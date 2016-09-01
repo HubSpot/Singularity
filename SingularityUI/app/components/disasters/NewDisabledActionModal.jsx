@@ -28,7 +28,7 @@ class DeleteDisabledActionModal extends Component {
         ref="newDisabledActionModal"
         name="New Disabled Action"
         action="Create Disabled Action"
-        buttonStyle="success"
+        buttonStyle="warning"
         onConfirm={(data) => this.props.newDisabledAction(data.type, data.message)}
         formElements={[
           {

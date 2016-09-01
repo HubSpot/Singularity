@@ -43,8 +43,8 @@ import com.hubspot.singularity.MachineState;
 import com.hubspot.singularity.RequestCleanupType;
 import com.hubspot.singularity.RequestState;
 import com.hubspot.singularity.RequestType;
-import com.hubspot.singularity.SingularityDeleteResult;
 import com.hubspot.singularity.ScheduleType;
+import com.hubspot.singularity.SingularityDeleteResult;
 import com.hubspot.singularity.SingularityDeploy;
 import com.hubspot.singularity.SingularityDeployBuilder;
 import com.hubspot.singularity.SingularityDeployProgress;
@@ -3174,6 +3174,106 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
   }
 
   @Test
+  public void testPriorityFreezeKillsActiveTasks() {
+    final SingularityRequest lowPriorityRequest = new SingularityRequestBuilder("lowPriorityRequest", RequestType.WORKER).setTaskPriorityLevel(Optional.of(.25)).build();
+    saveRequest(lowPriorityRequest);
+    final SingularityRequest mediumPriorityRequest = new SingularityRequestBuilder("mediumPriorityRequest", RequestType.WORKER).setTaskPriorityLevel(Optional.of(.5)).build();
+    saveRequest(mediumPriorityRequest);
+    final SingularityRequest highPriorityRequest = new SingularityRequestBuilder("highPriorityRequest", RequestType.WORKER).setTaskPriorityLevel(Optional.of(.75)).build();
+    saveRequest(highPriorityRequest);
+
+    final SingularityDeploy lowPriorityDeploy = initAndFinishDeploy(lowPriorityRequest, "lowPriorityDeploy");
+    final SingularityDeploy mediumPriorityDeploy = initAndFinishDeploy(mediumPriorityRequest, "mediumPriorityDeploy");
+    SingularityDeploy highPriorityDeploy = initAndFinishDeploy(highPriorityRequest, "highPriorityDeploy");
+
+    final SingularityTask lowPriorityTask = launchTask(lowPriorityRequest, lowPriorityDeploy, 2, 1, TaskState.TASK_RUNNING);
+    final SingularityTask mediumPriorityTask = launchTask(mediumPriorityRequest, mediumPriorityDeploy, 1, 1, TaskState.TASK_RUNNING);
+    final SingularityTask highPriorityTask = launchTask(highPriorityRequest, highPriorityDeploy, 10, 1, TaskState.TASK_RUNNING);
+
+    // priority freeze of .5 means that lowPriorityRequest's task should have a cleanup
+    priorityResource.createPriorityFreeze(new SingularityPriorityFreeze(.5, true, Optional.of("test"), Optional.<String>absent()));
+
+    // perform the killing
+    priorityKillPoller.runActionOnPoll();
+
+    // assert lowPriorityRequest has a PRIORITY_KILL task cleanup and that mediumPriorityRequest and highPriorityRequest should not have cleanups
+    Assert.assertEquals(TaskCleanupType.PRIORITY_KILL, taskManager.getTaskCleanup(lowPriorityTask.getTaskId().getId()).get().getCleanupType());
+
+    Assert.assertEquals(false, taskManager.getTaskCleanup(mediumPriorityTask.getTaskId().getId()).isPresent());
+    Assert.assertEquals(false, taskManager.getTaskCleanup(highPriorityTask.getTaskId().getId()).isPresent());
+
+    // kill task(s) with cleanups
+    cleaner.drainCleanupQueue();
+    killKilledTasks();
+
+    // assert lowPriorityTask was killed, mediumPriorityTask and highPriorityTask are still running
+    Assert.assertEquals(ExtendedTaskState.TASK_KILLED, taskManager.getTaskHistory(lowPriorityTask.getTaskId()).get().getLastTaskUpdate().get().getTaskState());
+    Assert.assertEquals(ExtendedTaskState.TASK_RUNNING, taskManager.getTaskHistory(mediumPriorityTask.getTaskId()).get().getLastTaskUpdate().get().getTaskState());
+    Assert.assertEquals(ExtendedTaskState.TASK_RUNNING, taskManager.getTaskHistory(highPriorityTask.getTaskId()).get().getLastTaskUpdate().get().getTaskState());
+
+    // assert lowPriorityRequest has a pending task
+    final SingularityPendingTaskId pendingTaskId = taskManager.getPendingTaskIds().get(0);
+    Assert.assertEquals(PendingType.TASK_DONE, pendingTaskId.getPendingType());
+    Assert.assertEquals(lowPriorityRequest.getId(), pendingTaskId.getRequestId());
+
+    // end the priority freeze
+    priorityResource.deleteActivePriorityFreeze();
+
+    // launch task(s)
+    scheduler.drainPendingQueue(stateCacheProvider.get());
+    resourceOffers();
+
+    // assert lowPriorityRequest has a new task running
+    Assert.assertNotEquals(lowPriorityTask.getTaskId(), taskManager.getActiveTaskIdsForRequest(lowPriorityRequest.getId()).get(0).getId());
+  }
+
+  @Test
+  public void testPriorityFreezeDoesntLaunchTasks() {
+    // deploy lowPriorityRequest (affected by priority freeze)
+    final SingularityRequest lowPriorityRequest = new SingularityRequestBuilder("lowPriorityRequest", RequestType.ON_DEMAND).setTaskPriorityLevel(Optional.of(.25)).build();
+    saveRequest(lowPriorityRequest);
+    deployResource.deploy(
+        new SingularityDeployRequest(new SingularityDeployBuilder(lowPriorityRequest.getId(), "d1").setCommand(Optional.of("cmd")).build(), Optional.<Boolean>absent(), Optional.<String>absent()));
+
+    // deploy medium priority request (NOT affected by priority freeze)
+    final SingularityRequest mediumPriorityRequest = new SingularityRequestBuilder("mediumPriorityRequest", RequestType.ON_DEMAND).setTaskPriorityLevel(Optional.of(.5)).build();
+    saveRequest(mediumPriorityRequest);
+    deployResource.deploy(
+        new SingularityDeployRequest(new SingularityDeployBuilder(mediumPriorityRequest.getId(), "d2").setCommand(Optional.of("cmd")).build(), Optional.<Boolean>absent(), Optional.<String>absent()));
+
+    // create priority freeze
+    priorityManager.createPriorityFreeze(
+        new SingularityPriorityFreezeParent(new SingularityPriorityFreeze(0.3, true, Optional.<String>absent(), Optional.<String>absent()), System.currentTimeMillis(), Optional.<String>absent()));
+
+    // launch both tasks
+    requestResource.scheduleImmediately(lowPriorityRequest.getId());
+    requestResource.scheduleImmediately(mediumPriorityRequest.getId());
+
+    // drain pending queue
+    scheduler.drainPendingQueue(stateCacheProvider.get());
+    resourceOffers();
+
+    // assert that lowPriorityRequest has a pending task
+    Assert.assertEquals(1, taskManager.getPendingTaskIds().size());
+    Assert.assertEquals(lowPriorityRequest.getId(), taskManager.getPendingTaskIds().get(0).getRequestId());
+
+    // assert that only mediumPriorityRequest has an active task
+    Assert.assertEquals(0, taskManager.getActiveTaskIdsForRequest(lowPriorityRequest.getId()).size());
+    Assert.assertEquals(1, taskManager.getActiveTaskIdsForRequest(mediumPriorityRequest.getId()).size());
+
+    // delete priority freeze
+    Assert.assertEquals(SingularityDeleteResult.DELETED, priorityManager.deleteActivePriorityFreeze());
+
+    // drain pending
+    scheduler.drainPendingQueue(stateCacheProvider.get());
+    resourceOffers();
+
+    // check that both requests have active tasks
+    Assert.assertEquals(1, taskManager.getActiveTaskIdsForRequest(lowPriorityRequest.getId()).size());
+    Assert.assertEquals(1, taskManager.getActiveTaskIdsForRequest(mediumPriorityRequest.getId()).size());
+  }
+
+  @Test
   public void testObsoletePendingRequestsRemoved() {
     initRequest();
     initFirstDeploy();
@@ -3339,102 +3439,5 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     deployResource.deploy(new SingularityDeployRequest(deploy, Optional.<Boolean> absent(), Optional.<String> absent(), Optional.of(newRequest)));
 
     requestResource.postRequest(newRequest);
-  }
-
-  @Test
-  public void testPriorityFreezeKillsActiveTasks() {
-    final SingularityRequest lowPriorityRequest = new SingularityRequestBuilder("lowPriorityRequest", RequestType.WORKER).setTaskPriorityLevel(Optional.of(.25)).build();
-    saveRequest(lowPriorityRequest);
-    final SingularityRequest mediumPriorityRequest = new SingularityRequestBuilder("mediumPriorityRequest", RequestType.WORKER).setTaskPriorityLevel(Optional.of(.5)).build();
-    saveRequest(mediumPriorityRequest);
-    final SingularityRequest highPriorityRequest = new SingularityRequestBuilder("highPriorityRequest", RequestType.WORKER).setTaskPriorityLevel(Optional.of(.75)).build();
-    saveRequest(highPriorityRequest);
-
-    final SingularityDeploy lowPriorityDeploy = initAndFinishDeploy(lowPriorityRequest, "lowPriorityDeploy");
-    final SingularityDeploy mediumPriorityDeploy = initAndFinishDeploy(mediumPriorityRequest, "mediumPriorityDeploy");
-    SingularityDeploy highPriorityDeploy = initAndFinishDeploy(highPriorityRequest, "highPriorityDeploy");
-
-    final SingularityTask lowPriorityTask = launchTask(lowPriorityRequest, lowPriorityDeploy, 2, 1, TaskState.TASK_RUNNING);
-    final SingularityTask mediumPriorityTask = launchTask(mediumPriorityRequest, mediumPriorityDeploy, 1, 1, TaskState.TASK_RUNNING);
-    final SingularityTask highPriorityTask = launchTask(highPriorityRequest, highPriorityDeploy, 10, 1, TaskState.TASK_RUNNING);
-
-    // priority freeze of .5 means that lowPriorityRequest's task should have a cleanup
-    priorityResource.createPriorityFreeze(new SingularityPriorityFreeze(.5, true, Optional.of("test"), Optional.<String>absent()));
-
-    // perform the killing
-    priorityKillPoller.runActionOnPoll();
-
-    // assert lowPriorityRequest has a PRIORITY_KILL task cleanup and that mediumPriorityRequest and highPriorityRequest should not have cleanups
-    Assert.assertEquals(TaskCleanupType.PRIORITY_KILL, taskManager.getTaskCleanup(lowPriorityTask.getTaskId().getId()).get().getCleanupType());
-
-    Assert.assertEquals(false, taskManager.getTaskCleanup(mediumPriorityTask.getTaskId().getId()).isPresent());
-    Assert.assertEquals(false, taskManager.getTaskCleanup(highPriorityTask.getTaskId().getId()).isPresent());
-
-    // kill task(s) with cleanups
-    cleaner.drainCleanupQueue();
-    killKilledTasks();
-
-    // assert lowPriorityTask was killed, mediumPriorityTask and highPriorityTask are still running
-    Assert.assertEquals(ExtendedTaskState.TASK_KILLED, taskManager.getTaskHistory(lowPriorityTask.getTaskId()).get().getLastTaskUpdate().get().getTaskState());
-    Assert.assertEquals(ExtendedTaskState.TASK_RUNNING, taskManager.getTaskHistory(mediumPriorityTask.getTaskId()).get().getLastTaskUpdate().get().getTaskState());
-    Assert.assertEquals(ExtendedTaskState.TASK_RUNNING, taskManager.getTaskHistory(highPriorityTask.getTaskId()).get().getLastTaskUpdate().get().getTaskState());
-
-    // assert lowPriorityRequest has a pending task
-    final SingularityPendingTaskId pendingTaskId = taskManager.getPendingTaskIds().get(0);
-    Assert.assertEquals(PendingType.TASK_DONE, pendingTaskId.getPendingType());
-    Assert.assertEquals(lowPriorityRequest.getId(), pendingTaskId.getRequestId());
-
-    // end the priority freeze
-    priorityResource.deleteActivePriorityFreeze();
-
-    // launch task(s)
-    scheduler.drainPendingQueue(stateCacheProvider.get());
-    resourceOffers();
-
-    // assert lowPriorityRequest has a new task running
-    Assert.assertNotEquals(lowPriorityTask.getTaskId(), taskManager.getActiveTaskIdsForRequest(lowPriorityRequest.getId()).get(0).getId());
-  }
-
-  @Test
-  public void testPriorityFreezeDoesntLaunchTasks() {
-    // deploy lowPriorityRequest (affected by priority freeze)
-    final SingularityRequest lowPriorityRequest = new SingularityRequestBuilder("lowPriorityRequest", RequestType.ON_DEMAND).setTaskPriorityLevel(Optional.of(.25)).build();
-    saveRequest(lowPriorityRequest);
-    deployResource.deploy(new SingularityDeployRequest(new SingularityDeployBuilder(lowPriorityRequest.getId(), "d1").setCommand(Optional.of("cmd")).build(), Optional.<Boolean> absent(), Optional.<String> absent()));
-
-    // deploy medium priority request (NOT affected by priority freeze)
-    final SingularityRequest mediumPriorityRequest = new SingularityRequestBuilder("mediumPriorityRequest", RequestType.ON_DEMAND).setTaskPriorityLevel(Optional.of(.5)).build();
-    saveRequest(mediumPriorityRequest);
-    deployResource.deploy(new SingularityDeployRequest(new SingularityDeployBuilder(mediumPriorityRequest.getId(), "d2").setCommand(Optional.of("cmd")).build(), Optional.<Boolean> absent(), Optional.<String> absent()));
-
-    // create priority freeze
-    priorityManager.createPriorityFreeze(new SingularityPriorityFreezeParent(new SingularityPriorityFreeze(0.3, true, Optional.<String>absent(), Optional.<String>absent()), System.currentTimeMillis(), Optional.<String>absent()));
-
-    // launch both tasks
-    requestResource.scheduleImmediately(lowPriorityRequest.getId());
-    requestResource.scheduleImmediately(mediumPriorityRequest.getId());
-
-    // drain pending queue
-    scheduler.drainPendingQueue(stateCacheProvider.get());
-    resourceOffers();
-
-    // assert that lowPriorityRequest has a pending task
-    Assert.assertEquals(1, taskManager.getPendingTaskIds().size());
-    Assert.assertEquals(lowPriorityRequest.getId(), taskManager.getPendingTaskIds().get(0).getRequestId());
-
-    // assert that only mediumPriorityRequest has an active task
-    Assert.assertEquals(0, taskManager.getActiveTaskIdsForRequest(lowPriorityRequest.getId()).size());
-    Assert.assertEquals(1, taskManager.getActiveTaskIdsForRequest(mediumPriorityRequest.getId()).size());
-
-    // delete priority freeze
-    Assert.assertEquals(SingularityDeleteResult.DELETED, priorityManager.deleteActivePriorityFreeze());
-
-    // drain pending
-    scheduler.drainPendingQueue(stateCacheProvider.get());
-    resourceOffers();
-
-    // check that both requests have active tasks
-    Assert.assertEquals(1, taskManager.getActiveTaskIdsForRequest(lowPriorityRequest.getId()).size());
-    Assert.assertEquals(1, taskManager.getActiveTaskIdsForRequest(mediumPriorityRequest.getId()).size());
   }
 }
