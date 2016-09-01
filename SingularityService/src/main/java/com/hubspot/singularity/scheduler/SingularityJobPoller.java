@@ -5,6 +5,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 import javax.inject.Singleton;
@@ -22,7 +23,9 @@ import com.google.inject.Inject;
 import com.hubspot.singularity.ScheduleType;
 import com.hubspot.singularity.SingularityDeployStatistics;
 import com.hubspot.singularity.SingularityRequestWithState;
+import com.hubspot.singularity.SingularityTaskCleanup;
 import com.hubspot.singularity.SingularityTaskId;
+import com.hubspot.singularity.TaskCleanupType;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.DeployManager;
 import com.hubspot.singularity.data.RequestManager;
@@ -32,9 +35,9 @@ import com.hubspot.singularity.sentry.SingularityExceptionNotifier;
 import com.hubspot.singularity.smtp.SingularityMailer;
 
 @Singleton
-public class SingularityScheduledJobPoller extends SingularityLeaderOnlyPoller {
+public class SingularityJobPoller extends SingularityLeaderOnlyPoller {
 
-  private static final Logger LOG = LoggerFactory.getLogger(SingularityScheduledJobPoller.class);
+  private static final Logger LOG = LoggerFactory.getLogger(SingularityJobPoller.class);
 
   private final TaskManager taskManager;
   private final RequestManager requestManager;
@@ -44,8 +47,8 @@ public class SingularityScheduledJobPoller extends SingularityLeaderOnlyPoller {
   private final SingularityExceptionNotifier exceptionNotifier;
 
   @Inject
-  public SingularityScheduledJobPoller(SingularityExceptionNotifier exceptionNotifier, TaskManager taskManager,
-      SingularityConfiguration configuration, RequestManager requestManager, DeployManager deployManager, SingularityMailer mailer) {
+  public SingularityJobPoller(SingularityExceptionNotifier exceptionNotifier, TaskManager taskManager,
+                              SingularityConfiguration configuration, RequestManager requestManager, DeployManager deployManager, SingularityMailer mailer) {
 
     super(configuration.getCheckScheduledJobsEveryMillis(), TimeUnit.MILLISECONDS);
 
@@ -67,6 +70,16 @@ public class SingularityScheduledJobPoller extends SingularityLeaderOnlyPoller {
     for (SingularityTaskId taskId : activeTaskIds) {
       if (start - taskId.getStartedAt() < configuration.getWarnIfScheduledJobIsRunningForAtLeastMillis()) {
         continue;
+      }
+
+      if (start - taskId.getStartedAt() >= configuration.getTaskExecutionTimeout()) {
+        taskManager.createTaskCleanup(new SingularityTaskCleanup(
+            Optional.<String>absent(),
+            TaskCleanupType.DEPLOY_TIMED_OUT,
+            start,
+            taskId,
+            Optional.of("Deploy has reached/exceeded the set timeout"),
+            Optional.of(UUID.randomUUID().toString())));
       }
 
       requestIdsToLookup.add(taskId.getRequestId());

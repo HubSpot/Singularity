@@ -214,6 +214,11 @@ public class SingularityConfiguration extends Configuration {
 
   private long warnIfScheduledJobIsRunningForAtLeastMillis = TimeUnit.DAYS.toMillis(1);
 
+  @JsonProperty("taskExecutionTimeout")
+  @Valid
+  @NotNull
+  private long taskExecutionTimeout = TimeUnit.HOURS.toMillis(12);
+
   private int warnIfScheduledJobIsRunningPastNextRunPct = 200;
 
   private long zookeeperAsyncTimeout = 5000;
@@ -604,6 +609,10 @@ public class SingularityConfiguration extends Configuration {
     return warnIfScheduledJobIsRunningForAtLeastMillis;
   }
 
+  public long getTaskExecutionTimeout() {
+    return taskExecutionTimeout;
+  }
+
   public int getWarnIfScheduledJobIsRunningPastNextRunPct() {
     return warnIfScheduledJobIsRunningPastNextRunPct;
   }
@@ -922,6 +931,11 @@ public class SingularityConfiguration extends Configuration {
 
   public void setWarnIfScheduledJobIsRunningForAtLeastMillis(long warnIfScheduledJobIsRunningForAtLeastMillis) {
     this.warnIfScheduledJobIsRunningForAtLeastMillis = warnIfScheduledJobIsRunningForAtLeastMillis;
+  }
+
+  public SingularityConfiguration setTaskExecutionTimeout(long taskExecutionTimeout) {
+    this.taskExecutionTimeout = taskExecutionTimeout;
+    return this;
   }
 
   public void setWarnIfScheduledJobIsRunningPastNextRunPct(int warnIfScheduledJobIsRunningPastNextRunPct) {
