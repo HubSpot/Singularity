@@ -96,7 +96,7 @@ public class DisastersResource {
   public void disableAction(@PathParam("action") SingularityAction action, Optional<SingularityDisabledActionRequest> maybeRequest) {
     authorizationHelper.checkAdminAuthorization(user);
     Optional<String> message = maybeRequest.isPresent() ? maybeRequest.get().getMessage() : Optional.<String>absent();
-    disasterManager.disable(action, message, user, false);
+    disasterManager.disable(action, message, user, false, Optional.<Long>absent());
   }
 
   @DELETE
