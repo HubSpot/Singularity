@@ -25,7 +25,6 @@ public class SingularityDeployBuilder {
   private Optional<String> customExecutorId;
   private Optional<String> customExecutorSource;
   private Optional<Resources> customExecutorResources;
-  private Optional<String> customExecutorUser;
 
   private Optional<Resources> resources;
 
@@ -78,7 +77,6 @@ public class SingularityDeployBuilder {
     this.customExecutorId = Optional.absent();
     this.customExecutorSource = Optional.absent();
     this.customExecutorResources = Optional.absent();
-    this.customExecutorUser = Optional.absent();
     this.resources = Optional.absent();
     this.command = Optional.absent();
     this.arguments = Optional.absent();
@@ -114,7 +112,7 @@ public class SingularityDeployBuilder {
   }
 
   public SingularityDeploy build() {
-    return new SingularityDeploy(requestId, id, command, arguments, containerInfo, customExecutorCmd, customExecutorId, customExecutorSource, customExecutorResources, customExecutorUser, resources,
+    return new SingularityDeploy(requestId, id, command, arguments, containerInfo, customExecutorCmd, customExecutorId, customExecutorSource, customExecutorResources, resources,
       env, taskEnv, uris, metadata, executorData, version, timestamp, labels, taskLabels, deployHealthTimeoutSeconds, healthcheckUri, healthcheckIntervalSeconds, healthcheckTimeoutSeconds, healthcheckPortIndex, healthcheckMaxRetries,
       healthcheckMaxTotalTimeoutSeconds, serviceBasePath, loadBalancerGroups, loadBalancerPortIndex, considerHealthyAfterRunningForSeconds, loadBalancerOptions, loadBalancerDomains, loadBalancerAdditionalRoutes,
       loadBalancerTemplate, skipHealthchecksOnDeploy, healthcheckProtocol, deployInstanceCountPerStep, deployStepWaitTimeMs, autoAdvanceDeploySteps, maxTaskRetries, shell, user);
@@ -211,15 +209,6 @@ public class SingularityDeployBuilder {
 
   public SingularityDeployBuilder setCustomExecutorResources(Optional<Resources> customExecutorResources) {
     this.customExecutorResources = customExecutorResources;
-    return this;
-  }
-
-  public Optional<String> getCustomExecutorUser() {
-    return customExecutorUser;
-  }
-
-  public SingularityDeployBuilder setCustomExecutorUser(Optional<String> customExecutorUser) {
-    this.customExecutorUser = customExecutorUser;
     return this;
   }
 
@@ -515,7 +504,6 @@ public class SingularityDeployBuilder {
       ", customExecutorId=" + customExecutorId +
       ", customExecutorSource=" + customExecutorSource +
       ", customExecutorResources=" + customExecutorResources +
-      ", customExecutorUser=" + customExecutorUser +
       ", resources=" + resources +
       ", command=" + command +
       ", arguments=" + arguments +
