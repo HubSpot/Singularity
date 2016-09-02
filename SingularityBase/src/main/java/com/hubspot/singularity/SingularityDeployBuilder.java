@@ -8,6 +8,7 @@ import com.google.common.base.Optional;
 import com.hubspot.deploy.ExecutorData;
 import com.hubspot.mesos.Resources;
 import com.hubspot.mesos.SingularityContainerInfo;
+import com.hubspot.mesos.SingularityMesosTaskLabel;
 
 public class SingularityDeployBuilder {
 
@@ -36,7 +37,9 @@ public class SingularityDeployBuilder {
   private Optional<List<String>> uris;
   private Optional<ExecutorData> executorData;
   private Optional<Map<String, String>> labels;
+  private Optional<List<SingularityMesosTaskLabel>> mesosLabels;
   private Optional<Map<Integer, Map<String, String>>> taskLabels;
+  private Optional<Map<Integer, List<SingularityMesosTaskLabel>>> mesosTaskLabels;
 
   private Optional<String> healthcheckUri;
   private Optional<Long> healthcheckIntervalSeconds;
@@ -59,6 +62,8 @@ public class SingularityDeployBuilder {
   private Optional<Set<String>> loadBalancerDomains;
   private Optional<List<String>> loadBalancerAdditionalRoutes;
   private Optional<String> loadBalancerTemplate;
+  private Optional<String> loadBalancerServiceIdOverride;
+  private Optional<String> loadBalancerUpstreamGroup;
 
   private Optional<Integer> deployInstanceCountPerStep;
   private Optional<Integer> deployStepWaitTimeMs;
@@ -86,7 +91,9 @@ public class SingularityDeployBuilder {
     this.uris = Optional.absent();
     this.executorData = Optional.absent();
     this.labels = Optional.absent();
+    this.mesosLabels = Optional.absent();
     this.taskLabels = Optional.absent();
+    this.mesosTaskLabels = Optional.absent();
     this.healthcheckUri = Optional.absent();
     this.healthcheckIntervalSeconds = Optional.absent();
     this.healthcheckTimeoutSeconds = Optional.absent();
@@ -104,6 +111,8 @@ public class SingularityDeployBuilder {
     this.loadBalancerDomains = Optional.absent();
     this.loadBalancerAdditionalRoutes = Optional.absent();
     this.loadBalancerTemplate = Optional.absent();
+    this.loadBalancerServiceIdOverride = Optional.absent();
+    this.loadBalancerUpstreamGroup = Optional.absent();
     this.deployInstanceCountPerStep = Optional.absent();
     this.deployStepWaitTimeMs = Optional.absent();
     this.autoAdvanceDeploySteps = Optional.absent();
@@ -113,9 +122,9 @@ public class SingularityDeployBuilder {
 
   public SingularityDeploy build() {
     return new SingularityDeploy(requestId, id, command, arguments, containerInfo, customExecutorCmd, customExecutorId, customExecutorSource, customExecutorResources, customExecutorUser, resources,
-      env, taskEnv, uris, metadata, executorData, version, timestamp, labels, taskLabels, deployHealthTimeoutSeconds, healthcheckUri, healthcheckIntervalSeconds, healthcheckTimeoutSeconds, healthcheckPortIndex, healthcheckMaxRetries,
+      env, taskEnv, uris, metadata, executorData, version, timestamp, labels, mesosLabels, taskLabels, mesosTaskLabels, deployHealthTimeoutSeconds, healthcheckUri, healthcheckIntervalSeconds, healthcheckTimeoutSeconds, healthcheckPortIndex, healthcheckMaxRetries,
       healthcheckMaxTotalTimeoutSeconds, serviceBasePath, loadBalancerGroups, loadBalancerPortIndex, considerHealthyAfterRunningForSeconds, loadBalancerOptions, loadBalancerDomains, loadBalancerAdditionalRoutes,
-      loadBalancerTemplate, skipHealthchecksOnDeploy, healthcheckProtocol, deployInstanceCountPerStep, deployStepWaitTimeMs, autoAdvanceDeploySteps, maxTaskRetries, shell);
+      loadBalancerTemplate, loadBalancerServiceIdOverride, loadBalancerUpstreamGroup, skipHealthchecksOnDeploy, healthcheckProtocol, deployInstanceCountPerStep, deployStepWaitTimeMs, autoAdvanceDeploySteps, maxTaskRetries, shell);
   }
 
   public String getRequestId() {
@@ -392,21 +401,43 @@ public class SingularityDeployBuilder {
     return this;
   }
 
+  @Deprecated
   public Optional<Map<String, String>> getLabels() {
     return labels;
   }
 
+  @Deprecated
   public SingularityDeployBuilder setLabels(Optional<Map<String, String>> labels) {
     this.labels = labels;
     return this;
   }
 
+  public Optional<List<SingularityMesosTaskLabel>> getMesosLabels() {
+    return mesosLabels;
+  }
+
+  public SingularityDeployBuilder setMesosLabels(Optional<List<SingularityMesosTaskLabel>> mesosLabels) {
+    this.mesosLabels = mesosLabels;
+    return this;
+  }
+
+  @Deprecated
   public Optional<Map<Integer, Map<String, String>>> getTaskLabels() {
     return taskLabels;
   }
 
+  @Deprecated
   public SingularityDeployBuilder setTaskLabels(Optional<Map<Integer, Map<String, String>>> taskLabels) {
     this.taskLabels = taskLabels;
+    return this;
+  }
+
+  public Optional<Map<Integer, List<SingularityMesosTaskLabel>>> getMesosTaskLabels() {
+    return mesosTaskLabels;
+  }
+
+  public SingularityDeployBuilder setMesosTaskLabels(Optional<Map<Integer, List<SingularityMesosTaskLabel>>> mesosTaskLabels) {
+    this.mesosTaskLabels = mesosTaskLabels;
     return this;
   }
 
@@ -491,6 +522,24 @@ public class SingularityDeployBuilder {
     return this;
   }
 
+  public Optional<String> getLoadBalancerServiceIdOverride() {
+    return loadBalancerServiceIdOverride;
+  }
+
+  public SingularityDeployBuilder setLoadBalancerServiceIdOverride(Optional<String> loadBalancerServiceIdOverride) {
+    this.loadBalancerServiceIdOverride = loadBalancerServiceIdOverride;
+    return this;
+  }
+
+  public Optional<String> getLoadBalancerUpstreamGroup() {
+    return loadBalancerUpstreamGroup;
+  }
+
+  public SingularityDeployBuilder setLoadBalancerUpstreamGroup(Optional<String> loadBalancerUpstreamGroup) {
+    this.loadBalancerUpstreamGroup = loadBalancerUpstreamGroup;
+    return this;
+  }
+
   @Override
   public String toString() {
     return "SingularityDeployBuilder{" +
@@ -531,6 +580,8 @@ public class SingularityDeployBuilder {
       ", loadBalancerDomains=" + loadBalancerDomains +
       ", loadBalancerAdditionalRoutes=" + loadBalancerAdditionalRoutes +
       ", loadBalancerTemplate=" + loadBalancerTemplate +
+      ", loadBalancerServiceIdOverride=" + loadBalancerServiceIdOverride +
+      ", loadBalancerUpstreamGroup=" + loadBalancerUpstreamGroup +
       ", deployInstanceCountPerStep=" + deployInstanceCountPerStep +
       ", deployStepWaitTimeMs=" + deployStepWaitTimeMs +
       ", autoAdvanceDeploySteps=" + autoAdvanceDeploySteps +

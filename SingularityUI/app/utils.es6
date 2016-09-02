@@ -66,24 +66,28 @@ const Utils = {
 
   getLabelClassFromTaskState(state) {
     switch (state) {
-      case 'TASK_STARTING':
-      case 'TASK_CLEANING':
-        return 'warning';
       case 'TASK_STAGING':
       case 'TASK_LAUNCHED':
-      case 'TASK_RUNNING':
+      case 'TASK_STARTING':
+      case 'TASK_CLEANING':
         return 'info';
       case 'TASK_FINISHED':
+      case 'TASK_KILLED':
+        return 'primary';
+      case 'TASK_RUNNING':
         return 'success';
       case 'TASK_LOST':
       case 'TASK_FAILED':
       case 'TASK_LOST_WHILE_DOWN':
       case 'TASK_ERROR':
         return 'danger';
-      case 'TASK_KILLED':
+      case 'TASK_OVERDUE':
+        return 'warning';
+      case 'TASK_SCHEDULED':
+      case 'TASK_PENDING':
         return 'default';
       default:
-        return 'default';
+        return 'danger'; // Unknown state.
     }
   },
 
