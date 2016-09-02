@@ -222,6 +222,17 @@ const Utils = {
     return null;
   },
 
+  changeUserSetting(oldSettings, setting, newValue) {
+    let newSettings = {};
+    if (oldSettings) newSettings = this.deepClone(oldSettings);
+    newSettings[setting] = newValue;
+    return newSettings;
+  },
+
+  getMaybeUserSetting(settings, setting) {
+    return this.maybe(settings, [setting]);
+  },
+
   maybe(object, path, defaultValue = undefined) {
     if (!path.length) {
       return object;
@@ -273,6 +284,20 @@ const Utils = {
     }
   },
   request: {
+    isStarred: (requestId, state) => {
+      const settings = Utils.maybe(state.api.userSettings, ['data']);
+      let starredRequests;
+      if (!_.isEmpty(settings)) {
+        const temporaryStars = state.temporaryStars;
+        starredRequests = Utils.getMaybeUserSetting(settings, 'starredRequestIds') || [];
+        starredRequests = _.union(starredRequests, temporaryStars.temporaryAddedStars);
+        starredRequests = _.difference(starredRequests, temporaryStars.temporaryRemovedStars);
+      } else {
+        starredRequests = state.ui.localStars;
+      }
+      return starredRequests.indexOf(requestId) !== -1;
+    },
+
     // all of these expect a RequestParent object
     LONG_RUNNING_TYPES: new Set(['WORKER', 'SERVICE']),
     hasActiveDeploy: (requestParent) => {

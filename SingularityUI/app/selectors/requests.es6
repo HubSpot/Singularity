@@ -15,13 +15,11 @@ function findRequestIds(requests) {
   });
 }
 
-export const getStarred = (state) => new Set(state.ui.starred);
-
 export const getStarredRequests = createSelector(
-  [getStarred, getRequestsAPI],
-  (starredData, requestsAPI) => {
+  [_.identity, getRequestsAPI],
+  (state, requestsAPI) => {
     const requests = findRequestIds(requestsAPI.data);
-    return requests.filter((requestParent) => starredData.has(requestParent.request.id));
+    return requests.filter((requestParent) => Utils.request.isStarred(requestParent.request.id, state));
   }
 );
 
