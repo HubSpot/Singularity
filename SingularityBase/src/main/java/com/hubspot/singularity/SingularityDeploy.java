@@ -392,7 +392,7 @@ public class SingularityDeploy {
   @ApiModelProperty(required=false, value="Additional routes besides serviceBasePath used by this service")
   public Optional<List<String>> getLoadBalancerAdditionalRoutes() {
     return loadBalancerAdditionalRoutes;
-  }de
+  }
 
   @ApiModelProperty(required=false, value="Name of load balancer template to use if not using the default template")
   public Optional<String> getLoadBalancerTemplate() {
