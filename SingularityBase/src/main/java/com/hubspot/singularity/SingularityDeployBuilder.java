@@ -62,6 +62,8 @@ public class SingularityDeployBuilder {
   private Optional<Set<String>> loadBalancerDomains;
   private Optional<List<String>> loadBalancerAdditionalRoutes;
   private Optional<String> loadBalancerTemplate;
+  private Optional<String> loadBalancerServiceIdOverride;
+  private Optional<String> loadBalancerUpstreamGroup;
 
   private Optional<Integer> deployInstanceCountPerStep;
   private Optional<Integer> deployStepWaitTimeMs;
@@ -109,6 +111,8 @@ public class SingularityDeployBuilder {
     this.loadBalancerDomains = Optional.absent();
     this.loadBalancerAdditionalRoutes = Optional.absent();
     this.loadBalancerTemplate = Optional.absent();
+    this.loadBalancerServiceIdOverride = Optional.absent();
+    this.loadBalancerUpstreamGroup = Optional.absent();
     this.deployInstanceCountPerStep = Optional.absent();
     this.deployStepWaitTimeMs = Optional.absent();
     this.autoAdvanceDeploySteps = Optional.absent();
@@ -120,7 +124,7 @@ public class SingularityDeployBuilder {
     return new SingularityDeploy(requestId, id, command, arguments, containerInfo, customExecutorCmd, customExecutorId, customExecutorSource, customExecutorResources, customExecutorUser, resources,
       env, taskEnv, uris, metadata, executorData, version, timestamp, labels, mesosLabels, taskLabels, mesosTaskLabels, deployHealthTimeoutSeconds, healthcheckUri, healthcheckIntervalSeconds, healthcheckTimeoutSeconds, healthcheckPortIndex, healthcheckMaxRetries,
       healthcheckMaxTotalTimeoutSeconds, serviceBasePath, loadBalancerGroups, loadBalancerPortIndex, considerHealthyAfterRunningForSeconds, loadBalancerOptions, loadBalancerDomains, loadBalancerAdditionalRoutes,
-      loadBalancerTemplate, skipHealthchecksOnDeploy, healthcheckProtocol, deployInstanceCountPerStep, deployStepWaitTimeMs, autoAdvanceDeploySteps, maxTaskRetries, shell);
+      loadBalancerTemplate, loadBalancerServiceIdOverride, loadBalancerUpstreamGroup, skipHealthchecksOnDeploy, healthcheckProtocol, deployInstanceCountPerStep, deployStepWaitTimeMs, autoAdvanceDeploySteps, maxTaskRetries, shell);
   }
 
   public String getRequestId() {
@@ -518,6 +522,24 @@ public class SingularityDeployBuilder {
     return this;
   }
 
+  public Optional<String> getLoadBalancerServiceIdOverride() {
+    return loadBalancerServiceIdOverride;
+  }
+
+  public SingularityDeployBuilder setLoadBalancerServiceIdOverride(Optional<String> loadBalancerServiceIdOverride) {
+    this.loadBalancerServiceIdOverride = loadBalancerServiceIdOverride;
+    return this;
+  }
+
+  public Optional<String> getLoadBalancerUpstreamGroup() {
+    return loadBalancerUpstreamGroup;
+  }
+
+  public SingularityDeployBuilder setLoadBalancerUpstreamGroup(Optional<String> loadBalancerUpstreamGroup) {
+    this.loadBalancerUpstreamGroup = loadBalancerUpstreamGroup;
+    return this;
+  }
+
   @Override
   public String toString() {
     return "SingularityDeployBuilder{" +
@@ -558,6 +580,8 @@ public class SingularityDeployBuilder {
       ", loadBalancerDomains=" + loadBalancerDomains +
       ", loadBalancerAdditionalRoutes=" + loadBalancerAdditionalRoutes +
       ", loadBalancerTemplate=" + loadBalancerTemplate +
+      ", loadBalancerServiceIdOverride=" + loadBalancerServiceIdOverride +
+      ", loadBalancerUpstreamGroup=" + loadBalancerUpstreamGroup +
       ", deployInstanceCountPerStep=" + deployInstanceCountPerStep +
       ", deployStepWaitTimeMs=" + deployStepWaitTimeMs +
       ", autoAdvanceDeploySteps=" + autoAdvanceDeploySteps +

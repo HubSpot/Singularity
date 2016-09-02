@@ -105,3 +105,7 @@ ALTER TABLE `taskHistory`
 UPDATE `taskHistory` SET `host` = SUBSTRING_INDEX(SUBSTRING_INDEX(`taskId`, '-', -2), '-', 1) WHERE `host` IS NULL;
 UPDATE `taskHistory` SET `startedAt` = FROM_UNIXTIME(SUBSTRING_INDEX(SUBSTRING_INDEX(`taskId`, '-', -4), '-', 1)/1000) WHERE `startedAt` IS NULL;
 
+--changeset ssalinas:12 dbms:mysql
+ALTER TABLE `taskHistory`
+  ADD KEY `updatedAt` (`updatedAt`, `requestId`)
+
