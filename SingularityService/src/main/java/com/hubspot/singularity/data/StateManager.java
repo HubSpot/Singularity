@@ -25,6 +25,7 @@ import com.hubspot.singularity.SingularityCreateResult;
 import com.hubspot.singularity.SingularityHostState;
 import com.hubspot.singularity.SingularityPendingDeploy;
 import com.hubspot.singularity.SingularityPendingTaskId;
+import com.hubspot.singularity.SingularityPriorityFreezeParent;
 import com.hubspot.singularity.SingularityRack;
 import com.hubspot.singularity.SingularityRequestDeployState;
 import com.hubspot.singularity.SingularityRequestWithState;
@@ -57,11 +58,12 @@ public class StateManager extends CuratorManager {
   private final SingularityConfiguration singularityConfiguration;
   private final SingularityAuthDatastore authDatastore;
   private final Transcoder<SingularityTaskReconciliationStatistics> taskReconciliationStatisticsTranscoder;
+  private final PriorityManager priorityManager;
 
   @Inject
   public StateManager(CuratorFramework curatorFramework, SingularityConfiguration configuration, MetricRegistry metricRegistry, RequestManager requestManager, TaskManager taskManager,
       DeployManager deployManager, SlaveManager slaveManager, RackManager rackManager, Transcoder<SingularityState> stateTranscoder, Transcoder<SingularityHostState> hostStateTranscoder,
-      SingularityConfiguration singularityConfiguration, SingularityAuthDatastore authDatastore, Transcoder<SingularityTaskReconciliationStatistics> taskReconciliationStatisticsTranscoder) {
+      SingularityConfiguration singularityConfiguration, SingularityAuthDatastore authDatastore, PriorityManager priorityManager, Transcoder<SingularityTaskReconciliationStatistics> taskReconciliationStatisticsTranscoder) {
     super(curatorFramework, configuration, metricRegistry);
 
     this.requestManager = requestManager;
@@ -73,6 +75,7 @@ public class StateManager extends CuratorManager {
     this.deployManager = deployManager;
     this.singularityConfiguration = singularityConfiguration;
     this.authDatastore = authDatastore;
+    this.priorityManager = priorityManager;
     this.taskReconciliationStatisticsTranscoder = taskReconciliationStatisticsTranscoder;
   }
 
@@ -305,9 +308,18 @@ public class StateManager extends CuratorManager {
 
     final Optional<Boolean> authDatastoreHealthy = authDatastore.isHealthy();
 
+    final Optional<SingularityPriorityFreezeParent> maybePriorityFreeze = priorityManager.getActivePriorityFreeze();
+    final Optional<Double> minimumPriorityLevel;
+
+    if (maybePriorityFreeze.isPresent()) {
+      minimumPriorityLevel = Optional.of(maybePriorityFreeze.get().getPriorityFreeze().getMinimumPriorityLevel());
+    } else {
+      minimumPriorityLevel = Optional.absent();
+    }
+
     return new SingularityState(activeTasks, numActiveRequests, cooldownRequests, numPausedRequests, scheduledTasks, pendingRequests, lbCleanupTasks, lbCleanupRequests, cleaningRequests, activeSlaves,
         deadSlaves, decommissioningSlaves, activeRacks, deadRacks, decommissioningRacks, cleaningTasks, states, oldestDeploy, numDeploys, scheduledTasksInfo.getNumLateTasks(),
         scheduledTasksInfo.getNumFutureTasks(), scheduledTasksInfo.getMaxTaskLag(), System.currentTimeMillis(), includeRequestIds ? overProvisionedRequestIds : null,
-            includeRequestIds ? underProvisionedRequestIds : null, overProvisionedRequestIds.size(), underProvisionedRequestIds.size(), numFinishedRequests, unknownRacks, unknownSlaves, authDatastoreHealthy);
+            includeRequestIds ? underProvisionedRequestIds : null, overProvisionedRequestIds.size(), underProvisionedRequestIds.size(), numFinishedRequests, unknownRacks, unknownSlaves, authDatastoreHealthy, minimumPriorityLevel);
   }
 }

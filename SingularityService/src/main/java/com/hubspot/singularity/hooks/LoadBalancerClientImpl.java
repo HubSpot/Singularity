@@ -170,19 +170,19 @@ public class LoadBalancerClientImpl implements LoadBalancerClient {
       List<SingularityTask> remove) {
     final List<String> serviceOwners = request.getOwners().or(Collections.<String> emptyList());
     final Set<String> loadBalancerGroups = deploy.getLoadBalancerGroups().or(Collections.<String>emptySet());
-    final BaragonService lbService = new BaragonService(request.getId(), serviceOwners, deploy.getServiceBasePath().get(),
+    final BaragonService lbService = new BaragonService(deploy.getLoadBalancerServiceIdOverride().or(request.getId()), serviceOwners, deploy.getServiceBasePath().get(),
       deploy.getLoadBalancerAdditionalRoutes().or(Collections.<String>emptyList()), loadBalancerGroups, deploy.getLoadBalancerOptions().orNull(),
       deploy.getLoadBalancerTemplate(), deploy.getLoadBalancerDomains().or(Collections.<String>emptySet()));
 
-    final List<UpstreamInfo> addUpstreams = tasksToUpstreams(add, loadBalancerRequestId.toString());
-    final List<UpstreamInfo> removeUpstreams = tasksToUpstreams(remove, loadBalancerRequestId.toString());
+    final List<UpstreamInfo> addUpstreams = tasksToUpstreams(add, loadBalancerRequestId.toString(), deploy.getLoadBalancerUpstreamGroup());
+    final List<UpstreamInfo> removeUpstreams = tasksToUpstreams(remove, loadBalancerRequestId.toString(), deploy.getLoadBalancerUpstreamGroup());
 
     final BaragonRequest loadBalancerRequest = new BaragonRequest(loadBalancerRequestId.toString(), lbService, addUpstreams, removeUpstreams);
 
     return sendBaragonRequest(loadBalancerRequestId, loadBalancerRequest, LoadBalancerMethod.ENQUEUE);
   }
 
-  private List<UpstreamInfo> tasksToUpstreams(List<SingularityTask> tasks, String requestId) {
+  private List<UpstreamInfo> tasksToUpstreams(List<SingularityTask> tasks, String requestId, Optional<String> loadBalancerUpstreamGroup) {
     final List<UpstreamInfo> upstreams = Lists.newArrayListWithCapacity(tasks.size());
 
     for (SingularityTask task : tasks) {
@@ -190,7 +190,7 @@ public class LoadBalancerClientImpl implements LoadBalancerClient {
 
       if (maybeLoadBalancerPort.isPresent()) {
         String upstream = String.format("%s:%d", task.getOffer().getHostname(), maybeLoadBalancerPort.get());
-        Optional<String> group = Optional.absent();
+        Optional<String> group = loadBalancerUpstreamGroup;
 
         if (taskLabelForLoadBalancerUpstreamGroup.isPresent()) {
           for (Protos.Label label : task.getMesosTask().getLabels().getLabelsList()) {
