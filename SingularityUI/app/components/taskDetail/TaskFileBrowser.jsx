@@ -112,7 +112,7 @@ function TaskFileBrowser (props) {
           sortData={sortData}
         />
         <Column
-          label="actions-column"
+          label=""
           id="actions-column"
           key="actions-column"
           className="actions-column"
