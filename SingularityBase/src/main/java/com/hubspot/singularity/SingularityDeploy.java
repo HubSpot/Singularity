@@ -409,7 +409,7 @@ public class SingularityDeploy {
     return loadBalancerUpstreamGroup;
   }
 
-
+  @Deprecated
   @ApiModelProperty(required=false, value="(Deprecated) Labels for all tasks associated with this deploy")
   public Optional<Map<String, String>> getLabels() {
     return labels;
