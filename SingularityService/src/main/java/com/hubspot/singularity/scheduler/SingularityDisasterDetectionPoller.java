@@ -15,6 +15,7 @@ import com.google.common.collect.Multiset;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import com.hubspot.singularity.MachineState;
+import com.hubspot.singularity.SingularityDisabledAction;
 import com.hubspot.singularity.SingularityDisasterDataPoint;
 import com.hubspot.singularity.SingularityDisasterDataPoints;
 import com.hubspot.singularity.SingularityDisasterType;
@@ -71,6 +72,9 @@ public class SingularityDisasterDetectionPoller extends SingularityLeaderOnlyPol
   @Override
   public void runActionOnPoll() {
     LOG.trace("Starting disaster detection");
+
+    clearExpiredDisabledActions();
+
     List<SingularityDisasterType> previouslyActiveDisasters = disasterManager.getActiveDisasters();
     List<SingularityDisasterDataPoint> dataPoints = disasterManager.getDisasterStats().getDataPoints();
     SingularityDisasterDataPoint newStats = collectDisasterStats();
@@ -97,6 +101,14 @@ public class SingularityDisasterDetectionPoller extends SingularityLeaderOnlyPol
       queueDisasterEmail(dataPoints, newActiveDisasters);
     } else {
       disasterManager.clearSystemGeneratedDisabledActions();
+    }
+  }
+
+  private void clearExpiredDisabledActions() {
+    for (SingularityDisabledAction disabledAction : disasterManager.getDisabledActions()) {
+      if (disabledAction.getExpiresAt().isPresent() && System.currentTimeMillis() > disabledAction.getExpiresAt().get()) {
+        disasterManager.enable(disabledAction.getType());
+      }
     }
   }
 
@@ -163,19 +175,45 @@ public class SingularityDisasterDetectionPoller extends SingularityLeaderOnlyPol
   }
 
   private boolean tooMuchTaskLag(long now, List<SingularityDisasterDataPoint> dataPoints) {
-    Optional<Long> triggeredSince = Optional.absent();
+    Optional<Long> criticalAvgLagTriggeredSince = Optional.absent();
+    Optional<Long> warningAvgLagTriggeredSince = Optional.absent();
+    Optional<Long> criticalPortionTriggeredSince = Optional.absent();
+    Optional<Long> warningPortionTriggeredSince = Optional.absent();
+
     for (SingularityDisasterDataPoint dataPoint : dataPoints) {
       double overdueTaskPortion = dataPoint.getNumLateTasks() / (double) Math.max((dataPoint.getNumActiveTasks() + dataPoint.getNumPendingTasks()), 1);
       boolean criticalOverdueTasksPortion = overdueTaskPortion > disasterConfiguration.getCriticalOverdueTaskPortion();
+      boolean warningOverdueTasksPortion = overdueTaskPortion > disasterConfiguration.getWarningOverdueTaskPortion();
       boolean criticalAvgTaskLag = dataPoint.getAvgTaskLagMillis() > disasterConfiguration.getCriticalAvgTaskLagMillis();
-      if (criticalAvgTaskLag && criticalOverdueTasksPortion) {
-        triggeredSince = Optional.of(dataPoint.getTimestamp());
-      } else {
+      boolean warningAvgTaskLag = dataPoint.getAvgTaskLagMillis() > disasterConfiguration.getWarningAvgTaskLagMillis();
+
+      if (criticalOverdueTasksPortion) {
+        criticalPortionTriggeredSince = Optional.of(dataPoint.getTimestamp());
+      }
+      if (warningOverdueTasksPortion) {
+        warningPortionTriggeredSince = Optional.of(dataPoint.getTimestamp());
+      }
+      if (criticalAvgTaskLag) {
+        criticalAvgLagTriggeredSince = Optional.of(dataPoint.getTimestamp());
+      }
+      if (warningAvgTaskLag) {
+        warningAvgLagTriggeredSince = Optional.of(dataPoint.getTimestamp());
+      }
+      if (!criticalOverdueTasksPortion && !warningOverdueTasksPortion && !criticalAvgTaskLag && !warningAvgTaskLag) {
         break;
       }
     }
 
-    return triggeredSince.isPresent() && now - triggeredSince.get() > disasterConfiguration.getTriggerAfterMillisOverTaskLagThreshold();
+    // 'true' if either critical condition is met
+    if ((criticalAvgLagTriggeredSince.isPresent() && now - criticalAvgLagTriggeredSince.get() > disasterConfiguration.getTriggerAfterMillisOverTaskLagThreshold())
+      || (criticalPortionTriggeredSince.isPresent() && now - criticalPortionTriggeredSince.get() > disasterConfiguration.getTriggerAfterMillisOverTaskLagThreshold())) {
+      return true;
+    }
+
+    // 'true' if both warning conditions are met
+    return warningAvgLagTriggeredSince.isPresent() && now - warningAvgLagTriggeredSince.get() > disasterConfiguration.getTriggerAfterMillisOverTaskLagThreshold()
+      && warningPortionTriggeredSince.isPresent() && now - warningPortionTriggeredSince.get() > disasterConfiguration.getTriggerAfterMillisOverTaskLagThreshold();
+
   }
 
   private boolean tooManyLostSlaves(long now, List<SingularityDisasterDataPoint> dataPoints) {

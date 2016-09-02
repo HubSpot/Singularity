@@ -1,5 +1,6 @@
 package com.hubspot.singularity.config;
 
+import java.sql.Time;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -20,11 +21,17 @@ public class DisasterDetectionConfiguration {
 
   private long runEveryMillis = TimeUnit.SECONDS.toMillis(10);
 
+  private long defaultDisabledActionExpiration = TimeUnit.MINUTES.toMillis(15);
+
   @JsonProperty("disableActionsOnDisaster")
   @NotNull
   private List<SingularityAction> disableActionsOnDisaster = Collections.emptyList();
 
   private boolean checkLateTasks = true;
+
+  private long warningAvgTaskLagMillis = TimeUnit.MINUTES.toMillis(2);
+
+  private double warningOverdueTaskPortion = 0.05;
 
   private long criticalAvgTaskLagMillis = TimeUnit.MINUTES.toMillis(4);
 
@@ -65,6 +72,14 @@ public class DisasterDetectionConfiguration {
     this.runEveryMillis = runEveryMillis;
   }
 
+  public long getDefaultDisabledActionExpiration() {
+    return defaultDisabledActionExpiration;
+  }
+
+  public void setDefaultDisabledActionExpiration(long defaultDisabledActionExpiration) {
+    this.defaultDisabledActionExpiration = defaultDisabledActionExpiration;
+  }
+
   public int getStatsHistorySize() {
     return statsHistorySize;
   }
@@ -87,6 +102,22 @@ public class DisasterDetectionConfiguration {
 
   public void setCheckLateTasks(boolean checkLateTasks) {
     this.checkLateTasks = checkLateTasks;
+  }
+
+  public long getWarningAvgTaskLagMillis() {
+    return warningAvgTaskLagMillis;
+  }
+
+  public void setWarningAvgTaskLagMillis(long warningAvgTaskLagMillis) {
+    this.warningAvgTaskLagMillis = warningAvgTaskLagMillis;
+  }
+
+  public double getWarningOverdueTaskPortion() {
+    return warningOverdueTaskPortion;
+  }
+
+  public void setWarningOverdueTaskPortion(double warningOverdueTaskPortion) {
+    this.warningOverdueTaskPortion = warningOverdueTaskPortion;
   }
 
   public long getCriticalAvgTaskLagMillis() {
