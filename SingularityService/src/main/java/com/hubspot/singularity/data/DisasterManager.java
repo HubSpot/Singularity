@@ -53,10 +53,10 @@ public class DisasterManager extends CuratorAsyncManager {
 
   public SingularityDisabledAction getDisabledAction(SingularityAction action) {
     Optional<SingularityDisabledAction> maybeDisabledAction = getData(getActionPath(action), disabledActionTranscoder);
-    return maybeDisabledAction.or(new SingularityDisabledAction(action, String.format(MESSAGE_FORMAT, action, DEFAULT_MESSAGE), Optional.<String>absent(), false));
+    return maybeDisabledAction.or(new SingularityDisabledAction(action, String.format(MESSAGE_FORMAT, action, DEFAULT_MESSAGE), Optional.<String>absent(), false, Optional.<Long>absent()));
   }
 
-  public SingularityCreateResult disable(SingularityAction action, Optional<String> maybeMessage, Optional<SingularityUser> user, boolean systemGenerated) {
+  public SingularityCreateResult disable(SingularityAction action, Optional<String> maybeMessage, Optional<SingularityUser> user, boolean systemGenerated, Optional<Long> expiresAt) {
     if (!action.isDisableable()) {
       throw new IllegalArgumentException(String.format("Action %s cannot be disabled", action));
     }
@@ -64,7 +64,8 @@ public class DisasterManager extends CuratorAsyncManager {
       action,
       String.format(MESSAGE_FORMAT, action, maybeMessage.or(DEFAULT_MESSAGE)),
       user.isPresent() ? Optional.of(user.get().getId()) : Optional.<String>absent(),
-      systemGenerated);
+      systemGenerated,
+      expiresAt);
 
     return save(getActionPath(action), disabledAction, disabledActionTranscoder);
   }
@@ -158,9 +159,13 @@ public class DisasterManager extends CuratorAsyncManager {
     }
 
     String message = String.format("Active disasters detected: (%s)%s", newActiveDisasters, automaticallyClearable ? "" : ", action must be re-enabled by an admin user");
+    Optional<Long> expiresAt = Optional.absent();
+    if (automaticallyClearable) {
+      expiresAt = Optional.of(System.currentTimeMillis() + configuration.getDisasterDetection().getDefaultDisabledActionExpiration());
+    }
 
     for (SingularityAction action : configuration.getDisasterDetection().getDisableActionsOnDisaster()) {
-      disable(action, Optional.of(message), Optional.<SingularityUser>absent(), automaticallyClearable);
+      disable(action, Optional.of(message), Optional.<SingularityUser>absent(), automaticallyClearable, expiresAt);
     }
   }
 

@@ -1,5 +1,6 @@
 package com.hubspot.singularity.config;
 
+import java.sql.Time;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -19,6 +20,8 @@ public class DisasterDetectionConfiguration {
   private int statsHistorySize = 10;
 
   private long runEveryMillis = TimeUnit.SECONDS.toMillis(10);
+
+  private long defaultDisabledActionExpiration = TimeUnit.MINUTES.toMillis(15);
 
   @JsonProperty("disableActionsOnDisaster")
   @NotNull
@@ -67,6 +70,14 @@ public class DisasterDetectionConfiguration {
 
   public void setRunEveryMillis(long runEveryMillis) {
     this.runEveryMillis = runEveryMillis;
+  }
+
+  public long getDefaultDisabledActionExpiration() {
+    return defaultDisabledActionExpiration;
+  }
+
+  public void setDefaultDisabledActionExpiration(long defaultDisabledActionExpiration) {
+    this.defaultDisabledActionExpiration = defaultDisabledActionExpiration;
   }
 
   public int getStatsHistorySize() {

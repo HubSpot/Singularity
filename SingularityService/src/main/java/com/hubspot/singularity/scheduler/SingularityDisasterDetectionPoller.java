@@ -15,6 +15,7 @@ import com.google.common.collect.Multiset;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import com.hubspot.singularity.MachineState;
+import com.hubspot.singularity.SingularityDisabledAction;
 import com.hubspot.singularity.SingularityDisasterDataPoint;
 import com.hubspot.singularity.SingularityDisasterDataPoints;
 import com.hubspot.singularity.SingularityDisasterType;
@@ -71,6 +72,9 @@ public class SingularityDisasterDetectionPoller extends SingularityLeaderOnlyPol
   @Override
   public void runActionOnPoll() {
     LOG.trace("Starting disaster detection");
+
+    clearExpiredDisabledActions();
+
     List<SingularityDisasterType> previouslyActiveDisasters = disasterManager.getActiveDisasters();
     List<SingularityDisasterDataPoint> dataPoints = disasterManager.getDisasterStats().getDataPoints();
     SingularityDisasterDataPoint newStats = collectDisasterStats();
@@ -97,6 +101,14 @@ public class SingularityDisasterDetectionPoller extends SingularityLeaderOnlyPol
       queueDisasterEmail(dataPoints, newActiveDisasters);
     } else {
       disasterManager.clearSystemGeneratedDisabledActions();
+    }
+  }
+
+  private void clearExpiredDisabledActions() {
+    for (SingularityDisabledAction disabledAction : disasterManager.getDisabledActions()) {
+      if (disabledAction.getExpiresAt().isPresent() && System.currentTimeMillis() > disabledAction.getExpiresAt().get()) {
+        disasterManager.enable(disabledAction.getType());
+      }
     }
   }
 
