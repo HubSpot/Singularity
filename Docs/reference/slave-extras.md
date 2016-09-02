@@ -65,7 +65,7 @@ logrotateToDirectory: logs
 s3UploaderBucket: bucket-name
 
 # Filename format to use when uploading logs to S3
-s3UploaderKeyPattern: %requestId/%Y/%m/%taskId_%index-%s%fileext
+s3UploaderKeyPattern: "%requestId/%Y/%m/%taskId_%index-%s%fileext"
 
 # Additional files to logrotate
 logrotateAdditionalFiles:
