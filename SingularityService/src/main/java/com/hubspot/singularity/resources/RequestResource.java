@@ -4,7 +4,6 @@ import static com.hubspot.singularity.WebExceptions.badRequest;
 import static com.hubspot.singularity.WebExceptions.checkBadRequest;
 import static com.hubspot.singularity.WebExceptions.checkConflict;
 import static com.hubspot.singularity.WebExceptions.checkNotNullBadRequest;
-import static com.hubspot.singularity.WebExceptions.checkUnauthorized;
 
 import java.util.List;
 import java.util.Map;
@@ -112,7 +111,11 @@ public class RequestResource extends AbstractRequestResource {
 
     Optional<SingularityRequest> oldRequest = oldRequestWithState.isPresent() ? Optional.of(oldRequestWithState.get().getRequest()) : Optional.<SingularityRequest> absent();
 
-    checkForAuthorization(request, oldRequest, SingularityAuthorizationScope.WRITE);
+    if (oldRequest.isPresent()) {
+      authorizationHelper.checkForAuthorization(oldRequest.get(), user, SingularityAuthorizationScope.WRITE);
+      authorizationHelper.checkForAuthorizedChanges(request, oldRequest.get(), user.get()); // previous check guarantees that user is present
+    }
+    authorizationHelper.checkForAuthorization(request, user, SingularityAuthorizationScope.WRITE);
 
     RequestState requestState = RequestState.ACTIVE;
 
@@ -121,18 +124,6 @@ public class RequestResource extends AbstractRequestResource {
     }
 
     requestHelper.updateRequest(request, oldRequest, requestState, historyType, JavaUtils.getUserEmail(user), skipHealthchecks, message);
-  }
-
-  private void checkForAuthorization(SingularityRequest request, Optional<SingularityRequest> oldRequest, SingularityAuthorizationScope scope) {
-    if (oldRequest.isPresent()) {
-      authorizationHelper.checkForAuthorization(oldRequest.get(), user, scope);
-
-      if (oldRequest.get().getGroup().isPresent() && !oldRequest.get().getReadWriteGroups().equals(request.getReadWriteGroups())) {
-        // authorizationHelper.checkForAuthorization guarantees user is present
-        checkUnauthorized(user.get().getGroups().contains(oldRequest.get().getGroup().get()), "Only admins and owners (members of accessGroup as specified in the deploy configs) can add or remove groups from readWriteGroups");
-      }
-    }
-    authorizationHelper.checkForAuthorization(request, user, scope);
   }
 
   @POST
