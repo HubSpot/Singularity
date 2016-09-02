@@ -2,6 +2,8 @@ package com.hubspot.singularity.data.transcoders;
 
 import static com.hubspot.singularity.data.transcoders.SingularityJsonTranscoderBinder.bindTranscoder;
 
+import javax.ws.rs.HEAD;
+
 import com.google.inject.Binder;
 import com.google.inject.Module;
 import com.hubspot.singularity.SingularityDeploy;
@@ -26,6 +28,7 @@ import com.hubspot.singularity.SingularityRack;
 import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityRequestCleanup;
 import com.hubspot.singularity.SingularityRequestDeployState;
+import com.hubspot.singularity.SingularityRequestGroup;
 import com.hubspot.singularity.SingularityRequestHistory;
 import com.hubspot.singularity.SingularityRequestLbCleanup;
 import com.hubspot.singularity.SingularityRequestWithState;
@@ -87,6 +90,7 @@ public class SingularityTranscoderModule implements Module {
     bindTranscoder(binder).asJson(SingularityTaskDestroyFrameworkMessage.class);
     bindTranscoder(binder).asJson(SingularityDisabledAction.class);
     bindTranscoder(binder).asJson(SingularityDisasterDataPoints.class);
+    bindTranscoder(binder).asJson(SingularityRequestGroup.class);
 
     bindTranscoder(binder).asCompressedJson(SingularityDeployHistory.class);
     bindTranscoder(binder).asCompressedJson(SingularityDeploy.class);

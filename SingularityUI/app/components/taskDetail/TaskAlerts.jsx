@@ -34,7 +34,7 @@ const TaskAlerts = (props) => {
       // Did a deploy cause this task to fail?
       alerts.push(
         <Alert key="failure" bsStyle="danger">
-          {Utils.ifDeployFailureCausedTaskToBeKilled(props.task) && 'This task was killed becasue '}
+          {Utils.ifDeployFailureCausedTaskToBeKilled(props.task) && 'This task was killed because '}
           <Link to={`request/${props.deploy.deploy.requestId}/deploy/${props.deploy.deploy.id}`}>Deploy {props.deploy.deploy.id}</Link> failed.
         </Alert>
       );
