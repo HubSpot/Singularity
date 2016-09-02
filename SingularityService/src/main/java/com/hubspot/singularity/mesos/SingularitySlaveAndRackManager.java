@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.inject.Singleton;
 
@@ -19,6 +20,7 @@ import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 import com.google.inject.Inject;
+import com.google.inject.name.Named;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.mesos.json.MesosMasterSlaveObject;
 import com.hubspot.mesos.json.MesosMasterStateObject;
@@ -51,9 +53,11 @@ class SingularitySlaveAndRackManager {
   private final SlaveManager slaveManager;
   private final TaskManager taskManager;
   private final SingularitySlaveAndRackHelper slaveAndRackHelper;
+  private final AtomicInteger activeSlavesLost;
 
   @Inject
-  SingularitySlaveAndRackManager(SingularitySlaveAndRackHelper slaveAndRackHelper, SingularityConfiguration configuration, SingularityExceptionNotifier exceptionNotifier, RackManager rackManager, SlaveManager slaveManager, TaskManager taskManager) {
+  SingularitySlaveAndRackManager(SingularitySlaveAndRackHelper slaveAndRackHelper, SingularityConfiguration configuration, SingularityExceptionNotifier exceptionNotifier,
+                                 RackManager rackManager, SlaveManager slaveManager, TaskManager taskManager, @Named(SingularityMesosModule.ACTIVE_SLAVES_LOST_COUNTER) AtomicInteger activeSlavesLost) {
     this.configuration = configuration;
 
     this.exceptionNotifier = exceptionNotifier;
@@ -62,6 +66,7 @@ class SingularitySlaveAndRackManager {
     this.rackManager = rackManager;
     this.slaveManager = slaveManager;
     this.taskManager = taskManager;
+    this.activeSlavesLost = activeSlavesLost;
   }
 
   public SlaveMatchState doesOfferMatch(Protos.Offer offer, SingularityTaskRequest taskRequest, SingularitySchedulerStateCache stateCache) {
@@ -198,11 +203,21 @@ class SingularitySlaveAndRackManager {
     Optional<SingularitySlave> slave = slaveManager.getObject(slaveId);
 
     if (slave.isPresent()) {
+      MachineState previousState = slave.get().getCurrentState().getState();
       slaveManager.changeState(slave.get(), MachineState.DEAD, Optional.<String> absent(), Optional.<String> absent());
+      if (configuration.getDisasterDetection().isEnabled()) {
+        updateDisasterCounter(previousState);
+      }
 
       checkRackAfterSlaveLoss(slave.get());
     } else {
       LOG.warn("Lost a slave {}, but didn't know about it", slaveId);
+    }
+  }
+
+  private void updateDisasterCounter(MachineState previousState) {
+    if (previousState == MachineState.ACTIVE) {
+      activeSlavesLost.getAndIncrement();
     }
   }
 

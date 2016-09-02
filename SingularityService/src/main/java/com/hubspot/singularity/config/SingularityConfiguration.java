@@ -258,6 +258,11 @@ public class SingularityConfiguration extends Configuration {
 
   private boolean taskHistoryQueryUsesZkFirst = false;
 
+  @JsonProperty("disasterDetection")
+  @NotNull
+  @Valid
+  private DisasterDetectionConfiguration disasterDetection = new DisasterDetectionConfiguration();
+
   @Min(0)
   @Max(1)
   private double defaultTaskPriorityLevel = 0.3;
@@ -1054,6 +1059,14 @@ public class SingularityConfiguration extends Configuration {
 
   public void setTaskLabelForLoadBalancerUpstreamGroup(Optional<String> taskLabelForLoadBalancerUpstreamGroup) {
     this.taskLabelForLoadBalancerUpstreamGroup = taskLabelForLoadBalancerUpstreamGroup;
+  }
+
+  public DisasterDetectionConfiguration getDisasterDetection() {
+    return disasterDetection;
+  }
+
+  public void setDisasterDetection(DisasterDetectionConfiguration disasterDetection) {
+    this.disasterDetection = disasterDetection;
   }
 
   public double getDefaultTaskPriorityLevel() {
