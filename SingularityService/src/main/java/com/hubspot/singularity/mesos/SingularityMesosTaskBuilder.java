@@ -341,8 +341,8 @@ class SingularityMesosTaskBuilder {
 
     prepareEnvironment(task, taskId, commandBuilder, offer, ports);
 
-    if (task.getDeploy().getCustomExecutorUser().isPresent()) {
-      commandBuilder.setUser(task.getDeploy().getCustomExecutorUser().get());
+    if (task.getDeploy().getUser().isPresent()) {
+      commandBuilder.setUser(task.getDeploy().getUser().get());
     }
 
     bldr.setExecutor(ExecutorInfo.newBuilder()

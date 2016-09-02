@@ -513,13 +513,6 @@ public class SingularityValidator {
         request.getId(), taskPriorityLevel, maybePriorityFreeze.get().getPriorityFreeze().getMinimumPriorityLevel());
   }
 
-  public void checkRequestGroup(SingularityRequestGroup requestGroup) {
-    checkBadRequest(requestGroup.getId() != null && !StringUtils.containsAny(requestGroup.getId(), JOINER.join(REQUEST_ID_ILLEGAL_CHARACTERS)), "Id can not be null or contain any of the following characters: %s", REQUEST_ID_ILLEGAL_CHARACTERS);
-    checkBadRequest(requestGroup.getId().length() < maxRequestIdSize, "Id must be less than %s characters, it is %s (%s)", maxRequestIdSize, requestGroup.getId().length(), requestGroup.getId());
-
-    checkBadRequest(requestGroup.getRequestIds() != null, "requestIds cannot be null");
-  }
-
   public SingularityBounceRequest checkBounceRequest(SingularityBounceRequest defaultBounceRequest) {
     if (defaultBounceRequest.getDurationMillis().isPresent()) {
       return defaultBounceRequest;
@@ -533,5 +526,12 @@ public class SingularityValidator {
 
   public void checkUserId(String name) {
     checkBadRequest(!Strings.isNullOrEmpty(name), "Name must be present and non-null");
+  }
+
+  public void checkRequestGroup(SingularityRequestGroup requestGroup) {
+    checkBadRequest(requestGroup.getId() != null && !StringUtils.containsAny(requestGroup.getId(), JOINER.join(REQUEST_ID_ILLEGAL_CHARACTERS)), "Id can not be null or contain any of the following characters: %s", REQUEST_ID_ILLEGAL_CHARACTERS);
+    checkBadRequest(requestGroup.getId().length() < maxRequestIdSize, "Id must be less than %s characters, it is %s (%s)", maxRequestIdSize, requestGroup.getId().length(), requestGroup.getId());
+
+    checkBadRequest(requestGroup.getRequestIds() != null, "requestIds cannot be null");
   }
 }
