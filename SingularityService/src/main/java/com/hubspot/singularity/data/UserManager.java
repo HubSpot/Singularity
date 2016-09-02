@@ -1,6 +1,5 @@
 package com.hubspot.singularity.data;
 
-import java.util.Collections;
 import java.util.Set;
 
 import org.apache.curator.framework.CuratorFramework;
@@ -59,7 +58,6 @@ public class UserManager extends CuratorManager {
     final String path = getUserSettingsPath(userId);
     final Optional<SingularityUserSettings> settings = getData(path, settingsTranscoder);
     if (!settings.isPresent()) {
-      save(path, new SingularityUserSettings(Collections.<String>emptySet()), settingsTranscoder);
       return;
     }
     save(path, settings.get().deleteStarredRequestIds(starredRequestIds), settingsTranscoder);
