@@ -26,6 +26,10 @@ public class DisasterDetectionConfiguration {
 
   private boolean checkLateTasks = true;
 
+  private long warningAvgTaskLagMillis = TimeUnit.MINUTES.toMillis(2);
+
+  private double warningOverdueTaskPortion = 0.05;
+
   private long criticalAvgTaskLagMillis = TimeUnit.MINUTES.toMillis(4);
 
   private double criticalOverdueTaskPortion = 0.1;
@@ -87,6 +91,22 @@ public class DisasterDetectionConfiguration {
 
   public void setCheckLateTasks(boolean checkLateTasks) {
     this.checkLateTasks = checkLateTasks;
+  }
+
+  public long getWarningAvgTaskLagMillis() {
+    return warningAvgTaskLagMillis;
+  }
+
+  public void setWarningAvgTaskLagMillis(long warningAvgTaskLagMillis) {
+    this.warningAvgTaskLagMillis = warningAvgTaskLagMillis;
+  }
+
+  public double getWarningOverdueTaskPortion() {
+    return warningOverdueTaskPortion;
+  }
+
+  public void setWarningOverdueTaskPortion(double warningOverdueTaskPortion) {
+    this.warningOverdueTaskPortion = warningOverdueTaskPortion;
   }
 
   public long getCriticalAvgTaskLagMillis() {

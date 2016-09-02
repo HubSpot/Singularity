@@ -149,15 +149,24 @@ public class DisasterManager extends CuratorAsyncManager {
   }
 
   public void addDisabledActionsForDisasters(List<SingularityDisasterType> newActiveDisasters) {
-    String message = String.format("Active disasters detected: (%s)", newActiveDisasters);
+    boolean automaticallyClearable = true;
+    for (SingularityDisasterType disasterType : newActiveDisasters) {
+      if (!disasterType.isAutomaticallyClearable()) {
+        automaticallyClearable = false;
+        break;
+      }
+    }
+
+    String message = String.format("Active disasters detected: (%s)%s", newActiveDisasters, automaticallyClearable ? "" : ", action must be re-enabled by an admin user");
+
     for (SingularityAction action : configuration.getDisasterDetection().getDisableActionsOnDisaster()) {
-      disable(action, Optional.of(message), Optional.<SingularityUser>absent(), true);
+      disable(action, Optional.of(message), Optional.<SingularityUser>absent(), automaticallyClearable);
     }
   }
 
   public void clearSystemGeneratedDisabledActions() {
     for (SingularityDisabledAction disabledAction : getDisabledActions()) {
-      if (disabledAction.isSystemGenerated()) {
+      if (disabledAction.isAutomaticallyClearable()) {
         enable(disabledAction.getType());
       }
     }
