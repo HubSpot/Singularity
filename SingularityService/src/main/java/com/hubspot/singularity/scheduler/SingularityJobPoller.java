@@ -72,15 +72,6 @@ public class SingularityJobPoller extends SingularityLeaderOnlyPoller {
         continue;
       }
 
-      if (start - taskId.getStartedAt() >= configuration.getTaskExecutionTimeout()) {
-        taskManager.createTaskCleanup(new SingularityTaskCleanup(
-            Optional.<String>absent(),
-            TaskCleanupType.DEPLOY_TIMED_OUT,
-            start,
-            taskId,
-            Optional.of("Deploy has reached/exceeded the set timeout"),
-            Optional.of(UUID.randomUUID().toString())));
-      }
 
       requestIdsToLookup.add(taskId.getRequestId());
     }
@@ -91,11 +82,30 @@ public class SingularityJobPoller extends SingularityLeaderOnlyPoller {
     for (SingularityTaskId taskId : activeTaskIds) {
       SingularityRequestWithState request = idToRequest.get(taskId.getRequestId());
 
-      if (request == null || !request.getRequest().isScheduled() || taskManager.hasNotifiedOverdue(taskId)) {
+      if (request == null) {
         continue;
       }
 
       final long runtime = start - taskId.getStartedAt();
+
+      if (!request.getRequest().getRequestType().isLongRunning() &&
+          configuration.getTaskExecutionTimeLimitMillis().isPresent() &&
+          (start - taskId.getStartedAt()) >= configuration.getTaskExecutionTimeLimitMillis().get()) {
+        taskManager.createTaskCleanup(new SingularityTaskCleanup(
+            Optional.<String>absent(),
+            TaskCleanupType.TASK_EXCEEDED_TIME_LIMIT,
+            start,
+            taskId,
+            Optional.of(String.format("Task has run for %s milliseconds, which exceeds the maximum execution time of %s milliseconds",
+                start - taskId.getStartedAt(),
+                configuration.getTaskExecutionTimeLimitMillis().get())),
+            Optional.of(UUID.randomUUID().toString())));
+      }
+
+      if (!request.getRequest().isScheduled() || taskManager.hasNotifiedOverdue(taskId)) {
+        continue;
+      }
+
       final Optional<Long> expectedRuntime = getExpectedRuntime(request, taskId);
 
       if (!expectedRuntime.isPresent()) {
