@@ -3105,8 +3105,8 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
           SingularityDockerNetworkType.BRIDGE,
           Optional.of(Arrays.asList(literalMapping, offerMapping)),
           Optional.of(false),
-          Optional.<Map<String, String>>of(ImmutableMap.of("env", "var=value"))
-        )));
+          Optional.<Map<String, String>>of(ImmutableMap.of("env", "var=value")))
+        ));
     final SingularityDeployBuilder deployBuilder = new SingularityDeployBuilder(requestId, "test-docker-ports-deploy");
     deployBuilder.setContainerInfo(Optional.of(containerInfo)).setResources(Optional.of(new Resources(1, 64, numPorts, 0)));
     return deployBuilder;
