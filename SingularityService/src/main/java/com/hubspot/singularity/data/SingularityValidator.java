@@ -62,6 +62,8 @@ public class SingularityValidator {
   private final int deployIdLength;
   private final DeployHistoryHelper deployHistoryHelper;
   private final Resources defaultResources;
+  private final Pattern DAY_RANGE_REGEXP = Pattern.compile("[0-7]-[0-7]");
+  private final Pattern COMMA_DAYS_REGEXP = Pattern.compile("([0-7],)+([0-7])?");
 
   @Inject
   public SingularityValidator(SingularityConfiguration configuration, DeployHistoryHelper deployHistoryHelper) {
@@ -383,9 +385,6 @@ public class SingularityValidator {
   private boolean isValidCronSchedule(String schedule) {
     return CronExpression.isValidExpression(schedule);
   }
-  private final Pattern DAY_RANGE_REGEXP = Pattern.compile("[0-7]-[0-7]");
-
-  private final Pattern COMMA_DAYS_REGEXP = Pattern.compile("([0-7],)+([0-7])?");
 
   /**
    * Standard cron: day of week (0 - 6) (0 to 6 are Sunday to Saturday, or use names; 7 is Sunday, the same as 0)
