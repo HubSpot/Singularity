@@ -270,7 +270,11 @@ public class SingularityMesosStatusUpdateHandler implements Managed {
 
     public void enqueueStatusUpdate(Protos.TaskStatus status) {
         if (processStatusUpdatesInSeparateThread) {
-            statusUpdateQueue.offer(status);
+            try {
+                statusUpdateQueue.put(status);
+            } catch (InterruptedException ie) {
+                // TODO: what's the best thing to do here?
+            }
         } else {
             processStatusUpdate(status);
         }
