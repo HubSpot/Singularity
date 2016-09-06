@@ -164,6 +164,19 @@ public class SingularityAuthorizationHelper {
     }
   }
 
+  public void checkForAuthorizedChanges(SingularityRequest request, SingularityRequest oldRequest, Optional<SingularityUser> user) {
+    if (!authEnabled) {
+      return;
+    }
+
+    checkUnauthorized(user.isPresent(), "user must be present");
+
+    if (oldRequest.getGroup().isPresent() && !oldRequest.getReadWriteGroups().equals(request.getReadWriteGroups())) {
+      checkUnauthorized(user.get().getGroups().contains(oldRequest.getGroup().get()),
+          "Only admins and members of the request's owner group can add or remove groups from readWriteGroups");
+    }
+  }
+
   public <T> Iterable<T> filterByAuthorizedRequests(final Optional<SingularityUser> user, List<T> objects, final Function<T, String> requestIdFunction, final SingularityAuthorizationScope scope) {
     if (hasAdminAuthorization(user)) {
       return objects;
