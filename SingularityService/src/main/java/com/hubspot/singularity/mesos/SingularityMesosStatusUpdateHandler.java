@@ -3,8 +3,7 @@ package com.hubspot.singularity.mesos;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.Lock;
 
@@ -22,6 +21,7 @@ import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import com.hubspot.singularity.ExtendedTaskState;
 import com.hubspot.singularity.InvalidSingularityTaskIdException;
+import com.hubspot.singularity.SingularityAbort;
 import com.hubspot.singularity.SingularityCreateResult;
 import com.hubspot.singularity.SingularityMainModule;
 import com.hubspot.singularity.SingularityPendingDeploy;
@@ -62,12 +62,11 @@ public class SingularityMesosStatusUpdateHandler implements Managed {
     private final String serverId;
     private final BlockingQueue<Protos.TaskStatus> statusUpdateQueue;
     private final ExecutorService executorService;
-    private Future<?> updateFuture;
     private final SchedulerDriverSupplier schedulerDriverSupplier;
     private final AtomicBoolean handlerStarted;
     private final Lock schedulerLock;
     private final boolean processStatusUpdatesInSeparateThread;
-
+    private final SingularityAbort singularityAbort;
 
     @Inject
     public SingularityMesosStatusUpdateHandler(TaskManager taskManager, DeployManager deployManager, RequestManager requestManager,
@@ -76,7 +75,9 @@ public class SingularityMesosStatusUpdateHandler implements Managed {
         Provider<SingularitySchedulerStateCache> stateCacheProvider, @Named(SingularityMainModule.SERVER_ID_PROPERTY) String serverId,
         SchedulerDriverSupplier schedulerDriverSupplier,
         @Named(SingularityMesosModule.SCHEDULER_LOCK_NAME) final Lock schedulerLock,
-        SingularityConfiguration configuration) {
+        @Named(SingularityMainModule.STATUS_UPDATE_THREADPOOL_NAME) ScheduledExecutorService executorService,
+        SingularityConfiguration configuration,
+        SingularityAbort singularityAbort) {
         this.taskManager = taskManager;
         this.deployManager = deployManager;
         this.requestManager = requestManager;
@@ -91,10 +92,11 @@ public class SingularityMesosStatusUpdateHandler implements Managed {
         this.serverId = serverId;
         this.schedulerDriverSupplier = schedulerDriverSupplier;
         this.schedulerLock = schedulerLock;
+        this.singularityAbort = singularityAbort;
         this.handlerStarted = new AtomicBoolean();
 
         this.statusUpdateQueue = new ArrayBlockingQueue<>(configuration.getStatusUpdateQueueCapacity());
-        this.executorService = Executors.newFixedThreadPool(1);
+        this.executorService = executorService;
         this.processStatusUpdatesInSeparateThread = configuration.isProcessStatusUpdatesInSeparateThread();
     }
 
@@ -163,91 +165,95 @@ public class SingularityMesosStatusUpdateHandler implements Managed {
         return maybeSchedulerDriver.get();
     }
 
+    private void unsafeProcessStatusUpdate(Protos.TaskStatus status) {
+        final String taskId = status.getTaskId().getValue();
+
+        long timestamp = System.currentTimeMillis();
+
+        if (status.hasTimestamp()) {
+            timestamp = (long) (status.getTimestamp() * 1000);
+        }
+
+        LOG.debug("Task {} is now {} ({}) at {} ", taskId, status.getState(), status.getMessage(), timestamp);
+
+        final Optional<SingularityTaskId> maybeTaskId = getTaskId(taskId);
+
+        if (!maybeTaskId.isPresent()) {
+            getSchedulerDriver().acknowledgeStatusUpdate(status);
+            return;
+        }
+
+        final SingularityTaskId taskIdObj = maybeTaskId.get();
+
+        final SingularityTaskStatusHolder newTaskStatusHolder = new SingularityTaskStatusHolder(taskIdObj, Optional.of(status), System.currentTimeMillis(), serverId, Optional.<String>absent());
+        final Optional<SingularityTaskStatusHolder> previousTaskStatusHolder = taskManager.getLastActiveTaskStatus(taskIdObj);
+        final ExtendedTaskState taskState = ExtendedTaskState.fromTaskState(status.getState());
+
+        if (isDuplicateOrIgnorableStatusUpdate(previousTaskStatusHolder, newTaskStatusHolder)) {
+            LOG.trace("Ignoring status update {} to {}", taskState, taskIdObj);
+            saveNewTaskStatusHolder(taskIdObj, newTaskStatusHolder, taskState);
+            getSchedulerDriver().acknowledgeStatusUpdate(status);
+            return;
+        }
+
+        final Optional<SingularityTask> task = taskManager.getTask(taskIdObj);
+
+        final boolean isActiveTask = taskManager.isActiveTask(taskId);
+
+        if (isActiveTask && !taskState.isDone()) {
+            if (task.isPresent()) {
+                final Optional<SingularityPendingDeploy> pendingDeploy = deployManager.getPendingDeploy(taskIdObj.getRequestId());
+
+                Optional<SingularityRequestWithState> requestWithState = Optional.absent();
+
+                if (taskState == ExtendedTaskState.TASK_RUNNING) {
+                    requestWithState = requestManager.getRequest(taskIdObj.getRequestId());
+                    healthchecker.enqueueHealthcheck(task.get(), pendingDeploy, requestWithState);
+                }
+
+                if (!pendingDeploy.isPresent() || !pendingDeploy.get().getDeployMarker().getDeployId().equals(taskIdObj.getDeployId())) {
+                    if (!requestWithState.isPresent()) {
+                        requestWithState = requestManager.getRequest(taskIdObj.getRequestId());
+                    }
+                    newTaskChecker.enqueueNewTaskCheck(task.get(), requestWithState, healthchecker);
+                }
+            } else {
+                final String message = String.format("Task %s is active but is missing task data", taskId);
+                exceptionNotifier.notify(message);
+                LOG.error(message);
+            }
+        }
+
+        final Optional<String> statusMessage = getStatusMessage(status, task);
+
+        final SingularityTaskHistoryUpdate taskUpdate =
+            new SingularityTaskHistoryUpdate(taskIdObj, timestamp, taskState, statusMessage, status.hasReason() ? Optional.of(status.getReason().name()) : Optional.<String>absent());
+        final SingularityCreateResult taskHistoryUpdateCreateResult = taskManager.saveTaskHistoryUpdate(taskUpdate);
+
+        logSupport.checkDirectory(taskIdObj);
+
+        if (taskState.isDone()) {
+            healthchecker.cancelHealthcheck(taskId);
+            newTaskChecker.cancelNewTaskCheck(taskId);
+
+            taskManager.deleteKilledRecord(taskIdObj);
+
+            SingularitySchedulerStateCache stateCache = stateCacheProvider.get();
+
+            slaveAndRackManager.checkStateAfterFinishedTask(taskIdObj, status.getSlaveId().getValue(), stateCache);
+
+            scheduler.handleCompletedTask(task, taskIdObj, isActiveTask, timestamp, taskState, taskHistoryUpdateCreateResult, stateCache, status);
+        }
+
+        saveNewTaskStatusHolder(taskIdObj, newTaskStatusHolder, taskState);
+        getSchedulerDriver().acknowledgeStatusUpdate(status);
+    }
+
     @Timed
     public void processStatusUpdate(Protos.TaskStatus status) {
         schedulerLock.lock();
         try {
-            final String taskId = status.getTaskId().getValue();
-
-            long timestamp = System.currentTimeMillis();
-
-            if (status.hasTimestamp()) {
-                timestamp = (long) (status.getTimestamp() * 1000);
-            }
-
-            LOG.debug("Task {} is now {} ({}) at {} ", taskId, status.getState(), status.getMessage(), timestamp);
-
-            final Optional<SingularityTaskId> maybeTaskId = getTaskId(taskId);
-
-            if (!maybeTaskId.isPresent()) {
-                getSchedulerDriver().acknowledgeStatusUpdate(status);
-                return;
-            }
-
-            final SingularityTaskId taskIdObj = maybeTaskId.get();
-
-            final SingularityTaskStatusHolder newTaskStatusHolder = new SingularityTaskStatusHolder(taskIdObj, Optional.of(status), System.currentTimeMillis(), serverId, Optional.<String>absent());
-            final Optional<SingularityTaskStatusHolder> previousTaskStatusHolder = taskManager.getLastActiveTaskStatus(taskIdObj);
-            final ExtendedTaskState taskState = ExtendedTaskState.fromTaskState(status.getState());
-
-            if (isDuplicateOrIgnorableStatusUpdate(previousTaskStatusHolder, newTaskStatusHolder)) {
-                LOG.trace("Ignoring status update {} to {}", taskState, taskIdObj);
-                saveNewTaskStatusHolder(taskIdObj, newTaskStatusHolder, taskState);
-                getSchedulerDriver().acknowledgeStatusUpdate(status);
-                return;
-            }
-
-            final Optional<SingularityTask> task = taskManager.getTask(taskIdObj);
-
-            final boolean isActiveTask = taskManager.isActiveTask(taskId);
-
-            if (isActiveTask && !taskState.isDone()) {
-                if (task.isPresent()) {
-                    final Optional<SingularityPendingDeploy> pendingDeploy = deployManager.getPendingDeploy(taskIdObj.getRequestId());
-
-                    Optional<SingularityRequestWithState> requestWithState = Optional.absent();
-
-                    if (taskState == ExtendedTaskState.TASK_RUNNING) {
-                        requestWithState = requestManager.getRequest(taskIdObj.getRequestId());
-                        healthchecker.enqueueHealthcheck(task.get(), pendingDeploy, requestWithState);
-                    }
-
-                    if (!pendingDeploy.isPresent() || !pendingDeploy.get().getDeployMarker().getDeployId().equals(taskIdObj.getDeployId())) {
-                        if (!requestWithState.isPresent()) {
-                            requestWithState = requestManager.getRequest(taskIdObj.getRequestId());
-                        }
-                        newTaskChecker.enqueueNewTaskCheck(task.get(), requestWithState, healthchecker);
-                    }
-                } else {
-                    final String message = String.format("Task %s is active but is missing task data", taskId);
-                    exceptionNotifier.notify(message);
-                    LOG.error(message);
-                }
-            }
-
-            final Optional<String> statusMessage = getStatusMessage(status, task);
-
-            final SingularityTaskHistoryUpdate taskUpdate =
-                new SingularityTaskHistoryUpdate(taskIdObj, timestamp, taskState, statusMessage, status.hasReason() ? Optional.of(status.getReason().name()) : Optional.<String>absent());
-            final SingularityCreateResult taskHistoryUpdateCreateResult = taskManager.saveTaskHistoryUpdate(taskUpdate);
-
-            logSupport.checkDirectory(taskIdObj);
-
-            if (taskState.isDone()) {
-                healthchecker.cancelHealthcheck(taskId);
-                newTaskChecker.cancelNewTaskCheck(taskId);
-
-                taskManager.deleteKilledRecord(taskIdObj);
-
-                SingularitySchedulerStateCache stateCache = stateCacheProvider.get();
-
-                slaveAndRackManager.checkStateAfterFinishedTask(taskIdObj, status.getSlaveId().getValue(), stateCache);
-
-                scheduler.handleCompletedTask(task, taskIdObj, isActiveTask, timestamp, taskState, taskHistoryUpdateCreateResult, stateCache, status);
-            }
-
-            saveNewTaskStatusHolder(taskIdObj, newTaskStatusHolder, taskState);
-            getSchedulerDriver().acknowledgeStatusUpdate(status);
+            unsafeProcessStatusUpdate(status);
         } finally {
             schedulerLock.unlock();
         }
@@ -265,35 +271,40 @@ public class SingularityMesosStatusUpdateHandler implements Managed {
         }
     }
 
+    @Override
     public void start() {
-        if (processStatusUpdatesInSeparateThread) {
-            if (!handlerStarted.compareAndSet(false, true)) {
-                LOG.warn("StatusUpdateHandler already started!");
-                return;
-            }
+        if (!processStatusUpdatesInSeparateThread) {
+            return;
+        }
 
-            updateFuture = executorService.submit(new Runnable() {
-                @Override
-                public void run() {
-                    LOG.info("Status update handler thread started");
-                    while (!Thread.currentThread().isInterrupted()) {
-                        try {
-                            final Protos.TaskStatus status = statusUpdateQueue.take();
-                            LOG.info("Handling status update for {} {}", status.getTaskId().getValue(), status.getState());
-                            processStatusUpdate(status);
-                        } catch (InterruptedException ie) {
-                            Thread.currentThread().interrupt();
-                            break;
-                        }
+        if (handlerStarted.getAndSet(true)) {
+            LOG.warn("StatusUpdateHandler already started!");
+            return;
+        }
+
+        executorService.submit(new Runnable() {
+            @Override
+            public void run() {
+                LOG.info("Status update handler thread started");
+                while (!Thread.currentThread().isInterrupted()) {
+                    try {
+                        final Protos.TaskStatus status = statusUpdateQueue.take();
+                        LOG.info("Handling status update for {} {}", status.getTaskId().getValue(), status.getState());
+                        processStatusUpdate(status);
+                    } catch (InterruptedException ie) {
+                        Thread.currentThread().interrupt();
+                        break;
+                    } catch (Throwable t) {
+                        LOG.error("Caught exception in status update handler thread", t);
+                        singularityAbort.abort(SingularityAbort.AbortReason.UNRECOVERABLE_ERROR, Optional.of(t));
                     }
                 }
-            });
-        }
+            }
+        });
     }
 
-    public void stop() {
-        if (updateFuture != null) {
-            updateFuture.cancel(true);
-        }
+    @Override
+    public void stop() throws Exception {
+        // noop
     }
 }
