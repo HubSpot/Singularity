@@ -2,10 +2,10 @@ package com.hubspot.singularity;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Set;
 
 import javax.ws.rs.WebApplicationException;
@@ -55,6 +55,7 @@ public class SingularityAuthorizationHelperTest {
   public static final SingularityRequest REQUEST_WITH_GROUP_A = new SingularityRequestBuilder("test_a", RequestType.SERVICE).setGroup(Optional.of("a")).build();
   public static final SingularityRequest REQUEST_WITH_GROUP_A_CHANGED_TO_B = new SingularityRequestBuilder("test_a", RequestType.SERVICE).setGroup(Optional.of("b")).build();
   public static final SingularityRequest REQUEST_WITH_GROUP_B = new SingularityRequestBuilder("test_b", RequestType.SERVICE).setGroup(Optional.of("b")).build();
+
 
   public static final Optional<SingularityUser> NOT_LOGGED_IN = Optional.absent();
   public static final Optional<SingularityUser> USER_GROUP_A = Optional.of(new SingularityUser("test1", Optional.of("test user1"), Optional.of("test1@test.com"), ImmutableSet.of("a")));
@@ -213,5 +214,27 @@ public class SingularityAuthorizationHelperTest {
     final SingularityAuthorizationHelper authorizationHelper = buildAuthorizationHelper(buildAuthEnabledConfig(Collections.<String>emptySet(), ImmutableSet.of("admin"), Collections.<String>emptySet()));
 
     authorizationHelper.checkForAuthorization(REQUEST_WITH_GROUP_A_CHANGED_TO_B, USER_GROUP_A, SingularityAuthorizationScope.READ);
+  }
+
+  @Test(expected = WebApplicationException.class)
+  public void itRestrictsReadWriteChangesForNonAdminsAndGroupOwners() {
+    final SingularityAuthorizationHelper authorizationHelper = buildAuthorizationHelper(buildAuthEnabledConfig());
+
+    Set<String> readWriteGroupsOld = new HashSet<>();
+    readWriteGroupsOld.add("a");
+    final SingularityRequest oldRequest = new SingularityRequestBuilder("test_c", RequestType.SERVICE)
+        .setGroup(Optional.of("c"))
+        .setReadWriteGroups(Optional.of(readWriteGroupsOld))
+        .build();
+
+    Set<String> readWriteGroupsNew = new HashSet<>();
+    readWriteGroupsNew.addAll(readWriteGroupsOld);
+    readWriteGroupsNew.add("b");
+    final SingularityRequest newRequest = new SingularityRequestBuilder("test_c", RequestType.SERVICE)
+        .setGroup(Optional.of("c"))
+        .setReadWriteGroups(Optional.of(readWriteGroupsNew))
+        .build();
+
+    authorizationHelper.checkForAuthorizedChanges(newRequest, oldRequest, USER_GROUP_A);
   }
 }

@@ -93,6 +93,7 @@ public class DeployResource extends AbstractRequestResource {
     SingularityRequest request = requestWithState.getRequest();
     final Optional<SingularityRequest> updatedValidatedRequest;
     if (deployRequest.getUpdatedRequest().isPresent()) {
+      authorizationHelper.checkForAuthorizedChanges(deployRequest.getUpdatedRequest().get(), requestWithState.getRequest(), user);
       updatedValidatedRequest = Optional.of(validator.checkSingularityRequest(deployRequest.getUpdatedRequest().get(), Optional.of(requestWithState.getRequest()), Optional.<SingularityDeploy>absent(), Optional.of(deploy)));
     } else {
       updatedValidatedRequest = Optional.absent();
