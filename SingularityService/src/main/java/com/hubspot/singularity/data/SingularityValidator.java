@@ -48,6 +48,8 @@ public class SingularityValidator {
   private static final Joiner JOINER = Joiner.on(" ");
   private static final List<Character> DEPLOY_ID_ILLEGAL_CHARACTERS = Arrays.asList('@', '-', '\\', '/', '*', '?', '%', ' ', '[', ']', '#', '$'); // Characters that make Mesos or URL bars sad
   private static final List<Character> REQUEST_ID_ILLEGAL_CHARACTERS = Arrays.asList('@', '\\', '/', '*', '?', '%', ' ', '[', ']', '#', '$'); // Characters that make Mesos or URL bars sad
+  private static final Pattern DAY_RANGE_REGEXP = Pattern.compile("[0-7]-[0-7]");
+  private static final Pattern COMMA_DAYS_REGEXP = Pattern.compile("([0-7],)+([0-7])?");
 
   private final int maxDeployIdSize;
   private final int maxRequestIdSize;
@@ -62,8 +64,6 @@ public class SingularityValidator {
   private final int deployIdLength;
   private final DeployHistoryHelper deployHistoryHelper;
   private final Resources defaultResources;
-  private final Pattern DAY_RANGE_REGEXP = Pattern.compile("[0-7]-[0-7]");
-  private final Pattern COMMA_DAYS_REGEXP = Pattern.compile("([0-7],)+([0-7])?");
 
   @Inject
   public SingularityValidator(SingularityConfiguration configuration, DeployHistoryHelper deployHistoryHelper) {
