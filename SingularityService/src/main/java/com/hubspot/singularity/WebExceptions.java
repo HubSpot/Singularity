@@ -59,10 +59,6 @@ public final class WebExceptions {
     throw webException(408, message, args);
   }
 
-  public static WebApplicationException locked(String message, Object... args) {
-    throw webException(423, message, args);
-  }
-
   public static WebApplicationException conflict(String message, Object... args) {
     if (args.length > 0) {
       message = format(message, args);
