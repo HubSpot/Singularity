@@ -10,13 +10,13 @@ public enum SingularityAction {
   FREEZE_SLAVE(true), ACTIVATE_SLAVE(true), DECOMMISSION_SLAVE(true), VIEW_SLAVES(false),
   FREEZE_RACK(true), ACTIVATE_RACK(true), DECOMMISSION_RACK(true), VIEW_RACKS(false);
 
-  private final boolean disableable;
+  private final boolean canDisable;
 
-  SingularityAction(boolean disableable) {
-    this.disableable = disableable;
+  SingularityAction(boolean canDisable) {
+    this.canDisable = canDisable;
   }
 
-  public boolean isDisableable() {
-    return disableable;
+  public boolean isCanDisable() {
+    return canDisable;
   }
 }

@@ -57,7 +57,7 @@ public class DisasterManager extends CuratorAsyncManager {
   }
 
   public SingularityCreateResult disable(SingularityAction action, Optional<String> maybeMessage, Optional<SingularityUser> user, boolean systemGenerated, Optional<Long> expiresAt) {
-    if (!action.isDisableable()) {
+    if (!action.isCanDisable()) {
       throw new IllegalArgumentException(String.format("Action %s cannot be disabled", action));
     }
     SingularityDisabledAction disabledAction = new SingularityDisabledAction(
