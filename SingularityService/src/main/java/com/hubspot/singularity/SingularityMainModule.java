@@ -97,6 +97,9 @@ public class SingularityMainModule implements Module {
   public static final String NEW_TASK_THREADPOOL_NAME = "_new_task_threadpool";
   public static final Named NEW_TASK_THREADPOOL_NAMED = Names.named(NEW_TASK_THREADPOOL_NAME);
 
+  public static final String STATUS_UPDATE_THREADPOOL_NAME = "_status_update_threadpool";
+  public static final Named STATUS_UPDATE_THREADPOOL_NAMED = Names.named(STATUS_UPDATE_THREADPOOL_NAME);
+
   public static final String CURRENT_HTTP_REQUEST = "_singularity_current_http_request";
 
   private final SingularityConfiguration configuration;
@@ -159,6 +162,10 @@ public class SingularityMainModule implements Module {
     binder.bind(ScheduledExecutorService.class).annotatedWith(NEW_TASK_THREADPOOL_NAMED).toProvider(new SingularityManagedScheduledExecutorServiceProvider(configuration.getCheckNewTasksScheduledThreads(),
         configuration.getThreadpoolShutdownDelayInSeconds(),
         "check-new-task")).in(Scopes.SINGLETON);
+
+    binder.bind(ScheduledExecutorService.class).annotatedWith(STATUS_UPDATE_THREADPOOL_NAMED).toProvider(new SingularityManagedScheduledExecutorServiceProvider(1,
+        configuration.getThreadpoolShutdownDelayInSeconds(),
+        "status-update-handler")).in(Scopes.SINGLETON);
 
     binder.bind(SingularityGraphiteReporterManaged.class).in(Scopes.SINGLETON);
 
