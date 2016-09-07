@@ -218,14 +218,11 @@ public class SingularityMesosSchedulerDelegator implements Scheduler {
       stateLock.unlock();
     }
 
-    lock.lock();
-
     try {
       scheduler.statusUpdate(driver, status);
     } catch (Throwable t) {
       handleUncaughtSchedulerException(t);
     } finally {
-      lock.unlock();
 
       LOG.debug("Handled status update {} for {} in {}", status.getState(), status.getTaskId().getValue(), JavaUtils.duration(start));
     }
