@@ -3,6 +3,7 @@ package com.hubspot.singularity.helpers;
 import java.io.IOException;
 import java.net.URL;
 
+import htsjdk.samtools.FileTruncatedException;
 import htsjdk.samtools.util.BlockCompressedInputStream;
 
 import org.slf4j.Logger;
@@ -27,8 +28,8 @@ public class BlockCompressedFileHelper {
       LOG.trace("Read {} bytes at offset {} for log at {}", bytesRead, offset, url.getPath());
       long newOffset = stream.getPosition();
       return new MesosFileChunkObject(new String(bytes, Charsets.UTF_8), offset.or(0L), Optional.of(newOffset));
-    } catch (IOException ioe) {
-      throw WebExceptions.badRequest("Cannot seek to an offset in a file that is not block compressed", ioe);
+    } catch (FileTruncatedException fte) {
+      throw WebExceptions.badRequest("Cannot seek to an offset in a file that is not block compressed", fte);
     } finally {
       stream.close();
     }
