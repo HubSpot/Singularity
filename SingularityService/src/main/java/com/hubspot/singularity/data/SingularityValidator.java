@@ -3,7 +3,7 @@ package com.hubspot.singularity.data;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.hubspot.singularity.WebExceptions.badRequest;
 import static com.hubspot.singularity.WebExceptions.checkBadRequest;
-import static com.hubspot.singularity.WebExceptions.locked;
+import static com.hubspot.singularity.WebExceptions.checkConflict;
 
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -465,9 +465,7 @@ public class SingularityValidator {
   }
 
   public void checkActionEnabled(SingularityAction action) {
-    if (disasterManager.isDisabled(action)) {
-      locked(disasterManager.getDisabledAction(action).getMessage());
-    }
+    checkConflict(!disasterManager.isDisabled(action), disasterManager.getDisabledAction(action).getMessage());
   }
 
   private boolean isValidInteger(String strValue) {
