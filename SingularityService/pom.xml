@@ -399,7 +399,6 @@
     <dependency>
       <groupId>com.github.samtools</groupId>
       <artifactId>htsjdk</artifactId>
-      <version>2.6.1</version>
     </dependency>
 
   </dependencies>
