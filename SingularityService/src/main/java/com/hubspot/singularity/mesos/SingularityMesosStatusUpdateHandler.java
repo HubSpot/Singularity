@@ -69,9 +69,9 @@ public class SingularityMesosStatusUpdateHandler implements Managed {
     private final AtomicBoolean handlerStarted;
     private final Lock schedulerLock;
     private final boolean processStatusUpdatesInSeparateThread;
-    private final Multiset<Protos.TaskStatus.Reason> taskLostReasons;
-    private final SingularityConfiguration configuration;
     private final SingularityAbort singularityAbort;
+    private final SingularityConfiguration configuration;
+    private final Multiset<Protos.TaskStatus.Reason> taskLostReasons;
 
     @Inject
     public SingularityMesosStatusUpdateHandler(TaskManager taskManager, DeployManager deployManager, RequestManager requestManager,
@@ -80,10 +80,10 @@ public class SingularityMesosStatusUpdateHandler implements Managed {
         Provider<SingularitySchedulerStateCache> stateCacheProvider, @Named(SingularityMainModule.SERVER_ID_PROPERTY) String serverId,
         SchedulerDriverSupplier schedulerDriverSupplier,
         @Named(SingularityMesosModule.SCHEDULER_LOCK_NAME) final Lock schedulerLock,
-        @Named(SingularityMesosModule.TASK_LOST_REASONS_COUNTER) Multiset<Protos.TaskStatus.Reason> taskLostReasons,
         @Named(SingularityMainModule.STATUS_UPDATE_THREADPOOL_NAME) ScheduledExecutorService executorService,
         SingularityConfiguration configuration,
-        SingularityAbort singularityAbort) {
+        SingularityAbort singularityAbort,
+        @Named(SingularityMesosModule.TASK_LOST_REASONS_COUNTER) Multiset<Protos.TaskStatus.Reason> taskLostReasons) {
         this.taskManager = taskManager;
         this.deployManager = deployManager;
         this.requestManager = requestManager;
@@ -99,19 +99,13 @@ public class SingularityMesosStatusUpdateHandler implements Managed {
         this.schedulerDriverSupplier = schedulerDriverSupplier;
         this.schedulerLock = schedulerLock;
         this.singularityAbort = singularityAbort;
-        this.handlerStarted = new AtomicBoolean();
-        this.taskLostReasons = taskLostReasons;
         this.configuration = configuration;
+        this.taskLostReasons = taskLostReasons;
+        this.handlerStarted = new AtomicBoolean();
 
         this.statusUpdateQueue = new ArrayBlockingQueue<>(configuration.getStatusUpdateQueueCapacity());
         this.executorService = executorService;
         this.processStatusUpdatesInSeparateThread = configuration.isProcessStatusUpdatesInSeparateThread();
-    }
-
-    private void updateDisasterStats(Protos.TaskStatus status) {
-        if (status.getState() == Protos.TaskState.TASK_LOST) {
-            taskLostReasons.add(status.getReason());
-        }
     }
 
     /**
@@ -168,6 +162,12 @@ public class SingularityMesosStatusUpdateHandler implements Managed {
         return Optional.absent();
     }
 
+    private void updateDisasterStats(Protos.TaskStatus status) {
+        if (status.getState() == Protos.TaskState.TASK_LOST) {
+            taskLostReasons.add(status.getReason());
+        }
+    }
+
     private SchedulerDriver getSchedulerDriver() {
         final Optional<SchedulerDriver> maybeSchedulerDriver = schedulerDriverSupplier.get();
 
@@ -211,7 +211,7 @@ public class SingularityMesosStatusUpdateHandler implements Managed {
         }
 
         if (configuration.getDisasterDetection().isEnabled()) {
-              updateDisasterStats(status);
+            updateDisasterStats(status);
         }
 
         final Optional<SingularityTask> task = taskManager.getTask(taskIdObj);
