@@ -8,6 +8,7 @@ import htsjdk.samtools.util.BlockCompressedInputStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Charsets;
 import com.google.common.base.Optional;
 import com.hubspot.mesos.json.MesosFileChunkObject;
 import com.hubspot.singularity.WebExceptions;
@@ -15,9 +16,9 @@ import com.hubspot.singularity.WebExceptions;
 public class BlockCompressedFileHelper {
   private static final Logger LOG = LoggerFactory.getLogger(BlockCompressedFileHelper.class);
 
-  public static MesosFileChunkObject getAndDecompressFromUrl(URL url, Optional<Long> offset, int length) {
+  public static MesosFileChunkObject getAndDecompressFromUrl(URL url, Optional<Long> offset, int length) throws Exception {
+    BlockCompressedInputStream stream = new BlockCompressedInputStream(url);
     try {
-      BlockCompressedInputStream stream = new BlockCompressedInputStream(url);
       if (offset.isPresent()) {
         stream.seek(offset.get());
       }
@@ -25,9 +26,11 @@ public class BlockCompressedFileHelper {
       int bytesRead = stream.read(bytes, 0, length);
       LOG.trace("Read {} bytes at offset {} for log at {}", bytesRead, offset, url.getPath());
       long newOffset = stream.getPosition();
-      return new MesosFileChunkObject(new String(bytes), offset.or(0L), Optional.of(newOffset));
+      return new MesosFileChunkObject(new String(bytes, Charsets.UTF_8), offset.or(0L), Optional.of(newOffset));
     } catch (IOException ioe) {
       throw WebExceptions.badRequest("Cannot seek to an offset in a file that is not block compressed", ioe);
+    } finally {
+      stream.close();
     }
   }
 }
