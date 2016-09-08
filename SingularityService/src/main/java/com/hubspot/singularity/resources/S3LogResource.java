@@ -27,7 +27,6 @@ import javax.ws.rs.core.MediaType;
 import org.jets3t.service.S3Service;
 import org.jets3t.service.S3ServiceException;
 import org.jets3t.service.model.S3Object;
-import org.jets3t.service.model.StorageObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -62,7 +61,6 @@ import com.hubspot.singularity.auth.SingularityAuthorizationHelper;
 import com.hubspot.singularity.config.S3Configuration;
 import com.hubspot.singularity.data.DeployManager;
 import com.hubspot.singularity.data.RequestManager;
-import com.hubspot.singularity.data.SingularityValidator;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.data.history.HistoryManager;
 import com.hubspot.singularity.data.history.RequestHistoryHelper;
@@ -89,7 +87,6 @@ public class S3LogResource extends AbstractHistoryResource {
   private final Optional<S3Configuration> configuration;
   private final RequestHistoryHelper requestHistoryHelper;
   private final RequestManager requestManager;
-  private final SingularityValidator validator;
 
   private static final Comparator<SingularityS3Log> LOG_COMPARATOR = new Comparator<SingularityS3Log>() {
 
@@ -102,14 +99,13 @@ public class S3LogResource extends AbstractHistoryResource {
 
   @Inject
   public S3LogResource(RequestManager requestManager, HistoryManager historyManager, RequestHistoryHelper requestHistoryHelper, TaskManager taskManager, DeployManager deployManager, Optional<S3Service> s3ServiceDefault,
-      Optional<S3Configuration> configuration, SingularityAuthorizationHelper authorizationHelper, Optional<SingularityUser> user, Map<String, S3Service> s3GroupOverride, SingularityValidator validator) {
+      Optional<S3Configuration> configuration, SingularityAuthorizationHelper authorizationHelper, Optional<SingularityUser> user, Map<String, S3Service> s3GroupOverride) {
     super(historyManager, taskManager, deployManager, authorizationHelper, user);
     this.requestManager = requestManager;
     this.s3ServiceDefault = s3ServiceDefault;
     this.configuration = configuration;
     this.requestHistoryHelper = requestHistoryHelper;
     this.s3GroupOverride = s3GroupOverride;
-    this.validator = validator;
   }
 
   private Collection<String> getS3PrefixesForTask(S3Configuration s3Configuration, SingularityTaskId taskId, Optional<Long> startArg, Optional<Long> endArg) {
