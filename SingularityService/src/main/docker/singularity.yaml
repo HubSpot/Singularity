@@ -35,3 +35,4 @@ logging:
     "com.hubspot.singularity" : TRACE
 
 enableCorsFilter: true
+
