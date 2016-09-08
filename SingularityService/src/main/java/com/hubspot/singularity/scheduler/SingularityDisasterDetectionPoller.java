@@ -128,7 +128,7 @@ public class SingularityDisasterDetectionPoller extends SingularityLeaderOnlyPol
         numPastDueTasks++;
         totalTaskLagMillis += taskLagMillis;
         if (taskLagMillis > configuration.getDeltaAfterWhichTasksAreLateMillis()) {
-          numLateTasks ++;
+          numLateTasks++;
         }
       }
     }

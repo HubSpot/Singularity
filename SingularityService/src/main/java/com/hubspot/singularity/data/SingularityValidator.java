@@ -3,7 +3,7 @@ package com.hubspot.singularity.data;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.hubspot.singularity.WebExceptions.badRequest;
 import static com.hubspot.singularity.WebExceptions.checkBadRequest;
-import static com.hubspot.singularity.WebExceptions.locked;
+import static com.hubspot.singularity.WebExceptions.checkConflict;
 
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -402,12 +402,6 @@ public class SingularityValidator {
     checkBadRequest(requestGroup.getRequestIds() != null, "requestIds cannot be null");
   }
 
-  public void checkActionEnabled(SingularityAction action) {
-    if (disasterManager.isDisabled(action)) {
-      locked(disasterManager.getDisabledAction(action).getMessage());
-    }
-  }
-
   private void checkForIllegalChanges(SingularityRequest request, SingularityRequest existingRequest) {
     checkBadRequest(request.getRequestType() == existingRequest.getRequestType(), String.format("Request can not change requestType from %s to %s", existingRequest.getRequestType(), request.getRequestType()));
     checkBadRequest(request.isLoadBalanced() == existingRequest.isLoadBalanced(), "Request can not change whether it is load balanced");
@@ -507,6 +501,10 @@ public class SingularityValidator {
     }
 
     return newDayOfWeekValue;
+  }
+
+  public void checkActionEnabled(SingularityAction action) {
+    checkConflict(!disasterManager.isDisabled(action), disasterManager.getDisabledAction(action).getMessage());
   }
 
   private boolean isValidInteger(String strValue) {
