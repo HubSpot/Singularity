@@ -42,7 +42,7 @@
     <horizon.version>0.0.24</horizon.version>
     <mesos.docker.tag>0.28.1-2.0.20.ubuntu1404</mesos.docker.tag>
     <mesos.version>0.28.2</mesos.version>
-    <singularitybase.image.revision>1</singularitybase.image.revision>
+    <singularitybase.image.revision>2</singularitybase.image.revision>
   </properties>
 
   <modules>
@@ -245,6 +245,12 @@
         <groupId>org.dmfs</groupId>
         <artifactId>rfc5545-datetime</artifactId>
         <version>0.2.2</version>
+      </dependency>
+
+      <dependency>
+        <groupId>com.github.samtools</groupId>
+        <artifactId>htsjdk</artifactId>
+        <version>2.6.1</version>
       </dependency>
     </dependencies>
   </dependencyManagement>

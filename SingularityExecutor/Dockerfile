@@ -29,4 +29,9 @@ RUN mkdir -p /usr/share/mesos/logwatcher && \
     mkdir -p /usr/share/mesos/s3 && \
     mkdir -p /usr/share/mesos/artifacts
 
-ENV JAVA_HOME /usr/lib/jvm/java-8-oracle
+ENV JAVA_HOME /opt/jdk1.8.0_77
+
+RUN update-alternatives --install /usr/bin/java java ${JAVA_HOME}/bin/java 20000 && \
+    update-alternatives --install /usr/bin/javac javac ${JAVA_HOME}/bin/javac 20000 && \
+    update-alternatives --install /usr/bin/jcmd jcmd ${JAVA_HOME}/bin/jcmd 20000 && \
+    update-alternatives --install /usr/bin/jar jar ${JAVA_HOME}/bin/jar 20000
