@@ -67,10 +67,19 @@ import {
 
 import { FetchWebhooks } from '../../actions/api/webhooks';
 
+import { 
+  FetchDisastersData,
+  FetchDisabledActions,
+  FetchPriorityFreeze
+} from '../../actions/api/disasters'
+
 import { FetchGroups } from '../../actions/api/requestGroups';
 
 const user = buildApiActionReducer(FetchUser);
 const webhooks = buildApiActionReducer(FetchWebhooks, []);
+const disabledActions = buildApiActionReducer(FetchDisabledActions, []);
+const disastersData = buildApiActionReducer(FetchDisastersData, []);
+const priorityFreeze = buildApiActionReducer(FetchPriorityFreeze, []);
 const slaves = buildApiActionReducer(FetchSlaves, []);
 const freezeSlave = buildApiActionReducer(FreezeSlave, []);
 const decommissionSlave = buildApiActionReducer(DecommissionSlave, []);
@@ -115,6 +124,9 @@ const requestGroups = buildApiActionReducer(FetchGroups, []);
 export default combineReducers({
   user,
   webhooks,
+  disabledActions,
+  disastersData,
+  priorityFreeze,
   slaves,
   freezeSlave,
   decommissionSlave,
