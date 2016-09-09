@@ -11,6 +11,8 @@ import com.hubspot.singularity.SingularityDeployMarker;
 import com.hubspot.singularity.SingularityDeployResult;
 import com.hubspot.singularity.SingularityDeployStatistics;
 import com.hubspot.singularity.SingularityDeployUpdate;
+import com.hubspot.singularity.SingularityDisabledAction;
+import com.hubspot.singularity.SingularityDisasterDataPoints;
 import com.hubspot.singularity.SingularityHostState;
 import com.hubspot.singularity.SingularityKilledTaskIdRecord;
 import com.hubspot.singularity.SingularityLoadBalancerUpdate;
@@ -19,10 +21,12 @@ import com.hubspot.singularity.SingularityPendingDeploy;
 import com.hubspot.singularity.SingularityPendingRequest;
 import com.hubspot.singularity.SingularityPendingTask;
 import com.hubspot.singularity.SingularityPendingTaskId;
+import com.hubspot.singularity.SingularityPriorityFreezeParent;
 import com.hubspot.singularity.SingularityRack;
 import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityRequestCleanup;
 import com.hubspot.singularity.SingularityRequestDeployState;
+import com.hubspot.singularity.SingularityRequestGroup;
 import com.hubspot.singularity.SingularityRequestHistory;
 import com.hubspot.singularity.SingularityRequestLbCleanup;
 import com.hubspot.singularity.SingularityRequestWithState;
@@ -34,6 +38,7 @@ import com.hubspot.singularity.SingularityTaskHealthcheckResult;
 import com.hubspot.singularity.SingularityTaskHistory;
 import com.hubspot.singularity.SingularityTaskHistoryUpdate;
 import com.hubspot.singularity.SingularityTaskId;
+import com.hubspot.singularity.SingularityTaskDestroyFrameworkMessage;
 import com.hubspot.singularity.SingularityTaskMetadata;
 import com.hubspot.singularity.SingularityTaskShellCommandRequest;
 import com.hubspot.singularity.SingularityTaskShellCommandUpdate;
@@ -80,6 +85,10 @@ public class SingularityTranscoderModule implements Module {
     bindTranscoder(binder).asJson(SingularityExpiringPause.class);
     bindTranscoder(binder).asJson(SingularityExpiringScale.class);
     bindTranscoder(binder).asJson(SingularityExpiringSkipHealthchecks.class);
+    bindTranscoder(binder).asJson(SingularityTaskDestroyFrameworkMessage.class);
+    bindTranscoder(binder).asJson(SingularityDisabledAction.class);
+    bindTranscoder(binder).asJson(SingularityDisasterDataPoints.class);
+    bindTranscoder(binder).asJson(SingularityRequestGroup.class);
 
     bindTranscoder(binder).asCompressedJson(SingularityDeployHistory.class);
     bindTranscoder(binder).asCompressedJson(SingularityDeploy.class);
@@ -91,5 +100,7 @@ public class SingularityTranscoderModule implements Module {
     bindTranscoder(binder).asCompressedJson(SingularityTaskStatusHolder.class);
     bindTranscoder(binder).asCompressedJson(SingularityTask.class);
     bindTranscoder(binder).asCompressedJson(SingularityTaskMetadata.class);
+
+    bindTranscoder(binder).asJson(SingularityPriorityFreezeParent.class);
   }
 }

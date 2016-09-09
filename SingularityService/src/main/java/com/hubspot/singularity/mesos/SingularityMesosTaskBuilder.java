@@ -45,7 +45,9 @@ import com.hubspot.mesos.Resources;
 import com.hubspot.mesos.SingularityContainerInfo;
 import com.hubspot.mesos.SingularityDockerInfo;
 import com.hubspot.mesos.SingularityDockerNetworkType;
+import com.hubspot.mesos.SingularityDockerParameter;
 import com.hubspot.mesos.SingularityDockerPortMapping;
+import com.hubspot.mesos.SingularityMesosTaskLabel;
 import com.hubspot.mesos.SingularityVolume;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskId;
@@ -121,17 +123,27 @@ class SingularityMesosTaskBuilder {
 
     final Builder labelsBuilder = Labels.newBuilder();
     // apply request-specific labels, if any
-    if (taskRequest.getDeploy().getLabels().isPresent() && !taskRequest.getDeploy().getLabels().get().isEmpty()) {
-      for (Map.Entry<String, String> label : taskRequest.getDeploy().getLabels().get().entrySet()) {
-        labelsBuilder.addLabels(Label.newBuilder().setKey(label.getKey()).setValue(label.getValue()).build());
+    if (taskRequest.getDeploy().getMesosLabels().isPresent() && !taskRequest.getDeploy().getMesosLabels().get().isEmpty()) {
+      for (SingularityMesosTaskLabel label : taskRequest.getDeploy().getMesosLabels().get()) {
+        org.apache.mesos.Protos.Label.Builder labelBuilder = Label.newBuilder();
+        labelBuilder.setKey(label.getKey());
+        if ((label.getValue().isPresent())) {
+          labelBuilder.setValue(label.getValue().get());
+        }
+        labelsBuilder.addLabels(labelBuilder.build());
       }
     }
 
     // apply task-specific labels, if any
     final int taskInstanceNo = taskRequest.getPendingTask().getPendingTaskId().getInstanceNo();
-    if (taskRequest.getDeploy().getTaskLabels().isPresent() && taskRequest.getDeploy().getTaskLabels().get().containsKey(taskInstanceNo) && !taskRequest.getDeploy().getTaskLabels().get().get(taskInstanceNo).isEmpty()) {
-      for (Map.Entry<String, String> label : taskRequest.getDeploy().getTaskLabels().get().get(taskInstanceNo).entrySet()) {
-        labelsBuilder.addLabels(Label.newBuilder().setKey(label.getKey()).setValue(label.getValue()).build());
+    if (taskRequest.getDeploy().getMesosTaskLabels().isPresent() && taskRequest.getDeploy().getMesosTaskLabels().get().containsKey(taskInstanceNo) && !taskRequest.getDeploy().getMesosTaskLabels().get().get(taskInstanceNo).isEmpty()) {
+      for (SingularityMesosTaskLabel label : taskRequest.getDeploy().getMesosTaskLabels().get().get(taskInstanceNo)) {
+        org.apache.mesos.Protos.Label.Builder labelBuilder = Label.newBuilder();
+        labelBuilder.setKey(label.getKey());
+        if ((label.getValue().isPresent())) {
+          labelBuilder.setValue(label.getValue().get());
+        }
+        labelsBuilder.addLabels(labelBuilder.build());
       }
     }
     bldr.setLabels(labelsBuilder);
@@ -166,15 +178,16 @@ class SingularityMesosTaskBuilder {
 
     setEnv(envBldr, "TASK_REQUEST_ID", task.getPendingTask().getPendingTaskId().getRequestId());
     setEnv(envBldr, "TASK_DEPLOY_ID", taskId.getDeployId());
+    setEnv(envBldr, "TASK_ID", taskId.getId());
     setEnv(envBldr, "ESTIMATED_INSTANCE_COUNT", task.getRequest().getInstancesSafe());
 
     for (Entry<String, String> envEntry : task.getDeploy().getEnv().or(Collections.<String, String>emptyMap()).entrySet()) {
-      setEnv(envBldr, envEntry.getKey(), envEntry.getValue());
+      setEnv(envBldr, envEntry.getKey(), fillInTaskIdValues(envEntry.getValue(), offer, taskId));
     }
 
     if (task.getDeploy().getTaskEnv().isPresent() && task.getDeploy().getTaskEnv().get().containsKey(taskId.getInstanceNo()) && !task.getDeploy().getTaskEnv().get().get(taskId.getInstanceNo()).isEmpty()) {
       for (Entry<String, String> envEntry : task.getDeploy().getTaskEnv().get().get(taskId.getInstanceNo()).entrySet()) {
-        setEnv(envBldr, envEntry.getKey(), envEntry.getValue());
+        setEnv(envBldr, envEntry.getKey(), fillInTaskIdValues(envEntry.getValue(), offer, taskId));
       }
     }
 
@@ -272,10 +285,10 @@ class SingularityMesosTaskBuilder {
         }
       }
 
-      if (!dockerInfo.get().getParameters().isEmpty()) {
+      if (!dockerInfo.get().getDockerParameters().isEmpty()) {
         List<Parameter> parameters = new ArrayList<>();
-        for (Map.Entry<String, String> entry : dockerInfo.get().getParameters().entrySet()) {
-          parameters.add(Parameter.newBuilder().setKey(entry.getKey()).setValue(entry.getValue()).build());
+        for (SingularityDockerParameter parameter : dockerInfo.get().getDockerParameters()) {
+          parameters.add(Parameter.newBuilder().setKey(parameter.getKey()).setValue(parameter.getValue()).build());
         }
         dockerInfoBuilder.addAllParameters(parameters);
       }
@@ -328,8 +341,8 @@ class SingularityMesosTaskBuilder {
 
     prepareEnvironment(task, taskId, commandBuilder, offer, ports);
 
-    if (task.getDeploy().getCustomExecutorUser().isPresent()) {
-      commandBuilder.setUser(task.getDeploy().getCustomExecutorUser().get());
+    if (task.getDeploy().getUser().isPresent()) {
+      commandBuilder.setUser(task.getDeploy().getUser().get());
     }
 
     bldr.setExecutor(ExecutorInfo.newBuilder()
@@ -379,6 +392,10 @@ class SingularityMesosTaskBuilder {
 
   private void prepareCommand(final TaskInfo.Builder bldr, final SingularityTaskId taskId, final SingularityTaskRequest task, final Protos.Offer offer, final Optional<long[]> ports) {
     CommandInfo.Builder commandBldr = CommandInfo.newBuilder();
+
+    if (task.getDeploy().getUser().isPresent()) {
+      commandBldr.setUser(task.getDeploy().getUser().get());
+    }
 
     if (task.getDeploy().getCommand().isPresent()) {
       commandBldr.setValue(task.getDeploy().getCommand().get());

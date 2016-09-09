@@ -26,12 +26,14 @@ import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.hubspot.jackson.jaxrs.PropertyFiltering;
 import com.hubspot.mesos.JavaUtils;
+import com.hubspot.mesos.Resources;
 import com.hubspot.singularity.MachineState;
 import com.hubspot.singularity.RequestCleanupType;
 import com.hubspot.singularity.RequestState;
 import com.hubspot.singularity.SingularityAuthorizationScope;
 import com.hubspot.singularity.SingularityCreateResult;
 import com.hubspot.singularity.SingularityDeleteResult;
+import com.hubspot.singularity.SingularityAction;
 import com.hubspot.singularity.SingularityPendingDeploy;
 import com.hubspot.singularity.SingularityPendingRequest;
 import com.hubspot.singularity.SingularityPendingRequest.PendingType;
@@ -112,6 +114,9 @@ public class RequestResource extends AbstractRequestResource {
 
     if (oldRequest.isPresent()) {
       authorizationHelper.checkForAuthorization(oldRequest.get(), user, SingularityAuthorizationScope.WRITE);
+      validator.checkActionEnabled(SingularityAction.UPDATE_REQUEST);
+    } else {
+      validator.checkActionEnabled(SingularityAction.CREATE_REQUEST);
     }
     authorizationHelper.checkForAuthorization(request, user, SingularityAuthorizationScope.WRITE);
 
@@ -160,6 +165,7 @@ public class RequestResource extends AbstractRequestResource {
     SingularityRequestWithState requestWithState = fetchRequestWithState(requestId);
 
     authorizationHelper.checkForAuthorization(requestWithState.getRequest(), user, SingularityAuthorizationScope.WRITE);
+    validator.checkActionEnabled(SingularityAction.BOUNCE_REQUEST);
 
     checkBadRequest(requestWithState.getRequest().isLongRunning(), "Can not bounce a %s request (%s)", requestWithState.getRequest().getRequestType(), requestWithState);
 
@@ -175,6 +181,8 @@ public class RequestResource extends AbstractRequestResource {
 
       checkBadRequest(currentActiveSlaveCount >= requiredSlaveCount, "Not enough active slaves to successfully complete a bounce of request %s (minimum required: %s, current: %s). Consider deploying, or changing the slave placement strategy instead.", requestId, requiredSlaveCount, currentActiveSlaveCount);
     }
+
+    validator.checkRequestForPriorityFreeze(requestWithState.getRequest());
 
     final Optional<Boolean> skipHealthchecks = bounceRequest.isPresent() ? bounceRequest.get().getSkipHealthchecks() : Optional.<Boolean> absent();
 
@@ -200,8 +208,10 @@ public class RequestResource extends AbstractRequestResource {
 
     requestManager.bounce(requestWithState.getRequest(), System.currentTimeMillis(), JavaUtils.getUserEmail(user), message);
 
+    final SingularityBounceRequest validatedBounceRequest = validator.checkBounceRequest(bounceRequest.or(SingularityBounceRequest.defaultRequest()));
+
     requestManager.saveExpiringObject(new SingularityExpiringBounce(requestId, deployId, JavaUtils.getUserEmail(user),
-        System.currentTimeMillis(), bounceRequest.or(SingularityBounceRequest.defaultRequest()), actionId.get()));
+        System.currentTimeMillis(), validatedBounceRequest, actionId.get()));
 
     return fillEntireRequest(requestWithState);
   }
@@ -242,12 +252,14 @@ public class RequestResource extends AbstractRequestResource {
     Optional<String> message = Optional.absent();
     Optional<Boolean> skipHealthchecks = Optional.absent();
     Optional<List<String>> commandLineArgs = Optional.absent();
+    Optional<Resources> resources = Optional.absent();
 
     if (runNowRequest.isPresent()) {
       message = runNowRequest.get().getMessage();
       runId = runNowRequest.get().getRunId();
       skipHealthchecks = runNowRequest.get().getSkipHealthchecks();
       commandLineArgs = runNowRequest.get().getCommandLineArgs();
+      resources = runNowRequest.get().getResources();
     }
 
     if (runId.isPresent() && runId.get().length() > 100) {
@@ -259,7 +271,7 @@ public class RequestResource extends AbstractRequestResource {
     }
 
     final SingularityPendingRequest pendingRequest = new SingularityPendingRequest(requestId, getAndCheckDeployId(requestId), System.currentTimeMillis(),
-        JavaUtils.getUserEmail(user), pendingType, commandLineArgs, runId, skipHealthchecks, message, Optional.<String> absent());
+        JavaUtils.getUserEmail(user), pendingType, commandLineArgs, runId, skipHealthchecks, message, Optional.<String> absent(), resources);
 
     SingularityCreateResult result = requestManager.addToPendingQueue(pendingRequest);
 
@@ -522,6 +534,7 @@ public class RequestResource extends AbstractRequestResource {
     SingularityRequest request = fetchRequest(requestId);
 
     authorizationHelper.checkForAuthorization(request, user, SingularityAuthorizationScope.WRITE);
+    validator.checkActionEnabled(SingularityAction.REMOVE_REQUEST);
 
     Optional<String> message = Optional.absent();
     Optional<String> actionId = Optional.absent();
@@ -550,6 +563,9 @@ public class RequestResource extends AbstractRequestResource {
     SingularityRequestWithState oldRequestWithState = fetchRequestWithState(requestId);
 
     SingularityRequest oldRequest = oldRequestWithState.getRequest();
+    authorizationHelper.checkForAuthorization(oldRequest, user, SingularityAuthorizationScope.WRITE);
+    validator.checkActionEnabled(SingularityAction.SCALE_REQUEST);
+
     SingularityRequest newRequest = oldRequest.toBuilder().setInstances(scaleRequest.getInstances()).build();
 
     checkBadRequest(oldRequest.getInstancesSafe() != newRequest.getInstancesSafe(), "Scale request has no affect on the # of instances (%s)", newRequest.getInstancesSafe());

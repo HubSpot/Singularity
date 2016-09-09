@@ -112,11 +112,11 @@ public final class JavaUtils {
   private static final String DURATION_FORMAT = "mm:ss.S";
 
   public static String duration(final long start) {
-    return DurationFormatUtils.formatDuration(System.currentTimeMillis() - start, DURATION_FORMAT);
+    return DurationFormatUtils.formatDuration(Math.max(System.currentTimeMillis() - start, 0), DURATION_FORMAT);
   }
 
   public static String durationFromMillis(final long millis) {
-    return DurationFormatUtils.formatDuration(millis, DURATION_FORMAT);
+    return DurationFormatUtils.formatDuration(Math.max(millis, 0), DURATION_FORMAT);
   }
 
   public static Thread awaitTerminationWithLatch(final CountDownLatch latch, final String threadNameSuffix, final ExecutorService service, final long millis) {

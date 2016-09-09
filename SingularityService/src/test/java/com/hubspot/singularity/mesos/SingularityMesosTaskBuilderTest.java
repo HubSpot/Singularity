@@ -64,7 +64,7 @@ public class SingularityMesosTaskBuilderTest {
   @Before
   public void createMocks() {
     pendingTask = new SingularityPendingTask(new SingularityPendingTaskId("test", "1", 0, 1, PendingType.IMMEDIATE, 0), Optional.<List<String>> absent(),
-        Optional.<String> absent(), Optional.<String> absent(), Optional.<Boolean> absent(), Optional.<String> absent());
+        Optional.<String> absent(), Optional.<String> absent(), Optional.<Boolean> absent(), Optional.<String> absent(), Optional.<Resources>absent());
 
     final SingularitySlaveAndRackHelper slaveAndRackHelper = mock(SingularitySlaveAndRackHelper.class);
     final ExecutorIdGenerator idGenerator = mock(ExecutorIdGenerator.class);
@@ -139,7 +139,8 @@ public class SingularityMesosTaskBuilderTest {
         Optional.of(Arrays.asList(
             new SingularityVolume("/container", Optional.of("/host"), SingularityDockerVolumeMode.RW),
             new SingularityVolume("/container/${TASK_REQUEST_ID}/${TASK_DEPLOY_ID}", Optional.of("/host/${TASK_ID}"), SingularityDockerVolumeMode.RO))),
-        Optional.of(new SingularityDockerInfo("docker-image", true, SingularityDockerNetworkType.BRIDGE, Optional.of(Arrays.asList(literalMapping, offerMapping)), Optional.of(false), Optional.<Map<String, String>>of(ImmutableMap.of("env", "var=value")) )));
+        Optional.of(new SingularityDockerInfo("docker-image", true, SingularityDockerNetworkType.BRIDGE, Optional.of(Arrays.asList(literalMapping, offerMapping)), Optional.of(false), Optional.<Map<String, String>>of(
+          ImmutableMap.of("env", "var=value")))));
     final SingularityDeploy deploy = new SingularityDeployBuilder("test", "1")
         .setContainerInfo(Optional.of(containerInfo))
         .setCommand(Optional.of("/bin/echo"))

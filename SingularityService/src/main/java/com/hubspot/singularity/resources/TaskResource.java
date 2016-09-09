@@ -33,6 +33,7 @@ import com.hubspot.mesos.client.MesosClient;
 import com.hubspot.mesos.json.MesosTaskMonitorObject;
 import com.hubspot.mesos.json.MesosTaskStatisticsObject;
 import com.hubspot.singularity.InvalidSingularityTaskIdException;
+import com.hubspot.singularity.SingularityAction;
 import com.hubspot.singularity.SingularityAuthorizationScope;
 import com.hubspot.singularity.SingularityCreateResult;
 import com.hubspot.singularity.SingularityKilledTaskIdRecord;
@@ -61,6 +62,7 @@ import com.hubspot.singularity.config.UIConfiguration;
 import com.hubspot.singularity.config.shell.ShellCommandDescriptor;
 import com.hubspot.singularity.config.shell.ShellCommandOptionDescriptor;
 import com.hubspot.singularity.data.RequestManager;
+import com.hubspot.singularity.data.SingularityValidator;
 import com.hubspot.singularity.data.SlaveManager;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.data.TaskRequestManager;
@@ -84,10 +86,11 @@ public class TaskResource {
   private final Optional<SingularityUser> user;
   private final SingularityTaskMetadataConfiguration taskMetadataConfiguration;
   private final UIConfiguration uiConfiguration;
+  private final SingularityValidator validator;
 
   @Inject
   public TaskResource(TaskRequestManager taskRequestManager, TaskManager taskManager, SlaveManager slaveManager, MesosClient mesosClient, SingularityTaskMetadataConfiguration taskMetadataConfiguration,
-      SingularityAuthorizationHelper authorizationHelper, Optional<SingularityUser> user, UIConfiguration uiConfiguration, RequestManager requestManager) {
+      SingularityAuthorizationHelper authorizationHelper, Optional<SingularityUser> user, UIConfiguration uiConfiguration, RequestManager requestManager, SingularityValidator validator) {
     this.taskManager = taskManager;
     this.taskRequestManager = taskRequestManager;
     this.taskMetadataConfiguration = taskMetadataConfiguration;
@@ -97,6 +100,7 @@ public class TaskResource {
     this.authorizationHelper = authorizationHelper;
     this.user = user;
     this.uiConfiguration = uiConfiguration;
+    this.validator = validator;
   }
 
   @GET
@@ -288,26 +292,37 @@ public class TaskResource {
 
     if (waitForReplacementTask.or(Boolean.FALSE)) {
       cleanupType = TaskCleanupType.USER_REQUESTED_TASK_BOUNCE;
+      validator.checkActionEnabled(SingularityAction.BOUNCE_TASK);
+    } else {
+      validator.checkActionEnabled(SingularityAction.KILL_TASK);
     }
 
     final long now = System.currentTimeMillis();
 
-    final SingularityTaskCleanup taskCleanup = new SingularityTaskCleanup(JavaUtils.getUserEmail(user), cleanupType, now,
-        task.getTaskId(), message, actionId);
+    final SingularityTaskCleanup taskCleanup;
 
     if (override.isPresent() && override.get().booleanValue()) {
+      cleanupType = TaskCleanupType.USER_REQUESTED_DESTROY;
+      taskCleanup = new SingularityTaskCleanup(JavaUtils.getUserEmail(user), cleanupType, now,
+        task.getTaskId(), message, actionId);
       taskManager.saveTaskCleanup(taskCleanup);
     } else {
+      taskCleanup = new SingularityTaskCleanup(JavaUtils.getUserEmail(user), cleanupType, now,
+        task.getTaskId(), message, actionId);
       SingularityCreateResult result = taskManager.createTaskCleanup(taskCleanup);
 
-      while (result == SingularityCreateResult.EXISTED) {
-        Optional<SingularityTaskCleanup> cleanup = taskManager.getTaskCleanup(taskId);
+      if (result == SingularityCreateResult.EXISTED && userRequestedKillTakesPriority(taskId)) {
+        taskManager.saveTaskCleanup(taskCleanup);
+      } else {
+        while (result == SingularityCreateResult.EXISTED) {
+          Optional<SingularityTaskCleanup> cleanup = taskManager.getTaskCleanup(taskId);
 
-        if (cleanup.isPresent()) {
-          throw new WebApplicationException(Response.status(Status.CONFLICT).entity(cleanup.get()).type(MediaType.APPLICATION_JSON).build());
+          if (cleanup.isPresent()) {
+            throw new WebApplicationException(Response.status(Status.CONFLICT).entity(cleanup.get()).type(MediaType.APPLICATION_JSON).build());
+          }
+
+          result = taskManager.createTaskCleanup(taskCleanup);
         }
-
-        result = taskManager.createTaskCleanup(taskCleanup);
       }
     }
 
@@ -317,6 +332,14 @@ public class TaskResource {
     }
 
     return taskCleanup;
+  }
+
+  boolean userRequestedKillTakesPriority(String taskId) {
+    Optional<SingularityTaskCleanup> existingCleanup = taskManager.getTaskCleanup(taskId);
+    if (!existingCleanup.isPresent()) {
+      return true;
+    }
+    return existingCleanup.get().getCleanupType() != TaskCleanupType.USER_REQUESTED_DESTROY;
   }
 
   @Path("/commands/queued")
@@ -339,6 +362,7 @@ public class TaskResource {
     SingularityTaskId taskIdObj = getTaskIdFromStr(taskId);
 
     authorizationHelper.checkForAuthorizationByTaskId(taskId, user, SingularityAuthorizationScope.WRITE);
+    validator.checkActionEnabled(SingularityAction.ADD_METADATA);
 
     WebExceptions.checkBadRequest(taskMetadataRequest.getTitle().length() < taskMetadataConfiguration.getMaxMetadataTitleLength(),
       "Task metadata title too long, must be less than %s bytes", taskMetadataConfiguration.getMaxMetadataTitleLength());
@@ -374,6 +398,7 @@ public class TaskResource {
     SingularityTaskId taskIdObj = getTaskIdFromStr(taskId);
 
     authorizationHelper.checkForAuthorizationByTaskId(taskId, user, SingularityAuthorizationScope.WRITE);
+    validator.checkActionEnabled(SingularityAction.RUN_SHELL_COMMAND);
 
     if (!taskManager.isActiveTask(taskId)) {
       throw WebExceptions.badRequest("%s is not an active task, can't run %s on it", taskId, shellCommand.getName());

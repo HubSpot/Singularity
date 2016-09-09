@@ -41,8 +41,8 @@ public class JDBIHistoryManager implements HistoryManager {
   @Override
   @Timed
   public List<SingularityTaskIdHistory> getTaskIdHistory(Optional<String> requestId, Optional<String> deployId, Optional<String> host, Optional<ExtendedTaskState> lastTaskStatus, Optional<Long> startedBefore,
-      Optional<Long> startedAfter, Optional<OrderDirection> orderDirection, Optional<Integer> limitStart, Integer limitCount) {
-    return history.getTaskIdHistory(requestId, deployId, host, lastTaskStatus, startedBefore, startedAfter, orderDirection, limitStart, limitCount);
+      Optional<Long> startedAfter, Optional<Long> updatedBefore, Optional<Long> updatedAfter, Optional<OrderDirection> orderDirection, Optional<Integer> limitStart, Integer limitCount) {
+    return history.getTaskIdHistory(requestId, deployId, host, lastTaskStatus, startedBefore, startedAfter, updatedBefore, updatedAfter, orderDirection, limitStart, limitCount);
   }
 
   private String getVarcharField(Optional<String> field, int maxLength) {

@@ -38,6 +38,7 @@ import com.google.inject.Provider;
 import com.google.inject.name.Named;
 import com.hubspot.baragon.models.BaragonRequestState;
 import com.hubspot.mesos.MesosUtils;
+import com.hubspot.mesos.Resources;
 import com.hubspot.singularity.DeployState;
 import com.hubspot.singularity.LoadBalancerRequestType;
 import com.hubspot.singularity.LoadBalancerRequestType.LoadBalancerRequestId;
@@ -72,6 +73,7 @@ import com.hubspot.singularity.api.SingularityScaleRequest;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.config.SingularityTaskMetadataConfiguration;
 import com.hubspot.singularity.data.DeployManager;
+import com.hubspot.singularity.data.PriorityManager;
 import com.hubspot.singularity.data.RackManager;
 import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.data.SlaveManager;
@@ -81,6 +83,7 @@ import com.hubspot.singularity.event.SingularityEventListener;
 import com.hubspot.singularity.mesos.SchedulerDriverSupplier;
 import com.hubspot.singularity.mesos.SingularityMesosScheduler;
 import com.hubspot.singularity.resources.DeployResource;
+import com.hubspot.singularity.resources.PriorityResource;
 import com.hubspot.singularity.resources.RackResource;
 import com.hubspot.singularity.resources.RequestResource;
 import com.hubspot.singularity.resources.SlaveResource;
@@ -100,6 +103,8 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
   protected DeployManager deployManager;
   @Inject
   protected TaskManager taskManager;
+  @Inject
+  protected PriorityManager priorityManager;
   @Inject
   protected SlaveManager slaveManager;
   @Inject
@@ -124,6 +129,8 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
   @Inject
   protected DeployResource deployResource;
   @Inject
+  protected PriorityResource priorityResource;
+  @Inject
   protected SingularityCleaner cleaner;
   @Inject
   protected SingularityConfiguration configuration;
@@ -136,8 +143,6 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
   @Inject
   protected TestingLoadBalancerClient testingLbClient;
   @Inject
-  protected SingularitySchedulerPriority schedulerPriority;
-  @Inject
   protected SingularityTaskReconciliation taskReconciliation;
   @Inject
   protected SingularityMailer mailer;
@@ -149,6 +154,8 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
   protected SingularityEventListener eventListener;
   @Inject
   protected SingularityExpiringUserActionPoller expiringUserActionPoller;
+  @Inject
+  protected SingularityPriorityKillPoller priorityKillPoller;
   @Inject
   protected SingularityHealthchecker healthchecker;
 
@@ -249,7 +256,7 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
 
   protected SingularityPendingTask buildPendingTask(SingularityRequest request, SingularityDeploy deploy, long launchTime, int instanceNo) {
     SingularityPendingTaskId pendingTaskId = new SingularityPendingTaskId(request.getId(), deploy.getId(), launchTime, instanceNo, PendingType.IMMEDIATE, launchTime);
-    SingularityPendingTask pendingTask = new SingularityPendingTask(pendingTaskId, Optional.<List<String>> absent(), Optional.<String> absent(), Optional.<String> absent(), Optional.<Boolean> absent(), Optional.<String> absent());
+    SingularityPendingTask pendingTask = new SingularityPendingTask(pendingTaskId, Optional.<List<String>> absent(), Optional.<String> absent(), Optional.<String> absent(), Optional.<Boolean> absent(), Optional.<String> absent(), Optional.<Resources>absent());
 
     return pendingTask;
   }
@@ -494,11 +501,11 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
   }
 
   protected void finishDeploy(SingularityDeployMarker marker, SingularityDeploy deploy) {
-    deployManager.deletePendingDeploy(requestId);
+    deployManager.deletePendingDeploy(marker.getRequestId());
 
     deployManager.saveDeployResult(marker, Optional.of(deploy), new SingularityDeployResult(DeployState.SUCCEEDED));
 
-    deployManager.saveNewRequestDeployState(new SingularityRequestDeployState(requestId, Optional.of(marker), Optional.<SingularityDeployMarker> absent()));
+    deployManager.saveNewRequestDeployState(new SingularityRequestDeployState(marker.getRequestId(), Optional.of(marker), Optional.<SingularityDeployMarker> absent()));
   }
 
   protected SingularityTask startTask(SingularityDeploy deploy) {
@@ -569,7 +576,7 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
     SingularityPendingTaskId pendingTaskId = new SingularityPendingTaskId(requestId, deployId,
         System.currentTimeMillis() + TimeUnit.DAYS.toMillis(random.nextInt(3)), random.nextInt(10), PendingType.IMMEDIATE, System.currentTimeMillis());
 
-    SingularityPendingTask pendingTask = new SingularityPendingTask(pendingTaskId, Optional.<List<String>> absent(), Optional.<String> absent(), Optional.<String> absent(), Optional.<Boolean> absent(), Optional.<String> absent());
+    SingularityPendingTask pendingTask = new SingularityPendingTask(pendingTaskId, Optional.<List<String>> absent(), Optional.<String> absent(), Optional.<String> absent(), Optional.<Boolean> absent(), Optional.<String> absent(), Optional.<Resources>absent());
 
     taskManager.savePendingTask(pendingTask);
 

@@ -271,11 +271,22 @@ public class S3LogResource extends AbstractHistoryResource {
     checkNotFound(configuration.isPresent(), "S3 configuration was absent");
   }
 
-  private SingularityRequestWithState getRequest(final String requestId) {
+  private Optional<String> getRequestGroup(final String requestId) {
     final Optional<SingularityRequestWithState> maybeRequest = requestManager.getRequest(requestId);
-    checkNotFound(maybeRequest.isPresent(), "RequestId %s does not exist", requestId);
-    authorizationHelper.checkForAuthorization(maybeRequest.get().getRequest(), user, SingularityAuthorizationScope.READ);
-    return maybeRequest.get();
+    if (maybeRequest.isPresent()) {
+      authorizationHelper.checkForAuthorization(maybeRequest.get().getRequest(), user, SingularityAuthorizationScope.READ);
+      return maybeRequest.get().getRequest().getGroup();
+    } else {
+      Optional<SingularityRequestHistory> maybeRequestHistory = requestHistoryHelper.getLastHistory(requestId);
+      if (maybeRequestHistory.isPresent()) {
+        authorizationHelper.checkForAuthorization(maybeRequestHistory.get().getRequest(), user, SingularityAuthorizationScope.READ);
+        return maybeRequestHistory.get().getRequest().getGroup();
+      } else {
+        // Deleted requests with no history data are searchable, but only by admins since we have no auth information about them
+        authorizationHelper.checkAdminAuthorization(user);
+        return Optional.absent();
+      }
+    }
   }
 
   @GET
@@ -290,7 +301,7 @@ public class S3LogResource extends AbstractHistoryResource {
     SingularityTaskId taskIdObject = getTaskIdObject(taskId);
 
     try {
-      return getS3Logs(configuration.get(), getRequest(taskIdObject.getRequestId()).getRequest().getGroup(), getS3PrefixesForTask(configuration.get(), taskIdObject, start, end));
+      return getS3Logs(configuration.get(), getRequestGroup(taskIdObject.getRequestId()), getS3PrefixesForTask(configuration.get(), taskIdObject, start, end));
     } catch (TimeoutException te) {
       throw timeout("Timed out waiting for response from S3 for %s", taskId);
     } catch (Throwable t) {
@@ -308,7 +319,7 @@ public class S3LogResource extends AbstractHistoryResource {
     checkS3();
 
     try {
-      return getS3Logs(configuration.get(), getRequest(requestId).getRequest().getGroup(), getS3PrefixesForRequest(configuration.get(), requestId, start, end));
+      return getS3Logs(configuration.get(), getRequestGroup(requestId), getS3PrefixesForRequest(configuration.get(), requestId, start, end));
     } catch (TimeoutException te) {
       throw timeout("Timed out waiting for response from S3 for %s", requestId);
     } catch (Throwable t) {
@@ -327,7 +338,7 @@ public class S3LogResource extends AbstractHistoryResource {
     checkS3();
 
     try {
-      return getS3Logs(configuration.get(), getRequest(requestId).getRequest().getGroup(), getS3PrefixesForDeploy(configuration.get(), requestId, deployId, start, end));
+      return getS3Logs(configuration.get(), getRequestGroup(requestId), getS3PrefixesForDeploy(configuration.get(), requestId, deployId, start, end));
     } catch (TimeoutException te) {
       throw timeout("Timed out waiting for response from S3 for %s-%s", requestId, deployId);
     } catch (Throwable t) {
