@@ -19,7 +19,7 @@ import TaskSearch from './components/taskSearch/TaskSearch';
 import DeployDetail from './components/deployDetail/DeployDetail';
 import RequestForm from './components/requestForm/RequestForm';
 import NewDeployForm from './components/newDeployForm/NewDeployForm';
-import { Tail, AggregateTail } from './components/logs/Tail';
+import { Tail, AggregateTail, CompressedLogView } from './components/logs/Tail';
 import RequestDetailPage from './components/requestDetail/RequestDetailPage';
 import Group from './components/groupDetail/GroupDetail.jsx';
 
@@ -51,6 +51,7 @@ const AppRouter = (props) => {
           <Route path="task">
             <Route path=":taskId(/files/**)" component={TaskDetail} store={props.store} />
             <Route path=":taskId/tail/**" component={Tail} />
+            <Route path=":taskId/view/**" component={CompressedLogView} />
           </Route>
           <Route path="racks(/:state)" component={Racks} />
           <Route path="slaves(/:state)" component={Slaves} />

@@ -3,10 +3,22 @@ import Utils from 'utils';
 
 import { fetchTasksForRequest } from './activeTasks';
 
-let fetchData = function(taskId, path, offset = undefined, length = 0) {
-  length = Math.max(length, 0);  // API breaks if you request a negative length
-  return $.ajax(
-    {url: `${ config.apiRoot }/sandbox/${ taskId }/read?${$.param({path, length, offset})}`});
+let fetchData = function(taskId, path, logType, offset = undefined, length = 0) {
+  if (logType == 'COMPRESSED') {
+    let params = {
+      key: path,
+      length: length > 0 ? length : undefined,
+      offset: offset
+    };
+    const splits = taskId.split('-');
+    const requestId = splits.slice(0, splits.length - 5).join('-');
+    return $.ajax(
+      {url: `${ config.apiRoot }/logs/request/${ requestId }/read?${$.param(params)}`});
+  } else {
+    length = Math.max(length, 0); // API breaks if you request a negative length
+    return $.ajax(
+      {url: `${ config.apiRoot }/sandbox/${ taskId }/read?${$.param({path, length, offset})}`});
+  }
 };
 
 let fetchTaskHistory = taskId =>
@@ -25,7 +37,7 @@ export const initializeUsingActiveTasks = (requestId, path, search, viewMode) =>
   }
 ;
 
-export const initialize = (requestId, path, search, taskIds, viewMode) =>
+export const initialize = (requestId, path, search, taskIds, viewMode, logType) =>
   function(dispatch, getState) {
     let taskIdGroups;
     if (viewMode === 'unified') {
@@ -34,13 +46,13 @@ export const initialize = (requestId, path, search, taskIds, viewMode) =>
       taskIdGroups = taskIds.map(taskId => [taskId]);
     }
 
-    dispatch(init(requestId, taskIdGroups, path, search, viewMode));
+    dispatch(init(requestId, taskIdGroups, path, search, viewMode, logType));
 
     let groupPromises = taskIdGroups.map(function(taskIds, taskGroupId) {
       let taskInitPromises = taskIds.map(function(taskId) {
         let taskInitDeferred = Q.defer();
         let resolvedPath = path.replace('$TASK_ID', taskId);
-        fetchData(taskId, resolvedPath).done(function({offset}) {
+        fetchData(taskId, resolvedPath, logType).done(function({offset}) {
           dispatch(initTask(taskId, offset, resolvedPath, true));
           return taskInitDeferred.resolve();
         })
@@ -66,13 +78,14 @@ export const initialize = (requestId, path, search, taskIds, viewMode) =>
   }
 ;
 
-export const init = (requestId, taskIdGroups, path, search, viewMode) =>
+export const init = (requestId, taskIdGroups, path, search, viewMode, logType) =>
   ({
     requestId,
     taskIdGroups,
     path,
     search,
     viewMode,
+    logType,
     type: 'LOG_INIT'
   })
 ;
@@ -129,10 +142,10 @@ export const taskHistory = (taskGroupId, taskId, taskHistory) =>
 export const getTasks = (taskGroup, tasks) => taskGroup.taskIds.map(taskId => tasks[taskId]);
 
 export const doesFinishedLogExist = (taskIds) =>
-  (dispatch) => {
+  (dispatch, getState) => {
     taskIds.map((taskId) => {
       const actualPath = config.finishedTaskLogPath.replace('$TASK_ID', taskId);
-      return fetchData(taskId, actualPath)
+      return fetchData(taskId, actualPath, getState().logType)
       .done(() => dispatch(finishedLogExists(taskId)));
     });
   }
@@ -140,10 +153,9 @@ export const doesFinishedLogExist = (taskIds) =>
 
 export const updateFilesizes = () =>
   function(dispatch, getState) {
-    let tasks;
-    tasks = getState();
+    let {tasks, logType} = getState();
     for (let taskId of tasks) {
-      fetchData(taskId, tasks[taskId.path]).done(({offset}) => {
+      fetchData(taskId, tasks[taskId.path], logType).done(({offset}) => {
         dispatch(taskFilesize(taskId, offset));
       });
     }
@@ -203,7 +215,7 @@ export const taskData = (taskGroupId, taskId, data, offset, nextOffset, append, 
 export const taskGroupFetchNext = taskGroupId =>
   (dispatch, getState) => {
     const state = getState();
-    const {taskGroups, logRequestLength, maxLines} = state;
+    const {taskGroups, logRequestLength, maxLines, logType} = state;
 
     const taskGroup = taskGroups[taskGroupId];
     const tasks = getTasks(taskGroup, state.tasks);
@@ -216,10 +228,12 @@ export const taskGroupFetchNext = taskGroupId =>
     dispatch({taskGroupId, type: 'LOG_REQUEST_START'});
     const promises = tasks.map(({taskId, exists, maxOffset, path, initialDataLoaded}) => {
       if (initialDataLoaded && exists !== false) {
-        const xhr = fetchData(taskId, path, maxOffset, logRequestLength);
+        const xhr = fetchData(taskId, path, logType, maxOffset, logRequestLength);
         const promise = xhr.done(({data, offset, nextOffset}) => {
           if (data.length > 0) {
-            nextOffset = offset + data.length;
+            if (_.isUndefined(nextOffset)) {
+              nextOffset = offset + data.length;
+            }
             return dispatch(taskData(taskGroupId, taskId, data, offset, nextOffset, true, maxLines));
           }
           return Promise.resolve();
@@ -240,7 +254,7 @@ export const taskGroupFetchNext = taskGroupId =>
 
 export const taskGroupFetchPrevious = taskGroupId =>
   function(dispatch, getState) {
-    let {tasks, taskGroups, logRequestLength, maxLines} = getState();
+    let {tasks, taskGroups, logRequestLength, maxLines, logType} = getState();
 
     const taskGroup = taskGroups[taskGroupId];
     tasks = getTasks(taskGroup, tasks);
@@ -259,7 +273,7 @@ export const taskGroupFetchPrevious = taskGroupId =>
     tasks = _.without(tasks, undefined);
     let promises = tasks.map(function({taskId, exists, minOffset, path, initialDataLoaded}) {
       if (minOffset > 0 && initialDataLoaded && exists !== false) {
-        let xhr = fetchData(taskId, path, Math.max(minOffset - logRequestLength, 0), Math.min(logRequestLength, minOffset));
+        let xhr = fetchData(taskId, path, logType, Math.max(minOffset - logRequestLength, 0), Math.min(logRequestLength, minOffset));
         return xhr.done(function({data, offset, nextOffset}) {
           if (data.length > 0) {
             nextOffset = offset + data.length;
@@ -352,7 +366,7 @@ export const setCurrentSearch = newSearch =>  // TODO: can we do something less 
 
 export const toggleTaskLog = taskId =>
   function(dispatch, getState) {
-    let {search, path, tasks, viewMode} = getState();
+    let {search, path, tasks, viewMode, logType} = getState();
     if (taskId in tasks) {
       // only remove task if it's not the last one
       if (Object.keys(tasks).length > 1) {
@@ -367,7 +381,7 @@ export const toggleTaskLog = taskId =>
 
       let resolvedPath = path.replace('$TASK_ID', taskId);
 
-      return fetchData(taskId, resolvedPath).done(function({offset}) {
+      return fetchData(taskId, resolvedPath, logType).done(function({offset}) {
         dispatch(initTask(taskId, offset, resolvedPath, true));
 
         return getState().taskGroups.map(function(taskGroup, taskGroupId) {
