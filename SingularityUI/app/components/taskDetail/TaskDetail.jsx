@@ -175,9 +175,9 @@ class TaskDetail extends Component {
     if (!files || _.isUndefined(files.currentDirectory)) {
       let message;
       if (props.task.isStillRunning) {
-        message = 'Could not retrieve files. The task may still be starting.'
+        message = 'Could not retrieve files. The task may still be starting.';
       } else {
-        message = 'Could not retrieve files. The directory may have already been cleaned up.'
+        message = 'Could not retrieve files. The directory may have already been cleaned up.';
       }
       return (
         <Section title="Files">
