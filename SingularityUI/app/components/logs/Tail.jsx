@@ -55,7 +55,7 @@ function refreshAggregateTail(props) {
   if (taskIds) {
     initPromise = props.initialize(props.params.requestId, props.params.splat, search, taskIds.split(','), viewMode);
   } else {
-    initPromise = props.initializeUsingActiveTasks(props.params.requestId, props.params.splat, search, viewMode);
+    initPromise = props.initializeUsingActiveTasks(props.params.requestId, props.params.splat, search, viewMode, 'SANDBOX');
   }
   initPromise.then(() => {
     props.updateActiveTasks(props.params.requestId);

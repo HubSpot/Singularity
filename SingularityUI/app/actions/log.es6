@@ -26,12 +26,12 @@ let fetchTaskHistory = taskId =>
     {url: `${ config.apiRoot }/history/task/${ taskId }`})
 ;
 
-export const initializeUsingActiveTasks = (requestId, path, search, viewMode) =>
+export const initializeUsingActiveTasks = (requestId, path, search, viewMode, logType) =>
   function(dispatch) {
     let deferred = Q.defer();
     fetchTasksForRequest(requestId).done(function(tasks) {
       let taskIds = _.sortBy(_.pluck(tasks, 'taskId'), taskId => taskId.instanceNo).map(taskId => taskId.id);
-      return dispatch(initialize(requestId, path, search, taskIds, viewMode)).then(() => deferred.resolve());
+      return dispatch(initialize(requestId, path, search, taskIds, viewMode, logType)).then(() => deferred.resolve());
     });
     return deferred.promise;
   }
@@ -342,7 +342,7 @@ export const selectLogColor = color =>
 
 export const switchViewMode = newViewMode =>
   function(dispatch, getState) {
-    let { taskGroups, path, activeRequest, search, viewMode } = getState();
+    let { taskGroups, path, activeRequest, search, viewMode, logType } = getState();
 
     if (__in__(newViewMode, ['custom', viewMode])) {
       return;
@@ -351,15 +351,15 @@ export const switchViewMode = newViewMode =>
     let taskIds = _.flatten(_.pluck(taskGroups, 'taskIds'));
 
     dispatch({viewMode: newViewMode, type: 'LOG_SWITCH_VIEW_MODE'});
-    return dispatch(initialize(activeRequest.requestId, path, search, taskIds, newViewMode));
+    return dispatch(initialize(activeRequest.requestId, path, search, taskIds, newViewMode, logType));
   }
 ;
 
 export const setCurrentSearch = newSearch =>  // TODO: can we do something less heavyweight?
   function(dispatch, getState) {
-    let {activeRequest, path, taskGroups, currentSearch, viewMode} = getState();
+    let {activeRequest, path, taskGroups, currentSearch, viewMode, logType} = getState();
     if (newSearch !== currentSearch) {
-      return dispatch(initialize(activeRequest.requestId, path, newSearch, _.flatten(_.pluck(taskGroups, 'taskIds')), viewMode));
+      return dispatch(initialize(activeRequest.requestId, path, newSearch, _.flatten(_.pluck(taskGroups, 'taskIds')), viewMode, logType));
     }
   }
 ;
