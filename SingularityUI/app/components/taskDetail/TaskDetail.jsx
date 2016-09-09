@@ -173,10 +173,16 @@ class TaskDetail extends Component {
 
   renderFiles(files) {
     if (!files || _.isUndefined(files.currentDirectory)) {
+      let message;
+      if (this.props.task.isStillRunning) {
+        message = 'Could not retrieve files. The task may still be starting.';
+      } else {
+        message = 'Could not retrieve files. The directory may have already been cleaned up.';
+      }
       return (
         <Section title="Files">
           <div className="empty-table-message">
-            {'Could not retrieve files. The host of this task is likely offline or its directory has been cleaned up.'}
+            {message}
           </div>
         </Section>
       );
