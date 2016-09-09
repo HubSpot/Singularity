@@ -53,13 +53,15 @@ export const initialize = (requestId, path, search, taskIds, viewMode, logType) 
         let taskInitDeferred = Q.defer();
         let resolvedPath = path.replace('$TASK_ID', taskId);
         fetchData(taskId, resolvedPath, logType).done(function({offset}) {
-          dispatch(initTask(taskId, offset, resolvedPath, true));
+          dispatch(initTask(taskId, offset, resolvedPath, true, false));
           return taskInitDeferred.resolve();
         })
         .error(function({status}) {
           if (status === 404) {
             dispatch(taskFileDoesNotExist(taskGroupId, taskId));
             return taskInitDeferred.resolve();
+          } else if (status === 400 && logType == 'COMPRESSED') {
+            dispatch(taskFileInvalidCompression(taskGroupId, taskId));
           } else {
             return taskInitDeferred.reject();
           }
@@ -98,12 +100,13 @@ export const addTaskGroup = (taskIds, search) =>
   })
 ;
 
-export const initTask = (taskId, offset, path, exists) =>
+export const initTask = (taskId, offset, path, exists, invalidCompression) =>
   ({
     taskId,
     offset,
     path,
     exists,
+    invalidCompression,
     type: 'LOG_TASK_INIT'
   })
 ;
@@ -113,6 +116,14 @@ export const taskFileDoesNotExist = (taskGroupId, taskId) =>
     taskId,
     taskGroupId,
     type: 'LOG_TASK_FILE_DOES_NOT_EXIST'
+  })
+;
+
+export const taskFileInvalidCompression = (taskGroupId, taskId) =>
+  ({
+    taskId,
+    taskGroupId,
+    type: 'LOG_TASK_FILE_INVALID_COMPRESSION'
   })
 ;
 
@@ -248,6 +259,9 @@ export const taskGroupFetchNext = taskGroupId =>
       if (error.status === 404) {
         dispatch(taskFileDoesNotExist(taskGroupId, error.taskId));
       }
+      if (error.status === 400 && logType == 'COMPRESSED') {
+        dispatch(taskFileInvalidCompression(taskGroupId, error.taskId))
+      }
     });
   }
 ;
@@ -382,7 +396,7 @@ export const toggleTaskLog = taskId =>
       let resolvedPath = path.replace('$TASK_ID', taskId);
 
       return fetchData(taskId, resolvedPath, logType).done(function({offset}) {
-        dispatch(initTask(taskId, offset, resolvedPath, true));
+        dispatch(initTask(taskId, offset, resolvedPath, true, false));
 
         return getState().taskGroups.map(function(taskGroup, taskGroupId) {
           if (__in__(taskId, taskGroup.taskIds)) {

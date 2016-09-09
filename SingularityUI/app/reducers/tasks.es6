@@ -13,7 +13,8 @@ let buildTask = (taskId, offset=0) =>
     initialDataLoaded: false,
     logDataLoaded: false,
     terminated: false,
-    exists: false
+    exists: false,
+    invalidCompression: false
   })
 ;
 
@@ -69,6 +70,9 @@ const ACTIONS = {
   },
   LOG_TASK_FILE_DOES_NOT_EXIST(state, {taskId}) {
     return updateTask(state, taskId, {exists: false, initialDataLoaded: true});
+  },
+  LOG_TASK_FILE_INVALID_COMPRESSION(state, {taskId}) {
+    return updateTask(state, taskId, {invalidCompression: true, initialDataLoaded: true});
   },
   LOG_SCROLL_TO_TOP(state, {taskIds}) {
     let newState = Object.assign({}, state);
