@@ -156,7 +156,7 @@ public class SingularityExecutorTaskProcessBuilder implements Callable<ProcessBu
     }
     Path basePath = MesosUtils.getTaskDirectoryPath(taskId);
     String appPath = configuration.getTaskAppDirectory().startsWith("./") ? configuration.getTaskAppDirectory().replace("./", "") : configuration.getTaskAppDirectory();
-    Path app = basePath.resolve(configuration.getTaskAppDirectory());
+    Path app = basePath.resolve(appPath);
     return app.relativize(basePath).toString() + "/" + configuration.getServiceLog();
   }
 
