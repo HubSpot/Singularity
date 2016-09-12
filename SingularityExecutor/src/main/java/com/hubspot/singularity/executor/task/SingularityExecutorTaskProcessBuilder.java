@@ -1,6 +1,7 @@
 package com.hubspot.singularity.executor.task;
 
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.concurrent.Callable;
 
@@ -10,6 +11,7 @@ import org.apache.mesos.Protos.TaskState;
 import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
 import com.hubspot.deploy.ExecutorData;
+import com.hubspot.mesos.MesosUtils;
 import com.hubspot.singularity.executor.TemplateManager;
 import com.hubspot.singularity.executor.config.SingularityExecutorConfiguration;
 import com.hubspot.singularity.executor.models.DockerContext;
@@ -114,7 +116,7 @@ public class SingularityExecutorTaskProcessBuilder implements Callable<ProcessBu
       configuration.getTaskAppDirectory(),
       configuration.getLogrotateToDirectory(),
       executorData.getUser().or(configuration.getDefaultRunAsUser()),
-      configuration.getServiceLog(),
+      serviceLogOutPath(task.getTaskId()),
       task.getTaskId(),
       executorData.getMaxTaskThreads().or(configuration.getMaxTaskThreads()),
       !getExecutorUser().equals(executorData.getUser().or(configuration.getDefaultRunAsUser())),
@@ -146,6 +148,15 @@ public class SingularityExecutorTaskProcessBuilder implements Callable<ProcessBu
     processBuilder.redirectOutput(task.getTaskDefinition().getExecutorBashOutPath().toFile());
 
     return processBuilder;
+  }
+
+  private String serviceLogOutPath(String taskId) {
+    if (configuration.getTaskAppDirectory().equals(".")) {
+      return configuration.getServiceLog();
+    }
+    Path basePath = MesosUtils.getTaskDirectoryPath(taskId);
+    Path app = basePath.resolve(configuration.getTaskAppDirectory());
+    return app.relativize(basePath).toString() + "/" + configuration.getServiceLog();
   }
 
   @Override
