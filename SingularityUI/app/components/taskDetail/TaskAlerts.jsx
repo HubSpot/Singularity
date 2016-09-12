@@ -87,7 +87,7 @@ const TaskAlerts = (props) => {
           label="Timestamp"
           id="timestamp"
           key="timestamp"
-          cellData={(healthcheckResult) => Utils.absoluteTimestamp(healthcheckResult.timestamp)}
+          cellData={(healthcheckResult) => Utils.absoluteTimestampWithSeconds(healthcheckResult.timestamp)}
         />
         <Column
           label="Duration"
