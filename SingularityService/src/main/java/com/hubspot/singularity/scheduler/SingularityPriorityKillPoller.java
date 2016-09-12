@@ -23,7 +23,7 @@ import com.hubspot.singularity.data.TaskManager;
 
 @Singleton
 public class SingularityPriorityKillPoller extends SingularityLeaderOnlyPoller {
-    private static final Logger LOG = LoggerFactory.getLogger(SingularityScheduledJobPoller.class);
+    private static final Logger LOG = LoggerFactory.getLogger(SingularityPriorityKillPoller.class);
 
     private final PriorityManager priorityManager;
     private final RequestManager requestManager;

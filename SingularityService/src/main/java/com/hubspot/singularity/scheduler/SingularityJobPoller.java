@@ -10,6 +10,7 @@ import java.util.concurrent.TimeUnit;
 
 import javax.inject.Singleton;
 
+import org.apache.commons.lang.time.DurationFormatUtils;
 import org.dmfs.rfc5545.recur.InvalidRecurrenceRuleException;
 import org.quartz.CronExpression;
 import org.slf4j.Logger;
@@ -72,7 +73,6 @@ public class SingularityJobPoller extends SingularityLeaderOnlyPoller {
         continue;
       }
 
-
       requestIdsToLookup.add(taskId.getRequestId());
     }
 
@@ -90,15 +90,16 @@ public class SingularityJobPoller extends SingularityLeaderOnlyPoller {
 
       if (!request.getRequest().getRequestType().isLongRunning() &&
           configuration.getTaskExecutionTimeLimitMillis().isPresent() &&
-          (start - taskId.getStartedAt()) >= configuration.getTaskExecutionTimeLimitMillis().get()) {
+          runtime >= configuration.getTaskExecutionTimeLimitMillis().get()) {
+
         taskManager.createTaskCleanup(new SingularityTaskCleanup(
             Optional.<String>absent(),
             TaskCleanupType.TASK_EXCEEDED_TIME_LIMIT,
             start,
             taskId,
-            Optional.of(String.format("Task has run for %s milliseconds, which exceeds the maximum execution time of %s milliseconds",
-                start - taskId.getStartedAt(),
-                configuration.getTaskExecutionTimeLimitMillis().get())),
+            Optional.of(String.format("Task has run for %s, which exceeds the maximum execution time of %s",
+                DurationFormatUtils.formatDurationHMS(runtime),
+                DurationFormatUtils.formatDurationHMS(configuration.getTaskExecutionTimeLimitMillis().get()))),
             Optional.of(UUID.randomUUID().toString())));
       }
 
