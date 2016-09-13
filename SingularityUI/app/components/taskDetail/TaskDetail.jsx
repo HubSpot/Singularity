@@ -458,12 +458,8 @@ function mapStateToProps(state, ownProps) {
   }
   task = mapTaskToProps(task.data);
   task = mapHealthchecksToProps(task);
-  let defaultFilePath;
-  if (!_.isUndefined(ownProps.files)) {
-    defaultFilePath = ownProps.files.currentDirectory;
-  } else {
-    defaultFilePath = '';
-  }
+  const defaultFilePath = _.isUndefined(ownProps.files) ? '' : ownProps.files.currentDirectory;
+
   return {
     task,
     taskId: ownProps.params.taskId,
