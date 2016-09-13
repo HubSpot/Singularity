@@ -92,9 +92,6 @@ public class UIConfiguration {
   @NotNull
   private Optional<String> extraScript = Optional.absent();
 
-  @JsonProperty
-  private Optional<Boolean> defaultToTaskIdDirectory = Optional.absent();
-
 
   public boolean isHideNewDeployButton() {
     return hideNewDeployButton;
@@ -222,13 +219,5 @@ public class UIConfiguration {
 
   public void setExtraScript(Optional<String> extraScript) {
     this.extraScript = extraScript;
-  }
-
-  public Optional<Boolean> getDefaultToTaskIdDirectory() {
-    return defaultToTaskIdDirectory;
-  }
-
-  public void setDefaultToTaskIdDirectory(Optional<Boolean> defaultToTaskIdDirectory) {
-    this.defaultToTaskIdDirectory = defaultToTaskIdDirectory;
   }
 }
