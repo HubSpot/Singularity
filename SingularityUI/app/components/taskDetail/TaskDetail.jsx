@@ -463,7 +463,7 @@ function mapStateToProps(state, ownProps) {
   return {
     task,
     taskId: ownProps.params.taskId,
-    currentFilePath: _.isUndefined(ownProps.params.splat) ? defaultFilePath : ownProps.params.splat,
+    currentFilePath: _.isUndefined(ownProps.params.splat) ? defaultFilePath : ownProps.params.splat.substring(1),
     taskCleanups: state.api.taskCleanups.data,
     files: state.api.taskFiles,
     resourceUsageNotFound: state.api.taskResourceUsage.statusCode === 404,
@@ -491,7 +491,7 @@ function mapDispatchToProps(dispatch) {
 }
 
 function refresh(props) {
-  props.fetchTaskFiles(props.params.taskId, props.params.splat, [400, 404]);
+  props.fetchTaskFiles(props.params.taskId, _.isUndefined(props.params.splat) ? undefined : props.params.splat.substring(1), [400, 404]);
   const promises = [];
   const taskPromise = props.fetchTaskHistory(props.params.taskId);
   taskPromise.then(() => {
