@@ -1,3 +1,4 @@
+import 'core-js/modules/es6.symbol';
 import React from 'react';
 import ReactDOM from 'react-dom';
 import FormModal from './components/common/modal/FormModal';
