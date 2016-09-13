@@ -116,6 +116,7 @@ public class SingularityExecutorTaskProcessBuilder implements Callable<ProcessBu
       configuration.getTaskAppDirectory(),
       configuration.getLogrotateToDirectory(),
       executorData.getUser().or(configuration.getDefaultRunAsUser()),
+      configuration.getServiceLog(),
       serviceLogOutPath(),
       task.getTaskId(),
       executorData.getMaxTaskThreads().or(configuration.getMaxTaskThreads()),
