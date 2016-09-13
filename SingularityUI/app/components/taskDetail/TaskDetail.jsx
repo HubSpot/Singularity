@@ -458,10 +458,11 @@ function mapStateToProps(state, ownProps) {
   }
   task = mapTaskToProps(task.data);
   task = mapHealthchecksToProps(task);
+  const defaultDirectory = config.defaultToTaskIdDirectory ? ownProps.params.taskId : '';
   return {
     task,
     taskId: ownProps.params.taskId,
-    currentFilePath: _.isUndefined(ownProps.params.splat) ? ownProps.params.taskId : ownProps.params.splat,
+    currentFilePath: _.isUndefined(ownProps.params.splat) ? defaultDirectory : ownProps.params.splat,
     taskCleanups: state.api.taskCleanups.data,
     files: state.api.taskFiles,
     resourceUsageNotFound: state.api.taskResourceUsage.statusCode === 404,
