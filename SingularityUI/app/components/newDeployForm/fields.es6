@@ -126,7 +126,8 @@ export const DOCKER_VOLUME_FIELDS = [
 
 function makeIndexedFields(fields) {
   const indexedFields = {};
-  for (const field of fields) {
+  for (var i = 0; i < fields.length; i++) {
+    const field = fields[i];
     if (field.type === 'object') {
       _.extend(indexedFields, makeIndexedFields(field.values));
     } else {
