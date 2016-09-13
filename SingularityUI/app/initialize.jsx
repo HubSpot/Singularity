@@ -1,6 +1,5 @@
 // explicit polyfills for older browsers
-import Symbol from 'core-js/es6/symbol';
-import Promise from 'core-js/es6/promise';
+import 'core-js/es6';
 
 import React from 'react';
 import ReactDOM from 'react-dom';
