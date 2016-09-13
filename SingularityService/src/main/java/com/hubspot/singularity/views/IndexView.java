@@ -94,6 +94,7 @@ public class IndexView extends View {
 
     this.runningTaskLogPath = configuration.getUiConfiguration().getRunningTaskLogPath();
     this.finishedTaskLogPath = configuration.getUiConfiguration().getFinishedTaskLogPath();
+
     this.showTaskDiskResource = configuration.getUiConfiguration().isShowTaskDiskResource();
 
     this.commonHostnameSuffixToOmit = configuration.getCommonHostnameSuffixToOmit().or("");
