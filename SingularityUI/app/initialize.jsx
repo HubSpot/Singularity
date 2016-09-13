@@ -1,3 +1,6 @@
+// explicit polyfills for older browsers
+import 'core-js/es6';
+
 import React from 'react';
 import ReactDOM from 'react-dom';
 import FormModal from './components/common/modal/FormModal';
