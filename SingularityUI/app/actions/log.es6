@@ -289,7 +289,6 @@ export const taskGroupFetchPrevious = taskGroupId =>
         let requestedOffset = logType == 'COMPRESSED' ? minOffset : Math.max(minOffset - logRequestLength, 0);
         let xhr = fetchData(taskId, path, logType, requestedOffset, Math.min(logRequestLength, minOffset), true);
         return xhr.done(function({data, offset, nextOffset}) {
-          console.log(`fetched previous ${offset} , ${nextOffset}`)
           if (data.length > 0) {
             if (logType == 'COMPRESSED') {
                return dispatch(taskData(taskGroupId, taskId, data, nextOffset, offset, false, maxLines));
