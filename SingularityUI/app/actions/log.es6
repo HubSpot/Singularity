@@ -3,12 +3,13 @@ import Utils from 'utils';
 
 import { fetchTasksForRequest } from './activeTasks';
 
-let fetchData = function(taskId, path, logType, offset = undefined, length = 0) {
+let fetchData = function(taskId, path, logType, offset = undefined, length = 0, reverse = false) {
   if (logType == 'COMPRESSED') {
     let params = {
       key: path,
       length: length > 0 ? length : undefined,
-      offset: offset
+      offset: offset,
+      reverse: reverse
     };
     const splits = taskId.split('-');
     const requestId = splits.slice(0, splits.length - 5).join('-');
@@ -242,9 +243,7 @@ export const taskGroupFetchNext = taskGroupId =>
         const xhr = fetchData(taskId, path, logType, maxOffset, logRequestLength);
         const promise = xhr.done(({data, offset, nextOffset}) => {
           if (data.length > 0) {
-            if (_.isUndefined(nextOffset)) {
-              nextOffset = offset + data.length;
-            }
+            nextOffset = _.isUndefined(nextOffset) ? offset + data.length : nextOffset;
             return dispatch(taskData(taskGroupId, taskId, data, offset, nextOffset, true, maxLines));
           }
           return Promise.resolve();
@@ -287,11 +286,17 @@ export const taskGroupFetchPrevious = taskGroupId =>
     tasks = _.without(tasks, undefined);
     let promises = tasks.map(function({taskId, exists, minOffset, path, initialDataLoaded}) {
       if (minOffset > 0 && initialDataLoaded && exists !== false) {
-        let xhr = fetchData(taskId, path, logType, Math.max(minOffset - logRequestLength, 0), Math.min(logRequestLength, minOffset));
+        let requestedOffset = logType == 'COMPRESSED' ? minOffset : Math.max(minOffset - logRequestLength, 0);
+        let xhr = fetchData(taskId, path, logType, requestedOffset, Math.min(logRequestLength, minOffset), true);
         return xhr.done(function({data, offset, nextOffset}) {
+          console.log(`fetched previous ${offset} , ${nextOffset}`)
           if (data.length > 0) {
-            nextOffset = offset + data.length;
-            return dispatch(taskData(taskGroupId, taskId, data, offset, nextOffset, false, maxLines));
+            if (logType == 'COMPRESSED') {
+               return dispatch(taskData(taskGroupId, taskId, data, nextOffset, offset, false, maxLines));
+            } else {
+              nextOffset = offset + data.length;
+              return dispatch(taskData(taskGroupId, taskId, data, offset, nextOffset, false, maxLines));
+            }
           }
         });
       } else {
