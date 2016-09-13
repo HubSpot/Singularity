@@ -116,7 +116,7 @@ public class SingularityExecutorTaskProcessBuilder implements Callable<ProcessBu
       configuration.getTaskAppDirectory(),
       configuration.getLogrotateToDirectory(),
       executorData.getUser().or(configuration.getDefaultRunAsUser()),
-      serviceLogOutPath(task.getTaskId()),
+      serviceLogOutPath(),
       task.getTaskId(),
       executorData.getMaxTaskThreads().or(configuration.getMaxTaskThreads()),
       !getExecutorUser().equals(executorData.getUser().or(configuration.getDefaultRunAsUser())),
@@ -150,11 +150,11 @@ public class SingularityExecutorTaskProcessBuilder implements Callable<ProcessBu
     return processBuilder;
   }
 
-  private String serviceLogOutPath(String taskId) {
+  private String serviceLogOutPath() {
     if (configuration.getTaskAppDirectory().equals(".")) {
       return configuration.getServiceLog();
     }
-    Path basePath = MesosUtils.getTaskDirectoryPath(taskId);
+    Path basePath = task.getTaskDefinition().getTaskDirectoryPath();
     String appPath = configuration.getTaskAppDirectory().startsWith("./") ? configuration.getTaskAppDirectory().replace("./", "") : configuration.getTaskAppDirectory();
     Path app = basePath.resolve(appPath);
     return app.relativize(basePath).toString() + "/" + configuration.getServiceLog();
