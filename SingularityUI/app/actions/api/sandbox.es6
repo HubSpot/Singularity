@@ -4,7 +4,7 @@ export const FetchTaskFiles = buildApiAction(
   'FETCH_TASK_FILES',
   (taskId, path = undefined, catchStatusCodes = null) => {
     let url;
-    if (path) {
+    if (!_.isUndefined(path)) {
       url = `/sandbox/${taskId}/browse?path=${path}`
     } else {
       url = `/sandbox/${taskId}/browse`
