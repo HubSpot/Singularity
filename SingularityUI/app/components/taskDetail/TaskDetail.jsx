@@ -458,10 +458,11 @@ function mapStateToProps(state, ownProps) {
   }
   task = mapTaskToProps(task.data);
   task = mapHealthchecksToProps(task);
+  const defaultDirectory = config.defaultToTaskIdDirectory ? ownProps.params.taskId : '';
   return {
     task,
     taskId: ownProps.params.taskId,
-    currentFilePath: _.isUndefined(ownProps.params.splat) ? ownProps.params.taskId : ownProps.params.splat,
+    currentFilePath: _.isUndefined(ownProps.params.splat) ? defaultDirectory : ownProps.params.splat,
     taskCleanups: state.api.taskCleanups.data,
     files: state.api.taskFiles,
     resourceUsageNotFound: state.api.taskResourceUsage.statusCode === 404,
@@ -489,7 +490,8 @@ function mapDispatchToProps(dispatch) {
 }
 
 function refresh(props) {
-  props.fetchTaskFiles(props.params.taskId, props.params.splat || props.params.taskId, [400, 404]);
+  const defaultDirectory = config.defaultToTaskIdDirectory ? props.params.taskId : '';
+  props.fetchTaskFiles(props.params.taskId, props.params.splat || defaultDirectory, [400, 404]);
   const promises = [];
   const taskPromise = props.fetchTaskHistory(props.params.taskId);
   taskPromise.then(() => {
