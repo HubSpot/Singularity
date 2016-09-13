@@ -29,8 +29,8 @@ public class BlockCompressedFileHelper {
       }
       byte[] bytes = new byte[length];
       int bytesRead = stream.read(bytes, 0, length);
-      LOG.trace("Read {} bytes at offset {} for log at {}", bytesRead, offset, url.getPath());
       long newOffset = stream.getPosition();
+      LOG.trace("Read {} bytes at offset {} (next offset is {}) for log at {}", bytesRead, offset, newOffset, url.getPath());
       return new MesosFileChunkObject(new String(bytes, Charsets.UTF_8), offset.or(0L), Optional.of(newOffset));
     } catch (FileTruncatedException fte) {
       throw WebExceptions.badRequest(String.format("File at %s is not block compressed", url.getPath()), fte);
@@ -48,12 +48,46 @@ public class BlockCompressedFileHelper {
 
     try {
       long nextOffsetStart = offset.get();
-      byte[] bytes = new byte[length];
+      byte[] bytes = new byte[0];
       long bytesRead = 0;
+      boolean continueReading = true;
 
-      while(readFromPreviousBlock(stream, nextOffsetStart, bytes, bytesRead, length)) {
+      while(continueReading) {
+        long remainingInBlock = BlockCompressedFilePointerUtil.getBlockOffset(nextOffsetStart);
+        long blockStart = BlockCompressedFilePointerUtil.getBlockAddress(nextOffsetStart);
+        long bytesNeeded = length - bytesRead;
+
+        LOG.trace("Block starting at {} has {} bytes remaining, need to read {}", blockStart, remainingInBlock, bytesNeeded);
+
+        // Seek to beginning of current block or back as many bytes as we need to read from the starting offset
+        int neededInBlock = (int) Math.min(remainingInBlock, bytesNeeded);
+        int inBlockOffset = (int) remainingInBlock - neededInBlock;
+        stream.seek(makeFilePointer(blockStart, inBlockOffset));
+
+        // Read the needed number of bytes into tempBytes and update our possible next offset and total bytes
+        byte[] tempBytes = new byte[neededInBlock];
+        int read = stream.read(tempBytes, 0, neededInBlock);
+        int readStart = (int) Math.max(0, read - bytesNeeded);
+        nextOffsetStart = Math.max(0, nextOffsetStart - read);
+        bytesRead += Math.max(0, read - readStart);
+        LOG.trace("Read {} total bytes", bytesRead);
+
+        // Copy the bytes we read into our overall result
+        bytes = concatenate(Arrays.copyOfRange(tempBytes, readStart, read), bytes);
+
+        if (bytesRead >= bytesNeeded || nextOffsetStart == 0) {
+          // Finished reading length bytes or reached beginning of the file
+          continueReading = false;
+        } else {
+          // Move to end of previous block
+          long previousBlockPointer = makeFilePointer(Math.max((blockStart >> 16) - 1L, 0L), 0);
+          stream.seek(previousBlockPointer);
+          nextOffsetStart = makeFilePointer(previousBlockPointer, stream.available());
+          continueReading = true;
+        }
         LOG.trace("Read {} bytes of {} max, moved offset back to {}", bytesRead, length, nextOffsetStart);
       }
+      LOG.trace("Read {} bytes in reverse from offset {} for log at {}", bytesRead, offset, url.getPath());
 
       // Offset = largest virtualFilePointer read from, nextOffset = smallest virtualFilePointer read from
       return new MesosFileChunkObject(new String(bytes, Charsets.UTF_8), offset.get(), Optional.of(nextOffsetStart));
@@ -61,33 +95,6 @@ public class BlockCompressedFileHelper {
       throw WebExceptions.badRequest(String.format("File at %s is not block compressed", url.getPath()), fte);
     } finally {
       stream.close();
-    }
-  }
-
-  private static boolean readFromPreviousBlock(final BlockCompressedInputStream stream, long nextOffsetStart, byte[] bytes, long bytesRead, final long length) throws IOException {
-    long remainingInBlock = BlockCompressedFilePointerUtil.getBlockOffset(nextOffsetStart);
-    long blockStart = BlockCompressedFilePointerUtil.getBlockAddress(nextOffsetStart);
-    long bytesNeeded = length - bytesRead;
-
-    // Seek to beginning of current block
-    stream.seek(makeFilePointer(blockStart, 0));
-
-    byte[] tempBytes = new byte[(int) remainingInBlock];
-    int read = stream.read(tempBytes, 0, (int) remainingInBlock);
-    int readStart = (int) Math.max(0, read - bytesNeeded);
-    nextOffsetStart = Math.max(0, nextOffsetStart - read);
-    bytesRead += Math.max(0, read - readStart);
-    bytes = concatenate(Arrays.copyOfRange(tempBytes, readStart, read), bytes);
-
-    if (bytesRead >= bytesNeeded || nextOffsetStart == 0) {
-      // Read length bytes or reached beginning of the file
-      return false;
-    } else {
-      // Move to end of previous block
-      long previousBlockPointer = makeFilePointer(blockStart - 1L, 0);
-      stream.seek(previousBlockPointer);
-      nextOffsetStart = makeFilePointer(blockStart - 1L, stream.available());
-      return true;
     }
   }
 
