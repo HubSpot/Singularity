@@ -1,4 +1,7 @@
+// explicit polyfills for older browsers
 import 'core-js/modules/es6.symbol';
+import 'core-js/modules/es6.promise';
+
 import React from 'react';
 import ReactDOM from 'react-dom';
 import FormModal from './components/common/modal/FormModal';
