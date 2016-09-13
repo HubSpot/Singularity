@@ -42,7 +42,7 @@ import com.hubspot.singularity.scheduler.SingularityTaskReconciliation;
 
 @Singleton
 class SingularityStartup {
-
+  private static final int THRESHOLD = 128; // todo: put in SingularityConfiguration?
   private static final Logger LOG = LoggerFactory.getLogger(SingularityStartup.class);
 
   private final MesosClient mesosClient;
@@ -115,6 +115,7 @@ class SingularityStartup {
   @VisibleForTesting
   void checkSchedulerForInconsistentState() {
     final long now = System.currentTimeMillis();
+    int numPendingStartupRequests = 0;
 
     final Map<SingularityDeployKey, SingularityPendingTaskId> deployKeyToPendingTaskId = getDeployKeyToPendingTaskId();
 
@@ -123,7 +124,13 @@ class SingularityStartup {
         case ACTIVE:
         case SYSTEM_COOLDOWN:
         case DEPLOYING_TO_UNPAUSE:
-          checkActiveRequest(requestWithState, deployKeyToPendingTaskId, now);
+          if(checkActiveRequest(requestWithState, deployKeyToPendingTaskId, now)) {
+            numPendingStartupRequests++;
+            if (numPendingStartupRequests > THRESHOLD) {
+              LOG.info("Reached startup task threshold of %s", THRESHOLD);
+              return; // todo: abort Singularity??
+            }
+          }
           break;
         case DELETED:
         case PAUSED:
@@ -133,18 +140,18 @@ class SingularityStartup {
     }
   }
 
-  private void checkActiveRequest(SingularityRequestWithState requestWithState, Map<SingularityDeployKey, SingularityPendingTaskId> deployKeyToPendingTaskId, final long timestamp) {
+  private boolean checkActiveRequest(SingularityRequestWithState requestWithState, Map<SingularityDeployKey, SingularityPendingTaskId> deployKeyToPendingTaskId, final long timestamp) {
     final SingularityRequest request = requestWithState.getRequest();
 
     if (request.getRequestType() == RequestType.ON_DEMAND || request.getRequestType() == RequestType.RUN_ONCE) {
-      return;  // There's no situation where we'd want to schedule an On Demand or Run Once request at startup, so don't even bother with them.
+      return false;  // There's no situation where we'd want to schedule an On Demand or Run Once request at startup, so don't even bother with them.
     }
 
     Optional<SingularityRequestDeployState> requestDeployState = deployManager.getRequestDeployState(request.getId());
 
     if (!requestDeployState.isPresent() || !requestDeployState.get().getActiveDeploy().isPresent()) {
       LOG.debug("No active deploy for {} - not scheduling on startup", request.getId());
-      return;
+      return false;
     }
 
     final String activeDeployId = requestDeployState.get().getActiveDeploy().get().getDeployId();
@@ -155,11 +162,12 @@ class SingularityStartup {
 
       if (pendingTaskId != null && pendingTaskId.getCreatedAt() >= requestWithState.getTimestamp()) {
         LOG.info("Not rescheduling {} because {} is newer than {}", request.getId(), pendingTaskId, requestWithState.getTimestamp());
-        return;
+        return false;
       }
     }
 
     requestManager.addToPendingQueue(new SingularityPendingRequest(request.getId(), activeDeployId, timestamp, Optional.<String> absent(), PendingType.STARTUP, Optional.<Boolean> absent(), Optional.<String> absent()));
+    return true;
   }
 
   private void enqueueHealthAndNewTaskChecks() {
