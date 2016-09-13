@@ -10,7 +10,7 @@ import java.util.concurrent.TimeUnit;
 
 import javax.inject.Singleton;
 
-import org.apache.commons.lang.time.DurationFormatUtils;
+import org.apache.commons.lang3.time.DurationFormatUtils;
 import org.dmfs.rfc5545.recur.InvalidRecurrenceRuleException;
 import org.quartz.CronExpression;
 import org.slf4j.Logger;
@@ -23,6 +23,7 @@ import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.hubspot.singularity.ScheduleType;
 import com.hubspot.singularity.SingularityDeployStatistics;
+import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityRequestWithState;
 import com.hubspot.singularity.SingularityTaskCleanup;
 import com.hubspot.singularity.SingularityTaskId;
@@ -80,17 +81,18 @@ public class SingularityJobPoller extends SingularityLeaderOnlyPoller {
     final Map<String, SingularityRequestWithState> idToRequest = Maps.uniqueIndex(requests, SingularityRequestWithState.REQUEST_STATE_TO_REQUEST_ID);
 
     for (SingularityTaskId taskId : activeTaskIds) {
-      SingularityRequestWithState request = idToRequest.get(taskId.getRequestId());
+      SingularityRequestWithState requestWithState = idToRequest.get(taskId.getRequestId());
 
-      if (request == null) {
+      if (requestWithState == null) {
         continue;
       }
 
+      SingularityRequest request = requestWithState.getRequest();
       final long runtime = start - taskId.getStartedAt();
 
-      if (!request.getRequest().getRequestType().isLongRunning() &&
-          configuration.getTaskExecutionTimeLimitMillis().isPresent() &&
-          runtime >= configuration.getTaskExecutionTimeLimitMillis().get()) {
+      if (!request.getRequestType().isLongRunning() &&
+          request.getTaskExecutionTimeLimitMillis().or(configuration.getTaskExecutionTimeLimitMillis()).isPresent() &&
+          runtime >= request.getTaskExecutionTimeLimitMillis().or(configuration.getTaskExecutionTimeLimitMillis().get())) {
 
         taskManager.createTaskCleanup(new SingularityTaskCleanup(
             Optional.<String>absent(),
@@ -103,7 +105,7 @@ public class SingularityJobPoller extends SingularityLeaderOnlyPoller {
             Optional.of(UUID.randomUUID().toString())));
       }
 
-      if (!request.getRequest().isScheduled() || taskManager.hasNotifiedOverdue(taskId)) {
+      if (!request.isScheduled() || taskManager.hasNotifiedOverdue(taskId)) {
         continue;
       }
 
@@ -118,7 +120,7 @@ public class SingularityJobPoller extends SingularityLeaderOnlyPoller {
       if (overDuePct > configuration.getWarnIfScheduledJobIsRunningPastNextRunPct()) {
         LOG.info("{} is overdue by {}% (expectedRunTime: {}, warnIfScheduledJobIsRunningPastNextRunPct: {})", taskId, overDuePct, expectedRuntime.get(), configuration.getWarnIfScheduledJobIsRunningPastNextRunPct());
 
-        mailer.sendTaskOverdueMail(taskManager.getTask(taskId), taskId, request.getRequest(), runtime, expectedRuntime.get());
+        mailer.sendTaskOverdueMail(taskManager.getTask(taskId), taskId, request, runtime, expectedRuntime.get());
 
         taskManager.saveNotifiedOverdue(taskId);
       } else {
@@ -127,9 +129,9 @@ public class SingularityJobPoller extends SingularityLeaderOnlyPoller {
     }
   }
 
-  private Optional<Long> getExpectedRuntime(SingularityRequestWithState request, SingularityTaskId taskId) {
-    if (request.getRequest().getScheduledExpectedRuntimeMillis().isPresent()) {
-      return request.getRequest().getScheduledExpectedRuntimeMillis();
+  private Optional<Long> getExpectedRuntime(SingularityRequest request, SingularityTaskId taskId) {
+    if (request.getScheduledExpectedRuntimeMillis().isPresent()) {
+      return request.getScheduledExpectedRuntimeMillis();
     } else {
       final Optional<SingularityDeployStatistics> deployStatistics = deployManager.getDeployStatistics(taskId.getRequestId(), taskId.getDeployId());
 
@@ -137,11 +139,11 @@ public class SingularityJobPoller extends SingularityLeaderOnlyPoller {
         return deployStatistics.get().getAverageRuntimeMillis();
       }
 
-      String scheduleExpression = request.getRequest().getScheduleTypeSafe() == ScheduleType.RFC5545 ? request.getRequest().getSchedule().get() : request.getRequest().getQuartzScheduleSafe();
+      String scheduleExpression = request.getScheduleTypeSafe() == ScheduleType.RFC5545 ? request.getSchedule().get() : request.getQuartzScheduleSafe();
       Date nextRunAtDate;
 
       try {
-        if (request.getRequest().getScheduleTypeSafe() == ScheduleType.RFC5545) {
+        if (request.getScheduleTypeSafe() == ScheduleType.RFC5545) {
           final RFC5545Schedule rfc5545Schedule = new RFC5545Schedule(scheduleExpression);
           nextRunAtDate = rfc5545Schedule.getNextValidTime();
         } else {
@@ -158,8 +160,8 @@ public class SingularityJobPoller extends SingularityLeaderOnlyPoller {
         }
 
       } catch (ParseException|InvalidRecurrenceRuleException e) {
-        LOG.warn("Unable to parse schedule of type {} for expression {} (taskId: {}, err: {})", request.getRequest().getScheduleTypeSafe(), scheduleExpression, taskId, e);
-        exceptionNotifier.notify(e, ImmutableMap.of("taskId", taskId.toString(), "scheduleExpression", scheduleExpression, "scheduleType", request.getRequest().getScheduleTypeSafe().toString()));
+        LOG.warn("Unable to parse schedule of type {} for expression {} (taskId: {}, err: {})", request.getScheduleTypeSafe(), scheduleExpression, taskId, e);
+        exceptionNotifier.notify(e, ImmutableMap.of("taskId", taskId.toString(), "scheduleExpression", scheduleExpression, "scheduleType", request.getScheduleTypeSafe().toString()));
         return Optional.absent();
       }
 
