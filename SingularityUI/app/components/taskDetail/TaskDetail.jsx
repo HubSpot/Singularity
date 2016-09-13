@@ -489,7 +489,8 @@ function mapDispatchToProps(dispatch) {
 }
 
 function refresh(props) {
-  props.fetchTaskFiles(props.params.taskId, props.params.splat || props.params.taskId, [400, 404]);
+  const defaultDirectory = config.defaultToTaskIdDirectory ? props.params.taskId : '';
+  props.fetchTaskFiles(props.params.taskId, props.params.splat || defaultDirectory, [400, 404]);
   const promises = [];
   const taskPromise = props.fetchTaskHistory(props.params.taskId);
   taskPromise.then(() => {
