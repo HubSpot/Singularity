@@ -92,6 +92,7 @@ public class UIConfiguration {
   @NotNull
   private Optional<String> extraScript = Optional.absent();
 
+
   public boolean isHideNewDeployButton() {
     return hideNewDeployButton;
   }
@@ -219,5 +220,4 @@ public class UIConfiguration {
   public void setExtraScript(Optional<String> extraScript) {
     this.extraScript = extraScript;
   }
-
 }
