@@ -54,8 +54,7 @@ export const getUserRequests = createSelector(
         return false;
       }
 
-      for (var i = 0; i < requestOwners.length; i++) {
-        const owner = requestOwners[i];
+      for (const owner of requestOwners) {
         if (deployUserTrimmed === owner.split('@')[0]) {
           return true;
         }
@@ -79,8 +78,7 @@ export const getUserRequestTotals = createSelector(
       SERVICE: 0
     };
 
-    for (var i = 0; i < userRequests.length; i++) {
-      const requestParent = userRequests[i];
+    for (const requestParent of userRequests) {
       userRequestTotals[requestParent.request.requestType] += 1;
     }
 
