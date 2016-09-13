@@ -52,6 +52,8 @@ public class IndexView extends View {
 
   private final String timestampFormat;
 
+  private final boolean defaultToTaskIdDirectory;
+
   private final boolean showTaskDiskResource;
 
   private final String timestampWithSecondsFormat;
@@ -94,7 +96,7 @@ public class IndexView extends View {
 
     this.runningTaskLogPath = configuration.getUiConfiguration().getRunningTaskLogPath();
     this.finishedTaskLogPath = configuration.getUiConfiguration().getFinishedTaskLogPath();
-
+    this.defaultToTaskIdDirectory = configuration.getUiConfiguration().getDefaultToTaskIdDirectory().or(false);
     this.showTaskDiskResource = configuration.getUiConfiguration().isShowTaskDiskResource();
 
     this.commonHostnameSuffixToOmit = configuration.getCommonHostnameSuffixToOmit().or("");
@@ -203,6 +205,10 @@ public class IndexView extends View {
     return commonHostnameSuffixToOmit;
   }
 
+  public Boolean isDefaultToTaskIdDirectory() {
+    return defaultToTaskIdDirectory;
+  }
+
   public Boolean isShowTaskDiskResource() {
     return showTaskDiskResource;
   }
@@ -257,6 +263,7 @@ public class IndexView extends View {
             ", taskS3LogOmitPrefix='" + taskS3LogOmitPrefix + '\'' +
             ", warnIfScheduledJobIsRunningPastNextRunPct=" + warnIfScheduledJobIsRunningPastNextRunPct +
             ", shellCommands='" + shellCommands + '\'' +
+            ", defaultToTaskIdDirectory='" + defaultToTaskIdDirectory + '\'' +
             ", showTaskDiskResource=" + showTaskDiskResource +
             ", timestampFormat='" + timestampFormat + '\'' +
             ", timestampWithSecondsFormat='" + timestampWithSecondsFormat + '\'' +
