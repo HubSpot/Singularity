@@ -194,7 +194,7 @@ class TaskDetail extends Component {
           files={files.files}
           currentDirectory={files.currentDirectory}
           changeDir={(path) => {
-            if (path.startsWith('/')) path = path.substring(1);
+            if (!_.isUndefined(path) && path.startsWith('/')) path = path.substring(1);
             this.props.fetchTaskFiles(this.props.params.taskId, path).then(() => {
               this.props.router.push(Utils.joinPath(`task/${this.props.params.taskId}/files/`, path));
             });
@@ -458,10 +458,12 @@ function mapStateToProps(state, ownProps) {
   }
   task = mapTaskToProps(task.data);
   task = mapHealthchecksToProps(task);
+  const defaultFilePath = _.isUndefined(ownProps.files) ? '' : ownProps.files.currentDirectory;
+
   return {
     task,
     taskId: ownProps.params.taskId,
-    currentFilePath: _.isUndefined(ownProps.params.splat) ? ownProps.params.taskId : ownProps.params.splat,
+    currentFilePath: _.isUndefined(ownProps.params.splat) ? defaultFilePath : ownProps.params.splat.substring(1),
     taskCleanups: state.api.taskCleanups.data,
     files: state.api.taskFiles,
     resourceUsageNotFound: state.api.taskResourceUsage.statusCode === 404,
@@ -489,7 +491,7 @@ function mapDispatchToProps(dispatch) {
 }
 
 function refresh(props) {
-  props.fetchTaskFiles(props.params.taskId, props.params.splat || props.params.taskId, [400, 404]);
+  props.fetchTaskFiles(props.params.taskId, _.isUndefined(props.params.splat) ? undefined : props.params.splat.substring(1), [400, 404]);
   const promises = [];
   const taskPromise = props.fetchTaskHistory(props.params.taskId);
   taskPromise.then(() => {

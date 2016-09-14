@@ -50,7 +50,7 @@ const AppRouter = (props) => {
           </Route>
           <Route path="tasks(/:state)(/:requestsSubFilter)(/:searchFilter)" component={TasksPage} />
           <Route path="task">
-            <Route path=":taskId(/files/**)" component={TaskDetail} store={props.store} />
+            <Route path=":taskId(/files**)" component={TaskDetail} store={props.store} />
             <Route path=":taskId/tail/**" component={Tail} />
           </Route>
           <Route path="racks(/:state)" component={Racks} />
