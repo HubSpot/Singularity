@@ -5,6 +5,7 @@
 - [`/api/history`](api-history.md)
 - [`/api/logs`](api-logs.md)
 - [`/api/racks`](api-racks.md)
+- [`/api/racks`](api-racks.md)
 - [`/api/requests`](api-requests.md)
 - [`/api/sandbox`](api-sandbox.md)
 - [`/api/slaves`](api-slaves.md)
