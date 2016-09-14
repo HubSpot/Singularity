@@ -17,6 +17,8 @@ Retrieve the history sorted by startedAt for all inactive tasks.
 | lastTaskStatus | false | Optional last task status to match | string |
 | startedAfter | false | Optionally match only tasks started after | long |
 | startedBefore | false | Optionally match only tasks started before | long |
+| updatedBefore | false | Optionally match tasks last updated before | long |
+| updatedAfter | false | Optionally match tasks last updated after | long |
 | orderDirection | false | Sort direction | string |
 | count | false | Maximum number of items to return | int |
 | page | false | Which page of items to view | int |
@@ -123,6 +125,8 @@ Retrieve the history sorted by startedAt for all inactive tasks of a specific re
 | lastTaskStatus | false | Optional last task status to match | string |
 | startedAfter | false | Optionally match only tasks started after | long |
 | startedBefore | false | Optionally match only tasks started before | long |
+| updatedBefore | false | Optionally match tasks last updated before | long |
+| updatedAfter | false | Optionally match tasks last updated after | long |
 | orderDirection | false | Sort direction | string |
 | count | false | Maximum number of items to return | int |
 | page | false | Which page of items to view | int |
