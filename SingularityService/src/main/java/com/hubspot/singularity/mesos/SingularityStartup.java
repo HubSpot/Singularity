@@ -141,10 +141,10 @@ class SingularityStartup {
         case DEPLOYING_TO_UNPAUSE:
           if(checkActiveRequest(requestWithState, deployKeyToPendingTaskId, now)) {
             numPendingStartupRequests++;
-            float startUpTaskPct = (numPendingStartupRequests * 100.0f / totalStartupRequests);
+            double startUpTaskPct = (numPendingStartupRequests * 100.0 / totalStartupRequests);
 
             if (startUpTaskPct > startUpTaskThresholdPct) {
-              LOG.info("%s% exceeded startup task threshold of %s%", startUpTaskPct, startUpTaskThresholdPct);
+              LOG.info("%s%% exceeded startup task threshold of %s%%", startUpTaskPct, startUpTaskThresholdPct);
               abort.abort(AbortReason.EXCEEDED_STARTUP_TASK_THRESHOLD, Optional.<Throwable>absent());
             }
           }
@@ -157,7 +157,8 @@ class SingularityStartup {
     }
   }
 
-  private boolean checkActiveRequest(SingularityRequestWithState requestWithState, Map<SingularityDeployKey, SingularityPendingTaskId> deployKeyToPendingTaskId, final long timestamp) {
+  @VisibleForTesting
+  boolean checkActiveRequest(SingularityRequestWithState requestWithState, Map<SingularityDeployKey, SingularityPendingTaskId> deployKeyToPendingTaskId, final long timestamp) {
     final SingularityRequest request = requestWithState.getRequest();
 
     if (request.getRequestType() == RequestType.ON_DEMAND || request.getRequestType() == RequestType.RUN_ONCE) {
