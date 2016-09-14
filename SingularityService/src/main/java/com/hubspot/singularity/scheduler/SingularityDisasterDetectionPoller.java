@@ -184,7 +184,7 @@ public class SingularityDisasterDetectionPoller extends SingularityLeaderOnlyPol
       double overdueTaskPortion = dataPoint.getNumLateTasks() / (double) Math.max((dataPoint.getNumActiveTasks() + dataPoint.getNumPendingTasks()), 1);
       boolean criticalOverdueTasksPortion = overdueTaskPortion > disasterConfiguration.getCriticalOverdueTaskPortion();
       boolean warningOverdueTasksPortion = overdueTaskPortion > disasterConfiguration.getWarningOverdueTaskPortion();
-      boolean criticalAvgTaskLag = dataPoint.getAvgTaskLagMillis() > disasterConfiguration.getCriticalAvgTaskLagMillis();
+      boolean criticalAvgTaskLag = dataPoint.getAvgTaskLagMillis() > disasterConfiguration.getCriticalAvgTaskLagMillis() && warningOverdueTasksPortion;
       boolean warningAvgTaskLag = dataPoint.getAvgTaskLagMillis() > disasterConfiguration.getWarningAvgTaskLagMillis();
 
       if (criticalOverdueTasksPortion) {
