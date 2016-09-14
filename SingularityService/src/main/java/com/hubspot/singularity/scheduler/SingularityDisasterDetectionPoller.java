@@ -98,7 +98,9 @@ public class SingularityDisasterDetectionPoller extends SingularityLeaderOnlyPol
       if (!disasterManager.isAutomatedDisabledActionsDisabled()) {
         disasterManager.addDisabledActionsForDisasters(newActiveDisasters);
       }
-      queueDisasterEmail(dataPoints, newActiveDisasters);
+      if (!previouslyActiveDisasters.containsAll(newActiveDisasters)) {
+        queueDisasterEmail(dataPoints, newActiveDisasters);
+      }
     } else {
       disasterManager.clearSystemGeneratedDisabledActions();
     }
