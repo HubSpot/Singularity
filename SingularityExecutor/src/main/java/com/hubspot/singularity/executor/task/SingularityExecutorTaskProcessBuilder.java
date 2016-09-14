@@ -154,8 +154,7 @@ public class SingularityExecutorTaskProcessBuilder implements Callable<ProcessBu
       return configuration.getServiceLog();
     }
     Path basePath = task.getTaskDefinition().getTaskDirectoryPath();
-    String appPath = configuration.getTaskAppDirectory().startsWith("./") ? configuration.getTaskAppDirectory().replace("./", "") : configuration.getTaskAppDirectory();
-    Path app = basePath.resolve(appPath);
+    Path app = basePath.resolve(configuration.getTaskAppDirectory()).normalize();
     return app.relativize(basePath).toString() + "/" + configuration.getServiceLog();
   }
 
