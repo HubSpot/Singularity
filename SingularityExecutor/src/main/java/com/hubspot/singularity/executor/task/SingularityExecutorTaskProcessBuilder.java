@@ -150,12 +150,9 @@ public class SingularityExecutorTaskProcessBuilder implements Callable<ProcessBu
   }
 
   private String serviceLogOutPath() {
-    if (configuration.getTaskAppDirectory().equals(".")) {
-      return configuration.getServiceLog();
-    }
     Path basePath = task.getTaskDefinition().getTaskDirectoryPath();
     Path app = basePath.resolve(configuration.getTaskAppDirectory()).normalize();
-    return app.relativize(basePath).toString() + "/" + configuration.getServiceLog();
+    return app.relativize(basePath).resolve(configuration.getServiceLog()).toString();
   }
 
   @Override
