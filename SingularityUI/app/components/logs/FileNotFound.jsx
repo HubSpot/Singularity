@@ -5,7 +5,8 @@ function buildNewRoute(currentPath) {
   const newRoute = currentPath.split('/');
   config.runningTaskLogPath.split('/').map(() => newRoute.pop());
   newRoute.push(config.finishedTaskLogPath);
-  return `${ config.appRoot }${ newRoute.join('/') }`;
+  const newPath = newRoute.join('/');
+  return `${ config.appRoot }/${ newPath.startsWith('/') ? newPath.substring(1) : newPath }`;
 }
 
 function FileNotFound (props) {
