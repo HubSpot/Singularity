@@ -115,6 +115,7 @@ public class SingularityExecutorTaskProcessBuilder implements Callable<ProcessBu
       configuration.getLogrotateToDirectory(),
       executorData.getUser().or(configuration.getDefaultRunAsUser()),
       configuration.getServiceLog(),
+      serviceLogOutPath(),
       task.getTaskId(),
       executorData.getMaxTaskThreads().or(configuration.getMaxTaskThreads()),
       !getExecutorUser().equals(executorData.getUser().or(configuration.getDefaultRunAsUser())),
@@ -146,6 +147,12 @@ public class SingularityExecutorTaskProcessBuilder implements Callable<ProcessBu
     processBuilder.redirectOutput(task.getTaskDefinition().getExecutorBashOutPath().toFile());
 
     return processBuilder;
+  }
+
+  private String serviceLogOutPath() {
+    Path basePath = task.getTaskDefinition().getTaskDirectoryPath();
+    Path app = basePath.resolve(configuration.getTaskAppDirectory()).normalize();
+    return app.relativize(basePath).resolve(configuration.getServiceLog()).toString();
   }
 
   @Override

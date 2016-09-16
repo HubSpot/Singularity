@@ -13,7 +13,7 @@ import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 
 public class RFC5545Schedule {
-  public static final int MAX_ITERATIONS = 10000;
+  public static final int MAX_ITERATIONS = 1000000;
   private final RecurrenceRule recurrenceRule;
   private final org.joda.time.DateTime dtStart;
 
@@ -24,16 +24,7 @@ public class RFC5545Schedule {
 
     if (matcher.find()) {
       DateTimeFormatter formatter = DateTimeFormat.forPattern("yyyyMMdd'T'HHmmss");
-      if (schedule.contains("REPEAT") || schedule.contains("COUNT")) {
-        this.dtStart = formatter.parseDateTime(matcher.group(1));
-      } else {
-        org.joda.time.DateTime start = formatter.parseDateTime(matcher.group(1));
-        org.joda.time.DateTime now = org.joda.time.DateTime.now().withSecondOfMinute(0);
-        if (now.getMillis() > start.getMillis()) {
-          start = now;
-        }
-        this.dtStart = start;
-      }
+      this.dtStart = formatter.parseDateTime(matcher.group(1));
       this.recurrenceRule = new RecurrenceRule(matcher.replaceAll("").replace("RRULE:", ""));
     } else {
       this.recurrenceRule = new RecurrenceRule(schedule);

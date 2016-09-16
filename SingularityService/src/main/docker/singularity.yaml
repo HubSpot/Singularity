@@ -36,3 +36,5 @@ logging:
 
 enableCorsFilter: true
 
+disasterDetection:
+  enabled: true

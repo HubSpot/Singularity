@@ -22,6 +22,7 @@ import NewDeployForm from './components/newDeployForm/NewDeployForm';
 import { Tail, AggregateTail, CompressedLogView } from './components/logs/Tail';
 import RequestDetailPage from './components/requestDetail/RequestDetailPage';
 import Group from './components/groupDetail/GroupDetail.jsx';
+import Disasters from './components/disasters/Disasters';
 
 const AppRouter = (props) => {
   const parsedUrl = parseurl({ url: config.appRoot });
@@ -49,7 +50,7 @@ const AppRouter = (props) => {
           </Route>
           <Route path="tasks(/:state)(/:requestsSubFilter)(/:searchFilter)" component={TasksPage} />
           <Route path="task">
-            <Route path=":taskId(/files/**)" component={TaskDetail} store={props.store} />
+            <Route path=":taskId(/files**)" component={TaskDetail} store={props.store} />
             <Route path=":taskId/tail/**" component={Tail} />
             <Route path=":taskId/view/**" component={CompressedLogView} />
           </Route>
@@ -57,6 +58,7 @@ const AppRouter = (props) => {
           <Route path="slaves(/:state)" component={Slaves} />
           <Route path="webhooks" component={Webhooks} />
           <Route path="task-search" component={TaskSearch} />
+          <Route path="disasters" component={Disasters} />
           <Route path="*" component={NotFound} />
         </Route>
       </Router>
