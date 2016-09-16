@@ -76,8 +76,14 @@ public class SingularityJobPoller extends SingularityLeaderOnlyPoller {
     final Map<String, SingularityRequestWithState> idToRequest = Maps.uniqueIndex(requestManager.getRequests(requestIdsToLookup), SingularityRequestWithState.REQUEST_STATE_TO_REQUEST_ID);
 
     for (SingularityTaskId taskId : activeTaskIds) {
-      SingularityRequest request = idToRequest.get(taskId.getRequestId()).getRequest();
+      SingularityRequestWithState requestWithState = idToRequest.get(taskId.getRequestId());
 
+      if (requestWithState == null) {
+        LOG.warn("Active request not found for task ID {}", taskId);
+        continue;
+      }
+
+      SingularityRequest request = requestWithState.getRequest();
       if (!request.isLongRunning()) {
         checkForOverdueScheduledJob(now - taskId.getStartedAt(), taskId, request);
         checkTaskExecutionTimeLimit(now, taskId, request);
