@@ -326,6 +326,7 @@ public class SingularityRequestBuilder {
             ", loadBalanced=" + loadBalanced +
             ", group=" + group +
             ", readOnlyGroups=" + readOnlyGroups +
+            ", readWriteGroups=" + readWriteGroups +
             ", bounceAfterScale=" + bounceAfterScale +
             ", emailConfigurationOverrides=" + emailConfigurationOverrides +
             ", skipHealthchecks=" + skipHealthchecks +
@@ -364,6 +365,7 @@ public class SingularityRequestBuilder {
             Objects.equals(loadBalanced, that.loadBalanced) &&
             Objects.equals(group, that.group) &&
             Objects.equals(readOnlyGroups, that.readOnlyGroups) &&
+            Objects.equals(readWriteGroups, that.readWriteGroups) &&
             Objects.equals(bounceAfterScale, that.bounceAfterScale) &&
             Objects.equals(skipHealthchecks, that.skipHealthchecks) &&
             Objects.equals(emailConfigurationOverrides, that.emailConfigurationOverrides) &&
@@ -376,7 +378,7 @@ public class SingularityRequestBuilder {
   public int hashCode() {
     return Objects.hash(id, requestType, owners, numRetriesOnFailure, schedule, quartzSchedule, scheduleTimeZone, scheduleType, killOldNonLongRunningTasksAfterMillis,
         scheduledExpectedRuntimeMillis, waitAtLeastMillisAfterTaskFinishesForReschedule, instances, rackSensitive, rackAffinity, slavePlacement,
-        requiredSlaveAttributes, allowedSlaveAttributes, loadBalanced, group, readOnlyGroups, bounceAfterScale, skipHealthchecks, emailConfigurationOverrides,
+        requiredSlaveAttributes, allowedSlaveAttributes, loadBalanced, group, readOnlyGroups, readWriteGroups, bounceAfterScale, skipHealthchecks, emailConfigurationOverrides,
         hideEvenNumberAcrossRacksHint, taskLogErrorRegex, taskLogErrorRegexCaseSensitive);
   }
 
