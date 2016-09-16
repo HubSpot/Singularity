@@ -80,7 +80,7 @@ public class SingularityHealthcheckAsyncHandler extends AsyncCompletionHandler<R
       }
     } catch (Throwable t) {
       LOG.error("Caught throwable while saving health check result for {}, will re-enqueue", task.getTaskId(), t);
-      exceptionNotifier.notify(String.format("Erro saving healthcheck (%s)", t.getMessage()), t, ImmutableMap.of("taskId", task.getTaskId().toString()));
+      exceptionNotifier.notify(String.format("Error saving healthcheck (%s)", t.getMessage()), t, ImmutableMap.of("taskId", task.getTaskId().toString()));
 
       healthchecker.reEnqueueOrAbort(task);
     }

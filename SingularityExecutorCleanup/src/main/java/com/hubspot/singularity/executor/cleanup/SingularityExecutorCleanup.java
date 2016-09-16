@@ -97,7 +97,7 @@ public class SingularityExecutorCleanup {
       runningTaskIds = getRunningTaskIds();
     } catch (Exception e) {
       LOG.error("While fetching running tasks from singularity", e);
-      exceptionNotifier.notify(String.format("Error fetchign running tasks (%s)", e.getMessage()), e, Collections.<String, String>emptyMap());
+      exceptionNotifier.notify(String.format("Error fetching running tasks (%s)", e.getMessage()), e, Collections.<String, String>emptyMap());
       statisticsBldr.setErrorMessage(e.getMessage());
       return statisticsBldr.build();
     }
