@@ -465,6 +465,18 @@ public class TaskManager extends CuratorAsyncManager {
     return exists(ACTIVE_PATH_ROOT, paths, taskIdTranscoder);
   }
 
+  public int getNumLaunchingTasks() {
+    List<SingularityTaskId> activeTaskIds = getActiveTaskIds();
+
+    final Map<String, SingularityTaskId> paths = Maps.newHashMapWithExpectedSize(activeTaskIds.size());
+
+    for (SingularityTaskId taskId : activeTaskIds) {
+      paths.put(getUpdatePath(taskId, ExtendedTaskState.TASK_RUNNING), taskId);
+    }
+
+    return notExists(ACTIVE_PATH_ROOT, paths).size();
+  }
+
   public List<SingularityTaskId> filterInactiveTaskIds(List<SingularityTaskId> taskIds) {
     final Map<String, SingularityTaskId> pathsMap = Maps.newHashMap();
 
