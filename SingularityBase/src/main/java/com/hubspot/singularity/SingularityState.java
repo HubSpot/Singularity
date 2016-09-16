@@ -9,6 +9,7 @@ import com.google.common.base.Optional;
 public class SingularityState {
 
   private final int activeTasks;
+  private final int launchingTasks;
   private final int pausedRequests;
   private final int activeRequests;
   private final int cooldownRequests;
@@ -53,7 +54,7 @@ public class SingularityState {
   private final Optional<Double> minimumPriorityLevel;
 
   @JsonCreator
-  public SingularityState(@JsonProperty("activeTasks") int activeTasks, @JsonProperty("activeRequests") int activeRequests, @JsonProperty("cooldownRequests") int cooldownRequests,
+  public SingularityState(@JsonProperty("activeTasks") int activeTasks, @JsonProperty("launchingTasks") int launchingTasks, @JsonProperty("activeRequests") int activeRequests, @JsonProperty("cooldownRequests") int cooldownRequests,
       @JsonProperty("pausedRequests") int pausedRequests, @JsonProperty("scheduledTasks") int scheduledTasks, @JsonProperty("pendingRequests") int pendingRequests, @JsonProperty("lbCleanupTasks") int lbCleanupTasks,
       @JsonProperty("lbCleanupRequests") int lbCleanupRequests, @JsonProperty("cleaningRequests") int cleaningRequests, @JsonProperty("activeSlaves") int activeSlaves, @JsonProperty("deadSlaves") int deadSlaves,
       @JsonProperty("decommissioningSlaves") int decommissioningSlaves, @JsonProperty("activeRacks") int activeRacks, @JsonProperty("deadRacks") int deadRacks, @JsonProperty("decommissioningRacks") int decommissioningRacks,
@@ -64,6 +65,7 @@ public class SingularityState {
       @JsonProperty("unknownRacks") int unknownRacks, @JsonProperty("unknownSlaves") int unknownSlaves, @JsonProperty("authDatastoreHealthy") Optional<Boolean> authDatastoreHealthy,
       @JsonProperty("minimumPriorityLevel") Optional<Double> minimumPriorityLevel) {
     this.activeTasks = activeTasks;
+    this.launchingTasks = launchingTasks;
     this.activeRequests = activeRequests;
     this.pausedRequests = pausedRequests;
     this.cooldownRequests = cooldownRequests;
@@ -163,6 +165,10 @@ public class SingularityState {
     return activeTasks;
   }
 
+  public int getLaunchingTasks() {
+    return launchingTasks;
+  }
+
   public int getAllRequests() {
     return getActiveRequests() + getCooldownRequests() + getPausedRequests();
   }
@@ -241,7 +247,7 @@ public class SingularityState {
 
   @Override
   public String toString() {
-    return "SingularityState [activeTasks=" + activeTasks + ", pausedRequests=" + pausedRequests + ", activeRequests=" + activeRequests + ", cooldownRequests=" + cooldownRequests + ", scheduledTasks=" + scheduledTasks
+    return "SingularityState [activeTasks=" + activeTasks + ", launchingTasks=" + launchingTasks + ", pausedRequests=" + pausedRequests + ", activeRequests=" + activeRequests + ", cooldownRequests=" + cooldownRequests + ", scheduledTasks=" + scheduledTasks
         + ", lateTasks=" + lateTasks + ", futureTasks=" + futureTasks + ", cleaningTasks=" + cleaningTasks + ", lbCleanupTasks=" + lbCleanupTasks + ", lbCleanupRequests=" + lbCleanupRequests
         + ", maxTaskLag=" + maxTaskLag + ", pendingRequests=" + pendingRequests + ", cleaningRequests=" + cleaningRequests + ", finishedRequests=" + finishedRequests + ", activeSlaves="
         + activeSlaves + ", deadSlaves=" + deadSlaves + ", decommissioningSlaves=" + decommissioningSlaves + ", unknownSlaves=" + unknownSlaves + ", activeRacks=" + activeRacks + ", deadRacks="
