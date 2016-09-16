@@ -64,67 +64,23 @@ public class SingularityJobPoller extends SingularityLeaderOnlyPoller {
 
   @Override
   public void runActionOnPoll() {
-    final long start = System.currentTimeMillis();
+    final long now = System.currentTimeMillis();
 
     final List<SingularityTaskId> activeTaskIds = taskManager.getActiveTaskIds();
     final Set<String> requestIdsToLookup = Sets.newHashSetWithExpectedSize(activeTaskIds.size());
 
     for (SingularityTaskId taskId : activeTaskIds) {
-      if (start - taskId.getStartedAt() < configuration.getWarnIfScheduledJobIsRunningForAtLeastMillis()) {
-        continue;
-      }
-
       requestIdsToLookup.add(taskId.getRequestId());
     }
 
-    final List<SingularityRequestWithState> requests = requestManager.getRequests(requestIdsToLookup);
-    final Map<String, SingularityRequestWithState> idToRequest = Maps.uniqueIndex(requests, SingularityRequestWithState.REQUEST_STATE_TO_REQUEST_ID);
+    final Map<String, SingularityRequestWithState> idToRequest = Maps.uniqueIndex(requestManager.getRequests(requestIdsToLookup), SingularityRequestWithState.REQUEST_STATE_TO_REQUEST_ID);
 
     for (SingularityTaskId taskId : activeTaskIds) {
-      SingularityRequestWithState requestWithState = idToRequest.get(taskId.getRequestId());
+      SingularityRequest request = idToRequest.get(taskId.getRequestId()).getRequest();
 
-      if (requestWithState == null) {
-        continue;
-      }
-
-      SingularityRequest request = requestWithState.getRequest();
-      final long runtime = start - taskId.getStartedAt();
-
-      if (!request.getRequestType().isLongRunning() &&
-          request.getTaskExecutionTimeLimitMillis().or(configuration.getTaskExecutionTimeLimitMillis()).isPresent() &&
-          runtime >= request.getTaskExecutionTimeLimitMillis().or(configuration.getTaskExecutionTimeLimitMillis().get())) {
-
-        taskManager.createTaskCleanup(new SingularityTaskCleanup(
-            Optional.<String>absent(),
-            TaskCleanupType.TASK_EXCEEDED_TIME_LIMIT,
-            start,
-            taskId,
-            Optional.of(String.format("Task has run for %s, which exceeds the maximum execution time of %s",
-                DurationFormatUtils.formatDurationHMS(runtime),
-                DurationFormatUtils.formatDurationHMS(configuration.getTaskExecutionTimeLimitMillis().get()))),
-            Optional.of(UUID.randomUUID().toString())));
-      }
-
-      if (!request.isScheduled() || taskManager.hasNotifiedOverdue(taskId)) {
-        continue;
-      }
-
-      final Optional<Long> expectedRuntime = getExpectedRuntime(request, taskId);
-
-      if (!expectedRuntime.isPresent()) {
-        continue;
-      }
-
-      final int overDuePct = (int) (100 * (runtime / (float) expectedRuntime.get()));
-
-      if (overDuePct > configuration.getWarnIfScheduledJobIsRunningPastNextRunPct()) {
-        LOG.info("{} is overdue by {}% (expectedRunTime: {}, warnIfScheduledJobIsRunningPastNextRunPct: {})", taskId, overDuePct, expectedRuntime.get(), configuration.getWarnIfScheduledJobIsRunningPastNextRunPct());
-
-        mailer.sendTaskOverdueMail(taskManager.getTask(taskId), taskId, request, runtime, expectedRuntime.get());
-
-        taskManager.saveNotifiedOverdue(taskId);
-      } else {
-        LOG.trace("{} is not overdue yet - runtime {}, expected {}, ({}% < {}%)", taskId, runtime, expectedRuntime.get(), overDuePct, configuration.getWarnIfScheduledJobIsRunningPastNextRunPct());
+      if (!request.isLongRunning()) {
+        checkForOverdueScheduledJob(now - taskId.getStartedAt(), taskId, request);
+        checkTaskExecutionTimeLimit(now, taskId, request);
       }
     }
   }
@@ -166,6 +122,47 @@ public class SingularityJobPoller extends SingularityLeaderOnlyPoller {
       }
 
       return Optional.of(nextRunAtDate.getTime() - taskId.getStartedAt());
+    }
+  }
+
+  private void checkForOverdueScheduledJob(long runtime, SingularityTaskId taskId, SingularityRequest request) {
+    if (request.isScheduled() && !taskManager.hasNotifiedOverdue(taskId)) {
+      final Optional<Long> expectedRuntime = getExpectedRuntime(request, taskId);
+
+      if (expectedRuntime.isPresent()) {
+
+        final int overDuePct = (int) (100 * (runtime / (float) expectedRuntime.get()));
+
+        if (overDuePct > configuration.getWarnIfScheduledJobIsRunningPastNextRunPct()) {
+          LOG.info("{} is overdue by {}% (expectedRunTime: {}, warnIfScheduledJobIsRunningPastNextRunPct: {})", taskId, overDuePct, expectedRuntime.get(), configuration.getWarnIfScheduledJobIsRunningPastNextRunPct());
+
+          mailer.sendTaskOverdueMail(taskManager.getTask(taskId), taskId, request, runtime, expectedRuntime.get());
+
+          taskManager.saveNotifiedOverdue(taskId);
+        } else {
+          LOG.trace("{} is not overdue yet - runtime {}, expected {}, ({}% < {}%)", taskId, runtime, expectedRuntime.get(), overDuePct, configuration.getWarnIfScheduledJobIsRunningPastNextRunPct());
+        }
+      }
+    }
+  }
+
+  private void checkTaskExecutionTimeLimit(long now, SingularityTaskId taskId, SingularityRequest request) {
+    final long runtime = now - taskId.getStartedAt();
+
+    if (request.getTaskExecutionTimeLimitMillis().or(configuration.getTaskExecutionTimeLimitMillis()).isPresent() &&
+        runtime >= request.getTaskExecutionTimeLimitMillis().or(configuration.getTaskExecutionTimeLimitMillis()).get()) {
+
+      taskManager.createTaskCleanup(new SingularityTaskCleanup(
+          Optional.<String>absent(),
+          TaskCleanupType.TASK_EXCEEDED_TIME_LIMIT,
+          now,
+          taskId,
+          Optional.of(String.format("Task has run for %s, which exceeds the maximum execution time of %s",
+              DurationFormatUtils.formatDurationHMS(runtime),
+              DurationFormatUtils.formatDurationHMS(request.getTaskExecutionTimeLimitMillis().or(configuration.getTaskExecutionTimeLimitMillis()).get()))
+          ),
+          Optional.of(UUID.randomUUID().toString()))
+      );
     }
   }
 
