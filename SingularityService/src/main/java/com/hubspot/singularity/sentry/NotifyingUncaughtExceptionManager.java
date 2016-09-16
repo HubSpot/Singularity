@@ -17,6 +17,6 @@ public class NotifyingUncaughtExceptionManager implements UncaughtExceptionHandl
   @Override
   public void uncaughtException(Thread t, Throwable e) {
     LOG.error("Uncaught exception!", e);
-    notifier.notify(e);
+    notifier.notify(String.format("Uncaught Exception (%s)", e.getMessage()), e);
   }
 }

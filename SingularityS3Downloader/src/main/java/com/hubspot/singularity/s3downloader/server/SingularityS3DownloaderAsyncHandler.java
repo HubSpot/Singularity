@@ -76,7 +76,7 @@ public class SingularityS3DownloaderAsyncHandler implements Runnable {
     } catch (Throwable t) {
       metrics.getServerErrorsMeter().mark();
       LOG.error("While handling {}", artifactDownloadRequest.getTargetDirectory(), t);
-      exceptionNotifier.notify(t, ImmutableMap.of("s3Bucket", artifactDownloadRequest.getS3Artifact().getS3Bucket(), "s3Key", artifactDownloadRequest.getS3Artifact().getS3ObjectKey(), "targetDirectory", artifactDownloadRequest.getTargetDirectory()));
+      exceptionNotifier.notify(String.format("Error handling download (%s)", t.getMessage()), t, ImmutableMap.of("s3Bucket", artifactDownloadRequest.getS3Artifact().getS3Bucket(), "s3Key", artifactDownloadRequest.getS3Artifact().getS3ObjectKey(), "targetDirectory", artifactDownloadRequest.getTargetDirectory()));
       try {
         getResponse().sendError(500);
       } catch (Throwable t2) {
