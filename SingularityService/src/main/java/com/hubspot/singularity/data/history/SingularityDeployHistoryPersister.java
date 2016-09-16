@@ -112,7 +112,7 @@ public class SingularityDeployHistoryPersister extends SingularityHistoryPersist
     try {
       historyManager.saveDeployHistory(deployHistory);
     } catch (Throwable t) {
-      LOG.warn("Failed to persist deploy {} history ({})", SingularityDeployKey.fromDeployMarker(deployHistory.getDeployMarker()), deployHistory, t);
+      LOG.warn("Failed to persist deploy {}", SingularityDeployKey.fromDeployMarker(deployHistory.getDeployMarker()), t);
       return false;
     }
 

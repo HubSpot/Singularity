@@ -109,3 +109,5 @@ UPDATE `taskHistory` SET `startedAt` = FROM_UNIXTIME(SUBSTRING_INDEX(SUBSTRING_I
 ALTER TABLE `taskHistory`
   ADD KEY `updatedAt` (`updatedAt`, `requestId`)
 
+--changeset ssalinas:13 dbms:mysql
+ALTER TABLE `deployHistory` MODIFY `bytes` MEDIUMBLOB NOT NULL;
