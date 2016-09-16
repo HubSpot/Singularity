@@ -126,7 +126,9 @@ public class SingularityJobPoller extends SingularityLeaderOnlyPoller {
   }
 
   private void checkForOverdueScheduledJob(long runtime, SingularityTaskId taskId, SingularityRequest request) {
-    if (request.isScheduled() && !taskManager.hasNotifiedOverdue(taskId)) {
+    if (request.isScheduled() &&
+        !taskManager.hasNotifiedOverdue(taskId) &&
+        runtime >= configuration.getWarnIfScheduledJobIsRunningForAtLeastMillis()) {
       final Optional<Long> expectedRuntime = getExpectedRuntime(request, taskId);
 
       if (expectedRuntime.isPresent()) {
