@@ -47,6 +47,7 @@ import com.hubspot.singularity.executor.utils.DockerUtils;
 import com.hubspot.singularity.runner.base.config.SingularityRunnerBaseModule;
 import com.hubspot.singularity.runner.base.configuration.SingularityRunnerBaseConfiguration;
 import com.hubspot.singularity.runner.base.sentry.SingularityRunnerExceptionNotifier;
+import com.hubspot.singularity.runner.base.shared.CompressionType;
 import com.hubspot.singularity.runner.base.shared.JsonObjectFileHelper;
 import com.hubspot.singularity.runner.base.shared.ProcessFailedException;
 import com.hubspot.singularity.runner.base.shared.ProcessUtils;
@@ -281,42 +282,53 @@ public class SingularityExecutorCleanup {
   private void checkForUncompressedLogrotatedFile(SingularityExecutorTaskDefinition taskDefinition) {
     final Iterator<Path> iterator = getUncompressedLogrotatedFileIterator(taskDefinition);
     final Set<String> emptyPaths = new HashSet<>();
-    final List<Path> ungzippedFiles = new ArrayList<>();
+    final List<Path> uncompressedFiles = new ArrayList<>();
 
-    // check for matched 0 byte gz files.. and delete/gzip them
+    // check for matched 0 byte compressed files.. and delete/compress them
 
     while (iterator.hasNext()) {
       Path path = iterator.next();
 
       final String fileName = Objects.toString(path.getFileName());
-      if (fileName.endsWith(".gz")) {
+      Optional<CompressionType> maybeCompressionType = getFileCompressionType(fileName);
+      if (maybeCompressionType.isPresent()) {
         try {
           if (Files.size(path) == 0) {
             Files.deleteIfExists(path);
 
-            emptyPaths.add(fileName.substring(0, fileName.length() - 3)); // removing .gz
+            emptyPaths.add(fileName.substring(0, fileName.length() - maybeCompressionType.get().getExtention().length()));
           }
         } catch (IOException ioe) {
-          LOG.error("Failed to handle empty gz file {}", path, ioe);
+          LOG.error("Failed to handle empty {} file {}", maybeCompressionType.get(), path, ioe);
           exceptionNotifier.notify(String.format("Error handling empty file (%s)", ioe.getMessage()), ioe, ImmutableMap.of("file", path.toString()));
         }
       } else {
-        ungzippedFiles.add(path);
+        uncompressedFiles.add(path);
       }
     }
 
-    for (Path path : ungzippedFiles) {
+    for (Path path : uncompressedFiles) {
       if (emptyPaths.contains(Objects.toString(path.getFileName()))) {
-        LOG.info("Gzipping abandoned file {}", path);
+        LOG.info("Compressing abandoned file {}", path);
         try {
-          new SimpleProcessManager(LOG).runCommand(ImmutableList.<String> of("gzip", path.toString()));
+          new SimpleProcessManager(LOG).runCommand(ImmutableList.<String> of(cleanupConfiguration.getCompressionType().getCommand(), path.toString()));
         } catch (InterruptedException | ProcessFailedException e) {
-          LOG.error("Failed to gzip {}", path, e);
+          LOG.error("Failed to {} {}", cleanupConfiguration.getCompressionType(), path, e);
           exceptionNotifier.notify(String.format("Failed to gzip (%s)", e.getMessage()), e, ImmutableMap.of("file", path.toString()));
         }
       } else {
-        LOG.debug("Didn't find matched empty gz file for {}", path);
+        LOG.debug("Didn't find matched empty {} file for {}", cleanupConfiguration.getCompressionType(), path);
       }
+    }
+  }
+
+  private Optional<CompressionType> getFileCompressionType(String fileName) {
+    if (fileName.endsWith(CompressionType.GZIP.getExtention())) {
+      return Optional.of(CompressionType.GZIP);
+    } else if (fileName.endsWith(CompressionType.BZIP2.getExtention())) {
+      return Optional.of(CompressionType.BZIP2);
+    } else {
+      return Optional.absent();
     }
   }
 

@@ -50,6 +50,7 @@ class LogLines extends React.Component {
   renderLogLines() {
     const initialOffset = this.props.initialOffset;
     const colorMap = this.props.colorMap;
+    const compressedLog = this.props.compressedLog;
     return this.props.logLines.map(function ({data, offset, taskId, timestamp}) {
       return (
         <LogLine
@@ -57,6 +58,7 @@ class LogLines extends React.Component {
           key={taskId + '_' + offset}
           offset={offset}
           taskId={taskId}
+          compressedLog={compressedLog}
           timestamp={timestamp}
           isHighlighted={offset === initialOffset}
           color={colorMap[taskId]}
@@ -121,7 +123,7 @@ LogLines.propTypes = {
 
   taskGroupId: React.PropTypes.number.isRequired,
   logLines: React.PropTypes.array.isRequired,
-
+  compressedLog: React.PropTypes.bool.isRequired,
   initialDataLoaded: React.PropTypes.bool.isRequired,
   reachedStartOfFile: React.PropTypes.bool.isRequired,
   reachedEndOfFile: React.PropTypes.bool.isRequired,
@@ -152,6 +154,7 @@ function mapStateToProps(state, ownProps) {
     prependedLineCount: taskGroup.prependedLineCount,
     linesRemovedFromTop: taskGroup.linesRemovedFromTop,
     activeColor: state.activeColor,
+    compressedLog: state.logType == "COMPRESSED",
     top: taskGroup.top,
     bottom: taskGroup.bottom,
     initialDataLoaded: _.all(_.pluck(tasks, 'initialDataLoaded')),

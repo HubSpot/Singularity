@@ -32,6 +32,19 @@ class TaskGroupContainer extends React.Component {
         </div>
       );
     }
+    if (this.props.initialDataLoaded && this.props.invalidCompression) {
+      return (
+        <div className="tail-contents">
+          <div className="lines-wrapper">
+            <div className="empty-table-message">
+              <p>
+                {_.last(this.props.path.split('/'))} is not compressed in a format that can be read by the Singularity log tailer
+              </p>
+            </div>
+          </div>
+        </div>
+      );
+    }
     if (this.props.initialDataLoaded && !this.props.fileExists) {
       return (
         <div className="tail-contents">
@@ -39,6 +52,7 @@ class TaskGroupContainer extends React.Component {
         </div>
       );
     }
+    
     return <LoadingSpinner centered={true}>Loading logs...</LoadingSpinner>;
   }
 
@@ -56,6 +70,7 @@ TaskGroupContainer.propTypes = {
 
   initialDataLoaded: React.PropTypes.bool.isRequired,
   fileExists: React.PropTypes.bool.isRequired,
+  invalidCompression: React.PropTypes.bool.isRequired,
   terminated: React.PropTypes.bool.isRequired,
   finishedLogExists: React.PropTypes.bool,
   doesFinishedLogExist: React.PropTypes.func.isRequired,
@@ -68,7 +83,8 @@ const mapStateToProps = (state, ownProps) => {
       initialDataLoaded: false,
       fileExists: false,
       logDataLoaded: false,
-      terminated: false
+      terminated: false,
+      invalidCompression: false
     };
   }
   const taskGroup = state.taskGroups[ownProps.taskGroupId];
@@ -78,6 +94,7 @@ const mapStateToProps = (state, ownProps) => {
     initialDataLoaded: _.all(_.pluck(tasks, 'initialDataLoaded')),
     logDataLoaded: _.all(_.pluck(tasks, 'logDataLoaded')),
     fileExists: _.any(_.pluck(tasks, 'exists')),
+    invalidCompression: _.any(_.pluck(tasks, 'invalidCompression')),
     finishedLogExists: _.any(_.pluck(tasks, 'taskFinishedLogExists')),
     terminated: _.all(_.pluck(tasks, 'terminated')),
     path: state.path,
