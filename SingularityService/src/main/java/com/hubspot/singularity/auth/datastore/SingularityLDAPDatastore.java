@@ -101,7 +101,7 @@ public class SingularityLDAPDatastore implements SingularityAuthDatastore {
       }
     } catch (LdapException e) {
       LOG.warn("LdapException caught when checking health", e);
-      exceptionNotifier.notify(e);
+      exceptionNotifier.notify(String.format("LdapException caught when checking health (%s)", e.getMessage()), e);
     }
     return Optional.of(false);
   }
