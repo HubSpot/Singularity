@@ -128,7 +128,7 @@ public class SingularityMesosStatusUpdateHandler implements Managed {
         try {
             return Optional.of(taskIdTranscoder.fromString(taskId));
         } catch (InvalidSingularityTaskIdException | SingularityTranscoderException e) {
-            exceptionNotifier.notify(e);
+            exceptionNotifier.notify(String.format("Unexpected task id %s", taskId), e);
             LOG.error("Unexpected taskId {} ", taskId, e);
             return Optional.absent();
         }

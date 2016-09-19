@@ -143,10 +143,10 @@ public class S3ArtifactDownloader {
     } catch (TimeoutException te) {
       log.error("Chunk {} for {} timed out after {} - had {} remaining", chunk, s3Artifact.getFilename(), JavaUtils.duration(start), JavaUtils.durationFromMillis(remainingMillis));
       future.cancel(true);
-      exceptionNotifier.notify(te, ImmutableMap.of("filename", s3Artifact.getFilename(), "chunk", Integer.toString(chunk)));
+      exceptionNotifier.notify("TimeoutException during download", te, ImmutableMap.of("filename", s3Artifact.getFilename(), "chunk", Integer.toString(chunk)));
     } catch (Throwable t) {
       log.error("Error while handling chunk {} for {}", chunk, s3Artifact.getFilename(), t);
-      exceptionNotifier.notify(t, ImmutableMap.of("filename", s3Artifact.getFilename(), "chunk", Integer.toString(chunk)));
+      exceptionNotifier.notify(String.format("Error handling chunk (%s)", t.getMessage()), t, ImmutableMap.of("filename", s3Artifact.getFilename(), "chunk", Integer.toString(chunk)));
     }
 
     return false;

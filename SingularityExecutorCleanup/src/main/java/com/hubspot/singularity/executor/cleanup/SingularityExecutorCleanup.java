@@ -14,6 +14,8 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
+import javax.ws.rs.HEAD;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -98,7 +100,7 @@ public class SingularityExecutorCleanup {
       runningTaskIds = getRunningTaskIds();
     } catch (Exception e) {
       LOG.error("While fetching running tasks from singularity", e);
-      exceptionNotifier.notify(e, Collections.<String, String>emptyMap());
+      exceptionNotifier.notify(String.format("Error fetching running tasks (%s)", e.getMessage()), e, Collections.<String, String>emptyMap());
       statisticsBldr.setErrorMessage(e.getMessage());
       return statisticsBldr.build();
     }
@@ -110,7 +112,7 @@ public class SingularityExecutorCleanup {
     if (runningTaskIds.isEmpty()) {
       if (!isDecommissioned()) {
         if (cleanupConfiguration.isSafeModeWontRunWithNoTasks()) {
-          final String errorMessage = String.format("Running in safe mode and found 0 running tasks - aborting cleanup");
+          final String errorMessage = "Running in safe mode and found 0 running tasks - aborting cleanup";
           LOG.error(errorMessage);
           statisticsBldr.setErrorMessage(errorMessage);
           return statisticsBldr.build();
@@ -160,7 +162,7 @@ public class SingularityExecutorCleanup {
           taskHistory = singularityClient.getHistoryForTask(taskId);
         } catch (SingularityClientException sce) {
           LOG.error("{} - Failed fetching history", taskId, sce);
-          exceptionNotifier.notify(sce, Collections.<String, String>emptyMap());
+          exceptionNotifier.notify(String.format("Error fetching history (%s)", sce.getMessage()), sce, ImmutableMap.<String, String>of("taskId", taskId));
           statisticsBldr.incrErrorTasks();
           continue;
         }
@@ -185,7 +187,7 @@ public class SingularityExecutorCleanup {
 
       } catch (IOException ioe) {
         LOG.error("Couldn't read file {}", file, ioe);
-        exceptionNotifier.notify(ioe, ImmutableMap.of("file", file.toString()));
+        exceptionNotifier.notify(String.format("Error reading file (%s)", ioe.getMessage()), ioe, ImmutableMap.of("file", file.toString()));
         statisticsBldr.incrIoErrorTasks();
       }
     }
@@ -300,7 +302,7 @@ public class SingularityExecutorCleanup {
           }
         } catch (IOException ioe) {
           LOG.error("Failed to handle empty {} file {}", maybeCompressionType.get(), path, ioe);
-          exceptionNotifier.notify(ioe, ImmutableMap.of("file", path.toString()));
+          exceptionNotifier.notify(String.format("Error handling empty file (%s)", ioe.getMessage()), ioe, ImmutableMap.of("file", path.toString()));
         }
       } else {
         uncompressedFiles.add(path);
@@ -314,7 +316,7 @@ public class SingularityExecutorCleanup {
           new SimpleProcessManager(LOG).runCommand(ImmutableList.<String> of(cleanupConfiguration.getCompressionType().getCommand(), path.toString()));
         } catch (InterruptedException | ProcessFailedException e) {
           LOG.error("Failed to {} {}", cleanupConfiguration.getCompressionType(), path, e);
-          exceptionNotifier.notify(e, ImmutableMap.of("file", path.toString()));
+          exceptionNotifier.notify(String.format("Failed to %s %s (%s)", cleanupConfiguration.getCompressionType(), path, e.getMessage()), e, ImmutableMap.of("file", path.toString()));
         }
       } else {
         LOG.debug("Didn't find matched empty {} file for {}", cleanupConfiguration.getCompressionType(), path);
@@ -345,7 +347,7 @@ public class SingularityExecutorCleanup {
       }
     } catch (Exception e) {
       LOG.error("Could not get list of Docker containers", e);
-      exceptionNotifier.notify(e, Collections.<String, String>emptyMap());
+      exceptionNotifier.notify(String.format("Error listing docker containers (%s)", e.getMessage()), e, Collections.<String, String>emptyMap());
     }
   }
 
@@ -360,7 +362,7 @@ public class SingularityExecutorCleanup {
       LOG.debug("Removed container {}", container.names());
     } catch (Exception e) {
       LOG.error("Failed to stop or remove container {}", container.names(), e);
-      exceptionNotifier.notify(e, Collections.<String, String>emptyMap());
+      exceptionNotifier.notify(String.format("Failed stopping container (%s)", e.getMessage()), e, Collections.<String, String>emptyMap());
     }
   }
 
