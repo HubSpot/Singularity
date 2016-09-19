@@ -67,14 +67,14 @@ public class S3ArtifactChunkDownloader implements Callable<Path> {
           log.error("Chunk {} (retry {}) for {} timed out after {} - total duration {}", chunk, retryNum, s3Artifact.getFilename(), JavaUtils.duration(timeout), JavaUtils.duration(start));
           future.cancel(true);
           if (retryNum == configuration.getS3ChunkRetries()) {
-            exceptionNotifier.notify(te, ImmutableMap.of("filename", s3Artifact.getFilename(), "chunk", Integer.toString(chunk), "retry", Integer.toString(retryNum)));
+            exceptionNotifier.notify("Timeout downloading chunk", te, ImmutableMap.of("filename", s3Artifact.getFilename(), "chunk", Integer.toString(chunk), "retry", Integer.toString(retryNum)));
           }
         } catch (InterruptedException ie) {
           log.warn("Chunk {} (retry {}) for {} interrupted", chunk, retryNum, s3Artifact.getFilename());
-          exceptionNotifier.notify(ie, ImmutableMap.of("filename", s3Artifact.getFilename(), "chunk", Integer.toString(chunk), "retry", Integer.toString(retryNum)));
+          exceptionNotifier.notify("Interrupted during download", ie, ImmutableMap.of("filename", s3Artifact.getFilename(), "chunk", Integer.toString(chunk), "retry", Integer.toString(retryNum)));
         } catch (Throwable t) {
           log.error("Error while downloading chunk {} (retry {}) for {}", chunk, retryNum, s3Artifact.getFilename(), t);
-          exceptionNotifier.notify(t, ImmutableMap.of("filename", s3Artifact.getFilename(), "chunk", Integer.toString(chunk), "retry", Integer.toString(retryNum)));
+          exceptionNotifier.notify(String.format("Error downloading chunk (%s)", t.getMessage()), t, ImmutableMap.of("filename", s3Artifact.getFilename(), "chunk", Integer.toString(chunk), "retry", Integer.toString(retryNum)));
         }
 
         retryNum++;
