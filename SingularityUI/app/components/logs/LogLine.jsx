@@ -55,12 +55,20 @@ class LogLine extends React.Component {
       highlightLine: this.props.isHighlighted
     });
 
-    return React.createElement("div", { "className": divClass, "style": { backgroundColor: this.props.color } }, React.createElement("a", { "href": `${ config.appRoot }/task/${ this.props.taskId }/tail/${ this.props.path }#${ this.props.offset }`, "className": "offset-link", ["onClick"]: () => this.props.clickPermalink(this.props.offset) }, <div className="pre-line"><span className="glyphicon glyphicon-link" data-offset={`${ this.props.offset }`} /></div>), <span>{this.highlightContent(this.props.content)}</span>);
+    let linkStyle;
+    if (this.props.compressedLog) {
+      linkStyle = "view";
+    } else {
+      linkStyle = "tail";
+    }
+
+    return React.createElement("div", { "className": divClass, "style": { backgroundColor: this.props.color } }, React.createElement("a", { "href": `${ config.appRoot }/task/${ this.props.taskId }/${linkStyle}/${ this.props.path }#${ this.props.offset }`, "className": "offset-link", ["onClick"]: () => this.props.clickPermalink(this.props.offset) }, <div className="pre-line"><span className="glyphicon glyphicon-link" data-offset={`${ this.props.offset }`} /></div>), <span>{this.highlightContent(this.props.content)}</span>);
   }
 }
 
 LogLine.propTypes = {
   offset: React.PropTypes.number.isRequired,
+  compressedLog: React.PropTypes.bool.isRequired,
   isHighlighted: React.PropTypes.bool.isRequired,
   content: React.PropTypes.string.isRequired,
   taskId: React.PropTypes.string.isRequired,

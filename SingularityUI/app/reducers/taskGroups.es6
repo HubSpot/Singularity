@@ -152,7 +152,7 @@ const ACTIONS = {
   },
 
   // We've received logging data for a task
-  LOG_TASK_DATA(state, {taskGroupId, taskId, offset, nextOffset, maxLines, data, append}) {
+  LOG_TASK_DATA(state, {taskGroupId, taskId, offset, nextOffset, maxLines, data, append, logType}) {
     let taskGroup = state[taskGroupId];
 
     // bail early if no data
@@ -180,7 +180,7 @@ const ACTIONS = {
     let taskBuffer = taskGroup.taskBuffer[taskId] || buildEmptyBuffer(taskId, 0);
 
     if (append) {
-      if (taskBuffer.offset + taskBuffer.data.length === offset) {
+      if (taskBuffer.offset + taskBuffer.data.length === offset || (logType == "COMPRESSED" && (taskBuffer.offset + taskBuffer.data.length) <= offset)) {
         var firstLine = _.first(lines);
         lines = _.rest(lines);
         taskBuffer = {offset: taskBuffer.offset, data: taskBuffer.data + firstLine.data, taskId};
