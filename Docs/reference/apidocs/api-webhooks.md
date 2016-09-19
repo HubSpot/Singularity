@@ -200,17 +200,17 @@ Retrieve a list of active webhooks.
 
 
 - - -
-#### **POST** `/api/webhooks`
+#### **DELETE** `/api/webhooks`
 
-Add a new webhook.
+Delete a specific webhook.
 
 
 ###### Parameters
-**body**
+**query**
 
 | Parameter | Required | Description | Data Type |
 |-----------|----------|-------------|-----------|
-| body | false |  | [SingularityWebhook](models.md#model-linkType)</a> |
+| webhookId | false |  | string |
 
 ###### Response
 string
@@ -223,17 +223,17 @@ string
 
 
 - - -
-#### **DELETE** `/api/webhooks`
+#### **POST** `/api/webhooks`
 
-Delete a specific webhook.
+Add a new webhook.
 
 
 ###### Parameters
-**query**
+**body**
 
 | Parameter | Required | Description | Data Type |
 |-----------|----------|-------------|-----------|
-| webhookId | false |  | string |
+| body | false |  | [SingularityWebhook](models.md#model-linkType)</a> |
 
 ###### Response
 string

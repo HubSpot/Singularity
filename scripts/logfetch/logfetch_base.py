@@ -55,12 +55,14 @@ def all_tasks_for_request(args, request):
         return active_tasks
 
 def all_requests(args):
-    uri = '{0}{1}'.format(base_uri(args),    ALL_REQUESTS)
+    uri = '{0}{1}'.format(base_uri(args), ALL_REQUESTS)
     requests = get_json_response(uri, args)
     included_requests = []
     for request in requests:
         if fnmatch.fnmatch(request['request']['id'], args.requestId):
             included_requests.append(request['request']['id'])
+    if not included_requests and not '*' in args.requestId:
+        included_requests.append(args.requestId)
     return included_requests
 
 def is_in_date_range(args, timestamp):
