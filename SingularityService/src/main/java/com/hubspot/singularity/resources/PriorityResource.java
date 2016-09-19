@@ -77,7 +77,7 @@ public class PriorityResource {
     @ApiOperation(value="Stop scheduling tasks below a certain priority level.", response=SingularityPriorityFreezeParent.class)
     @ApiResponses({
         @ApiResponse(code=200, message="The priority freeze request was accepted."),
-        @ApiResponse(code=400, message="There was a validation error with the priorty freeze request.")
+        @ApiResponse(code=400, message="There was a validation error with the priority freeze request.")
     })
     public SingularityPriorityFreezeParent createPriorityFreeze(SingularityPriorityFreeze priorityFreezeRequest) {
         authorizationHelper.checkAdminAuthorization(user);

@@ -64,11 +64,11 @@ public class SingularityExceptionNotifier {
     raven.sendEvent(eventBuilder.build());
   }
 
-  public void notify(Throwable t) {
-    notify(t, Collections.<String, String>emptyMap());
+  public void notify(String message, Throwable t) {
+    notify(message, t, Collections.<String, String>emptyMap());
   }
 
-  public void notify(Throwable t, Map<String, String> extraData) {
+  public void notify(String message, Throwable t, Map<String, String> extraData) {
     if (!raven.isPresent()) {
       return;
     }
@@ -76,8 +76,8 @@ public class SingularityExceptionNotifier {
     final StackTraceElement[] currentThreadStackTrace = Thread.currentThread().getStackTrace();
 
     final EventBuilder eventBuilder = new EventBuilder()
-            .withCulprit(getPrefix() + t.getMessage())
-            .withMessage(Strings.nullToEmpty(t.getMessage()))
+            .withCulprit(getPrefix() + message)
+            .withMessage(message)
             .withLevel(Event.Level.ERROR)
             .withLogger(getCallingClassName(currentThreadStackTrace))
             .withSentryInterface(new ExceptionInterface(t));
