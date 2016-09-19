@@ -93,7 +93,7 @@ public class SingularityMesosSchedulerDelegator implements Scheduler {
   private void handleUncaughtSchedulerException(Throwable t) {
     LOG.error("Scheduler threw an uncaught exception - exiting", t);
 
-    exceptionNotifier.notify(t);
+    exceptionNotifier.notify(String.format("Scheduler threw an uncaught exception (%s)", t.getMessage()), t);
 
     abort.abort(AbortReason.UNRECOVERABLE_ERROR, Optional.of(t));
   }
