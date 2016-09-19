@@ -3,12 +3,14 @@ package com.hubspot.singularity.data;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.hubspot.singularity.WebExceptions.badRequest;
 import static com.hubspot.singularity.WebExceptions.checkBadRequest;
+import static com.hubspot.singularity.WebExceptions.checkConflict;
 
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.TimeZone;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
@@ -31,14 +33,18 @@ import com.hubspot.mesos.Resources;
 import com.hubspot.mesos.SingularityContainerInfo;
 import com.hubspot.mesos.SingularityContainerType;
 import com.hubspot.mesos.SingularityDockerInfo;
+import com.hubspot.mesos.SingularityDockerParameter;
 import com.hubspot.mesos.SingularityDockerPortMapping;
+import com.hubspot.mesos.SingularityMesosTaskLabel;
 import com.hubspot.mesos.SingularityPortMappingType;
 import com.hubspot.mesos.SingularityVolume;
 import com.hubspot.singularity.ScheduleType;
 import com.hubspot.singularity.SingularityDeploy;
 import com.hubspot.singularity.SingularityDeployBuilder;
+import com.hubspot.singularity.SingularityAction;
 import com.hubspot.singularity.SingularityPriorityFreezeParent;
 import com.hubspot.singularity.SingularityRequest;
+import com.hubspot.singularity.SingularityRequestGroup;
 import com.hubspot.singularity.SingularityWebhook;
 import com.hubspot.singularity.api.SingularityPriorityFreeze;
 import com.hubspot.singularity.api.SingularityBounceRequest;
@@ -68,9 +74,10 @@ public class SingularityValidator {
   private final DeployHistoryHelper deployHistoryHelper;
   private final Resources defaultResources;
   private final PriorityManager priorityManager;
+  private final DisasterManager disasterManager;
 
   @Inject
-  public SingularityValidator(SingularityConfiguration configuration, DeployHistoryHelper deployHistoryHelper, PriorityManager priorityManager) {
+  public SingularityValidator(SingularityConfiguration configuration, DeployHistoryHelper deployHistoryHelper, PriorityManager priorityManager, DisasterManager disasterManager) {
     this.maxDeployIdSize = configuration.getMaxDeployIdSize();
     this.maxRequestIdSize = configuration.getMaxRequestIdSize();
     this.allowRequestsWithoutOwners = configuration.isAllowRequestsWithoutOwners();
@@ -91,6 +98,8 @@ public class SingularityValidator {
     this.maxMemoryMbPerInstance = configuration.getMesosConfiguration().getMaxMemoryMbPerInstance();
     this.maxMemoryMbPerRequest = configuration.getMesosConfiguration().getMaxMemoryMbPerRequest();
     this.maxInstancesPerRequest = configuration.getMesosConfiguration().getMaxNumInstancesPerRequest();
+
+    this.disasterManager = disasterManager;
   }
 
   private void checkForIllegalChanges(SingularityRequest request, SingularityRequest existingRequest) {
@@ -273,6 +282,21 @@ public class SingularityValidator {
 
     checkBadRequest(!deploy.getContainerInfo().isPresent() || deploy.getContainerInfo().get().getType() != null, "Container type must not be null");
 
+    if (deploy.getLabels().isPresent() && deploy.getMesosTaskLabels().isPresent()) {
+      List<SingularityMesosTaskLabel> deprecatedLabels = SingularityMesosTaskLabel.labelsFromMap(deploy.getLabels().get());
+      checkBadRequest(deprecatedLabels.containsAll(deploy.getMesosLabels().get()) && deploy.getMesosLabels().get().containsAll(deprecatedLabels), "Can only specify one of 'labels' or 'mesosLabels");
+    }
+
+    if (deploy.getTaskLabels().isPresent() && deploy.getMesosTaskLabels().isPresent()) {
+      for (Map.Entry<Integer, Map<String, String>> entry : deploy.getTaskLabels().get().entrySet()) {
+        List<SingularityMesosTaskLabel> deprecatedLabels = SingularityMesosTaskLabel.labelsFromMap(entry.getValue());
+        checkBadRequest(deploy.getMesosTaskLabels().get().containsKey(entry.getKey())
+          && deprecatedLabels.containsAll(deploy.getMesosTaskLabels().get().get(entry.getKey()))
+          && deploy.getMesosTaskLabels().get().get(entry.getKey()).containsAll(deprecatedLabels),
+          "Can only specify one of 'taskLabels' or 'mesosTaskLabels");
+      }
+    }
+
     if (deploy.getContainerInfo().isPresent()) {
       SingularityContainerInfo containerInfo = deploy.getContainerInfo().get();
       checkBadRequest(containerInfo.getType() != null, "container type may not be null");
@@ -307,6 +331,11 @@ public class SingularityValidator {
       final int numPorts = deploy.getResources().get().getNumPorts();
 
       checkBadRequest(dockerInfo.getImage() != null, "docker image may not be null");
+
+      if (dockerInfo.getParameters().isPresent()) {
+        List<SingularityDockerParameter> deprecatedParameters = SingularityDockerParameter.parametersFromMap(dockerInfo.getParameters().get());
+        checkBadRequest(deprecatedParameters.containsAll(dockerInfo.getDockerParameters()) && dockerInfo.getDockerParameters().containsAll(deprecatedParameters), "Can only specify one of 'parameters' or 'dockerParameters'");
+      }
 
       for (SingularityDockerPortMapping portMapping : dockerInfo.getPortMappings()) {
         if (portMapping.getContainerPortType() == SingularityPortMappingType.FROM_OFFER) {
@@ -444,6 +473,10 @@ public class SingularityValidator {
     return newDayOfWeekValue;
   }
 
+  public void checkActionEnabled(SingularityAction action) {
+    checkConflict(!disasterManager.isDisabled(action), disasterManager.getDisabledAction(action).getMessage());
+  }
+
   private boolean isValidInteger(String strValue) {
     try {
       Integer.parseInt(strValue);
@@ -486,5 +519,12 @@ public class SingularityValidator {
         .toBuilder()
         .setDurationMillis(Optional.of(durationMillis))
         .build();
+  }
+
+  public void checkRequestGroup(SingularityRequestGroup requestGroup) {
+    checkBadRequest(requestGroup.getId() != null && !StringUtils.containsAny(requestGroup.getId(), JOINER.join(REQUEST_ID_ILLEGAL_CHARACTERS)), "Id can not be null or contain any of the following characters: %s", REQUEST_ID_ILLEGAL_CHARACTERS);
+    checkBadRequest(requestGroup.getId().length() < maxRequestIdSize, "Id must be less than %s characters, it is %s (%s)", maxRequestIdSize, requestGroup.getId().length(), requestGroup.getId());
+
+    checkBadRequest(requestGroup.getRequestIds() != null, "requestIds cannot be null");
   }
 }

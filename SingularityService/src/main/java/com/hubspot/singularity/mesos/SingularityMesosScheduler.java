@@ -11,6 +11,7 @@ import javax.inject.Singleton;
 
 import org.apache.mesos.Protos;
 import org.apache.mesos.Protos.Offer;
+import org.apache.mesos.Protos.TaskState;
 import org.apache.mesos.Protos.TaskStatus.Reason;
 import org.apache.mesos.Scheduler;
 import org.apache.mesos.SchedulerDriver;
@@ -21,6 +22,7 @@ import com.codahale.metrics.annotation.Timed;
 import com.google.common.base.Optional;
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Multiset;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
@@ -77,6 +79,7 @@ public class SingularityMesosScheduler implements Scheduler {
   private final SingularitySlaveAndRackManager slaveAndRackManager;
   private final SingularityLogSupport logSupport;
   private final SingularityTaskSizeOptimizer taskSizeOptimizer;
+  private final Multiset<Reason> taskLostReasons;
 
   private final SingularityExceptionNotifier exceptionNotifier;
 
@@ -90,7 +93,8 @@ public class SingularityMesosScheduler implements Scheduler {
   SingularityMesosScheduler(MesosConfiguration mesosConfiguration, SingularityConfiguration configuration, TaskManager taskManager, PriorityManager priorityManager, SingularityScheduler scheduler, SingularitySlaveAndRackManager slaveAndRackManager,
       SingularityNewTaskChecker newTaskChecker, SingularityMesosTaskBuilder mesosTaskBuilder, SingularityLogSupport logSupport, RequestManager requestManager,
       Provider<SingularitySchedulerStateCache> stateCacheProvider, SingularityHealthchecker healthchecker, DeployManager deployManager, SingularityExceptionNotifier exceptionNotifier,SingularityMesosFrameworkMessageHandler messageHandler,
-      @Named(SingularityMainModule.SERVER_ID_PROPERTY) String serverId, SchedulerDriverSupplier schedulerDriverSupplier, SingularityTaskSizeOptimizer taskSizeOptimizer, final IdTranscoder<SingularityTaskId> taskIdTranscoder, CustomExecutorConfiguration customExecutorConfiguration) {
+      @Named(SingularityMainModule.SERVER_ID_PROPERTY) String serverId, SchedulerDriverSupplier schedulerDriverSupplier, SingularityTaskSizeOptimizer taskSizeOptimizer, final IdTranscoder<SingularityTaskId> taskIdTranscoder, CustomExecutorConfiguration customExecutorConfiguration,
+      @Named(SingularityMesosModule.TASK_LOST_REASONS_COUNTER) Multiset<Reason> taskLostReasons) {
     this.defaultResources = new Resources(mesosConfiguration.getDefaultCpus(), mesosConfiguration.getDefaultMemory(), 0, mesosConfiguration.getDefaultDisk());
     this.defaultCustomExecutorResources = new Resources(customExecutorConfiguration.getNumCpus(), customExecutorConfiguration.getMemoryMb(), 0, customExecutorConfiguration.getDiskMb());
     this.taskManager = taskManager;
@@ -111,6 +115,7 @@ public class SingularityMesosScheduler implements Scheduler {
     this.exceptionNotifier = exceptionNotifier;
     this.requestManager = requestManager;
     this.configuration = configuration;
+    this.taskLostReasons = taskLostReasons;
   }
 
   @Override
@@ -362,6 +367,12 @@ public class SingularityMesosScheduler implements Scheduler {
     return Optional.absent();
   }
 
+  private void updateDisasterStats(Protos.TaskStatus status) {
+    if (status.getState() == TaskState.TASK_LOST) {
+      taskLostReasons.add(status.getReason());
+    }
+  }
+
   @Override
   @Timed
   public void statusUpdate(SchedulerDriver driver, Protos.TaskStatus status) {
@@ -391,6 +402,10 @@ public class SingularityMesosScheduler implements Scheduler {
       LOG.trace("Ignoring status update {} to {}", taskState, taskIdObj);
       saveNewTaskStatusHolder(taskIdObj, newTaskStatusHolder, taskState);
       return;
+    }
+
+    if (configuration.getDisasterDetection().isEnabled()) {
+      updateDisasterStats(status);
     }
 
     final Optional<SingularityTask> task = taskManager.getTask(taskIdObj);
