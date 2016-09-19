@@ -39,6 +39,7 @@ import com.hubspot.mesos.SingularityDockerPortMapping;
 import com.hubspot.mesos.SingularityMesosTaskLabel;
 import com.hubspot.mesos.SingularityPortMappingType;
 import com.hubspot.mesos.SingularityVolume;
+import com.hubspot.singularity.MachineState;
 import com.hubspot.singularity.ScheduleType;
 import com.hubspot.singularity.SingularityDeploy;
 import com.hubspot.singularity.SingularityDeployBuilder;
@@ -47,6 +48,7 @@ import com.hubspot.singularity.SingularityPriorityFreezeParent;
 import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityRequestGroup;
 import com.hubspot.singularity.SingularityWebhook;
+import com.hubspot.singularity.SlavePlacement;
 import com.hubspot.singularity.api.SingularityPriorityFreeze;
 import com.hubspot.singularity.api.SingularityBounceRequest;
 import com.hubspot.singularity.config.SingularityConfiguration;
@@ -71,13 +73,15 @@ public class SingularityValidator {
   private final boolean allowRequestsWithoutOwners;
   private final boolean createDeployIds;
   private final int deployIdLength;
+  private final SlavePlacement defaultSlavePlacement;
   private final DeployHistoryHelper deployHistoryHelper;
   private final Resources defaultResources;
   private final PriorityManager priorityManager;
   private final DisasterManager disasterManager;
+  private final SlaveManager slaveManager;
 
   @Inject
-  public SingularityValidator(SingularityConfiguration configuration, DeployHistoryHelper deployHistoryHelper, PriorityManager priorityManager, DisasterManager disasterManager) {
+  public SingularityValidator(SingularityConfiguration configuration, DeployHistoryHelper deployHistoryHelper, PriorityManager priorityManager, DisasterManager disasterManager, SlaveManager slaveManager) {
     this.maxDeployIdSize = configuration.getMaxDeployIdSize();
     this.maxRequestIdSize = configuration.getMaxRequestIdSize();
     this.allowRequestsWithoutOwners = configuration.isAllowRequestsWithoutOwners();
@@ -90,6 +94,7 @@ public class SingularityValidator {
     int defaultMemoryMb = configuration.getMesosConfiguration().getDefaultMemory();
     int defaultDiskMb = configuration.getMesosConfiguration().getDefaultDisk();
     this.defaultBounceExpirationMinutes = configuration.getDefaultBounceExpirationMinutes();
+    this.defaultSlavePlacement = configuration.getDefaultSlavePlacement();
 
 
     defaultResources = new Resources(defaultCpus, defaultMemoryMb, 0, defaultDiskMb);
@@ -101,6 +106,7 @@ public class SingularityValidator {
     this.maxInstancesPerRequest = configuration.getMesosConfiguration().getMaxNumInstancesPerRequest();
 
     this.disasterManager = disasterManager;
+    this.slaveManager = slaveManager;
   }
 
   public SingularityRequest checkSingularityRequest(SingularityRequest request, Optional<SingularityRequest> existingRequest, Optional<SingularityDeploy> activeDeploy,
@@ -463,6 +469,32 @@ public class SingularityValidator {
     }
 
     return newDayOfWeekValue;
+  }
+
+  public void checkResourcesForBounce(SingularityRequest request, boolean isIncremental) {
+    SlavePlacement placement = request.getSlavePlacement().or(defaultSlavePlacement);
+
+    if (placement != SlavePlacement.GREEDY && placement != SlavePlacement.OPTIMISTIC) {
+      int currentActiveSlaveCount = slaveManager.getNumObjectsAtState(MachineState.ACTIVE);
+      int requiredSlaveCount = isIncremental ? request.getInstancesSafe() + 1 : request.getInstancesSafe() * 2;
+
+      checkBadRequest(currentActiveSlaveCount >= requiredSlaveCount, "Not enough active slaves to successfully scale request %s to %s instances (minimum required: %s, current: %s).", request.getId(), request.getInstancesSafe(), requiredSlaveCount, currentActiveSlaveCount);
+    }
+  }
+
+  public void checkScale(SingularityRequest request, Optional<Integer> previousScale) {
+    SlavePlacement placement = request.getSlavePlacement().or(defaultSlavePlacement);
+
+    if (placement != SlavePlacement.GREEDY && placement != SlavePlacement.OPTIMISTIC) {
+      int currentActiveSlaveCount = slaveManager.getNumObjectsAtState(MachineState.ACTIVE);
+      int requiredSlaveCount = request.getInstancesSafe();
+
+      if (previousScale.isPresent() && placement == SlavePlacement.SEPARATE_BY_REQUEST) {
+        requiredSlaveCount += previousScale.get();
+      }
+
+      checkBadRequest(currentActiveSlaveCount >= requiredSlaveCount, "Not enough active slaves to successfully complete a bounce of request %s (minimum required: %s, current: %s). Consider deploying, or changing the slave placement strategy instead.", request.getId(), requiredSlaveCount, currentActiveSlaveCount);
+    }
   }
 
   public void checkActionEnabled(SingularityAction action) {
