@@ -46,7 +46,7 @@ public class SingularityRunner {
       System.exit(1);
     } catch (Throwable t) {
       LOG.error("Caught unexpected exception, exiting", t);
-      exceptionNotifier.notify(t, Collections.<String, String>emptyMap());
+      exceptionNotifier.notify(String.format("Unexpected exception in runner (%s)", t.getMessage()), t, Collections.<String, String>emptyMap());
       System.exit(1);
     }
 

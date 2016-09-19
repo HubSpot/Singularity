@@ -108,7 +108,7 @@ public abstract class SingularityLeaderOnlyPoller implements Managed {
       runActionOnPoll();
     } catch (Throwable t) {
       LOG.error("Caught an exception while running {}", getClass().getSimpleName(), t);
-      exceptionNotifier.notify(t);
+      exceptionNotifier.notify(String.format("Caught an exception while running %s", getClass().getSimpleName()), t);
       if (abortsOnError()) {
         abort.abort(AbortReason.UNRECOVERABLE_ERROR, Optional.of(t));
       }
