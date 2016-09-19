@@ -135,7 +135,7 @@ public class SingularityScheduledJobPoller extends SingularityLeaderOnlyPoller {
 
       } catch (ParseException|InvalidRecurrenceRuleException e) {
         LOG.warn("Unable to parse schedule of type {} for expression {} (taskId: {}, err: {})", request.getRequest().getScheduleTypeSafe(), scheduleExpression, taskId, e);
-        exceptionNotifier.notify(e, ImmutableMap.of("taskId", taskId.toString(), "scheduleExpression", scheduleExpression, "scheduleType", request.getRequest().getScheduleTypeSafe().toString()));
+        exceptionNotifier.notify(String.format("Unable to parse schedule (%s)", e.getMessage()), e, ImmutableMap.of("taskId", taskId.toString(), "scheduleExpression", scheduleExpression, "scheduleType", request.getRequest().getScheduleTypeSafe().toString()));
         return Optional.absent();
       }
 

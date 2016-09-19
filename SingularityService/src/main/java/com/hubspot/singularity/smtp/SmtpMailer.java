@@ -367,7 +367,7 @@ public class SmtpMailer implements SingularityMailer, Managed {
           prepareRequestMail(request, type, user, message, additionalProperties);
         } catch (Throwable t) {
           LOG.error("While preparing request mail for {} / {}", request, type, t);
-          exceptionNotifier.notify(t, ImmutableMap.of("requestId", request.getId()));
+          exceptionNotifier.notify(String.format("Error preparing request mail (%s)", t.getMessage()), t, ImmutableMap.of("requestId", request.getId()));
         }
       }
     });
@@ -482,7 +482,7 @@ public class SmtpMailer implements SingularityMailer, Managed {
           prepareRequestInCooldownMail(request);
         } catch (Throwable t) {
           LOG.error("While preparing request in cooldown mail for {}", request, t);
-          exceptionNotifier.notify(t, ImmutableMap.of("requestId", request.getId()));
+          exceptionNotifier.notify(String.format("Error preparing cooldown mail (%s)", t.getMessage()), t, ImmutableMap.of("requestId", request.getId()));
         }
       }
     });

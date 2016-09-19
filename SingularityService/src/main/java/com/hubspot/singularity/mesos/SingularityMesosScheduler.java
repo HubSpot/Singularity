@@ -343,7 +343,7 @@ public class SingularityMesosScheduler implements Scheduler {
     try {
       return Optional.of(taskIdTranscoder.fromString(taskId));
     } catch (InvalidSingularityTaskIdException | SingularityTranscoderException e) {
-      exceptionNotifier.notify(e);
+      exceptionNotifier.notify(String.format("Unexpected taskId %s", taskId), e);
       LOG.error("Unexpected taskId {} ", taskId, e);
       return Optional.absent();
     }
