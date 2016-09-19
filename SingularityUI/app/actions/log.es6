@@ -211,7 +211,7 @@ export const updateTaskStatus = (taskGroupId, taskId) =>
 
 ;
 
-export const taskData = (taskGroupId, taskId, data, offset, nextOffset, append, maxLines) =>
+export const taskData = (taskGroupId, taskId, data, offset, nextOffset, append, maxLines, logType) =>
   ({
     taskGroupId,
     taskId,
@@ -220,6 +220,7 @@ export const taskData = (taskGroupId, taskId, data, offset, nextOffset, append, 
     nextOffset,
     append,
     maxLines,
+    logType,
     type: 'LOG_TASK_DATA'
   })
 ;
@@ -244,7 +245,7 @@ export const taskGroupFetchNext = taskGroupId =>
         const promise = xhr.done(({data, offset, nextOffset}) => {
           if (data.length > 0) {
             nextOffset = _.isUndefined(nextOffset) ? offset + data.length : nextOffset;
-            return dispatch(taskData(taskGroupId, taskId, data, offset, nextOffset, true, maxLines));
+            return dispatch(taskData(taskGroupId, taskId, data, offset, nextOffset, true, maxLines, logType));
           }
           return Promise.resolve();
         }).error(error => Utils.ignore404(error));
@@ -291,10 +292,10 @@ export const taskGroupFetchPrevious = taskGroupId =>
         return xhr.done(function({data, offset, nextOffset}) {
           if (data.length > 0) {
             if (logType == 'COMPRESSED') {
-               return dispatch(taskData(taskGroupId, taskId, data, nextOffset, offset, false, maxLines));
+               return dispatch(taskData(taskGroupId, taskId, data, nextOffset, offset, false, maxLines, logType));
             } else {
               nextOffset = offset + data.length;
-              return dispatch(taskData(taskGroupId, taskId, data, offset, nextOffset, false, maxLines));
+              return dispatch(taskData(taskGroupId, taskId, data, offset, nextOffset, false, maxLines, logType));
             }
           }
         });
