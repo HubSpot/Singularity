@@ -27,7 +27,7 @@ class ShellCommandLauncher extends Component {
   }
 
   constructor() {
-    super();
+    super(props);
     this.state = {
       commandAcked: false,
       commandStarted: false,
@@ -77,12 +77,10 @@ class ShellCommandLauncher extends Component {
       const taskId = _.first(cmdStatus.shellUpdates).shellRequestId.taskId.id;
       this.fileInterval = setInterval(() => {
         const directory = this.props.taskFiles[`${taskId}/`].data;
-        console.log(_.find(directory.files, (file) => file.name === outputFilePath));
         if (_.find(directory.files, (file) => file.name === outputFilePath)) {
           clearInterval(this.fileInterval);
           this.props.router.push(`task/${taskId}/tail/${taskId}/${outputFilePath}`);
         } else {
-          console.log('Fetching files');
           this.props.updateFiles(taskId);
         }
       }, 1000);
