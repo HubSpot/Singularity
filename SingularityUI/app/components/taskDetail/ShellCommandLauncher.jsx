@@ -27,7 +27,7 @@ class ShellCommandLauncher extends Component {
   }
 
   constructor() {
-    super(props);
+    super();
     this.state = {
       commandAcked: false,
       commandStarted: false,
