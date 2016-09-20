@@ -80,6 +80,7 @@ class ShellCommandLauncher extends Component {
         if (_.find(directory.files, (file) => file.name === outputFilePath)) {
           clearInterval(this.fileInterval);
           this.props.router.push(`task/${taskId}/tail/${taskId}/${outputFilePath}`);
+          this.props.close();
         } else {
           this.props.updateFiles(taskId, taskId);
         }
