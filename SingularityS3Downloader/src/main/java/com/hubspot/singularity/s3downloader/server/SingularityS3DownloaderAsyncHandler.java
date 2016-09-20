@@ -11,6 +11,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.codahale.metrics.Timer.Context;
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.runner.base.sentry.SingularityRunnerExceptionNotifier;
@@ -57,7 +58,7 @@ public class SingularityS3DownloaderAsyncHandler implements Runnable {
     if (Objects.toString(fetched.getFileName()).endsWith(".tar.gz")) {
       artifactManager.untar(fetched, targetDirectory);
     } else {
-      artifactManager.copy(fetched, targetDirectory);
+      artifactManager.copy(fetched, targetDirectory, artifactDownloadRequest.getS3Artifact().getFilename());
     }
 
     LOG.info("Finishing request {} after {}", artifactDownloadRequest.getTargetDirectory(), JavaUtils.duration(start));
