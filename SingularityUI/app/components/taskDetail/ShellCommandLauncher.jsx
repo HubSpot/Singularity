@@ -76,12 +76,11 @@ class ShellCommandLauncher extends Component {
       const outputFilePath = _.find(cmdStatus.shellUpdates, (shellUpdate) => shellUpdate.updateType === 'ACKED').outputFilename;
       const taskId = _.first(cmdStatus.shellUpdates).shellRequestId.taskId.id;
       this.fileInterval = setInterval(() => {
-        const directory = nextProps.taskFiles[`${taskId}/`].data;
-        if (_.find(directory.files, (file) => file.name === outputFilePath)) {
+        if (this.props.taskFiles[`${taskId}/${taskId}`] && _.find(this.props.taskFiles[`${taskId}/${taskId}`].data.files, (file) => file.name === outputFilePath)) {
           clearInterval(this.fileInterval);
           this.props.router.push(`task/${taskId}/tail/${taskId}/${outputFilePath}`);
         } else {
-          this.props.updateFiles(taskId, taskId);
+          this.props.updateFiles(taskId);
         }
       }, 1000);
     }
