@@ -19,6 +19,8 @@ import com.hubspot.mesos.MesosUtils;
 import com.hubspot.mesos.client.MesosClient;
 import com.hubspot.mesos.json.MesosMasterStateObject;
 import com.hubspot.singularity.RequestType;
+import com.hubspot.singularity.SingularityAbort;
+import com.hubspot.singularity.SingularityAbort.AbortReason;
 import com.hubspot.singularity.SingularityDeployKey;
 import com.hubspot.singularity.SingularityPendingDeploy;
 import com.hubspot.singularity.SingularityPendingRequest;
@@ -32,6 +34,7 @@ import com.hubspot.singularity.SingularityTaskHistoryUpdate;
 import com.hubspot.singularity.SingularityTaskHistoryUpdate.SimplifiedTaskState;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTaskIdHolder;
+import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.DeployManager;
 import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.data.TaskManager;
@@ -42,7 +45,6 @@ import com.hubspot.singularity.scheduler.SingularityTaskReconciliation;
 
 @Singleton
 class SingularityStartup {
-  private static final int THRESHOLD = 128; // todo: put in SingularityConfiguration?
   private static final Logger LOG = LoggerFactory.getLogger(SingularityStartup.class);
 
   private final MesosClient mesosClient;
@@ -54,11 +56,21 @@ class SingularityStartup {
   private final SingularityNewTaskChecker newTaskChecker;
   private final SingularityTaskReconciliation taskReconciliation;
   private final ZkDataMigrationRunner zkDataMigrationRunner;
+  private final SingularityAbort abort;
+  private final int startUpTaskThresholdPct;
 
   @Inject
-  SingularityStartup(MesosClient mesosClient, SingularityHealthchecker healthchecker, SingularityNewTaskChecker newTaskChecker,
-      SingularitySlaveAndRackManager slaveAndRackManager, TaskManager taskManager, RequestManager requestManager, DeployManager deployManager, SingularityTaskReconciliation taskReconciliation,
-      ZkDataMigrationRunner zkDataMigrationRunner) {
+  SingularityStartup(MesosClient mesosClient,
+                     SingularityHealthchecker healthchecker,
+                     SingularityNewTaskChecker newTaskChecker,
+                     SingularitySlaveAndRackManager slaveAndRackManager,
+                     TaskManager taskManager,
+                     RequestManager requestManager,
+                     DeployManager deployManager,
+                     SingularityTaskReconciliation taskReconciliation,
+                     ZkDataMigrationRunner zkDataMigrationRunner,
+                     SingularityAbort abort,
+                     SingularityConfiguration singularityConfiguration) {
     this.mesosClient = mesosClient;
     this.zkDataMigrationRunner = zkDataMigrationRunner;
     this.slaveAndRackManager = slaveAndRackManager;
@@ -68,6 +80,8 @@ class SingularityStartup {
     this.taskManager = taskManager;
     this.healthchecker = healthchecker;
     this.taskReconciliation = taskReconciliation;
+    this.abort = abort;
+    this.startUpTaskThresholdPct = singularityConfiguration.getStartUpTaskThresholdPct();
   }
 
   public void startup(MasterInfo masterInfo, SchedulerDriver driver) throws Exception {
@@ -116,6 +130,7 @@ class SingularityStartup {
   void checkSchedulerForInconsistentState() {
     final long now = System.currentTimeMillis();
     int numPendingStartupRequests = 0;
+    int totalStartupRequests = requestManager.getNumRequests();
 
     final Map<SingularityDeployKey, SingularityPendingTaskId> deployKeyToPendingTaskId = getDeployKeyToPendingTaskId();
 
@@ -126,9 +141,11 @@ class SingularityStartup {
         case DEPLOYING_TO_UNPAUSE:
           if(checkActiveRequest(requestWithState, deployKeyToPendingTaskId, now)) {
             numPendingStartupRequests++;
-            if (numPendingStartupRequests > THRESHOLD) {
-              LOG.info("Reached startup task threshold of %s", THRESHOLD);
-              return; // todo: abort Singularity??
+            float startUpTaskPct = (numPendingStartupRequests * 100.0f / totalStartupRequests);
+
+            if (startUpTaskPct > startUpTaskThresholdPct) {
+              LOG.info("%s% exceeded startup task threshold of %s%", startUpTaskPct, startUpTaskThresholdPct);
+              abort.abort(AbortReason.EXCEEDED_STARTUP_TASK_THRESHOLD, Optional.<Throwable>absent());
             }
           }
           break;
