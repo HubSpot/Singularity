@@ -181,8 +181,9 @@ public class SingularityValidator {
       checkBadRequest(!request.isLoadBalanced(), "non-longRunning (scheduled/oneoff) requests can not be load balanced");
       checkBadRequest(!request.isRackSensitive(), "non-longRunning (scheduled/oneoff) requests can not be rack sensitive");
     } else {
-      checkBadRequest(!request.getNumRetriesOnFailure().isPresent(), "NumRetriesOnFailure can only be set for non-long running requests");
+      checkBadRequest(!request.getNumRetriesOnFailure().isPresent(), "longRunning requests can not define a NumRetriesOnFailure value");
       checkBadRequest(!request.getKillOldNonLongRunningTasksAfterMillis().isPresent(), "longRunning requests can not define a killOldNonLongRunningTasksAfterMillis value");
+      checkBadRequest(!request.getTaskExecutionTimeLimitMillis().isPresent(), "longRunning requests can not define a taskExecutionTimeLimitMillis value");
     }
 
     if (request.isScheduled()) {
