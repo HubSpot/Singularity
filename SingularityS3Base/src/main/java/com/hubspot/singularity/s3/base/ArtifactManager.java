@@ -235,27 +235,4 @@ public class ArtifactManager extends SimpleProcessManager {
       throw Throwables.propagate(e);
     }
   }
-
-  private enum CacheCheckResult {
-    FOUND, DOES_NOT_EXIST, FILE_SIZE_MISMATCH, MD5_MISMATCH
-  }
-
-  private class CacheCheck {
-    private final CacheCheckResult cacheCheckResult;
-    private final String message;
-
-    public CacheCheck(CacheCheckResult cacheCheckResult, String message) {
-      this.cacheCheckResult = cacheCheckResult;
-      this.message = message;
-    }
-
-    public CacheCheckResult getCacheCheckResult() {
-      return cacheCheckResult;
-    }
-
-    public String getMessage() {
-      return message;
-    }
-  }
-
 }
