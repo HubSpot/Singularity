@@ -134,37 +134,37 @@ public class ArtifactManager extends SimpleProcessManager {
     return cacheDirectory.resolve(filename);
   }
 
-  private Optional<String> checkCached(RemoteArtifact artifact, Path cachedPath) {
+  private CacheCheck checkCached(RemoteArtifact artifact, Path cachedPath) {
     if (!Files.exists(cachedPath)) {
       String message = String.format("Cached %s did not exist", cachedPath);
       log.debug(message);
-      return Optional.of(message);
+      return new CacheCheck(CacheCheckResult.DOES_NOT_EXIST, message);
     }
 
     if (!filesSizeMatches(artifact, cachedPath)) {
       String message = String.format("Cached %s (%s) did not match file size %s", cachedPath, getSize(cachedPath), artifact.getFilesize());
       log.debug(message);
-      return Optional.of(message);
+      return new CacheCheck(CacheCheckResult.FILE_SIZE_MISMATCH, message);
     }
 
     if (!md5Matches(artifact, cachedPath)) {
       String message = String.format("Cached %s (%s) did not match md5 %s", cachedPath, calculateMd5sum(cachedPath), artifact.getMd5sum().get());
       log.debug(message);
-      return Optional.of(message);
+      return new CacheCheck(CacheCheckResult.MD5_MISMATCH, message);
     }
 
-    return Optional.absent();
+    return new CacheCheck(CacheCheckResult.FOUND, "");
   }
 
   public Path fetch(RemoteArtifact artifact) {
     String filename = artifact.getFilenameForCache();
     Path cachedPath = getCachedPath(filename);
 
-    Optional<String> maybeCacheMissMessage = checkCached(artifact, cachedPath);
+    CacheCheck cacheCheck = checkCached(artifact, cachedPath);
 
-    if (maybeCacheMissMessage.isPresent()) {
-      log.info(maybeCacheMissMessage.get());
-      downloadAndCache(artifact, filename, maybeCacheMissMessage.get());
+    if (cacheCheck.getCacheCheckResult() != CacheCheckResult.FOUND) {
+      log.info(cacheCheck.getMessage());
+      downloadAndCache(artifact, filename, cacheCheck.getMessage());
     } else {
       log.info("Using cached file {}", cachedPath);
     }
@@ -233,6 +233,28 @@ public class ArtifactManager extends SimpleProcessManager {
       return hc.toString();
     } catch (IOException e) {
       throw Throwables.propagate(e);
+    }
+  }
+
+  private enum CacheCheckResult {
+    FOUND, DOES_NOT_EXIST, FILE_SIZE_MISMATCH, MD5_MISMATCH
+  }
+
+  private class CacheCheck {
+    private final CacheCheckResult cacheCheckResult;
+    private final String message;
+
+    public CacheCheck(CacheCheckResult cacheCheckResult, String message) {
+      this.cacheCheckResult = cacheCheckResult;
+      this.message = message;
+    }
+
+    public CacheCheckResult getCacheCheckResult() {
+      return cacheCheckResult;
+    }
+
+    public String getMessage() {
+      return message;
     }
   }
 
