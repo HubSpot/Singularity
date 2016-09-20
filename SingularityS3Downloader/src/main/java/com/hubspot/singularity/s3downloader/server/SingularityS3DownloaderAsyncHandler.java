@@ -11,7 +11,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.codahale.metrics.Timer.Context;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.runner.base.sentry.SingularityRunnerExceptionNotifier;
