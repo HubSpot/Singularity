@@ -157,7 +157,7 @@ public class ArtifactManager extends SimpleProcessManager {
   }
 
   public Path fetch(RemoteArtifact artifact) {
-    String filename = artifact.getFilename();
+    String filename = artifact.getFilenameForCache();
     Path cachedPath = getCachedPath(filename);
 
     Optional<String> maybeCacheMissMessage = checkCached(artifact, cachedPath);
