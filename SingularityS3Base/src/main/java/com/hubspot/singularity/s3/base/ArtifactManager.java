@@ -13,6 +13,7 @@ import java.util.List;
 
 import org.slf4j.Logger;
 
+import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.hash.HashCode;
@@ -113,7 +114,7 @@ public class ArtifactManager extends SimpleProcessManager {
     checkMd5(embeddedArtifact, extractTo);
   }
 
-  private Path downloadAndCache(RemoteArtifact artifact, String filename) {
+  private Path downloadAndCache(RemoteArtifact artifact, String filename, String cacheMissMessage) {
     Path tempFilePath = createTempPath(filename);
 
     downloadAndCheck(artifact, tempFilePath);
@@ -123,7 +124,7 @@ public class ArtifactManager extends SimpleProcessManager {
     try {
       Files.move(tempFilePath, cachedPath, StandardCopyOption.ATOMIC_MOVE);
     } catch (IOException e) {
-      throw new RuntimeException(String.format("Couldn't move %s to %s", tempFilePath, cachedPath), e);
+      throw new RuntimeException(String.format("Couldn't move %s to cache at %s (Not cached because %s)", tempFilePath, cachedPath, cacheMissMessage), e);
     }
 
     return cachedPath;
@@ -133,31 +134,37 @@ public class ArtifactManager extends SimpleProcessManager {
     return cacheDirectory.resolve(filename);
   }
 
-  private boolean checkCached(RemoteArtifact artifact, Path cachedPath) {
+  private Optional<String> checkCached(RemoteArtifact artifact, Path cachedPath) {
     if (!Files.exists(cachedPath)) {
-      log.debug("Cached {} did not exist", cachedPath);
-      return false;
+      String message = String.format("Cached %s did not exist", cachedPath);
+      log.debug(message);
+      return Optional.of(message);
     }
 
     if (!filesSizeMatches(artifact, cachedPath)) {
-      log.debug("Cached {} ({}) did not match file size {}", cachedPath, getSize(cachedPath), artifact.getFilesize());
-      return false;
+      String message = String.format("Cached %s (%s) did not match file size %s", cachedPath, getSize(cachedPath), artifact.getFilesize());
+      log.debug(message);
+      return Optional.of(message);
     }
 
     if (!md5Matches(artifact, cachedPath)) {
-      log.debug("Cached {} ({}) did not match md5 {}", cachedPath, calculateMd5sum(cachedPath), artifact.getMd5sum().get());
-      return false;
+      String message = String.format("Cached %s (%s) did not match md5 %s", cachedPath, calculateMd5sum(cachedPath), artifact.getMd5sum().get());
+      log.debug(message);
+      return Optional.of(message);
     }
 
-    return true;
+    return Optional.absent();
   }
 
   public Path fetch(RemoteArtifact artifact) {
     String filename = artifact.getFilename();
     Path cachedPath = getCachedPath(filename);
 
-    if (!checkCached(artifact, cachedPath)) {
-      downloadAndCache(artifact, filename);
+    Optional<String> maybeCacheMissMessage = checkCached(artifact, cachedPath);
+
+    if (maybeCacheMissMessage.isPresent()) {
+      log.info(maybeCacheMissMessage.get());
+      downloadAndCache(artifact, filename, maybeCacheMissMessage.get());
     } else {
       log.info("Using cached file {}", cachedPath);
     }
