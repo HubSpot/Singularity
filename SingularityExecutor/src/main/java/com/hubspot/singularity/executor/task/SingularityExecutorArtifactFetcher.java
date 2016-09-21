@@ -190,7 +190,7 @@ public class SingularityExecutorArtifactFetcher {
       if (Objects.toString(fetched.getFileName()).endsWith(".tar.gz")) {
         artifactManager.untar(fetched, task.getArtifactPath(remoteArtifact, task.getTaskDefinition().getTaskDirectoryPath()));
       } else {
-        artifactManager.copy(fetched, task.getArtifactPath(remoteArtifact, task.getTaskDefinition().getTaskAppDirectoryPath()));
+        artifactManager.copy(fetched, task.getArtifactPath(remoteArtifact, task.getTaskDefinition().getTaskAppDirectoryPath()), remoteArtifact.getFilename());
       }
     }
 
