@@ -466,7 +466,6 @@
           <artifactId>maven-surefire-plugin</artifactId>
           <configuration>
             <forkedProcessTimeoutInSeconds>300</forkedProcessTimeoutInSeconds>
-            <forkCount>2C</forkCount>
           </configuration>
         </plugin>
       </plugins>
