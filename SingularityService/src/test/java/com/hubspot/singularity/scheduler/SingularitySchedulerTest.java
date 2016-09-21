@@ -1037,6 +1037,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
   @Test
   public void testIncrementalBounce() {
     initRequest();
+    resourceOffers(2); // set up slaves so scale validate will pass
 
     SingularityRequest request = requestResource.getRequest(requestId).getRequest();
 
