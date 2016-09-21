@@ -81,7 +81,7 @@ class SingularityStartup {
 
     MesosMasterStateObject state = mesosClient.getMasterState(uri);
 
-    slaveAndRackManager.loadSlavesAndRacksFromMaster(state);
+    slaveAndRackManager.loadSlavesAndRacksFromMaster(state, true);
 
     checkSchedulerForInconsistentState();
 

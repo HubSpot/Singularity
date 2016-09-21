@@ -15,6 +15,7 @@ import com.hubspot.singularity.SingularityDeleteResult;
 import com.hubspot.singularity.SingularitySlave;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.SlaveManager;
+import com.hubspot.singularity.mesos.SingularitySlaveAndRackHelper;
 
 @Singleton
 public class SingularityDeadSlavePoller extends SingularityLeaderOnlyPoller {
@@ -23,17 +24,32 @@ public class SingularityDeadSlavePoller extends SingularityLeaderOnlyPoller {
 
   private final SlaveManager slaveManager;
   private final SingularityConfiguration configuration;
+  private final SingularitySlaveAndRackHelper slaveAndRackHelper;
 
   @Inject
-  SingularityDeadSlavePoller(SingularityConfiguration configuration, SlaveManager slaveManager) {
+  SingularityDeadSlavePoller(SingularityConfiguration configuration, SlaveManager slaveManager, SingularitySlaveAndRackHelper slaveAndRackHelper) {
     super(1, TimeUnit.HOURS);
 
     this.slaveManager = slaveManager;
     this.configuration = configuration;
+    this.slaveAndRackHelper = slaveAndRackHelper;
   }
 
   @Override
   public void runActionOnPoll() {
+    refereshSlavesAndRacks();
+    checkDeadSlaves();
+  }
+
+  private void refereshSlavesAndRacks() {
+    try {
+      slaveAndRackHelper.refreshSlavesAndRacks();
+    } catch (Exception e) {
+      LOG.error("Could not refresh slave data", e);
+    }
+  }
+
+  private void checkDeadSlaves() {
     final long start = System.currentTimeMillis();
 
     final List<SingularitySlave> deadSlaves = slaveManager.getObjectsFiltered(MachineState.DEAD);
