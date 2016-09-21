@@ -383,7 +383,9 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
 
       try {
         Thread.sleep(10);
-      } catch (InterruptedException ie) {}
+      } catch (InterruptedException ie) {
+        break;
+      }
     }
   }
 
