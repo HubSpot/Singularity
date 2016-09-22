@@ -256,6 +256,10 @@ public class SingularitySlaveAndRackManager {
       String host = slaveAndRackHelper.getMaybeTruncatedHost(slaveJsonObject.getHostname());
 
       if (activeSlavesById.containsKey(slaveId)) {
+        SingularitySlave slave = activeSlavesById.get(slaveId);
+        if (slave != null && (!slave.getResources().isPresent() || slave.getResources().get() != slaveJsonObject.getResources())) {
+          slaveManager.saveObject(slave.withResources(slaveJsonObject.getResources()));
+        }
         activeSlavesById.remove(slaveId);
       } else {
         SingularitySlave newSlave = new SingularitySlave(slaveId, host, rackId, textAttributes, Optional.of(slaveJsonObject.getResources()));
