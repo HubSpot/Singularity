@@ -111,6 +111,9 @@ const ACTIONS = {
     let {minOffset, maxOffset, filesize} = state[taskId];
     return updateTask(state, taskId, {logDataLoaded: true, minOffset: Math.min(minOffset, offset), maxOffset: Math.max(maxOffset, nextOffset), filesize: Math.max(nextOffset, filesize)});
   },
+  LOG_FILE_EMPTY(state, {taskId}) {
+    return updateTask(state, taskId, {logDataLoaded: true, minOffset: 0, maxOffset: 0, filesize: 0})
+  },
   LOG_TASK_HISTORY(state, {taskId, taskHistory}) {
     let lastTaskStatus = getLastTaskUpdate(taskHistory.taskUpdates);
     return updateTask(state, taskId, {lastTaskStatus, terminated: isTerminalTaskState(lastTaskStatus)});
