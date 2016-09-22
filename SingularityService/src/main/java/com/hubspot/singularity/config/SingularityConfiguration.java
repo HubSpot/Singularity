@@ -183,6 +183,8 @@ public class SingularityConfiguration extends Configuration {
 
   private long persistHistoryEverySeconds = TimeUnit.HOURS.toSeconds(1);
 
+  private long reconcileSlavesEveryMinutes = TimeUnit.HOURS.toMinutes(1);
+
   @JsonProperty("s3")
   private S3Configuration s3Configuration;
 
@@ -959,6 +961,14 @@ public class SingularityConfiguration extends Configuration {
 
   public void setZooKeeperConfiguration(ZooKeeperConfiguration zooKeeperConfiguration) {
     this.zooKeeperConfiguration = zooKeeperConfiguration;
+  }
+
+  public long getReconcileSlavesEveryMinutes() {
+    return reconcileSlavesEveryMinutes;
+  }
+
+  public void setReconcileSlavesEveryMinutes(long reconcileSlavesEveryMinutes) {
+    this.reconcileSlavesEveryMinutes = reconcileSlavesEveryMinutes;
   }
 
   public long getCacheTasksForMillis() {

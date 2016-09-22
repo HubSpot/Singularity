@@ -42,7 +42,7 @@ import com.hubspot.singularity.scheduler.SingularitySchedulerStateCache;
 import com.hubspot.singularity.sentry.SingularityExceptionNotifier;
 
 @Singleton
-class SingularitySlaveAndRackManager {
+public class SingularitySlaveAndRackManager {
 
   private static final Logger LOG = LoggerFactory.getLogger(SingularitySlaveAndRackManager.class);
 
@@ -239,7 +239,7 @@ class SingularitySlaveAndRackManager {
     }
   }
 
-  public void loadSlavesAndRacksFromMaster(MesosMasterStateObject state) {
+  public void loadSlavesAndRacksFromMaster(MesosMasterStateObject state, boolean isStartup) {
     Map<String, SingularitySlave> activeSlavesById = slaveManager.getObjectsByIdForState(MachineState.ACTIVE);
     Map<String, SingularityRack> activeRacksById = rackManager.getObjectsByIdForState(MachineState.ACTIVE);
 
@@ -276,11 +276,11 @@ class SingularitySlaveAndRackManager {
     }
 
     for (SingularitySlave leftOverSlave : activeSlavesById.values()) {
-      slaveManager.changeState(leftOverSlave, MachineState.MISSING_ON_STARTUP, Optional.<String> absent(), Optional.<String> absent());
+      slaveManager.changeState(leftOverSlave, isStartup ? MachineState.MISSING_ON_STARTUP : MachineState.DEAD, Optional.<String> absent(), Optional.<String> absent());
     }
 
     for (SingularityRack leftOverRack : remainingActiveRacks.values()) {
-      rackManager.changeState(leftOverRack, MachineState.MISSING_ON_STARTUP, Optional.<String> absent(), Optional.<String> absent());
+      rackManager.changeState(leftOverRack, isStartup ? MachineState.MISSING_ON_STARTUP : MachineState.DEAD, Optional.<String> absent(), Optional.<String> absent());
     }
 
     LOG.info("Found {} new racks ({} missing) and {} new slaves ({} missing)", racks, remainingActiveRacks.size(), slaves, activeSlavesById.size());
