@@ -147,7 +147,7 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
   @Inject
   protected SingularityMailer mailer;
   @Inject
-  protected SingularityScheduledJobPoller scheduledJobPoller;
+  protected SingularityJobPoller scheduledJobPoller;
   @Inject
   protected ZkDataMigrationRunner migrationRunner;
   @Inject
