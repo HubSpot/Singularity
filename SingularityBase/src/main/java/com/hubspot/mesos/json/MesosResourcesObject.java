@@ -5,6 +5,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.google.common.base.Objects;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 
@@ -51,5 +52,28 @@ public class MesosResourcesObject {
   public Optional<Object> getResourceAsObject(String resourceName) {
     checkNotNull(resourceName, "resourceName is null");
     return Optional.fromNullable(properties.get(resourceName));
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o)
+      return true;
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+    MesosResourcesObject that = (MesosResourcesObject) o;
+    return Objects.equal(properties, that.properties);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hashCode(properties);
+  }
+
+  @Override
+  public String toString() {
+    return Objects.toStringHelper(this)
+      .add("properties", properties)
+      .toString();
   }
 }
