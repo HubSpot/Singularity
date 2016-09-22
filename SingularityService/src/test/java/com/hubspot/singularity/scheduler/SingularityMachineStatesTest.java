@@ -44,8 +44,8 @@ public class SingularityMachineStatesTest extends SingularitySchedulerTestBase {
 
   @Test
   public void testDeadSlavesArePurged() {
-    SingularitySlave liveSlave = new SingularitySlave("1", "h1", "r1", ImmutableMap.of("uniqueAttribute", "1"));
-    SingularitySlave deadSlave = new SingularitySlave("2", "h1", "r1", ImmutableMap.of("uniqueAttribute", "2"));
+    SingularitySlave liveSlave = new SingularitySlave("1", "h1", "r1", ImmutableMap.of("uniqueAttribute", "1"), Optional.<MesosResourcesObject>absent());
+    SingularitySlave deadSlave = new SingularitySlave("2", "h1", "r1", ImmutableMap.of("uniqueAttribute", "2"), Optional.<MesosResourcesObject>absent());
 
     final long now = System.currentTimeMillis();
 
@@ -415,12 +415,12 @@ public class SingularityMachineStatesTest extends SingularitySchedulerTestBase {
 
     List<MesosMasterSlaveObject> slaves = new ArrayList<>();
     for (Integer i = 0; i < numSlaves; i++) {
-      slaves.add(new MesosMasterSlaveObject(i.toString(), i.toString(), String.format("localhost:505%s", i), now, new MesosResourcesObject(resources), attributes));
+      slaves.add(new MesosMasterSlaveObject(i.toString(), i.toString(), String.format("localhost:505%s", i), now, new MesosResourcesObject(resources), attributes, new MesosResourcesObject(resources), new MesosResourcesObject(resources), new MesosResourcesObject(resources), new MesosResourcesObject(resources), "", true));
     }
 
-    MesosFrameworkObject framework = new MesosFrameworkObject("test", "test", now, "active", new MesosResourcesObject(resources), Collections.<MesosTaskObject>emptyList());
+    MesosFrameworkObject framework = new MesosFrameworkObject("", "", "", "", "", "", "", now, now, now, true, true, new MesosResourcesObject(resources), new MesosResourcesObject(resources), new MesosResourcesObject(resources), Collections.<MesosTaskObject>emptyList());
 
-    return new MesosMasterStateObject(1, 1, 0, 0, 0, 0, "YES", "10", now, slaves, Collections.singletonList(framework));
+    return new MesosMasterStateObject("", "", "", "", now, "", now, now, "", "", "", 0, 0, "", "", "", Collections.<String, String>emptyMap(), slaves, Collections.singletonList(framework));
   }
 
 }
