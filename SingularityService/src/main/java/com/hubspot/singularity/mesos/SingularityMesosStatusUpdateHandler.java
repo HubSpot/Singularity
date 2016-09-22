@@ -3,6 +3,7 @@ package com.hubspot.singularity.mesos;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.Lock;
@@ -25,6 +26,7 @@ import com.google.inject.name.Named;
 import com.hubspot.singularity.ExtendedTaskState;
 import com.hubspot.singularity.InvalidSingularityTaskIdException;
 import com.hubspot.singularity.SingularityAbort;
+import com.hubspot.singularity.SingularityAbort.AbortReason;
 import com.hubspot.singularity.SingularityCreateResult;
 import com.hubspot.singularity.SingularityMainModule;
 import com.hubspot.singularity.SingularityPendingDeploy;
@@ -72,6 +74,8 @@ public class SingularityMesosStatusUpdateHandler implements Managed {
     private final SingularityAbort singularityAbort;
     private final SingularityConfiguration configuration;
     private final Multiset<Protos.TaskStatus.Reason> taskLostReasons;
+
+    private Future statusUpdateFuture;
 
     @Inject
     public SingularityMesosStatusUpdateHandler(TaskManager taskManager, DeployManager deployManager, RequestManager requestManager,
@@ -280,9 +284,13 @@ public class SingularityMesosStatusUpdateHandler implements Managed {
     public void enqueueStatusUpdate(Protos.TaskStatus status) {
         if (processStatusUpdatesInSeparateThread) {
             try {
+                if (statusUpdateFuture == null || statusUpdateFuture.isDone()) {
+                    singularityAbort.abort(AbortReason.NO_RUNNING_STATUS_UPDATE_THREAD, Optional.<Throwable>absent());
+                }
                 statusUpdateQueue.put(status);
             } catch (InterruptedException ie) {
-                // TODO: what's the best thing to do here?
+                // If we do not ack the status update it will be resent, can log this and move on
+                LOG.error("Interrupted while adding status update to queue", ie);
             }
         } else {
             processStatusUpdate(status);
@@ -300,7 +308,7 @@ public class SingularityMesosStatusUpdateHandler implements Managed {
             return;
         }
 
-        executorService.submit(new Runnable() {
+        statusUpdateFuture = executorService.submit(new Runnable() {
             @Override
             public void run() {
                 LOG.info("Status update handler thread started");
