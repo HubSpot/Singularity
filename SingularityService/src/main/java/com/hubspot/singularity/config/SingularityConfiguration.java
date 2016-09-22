@@ -49,7 +49,7 @@ public class SingularityConfiguration extends Configuration {
 
   private long checkReconcileWhenRunningEveryMillis = TimeUnit.SECONDS.toMillis(30);
 
-  private long checkScheduledJobsEveryMillis = TimeUnit.MINUTES.toMillis(10);
+  private long checkJobsEveryMillis = TimeUnit.MINUTES.toMillis(10);
 
   private long checkSchedulerEverySeconds = 5;
 
@@ -318,8 +318,8 @@ public class SingularityConfiguration extends Configuration {
     return checkReconcileWhenRunningEveryMillis;
   }
 
-  public long getCheckScheduledJobsEveryMillis() {
-    return checkScheduledJobsEveryMillis;
+  public long getCheckJobsEveryMillis() {
+    return checkJobsEveryMillis;
   }
 
   public long getCheckSchedulerEverySeconds() {
@@ -710,8 +710,8 @@ public class SingularityConfiguration extends Configuration {
     this.checkReconcileWhenRunningEveryMillis = checkReconcileWhenRunningEveryMillis;
   }
 
-  public void setCheckScheduledJobsEveryMillis(long checkScheduledJobsEveryMillis) {
-    this.checkScheduledJobsEveryMillis = checkScheduledJobsEveryMillis;
+  public void setCheckJobsEveryMillis(long checkJobsEveryMillis) {
+    this.checkJobsEveryMillis = checkJobsEveryMillis;
   }
 
   public void setCheckSchedulerEverySeconds(long checkSchedulerEverySeconds) {

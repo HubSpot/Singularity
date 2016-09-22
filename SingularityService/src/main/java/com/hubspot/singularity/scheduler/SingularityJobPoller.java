@@ -52,7 +52,7 @@ public class SingularityJobPoller extends SingularityLeaderOnlyPoller {
   public SingularityJobPoller(SingularityExceptionNotifier exceptionNotifier, TaskManager taskManager,
                               SingularityConfiguration configuration, RequestManager requestManager, DeployManager deployManager, SingularityMailer mailer) {
 
-    super(configuration.getCheckScheduledJobsEveryMillis(), TimeUnit.MILLISECONDS);
+    super(configuration.getCheckJobsEveryMillis(), TimeUnit.MILLISECONDS);
 
     this.taskManager = taskManager;
     this.deployManager = deployManager;
@@ -88,46 +88,6 @@ public class SingularityJobPoller extends SingularityLeaderOnlyPoller {
         checkForOverdueScheduledJob(now - taskId.getStartedAt(), taskId, request);
         checkTaskExecutionTimeLimit(now, taskId, request);
       }
-    }
-  }
-
-  private Optional<Long> getExpectedRuntime(SingularityRequest request, SingularityTaskId taskId) {
-    if (request.getScheduledExpectedRuntimeMillis().isPresent()) {
-      return request.getScheduledExpectedRuntimeMillis();
-    } else {
-      final Optional<SingularityDeployStatistics> deployStatistics = deployManager.getDeployStatistics(taskId.getRequestId(), taskId.getDeployId());
-
-      if (deployStatistics.isPresent() && deployStatistics.get().getAverageRuntimeMillis().isPresent()) {
-        return deployStatistics.get().getAverageRuntimeMillis();
-      }
-
-      String scheduleExpression = request.getScheduleTypeSafe() == ScheduleType.RFC5545 ? request.getSchedule().get() : request.getQuartzScheduleSafe();
-      Date nextRunAtDate;
-
-      try {
-        if (request.getScheduleTypeSafe() == ScheduleType.RFC5545) {
-          final RFC5545Schedule rfc5545Schedule = new RFC5545Schedule(scheduleExpression);
-          nextRunAtDate = rfc5545Schedule.getNextValidTime();
-        } else {
-          final CronExpression cronExpression = new CronExpression(scheduleExpression);
-          final Date startDate = new Date(taskId.getStartedAt());
-          nextRunAtDate = cronExpression.getNextValidTimeAfter(startDate);
-        }
-
-        if (nextRunAtDate == null) {
-          String msg = String.format("No next run date found for %s (%s)", taskId, scheduleExpression);
-          LOG.warn(msg);
-          exceptionNotifier.notify(msg, ImmutableMap.of("taskId", taskId.toString()));
-          return Optional.absent();
-        }
-
-      } catch (ParseException|InvalidRecurrenceRuleException e) {
-        LOG.warn("Unable to parse schedule of type {} for expression {} (taskId: {}, err: {})", request.getScheduleTypeSafe(), scheduleExpression, taskId, e);
-        exceptionNotifier.notify(String.format("Unable to parse schedule (%s)", e.getMessage()), e, ImmutableMap.of("taskId", taskId.toString(), "scheduleExpression", scheduleExpression, "scheduleType", request.getScheduleTypeSafe().toString()));
-        return Optional.absent();
-      }
-
-      return Optional.of(nextRunAtDate.getTime() - taskId.getStartedAt());
     }
   }
 
@@ -171,6 +131,46 @@ public class SingularityJobPoller extends SingularityLeaderOnlyPoller {
           ),
           Optional.of(UUID.randomUUID().toString()))
       );
+    }
+  }
+
+  private Optional<Long> getExpectedRuntime(SingularityRequest request, SingularityTaskId taskId) {
+    if (request.getScheduledExpectedRuntimeMillis().isPresent()) {
+      return request.getScheduledExpectedRuntimeMillis();
+    } else {
+      final Optional<SingularityDeployStatistics> deployStatistics = deployManager.getDeployStatistics(taskId.getRequestId(), taskId.getDeployId());
+
+      if (deployStatistics.isPresent() && deployStatistics.get().getAverageRuntimeMillis().isPresent()) {
+        return deployStatistics.get().getAverageRuntimeMillis();
+      }
+
+      String scheduleExpression = request.getScheduleTypeSafe() == ScheduleType.RFC5545 ? request.getSchedule().get() : request.getQuartzScheduleSafe();
+      Date nextRunAtDate;
+
+      try {
+        if (request.getScheduleTypeSafe() == ScheduleType.RFC5545) {
+          final RFC5545Schedule rfc5545Schedule = new RFC5545Schedule(scheduleExpression);
+          nextRunAtDate = rfc5545Schedule.getNextValidTime();
+        } else {
+          final CronExpression cronExpression = new CronExpression(scheduleExpression);
+          final Date startDate = new Date(taskId.getStartedAt());
+          nextRunAtDate = cronExpression.getNextValidTimeAfter(startDate);
+        }
+
+        if (nextRunAtDate == null) {
+          String msg = String.format("No next run date found for %s (%s)", taskId, scheduleExpression);
+          LOG.warn(msg);
+          exceptionNotifier.notify(msg, ImmutableMap.of("taskId", taskId.toString()));
+          return Optional.absent();
+        }
+
+      } catch (ParseException|InvalidRecurrenceRuleException e) {
+        LOG.warn("Unable to parse schedule of type {} for expression {} (taskId: {}, err: {})", request.getScheduleTypeSafe(), scheduleExpression, taskId, e);
+        exceptionNotifier.notify(String.format("Unable to parse schedule (%s)", e.getMessage()), e, ImmutableMap.of("taskId", taskId.toString(), "scheduleExpression", scheduleExpression, "scheduleType", request.getScheduleTypeSafe().toString()));
+        return Optional.absent();
+      }
+
+      return Optional.of(nextRunAtDate.getTime() - taskId.getStartedAt());
     }
   }
 
