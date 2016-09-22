@@ -60,6 +60,11 @@ public class SingularitySlave extends SingularityMachineAbstraction<SingularityS
     return "Slave";
   }
 
+  @JsonIgnore
+  public SingularitySlave withResources(MesosResourcesObject resources) {
+    return new SingularitySlave(getId(), getFirstSeenAt(), getCurrentState(), host, rackId, attributes, Optional.of(resources));
+  }
+
   @ApiModelProperty("Slave rack ID")
   public String getRackId() {
     return rackId;
