@@ -58,6 +58,13 @@ public class SlaveResource extends AbstractMachineResource<SingularitySlave> {
     return manager.getHistory(slaveId);
   }
 
+  @GET
+  @Path("/slave/{slaveId}/details")
+  @ApiOperation("Get information about a particular slave")
+  public Optional<SingularitySlave> getSlave(@ApiParam("Slave ID") @PathParam("slaveId") String slaveId) {
+    return manager.getObject(slaveId);
+  }
+
   @DELETE
   @Path("/slave/{slaveId}")
   @ApiOperation("Remove a known slave, erasing history. This operation will cancel decomissioning of the slave")

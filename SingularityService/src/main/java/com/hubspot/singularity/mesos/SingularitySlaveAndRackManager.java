@@ -24,6 +24,7 @@ import com.google.inject.name.Named;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.mesos.json.MesosMasterSlaveObject;
 import com.hubspot.mesos.json.MesosMasterStateObject;
+import com.hubspot.mesos.json.MesosResourcesObject;
 import com.hubspot.singularity.MachineState;
 import com.hubspot.singularity.SingularityMachineAbstraction;
 import com.hubspot.singularity.SingularityRack;
@@ -42,7 +43,7 @@ import com.hubspot.singularity.scheduler.SingularitySchedulerStateCache;
 import com.hubspot.singularity.sentry.SingularityExceptionNotifier;
 
 @Singleton
-class SingularitySlaveAndRackManager {
+public class SingularitySlaveAndRackManager {
 
   private static final Logger LOG = LoggerFactory.getLogger(SingularitySlaveAndRackManager.class);
 
@@ -239,7 +240,7 @@ class SingularitySlaveAndRackManager {
     }
   }
 
-  public void loadSlavesAndRacksFromMaster(MesosMasterStateObject state) {
+  public void loadSlavesAndRacksFromMaster(MesosMasterStateObject state, boolean isStartup) {
     Map<String, SingularitySlave> activeSlavesById = slaveManager.getObjectsByIdForState(MachineState.ACTIVE);
     Map<String, SingularityRack> activeRacksById = rackManager.getObjectsByIdForState(MachineState.ACTIVE);
 
@@ -255,9 +256,13 @@ class SingularitySlaveAndRackManager {
       String host = slaveAndRackHelper.getMaybeTruncatedHost(slaveJsonObject.getHostname());
 
       if (activeSlavesById.containsKey(slaveId)) {
+        SingularitySlave slave = activeSlavesById.get(slaveId);
+        if (slave != null && (!slave.getResources().isPresent() || !slave.getResources().get().equals(slaveJsonObject.getResources()))) {
+          slaveManager.saveObject(slave.withResources(slaveJsonObject.getResources()));
+        }
         activeSlavesById.remove(slaveId);
       } else {
-        SingularitySlave newSlave = new SingularitySlave(slaveId, host, rackId, textAttributes);
+        SingularitySlave newSlave = new SingularitySlave(slaveId, host, rackId, textAttributes, Optional.of(slaveJsonObject.getResources()));
 
         if (check(newSlave, slaveManager) == CheckResult.NEW) {
           slaves++;
@@ -276,11 +281,11 @@ class SingularitySlaveAndRackManager {
     }
 
     for (SingularitySlave leftOverSlave : activeSlavesById.values()) {
-      slaveManager.changeState(leftOverSlave, MachineState.MISSING_ON_STARTUP, Optional.<String> absent(), Optional.<String> absent());
+      slaveManager.changeState(leftOverSlave, isStartup ? MachineState.MISSING_ON_STARTUP : MachineState.DEAD, Optional.<String> absent(), Optional.<String> absent());
     }
 
     for (SingularityRack leftOverRack : remainingActiveRacks.values()) {
-      rackManager.changeState(leftOverRack, MachineState.MISSING_ON_STARTUP, Optional.<String> absent(), Optional.<String> absent());
+      rackManager.changeState(leftOverRack, isStartup ? MachineState.MISSING_ON_STARTUP : MachineState.DEAD, Optional.<String> absent(), Optional.<String> absent());
     }
 
     LOG.info("Found {} new racks ({} missing) and {} new slaves ({} missing)", racks, remainingActiveRacks.size(), slaves, activeSlavesById.size());
@@ -325,7 +330,7 @@ class SingularitySlaveAndRackManager {
     final String host = slaveAndRackHelper.getMaybeTruncatedHost(offer);
     final Map<String, String> textAttributes = slaveAndRackHelper.getTextAttributes(offer);
 
-    final SingularitySlave slave = new SingularitySlave(slaveId, host, rackId, textAttributes);
+    final SingularitySlave slave = new SingularitySlave(slaveId, host, rackId, textAttributes, Optional.<MesosResourcesObject>absent());
 
     if (check(slave, slaveManager) == CheckResult.NEW) {
       LOG.info("Offer revealed a new slave {}", slave);
