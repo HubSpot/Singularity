@@ -7,15 +7,10 @@ import java.util.Map;
 import javax.inject.Singleton;
 
 import org.apache.mesos.Protos.Attribute;
-import org.apache.mesos.Protos.MasterInfo;
 import org.apache.mesos.Protos.Offer;
 
 import com.google.common.base.Optional;
 import com.google.inject.Inject;
-import com.hubspot.mesos.MesosUtils;
-import com.hubspot.mesos.client.MesosClient;
-import com.hubspot.mesos.json.MesosMasterStateObject;
-import com.hubspot.singularity.SingularityDriverManager;
 import com.hubspot.singularity.config.MesosConfiguration;
 import com.hubspot.singularity.config.SingularityConfiguration;
 
@@ -26,21 +21,16 @@ public class SingularitySlaveAndRackHelper {
   private final String defaultRackId;
 
   private final SingularityConfiguration configuration;
-  private final SingularitySlaveAndRackManager slaveAndRackManager;
-  private final MesosClient mesosClient;
-  private final SingularityDriverManager driverManager;
 
   @Inject
-  public SingularitySlaveAndRackHelper(SingularityConfiguration configuration, SingularitySlaveAndRackManager slaveAndRackManager, MesosClient mesosClient, SingularityDriverManager driverManager) {
+  public SingularitySlaveAndRackHelper(SingularityConfiguration configuration) {
     this.configuration = configuration;
 
     MesosConfiguration mesosConfiguration = configuration.getMesosConfiguration();
 
     this.rackIdAttributeKey = mesosConfiguration.getRackIdAttributeKey();
     this.defaultRackId = mesosConfiguration.getDefaultRackId();
-    this.slaveAndRackManager = slaveAndRackManager;
-    this.mesosClient = mesosClient;
-    this.driverManager = driverManager;
+
   }
 
   public String getMaybeTruncatedHost(String hostname) {
@@ -124,16 +114,6 @@ public class SingularitySlaveAndRackHelper {
       }
     }
     return true;
-  }
-
-  public void refreshSlavesAndRacks() {
-    Optional<MasterInfo> maybeMasterInfo = driverManager.getMaster();
-    if (maybeMasterInfo.isPresent()) {
-      final String uri = mesosClient.getMasterUri(MesosUtils.getMasterHostAndPort(maybeMasterInfo.get()));
-      MesosMasterStateObject state = mesosClient.getMasterState(uri);
-
-      slaveAndRackManager.loadSlavesAndRacksFromMaster(state, false);
-    }
   }
 
 }

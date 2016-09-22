@@ -1,6 +1,11 @@
 package com.hubspot.singularity.scheduler;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.mesos.Protos.SlaveID;
@@ -11,6 +16,11 @@ import org.junit.Test;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
+import com.hubspot.mesos.json.MesosFrameworkObject;
+import com.hubspot.mesos.json.MesosMasterSlaveObject;
+import com.hubspot.mesos.json.MesosMasterStateObject;
+import com.hubspot.mesos.json.MesosResourcesObject;
+import com.hubspot.mesos.json.MesosTaskObject;
 import com.hubspot.singularity.MachineState;
 import com.hubspot.singularity.SingularityMachineStateHistoryUpdate;
 import com.hubspot.singularity.SingularitySlave;
@@ -18,11 +28,15 @@ import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SlavePlacement;
 import com.hubspot.singularity.api.SingularityMachineChangeRequest;
 import com.hubspot.singularity.data.AbstractMachineManager.StateChangeResult;
+import com.hubspot.singularity.mesos.SingularitySlaveAndRackManager;
 
 public class SingularityMachineStatesTest extends SingularitySchedulerTestBase {
 
   @Inject
-  protected SingularityDeadSlavePoller deadSlavePoller;
+  protected SingularitySlaveReconciliationPoller slaveReconciliationPoller;
+
+  @Inject
+  private SingularitySlaveAndRackManager singularitySlaveAndRackManager;
 
   public SingularityMachineStatesTest() {
     super(false);
@@ -41,14 +55,14 @@ public class SingularityMachineStatesTest extends SingularitySchedulerTestBase {
     slaveManager.saveObject(liveSlave);
     slaveManager.saveObject(deadSlave);
 
-    deadSlavePoller.runActionOnPoll();
+    slaveReconciliationPoller.runActionOnPoll();
 
     Assert.assertEquals(1, slaveManager.getObjectsFiltered(MachineState.ACTIVE).size());
     Assert.assertEquals(1, slaveManager.getObjectsFiltered(MachineState.DEAD).size());
 
     configuration.setDeleteDeadSlavesAfterHours(1);
 
-    deadSlavePoller.runActionOnPoll();
+    slaveReconciliationPoller.runActionOnPoll();
 
     Assert.assertEquals(1, slaveManager.getObjectsFiltered(MachineState.ACTIVE).size());
     Assert.assertEquals(0, slaveManager.getObjectsFiltered(MachineState.DEAD).size());
@@ -354,6 +368,59 @@ public class SingularityMachineStatesTest extends SingularitySchedulerTestBase {
     Assert.assertEquals(0, taskManager.getTasksOnSlave(taskManager.getActiveTaskIds(), slaveManager.getObject("slave1").get()).size());
     Assert.assertEquals(2, taskManager.getTasksOnSlave(taskManager.getActiveTaskIds(), slaveManager.getObject("slave2").get()).size());
     Assert.assertTrue(slaveManager.getObject("slave1").get().getCurrentState().getState() == MachineState.DECOMMISSIONED);
+  }
+
+  @Test
+  public void testLoadSlavesFromMasterDataOnStartup() {
+    MesosMasterStateObject state = getMasterState(3);
+    singularitySlaveAndRackManager.loadSlavesAndRacksFromMaster(state, true);
+
+    List<SingularitySlave> slaves = slaveManager.getObjects();
+
+    Assert.assertEquals(3, slaves.size());
+    for (SingularitySlave slave : slaves) {
+      Assert.assertEquals(MachineState.ACTIVE, slave.getCurrentState().getState());
+    }
+  }
+
+  @Test
+  public void testReconcileSlaves() {
+    // Load 3 slaves on startup
+    MesosMasterStateObject state = getMasterState(3);
+    singularitySlaveAndRackManager.loadSlavesAndRacksFromMaster(state, true);
+
+    MesosMasterStateObject newState = getMasterState(2); // 2 slaves, third has died
+    singularitySlaveAndRackManager.loadSlavesAndRacksFromMaster(newState, false);
+    List<SingularitySlave> slaves = slaveManager.getObjects();
+
+    Assert.assertEquals(3, slaves.size());
+
+    for (SingularitySlave slave : slaves) {
+      if (slave.getId().equals("2")) {
+        Assert.assertEquals(MachineState.DEAD, slave.getCurrentState().getState());
+      } else {
+        Assert.assertEquals(MachineState.ACTIVE, slave.getCurrentState().getState());
+      }
+    }
+  }
+
+  private MesosMasterStateObject getMasterState(int numSlaves) {
+    long now = System.currentTimeMillis();
+    Map<String, Object> resources = new HashMap<>();
+    resources.put("cpus", 10);
+    resources.put("mem", 2000);
+
+    Map<String, String> attributes = new HashMap<>();
+    attributes.put("testKey", "testValue");
+
+    List<MesosMasterSlaveObject> slaves = new ArrayList<>();
+    for (Integer i = 0; i < numSlaves; i++) {
+      slaves.add(new MesosMasterSlaveObject(i.toString(), i.toString(), String.format("localhost:505%s", i), now, new MesosResourcesObject(resources), attributes));
+    }
+
+    MesosFrameworkObject framework = new MesosFrameworkObject("test", "test", now, "active", new MesosResourcesObject(resources), Collections.<MesosTaskObject>emptyList());
+
+    return new MesosMasterStateObject(1, 1, 0, 0, 0, 0, "YES", "10", now, slaves, Collections.singletonList(framework));
   }
 
 }

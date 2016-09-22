@@ -42,7 +42,7 @@ import com.hubspot.singularity.scheduler.SingularitySchedulerStateCache;
 import com.hubspot.singularity.sentry.SingularityExceptionNotifier;
 
 @Singleton
-class SingularitySlaveAndRackManager {
+public class SingularitySlaveAndRackManager {
 
   private static final Logger LOG = LoggerFactory.getLogger(SingularitySlaveAndRackManager.class);
 

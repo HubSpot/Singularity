@@ -5,34 +5,43 @@ import java.util.concurrent.TimeUnit;
 
 import javax.inject.Singleton;
 
+import org.apache.mesos.Protos.MasterInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.hubspot.mesos.JavaUtils;
+import com.hubspot.mesos.MesosUtils;
+import com.hubspot.mesos.client.MesosClient;
+import com.hubspot.mesos.json.MesosMasterStateObject;
 import com.hubspot.singularity.MachineState;
 import com.hubspot.singularity.SingularityDeleteResult;
+import com.hubspot.singularity.SingularityDriverManager;
 import com.hubspot.singularity.SingularitySlave;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.SlaveManager;
-import com.hubspot.singularity.mesos.SingularitySlaveAndRackHelper;
+import com.hubspot.singularity.mesos.SingularitySlaveAndRackManager;
 
 @Singleton
-public class SingularityDeadSlavePoller extends SingularityLeaderOnlyPoller {
+public class SingularitySlaveReconciliationPoller extends SingularityLeaderOnlyPoller {
 
-  private static final Logger LOG = LoggerFactory.getLogger(SingularityDeadSlavePoller.class);
+  private static final Logger LOG = LoggerFactory.getLogger(SingularitySlaveReconciliationPoller.class);
 
   private final SlaveManager slaveManager;
   private final SingularityConfiguration configuration;
-  private final SingularitySlaveAndRackHelper slaveAndRackHelper;
+  private final SingularitySlaveAndRackManager slaveAndRackManager;
+  private final MesosClient mesosClient;
+  private final SingularityDriverManager driverManager;
 
-  @Inject
-  SingularityDeadSlavePoller(SingularityConfiguration configuration, SlaveManager slaveManager, SingularitySlaveAndRackHelper slaveAndRackHelper) {
-    super(1, TimeUnit.HOURS);
+  @Inject SingularitySlaveReconciliationPoller(SingularityConfiguration configuration, SlaveManager slaveManager, SingularitySlaveAndRackManager slaveAndRackManager, MesosClient mesosClient, SingularityDriverManager driverManager) {
+    super(configuration.getReconcileSlavesEveryMinutes(), TimeUnit.MINUTES);
 
     this.slaveManager = slaveManager;
     this.configuration = configuration;
-    this.slaveAndRackHelper = slaveAndRackHelper;
+    this.slaveAndRackManager = slaveAndRackManager;
+    this.mesosClient = mesosClient;
+    this.driverManager = driverManager;
   }
 
   @Override
@@ -43,7 +52,13 @@ public class SingularityDeadSlavePoller extends SingularityLeaderOnlyPoller {
 
   private void refereshSlavesAndRacks() {
     try {
-      slaveAndRackHelper.refreshSlavesAndRacks();
+      Optional<MasterInfo> maybeMasterInfo = driverManager.getMaster();
+      if (maybeMasterInfo.isPresent()) {
+        final String uri = mesosClient.getMasterUri(MesosUtils.getMasterHostAndPort(maybeMasterInfo.get()));
+        MesosMasterStateObject state = mesosClient.getMasterState(uri);
+
+        slaveAndRackManager.loadSlavesAndRacksFromMaster(state, false);
+      }
     } catch (Exception e) {
       LOG.error("Could not refresh slave data", e);
     }
