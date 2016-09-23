@@ -79,6 +79,7 @@ public class SingularityClient {
   private static final String RACKS_DELETE_DECOMISSIONING_FORMAT = RACKS_FORMAT + "/rack/%s/decomissioning";
 
   private static final String SLAVES_FORMAT = "http://%s/%s/slaves";
+  private static final String SLAVE_DETAIL_FORMAT = SLAVES_FORMAT + "/slave/%s/details";
   private static final String SLAVES_DECOMISSION_FORMAT = SLAVES_FORMAT + "/slave/%s/decommission";
   private static final String SLAVES_DELETE_FORMAT = SLAVES_FORMAT + "/slave/%s/decomissioning";
 
@@ -791,6 +792,12 @@ public class SingularityClient {
     }
 
     return getCollectionWithParams(requestUri, type, maybeQueryParams, SLAVES_COLLECTION);
+  }
+
+  public Optional<SingularitySlave> getSlave(String slaveId) {
+    final String requestUri = String.format(SLAVE_DETAIL_FORMAT, getHost(), contextPath, slaveId);
+
+    return getSingle(requestUri, "slave", slaveId, SingularitySlave.class);
   }
 
   public void decomissionSlave(String slaveId) {
