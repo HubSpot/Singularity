@@ -53,6 +53,13 @@ export const FIELDS_BY_REQUEST_TYPE = {
         arrayType: 'string'
       }
     },
+    {
+      id: 'readWriteGroups',
+      type: {
+        typeName: 'array',
+        arrayType: 'string'
+      }
+    },
     {id: 'skipHealthchecks', type: 'bool'},
     {
       id: 'emailConfigurationOverrides',
