@@ -505,6 +505,18 @@ const RequestForm = (props) => {
     />
   );
 
+  const readWriteGroups = (
+    <MultiInputFormGroup
+      id="read-write-groups"
+      value={getValue('readWriteGroups') || []}
+      onChange={(newValue) => updateField('readWriteGroups', newValue)}
+      label="Read-write groups"
+      required={INDEXED_FIELDS.readWriteGroups.required}
+      errorIndices={INDEXED_FIELDS.readWriteGroups.required && _.isEmpty(getValue('readWriteGroups')) && [0] || []}
+      couldHaveFeedback={true}
+    />
+  );
+
   const taskLogErrorRegex = (
     <TextFormGroup
       id="task-log-error-regex"
@@ -638,6 +650,7 @@ const RequestForm = (props) => {
                   { shouldRenderField('allowedSlaveAttributes') && allowedSlaveAttributes }
                   { shouldRenderField('group') && group }
                   { shouldRenderField('readOnlyGroups') && readOnlyGroups }
+                  { shouldRenderField('readWriteGroups') && readWriteGroups }
                   { shouldRenderField('taskLogErrorRegex') && taskLogErrorRegex }
                   { shouldRenderField('taskLogErrorRegexCaseSensitive') && taskLogErrorRegexCaseSensitive }
                   { shouldRenderField('emailConfigurationOverrides') && emailConfigurationOverrides }
