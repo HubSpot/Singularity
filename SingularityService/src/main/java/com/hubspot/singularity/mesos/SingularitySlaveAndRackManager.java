@@ -258,6 +258,7 @@ public class SingularitySlaveAndRackManager {
       if (activeSlavesById.containsKey(slaveId)) {
         SingularitySlave slave = activeSlavesById.get(slaveId);
         if (slave != null && (!slave.getResources().isPresent() || !slave.getResources().get().equals(slaveJsonObject.getResources()))) {
+          LOG.trace("Found updated resources ({}) for slave {}", slaveJsonObject.getResources(), slave);
           slaveManager.saveObject(slave.withResources(slaveJsonObject.getResources()));
         }
         activeSlavesById.remove(slaveId);
