@@ -4,7 +4,9 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.Map;
 
+import com.fasterxml.jackson.annotation.JsonAnyGetter;
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.base.Objects;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
@@ -18,18 +20,22 @@ public class MesosResourcesObject {
     this.properties = ImmutableMap.copyOf(checkNotNull(properties, "properties is null"));
   }
 
+  @JsonIgnore
   public Optional<Integer> getNumCpus() {
     return getResourceAsInteger("cpus");
   }
 
+  @JsonIgnore
   public Optional<Long> getDiskSpace() {
     return getResourceAsLong("disk");
   }
 
+  @JsonIgnore
   public Optional<Integer> getMemoryMegaBytes() {
     return getResourceAsInteger("mem");
   }
 
+  @JsonIgnore
   public Optional<String> getPorts() {
     return getResourceAsString("ports");
   }
@@ -52,6 +58,11 @@ public class MesosResourcesObject {
   public Optional<Object> getResourceAsObject(String resourceName) {
     checkNotNull(resourceName, "resourceName is null");
     return Optional.fromNullable(properties.get(resourceName));
+  }
+
+  @JsonAnyGetter
+  public Map<String, Object> getProperties() {
+    return properties;
   }
 
   @Override
