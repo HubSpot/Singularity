@@ -29,25 +29,11 @@ public class MesosMasterStateObject {
   private final List<MesosFrameworkObject> frameworks;
 
   @JsonCreator
-  public MesosMasterStateObject(@JsonProperty("version") String version,
-                                @JsonProperty("git_sha") String gitSha,
-                                @JsonProperty("git_tag") String gitTag,
-                                @JsonProperty("build_date") String buildDate,
-                                @JsonProperty("build_time") long buildTime,
-                                @JsonProperty("build_user") String buildUser,
-                                @JsonProperty("start_time") double startTime,
-                                @JsonProperty("elected_time") double electedTime,
-                                @JsonProperty("id") String id,
-                                @JsonProperty("pid") String pid,
-                                @JsonProperty("hostname") String hostname,
-                                @JsonProperty("activated_slaves") int activatedSlaves,
-                                @JsonProperty("deactivated_slaves") int deactivatedSlaves,
-                                @JsonProperty("cluster") String cluster,
-                                @JsonProperty("leader") String leader,
-                                @JsonProperty("log_dir") String logDir,
-                                @JsonProperty("flags") Map<String, String> flags,
-                                @JsonProperty("slaves") List<MesosMasterSlaveObject> slaves,
-                                @JsonProperty("frameworks") List<MesosFrameworkObject> frameworks) {
+  public MesosMasterStateObject(@JsonProperty("version") String version, @JsonProperty("git_sha") String gitSha, @JsonProperty("git_tag") String gitTag, @JsonProperty("build_date") String buildDate,
+      @JsonProperty("build_time") long buildTime, @JsonProperty("build_user") String buildUser, @JsonProperty("start_time") double startTime, @JsonProperty("elected_time") double electedTime,
+      @JsonProperty("id") String id, @JsonProperty("pid") String pid, @JsonProperty("hostname") String hostname, @JsonProperty("activated_slaves") int activatedSlaves,
+      @JsonProperty("deactivated_slaves") int deactivatedSlaves, @JsonProperty("cluster") String cluster, @JsonProperty("leader") String leader, @JsonProperty("log_dir") String logDir,
+      @JsonProperty("flags") Map<String, String> flags, @JsonProperty("slaves") List<MesosMasterSlaveObject> slaves, @JsonProperty("frameworks") List<MesosFrameworkObject> frameworks) {
     this.version = version;
     this.gitSha = gitSha;
     this.gitTag = gitTag;
