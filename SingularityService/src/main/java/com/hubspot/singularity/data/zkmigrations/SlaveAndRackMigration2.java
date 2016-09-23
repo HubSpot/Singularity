@@ -4,7 +4,6 @@ import javax.inject.Singleton;
 
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.zookeeper.KeeperException.NoNodeException;
-import com.google.common.base.Throwables;
 import com.google.inject.Inject;
 
 @Singleton
