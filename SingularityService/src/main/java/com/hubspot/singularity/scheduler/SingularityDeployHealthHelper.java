@@ -16,17 +16,14 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Iterables;
 import com.google.inject.Inject;
 import com.hubspot.mesos.JavaUtils;
-import com.hubspot.singularity.DeployState;
 import com.hubspot.singularity.ExtendedTaskState;
 import com.hubspot.singularity.SingularityDeploy;
 import com.hubspot.singularity.SingularityDeployFailure;
 import com.hubspot.singularity.SingularityDeployFailureReason;
-import com.hubspot.singularity.SingularityDeployResult;
 import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityRequestHistory;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskHealthcheckResult;
-import com.hubspot.singularity.SingularityTaskHistory;
 import com.hubspot.singularity.SingularityTaskHistoryUpdate;
 import com.hubspot.singularity.SingularityTaskHistoryUpdate.SimplifiedTaskState;
 import com.hubspot.singularity.SingularityTaskId;
@@ -43,14 +40,12 @@ public class SingularityDeployHealthHelper {
   private final TaskManager taskManager;
   private final SingularityConfiguration configuration;
   private final RequestManager requestManager;
-  private final DeployManager deployManager;
 
   @Inject
-  public SingularityDeployHealthHelper(TaskManager taskManager, SingularityConfiguration configuration, RequestManager requestManager, DeployManager deployManager) {
+  public SingularityDeployHealthHelper(TaskManager taskManager, SingularityConfiguration configuration, RequestManager requestManager) {
     this.taskManager = taskManager;
     this.configuration = configuration;
     this.requestManager = requestManager;
-    this.deployManager = deployManager;
   }
 
   public enum DeployHealth {
