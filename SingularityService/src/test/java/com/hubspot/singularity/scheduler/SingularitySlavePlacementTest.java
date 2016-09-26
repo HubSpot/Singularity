@@ -205,4 +205,9 @@ public class SingularitySlavePlacementTest extends SingularitySchedulerTestBase 
 
     Assert.assertTrue(taskManager.getActiveTaskIds().size() == 1);
   }
+
+  @Test
+  public void testRackSensitivePlacement() {
+    
+  }
 }
