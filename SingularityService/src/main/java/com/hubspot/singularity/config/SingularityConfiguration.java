@@ -284,6 +284,11 @@ public class SingularityConfiguration extends Configuration {
   @Max(5)
   private double schedulerPriorityWeightFactor = 1.0;
 
+  @Min(1)
+  private int statusUpdateQueueCapacity = 10;
+
+  private boolean processStatusUpdatesInSeparateThread = false;
+
   public long getAskDriverToKillTasksAgainAfterMillis() {
     return askDriverToKillTasksAgainAfterMillis;
   }
@@ -1123,5 +1128,21 @@ public class SingularityConfiguration extends Configuration {
 
   public void setSchedulerPriorityWeightFactor(double schedulerPriorityWeightFactor) {
     this.schedulerPriorityWeightFactor = schedulerPriorityWeightFactor;
+  }
+
+  public int getStatusUpdateQueueCapacity() {
+    return statusUpdateQueueCapacity;
+  }
+
+  public void setStatusUpdateQueueCapacity(int statusUpdateQueueCapacity) {
+    this.statusUpdateQueueCapacity = statusUpdateQueueCapacity;
+  }
+
+  public boolean isProcessStatusUpdatesInSeparateThread() {
+    return processStatusUpdatesInSeparateThread;
+  }
+
+  public void setProcessStatusUpdatesInSeparateThread(boolean processStatusUpdatesInSeparateThread) {
+    this.processStatusUpdatesInSeparateThread = processStatusUpdatesInSeparateThread;
   }
 }
