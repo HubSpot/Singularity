@@ -228,8 +228,7 @@ public class RequestManager extends CuratorAsyncManager {
     return getData(getPendingPath(requestId, deployId), pendingRequestTranscoder);
   }
 
-  @VisibleForTesting
-  protected SingularityCreateResult saveHistory(SingularityRequestHistory history) {
+  public SingularityCreateResult saveHistory(SingularityRequestHistory history) {
     final String path = getHistoryPath(history);
 
     singularityEventListener.requestHistoryEvent(history);
