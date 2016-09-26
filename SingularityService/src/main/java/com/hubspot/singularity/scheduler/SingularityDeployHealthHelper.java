@@ -179,6 +179,7 @@ public class SingularityDeployHealthHelper {
     for (SingularityTaskId taskId : matchingActiveTasks) {
       DeployHealth individualTaskHealth;
       if (healthchecksSkipped(taskId, requestHistories, deploy)) {
+        LOG.trace("Detected skipped healthchecks for {}", taskId);
         individualTaskHealth = DeployHealth.HEALTHY;
       } else {
         individualTaskHealth = getTaskHealth(deploy, isDeployPending, Optional.fromNullable(healthcheckResults.get(taskId)), taskId);
@@ -204,7 +205,6 @@ public class SingularityDeployHealthHelper {
 
       Optional<Long> runningStartTime = Optional.absent();
       for (SingularityTaskHistoryUpdate historyUpdate : taskManager.getTaskHistoryUpdates(taskId)) {
-        LOG.info("{}", historyUpdate);
         if (historyUpdate.getTaskState() == ExtendedTaskState.TASK_RUNNING) {
           runningStartTime = Optional.of(historyUpdate.getTimestamp());
         }

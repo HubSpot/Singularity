@@ -57,6 +57,7 @@ import com.hubspot.singularity.SingularityPriorityFreezeParent;
 import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityRequestBuilder;
 import com.hubspot.singularity.SingularityRequestCleanup;
+import com.hubspot.singularity.SingularityRequestHistory;
 import com.hubspot.singularity.SingularityRequestHistory.RequestHistoryType;
 import com.hubspot.singularity.SingularityRequestLbCleanup;
 import com.hubspot.singularity.SingularityTask;
@@ -1646,31 +1647,41 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
 
     SingularityRequest request = requestResource.getRequest(requestId).getRequest();
 
-    requestResource.postRequest(request.toBuilder()
-      .setSkipHealthchecks(Optional.of(true))
-      .setInstances(Optional.of(2))
-      .build());
+    long now = System.currentTimeMillis();
+
+    requestManager.saveHistory(new SingularityRequestHistory(now, Optional.<String>absent(), RequestHistoryType.UPDATED,
+      request.toBuilder()
+        .setSkipHealthchecks(Optional.of(true))
+        .setInstances(Optional.of(2))
+        .build(),
+      Optional.<String>absent()));
 
     firstDeploy = initDeploy(new SingularityDeployBuilder(request.getId(), firstDeployId).setCommand(Optional.of("sleep 100")).setHealthcheckUri(Optional.of("http://uri")), System.currentTimeMillis());
 
-    SingularityTask taskOne = startTask(firstDeploy, 1);
-    SingularityTask taskTwo = startTask(firstDeploy, 2);
+    SingularityTask taskOne = launchTask(request, firstDeploy, now + 1000, now + 2000, 1, TaskState.TASK_RUNNING);
 
-    finishDeploy(new SingularityDeployMarker(requestId, firstDeployId, System.currentTimeMillis(), Optional.<String> absent(), Optional.<String> absent()), firstDeploy);
+    finishDeploy(new SingularityDeployMarker(requestId, firstDeployId, now + 2000, Optional.<String> absent(), Optional.<String> absent()), firstDeploy);
 
-    SingularityRequest updatedRequest = requestResource.postRequest(request.toBuilder()
+    SingularityRequest updatedRequest = request.toBuilder()
       .setSkipHealthchecks(Optional.<Boolean>absent())
-      .build()).getRequest();
+      .setInstances(Optional.of(2))
+      .build();
 
-    statusUpdate(taskTwo, TaskState.TASK_KILLED);
+    requestManager.saveHistory(new SingularityRequestHistory(now + 3000, Optional.<String>absent(), RequestHistoryType.UPDATED,
+      updatedRequest, Optional.<String>absent()));
 
-    SingularityTask newTaskTwoWithCheck = prepTask(updatedRequest, firstDeploy, System.currentTimeMillis(), 2);
-    statusUpdate(newTaskTwoWithCheck, TaskState.TASK_RUNNING);
-    taskManager.saveHealthcheckResult(new SingularityTaskHealthcheckResult(Optional.of(200), Optional.of(1000L), System.currentTimeMillis(), Optional.<String> absent(), Optional.<String> absent(), newTaskTwoWithCheck.getTaskId()));
+    SingularityTask newTaskTwoWithCheck = prepTask(updatedRequest, firstDeploy, now + 4000, 2);
+    taskManager.createTaskAndDeletePendingTask(newTaskTwoWithCheck);
+    statusUpdate(newTaskTwoWithCheck, TaskState.TASK_RUNNING, Optional.of(now + 5000));
+    taskManager.saveHealthcheckResult(new SingularityTaskHealthcheckResult(Optional.of(200), Optional.of(1000L), now + 6000, Optional.<String> absent(), Optional.<String> absent(), newTaskTwoWithCheck.getTaskId()));
+
+    SingularityTask unhealthyTaskThree = prepTask(updatedRequest, firstDeploy, now + 4000, 3);
+    taskManager.createTaskAndDeletePendingTask(unhealthyTaskThree);
+    statusUpdate(unhealthyTaskThree, TaskState.TASK_RUNNING, Optional.of(now + 5000));
 
     List<SingularityTaskId> activeTaskIds = taskManager.getActiveTaskIdsForRequest(requestId);
     List<SingularityTaskId> healthyTaskIds = deployHealthHelper.getHealthyTasks(updatedRequest, Optional.of(firstDeploy), activeTaskIds, false);
-    Assert.assertTrue(!healthyTaskIds.contains(taskTwo.getTaskId()));
+    Assert.assertTrue(!healthyTaskIds.contains(unhealthyTaskThree.getTaskId()));
     Assert.assertEquals(2, healthyTaskIds.size()); // Healthchecked and skip-healthchecked tasks should both be here
   }
 }
