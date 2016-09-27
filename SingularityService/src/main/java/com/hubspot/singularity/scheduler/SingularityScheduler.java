@@ -417,7 +417,7 @@ public class SingularityScheduler {
         taskManager.createTaskCleanup(new SingularityTaskCleanup(pendingRequest.getUser(), TaskCleanupType.SCALING_DOWN, now, toCleanup, Optional.<String>absent(), Optional.<String>absent()));
       }
 
-      if (request.isRackSensitive()) {
+      if (request.isRackSensitive() && configuration.isRebalanceRacksOnScaleDown()) {
         int extraCleanedTasks = 0;
         int numActiveRacks = stateCache.getNumActiveRacks();
         double perRack = request.getInstancesSafe() / (double) numActiveRacks;
@@ -429,7 +429,7 @@ public class SingularityScheduler {
           if (countPerRack.count(taskId.getRackId()) > perRack && extraCleanedTasks < numActiveRacks - 1) {
             extraCleanedTasks++;
             remainingTaskIds.remove(taskId);
-            LOG.info("Cleanup up task {} to evenly distribute tasks among racks", taskId);
+            LOG.info("Cleaning up task {} to evenly distribute tasks among racks", taskId);
             taskManager.createTaskCleanup(new SingularityTaskCleanup(pendingRequest.getUser(), TaskCleanupType.REBALANCE_RACKS, now, taskId, Optional.<String>absent(), Optional.<String>absent()));
           }
         }
