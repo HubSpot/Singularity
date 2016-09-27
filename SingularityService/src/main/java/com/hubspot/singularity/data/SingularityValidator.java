@@ -234,11 +234,15 @@ public class SingularityValidator {
     checkForIllegalResources(request, deploy);
 
     if (deploy.getResources().isPresent()) {
-      if (deploy.getHealthcheckPortIndex().isPresent()) {
-        checkBadRequest(deploy.getHealthcheckPortIndex().get() >= 0, "healthcheckPortIndex must be greater than 0");
-        checkBadRequest(deploy.getResources().get().getNumPorts() > deploy.getHealthcheckPortIndex().get(), String
-            .format("Must request %s ports for healthcheckPortIndex %s, only requested %s", deploy.getHealthcheckPortIndex().get() + 1, deploy.getHealthcheckPortIndex().get(),
-                deploy.getResources().get().getNumPorts()));
+      if (deploy.getHealthcheck().isPresent()) {
+        checkBadRequest(!(deploy.getHealthcheck().get().getPortIndex().isPresent() && deploy.getHealthcheck().get().getPortNumber().isPresent()),
+          "Can only specify one of portIndex or portNumber for healthchecks");
+        if (deploy.getHealthcheck().get().getPortIndex().isPresent()) {
+          checkBadRequest(deploy.getHealthcheck().get().getPortIndex().get() >= 0, "healthcheckPortIndex must be greater than 0");
+          checkBadRequest(deploy.getResources().get().getNumPorts() > deploy.getHealthcheck().get().getPortIndex().get(), String
+            .format("Must request %s ports for healthcheckPortIndex %s, only requested %s", deploy.getHealthcheck().get().getPortIndex().get() + 1, deploy.getHealthcheck().get().getPortIndex().get(),
+              deploy.getResources().get().getNumPorts()));
+        }
       }
       if (deploy.getLoadBalancerPortIndex().isPresent()) {
         checkBadRequest(deploy.getLoadBalancerPortIndex().get() >= 0, "loadBalancerPortIndex must be greater than 0");

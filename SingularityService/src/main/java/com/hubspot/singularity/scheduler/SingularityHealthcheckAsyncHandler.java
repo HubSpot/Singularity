@@ -1,5 +1,7 @@
 package com.hubspot.singularity.scheduler;
 
+import java.net.ConnectException;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -45,7 +47,7 @@ public class SingularityHealthcheckAsyncHandler extends AsyncCompletionHandler<R
       responseBody = Optional.of(response.getResponseBodyExcerpt(maxHealthcheckResponseBodyBytes));
     }
 
-    saveResult(Optional.of(response.getStatusCode()), responseBody, Optional.<String> absent());
+    saveResult(Optional.of(response.getStatusCode()), responseBody, Optional.<String> absent(), Optional.<Throwable>absent());
 
     return response;
   }
@@ -54,13 +56,18 @@ public class SingularityHealthcheckAsyncHandler extends AsyncCompletionHandler<R
   public void onThrowable(Throwable t) {
     LOG.trace("Exception while making health check for task {}", task.getTaskId(), t);
 
-    saveResult(Optional.<Integer> absent(), Optional.<String> absent(), Optional.of(String.format("Healthcheck failed due to exception: %s", t.getMessage())));
+    saveResult(Optional.<Integer> absent(), Optional.<String> absent(), Optional.of(String.format("Healthcheck failed due to exception: %s", t.getMessage())), Optional.of(t));
   }
 
-  public void saveResult(Optional<Integer> statusCode, Optional<String> responseBody, Optional<String> errorMessage) {
+  public void saveResult(Optional<Integer> statusCode, Optional<String> responseBody, Optional<String> errorMessage, Optional<Throwable> throwable) {
+    boolean inStartup = false;
+    if (throwable.isPresent() && throwable.get() instanceof ConnectException) {
+      inStartup = true;
+    }
+
     try {
       SingularityTaskHealthcheckResult result = new SingularityTaskHealthcheckResult(statusCode, Optional.of(System.currentTimeMillis() - startTime), startTime, responseBody,
-          errorMessage, task.getTaskId());
+          errorMessage, task.getTaskId(), Optional.of(inStartup));
 
       LOG.trace("Saving healthcheck result {}", result);
 
@@ -72,7 +79,7 @@ public class SingularityHealthcheckAsyncHandler extends AsyncCompletionHandler<R
           return;
         }
 
-        healthchecker.enqueueHealthcheck(task, true);
+        healthchecker.enqueueHealthcheck(task, true, inStartup);
       } else {
         healthchecker.markHealthcheckFinished(task.getTaskId().getId());
 
@@ -82,7 +89,7 @@ public class SingularityHealthcheckAsyncHandler extends AsyncCompletionHandler<R
       LOG.error("Caught throwable while saving health check result for {}, will re-enqueue", task.getTaskId(), t);
       exceptionNotifier.notify(String.format("Error saving healthcheck (%s)", t.getMessage()), t, ImmutableMap.of("taskId", task.getTaskId().toString()));
 
-      healthchecker.reEnqueueOrAbort(task);
+      healthchecker.reEnqueueOrAbort(task, inStartup);
     }
   }
 

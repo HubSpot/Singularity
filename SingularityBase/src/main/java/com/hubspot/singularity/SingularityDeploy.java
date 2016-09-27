@@ -13,6 +13,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
 import com.hubspot.deploy.ExecutorData;
+import com.hubspot.deploy.HealthcheckOptions;
 import com.hubspot.mesos.Resources;
 import com.hubspot.mesos.SingularityContainerInfo;
 import com.hubspot.mesos.SingularityMesosTaskLabel;
@@ -49,15 +50,24 @@ public class SingularityDeploy {
   private final Optional<Map<Integer, List<SingularityMesosTaskLabel>>> mesosTaskLabels;
   private final Optional<Map<Integer, Map<String, String>>> taskEnv;
 
+  @Deprecated
   private final Optional<String> healthcheckUri;
+  @Deprecated
   private final Optional<Long> healthcheckIntervalSeconds;
+  @Deprecated
   private final Optional<Long> healthcheckTimeoutSeconds;
+  @Deprecated
   private final Optional<Integer> healthcheckPortIndex;
-  private final Optional<Boolean> skipHealthchecksOnDeploy;
+  @Deprecated
   private final Optional<HealthcheckProtocol> healthcheckProtocol;
-
+  @Deprecated
   private final Optional<Integer> healthcheckMaxRetries;
+  @Deprecated
   private final Optional<Long> healthcheckMaxTotalTimeoutSeconds;
+
+  private final Optional<HealthcheckOptions> healthcheck;
+
+  private final Optional<Boolean> skipHealthchecksOnDeploy;
 
   private final Optional<Long> deployHealthTimeoutSeconds;
 
@@ -113,6 +123,7 @@ public class SingularityDeploy {
       @JsonProperty("healthcheckPortIndex") Optional<Integer> healthcheckPortIndex,
       @JsonProperty("healthcheckMaxRetries") Optional<Integer> healthcheckMaxRetries,
       @JsonProperty("healthcheckMaxTotalTimeoutSeconds") Optional<Long> healthcheckMaxTotalTimeoutSeconds,
+      @JsonProperty("healthcheck") Optional<HealthcheckOptions> healthcheck,
       @JsonProperty("serviceBasePath") Optional<String> serviceBasePath,
       @JsonProperty("loadBalancerGroups") Optional<Set<String>> loadBalancerGroups,
       @JsonProperty("loadBalancerPortIndex") Optional<Integer> loadBalancerPortIndex,
@@ -168,6 +179,21 @@ public class SingularityDeploy {
     this.healthcheckMaxRetries = healthcheckMaxRetries;
     this.healthcheckMaxTotalTimeoutSeconds = healthcheckMaxTotalTimeoutSeconds;
 
+    if (healthcheckUri.isPresent() && !healthcheck.isPresent()) {
+      this.healthcheck = Optional.of(new HealthcheckOptions(
+        healthcheckUri.get(),
+        healthcheckPortIndex,
+        Optional.<Long>absent(),
+        healthcheckProtocol,
+        Optional.<Integer>absent(),
+        Optional.<Integer>absent(),
+        Optional.<Integer>absent(),
+        healthcheckIntervalSeconds.isPresent() ? Optional.of(healthcheckIntervalSeconds.get().intValue()) : Optional.<Integer>absent(),
+        healthcheckTimeoutSeconds.isPresent() ? Optional.of(healthcheckTimeoutSeconds.get().intValue()) : Optional.<Integer>absent(),
+        healthcheckMaxRetries));
+    } else {
+      this.healthcheck = healthcheck;
+    }
     this.considerHealthyAfterRunningForSeconds = considerHealthyAfterRunningForSeconds;
 
     this.deployHealthTimeoutSeconds = deployHealthTimeoutSeconds;
@@ -444,6 +470,11 @@ public class SingularityDeploy {
   @ApiModelProperty(required=false, value="Maximum amount of time to wait before failing a deploy for healthchecks to pass.")
   public Optional<Long> getHealthcheckMaxTotalTimeoutSeconds() {
     return healthcheckMaxTotalTimeoutSeconds;
+  }
+
+  @ApiModelProperty(required = false, value="HTTP Healthcheck settings")
+  public Optional<HealthcheckOptions> getHealthcheck() {
+    return healthcheck;
   }
 
   @ApiModelProperty(required=false, value="deploy this many instances at a time")

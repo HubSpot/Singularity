@@ -15,6 +15,7 @@ import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Iterables;
 import com.google.inject.Inject;
+import com.hubspot.deploy.HealthcheckOptions;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.ExtendedTaskState;
 import com.hubspot.singularity.SingularityDeploy;
@@ -52,7 +53,7 @@ public class SingularityDeployHealthHelper {
       return false;
     }
 
-    if (!deploy.get().getHealthcheckUri().isPresent()) {
+    if (!deploy.get().getHealthcheck().isPresent()) {
       return false;
     }
 
@@ -182,14 +183,14 @@ public class SingularityDeployHealthHelper {
     } else if (healthcheckResult.get().isFailed()) {
       LOG.debug("Found a failed healthcheck: {}", healthcheckResult);
 
-      final Optional<Integer> healthcheckMaxRetries = deploy.getHealthcheckMaxRetries().or(configuration.getHealthcheckMaxRetries());
+      final Optional<Integer> healthcheckMaxRetries = deploy.getHealthcheck().isPresent() ? deploy.getHealthcheck().get().getMaxRetries().or(configuration.getHealthcheckMaxRetries()) : Optional.<Integer>absent();
 
       if (healthcheckMaxRetries.isPresent() && taskManager.getNumHealthchecks(taskId) > healthcheckMaxRetries.get()) {
         LOG.debug("{} failed {} healthchecks, the max for the deploy", taskId, healthcheckMaxRetries.get());
         return DeployHealth.UNHEALTHY;
       }
 
-      final Optional<Long> healthcheckMaxTotalTimeoutSeconds = deploy.getHealthcheckMaxTotalTimeoutSeconds().or(configuration.getHealthcheckMaxTotalTimeoutSeconds());
+      final Optional<Integer> healthcheckMaxTotalTimeoutSeconds = deploy.getHealthcheck().isPresent() ? Optional.of(getMaxHealthcheckTimeoutSeconds(deploy.getHealthcheck().get())) : Optional.<Integer>absent();
 
       if (isDeployPending && healthcheckMaxTotalTimeoutSeconds.isPresent()) {
         Collection<SingularityTaskHistoryUpdate> updates = taskManager.getTaskHistoryUpdates(taskId);
@@ -217,6 +218,13 @@ public class SingularityDeployHealthHelper {
       return DeployHealth.WAITING;
     }
     return DeployHealth.HEALTHY;
+  }
+
+  public int getMaxHealthcheckTimeoutSeconds(HealthcheckOptions options) {
+    int intervalSeconds = options.getIntervalSeconds().or(configuration.getHealthcheckIntervalSeconds());
+    int startupTime = options.getStartupTimeoutSeconds().or(configuration.getStartupTimeoutSeconds());
+    int attempts = options.getMaxRetries().or(configuration.getHealthcheckMaxRetries()).or(0) + 1;
+    return startupTime + (intervalSeconds * attempts);
   }
 
   public List<SingularityDeployFailure> getTaskFailures(final Optional<SingularityDeploy> deploy, final Collection<SingularityTaskId> activeTasks) {
@@ -263,7 +271,8 @@ public class SingularityDeployHealthHelper {
       }
     }
 
-    final Optional<Integer> healthcheckMaxRetries = deploy.getHealthcheckMaxRetries().or(configuration.getHealthcheckMaxRetries());
+    final Optional<Integer> healthcheckMaxRetries = deploy.getHealthcheck().isPresent() ?
+      deploy.getHealthcheck().get().getMaxRetries().or(configuration.getHealthcheckMaxRetries()) : configuration.getHealthcheckMaxRetries();
     if (healthcheckMaxRetries.isPresent() && taskManager.getNumHealthchecks(taskId) > healthcheckMaxRetries.get()) {
       String message = String.format("Instance %s failed %s healthchecks, the max for the deploy.", taskId.getInstanceNo(), healthcheckMaxRetries.get() + 1);
       if (healthcheckResult.getStatusCode().isPresent()) {
@@ -286,8 +295,8 @@ public class SingularityDeployHealthHelper {
   }
 
   private boolean isRunningLongerThanThreshold(SingularityDeploy deploy, long durationSinceRunning) {
-    long relevantTimeoutSeconds = deploy.getHealthcheckMaxTotalTimeoutSeconds().or(configuration.getHealthcheckMaxTotalTimeoutSeconds()).or(deploy.getDeployHealthTimeoutSeconds()).or(
-      configuration.getDeployHealthyBySeconds());
+    long relevantTimeoutSeconds = deploy.getHealthcheck().isPresent() ?
+      getMaxHealthcheckTimeoutSeconds(deploy.getHealthcheck().get()) : deploy.getDeployHealthTimeoutSeconds().or(configuration.getDeployHealthyBySeconds());
     return durationSinceRunning > TimeUnit.SECONDS.toMillis(relevantTimeoutSeconds);
   }
 

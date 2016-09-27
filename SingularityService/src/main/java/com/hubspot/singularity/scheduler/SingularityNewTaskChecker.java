@@ -86,7 +86,7 @@ public class SingularityNewTaskChecker {
   }
 
   private boolean hasHealthcheck(SingularityTask task, Optional<SingularityRequestWithState> requestWithState) {
-    if (!task.getTaskRequest().getDeploy().getHealthcheckUri().isPresent()) {
+    if (!task.getTaskRequest().getDeploy().getHealthcheck().isPresent()) {
       return false;
     }
 
@@ -109,7 +109,7 @@ public class SingularityNewTaskChecker {
     int delaySeconds = configuration.getNewTaskCheckerBaseDelaySeconds();
 
     if (hasHealthcheck(task, requestWithState)) {
-      delaySeconds += task.getTaskRequest().getDeploy().getHealthcheckIntervalSeconds().or(configuration.getHealthcheckIntervalSeconds());
+      delaySeconds += task.getTaskRequest().getDeploy().getHealthcheck().get().getStartupDelaySeconds().or(configuration.getStartupDelaySeconds());
     } else if (task.getTaskRequest().getRequest().isLoadBalanced()) {
       return delaySeconds;
     }

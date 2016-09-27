@@ -1078,7 +1078,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
 
     // No old tasks should be killed before new ones pass healthchecks
     Assert.assertEquals(2, taskManager.getCleanupTaskIds().size());
-    taskManager.saveHealthcheckResult(new SingularityTaskHealthcheckResult(Optional.of(200), Optional.of(1000L), System.currentTimeMillis(), Optional.<String> absent(), Optional.<String> absent(), taskThree.getTaskId()));
+    taskManager.saveHealthcheckResult(new SingularityTaskHealthcheckResult(Optional.of(200), Optional.of(1000L), System.currentTimeMillis(), Optional.<String> absent(), Optional.<String> absent(), taskThree.getTaskId(), Optional.<Boolean>absent()));
 
     cleaner.drainCleanupQueue();
     Assert.assertEquals(1, taskManager.getCleanupTaskIds().size());
@@ -1096,7 +1096,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     }
 
     statusUpdate(taskFour, TaskState.TASK_RUNNING, Optional.of(1L));
-    taskManager.saveHealthcheckResult(new SingularityTaskHealthcheckResult(Optional.of(200), Optional.of(1000L), System.currentTimeMillis(), Optional.<String> absent(), Optional.<String> absent(), taskFour.getTaskId()));
+    taskManager.saveHealthcheckResult(new SingularityTaskHealthcheckResult(Optional.of(200), Optional.of(1000L), System.currentTimeMillis(), Optional.<String> absent(), Optional.<String> absent(), taskFour.getTaskId(), Optional.<Boolean>absent()));
 
     cleaner.drainCleanupQueue();
 

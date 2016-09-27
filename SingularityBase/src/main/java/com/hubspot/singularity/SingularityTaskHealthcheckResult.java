@@ -14,11 +14,12 @@ public class SingularityTaskHealthcheckResult extends SingularityTaskIdHolder im
   private final Optional<Long> durationMillis;
   private final Optional<String> responseBody;
   private final Optional<String> errorMessage;
+  private final boolean startup;
   private final long timestamp;
 
   @JsonCreator
   public SingularityTaskHealthcheckResult(@JsonProperty("statusCode") Optional<Integer> statusCode, @JsonProperty("duration") Optional<Long> durationMillis, @JsonProperty("timestamp") long timestamp,
-      @JsonProperty("responseBody") Optional<String> responseBody, @JsonProperty("errorMessage") Optional<String> errorMessage, @JsonProperty("taskId") SingularityTaskId taskId) {
+      @JsonProperty("responseBody") Optional<String> responseBody, @JsonProperty("errorMessage") Optional<String> errorMessage, @JsonProperty("taskId") SingularityTaskId taskId, @JsonProperty("startup") Optional<Boolean> startup) {
     super(taskId);
 
     this.statusCode = statusCode;
@@ -26,6 +27,7 @@ public class SingularityTaskHealthcheckResult extends SingularityTaskIdHolder im
     this.durationMillis = durationMillis;
     this.timestamp = timestamp;
     this.responseBody = responseBody;
+    this.startup = startup.or(false);
   }
 
   @Override
@@ -80,6 +82,10 @@ public class SingularityTaskHealthcheckResult extends SingularityTaskIdHolder im
     return responseBody;
   }
 
+  public boolean isStartup() {
+    return startup;
+  }
+
   @JsonIgnore
   public boolean isFailed() {
     return getErrorMessage().isPresent() || (getStatusCode().isPresent() && !JavaUtils.isHttpSuccess(getStatusCode().get()));
@@ -88,7 +94,7 @@ public class SingularityTaskHealthcheckResult extends SingularityTaskIdHolder im
   @Override
   public String toString() {
     return "SingularityTaskHealthcheckResult [statusCode=" + statusCode + ", durationMillis=" + durationMillis + ", timestamp=" + timestamp + ", responseBody="
-        + responseBody + ", errorMessage=" + errorMessage + ", taskId=" + getTaskId() + "]";
+        + responseBody + ", errorMessage=" + errorMessage + ", taskId=" + getTaskId() + ", startup=" + startup + "]";
   }
 
 }
