@@ -198,7 +198,7 @@ class SingularitySlaveAndRackManager {
     int racksAccountedFor = countPerRack.elementSet().size();
     double numPerRack = numDesiredInstances / (double) stateCache.getNumActiveRacks();
     if (racksAccountedFor < stateCache.getNumActiveRacks()) {
-      if (countPerRack.count(sanitizedRackId) < (int) numPerRack) {
+      if (countPerRack.count(sanitizedRackId) < Math.max(numPerRack, 1)) {
         return true;
       }
     } else {
