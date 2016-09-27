@@ -290,6 +290,8 @@ public class SingularityConfiguration extends Configuration {
 
   private boolean processStatusUpdatesInSeparateThread = false;
 
+  private boolean rebalanceRacksOnScaleDown = false;
+
   public long getAskDriverToKillTasksAgainAfterMillis() {
     return askDriverToKillTasksAgainAfterMillis;
   }
@@ -1145,5 +1147,13 @@ public class SingularityConfiguration extends Configuration {
 
   public void setProcessStatusUpdatesInSeparateThread(boolean processStatusUpdatesInSeparateThread) {
     this.processStatusUpdatesInSeparateThread = processStatusUpdatesInSeparateThread;
+  }
+
+  public boolean isRebalanceRacksOnScaleDown() {
+    return rebalanceRacksOnScaleDown;
+  }
+
+  public void setRebalanceRacksOnScaleDown(boolean rebalanceRacksOnScaleDown) {
+    this.rebalanceRacksOnScaleDown = rebalanceRacksOnScaleDown;
   }
 }

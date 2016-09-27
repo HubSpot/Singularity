@@ -17,8 +17,10 @@ import org.slf4j.LoggerFactory;
 
 import com.codahale.metrics.annotation.Timed;
 import com.google.common.base.Optional;
+import com.google.common.collect.HashMultiset;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Multiset;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import com.hubspot.mesos.JavaUtils;
@@ -130,7 +132,7 @@ public class SingularitySlaveAndRackManager {
     }
 
     final int numDesiredInstances = taskRequest.getRequest().getInstancesSafe();
-    double numOnRack = 0;
+    Multiset<String> countPerRack = HashMultiset.create(stateCache.getNumActiveRacks());
     double numOnSlave = 0;
     double numCleaningOnSlave = 0;
     double numOtherDeploysOnSlave = 0;
@@ -152,18 +154,13 @@ public class SingularitySlaveAndRackManager {
           numOtherDeploysOnSlave++;
         }
       }
-      if (taskId.getSanitizedRackId().equals(sanitizedRackId) && !cleaningTasks.contains(taskId) && taskRequest.getDeploy().getId().equals(taskId.getDeployId())) {
-        numOnRack++;
-      }
+      countPerRack.add(taskId.getSanitizedRackId());
     }
 
     if (taskRequest.getRequest().isRackSensitive()) {
-      final double numPerRack = numDesiredInstances / (double) stateCache.getNumActiveRacks();
-
-      final boolean isRackOk = numOnRack < numPerRack;
+      final boolean isRackOk = isRackOk(countPerRack, sanitizedRackId, numDesiredInstances, taskRequest.getRequest().getId(), slaveId, host, numCleaningOnSlave, stateCache);
 
       if (!isRackOk) {
-        LOG.trace("Rejecting RackSensitive task {} from slave {} ({}) due to numOnRack {} and cleaningOnSlave {}", taskRequest.getRequest().getId(), slaveId, host, numOnRack, numCleaningOnSlave);
         return SlaveMatchState.RACK_SATURATED;
       }
     }
@@ -196,6 +193,33 @@ public class SingularitySlaveAndRackManager {
     }
 
     return SlaveMatchState.OK;
+  }
+
+  private boolean isRackOk(Multiset<String> countPerRack, String sanitizedRackId, int numDesiredInstances, String requestId, String slaveId, String host, double numCleaningOnSlave, SingularitySchedulerStateCache stateCache) {
+    int racksAccountedFor = countPerRack.elementSet().size();
+    double numPerRack = numDesiredInstances / (double) stateCache.getNumActiveRacks();
+    if (racksAccountedFor < stateCache.getNumActiveRacks()) {
+      if (countPerRack.count(sanitizedRackId) < (int) numPerRack) {
+        return true;
+      }
+    } else {
+      Integer rackMin = null;
+      for (String rackId : countPerRack.elementSet()) {
+        if (rackMin == null || countPerRack.count(rackId) < rackMin) {
+          rackMin = countPerRack.count(rackId);
+        }
+      }
+      if (rackMin == null || rackMin < (int) numPerRack) {
+        if (countPerRack.count(sanitizedRackId) < (int) numPerRack) {
+          return true;
+        }
+      } else if (countPerRack.count(sanitizedRackId) < numPerRack) {
+        return true;
+      }
+    }
+
+    LOG.trace("Rejecting RackSensitive task {} from slave {} ({}) due to numOnRack {} and cleaningOnSlave {}", requestId, slaveId, host, countPerRack.count(sanitizedRackId), numCleaningOnSlave);
+    return false;
   }
 
   public void slaveLost(SlaveID slaveIdObj) {
