@@ -78,6 +78,7 @@ import com.hubspot.singularity.api.SingularityScaleRequest;
 import com.hubspot.singularity.api.SingularityUnpauseRequest;
 import com.hubspot.singularity.data.AbstractMachineManager.StateChangeResult;
 import com.hubspot.singularity.data.SingularityValidator;
+import com.hubspot.singularity.scheduler.SingularityDeployHealthHelper.DeployHealth;
 import com.hubspot.singularity.scheduler.SingularityTaskReconciliation.ReconciliationState;
 
 public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
@@ -1683,5 +1684,9 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     List<SingularityTaskId> healthyTaskIds = deployHealthHelper.getHealthyTasks(updatedRequest, Optional.of(firstDeploy), activeTaskIds, false);
     Assert.assertTrue(!healthyTaskIds.contains(unhealthyTaskThree.getTaskId()));
     Assert.assertEquals(2, healthyTaskIds.size()); // Healthchecked and skip-healthchecked tasks should both be here
+    Assert.assertEquals(DeployHealth.WAITING, deployHealthHelper.getDeployHealth(updatedRequest, Optional.of(firstDeploy), activeTaskIds, false));
+
+    taskManager.saveHealthcheckResult(new SingularityTaskHealthcheckResult(Optional.of(200), Optional.of(1000L), now + 6000, Optional.<String> absent(), Optional.<String> absent(), unhealthyTaskThree.getTaskId()));
+    Assert.assertEquals(DeployHealth.HEALTHY, deployHealthHelper.getDeployHealth(updatedRequest, Optional.of(firstDeploy), activeTaskIds, false));
   }
 }
