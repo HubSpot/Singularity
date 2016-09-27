@@ -249,35 +249,40 @@ public class SingularitySlavePlacementTest extends SingularitySchedulerTestBase 
 
   @Test
   public void testRackPlacementOnScaleDown() {
-    // Set up 3 active racks
-    sms.resourceOffers(driver, Arrays.asList(createOffer(1, 128, "slave1", "host1", Optional.of("rack1"))));
-    sms.resourceOffers(driver, Arrays.asList(createOffer(1, 128, "slave2", "host2", Optional.of("rack2"))));
-    sms.resourceOffers(driver, Arrays.asList(createOffer(1, 128, "slave3", "host3", Optional.of("rack3"))));
+    try {
+      configuration.setRebalanceRacksOnScaleDown(true);
+      // Set up 3 active racks
+      sms.resourceOffers(driver, Arrays.asList(createOffer(1, 128, "slave1", "host1", Optional.of("rack1"))));
+      sms.resourceOffers(driver, Arrays.asList(createOffer(1, 128, "slave2", "host2", Optional.of("rack2"))));
+      sms.resourceOffers(driver, Arrays.asList(createOffer(1, 128, "slave3", "host3", Optional.of("rack3"))));
 
-    initRequest();
-    initFirstDeploy();
-    saveAndSchedule(request.toBuilder().setInstances(Optional.of(7)).setRackSensitive(Optional.of(true)));
+      initRequest();
+      initFirstDeploy();
+      saveAndSchedule(request.toBuilder().setInstances(Optional.of(7)).setRackSensitive(Optional.of(true)));
 
-    // rack1 -> [1,2], rack2 -> [3,4], rack3 -> [5,6,7]
-    sms.resourceOffers(driver, Arrays.asList(createOffer(2, 256, "slave1", "host1", Optional.of("rack1"))));
-    sms.resourceOffers(driver, Arrays.asList(createOffer(2, 256, "slave2", "host2", Optional.of("rack2"))));
-    sms.resourceOffers(driver, Arrays.asList(createOffer(3, 384, "slave3", "host3", Optional.of("rack3"))));
+      // rack1 -> [1,2], rack2 -> [3,4], rack3 -> [5,6,7]
+      sms.resourceOffers(driver, Arrays.asList(createOffer(2, 256, "slave1", "host1", Optional.of("rack1"))));
+      sms.resourceOffers(driver, Arrays.asList(createOffer(2, 256, "slave2", "host2", Optional.of("rack2"))));
+      sms.resourceOffers(driver, Arrays.asList(createOffer(3, 384, "slave3", "host3", Optional.of("rack3"))));
 
-    Assert.assertEquals(7, taskManager.getActiveTaskIds().size());
+      Assert.assertEquals(7, taskManager.getActiveTaskIds().size());
 
-    requestResource.postRequest(request.toBuilder().setInstances(Optional.of(4)).setRackSensitive(Optional.of(true)).build());
+      requestResource.postRequest(request.toBuilder().setInstances(Optional.of(4)).setRackSensitive(Optional.of(true)).build());
 
-    scheduler.drainPendingQueue(stateCacheProvider.get());
+      scheduler.drainPendingQueue(stateCacheProvider.get());
 
-    // [5,6,7] -> scale down, 1 other -> rack rebalance
-    Assert.assertEquals(4, taskManager.getNumCleanupTasks());
+      // [5,6,7] -> scale down, 1 other -> rack rebalance
+      Assert.assertEquals(4, taskManager.getNumCleanupTasks());
 
-    int rebalanceRackCleanups = 0;
-    for (SingularityTaskCleanup cleanup : taskManager.getCleanupTasks()) {
-      if (cleanup.getCleanupType() == TaskCleanupType.REBALANCE_RACKS) {
-        rebalanceRackCleanups ++;
+      int rebalanceRackCleanups = 0;
+      for (SingularityTaskCleanup cleanup : taskManager.getCleanupTasks()) {
+        if (cleanup.getCleanupType() == TaskCleanupType.REBALANCE_RACKS) {
+          rebalanceRackCleanups++;
+        }
       }
+      Assert.assertEquals(1, rebalanceRackCleanups);
+    } finally {
+      configuration.setRebalanceRacksOnScaleDown(false);
     }
-    Assert.assertEquals(1, rebalanceRackCleanups);
   }
 }
