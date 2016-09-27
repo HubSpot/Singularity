@@ -156,9 +156,16 @@ public class SingularityDeployHealthHelper {
 
   private DeployHealth getHealthcheckDeployState(final SingularityDeploy deploy, final Collection<SingularityTaskId> matchingActiveTasks, final boolean isDeployPending) {
     Map<SingularityTaskId, SingularityTaskHealthcheckResult> healthcheckResults = taskManager.getLastHealthcheck(matchingActiveTasks);
+    List<SingularityRequestHistory> requestHistories = requestManager.getRequestHistory(deploy.getRequestId());
 
     for (SingularityTaskId taskId : matchingActiveTasks) {
-      DeployHealth individualTaskHealth = getTaskHealth(deploy, isDeployPending, Optional.fromNullable(healthcheckResults.get(taskId)), taskId);
+      DeployHealth individualTaskHealth;
+      if (healthchecksSkipped(taskId, requestHistories, deploy)) {
+        LOG.trace("Detected skipped healthchecks for {}", taskId);
+        individualTaskHealth = DeployHealth.HEALTHY;
+      } else {
+        individualTaskHealth = getTaskHealth(deploy, isDeployPending, Optional.fromNullable(healthcheckResults.get(taskId)), taskId);
+      }
       if (individualTaskHealth != DeployHealth.HEALTHY) {
         return individualTaskHealth;
       }
