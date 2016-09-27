@@ -426,7 +426,8 @@ public class SingularityScheduler {
         Multiset<String> countPerRack = HashMultiset.create();
         for (SingularityTaskId taskId : remainingActiveTasks) {
           countPerRack.add(taskId.getRackId());
-          if (countPerRack.count(taskId.getRackId()) > perRack && extraCleanedTasks < numActiveRacks - 1) {
+          LOG.info("{} - {} - {} - {}", countPerRack, perRack, extraCleanedTasks, taskId);
+          if (countPerRack.count(taskId.getRackId()) > perRack && extraCleanedTasks < numActiveRacks / 2) {
             extraCleanedTasks++;
             remainingTaskIds.remove(taskId);
             LOG.info("Cleaning up task {} to evenly distribute tasks among racks", taskId);

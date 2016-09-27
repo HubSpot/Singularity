@@ -260,7 +260,6 @@ public class SingularitySlavePlacementTest extends SingularitySchedulerTestBase 
       initFirstDeploy();
       saveAndSchedule(request.toBuilder().setInstances(Optional.of(7)).setRackSensitive(Optional.of(true)));
 
-      // rack1 -> [1,2], rack2 -> [3,4], rack3 -> [5,6,7]
       sms.resourceOffers(driver, Arrays.asList(createOffer(2, 256, "slave1", "host1", Optional.of("rack1"))));
       sms.resourceOffers(driver, Arrays.asList(createOffer(2, 256, "slave2", "host2", Optional.of("rack2"))));
       sms.resourceOffers(driver, Arrays.asList(createOffer(3, 384, "slave3", "host3", Optional.of("rack3"))));
@@ -271,7 +270,6 @@ public class SingularitySlavePlacementTest extends SingularitySchedulerTestBase 
 
       scheduler.drainPendingQueue(stateCacheProvider.get());
 
-      // [5,6,7] -> scale down, 1 other -> rack rebalance
       Assert.assertEquals(4, taskManager.getNumCleanupTasks());
 
       int rebalanceRackCleanups = 0;
@@ -281,6 +279,7 @@ public class SingularitySlavePlacementTest extends SingularitySchedulerTestBase 
         }
       }
       Assert.assertEquals(1, rebalanceRackCleanups);
+      Assert.assertEquals(1, taskManager.getPendingTaskIds().size());
     } finally {
       configuration.setRebalanceRacksOnScaleDown(false);
     }
