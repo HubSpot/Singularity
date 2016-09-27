@@ -777,7 +777,7 @@ public class SingularityClient {
   public void decomissionSlave(String slaveId) {
     final String requestUri = String.format(SLAVES_DECOMISSION_FORMAT, getHost(), contextPath, slaveId);
 
-    post(requestUri, String.format("decomission slave %s", slaveId), Optional.absent());
+    post(requestUri, String.format("decomission slave %s", slaveId), Optional.of(ImmutableMap.of()));
   }
 
   public void deleteSlave(String slaveId) {
