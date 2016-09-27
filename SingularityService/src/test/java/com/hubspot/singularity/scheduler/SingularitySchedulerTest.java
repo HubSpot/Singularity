@@ -45,6 +45,7 @@ import com.hubspot.singularity.ScheduleType;
 import com.hubspot.singularity.SingularityDeleteResult;
 import com.hubspot.singularity.SingularityDeploy;
 import com.hubspot.singularity.SingularityDeployBuilder;
+import com.hubspot.singularity.SingularityDeployMarker;
 import com.hubspot.singularity.SingularityDeployResult;
 import com.hubspot.singularity.SingularityDeployStatistics;
 import com.hubspot.singularity.SingularityKilledTaskIdRecord;
@@ -57,6 +58,7 @@ import com.hubspot.singularity.SingularityPriorityFreezeParent;
 import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityRequestBuilder;
 import com.hubspot.singularity.SingularityRequestCleanup;
+import com.hubspot.singularity.SingularityRequestHistory;
 import com.hubspot.singularity.SingularityRequestHistory.RequestHistoryType;
 import com.hubspot.singularity.SingularityRequestLbCleanup;
 import com.hubspot.singularity.SingularityTask;
@@ -77,11 +79,15 @@ import com.hubspot.singularity.api.SingularityScaleRequest;
 import com.hubspot.singularity.api.SingularityUnpauseRequest;
 import com.hubspot.singularity.data.AbstractMachineManager.StateChangeResult;
 import com.hubspot.singularity.data.SingularityValidator;
+import com.hubspot.singularity.scheduler.SingularityDeployHealthHelper.DeployHealth;
 import com.hubspot.singularity.scheduler.SingularityTaskReconciliation.ReconciliationState;
 
 public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
   @Inject
   private SingularityValidator validator;
+
+  @Inject
+  private SingularityDeployHealthHelper deployHealthHelper;
 
   public SingularitySchedulerTest() {
     super(false);
@@ -1634,5 +1640,54 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
 
     // GMT happens first, so EST is a larger timestamp
     Assert.assertEquals(nextRunEST - nextRunGMT, fiveHoursInMilliseconds);
+  }
+
+  @Test
+  public void testCleanerFindsTasksWithSkippedHealthchecks() {
+    initRequest();
+    resourceOffers(2); // set up slaves so scale validate will pass
+
+    SingularityRequest request = requestResource.getRequest(requestId).getRequest();
+
+    long now = System.currentTimeMillis();
+
+    requestManager.saveHistory(new SingularityRequestHistory(now, Optional.<String>absent(), RequestHistoryType.UPDATED,
+      request.toBuilder()
+        .setSkipHealthchecks(Optional.of(true))
+        .setInstances(Optional.of(2))
+        .build(),
+      Optional.<String>absent()));
+
+    firstDeploy = initDeploy(new SingularityDeployBuilder(request.getId(), firstDeployId).setCommand(Optional.of("sleep 100")).setHealthcheckUri(Optional.of("http://uri")), System.currentTimeMillis());
+
+    SingularityTask taskOne = launchTask(request, firstDeploy, now + 1000, now + 2000, 1, TaskState.TASK_RUNNING);
+
+    finishDeploy(new SingularityDeployMarker(requestId, firstDeployId, now + 2000, Optional.<String> absent(), Optional.<String> absent()), firstDeploy);
+
+    SingularityRequest updatedRequest = request.toBuilder()
+      .setSkipHealthchecks(Optional.<Boolean>absent())
+      .setInstances(Optional.of(2))
+      .build();
+
+    requestManager.saveHistory(new SingularityRequestHistory(now + 3000, Optional.<String>absent(), RequestHistoryType.UPDATED,
+      updatedRequest, Optional.<String>absent()));
+
+    SingularityTask newTaskTwoWithCheck = prepTask(updatedRequest, firstDeploy, now + 4000, 2);
+    taskManager.createTaskAndDeletePendingTask(newTaskTwoWithCheck);
+    statusUpdate(newTaskTwoWithCheck, TaskState.TASK_RUNNING, Optional.of(now + 5000));
+    taskManager.saveHealthcheckResult(new SingularityTaskHealthcheckResult(Optional.of(200), Optional.of(1000L), now + 6000, Optional.<String> absent(), Optional.<String> absent(), newTaskTwoWithCheck.getTaskId()));
+
+    SingularityTask unhealthyTaskThree = prepTask(updatedRequest, firstDeploy, now + 4000, 3);
+    taskManager.createTaskAndDeletePendingTask(unhealthyTaskThree);
+    statusUpdate(unhealthyTaskThree, TaskState.TASK_RUNNING, Optional.of(now + 5000));
+
+    List<SingularityTaskId> activeTaskIds = taskManager.getActiveTaskIdsForRequest(requestId);
+    List<SingularityTaskId> healthyTaskIds = deployHealthHelper.getHealthyTasks(updatedRequest, Optional.of(firstDeploy), activeTaskIds, false);
+    Assert.assertTrue(!healthyTaskIds.contains(unhealthyTaskThree.getTaskId()));
+    Assert.assertEquals(2, healthyTaskIds.size()); // Healthchecked and skip-healthchecked tasks should both be here
+    Assert.assertEquals(DeployHealth.WAITING, deployHealthHelper.getDeployHealth(updatedRequest, Optional.of(firstDeploy), activeTaskIds, false));
+
+    taskManager.saveHealthcheckResult(new SingularityTaskHealthcheckResult(Optional.of(200), Optional.of(1000L), now + 6000, Optional.<String> absent(), Optional.<String> absent(), unhealthyTaskThree.getTaskId()));
+    Assert.assertEquals(DeployHealth.HEALTHY, deployHealthHelper.getDeployHealth(updatedRequest, Optional.of(firstDeploy), activeTaskIds, false));
   }
 }
