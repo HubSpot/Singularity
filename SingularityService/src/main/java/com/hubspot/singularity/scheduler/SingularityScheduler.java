@@ -422,14 +422,12 @@ public class SingularityScheduler {
         int numActiveRacks = stateCache.getNumActiveRacks();
         double perRack = request.getInstancesSafe() / (double) numActiveRacks;
 
-        List<SingularityTaskId> remainingTaskIds = new ArrayList<>(matchingTaskIds);
         Multiset<String> countPerRack = HashMultiset.create();
         for (SingularityTaskId taskId : remainingActiveTasks) {
           countPerRack.add(taskId.getRackId());
           LOG.info("{} - {} - {} - {}", countPerRack, perRack, extraCleanedTasks, taskId);
           if (countPerRack.count(taskId.getRackId()) > perRack && extraCleanedTasks < numActiveRacks / 2) {
             extraCleanedTasks++;
-            remainingTaskIds.remove(taskId);
             LOG.info("Cleaning up task {} to evenly distribute tasks among racks", taskId);
             taskManager.createTaskCleanup(new SingularityTaskCleanup(pendingRequest.getUser(), TaskCleanupType.REBALANCE_RACKS, now, taskId, Optional.<String>absent(), Optional.<String>absent()));
           }
