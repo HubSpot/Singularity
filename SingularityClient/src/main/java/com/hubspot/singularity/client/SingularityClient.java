@@ -757,10 +757,10 @@ public class SingularityClient {
 
   @Deprecated
   public void decomissionSlave(String slaveId) {
-    decomissionSlave(slaveId, Optional.<SingularityMachineChangeRequest>absent());
+    decommissionSlave(slaveId, Optional.<SingularityMachineChangeRequest>absent());
   }
 
-  public void decomissionSlave(String slaveId, Optional<SingularityMachineChangeRequest> machineChangeRequest) {
+  public void decommissionSlave(String slaveId, Optional<SingularityMachineChangeRequest> machineChangeRequest) {
     final String requestUri = String.format(SLAVES_DECOMISSION_FORMAT, getHost(), contextPath, slaveId);
 
     post(requestUri, String.format("decommission slave %s", slaveId), machineChangeRequest.or(Optional.of(new SingularityMachineChangeRequest(Optional.<String>absent()))));
