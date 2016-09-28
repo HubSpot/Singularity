@@ -4,6 +4,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -26,7 +27,10 @@ import com.hubspot.horizon.HttpRequest;
 import com.hubspot.horizon.HttpRequest.Method;
 import com.hubspot.horizon.HttpResponse;
 import com.hubspot.mesos.json.MesosFileChunkObject;
+import com.hubspot.singularity.ExtendedTaskState;
 import com.hubspot.singularity.MachineState;
+import com.hubspot.singularity.OrderDirection;
+import com.hubspot.singularity.SingularityAction;
 import com.hubspot.singularity.SingularityClientCredentials;
 import com.hubspot.singularity.SingularityCreateResult;
 import com.hubspot.singularity.SingularityDeleteResult;
@@ -34,7 +38,13 @@ import com.hubspot.singularity.SingularityDeploy;
 import com.hubspot.singularity.SingularityDeployHistory;
 import com.hubspot.singularity.SingularityDeployKey;
 import com.hubspot.singularity.SingularityDeployUpdate;
+import com.hubspot.singularity.SingularityDisabledAction;
+import com.hubspot.singularity.SingularityDisasterType;
+import com.hubspot.singularity.SingularityDisastersData;
+import com.hubspot.singularity.SingularityPaginatedResponse;
 import com.hubspot.singularity.SingularityPendingRequest;
+import com.hubspot.singularity.SingularityPendingTaskId;
+import com.hubspot.singularity.SingularityPriorityFreezeParent;
 import com.hubspot.singularity.SingularityRack;
 import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityRequestCleanup;
@@ -52,14 +62,17 @@ import com.hubspot.singularity.SingularityTaskHistoryUpdate;
 import com.hubspot.singularity.SingularityTaskIdHistory;
 import com.hubspot.singularity.SingularityTaskReconciliationStatistics;
 import com.hubspot.singularity.SingularityTaskRequest;
+import com.hubspot.singularity.SingularityUpdatePendingDeployRequest;
 import com.hubspot.singularity.SingularityWebhook;
 import com.hubspot.singularity.api.SingularityBounceRequest;
 import com.hubspot.singularity.api.SingularityDeleteRequestRequest;
 import com.hubspot.singularity.api.SingularityDeployRequest;
+import com.hubspot.singularity.api.SingularityDisabledActionRequest;
 import com.hubspot.singularity.api.SingularityExitCooldownRequest;
 import com.hubspot.singularity.api.SingularityKillTaskRequest;
 import com.hubspot.singularity.api.SingularityMachineChangeRequest;
 import com.hubspot.singularity.api.SingularityPauseRequest;
+import com.hubspot.singularity.api.SingularityPriorityFreeze;
 import com.hubspot.singularity.api.SingularityRunNowRequest;
 import com.hubspot.singularity.api.SingularityScaleRequest;
 import com.hubspot.singularity.api.SingularityUnpauseRequest;
@@ -89,8 +102,11 @@ public class SingularityClient {
   private static final String TASKS_GET_ACTIVE_FORMAT = TASKS_FORMAT + "/active";
   private static final String TASKS_GET_ACTIVE_ON_SLAVE_FORMAT = TASKS_FORMAT + "/active/slave/%s";
   private static final String TASKS_GET_SCHEDULED_FORMAT = TASKS_FORMAT + "/scheduled";
+  private static final String TASKS_GET_SCHEDULED_IDS_FORMAT = TASKS_GET_SCHEDULED_FORMAT + "/ids";
 
   private static final String HISTORY_FORMAT = "http://%s/%s/history";
+  private static final String TASKS_HISTORY_FORMAT = HISTORY_FORMAT + "/tasks";
+  private static final String TASKS_HISTORY_WITHMETADATA_FORMAT = HISTORY_FORMAT + "/tasks/withmetadata";
   private static final String TASK_HISTORY_FORMAT = HISTORY_FORMAT + "/task/%s";
   private static final String REQUEST_HISTORY_FORMAT = HISTORY_FORMAT + "/request/%s/requests";
   private static final String TASK_HISTORY_BY_RUN_ID_FORMAT = HISTORY_FORMAT + "/request/%s/run/%s";
@@ -120,6 +136,7 @@ public class SingularityClient {
 
   private static final String DEPLOYS_FORMAT = "http://%s/%s/deploys";
   private static final String DELETE_DEPLOY_FORMAT = DEPLOYS_FORMAT + "/deploy/%s/request/%s";
+  private static final String UPDATE_DEPLOY_FORMAT = DEPLOYS_FORMAT + "/update";
 
   private static final String WEBHOOKS_FORMAT = "http://%s/%s/webhooks";
   private static final String WEBHOOKS_DELETE_FORMAT = WEBHOOKS_FORMAT;
@@ -136,6 +153,18 @@ public class SingularityClient {
   private static final String S3_LOG_GET_REQUEST_LOGS = S3_LOG_FORMAT + "/request/%s";
   private static final String S3_LOG_GET_DEPLOY_LOGS = S3_LOG_FORMAT + "/request/%s/deploy/%s";
 
+  private static final String DISASTERS_FORMAT = "http://%s/%s/disasters";
+  private static final String DISASTER_STATS_FORMAT = DISASTERS_FORMAT + "/stats";
+  private static final String ACTIVE_DISASTERS_FORMAT = DISASTERS_FORMAT + "/active";
+  private static final String DISABLE_AUTOMATED_ACTIONS_FORMAT = DISASTERS_FORMAT + "/disable";
+  private static final String ENABLE_AUTOMATED_ACTIONS_FORMAT = DISASTERS_FORMAT + "/enable";
+  private static final String DISASTER_FORMAT = DISASTERS_FORMAT + "/active/%s";
+  private static final String DISABLED_ACTIONS_FORMAT = DISASTERS_FORMAT + "/disabled-actions";
+  private static final String DISABLED_ACTION_FORMAT = DISASTERS_FORMAT + "/disabled-actions/%s";
+
+  private static final String PRIORITY_FORMAT = "http://%s/%s/priority";
+  private static final String PRIORITY_FREEZE_FORMAT = PRIORITY_FORMAT + "/freeze";
+
   private static final TypeReference<Collection<SingularityRequestParent>> REQUESTS_COLLECTION = new TypeReference<Collection<SingularityRequestParent>>() {};
   private static final TypeReference<Collection<SingularityPendingRequest>> PENDING_REQUESTS_COLLECTION = new TypeReference<Collection<SingularityPendingRequest>>() {};
   private static final TypeReference<Collection<SingularityRequestCleanup>> CLEANUP_REQUESTS_COLLECTION = new TypeReference<Collection<SingularityRequestCleanup>>() {};
@@ -148,9 +177,13 @@ public class SingularityClient {
   private static final TypeReference<Collection<SingularityRequestHistory>> REQUEST_UPDATES_COLLECTION = new TypeReference<Collection<SingularityRequestHistory>>() {};
   private static final TypeReference<Collection<SingularityTaskHistoryUpdate>> TASK_UPDATES_COLLECTION = new TypeReference<Collection<SingularityTaskHistoryUpdate>>() {};
   private static final TypeReference<Collection<SingularityTaskRequest>> TASKS_REQUEST_COLLECTION = new TypeReference<Collection<SingularityTaskRequest>>() {};
+  private static final TypeReference<Collection<SingularityPendingTaskId>> PENDING_TASK_ID_COLLECTION = new TypeReference<Collection<SingularityPendingTaskId>>() {};
   private static final TypeReference<Collection<SingularityS3Log>> S3_LOG_COLLECTION = new TypeReference<Collection<SingularityS3Log>>() {};
   private static final TypeReference<Collection<SingularityRequestHistory>> REQUEST_HISTORY_COLLECTION = new TypeReference<Collection<SingularityRequestHistory>>() {};
   private static final TypeReference<Collection<SingularityRequestGroup>> REQUEST_GROUP_COLLECTION = new TypeReference<Collection<SingularityRequestGroup>>() {};
+  private static final TypeReference<Collection<SingularityDisasterType>> DISASTERS_COLLECTION = new TypeReference<Collection<SingularityDisasterType>>() {};
+  private static final TypeReference<Collection<SingularityDisabledAction>> DISABLED_ACTIONS_COLLECTION = new TypeReference<Collection<SingularityDisabledAction>>() {};
+  private static final TypeReference<SingularityPaginatedResponse<SingularityTaskIdHistory>> PAGINATED_HISTORY = new TypeReference<SingularityPaginatedResponse<SingularityTaskIdHistory>>() {};
 
   private final Random random;
   private final Provider<List<String>> hostsProvider;
@@ -215,14 +248,41 @@ public class SingularityClient {
   }
 
   private <T> Optional<T> getSingleWithParams(String uri, String type, String id, Optional<Map<String, Object>> queryParams, Class<T> clazz) {
+    final long start = System.currentTimeMillis();
+    HttpResponse response = executeGetSingleWithParams(uri, type, id, queryParams);
+
+    if (response.getStatusCode() == 404) {
+      return Optional.absent();
+    }
+
+    checkResponse(type, response);
+    LOG.info("Got {} {} in {}ms", type, id, System.currentTimeMillis() - start);
+
+    return Optional.fromNullable(response.getAs(clazz));
+  }
+
+  private <T> Optional<T> getSingleWithParams(String uri, String type, String id, Optional<Map<String, Object>> queryParams, TypeReference<T> typeReference) {
+    final long start = System.currentTimeMillis();
+    HttpResponse response = executeGetSingleWithParams(uri, type, id, queryParams);
+
+    if (response.getStatusCode() == 404) {
+      return Optional.absent();
+    }
+
+    checkResponse(type, response);
+    LOG.info("Got {} {} in {}ms", type, id, System.currentTimeMillis() - start);
+
+    return Optional.fromNullable(response.getAs(typeReference));
+  }
+
+
+  private HttpResponse executeGetSingleWithParams(String uri, String type, String id, Optional<Map<String, Object>> queryParams) {
     checkNotNull(id, String.format("Provide a %s id", type));
 
     LOG.info("Getting {} {} from {}", type, id, uri);
 
-    final long start = System.currentTimeMillis();
-
     HttpRequest.Builder requestBuilder = HttpRequest.newBuilder()
-        .setUrl(uri);
+      .setUrl(uri);
 
     if (queryParams.isPresent()) {
       addQueryParams(requestBuilder, queryParams.get());
@@ -230,17 +290,7 @@ public class SingularityClient {
 
     addCredentials(requestBuilder);
 
-    HttpResponse response = httpClient.execute(requestBuilder.build());
-
-    if (response.getStatusCode() == 404) {
-      return Optional.absent();
-    }
-
-    checkResponse(type, response);
-
-    LOG.info("Got {} {} in {}ms", type, id, System.currentTimeMillis() - start);
-
-    return Optional.fromNullable(response.getAs(clazz));
+    return httpClient.execute(requestBuilder.build());
   }
 
   private <T> Collection<T> getCollection(String uri, String type, TypeReference<Collection<T>> typeReference) {
@@ -428,10 +478,10 @@ public class SingularityClient {
     HttpRequest.Builder request = HttpRequest.newBuilder().setUrl(uri);
 
     if (skipCache.isPresent()) {
-      request.setQueryParam("skipCache").to(skipCache.get().booleanValue());
+      request.setQueryParam("skipCache").to(skipCache.get());
     }
     if (includeRequestIds.isPresent()) {
-      request.setQueryParam("includeRequestIds").to(includeRequestIds.get().booleanValue());
+      request.setQueryParam("includeRequestIds").to(includeRequestIds.get());
     }
 
     addCredentials(request);
@@ -577,6 +627,15 @@ public class SingularityClient {
     return getAndLogRequestAndDeployStatus(singularityRequestParent);
   }
 
+  public SingularityRequestParent updateIncrementalDeployInstanceCount(SingularityUpdatePendingDeployRequest updateRequest) {
+    final String requestUri = String.format(UPDATE_DEPLOY_FORMAT, getHost(), contextPath);
+
+    HttpResponse response = post(requestUri, String.format("update deploy %s", new SingularityDeployKey(updateRequest.getRequestId(), updateRequest.getDeployId())),
+      Optional.of(updateRequest));
+
+    return getAndLogRequestAndDeployStatus(response.getAs(SingularityRequestParent.class));
+  }
+
   /**
    * Get all singularity requests that their state is either ACTIVE, PAUSED or COOLDOWN
    *
@@ -698,6 +757,12 @@ public class SingularityClient {
     final String requestUri = String.format(TASKS_GET_SCHEDULED_FORMAT, getHost(), contextPath);
 
     return getCollection(requestUri, "scheduled tasks", TASKS_REQUEST_COLLECTION);
+  }
+
+  public Collection<SingularityPendingTaskId> getScheduledTaskIds() {
+    final String requestUri = String.format(TASKS_GET_SCHEDULED_IDS_FORMAT, getHost(), contextPath);
+
+    return getCollection(requestUri, "scheduled task ids", PENDING_TASK_ID_COLLECTION);
   }
 
   //
@@ -887,6 +952,62 @@ public class SingularityClient {
     return getSingle(requestUri, "task history", requestId, SingularityTaskIdHistory.class);
   }
 
+  public Collection<SingularityTaskIdHistory> getTaskHistory(Optional<String> requestId, Optional<String> deployId, Optional<String> host,
+    Optional<ExtendedTaskState> lastTaskStatus, Optional<Long> startedBefore, Optional<Long> startedAfter, Optional<Long> updatedBefore,
+    Optional<Long> updatedAfter, Optional<OrderDirection> orderDirection, Integer count, Integer page) {
+    final String requestUri = String.format(TASKS_HISTORY_FORMAT, getHost(), contextPath);
+
+    Map<String, Object> params = taskSearchParams(requestId, deployId, host, lastTaskStatus, startedBefore, startedAfter, updatedBefore, updatedAfter, orderDirection, count, page);
+
+    return getCollectionWithParams(requestUri, "task id history", Optional.of(params), TASKID_HISTORY_COLLECTION);
+  }
+
+  public Optional<SingularityPaginatedResponse<SingularityTaskIdHistory>> getTaskHistoryWithMetadata(Optional<String> requestId, Optional<String> deployId, Optional<String> host,
+    Optional<ExtendedTaskState> lastTaskStatus, Optional<Long> startedBefore, Optional<Long> startedAfter, Optional<Long> updatedBefore,
+    Optional<Long> updatedAfter, Optional<OrderDirection> orderDirection, Integer count, Integer page) {
+    final String requestUri = String.format(TASKS_HISTORY_WITHMETADATA_FORMAT, getHost(), contextPath);
+
+    Map<String, Object> params = taskSearchParams(requestId, deployId, host, lastTaskStatus, startedBefore, startedAfter, updatedBefore, updatedAfter, orderDirection, count, page);
+
+    return getSingleWithParams(requestUri, "task id history with metadata", "", Optional.of(params), PAGINATED_HISTORY);
+  }
+
+  private Map<String, Object> taskSearchParams(Optional<String> requestId, Optional<String> deployId, Optional<String> host,
+    Optional<ExtendedTaskState> lastTaskStatus, Optional<Long> startedBefore, Optional<Long> startedAfter, Optional<Long> updatedBefore,
+    Optional<Long> updatedAfter, Optional<OrderDirection> orderDirection, Integer count, Integer page) {
+    Map<String, Object> params = new HashMap<>();
+    if (requestId.isPresent()) {
+      params.put("requestId", requestId);
+    }
+    if (deployId.isPresent()) {
+      params.put("deployId", deployId);
+    }
+    if (host.isPresent()) {
+      params.put("host", host);
+    }
+    if (lastTaskStatus.isPresent()) {
+      params.put("lastTaskStatus", lastTaskStatus.toString());
+    }
+    if (startedBefore.isPresent()) {
+      params.put("startedBefore", startedBefore);
+    }
+    if (startedAfter.isPresent()) {
+      params.put("startedAfter", startedAfter);
+    }
+    if (updatedBefore.isPresent()) {
+      params.put("updatedBefore", updatedBefore);
+    }
+    if (updatedAfter.isPresent()) {
+      params.put("updatedAfter", updatedAfter);
+    }
+    if (orderDirection.isPresent()) {
+      params.put("orderDirection", orderDirection.toString());
+    }
+    params.put("count", count);
+    params.put("page", page);
+    return params;
+  }
+
   //
   // WEBHOOKS
   //
@@ -1071,4 +1192,73 @@ public class SingularityClient {
 
     delete(requestUri, "request group", requestGroupId);
   }
+
+  //
+  // DISASTERS
+  //
+
+  public Optional<SingularityDisastersData> getDisasterStats() {
+    final String requestUri = String.format(DISASTER_STATS_FORMAT, getHost(), contextPath);
+    return getSingle(requestUri, "disaster stats", "", SingularityDisastersData.class);
+  }
+
+  public Collection<SingularityDisasterType> getActiveDisasters() {
+    final String requestUri = String.format(ACTIVE_DISASTERS_FORMAT, getHost(), contextPath);
+    return getCollection(requestUri, "active disasters", DISASTERS_COLLECTION);
+  }
+
+  public void disableAutomatedDisasterCreation() {
+    final String requestUri = String.format(DISABLE_AUTOMATED_ACTIONS_FORMAT, getHost(), contextPath);
+    post(requestUri, "disable automated disasters", Optional.absent());
+  }
+
+  public void enableAutomatedDisasterCreation() {
+    final String requestUri = String.format(ENABLE_AUTOMATED_ACTIONS_FORMAT, getHost(), contextPath);
+    post(requestUri, "enable automated disasters", Optional.absent());
+  }
+
+  public void removeDisaster(SingularityDisasterType disasterType) {
+    final String requestUri = String.format(DISASTER_FORMAT, getHost(), contextPath, disasterType);
+    delete(requestUri, "remove disaster", disasterType.toString());
+  }
+
+  public void activateDisaster(SingularityDisasterType disasterType) {
+    final String requestUri = String.format(DISASTER_FORMAT, getHost(), contextPath, disasterType);
+    post(requestUri, "activate disaster", Optional.absent());
+  }
+
+  public Collection<SingularityDisabledAction> getDisabledActions() {
+    final String requestUri = String.format(DISABLED_ACTIONS_FORMAT, getHost(), contextPath);
+    return getCollection(requestUri, "disabled actions", DISABLED_ACTIONS_COLLECTION);
+  }
+
+  public void disableAction(SingularityAction action, Optional<SingularityDisabledActionRequest> request) {
+    final String requestUri = String.format(DISABLED_ACTION_FORMAT, getHost(), contextPath, action);
+    post(requestUri, "disable action", request);
+  }
+
+  public void enableAction(SingularityAction action) {
+    final String requestUri = String.format(DISABLED_ACTION_FORMAT, getHost(), contextPath, action);
+    delete(requestUri, "disable action", action.toString());
+  }
+
+  //
+  // PRIORITY
+  //
+
+  public Optional<SingularityPriorityFreezeParent> getActivePriorityFreeze() {
+    final String requestUri = String.format(PRIORITY_FREEZE_FORMAT, getHost(), contextPath);
+    return getSingle(requestUri, "priority freeze", "", SingularityPriorityFreezeParent.class);
+  }
+
+  public Optional<SingularityPriorityFreezeParent> createPriorityFreeze(SingularityPriorityFreeze priorityFreezeRequest) {
+    final String requestUri = String.format(PRIORITY_FREEZE_FORMAT, getHost(), contextPath);
+    return post(requestUri, "priority freeze", Optional.of(priorityFreezeRequest), Optional.of(SingularityPriorityFreezeParent.class));
+  }
+
+  public void deletePriorityFreeze() {
+    final String requestUri = String.format(PRIORITY_FREEZE_FORMAT, getHost(), contextPath);
+    delete(requestUri, "priority freeze", "");
+  }
+
 }
