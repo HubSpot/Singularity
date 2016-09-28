@@ -58,6 +58,7 @@ import com.hubspot.singularity.api.SingularityDeleteRequestRequest;
 import com.hubspot.singularity.api.SingularityDeployRequest;
 import com.hubspot.singularity.api.SingularityExitCooldownRequest;
 import com.hubspot.singularity.api.SingularityKillTaskRequest;
+import com.hubspot.singularity.api.SingularityMachineChangeRequest;
 import com.hubspot.singularity.api.SingularityPauseRequest;
 import com.hubspot.singularity.api.SingularityRunNowRequest;
 import com.hubspot.singularity.api.SingularityScaleRequest;
@@ -71,17 +72,17 @@ public class SingularityClient {
   private static final String TASK_RECONCILIATION_FORMAT = STATE_FORMAT + "/task-reconciliation";
 
   private static final String RACKS_FORMAT = "http://%s/%s/racks";
-  private static final String RACKS_GET_ACTIVE_FORMAT = RACKS_FORMAT + "/active";
-  private static final String RACKS_GET_DEAD_FORMAT = RACKS_FORMAT + "/dead";
-  private static final String RACKS_GET_DECOMISSIONING_FORMAT = RACKS_FORMAT + "/decomissioning";
-  private static final String RACKS_DECOMISSION_FORMAT = RACKS_FORMAT + "/rack/%s/decomission";
-  private static final String RACKS_DELETE_DEAD_FORMAT = RACKS_FORMAT + "/rack/%s/dead";
-  private static final String RACKS_DELETE_DECOMISSIONING_FORMAT = RACKS_FORMAT + "/rack/%s/decomissioning";
+  private static final String RACKS_DECOMISSION_FORMAT = RACKS_FORMAT + "/rack/%s/decommission";
+  private static final String RACKS_FREEZE_FORMAT = RACKS_FORMAT + "/rack/%s/freeze";
+  private static final String RACKS_ACTIVATE_FORMAT = RACKS_FORMAT + "/rack/%s/activate";
+  private static final String RACKS_DELETE_FORMAT = RACKS_FORMAT + "/rack/%s";
 
   private static final String SLAVES_FORMAT = "http://%s/%s/slaves";
   private static final String SLAVE_DETAIL_FORMAT = SLAVES_FORMAT + "/slave/%s/details";
   private static final String SLAVES_DECOMISSION_FORMAT = SLAVES_FORMAT + "/slave/%s/decommission";
-  private static final String SLAVES_DELETE_FORMAT = SLAVES_FORMAT + "/slave/%s/decomissioning";
+  private static final String SLAVES_FREEZE_FORMAT = SLAVES_FORMAT + "/slave/%s/freeze";
+  private static final String SLAVES_ACTIVATE_FORMAT = SLAVES_FORMAT + "/slave/%s/activate";
+  private static final String SLAVES_DELETE_FORMAT = SLAVES_FORMAT + "/slave/%s";
 
   private static final String TASKS_FORMAT = "http://%s/%s/tasks";
   private static final String TASKS_KILL_TASK_FORMAT = TASKS_FORMAT + "/task/%s";
@@ -702,39 +703,46 @@ public class SingularityClient {
   //
   // RACKS
   //
+  private Collection<SingularityRack> getRacks(Optional<MachineState> rackState) {
+    final String requestUri = String.format(RACKS_FORMAT, getHost(), contextPath);
+    Optional<Map<String, Object>> maybeQueryParams = Optional.<Map<String, Object>>absent();
 
-  public Collection<SingularityRack> getActiveRacks() {
-    return getRacks(RACKS_GET_ACTIVE_FORMAT, "active");
+    String type = "racks";
+
+    if (rackState.isPresent()) {
+      maybeQueryParams = Optional.<Map<String, Object>>of(ImmutableMap.<String, Object>of("state", rackState.get().toString()));
+
+      type = String.format("%s racks", rackState.get().toString());
+    }
+
+    return getCollectionWithParams(requestUri, type, maybeQueryParams, RACKS_COLLECTION);
   }
 
-  public Collection<SingularityRack> getDeadRacks() {
-    return getRacks(RACKS_GET_DEAD_FORMAT, "dead");
-  }
-
-  public Collection<SingularityRack> getDecomissioningRacks() {
-    return getRacks(RACKS_GET_DECOMISSIONING_FORMAT, "decomissioning");
-  }
-
-  private Collection<SingularityRack> getRacks(String format, String type) {
-    final String requestUri = String.format(format, getHost(), contextPath);
-
-    return getCollection(requestUri, String.format("%s racks", type), RACKS_COLLECTION);
-  }
-
+  @Deprecated
   public void decomissionRack(String rackId) {
+    decommissionRack(rackId, Optional.<SingularityMachineChangeRequest>absent());
+  }
+
+  public void decommissionRack(String rackId, Optional<SingularityMachineChangeRequest> machineChangeRequest) {
     final String requestUri = String.format(RACKS_DECOMISSION_FORMAT, getHost(), contextPath, rackId);
 
-    post(requestUri, String.format("decomission rack %s", rackId), Optional.absent());
+    post(requestUri, String.format("decomission rack %s", rackId), machineChangeRequest.or(Optional.of(new SingularityMachineChangeRequest(Optional.<String>absent()))));
   }
 
-  public void deleteDecomissioningRack(String rackId) {
-    final String requestUri = String.format(RACKS_DELETE_DECOMISSIONING_FORMAT, getHost(), contextPath, rackId);
+  public void freezeRack(String rackId, Optional<SingularityMachineChangeRequest> machineChangeRequest) {
+    final String requestUri = String.format(RACKS_FREEZE_FORMAT, getHost(), contextPath, rackId);
 
-    delete(requestUri, "rack", rackId);
+    post(requestUri, String.format("freeze rack %s", rackId), machineChangeRequest.or(Optional.of(new SingularityMachineChangeRequest(Optional.<String>absent()))));
   }
 
-  public void deleteDeadRack(String rackId) {
-    final String requestUri = String.format(RACKS_DELETE_DEAD_FORMAT, getHost(), contextPath, rackId);
+  public void activateRack(String rackId, Optional<SingularityMachineChangeRequest> machineChangeRequest) {
+    final String requestUri = String.format(RACKS_ACTIVATE_FORMAT, getHost(), contextPath, rackId);
+
+    post(requestUri, String.format("decommission rack %s", rackId), machineChangeRequest.or(Optional.of(new SingularityMachineChangeRequest(Optional.<String>absent()))));
+  }
+
+  public void deleteRack(String rackId) {
+    final String requestUri = String.format(RACKS_DELETE_FORMAT, getHost(), contextPath, rackId);
 
     delete(requestUri, "dead rack", rackId);
   }
@@ -742,33 +750,6 @@ public class SingularityClient {
   //
   // SLAVES
   //
-
-  /**
-   * Use {@link getSlaves} specifying the desired slave state to filter by
-   *
-   */
-  @Deprecated
-  public Collection<SingularitySlave> getActiveSlaves() {
-    return getSlaves(Optional.of(MachineState.ACTIVE));
-  }
-
-  /**
-   * Use {@link getSlaves} specifying the desired slave state to filter by
-   *
-   */
-  @Deprecated
-  public Collection<SingularitySlave> getDeadSlaves() {
-    return getSlaves(Optional.of(MachineState.DEAD));
-  }
-
-  /**
-   * Use {@link getSlaves} specifying the desired slave state to filter by
-   *
-   */
-  @Deprecated
-  public Collection<SingularitySlave> getDecomissioningSlaves() {
-    return getSlaves(Optional.of(MachineState.DECOMMISSIONING));
-  }
 
   /**
    * Retrieve the list of all known slaves, optionally filtering by a particular slave state
@@ -800,10 +781,27 @@ public class SingularityClient {
     return getSingle(requestUri, "slave", slaveId, SingularitySlave.class);
   }
 
+  @Deprecated
   public void decomissionSlave(String slaveId) {
+    decomissionSlave(slaveId, Optional.<SingularityMachineChangeRequest>absent());
+  }
+
+  public void decomissionSlave(String slaveId, Optional<SingularityMachineChangeRequest> machineChangeRequest) {
     final String requestUri = String.format(SLAVES_DECOMISSION_FORMAT, getHost(), contextPath, slaveId);
 
-    post(requestUri, String.format("decomission slave %s", slaveId), Optional.absent());
+    post(requestUri, String.format("decommission slave %s", slaveId), machineChangeRequest.or(Optional.of(new SingularityMachineChangeRequest(Optional.<String>absent()))));
+  }
+
+  public void freezeSlave(String slaveId, Optional<SingularityMachineChangeRequest> machineChangeRequest) {
+    final String requestUri = String.format(SLAVES_FREEZE_FORMAT, getHost(), contextPath, slaveId);
+
+    post(requestUri, String.format("freeze slave %s", slaveId), machineChangeRequest.or(Optional.of(new SingularityMachineChangeRequest(Optional.<String>absent()))));
+  }
+
+  public void activateSlave(String slaveId, Optional<SingularityMachineChangeRequest> machineChangeRequest) {
+    final String requestUri = String.format(SLAVES_ACTIVATE_FORMAT, getHost(), contextPath, slaveId);
+
+    post(requestUri, String.format("activate slave %s", slaveId), machineChangeRequest.or(Optional.of(new SingularityMachineChangeRequest(Optional.<String>absent()))));
   }
 
   public void deleteSlave(String slaveId) {

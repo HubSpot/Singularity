@@ -61,11 +61,15 @@ def cat_logs(args):
     try:
         check_dest(args)
         all_logs = []
-        if not args.skip_s3:
-            all_logs += download_s3_logs(args)
-        if not args.skip_live:
-            all_logs += download_live_logs(args)
-        if not args.download_only:
+
+        if args.cached_only:
+            all_logs += find_cached_logs(args)
+        else:
+            if not args.skip_s3:
+                all_logs += download_s3_logs(args)
+            if not args.skip_live:
+                all_logs += download_live_logs(args)
+        if not args.download_only or args.cache_only:
             cat_files(args, all_logs)
     except KeyboardInterrupt:
         exit('Stopping logcat...', 'magenta')
@@ -277,6 +281,7 @@ def cat():
     parser.add_argument("-S", "--skip-s3", dest="skip_s3", help="Don't download/search s3 logs", action='store_true')
     parser.add_argument("-L", "--skip-live", dest="skip_live", help="Don't download/search live logs", action='store_true')
     parser.add_argument("-U", "--use-cache", dest="use_cache", help="Use cache for live logs, don't re-download them", action='store_true')
+    parser.add_argument("-O", "--cached-only", dest="cached_only", help="Find and output content of files already downloaded", action='store_true')
     parser.add_argument("-V", "--verbose", dest="verbose", help="Print more verbose output", action='store_true')
     parser.add_argument("--silent", dest="silent", help="No stderr (progress, file names, etc) output", action='store_true')
     parser.add_argument("-i", "--show-file-info", dest='show_file_info', help="Print the file name before printing log lines", action='store_true')
