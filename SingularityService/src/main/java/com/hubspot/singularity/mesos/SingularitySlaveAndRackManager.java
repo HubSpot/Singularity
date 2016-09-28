@@ -154,7 +154,9 @@ public class SingularitySlaveAndRackManager {
           numOtherDeploysOnSlave++;
         }
       }
-      countPerRack.add(taskId.getSanitizedRackId());
+      if (!cleaningTasks.contains(taskId) && taskRequest.getDeploy().getId().equals(taskId.getDeployId())) {
+        countPerRack.add(taskId.getSanitizedRackId());
+      }
     }
 
     if (taskRequest.getRequest().isRackSensitive()) {
