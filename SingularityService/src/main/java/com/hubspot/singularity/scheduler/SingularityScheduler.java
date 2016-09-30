@@ -236,7 +236,6 @@ public class SingularityScheduler {
     LOG.info("Pending queue had {} requests", pendingRequests.size());
 
     int totalNewScheduledTasks = 0;
-    int totalNewStartupTasks = 0;
     int heldForScheduledActiveTask = 0;
     int obsoleteRequests = 0;
     int totalTasks = stateCache.getActiveTaskIds().size();
