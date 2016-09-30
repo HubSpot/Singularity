@@ -1692,4 +1692,57 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
 
     configuration.setStartUpTaskThresholdPct(oldThresholdPct);
   }
+
+  @Test
+  public void itFailsIfNumberOfStartupRequestsPassThreshold() {
+    int oldThresholdPct = configuration.getStartUpTaskThresholdPct();
+    int numTotalRequests = 2;
+    int numStartupRequests = 2;
+
+    configuration.setStartUpTaskThresholdPct(40);
+
+    for (int i = 1; i <= numTotalRequests; i++) {
+      String requestId = "test-request-" + i;
+      String deployId = firstDeployId + i;
+      initRequestWithType(requestId, RequestType.SCHEDULED, false);
+      deploy(deployId, requestId);
+      launchTask(requestManager.getRequest(requestId).get().getRequest(), deployManager.getDeploy(requestId, deployId).get(), i, TaskState.TASK_RUNNING);
+      if (i <= numStartupRequests) {
+        requestManager.addToPendingQueue(new SingularityPendingRequest(requestId, deployId, System.currentTimeMillis(), Optional.<String> absent(), PendingType.STARTUP, Optional.<Boolean> absent(), Optional.<String> absent()));
+      }
+    }
+
+    Assert.assertEquals(requestManager.getNumRequests(), numTotalRequests);
+    scheduler.drainPendingQueue(stateCacheProvider.get());
+    Mockito.verify(abort, Mockito.times(1)).abort(AbortReason.EXCEEDED_STARTUP_TASK_THRESHOLD, Optional.<Throwable>absent());
+
+    configuration.setStartUpTaskThresholdPct(oldThresholdPct);
+  }
+
+  @Test
+  public void itPassesIfNumberOfStartupRequestsEqualsThreshold() {
+    int oldThresholdPct = configuration.getStartUpTaskThresholdPct();
+    int numTotalRequests = 2;
+    int numStartupRequests = 2;
+
+    configuration.setStartUpTaskThresholdPct(50);
+
+    for (int i = 1; i <= numTotalRequests; i++) {
+      String requestId = "test-request-" + i;
+      String deployId = firstDeployId + i;
+      initRequestWithType(requestId, RequestType.SCHEDULED, false);
+      deploy(deployId, requestId);
+      launchTask(requestManager.getRequest(requestId).get().getRequest(), deployManager.getDeploy(requestId, deployId).get(), i, TaskState.TASK_RUNNING);
+      if (i <= numStartupRequests) {
+        requestManager.addToPendingQueue(new SingularityPendingRequest(requestId, deployId, System.currentTimeMillis(), Optional.<String> absent(), PendingType.STARTUP, Optional.<Boolean> absent(), Optional.<String> absent()));
+      }
+    }
+
+
+    Assert.assertEquals(requestManager.getNumRequests(), numTotalRequests);
+    scheduler.drainPendingQueue(stateCacheProvider.get());
+    Mockito.verify(abort, Mockito.times(0)).abort(AbortReason.EXCEEDED_STARTUP_TASK_THRESHOLD, Optional.<Throwable>absent());
+
+    configuration.setStartUpTaskThresholdPct(oldThresholdPct);
+  }
 }

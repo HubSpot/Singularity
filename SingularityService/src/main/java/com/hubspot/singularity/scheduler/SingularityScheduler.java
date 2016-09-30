@@ -93,7 +93,11 @@ public class SingularityScheduler {
   private final SingularityMailer mailer;
 
   private final SingularityAbort abort;
+<<<<<<< HEAD
+  private final AtomicInteger numStartupTasks = new AtomicInteger(0);
+=======
   private final AtomicInteger numStartupRequests = new AtomicInteger(0);
+>>>>>>> 1b3a2b2... changed threshold to correctly check startup tasks, updated tests
 
   @Inject
   public SingularityScheduler(TaskRequestManager taskRequestManager,
@@ -284,6 +288,10 @@ public class SingularityScheduler {
       LOG.debug("Pending request {} resulted in {} new scheduled tasks", pendingRequest, numScheduledTasks);
 
       totalNewScheduledTasks += numScheduledTasks;
+      totalTasks += numScheduledTasks;
+      numStartupTasks.set(numStartupTasks.get() + numScheduledTasks);
+
+      checkStartupThreshold(pendingRequest, totalTasks);
 
       totalTasks = checkStartupThreshold(pendingRequest, totalTasks);
 
@@ -763,10 +771,7 @@ public class SingularityScheduler {
 
   private int checkStartupThreshold(SingularityPendingRequest pendingRequest, int totalTasks) {
     if (pendingRequest.getPendingType() == PendingType.STARTUP) {
-      int numNewStartupTasks = taskManager.getNumActiveTasksForRequest(pendingRequest.getRequestId());
-      numStartupRequests.set(numStartupRequests.get() + numNewStartupTasks);
-      totalTasks += numNewStartupTasks;
-      double startUpRequestPct = (numStartupRequests.get() * 100.0 / totalTasks);
+      double startUpRequestPct = (numStartupTasks.get() * 100.0 / totalTasks);
 
       if (startUpRequestPct > configuration.getStartUpTaskThresholdPct()) {
         LOG.info("{}% exceeded startup task threshold of {}%", startUpRequestPct, configuration.getStartUpTaskThresholdPct());
