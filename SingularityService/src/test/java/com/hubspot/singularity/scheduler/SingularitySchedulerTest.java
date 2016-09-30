@@ -41,6 +41,8 @@ import com.hubspot.singularity.RequestCleanupType;
 import com.hubspot.singularity.RequestState;
 import com.hubspot.singularity.RequestType;
 import com.hubspot.singularity.ScheduleType;
+import com.hubspot.singularity.SingularityAbort;
+import com.hubspot.singularity.SingularityAbort.AbortReason;
 import com.hubspot.singularity.SingularityDeleteResult;
 import com.hubspot.singularity.SingularityDeploy;
 import com.hubspot.singularity.SingularityDeployBuilder;
@@ -81,6 +83,9 @@ import com.hubspot.singularity.scheduler.SingularityTaskReconciliation.Reconcili
 public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
   @Inject
   private SingularityValidator validator;
+
+  @Inject
+  private SingularityAbort abort;
 
   public SingularitySchedulerTest() {
     super(false);
@@ -1633,5 +1638,58 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
 
     // GMT happens first, so EST is a larger timestamp
     Assert.assertEquals(nextRunEST - nextRunGMT, fiveHoursInMilliseconds);
+  }
+
+  @Test
+  public void itFailsIfNumberOfStartupRequestsPassThreshold() {
+    int oldThresholdPct = configuration.getStartUpTaskThresholdPct();
+    int numTotalRequests = 2;
+    int numStartupRequests = 2;
+
+    configuration.setStartUpTaskThresholdPct(40);
+
+    for (int i = 1; i <= numTotalRequests; i++) {
+      String requestId = "test-request-" + i;
+      String deployId = firstDeployId + i;
+      initRequestWithType(requestId, RequestType.SCHEDULED, false);
+      deploy(deployId, requestId);
+      launchTask(requestManager.getRequest(requestId).get().getRequest(), deployManager.getDeploy(requestId, deployId).get(), i, TaskState.TASK_RUNNING);
+      if (i <= numStartupRequests) {
+        requestManager.addToPendingQueue(new SingularityPendingRequest(requestId, deployId, System.currentTimeMillis(), Optional.<String> absent(), PendingType.STARTUP, Optional.<Boolean> absent(), Optional.<String> absent()));
+      }
+    }
+
+    Assert.assertEquals(requestManager.getNumRequests(), numTotalRequests);
+    scheduler.drainPendingQueue(stateCacheProvider.get());
+    Mockito.verify(abort, Mockito.times(1)).abort(AbortReason.EXCEEDED_STARTUP_TASK_THRESHOLD, Optional.<Throwable>absent());
+
+    configuration.setStartUpTaskThresholdPct(oldThresholdPct);
+  }
+
+  @Test
+  public void itPassesIfNumberOfStartupRequestsEqualsThreshold() {
+    int oldThresholdPct = configuration.getStartUpTaskThresholdPct();
+    int numTotalRequests = 2;
+    int numStartupRequests = 2;
+
+    configuration.setStartUpTaskThresholdPct(50);
+
+    for (int i = 1; i <= numTotalRequests; i++) {
+      String requestId = "test-request-" + i;
+      String deployId = firstDeployId + i;
+      initRequestWithType(requestId, RequestType.SCHEDULED, false);
+      deploy(deployId, requestId);
+      launchTask(requestManager.getRequest(requestId).get().getRequest(), deployManager.getDeploy(requestId, deployId).get(), i, TaskState.TASK_RUNNING);
+      if (i <= numStartupRequests) {
+        requestManager.addToPendingQueue(new SingularityPendingRequest(requestId, deployId, System.currentTimeMillis(), Optional.<String> absent(), PendingType.STARTUP, Optional.<Boolean> absent(), Optional.<String> absent()));
+      }
+    }
+
+
+    Assert.assertEquals(requestManager.getNumRequests(), numTotalRequests);
+    scheduler.drainPendingQueue(stateCacheProvider.get());
+    Mockito.verify(abort, Mockito.times(0)).abort(AbortReason.EXCEEDED_STARTUP_TASK_THRESHOLD, Optional.<Throwable>absent());
+
+    configuration.setStartUpTaskThresholdPct(oldThresholdPct);
   }
 }

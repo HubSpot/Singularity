@@ -1,24 +1,19 @@
 package com.hubspot.singularity.mesos;
 
-import java.math.BigInteger;
 import java.util.List;
 
 import org.junit.Assert;
 import org.junit.Test;
-import org.mockito.Mockito;
 
 import com.google.common.base.Optional;
-import com.google.common.collect.Iterables;
 import com.google.inject.Inject;
 import com.hubspot.singularity.RequestType;
-import com.hubspot.singularity.SingularityAbort;
-import com.hubspot.singularity.SingularityAbort.AbortReason;
 import com.hubspot.singularity.SingularityPendingRequest;
 import com.hubspot.singularity.SingularityPendingRequest.PendingType;
+import com.hubspot.singularity.scheduler.SingularitySchedulerTestBase;
 import com.hubspot.singularity.SingularityPendingTask;
 import com.hubspot.singularity.SingularityRequestBuilder;
 import com.hubspot.singularity.SingularityTask;
-import com.hubspot.singularity.scheduler.SingularitySchedulerTestBase;
 
 public class SingularityStartupTest extends SingularitySchedulerTestBase {
 
@@ -28,9 +23,6 @@ public class SingularityStartupTest extends SingularitySchedulerTestBase {
 
   @Inject
   private SingularityStartup startup;
-
-  @Inject
-  private SingularityAbort abort;
 
   @Test
   public void testFailuresInLaunchPath() {
@@ -166,48 +158,5 @@ public class SingularityStartupTest extends SingularitySchedulerTestBase {
 
     // assert that SingularityStartup does not enqueue a SingularityPendingRequest (pendingType=STARTUP) for the RUN_ONCE request
     Assert.assertTrue(requestManager.getPendingRequests().isEmpty());
-  }
-
-  @Test
-  public void itFailsIfNumberOfStartupTasksPassThreshold() {
-    int maxPct = 100;
-    Assert.assertTrue("StartUpTaskThresholdPct cannot be above 100%", configuration.getStartUpTaskThresholdPct() <= maxPct);
-
-    // round down to closest multiple of 5 to reduce the number of requests created during this test
-    int roundedThreshold = configuration.getStartUpTaskThresholdPct() - (configuration.getStartUpTaskThresholdPct() % 5);
-    int gcd = BigInteger.valueOf(roundedThreshold).gcd(BigInteger.valueOf(maxPct)).intValue();
-    int numTotalRequests = maxPct / gcd;
-    int numActiveRequestsNeeded = (roundedThreshold / gcd);
-    int numInactiveRequestsNeeded = numTotalRequests - numActiveRequestsNeeded;
-
-    for (int i = 1; i <= numTotalRequests; i++) {
-      String requestId = "test-request-" + i;
-      initRequestWithType(requestId, RequestType.SCHEDULED, false);
-      deploy(firstDeployId + i, requestId);
-
-      if (i < numInactiveRequestsNeeded) {
-        finishRequest(requestManager.getRequest(requestId).get().getRequest(), 1L);
-      }
-    }
-
-    // Above threshold
-    Assert.assertEquals(requestManager.getNumRequests(), numTotalRequests);
-    Assert.assertEquals(Iterables.size(requestManager.getActiveRequests()), numActiveRequestsNeeded + 1);
-    startup.checkSchedulerForInconsistentState();
-    Mockito.verify(abort, Mockito.times(1)).abort(AbortReason.EXCEEDED_STARTUP_TASK_THRESHOLD, Optional.<Throwable>absent());
-
-    finishRequest(requestManager.getRequest("test-request-" + numActiveRequestsNeeded).get().getRequest(), 1L);
-    Assert.assertEquals(requestManager.getNumRequests(), numTotalRequests);
-    Assert.assertEquals(Iterables.size(requestManager.getActiveRequests()), numActiveRequestsNeeded);
-    startup.checkSchedulerForInconsistentState();
-    Mockito.verify(abort, Mockito.times(1)).abort(AbortReason.EXCEEDED_STARTUP_TASK_THRESHOLD, Optional.<Throwable>absent());
-
-    // Below threshold
-    finishRequest(requestManager.getRequest("test-request-" + (numActiveRequestsNeeded + 1)).get().getRequest(), 1L);
-    Assert.assertEquals(requestManager.getNumRequests(), numTotalRequests);
-    Assert.assertEquals(Iterables.size(requestManager.getActiveRequests()), numActiveRequestsNeeded - 1);
-    startup.checkSchedulerForInconsistentState();
-    Mockito.verify(abort, Mockito.times(1)).abort(AbortReason.EXCEEDED_STARTUP_TASK_THRESHOLD, Optional.<Throwable>absent());
-
   }
 }

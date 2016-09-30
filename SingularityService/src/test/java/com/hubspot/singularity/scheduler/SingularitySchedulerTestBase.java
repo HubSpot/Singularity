@@ -401,9 +401,6 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
     requestManager.activate(request, RequestHistoryType.CREATED, System.currentTimeMillis(), Optional.<String> absent(), Optional.<String> absent());
   }
 
-  protected void finishRequest(SingularityRequest request, Long timestamp) {
-    requestManager.finish(request, timestamp);
-  }
   protected void initOnDemandRequest() {
     initRequestWithType(RequestType.ON_DEMAND, false);
   }

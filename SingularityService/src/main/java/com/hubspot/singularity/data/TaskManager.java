@@ -13,7 +13,6 @@ import org.apache.curator.framework.api.transaction.CuratorTransactionFinal;
 import org.apache.curator.utils.ZKPaths;
 import org.apache.mesos.Protos.TaskStatus;
 import org.apache.zookeeper.KeeperException;
-import org.apache.zookeeper.KeeperException.NodeExistsException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -48,7 +47,6 @@ import com.hubspot.singularity.SingularityTaskHealthcheckResult;
 import com.hubspot.singularity.SingularityTaskHistory;
 import com.hubspot.singularity.SingularityTaskHistoryUpdate;
 import com.hubspot.singularity.SingularityTaskId;
-import com.hubspot.singularity.SingularityTaskIdHistory;
 import com.hubspot.singularity.SingularityTaskIdHolder;
 import com.hubspot.singularity.SingularityTaskMetadata;
 import com.hubspot.singularity.SingularityTaskShellCommandHistory;
@@ -256,6 +254,10 @@ public class TaskManager extends CuratorAsyncManager {
 
   public int getNumActiveTasks() {
     return getNumChildren(ACTIVE_PATH_ROOT);
+  }
+
+  public int getNumActiveTasksForRequest(String requestId) {
+    return getNumChildren(getRequestPath(requestId));
   }
 
   public int getNumScheduledTasks() {

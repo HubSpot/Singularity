@@ -10,6 +10,7 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.inject.Singleton;
 
@@ -32,13 +33,14 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.hubspot.mesos.JavaUtils;
-import com.hubspot.mesos.Resources;
 import com.hubspot.singularity.DeployState;
 import com.hubspot.singularity.ExtendedTaskState;
 import com.hubspot.singularity.MachineState;
 import com.hubspot.singularity.RequestState;
 import com.hubspot.singularity.RequestType;
 import com.hubspot.singularity.ScheduleType;
+import com.hubspot.singularity.SingularityAbort;
+import com.hubspot.singularity.SingularityAbort.AbortReason;
 import com.hubspot.singularity.SingularityCreateResult;
 import com.hubspot.singularity.SingularityDeployMarker;
 import com.hubspot.singularity.SingularityDeployProgress;
@@ -90,9 +92,20 @@ public class SingularityScheduler {
 
   private final SingularityMailer mailer;
 
+  private final SingularityAbort abort;
+  private final AtomicInteger numStartupRequests = new AtomicInteger(0);
+
   @Inject
-  public SingularityScheduler(TaskRequestManager taskRequestManager, SingularityConfiguration configuration, SingularityCooldown cooldown, DeployManager deployManager,
-    TaskManager taskManager, RequestManager requestManager, SlaveManager slaveManager, RackManager rackManager, SingularityMailer mailer) {
+  public SingularityScheduler(TaskRequestManager taskRequestManager,
+                              SingularityConfiguration configuration,
+                              SingularityCooldown cooldown,
+                              DeployManager deployManager,
+                              TaskManager taskManager,
+                              RequestManager requestManager,
+                              SlaveManager slaveManager,
+                              RackManager rackManager,
+                              SingularityMailer mailer,
+                              SingularityAbort abort) {
     this.taskRequestManager = taskRequestManager;
     this.configuration = configuration;
     this.deployManager = deployManager;
@@ -102,6 +115,7 @@ public class SingularityScheduler {
     this.rackManager = rackManager;
     this.mailer = mailer;
     this.cooldown = cooldown;
+    this.abort = abort;
   }
 
   private void cleanupTaskDueToDecomission(final Map<String, Optional<String>> requestIdsToUserToReschedule, final Set<SingularityTaskId> matchingTaskIds, SingularityTask task,
@@ -222,8 +236,10 @@ public class SingularityScheduler {
     LOG.info("Pending queue had {} requests", pendingRequests.size());
 
     int totalNewScheduledTasks = 0;
+    int totalNewStartupTasks = 0;
     int heldForScheduledActiveTask = 0;
     int obsoleteRequests = 0;
+    int totalTasks = stateCache.getActiveTaskIds().size();
 
     for (SingularityPendingRequest pendingRequest : pendingRequests) {
       Optional<SingularityRequestWithState> maybeRequest = requestManager.getRequest(pendingRequest.getRequestId());
@@ -269,6 +285,8 @@ public class SingularityScheduler {
       LOG.debug("Pending request {} resulted in {} new scheduled tasks", pendingRequest, numScheduledTasks);
 
       totalNewScheduledTasks += numScheduledTasks;
+
+      totalTasks = checkStartupThreshold(pendingRequest, totalTasks);
 
       requestManager.deletePendingRequest(pendingRequest);
     }
@@ -744,4 +762,19 @@ public class SingularityScheduler {
     return Optional.of(nextRunAt);
   }
 
+  private int checkStartupThreshold(SingularityPendingRequest pendingRequest, int totalTasks) {
+    if (pendingRequest.getPendingType() == PendingType.STARTUP) {
+      int numNewStartupTasks = taskManager.getNumActiveTasksForRequest(pendingRequest.getRequestId());
+      numStartupRequests.set(numStartupRequests.get() + numNewStartupTasks);
+      totalTasks += numNewStartupTasks;
+      double startUpRequestPct = (numStartupRequests.get() * 100.0 / totalTasks);
+
+      if (startUpRequestPct > configuration.getStartUpTaskThresholdPct()) {
+        LOG.info("{}% exceeded startup task threshold of {}%", startUpRequestPct, configuration.getStartUpTaskThresholdPct());
+        abort.abort(AbortReason.EXCEEDED_STARTUP_TASK_THRESHOLD, Optional.<Throwable>absent());
+      }
+    }
+
+    return totalTasks;
+  }
 }

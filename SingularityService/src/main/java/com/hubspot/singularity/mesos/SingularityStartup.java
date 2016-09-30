@@ -19,8 +19,6 @@ import com.hubspot.mesos.MesosUtils;
 import com.hubspot.mesos.client.MesosClient;
 import com.hubspot.mesos.json.MesosMasterStateObject;
 import com.hubspot.singularity.RequestType;
-import com.hubspot.singularity.SingularityAbort;
-import com.hubspot.singularity.SingularityAbort.AbortReason;
 import com.hubspot.singularity.SingularityDeployKey;
 import com.hubspot.singularity.SingularityPendingDeploy;
 import com.hubspot.singularity.SingularityPendingRequest;
@@ -34,7 +32,6 @@ import com.hubspot.singularity.SingularityTaskHistoryUpdate;
 import com.hubspot.singularity.SingularityTaskHistoryUpdate.SimplifiedTaskState;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTaskIdHolder;
-import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.DeployManager;
 import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.data.TaskManager;
@@ -45,6 +42,7 @@ import com.hubspot.singularity.scheduler.SingularityTaskReconciliation;
 
 @Singleton
 class SingularityStartup {
+
   private static final Logger LOG = LoggerFactory.getLogger(SingularityStartup.class);
 
   private final MesosClient mesosClient;
@@ -56,21 +54,11 @@ class SingularityStartup {
   private final SingularityNewTaskChecker newTaskChecker;
   private final SingularityTaskReconciliation taskReconciliation;
   private final ZkDataMigrationRunner zkDataMigrationRunner;
-  private final SingularityAbort abort;
-  private final int startUpTaskThresholdPct;
 
   @Inject
-  SingularityStartup(MesosClient mesosClient,
-                     SingularityHealthchecker healthchecker,
-                     SingularityNewTaskChecker newTaskChecker,
-                     SingularitySlaveAndRackManager slaveAndRackManager,
-                     TaskManager taskManager,
-                     RequestManager requestManager,
-                     DeployManager deployManager,
-                     SingularityTaskReconciliation taskReconciliation,
-                     ZkDataMigrationRunner zkDataMigrationRunner,
-                     SingularityAbort abort,
-                     SingularityConfiguration singularityConfiguration) {
+  SingularityStartup(MesosClient mesosClient, SingularityHealthchecker healthchecker, SingularityNewTaskChecker newTaskChecker,
+      SingularitySlaveAndRackManager slaveAndRackManager, TaskManager taskManager, RequestManager requestManager, DeployManager deployManager, SingularityTaskReconciliation taskReconciliation,
+      ZkDataMigrationRunner zkDataMigrationRunner) {
     this.mesosClient = mesosClient;
     this.zkDataMigrationRunner = zkDataMigrationRunner;
     this.slaveAndRackManager = slaveAndRackManager;
@@ -80,8 +68,6 @@ class SingularityStartup {
     this.taskManager = taskManager;
     this.healthchecker = healthchecker;
     this.taskReconciliation = taskReconciliation;
-    this.abort = abort;
-    this.startUpTaskThresholdPct = singularityConfiguration.getStartUpTaskThresholdPct();
   }
 
   public void startup(MasterInfo masterInfo, SchedulerDriver driver) throws Exception {
@@ -129,8 +115,6 @@ class SingularityStartup {
   @VisibleForTesting
   void checkSchedulerForInconsistentState() {
     final long now = System.currentTimeMillis();
-    int numPendingStartupRequests = 0;
-    int totalStartupRequests = requestManager.getNumRequests();
 
     final Map<SingularityDeployKey, SingularityPendingTaskId> deployKeyToPendingTaskId = getDeployKeyToPendingTaskId();
 
@@ -139,15 +123,7 @@ class SingularityStartup {
         case ACTIVE:
         case SYSTEM_COOLDOWN:
         case DEPLOYING_TO_UNPAUSE:
-          if(checkActiveRequest(requestWithState, deployKeyToPendingTaskId, now)) {
-            numPendingStartupRequests++;
-            double startUpTaskPct = (numPendingStartupRequests * 100.0 / totalStartupRequests);
-
-            if (startUpTaskPct > startUpTaskThresholdPct) {
-              LOG.info("%s%% exceeded startup task threshold of %s%%", startUpTaskPct, startUpTaskThresholdPct);
-              abort.abort(AbortReason.EXCEEDED_STARTUP_TASK_THRESHOLD, Optional.<Throwable>absent());
-            }
-          }
+          checkActiveRequest(requestWithState, deployKeyToPendingTaskId, now);
           break;
         case DELETED:
         case PAUSED:
@@ -157,19 +133,18 @@ class SingularityStartup {
     }
   }
 
-  @VisibleForTesting
-  boolean checkActiveRequest(SingularityRequestWithState requestWithState, Map<SingularityDeployKey, SingularityPendingTaskId> deployKeyToPendingTaskId, final long timestamp) {
+  private void checkActiveRequest(SingularityRequestWithState requestWithState, Map<SingularityDeployKey, SingularityPendingTaskId> deployKeyToPendingTaskId, final long timestamp) {
     final SingularityRequest request = requestWithState.getRequest();
 
     if (request.getRequestType() == RequestType.ON_DEMAND || request.getRequestType() == RequestType.RUN_ONCE) {
-      return false;  // There's no situation where we'd want to schedule an On Demand or Run Once request at startup, so don't even bother with them.
+      return;  // There's no situation where we'd want to schedule an On Demand or Run Once request at startup, so don't even bother with them.
     }
 
     Optional<SingularityRequestDeployState> requestDeployState = deployManager.getRequestDeployState(request.getId());
 
     if (!requestDeployState.isPresent() || !requestDeployState.get().getActiveDeploy().isPresent()) {
       LOG.debug("No active deploy for {} - not scheduling on startup", request.getId());
-      return false;
+      return;
     }
 
     final String activeDeployId = requestDeployState.get().getActiveDeploy().get().getDeployId();
@@ -180,12 +155,11 @@ class SingularityStartup {
 
       if (pendingTaskId != null && pendingTaskId.getCreatedAt() >= requestWithState.getTimestamp()) {
         LOG.info("Not rescheduling {} because {} is newer than {}", request.getId(), pendingTaskId, requestWithState.getTimestamp());
-        return false;
+        return;
       }
     }
 
     requestManager.addToPendingQueue(new SingularityPendingRequest(request.getId(), activeDeployId, timestamp, Optional.<String> absent(), PendingType.STARTUP, Optional.<Boolean> absent(), Optional.<String> absent()));
-    return true;
   }
 
   private void enqueueHealthAndNewTaskChecks() {
