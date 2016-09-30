@@ -93,11 +93,7 @@ public class SingularityScheduler {
   private final SingularityMailer mailer;
 
   private final SingularityAbort abort;
-<<<<<<< HEAD
   private final AtomicInteger numStartupTasks = new AtomicInteger(0);
-=======
-  private final AtomicInteger numStartupRequests = new AtomicInteger(0);
->>>>>>> 1b3a2b2... changed threshold to correctly check startup tasks, updated tests
 
   @Inject
   public SingularityScheduler(TaskRequestManager taskRequestManager,
@@ -292,8 +288,6 @@ public class SingularityScheduler {
       numStartupTasks.set(numStartupTasks.get() + numScheduledTasks);
 
       checkStartupThreshold(pendingRequest, totalTasks);
-
-      totalTasks = checkStartupThreshold(pendingRequest, totalTasks);
 
       requestManager.deletePendingRequest(pendingRequest);
     }

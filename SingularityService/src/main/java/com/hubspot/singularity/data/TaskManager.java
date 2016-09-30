@@ -256,10 +256,6 @@ public class TaskManager extends CuratorAsyncManager {
     return getNumChildren(ACTIVE_PATH_ROOT);
   }
 
-  public int getNumActiveTasksForRequest(String requestId) {
-    return getNumChildren(getRequestPath(requestId));
-  }
-
   public int getNumScheduledTasks() {
     return getNumChildren(PENDING_PATH_ROOT);
   }
