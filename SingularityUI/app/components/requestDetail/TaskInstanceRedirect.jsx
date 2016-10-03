@@ -13,7 +13,7 @@ class TaskInstanceRedirect extends Component {
     if (nextProps.activeTasksForRequest && nextProps.activeTasksForRequest[nextProps.params.requestId].data.length > 0) {
       let found = false;
       nextProps.activeTasksForRequest[nextProps.params.requestId].data.forEach((task) => {
-        if (task.taskId.instanceNo == parseInt(nextProps.params.instanceNo)) {
+        if (task.taskId.instanceNo == parseInt(nextProps.params.instanceNo) && !found) {
           found = true;
           this.props.router.push(`task/${task.taskId.id}`);
         }
