@@ -131,7 +131,7 @@ public class SingularityAuthorizationHelper {
       return false;
     }
   }
-C
+
   public void checkForAuthorization(SingularityRequest request, Optional<SingularityUser> user, SingularityAuthorizationScope scope) {
     if (!authEnabled) {
       return;
