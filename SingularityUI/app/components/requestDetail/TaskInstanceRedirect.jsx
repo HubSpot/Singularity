@@ -15,11 +15,11 @@ class TaskInstanceRedirect extends Component {
       nextProps.activeTasksForRequest[nextProps.params.requestId].data.forEach((task) => {
         if (task.taskId.instanceNo == parseInt(nextProps.params.instanceNo) && !found) {
           found = true;
-          this.props.router.push(`task/${task.taskId.id}`);
+          this.props.router.replace(`task/${task.taskId.id}`);
         }
       });
       if (!found) {
-        this.props.router.push(`request/${nextProps.params.requestId}`);
+        this.props.router.replace(`request/${nextProps.params.requestId}`);
       }
     }
   }
