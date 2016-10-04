@@ -418,22 +418,23 @@ public class SingularityScheduler {
       }
 
       if (request.isRackSensitive() && configuration.isRebalanceRacksOnScaleDown()) {
-        int extraCleanedTasks = 0;
+        List<SingularityTaskId> extraCleanedTasks = new ArrayList<>();
         int numActiveRacks = stateCache.getNumActiveRacks();
         double perRack = request.getInstancesSafe() / (double) numActiveRacks;
 
         Multiset<String> countPerRack = HashMultiset.create();
         for (SingularityTaskId taskId : remainingActiveTasks) {
           countPerRack.add(taskId.getRackId());
-          LOG.info("{} - {} - {} - {}", countPerRack, perRack, extraCleanedTasks, taskId);
-          if (countPerRack.count(taskId.getRackId()) > perRack && extraCleanedTasks < numActiveRacks / 2) {
-            extraCleanedTasks++;
+          LOG.info("{} - {} - {} - {}", countPerRack, perRack, extraCleanedTasks.size(), taskId);
+          if (countPerRack.count(taskId.getRackId()) > perRack && extraCleanedTasks.size() < numActiveRacks / 2) {
+            extraCleanedTasks.add(taskId);
             LOG.info("Cleaning up task {} to evenly distribute tasks among racks", taskId);
             taskManager.createTaskCleanup(new SingularityTaskCleanup(pendingRequest.getUser(), TaskCleanupType.REBALANCE_RACKS, now, taskId, Optional.<String>absent(), Optional.<String>absent()));
           }
         }
-        if (extraCleanedTasks > 0) {
-          schedule(extraCleanedTasks, matchingTaskIds, request, state, deployStatistics, pendingRequest, maybePendingDeploy);
+        remainingActiveTasks.removeAll(extraCleanedTasks);
+        if (extraCleanedTasks.size() > 0) {
+          schedule(extraCleanedTasks.size(), remainingActiveTasks, request, state, deployStatistics, pendingRequest, maybePendingDeploy);
         }
       }
 
