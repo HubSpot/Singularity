@@ -259,7 +259,9 @@ public class SingularityDeployChecker {
 
     if (request.isDeployable() && (deployResult.getDeployState() == DeployState.CANCELED || deployResult.getDeployState() == DeployState.FAILED)) {
       Optional<SingularityRequestDeployState> maybeRequestDeployState = deployManager.getRequestDeployState(request.getId());
-      if (maybeRequestDeployState.isPresent() && maybeRequestDeployState.get().getActiveDeploy().isPresent()) {
+      if (maybeRequestDeployState.isPresent()
+        && maybeRequestDeployState.get().getActiveDeploy().isPresent()
+        && !(requestWithState.getState() == RequestState.PAUSED || requestWithState.getState() == RequestState.DEPLOYING_TO_UNPAUSE)) {
         requestManager.addToPendingQueue(new SingularityPendingRequest(
           request.getId(),
           maybeRequestDeployState.get().getActiveDeploy().get().getDeployId(),
