@@ -433,7 +433,7 @@ public class SingularityScheduler {
           }
         }
         if (extraCleanedTasks > 0) {
-          schedule(extraCleanedTasks, matchingTaskIds, request, state, deployStatistics, pendingRequest, maybePendingDeploy);
+          schedule(extraCleanedTasks, remainingActiveTasks, request, state, deployStatistics, pendingRequest, maybePendingDeploy);
         }
       }
 
