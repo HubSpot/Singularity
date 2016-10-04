@@ -8,7 +8,6 @@ import java.util.Map;
 import org.junit.Assert;
 import org.junit.Test;
 
-import com.fasterxml.jackson.annotation.JsonTypeInfo.As;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 import com.hubspot.singularity.ExtendedTaskState;
