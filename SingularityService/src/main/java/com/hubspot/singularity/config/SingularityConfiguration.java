@@ -162,6 +162,8 @@ public class SingularityConfiguration extends Configuration {
 
   private int maxRequestIdSize = 100;
 
+  private int startUpTaskThresholdPct = 90;
+
   private boolean storeAllMesosTaskInfoForDebugging = false;
 
   @JsonProperty("historyPurging")
@@ -283,6 +285,10 @@ public class SingularityConfiguration extends Configuration {
   @Min(0)
   @Max(5)
   private double schedulerPriorityWeightFactor = 1.0;
+
+  public int getStartUpTaskThresholdPct() {
+    return startUpTaskThresholdPct;
+  }
 
   public long getAskDriverToKillTasksAgainAfterMillis() {
     return askDriverToKillTasksAgainAfterMillis;
@@ -670,6 +676,11 @@ public class SingularityConfiguration extends Configuration {
 
   public boolean isWaitForListeners() {
     return waitForListeners;
+  }
+
+  public SingularityConfiguration setStartUpTaskThresholdPct(int startUpTaskThresholdPct) {
+    this.startUpTaskThresholdPct = startUpTaskThresholdPct;
+    return this;
   }
 
   public void setAllowRequestsWithoutOwners(boolean allowRequestsWithoutOwners) {

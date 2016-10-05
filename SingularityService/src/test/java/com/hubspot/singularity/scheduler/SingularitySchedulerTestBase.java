@@ -406,6 +406,11 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
   }
 
   protected void initRequestWithType(RequestType requestType, boolean isLoadBalanced) {
+    initRequestWithType(requestId, requestType, isLoadBalanced);
+
+  }
+
+  protected void initRequestWithType(String requestId, RequestType requestType, boolean isLoadBalanced) {
     SingularityRequestBuilder bldr = new SingularityRequestBuilder(requestId, requestType);
 
     bldr.setLoadBalanced(Optional.of(isLoadBalanced));
@@ -419,6 +424,7 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
     saveRequest(request);
 
   }
+
 
   protected void protectedInitRequest(boolean isLoadBalanced, boolean isScheduled) {
     RequestType requestType = RequestType.WORKER;
@@ -552,19 +558,26 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
     deploy(deployId, Optional.<Boolean>absent(), Optional.<Integer>absent(), Optional.<Boolean>absent(), false);
   }
 
+  protected void deploy(String deployId, String requestId) {
+    deploy(deployId, requestId, Optional.<Boolean>absent(), Optional.<Integer>absent(), Optional.<Boolean>absent(), false);
+  }
+
   protected void deploy(String deployId, Optional<Boolean> unpauseOnDeploy) {
     deploy(deployId, unpauseOnDeploy, Optional.<Integer> absent(), Optional.<Boolean> absent(), false);
   }
 
   protected void deploy(String deployId, Optional<Boolean> unpauseOnDeploy, Optional<Integer> deployRate, Optional<Boolean> autoAdvance, boolean loadBalanced) {
-    SingularityDeployBuilder builder = new SingularityDeployBuilder(requestId, deployId);
-    builder
+    deploy(deployId, requestId, unpauseOnDeploy, deployRate, autoAdvance, loadBalanced);
+  }
+
+  protected void deploy(String deployId, String requestId, Optional<Boolean> unpauseOnDeploy, Optional<Integer> deployRate, Optional<Boolean> autoAdvance, boolean loadBalanced) {
+    SingularityDeployBuilder builder = new SingularityDeployBuilder(requestId, deployId)
         .setCommand(Optional.of("sleep 1"))
         .setDeployInstanceCountPerStep(deployRate)
         .setAutoAdvanceDeploySteps(autoAdvance)
         .setDeployStepWaitTimeMs(Optional.of(0));
     if (loadBalanced) {
-      Set<String> groups = new HashSet<>(Arrays.asList("group"));
+      Set<String> groups = new HashSet<>(Collections.singletonList("group"));
       builder
           .setServiceBasePath(Optional.of("/basepath"))
           .setLoadBalancerGroups(Optional.of(groups));
