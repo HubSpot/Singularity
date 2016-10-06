@@ -50,18 +50,39 @@ public class SingularityDeploy {
   private final Optional<Map<Integer, List<SingularityMesosTaskLabel>>> mesosTaskLabels;
   private final Optional<Map<Integer, Map<String, String>>> taskEnv;
 
+  /**
+   * @deprecated use {@link #healthcheck}
+   */
   @Deprecated
   private final Optional<String> healthcheckUri;
+  /**
+   * @deprecated use {@link #healthcheck}
+   */
   @Deprecated
   private final Optional<Long> healthcheckIntervalSeconds;
+  /**
+   * @deprecated use {@link #healthcheck}
+   */
   @Deprecated
   private final Optional<Long> healthcheckTimeoutSeconds;
+  /**
+   * @deprecated use {@link #healthcheck}
+   */
   @Deprecated
   private final Optional<Integer> healthcheckPortIndex;
+  /**
+   * @deprecated use {@link #healthcheck}
+   */
   @Deprecated
   private final Optional<HealthcheckProtocol> healthcheckProtocol;
+  /**
+   * @deprecated use {@link #healthcheck}
+   */
   @Deprecated
   private final Optional<Integer> healthcheckMaxRetries;
+  /**
+   * @deprecated use {@link #healthcheck}
+   */
   @Deprecated
   private final Optional<Long> healthcheckMaxTotalTimeoutSeconds;
 

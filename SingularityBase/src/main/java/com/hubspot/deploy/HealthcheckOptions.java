@@ -42,12 +42,12 @@ public class HealthcheckOptions {
     return uri;
   }
 
-  @ApiModelProperty(required = false, value="Perform healthcheck on this dynamically allocated port (e.g. 0 for first port), defaults to first port")
+  @ApiModelProperty(required=false, value="Perform healthcheck on this dynamically allocated port (e.g. 0 for first port), defaults to first port")
   public Optional<Integer> getPortIndex() {
     return portIndex;
   }
 
-  @ApiModelProperty(required = false, value="Perform healthcheck on this port (portIndex cannot also be used when using this setting)")
+  @ApiModelProperty(required=false, value="Perform healthcheck on this port (portIndex cannot also be used when using this setting)")
   public Optional<Long> getPortNumber() {
     return portNumber;
   }
@@ -95,21 +95,22 @@ public class HealthcheckOptions {
     if (o == null || getClass() != o.getClass()) {
       return false;
     }
-    HealthcheckOptions that = (HealthcheckOptions) o;
-    return Objects.equal(uri, that.uri) &&
-      Objects.equal(portIndex, that.portIndex) &&
-      Objects.equal(portNumber, that.portNumber) &&
-      Objects.equal(protocol, that.protocol) &&
-      Objects.equal(startupTimeoutSeconds, that.startupTimeoutSeconds) &&
-      Objects.equal(startupDelaySeconds, that.startupDelaySeconds) &&
-      Objects.equal(intervalSeconds, that.intervalSeconds) &&
-      Objects.equal(responseTimeoutSeconds, that.responseTimeoutSeconds) &&
-      Objects.equal(maxRetries, that.maxRetries);
+    HealthcheckOptions options = (HealthcheckOptions) o;
+    return Objects.equal(uri, options.uri) &&
+      Objects.equal(portIndex, options.portIndex) &&
+      Objects.equal(portNumber, options.portNumber) &&
+      Objects.equal(protocol, options.protocol) &&
+      Objects.equal(startupTimeoutSeconds, options.startupTimeoutSeconds) &&
+      Objects.equal(startupDelaySeconds, options.startupDelaySeconds) &&
+      Objects.equal(startupIntervalSeconds, options.startupIntervalSeconds) &&
+      Objects.equal(intervalSeconds, options.intervalSeconds) &&
+      Objects.equal(responseTimeoutSeconds, options.responseTimeoutSeconds) &&
+      Objects.equal(maxRetries, options.maxRetries);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hashCode(uri, portIndex, portNumber, protocol, startupTimeoutSeconds, startupDelaySeconds, intervalSeconds, responseTimeoutSeconds, maxRetries);
+    return Objects.hashCode(uri, portIndex, portNumber, protocol, startupTimeoutSeconds, startupDelaySeconds, startupIntervalSeconds, intervalSeconds, responseTimeoutSeconds, maxRetries);
   }
 
   @Override
@@ -121,6 +122,7 @@ public class HealthcheckOptions {
       .add("protocol", protocol)
       .add("startupTimeoutSeconds", startupTimeoutSeconds)
       .add("startupDelaySeconds", startupDelaySeconds)
+      .add("startupIntervalSeconds", startupIntervalSeconds)
       .add("intervalSeconds", intervalSeconds)
       .add("responseTimeoutSeconds", responseTimeoutSeconds)
       .add("maxRetries", maxRetries)

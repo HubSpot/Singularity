@@ -60,10 +60,7 @@ public class SingularityHealthcheckAsyncHandler extends AsyncCompletionHandler<R
   }
 
   public void saveResult(Optional<Integer> statusCode, Optional<String> responseBody, Optional<String> errorMessage, Optional<Throwable> throwable) {
-    boolean inStartup = false;
-    if (throwable.isPresent() && throwable.get() instanceof ConnectException) {
-      inStartup = true;
-    }
+    boolean inStartup = throwable.isPresent() && throwable.get() instanceof ConnectException;
 
     try {
       SingularityTaskHealthcheckResult result = new SingularityTaskHealthcheckResult(statusCode, Optional.of(System.currentTimeMillis() - startTime), startTime, responseBody,

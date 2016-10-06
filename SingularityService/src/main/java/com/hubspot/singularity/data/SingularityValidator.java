@@ -29,6 +29,7 @@ import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
 import com.google.common.hash.Hashing;
 import com.google.inject.Inject;
+import com.hubspot.deploy.HealthcheckOptions;
 import com.hubspot.mesos.Resources;
 import com.hubspot.mesos.SingularityContainerInfo;
 import com.hubspot.mesos.SingularityContainerType;
@@ -235,12 +236,13 @@ public class SingularityValidator {
 
     if (deploy.getResources().isPresent()) {
       if (deploy.getHealthcheck().isPresent()) {
-        checkBadRequest(!(deploy.getHealthcheck().get().getPortIndex().isPresent() && deploy.getHealthcheck().get().getPortNumber().isPresent()),
+        HealthcheckOptions healthcheck = deploy.getHealthcheck().get();
+        checkBadRequest(!(healthcheck.getPortIndex().isPresent() && healthcheck.getPortNumber().isPresent()),
           "Can only specify one of portIndex or portNumber for healthchecks");
-        if (deploy.getHealthcheck().get().getPortIndex().isPresent()) {
-          checkBadRequest(deploy.getHealthcheck().get().getPortIndex().get() >= 0, "healthcheckPortIndex must be greater than 0");
-          checkBadRequest(deploy.getResources().get().getNumPorts() > deploy.getHealthcheck().get().getPortIndex().get(), String
-            .format("Must request %s ports for healthcheckPortIndex %s, only requested %s", deploy.getHealthcheck().get().getPortIndex().get() + 1, deploy.getHealthcheck().get().getPortIndex().get(),
+        if (healthcheck.getPortIndex().isPresent()) {
+          checkBadRequest(healthcheck.getPortIndex().get() >= 0, "healthcheckPortIndex must be greater than 0");
+          checkBadRequest(deploy.getResources().get().getNumPorts() > healthcheck.getPortIndex().get(), String
+            .format("Must request %s ports for healthcheckPortIndex %s, only requested %s", healthcheck.getPortIndex().get() + 1, healthcheck.getPortIndex().get(),
               deploy.getResources().get().getNumPorts()));
         }
       }
