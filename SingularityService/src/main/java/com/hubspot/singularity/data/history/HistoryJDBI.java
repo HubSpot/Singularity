@@ -88,7 +88,7 @@ public abstract class HistoryJDBI implements GetHandle {
     }
   }
 
-  private void applyTaskIdHistoryBaseQuery(StringBuilder sqlBuilder, Map<String, Object> binds, Optional<String> requestId, Optional<String> deployId, Optional<String> host,
+  private void applyTaskIdHistoryBaseQuery(StringBuilder sqlBuilder, Map<String, Object> binds, Optional<String> requestId, Optional<String> deployId, Optional<String> runId, Optional<String> host,
       Optional<ExtendedTaskState> lastTaskStatus, Optional<Long> startedBefore, Optional<Long> startedAfter, Optional<Long> updatedBefore,
       Optional<Long> updatedAfter) {
     if (requestId.isPresent()) {
@@ -101,6 +101,12 @@ public abstract class HistoryJDBI implements GetHandle {
       addWhereOrAnd(sqlBuilder, binds.isEmpty());
       sqlBuilder.append("deployId = :deployId");
       binds.put("deployId", deployId.get());
+    }
+
+    if (runId.isPresent()) {
+      addWhereOrAnd(sqlBuilder, binds.isEmpty());
+      sqlBuilder.append("runId = :runId");
+      binds.put("runId", runId.get());
     }
 
     if (host.isPresent()) {
@@ -140,14 +146,14 @@ public abstract class HistoryJDBI implements GetHandle {
     }
   }
 
-    public List<SingularityTaskIdHistory> getTaskIdHistory(Optional<String> requestId, Optional<String> deployId, Optional<String> host,
+    public List<SingularityTaskIdHistory> getTaskIdHistory(Optional<String> requestId, Optional<String> deployId, Optional<String> runId, Optional<String> host,
       Optional<ExtendedTaskState> lastTaskStatus, Optional<Long> startedBefore, Optional<Long> startedAfter, Optional<Long> updatedBefore,
       Optional<Long> updatedAfter, Optional<OrderDirection> orderDirection, Optional<Integer> limitStart, Integer limitCount) {
 
     final Map<String, Object> binds = new HashMap<>();
     final StringBuilder sqlBuilder = new StringBuilder(GET_TASK_ID_HISTORY_QUERY);
 
-    applyTaskIdHistoryBaseQuery(sqlBuilder, binds, requestId, deployId, host, lastTaskStatus, startedBefore, startedAfter, updatedBefore, updatedAfter);
+    applyTaskIdHistoryBaseQuery(sqlBuilder, binds, requestId, deployId, runId, host, lastTaskStatus, startedBefore, startedAfter, updatedBefore, updatedAfter);
 
     sqlBuilder.append(" ORDER BY startedAt ");
     sqlBuilder.append(orderDirection.or(OrderDirection.DESC).name());
@@ -179,14 +185,14 @@ public abstract class HistoryJDBI implements GetHandle {
     return query.list();
   }
 
-  public int getTaskIdHistoryCount(Optional<String> requestId, Optional<String> deployId, Optional<String> host,
+  public int getTaskIdHistoryCount(Optional<String> requestId, Optional<String> deployId, Optional<String> runId, Optional<String> host,
       Optional<ExtendedTaskState> lastTaskStatus, Optional<Long> startedBefore, Optional<Long> startedAfter, Optional<Long> updatedBefore,
       Optional<Long> updatedAfter) {
 
     final Map<String, Object> binds = new HashMap<>();
     final StringBuilder sqlBuilder = new StringBuilder(GET_TASK_ID_HISTORY_COUNT_QUERY);
 
-    applyTaskIdHistoryBaseQuery(sqlBuilder, binds, requestId, deployId, host, lastTaskStatus, startedBefore, startedAfter, updatedBefore, updatedAfter);
+    applyTaskIdHistoryBaseQuery(sqlBuilder, binds, requestId, deployId, runId, host, lastTaskStatus, startedBefore, startedAfter, updatedBefore, updatedAfter);
 
     final String sql = sqlBuilder.toString();
 
