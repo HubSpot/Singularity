@@ -257,11 +257,19 @@ public class SingularityDeployChecker {
 
     deployManager.saveDeployResult(pendingDeploy.getDeployMarker(), deploy, deployResult);
 
-    if (request.isDeployable() && deployResult.getDeployState() == DeployState.CANCELED) {
+    if (request.isDeployable() && (deployResult.getDeployState() == DeployState.CANCELED || deployResult.getDeployState() == DeployState.FAILED)) {
       Optional<SingularityRequestDeployState> maybeRequestDeployState = deployManager.getRequestDeployState(request.getId());
-      if (maybeRequestDeployState.isPresent() && maybeRequestDeployState.get().getActiveDeploy().isPresent()) {
-        requestManager.addToPendingQueue(new SingularityPendingRequest(request.getId(), maybeRequestDeployState.get().getActiveDeploy().get().getDeployId(), deployResult.getTimestamp(),
-          pendingDeploy.getDeployMarker().getUser(), PendingType.DEPLOY_CANCELLED, request.getSkipHealthchecks(), pendingDeploy.getDeployMarker().getMessage()));
+      if (maybeRequestDeployState.isPresent()
+        && maybeRequestDeployState.get().getActiveDeploy().isPresent()
+        && !(requestWithState.getState() == RequestState.PAUSED || requestWithState.getState() == RequestState.DEPLOYING_TO_UNPAUSE)) {
+        requestManager.addToPendingQueue(new SingularityPendingRequest(
+          request.getId(),
+          maybeRequestDeployState.get().getActiveDeploy().get().getDeployId(),
+          deployResult.getTimestamp(),
+          pendingDeploy.getDeployMarker().getUser(),
+          deployResult.getDeployState() == DeployState.CANCELED ? PendingType.DEPLOY_CANCELLED : PendingType.DEPLOY_FAILED,
+          request.getSkipHealthchecks(),
+          pendingDeploy.getDeployMarker().getMessage()));
       }
     }
 
