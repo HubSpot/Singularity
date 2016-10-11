@@ -26,6 +26,7 @@ import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.config.SingularityTaskMetadataConfiguration;
 import com.hubspot.singularity.data.DeployManager;
 import com.hubspot.singularity.data.TaskManager;
+import com.hubspot.singularity.sentry.SingularityExceptionNotifier;
 
 @Singleton
 public class SingularityTaskHistoryPersister extends SingularityHistoryPersister<SingularityTaskId> {
@@ -36,16 +37,18 @@ public class SingularityTaskHistoryPersister extends SingularityHistoryPersister
   private final DeployManager deployManager;
   private final HistoryManager historyManager;
   private final SingularityTaskMetadataConfiguration taskMetadataConfiguration;
+  private final SingularityExceptionNotifier exceptionNotifier;
 
   @Inject
   public SingularityTaskHistoryPersister(SingularityConfiguration configuration, SingularityTaskMetadataConfiguration taskMetadataConfiguration, TaskManager taskManager,
-      DeployManager deployManager, HistoryManager historyManager) {
+      DeployManager deployManager, HistoryManager historyManager, SingularityExceptionNotifier exceptionNotifier) {
     super(configuration);
 
     this.taskManager = taskManager;
     this.historyManager = historyManager;
     this.deployManager = deployManager;
     this.taskMetadataConfiguration = taskMetadataConfiguration;
+    this.exceptionNotifier = exceptionNotifier;
   }
 
   @Override
@@ -137,6 +140,7 @@ public class SingularityTaskHistoryPersister extends SingularityHistoryPersister
         historyManager.saveTaskHistory(taskHistory.get());
       } catch (Throwable t) {
         LOG.warn("Failed to persist task into History for task {}", object, t);
+        exceptionNotifier.notify("Failed to persist task history", t);
         return false;
       }
     } else {
