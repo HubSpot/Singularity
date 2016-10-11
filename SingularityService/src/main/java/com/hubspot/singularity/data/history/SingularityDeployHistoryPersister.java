@@ -20,6 +20,7 @@ import com.hubspot.singularity.SingularityDeployKey;
 import com.hubspot.singularity.SingularityRequestDeployState;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.DeployManager;
+import com.hubspot.singularity.sentry.SingularityExceptionNotifier;
 
 @Singleton
 public class SingularityDeployHistoryPersister extends SingularityHistoryPersister<SingularityDeployHistory> {
@@ -28,13 +29,15 @@ public class SingularityDeployHistoryPersister extends SingularityHistoryPersist
 
   private final DeployManager deployManager;
   private final HistoryManager historyManager;
+  private final SingularityExceptionNotifier exceptionNotifier;
 
   @Inject
-  public SingularityDeployHistoryPersister(SingularityConfiguration configuration, DeployManager deployManager, HistoryManager historyManager) {
+  public SingularityDeployHistoryPersister(SingularityConfiguration configuration, DeployManager deployManager, HistoryManager historyManager, SingularityExceptionNotifier exceptionNotifier) {
     super(configuration);
 
     this.deployManager = deployManager;
     this.historyManager = historyManager;
+    this.exceptionNotifier = exceptionNotifier;
   }
 
   @Override
@@ -113,6 +116,7 @@ public class SingularityDeployHistoryPersister extends SingularityHistoryPersist
       historyManager.saveDeployHistory(deployHistory);
     } catch (Throwable t) {
       LOG.warn("Failed to persist deploy {}", SingularityDeployKey.fromDeployMarker(deployHistory.getDeployMarker()), t);
+      exceptionNotifier.notify("Failed to persist deploy history", t);
       return false;
     }
 

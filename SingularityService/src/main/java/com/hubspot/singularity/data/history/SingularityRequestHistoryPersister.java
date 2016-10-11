@@ -21,6 +21,7 @@ import com.hubspot.singularity.SingularityRequestHistory;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.data.history.SingularityRequestHistoryPersister.SingularityRequestHistoryParent;
+import com.hubspot.singularity.sentry.SingularityExceptionNotifier;
 
 @Singleton
 public class SingularityRequestHistoryPersister extends SingularityHistoryPersister<SingularityRequestHistoryParent> {
@@ -29,13 +30,15 @@ public class SingularityRequestHistoryPersister extends SingularityHistoryPersis
 
   private final RequestManager requestManager;
   private final HistoryManager historyManager;
+  private final SingularityExceptionNotifier exceptionNotifier;
 
   @Inject
-  public SingularityRequestHistoryPersister(SingularityConfiguration configuration, RequestManager requestManager, HistoryManager historyManager) {
+  public SingularityRequestHistoryPersister(SingularityConfiguration configuration, RequestManager requestManager, HistoryManager historyManager, SingularityExceptionNotifier exceptionNotifier) {
     super(configuration);
 
     this.requestManager = requestManager;
     this.historyManager = historyManager;
+    this.exceptionNotifier = exceptionNotifier;
   }
 
   public static class SingularityRequestHistoryParent implements SingularityHistoryItem, Comparable<SingularityRequestHistoryParent> {
@@ -141,6 +144,7 @@ public class SingularityRequestHistoryPersister extends SingularityHistoryPersis
         historyManager.saveRequestHistoryUpdate(requestHistory);
       } catch (Throwable t) {
         LOG.warn("Failed to persist {} into History", requestHistory, t);
+        exceptionNotifier.notify("Failed to persist request history", t);
         return false;
       }
 
