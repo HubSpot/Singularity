@@ -34,7 +34,6 @@ import com.hubspot.mesos.Resources;
 import com.hubspot.mesos.SingularityContainerInfo;
 import com.hubspot.mesos.SingularityContainerType;
 import com.hubspot.mesos.SingularityDockerInfo;
-import com.hubspot.mesos.SingularityDockerParameter;
 import com.hubspot.mesos.SingularityDockerPortMapping;
 import com.hubspot.mesos.SingularityMesosTaskLabel;
 import com.hubspot.mesos.SingularityPortMappingType;
@@ -70,6 +69,10 @@ public class SingularityValidator {
   private final int defaultBounceExpirationMinutes;
   private final int maxMemoryMbPerRequest;
   private final int maxMemoryMbPerInstance;
+  private final Optional<Integer> maxTotalHealthcheckTimeoutSeconds;
+  private final int defaultHealthcheckIntervalSeconds;
+  private final int defaultHealthcheckStartupTimeooutSeconds;
+  private final int defaultHealthcehckMaxRetries;
   private final boolean allowRequestsWithoutOwners;
   private final boolean createDeployIds;
   private final int deployIdLength;
@@ -103,6 +106,11 @@ public class SingularityValidator {
     this.maxMemoryMbPerInstance = configuration.getMesosConfiguration().getMaxMemoryMbPerInstance();
     this.maxMemoryMbPerRequest = configuration.getMesosConfiguration().getMaxMemoryMbPerRequest();
     this.maxInstancesPerRequest = configuration.getMesosConfiguration().getMaxNumInstancesPerRequest();
+
+    this.maxTotalHealthcheckTimeoutSeconds = configuration.getHealthcheckMaxTotalTimeoutSeconds();
+    this.defaultHealthcheckIntervalSeconds = configuration.getHealthcheckIntervalSeconds();
+    this.defaultHealthcheckStartupTimeooutSeconds = configuration.getStartupTimeoutSeconds();
+    this.defaultHealthcehckMaxRetries = configuration.getHealthcheckMaxRetries().or(0);
 
     this.disasterManager = disasterManager;
     this.slaveManager = slaveManager;
@@ -252,6 +260,15 @@ public class SingularityValidator {
             .format("Must request %s ports for loadBalancerPortIndex %s, only requested %s", deploy.getLoadBalancerPortIndex().get() + 1, deploy.getLoadBalancerPortIndex().get(),
                 deploy.getResources().get().getNumPorts()));
       }
+    }
+
+    if (deploy.getHealthcheck().isPresent() && maxTotalHealthcheckTimeoutSeconds.isPresent()) {
+      HealthcheckOptions options = deploy.getHealthcheck().get();
+      int intervalSeconds = options.getIntervalSeconds().or(defaultHealthcheckIntervalSeconds);
+      int startupTime = options.getStartupTimeoutSeconds().or(defaultHealthcheckStartupTimeooutSeconds);
+      int attempts = options.getMaxRetries().or(defaultHealthcehckMaxRetries) + 1;
+      checkBadRequest((startupTime + (intervalSeconds * attempts)) > maxTotalHealthcheckTimeoutSeconds.get(),
+        String.format("Max healthcheck time cannot be greater than %s, (was startup timeout: %s, interval: %s, attempts: %s)", maxTotalHealthcheckTimeoutSeconds.get(), startupTime, intervalSeconds, attempts));
     }
 
     checkBadRequest(deploy.getCommand().isPresent() && !deploy.getExecutorData().isPresent() ||
