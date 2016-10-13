@@ -1,6 +1,7 @@
 package com.hubspot.singularity.scheduler;
 
 import java.net.ConnectException;
+import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,6 +27,7 @@ public class SingularityHealthcheckAsyncHandler extends AsyncCompletionHandler<R
   private final SingularityTask task;
   private final TaskManager taskManager;
   private final int maxHealthcheckResponseBodyBytes;
+  private final List<Integer> failureStatusCodes;
 
   public SingularityHealthcheckAsyncHandler(SingularityExceptionNotifier exceptionNotifier, SingularityConfiguration configuration, SingularityHealthchecker healthchecker,
       SingularityNewTaskChecker newTaskChecker, TaskManager taskManager, SingularityTask task) {
@@ -35,6 +37,9 @@ public class SingularityHealthcheckAsyncHandler extends AsyncCompletionHandler<R
     this.healthchecker = healthchecker;
     this.task = task;
     this.maxHealthcheckResponseBodyBytes = configuration.getMaxHealthcheckResponseBodyBytes();
+    this.failureStatusCodes = task.getTaskRequest().getDeploy().getHealthcheck().isPresent() ?
+      task.getTaskRequest().getDeploy().getHealthcheck().get().getFailureStatusCodes().or(configuration.getHealthcheckFailureStatusCodes()) :
+      configuration.getHealthcheckFailureStatusCodes();
 
     startTime = System.currentTimeMillis();
   }
@@ -73,6 +78,13 @@ public class SingularityHealthcheckAsyncHandler extends AsyncCompletionHandler<R
       if (result.isFailed()) {
         if (!taskManager.isActiveTask(task.getTaskId().getId())) {
           LOG.trace("Task {} is not active, not re-enqueueing healthcheck", task.getTaskId());
+          return;
+        }
+
+        if (statusCode.isPresent() && failureStatusCodes.contains(statusCode.get())) {
+          LOG.debug("Failed status code present for task {} ({})", task.getTaskId(), statusCode.get());
+          healthchecker.markHealthcheckFinished(task.getTaskId().getId());
+          newTaskChecker.runNewTaskCheckImmediately(task, healthchecker);
           return;
         }
 

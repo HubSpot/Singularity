@@ -171,7 +171,7 @@ public class TaskManager extends CuratorAsyncManager {
   }
 
   private String getHealthcheckPath(SingularityTaskHealthcheckResult healthcheck) {
-    return ZKPaths.makePath(getHealthcheckParentPath(healthcheck.getTaskId()), Long.toString(healthcheck.getTimestamp()));
+    return ZKPaths.makePath(getHealthcheckParentPath(healthcheck.getTaskId()), String.format("%s%s", Long.toString(healthcheck.getTimestamp()), healthcheck.isStartup() ? "-STARTUP" : ""));
   }
 
   private String getShellRequestQueuePath(SingularityTaskShellCommandRequest shellRequest) {
@@ -388,6 +388,17 @@ public class TaskManager extends CuratorAsyncManager {
 
   public int getNumHealthchecks(SingularityTaskId taskId) {
     return getNumChildren(getHealthcheckParentPath(taskId));
+  }
+
+  public int getNumNonstartupHealthchecks(SingularityTaskId taskId) {
+    int numChecks = 0;
+    List<String> checks = getChildren(getHealthcheckParentPath(taskId));
+    for (String check : checks) {
+      if (!check.endsWith("-STARTUP")) {
+        numChecks++;
+      }
+    }
+    return numChecks;
   }
 
   public List<SingularityTaskHealthcheckResult> getHealthcheckResults(SingularityTaskId taskId) {

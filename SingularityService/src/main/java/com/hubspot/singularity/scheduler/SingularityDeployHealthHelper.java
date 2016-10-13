@@ -238,9 +238,15 @@ public class SingularityDeployHealthHelper {
     } else if (healthcheckResult.get().isFailed()) {
       LOG.debug("Found a failed healthcheck: {}", healthcheckResult);
 
+      if (deploy.getHealthcheck().isPresent() && healthcheckResult.get().getStatusCode().isPresent()
+        && deploy.getHealthcheck().get().getFailureStatusCodes().or(configuration.getHealthcheckFailureStatusCodes()).contains(healthcheckResult.get().getStatusCode().get())) {
+        LOG.debug("Failed healthcheck had bad status code: {}", healthcheckResult.get().getStatusCode().get());
+        return DeployHealth.UNHEALTHY;
+      }
+
       final Optional<Integer> healthcheckMaxRetries = deploy.getHealthcheck().isPresent() ? deploy.getHealthcheck().get().getMaxRetries().or(configuration.getHealthcheckMaxRetries()) : Optional.<Integer>absent();
 
-      if (healthcheckMaxRetries.isPresent() && taskManager.getNumHealthchecks(taskId) > healthcheckMaxRetries.get()) {
+      if (healthcheckMaxRetries.isPresent() && taskManager.getNumNonstartupHealthchecks(taskId) > healthcheckMaxRetries.get()) {
         LOG.debug("{} failed {} healthchecks, the max for the deploy", taskId, healthcheckMaxRetries.get());
         return DeployHealth.UNHEALTHY;
       }

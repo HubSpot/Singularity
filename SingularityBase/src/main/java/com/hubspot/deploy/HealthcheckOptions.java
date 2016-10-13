@@ -1,8 +1,12 @@
 package com.hubspot.deploy;
 
+import java.util.Collections;
+import java.util.List;
+
 import javax.validation.constraints.NotNull;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Objects;
 import com.google.common.base.Optional;
@@ -21,11 +25,13 @@ public class HealthcheckOptions {
   private final Optional<Integer> intervalSeconds;
   private final Optional<Integer> responseTimeoutSeconds;
   private final Optional<Integer> maxRetries;
+  private final Optional<List<Integer>> failureStatusCodes;
 
   @JsonCreator
   public HealthcheckOptions(@JsonProperty("uri") String uri, @JsonProperty("portIndex") Optional<Integer> portIndex, @JsonProperty("portNumber") Optional<Long> portNumber, @JsonProperty("protocol") Optional<HealthcheckProtocol> protocol,
     @JsonProperty("startupTimeoutSeconds") Optional<Integer> startupTimeoutSeconds, @JsonProperty("startupDelaySeconds") Optional<Integer> startupDelaySeconds, @JsonProperty("startupIntervalSeconds") Optional<Integer> startupIntervalSeconds,
-    @JsonProperty("intervalSeconds") Optional<Integer> intervalSeconds, @JsonProperty("responseTimeoutSeconds") Optional<Integer> responseTimeoutSeconds, @JsonProperty("maxRetries") Optional<Integer> maxRetries) {
+    @JsonProperty("intervalSeconds") Optional<Integer> intervalSeconds, @JsonProperty("responseTimeoutSeconds") Optional<Integer> responseTimeoutSeconds, @JsonProperty("maxRetries") Optional<Integer> maxRetries,
+    @JsonProperty("failureStatusCodes") Optional<List<Integer>> failureStatusCodes) {
     this.uri = uri;
     this.portIndex = portIndex;
     this.portNumber = portNumber;
@@ -36,6 +42,22 @@ public class HealthcheckOptions {
     this.intervalSeconds = intervalSeconds;
     this.responseTimeoutSeconds = responseTimeoutSeconds;
     this.maxRetries = maxRetries;
+    this.failureStatusCodes = failureStatusCodes;
+  }
+
+  @JsonIgnore
+  public HealthcheckOptionsBuilder toBuilder() {
+    return new HealthcheckOptionsBuilder(uri)
+      .setPortIndex(portIndex)
+      .setPortNumber(portNumber)
+      .setProtocol(protocol)
+      .setStartupTimeoutSeconds(startupTimeoutSeconds)
+      .setStartupDelaySeconds(startupDelaySeconds)
+      .setStartupIntervalSeconds(startupIntervalSeconds)
+      .setIntervalSeconds(intervalSeconds)
+      .setResponseTimeoutSeconds(responseTimeoutSeconds)
+      .setMaxRetries(maxRetries)
+      .setFailureStatusCodes(failureStatusCodes);
   }
 
   public String getUri() {
@@ -85,6 +107,11 @@ public class HealthcheckOptions {
   @ApiModelProperty(required=false, value="Maximum number of times to retry an individual healthcheck before failing the deploy.")
   public Optional<Integer> getMaxRetries() {
     return maxRetries;
+  }
+
+  @ApiModelProperty(required=false, value="Fail the healthcheck with no further retries if one of these status codes is returned")
+  public Optional<List<Integer>> getFailureStatusCodes() {
+    return failureStatusCodes;
   }
 
   @Override
