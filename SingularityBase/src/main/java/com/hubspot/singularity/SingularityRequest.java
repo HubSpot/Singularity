@@ -302,38 +302,38 @@ public class SingularityRequest {
     return taskPriorityLevel;
   }
 
-  @Override
-  public String toString() {
-    return "SingularityRequest[" +
-            "id='" + id + '\'' +
-            ", requestType=" + requestType +
-            ", owners=" + owners +
-            ", numRetriesOnFailure=" + numRetriesOnFailure +
-            ", schedule=" + schedule +
-            ", quartzSchedule=" + quartzSchedule +
-            ", scheduleTimeZone=" + scheduleTimeZone +
-            ", scheduleType=" + scheduleType +
-            ", killOldNonLongRunningTasksAfterMillis=" + killOldNonLongRunningTasksAfterMillis +
-            ", taskExecutionTimeLimitMillis=" + taskExecutionTimeLimitMillis +
-            ", scheduledExpectedRuntimeMillis=" + scheduledExpectedRuntimeMillis +
-            ", waitAtLeastMillisAfterTaskFinishesForReschedule=" + waitAtLeastMillisAfterTaskFinishesForReschedule +
-            ", instances=" + instances +
-            ", rackSensitive=" + rackSensitive +
-            ", rackAffinity=" + rackAffinity +
-            ", slavePlacement=" + slavePlacement +
-            ", requiredSlaveAttributes=" + requiredSlaveAttributes +
-            ", allowedSlaveAttributes=" + allowedSlaveAttributes +
-            ", loadBalanced=" + loadBalanced +
-            ", group=" + group +
-            ", readWriteGroups" + readWriteGroups +
-            ", readOnlyGroups=" + readOnlyGroups +
-            ", bounceAfterScale=" + bounceAfterScale +
-            ", emailConfigurationOverrides=" + emailConfigurationOverrides +
-            ", hideEvenNumberAcrossRacksHint=" + hideEvenNumberAcrossRacksHint +
-            ", taskLogErrorRegex=" + taskLogErrorRegex +
-            ", taskLogErrorRegexCaseSensitive=" + taskLogErrorRegexCaseSensitive +
-            ", taskPriorityLevel=" + taskPriorityLevel +
-            ']';
+  @Override public String toString() {
+    return com.google.common.base.Objects.toStringHelper(this)
+      .add("id", id)
+      .add("requestType", requestType)
+      .add("owners", owners)
+      .add("numRetriesOnFailure", numRetriesOnFailure)
+      .add("schedule", schedule)
+      .add("quartzSchedule", quartzSchedule)
+      .add("scheduleType", scheduleType)
+      .add("scheduleTimeZone", scheduleTimeZone)
+      .add("killOldNonLongRunningTasksAfterMillis", killOldNonLongRunningTasksAfterMillis)
+      .add("taskExecutionTimeLimitMillis", taskExecutionTimeLimitMillis)
+      .add("scheduledExpectedRuntimeMillis", scheduledExpectedRuntimeMillis)
+      .add("waitAtLeastMillisAfterTaskFinishesForReschedule", waitAtLeastMillisAfterTaskFinishesForReschedule)
+      .add("instances", instances)
+      .add("skipHealthchecks", skipHealthchecks)
+      .add("rackSensitive", rackSensitive)
+      .add("rackAffinity", rackAffinity)
+      .add("slavePlacement", slavePlacement)
+      .add("requiredSlaveAttributes", requiredSlaveAttributes)
+      .add("allowedSlaveAttributes", allowedSlaveAttributes)
+      .add("loadBalanced", loadBalanced)
+      .add("group", group)
+      .add("readWriteGroups", readWriteGroups)
+      .add("readOnlyGroups", readOnlyGroups)
+      .add("bounceAfterScale", bounceAfterScale)
+      .add("emailConfigurationOverrides", emailConfigurationOverrides)
+      .add("hideEvenNumberAcrossRacksHint", hideEvenNumberAcrossRacksHint)
+      .add("taskLogErrorRegex", taskLogErrorRegex)
+      .add("taskLogErrorRegexCaseSensitive", taskLogErrorRegexCaseSensitive)
+      .add("taskPriorityLevel", taskPriorityLevel)
+      .toString();
   }
 
   @Override

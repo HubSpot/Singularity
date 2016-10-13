@@ -57,7 +57,7 @@ public class SingularityS3DownloaderAsyncHandler implements Runnable {
     if (Objects.toString(fetched.getFileName()).endsWith(".tar.gz")) {
       artifactManager.untar(fetched, targetDirectory);
     } else {
-      artifactManager.copy(fetched, targetDirectory);
+      artifactManager.copy(fetched, targetDirectory, artifactDownloadRequest.getS3Artifact().getFilename());
     }
 
     LOG.info("Finishing request {} after {}", artifactDownloadRequest.getTargetDirectory(), JavaUtils.duration(start));
