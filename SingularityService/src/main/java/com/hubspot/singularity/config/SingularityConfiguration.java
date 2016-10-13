@@ -137,7 +137,7 @@ public class SingularityConfiguration extends Configuration {
   private Optional<Integer> healthcheckMaxTotalTimeoutSeconds = Optional.absent();
 
   @NotNull
-  private List<Integer> healthcheckFailureStatusCodes = ImmutableList.of(400, 401, 403, 404, 405, 500);
+  private List<Integer> healthcheckFailureStatusCodes = Collections.emptyList();
 
   private String hostname;
 
