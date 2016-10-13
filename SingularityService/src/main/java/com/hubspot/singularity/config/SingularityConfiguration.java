@@ -124,7 +124,7 @@ public class SingularityConfiguration extends Configuration {
 
   private int healthcheckTimeoutSeconds = 5;
 
-  private int startupDelaySeconds = 0;
+  private Optional<Integer> startupDelaySeconds = Optional.absent();
 
   private int startupTimeoutSeconds = 60;
 
@@ -975,11 +975,11 @@ public class SingularityConfiguration extends Configuration {
     this.zooKeeperConfiguration = zooKeeperConfiguration;
   }
 
-  public int getStartupDelaySeconds() {
+  public Optional<Integer> getStartupDelaySeconds() {
     return startupDelaySeconds;
   }
 
-  public void setStartupDelaySeconds(int startupDelaySeconds) {
+  public void setStartupDelaySeconds(Optional<Integer> startupDelaySeconds) {
     this.startupDelaySeconds = startupDelaySeconds;
   }
 

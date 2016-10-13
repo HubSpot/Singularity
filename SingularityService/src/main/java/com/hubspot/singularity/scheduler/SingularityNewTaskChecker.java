@@ -109,7 +109,7 @@ public class SingularityNewTaskChecker {
     int delaySeconds = configuration.getNewTaskCheckerBaseDelaySeconds();
 
     if (hasHealthcheck(task, requestWithState)) {
-      delaySeconds += task.getTaskRequest().getDeploy().getHealthcheck().get().getStartupDelaySeconds().or(configuration.getStartupDelaySeconds());
+      delaySeconds += task.getTaskRequest().getDeploy().getHealthcheck().get().getStartupDelaySeconds().or(configuration.getStartupDelaySeconds()).or(0);
     } else if (task.getTaskRequest().getRequest().isLoadBalanced()) {
       return delaySeconds;
     }

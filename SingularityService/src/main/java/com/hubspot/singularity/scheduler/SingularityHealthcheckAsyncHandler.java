@@ -88,7 +88,7 @@ public class SingularityHealthcheckAsyncHandler extends AsyncCompletionHandler<R
           return;
         }
 
-        healthchecker.enqueueHealthcheck(task, true, inStartup);
+        healthchecker.enqueueHealthcheck(task, true, inStartup, false);
       } else {
         healthchecker.markHealthcheckFinished(task.getTaskId().getId());
 
