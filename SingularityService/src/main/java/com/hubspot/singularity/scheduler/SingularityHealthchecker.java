@@ -74,7 +74,7 @@ public class SingularityHealthchecker {
     HealthcheckOptions options = task.getTaskRequest().getDeploy().getHealthcheck().get();
     final Optional<Integer> healthcheckMaxRetries = options.getMaxRetries().or(configuration.getHealthcheckMaxRetries());
 
-    if (healthcheckMaxRetries.isPresent() && taskManager.getNumHealthchecks(task.getTaskId()) > healthcheckMaxRetries.get()) {
+    if (healthcheckMaxRetries.isPresent() && taskManager.getNumNonstartupHealthchecks(task.getTaskId()) > healthcheckMaxRetries.get()) {
       LOG.info("Not enqueuing new healthcheck for {}, it has already attempted {} times", task.getTaskId(), healthcheckMaxRetries.get());
       return;
     }

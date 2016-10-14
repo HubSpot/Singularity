@@ -298,6 +298,7 @@ public class SingularityNewTaskChecker {
         case UNHEALTHY:
           return CheckTaskState.UNHEALTHY_KILL_TASK;
         case HEALTHY:
+          taskManager.clearStartupHealthchecks(task.getTaskId());
           break;
       }
     }
