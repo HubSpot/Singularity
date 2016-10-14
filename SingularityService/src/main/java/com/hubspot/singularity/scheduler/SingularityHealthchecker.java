@@ -20,6 +20,7 @@ import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import com.hubspot.deploy.HealthcheckOptions;
+import com.hubspot.singularity.ExtendedTaskState;
 import com.hubspot.singularity.HealthcheckProtocol;
 import com.hubspot.singularity.SingularityAbort;
 import com.hubspot.singularity.SingularityMainModule;
@@ -27,6 +28,7 @@ import com.hubspot.singularity.SingularityPendingDeploy;
 import com.hubspot.singularity.SingularityRequestWithState;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskHealthcheckResult;
+import com.hubspot.singularity.SingularityTaskHistoryUpdate;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.TaskManager;
@@ -74,6 +76,17 @@ public class SingularityHealthchecker {
     HealthcheckOptions options = task.getTaskRequest().getDeploy().getHealthcheck().get();
     final Optional<Integer> healthcheckMaxRetries = options.getMaxRetries().or(configuration.getHealthcheckMaxRetries());
 
+    Optional<Long> maybeRunningAt = getRunningAt(taskManager.getTaskHistoryUpdates(task.getTaskId()));
+    if (maybeRunningAt.isPresent()) {
+      final long durationSinceRunning = System.currentTimeMillis() - maybeRunningAt.get();
+      final int startupTimeout = options.getStartupTimeoutSeconds().or(configuration.getStartupTimeoutSeconds());
+      if (inStartup && durationSinceRunning > TimeUnit.SECONDS.toMillis(startupTimeout)) {
+        LOG.debug("{} since running", durationSinceRunning);
+        LOG.info("Not enqueuing new healthcheck for {}, has not responded to healthchecks before startup timeout of {}s", task.getTaskId(), startupTimeout);
+        return;
+      }
+    }
+
     if (healthcheckMaxRetries.isPresent() && taskManager.getNumNonstartupHealthchecks(task.getTaskId()) > healthcheckMaxRetries.get()) {
       LOG.info("Not enqueuing new healthcheck for {}, it has already attempted {} times", task.getTaskId(), healthcheckMaxRetries.get());
       return;
@@ -89,6 +102,15 @@ public class SingularityHealthchecker {
         LOG.warn("Found existing overlapping healthcheck for task {} - cancel success: {}", task.getTaskId(), canceledExisting);
       }
     }
+  }
+
+  private Optional<Long> getRunningAt(Collection<SingularityTaskHistoryUpdate> updates) {
+    for (SingularityTaskHistoryUpdate update : updates) {
+      if (update.getTaskState() == ExtendedTaskState.TASK_RUNNING) {
+        return Optional.of(update.getTimestamp());
+      }
+    }
+    return Optional.absent();
   }
 
   private int getDelaySeconds(SingularityTaskId taskId, HealthcheckOptions options, boolean inStartup, boolean isFirstCheck) {
