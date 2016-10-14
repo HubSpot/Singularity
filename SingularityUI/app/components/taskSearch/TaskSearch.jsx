@@ -3,7 +3,7 @@ import { connect } from 'react-redux';
 import { Link } from 'react-router';
 import { Glyphicon, Label } from 'react-bootstrap';
 import rootComponent from '../../rootComponent';
-import { FetchTaskSearchParams } from '../../actions/api/history';
+import { FetchTaskSearchParamsWithMetaData } from '../../actions/api/history';
 import { UpdateFilter } from '../../actions/ui/taskSearch';
 
 import Breadcrumbs from '../common/Breadcrumbs';
@@ -38,7 +38,7 @@ class TaskSearch extends React.Component {
 
   componentWillReceiveProps(nextProps) {
     if (nextProps.params.requestId !== this.props.params.requestId) {
-      FetchTaskSearchParams.clear();
+      FetchTaskSearchParamsWithMetaData.clear();
       nextProps.fetchTaskHistory(INITIAL_TASKS_PER_PAGE, 1, { requestId: nextProps.params.requestId }).then(this.resetTablePageAndCount);
       nextProps.updateFilter({ requestId: nextProps.params.requestId });
     }
@@ -80,6 +80,7 @@ class TaskSearch extends React.Component {
         {updatedAfter && this.renderTag('Updated After', Utils.absoluteTimestamp(parseInt(updatedAfter, 10)))}{' '}
         {updatedBefore && this.renderTag('Updated Before', Utils.absoluteTimestamp(parseInt(updatedBefore, 10)))}{' '}
         {lastTaskStatus && this.renderTag('Last Task Status', Utils.humanizeText(lastTaskStatus))}
+        {this.renderTag('Total Results', this.props.taskHistory.dataCount)}
       </div>);
   }
 
@@ -108,10 +109,13 @@ class TaskSearch extends React.Component {
         {this.renderTags()}
         <UITable
           emptyTableMessage="No matching tasks"
-          data={this.props.taskHistory}
+          data={this.props.taskHistory.objects}
+          totalResults={this.props.taskHistory.dataCount}
+          maxPage={this.props.taskHistory.pageCount}
+          page={this.props.taskHistory.page}
           keyGetter={(task) => task.taskId.id}
-          rowChunkSize={INITIAL_TASKS_PER_PAGE}
-          rowChunkSizeChoices={[5, 10, 25]}
+          resultsPerPage={INITIAL_TASKS_PER_PAGE}
+          resultsPerPageChoices={[5, 10, 25]}
           paginated={true}
           fetchDataFromApi={(page, numberPerPage, sortBy) => this.fetchDataFromApi(page, numberPerPage, sortBy)}
           isFetching={this.props.isFetching}
@@ -206,13 +210,13 @@ function mapStateToProps(state) {
 
 function mapDispatchToProps(dispatch) {
   return {
-    fetchTaskHistory: (count, page, ...args) => dispatch(FetchTaskSearchParams.trigger(...args, count, page)),
+    fetchTaskHistory: (count, page, ...args) => dispatch(FetchTaskSearchParamsWithMetaData.trigger(...args, count, page)),
     updateFilter: (newFilter) => dispatch(UpdateFilter(newFilter))
   };
 }
 
 function refresh(props) {
-  FetchTaskSearchParams.clear();
+  FetchTaskSearchParamsWithMetaData.clear();
   const promises = [];
   promises.push(props.fetchTaskHistory(INITIAL_TASKS_PER_PAGE, 1, { requestId: props.params.requestId || undefined }));
   promises.push(props.updateFilter({ requestId: props.params.requestId || undefined }));

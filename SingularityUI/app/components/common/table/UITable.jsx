@@ -11,7 +11,7 @@ class UITable extends Component {
     super(props);
 
     let { data } = props;
-    const { defaultSortBy, defaultSortDirection, rowChunkSize } = props;
+    const { defaultSortBy, defaultSortDirection, resultsPerPage } = props;
     if (defaultSortBy) {
       data = this.doSort(data, defaultSortBy, defaultSortDirection);
     }
@@ -20,9 +20,9 @@ class UITable extends Component {
       sortBy: defaultSortBy,
       sortDirection: defaultSortDirection,
       sortTime: null,
-      chunkNum: 1,
+      curPage: 1,
       data,
-      rowChunkSize
+      resultsPerPage
     };
 
     this.handlePageChange = this.handlePageChange.bind(this);
@@ -33,13 +33,12 @@ class UITable extends Component {
     if (nextProps.isFetching) {
       return;
     }
-    if (this.isApiPaginated() && _.isEmpty(nextProps.data) && this.state.chunkNum > 1) {
-      this.fetchDataFromApi(this.state.chunkNum - 1, this.state.rowChunkSize, this.state.sortBy);
-      this.setState({ pastEnd: true, data: nextProps.data });
-    } else if (this.isApiPaginated() && (this.state.pastEnd || nextProps.data.length < this.state.rowChunkSize)) {
-      this.setState({ pastEnd: false, lastPage: true, data: nextProps.data });
-    } else if (this.isApiPaginated()) {
-      this.setState({ data: nextProps.data });
+    if (this.isApiPaginated()) {
+      if (nextProps.page == nextProps.maxPage) {
+        this.setState({ lastPage : true, data : nextProps.data });
+      } else {
+        this.setState({ data : nextProps.data });
+      }
     }
   }
 
@@ -50,7 +49,7 @@ class UITable extends Component {
 
   static defaultProps = {
     paginated: false,
-    rowChunkSize: 30,
+    resultsPerPage: 30,
     defaultSortBy: undefined,
     defaultSortDirection: UITable.SortDirection.DESC,
     asyncSort: false,
@@ -63,28 +62,31 @@ class UITable extends Component {
     return !!this.props.fetchDataFromApi;
   }
 
+  
   resetPageAndChunkSizeWithoutChangingData(table) {
     return () => {
       table.setState({
-        chunkNum: 1,
-        rowChunkSize: this.props.rowChunkSize,
+        curPage: 1,
+        resultsPerPage: this.props.resultsPerPage,
         lastPage: false,
         pastEnd: false
       });
     };
   }
 
-  fetchDataFromApi(chunkNum, rowChunkSize, updateStateAfterFetching = false, sortBy = this.state.sortBy) {
+  fetchDataFromApi(curPage, resultsPerPage, updateStateAfterFetching = false, sortBy = this.state.sortBy) {
     let lastPage = this.state.lastPage;
-    if (chunkNum < this.state.chunkNum) {
+    if (curPage < this.state.curPage) {
+      // going back a page
       lastPage = false;
     }
     if (!updateStateAfterFetching) {
-      this.setState({chunkNum, rowChunkSize, sortBy, lastPage});
+      this.setState({curPage, resultsPerPage, sortBy, lastPage});
     }
-    return this.props.fetchDataFromApi(chunkNum, rowChunkSize, sortBy).then(() => {
+
+    return this.props.fetchDataFromApi(curPage, resultsPerPage, sortBy).then(() => {
       if (updateStateAfterFetching) {
-        this.setState({chunkNum, rowChunkSize, sortBy, lastPage});
+        this.setState({curPage, resultsPerPage, sortBy, lastPage});
       }
     });
   }
@@ -137,17 +139,17 @@ class UITable extends Component {
 
     // we have to update pagination if the new list size doesn't
     // have enough pages for the current page
-    const numPages = Math.ceil(nextState.data.length / this.state.rowChunkSize);
-    const updatedPage = this.state.chunkNum > numPages && numPages !== 0
+    const numPages = Math.ceil(nextState.data.length / this.state.resultsPerPage);
+    const updatedPage = this.state.curPage > numPages && numPages !== 0
       ? numPages
-      : this.state.chunkNum;
+      : this.state.curPage;
 
     let updatedNextState = nextState;
 
     if (this.props.paginated) {
       updatedNextState = {
         ...updatedNextState,
-        chunkNum: updatedPage
+        curPage: updatedPage
       };
     }
 
@@ -181,18 +183,18 @@ class UITable extends Component {
   }
 
   handlePageChange(eventKey) {
-    if (eventKey === this.state.chunkNum) {
+    if (eventKey === this.state.curPage) {
       return;
     }
     if (this.isApiPaginated()) {
-      this.fetchDataFromApi(eventKey, this.state.rowChunkSize);
+      this.fetchDataFromApi(eventKey, this.state.resultsPerPage);
       return;
     }
     const page = eventKey;
-    const numPages = Math.ceil(this.state.data.length / this.state.rowChunkSize);
+    const numPages = Math.ceil(this.state.data.length / this.state.resultsPerPage);
 
     this.setState({
-      chunkNum: Math.min(Math.max(1, page), numPages)
+      curPage: Math.min(Math.max(1, page), numPages)
     });
   }
 
@@ -213,7 +215,7 @@ class UITable extends Component {
 
   handleSortClick(col) {
     if (this.isApiPaginated()) {
-      this.props.fetchDataFromApi(this.state.chunkNum, this.state.rowChunkSize, false, col.props.id);
+      this.props.fetchDataFromApi(this.state.curPage, this.state.resultsPerPage, false, col.props.id);
     }
     const colId = col.props.id;
     if (colId === this.state.sortBy) {
@@ -273,9 +275,9 @@ class UITable extends Component {
 
   renderTableRows() {
     if (this.props.paginated && !this.isApiPaginated()) {
-      const page = this.state.chunkNum;
-      const beginIndex = (page - 1) * this.state.rowChunkSize;
-      const endIndex = page * this.state.rowChunkSize;
+      const page = this.state.curPage;
+      const beginIndex = (page - 1) * this.state.resultsPerPage;
+      const endIndex = page * this.state.resultsPerPage;
       const rows = this.state.data.slice(beginIndex, endIndex).map((row, index) => {
         return this.renderTableRow(row, index);
       });
@@ -289,7 +291,7 @@ class UITable extends Component {
     // infinite scrolling
     // Only render a number of rows at a time
     // check to see if we can render of everything
-    const maxVisibleRows = this.props.renderAllRows ? this.state.data.length : this.state.chunkNum * this.state.rowChunkSize;
+    const maxVisibleRows = this.props.renderAllRows ? this.state.data.length : this.state.curPage * this.state.resultsPerPage;
     const rows = this.state.data.slice(0, maxVisibleRows).map((row) => {
       return this.renderTableRow(row);
     });
@@ -301,19 +303,20 @@ class UITable extends Component {
     return rows;
   }
 
-  renderRowChunkSizeChoices() {
-    const setRowChunkSize = (rowChunkSize) => {
+  renderRequestPerPageChoices() {
+    const setRequestPerPage = (resultsPerPage) => {
       if (this.isApiPaginated()) {
-        this.fetchDataFromApi(1, rowChunkSize, true);
+        this.fetchDataFromApi(1, resultsPerPage, true);
       } else {
-        this.setState({chunkNum: 1, rowChunkSize});
+        this.setState({curPage: 1, resultsPerPage});
       }
     };
+
     return (
       <div className="pull-right count-options">
         Results per page:
-        {this.props.rowChunkSizeChoices.map((choice) =>
-          <a key={choice} className={classNames({inactive: choice === this.state.rowChunkSize})} onClick={() => setRowChunkSize(choice)}>
+        {this.props.requestPerPageChoices.map((choice) =>
+          <a key={choice} className={classNames({inactive: choice === this.state.resultsPerPage})} onClick={() => setRequestPerPage(choice)}>
             {choice}
           </a>
         )}
@@ -323,17 +326,11 @@ class UITable extends Component {
 
   renderPagination() {
     const numRows = this.state.data.length;
-    const rowsPerPage = this.state.rowChunkSize;
+    const rowsPerPage = this.state.resultsPerPage;
     const maxPaginationButtons = this.isApiPaginated() ? 1 : this.props.maxPaginationButtons;
     if (this.shouldRenderPagination(numRows, rowsPerPage)) {
-      let numPages = Math.ceil(numRows / rowsPerPage);
-      if (this.isApiPaginated()) {
-        if (this.state.lastPage || numRows < rowsPerPage) {
-          numPages = this.state.chunkNum;
-        } else {
-          numPages = this.state.chunkNum + 1;
-        }
-      }
+      let numPages = this.props.maxPage;
+      
       return (
         <Pagination
           prev={true}
@@ -343,7 +340,7 @@ class UITable extends Component {
           ellipsis={false}
           items={numPages}
           maxButtons={maxPaginationButtons}
-          activePage={this.state.chunkNum}
+          activePage={this.state.curPage}
           onSelect={this.handlePageChange}
         />
       );
@@ -359,13 +356,13 @@ class UITable extends Component {
           Loading...
           <Waypoint
             scrollableAncestor={window}
-            key={`waypoint${this.state.chunkNum}`}
+            key={`waypoint${this.state.curPage}`}
             onEnter={() => {
-              const maxVisibleRows = this.state.chunkNum * this.state.rowChunkSize;
+              const maxVisibleRows = this.state.curPage * this.state.resultsPerPage;
               if (maxVisibleRows < this.state.data.length) {
                 _.defer(() => {
                   this.setState({
-                    chunkNum: this.state.chunkNum + 1
+                    curPage: this.state.curPage + 1
                   });
                 });
               }
@@ -440,7 +437,7 @@ class UITable extends Component {
 
     return (
       <div>
-        {this.props.rowChunkSizeChoices && <div className="row"><div className="col-md-12">{this.renderRowChunkSizeChoices()}</div></div>}
+        {this.props.requestPerPageChoices && <div className="row"><div className="col-md-12">{this.renderRequestPerPageChoices()}</div></div>}
         {maybeTable}
         {this.renderPagination()}
       </div>
@@ -454,8 +451,8 @@ UITable.propTypes = {
   children: PropTypes.arrayOf(PropTypes.node).isRequired,
   paginated: PropTypes.bool,
   renderAllRows: PropTypes.bool,
-  rowChunkSize: PropTypes.number,
-  rowChunkSizeChoices: PropTypes.arrayOf(PropTypes.number),
+  resultsPerPage: PropTypes.number,
+  resultsPerPageChoices: PropTypes.arrayOf(PropTypes.number),
   maxPaginationButtons: PropTypes.number,
   defaultSortBy: PropTypes.string,
   defaultSortDirection: PropTypes.oneOf([

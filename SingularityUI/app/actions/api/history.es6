@@ -86,6 +86,28 @@ export const FetchRequestRunHistory = buildApiAction(
   })
 );
 
+export const FetchTaskSearchParamsWithMetaData = buildApiAction(
+  'FETCH_TASK_HISTORY',
+  ({requestId = null, deployId = null, host = null, lastTaskStatus = null, startedAfter = null, startedBefore = null, updatedAfter = null, updatedBefore = null, orderDirection = null}, count, page) => {
+    const args = {
+      deployId,
+      host,
+      lastTaskStatus,
+      startedAfter,
+      startedBefore,
+      updatedAfter,
+      updatedBefore,
+      orderDirection
+    };
+    let url;
+    if (requestId) {
+      url = `/history/request/${requestId}/tasks/withmetadata?&count=${count}&page=${page}&${Utils.queryParams(args)}`;
+    } else {
+      url = `/history/tasks/withmetadata?count=${count}&page=${page}&${Utils.queryParams(args)}`;
+    }
+    return { url };
+  });
+
 export const FetchRequestHistory = buildApiAction(
   'FETCH_REQUEST_HISTORY',
   (requestId, count, page) => ({
