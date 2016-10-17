@@ -121,7 +121,7 @@ public class SingularityCleaner {
       return true;
     }
 
-    if (requestWithState.get().getState() == RequestState.PAUSED) {
+    if (requestWithState.get().getState() == RequestState.PAUSED && !(taskCleanup.getCleanupType() == TaskCleanupType.PAUSING)) {
       LOG.debug("Killing a task {} immediately because the request was paused", taskCleanup);
       return true;
     }
@@ -333,7 +333,7 @@ public class SingularityCleaner {
               continue;
             }
           } else {
-            pause(requestCleanup, matchingActiveTaskIds);
+            pause(requestCleanup, matchingActiveTaskIds, killActiveTasks);
           }
           break;
         case DELETING:
@@ -427,7 +427,7 @@ public class SingularityCleaner {
     LOG.info("Added {} tasks for request {} to cleanup bounce queue in {}", matchingTaskIds.size(), requestCleanup.getRequestId(), JavaUtils.duration(start));
   }
 
-  private void pause(SingularityRequestCleanup requestCleanup, Iterable<SingularityTaskId> activeTaskIds) {
+  private void pause(SingularityRequestCleanup requestCleanup, Iterable<SingularityTaskId> activeTaskIds, boolean killActiveTasks) {
     final long start = System.currentTimeMillis();
 
     for (SingularityTaskId taskId : activeTaskIds) {
@@ -441,7 +441,9 @@ public class SingularityCleaner {
         runBeforeKillId = Optional.of(shellRequest.getId());
       }
 
-      taskManager.createTaskCleanup(new SingularityTaskCleanup(requestCleanup.getUser(), requestCleanup.getCleanupType().getTaskCleanupType().get(), start, taskId, requestCleanup.getMessage(), requestCleanup.getActionId(), runBeforeKillId));
+      TaskCleanupType cleanupType = killActiveTasks ? TaskCleanupType.PAUSE : TaskCleanupType.PAUSING;
+
+      taskManager.createTaskCleanup(new SingularityTaskCleanup(requestCleanup.getUser(), cleanupType, start, taskId, requestCleanup.getMessage(), requestCleanup.getActionId(), runBeforeKillId));
     }
   }
 
