@@ -38,6 +38,7 @@ public class SingularityAuthorizationHelper {
   private final ImmutableSet<String> requiredGroups;
   private final ImmutableSet<String> jitaGroups;
   private final ImmutableSet<String> defaultReadOnlyGroups;
+  private final ImmutableSet<String> globalReadOnlyGroups;
   private final boolean authEnabled;
 
   @Inject
@@ -47,6 +48,7 @@ public class SingularityAuthorizationHelper {
     this.requiredGroups = copyOf(configuration.getAuthConfiguration().getRequiredGroups());
     this.jitaGroups = copyOf(configuration.getAuthConfiguration().getJitaGroups());
     this.defaultReadOnlyGroups = copyOf(configuration.getAuthConfiguration().getDefaultReadOnlyGroups());
+    this.globalReadOnlyGroups = copyOf(configuration.getAuthConfiguration().getGlobalReadOnlyGroups());
     this.authEnabled = configuration.getAuthConfiguration().isEnabled();
   }
 
@@ -114,11 +116,12 @@ public class SingularityAuthorizationHelper {
 
     final Set<String> userGroups = user.get().getGroups();
     final Set<String> readWriteGroups = Sets.union(request.getGroup().asSet(), request.getReadWriteGroups().or(Collections.<String>emptySet()));
+    final Set<String> readOnlyGroups = request.getReadOnlyGroups().or(defaultReadOnlyGroups);
 
     final boolean userIsAdmin = !adminGroups.isEmpty() && groupsIntersect(userGroups, adminGroups);
     final boolean userIsJITA = !jitaGroups.isEmpty() && groupsIntersect(userGroups, jitaGroups);
     final boolean userIsReadWriteUser = readWriteGroups.isEmpty() || groupsIntersect(userGroups, readWriteGroups);
-    final boolean userIsReadOnlyUser = groupsIntersect(userGroups, request.getReadOnlyGroups().or(defaultReadOnlyGroups));
+    final boolean userIsReadOnlyUser = groupsIntersect(userGroups, readOnlyGroups) || (!globalReadOnlyGroups.isEmpty() && groupsIntersect(userGroups, globalReadOnlyGroups));
     final boolean userIsPartOfRequiredGroups = requiredGroups.isEmpty() || groupsIntersect(userGroups, requiredGroups);
 
     if (userIsAdmin) {
@@ -146,7 +149,7 @@ public class SingularityAuthorizationHelper {
     final boolean userIsAdmin = !adminGroups.isEmpty() && groupsIntersect(userGroups, adminGroups);
     final boolean userIsJITA = !jitaGroups.isEmpty() && groupsIntersect(userGroups, jitaGroups);
     final boolean userIsReadWriteUser = readWriteGroups.isEmpty() || groupsIntersect(userGroups, readWriteGroups);
-    final boolean userIsReadOnlyUser = groupsIntersect(userGroups, readOnlyGroups);
+    final boolean userIsReadOnlyUser = groupsIntersect(userGroups, readOnlyGroups) || (!globalReadOnlyGroups.isEmpty() && groupsIntersect(userGroups, globalReadOnlyGroups));
     final boolean userIsPartOfRequiredGroups = requiredGroups.isEmpty() || groupsIntersect(userGroups, requiredGroups);
 
     if (userIsAdmin) {
