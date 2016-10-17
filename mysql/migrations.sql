@@ -111,3 +111,9 @@ ALTER TABLE `taskHistory`
 
 --changeset ssalinas:13 dbms:mysql
 ALTER TABLE `deployHistory` MODIFY `bytes` MEDIUMBLOB NOT NULL;
+
+--changeset ssalinas:14 dbms:mysql
+ALTER TABLE `taskHistory`
+  ADD COLUMN `purged` BOOLEAN NOT NULL DEFAULT false,
+  ADD KEY `purged` (`requestId`, `purged`);
+UPDATE `taskHistory` SET `purged` = true WHERE `bytes` = '';
