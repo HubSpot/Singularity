@@ -11,8 +11,10 @@ import org.junit.Test;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 import com.hubspot.singularity.ExtendedTaskState;
+import com.hubspot.singularity.SingularityTaskCleanup;
 import com.hubspot.singularity.SingularityTaskHistoryUpdate;
 import com.hubspot.singularity.SlavePlacement;
+import com.hubspot.singularity.TaskCleanupType;
 
 public class SingularitySlavePlacementTest extends SingularitySchedulerTestBase {
 
@@ -204,5 +206,81 @@ public class SingularitySlavePlacementTest extends SingularitySchedulerTestBase 
     sms.resourceOffers(driver, Arrays.asList(createOffer(20, 20000, "slave2", "host2", Optional.<String>absent(), requiredAttributes)));
 
     Assert.assertTrue(taskManager.getActiveTaskIds().size() == 1);
+  }
+
+  @Test
+  public void testEvenRackPlacement() {
+    // Set up 3 active racks
+    sms.resourceOffers(driver, Arrays.asList(createOffer(1, 128, "slave1", "host1", Optional.of("rack1"))));
+    sms.resourceOffers(driver, Arrays.asList(createOffer(1, 128, "slave2", "host2", Optional.of("rack2"))));
+    sms.resourceOffers(driver, Arrays.asList(createOffer(1, 128, "slave3", "host3", Optional.of("rack3"))));
+
+    initRequest();
+    initFirstDeploy();
+    saveAndSchedule(request.toBuilder().setInstances(Optional.of(7)).setRackSensitive(Optional.of(true)));
+
+    // rack1 -> 1, rack2 -> 2, rack3 -> 3
+    sms.resourceOffers(driver, Arrays.asList(createOffer(1, 128, "slave1", "host1", Optional.of("rack1"))));
+    sms.resourceOffers(driver, Arrays.asList(createOffer(1, 128, "slave2", "host2", Optional.of("rack2"))));
+    sms.resourceOffers(driver, Arrays.asList(createOffer(1, 128, "slave3", "host3", Optional.of("rack3"))));
+
+    Assert.assertEquals(3, taskManager.getActiveTaskIds().size());
+
+    sms.resourceOffers(driver, Arrays.asList(createOffer(1, 128, "slave1", "host1", Optional.of("rack1"))));
+    Assert.assertEquals(4, taskManager.getActiveTaskIds().size());
+
+    sms.resourceOffers(driver, Arrays.asList(createOffer(1, 128, "slave1", "host1", Optional.of("rack1"))));
+    Assert.assertEquals(4, taskManager.getActiveTaskIds().size());
+
+    sms.resourceOffers(driver, Arrays.asList(createOffer(1, 128, "slave2", "host2", Optional.of("rack2"))));
+    Assert.assertEquals(5, taskManager.getActiveTaskIds().size());
+
+    // rack1 should not get a third instance until rack3 has a second
+    sms.resourceOffers(driver, Arrays.asList(createOffer(1, 128, "slave1", "host1", Optional.of("rack1"))));
+    Assert.assertEquals(5, taskManager.getActiveTaskIds().size());
+
+    sms.resourceOffers(driver, Arrays.asList(createOffer(1, 128, "slave3", "host3", Optional.of("rack3"))));
+    Assert.assertEquals(6, taskManager.getActiveTaskIds().size());
+
+    sms.resourceOffers(driver, Arrays.asList(createOffer(1, 128, "slave1", "host1", Optional.of("rack1"))));
+    Assert.assertEquals(7, taskManager.getActiveTaskIds().size());
+  }
+
+  @Test
+  public void testRackPlacementOnScaleDown() {
+    try {
+      configuration.setRebalanceRacksOnScaleDown(true);
+      // Set up 3 active racks
+      sms.resourceOffers(driver, Arrays.asList(createOffer(1, 128, "slave1", "host1", Optional.of("rack1"))));
+      sms.resourceOffers(driver, Arrays.asList(createOffer(1, 128, "slave2", "host2", Optional.of("rack2"))));
+      sms.resourceOffers(driver, Arrays.asList(createOffer(1, 128, "slave3", "host3", Optional.of("rack3"))));
+
+      initRequest();
+      initFirstDeploy();
+      saveAndSchedule(request.toBuilder().setInstances(Optional.of(7)).setRackSensitive(Optional.of(true)));
+
+      sms.resourceOffers(driver, Arrays.asList(createOffer(2, 256, "slave1", "host1", Optional.of("rack1"))));
+      sms.resourceOffers(driver, Arrays.asList(createOffer(2, 256, "slave2", "host2", Optional.of("rack2"))));
+      sms.resourceOffers(driver, Arrays.asList(createOffer(3, 384, "slave3", "host3", Optional.of("rack3"))));
+
+      Assert.assertEquals(7, taskManager.getActiveTaskIds().size());
+
+      requestResource.postRequest(request.toBuilder().setInstances(Optional.of(4)).setRackSensitive(Optional.of(true)).build());
+
+      scheduler.drainPendingQueue(stateCacheProvider.get());
+
+      Assert.assertEquals(4, taskManager.getNumCleanupTasks());
+
+      int rebalanceRackCleanups = 0;
+      for (SingularityTaskCleanup cleanup : taskManager.getCleanupTasks()) {
+        if (cleanup.getCleanupType() == TaskCleanupType.REBALANCE_RACKS) {
+          rebalanceRackCleanups++;
+        }
+      }
+      Assert.assertEquals(1, rebalanceRackCleanups);
+      Assert.assertEquals(1, taskManager.getPendingTaskIds().size());
+    } finally {
+      configuration.setRebalanceRacksOnScaleDown(false);
+    }
   }
 }

@@ -62,6 +62,7 @@ import com.hubspot.singularity.SingularityRequestHistory.RequestHistoryType;
 import com.hubspot.singularity.SingularityRequestLbCleanup;
 import com.hubspot.singularity.SingularityShellCommand;
 import com.hubspot.singularity.SingularityTask;
+import com.hubspot.singularity.SingularityTaskCleanup;
 import com.hubspot.singularity.SingularityTaskHealthcheckResult;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTaskRequest;
@@ -1640,6 +1641,31 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
 
     // GMT happens first, so EST is a larger timestamp
     Assert.assertEquals(nextRunEST - nextRunGMT, fiveHoursInMilliseconds);
+  }
+
+  @Test
+  public void testDeployCleanupOverwritesTaskBounceCleanup() {
+    initRequest();
+    initFirstDeploy();
+    final SingularityTask oldTask = startTask(firstDeploy);
+
+    taskResource
+      .killTask(oldTask.getTaskId().getId(), Optional.of(new SingularityKillTaskRequest(Optional.<Boolean> absent(), Optional.<String> absent(), Optional.<String> absent(), Optional.of(true), Optional.<SingularityShellCommand>absent())));
+
+    final Optional<SingularityTaskCleanup> taskCleanup = taskManager.getTaskCleanup(oldTask.getTaskId().getId());
+    Assert.assertTrue(taskCleanup.isPresent());
+    Assert.assertEquals(TaskCleanupType.USER_REQUESTED_TASK_BOUNCE, taskCleanup.get().getCleanupType());
+
+    initSecondDeploy();
+    startTask(secondDeploy);
+    deployChecker.checkDeploys();
+
+    Assert.assertEquals(DeployState.SUCCEEDED, deployManager.getDeployResult(requestId, secondDeployId).get().getDeployState());
+    Assert.assertEquals(TaskCleanupType.DEPLOY_STEP_FINISHED, taskManager.getTaskCleanup(oldTask.getTaskId().getId()).get().getCleanupType());
+
+    cleaner.drainCleanupQueue();
+
+    Assert.assertFalse(taskManager.getTaskCleanup(oldTask.getTaskId().getId()).isPresent());
   }
 
   @Test
