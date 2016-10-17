@@ -115,4 +115,4 @@ ALTER TABLE `deployHistory` MODIFY `bytes` MEDIUMBLOB NOT NULL;
 --changeset ssalinas:14 dbms:mysql
 ALTER TABLE `taskHistory`
   ADD COLUMN `purged` BOOLEAN NOT NULL DEFAULT false,
-  ADD KEY `purged` (`requestId`, `purged`);
+  ADD KEY `purged` (`requestId`, `purged`, `updatedAt`);
