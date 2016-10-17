@@ -31,6 +31,7 @@ import com.hubspot.singularity.SingularityRequestHistory;
 import com.hubspot.singularity.SingularityRequestHistory.RequestHistoryType;
 import com.hubspot.singularity.SingularityRequestLbCleanup;
 import com.hubspot.singularity.SingularityRequestWithState;
+import com.hubspot.singularity.SingularityShellCommand;
 import com.hubspot.singularity.api.SingularityExpiringRequestParent;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.transcoders.Transcoder;
@@ -322,7 +323,7 @@ public class RequestManager extends CuratorAsyncManager {
 
     // delete it no matter if the delete request already exists.
     createCleanupRequest(new SingularityRequestCleanup(user, RequestCleanupType.DELETING, now, Optional.of(Boolean.TRUE), request.getId(), Optional.<String> absent(),
-        Optional.<Boolean> absent(), message, actionId));
+        Optional.<Boolean> absent(), message, actionId, Optional.<SingularityShellCommand>absent()));
 
     saveHistory(new SingularityRequestHistory(now, user, RequestHistoryType.DELETED, request, message));
 

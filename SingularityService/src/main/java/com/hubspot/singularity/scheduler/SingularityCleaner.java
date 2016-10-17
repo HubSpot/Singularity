@@ -42,6 +42,8 @@ import com.hubspot.singularity.SingularityRequestWithState;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskCleanup;
 import com.hubspot.singularity.SingularityTaskId;
+import com.hubspot.singularity.SingularityTaskShellCommandRequest;
+import com.hubspot.singularity.SingularityTaskShellCommandRequestId;
 import com.hubspot.singularity.TaskCleanupType;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.DeployManager;
@@ -314,6 +316,8 @@ public class SingularityCleaner {
               LOG.debug("Waiting on {} (it will expire after {}), because {} is {}", requestCleanup, JavaUtils.durationFromMillis(getObsoleteExpirationTime()), requestCleanup.getRequestId(), requestWithState.get().getState());
               continue;
             }
+          } else {
+            pause(requestCleanup, matchingActiveTaskIds);
           }
           break;
         case DELETING:
@@ -390,13 +394,39 @@ public class SingularityCleaner {
     for (SingularityTaskId matchingTaskId : matchingTaskIds) {
       LOG.debug("Adding task {} to cleanup (bounce)", matchingTaskId.getId());
 
-      taskManager.createTaskCleanup(new SingularityTaskCleanup(requestCleanup.getUser(), requestCleanup.getCleanupType().getTaskCleanupType().get(), start, matchingTaskId, requestCleanup.getMessage(), requestCleanup.getActionId()));
+      Optional<SingularityTaskShellCommandRequestId> runBeforeKillId = Optional.absent();
+
+      if (requestCleanup.getRunBeforeKill().isPresent()) {
+        SingularityTaskShellCommandRequest shellRequest = new SingularityTaskShellCommandRequest(matchingTaskId, requestCleanup.getUser(), System.currentTimeMillis(), requestCleanup.getRunBeforeKill().get());
+        taskManager.saveTaskShellCommandRequestToQueue(shellRequest);
+        runBeforeKillId = Optional.of(shellRequest.getId());
+      }
+
+      taskManager.createTaskCleanup(new SingularityTaskCleanup(requestCleanup.getUser(), requestCleanup.getCleanupType().getTaskCleanupType().get(), start, matchingTaskId, requestCleanup.getMessage(), requestCleanup.getActionId(), runBeforeKillId));
     }
 
     requestManager.addToPendingQueue(new SingularityPendingRequest(requestCleanup.getRequestId(), requestCleanup.getDeployId().get(), requestCleanup.getTimestamp(),
         requestCleanup.getUser(), PendingType.BOUNCE, Optional.<List<String>> absent(), Optional.<String> absent(), requestCleanup.getSkipHealthchecks(), requestCleanup.getMessage(), requestCleanup.getActionId()));
 
     LOG.info("Added {} tasks for request {} to cleanup bounce queue in {}", matchingTaskIds.size(), requestCleanup.getRequestId(), JavaUtils.duration(start));
+  }
+
+  private void pause(SingularityRequestCleanup requestCleanup, Iterable<SingularityTaskId> activeTaskIds) {
+    final long start = System.currentTimeMillis();
+
+    for (SingularityTaskId taskId : activeTaskIds) {
+      LOG.debug("Adding task {} to cleanup (pause)", taskId.getId());
+
+      Optional<SingularityTaskShellCommandRequestId> runBeforeKillId = Optional.absent();
+
+      if (requestCleanup.getRunBeforeKill().isPresent()) {
+        SingularityTaskShellCommandRequest shellRequest = new SingularityTaskShellCommandRequest(taskId, requestCleanup.getUser(), System.currentTimeMillis(), requestCleanup.getRunBeforeKill().get());
+        taskManager.saveTaskShellCommandRequestToQueue(shellRequest);
+        runBeforeKillId = Optional.of(shellRequest.getId());
+      }
+
+      taskManager.createTaskCleanup(new SingularityTaskCleanup(requestCleanup.getUser(), requestCleanup.getCleanupType().getTaskCleanupType().get(), start, taskId, requestCleanup.getMessage(), requestCleanup.getActionId(), runBeforeKillId));
+    }
   }
 
   private void cleanupDeployState(SingularityRequestCleanup requestCleanup) {
