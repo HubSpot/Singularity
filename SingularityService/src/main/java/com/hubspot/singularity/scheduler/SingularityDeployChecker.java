@@ -542,6 +542,9 @@ public class SingularityDeployChecker {
         return enqueueAndProcessLbRequest(request, deploy, pendingDeploy, updatePendingDeployRequest, deployActiveTasks, otherActiveTasks);
       case UNHEALTHY:
       default:
+        for (SingularityTaskId activeTaskId : deployActiveTasks) {
+          taskManager.clearStartupHealthchecks(activeTaskId);
+        }
         return getDeployResultWithFailures(request, deploy, pendingDeploy, DeployState.FAILED, "Not all tasks for deploy were healthy", deployActiveTasks);
     }
   }

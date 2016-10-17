@@ -39,27 +39,25 @@ public class SingularityTaskHealthcheckResult extends SingularityTaskIdHolder im
   }
 
   @Override
-  public int hashCode() {
-    return Objects.hashCode(getTaskId(), statusCode, durationMillis, responseBody, errorMessage, timestamp);
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+    SingularityTaskHealthcheckResult that = (SingularityTaskHealthcheckResult) o;
+    return startup == that.startup &&
+      timestamp == that.timestamp &&
+      Objects.equal(statusCode, that.statusCode) &&
+      Objects.equal(durationMillis, that.durationMillis) &&
+      Objects.equal(responseBody, that.responseBody) &&
+      Objects.equal(errorMessage, that.errorMessage);
   }
 
   @Override
-  public boolean equals(Object other) {
-    if (this == other) {
-        return true;
-    }
-    if (other == null || other.getClass() != this.getClass()) {
-        return false;
-    }
-
-    SingularityTaskHealthcheckResult that = (SingularityTaskHealthcheckResult) other;
-
-    return Objects.equal(this.statusCode, that.statusCode)
-            && Objects.equal(this.getTaskId(), that.getTaskId())
-            && Objects.equal(this.durationMillis, that.durationMillis)
-            && Objects.equal(this.responseBody, that.responseBody)
-            && Objects.equal(this.errorMessage, that.errorMessage)
-            && Objects.equal(this.timestamp, that.timestamp);
+  public int hashCode() {
+    return Objects.hashCode(statusCode, durationMillis, responseBody, errorMessage, startup, timestamp);
   }
 
   public Optional<Integer> getStatusCode() {
@@ -93,8 +91,13 @@ public class SingularityTaskHealthcheckResult extends SingularityTaskIdHolder im
 
   @Override
   public String toString() {
-    return "SingularityTaskHealthcheckResult [statusCode=" + statusCode + ", durationMillis=" + durationMillis + ", timestamp=" + timestamp + ", responseBody="
-        + responseBody + ", errorMessage=" + errorMessage + ", taskId=" + getTaskId() + ", startup=" + startup + "]";
+    return Objects.toStringHelper(this)
+      .add("statusCode", statusCode)
+      .add("durationMillis", durationMillis)
+      .add("responseBody", responseBody)
+      .add("errorMessage", errorMessage)
+      .add("startup", startup)
+      .add("timestamp", timestamp)
+      .toString();
   }
-
 }

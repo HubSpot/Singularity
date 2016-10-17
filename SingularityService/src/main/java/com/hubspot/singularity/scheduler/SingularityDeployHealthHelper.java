@@ -245,6 +245,7 @@ public class SingularityDeployHealthHelper {
         final long durationSinceRunning = System.currentTimeMillis() - runningAt.get();
         if (healthcheckResult.get().isStartup() && durationSinceRunning > TimeUnit.SECONDS.toMillis(startupTimeout)) {
           LOG.debug("{} has not responded to healthchecks in {}s", taskId, startupTimeout);
+          return DeployHealth.UNHEALTHY;
         }
       }
 

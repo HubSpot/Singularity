@@ -296,6 +296,7 @@ public class SingularityNewTaskChecker {
           healthchecker.checkHealthcheck(task);
           return CheckTaskState.CHECK_IF_OVERDUE;
         case UNHEALTHY:
+          taskManager.clearStartupHealthchecks(task.getTaskId());
           return CheckTaskState.UNHEALTHY_KILL_TASK;
         case HEALTHY:
           taskManager.clearStartupHealthchecks(task.getTaskId());

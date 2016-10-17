@@ -413,8 +413,9 @@ public class TaskManager extends CuratorAsyncManager {
     Optional<SingularityTaskHealthcheckResult> maybeLastHealthcheck = getLastHealthcheck(taskId);
     String parentPath = getHealthcheckParentPath(taskId);
     for (String healthcheckPath : getChildren(parentPath)) {
-      if (healthcheckPath.endsWith(STARTUP_HEALTHCHECK_PATH_SUFFIX) && (!maybeLastHealthcheck.isPresent() || !getHealthcheckPath(maybeLastHealthcheck.get()).equals(healthcheckPath))) {
-        delete(ZKPaths.makePath(parentPath, healthcheckPath));
+      String fullPath = ZKPaths.makePath(parentPath, healthcheckPath);
+      if (healthcheckPath.endsWith(STARTUP_HEALTHCHECK_PATH_SUFFIX) && (!maybeLastHealthcheck.isPresent() || !getHealthcheckPath(maybeLastHealthcheck.get()).equals(fullPath))) {
+        delete(fullPath);
       }
     }
   }

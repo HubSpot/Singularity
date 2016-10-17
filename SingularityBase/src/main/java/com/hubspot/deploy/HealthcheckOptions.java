@@ -60,6 +60,7 @@ public class HealthcheckOptions {
       .setFailureStatusCodes(failureStatusCodes);
   }
 
+  @ApiModelProperty(required=true, value="Healthcheck uri to hit")
   public String getUri() {
     return uri;
   }
