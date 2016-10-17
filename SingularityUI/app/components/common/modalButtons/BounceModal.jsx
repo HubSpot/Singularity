@@ -32,7 +32,12 @@ class BounceModal extends Component {
         name="Bounce Request"
         ref="bouceModal"
         action="Bounce Request"
-        onConfirm={(data) => this.props.bounceRequest(data)}
+        onConfirm={(data) => {
+          if (data.runShellCommand) {
+            data.runBeforeKill = {name: data.runBeforeKill};
+          }
+          this.props.bounceRequest(data)
+        }}
         buttonStyle="primary"
         formElements={[
           {
@@ -45,6 +50,21 @@ class BounceModal extends Component {
             name: 'skipHealthchecks',
             type: FormModal.INPUT_TYPES.BOOLEAN,
             label: 'Skip healthchecks during bounce'
+          },
+          {
+            name: 'runShellCommand',
+            type: FormModal.INPUT_TYPES.BOOLEAN,
+            label: 'Run shell command before killing tasks',
+            defaultValue: false
+          },
+          {
+            name: 'runBeforeKill',
+            type: FormModal.INPUT_TYPES.SELECT,
+            dependsOn: 'runShellCommand',
+            options: config.shellCommands.map((shellCommand) => ({
+              label: shellCommand.name,
+              value: shellCommand.name
+            }))
           },
           {
             name: 'durationMillis',
