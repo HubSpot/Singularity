@@ -36,6 +36,7 @@ import com.hubspot.singularity.SingularityTaskCleanup;
 import com.hubspot.singularity.SingularityTaskHealthcheckResult;
 import com.hubspot.singularity.SingularityTaskHistoryUpdate;
 import com.hubspot.singularity.SingularityTaskHistoryUpdate.SimplifiedTaskState;
+import com.hubspot.singularity.SingularityTaskShellCommandRequestId;
 import com.hubspot.singularity.TaskCleanupType;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.RequestManager;
@@ -248,7 +249,7 @@ public class SingularityNewTaskChecker {
           LOG.info("Killing {} because it did not become healthy after {}", task.getTaskId(), JavaUtils.durationFromMillis(getKillAfterUnhealthyMillis()));
 
           taskManager.createTaskCleanup(new SingularityTaskCleanup(Optional.<String> absent(), TaskCleanupType.OVERDUE_NEW_TASK, System.currentTimeMillis(),
-              task.getTaskId(), Optional.of(String.format("Task did not become healthy after %s", JavaUtils.durationFromMillis(getKillAfterUnhealthyMillis()))), Optional.<String>absent()));
+              task.getTaskId(), Optional.of(String.format("Task did not become healthy after %s", JavaUtils.durationFromMillis(getKillAfterUnhealthyMillis()))), Optional.<String>absent(), Optional.<SingularityTaskShellCommandRequestId>absent()));
           return false;
         } else {
           return true;
@@ -259,7 +260,7 @@ public class SingularityNewTaskChecker {
         LOG.info("Killing {} because it failed healthchecks", task.getTaskId());
 
         taskManager.createTaskCleanup(new SingularityTaskCleanup(Optional.<String> absent(), TaskCleanupType.UNHEALTHY_NEW_TASK, System.currentTimeMillis(),
-            task.getTaskId(), Optional.of("Task is not healthy"), Optional.<String> absent()));
+            task.getTaskId(), Optional.of("Task is not healthy"), Optional.<String> absent(), Optional.<SingularityTaskShellCommandRequestId>absent()));
         return false;
       case HEALTHY:
       case OBSOLETE:

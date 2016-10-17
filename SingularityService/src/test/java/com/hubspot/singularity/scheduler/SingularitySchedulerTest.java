@@ -60,6 +60,7 @@ import com.hubspot.singularity.SingularityRequestCleanup;
 import com.hubspot.singularity.SingularityRequestHistory;
 import com.hubspot.singularity.SingularityRequestHistory.RequestHistoryType;
 import com.hubspot.singularity.SingularityRequestLbCleanup;
+import com.hubspot.singularity.SingularityShellCommand;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskCleanup;
 import com.hubspot.singularity.SingularityTaskHealthcheckResult;
@@ -146,7 +147,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     SingularityTask firstTask = launchTask(request, firstDeploy, 1, TaskState.TASK_RUNNING);
     createAndSchedulePendingTask(firstDeployId);
 
-    requestResource.pause(requestId, Optional.of(new SingularityPauseRequest(Optional.of(false), Optional.<Long> absent(), Optional.<String> absent(), Optional.<String>absent())));
+    requestResource.pause(requestId, Optional.of(new SingularityPauseRequest(Optional.of(false), Optional.<Long> absent(), Optional.<String> absent(), Optional.<String>absent(), Optional.<SingularityShellCommand>absent())));
 
     cleaner.drainCleanupQueue();
 
@@ -184,7 +185,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     SingularityTask firstTask = startTask(firstDeploy);
 
     taskResource.killTask(firstTask.getTaskId().getId(), Optional.of(
-        new SingularityKillTaskRequest(Optional.<Boolean> absent(), Optional.of("msg"), Optional.<String> absent(), Optional.of(true))));
+        new SingularityKillTaskRequest(Optional.<Boolean> absent(), Optional.of("msg"), Optional.<String> absent(), Optional.of(true), Optional.<SingularityShellCommand>absent())));
 
     cleaner.drainCleanupQueue();
 
@@ -877,7 +878,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     initRequest();
 
     requestManager.createCleanupRequest(new SingularityRequestCleanup(Optional.<String>absent(), RequestCleanupType.PAUSING, System.currentTimeMillis(),
-        Optional.<Boolean>absent(), requestId, Optional.<String>absent(), Optional.<Boolean> absent(), Optional.<String>absent(), Optional.<String>absent()));
+        Optional.<Boolean>absent(), requestId, Optional.<String>absent(), Optional.<Boolean> absent(), Optional.<String>absent(), Optional.<String>absent(), Optional.<SingularityShellCommand>absent()));
 
     cleaner.drainCleanupQueue();
 
@@ -1017,7 +1018,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     startTask(firstDeploy, 3);
 
     requestResource.bounce(requestId,
-        Optional.of(new SingularityBounceRequest(Optional.of(true), Optional.<Boolean>absent(), Optional.of(1L), Optional.<String>absent(), Optional.of("msg"))));
+        Optional.of(new SingularityBounceRequest(Optional.of(true), Optional.<Boolean>absent(), Optional.of(1L), Optional.<String>absent(), Optional.of("msg"), Optional.<SingularityShellCommand>absent())));
 
     Assert.assertTrue(requestManager.cleanupRequestExists(requestId));
 
@@ -1059,7 +1060,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     SingularityTask taskTwo = startSeparatePlacementTask(firstDeploy, 2);
 
     requestManager.createCleanupRequest(new SingularityRequestCleanup(user, RequestCleanupType.INCREMENTAL_BOUNCE, System.currentTimeMillis(),
-        Optional.<Boolean>absent(), requestId, Optional.of(firstDeployId), Optional.<Boolean> absent(), Optional.<String>absent(), Optional.<String>absent()));
+        Optional.<Boolean>absent(), requestId, Optional.of(firstDeployId), Optional.<Boolean> absent(), Optional.<String>absent(), Optional.<String>absent(), Optional.<SingularityShellCommand>absent()));
 
     Assert.assertTrue(requestManager.cleanupRequestExists(requestId));
 
@@ -1643,6 +1644,31 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
   }
 
   @Test
+  public void testDeployCleanupOverwritesTaskBounceCleanup() {
+    initRequest();
+    initFirstDeploy();
+    final SingularityTask oldTask = startTask(firstDeploy);
+
+    taskResource
+      .killTask(oldTask.getTaskId().getId(), Optional.of(new SingularityKillTaskRequest(Optional.<Boolean> absent(), Optional.<String> absent(), Optional.<String> absent(), Optional.of(true), Optional.<SingularityShellCommand>absent())));
+
+    final Optional<SingularityTaskCleanup> taskCleanup = taskManager.getTaskCleanup(oldTask.getTaskId().getId());
+    Assert.assertTrue(taskCleanup.isPresent());
+    Assert.assertEquals(TaskCleanupType.USER_REQUESTED_TASK_BOUNCE, taskCleanup.get().getCleanupType());
+
+    initSecondDeploy();
+    startTask(secondDeploy);
+    deployChecker.checkDeploys();
+
+    Assert.assertEquals(DeployState.SUCCEEDED, deployManager.getDeployResult(requestId, secondDeployId).get().getDeployState());
+    Assert.assertEquals(TaskCleanupType.DEPLOY_STEP_FINISHED, taskManager.getTaskCleanup(oldTask.getTaskId().getId()).get().getCleanupType());
+
+    cleaner.drainCleanupQueue();
+
+    Assert.assertFalse(taskManager.getTaskCleanup(oldTask.getTaskId().getId()).isPresent());
+  }
+
+  @Test
   public void testCleanerFindsTasksWithSkippedHealthchecks() {
     initRequest();
     resourceOffers(2); // set up slaves so scale validate will pass
@@ -1693,29 +1719,5 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
         new SingularityTaskHealthcheckResult(Optional.of(200), Optional.of(1000L), now + 6000, Optional.<String>absent(), Optional.<String>absent(), unhealthyTaskThree.getTaskId()));
 
     Assert.assertEquals(DeployHealth.HEALTHY, deployHealthHelper.getDeployHealth(updatedRequest, Optional.of(firstDeploy), activeTaskIds, false));
-  }
-
-  @Test
-  public void testDeployCleanupOverwritesTaskBounceCleanup() {
-    initRequest();
-    initFirstDeploy();
-    final SingularityTask oldTask = startTask(firstDeploy);
-
-    taskResource.killTask(oldTask.getTaskId().getId(), Optional.of(new SingularityKillTaskRequest(Optional.<Boolean>absent(), Optional.<String>absent(), Optional.<String>absent(), Optional.of(true))));
-
-    final Optional<SingularityTaskCleanup> taskCleanup = taskManager.getTaskCleanup(oldTask.getTaskId().getId());
-    Assert.assertTrue(taskCleanup.isPresent());
-    Assert.assertEquals(TaskCleanupType.USER_REQUESTED_TASK_BOUNCE, taskCleanup.get().getCleanupType());
-
-    initSecondDeploy();
-    startTask(secondDeploy);
-    deployChecker.checkDeploys();
-
-    Assert.assertEquals(DeployState.SUCCEEDED, deployManager.getDeployResult(requestId, secondDeployId).get().getDeployState());
-    Assert.assertEquals(TaskCleanupType.DEPLOY_STEP_FINISHED, taskManager.getTaskCleanup(oldTask.getTaskId().getId()).get().getCleanupType());
-
-    cleaner.drainCleanupQueue();
-
-    Assert.assertFalse(taskManager.getTaskCleanup(oldTask.getTaskId().getId()).isPresent());
   }
 }
