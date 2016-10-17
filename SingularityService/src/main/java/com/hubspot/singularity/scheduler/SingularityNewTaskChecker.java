@@ -201,7 +201,7 @@ public class SingularityNewTaskChecker {
           }
         } catch (Throwable t) {
           LOG.error("Uncaught throwable in task check for task {}, re-enqueing", task, t);
-          exceptionNotifier.notify(t, ImmutableMap.of("taskId", task.getTaskId().toString()));
+          exceptionNotifier.notify(String.format("Error in task check (%s)", t.getMessage()), t, ImmutableMap.of("taskId", task.getTaskId().toString()));
 
           reEnqueueCheckOrAbort(task, healthchecker);
         }
@@ -214,7 +214,7 @@ public class SingularityNewTaskChecker {
       reEnqueueCheck(task, healthchecker);
     } catch (Throwable t) {
       LOG.error("Uncaught throwable re-enqueuing task check for task {}, aborting", task, t);
-      exceptionNotifier.notify(t, ImmutableMap.of("taskId", task.getTaskId().toString()));
+      exceptionNotifier.notify(String.format("Error in task check (%s)", t.getMessage()), t, ImmutableMap.of("taskId", task.getTaskId().toString()));
       abort.abort(AbortReason.UNRECOVERABLE_ERROR, Optional.of(t));
     }
   }

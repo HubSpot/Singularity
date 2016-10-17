@@ -21,12 +21,15 @@ import com.hubspot.singularity.SingularityDeploy;
 import com.hubspot.singularity.SingularityDeployFailure;
 import com.hubspot.singularity.SingularityDeployFailureReason;
 import com.hubspot.singularity.SingularityRequest;
+import com.hubspot.singularity.SingularityRequestHistory;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskHealthcheckResult;
 import com.hubspot.singularity.SingularityTaskHistoryUpdate;
 import com.hubspot.singularity.SingularityTaskHistoryUpdate.SimplifiedTaskState;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.config.SingularityConfiguration;
+import com.hubspot.singularity.data.DeployManager;
+import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.data.TaskManager;
 
 @Singleton
@@ -36,11 +39,13 @@ public class SingularityDeployHealthHelper {
 
   private final TaskManager taskManager;
   private final SingularityConfiguration configuration;
+  private final RequestManager requestManager;
 
   @Inject
-  public SingularityDeployHealthHelper(TaskManager taskManager, SingularityConfiguration configuration) {
+  public SingularityDeployHealthHelper(TaskManager taskManager, SingularityConfiguration configuration, RequestManager requestManager) {
     this.taskManager = taskManager;
     this.configuration = configuration;
+    this.requestManager = requestManager;
   }
 
   public enum DeployHealth {
@@ -151,9 +156,16 @@ public class SingularityDeployHealthHelper {
 
   private DeployHealth getHealthcheckDeployState(final SingularityDeploy deploy, final Collection<SingularityTaskId> matchingActiveTasks, final boolean isDeployPending) {
     Map<SingularityTaskId, SingularityTaskHealthcheckResult> healthcheckResults = taskManager.getLastHealthcheck(matchingActiveTasks);
+    List<SingularityRequestHistory> requestHistories = requestManager.getRequestHistory(deploy.getRequestId());
 
     for (SingularityTaskId taskId : matchingActiveTasks) {
-      DeployHealth individualTaskHealth = getTaskHealth(deploy, isDeployPending, Optional.fromNullable(healthcheckResults.get(taskId)), taskId);
+      DeployHealth individualTaskHealth;
+      if (healthchecksSkipped(taskId, requestHistories, deploy)) {
+        LOG.trace("Detected skipped healthchecks for {}", taskId);
+        individualTaskHealth = DeployHealth.HEALTHY;
+      } else {
+        individualTaskHealth = getTaskHealth(deploy, isDeployPending, Optional.fromNullable(healthcheckResults.get(taskId)), taskId);
+      }
       if (individualTaskHealth != DeployHealth.HEALTHY) {
         return individualTaskHealth;
       }
@@ -164,15 +176,58 @@ public class SingularityDeployHealthHelper {
   private List<SingularityTaskId> getHealthcheckedHealthyTasks(final SingularityDeploy deploy, final Collection<SingularityTaskId> matchingActiveTasks, final boolean isDeployPending) {
     final Map<SingularityTaskId, SingularityTaskHealthcheckResult> healthcheckResults = taskManager.getLastHealthcheck(matchingActiveTasks);
     final List<SingularityTaskId> healthyTaskIds = Lists.newArrayListWithCapacity(matchingActiveTasks.size());
+    List<SingularityRequestHistory> requestHistories = requestManager.getRequestHistory(deploy.getRequestId());
 
     for (SingularityTaskId taskId : matchingActiveTasks) {
-      DeployHealth individualTaskHealth = getTaskHealth(deploy, isDeployPending, Optional.fromNullable(healthcheckResults.get(taskId)), taskId);
+      DeployHealth individualTaskHealth;
+      if (healthchecksSkipped(taskId, requestHistories, deploy)) {
+        LOG.trace("Detected skipped healthchecks for {}", taskId);
+        individualTaskHealth = DeployHealth.HEALTHY;
+      } else {
+        individualTaskHealth = getTaskHealth(deploy, isDeployPending, Optional.fromNullable(healthcheckResults.get(taskId)), taskId);
+      }
       if (individualTaskHealth == DeployHealth.HEALTHY) {
         healthyTaskIds.add(taskId);
       }
     }
 
     return healthyTaskIds;
+  }
+
+  private boolean healthchecksSkipped(SingularityTaskId taskId, List<SingularityRequestHistory> requestHistories, SingularityDeploy deploy) {
+    if (deploy.getSkipHealthchecksOnDeploy().or(false)) {
+      return true;
+    }
+
+    Optional<SingularityTask> maybeTask = taskManager.getTask(taskId);
+    if (maybeTask.isPresent()) {
+      if (maybeTask.get().getTaskRequest().getPendingTask().getSkipHealthchecks().or(false)) {
+        return true;
+      }
+
+      Optional<Long> runningStartTime = Optional.absent();
+      for (SingularityTaskHistoryUpdate historyUpdate : taskManager.getTaskHistoryUpdates(taskId)) {
+        if (historyUpdate.getTaskState() == ExtendedTaskState.TASK_RUNNING) {
+          runningStartTime = Optional.of(historyUpdate.getTimestamp());
+        }
+      }
+
+      if (runningStartTime.isPresent()) {
+        Optional<SingularityRequestHistory> previousHistory = Optional.absent();
+        for (SingularityRequestHistory history : requestHistories) {
+          if (history.getCreatedAt() < runningStartTime.get() && (!previousHistory.isPresent() || previousHistory.get().getCreatedAt() < history.getCreatedAt())) {
+            previousHistory = Optional.of(history);
+          }
+        }
+
+        if (previousHistory.isPresent() && previousHistory.get().getRequest().getSkipHealthchecks().or(false)) {
+          return true;
+        }
+      }
+    }
+
+
+    return false;
   }
 
   public DeployHealth getTaskHealth(SingularityDeploy deploy, boolean isDeployPending, Optional<SingularityTaskHealthcheckResult> healthcheckResult, SingularityTaskId taskId) {

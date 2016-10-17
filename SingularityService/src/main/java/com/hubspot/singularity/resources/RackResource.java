@@ -62,7 +62,7 @@ public class RackResource extends AbstractMachineResource<SingularityRack> {
 
   @DELETE
   @Path("/rack/{rackId}")
-  @ApiOperation("Remove a known rack, erasing history. This operation will cancel decomissioning of racks")
+  @ApiOperation("Remove a known rack, erasing history. This operation will cancel decommissioning of racks")
   public void removeRack(@ApiParam("Rack ID") @PathParam("rackId") String rackId) {
     super.remove(rackId);
   }
