@@ -284,6 +284,8 @@ public class SingularityConfiguration extends Configuration {
   @Max(5)
   private double schedulerPriorityWeightFactor = 1.0;
 
+  private boolean rebalanceRacksOnScaleDown = false;
+
   public long getAskDriverToKillTasksAgainAfterMillis() {
     return askDriverToKillTasksAgainAfterMillis;
   }
@@ -1123,5 +1125,13 @@ public class SingularityConfiguration extends Configuration {
 
   public void setSchedulerPriorityWeightFactor(double schedulerPriorityWeightFactor) {
     this.schedulerPriorityWeightFactor = schedulerPriorityWeightFactor;
+  }
+
+  public boolean isRebalanceRacksOnScaleDown() {
+    return rebalanceRacksOnScaleDown;
+  }
+
+  public void setRebalanceRacksOnScaleDown(boolean rebalanceRacksOnScaleDown) {
+    this.rebalanceRacksOnScaleDown = rebalanceRacksOnScaleDown;
   }
 }
