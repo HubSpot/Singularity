@@ -65,7 +65,7 @@ public abstract class HistoryJDBI implements GetHandle {
   @SqlQuery("SELECT requestId, COUNT(*) as count FROM taskHistory WHERE updatedAt \\< :updatedAt GROUP BY requestId")
   abstract List<SingularityRequestIdCount> getRequestIdCounts(@Bind("updatedAt") Date updatedAt);
 
-  @SqlQuery("SELECT MIN(updatedAt) FROM taskHistory WHERE requestId = :requestId ORDER BY updatedAt DESC LIMIT :limit")
+  @SqlQuery("SELECT MIN(updatedAt) FROM taskHistory WHERE requestId = :requestId GROUP BY updatedAt ORDER BY updatedAt DESC LIMIT :limit")
   abstract Date getMinUpdatedAtWithLimitForRequest(@Bind("requestId") String requestId, @Bind("limit") Integer limit);
 
   @SqlUpdate("UPDATE taskHistory SET bytes = '', purged = true WHERE requestId = :requestId AND purged = false AND updatedAt \\< :updatedAtBefore")
