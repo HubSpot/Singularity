@@ -7,7 +7,17 @@ import com.google.common.base.Optional;
 public class SingularityTaskShellCommandUpdate {
 
   public enum UpdateType {
-    INVALID, ACKED, STARTED, FINISHED, FAILED;
+    INVALID(true), ACKED(false), STARTED(false), FINISHED(true), FAILED(true);
+
+    private boolean finished;
+
+    UpdateType(boolean finished) {
+      this.finished = finished;
+    }
+
+    public boolean isFinished() {
+      return finished;
+    }
   }
 
   private final SingularityTaskShellCommandRequestId shellRequestId;

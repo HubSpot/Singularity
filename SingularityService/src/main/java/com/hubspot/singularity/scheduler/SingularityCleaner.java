@@ -44,6 +44,7 @@ import com.hubspot.singularity.SingularityTaskCleanup;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTaskShellCommandRequest;
 import com.hubspot.singularity.SingularityTaskShellCommandRequestId;
+import com.hubspot.singularity.SingularityTaskShellCommandUpdate;
 import com.hubspot.singularity.TaskCleanupType;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.DeployManager;
@@ -99,6 +100,21 @@ public class SingularityCleaner {
     }
 
     final SingularityRequest request = requestWithState.get().getRequest();
+
+    if (taskCleanup.getRunBeforeKillId().isPresent()) {
+      List<SingularityTaskShellCommandUpdate> shellCommandUpdates = taskManager.getTaskShellCommandUpdates(taskCleanup.getRunBeforeKillId().get());
+      boolean finished = false;
+      for (SingularityTaskShellCommandUpdate update : shellCommandUpdates) {
+        if (update.getUpdateType().isFinished()) {
+          finished = true;
+          break;
+        }
+      }
+      if (!finished) {
+        LOG.debug("Waiting for pre-kill shell command {} to finish before killing task", taskCleanup.getRunBeforeKillId());
+        return false;
+      }
+    }
 
     if (taskCleanup.getCleanupType().shouldKillTaskInstantly(request)) {
       LOG.debug("Killing a task {} immediately because of its cleanup type", taskCleanup);

@@ -57,6 +57,7 @@ import com.hubspot.singularity.WebExceptions;
 import com.hubspot.singularity.api.SingularityPriorityFreeze;
 import com.hubspot.singularity.api.SingularityBounceRequest;
 import com.hubspot.singularity.config.SingularityConfiguration;
+import com.hubspot.singularity.config.UIConfiguration;
 import com.hubspot.singularity.config.shell.ShellCommandDescriptor;
 import com.hubspot.singularity.config.shell.ShellCommandOptionDescriptor;
 import com.hubspot.singularity.data.history.DeployHistoryHelper;
@@ -80,7 +81,7 @@ public class SingularityValidator {
   private final boolean allowRequestsWithoutOwners;
   private final boolean createDeployIds;
   private final int deployIdLength;
-  private final List<ShellCommandDescriptor> shellCommands;
+  private final UIConfiguration uiConfiguration;
   private final SlavePlacement defaultSlavePlacement;
   private final DeployHistoryHelper deployHistoryHelper;
   private final Resources defaultResources;
@@ -89,7 +90,7 @@ public class SingularityValidator {
   private final SlaveManager slaveManager;
 
   @Inject
-  public SingularityValidator(SingularityConfiguration configuration, DeployHistoryHelper deployHistoryHelper, PriorityManager priorityManager, DisasterManager disasterManager, SlaveManager slaveManager) {
+  public SingularityValidator(SingularityConfiguration configuration, DeployHistoryHelper deployHistoryHelper, PriorityManager priorityManager, DisasterManager disasterManager, SlaveManager slaveManager, UIConfiguration uiConfiguration) {
     this.maxDeployIdSize = configuration.getMaxDeployIdSize();
     this.maxRequestIdSize = configuration.getMaxRequestIdSize();
     this.allowRequestsWithoutOwners = configuration.isAllowRequestsWithoutOwners();
@@ -112,7 +113,7 @@ public class SingularityValidator {
     this.maxMemoryMbPerRequest = configuration.getMesosConfiguration().getMaxMemoryMbPerRequest();
     this.maxInstancesPerRequest = configuration.getMesosConfiguration().getMaxNumInstancesPerRequest();
 
-    this.shellCommands = configuration.getUiConfiguration().getShellCommands();
+    this.uiConfiguration = uiConfiguration;
 
     this.disasterManager = disasterManager;
     this.slaveManager = slaveManager;
@@ -562,7 +563,7 @@ public class SingularityValidator {
   }
 
   public void checkValidShellCommand(final SingularityShellCommand shellCommand) {
-    Optional<ShellCommandDescriptor> commandDescriptor = Iterables.tryFind(shellCommands, new Predicate<ShellCommandDescriptor>() {
+    Optional<ShellCommandDescriptor> commandDescriptor = Iterables.tryFind(uiConfiguration.getShellCommands(), new Predicate<ShellCommandDescriptor>() {
       @Override
       public boolean apply(ShellCommandDescriptor input) {
         return input.getName().equals(shellCommand.getName());
@@ -570,7 +571,7 @@ public class SingularityValidator {
     });
 
     if (!commandDescriptor.isPresent()) {
-      throw WebExceptions.forbidden("Shell command %s not in %s", shellCommand.getName(), shellCommands);
+      throw WebExceptions.forbidden("Shell command %s not in %s", shellCommand.getName(), uiConfiguration.getShellCommands());
     }
 
     Set<String> options = Sets.newHashSetWithExpectedSize(commandDescriptor.get().getOptions().size());
