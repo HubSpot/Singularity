@@ -285,7 +285,7 @@ public class SingularityConfiguration extends Configuration {
   private DisasterDetectionConfiguration disasterDetection = new DisasterDetectionConfiguration();
 
   @Min(1)
-  private int statusUpdateQueueCapacity = 10;
+  private int statusUpdateQueueCapacity = 1000;
 
   private boolean processStatusUpdatesInSeparateThread = false;
 

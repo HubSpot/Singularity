@@ -9,6 +9,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.Lock;
 
 import org.apache.mesos.Protos;
+import org.apache.mesos.Protos.TaskState;
+import org.apache.mesos.Protos.TaskStatus.Reason;
 import org.apache.mesos.SchedulerDriver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -128,16 +130,6 @@ public class SingularityMesosStatusUpdateHandler implements Managed {
         return previousTaskStatusHolder.get().getTaskStatus().get().getState() == newTaskStatusHolder.getTaskStatus().get().getState();
     }
 
-    private Optional<SingularityTaskId> getTaskId(String taskId) {
-        try {
-            return Optional.of(taskIdTranscoder.fromString(taskId));
-        } catch (InvalidSingularityTaskIdException | SingularityTranscoderException e) {
-            exceptionNotifier.notify(String.format("Unexpected task id %s", taskId), e);
-            LOG.error("Unexpected taskId {} ", taskId, e);
-            return Optional.absent();
-        }
-    }
-
     private void saveNewTaskStatusHolder(SingularityTaskId taskIdObj, SingularityTaskStatusHolder newTaskStatusHolder, ExtendedTaskState taskState) {
         if (taskState.isDone()) {
             taskManager.deleteLastActiveTaskStatus(taskIdObj);
@@ -146,10 +138,20 @@ public class SingularityMesosStatusUpdateHandler implements Managed {
         }
     }
 
+    private Optional<SingularityTaskId> getTaskId(String taskId) {
+        try {
+            return Optional.of(taskIdTranscoder.fromString(taskId));
+        } catch (InvalidSingularityTaskIdException | SingularityTranscoderException e) {
+            exceptionNotifier.notify(String.format("Unexpected taskId %s", taskId), e);
+            LOG.error("Unexpected taskId {} ", taskId, e);
+            return Optional.absent();
+        }
+    }
+
     private Optional<String> getStatusMessage(Protos.TaskStatus status, Optional<SingularityTask> task) {
         if (status.hasMessage() && !Strings.isNullOrEmpty(status.getMessage())) {
             return Optional.of(status.getMessage());
-        } else if (status.hasReason() && status.getReason() == Protos.TaskStatus.Reason.REASON_CONTAINER_LIMITATION_MEMORY) {
+        } else if (status.hasReason() && status.getReason() == Reason.REASON_CONTAINER_LIMITATION_MEMORY) {
             if (task.isPresent() && task.get().getTaskRequest().getDeploy().getResources().isPresent()) {
                 if (task.get().getTaskRequest().getDeploy().getResources().get().getDiskMb() > 0) {
                     return Optional.of(String.format("Task exceeded one or more memory limits (%s MB mem, %s MB disk).", task.get().getTaskRequest().getDeploy().getResources().get().getMemoryMb(), task.get().getTaskRequest().getDeploy().getResources().get().getDiskMb()));
@@ -165,7 +167,7 @@ public class SingularityMesosStatusUpdateHandler implements Managed {
     }
 
     private void updateDisasterStats(Protos.TaskStatus status) {
-        if (status.getState() == Protos.TaskState.TASK_LOST) {
+        if (status.getState() == TaskState.TASK_LOST) {
             taskLostReasons.add(status.getReason());
         }
     }
