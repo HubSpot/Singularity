@@ -116,4 +116,3 @@ ALTER TABLE `deployHistory` MODIFY `bytes` MEDIUMBLOB NOT NULL;
 ALTER TABLE `taskHistory`
   ADD COLUMN `purged` BOOLEAN NOT NULL DEFAULT false,
   ADD KEY `purged` (`requestId`, `purged`);
-UPDATE `taskHistory` SET `purged` = true WHERE `bytes` = '';
