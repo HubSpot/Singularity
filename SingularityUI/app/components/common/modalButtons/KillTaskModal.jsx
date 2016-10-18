@@ -37,6 +37,27 @@ class KillTaskModal extends Component {
         defaultValue: true
       }];
     }
+
+    if (config.shellCommands.length > 0) {
+      formElements.push(
+        {
+        name: 'runShellCommand',
+        type: FormModal.INPUT_TYPES.BOOLEAN,
+        label: 'Run shell command before killing tasks',
+        defaultValue: false
+        },
+        {
+          name: 'runBeforeKill',
+          type: FormModal.INPUT_TYPES.SELECT,
+          dependsOn: 'runShellCommand',
+          options: config.shellCommands.map((shellCommand) => ({
+            label: shellCommand.name,
+            value: shellCommand.name
+          }))
+        }
+      );
+    }
+
     formElements.push({
       name: 'message',
       type: FormModal.INPUT_TYPES.STRING,
@@ -47,7 +68,13 @@ class KillTaskModal extends Component {
         name={this.props.name}
         ref="confirmKillTask"
         action={this.props.name}
-        onConfirm={(data) => this.props.killTask(data)}
+        onConfirm={(data) => {
+          if (data.runShellCommand) {
+            data.runBeforeKill = {name: data.runBeforeKill};
+          }
+          console.log(data);
+          this.props.killTask(data)
+        }}
         buttonStyle="danger"
         formElements={formElements}>
         <span>

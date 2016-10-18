@@ -1,11 +1,14 @@
 package com.hubspot.singularity.api;
 
+import com.google.common.base.Objects;
 import com.google.common.base.Optional;
+import com.hubspot.singularity.SingularityShellCommand;
 
 public class SingularityBounceRequestBuilder {
 
   private Optional<Boolean> incremental;
   private Optional<Boolean> skipHealthchecks;
+  private Optional<SingularityShellCommand> runBeforeKill;
 
   private Optional<Long> durationMillis;
   private Optional<String> actionId;
@@ -14,6 +17,7 @@ public class SingularityBounceRequestBuilder {
   public SingularityBounceRequestBuilder() {
     this.incremental = Optional.absent();
     this.skipHealthchecks = Optional.absent();
+    this.runBeforeKill = Optional.absent();
 
     this.durationMillis = Optional.absent();
     this.actionId = Optional.absent();
@@ -21,7 +25,7 @@ public class SingularityBounceRequestBuilder {
   }
 
   public SingularityBounceRequest build() {
-    return new SingularityBounceRequest(incremental, skipHealthchecks, durationMillis, actionId, message);
+    return new SingularityBounceRequest(incremental, skipHealthchecks, durationMillis, actionId, message, runBeforeKill);
   }
 
   public Optional<Long> getDurationMillis() {
@@ -69,14 +73,24 @@ public class SingularityBounceRequestBuilder {
     return this;
   }
 
+  public Optional<SingularityShellCommand> getRunBeforeKill() {
+    return runBeforeKill;
+  }
+
+  public SingularityBounceRequestBuilder setRunBeforeKill(Optional<SingularityShellCommand> runBeforeKill) {
+    this.runBeforeKill = runBeforeKill;
+    return this;
+  }
+
   @Override
   public String toString() {
-    return "SingularityBounceRequestBuilder{" +
-        "durationMillis='" + durationMillis + '\'' +
-        ", actionId='" + actionId + '\'' +
-        ", message='" + message + '\'' +
-        ", incremental='" + incremental + '\'' +
-        ", skipHealthchecks='" + skipHealthchecks + '\'' +
-        "}";
+    return Objects.toStringHelper(this)
+      .add("incremental", incremental)
+      .add("skipHealthchecks", skipHealthchecks)
+      .add("runBeforeKill", runBeforeKill)
+      .add("durationMillis", durationMillis)
+      .add("actionId", actionId)
+      .add("message", message)
+      .toString();
   }
 }
