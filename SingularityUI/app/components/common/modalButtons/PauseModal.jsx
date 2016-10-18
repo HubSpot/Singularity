@@ -28,23 +28,29 @@ class PauseModal extends Component {
         name: 'message',
         type: FormModal.INPUT_TYPES.STRING,
         label: 'Message (optional)'
-      },
-      {
+      }
+    ];
+
+    if (config.shellCommands.length > 0) {
+      formElements.push(
+        {
         name: 'runShellCommand',
         type: FormModal.INPUT_TYPES.BOOLEAN,
         label: 'Run shell command before killing tasks',
         defaultValue: false
-      },
-      {
-        name: 'runBeforeKill',
-        type: FormModal.INPUT_TYPES.SELECT,
-        dependsOn: 'runShellCommand',
-        options: config.shellCommands.map((shellCommand) => ({
-          label: shellCommand.name,
-          value: shellCommand.name
-        }))
-      }
-    ];
+        },
+        {
+          name: 'runBeforeKill',
+          type: FormModal.INPUT_TYPES.SELECT,
+          dependsOn: 'runShellCommand',
+          options: config.shellCommands.map((shellCommand) => ({
+            label: shellCommand.name,
+            value: shellCommand.name
+          }))
+        }
+      );
+    }
+
     if (this.props.isScheduled) {
       formElements = [
         {

@@ -35,23 +35,29 @@ class KillTaskModal extends Component {
         type: FormModal.INPUT_TYPES.BOOLEAN,
         label: 'Wait for replacement task to start before killing task',
         defaultValue: true
-      },
-      {
+      }];
+    }
+
+    if (config.shellCommands.length > 0) {
+      formElements.push(
+        {
         name: 'runShellCommand',
         type: FormModal.INPUT_TYPES.BOOLEAN,
         label: 'Run shell command before killing tasks',
         defaultValue: false
-      },
-      {
-        name: 'runBeforeKill',
-        type: FormModal.INPUT_TYPES.SELECT,
-        dependsOn: 'runShellCommand',
-        options: config.shellCommands.map((shellCommand) => ({
-          label: shellCommand.name,
-          value: shellCommand.name
-        }))
-      }];
+        },
+        {
+          name: 'runBeforeKill',
+          type: FormModal.INPUT_TYPES.SELECT,
+          dependsOn: 'runShellCommand',
+          options: config.shellCommands.map((shellCommand) => ({
+            label: shellCommand.name,
+            value: shellCommand.name
+          }))
+        }
+      );
     }
+
     formElements.push({
       name: 'message',
       type: FormModal.INPUT_TYPES.STRING,
