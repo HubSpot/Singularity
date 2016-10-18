@@ -285,7 +285,7 @@ public class SingularityConfiguration extends Configuration {
   private double schedulerPriorityWeightFactor = 1.0;
 
   @Min(1)
-  private int statusUpdateQueueCapacity = 10;
+  private int statusUpdateQueueCapacity = 1000;
 
   private boolean processStatusUpdatesInSeparateThread = false;
 
