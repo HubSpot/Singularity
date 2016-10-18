@@ -56,6 +56,7 @@ import com.hubspot.singularity.hooks.LoadBalancerClient;
 import com.hubspot.singularity.hooks.LoadBalancerClientImpl;
 import com.hubspot.singularity.hooks.SingularityWebhookPoller;
 import com.hubspot.singularity.hooks.SingularityWebhookSender;
+import com.hubspot.singularity.mesos.SingularityMesosStatusUpdateHandler;
 import com.hubspot.singularity.metrics.SingularityGraphiteReporterManaged;
 import com.hubspot.singularity.sentry.NotifyingExceptionMapper;
 import com.hubspot.singularity.sentry.SingularityExceptionNotifier;
@@ -95,6 +96,9 @@ public class SingularityMainModule implements Module {
 
   public static final String NEW_TASK_THREADPOOL_NAME = "_new_task_threadpool";
   public static final Named NEW_TASK_THREADPOOL_NAMED = Names.named(NEW_TASK_THREADPOOL_NAME);
+
+  public static final String STATUS_UPDATE_THREADPOOL_NAME = "_status_update_threadpool";
+  public static final Named STATUS_UPDATE_THREADPOOL_NAMED = Names.named(STATUS_UPDATE_THREADPOOL_NAME);
 
   public static final String CURRENT_HTTP_REQUEST = "_singularity_current_http_request";
 
@@ -159,7 +163,13 @@ public class SingularityMainModule implements Module {
         configuration.getThreadpoolShutdownDelayInSeconds(),
         "check-new-task")).in(Scopes.SINGLETON);
 
+    binder.bind(ScheduledExecutorService.class).annotatedWith(STATUS_UPDATE_THREADPOOL_NAMED).toProvider(new SingularityManagedScheduledExecutorServiceProvider(1,
+        configuration.getThreadpoolShutdownDelayInSeconds(),
+        "status-update-handler")).in(Scopes.SINGLETON);
+
     binder.bind(SingularityGraphiteReporterManaged.class).in(Scopes.SINGLETON);
+
+    binder.bind(SingularityMesosStatusUpdateHandler.class).in(Scopes.SINGLETON);
   }
 
   @Provides
