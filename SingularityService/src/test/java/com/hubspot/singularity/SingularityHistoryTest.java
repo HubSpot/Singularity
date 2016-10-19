@@ -132,7 +132,7 @@ public class SingularityHistoryTest extends SingularitySchedulerTestBase {
 
     HistoryPurgingConfiguration historyPurgingConfiguration = new HistoryPurgingConfiguration();
     historyPurgingConfiguration.setEnabled(true);
-    historyPurgingConfiguration.setDeleteTaskHistoryBytesInsteadOfEntireRow(false);
+    historyPurgingConfiguration.setDeleteTaskHistoryBytesInsteadOfEntireRow(true);
     historyPurgingConfiguration.setDeleteTaskHistoryAfterDays(1);
 
     SingularityTaskHistory taskHistory = buildTask(System.currentTimeMillis() - TimeUnit.DAYS.toMillis(3));
@@ -163,7 +163,7 @@ public class SingularityHistoryTest extends SingularitySchedulerTestBase {
 
     HistoryPurgingConfiguration historyPurgingConfiguration = new HistoryPurgingConfiguration();
     historyPurgingConfiguration.setEnabled(true);
-    historyPurgingConfiguration.setDeleteTaskHistoryBytesInsteadOfEntireRow(true);
+    historyPurgingConfiguration.setDeleteTaskHistoryBytesInsteadOfEntireRow(false);
     historyPurgingConfiguration.setDeleteTaskHistoryAfterDays(10);
 
     SingularityHistoryPurger purger = new SingularityHistoryPurger(historyPurgingConfiguration, historyManager);
