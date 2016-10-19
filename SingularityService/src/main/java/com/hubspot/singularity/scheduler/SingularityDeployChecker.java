@@ -47,6 +47,7 @@ import com.hubspot.singularity.SingularityRequestWithState;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskCleanup;
 import com.hubspot.singularity.SingularityTaskId;
+import com.hubspot.singularity.SingularityTaskShellCommandRequestId;
 import com.hubspot.singularity.SingularityUpdatePendingDeployRequest;
 import com.hubspot.singularity.TaskCleanupType;
 import com.hubspot.singularity.config.SingularityConfiguration;
@@ -210,7 +211,7 @@ public class SingularityDeployChecker {
   private void cleanupTasks(SingularityPendingDeploy pendingDeploy, SingularityRequest request, SingularityDeployResult deployResult, Iterable<SingularityTaskId> tasksToKill) {
     for (SingularityTaskId matchingTask : tasksToKill) {
       taskManager.saveTaskCleanup(new SingularityTaskCleanup(pendingDeploy.getDeployMarker().getUser(), getCleanupType(pendingDeploy, request, deployResult), deployResult.getTimestamp(), matchingTask,
-        Optional.of(String.format("Deploy %s - %s", pendingDeploy.getDeployMarker().getDeployId(), deployResult.getDeployState().name())), Optional.<String> absent()));
+        Optional.of(String.format("Deploy %s - %s", pendingDeploy.getDeployMarker().getDeployId(), deployResult.getDeployState().name())), Optional.<String> absent(), Optional.<SingularityTaskShellCommandRequestId>absent()));
     }
   }
 
@@ -656,7 +657,7 @@ public class SingularityDeployChecker {
     for (SingularityTaskId taskId : tasksToShutDown(deployProgress, otherActiveTasks, request)) {
       taskManager.createTaskCleanup(
         new SingularityTaskCleanup(Optional.<String> absent(), TaskCleanupType.DEPLOY_STEP_FINISHED, System.currentTimeMillis(), taskId, Optional.of(message),
-          Optional.<String> absent()));
+          Optional.<String> absent(), Optional.<SingularityTaskShellCommandRequestId>absent()));
     }
     return new SingularityDeployResult(deployState);
   }

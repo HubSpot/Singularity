@@ -50,6 +50,7 @@ import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTaskMetadata;
 import com.hubspot.singularity.SingularityTaskRequest;
 import com.hubspot.singularity.SingularityTaskShellCommandRequest;
+import com.hubspot.singularity.SingularityTaskShellCommandRequestId;
 import com.hubspot.singularity.SingularityTransformHelpers;
 import com.hubspot.singularity.SingularityUser;
 import com.hubspot.singularity.TaskCleanupType;
@@ -280,12 +281,17 @@ public class TaskResource {
     Optional<Boolean> override = Optional.absent();
     Optional<String> actionId = Optional.absent();
     Optional<Boolean> waitForReplacementTask = Optional.absent();
+    Optional<SingularityTaskShellCommandRequestId> runBeforeKillId = Optional.absent();
 
     if (killTaskRequest.isPresent()) {
       actionId = killTaskRequest.get().getActionId();
       message = killTaskRequest.get().getMessage();
       override = killTaskRequest.get().getOverride();
       waitForReplacementTask = killTaskRequest.get().getWaitForReplacementTask();
+      if (killTaskRequest.get().getRunBeforeKill().isPresent()) {
+        SingularityTaskShellCommandRequest shellCommandRequest = startShellCommand(task.getTaskId(), killTaskRequest.get().getRunBeforeKill().get());
+        runBeforeKillId = Optional.of(shellCommandRequest.getId());
+      }
     }
 
     TaskCleanupType cleanupType = TaskCleanupType.USER_REQUESTED;
@@ -304,11 +310,11 @@ public class TaskResource {
     if (override.isPresent() && override.get().booleanValue()) {
       cleanupType = TaskCleanupType.USER_REQUESTED_DESTROY;
       taskCleanup = new SingularityTaskCleanup(JavaUtils.getUserEmail(user), cleanupType, now,
-        task.getTaskId(), message, actionId);
+        task.getTaskId(), message, actionId, runBeforeKillId);
       taskManager.saveTaskCleanup(taskCleanup);
     } else {
       taskCleanup = new SingularityTaskCleanup(JavaUtils.getUserEmail(user), cleanupType, now,
-        task.getTaskId(), message, actionId);
+        task.getTaskId(), message, actionId, runBeforeKillId);
       SingularityCreateResult result = taskManager.createTaskCleanup(taskCleanup);
 
       if (result == SingularityCreateResult.EXISTED && userRequestedKillTakesPriority(taskId)) {
@@ -404,35 +410,14 @@ public class TaskResource {
       throw WebExceptions.badRequest("%s is not an active task, can't run %s on it", taskId, shellCommand.getName());
     }
 
-    Optional<ShellCommandDescriptor> commandDescriptor = Iterables.tryFind(uiConfiguration.getShellCommands(), new Predicate<ShellCommandDescriptor>() {
+    return startShellCommand(taskIdObj, shellCommand);
+  }
 
-      @Override
-      public boolean apply(ShellCommandDescriptor input) {
-        return input.getName().equals(shellCommand.getName());
-      }
-    });
+  private SingularityTaskShellCommandRequest startShellCommand(SingularityTaskId taskId, final SingularityShellCommand shellCommand) {
+    validator.checkValidShellCommand(shellCommand);
 
-    if (!commandDescriptor.isPresent()) {
-      throw WebExceptions.forbidden("Shell command %s not in %s", shellCommand.getName(), uiConfiguration.getShellCommands());
-    }
-
-    Set<String> options = Sets.newHashSetWithExpectedSize(commandDescriptor.get().getOptions().size());
-    for (ShellCommandOptionDescriptor option : commandDescriptor.get().getOptions()) {
-      options.add(option.getName());
-    }
-
-    if (shellCommand.getOptions().isPresent()) {
-      for (String option : shellCommand.getOptions().get()) {
-        if (!options.contains(option)) {
-          throw WebExceptions.badRequest("Shell command %s does not have option %s (%s)", shellCommand.getName(), option, options);
-        }
-      }
-    }
-
-    SingularityTaskShellCommandRequest shellRequest = new SingularityTaskShellCommandRequest(taskIdObj, JavaUtils.getUserEmail(user), System.currentTimeMillis(), shellCommand);
-
+    SingularityTaskShellCommandRequest shellRequest = new SingularityTaskShellCommandRequest(taskId, JavaUtils.getUserEmail(user), System.currentTimeMillis(), shellCommand);
     taskManager.saveTaskShellCommandRequestToQueue(shellRequest);
-
     return shellRequest;
   }
 

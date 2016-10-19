@@ -44,6 +44,7 @@ import com.hubspot.singularity.SingularityRequestHistory.RequestHistoryType;
 import com.hubspot.singularity.SingularityRequestParent;
 import com.hubspot.singularity.SingularityRequestWithState;
 import com.hubspot.singularity.SingularityService;
+import com.hubspot.singularity.SingularityShellCommand;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTransformHelpers;
 import com.hubspot.singularity.SingularityUser;
@@ -178,10 +179,15 @@ public class RequestResource extends AbstractRequestResource {
 
     Optional<String> message = Optional.absent();
     Optional<String> actionId = Optional.absent();
+    Optional<SingularityShellCommand> runBeforeKill = Optional.absent();
 
     if (bounceRequest.isPresent()) {
       actionId = bounceRequest.get().getActionId();
       message = bounceRequest.get().getMessage();
+      if (bounceRequest.get().getRunBeforeKill().isPresent()) {
+        validator.checkValidShellCommand(bounceRequest.get().getRunBeforeKill().get());
+        runBeforeKill = bounceRequest.get().getRunBeforeKill();
+      }
     }
 
     if (!actionId.isPresent()) {
@@ -192,7 +198,7 @@ public class RequestResource extends AbstractRequestResource {
 
     SingularityCreateResult createResult = requestManager.createCleanupRequest(
         new SingularityRequestCleanup(JavaUtils.getUserEmail(user), isIncrementalBounce ? RequestCleanupType.INCREMENTAL_BOUNCE : RequestCleanupType.BOUNCE,
-            System.currentTimeMillis(), Optional.<Boolean> absent(), requestId, Optional.of(deployId), skipHealthchecks, message, actionId));
+            System.currentTimeMillis(), Optional.<Boolean> absent(), requestId, Optional.of(deployId), skipHealthchecks, message, actionId, runBeforeKill));
 
     checkConflict(createResult != SingularityCreateResult.EXISTED, "%s is already bouncing", requestId);
 
@@ -303,10 +309,15 @@ public class RequestResource extends AbstractRequestResource {
     Optional<Boolean> killTasks = Optional.absent();
     Optional<String> message = Optional.absent();
     Optional<String> actionId = Optional.absent();
+    Optional<SingularityShellCommand> runBeforeKill = Optional.absent();
 
     if (pauseRequest.isPresent()) {
       killTasks = pauseRequest.get().getKillTasks();
       message = pauseRequest.get().getMessage();
+      if (pauseRequest.get().getRunBeforeKill().isPresent()) {
+        validator.checkValidShellCommand(pauseRequest.get().getRunBeforeKill().get());
+        runBeforeKill = pauseRequest.get().getRunBeforeKill();
+      }
 
       if (pauseRequest.get().getDurationMillis().isPresent() && !actionId.isPresent()) {
         actionId = Optional.of(UUID.randomUUID().toString());
@@ -316,7 +327,7 @@ public class RequestResource extends AbstractRequestResource {
     final long now = System.currentTimeMillis();
 
     SingularityCreateResult result = requestManager.createCleanupRequest(new SingularityRequestCleanup(JavaUtils.getUserEmail(user),
-        RequestCleanupType.PAUSING, now, killTasks, requestId, Optional.<String> absent(), Optional.<Boolean> absent(), message, actionId));
+        RequestCleanupType.PAUSING, now, killTasks, requestId, Optional.<String> absent(), Optional.<Boolean> absent(), message, actionId, runBeforeKill));
 
     checkConflict(result == SingularityCreateResult.CREATED, "%s is already pausing - try again soon", requestId, result);
 

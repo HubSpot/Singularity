@@ -30,6 +30,27 @@ class PauseModal extends Component {
         label: 'Message (optional)'
       }
     ];
+
+    if (config.shellCommands.length > 0) {
+      formElements.push(
+        {
+        name: 'runShellCommand',
+        type: FormModal.INPUT_TYPES.BOOLEAN,
+        label: 'Run shell command before killing tasks',
+        defaultValue: false
+        },
+        {
+          name: 'runBeforeKill',
+          type: FormModal.INPUT_TYPES.SELECT,
+          dependsOn: 'runShellCommand',
+          options: config.shellCommands.map((shellCommand) => ({
+            label: shellCommand.name,
+            value: shellCommand.name
+          }))
+        }
+      );
+    }
+
     if (this.props.isScheduled) {
       formElements = [
         {
@@ -46,7 +67,12 @@ class PauseModal extends Component {
         name="Pause Request"
         ref="pauseModal"
         action="Pause Request"
-        onConfirm={(data) => this.props.pauseRequest(data)}
+        onConfirm={(data) => {
+          if (data.runShellCommand) {
+            data.runBeforeKill = {name: data.runBeforeKill};
+          }
+          this.props.pauseRequest(data)
+        }}
         buttonStyle="primary"
         formElements={formElements}>
         <p>Are you sure you want to pause this request?</p>

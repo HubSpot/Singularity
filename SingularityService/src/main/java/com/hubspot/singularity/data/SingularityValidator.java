@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.TimeZone;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
@@ -26,7 +27,10 @@ import org.quartz.CronExpression;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
+import com.google.common.base.Predicate;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.google.common.hash.Hashing;
 import com.google.inject.Inject;
 import com.hubspot.mesos.Resources;
@@ -46,11 +50,16 @@ import com.hubspot.singularity.SingularityAction;
 import com.hubspot.singularity.SingularityPriorityFreezeParent;
 import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityRequestGroup;
+import com.hubspot.singularity.SingularityShellCommand;
 import com.hubspot.singularity.SingularityWebhook;
 import com.hubspot.singularity.SlavePlacement;
+import com.hubspot.singularity.WebExceptions;
 import com.hubspot.singularity.api.SingularityPriorityFreeze;
 import com.hubspot.singularity.api.SingularityBounceRequest;
 import com.hubspot.singularity.config.SingularityConfiguration;
+import com.hubspot.singularity.config.UIConfiguration;
+import com.hubspot.singularity.config.shell.ShellCommandDescriptor;
+import com.hubspot.singularity.config.shell.ShellCommandOptionDescriptor;
 import com.hubspot.singularity.data.history.DeployHistoryHelper;
 
 @Singleton
@@ -72,6 +81,7 @@ public class SingularityValidator {
   private final boolean allowRequestsWithoutOwners;
   private final boolean createDeployIds;
   private final int deployIdLength;
+  private final UIConfiguration uiConfiguration;
   private final SlavePlacement defaultSlavePlacement;
   private final DeployHistoryHelper deployHistoryHelper;
   private final Resources defaultResources;
@@ -80,7 +90,7 @@ public class SingularityValidator {
   private final SlaveManager slaveManager;
 
   @Inject
-  public SingularityValidator(SingularityConfiguration configuration, DeployHistoryHelper deployHistoryHelper, PriorityManager priorityManager, DisasterManager disasterManager, SlaveManager slaveManager) {
+  public SingularityValidator(SingularityConfiguration configuration, DeployHistoryHelper deployHistoryHelper, PriorityManager priorityManager, DisasterManager disasterManager, SlaveManager slaveManager, UIConfiguration uiConfiguration) {
     this.maxDeployIdSize = configuration.getMaxDeployIdSize();
     this.maxRequestIdSize = configuration.getMaxRequestIdSize();
     this.allowRequestsWithoutOwners = configuration.isAllowRequestsWithoutOwners();
@@ -102,6 +112,8 @@ public class SingularityValidator {
     this.maxMemoryMbPerInstance = configuration.getMesosConfiguration().getMaxMemoryMbPerInstance();
     this.maxMemoryMbPerRequest = configuration.getMesosConfiguration().getMaxMemoryMbPerRequest();
     this.maxInstancesPerRequest = configuration.getMesosConfiguration().getMaxNumInstancesPerRequest();
+
+    this.uiConfiguration = uiConfiguration;
 
     this.disasterManager = disasterManager;
     this.slaveManager = slaveManager;
@@ -547,5 +559,31 @@ public class SingularityValidator {
     checkBadRequest(requestGroup.getId().length() < maxRequestIdSize, "Id must be less than %s characters, it is %s (%s)", maxRequestIdSize, requestGroup.getId().length(), requestGroup.getId());
 
     checkBadRequest(requestGroup.getRequestIds() != null, "requestIds cannot be null");
+  }
+
+  public void checkValidShellCommand(final SingularityShellCommand shellCommand) {
+    Optional<ShellCommandDescriptor> commandDescriptor = Iterables.tryFind(uiConfiguration.getShellCommands(), new Predicate<ShellCommandDescriptor>() {
+      @Override
+      public boolean apply(ShellCommandDescriptor input) {
+        return input.getName().equals(shellCommand.getName());
+      }
+    });
+
+    if (!commandDescriptor.isPresent()) {
+      throw WebExceptions.forbidden("Shell command %s not in %s", shellCommand.getName(), uiConfiguration.getShellCommands());
+    }
+
+    Set<String> options = Sets.newHashSetWithExpectedSize(commandDescriptor.get().getOptions().size());
+    for (ShellCommandOptionDescriptor option : commandDescriptor.get().getOptions()) {
+      options.add(option.getName());
+    }
+
+    if (shellCommand.getOptions().isPresent()) {
+      for (String option : shellCommand.getOptions().get()) {
+        if (!options.contains(option)) {
+          throw WebExceptions.badRequest("Shell command %s does not have option %s (%s)", shellCommand.getName(), option, options);
+        }
+      }
+    }
   }
 }

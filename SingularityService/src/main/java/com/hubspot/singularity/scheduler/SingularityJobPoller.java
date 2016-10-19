@@ -27,6 +27,7 @@ import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityRequestWithState;
 import com.hubspot.singularity.SingularityTaskCleanup;
 import com.hubspot.singularity.SingularityTaskId;
+import com.hubspot.singularity.SingularityTaskShellCommandRequestId;
 import com.hubspot.singularity.TaskCleanupType;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.DeployManager;
@@ -129,7 +130,8 @@ public class SingularityJobPoller extends SingularityLeaderOnlyPoller {
               DurationFormatUtils.formatDurationHMS(runtime),
               DurationFormatUtils.formatDurationHMS(request.getTaskExecutionTimeLimitMillis().or(configuration.getTaskExecutionTimeLimitMillis()).get()))
           ),
-          Optional.of(UUID.randomUUID().toString()))
+          Optional.of(UUID.randomUUID().toString()),
+          Optional.<SingularityTaskShellCommandRequestId>absent())
       );
     }
   }
