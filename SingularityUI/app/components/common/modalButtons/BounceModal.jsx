@@ -50,7 +50,7 @@ class BounceModal extends Component {
         defaultValue: false
         },
         {
-          name: 'runBeforeKill',
+          name: 'runShellCommandBeforeKill',
           type: FormModal.INPUT_TYPES.SELECT,
           dependsOn: 'runShellCommand',
           defaultValue: config.shellCommands[0].name,
@@ -88,9 +88,9 @@ class BounceModal extends Component {
         action="Bounce Request"
         onConfirm={(data) => {
           if (data.runShellCommand) {
-            data.runBeforeKill = {name: data.runBeforeKill};
+            data.runShellCommandBeforeKill = {name: data.runShellCommandBeforeKill};
           } else {
-            delete data.runBeforeKill;
+            delete data.runShellCommandBeforeKill;
           }
           this.props.bounceRequest(data)
         }}
