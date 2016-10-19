@@ -3,7 +3,7 @@ import Waypoint from 'react-waypoint';
 import classNames from 'classnames';
 
 import BootstrapTable from 'react-bootstrap/lib/Table';
-import { Pagination } from 'react-bootstrap';
+import { Pagination, Label } from 'react-bootstrap';
 
 class UITable extends Component {
 
@@ -329,8 +329,11 @@ class UITable extends Component {
     const rowsPerPage = this.state.resultsPerPage;
     const maxPaginationButtons = this.isApiPaginated() ? 1 : this.props.maxPaginationButtons;
     if (this.shouldRenderPagination(numRows, rowsPerPage)) {
-      let numPages = this.props.maxPage;
-      
+      let numPages = Math.ceil(numRows / rowsPerPage);
+      if (this.props.maxPage) {
+        numPages = this.props.maxPage;
+      }
+
       return (
         <Pagination
           prev={true}
@@ -412,6 +415,14 @@ class UITable extends Component {
     return <tr>{headerRow}</tr>;
   }
 
+  renderTag(field, value) {
+    return (
+      <Label>
+        {field}: <b>{value}</b>
+      </Label>
+    );
+  }
+
   render() {
     if (this.props.showPageLoaderWhenFetching && this.props.isFetching) {
       return <div className="page-loader fixed" />;
@@ -437,6 +448,7 @@ class UITable extends Component {
 
     return (
       <div>
+        {this.renderTag("Total", this.props.totalResults)}
         {this.props.requestPerPageChoices && <div className="row"><div className="col-md-12">{this.renderRequestPerPageChoices()}</div></div>}
         {maybeTable}
         {this.renderPagination()}
@@ -450,6 +462,9 @@ UITable.propTypes = {
   keyGetter: PropTypes.func.isRequired,
   children: PropTypes.arrayOf(PropTypes.node).isRequired,
   paginated: PropTypes.bool,
+  maxPage: PropTypes.number,
+  page: PropTypes.number,
+  totalResults: PropTypes.number,
   renderAllRows: PropTypes.bool,
   resultsPerPage: PropTypes.number,
   resultsPerPageChoices: PropTypes.arrayOf(PropTypes.number),
