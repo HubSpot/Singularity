@@ -303,7 +303,7 @@ class UITable extends Component {
     return rows;
   }
 
-  renderRequestPerPageChoices() {
+  renderResultsPerPageChoices() {
     const setRequestPerPage = (resultsPerPage) => {
       if (this.isApiPaginated()) {
         this.fetchDataFromApi(1, resultsPerPage, true);
@@ -315,7 +315,7 @@ class UITable extends Component {
     return (
       <div className="pull-right count-options">
         Results per page:
-        {this.props.requestPerPageChoices.map((choice) =>
+        {this.props.resultsPerPageChoices.map((choice) =>
           <a key={choice} className={classNames({inactive: choice === this.state.resultsPerPage})} onClick={() => setRequestPerPage(choice)}>
             {choice}
           </a>
@@ -415,12 +415,14 @@ class UITable extends Component {
     return <tr>{headerRow}</tr>;
   }
 
-  renderTag(field, value) {
-    return (
-      <Label>
-        {field}: <b>{value}</b>
-      </Label>
-    );
+  renderTotal(field, value) {
+    if (this.props.totalResults) {
+      return (
+        <Label>
+          {"Total"}: <b>{this.props.totalResults}</b>
+        </Label>
+      );
+    }
   }
 
   render() {
@@ -448,8 +450,8 @@ class UITable extends Component {
 
     return (
       <div>
-        {this.renderTag("Total", this.props.totalResults)}
-        {this.props.requestPerPageChoices && <div className="row"><div className="col-md-12">{this.renderRequestPerPageChoices()}</div></div>}
+        {this.renderTotal()}
+        {this.props.resultsPerPageChoices && <div className="row"><div className="col-md-12">{this.renderResultsPerPageChoices()}</div></div>}
         {maybeTable}
         {this.renderPagination()}
       </div>
