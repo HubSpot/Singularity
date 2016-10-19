@@ -71,7 +71,7 @@ public class SingularityHistoryPurger extends SingularityLeaderOnlyPoller {
       final long startRequestId = System.currentTimeMillis();
 
       historyManager.purgeTaskHistory(requestIdCount.getRequestId(), requestIdCount.getCount(), historyPurgingConfiguration.getDeleteTaskHistoryAfterTasksPerRequest(), purgeBefore,
-          historyPurgingConfiguration.isDeleteTaskHistoryBytesInsteadOfEntireRow());
+          !historyPurgingConfiguration.isDeleteTaskHistoryBytesInsteadOfEntireRow());
 
       LOG.info("Purged old taskHistory for {} ({} count) in {}", requestIdCount.getRequestId(), requestIdCount.getCount(), JavaUtils.duration(startRequestId));
     }
