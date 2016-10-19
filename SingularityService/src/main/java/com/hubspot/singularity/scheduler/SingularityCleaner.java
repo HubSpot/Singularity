@@ -121,7 +121,10 @@ public class SingularityCleaner {
       return true;
     }
 
-    if (requestWithState.get().getState() == RequestState.PAUSED && !(taskCleanup.getCleanupType() == TaskCleanupType.PAUSING)) {
+    // If pausing, must be a long-running task to kill here
+    if (requestWithState.get().getState() == RequestState.PAUSED &&
+      ((taskCleanup.getCleanupType() == TaskCleanupType.PAUSING && request.isLongRunning())
+        || !(taskCleanup.getCleanupType() == TaskCleanupType.PAUSING))) {
       LOG.debug("Killing a task {} immediately because the request was paused", taskCleanup);
       return true;
     }
@@ -333,7 +336,9 @@ public class SingularityCleaner {
               continue;
             }
           } else {
-            pause(requestCleanup, matchingActiveTaskIds, killActiveTasks);
+            if (pause(requestCleanup, matchingActiveTaskIds, killActiveTasks) == TaskCleanupType.PAUSING) {
+              killActiveTasks = false;
+            }
           }
           break;
         case DELETING:
@@ -427,8 +432,14 @@ public class SingularityCleaner {
     LOG.info("Added {} tasks for request {} to cleanup bounce queue in {}", matchingTaskIds.size(), requestCleanup.getRequestId(), JavaUtils.duration(start));
   }
 
-  private void pause(SingularityRequestCleanup requestCleanup, Iterable<SingularityTaskId> activeTaskIds, boolean killActiveTasks) {
+  private TaskCleanupType pause(SingularityRequestCleanup requestCleanup, Iterable<SingularityTaskId> activeTaskIds, boolean killActiveTasks) {
     final long start = System.currentTimeMillis();
+    boolean killTasks = requestCleanup.getKillTasks().or(configuration.isDefaultValueForKillTasksOfPausedRequests());
+    if (requestCleanup.getRunBeforeKill().isPresent()) {
+      killTasks = false;
+    }
+
+    TaskCleanupType cleanupType = killTasks ? TaskCleanupType.PAUSE : TaskCleanupType.PAUSING;
 
     for (SingularityTaskId taskId : activeTaskIds) {
       LOG.debug("Adding task {} to cleanup (pause)", taskId.getId());
@@ -441,10 +452,10 @@ public class SingularityCleaner {
         runBeforeKillId = Optional.of(shellRequest.getId());
       }
 
-      TaskCleanupType cleanupType = killActiveTasks ? TaskCleanupType.PAUSE : TaskCleanupType.PAUSING;
-
       taskManager.createTaskCleanup(new SingularityTaskCleanup(requestCleanup.getUser(), cleanupType, start, taskId, requestCleanup.getMessage(), requestCleanup.getActionId(), runBeforeKillId));
     }
+
+    return cleanupType;
   }
 
   private void cleanupDeployState(SingularityRequestCleanup requestCleanup) {
