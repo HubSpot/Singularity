@@ -65,9 +65,9 @@ export const FetchRequestRun = buildApiAction(
 export const PauseRequest = buildJsonApiAction(
   'PAUSE_REQUEST',
   'POST',
-  (requestId, { durationMillis, killTasks, message, actionId, runBeforeKill }) => ({
+  (requestId, { durationMillis, killTasks, message, actionId, runShellCommandBeforeKill }) => ({
     url: `/requests/request/${requestId}/pause`,
-    body: { durationMillis, killTasks, message, actionId, runBeforeKill }
+    body: { durationMillis, killTasks, message, actionId, runShellCommandBeforeKill }
   })
 );
 

@@ -9,7 +9,7 @@ public class SingularityTaskShellCommandUpdate {
   public enum UpdateType {
     INVALID(true), ACKED(false), STARTED(false), FINISHED(true), FAILED(true);
 
-    private boolean finished;
+    private final boolean finished;
 
     UpdateType(boolean finished) {
       this.finished = finished;

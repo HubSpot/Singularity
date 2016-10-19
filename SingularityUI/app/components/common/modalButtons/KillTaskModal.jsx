@@ -47,7 +47,7 @@ class KillTaskModal extends Component {
         defaultValue: false
         },
         {
-          name: 'runBeforeKill',
+          name: 'runShellCommandBeforeKill',
           type: FormModal.INPUT_TYPES.SELECT,
           dependsOn: 'runShellCommand',
           defaultValue: config.shellCommands[0].name,
@@ -71,9 +71,9 @@ class KillTaskModal extends Component {
         action={this.props.name}
         onConfirm={(data) => {
           if (data.runShellCommand) {
-            data.runBeforeKill = {name: data.runBeforeKill};
+            data.runShellCommandBeforeKill = {name: data.runShellCommandBeforeKill};
           } else {
-            delete data.runBeforeKill;
+            delete data.runShellCommandBeforeKill;
           }
           console.log(data);
           this.props.killTask(data)

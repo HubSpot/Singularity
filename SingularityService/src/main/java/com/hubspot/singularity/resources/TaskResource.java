@@ -6,7 +6,6 @@ import static com.hubspot.singularity.WebExceptions.notFound;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.Set;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -21,11 +20,9 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
 import com.google.common.base.Optional;
-import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.hubspot.jackson.jaxrs.PropertyFiltering;
 import com.hubspot.mesos.JavaUtils;
@@ -60,8 +57,6 @@ import com.hubspot.singularity.api.SingularityTaskMetadataRequest;
 import com.hubspot.singularity.auth.SingularityAuthorizationHelper;
 import com.hubspot.singularity.config.SingularityTaskMetadataConfiguration;
 import com.hubspot.singularity.config.UIConfiguration;
-import com.hubspot.singularity.config.shell.ShellCommandDescriptor;
-import com.hubspot.singularity.config.shell.ShellCommandOptionDescriptor;
 import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.data.SingularityValidator;
 import com.hubspot.singularity.data.SlaveManager;
@@ -86,12 +81,11 @@ public class TaskResource {
   private final SingularityAuthorizationHelper authorizationHelper;
   private final Optional<SingularityUser> user;
   private final SingularityTaskMetadataConfiguration taskMetadataConfiguration;
-  private final UIConfiguration uiConfiguration;
   private final SingularityValidator validator;
 
   @Inject
   public TaskResource(TaskRequestManager taskRequestManager, TaskManager taskManager, SlaveManager slaveManager, MesosClient mesosClient, SingularityTaskMetadataConfiguration taskMetadataConfiguration,
-      SingularityAuthorizationHelper authorizationHelper, Optional<SingularityUser> user, UIConfiguration uiConfiguration, RequestManager requestManager, SingularityValidator validator) {
+      SingularityAuthorizationHelper authorizationHelper, Optional<SingularityUser> user, RequestManager requestManager, SingularityValidator validator) {
     this.taskManager = taskManager;
     this.taskRequestManager = taskRequestManager;
     this.taskMetadataConfiguration = taskMetadataConfiguration;
@@ -100,7 +94,6 @@ public class TaskResource {
     this.requestManager = requestManager;
     this.authorizationHelper = authorizationHelper;
     this.user = user;
-    this.uiConfiguration = uiConfiguration;
     this.validator = validator;
   }
 
@@ -288,8 +281,8 @@ public class TaskResource {
       message = killTaskRequest.get().getMessage();
       override = killTaskRequest.get().getOverride();
       waitForReplacementTask = killTaskRequest.get().getWaitForReplacementTask();
-      if (killTaskRequest.get().getRunBeforeKill().isPresent()) {
-        SingularityTaskShellCommandRequest shellCommandRequest = startShellCommand(task.getTaskId(), killTaskRequest.get().getRunBeforeKill().get());
+      if (killTaskRequest.get().getRunShellCommandBeforeKill().isPresent()) {
+        SingularityTaskShellCommandRequest shellCommandRequest = startShellCommand(task.getTaskId(), killTaskRequest.get().getRunShellCommandBeforeKill().get());
         runBeforeKillId = Optional.of(shellCommandRequest.getId());
       }
     }
