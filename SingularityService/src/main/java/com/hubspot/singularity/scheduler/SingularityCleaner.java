@@ -121,7 +121,10 @@ public class SingularityCleaner {
       return true;
     }
 
-    if (requestWithState.get().getState() == RequestState.PAUSED && !(taskCleanup.getCleanupType() == TaskCleanupType.PAUSING && !request.isLongRunning())) {
+    // If pausing, must be a long-running task to kill here
+    if (requestWithState.get().getState() == RequestState.PAUSED &&
+      ((taskCleanup.getCleanupType() == TaskCleanupType.PAUSING && request.isLongRunning())
+        || !(taskCleanup.getCleanupType() == TaskCleanupType.PAUSING))) {
       LOG.debug("Killing a task {} immediately because the request was paused", taskCleanup);
       return true;
     }
