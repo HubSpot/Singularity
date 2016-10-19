@@ -408,14 +408,23 @@ class TaskDetail extends Component {
   }
 }
 
+function healthcheckFailureReasonMessage(task) {
+  const healthcheckResults = task.healthcheckResults;
+  if (healthcheckResults && healthcheckResults.length > 0) {
+    if (_.last(healthcheckResults).startup) {
+      return `a refused connection. It is possible your app did not start properly or was not listening on the anticipated port (${Utils.healthcheckPort(task.task.taskRequest.deploy.healthchecks, task.ports)}). Please check the logs for more details.`;
+    }
+  }
+  return null;
+}
+
 function mapHealthchecksToProps(task) {
   if (!task) return task;
   const { healthcheckResults } = task;
   task.hasSuccessfulHealthcheck = healthcheckResults && healthcheckResults.length > 0 && !!_.find(healthcheckResults, (healthcheckResult) => healthcheckResult.statusCode === 200);
   task.lastHealthcheckFailed = healthcheckResults && healthcheckResults.length > 0 && _.last(healthcheckResults).statusCode !== 200;
-  task.healthcheckFailureReasonMessage = Utils.healthcheckFailureReasonMessage(task);
+  task.healthcheckFailureReasonMessage = healthcheckFailureReasonMessage(task);
   task.tooManyRetries = healthcheckResults && healthcheckResults.length > task.task.taskRequest.deploy.healthcheckMaxRetries && task.task.taskRequest.deploy.healthcheckMaxRetries > 0;
-  task.secondsElapsed = task.task && task.task.taskRequest && task.task.taskRequest.deploy.healthcheckMaxTotalTimeoutSeconds || config.defaultDeployHealthTimeoutSeconds;
   return task;
 }
 

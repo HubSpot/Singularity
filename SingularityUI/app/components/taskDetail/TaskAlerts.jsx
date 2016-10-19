@@ -127,25 +127,52 @@ const TaskAlerts = (props) => {
   // Killed due to HC fail
   if (props.task.lastHealthcheckFailed && !props.task.isStillRunning) {
     const lastHealthcheck = _.last(props.task.healthcheckResults);
+    const healthcheckOptions = props.task.task.taskRequest.deploy.healthchecks;
+
+    let respondedMessage;
+    if (lastHealthcheck.statusCode) {
+      respondedMessage = (
+        <p>
+          Last healthcheck <span>responded with <span className="label label-danger"> HTTP {lastHealthcheck.statusCode}</span></span>
+        </p>
+      );
+    } else if (lastHealthcheck.startup) {
+      // taskKilledReason message below covers this situation
+    } else {
+      respondedMessage = (
+        <span>
+          Last healthcheck did not respond after{' '}
+          <code>
+            {lastHealthcheck.durationMillis && `${Utils.millisecondsToSecondsRoundToTenth(lastHealthcheck.durationMillis)} seconds`}
+          </code>
+          {' '}at {Utils.absoluteTimestampWithSeconds(lastHealthcheck.timestamp)}
+        </span>
+      );
+    }
+
+    let taskKilledReason;
+    if (lastHealthcheck.startup) {
+      taskKilledReason = (
+        <span>beacuse it did not respond to healthchecks within <strong>{(healthcheckOptions && healthcheckOptions.startupTimeoutSeconds) || config.defaultStartupTimeoutSeconds}s</strong></span>
+      );
+    } else if (lastHealthcheck.statusCode && healthcheckOptions && healthcheckOptions.failureStatusCodes && healthcheckOptions.failureStatusCodes.indexOf(lastHealthcheck.statusCode) !== -1) {
+      taskKilledReason = (
+        <span>due to bad status code <strong>{lastHealthcheck.statusCode}</strong></span>
+      );
+    } else {
+      taskKilledReason = (
+        <span>due to no passing healthchecks after <strong>{props.task.tooManyRetries ? ` ${props.task.healthcheckResults.length} tries.` : ` ${Utils.healthcheckTimeout(healthcheckOptions)} seconds.`}</strong></span>
+      );
+    }
+
     alerts.push(
       <Alert key="hcFail" bsStyle="warning">
         <p>
           <strong>
-            Task killed due to no passing healthchecks after
-            {props.task.tooManyRetries ? ` ${props.task.healthcheckResults.length} tries.` : ` ${props.task.secondsElapsed} seconds.`}
+            Task killed {taskKilledReason}
           </strong>
         </p>
-        <p>
-          Last healthcheck {lastHealthcheck.statusCode ?
-            <span>responded with <span className="label label-danger"> HTTP {lastHealthcheck.statusCode}</span></span> :
-            <span>
-              did not respond after{' '}
-              <code>
-                {lastHealthcheck.durationMillis && `${Utils.millisecondsToSecondsRoundToTenth(lastHealthcheck.durationMillis)} seconds`}
-              </code>
-              {' '}at {Utils.absoluteTimestampWithSeconds(lastHealthcheck.timestamp)}
-            </span>}.
-        </p>
+        {respondedMessage}
         {props.task.healthcheckFailureReasonMessage && <p>The healthcheck failed because of {props.task.healthcheckFailureReasonMessage}</p>}
         <p><li>
           <a href="#healthchecks">View all healthchecks</a>
@@ -213,8 +240,7 @@ TaskAlerts.propTypes = {
     isStillRunning: PropTypes.bool,
     tooManyRetries: PropTypes.bool,
     hasSuccessfulHealthcheck: PropTypes.bool,
-    healthcheckFailureReasonMessage: PropTypes.string,
-    secondsElapsed: PropTypes.number.isRequired
+    healthcheckFailureReasonMessage: PropTypes.string
   }).isRequired,
 
   pendingDeploys: PropTypes.arrayOf(PropTypes.shape({
