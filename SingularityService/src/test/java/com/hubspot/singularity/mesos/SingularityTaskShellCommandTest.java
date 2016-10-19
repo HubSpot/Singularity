@@ -63,7 +63,7 @@ public class SingularityTaskShellCommandTest extends SingularitySchedulerTestBas
     try {
       taskResource.runShellCommand(task.getTaskId().getId(), new SingularityShellCommand("test-cmd", Optional.of(Arrays.asList("one", "two")), user, Optional.<String>absent()));
     } catch (WebApplicationException exception) {
-      assertEquals(403, exception.getResponse().getStatus());
+      assertEquals(400, exception.getResponse().getStatus());
     }
 
     // bad option

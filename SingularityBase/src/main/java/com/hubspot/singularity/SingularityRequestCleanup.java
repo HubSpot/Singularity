@@ -15,13 +15,13 @@ public class SingularityRequestCleanup {
   private final String requestId;
   private final Optional<String> message;
   private final Optional<String> actionId;
-  private final Optional<SingularityShellCommand> runBeforeKill;
+  private final Optional<SingularityShellCommand> runShellCommandBeforeKill;
 
   @JsonCreator
   public SingularityRequestCleanup(@JsonProperty("user") Optional<String> user, @JsonProperty("cleanupType") RequestCleanupType cleanupType, @JsonProperty("timestamp") long timestamp,
       @JsonProperty("killTasks") Optional<Boolean> killTasks, @JsonProperty("requestId") String requestId, @JsonProperty("deployId") Optional<String> deployId,
       @JsonProperty("skipHealthchecks") Optional<Boolean> skipHealthchecks, @JsonProperty("message") Optional<String> message, @JsonProperty("actionId") Optional<String> actionId,
-      @JsonProperty("runBeforeKill") Optional<SingularityShellCommand> runBeforeKill) {
+      @JsonProperty("runShellCommandBeforeKill") Optional<SingularityShellCommand> runShellCommandBeforeKill) {
     this.user = user;
     this.cleanupType = cleanupType;
     this.timestamp = timestamp;
@@ -31,7 +31,7 @@ public class SingularityRequestCleanup {
     this.skipHealthchecks = skipHealthchecks;
     this.actionId = actionId;
     this.message = message;
-    this.runBeforeKill = runBeforeKill;
+    this.runShellCommandBeforeKill = runShellCommandBeforeKill;
   }
 
   public Optional<Boolean> getSkipHealthchecks() {
@@ -70,14 +70,14 @@ public class SingularityRequestCleanup {
     return actionId;
   }
 
-  public Optional<SingularityShellCommand> getRunBeforeKill() {
-    return runBeforeKill;
+  public Optional<SingularityShellCommand> getRunShellCommandBeforeKill() {
+    return runShellCommandBeforeKill;
   }
 
   @Override
   public String toString() {
     return "SingularityRequestCleanup [user=" + user + ", cleanupType=" + cleanupType + ", killTasks=" + killTasks + ", skipHealthchecks=" + skipHealthchecks + ", deployId=" + deployId
-        + ", timestamp=" + timestamp + ", requestId=" + requestId + ", message=" + message + ", actionId=" + actionId + ", runBeforeKill=" + runBeforeKill + "]";
+        + ", timestamp=" + timestamp + ", requestId=" + requestId + ", message=" + message + ", actionId=" + actionId + ", runShellCommandBeforeKill=" + runShellCommandBeforeKill + "]";
   }
 
 
