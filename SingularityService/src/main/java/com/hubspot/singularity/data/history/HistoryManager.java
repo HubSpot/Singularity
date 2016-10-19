@@ -46,6 +46,10 @@ public interface HistoryManager {
 
   List<SingularityRequestIdCount> getRequestIdCounts(Date before);
 
+  List<String> getRequestIdsInTaskHistory();
+
+  int getUnpurgedTaskHistoryCountByRequestBefore(String requestId, Date before);
+
   void purgeTaskHistory(String requestId, int count, Optional<Integer> limit, Optional<Date> purgeBefore, boolean deleteRowInsteadOfUpdate);
 
 }

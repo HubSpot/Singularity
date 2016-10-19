@@ -176,6 +176,16 @@ public class JDBIHistoryManager implements HistoryManager {
   }
 
   @Override
+  public List<String> getRequestIdsInTaskHistory() {
+    return history.getRequestIdsInTaskHistory();
+  }
+
+  @Override
+  public int getUnpurgedTaskHistoryCountByRequestBefore(String requestId, Date before) {
+    return history.getUnpurgedTaskHistoryCountByRequestBefore(requestId, before);
+  }
+
+  @Override
   public void purgeTaskHistory(String requestId, int count, Optional<Integer> limit, Optional<Date> purgeBefore, boolean deleteRowInsteadOfUpdate) {
     if (limit.isPresent() && count > limit.get()) {
       Date beforeBasedOnLimit = history.getMinUpdatedAtWithLimitForRequest(requestId, limit.get());
