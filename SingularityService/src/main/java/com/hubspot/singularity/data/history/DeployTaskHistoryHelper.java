@@ -32,14 +32,14 @@ public class DeployTaskHistoryHelper extends BlendedHistoryHelper<SingularityTas
 
   @Override
   protected List<SingularityTaskIdHistory> getFromHistory(final SingularityDeployKey deployKey, int historyStart, int numFromHistory) {
-    return historyManager.getTaskIdHistory(Optional.of(deployKey.getRequestId()), Optional.of(deployKey.getDeployId()), Optional.<String> absent(), Optional.<ExtendedTaskState> absent(),
+    return historyManager.getTaskIdHistory(Optional.of(deployKey.getRequestId()), Optional.of(deployKey.getDeployId()), Optional.<String>absent(), Optional.<String> absent(), Optional.<ExtendedTaskState> absent(),
         Optional.<Long> absent(), Optional.<Long> absent(), Optional.<Long> absent(), Optional.<Long> absent(), Optional.<OrderDirection> absent(), Optional.of(historyStart), numFromHistory);
   }
 
   @Override
   protected Optional<Integer> getTotalCount(SingularityDeployKey deployKey) {
     final int numFromZk = taskManager.getInactiveTaskIdsForDeploy(deployKey.getRequestId(), deployKey.getDeployId()).size();
-    final int numFromHistory = historyManager.getTaskIdHistoryCount(Optional.of(deployKey.getRequestId()), Optional.of(deployKey.getDeployId()), Optional.<String> absent(), Optional.<ExtendedTaskState> absent(),
+    final int numFromHistory = historyManager.getTaskIdHistoryCount(Optional.of(deployKey.getRequestId()), Optional.of(deployKey.getDeployId()), Optional.<String>absent(), Optional.<String> absent(), Optional.<ExtendedTaskState> absent(),
       Optional.<Long> absent(), Optional.<Long> absent(), Optional.<Long> absent(), Optional.<Long> absent());
     return Optional.of(numFromZk + numFromHistory);
   }
