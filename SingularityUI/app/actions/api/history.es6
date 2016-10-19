@@ -40,6 +40,13 @@ export const FetchTaskHistoryForDeploy = buildApiAction(
   })
 );
 
+export const FetchTaskHistoryForDeployWithMetaData = buildApiAction(
+  'FETCH_TASK_HISTORY_FOR_DEPLOY',
+  (requestId, deployId, count, page) => ({
+    url: `/history/request/${requestId}/tasks/withmetadata?requestId=${requestId}&deployId=${deployId}&count=${count}&page=${page}`
+  })
+);
+
 export const FetchDeployForRequest = buildApiAction(
   'FETCH_DEPLOY',
   (requestId, deployId, renderNotFoundIf404) => ({
@@ -78,14 +85,6 @@ export const FetchTaskSearchParams = buildApiAction(
     return { url };
   });
 
-export const FetchRequestRunHistory = buildApiAction(
-  'FETCH_REQUEST_RUN_HISTORY',
-  (requestId, runId, catchStatusCodes = null) => ({
-    url: `/history/request/${ requestId }/run/${runId}`,
-    catchStatusCodes
-  })
-);
-
 export const FetchTaskSearchParamsWithMetaData = buildApiAction(
   'FETCH_TASK_HISTORY',
   ({requestId = null, deployId = null, host = null, lastTaskStatus = null, startedAfter = null, startedBefore = null, updatedAfter = null, updatedBefore = null, orderDirection = null}, count, page) => {
@@ -107,6 +106,14 @@ export const FetchTaskSearchParamsWithMetaData = buildApiAction(
     }
     return { url };
   });
+
+export const FetchRequestRunHistory = buildApiAction(
+  'FETCH_REQUEST_RUN_HISTORY',
+  (requestId, runId, catchStatusCodes = null) => ({
+    url: `/history/request/${ requestId }/run/${runId}`,
+    catchStatusCodes
+  })
+);
 
 export const FetchRequestHistory = buildApiAction(
   'FETCH_REQUEST_HISTORY',

@@ -80,7 +80,6 @@ class TaskSearch extends React.Component {
         {updatedAfter && this.renderTag('Updated After', Utils.absoluteTimestamp(parseInt(updatedAfter, 10)))}{' '}
         {updatedBefore && this.renderTag('Updated Before', Utils.absoluteTimestamp(parseInt(updatedBefore, 10)))}{' '}
         {lastTaskStatus && this.renderTag('Last Task Status', Utils.humanizeText(lastTaskStatus))}
-        {this.renderTag('Total Results', this.props.taskHistory.dataCount)}
       </div>);
   }
 
@@ -109,8 +108,8 @@ class TaskSearch extends React.Component {
         {this.renderTags()}
         <UITable
           emptyTableMessage="No matching tasks"
-          data={this.props.taskHistory.objects}
-          totalResults={this.props.taskHistory.dataCount}
+          data={this.props.taskHistory.objects || []}
+          totalResults={this.props.taskHistory.dataCount || 0}
           maxPage={this.props.taskHistory.pageCount}
           page={this.props.taskHistory.page}
           keyGetter={(task) => task.taskId.id}
