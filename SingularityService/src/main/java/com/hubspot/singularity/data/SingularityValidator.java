@@ -571,7 +571,7 @@ public class SingularityValidator {
     });
 
     if (!commandDescriptor.isPresent()) {
-      throw WebExceptions.forbidden("Shell command %s not in %s", shellCommand.getName(), uiConfiguration.getShellCommands());
+      throw WebExceptions.badRequest("Shell command %s not in %s", shellCommand.getName(), uiConfiguration.getShellCommands());
     }
 
     Set<String> options = Sets.newHashSetWithExpectedSize(commandDescriptor.get().getOptions().size());
