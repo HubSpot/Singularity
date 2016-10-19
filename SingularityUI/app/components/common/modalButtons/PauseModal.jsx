@@ -40,7 +40,7 @@ class PauseModal extends Component {
         defaultValue: false
         },
         {
-          name: 'runBeforeKill',
+          name: 'runShellCommandBeforeKill',
           type: FormModal.INPUT_TYPES.SELECT,
           dependsOn: 'runShellCommand',
           defaultValue: config.shellCommands[0].name,
@@ -70,9 +70,9 @@ class PauseModal extends Component {
         action="Pause Request"
         onConfirm={(data) => {
           if (data.runShellCommand) {
-            data.runBeforeKill = {name: data.runBeforeKill};
+            data.runShellCommandBeforeKill = {name: data.runShellCommandBeforeKill};
           } else {
-            delete data.runBeforeKill;
+            delete data.runShellCommandBeforeKill;
           }
           this.props.pauseRequest(data)
         }}

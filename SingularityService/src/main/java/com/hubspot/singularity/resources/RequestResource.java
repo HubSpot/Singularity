@@ -183,9 +183,9 @@ public class RequestResource extends AbstractRequestResource {
     if (bounceRequest.isPresent()) {
       actionId = bounceRequest.get().getActionId();
       message = bounceRequest.get().getMessage();
-      if (bounceRequest.get().getRunBeforeKill().isPresent()) {
-        validator.checkValidShellCommand(bounceRequest.get().getRunBeforeKill().get());
-        runBeforeKill = bounceRequest.get().getRunBeforeKill();
+      if (bounceRequest.get().getRunShellCommandBeforeKill().isPresent()) {
+        validator.checkValidShellCommand(bounceRequest.get().getRunShellCommandBeforeKill().get());
+        runBeforeKill = bounceRequest.get().getRunShellCommandBeforeKill();
       }
     }
 
@@ -313,9 +313,9 @@ public class RequestResource extends AbstractRequestResource {
     if (pauseRequest.isPresent()) {
       killTasks = pauseRequest.get().getKillTasks();
       message = pauseRequest.get().getMessage();
-      if (pauseRequest.get().getRunBeforeKill().isPresent()) {
-        validator.checkValidShellCommand(pauseRequest.get().getRunBeforeKill().get());
-        runBeforeKill = pauseRequest.get().getRunBeforeKill();
+      if (pauseRequest.get().getRunShellCommandBeforeKill().isPresent()) {
+        validator.checkValidShellCommand(pauseRequest.get().getRunShellCommandBeforeKill().get());
+        runBeforeKill = pauseRequest.get().getRunShellCommandBeforeKill();
       }
 
       if (pauseRequest.get().getDurationMillis().isPresent() && !actionId.isPresent()) {

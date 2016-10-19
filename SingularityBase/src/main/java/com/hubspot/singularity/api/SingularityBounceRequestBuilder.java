@@ -8,7 +8,7 @@ public class SingularityBounceRequestBuilder {
 
   private Optional<Boolean> incremental;
   private Optional<Boolean> skipHealthchecks;
-  private Optional<SingularityShellCommand> runBeforeKill;
+  private Optional<SingularityShellCommand> runShellCommandBeforeKill;
 
   private Optional<Long> durationMillis;
   private Optional<String> actionId;
@@ -17,7 +17,7 @@ public class SingularityBounceRequestBuilder {
   public SingularityBounceRequestBuilder() {
     this.incremental = Optional.absent();
     this.skipHealthchecks = Optional.absent();
-    this.runBeforeKill = Optional.absent();
+    this.runShellCommandBeforeKill = Optional.absent();
 
     this.durationMillis = Optional.absent();
     this.actionId = Optional.absent();
@@ -25,7 +25,7 @@ public class SingularityBounceRequestBuilder {
   }
 
   public SingularityBounceRequest build() {
-    return new SingularityBounceRequest(incremental, skipHealthchecks, durationMillis, actionId, message, runBeforeKill);
+    return new SingularityBounceRequest(incremental, skipHealthchecks, durationMillis, actionId, message, runShellCommandBeforeKill);
   }
 
   public Optional<Long> getDurationMillis() {
@@ -73,12 +73,12 @@ public class SingularityBounceRequestBuilder {
     return this;
   }
 
-  public Optional<SingularityShellCommand> getRunBeforeKill() {
-    return runBeforeKill;
+  public Optional<SingularityShellCommand> getRunShellCommandBeforeKill() {
+    return runShellCommandBeforeKill;
   }
 
-  public SingularityBounceRequestBuilder setRunBeforeKill(Optional<SingularityShellCommand> runBeforeKill) {
-    this.runBeforeKill = runBeforeKill;
+  public SingularityBounceRequestBuilder setRunShellCommandBeforeKill(Optional<SingularityShellCommand> runShellCommandBeforeKill) {
+    this.runShellCommandBeforeKill = runShellCommandBeforeKill;
     return this;
   }
 
@@ -87,7 +87,7 @@ public class SingularityBounceRequestBuilder {
     return Objects.toStringHelper(this)
       .add("incremental", incremental)
       .add("skipHealthchecks", skipHealthchecks)
-      .add("runBeforeKill", runBeforeKill)
+      .add("runShellCommandBeforeKill", runShellCommandBeforeKill)
       .add("durationMillis", durationMillis)
       .add("actionId", actionId)
       .add("message", message)

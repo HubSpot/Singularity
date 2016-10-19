@@ -417,8 +417,8 @@ public class SingularityCleaner {
 
       Optional<SingularityTaskShellCommandRequestId> runBeforeKillId = Optional.absent();
 
-      if (requestCleanup.getRunBeforeKill().isPresent()) {
-        SingularityTaskShellCommandRequest shellRequest = new SingularityTaskShellCommandRequest(matchingTaskId, requestCleanup.getUser(), System.currentTimeMillis(), requestCleanup.getRunBeforeKill().get());
+      if (requestCleanup.getRunShellCommandBeforeKill().isPresent()) {
+        SingularityTaskShellCommandRequest shellRequest = new SingularityTaskShellCommandRequest(matchingTaskId, requestCleanup.getUser(), System.currentTimeMillis(), requestCleanup.getRunShellCommandBeforeKill().get());
         taskManager.saveTaskShellCommandRequestToQueue(shellRequest);
         runBeforeKillId = Optional.of(shellRequest.getId());
       }
@@ -435,7 +435,7 @@ public class SingularityCleaner {
   private TaskCleanupType pause(SingularityRequestCleanup requestCleanup, Iterable<SingularityTaskId> activeTaskIds, boolean killActiveTasks) {
     final long start = System.currentTimeMillis();
     boolean killTasks = requestCleanup.getKillTasks().or(configuration.isDefaultValueForKillTasksOfPausedRequests());
-    if (requestCleanup.getRunBeforeKill().isPresent()) {
+    if (requestCleanup.getRunShellCommandBeforeKill().isPresent()) {
       killTasks = false;
     }
 
@@ -446,8 +446,8 @@ public class SingularityCleaner {
 
       Optional<SingularityTaskShellCommandRequestId> runBeforeKillId = Optional.absent();
 
-      if (requestCleanup.getRunBeforeKill().isPresent()) {
-        SingularityTaskShellCommandRequest shellRequest = new SingularityTaskShellCommandRequest(taskId, requestCleanup.getUser(), System.currentTimeMillis(), requestCleanup.getRunBeforeKill().get());
+      if (requestCleanup.getRunShellCommandBeforeKill().isPresent()) {
+        SingularityTaskShellCommandRequest shellRequest = new SingularityTaskShellCommandRequest(taskId, requestCleanup.getUser(), System.currentTimeMillis(), requestCleanup.getRunShellCommandBeforeKill().get());
         taskManager.saveTaskShellCommandRequestToQueue(shellRequest);
         runBeforeKillId = Optional.of(shellRequest.getId());
       }
