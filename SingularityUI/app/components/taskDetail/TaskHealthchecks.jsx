@@ -8,7 +8,7 @@ import UITable from '../common/table/UITable';
 
 function TaskHealthchecks (props) {
   const healthchecks = props.healthcheckResults;
-  const healthcheckOptions = props.task.taskRequest.deploy.healthcheck;
+  const healthcheckOptions = props.task.taskRequest.deploy.healthcheck || {};
 
   let beginningOnMessage;
   if (healthcheckOptions.startupDelaySeconds) {
