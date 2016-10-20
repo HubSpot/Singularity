@@ -211,19 +211,17 @@ const Utils = {
   },
 
   healthcheckPort(healthcheckOptions, ports) {
-    let healthcheckPort;
     if (healthcheckOptions) {
       if (healthcheckOptions.portNumber) {
-        healthcheckPort = healthcheckOptions.portNumber;
+        return healthcheckOptions.portNumber;
       } else if (healthcheckOptions.portIndex && ports.length > healthcheckOptions.portIndex) {
-        healthcheckPort = ports[healthcheckOptions.portIndex];
+        return ports[healthcheckOptions.portIndex];
       } else {
-        healthcheckPort = _.first(ports);
+        return _.first(ports);
       }
     } else {
-      healthcheckPort = _.first(ports);
+      return _.first(ports);
     }
-    return healthcheckPort;
   },
 
   healthcheckTimeout(healthcheckOptions) {

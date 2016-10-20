@@ -127,7 +127,7 @@ const TaskAlerts = (props) => {
   // Killed due to HC fail
   if (props.task.lastHealthcheckFailed && !props.task.isStillRunning) {
     const lastHealthcheck = _.last(props.task.healthcheckResults);
-    const healthcheckOptions = props.task.task.taskRequest.deploy.healthchecks;
+    const healthcheckOptions = props.task.task.taskRequest.deploy.healthcheck;
 
     let respondedMessage;
     if (lastHealthcheck.statusCode) {
@@ -137,7 +137,11 @@ const TaskAlerts = (props) => {
         </p>
       );
     } else if (lastHealthcheck.startup) {
-      // taskKilledReason message below covers this situation
+      respondedMessage = (
+        <p>
+          The healthcheck failed because of a refused connection. It is possible your app did not start properly or was not listening on the anticipated port ({Utils.healthcheckPort(healthcheckOptions, props.task.ports)}). Please check the logs for more details.
+        </p>
+      );
     } else {
       respondedMessage = (
         <span>
@@ -161,7 +165,7 @@ const TaskAlerts = (props) => {
       );
     } else {
       taskKilledReason = (
-        <span>due to no passing healthchecks after <strong>{props.task.tooManyRetries ? ` ${props.task.healthcheckResults.length} tries.` : ` ${Utils.healthcheckTimeout(healthcheckOptions)} seconds.`}</strong></span>
+        <span>due to no passing healthchecks after <strong>{props.task.tooManyRetries ? ` ${props.task.healthcheckResults.length} attempts.` : ` ${Utils.healthcheckTimeout(healthcheckOptions)} seconds.`}</strong></span>
       );
     }
 
@@ -173,7 +177,6 @@ const TaskAlerts = (props) => {
           </strong>
         </p>
         {respondedMessage}
-        {props.task.healthcheckFailureReasonMessage && <p>The healthcheck failed because of {props.task.healthcheckFailureReasonMessage}</p>}
         <p><li>
           <a href="#healthchecks">View all healthchecks</a>
         </li>

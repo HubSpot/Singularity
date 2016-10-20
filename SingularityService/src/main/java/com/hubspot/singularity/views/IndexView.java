@@ -5,6 +5,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
+import com.google.common.base.Objects;
 import com.google.common.base.Strings;
 import com.google.common.base.Throwables;
 import com.google.common.base.Optional;
@@ -36,8 +37,8 @@ public class IndexView extends View {
   private final int defaultBounceExpirationMinutes;
   private final long defaultHealthcheckIntervalSeconds;
   private final long defaultHealthcheckTimeoutSeconds;
-  private final long defaultDeployHealthTimeoutSeconds;
   private final Integer defaultHealthcheckMaxRetries;
+  private final int defaultStartupTimeoutSeconds;
 
   private final String runningTaskLogPath;
   private final String finishedTaskLogPath;
@@ -89,8 +90,8 @@ public class IndexView extends View {
     this.defaultBounceExpirationMinutes = configuration.getDefaultBounceExpirationMinutes();
     this.defaultHealthcheckIntervalSeconds = configuration.getHealthcheckIntervalSeconds();
     this.defaultHealthcheckTimeoutSeconds = configuration.getHealthcheckTimeoutSeconds();
-    this.defaultDeployHealthTimeoutSeconds = configuration.getDeployHealthyBySeconds();
     this.defaultHealthcheckMaxRetries = configuration.getHealthcheckMaxRetries().or(0);
+    this.defaultStartupTimeoutSeconds = configuration.getStartupTimeoutSeconds();
 
     this.runningTaskLogPath = configuration.getUiConfiguration().getRunningTaskLogPath();
     this.finishedTaskLogPath = configuration.getUiConfiguration().getFinishedTaskLogPath();
@@ -183,12 +184,12 @@ public class IndexView extends View {
     return defaultHealthcheckTimeoutSeconds;
   }
 
-  public long getDefaultDeployHealthTimeoutSeconds() {
-    return defaultDeployHealthTimeoutSeconds;
-  }
-
   public Integer getDefaultHealthcheckMaxRetries() {
     return defaultHealthcheckMaxRetries;
+  }
+
+  public int getDefaultStartupTimeoutSeconds() {
+    return defaultStartupTimeoutSeconds;
   }
 
   public String getRunningTaskLogPath() {
@@ -231,37 +232,41 @@ public class IndexView extends View {
     return extraScript;
   }
 
-  @Override
-  public String toString() {
-    return "IndexView[" +
-            "appRoot='" + appRoot + '\'' +
-            ", apiDocs='" + apiDocs + '\'' +
-            ", staticRoot='" + staticRoot + '\'' +
-            ", apiRoot='" + apiRoot + '\'' +
-            ", navColor='" + navColor + '\'' +
-            ", defaultMemory=" + defaultMemory +
-            ", defaultCpus=" + defaultCpus +
-            ", hideNewDeployButton=" + hideNewDeployButton +
-            ", hideNewRequestButton=" + hideNewRequestButton +
-            ", title='" + title + '\'' +
-            ", slaveHttpPort=" + slaveHttpPort +
-            ", slaveHttpsPort=" + slaveHttpsPort +
-            ", defaultBounceExpirationMinutes=" + defaultBounceExpirationMinutes +
-            ", defaultHealthcheckIntervalSeconds=" + defaultHealthcheckIntervalSeconds +
-            ", defaultHealthcheckTimeoutSeconds=" + defaultHealthcheckTimeoutSeconds +
-            ", defaultDeployHealthTimeoutSeconds=" + defaultDeployHealthTimeoutSeconds +
-            ", defaultHealthcheckMaxRetries=" + defaultHealthcheckMaxRetries +
-            ", runningTaskLogPath='" + runningTaskLogPath + '\'' +
-            ", finishedTaskLogPath='" + finishedTaskLogPath + '\'' +
-            ", commonHostnameSuffixToOmit='" + commonHostnameSuffixToOmit + '\'' +
-            ", taskS3LogOmitPrefix='" + taskS3LogOmitPrefix + '\'' +
-            ", warnIfScheduledJobIsRunningPastNextRunPct=" + warnIfScheduledJobIsRunningPastNextRunPct +
-            ", shellCommands='" + shellCommands + '\'' +
-            ", showTaskDiskResource=" + showTaskDiskResource +
-            ", timestampFormat='" + timestampFormat + '\'' +
-            ", timestampWithSecondsFormat='" + timestampWithSecondsFormat + '\'' +
-            ", redirectOnUnauthorizedUrl='" + redirectOnUnauthorizedUrl + '\'' +
-            ", extraScript='" + extraScript + '\'' +
-            ']';
+  public String getRedirectOnUnauthorizedUrl() {
+    return redirectOnUnauthorizedUrl;
+  }
+
+  @Override public String toString() {
+    return Objects.toStringHelper(this)
+      .add("appRoot", appRoot)
+      .add("apiDocs", apiDocs)
+      .add("staticRoot", staticRoot)
+      .add("apiRoot", apiRoot)
+      .add("navColor", navColor)
+      .add("defaultMemory", defaultMemory)
+      .add("defaultCpus", defaultCpus)
+      .add("hideNewDeployButton", hideNewDeployButton)
+      .add("hideNewRequestButton", hideNewRequestButton)
+      .add("loadBalancingEnabled", loadBalancingEnabled)
+      .add("title", title)
+      .add("slaveHttpPort", slaveHttpPort)
+      .add("slaveHttpsPort", slaveHttpsPort)
+      .add("defaultBounceExpirationMinutes", defaultBounceExpirationMinutes)
+      .add("defaultHealthcheckIntervalSeconds", defaultHealthcheckIntervalSeconds)
+      .add("defaultHealthcheckTimeoutSeconds", defaultHealthcheckTimeoutSeconds)
+      .add("defaultHealthcheckMaxRetries", defaultHealthcheckMaxRetries)
+      .add("defaultStartupTimeoutSeconds", defaultStartupTimeoutSeconds)
+      .add("runningTaskLogPath", runningTaskLogPath)
+      .add("finishedTaskLogPath", finishedTaskLogPath)
+      .add("commonHostnameSuffixToOmit", commonHostnameSuffixToOmit)
+      .add("taskS3LogOmitPrefix", taskS3LogOmitPrefix)
+      .add("warnIfScheduledJobIsRunningPastNextRunPct", warnIfScheduledJobIsRunningPastNextRunPct)
+      .add("shellCommands", shellCommands)
+      .add("timestampFormat", timestampFormat)
+      .add("showTaskDiskResource", showTaskDiskResource)
+      .add("timestampWithSecondsFormat", timestampWithSecondsFormat)
+      .add("redirectOnUnauthorizedUrl", redirectOnUnauthorizedUrl)
+      .add("extraScript", extraScript)
+      .toString();
   }
 }
