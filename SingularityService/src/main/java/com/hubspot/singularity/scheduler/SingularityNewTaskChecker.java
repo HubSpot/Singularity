@@ -87,7 +87,7 @@ public class SingularityNewTaskChecker {
   }
 
   private boolean hasHealthcheck(SingularityTask task, Optional<SingularityRequestWithState> requestWithState) {
-    if (!task.getTaskRequest().getDeploy().getHealthcheckUri().isPresent()) {
+    if (!task.getTaskRequest().getDeploy().getHealthcheck().isPresent()) {
       return false;
     }
 
@@ -110,7 +110,10 @@ public class SingularityNewTaskChecker {
     int delaySeconds = configuration.getNewTaskCheckerBaseDelaySeconds();
 
     if (hasHealthcheck(task, requestWithState)) {
-      delaySeconds += task.getTaskRequest().getDeploy().getHealthcheckIntervalSeconds().or(configuration.getHealthcheckIntervalSeconds());
+      Optional<Integer> maybeStartupDelay = task.getTaskRequest().getDeploy().getHealthcheck().get().getStartupDelaySeconds().or(configuration.getStartupDelaySeconds());
+      if (maybeStartupDelay.isPresent()) {
+        return maybeStartupDelay.get();
+      }
     } else if (task.getTaskRequest().getRequest().isLoadBalanced()) {
       return delaySeconds;
     }
@@ -297,8 +300,10 @@ public class SingularityNewTaskChecker {
           healthchecker.checkHealthcheck(task);
           return CheckTaskState.CHECK_IF_OVERDUE;
         case UNHEALTHY:
+          taskManager.clearStartupHealthchecks(task.getTaskId());
           return CheckTaskState.UNHEALTHY_KILL_TASK;
         case HEALTHY:
+          taskManager.clearStartupHealthchecks(task.getTaskId());
           break;
       }
     }

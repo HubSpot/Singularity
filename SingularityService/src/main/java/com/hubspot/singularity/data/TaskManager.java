@@ -92,6 +92,8 @@ public class TaskManager extends CuratorAsyncManager {
   private static final String SHELL_UPDATES_PATH = "/updates";
 
   private static final String HEALTHCHECKS_PATH = "/healthchecks";
+  private static final String STARTUP_HEALTHCHECK_PATH_SUFFIX = "-STARTUP";
+
   private static final String METADATA_PATH = "/metadata";
   private static final String UPDATES_PATH = "/updates";
 
@@ -171,7 +173,7 @@ public class TaskManager extends CuratorAsyncManager {
   }
 
   private String getHealthcheckPath(SingularityTaskHealthcheckResult healthcheck) {
-    return ZKPaths.makePath(getHealthcheckParentPath(healthcheck.getTaskId()), Long.toString(healthcheck.getTimestamp()));
+    return ZKPaths.makePath(getHealthcheckParentPath(healthcheck.getTaskId()), String.format("%s%s", Long.toString(healthcheck.getTimestamp()), healthcheck.isStartup() ? STARTUP_HEALTHCHECK_PATH_SUFFIX : ""));
   }
 
   private String getShellRequestQueuePath(SingularityTaskShellCommandRequest shellRequest) {
@@ -390,10 +392,32 @@ public class TaskManager extends CuratorAsyncManager {
     return getNumChildren(getHealthcheckParentPath(taskId));
   }
 
+  public int getNumNonstartupHealthchecks(SingularityTaskId taskId) {
+    int numChecks = 0;
+    List<String> checks = getChildren(getHealthcheckParentPath(taskId));
+    for (String check : checks) {
+      if (!check.endsWith(STARTUP_HEALTHCHECK_PATH_SUFFIX)) {
+        numChecks++;
+      }
+    }
+    return numChecks;
+  }
+
   public List<SingularityTaskHealthcheckResult> getHealthcheckResults(SingularityTaskId taskId) {
     List<SingularityTaskHealthcheckResult> healthcheckResults = getAsyncChildren(getHealthcheckParentPath(taskId), healthcheckResultTranscoder);
     Collections.sort(healthcheckResults);
     return healthcheckResults;
+  }
+
+  public void clearStartupHealthchecks(SingularityTaskId taskId) {
+    Optional<SingularityTaskHealthcheckResult> maybeLastHealthcheck = getLastHealthcheck(taskId);
+    String parentPath = getHealthcheckParentPath(taskId);
+    for (String healthcheckPath : getChildren(parentPath)) {
+      String fullPath = ZKPaths.makePath(parentPath, healthcheckPath);
+      if (healthcheckPath.endsWith(STARTUP_HEALTHCHECK_PATH_SUFFIX) && (!maybeLastHealthcheck.isPresent() || !getHealthcheckPath(maybeLastHealthcheck.get()).equals(fullPath))) {
+        delete(fullPath);
+      }
+    }
   }
 
   public Optional<SingularityTaskHealthcheckResult> getLastHealthcheck(SingularityTaskId taskId) {

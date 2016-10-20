@@ -210,16 +210,28 @@ const Utils = {
     return deployFailed && taskKilled;
   },
 
-  healthcheckFailureReasonMessage(task) {
-    const healthcheckResults = task.healthcheckResults;
-    if (healthcheckResults && healthcheckResults.length > 0) {
-      if (_.last(healthcheckResults).errorMessage && _.last(healthcheckResults).errorMessage.toLowerCase().indexOf('connection refused') !== -1) {
-        const portIndex = task.task.taskRequest.deploy.healthcheckPortIndex || 0;
-        const port = task.ports && task.ports.length > portIndex ? task.ports[portIndex] : false;
-        return `a refused connection. It is possible your app did not start properly or was not listening on the anticipated port (${port}). Please check the logs for more details.`;
+  healthcheckPort(healthcheckOptions, ports) {
+    if (healthcheckOptions) {
+      if (healthcheckOptions.portNumber) {
+        return healthcheckOptions.portNumber;
+      } else if (healthcheckOptions.portIndex && ports.length > healthcheckOptions.portIndex) {
+        return ports[healthcheckOptions.portIndex];
+      } else {
+        return _.first(ports);
       }
+    } else {
+      return _.first(ports);
     }
-    return null;
+  },
+
+  healthcheckTimeout(healthcheckOptions) {
+    if (healthcheckOptions) {
+      let startupTimeout = healthcheckOptions.startupTimeoutSeconds || config.defaultStartupTimeoutSeconds;
+      let attempts = (healthcheckOptions.maxRetries || config.defaultHealthcheckMaxRetries) + 1
+      return startupTimeout + (attempts * (healthcheckOptions.intervalSeconds || config.defaultHealthcheckIntervalSeconds))
+    } else {
+      return config.defaultStartupTimeoutSeconds + ((config.defaultHealthcheckMaxRetries + 1) * config.defaultHealthcheckIntervalSeconds);
+    }
   },
 
   maybe(object, path, defaultValue = undefined) {

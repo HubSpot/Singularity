@@ -6,6 +6,7 @@ import java.util.Set;
 
 import com.google.common.base.Optional;
 import com.hubspot.deploy.ExecutorData;
+import com.hubspot.deploy.HealthcheckOptions;
 import com.hubspot.mesos.Resources;
 import com.hubspot.mesos.SingularityContainerInfo;
 import com.hubspot.mesos.SingularityMesosTaskLabel;
@@ -40,15 +41,45 @@ public class SingularityDeployBuilder {
   private Optional<Map<Integer, Map<String, String>>> taskLabels;
   private Optional<Map<Integer, List<SingularityMesosTaskLabel>>> mesosTaskLabels;
 
+  /**
+   * @deprecated use {@link #healthcheck}
+   */
+  @Deprecated
   private Optional<String> healthcheckUri;
+  /**
+   * @deprecated use {@link #healthcheck}
+   */
+  @Deprecated
   private Optional<Long> healthcheckIntervalSeconds;
+  /**
+   * @deprecated use {@link #healthcheck}
+   */
+  @Deprecated
   private Optional<Long> healthcheckTimeoutSeconds;
+  /**
+   * @deprecated use {@link #healthcheck}
+   */
+  @Deprecated
   private Optional<Integer> healthcheckPortIndex;
-  private Optional<Boolean> skipHealthchecksOnDeploy;
+  /**
+   * @deprecated use {@link #healthcheck}
+   */
+  @Deprecated
   private Optional<HealthcheckProtocol> healthcheckProtocol;
-
+  /**
+   * @deprecated use {@link #healthcheck}
+   */
+  @Deprecated
   private Optional<Integer> healthcheckMaxRetries;
+  /**
+   * @deprecated use {@link #healthcheck}
+   */
+  @Deprecated
   private Optional<Long> healthcheckMaxTotalTimeoutSeconds;
+
+  private Optional<Boolean> skipHealthchecksOnDeploy;
+
+  private Optional<HealthcheckOptions> healthcheck;
 
   private Optional<Long> deployHealthTimeoutSeconds;
 
@@ -99,6 +130,7 @@ public class SingularityDeployBuilder {
     this.healthcheckPortIndex = Optional.absent();
     this.skipHealthchecksOnDeploy = Optional.absent();
     this.deployHealthTimeoutSeconds = Optional.absent();
+    this.healthcheck = Optional.absent();
     this.healthcheckProtocol = Optional.absent();
     this.healthcheckMaxTotalTimeoutSeconds = Optional.absent();
     this.healthcheckMaxRetries = Optional.absent();
@@ -123,7 +155,7 @@ public class SingularityDeployBuilder {
   public SingularityDeploy build() {
     return new SingularityDeploy(requestId, id, command, arguments, containerInfo, customExecutorCmd, customExecutorId, customExecutorSource, customExecutorResources, resources,
       env, taskEnv, uris, metadata, executorData, version, timestamp, labels, mesosLabels, taskLabels, mesosTaskLabels, deployHealthTimeoutSeconds, healthcheckUri, healthcheckIntervalSeconds, healthcheckTimeoutSeconds, healthcheckPortIndex, healthcheckMaxRetries,
-      healthcheckMaxTotalTimeoutSeconds, serviceBasePath, loadBalancerGroups, loadBalancerPortIndex, considerHealthyAfterRunningForSeconds, loadBalancerOptions, loadBalancerDomains, loadBalancerAdditionalRoutes,
+      healthcheckMaxTotalTimeoutSeconds, healthcheck, serviceBasePath, loadBalancerGroups, loadBalancerPortIndex, considerHealthyAfterRunningForSeconds, loadBalancerOptions, loadBalancerDomains, loadBalancerAdditionalRoutes,
       loadBalancerTemplate, loadBalancerServiceIdOverride, loadBalancerUpstreamGroup, skipHealthchecksOnDeploy, healthcheckProtocol, deployInstanceCountPerStep, deployStepWaitTimeMs, autoAdvanceDeploySteps, maxTaskRetries, shell, user);
   }
 
@@ -468,6 +500,15 @@ public class SingularityDeployBuilder {
     return this;
   }
 
+  public Optional<HealthcheckOptions> getHealthcheck() {
+    return healthcheck;
+  }
+
+  public SingularityDeployBuilder setHealthcheck(Optional<HealthcheckOptions> healthcheck) {
+    this.healthcheck = healthcheck;
+    return this;
+  }
+
   public Optional<Integer> getDeployInstanceCountPerStep() {
     return deployInstanceCountPerStep;
   }
@@ -570,6 +611,7 @@ public class SingularityDeployBuilder {
       ", healthcheckProtocol=" + healthcheckProtocol +
       ", healthcheckMaxRetries=" + healthcheckMaxRetries +
       ", healthcheckMaxTotalTimeoutSeconds=" + healthcheckMaxTotalTimeoutSeconds +
+      ", healthcheck=" + healthcheck +
       ", deployHealthTimeoutSeconds=" + deployHealthTimeoutSeconds +
       ", considerHealthyAfterRunningForSeconds=" + considerHealthyAfterRunningForSeconds +
       ", serviceBasePath=" + serviceBasePath +
