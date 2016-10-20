@@ -30,4 +30,5 @@ CREATE TABLE taskHistory (
   lastTaskStatus VARCHAR(25) NULL,
   runId VARCHAR(100) NULL,
   bytes BLOB NOT NULL,
+  purged BOOLEAN NOT NULL DEFAULT false,
 );
