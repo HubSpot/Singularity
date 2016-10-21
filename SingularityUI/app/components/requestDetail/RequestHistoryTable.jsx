@@ -3,7 +3,7 @@ import { connect } from 'react-redux';
 
 import Utils from '../../utils';
 
-import { FetchRequestHistory } from '../../actions/api/history';
+import { FetchRequestHistoryWithMetaData } from '../../actions/api/history';
 
 import Section from '../common/Section';
 
@@ -12,7 +12,7 @@ import Column from '../common/table/Column';
 import JSONButton from '../common/JSONButton';
 
 const RequestHistoryTable = ({requestId, requestEventsAPI, fetchRequestHistory}) => {
-  const requestEvents = requestEventsAPI ? requestEventsAPI.data : [];
+  const requestEvents = requestEventsAPI ? requestEventsAPI.data.objects : [];
   const isFetching = requestEventsAPI ? requestEventsAPI.isFetching : false;
   const emptyTableMessage = (Utils.api.isFirstLoad(requestEventsAPI)
     ? 'Loading...'
@@ -22,10 +22,13 @@ const RequestHistoryTable = ({requestId, requestEventsAPI, fetchRequestHistory})
     <Section id="request-history" title="Request history">
       <UITable
         emptyTableMessage={emptyTableMessage}
-        data={requestEvents}
+        data={requestEvents || []}
+        totalResults={requestEventsAPI.data.dataCount}
         keyGetter={(requestEvent) => requestEvent.createdAt}
-        rowChunkSize={5}
         paginated={true}
+        page={requestEventsAPI.data.page}
+        resultsPerPage={5}
+        maxPage={requestEventsAPI.data.pageCount}
         fetchDataFromApi={(page, numberPerPage) => fetchRequestHistory(requestId, numberPerPage, page)}
         isFetching={isFetching}
       >
@@ -71,7 +74,7 @@ RequestHistoryTable.propTypes = {
 };
 
 const mapDispatchToProps = (dispatch) => ({
-  fetchRequestHistory: (requestId, count, page) => dispatch(FetchRequestHistory.trigger(requestId, count, page))
+  fetchRequestHistory: (requestId, count, page) => dispatch(FetchRequestHistoryWithMetaData.trigger(requestId, count, page))
 });
 
 const mapStateToProps = (state, ownProps) => ({

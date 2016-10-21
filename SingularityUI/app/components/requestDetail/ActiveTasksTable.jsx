@@ -45,6 +45,7 @@ const ActiveTasksTable = ({requestId, tasksAPI}) => {
       { localStorage.enableTaskStateBreakdown ? <TaskStateBreakdown requestId={requestId} /> : null }
       <UITable
         data={tasks}
+        totalResults={tasks.length || 0}
         keyGetter={(task) => task.taskId.id}
         emptyTableMessage={emptyTableMessage}
       >

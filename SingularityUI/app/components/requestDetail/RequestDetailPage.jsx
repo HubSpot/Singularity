@@ -7,9 +7,9 @@ import * as RefreshActions from '../../actions/ui/refresh';
 import { FetchRequest } from '../../actions/api/requests';
 import {
   FetchActiveTasksForRequest,
-  FetchTaskHistoryForRequest,
-  FetchDeploysForRequest,
-  FetchRequestHistory
+  FetchTaskHistoryForRequestWithMetaData,
+  FetchDeploysForRequestWithMetaData,
+  FetchRequestHistoryWithMetaData
 } from '../../actions/api/history';
 import {
   FetchScheduledTasksForRequest,
@@ -30,9 +30,9 @@ function refresh(props) {
   props.fetchRequest(props.params.requestId);
   props.fetchActiveTasksForRequest(props.params.requestId);
   props.fetchTaskCleanups();
-  props.fetchTaskHistoryForRequest(props.params.requestId, 5, 1);
-  props.fetchDeploysForRequest(props.params.requestId, 5, 1);
-  props.fetchRequestHistory(props.params.requestId, 5, 1);
+  props.fetchTaskHistoryForRequestWithMetaData(props.params.requestId, 5, 1);
+  props.fetchDeploysForRequestWithMetaData(props.params.requestId, 5, 1);
+  props.fetchRequestHistoryWithMetaData(props.params.requestId, 5, 1);
   props.fetchScheduledTasksForRequest(props.params.requestId);
 }
 
@@ -108,9 +108,9 @@ const mapDispatchToProps = (dispatch, ownProps) => {
     fetchActiveTasksForRequest: (requestId) => dispatch(FetchActiveTasksForRequest.trigger(requestId)),
     fetchScheduledTasksForRequest: (requestId) => dispatch(FetchScheduledTasksForRequest.trigger(requestId)),
     fetchTaskCleanups: () => dispatch(FetchTaskCleanups.trigger()),
-    fetchTaskHistoryForRequest: (requestId, count, page) => dispatch(FetchTaskHistoryForRequest.trigger(requestId, count, page)),
-    fetchDeploysForRequest: (requestId, count, page) => dispatch(FetchDeploysForRequest.trigger(requestId, count, page)),
-    fetchRequestHistory: (requestId, count, page) => dispatch(FetchRequestHistory.trigger(requestId, count, page))
+    fetchTaskHistoryForRequestWithMetaData: (requestId, count, page) => dispatch(FetchTaskHistoryForRequestWithMetaData.trigger(requestId, count, page)),
+    fetchDeploysForRequestWithMetaData: (requestId, count, page) => dispatch(FetchDeploysForRequestWithMetaData.trigger(requestId, count, page)),
+    fetchRequestHistoryWithMetaData: (requestId, count, page) => dispatch(FetchRequestHistoryWithMetaData.trigger(requestId, count, page))
   };
 };
 

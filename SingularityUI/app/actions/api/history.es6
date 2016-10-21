@@ -26,6 +26,14 @@ export const FetchTaskHistoryForRequest = buildApiAction(
   (requestId) => requestId
 );
 
+export const FetchTaskHistoryForRequestWithMetaData = buildApiAction(
+  'FETCH_TASK_HISTORY_FOR_REQUEST',
+  (requestId, count, page) => ({
+    url: `/history/request/${requestId}/tasks/withmetadata?requestId=${requestId}&count=${count}&page=${page}`
+  }),
+  (requestId) => requestId
+);
+
 export const FetchActiveTasksForDeploy = buildApiAction(
   'FETCH_ACTIVE_TASKS_FOR_DEPLOY',
   (requestId, deployId) => ({
@@ -59,6 +67,14 @@ export const FetchDeploysForRequest = buildApiAction(
   'FETCH_DEPLOYS_FOR_REQUEST',
   (requestId, count, page) => ({
     url: `/history/request/${requestId}/deploys?count=${count}&page=${page}`
+  }),
+  (requestId) => requestId
+);
+
+export const FetchDeploysForRequestWithMetaData = buildApiAction(
+  'FETCH_DEPLOYS_FOR_REQUEST',
+  (requestId, count, page) => ({
+    url: `/history/request/${requestId}/deploys/withmetadata?count=${count}&page=${page}`
   }),
   (requestId) => requestId
 );
@@ -119,6 +135,14 @@ export const FetchRequestHistory = buildApiAction(
   'FETCH_REQUEST_HISTORY',
   (requestId, count, page) => ({
     url: `/history/request/${requestId}/requests?count=${count}&page=${page}`
+  }),
+  (requestId) => requestId
+);
+
+export const FetchRequestHistoryWithMetaData = buildApiAction(
+  'FETCH_REQUEST_HISTORY',
+  (requestId, count, page) => ({
+    url: `/history/request/${requestId}/requests/withmetadata?count=${count}&page=${page}`
   }),
   (requestId) => requestId
 );
