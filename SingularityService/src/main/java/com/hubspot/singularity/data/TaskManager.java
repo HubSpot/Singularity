@@ -92,6 +92,7 @@ public class TaskManager extends CuratorAsyncManager {
   private static final String SHELL_UPDATES_PATH = "/updates";
 
   private static final String HEALTHCHECKS_PATH = "/healthchecks";
+  private static final String HEALTHCHECKS_FINISHED_PATH = "/healthchecks-finished";
   private static final String STARTUP_HEALTHCHECK_PATH_SUFFIX = "-STARTUP";
 
   private static final String METADATA_PATH = "/metadata";
@@ -166,6 +167,10 @@ public class TaskManager extends CuratorAsyncManager {
 
   private String getHealthcheckParentPath(SingularityTaskId taskId) {
     return ZKPaths.makePath(getHistoryPath(taskId), HEALTHCHECKS_PATH);
+  }
+
+  private String getHealthchecksFinishedPath(SingularityTaskId taskId) {
+    return ZKPaths.makePath(getHistoryPath(taskId), HEALTHCHECKS_FINISHED_PATH);
   }
 
   private String getLastActiveTaskStatusPath(SingularityTaskId taskId) {
@@ -284,10 +289,22 @@ public class TaskManager extends CuratorAsyncManager {
   }
 
   public void saveHealthcheckResult(SingularityTaskHealthcheckResult healthcheckResult) {
-    final Optional<byte[]> bytes = Optional.of(healthcheckResultTranscoder.toBytes(healthcheckResult));
+    if (canSaveNewHealthcheck(healthcheckResult)) {
+      final Optional<byte[]> bytes = Optional.of(healthcheckResultTranscoder.toBytes(healthcheckResult));
 
-    save(getHealthcheckPath(healthcheckResult), bytes);
-    save(getLastHealthcheckPath(healthcheckResult.getTaskId()), bytes);
+      save(getHealthcheckPath(healthcheckResult), bytes);
+      save(getLastHealthcheckPath(healthcheckResult.getTaskId()), bytes);
+    } else {
+      LOG.warn("Healthchecks have finished, could not save new result {}", healthcheckResult);
+    }
+  }
+
+  private boolean canSaveNewHealthcheck(SingularityTaskHealthcheckResult healthcheckResult) {
+    return !exists(getHealthchecksFinishedPath(healthcheckResult.getTaskId()));
+  }
+
+  public void markHealthchecksFinished(SingularityTaskId taskId) {
+    create(getHealthchecksFinishedPath(taskId));
   }
 
   public SingularityCreateResult savePendingTask(SingularityPendingTask task) {
