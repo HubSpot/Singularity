@@ -26,7 +26,8 @@ function TaskHealthchecks (props) {
       <UITable
         emptyTableMessage="No healthchecks"
         data={healthchecks}
-        rowChunkSize={5}
+        resultsPerPage={5}
+        totalResults={healthchecks.length || 0}
         paginated={true}
         keyGetter={(healthcheckResult) => healthcheckResult.timestamp}
       >

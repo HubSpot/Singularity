@@ -123,7 +123,8 @@ export default class ShellCommands extends Component {
           data={this.props.shellCommandHistory}
           keyGetter={(historyItem) => historyItem.shellRequest.timestamp}
           emptyTableMessage="No commands run"
-          rowChunkSize={5}
+          resultsPerPage={5}
+          totalResults={this.props.shellCommandHistory.length || 0}
           paginated={true}
         >
           <Column

@@ -115,7 +115,7 @@ class RequestsPage extends Component {
         <UITable
           ref="table"
           data={displayRequests}
-          totalResults={displayRequests.length}
+          totalResults={displayRequests.length || 0}
           keyGetter={(request) => (request.request ? request.request.id : request.requestId)}
         >
           {this.getColumns()}

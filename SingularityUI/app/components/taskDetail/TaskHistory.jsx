@@ -12,7 +12,7 @@ function TaskHistory (props) {
         emptyTableMessage="This task has no history yet"
         data={props.taskUpdates.concat().reverse()}
         keyGetter={(taskUpdate) => taskUpdate.timestamp}
-        rowChunkSize={5}
+        resultsPerPage={5}
         paginated={true}
         rowClassName={(rowData, index) => classNames({'medium-weight': index === 0})}
       >
