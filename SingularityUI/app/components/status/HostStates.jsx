@@ -19,7 +19,7 @@ function HostStates(props) {
       <UITable
         data={props.hosts || []}
         paginated={true}
-        rowChunkSize={100}
+        resultsPerPage={100}
         keyGetter={(host) => host.hostname}
       >
         <Column
