@@ -20,7 +20,7 @@ function HostStates(props) {
         data={props.hosts || []}
         paginated={true}
         resultsPerPage={100}
-        totalResults={props.hosts.length}
+        totalResults={props.hosts.length || 0}
         keyGetter={(host) => host.hostname}
       >
         <Column
