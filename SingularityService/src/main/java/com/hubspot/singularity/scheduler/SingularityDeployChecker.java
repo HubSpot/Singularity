@@ -543,6 +543,7 @@ public class SingularityDeployChecker {
       case UNHEALTHY:
       default:
         for (SingularityTaskId activeTaskId : deployActiveTasks) {
+          taskManager.markHealthchecksFinished(activeTaskId);
           taskManager.clearStartupHealthchecks(activeTaskId);
         }
         return getDeployResultWithFailures(request, deploy, pendingDeploy, DeployState.FAILED, "Not all tasks for deploy were healthy", deployActiveTasks);
