@@ -300,7 +300,7 @@ public class TaskManager extends CuratorAsyncManager {
   }
 
   private boolean canSaveNewHealthcheck(SingularityTaskHealthcheckResult healthcheckResult) {
-    return exists(getHealthchecksFinishedPath(healthcheckResult.getTaskId()));
+    return !exists(getHealthchecksFinishedPath(healthcheckResult.getTaskId()));
   }
 
   public void markHealthchecksFinished(SingularityTaskId taskId) {
