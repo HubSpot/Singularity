@@ -104,13 +104,32 @@ const Utils = {
     return false;
   },
 
-  fuzzyAdjustScore(filter, fuzzyObject) {
-    if (fuzzyObject.original.id.toLowerCase().startsWith(filter.toLowerCase())) {
-      return fuzzyObject.score * 10;
-    } else if (fuzzyObject.original.id.toLowerCase().indexOf(filter.toLowerCase()) > -1) {
-      return fuzzyObject.score * 5;
-    }
-    return fuzzyObject.score;
+  fuzzyFilter(filter, fuzzyObjects) {
+    const maxScore = _.max(fuzzyObjects, (fuzzyObject) => fuzzyObject.score).score;
+    _.chain(fuzzyObjects).map((fuzzyObject) => {
+        if (fuzzyObject.original.id.toLowerCase().startsWith(filter.toLowerCase())) {
+          fuzzyObject.score = fuzzyObject.score * 10;
+        } else if (fuzzyObject.original.id.toLowerCase().indexOf(filter.toLowerCase()) > -1) {
+          fuzzyObject.score = fuzzyObject.score * 5;
+        }
+        return fuzzyObject;
+    });
+    return _.uniq(
+      _.pluck(
+        _.sortBy(
+          _.filter(
+            fuzzyObjects,
+            (fuzzyObject) => {
+              return fuzzyObject.score > (maxScore / 10) && fuzzyObject.score > 20;
+            }
+          ),
+          (fuzzyObject) => {
+            return fuzzyObject.score;
+          }
+        ).reverse(),
+        'original'
+      )
+    );
   },
 
   convertMapFromObjectToArray(mapAsObj) {
