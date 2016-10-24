@@ -66,7 +66,10 @@ const DeployHistoryTable = ({requestId, deploysAPI, fetchDeploys}) => {
           className="actions-column"
           cellData={(deploy) => (
             <span>
-              <RedeployButton requestId={requestId} deployId={deploy.deployMarker.deployId} />
+              <RedeployButton
+                requestId={requestId}
+                deployId={deploy.deployMarker.deployId} 
+                doAfterSuccessfulRedeploy={() => fetchDeploys(requestId, 5, 1)}/>
               <JSONButton object={deploy} showOverlay={true}>{'{ }'}</JSONButton>
             </span>
           )}

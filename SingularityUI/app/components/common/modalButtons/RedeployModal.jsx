@@ -24,9 +24,10 @@ class RedeployModal extends Component {
   }
 
   showSuccessMessage() {
+    let oldDeployId = Utils.maybe(this.props.deploy, ['deploy', 'id'])
     Messenger().success({
-      message: `Success! Redeployed ${Utils.maybe(this.props.deploy, ['deploy', 'id'])}. New id: ${this.state.newDeployId}`,
-      hideAfter: 10
+      message: `Success! Started redeploy of <a href="/request/${this.props.requestId}/deploy/${oldDeployId}">deploy ${oldDeployId}</a>. New id: <a href="/request/${this.props.requestId}/deploy/${this.state.newDeployId}">${this.state.newDeployId}</a>`,
+      hideAfter: 5
     });
   }
 
@@ -39,12 +40,12 @@ class RedeployModal extends Component {
       if (response.statusCode === 200) {
         this.setState({newDeployId: data.deployId});
         this.showSuccessMessage();
+        if (this.props.doAfterSuccessfulRedeploy) {
+          this.props.doAfterSuccessfulRedeploy();
+        }
       } else {
         this.setState({error: response.error, errorCode: response.statusCode, newDeployId: data.deployId});
         this.show();
-      }
-      if (this.props.doAfterRedeploy) {
-        this.props.doAfterRedeploy(response);
       }
     });
   }
@@ -98,7 +99,7 @@ class RedeployModal extends Component {
 }
 
 const mapDispatchToProps = (dispatch, ownProps) => ({
-  saveDeploy: (deployId) => dispatch(SaveDeploy.trigger({deploy: _.extend({}, ownProps.deploy.deploy, {id: deployId})})),
+  saveDeploy: (deployId) => dispatch(SaveDeploy.trigger({deploy: _.extend({}, ownProps.deploy.deploy, {id: deployId})}))
 });
 
 export default connect(
