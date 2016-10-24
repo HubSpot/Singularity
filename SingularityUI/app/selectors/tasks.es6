@@ -74,8 +74,11 @@ export const getFilteredTasks = createSelector(
         tasks = _.uniq(
           _.pluck(
             _.sortBy(
-              _.union(
-                rackMatch, hostMatch, idMatch
+              _.filter(
+                _.union(
+                  rackMatch, hostMatch, idMatch
+                ),
+                (task) => task.score > 20
               ),
               (task) => Utils.fuzzyAdjustScore(filter.filterText, task)
             ),
