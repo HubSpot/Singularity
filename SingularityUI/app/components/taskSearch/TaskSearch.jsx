@@ -217,7 +217,9 @@ function mapDispatchToProps(dispatch) {
 function refresh(props) {
   FetchTaskSearchParamsWithMetaData.clear();
   const promises = [];
-  promises.push(props.fetchTaskHistory(INITIAL_TASKS_PER_PAGE, 1, { requestId: props.params.requestId || undefined }));
+  if (Object.keys(props.params || []).length) {
+    promises.push(props.fetchTaskHistory(INITIAL_TASKS_PER_PAGE, 1, { requestId: props.params.requestId || undefined }));
+  }
   promises.push(props.updateFilter({ requestId: props.params.requestId || undefined }));
   return Promise.all(promises);
 }
