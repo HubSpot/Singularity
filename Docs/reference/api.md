@@ -1,11 +1,12 @@
 # Singularity REST API
 
-Version: 0.10.0-SNAPSHOT
+Version: 0.12.0-SNAPSHOT
 
 Endpoints:
 - [`/api/deploys`](#endpoint-/api/deploys) - Manages Singularity Deploys for existing requests
 - [`/api/history`](#endpoint-/api/history) - Manages historical data for tasks, requests, and deploys.
 - [`/api/logs`](#endpoint-/api/logs) - Manages Singularity task logs stored in S3.
+- [`/api/racks`](#endpoint-/api/racks) - Manages whether or not to schedule tasks based on their priority levels.
 - [`/api/racks`](#endpoint-/api/racks) - Manages Singularity racks.
 - [`/api/requests`](#endpoint-/api/requests) - Manages Singularity Requests, the parent object for any deployed task
 - [`/api/sandbox`](#endpoint-/api/sandbox) - Provides a proxy to Mesos sandboxes.
@@ -84,6 +85,7 @@ Models:
 - [`SingularityDeployStatistics`](#model-SingularityDeployStatistics)
 - [`SingularityDeployUpdate`](#model-SingularityDeployUpdate)
 - [`SingularityDockerInfo`](#model-SingularityDockerInfo)
+- [`SingularityDockerParameter`](#model-SingularityDockerParameter)
 - [`SingularityDockerPortMapping`](#model-SingularityDockerPortMapping)
 - [`SingularityExitCooldownRequest`](#model-SingularityExitCooldownRequest)
 - [`SingularityExpiringBounce`](#model-SingularityExpiringBounce)
@@ -95,11 +97,14 @@ Models:
 - [`SingularityLoadBalancerUpdate`](#model-SingularityLoadBalancerUpdate)
 - [`SingularityMachineChangeRequest`](#model-SingularityMachineChangeRequest)
 - [`SingularityMachineStateHistoryUpdate`](#model-SingularityMachineStateHistoryUpdate)
+- [`SingularityMesosTaskLabel`](#model-SingularityMesosTaskLabel)
 - [`SingularityPauseRequest`](#model-SingularityPauseRequest)
 - [`SingularityPendingDeploy`](#model-SingularityPendingDeploy)
 - [`SingularityPendingRequest`](#model-SingularityPendingRequest)
 - [`SingularityPendingTask`](#model-SingularityPendingTask)
 - [`SingularityPendingTaskId`](#model-SingularityPendingTaskId)
+- [`SingularityPriorityFreeze`](#model-SingularityPriorityFreeze)
+- [`SingularityPriorityFreezeParent`](#model-SingularityPriorityFreezeParent)
 - [`SingularityRack`](#model-SingularityRack)
 - [`SingularityRequest`](#model-SingularityRequest)
 - [`SingularityRequestCleanup`](#model-SingularityRequestCleanup)
@@ -263,6 +268,8 @@ Retrieve the history sorted by startedAt for all inactive tasks.
 | lastTaskStatus | false | Optional last task status to match | string |
 | startedAfter | false | Optionally match only tasks started after | long |
 | startedBefore | false | Optionally match only tasks started before | long |
+| updatedBefore | false | Optionally match tasks last updated before | long |
+| updatedAfter | false | Optionally match tasks last updated after | long |
 | orderDirection | false | Sort direction | string |
 | count | false | Maximum number of items to return | int |
 | page | false | Which page of items to view | int |
@@ -369,6 +376,8 @@ Retrieve the history sorted by startedAt for all inactive tasks of a specific re
 | lastTaskStatus | false | Optional last task status to match | string |
 | startedAfter | false | Optionally match only tasks started after | long |
 | startedBefore | false | Optionally match only tasks started before | long |
+| updatedBefore | false | Optionally match tasks last updated before | long |
+| updatedAfter | false | Optionally match tasks last updated after | long |
 | orderDirection | false | Sort direction | string |
 | count | false | Maximum number of items to return | int |
 | page | false | Which page of items to view | int |
@@ -633,6 +642,74 @@ Retrieve the list of logs stored in S3 for a specific request.
 | Status Code | Reason      | Response Model |
 |-------------|-------------|----------------|
 | - | - | - |
+
+
+- - -
+### <a name="endpoint-/api/racks"></a> /api/racks
+#### Overview
+Manages whether or not to schedule tasks based on their priority levels.
+
+#### **GET** `/api/priority/freeze`
+
+Get information about the active priority freeze.
+
+
+###### Parameters
+- No parameters
+
+###### Response
+[SingularityPriorityFreezeParent](#model-SingularityPriorityFreezeParent)
+
+
+###### Errors
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| 200    | The active priority freeze. | - |
+| 404    | There was no active priority freeze. | - |
+
+
+- - -
+#### **DELETE** `/api/priority/freeze`
+
+Stops the active priority freeze.
+
+
+###### Parameters
+- No parameters
+
+###### Response
+
+
+
+###### Errors
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| 202    | The active priority freeze was deleted. | - |
+| 400    | There was no active priority freeze to delete. | - |
+
+
+- - -
+#### **POST** `/api/priority/freeze`
+
+Stop scheduling tasks below a certain priority level.
+
+
+###### Parameters
+**body**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| body | false |  | [SingularityPriorityFreeze](#model-linkType)</a> |
+
+###### Response
+[SingularityPriorityFreezeParent](#model-SingularityPriorityFreezeParent)
+
+
+###### Errors
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| 200    | The priority freeze request was accepted. | - |
+| 400    | There was a validation error with the priority freeze request. | - |
 
 
 - - -
@@ -1790,6 +1867,29 @@ Get the cleanup object for the task, if it exists
 
 
 - - -
+#### **GET** `/api/tasks/task/{taskId}`
+
+Retrieve information about a specific active task.
+
+
+###### Parameters
+**path**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| taskId | true |  | string |
+
+###### Response
+[SingularityTask](#model-SingularityTask)
+
+
+###### Errors
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| - | - | - |
+
+
+- - -
 #### **DELETE** `/api/tasks/task/{taskId}`
 
 Attempt to kill task, optionally overriding an existing cleanup request (that may be waiting for replacement tasks to become healthy)
@@ -1815,29 +1915,6 @@ Attempt to kill task, optionally overriding an existing cleanup request (that ma
 | Status Code | Reason      | Response Model |
 |-------------|-------------|----------------|
 | 409    | Task already has a cleanup request (can be overridden with override=true) | - |
-
-
-- - -
-#### **GET** `/api/tasks/task/{taskId}`
-
-Retrieve information about a specific active task.
-
-
-###### Parameters
-**path**
-
-| Parameter | Required | Description | Data Type |
-|-----------|----------|-------------|-----------|
-| taskId | true |  | string |
-
-###### Response
-[SingularityTask](#model-SingularityTask)
-
-
-###### Errors
-| Status Code | Reason      | Response Model |
-|-------------|-------------|----------------|
-| - | - | - |
 
 
 - - -
@@ -2078,6 +2155,25 @@ Force an update for a specific task.
 |-----------|----------|-------------|-----------|
 | taskId | true |  | string |
 | taskState | true |  | string |
+
+###### Response
+
+
+
+###### Errors
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| - | - | - |
+
+
+- - -
+#### **POST** `/api/test/reconcile`
+
+Start task reconciliation
+
+
+###### Parameters
+- No parameters
 
 ###### Response
 
@@ -2373,17 +2469,17 @@ Retrieve a list of active webhooks.
 
 
 - - -
-#### **POST** `/api/webhooks`
+#### **DELETE** `/api/webhooks`
 
-Add a new webhook.
+Delete a specific webhook.
 
 
 ###### Parameters
-**body**
+**query**
 
 | Parameter | Required | Description | Data Type |
 |-----------|----------|-------------|-----------|
-| body | false |  | [SingularityWebhook](#model-linkType)</a> |
+| webhookId | false |  | string |
 
 ###### Response
 string
@@ -2396,17 +2492,17 @@ string
 
 
 - - -
-#### **DELETE** `/api/webhooks`
+#### **POST** `/api/webhooks`
 
-Delete a specific webhook.
+Add a new webhook.
 
 
 ###### Parameters
-**query**
+**body**
 
 | Parameter | Required | Description | Data Type |
 |-----------|----------|-------------|-----------|
-| webhookId | false |  | string |
+| body | false |  | [SingularityWebhook](#model-linkType)</a> |
 
 ###### Response
 string
@@ -2499,8 +2595,8 @@ string
 | defaultInstanceForType | [CommandInfo](#model-CommandInfo) | optional |  |
 | urisOrBuilderList | [List[? extends org.apache.mesos.Protos$CommandInfo$URIOrBuilder]](#model-List[? extends org.apache.mesos.Protos$CommandInfo$URIOrBuilder]) | optional |  |
 | parserForType | [com.google.protobuf.Parser&lt;org.apache.mesos.Protos$CommandInfo&gt;](#model-com.google.protobuf.Parser&lt;org.apache.mesos.Protos$CommandInfo&gt;) | optional |  |
-| argumentsCount | int | optional |  |
 | urisCount | int | optional |  |
+| argumentsCount | int | optional |  |
 | argumentsList | Array[string] | optional |  |
 | user | string | optional |  |
 | value | string | optional |  |
@@ -2528,8 +2624,8 @@ string
 | argumentsList | Array[string] | optional |  |
 | user | string | optional |  |
 | value | string | optional |  |
-| userBytes | [ByteString](#model-ByteString) | optional |  |
 | environment | [Environment](#model-Environment) | optional |  |
+| userBytes | [ByteString](#model-ByteString) | optional |  |
 | shell | boolean | optional |  |
 | environmentOrBuilder | [EnvironmentOrBuilder](#model-EnvironmentOrBuilder) | optional |  |
 | urisList | [List[URI]](#model-List[URI]) | optional |  |
@@ -2543,8 +2639,8 @@ string
 | defaultInstanceForType | [ContainerInfo](#model-ContainerInfo) | optional |  |
 | networkInfosList | [List[NetworkInfo]](#model-List[NetworkInfo]) | optional |  |
 | networkInfosOrBuilderList | [List[? extends org.apache.mesos.Protos$NetworkInfoOrBuilder]](#model-List[? extends org.apache.mesos.Protos$NetworkInfoOrBuilder]) | optional |  |
-| type | [Type](#model-Type) | optional |  Allowable values: DOCKER, MESOS |
 | parserForType | [com.google.protobuf.Parser&lt;org.apache.mesos.Protos$ContainerInfo&gt;](#model-com.google.protobuf.Parser&lt;org.apache.mesos.Protos$ContainerInfo&gt;) | optional |  |
+| type | [Type](#model-Type) | optional |  Allowable values: DOCKER, MESOS |
 | mesos | [MesosInfo](#model-MesosInfo) | optional |  |
 | hostname | string | optional |  |
 | mesosOrBuilder | [MesosInfoOrBuilder](#model-MesosInfoOrBuilder) | optional |  |
@@ -2638,12 +2734,12 @@ string
 | labels | [Labels](#model-Labels) | optional |  |
 | locationBytes | [ByteString](#model-ByteString) | optional |  |
 | initialized | boolean | optional |  |
-| nameBytes | [ByteString](#model-ByteString) | optional |  |
 | name | string | optional |  |
 | environment | string | optional |  |
+| nameBytes | [ByteString](#model-ByteString) | optional |  |
 | ports | [Ports](#model-Ports) | optional |  |
-| visibility | [Visibility](#model-Visibility) | optional |  Allowable values: FRAMEWORK, CLUSTER, EXTERNAL |
 | environmentBytes | [ByteString](#model-ByteString) | optional |  |
+| visibility | [Visibility](#model-Visibility) | optional |  Allowable values: FRAMEWORK, CLUSTER, EXTERNAL |
 | serializedSize | int | optional |  |
 | portsOrBuilder | [PortsOrBuilder](#model-PortsOrBuilder) | optional |  |
 | allFields | [Map[FieldDescriptor,Object]](#model-Map[FieldDescriptor,Object]) | optional |  |
@@ -2869,8 +2965,8 @@ string
 | initialized | boolean | optional |  |
 | name | string | optional |  |
 | nameBytes | [ByteString](#model-ByteString) | optional |  |
-| frameworkId | [FrameworkID](#model-FrameworkID) | optional |  |
 | sourceBytes | [ByteString](#model-ByteString) | optional |  |
+| frameworkId | [FrameworkID](#model-FrameworkID) | optional |  |
 | command | [CommandInfo](#model-CommandInfo) | optional |  |
 | frameworkIdOrBuilder | [FrameworkIDOrBuilder](#model-FrameworkIDOrBuilder) | optional |  |
 | executorIdOrBuilder | [ExecutorIDOrBuilder](#model-ExecutorIDOrBuilder) | optional |  |
@@ -2894,13 +2990,13 @@ string
 | data | [ByteString](#model-ByteString) | optional |  |
 | source | string | optional |  |
 | containerOrBuilder | [ContainerInfoOrBuilder](#model-ContainerInfoOrBuilder) | optional |  |
-| container | [ContainerInfo](#model-ContainerInfo) | optional |  |
 | executorId | [ExecutorID](#model-ExecutorID) | optional |  |
+| container | [ContainerInfo](#model-ContainerInfo) | optional |  |
 | name | string | optional |  |
 | nameBytes | [ByteString](#model-ByteString) | optional |  |
+| frameworkId | [FrameworkID](#model-FrameworkID) | optional |  |
 | sourceBytes | [ByteString](#model-ByteString) | optional |  |
 | command | [CommandInfo](#model-CommandInfo) | optional |  |
-| frameworkId | [FrameworkID](#model-FrameworkID) | optional |  |
 | frameworkIdOrBuilder | [FrameworkIDOrBuilder](#model-FrameworkIDOrBuilder) | optional |  |
 | executorIdOrBuilder | [ExecutorIDOrBuilder](#model-ExecutorIDOrBuilder) | optional |  |
 | resourcesList | [List[Resource]](#model-List[Resource]) | optional |  |
@@ -2951,16 +3047,16 @@ string
 | javaOuterClassnameBytes | [ByteString](#model-ByteString) | optional |  |
 | initialized | boolean | optional |  |
 | javaOuterClassname | string | optional |  |
-| pyGenericServices | boolean | optional |  |
 | serializedSize | int | optional |  |
+| pyGenericServices | boolean | optional |  |
 | allFields | [Map[FieldDescriptor,Object]](#model-Map[FieldDescriptor,Object]) | optional |  |
 | descriptorForType | [Descriptor](#model-Descriptor) | optional |  |
-| goPackage | string | optional |  |
 | uninterpretedOptionList | [List[UninterpretedOption]](#model-List[UninterpretedOption]) | optional |  |
 | javaPackage | string | optional |  |
-| javaGenerateEqualsAndHash | boolean | optional |  |
+| goPackage | string | optional |  |
 | unknownFields | [UnknownFieldSet](#model-UnknownFieldSet) | optional |  |
 | uninterpretedOptionOrBuilderList | [List[? extends com.google.protobuf.DescriptorProtos$UninterpretedOptionOrBuilder]](#model-List[? extends com.google.protobuf.DescriptorProtos$UninterpretedOptionOrBuilder]) | optional |  |
+| javaGenerateEqualsAndHash | boolean | optional |  |
 | initializationErrorString | string | optional |  |
 | ccGenericServices | boolean | optional |  |
 
@@ -3185,8 +3281,8 @@ string
 | serializedSize | int | optional |  |
 | allFields | [Map[FieldDescriptor,Object]](#model-Map[FieldDescriptor,Object]) | optional |  |
 | descriptorForType | [Descriptor](#model-Descriptor) | optional |  |
-| messageSetWireFormat | boolean | optional |  |
 | uninterpretedOptionList | [List[UninterpretedOption]](#model-List[UninterpretedOption]) | optional |  |
+| messageSetWireFormat | boolean | optional |  |
 | unknownFields | [UnknownFieldSet](#model-UnknownFieldSet) | optional |  |
 | uninterpretedOptionOrBuilderList | [List[? extends com.google.protobuf.DescriptorProtos$UninterpretedOptionOrBuilder]](#model-List[? extends com.google.protobuf.DescriptorProtos$UninterpretedOptionOrBuilder]) | optional |  |
 | initializationErrorString | string | optional |  |
@@ -3210,8 +3306,8 @@ string
 | hostname | string | optional |  |
 | attributesCount | int | optional |  |
 | initialized | boolean | optional |  |
-| attributesList | [List[Attribute]](#model-List[Attribute]) | optional |  |
 | idOrBuilder | [OfferIDOrBuilder](#model-OfferIDOrBuilder) | optional |  |
+| attributesList | [List[Attribute]](#model-List[Attribute]) | optional |  |
 | frameworkId | [FrameworkID](#model-FrameworkID) | optional |  |
 | frameworkIdOrBuilder | [FrameworkIDOrBuilder](#model-FrameworkIDOrBuilder) | optional |  |
 | serializedSize | int | optional |  |
@@ -3221,8 +3317,8 @@ string
 | descriptorForType | [Descriptor](#model-Descriptor) | optional |  |
 | hostnameBytes | [ByteString](#model-ByteString) | optional |  |
 | attributesOrBuilderList | [List[? extends org.apache.mesos.Protos$AttributeOrBuilder]](#model-List[? extends org.apache.mesos.Protos$AttributeOrBuilder]) | optional |  |
-| unknownFields | [UnknownFieldSet](#model-UnknownFieldSet) | optional |  |
 | resourcesCount | int | optional |  |
+| unknownFields | [UnknownFieldSet](#model-UnknownFieldSet) | optional |  |
 | initializationErrorString | string | optional |  |
 | id | [OfferID](#model-OfferID) | optional |  |
 
@@ -3355,21 +3451,24 @@ string
 | taskEnv | [Map[int,Map[string,string]]](#model-Map[int,Map[string,string]]) | optional | Map of environment variable overrides for specific task instances. |
 | autoAdvanceDeploySteps | boolean | optional | automatically advance to the next target instance count after `deployStepWaitTimeMs` seconds |
 | serviceBasePath | string | optional | The base path for the API exposed by the deploy. Used in conjunction with the Load balancer API. |
-| customExecutorUser | string | optional | User to run custom executor as |
 | customExecutorSource | string | optional | Custom Mesos executor source. |
 | metadata | [Map[string,string]](#model-Map[string,string]) | optional | Map of metadata key/value pairs associated with the deployment. |
 | healthcheckMaxRetries | int | optional | Maximum number of times to retry an individual healthcheck before failing the deploy. |
 | healthcheckTimeoutSeconds | long | optional | Single healthcheck HTTP timeout in seconds. |
 | healthcheckProtocol | [HealthcheckProtocol](#model-HealthcheckProtocol) | optional | Healthcheck protocol - HTTP or HTTPS |
-| taskLabels | [Map[int,Map[string,string]]](#model-Map[int,Map[string,string]]) | optional | Labels for specific tasks associated with this deploy, indexed by instance number |
+| taskLabels | [Map[int,Map[string,string]]](#model-Map[int,Map[string,string]]) | optional | (Deprecated) Labels for specific tasks associated with this deploy, indexed by instance number |
 | healthcheckPortIndex | int | optional | Perform healthcheck on this dynamically allocated port (e.g. 0 for first port), defaults to first port |
 | healthcheckMaxTotalTimeoutSeconds | long | optional | Maximum amount of time to wait before failing a deploy for healthchecks to pass. |
+| loadBalancerServiceIdOverride | string | optional | Name of load balancer Service ID to use instead of the Request ID |
+| mesosTaskLabels | [Map[int,List[SingularityMesosTaskLabel]]](#model-Map[int,List[SingularityMesosTaskLabel]]) | optional | Labels for specific tasks associated with this deploy, indexed by instance number |
 | labels | [Map[string,string]](#model-Map[string,string]) | optional | Labels for all tasks associated with this deploy |
 | healthcheckUri | string | optional | Deployment Healthcheck URI, if specified will be called after TASK_RUNNING. |
+| user | string | optional | Run tasks as this user |
 | requestId | string | required | Singularity Request Id which is associated with this deploy. |
 | loadBalancerGroups | [Set](#model-Set) | optional | List of load balancer groups associated with this deployment. |
 | deployStepWaitTimeMs | int | optional | wait this long between deploy steps |
 | skipHealthchecksOnDeploy | boolean | optional | Allows skipping of health checks when deploying. |
+| mesosLabels | [Array[SingularityMesosTaskLabel]](#model-SingularityMesosTaskLabel) | optional | Labels for all tasks associated with this deploy |
 | healthcheckIntervalSeconds | long | optional | Time to wait after a failed healthcheck to try again in seconds. |
 | command | string | optional | Command to execute for this deployment. |
 | executorData | [ExecutorData](#model-ExecutorData) | optional | Executor specific information |
@@ -3384,6 +3483,7 @@ string
 | loadBalancerTemplate | string | optional | Name of load balancer template to use if not using the default template |
 | customExecutorCmd | string | optional | Custom Mesos executor |
 | env | [Map[string,string]](#model-Map[string,string]) | optional | Map of environment variable definitions. |
+| loadBalancerUpstreamGroup | string | optional | Group name to tag all upstreams with in load balancer |
 | customExecutorResources | [Resources](#model-Resources) | optional | Resources to allocate for custom mesos executor |
 | version | string | optional | Deploy version |
 | id | string | required | Singularity deploy id. |
@@ -3486,10 +3586,19 @@ string
 |------|------|----------|-------------|
 | parameters | [Map[string,string]](#model-Map[string,string]) | optional |  |
 | forcePullImage | boolean | optional |  |
+| dockerParameters | [Array[SingularityDockerParameter]](#model-SingularityDockerParameter) | optional |  |
 | privileged | boolean | optional |  |
 | network | [SingularityDockerNetworkType](#model-SingularityDockerNetworkType) | optional |  |
 | portMappings | [Array[SingularityDockerPortMapping]](#model-SingularityDockerPortMapping) | optional |  |
 | image | string | optional |  |
+
+
+## <a name="model-SingularityDockerParameter"></a> SingularityDockerParameter
+
+| name | type | required | description |
+|------|------|----------|-------------|
+| key | string | optional |  |
+| value | string | optional |  |
 
 
 ## <a name="model-SingularityDockerPortMapping"></a> SingularityDockerPortMapping
@@ -3613,6 +3722,14 @@ string
 | objectId | string | optional |  |
 
 
+## <a name="model-SingularityMesosTaskLabel"></a> SingularityMesosTaskLabel
+
+| name | type | required | description |
+|------|------|----------|-------------|
+| key | string | optional |  |
+| value | string | optional |  |
+
+
 ## <a name="model-SingularityPauseRequest"></a> SingularityPauseRequest
 
 | name | type | required | description |
@@ -3677,6 +3794,25 @@ string
 | id | string | optional |  |
 
 
+## <a name="model-SingularityPriorityFreeze"></a> SingularityPriorityFreeze
+
+| name | type | required | description |
+|------|------|----------|-------------|
+| killTasks | boolean | optional |  |
+| message | string | optional |  |
+| actionId | string | optional |  |
+| minimumPriorityLevel | double | optional |  |
+
+
+## <a name="model-SingularityPriorityFreezeParent"></a> SingularityPriorityFreezeParent
+
+| name | type | required | description |
+|------|------|----------|-------------|
+| priorityFreeze | [SingularityPriorityFreeze](#model-SingularityPriorityFreeze) | optional |  |
+| user | string | optional |  |
+| timestamp | long | optional |  |
+
+
 ## <a name="model-SingularityRack"></a> SingularityRack
 
 | name | type | required | description |
@@ -3696,6 +3832,7 @@ string
 | schedule | string | optional |  |
 | skipHealthchecks | boolean | optional |  |
 | waitAtLeastMillisAfterTaskFinishesForReschedule | long | optional |  |
+| taskPriorityLevel | double | optional |  |
 | rackAffinity | Array[string] | optional |  |
 | emailConfigurationOverrides | [Map[SingularityEmailType,List[SingularityEmailDestination]]](#model-Map[SingularityEmailType,List[SingularityEmailDestination]]) | optional |  |
 | slavePlacement | [SlavePlacement](#model-SlavePlacement) | optional |  |
@@ -3879,6 +4016,7 @@ string
 | underProvisionedRequests | int | optional |  |
 | decomissioningSlaves | int | optional |  |
 | oldestDeploy | long | optional |  |
+| minimumPriorityLevel | double | optional |  |
 | scheduledTasks | int | optional |  |
 | underProvisionedRequestIds | Array[string] | optional |  |
 
@@ -3900,7 +4038,7 @@ string
 |------|------|----------|-------------|
 | taskId | [SingularityTaskId](#model-SingularityTaskId) | optional |  |
 | user | string | optional |  |
-| cleanupType | [TaskCleanupType](#model-TaskCleanupType) | optional |  Allowable values: USER_REQUESTED, USER_REQUESTED_TASK_BOUNCE, DECOMISSIONING, SCALING_DOWN, BOUNCING, INCREMENTAL_BOUNCE, DEPLOY_FAILED, NEW_DEPLOY_SUCCEEDED, DEPLOY_STEP_FINISHED, DEPLOY_CANCELED, UNHEALTHY_NEW_TASK, OVERDUE_NEW_TASK, USER_REQUESTED_DESTROY |
+| cleanupType | [TaskCleanupType](#model-TaskCleanupType) | optional |  Allowable values: USER_REQUESTED, USER_REQUESTED_TASK_BOUNCE, DECOMISSIONING, SCALING_DOWN, BOUNCING, INCREMENTAL_BOUNCE, DEPLOY_FAILED, NEW_DEPLOY_SUCCEEDED, DEPLOY_STEP_FINISHED, DEPLOY_CANCELED, UNHEALTHY_NEW_TASK, OVERDUE_NEW_TASK, USER_REQUESTED_DESTROY, INCREMENTAL_DEPLOY_FAILED, INCREMENTAL_DEPLOY_CANCELLED, PRIORITY_KILL |
 | message | string | optional |  |
 | timestamp | long | optional |  |
 | actionId | string | optional |  |
@@ -4138,8 +4276,8 @@ string
 |------|------|----------|-------------|
 | commandOrBuilder | [CommandInfoOrBuilder](#model-CommandInfoOrBuilder) | optional |  |
 | defaultInstanceForType | [TaskInfo](#model-TaskInfo) | optional |  |
-| taskId | [TaskID](#model-TaskID) | optional |  |
 | taskIdOrBuilder | [TaskIDOrBuilder](#model-TaskIDOrBuilder) | optional |  |
+| taskId | [TaskID](#model-TaskID) | optional |  |
 | parserForType | [com.google.protobuf.Parser&lt;org.apache.mesos.Protos$TaskInfo&gt;](#model-com.google.protobuf.Parser&lt;org.apache.mesos.Protos$TaskInfo&gt;) | optional |  |
 | slaveIdOrBuilder | [SlaveIDOrBuilder](#model-SlaveIDOrBuilder) | optional |  |
 | resourcesOrBuilderList | [List[? extends org.apache.mesos.Protos$ResourceOrBuilder]](#model-List[? extends org.apache.mesos.Protos$ResourceOrBuilder]) | optional |  |
@@ -4196,17 +4334,17 @@ string
 |------|------|----------|-------------|
 | defaultInstanceForType | [URL](#model-URL) | optional |  |
 | queryCount | int | optional |  |
-| queryOrBuilderList | [List[? extends org.apache.mesos.Protos$ParameterOrBuilder]](#model-List[? extends org.apache.mesos.Protos$ParameterOrBuilder]) | optional |  |
 | queryList | [List[Parameter]](#model-List[Parameter]) | optional |  |
-| fragment | string | optional |  |
+| queryOrBuilderList | [List[? extends org.apache.mesos.Protos$ParameterOrBuilder]](#model-List[? extends org.apache.mesos.Protos$ParameterOrBuilder]) | optional |  |
 | parserForType | [com.google.protobuf.Parser&lt;org.apache.mesos.Protos$URL&gt;](#model-com.google.protobuf.Parser&lt;org.apache.mesos.Protos$URL&gt;) | optional |  |
+| fragment | string | optional |  |
 | address | [Address](#model-Address) | optional |  |
 | schemeBytes | [ByteString](#model-ByteString) | optional |  |
 | addressOrBuilder | [AddressOrBuilder](#model-AddressOrBuilder) | optional |  |
 | pathBytes | [ByteString](#model-ByteString) | optional |  |
 | scheme | string | optional |  |
-| fragmentBytes | [ByteString](#model-ByteString) | optional |  |
 | initialized | boolean | optional |  |
+| fragmentBytes | [ByteString](#model-ByteString) | optional |  |
 | serializedSize | int | optional |  |
 | allFields | [Map[FieldDescriptor,Object]](#model-Map[FieldDescriptor,Object]) | optional |  |
 | descriptorForType | [Descriptor](#model-Descriptor) | optional |  |

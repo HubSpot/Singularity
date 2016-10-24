@@ -30,6 +30,7 @@ public class SingularitySlaveAndRackHelper {
 
     this.rackIdAttributeKey = mesosConfiguration.getRackIdAttributeKey();
     this.defaultRackId = mesosConfiguration.getDefaultRackId();
+
   }
 
   public String getMaybeTruncatedHost(String hostname) {

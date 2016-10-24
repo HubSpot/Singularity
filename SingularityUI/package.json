@@ -19,6 +19,7 @@
     "bootstrap": "~3.3.0",
     "classnames": "^2.2.3",
     "clipboard": "^1.5.8",
+    "core-js": "^1.2.7",
     "eonasdan-bootstrap-datetimepicker": "^4.15.35",
     "es6-object-assign": "^1.0.1",
     "fuse.js": "~1.2.2",

@@ -39,6 +39,10 @@ public class AuthConfiguration {
 
   @JsonProperty
   @NotNull
+  private Set<String> globalReadOnlyGroups = new HashSet<>();
+
+  @JsonProperty
+  @NotNull
   private String requestUserHeaderName = "X-Username";  // used by SingularityHeaderPassthroughAuthenticator
 
   public boolean isEnabled() {
@@ -95,6 +99,14 @@ public class AuthConfiguration {
 
   public void setDefaultReadOnlyGroups(Set<String> defaultReadOnlyGroups) {
     this.defaultReadOnlyGroups = defaultReadOnlyGroups;
+  }
+
+  public Set<String> getGlobalReadOnlyGroups() {
+    return globalReadOnlyGroups;
+  }
+
+  public void setGlobalReadOnlyGroups(Set<String> globalReadOnlyGroups) {
+    this.globalReadOnlyGroups = globalReadOnlyGroups;
   }
 
   public String getRequestUserHeaderName() {

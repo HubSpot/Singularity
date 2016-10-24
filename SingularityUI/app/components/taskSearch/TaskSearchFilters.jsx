@@ -35,7 +35,7 @@ class TaskSearchFilters extends React.Component {
   }
 
   render() {
-    const {fields: {requestId, deployId, host, startedAfter, startedBefore, lastTaskStatus}} = this.props;
+    const {fields: {requestId, deployId, runId, host, startedAfter, startedBefore, updatedAfter, updatedBefore, lastTaskStatus}} = this.props;
     const statusOptions = [
       { value: 'TASK_ERROR', label: 'Error' },
       { value: 'TASK_FAILED', label: 'Failed' },
@@ -63,7 +63,7 @@ class TaskSearchFilters extends React.Component {
             </div>
           </div>
           <div className="row">
-            <div className={classNames('form-group col-md-4', {'has-error': startedAfter.error || startedBefore.error})}>
+            <div className={classNames('form-group col-md-6', {'has-error': startedAfter.error || startedBefore.error})}>
               <label className="control-label">Started Between</label>
               <div className="row">
                 <div className="col-md-6">
@@ -74,7 +74,26 @@ class TaskSearchFilters extends React.Component {
                 </div>
               </div>
               <span className="text-center help-block">{startedAfter.error || startedBefore.error}</span>
-            </div><div className="form-group col-md-4">
+            </div>
+            <div className={classNames('form-group col-md-6', {'has-error': updatedAfter.error || updatedBefore.error})}>
+              <label className="control-label">Updated Between</label>
+              <div className="row">
+                <div className="col-md-6">
+                  <DateTimeField defaultText="" maxDate={moment()} {...updatedAfter} />
+                </div>
+                <div className="col-md-6">
+                  <DateTimeField defaultText="" minDate={moment(updatedAfter.value ? parseInt(updatedAfter.value, 10) : moment(0))} maxDate={moment()} {...updatedBefore} />
+                </div>
+              </div>
+              <span className="text-center help-block">{updatedAfter.error || updatedBefore.error}</span>
+            </div>
+          </div>
+          <div className="row">
+            <div className="form-group col-md-4">
+              <label htmlFor="runId">Run ID</label>
+              <input className="form-control" {...runId} />
+            </div>
+            <div className="form-group col-md-4">
               <label htmlFor="lastTaskStatus">Last Task Status</label>
               <ReduxSelect options={statusOptions} optionRenderer={this.renderStatusOptions} valueRenderer={this.renderStatusOptions} {...lastTaskStatus} />
             </div>
@@ -117,6 +136,6 @@ function mapStateToProps(state, ownProps) {
 
 export default reduxForm({
   form: 'taskSearch',
-  fields: ['requestId', 'deployId', 'host', 'startedAfter', 'startedBefore', 'lastTaskStatus'],
+  fields: ['requestId', 'deployId', 'runId', 'host', 'startedAfter', 'startedBefore', 'updatedAfter', 'updatedBefore', 'lastTaskStatus'],
   validate
 }, mapStateToProps)(TaskSearchFilters);

@@ -24,9 +24,12 @@ class TaskSearch extends React.Component {
     filter: React.PropTypes.shape({
       requestId: React.PropTypes.string,
       deployId: React.PropTypes.string,
+      runId: React.PropTypes.string,
       host: React.PropTypes.string,
       startedAfter: React.PropTypes.number,
       startedBefore: React.PropTypes.number,
+      updatedAfter: React.PropTypes.number,
+      updatedBefore: React.PropTypes.number,
       lastTaskStatus: React.PropTypes.string
     }),
     params: React.PropTypes.shape({
@@ -67,14 +70,17 @@ class TaskSearch extends React.Component {
   }
 
   renderTags() {
-    const {requestId, deployId, host, startedAfter, startedBefore, lastTaskStatus} = this.props.filter;
+    const {requestId, deployId, runId, host, startedAfter, startedBefore, updatedBefore, updatedAfter, lastTaskStatus} = this.props.filter;
     return (
       <div>
         {requestId && !this.props.params.requestId && this.renderTag('Request ID', requestId)}{' '}
         {deployId && this.renderTag('Deploy ID', deployId)}{' '}
+        {runId && this.renderTag('Run ID', runId)}{' '}
         {host && this.renderTag('Host', host)}{' '}
         {startedAfter && this.renderTag('Started After', Utils.absoluteTimestamp(parseInt(startedAfter, 10)))}{' '}
         {startedBefore && this.renderTag('Started Before', Utils.absoluteTimestamp(parseInt(startedBefore, 10)))}{' '}
+        {updatedAfter && this.renderTag('Updated After', Utils.absoluteTimestamp(parseInt(updatedAfter, 10)))}{' '}
+        {updatedBefore && this.renderTag('Updated Before', Utils.absoluteTimestamp(parseInt(updatedBefore, 10)))}{' '}
         {lastTaskStatus && this.renderTag('Last Task Status', Utils.humanizeText(lastTaskStatus))}
       </div>);
   }

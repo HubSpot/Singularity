@@ -20,7 +20,7 @@ public class NotifyingExceptionMapper extends LoggingExceptionMapper<Exception> 
     final Response response = super.toResponse(e);
 
     if (response.getStatus() >= 500) {
-      notifier.notify(e);
+      notifier.notify(String.format("Uncaught Exception (%s)", e.getMessage()), e);
     }
 
     return response;
