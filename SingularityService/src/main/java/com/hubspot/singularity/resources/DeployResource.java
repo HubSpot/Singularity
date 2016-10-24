@@ -26,6 +26,7 @@ import com.hubspot.singularity.SingularityCreateResult;
 import com.hubspot.singularity.SingularityDeploy;
 import com.hubspot.singularity.SingularityDeployMarker;
 import com.hubspot.singularity.SingularityDeployProgress;
+import com.hubspot.singularity.SingularityAction;
 import com.hubspot.singularity.SingularityLoadBalancerUpdate;
 import com.hubspot.singularity.SingularityPendingDeploy;
 import com.hubspot.singularity.SingularityTaskId;
@@ -45,6 +46,7 @@ import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.DeployManager;
 import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.data.SingularityValidator;
+import com.hubspot.singularity.data.TaskManager;
 import com.wordnik.swagger.annotations.Api;
 import com.wordnik.swagger.annotations.ApiOperation;
 import com.wordnik.swagger.annotations.ApiParam;
@@ -57,11 +59,13 @@ import com.wordnik.swagger.annotations.ApiResponses;
 public class DeployResource extends AbstractRequestResource {
   public static final String PATH = SingularityService.API_BASE_PATH + "/deploys";
   private final SingularityConfiguration configuration;
+  private final TaskManager taskManager;
 
   @Inject
-  public DeployResource(RequestManager requestManager, DeployManager deployManager, SingularityValidator validator, SingularityAuthorizationHelper authorizationHelper, Optional<SingularityUser> user, SingularityConfiguration configuration) {
+  public DeployResource(RequestManager requestManager, DeployManager deployManager, SingularityValidator validator, SingularityAuthorizationHelper authorizationHelper, Optional<SingularityUser> user, SingularityConfiguration configuration, TaskManager taskManager) {
     super(requestManager, deployManager, user, validator, authorizationHelper);
     this.configuration = configuration;
+    this.taskManager = taskManager;
   }
 
   @GET
@@ -80,6 +84,7 @@ public class DeployResource extends AbstractRequestResource {
     @ApiResponse(code=409, message="A current deploy is in progress. It may be canceled by calling DELETE"),
   })
   public SingularityRequestParent deploy(@ApiParam(required=true) SingularityDeployRequest deployRequest) {
+    validator.checkActionEnabled(SingularityAction.DEPLOY);
     SingularityDeploy deploy = deployRequest.getDeploy();
     checkNotNullBadRequest(deploy, "DeployRequest must have a deploy object");
 
@@ -93,6 +98,7 @@ public class DeployResource extends AbstractRequestResource {
     SingularityRequest request = requestWithState.getRequest();
     final Optional<SingularityRequest> updatedValidatedRequest;
     if (deployRequest.getUpdatedRequest().isPresent()) {
+      authorizationHelper.checkForAuthorizedChanges(deployRequest.getUpdatedRequest().get(), requestWithState.getRequest(), user);
       updatedValidatedRequest = Optional.of(validator.checkSingularityRequest(deployRequest.getUpdatedRequest().get(), Optional.of(requestWithState.getRequest()), Optional.<SingularityDeploy>absent(), Optional.of(deploy)));
     } else {
       updatedValidatedRequest = Optional.absent();
@@ -101,6 +107,8 @@ public class DeployResource extends AbstractRequestResource {
     if (updatedValidatedRequest.isPresent()) {
       request = updatedValidatedRequest.get();
     }
+
+    validator.checkScale(request, Optional.of(taskManager.getActiveTaskIdsForRequest(request.getId()).size()));
 
     if (!deployRequest.isUnpauseOnSuccessfulDeploy()) {
       checkConflict(requestWithState.getState() != RequestState.PAUSED, "Request %s is paused. Unable to deploy (it must be manually unpaused first)", requestWithState.getRequest().getId());
@@ -155,6 +163,7 @@ public class DeployResource extends AbstractRequestResource {
     SingularityRequestWithState requestWithState = fetchRequestWithState(requestId);
 
     authorizationHelper.checkForAuthorization(requestWithState.getRequest(), user, SingularityAuthorizationScope.WRITE);
+    validator.checkActionEnabled(SingularityAction.CANCEL_DEPLOY);
 
     Optional<SingularityRequestDeployState> deployState = deployManager.getRequestDeployState(requestWithState.getRequest().getId());
 

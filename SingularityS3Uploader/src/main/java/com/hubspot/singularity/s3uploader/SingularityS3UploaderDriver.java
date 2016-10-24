@@ -160,7 +160,7 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper implements S
           uploads = checkUploads();
         } catch (Throwable t) {
           LOG.error("Uncaught exception while checking {} upload(s)", uploaders, t);
-          exceptionNotifier.notify(t, Collections.<String, String>emptyMap());
+          exceptionNotifier.notify(String.format("Error checking uploads (%s)", t.getMessage()), t, Collections.<String, String>emptyMap());
         } finally {
           runLock.unlock();
           metrics.finishUploads();
@@ -226,7 +226,7 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper implements S
           } catch (Throwable t) {
             metrics.error();
             LOG.error("Error while processing uploader {}", uploader, t);
-            exceptionNotifier.notify(t, ImmutableMap.of("metadataPath", uploader.getMetadataPath().toString()));
+            exceptionNotifier.notify(String.format("Error processing uploader (%s)", t.getMessage()), t, ImmutableMap.of("metadataPath", uploader.getMetadataPath().toString()));
           }
           return returnValue;
         }
@@ -259,7 +259,7 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper implements S
       } catch (Throwable t) {
         metrics.error();
         LOG.error("Waiting on future", t);
-        exceptionNotifier.notify(t, ImmutableMap.of("metadataPath", uploader.getMetadataPath().toString()));
+        exceptionNotifier.notify(String.format("Error waiting on uploader future (%s)", t.getMessage()), t, ImmutableMap.of("metadataPath", uploader.getMetadataPath().toString()));
       }
     }
 
@@ -279,7 +279,7 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper implements S
         LOG.warn("File {} was alrady deleted");
       } catch (IOException e) {
         LOG.warn("Couldn't delete {}", expiredUploader.getMetadataPath(), e);
-        exceptionNotifier.notify(e, ImmutableMap.of("metadataPath", expiredUploader.getMetadataPath().toString()));
+        exceptionNotifier.notify("Could not delete metadata file", e, ImmutableMap.of("metadataPath", expiredUploader.getMetadataPath().toString()));
       }
     }
 

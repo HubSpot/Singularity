@@ -3,9 +3,10 @@ import classNames from 'classnames';
 
 import { Modal, Button, Popover, OverlayTrigger } from 'react-bootstrap';
 import TagsInput from 'react-tagsinput';
-import Duration from '../formItems/Duration';
+import MultiInput from '../formItems/MultiInput';
 import Select from 'react-select';
 import Utils from '../../../utils';
+import juration from 'juration';
 
 const TAGS_CHARACTER_LIMIT = 75;
 
@@ -59,6 +60,7 @@ export default class FormModal extends React.Component {
     STRING: 'STRING',
     RADIO: 'RADIO',
     TAGS: 'TAGS',
+    MULTIINPUT: 'MULTIINPUT',
     NUMBER: 'NUMBER',
     DURATION: 'DURATION',
     SELECT: 'SELECT'
@@ -94,6 +96,13 @@ export default class FormModal extends React.Component {
           errors[formElement.name] = error;
         }
       }
+      if (formElement.type === FormModal.INPUT_TYPES.DURATION && this.state.formState[formElement.name]) {
+        try {
+          juration.parse(this.state.formState[formElement.name]);
+        } catch (exception) {
+          errors[formElement.name] = 'Invalid duraton specified.';
+        }
+      }
     });
     this.setState({ errors });
 
@@ -111,6 +120,9 @@ export default class FormModal extends React.Component {
           break;
         case FormModal.INPUT_TYPES.NUMBER:
           parsed[key] = Number.parseFloat(val);
+          break;
+        case FormModal.INPUT_TYPES.DURATION:
+          parsed[key] = juration.parse(val) * 1000;
           break;
         default:
           parsed[key] = val;
@@ -164,6 +176,18 @@ export default class FormModal extends React.Component {
     );
   }
 
+  renderTagsInput(props) {
+    const inputProps = _.omit(props, 'className', 'placeholder', 'addTag');
+    return (
+      <div className="input-group">
+        <input type="text" ref="argValue" className="form-control" placeholder="" {...inputProps} />
+        <span className="input-group-btn">
+          <Button bsStyle="success" onClick={() => this.refs.tagsInput.accept()}>+</Button>
+        </span>
+      </div>
+    );
+  }
+
   renderForm() {
     const inputs = this.props.formElements.map((formElement) => {
       const error = this.state.errors[formElement.name];
@@ -185,6 +209,12 @@ export default class FormModal extends React.Component {
           </div>
         );
       });
+
+      let extraHelp;
+
+      if (formElement.type === FormModal.INPUT_TYPES.DURATION) {
+        extraHelp = 'Accepts any English duration (Days, Hr, Min...)';
+      }
 
       switch (formElement.type) {
 
@@ -208,6 +238,7 @@ export default class FormModal extends React.Component {
             </FormModal.FormItem>
           );
 
+        case FormModal.INPUT_TYPES.DURATION:
         case FormModal.INPUT_TYPES.STRING:
           return (
             <FormModal.FormItem element={formElement} formState={this.state.formState} key={formElement.name}>
@@ -220,6 +251,7 @@ export default class FormModal extends React.Component {
                   onChange={(event) => this.handleFormChange(formElement.name, event.target.value)}
                 />
                 {errorBlock}
+                {extraHelp}
                 {help}
               </div>
             </FormModal.FormItem>
@@ -239,12 +271,26 @@ export default class FormModal extends React.Component {
               <label style={{display: 'block', width: '100%'}}>
                 {formElement.label}
                 <TagsInput
+                  ref="tagsInput"
                   value={this.state.formState[formElement.name] || []}
                   onChange={(tags) => this.handleFormChange(formElement.name, tags)}
                   addOnBlur={true}
-                  addOnPaste={true}
-                  inputProps={{className: 'form-control input-large', placeholder: ''}}
+                  renderInput={(props) => this.renderTagsInput(props)}
                   renderTag={this.renderTag}
+                />
+              </label>
+            </FormModal.FormItem>
+          );
+
+        case FormModal.INPUT_TYPES.MULTIINPUT:
+          return (
+            <FormModal.FormItem element={formElement} formState={this.state.formState} key={formElement.name}>
+              <label style={{display: 'block', width: '100%'}}>
+                {formElement.label}
+                <MultiInput
+                  id={`${formElement.name}-input`}
+                  value={this.state.formState[formElement.name] || []}
+                  onChange={(values) => this.handleFormChange(formElement.name, values)}
                 />
               </label>
             </FormModal.FormItem>
@@ -263,23 +309,6 @@ export default class FormModal extends React.Component {
                   className="form-control input-large"
                   value={this.state.formState[formElement.name] || ''}
                   onChange={(event) => this.handleFormChange(formElement.name, event.target.value)}
-                />
-                {errorBlock}
-                {help}
-              </div>
-            </FormModal.FormItem>
-          );
-
-        case FormModal.INPUT_TYPES.DURATION:
-          return (
-            <FormModal.FormItem element={formElement} formState={this.state.formState} key={formElement.name}>
-              <div className={classNames('form-group', {'has-error': !!error})}>
-                <label className="control-label" htmlFor={formElement.name}>{formElement.label}</label>
-                <Duration
-                  type="text"
-                  value={this.state.formState[formElement.name] || 0}
-                  onChange={(value) => this.handleFormChange(formElement.name, value)}
-                  isSubForm={true}
                 />
                 {errorBlock}
                 {help}

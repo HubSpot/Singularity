@@ -63,6 +63,25 @@ Force an update for a specific task.
 
 
 - - -
+#### **POST** `/api/test/reconcile`
+
+Start task reconciliation
+
+
+###### Parameters
+- No parameters
+
+###### Response
+
+
+
+###### Errors
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| - | - | - |
+
+
+- - -
 #### **POST** `/api/test/notleader`
 
 Make this instanceo of Singularity believe it&#39;s lost leadership.

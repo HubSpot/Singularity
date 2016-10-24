@@ -6,7 +6,7 @@ import Clipboard from 'clipboard';
 
 import Utils from '../../utils';
 import { Link } from 'react-router';
-import { OverlayTrigger, Popover, Glyphicon } from 'react-bootstrap';
+import { Glyphicon } from 'react-bootstrap';
 import {
   FetchTaskHistory,
   FetchActiveTasksForDeploy,
@@ -87,11 +87,6 @@ class DeployDetail extends React.Component {
         );
       }
     }
-    const copyLinkPopover = (
-      <Popover id="popover-trigger-focus">
-        Click to copy
-      </Popover>
-    );
     const breadcrumbs = [
       {
         label: 'Request',
@@ -122,9 +117,7 @@ class DeployDetail extends React.Component {
         <div className="row">
           <div className="col-md-8">
             <h1>
-              <OverlayTrigger trigger={['hover', 'focus', 'click']} placement="left" overlay={copyLinkPopover}>
-                <span className="copy-btn" data-clipboard-text={this.props.params.deployId}>{this.props.params.deployId}</span>
-              </OverlayTrigger>
+              <span>{deploy.deploy.id}</span>
               <DeployState state={deploy.deployResult && deploy.deployResult.deployState || 'PENDING'} />
             </h1>
           </div>
@@ -350,8 +343,8 @@ function mapDispatchToProps(dispatch) {
 function mapStateToProps(state, ownProps) {
   let latestHealthchecks = _.mapObject(state.api.task, (val) => {
     if (val.data && val.data.healthcheckResults && val.data.healthcheckResults.length > 0) {
-      return _.max(val.data.healthcheckResults, (hc) => {
-        return hc.timestamp;
+      return _.max(val.data.healthcheckResults, (healthcheckResult) => {
+        return healthcheckResult.timestamp;
       });
     }
     return undefined;
@@ -375,8 +368,8 @@ function refresh(props, promises = []) {
 
   const allPromises = Promise.all(promises);
   allPromises.then(() => {
-    for (const t of props.route.store.getState().api.activeTasksForDeploy.data) {
-      props.fetchTaskHistory(t.taskId.id);
+    for (const task of props.route.store.getState().api.activeTasksForDeploy.data) {
+      props.fetchTaskHistory(task.taskId.id);
     }
   });
   return allPromises;

@@ -73,6 +73,7 @@ function TaskFileBrowser (props) {
         rowChunkSize={50}
         paginated={true}
         emptyTableMessage="No files exist in this directory"
+        defaultSortBy="name"
       >
         <Column
           label="Name"
@@ -111,7 +112,7 @@ function TaskFileBrowser (props) {
           sortData={sortData}
         />
         <Column
-          label="actions-column"
+          label=""
           id="actions-column"
           key="actions-column"
           className="actions-column"

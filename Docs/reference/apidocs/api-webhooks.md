@@ -181,20 +181,16 @@ Retrieve a list of queued deploy updates for a specific webhook.
 
 
 - - -
-#### **POST** `/api/webhooks`
+#### **GET** `/api/webhooks`
 
-Add a new webhook.
+Retrieve a list of active webhooks.
 
 
 ###### Parameters
-**body**
-
-| Parameter | Required | Description | Data Type |
-|-----------|----------|-------------|-----------|
-| body | false |  | [SingularityWebhook](models.md#model-linkType)</a> |
+- No parameters
 
 ###### Response
-string
+[List[SingularityWebhook]](models.md#model-SingularityWebhook)
 
 
 ###### Errors
@@ -227,16 +223,20 @@ string
 
 
 - - -
-#### **GET** `/api/webhooks`
+#### **POST** `/api/webhooks`
 
-Retrieve a list of active webhooks.
+Add a new webhook.
 
 
 ###### Parameters
-- No parameters
+**body**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| body | false |  | [SingularityWebhook](models.md#model-linkType)</a> |
 
 ###### Response
-[List[SingularityWebhook]](models.md#model-SingularityWebhook)
+string
 
 
 ###### Errors

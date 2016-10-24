@@ -1,6 +1,6 @@
 import React, { PropTypes, Component } from 'react';
 import classNames from 'classnames';
-import NotFound from 'components/common/NotFound';
+import { NotFoundNoRoot } from 'components/common/NotFound';
 
 const rootComponent = (Wrapped, title, refresh = _.noop, refreshInterval = true, pageMargin = true, initialize) => class extends Component {
 
@@ -23,8 +23,7 @@ const rootComponent = (Wrapped, title, refresh = _.noop, refreshInterval = true,
   }
 
   componentWillMount() {
-    const titleString = typeof title === 'function' ? title(this.props) : title;
-    document.title = `${titleString} - ${config.title}`;
+    this.setTitle();
 
     const promise = initialize ? initialize(this.props) : refresh(this.props);
     if (promise) {
@@ -67,26 +66,41 @@ const rootComponent = (Wrapped, title, refresh = _.noop, refreshInterval = true,
   }
 
   handleFocus() {
-    refresh(this.props).catch((reason) => setTimeout(() => { throw new Error(reason); }));
+    const promise = refresh(this.props);
+    if (promise) {
+      promise.catch((reason) => setTimeout(() => { throw new Error(reason); }));
+    }
     this.startRefreshInterval();
   }
 
   startRefreshInterval() {
-    this.refreshInterval = setInterval(() => refresh(this.props).catch((reason) => setTimeout(() => { throw new Error(reason); })), config.globalRefreshInterval);
+    this.refreshInterval = setInterval(() => {
+      const promise = refresh(this.props);
+      if (promise) {
+        promise.catch((reason) => setTimeout(() => { throw new Error(reason); }));
+      }
+    }, config.globalRefreshInterval);
   }
 
   stopRefreshInterval() {
     clearInterval(this.refreshInterval);
   }
 
+  setTitle() {
+    const titleString = typeof title === 'function' ? title(this.props) : title;
+    document.title = `${titleString} - ${config.title}`;
+  }
+
   render() {
     if (this.props.notFound) {
+      document.title = 'Not Found';
       return (
         <div className={classNames({'page container-fluid': pageMargin})}>
-          <NotFound location={{pathname: this.props.pathname}} />
+          <NotFoundNoRoot location={{pathname: this.props.pathname}} />
         </div>
       );
     }
+    this.setTitle();
     const loader = this.state.loading && <div className="page-loader fixed" />;
     const page = !this.state.loading && <Wrapped {...this.props} />;
     return (

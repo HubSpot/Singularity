@@ -7,7 +7,6 @@ import Utils from '../../utils';
 import { FetchTaskFiles } from '../../actions/api/sandbox';
 import {
   FetchTaskStatistics,
-  KillTask,
   RunCommandOnTask,
   FetchTaskCleanups
 } from '../../actions/api/tasks';
@@ -25,9 +24,10 @@ import { Alert } from 'react-bootstrap';
 import Breadcrumbs from '../common/Breadcrumbs';
 import JSONButton from '../common/JSONButton';
 import Section from '../common/Section';
-import FormModal from '../common/modal/FormModal';
 import CollapsableSection from '../common/CollapsableSection';
 import NotFound from '../common/NotFound';
+
+import KillTaskButton from '../common/modalButtons/KillTaskButton';
 
 import TaskFileBrowser from './TaskFileBrowser';
 import ShellCommands from './ShellCommands';
@@ -53,6 +53,9 @@ class TaskDetail extends Component {
           instanceNo: PropTypes.number.isRequired
         }).isRequired,
         taskRequest: PropTypes.shape({
+          request: PropTypes.shape({
+            requestType: PropTypes.string.isRequired
+          }).isRequired,
           deploy: PropTypes.shape({
             customExecutorCmd: PropTypes.string
           }).isRequired
@@ -89,6 +92,7 @@ class TaskDetail extends Component {
       memMappedFileBytes: PropTypes.number,
       timestamp: PropTypes.number
     }),
+    resourceUsageNotFound: PropTypes.bool.isRequired,
     taskCleanups: PropTypes.arrayOf(PropTypes.shape({
       taskId: PropTypes.shape({
         id: PropTypes.string
@@ -103,13 +107,12 @@ class TaskDetail extends Component {
       files: PropTypes.array,
       currentDirectory: PropTypes.string
     }),
-    filePath: PropTypes.string,
+    currentFilePath: PropTypes.string,
     taskId: PropTypes.string.isRequired,
     params: PropTypes.object,
     fetchTaskHistory: PropTypes.func.isRequired,
     fetchTaskStatistics: PropTypes.func.isRequired,
     fetchTaskFiles: PropTypes.func.isRequired,
-    killTask: PropTypes.func.isRequired,
     runCommandOnTask: PropTypes.func.isRequired,
     group: PropTypes.object
   };
@@ -117,8 +120,7 @@ class TaskDetail extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      previousUsage: null,
-      currentFilePath: props.params.splat || props.params.taskId
+      previousUsage: null
     };
   }
 
@@ -169,18 +171,18 @@ class TaskDetail extends Component {
     return files;
   }
 
-  killTask(data) {
-    this.props.killTask(this.props.params.taskId, data).then(() => {
-      this.props.fetchTaskHistory(this.props.params.taskId);
-    });
-  }
-
   renderFiles(files) {
     if (!files || _.isUndefined(files.currentDirectory)) {
+      let message;
+      if (this.props.task.isStillRunning) {
+        message = 'Could not retrieve files. The task may still be starting.';
+      } else {
+        message = 'Could not retrieve files. The directory may have already been cleaned up.';
+      }
       return (
         <Section title="Files">
           <div className="empty-table-message">
-            {'Could not retrieve files. The host of this task is likely offline or its directory has been cleaned up.'}
+            {message}
           </div>
         </Section>
       );
@@ -192,11 +194,8 @@ class TaskDetail extends Component {
           files={files.files}
           currentDirectory={files.currentDirectory}
           changeDir={(path) => {
-            if (path.startsWith('/')) path = path.substring(1);
+            if (!_.isUndefined(path) && path.startsWith('/')) path = path.substring(1);
             this.props.fetchTaskFiles(this.props.params.taskId, path).then(() => {
-              this.setState({
-                currentFilePath: path
-              });
               this.props.router.push(Utils.joinPath(`task/${this.props.params.taskId}/files/`, path));
             });
           }}
@@ -223,41 +222,15 @@ class TaskDetail extends Component {
       removeText = this.props.task.isCleaning ? 'Destroy task' : 'Kill Task';
     }
     const removeBtn = this.props.task.isStillRunning && (
-      <span>
-        <FormModal
-          name={removeText}
-          ref="confirmKillTask"
-          action={removeText}
-          onConfirm={(event) => this.killTask(event)}
-          buttonStyle="danger"
-          formElements={[
-            {
-              name: 'waitForReplacementTask',
-              type: FormModal.INPUT_TYPES.BOOLEAN,
-              label: 'Wait for replacement task to start before killing task',
-              defaultValue: true
-            },
-            {
-              name: 'message',
-              type: FormModal.INPUT_TYPES.STRING,
-              label: 'Message (optional)'
-            }
-          ]}>
-          <span>
-            <p>Are you sure you want to kill this task?</p>
-            <pre>{this.props.params.taskId}</pre>
-            <p>
-                Long running process will be started again instantly, scheduled
-                tasks will behave as if the task failed and may be rescheduled
-                to run in the future depending on whether or not the request
-                has <code>numRetriesOnFailure</code> set.
-            </p>
-          </span>
-        </FormModal>
-        <a className="btn btn-danger" onClick={() => this.refs.confirmKillTask.show()}>
+      <KillTaskButton
+        name={removeText}
+        taskId={this.props.params.taskId}
+        shouldShowWaitForReplacementTask={Utils.isIn(this.props.task.task.taskRequest.request.requestType, ['SERVICE', 'WORKER'])}
+      >
+        <a className="btn btn-danger">
           {removeText}
         </a>
-      </span>
+      </KillTaskButton>
     );
     const terminationAlert = this.props.task.isStillRunning && !cleanup && this.props.task.isCleaning && (
       <Alert bsStyle="warning">
@@ -351,8 +324,16 @@ class TaskDetail extends Component {
       <span className="label label-danger">CPU usage > 110% allocated</span>
     );
 
-    return (
-      <CollapsableSection title="Resource Usage">
+    let maybeResourceUsage;
+
+    if (this.props.resourceUsageNotFound) {
+      maybeResourceUsage = (
+        <div className="empty-table-message">
+          Could not establish communication with the slave to find resource usage.
+        </div>
+      );
+    } else {
+      maybeResourceUsage = (
         <div className="row">
           <div className="col-md-3">
             <UsageInfo
@@ -388,6 +369,12 @@ class TaskDetail extends Component {
             </ul>
           </div>
         </div>
+      );
+    }
+
+    return (
+      <CollapsableSection title="Resource Usage">
+        {maybeResourceUsage}
       </CollapsableSection>
     );
   }
@@ -399,7 +386,7 @@ class TaskDetail extends Component {
     const cleanup = _.find(this.props.taskCleanups, (cleanupToTest) => {
       return cleanupToTest.taskId.id === this.props.taskId;
     });
-    const filesToDisplay = this.props.files[`${this.props.params.taskId}/${this.state.currentFilePath}`] && this.analyzeFiles(this.props.files[`${this.props.taskId}/${this.state.currentFilePath}`].data);
+    const filesToDisplay = this.props.files[`${this.props.params.taskId}/${this.props.currentFilePath}`] && this.analyzeFiles(this.props.files[`${this.props.taskId}/${this.props.currentFilePath}`].data);
 
     return (
       <div className="task-detail detail-view">
@@ -425,7 +412,7 @@ function mapHealthchecksToProps(task) {
   if (!task) return task;
   const { healthcheckResults } = task;
   task.hasSuccessfulHealthcheck = healthcheckResults && healthcheckResults.length > 0 && !!_.find(healthcheckResults, (healthcheckResult) => healthcheckResult.statusCode === 200);
-  task.lastHealthcheckFailed = healthcheckResults && healthcheckResults.length > 0 && healthcheckResults[0].statusCode !== 200;
+  task.lastHealthcheckFailed = healthcheckResults && healthcheckResults.length > 0 && _.last(healthcheckResults).statusCode !== 200;
   task.healthcheckFailureReasonMessage = Utils.healthcheckFailureReasonMessage(task);
   task.tooManyRetries = healthcheckResults && healthcheckResults.length > task.task.taskRequest.deploy.healthcheckMaxRetries && task.task.taskRequest.deploy.healthcheckMaxRetries > 0;
   task.secondsElapsed = task.task && task.task.taskRequest && task.task.taskRequest.deploy.healthcheckMaxTotalTimeoutSeconds || config.defaultDeployHealthTimeoutSeconds;
@@ -471,11 +458,15 @@ function mapStateToProps(state, ownProps) {
   }
   task = mapTaskToProps(task.data);
   task = mapHealthchecksToProps(task);
+  const defaultFilePath = _.isUndefined(ownProps.files) ? '' : ownProps.files.currentDirectory;
+
   return {
     task,
     taskId: ownProps.params.taskId,
+    currentFilePath: _.isUndefined(ownProps.params.splat) ? defaultFilePath : ownProps.params.splat.substring(1),
     taskCleanups: state.api.taskCleanups.data,
     files: state.api.taskFiles,
+    resourceUsageNotFound: state.api.taskResourceUsage.statusCode === 404,
     resourceUsage: state.api.taskResourceUsage.data,
     cpuTimestamp: state.api.taskResourceUsage.data.timestamp,
     s3Logs: state.api.taskS3Logs.data,
@@ -489,19 +480,18 @@ function mapStateToProps(state, ownProps) {
 function mapDispatchToProps(dispatch) {
   return {
     runCommandOnTask: (taskId, commandName) => dispatch(RunCommandOnTask.trigger(taskId, commandName)),
-    killTask: (taskId, data) => dispatch(KillTask.trigger(taskId, data)),
     fetchTaskHistory: (taskId) => dispatch(FetchTaskHistory.trigger(taskId, true)),
-    fetchTaskStatistics: (taskId) => dispatch(FetchTaskStatistics.trigger(taskId)),
+    fetchTaskStatistics: (taskId) => dispatch(FetchTaskStatistics.trigger(taskId, [404])),
     fetchTaskFiles: (taskId, path, catchStatusCodes = []) => dispatch(FetchTaskFiles.trigger(taskId, path, catchStatusCodes.concat([404]))),
     fetchDeployForRequest: (taskId, deployId) => dispatch(FetchDeployForRequest.trigger(taskId, deployId)),
     fetchTaskCleanups: () => dispatch(FetchTaskCleanups.trigger()),
     fetchPendingDeploys: () => dispatch(FetchPendingDeploys.trigger()),
-    fechS3Logs: (taskId) => dispatch(FetchTaskS3Logs.trigger(taskId)),
+    fechS3Logs: (taskId) => dispatch(FetchTaskS3Logs.trigger(taskId, [404])),
   };
 }
 
 function refresh(props) {
-  props.fetchTaskFiles(props.params.taskId, props.params.splat || props.params.taskId, [400, 404]);
+  props.fetchTaskFiles(props.params.taskId, _.isUndefined(props.params.splat) ? undefined : props.params.splat.substring(1), [400, 404]);
   const promises = [];
   const taskPromise = props.fetchTaskHistory(props.params.taskId);
   taskPromise.then(() => {

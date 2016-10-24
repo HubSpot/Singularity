@@ -73,6 +73,7 @@ import com.hubspot.singularity.api.SingularityScaleRequest;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.config.SingularityTaskMetadataConfiguration;
 import com.hubspot.singularity.data.DeployManager;
+import com.hubspot.singularity.data.PriorityManager;
 import com.hubspot.singularity.data.RackManager;
 import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.data.SlaveManager;
@@ -82,6 +83,7 @@ import com.hubspot.singularity.event.SingularityEventListener;
 import com.hubspot.singularity.mesos.SchedulerDriverSupplier;
 import com.hubspot.singularity.mesos.SingularityMesosScheduler;
 import com.hubspot.singularity.resources.DeployResource;
+import com.hubspot.singularity.resources.PriorityResource;
 import com.hubspot.singularity.resources.RackResource;
 import com.hubspot.singularity.resources.RequestResource;
 import com.hubspot.singularity.resources.SlaveResource;
@@ -101,6 +103,8 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
   protected DeployManager deployManager;
   @Inject
   protected TaskManager taskManager;
+  @Inject
+  protected PriorityManager priorityManager;
   @Inject
   protected SlaveManager slaveManager;
   @Inject
@@ -125,6 +129,8 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
   @Inject
   protected DeployResource deployResource;
   @Inject
+  protected PriorityResource priorityResource;
+  @Inject
   protected SingularityCleaner cleaner;
   @Inject
   protected SingularityConfiguration configuration;
@@ -137,19 +143,19 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
   @Inject
   protected TestingLoadBalancerClient testingLbClient;
   @Inject
-  protected SingularitySchedulerPriority schedulerPriority;
-  @Inject
   protected SingularityTaskReconciliation taskReconciliation;
   @Inject
   protected SingularityMailer mailer;
   @Inject
-  protected SingularityScheduledJobPoller scheduledJobPoller;
+  protected SingularityJobPoller scheduledJobPoller;
   @Inject
   protected ZkDataMigrationRunner migrationRunner;
   @Inject
   protected SingularityEventListener eventListener;
   @Inject
   protected SingularityExpiringUserActionPoller expiringUserActionPoller;
+  @Inject
+  protected SingularityPriorityKillPoller priorityKillPoller;
   @Inject
   protected SingularityHealthchecker healthchecker;
 
@@ -377,7 +383,9 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
 
       try {
         Thread.sleep(10);
-      } catch (InterruptedException ie) {}
+      } catch (InterruptedException ie) {
+        break;
+      }
     }
   }
 
@@ -495,11 +503,11 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
   }
 
   protected void finishDeploy(SingularityDeployMarker marker, SingularityDeploy deploy) {
-    deployManager.deletePendingDeploy(requestId);
+    deployManager.deletePendingDeploy(marker.getRequestId());
 
     deployManager.saveDeployResult(marker, Optional.of(deploy), new SingularityDeployResult(DeployState.SUCCEEDED));
 
-    deployManager.saveNewRequestDeployState(new SingularityRequestDeployState(requestId, Optional.of(marker), Optional.<SingularityDeployMarker> absent()));
+    deployManager.saveNewRequestDeployState(new SingularityRequestDeployState(marker.getRequestId(), Optional.of(marker), Optional.<SingularityDeployMarker> absent()));
   }
 
   protected SingularityTask startTask(SingularityDeploy deploy) {

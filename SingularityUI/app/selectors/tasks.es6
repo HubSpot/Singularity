@@ -11,8 +11,8 @@ const getCleanups = (state) => state.cleanups;
 export const getBouncesForRequest = (requestId) => createSelector(
   [getTaskCleanups],
   (taskCleanups) => (
-  taskCleanups.data || []).filter((tc) => (
-    tc.cleanupType === 'BOUNCING' || tc.cleanupType === 'INCREMENTAL_BOUNCE' && tc.taskId.requestId === requestId
+  taskCleanups.data || []).filter((cleanup) => (
+    cleanup.cleanupType === 'BOUNCING' || cleanup.cleanupType === 'INCREMENTAL_BOUNCE' && cleanup.taskId.requestId === requestId
   ))
 );
 
@@ -22,9 +22,9 @@ export const getBouncesForRequest = (requestId) => createSelector(
 export const getDecomissioningTasks = createSelector(
   [getTasks, getCleanups],
   (tasks, cleanups) => {
-    return _.without(_.map(cleanups, (c) => {
-      if (c.cleanupType === 'DECOMISSIONING') {
-        return _.find(tasks, (t) => t.taskId.id === c.taskId.id);
+    return _.without(_.map(cleanups, (cleanup) => {
+      if (cleanup.cleanupType === 'DECOMISSIONING') {
+        return _.find(tasks, (task) => task.taskId.id === cleanup.taskId.id);
       }
       return undefined;
     }), undefined);
@@ -49,9 +49,9 @@ export const getFilteredTasks = createSelector(
 
     // Filter by glob or fuzzy string
     if (filter.filterText) {
-      const host = {extract: (t) => `${t.taskId && t.taskId.host}`};
-      const id = {extract: (t) => `${t.taskId ? t.taskId.id : t.pendingTask.pendingTaskId.id}`};
-      const rack = {extract: (t) => `${t.taskId && t.taskId.rackId}`};
+      const host = {extract: (task) => `${task.taskId && task.taskId.host}`};
+      const id = {extract: (task) => `${task.taskId ? task.taskId.id : task.pendingTask.pendingTaskId.id}`};
+      const rack = {extract: (task) => `${task.taskId && task.taskId.rackId}`};
 
       if (Utils.isGlobFilter(filter.filterText)) {
         const hostMatch = _.filter(tasks, (task) => {
@@ -65,8 +65,8 @@ export const getFilteredTasks = createSelector(
         });
         tasks = _.union(hostMatch, idMatch, rackMatch).reverse();
       } else {
-        _.each(tasks, (t) => {
-          t.id = id.extract(t);
+        _.each(tasks, (task) => {
+          task.id = id.extract(task);
         });
         const hostMatch = fuzzy.filter(filter.filterText.replace(/-/g, '_'), tasks, host);
         const idMatch = fuzzy.filter(filter.filterText, tasks, id);
@@ -77,7 +77,7 @@ export const getFilteredTasks = createSelector(
               _.union(
                 rackMatch, hostMatch, idMatch
               ),
-              (t) => Utils.fuzzyAdjustScore(filter.filterText, t)
+              (task) => Utils.fuzzyAdjustScore(filter.filterText, task)
             ),
             'original'
           ).reverse()

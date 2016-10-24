@@ -43,39 +43,39 @@ export default class TaskFilters extends React.Component {
     this.props.onFilterChange(_.extend({}, this.props.filter, {taskStatus: TaskFilters.TASK_STATES[selectedKey].filterVal}));
   }
 
-  handleSearchChange(e) {
-    this.props.onFilterChange(_.extend({}, this.props.filter, {filterText: e.target.value}));
+  handleSearchChange(event) {
+    this.props.onFilterChange(_.extend({}, this.props.filter, {filterText: event.target.value}));
   }
 
   clearSearch() {
     this.props.onFilterChange(_.extend({}, this.props.filter, {filterText: ''}));
   }
 
-  toggleRequestType(t) {
+  toggleRequestType(requestType) {
     let selected = this.props.filter.requestTypes;
     if (selected.length === TaskFilters.REQUEST_TYPES.length) {
-      selected = [t];
-    } else if (_.isEmpty(_.without(selected, t))) {
+      selected = [requestType];
+    } else if (_.isEmpty(_.without(selected, requestType))) {
       selected = TaskFilters.REQUEST_TYPES;
-    } else if (_.contains(selected, t)) {
-      selected = _.without(selected, t);
+    } else if (_.contains(selected, requestType)) {
+      selected = _.without(selected, requestType);
     } else {
-      selected.push(t);
+      selected.push(requestType);
     }
     this.props.onFilterChange(_.extend({}, this.props.filter, {requestTypes: selected}));
   }
 
   renderStatusFilter() {
-    const selectedIndex = _.findIndex(TaskFilters.TASK_STATES, (s) => s.filterVal === this.props.filter.taskStatus);
-    const navItems = TaskFilters.TASK_STATES.map((s, index) => {
+    const selectedIndex = _.findIndex(TaskFilters.TASK_STATES, (taskState) => taskState.filterVal === this.props.filter.taskStatus);
+    const navItems = TaskFilters.TASK_STATES.map((taskState, index) => {
       return (
-        <OverlayTrigger key={index} placement="top" overlay={<Tooltip id={index}>{s.tip}</Tooltip>} delay={500}>
+        <OverlayTrigger key={index} placement="top" overlay={<Tooltip id={index}>{taskState.tip}</Tooltip>} delay={500}>
           <NavItem
             eventKey={index}
-            title={s.tip}
+            title={taskState.tip}
             active={index === selectedIndex}
             onClick={() => this.handleStatusSelect(index)}>
-              {s.displayVal}
+              {taskState.displayVal}
           </NavItem>
         </OverlayTrigger>
       );
@@ -106,11 +106,11 @@ export default class TaskFilters extends React.Component {
   }
 
   renderRequestTypeFilter() {
-    const filterItems = this.props.displayRequestTypeFilters && TaskFilters.REQUEST_TYPES.map((t, index) => {
+    const filterItems = this.props.displayRequestTypeFilters && TaskFilters.REQUEST_TYPES.map((requestType, index) => {
       return (
-        <li key={index} className={_.contains(this.props.filter.requestTypes, t) ? 'active' : ''}>
-          <a onClick={() => this.toggleRequestType(t)}>
-            <Glyphicon glyph="ok" /> {Utils.humanizeText(t)}
+        <li key={index} className={_.contains(this.props.filter.requestTypes, requestType) ? 'active' : ''}>
+          <a onClick={() => this.toggleRequestType(requestType)}>
+            <Glyphicon glyph="ok" /> {Utils.humanizeText(requestType)}
           </a>
         </li>
       );

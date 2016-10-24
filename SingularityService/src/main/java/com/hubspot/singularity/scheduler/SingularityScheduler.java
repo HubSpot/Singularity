@@ -1,6 +1,7 @@
 package com.hubspot.singularity.scheduler;
 
 import java.text.ParseException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
@@ -8,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
 
 import javax.inject.Singleton;
@@ -23,15 +25,16 @@ import com.codahale.metrics.annotation.Timed;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicates;
 import com.google.common.base.Throwables;
+import com.google.common.collect.HashMultiset;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Multiset;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.hubspot.mesos.JavaUtils;
-import com.hubspot.mesos.Resources;
 import com.hubspot.singularity.DeployState;
 import com.hubspot.singularity.ExtendedTaskState;
 import com.hubspot.singularity.MachineState;
@@ -40,9 +43,9 @@ import com.hubspot.singularity.RequestType;
 import com.hubspot.singularity.ScheduleType;
 import com.hubspot.singularity.SingularityCreateResult;
 import com.hubspot.singularity.SingularityDeployMarker;
+import com.hubspot.singularity.SingularityDeployProgress;
 import com.hubspot.singularity.SingularityDeployStatistics;
 import com.hubspot.singularity.SingularityDeployStatisticsBuilder;
-import com.hubspot.singularity.SingularityDeployProgress;
 import com.hubspot.singularity.SingularityMachineAbstraction;
 import com.hubspot.singularity.SingularityPendingDeploy;
 import com.hubspot.singularity.SingularityPendingRequest;
@@ -396,19 +399,7 @@ public class SingularityScheduler {
       maybePendingDeploy);
 
     if (numMissingInstances > 0) {
-      final List<SingularityPendingTask> scheduledTasks =
-        getScheduledTaskIds(numMissingInstances, matchingTaskIds, request, state, deployStatistics, pendingRequest.getDeployId(), pendingRequest, maybePendingDeploy);
-
-      if (!scheduledTasks.isEmpty()) {
-        LOG.trace("Scheduling tasks: {}", scheduledTasks);
-
-        for (SingularityPendingTask scheduledTask : scheduledTasks) {
-          taskManager.savePendingTask(scheduledTask);
-        }
-      } else {
-        LOG.info("No new scheduled tasks found for {}, setting state to {}", request.getId(), RequestState.FINISHED);
-        requestManager.finish(request, System.currentTimeMillis());
-      }
+      schedule(numMissingInstances, matchingTaskIds, request, state, deployStatistics, pendingRequest, maybePendingDeploy);
     } else if (numMissingInstances < 0) {
       final long now = System.currentTimeMillis();
 
@@ -418,16 +409,55 @@ public class SingularityScheduler {
         Collections.sort(matchingTaskIds, Collections.reverseOrder(SingularityTaskId.INSTANCE_NO_COMPARATOR)); // clean the highest numbers
       }
 
+      List<SingularityTaskId> remainingActiveTasks = new ArrayList<>(matchingTaskIds);
       for (int i = 0; i < Math.abs(numMissingInstances); i++) {
         final SingularityTaskId toCleanup = matchingTaskIds.get(i);
-
+        remainingActiveTasks.remove(toCleanup);
         LOG.info("Cleaning up task {} due to new request {} - scaling down to {} instances", toCleanup.getId(), request.getId(), request.getInstancesSafe());
-
         taskManager.createTaskCleanup(new SingularityTaskCleanup(pendingRequest.getUser(), TaskCleanupType.SCALING_DOWN, now, toCleanup, Optional.<String>absent(), Optional.<String>absent()));
       }
+
+      if (request.isRackSensitive() && configuration.isRebalanceRacksOnScaleDown()) {
+        List<SingularityTaskId> extraCleanedTasks = new ArrayList<>();
+        int numActiveRacks = stateCache.getNumActiveRacks();
+        double perRack = request.getInstancesSafe() / (double) numActiveRacks;
+
+        Multiset<String> countPerRack = HashMultiset.create();
+        for (SingularityTaskId taskId : remainingActiveTasks) {
+          countPerRack.add(taskId.getRackId());
+          LOG.info("{} - {} - {} - {}", countPerRack, perRack, extraCleanedTasks.size(), taskId);
+          if (countPerRack.count(taskId.getRackId()) > perRack && extraCleanedTasks.size() < numActiveRacks / 2) {
+            extraCleanedTasks.add(taskId);
+            LOG.info("Cleaning up task {} to evenly distribute tasks among racks", taskId);
+            taskManager.createTaskCleanup(new SingularityTaskCleanup(pendingRequest.getUser(), TaskCleanupType.REBALANCE_RACKS, now, taskId, Optional.<String>absent(), Optional.<String>absent()));
+          }
+        }
+        remainingActiveTasks.removeAll(extraCleanedTasks);
+        if (extraCleanedTasks.size() > 0) {
+          schedule(extraCleanedTasks.size(), remainingActiveTasks, request, state, deployStatistics, pendingRequest, maybePendingDeploy);
+        }
+      }
+
     }
 
     return numMissingInstances;
+  }
+
+  private void schedule(int numMissingInstances, List<SingularityTaskId> matchingTaskIds, SingularityRequest request, RequestState state, SingularityDeployStatistics deployStatistics,
+    SingularityPendingRequest pendingRequest, Optional<SingularityPendingDeploy> maybePendingDeploy) {
+    final List<SingularityPendingTask> scheduledTasks =
+      getScheduledTaskIds(numMissingInstances, matchingTaskIds, request, state, deployStatistics, pendingRequest.getDeployId(), pendingRequest, maybePendingDeploy);
+
+    if (!scheduledTasks.isEmpty()) {
+      LOG.trace("Scheduling tasks: {}", scheduledTasks);
+
+      for (SingularityPendingTask scheduledTask : scheduledTasks) {
+        taskManager.savePendingTask(scheduledTask);
+      }
+    } else {
+      LOG.info("No new scheduled tasks found for {}, setting state to {}", request.getId(), RequestState.FINISHED);
+      requestManager.finish(request, System.currentTimeMillis());
+    }
   }
 
   private boolean isRequestActive(Optional<SingularityRequestWithState> maybeRequestWithState) {
@@ -706,6 +736,9 @@ public class SingularityScheduler {
           } else {
             scheduleFrom = new Date(now);
             final CronExpression cronExpression = new CronExpression(request.getQuartzScheduleSafe());
+            if (request.getScheduleTimeZone().isPresent()) {
+              cronExpression.setTimeZone(TimeZone.getTimeZone(request.getScheduleTimeZone().get()));
+            }
             nextRunAtDate = cronExpression.getNextValidTimeAfter(scheduleFrom);
           }
 

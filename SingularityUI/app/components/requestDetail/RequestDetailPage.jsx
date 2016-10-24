@@ -53,14 +53,15 @@ class RequestDetailPage extends Component {
 
   render() {
     const { requestId } = this.props.params;
+    const { deleted } = this.props;
     return (
       <div>
-        <RequestHeader requestId={requestId} showBreadcrumbs={this.props.showBreadcrumbs} />
-        <RequestExpiringActions requestId={requestId} />
-        <ActiveTasksTable requestId={requestId} />
-        <PendingTasksTable requestId={requestId} />
-        <TaskHistoryTable requestId={requestId} />
-        <DeployHistoryTable requestId={requestId} />
+        <RequestHeader requestId={requestId} showBreadcrumbs={this.props.showBreadcrumbs} deleted={this.props.deleted} />
+        {deleted || <RequestExpiringActions requestId={requestId} />}
+        {deleted || <ActiveTasksTable requestId={requestId} />}
+        {deleted || <PendingTasksTable requestId={requestId} />}
+        {deleted || <TaskHistoryTable requestId={requestId} />}
+        {deleted || <DeployHistoryTable requestId={requestId} />}
         <RequestHistoryTable requestId={requestId} />
       </div>
     );
@@ -71,20 +72,23 @@ RequestDetailPage.propTypes = {
   params: PropTypes.object.isRequired,
   refresh: PropTypes.func.isRequired,
   cancelRefresh: PropTypes.func.isRequired,
+  deleted: PropTypes.bool,
   showBreadcrumbs: PropTypes.bool
 };
 
 const mapStateToProps = (state, ownProps) => {
   const statusCode = Utils.maybe(state, ['api', 'request', ownProps.params.requestId, 'statusCode']);
+  const history = Utils.maybe(state, ['api', 'requestHistory', ownProps.params.requestId, 'data']);
   return {
-    notFound: statusCode === 404,
+    notFound: statusCode === 404 && _.isEmpty(history),
+    deleted: statusCode === 404 && !_.isEmpty(history),
     pathname: ownProps.location.pathname
   };
 };
 
 const mapDispatchToProps = (dispatch, ownProps) => {
   const refreshActions = [
-    FetchRequest.trigger(ownProps.params.requestId),
+    FetchRequest.trigger(ownProps.params.requestId, true),
     FetchActiveTasksForRequest.trigger(ownProps.params.requestId),
     FetchScheduledTasksForRequest.trigger(ownProps.params.requestId),
     FetchTaskCleanups.trigger()

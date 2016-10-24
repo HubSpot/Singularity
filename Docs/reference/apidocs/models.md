@@ -69,6 +69,7 @@ Models:
 - [`SingularityDeployStatistics`](models.md#model-SingularityDeployStatistics)
 - [`SingularityDeployUpdate`](models.md#model-SingularityDeployUpdate)
 - [`SingularityDockerInfo`](models.md#model-SingularityDockerInfo)
+- [`SingularityDockerParameter`](models.md#model-SingularityDockerParameter)
 - [`SingularityDockerPortMapping`](models.md#model-SingularityDockerPortMapping)
 - [`SingularityExitCooldownRequest`](models.md#model-SingularityExitCooldownRequest)
 - [`SingularityExpiringBounce`](models.md#model-SingularityExpiringBounce)
@@ -80,11 +81,14 @@ Models:
 - [`SingularityLoadBalancerUpdate`](models.md#model-SingularityLoadBalancerUpdate)
 - [`SingularityMachineChangeRequest`](models.md#model-SingularityMachineChangeRequest)
 - [`SingularityMachineStateHistoryUpdate`](models.md#model-SingularityMachineStateHistoryUpdate)
+- [`SingularityMesosTaskLabel`](models.md#model-SingularityMesosTaskLabel)
 - [`SingularityPauseRequest`](models.md#model-SingularityPauseRequest)
 - [`SingularityPendingDeploy`](models.md#model-SingularityPendingDeploy)
 - [`SingularityPendingRequest`](models.md#model-SingularityPendingRequest)
 - [`SingularityPendingTask`](models.md#model-SingularityPendingTask)
 - [`SingularityPendingTaskId`](models.md#model-SingularityPendingTaskId)
+- [`SingularityPriorityFreeze`](models.md#model-SingularityPriorityFreeze)
+- [`SingularityPriorityFreezeParent`](models.md#model-SingularityPriorityFreezeParent)
 - [`SingularityRack`](models.md#model-SingularityRack)
 - [`SingularityRequest`](models.md#model-SingularityRequest)
 - [`SingularityRequestCleanup`](models.md#model-SingularityRequestCleanup)
@@ -142,8 +146,8 @@ Models:
 | defaultInstanceForType | [Address](models.md#model-Address) | optional |  |
 | ip | string | optional |  |
 | parserForType | [com.google.protobuf.Parser&lt;org.apache.mesos.Protos$Address&gt;](models.md#model-com.google.protobuf.Parser&lt;org.apache.mesos.Protos$Address&gt;) | optional |  |
-| hostname | string | optional |  |
 | ipBytes | [ByteString](models.md#model-ByteString) | optional |  |
+| hostname | string | optional |  |
 | initialized | boolean | optional |  |
 | serializedSize | int | optional |  |
 | allFields | [Map[FieldDescriptor,Object]](models.md#model-Map[FieldDescriptor,Object]) | optional |  |
@@ -159,8 +163,8 @@ Models:
 | name | type | required | description |
 |------|------|----------|-------------|
 | ip | string | optional |  |
-| ipBytes | [ByteString](models.md#model-ByteString) | optional |  |
 | hostname | string | optional |  |
+| ipBytes | [ByteString](models.md#model-ByteString) | optional |  |
 | hostnameBytes | [ByteString](models.md#model-ByteString) | optional |  |
 | port | int | optional |  |
 
@@ -170,8 +174,8 @@ Models:
 | name | type | required | description |
 |------|------|----------|-------------|
 | defaultInstanceForType | [Appc](models.md#model-Appc) | optional |  |
-| idBytes | [ByteString](models.md#model-ByteString) | optional |  |
 | parserForType | [com.google.protobuf.Parser&lt;org.apache.mesos.Protos$Image$Appc&gt;](models.md#model-com.google.protobuf.Parser&lt;org.apache.mesos.Protos$Image$Appc&gt;) | optional |  |
+| idBytes | [ByteString](models.md#model-ByteString) | optional |  |
 | labelsOrBuilder | [LabelsOrBuilder](models.md#model-LabelsOrBuilder) | optional |  |
 | labels | [Labels](models.md#model-Labels) | optional |  |
 | initialized | boolean | optional |  |
@@ -241,8 +245,8 @@ Models:
 | argumentsList | Array[string] | optional |  |
 | user | string | optional |  |
 | value | string | optional |  |
-| userBytes | [ByteString](models.md#model-ByteString) | optional |  |
 | environment | [Environment](models.md#model-Environment) | optional |  |
+| userBytes | [ByteString](models.md#model-ByteString) | optional |  |
 | shell | boolean | optional |  |
 | environmentOrBuilder | [EnvironmentOrBuilder](models.md#model-EnvironmentOrBuilder) | optional |  |
 | urisList | [List[URI]](models.md#model-List[URI]) | optional |  |
@@ -351,18 +355,18 @@ Models:
 | labels | [Labels](models.md#model-Labels) | optional |  |
 | locationBytes | [ByteString](models.md#model-ByteString) | optional |  |
 | initialized | boolean | optional |  |
-| environment | string | optional |  |
 | name | string | optional |  |
+| environment | string | optional |  |
 | nameBytes | [ByteString](models.md#model-ByteString) | optional |  |
 | ports | [Ports](models.md#model-Ports) | optional |  |
-| visibility | [Visibility](models.md#model-Visibility) | optional |  Allowable values: FRAMEWORK, CLUSTER, EXTERNAL |
 | environmentBytes | [ByteString](models.md#model-ByteString) | optional |  |
+| visibility | [Visibility](models.md#model-Visibility) | optional |  Allowable values: FRAMEWORK, CLUSTER, EXTERNAL |
 | serializedSize | int | optional |  |
 | portsOrBuilder | [PortsOrBuilder](models.md#model-PortsOrBuilder) | optional |  |
 | allFields | [Map[FieldDescriptor,Object]](models.md#model-Map[FieldDescriptor,Object]) | optional |  |
 | descriptorForType | [Descriptor](models.md#model-Descriptor) | optional |  |
-| version | string | optional |  |
 | unknownFields | [UnknownFieldSet](models.md#model-UnknownFieldSet) | optional |  |
+| version | string | optional |  |
 | initializationErrorString | string | optional |  |
 
 
@@ -376,8 +380,8 @@ Models:
 | labels | [Labels](models.md#model-Labels) | optional |  |
 | locationBytes | [ByteString](models.md#model-ByteString) | optional |  |
 | name | string | optional |  |
-| nameBytes | [ByteString](models.md#model-ByteString) | optional |  |
 | environment | string | optional |  |
+| nameBytes | [ByteString](models.md#model-ByteString) | optional |  |
 | ports | [Ports](models.md#model-Ports) | optional |  |
 | visibility | [Visibility](models.md#model-Visibility) | optional |  Allowable values: FRAMEWORK, CLUSTER, EXTERNAL |
 | environmentBytes | [ByteString](models.md#model-ByteString) | optional |  |
@@ -611,9 +615,9 @@ Models:
 | container | [ContainerInfo](models.md#model-ContainerInfo) | optional |  |
 | name | string | optional |  |
 | nameBytes | [ByteString](models.md#model-ByteString) | optional |  |
-| command | [CommandInfo](models.md#model-CommandInfo) | optional |  |
-| sourceBytes | [ByteString](models.md#model-ByteString) | optional |  |
 | frameworkId | [FrameworkID](models.md#model-FrameworkID) | optional |  |
+| sourceBytes | [ByteString](models.md#model-ByteString) | optional |  |
+| command | [CommandInfo](models.md#model-CommandInfo) | optional |  |
 | frameworkIdOrBuilder | [FrameworkIDOrBuilder](models.md#model-FrameworkIDOrBuilder) | optional |  |
 | executorIdOrBuilder | [ExecutorIDOrBuilder](models.md#model-ExecutorIDOrBuilder) | optional |  |
 | resourcesList | [List[Resource]](models.md#model-List[Resource]) | optional |  |
@@ -736,8 +740,8 @@ Models:
 
 | name | type | required | description |
 |------|------|----------|-------------|
-| commandOrBuilder | [CommandInfoOrBuilder](models.md#model-CommandInfoOrBuilder) | optional |  |
 | defaultInstanceForType | [HealthCheck](models.md#model-HealthCheck) | optional |  |
+| commandOrBuilder | [CommandInfoOrBuilder](models.md#model-CommandInfoOrBuilder) | optional |  |
 | gracePeriodSeconds | double | optional |  |
 | httpOrBuilder | [HTTPOrBuilder](models.md#model-HTTPOrBuilder) | optional |  |
 | parserForType | [com.google.protobuf.Parser&lt;org.apache.mesos.Protos$HealthCheck&gt;](models.md#model-com.google.protobuf.Parser&lt;org.apache.mesos.Protos$HealthCheck&gt;) | optional |  |
@@ -759,8 +763,8 @@ Models:
 
 | name | type | required | description |
 |------|------|----------|-------------|
-| gracePeriodSeconds | double | optional |  |
 | commandOrBuilder | [CommandInfoOrBuilder](models.md#model-CommandInfoOrBuilder) | optional |  |
+| gracePeriodSeconds | double | optional |  |
 | httpOrBuilder | [HTTPOrBuilder](models.md#model-HTTPOrBuilder) | optional |  |
 | consecutiveFailures | int | optional |  |
 | intervalSeconds | double | optional |  |
@@ -934,8 +938,8 @@ Models:
 | descriptorForType | [Descriptor](models.md#model-Descriptor) | optional |  |
 | hostnameBytes | [ByteString](models.md#model-ByteString) | optional |  |
 | attributesOrBuilderList | [List[? extends org.apache.mesos.Protos$AttributeOrBuilder]](models.md#model-List[? extends org.apache.mesos.Protos$AttributeOrBuilder]) | optional |  |
-| unknownFields | [UnknownFieldSet](models.md#model-UnknownFieldSet) | optional |  |
 | resourcesCount | int | optional |  |
+| unknownFields | [UnknownFieldSet](models.md#model-UnknownFieldSet) | optional |  |
 | initializationErrorString | string | optional |  |
 | id | [OfferID](models.md#model-OfferID) | optional |  |
 
@@ -996,6 +1000,7 @@ Models:
 |------|------|----------|-------------|
 | numPorts | int | optional |  |
 | memoryMb | double | optional |  |
+| diskMb | double | optional |  |
 | cpus | double | optional |  |
 
 
@@ -1067,21 +1072,24 @@ Models:
 | taskEnv | [Map[int,Map[string,string]]](models.md#model-Map[int,Map[string,string]]) | optional | Map of environment variable overrides for specific task instances. |
 | autoAdvanceDeploySteps | boolean | optional | automatically advance to the next target instance count after `deployStepWaitTimeMs` seconds |
 | serviceBasePath | string | optional | The base path for the API exposed by the deploy. Used in conjunction with the Load balancer API. |
-| customExecutorUser | string | optional | User to run custom executor as |
 | customExecutorSource | string | optional | Custom Mesos executor source. |
 | metadata | [Map[string,string]](models.md#model-Map[string,string]) | optional | Map of metadata key/value pairs associated with the deployment. |
 | healthcheckMaxRetries | int | optional | Maximum number of times to retry an individual healthcheck before failing the deploy. |
 | healthcheckTimeoutSeconds | long | optional | Single healthcheck HTTP timeout in seconds. |
 | healthcheckProtocol | [HealthcheckProtocol](models.md#model-HealthcheckProtocol) | optional | Healthcheck protocol - HTTP or HTTPS |
-| taskLabels | [Map[int,Map[string,string]]](models.md#model-Map[int,Map[string,string]]) | optional | Labels for specific tasks associated with this deploy, indexed by instance number |
+| taskLabels | [Map[int,Map[string,string]]](models.md#model-Map[int,Map[string,string]]) | optional | (Deprecated) Labels for specific tasks associated with this deploy, indexed by instance number |
 | healthcheckPortIndex | int | optional | Perform healthcheck on this dynamically allocated port (e.g. 0 for first port), defaults to first port |
 | healthcheckMaxTotalTimeoutSeconds | long | optional | Maximum amount of time to wait before failing a deploy for healthchecks to pass. |
+| loadBalancerServiceIdOverride | string | optional | Name of load balancer Service ID to use instead of the Request ID |
+| mesosTaskLabels | [Map[int,List[SingularityMesosTaskLabel]]](models.md#model-Map[int,List[SingularityMesosTaskLabel]]) | optional | Labels for specific tasks associated with this deploy, indexed by instance number |
 | labels | [Map[string,string]](models.md#model-Map[string,string]) | optional | Labels for all tasks associated with this deploy |
 | healthcheckUri | string | optional | Deployment Healthcheck URI, if specified will be called after TASK_RUNNING. |
+| user | string | optional | Run tasks as this user |
 | requestId | string | required | Singularity Request Id which is associated with this deploy. |
 | loadBalancerGroups | [Set](models.md#model-Set) | optional | List of load balancer groups associated with this deployment. |
 | deployStepWaitTimeMs | int | optional | wait this long between deploy steps |
 | skipHealthchecksOnDeploy | boolean | optional | Allows skipping of health checks when deploying. |
+| mesosLabels | [Array[SingularityMesosTaskLabel]](models.md#model-SingularityMesosTaskLabel) | optional | Labels for all tasks associated with this deploy |
 | healthcheckIntervalSeconds | long | optional | Time to wait after a failed healthcheck to try again in seconds. |
 | command | string | optional | Command to execute for this deployment. |
 | executorData | [ExecutorData](models.md#model-ExecutorData) | optional | Executor specific information |
@@ -1096,6 +1104,7 @@ Models:
 | loadBalancerTemplate | string | optional | Name of load balancer template to use if not using the default template |
 | customExecutorCmd | string | optional | Custom Mesos executor |
 | env | [Map[string,string]](models.md#model-Map[string,string]) | optional | Map of environment variable definitions. |
+| loadBalancerUpstreamGroup | string | optional | Group name to tag all upstreams with in load balancer |
 | customExecutorResources | [Resources](models.md#model-Resources) | optional | Resources to allocate for custom mesos executor |
 | version | string | optional | Deploy version |
 | id | string | required | Singularity deploy id. |
@@ -1198,10 +1207,19 @@ Models:
 |------|------|----------|-------------|
 | parameters | [Map[string,string]](models.md#model-Map[string,string]) | optional |  |
 | forcePullImage | boolean | optional |  |
+| dockerParameters | [Array[SingularityDockerParameter]](models.md#model-SingularityDockerParameter) | optional |  |
 | privileged | boolean | optional |  |
 | network | [SingularityDockerNetworkType](models.md#model-SingularityDockerNetworkType) | optional |  |
 | portMappings | [Array[SingularityDockerPortMapping]](models.md#model-SingularityDockerPortMapping) | optional |  |
 | image | string | optional |  |
+
+
+## <a name="model-SingularityDockerParameter"></a> SingularityDockerParameter
+
+| name | type | required | description |
+|------|------|----------|-------------|
+| key | string | optional |  |
+| value | string | optional |  |
 
 
 ## <a name="model-SingularityDockerPortMapping"></a> SingularityDockerPortMapping
@@ -1325,6 +1343,14 @@ Models:
 | objectId | string | optional |  |
 
 
+## <a name="model-SingularityMesosTaskLabel"></a> SingularityMesosTaskLabel
+
+| name | type | required | description |
+|------|------|----------|-------------|
+| key | string | optional |  |
+| value | string | optional |  |
+
+
 ## <a name="model-SingularityPauseRequest"></a> SingularityPauseRequest
 
 | name | type | required | description |
@@ -1350,6 +1376,7 @@ Models:
 
 | name | type | required | description |
 |------|------|----------|-------------|
+| resources | [Resources](models.md#model-Resources) | optional |  |
 | runId | string | optional |  |
 | skipHealthchecks | boolean | optional |  |
 | user | string | optional |  |
@@ -1366,6 +1393,7 @@ Models:
 
 | name | type | required | description |
 |------|------|----------|-------------|
+| resources | [Resources](models.md#model-Resources) | optional |  |
 | runId | string | optional |  |
 | skipHealthchecks | boolean | optional |  |
 | pendingTaskId | [SingularityPendingTaskId](models.md#model-SingularityPendingTaskId) | optional |  |
@@ -1387,6 +1415,25 @@ Models:
 | id | string | optional |  |
 
 
+## <a name="model-SingularityPriorityFreeze"></a> SingularityPriorityFreeze
+
+| name | type | required | description |
+|------|------|----------|-------------|
+| killTasks | boolean | optional |  |
+| message | string | optional |  |
+| actionId | string | optional |  |
+| minimumPriorityLevel | double | optional |  |
+
+
+## <a name="model-SingularityPriorityFreezeParent"></a> SingularityPriorityFreezeParent
+
+| name | type | required | description |
+|------|------|----------|-------------|
+| priorityFreeze | [SingularityPriorityFreeze](models.md#model-SingularityPriorityFreeze) | optional |  |
+| user | string | optional |  |
+| timestamp | long | optional |  |
+
+
 ## <a name="model-SingularityRack"></a> SingularityRack
 
 | name | type | required | description |
@@ -1402,10 +1449,11 @@ Models:
 |------|------|----------|-------------|
 | hideEvenNumberAcrossRacksHint | boolean | optional |  |
 | readOnlyGroups | [Set](models.md#model-Set) | optional |  |
-| schedule | string | optional |  |
 | taskLogErrorRegexCaseSensitive | boolean | optional |  |
+| schedule | string | optional |  |
 | skipHealthchecks | boolean | optional |  |
 | waitAtLeastMillisAfterTaskFinishesForReschedule | long | optional |  |
+| taskPriorityLevel | double | optional |  |
 | rackAffinity | Array[string] | optional |  |
 | emailConfigurationOverrides | [Map[SingularityEmailType,List[SingularityEmailDestination]]](models.md#model-Map[SingularityEmailType,List[SingularityEmailDestination]]) | optional |  |
 | slavePlacement | [SlavePlacement](models.md#model-SlavePlacement) | optional |  |
@@ -1423,6 +1471,7 @@ Models:
 | killOldNonLongRunningTasksAfterMillis | long | optional |  |
 | instances | int | optional |  |
 | scheduleType | [ScheduleType](models.md#model-ScheduleType) | optional |  |
+| scheduleTimeZone | string | optional |  |
 | taskLogErrorRegex | string | optional |  |
 | id | string | optional |  |
 
@@ -1482,6 +1531,7 @@ Models:
 
 | name | type | required | description |
 |------|------|----------|-------------|
+| resources | [Resources](models.md#model-Resources) | optional | Override the resources from the active deploy for this run |
 | runId | string | optional | An id to associate with this request which will be associated with the corresponding launched tasks |
 | skipHealthchecks | boolean | optional | If set to true, healthchecks will be skipped for this task run |
 | commandLineArgs | Array[string] | optional | Command line arguments to be passed to the task |
@@ -1587,6 +1637,7 @@ Models:
 | underProvisionedRequests | int | optional |  |
 | decomissioningSlaves | int | optional |  |
 | oldestDeploy | long | optional |  |
+| minimumPriorityLevel | double | optional |  |
 | scheduledTasks | int | optional |  |
 | underProvisionedRequestIds | Array[string] | optional |  |
 
@@ -1608,7 +1659,7 @@ Models:
 |------|------|----------|-------------|
 | taskId | [SingularityTaskId](models.md#model-SingularityTaskId) | optional |  |
 | user | string | optional |  |
-| cleanupType | [TaskCleanupType](models.md#model-TaskCleanupType) | optional |  Allowable values: USER_REQUESTED, USER_REQUESTED_TASK_BOUNCE, DECOMISSIONING, SCALING_DOWN, BOUNCING, INCREMENTAL_BOUNCE, DEPLOY_FAILED, NEW_DEPLOY_SUCCEEDED, DEPLOY_STEP_FINISHED, DEPLOY_CANCELED, UNHEALTHY_NEW_TASK, OVERDUE_NEW_TASK |
+| cleanupType | [TaskCleanupType](models.md#model-TaskCleanupType) | optional |  Allowable values: USER_REQUESTED, USER_REQUESTED_TASK_BOUNCE, DECOMISSIONING, SCALING_DOWN, BOUNCING, INCREMENTAL_BOUNCE, DEPLOY_FAILED, NEW_DEPLOY_SUCCEEDED, DEPLOY_STEP_FINISHED, DEPLOY_CANCELED, UNHEALTHY_NEW_TASK, OVERDUE_NEW_TASK, USER_REQUESTED_DESTROY, INCREMENTAL_DEPLOY_FAILED, INCREMENTAL_DEPLOY_CANCELLED, PRIORITY_KILL |
 | message | string | optional |  |
 | timestamp | long | optional |  |
 | actionId | string | optional |  |
@@ -1850,13 +1901,13 @@ Models:
 | taskId | [TaskID](models.md#model-TaskID) | optional |  |
 | parserForType | [com.google.protobuf.Parser&lt;org.apache.mesos.Protos$TaskInfo&gt;](models.md#model-com.google.protobuf.Parser&lt;org.apache.mesos.Protos$TaskInfo&gt;) | optional |  |
 | slaveIdOrBuilder | [SlaveIDOrBuilder](models.md#model-SlaveIDOrBuilder) | optional |  |
-| labelsOrBuilder | [LabelsOrBuilder](models.md#model-LabelsOrBuilder) | optional |  |
 | resourcesOrBuilderList | [List[? extends org.apache.mesos.Protos$ResourceOrBuilder]](models.md#model-List[? extends org.apache.mesos.Protos$ResourceOrBuilder]) | optional |  |
+| labelsOrBuilder | [LabelsOrBuilder](models.md#model-LabelsOrBuilder) | optional |  |
 | data | [ByteString](models.md#model-ByteString) | optional |  |
 | executor | [ExecutorInfo](models.md#model-ExecutorInfo) | optional |  |
 | containerOrBuilder | [ContainerInfoOrBuilder](models.md#model-ContainerInfoOrBuilder) | optional |  |
-| executorOrBuilder | [ExecutorInfoOrBuilder](models.md#model-ExecutorInfoOrBuilder) | optional |  |
 | labels | [Labels](models.md#model-Labels) | optional |  |
+| executorOrBuilder | [ExecutorInfoOrBuilder](models.md#model-ExecutorInfoOrBuilder) | optional |  |
 | container | [ContainerInfo](models.md#model-ContainerInfo) | optional |  |
 | healthCheckOrBuilder | [HealthCheckOrBuilder](models.md#model-HealthCheckOrBuilder) | optional |  |
 | initialized | boolean | optional |  |
@@ -1870,8 +1921,8 @@ Models:
 | allFields | [Map[FieldDescriptor,Object]](models.md#model-Map[FieldDescriptor,Object]) | optional |  |
 | descriptorForType | [Descriptor](models.md#model-Descriptor) | optional |  |
 | discovery | [DiscoveryInfo](models.md#model-DiscoveryInfo) | optional |  |
-| resourcesCount | int | optional |  |
 | unknownFields | [UnknownFieldSet](models.md#model-UnknownFieldSet) | optional |  |
+| resourcesCount | int | optional |  |
 | initializationErrorString | string | optional |  |
 | discoveryOrBuilder | [DiscoveryInfoOrBuilder](models.md#model-DiscoveryInfoOrBuilder) | optional |  |
 
