@@ -47,7 +47,7 @@ export default createSelector([getRequests, getFilter], (requests, filter) => {
       _.each(filteredRequests, (requestParent) => {requestParent.id = id.extract(requestParent);});
       const res1 = fuzzy.filter(filter.searchFilter, filteredRequests, user);
       const res2 = fuzzy.filter(filter.searchFilter, filteredRequests, id);
-      filteredRequests = _.uniq(_.pluck(_.sortBy(_.filter(_.union(res1, res2), (task) => task.score > 20), (task) => Utils.fuzzyAdjustScore(filter.searchFilter, task)), 'original').reverse());
+      filteredRequests = Utils.fuzzyFilter(filter.searchFilter, _.union(res1, res2));
     }
   }
 

@@ -71,20 +71,7 @@ export const getFilteredTasks = createSelector(
         const hostMatch = fuzzy.filter(filter.filterText.replace(/-/g, '_'), tasks, host);
         const idMatch = fuzzy.filter(filter.filterText, tasks, id);
         const rackMatch = fuzzy.filter(filter.filterText, tasks, rack);
-        tasks = _.uniq(
-          _.pluck(
-            _.sortBy(
-              _.filter(
-                _.union(
-                  rackMatch, hostMatch, idMatch
-                ),
-                (task) => task.score > 20
-              ),
-              (task) => Utils.fuzzyAdjustScore(filter.filterText, task)
-            ),
-            'original'
-          ).reverse()
-        );
+        tasks = Utils.fuzzyFilter(filter.filterText, _.union(rackMatch, hostMatch, idMatch));
       }
     }
 
