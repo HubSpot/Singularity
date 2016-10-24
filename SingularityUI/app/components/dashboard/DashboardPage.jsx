@@ -4,6 +4,7 @@ import rootComponent from '../../rootComponent';
 
 import Header from './Header';
 import MyRequests from './MyRequests';
+import MyGroupRequests from './MyGroupRequests';
 import MyPausedRequests from './MyPausedRequests';
 import MyStarredRequests from './MyStarredRequests';
 
@@ -13,6 +14,7 @@ const DashboardPage = () => (
   <div>
     <Header />
     <MyRequests />
+    <MyGroupRequests />
     <MyPausedRequests />
     <MyStarredRequests />
   </div>
