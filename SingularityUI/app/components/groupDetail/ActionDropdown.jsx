@@ -20,8 +20,16 @@ class ActionDropdown extends React.Component {
 
   constructor() {
     super();
-    this.state = {};
-    _.bindAll(this, 'fetchRequests');
+    this.state = {
+      dropdownOpen: false
+    };
+    _.bindAll(this, 'onMenuClick', 'fetchRequests');
+  }
+
+  onMenuClick() {
+    this.setState({
+      dropdownOpen: !this.state.dropdownOpen
+    });
   }
 
   fetchRequests() {
@@ -38,6 +46,9 @@ class ActionDropdown extends React.Component {
         bsStyle="primary"
         title="Apply to all"
         id="action-dropdown"
+        open={this.state.dropdownOpen}
+        onToggle={_.noop}
+        onClick={this.onMenuClick}
         >
 
         <MenuItem header={true}>Request State</MenuItem>
