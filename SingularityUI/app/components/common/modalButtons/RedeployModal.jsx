@@ -26,7 +26,7 @@ class RedeployModal extends Component {
   showSuccessMessage() {
     let oldDeployId = Utils.maybe(this.props.deploy, ['deploy', 'id'])
     Messenger().success({
-      message: `Success! Started redeploy of <a href="/request/${this.props.requestId}/deploy/${oldDeployId}">deploy ${oldDeployId}</a>. New id: <a href="/request/${this.props.requestId}/deploy/${this.state.newDeployId}">${this.state.newDeployId}</a>`,
+      message: `Success! Started redeploy of <a href="${ config.appRoot }/request/${this.props.requestId}/deploy/${oldDeployId}">deploy ${oldDeployId}</a>. New id: <a href="${ config.appRoot }/request/${this.props.requestId}/deploy/${this.state.newDeployId}">${this.state.newDeployId}</a>`,
       hideAfter: 5
     });
   }
