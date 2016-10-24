@@ -92,6 +92,7 @@ class TaskDetail extends Component {
       memMappedFileBytes: PropTypes.number,
       timestamp: PropTypes.number
     }),
+    resourceUsageNotFound: PropTypes.bool.isRequired,
     taskCleanups: PropTypes.arrayOf(PropTypes.shape({
       taskId: PropTypes.shape({
         id: PropTypes.string
@@ -172,10 +173,16 @@ class TaskDetail extends Component {
 
   renderFiles(files) {
     if (!files || _.isUndefined(files.currentDirectory)) {
+      let message;
+      if (this.props.task.isStillRunning) {
+        message = 'Could not retrieve files. The task may still be starting.';
+      } else {
+        message = 'Could not retrieve files. The directory may have already been cleaned up.';
+      }
       return (
         <Section title="Files">
           <div className="empty-table-message">
-            {'Could not retrieve files. The host of this task is likely offline or its directory has been cleaned up.'}
+            {message}
           </div>
         </Section>
       );
@@ -187,7 +194,7 @@ class TaskDetail extends Component {
           files={files.files}
           currentDirectory={files.currentDirectory}
           changeDir={(path) => {
-            if (path.startsWith('/')) path = path.substring(1);
+            if (!_.isUndefined(path) && path.startsWith('/')) path = path.substring(1);
             this.props.fetchTaskFiles(this.props.params.taskId, path).then(() => {
               this.props.router.push(Utils.joinPath(`task/${this.props.params.taskId}/files/`, path));
             });
@@ -317,8 +324,16 @@ class TaskDetail extends Component {
       <span className="label label-danger">CPU usage > 110% allocated</span>
     );
 
-    return (
-      <CollapsableSection title="Resource Usage">
+    let maybeResourceUsage;
+
+    if (this.props.resourceUsageNotFound) {
+      maybeResourceUsage = (
+        <div className="empty-table-message">
+          Could not establish communication with the slave to find resource usage.
+        </div>
+      );
+    } else {
+      maybeResourceUsage = (
         <div className="row">
           <div className="col-md-3">
             <UsageInfo
@@ -354,6 +369,12 @@ class TaskDetail extends Component {
             </ul>
           </div>
         </div>
+      );
+    }
+
+    return (
+      <CollapsableSection title="Resource Usage">
+        {maybeResourceUsage}
       </CollapsableSection>
     );
   }
@@ -391,7 +412,7 @@ function mapHealthchecksToProps(task) {
   if (!task) return task;
   const { healthcheckResults } = task;
   task.hasSuccessfulHealthcheck = healthcheckResults && healthcheckResults.length > 0 && !!_.find(healthcheckResults, (healthcheckResult) => healthcheckResult.statusCode === 200);
-  task.lastHealthcheckFailed = healthcheckResults && healthcheckResults.length > 0 && healthcheckResults[0].statusCode !== 200;
+  task.lastHealthcheckFailed = healthcheckResults && healthcheckResults.length > 0 && _.last(healthcheckResults).statusCode !== 200;
   task.healthcheckFailureReasonMessage = Utils.healthcheckFailureReasonMessage(task);
   task.tooManyRetries = healthcheckResults && healthcheckResults.length > task.task.taskRequest.deploy.healthcheckMaxRetries && task.task.taskRequest.deploy.healthcheckMaxRetries > 0;
   task.secondsElapsed = task.task && task.task.taskRequest && task.task.taskRequest.deploy.healthcheckMaxTotalTimeoutSeconds || config.defaultDeployHealthTimeoutSeconds;
@@ -437,12 +458,15 @@ function mapStateToProps(state, ownProps) {
   }
   task = mapTaskToProps(task.data);
   task = mapHealthchecksToProps(task);
+  const defaultFilePath = _.isUndefined(ownProps.files) ? '' : ownProps.files.currentDirectory;
+
   return {
     task,
     taskId: ownProps.params.taskId,
-    currentFilePath: _.isUndefined(ownProps.params.splat) ? ownProps.params.taskId : ownProps.params.splat,
+    currentFilePath: _.isUndefined(ownProps.params.splat) ? defaultFilePath : ownProps.params.splat.substring(1),
     taskCleanups: state.api.taskCleanups.data,
     files: state.api.taskFiles,
+    resourceUsageNotFound: state.api.taskResourceUsage.statusCode === 404,
     resourceUsage: state.api.taskResourceUsage.data,
     cpuTimestamp: state.api.taskResourceUsage.data.timestamp,
     s3Logs: state.api.taskS3Logs.data,
@@ -457,17 +481,17 @@ function mapDispatchToProps(dispatch) {
   return {
     runCommandOnTask: (taskId, commandName) => dispatch(RunCommandOnTask.trigger(taskId, commandName)),
     fetchTaskHistory: (taskId) => dispatch(FetchTaskHistory.trigger(taskId, true)),
-    fetchTaskStatistics: (taskId) => dispatch(FetchTaskStatistics.trigger(taskId)),
+    fetchTaskStatistics: (taskId) => dispatch(FetchTaskStatistics.trigger(taskId, [404])),
     fetchTaskFiles: (taskId, path, catchStatusCodes = []) => dispatch(FetchTaskFiles.trigger(taskId, path, catchStatusCodes.concat([404]))),
     fetchDeployForRequest: (taskId, deployId) => dispatch(FetchDeployForRequest.trigger(taskId, deployId)),
     fetchTaskCleanups: () => dispatch(FetchTaskCleanups.trigger()),
     fetchPendingDeploys: () => dispatch(FetchPendingDeploys.trigger()),
-    fechS3Logs: (taskId) => dispatch(FetchTaskS3Logs.trigger(taskId)),
+    fechS3Logs: (taskId) => dispatch(FetchTaskS3Logs.trigger(taskId, [404])),
   };
 }
 
 function refresh(props) {
-  props.fetchTaskFiles(props.params.taskId, props.params.splat || props.params.taskId, [400, 404]);
+  props.fetchTaskFiles(props.params.taskId, _.isUndefined(props.params.splat) ? undefined : props.params.splat.substring(1), [400, 404]);
   const promises = [];
   const taskPromise = props.fetchTaskHistory(props.params.taskId);
   taskPromise.then(() => {

@@ -52,7 +52,7 @@ public class SingularityOOMKillerDriver implements SingularityDriver {
 
         } catch (Throwable t) {
           LOG.error("Uncaught exception while checking for OOMS", t);
-          exceptionNotifier.notify(t, Collections.<String, String>emptyMap());
+          exceptionNotifier.notify(String.format("Exception while checking for OOM (%s)", t.getMessage()), t, Collections.<String, String>emptyMap());
         } finally {
           LOG.info("Finished checking OOMS after {}", JavaUtils.duration(start));
         }
@@ -64,7 +64,7 @@ public class SingularityOOMKillerDriver implements SingularityDriver {
       future.get();
     } catch (InterruptedException | ExecutionException e) {
       LOG.warn("Unexpected exception while waiting on future", e);
-      exceptionNotifier.notify(e, Collections.<String, String>emptyMap());
+      exceptionNotifier.notify(String.format("Exception waiting for future (%s)", e.getMessage()), e, Collections.<String, String>emptyMap());
     }
 
   }

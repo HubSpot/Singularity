@@ -3,6 +3,7 @@ import { Provider } from 'react-redux';
 import { Router, Route, IndexRoute, useRouterHistory } from 'react-router';
 import { createHistory } from 'history';
 import { syncHistoryWithStore } from 'react-router-redux';
+import parseurl from 'parseurl';
 
 import Application from './components/common/Application';
 import NotFound from './components/common/NotFound';
@@ -19,12 +20,15 @@ import DeployDetail from './components/deployDetail/DeployDetail';
 import RequestForm from './components/requestForm/RequestForm';
 import NewDeployForm from './components/newDeployForm/NewDeployForm';
 import { Tail, AggregateTail } from './components/logs/Tail';
+import TaskInstanceRedirect from './components/requestDetail/TaskInstanceRedirect'
 import RequestDetailPage from './components/requestDetail/RequestDetailPage';
 import Group from './components/groupDetail/GroupDetail.jsx';
+import Disasters from './components/disasters/Disasters';
 
 const AppRouter = (props) => {
+  const parsedUrl = parseurl({ url: config.appRoot });
   let history = useRouterHistory(createHistory)({
-    basename: config.appRoot
+    basename: parsedUrl.path
   });
   history = syncHistoryWithStore(history, props.store);
 
@@ -44,16 +48,18 @@ const AppRouter = (props) => {
             <Route path=":requestId/deploy" component={NewDeployForm} />
             <Route path=":requestId/deploy/:deployId" component={DeployDetail} store={props.store} />
             <Route path=":requestId/tail/**" component={AggregateTail} />
+            <Route path=":requestId/instance/:instanceNo" component={TaskInstanceRedirect} />
           </Route>
           <Route path="tasks(/:state)(/:requestsSubFilter)(/:searchFilter)" component={TasksPage} />
           <Route path="task">
-            <Route path=":taskId(/files/**)" component={TaskDetail} store={props.store} />
+            <Route path=":taskId(/files**)" component={TaskDetail} store={props.store} />
             <Route path=":taskId/tail/**" component={Tail} />
           </Route>
           <Route path="racks(/:state)" component={Racks} />
           <Route path="slaves(/:state)" component={Slaves} />
           <Route path="webhooks" component={Webhooks} />
           <Route path="task-search" component={TaskSearch} />
+          <Route path="disasters" component={Disasters} />
           <Route path="*" component={NotFound} />
         </Route>
       </Router>

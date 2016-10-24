@@ -24,6 +24,15 @@ public class SingularityBounceRequest extends SingularityExpiringRequestParent {
     return new SingularityBounceRequest(Optional.<Boolean>absent(), Optional.<Boolean>absent(), Optional.<Long>absent(), Optional.of(UUID.randomUUID().toString()), Optional.<String>absent());
   }
 
+  public SingularityBounceRequestBuilder toBuilder() {
+    return new SingularityBounceRequestBuilder()
+        .setIncremental(incremental)
+        .setSkipHealthchecks(skipHealthchecks)
+        .setDurationMillis(getDurationMillis())
+        .setActionId(getActionId())
+        .setMessage(getMessage());
+  }
+
   @ApiModelProperty(required=false, value="If present and set to true, old tasks will be killed as soon as replacement tasks are available, instead of waiting for all replacement tasks to be healthy")
   public Optional<Boolean> getIncremental() {
     return incremental;

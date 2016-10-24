@@ -12,6 +12,7 @@ public class RunnerContext {
   private final String logDir;
   private final String user;
   private final String logFile;
+  private final String logFilePath;
   private final String taskId;
 
   private final Optional<Integer> maxTaskThreads;
@@ -19,12 +20,13 @@ public class RunnerContext {
   private final Integer maxOpenFiles;
   private final String switchUserCommand;
 
-  public RunnerContext(String cmd, String taskAppDirectory, String logDir, String user, String logFile, String taskId, Optional<Integer> maxTaskThreads, boolean shouldChangeUser, Integer maxOpenFiles, String switchUserCommand) {
+  public RunnerContext(String cmd, String taskAppDirectory, String logDir, String user, String logFile, String logFilePath, String taskId, Optional<Integer> maxTaskThreads, boolean shouldChangeUser, Integer maxOpenFiles, String switchUserCommand) {
     this.cmd = cmd;
     this.taskAppDirectory = taskAppDirectory;
     this.logDir = logDir;
     this.user = user;
     this.logFile = logFile;
+    this.logFilePath = logFilePath;
     this.taskId = taskId;
 
     this.maxTaskThreads = maxTaskThreads;
@@ -51,6 +53,10 @@ public class RunnerContext {
 
   public String getLogFile() {
     return logFile;
+  }
+
+  public String getLogFilePath() {
+    return logFilePath;
   }
 
   public String getTaskId() {
@@ -81,6 +87,7 @@ public class RunnerContext {
             ", logDir='" + logDir + '\'' +
             ", user='" + user + '\'' +
             ", logFile='" + logFile + '\'' +
+            ", logFilePath='" + logFilePath + '\'' +
             ", taskId='" + taskId + '\'' +
             ", maxTaskThreads=" + maxTaskThreads +
             ", shouldChangeUser=" + shouldChangeUser +

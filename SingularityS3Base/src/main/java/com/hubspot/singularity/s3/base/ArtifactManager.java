@@ -113,7 +113,7 @@ public class ArtifactManager extends SimpleProcessManager {
     checkMd5(embeddedArtifact, extractTo);
   }
 
-  private Path downloadAndCache(RemoteArtifact artifact, String filename) {
+  private Path downloadAndCache(RemoteArtifact artifact, String filename, String cacheMissMessage) {
     Path tempFilePath = createTempPath(filename);
 
     downloadAndCheck(artifact, tempFilePath);
@@ -123,7 +123,7 @@ public class ArtifactManager extends SimpleProcessManager {
     try {
       Files.move(tempFilePath, cachedPath, StandardCopyOption.ATOMIC_MOVE);
     } catch (IOException e) {
-      throw new RuntimeException(String.format("Couldn't move %s to %s", tempFilePath, cachedPath), e);
+      throw new RuntimeException(String.format("Couldn't move %s to cache at %s (Not cached because %s)", tempFilePath, cachedPath, cacheMissMessage), e);
     }
 
     return cachedPath;
@@ -133,31 +133,37 @@ public class ArtifactManager extends SimpleProcessManager {
     return cacheDirectory.resolve(filename);
   }
 
-  private boolean checkCached(RemoteArtifact artifact, Path cachedPath) {
+  private CacheCheck checkCached(RemoteArtifact artifact, Path cachedPath) {
     if (!Files.exists(cachedPath)) {
-      log.debug("Cached {} did not exist", cachedPath);
-      return false;
+      String message = String.format("Cached %s did not exist", cachedPath);
+      log.debug(message);
+      return new CacheCheck(CacheCheckResult.DOES_NOT_EXIST, message);
     }
 
     if (!filesSizeMatches(artifact, cachedPath)) {
-      log.debug("Cached {} ({}) did not match file size {}", cachedPath, getSize(cachedPath), artifact.getFilesize());
-      return false;
+      String message = String.format("Cached %s (%s) did not match file size %s", cachedPath, getSize(cachedPath), artifact.getFilesize());
+      log.debug(message);
+      return new CacheCheck(CacheCheckResult.FILE_SIZE_MISMATCH, message);
     }
 
     if (!md5Matches(artifact, cachedPath)) {
-      log.debug("Cached {} ({}) did not match md5 {}", cachedPath, calculateMd5sum(cachedPath), artifact.getMd5sum().get());
-      return false;
+      String message = String.format("Cached %s (%s) did not match md5 %s", cachedPath, calculateMd5sum(cachedPath), artifact.getMd5sum().get());
+      log.debug(message);
+      return new CacheCheck(CacheCheckResult.MD5_MISMATCH, message);
     }
 
-    return true;
+    return new CacheCheck(CacheCheckResult.FOUND, "");
   }
 
   public Path fetch(RemoteArtifact artifact) {
-    String filename = artifact.getFilename();
+    String filename = artifact.getFilenameForCache();
     Path cachedPath = getCachedPath(filename);
 
-    if (!checkCached(artifact, cachedPath)) {
-      downloadAndCache(artifact, filename);
+    CacheCheck cacheCheck = checkCached(artifact, cachedPath);
+
+    if (cacheCheck.getCacheCheckResult() != CacheCheckResult.FOUND) {
+      log.info(cacheCheck.getMessage());
+      downloadAndCache(artifact, filename, cacheCheck.getMessage());
     } else {
       log.info("Using cached file {}", cachedPath);
     }
@@ -187,12 +193,12 @@ public class ArtifactManager extends SimpleProcessManager {
     runCommandAndThrowRuntimeException(command);
   }
 
-  public void copy(Path source, Path destination) {
+  public void copy(Path source, Path destination, String destinationFilename) {
     log.info("Copying {} to {}", source, destination);
 
     try {
       Files.createDirectories(destination);
-      Files.copy(source, destination.resolve(source.getFileName()));
+      Files.copy(source, destination.resolve(destinationFilename));
     } catch (IOException e) {
       throw Throwables.propagate(e);
     }
@@ -228,5 +234,4 @@ public class ArtifactManager extends SimpleProcessManager {
       throw Throwables.propagate(e);
     }
   }
-
 }

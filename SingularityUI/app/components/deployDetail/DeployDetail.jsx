@@ -88,11 +88,6 @@ class DeployDetail extends React.Component {
         );
       }
     }
-    const copyLinkPopover = (
-      <Popover id="popover-trigger-focus">
-        Click to copy
-      </Popover>
-    );
     const breadcrumbs = [
       {
         label: 'Request',
@@ -123,9 +118,7 @@ class DeployDetail extends React.Component {
         <div className="row">
           <div className="col-md-8">
             <h1>
-              <OverlayTrigger trigger={['hover', 'focus', 'click']} placement="top" overlay={copyLinkPopover}>
-                <span className="copy-btn" data-clipboard-text={this.props.params.deployId}>{this.props.params.deployId}</span>
-              </OverlayTrigger>
+              <span>{deploy.deploy.id}</span>
               <DeployState state={deploy.deployResult && deploy.deployResult.deployState || 'PENDING'} />
             </h1>
           </div>

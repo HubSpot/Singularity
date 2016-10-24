@@ -55,12 +55,14 @@ def all_tasks_for_request(args, request):
         return active_tasks
 
 def all_requests(args):
-    uri = '{0}{1}'.format(base_uri(args),    ALL_REQUESTS)
+    uri = '{0}{1}'.format(base_uri(args), ALL_REQUESTS)
     requests = get_json_response(uri, args)
     included_requests = []
     for request in requests:
         if fnmatch.fnmatch(request['request']['id'], args.requestId):
             included_requests.append(request['request']['id'])
+    if not included_requests and not '*' in args.requestId:
+        included_requests.append(args.requestId)
     return included_requests
 
 def is_in_date_range(args, timestamp):
@@ -124,3 +126,13 @@ def get_json_response(uri, args, params={}, skip404ErrMessage=False):
             log(colored(singularity_response.text, 'red') + '\n', args, False)
         return {}
     return singularity_response.json()
+
+
+def is_valid_log(file_data):
+    not_a_directory = not file_data['mode'].startswith('d')
+    is_a_logfile = fnmatch.fnmatch(file_data['name'], '*.log') or fnmatch.fnmatch(file_data['name'], '*.out') or fnmatch.fnmatch(file_data['name'], '*.err')
+    return not_a_directory and is_a_logfile
+
+
+def logfile_has_data(file_data):
+    return file_data['size'] > 0
