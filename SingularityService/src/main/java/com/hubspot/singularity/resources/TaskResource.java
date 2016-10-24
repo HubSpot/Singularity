@@ -6,7 +6,6 @@ import static com.hubspot.singularity.WebExceptions.notFound;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.Set;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -21,11 +20,9 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
 import com.google.common.base.Optional;
-import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.hubspot.jackson.jaxrs.PropertyFiltering;
 import com.hubspot.mesos.JavaUtils;
@@ -50,6 +47,7 @@ import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTaskMetadata;
 import com.hubspot.singularity.SingularityTaskRequest;
 import com.hubspot.singularity.SingularityTaskShellCommandRequest;
+import com.hubspot.singularity.SingularityTaskShellCommandRequestId;
 import com.hubspot.singularity.SingularityTransformHelpers;
 import com.hubspot.singularity.SingularityUser;
 import com.hubspot.singularity.TaskCleanupType;
@@ -59,8 +57,6 @@ import com.hubspot.singularity.api.SingularityTaskMetadataRequest;
 import com.hubspot.singularity.auth.SingularityAuthorizationHelper;
 import com.hubspot.singularity.config.SingularityTaskMetadataConfiguration;
 import com.hubspot.singularity.config.UIConfiguration;
-import com.hubspot.singularity.config.shell.ShellCommandDescriptor;
-import com.hubspot.singularity.config.shell.ShellCommandOptionDescriptor;
 import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.data.SingularityValidator;
 import com.hubspot.singularity.data.SlaveManager;
@@ -85,12 +81,11 @@ public class TaskResource {
   private final SingularityAuthorizationHelper authorizationHelper;
   private final Optional<SingularityUser> user;
   private final SingularityTaskMetadataConfiguration taskMetadataConfiguration;
-  private final UIConfiguration uiConfiguration;
   private final SingularityValidator validator;
 
   @Inject
   public TaskResource(TaskRequestManager taskRequestManager, TaskManager taskManager, SlaveManager slaveManager, MesosClient mesosClient, SingularityTaskMetadataConfiguration taskMetadataConfiguration,
-      SingularityAuthorizationHelper authorizationHelper, Optional<SingularityUser> user, UIConfiguration uiConfiguration, RequestManager requestManager, SingularityValidator validator) {
+      SingularityAuthorizationHelper authorizationHelper, Optional<SingularityUser> user, RequestManager requestManager, SingularityValidator validator) {
     this.taskManager = taskManager;
     this.taskRequestManager = taskRequestManager;
     this.taskMetadataConfiguration = taskMetadataConfiguration;
@@ -99,7 +94,6 @@ public class TaskResource {
     this.requestManager = requestManager;
     this.authorizationHelper = authorizationHelper;
     this.user = user;
-    this.uiConfiguration = uiConfiguration;
     this.validator = validator;
   }
 
@@ -280,12 +274,17 @@ public class TaskResource {
     Optional<Boolean> override = Optional.absent();
     Optional<String> actionId = Optional.absent();
     Optional<Boolean> waitForReplacementTask = Optional.absent();
+    Optional<SingularityTaskShellCommandRequestId> runBeforeKillId = Optional.absent();
 
     if (killTaskRequest.isPresent()) {
       actionId = killTaskRequest.get().getActionId();
       message = killTaskRequest.get().getMessage();
       override = killTaskRequest.get().getOverride();
       waitForReplacementTask = killTaskRequest.get().getWaitForReplacementTask();
+      if (killTaskRequest.get().getRunShellCommandBeforeKill().isPresent()) {
+        SingularityTaskShellCommandRequest shellCommandRequest = startShellCommand(task.getTaskId(), killTaskRequest.get().getRunShellCommandBeforeKill().get());
+        runBeforeKillId = Optional.of(shellCommandRequest.getId());
+      }
     }
 
     TaskCleanupType cleanupType = TaskCleanupType.USER_REQUESTED;
@@ -304,11 +303,11 @@ public class TaskResource {
     if (override.isPresent() && override.get().booleanValue()) {
       cleanupType = TaskCleanupType.USER_REQUESTED_DESTROY;
       taskCleanup = new SingularityTaskCleanup(JavaUtils.getUserEmail(user), cleanupType, now,
-        task.getTaskId(), message, actionId);
+        task.getTaskId(), message, actionId, runBeforeKillId);
       taskManager.saveTaskCleanup(taskCleanup);
     } else {
       taskCleanup = new SingularityTaskCleanup(JavaUtils.getUserEmail(user), cleanupType, now,
-        task.getTaskId(), message, actionId);
+        task.getTaskId(), message, actionId, runBeforeKillId);
       SingularityCreateResult result = taskManager.createTaskCleanup(taskCleanup);
 
       if (result == SingularityCreateResult.EXISTED && userRequestedKillTakesPriority(taskId)) {
@@ -404,35 +403,14 @@ public class TaskResource {
       throw WebExceptions.badRequest("%s is not an active task, can't run %s on it", taskId, shellCommand.getName());
     }
 
-    Optional<ShellCommandDescriptor> commandDescriptor = Iterables.tryFind(uiConfiguration.getShellCommands(), new Predicate<ShellCommandDescriptor>() {
+    return startShellCommand(taskIdObj, shellCommand);
+  }
 
-      @Override
-      public boolean apply(ShellCommandDescriptor input) {
-        return input.getName().equals(shellCommand.getName());
-      }
-    });
+  private SingularityTaskShellCommandRequest startShellCommand(SingularityTaskId taskId, final SingularityShellCommand shellCommand) {
+    validator.checkValidShellCommand(shellCommand);
 
-    if (!commandDescriptor.isPresent()) {
-      throw WebExceptions.forbidden("Shell command %s not in %s", shellCommand.getName(), uiConfiguration.getShellCommands());
-    }
-
-    Set<String> options = Sets.newHashSetWithExpectedSize(commandDescriptor.get().getOptions().size());
-    for (ShellCommandOptionDescriptor option : commandDescriptor.get().getOptions()) {
-      options.add(option.getName());
-    }
-
-    if (shellCommand.getOptions().isPresent()) {
-      for (String option : shellCommand.getOptions().get()) {
-        if (!options.contains(option)) {
-          throw WebExceptions.badRequest("Shell command %s does not have option %s (%s)", shellCommand.getName(), option, options);
-        }
-      }
-    }
-
-    SingularityTaskShellCommandRequest shellRequest = new SingularityTaskShellCommandRequest(taskIdObj, JavaUtils.getUserEmail(user), System.currentTimeMillis(), shellCommand);
-
+    SingularityTaskShellCommandRequest shellRequest = new SingularityTaskShellCommandRequest(taskId, JavaUtils.getUserEmail(user), System.currentTimeMillis(), shellCommand);
     taskManager.saveTaskShellCommandRequestToQueue(shellRequest);
-
     return shellRequest;
   }
 
