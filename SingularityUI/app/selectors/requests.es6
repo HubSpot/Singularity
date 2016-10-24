@@ -1,13 +1,11 @@
 import { createSelector } from 'reselect';
 import micromatch from 'micromatch';
-import fuzzy from 'fuzzy';
-import _ from 'underscore';
-
 import Utils from '../utils';
 
 const getRequestsAPI = (state) => state.api.requests;
 const getUserAPI = (state) => state.api.user;
-const getSearchFilter = (state) => state.ui.requestsPage;
+const getRequests = (state) => state.requestsInState;
+const getFilter = (state) => state.filter;
 
 function findRequestIds(requests) {
   return _.map(requests, (request) => {
@@ -86,82 +84,49 @@ export const getUserRequestTotals = createSelector(
   }
 );
 
-export const getFilteredRequests = createSelector(
-  [getSearchFilter, getRequestsAPI],
-  (searchFilter, requestsAPI) => {
-    let filteredRequests = requestsAPI.data;
+export default createSelector([getRequests, getFilter], (requests, filter) => {
+  let filteredRequests = requests;
 
-    // filter by type
-    if (searchFilter.typeFilter !== 'ALL') {
-      filteredRequests = filteredRequests.filter((requestParent) => {
-        return searchFilter.typeFilter === requestParent.request.requestType;
-      });
-    }
-
-    // filter by state
-    filteredRequests = filteredRequests.filter((requestParent) => {
-      return searchFilter.stateFilter.indexOf(requestParent.state) > -1;
-    });
-
-    const getUser = (requestParent) => {
-      if ('requestDeployState' in requestParent && 'activeDeploy' in requestParent.requestDeployState) {
-        return requestParent.requestDeployState.activeDeploy.user || '';
-      }
-      return null;
-    };
-
-    // filter by text
-    if (searchFilter.textFilter.length < 3) {
-      // Don't start filtering by text until string has some length
-      return filteredRequests;
-    }
-    if (Utils.isGlobFilter(searchFilter.textFilter)) {
-      const byId = filteredRequests.filter((requestParent) => {
-        return micromatch.any(requestParent.request.id, `${searchFilter.textFilter}*`);
-      });
-      const byUser = filteredRequests.filter((requestParent) => {
-        const user = getUser(requestParent);
-        if (user !== null) {
-          return micromatch.any(user, `${searchFilter.textFilter}*`);
-        }
-        return false;
-      });
-      filteredRequests = _.uniq(_.union(byUser, byId)).reverse();
-    } else {
-      // somewhere, in the history of Request searching, this was labeled a hack
-      // time has passed
-      // the comment was lost to refactors
-      // this is no longer considered a hack
-      // todo: remove hack
-      const byId = fuzzy.filter(
-        searchFilter.textFilter,
-        filteredRequests,
-        {
-          extract: (requestParent) => requestParent.request.id
-        }
-      );
-
-      const byUser = fuzzy.filter(
-        searchFilter.textFilter,
-        filteredRequests,
-        {
-          extract: (requestParent) => getUser(requestParent) || ''
-        }
-      );
-
-      filteredRequests = _.uniq(
-        _.pluck(
-          _.sortBy(
-            _.union(byUser, byId),
-            (requestParent) => {
-              return Utils.fuzzyAdjustScore(searchFilter.textFilter, requestParent);
-            }
-          ),
-          'original'
-        ).reverse()
-      );
-    }
-
-    return filteredRequests;
+  // Filter by state
+  let stateFilter = null;
+  switch (filter.state) {
+    case 'activeDeploy':
+      stateFilter = (requestParent) => requestParent.hasActiveDeploy;
+      break;
+    case 'noDeploy':
+      stateFilter = (requestParent) => !requestParent.hasActiveDeploy;
+      break;
+    default:
+      break;
   }
-);
+  if (stateFilter) {
+    filteredRequests = _.filter(filteredRequests, stateFilter);
+  }
+
+  // Filter by request type
+  if (!_.contains(['pending', 'cleanup'], filter.type)) {
+    filteredRequests = _.filter(filteredRequests, (requestParent) => requestParent.request && _.contains(filter.subFilter, requestParent.request.requestType));
+  }
+
+  // Filter by glob or string match
+  if (filter.searchFilter) {
+    const id = (requestParent) => requestParent.id || '';
+    const user = (requestParent) => `${requestParent.hasActiveDeploy ? requestParent.requestDeployState.activeDeploy.user : ''}`;
+
+    if (Utils.isGlobFilter(filter.searchFilter)) {
+      const res1 = _.filter(filteredRequests, (requestParent) => {
+        return micromatch.any(user(requestParent).toLowerCase(), `*${filter.searchFilter.toLowerCase()}*`);
+      });
+      const res2 = _.filter(filteredRequests, (requestParent) => {
+        return micromatch.any(id(requestParent).toLowerCase(), `*${filter.searchFilter.toLowerCase()}*`);
+      });
+      filteredRequests = _.sortBy(_.union(res1, res2), (requestParent) => (micromatch.any(id(requestParent).toLowerCase(), `${filter.searchFilter.toLowerCase()}*`) ? 1 : 0)).reverse();
+    } else {
+      const res1 = _.filter(filteredRequests, requestParent => id(requestParent).toLowerCase().indexOf(filter.searchFilter.toLowerCase()) > -1);
+      const res2 = _.filter(filteredRequests, requestParent => user(requestParent).toLowerCase().indexOf(filter.searchFilter.toLowerCase()) > -1);
+      filteredRequests = _.uniq(_.sortBy(_.union(res1, res2), (requestParent) => (id(requestParent).toLowerCase().startsWith(filter.searchFilter.toLowerCase()) ? 1 : 0)).reverse());
+    }
+  }
+
+  return filteredRequests;
+});

@@ -2,6 +2,7 @@ import React from 'react';
 import Utils from '../../utils';
 import classNames from 'classnames';
 import { Link } from 'react-router';
+import InfoModalButton from '../common/modalButtons/InfoModalButton';
 
 import { Nav, NavItem, Glyphicon, Button } from 'react-bootstrap';
 
@@ -9,7 +10,7 @@ export default class RequestFilters extends React.Component {
 
   static propTypes = {
     displayRequestTypeFilters: React.PropTypes.bool
-  }
+  };
 
   static REQUEST_STATES = [
     {
@@ -102,7 +103,6 @@ export default class RequestFilters extends React.Component {
       <div>
         <input
           type="search"
-          ref="search"
           className="big-search-box"
           placeholder="Filter requests"
           value={this.props.filter.searchFilter}
@@ -117,7 +117,7 @@ export default class RequestFilters extends React.Component {
   renderRequestTypeFilter() {
     const filterItems = this.props.displayRequestTypeFilters && RequestFilters.REQUEST_TYPES.map((requestType, index) => {
       return (
-        <li key={index} className={_.contains(this.props.filter.subFilter, requestType) ? 'active' : ''}>
+        <li key={index} className={_.contains(this.props.filter.subFilter, requestType) && 'active'}>
           <a onClick={() => this.toggleRequestType(requestType)}>
             <Glyphicon glyph="ok" /> {Utils.humanizeText(requestType)}
           </a>
@@ -129,6 +129,16 @@ export default class RequestFilters extends React.Component {
       <div className="requests-filter-container">
         <ul className="nav nav-pills nav-pills-multi-select">
           {filterItems}
+          <InfoModalButton title="Filter Requests" className="inline-button" id="filter-requests-hint">
+            <ul>
+              <li>Requests will be substring-matched by RequestId and last deploy user.</li>
+              <li>Matches at the beginning of the RequestId are sorted above everything else.</li>
+              <li>Matches are case-insensitive.</li>
+              <li><strong>You can use <code>*</code> as a wildcard character.</strong></li>
+              <li>Use the request state selectors to filter by one request state.</li>
+              <li>Use the request type selectors to filter by one or more reqeust types. These are not availible for pending or cleaning requests.</li>
+            </ul>
+          </InfoModalButton>
         </ul>
       </div>
     );
@@ -136,7 +146,7 @@ export default class RequestFilters extends React.Component {
 
   render() {
     const newRequestButton = !config.hideNewRequestButton && (
-      <Link to={'requests/new'}>
+      <Link to="requests/new">
         <Button bsStyle="success">
           <Glyphicon glyph="plus" /> New Request
         </Button>
