@@ -9,7 +9,7 @@ import DisableHealthchecksModal from './DisableHealthchecksModal';
 export default class DisableHealthchecksButton extends Component {
 
   static propTypes = {
-    requestId: PropTypes.string.isRequired,
+    requestId: PropTypes.oneOfType([PropTypes.string, PropTypes.array]).isRequired,
     children: PropTypes.node,
     then: PropTypes.func
   };
