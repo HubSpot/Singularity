@@ -926,56 +926,59 @@ public class SingularityClient {
     return getSingle(requestUri, "task history", requestId, SingularityTaskIdHistory.class);
   }
 
-  public Collection<SingularityTaskIdHistory> getTaskHistory(Optional<String> requestId, Optional<String> deployId, Optional<String> host,
+  public Collection<SingularityTaskIdHistory> getTaskHistory(Optional<String> requestId, Optional<String> deployId, Optional<String> runId, Optional<String> host,
     Optional<ExtendedTaskState> lastTaskStatus, Optional<Long> startedBefore, Optional<Long> startedAfter, Optional<Long> updatedBefore,
     Optional<Long> updatedAfter, Optional<OrderDirection> orderDirection, Integer count, Integer page) {
     final String requestUri = String.format(TASKS_HISTORY_FORMAT, getHost(), contextPath);
 
-    Map<String, Object> params = taskSearchParams(requestId, deployId, host, lastTaskStatus, startedBefore, startedAfter, updatedBefore, updatedAfter, orderDirection, count, page);
+    Map<String, Object> params = taskSearchParams(requestId, deployId, runId, host, lastTaskStatus, startedBefore, startedAfter, updatedBefore, updatedAfter, orderDirection, count, page);
 
     return getCollectionWithParams(requestUri, "task id history", Optional.of(params), TASKID_HISTORY_COLLECTION);
   }
 
-  public Optional<SingularityPaginatedResponse<SingularityTaskIdHistory>> getTaskHistoryWithMetadata(Optional<String> requestId, Optional<String> deployId, Optional<String> host,
+  public Optional<SingularityPaginatedResponse<SingularityTaskIdHistory>> getTaskHistoryWithMetadata(Optional<String> requestId, Optional<String> deployId, Optional<String> runId, Optional<String> host,
     Optional<ExtendedTaskState> lastTaskStatus, Optional<Long> startedBefore, Optional<Long> startedAfter, Optional<Long> updatedBefore,
     Optional<Long> updatedAfter, Optional<OrderDirection> orderDirection, Integer count, Integer page) {
     final String requestUri = String.format(TASKS_HISTORY_WITHMETADATA_FORMAT, getHost(), contextPath);
 
-    Map<String, Object> params = taskSearchParams(requestId, deployId, host, lastTaskStatus, startedBefore, startedAfter, updatedBefore, updatedAfter, orderDirection, count, page);
+    Map<String, Object> params = taskSearchParams(requestId, deployId, runId, host, lastTaskStatus, startedBefore, startedAfter, updatedBefore, updatedAfter, orderDirection, count, page);
 
     return getSingleWithParams(requestUri, "task id history with metadata", "", Optional.of(params), PAGINATED_HISTORY);
   }
 
-  private Map<String, Object> taskSearchParams(Optional<String> requestId, Optional<String> deployId, Optional<String> host,
+  private Map<String, Object> taskSearchParams(Optional<String> requestId, Optional<String> deployId, Optional<String> runId, Optional<String> host,
     Optional<ExtendedTaskState> lastTaskStatus, Optional<Long> startedBefore, Optional<Long> startedAfter, Optional<Long> updatedBefore,
     Optional<Long> updatedAfter, Optional<OrderDirection> orderDirection, Integer count, Integer page) {
     Map<String, Object> params = new HashMap<>();
     if (requestId.isPresent()) {
-      params.put("requestId", requestId);
+      params.put("requestId", requestId.get());
     }
     if (deployId.isPresent()) {
-      params.put("deployId", deployId);
+      params.put("deployId", deployId.get());
+    }
+    if (runId.isPresent()) {
+      params.put("runId", runId.get());
     }
     if (host.isPresent()) {
-      params.put("host", host);
+      params.put("host", host.get());
     }
     if (lastTaskStatus.isPresent()) {
-      params.put("lastTaskStatus", lastTaskStatus.toString());
+      params.put("lastTaskStatus", lastTaskStatus.get().toString());
     }
     if (startedBefore.isPresent()) {
-      params.put("startedBefore", startedBefore);
+      params.put("startedBefore", startedBefore.get());
     }
     if (startedAfter.isPresent()) {
-      params.put("startedAfter", startedAfter);
+      params.put("startedAfter", startedAfter.get());
     }
     if (updatedBefore.isPresent()) {
-      params.put("updatedBefore", updatedBefore);
+      params.put("updatedBefore", updatedBefore.get());
     }
     if (updatedAfter.isPresent()) {
-      params.put("updatedAfter", updatedAfter);
+      params.put("updatedAfter", updatedAfter.get());
     }
     if (orderDirection.isPresent()) {
-      params.put("orderDirection", orderDirection.toString());
+      params.put("orderDirection", orderDirection.get().toString());
     }
     params.put("count", count);
     params.put("page", page);

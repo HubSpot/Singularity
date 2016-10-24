@@ -26,11 +26,11 @@ public interface HistoryManager {
 
   int getDeployHistoryForRequestCount(String requestId);
 
-  List<SingularityTaskIdHistory> getTaskIdHistory(Optional<String> requestId, Optional<String> deployId, Optional<String> host,
+  List<SingularityTaskIdHistory> getTaskIdHistory(Optional<String> requestId, Optional<String> deployId, Optional<String> runId, Optional<String> host,
       Optional<ExtendedTaskState> lastTaskStatus, Optional<Long> startedBefore, Optional<Long> startedAfter, Optional<Long> updatedBefore,
       Optional<Long> updatedAfter, Optional<OrderDirection> orderDirection, Optional<Integer> limitStart, Integer limitCount);
 
-  int getTaskIdHistoryCount(Optional<String> requestId, Optional<String> deployId, Optional<String> host,
+  int getTaskIdHistoryCount(Optional<String> requestId, Optional<String> deployId, Optional<String> runId, Optional<String> host,
       Optional<ExtendedTaskState> lastTaskStatus, Optional<Long> startedBefore, Optional<Long> startedAfter,
       Optional<Long> updatedBefore, Optional<Long> updatedAfter);
 
@@ -45,6 +45,10 @@ public interface HistoryManager {
   List<String> getRequestHistoryLike(String requestIdLike, Integer limitStart, Integer limitCount);
 
   List<SingularityRequestIdCount> getRequestIdCounts(Date before);
+
+  List<String> getRequestIdsInTaskHistory();
+
+  int getUnpurgedTaskHistoryCountByRequestBefore(String requestId, Date before);
 
   void purgeTaskHistory(String requestId, int count, Optional<Integer> limit, Optional<Date> purgeBefore, boolean deleteRowInsteadOfUpdate);
 

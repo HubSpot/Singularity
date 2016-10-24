@@ -58,9 +58,10 @@ export const FetchDeploysForRequest = buildApiAction(
 
 export const FetchTaskSearchParams = buildApiAction(
   'FETCH_TASK_HISTORY',
-  ({requestId = null, deployId = null, host = null, lastTaskStatus = null, startedAfter = null, startedBefore = null, updatedAfter = null, updatedBefore = null, orderDirection = null}, count, page) => {
+  ({requestId = null, deployId = null, runId=null, host = null, lastTaskStatus = null, startedAfter = null, startedBefore = null, updatedAfter = null, updatedBefore = null, orderDirection = null}, count, page) => {
     const args = {
       deployId,
+      runId,
       host,
       lastTaskStatus,
       startedAfter,

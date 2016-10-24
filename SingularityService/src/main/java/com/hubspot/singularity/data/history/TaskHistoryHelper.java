@@ -61,7 +61,7 @@ public class TaskHistoryHelper extends BlendedHistoryHelper<SingularityTaskIdHis
 
   @Override
   protected List<SingularityTaskIdHistory> getFromHistory(SingularityTaskHistoryQuery query, int historyStart, int numFromHistory) {
-    return historyManager.getTaskIdHistory(query.getRequestId(), query.getDeployId(), query.getHost(), query.getLastTaskStatus(), query.getStartedBefore(),
+    return historyManager.getTaskIdHistory(query.getRequestId(), query.getDeployId(), query.getRunId(), query.getHost(), query.getLastTaskStatus(), query.getStartedBefore(),
         query.getStartedAfter(), query.getUpdatedBefore(), query.getUpdatedAfter(), query.getOrderDirection(), Optional.of(historyStart), numFromHistory);
   }
 
@@ -131,7 +131,7 @@ public class TaskHistoryHelper extends BlendedHistoryHelper<SingularityTaskIdHis
   @Override
   protected Optional<Integer> getTotalCount(SingularityTaskHistoryQuery query) {
     final int numFromZk = Collections2.filter(getFromZk(getRequestIds(query)), query.getHistoryFilter()).size();
-    final int numFromHistory = historyManager.getTaskIdHistoryCount(query.getRequestId(), query.getDeployId(), query.getHost(), query.getLastTaskStatus(), query.getStartedBefore(),
+    final int numFromHistory = historyManager.getTaskIdHistoryCount(query.getRequestId(), query.getDeployId(), query.getRunId(), query.getHost(), query.getLastTaskStatus(), query.getStartedBefore(),
         query.getStartedAfter(), query.getUpdatedBefore(), query.getUpdatedAfter());
 
     return Optional.fromNullable(numFromZk + numFromHistory);

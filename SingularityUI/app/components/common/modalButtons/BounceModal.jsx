@@ -35,42 +35,75 @@ class BounceModal extends Component {
 
   render() {
     const requestIds = typeof this.props.requestId === 'string' ? [this.props.requestId] : this.props.requestId;
+    let formElements = [
+      {
+        name: 'incremental',
+        type: FormModal.INPUT_TYPES.RADIO,
+        values: _.values(BounceModal.INCREMENTAL_BOUNCE_VALUE),
+        defaultValue: BounceModal.INCREMENTAL_BOUNCE_VALUE.INCREMENTAL.value
+      },
+      {
+        name: 'skipHealthchecks',
+        type: FormModal.INPUT_TYPES.BOOLEAN,
+        label: 'Skip healthchecks during bounce'
+      }
+    ]
+
+    if (config.shellCommands.length > 0) {
+      formElements.push(
+        {
+        name: 'runShellCommand',
+        type: FormModal.INPUT_TYPES.BOOLEAN,
+        label: 'Run shell command before killing tasks',
+        defaultValue: false
+        },
+        {
+          name: 'runShellCommandBeforeKill',
+          type: FormModal.INPUT_TYPES.SELECT,
+          dependsOn: 'runShellCommand',
+          defaultValue: config.shellCommands[0].name,
+          options: config.shellCommands.map((shellCommand) => ({
+            label: shellCommand.name,
+            value: shellCommand.name
+          }))
+        }
+      );
+    }
+
+    formElements.push(
+      {
+        name: 'durationMillis',
+        type: FormModal.INPUT_TYPES.DURATION,
+        label: 'Expiration (optional)',
+        help: (
+          <div>
+            <p>If an expiration duration is specified, this bounce will be aborted if not finished.</p>
+            <p>Default value {config.defaultBounceExpirationMinutes} minutes</p>
+          </div>
+        )
+      },
+      {
+        name: 'message',
+        type: FormModal.INPUT_TYPES.STRING,
+        label: 'Message (optional)'
+      }
+    );
+
     return (
       <FormModal
         name="Bounce Request"
         ref="bouceModal"
         action="Bounce Request"
-        onConfirm={(data) => this.confirm(data)}
-        buttonStyle="primary"
-        formElements={[
-          {
-            name: 'incremental',
-            type: FormModal.INPUT_TYPES.RADIO,
-            values: _.values(BounceModal.INCREMENTAL_BOUNCE_VALUE),
-            defaultValue: BounceModal.INCREMENTAL_BOUNCE_VALUE.INCREMENTAL.value
-          },
-          {
-            name: 'skipHealthchecks',
-            type: FormModal.INPUT_TYPES.BOOLEAN,
-            label: 'Skip healthchecks during bounce'
-          },
-          {
-            name: 'durationMillis',
-            type: FormModal.INPUT_TYPES.DURATION,
-            label: 'Expiration (optional)',
-            help: (
-              <div>
-                <p>If an expiration duration is specified, this bounce will be aborted if not finished.</p>
-                <p>Default value {config.defaultBounceExpirationMinutes} minutes</p>
-              </div>
-            )
-          },
-          {
-            name: 'message',
-            type: FormModal.INPUT_TYPES.STRING,
-            label: 'Message (optional)'
+        onConfirm={(data) => {
+          if (data.runShellCommand) {
+            data.runShellCommandBeforeKill = {name: data.runShellCommandBeforeKill};
+          } else {
+            delete data.runShellCommandBeforeKill;
           }
-        ]}>
+          this.confirm(data)
+        }}
+        buttonStyle="primary"
+        formElements={formElements}>
         <p>Are you sure you want to bounce {requestIds.length > 1 ? 'these' : 'this'} request{requestIds.length > 1 && 's'}?</p>
         <pre>{requestIds.join('\n')}</pre>
         <p>Bouncing a request will cause replacement tasks to be scheduled and (under normal conditions) executed immediately.</p>
