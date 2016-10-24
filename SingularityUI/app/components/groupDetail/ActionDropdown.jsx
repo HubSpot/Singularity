@@ -4,11 +4,11 @@ import { connect } from 'react-redux';
 import { FetchRequest } from '../../actions/api/requests';
 
 import { DropdownButton, MenuItem } from 'react-bootstrap';
-import PauseButton from '../requests/PauseButton';
-import UnpauseButton from '../requests/UnpauseButton';
-import BounceButton from '../requests/BounceButton';
-import EnableHealthchecksButton from '../requests/EnableHealthchecksButton';
-import DisableHealthchecksButton from '../requests/DisableHealthchecksButton';
+import PauseButton from '../common/modalButtons/PauseButton';
+import UnpauseButton from '../common/modalButtons/UnpauseButton';
+import BounceButton from '../common/modalButtons/BounceButton';
+import EnableHealthchecksButton from '../common/modalButtons/EnableHealthchecksButton';
+import DisableHealthchecksButton from '../common/modalButtons/DisableHealthchecksButton';
 
 class ActionDropdown extends React.Component {
 
@@ -20,16 +20,8 @@ class ActionDropdown extends React.Component {
 
   constructor() {
     super();
-    this.state = {
-      dropdownOpen: false
-    };
-    _.bindAll(this, 'onMenuClick', 'fetchRequests');
-  }
-
-  onMenuClick() {
-    this.setState({
-      dropdownOpen: !this.state.dropdownOpen
-    });
+    this.state = {};
+    _.bindAll(this, 'fetchRequests');
   }
 
   fetchRequests() {
@@ -46,9 +38,6 @@ class ActionDropdown extends React.Component {
         bsStyle="primary"
         title="Apply to all"
         id="action-dropdown"
-        open={this.state.dropdownOpen}
-        onToggle={_.noop}
-        onClick={this.onMenuClick}
         >
 
         <MenuItem header={true}>Request State</MenuItem>
