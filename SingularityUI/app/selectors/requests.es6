@@ -8,6 +8,7 @@ import Utils from '../utils';
 const getRequestsAPI = (state) => state.api.requests;
 const getUserAPI = (state) => state.api.user;
 const getSearchFilter = (state) => state.ui.requestsPage;
+const getCurrentGroup = (state) => state.ui.dashboard.currentGroup;
 
 function findRequestIds(requests) {
   return _.map(requests, (request) => {
@@ -22,6 +23,14 @@ export const getStarredRequests = createSelector(
   (starredData, requestsAPI) => {
     const requests = findRequestIds(requestsAPI.data);
     return requests.filter((requestParent) => starredData.has(requestParent.request.id));
+  }
+);
+
+export const getUserGroupRequests = createSelector(
+  [getCurrentGroup, getRequestsAPI],
+  (currentGroup, requestsAPI) => {
+    const requests = findRequestIds(requestsAPI.data);
+    return requests.filter((requestParent) => requestParent.request.group === currentGroup);
   }
 );
 
