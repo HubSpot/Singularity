@@ -114,3 +114,8 @@ ALTER TABLE `deployHistory` MODIFY `bytes` MEDIUMBLOB NOT NULL;
 
 --changeset tpetr:14 dbms:mysql
 ALTER TABLE `requestHistory` MODIFY `createdAt` TIMESTAMP(3) NOT NULL DEFAULT '1971-01-01 00:00:01'
+
+--changeset ssalinas:15 dbms:mysql
+ALTER TABLE `taskHistory`
+  ADD COLUMN `purged` BOOLEAN NOT NULL DEFAULT false,
+  ADD KEY `purged` (`requestId`, `purged`, `updatedAt`);
