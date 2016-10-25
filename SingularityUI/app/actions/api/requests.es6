@@ -65,9 +65,10 @@ export const FetchRequestRun = buildApiAction(
 export const PauseRequest = buildJsonApiAction(
   'PAUSE_REQUEST',
   'POST',
-  (requestId, { durationMillis, killTasks, message, actionId, runShellCommandBeforeKill }) => ({
+  (requestId, { durationMillis, killTasks, message, actionId, runShellCommandBeforeKill }, catchStatusCodes = null) => ({
     url: `/requests/request/${requestId}/pause`,
-    body: { durationMillis, killTasks, message, actionId, runShellCommandBeforeKill }
+    body: { durationMillis, killTasks, message, actionId, runShellCommandBeforeKill },
+    catchStatusCodes
   })
 );
 
@@ -82,9 +83,10 @@ export const PersistRequestPause = buildJsonApiAction(
 export const UnpauseRequest = buildJsonApiAction(
   'UNPAUSE_REQUEST',
   'POST',
-  (requestId, { skipHealthchecks, message, actionId }) => ({
+  (requestId, { skipHealthchecks, message, actionId }, catchStatusCodes = null) => ({
     url: `/requests/request/${requestId}/unpause`,
-    body: { skipHealthchecks, message, actionId }
+    body: { skipHealthchecks, message, actionId },
+    catchStatusCodes
   })
 );
 

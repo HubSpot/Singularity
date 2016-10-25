@@ -122,7 +122,9 @@ export default class FormModal extends React.Component {
           parsed[key] = Number.parseFloat(val);
           break;
         case FormModal.INPUT_TYPES.DURATION:
-          parsed[key] = juration.parse(val) * 1000;
+          if (val) {
+            parsed[key] = juration.parse(val) * 1000;
+          }
           break;
         default:
           parsed[key] = val;
