@@ -6,7 +6,7 @@ import Clipboard from 'clipboard';
 
 import Utils from '../../utils';
 import { Link } from 'react-router';
-import { Glyphicon } from 'react-bootstrap';
+import { OverlayTrigger, Popover, Glyphicon, Button } from 'react-bootstrap';
 import {
   FetchTaskHistory,
   FetchActiveTasksForDeploy,
@@ -21,6 +21,7 @@ import JSONButton from '../common/JSONButton';
 import UITable from '../common/table/UITable';
 import Column from '../common/table/Column';
 import CollapsableSection from '../common/CollapsableSection';
+import RedeployButton from '../common/modalButtons/RedeployButton';
 
 import ActiveTasksTable from './ActiveTasksTable';
 
@@ -122,6 +123,9 @@ class DeployDetail extends React.Component {
             </h1>
           </div>
           <div className="col-md-4 button-container">
+            <RedeployButton requestId={deploy.deploy.requestId} deployId={deploy.deploy.id}>
+              <Button bsStyle="primary">Redeploy</Button>
+            </RedeployButton>
             <JSONButton object={deploy} linkClassName="btn btn-default">
               JSON
             </JSONButton>
