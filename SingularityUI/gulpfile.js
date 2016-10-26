@@ -11,9 +11,12 @@ var concat = require('gulp-concat');
 // we used the wrong variable here, in the next version we will remove SINGULARITY_BASE_URI
 var serverBase = process.env.SINGULARITY_URI_BASE || process.env.SINGULARITY_BASE_URI || '/singularity';
 
+var staticUri = process.env.SINGULARITY_STATIC_URI || (serverBase + '/static');
+var appUri = process.env.SINGULARITY_APP_URI || (serverBase + '/ui');
+
 var templateData = {
-  staticRoot: process.env.SINGULARITY_STATIC_URI || (serverBase + '/static'),
-  appRoot: process.env.SINGULARITY_APP_URI || (serverBase + '/ui'),
+  staticRoot: staticUri,
+  appRoot: appUri,
   apiRoot: process.env.SINGULARITY_API_URI || '',
   apiDocs: process.env.SINGULARITY_API_DOCS || 'http://getsingularity.com/Docs/reference/apidocs/api-index.html',
   slaveHttpPort: process.env.SINGULARITY_SLAVE_HTTP_PORT || 5051,
@@ -46,6 +49,8 @@ var dest = path.resolve(__dirname, 'dist');
 
 var webpackStream = require('webpack-stream');
 var webpack = require('webpack');
+
+var port = process.env.PORT || 3334;
 
 gulp.task('clean', function() {
   return del(dest + '/*');
@@ -80,7 +85,7 @@ gulp.task('serve', ['clean', 'debug-html'], function () {
     // Node.js middleware that compiles application in watch mode with HMR support
     // http://webpack.github.io/docs/webpack-dev-middleware.html
     var webpackDevMiddleware = require('webpack-dev-middleware')(compiler, {
-      publicPath: webpackConfig.output.publicPath,
+      publicPath: staticUri,
       stats: webpackConfig.stats,
     });
     var webpackHotMiddleware = require('webpack-hot-middleware')(compiler);
@@ -88,6 +93,12 @@ gulp.task('serve', ['clean', 'debug-html'], function () {
       // Launch Browsersync after the initial bundling is complete
       if (++count === 1) {
         bs.init({
+          port: port,
+          startPath: appUri,
+          socket: {
+            domain: 'localhost:' + port,
+            clientPath: '/singularity/browser-sync'
+          },
           server: {
             baseDir: 'dist',
             middleware: [
