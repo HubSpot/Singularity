@@ -126,9 +126,9 @@ public class SingularityConfiguration extends Configuration {
 
   private Optional<Integer> startupDelaySeconds = Optional.absent();
 
-  private int startupTimeoutSeconds = 60;
+  private int startupTimeoutSeconds = 45;
 
-  private int startupIntervalSeconds = 5;
+  private int startupIntervalSeconds = 2;
 
   @NotNull
   private Optional<Integer> healthcheckMaxRetries = Optional.absent();
