@@ -15,7 +15,9 @@ class ActionDropdown extends React.Component {
   static propTypes = {
     group: PropTypes.object.isRequired,
     requests: PropTypes.object,
-    fetchRequest: PropTypes.func.isRequired
+    fetchRequest: PropTypes.func.isRequired,
+    fetchRequestHistory: PropTypes.func.isRequired,
+    fetchActiveTasksForRequest: PropTypes.func.isRequired
   }
 
   constructor() {
@@ -32,9 +34,18 @@ class ActionDropdown extends React.Component {
     });
   }
 
-  fetchRequests() {
+  fetchRequestsAndHistory() {
     for (const requestId of _.keys(this.props.requests)) {
       this.props.fetchRequest(requestId);
+      this.props.fetchRequestHistory(requestId, 5, 1);
+    }
+  }
+
+  fetchRequestsAndHistoryAndActiveTasks() {
+    for (const requestId of _.keys(this.props.requests)) {
+      this.props.fetchRequest(requestId);
+      this.props.fetchRequestHistory(requestId, 5, 1);
+      this.props.fetchActiveTasksForRequest(requestId);
     }
   }
 
@@ -52,24 +63,24 @@ class ActionDropdown extends React.Component {
         >
 
         <MenuItem header={true}>Request State</MenuItem>
-        <PauseButton requestId={group.requestIds} isScheduled={_.any(_.keys(requests), (requestId) => requests[requestId].requestType === 'SCHEDULED')} then={this.fetchRequests}>
+        <PauseButton requestId={group.requestIds} isScheduled={_.any(_.keys(requests), (requestId) => requests[requestId].requestType === 'SCHEDULED')} then={this.fetchRequestsAndHistoryAndActiveTasks}>
           <MenuItem eventKey="1">Pause</MenuItem>
         </PauseButton>
-        <UnpauseButton requestId={group.requestIds} then={this.fetchRequests}>
+        <UnpauseButton requestId={group.requestIds} then={this.fetchRequestsAndHistoryAndActiveTasks}>
           <MenuItem eventKey="2">Unpause</MenuItem>
         </UnpauseButton>
         <MenuItem divider={true} />
 
         <MenuItem header={true}>Healthchecks</MenuItem>
-        <EnableHealthchecksButton requestId={group.requestIds} then={this.fetchRequests}>
+        <EnableHealthchecksButton requestId={group.requestIds} then={this.fetchRequestsAndHistory}>
           <MenuItem eventKey="3">Enable</MenuItem>
         </EnableHealthchecksButton>
-        <DisableHealthchecksButton requestId={group.requestIds} then={this.fetchRequests}>
+        <DisableHealthchecksButton requestId={group.requestIds} then={this.fetchRequestsAndHistory}>
           <MenuItem eventKey="4">Disable</MenuItem>
         </DisableHealthchecksButton>
         <MenuItem divider={true} />
 
-        <BounceButton requestId={group.requestIds} then={this.fetchRequests}>
+        <BounceButton requestId={group.requestIds} then={this.fetchRequestsAndHistoryAndActiveTasks}>
           <MenuItem eventKey="5">Bounce</MenuItem>
         </BounceButton>
 
@@ -86,7 +97,9 @@ const mapStateToProps = (state, ownProps) => {
 };
 
 const mapDispatchToProps = (dispatch) => ({
-  fetchRequest: (requestId) => dispatch(FetchRequest.trigger(requestId))
+  fetchRequest: (requestId) => dispatch(FetchRequest.trigger(requestId)),
+  fetchRequestHistory: (requestId, count, page) => dispatch(FetchRequestHistory.trigger(requestId, count, page)),
+  fetchActiveTasksForRequest: (requestId) => dispatch(FetchActiveTasksForRequest.trigger(requestId))
 });
 
 export default connect(mapStateToProps, mapDispatchToProps)(ActionDropdown);
