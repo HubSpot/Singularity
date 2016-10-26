@@ -44,6 +44,7 @@
     "react-redux": "^4.4.5",
     "redux": "^3.5.2",
     "reselect": "^2.5.3",
+    "resolve-url-loader": "^1.6.0",
     "text-encoding": "^0.6.0"
   },
   "devDependencies": {
