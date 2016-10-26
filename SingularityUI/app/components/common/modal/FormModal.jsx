@@ -399,7 +399,7 @@ export default class FormModal extends React.Component {
         </Modal.Body>
         <Modal.Footer>
           {cancel}
-          <Button bsStyle={this.props.buttonStyle} onClick={this.confirm}>{this.props.action}</Button>
+          <Button bsStyle={this.props.buttonStyle} onClick={this.confirm} disabled={this.props.disableSubmit}>{this.props.action}</Button>
         </Modal.Footer>
       </Modal>
     );
@@ -413,6 +413,7 @@ FormModal.propTypes = {
   name: React.PropTypes.string,
   children: React.PropTypes.node,
   mustFill: React.PropTypes.bool,
+  disableSubmit: React.PropTypes.bool,
   formElements: React.PropTypes.arrayOf(React.PropTypes.shape({
     options: React.PropTypes.arrayOf(React.PropTypes.shape({
       value: React.PropTypes.string.isRequired,
