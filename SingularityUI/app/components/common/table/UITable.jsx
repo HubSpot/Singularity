@@ -28,11 +28,18 @@ class UITable extends Component {
     this.handlePageChange = this.handlePageChange.bind(this);
   }
 
+  componentDidUpdate(prevProps, prevState) {
+    if (this.props.triggerOnDataSizeChange && prevState.data && prevState.data.length != this.state.data.length) {
+      this.props.triggerOnDataSizeChange();
+    }
+  }
+
   componentWillReceiveProps(nextProps) {
     this.updateSort(nextProps.data, this.state.sortBy, this.state.sortDirection);
     if (nextProps.isFetching) {
       return;
     }
+
     if (this.isApiPaginated() && _.isEmpty(nextProps.data) && this.state.chunkNum > 1) {
       this.fetchDataFromApi(this.state.chunkNum - 1, this.state.rowChunkSize, this.state.sortBy);
       this.setState({ pastEnd: true, data: nextProps.data });
@@ -54,7 +61,8 @@ class UITable extends Component {
     defaultSortBy: undefined,
     defaultSortDirection: UITable.SortDirection.DESC,
     asyncSort: false,
-    maxPaginationButtons: 10
+    maxPaginationButtons: 10,
+    triggerOnDataSizeChange: undefined
   };
 
   state;
@@ -468,6 +476,7 @@ UITable.propTypes = {
   isFetching: PropTypes.bool,
   // For long API calls set this to true. As a future upgrade it would be nice to automatically detect if it's taking a long time:
   showPageLoaderWhenFetching: PropTypes.bool,
+  triggerOnDataSizeChange: PropTypes.func,
   rowClassName: PropTypes.oneOfType([
     PropTypes.string,
     PropTypes.func
