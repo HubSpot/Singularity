@@ -29,7 +29,7 @@ class ActionDropdown extends React.Component {
     this.state = {
       dropdownOpen: false
     };
-    _.bindAll(this, 'onMenuClick', 'fetchRequests');
+    _.bindAll(this, 'onMenuClick', 'fetchRequestsAndHistory', 'fetchRequestsAndHistoryAndActiveTasks');
   }
 
   onMenuClick() {
