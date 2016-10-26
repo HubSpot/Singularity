@@ -2,6 +2,10 @@ import React, {PropTypes} from 'react';
 import { connect } from 'react-redux';
 
 import { FetchRequest } from '../../actions/api/requests';
+import {
+  FetchActiveTasksForRequest,
+  FetchRequestHistory
+} from '../../actions/api/history'
 
 import { DropdownButton, MenuItem } from 'react-bootstrap';
 import PauseButton from '../common/modalButtons/PauseButton';
