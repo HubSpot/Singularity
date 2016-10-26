@@ -158,17 +158,7 @@ export const getFilteredRequests = createSelector(
         }
       );
 
-      filteredRequests = _.uniq(
-        _.pluck(
-          _.sortBy(
-            _.union(byUser, byId),
-            (requestParent) => {
-              return Utils.fuzzyAdjustScore(searchFilter.textFilter, requestParent);
-            }
-          ),
-          'original'
-        ).reverse()
-      );
+      filteredRequests = Utils.fuzzyFilter(searchFilter.textFilter, _.union(byUser, byId));
     }
 
     return filteredRequests;
