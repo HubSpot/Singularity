@@ -107,6 +107,14 @@ export const taskData = (taskGroupId, taskId, data, offset, nextOffset, append, 
     type: 'LOG_TASK_DATA'
   });
 
+export const emptyFile = (taskGroupId, taskId) =>
+  ({
+    taskGroupId,
+    taskId,
+    type: 'LOG_FILE_EMPTY'
+  })
+;
+
 export const taskGroupFetchNext = taskGroupId =>
   (dispatch, getState) => {
     const state = getState();
@@ -128,8 +136,9 @@ export const taskGroupFetchNext = taskGroupId =>
           if (data.length > 0) {
             nextOffset = offset + data.length;
             return dispatch(taskData(taskGroupId, taskId, data, offset, nextOffset, true, maxLines));
+          } else if (offset == 0) {
+            return dispatch(emptyFile(taskGroupId, taskId));
           }
-          return Promise.resolve();
         }).error(error => Utils.ignore404(error));
         promise.taskId = taskId;
         return promise;
@@ -150,10 +159,10 @@ export const taskGroupFetchPrevious = taskGroupId =>
     const {taskGroups, logRequestLength, maxLines} = state;
 
     const taskGroup = taskGroups[taskGroupId];
-    const tasks = getTasks(taskGroup, state.tasks);
+    tasks = getTasks(taskGroup, tasks);
 
     // bail early if all tasks are at the top
-    if (_.all(tasks.map(({minOffset}) => minOffset === 0))) {
+    if (_.all(tasks.map((task) => task.minOffset === 0))) {
       return Promise.resolve();
     }
 
@@ -163,7 +172,8 @@ export const taskGroupFetchPrevious = taskGroupId =>
     }
 
     dispatch({taskGroupId, type: 'LOG_REQUEST_START'});
-    const promises = tasks.map(({taskId, exists, minOffset, path, initialDataLoaded}) => {
+    tasks = _.without(tasks, undefined);
+    let promises = tasks.map(function({taskId, exists, minOffset, path, initialDataLoaded}) {
       if (minOffset > 0 && initialDataLoaded && exists !== false) {
         const xhr = fetchData(taskId, path, Math.max(minOffset - logRequestLength, 0), Math.min(logRequestLength, minOffset));
         return xhr.done(({data, offset, nextOffset}) => {

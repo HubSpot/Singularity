@@ -59,6 +59,7 @@ import com.hubspot.singularity.mesos.SingularityDriver;
 import com.hubspot.singularity.mesos.SingularityLogSupport;
 import com.hubspot.singularity.mesos.SingularityMesosModule;
 import com.hubspot.singularity.resources.DeployResource;
+import com.hubspot.singularity.resources.PriorityResource;
 import com.hubspot.singularity.resources.RackResource;
 import com.hubspot.singularity.resources.RequestResource;
 import com.hubspot.singularity.resources.SlaveResource;
@@ -88,10 +89,10 @@ public class SingularityTestModule implements Module {
 
     LoggerContext context = (LoggerContext) LoggerFactory.getILoggerFactory();
     Logger rootLogger = context.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME);
-    rootLogger.setLevel(Level.ERROR);
+    rootLogger.setLevel(Level.toLevel(System.getProperty("singularity.test.log.level", "ERROR")));
 
     Logger hsLogger = context.getLogger("com.hubspot");
-    hsLogger.setLevel(Level.ERROR);
+    hsLogger.setLevel(Level.toLevel(System.getProperty("singularity.test.log.level.for.com.hubspot", "ERROR")));
 
     this.ts = new TestingServer();
   }
@@ -217,6 +218,7 @@ public class SingularityTestModule implements Module {
     mainBinder.bind(TaskResource.class);
     mainBinder.bind(SlaveResource.class);
     mainBinder.bind(RackResource.class);
+    mainBinder.bind(PriorityResource.class);
   }
 
   private DataSourceFactory getDataSourceFactory() {

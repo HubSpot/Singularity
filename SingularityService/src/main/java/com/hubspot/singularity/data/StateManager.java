@@ -24,6 +24,7 @@ import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.SingularityHostState;
 import com.hubspot.singularity.SingularityPendingDeploy;
 import com.hubspot.singularity.SingularityPendingTaskId;
+import com.hubspot.singularity.SingularityPriorityFreezeParent;
 import com.hubspot.singularity.SingularityRack;
 import com.hubspot.singularity.SingularityRequestDeployState;
 import com.hubspot.singularity.SingularityRequestWithState;
@@ -52,11 +53,12 @@ public class StateManager extends CuratorManager {
   private final Transcoder<SingularityHostState> hostStateTranscoder;
   private final SingularityConfiguration singularityConfiguration;
   private final SingularityAuthDatastore authDatastore;
+  private final PriorityManager priorityManager;
 
   @Inject
   public StateManager(CuratorFramework curatorFramework, SingularityConfiguration configuration, MetricRegistry metricRegistry, RequestManager requestManager, TaskManager taskManager,
       DeployManager deployManager, SlaveManager slaveManager, RackManager rackManager, Transcoder<SingularityState> stateTranscoder, Transcoder<SingularityHostState> hostStateTranscoder,
-      SingularityConfiguration singularityConfiguration, SingularityAuthDatastore authDatastore) {
+      SingularityConfiguration singularityConfiguration, SingularityAuthDatastore authDatastore, PriorityManager priorityManager) {
     super(curatorFramework, configuration, metricRegistry);
 
     this.requestManager = requestManager;
@@ -68,6 +70,7 @@ public class StateManager extends CuratorManager {
     this.deployManager = deployManager;
     this.singularityConfiguration = singularityConfiguration;
     this.authDatastore = authDatastore;
+    this.priorityManager = priorityManager;
   }
 
   public void save(SingularityHostState hostState) throws InterruptedException {
@@ -151,7 +154,8 @@ public class StateManager extends CuratorManager {
   }
 
   public SingularityState generateState(boolean includeRequestIds) {
-    final int activeTasks = taskManager.getNumActiveTasks();
+    final int launchingTasks = taskManager.getNumLaunchingTasks();
+    final int activeTasks = taskManager.getNumActiveTasks() - launchingTasks;
     final int scheduledTasks = taskManager.getNumScheduledTasks();
     final int cleaningTasks = taskManager.getNumCleanupTasks();
     final int lbCleanupTasks = taskManager.getNumLbCleanupTasks();
@@ -291,9 +295,18 @@ public class StateManager extends CuratorManager {
 
     final Optional<Boolean> authDatastoreHealthy = authDatastore.isHealthy();
 
-    return new SingularityState(activeTasks, numActiveRequests, cooldownRequests, numPausedRequests, scheduledTasks, pendingRequests, lbCleanupTasks, lbCleanupRequests, cleaningRequests, activeSlaves,
+    final Optional<SingularityPriorityFreezeParent> maybePriorityFreeze = priorityManager.getActivePriorityFreeze();
+    final Optional<Double> minimumPriorityLevel;
+
+    if (maybePriorityFreeze.isPresent()) {
+      minimumPriorityLevel = Optional.of(maybePriorityFreeze.get().getPriorityFreeze().getMinimumPriorityLevel());
+    } else {
+      minimumPriorityLevel = Optional.absent();
+    }
+
+    return new SingularityState(activeTasks, launchingTasks, numActiveRequests, cooldownRequests, numPausedRequests, scheduledTasks, pendingRequests, lbCleanupTasks, lbCleanupRequests, cleaningRequests, activeSlaves,
         deadSlaves, decommissioningSlaves, activeRacks, deadRacks, decommissioningRacks, cleaningTasks, states, oldestDeploy, numDeploys, scheduledTasksInfo.getNumLateTasks(),
         scheduledTasksInfo.getNumFutureTasks(), scheduledTasksInfo.getMaxTaskLag(), System.currentTimeMillis(), includeRequestIds ? overProvisionedRequestIds : null,
-            includeRequestIds ? underProvisionedRequestIds : null, overProvisionedRequestIds.size(), underProvisionedRequestIds.size(), numFinishedRequests, unknownRacks, unknownSlaves, authDatastoreHealthy);
+            includeRequestIds ? underProvisionedRequestIds : null, overProvisionedRequestIds.size(), underProvisionedRequestIds.size(), numFinishedRequests, unknownRacks, unknownSlaves, authDatastoreHealthy, minimumPriorityLevel);
   }
 }

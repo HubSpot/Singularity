@@ -80,7 +80,7 @@ public class SingularityLogWatcherDriver implements TailMetadataListener, Singul
             store.markConsumed(tail);
           }
         } catch (Throwable t) {
-          exceptionNotifier.notify(t, ImmutableMap.of("tailFilename", tail.getFilename()));
+          exceptionNotifier.notify(String.format("Error while tailing (%s)", t.getMessage()), t, ImmutableMap.of("tailFilename", tail.getFilename()));
           if (shutdown) {
             LOG.error("Exception tailing {} while shutting down", tail, t);
           } else {
@@ -110,7 +110,7 @@ public class SingularityLogWatcherDriver implements TailMetadataListener, Singul
           tailChanged(tail);
         } catch (Throwable unexpected) {
           LOG.error("Unexpected exception for {} while attempting retry", tail, unexpected);
-          exceptionNotifier.notify(unexpected, ImmutableMap.of("tailFilename", tail.getFilename()));
+          exceptionNotifier.notify(String.format("Error while tailing (%s)", unexpected.getMessage()), unexpected, ImmutableMap.of("tailFilename", tail.getFilename()));
         }
       }
     }, configuration.getRetryDelaySeconds(), TimeUnit.SECONDS);
@@ -184,14 +184,14 @@ public class SingularityLogWatcherDriver implements TailMetadataListener, Singul
       tailService.awaitTermination(1L, TimeUnit.DAYS);
     } catch (Throwable t) {
       LOG.error("While awaiting tail service", t);
-      exceptionNotifier.notify(t, Collections.<String, String>emptyMap());
+      exceptionNotifier.notify(String.format("Error awaiting tail service (%s)", t.getMessage()), t, Collections.<String, String>emptyMap());
     }
 
     try {
       store.close();
     } catch (Throwable t) {
       LOG.error("While closing store", t);
-      exceptionNotifier.notify(t, Collections.<String, String>emptyMap());
+      exceptionNotifier.notify(String.format("Error closing store (%s)", t.getMessage()), t, Collections.<String, String>emptyMap());
     }
 
     LOG.info("Shutdown after {}", JavaUtils.duration(start));
@@ -203,7 +203,7 @@ public class SingularityLogWatcherDriver implements TailMetadataListener, Singul
       return Optional.of(tailer);
     } catch (Throwable t) {
       LOG.warn("Couldn't create a tailer for {}", tail, t);
-      exceptionNotifier.notify(t, ImmutableMap.of("tailFilename", tail.getFilename()));
+      exceptionNotifier.notify(String.format("Error creating tailer (%s)", t.getMessage()), t, ImmutableMap.of("tailFilename", tail.getFilename()));
       return Optional.absent();
     }
   }

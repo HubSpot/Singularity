@@ -1,34 +1,27 @@
 import React from 'react';
 import { Link } from 'react-router';
 
-export default class Breadcrumbs extends React.Component {
-
-  renderItems() {
-    return this.props.items.map((i, n) => {
-      if (i.link) {
-        return (
-          <li key={n}>{i.label} <Link to={i.link}>{i.text}</Link></li>
-        );
-      } else if (i.onClick) {
-        return (
-          <li key={n}>{i.label} <a onClick={i.onClick}>{i.text}</a></li>
-        );
-      }
-      return (
-        <li key={n}>{i.label} {i.text}</li>
-      );
-    });
-  }
-
-  render() {
+const renderedItems = (items) => items.map((item, key) => {
+  if (item.link) {
     return (
-      <ul className="breadcrumb">
-          {this.renderItems()}
-          <span className="pull-right">{this.props.right}</span>
-      </ul>
+      <li key={key}>{item.label} <Link to={item.link}>{item.text}</Link></li>
+    );
+  } else if (item.onClick) {
+    return (
+      <li key={key}>{item.label} <a onClick={item.onClick}>{item.text}</a></li>
     );
   }
-}
+  return (
+    <li key={key}>{item.label} {item.text}</li>
+  );
+});
+
+const Breadcrumbs = ({items, right}) => (
+  <ul className="breadcrumb clearfix">
+      {renderedItems(items)}
+      <span className="pull-right">{right}</span>
+  </ul>
+);
 
 Breadcrumbs.propTypes = {
   items: React.PropTypes.arrayOf(React.PropTypes.shape({
@@ -38,3 +31,5 @@ Breadcrumbs.propTypes = {
   })).isRequired,
   right: React.PropTypes.element
 };
+
+export default Breadcrumbs;

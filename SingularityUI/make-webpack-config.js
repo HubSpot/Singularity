@@ -2,6 +2,7 @@ var path = require('path');
 var extend = require('extend');
 var webpack = require('webpack');
 var ExtractTextPlugin = require('extract-text-webpack-plugin');
+var CaseSensitivePathsPlugin = require('case-sensitive-paths-webpack-plugin');
 var pkg = require('./package.json');
 
 var dest = path.resolve(__dirname, 'dist/static');
@@ -91,6 +92,7 @@ module.exports = function(options) {
         'window.jQuery': 'jquery'
       }),
       extractCSS,
+      new CaseSensitivePathsPlugin()
     ],
 
     // Options affecting the normal modules

@@ -38,7 +38,14 @@ export const Tail = connect(null, mapDispatchToProps)(rootComponent(TailPage, ge
 function refreshAggregateTail(props) {
   const viewMode = props.location.query.viewMode || 'split';
   const search = props.location.query.search || '';
-  const initPromise = props.initializeUsingActiveTasks(props.params.requestId, props.params.splat, search, viewMode);
+  const taskIds = props.location.query.taskIds;
+
+  let initPromise;
+  if (taskIds) {
+    initPromise = props.initialize(props.params.requestId, props.params.splat, search, taskIds.split(','), viewMode);
+  } else {
+    initPromise = props.initializeUsingActiveTasks(props.params.requestId, props.params.splat, search, viewMode);
+  }
   initPromise.then(() => {
     props.updateActiveTasks(props.params.requestId);
   });

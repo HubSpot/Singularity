@@ -57,4 +57,12 @@ public class RequestHistoryHelper extends BlendedHistoryHelper<SingularityReques
     return JavaUtils.getFirst(historyManager.getRequestHistory(requestId, Optional.of(OrderDirection.DESC), 0, 1));
   }
 
+  @Override
+  protected Optional<Integer> getTotalCount(String requestId) {
+    int numFromZk = requestManager.getRequestHistory(requestId).size();
+    int numFromHistory = historyManager.getRequestHistoryCount(requestId);
+
+    return Optional.of(numFromZk + numFromHistory);
+  }
+
 }

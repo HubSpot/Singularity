@@ -28,8 +28,8 @@ export function buildApiAction(actionName, opts = {}, keyFunc = undefined) {
   }
 
   function error(err, options, apiResponse, key = undefined) {
-    const action = { type: ERROR, error: err, key };
-    if (Utils.isIn(apiResponse.status, options.catchStatusCodes)) {
+    const action = { type: ERROR, error: err, key, statusCode: apiResponse.status };
+    if (Utils.isIn(apiResponse.status, options.catchStatusCodes) || apiResponse.status === 404 && options.renderNotFoundIf404) {
       return action;
     }
     if (apiResponse.status === 502) { // Singularity is deploying

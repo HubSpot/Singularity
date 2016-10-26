@@ -4,7 +4,8 @@ import { Alert } from 'react-bootstrap';
 import { Link } from 'react-router';
 
 import JSONButton from '../common/JSONButton';
-import SimpleTable from '../common/SimpleTable';
+import Column from '../common/table/Column';
+import UITable from '../common/table/UITable';
 
 const TaskAlerts = (props) => {
   let alerts = [];
@@ -22,7 +23,7 @@ const TaskAlerts = (props) => {
             This
             {props.deploy.deployResult.deployFailures.length === 1 && ' caused ' || ' contributed to '}
             the failure of
-            <Link to={`$request/${props.deploy.deploy.requestId}/deploy/${props.deploy.deploy.id}`}>
+            <Link to={`request/${props.deploy.deploy.requestId}/deploy/${props.deploy.deploy.id}`}>
               {' '}Deploy {props.deploy.deploy.id}
             </Link>
             .
@@ -33,7 +34,7 @@ const TaskAlerts = (props) => {
       // Did a deploy cause this task to fail?
       alerts.push(
         <Alert key="failure" bsStyle="danger">
-          {Utils.ifDeployFailureCausedTaskToBeKilled(props.task) && 'This task was killed becasue '}
+          {Utils.ifDeployFailureCausedTaskToBeKilled(props.task) && 'This task was killed because '}
           <Link to={`request/${props.deploy.deploy.requestId}/deploy/${props.deploy.deploy.id}`}>Deploy {props.deploy.deploy.id}</Link> failed.
         </Alert>
       );
@@ -49,7 +50,7 @@ const TaskAlerts = (props) => {
       alerts.push(
         <Alert key="runLong" bsStyle="warning">
           <strong>Warning: </strong>
-          This scheduled task has been running longer than <code>{threshold}</code> times the average for the request and may be stuck.
+          This scheduled task has been running longer than <code>{threshold}</code> times the average for the deploy and may be stuck.
         </Alert>
       );
     }
@@ -75,25 +76,44 @@ const TaskAlerts = (props) => {
     pendingDeploy.deployMarker.requestId === props.task.task.taskId.requestId && pendingDeploy.deployMarker.deployId === props.task.task.taskId.deployId && pendingDeploy.currentDeployState === 'WAITING'
   )) {
     const hcTable = props.task.healthcheckResults.length > 0 && (
-      <SimpleTable
-        emptyMessage="No healthchecks"
-        entries={[props.task.healthcheckResults[0]]}
-        perPage={5}
-        first={true}
-        last={true}
-        headers={['Timestamp', 'Duration', 'Status', 'Message']}
-        renderTableRow={(data, index) => {
-          return (
-            <tr key={index}>
-              <td>{Utils.absoluteTimestamp(data.timestamp)}</td>
-              <td>{data.durationMillis} {data.durationMillis && 'ms'}</td>
-              <td>{data.statusCode ? <span className={`label label-${data.statusCode === 200 ? 'success' : 'danger'}`}>HTTP {data.statusCode}</span> : <span className="label label-warning">No Response</span>}</td>
-              <td><pre className="healthcheck-message">{data.errorMessage || data.responseBody}</pre></td>
-              <td className="actions-column"><JSONButton object={data}>{'{ }'}</JSONButton></td>
-            </tr>
-          );
-        }}
-      />
+      <UITable
+        emptyTableMessage="No healthchecks"
+        data={[props.task.healthcheckResults[0]]}
+        rowChunkSize={5}
+        paginated={true}
+        keyGetter={(healthcheckResult) => healthcheckResult.timestamp}
+      >
+        <Column
+          label="Timestamp"
+          id="timestamp"
+          key="timestamp"
+          cellData={(healthcheckResult) => Utils.absoluteTimestampWithSeconds(healthcheckResult.timestamp)}
+        />
+        <Column
+          label="Duration"
+          id="duration"
+          key="duration"
+          cellData={(healthcheckResult) => `${healthcheckResult.durationMillis} ${healthcheckResult.durationMillis && 'ms'}`}
+        />
+        <Column
+          label="Status"
+          id="status"
+          key="status"
+          cellData={(healthcheckResult) => healthcheckResult.statusCode && <span className={`label label-${healthcheckResult.statusCode === 200 ? 'success' : 'danger'}`}>HTTP {healthcheckResult.statusCode}</span> || <span className="label label-warning">No Response</span>}
+        />
+        <Column
+          label="Message"
+          id="message"
+          key="message"
+          cellData={(healthcheckResult) => <pre className="healthcheck-message">{healthcheckResult.errorMessage || healthcheckResult.responseBody}</pre>}
+        />
+        <Column
+          id="actions-column"
+          key="actions-column"
+          className="actions-column"
+          cellData={(healthcheckResult) => <JSONButton object={healthcheckResult} showOverlay={true}>{'{ }'}</JSONButton>}
+        />
+      </UITable>
     );
     const pending = <span><strong>Deploy <code>{props.task.task.taskId.deployId}</code> is pending:</strong> Waiting for task to become healthy.</span>;
     alerts.push(
@@ -117,7 +137,7 @@ const TaskAlerts = (props) => {
         </p>
         <p>
           Last healthcheck {lastHealthcheck.statusCode ?
-            `responded with ${<span className="label label-danger"> HTTP {lastHealthcheck.statusCode}</span>}` :
+            <span>responded with <span className="label label-danger"> HTTP {lastHealthcheck.statusCode}</span></span> :
             <span>
               did not respond after{' '}
               <code>

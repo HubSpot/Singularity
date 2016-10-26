@@ -38,6 +38,7 @@
             runningTaskLogPath: "{{{ runningTaskLogPath }}}",
             finishedTaskLogPath: "{{{ finishedTaskLogPath }}}",
             commonHostnameSuffixToOmit: "{{{ commonHostnameSuffixToOmit }}}",
+            showTaskDiskResource: {{{showTaskDiskResource}}},
             taskS3LogOmitPrefix: "{{{ taskS3LogOmitPrefix }}}",
             slaveHttpPort: {{{slaveHttpPort}}},
             warnIfScheduledJobIsRunningPastNextRunPct: {{{warnIfScheduledJobIsRunningPastNextRunPct}}},
@@ -58,6 +59,9 @@
     {{^isDebug}}
     <script src="{{{staticRoot}}}/js/app.bundle.js"></script>
     <script src="{{{staticRoot}}}/js/vendor.bundle.js"></script>
+    {{#extraScript}}
+    {{{extraScript}}}
+    {{/extraScript}}
     {{/isDebug}}
 </head>
 {{#navColor}}

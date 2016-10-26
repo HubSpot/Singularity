@@ -6,12 +6,14 @@ import Column from '../common/table/Column';
 import Utils from '../../utils';
 
 import JSONButton from '../common/JSONButton';
+import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
+import ToolTip from 'react-bootstrap/lib/Tooltip';
 
 import RequestStar from './RequestStar';
-import UnpauseButton from './UnpauseButton';
-import RemoveButton from './RemoveButton';
-import RunNowButton from './RunNowButton';
-import ScaleButton from './ScaleButton';
+import UnpauseButton from '../common/modalButtons/UnpauseButton';
+import RemoveButton from '../common/modalButtons/RemoveButton';
+import RunNowButton from '../common/modalButtons/RunNowButton';
+import ScaleButton from '../common/modalButtons/ScaleButton';
 
 export const Starred = (
   <Column
@@ -177,6 +179,12 @@ export const Schedule = (
   />
 );
 
+const editTooltip = (
+  <ToolTip id="edit">
+    Edit Request
+  </ToolTip>
+);
+
 export const Actions = (
   <Column
     label=""
@@ -186,9 +194,11 @@ export const Actions = (
     cellRender={
       (cellData, rowData) => {
         const edit = !config.hideNewRequestButton && (
-          <Link to={`requests/edit/${rowData.id}`} alt="Edit">
-            <span className="glyphicon glyphicon-edit"></span>
-          </Link>
+          <OverlayTrigger placement="top" id="view-edit-overlay" overlay={editTooltip}>
+            <Link to={`requests/edit/${rowData.id}`} alt="Edit">
+              <span className="glyphicon glyphicon-edit"></span>
+            </Link>
+          </OverlayTrigger>
         );
 
         const unpause = cellData.state === 'PAUSED' && (
@@ -212,7 +222,7 @@ export const Actions = (
             {runNow}
             {unpause}
             <RemoveButton requestId={cellData.id} />
-            <JSONButton className="inline" object={cellData}>
+            <JSONButton className="inline" object={cellData} showOverlay={true}>
               {'{ }'}
             </JSONButton>
             {edit}

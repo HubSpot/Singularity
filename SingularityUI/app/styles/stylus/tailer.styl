@@ -198,10 +198,13 @@
         font-family Consolas, "Liberation Mono", Courier, monospace
         min-height 1.6em // Show empty lines too
         line-height 1.6em
-        padding 0 2em
         white-space pre
         font-size 12px
         height 20px
+        display table-row
+
+        &>span
+          padding 0 2em
 
         &:hover
             .pre-line

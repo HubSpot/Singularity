@@ -1,4 +1,4 @@
-import React, {PropTypes} from 'react';
+import React from 'react';
 import { connect } from 'react-redux';
 import { withRouter } from 'react-router';
 import rootComponent from '../../rootComponent';
@@ -16,6 +16,7 @@ import { FetchRequestRunHistory } from '../../actions/api/history';
 import { FetchTaskFiles } from '../../actions/api/sandbox';
 
 import UITable from '../common/table/UITable';
+import Utils from '../../utils';
 
 import {
   TaskIdShortened,
@@ -24,6 +25,7 @@ import {
   Rack,
   CPUs,
   Memory,
+  Disk,
   ActiveActions,
   NextRun,
   PendingType,
@@ -81,9 +83,15 @@ class TasksPage extends React.Component {
 
 
   getColumns() {
+    let columns;
     switch (this.props.filter.taskStatus) {
       case 'active':
-        return [TaskIdShortened, StartedAt, Host, Rack, CPUs, Memory, ActiveActions];
+        columns = [TaskIdShortened, StartedAt, Host, Rack, CPUs, Memory];
+        if (config.showTaskDiskResource) {
+          columns.push(Disk);
+        }
+        columns.push(ActiveActions);
+        return columns;
       case 'scheduled':
         return [ScheduledTaskId, NextRun, PendingType, PendingDeployId, ScheduledActions];
       case 'cleaning':
@@ -91,20 +99,25 @@ class TasksPage extends React.Component {
       case 'lbcleanup':
         return [TaskIdShortened, StartedAt, Host, Rack, InstanceNumber, JSONAction];
       case 'decommissioning':
-        return [TaskIdShortened, StartedAt, Host, Rack, CPUs, Memory, ActiveActions];
+        columns = [TaskIdShortened, StartedAt, Host, Rack, CPUs, Memory, ActiveActions];
+        if (config.showTaskDiskResource) {
+          columns.push(Disk);
+        }
+        columns.push(ActiveActions);
+        return columns;
       default:
         return [TaskIdShortened, JSONAction];
     }
   }
 
-  getDefaultSortAttribute(t) {
+  getDefaultSortAttribute(task) {
     switch (this.props.filter.taskStatus) {
       case 'active':
       case 'decommissioning':
-        return t.taskId.startedAt;
+        return task.taskId.startedAt;
       case 'scheduled':
-        if (!t.pendingTask) return null;
-        return t.pendingTask.pendingTaskId.nextRunAt;
+        if (!task.pendingTask) return null;
+        return task.pendingTask.pendingTaskId.nextRunAt;
       default:
         return null;
     }
@@ -113,8 +126,8 @@ class TasksPage extends React.Component {
   render() {
     const displayRequestTypeFilters = this.props.filter.taskStatus === 'active';
     const displayTasks = this.props.filter.taskStatus !== 'decommissioning' ?
-      _.sortBy(getFilteredTasks({tasks: this.props.tasks, filter: this.props.filter}), (t) => this.getDefaultSortAttribute(t)) :
-      _.sortBy(getDecomissioningTasks({tasks: this.props.tasks, cleanups: this.props.cleanups}), (t) => this.getDefaultSortAttribute(t));
+      _.sortBy(getFilteredTasks({tasks: this.props.tasks, filter: this.props.filter}), (task) => this.getDefaultSortAttribute(task)) :
+      _.sortBy(getDecomissioningTasks({tasks: this.props.tasks, cleanups: this.props.cleanups}), (task) => this.getDefaultSortAttribute(task));
     if (_.contains(['active', 'decommissioning'], this.props.filter.taskStatus)) displayTasks.reverse();
 
     let table;
@@ -126,7 +139,7 @@ class TasksPage extends React.Component {
       table = (
         <UITable
           data={displayTasks}
-          keyGetter={(r) => (r.taskId ? r.taskId.id : r.pendingTask.pendingTaskId.id)}
+          keyGetter={(task) => (Utils.maybe(task, ['taskId', 'id']) || Utils.maybe(task, ['pendingTask', 'pendingTaskId', 'id']) || Utils.maybe(task, ['id']))}
         >
           {this.getColumns()}
         </UITable>
@@ -148,7 +161,10 @@ function mapStateToProps(state, ownProps) {
     requestTypes: !ownProps.params.requestsSubFilter || ownProps.params.requestsSubFilter === 'all' ? TaskFilters.REQUEST_TYPES : ownProps.params.requestsSubFilter.split(','),
     filterText: ownProps.params.searchFilter || ''
   };
+  const statusCode = Utils.maybe(state, ['api', 'tasks', 'statusCode']);
   return {
+    pathname: ownProps.location.pathname,
+    notFound: statusCode === 404,
     tasks: state.api.tasks.data,
     cleanups: state.api.taskCleanups.data,
     filter
@@ -157,7 +173,7 @@ function mapStateToProps(state, ownProps) {
 
 function mapDispatchToProps(dispatch) {
   return {
-    fetchFilter: (state) => dispatch(FetchTasksInState.trigger(state)),
+    fetchFilter: (state) => dispatch(FetchTasksInState.trigger(state, true)),
     fetchCleanups: () => dispatch(FetchTaskCleanups.trigger()),
     killTask: (taskId, data) => dispatch(KillTask.trigger(taskId, data)),
     runRequest: (requestId, data) => dispatch(RunRequest.trigger(requestId, data)),

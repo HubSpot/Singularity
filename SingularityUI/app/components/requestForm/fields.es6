@@ -1,36 +1,105 @@
-const QUARTZ_SCHEDULE_FIELD = {id: 'quartzSchedule', type: 'text', required: true};
-const CRON_SCHEDULE_FIELD = {id: 'cronSchedule', type: 'text', required: true};
+import Utils from '../../utils';
+
+const QUARTZ_SCHEDULE_FIELD = {id: 'quartzSchedule', type: 'string', required: true};
+const CRON_SCHEDULE_FIELD = {id: 'cronSchedule', type: 'string', required: true};
 const INSTANCES_FIELD = {id: 'instances', type: 'number'};
 const RACK_SENSITIVE_FIELD = {id: 'rackSensitive', type: 'bool'};
 const HIDE_EVEN_NUMBERS_ACROSS_RACKS_HINT_FIELD = {id: 'hideEvenNumberAcrossRacksHint', type: 'bool'};
-const RACK_AFFINITY_FIELD = {id: 'rackAffinity', type: 'array'};
+const RACK_AFFINITY_FIELD = {
+  id: 'rackAffinity',
+  type: {
+    typeName: 'array',
+    arrayType: 'string'
+  }
+};
 const KILL_OLD_NRL_FIELD = {id: 'killOldNonLongRunningTasksAfterMillis', type: 'number'};
+const BOUNCE_AFTER_SCALE_FIELD = {id: 'bounceAfterScale', type: 'bool'};
 
 export const FIELDS_BY_REQUEST_TYPE = {
   ALL: [
     {id: 'id', type: 'request-id', required: true},
-    {id: 'owners', type: 'array', required: true},
-    {id: 'requestType', type: 'text', required: true},
-    {id: 'slavePlacement', type: 'text'}
+    {
+      id: 'owners',
+      type: {
+        typeName: 'array',
+        arrayType: 'string'
+      }
+    },
+    {id: 'requestType', type: { typeName: 'enum', enumType: Utils.enums.SingularityRequestTypes}, required: true},
+    {id: 'slavePlacement', type: 'string'},
+    {
+      id: 'requiredSlaveAttributes',
+      type: {
+        typeName: 'map',
+        mapFrom: 'string',
+        mapTo: 'string'
+      }
+    },
+    {
+      id: 'allowedSlaveAttributes',
+      type: {
+        typeName: 'map',
+        mapFrom: 'string',
+        mapTo: 'string'
+      }
+    },
+    {id: 'group', type: 'string'},
+    {id: 'taskLogErrorRegex', type: 'string'},
+    {id: 'taskLogErrorRegexCaseSensitive', type: 'bool'},
+    {
+      id: 'readOnlyGroups',
+      type: {
+        typeName: 'array',
+        arrayType: 'string'
+      }
+    },
+    {
+      id: 'readWriteGroups',
+      type: {
+        typeName: 'array',
+        arrayType: 'string'
+      }
+    },
+    {id: 'skipHealthchecks', type: 'bool'},
+    {
+      id: 'emailConfigurationOverrides',
+      type: {
+        typeName: 'map',
+        mapFrom: {
+          typeName: 'enum',
+          enumType: Utils.enums.SingularityEmailType
+        },
+        mapTo: {
+          typeName: 'array',
+          arrayType: {
+            typeName: 'enum',
+            enumType: Utils.enums.SingularityEmailDestination
+          }
+        }
+      }
+    }
   ],
   SERVICE: [
     INSTANCES_FIELD,
     RACK_SENSITIVE_FIELD,
     HIDE_EVEN_NUMBERS_ACROSS_RACKS_HINT_FIELD,
     {id: 'loadBalanced', type: 'bool'},
-    RACK_AFFINITY_FIELD
+    RACK_AFFINITY_FIELD,
+    BOUNCE_AFTER_SCALE_FIELD
   ],
   WORKER: [
     INSTANCES_FIELD,
     RACK_SENSITIVE_FIELD,
     HIDE_EVEN_NUMBERS_ACROSS_RACKS_HINT_FIELD,
     {id: 'waitAtLeastMillisAfterTaskFinishesForReschedule', type: 'number'},
-    RACK_AFFINITY_FIELD
+    RACK_AFFINITY_FIELD,
+    BOUNCE_AFTER_SCALE_FIELD
   ],
   SCHEDULED: [
     QUARTZ_SCHEDULE_FIELD,
     CRON_SCHEDULE_FIELD,
-    {id: 'scheduleType', type: 'text'},
+    {id: 'scheduleTimeZone', type: 'string'},
+    {id: 'scheduleType', type: 'string'},
     {id: 'numRetriesOnFailure', type: 'number'},
     KILL_OLD_NRL_FIELD,
     {id: 'scheduledExpectedRuntimeMillis', type: 'number'}

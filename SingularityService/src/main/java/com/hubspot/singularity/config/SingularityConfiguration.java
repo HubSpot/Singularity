@@ -4,7 +4,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
-import java.util.TimeZone;
 
 import javax.validation.Valid;
 import javax.validation.constraints.Max;
@@ -15,6 +14,8 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
 import com.google.common.base.Strings;
+import com.google.common.collect.ImmutableMap;
+import com.hubspot.singularity.RequestType;
 import com.hubspot.singularity.SlavePlacement;
 
 import io.dropwizard.Configuration;
@@ -47,7 +48,7 @@ public class SingularityConfiguration extends Configuration {
 
   private long checkReconcileWhenRunningEveryMillis = TimeUnit.SECONDS.toMillis(30);
 
-  private long checkScheduledJobsEveryMillis = TimeUnit.MINUTES.toMillis(10);
+  private long checkJobsEveryMillis = TimeUnit.MINUTES.toMillis(10);
 
   private long checkSchedulerEverySeconds = 5;
 
@@ -147,6 +148,8 @@ public class SingularityConfiguration extends Configuration {
 
   private boolean deleteRemovedRequestsFromLoadBalancer = false;
 
+  private Optional<String> taskLabelForLoadBalancerUpstreamGroup = Optional.absent();
+
   private int logFetchMaxThreads = 15;
 
   private int maxDeployIdSize = 50;
@@ -179,6 +182,8 @@ public class SingularityConfiguration extends Configuration {
 
   private long persistHistoryEverySeconds = TimeUnit.HOURS.toSeconds(1);
 
+  private long reconcileSlavesEveryMinutes = TimeUnit.HOURS.toMinutes(1);
+
   @JsonProperty("s3")
   private S3Configuration s3Configuration;
 
@@ -210,6 +215,11 @@ public class SingularityConfiguration extends Configuration {
   private boolean waitForListeners = true;
 
   private long warnIfScheduledJobIsRunningForAtLeastMillis = TimeUnit.DAYS.toMillis(1);
+
+  @JsonProperty("taskExecutionTimeLimitMillis")
+  @Valid
+  @NotNull
+  private Optional<Long> taskExecutionTimeLimitMillis = Optional.absent();
 
   private int warnIfScheduledJobIsRunningPastNextRunPct = 200;
 
@@ -255,6 +265,32 @@ public class SingularityConfiguration extends Configuration {
 
   private boolean taskHistoryQueryUsesZkFirst = false;
 
+  @JsonProperty("disasterDetection")
+  @NotNull
+  @Valid
+  private DisasterDetectionConfiguration disasterDetection = new DisasterDetectionConfiguration();
+
+  @Min(0)
+  @Max(1)
+  private double defaultTaskPriorityLevel = 0.3;
+
+  @NotNull
+  private Map<RequestType, Double> defaultTaskPriorityLevelForRequestType = ImmutableMap.of(RequestType.WORKER, 0.5, RequestType.SERVICE, 0.7);
+
+  @Min(0)
+  private long checkPriorityKillsEveryMillis = TimeUnit.SECONDS.toMillis(30);
+
+  @Min(0)
+  @Max(5)
+  private double schedulerPriorityWeightFactor = 1.0;
+
+  @Min(1)
+  private int statusUpdateQueueCapacity = 1000;
+
+  private boolean processStatusUpdatesInSeparateThread = false;
+
+  private boolean rebalanceRacksOnScaleDown = false;
+
   public long getAskDriverToKillTasksAgainAfterMillis() {
     return askDriverToKillTasksAgainAfterMillis;
   }
@@ -283,8 +319,8 @@ public class SingularityConfiguration extends Configuration {
     return checkReconcileWhenRunningEveryMillis;
   }
 
-  public long getCheckScheduledJobsEveryMillis() {
-    return checkScheduledJobsEveryMillis;
+  public long getCheckJobsEveryMillis() {
+    return checkJobsEveryMillis;
   }
 
   public long getCheckSchedulerEverySeconds() {
@@ -587,6 +623,10 @@ public class SingularityConfiguration extends Configuration {
     return warnIfScheduledJobIsRunningForAtLeastMillis;
   }
 
+  public Optional<Long> getTaskExecutionTimeLimitMillis() {
+    return taskExecutionTimeLimitMillis;
+  }
+
   public int getWarnIfScheduledJobIsRunningPastNextRunPct() {
     return warnIfScheduledJobIsRunningPastNextRunPct;
   }
@@ -671,8 +711,8 @@ public class SingularityConfiguration extends Configuration {
     this.checkReconcileWhenRunningEveryMillis = checkReconcileWhenRunningEveryMillis;
   }
 
-  public void setCheckScheduledJobsEveryMillis(long checkScheduledJobsEveryMillis) {
-    this.checkScheduledJobsEveryMillis = checkScheduledJobsEveryMillis;
+  public void setCheckJobsEveryMillis(long checkJobsEveryMillis) {
+    this.checkJobsEveryMillis = checkJobsEveryMillis;
   }
 
   public void setCheckSchedulerEverySeconds(long checkSchedulerEverySeconds) {
@@ -907,6 +947,11 @@ public class SingularityConfiguration extends Configuration {
     this.warnIfScheduledJobIsRunningForAtLeastMillis = warnIfScheduledJobIsRunningForAtLeastMillis;
   }
 
+  public SingularityConfiguration setTaskExecutionTimeLimitMillis(Optional<Long> taskExecutionTimeLimitMillis) {
+    this.taskExecutionTimeLimitMillis = taskExecutionTimeLimitMillis;
+    return this;
+  }
+
   public void setWarnIfScheduledJobIsRunningPastNextRunPct(int warnIfScheduledJobIsRunningPastNextRunPct) {
     this.warnIfScheduledJobIsRunningPastNextRunPct = warnIfScheduledJobIsRunningPastNextRunPct;
   }
@@ -917,6 +962,14 @@ public class SingularityConfiguration extends Configuration {
 
   public void setZooKeeperConfiguration(ZooKeeperConfiguration zooKeeperConfiguration) {
     this.zooKeeperConfiguration = zooKeeperConfiguration;
+  }
+
+  public long getReconcileSlavesEveryMinutes() {
+    return reconcileSlavesEveryMinutes;
+  }
+
+  public void setReconcileSlavesEveryMinutes(long reconcileSlavesEveryMinutes) {
+    this.reconcileSlavesEveryMinutes = reconcileSlavesEveryMinutes;
   }
 
   public long getCacheTasksForMillis() {
@@ -1029,5 +1082,77 @@ public class SingularityConfiguration extends Configuration {
 
   public void setTaskHistoryQueryUsesZkFirst(boolean taskHistoryQueryUsesZkFirst) {
     this.taskHistoryQueryUsesZkFirst = taskHistoryQueryUsesZkFirst;
+  }
+
+  public Optional<String> getTaskLabelForLoadBalancerUpstreamGroup() {
+    return taskLabelForLoadBalancerUpstreamGroup;
+  }
+
+  public void setTaskLabelForLoadBalancerUpstreamGroup(Optional<String> taskLabelForLoadBalancerUpstreamGroup) {
+    this.taskLabelForLoadBalancerUpstreamGroup = taskLabelForLoadBalancerUpstreamGroup;
+  }
+
+  public DisasterDetectionConfiguration getDisasterDetection() {
+    return disasterDetection;
+  }
+
+  public void setDisasterDetection(DisasterDetectionConfiguration disasterDetection) {
+    this.disasterDetection = disasterDetection;
+  }
+
+  public double getDefaultTaskPriorityLevel() {
+    return defaultTaskPriorityLevel;
+  }
+
+  public void setDefaultTaskPriorityLevel(double defaultTaskPriorityLevel) {
+    this.defaultTaskPriorityLevel = defaultTaskPriorityLevel;
+  }
+
+  public Map<RequestType, Double> getDefaultTaskPriorityLevelForRequestType() {
+    return defaultTaskPriorityLevelForRequestType;
+  }
+
+  public void setDefaultTaskPriorityLevelForRequestType(Map<RequestType, Double> defaultTaskPriorityLevelForRequestType) {
+    this.defaultTaskPriorityLevelForRequestType = defaultTaskPriorityLevelForRequestType;
+  }
+
+  public long getCheckPriorityKillsEveryMillis() {
+    return checkPriorityKillsEveryMillis;
+  }
+
+  public void setCheckPriorityKillsEveryMillis(long checkPriorityKillsEveryMillis) {
+    this.checkPriorityKillsEveryMillis = checkPriorityKillsEveryMillis;
+  }
+
+  public double getSchedulerPriorityWeightFactor() {
+    return schedulerPriorityWeightFactor;
+  }
+
+  public void setSchedulerPriorityWeightFactor(double schedulerPriorityWeightFactor) {
+    this.schedulerPriorityWeightFactor = schedulerPriorityWeightFactor;
+  }
+
+  public int getStatusUpdateQueueCapacity() {
+    return statusUpdateQueueCapacity;
+  }
+
+  public void setStatusUpdateQueueCapacity(int statusUpdateQueueCapacity) {
+    this.statusUpdateQueueCapacity = statusUpdateQueueCapacity;
+  }
+
+  public boolean isProcessStatusUpdatesInSeparateThread() {
+    return processStatusUpdatesInSeparateThread;
+  }
+
+  public void setProcessStatusUpdatesInSeparateThread(boolean processStatusUpdatesInSeparateThread) {
+    this.processStatusUpdatesInSeparateThread = processStatusUpdatesInSeparateThread;
+  }
+
+  public boolean isRebalanceRacksOnScaleDown() {
+    return rebalanceRacksOnScaleDown;
+  }
+
+  public void setRebalanceRacksOnScaleDown(boolean rebalanceRacksOnScaleDown) {
+    this.rebalanceRacksOnScaleDown = rebalanceRacksOnScaleDown;
   }
 }

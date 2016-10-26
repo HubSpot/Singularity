@@ -1,9 +1,13 @@
+// explicit polyfills for older browsers
+import 'core-js/es6';
+
 import React from 'react';
 import ReactDOM from 'react-dom';
 import FormModal from './components/common/modal/FormModal';
 import AppRouter from './router';
 import configureStore from 'store';
 import { FetchUser } from 'actions/api/auth';
+import { FetchGroups } from 'actions/api/requestGroups';
 
 // Set up third party configurations
 import { loadThirdParty } from 'thirdPartyConfigurations';
@@ -28,7 +32,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const store = configureStore();
 
     // set up user
-    store.dispatch(FetchUser.trigger());
+    window.app = {};
+    window.app.setupUser = () => store.dispatch(FetchUser.trigger());
+    window.app.setupUser();
+
+    // set up request groups
+    store.dispatch(FetchGroups.trigger([404, 500]));
 
     // Render the page content
     return ReactDOM.render(<AppRouter store={store} />, document.getElementById('root'), () => {
@@ -39,6 +48,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   return ReactDOM.render(
     <FormModal
+      name="Set API Root"
       action="Set API Root"
       onConfirm={(data) => setApiRoot(data)}
       buttonStyle="primary"
@@ -46,7 +56,7 @@ document.addEventListener('DOMContentLoaded', () => {
       formElements={[
         {
           name: 'apiRoot',
-          type: FormModal.INPUT_TYPES.URL,
+          type: FormModal.INPUT_TYPES.STRING,
           label: 'API Root URL',
           isRequired: true
         }
@@ -62,7 +72,7 @@ document.addEventListener('DOMContentLoaded', () => {
         </p>
         <p>
           This can be changed at any time in the JS console with <br />
-          <code>localStorage.setItem(&quot;apiRootOverride&quot;, &quot;http://example/singularity/api&quot;)</code>
+          <code>localStorage.setItem("apiRootOverride", "http://example/singularity/api")</code>
         </p>
       </div>
     </FormModal>, document.getElementById('root')).show();

@@ -9,57 +9,71 @@ import { Link } from 'react-router';
 
 import { FetchDeploysForRequest } from '../../actions/api/history';
 
-import ServerSideTable from '../common/ServerSideTable';
+import UITable from '../common/table/UITable';
+import Column from '../common/table/Column';
 import JSONButton from '../common/JSONButton';
 
-const DeployHistoryTable = ({requestId, deploysAPI}) => {
+const DeployHistoryTable = ({requestId, deploysAPI, fetchDeploys}) => {
   const deploys = deploysAPI ? deploysAPI.data : [];
+  const isFetching = deploysAPI ? deploysAPI.isFetching : false;
   const emptyTableMessage = (Utils.api.isFirstLoad(deploysAPI)
     ? 'Loading...'
     : 'No deploys'
   );
   return (
     <Section id="deploy-history" title="Deploy history">
-      <ServerSideTable
-        emptyMessage={emptyTableMessage}
-        entries={deploys}
-        paginate={deploys.length >= 5}
-        perPage={5}
-        fetchAction={FetchDeploysForRequest}
-        fetchParams={[requestId]}
-        headers={['Deploy ID', 'Status', 'User', 'Timestamp', '']}
-        renderTableRow={(data, index) => {
-          const { deployMarker, deployResult } = data;
-          return (
-            <tr key={index}>
-              <td>
-                <Link to={`request/${deployMarker.requestId}/deploy/${deployMarker.deployId}`}>
-                  {deployMarker.deployId}
-                </Link>
-              </td>
-              <td>
-                {deployResult ? Utils.humanizeText(deployResult.deployState) : 'Pending'}
-              </td>
-              <td>
-                {deployMarker.user.split('@')[0]}
-              </td>
-              <td>
-                {Utils.timestampFromNow(deployMarker.timestamp)}
-              </td>
-              <td className="actions-column">
-                <JSONButton object={data}>{'{ }'}</JSONButton>
-              </td>
-            </tr>
-          );
-        }}
-      />
+      <UITable
+        emptyTableMessage={emptyTableMessage}
+        data={deploys}
+        keyGetter={({deployMarker}) => deployMarker.deployId}
+        rowChunkSize={5}
+        paginated={true}
+        fetchDataFromApi={(page, numberPerPage) => fetchDeploys(requestId, numberPerPage, page)}
+        isFetching={isFetching}
+      >
+        <Column
+          label="Deploy ID"
+          id="deploy-id"
+          key="deploy-id"
+          cellData={(deploy) => (
+            <Link to={`request/${deploy.deployMarker.requestId}/deploy/${deploy.deployMarker.deployId}`}>
+              {deploy.deployMarker.deployId}
+            </Link>
+          )}
+        />
+        <Column
+          label="Status"
+          id="status"
+          key="status"
+          cellData={({deployResult}) => (deployResult ? Utils.humanizeText(deployResult.deployState) : 'Pending')}
+        />
+        <Column
+          label="User"
+          id="user"
+          key="user"
+          cellData={({deployMarker}) => deployMarker.user && deployMarker.user.split('@')[0] || 'N/A'}
+        />
+        <Column
+          label="Timestamp"
+          id="timestamp"
+          key="timestamp"
+          cellData={(deploy) => Utils.timestampFromNow(deploy.deployMarker.timestamp)}
+        />
+        <Column
+          id="actions-column"
+          key="actions-column"
+          className="actions-column"
+          cellData={(deploy) => <JSONButton object={deploy} showOverlay={true}>{'{ }'}</JSONButton>}
+        />
+      </UITable>
     </Section>
   );
 };
 
 DeployHistoryTable.propTypes = {
   requestId: PropTypes.string.isRequired,
-  deploysAPI: PropTypes.object.isRequired
+  deploysAPI: PropTypes.object.isRequired,
+  fetchDeploys: PropTypes.func.isRequired
 };
 
 const mapStateToProps = (state, ownProps) => ({
@@ -69,7 +83,11 @@ const mapStateToProps = (state, ownProps) => ({
   )
 });
 
+const mapDispatchToProps = (dispatch) => ({
+  fetchDeploys: (requestId, count, page) => dispatch(FetchDeploysForRequest.trigger(requestId, count, page))
+});
+
 export default connect(
   mapStateToProps,
-  null
+  mapDispatchToProps
 )(DeployHistoryTable);

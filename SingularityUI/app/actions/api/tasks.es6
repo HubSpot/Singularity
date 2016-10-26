@@ -2,7 +2,7 @@ import { buildApiAction, buildJsonApiAction } from './base';
 
 export const FetchTasksInState = buildApiAction(
   'FETCH_TASKS',
-  (state) => {
+  (state, renderNotFoundIf404) => {
     const stateToFetch = state !== 'decommissioning' ? state : 'active';
 
     let propertyString = '?property=';
@@ -20,7 +20,8 @@ export const FetchTasksInState = buildApiAction(
     }
 
     return {
-      url: `/tasks/${stateToFetch}${propertyString}`
+      url: `/tasks/${stateToFetch}${propertyString}`,
+      renderNotFoundIf404
     };
   }
 );
@@ -56,8 +57,9 @@ export const FetchTaskCleanups = buildApiAction(
 
 export const FetchTaskStatistics = buildApiAction(
   'FETCH_TASK_STATISTICS',
-  (taskId) => ({
-    url: `/tasks/task/${taskId}/statistics`
+  (taskId, catchStatusCodes) => ({
+    url: `/tasks/task/${taskId}/statistics`,
+    catchStatusCodes
   })
 );
 

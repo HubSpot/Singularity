@@ -7,56 +7,72 @@ import { FetchRequestHistory } from '../../actions/api/history';
 
 import Section from '../common/Section';
 
-import ServerSideTable from '../common/ServerSideTable';
+import UITable from '../common/table/UITable';
+import Column from '../common/table/Column';
 import JSONButton from '../common/JSONButton';
 
-const RequestHistoryTable = ({requestId, requestEventsAPI}) => {
+const RequestHistoryTable = ({requestId, requestEventsAPI, fetchRequestHistory}) => {
   const requestEvents = requestEventsAPI ? requestEventsAPI.data : [];
+  const isFetching = requestEventsAPI ? requestEventsAPI.isFetching : false;
   const emptyTableMessage = (Utils.api.isFirstLoad(requestEventsAPI)
     ? 'Loading...'
     : 'No request history'
   );
   return (
-    <Section id="deploy-history" title="Request history">
-      <ServerSideTable
-        emptyMessage={emptyTableMessage}
-        entries={requestEvents}
-        paginate={requestEvents.length >= 5}
-        perPage={5}
-        fetchAction={FetchRequestHistory}
-        fetchParams={[requestId]}
-        headers={['State', 'User', 'Created', 'Message', '']}
-        renderTableRow={(data, index) => {
-          const { eventType, user, createdAt, message } = data;
-          return (
-            <tr key={index}>
-              <td>
-                {Utils.humanizeText(eventType)}
-              </td>
-              <td>
-                {(user || '').split('@')[0]}
-              </td>
-              <td>
-                {Utils.timestampFromNow(createdAt)}
-              </td>
-              <td>
-                {message}
-              </td>
-              <td className="actions-column">
-                <JSONButton object={data}>{'{ }'}</JSONButton>
-              </td>
-            </tr>
-          );
-        }}
-      />
+    <Section id="request-history" title="Request history">
+      <UITable
+        emptyTableMessage={emptyTableMessage}
+        data={requestEvents}
+        keyGetter={(requestEvent) => requestEvent.createdAt}
+        rowChunkSize={5}
+        paginated={true}
+        fetchDataFromApi={(page, numberPerPage) => fetchRequestHistory(requestId, numberPerPage, page)}
+        isFetching={isFetching}
+      >
+        <Column
+          label="State"
+          id="state"
+          key="state"
+          cellData={(requestEvent) => Utils.humanizeText(requestEvent.eventType)}
+        />
+        <Column
+          label="User"
+          id="user"
+          key="user"
+          cellData={(requestEvent) => (requestEvent.user || '').split('@')[0]}
+        />
+        <Column
+          label="Timestamp"
+          id="timestamp"
+          key="timestamp"
+          cellData={(requestEvent) => Utils.timestampFromNow(requestEvent.createdAt)}
+        />
+        <Column
+          label="Message"
+          id="message"
+          key="message"
+          cellData={(requestEvent) => requestEvent.message}
+        />
+        <Column
+          id="actions-column"
+          key="actions-column"
+          className="actions-column"
+          cellData={(requestEvent) => <JSONButton object={requestEvent} showOverlay={true}>{'{ }'}</JSONButton>}
+        />
+      </UITable>
     </Section>
   );
 };
 
 RequestHistoryTable.propTypes = {
   requestId: PropTypes.string.isRequired,
-  requestEventsAPI: PropTypes.object.isRequired
+  requestEventsAPI: PropTypes.object.isRequired,
+  fetchRequestHistory: PropTypes.func.isRequired
 };
+
+const mapDispatchToProps = (dispatch) => ({
+  fetchRequestHistory: (requestId, count, page) => dispatch(FetchRequestHistory.trigger(requestId, count, page))
+});
 
 const mapStateToProps = (state, ownProps) => ({
   requestEventsAPI: Utils.maybe(
@@ -66,5 +82,6 @@ const mapStateToProps = (state, ownProps) => ({
 });
 
 export default connect(
-  mapStateToProps
+  mapStateToProps,
+  mapDispatchToProps
 )(RequestHistoryTable);

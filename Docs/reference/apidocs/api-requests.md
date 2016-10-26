@@ -29,6 +29,29 @@ Unpause a Singularity Request, scheduling new tasks immediately
 
 
 - - -
+#### **DELETE** `/api/requests/request/{requestId}/skipHealthchecks`
+
+Delete/cancel the expiring skipHealthchecks. This makes the skipHealthchecks request permanent.
+
+
+###### Parameters
+**path**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| requestId | true | The Request ID | string |
+
+###### Response
+[SingularityRequestParent](models.md#model-SingularityRequestParent)
+
+
+###### Errors
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| 404    | No Request or expiring skipHealthchecks request for that ID | - |
+
+
+- - -
 #### **PUT** `/api/requests/request/{requestId}/skipHealthchecks`
 
 Update the skipHealthchecks field for the request, possibly temporarily
@@ -57,7 +80,35 @@ Update the skipHealthchecks field for the request, possibly temporarily
 
 
 - - -
-#### **DELETE** `/api/requests/request/{requestId}/skipHealthchecks`
+#### **PUT** `/api/requests/request/{requestId}/skip-healthchecks`
+
+Update the skipHealthchecks field for the request, possibly temporarily
+
+
+###### Parameters
+**path**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| requestId | true | The Request ID to scale | string |
+**body**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| body | false | SkipHealtchecks options | [SingularitySkipHealthchecksRequest](models.md#model-linkType)</a> |
+
+###### Response
+[SingularityRequestParent](models.md#model-SingularityRequestParent)
+
+
+###### Errors
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| 404    | No Request with that ID | - |
+
+
+- - -
+#### **DELETE** `/api/requests/request/{requestId}/skip-healthchecks`
 
 Delete/cancel the expiring skipHealthchecks. This makes the skipHealthchecks request permanent.
 

@@ -105,7 +105,7 @@ These settings are less likely to be changed, but were included in the configura
 | cleanupEverySeconds | 5 | Will cleanup request, task, and other queues on this interval | long | 
 | persistHistoryEverySeconds | 3600 (1 hour) | Moves stale historical task data from ZooKeeper into MySQL, setting to 0 will disable history persistence | long |
 | saveStateEverySeconds | 60 | State about this Singularity instance is saved (available over API) on this interval | long |
-| checkScheduledJobsEveryMillis | 600000 (10 mins) | Check for new scheduled jobs and those running into the next scheduled time on this interval | long |
+| checkJobsEveryMillis | 600000 (10 mins) | Check for jobs running longer than the expected time on this interval | long |
 | checkExpiringUserActionEveryMillis | 45000 | Check for expiring actions that should be expired on this interval | long |
 
 #### Mesos ####

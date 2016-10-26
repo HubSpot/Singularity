@@ -19,8 +19,11 @@ class TaskGroupHeader extends React.Component {
   }
 
   renderInstanceInfo() {
+    const instances = _.without(this.props.tasks, undefined).map((task) => {
+      return Utils.getTaskDataFromTaskId(task.taskId).instanceNo;
+    }).join(', ');
     if (this.props.tasks.length > 1) {
-      return <span className="instance-link">Viewing Instances {this.props.tasks.map(({ taskId }) => Utils.getTaskDataFromTaskId(taskId).instanceNo).join(', ')}</span>;
+      return <span className="instance-link">Viewing Instances {instances}</span>;
     } else if (this.props.tasks.length > 0) {
       const taskData = Utils.getTaskDataFromTaskId(this.props.tasks[0].taskId);
       return <span><div className="width-constrained"><OverlayTrigger placement="bottom" overlay={this.getInstanceNoToolTip(taskData)}><Link className="instance-link" to={`task/${ this.props.tasks[0].taskId }`}>Instance {taskData.instanceNo}</Link></OverlayTrigger></div><TaskStatusIndicator status={this.props.tasks[0].lastTaskStatus} /></span>;

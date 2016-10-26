@@ -10,7 +10,7 @@ class Column extends Component {
     cellData: PropTypes.func,
     cellRender: PropTypes.func,
     sortable: PropTypes.bool,
-    sortData: PropTypes.func,
+    sortData: PropTypes.func, // (cellData, object) -> any
     sortFunc: PropTypes.func,
     className: PropTypes.oneOfType([
       PropTypes.string,
@@ -25,7 +25,9 @@ class Column extends Component {
     label: '',
     sortable: false,
     sortData: (cellData) => cellData,
+    /* eslint-disable id-length */ // Exception for comparator
     sortFunc: (a, b) => {
+      /* eslint-enable id-length */
       if (a < b) {
         return -1;
       }

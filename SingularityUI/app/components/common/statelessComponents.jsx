@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { PropTypes } from 'react';
 import { Panel, ProgressBar } from 'react-bootstrap';
+import classNames from 'classnames';
 
 export const DeployState = (props) => {
   return (
@@ -9,22 +10,54 @@ export const DeployState = (props) => {
   );
 };
 
+DeployState.propTypes = {
+  state: PropTypes.string
+};
+
 export const InfoBox = (props) => {
+  let { value } = props;
+  if (value instanceof Array) {
+    value = value.join(props.join);
+  }
   return (
-    <li className={`col-sm-6 col-md-3`}>
+    <li className="col-sm-6 col-md-3">
         <div>
-            <h4>{props.name}<a className={props.copyableClassName} data-clipboard-text={props.value}>Copy</a></h4>
-            <p>{props.value}</p>
+            <h4>{props.name}<a className={classNames(props.copyableClassName, 'copy-btn')} data-clipboard-text={value}>Copy</a></h4>
+            <p>{value}</p>
         </div>
     </li>
   );
 };
 
+InfoBox.propTypes = {
+  name: PropTypes.string,
+  copyableClassName: PropTypes.string,
+  join: PropTypes.string,
+  value: PropTypes.oneOfType([
+    PropTypes.string,
+    PropTypes.number,
+    PropTypes.bool,
+    PropTypes.arrayOf(PropTypes.oneOfType([
+      PropTypes.string,
+      PropTypes.number,
+      PropTypes.bool
+    ]))
+  ]).isRequired
+};
+
 export const UsageInfo = (props) => {
   return (
     <Panel header={props.title}>
-      <ProgressBar active bsStyle={props.style} max={props.total} now={props.used} />
-      <span>{props.text}</span>
+      <ProgressBar active={true} bsStyle={props.style} max={props.total} now={props.used} />
+      <span>{props.children}</span>
     </Panel>
   );
-}
+};
+
+UsageInfo.propTypes = {
+  title: PropTypes.string,
+  style: PropTypes.string,
+  total: PropTypes.number,
+  used: PropTypes.number,
+  children: PropTypes.node
+};

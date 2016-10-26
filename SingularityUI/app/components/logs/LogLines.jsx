@@ -21,9 +21,9 @@ class LogLines extends Component {
 
   componentDidUpdate(prevProps) {
     if (prevProps.updatedAt !== this.props.updatedAt) {
-      if (this.props.tailing) {
+      if (this.refs.tailContents && this.props.tailing) {
         this.refs.tailContents.scrollTop = this.refs.tailContents.scrollHeight;
-      } else if (this.props.prependedLineCount > 0 || this.props.linesRemovedFromTop > 0) {
+      } else if (this.refs.tailContents && (this.props.prependedLineCount > 0 || this.props.linesRemovedFromTop > 0)) {
         this.refs.tailContents.scrollTop += 20 * (this.props.prependedLineCount - this.props.linesRemovedFromTop);
       } else {
         this.handleScroll();
@@ -35,20 +35,22 @@ class LogLines extends Component {
     window.removeEventListener('resize', this.handleScroll.bind(this));
   }
 
-  handleScroll() {
-    const {scrollTop, scrollHeight, clientHeight} = this.refs.tailContents;
-
-    if (scrollTop < clientHeight) {
-      this.props.taskGroupTop(this.props.taskGroupId, true);
-    } else {
-      this.props.taskGroupTop(this.props.taskGroupId, false);
-    }
-
-    if (scrollTop + clientHeight > scrollHeight - clientHeight) {
-      this.props.taskGroupBottom(this.props.taskGroupId, true, (scrollTop + clientHeight > scrollHeight - 20));
-    } else {
-      this.props.taskGroupBottom(this.props.taskGroupId, false);
-    }
+  renderLogLines() {
+    const initialOffset = this.props.initialOffset;
+    const colorMap = this.props.colorMap;
+    return this.props.logLines.map(function ({data, offset, taskId, timestamp}) {
+      return (
+        <LogLine
+          content={data}
+          key={taskId + '_' + offset}
+          offset={offset}
+          taskId={taskId}
+          timestamp={timestamp}
+          isHighlighted={offset === initialOffset}
+          color={colorMap[taskId]}
+        />
+      );
+    });
   }
 
   renderLoadingMore() {
@@ -83,29 +85,33 @@ class LogLines extends Component {
     ));
   }
 
-  renderLoadingPrevious() {
-    if (this.props.initialDataLoaded) {
-      if (!this.props.reachedStartOfFile) {
-        if (this.props.search) {
-          return <div>Searching for '{this.props.search}'... ({Humanize.filesize(this.props.bytesRemainingBefore)} remaining)</div>;
-        }
-        return <div>Loading previous... ({Humanize.filesize(this.props.bytesRemainingBefore)} remaining)</div>;
-      }
+  handleScroll() {
+    if (!this.refs.tailContents) return;
+    const {scrollTop, scrollHeight, clientHeight} = this.refs.tailContents;
+
+    if (scrollTop < clientHeight) {
+      this.props.taskGroupTop(this.props.taskGroupId, true);
+    } else {
+      this.props.taskGroupTop(this.props.taskGroupId, false);
+    }
+
+    if (scrollTop + clientHeight > scrollHeight - clientHeight) {
+      this.props.taskGroupBottom(this.props.taskGroupId, true, (scrollTop + clientHeight > scrollHeight - 20));
+    } else {
+      this.props.taskGroupBottom(this.props.taskGroupId, false);
     }
     return null;
   }
 
   render() {
-    return (
-      <div className="contents-container">
-        <div className={classNames(['tail-contents', this.props.activeColor])} ref="tailContents" onScroll={(event) => { this.handleScroll(event); }}>
-          {this.renderLoadingPrevious()}
-          {this.renderLogLines()}
-          {this.renderLoadingMore()}
-          {this.props.fileNotFound}
-        </div>
+    return (<div className="contents-container">
+      <div className={classNames(['tail-contents', this.props.activeColor])} ref="tailContents" onScroll={(event) => { this.handleScroll(event); }}>
+        {this.renderLoadingPrevious()}
+        {this.renderLogLines()}
+        {this.renderLoadingMore()}
+        {this.props.fileNotFound}
       </div>
-    );
+    </div>);
   }
 }
 
@@ -136,7 +142,7 @@ LogLines.propTypes = {
 
 function mapStateToProps(state, ownProps) {
   const taskGroup = state.taskGroups[ownProps.taskGroupId];
-  const tasks = taskGroup.taskIds.map((taskId) => state.tasks[taskId]);
+  const tasks = taskGroup.taskIds.map(function (taskId) { return state.tasks[taskId]; });
 
   const colorMap = {};
   if (taskGroup.taskIds.length > 1) {
@@ -158,10 +164,10 @@ function mapStateToProps(state, ownProps) {
     bottom: taskGroup.bottom,
     initialDataLoaded: _.all(_.pluck(tasks, 'initialDataLoaded')),
     terminated: _.all(_.pluck(tasks, 'terminated')),
-    reachedStartOfFile: _.all(tasks.map(({minOffset}) => minOffset === 0)),
-    reachedEndOfFile: _.all(tasks.map(({maxOffset, filesize}) => maxOffset >= filesize)),
+    reachedStartOfFile: _.all(tasks.map(function ({minOffset}) { return minOffset === 0; })),
+    reachedEndOfFile: _.all(tasks.map(function ({maxOffset, filesize}) { return maxOffset >= filesize; })),
     bytesRemainingBefore: sum(_.pluck(tasks, 'minOffset')),
-    bytesRemainingAfter: sum(tasks.map(({filesize, maxOffset}) => Math.max(filesize - maxOffset, 0))),
+    bytesRemainingAfter: sum(tasks.map(function ({filesize, maxOffset}) { return Math.max(filesize - maxOffset, 0); })),
     colorMap,
     search: state.search,
   };

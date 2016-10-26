@@ -6,7 +6,6 @@ import static com.hubspot.singularity.WebExceptions.notFound;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.Set;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -21,11 +20,9 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
 import com.google.common.base.Optional;
-import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.hubspot.jackson.jaxrs.PropertyFiltering;
 import com.hubspot.mesos.JavaUtils;
@@ -33,6 +30,7 @@ import com.hubspot.mesos.client.MesosClient;
 import com.hubspot.mesos.json.MesosTaskMonitorObject;
 import com.hubspot.mesos.json.MesosTaskStatisticsObject;
 import com.hubspot.singularity.InvalidSingularityTaskIdException;
+import com.hubspot.singularity.SingularityAction;
 import com.hubspot.singularity.SingularityAuthorizationScope;
 import com.hubspot.singularity.SingularityCreateResult;
 import com.hubspot.singularity.SingularityKilledTaskIdRecord;
@@ -49,6 +47,7 @@ import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTaskMetadata;
 import com.hubspot.singularity.SingularityTaskRequest;
 import com.hubspot.singularity.SingularityTaskShellCommandRequest;
+import com.hubspot.singularity.SingularityTaskShellCommandRequestId;
 import com.hubspot.singularity.SingularityTransformHelpers;
 import com.hubspot.singularity.SingularityUser;
 import com.hubspot.singularity.TaskCleanupType;
@@ -58,9 +57,8 @@ import com.hubspot.singularity.api.SingularityTaskMetadataRequest;
 import com.hubspot.singularity.auth.SingularityAuthorizationHelper;
 import com.hubspot.singularity.config.SingularityTaskMetadataConfiguration;
 import com.hubspot.singularity.config.UIConfiguration;
-import com.hubspot.singularity.config.shell.ShellCommandDescriptor;
-import com.hubspot.singularity.config.shell.ShellCommandOptionDescriptor;
 import com.hubspot.singularity.data.RequestManager;
+import com.hubspot.singularity.data.SingularityValidator;
 import com.hubspot.singularity.data.SlaveManager;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.data.TaskRequestManager;
@@ -83,11 +81,11 @@ public class TaskResource {
   private final SingularityAuthorizationHelper authorizationHelper;
   private final Optional<SingularityUser> user;
   private final SingularityTaskMetadataConfiguration taskMetadataConfiguration;
-  private final UIConfiguration uiConfiguration;
+  private final SingularityValidator validator;
 
   @Inject
   public TaskResource(TaskRequestManager taskRequestManager, TaskManager taskManager, SlaveManager slaveManager, MesosClient mesosClient, SingularityTaskMetadataConfiguration taskMetadataConfiguration,
-      SingularityAuthorizationHelper authorizationHelper, Optional<SingularityUser> user, UIConfiguration uiConfiguration, RequestManager requestManager) {
+      SingularityAuthorizationHelper authorizationHelper, Optional<SingularityUser> user, RequestManager requestManager, SingularityValidator validator) {
     this.taskManager = taskManager;
     this.taskRequestManager = taskRequestManager;
     this.taskMetadataConfiguration = taskMetadataConfiguration;
@@ -96,7 +94,7 @@ public class TaskResource {
     this.requestManager = requestManager;
     this.authorizationHelper = authorizationHelper;
     this.user = user;
-    this.uiConfiguration = uiConfiguration;
+    this.validator = validator;
   }
 
   @GET
@@ -276,38 +274,54 @@ public class TaskResource {
     Optional<Boolean> override = Optional.absent();
     Optional<String> actionId = Optional.absent();
     Optional<Boolean> waitForReplacementTask = Optional.absent();
+    Optional<SingularityTaskShellCommandRequestId> runBeforeKillId = Optional.absent();
 
     if (killTaskRequest.isPresent()) {
       actionId = killTaskRequest.get().getActionId();
       message = killTaskRequest.get().getMessage();
       override = killTaskRequest.get().getOverride();
       waitForReplacementTask = killTaskRequest.get().getWaitForReplacementTask();
+      if (killTaskRequest.get().getRunShellCommandBeforeKill().isPresent()) {
+        SingularityTaskShellCommandRequest shellCommandRequest = startShellCommand(task.getTaskId(), killTaskRequest.get().getRunShellCommandBeforeKill().get());
+        runBeforeKillId = Optional.of(shellCommandRequest.getId());
+      }
     }
 
     TaskCleanupType cleanupType = TaskCleanupType.USER_REQUESTED;
 
     if (waitForReplacementTask.or(Boolean.FALSE)) {
       cleanupType = TaskCleanupType.USER_REQUESTED_TASK_BOUNCE;
+      validator.checkActionEnabled(SingularityAction.BOUNCE_TASK);
+    } else {
+      validator.checkActionEnabled(SingularityAction.KILL_TASK);
     }
 
     final long now = System.currentTimeMillis();
 
-    final SingularityTaskCleanup taskCleanup = new SingularityTaskCleanup(JavaUtils.getUserEmail(user), cleanupType, now,
-        task.getTaskId(), message, actionId);
+    final SingularityTaskCleanup taskCleanup;
 
     if (override.isPresent() && override.get().booleanValue()) {
+      cleanupType = TaskCleanupType.USER_REQUESTED_DESTROY;
+      taskCleanup = new SingularityTaskCleanup(JavaUtils.getUserEmail(user), cleanupType, now,
+        task.getTaskId(), message, actionId, runBeforeKillId);
       taskManager.saveTaskCleanup(taskCleanup);
     } else {
+      taskCleanup = new SingularityTaskCleanup(JavaUtils.getUserEmail(user), cleanupType, now,
+        task.getTaskId(), message, actionId, runBeforeKillId);
       SingularityCreateResult result = taskManager.createTaskCleanup(taskCleanup);
 
-      while (result == SingularityCreateResult.EXISTED) {
-        Optional<SingularityTaskCleanup> cleanup = taskManager.getTaskCleanup(taskId);
+      if (result == SingularityCreateResult.EXISTED && userRequestedKillTakesPriority(taskId)) {
+        taskManager.saveTaskCleanup(taskCleanup);
+      } else {
+        while (result == SingularityCreateResult.EXISTED) {
+          Optional<SingularityTaskCleanup> cleanup = taskManager.getTaskCleanup(taskId);
 
-        if (cleanup.isPresent()) {
-          throw new WebApplicationException(Response.status(Status.CONFLICT).entity(cleanup.get()).type(MediaType.APPLICATION_JSON).build());
+          if (cleanup.isPresent()) {
+            throw new WebApplicationException(Response.status(Status.CONFLICT).entity(cleanup.get()).type(MediaType.APPLICATION_JSON).build());
+          }
+
+          result = taskManager.createTaskCleanup(taskCleanup);
         }
-
-        result = taskManager.createTaskCleanup(taskCleanup);
       }
     }
 
@@ -317,6 +331,14 @@ public class TaskResource {
     }
 
     return taskCleanup;
+  }
+
+  boolean userRequestedKillTakesPriority(String taskId) {
+    Optional<SingularityTaskCleanup> existingCleanup = taskManager.getTaskCleanup(taskId);
+    if (!existingCleanup.isPresent()) {
+      return true;
+    }
+    return existingCleanup.get().getCleanupType() != TaskCleanupType.USER_REQUESTED_DESTROY;
   }
 
   @Path("/commands/queued")
@@ -339,6 +361,14 @@ public class TaskResource {
     SingularityTaskId taskIdObj = getTaskIdFromStr(taskId);
 
     authorizationHelper.checkForAuthorizationByTaskId(taskId, user, SingularityAuthorizationScope.WRITE);
+    validator.checkActionEnabled(SingularityAction.ADD_METADATA);
+
+    WebExceptions.checkBadRequest(taskMetadataRequest.getTitle().length() < taskMetadataConfiguration.getMaxMetadataTitleLength(),
+      "Task metadata title too long, must be less than %s bytes", taskMetadataConfiguration.getMaxMetadataTitleLength());
+
+    int messageLength = taskMetadataRequest.getMessage().isPresent() ? taskMetadataRequest.getMessage().get().length() : 0;
+    WebExceptions.checkBadRequest(!taskMetadataRequest.getMessage().isPresent() || messageLength < taskMetadataConfiguration.getMaxMetadataMessageLength(),
+      "Task metadata message too long, must be less than %s bytes", taskMetadataConfiguration.getMaxMetadataMessageLength());
 
     if (taskMetadataConfiguration.getAllowedMetadataTypes().isPresent()) {
       WebExceptions.checkBadRequest(taskMetadataConfiguration.getAllowedMetadataTypes().get().contains(taskMetadataRequest.getType()), "%s is not one of the allowed metadata types %s",
@@ -367,40 +397,20 @@ public class TaskResource {
     SingularityTaskId taskIdObj = getTaskIdFromStr(taskId);
 
     authorizationHelper.checkForAuthorizationByTaskId(taskId, user, SingularityAuthorizationScope.WRITE);
+    validator.checkActionEnabled(SingularityAction.RUN_SHELL_COMMAND);
 
     if (!taskManager.isActiveTask(taskId)) {
       throw WebExceptions.badRequest("%s is not an active task, can't run %s on it", taskId, shellCommand.getName());
     }
 
-    Optional<ShellCommandDescriptor> commandDescriptor = Iterables.tryFind(uiConfiguration.getShellCommands(), new Predicate<ShellCommandDescriptor>() {
+    return startShellCommand(taskIdObj, shellCommand);
+  }
 
-      @Override
-      public boolean apply(ShellCommandDescriptor input) {
-        return input.getName().equals(shellCommand.getName());
-      }
-    });
+  private SingularityTaskShellCommandRequest startShellCommand(SingularityTaskId taskId, final SingularityShellCommand shellCommand) {
+    validator.checkValidShellCommand(shellCommand);
 
-    if (!commandDescriptor.isPresent()) {
-      throw WebExceptions.forbidden("Shell command %s not in %s", shellCommand.getName(), uiConfiguration.getShellCommands());
-    }
-
-    Set<String> options = Sets.newHashSetWithExpectedSize(commandDescriptor.get().getOptions().size());
-    for (ShellCommandOptionDescriptor option : commandDescriptor.get().getOptions()) {
-      options.add(option.getName());
-    }
-
-    if (shellCommand.getOptions().isPresent()) {
-      for (String option : shellCommand.getOptions().get()) {
-        if (!options.contains(option)) {
-          throw WebExceptions.badRequest("Shell command %s does not have option %s (%s)", shellCommand.getName(), option, options);
-        }
-      }
-    }
-
-    SingularityTaskShellCommandRequest shellRequest = new SingularityTaskShellCommandRequest(taskIdObj, JavaUtils.getUserEmail(user), System.currentTimeMillis(), shellCommand);
-
+    SingularityTaskShellCommandRequest shellRequest = new SingularityTaskShellCommandRequest(taskId, JavaUtils.getUserEmail(user), System.currentTimeMillis(), shellCommand);
     taskManager.saveTaskShellCommandRequestToQueue(shellRequest);
-
     return shellRequest;
   }
 

@@ -21,6 +21,8 @@ public class MesosConfiguration {
 
   private int defaultMemory = 64;
 
+  private int defaultDisk = 0;
+
   private boolean checkpoint = true;
 
   @NotNull
@@ -184,5 +186,13 @@ public class MesosConfiguration {
 
   public void setCredentialSecret(Optional<String> credentialSecret) {
     this.credentialSecret = credentialSecret;
+  }
+
+  public int getDefaultDisk() {
+    return defaultDisk;
+  }
+
+  public void setDefaultDisk(int defaultDisk) {
+    this.defaultDisk = defaultDisk;
   }
 }
