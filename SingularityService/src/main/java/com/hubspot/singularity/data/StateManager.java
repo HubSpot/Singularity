@@ -56,8 +56,8 @@ public class StateManager extends CuratorManager {
   private final Transcoder<SingularityHostState> hostStateTranscoder;
   private final SingularityConfiguration singularityConfiguration;
   private final SingularityAuthDatastore authDatastore;
-  private final PriorityManager priorityManager;
   private final Transcoder<SingularityTaskReconciliationStatistics> taskReconciliationStatisticsTranscoder;
+  private final PriorityManager priorityManager;
 
   @Inject
   public StateManager(CuratorFramework curatorFramework, SingularityConfiguration configuration, MetricRegistry metricRegistry, RequestManager requestManager, TaskManager taskManager,
