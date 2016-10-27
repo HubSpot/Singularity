@@ -173,10 +173,16 @@ class TaskDetail extends Component {
 
   renderFiles(files) {
     if (!files || _.isUndefined(files.currentDirectory)) {
+      let message;
+      if (this.props.task.isStillRunning) {
+        message = 'Could not retrieve files. The task may still be starting.';
+      } else {
+        message = 'Could not retrieve files. The directory may have already been cleaned up.';
+      }
       return (
         <Section title="Files">
           <div className="empty-table-message">
-            {'Could not retrieve files. The host of this task is likely offline or its directory has been cleaned up.'}
+            {message}
           </div>
         </Section>
       );
@@ -188,7 +194,7 @@ class TaskDetail extends Component {
           files={files.files}
           currentDirectory={files.currentDirectory}
           changeDir={(path) => {
-            if (path.startsWith('/')) path = path.substring(1);
+            if (!_.isUndefined(path) && path.startsWith('/')) path = path.substring(1);
             this.props.fetchTaskFiles(this.props.params.taskId, path).then(() => {
               this.props.router.push(Utils.joinPath(`task/${this.props.params.taskId}/files/`, path));
             });
@@ -406,7 +412,7 @@ function mapHealthchecksToProps(task) {
   if (!task) return task;
   const { healthcheckResults } = task;
   task.hasSuccessfulHealthcheck = healthcheckResults && healthcheckResults.length > 0 && !!_.find(healthcheckResults, (healthcheckResult) => healthcheckResult.statusCode === 200);
-  task.lastHealthcheckFailed = healthcheckResults && healthcheckResults.length > 0 && healthcheckResults[0].statusCode !== 200;
+  task.lastHealthcheckFailed = healthcheckResults && healthcheckResults.length > 0 && _.last(healthcheckResults).statusCode !== 200;
   task.healthcheckFailureReasonMessage = Utils.healthcheckFailureReasonMessage(task);
   task.tooManyRetries = healthcheckResults && healthcheckResults.length > task.task.taskRequest.deploy.healthcheckMaxRetries && task.task.taskRequest.deploy.healthcheckMaxRetries > 0;
   task.secondsElapsed = task.task && task.task.taskRequest && task.task.taskRequest.deploy.healthcheckMaxTotalTimeoutSeconds || config.defaultDeployHealthTimeoutSeconds;
@@ -452,10 +458,12 @@ function mapStateToProps(state, ownProps) {
   }
   task = mapTaskToProps(task.data);
   task = mapHealthchecksToProps(task);
+  const defaultFilePath = _.isUndefined(ownProps.files) ? '' : ownProps.files.currentDirectory;
+
   return {
     task,
     taskId: ownProps.params.taskId,
-    currentFilePath: _.isUndefined(ownProps.params.splat) ? ownProps.params.taskId : ownProps.params.splat,
+    currentFilePath: _.isUndefined(ownProps.params.splat) ? defaultFilePath : ownProps.params.splat.substring(1),
     taskCleanups: state.api.taskCleanups.data,
     files: state.api.taskFiles,
     resourceUsageNotFound: state.api.taskResourceUsage.statusCode === 404,
@@ -483,7 +491,7 @@ function mapDispatchToProps(dispatch) {
 }
 
 function refresh(props) {
-  props.fetchTaskFiles(props.params.taskId, props.params.splat || props.params.taskId, [400, 404]);
+  props.fetchTaskFiles(props.params.taskId, _.isUndefined(props.params.splat) ? undefined : props.params.splat.substring(1), [400, 404]);
   const promises = [];
   const taskPromise = props.fetchTaskHistory(props.params.taskId);
   taskPromise.then(() => {

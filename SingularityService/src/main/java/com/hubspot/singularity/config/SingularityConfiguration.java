@@ -48,7 +48,7 @@ public class SingularityConfiguration extends Configuration {
 
   private long checkReconcileWhenRunningEveryMillis = TimeUnit.SECONDS.toMillis(30);
 
-  private long checkScheduledJobsEveryMillis = TimeUnit.MINUTES.toMillis(10);
+  private long checkJobsEveryMillis = TimeUnit.MINUTES.toMillis(10);
 
   private long checkSchedulerEverySeconds = 5;
 
@@ -182,6 +182,8 @@ public class SingularityConfiguration extends Configuration {
 
   private long persistHistoryEverySeconds = TimeUnit.HOURS.toSeconds(1);
 
+  private long reconcileSlavesEveryMinutes = TimeUnit.HOURS.toMinutes(1);
+
   @JsonProperty("s3")
   private S3Configuration s3Configuration;
 
@@ -213,6 +215,11 @@ public class SingularityConfiguration extends Configuration {
   private boolean waitForListeners = true;
 
   private long warnIfScheduledJobIsRunningForAtLeastMillis = TimeUnit.DAYS.toMillis(1);
+
+  @JsonProperty("taskExecutionTimeLimitMillis")
+  @Valid
+  @NotNull
+  private Optional<Long> taskExecutionTimeLimitMillis = Optional.absent();
 
   private int warnIfScheduledJobIsRunningPastNextRunPct = 200;
 
@@ -258,6 +265,11 @@ public class SingularityConfiguration extends Configuration {
 
   private boolean taskHistoryQueryUsesZkFirst = false;
 
+  @JsonProperty("disasterDetection")
+  @NotNull
+  @Valid
+  private DisasterDetectionConfiguration disasterDetection = new DisasterDetectionConfiguration();
+
   @Min(0)
   @Max(1)
   private double defaultTaskPriorityLevel = 0.3;
@@ -271,6 +283,13 @@ public class SingularityConfiguration extends Configuration {
   @Min(0)
   @Max(5)
   private double schedulerPriorityWeightFactor = 1.0;
+
+  @Min(1)
+  private int statusUpdateQueueCapacity = 1000;
+
+  private boolean processStatusUpdatesInSeparateThread = false;
+
+  private boolean rebalanceRacksOnScaleDown = false;
 
   public long getAskDriverToKillTasksAgainAfterMillis() {
     return askDriverToKillTasksAgainAfterMillis;
@@ -300,8 +319,8 @@ public class SingularityConfiguration extends Configuration {
     return checkReconcileWhenRunningEveryMillis;
   }
 
-  public long getCheckScheduledJobsEveryMillis() {
-    return checkScheduledJobsEveryMillis;
+  public long getCheckJobsEveryMillis() {
+    return checkJobsEveryMillis;
   }
 
   public long getCheckSchedulerEverySeconds() {
@@ -604,6 +623,10 @@ public class SingularityConfiguration extends Configuration {
     return warnIfScheduledJobIsRunningForAtLeastMillis;
   }
 
+  public Optional<Long> getTaskExecutionTimeLimitMillis() {
+    return taskExecutionTimeLimitMillis;
+  }
+
   public int getWarnIfScheduledJobIsRunningPastNextRunPct() {
     return warnIfScheduledJobIsRunningPastNextRunPct;
   }
@@ -688,8 +711,8 @@ public class SingularityConfiguration extends Configuration {
     this.checkReconcileWhenRunningEveryMillis = checkReconcileWhenRunningEveryMillis;
   }
 
-  public void setCheckScheduledJobsEveryMillis(long checkScheduledJobsEveryMillis) {
-    this.checkScheduledJobsEveryMillis = checkScheduledJobsEveryMillis;
+  public void setCheckJobsEveryMillis(long checkJobsEveryMillis) {
+    this.checkJobsEveryMillis = checkJobsEveryMillis;
   }
 
   public void setCheckSchedulerEverySeconds(long checkSchedulerEverySeconds) {
@@ -924,6 +947,11 @@ public class SingularityConfiguration extends Configuration {
     this.warnIfScheduledJobIsRunningForAtLeastMillis = warnIfScheduledJobIsRunningForAtLeastMillis;
   }
 
+  public SingularityConfiguration setTaskExecutionTimeLimitMillis(Optional<Long> taskExecutionTimeLimitMillis) {
+    this.taskExecutionTimeLimitMillis = taskExecutionTimeLimitMillis;
+    return this;
+  }
+
   public void setWarnIfScheduledJobIsRunningPastNextRunPct(int warnIfScheduledJobIsRunningPastNextRunPct) {
     this.warnIfScheduledJobIsRunningPastNextRunPct = warnIfScheduledJobIsRunningPastNextRunPct;
   }
@@ -934,6 +962,14 @@ public class SingularityConfiguration extends Configuration {
 
   public void setZooKeeperConfiguration(ZooKeeperConfiguration zooKeeperConfiguration) {
     this.zooKeeperConfiguration = zooKeeperConfiguration;
+  }
+
+  public long getReconcileSlavesEveryMinutes() {
+    return reconcileSlavesEveryMinutes;
+  }
+
+  public void setReconcileSlavesEveryMinutes(long reconcileSlavesEveryMinutes) {
+    this.reconcileSlavesEveryMinutes = reconcileSlavesEveryMinutes;
   }
 
   public long getCacheTasksForMillis() {
@@ -1056,6 +1092,14 @@ public class SingularityConfiguration extends Configuration {
     this.taskLabelForLoadBalancerUpstreamGroup = taskLabelForLoadBalancerUpstreamGroup;
   }
 
+  public DisasterDetectionConfiguration getDisasterDetection() {
+    return disasterDetection;
+  }
+
+  public void setDisasterDetection(DisasterDetectionConfiguration disasterDetection) {
+    this.disasterDetection = disasterDetection;
+  }
+
   public double getDefaultTaskPriorityLevel() {
     return defaultTaskPriorityLevel;
   }
@@ -1086,5 +1130,29 @@ public class SingularityConfiguration extends Configuration {
 
   public void setSchedulerPriorityWeightFactor(double schedulerPriorityWeightFactor) {
     this.schedulerPriorityWeightFactor = schedulerPriorityWeightFactor;
+  }
+
+  public int getStatusUpdateQueueCapacity() {
+    return statusUpdateQueueCapacity;
+  }
+
+  public void setStatusUpdateQueueCapacity(int statusUpdateQueueCapacity) {
+    this.statusUpdateQueueCapacity = statusUpdateQueueCapacity;
+  }
+
+  public boolean isProcessStatusUpdatesInSeparateThread() {
+    return processStatusUpdatesInSeparateThread;
+  }
+
+  public void setProcessStatusUpdatesInSeparateThread(boolean processStatusUpdatesInSeparateThread) {
+    this.processStatusUpdatesInSeparateThread = processStatusUpdatesInSeparateThread;
+  }
+
+  public boolean isRebalanceRacksOnScaleDown() {
+    return rebalanceRacksOnScaleDown;
+  }
+
+  public void setRebalanceRacksOnScaleDown(boolean rebalanceRacksOnScaleDown) {
+    this.rebalanceRacksOnScaleDown = rebalanceRacksOnScaleDown;
   }
 }

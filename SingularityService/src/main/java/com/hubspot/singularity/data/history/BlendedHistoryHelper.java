@@ -9,6 +9,8 @@ import java.util.Map;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
+import com.google.common.base.Optional;
+import org.apache.commons.lang.NotImplementedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -24,6 +26,8 @@ public abstract class BlendedHistoryHelper<T, Q> {
   private static final Logger LOG = LoggerFactory.getLogger(BlendedHistoryHelper.class);
   protected abstract List<T> getFromZk(Q id);
   protected abstract List<T> getFromHistory(Q id, int historyStart, int numFromHistory);
+
+  protected abstract Optional<Integer> getTotalCount(Q id);
 
   public List<SingularityTaskIdHistory> getTaskHistoriesFor(TaskManager taskManager, Collection<SingularityTaskId> taskIds) {
     Map<SingularityTaskId, SingularityTask> tasks = taskManager.getTasks(taskIds);
@@ -49,6 +53,10 @@ public abstract class BlendedHistoryHelper<T, Q> {
 
   protected Comparator<T> getComparator(Q id) {
     throw new IllegalStateException("Comparator requested for query which doesn't implement it");
+  }
+
+  public Optional<Integer> getBlendedHistoryCount(Q id) {
+    return getTotalCount(id);
   }
 
   public List<T> getBlendedHistory(Q id, Integer limitStart, Integer limitCount) {

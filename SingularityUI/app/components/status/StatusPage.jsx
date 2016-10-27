@@ -68,7 +68,7 @@ const StatusPage = (props) => {
   };
 
   const taskDetail = (status) => {
-    const totalTasks = status.activeTasks + status.lateTasks + status.scheduledTasks + status.cleaningTasks + status.lbCleanupTasks;
+    const totalTasks = status.activeTasks + status.launchingTasks + status.lateTasks + status.scheduledTasks + status.cleaningTasks + status.lbCleanupTasks;
     const tasks = [
       {
         type: 'active',
@@ -76,6 +76,14 @@ const StatusPage = (props) => {
         label: 'active',
         count: status.activeTasks,
         percent: status.activeTasks / totalTasks * 100,
+        link: '/tasks'
+      },
+      {
+        type: 'launching',
+        attribute: 'launchingTasks',
+        label: 'launching',
+        count: status.launchingTasks,
+        percent: status.launchingTasks / totalTasks * 100,
         link: '/tasks'
       },
       {

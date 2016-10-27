@@ -168,7 +168,8 @@ public class StateManager extends CuratorManager {
   }
 
   public SingularityState generateState(boolean includeRequestIds) {
-    final int activeTasks = taskManager.getNumActiveTasks();
+    final int launchingTasks = taskManager.getNumLaunchingTasks();
+    final int activeTasks = taskManager.getNumActiveTasks() - launchingTasks;
     final int scheduledTasks = taskManager.getNumScheduledTasks();
     final int cleaningTasks = taskManager.getNumCleanupTasks();
     final int lbCleanupTasks = taskManager.getNumLbCleanupTasks();
@@ -317,7 +318,7 @@ public class StateManager extends CuratorManager {
       minimumPriorityLevel = Optional.absent();
     }
 
-    return new SingularityState(activeTasks, numActiveRequests, cooldownRequests, numPausedRequests, scheduledTasks, pendingRequests, lbCleanupTasks, lbCleanupRequests, cleaningRequests, activeSlaves,
+    return new SingularityState(activeTasks, launchingTasks, numActiveRequests, cooldownRequests, numPausedRequests, scheduledTasks, pendingRequests, lbCleanupTasks, lbCleanupRequests, cleaningRequests, activeSlaves,
         deadSlaves, decommissioningSlaves, activeRacks, deadRacks, decommissioningRacks, cleaningTasks, states, oldestDeploy, numDeploys, scheduledTasksInfo.getNumLateTasks(),
         scheduledTasksInfo.getNumFutureTasks(), scheduledTasksInfo.getMaxTaskLag(), System.currentTimeMillis(), includeRequestIds ? overProvisionedRequestIds : null,
             includeRequestIds ? underProvisionedRequestIds : null, overProvisionedRequestIds.size(), underProvisionedRequestIds.size(), numFinishedRequests, unknownRacks, unknownSlaves, authDatastoreHealthy, minimumPriorityLevel);
