@@ -24,9 +24,7 @@ public class AuthResource {
   private final SingularityConfiguration configuration;
 
   @Inject
-  public AuthResource(Optional<SingularityUser> user,
-                      UserManager userManager,
-                      SingularityConfiguration configuration) {
+  public AuthResource(Optional<SingularityUser> user, UserManager userManager, SingularityConfiguration configuration) {
     this.user = user;
     this.userManager = userManager;
     this.configuration = configuration;
@@ -35,10 +33,10 @@ public class AuthResource {
   @GET
   @Path("/user")
   public SingularityUserHolder getUser() {
-    Optional<SingularityUserSettings> userSettingsOptional = Optional.absent();
-    if (user.isPresent()) {
-      userSettingsOptional = userManager.getUserSettings(user.get().getId());
-    }
-    return new SingularityUserHolder(user, userSettingsOptional, user.isPresent(), configuration.getAuthConfiguration().isEnabled());
+    return new SingularityUserHolder(
+      user,
+      user.isPresent() ? userManager.getUserSettings(user.get().getId()) : Optional.<SingularityUserSettings>absent(),
+      user.isPresent(),
+      configuration.getAuthConfiguration().isEnabled());
   }
 }

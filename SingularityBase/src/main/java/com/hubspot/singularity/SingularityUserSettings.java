@@ -31,13 +31,6 @@ public class SingularityUserSettings {
   }
 
   @Override
-  public String toString() {
-    return "SingularityUserSettings[" +
-        "starredRequestIds=" + starredRequestIds +
-        ']';
-  }
-
-  @Override
   public boolean equals(Object o) {
     if (this == o) {
       return true;
@@ -45,18 +38,19 @@ public class SingularityUserSettings {
     if (o == null || getClass() != o.getClass()) {
       return false;
     }
-
     SingularityUserSettings that = (SingularityUserSettings) o;
-
-    if (!Objects.equal(starredRequestIds, that.starredRequestIds)) {
-      return false;
-    }
-
-    return true;
+    return Objects.equal(starredRequestIds, that.starredRequestIds);
   }
 
   @Override
   public int hashCode() {
     return Objects.hashCode(starredRequestIds);
+  }
+
+  @Override
+  public String toString() {
+    return Objects.toStringHelper(this)
+      .add("starredRequestIds", starredRequestIds)
+      .toString();
   }
 }

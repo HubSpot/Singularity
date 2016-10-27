@@ -1,6 +1,6 @@
 package com.hubspot.singularity.resources;
 
-import static com.hubspot.singularity.WebExceptions.checkBadRequest;
+import static com.hubspot.singularity.WebExceptions.checkUnauthorized;
 
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -33,8 +33,8 @@ public class UserResource {
   }
 
   private String getAuthUserId() {
-    checkBadRequest(user.isPresent() && user.get().getName().isPresent(), "Singularity userId must be provided by auth");
-    return user.get().getName().get();
+    checkUnauthorized(user.isPresent(), "Please log in to perform this action.");
+    return user.get().getId();
   }
 
   @GET

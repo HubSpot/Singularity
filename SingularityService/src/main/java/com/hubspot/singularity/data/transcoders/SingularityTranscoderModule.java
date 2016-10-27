@@ -2,8 +2,6 @@ package com.hubspot.singularity.data.transcoders;
 
 import static com.hubspot.singularity.data.transcoders.SingularityJsonTranscoderBinder.bindTranscoder;
 
-import javax.ws.rs.HEAD;
-
 import com.google.inject.Binder;
 import com.google.inject.Module;
 import com.hubspot.singularity.SingularityDeploy;
