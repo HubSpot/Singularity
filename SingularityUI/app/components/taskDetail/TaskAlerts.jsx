@@ -79,7 +79,7 @@ const TaskAlerts = (props) => {
       <UITable
         emptyTableMessage="No healthchecks"
         data={[props.task.healthcheckResults[0]]}
-        rowChunkSize={5}
+        resultsPerPage={5}
         paginated={true}
         keyGetter={(healthcheckResult) => healthcheckResult.timestamp}
       >

@@ -8,7 +8,7 @@ import { Link } from 'react-router';
 
 import Utils from '../../utils';
 
-import { FetchTaskHistoryForRequest } from '../../actions/api/history';
+import { FetchTaskHistoryForRequestWithMetaData } from '../../actions/api/history';
 import RunNowButton from '../common/modalButtons/RunNowButton';
 import Section from '../common/Section';
 
@@ -16,8 +16,8 @@ import UITable from '../common/table/UITable';
 import Column from '../common/table/Column';
 import JSONButton from '../common/JSONButton';
 
-const TaskHistoryTable = ({requestId, requestParent, tasksAPI, fetchTaskHistoryForRequest}) => {
-  const tasks = tasksAPI ? tasksAPI.data : [];
+const TaskHistoryTable = ({requestId, requestParent, tasksAPI, fetchTaskHistory}) => {
+  const tasks = tasksAPI ? tasksAPI.data.objects : [];
   const isFetching = tasksAPI ? tasksAPI.isFetching : false;
   const emptyTableMessage = (Utils.api.isFirstLoad(tasksAPI)
     ? 'Loading...'
@@ -25,7 +25,7 @@ const TaskHistoryTable = ({requestId, requestParent, tasksAPI, fetchTaskHistoryF
   );
 
   let maybeSearchButton;
-  if (tasks.length) {
+  if (tasks != null && tasks.length) {
     maybeSearchButton = (
       <Link to={`request/${requestId}/task-search`}>
         <Button bsStyle="primary">
@@ -58,11 +58,14 @@ const TaskHistoryTable = ({requestId, requestParent, tasksAPI, fetchTaskHistoryF
     <Section id="task-history" title={title}>
       <UITable
         emptyTableMessage={emptyTableMessage}
-        data={tasks}
+        data={tasks || []}
+        totalResults={tasksAPI.data.dataCount}
         keyGetter={(task) => task.taskId.id}
-        rowChunkSize={5}
         paginated={true}
-        fetchDataFromApi={(page, numberPerPage) => fetchTaskHistoryForRequest(requestId, numberPerPage, page)}
+        page={tasksAPI.data.page}
+        resultsPerPage={5}
+        maxPage={tasksAPI.data.pageCount}
+        fetchDataFromApi={(page, numberPerPage) => fetchTaskHistory(requestId, numberPerPage, page)}
         isFetching={isFetching}
       >
         <Column
@@ -142,11 +145,11 @@ TaskHistoryTable.propTypes = {
   requestId: PropTypes.string.isRequired,
   requestParent: PropTypes.object,
   tasksAPI: PropTypes.object.isRequired,
-  fetchTaskHistoryForRequest: PropTypes.func.isRequired
+  fetchTaskHistory: PropTypes.func.isRequired
 };
 
 const mapDispatchToProps = (dispatch) => ({
-  fetchTaskHistoryForRequest: (requestId, count, page) => dispatch(FetchTaskHistoryForRequest.trigger(requestId, count, page))
+  fetchTaskHistory: (requestId, count, page) => dispatch(FetchTaskHistoryForRequestWithMetaData.trigger(requestId, count, page))
 });
 
 const mapStateToProps = (state, ownProps) => ({

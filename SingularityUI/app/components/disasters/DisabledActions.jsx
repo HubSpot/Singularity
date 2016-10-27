@@ -22,6 +22,7 @@ function DisabledActions (props) {
       <UITable
         emptyTableMessage="No Actions Are Disabled"
         data={props.disabledActions}
+        totalResults={props.disabledActions.length || 0}
         keyGetter={(disabledAction) => disabledAction.type}
         defaultSortBy="type"
         defaultSortDirection={UITable.SortDirection.ASC}

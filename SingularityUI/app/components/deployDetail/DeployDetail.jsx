@@ -10,7 +10,7 @@ import { Glyphicon } from 'react-bootstrap';
 import {
   FetchTaskHistory,
   FetchActiveTasksForDeploy,
-  FetchTaskHistoryForDeploy,
+  FetchTaskHistoryForDeployWithMetaData,
   FetchDeployForRequest
 } from '../../actions/api/history';
 
@@ -34,7 +34,7 @@ class DeployDetail extends React.Component {
     activeTasks: PropTypes.array,
     taskHistory: PropTypes.array,
     latestHealthchecks: PropTypes.array,
-    fetchTaskHistoryForDeploy: PropTypes.func,
+    fetchTaskHistoryForDeployWithMetaData: PropTypes.func,
     params: PropTypes.object,
     isTaskHistoryFetching: PropTypes.bool,
     notFound: PropTypes.bool,
@@ -143,7 +143,7 @@ class DeployDetail extends React.Component {
     );
   }
 
-  renderTaskHistory(deploy, tasks) {
+  renderTaskHistory(deploy, tasks, totalResults, maxPage) {
     return (
       <div>
         <div className="page-header">
@@ -152,10 +152,12 @@ class DeployDetail extends React.Component {
         <UITable
           emptyTableMessage="No tasks"
           data={tasks || []}
+          totalResults={totalResults || 0}
           keyGetter={(task) => task.taskId.id}
-          rowChunkSize={5}
+          maxPage={maxPage}
+          resultsPerPage={5}
           paginated={true}
-          fetchDataFromApi={(page, numberPerPage) => this.props.fetchTaskHistoryForDeploy(this.props.params.requestId, this.props.params.deployId, numberPerPage, page)}
+          fetchDataFromApi={(page, numberPerPage) => this.props.fetchTaskHistoryForDeployWithMetaData(this.props.params.requestId, this.props.params.deployId, numberPerPage, page)}
           isFetching={this.props.isTaskHistoryFetching}
         >
           <Column
@@ -253,7 +255,8 @@ class DeployDetail extends React.Component {
       <CollapsableSection title="Latest Healthchecks">
         <UITable
           emptyTableMessage="No healthchecks"
-          rowChunkSize={5}
+          resultsPerPage={5}
+          totalResults={healthchecks.length || 0}
           paginated={true}
           keyGetter={(healthcheck) => healthcheck.timestamp}
           data={_.values(healthchecks)}
@@ -315,13 +318,13 @@ class DeployDetail extends React.Component {
   }
 
   render() {
-    const { deploy, activeTasks, taskHistory, latestHealthchecks } = this.props;
+    const { deploy, activeTasks, taskHistory, totalResults, maxPage, latestHealthchecks } = this.props;
     const emptyMessage = !deploy.deploy && <div className="empty-table-message">Deploy data not found</div>;
     return (
       <div>
         {this.renderHeader(deploy)}
         {this.renderActiveTasks(deploy, activeTasks)}
-        {this.renderTaskHistory(deploy, taskHistory)}
+        {this.renderTaskHistory(deploy, taskHistory, totalResults, maxPage)}
         {emptyMessage}
         {deploy.deploy && this.renderInfo(deploy)}
         {deploy.deploy && this.renderHealthchecks(deploy, latestHealthchecks)}
@@ -334,8 +337,8 @@ function mapDispatchToProps(dispatch) {
   return {
     fetchDeployForRequest: (requestId, deployId) => dispatch(FetchDeployForRequest.trigger(requestId, deployId, true)),
     fetchActiveTasksForDeploy: (requestId, deployId) => dispatch(FetchActiveTasksForDeploy.trigger(requestId, deployId)),
-    clearTaskHistoryForDeploy: () => dispatch(FetchTaskHistoryForDeploy.clearData()),
-    fetchTaskHistoryForDeploy: (requestId, deployId, count, page) => dispatch(FetchTaskHistoryForDeploy.trigger(requestId, deployId, count, page)),
+    clearTaskHistoryForDeploy: () => dispatch(FetchTaskHistoryForDeployWithMetaData.clearData()),
+    fetchTaskHistoryForDeployWithMetaData: (requestId, deployId, count, page) => dispatch(FetchTaskHistoryForDeployWithMetaData.trigger(requestId, deployId, count, page)),
     fetchTaskHistory: (taskId) => dispatch(FetchTaskHistory.trigger(taskId))
   };
 }
@@ -355,7 +358,9 @@ function mapStateToProps(state, ownProps) {
     notFound: state.api.deploy.statusCode === 404,
     pathname: ownProps.location.pathname,
     deploy: state.api.deploy.data,
-    taskHistory: state.api.taskHistoryForDeploy.data,
+    taskHistory: state.api.taskHistoryForDeploy.data.objects,
+    totalResults: state.api.taskHistoryForDeploy.data.dataCount,
+    maxPage: state.api.taskHistoryForDeploy.data.pageCount,
     isTaskHistoryFetching: state.api.taskHistoryForDeploy.isFetching,
     group: state.api.deploy.data.deploy && _.first(_.filter(state.api.requestGroups.data, (filterGroup) => _.contains(filterGroup.requestIds, state.api.deploy.data.deploy.requestId))),
     latestHealthchecks
@@ -378,7 +383,7 @@ function refresh(props, promises = []) {
 function initialize(props) {
   const promises = [];
   promises.push(props.clearTaskHistoryForDeploy());
-  promises.push(props.fetchTaskHistoryForDeploy(props.params.requestId, props.params.deployId, 5, 1));
+  promises.push(props.fetchTaskHistoryForDeployWithMetaData(props.params.requestId, props.params.deployId, 5, 1));
   return refresh(props, promises);
 }
 

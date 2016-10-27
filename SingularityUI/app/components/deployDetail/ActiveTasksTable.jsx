@@ -13,8 +13,9 @@ const ActiveTasksTable = ({tasks}) => (
   <UITable
     emptyTableMessage="No tasks"
     data={tasks}
+    totalResults={tasks.length || 0}
     keyGetter={(task) => task.taskId.id}
-    rowChunkSize={5}
+    resultsPerPage={5}
     paginated={true}
   >
     <Column

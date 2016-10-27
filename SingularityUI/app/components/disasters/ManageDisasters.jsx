@@ -96,6 +96,7 @@ function ManageDisasters (props) {
           <UITable
             emptyTableMessage="No Disaster Data Found"
             data={props.disasters}
+            totalResults={props.disasters.length || 0}
             keyGetter={(disaster) => disaster.type}
             defaultSortBy="type"
             defaultSortDirection={UITable.SortDirection.ASC}

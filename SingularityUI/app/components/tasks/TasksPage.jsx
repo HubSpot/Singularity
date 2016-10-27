@@ -139,6 +139,7 @@ class TasksPage extends React.Component {
       table = (
         <UITable
           data={displayTasks}
+          totalResults={displayTasks.length || 0}
           keyGetter={(task) => (Utils.maybe(task, ['taskId', 'id']) || Utils.maybe(task, ['pendingTask', 'pendingTaskId', 'id']) || Utils.maybe(task, ['id']))}
         >
           {this.getColumns()}

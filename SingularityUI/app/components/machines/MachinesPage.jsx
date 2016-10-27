@@ -9,8 +9,9 @@ function MachinesPage (props) {
       <UITable
         emptyTableMessage={state.emptyMessage}
         data={state.hostsInState}
+        totalResults={state.hostsInState.length || 0}
         keyGetter={(slave) => slave.id}
-        rowChunkSize={20}
+        resultsPerPage={20}
         paginated={true}
       >
         {state.columns}

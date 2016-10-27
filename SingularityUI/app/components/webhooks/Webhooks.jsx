@@ -29,7 +29,8 @@ const Webhooks = ({webhooks, user}) => (
       emptyTableMessage="No Webhooks"
       data={webhooks}
       keyGetter={(webhook) => webhook.webhook.timestamp}
-      rowChunkSize={20}
+      resultsPerPage={20}
+      totalResults={webhooks.length || 0}
       paginated={true}
       defaultSortBy="queue-size"
       defaultSortDirection={UITable.SortDirection.ASC}

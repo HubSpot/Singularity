@@ -7,14 +7,14 @@ import Utils from '../../utils';
 
 import { Link } from 'react-router';
 
-import { FetchDeploysForRequest } from '../../actions/api/history';
+import { FetchDeploysForRequestWithMetaData } from '../../actions/api/history';
 
 import UITable from '../common/table/UITable';
 import Column from '../common/table/Column';
 import JSONButton from '../common/JSONButton';
 
 const DeployHistoryTable = ({requestId, deploysAPI, fetchDeploys}) => {
-  const deploys = deploysAPI ? deploysAPI.data : [];
+  const deploys = deploysAPI ? deploysAPI.data.objects : [];
   const isFetching = deploysAPI ? deploysAPI.isFetching : false;
   const emptyTableMessage = (Utils.api.isFirstLoad(deploysAPI)
     ? 'Loading...'
@@ -24,10 +24,13 @@ const DeployHistoryTable = ({requestId, deploysAPI, fetchDeploys}) => {
     <Section id="deploy-history" title="Deploy history">
       <UITable
         emptyTableMessage={emptyTableMessage}
-        data={deploys}
+        data={deploys || []}
+        totalResults={deploysAPI.data.dataCount}
         keyGetter={({deployMarker}) => deployMarker.deployId}
-        rowChunkSize={5}
         paginated={true}
+        page={deploysAPI.data.page}
+        resultsPerPage={5}
+        maxPage={deploysAPI.data.pageCount}
         fetchDataFromApi={(page, numberPerPage) => fetchDeploys(requestId, numberPerPage, page)}
         isFetching={isFetching}
       >
@@ -84,7 +87,7 @@ const mapStateToProps = (state, ownProps) => ({
 });
 
 const mapDispatchToProps = (dispatch) => ({
-  fetchDeploys: (requestId, count, page) => dispatch(FetchDeploysForRequest.trigger(requestId, count, page))
+  fetchDeploys: (requestId, count, page) => dispatch(FetchDeploysForRequestWithMetaData.trigger(requestId, count, page))
 });
 
 export default connect(

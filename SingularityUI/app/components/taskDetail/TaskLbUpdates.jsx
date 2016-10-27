@@ -13,7 +13,7 @@ function TaskLbUpdates (props) {
         emptyTableMessage="This task has no history yet"
         data={props.loadBalancerUpdates}
         keyGetter={(loadBalancerUpdate) => loadBalancerUpdate.timestamp}
-        rowChunkSize={5}
+        resultsPerPage={5}
         paginated={true}
       >
         <Column

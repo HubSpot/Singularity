@@ -12,7 +12,7 @@ function TaskS3Logs (props) {
         emptyTableMessage="This task has no history yet"
         data={props.s3Files}
         keyGetter={(s3File) => s3File.key}
-        rowChunkSize={5}
+        resultsPerPage={5}
         paginated={true}
       >
         <Column
