@@ -60,6 +60,7 @@ import com.hubspot.singularity.SingularityTaskCleanupResult;
 import com.hubspot.singularity.SingularityTaskHistory;
 import com.hubspot.singularity.SingularityTaskHistoryUpdate;
 import com.hubspot.singularity.SingularityTaskIdHistory;
+import com.hubspot.singularity.SingularityTaskReconciliationStatistics;
 import com.hubspot.singularity.SingularityTaskRequest;
 import com.hubspot.singularity.SingularityUpdatePendingDeployRequest;
 import com.hubspot.singularity.SingularityWebhook;
@@ -81,6 +82,7 @@ public class SingularityClient {
   private static final Logger LOG = LoggerFactory.getLogger(SingularityClient.class);
 
   private static final String STATE_FORMAT = "http://%s/%s/state";
+  private static final String TASK_RECONCILIATION_FORMAT = STATE_FORMAT + "/task-reconciliation";
 
   private static final String RACKS_FORMAT = "http://%s/%s/racks";
   private static final String RACKS_DECOMISSION_FORMAT = RACKS_FORMAT + "/rack/%s/decommission";
@@ -491,6 +493,30 @@ public class SingularityClient {
     LOG.info("Got state in {}ms", System.currentTimeMillis() - start);
 
     return response.getAs(SingularityState.class);
+  }
+
+  public Optional<SingularityTaskReconciliationStatistics> getTaskReconciliationStatistics() {
+    final String uri = String.format(TASK_RECONCILIATION_FORMAT, getHost(), contextPath);
+
+    LOG.info("Fetch task reconciliation statistics from {}", uri);
+
+    final long start = System.currentTimeMillis();
+
+    HttpRequest.Builder request = HttpRequest.newBuilder().setUrl(uri);
+
+    addCredentials(request);
+
+    HttpResponse response = httpClient.execute(request.build());
+
+    if (response.getStatusCode() == 404) {
+      return Optional.absent();
+    }
+
+    checkResponse("task reconciliation statistics", response);
+
+    LOG.info("Got task reconciliation statistics in {}ms", System.currentTimeMillis() - start);
+
+    return Optional.of(response.getAs(SingularityTaskReconciliationStatistics.class));
   }
 
   //
