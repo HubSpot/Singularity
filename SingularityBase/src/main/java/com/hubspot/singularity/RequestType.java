@@ -34,11 +34,11 @@ public enum RequestType {
       return RequestType.SCHEDULED;
     }
 
-    if (!daemon.or(Boolean.TRUE).booleanValue()) {
+    if (!daemon.or(true)) {
       return RequestType.ON_DEMAND;
     }
 
-    if (loadBalanced.isPresent() && loadBalanced.get().booleanValue()) {
+    if (loadBalanced.isPresent() && loadBalanced.get()) {
       return RequestType.SERVICE;
     }
 

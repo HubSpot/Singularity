@@ -40,9 +40,16 @@ public class JDBIHistoryManager implements HistoryManager {
 
   @Override
   @Timed
-  public List<SingularityTaskIdHistory> getTaskIdHistory(Optional<String> requestId, Optional<String> deployId, Optional<String> host, Optional<ExtendedTaskState> lastTaskStatus, Optional<Long> startedBefore,
+  public List<SingularityTaskIdHistory> getTaskIdHistory(Optional<String> requestId, Optional<String> deployId, Optional<String> runId, Optional<String> host, Optional<ExtendedTaskState> lastTaskStatus, Optional<Long> startedBefore,
       Optional<Long> startedAfter, Optional<Long> updatedBefore, Optional<Long> updatedAfter, Optional<OrderDirection> orderDirection, Optional<Integer> limitStart, Integer limitCount) {
-    return history.getTaskIdHistory(requestId, deployId, host, lastTaskStatus, startedBefore, startedAfter, updatedBefore, updatedAfter, orderDirection, limitStart, limitCount);
+    return history.getTaskIdHistory(requestId, deployId, runId, host, lastTaskStatus, startedBefore, startedAfter, updatedBefore, updatedAfter, orderDirection, limitStart, limitCount);
+  }
+
+  @Override
+  @Timed
+  public int getTaskIdHistoryCount(Optional<String> requestId, Optional<String> deployId, Optional<String> runId, Optional<String> host, Optional<ExtendedTaskState> lastTaskStatus, Optional<Long> startedBefore,
+       Optional<Long> startedAfter, Optional<Long> updatedBefore, Optional<Long> updatedAfter) {
+    return history.getTaskIdHistoryCount(requestId, deployId, runId, host, lastTaskStatus, startedBefore, startedAfter, updatedBefore, updatedAfter);
   }
 
   private String getVarcharField(Optional<String> field, int maxLength) {
@@ -99,6 +106,11 @@ public class JDBIHistoryManager implements HistoryManager {
     return history.getDeployHistoryForRequest(requestId, limitStart, limitCount);
   }
 
+  @Override
+  public int getDeployHistoryForRequestCount(String requestId) {
+    return history.getDeployHistoryForRequestCount(requestId);
+  }
+
   private String getOrderDirection(Optional<OrderDirection> orderDirection) {
     return orderDirection.or(OrderDirection.DESC).name();
   }
@@ -106,6 +118,11 @@ public class JDBIHistoryManager implements HistoryManager {
   @Override
   public List<SingularityRequestHistory> getRequestHistory(String requestId, Optional<OrderDirection> orderDirection, Integer limitStart, Integer limitCount) {
     return history.getRequestHistory(requestId, getOrderDirection(orderDirection), limitStart, limitCount);
+  }
+
+  @Override
+  public int getRequestHistoryCount(String requestId) {
+    return history.getRequestHistoryCount(requestId);
   }
 
   @Override
@@ -156,6 +173,16 @@ public class JDBIHistoryManager implements HistoryManager {
   @Override
   public List<SingularityRequestIdCount> getRequestIdCounts(Date before) {
     return history.getRequestIdCounts(before);
+  }
+
+  @Override
+  public List<String> getRequestIdsInTaskHistory() {
+    return history.getRequestIdsInTaskHistory();
+  }
+
+  @Override
+  public int getUnpurgedTaskHistoryCountByRequestBefore(String requestId, Date before) {
+    return history.getUnpurgedTaskHistoryCountByRequestBefore(requestId, before);
   }
 
   @Override

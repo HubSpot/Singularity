@@ -34,7 +34,6 @@ public class SingularityDeploy {
   private final Optional<String> customExecutorId;
   private final Optional<String> customExecutorSource;
   private final Optional<Resources> customExecutorResources;
-  private final Optional<String> customExecutorUser;
 
   private final Optional<Resources> resources;
 
@@ -79,6 +78,7 @@ public class SingularityDeploy {
   private final Optional<Boolean> autoAdvanceDeploySteps;
   private final Optional<Integer> maxTaskRetries;
   private final Optional<Boolean> shell;
+  private final Optional<String> user;
 
   public static SingularityDeployBuilder newBuilder(String requestId, String id) {
     return new SingularityDeployBuilder(requestId, id);
@@ -94,7 +94,6 @@ public class SingularityDeploy {
       @JsonProperty("customExecutorId") Optional<String> customExecutorId,
       @JsonProperty("customExecutorSource") Optional<String> customExecutorSource,
       @JsonProperty("customExecutorResources") Optional<Resources> customExecutorResources,
-      @JsonProperty("customExecutorUser") Optional<String> customExecutorUser,
       @JsonProperty("resources") Optional<Resources> resources,
       @JsonProperty("env") Optional<Map<String, String>> env,
       @JsonProperty("taskEnv") Optional<Map<Integer, Map<String, String>>> taskEnv,
@@ -130,7 +129,8 @@ public class SingularityDeploy {
       @JsonProperty("deployStepWaitTimeMs") Optional<Integer> deployStepWaitTimeMs,
       @JsonProperty("autoAdvanceDeploySteps") Optional<Boolean> autoAdvanceDeploySteps,
       @JsonProperty("maxTaskRetries") Optional<Integer> maxTaskRetries,
-      @JsonProperty("shell") Optional<Boolean> shell) {
+      @JsonProperty("shell") Optional<Boolean> shell,
+      @JsonProperty("user") Optional<String> user) {
     this.requestId = requestId;
 
     this.command = command;
@@ -143,7 +143,6 @@ public class SingularityDeploy {
     this.customExecutorId = customExecutorId;
     this.customExecutorSource = customExecutorSource;
     this.customExecutorResources = customExecutorResources;
-    this.customExecutorUser = customExecutorUser;
 
     this.metadata = metadata;
     this.version = version;
@@ -188,6 +187,7 @@ public class SingularityDeploy {
     this.autoAdvanceDeploySteps = autoAdvanceDeploySteps;
     this.maxTaskRetries = maxTaskRetries;
     this.shell = shell;
+    this.user = user;
   }
 
   private static Map<Integer, List<SingularityMesosTaskLabel>> parseMesosTaskLabelsFromMap(Map<Integer, Map<String, String>> taskLabels) {
@@ -208,7 +208,6 @@ public class SingularityDeploy {
     .setCustomExecutorId(customExecutorId)
     .setCustomExecutorSource(customExecutorSource)
     .setCustomExecutorResources(customExecutorResources)
-    .setCustomExecutorUser(customExecutorUser)
     .setHealthcheckUri(healthcheckUri)
     .setHealthcheckIntervalSeconds(healthcheckIntervalSeconds)
     .setHealthcheckTimeoutSeconds(healthcheckTimeoutSeconds)
@@ -243,7 +242,8 @@ public class SingularityDeploy {
     .setDeployStepWaitTimeMs(deployStepWaitTimeMs)
     .setAutoAdvanceDeploySteps(autoAdvanceDeploySteps)
     .setMaxTaskRetries(maxTaskRetries)
-    .setShell(shell);
+    .setShell(shell)
+    .setUser(user);
   }
 
   @ApiModelProperty(required=false, value="Number of seconds that Singularity waits for this service to become healthy (for it to download artifacts, start running, and optionally pass healthchecks.)")
@@ -297,12 +297,6 @@ public class SingularityDeploy {
   @ApiModelProperty(required=false, value="Resources to allocate for custom mesos executor")
   public Optional<Resources> getCustomExecutorResources() {
     return customExecutorResources;
-  }
-
-  @Deprecated
-  @ApiModelProperty(required=false, value="User to run custom executor as")
-  public Optional<String> getCustomExecutorUser() {
-    return customExecutorUser;
   }
 
   @ApiModelProperty(required=false, value="Resources required for this deploy.", dataType="com.hubspot.mesos.Resources")
@@ -477,6 +471,11 @@ public class SingularityDeploy {
     return shell;
   }
 
+  @ApiModelProperty(required=false, value="Run tasks as this user")
+  public Optional<String> getUser() {
+    return user;
+  }
+
   @Override
   public String toString() {
     return "SingularityDeploy{" +
@@ -490,7 +489,6 @@ public class SingularityDeploy {
       ", customExecutorId=" + customExecutorId +
       ", customExecutorSource=" + customExecutorSource +
       ", customExecutorResources=" + customExecutorResources +
-      ", customExecutorUser=" + customExecutorUser +
       ", resources=" + resources +
       ", command=" + command +
       ", arguments=" + arguments +
@@ -523,6 +521,8 @@ public class SingularityDeploy {
       ", deployStepWaitTimeMs=" + deployStepWaitTimeMs +
       ", autoAdvanceDeploySteps=" + autoAdvanceDeploySteps +
       ", maxTaskRetries=" + maxTaskRetries +
+      ", shell=" + shell +
+      ", user=" + user +
       '}';
   }
 
