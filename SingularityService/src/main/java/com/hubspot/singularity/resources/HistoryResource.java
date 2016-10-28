@@ -2,7 +2,9 @@ package com.hubspot.singularity.resources;
 
 import static com.hubspot.singularity.WebExceptions.checkBadRequest;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -21,6 +23,7 @@ import com.hubspot.singularity.SingularityDeployKey;
 import com.hubspot.singularity.SingularityPaginatedResponse;
 import com.hubspot.singularity.SingularityRequestHistory;
 import com.hubspot.singularity.SingularityService;
+import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskHistory;
 import com.hubspot.singularity.SingularityTaskHistoryQuery;
 import com.hubspot.singularity.SingularityTaskId;
@@ -43,6 +46,7 @@ import com.wordnik.swagger.annotations.ApiParam;
 @Api(description = "Manages historical data for tasks, requests, and deploys.", value = HistoryResource.PATH)
 public class HistoryResource extends AbstractHistoryResource {
   public static final String PATH = SingularityService.API_BASE_PATH + "/history";
+  public static final int DEFAULT_ARGS_HISTORY_COUNT = 5;
 
   private final DeployHistoryHelper deployHistoryHelper;
   private final TaskHistoryHelper taskHistoryHelper;
@@ -368,6 +372,28 @@ public class HistoryResource extends AbstractHistoryResource {
     List<String> requestIds = historyManager.getRequestHistoryLike(requestIdLike, limitStart, limitCount);
 
     return authorizationHelper.filterAuthorizedRequestIds(user, requestIds, SingularityAuthorizationScope.READ);  // TODO: will this screw up pagination? A: yes.
+  }
+
+  @GET
+  @Path("/request/{requestId}/command-line-args")
+  @ApiOperation("Get a list of recently used command line args for an on-demand or scheduled request")
+  public Set<List<String>> getRecentCommandLineArgs(
+    @ApiParam("Request ID to look up") @PathParam("requestId") String requestId,
+    @ApiParam("Max number of recent args to return") @QueryParam("count") Optional<Integer> count) {
+    authorizationHelper.checkForAuthorizationByRequestId(requestId, user, SingularityAuthorizationScope.READ);
+
+    final int argCount = count.or(DEFAULT_ARGS_HISTORY_COUNT);
+    List<SingularityTaskIdHistory> historiesToCheck = taskHistoryHelper.getBlendedHistory(new SingularityTaskHistoryQuery(
+      Optional.of(requestId), Optional.<String>absent(), Optional.<String>absent(), Optional.<String>absent(), Optional.<ExtendedTaskState>absent(), Optional.<Long>absent(), Optional.<Long>absent(),
+      Optional.<Long>absent(), Optional.<Long>absent(), Optional.<OrderDirection>absent()), 0, argCount);
+    Set<List<String>> args = new HashSet<>();
+    for (SingularityTaskIdHistory taskIdHistory : historiesToCheck) {
+      Optional<SingularityTask> maybeTask = taskHistoryHelper.getTask(taskIdHistory.getTaskId());
+      if (maybeTask.isPresent() && maybeTask.get().getTaskRequest().getPendingTask().getCmdLineArgsList().isPresent()) {
+        args.add(maybeTask.get().getTaskRequest().getPendingTask().getCmdLineArgsList().get());
+      }
+    }
+    return args;
   }
 
 }
