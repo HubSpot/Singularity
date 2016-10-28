@@ -390,7 +390,10 @@ public class HistoryResource extends AbstractHistoryResource {
     for (SingularityTaskIdHistory taskIdHistory : historiesToCheck) {
       Optional<SingularityTask> maybeTask = taskHistoryHelper.getTask(taskIdHistory.getTaskId());
       if (maybeTask.isPresent() && maybeTask.get().getTaskRequest().getPendingTask().getCmdLineArgsList().isPresent()) {
-        args.add(maybeTask.get().getTaskRequest().getPendingTask().getCmdLineArgsList().get());
+        List<String> taskArgs = maybeTask.get().getTaskRequest().getPendingTask().getCmdLineArgsList().get();
+        if (!taskArgs.isEmpty()) {
+          args.add(maybeTask.get().getTaskRequest().getPendingTask().getCmdLineArgsList().get());
+        }
       }
     }
     return args;
