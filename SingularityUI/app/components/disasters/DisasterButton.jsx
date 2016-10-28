@@ -11,12 +11,12 @@ const disasterTooltip = (
   </ToolTip>
 );
 
-const DisasterButton = ({children, user, action, type, message}) => {
+const DisasterButton = ({children, user, action, type}) => {
   const clickComponentData = {props: {children}};
   return (
     <span>
       {getClickComponent(clickComponentData)}
-      <DisasterModal ref={(modal) => {clickComponentData.refs = {modal};}} user={user} message={message} action={action} type={type} />
+      <DisasterModal ref={(modal) => {clickComponentData.refs = {modal};}} user={user} action={action} type={type} />
     </span>
   );
 };
@@ -25,8 +25,7 @@ DisasterButton.propTypes = {
   children: PropTypes.node,
   user: PropTypes.string,
   action: PropTypes.string.isRequired,
-  type: PropTypes.string.isRequired,
-  message: PropTypes.string.isRequired
+  type: PropTypes.string.isRequired
 };
 
 DisasterButton.defaultProps = {
