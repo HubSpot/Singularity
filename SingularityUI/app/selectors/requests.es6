@@ -16,13 +16,14 @@ function findRequestIds(requests) {
   });
 }
 
-export const getStarred = (state) => new Set(state.ui.starred);
+export const getUserSettings = (state) => state.api.userSettings;
 
 export const getStarredRequests = createSelector(
-  [getStarred, getRequestsAPI],
-  (starredData, requestsAPI) => {
+  [getUserSettings, getRequestsAPI],
+  (userSettings, requestsAPI) => {
+    const starredRequests = Utils.maybe(userSettings, ['data', 'starredRequestIds'], []);
     const requests = findRequestIds(requestsAPI.data);
-    return requests.filter((requestParent) => starredData.has(requestParent.request.id));
+    return requests.filter((requestParent) => _.contains(starredRequests, requestParent.request.id));
   }
 );
 
