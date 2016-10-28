@@ -521,8 +521,8 @@ public class SingularityValidator {
     }
   }
 
-  public void checkUserId(String name) {
-    checkBadRequest(!Strings.isNullOrEmpty(name), "Name must be present and non-null");
+  public void checkUserId(String userId) {
+    checkBadRequest(!Strings.isNullOrEmpty(userId), "User ID must be present and non-null");
   }
 
   public SingularityPriorityFreeze checkSingularityPriorityFreeze(SingularityPriorityFreeze priorityFreeze) {

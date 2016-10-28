@@ -45,19 +45,19 @@ public class UserResource {
 
   @POST
   @Path("/settings")
-  public void setUserSettings(@ApiParam("The new settings") SingularityUserSettings settings) {
+  public void setUserSettings(@ApiParam("Update all settings for a user") SingularityUserSettings settings) {
     userManager.updateUserSettings(getAuthUserId(), settings);
   }
 
   @POST
   @Path("/settings/starred-requests")
-  public void addStarredRequests(@ApiParam("The new starred requests") SingularityUserSettings settings) {
+  public void addStarredRequests(@ApiParam("Add starred requests for a user") SingularityUserSettings settings) {
     userManager.addStarredRequestIds(getAuthUserId(), settings.getStarredRequestIds());
   }
 
   @DELETE
   @Path("/settings/starred-requests")
-  public void deleteStarredRequests(@ApiParam("The new starred requests") SingularityUserSettings settings) {
+  public void deleteStarredRequests(@ApiParam("Remove starred requests for a user") SingularityUserSettings settings) {
     userManager.deleteStarredRequestIds(getAuthUserId(), settings.getStarredRequestIds());
   }
 }
