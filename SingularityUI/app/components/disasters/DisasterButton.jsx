@@ -5,6 +5,12 @@ import ToolTip from 'react-bootstrap/lib/Tooltip';
 import { getClickComponent } from '../common/modal/ModalWrapper';
 import DisasterModal from './DisasterModal';
 
+const disasterTooltip = (
+  <ToolTip id="disaster-activate">
+    Activate a new disaster
+  </ToolTip>
+);
+
 const DisasterButton = ({children, user, action, type, message}) => {
   const clickComponentData = {props: {children}};
   return (
@@ -25,7 +31,7 @@ DisasterButton.propTypes = {
 
 DisasterButton.defaultProps = {
   children: (
-    <OverlayTrigger placement="top" id="view-bounce-overlay">
+    <OverlayTrigger placement="top" id="view-bounce-overlay" overlay={disasterTooltip}>
       <a>
         <Glyphicon glyph="plus" />
       </a>
