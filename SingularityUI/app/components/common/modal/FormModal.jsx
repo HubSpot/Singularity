@@ -228,6 +228,9 @@ export default class FormModal extends React.Component {
           const menuItems = []
           _.each(formElement.valueOptions, (optionValue, index) => {
             if (index < 5) {
+              if (index != 0) {
+                menuItems.push(<MenuItem divider />);
+              }
               menuItems.push(
                 <MenuItem
                   eventKey={index}
@@ -236,7 +239,6 @@ export default class FormModal extends React.Component {
                   {this.renderFormattedOptions(optionValue)}
                 </MenuItem>
               );
-              menuItems.push(<MenuItem divider />);
             }
           });
           return (
@@ -244,6 +246,7 @@ export default class FormModal extends React.Component {
             <DropdownButton
               pullRight
               bsStyle="info"
+              bsSize="small"
               title="Previous Args"
               id={`${formElement.name}-input-dropdown-options`}
             >
