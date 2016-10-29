@@ -1,7 +1,7 @@
 import React, { Component, PropTypes } from 'react';
 import { connect } from 'react-redux';
 
-import { KillTask, FetchTaskCleanups } from '../../../actions/api/tasks';
+import { KillTask } from '../../../actions/api/tasks';
 
 import FormModal from '../modal/FormModal';
 
@@ -11,7 +11,8 @@ class KillTaskModal extends Component {
     shouldShowWaitForReplacementTask: PropTypes.bool,
     killTask: PropTypes.func.isRequired,
     destroy: PropTypes.bool,
-    name: PropTypes.string
+    name: PropTypes.string,
+    then: PropTypes.func
   };
 
   constructor() {
@@ -79,7 +80,7 @@ class KillTaskModal extends Component {
           if (this.props.destroy) {
             data.override = true;
           }
-          this.props.killTask(data)
+          this.props.killTask(data);
         }}
         buttonStyle="danger"
         formElements={formElements}>
@@ -99,7 +100,7 @@ class KillTaskModal extends Component {
 }
 
 const mapDispatchToProps = (dispatch, ownProps) => ({
-  killTask: (data) => dispatch(KillTask.trigger(ownProps.taskId, data)).then(dispatch(FetchTaskCleanups.trigger()))
+  killTask: (data) => dispatch(KillTask.trigger(ownProps.taskId, data)).then(() => ownProps.then && ownProps.then())
 });
 
 export default connect(

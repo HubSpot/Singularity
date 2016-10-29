@@ -226,11 +226,19 @@ class TaskDetail extends Component {
       }
     }
 
+    const refreshHistoryAndCleanups = () => {
+      const promises = [];
+      promises.push(this.props.fetchTaskCleanups());
+      promises.push(this.props.fetchTaskHistory(this.props.params.taskId));
+      return Promise.all(promises);
+    }
+
     const removeBtn = this.props.task.isStillRunning && (
       <KillTaskButton
         name={removeText}
         taskId={this.props.params.taskId}
         destroy={destroy}
+        then={refreshHistoryAndCleanups}
         shouldShowWaitForReplacementTask={Utils.isIn(this.props.task.task.taskRequest.request.requestType, ['SERVICE', 'WORKER']) && !destroy}
       >
         <a className="btn btn-danger">

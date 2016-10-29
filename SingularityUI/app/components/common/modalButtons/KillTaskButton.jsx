@@ -20,7 +20,8 @@ export default class KillTaskButton extends Component {
     shouldShowWaitForReplacementTask: PropTypes.bool,
     children: PropTypes.node,
     name: PropTypes.string,
-    destroy: PropTypes.bool
+    destroy: PropTypes.bool,
+    then: PropTypes.func
   };
 
   static defaultProps = {
@@ -40,6 +41,7 @@ export default class KillTaskButton extends Component {
         <KillTaskModal
           name={this.props.name}
           destroy={this.props.destroy}
+          then={this.props.then}
           ref="modal"
           taskId={this.props.taskId}
           shouldShowWaitForReplacementTask={this.props.shouldShowWaitForReplacementTask}
