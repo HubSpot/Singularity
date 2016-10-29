@@ -215,17 +215,31 @@ class TaskDetail extends Component {
       </div>
     );
 
-    let removeText;
+    let destroy = false;
+    let removeText = 'Kill Task';
     if (cleanup) {
-      removeText = cleanup.isImmediate ? 'Destroy task' : 'Override cleanup';
-    } else {
-      removeText = this.props.task.isCleaning ? 'Destroy task' : 'Kill Task';
+      if (Utils.isImmediateCleanup(cleanup, Utils.request.isLongRunning(this.props.task.task.taskRequest))) {
+        removeText = 'Destroy task';
+        destroy = true;
+      } else {
+        removeText = 'Override cleanup';
+      }
     }
+
+    const refreshHistoryAndCleanups = () => {
+      const promises = [];
+      promises.push(this.props.fetchTaskCleanups());
+      promises.push(this.props.fetchTaskHistory(this.props.params.taskId));
+      return Promise.all(promises);
+    }
+
     const removeBtn = this.props.task.isStillRunning && (
       <KillTaskButton
         name={removeText}
         taskId={this.props.params.taskId}
-        shouldShowWaitForReplacementTask={Utils.isIn(this.props.task.task.taskRequest.request.requestType, ['SERVICE', 'WORKER'])}
+        destroy={destroy}
+        then={refreshHistoryAndCleanups}
+        shouldShowWaitForReplacementTask={Utils.isIn(this.props.task.task.taskRequest.request.requestType, ['SERVICE', 'WORKER']) && !destroy}
       >
         <a className="btn btn-danger">
           {removeText}
