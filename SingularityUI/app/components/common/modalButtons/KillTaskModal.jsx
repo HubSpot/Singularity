@@ -1,7 +1,7 @@
 import React, { Component, PropTypes } from 'react';
 import { connect } from 'react-redux';
 
-import { KillTask } from '../../../actions/api/tasks';
+import { KillTask, FetchTaskCleanups } from '../../../actions/api/tasks';
 
 import FormModal from '../modal/FormModal';
 
@@ -10,6 +10,7 @@ class KillTaskModal extends Component {
     taskId: PropTypes.string.isRequired,
     shouldShowWaitForReplacementTask: PropTypes.bool,
     killTask: PropTypes.func.isRequired,
+    destroy: PropTypes.bool,
     name: PropTypes.string
   };
 
@@ -75,13 +76,15 @@ class KillTaskModal extends Component {
           } else {
             delete data.runShellCommandBeforeKill;
           }
-          console.log(data);
+          if (this.props.destroy) {
+            data.override = true;
+          }
           this.props.killTask(data)
         }}
         buttonStyle="danger"
         formElements={formElements}>
         <span>
-          <p>Are you sure you want to kill this task?</p>
+          <p>Are you sure you want to kill {this.props.destroy ? '-9' : ''} this task?</p>
           <pre>{this.props.taskId}</pre>
           <p>
               Long running process will be started again instantly, scheduled
@@ -96,7 +99,7 @@ class KillTaskModal extends Component {
 }
 
 const mapDispatchToProps = (dispatch, ownProps) => ({
-  killTask: (data) => dispatch(KillTask.trigger(ownProps.taskId, data))
+  killTask: (data) => dispatch(KillTask.trigger(ownProps.taskId, data)).then(dispatch(FetchTaskCleanups.trigger()))
 });
 
 export default connect(
