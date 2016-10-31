@@ -113,23 +113,27 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // set up user
     let userId;
+    let willRenderUserIdForm = false;
     window.app = {};
     window.app.setupUser = () => store.dispatch(FetchUser.trigger());
     window.app.setupUser().then(() => {
       if (!store.getState().api.user.data.user) {
+        willRenderUserIdForm = true;
         return renderUserIdForm();
       } else {
         userId = store.getState().api.user.data.user.id
       }
     });
 
-    // Set up starred requests
-    store.dispatch(FetchUserSettings.trigger(userId)).then((userSettingsResponse) =>
-      maybeImportStarredRequests(store, userSettingsResponse, userId)
-    );
+    if (!willRenderUserIdForm) {
+      // Set up starred requests
+      store.dispatch(FetchUserSettings.trigger(userId)).then((userSettingsResponse) =>
+        maybeImportStarredRequests(store, userSettingsResponse, userId)
+      );
 
-    // set up request groups
-    store.dispatch(FetchGroups.trigger([404, 500]));
+      // set up request groups
+      store.dispatch(FetchGroups.trigger([404, 500]));
+    }
 
     // Render the page content
     return ReactDOM.render(<AppRouter store={store} />, document.getElementById('root'), () => {
