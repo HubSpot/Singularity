@@ -5,9 +5,9 @@ import java.io.IOException;
 import com.github.jknack.handlebars.Helper;
 import com.github.jknack.handlebars.Options;
 
-public class EscapedNewLinesHelper implements Helper<Object> {
+public class EchoEscapedHelper implements Helper<Object> {
 
-  public static final String NAME = "escapedNewLines";
+  public static final String NAME = "echoEscaped";
 
   @Override
   public CharSequence apply(Object context, Options options) throws IOException {
@@ -23,6 +23,9 @@ public class EscapedNewLinesHelper implements Helper<Object> {
       if (c == '\n') {
         sb.append('\\');
         sb.append('n');
+      } else if (c == '"') {
+        sb.append('\\');
+        sb.append('"');
       } else {
         sb.append(c);
       }
