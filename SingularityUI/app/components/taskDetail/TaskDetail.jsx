@@ -446,7 +446,7 @@ function mapTaskToProps(task) {
   task.isCleaning = task.lastKnownState && task.lastKnownState.taskState === 'TASK_CLEANING';
 
   const ports = [];
-  if (task.task && task.task.taskRequest.deploy.resources.numPorts > 0) {
+  if (task.task && task.task.taskRequest.deploy.resources && task.task.taskRequest.deploy.resources.numPorts > 0) {
     for (const resource of task.task.mesosTask.resources) {
       if (resource.name === 'ports') {
         for (const range of resource.ranges.range) {
