@@ -2,6 +2,7 @@ package com.hubspot.singularity.resources;
 
 import static com.hubspot.singularity.WebExceptions.checkBadRequest;
 
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -386,6 +387,7 @@ public class HistoryResource extends AbstractHistoryResource {
     List<SingularityTaskIdHistory> historiesToCheck = taskHistoryHelper.getBlendedHistory(new SingularityTaskHistoryQuery(
       Optional.of(requestId), Optional.<String>absent(), Optional.<String>absent(), Optional.<String>absent(), Optional.<ExtendedTaskState>absent(), Optional.<Long>absent(), Optional.<Long>absent(),
       Optional.<Long>absent(), Optional.<Long>absent(), Optional.<OrderDirection>absent()), 0, argCount);
+    Collections.sort(historiesToCheck);
     Set<List<String>> args = new HashSet<>();
     for (SingularityTaskIdHistory taskIdHistory : historiesToCheck) {
       Optional<SingularityTask> maybeTask = taskHistoryHelper.getTask(taskIdHistory.getTaskId());
