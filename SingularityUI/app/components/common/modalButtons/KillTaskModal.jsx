@@ -10,7 +10,9 @@ class KillTaskModal extends Component {
     taskId: PropTypes.string.isRequired,
     shouldShowWaitForReplacementTask: PropTypes.bool,
     killTask: PropTypes.func.isRequired,
-    name: PropTypes.string
+    destroy: PropTypes.bool,
+    name: PropTypes.string,
+    then: PropTypes.func
   };
 
   constructor() {
@@ -75,13 +77,15 @@ class KillTaskModal extends Component {
           } else {
             delete data.runShellCommandBeforeKill;
           }
-          console.log(data);
-          this.props.killTask(data)
+          if (this.props.destroy) {
+            data.override = true;
+          }
+          this.props.killTask(data);
         }}
         buttonStyle="danger"
         formElements={formElements}>
         <span>
-          <p>Are you sure you want to kill this task?</p>
+          <p>Are you sure you want to kill {this.props.destroy ? '-9' : ''} this task?</p>
           <pre>{this.props.taskId}</pre>
           <p>
               Long running process will be started again instantly, scheduled
@@ -96,7 +100,7 @@ class KillTaskModal extends Component {
 }
 
 const mapDispatchToProps = (dispatch, ownProps) => ({
-  killTask: (data) => dispatch(KillTask.trigger(ownProps.taskId, data))
+  killTask: (data) => dispatch(KillTask.trigger(ownProps.taskId, data)).then(() => ownProps.then && ownProps.then())
 });
 
 export default connect(
