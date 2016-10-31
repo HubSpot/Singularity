@@ -14,6 +14,7 @@ import com.google.inject.Inject;
 import com.hubspot.singularity.SingularityService;
 import com.hubspot.singularity.SingularityUser;
 import com.hubspot.singularity.SingularityUserSettings;
+import com.hubspot.singularity.auth.SingularityAuthorizationHelper;
 import com.hubspot.singularity.data.UserManager;
 import com.wordnik.swagger.annotations.ApiParam;
 
@@ -24,40 +25,36 @@ public class UserResource {
 
   private final UserManager userManager;
   private final Optional<SingularityUser> user;
+  private final SingularityAuthorizationHelper authorizationHelper;
 
   @Inject
-  public UserResource(UserManager userManager,
-                      Optional<SingularityUser> user) {
+  public UserResource(UserManager userManager, Optional<SingularityUser> user, SingularityAuthorizationHelper authorizationHelper) {
     this.userManager = userManager;
     this.user = user;
-  }
-
-  private String getAuthUserId() {
-    checkUnauthorized(user.isPresent(), "Please log in to perform this action.");
-    return user.get().getId();
+    this.authorizationHelper = authorizationHelper;
   }
 
   @GET
   @Path("/settings")
   public Optional<SingularityUserSettings> getUserSettings() {
-    return userManager.getUserSettings(getAuthUserId());
+    return userManager.getUserSettings(authorizationHelper.getAuthUserId(user));
   }
 
   @POST
   @Path("/settings")
   public void setUserSettings(@ApiParam("Update all settings for a user") SingularityUserSettings settings) {
-    userManager.updateUserSettings(getAuthUserId(), settings);
+    userManager.updateUserSettings(authorizationHelper.getAuthUserId(user), settings);
   }
 
   @POST
   @Path("/settings/starred-requests")
   public void addStarredRequests(@ApiParam("Add starred requests for a user") SingularityUserSettings settings) {
-    userManager.addStarredRequestIds(getAuthUserId(), settings.getStarredRequestIds());
+    userManager.addStarredRequestIds(authorizationHelper.getAuthUserId(user), settings.getStarredRequestIds());
   }
 
   @DELETE
   @Path("/settings/starred-requests")
   public void deleteStarredRequests(@ApiParam("Remove starred requests for a user") SingularityUserSettings settings) {
-    userManager.deleteStarredRequestIds(getAuthUserId(), settings.getStarredRequestIds());
+    userManager.deleteStarredRequestIds(authorizationHelper.getAuthUserId(user), settings.getStarredRequestIds());
   }
 }
