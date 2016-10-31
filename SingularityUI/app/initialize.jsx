@@ -89,7 +89,10 @@ function renderUserIdForm() {
 }
 
 function maybeImportStarredRequests(store, userState, userId) {
-  const apiStarredRequests = Utils.maybe(userState, ['data', 'settings', 'starredRequestIds']);
+  if (!userState.data.user) {
+    return;
+  }
+  const apiStarredRequests = Utils.maybe(userState.data, ['settings', 'starredRequestIds']);
   const locallyStarredRequests = window.localStorage.hasOwnProperty('starredRequests')
     ? JSON.parse(window.localStorage.getItem('starredRequests'))
     : [];
