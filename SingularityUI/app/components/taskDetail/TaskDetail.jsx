@@ -205,11 +205,22 @@ class TaskDetail extends Component {
   }
 
   renderHeader(cleanup) {
+    const cleaningUpdate = _.find(Utils.maybe(this.props.task, ['taskUpdates'], []), (taskUpdate) => {
+      return taskUpdate.taskState == "TASK_CLEANING";
+    });
+
+    let cleanupType;
+    if (cleaningUpdate) {
+      cleanupType = cleaningUpdate.statusMessage.split(/\s+/)[0];
+    } else if (cleanup) {
+      cleanupType = cleanup.cleanupType;
+    }
+
     const taskState = this.props.task.taskUpdates && (
       <div className="col-xs-6 task-state-header">
         <h1>
           <span className={`label label-${Utils.getLabelClassFromTaskState(_.last(this.props.task.taskUpdates).taskState)} task-state-header-label`}>
-            {Utils.humanizeText(_.last(this.props.task.taskUpdates).taskState)} {cleanup && `(${Utils.humanizeText(cleanup.cleanupType)})`}
+            {Utils.humanizeText(_.last(this.props.task.taskUpdates).taskState)} {cleanupType && `(${Utils.humanizeText(cleanupType)})`}
           </span>
         </h1>
       </div>
@@ -217,8 +228,8 @@ class TaskDetail extends Component {
 
     let destroy = false;
     let removeText = 'Kill Task';
-    if (cleanup) {
-      if (Utils.isImmediateCleanup(cleanup, Utils.request.isLongRunning(this.props.task.task.taskRequest))) {
+    if (cleanupType) {
+      if (Utils.isImmediateCleanup(cleanupType, Utils.request.isLongRunning(this.props.task.task.taskRequest))) {
         removeText = 'Destroy task';
         destroy = true;
       } else {
@@ -246,7 +257,7 @@ class TaskDetail extends Component {
         </a>
       </KillTaskButton>
     );
-    const terminationAlert = this.props.task.isStillRunning && !cleanup && this.props.task.isCleaning && (
+    const terminationAlert = this.props.task.isStillRunning && this.props.task.isCleaning && destroy && (
       <Alert bsStyle="warning">
           <strong>Task is terminating:</strong> To issue a non-graceful termination (kill -term), click Destroy Task.
       </Alert>

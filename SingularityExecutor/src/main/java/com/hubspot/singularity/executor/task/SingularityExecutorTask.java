@@ -4,12 +4,14 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.ReentrantLock;
 
 import org.apache.mesos.ExecutorDriver;
 import org.apache.mesos.Protos;
 import org.apache.mesos.Protos.TaskState;
 
+import com.google.common.base.Optional;
 import com.hubspot.deploy.Artifact;
 import com.hubspot.deploy.ExecutorData;
 import com.hubspot.singularity.ExtendedTaskState;
@@ -34,6 +36,7 @@ public class SingularityExecutorTask {
   private final AtomicBoolean killedAfterThreadOverage;
   private final AtomicBoolean destroyedAfterWaiting;
   private final AtomicBoolean forceDestroyed;
+  private final AtomicReference<Optional<String>> killedBy;
   private final SingularityExecutorTaskProcessBuilder processBuilder;
   private final SingularityExecutorTaskLogManager taskLogManager;
   private final SingularityExecutorTaskCleanup taskCleanup;
@@ -50,6 +53,7 @@ public class SingularityExecutorTask {
     this.killed = new AtomicBoolean(false);
     this.destroyedAfterWaiting = new AtomicBoolean(false);
     this.forceDestroyed = new AtomicBoolean(false);
+    this.killedBy = new AtomicReference<>(Optional.<String>absent());
     this.killedAfterThreadOverage = new AtomicBoolean(false);
     this.threadCountAtOverage = new AtomicInteger(0);
 
@@ -124,8 +128,9 @@ public class SingularityExecutorTask {
     return killed.get();
   }
 
-  public void markKilled() {
+  public void markKilled(Optional<String> maybeUser) {
     this.killed.set(true);
+    this.killedBy.set(maybeUser);
   }
 
   public void markKilledDueToThreads(int currentThreads) {
@@ -141,8 +146,13 @@ public class SingularityExecutorTask {
     return threadCountAtOverage.get();
   }
 
-  public void markForceDestroyed() {
+  public void markForceDestroyed(Optional<String> maybeUser) {
     this.forceDestroyed.set(true);
+    this.killedBy.set(maybeUser);
+  }
+
+  public Optional<String> getKilledBy() {
+    return killedBy.get();
   }
 
   public void markDestroyedAfterWaiting() {
