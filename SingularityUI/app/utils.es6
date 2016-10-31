@@ -345,11 +345,11 @@ const Utils = {
 
 
 
-  isImmediateCleanup: (cleanup, longRunning) => {
+  isImmediateCleanup: (cleanupType, longRunning) => {
     if (longRunning) {
-      return _.contains(Utils.LONG_RUNNING_IMMEDIATE_CLEANUPS, cleanup.cleanupType)
+      return _.contains(Utils.LONG_RUNNING_IMMEDIATE_CLEANUPS, cleanupType)
     } else {
-      return _.contains(Utils.NON_LONG_RUNNING_IMMEDIATE_CLEANUPS, cleanup.cleanupType)
+      return _.contains(Utils.NON_LONG_RUNNING_IMMEDIATE_CLEANUPS, cleanupType)
     }
   },
 
