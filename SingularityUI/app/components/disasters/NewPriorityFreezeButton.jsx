@@ -5,6 +5,12 @@ import ToolTip from 'react-bootstrap/lib/Tooltip';
 import { getClickComponent } from '../common/modal/ModalWrapper';
 import NewPriorityFreezeModal from './NewPriorityFreezeModal';
 
+const newFreezeTooltip = (
+  <ToolTip id="new-freeze">
+    Create a new priority freeze
+  </ToolTip>
+);
+
 const NewPriorityFreezeButton = ({children, user}) => {
   const clickComponentData = {props: {children}};
   return (
@@ -22,7 +28,7 @@ NewPriorityFreezeButton.propTypes = {
 
 NewPriorityFreezeButton.defaultProps = {
   children: (
-    <OverlayTrigger placement="top" id="view-bounce-overlay">
+    <OverlayTrigger placement="top" id="view-bounce-overlay" overlay={newFreezeTooltip}>
       <a>
         <Glyphicon glyph="plus" />
       </a>
