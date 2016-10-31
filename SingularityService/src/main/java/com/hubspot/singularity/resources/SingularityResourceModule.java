@@ -2,8 +2,6 @@ package com.hubspot.singularity.resources;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-import javax.ws.rs.HEAD;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
