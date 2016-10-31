@@ -16,6 +16,10 @@ public class SingularityUserSettings {
     this.starredRequestIds = Objects.firstNonNull(starredRequestIds, Collections.<String>emptySet());
   }
 
+  public static SingularityUserSettings empty() {
+    return new SingularityUserSettings(Collections.<String>emptySet());
+  }
+
   public Set<String> getStarredRequestIds() {
     return starredRequestIds;
   }
