@@ -36,8 +36,8 @@ public class UserResource {
 
   @GET
   @Path("/settings")
-  public Optional<SingularityUserSettings> getUserSettings() {
-    return userManager.getUserSettings(authorizationHelper.getAuthUserId(user));
+  public SingularityUserSettings getUserSettings() {
+    return userManager.getUserSettings(authorizationHelper.getAuthUserId(user)).or(SingularityUserSettings.empty());
   }
 
   @POST

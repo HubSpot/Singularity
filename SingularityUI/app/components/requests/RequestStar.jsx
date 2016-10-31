@@ -1,6 +1,7 @@
 import React, { PropTypes } from 'react';
 import { connect } from 'react-redux';
-import { FetchUserSettings, AddStarredRequests, DeleteStarredRequests } from '../../actions/api/users';
+import { FetchUser } from 'actions/api/auth';
+import { AddStarredRequests, DeleteStarredRequests } from '../../actions/api/users';
 import Utils from '../../utils';
 
 const RequestStar = ({requestId, changeStar, starred}) => (
@@ -17,7 +18,7 @@ RequestStar.propTypes = {
 
 const mapStateToProps = (state, ownProps) => {
   return {
-    starred: _.contains(Utils.maybe(state.api.userSettings, ['data', 'starredRequestIds'], []), ownProps.requestId)
+    starred: _.contains(Utils.maybe(state.api.user, ['data', 'settings', 'starredRequestIds'], []), ownProps.requestId)
   };
 };
 
@@ -25,9 +26,9 @@ const mapDispatchToProps = (dispatch) => {
   return {
     changeStar: (requestId, starred) => {
       if (starred) {
-        dispatch(DeleteStarredRequests.trigger([requestId])).then(() => dispatch(FetchUserSettings.trigger()));
+        dispatch(DeleteStarredRequests.trigger([requestId])).then(() => dispatch(FetchUser.trigger()));
       } else {
-        dispatch(AddStarredRequests.trigger([requestId])).then(() => dispatch(FetchUserSettings.trigger()));
+        dispatch(AddStarredRequests.trigger([requestId])).then(() => dispatch(FetchUser.trigger()));
       }
     }
   };

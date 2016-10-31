@@ -5,8 +5,6 @@ import buildKeyedApiActionReducer from './keyed';
 import { FetchUser } from '../../actions/api/auth';
 
 import {
-  FetchUserSettings,
-  UpdateUserSettings,
   AddStarredRequests,
   DeleteStarredRequests
 } from '../../actions/api/users';
@@ -85,8 +83,6 @@ import {
 import { FetchGroups } from '../../actions/api/requestGroups';
 
 const user = buildApiActionReducer(FetchUser);
-const userSettings = buildApiActionReducer(FetchUserSettings);
-const updateUserSettings = buildApiActionReducer(UpdateUserSettings, []);
 const addStarredRequests = buildApiActionReducer(AddStarredRequests, []);
 const deleteStarredRequests = buildApiActionReducer(DeleteStarredRequests, []);
 const webhooks = buildApiActionReducer(FetchWebhooks, []);
@@ -137,8 +133,6 @@ const requestGroups = buildApiActionReducer(FetchGroups, []);
 
 export default combineReducers({
   user,
-  userSettings,
-  updateUserSettings,
   addStarredRequests,
   deleteStarredRequests,
   webhooks,

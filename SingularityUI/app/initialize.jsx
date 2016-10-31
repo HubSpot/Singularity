@@ -8,7 +8,7 @@ import AppRouter from './router';
 import configureStore from 'store';
 import { FetchUser } from 'actions/api/auth';
 import { FetchGroups } from 'actions/api/requestGroups';
-import { FetchUserSettings, AddStarredRequests } from 'actions/api/users';
+import { AddStarredRequests } from 'actions/api/users';
 import Utils from './utils';
 
 // Set up third party configurations
@@ -88,8 +88,11 @@ function renderUserIdForm() {
   ).show();
 }
 
-function maybeImportStarredRequests(store, userSettingsResponse, userId) {
-  const apiStarredRequests = Utils.maybe(userSettingsResponse.data, ['starredRequestIds']);
+function maybeImportStarredRequests(store, userState, userId) {
+  if (!userState.data.user) {
+    return;
+  }
+  const apiStarredRequests = Utils.maybe(userState.data, ['settings', 'starredRequestIds']);
   const locallyStarredRequests = window.localStorage.hasOwnProperty('starredRequests')
     ? JSON.parse(window.localStorage.getItem('starredRequests'))
     : [];
@@ -127,9 +130,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (!willRenderUserIdForm) {
       // Set up starred requests
-      store.dispatch(FetchUserSettings.trigger(userId)).then((userSettingsResponse) =>
-        maybeImportStarredRequests(store, userSettingsResponse, userId)
-      );
+      maybeImportStarredRequests(store, store.getState().api.user, userId);
 
       // set up request groups
       store.dispatch(FetchGroups.trigger([404, 500]));
