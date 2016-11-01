@@ -89,9 +89,6 @@ function renderUserIdForm() {
 }
 
 function maybeImportStarredRequests(store, userState, userId) {
-  if (!userState.data.user) {
-    return;
-  }
   const apiStarredRequests = Utils.maybe(userState.data, ['settings', 'starredRequestIds']);
   const locallyStarredRequests = window.localStorage.hasOwnProperty('starredRequests')
     ? JSON.parse(window.localStorage.getItem('starredRequests'))
@@ -116,25 +113,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // set up user
     let userId;
-    let willRenderUserIdForm = false;
     window.app = {};
     window.app.setupUser = () => store.dispatch(FetchUser.trigger());
     window.app.setupUser().then(() => {
       if (!store.getState().api.user.data.user) {
-        willRenderUserIdForm = true;
         return renderUserIdForm();
       } else {
         userId = store.getState().api.user.data.user.id
+        // Set up starred requests
+        maybeImportStarredRequests(store, store.getState().api.user, userId);
       }
     });
 
-    if (!willRenderUserIdForm) {
-      // Set up starred requests
-      maybeImportStarredRequests(store, store.getState().api.user, userId);
-
-      // set up request groups
-      store.dispatch(FetchGroups.trigger([404, 500]));
-    }
+    // set up request groups
+    store.dispatch(FetchGroups.trigger([404, 500]));
 
     // Render the page content
     return ReactDOM.render(<AppRouter store={store} />, document.getElementById('root'), () => {
