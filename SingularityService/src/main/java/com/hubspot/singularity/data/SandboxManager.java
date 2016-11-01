@@ -1,13 +1,21 @@
 package com.hubspot.singularity.data;
 
+import java.io.IOException;
+import java.io.Reader;
 import java.net.ConnectException;
+import java.nio.ByteBuffer;
+import java.nio.charset.CharsetDecoder;
+import java.nio.charset.CodingErrorAction;
+import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 import java.util.Collections;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
+import com.google.common.io.CharSource;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.hubspot.mesos.json.MesosFileChunkObject;
@@ -94,7 +102,7 @@ public class SandboxManager {
         throw new RuntimeException(String.format("Got HTTP %s from Mesos slave", response.getStatusCode()));
       }
 
-      return Optional.of(objectMapper.readValue(response.getResponseBodyAsStream(), MesosFileChunkObject.class));
+      return Optional.of(parseResponseBody(response));
     } catch (ConnectException ce) {
       throw new SlaveNotFoundException(ce);
     } catch (Exception e) {
@@ -104,5 +112,20 @@ public class SandboxManager {
         throw Throwables.propagate(e);
       }
     }
+  }
+
+  /**
+   * this method will first sanitize the input by throwing away invalid UTF8 characters before sending it to
+   * Jackson for parsing. We can get invalid UTF8 data if there is a multibyte character at the boundary
+   * of our fetch
+   */
+  @VisibleForTesting
+  MesosFileChunkObject parseResponseBody(Response response) throws IOException {
+    // not thread-safe, need to make a new one each time;
+    CharsetDecoder decoder = StandardCharsets.UTF_8.newDecoder().onMalformedInput(CodingErrorAction.IGNORE);
+
+    ByteBuffer responseBuffer = response.getResponseBodyAsByteBuffer();
+    Reader sanitizedReader = CharSource.wrap(decoder.decode(responseBuffer)).openStream();
+    return objectMapper.readValue(sanitizedReader, MesosFileChunkObject.class);
   }
 }
