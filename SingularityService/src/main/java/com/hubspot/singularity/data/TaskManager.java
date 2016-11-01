@@ -416,10 +416,10 @@ public class TaskManager extends CuratorAsyncManager {
   }
 
   @Timed
-  public SingularityCreateResult saveTaskHistoryUpdate(SingularityTaskHistoryUpdate taskHistoryUpdate, boolean overwrite) {
+  public SingularityCreateResult saveTaskHistoryUpdate(SingularityTaskHistoryUpdate taskHistoryUpdate, boolean overwriteExisting) {
     singularityEventListener.taskHistoryUpdateEvent(taskHistoryUpdate);
 
-    if (overwrite) {
+    if (overwriteExisting) {
       return save(getUpdatePath(taskHistoryUpdate.getTaskId(), taskHistoryUpdate.getTaskState()), taskHistoryUpdate, taskHistoryUpdateTranscoder);
     } else {
       return create(getUpdatePath(taskHistoryUpdate.getTaskId(), taskHistoryUpdate.getTaskState()), taskHistoryUpdate, taskHistoryUpdateTranscoder);
