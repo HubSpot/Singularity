@@ -1,0 +1,50 @@
+.new-tailer {
+  display: flex;
+  flex-flow: column;
+
+  .tail-row {
+    display: flex;
+    flex-flow: row;
+
+    section.log-pane {
+      align-items: stretch;
+      display: flex;
+      flex-flow: column;
+      width: 100%;
+      height: 100%;
+
+      overflow: scroll;
+      // will repaint on scroll if you don't put this in!!!
+      transform: translateZ(0);
+
+      font-family: Consolas, "Liberation Mono", Courier, monospace;
+
+      color: #839496;
+      background-color: #002b36;
+
+      .log-row {
+        font-size: 12px;
+        line-height: 12px;
+        height: 14px;
+        padding: 0;
+        white-space: pre;
+
+        span:last-child {
+          padding-right: 10px;
+        }
+
+        &.missing {
+          background-color: rgba(255, 255, 255, 0.1);
+        }
+
+        &.loading {
+          background-color: rgba(255, 255, 255, 0.4);
+        }
+      }
+
+      footer {
+        flex: 0 1 40px;
+      }
+    }
+  }
+}

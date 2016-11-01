@@ -11,6 +11,8 @@ module.exports = function(options) {
   var isDebug = options.isDebug;
   var isVerbose = options.isVerbose;
   var useHMR = options.useHMR;
+  var webpackHMRPath = options.webpackHMRPath || '/__webpack_hmr';
+  var publicPath = options.publicPath || '/static/';
 
 
   var extractCSS = new ExtractTextPlugin('css/app.css', {
@@ -25,7 +27,7 @@ module.exports = function(options) {
     // The entry point for the bundle
     entry: {
       'js/app': (isDebug && useHMR)
-        ? ['./app/initialize.jsx', 'react-hot-loader/patch', 'webpack-hot-middleware/client']
+        ? ['./app/initialize.jsx', 'react-hot-loader/patch', 'webpack-hot-middleware/client?path=' + webpackHMRPath]
         : './app/initialize.jsx',
       'js/vendor': [
         'react',
@@ -52,7 +54,7 @@ module.exports = function(options) {
     // Options affecting the output of the compilation
     output: {
       path: path.resolve(__dirname, dest),
-      publicPath: '/static/',
+      publicPath: publicPath,
       filename: '[name].bundle.js',
       chunkFilename: '[id].bundle.js?',
       sourcePrefix: '  ',

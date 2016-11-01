@@ -51,6 +51,10 @@ var webpackStream = require('webpack-stream');
 var webpack = require('webpack');
 
 var port = process.env.PORT || 3334;
+var useHMR = process.env.USE_HMR || true;
+var webpackHMRPath = serverBase + '/__webpack_hmr';
+
+__webpack_public_path__ = serverBase;
 
 gulp.task('clean', function() {
   return del(dest + '/*');
@@ -70,15 +74,19 @@ gulp.task('debug-html', function () {
 });
 
 gulp.task('build', ['clean', 'html'], function () {
-  var prodWebpackConfig = require('./webpack.config.prod');
   return gulp.src('app')
-    .pipe(webpackStream(prodWebpackConfig))
+    .pipe(webpackStream(require('./webpack.config')))
     .pipe(gulp.dest(dest + '/static'));
 });
 
 gulp.task('serve', ['clean', 'debug-html'], function () {
   var count = 0;
-  var webpackConfig = require('./webpack.config.dev');
+  var webpackConfig = require('./make-webpack-config')({
+    isDebug: true,
+    useHMR: useHMR,
+    webpackHMRPath: webpackHMRPath,
+    publicPath: staticUri
+  });
   return new Promise(resolve => {
     var bs = require('browser-sync').create();
     var compiler = webpack(webpackConfig);
@@ -88,13 +96,16 @@ gulp.task('serve', ['clean', 'debug-html'], function () {
       publicPath: staticUri,
       stats: webpackConfig.stats,
     });
-    var webpackHotMiddleware = require('webpack-hot-middleware')(compiler);
+    var webpackHotMiddleware = require('webpack-hot-middleware')(compiler, {
+      path: webpackHMRPath
+    });
     compiler.plugin('done', function () {
       // Launch Browsersync after the initial bundling is complete
       if (++count === 1) {
         bs.init({
           port: port,
           startPath: appUri,
+          open: false,
           socket: {
             domain: 'localhost:' + port,
             clientPath: '/singularity/browser-sync'

@@ -159,7 +159,7 @@ export const taskGroupFetchPrevious = taskGroupId =>
     const {taskGroups, logRequestLength, maxLines} = state;
 
     const taskGroup = taskGroups[taskGroupId];
-    tasks = getTasks(taskGroup, tasks);
+    let tasks = getTasks(taskGroup, state.tasks);
 
     // bail early if all tasks are at the top
     if (_.all(tasks.map((task) => task.minOffset === 0))) {

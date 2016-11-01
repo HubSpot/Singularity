@@ -2,19 +2,15 @@ import React, { PropTypes } from 'react';
 
 const Pane = ({logHeader, logComponent, logFooter}) => {
   return (
-    <div>
       <section className="log-pane">
         <header>
           {logHeader}
         </header>
-        <div className="log-line-wrapper">
-          {logComponent}
-        </div>
+        {logComponent}
         <footer>
           {logFooter}
         </footer>
       </section>
-    </div>
   );
 };
 

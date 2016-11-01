@@ -15,9 +15,11 @@
   ],
   "scripts": {
     "start": "node server.js",
+    "prepublish": "babel src --out-dir lib",
     "test": "mocha --compilers js:babel-register --recursive",
     "test:watch": "npm test -- --watch"
   },
+  "main": "lib/index.js",
   "repository": {
     "type": "git",
     "url": "https://github.com/HubSpot/Singularity"
@@ -67,5 +69,8 @@
     "webpack": "^1.13.1",
     "webpack-dev-server": "^1.14.1"
   },
+  "files": [
+    "lib"
+  ],
   "license": "Apache-2.0"
 }

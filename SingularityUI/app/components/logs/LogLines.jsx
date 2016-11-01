@@ -71,6 +71,17 @@ class LogLines extends Component {
     return null;
   }
 
+  renderLoadingPrevious() {
+    if (this.props.initialDataLoaded) {
+      if (!this.props.reachedStartOfFile) {
+        if (this.props.search) {
+          return <div>Searching for '{this.props.search}'... ({Humanize.filesize(this.props.bytesRemainingBefore)} remaining)</div>;
+        }
+        return <div>Loading previous... ({Humanize.filesize(this.props.bytesRemainingBefore)} remaining)</div>;
+      }
+    }
+  }
+
   renderLogLines() {
     return this.props.logLines.map(({data, offset, taskId, timestamp}) => (
       <LogLine

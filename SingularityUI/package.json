@@ -59,7 +59,8 @@
     "reselect": "^2.5.1",
     "select2": "~3.5.1",
     "typeahead.js": "~0.10.4",
-    "underscore": "~1.8.0"
+    "underscore": "~1.8.0",
+    "singularityui-tailer": "./SingularityTailer"
   },
   "license": "Apache-2.0",
   "devDependencies": {

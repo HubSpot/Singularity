@@ -10,13 +10,9 @@ class LogLine extends React.Component {
   highlightContent(content) {
     const { search } = this.props;
     if (!search || _.isEmpty(search)) {
-      const ansiStyled = ansiStyleParser(content).map((p, i) => {
+      return ansiStyleParser(content).map((p, i) => {
         return <span key={i} className={p.styles}>{p.text}</span>;
       });
-      if (this.props.showDebugInfo) {
-        return `${ this.props.offset } | ${ this.props.timestamp } | ${ ansiStyled }`;
-      }
-      return ansiStyled;
     }
 
     const regex = RegExp(search, 'g');

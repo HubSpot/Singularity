@@ -3,11 +3,13 @@ import 'core-js/es6';
 
 import React from 'react';
 import ReactDOM from 'react-dom';
+import { AppContainer } from 'react-hot-loader';
 import FormModal from './components/common/modal/FormModal';
 import AppRouter from './router';
 import configureStore from 'store';
 import { FetchUser } from 'actions/api/auth';
 import { FetchGroups } from 'actions/api/requestGroups';
+import { actions as tailerActions } from 'singularityui-tailer';
 
 // Set up third party configurations
 import { loadThirdParty } from 'thirdPartyConfigurations';
@@ -24,12 +26,18 @@ function setApiRoot(data) {
   return location.reload();
 }
 
+const HMRContainer = (module.hot)
+  ? AppContainer
+  : ({ children }) => (children);
+
 document.addEventListener('DOMContentLoaded', () => {
   loadThirdParty();
 
   if (window.config.apiRoot) {
     // set up Redux store
     const store = configureStore();
+
+    store.dispatch(tailerActions.sandboxSetApiRoot(config.apiRoot));
 
     // set up user
     window.app = {};
@@ -39,8 +47,16 @@ document.addEventListener('DOMContentLoaded', () => {
     // set up request groups
     store.dispatch(FetchGroups.trigger([404, 500]));
 
+    // set up hot module reloading
+    if (module.hot) {
+      module.hot.accept('./router', () => {
+        const NextAppRouter = require('./router').default;
+        return ReactDOM.render(<HMRContainer><NextAppRouter store={store} /></HMRContainer>, document.getElementById('root'));
+      });
+    }
+
     // Render the page content
-    return ReactDOM.render(<AppRouter store={store} />, document.getElementById('root'), () => {
+    return ReactDOM.render(<HMRContainer><AppRouter store={store} /></HMRContainer>, document.getElementById('root'), () => {
       // hide loading animation
       document.getElementById('static-loader').remove();
     });
