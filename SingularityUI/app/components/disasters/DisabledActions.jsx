@@ -63,8 +63,7 @@ DisabledActions.propTypes = {
     message: PropTypes.string,
     user: PropTypes.string
   })).isRequired,
-  user: PropTypes.string,
-  fetchDisabledActions: PropTypes.func.isRequired
+  user: PropTypes.string
 };
 
 export default DisabledActions;
