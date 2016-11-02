@@ -21,7 +21,8 @@ class RunNowModal extends Component {
     router: PropTypes.object.isRequired,
     rerun: PropTypes.bool,
     task: PropTypes.object,
-    then: PropTypes.func
+    then: PropTypes.func,
+    requestArgHistory: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.string)).isRequired
   };
 
   static AFTER_TRIGGER = {
@@ -88,7 +89,8 @@ class RunNowModal extends Component {
               name: 'commandLineArgs',
               type: FormModal.INPUT_TYPES.MULTIINPUT,
               label: 'Additional command line arguments: (optional)',
-              defaultValue: this.defaultCommandLineArgs()
+              defaultValue: this.defaultCommandLineArgs(),
+              valueOptions: this.props.requestArgHistory
             },
             {
               name: 'message',

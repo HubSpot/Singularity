@@ -17,7 +17,8 @@ import {
   FetchDeployForRequest,
   FetchDeploysForRequest,
   FetchTaskSearchParams,
-  FetchRequestHistory
+  FetchRequestHistory,
+  FetchRequestArgHistory
 } from '../../actions/api/history';
 
 import { FetchTaskS3Logs } from '../../actions/api/logs';
@@ -95,6 +96,7 @@ const saveRequest = buildApiActionReducer(SaveRequest);
 const requests = buildApiActionReducer(FetchRequests, []);
 const requestsInState = buildApiActionReducer(FetchRequestsInState, []);
 const requestHistory = buildKeyedApiActionReducer(FetchRequestHistory, []);
+const requestArgHistory = buildKeyedApiActionReducer(FetchRequestArgHistory, []);
 const removeRequest = buildKeyedApiActionReducer(RemoveRequest, []);
 const pauseRequest = buildKeyedApiActionReducer(PauseRequest, []);
 const unpauseRequest = buildKeyedApiActionReducer(UnpauseRequest, []);
@@ -146,6 +148,7 @@ export default combineReducers({
   requests,
   requestsInState,
   requestHistory,
+  requestArgHistory,
   status,
   deploy,
   deploys,
