@@ -137,7 +137,7 @@ public class SandboxManager {
 
     final String data = initialChunk.getData();
 
-    if (data.length() <= 4 && data.replace("\ufffd", "").length() == 0) {
+    if (data.length() <= 4 && data.replace(REPLACEMENT_CHARACTER, "").length() == 0) {
       return new MesosFileChunkObject("", initialChunk.getOffset() + data.length(), Optional.<Long>absent());
     }
 
