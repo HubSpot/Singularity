@@ -19,6 +19,9 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
@@ -72,6 +75,7 @@ import com.wordnik.swagger.annotations.ApiResponses;
 @Api(description="Manages Singularity tasks.", value=TaskResource.PATH)
 public class TaskResource {
   public static final String PATH = SingularityService.API_BASE_PATH + "/tasks";
+  private static final Logger LOG = LoggerFactory.getLogger(TaskResource.class);
 
   private final TaskManager taskManager;
   private final RequestManager requestManager;
@@ -300,7 +304,8 @@ public class TaskResource {
 
     final SingularityTaskCleanup taskCleanup;
 
-    if (override.isPresent() && override.get().booleanValue()) {
+    if (override.isPresent() && override.get()) {
+      LOG.debug("Requested destroy of {}", taskId);
       cleanupType = TaskCleanupType.USER_REQUESTED_DESTROY;
       taskCleanup = new SingularityTaskCleanup(JavaUtils.getUserEmail(user), cleanupType, now,
         task.getTaskId(), message, actionId, runBeforeKillId);
