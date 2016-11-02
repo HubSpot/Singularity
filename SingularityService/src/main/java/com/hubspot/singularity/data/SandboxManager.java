@@ -117,9 +117,9 @@ public class SandboxManager {
   }
 
   /**
-   * this method will first sanitize the input by throwing away invalid UTF8 characters before sending it to
-   * Jackson for parsing. We can get invalid UTF8 data if there is a multibyte character at the boundary
-   * of our fetch
+   * This method will first sanitize the input by replacing invalid UTF8 characters with \ufffd (Unicode's "REPLACEMENT CHARACTER")
+   * before sending it to Jackson for parsing. We then strip the replacement characters characters from the beginning and end of the string
+   * and increment the offset field by how many characters were stripped from the beginning.
    */
   @VisibleForTesting
   MesosFileChunkObject parseResponseBody(Response response) throws IOException {
@@ -137,10 +137,12 @@ public class SandboxManager {
 
     final String data = initialChunk.getData();
 
+    // if we requested data between two characters, return nothing and advance the offset to the end
     if (data.length() <= 4 && data.replace(REPLACEMENT_CHARACTER, "").length() == 0) {
       return new MesosFileChunkObject("", initialChunk.getOffset() + data.length(), Optional.<Long>absent());
     }
 
+    // trim incomplete character at the beginning of the string
     int startIndex = 0;
     if (data.startsWith(TWO_REPLACEMENT_CHARACTERS)) {
       startIndex = 2;
@@ -148,6 +150,7 @@ public class SandboxManager {
       startIndex = 1;
     }
 
+    // trim incomplete character at the end of the string
     int endIndex = data.length();
     if (data.endsWith(TWO_REPLACEMENT_CHARACTERS)) {
       endIndex -= 2;
