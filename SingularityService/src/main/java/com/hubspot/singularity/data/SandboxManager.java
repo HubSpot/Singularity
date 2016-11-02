@@ -27,6 +27,8 @@ import com.ning.http.client.Response;
 
 @Singleton
 public class SandboxManager {
+  private static final String REPLACEMENT_CHARACTER = "\ufffd";
+  private static final String TWO_REPLACEMENT_CHARACTERS = REPLACEMENT_CHARACTER + REPLACEMENT_CHARACTER;
 
   private final AsyncHttpClient asyncHttpClient;
   private final ObjectMapper objectMapper;
@@ -122,10 +124,37 @@ public class SandboxManager {
   @VisibleForTesting
   MesosFileChunkObject parseResponseBody(Response response) throws IOException {
     // not thread-safe, need to make a new one each time;
-    CharsetDecoder decoder = StandardCharsets.UTF_8.newDecoder().onMalformedInput(CodingErrorAction.IGNORE);
+    CharsetDecoder decoder = StandardCharsets.UTF_8.newDecoder().onMalformedInput(CodingErrorAction.REPLACE);
 
     ByteBuffer responseBuffer = response.getResponseBodyAsByteBuffer();
     Reader sanitizedReader = CharSource.wrap(decoder.decode(responseBuffer)).openStream();
-    return objectMapper.readValue(sanitizedReader, MesosFileChunkObject.class);
+    final MesosFileChunkObject initialChunk = objectMapper.readValue(sanitizedReader, MesosFileChunkObject.class);
+
+    // bail early if no replacement characters
+    if (!initialChunk.getData().startsWith(REPLACEMENT_CHARACTER) && !initialChunk.getData().endsWith(REPLACEMENT_CHARACTER)) {
+      return initialChunk;
+    }
+
+    final String data = initialChunk.getData();
+
+    if (data.length() <= 4 && data.replace("\ufffd", "").length() == 0) {
+      return new MesosFileChunkObject("", initialChunk.getOffset() + data.length(), Optional.<Long>absent());
+    }
+
+    int startIndex = 0;
+    if (data.startsWith(TWO_REPLACEMENT_CHARACTERS)) {
+      startIndex = 2;
+    } else if (data.startsWith(REPLACEMENT_CHARACTER)) {
+      startIndex = 1;
+    }
+
+    int endIndex = data.length();
+    if (data.endsWith(TWO_REPLACEMENT_CHARACTERS)) {
+      endIndex -= 2;
+    } else if (data.endsWith(REPLACEMENT_CHARACTER)) {
+      endIndex -= 1;
+    }
+
+    return new MesosFileChunkObject(data.substring(startIndex, endIndex), initialChunk.getOffset() + startIndex, Optional.<Long>absent());
   }
 }
