@@ -9,7 +9,6 @@ class DisasterModal extends Component {
     user: PropTypes.string,
     action: PropTypes.string.isRequired,
     type: PropTypes.string.isRequired,
-    message: PropTypes.string.isRequired,
     updateDisaster: PropTypes.func.isRequired
   };
 
