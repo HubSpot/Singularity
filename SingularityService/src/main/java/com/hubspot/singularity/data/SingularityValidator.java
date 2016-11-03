@@ -73,6 +73,7 @@ public class SingularityValidator {
   private final int defaultHealthcheckIntervalSeconds;
   private final int defaultHealthcheckStartupTimeooutSeconds;
   private final int defaultHealthcehckMaxRetries;
+  private final int defaultHealthcheckResponseTimeoutSeconds;
   private final boolean allowRequestsWithoutOwners;
   private final boolean createDeployIds;
   private final int deployIdLength;
@@ -111,6 +112,7 @@ public class SingularityValidator {
     this.defaultHealthcheckIntervalSeconds = configuration.getHealthcheckIntervalSeconds();
     this.defaultHealthcheckStartupTimeooutSeconds = configuration.getStartupTimeoutSeconds();
     this.defaultHealthcehckMaxRetries = configuration.getHealthcheckMaxRetries().or(0);
+    this.defaultHealthcheckResponseTimeoutSeconds = configuration.getHealthcheckTimeoutSeconds();
 
     this.disasterManager = disasterManager;
     this.slaveManager = slaveManager;
@@ -265,9 +267,10 @@ public class SingularityValidator {
     if (deploy.getHealthcheck().isPresent() && maxTotalHealthcheckTimeoutSeconds.isPresent()) {
       HealthcheckOptions options = deploy.getHealthcheck().get();
       int intervalSeconds = options.getIntervalSeconds().or(defaultHealthcheckIntervalSeconds);
+      int httpTimeoutSeconds = options.getResponseTimeoutSeconds().or(defaultHealthcheckResponseTimeoutSeconds);
       int startupTime = options.getStartupTimeoutSeconds().or(defaultHealthcheckStartupTimeooutSeconds);
       int attempts = options.getMaxRetries().or(defaultHealthcehckMaxRetries) + 1;
-      checkBadRequest((startupTime + (intervalSeconds * attempts)) > maxTotalHealthcheckTimeoutSeconds.get(),
+      checkBadRequest((startupTime + ((httpTimeoutSeconds + intervalSeconds) * attempts)) > maxTotalHealthcheckTimeoutSeconds.get(),
         String.format("Max healthcheck time cannot be greater than %s, (was startup timeout: %s, interval: %s, attempts: %s)", maxTotalHealthcheckTimeoutSeconds.get(), startupTime, intervalSeconds, attempts));
     }
 
