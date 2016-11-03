@@ -276,9 +276,10 @@ public class SingularityDeployHealthHelper {
 
   public int getMaxHealthcheckTimeoutSeconds(HealthcheckOptions options) {
     int intervalSeconds = options.getIntervalSeconds().or(configuration.getHealthcheckIntervalSeconds());
+    int responseTimeSeconds = options.getResponseTimeoutSeconds().or(configuration.getHealthcheckTimeoutSeconds());
     int startupTime = options.getStartupTimeoutSeconds().or(configuration.getStartupTimeoutSeconds());
     int attempts = options.getMaxRetries().or(configuration.getHealthcheckMaxRetries()).or(0) + 1;
-    return startupTime + (intervalSeconds * attempts);
+    return startupTime + ((intervalSeconds + responseTimeSeconds) * attempts);
   }
 
   public List<SingularityDeployFailure> getTaskFailures(final Optional<SingularityDeploy> deploy, final Collection<SingularityTaskId> activeTasks) {
