@@ -43,6 +43,7 @@ import com.hubspot.singularity.SingularityDisasterType;
 import com.hubspot.singularity.SingularityDisastersData;
 import com.hubspot.singularity.SingularityPaginatedResponse;
 import com.hubspot.singularity.SingularityPendingRequest;
+import com.hubspot.singularity.SingularityPendingRequestParent;
 import com.hubspot.singularity.SingularityPendingTaskId;
 import com.hubspot.singularity.SingularityPriorityFreezeParent;
 import com.hubspot.singularity.SingularityRack;
@@ -575,10 +576,12 @@ public class SingularityClient {
     put(requestUri, String.format("Scale of Request %s", requestId), Optional.of(scaleRequest));
   }
 
-  public void runSingularityRequest(String requestId, Optional<SingularityRunNowRequest> runNowRequest) {
+  public SingularityPendingRequestParent runSingularityRequest(String requestId, Optional<SingularityRunNowRequest> runNowRequest) {
     final String requestUri = String.format(REQUEST_RUN_FORMAT, getHost(), contextPath, requestId);
 
-    post(requestUri, String.format("run of request %s", requestId), runNowRequest);
+    final HttpResponse response = post(requestUri, String.format("run of request %s", requestId), runNowRequest);
+
+    return response.getAs(SingularityPendingRequestParent.class);
   }
 
   public void bounceSingularityRequest(String requestId, Optional<SingularityBounceRequest> bounceOptions) {
