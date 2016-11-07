@@ -19,22 +19,26 @@ import com.hubspot.singularity.SingularityMachineAbstraction;
 import com.hubspot.singularity.SingularityMachineStateHistoryUpdate;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.transcoders.Transcoder;
+import com.hubspot.singularity.expiring.SingularityExpiringMachineState;
 
 public abstract class AbstractMachineManager<T extends SingularityMachineAbstraction<T>> extends CuratorAsyncManager {
 
   private static final Logger LOG = LoggerFactory.getLogger(AbstractMachineManager.class);
 
   private static final String HISTORY_PATH = "history";
+  private static final String EXPIRING_PATH = "expiring";
 
   private final Transcoder<T> transcoder;
   private final Transcoder<SingularityMachineStateHistoryUpdate> historyTranscoder;
+  private final Transcoder<SingularityExpiringMachineState> expiringMachineStateTranscoder;
 
   public AbstractMachineManager(CuratorFramework curator, SingularityConfiguration configuration, MetricRegistry metricRegistry, Transcoder<T> transcoder,
-      Transcoder<SingularityMachineStateHistoryUpdate> historyTranscoder) {
+      Transcoder<SingularityMachineStateHistoryUpdate> historyTranscoder, Transcoder<SingularityExpiringMachineState> expiringMachineStateTranscoder) {
     super(curator, configuration, metricRegistry);
 
     this.transcoder = transcoder;
     this.historyTranscoder = historyTranscoder;
+    this.expiringMachineStateTranscoder = expiringMachineStateTranscoder;
   }
 
   protected abstract String getRoot();
@@ -172,5 +176,26 @@ public abstract class AbstractMachineManager<T extends SingularityMachineAbstrac
 
     return save(getObjectPath(object.getId()), object, transcoder);
   }
+
+  private String getExpiringPath(String machineId) {
+    return ZKPaths.makePath(EXPIRING_PATH, machineId);
+  }
+
+  public List<SingularityExpiringMachineState> getExpiringObjects() {
+    return getAsyncChildren(EXPIRING_PATH, expiringMachineStateTranscoder);
+  }
+
+  public Optional<SingularityExpiringMachineState> getExpiringObject(String machineId) {
+    return getData(getExpiringPath(machineId), expiringMachineStateTranscoder);
+  }
+
+  public SingularityCreateResult saveExpiringObject(SingularityExpiringMachineState expiringMachineState, String machineId) {
+    return save(getExpiringPath(machineId), expiringMachineState, expiringMachineStateTranscoder);
+  }
+
+  public SingularityDeleteResult deleteExpiringObject(String machineId) {
+    return delete(getExpiringPath(machineId));
+  }
+
 
 }

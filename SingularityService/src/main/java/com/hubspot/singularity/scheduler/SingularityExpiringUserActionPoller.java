@@ -20,20 +20,27 @@ import com.google.inject.name.Named;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.ExtendedTaskState;
 import com.hubspot.singularity.RequestState;
+import com.hubspot.singularity.SingularityMachineAbstraction;
 import com.hubspot.singularity.SingularityPendingRequest;
 import com.hubspot.singularity.SingularityPendingRequest.PendingType;
+import com.hubspot.singularity.SingularityRack;
 import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityRequestHistory.RequestHistoryType;
 import com.hubspot.singularity.SingularityRequestWithState;
+import com.hubspot.singularity.SingularitySlave;
 import com.hubspot.singularity.SingularityTaskCleanup;
 import com.hubspot.singularity.SingularityTaskHistoryUpdate;
 import com.hubspot.singularity.api.SingularityScaleRequest;
 import com.hubspot.singularity.config.SingularityConfiguration;
+import com.hubspot.singularity.data.RackManager;
 import com.hubspot.singularity.data.RequestManager;
+import com.hubspot.singularity.data.SlaveManager;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.expiring.SingularityExpiringBounce;
+import com.hubspot.singularity.expiring.SingularityExpiringMachineState;
 import com.hubspot.singularity.expiring.SingularityExpiringParent;
 import com.hubspot.singularity.expiring.SingularityExpiringPause;
+import com.hubspot.singularity.expiring.SingularityExpiringRequestActionParent;
 import com.hubspot.singularity.expiring.SingularityExpiringScale;
 import com.hubspot.singularity.expiring.SingularityExpiringSkipHealthchecks;
 import com.hubspot.singularity.helpers.RequestHelper;
@@ -49,11 +56,13 @@ public class SingularityExpiringUserActionPoller extends SingularityLeaderOnlyPo
   private final TaskManager taskManager;
   private final SingularityMailer mailer;
   private final RequestHelper requestHelper;
-  private final List<SingularityExpiringUserActionHandler<?>> handlers;
+  private final SlaveManager slaveManager;
+  private final RackManager rackManager;
+  private final List<SingularityExpiringUserActionHandler<?, ?>> handlers;
   private final SingularityConfiguration configuration;
 
   @Inject
-  SingularityExpiringUserActionPoller(SingularityConfiguration configuration, RequestManager requestManager, TaskManager taskManager,
+  SingularityExpiringUserActionPoller(SingularityConfiguration configuration, RequestManager requestManager, TaskManager taskManager, SlaveManager slaveManager, RackManager rackManager,
       @Named(SingularityMesosModule.SCHEDULER_LOCK_NAME) final Lock lock, RequestHelper requestHelper, SingularityMailer mailer) {
     super(configuration.getCheckExpiringUserActionEveryMillis(), TimeUnit.MILLISECONDS, lock);
 
@@ -61,33 +70,39 @@ public class SingularityExpiringUserActionPoller extends SingularityLeaderOnlyPo
     this.requestHelper = requestHelper;
     this.mailer = mailer;
     this.taskManager = taskManager;
+    this.slaveManager = slaveManager;
+    this.rackManager = rackManager;
     this.configuration = configuration;
 
-    List<SingularityExpiringUserActionHandler<?>> tempHandlers = Lists.newArrayList();
+    List<SingularityExpiringUserActionHandler<?, ?>> tempHandlers = Lists.newArrayList();
     tempHandlers.add(new SingularityExpiringBounceHandler());
     tempHandlers.add(new SingularityExpiringPauseHandler());
     tempHandlers.add(new SingularityExpiringScaleHandler());
     tempHandlers.add(new SingularityExpiringSkipHealthchecksHandler());
+    tempHandlers.add(new SingularityExpiringMachineStateHandler());
 
     this.handlers = ImmutableList.copyOf(tempHandlers);
   }
 
   @Override
   public void runActionOnPoll() {
-    for (SingularityExpiringUserActionHandler<?> handler : handlers) {
+    for (SingularityExpiringUserActionHandler<?, ?> handler : handlers) {
       handler.checkExpiringObjects();
     }
   }
 
-  private abstract class SingularityExpiringUserActionHandler<T extends SingularityExpiringParent<?>> {
-
+  private abstract class SingularityExpiringUserActionHandler<T extends SingularityExpiringParent<?>, Q> {
     private final Class<T> clazz;
 
     private SingularityExpiringUserActionHandler(Class<T> clazz) {
       this.clazz = clazz;
     }
 
-    private boolean isExpiringDue(T expiringObject) {
+    protected Class<T> getClazz() {
+      return clazz;
+    }
+
+    protected boolean isExpiringDue(T expiringObject) {
       final long now = System.currentTimeMillis();
       final long duration = now - expiringObject.getStartMillis();
 
@@ -107,8 +122,22 @@ public class SingularityExpiringUserActionPoller extends SingularityLeaderOnlyPo
       return expiringObject.getExpiringAPIRequestObject().getDurationMillis().get();
     }
 
+    protected abstract void checkExpiringObjects();
+    protected abstract String getActionName();
+    protected abstract void handleExpiringObject(T expiringObject, Q targetObject, String message);
+
+  }
+
+  // Expiring request-related actions
+  private abstract class SingularityExpiringRequestActionHandler<T extends SingularityExpiringRequestActionParent<?>> extends SingularityExpiringUserActionHandler<T, SingularityRequestWithState> {
+
+    private SingularityExpiringRequestActionHandler(Class<T> clazz) {
+      super(clazz);
+    }
+
+    @Override
     protected void checkExpiringObjects() {
-      for (T expiringObject : requestManager.getExpiringObjects(clazz)) {
+      for (T expiringObject : requestManager.getExpiringObjects(getClazz())) {
         if (isExpiringDue(expiringObject)) {
 
           Optional<SingularityRequestWithState> requestWithState = requestManager.getRequest(expiringObject.getRequestId());
@@ -119,17 +148,14 @@ public class SingularityExpiringUserActionPoller extends SingularityLeaderOnlyPo
             handleExpiringObject(expiringObject, requestWithState.get(), getMessage(expiringObject));
           }
 
-          requestManager.deleteExpiringObject(clazz, expiringObject.getRequestId());
+          requestManager.deleteExpiringObject(getClazz(), expiringObject.getRequestId());
         }
       }
     }
-
-    protected abstract String getActionName();
-    protected abstract void handleExpiringObject(T expiringObject, SingularityRequestWithState requestWithState, String message);
-
   }
 
-  private class SingularityExpiringBounceHandler extends SingularityExpiringUserActionHandler<SingularityExpiringBounce> {
+
+  private class SingularityExpiringBounceHandler extends SingularityExpiringRequestActionHandler<SingularityExpiringBounce> {
 
     public SingularityExpiringBounceHandler() {
       super(SingularityExpiringBounce.class);
@@ -178,7 +204,7 @@ public class SingularityExpiringUserActionPoller extends SingularityLeaderOnlyPo
 
   }
 
-  private class SingularityExpiringPauseHandler extends SingularityExpiringUserActionHandler<SingularityExpiringPause> {
+  private class SingularityExpiringPauseHandler extends SingularityExpiringRequestActionHandler<SingularityExpiringPause> {
 
     public SingularityExpiringPauseHandler() {
       super(SingularityExpiringPause.class);
@@ -203,7 +229,7 @@ public class SingularityExpiringUserActionPoller extends SingularityLeaderOnlyPo
 
   }
 
-  private class SingularityExpiringScaleHandler extends SingularityExpiringUserActionHandler<SingularityExpiringScale> {
+  private class SingularityExpiringScaleHandler extends SingularityExpiringRequestActionHandler<SingularityExpiringScale> {
 
     public SingularityExpiringScaleHandler() {
       super(SingularityExpiringScale.class);
@@ -231,7 +257,7 @@ public class SingularityExpiringUserActionPoller extends SingularityLeaderOnlyPo
 
   }
 
-  private class SingularityExpiringSkipHealthchecksHandler extends SingularityExpiringUserActionHandler<SingularityExpiringSkipHealthchecks> {
+  private class SingularityExpiringSkipHealthchecksHandler extends SingularityExpiringRequestActionHandler<SingularityExpiringSkipHealthchecks> {
 
     public SingularityExpiringSkipHealthchecksHandler() {
       super(SingularityExpiringSkipHealthchecks.class);
@@ -252,6 +278,55 @@ public class SingularityExpiringUserActionPoller extends SingularityLeaderOnlyPo
             Optional.<Boolean> absent(), Optional.of(message));
       } catch (WebApplicationException wae) {
         LOG.error("While trying to apply {} for {}", expiringObject, expiringObject.getRequestId(), wae);
+      }
+    }
+  }
+
+  // Expiring Machine States
+  private class SingularityExpiringMachineStateHandler extends SingularityExpiringUserActionHandler<SingularityExpiringMachineState, SingularityMachineAbstraction> {
+
+    public SingularityExpiringMachineStateHandler() {
+      super(SingularityExpiringMachineState.class);
+    }
+
+    @Override
+    protected String getActionName() {
+      return "Change machine state";
+    }
+
+    @Override
+    protected void handleExpiringObject(SingularityExpiringMachineState expiringObject, SingularityMachineAbstraction machine, String message) {
+      // TODO: actually revert the state here
+    }
+
+    @Override
+    protected void checkExpiringObjects() {
+      for (SingularityExpiringMachineState expiringObject : slaveManager.getExpiringObjects()) {
+        if (isExpiringDue(expiringObject)) {
+          Optional<SingularitySlave> slave = slaveManager.getObject(expiringObject.getMachineId());
+
+          if (!slave.isPresent()) {
+            LOG.warn("Slave {} not present, discarding {}", expiringObject.getMachineId(), expiringObject);
+          } else {
+            handleExpiringObject(expiringObject, slave.get(), getMessage(expiringObject));
+          }
+
+          slaveManager.deleteExpiringObject(expiringObject.getMachineId());
+        }
+      }
+
+      for (SingularityExpiringMachineState expiringObject : rackManager.getExpiringObjects()) {
+        if (isExpiringDue(expiringObject)) {
+          Optional<SingularityRack> rack = rackManager.getObject(expiringObject.getMachineId());
+
+          if (!rack.isPresent()) {
+            LOG.warn("Rack {} not present, discarding {}", expiringObject.getMachineId(), expiringObject);
+          } else {
+            handleExpiringObject(expiringObject, rack.get(), getMessage(expiringObject));
+          }
+
+          rackManager.deleteExpiringObject(expiringObject.getMachineId());
+        }
       }
     }
   }
