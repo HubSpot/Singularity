@@ -162,6 +162,8 @@ public class SingularityConfiguration extends Configuration {
 
   private int maxRequestIdSize = 100;
 
+  private int maxUserIdSize = 100;
+
   private boolean storeAllMesosTaskInfoForDebugging = false;
 
   @JsonProperty("historyPurging")
@@ -555,6 +557,10 @@ public class SingularityConfiguration extends Configuration {
     return maxRequestIdSize;
   }
 
+  public int getMaxUserIdSize() {
+    return maxUserIdSize;
+  }
+
   public int getMaxTasksPerOffer() {
     return maxTasksPerOffer;
   }
@@ -881,6 +887,11 @@ public class SingularityConfiguration extends Configuration {
 
   public void setMaxRequestIdSize(int maxRequestIdSize) {
     this.maxRequestIdSize = maxRequestIdSize;
+  }
+
+  public SingularityConfiguration setMaxUserIdSize(int maxUserIdSize) {
+    this.maxUserIdSize = maxUserIdSize;
+    return this;
   }
 
   public void setMaxTasksPerOffer(int maxTasksPerOffer) {

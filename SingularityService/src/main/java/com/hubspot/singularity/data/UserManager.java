@@ -20,7 +20,6 @@ public class UserManager extends CuratorManager {
   private final SingularityValidator validator;
 
   private static final String USER_ROOT = "/users";
-
   private static final String SETTINGS_ROOT = USER_ROOT + "/settings";
 
   @Inject
@@ -48,10 +47,13 @@ public class UserManager extends CuratorManager {
     final String path = getUserSettingsPath(userId);
     final Optional<SingularityUserSettings> settings = getData(path, settingsTranscoder);
     if (!settings.isPresent()) {
+      validator.checkStarredRequests(starredRequestIds);
       save(path, new SingularityUserSettings(starredRequestIds), settingsTranscoder);
       return;
     }
-    save(path, settings.get().addStarredRequestIds(starredRequestIds), settingsTranscoder);
+    settings.get().addStarredRequestIds(starredRequestIds);
+    validator.checkStarredRequests(settings.get().getStarredRequestIds());
+    save(path, settings.get(), settingsTranscoder);
   }
 
   public void deleteStarredRequestIds(String userId, Set<String> starredRequestIds) {
