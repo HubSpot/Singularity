@@ -113,6 +113,12 @@ export const sandboxSetApiRoot = (apiRoot) => ({
   apiRoot
 });
 
+export const SET_TAIL_INTERVAL_MS = `${frameworkName}_TAIL_INTERVAL_MS`;
+export const tailIntervalMs = (tailIntervalMs) => ({
+  type: SET_TAIL_INTERVAL_MS,
+  tailIntervalMs
+});
+
 export const sandboxFetchChunk = (id, taskId, path, start, end, config) => {
   return (dispatch) => {
     dispatch(

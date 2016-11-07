@@ -2,12 +2,14 @@ import {
   SANDBOX_SET_API_ROOT,
   BLAZAR_SET_API_ROOT,
   TOGGLE_ANSI_COLORING,
-  TOGGLE_FETCH_OVERSCAN
+  TOGGLE_FETCH_OVERSCAN,
+  SET_TAIL_INTERVAL_MS
 } from '../actions';
 
 const initialState = {
   parseAnsi: true,
-  fetchOverscan: true
+  fetchOverscan: true,
+  tailIntervalMs: 5000
 };
 
 const configReducer = (state = initialState, action) => {
@@ -32,6 +34,11 @@ const configReducer = (state = initialState, action) => {
         ...state,
         fetchOverscan: !state.fetchOverscan
       };
+    case SET_TAIL_INTERVAL_MS:
+      return {
+        ...state,
+        tailIntervalMs: action.tailIntervalMs
+      }
     default:
       return state;
   }

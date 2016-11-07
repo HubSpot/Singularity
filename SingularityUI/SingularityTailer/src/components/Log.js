@@ -13,7 +13,6 @@ import * as Selectors from '../selectors';
 import LogLines, { LOG_LINE_HEIGHT } from './LogLines';
 
 const SCROLL_LOAD_THRESHOLD = 300;
-const TAIL_INTERVAL_MS = 5000;
 
 class Log extends Component {
   constructor() {
@@ -84,7 +83,7 @@ class Log extends Component {
     if (nextState.tailing && this.tailIntervalId == null) {
       this.tailIntervalId = setInterval(() => {
         this.loadLine(this.props.lines.size - 1, false);
-      }, TAIL_INTERVAL_MS);
+      }, nextProps.config.tailIntervalMs);
     } else if (!nextState.tailing && this.tailIntervalId != null) {
       clearInterval(this.tailIntervalId);
     }
