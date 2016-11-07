@@ -14,7 +14,7 @@ public class SingularityExpiringSlaveState extends SingularityExpiringMachineSta
                                        @JsonProperty("actionId") String actionId,
                                        @JsonProperty("expiringAPIRequestObject") SingularityMachineChangeRequest machineChangeRequest,
                                        @JsonProperty("machineId") String machineId,
-                                       @JsonProperty("revertToState") Optional<MachineState> revertToState,
+                                       @JsonProperty("revertToState") MachineState revertToState,
                                        @JsonProperty("killTasksOnDecommissionTimeout") Optional<Boolean> killTasksOnDecommissionTimeout) {
     super(user, startMillis, actionId, machineChangeRequest, machineId, revertToState, killTasksOnDecommissionTimeout);
   }

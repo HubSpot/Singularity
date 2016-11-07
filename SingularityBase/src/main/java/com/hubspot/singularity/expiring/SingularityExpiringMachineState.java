@@ -9,12 +9,12 @@ import com.hubspot.singularity.api.SingularityMachineChangeRequest;
 public class SingularityExpiringMachineState extends SingularityExpiringParent<SingularityMachineChangeRequest> {
 
   private final String machineId;
-  private final Optional<MachineState> revertToState;
+  private final MachineState revertToState;
   private final boolean killTasksOnDecommissionTimeout;
 
   @JsonCreator
   public SingularityExpiringMachineState(Optional<String> user, long startMillis, String actionId, SingularityMachineChangeRequest machineChangeRequest,
-    String machineId, Optional<MachineState> revertToState, Optional<Boolean> killTasksOnDecommissionTimeout) {
+    String machineId, MachineState revertToState, Optional<Boolean> killTasksOnDecommissionTimeout) {
     super(machineChangeRequest, user, startMillis, actionId);
     this.machineId = machineId;
     this.revertToState = revertToState;
@@ -25,7 +25,7 @@ public class SingularityExpiringMachineState extends SingularityExpiringParent<S
     return machineId;
   }
 
-  public Optional<MachineState> getRevertToState() {
+  public MachineState getRevertToState() {
     return revertToState;
   }
 

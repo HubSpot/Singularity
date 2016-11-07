@@ -515,15 +515,14 @@ public class SingularityValidator {
     }
 
     SingularityMachineChangeRequest changeRequest = maybeChangeRequest.get();
-    if (changeRequest.getRevertToState().isPresent()) {
-      MachineState newState = changeRequest.getRevertToState().get();
 
-      checkConflict(!currentExpiringObject.isPresent(), "A current expiring object already exists, delete it first");
-      checkBadRequest(!(newState == MachineState.STARTING_DECOMMISSION && currentState.isDecommissioning()), "Cannot start decommission when it has already been started");
-      checkBadRequest(!(((newState == MachineState.DECOMMISSIONING) || (newState == MachineState.DECOMMISSIONED)) && (currentState == MachineState.FROZEN)), "Cannot transition from FROZEN to DECOMMISSIONING or DECOMMISSIONED");
-      checkBadRequest(!(newState == MachineState.FROZEN && currentState.isDecommissioning()), "Cannot transition from a decommissioning state to FROZEN");
-    }
+    checkBadRequest(!changeRequest.getRevertToState().isPresent(), "Must include a machine state to revert to for an expiring machine state change");
+    MachineState newState = changeRequest.getRevertToState().get();
 
+    checkConflict(!currentExpiringObject.isPresent(), "A current expiring object already exists, delete it first");
+    checkBadRequest(!(newState == MachineState.STARTING_DECOMMISSION && currentState.isDecommissioning()), "Cannot start decommission when it has already been started");
+    checkBadRequest(!(((newState == MachineState.DECOMMISSIONING) || (newState == MachineState.DECOMMISSIONED)) && (currentState == MachineState.FROZEN)), "Cannot transition from FROZEN to DECOMMISSIONING or DECOMMISSIONED");
+    checkBadRequest(!(newState == MachineState.FROZEN && currentState.isDecommissioning()), "Cannot transition from a decommissioning state to FROZEN");
   }
 
   public void checkActionEnabled(SingularityAction action) {

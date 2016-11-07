@@ -106,7 +106,7 @@ public abstract class AbstractMachineResource<T extends SingularityMachineAbstra
           changeRequest.get().getActionId().or(UUID.randomUUID().toString()),
           changeRequest.get(),
           objectId,
-          changeRequest.get().getRevertToState(),
+          changeRequest.get().getRevertToState().get(),
           Optional.of(changeRequest.get().isKillTasksOnDecommissionTimeout())
           ),
         objectId);
