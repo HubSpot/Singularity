@@ -19,6 +19,7 @@ import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.ExtendedTaskState;
+import com.hubspot.singularity.MachineState;
 import com.hubspot.singularity.RequestState;
 import com.hubspot.singularity.SingularityMachineAbstraction;
 import com.hubspot.singularity.SingularityPendingRequest;
@@ -28,8 +29,12 @@ import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityRequestHistory.RequestHistoryType;
 import com.hubspot.singularity.SingularityRequestWithState;
 import com.hubspot.singularity.SingularitySlave;
+import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskCleanup;
 import com.hubspot.singularity.SingularityTaskHistoryUpdate;
+import com.hubspot.singularity.SingularityTaskId;
+import com.hubspot.singularity.SingularityTaskShellCommandRequestId;
+import com.hubspot.singularity.TaskCleanupType;
 import com.hubspot.singularity.api.SingularityScaleRequest;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.RackManager;
@@ -79,7 +84,8 @@ public class SingularityExpiringUserActionPoller extends SingularityLeaderOnlyPo
     tempHandlers.add(new SingularityExpiringPauseHandler());
     tempHandlers.add(new SingularityExpiringScaleHandler());
     tempHandlers.add(new SingularityExpiringSkipHealthchecksHandler());
-    tempHandlers.add(new SingularityExpiringMachineStateHandler());
+    tempHandlers.add(new SingularityExpiringSlaveStateHandler());
+    tempHandlers.add(new SingularityExpiringRackStateHandler());
 
     this.handlers = ImmutableList.copyOf(tempHandlers);
   }
@@ -283,7 +289,7 @@ public class SingularityExpiringUserActionPoller extends SingularityLeaderOnlyPo
   }
 
   // Expiring Machine States
-  private class SingularityExpiringMachineStateHandler extends SingularityExpiringUserActionHandler<SingularityExpiringMachineState, SingularityMachineAbstraction> {
+  private abstract class SingularityExpiringMachineStateHandler extends SingularityExpiringUserActionHandler<SingularityExpiringMachineState, SingularityMachineAbstraction> {
 
     public SingularityExpiringMachineStateHandler() {
       super(SingularityExpiringMachineState.class);
@@ -293,10 +299,29 @@ public class SingularityExpiringUserActionPoller extends SingularityLeaderOnlyPo
     protected String getActionName() {
       return "Change machine state";
     }
+  }
 
+  private class SingularityExpiringSlaveStateHandler extends SingularityExpiringMachineStateHandler {
     @Override
     protected void handleExpiringObject(SingularityExpiringMachineState expiringObject, SingularityMachineAbstraction machine, String message) {
-      // TODO: actually revert the state here
+      SingularitySlave slave = (SingularitySlave) machine;
+      slaveManager.changeState(slave, expiringObject.getRevertToState(), Optional.of("Reverted due to expiring action"), expiringObject.getUser());
+      if (expiringObject.isKillTasksOnDecommissionTimeout() && expiringObject.getRevertToState() == MachineState.DECOMMISSIONED) {
+        List<SingularityTaskId> activeTasksIdsOnSlave = taskManager.getActiveTaskIds();
+        String sanitizedHost = JavaUtils.getReplaceHyphensWithUnderscores(slave.getHost());
+        long now = System.currentTimeMillis();
+        for (SingularityTaskId taskId : activeTasksIdsOnSlave) {
+          if (taskId.getSanitizedHost().equals(sanitizedHost)) {
+            taskManager.createTaskCleanup(new SingularityTaskCleanup(
+              expiringObject.getUser(),
+              TaskCleanupType.DECOMMISSION_TIMEOUT,
+              now, taskId,
+              Optional.of(String.format("Slave decommission (started by: %s) timed out after %sms", expiringObject.getUser(), now - expiringObject.getStartMillis())),
+              Optional.<String> absent(),
+              Optional.<SingularityTaskShellCommandRequestId> absent()));
+          }
+        }
+      }
     }
 
     @Override
@@ -314,7 +339,17 @@ public class SingularityExpiringUserActionPoller extends SingularityLeaderOnlyPo
           slaveManager.deleteExpiringObject(expiringObject.getMachineId());
         }
       }
+    }
+  }
 
+  private class SingularityExpiringRackStateHandler extends SingularityExpiringMachineStateHandler {
+    @Override
+    protected void handleExpiringObject(SingularityExpiringMachineState expiringObject, SingularityMachineAbstraction machine, String message) {
+      rackManager.changeState((SingularityRack) machine, expiringObject.getRevertToState(), Optional.of("Reverted due to expiring action"), expiringObject.getUser());
+    }
+
+    @Override
+    protected void checkExpiringObjects() {
       for (SingularityExpiringMachineState expiringObject : rackManager.getExpiringObjects()) {
         if (isExpiringDue(expiringObject)) {
           Optional<SingularityRack> rack = rackManager.getObject(expiringObject.getMachineId());
@@ -330,5 +365,4 @@ public class SingularityExpiringUserActionPoller extends SingularityLeaderOnlyPo
       }
     }
   }
-
 }
