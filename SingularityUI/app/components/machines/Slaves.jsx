@@ -2,12 +2,12 @@ import React, {PropTypes} from 'react';
 import MachinesPage from './MachinesPage';
 import {Glyphicon} from 'react-bootstrap';
 import FormModalButton from '../common/modal/FormModalButton';
-import messageElement from './messageElement';
+import FormModal from '../common/modal/FormModal';
 import Utils from '../../utils';
 import { connect } from 'react-redux';
 import rootComponent from '../../rootComponent';
 import { Link } from 'react-router';
-import { FetchSlaves, FreezeSlave, DecommissionSlave, RemoveSlave, ReactivateSlave } from '../../actions/api/slaves';
+import { FetchSlaves, FreezeSlave, DecommissionSlave, RemoveSlave, ReactivateSlave, FetchExpiringSlaveStates, RemoveExpiringSlaveState } from '../../actions/api/slaves';
 import Column from '../common/table/Column';
 import JSONButton from '../common/JSONButton';
 import CustomizeSlavesTableButton from './CustomizeSlavesTableButton';
@@ -15,15 +15,63 @@ import CustomizeSlavesTableButton from './CustomizeSlavesTableButton';
 const typeName = {
   'active': 'Activated By',
   'frozen': 'Frozen By',
-  'decommissioning': 'Decommissioned By'
+  'decommissioning': 'Decommissioned By',
+  'decommissioned': 'Decommissioned By'
 };
 
 const Slaves = (props) => {
+  const actionElements = (slave, buttonType) => {
+    const elements = [];
+    elements.push({
+      name: 'message',
+      type: FormModal.INPUT_TYPES.STRING,
+      label: 'Message (optional)'
+    });
+    if (buttonType != 'REMOVE') {
+      elements.push({
+        name: 'durationMillis',
+        type: FormModal.INPUT_TYPES.DURATION,
+        label: 'Expiration (optional)',
+        help: (
+          <div>
+            <p>If an expiration duration is specified, the slave will revert to the state specified below after time has elapsed.</p>
+          </div>
+        )
+      });
+      elements.push({
+        name: 'revertToState',
+        type: FormModal.INPUT_TYPES.SELECT,
+        dependsOn: 'durationMillis',
+        defaultValue: slave.currentState.state,
+        label: 'Revert To',
+        options: _.map(Utils.MACHINE_STATES_FOR_REVERT, (machineState) => ({
+          label: machineState,
+          value: machineState
+        }))
+      });
+    }
+    if (buttonType == 'DECOMMISSION') {
+      elements.push({
+        name: 'killTasksOnDecommissionTimeout',
+        type: FormModal.INPUT_TYPES.BOOLEAN,
+        dependsOn: 'durationMillis',
+        label: 'Kill remaining tasks on decommission timeout',
+        defaultValue: false
+      });
+    }
+
+    return elements;
+  };
+
   const showUser = (slave) => Utils.isIn(slave.currentState.state, ['ACTIVE', 'DECOMMISSIONING', 'DECOMMISSIONED', 'STARTING_DECOMMISSION', 'FROZEN']);
 
   const resources = _.uniq(_.flatten(_.map(props.slaves, (slave) => Object.keys(Utils.maybe(slave, ['resources'], [])))));
 
   const customAttrs = _.uniq(_.flatten(_.map(props.slaves, (slave) => Object.keys(Utils.maybe(slave, ['attributes'], [])))));
+
+  const expiringSlaveState = (slave) => (
+    _.find(props.expiringSlaveStates, (expiring) => expiring.machineId == slave.id)
+  )
 
   const getMaybeReactivateButton = (slave) => (
     Utils.isIn(slave.currentState.state, ['DECOMMISSIONING', 'DECOMMISSIONED', 'STARTING_DECOMMISSION', 'FROZEN']) && (
@@ -31,9 +79,9 @@ const Slaves = (props) => {
         name="Reactivate Slave"
         buttonChildren={<Glyphicon glyph="new-window" />}
         action="Reactivate Slave"
-        onConfirm={(data) => props.reactivateSlave(slave, data.message)}
+        onConfirm={(data) => props.reactivateSlave(slave, data)}
         tooltipText={`Reactivate ${slave.id}`}
-        formElements={[messageElement]}>
+        formElements={actionElements(slave, 'REACTIVATE')}>
         <p>Are you sure you want to cancel decommission and reactivate this slave??</p>
         <pre>{slave.id}</pre>
         <p>Reactivating a slave will cancel the decommission without erasing the slave's history and move it back to the active state.</p>
@@ -45,9 +93,9 @@ const Slaves = (props) => {
       name="Freeze Slave"
       buttonChildren={<Glyphicon glyph="stop" />}
       action="Freeze Slave"
-      onConfirm={(data) => props.freezeSlave(slave, data.message)}
+      onConfirm={(data) => props.freezeSlave(slave, data)}
       tooltipText={`Freeze ${slave.id}`}
-      formElements={[messageElement]}>
+      formElements={actionElements(slave, 'FREEZE')}>
       <p>Are you sure you want to freeze this slave?</p>
       <pre>{slave.id}</pre>
       <p>Freezing a slave will prevent new tasks from being launched. Previously running tasks will be unaffected.</p>
@@ -59,9 +107,9 @@ const Slaves = (props) => {
       name="Decommission Slave"
       buttonChildren={<Glyphicon glyph="trash" />}
       action="Decommission Slave"
-      onConfirm={(data) => props.decommissionSlave(slave, data.message)}
+      onConfirm={(data) => props.decommissionSlave(slave, data)}
       tooltipText={`Decommission ${slave.id}`}
-      formElements={[messageElement]}>
+      formElements={actionElements(slave, 'DECOMMISSION')}>
       <p>Are you sure you want to decommission this slave?</p>
       <pre>{slave.id}</pre>
       <p>Decommissioning a slave causes all tasks currently running on it to be rescheduled and executed elsewhere,
@@ -75,15 +123,28 @@ const Slaves = (props) => {
       name="Remove Slave"
       buttonChildren={<Glyphicon glyph="remove" />}
       action="Remove Slave"
-      onConfirm={(data) => props.removeSlave(slave, data.message)}
+      onConfirm={(data) => props.removeSlave(slave, data)}
       tooltipText={`Remove ${slave.id}`}
-      formElements={[messageElement]}>
+      formElements={actionElements(slave, 'REMOVE')}>
       <p>Are you sure you want to remove this slave?</p>
       <pre>{slave.id}</pre>
       {Utils.isIn(slave.currentState.state, ['DECOMMISSIONING', 'DECOMMISSIONED', 'STARTING_DECOMMISSION']) &&
       <p>
         Removing a decommissioned slave will cause that slave to become active again if the mesos-slave process is still running.
       </p>}
+    </FormModalButton>
+  ));
+
+  const getMaybeRemoveExpiring = (slave) => ( expiringSlaveState(slave) && (
+    <FormModalButton
+      name="Cancel Expiring ACtion"
+      buttonChildren={<Glyphicon glyph="remove-circle" />}
+      action={`Make ${slave.currentState.state} Permanent`}
+      onConfirm={(data) => props.removeExpiringState(slave.id)}
+      tooltipText={`Cancel revert to ${expiringSlaveState(slave).revertToState}`}
+      formElements={[]}>
+      <p>Are you sure you want to remove the expiring action for this slave? This will make the curretn state permanent.</p>
+      <pre>{slave.id}</pre>
     </FormModalButton>
   ));
 
@@ -166,6 +227,20 @@ const Slaves = (props) => {
     />
   );
 
+  const expiringColumn = () => (
+    <Column
+      label="Expiring"
+      id="expiring"
+      key="expiring"
+      cellData={(slave) => {
+        const expiring = expiringSlaveState(slave);
+        if (expiring) {
+          return `Transitions to ${expiring.revertToState} in ${Utils.duration(Date.now() - (expiring.startMillis + expiring.expiringAPIRequestObject.durationMillis))}`
+        }
+      }}
+    />
+  );
+
   const getColumns = (type) => {
     const columns = [];
     if (props.columnSettings['id']) {
@@ -201,6 +276,9 @@ const Slaves = (props) => {
     }
     if (props.columnSettings['message']) {
       columns.push(messageColumn());
+    }
+    if (!_.isEmpty(props.expiringSlaveStates) && props.columnSettings['expiring']) {
+      columns.push(expiringColumn());
     }
 
     _.each(resources, (resource) => {
@@ -240,6 +318,7 @@ const Slaves = (props) => {
         className="actions-column"
         cellData={(slave) => (
           <span>
+            {getMaybeRemoveExpiring(slave)}
             {getMaybeReactivateButton(slave)}
             {getMaybeFreezeButton(slave)}
             {getMaybeDecommissionButton(slave)}
@@ -259,7 +338,9 @@ const Slaves = (props) => {
 
   const frozenSlaves = props.slaves.filter(({currentState}) => currentState.state === 'FROZEN');
 
-  const decommissioningSlaves = props.slaves.filter(({currentState}) => Utils.isIn(currentState.state, ['DECOMMISSIONING', 'DECOMMISSIONED', 'STARTING_DECOMMISSION']));
+  const decommissioningSlaves = props.slaves.filter(({currentState}) => Utils.isIn(currentState.state, ['DECOMMISSIONING', 'STARTING_DECOMMISSION']));
+
+  const decommissionedSlaves = props.slaves.filter(({currentState}) => currentState.state === 'DECOMMISSIONED');
 
   const inactiveSlaves = props.slaves.filter(({currentState}) => Utils.isIn(currentState.state, ['DEAD', 'MISSING_ON_STARTUP']));
 
@@ -283,6 +364,13 @@ const Slaves = (props) => {
       emptyMessage: 'No Decommissioning Slaves',
       hostsInState: decommissioningSlaves,
       columns: getColumns('decommissioning'),
+      paginated: props.paginated
+    },
+    {
+      stateName: 'Decommissioned',
+      emptyMessage: 'No Decommissioned Slaves',
+      hostsInState: decommissionedSlaves,
+      columns: getColumns('decommissioned'),
       paginated: props.paginated
     },
     {
@@ -323,8 +411,11 @@ Slaves.propTypes = {
   decommissionSlave: PropTypes.func.isRequired,
   removeSlave: PropTypes.func.isRequired,
   reactivateSlave: PropTypes.func.isRequired,
+  fetchExpiringSlaveStates: PropTypes.func.isRequired,
+  removeExpiringState: PropTypes.func.isRequired,
   clear: PropTypes.func.isRequired,
   error: PropTypes.string,
+  expiringSlaveStates: PropTypes.array.isRequired,
   slaves: PropTypes.arrayOf(PropTypes.shape({
     state: PropTypes.string
   })),
@@ -354,7 +445,8 @@ function mapStateToProps(state) {
     slaves: state.api.slaves.data,
     error: getErrorFromState(state),
     columnSettings: state.ui.slaves.columns,
-    paginated: state.ui.slaves.paginated
+    paginated: state.ui.slaves.paginated,
+    expiringSlaveStates: state.api.expiringSlaveStates.data
   };
 }
 
@@ -367,12 +459,20 @@ function mapDispatchToProps(dispatch) {
       dispatch(ReactivateSlave.clear())
     ]);
   }
+  function fetchSlavesAndExpiring() {
+    return Promise.all([
+      dispatch(FetchSlaves.trigger()),
+      dispatch(FetchExpiringSlaveStates.trigger())
+    ]);
+  }
   return {
     fetchSlaves: () => dispatch(FetchSlaves.trigger()),
-    freezeSlave: (slave, message) => { clear().then(() => dispatch(FreezeSlave.trigger(slave.id, message)).then(() => dispatch(FetchSlaves.trigger()))); },
-    decommissionSlave: (slave, message) => { clear().then(() => dispatch(DecommissionSlave.trigger(slave.id, message)).then(() => dispatch(FetchSlaves.trigger()))); },
-    removeSlave: (slave, message) => { clear().then(() => dispatch(RemoveSlave.trigger(slave.id, message)).then(() => dispatch(FetchSlaves.trigger()))); },
-    reactivateSlave: (slave, message) => { clear().then(() => dispatch(ReactivateSlave.trigger(slave.id, message)).then(() => dispatch(FetchSlaves.trigger()))); },
+    freezeSlave: (slave, message) => { clear().then(() => dispatch(FreezeSlave.trigger(slave.id, message)).then(() => fetchSlavesAndExpiring())); },
+    decommissionSlave: (slave, message) => { clear().then(() => dispatch(DecommissionSlave.trigger(slave.id, message)).then(() => fetchSlavesAndExpiring())); },
+    removeSlave: (slave, message) => { clear().then(() => dispatch(RemoveSlave.trigger(slave.id, message)).then(() => fetchSlavesAndExpiring())); },
+    reactivateSlave: (slave, message) => { clear().then(() => dispatch(ReactivateSlave.trigger(slave.id, message)).then(() => fetchSlavesAndExpiring())); },
+    fetchExpiringSlaveStates: () => dispatch(FetchExpiringSlaveStates.trigger()),
+    removeExpiringState: (slaveId) => { clear().then(() => dispatch(RemoveExpiringSlaveState.trigger(slaveId)).then(() => fetchSlavesAndExpiring())); },
     clear
   };
 }
@@ -380,12 +480,16 @@ function mapDispatchToProps(dispatch) {
 function initialize(props) {
   return Promise.all([
     props.clear(),
-    props.fetchSlaves()
+    props.fetchSlaves(),
+    props.fetchExpiringSlaveStates()
   ]);
 }
 
 function refresh(props) {
-  return props.fetchSlaves();
+  return Promise.all([
+    props.fetchSlaves(),
+    props.fetchExpiringSlaveStates()
+  ]);
 }
 
 export default connect(mapStateToProps, mapDispatchToProps)(rootComponent(Slaves, 'Slaves', refresh, true, true, initialize));

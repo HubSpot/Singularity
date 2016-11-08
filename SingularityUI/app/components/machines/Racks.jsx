@@ -2,7 +2,6 @@ import React, { PropTypes } from 'react';
 import MachinesPage from './MachinesPage';
 import {Glyphicon} from 'react-bootstrap';
 import FormModalButton from '../common/modal/FormModalButton';
-import messageElement from './messageElement';
 import Utils from '../../utils';
 import { connect } from 'react-redux';
 import { DecommissionRack, RemoveRack, ReactivateRack, FetchRacks } from '../../actions/api/racks';
@@ -18,6 +17,12 @@ const typeName = {
 };
 
 const Racks = (props) => {
+  const messageElement = {
+    name: 'message',
+    type: FormModal.INPUT_TYPES.STRING,
+    label: 'Message (optional)'
+  }
+
   const showUser = (rack) => Utils.isIn(rack.currentState.state, ['ACTIVE', 'DECOMMISSIONING', 'DECOMMISSIONED', 'STARTING_DECOMMISSION']);
 
   const getMaybeReactivateButton = (rack) => (Utils.isIn(rack.currentState.state, ['DECOMMISSIONING', 'DECOMMISSIONED', 'STARTING_DECOMMISSION']) &&

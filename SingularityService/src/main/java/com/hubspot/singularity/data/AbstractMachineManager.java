@@ -178,11 +178,11 @@ public abstract class AbstractMachineManager<T extends SingularityMachineAbstrac
   }
 
   private String getExpiringPath(String machineId) {
-    return ZKPaths.makePath(EXPIRING_PATH, machineId);
+    return ZKPaths.makePath(getRoot(), EXPIRING_PATH, machineId);
   }
 
   public List<SingularityExpiringMachineState> getExpiringObjects() {
-    return getAsyncChildren(EXPIRING_PATH, expiringMachineStateTranscoder);
+    return getAsyncChildren(ZKPaths.makePath(getRoot(), EXPIRING_PATH), expiringMachineStateTranscoder);
   }
 
   public Optional<SingularityExpiringMachineState> getExpiringObject(String machineId) {

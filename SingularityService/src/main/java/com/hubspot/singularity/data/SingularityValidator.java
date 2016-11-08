@@ -28,6 +28,7 @@ import org.quartz.CronExpression;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
@@ -510,19 +511,24 @@ public class SingularityValidator {
   }
 
   public void validateExpiringMachineStateChange(Optional<SingularityMachineChangeRequest> maybeChangeRequest, MachineState currentState, Optional<SingularityExpiringMachineState> currentExpiringObject) {
-    if (!maybeChangeRequest.isPresent()) {
+    if (!maybeChangeRequest.isPresent() || !maybeChangeRequest.get().getDurationMillis().isPresent()) {
       return;
     }
 
     SingularityMachineChangeRequest changeRequest = maybeChangeRequest.get();
 
-    checkBadRequest(!changeRequest.getRevertToState().isPresent(), "Must include a machine state to revert to for an expiring machine state change");
+    checkBadRequest(changeRequest.getRevertToState().isPresent(), "Must include a machine state to revert to for an expiring machine state change");
     MachineState newState = changeRequest.getRevertToState().get();
 
     checkConflict(!currentExpiringObject.isPresent(), "A current expiring object already exists, delete it first");
     checkBadRequest(!(newState == MachineState.STARTING_DECOMMISSION && currentState.isDecommissioning()), "Cannot start decommission when it has already been started");
     checkBadRequest(!(((newState == MachineState.DECOMMISSIONING) || (newState == MachineState.DECOMMISSIONED)) && (currentState == MachineState.FROZEN)), "Cannot transition from FROZEN to DECOMMISSIONING or DECOMMISSIONED");
     checkBadRequest(!(newState == MachineState.FROZEN && currentState.isDecommissioning()), "Cannot transition from a decommissioning state to FROZEN");
+
+    List<MachineState> systemOnlyStateTransitions = ImmutableList.of(MachineState.DEAD, MachineState.MISSING_ON_STARTUP, MachineState.DECOMMISSIONING);
+    checkBadRequest(!systemOnlyStateTransitions.contains(newState), "States {} are reserved for system usage, you cannot manually transition to {}", systemOnlyStateTransitions, newState);
+
+    checkBadRequest(!(newState == MachineState.DECOMMISSIONED && !changeRequest.isKillTasksOnDecommissionTimeout()), "Must specify that all tasks on slave get killed if transitioning to DECOMMISSIONED state");
   }
 
   public void checkActionEnabled(SingularityAction action) {

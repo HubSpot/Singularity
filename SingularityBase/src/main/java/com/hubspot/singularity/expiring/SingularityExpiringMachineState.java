@@ -1,6 +1,7 @@
 package com.hubspot.singularity.expiring;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Objects;
 import com.google.common.base.Optional;
 import com.hubspot.singularity.MachineState;
@@ -13,8 +14,13 @@ public class SingularityExpiringMachineState extends SingularityExpiringParent<S
   private final boolean killTasksOnDecommissionTimeout;
 
   @JsonCreator
-  public SingularityExpiringMachineState(Optional<String> user, long startMillis, String actionId, SingularityMachineChangeRequest machineChangeRequest,
-    String machineId, MachineState revertToState, Optional<Boolean> killTasksOnDecommissionTimeout) {
+  public SingularityExpiringMachineState(@JsonProperty("user") Optional<String> user,
+                                         @JsonProperty("startMillis") long startMillis,
+                                         @JsonProperty("actionId") String actionId,
+                                         @JsonProperty("expiringAPIRequestObject") SingularityMachineChangeRequest machineChangeRequest,
+                                         @JsonProperty("machineId") String machineId,
+                                         @JsonProperty("revertToState") MachineState revertToState,
+                                         @JsonProperty("killTasksOnDecommissionTimeout") Optional<Boolean> killTasksOnDecommissionTimeout) {
     super(machineChangeRequest, user, startMillis, actionId);
     this.machineId = machineId;
     this.revertToState = revertToState;

@@ -49,7 +49,9 @@ import {
   FreezeSlave,
   DecommissionSlave,
   RemoveSlave,
-  ReactivateSlave
+  ReactivateSlave,
+  FetchExpiringSlaveStates,
+  RemoveExpiringSlaveState
 } from '../../actions/api/slaves';
 
 import {
@@ -86,6 +88,8 @@ const freezeSlave = buildApiActionReducer(FreezeSlave, []);
 const decommissionSlave = buildApiActionReducer(DecommissionSlave, []);
 const removeSlave = buildApiActionReducer(RemoveSlave, []);
 const reactivateSlave = buildApiActionReducer(ReactivateSlave, []);
+const expiringSlaveStates = buildApiActionReducer(FetchExpiringSlaveStates, []);
+const removeExpiringSlaveState = buildApiActionReducer(RemoveExpiringSlaveState, []);
 const racks = buildApiActionReducer(FetchRacks, []);
 const freezeRack = buildApiActionReducer(FreezeRack, []);
 const decommissionRack = buildApiActionReducer(DecommissionRack, []);
@@ -134,6 +138,8 @@ export default combineReducers({
   decommissionSlave,
   removeSlave,
   reactivateSlave,
+  expiringSlaveStates,
+  removeExpiringSlaveState,
   racks,
   freezeRack,
   decommissionRack,
