@@ -24,7 +24,7 @@ class CustomizeSlavesTableModal extends Component {
         {
           name: field,
           type: FormModal.INPUT_TYPES.BOOLEAN,
-          label: field,
+          label: `Default Field: ${field}`,
           defaultValue: field in this.props.columns ? this.props.columns[field] : false
         }
       )
@@ -34,7 +34,7 @@ class CustomizeSlavesTableModal extends Component {
         {
           name: field,
           type: FormModal.INPUT_TYPES.BOOLEAN,
-          label: field,
+          label: `Resource: ${field}`,
           defaultValue: field in this.props.columns ? this.props.columns[field] : false
         }
       )
@@ -44,7 +44,7 @@ class CustomizeSlavesTableModal extends Component {
         {
           name: field,
           type: FormModal.INPUT_TYPES.BOOLEAN,
-          label: field,
+          label: `Attribute: ${field}`,
           defaultValue: field in this.props.columns ? this.props.columns[field] : false
         }
       )
