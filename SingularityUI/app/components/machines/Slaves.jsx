@@ -10,6 +10,7 @@ import { Link } from 'react-router';
 import { FetchSlaves, FreezeSlave, DecommissionSlave, RemoveSlave, ReactivateSlave } from '../../actions/api/slaves';
 import Column from '../common/table/Column';
 import JSONButton from '../common/JSONButton';
+import CustomizeSlavesTableButton from './CustomizeSlavesTableButton';
 
 const typeName = {
   'active': 'Activated By',
@@ -19,6 +20,10 @@ const typeName = {
 
 const Slaves = (props) => {
   const showUser = (slave) => Utils.isIn(slave.currentState.state, ['ACTIVE', 'DECOMMISSIONING', 'DECOMMISSIONED', 'STARTING_DECOMMISSION', 'FROZEN']);
+
+  const resources = _.uniq(_.flatten(_.map(props.slaves, (slave) => Object.keys(Utils.maybe(slave, ['resources'], [])))));
+
+  const customAttrs = _.uniq(_.flatten(_.map(props.slaves, (slave) => Object.keys(Utils.maybe(slave, ['attributes'], [])))));
 
   const getMaybeReactivateButton = (slave) => (
     Utils.isIn(slave.currentState.state, ['DECOMMISSIONING', 'DECOMMISSIONED', 'STARTING_DECOMMISSION', 'FROZEN']) && (
@@ -82,63 +87,107 @@ const Slaves = (props) => {
     </FormModalButton>
   ));
 
-  const getColumns = (type) => {
-    const columns = [
-      <Column
-        label="ID"
-        id="id"
-        key="id"
-        sortable={true}
-        sortData={(cellData, slave) => slave.id}
-        cellData={(slave) => (
-          <Link to={`tasks/active/all/${slave.host}`} title={`All tasks running on host ${slave.host}`}>
-            {slave.id}
-          </Link>
-        )}
-      />,
-      <Column
-        label="State"
-        id="state"
-        key="state"
-        sortable={true}
-        sortData={(cellData, slave) => slave.currentState.state}
-        cellData={(slave) => Utils.humanizeText(slave.currentState.state)}
-      />,
-      <Column
-        label="Since"
-        id="timestamp"
-        key="timestamp"
-        sortable={true}
-        sortData={(cellData, slave) => slave.currentState.timestamp}
-        cellData={(slave) => Utils.absoluteTimestamp(slave.currentState.timestamp)}
-      />,
-      <Column
-        label="Rack"
-        id="rack"
-        key="rack"
-        sortable={true}
-        sortData={(cellData, slave) => slave.rackId}
-        cellData={(slave) => slave.rackId}
-      />,
-      <Column
-        label="Host"
-        id="host"
-        key="host"
-        sortable={true}
-        sortData={(cellData, slave) => slave.host}
-        cellData={(slave) => slave.host}
-      />,
-      <Column
-        label="Uptime"
-        id="uptime"
-        key="uptime"
-        sortable={true}
-        sortData={(cellData, slave) => slave.firstSeenAt}
-        cellData={(slave) => Utils.duration(Date.now() - slave.firstSeenAt)}
-      />
-    ];
+  const idColumn = () => (
+    <Column
+      label="ID"
+      id="id"
+      key="id"
+      sortable={true}
+      sortData={(cellData, slave) => slave.id}
+      cellData={(slave) => (
+        <Link to={`tasks/active/all/${slave.host}`} title={`All tasks running on host ${slave.host}`}>
+          {slave.id}
+        </Link>
+      )}
+    />
+  );
 
-    if (typeName[type]) {
+  const stateColumn = () => (
+    <Column
+      label="State"
+      id="state"
+      key="state"
+      sortable={true}
+      sortData={(cellData, slave) => slave.currentState.state}
+      cellData={(slave) => Utils.humanizeText(slave.currentState.state)}
+    />
+  );
+
+  const sinceColumn = () => (
+    <Column
+      label="Since"
+      id="timestamp"
+      key="timestamp"
+      sortable={true}
+      sortData={(cellData, slave) => slave.currentState.timestamp}
+      cellData={(slave) => Utils.absoluteTimestamp(slave.currentState.timestamp)}
+    />
+  );
+
+  const rackColumn = () => (
+    <Column
+      label="Rack"
+      id="rack"
+      key="rack"
+      sortable={true}
+      sortData={(cellData, slave) => slave.rackId}
+      cellData={(slave) => slave.rackId}
+    />
+  );
+
+  const hostColumn = () => (
+    <Column
+      label="Host"
+      id="host"
+      key="host"
+      sortable={true}
+      sortData={(cellData, slave) => slave.host}
+      cellData={(slave) => slave.host}
+    />
+  );
+
+  const uptimeColumn = () => (
+    <Column
+      label="Uptime"
+      id="uptime"
+      key="uptime"
+      sortable={true}
+      sortData={(cellData, slave) => slave.firstSeenAt}
+      cellData={(slave) => Utils.duration(Date.now() - slave.firstSeenAt)}
+    />
+  );
+
+  const messageColumn = () => (
+    <Column
+      label="Message"
+      id="message"
+      key="message"
+      cellData={(slave) => slave.currentState.message}
+    />
+  );
+
+  const getColumns = (type) => {
+    const columns = [];
+    if (props.columnSettings['id']) {
+      columns.push(idColumn());
+    }
+    if (props.columnSettings['state']) {
+      columns.push(stateColumn());
+    }
+    if (props.columnSettings['since']) {
+      columns.push(sinceColumn());
+    }
+    if (props.columnSettings['rack']) {
+      columns.push(rackColumn());
+    }
+    if (props.columnSettings['host']) {
+      columns.push(hostColumn());
+    }
+    if (props.columnSettings['uptime']) {
+      columns.push(uptimeColumn());
+    }
+
+    if (typeName[type] && props.columnSettings['actionUser']) {
       columns.push(
         <Column
           label={typeName[type]}
@@ -150,13 +199,41 @@ const Slaves = (props) => {
         />
       );
     }
+    if (props.columnSettings['message']) {
+      columns.push(messageColumn());
+    }
+
+    _.each(resources, (resource) => {
+        if (props.columnSettings[resource]) {
+          columns.push(
+            <Column
+              label={resource}
+              id={resource}
+              key={resource}
+              sortable={true}
+              cellData={(slave) => Utils.maybe(slave, ['resources', resource], 0)}
+            />
+          );
+        }
+      }
+    );
+
+    _.each(customAttrs, (attr) => {
+        if (props.columnSettings[attr]) {
+          columns.push(
+            <Column
+              label={attr}
+              id={attr}
+              key={attr}
+              sortable={true}
+              cellData={(slave) => Utils.maybe(slave, ['attributes', attr], '')}
+            />
+          );
+        }
+      }
+    );
+
     columns.push(
-      <Column
-        label="Message"
-        id="message"
-        key="message"
-        cellData={(slave) => slave.currentState.message}
-      />,
       <Column
         id="actions-column"
         key="actions-column"
@@ -191,34 +268,53 @@ const Slaves = (props) => {
       stateName: 'Active',
       emptyMessage: 'No Active Slaves',
       hostsInState: activeSlaves,
-      columns: getColumns('active')
+      columns: getColumns('active'),
+      paginated: props.paginated
     },
     {
       stateName: 'Frozen',
       emptyMessage: 'No Frozen Slaves',
       hostsInState: frozenSlaves,
-      columns: getColumns('decommissioning')
+      columns: getColumns('decommissioning'),
+      paginated: props.paginated
     },
     {
       stateName: 'Decommissioning',
       emptyMessage: 'No Decommissioning Slaves',
       hostsInState: decommissioningSlaves,
-      columns: getColumns('decommissioning')
+      columns: getColumns('decommissioning'),
+      paginated: props.paginated
     },
     {
       stateName: 'Inactive',
       emptyMessage: 'No Inactive Slaves',
       hostsInState: inactiveSlaves,
-      columns: getColumns('inactive')
+      columns: getColumns('inactive'),
+      paginated: props.paginated
     }
   ];
 
   return (
-    <MachinesPage
-      header = "Slaves"
-      states = {states}
-      error = {props.error}
-    />
+    <div>
+      <CustomizeSlavesTableButton
+        columns={props.columnSettings}
+        paginated={props.paginated}
+        availableAttributes={customAttrs}
+        availableResources={resources}
+      >
+        <button
+          className="btn btn-primary pull-right"
+          alt="Customize Columns"
+          title="Customize">
+          Customize
+        </button>
+      </CustomizeSlavesTableButton>
+      <MachinesPage
+        header = "Slaves"
+        states = {states}
+        error = {props.error}
+      />
+    </div>
   );
 };
 
@@ -231,7 +327,9 @@ Slaves.propTypes = {
   error: PropTypes.string,
   slaves: PropTypes.arrayOf(PropTypes.shape({
     state: PropTypes.string
-  }))
+  })),
+  columnSettings: PropTypes.object.isRequired,
+  paginated: PropTypes.bool.isRequired
 };
 
 function getErrorFromState(state) {
@@ -254,7 +352,9 @@ function getErrorFromState(state) {
 function mapStateToProps(state) {
   return {
     slaves: state.api.slaves.data,
-    error: getErrorFromState(state)
+    error: getErrorFromState(state),
+    columnSettings: state.ui.slaves.columns,
+    paginated: state.ui.slaves.paginated
   };
 }
 

@@ -11,6 +11,8 @@ const Utils = {
 
   NON_LONG_RUNNING_IMMEDIATE_CLEANUPS: ['USER_REQUESTED', 'DEPLOY_FAILED', 'DEPLOY_CANCELED', 'TASK_EXCEEDED_TIME_LIMIT', 'UNHEALTHY_NEW_TASK', 'OVERDUE_NEW_TASK', 'USER_REQUESTED_DESTROY', 'INCREMENTAL_DEPLOY_FAILED', 'INCREMENTAL_DEPLOY_CANCELLED', 'PRIORITY_KILL', 'PAUSE'],
 
+  DEFAULT_SLAVES_COLUMNS: {'id': true, 'state': true, 'since': true, 'rack': true, 'host': true, 'uptime': true, 'actionUser': true, 'message': true},
+
   isIn(needle, haystack) {
     return !_.isEmpty(haystack) && haystack.indexOf(needle) >= 0;
   },
@@ -405,6 +407,7 @@ const Utils = {
     }
     return array.join('&');
   }
+
 };
 
 export default Utils;
