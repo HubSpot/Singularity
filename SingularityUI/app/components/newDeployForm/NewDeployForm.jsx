@@ -435,6 +435,16 @@ class NewDeployForm extends Component {
   }
 
   renderDefaultExecutorFields() {
+    const command = (
+      <TextFormGroup
+        id="command-to-execute"
+        onChange={event => this.updateField('command', event.target.value)}
+        value={this.props.form.command}
+        label="Command to execute"
+        placeholder="eg: rm -rf /"
+        feedback={this.formFieldFeedback(INDEXED_FIELDS.command, this.props.form.command)}
+      />
+    );
     const cmdLineArguments = (
       <MultiInputFormGroup
         id="cmd-line-args"
@@ -460,6 +470,7 @@ class NewDeployForm extends Component {
       <div>
         <fieldset id="default-expandable" className="expandable">
           <h4>Default Executor Settings</h4>
+          {command}
           {cmdLineArguments}
           {artifacts}
         </fieldset>
@@ -580,15 +591,25 @@ class NewDeployForm extends Component {
   }
 
   renderCustomExecutorFields() {
-    const customExecutorCmds = (
+    const command = (
       <TextFormGroup
-        id="custom-executor-command"
+        id="cmd-to-execute"
         onChange={event => this.updateField('cmd', event.target.value)}
         value={this.props.form.cmd}
+        label="Command to execute"
+        placeholder="eg: rm -rf /"
+        feedback={this.formFieldFeedback(INDEXED_FIELDS.cmd, this.props.form.cmd)}
+      />
+    );
+    const customExecutorCmd = (
+      <TextFormGroup
+        id="custom-executor-command"
+        onChange={event => this.updateField('customExecutorCmd', event.target.value)}
+        value={this.props.form.customExecutorCmd}
         label="Custom executor command"
         required={true}
         placeholder="eg: /usr/local/bin/singularity-executor"
-        feedback={this.formFieldFeedback(INDEXED_FIELDS.cmd, this.props.form.cmd)}
+        feedback={this.formFieldFeedback(INDEXED_FIELDS.customExecutorCmd, this.props.form.customExecutorCmd)}
       />
     );
     const extraCommandArgs = (
@@ -708,8 +729,8 @@ class NewDeployForm extends Component {
       <div>
         <fieldset>
           <h4>Custom Executor Settingss</h4>
-
-          {customExecutorCmds}
+          {command}
+          {customExecutorCmd}
           {extraCommandArgs}
 
           <div className="row">
@@ -1058,16 +1079,6 @@ class NewDeployForm extends Component {
         ]}
       />
     );
-    const command = (
-      <TextFormGroup
-        id="command"
-        onChange={event => this.updateField('command', event.target.value)}
-        value={this.props.form.command}
-        label="Command to execute"
-        placeholder="eg: rm -rf /"
-        feedback={this.formFieldFeedback(INDEXED_FIELDS.command, this.props.form.command)}
-      />
-    );
     const type = (
       <SelectFormGroup
         id="container-type"
@@ -1333,7 +1344,6 @@ class NewDeployForm extends Component {
               {executorType}
           </div>
         </div>
-        {command}
         { this.getValueOrDefault('executorType') === DEFAULT_EXECUTOR_TYPE && this.renderDefaultExecutorFields() }
         { this.getValueOrDefault('executorType') === CUSTOM_EXECUTOR_TYPE && this.renderCustomExecutorFields() }
       </div>
