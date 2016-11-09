@@ -66,9 +66,7 @@ class CustomizeSlavesTableModal extends Component {
         onConfirm={(data) => this.props.updateSlaveTableSettings(data)}
         keepCurrentFormState={true}
         formElements={formElements}
-      >
-        <p>Update settings?</p>
-      </FormModal>
+      />
     );
   }
 }
