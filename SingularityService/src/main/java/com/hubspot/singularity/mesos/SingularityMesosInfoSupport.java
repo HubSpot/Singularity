@@ -27,9 +27,9 @@ import com.hubspot.singularity.data.TaskManager;
 import io.dropwizard.lifecycle.Managed;
 
 @Singleton
-public class SingularityLogSupport implements Managed {
+public class SingularityMesosInfoSupport implements Managed {
 
-  private static final Logger LOG = LoggerFactory.getLogger(SingularityLogSupport.class);
+  private static final Logger LOG = LoggerFactory.getLogger(SingularityMesosInfoSupport.class);
 
   private final MesosClient mesosClient;
   private final TaskManager taskManager;
@@ -37,7 +37,7 @@ public class SingularityLogSupport implements Managed {
   private final ThreadPoolExecutor logLookupExecutorService;
 
   @Inject
-  public SingularityLogSupport(SingularityConfiguration configuration, MesosClient mesosClient, TaskManager taskManager) {
+  public SingularityMesosInfoSupport(SingularityConfiguration configuration, MesosClient mesosClient, TaskManager taskManager) {
     this.mesosClient = mesosClient;
     this.taskManager = taskManager;
 

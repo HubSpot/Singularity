@@ -56,7 +56,7 @@ import com.hubspot.singularity.event.SingularityEventModule;
 import com.hubspot.singularity.hooks.LoadBalancerClient;
 import com.hubspot.singularity.mesos.SchedulerDriverSupplier;
 import com.hubspot.singularity.mesos.SingularityDriver;
-import com.hubspot.singularity.mesos.SingularityLogSupport;
+import com.hubspot.singularity.mesos.SingularityMesosInfoSupport;
 import com.hubspot.singularity.mesos.SingularityMesosModule;
 import com.hubspot.singularity.resources.DeployResource;
 import com.hubspot.singularity.resources.PriorityResource;
@@ -176,8 +176,8 @@ public class SingularityTestModule implements Module {
 
           @Override
           public void configure(Binder binder) {
-            SingularityLogSupport logSupport = mock(SingularityLogSupport.class);
-            binder.bind(SingularityLogSupport.class).toInstance(logSupport);
+            SingularityMesosInfoSupport logSupport = mock(SingularityMesosInfoSupport.class);
+            binder.bind(SingularityMesosInfoSupport.class).toInstance(logSupport);
 
             SingularityDriver mock = mock(SingularityDriver.class);
             when(mock.kill((SingularityTaskId) Matchers.any())).thenReturn(Status.DRIVER_RUNNING);
