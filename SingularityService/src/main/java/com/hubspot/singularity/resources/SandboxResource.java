@@ -39,7 +39,7 @@ import com.hubspot.singularity.data.SandboxManager;
 import com.hubspot.singularity.data.SandboxManager.SlaveNotFoundException;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.data.history.HistoryManager;
-import com.hubspot.singularity.mesos.SingularityLogSupport;
+import com.hubspot.singularity.mesos.SingularityMesosInfoSupport;
 import com.wordnik.swagger.annotations.Api;
 import com.wordnik.swagger.annotations.ApiOperation;
 import com.wordnik.swagger.annotations.ApiParam;
@@ -51,11 +51,11 @@ public class SandboxResource extends AbstractHistoryResource {
   public static final String PATH = SingularityService.API_BASE_PATH + "/sandbox";
 
   private final SandboxManager sandboxManager;
-  private final SingularityLogSupport logSupport;
+  private final SingularityMesosInfoSupport logSupport;
   private final SingularityConfiguration configuration;
 
   @Inject
-  public SandboxResource(HistoryManager historyManager, TaskManager taskManager, SandboxManager sandboxManager, DeployManager deployManager, SingularityLogSupport logSupport,
+  public SandboxResource(HistoryManager historyManager, TaskManager taskManager, SandboxManager sandboxManager, DeployManager deployManager, SingularityMesosInfoSupport logSupport,
       SingularityConfiguration configuration, SingularityAuthorizationHelper authorizationHelper, Optional<SingularityUser> user) {
     super(historyManager, taskManager, deployManager, authorizationHelper, user);
 
@@ -69,7 +69,7 @@ public class SandboxResource extends AbstractHistoryResource {
     final SingularityTaskHistory taskHistory = getTaskHistoryRequired(taskIdObj);
 
     if (!taskHistory.getDirectory().isPresent()) {
-      logSupport.checkDirectory(taskIdObj);
+      logSupport.checkDirectoryAndContainerId(taskIdObj);
 
       throw badRequest("Task %s does not have a directory yet - check again soon (enqueued request to refetch)", taskId);
     }

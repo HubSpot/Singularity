@@ -82,6 +82,7 @@ public class TaskManager extends CuratorAsyncManager {
 
   private static final String LAST_HEALTHCHECK_KEY = "LAST_HEALTHCHECK";
   private static final String DIRECTORY_KEY = "DIRECTORY";
+  private static final String CONTAINER_ID_KEY = "CONTAINER_ID";
   private static final String TASK_KEY = "TASK";
   private static final String NOTIFIED_OVERDUE_TO_FINISH_KEY = "NOTIFIED_OVERDUE_TO_FINISH";
 
@@ -221,6 +222,10 @@ public class TaskManager extends CuratorAsyncManager {
     return ZKPaths.makePath(getHistoryPath(taskId), DIRECTORY_KEY);
   }
 
+  private String getContainerIdPath(SingularityTaskId taskId) {
+    return ZKPaths.makePath(getHistoryPath(taskId), CONTAINER_ID_KEY);
+  }
+
   private String getNotifiedOverduePath(SingularityTaskId taskId) {
     return ZKPaths.makePath(getHistoryPath(taskId), NOTIFIED_OVERDUE_TO_FINISH_KEY);
   }
@@ -279,6 +284,10 @@ public class TaskManager extends CuratorAsyncManager {
     save(getDirectoryPath(taskId), Optional.of(directory.getBytes(UTF_8)));
   }
 
+  public void saveContainerId(SingularityTaskId taskId, String containerId) {
+    save(getContainerIdPath(taskId), Optional.of(containerId.getBytes(UTF_8)));
+  }
+
   @Timed
   public void saveLastActiveTaskStatus(SingularityTaskStatusHolder taskStatus) {
     save(getLastActiveTaskStatusPath(taskStatus.getTaskId()), taskStatus, taskStatusTranscoder);
@@ -286,6 +295,10 @@ public class TaskManager extends CuratorAsyncManager {
 
   public Optional<String> getDirectory(SingularityTaskId taskId) {
     return getData(getDirectoryPath(taskId), StringTranscoder.INSTANCE);
+  }
+
+  public Optional<String> getContainerId(SingularityTaskId taskId) {
+    return getData(getContainerIdPath(taskId), StringTranscoder.INSTANCE);
   }
 
   public void saveHealthcheckResult(SingularityTaskHealthcheckResult healthcheckResult) {
@@ -588,6 +601,7 @@ public class TaskManager extends CuratorAsyncManager {
 
     List<SingularityTaskHistoryUpdate> taskUpdates = getTaskHistoryUpdates(taskId);
     Optional<String> directory = getDirectory(taskId);
+    Optional<String> containerId = getContainerId(taskId);
     List<SingularityTaskHealthcheckResult> healthchecks = getHealthcheckResults(taskId);
 
     List<SingularityLoadBalancerUpdate> loadBalancerUpdates = Lists.newArrayListWithCapacity(2);
@@ -599,7 +613,7 @@ public class TaskManager extends CuratorAsyncManager {
 
     List<SingularityTaskMetadata> taskMetadata = getTaskMetadata(taskId);
 
-    return Optional.of(new SingularityTaskHistory(taskUpdates, directory, healthchecks, task.get(), loadBalancerUpdates, shellCommandHistory, taskMetadata));
+    return Optional.of(new SingularityTaskHistory(taskUpdates, directory, containerId, healthchecks, task.get(), loadBalancerUpdates, shellCommandHistory, taskMetadata));
   }
 
   private List<SingularityTaskShellCommandHistory> getTaskShellCommandHistory(SingularityTaskId taskId) {
