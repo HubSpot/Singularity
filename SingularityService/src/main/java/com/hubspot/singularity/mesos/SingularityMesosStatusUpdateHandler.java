@@ -63,7 +63,7 @@ public class SingularityMesosStatusUpdateHandler implements Managed {
     private final SingularityHealthchecker healthchecker;
     private final SingularityNewTaskChecker newTaskChecker;
     private final SingularitySlaveAndRackManager slaveAndRackManager;
-    private final SingularityMesosInfoSupport logSupport;
+    private final SingularityMesosExecutorInfoSupport logSupport;
     private final SingularityScheduler scheduler;
     private final Provider<SingularitySchedulerStateCache> stateCacheProvider;
     private final String serverId;
@@ -82,7 +82,7 @@ public class SingularityMesosStatusUpdateHandler implements Managed {
     @Inject
     public SingularityMesosStatusUpdateHandler(TaskManager taskManager, DeployManager deployManager, RequestManager requestManager,
         IdTranscoder<SingularityTaskId> taskIdTranscoder, SingularityExceptionNotifier exceptionNotifier, SingularityHealthchecker healthchecker,
-        SingularityNewTaskChecker newTaskChecker, SingularitySlaveAndRackManager slaveAndRackManager, SingularityMesosInfoSupport logSupport, SingularityScheduler scheduler,
+        SingularityNewTaskChecker newTaskChecker, SingularitySlaveAndRackManager slaveAndRackManager, SingularityMesosExecutorInfoSupport logSupport, SingularityScheduler scheduler,
         Provider<SingularitySchedulerStateCache> stateCacheProvider, @Named(SingularityMainModule.SERVER_ID_PROPERTY) String serverId,
         SchedulerDriverSupplier schedulerDriverSupplier,
         @Named(SingularityMesosModule.SCHEDULER_LOCK_NAME) final Lock schedulerLock,
