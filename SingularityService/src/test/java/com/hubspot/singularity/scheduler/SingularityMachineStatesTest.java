@@ -423,4 +423,19 @@ public class SingularityMachineStatesTest extends SingularitySchedulerTestBase {
     return new MesosMasterStateObject("", "", "", "", now, "", now, now, "", "", "", 0, 0, "", "", "", Collections.<String, String>emptyMap(), slaves, Collections.singletonList(framework));
   }
 
+  @Test
+  public void testExpiringMachineState() {
+
+  }
+
+  @Test
+  public void testCannotMakeInvalidStateChangeOnExpire() {
+
+  }
+
+  @Test
+  public void testSystemChangeClearsExpiringChangeIfInvalid() {
+    
+  }
+
 }
