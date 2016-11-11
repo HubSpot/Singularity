@@ -113,11 +113,11 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
 
   @NotEmpty
   @JsonProperty
-  private String logrotateDateformat= "-%Y%m%d%s";
+  private String logrotateDateformat= "%Y%m%d%s";
 
   @NotEmpty
   @JsonProperty
-  private String logrotateExtrasDateformat = "-%Y%m%d";
+  private String logrotateExtrasDateformat = "%Y%m%d";
 
   @NotNull
   @JsonProperty
