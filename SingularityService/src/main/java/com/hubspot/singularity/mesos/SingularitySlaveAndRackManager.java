@@ -232,7 +232,6 @@ public class SingularitySlaveAndRackManager {
     if (slave.isPresent()) {
       MachineState previousState = slave.get().getCurrentState().getState();
       slaveManager.changeState(slave.get(), MachineState.DEAD, Optional.<String> absent(), Optional.<String> absent());
-      slaveManager.deleteExpiringObject(slaveId);
       if (configuration.getDisasterDetection().isEnabled()) {
         updateDisasterCounter(previousState);
       }
@@ -310,12 +309,10 @@ public class SingularitySlaveAndRackManager {
 
     for (SingularitySlave leftOverSlave : activeSlavesById.values()) {
       slaveManager.changeState(leftOverSlave, isStartup ? MachineState.MISSING_ON_STARTUP : MachineState.DEAD, Optional.<String> absent(), Optional.<String> absent());
-      slaveManager.deleteExpiringObject(leftOverSlave.getId());
     }
 
     for (SingularityRack leftOverRack : remainingActiveRacks.values()) {
       rackManager.changeState(leftOverRack, isStartup ? MachineState.MISSING_ON_STARTUP : MachineState.DEAD, Optional.<String> absent(), Optional.<String> absent());
-      rackManager.deleteExpiringObject(leftOverRack.getId());
     }
 
     LOG.info("Found {} new racks ({} missing) and {} new slaves ({} missing)", racks, remainingActiveRacks.size(), slaves, activeSlavesById.size());
@@ -403,7 +400,6 @@ public class SingularitySlaveAndRackManager {
     if (rack.get().getCurrentState().getState() == MachineState.DECOMMISSIONING) {
       if (!hasTaskLeftOnRack(taskId, stateCache)) {
         rackManager.changeState(rack.get(), MachineState.DECOMMISSIONED, rack.get().getCurrentState().getMessage(), rack.get().getCurrentState().getUser());
-        rackManager.deleteExpiringObject(rack.get().getId());
       }
     }
   }

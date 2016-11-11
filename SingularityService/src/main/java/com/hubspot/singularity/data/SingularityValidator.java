@@ -553,6 +553,7 @@ public class SingularityValidator {
     checkConflict(!currentExpiringObject.isPresent(), "A current expiring object already exists, delete it first");
     checkBadRequest(!(newState == MachineState.STARTING_DECOMMISSION && currentState.isDecommissioning()), "Cannot start decommission when it has already been started");
     checkBadRequest(!(((newState == MachineState.DECOMMISSIONING) || (newState == MachineState.DECOMMISSIONED)) && (currentState == MachineState.FROZEN)), "Cannot transition from FROZEN to DECOMMISSIONING or DECOMMISSIONED");
+    checkBadRequest(!(((newState == MachineState.DECOMMISSIONING) || (newState == MachineState.DECOMMISSIONED)) && (currentState == MachineState.ACTIVE)), "Cannot transition from ACTIVE to DECOMMISSIONING or DECOMMISSIONED");
     checkBadRequest(!(newState == MachineState.FROZEN && currentState.isDecommissioning()), "Cannot transition from a decommissioning state to FROZEN");
 
     List<MachineState> systemOnlyStateTransitions = ImmutableList.of(MachineState.DEAD, MachineState.MISSING_ON_STARTUP, MachineState.DECOMMISSIONING);

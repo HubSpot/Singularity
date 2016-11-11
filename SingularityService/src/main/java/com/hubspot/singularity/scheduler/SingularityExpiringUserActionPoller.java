@@ -312,7 +312,7 @@ public class SingularityExpiringUserActionPoller extends SingularityLeaderOnlyPo
         long now = System.currentTimeMillis();
         for (SingularityTaskId taskId : activeTasksIdsOnSlave) {
           if (taskId.getSanitizedHost().equals(sanitizedHost)) {
-            taskManager.createTaskCleanup(new SingularityTaskCleanup(
+            taskManager.saveTaskCleanup(new SingularityTaskCleanup(
               expiringObject.getUser(),
               TaskCleanupType.DECOMMISSION_TIMEOUT,
               now, taskId,
@@ -333,7 +333,11 @@ public class SingularityExpiringUserActionPoller extends SingularityLeaderOnlyPo
           if (!slave.isPresent()) {
             LOG.warn("Slave {} not present, discarding {}", expiringObject.getMachineId(), expiringObject);
           } else {
-            handleExpiringObject(expiringObject, slave.get(), getMessage(expiringObject));
+            try {
+              handleExpiringObject(expiringObject, slave.get(), getMessage(expiringObject));
+            } catch (Exception e) {
+              LOG.error("Could not return slave {} to state {}", slave.get().getHost(), expiringObject.getRevertToState());
+            }
           }
 
           slaveManager.deleteExpiringObject(expiringObject.getMachineId());
@@ -357,7 +361,11 @@ public class SingularityExpiringUserActionPoller extends SingularityLeaderOnlyPo
           if (!rack.isPresent()) {
             LOG.warn("Rack {} not present, discarding {}", expiringObject.getMachineId(), expiringObject);
           } else {
-            handleExpiringObject(expiringObject, rack.get(), getMessage(expiringObject));
+            try {
+              handleExpiringObject(expiringObject, rack.get(), getMessage(expiringObject));
+            } catch (Exception e) {
+              LOG.error("Could not return rack {} to state {}", rack.get().getName(), expiringObject.getRevertToState());
+            }
           }
 
           rackManager.deleteExpiringObject(expiringObject.getMachineId());
