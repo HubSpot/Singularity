@@ -252,7 +252,7 @@ public class SingularityMesosStatusUpdateHandler implements Managed {
             new SingularityTaskHistoryUpdate(taskIdObj, timestamp, taskState, statusMessage, status.hasReason() ? Optional.of(status.getReason().name()) : Optional.<String>absent());
         final SingularityCreateResult taskHistoryUpdateCreateResult = taskManager.saveTaskHistoryUpdate(taskUpdate);
 
-        logSupport.checkDirectory(taskIdObj);
+        logSupport.checkDirectoryAndContainerId(taskIdObj);
 
         if (taskState.isDone()) {
             healthchecker.cancelHealthcheck(taskId);

@@ -69,7 +69,7 @@ public class SandboxResource extends AbstractHistoryResource {
     final SingularityTaskHistory taskHistory = getTaskHistoryRequired(taskIdObj);
 
     if (!taskHistory.getDirectory().isPresent()) {
-      logSupport.checkDirectory(taskIdObj);
+      logSupport.checkDirectoryAndContainerId(taskIdObj);
 
       throw badRequest("Task %s does not have a directory yet - check again soon (enqueued request to refetch)", taskId);
     }

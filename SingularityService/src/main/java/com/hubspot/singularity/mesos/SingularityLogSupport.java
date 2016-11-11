@@ -53,16 +53,16 @@ public class SingularityLogSupport implements Managed {
     MoreExecutors.shutdownAndAwaitTermination(logLookupExecutorService, 1, TimeUnit.SECONDS);
   }
 
-  private Optional<String> findDirectory(SingularityTaskId taskId, List<MesosExecutorObject> executors) {
+  private Optional<MesosExecutorObject> findExecutor(SingularityTaskId taskId, List<MesosExecutorObject> executors) {
     for (MesosExecutorObject executor : executors) {
       for (MesosTaskObject executorTask : executor.getTasks()) {
         if (taskId.getId().equals(executorTask.getId())) {
-          return Optional.of(executor.getDirectory());
+          return Optional.of(executor);
         }
       }
       for (MesosTaskObject executorTask : executor.getCompletedTasks()) {
         if (taskId.getId().equals(executorTask.getId())) {
-          return Optional.of(executor.getDirectory());
+          return Optional.of(executor);
         }
       }
     }
@@ -70,7 +70,7 @@ public class SingularityLogSupport implements Managed {
     return Optional.absent();
   }
 
-  private void loadDirectory(SingularityTask task) {
+  private void loadDirectoryAndContainer(SingularityTask task) {
     final long start = System.currentTimeMillis();
 
     final String slaveUri = mesosClient.getSlaveUri(task.getOffer().getHostname());
@@ -80,37 +80,48 @@ public class SingularityLogSupport implements Managed {
     MesosSlaveStateObject slaveState = mesosClient.getSlaveState(slaveUri);
 
     Optional<String> directory = Optional.absent();
+    Optional<String> containerId = Optional.absent();
 
     for (MesosSlaveFrameworkObject slaveFramework : slaveState.getFrameworks()) {
-      directory = findDirectory(task.getTaskId(), slaveFramework.getExecutors());
-      if (directory.isPresent()) {
+      Optional<MesosExecutorObject> maybeExecutor = findExecutor(task.getTaskId(), slaveFramework.getExecutors());
+      if (maybeExecutor.isPresent()) {
+        directory = Optional.of(maybeExecutor.get().getDirectory());
+        containerId = Optional.of(maybeExecutor.get().getContainer());
         break;
       }
 
-      directory = findDirectory(task.getTaskId(), slaveFramework.getCompletedExecutors());
-      if (directory.isPresent()) {
+      maybeExecutor = findExecutor(task.getTaskId(), slaveFramework.getCompletedExecutors());
+      if (maybeExecutor.isPresent()) {
+        directory = Optional.of(maybeExecutor.get().getDirectory());
+        containerId = Optional.of(maybeExecutor.get().getContainer());
         break;
       }
     }
 
-    if (!directory.isPresent()) {
+    if (!directory.isPresent() && !containerId.isPresent()) {
       LOG.warn("Couldn't find matching executor for task {}", task.getTaskId());
       return;
     }
 
-    LOG.debug("Found a directory {} for task {}", directory.get(), task.getTaskId());
+    LOG.debug("Found a directory {} and container {} for task {}", directory.or(""), containerId.or(""), task.getTaskId());
 
-    taskManager.saveTaskDirectory(task.getTaskId(), directory.get());
+    if (directory.isPresent()) {
+      taskManager.saveTaskDirectory(task.getTaskId(), directory.get());
+    }
+    if (containerId.isPresent()) {
+      taskManager.saveContainerId(task.getTaskId(), containerId.get());
+    }
 
     LOG.trace("Updated task {} directory in {}", task.getTaskId(), JavaUtils.duration(start));
   }
 
   @Timed
-  public void checkDirectory(final SingularityTaskId taskId) {
+  public void checkDirectoryAndContainerId(final SingularityTaskId taskId) {
     final Optional<String> maybeDirectory = taskManager.getDirectory(taskId);
+    final Optional<String> maybeContainerId = taskManager.getContainerId(taskId);
 
-    if (maybeDirectory.isPresent()) {
-      LOG.debug("Already had a directory for task {}, skipping lookup", taskId);
+    if (maybeDirectory.isPresent() && maybeContainerId.isPresent()) {
+      LOG.debug("Already had a directory and container id for task {}, skipping lookup", taskId);
       return;
     }
 
@@ -134,7 +145,7 @@ public class SingularityLogSupport implements Managed {
       @Override
       public void run() {
         try {
-          loadDirectory(task);
+          loadDirectoryAndContainer(task);
         } catch (Throwable t) {
           LOG.error("While fetching directory for task: {}", task.getTaskId(), t);
         }
