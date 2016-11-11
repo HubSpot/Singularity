@@ -8,6 +8,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
+import javax.ws.rs.WebApplicationException;
+
+import org.apache.mesos.Protos.Offer;
 import org.apache.mesos.Protos.SlaveID;
 import org.apache.mesos.Protos.TaskState;
 import org.junit.Assert;
@@ -26,9 +29,11 @@ import com.hubspot.singularity.SingularityMachineStateHistoryUpdate;
 import com.hubspot.singularity.SingularitySlave;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SlavePlacement;
+import com.hubspot.singularity.TaskCleanupType;
 import com.hubspot.singularity.api.SingularityMachineChangeRequest;
 import com.hubspot.singularity.data.AbstractMachineManager.StateChangeResult;
 import com.hubspot.singularity.mesos.SingularitySlaveAndRackManager;
+import com.hubspot.singularity.resources.SlaveResource;
 
 public class SingularityMachineStatesTest extends SingularitySchedulerTestBase {
 
@@ -37,6 +42,9 @@ public class SingularityMachineStatesTest extends SingularitySchedulerTestBase {
 
   @Inject
   private SingularitySlaveAndRackManager singularitySlaveAndRackManager;
+
+  @Inject
+  private SlaveResource slaveResource;
 
   public SingularityMachineStatesTest() {
     super(false);
@@ -94,7 +102,7 @@ public class SingularityMachineStatesTest extends SingularitySchedulerTestBase {
     sms.resourceOffers(driver, Arrays.asList(createOffer(1, 1, "slave3", "host3", Optional.of("rack1"))));
 
     Assert.assertTrue(slaveManager.getNumObjectsAtState(MachineState.ACTIVE) == 2);
-    Assert.assertTrue(rackManager.getNumObjectsAtState(MachineState.ACTIVE) == 2);
+    Assert.assertEquals(2, rackManager.getNumObjectsAtState(MachineState.ACTIVE));
     Assert.assertTrue(slaveManager.getNumObjectsAtState(MachineState.DEAD) == 1);
 
     Assert.assertTrue(rackManager.getHistory("rack1").size() == 3);
@@ -425,17 +433,73 @@ public class SingularityMachineStatesTest extends SingularitySchedulerTestBase {
 
   @Test
   public void testExpiringMachineState() {
+    MesosMasterStateObject state = getMasterState(1);
+    singularitySlaveAndRackManager.loadSlavesAndRacksFromMaster(state, true);
 
+    SingularitySlave slave = slaveManager.getObjects().get(0);
+
+    slaveResource.freezeSlave(slave.getId(), Optional.of(new SingularityMachineChangeRequest(Optional.of(1L), Optional.<String>absent(), Optional.<String>absent(), Optional.of(MachineState.ACTIVE), Optional.<Boolean>absent())));
+
+    Assert.assertEquals(MachineState.FROZEN, slaveManager.getObjects().get(0).getCurrentState().getState());
+
+    expiringUserActionPoller.runActionOnPoll();
+
+    Assert.assertEquals(MachineState.ACTIVE, slaveManager.getObjects().get(0).getCurrentState().getState());
+  }
+
+  private SingularitySlave getSingleSlave() {
+    MesosMasterStateObject state = getMasterState(1);
+    singularitySlaveAndRackManager.loadSlavesAndRacksFromMaster(state, true);
+    return slaveManager.getObjects().get(0);
+  }
+  @Test(expected = WebApplicationException.class)
+  public void testCannotUseStateReservedForSystem() {
+    SingularitySlave slave = getSingleSlave();
+    slaveResource.freezeSlave(slave.getId(), Optional.of(new SingularityMachineChangeRequest(Optional.of(1L), Optional.<String>absent(), Optional.<String>absent(), Optional.of(MachineState.DEAD), Optional.<Boolean>absent())));
+  }
+
+  @Test(expected = WebApplicationException.class)
+  public void testBadExpiringStateTransition() {
+    SingularitySlave slave = getSingleSlave();
+    slaveResource.decommissionSlave(slave.getId(), Optional.of(new SingularityMachineChangeRequest(Optional.of(1L), Optional.<String>absent(), Optional.<String>absent(), Optional.of(MachineState.FROZEN), Optional.<Boolean>absent())));
+  }
+
+  @Test(expected = WebApplicationException.class)
+  public void testInvalidTransitionToDecommissioned() {
+    SingularitySlave slave = getSingleSlave();
+    slaveResource.decommissionSlave(slave.getId(), Optional.of(new SingularityMachineChangeRequest(Optional.of(1L), Optional.<String>absent(), Optional.<String>absent(), Optional.of(MachineState.DECOMMISSIONED), Optional.<Boolean>absent())));
   }
 
   @Test
-  public void testCannotMakeInvalidStateChangeOnExpire() {
+  public void testValidTransitionToDecommissioned() {
+    initRequest();
+    initFirstDeploy();
+    requestResource.postRequest(request.toBuilder().setInstances(Optional.of(2)).build());
+    scheduler.drainPendingQueue(stateCacheProvider.get());
+    resourceOffers();
+    SingularitySlave slave = slaveManager.getObjects().get(0);
 
+    finishNewTaskChecks();
+
+    slaveResource.decommissionSlave(slave.getId(), Optional.of(new SingularityMachineChangeRequest(Optional.of(1L), Optional.<String>absent(), Optional.<String>absent(), Optional.of(MachineState.DECOMMISSIONED), Optional.of(true))));
+    Assert.assertEquals(MachineState.STARTING_DECOMMISSION, slaveManager.getObjects().get(0).getCurrentState().getState());
+    scheduler.checkForDecomissions(stateCacheProvider.get());
+    scheduler.drainPendingQueue(stateCacheProvider.get());
+    Assert.assertEquals(TaskCleanupType.DECOMISSIONING, taskManager.getCleanupTasks().get(0).getCleanupType());
+
+    expiringUserActionPoller.runActionOnPoll();
+    Assert.assertEquals(MachineState.DECOMMISSIONED, slaveManager.getObjects().get(0).getCurrentState().getState());
+    Assert.assertEquals(TaskCleanupType.DECOMMISSION_TIMEOUT, taskManager.getCleanupTasks().get(0).getCleanupType());
   }
 
   @Test
   public void testSystemChangeClearsExpiringChangeIfInvalid() {
-    
+    SingularitySlave slave = getSingleSlave();
+    slaveResource.freezeSlave(slave.getId(), Optional.<SingularityMachineChangeRequest>absent());
+    slaveResource.activateSlave(slave.getId(), Optional.of(new SingularityMachineChangeRequest(Optional.of(1L), Optional.<String>absent(), Optional.<String>absent(), Optional.of(MachineState.FROZEN), Optional.<Boolean>absent())));
+    Assert.assertTrue(slaveManager.getExpiringObject(slave.getId()).isPresent());
+    slaveResource.decommissionSlave(slave.getId(), Optional.<SingularityMachineChangeRequest>absent());
+    Assert.assertFalse(slaveManager.getExpiringObject(slave.getId()).isPresent());
   }
 
 }

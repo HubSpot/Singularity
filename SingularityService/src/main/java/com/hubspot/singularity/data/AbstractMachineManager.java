@@ -130,23 +130,13 @@ public abstract class AbstractMachineManager<T extends SingularityMachineAbstrac
   }
 
   public StateChangeResult changeState(T object, MachineState newState, Optional<String> message, Optional<String> user) {
-    if (object.getCurrentState().getState() == newState) {
-      return StateChangeResult.FAILURE_ALREADY_AT_STATE;
+    Optional<StateChangeResult> maybeInvalidStateChange = getInvalidStateChangeResult(object.getCurrentState().getState(), newState, false);
+
+    if (maybeInvalidStateChange.isPresent()) {
+      return maybeInvalidStateChange.get();
     }
 
-    if (newState == MachineState.STARTING_DECOMMISSION && object.getCurrentState().getState().isDecommissioning()) {
-      return StateChangeResult.FAILURE_ILLEGAL_TRANSITION;
-    }
-
-    // can't jump from FROZEN to DECOMMISSIONING or DECOMMISSIONED
-    if (((newState == MachineState.DECOMMISSIONING) || (newState == MachineState.DECOMMISSIONED)) && (object.getCurrentState().getState() == MachineState.FROZEN)) {
-      return StateChangeResult.FAILURE_ILLEGAL_TRANSITION;
-    }
-
-    // can't jump from a decommissioning state to FROZEN
-    if ((newState == MachineState.FROZEN) && object.getCurrentState().getState().isDecommissioning()) {
-      return StateChangeResult.FAILURE_ILLEGAL_TRANSITION;
-    }
+    clearExpiringStateChangeIfInvalid(object, newState);
 
     SingularityMachineStateHistoryUpdate newStateUpdate = new SingularityMachineStateHistoryUpdate(object.getId(), newState, System.currentTimeMillis(), user, message);
 
@@ -155,6 +145,48 @@ public abstract class AbstractMachineManager<T extends SingularityMachineAbstrac
     saveObject(object.changeState(newStateUpdate));
 
     return StateChangeResult.SUCCESS;
+  }
+
+  private void clearExpiringStateChangeIfInvalid(T object, MachineState newState) {
+    Optional<SingularityExpiringMachineState> maybeExpiring = getExpiringObject(object.getId());
+    if (!maybeExpiring.isPresent()) {
+      return;
+    }
+    MachineState targetExpiringState = maybeExpiring.get().getRevertToState();
+
+    Optional<StateChangeResult> maybeInvalidStateChange = getInvalidStateChangeResult(newState, targetExpiringState, true);
+
+    if (maybeInvalidStateChange.isPresent()) {
+      LOG.info("Cannot complete expiring state transition from {} to {}, removing expiring action for {}", newState, targetExpiringState, object.getId());
+      deleteExpiringObject(object.getId());
+    }
+  }
+
+  private Optional<StateChangeResult> getInvalidStateChangeResult(MachineState currentState, MachineState newState, boolean expiringAction) {
+    if (currentState == newState) {
+      return Optional.of(StateChangeResult.FAILURE_ALREADY_AT_STATE);
+    }
+
+    if (newState == MachineState.STARTING_DECOMMISSION && currentState.isDecommissioning()) {
+      return Optional.of(StateChangeResult.FAILURE_ILLEGAL_TRANSITION);
+    }
+
+    // can't jump from FROZEN or ACTIVE to DECOMMISSIONING or DECOMMISSIONED
+    if (((newState == MachineState.DECOMMISSIONING) || (newState == MachineState.DECOMMISSIONED)) && (currentState == MachineState.FROZEN || currentState == MachineState.ACTIVE)) {
+      return Optional.of(StateChangeResult.FAILURE_ILLEGAL_TRANSITION);
+    }
+
+    // can't jump from a decommissioning state to FROZEN
+    if ((newState == MachineState.FROZEN) && currentState.isDecommissioning()) {
+      return Optional.of(StateChangeResult.FAILURE_ILLEGAL_TRANSITION);
+    }
+
+    // User/Expiring can't jump from inactive to active state
+    if (currentState.isInactive() && expiringAction) {
+      return Optional.of(StateChangeResult.FAILURE_ILLEGAL_TRANSITION);
+    }
+
+    return Optional.absent();
   }
 
   private String getHistoryUpdatePath(SingularityMachineStateHistoryUpdate historyUpdate) {
