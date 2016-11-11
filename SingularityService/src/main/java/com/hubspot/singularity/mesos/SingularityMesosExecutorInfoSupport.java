@@ -75,7 +75,7 @@ public class SingularityMesosExecutorInfoSupport implements Managed {
 
     final String slaveUri = mesosClient.getSlaveUri(task.getOffer().getHostname());
 
-    LOG.info("Fetching slave data to find log directory for task {} from uri {}", task.getTaskId(), slaveUri);
+    LOG.info("Fetching slave data to find log directory and container id for task {} from uri {}", task.getTaskId(), slaveUri);
 
     MesosSlaveStateObject slaveState = mesosClient.getSlaveState(slaveUri);
 
@@ -103,7 +103,7 @@ public class SingularityMesosExecutorInfoSupport implements Managed {
       return;
     }
 
-    LOG.debug("Found a directory {} and container {} for task {}", directory.or(""), containerId.or(""), task.getTaskId());
+    LOG.debug("Found a directory {} and container id {} for task {}", directory.or(""), containerId.or(""), task.getTaskId());
 
     if (directory.isPresent()) {
       taskManager.saveTaskDirectory(task.getTaskId(), directory.get());
@@ -112,7 +112,7 @@ public class SingularityMesosExecutorInfoSupport implements Managed {
       taskManager.saveContainerId(task.getTaskId(), containerId.get());
     }
 
-    LOG.trace("Updated task {} directory in {}", task.getTaskId(), JavaUtils.duration(start));
+    LOG.trace("Updated task {} directory and container id in {}", task.getTaskId(), JavaUtils.duration(start));
   }
 
   @Timed
@@ -128,13 +128,13 @@ public class SingularityMesosExecutorInfoSupport implements Managed {
     final Optional<SingularityTask> task = taskManager.getTask(taskId);
 
     if (!task.isPresent()) {
-      LOG.warn("No task found available for task {}, can't locate directory", taskId);
+      LOG.warn("No task found available for task {}, can't locate directory or container id", taskId);
       return;
     }
 
     Runnable cmd = generateLookupCommand(task.get());
 
-    LOG.trace("Enqueing a request to fetch directory for task: {}, current queue size: {}", taskId, logLookupExecutorService.getQueue().size());
+    LOG.trace("Enqueing a request to fetch directory and container id for task: {}, current queue size: {}", taskId, logLookupExecutorService.getQueue().size());
 
     logLookupExecutorService.submit(cmd);
   }
@@ -147,7 +147,7 @@ public class SingularityMesosExecutorInfoSupport implements Managed {
         try {
           loadDirectoryAndContainer(task);
         } catch (Throwable t) {
-          LOG.error("While fetching directory for task: {}", task.getTaskId(), t);
+          LOG.error("While fetching directory and container id for task: {}", task.getTaskId(), t);
         }
       }
     };
