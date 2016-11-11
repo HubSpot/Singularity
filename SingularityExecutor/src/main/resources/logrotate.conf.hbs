@@ -12,6 +12,18 @@ notifempty
 {{{ logfile }}} {
   dateformat {{{ rotateDateformat }}}{{#if logfileExtension}}.{{{ logfileExtension}}}{{/if}}
   olddir {{{ rotateDirectory }}}
+  postrotate
+    NOW="$(($(date +%s%N)/1000000))"
+    LOGSTART=`getfattr --only-values -n user.logstart {{{ logfile }}}`
+    if [ "$LOGSTART" != "" ]; then
+      for filename in "{{{ rotateDirectory }}}/{{{ logfileName }}}-$(date +%Y%m%d)"*
+      do
+        setfattr -n user.logend -v "$NOW" {{{ rotateDirectory }}}/$filename
+        setfattr -n user.logstart -v "$LOGSTART" {{{ rotateDirectory }}}/$filename
+      done
+    fi
+    setfattr -n user.logstart -v "$NOW" {{{ logfile }}}
+  endscript
 }
 {{/if}}
 

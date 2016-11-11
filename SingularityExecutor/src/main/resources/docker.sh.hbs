@@ -149,6 +149,10 @@ echo "Ensuring {{{ runContext.taskAppDirectory }}} is owned by {{{ runContext.us
 mkdir -p {{{ runContext.taskAppDirectory }}}
 sudo chown -R {{{ runContext.user }}} {{{ runContext.taskAppDirectory }}}
 
+touch {{{ runContext.logFile }}}
+sudo chown {{{ runContext.user }}} {{{ runContext.logFile }}}
+setfattr -n user.logstart -v "$(($(date +%s%N)/1000000))" {{{ runContext.logFile }}}
+
 # Start up the container
 echo -e "Creating continer with: sudo -E -H -u {{{ runContext.user }}} docker create $DOCKER_OPTIONS {{#each envContext.env}}{{#ifHasNewLines value}}-e {{{name}}}={{#escapeNewLinesAndQuotes value}}{{/escapeNewLinesAndQuotes}}{{/ifHasNewLines}}{{/each}} $DOCKER_IMAGE {{{ runContext.cmd }}}"
 cid=`sudo -E -H -u {{{ runContext.user }}} docker create $DOCKER_OPTIONS {{#each envContext.env}}{{#ifHasNewLines value}}-e {{{name}}}={{#escapeNewLinesAndQuotes value}}{{/escapeNewLinesAndQuotes}}{{/ifHasNewLines}}{{/each}} $DOCKER_IMAGE {{{runContext.cmd }}}`
