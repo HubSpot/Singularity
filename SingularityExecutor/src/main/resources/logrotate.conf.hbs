@@ -12,6 +12,7 @@ notifempty
 {{{ logfile }}} {
   dateformat -{{{ rotateDateformat }}}{{#if logfileExtension}}.{{{ logfileExtension}}}{{/if}}
   olddir {{{ rotateDirectory }}}
+{{#if useFileAttributes}}
   postrotate
     NOW="$(($(date +%s%N)/1000000))"
     LOGSTART=`getfattr --only-values -n user.logstart {{{ logfile }}}`
@@ -24,6 +25,7 @@ notifempty
     fi
     setfattr -n user.logstart -v "$NOW" {{{ logfile }}}
   endscript
+{{/if}}
 }
 {{/if}}
 
@@ -31,6 +33,7 @@ notifempty
 {{#each extrasFiles}}{{{filename}}} {
   dateformat -{{{ dateformat }}}{{#if extension}}.{{{ extension}}}{{/if}}
   missingok
+{{#if useFileAttributes}}
   postrotate
     NOW="$(($(date +%s%N)/1000000))"
     for oldfile in $@
@@ -46,6 +49,7 @@ notifempty
       setfattr -n user.logstart -v "$NOW" $oldfile
     done
   endscript
+{{/if}}
 }
 
 {{/each}}

@@ -64,9 +64,11 @@ else
   echo "No deploy-specific profile.d"
 fi
 
+{{#if useFileAttributes}}
 touch {{{ logFilePath }}}
 sudo chown {{{ user }}} {{{ logFilePath }}}
 setfattr -n user.logstart -v "$(($(date +%s%N)/1000000))" {{{ logFilePath }}}
+{{/if}}
 
 # execute command
 {{#if shouldChangeUser}}

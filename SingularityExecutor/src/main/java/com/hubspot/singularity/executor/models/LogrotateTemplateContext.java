@@ -105,6 +105,10 @@ public class LogrotateTemplateContext {
     return configuration.getServiceLog();
   }
 
+  public boolean isUseFileAttributes() {
+    return configuration.isUseFileAttributes();
+  }
+
   @Override
   public String toString() {
     return "LogrotateTemplateContext [taskId=" + taskDefinition.getTaskId() + "]";

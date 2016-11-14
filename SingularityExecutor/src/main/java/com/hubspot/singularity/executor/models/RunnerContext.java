@@ -1,5 +1,6 @@
 package com.hubspot.singularity.executor.models;
 
+import com.google.common.base.Objects;
 import com.google.common.base.Optional;
 
 /**
@@ -19,8 +20,9 @@ public class RunnerContext {
   private final boolean shouldChangeUser;
   private final Integer maxOpenFiles;
   private final String switchUserCommand;
+  private final boolean useFileAttributes;
 
-  public RunnerContext(String cmd, String taskAppDirectory, String logDir, String user, String logFile, String logFilePath, String taskId, Optional<Integer> maxTaskThreads, boolean shouldChangeUser, Integer maxOpenFiles, String switchUserCommand) {
+  public RunnerContext(String cmd, String taskAppDirectory, String logDir, String user, String logFile, String logFilePath, String taskId, Optional<Integer> maxTaskThreads, boolean shouldChangeUser, Integer maxOpenFiles, String switchUserCommand, boolean useFileAttributes) {
     this.cmd = cmd;
     this.taskAppDirectory = taskAppDirectory;
     this.logDir = logDir;
@@ -33,6 +35,7 @@ public class RunnerContext {
     this.shouldChangeUser = shouldChangeUser;
     this.maxOpenFiles = maxOpenFiles;
     this.switchUserCommand = switchUserCommand;
+    this.useFileAttributes = useFileAttributes;
   }
 
   public String getCmd() {
@@ -79,19 +82,25 @@ public class RunnerContext {
     return switchUserCommand;
   }
 
+  public boolean isUseFileAttributes() {
+    return useFileAttributes;
+  }
+
   @Override
   public String toString() {
-    return "RunnerContext[" +
-            "cmd='" + cmd + '\'' +
-            ", taskAppDirectory='" + taskAppDirectory + '\'' +
-            ", logDir='" + logDir + '\'' +
-            ", user='" + user + '\'' +
-            ", logFile='" + logFile + '\'' +
-            ", logFilePath='" + logFilePath + '\'' +
-            ", taskId='" + taskId + '\'' +
-            ", maxTaskThreads=" + maxTaskThreads +
-            ", shouldChangeUser=" + shouldChangeUser +
-            ", switchUserCommand=" + switchUserCommand +
-            ']';
+    return Objects.toStringHelper(this)
+      .add("cmd", cmd)
+      .add("taskAppDirectory", taskAppDirectory)
+      .add("logDir", logDir)
+      .add("user", user)
+      .add("logFile", logFile)
+      .add("logFilePath", logFilePath)
+      .add("taskId", taskId)
+      .add("maxTaskThreads", maxTaskThreads)
+      .add("shouldChangeUser", shouldChangeUser)
+      .add("maxOpenFiles", maxOpenFiles)
+      .add("switchUserCommand", switchUserCommand)
+      .add("useFileAttributes", useFileAttributes)
+      .toString();
   }
 }
