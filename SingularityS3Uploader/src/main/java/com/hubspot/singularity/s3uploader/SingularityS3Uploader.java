@@ -2,11 +2,15 @@ package com.hubspot.singularity.s3uploader;
 
 import java.io.Closeable;
 import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.nio.charset.Charset;
 import java.nio.file.FileSystem;
+import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.PathMatcher;
 import java.nio.file.Paths;
+import java.nio.file.attribute.UserDefinedFileAttributeView;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
@@ -33,6 +37,7 @@ import com.github.rholder.retry.RetryerBuilder;
 import com.github.rholder.retry.StopStrategies;
 import com.github.rholder.retry.WaitStrategies;
 import com.google.common.base.Optional;
+import com.google.common.base.Strings;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -49,6 +54,10 @@ import com.hubspot.singularity.s3uploader.config.SingularityS3UploaderConfigurat
 public class SingularityS3Uploader implements Closeable {
 
   private static final Logger LOG = LoggerFactory.getLogger(SingularityS3Uploader.class);
+  private static final String LOG_START_TIME_ATTR = "user.logstart";
+  private static final String LOG_END_TIME_ATTR = "user.logend";
+  private static final String LOG_START_S3_ATTR = "logStartTime";
+  private static final String LOG_END_S3_ATTR = "logEndTime";
 
   private final S3UploadMetadata uploadMetadata;
   private final PathMatcher pathMatcher;
@@ -234,6 +243,21 @@ public class SingularityS3Uploader implements Closeable {
         S3Object object = new S3Object(s3Bucket, file.toFile());
         object.setKey(key);
 
+        if (FileSystems.getDefault().supportedFileAttributeViews().contains("user")) {
+          try {
+            Optional<Long> maybeStartTime = readFileAttributeAsLong(LOG_START_TIME_ATTR);
+            if (maybeStartTime.isPresent()) {
+              object.getMetadataMap().put(LOG_START_S3_ATTR, maybeStartTime.get());
+            }
+            Optional<Long> maybeEndTime = readFileAttributeAsLong(LOG_END_TIME_ATTR);
+            if (maybeEndTime.isPresent()) {
+              object.getMetadataMap().put(LOG_END_S3_ATTR, maybeEndTime.get());
+            }
+          } catch (Exception e) {
+            LOG.error("Could not get extra file metadata for {}", file, e);
+          }
+        }
+
         for (SingularityS3UploaderContentHeaders contentHeaders : configuration.getS3ContentHeaders()) {
           if (file.toString().endsWith(contentHeaders.getFilenameEndsWith())) {
             LOG.debug("{} Using content headers {} for file {}", logIdentifier, contentHeaders, file);
@@ -260,6 +284,24 @@ public class SingularityS3Uploader implements Closeable {
       LOG.info("{} Uploaded {} in {}", logIdentifier, key, JavaUtils.duration(start));
 
       return true;
+    }
+
+    private Optional<Long> readFileAttributeAsLong(String attribute) {
+      try {
+        UserDefinedFileAttributeView view = Files.getFileAttributeView(file, UserDefinedFileAttributeView.class);
+        ByteBuffer buf = ByteBuffer.allocate(view.size(attribute));
+        view.read(attribute, buf);
+        buf.flip();
+        String value = Charset.defaultCharset().decode(buf).toString();
+        if (Strings.isNullOrEmpty(value)) {
+          LOG.debug("No attrbiute {} found for file {}", attribute, file);
+          return Optional.absent();
+        }
+        return Optional.of(Long.parseLong(value));
+      } catch (Exception e) {
+        LOG.error("Error getting extra file metadata for {}", file, e);
+        return Optional.absent();
+      }
     }
   }
 
