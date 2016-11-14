@@ -38,6 +38,16 @@
                             </execution>
 
                             <execution>
+                                <id>npm run compile:tailer</id>
+                                <goals>
+                                    <goal>npm</goal>
+                                </goals>
+                                <configuration>
+                                    <arguments>run compile:tailer</arguments>
+                                </configuration>
+                            </execution>
+
+                            <execution>
                                 <id>npm install</id>
                                 <goals>
                                     <goal>npm</goal>
