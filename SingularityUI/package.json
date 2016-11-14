@@ -14,7 +14,7 @@
   "bin": {},
   "scripts": {
     "start": "gulp serve",
-    "compile:tailer": "cd SingularityTailer && npm install"
+    "install:tailer-dev-dependencies": "cd SingularityTailer && npm install --only=dev"
   },
   "dependencies": {
     "ansi-style-parser": "^1.0.1",

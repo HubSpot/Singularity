@@ -112,15 +112,15 @@ module.exports = function(options) {
         },
         {
           test: /\.scss/,
-          loader: extractCSS.extract('style', 'style-loader?sourceMap!css-loader?sourceMap!resolve-url?fail!sass?sourceMap'),
+          loader: extractCSS.extract('style-loader?sourceMap', 'css-loader?sourceMap!resolve-url?fail!sass?sourceMap'),
         },
         {
           test: /\.styl/,
-          loader: extractCSS.extract('style', 'style-loader?sourceMap!css-loader?sourceMap!stylus?sourceMap'),
+          loader: extractCSS.extract('style-loader?sourceMap', 'css-loader?sourceMap!stylus?sourceMap'),
         },
         {
           test: /\.css/,
-          loader: extractCSS.extract('style', 'style-loader?sourceMap!css-loader?sourceMap'),
+          loader: extractCSS.extract('style-loader?sourceMap', 'css-loader?sourceMap'),
         },
         {
           test: /\.(png|jpg|jpeg|gif|ico)$/,
