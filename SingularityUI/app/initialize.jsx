@@ -3,6 +3,7 @@ import 'core-js/es6';
 
 import React from 'react';
 import ReactDOM from 'react-dom';
+import { AppContainer } from 'react-hot-loader';
 import FormModal from './components/common/modal/FormModal';
 import AppRouter from './router';
 import configureStore from 'store';
@@ -10,9 +11,15 @@ import { FetchUser } from 'actions/api/auth';
 import { FetchGroups } from 'actions/api/requestGroups';
 import { AddStarredRequests } from 'actions/api/users';
 import Utils from './utils';
+import { actions as tailerActions } from 'singularityui-tailer';
 
 // Set up third party configurations
-import 'thirdPartyConfigurations';
+import { loadThirdParty } from 'thirdPartyConfigurations';
+
+import './assets/static/images/favicon.ico';
+
+import './styles/index.scss';
+import './styles/index.styl';
 
 function setApiRoot(data) {
   if (data.apiRoot) {
@@ -20,6 +27,10 @@ function setApiRoot(data) {
   }
   return location.reload();
 }
+
+const HMRContainer = (module.hot)
+  ? AppContainer
+  : ({ children }) => (children);
 
 function renderApiRootForm() {
   return ReactDOM.render(
@@ -111,6 +122,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // set up Redux store
     const store = configureStore();
 
+    // set up tailer
+    store.dispatch(tailerActions.sandboxSetApiRoot(config.apiRoot));
+
     // set up user
     let userId;
     window.app = {};
@@ -128,8 +142,16 @@ document.addEventListener('DOMContentLoaded', () => {
     // set up request groups
     store.dispatch(FetchGroups.trigger([404, 500]));
 
+    // set up hot module reloading
+    if (module.hot) {
+      module.hot.accept('./router', () => {
+        const NextAppRouter = require('./router').default;
+        return ReactDOM.render(<HMRContainer><NextAppRouter store={store} /></HMRContainer>, document.getElementById('root'));
+      });
+    }
+
     // Render the page content
-    return ReactDOM.render(<AppRouter store={store} />, document.getElementById('root'), () => {
+    return ReactDOM.render(<HMRContainer><AppRouter store={store} /></HMRContainer>, document.getElementById('root'), () => {
       // hide loading animation
       document.getElementById('static-loader').remove();
     });

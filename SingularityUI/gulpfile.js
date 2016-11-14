@@ -1,26 +1,22 @@
 var gulp = require('gulp');
 var gutil = require('gulp-util');
 var path = require('path');
+var fs = require('fs');
 var del = require('del');
 
 var mustache = require('gulp-mustache');
-var stylus = require('gulp-stylus');
-var nib = require('nib');
 
 var concat = require('gulp-concat');
-var webpackMerge = require('webpack-merge');
-
-var sass = require('gulp-sass');
-var streamqueue = require('streamqueue');
-
-var eslint = require('gulp-eslint');
 
 // we used the wrong variable here, in the next version we will remove SINGULARITY_BASE_URI
 var serverBase = process.env.SINGULARITY_URI_BASE || process.env.SINGULARITY_BASE_URI || '/singularity';
 
+var staticUri = process.env.SINGULARITY_STATIC_URI || (serverBase + '/static');
+var appUri = process.env.SINGULARITY_APP_URI || (serverBase + '/ui');
+
 var templateData = {
-  staticRoot: process.env.SINGULARITY_STATIC_URI || (serverBase + '/static'),
-  appRoot: process.env.SINGULARITY_APP_URI || (serverBase + '/ui'),
+  staticRoot: staticUri,
+  appRoot: appUri,
   apiRoot: process.env.SINGULARITY_API_URI || '',
   apiDocs: process.env.SINGULARITY_API_DOCS || 'http://getsingularity.com/Docs/reference/apidocs/api-index.html',
   slaveHttpPort: process.env.SINGULARITY_SLAVE_HTTP_PORT || 5051,
@@ -53,36 +49,15 @@ var dest = path.resolve(__dirname, 'dist');
 
 var webpackStream = require('webpack-stream');
 var webpack = require('webpack');
-var webpackConfig = require('./webpack.config');
-var WebpackDevServer = require('webpack-dev-server');
+
+var port = process.env.PORT || 3334;
+var useHMR = process.env.USE_HMR || true;
+var webpackHMRPath = serverBase + '/__webpack_hmr';
+
+__webpack_public_path__ = serverBase;
 
 gulp.task('clean', function() {
-  return del(dest);
-});
-
-gulp.task('fonts', function() {
-  return gulp.src([
-    './node_modules/bootstrap/dist/fonts/*.{eot,svg,ttf,woff,svg,woff2}'
-  ]).pipe(gulp.dest(dest + '/static/fonts'));
-});
-
-gulp.task('scripts', function () {
-  var prodConfig = Object.create(webpackConfig);
-
-  prodConfig.plugins = prodConfig.plugins.concat(
-    new webpack.optimize.UglifyJsPlugin({
-      compress: {
-        warnings: false
-      }
-    }),
-    new webpack.DefinePlugin({
-      'process.env.NODE_ENV': JSON.stringify('production')
-    })
-  );
-
-  return gulp.src(prodConfig.entry.app)
-    .pipe(webpackStream(prodConfig))
-    .pipe(gulp.dest(dest + '/static/js'));
+  return del(dest + '/*');
 });
 
 gulp.task('html', function () {
@@ -91,60 +66,67 @@ gulp.task('html', function () {
     .pipe(gulp.dest(dest));
 });
 
-gulp.task('css-images', function () {
-  return gulp.src('node_modules/select2/*.{gif,png}')
-    .pipe(gulp.dest(dest + '/static/css'));
+gulp.task('debug-html', function () {
+  templateData.isDebug = true;
+  return gulp.src('app/assets/index.mustache')
+    .pipe(mustache(templateData, {extension: '.html'}))
+    .pipe(gulp.dest(dest));
 });
 
-gulp.task('images', function () {
-  return gulp.src('app/assets/static/images/*.ico')
-    .pipe(gulp.dest(dest + '/static/images'));
+gulp.task('build', ['clean', 'html'], function () {
+  return gulp.src('app')
+    .pipe(webpackStream(require('./webpack.config')))
+    .pipe(gulp.dest(dest + '/static'));
 });
 
-gulp.task('styles', function () {
-  var stylusStyles = gulp.src([
-    'node_modules/vex-js/css/*.css',
-    'node_modules/messenger/build/css/*.css',
-    'node_modules/select2/*.css',
-    'node_modules/bootstrap/dist/css/bootstrap.css',
-    'node_modules/eonasdan-bootstrap-datetimepicker/build/css/bootstrap-datetimepicker.css',
-    'node_modules/react-select/dist/react-select.css',
-    'node_modules/react-tagsinput/react-tagsinput.css',
-    'app/**/*.styl'
-  ])
-  .pipe(stylus({
-    use: nib(),
-    'include css': true
-  }));
-
-  var sassStyles = gulp.src('app/styles/scss/**/*.scss')
-    .pipe(sass({errLogToConsole: true}));
-
-  return streamqueue({ objectMode: true }, stylusStyles, sassStyles)
-    .pipe(concat('app.css'))
-    .pipe(gulp.dest(dest + '/static/css'));
-});
-
-gulp.task('lint', function () {
-  return gulp.src(['./app/**/*.{es6, jsx}'])
-    .pipe(eslint())
-    .pipe(eslint.format());
-});
-
-gulp.task('build', ['clean'], function () {
-  gulp.start(['scripts', 'html', 'styles', 'fonts', 'images', 'css-images', 'lint']);
-});
-
-gulp.task('serve', ['html', 'styles', 'fonts', 'images', 'css-images', 'lint'], function () {
-  gulp.watch('app/**/*.styl', ['styles']);
-  gulp.watch('app/**/*.scss', ['styles']);
-
-  new WebpackDevServer(webpack(webpackMerge(webpackConfig, {devtool: 'eval'})), {
-    contentBase: dest,
-    historyApiFallback: true
-  }).listen(3334, 'localhost', function (err) {
-    if (err) throw new gutil.PluginError('webpack-dev-server', err);
-    gutil.log('[webpack-dev-server]', 'Development server running on port 3334');
+gulp.task('serve', ['clean', 'debug-html'], function () {
+  var count = 0;
+  var webpackConfig = require('./make-webpack-config')({
+    isDebug: true,
+    useHMR: useHMR,
+    webpackHMRPath: webpackHMRPath,
+    publicPath: staticUri
+  });
+  return new Promise(resolve => {
+    var bs = require('browser-sync').create();
+    var compiler = webpack(webpackConfig);
+    // Node.js middleware that compiles application in watch mode with HMR support
+    // http://webpack.github.io/docs/webpack-dev-middleware.html
+    var webpackDevMiddleware = require('webpack-dev-middleware')(compiler, {
+      publicPath: staticUri,
+      stats: webpackConfig.stats,
+    });
+    var webpackHotMiddleware = require('webpack-hot-middleware')(compiler, {
+      path: webpackHMRPath
+    });
+    compiler.plugin('done', function () {
+      // Launch Browsersync after the initial bundling is complete
+      if (++count === 1) {
+        bs.init({
+          port: port,
+          startPath: appUri,
+          open: false,
+          socket: {
+            domain: 'localhost:' + port,
+            clientPath: '/singularity/browser-sync'
+          },
+          server: {
+            baseDir: 'dist',
+            middleware: [
+              webpackDevMiddleware,
+              webpackHotMiddleware,
+              // Serve index.html for all unknown requests
+              function(req, res, next) {
+                if (req.headers.accept && req.headers.accept.startsWith('text/html')) {
+                  req.url = '/index.html'; // eslint-disable-line no-param-reassign
+                }
+                next();
+              },
+            ],
+          },
+        }, resolve);
+      }
+    });
   });
 });
 

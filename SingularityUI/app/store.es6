@@ -11,7 +11,10 @@ export default function configureStore(initialState = {}) {
     middlewares.push(logger());
   }
 
-  const store = createStore(rootReducer, initialState, compose(applyMiddleware.apply(this, middlewares)));
+  const store = createStore(rootReducer, initialState, compose(
+    applyMiddleware.apply(this, middlewares),
+    window.devToolsExtension ? window.devToolsExtension() : f => f
+  ));
 
   return store;
 }

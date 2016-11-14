@@ -1,0 +1,78 @@
+html,
+body {
+  height: 100%;
+  margin: 0
+}
+
+#root {
+  height: 100%;
+}
+
+.full {
+  display: flex;
+  flex-flow: column;
+  height: 100%;
+  height: 100%;
+}
+
+.app-header {
+  flex: 0 1 auto;
+
+  form {
+    display: inline-block;
+  }
+
+  a {
+    padding: 0 5px;
+  }
+
+  padding: 5px;
+}
+
+.app-content {
+  flex: 1 1 auto;
+  display: flex;
+  min-height: 0;
+}
+
+.app-footer {
+  flex: 0 1 40px;
+}
+
+.log-pane {
+  color: #839496;
+  background-color: #002b36;
+
+  &.tailing {
+  }
+
+  .log-row {
+    &:hover {
+      a.line-link {
+        visibility: visible;
+      }
+    }
+
+    a.line-link {
+      padding: 0 5px;
+      visibility: hidden;
+      text-decoration: none;
+
+      &:link {
+        color: white;
+      }
+
+      &:visited {
+        color: white;
+      }
+
+      &:hover {
+        color: gray;
+      }
+
+      &:active {
+        color: darkgray;
+      }
+    }
+  }
+}

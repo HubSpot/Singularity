@@ -169,6 +169,11 @@ const Utils = {
     };
   },
 
+  getRequestIdFromTaskId(taskId) {
+    const splits = taskId.split('-');
+    return splits.slice(0, splits.length - 5).join('-');
+  },
+
   deepClone(objectToClone) {
     return $.extend(true, {}, objectToClone);
   },
