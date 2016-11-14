@@ -8,6 +8,7 @@ import api from './api';
 import ui from './ui';
 import { reducer as formReducer } from 'redux-form';
 import { reducer as tailerReducer } from 'singularityui-tailer';
+import tailerViewReducer from './tailerView';
 
 const path = (state = '', action) => {
   if (action.type === 'LOG_INIT') {
@@ -82,5 +83,6 @@ export default combineReducers({
   logRequestLength,
   maxLines,
   form: formReducer,
-  tailer: tailerReducer
+  tailer: tailerReducer,
+  tailerView: tailerViewReducer
 });

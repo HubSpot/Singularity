@@ -24,7 +24,9 @@ import TaskInstanceRedirect from './components/requestDetail/TaskInstanceRedirec
 import RequestDetailPage from './components/requestDetail/RequestDetailPage';
 import Group from './components/groupDetail/GroupDetail.jsx';
 import Disasters from './components/disasters/Disasters';
-import LogTailerContainer from './containers/LogTailerContainer';
+import TaskLogTailerContainer from './containers/TaskLogTailerContainer';
+import RequestLogTailerContainer from './containers/RequestLogTailerContainer';
+import CustomLogTailerContainer from './containers/CustomLogTailerContainer';
 
 const routes = (
   <Route path="/" component={Application}>
@@ -40,14 +42,16 @@ const routes = (
       <Route path=":requestId/deploy" component={NewDeployForm} />
       <Route path=":requestId/deploy/:deployId" component={DeployDetail} />
       <Route path=":requestId/tail/**" component={AggregateTail} />
+      <Route path=":requestId/new-tail/**" component={RequestLogTailerContainer} />
       <Route path=":requestId/instance/:instanceNo" component={TaskInstanceRedirect} />
     </Route>
     <Route path="tasks(/:state)(/:requestsSubFilter)(/:searchFilter)" component={TasksPage} />
     <Route path="task">
       <Route path=":taskId(/files**)" component={TaskDetail} />
       <Route path=":taskId/tail/**" component={Tail} />
-      <Route path=":taskId/new-tail/**" component={LogTailerContainer} />
+      <Route path=":taskId/new-tail/**" component={TaskLogTailerContainer} />
     </Route>
+    <Route path="new-tail/**" component={CustomLogTailerContainer} />
     <Route path="racks(/:state)" component={Racks} />
     <Route path="slaves(/:state)" component={Slaves} />
     <Route path="webhooks" component={Webhooks} />
