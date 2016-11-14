@@ -12,7 +12,7 @@ export const getBouncesForRequest = (requestId) => createSelector(
   [getTaskCleanups],
   (taskCleanups) => (
   taskCleanups.data || []).filter((cleanup) => (
-    cleanup.cleanupType === 'BOUNCING' || cleanup.cleanupType === 'INCREMENTAL_BOUNCE' && cleanup.taskId.requestId === requestId
+    (cleanup.cleanupType === 'BOUNCING' || cleanup.cleanupType === 'INCREMENTAL_BOUNCE') && cleanup.taskId.requestId === requestId
   ))
 );
 
