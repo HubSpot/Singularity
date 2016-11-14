@@ -163,7 +163,7 @@ module.exports = function(options) {
     config.plugins.push(new webpack.optimize.DedupePlugin());
     config.plugins.push(new webpack.optimize.UglifyJsPlugin({ compress: { warnings: isVerbose } }));
     config.plugins.push(new webpack.optimize.AggressiveMergingPlugin());
-    config.plugins.push(new webpack.optimize.CommonsChunkPlugin('vendor', 'vendor.bundle.js'));
+    config.plugins.push(new webpack.optimize.CommonsChunkPlugin('js/vendor', 'js/vendor.bundle.js'));
   }
 
   // Hot Module Replacement (HMR) + React Hot Reload
