@@ -148,7 +148,7 @@ public class SingularityDeployChecker {
     final List<SingularityTaskId> allOtherMatchingTasks = Lists.newArrayList(Iterables.filter(activeTasks, Predicates.not(SingularityTaskId.matchingDeploy(pendingDeployMarker.getDeployId()))));
 
     SingularityDeployResult deployResult =
-      getDeployResult(request, cancelRequest, pendingDeploy, updatePendingDeployRequest, deployKey, deploy, deployMatchingTasks, allOtherMatchingTasks, inactiveDeployMatchingTasks);
+      getDeployResult(request, cancelRequest, pendingDeploy, updatePendingDeployRequest, deploy, deployMatchingTasks, allOtherMatchingTasks, inactiveDeployMatchingTasks);
 
     LOG.info("Deploy {} had result {} after {}", pendingDeployMarker, deployResult, JavaUtils.durationFromMillis(System.currentTimeMillis() - pendingDeployMarker.getTimestamp()));
 
@@ -316,8 +316,8 @@ public class SingularityDeployChecker {
   private long getAllowedMillis(SingularityDeploy deploy) {
     long seconds = deploy.getDeployHealthTimeoutSeconds().or(configuration.getDeployHealthyBySeconds());
 
-    if (deploy.getHealthcheckUri().isPresent() && !deploy.getSkipHealthchecksOnDeploy().or(false)) {
-      seconds += deploy.getHealthcheckIntervalSeconds().or(configuration.getHealthcheckIntervalSeconds()) + deploy.getHealthcheckTimeoutSeconds().or(configuration.getHealthcheckTimeoutSeconds());
+    if (deploy.getHealthcheck().isPresent() && !deploy.getSkipHealthchecksOnDeploy().or(false)) {
+      seconds += deployHealthHelper.getMaxHealthcheckTimeoutSeconds(deploy.getHealthcheck().get());
     } else {
       seconds += deploy.getConsiderHealthyAfterRunningForSeconds().or(configuration.getConsiderTaskHealthyAfterRunningForSeconds());
     }
@@ -432,8 +432,7 @@ public class SingularityDeployChecker {
   }
 
   private SingularityDeployResult getDeployResult(final SingularityRequest request, final Optional<SingularityDeployMarker> cancelRequest, final SingularityPendingDeploy pendingDeploy,
-    final Optional<SingularityUpdatePendingDeployRequest> updatePendingDeployRequest,
-    final SingularityDeployKey deployKey, final Optional<SingularityDeploy> deploy, final Collection<SingularityTaskId> deployActiveTasks, final Collection<SingularityTaskId> otherActiveTasks,
+    final Optional<SingularityUpdatePendingDeployRequest> updatePendingDeployRequest, final Optional<SingularityDeploy> deploy, final Collection<SingularityTaskId> deployActiveTasks, final Collection<SingularityTaskId> otherActiveTasks,
     final Collection<SingularityTaskId> inactiveDeployMatchingTasks) {
     if (!request.isDeployable()) {
       LOG.info("Succeeding a deploy {} because the request {} was not deployable", pendingDeploy, request);
@@ -544,6 +543,10 @@ public class SingularityDeployChecker {
         return enqueueAndProcessLbRequest(request, deploy, pendingDeploy, updatePendingDeployRequest, deployActiveTasks, otherActiveTasks);
       case UNHEALTHY:
       default:
+        for (SingularityTaskId activeTaskId : deployActiveTasks) {
+          taskManager.markHealthchecksFinished(activeTaskId);
+          taskManager.clearStartupHealthchecks(activeTaskId);
+        }
         return getDeployResultWithFailures(request, deploy, pendingDeploy, DeployState.FAILED, "Not all tasks for deploy were healthy", deployActiveTasks);
     }
   }

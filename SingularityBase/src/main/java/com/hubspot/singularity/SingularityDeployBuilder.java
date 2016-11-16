@@ -4,8 +4,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.google.common.base.Objects;
 import com.google.common.base.Optional;
 import com.hubspot.deploy.ExecutorData;
+import com.hubspot.deploy.HealthcheckOptions;
 import com.hubspot.mesos.Resources;
 import com.hubspot.mesos.SingularityContainerInfo;
 import com.hubspot.mesos.SingularityMesosTaskLabel;
@@ -40,15 +42,45 @@ public class SingularityDeployBuilder {
   private Optional<Map<Integer, Map<String, String>>> taskLabels;
   private Optional<Map<Integer, List<SingularityMesosTaskLabel>>> mesosTaskLabels;
 
+  /**
+   * @deprecated use {@link #healthcheck}
+   */
+  @Deprecated
   private Optional<String> healthcheckUri;
+  /**
+   * @deprecated use {@link #healthcheck}
+   */
+  @Deprecated
   private Optional<Long> healthcheckIntervalSeconds;
+  /**
+   * @deprecated use {@link #healthcheck}
+   */
+  @Deprecated
   private Optional<Long> healthcheckTimeoutSeconds;
+  /**
+   * @deprecated use {@link #healthcheck}
+   */
+  @Deprecated
   private Optional<Integer> healthcheckPortIndex;
-  private Optional<Boolean> skipHealthchecksOnDeploy;
+  /**
+   * @deprecated use {@link #healthcheck}
+   */
+  @Deprecated
   private Optional<HealthcheckProtocol> healthcheckProtocol;
-
+  /**
+   * @deprecated use {@link #healthcheck}
+   */
+  @Deprecated
   private Optional<Integer> healthcheckMaxRetries;
+  /**
+   * @deprecated use {@link #healthcheck}
+   */
+  @Deprecated
   private Optional<Long> healthcheckMaxTotalTimeoutSeconds;
+
+  private Optional<Boolean> skipHealthchecksOnDeploy;
+
+  private Optional<HealthcheckOptions> healthcheck;
 
   private Optional<Long> deployHealthTimeoutSeconds;
 
@@ -99,6 +131,7 @@ public class SingularityDeployBuilder {
     this.healthcheckPortIndex = Optional.absent();
     this.skipHealthchecksOnDeploy = Optional.absent();
     this.deployHealthTimeoutSeconds = Optional.absent();
+    this.healthcheck = Optional.absent();
     this.healthcheckProtocol = Optional.absent();
     this.healthcheckMaxTotalTimeoutSeconds = Optional.absent();
     this.healthcheckMaxRetries = Optional.absent();
@@ -123,7 +156,7 @@ public class SingularityDeployBuilder {
   public SingularityDeploy build() {
     return new SingularityDeploy(requestId, id, command, arguments, containerInfo, customExecutorCmd, customExecutorId, customExecutorSource, customExecutorResources, resources,
       env, taskEnv, uris, metadata, executorData, version, timestamp, labels, mesosLabels, taskLabels, mesosTaskLabels, deployHealthTimeoutSeconds, healthcheckUri, healthcheckIntervalSeconds, healthcheckTimeoutSeconds, healthcheckPortIndex, healthcheckMaxRetries,
-      healthcheckMaxTotalTimeoutSeconds, serviceBasePath, loadBalancerGroups, loadBalancerPortIndex, considerHealthyAfterRunningForSeconds, loadBalancerOptions, loadBalancerDomains, loadBalancerAdditionalRoutes,
+      healthcheckMaxTotalTimeoutSeconds, healthcheck, serviceBasePath, loadBalancerGroups, loadBalancerPortIndex, considerHealthyAfterRunningForSeconds, loadBalancerOptions, loadBalancerDomains, loadBalancerAdditionalRoutes,
       loadBalancerTemplate, loadBalancerServiceIdOverride, loadBalancerUpstreamGroup, skipHealthchecksOnDeploy, healthcheckProtocol, deployInstanceCountPerStep, deployStepWaitTimeMs, autoAdvanceDeploySteps, maxTaskRetries, shell, user);
   }
 
@@ -468,6 +501,15 @@ public class SingularityDeployBuilder {
     return this;
   }
 
+  public Optional<HealthcheckOptions> getHealthcheck() {
+    return healthcheck;
+  }
+
+  public SingularityDeployBuilder setHealthcheck(Optional<HealthcheckOptions> healthcheck) {
+    this.healthcheck = healthcheck;
+    return this;
+  }
+
   public Optional<Integer> getDeployInstanceCountPerStep() {
     return deployInstanceCountPerStep;
   }
@@ -542,52 +584,55 @@ public class SingularityDeployBuilder {
 
   @Override
   public String toString() {
-    return "SingularityDeployBuilder{" +
-      "requestId='" + requestId + '\'' +
-      ", id='" + id + '\'' +
-      ", version=" + version +
-      ", timestamp=" + timestamp +
-      ", metadata=" + metadata +
-      ", containerInfo=" + containerInfo +
-      ", customExecutorCmd=" + customExecutorCmd +
-      ", customExecutorId=" + customExecutorId +
-      ", customExecutorSource=" + customExecutorSource +
-      ", customExecutorResources=" + customExecutorResources +
-      ", resources=" + resources +
-      ", command=" + command +
-      ", arguments=" + arguments +
-      ", env=" + env +
-      ", taskEnv=" + taskEnv +
-      ", uris=" + uris +
-      ", executorData=" + executorData +
-      ", labels=" + labels +
-      ", taskLabels=" + taskLabels +
-      ", healthcheckUri=" + healthcheckUri +
-      ", healthcheckIntervalSeconds=" + healthcheckIntervalSeconds +
-      ", healthcheckTimeoutSeconds=" + healthcheckTimeoutSeconds +
-      ", healthcheckPortIndex=" + healthcheckPortIndex +
-      ", skipHealthchecksOnDeploy=" + skipHealthchecksOnDeploy +
-      ", healthcheckProtocol=" + healthcheckProtocol +
-      ", healthcheckMaxRetries=" + healthcheckMaxRetries +
-      ", healthcheckMaxTotalTimeoutSeconds=" + healthcheckMaxTotalTimeoutSeconds +
-      ", deployHealthTimeoutSeconds=" + deployHealthTimeoutSeconds +
-      ", considerHealthyAfterRunningForSeconds=" + considerHealthyAfterRunningForSeconds +
-      ", serviceBasePath=" + serviceBasePath +
-      ", loadBalancerGroups=" + loadBalancerGroups +
-      ", loadBalancerPortIndex=" + loadBalancerPortIndex +
-      ", loadBalancerOptions=" + loadBalancerOptions +
-      ", loadBalancerDomains=" + loadBalancerDomains +
-      ", loadBalancerAdditionalRoutes=" + loadBalancerAdditionalRoutes +
-      ", loadBalancerTemplate=" + loadBalancerTemplate +
-      ", loadBalancerServiceIdOverride=" + loadBalancerServiceIdOverride +
-      ", loadBalancerUpstreamGroup=" + loadBalancerUpstreamGroup +
-      ", deployInstanceCountPerStep=" + deployInstanceCountPerStep +
-      ", deployStepWaitTimeMs=" + deployStepWaitTimeMs +
-      ", autoAdvanceDeploySteps=" + autoAdvanceDeploySteps +
-      ", maxTaskRetries=" + maxTaskRetries +
-      ", shell=" + shell +
-      ", user=" + user +
-      '}';
+    return Objects.toStringHelper(this)
+      .add("requestId", requestId)
+      .add("id", id)
+      .add("version", version)
+      .add("timestamp", timestamp)
+      .add("metadata", metadata)
+      .add("containerInfo", containerInfo)
+      .add("customExecutorCmd", customExecutorCmd)
+      .add("customExecutorId", customExecutorId)
+      .add("customExecutorSource", customExecutorSource)
+      .add("customExecutorResources", customExecutorResources)
+      .add("resources", resources)
+      .add("command", command)
+      .add("arguments", arguments)
+      .add("env", env)
+      .add("taskEnv", taskEnv)
+      .add("uris", uris)
+      .add("executorData", executorData)
+      .add("labels", labels)
+      .add("mesosLabels", mesosLabels)
+      .add("taskLabels", taskLabels)
+      .add("mesosTaskLabels", mesosTaskLabels)
+      .add("healthcheckUri", healthcheckUri)
+      .add("healthcheckIntervalSeconds", healthcheckIntervalSeconds)
+      .add("healthcheckTimeoutSeconds", healthcheckTimeoutSeconds)
+      .add("healthcheckPortIndex", healthcheckPortIndex)
+      .add("healthcheckProtocol", healthcheckProtocol)
+      .add("healthcheckMaxRetries", healthcheckMaxRetries)
+      .add("healthcheckMaxTotalTimeoutSeconds", healthcheckMaxTotalTimeoutSeconds)
+      .add("skipHealthchecksOnDeploy", skipHealthchecksOnDeploy)
+      .add("healthcheck", healthcheck)
+      .add("deployHealthTimeoutSeconds", deployHealthTimeoutSeconds)
+      .add("considerHealthyAfterRunningForSeconds", considerHealthyAfterRunningForSeconds)
+      .add("serviceBasePath", serviceBasePath)
+      .add("loadBalancerGroups", loadBalancerGroups)
+      .add("loadBalancerPortIndex", loadBalancerPortIndex)
+      .add("loadBalancerOptions", loadBalancerOptions)
+      .add("loadBalancerDomains", loadBalancerDomains)
+      .add("loadBalancerAdditionalRoutes", loadBalancerAdditionalRoutes)
+      .add("loadBalancerTemplate", loadBalancerTemplate)
+      .add("loadBalancerServiceIdOverride", loadBalancerServiceIdOverride)
+      .add("loadBalancerUpstreamGroup", loadBalancerUpstreamGroup)
+      .add("deployInstanceCountPerStep", deployInstanceCountPerStep)
+      .add("deployStepWaitTimeMs", deployStepWaitTimeMs)
+      .add("autoAdvanceDeploySteps", autoAdvanceDeploySteps)
+      .add("maxTaskRetries", maxTaskRetries)
+      .add("shell", shell)
+      .add("user", user)
+      .add("ild", build())
+      .toString();
   }
-
 }
