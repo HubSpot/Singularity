@@ -11,6 +11,7 @@ import java.util.Set;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.base.Objects;
 import com.google.common.base.Optional;
 import com.hubspot.deploy.ExecutorData;
 import com.hubspot.deploy.HealthcheckOptions;
@@ -264,6 +265,7 @@ public class SingularityDeploy {
     .setHealthcheckProtocol(healthcheckProtocol)
     .setHealthcheckMaxRetries(healthcheckMaxRetries)
     .setHealthcheckMaxTotalTimeoutSeconds(healthcheckMaxTotalTimeoutSeconds)
+    .setHealthcheck(healthcheck)
     .setConsiderHealthyAfterRunningForSeconds(considerHealthyAfterRunningForSeconds)
     .setDeployHealthTimeoutSeconds(deployHealthTimeoutSeconds)
     .setServiceBasePath(serviceBasePath)
@@ -531,52 +533,55 @@ public class SingularityDeploy {
 
   @Override
   public String toString() {
-    return "SingularityDeploy{" +
-      "requestId='" + requestId + '\'' +
-      ", id='" + id + '\'' +
-      ", version=" + version +
-      ", timestamp=" + timestamp +
-      ", metadata=" + metadata +
-      ", containerInfo=" + containerInfo +
-      ", customExecutorCmd=" + customExecutorCmd +
-      ", customExecutorId=" + customExecutorId +
-      ", customExecutorSource=" + customExecutorSource +
-      ", customExecutorResources=" + customExecutorResources +
-      ", resources=" + resources +
-      ", command=" + command +
-      ", arguments=" + arguments +
-      ", env=" + env +
-      ", taskEnv=" + taskEnv +
-      ", uris=" + uris +
-      ", executorData=" + executorData +
-      ", healthcheckUri=" + healthcheckUri +
-      ", healthcheckIntervalSeconds=" + healthcheckIntervalSeconds +
-      ", healthcheckTimeoutSeconds=" + healthcheckTimeoutSeconds +
-      ", healthcheckPortIndex=" + healthcheckPortIndex +
-      ", skipHealthchecksOnDeploy=" + skipHealthchecksOnDeploy +
-      ", healthcheckProtocol=" + healthcheckProtocol +
-      ", healthcheckMaxRetries=" + healthcheckMaxRetries +
-      ", healthcheckMaxTotalTimeoutSeconds=" + healthcheckMaxTotalTimeoutSeconds +
-      ", deployHealthTimeoutSeconds=" + deployHealthTimeoutSeconds +
-      ", considerHealthyAfterRunningForSeconds=" + considerHealthyAfterRunningForSeconds +
-      ", serviceBasePath=" + serviceBasePath +
-      ", loadBalancerGroups=" + loadBalancerGroups +
-      ", loadBalancerPortIndex=" + loadBalancerPortIndex +
-      ", loadBalancerOptions=" + loadBalancerOptions +
-      ", loadBalancerDomain=" + loadBalancerDomains +
-      ", loadBalancerAdditionalRoutes=" + loadBalancerAdditionalRoutes +
-      ", loadBalancerTemplate=" + loadBalancerTemplate +
-      ", loadBalancerServiceIdOverride=" + loadBalancerServiceIdOverride +
-      ", loadBalancerUpstreamGroup=" + loadBalancerUpstreamGroup +
-      ", labels=" + labels +
-      ", taskLabels=" + taskLabels +
-      ", deployInstanceCountPerStep=" + deployInstanceCountPerStep +
-      ", deployStepWaitTimeMs=" + deployStepWaitTimeMs +
-      ", autoAdvanceDeploySteps=" + autoAdvanceDeploySteps +
-      ", maxTaskRetries=" + maxTaskRetries +
-      ", shell=" + shell +
-      ", user=" + user +
-      '}';
+    return Objects.toStringHelper(this)
+      .add("requestId", requestId)
+      .add("id", id)
+      .add("version", version)
+      .add("timestamp", timestamp)
+      .add("metadata", metadata)
+      .add("containerInfo", containerInfo)
+      .add("customExecutorCmd", customExecutorCmd)
+      .add("customExecutorId", customExecutorId)
+      .add("customExecutorSource", customExecutorSource)
+      .add("customExecutorResources", customExecutorResources)
+      .add("resources", resources)
+      .add("command", command)
+      .add("arguments", arguments)
+      .add("env", env)
+      .add("uris", uris)
+      .add("executorData", executorData)
+      .add("labels", labels)
+      .add("mesosLabels", mesosLabels)
+      .add("taskLabels", taskLabels)
+      .add("mesosTaskLabels", mesosTaskLabels)
+      .add("taskEnv", taskEnv)
+      .add("healthcheckUri", healthcheckUri)
+      .add("healthcheckIntervalSeconds", healthcheckIntervalSeconds)
+      .add("healthcheckTimeoutSeconds", healthcheckTimeoutSeconds)
+      .add("healthcheckPortIndex", healthcheckPortIndex)
+      .add("healthcheckProtocol", healthcheckProtocol)
+      .add("healthcheckMaxRetries", healthcheckMaxRetries)
+      .add("healthcheckMaxTotalTimeoutSeconds", healthcheckMaxTotalTimeoutSeconds)
+      .add("healthcheck", healthcheck)
+      .add("skipHealthchecksOnDeploy", skipHealthchecksOnDeploy)
+      .add("deployHealthTimeoutSeconds", deployHealthTimeoutSeconds)
+      .add("considerHealthyAfterRunningForSeconds", considerHealthyAfterRunningForSeconds)
+      .add("serviceBasePath", serviceBasePath)
+      .add("loadBalancerGroups", loadBalancerGroups)
+      .add("loadBalancerPortIndex", loadBalancerPortIndex)
+      .add("loadBalancerOptions", loadBalancerOptions)
+      .add("loadBalancerDomains", loadBalancerDomains)
+      .add("loadBalancerAdditionalRoutes", loadBalancerAdditionalRoutes)
+      .add("loadBalancerTemplate", loadBalancerTemplate)
+      .add("loadBalancerServiceIdOverride", loadBalancerServiceIdOverride)
+      .add("loadBalancerUpstreamGroup", loadBalancerUpstreamGroup)
+      .add("deployInstanceCountPerStep", deployInstanceCountPerStep)
+      .add("deployStepWaitTimeMs", deployStepWaitTimeMs)
+      .add("autoAdvanceDeploySteps", autoAdvanceDeploySteps)
+      .add("maxTaskRetries", maxTaskRetries)
+      .add("shell", shell)
+      .add("user", user)
+      .add("builder", toBuilder())
+      .toString();
   }
-
 }
