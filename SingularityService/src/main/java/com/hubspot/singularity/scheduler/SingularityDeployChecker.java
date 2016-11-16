@@ -540,6 +540,11 @@ public class SingularityDeployChecker {
           return new SingularityDeployResult(DeployState.FAILED, Optional.of("No valid load balancer URI was present"), Optional.<SingularityLoadBalancerUpdate>absent(), Collections.<SingularityDeployFailure>emptyList(), System.currentTimeMillis());
         }
 
+        for (SingularityTaskId activeTaskId : deployActiveTasks) {
+          taskManager.markHealthchecksFinished(activeTaskId);
+          taskManager.clearStartupHealthchecks(activeTaskId);
+        }
+
         return enqueueAndProcessLbRequest(request, deploy, pendingDeploy, updatePendingDeployRequest, deployActiveTasks, otherActiveTasks);
       case UNHEALTHY:
       default:

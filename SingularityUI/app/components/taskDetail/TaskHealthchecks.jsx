@@ -35,7 +35,7 @@ function TaskHealthchecks (props) {
     );
   }
 
-  return healthchecks && (
+  return (healthchecks && healthcheckOptions.uri && (
     <CollapsableSection title="Healthchecks" id="healthchecks">
       <div className="well">
         <p>
@@ -94,7 +94,7 @@ function TaskHealthchecks (props) {
         />
       </UITable>
     </CollapsableSection>
-  ) || <div></div>;
+  )) || <div></div>;
 }
 
 TaskHealthchecks.propTypes = {
