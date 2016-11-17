@@ -25,7 +25,7 @@ html
           div(style="border-top: 10px solid #{ color }; padding: 20px; background: #eee; border-radius: 4px; text-align: center")
             h1(style="font-weight: normal; margin: 0 0 12px; line-height: 1.3") New Disaster(s) Detected
 
-       //- Active Disasters
+        //- Active Disasters
         div(style="padding-bottom: 20px")
           div(style="padding-bottom: 12px; margin: 15px 0; border-bottom: 1px solid #eee")
             h3(style="margin: 0; font-size: 20px; line-height: 1") Active Disasters
@@ -39,23 +39,23 @@ html
                 td(style="border: 0; border-collapse: collapse; padding: 12px; color: #444")= disaster.active
 
         //- Recent Data
-          div(style="padding-bottom: 20px")
-            div(style="padding-bottom: 12px; margin: 15px 0; border-bottom: 1px solid #eee")
-              h3(style="margin: 0; font-size: 20px; line-height: 1") Disaster Stats
-            table(style="border: 0; border-collapse: collapse; background: #eee")
-              tr
-                th(style="border: 0; border-collapse: collapse; padding: 12px; color: #444; border-bottom: 1px solid #ccc; text-align: left") Active Tasks
-                th(style="border: 0; border-collapse: collapse; padding: 12px; color: #444; border-bottom: 1px solid #ccc; text-align: left") Peding Tasks
-                th(style="border: 0; border-collapse: collapse; padding: 12px; color: #444; border-bottom: 1px solid #ccc; text-align: left") Late Tasks
-                th(style="border: 0; border-collapse: collapse; padding: 12px; color: #444; border-bottom: 1px solid #ccc; text-align: left") Lost Tasks
-                th(style="border: 0; border-collapse: collapse; padding: 12px; color: #444; border-bottom: 1px solid #ccc; text-align: left") Avg Lag (ms)
-                th(style="border: 0; border-collapse: collapse; padding: 12px; color: #444; border-bottom: 1px solid #ccc; text-align: left") Lost Slaves
+        div(style="padding-bottom: 20px")
+          div(style="padding-bottom: 12px; margin: 15px 0; border-bottom: 1px solid #eee")
+            h3(style="margin: 0; font-size: 20px; line-height: 1") Disaster Stats
+          table(style="border: 0; border-collapse: collapse; background: #eee")
+            tr
+              th(style="border: 0; border-collapse: collapse; padding: 12px; color: #444; border-bottom: 1px solid #ccc; text-align: left") Active Tasks
+              th(style="border: 0; border-collapse: collapse; padding: 12px; color: #444; border-bottom: 1px solid #ccc; text-align: left") Peding Tasks
+              th(style="border: 0; border-collapse: collapse; padding: 12px; color: #444; border-bottom: 1px solid #ccc; text-align: left") Late Tasks
+              th(style="border: 0; border-collapse: collapse; padding: 12px; color: #444; border-bottom: 1px solid #ccc; text-align: left") Lost Tasks
+              th(style="border: 0; border-collapse: collapse; padding: 12px; color: #444; border-bottom: 1px solid #ccc; text-align: left") Avg Lag (ms)
+              th(style="border: 0; border-collapse: collapse; padding: 12px; color: #444; border-bottom: 1px solid #ccc; text-align: left") Lost Slaves
 
-              each stat, i in stats
-                tr
-                  td(style="border: 0; border-collapse: collapse; padding: 12px; color: #444")= stat.numActiveTasks
-                  td(style="border: 0; border-collapse: collapse; padding: 12px; color: #444")= stat.numPendingTasks
-                  td(style="border: 0; border-collapse: collapse; padding: 12px; color: #444")= stat.numLateTasks
-                  td(style="border: 0; border-collapse: collapse; padding: 12px; color: #444")= stat.numLostTasks
-                  td(style="border: 0; border-collapse: collapse; padding: 12px; color: #444")= stat.avgTaskLagMillis
-                  td(style="border: 0; border-collapse: collapse; padding: 12px; color: #444")= stat.numLostSlaves
+            each stat, i in stats
+              tr
+                td(style="border: 0; border-collapse: collapse; padding: 12px; color: #444")= stat.numActiveTasks
+                td(style="border: 0; border-collapse: collapse; padding: 12px; color: #444")= stat.numPendingTasks
+                td(style="border: 0; border-collapse: collapse; padding: 12px; color: #444")= stat.numLateTasks
+                td(style="border: 0; border-collapse: collapse; padding: 12px; color: #444")= stat.numLostTasks
+                td(style="border: 0; border-collapse: collapse; padding: 12px; color: #444")= stat.avgTaskLagMillis
+                td(style="border: 0; border-collapse: collapse; padding: 12px; color: #444")= stat.numLostSlaves
