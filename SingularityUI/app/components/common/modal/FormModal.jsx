@@ -84,6 +84,11 @@ export default class FormModal extends React.Component {
     this.setState({ formState });
   }
 
+  clearForm() {
+    const formState = {}
+    this.setState({ formState })
+  }
+
   validateForm() {
     // Check required values
     const errors = {};
@@ -138,11 +143,14 @@ export default class FormModal extends React.Component {
       event.preventDefault();
     }
     if (this.validateForm()) {
-      this.props.onConfirm(this.parseFormState(this.state.formState));
-      const formState = {};
-      this.props.formElements.forEach((formElement) => {
-        formState[formElement.name] = formElement.defaultValue;
-      });
+      let formState = this.parseFormState(this.state.formState);
+      this.props.onConfirm(formState);
+      if (!this.props.keepCurrentFormState) {
+        const formState = {};
+        this.props.formElements.forEach((formElement) => {
+          formState[formElement.name] = formElement.defaultValue;
+        });
+      }
       this.setState({
         visible: false,
         errors: {},
@@ -465,6 +473,7 @@ FormModal.propTypes = {
   children: React.PropTypes.node,
   mustFill: React.PropTypes.bool,
   disableSubmit: React.PropTypes.bool,
+  keepCurrentFormState: React.PropTypes.bool,
   formElements: React.PropTypes.arrayOf(React.PropTypes.shape({
     options: React.PropTypes.arrayOf(React.PropTypes.shape({
       value: React.PropTypes.string.isRequired,

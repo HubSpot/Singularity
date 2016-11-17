@@ -11,7 +11,7 @@ function MachinesPage (props) {
         data={state.hostsInState}
         keyGetter={(slave) => slave.id}
         rowChunkSize={20}
-        paginated={true}
+        paginated={state.paginated}
       >
         {state.columns}
       </UITable>
@@ -39,7 +39,8 @@ MachinesPage.propTypes = {
     stateName: React.PropTypes.string.isRequired, // Eg. 'Active', 'Frozen', etc
     hostsInState: React.PropTypes.arrayOf(React.PropTypes.object).isRequired,
     emptyMessage: React.PropTypes.string.isRequired,
-    columns: React.PropTypes.arrayOf(React.PropTypes.node).isRequired
+    columns: React.PropTypes.arrayOf(React.PropTypes.node).isRequired,
+    paginated: React.PropTypes.bool.isRequired
   })).isRequired
 };
 

@@ -384,6 +384,7 @@ public class SingularitySlaveAndRackManager {
     if (slave.get().getCurrentState().getState() == MachineState.DECOMMISSIONING) {
       if (!hasTaskLeftOnSlave(taskId, slaveId, stateCache)) {
         slaveManager.changeState(slave.get(), MachineState.DECOMMISSIONED, slave.get().getCurrentState().getMessage(), slave.get().getCurrentState().getUser());
+        slaveManager.deleteExpiringObject(slaveId);
       }
     }
 
