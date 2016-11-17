@@ -93,9 +93,7 @@ public class SingularityHistoryTest extends SingularitySchedulerTestBase {
   private SingularityTaskHistory buildTask(long launchTime) {
     SingularityTask task = prepTask(request, firstDeploy, launchTime, 1);
 
-    SingularityTaskHistory taskHistory = new SingularityTaskHistory(null, Optional.<String> absent(), null, task, null, null, null);
-
-    return taskHistory;
+    return new SingularityTaskHistory(null, Optional.<String> absent(), Optional.<String>absent(), null, task, null, null, null);
   }
 
   private void saveTasks(int num, long launchTime) {
