@@ -30,6 +30,7 @@ import com.hubspot.singularity.data.DisasterManager;
 import com.hubspot.singularity.data.SlaveManager;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.mesos.SingularityMesosModule;
+import com.hubspot.singularity.smtp.SingularityMailer;
 import com.hubspot.singularity.smtp.SingularitySmtpSender;
 import com.hubspot.singularity.smtp.SmtpMailer;
 
@@ -42,12 +43,12 @@ public class SingularityDisasterDetectionPoller extends SingularityLeaderOnlyPol
   private final TaskManager taskManager;
   private final SlaveManager slaveManager;
   private final DisasterManager disasterManager;
-  private final SmtpMailer smtpMailer;
+  private final SingularityMailer mailer;
   private final Multiset<Reason> taskLostReasons;
   private final AtomicInteger activeSlavesLost;
 
   @Inject
-  public SingularityDisasterDetectionPoller(SingularityConfiguration configuration,  TaskManager taskManager, SlaveManager slaveManager, DisasterManager disasterManager, SmtpMailer smtpMailer,
+  public SingularityDisasterDetectionPoller(SingularityConfiguration configuration,  TaskManager taskManager, SlaveManager slaveManager, DisasterManager disasterManager, SingularityMailer mailer,
                                             @Named(SingularityMesosModule.TASK_LOST_REASONS_COUNTER) Multiset<Reason> taskLostReasons, @Named(SingularityMesosModule.ACTIVE_SLAVES_LOST_COUNTER) AtomicInteger activeSlavesLost) {
     super(configuration.getDisasterDetection().getRunEveryMillis(), TimeUnit.MILLISECONDS);
     this.configuration = configuration;
@@ -55,7 +56,7 @@ public class SingularityDisasterDetectionPoller extends SingularityLeaderOnlyPol
     this.taskManager = taskManager;
     this.slaveManager = slaveManager;
     this.disasterManager = disasterManager;
-    this.smtpMailer = smtpMailer;
+    this.mailer = mailer;
     this.taskLostReasons = taskLostReasons;
     this.activeSlavesLost = activeSlavesLost;
   }
@@ -249,7 +250,7 @@ public class SingularityDisasterDetectionPoller extends SingularityLeaderOnlyPol
       disasterManager.isAutomatedDisabledActionsDisabled()
     );
 
-    smtpMailer.sendDisasterMail(data);
+    mailer.sendDisasterMail(data);
   }
 
 }
