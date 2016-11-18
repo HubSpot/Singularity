@@ -41,4 +41,5 @@
     * [/api/racks](Docs/reference/apidocs/api-racks.md)
     * [/api/requests](Docs/reference/apidocs/api-requests.md)
     * [/api/deploys](Docs/reference/apidocs/api-deploys.md)
+    * [/api/disasters](Docs/reference/apidocs/api-disasters.md)
     * [Models](Docs/reference/apidocs/models.md)

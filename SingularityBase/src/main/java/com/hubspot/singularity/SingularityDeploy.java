@@ -253,19 +253,16 @@ public class SingularityDeploy {
     return id;
   }
 
-  @Deprecated
   @ApiModelProperty(required=false, value="Deploy version")
   public Optional<String> getVersion() {
     return version;
   }
 
-  @Deprecated
   @ApiModelProperty(required=false, value="Deploy timestamp.")
   public Optional<Long> getTimestamp() {
     return timestamp;
   }
 
-  @Deprecated
   @ApiModelProperty(required=false, value="Map of metadata key/value pairs associated with the deployment.")
   public Optional<Map<String, String>> getMetadata() {
     return metadata;

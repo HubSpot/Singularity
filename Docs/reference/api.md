@@ -1292,6 +1292,29 @@ Update the skipHealthchecks field for the request, possibly temporarily
 
 
 - - -
+#### **DELETE** `/api/requests/request/{requestId}/skip-healthchecks`
+
+Delete/cancel the expiring skipHealthchecks. This makes the skipHealthchecks request permanent.
+
+
+###### Parameters
+**path**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| requestId | true | The Request ID | string |
+
+###### Response
+[SingularityRequestParent](#model-SingularityRequestParent)
+
+
+###### Errors
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| 404    | No Request or expiring skipHealthchecks request for that ID | - |
+
+
+- - -
 #### **PUT** `/api/requests/request/{requestId}/skip-healthchecks`
 
 Update the skipHealthchecks field for the request, possibly temporarily
@@ -1317,29 +1340,6 @@ Update the skipHealthchecks field for the request, possibly temporarily
 | Status Code | Reason      | Response Model |
 |-------------|-------------|----------------|
 | 404    | No Request with that ID | - |
-
-
-- - -
-#### **DELETE** `/api/requests/request/{requestId}/skip-healthchecks`
-
-Delete/cancel the expiring skipHealthchecks. This makes the skipHealthchecks request permanent.
-
-
-###### Parameters
-**path**
-
-| Parameter | Required | Description | Data Type |
-|-----------|----------|-------------|-----------|
-| requestId | true | The Request ID | string |
-
-###### Response
-[SingularityRequestParent](#model-SingularityRequestParent)
-
-
-###### Errors
-| Status Code | Reason      | Response Model |
-|-------------|-------------|----------------|
-| 404    | No Request or expiring skipHealthchecks request for that ID | - |
 
 
 - - -
@@ -1525,6 +1525,29 @@ Immediately exits cooldown, scheduling new tasks immediately
 
 
 - - -
+#### **DELETE** `/api/requests/request/{requestId}/bounce`
+
+Delete/cancel the expiring bounce. This makes the bounce request permanent.
+
+
+###### Parameters
+**path**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| requestId | true | The Request ID | string |
+
+###### Response
+[SingularityRequestParent](#model-SingularityRequestParent)
+
+
+###### Errors
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| 404    | No Request or expiring bounce request for that ID | - |
+
+
+- - -
 #### **POST** `/api/requests/request/{requestId}/bounce`
 
 Bounce a specific Singularity request. A bounce launches replacement task(s), and then kills the original task(s) if the replacement(s) are healthy.
@@ -1550,29 +1573,6 @@ Bounce a specific Singularity request. A bounce launches replacement task(s), an
 | Status Code | Reason      | Response Model |
 |-------------|-------------|----------------|
 | - | - | - |
-
-
-- - -
-#### **DELETE** `/api/requests/request/{requestId}/bounce`
-
-Delete/cancel the expiring bounce. This makes the bounce request permanent.
-
-
-###### Parameters
-**path**
-
-| Parameter | Required | Description | Data Type |
-|-----------|----------|-------------|-----------|
-| requestId | true | The Request ID | string |
-
-###### Response
-[SingularityRequestParent](#model-SingularityRequestParent)
-
-
-###### Errors
-| Status Code | Reason      | Response Model |
-|-------------|-------------|----------------|
-| 404    | No Request or expiring bounce request for that ID | - |
 
 
 - - -
@@ -2923,25 +2923,6 @@ Retrieve a list of queued deploy updates for a specific webhook.
 
 
 - - -
-#### **GET** `/api/webhooks`
-
-Retrieve a list of active webhooks.
-
-
-###### Parameters
-- No parameters
-
-###### Response
-[List[SingularityWebhook]](#model-SingularityWebhook)
-
-
-###### Errors
-| Status Code | Reason      | Response Model |
-|-------------|-------------|----------------|
-| - | - | - |
-
-
-- - -
 #### **POST** `/api/webhooks`
 
 Add a new webhook.
@@ -2956,6 +2937,25 @@ Add a new webhook.
 
 ###### Response
 string
+
+
+###### Errors
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| - | - | - |
+
+
+- - -
+#### **GET** `/api/webhooks`
+
+Retrieve a list of active webhooks.
+
+
+###### Parameters
+- No parameters
+
+###### Response
+[List[SingularityWebhook]](#model-SingularityWebhook)
 
 
 ###### Errors
