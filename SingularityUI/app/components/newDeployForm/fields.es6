@@ -30,7 +30,7 @@ export const FIELDS = {
       id: 'executorData',
       type: 'object',
       values: [
-        {id: 'cmd', type: 'text', required: true},
+        {id: 'cmd', type: 'text'},
         {id: 'extraCmdLineArgs', type: 'array', arrayType: 'text'},
         {id: 'user', type: 'text', default: 'root'},
         {id: 'sigKillProcessesAfterMillis', type: 'number', default: 120000},
