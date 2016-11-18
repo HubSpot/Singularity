@@ -44,6 +44,7 @@ html
             h3(style="margin: 0; font-size: 20px; line-height: 1") Disaster Stats
           table(style="border: 0; border-collapse: collapse; background: #eee")
             tr
+              th(style="border: 0; border-collapse: collapse; padding: 12px; color: #444; border-bottom: 1px solid #ccc; text-align: left") Time
               th(style="border: 0; border-collapse: collapse; padding: 12px; color: #444; border-bottom: 1px solid #ccc; text-align: left") Active Tasks
               th(style="border: 0; border-collapse: collapse; padding: 12px; color: #444; border-bottom: 1px solid #ccc; text-align: left") Peding Tasks
               th(style="border: 0; border-collapse: collapse; padding: 12px; color: #444; border-bottom: 1px solid #ccc; text-align: left") Late Tasks
@@ -53,6 +54,7 @@ html
 
             each stat, i in stats
               tr
+                td(style="border: 0; border-collapse: collapse; padding: 12px; color: #444")= stat.time
                 td(style="border: 0; border-collapse: collapse; padding: 12px; color: #444")= stat.numActiveTasks
                 td(style="border: 0; border-collapse: collapse; padding: 12px; color: #444")= stat.numPendingTasks
                 td(style="border: 0; border-collapse: collapse; padding: 12px; color: #444")= stat.numLateTasks

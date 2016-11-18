@@ -544,7 +544,7 @@ public class SmtpMailer implements SingularityMailer, Managed {
     final Map<String, Object> templateProperties = Maps.newHashMap();
 
     templateProperties.put("disasterTypes", disastersData.getDisasters());
-    templateProperties.put("stats", disastersData.getStats());
+    templateProperties.put("stats", mailTemplateHelpers.getJadeDisasterStats(disastersData.getStats()));
 
     final String body = Jade4J.render(disastersTemplate, templateProperties);
 
