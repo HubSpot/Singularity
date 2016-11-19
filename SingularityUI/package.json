@@ -13,8 +13,7 @@
   },
   "bin": {},
   "scripts": {
-    "start": "gulp serve",
-    "install:tailer-dev-dependencies": "cd SingularityTailer && npm install --only=dev"
+    "start": "gulp serve"
   },
   "dependencies": {
     "ansi-style-parser": "^1.0.1",
@@ -61,7 +60,7 @@
     "select2": "~3.5.1",
     "typeahead.js": "~0.10.4",
     "underscore": "~1.8.0",
-    "singularityui-tailer": "./SingularityTailer"
+    "singularityui-tailer": "0.3.0"
   },
   "license": "Apache-2.0",
   "devDependencies": {
@@ -84,6 +83,7 @@
     "eslint-plugin-babel": "^3.2.0",
     "eslint-plugin-react": "^4.2.3",
     "exports-loader": "^0.6.3",
+    "extend": "^3.0.0",
     "extract-text-webpack-plugin": "^1.0.1",
     "file-loader": "^0.9.0",
     "gulp": "^3.9.1",
@@ -97,6 +97,7 @@
     "sass-loader": "^4.0.0",
     "streamqueue": "^1.1.1",
     "style-loader": "^0.13.1",
+    "stylus": "^0.54.5",
     "stylus-loader": "^2.1.1",
     "url-loader": "^0.5.7",
     "webpack": "^1.13.1",

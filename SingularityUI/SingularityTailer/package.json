@@ -1,6 +1,6 @@
 {
   "name": "singularityui-tailer",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "A robust log tailer",
   "author": "Danny Wolf <dwolf@hubspot.com>",
   "contributors": [
@@ -15,7 +15,8 @@
   ],
   "scripts": {
     "start": "node server.js",
-    "prepublish": "babel src --out-dir lib",
+    "build": "babel src --out-dir lib",
+    "prepublish": "npm run build",
     "test": "mocha --compilers js:babel-register --recursive",
     "test:watch": "npm test -- --watch"
   },
@@ -67,7 +68,7 @@
     "redux-devtools": "^3.3.1",
     "sass-loader": "^4.0.0",
     "style-loader": "^0.13.1",
-    "webpack": "^1.13.1",
+    "webpack": "1.13.1",
     "webpack-dev-server": "^1.14.1"
   },
   "files": [
