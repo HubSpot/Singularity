@@ -13,7 +13,9 @@
   },
   "bin": {},
   "scripts": {
-    "start": "gulp serve"
+    "start": "gulp serve",
+    "test": "mocha --compilers js:babel-core/register test/index.test",
+    "test:watch": "npm test -- --watch"
   },
   "dependencies": {
     "bootstrap": "~3.3.0",
@@ -76,6 +78,7 @@
     "eslint-config-hubspot": "^6.2.0",
     "eslint-plugin-babel": "^3.2.0",
     "eslint-plugin-react": "^4.2.3",
+    "expect": "^1.20.2",
     "exports-loader": "^0.6.3",
     "gulp": "^3.9.1",
     "gulp-concat": "^2.6.0",
@@ -84,6 +87,7 @@
     "gulp-sass": "^2.3.1",
     "gulp-stylus": "^2.3.0",
     "gulp-util": "^3.0.7",
+    "mocha": "^3.1.2",
     "nib": "^1.1.0",
     "streamqueue": "^1.1.1",
     "webpack": "~1.12.14",
