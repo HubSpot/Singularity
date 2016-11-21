@@ -48,6 +48,16 @@
                             </execution>
 
                             <execution>
+                                <id>npm test</id>
+                                <goals>
+                                    <goal>npm</goal>
+                                </goals>
+                                <configuration>
+                                    <arguments>test</arguments>
+                                </configuration>
+                            </execution>
+
+                            <execution>
                                 <id>gulp build</id>
                                 <goals>
                                     <goal>gulp</goal>
