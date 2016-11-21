@@ -124,7 +124,9 @@ public class SandboxManager {
   @VisibleForTesting
   MesosFileChunkObject parseResponseBody(Response response) throws IOException {
     // not thread-safe, need to make a new one each time;
-    CharsetDecoder decoder = StandardCharsets.UTF_8.newDecoder().onMalformedInput(CodingErrorAction.REPLACE);
+    CharsetDecoder decoder = StandardCharsets.UTF_8.newDecoder()
+        .onMalformedInput(CodingErrorAction.REPLACE)
+        .replaceWith(REPLACEMENT_CHARACTER);
 
     ByteBuffer responseBuffer = response.getResponseBodyAsByteBuffer();
     Reader sanitizedReader = CharSource.wrap(decoder.decode(responseBuffer)).openStream();
