@@ -267,6 +267,21 @@ public class SingularityValidator {
 
     checkBadRequest(!deploy.getContainerInfo().isPresent() || deploy.getContainerInfo().get().getType() != null, "Container type must not be null");
 
+    if (deploy.getLabels().isPresent() && deploy.getMesosTaskLabels().isPresent()) {
+      List<SingularityMesosTaskLabel> deprecatedLabels = SingularityMesosTaskLabel.labelsFromMap(deploy.getLabels().get());
+      checkBadRequest(deprecatedLabels.containsAll(deploy.getMesosLabels().get()) && deploy.getMesosLabels().get().containsAll(deprecatedLabels), "Can only specify one of 'labels' or 'mesosLabels");
+    }
+
+    if (deploy.getTaskLabels().isPresent() && deploy.getMesosTaskLabels().isPresent()) {
+      for (Map.Entry<Integer, Map<String, String>> entry : deploy.getTaskLabels().get().entrySet()) {
+        List<SingularityMesosTaskLabel> deprecatedLabels = SingularityMesosTaskLabel.labelsFromMap(entry.getValue());
+        checkBadRequest(deploy.getMesosTaskLabels().get().containsKey(entry.getKey())
+          && deprecatedLabels.containsAll(deploy.getMesosTaskLabels().get().get(entry.getKey()))
+          && deploy.getMesosTaskLabels().get().get(entry.getKey()).containsAll(deprecatedLabels),
+          "Can only specify one of 'taskLabels' or 'mesosTaskLabels");
+      }
+    }
+
     if (deploy.getContainerInfo().isPresent()) {
       SingularityContainerInfo containerInfo = deploy.getContainerInfo().get();
       checkBadRequest(containerInfo.getType() != null, "container type may not be null");
