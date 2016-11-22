@@ -68,7 +68,15 @@ export function buildApiAction(actionName, opts = {}, keyFunc = undefined) {
 
       const options = optsFunc(...args);
       let apiResponse;
-      return fetch(config.apiRoot + options.url, _.extend({credentials: 'include'}, _.omit(options, 'url')))
+      let userParam = '';
+      if (localStorage.getItem('singularityUserId')) {
+        if (options.url.includes('?')) {
+          userParam = `&user=${localStorage.getItem('singularityUserId')}`
+        } else {
+          userParam = `?user=${localStorage.getItem('singularityUserId')}`
+        }
+      }
+      return fetch(config.apiRoot + options.url + userParam, _.extend({credentials: 'include'}, _.omit(options, 'url')))
         .then(response => {
           apiResponse = response;
           if (response.status === 204) {
