@@ -128,9 +128,9 @@ Do not allow the automated poller to disable actions when a disaster is detected
 
 
 - - -
-#### **DELETE** `/api/disasters/active/{type}`
+#### **POST** `/api/disasters/active/{type}`
 
-Remove an active disaster (make it inactive)
+Create a new active disaster
 
 
 ###### Parameters
@@ -151,9 +151,9 @@ Remove an active disaster (make it inactive)
 
 
 - - -
-#### **POST** `/api/disasters/active/{type}`
+#### **DELETE** `/api/disasters/active/{type}`
 
-Create a new active disaster
+Remove an active disaster (make it inactive)
 
 
 ###### Parameters

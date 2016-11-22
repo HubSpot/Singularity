@@ -1,67 +1,156 @@
 #### Overview
-Manages whether or not to schedule tasks based on their priority levels.
+Manages Singularity racks.
 
-#### **GET** `/api/priority/freeze`
+#### **POST** `/api/racks/rack/{rackId}/freeze`
 
-Get information about the active priority freeze.
-
-
-###### Parameters
-- No parameters
-
-###### Response
-[SingularityPriorityFreezeParent](models.md#model-SingularityPriorityFreezeParent)
-
-
-###### Errors
-| Status Code | Reason      | Response Model |
-|-------------|-------------|----------------|
-| 200    | The active priority freeze. | - |
-| 404    | There was no active priority freeze. | - |
-
-
-- - -
-#### **DELETE** `/api/priority/freeze`
-
-Stops the active priority freeze.
+Freeze a specific rack
 
 
 ###### Parameters
-- No parameters
+**path**
 
-###### Response
-
-
-
-###### Errors
-| Status Code | Reason      | Response Model |
-|-------------|-------------|----------------|
-| 202    | The active priority freeze was deleted. | - |
-| 400    | There was no active priority freeze to delete. | - |
-
-
-- - -
-#### **POST** `/api/priority/freeze`
-
-Stop scheduling tasks below a certain priority level.
-
-
-###### Parameters
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| rackId | true | Rack ID | string |
 **body**
 
 | Parameter | Required | Description | Data Type |
 |-----------|----------|-------------|-----------|
-| body | false |  | [SingularityPriorityFreeze](models.md#model-linkType)</a> |
+| body | false |  | [SingularityMachineChangeRequest](models.md#model-linkType)</a> |
 
 ###### Response
-[SingularityPriorityFreezeParent](models.md#model-SingularityPriorityFreezeParent)
+
 
 
 ###### Errors
 | Status Code | Reason      | Response Model |
 |-------------|-------------|----------------|
-| 200    | The priority freeze request was accepted. | - |
-| 400    | There was a validation error with the priority freeze request. | - |
+| - | - | - |
+
+
+- - -
+#### **POST** `/api/racks/rack/{rackId}/decommission`
+
+Begin decommissioning a specific active rack
+
+
+###### Parameters
+**path**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| rackId | true | Active rack ID | string |
+**body**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| body | false |  | [SingularityMachineChangeRequest](models.md#model-linkType)</a> |
+
+###### Response
+
+
+
+###### Errors
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| - | - | - |
+
+
+- - -
+#### **POST** `/api/racks/rack/{rackId}/activate`
+
+Activate a decomissioning rack, canceling decomission without erasing history
+
+
+###### Parameters
+**path**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| rackId | true | Active rackId | string |
+**body**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| body | false |  | [SingularityMachineChangeRequest](models.md#model-linkType)</a> |
+
+###### Response
+
+
+
+###### Errors
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| - | - | - |
+
+
+- - -
+#### **GET** `/api/racks/rack/{rackId}`
+
+Retrieve the history of a given rack
+
+
+###### Parameters
+**path**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| rackId | true | Rack ID | string |
+
+###### Response
+[List[SingularityMachineStateHistoryUpdate]](models.md#model-SingularityMachineStateHistoryUpdate)
+
+
+###### Errors
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| - | - | - |
+
+
+- - -
+#### **DELETE** `/api/racks/rack/{rackId}`
+
+Remove a known rack, erasing history. This operation will cancel decommissioning of racks
+
+
+###### Parameters
+**path**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| rackId | true | Rack ID | string |
+
+###### Response
+
+
+
+###### Errors
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| - | - | - |
+
+
+- - -
+#### **GET** `/api/racks/`
+
+Retrieve the list of all known racks, optionally filtering by a particular state
+
+
+###### Parameters
+**query**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| state | false | Optionally specify a particular state to filter racks by | string |
+
+###### Response
+[List[SingularityRack]](models.md#model-SingularityRack)
+
+
+###### Errors
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| - | - | - |
 
 
 - - -

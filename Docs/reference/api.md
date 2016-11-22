@@ -7,10 +7,10 @@ Endpoints:
 - [`/api/disasters`](#endpoint-/api/disasters) - Manages Singularity Deploys for existing requests
 - [`/api/history`](#endpoint-/api/history) - Manages historical data for tasks, requests, and deploys.
 - [`/api/logs`](#endpoint-/api/logs) - Manages Singularity task logs stored in S3.
-- [`/api/racks`](#endpoint-/api/racks) - Manages Singularity racks.
 - [`/api/racks`](#endpoint-/api/racks) - Manages whether or not to schedule tasks based on their priority levels.
-- [`/api/requests`](#endpoint-/api/requests) - Manages Singularity Requests, the parent object for any deployed task
+- [`/api/racks`](#endpoint-/api/racks) - Manages Singularity racks.
 - [`/api/requests`](#endpoint-/api/requests) - Manages Singularity Request Groups, which are collections of one or more Singularity Requests
+- [`/api/requests`](#endpoint-/api/requests) - Manages Singularity Requests, the parent object for any deployed task
 - [`/api/sandbox`](#endpoint-/api/sandbox) - Provides a proxy to Mesos sandboxes.
 - [`/api/slaves`](#endpoint-/api/slaves) - Manages Singularity slaves.
 - [`/api/state`](#endpoint-/api/state) - Provides information about the current state of Singularity.
@@ -332,9 +332,9 @@ Do not allow the automated poller to disable actions when a disaster is detected
 
 
 - - -
-#### **DELETE** `/api/disasters/active/{type}`
+#### **POST** `/api/disasters/active/{type}`
 
-Remove an active disaster (make it inactive)
+Create a new active disaster
 
 
 ###### Parameters
@@ -355,9 +355,9 @@ Remove an active disaster (make it inactive)
 
 
 - - -
-#### **POST** `/api/disasters/active/{type}`
+#### **DELETE** `/api/disasters/active/{type}`
 
-Create a new active disaster
+Remove an active disaster (make it inactive)
 
 
 ###### Parameters
@@ -986,6 +986,74 @@ Retrieve the list of logs stored in S3 for a specific request.
 - - -
 ### <a name="endpoint-/api/racks"></a> /api/racks
 #### Overview
+Manages whether or not to schedule tasks based on their priority levels.
+
+#### **DELETE** `/api/priority/freeze`
+
+Stops the active priority freeze.
+
+
+###### Parameters
+- No parameters
+
+###### Response
+
+
+
+###### Errors
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| 202    | The active priority freeze was deleted. | - |
+| 400    | There was no active priority freeze to delete. | - |
+
+
+- - -
+#### **POST** `/api/priority/freeze`
+
+Stop scheduling tasks below a certain priority level.
+
+
+###### Parameters
+**body**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| body | false |  | [SingularityPriorityFreeze](#model-linkType)</a> |
+
+###### Response
+[SingularityPriorityFreezeParent](#model-SingularityPriorityFreezeParent)
+
+
+###### Errors
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| 200    | The priority freeze request was accepted. | - |
+| 400    | There was a validation error with the priority freeze request. | - |
+
+
+- - -
+#### **GET** `/api/priority/freeze`
+
+Get information about the active priority freeze.
+
+
+###### Parameters
+- No parameters
+
+###### Response
+[SingularityPriorityFreezeParent](#model-SingularityPriorityFreezeParent)
+
+
+###### Errors
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| 200    | The active priority freeze. | - |
+| 404    | There was no active priority freeze. | - |
+
+
+- - -
+### <a name="endpoint-/api/racks"></a> /api/racks
+#### Overview
 Manages Singularity racks.
 
 #### **POST** `/api/racks/rack/{rackId}/freeze`
@@ -1141,53 +1209,78 @@ Retrieve the list of all known racks, optionally filtering by a particular state
 
 
 - - -
-### <a name="endpoint-/api/racks"></a> /api/racks
+### <a name="endpoint-/api/requests"></a> /api/requests
 #### Overview
-Manages whether or not to schedule tasks based on their priority levels.
+Manages Singularity Request Groups, which are collections of one or more Singularity Requests
 
-#### **GET** `/api/priority/freeze`
+#### **GET** `/api/groups/group/{requestGroupId}`
 
-Get information about the active priority freeze.
+Get a specific Singularity request group by ID
+
+
+###### Parameters
+**path**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| requestGroupId | true |  | string |
+
+###### Response
+[SingularityRequestGroup](#model-SingularityRequestGroup)
+
+
+###### Errors
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| - | - | - |
+
+
+- - -
+#### **DELETE** `/api/groups/group/{requestGroupId}`
+
+Delete a specific Singularity request group by ID
+
+
+###### Parameters
+**path**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| requestGroupId | true |  | string |
+
+###### Response
+
+
+
+###### Errors
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| - | - | - |
+
+
+- - -
+#### **GET** `/api/groups`
+
+Get a list of Singularity request groups
 
 
 ###### Parameters
 - No parameters
 
 ###### Response
-[SingularityPriorityFreezeParent](#model-SingularityPriorityFreezeParent)
+[List[SingularityRequestGroup]](#model-SingularityRequestGroup)
 
 
 ###### Errors
 | Status Code | Reason      | Response Model |
 |-------------|-------------|----------------|
-| 200    | The active priority freeze. | - |
-| 404    | There was no active priority freeze. | - |
+| - | - | - |
 
 
 - - -
-#### **DELETE** `/api/priority/freeze`
+#### **POST** `/api/groups`
 
-Stops the active priority freeze.
-
-
-###### Parameters
-- No parameters
-
-###### Response
-
-
-
-###### Errors
-| Status Code | Reason      | Response Model |
-|-------------|-------------|----------------|
-| 202    | The active priority freeze was deleted. | - |
-| 400    | There was no active priority freeze to delete. | - |
-
-
-- - -
-#### **POST** `/api/priority/freeze`
-
-Stop scheduling tasks below a certain priority level.
+Create a Singularity request group
 
 
 ###### Parameters
@@ -1195,17 +1288,16 @@ Stop scheduling tasks below a certain priority level.
 
 | Parameter | Required | Description | Data Type |
 |-----------|----------|-------------|-----------|
-| body | false |  | [SingularityPriorityFreeze](#model-linkType)</a> |
+| body | false |  | [SingularityRequestGroup](#model-linkType)</a> |
 
 ###### Response
-[SingularityPriorityFreezeParent](#model-SingularityPriorityFreezeParent)
+[SingularityRequestGroup](#model-SingularityRequestGroup)
 
 
 ###### Errors
 | Status Code | Reason      | Response Model |
 |-------------|-------------|----------------|
-| 200    | The priority freeze request was accepted. | - |
-| 400    | There was a validation error with the priority freeze request. | - |
+| - | - | - |
 
 
 - - -
@@ -1292,29 +1384,6 @@ Update the skipHealthchecks field for the request, possibly temporarily
 
 
 - - -
-#### **DELETE** `/api/requests/request/{requestId}/skip-healthchecks`
-
-Delete/cancel the expiring skipHealthchecks. This makes the skipHealthchecks request permanent.
-
-
-###### Parameters
-**path**
-
-| Parameter | Required | Description | Data Type |
-|-----------|----------|-------------|-----------|
-| requestId | true | The Request ID | string |
-
-###### Response
-[SingularityRequestParent](#model-SingularityRequestParent)
-
-
-###### Errors
-| Status Code | Reason      | Response Model |
-|-------------|-------------|----------------|
-| 404    | No Request or expiring skipHealthchecks request for that ID | - |
-
-
-- - -
 #### **PUT** `/api/requests/request/{requestId}/skip-healthchecks`
 
 Update the skipHealthchecks field for the request, possibly temporarily
@@ -1340,6 +1409,29 @@ Update the skipHealthchecks field for the request, possibly temporarily
 | Status Code | Reason      | Response Model |
 |-------------|-------------|----------------|
 | 404    | No Request with that ID | - |
+
+
+- - -
+#### **DELETE** `/api/requests/request/{requestId}/skip-healthchecks`
+
+Delete/cancel the expiring skipHealthchecks. This makes the skipHealthchecks request permanent.
+
+
+###### Parameters
+**path**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| requestId | true | The Request ID | string |
+
+###### Response
+[SingularityRequestParent](#model-SingularityRequestParent)
+
+
+###### Errors
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| 404    | No Request or expiring skipHealthchecks request for that ID | - |
 
 
 - - -
@@ -1525,29 +1617,6 @@ Immediately exits cooldown, scheduling new tasks immediately
 
 
 - - -
-#### **DELETE** `/api/requests/request/{requestId}/bounce`
-
-Delete/cancel the expiring bounce. This makes the bounce request permanent.
-
-
-###### Parameters
-**path**
-
-| Parameter | Required | Description | Data Type |
-|-----------|----------|-------------|-----------|
-| requestId | true | The Request ID | string |
-
-###### Response
-[SingularityRequestParent](#model-SingularityRequestParent)
-
-
-###### Errors
-| Status Code | Reason      | Response Model |
-|-------------|-------------|----------------|
-| 404    | No Request or expiring bounce request for that ID | - |
-
-
-- - -
 #### **POST** `/api/requests/request/{requestId}/bounce`
 
 Bounce a specific Singularity request. A bounce launches replacement task(s), and then kills the original task(s) if the replacement(s) are healthy.
@@ -1573,6 +1642,29 @@ Bounce a specific Singularity request. A bounce launches replacement task(s), an
 | Status Code | Reason      | Response Model |
 |-------------|-------------|----------------|
 | - | - | - |
+
+
+- - -
+#### **DELETE** `/api/requests/request/{requestId}/bounce`
+
+Delete/cancel the expiring bounce. This makes the bounce request permanent.
+
+
+###### Parameters
+**path**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| requestId | true | The Request ID | string |
+
+###### Response
+[SingularityRequestParent](#model-SingularityRequestParent)
+
+
+###### Errors
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| 404    | No Request or expiring bounce request for that ID | - |
 
 
 - - -
@@ -1800,98 +1892,6 @@ Create or update a Singularity Request
 |-------------|-------------|----------------|
 | 400    | Request object is invalid | - |
 | 409    | Request object is being cleaned. Try again shortly | - |
-
-
-- - -
-### <a name="endpoint-/api/requests"></a> /api/requests
-#### Overview
-Manages Singularity Request Groups, which are collections of one or more Singularity Requests
-
-#### **GET** `/api/groups/group/{requestGroupId}`
-
-Get a specific Singularity request group by ID
-
-
-###### Parameters
-**path**
-
-| Parameter | Required | Description | Data Type |
-|-----------|----------|-------------|-----------|
-| requestGroupId | true |  | string |
-
-###### Response
-[SingularityRequestGroup](#model-SingularityRequestGroup)
-
-
-###### Errors
-| Status Code | Reason      | Response Model |
-|-------------|-------------|----------------|
-| - | - | - |
-
-
-- - -
-#### **DELETE** `/api/groups/group/{requestGroupId}`
-
-Delete a specific Singularity request group by ID
-
-
-###### Parameters
-**path**
-
-| Parameter | Required | Description | Data Type |
-|-----------|----------|-------------|-----------|
-| requestGroupId | true |  | string |
-
-###### Response
-
-
-
-###### Errors
-| Status Code | Reason      | Response Model |
-|-------------|-------------|----------------|
-| - | - | - |
-
-
-- - -
-#### **GET** `/api/groups`
-
-Get a list of Singularity request groups
-
-
-###### Parameters
-- No parameters
-
-###### Response
-[List[SingularityRequestGroup]](#model-SingularityRequestGroup)
-
-
-###### Errors
-| Status Code | Reason      | Response Model |
-|-------------|-------------|----------------|
-| - | - | - |
-
-
-- - -
-#### **POST** `/api/groups`
-
-Create a Singularity request group
-
-
-###### Parameters
-**body**
-
-| Parameter | Required | Description | Data Type |
-|-----------|----------|-------------|-----------|
-| body | false |  | [SingularityRequestGroup](#model-linkType)</a> |
-
-###### Response
-[SingularityRequestGroup](#model-SingularityRequestGroup)
-
-
-###### Errors
-| Status Code | Reason      | Response Model |
-|-------------|-------------|----------------|
-| - | - | - |
 
 
 - - -
@@ -2923,6 +2923,25 @@ Retrieve a list of queued deploy updates for a specific webhook.
 
 
 - - -
+#### **GET** `/api/webhooks`
+
+Retrieve a list of active webhooks.
+
+
+###### Parameters
+- No parameters
+
+###### Response
+[List[SingularityWebhook]](#model-SingularityWebhook)
+
+
+###### Errors
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| - | - | - |
+
+
+- - -
 #### **POST** `/api/webhooks`
 
 Add a new webhook.
@@ -2937,25 +2956,6 @@ Add a new webhook.
 
 ###### Response
 string
-
-
-###### Errors
-| Status Code | Reason      | Response Model |
-|-------------|-------------|----------------|
-| - | - | - |
-
-
-- - -
-#### **GET** `/api/webhooks`
-
-Retrieve a list of active webhooks.
-
-
-###### Parameters
-- No parameters
-
-###### Response
-[List[SingularityWebhook]](#model-SingularityWebhook)
 
 
 ###### Errors
@@ -3171,11 +3171,13 @@ string
 | metadata | [Map[string,string]](#model-Map[string,string]) | optional | Map of metadata key/value pairs associated with the deployment. |
 | healthcheckMaxRetries | int | optional | Maximum number of times to retry an individual healthcheck before failing the deploy. |
 | healthcheckTimeoutSeconds | long | optional | Single healthcheck HTTP timeout in seconds. |
-| healthcheckPortIndex | int | optional | Perform healthcheck on this dynamically allocated port (e.g. 0 for first port), defaults to first port |
 | healthcheckProtocol | [com.hubspot.singularity.HealthcheckProtocol](#model-com.hubspot.singularity.HealthcheckProtocol) | optional | Healthcheck protocol - HTTP or HTTPS |
+| taskLabels | [Map[int,Map[string,string]]](#model-Map[int,Map[string,string]]) | optional | (Deprecated) Labels for specific tasks associated with this deploy, indexed by instance number |
+| healthcheckPortIndex | int | optional | Perform healthcheck on this dynamically allocated port (e.g. 0 for first port), defaults to first port |
 | healthcheckMaxTotalTimeoutSeconds | long | optional | Maximum amount of time to wait before failing a deploy for healthchecks to pass. |
 | loadBalancerServiceIdOverride | string | optional | Name of load balancer Service ID to use instead of the Request ID |
 | mesosTaskLabels | [Map[int,List[SingularityMesosTaskLabel]]](#model-Map[int,List[SingularityMesosTaskLabel]]) | optional | Labels for specific tasks associated with this deploy, indexed by instance number |
+| labels | [Map[string,string]](#model-Map[string,string]) | optional | Labels for all tasks associated with this deploy |
 | healthcheckUri | string | optional | Deployment Healthcheck URI, if specified will be called after TASK_RUNNING. |
 | user | string | optional | Run tasks as this user |
 | requestId | string | required | Singularity Request Id which is associated with this deploy. |
