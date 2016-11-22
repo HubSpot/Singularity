@@ -44,10 +44,7 @@ public class SingularityDeploy {
   private final Optional<Map<String, String>> env;
   private final Optional<List<String>> uris;
   private final Optional<ExecutorData> executorData;
-  private final Optional<Map<String, String>> labels;
   private final Optional<List<SingularityMesosTaskLabel>> mesosLabels;
-
-  private final Optional<Map<Integer, Map<String, String>>> taskLabels;
   private final Optional<Map<Integer, List<SingularityMesosTaskLabel>>> mesosTaskLabels;
   private final Optional<Map<Integer, Map<String, String>>> taskEnv;
 
@@ -134,9 +131,7 @@ public class SingularityDeploy {
       @JsonProperty("executorData") Optional<ExecutorData> executorData,
       @JsonProperty("version") Optional<String> version,
       @JsonProperty("timestamp") Optional<Long> timestamp,
-      @JsonProperty("labels") Optional<Map<String, String>> labels,
       @JsonProperty("mesosLabels") Optional<List<SingularityMesosTaskLabel>> mesosLabels,
-      @JsonProperty("taskLabels") Optional<Map<Integer, Map<String, String>>> taskLabels,
       @JsonProperty("mesosTaskLabels") Optional<Map<Integer, List<SingularityMesosTaskLabel>>> mesosTaskLabels,
       @JsonProperty("deployHealthTimeoutSeconds") Optional<Long> deployHealthTimeoutSeconds,
       @JsonProperty("healthcheckUri") Optional<String> healthcheckUri,
@@ -186,10 +181,8 @@ public class SingularityDeploy {
     this.uris = uris;
     this.executorData = executorData;
 
-    this.labels = labels;
-    this.mesosLabels = mesosLabels.or(labels.isPresent() ? Optional.of(SingularityMesosTaskLabel.labelsFromMap(labels.get())) : Optional.<List<SingularityMesosTaskLabel>>absent());
-    this.taskLabels = taskLabels;
-    this.mesosTaskLabels = mesosTaskLabels.or(taskLabels.isPresent() ? Optional.of(parseMesosTaskLabelsFromMap(taskLabels.get())) : Optional.<Map<Integer,List<SingularityMesosTaskLabel>>>absent());
+    this.mesosLabels = mesosLabels;
+    this.mesosTaskLabels = mesosTaskLabels;
 
     this.healthcheckUri = healthcheckUri;
     this.healthcheckIntervalSeconds = healthcheckIntervalSeconds;
@@ -284,9 +277,7 @@ public class SingularityDeploy {
     .setTaskEnv(taskEnv)
     .setUris(copyOfList(uris))
     .setExecutorData(executorData)
-    .setLabels(labels)
     .setMesosLabels(mesosLabels)
-    .setTaskLabels(taskLabels)
     .setMesosTaskLabels(mesosTaskLabels)
     .setDeployInstanceCountPerStep(deployInstanceCountPerStep)
     .setDeployStepWaitTimeMs(deployStepWaitTimeMs)
@@ -331,20 +322,20 @@ public class SingularityDeploy {
     return containerInfo;
   }
 
-  @ApiModelProperty(required=false, value="Custom Mesos executor", dataType= "string")
+  @ApiModelProperty(required=false, value="Custom Mesos executor", dataType="string")
   public Optional<String> getCustomExecutorCmd() {
     return customExecutorCmd;
   }
 
-  @ApiModelProperty(required=false, value="Custom Mesos executor id.")
+  @ApiModelProperty(required=false, value="Custom Mesos executor id.", dataType="string")
   public Optional<String> getCustomExecutorId() {
     return customExecutorId;
   }
 
-  @ApiModelProperty(required=false, value="Custom Mesos executor source.")
+  @ApiModelProperty(required=false, value="Custom Mesos executor source.", dataType="string")
   public Optional<String> getCustomExecutorSource() { return customExecutorSource; }
 
-  @ApiModelProperty(required=false, value="Resources to allocate for custom mesos executor")
+  @ApiModelProperty(required=false, value="Resources to allocate for custom mesos executor", dataType="com.hubspot.mesos.Resources")
   public Optional<Resources> getCustomExecutorResources() {
     return customExecutorResources;
   }
@@ -389,7 +380,7 @@ public class SingularityDeploy {
     return healthcheckUri;
   }
 
-  @ApiModelProperty(required=false, value="Healthcheck protocol - HTTP or HTTPS")
+  @ApiModelProperty(required=false, value="Healthcheck protocol - HTTP or HTTPS", dataType="com.hubspot.singularity.HealthcheckProtocol")
   public Optional<HealthcheckProtocol> getHealthcheckProtocol() {
     return healthcheckProtocol;
   }
@@ -459,21 +450,9 @@ public class SingularityDeploy {
     return loadBalancerUpstreamGroup;
   }
 
-  @Deprecated
-  @ApiModelProperty(required=false, value="(Deprecated) Labels for all tasks associated with this deploy")
-  public Optional<Map<String, String>> getLabels() {
-    return labels;
-  }
-
   @ApiModelProperty(required=false, value="Labels for all tasks associated with this deploy")
   public Optional<List<SingularityMesosTaskLabel>> getMesosLabels() {
     return mesosLabels;
-  }
-
-  @Deprecated
-  @ApiModelProperty(required=false, value="(Deprecated) Labels for specific tasks associated with this deploy, indexed by instance number")
-  public Optional<Map<Integer, Map<String, String>>> getTaskLabels() {
-    return taskLabels;
   }
 
   @ApiModelProperty(required=false, value="Labels for specific tasks associated with this deploy, indexed by instance number")
@@ -531,6 +510,7 @@ public class SingularityDeploy {
     return user;
   }
 
+
   @Override
   public String toString() {
     return Objects.toStringHelper(this)
@@ -550,9 +530,7 @@ public class SingularityDeploy {
       .add("env", env)
       .add("uris", uris)
       .add("executorData", executorData)
-      .add("labels", labels)
       .add("mesosLabels", mesosLabels)
-      .add("taskLabels", taskLabels)
       .add("mesosTaskLabels", mesosTaskLabels)
       .add("taskEnv", taskEnv)
       .add("healthcheckUri", healthcheckUri)
@@ -581,6 +559,7 @@ public class SingularityDeploy {
       .add("maxTaskRetries", maxTaskRetries)
       .add("shell", shell)
       .add("user", user)
+      .add("builder", toBuilder())
       .toString();
   }
 }

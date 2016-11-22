@@ -37,9 +37,7 @@ public class SingularityDeployBuilder {
   private Optional<Map<Integer, Map<String, String>>> taskEnv;
   private Optional<List<String>> uris;
   private Optional<ExecutorData> executorData;
-  private Optional<Map<String, String>> labels;
   private Optional<List<SingularityMesosTaskLabel>> mesosLabels;
-  private Optional<Map<Integer, Map<String, String>>> taskLabels;
   private Optional<Map<Integer, List<SingularityMesosTaskLabel>>> mesosTaskLabels;
 
   /**
@@ -121,9 +119,7 @@ public class SingularityDeployBuilder {
     this.taskEnv = Optional.absent();
     this.uris = Optional.absent();
     this.executorData = Optional.absent();
-    this.labels = Optional.absent();
     this.mesosLabels = Optional.absent();
-    this.taskLabels = Optional.absent();
     this.mesosTaskLabels = Optional.absent();
     this.healthcheckUri = Optional.absent();
     this.healthcheckIntervalSeconds = Optional.absent();
@@ -155,7 +151,7 @@ public class SingularityDeployBuilder {
 
   public SingularityDeploy build() {
     return new SingularityDeploy(requestId, id, command, arguments, containerInfo, customExecutorCmd, customExecutorId, customExecutorSource, customExecutorResources, resources,
-      env, taskEnv, uris, metadata, executorData, version, timestamp, labels, mesosLabels, taskLabels, mesosTaskLabels, deployHealthTimeoutSeconds, healthcheckUri, healthcheckIntervalSeconds, healthcheckTimeoutSeconds, healthcheckPortIndex, healthcheckMaxRetries,
+      env, taskEnv, uris, metadata, executorData, version, timestamp, mesosLabels, mesosTaskLabels, deployHealthTimeoutSeconds, healthcheckUri, healthcheckIntervalSeconds, healthcheckTimeoutSeconds, healthcheckPortIndex, healthcheckMaxRetries,
       healthcheckMaxTotalTimeoutSeconds, healthcheck, serviceBasePath, loadBalancerGroups, loadBalancerPortIndex, considerHealthyAfterRunningForSeconds, loadBalancerOptions, loadBalancerDomains, loadBalancerAdditionalRoutes,
       loadBalancerTemplate, loadBalancerServiceIdOverride, loadBalancerUpstreamGroup, skipHealthchecksOnDeploy, healthcheckProtocol, deployInstanceCountPerStep, deployStepWaitTimeMs, autoAdvanceDeploySteps, maxTaskRetries, shell, user);
   }
@@ -425,34 +421,12 @@ public class SingularityDeployBuilder {
     return this;
   }
 
-  @Deprecated
-  public Optional<Map<String, String>> getLabels() {
-    return labels;
-  }
-
-  @Deprecated
-  public SingularityDeployBuilder setLabels(Optional<Map<String, String>> labels) {
-    this.labels = labels;
-    return this;
-  }
-
   public Optional<List<SingularityMesosTaskLabel>> getMesosLabels() {
     return mesosLabels;
   }
 
   public SingularityDeployBuilder setMesosLabels(Optional<List<SingularityMesosTaskLabel>> mesosLabels) {
     this.mesosLabels = mesosLabels;
-    return this;
-  }
-
-  @Deprecated
-  public Optional<Map<Integer, Map<String, String>>> getTaskLabels() {
-    return taskLabels;
-  }
-
-  @Deprecated
-  public SingularityDeployBuilder setTaskLabels(Optional<Map<Integer, Map<String, String>>> taskLabels) {
-    this.taskLabels = taskLabels;
     return this;
   }
 
@@ -602,9 +576,7 @@ public class SingularityDeployBuilder {
       .add("taskEnv", taskEnv)
       .add("uris", uris)
       .add("executorData", executorData)
-      .add("labels", labels)
       .add("mesosLabels", mesosLabels)
-      .add("taskLabels", taskLabels)
       .add("mesosTaskLabels", mesosTaskLabels)
       .add("healthcheckUri", healthcheckUri)
       .add("healthcheckIntervalSeconds", healthcheckIntervalSeconds)

@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.hubspot.singularity.MetadataLevel;
+import com.wordnik.swagger.annotations.ApiModelProperty;
 
 public class SingularityTaskMetadataRequest {
 
@@ -23,18 +24,22 @@ public class SingularityTaskMetadataRequest {
     this.level = level;
   }
 
+  @ApiModelProperty(required=true, value="A type to be associated with this metadata")
   public String getType() {
     return type;
   }
 
+  @ApiModelProperty(required=true, value="A title to be associated with this metadata")
   public String getTitle() {
     return title;
   }
 
+  @ApiModelProperty(required=false, value="An optional message")
   public Optional<String> getMessage() {
     return message;
   }
 
+  @ApiModelProperty(required=false, value="Level of metadata, can be INFO, WARN, or ERROR")
   public Optional<MetadataLevel> getLevel() { return level; }
 
   @Override
