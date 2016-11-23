@@ -46,7 +46,6 @@ public class SingularityDeploy {
   private final Optional<ExecutorData> executorData;
   private final Optional<Map<String, String>> labels;
   private final Optional<List<SingularityMesosTaskLabel>> mesosLabels;
-
   private final Optional<Map<Integer, Map<String, String>>> taskLabels;
   private final Optional<Map<Integer, List<SingularityMesosTaskLabel>>> mesosTaskLabels;
   private final Optional<Map<Integer, Map<String, String>>> taskEnv;
@@ -331,20 +330,20 @@ public class SingularityDeploy {
     return containerInfo;
   }
 
-  @ApiModelProperty(required=false, value="Custom Mesos executor", dataType= "string")
+  @ApiModelProperty(required=false, value="Custom Mesos executor", dataType="string")
   public Optional<String> getCustomExecutorCmd() {
     return customExecutorCmd;
   }
 
-  @ApiModelProperty(required=false, value="Custom Mesos executor id.")
+  @ApiModelProperty(required=false, value="Custom Mesos executor id.", dataType="string")
   public Optional<String> getCustomExecutorId() {
     return customExecutorId;
   }
 
-  @ApiModelProperty(required=false, value="Custom Mesos executor source.")
+  @ApiModelProperty(required=false, value="Custom Mesos executor source.", dataType="string")
   public Optional<String> getCustomExecutorSource() { return customExecutorSource; }
 
-  @ApiModelProperty(required=false, value="Resources to allocate for custom mesos executor")
+  @ApiModelProperty(required=false, value="Resources to allocate for custom mesos executor", dataType="com.hubspot.mesos.Resources")
   public Optional<Resources> getCustomExecutorResources() {
     return customExecutorResources;
   }
@@ -389,7 +388,7 @@ public class SingularityDeploy {
     return healthcheckUri;
   }
 
-  @ApiModelProperty(required=false, value="Healthcheck protocol - HTTP or HTTPS")
+  @ApiModelProperty(required=false, value="Healthcheck protocol - HTTP or HTTPS", dataType="com.hubspot.singularity.HealthcheckProtocol")
   public Optional<HealthcheckProtocol> getHealthcheckProtocol() {
     return healthcheckProtocol;
   }
@@ -470,7 +469,6 @@ public class SingularityDeploy {
     return mesosLabels;
   }
 
-  @Deprecated
   @ApiModelProperty(required=false, value="(Deprecated) Labels for specific tasks associated with this deploy, indexed by instance number")
   public Optional<Map<Integer, Map<String, String>>> getTaskLabels() {
     return taskLabels;
@@ -581,6 +579,7 @@ public class SingularityDeploy {
       .add("maxTaskRetries", maxTaskRetries)
       .add("shell", shell)
       .add("user", user)
+      .add("builder", toBuilder())
       .toString();
   }
 }

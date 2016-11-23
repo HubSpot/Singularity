@@ -12,6 +12,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
 import com.hubspot.mesos.MesosUtils;
+import com.wordnik.swagger.annotations.ApiModelProperty;
 
 public class SingularityTask extends SingularityTaskIdHolder {
 
@@ -34,10 +35,12 @@ public class SingularityTask extends SingularityTaskIdHolder {
     return taskRequest;
   }
 
+  @ApiModelProperty(hidden=true)
   public Offer getOffer() {
     return offer;
   }
 
+  @ApiModelProperty(hidden=true)
   public TaskInfo getMesosTask() {
     return mesosTask;
   }
