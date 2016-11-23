@@ -28,6 +28,7 @@
   * [Database](Docs/reference/database.md)
   * [Webhooks](Docs/reference/webhooks.md)
   * [Slave Extras](Docs/reference/slave-extras.md)
+  * [Deploy Defaults](Docs/reference/deploy-defaults.md)
   * [API](Docs/reference/apidocs/api-index.md)
     * [/api/sandbox](Docs/reference/apidocs/api-sandbox.md)
     * [/api/slaves](Docs/reference/apidocs/api-slaves.md)
@@ -40,4 +41,5 @@
     * [/api/racks](Docs/reference/apidocs/api-racks.md)
     * [/api/requests](Docs/reference/apidocs/api-requests.md)
     * [/api/deploys](Docs/reference/apidocs/api-deploys.md)
+    * [/api/disasters](Docs/reference/apidocs/api-disasters.md)
     * [Models](Docs/reference/apidocs/models.md)
