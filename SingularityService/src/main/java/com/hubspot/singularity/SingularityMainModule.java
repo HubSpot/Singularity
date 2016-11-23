@@ -24,6 +24,7 @@ import org.jets3t.service.S3ServiceException;
 import org.jets3t.service.impl.rest.httpclient.RestS3Service;
 import org.jets3t.service.security.AWSCredentials;
 
+import com.codahale.metrics.Meter;
 import com.codahale.metrics.MetricRegistry;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
@@ -101,6 +102,8 @@ public class SingularityMainModule implements Module {
   public static final Named STATUS_UPDATE_THREADPOOL_NAMED = Names.named(STATUS_UPDATE_THREADPOOL_NAME);
 
   public static final String CURRENT_HTTP_REQUEST = "_singularity_current_http_request";
+
+  public static final String LOST_TASKS_METER = "singularity.lost.tasks.meter";
 
   private final SingularityConfiguration configuration;
 
@@ -346,5 +349,12 @@ public class SingularityMainModule implements Module {
     } catch (ProvisionException pe) {  // this will happen if we're not in the REQUEST scope
       return Optional.absent();
     }
+  }
+
+  @Provides
+  @Singleton
+  @Named(LOST_TASKS_METER)
+  public Meter providesLostTasksMeter(MetricRegistry registry) {
+    return registry.meter("com.hubspot.singularity.lostTasks");
   }
 }
