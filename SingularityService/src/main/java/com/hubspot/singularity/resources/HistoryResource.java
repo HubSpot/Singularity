@@ -110,7 +110,6 @@ public class HistoryResource extends AbstractHistoryResource {
   @ApiOperation("Retrieve the history for all active tasks of a specific request.")
   public List<SingularityTaskIdHistory> getTaskHistoryForRequest(
       @ApiParam("Request ID to look up") @PathParam("requestId") String requestId) {
-
     authorizationHelper.checkForAuthorizationByRequestId(requestId, user, SingularityAuthorizationScope.READ);
     List<SingularityTaskId> activeTaskIds = taskManager.getActiveTaskIdsForRequest(requestId);
 
@@ -157,10 +156,10 @@ public class HistoryResource extends AbstractHistoryResource {
   @Path("/request/{requestId}/deploy/{deployId}/tasks/inactive/withmetadata")
   @ApiOperation("Retrieve the task history for a specific deploy.")
   public SingularityPaginatedResponse<SingularityTaskIdHistory> getInactiveDeployTasksWithMetadata(
-    @ApiParam("Request ID for deploy") @PathParam("requestId") String requestId,
-    @ApiParam("Deploy ID") @PathParam("deployId") String deployId,
-    @ApiParam("Maximum number of items to return") @QueryParam("count") Integer count,
-    @ApiParam("Which page of items to view") @QueryParam("page") Integer page) {
+      @ApiParam("Request ID for deploy") @PathParam("requestId") String requestId,
+      @ApiParam("Deploy ID") @PathParam("deployId") String deployId,
+      @ApiParam("Maximum number of items to return") @QueryParam("count") Integer count,
+      @ApiParam("Which page of items to view") @QueryParam("page") Integer page) {
     authorizationHelper.checkForAuthorizationByRequestId(requestId, user, SingularityAuthorizationScope.READ);
 
     SingularityDeployKey key = new SingularityDeployKey(requestId, deployId);
@@ -180,7 +179,7 @@ public class HistoryResource extends AbstractHistoryResource {
   public List<SingularityTaskIdHistory> getTaskHistory(
       @ApiParam("Optional Request ID to match") @QueryParam("requestId") Optional<String> requestId,
       @ApiParam("Optional deploy ID to match") @QueryParam("deployId") Optional<String> deployId,
-    @ApiParam("Optional runId to match") @QueryParam("runId") Optional<String> runId,
+      @ApiParam("Optional runId to match") @QueryParam("runId") Optional<String> runId,
       @ApiParam("Optional host to match") @QueryParam("host") Optional<String> host,
       @ApiParam("Optional last task status to match") @QueryParam("lastTaskStatus") Optional<ExtendedTaskState> lastTaskStatus,
       @ApiParam("Optionally match only tasks started before") @QueryParam("startedBefore") Optional<Long> startedBefore,
@@ -207,18 +206,18 @@ public class HistoryResource extends AbstractHistoryResource {
   @Path("/tasks/withmetadata")
   @ApiOperation("Retrieve the history sorted by startedAt for all inactive tasks.")
   public SingularityPaginatedResponse<SingularityTaskIdHistory> getTaskHistoryWithMetadata(
-    @ApiParam("Optional Request ID to match") @QueryParam("requestId") Optional<String> requestId,
-    @ApiParam("Optional deploy ID to match") @QueryParam("deployId") Optional<String> deployId,
-    @ApiParam("Optional runId to match") @QueryParam("runId") Optional<String> runId,
-    @ApiParam("Optional host to match") @QueryParam("host") Optional<String> host,
-    @ApiParam("Optional last task status to match") @QueryParam("lastTaskStatus") Optional<ExtendedTaskState> lastTaskStatus,
-    @ApiParam("Optionally match only tasks started before") @QueryParam("startedBefore") Optional<Long> startedBefore,
-    @ApiParam("Optionally match only tasks started after") @QueryParam("startedAfter") Optional<Long> startedAfter,
-    @ApiParam("Optionally match tasks last updated before") @QueryParam("updatedBefore") Optional<Long> updatedBefore,
-    @ApiParam("Optionally match tasks last updated after") @QueryParam("updatedAfter") Optional<Long> updatedAfter,
-    @ApiParam("Sort direction") @QueryParam("orderDirection") Optional<OrderDirection> orderDirection,
-    @ApiParam("Maximum number of items to return") @QueryParam("count") Integer count,
-    @ApiParam("Which page of items to view") @QueryParam("page") Integer page) {
+      @ApiParam("Optional Request ID to match") @QueryParam("requestId") Optional<String> requestId,
+      @ApiParam("Optional deploy ID to match") @QueryParam("deployId") Optional<String> deployId,
+      @ApiParam("Optional runId to match") @QueryParam("runId") Optional<String> runId,
+      @ApiParam("Optional host to match") @QueryParam("host") Optional<String> host,
+      @ApiParam("Optional last task status to match") @QueryParam("lastTaskStatus") Optional<ExtendedTaskState> lastTaskStatus,
+      @ApiParam("Optionally match only tasks started before") @QueryParam("startedBefore") Optional<Long> startedBefore,
+      @ApiParam("Optionally match only tasks started after") @QueryParam("startedAfter") Optional<Long> startedAfter,
+      @ApiParam("Optionally match tasks last updated before") @QueryParam("updatedBefore") Optional<Long> updatedBefore,
+      @ApiParam("Optionally match tasks last updated after") @QueryParam("updatedAfter") Optional<Long> updatedAfter,
+      @ApiParam("Sort direction") @QueryParam("orderDirection") Optional<OrderDirection> orderDirection,
+      @ApiParam("Maximum number of items to return") @QueryParam("count") Integer count,
+      @ApiParam("Which page of items to view") @QueryParam("page") Integer page) {
     if (requestId.isPresent()) {
       authorizationHelper.checkForAuthorizationByRequestId(requestId.get(), user, SingularityAuthorizationScope.READ);
     } else {
@@ -262,18 +261,18 @@ public class HistoryResource extends AbstractHistoryResource {
   @Path("/request/{requestId}/tasks/withmetadata")
   @ApiOperation("Retrieve the history count for all inactive tasks of a specific request.")
   public SingularityPaginatedResponse<SingularityTaskIdHistory> getTaskHistoryForRequestWithMetadata(
-    @ApiParam("Request ID to match") @PathParam("requestId") String requestId,
-    @ApiParam("Optional deploy ID to match") @QueryParam("deployId") Optional<String> deployId,
-    @ApiParam("Optional runId to match") @QueryParam("runId") Optional<String> runId,
-    @ApiParam("Optional host to match") @QueryParam("host") Optional<String> host,
-    @ApiParam("Optional last task status to match") @QueryParam("lastTaskStatus") Optional<ExtendedTaskState> lastTaskStatus,
-    @ApiParam("Optionally match only tasks started before") @QueryParam("startedBefore") Optional<Long> startedBefore,
-    @ApiParam("Optionally match only tasks started after") @QueryParam("startedAfter") Optional<Long> startedAfter,
-    @ApiParam("Optionally match tasks last updated before") @QueryParam("updatedBefore") Optional<Long> updatedBefore,
-    @ApiParam("Optionally match tasks last updated after") @QueryParam("updatedAfter") Optional<Long> updatedAfter,
-    @ApiParam("Sort direction") @QueryParam("orderDirection") Optional<OrderDirection> orderDirection,
-    @ApiParam("Maximum number of items to return") @QueryParam("count") Integer count,
-    @ApiParam("Which page of items to view") @QueryParam("page") Integer page) {
+      @ApiParam("Request ID to match") @PathParam("requestId") String requestId,
+      @ApiParam("Optional deploy ID to match") @QueryParam("deployId") Optional<String> deployId,
+      @ApiParam("Optional runId to match") @QueryParam("runId") Optional<String> runId,
+      @ApiParam("Optional host to match") @QueryParam("host") Optional<String> host,
+      @ApiParam("Optional last task status to match") @QueryParam("lastTaskStatus") Optional<ExtendedTaskState> lastTaskStatus,
+      @ApiParam("Optionally match only tasks started before") @QueryParam("startedBefore") Optional<Long> startedBefore,
+      @ApiParam("Optionally match only tasks started after") @QueryParam("startedAfter") Optional<Long> startedAfter,
+      @ApiParam("Optionally match tasks last updated before") @QueryParam("updatedBefore") Optional<Long> updatedBefore,
+      @ApiParam("Optionally match tasks last updated after") @QueryParam("updatedAfter") Optional<Long> updatedAfter,
+      @ApiParam("Sort direction") @QueryParam("orderDirection") Optional<OrderDirection> orderDirection,
+      @ApiParam("Maximum number of items to return") @QueryParam("count") Integer count,
+      @ApiParam("Which page of items to view") @QueryParam("page") Integer page) {
     authorizationHelper.checkForAuthorizationByRequestId(requestId, user, SingularityAuthorizationScope.READ);
 
     final Optional<Integer> dataCount = taskHistoryHelper.getBlendedHistoryCount(new SingularityTaskHistoryQuery(Optional.of(requestId), deployId, runId, host, lastTaskStatus, startedBefore, startedAfter, updatedBefore, updatedAfter, orderDirection));
@@ -314,9 +313,9 @@ public class HistoryResource extends AbstractHistoryResource {
   @Path("/request/{requestId}/deploys/withmetadata")
   @ApiOperation("Get deploy history with metadata for a single request")
   public SingularityPaginatedResponse<SingularityDeployHistory> getDeploysWithMetadata(
-          @ApiParam("Request ID to look up") @PathParam("requestId") String requestId,
-          @ApiParam("Maximum number of items to return") @QueryParam("count") Integer count,
-          @ApiParam("Which page of items to view") @QueryParam("page") Integer page) {
+      @ApiParam("Request ID to look up") @PathParam("requestId") String requestId,
+      @ApiParam("Maximum number of items to return") @QueryParam("count") Integer count,
+      @ApiParam("Which page of items to view") @QueryParam("page") Integer page) {
     authorizationHelper.checkForAuthorizationByRequestId(requestId, user, SingularityAuthorizationScope.READ);
 
     final Optional<Integer> dataCount = deployHistoryHelper.getBlendedHistoryCount(requestId);
@@ -346,9 +345,9 @@ public class HistoryResource extends AbstractHistoryResource {
   @Path("/request/{requestId}/requests/withmetadata")
   @ApiOperation("Get request history for a single request")
   public SingularityPaginatedResponse<SingularityRequestHistory> getRequestHistoryForRequestWithMetadata(
-    @ApiParam("Request ID to look up") @PathParam("requestId") String requestId,
-    @ApiParam("Maximum number of items to return") @QueryParam("count") Integer count,
-    @ApiParam("Which page of items to view") @QueryParam("page") Integer page) {
+      @ApiParam("Request ID to look up") @PathParam("requestId") String requestId,
+      @ApiParam("Maximum number of items to return") @QueryParam("count") Integer count,
+      @ApiParam("Which page of items to view") @QueryParam("page") Integer page) {
     authorizationHelper.checkForAuthorizationByRequestId(requestId, user, SingularityAuthorizationScope.READ);
 
     final Optional<Integer> dataCount = requestHistoryHelper.getBlendedHistoryCount(requestId);
@@ -379,8 +378,8 @@ public class HistoryResource extends AbstractHistoryResource {
   @Path("/request/{requestId}/command-line-args")
   @ApiOperation("Get a list of recently used command line args for an on-demand or scheduled request")
   public Set<List<String>> getRecentCommandLineArgs(
-    @ApiParam("Request ID to look up") @PathParam("requestId") String requestId,
-    @ApiParam("Max number of recent args to return") @QueryParam("count") Optional<Integer> count) {
+      @ApiParam("Request ID to look up") @PathParam("requestId") String requestId,
+      @ApiParam("Max number of recent args to return") @QueryParam("count") Optional<Integer> count) {
     authorizationHelper.checkForAuthorizationByRequestId(requestId, user, SingularityAuthorizationScope.READ);
 
     final int argCount = count.or(DEFAULT_ARGS_HISTORY_COUNT);
