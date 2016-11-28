@@ -83,6 +83,7 @@ public class SingularityMainModule implements Module {
   public static final String REQUEST_IN_COOLDOWN_TEMPLATE = "request.in.cooldown.template";
   public static final String REQUEST_MODIFIED_TEMPLATE = "request.modified.template";
   public static final String RATE_LIMITED_TEMPLATE = "rate.limited.template";
+  public static final String DISASTERS_TEMPLATE = "disasters.template";
 
   public static final String SERVER_ID_PROPERTY = "singularity.server.id";
   public static final String HOST_NAME_PROPERTY = "singularity.host.name";
@@ -336,6 +337,13 @@ public class SingularityMainModule implements Module {
   @Named(RATE_LIMITED_TEMPLATE)
   public JadeTemplate getRateLimitedTemplate() throws IOException {
     return getJadeTemplate("rate_limited.jade");
+  }
+
+  @Provides
+  @Singleton
+  @Named(DISASTERS_TEMPLATE)
+  public JadeTemplate getDisastersTemplate() throws IOException {
+    return getJadeTemplate("disaster.jade");
   }
 
   @Provides
