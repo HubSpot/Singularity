@@ -20,7 +20,7 @@ import DeployDetail from './components/deployDetail/DeployDetail';
 import RequestForm from './components/requestForm/RequestForm';
 import NewDeployForm from './components/newDeployForm/NewDeployForm';
 import { Tail, AggregateTail, CompressedLogView } from './components/logs/Tail';
-import TaskInstanceRedirect from './components/requestDetail/TaskInstanceRedirect'
+import TaskInstanceRedirect from './components/requestDetail/TaskInstanceRedirect';
 import RequestDetailPage from './components/requestDetail/RequestDetailPage';
 import Group from './components/groupDetail/GroupDetail.jsx';
 import Disasters from './components/disasters/Disasters';
