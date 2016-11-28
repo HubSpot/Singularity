@@ -17,13 +17,16 @@ import org.slf4j.LoggerFactory;
 
 import com.codahale.metrics.annotation.Timed;
 import com.google.common.base.Optional;
+import com.google.common.collect.HashMultiset;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Multiset;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.mesos.json.MesosMasterSlaveObject;
 import com.hubspot.mesos.json.MesosMasterStateObject;
+import com.hubspot.mesos.json.MesosResourcesObject;
 import com.hubspot.singularity.MachineState;
 import com.hubspot.singularity.SingularityMachineAbstraction;
 import com.hubspot.singularity.SingularityRack;
@@ -42,7 +45,7 @@ import com.hubspot.singularity.scheduler.SingularitySchedulerStateCache;
 import com.hubspot.singularity.sentry.SingularityExceptionNotifier;
 
 @Singleton
-class SingularitySlaveAndRackManager {
+public class SingularitySlaveAndRackManager {
 
   private static final Logger LOG = LoggerFactory.getLogger(SingularitySlaveAndRackManager.class);
 
@@ -129,7 +132,7 @@ class SingularitySlaveAndRackManager {
     }
 
     final int numDesiredInstances = taskRequest.getRequest().getInstancesSafe();
-    double numOnRack = 0;
+    Multiset<String> countPerRack = HashMultiset.create(stateCache.getNumActiveRacks());
     double numOnSlave = 0;
     double numCleaningOnSlave = 0;
     double numOtherDeploysOnSlave = 0;
@@ -151,18 +154,15 @@ class SingularitySlaveAndRackManager {
           numOtherDeploysOnSlave++;
         }
       }
-      if (taskId.getSanitizedRackId().equals(sanitizedRackId) && !cleaningTasks.contains(taskId) && taskRequest.getDeploy().getId().equals(taskId.getDeployId())) {
-        numOnRack++;
+      if (!cleaningTasks.contains(taskId) && taskRequest.getDeploy().getId().equals(taskId.getDeployId())) {
+        countPerRack.add(taskId.getSanitizedRackId());
       }
     }
 
     if (taskRequest.getRequest().isRackSensitive()) {
-      final double numPerRack = numDesiredInstances / (double) stateCache.getNumActiveRacks();
-
-      final boolean isRackOk = numOnRack < numPerRack;
+      final boolean isRackOk = isRackOk(countPerRack, sanitizedRackId, numDesiredInstances, taskRequest.getRequest().getId(), slaveId, host, numCleaningOnSlave, stateCache);
 
       if (!isRackOk) {
-        LOG.trace("Rejecting RackSensitive task {} from slave {} ({}) due to numOnRack {} and cleaningOnSlave {}", taskRequest.getRequest().getId(), slaveId, host, numOnRack, numCleaningOnSlave);
         return SlaveMatchState.RACK_SATURATED;
       }
     }
@@ -195,6 +195,33 @@ class SingularitySlaveAndRackManager {
     }
 
     return SlaveMatchState.OK;
+  }
+
+  private boolean isRackOk(Multiset<String> countPerRack, String sanitizedRackId, int numDesiredInstances, String requestId, String slaveId, String host, double numCleaningOnSlave, SingularitySchedulerStateCache stateCache) {
+    int racksAccountedFor = countPerRack.elementSet().size();
+    double numPerRack = numDesiredInstances / (double) stateCache.getNumActiveRacks();
+    if (racksAccountedFor < stateCache.getNumActiveRacks()) {
+      if (countPerRack.count(sanitizedRackId) < Math.max(numPerRack, 1)) {
+        return true;
+      }
+    } else {
+      Integer rackMin = null;
+      for (String rackId : countPerRack.elementSet()) {
+        if (rackMin == null || countPerRack.count(rackId) < rackMin) {
+          rackMin = countPerRack.count(rackId);
+        }
+      }
+      if (rackMin == null || rackMin < (int) numPerRack) {
+        if (countPerRack.count(sanitizedRackId) < (int) numPerRack) {
+          return true;
+        }
+      } else if (countPerRack.count(sanitizedRackId) < numPerRack) {
+        return true;
+      }
+    }
+
+    LOG.trace("Rejecting RackSensitive task {} from slave {} ({}) due to numOnRack {} and cleaningOnSlave {}", requestId, slaveId, host, countPerRack.count(sanitizedRackId), numCleaningOnSlave);
+    return false;
   }
 
   public void slaveLost(SlaveID slaveIdObj) {
@@ -239,7 +266,7 @@ class SingularitySlaveAndRackManager {
     }
   }
 
-  public void loadSlavesAndRacksFromMaster(MesosMasterStateObject state) {
+  public void loadSlavesAndRacksFromMaster(MesosMasterStateObject state, boolean isStartup) {
     Map<String, SingularitySlave> activeSlavesById = slaveManager.getObjectsByIdForState(MachineState.ACTIVE);
     Map<String, SingularityRack> activeRacksById = rackManager.getObjectsByIdForState(MachineState.ACTIVE);
 
@@ -255,9 +282,14 @@ class SingularitySlaveAndRackManager {
       String host = slaveAndRackHelper.getMaybeTruncatedHost(slaveJsonObject.getHostname());
 
       if (activeSlavesById.containsKey(slaveId)) {
+        SingularitySlave slave = activeSlavesById.get(slaveId);
+        if (slave != null && (!slave.getResources().isPresent() || !slave.getResources().get().equals(slaveJsonObject.getResources()))) {
+          LOG.trace("Found updated resources ({}) for slave {}", slaveJsonObject.getResources(), slave);
+          slaveManager.saveObject(slave.withResources(slaveJsonObject.getResources()));
+        }
         activeSlavesById.remove(slaveId);
       } else {
-        SingularitySlave newSlave = new SingularitySlave(slaveId, host, rackId, textAttributes);
+        SingularitySlave newSlave = new SingularitySlave(slaveId, host, rackId, textAttributes, Optional.of(slaveJsonObject.getResources()));
 
         if (check(newSlave, slaveManager) == CheckResult.NEW) {
           slaves++;
@@ -276,11 +308,11 @@ class SingularitySlaveAndRackManager {
     }
 
     for (SingularitySlave leftOverSlave : activeSlavesById.values()) {
-      slaveManager.changeState(leftOverSlave, MachineState.MISSING_ON_STARTUP, Optional.<String> absent(), Optional.<String> absent());
+      slaveManager.changeState(leftOverSlave, isStartup ? MachineState.MISSING_ON_STARTUP : MachineState.DEAD, Optional.<String> absent(), Optional.<String> absent());
     }
 
     for (SingularityRack leftOverRack : remainingActiveRacks.values()) {
-      rackManager.changeState(leftOverRack, MachineState.MISSING_ON_STARTUP, Optional.<String> absent(), Optional.<String> absent());
+      rackManager.changeState(leftOverRack, isStartup ? MachineState.MISSING_ON_STARTUP : MachineState.DEAD, Optional.<String> absent(), Optional.<String> absent());
     }
 
     LOG.info("Found {} new racks ({} missing) and {} new slaves ({} missing)", racks, remainingActiveRacks.size(), slaves, activeSlavesById.size());
@@ -325,7 +357,7 @@ class SingularitySlaveAndRackManager {
     final String host = slaveAndRackHelper.getMaybeTruncatedHost(offer);
     final Map<String, String> textAttributes = slaveAndRackHelper.getTextAttributes(offer);
 
-    final SingularitySlave slave = new SingularitySlave(slaveId, host, rackId, textAttributes);
+    final SingularitySlave slave = new SingularitySlave(slaveId, host, rackId, textAttributes, Optional.<MesosResourcesObject>absent());
 
     if (check(slave, slaveManager) == CheckResult.NEW) {
       LOG.info("Offer revealed a new slave {}", slave);

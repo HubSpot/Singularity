@@ -15,6 +15,7 @@ import com.hubspot.singularity.SingularityPriorityFreezeParent;
 import com.hubspot.singularity.SingularityRequestWithState;
 import com.hubspot.singularity.SingularityTaskCleanup;
 import com.hubspot.singularity.SingularityTaskId;
+import com.hubspot.singularity.SingularityTaskShellCommandRequestId;
 import com.hubspot.singularity.TaskCleanupType;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.PriorityManager;
@@ -23,7 +24,7 @@ import com.hubspot.singularity.data.TaskManager;
 
 @Singleton
 public class SingularityPriorityKillPoller extends SingularityLeaderOnlyPoller {
-    private static final Logger LOG = LoggerFactory.getLogger(SingularityScheduledJobPoller.class);
+    private static final Logger LOG = LoggerFactory.getLogger(SingularityPriorityKillPoller.class);
 
     private final PriorityManager priorityManager;
     private final RequestManager requestManager;
@@ -82,7 +83,7 @@ public class SingularityPriorityKillPoller extends SingularityLeaderOnlyPoller {
                     LOG.info("Killing active task {} since priority level {} is less than {}", taskId.getId(), taskPriorityLevel, minPriorityLevel);
                     taskManager.createTaskCleanup(
                         new SingularityTaskCleanup(maybePriorityFreeze.get().getUser(), TaskCleanupType.PRIORITY_KILL, now, taskId, maybePriorityFreeze.get().getPriorityFreeze().getMessage(),
-                            maybePriorityFreeze.get().getPriorityFreeze().getActionId()));
+                            maybePriorityFreeze.get().getPriorityFreeze().getActionId(), Optional.<SingularityTaskShellCommandRequestId>absent()));
                     killedTaskCount++;
                 }
             }

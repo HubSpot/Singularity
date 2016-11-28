@@ -1,12 +1,11 @@
 import React, { PropTypes } from 'react';
 import { connect } from 'react-redux';
-
-import * as StarredActions from '../../actions/ui/starred';
-import { getStarred } from '../../selectors/requests';
-
+import { FetchUser } from 'actions/api/auth';
+import { AddStarredRequests, DeleteStarredRequests } from '../../actions/api/users';
+import Utils from '../../utils';
 
 const RequestStar = ({requestId, changeStar, starred}) => (
-  <a className="star" data-starred={starred} onClick={() => changeStar(requestId)}>
+  <a className="star" data-starred={starred} onClick={() => changeStar(requestId, starred)}>
     <span className="glyphicon glyphicon-star"></span>
   </a>
 );
@@ -19,14 +18,18 @@ RequestStar.propTypes = {
 
 const mapStateToProps = (state, ownProps) => {
   return {
-    starred: getStarred(state).has(ownProps.requestId)
+    starred: _.contains(Utils.maybe(state.api.user, ['data', 'settings', 'starredRequestIds'], []), ownProps.requestId)
   };
 };
 
 const mapDispatchToProps = (dispatch) => {
   return {
-    changeStar: (requestId) => {
-      dispatch(StarredActions.ToggleRequestStar(requestId));
+    changeStar: (requestId, starred) => {
+      if (starred) {
+        dispatch(DeleteStarredRequests.trigger([requestId])).then(() => dispatch(FetchUser.trigger()));
+      } else {
+        dispatch(AddStarredRequests.trigger([requestId])).then(() => dispatch(FetchUser.trigger()));
+      }
     }
   };
 };

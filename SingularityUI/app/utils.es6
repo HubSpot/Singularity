@@ -7,6 +7,10 @@ const Utils = {
 
   GLOB_CHARS: ['*', '!', '?', '[', ']'],
 
+  LONG_RUNNING_IMMEDIATE_CLEANUPS: ['USER_REQUESTED', 'SCALING_DOWN', 'DEPLOY_FAILED', 'NEW_DEPLOY_SUCCEEDED', 'DEPLOY_STEP_FINISHED', 'DEPLOY_CANCELED' , 'TASK_EXCEEDED_TIME_LIMIT', 'UNHEALTHY_NEW_TASK', 'OVERDUE_NEW_TASK', 'USER_REQUESTED_DESTROY', 'PRIORITY_KILL', 'PAUSE'],
+
+  NON_LONG_RUNNING_IMMEDIATE_CLEANUPS: ['USER_REQUESTED', 'DEPLOY_FAILED', 'DEPLOY_CANCELED', 'TASK_EXCEEDED_TIME_LIMIT', 'UNHEALTHY_NEW_TASK', 'OVERDUE_NEW_TASK', 'USER_REQUESTED_DESTROY', 'INCREMENTAL_DEPLOY_FAILED', 'INCREMENTAL_DEPLOY_CANCELLED', 'PRIORITY_KILL', 'PAUSE'],
+
   isIn(needle, haystack) {
     return !_.isEmpty(haystack) && haystack.indexOf(needle) >= 0;
   },
@@ -104,13 +108,32 @@ const Utils = {
     return false;
   },
 
-  fuzzyAdjustScore(filter, fuzzyObject) {
-    if (fuzzyObject.original.id.toLowerCase().startsWith(filter.toLowerCase())) {
-      return fuzzyObject.score * 10;
-    } else if (fuzzyObject.original.id.toLowerCase().indexOf(filter.toLowerCase()) > -1) {
-      return fuzzyObject.score * 5;
-    }
-    return fuzzyObject.score;
+  fuzzyFilter(filter, fuzzyObjects) {
+    const maxScore = _.max(fuzzyObjects, (fuzzyObject) => fuzzyObject.score).score;
+    _.chain(fuzzyObjects).map((fuzzyObject) => {
+        if (fuzzyObject.original.id.toLowerCase().startsWith(filter.toLowerCase())) {
+          fuzzyObject.score = fuzzyObject.score * 10;
+        } else if (fuzzyObject.original.id.toLowerCase().indexOf(filter.toLowerCase()) > -1) {
+          fuzzyObject.score = fuzzyObject.score * 5;
+        }
+        return fuzzyObject;
+    });
+    return _.uniq(
+      _.pluck(
+        _.sortBy(
+          _.filter(
+            fuzzyObjects,
+            (fuzzyObject) => {
+              return fuzzyObject.score > (maxScore / 10) && fuzzyObject.score > 20;
+            }
+          ),
+          (fuzzyObject) => {
+            return fuzzyObject.score;
+          }
+        ).reverse(),
+        'original'
+      )
+    );
   },
 
   convertMapFromObjectToArray(mapAsObj) {
@@ -336,6 +359,16 @@ const Utils = {
       return expiringBounce
         ? (expiringBounce.startMillis + expiringBounce.expiringAPIRequestObject.durationMillis) > new Date().getTime()
         : false;
+    },
+  },
+
+
+
+  isImmediateCleanup: (cleanupType, longRunning) => {
+    if (longRunning) {
+      return _.contains(Utils.LONG_RUNNING_IMMEDIATE_CLEANUPS, cleanupType)
+    } else {
+      return _.contains(Utils.NON_LONG_RUNNING_IMMEDIATE_CLEANUPS, cleanupType)
     }
   },
 

@@ -13,13 +13,13 @@ public class SingularitySchedulerModule extends AbstractModule {
     bind(SingularityCleanupPoller.class).in(Scopes.SINGLETON);
     bind(SingularityExpiringUserActionPoller.class).in(Scopes.SINGLETON);
     bind(SingularityHistoryPurger.class).in(Scopes.SINGLETON);
-    bind(SingularityDeadSlavePoller.class).in(Scopes.SINGLETON);
+    bind(SingularitySlaveReconciliationPoller.class).in(Scopes.SINGLETON);
     bind(SingularityCooldownPoller.class).in(Scopes.SINGLETON);
     bind(SingularityDeployPoller.class).in(Scopes.SINGLETON);
     bind(SingularityCooldownPoller.class).in(Scopes.SINGLETON);
     bind(SingularityDeployPoller.class).in(Scopes.SINGLETON);
     bind(SingularitySchedulerPoller.class).in(Scopes.SINGLETON);
-    bind(SingularityScheduledJobPoller.class).in(Scopes.SINGLETON);
+    bind(SingularityJobPoller.class).in(Scopes.SINGLETON);
     bind(SingularityTaskShellCommandDispatchPoller.class).in(Scopes.SINGLETON);
     bind(SingularityTaskReconciliationPoller.class).in(Scopes.SINGLETON);
     bind(SingularityScheduler.class).in(Scopes.SINGLETON);

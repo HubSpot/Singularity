@@ -429,7 +429,7 @@ public class SingularityExecutorMonitor {
 
     try {
       if (!wasKilled) {
-        task.markKilled();
+        task.markKilled(user);
       }
 
       processBuilderFuture = processBuildingTasks.get(task.getTaskId());
@@ -454,7 +454,7 @@ public class SingularityExecutorMonitor {
         } else {
           task.getLog().info("Destroying process with pid {} for task {}", runningProcess.getCurrentPid(), taskId);
         }
-        task.markForceDestroyed();
+        task.markForceDestroyed(user);
         runningProcess.signalKillToProcessIfActive();
         return KillState.DESTROYING_PROCESS;
       }
@@ -519,6 +519,7 @@ public class SingularityExecutorMonitor {
       public void onSuccess(Integer exitCode) {
         TaskState taskState = null;
         String message = null;
+        Optional<String> maybeKilledBy = task.getKilledBy();
 
         if (task.wasKilledDueToThreads()) {
           taskState = TaskState.TASK_FAILED;
@@ -532,7 +533,11 @@ public class SingularityExecutorMonitor {
 
             message = String.format("Task killed forcibly after waiting at least %s", JavaUtils.durationFromMillis(millisWaited));
           } else if (task.wasForceDestroyed()) {
-            message = "Task killed forcibly after multiple kill requests from framework";
+            if (maybeKilledBy.isPresent()) {
+              message = String.format("Task killed forcibly by %s", maybeKilledBy.get());
+            } else {
+              message = "Task killed forcibly after multiple kill requests from framework";
+            }
           } else {
             message = "Task killed. Process exited gracefully with code " + exitCode;
           }

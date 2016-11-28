@@ -9,7 +9,7 @@
   </parent>
 
   <artifactId>Singularity</artifactId>
-  <version>0.12.0-SNAPSHOT</version>
+  <version>0.13.0-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <scm>
@@ -54,10 +54,8 @@
     <module>SingularityClient</module>
     <module>SingularityExecutor</module>
     <module>SingularityExecutorCleanup</module>
-    <module>SingularityLogWatcher</module>
     <module>SingularityS3Uploader</module>
     <module>SingularityS3Downloader</module>
-    <module>SingularityOOMKiller</module>
     <module>SingularitySwagger</module>
     <module>EmbedSingularityExample</module>
     <module>SingularityServiceIntegrationTests</module>

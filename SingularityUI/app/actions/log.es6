@@ -225,6 +225,14 @@ export const taskData = (taskGroupId, taskId, data, offset, nextOffset, append, 
   })
 ;
 
+export const emptyFile = (taskGroupId, taskId) =>
+  ({
+    taskGroupId,
+    taskId,
+    type: 'LOG_FILE_EMPTY'
+  })
+;
+
 export const taskGroupFetchNext = taskGroupId =>
   (dispatch, getState) => {
     const state = getState();
@@ -246,8 +254,9 @@ export const taskGroupFetchNext = taskGroupId =>
           if (data.length > 0) {
             nextOffset = _.isUndefined(nextOffset) ? offset + data.length : nextOffset;
             return dispatch(taskData(taskGroupId, taskId, data, offset, nextOffset, true, maxLines, logType));
+          } else if (offset == 0) {
+            return dispatch(emptyFile(taskGroupId, taskId));
           }
-          return Promise.resolve();
         }).error(error => Utils.ignore404(error));
         promise.taskId = taskId;
         return promise;
