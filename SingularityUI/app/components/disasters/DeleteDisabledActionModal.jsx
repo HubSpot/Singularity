@@ -6,7 +6,6 @@ import FormModal from '../common/modal/FormModal';
 class DeleteDisabledActionModal extends Component {
   static propTypes = {
     disabledAction: PropTypes.shape({
-      id: PropTypes.string.isRequired,
       type: PropTypes.string.isRequired,
       uri: PropTypes.string.isRequired
     }).isRequired,

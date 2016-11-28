@@ -43,6 +43,7 @@ import com.hubspot.singularity.SingularityDisasterType;
 import com.hubspot.singularity.SingularityDisastersData;
 import com.hubspot.singularity.SingularityPaginatedResponse;
 import com.hubspot.singularity.SingularityPendingRequest;
+import com.hubspot.singularity.SingularityPendingRequestParent;
 import com.hubspot.singularity.SingularityPendingTaskId;
 import com.hubspot.singularity.SingularityPriorityFreezeParent;
 import com.hubspot.singularity.SingularityRack;
@@ -60,6 +61,7 @@ import com.hubspot.singularity.SingularityTaskCleanupResult;
 import com.hubspot.singularity.SingularityTaskHistory;
 import com.hubspot.singularity.SingularityTaskHistoryUpdate;
 import com.hubspot.singularity.SingularityTaskIdHistory;
+import com.hubspot.singularity.SingularityTaskReconciliationStatistics;
 import com.hubspot.singularity.SingularityTaskRequest;
 import com.hubspot.singularity.SingularityUpdatePendingDeployRequest;
 import com.hubspot.singularity.SingularityWebhook;
@@ -81,6 +83,7 @@ public class SingularityClient {
   private static final Logger LOG = LoggerFactory.getLogger(SingularityClient.class);
 
   private static final String STATE_FORMAT = "http://%s/%s/state";
+  private static final String TASK_RECONCILIATION_FORMAT = STATE_FORMAT + "/task-reconciliation";
 
   private static final String RACKS_FORMAT = "http://%s/%s/racks";
   private static final String RACKS_DECOMISSION_FORMAT = RACKS_FORMAT + "/rack/%s/decommission";
@@ -493,6 +496,30 @@ public class SingularityClient {
     return response.getAs(SingularityState.class);
   }
 
+  public Optional<SingularityTaskReconciliationStatistics> getTaskReconciliationStatistics() {
+    final String uri = String.format(TASK_RECONCILIATION_FORMAT, getHost(), contextPath);
+
+    LOG.info("Fetch task reconciliation statistics from {}", uri);
+
+    final long start = System.currentTimeMillis();
+
+    HttpRequest.Builder request = HttpRequest.newBuilder().setUrl(uri);
+
+    addCredentials(request);
+
+    HttpResponse response = httpClient.execute(request.build());
+
+    if (response.getStatusCode() == 404) {
+      return Optional.absent();
+    }
+
+    checkResponse("task reconciliation statistics", response);
+
+    LOG.info("Got task reconciliation statistics in {}ms", System.currentTimeMillis() - start);
+
+    return Optional.of(response.getAs(SingularityTaskReconciliationStatistics.class));
+  }
+
   //
   // ACTIONS ON A SINGLE SINGULARITY REQUEST
   //
@@ -549,10 +576,12 @@ public class SingularityClient {
     put(requestUri, String.format("Scale of Request %s", requestId), Optional.of(scaleRequest));
   }
 
-  public void runSingularityRequest(String requestId, Optional<SingularityRunNowRequest> runNowRequest) {
+  public SingularityPendingRequestParent runSingularityRequest(String requestId, Optional<SingularityRunNowRequest> runNowRequest) {
     final String requestUri = String.format(REQUEST_RUN_FORMAT, getHost(), contextPath, requestId);
 
-    post(requestUri, String.format("run of request %s", requestId), runNowRequest);
+    final HttpResponse response = post(requestUri, String.format("run of request %s", requestId), runNowRequest);
+
+    return response.getAs(SingularityPendingRequestParent.class);
   }
 
   public void bounceSingularityRequest(String requestId, Optional<SingularityBounceRequest> bounceOptions) {

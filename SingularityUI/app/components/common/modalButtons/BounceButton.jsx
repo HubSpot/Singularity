@@ -17,7 +17,7 @@ const bounceTooltip = (
 export default class BounceButton extends Component {
 
   static propTypes = {
-    requestId: PropTypes.string.isRequired,
+    requestId: PropTypes.oneOfType([PropTypes.string, PropTypes.array]).isRequired,
     children: PropTypes.node,
     then: PropTypes.func
   };

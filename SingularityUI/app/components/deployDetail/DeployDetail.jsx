@@ -7,7 +7,7 @@ import Clipboard from 'clipboard';
 
 import Utils from '../../utils';
 import { Link } from 'react-router';
-import { Glyphicon } from 'react-bootstrap';
+import { Glyphicon, Button } from 'react-bootstrap';
 import { FetchTaskHistoryForDeploy } from '../../actions/api/history';
 import { initialize, refresh } from '../../actions/ui/deployDetail';
 
@@ -18,6 +18,7 @@ import JSONButton from '../common/JSONButton';
 import UITable from '../common/table/UITable';
 import Column from '../common/table/Column';
 import CollapsableSection from '../common/CollapsableSection';
+import RedeployButton from '../common/modalButtons/RedeployButton';
 
 import ActiveTasksTable from './ActiveTasksTable';
 
@@ -119,6 +120,9 @@ class DeployDetail extends React.Component {
             </h1>
           </div>
           <div className="col-md-4 button-container">
+            <RedeployButton requestId={deploy.deploy.requestId} deployId={deploy.deploy.id}>
+              <Button bsStyle="primary">Redeploy</Button>
+            </RedeployButton>
             <JSONButton object={deploy} linkClassName="btn btn-default">
               JSON
             </JSONButton>
@@ -217,7 +221,7 @@ class DeployDetail extends React.Component {
     if (deploy.deploy.executorData && deploy.deploy.executorData.cmd) {
       stats.push(<InfoBox key="cmd" copyableClassName="info-copyable" name="Command" value={deploy.deploy.executorData.cmd} />);
     }
-    if (deploy.deploy.resources.cpus) {
+    if (deploy.deploy.resources && deploy.deploy.resources.cpus) {
       let value = `CPUs: ${deploy.deploy.resources.cpus} | Memory (Mb): ${deploy.deploy.resources.memoryMb} | Ports: ${deploy.deploy.resources.numPorts}`;
       stats.push(<InfoBox key="cpus" copyableClassName="info-copyable" name="Resources" value={value} />);
     }

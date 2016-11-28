@@ -7,6 +7,7 @@ import org.apache.mesos.Protos.ContainerInfo.Type;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
+import com.wordnik.swagger.annotations.ApiModelProperty;
 
 public class SingularityContainerInfo {
   private final SingularityContainerType type;
@@ -23,19 +24,17 @@ public class SingularityContainerInfo {
     this.docker = docker;
   }
 
-  @Deprecated
-  public SingularityContainerInfo(Type type, Optional<List<SingularityVolume>> volumes, Optional<SingularityDockerInfo> docker) {
-    this(SingularityContainerType.valueOf(type.toString()), volumes, docker);
-  }
-
+  @ApiModelProperty(required=true, value="Container type, can be MESOS or DOCKER. Default is MESOS")
   public SingularityContainerType getType() {
     return type;
   }
 
+  @ApiModelProperty(required=false, value="List of volumes to mount. Applicable only to DOCKER container type")
   public Optional<List<SingularityVolume>> getVolumes() {
     return volumes;
   }
 
+  @ApiModelProperty(required=false, value="Information specific to docker runtime settings")
   public Optional<SingularityDockerInfo> getDocker() {
     return docker;
   }

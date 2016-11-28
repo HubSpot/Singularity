@@ -12,6 +12,7 @@ import { FetchDeploysForRequest } from '../../actions/api/history';
 import UITable from '../common/table/UITable';
 import Column from '../common/table/Column';
 import JSONButton from '../common/JSONButton';
+import RedeployButton from '../common/modalButtons/RedeployButton';
 
 const DeployHistoryTable = ({requestId, deploysAPI, fetchDeploys}) => {
   const deploys = deploysAPI ? deploysAPI.data : [];
@@ -63,7 +64,15 @@ const DeployHistoryTable = ({requestId, deploysAPI, fetchDeploys}) => {
           id="actions-column"
           key="actions-column"
           className="actions-column"
-          cellData={(deploy) => <JSONButton object={deploy} showOverlay={true}>{'{ }'}</JSONButton>}
+          cellData={(deploy) => (
+            <span>
+              <RedeployButton
+                requestId={requestId}
+                deployId={deploy.deployMarker.deployId} 
+                doAfterSuccessfulRedeploy={() => fetchDeploys(requestId, 5, 1)}/>
+              <JSONButton object={deploy} showOverlay={true}>{'{ }'}</JSONButton>
+            </span>
+          )}
         />
       </UITable>
     </Section>

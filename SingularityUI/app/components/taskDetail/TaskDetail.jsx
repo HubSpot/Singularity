@@ -165,7 +165,7 @@ class TaskDetail extends Component {
         if (!file.isDirectory) {
           const regex = /(?:\.([^.]+))?$/;
           const extension = regex.exec(file.name)[1];
-          file.isTailable = !_.contains(['zip', 'gz', 'jar'], extension);
+          file.isTailable = !_.contains(['zip', 'gz', 'jar', 'bz2', 'so', 'png', 'jpg', 'jpeg', 'pdf'], extension);
         }
       }
     }
@@ -206,34 +206,59 @@ class TaskDetail extends Component {
   }
 
   renderHeader(cleanup) {
+    const cleaningUpdate = _.find(Utils.maybe(this.props.task, ['taskUpdates'], []), (taskUpdate) => {
+      return taskUpdate.taskState == "TASK_CLEANING";
+    });
+
+    let cleanupType;
+    if (cleaningUpdate) {
+      cleanupType = cleaningUpdate.statusMessage.split(/\s+/)[0];
+    } else if (cleanup) {
+      cleanupType = cleanup.cleanupType;
+    }
+
     const taskState = this.props.task.taskUpdates && (
       <div className="col-xs-6 task-state-header">
         <h1>
           <span className={`label label-${Utils.getLabelClassFromTaskState(_.last(this.props.task.taskUpdates).taskState)} task-state-header-label`}>
-            {Utils.humanizeText(_.last(this.props.task.taskUpdates).taskState)} {cleanup && `(${Utils.humanizeText(cleanup.cleanupType)})`}
+            {Utils.humanizeText(_.last(this.props.task.taskUpdates).taskState)} {cleanupType && `(${Utils.humanizeText(cleanupType)})`}
           </span>
         </h1>
       </div>
     );
 
-    let removeText;
-    if (cleanup) {
-      removeText = cleanup.isImmediate ? 'Destroy task' : 'Override cleanup';
-    } else {
-      removeText = this.props.task.isCleaning ? 'Destroy task' : 'Kill Task';
+    let destroy = false;
+    let removeText = 'Kill Task';
+    if (cleanupType) {
+      if (Utils.isImmediateCleanup(cleanupType, Utils.request.isLongRunning(this.props.task.task.taskRequest))) {
+        removeText = 'Destroy task';
+        destroy = true;
+      } else {
+        removeText = 'Override cleanup';
+      }
     }
+
+    const refreshHistoryAndCleanups = () => {
+      const promises = [];
+      promises.push(this.props.fetchTaskCleanups());
+      promises.push(this.props.fetchTaskHistory(this.props.params.taskId));
+      return Promise.all(promises);
+    }
+
     const removeBtn = this.props.task.isStillRunning && (
       <KillTaskButton
         name={removeText}
         taskId={this.props.params.taskId}
-        shouldShowWaitForReplacementTask={Utils.isIn(this.props.task.task.taskRequest.request.requestType, ['SERVICE', 'WORKER'])}
+        destroy={destroy}
+        then={refreshHistoryAndCleanups}
+        shouldShowWaitForReplacementTask={Utils.isIn(this.props.task.task.taskRequest.request.requestType, ['SERVICE', 'WORKER']) && !destroy}
       >
         <a className="btn btn-danger">
           {removeText}
         </a>
       </KillTaskButton>
     );
-    const terminationAlert = this.props.task.isStillRunning && !cleanup && this.props.task.isCleaning && (
+    const terminationAlert = this.props.task.isStillRunning && this.props.task.isCleaning && destroy && (
       <Alert bsStyle="warning">
           <strong>Task is terminating:</strong> To issue a non-graceful termination (kill -term), click Destroy Task.
       </Alert>
@@ -431,7 +456,7 @@ function mapTaskToProps(task) {
   task.isCleaning = task.lastKnownState && task.lastKnownState.taskState === 'TASK_CLEANING';
 
   const ports = [];
-  if (task.task && task.task.taskRequest.deploy.resources.numPorts > 0) {
+  if (task.task && task.task.taskRequest.deploy.resources && task.task.taskRequest.deploy.resources.numPorts > 0) {
     for (const resource of task.task.mesosTask.resources) {
       if (resource.name === 'ports') {
         for (const range of resource.ranges.range) {

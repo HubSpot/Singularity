@@ -110,7 +110,7 @@ Retrieve the history of a given rack
 - - -
 #### **DELETE** `/api/racks/rack/{rackId}`
 
-Remove a known rack, erasing history. This operation will cancel decomissioning of racks
+Remove a known rack, erasing history. This operation will cancel decommissioning of racks
 
 
 ###### Parameters

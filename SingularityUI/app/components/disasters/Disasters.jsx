@@ -26,16 +26,7 @@ class Disasters extends Component {
       })).isRequired,
       automatedActionsDisabled: PropTypes.bool.isRequired
     }).isRequired,
-    priorityFreeze: PropTypes.shape({
-      priorityFreeze: PropTypes.shape({
-        minimumPriorityLevel: PropTypes.number.isRequired,
-        killTasks: PropTypes.bool.isRequired,
-        message: PropTypes.string,
-        actionId: PropTypes.string
-      }).isRequired,
-      timestamp: PropTypes.number.isRequired,
-      user: PropTypes.string
-    }),
+    priorityFreeze: PropTypes.object,
     user: PropTypes.string,
     fetchDisabledActions: PropTypes.func.isRequired,
     fetchDisastersData: PropTypes.func.isRequired,
@@ -65,11 +56,12 @@ class Disasters extends Component {
 
 function mapStateToProps(state) {
   const user = Utils.maybe(state, ['api', 'user', 'data', 'user', 'name']);
+  const priorityFreeze = Utils.maybe(state.api.priorityFreeze, ['data'], {});
   return {
     user,
     disastersData: state.api.disastersData.data,
     disabledActions: state.api.disabledActions.data,
-    priorityFreeze: state.api.priorityFreeze.data
+    priorityFreeze: _.isEmpty(priorityFreeze) ? {} : priorityFreeze
   };
 }
 

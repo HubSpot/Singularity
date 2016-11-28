@@ -1,5 +1,3 @@
-
-
 import rootComponent from '../../rootComponent';
 
 import LogContainer from './LogContainer';
@@ -12,13 +10,26 @@ const refreshTail = (props) => (dispatch) => {
   const requestId = splits.slice(0, splits.length - 5).join('-');
   const search = props.location.query.search || '';
   const path = props.params.splat.replace(props.params.taskId, '$TASK_ID');
-  const initPromise = dispatch(initialize(requestId, path, search, [props.params.taskId], props.location.query.viewMode || 'split'));
+  const initPromise = dispatch(initialize(requestId, path, search, [props.params.taskId], props.location.query.viewMode || 'split', 'SANDBOX'));
   return initPromise.then(() => {
     dispatch(updateActiveTasks(requestId));
   });
 };
 
 export const Tail = rootComponent(LogContainer, refreshTail, false, false);
+
+const refreshCompressedLog = (props) => (dispatch) => {
+  const splits = props.params.taskId.split('-');
+  const requestId = splits.slice(0, splits.length - 5).join('-');
+  const search = props.location.query.search || '';
+  const path = props.params.splat;
+  const initPromise = dispatch(initialize(requestId, path, search, [props.params.taskId], props.location.query.viewMode || 'split', 'COMPRESSED'));
+  initPromise.then(() => {
+    dispatch(updateActiveTasks(requestId));
+  });
+}
+
+export const CompressedLogView = rootComponent(LogContainer, refreshCompressedLog, false, false);
 
 const refreshAggregateTail = (props) => (dispatch) => {
   const viewMode = props.location.query.viewMode || 'split';
@@ -27,9 +38,9 @@ const refreshAggregateTail = (props) => (dispatch) => {
 
   let initPromise;
   if (taskIds) {
-    initPromise = dispatch(initialize(props.params.requestId, props.params.splat, search, taskIds.split(','), viewMode));
+    initPromise = dispatch(initialize(props.params.requestId, props.params.splat, search, taskIds.split(','), viewMode, 'SANDBOX'));
   } else {
-    initPromise = dispatch(initializeUsingActiveTasks(props.params.requestId, props.params.splat, search, viewMode));
+    initPromise = dispatch(initializeUsingActiveTasks(props.params.requestId, props.params.splat, search, viewMode, 'SANDBOX'));
   }
   initPromise.then(() => {
     dispatch(updateActiveTasks(props.params.requestId));

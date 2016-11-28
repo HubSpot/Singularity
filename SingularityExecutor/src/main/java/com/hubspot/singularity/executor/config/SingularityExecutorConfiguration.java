@@ -121,6 +121,10 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
 
   @NotNull
   @JsonProperty
+  private LogrotateCompressionSettings logrotateCompressionSettings = LogrotateCompressionSettings.empty();
+
+  @NotNull
+  @JsonProperty
   private List<SingularityExecutorLogrotateAdditionalFile> logrotateAdditionalFiles = Collections.emptyList();
 
   /**
@@ -674,6 +678,14 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
     this.cronDirectory = cronDirectory;
   }
 
+  public LogrotateCompressionSettings getLogrotateCompressionSettings() {
+    return logrotateCompressionSettings;
+  }
+
+  public void setLogrotateCompressionSettings(LogrotateCompressionSettings logrotateCompressionSettings) {
+    this.logrotateCompressionSettings = logrotateCompressionSettings;
+  }
+
   @Override
   public String toString() {
     return "SingularityExecutorConfiguration[" +
@@ -701,9 +713,10 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
             ", logrotateCount=" + logrotateCount +
             ", logrotateDateformat='" + logrotateDateformat + '\'' +
             ", logrotateExtrasDateformat='" + logrotateExtrasDateformat + '\'' +
-            ", logrotateAdditionalFiles=" + logrotateAdditionalFiles +
-            ", s3UploaderAdditionalFiles=" + s3UploaderAdditionalFiles +
-            ", tailLogLinesToSave=" + tailLogLinesToSave +
+            ", logrotateAdditionalFiles=" + logrotateAdditionalFiles + '\'' +
+            ", logrotateCompressionSettings='" + logrotateCompressionSettings + '\'' +
+            ", s3UploaderAdditionalFiles='" + s3UploaderAdditionalFiles + '\'' +
+            ", tailLogLinesToSave='" + tailLogLinesToSave + '\'' +
             ", serviceFinishedTailLog='" + serviceFinishedTailLog + '\'' +
             ", s3UploaderKeyPattern='" + s3UploaderKeyPattern + '\'' +
             ", s3UploaderBucket='" + s3UploaderBucket + '\'' +

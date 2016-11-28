@@ -1,7 +1,6 @@
 package com.hubspot.singularity.data.history;
 
 import java.util.Date;
-import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import javax.inject.Singleton;
@@ -13,7 +12,6 @@ import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.config.HistoryPurgingConfiguration;
-import com.hubspot.singularity.data.history.SingularityMappers.SingularityRequestIdCount;
 import com.hubspot.singularity.scheduler.SingularityLeaderOnlyPoller;
 
 @Singleton
@@ -66,7 +64,7 @@ public class SingularityHistoryPurger extends SingularityLeaderOnlyPoller {
       final long startRequestId = System.currentTimeMillis();
 
       historyManager.purgeTaskHistory(requestId, unpurgedCount, historyPurgingConfiguration.getDeleteTaskHistoryAfterTasksPerRequest(), purgeBefore,
-          historyPurgingConfiguration.isDeleteTaskHistoryBytesInsteadOfEntireRow());
+          !historyPurgingConfiguration.isDeleteTaskHistoryBytesInsteadOfEntireRow());
 
       LOG.info("Purged old taskHistory for {} ({} count) in {}", requestId, unpurgedCount, JavaUtils.duration(startRequestId));
     }

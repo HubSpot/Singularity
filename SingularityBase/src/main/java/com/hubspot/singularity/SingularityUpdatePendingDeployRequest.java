@@ -1,6 +1,7 @@
 package com.hubspot.singularity;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.wordnik.swagger.annotations.ApiModelProperty;
 
 public class SingularityUpdatePendingDeployRequest {
   private final String requestId;
@@ -15,14 +16,17 @@ public class SingularityUpdatePendingDeployRequest {
     this.targetActiveInstances = targetActiveInstances;
   }
 
+  @ApiModelProperty(value="Request id", required=true)
   public String getRequestId() {
     return requestId;
   }
 
+  @ApiModelProperty(value="Deploy id", required=true)
   public String getDeployId() {
     return deployId;
   }
 
+  @ApiModelProperty(value="Updated target instance count for the active deploy", required=true)
   public int getTargetActiveInstances() {
     return targetActiveInstances;
   }

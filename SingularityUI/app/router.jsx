@@ -19,8 +19,8 @@ import TaskSearch from './components/taskSearch/TaskSearch';
 import DeployDetail from './components/deployDetail/DeployDetail';
 import RequestForm from './components/requestForm/RequestForm';
 import NewDeployForm from './components/newDeployForm/NewDeployForm';
-import { Tail, AggregateTail } from './components/logs/Tail';
-import TaskInstanceRedirect from './components/requestDetail/TaskInstanceRedirect'
+import { Tail, AggregateTail, CompressedLogView } from './components/logs/Tail';
+import TaskInstanceRedirect from './components/requestDetail/TaskInstanceRedirect';
 import RequestDetailPage from './components/requestDetail/RequestDetailPage';
 import Group from './components/groupDetail/GroupDetail.jsx';
 import Disasters from './components/disasters/Disasters';
@@ -53,6 +53,7 @@ const routes = (
       <Route path=":taskId(/files**)" component={TaskDetail} title={(params) => params.taskId} />
       <Route path=":taskId/tail/**" component={Tail} title={(params) => `Tail of ${getFilenameFromSplat(params.splat)}`} />
       <Route path=":taskId/new-tail/**" component={TaskLogTailerContainer} title={(params) => `Tail of ${getFilenameFromSplat(params.splat)}`} />
+      <Route path=":taskId/view/**" component={CompressedLogView} title={(params) => `Tail of ${getFilenameFromSplat(params.splat)}`} />
       <IndexRoute component={NotFound} title="Not Found" />
     </Route>
     <Route path="new-tail/**" component={CustomLogTailerContainer} title="New Tailer" />
