@@ -590,7 +590,6 @@ public class SingularityDeployBuilder {
       .add("maxTaskRetries", maxTaskRetries)
       .add("shell", shell)
       .add("user", user)
-      .add("ild", build())
       .toString();
   }
 }
