@@ -9,7 +9,7 @@ import FormModal from '../modal/FormModal';
 
 import Messenger from 'messenger';
 import Utils from '../../../utils';
-import uuid from 'node-uuid';
+import uuid from 'uuid';
 
 const LOCAL_STORAGE_AFTER_TRIGGER_VALUE = 'afterRunNowTrigger';
 const LOCAL_STORAGE_TAIL_AFTER_TRIGGER_FILENAME = 'taskRunRedirectFilename';
