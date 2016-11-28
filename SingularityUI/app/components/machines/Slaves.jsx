@@ -10,6 +10,7 @@ import { Link } from 'react-router';
 import { FetchSlaves, FreezeSlave, DecommissionSlave, RemoveSlave, ReactivateSlave } from '../../actions/api/slaves';
 import Column from '../common/table/Column';
 import JSONButton from '../common/JSONButton';
+import { refresh, initialize } from '../../actions/ui/slaves'
 
 const typeName = {
   'active': 'Activated By',
@@ -277,15 +278,4 @@ function mapDispatchToProps(dispatch) {
   };
 }
 
-function initialize(props) {
-  return Promise.all([
-    props.clear(),
-    props.fetchSlaves()
-  ]);
-}
-
-function refresh(props) {
-  return props.fetchSlaves();
-}
-
-export default connect(mapStateToProps, mapDispatchToProps)(rootComponent(Slaves, 'Slaves', refresh, true, true, initialize));
+export default connect(mapStateToProps, mapDispatchToProps)(rootComponent(Slaves, refresh, true, true, initialize));

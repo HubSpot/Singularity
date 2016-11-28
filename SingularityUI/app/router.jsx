@@ -28,36 +28,40 @@ import TaskLogTailerContainer from './containers/TaskLogTailerContainer';
 import RequestLogTailerContainer from './containers/RequestLogTailerContainer';
 import CustomLogTailerContainer from './containers/CustomLogTailerContainer';
 
+const getFilenameFromSplat = (splat) => _.last(splat.split('/'));
+
 const routes = (
   <Route path="/" component={Application}>
-    <IndexRoute component={DashboardPage} />
-    <Route path="status" component={StatusPage} />
-    <Route path="requests/new" component={RequestForm} />
-    <Route path="requests/edit/:requestId" component={RequestForm} />
-    <Route path="requests(/:state)(/:subFilter)(/:searchFilter)" component={RequestsPage} />
-    <Route path="group/:groupId" component={Group} />
+    <IndexRoute component={DashboardPage} title="Dashboard" />
+    <Route path="status" component={StatusPage} title="Status" />
+    <Route path="requests/new" component={RequestForm} title="New Request" />
+    <Route path="requests/edit/:requestId" component={RequestForm} title="New or Edit Request" />
+    <Route path="requests(/:state)(/:subFilter)(/:searchFilter)" component={RequestsPage} title="Requests" />
+    <Route path="group/:groupId" component={Group} title={(params) => `Group ${params.groupId}`} />
     <Route path="request">
-      <Route path=":requestId" component={RequestDetailPage} />
-      <Route path=":requestId/task-search" component={TaskSearch} />
-      <Route path=":requestId/deploy" component={NewDeployForm} />
-      <Route path=":requestId/deploy/:deployId" component={DeployDetail} />
-      <Route path=":requestId/tail/**" component={AggregateTail} />
-      <Route path=":requestId/new-tail/**" component={RequestLogTailerContainer} />
+      <Route path=":requestId" component={RequestDetailPage} title={(params) => params.requestId} />
+      <Route path=":requestId/task-search" component={TaskSearch} title="Task Search" />
+      <Route path=":requestId/deploy" component={NewDeployForm} title="New Deploy" />
+      <Route path=":requestId/deploy/:deployId" component={DeployDetail} title={(params) => `Deploy ${params.deployId}`} />
+      <Route path=":requestId/tail/**" component={AggregateTail} title={(params) => `Tail of ${getFilenameFromSplat(params.splat)}`} />
+      <Route path=":requestId/new-tail/**" component={RequestLogTailerContainer} title={(params) => `Tail of ${getFilenameFromSplat(params.splat)}`} />
       <Route path=":requestId/instance/:instanceNo" component={TaskInstanceRedirect} />
+      <IndexRoute component={NotFound} title="Not Found" />
     </Route>
-    <Route path="tasks(/:state)(/:requestsSubFilter)(/:searchFilter)" component={TasksPage} />
+    <Route path="tasks(/:state)(/:requestsSubFilter)(/:searchFilter)" component={TasksPage} title="Tasks" />
     <Route path="task">
-      <Route path=":taskId(/files**)" component={TaskDetail} />
-      <Route path=":taskId/tail/**" component={Tail} />
-      <Route path=":taskId/new-tail/**" component={TaskLogTailerContainer} />
+      <Route path=":taskId(/files**)" component={TaskDetail} title={(params) => params.taskId} />
+      <Route path=":taskId/tail/**" component={Tail} title={(params) => `Tail of ${getFilenameFromSplat(params.splat)}`} />
+      <Route path=":taskId/new-tail/**" component={TaskLogTailerContainer} title={(params) => `Tail of ${getFilenameFromSplat(params.splat)}`} />
+      <IndexRoute component={NotFound} title="Not Found" />
     </Route>
-    <Route path="new-tail/**" component={CustomLogTailerContainer} />
-    <Route path="racks(/:state)" component={Racks} />
-    <Route path="slaves(/:state)" component={Slaves} />
-    <Route path="webhooks" component={Webhooks} />
-    <Route path="task-search" component={TaskSearch} />
-    <Route path="disasters" component={Disasters} />
-    <Route path="*" component={NotFound} />
+    <Route path="new-tail/**" component={CustomLogTailerContainer} title="New Tailer" />
+    <Route path="racks(/:state)" component={Racks} title="Racks" />
+    <Route path="slaves(/:state)" component={Slaves} title="Slaves" />
+    <Route path="webhooks" component={Webhooks} title="Webhooks" />
+    <Route path="task-search" component={TaskSearch} title="Task Search" />
+    <Route path="disasters" component={Disasters} title="Disasters" />
+    <Route path="*" component={NotFound} title="Not Found" />
   </Route>);
 
 const AppRouter = (props) => {

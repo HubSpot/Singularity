@@ -20,6 +20,7 @@ import timeZones from '../../timeZones';
 import classNames from 'classnames';
 import {FIELDS_BY_REQUEST_TYPE, INDEXED_FIELDS} from './fields';
 import { FetchRacks } from '../../actions/api/racks';
+import { refresh } from '../../actions/ui/requestForm';
 
 const QUARTZ_SCHEDULE = 'quartzSchedule';
 const CRON_SCHEDULE = 'cronSchedule';
@@ -742,22 +743,7 @@ function mapDispatchToProps(dispatch, ownProps) {
   };
 }
 
-function refresh(props) {
-  const promises = [];
-
-  promises.push(props.fetchRacks());
-  if (props.params.requestId) {
-    promises.push(props.fetchRequest(props.params.requestId));
-  } else {
-    promises.push(props.clearRequestData());
-  }
-  promises.push(props.clearSaveRequestData());
-  promises.push(props.clearForm(FORM_ID));
-
-  return Promise.all(promises);
-}
-
 export default withRouter(connect(
   mapStateToProps,
   mapDispatchToProps
-)(rootComponent(RequestForm, 'New or Edit Request', refresh, false)));
+)(rootComponent(RequestForm, (props) => refresh(props.params.requestId, FORM_ID), false)));

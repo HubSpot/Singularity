@@ -3,7 +3,7 @@ import { connect } from 'react-redux';
 import classNames from 'classnames';
 import { Link } from 'react-router';
 import rootComponent from '../../rootComponent';
-import { FetchSingularityStatus } from '../../actions/api/state';
+import { refresh } from '../../actions/ui/status';
 
 import HostStates from './HostStates';
 import StatusList from './StatusList';
@@ -302,15 +302,8 @@ const StatusPage = (props) => {
 };
 
 StatusPage.propTypes = {
-  fetchStatus: React.PropTypes.func.isRequired,
   status: React.PropTypes.object
 };
-
-function mapDispatchToProps(dispatch) {
-  return {
-    fetchStatus: () => dispatch(FetchSingularityStatus.trigger())
-  };
-}
 
 function mapStateToProps(state) {
   return {
@@ -318,8 +311,6 @@ function mapStateToProps(state) {
   };
 }
 
-function refresh(props) {
-  return props.fetchStatus();
-}
-
-export default connect(mapStateToProps, mapDispatchToProps)(rootComponent(StatusPage, 'Status', refresh));
+export default connect((state) => ({
+  status: state.api.status.data
+}))(rootComponent(StatusPage, refresh));

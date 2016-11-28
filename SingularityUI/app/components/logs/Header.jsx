@@ -40,6 +40,12 @@ class Header extends React.Component {
     );
   }
 
+  renderSwitchToNewTailer() {
+    if ((this.props.taskGroupCount === 1) && (true)) {
+      return (<Link to={`/task/${this.props.firstTaskId}/new-tail/${this.props.path}`}>Switch to new tailer</Link>);
+    }
+  }
+
   render() {
     return (
       <div className="tail-header">
@@ -60,6 +66,7 @@ class Header extends React.Component {
             </ul>
           </div>
           <div className="col-md-3 hidden-xs tail-buttons">
+            {this.renderSwitchToNewTailer()}
             <SearchDropdown />
             <TasksDropdown />
             <ColorDropdown />
@@ -87,6 +94,7 @@ function mapStateToProps(state) {
   return {
     taskGroupCount: state.taskGroups.length,
     multipleTasks: (state.taskGroups.length > 1) || ((state.taskGroups.length > 0) && (state.taskGroups[0].taskIds.length > 1)),
+    firstTaskId: state.taskGroups[0].taskIds[0],
     path: state.path,
     viewMode: state.viewMode,
     requestId: state.activeRequest.requestId,

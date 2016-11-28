@@ -13,6 +13,7 @@ import CheckboxFormGroup from '../common/formItems/formGroups/CheckboxFormGroup'
 import { ModifyField, ClearForm } from '../../actions/ui/form';
 import { SaveDeploy } from '../../actions/api/deploys';
 import { FetchRequest } from '../../actions/api/requests';
+import { refresh } from '../../actions/ui/newDeployForm';
 
 import {
   FIELDS, ARTIFACT_FIELDS, DOCKER_PORT_MAPPING_FIELDS, DOCKER_VOLUME_FIELDS,
@@ -1486,7 +1487,7 @@ function mapDispatchToProps(dispatch, ownProps) {
       return dispatch(FetchRequest.trigger(requestId, true));
     },
     clearForm() {
-      return dispatch(ClearForm('newDeployForm'));
+      return dispatch(ClearForm(FORM_ID));
     },
     clearSaveDeployData() {
       return dispatch(SaveDeploy.clearData());
@@ -1494,13 +1495,4 @@ function mapDispatchToProps(dispatch, ownProps) {
   };
 }
 
-function refresh(props) {
-  const promises = [];
-  promises.push(props.fetchRequest(props.params.requestId));
-  if (!props.form) {
-    promises.push(props.clearForm());
-  }
-  return Promise.all(promises);
-}
-
-export default withRouter(connect(mapStateToProps, mapDispatchToProps)(rootComponent(NewDeployForm, 'New Deploy', refresh)));
+export default withRouter(connect(mapStateToProps, mapDispatchToProps)(rootComponent(NewDeployForm, (props) => refresh(props.params.requestId, FORM_ID))));
