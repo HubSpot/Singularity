@@ -14,7 +14,6 @@ module.exports = function(options) {
   var webpackHMRPath = options.webpackHMRPath || '/__webpack_hmr';
   var publicPath = options.publicPath || '/static/';
 
-
   var extractCSS = new ExtractTextPlugin('css/app.css', {
     disable: isDebug
   });
@@ -65,7 +64,7 @@ module.exports = function(options) {
 
     // Developer tool to enhance debugging, source maps
     // http://webpack.github.io/docs/configuration.html#devtool
-    devtool: isDebug ? 'source-map' : false,
+    devtool: isDebug ? 'eval-source-map' : 'source-map',
 
     // What information should be printed to the console
     stats: {
