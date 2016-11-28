@@ -478,23 +478,4 @@ function mapDispatchToProps(dispatch) {
   };
 }
 
-<<<<<<< HEAD
-function initialize(props) {
-  return Promise.all([
-    props.clear(),
-    props.fetchSlaves(),
-    props.fetchExpiringSlaveStates()
-  ]);
-}
-
-function refresh(props) {
-  return Promise.all([
-    props.fetchSlaves(),
-    props.fetchExpiringSlaveStates()
-  ]);
-}
-
-export default connect(mapStateToProps, mapDispatchToProps)(rootComponent(Slaves, 'Slaves', refresh, true, true, initialize));
-=======
 export default connect(mapStateToProps, mapDispatchToProps)(rootComponent(Slaves, refresh, true, true, initialize));
->>>>>>> tailer
