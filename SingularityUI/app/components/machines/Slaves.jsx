@@ -11,6 +11,7 @@ import { FetchSlaves, FreezeSlave, DecommissionSlave, RemoveSlave, ReactivateSla
 import Column from '../common/table/Column';
 import JSONButton from '../common/JSONButton';
 import CustomizeSlavesTableButton from './CustomizeSlavesTableButton';
+import { refresh, initialize } from '../../actions/ui/slaves'
 
 const typeName = {
   'active': 'Activated By',
@@ -477,19 +478,4 @@ function mapDispatchToProps(dispatch) {
   };
 }
 
-function initialize(props) {
-  return Promise.all([
-    props.clear(),
-    props.fetchSlaves(),
-    props.fetchExpiringSlaveStates()
-  ]);
-}
-
-function refresh(props) {
-  return Promise.all([
-    props.fetchSlaves(),
-    props.fetchExpiringSlaveStates()
-  ]);
-}
-
-export default connect(mapStateToProps, mapDispatchToProps)(rootComponent(Slaves, 'Slaves', refresh, true, true, initialize));
+export default connect(mapStateToProps, mapDispatchToProps)(rootComponent(Slaves, refresh, true, true, initialize));

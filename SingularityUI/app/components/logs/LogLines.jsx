@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { PropTypes, Component } from 'react';
 import LogLine from './LogLine';
 import Humanize from 'humanize-plus';
 import classNames from 'classnames';
@@ -6,7 +6,7 @@ import classNames from 'classnames';
 import { connect } from 'react-redux';
 import { taskGroupTop, taskGroupBottom } from '../../actions/log';
 
-function sum (numbers) {
+function sum(numbers) {
   let total = 0;
   for (let i = 0; i < numbers.length; i++) {
     total += numbers[i];
@@ -14,16 +14,12 @@ function sum (numbers) {
   return total;
 }
 
-class LogLines extends React.Component {
+class LogLines extends Component {
   componentDidMount() {
     window.addEventListener('resize', this.handleScroll.bind(this));
   }
 
-  componentWillUnmount() {
-    window.removeEventListener('resize', this.handleScroll.bind(this));
-  }
-
-  componentDidUpdate(prevProps, prevState) {
+  componentDidUpdate(prevProps) {
     if (prevProps.updatedAt !== this.props.updatedAt) {
       if (this.refs.tailContents && this.props.tailing) {
         this.refs.tailContents.scrollTop = this.refs.tailContents.scrollHeight;
@@ -35,16 +31,8 @@ class LogLines extends React.Component {
     }
   }
 
-  renderLoadingPrevious() {
-    if (this.props.initialDataLoaded) {
-      if (!this.props.reachedStartOfFile) {
-        if (this.props.search) {
-          return <div>Searching for '{this.props.search}'... ({Humanize.filesize(this.props.bytesRemainingBefore)} remaining)</div>;
-        } else {
-          return <div>Loading previous... ({Humanize.filesize(this.props.bytesRemainingBefore)} remaining)</div>;
-        }
-      }
-    }
+  componentWillUnmount() {
+    window.removeEventListener('resize', this.handleScroll.bind(this));
   }
 
   renderLogLines() {
@@ -74,19 +62,41 @@ class LogLines extends React.Component {
       if (this.props.reachedEndOfFile) {
         if (this.props.search) {
           return <div>Tailing for '{this.props.search}'...</div>;
-        } else {
-          return <div>Tailing...</div>;
         }
-      } else {
+        return <div>Tailing...</div>;
+      }
+      if (this.props.search) {
+        return <div>Searching for '{this.props.search}'... ({Humanize.filesize(this.props.bytesRemainingAfter)} remaining)</div>;
+      }
+      return <div>Loading more... ({Humanize.filesize(this.props.bytesRemainingAfter)} remaining)</div>;
+    }
+    return null;
+  }
+
+  renderLoadingPrevious() {
+    if (this.props.initialDataLoaded) {
+      if (!this.props.reachedStartOfFile) {
         if (this.props.search) {
-          return <div>Searching for '{this.props.search}'... ({Humanize.filesize(this.props.bytesRemainingAfter)} remaining)</div>;
-        } else {
-          return <div>Loading more... ({Humanize.filesize(this.props.bytesRemainingAfter)} remaining)</div>;
+          return <div>Searching for '{this.props.search}'... ({Humanize.filesize(this.props.bytesRemainingBefore)} remaining)</div>;
         }
+        return <div>Loading previous... ({Humanize.filesize(this.props.bytesRemainingBefore)} remaining)</div>;
       }
     }
   }
 
+  renderLogLines() {
+    return this.props.logLines.map(({data, offset, taskId, timestamp}) => (
+      <LogLine
+        content={data}
+        key={`${taskId}_${offset}`}
+        offset={offset}
+        taskId={taskId}
+        timestamp={timestamp}
+        isHighlighted={offset === this.props.initialOffset}
+        color={this.props.colorMap[taskId]}
+      />
+    ));
+  }
 
   handleScroll() {
     if (!this.refs.tailContents) return;
@@ -103,6 +113,7 @@ class LogLines extends React.Component {
     } else {
       this.props.taskGroupBottom(this.props.taskGroupId, false);
     }
+    return null;
   }
 
   render() {
@@ -118,20 +129,29 @@ class LogLines extends React.Component {
 }
 
 LogLines.propTypes = {
-  taskGroupTop: React.PropTypes.func.isRequired,
-  taskGroupBottom: React.PropTypes.func.isRequired,
+  taskGroupTop: PropTypes.func.isRequired,
+  taskGroupBottom: PropTypes.func.isRequired,
 
-  taskGroupId: React.PropTypes.number.isRequired,
-  logLines: React.PropTypes.array.isRequired,
+  taskGroupId: PropTypes.number.isRequired,
+  logLines: PropTypes.array.isRequired,
   compressedLog: React.PropTypes.bool.isRequired,
-  initialDataLoaded: React.PropTypes.bool.isRequired,
-  reachedStartOfFile: React.PropTypes.bool.isRequired,
-  reachedEndOfFile: React.PropTypes.bool.isRequired,
-  bytesRemainingBefore: React.PropTypes.number.isRequired,
-  bytesRemainingAfter: React.PropTypes.number.isRequired,
-  activeColor: React.PropTypes.string.isRequired,
 
-  fileNotFound: React.PropTypes.element
+  initialDataLoaded: PropTypes.bool.isRequired,
+  reachedStartOfFile: PropTypes.bool.isRequired,
+  reachedEndOfFile: PropTypes.bool.isRequired,
+  bytesRemainingBefore: PropTypes.number.isRequired,
+  bytesRemainingAfter: PropTypes.number.isRequired,
+  activeColor: PropTypes.string.isRequired,
+  search: PropTypes.string,
+  initialOffset: PropTypes.number,
+  colorMap: PropTypes.object,
+  terminated: PropTypes.bool,
+  prependedLineCount: PropTypes.number,
+  linesRemovedFromTop: PropTypes.number,
+  tailing: PropTypes.bool,
+
+  fileNotFound: PropTypes.element,
+  updatedAt: PropTypes.number
 };
 
 function mapStateToProps(state, ownProps) {

@@ -4,7 +4,7 @@ import { Link } from 'react-router';
 import { Glyphicon, Label } from 'react-bootstrap';
 import rootComponent from '../../rootComponent';
 import { FetchTaskSearchParams } from '../../actions/api/history';
-import { UpdateFilter } from '../../actions/ui/taskSearch';
+import { UpdateFilter, refresh } from '../../actions/ui/taskSearch';
 
 import Breadcrumbs from '../common/Breadcrumbs';
 import TaskSearchFilters from './TaskSearchFilters';
@@ -213,12 +213,4 @@ function mapDispatchToProps(dispatch) {
   };
 }
 
-function refresh(props) {
-  FetchTaskSearchParams.clear();
-  const promises = [];
-  promises.push(props.fetchTaskHistory(INITIAL_TASKS_PER_PAGE, 1, { requestId: props.params.requestId || undefined }));
-  promises.push(props.updateFilter({ requestId: props.params.requestId || undefined }));
-  return Promise.all(promises);
-}
-
-export default connect(mapStateToProps, mapDispatchToProps)(rootComponent(TaskSearch, 'Task Search', refresh, false));
+export default connect(mapStateToProps, mapDispatchToProps)(rootComponent(TaskSearch, (props) => refresh(Utils.maybe(props, ['params', 'requestId'], undefined), INITIAL_TASKS_PER_PAGE, 1), false));

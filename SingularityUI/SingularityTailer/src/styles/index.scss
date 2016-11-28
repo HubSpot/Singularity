@@ -1,0 +1,50 @@
+section.log-pane {
+  align-items: stretch;
+  display: flex;
+  flex-flow: column;
+  width: 100%;
+
+  overflow: scroll;
+  // will repaint on scroll if you don't put this in!!!
+  transform: translateZ(0);
+
+  font-family: Consolas, "Liberation Mono", Courier, monospace;
+
+  header {
+    flex: 0 1 auto;
+  }
+
+  div.log-line-wrapper {
+    flex: 1 1 auto;
+    min-height: 0; // firefox
+  }
+
+  .render-group {
+  }
+
+  .log-row {
+    font-size: 12px;
+    line-height: 12px;
+    height: 14px;
+    padding: 0;
+    white-space: pre;
+
+    span:last-child {
+      padding-right: 10px;
+    }
+
+    &.missing {
+      background-color: rgba(255, 255, 255, 0.1);
+    }
+
+    &.loading {
+      background-color: rgba(255, 255, 255, 0.4);
+    }
+  }
+
+  footer {
+    flex: 0 1 40px;
+  }
+}
+
+@import './ansi';
