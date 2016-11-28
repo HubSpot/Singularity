@@ -9,9 +9,9 @@ import AppRouter from './router';
 import configureStore from 'store';
 import { FetchUser } from 'actions/api/auth';
 import { FetchGroups } from 'actions/api/requestGroups';
+import { actions as tailerActions } from 'singularityui-tailer';
 import { AddStarredRequests } from 'actions/api/users';
 import Utils from './utils';
-import { actions as tailerActions } from 'singularityui-tailer';
 
 // Set up third party configurations
 import { loadThirdParty } from 'thirdPartyConfigurations';
@@ -32,7 +32,47 @@ const HMRContainer = (module.hot)
   ? AppContainer
   : ({ children }) => (children);
 
-function renderApiRootForm() {
+document.addEventListener('DOMContentLoaded', () => {
+  loadThirdParty();
+
+  if (window.config.apiRoot) {
+    // set up Redux store
+    const store = configureStore();
+
+    store.dispatch(tailerActions.sandboxSetApiRoot(config.apiRoot));
+
+    // set up user
+    let userId;
+    window.app = {};
+    window.app.setupUser = () => store.dispatch(FetchUser.trigger());
+    window.app.setupUser().then(() => {
+      if (!store.getState().api.user.data.user) {
+        return renderUserIdForm();
+      } else {
+        userId = store.getState().api.user.data.user.id
+        // Set up starred requests
+        maybeImportStarredRequests(store, store.getState().api.user, userId);
+      }
+    });
+
+    // set up request groups
+    store.dispatch(FetchGroups.trigger([404, 500]));
+
+    // set up hot module reloading
+    if (module.hot) {
+      module.hot.accept('./router', () => {
+        const NextAppRouter = require('./router').default;
+        return ReactDOM.render(<HMRContainer><NextAppRouter store={store} /></HMRContainer>, document.getElementById('root'));
+      });
+    }
+
+    // Render the page content
+    return ReactDOM.render(<HMRContainer><AppRouter store={store} /></HMRContainer>, document.getElementById('root'), () => {
+      // hide loading animation
+      document.getElementById('static-loader').remove();
+    });
+  }
+
   return ReactDOM.render(
     <FormModal
       name="Set API Root"
@@ -64,7 +104,7 @@ function renderApiRootForm() {
       </div>
     </FormModal>, document.getElementById('root')
   ).show();
-}
+});
 
 function setUserIdLocal(data) {
   if (data.userId) {
@@ -116,46 +156,3 @@ function maybeImportStarredRequests(store, userState, userId) {
     });
   }
 }
-
-document.addEventListener('DOMContentLoaded', () => {
-  if (window.config.apiRoot) {
-    // set up Redux store
-    const store = configureStore();
-
-    // set up tailer
-    store.dispatch(tailerActions.sandboxSetApiRoot(config.apiRoot));
-
-    // set up user
-    let userId;
-    window.app = {};
-    window.app.setupUser = () => store.dispatch(FetchUser.trigger());
-    window.app.setupUser().then(() => {
-      if (!store.getState().api.user.data.user) {
-        return renderUserIdForm();
-      } else {
-        userId = store.getState().api.user.data.user.id
-        // Set up starred requests
-        maybeImportStarredRequests(store, store.getState().api.user, userId);
-      }
-    });
-
-    // set up request groups
-    store.dispatch(FetchGroups.trigger([404, 500]));
-
-    // set up hot module reloading
-    if (module.hot) {
-      module.hot.accept('./router', () => {
-        const NextAppRouter = require('./router').default;
-        return ReactDOM.render(<HMRContainer><NextAppRouter store={store} /></HMRContainer>, document.getElementById('root'));
-      });
-    }
-
-    // Render the page content
-    return ReactDOM.render(<HMRContainer><AppRouter store={store} /></HMRContainer>, document.getElementById('root'), () => {
-      // hide loading animation
-      document.getElementById('static-loader').remove();
-    });
-  }
-
-  return renderApiRootForm();
-});

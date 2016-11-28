@@ -1,6 +1,6 @@
 import React, { PropTypes } from 'react';
 import Utils from '../../utils';
-import { FetchWebhooks } from '../../actions/api/webhooks';
+import { refresh } from '../../actions/ui/webhooks';
 import { connect } from 'react-redux';
 import Column from '../common/table/Column';
 import UITable from '../common/table/UITable';
@@ -97,7 +97,6 @@ Webhooks.propTypes = {
     queueSize: PropTypes.number
   })).isRequired,
   user: PropTypes.string,
-  fetchWebhooks: PropTypes.func.isRequired
 };
 
 function mapStateToProps(state) {
@@ -108,14 +107,4 @@ function mapStateToProps(state) {
   };
 }
 
-function mapDispatchToProps(dispatch) {
-  return {
-    fetchWebhooks: () => dispatch(FetchWebhooks.trigger())
-  };
-}
-
-function refresh(props) {
-  return props.fetchWebhooks();
-}
-
-export default connect(mapStateToProps, mapDispatchToProps)(rootComponent(Webhooks, 'Webhooks', refresh));
+export default connect(mapStateToProps)(rootComponent(Webhooks, refresh));

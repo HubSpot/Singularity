@@ -14,6 +14,7 @@ import {
 } from '../../actions/api/requests';
 import { FetchRequestRunHistory } from '../../actions/api/history';
 import { FetchTaskFiles } from '../../actions/api/sandbox';
+import { refresh } from '../../actions/ui/requests';
 
 import UITable from '../common/table/UITable';
 import RequestFilters from './RequestFilters';
@@ -178,9 +179,4 @@ function mapDispatchToProps(dispatch) {
   };
 }
 
-function refresh(props) {
-  const state = props.params.state || 'all';
-  return props.fetchFilter(state);
-}
-
-export default connect(mapStateToProps, mapDispatchToProps)(rootComponent(withRouter(RequestsPage), 'Requests', refresh));
+export default connect(mapStateToProps, mapDispatchToProps)(rootComponent(withRouter(RequestsPage), (props) => refresh(props.params.state || 'all')));

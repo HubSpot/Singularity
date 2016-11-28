@@ -54,8 +54,9 @@ class LogLine extends React.Component {
       highlightLine: this.props.isHighlighted
     });
 
-    const linkStyle = this.props.compressedLog ? 'view' : 'tail';
-
+    const linkStyle = this.props.compressedLog
+      ? 'view'
+      : 'tail';
     return (
       <div className={divClass} style={{ backgroundColor: this.props.color }}>
         <a
@@ -77,7 +78,7 @@ class LogLine extends React.Component {
 
 LogLine.propTypes = {
   offset: React.PropTypes.number.isRequired,
-  compressedLog: React.PropTypes.bool.isRequired,
+  compressedLog: React.PropTypes.bool,
   isHighlighted: React.PropTypes.bool.isRequired,
   content: React.PropTypes.string.isRequired,
   taskId: React.PropTypes.string.isRequired,

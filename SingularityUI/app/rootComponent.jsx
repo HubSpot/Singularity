@@ -2,11 +2,15 @@ import React, { PropTypes, Component } from 'react';
 import classNames from 'classnames';
 import { NotFoundNoRoot } from 'components/common/NotFound';
 
-const rootComponent = (Wrapped, title, refresh = _.noop, refreshInterval = true, pageMargin = true, initialize) => class extends Component {
+const rootComponent = (Wrapped, refresh = null, refreshInterval = true, pageMargin = true, initialize = null) => class extends Component {
 
   static propTypes = {
     notFound: PropTypes.bool,
     pathname: PropTypes.string
+  }
+
+  static contextTypes = {
+    store: PropTypes.object
   }
 
   constructor(props) {
@@ -18,14 +22,27 @@ const rootComponent = (Wrapped, title, refresh = _.noop, refreshInterval = true,
      Maybe revisit this in the future. (see branch rootcomponent_redux for implementation)
     */
     this.state = {
-      loading: refresh !== _.noop
+      loading: refresh !== null
     };
   }
 
-  componentWillMount() {
-    this.setTitle();
+  dispatchRefresh() {
+    return (refresh !== null)
+      ? this.context.store.dispatch(refresh(this.props))
+      : Promise.resolve();
+  }
 
-    const promise = initialize ? initialize(this.props) : refresh(this.props);
+  dispatchInitialize() {
+    return (initialize !== null)
+      ? this.context.store.dispatch(initialize(this.props))
+      : Promise.resolve();
+  }
+
+  componentWillMount() {
+    const promise = (initialize !== null)
+      ? this.dispatchInitialize()
+      : this.dispatchRefresh();
+
     if (promise) {
       promise.then(() => {
         if (!this.unmounted) {
@@ -66,7 +83,7 @@ const rootComponent = (Wrapped, title, refresh = _.noop, refreshInterval = true,
   }
 
   handleFocus() {
-    const promise = refresh(this.props);
+    const promise = this.dispatchRefresh();
     if (promise) {
       promise.catch((reason) => setTimeout(() => { throw new Error(reason); }));
     }
@@ -75,7 +92,7 @@ const rootComponent = (Wrapped, title, refresh = _.noop, refreshInterval = true,
 
   startRefreshInterval() {
     this.refreshInterval = setInterval(() => {
-      const promise = refresh(this.props);
+      const promise = this.dispatchRefresh();
       if (promise) {
         promise.catch((reason) => setTimeout(() => { throw new Error(reason); }));
       }
@@ -86,21 +103,14 @@ const rootComponent = (Wrapped, title, refresh = _.noop, refreshInterval = true,
     clearInterval(this.refreshInterval);
   }
 
-  setTitle() {
-    const titleString = typeof title === 'function' ? title(this.props) : title;
-    document.title = `${titleString} - ${config.title}`;
-  }
-
   render() {
     if (this.props.notFound) {
-      document.title = 'Not Found';
       return (
         <div className={classNames({'page container-fluid': pageMargin})}>
           <NotFoundNoRoot location={{pathname: this.props.pathname}} />
         </div>
       );
     }
-    this.setTitle();
     const loader = this.state.loading && <div className="page-loader fixed" />;
     const page = !this.state.loading && <Wrapped {...this.props} />;
     return (

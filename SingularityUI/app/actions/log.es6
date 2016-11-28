@@ -22,64 +22,51 @@ let fetchData = function(taskId, path, logType, offset = undefined, length = 0, 
   }
 };
 
-const fetchTaskHistory = taskId =>
-  $.ajax(
-    {url: `${ config.apiRoot }/history/task/${ taskId }`})
-;
+const fetchTaskHistory = (taskId) =>
+  $.ajax({url: `${ config.apiRoot }/history/task/${ taskId }`});
 
-export const initializeUsingActiveTasks = (requestId, path, search, viewMode, logType) =>
-  function(dispatch) {
-    let deferred = Q.defer();
-    fetchTasksForRequest(requestId).done(function(tasks) {
-      let taskIds = _.sortBy(_.pluck(tasks, 'taskId'), taskId => taskId.instanceNo).map(taskId => taskId.id);
-      return dispatch(initialize(requestId, path, search, taskIds, viewMode, logType)).then(() => deferred.resolve());
-    });
-    return deferred.promise;
-  }
-;
+export const initializeUsingActiveTasks = (requestId, path, search, viewMode, logType) => (dispatch) => {
+  return fetchTasksForRequest(requestId).then((tasks) => {
+    const taskIds = _.sortBy(_.pluck(tasks, 'taskId'), taskId => taskId.instanceNo).map(taskId => taskId.id);
+    return dispatch(initialize(requestId, path, search, taskIds, viewMode, logType));
+  });
+};
 
-export const initialize = (requestId, path, search, taskIds, viewMode, logType) =>
-  function(dispatch, getState) {
-    let taskIdGroups;
-    if (viewMode === 'unified') {
-      taskIdGroups = [taskIds];
-    } else {
-      taskIdGroups = taskIds.map(taskId => [taskId]);
-    }
+export const initialize = (requestId, path, search, taskIds, viewMode, logType) => (dispatch, getState) => {
+  const taskIdGroups = viewMode === 'unified'
+    ? [taskIds]
+    : taskIds.map(taskId => [taskId]);
 
-    dispatch(init(requestId, taskIdGroups, path, search, viewMode, logType));
+  dispatch(init(requestId, taskIdGroups, path, search, viewMode, logType));
 
-    let groupPromises = taskIdGroups.map(function(taskIds, taskGroupId) {
-      let taskInitPromises = taskIds.map(function(taskId) {
-        let taskInitDeferred = Q.defer();
-        let resolvedPath = path.replace('$TASK_ID', taskId);
-        fetchData(taskId, resolvedPath, logType).done(function({offset}) {
-          dispatch(initTask(taskId, offset, resolvedPath, true, false));
+  return Promise.all(taskIdGroups.map(function(taskIds, taskGroupId) {
+    let taskInitPromises = taskIds.map(function(taskId) {
+      let taskInitDeferred = Q.defer();
+      let resolvedPath = path.replace('$TASK_ID', taskId);
+      fetchData(taskId, resolvedPath, logType).done(function({offset}) {
+        dispatch(initTask(taskId, offset, resolvedPath, true, false));
+        return taskInitDeferred.resolve();
+      })
+      .error(function({status}) {
+        if (status === 404) {
+          dispatch(taskFileDoesNotExist(taskGroupId, taskId));
           return taskInitDeferred.resolve();
-        })
-        .error(function({status}) {
-          if (status === 404) {
-            dispatch(taskFileDoesNotExist(taskGroupId, taskId));
-            return taskInitDeferred.resolve();
-          } else if (status === 400 && logType == 'COMPRESSED') {
-            dispatch(taskFileInvalidCompression(taskGroupId, taskId));
-          } else {
-            return taskInitDeferred.reject();
-          }
-        });
-        return taskInitDeferred.promise;
+        } else if (status === 400 && logType == 'COMPRESSED') {
+          dispatch(taskFileInvalidCompression(taskGroupId, taskId));
+        } else {
+          return taskInitDeferred.reject();
+        }
       });
-
-      let taskStatusPromises = taskIds.map(taskId => dispatch(updateTaskStatus(taskGroupId, taskId)));
-
-      return Promise.all(taskInitPromises, taskStatusPromises).then(() =>
-        dispatch(taskGroupFetchPrevious(taskGroupId)).then(() => dispatch(taskGroupReady(taskGroupId)))
-      );
+      return taskInitDeferred.promise;
     });
 
-    return Promise.all(groupPromises);
-  }
-;
+    let taskStatusPromises = taskIds.map(taskId => dispatch(updateTaskStatus(taskGroupId, taskId)));
+
+    return Promise.all(taskInitPromises, taskStatusPromises).then(() =>
+      dispatch(taskGroupFetchPrevious(taskGroupId)).then(() => dispatch(taskGroupReady(taskGroupId)))
+    );
+  }));
+};
 
 export const init = (requestId, taskIdGroups, path, search, viewMode, logType) =>
   ({
@@ -162,11 +149,10 @@ export const taskFilesize = (taskId, filesize) =>
     type: 'LOG_TASK_FILESIZE'
   });
 
-export const updateFilesizes = () =>
-  function(dispatch, getState) {
-    let {tasks, logType} = getState();
-    for (let taskId of tasks) {
-      fetchData(taskId, tasks[taskId.path], logType).done(({offset}) => {
+export const updateFilesizes = () => (dispatch, getState) => {
+    const tasks = getState();
+    for (const taskId of tasks) {
+      fetchData(taskId, tasks[taskId.path]).done(({offset}) => {
         dispatch(taskFilesize(taskId, offset));
       });
     }
@@ -235,46 +221,46 @@ export const taskGroupFetchNext = taskGroupId =>
     });
   };
 
-export const taskGroupFetchPrevious = taskGroupId =>
-  function(dispatch, getState) {
-    let {taskGroups, logRequestLength, maxLines, logType} = getState();
+export const taskGroupFetchPrevious = (taskGroupId) => (dispatch, getState) => {
+  const state = getState();
+  const {taskGroups, logRequestLength, maxLines, logType} = state;
 
-    const taskGroup = taskGroups[taskGroupId];
-    let tasks = getTasks(taskGroup, state.tasks);
+  const taskGroup = taskGroups[taskGroupId];
+  let tasks = getTasks(taskGroup, state.tasks);
 
-    // bail early if all tasks are at the top
-    if (_.all(tasks.map((task) => task.minOffset === 0))) {
-      return Promise.resolve();
-    }
+  // bail early if all tasks are at the top
+  if (_.all(tasks.map((task) => task.minOffset === 0))) {
+    return Promise.resolve();
+  }
 
-    // bail early if there's already a pending request
-    if (taskGroup.pendingRequests) {
-      return Promise.resolve();
-    }
+  // bail early if there's already a pending request
+  if (taskGroup.pendingRequests) {
+    return Promise.resolve();
+  }
 
-    dispatch({taskGroupId, type: 'LOG_REQUEST_START'});
-    tasks = _.without(tasks, undefined);
-    let promises = tasks.map(function({taskId, exists, minOffset, path, initialDataLoaded}) {
-      if (minOffset > 0 && initialDataLoaded && exists !== false) {
-        let requestedOffset = logType == 'COMPRESSED' ? minOffset : Math.max(minOffset - logRequestLength, 0);
-        let xhr = fetchData(taskId, path, logType, requestedOffset, Math.min(logRequestLength, minOffset), true);
-        return xhr.done(function({data, offset, nextOffset}) {
-          if (data.length > 0) {
-            if (logType == 'COMPRESSED') {
-               return dispatch(taskData(taskGroupId, taskId, data, nextOffset, offset, false, maxLines, logType));
-            } else {
-              nextOffset = offset + data.length;
-              return dispatch(taskData(taskGroupId, taskId, data, offset, nextOffset, false, maxLines, logType));
-            }
+  dispatch({taskGroupId, type: 'LOG_REQUEST_START'});
+  tasks = _.without(tasks, undefined);
+  let promises = tasks.map(function({taskId, exists, minOffset, path, initialDataLoaded}) {
+    if (minOffset > 0 && initialDataLoaded && exists !== false) {
+      const requestedOffset = logType == 'COMPRESSED' ? minOffset : Math.max(minOffset - logRequestLength, 0);
+      const xhr = fetchData(taskId, path, logType, requestedOffset, Math.min(logRequestLength, minOffset), true);
+      return xhr.done(({data, offset, nextOffset}) => {
+        if (data.length > 0) {
+          if (logType === 'COMPRESSED') {
+             return dispatch(taskData(taskGroupId, taskId, data, nextOffset, offset, false, maxLines, logType));
+          } else {
+            nextOffset = offset + data.length;
+            return dispatch(taskData(taskGroupId, taskId, data, offset, nextOffset, false, maxLines, logType));
           }
-          return Promise.resolve();
-        });
-      }
-      return Promise.resolve();
-    });
+        }
+        return Promise.resolve();
+      });
+    }
+    return Promise.resolve();
+  });
 
-    return Promise.all(promises).then(() => dispatch({taskGroupId, type: 'LOG_REQUEST_END'}));
-  };
+  return Promise.all(promises).then(() => dispatch({taskGroupId, type: 'LOG_REQUEST_END'}));
+};
 
 export const updateGroups = () =>
   (dispatch, getState) =>
@@ -349,24 +335,22 @@ export const selectLogColor = color =>
     type: 'LOG_SELECT_COLOR'
   });
 
-export const switchViewMode = newViewMode =>
-  function(dispatch, getState) {
-    let { taskGroups, path, activeRequest, search, viewMode, logType } = getState();
+export const switchViewMode = (newViewMode) => (dispatch, getState) => {
+  const { taskGroups, path, activeRequest, search, viewMode, logType } = getState();
 
-    if (Utils.isIn(newViewMode, ['custom', viewMode])) {
-      return null;
-    }
-
-    const taskIds = _.flatten(_.pluck(taskGroups, 'taskIds'));
-
-    dispatch({viewMode: newViewMode, type: 'LOG_SWITCH_VIEW_MODE'});
-    return dispatch(initialize(activeRequest.requestId, path, search, taskIds, newViewMode, logType));
+  if (Utils.isIn(newViewMode, ['custom', viewMode])) {
+    return null;
   }
-;
 
-export const setCurrentSearch = newSearch =>  // TODO: can we do something less heavyweight?
-  function(dispatch, getState) {
-    let {activeRequest, path, taskGroups, currentSearch, viewMode, logType} = getState();
+  const taskIds = _.flatten(_.pluck(taskGroups, 'taskIds'));
+
+  dispatch({viewMode: newViewMode, type: 'LOG_SWITCH_VIEW_MODE'});
+  return dispatch(initialize(activeRequest.requestId, path, search, taskIds, newViewMode, logType));
+};
+
+export const setCurrentSearch = (newSearch) =>  // TODO: can we do something less heavyweight?
+  (dispatch, getState) => {
+    const {activeRequest, path, taskGroups, currentSearch, viewMode, logType} = getState();
     if (newSearch !== currentSearch) {
       return dispatch(initialize(activeRequest.requestId, path, newSearch, _.flatten(_.pluck(taskGroups, 'taskIds')), viewMode, logType));
     }
@@ -374,8 +358,8 @@ export const setCurrentSearch = newSearch =>  // TODO: can we do something less 
   };
 
 export const toggleTaskLog = taskId =>
-  function(dispatch, getState) {
-    let {search, path, tasks, viewMode, logType} = getState();
+  (dispatch, getState) => {
+    const {search, path, tasks, viewMode, logType} = getState();
     if (taskId in tasks) {
       // only remove task if it's not the last one
       if (Object.keys(tasks).length > 1) {
@@ -389,8 +373,8 @@ export const toggleTaskLog = taskId =>
 
     const resolvedPath = path.replace('$TASK_ID', taskId);
 
-      return fetchData(taskId, resolvedPath, logType).done(function({offset}) {
-        dispatch(initTask(taskId, offset, resolvedPath, true, false));
+    return fetchData(taskId, resolvedPath, logType).done(function({offset}) {
+      dispatch(initTask(taskId, offset, resolvedPath, true, false));
 
       return getState().taskGroups.map((taskGroup, taskGroupId) => {
         if (Utils.isIn(taskId, taskGroup.taskIds)) {
