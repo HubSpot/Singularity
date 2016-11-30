@@ -1,4 +1,5 @@
 import React from 'react';
+import classNames from 'classnames';
 import { TailerProvider, Pane, SandboxTailer } from 'singularityui-tailer';
 import NewTaskGroupHeader from '../components/logs/NewTaskGroupHeader';
 import NewHeader from '../components/logs/NewHeader';
@@ -22,7 +23,7 @@ class LogTailerContainer extends React.Component {
   render() {
     return (
       <TailerProvider getTailerState={(state) => state.tailer}>
-        <div className="new-tailer tail-root">
+        <div className={classNames(['new-tailer', 'tail-root', this.props.color])}>
           <NewHeader />
           <div className="row tail-row">
             {this.props.tailerGroups.map(this.renderTailerPane)}
@@ -34,7 +35,8 @@ class LogTailerContainer extends React.Component {
 };
 
 export default connect((state) => ({
-  tailerGroups: state.tailerView.tailerGroups
+  tailerGroups: state.tailerView.tailerGroups,
+  color: state.activeColor
 }), {
   setTailerGroups
 })(LogTailerContainer);
