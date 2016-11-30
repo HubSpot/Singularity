@@ -2,6 +2,25 @@
   display: flex;
   flex-flow: column;
 
+  section.log-pane {
+    color: #000;
+    background-color: #FFF;
+  }
+
+  &.light {
+    section.log-pane {
+      background: #FDF6E3;
+      color: #657b83;
+    }
+  }
+
+  &.dark {
+    section.log-pane {
+      color: #839496;
+      background-color: #002b36;
+    }
+  }
+
   .tail-row {
     display: flex;
     flex-flow: row;
@@ -18,9 +37,6 @@
       transform: translateZ(0);
 
       font-family: Consolas, "Liberation Mono", Courier, monospace;
-
-      color: #839496;
-      background-color: #002b36;
 
       .log-row {
         font-size: 12px;
