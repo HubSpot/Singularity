@@ -1,6 +1,10 @@
 import {
   SET_TAILER_GROUPS,
-  SET_SEARCH
+  ADD_TAILER_GROUP,
+  SET_SEARCH,
+  REMOVE_TAILER_GROUP,
+  PICK_TAILER_GROUP,
+  SET_COLOR,
 } from '../actions/tailer';
 
 import Utils from '../utils';
@@ -14,7 +18,31 @@ const initialState = {
   paths: [],
   viewMode: 'split',
   ready: false,
-  search: null
+  search: null,
+  color: 'default'
+}
+
+const splice = (array, index, length=1) => [...array.slice(0, index), ...array.slice(index+length)];
+
+export const buildTailerId = (index, taskId, path) => `${index}-${taskId}/${path}`;
+
+const generateTailerState = (tailerGroups) => {
+  const tailerGroupsWithTailerId = tailerGroups.map((tailerGroup, i) =>
+    tailerGroup.map((tailer) => ({
+      ...tailer,
+      tailerId: buildTailerId(i, tailer.taskId, tailer.path)
+    })));
+
+  const flattenedTasks = [].concat.apply([], tailerGroups);
+  const sortedUniqueTaskIds = _.uniq(flattenedTasks.map((task) => task.taskId).sort(), true);
+  const sortedUniquePaths = _.uniq(flattenedTasks.map(({path}) => path).sort(), true);
+
+  return {
+    tailerGroups: tailerGroupsWithTailerId,
+    requestIds: _.uniq(sortedUniqueTaskIds.map(Utils.getRequestIdFromTaskId), true),
+    taskIds: sortedUniqueTaskIds,
+    paths: sortedUniquePaths,
+  }
 }
 
 export default (state = initialState, action) => {
@@ -25,24 +53,32 @@ export default (state = initialState, action) => {
         search: action.search
       };
     case SET_TAILER_GROUPS:
-      const tailerGroupsWithKey = action.tailerGroups.map((tailerGroup, i) =>
-        tailerGroup.map((tailer) => ({
-          ...tailer,
-          tailerId: `${i}-${tailer.taskId}/${tailer.path}`
-        })));
-      const flattenedTasks = [].concat.apply([], action.tailerGroups);
-      const sortedUniqueTaskIds = _.uniq(flattenedTasks.map(({taskId}) => taskId).sort());
-      const sortedUniquePaths = _.uniq(flattenedTasks.map(({path}) => path).sort());
-
       return {
         ...state,
-        tailerGroups: tailerGroupsWithKey,
-        requestIds: _.uniq(sortedUniqueTaskIds.map(Utils.getRequestIdFromTaskId), true),
-        taskIds: sortedUniqueTaskIds,
-        paths: sortedUniquePaths,
+        ...generateTailerState(action.tailerGroups),
         ready: true
+      };
+    case ADD_TAILER_GROUP:
+      return {
+        ...state,
+        ...generateTailerState([...state.tailerGroups, action.tailerGroup])
+      }
+    case REMOVE_TAILER_GROUP:
+      return {
+        ...state,
+        ...generateTailerState(splice(state.tailerGroups, action.tailerGroupIndex)),
+      };
+    case PICK_TAILER_GROUP:
+      return {
+        ...state,
+        ...generateTailerState([state.tailerGroups[action.tailerGroupIndex]]),
+      }
+    case SET_COLOR:
+      return {
+        ...state,
+        color: action.color
       };
     default:
       return state;
   }
-}
+};

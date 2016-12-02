@@ -1,7 +1,6 @@
 import React from 'react';
 
 import { connect } from 'react-redux';
-import { bindActionCreators } from 'redux';
 
 import { setTailerGroups } from '../actions/tailer';
 
@@ -9,18 +8,15 @@ import LogTailerContainer from './LogTailerContainer';
 
 import { FetchActiveTasksForRequest } from '../actions/api/history';
 
-import Utils from '../utils';
-
 import _ from 'underscore';
 
 class RequestLogTailerContainer extends React.Component {
   componentWillMount() {
-    //const instances = (this.props.location.query.instance.split(',')) || [1];
     const instances = this.props.location.query.instance
       ? this.props.location.query.instance.split(',').map(Number)
       : [1,2,3];
 
-    const unifiedView = this.props.location.query.unified === 'true';
+    const unifiedView = false; // this.props.location.query.unified === 'true';
 
     this.props.fetchActiveTasksForRequest(this.props.params.requestId).then((data) => {
       const tasksByInstanceNumber = _.groupBy(data.data, ({taskId}) => taskId.instanceNo);
@@ -36,7 +32,7 @@ class RequestLogTailerContainer extends React.Component {
       if (unifiedView) {
         this.props.setTailerGroups([tg]);
       } else {
-        this.props.setTailerGroups(tg.map((item) => ([item])));
+        this.props.setTailerGroups(tg.map((item) => [item]));
       }
     })
   }
@@ -46,7 +42,7 @@ class RequestLogTailerContainer extends React.Component {
   }
 };
 
-export default connect(null, (dispatch) => bindActionCreators({
+export default connect(null, {
   setTailerGroups,
   fetchActiveTasksForRequest: FetchActiveTasksForRequest.trigger
-  }, dispatch))(RequestLogTailerContainer);
+})(RequestLogTailerContainer);
