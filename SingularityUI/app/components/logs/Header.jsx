@@ -41,8 +41,16 @@ class Header extends React.Component {
   }
 
   renderSwitchToNewTailer() {
-    if ((this.props.taskGroupCount === 1) && (true)) {
-      return (<Link to={`/task/${this.props.firstTaskId}/new-tail/${this.props.path}`}><button type="button" className="btn btn-sm btn-default">Switch to new tailer</button></Link>);
+    if (!this.props.taskGroupHasMultipleTasks) {
+      if ((this.props.taskGroupCount === 1)) {
+        return (<Link to={`/task/${this.props.firstTaskId}/new-tail/${this.props.path}`}>
+          <button type="button" className="btn btn-sm btn-default">Switch to new tailer</button>
+        </Link>);
+      } else if ((this.props.taskGroupCount > 1)) {
+        return (<Link to={`/request/${this.props.requestId}/new-tail/${this.props.path}`}>
+          <button type="button" className="btn btn-sm btn-default">Switch to new tailer</button>
+        </Link>);
+      }
     }
   }
 
@@ -95,7 +103,8 @@ function mapStateToProps(state) {
   return {
     taskGroupCount: state.taskGroups.length,
     multipleTasks: (state.taskGroups.length > 1) || ((state.taskGroups.length > 0) && (state.taskGroups[0].taskIds.length > 1)),
-    firstTaskId: state.taskGroups[0].taskIds[0],
+    taskGroupHasMultipleTasks: _.some(state.taskGroups.map((tg) => tg.taskIds.length > 1)),
+    firstTaskId: state.taskGroups[0] && state.taskGroups[0].taskIds[0],
     path: state.path,
     viewMode: state.viewMode,
     requestId: state.activeRequest.requestId,

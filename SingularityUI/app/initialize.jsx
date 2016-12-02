@@ -12,6 +12,9 @@ import { FetchGroups } from 'actions/api/requestGroups';
 import { actions as tailerActions } from 'singularityui-tailer';
 import { AddStarredRequests } from 'actions/api/users';
 import Utils from './utils';
+import parseurl from 'parseurl';
+import { useRouterHistory } from 'react-router';
+import { createHistory } from 'history';
 
 // Set up third party configurations
 import { loadThirdParty } from 'thirdPartyConfigurations';
@@ -37,7 +40,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
   if (window.config.apiRoot) {
     // set up Redux store
-    const store = configureStore();
+    const parsedUrl = parseurl({ url: config.appRoot });
+    const history = useRouterHistory(createHistory)({
+      basename: parsedUrl.path
+    });
+
+    const store = configureStore({}, history);
 
     store.dispatch(tailerActions.sandboxSetApiRoot(config.apiRoot));
 
@@ -62,12 +70,12 @@ document.addEventListener('DOMContentLoaded', () => {
     if (module.hot) {
       module.hot.accept('./router', () => {
         const NextAppRouter = require('./router').default;
-        return ReactDOM.render(<HMRContainer><NextAppRouter store={store} /></HMRContainer>, document.getElementById('root'));
+        return ReactDOM.render(<HMRContainer><NextAppRouter history={history} store={store} /></HMRContainer>, document.getElementById('root'));
       });
     }
 
     // Render the page content
-    return ReactDOM.render(<HMRContainer><AppRouter store={store} /></HMRContainer>, document.getElementById('root'), () => {
+    return ReactDOM.render(<HMRContainer><AppRouter history={history} store={store} /></HMRContainer>, document.getElementById('root'), () => {
       // hide loading animation
       document.getElementById('static-loader').remove();
     });
