@@ -17,24 +17,27 @@ const NewTaskGroupHeader = ({showCloseAndExpandButtons, showRequestId, taskId, o
     ? `${requestId} ${instanceNo}`
     : `Instance ${instanceNo}`;
 
-  return (<div className="individual-header">
-      { showCloseAndExpandButtons && closeComponent }
-      { showCloseAndExpandButtons && expandComponent }
-      <span>
-        <div className="width-constrained">
-        <Link to={`/task/${taskId}`} title={taskId}>{ taskInfoTitle }</Link>
-        </div>
-      </span>
-      { /* this.renderTaskLegend() */ }
-      <span className="right-buttons">
-        <a className="action-link" onClick={onJumpToBottom} title="Scroll to bottom">
-          <span className="glyphicon glyphicon-chevron-down" />
-        </a>
-        <a className="action-link" onClick={onJumpToTop} title="Scroll to top">
-          <span className="glyphicon glyphicon-chevron-up" />
-        </a>
-      </span>
-    </div>);
+  return (
+    <header>
+      <div className="individual-header">
+        { showCloseAndExpandButtons && closeComponent }
+        { showCloseAndExpandButtons && expandComponent }
+        <span>
+          <div className="width-constrained">
+          <Link to={`/task/${taskId}`} title={taskId}>{ taskInfoTitle }</Link>
+          </div>
+        </span>
+        { /* this.renderTaskLegend() */ }
+        <span className="right-buttons">
+          <a className="action-link" onClick={onJumpToBottom} title="Scroll to bottom">
+            <span className="glyphicon glyphicon-chevron-down" />
+          </a>
+          <a className="action-link" onClick={onJumpToTop} title="Scroll to top">
+            <span className="glyphicon glyphicon-chevron-up" />
+          </a>
+        </span>
+      </div>
+    </header>);
 }
 
 NewTaskGroupHeader.propTypes = {

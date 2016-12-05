@@ -21,7 +21,7 @@ const SimpleLogLines = (props) => {
           <Line
             key={`${data.start}-${data.end}`}
             data={data}
-            hrefFunc={props.hrefFunc}
+            lineLinkRenderer={props.lineLinkRenderer}
           />
         );
       })}
@@ -33,7 +33,7 @@ SimpleLogLines.propTypes = {
   isLoaded: PropTypes.bool.isRequired,
   lines: PropTypes.instanceOf(Immutable.List).isRequired,
   fakeLineCount: PropTypes.number,
-  hrefFunc: PropTypes.func
+  lineLinkRenderer: PropTypes.func
 };
 
 SimpleLogLines.defaultProps = {

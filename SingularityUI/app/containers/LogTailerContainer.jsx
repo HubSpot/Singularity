@@ -1,13 +1,23 @@
 import React from 'react';
 import classNames from 'classnames';
-import { TailerProvider, Pane, SandboxTailer } from 'singularityui-tailer';
+import { TailerProvider, SandboxTailer } from 'singularityui-tailer';
 import NewTaskGroupHeader from '../components/logs/NewTaskGroupHeader';
 import NewHeader from '../components/logs/NewHeader';
-import Footer from '../components/logs/Footer';
 
 import { connect } from 'react-redux';
 
 import { loadColor, removeTailerGroup, pickTailerGroup } from '../actions/tailer';
+
+const prefixedLineLinkRenderer = (taskId, path) => ({start}) => {
+  return (<a
+    href={`${ config.appRoot }/task/${taskId}/new-tail/${path}?offset=${start}`}
+    className="offset-link"
+  >
+    <div className="pre-line">
+      <span className="glyphicon glyphicon-link" />
+    </div>
+  </a>);
+}
 
 class LogTailerContainer extends React.PureComponent {
   componentWillMount() {
@@ -18,25 +28,22 @@ class LogTailerContainer extends React.PureComponent {
     const renderTailerPane = (tasks, key) => {
       const {taskId, path, offset, tailerId} = tasks[0];
 
-      const header = (<NewTaskGroupHeader
-        taskId={taskId}
-        showRequestId={this.props.requestIds.length > 1}
-        showCloseAndExpandButtons={this.props.tailerGroups.length > 1}
-        onClose={() => this.props.removeTailerGroup(key)}
-        onExpand={() => this.props.pickTailerGroup(key)}
-        onJumpToTop={() => console.log("jump to top")}
-        onJumpToBottom={() => console.log("jump to bottom")} />);
-
-      const component = (<SandboxTailer
-        goToOffset={parseInt(offset)}
-        tailerId={tailerId}
-        taskId={taskId}
-        path={path.replace('$TASK_ID', taskId)}
-        hrefFunc={(tailerId, offset) => `${config.appRoot}/task/${taskId}/new-tail/${path}?offset=${offset}`}/>);
-
-      const footer = (<Footer tailerId={tailerId} />);
-
-      return (<Pane key={key} logHeader={header} logComponent={component} logFooter={footer} />);
+      return (<section className="log-pane" key={key}>
+        <NewTaskGroupHeader
+          taskId={taskId}
+          showRequestId={this.props.requestIds.length > 1}
+          showCloseAndExpandButtons={this.props.tailerGroups.length > 1}
+          onClose={() => this.props.removeTailerGroup(key)}
+          onExpand={() => this.props.pickTailerGroup(key)}
+          onJumpToTop={() => console.log("jump to top")}
+          onJumpToBottom={() => console.log("jump to bottom")} />
+        <SandboxTailer
+          goToOffset={parseInt(offset)}
+          tailerId={tailerId}
+          taskId={taskId}
+          path={path.replace('$TASK_ID', taskId)}
+          lineLinkRenderer={prefixedLineLinkRenderer(taskId, path)} />
+      </section>);
     };
 
     return (
