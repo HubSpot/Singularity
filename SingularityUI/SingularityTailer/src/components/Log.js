@@ -209,6 +209,7 @@ class Log extends Component {
             isLineLoaded={this.isLineLoaded}
             hrefFunc={hrefFunc}
             lineLinkRenderer={props.lineLinkRenderer}
+            highlightedOffset={props.goToOffset}
           />
         </div>
       </section>

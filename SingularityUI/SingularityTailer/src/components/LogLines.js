@@ -73,6 +73,7 @@ class LogLines extends Component {
           <this.props.lineRenderGroupComponent
             key={lines.first().start}
             lines={lines}
+            highlightedOffset={this.props.highlightedOffset}
             lineLinkRenderer={this.props.lineLinkRenderer}
           />
         ))}
@@ -86,6 +87,7 @@ LogLines.propTypes = {
   lines: PropTypes.instanceOf(List).isRequired,
   fakeLineCount: PropTypes.number,
   lineLinkRenderer: PropTypes.func,
+  highlightedOffset: PropTypes.number,
   lineRenderGroupComponent: PropTypes.func.isRequired
 };
 
