@@ -10,13 +10,14 @@ class Line extends Component {
   }
 
   render() {
-    const { data, lineLinkRenderer } = this.props;
+    const { data, lineLinkRenderer, highlighted } = this.props;
     let lineContents;
 
     const classes = classNames({
       'log-row': true,
       'missing': data.isMissingMarker,
-      'loading': data.isLoading
+      'loading': data.isLoading,
+      'highlighted': highlighted
     });
 
     if (data.isMissingMarker) {
@@ -50,6 +51,7 @@ class Line extends Component {
 
 Line.propTypes = {
   data: PropTypes.object.isRequired,
+  highlighted: PropTypes.bool,
   lineLinkRenderer: PropTypes.func
 };
 
