@@ -15,6 +15,7 @@ class LineRenderGroup extends Component {
         <Line
           key={`${data.start}-${data.end}`}
           data={data}
+          highlighted={this.props.highlightedOffset === data.start}
           lineLinkRenderer={this.props.lineLinkRenderer}
         />
       );
@@ -32,6 +33,7 @@ class LineRenderGroup extends Component {
 
 LineRenderGroup.propTypes = {
   lines: PropTypes.object.isRequired,
+  highlightedOffset: PropTypes.number,
   lineLinkRenderer: PropTypes.func
 };
 
