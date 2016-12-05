@@ -126,7 +126,7 @@ class BlazarLogTailer extends Component {
         loadLine={this.loadLine}
         tailLog={this.tailLog}
         goToOffset={this.props.goToOffset}
-        hrefFunc={this.props.hrefFunc}
+        lineLinkRenderer={this.props.lineLinkRenderer}
       />
     );
   }
@@ -142,7 +142,7 @@ BlazarLogTailer.propTypes = {
   unloadFile: PropTypes.func.isRequired,
   unloadFileChunk: PropTypes.func.isRequired,
   goToOffset: PropTypes.number,
-  hrefFunc: PropTypes.func
+  lineLinkRenderer: PropTypes.func
 };
 
 const mapStateToProps = (state, ownProps) => ({

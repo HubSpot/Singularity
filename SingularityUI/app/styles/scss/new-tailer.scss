@@ -44,8 +44,29 @@
         height: 14px;
         padding: 0;
         white-space: pre;
+        display: table-row;
 
-        span:last-child {
+        a {
+          text-decoration: none;
+          visibility: hidden;
+
+          div.pre-line {
+            position: absolute;
+            left: 0;
+            padding-left: 5px;
+          }
+        }
+
+        &:hover {
+          background-color: rgba(255, 255, 255, 0.1);
+
+          a {
+            visibility: visible;
+          }
+        }
+
+        > span {
+          padding-left: 2em;
           padding-right: 10px;
         }
 

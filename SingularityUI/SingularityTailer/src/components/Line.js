@@ -3,16 +3,14 @@ import classNames from 'classnames';
 
 class Line extends Component {
   shouldComponentUpdate(nextProps) {
-    return (
-      this.props.data.isMissingMarker !== nextProps.data.isMissingMarker
+    return this.props.data.isMissingMarker !== nextProps.data.isMissingMarker
       || this.props.data.isLoading !== nextProps.data.isLoading
       || this.props.data.start !== nextProps.data.start
-      || this.props.data.end !== nextProps.data.end
-    );
+      || this.props.data.end !== nextProps.data.end;
   }
 
   render() {
-    const { data, hrefFunc } = this.props;
+    const { data, lineLinkRenderer } = this.props;
     let lineContents;
 
     const classes = classNames({
@@ -37,8 +35,8 @@ class Line extends Component {
     }
 
     let maybeLink;
-    if (hrefFunc) {
-      maybeLink = <a className="line-link" href={hrefFunc(data.start)}>@</a>;
+    if (lineLinkRenderer && !data.isMissingMarker && !data.isLoading) {
+      maybeLink = this.props.lineLinkRenderer(data);
     }
 
     return (
@@ -52,7 +50,7 @@ class Line extends Component {
 
 Line.propTypes = {
   data: PropTypes.object.isRequired,
-  hrefFunc: PropTypes.func
+  lineLinkRenderer: PropTypes.func
 };
 
 export default Line;
