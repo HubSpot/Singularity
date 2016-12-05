@@ -62,7 +62,7 @@
     "select2": "~3.5.1",
     "typeahead.js": "~0.10.4",
     "underscore": "~1.8.0",
-    "singularityui-tailer": "0.3.0"
+    "singularityui-tailer": "0.3.1"
   },
   "license": "Apache-2.0",
   "devDependencies": {
