@@ -208,6 +208,7 @@ class Log extends Component {
             fakeLineCount={this.fakeLineCount}
             isLineLoaded={this.isLineLoaded}
             hrefFunc={hrefFunc}
+            lineLinkRenderer={props.lineLinkRenderer}
           />
         </div>
       </section>
@@ -232,7 +233,8 @@ Log.propTypes = {
   lines: PropTypes.instanceOf(Immutable.List),
   chunks: PropTypes.instanceOf(Immutable.List),
   requests: PropTypes.instanceOf(Immutable.Map),
-  config: PropTypes.object.isRequired
+  config: PropTypes.object.isRequired,
+  lineLinkRenderer: PropTypes.func
 };
 
 const makeMapStateToProps = () => {
