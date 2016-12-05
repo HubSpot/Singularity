@@ -7,43 +7,49 @@ import Footer from '../components/logs/Footer';
 
 import { connect } from 'react-redux';
 
-import { setTailerGroups, setColor, loadColor, removeTailerGroup, pickTailerGroup } from '../actions/tailer';
+import { loadColor, removeTailerGroup, pickTailerGroup } from '../actions/tailer';
 
-const LogTailerContainer = ({tailerGroups, requestIds, color, removeTailerGroup, pickTailerGroup}) => {
-  const renderTailerPane = (tasks, key) => {
-    const {taskId, path, offset, tailerId} = tasks[0];
+class LogTailerContainer extends React.PureComponent {
+  componentWillMount() {
+    this.props.loadColor();
+  }
 
-    const header = (<NewTaskGroupHeader
-      taskId={taskId}
-      showRequestId={requestIds.length > 1}
-      showCloseAndExpandButtons={tailerGroups.length > 1}
-      onClose={() => removeTailerGroup(key)}
-      onExpand={() => pickTailerGroup(key)}
-      onJumpToTop={() => console.log("jump to top")}
-      onJumpToBottom={() => console.log("jump to bottom")} />);
+  render() {
+    const renderTailerPane = (tasks, key) => {
+      const {taskId, path, offset, tailerId} = tasks[0];
 
-    const component = (<SandboxTailer
-      goToOffset={parseInt(offset)}
-      tailerId={tailerId}
-      taskId={taskId}
-      path={path.replace('$TASK_ID', taskId)}
-      hrefFunc={(tailerId, offset) => `${config.appRoot}/task/${taskId}/new-tail/${path}?offset=${offset}`}/>);
+      const header = (<NewTaskGroupHeader
+        taskId={taskId}
+        showRequestId={this.props.requestIds.length > 1}
+        showCloseAndExpandButtons={this.props.tailerGroups.length > 1}
+        onClose={() => this.props.removeTailerGroup(key)}
+        onExpand={() => this.props.pickTailerGroup(key)}
+        onJumpToTop={() => console.log("jump to top")}
+        onJumpToBottom={() => console.log("jump to bottom")} />);
 
-    const footer = (<Footer tailerId={tailerId} />);
+      const component = (<SandboxTailer
+        goToOffset={parseInt(offset)}
+        tailerId={tailerId}
+        taskId={taskId}
+        path={path.replace('$TASK_ID', taskId)}
+        hrefFunc={(tailerId, offset) => `${config.appRoot}/task/${taskId}/new-tail/${path}?offset=${offset}`}/>);
 
-    return (<Pane key={key} logHeader={header} logComponent={component} logFooter={footer} />);
-  };
+      const footer = (<Footer tailerId={tailerId} />);
 
-  return (
-    <TailerProvider getTailerState={(state) => state.tailer}>
-      <div className={classNames(['new-tailer', 'tail-root', color])}>
-        <NewHeader />
-        <div className="row tail-row">
-          {tailerGroups.map(renderTailerPane)}
+      return (<Pane key={key} logHeader={header} logComponent={component} logFooter={footer} />);
+    };
+
+    return (
+      <TailerProvider getTailerState={(state) => state.tailer}>
+        <div className={classNames(['new-tailer', 'tail-root', this.props.color])}>
+          <NewHeader />
+          <div className="row tail-row">
+            {this.props.tailerGroups.map(renderTailerPane)}
+          </div>
         </div>
-      </div>
-    </TailerProvider>
-  );
+      </TailerProvider>
+    );
+  }
 }
 
 export default connect((state) => ({
@@ -51,8 +57,6 @@ export default connect((state) => ({
   requestIds: state.tailerView.requestIds,
   color: state.tailerView.color
 }), {
-  setTailerGroups,
-  setColor,
   loadColor,
   removeTailerGroup,
   pickTailerGroup,
