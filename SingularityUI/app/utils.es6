@@ -327,7 +327,8 @@ const Utils = {
     // other
     canDisableHealthchecks: (requestParent) => {
       return !!requestParent.activeDeploy
-        && !!requestParent.activeDeploy.healthcheckUri
+        && !!requestParent.activeDeploy.healthcheck
+        && !!requestParent.activeDeploy.healthcheck.uri
         && requestParent.state !== 'PAUSED'
         && !requestParent.expiringSkipHealthchecks;
     },
