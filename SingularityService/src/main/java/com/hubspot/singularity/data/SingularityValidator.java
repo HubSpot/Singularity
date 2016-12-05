@@ -27,6 +27,7 @@ import org.quartz.CronExpression;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
+import com.google.common.base.Strings;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
@@ -72,9 +73,11 @@ public class SingularityValidator {
   private static final List<Character> REQUEST_ID_ILLEGAL_CHARACTERS = Arrays.asList('@', '\\', '/', '*', '?', '%', ' ', '[', ']', '#', '$'); // Characters that make Mesos or URL bars sad
   private static final Pattern DAY_RANGE_REGEXP = Pattern.compile("[0-7]-[0-7]");
   private static final Pattern COMMA_DAYS_REGEXP = Pattern.compile("([0-7],)+([0-7])?");
+  private static final int MAX_STARRED_REQUESTS = 5000;
 
   private final int maxDeployIdSize;
   private final int maxRequestIdSize;
+  private final int maxUserIdSize;
   private final int maxCpusPerRequest;
   private final int maxCpusPerInstance;
   private final int maxInstancesPerRequest;
@@ -96,6 +99,7 @@ public class SingularityValidator {
   public SingularityValidator(SingularityConfiguration configuration, DeployHistoryHelper deployHistoryHelper, PriorityManager priorityManager, DisasterManager disasterManager, SlaveManager slaveManager, UIConfiguration uiConfiguration) {
     this.maxDeployIdSize = configuration.getMaxDeployIdSize();
     this.maxRequestIdSize = configuration.getMaxRequestIdSize();
+    this.maxUserIdSize = configuration.getMaxUserIdSize();
     this.allowRequestsWithoutOwners = configuration.isAllowRequestsWithoutOwners();
     this.createDeployIds = configuration.isCreateDeployIds();
     this.deployIdLength = configuration.getDeployIdLength();
@@ -543,6 +547,15 @@ public class SingularityValidator {
     } catch (NumberFormatException nfe) {
       return false;
     }
+  }
+
+  public void checkUserId(String userId) {
+    checkBadRequest(!Strings.isNullOrEmpty(userId), "User ID must be present and non-null");
+    checkBadRequest(!(userId.length() > maxUserIdSize), "User ID cannot be more than %s characters, it was %s", maxUserIdSize, userId.length());
+  }
+
+  public void checkStarredRequests(Set<String> starredRequests) {
+    checkBadRequest(!(starredRequests.size() > MAX_STARRED_REQUESTS), "Cannot have more than %s starred requests", MAX_STARRED_REQUESTS);
   }
 
   public SingularityPriorityFreeze checkSingularityPriorityFreeze(SingularityPriorityFreeze priorityFreeze) {

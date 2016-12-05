@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Objects;
 import com.google.common.base.Optional;
 import com.hubspot.singularity.SingularityAction;
+import com.wordnik.swagger.annotations.ApiModelProperty;
 
 public class SingularityDisabledActionRequest {
   private final SingularityAction type;
@@ -16,10 +17,12 @@ public class SingularityDisabledActionRequest {
     this.message = message;
   }
 
+  @ApiModelProperty(required=true, value="The type of action to disable")
   public SingularityAction getType() {
     return type;
   }
 
+  @ApiModelProperty(required=false, value="An optional message/reason for disabling the action specified")
   public Optional<String> getMessage() {
     return message;
   }

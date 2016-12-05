@@ -396,6 +396,11 @@
       <artifactId>joda-time</artifactId>
     </dependency>
 
+    <dependency>
+      <groupId>com.github.samtools</groupId>
+      <artifactId>htsjdk</artifactId>
+    </dependency>
+
   </dependencies>
 
   <build>

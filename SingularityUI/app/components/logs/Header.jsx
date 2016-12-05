@@ -62,7 +62,7 @@ class Header extends React.Component {
           </div>
           <div className="col-md-3 hidden-xs tail-buttons">
             <SearchDropdown />
-            <TasksDropdown />
+            {this.props.compressedLogsView ? null : <TasksDropdown />}
             <ColorDropdown />
             {this.renderViewButtons()}
             {this.renderAnchorButtons()}
@@ -82,6 +82,7 @@ Header.propTypes = {
   switchViewMode: React.PropTypes.func.isRequired,
   scrollAllToBottom: React.PropTypes.func.isRequired,
   scrollAllToTop: React.PropTypes.func.isRequired,
+  compressedLogsView: React.PropTypes.bool.isRequired,
 };
 
 function mapStateToProps(state) {
@@ -91,6 +92,7 @@ function mapStateToProps(state) {
     path: state.path,
     viewMode: state.viewMode,
     requestId: state.activeRequest.requestId,
+    compressedLogsView: state.logType == 'COMPRESSED'
   };
 }
 

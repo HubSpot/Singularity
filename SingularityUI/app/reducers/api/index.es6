@@ -3,6 +3,12 @@ import buildApiActionReducer from './base';
 import buildKeyedApiActionReducer from './keyed';
 
 import { FetchUser } from '../../actions/api/auth';
+
+import {
+  AddStarredRequests,
+  DeleteStarredRequests
+} from '../../actions/api/users';
+
 import {
   FetchPendingDeploys,
   SaveDeploy
@@ -79,6 +85,8 @@ import {
 import { FetchGroups } from '../../actions/api/requestGroups';
 
 const user = buildApiActionReducer(FetchUser);
+const addStarredRequests = buildApiActionReducer(AddStarredRequests, []);
+const deleteStarredRequests = buildApiActionReducer(DeleteStarredRequests, []);
 const webhooks = buildApiActionReducer(FetchWebhooks, []);
 const disabledActions = buildApiActionReducer(FetchDisabledActions, []);
 const disastersData = buildApiActionReducer(FetchDisastersData, []);
@@ -129,6 +137,8 @@ const requestGroups = buildApiActionReducer(FetchGroups, []);
 
 export default combineReducers({
   user,
+  addStarredRequests,
+  deleteStarredRequests,
   webhooks,
   disabledActions,
   disastersData,

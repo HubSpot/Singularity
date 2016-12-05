@@ -4,6 +4,7 @@ import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.base.Objects;
 import com.hubspot.mesos.SingularityMesosTaskLabel;
 
 public class MesosTaskObject {
@@ -54,5 +55,18 @@ public class MesosTaskObject {
 
   public String getExecutorId() {
     return executorId;
+  }
+
+  @Override
+  public String toString() {
+    return Objects.toStringHelper(this)
+      .add("resources", resources)
+      .add("state", state)
+      .add("id", id)
+      .add("name", name)
+      .add("slaveId", slaveId)
+      .add("frameworkId", frameworkId)
+      .add("executorId", executorId)
+      .toString();
   }
 }
