@@ -113,7 +113,7 @@ TaskHealthchecks.propTypes = {
           responseTimeoutSeconds: PropTypes.number,
           maxRetries: PropTypes.number,
           failureStatusCodes: PropTypes.arrayOf(PropTypes.number)
-      }).isRequired
+      })
     }).isRequired,
     offer: PropTypes.shape({
       hostname: PropTypes.string
