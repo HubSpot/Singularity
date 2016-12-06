@@ -94,7 +94,6 @@ Once the task is running you can go to [http://localhost:7099/singularity/reques
 ### Limitations
 
 - Since this container is bound to the ports 8080 and 8081 on the host machine you can't scale it up to more than one per machine. Depending on your setup, you may already see port in use errors when starting the app, as those ports are commonly used by other processes.
-- Since Singularity isn't allocating the ports and we have not specified a port to use for checks you can't use the health check. (*See [choosing ports](../features/custom-ports.md) for info on selecting specific ports*)
 
 
 ## Basic Service Using Dynamically Allocated Ports
@@ -136,7 +135,9 @@ Or post the following JSON:
             "https://github.com/HubSpot/singularity-test-service/releases/download/1.0/singularitytest-1.0-SNAPSHOT.jar", 
             "https://github.com/HubSpot/singularity-test-service/releases/download/1.0/example.yml"
         ],
-        "healthcheckUri": "/healthcheck"
+        "healthcheck": {
+          "uri": "/healthcheck"
+        }
     }
 }
 ```
@@ -194,7 +195,9 @@ Make another deploy request by posting the following JSON:
             "https://github.com/HubSpot/singularity-test-service/releases/download/1.0/example.yml"
         ],
         "skipHealthchecksOnDeploy": false,
-        "healthcheckUri": "/healthcheck",
+        "healthcheck": {
+          "uri": "/healthcheck"
+        },
         "serviceBasePath":"/",
         "loadBalancerGroups":["test"]
     }
@@ -290,7 +293,9 @@ You could specify port mappings in the Singularity UI or POST JSON like the foll
             "memoryMb": 128,
             "numPorts": 2
         },
-        "healthcheckUri": "/healthcheck"
+        "healthcheck": {
+          "uri": "/healthcheck"
+        }
     }
 }
 ```
@@ -323,7 +328,9 @@ Now, we also want to add in the SingularityExecutor, Singularity's custom execut
             "memoryMb": 128,
             "numPorts": 2
         },
-        "healthcheckUri": "/healthcheck",
+        "healthcheck": {
+          "uri": "/healthcheck"
+        },
         "serviceBasePath":"/",
         "loadBalancerGroups":["test"],
         "customExecutorCmd": "/usr/local/bin/singularity-executor",
