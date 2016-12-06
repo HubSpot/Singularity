@@ -1,25 +1,31 @@
 import React, { Component, PropTypes } from 'react';
-import classNames from 'classnames';
 
 import Line from './Line';
 
 class LineRenderGroup extends Component {
   shouldComponentUpdate(nextProps) {
-    return nextProps.lines !== this.props.lines;
+    return nextProps.lines.size !== this.props.lines.size
+      || nextProps.lines.first().start !== this.props.lines.first().start
+      || nextProps.lines.last().end !== this.props.lines.last().end;
+  }
+
+  renderLines() {
+    return this.props.lines.map((data) => {
+      return (
+        <Line
+          key={`${data.start}-${data.end}`}
+          data={data}
+          highlighted={this.props.highlightedOffset === data.start}
+          lineLinkRenderer={this.props.lineLinkRenderer}
+        />
+      );
+    })
   }
 
   render() {
     return (
       <div className="render-group">
-        {this.props.lines.map((data) => {
-          return (
-            <Line
-              key={`${data.start}-${data.end}`}
-              data={data}
-              hrefFunc={this.props.hrefFunc}
-            />
-          );
-        })}
+        {this.renderLines()}
       </div>
     );
   }
@@ -27,7 +33,8 @@ class LineRenderGroup extends Component {
 
 LineRenderGroup.propTypes = {
   lines: PropTypes.object.isRequired,
-  hrefFunc: PropTypes.func
+  highlightedOffset: PropTypes.number,
+  lineLinkRenderer: PropTypes.func
 };
 
 export default LineRenderGroup;

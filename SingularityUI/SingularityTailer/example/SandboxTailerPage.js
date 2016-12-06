@@ -5,9 +5,7 @@ const SandboxTailerPage = ({params, location: {query}}) => {
   const taskId = params.taskId;
   const path = params.splat;
 
-  const myHrefFunc = (id, offset) => {
-    return `/${taskId}/tail/${path}?goToOffset=${offset}`;
-  };
+  const myLineLink = ({start}) => (<a href={`/${taskId}/tail/${path}?goToOffset=${start}`}>@</a>);
 
   myHrefFunc.propTypes = {
     id: PropTypes.string.isRequired,
@@ -25,7 +23,7 @@ const SandboxTailerPage = ({params, location: {query}}) => {
       taskId={taskId}
       path={path}
       goToOffset={goToOffset}
-      hrefFunc={myHrefFunc}
+      lineLinkRenderer={myLineLink}
     />
   );
 };

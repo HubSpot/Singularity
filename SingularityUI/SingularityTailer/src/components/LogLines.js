@@ -1,7 +1,7 @@
 import React, { Component, PropTypes } from 'react';
 import { List } from 'immutable';
 
-import DangerousLineRenderGroup from './DangerousLineRenderGroup';
+import LineRenderGroup from './LineRenderGroup';
 
 export const LOG_LINE_HEIGHT = 14;
 
@@ -70,10 +70,11 @@ class LogLines extends Component {
           key="fakeLines"
         />
         {this.state.renderGroups.map((lines) => (
-          <DangerousLineRenderGroup
+          <this.props.lineRenderGroupComponent
             key={lines.first().start}
             lines={lines}
-            hrefFunc={this.props.hrefFunc}
+            highlightedOffset={this.props.highlightedOffset}
+            lineLinkRenderer={this.props.lineLinkRenderer}
           />
         ))}
       </div>
@@ -85,11 +86,14 @@ LogLines.propTypes = {
   isLoaded: PropTypes.bool.isRequired,
   lines: PropTypes.instanceOf(List).isRequired,
   fakeLineCount: PropTypes.number,
-  hrefFunc: PropTypes.func
+  lineLinkRenderer: PropTypes.func,
+  highlightedOffset: PropTypes.number,
+  lineRenderGroupComponent: PropTypes.func.isRequired
 };
 
 LogLines.defaultProps = {
-  fakeLineCount: 0
+  fakeLineCount: 0,
+  lineRenderGroupComponent: LineRenderGroup
 };
 
 export default LogLines;
