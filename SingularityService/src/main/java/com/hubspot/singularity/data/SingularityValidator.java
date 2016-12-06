@@ -488,7 +488,7 @@ public class SingularityValidator {
   public void checkResourcesForBounce(SingularityRequest request, boolean isIncremental) {
     SlavePlacement placement = request.getSlavePlacement().or(defaultSlavePlacement);
 
-    if (placement != SlavePlacement.GREEDY && placement != SlavePlacement.OPTIMISTIC) {
+    if (placement == SlavePlacement.SEPARATE_BY_REQUEST) {
       int currentActiveSlaveCount = slaveManager.getNumObjectsAtState(MachineState.ACTIVE);
       int requiredSlaveCount = isIncremental ? request.getInstancesSafe() + 1 : request.getInstancesSafe() * 2;
 

@@ -11,6 +11,7 @@ import org.junit.Test;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 import com.hubspot.singularity.ExtendedTaskState;
+import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityTaskCleanup;
 import com.hubspot.singularity.SingularityTaskHistoryUpdate;
 import com.hubspot.singularity.SlavePlacement;
@@ -282,5 +283,42 @@ public class SingularitySlavePlacementTest extends SingularitySchedulerTestBase 
     } finally {
       configuration.setRebalanceRacksOnScaleDown(false);
     }
+  }
+
+  @Test
+  public void testPlacementOfBounceTasks() {
+    // Set up 1 active rack
+    sms.resourceOffers(driver, Arrays.asList(createOffer(1, 128, "slave1", "host1", Optional.of("rack1"))));
+
+    initRequest();
+    initFirstDeploy();
+    SingularityRequest newRequest = request.toBuilder()
+      .setInstances(Optional.of(1))
+      .setRackSensitive(Optional.of(true))
+      .setSlavePlacement(Optional.of(SlavePlacement.SEPARATE))
+      .setAllowBounceToSameHost(Optional.of(true))
+      .build();
+    saveAndSchedule(newRequest.toBuilder());
+    scheduler.drainPendingQueue(stateCacheProvider.get());
+
+    sms.resourceOffers(driver, Arrays.asList(createOffer(1, 128, "slave1", "host1", Optional.of("rack1"))));
+    Assert.assertEquals(1, taskManager.getActiveTaskIds().size());
+
+    requestResource.bounce(requestId);
+    cleaner.drainCleanupQueue();
+    scheduler.drainPendingQueue(stateCacheProvider.get());
+
+    Assert.assertEquals(1, taskManager.getNumCleanupTasks());
+    Assert.assertEquals(1, taskManager.getPendingTaskIds().size());
+    Assert.assertEquals(taskManager.getCleanupTasks().get(0).getActionId().get(), taskManager.getPendingTasks().get(0).getActionId().get());
+
+    // BOUNCE should allow a task to launch on the same host
+    sms.resourceOffers(driver, Arrays.asList(createOffer(1, 128, "slave1", "host1", Optional.of("rack1"))));
+    Assert.assertEquals(2, taskManager.getActiveTaskIds().size());
+
+    // Other pending type should not allow tasks on same host
+    saveAndSchedule(newRequest.toBuilder().setInstances(Optional.of(2)));
+    sms.resourceOffers(driver, Arrays.asList(createOffer(1, 128, "slave1", "host1", Optional.of("rack1"))));
+    Assert.assertEquals(2, taskManager.getActiveTaskIds().size());
   }
 }
