@@ -2,6 +2,7 @@ package com.hubspot.singularity.scheduler;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
 
@@ -19,16 +20,22 @@ import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.ExtendedTaskState;
+import com.hubspot.singularity.RequestCleanupType;
 import com.hubspot.singularity.RequestState;
+import com.hubspot.singularity.SingularityCreateResult;
 import com.hubspot.singularity.SingularityPendingRequest;
 import com.hubspot.singularity.SingularityPendingRequest.PendingType;
 import com.hubspot.singularity.SingularityRequest;
+import com.hubspot.singularity.SingularityRequestCleanup;
 import com.hubspot.singularity.SingularityRequestHistory.RequestHistoryType;
 import com.hubspot.singularity.SingularityRequestWithState;
+import com.hubspot.singularity.SingularityShellCommand;
 import com.hubspot.singularity.SingularityTaskCleanup;
 import com.hubspot.singularity.SingularityTaskHistoryUpdate;
+import com.hubspot.singularity.api.SingularityBounceRequest;
 import com.hubspot.singularity.api.SingularityScaleRequest;
 import com.hubspot.singularity.config.SingularityConfiguration;
+import com.hubspot.singularity.data.DeployManager;
 import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.expiring.SingularityExpiringBounce;
@@ -46,6 +53,7 @@ public class SingularityExpiringUserActionPoller extends SingularityLeaderOnlyPo
   private static final Logger LOG = LoggerFactory.getLogger(SingularityExpiringUserActionPoller.class);
 
   private final RequestManager requestManager;
+  private final DeployManager deployManager;
   private final TaskManager taskManager;
   private final SingularityMailer mailer;
   private final RequestHelper requestHelper;
@@ -53,10 +61,11 @@ public class SingularityExpiringUserActionPoller extends SingularityLeaderOnlyPo
   private final SingularityConfiguration configuration;
 
   @Inject
-  SingularityExpiringUserActionPoller(SingularityConfiguration configuration, RequestManager requestManager, TaskManager taskManager,
+  SingularityExpiringUserActionPoller(SingularityConfiguration configuration, RequestManager requestManager, DeployManager deployManager, TaskManager taskManager,
       @Named(SingularityMesosModule.SCHEDULER_LOCK_NAME) final Lock lock, RequestHelper requestHelper, SingularityMailer mailer) {
     super(configuration.getCheckExpiringUserActionEveryMillis(), TimeUnit.MILLISECONDS, lock);
 
+    this.deployManager = deployManager;
     this.requestManager = requestManager;
     this.requestHelper = requestHelper;
     this.mailer = mailer;
@@ -222,6 +231,28 @@ public class SingularityExpiringUserActionPoller extends SingularityLeaderOnlyPo
       try {
         requestHelper.updateRequest(newRequest, Optional.of(oldRequest), requestWithState.getState(), Optional.of(RequestHistoryType.SCALE_REVERTED), expiringObject.getUser(),
             Optional.<Boolean> absent(), Optional.of(message));
+
+        if (newRequest.getBounceAfterScale().or(false)) {
+          LOG.info("Attempting to bounce request {} after expiring scale", newRequest.getId());
+          Optional<String> maybeActiveDeployId = deployManager.getInUseDeployId(newRequest.getId());
+          if (maybeActiveDeployId.isPresent()) {
+            String bounceMessage = String.format("Bouncing after expiring scale by %s", expiringObject.getUser());
+            String actionId = UUID.randomUUID().toString();
+            SingularityCreateResult createResult = requestManager.createCleanupRequest(
+              new SingularityRequestCleanup(expiringObject.getUser(), RequestCleanupType.INCREMENTAL_BOUNCE, System.currentTimeMillis(), Optional.<Boolean> absent(),
+                newRequest.getId(), maybeActiveDeployId, Optional.<Boolean>absent(), Optional.of(bounceMessage), Optional.of(actionId), Optional.<SingularityShellCommand>absent()));
+
+            if (createResult != SingularityCreateResult.EXISTED) {
+              requestManager.bounce(requestWithState.getRequest(), System.currentTimeMillis(), expiringObject.getUser(), Optional.of(bounceMessage));
+              requestManager.saveExpiringObject(new SingularityExpiringBounce(newRequest.getId(), maybeActiveDeployId.get(), expiringObject.getUser(),
+                System.currentTimeMillis(), SingularityBounceRequest.defaultRequest(), actionId));
+            } else {
+              LOG.debug("Request {} was already bouncing, not bouncing again after expiring scale", newRequest.getId());
+            }
+          } else {
+            LOG.debug("No active deploy id present for request {}, not bouncing after expiring scale", newRequest.getId());
+          }
+        }
 
         mailer.sendRequestScaledMail(newRequest, Optional.<SingularityScaleRequest> absent(), oldRequest.getInstances(), expiringObject.getUser());
       } catch (WebApplicationException wae) {
