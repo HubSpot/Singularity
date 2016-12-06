@@ -6,7 +6,7 @@ const initialState = {
     ? JSON.parse(window.localStorage.getItem('slaves.columns'))
     : Utils.DEFAULT_SLAVES_COLUMNS,
   paginated: window.localStorage.hasOwnProperty('slaves.paginated')
-    ? JSON.parse(localStorage['slaves.paginated'])
+    ? (localStorage.getItem('slaves.paginated') == "true")
     : true
 };
 
