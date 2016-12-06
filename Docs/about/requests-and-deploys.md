@@ -43,7 +43,9 @@ Now you want `TestService` to actually run. To do this, you need to create a `De
         "https://github.com/HubSpot/singularity-test-service/releases/download/1.0/singularitytest-1.0-SNAPSHOT.jar",
         "https://github.com/HubSpot/singularity-test-service/releases/download/1.0/example.yml"
     ],
-    "healthcheckUri": "/"
+    "healthcheck": {
+       "uri": "/"
+     }
   }
 }
 ```
