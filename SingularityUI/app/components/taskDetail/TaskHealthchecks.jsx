@@ -101,12 +101,19 @@ TaskHealthchecks.propTypes = {
   task: PropTypes.shape({
     taskRequest: PropTypes.shape({
       deploy: PropTypes.shape({
-        healthcheckUri: PropTypes.string,
-        healthcheckTimeoutSeconds: PropTypes.number,
-        healthcheckIntervalSeconds: PropTypes.number,
-        healthcheckMaxRetries: PropTypes.number,
-        healthcheckMaxTotalTimeoutSeconds: PropTypes.number
-      }).isRequired
+        healthcheck: PropTypes.shape({
+          uri: PropTypes.string,
+          portIndex: PropTypes.number,
+          portNumber: PropTypes.number,
+          protocol: PropTypes.string,
+          startupTimeoutSeconds: PropTypes.number,
+          startupDelaySeconds: PropTypes.number,
+          startupIntervalSeconds: PropTypes.number,
+          intervalSeconds: PropTypes.number,
+          responseTimeoutSeconds: PropTypes.number,
+          maxRetries: PropTypes.number,
+          failureStatusCodes: PropTypes.arrayOf(PropTypes.number)
+      })
     }).isRequired,
     offer: PropTypes.shape({
       hostname: PropTypes.string
