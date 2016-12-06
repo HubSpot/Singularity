@@ -60,26 +60,31 @@ gulp.task('clean', function() {
   return del(dest + '/*');
 });
 
-gulp.task('html', function () {
+gulp.task('static', ['clean'], function() {
+  return gulp.src(['app/assets/static/**/*'])
+    .pipe(gulp.dest(dest + '/static'));
+})
+
+gulp.task('html', ['static'], function () {
   return gulp.src('app/assets/index.mustache')
     .pipe(mustache(templateData, {extension: '.html'}))
     .pipe(gulp.dest(dest));
 });
 
-gulp.task('debug-html', function () {
+gulp.task('debug-html', ['static'], function () {
   templateData.isDebug = true;
   return gulp.src('app/assets/index.mustache')
     .pipe(mustache(templateData, {extension: '.html'}))
     .pipe(gulp.dest(dest));
 });
 
-gulp.task('build', ['clean', 'html'], function () {
+gulp.task('build', ['html'], function () {
   return gulp.src('app')
     .pipe(webpackStream(require('./webpack.config')))
     .pipe(gulp.dest(dest + '/static'));
 });
 
-gulp.task('serve', ['clean', 'debug-html'], function () {
+gulp.task('serve', ['debug-html'], function () {
   var count = 0;
   var webpackConfig = require('./make-webpack-config')({
     isDebug: true,
