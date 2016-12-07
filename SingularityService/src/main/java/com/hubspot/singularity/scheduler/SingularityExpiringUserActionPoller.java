@@ -229,30 +229,20 @@ public class SingularityExpiringUserActionPoller extends SingularityLeaderOnlyPo
       final SingularityRequest newRequest = oldRequest.toBuilder().setInstances(expiringObject.getRevertToInstances()).build();
 
       try {
-        requestHelper.updateRequest(newRequest, Optional.of(oldRequest), requestWithState.getState(), Optional.of(RequestHistoryType.SCALE_REVERTED), expiringObject.getUser(),
-            Optional.<Boolean> absent(), Optional.of(message));
+        Optional<SingularityBounceRequest> maybeBounceRequest = Optional.absent();
 
         if (newRequest.getBounceAfterScale().or(false)) {
           LOG.info("Attempting to bounce request {} after expiring scale", newRequest.getId());
           Optional<String> maybeActiveDeployId = deployManager.getInUseDeployId(newRequest.getId());
           if (maybeActiveDeployId.isPresent()) {
-            String bounceMessage = String.format("Bouncing after expiring scale by %s", expiringObject.getUser());
-            String actionId = UUID.randomUUID().toString();
-            SingularityCreateResult createResult = requestManager.createCleanupRequest(
-              new SingularityRequestCleanup(expiringObject.getUser(), RequestCleanupType.INCREMENTAL_BOUNCE, System.currentTimeMillis(), Optional.<Boolean> absent(),
-                newRequest.getId(), maybeActiveDeployId, Optional.<Boolean>absent(), Optional.of(bounceMessage), Optional.of(actionId), Optional.<SingularityShellCommand>absent()));
-
-            if (createResult != SingularityCreateResult.EXISTED) {
-              requestManager.bounce(requestWithState.getRequest(), System.currentTimeMillis(), expiringObject.getUser(), Optional.of(bounceMessage));
-              requestManager.saveExpiringObject(new SingularityExpiringBounce(newRequest.getId(), maybeActiveDeployId.get(), expiringObject.getUser(),
-                System.currentTimeMillis(), SingularityBounceRequest.defaultRequest(), actionId));
-            } else {
-              LOG.debug("Request {} was already bouncing, not bouncing again after expiring scale", newRequest.getId());
-            }
+            maybeBounceRequest = Optional.of(SingularityBounceRequest.defaultRequest());
           } else {
             LOG.debug("No active deploy id present for request {}, not bouncing after expiring scale", newRequest.getId());
           }
         }
+
+        requestHelper.updateRequest(newRequest, Optional.of(oldRequest), requestWithState.getState(), Optional.of(RequestHistoryType.SCALE_REVERTED), expiringObject.getUser(),
+            Optional.<Boolean> absent(), Optional.of(message), maybeBounceRequest);
 
         mailer.sendRequestScaledMail(newRequest, Optional.<SingularityScaleRequest> absent(), oldRequest.getInstances(), expiringObject.getUser());
       } catch (WebApplicationException wae) {
@@ -280,7 +270,7 @@ public class SingularityExpiringUserActionPoller extends SingularityLeaderOnlyPo
 
       try {
         requestHelper.updateRequest(newRequest, Optional.of(oldRequest), requestWithState.getState(), Optional.<RequestHistoryType> absent(), expiringObject.getUser(),
-            Optional.<Boolean> absent(), Optional.of(message));
+            Optional.<Boolean> absent(), Optional.of(message), Optional.<SingularityBounceRequest>absent());
       } catch (WebApplicationException wae) {
         LOG.error("While trying to apply {} for {}", expiringObject, expiringObject.getRequestId(), wae);
       }

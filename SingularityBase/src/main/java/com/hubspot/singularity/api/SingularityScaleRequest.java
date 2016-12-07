@@ -9,13 +9,18 @@ public class SingularityScaleRequest extends SingularityExpiringRequestParent {
 
   private final Optional<Integer> instances;
   private final Optional<Boolean> skipHealthchecks;
+  private final Optional<Boolean> bounce;
+  private final Optional<Boolean> incrementalBounce;
 
   @JsonCreator
   public SingularityScaleRequest(@JsonProperty("instances") Optional<Integer> instances, @JsonProperty("durationMillis") Optional<Long> durationMillis,
-      @JsonProperty("skipHealthchecks") Optional<Boolean> skipHealthchecks, @JsonProperty("actionId") Optional<String> actionId, @JsonProperty("message") Optional<String> message) {
+      @JsonProperty("skipHealthchecks") Optional<Boolean> skipHealthchecks, @JsonProperty("actionId") Optional<String> actionId, @JsonProperty("message") Optional<String> message,
+      @JsonProperty("bounce") Optional<Boolean> bounce, @JsonProperty("incrementalBounce") Optional<Boolean> incrementalBounce) {
     super(durationMillis, actionId, message);
     this.instances = instances;
     this.skipHealthchecks = skipHealthchecks;
+    this.bounce = bounce;
+    this.incrementalBounce = incrementalBounce;
   }
 
   @ApiModelProperty(required=false, value="If set to true, healthchecks will be skipped while scaling this request (only)")
@@ -28,9 +33,19 @@ public class SingularityScaleRequest extends SingularityExpiringRequestParent {
     return instances;
   }
 
+  @ApiModelProperty(required=false, value="Bounce the request to get to the new scale")
+  public Optional<Boolean> getBounce() {
+    return bounce;
+  }
+
+  @ApiModelProperty(required=false, value="If present and set to true, old tasks will be killed as soon as replacement tasks are available, instead of waiting for all replacement tasks to be healthy")
+  public Optional<Boolean> getIncrementalBounce() {
+    return incrementalBounce;
+  }
+
   @Override
   public String toString() {
-    return "SingularityScaleRequest [instances=" + instances + ", skipHealthchecks=" + skipHealthchecks + ", toString()=" + super.toString() + "]";
+    return "SingularityScaleRequest [instances=" + instances + ", skipHealthchecks=" + skipHealthchecks + ", bounce=" + bounce + ", incrementalBounce=" + incrementalBounce + ", toString()=" + super.toString() + "]";
   }
 
 }
