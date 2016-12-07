@@ -11,12 +11,14 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.TimeZone;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
 import javax.inject.Singleton;
+import javax.ws.rs.HEAD;
 
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -27,7 +29,10 @@ import org.quartz.CronExpression;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Strings;
+import com.google.common.base.Predicate;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.google.common.hash.Hashing;
 import com.google.inject.Inject;
 import com.hubspot.deploy.HealthcheckOptions;
@@ -47,11 +52,16 @@ import com.hubspot.singularity.SingularityAction;
 import com.hubspot.singularity.SingularityPriorityFreezeParent;
 import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityRequestGroup;
+import com.hubspot.singularity.SingularityShellCommand;
 import com.hubspot.singularity.SingularityWebhook;
 import com.hubspot.singularity.SlavePlacement;
+import com.hubspot.singularity.WebExceptions;
 import com.hubspot.singularity.api.SingularityPriorityFreeze;
 import com.hubspot.singularity.api.SingularityBounceRequest;
 import com.hubspot.singularity.config.SingularityConfiguration;
+import com.hubspot.singularity.config.UIConfiguration;
+import com.hubspot.singularity.config.shell.ShellCommandDescriptor;
+import com.hubspot.singularity.config.shell.ShellCommandOptionDescriptor;
 import com.hubspot.singularity.data.history.DeployHistoryHelper;
 
 @Singleton
@@ -61,9 +71,11 @@ public class SingularityValidator {
   private static final List<Character> REQUEST_ID_ILLEGAL_CHARACTERS = Arrays.asList('@', '\\', '/', '*', '?', '%', ' ', '[', ']', '#', '$'); // Characters that make Mesos or URL bars sad
   private static final Pattern DAY_RANGE_REGEXP = Pattern.compile("[0-7]-[0-7]");
   private static final Pattern COMMA_DAYS_REGEXP = Pattern.compile("([0-7],)+([0-7])?");
+  private static final int MAX_STARRED_REQUESTS = 5000;
 
   private final int maxDeployIdSize;
   private final int maxRequestIdSize;
+  private final int maxUserIdSize;
   private final int maxCpusPerRequest;
   private final int maxCpusPerInstance;
   private final int maxInstancesPerRequest;
@@ -78,6 +90,7 @@ public class SingularityValidator {
   private final boolean allowRequestsWithoutOwners;
   private final boolean createDeployIds;
   private final int deployIdLength;
+  private final UIConfiguration uiConfiguration;
   private final SlavePlacement defaultSlavePlacement;
   private final DeployHistoryHelper deployHistoryHelper;
   private final Resources defaultResources;
@@ -86,9 +99,10 @@ public class SingularityValidator {
   private final SlaveManager slaveManager;
 
   @Inject
-  public SingularityValidator(SingularityConfiguration configuration, DeployHistoryHelper deployHistoryHelper, PriorityManager priorityManager, DisasterManager disasterManager, SlaveManager slaveManager) {
+  public SingularityValidator(SingularityConfiguration configuration, DeployHistoryHelper deployHistoryHelper, PriorityManager priorityManager, DisasterManager disasterManager, SlaveManager slaveManager, UIConfiguration uiConfiguration) {
     this.maxDeployIdSize = configuration.getMaxDeployIdSize();
     this.maxRequestIdSize = configuration.getMaxRequestIdSize();
+    this.maxUserIdSize = configuration.getMaxUserIdSize();
     this.allowRequestsWithoutOwners = configuration.isAllowRequestsWithoutOwners();
     this.createDeployIds = configuration.isCreateDeployIds();
     this.deployIdLength = configuration.getDeployIdLength();
@@ -114,6 +128,8 @@ public class SingularityValidator {
     this.defaultHealthcheckStartupTimeooutSeconds = configuration.getStartupTimeoutSeconds();
     this.defaultHealthcehckMaxRetries = configuration.getHealthcheckMaxRetries().or(0);
     this.defaultHealthcheckResponseTimeoutSeconds = configuration.getHealthcheckTimeoutSeconds();
+
+    this.uiConfiguration = uiConfiguration;
 
     this.disasterManager = disasterManager;
     this.slaveManager = slaveManager;
@@ -542,6 +558,15 @@ public class SingularityValidator {
     }
   }
 
+  public void checkUserId(String userId) {
+    checkBadRequest(!Strings.isNullOrEmpty(userId), "User ID must be present and non-null");
+    checkBadRequest(!(userId.length() > maxUserIdSize), "User ID cannot be more than %s characters, it was %s", maxUserIdSize, userId.length());
+  }
+
+  public void checkStarredRequests(Set<String> starredRequests) {
+    checkBadRequest(!(starredRequests.size() > MAX_STARRED_REQUESTS), "Cannot have more than %s starred requests", MAX_STARRED_REQUESTS);
+  }
+
   public SingularityPriorityFreeze checkSingularityPriorityFreeze(SingularityPriorityFreeze priorityFreeze) {
     checkBadRequest(priorityFreeze.getMinimumPriorityLevel() > 0 && priorityFreeze.getMinimumPriorityLevel() <= 1, "minimumPriorityLevel %s is invalid, must be greater than 0 and less than or equal to 1.", priorityFreeze.getMinimumPriorityLevel());
 
@@ -582,5 +607,31 @@ public class SingularityValidator {
     checkBadRequest(requestGroup.getId().length() < maxRequestIdSize, "Id must be less than %s characters, it is %s (%s)", maxRequestIdSize, requestGroup.getId().length(), requestGroup.getId());
 
     checkBadRequest(requestGroup.getRequestIds() != null, "requestIds cannot be null");
+  }
+
+  public void checkValidShellCommand(final SingularityShellCommand shellCommand) {
+    Optional<ShellCommandDescriptor> commandDescriptor = Iterables.tryFind(uiConfiguration.getShellCommands(), new Predicate<ShellCommandDescriptor>() {
+      @Override
+      public boolean apply(ShellCommandDescriptor input) {
+        return input.getName().equals(shellCommand.getName());
+      }
+    });
+
+    if (!commandDescriptor.isPresent()) {
+      throw WebExceptions.badRequest("Shell command %s not in %s", shellCommand.getName(), uiConfiguration.getShellCommands());
+    }
+
+    Set<String> options = Sets.newHashSetWithExpectedSize(commandDescriptor.get().getOptions().size());
+    for (ShellCommandOptionDescriptor option : commandDescriptor.get().getOptions()) {
+      options.add(option.getName());
+    }
+
+    if (shellCommand.getOptions().isPresent()) {
+      for (String option : shellCommand.getOptions().get()) {
+        if (!options.contains(option)) {
+          throw WebExceptions.badRequest("Shell command %s does not have option %s (%s)", shellCommand.getName(), option, options);
+        }
+      }
+    }
   }
 }

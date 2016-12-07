@@ -7,7 +7,7 @@ import FormModal from '../modal/FormModal';
 
 class UnpauseModal extends Component {
   static propTypes = {
-    requestId: PropTypes.string.isRequired,
+    requestId: PropTypes.oneOfType([PropTypes.string, PropTypes.array]).isRequired,
     unpauseRequest: PropTypes.func.isRequired
   };
 
@@ -15,12 +15,20 @@ class UnpauseModal extends Component {
     this.refs.unpauseModal.show();
   }
 
+  confirm(data) {
+    const requestIds = typeof this.props.requestId === 'string' ? [this.props.requestId] : this.props.requestId;
+    for (const requestId of requestIds) {
+      this.props.unpauseRequest(requestId, data, [409]);
+    }
+  }
+
   render() {
+    const requestIds = typeof this.props.requestId === 'string' ? [this.props.requestId] : this.props.requestId;
     return (
       <FormModal
         ref="unpauseModal"
         action="Unpause Request"
-        onConfirm={(data) => this.props.unpauseRequest(data)}
+        onConfirm={(data) => this.confirm(data)}
         buttonStyle="primary"
         formElements={[
           {
@@ -34,15 +42,15 @@ class UnpauseModal extends Component {
             label: 'Message (optional)'
           }
         ]}>
-        <p>Are you sure you want to unpause this request?</p>
-        <pre>{this.props.requestId}</pre>
+        <p>Are you sure you want to unpause {requestIds.length > 1 ? 'these' : 'this'} request{requestIds.length > 1 && 's'}?</p>
+        <pre>{requestIds.join('\n')}</pre>
       </FormModal>
     );
   }
 }
 
 const mapDispatchToProps = (dispatch, ownProps) => ({
-  unpauseRequest: (data) => dispatch(UnpauseRequest.trigger(ownProps.requestId, data)).then((response) => ownProps.then && ownProps.then(response)),
+  unpauseRequest: (requestId, data, catchStatusCodes) => dispatch(UnpauseRequest.trigger(requestId, data, catchStatusCodes)).then((response) => ownProps.then && ownProps.then(response)),
 });
 
 export default connect(

@@ -1,7 +1,7 @@
 import React from 'react';
 import classNames from 'classnames';
 
-import { Modal, Button, Popover, OverlayTrigger } from 'react-bootstrap';
+import { Modal, Button, Popover, OverlayTrigger, DropdownButton, MenuItem } from 'react-bootstrap';
 import TagsInput from 'react-tagsinput';
 import MultiInput from '../formItems/MultiInput';
 import Select from 'react-select';
@@ -122,7 +122,9 @@ export default class FormModal extends React.Component {
           parsed[key] = Number.parseFloat(val);
           break;
         case FormModal.INPUT_TYPES.DURATION:
-          parsed[key] = juration.parse(val) * 1000;
+          if (val) {
+            parsed[key] = juration.parse(val) * 1000;
+          }
           break;
         default:
           parsed[key] = val;
@@ -188,6 +190,19 @@ export default class FormModal extends React.Component {
     );
   }
 
+  renderFormattedOptions(optionValue) {
+    if (_.isArray(optionValue)) {
+      let optionLines = optionValue.map((value) =>
+        (<li key={value}>{value}</li>)
+      );
+      return (
+        <ul>{optionLines}</ul>
+      );
+    } else {
+      return optionValue;
+    }
+  }
+
   renderForm() {
     const inputs = this.props.formElements.map((formElement) => {
       const error = this.state.errors[formElement.name];
@@ -209,6 +224,39 @@ export default class FormModal extends React.Component {
           </div>
         );
       });
+
+      const selectOptions = () => {
+        if (formElement.valueOptions && formElement.valueOptions.length > 0) {
+          const menuItems = []
+          _.each(formElement.valueOptions, (optionValue, index) => {
+            if (index < 5) {
+              if (index != 0) {
+                menuItems.push(<MenuItem divider />);
+              }
+              menuItems.push(
+                <MenuItem
+                  eventKey={index}
+                  onSelect={() => this.handleFormChange(formElement.name, optionValue)}
+                >
+                  {this.renderFormattedOptions(optionValue)}
+                </MenuItem>
+              );
+            }
+          });
+          return (
+
+            <DropdownButton
+              pullRight
+              bsStyle="info"
+              bsSize="small"
+              title="Previous Args"
+              id={`${formElement.name}-input-dropdown-options`}
+            >
+              {menuItems}
+            </DropdownButton>
+          );
+        }
+      }
 
       let extraHelp;
 
@@ -284,16 +332,21 @@ export default class FormModal extends React.Component {
 
         case FormModal.INPUT_TYPES.MULTIINPUT:
           return (
-            <FormModal.FormItem element={formElement} formState={this.state.formState} key={formElement.name}>
-              <label style={{display: 'block', width: '100%'}}>
-                {formElement.label}
-                <MultiInput
-                  id={`${formElement.name}-input`}
-                  value={this.state.formState[formElement.name] || []}
-                  onChange={(values) => this.handleFormChange(formElement.name, values)}
-                />
-              </label>
-            </FormModal.FormItem>
+            <div>
+              <FormModal.FormItem element={formElement} formState={this.state.formState} key={formElement.name}>
+                <label style={{display: 'block', width: '100%'}}>
+                  {formElement.label}
+                  <span className="pull-right">
+                    {selectOptions()}
+                  </span>
+                  <MultiInput
+                    id={`${formElement.name}-input`}
+                    value={this.state.formState[formElement.name] || []}
+                    onChange={(values) => this.handleFormChange(formElement.name, values)}
+                  />
+                </label>
+              </FormModal.FormItem>
+            </div>
           );
 
         case FormModal.INPUT_TYPES.NUMBER:
@@ -397,7 +450,7 @@ export default class FormModal extends React.Component {
         </Modal.Body>
         <Modal.Footer>
           {cancel}
-          <Button bsStyle={this.props.buttonStyle} onClick={this.confirm}>{this.props.action}</Button>
+          <Button bsStyle={this.props.buttonStyle} onClick={this.confirm} disabled={this.props.disableSubmit}>{this.props.action}</Button>
         </Modal.Footer>
       </Modal>
     );
@@ -411,6 +464,7 @@ FormModal.propTypes = {
   name: React.PropTypes.string,
   children: React.PropTypes.node,
   mustFill: React.PropTypes.bool,
+  disableSubmit: React.PropTypes.bool,
   formElements: React.PropTypes.arrayOf(React.PropTypes.shape({
     options: React.PropTypes.arrayOf(React.PropTypes.shape({
       value: React.PropTypes.string.isRequired,

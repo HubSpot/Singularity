@@ -3,6 +3,7 @@ package com.hubspot.singularity.auth;
 import static com.google.common.collect.ImmutableSet.copyOf;
 import static com.hubspot.singularity.WebExceptions.badRequest;
 import static com.hubspot.singularity.WebExceptions.checkForbidden;
+import static com.hubspot.singularity.WebExceptions.checkNotFound;
 import static com.hubspot.singularity.WebExceptions.checkUnauthorized;
 
 import java.util.Collections;
@@ -230,5 +231,14 @@ public class SingularityAuthorizationHelper {
         return requestMap.containsKey(input) && isAuthorizedForRequest(requestMap.get(input).getRequest(), user, scope);
       }
     });
+  }
+
+  public String getAuthUserId(Optional<SingularityUser> user) {
+    if (authEnabled) {
+      checkUnauthorized(user.isPresent(), "Please log in to perform this action.");
+    } else {
+      checkNotFound(user.isPresent(), "Please set a user id to perform this action.");
+    }
+    return user.get().getId();
   }
 }

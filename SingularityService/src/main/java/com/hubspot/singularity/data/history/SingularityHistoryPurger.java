@@ -1,7 +1,6 @@
 package com.hubspot.singularity.data.history;
 
 import java.util.Date;
-import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import javax.inject.Singleton;
@@ -13,7 +12,6 @@ import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.config.HistoryPurgingConfiguration;
-import com.hubspot.singularity.data.history.SingularityMappers.SingularityRequestIdCount;
 import com.hubspot.singularity.scheduler.SingularityLeaderOnlyPoller;
 
 @Singleton
@@ -52,28 +50,23 @@ public class SingularityHistoryPurger extends SingularityLeaderOnlyPoller {
       LOG.debug("Purging taskHistory before {}", purgeBefore.get());
     }
 
-    final long start = System.currentTimeMillis();
-
     LOG.info("Finding taskHistory counts before {} (purging tasks over limit of {})", checkBefore, historyPurgingConfiguration.getDeleteTaskHistoryAfterTasksPerRequest());
 
-    final List<SingularityRequestIdCount> requestIdCounts = historyManager.getRequestIdCounts(checkBefore);
-
-    LOG.info("Found {} counts in {}", requestIdCounts.size(), JavaUtils.duration(start));
-
-    for (SingularityRequestIdCount requestIdCount : requestIdCounts) {
+    for (String requestId : historyManager.getRequestIdsInTaskHistory()) {
+      int unpurgedCount = historyManager.getUnpurgedTaskHistoryCountByRequestBefore(requestId, checkBefore);
       if (!historyPurgingConfiguration.getDeleteTaskHistoryAfterDays().isPresent() && historyPurgingConfiguration.getDeleteTaskHistoryAfterTasksPerRequest().isPresent() &&
-          requestIdCount.getCount() < historyPurgingConfiguration.getDeleteTaskHistoryAfterTasksPerRequest().get()) {
-        LOG.debug("Not purging old taskHistory for {} - {} count is less than {}", requestIdCount.getRequestId(), requestIdCount.getCount(),
+        unpurgedCount < historyPurgingConfiguration.getDeleteTaskHistoryAfterTasksPerRequest().get()) {
+        LOG.debug("Not purging old taskHistory for {} - {} count is less than {}", requestId, unpurgedCount,
             historyPurgingConfiguration.getDeleteTaskHistoryAfterTasksPerRequest().get());
         continue;
       }
 
       final long startRequestId = System.currentTimeMillis();
 
-      historyManager.purgeTaskHistory(requestIdCount.getRequestId(), requestIdCount.getCount(), historyPurgingConfiguration.getDeleteTaskHistoryAfterTasksPerRequest(), purgeBefore,
-          historyPurgingConfiguration.isDeleteTaskHistoryBytesInsteadOfEntireRow());
+      historyManager.purgeTaskHistory(requestId, unpurgedCount, historyPurgingConfiguration.getDeleteTaskHistoryAfterTasksPerRequest(), purgeBefore,
+          !historyPurgingConfiguration.isDeleteTaskHistoryBytesInsteadOfEntireRow());
 
-      LOG.info("Purged old taskHistory for {} ({} count) in {}", requestIdCount.getRequestId(), requestIdCount.getCount(), JavaUtils.duration(startRequestId));
+      LOG.info("Purged old taskHistory for {} ({} count) in {}", requestId, unpurgedCount, JavaUtils.duration(startRequestId));
     }
   }
 

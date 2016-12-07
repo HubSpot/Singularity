@@ -70,7 +70,7 @@ public class IndexView extends View {
 
     this.appRoot = (rawAppRoot.endsWith("/")) ? rawAppRoot.substring(0, rawAppRoot.length() - 1) : rawAppRoot;
     this.staticRoot = String.format("%s/static", singularityUriBase);
-    this.apiDocs = String.format("%s/api-docs", singularityUriBase);
+    this.apiDocs = String.format("%s/api-docs/", singularityUriBase);
     this.apiRoot = String.format("%s%s", singularityUriBase, SingularityService.API_BASE_PATH);
 
     this.title = configuration.getUiConfiguration().getTitle();

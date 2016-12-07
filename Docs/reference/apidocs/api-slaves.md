@@ -29,6 +29,29 @@ Freeze tasks on a specific slave
 
 
 - - -
+#### **GET** `/api/slaves/slave/{slaveId}/details`
+
+Get information about a particular slave
+
+
+###### Parameters
+**path**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| slaveId | true | Slave ID | string |
+
+###### Response
+[SingularitySlave](models.md#model-SingularitySlave)
+
+
+###### Errors
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| - | - | - |
+
+
+- - -
 #### **POST** `/api/slaves/slave/{slaveId}/decommission`
 
 Begin decommissioning a specific active slave

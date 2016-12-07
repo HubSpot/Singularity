@@ -151,12 +151,12 @@ ManageDisasters.propTypes = {
   })).isRequired,
   priorityFreeze: PropTypes.shape({
     priorityFreeze: PropTypes.shape({
-      minimumPriorityLevel: PropTypes.number.isRequired,
-      killTasks: PropTypes.bool.isRequired,
+      minimumPriorityLevel: PropTypes.number,
+      killTasks: PropTypes.bool,
       message: PropTypes.string,
       actionId: PropTypes.string
     }).isRequired,
-    timestamp: PropTypes.number.isRequired,
+    timestamp: PropTypes.number,
     user: PropTypes.string
   }),
   automatedActionsDisabled: PropTypes.bool
