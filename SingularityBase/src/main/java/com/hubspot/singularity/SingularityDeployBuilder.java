@@ -582,6 +582,7 @@ public class SingularityDeployBuilder {
     return this;
   }
 
+
   @Override
   public String toString() {
     return Objects.toStringHelper(this)
