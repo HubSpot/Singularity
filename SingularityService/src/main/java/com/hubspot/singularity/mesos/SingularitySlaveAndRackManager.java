@@ -29,6 +29,8 @@ import com.hubspot.mesos.json.MesosMasterStateObject;
 import com.hubspot.mesos.json.MesosResourcesObject;
 import com.hubspot.singularity.MachineState;
 import com.hubspot.singularity.SingularityMachineAbstraction;
+import com.hubspot.singularity.SingularityPendingRequest.PendingType;
+import com.hubspot.singularity.SingularityPendingTask;
 import com.hubspot.singularity.SingularityRack;
 import com.hubspot.singularity.SingularitySlave;
 import com.hubspot.singularity.SingularityTask;
@@ -133,10 +135,13 @@ public class SingularitySlaveAndRackManager {
     }
 
     final int numDesiredInstances = taskRequest.getRequest().getInstancesSafe();
+    final boolean allowBounceToSameHost = taskRequest.getRequest().getAllowBounceToSameHost().or(configuration.isAllowBounceToSameHost());
     Multiset<String> countPerRack = HashMultiset.create(stateCache.getNumActiveRacks());
     double numOnSlave = 0;
     double numCleaningOnSlave = 0;
+    double numFromSameBounceOnSlave = 0;
     double numOtherDeploysOnSlave = 0;
+    boolean taskLaunchedFromBounceWithActionId = taskRequest.getPendingTask().getPendingTaskId().getPendingType() == PendingType.BOUNCE && taskRequest.getPendingTask().getActionId().isPresent();
 
     final String sanitizedHost = JavaUtils.getReplaceHyphensWithUnderscores(host);
     final String sanitizedRackId = JavaUtils.getReplaceHyphensWithUnderscores(rackId);
@@ -150,6 +155,17 @@ public class SingularitySlaveAndRackManager {
             numCleaningOnSlave++;
           } else {
             numOnSlave++;
+          }
+          if (taskLaunchedFromBounceWithActionId) {
+            Optional<SingularityTask> maybeTask = taskManager.getTask(taskId);
+            if (maybeTask.isPresent()) {
+              SingularityPendingTask pendingTask = maybeTask.get().getTaskRequest().getPendingTask();
+              if (pendingTask.getPendingTaskId().getPendingType() == PendingType.BOUNCE
+                && pendingTask.getActionId().isPresent()
+                && pendingTask.getActionId().get().equals(taskRequest.getPendingTask().getActionId().get())) {
+                numFromSameBounceOnSlave++;
+              }
+            }
           }
         } else {
           numOtherDeploysOnSlave++;
@@ -171,14 +187,21 @@ public class SingularitySlaveAndRackManager {
     switch (slavePlacement) {
       case SEPARATE:
       case SEPARATE_BY_DEPLOY:
-        if (numOnSlave > 0 || numCleaningOnSlave > 0) {
-          LOG.trace("Rejecting SEPARATE task {} from slave {} ({}) due to numOnSlave {} numCleaningOnSlave {}", taskRequest.getRequest().getId(), slaveId, host, numOnSlave, numCleaningOnSlave);
-          return SlaveMatchState.SLAVE_SATURATED;
+        if (allowBounceToSameHost && taskLaunchedFromBounceWithActionId) {
+          if (numFromSameBounceOnSlave > 0) {
+            LOG.trace("Rejecting SEPARATE task {} from slave {} ({}) due to numFromSameBounceOnSlave {}", taskRequest.getRequest().getId(), slaveId, host, numFromSameBounceOnSlave);
+            return SlaveMatchState.SLAVE_SATURATED;
+          }
+        } else {
+          if (numOnSlave > 0 || numCleaningOnSlave > 0) {
+            LOG.trace("Rejecting SEPARATE task {} from slave {} ({}) due to numOnSlave {} numCleaningOnSlave {}", taskRequest.getRequest().getId(), slaveId, host, numOnSlave, numCleaningOnSlave);
+            return SlaveMatchState.SLAVE_SATURATED;
+          }
         }
         break;
       case SEPARATE_BY_REQUEST:
         if (numOnSlave > 0 || numCleaningOnSlave > 0 || numOtherDeploysOnSlave > 0) {
-          LOG.trace("Rejecting SEPARATE task {} from slave {} ({}) due to numOnSlave {} numCleaningOnSlave {} numOtherDeploysOnSlave {}", taskRequest.getRequest().getId(), slaveId, host, numOnSlave, numCleaningOnSlave, numOtherDeploysOnSlave);
+          LOG.trace("Rejecting SEPARATE_BY_REQUEST task {} from slave {} ({}) due to numOnSlave {} numCleaningOnSlave {} numOtherDeploysOnSlave {}", taskRequest.getRequest().getId(), slaveId, host, numOnSlave, numCleaningOnSlave, numOtherDeploysOnSlave);
           return SlaveMatchState.SLAVE_SATURATED;
         }
         break;
