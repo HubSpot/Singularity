@@ -11,8 +11,8 @@ import FormModal from '../modal/FormModal';
 class ScaleModal extends Component {
   static propTypes = {
     requestId: PropTypes.string.isRequired,
+    bounceAfterScaleDefault: PropTypes.bool.isRequired,
     scaleRequest: PropTypes.func.isRequired,
-    bounceRequest: PropTypes.func.isRequired,
     currentInstances: PropTypes.number,
     then: PropTypes.func
   };
@@ -33,22 +33,16 @@ class ScaleModal extends Component {
   };
 
   handleScale(data) {
-    const { instances, durationMillis, message } = data;
+    const { instances, durationMillis, message, bounce, incremental } = data;
     this.props.scaleRequest(
       {
         instances,
         durationMillis,
-        message
+        message,
+        bounce,
+        incremental
       }
-    ).then(() => {
-      if (data.bounce) {
-        this.props.bounceRequest(
-          {
-            incremental: !!data.incremental
-          }
-        );
-      }
-    });
+    );
   }
 
   show() {
@@ -76,7 +70,7 @@ class ScaleModal extends Component {
             name: 'bounce',
             type: FormModal.INPUT_TYPES.BOOLEAN,
             label: 'Bounce after scaling',
-            defaultValue: false
+            defaultValue: this.props.bounceAfterScaleDefault
           },
           {
             name: 'incremental',
@@ -105,7 +99,6 @@ class ScaleModal extends Component {
 
 const mapDispatchToProps = (dispatch, ownProps) => ({
   scaleRequest: (data) => dispatch(ScaleRequest.trigger(ownProps.requestId, data)).then((response) => ownProps.then && ownProps.then(response)),
-  bounceRequest: (data) => dispatch(BounceRequest.trigger(ownProps.requestId, data))
 });
 
 export default connect(

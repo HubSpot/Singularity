@@ -578,7 +578,7 @@ public class RequestResource extends AbstractRequestResource {
       checkBadRequest(newRequest.isLongRunning(), "Can not bounce a %s request (%s)", newRequest.getRequestType(), newRequest);
       checkConflict(oldRequestWithState.getState() != RequestState.PAUSED, "Request %s is paused. Unable to bounce (it must be manually unpaused first)", newRequest.getId());
 
-      final boolean isIncrementalBounce = scaleRequest.getIncrementalBounce().or(true);
+      final boolean isIncrementalBounce = scaleRequest.getIncremental().or(true);
 
       validator.checkResourcesForBounce(newRequest, isIncrementalBounce);
       validator.checkRequestForPriorityFreeze(newRequest);
