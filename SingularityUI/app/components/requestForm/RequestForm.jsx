@@ -354,9 +354,6 @@ const RequestForm = (props) => {
       label="Allow Bounce To Same Host"
       checked={getValue('allowBounceToSameHost') || false}
       onChange={(newValue) => updateField('allowBounceToSameHost', newValue)}
-      disabled={isEditing && true}
-      hasTooltip={isEditing && true}
-      tooltipText="Option cannot be altered after creation"
     />
   );
 

@@ -24,23 +24,24 @@ class ScaleModal extends Component {
   static INCREMENTAL_BOUNCE_VALUE = {
     INCREMENTAL: {
       label: 'Kill old tasks as new tasks become healthy',
-      value: true
+      value: 'incremental'
     },
     ALL: {
       label: 'Kill old tasks once ALL new tasks are healthy',
-      value: false
+      value: 'non-incremental'
     }
   };
 
   handleScale(data) {
     const { instances, durationMillis, message, bounce, incremental } = data;
+    const isIncremental = incremental === 'incremental';
     this.props.scaleRequest(
       {
         instances,
         durationMillis,
         message,
         bounce,
-        incremental
+        incremental: isIncremental
       }
     );
   }
