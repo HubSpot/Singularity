@@ -309,7 +309,7 @@ const Utils = {
   },
   request: {
     // all of these expect a RequestParent object
-    LONG_RUNNING_TYPES: new Set(['WORKER', 'SERVICE']),
+    LONG_RUNNING_TYPES: ['WORKER', 'SERVICE'],
     hasActiveDeploy: (requestParent) => {
       return Utils.maybe(requestParent, ['activeDeploy'], false) || Utils.maybe(requestParent, ['requestDeployState', 'activeDeploy'], false);
     },
