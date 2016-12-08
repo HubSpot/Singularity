@@ -7,7 +7,7 @@ import { withRouter } from 'react-router';
 
 class TaskInstanceRedirect extends Component {
   componentWillMount() {
-    this.props.fetchActiveTasksForRequest(props.params.requestId);
+    this.props.fetchActiveTasksForRequest(this.props.params.requestId);
   }
 
   componentWillReceiveProps(nextProps) {
