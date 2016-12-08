@@ -32,6 +32,7 @@ import com.hubspot.singularity.SingularityMachineAbstraction;
 import com.hubspot.singularity.SingularityPendingRequest.PendingType;
 import com.hubspot.singularity.SingularityPendingTask;
 import com.hubspot.singularity.SingularityRack;
+import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularitySlave;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskId;
@@ -134,7 +135,7 @@ public class SingularitySlaveAndRackManager {
     }
 
     final int numDesiredInstances = taskRequest.getRequest().getInstancesSafe();
-    final boolean allowBounceToSameHost = taskRequest.getRequest().getAllowBounceToSameHost().or(configuration.isAllowBounceToSameHost());
+    final boolean allowBounceToSameHost = isAllowBounceToSameHost(taskRequest.getRequest());
     Multiset<String> countPerRack = HashMultiset.create(stateCache.getNumActiveRacks());
     double numOnSlave = 0;
     double numCleaningOnSlave = 0;
@@ -218,6 +219,14 @@ public class SingularitySlaveAndRackManager {
     }
 
     return SlaveMatchState.OK;
+  }
+
+  private boolean isAllowBounceToSameHost(SingularityRequest request) {
+    if (request.getAllowBounceToSameHost().isPresent()) {
+      return request.getAllowBounceToSameHost().get();
+    } else {
+      return configuration.isAllowBounceToSameHost();
+    }
   }
 
   private boolean isRackOk(Multiset<String> countPerRack, String sanitizedRackId, int numDesiredInstances, String requestId, String slaveId, String host, double numCleaningOnSlave, SingularitySchedulerStateCache stateCache) {

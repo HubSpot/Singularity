@@ -1,13 +1,10 @@
 package com.hubspot.singularity.helpers;
 
-import static com.hubspot.singularity.WebExceptions.checkConflict;
-
 import java.util.UUID;
 
 import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.RequestCleanupType;
 import com.hubspot.singularity.RequestState;
 import com.hubspot.singularity.SingularityCreateResult;
@@ -104,13 +101,14 @@ public class RequestHelper {
             new SingularityRequestCleanup(user, maybeBounceRequest.get().getIncremental().or(true) ? RequestCleanupType.INCREMENTAL_BOUNCE : RequestCleanupType.BOUNCE,
               System.currentTimeMillis(), Optional.<Boolean> absent(), newRequest.getId(), Optional.of(maybeDeployId.get()), skipHealthchecks, message, actionId, maybeBounceRequest.get().getRunShellCommandBeforeKill()));
 
-          checkConflict(createResult != SingularityCreateResult.EXISTED, "%s is already bouncing", newRequest.getId());
-
-          requestManager.bounce(newRequest, System.currentTimeMillis(), user, Optional.of(String.format("Bouncing due to bounce after scale by %s", user)));
-
-          final SingularityBounceRequest validatedBounceRequest = validator.checkBounceRequest(maybeBounceRequest.get());
-
-          requestManager.saveExpiringObject(new SingularityExpiringBounce(newRequest.getId(), maybeDeployId.get(), user, System.currentTimeMillis(), validatedBounceRequest, actionId.get()));
+          if (createResult != SingularityCreateResult.EXISTED) {
+            requestManager.bounce(newRequest, System.currentTimeMillis(), user, Optional.of(String.format("Bouncing due to bounce after scale by %s", user)));
+            final SingularityBounceRequest validatedBounceRequest = validator.checkBounceRequest(maybeBounceRequest.get());
+            requestManager.saveExpiringObject(new SingularityExpiringBounce(newRequest.getId(), maybeDeployId.get(), user, System.currentTimeMillis(), validatedBounceRequest, actionId.get()));
+          } else {
+            requestManager.addToPendingQueue(new SingularityPendingRequest(newRequest.getId(), maybeDeployId.get(), timestamp, user, PendingType.UPDATED_REQUEST,
+              skipHealthchecks, message));
+          }
         } else {
           requestManager.addToPendingQueue(new SingularityPendingRequest(newRequest.getId(), maybeDeployId.get(), timestamp, user, PendingType.UPDATED_REQUEST,
             skipHealthchecks, message));

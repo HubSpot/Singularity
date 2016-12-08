@@ -175,6 +175,10 @@ public class RequestManager extends CuratorAsyncManager {
     return false;
   }
 
+  public boolean cleanupRequestExists(String requestId, RequestCleanupType type) {
+    return checkExists(getCleanupPath(requestId, type)).isPresent();
+  }
+
   public void deleteCleanRequest(String requestId, RequestCleanupType type) {
     delete(getCleanupPath(requestId, type));
   }
