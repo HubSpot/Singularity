@@ -135,7 +135,7 @@ public class SingularitySlaveAndRackManager {
     }
 
     final int numDesiredInstances = taskRequest.getRequest().getInstancesSafe();
-    final boolean allowBounceToSameHost = isAllowBounceToSameHost(taskRequest.getRequest());
+    boolean allowBounceToSameHost = isAllowBounceToSameHost(taskRequest.getRequest());
     Multiset<String> countPerRack = HashMultiset.create(stateCache.getNumActiveRacks());
     double numOnSlave = 0;
     double numCleaningOnSlave = 0;
@@ -158,13 +158,25 @@ public class SingularitySlaveAndRackManager {
           }
           if (taskLaunchedFromBounceWithActionId) {
             Optional<SingularityTask> maybeTask = taskManager.getTask(taskId);
+            boolean errorInTaskData = false;
             if (maybeTask.isPresent()) {
               SingularityPendingTask pendingTask = maybeTask.get().getTaskRequest().getPendingTask();
-              if (pendingTask.getPendingTaskId().getPendingType() == PendingType.BOUNCE
-                && pendingTask.getActionId().isPresent()
-                && pendingTask.getActionId().get().equals(taskRequest.getPendingTask().getActionId().get())) {
-                numFromSameBounceOnSlave++;
+              if (pendingTask.getPendingTaskId().getPendingType() == PendingType.BOUNCE) {
+                if (pendingTask.getActionId().isPresent()) {
+                  if (pendingTask.getActionId().get().equals(taskRequest.getPendingTask().getActionId().get())) {
+                    numFromSameBounceOnSlave++;
+                  }
+                } else {
+                  // No actionId present on bounce, fall back to more restrictive placement strategy
+                  errorInTaskData = true;
+                }
               }
+            } else {
+              // Could not find appropriate task data, fall back to more restrictive placement strategy
+              errorInTaskData = true;
+            }
+            if (errorInTaskData) {
+              allowBounceToSameHost = false;
             }
           }
         } else {
