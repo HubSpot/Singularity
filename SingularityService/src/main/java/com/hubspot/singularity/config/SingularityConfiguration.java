@@ -302,6 +302,8 @@ public class SingularityConfiguration extends Configuration {
 
   private boolean rebalanceRacksOnScaleDown = false;
 
+  private boolean allowBounceToSameHost = false;
+
   public long getAskDriverToKillTasksAgainAfterMillis() {
     return askDriverToKillTasksAgainAfterMillis;
   }
@@ -1206,5 +1208,14 @@ public class SingularityConfiguration extends Configuration {
 
   public void setRebalanceRacksOnScaleDown(boolean rebalanceRacksOnScaleDown) {
     this.rebalanceRacksOnScaleDown = rebalanceRacksOnScaleDown;
+  }
+
+  public boolean isAllowBounceToSameHost() {
+    return allowBounceToSameHost;
+  }
+
+  public SingularityConfiguration setAllowBounceToSameHost(boolean allowBounceToSameHost) {
+    this.allowBounceToSameHost = allowBounceToSameHost;
+    return this;
   }
 }

@@ -29,7 +29,10 @@ import com.hubspot.mesos.json.MesosMasterStateObject;
 import com.hubspot.mesos.json.MesosResourcesObject;
 import com.hubspot.singularity.MachineState;
 import com.hubspot.singularity.SingularityMachineAbstraction;
+import com.hubspot.singularity.SingularityPendingRequest.PendingType;
+import com.hubspot.singularity.SingularityPendingTask;
 import com.hubspot.singularity.SingularityRack;
+import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularitySlave;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskId;
@@ -133,10 +136,13 @@ public class SingularitySlaveAndRackManager {
     }
 
     final int numDesiredInstances = taskRequest.getRequest().getInstancesSafe();
+    boolean allowBounceToSameHost = isAllowBounceToSameHost(taskRequest.getRequest());
     Multiset<String> countPerRack = HashMultiset.create(stateCache.getNumActiveRacks());
     double numOnSlave = 0;
     double numCleaningOnSlave = 0;
+    double numFromSameBounceOnSlave = 0;
     double numOtherDeploysOnSlave = 0;
+    boolean taskLaunchedFromBounceWithActionId = taskRequest.getPendingTask().getPendingTaskId().getPendingType() == PendingType.BOUNCE && taskRequest.getPendingTask().getActionId().isPresent();
 
     final String sanitizedHost = JavaUtils.getReplaceHyphensWithUnderscores(host);
     final String sanitizedRackId = JavaUtils.getReplaceHyphensWithUnderscores(rackId);
@@ -150,6 +156,29 @@ public class SingularitySlaveAndRackManager {
             numCleaningOnSlave++;
           } else {
             numOnSlave++;
+          }
+          if (taskLaunchedFromBounceWithActionId) {
+            Optional<SingularityTask> maybeTask = taskManager.getTask(taskId);
+            boolean errorInTaskData = false;
+            if (maybeTask.isPresent()) {
+              SingularityPendingTask pendingTask = maybeTask.get().getTaskRequest().getPendingTask();
+              if (pendingTask.getPendingTaskId().getPendingType() == PendingType.BOUNCE) {
+                if (pendingTask.getActionId().isPresent()) {
+                  if (pendingTask.getActionId().get().equals(taskRequest.getPendingTask().getActionId().get())) {
+                    numFromSameBounceOnSlave++;
+                  }
+                } else {
+                  // No actionId present on bounce, fall back to more restrictive placement strategy
+                  errorInTaskData = true;
+                }
+              }
+            } else {
+              // Could not find appropriate task data, fall back to more restrictive placement strategy
+              errorInTaskData = true;
+            }
+            if (errorInTaskData) {
+              allowBounceToSameHost = false;
+            }
           }
         } else {
           numOtherDeploysOnSlave++;
@@ -171,14 +200,21 @@ public class SingularitySlaveAndRackManager {
     switch (slavePlacement) {
       case SEPARATE:
       case SEPARATE_BY_DEPLOY:
-        if (numOnSlave > 0 || numCleaningOnSlave > 0) {
-          LOG.trace("Rejecting SEPARATE task {} from slave {} ({}) due to numOnSlave {} numCleaningOnSlave {}", taskRequest.getRequest().getId(), slaveId, host, numOnSlave, numCleaningOnSlave);
-          return SlaveMatchState.SLAVE_SATURATED;
+        if (allowBounceToSameHost && taskLaunchedFromBounceWithActionId) {
+          if (numFromSameBounceOnSlave > 0) {
+            LOG.trace("Rejecting SEPARATE task {} from slave {} ({}) due to numFromSameBounceOnSlave {}", taskRequest.getRequest().getId(), slaveId, host, numFromSameBounceOnSlave);
+            return SlaveMatchState.SLAVE_SATURATED;
+          }
+        } else {
+          if (numOnSlave > 0 || numCleaningOnSlave > 0) {
+            LOG.trace("Rejecting SEPARATE task {} from slave {} ({}) due to numOnSlave {} numCleaningOnSlave {}", taskRequest.getRequest().getId(), slaveId, host, numOnSlave, numCleaningOnSlave);
+            return SlaveMatchState.SLAVE_SATURATED;
+          }
         }
         break;
       case SEPARATE_BY_REQUEST:
         if (numOnSlave > 0 || numCleaningOnSlave > 0 || numOtherDeploysOnSlave > 0) {
-          LOG.trace("Rejecting SEPARATE task {} from slave {} ({}) due to numOnSlave {} numCleaningOnSlave {} numOtherDeploysOnSlave {}", taskRequest.getRequest().getId(), slaveId, host, numOnSlave, numCleaningOnSlave, numOtherDeploysOnSlave);
+          LOG.trace("Rejecting SEPARATE_BY_REQUEST task {} from slave {} ({}) due to numOnSlave {} numCleaningOnSlave {} numOtherDeploysOnSlave {}", taskRequest.getRequest().getId(), slaveId, host, numOnSlave, numCleaningOnSlave, numOtherDeploysOnSlave);
           return SlaveMatchState.SLAVE_SATURATED;
         }
         break;
@@ -196,6 +232,14 @@ public class SingularitySlaveAndRackManager {
     }
 
     return SlaveMatchState.OK;
+  }
+
+  private boolean isAllowBounceToSameHost(SingularityRequest request) {
+    if (request.getAllowBounceToSameHost().isPresent()) {
+      return request.getAllowBounceToSameHost().get();
+    } else {
+      return configuration.isAllowBounceToSameHost();
+    }
   }
 
   private boolean isRackOk(Multiset<String> countPerRack, String sanitizedRackId, int numDesiredInstances, String requestId, String slaveId, String host, double numCleaningOnSlave, SingularitySchedulerStateCache stateCache) {
