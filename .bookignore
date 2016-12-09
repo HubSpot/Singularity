@@ -12,3 +12,5 @@ compose-dev.yml
 docker-compose.yml
 pom.xml
 dev
+*.sh
+*.py
