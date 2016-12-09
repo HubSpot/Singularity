@@ -3,16 +3,26 @@ import 'core-js/es6';
 
 import React from 'react';
 import ReactDOM from 'react-dom';
+import { AppContainer } from 'react-hot-loader';
 import FormModal from './components/common/modal/FormModal';
 import AppRouter from './router';
 import configureStore from 'store';
 import { FetchUser } from 'actions/api/auth';
 import { FetchGroups } from 'actions/api/requestGroups';
+import { actions as tailerActions } from 'singularityui-tailer';
 import { AddStarredRequests } from 'actions/api/users';
 import Utils from './utils';
+import parseurl from 'parseurl';
+import { useRouterHistory } from 'react-router';
+import { createHistory } from 'history';
 
 // Set up third party configurations
-import 'thirdPartyConfigurations';
+import { loadThirdParty } from 'thirdPartyConfigurations';
+
+import './assets/static/images/favicon.ico';
+
+import './styles/index.scss';
+import './styles/index.styl';
 
 function setApiRoot(data) {
   if (data.apiRoot) {
@@ -21,7 +31,56 @@ function setApiRoot(data) {
   return location.reload();
 }
 
-function renderApiRootForm() {
+const HMRContainer = (module.hot)
+  ? AppContainer
+  : ({ children }) => (children);
+
+document.addEventListener('DOMContentLoaded', () => {
+  loadThirdParty();
+
+  if (window.config.apiRoot) {
+    // set up Redux store
+    const parsedUrl = parseurl({ url: config.appRoot });
+    const history = useRouterHistory(createHistory)({
+      basename: parsedUrl.path
+    });
+
+    const store = configureStore({}, history);
+
+    store.dispatch(tailerActions.sandboxSetApiRoot(config.apiRoot));
+
+    // set up user
+    let userId;
+    window.app = {};
+    window.app.setupUser = () => store.dispatch(FetchUser.trigger());
+    window.app.setupUser().then(() => {
+      if (!store.getState().api.user.data.user) {
+        return renderUserIdForm();
+      } else {
+        userId = store.getState().api.user.data.user.id
+        // Set up starred requests
+        maybeImportStarredRequests(store, store.getState().api.user, userId);
+      }
+    });
+
+    // set up request groups
+    store.dispatch(FetchGroups.trigger([404, 500]));
+
+    // set up hot module reloading
+    if (module.hot) {
+      module.hot.accept('./router', () => {
+        const NextAppRouter = require('./router').default;
+        return ReactDOM.render(<HMRContainer><NextAppRouter history={history} store={store} /></HMRContainer>, document.getElementById('root'));
+      });
+    }
+
+    // Render the page content
+    return ReactDOM.render(<HMRContainer><AppRouter history={history} store={store} /></HMRContainer>, document.getElementById('root'), () => {
+      // hide loading animation
+      document.getElementById('static-loader').remove();
+    });
+  }
+
   return ReactDOM.render(
     <FormModal
       name="Set API Root"
@@ -53,7 +112,7 @@ function renderApiRootForm() {
       </div>
     </FormModal>, document.getElementById('root')
   ).show();
-}
+});
 
 function setUserIdLocal(data) {
   if (data.userId) {
@@ -105,35 +164,3 @@ function maybeImportStarredRequests(store, userState, userId) {
     });
   }
 }
-
-document.addEventListener('DOMContentLoaded', () => {
-  if (window.config.apiRoot) {
-    // set up Redux store
-    const store = configureStore();
-
-    // set up user
-    let userId;
-    window.app = {};
-    window.app.setupUser = () => store.dispatch(FetchUser.trigger());
-    window.app.setupUser().then(() => {
-      if (!store.getState().api.user.data.user) {
-        return renderUserIdForm();
-      } else {
-        userId = store.getState().api.user.data.user.id
-        // Set up starred requests
-        maybeImportStarredRequests(store, store.getState().api.user, userId);
-      }
-    });
-
-    // set up request groups
-    store.dispatch(FetchGroups.trigger([404, 500]));
-
-    // Render the page content
-    return ReactDOM.render(<AppRouter store={store} />, document.getElementById('root'), () => {
-      // hide loading animation
-      document.getElementById('static-loader').remove();
-    });
-  }
-
-  return renderApiRootForm();
-});
