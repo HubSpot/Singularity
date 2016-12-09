@@ -106,29 +106,6 @@ Get the cleanup object for the task, if it exists
 
 
 - - -
-#### **GET** `/api/tasks/task/{taskId}`
-
-Retrieve information about a specific active task.
-
-
-###### Parameters
-**path**
-
-| Parameter | Required | Description | Data Type |
-|-----------|----------|-------------|-----------|
-| taskId | true |  | string |
-
-###### Response
-[SingularityTask](models.md#model-SingularityTask)
-
-
-###### Errors
-| Status Code | Reason      | Response Model |
-|-------------|-------------|----------------|
-| - | - | - |
-
-
-- - -
 #### **DELETE** `/api/tasks/task/{taskId}`
 
 Attempt to kill task, optionally overriding an existing cleanup request (that may be waiting for replacement tasks to become healthy)
@@ -154,6 +131,29 @@ Attempt to kill task, optionally overriding an existing cleanup request (that ma
 | Status Code | Reason      | Response Model |
 |-------------|-------------|----------------|
 | 409    | Task already has a cleanup request (can be overridden with override=true) | - |
+
+
+- - -
+#### **GET** `/api/tasks/task/{taskId}`
+
+Retrieve information about a specific active task.
+
+
+###### Parameters
+**path**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| taskId | true |  | string |
+
+###### Response
+[SingularityTask](models.md#model-SingularityTask)
+
+
+###### Errors
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| - | - | - |
 
 
 - - -
