@@ -30,6 +30,37 @@ Retrieve the list of logs stored in S3 for a specific task.
 
 
 - - -
+#### **GET** `/api/logs/request/{requestId}/read`
+
+Retrieve the list of logs stored in S3 for a specific request.
+
+
+###### Parameters
+**path**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| requestId | true | The request ID to search for | string |
+**query**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| key | false | S3 Key for the log to read | string |
+| offset | false | Offset to read in the log file | long |
+| length | false | Length in bytes to read | int |
+| reverse | false | Read backwards from offset | boolean |
+
+###### Response
+[MesosFileChunkObject](models.md#model-MesosFileChunkObject)
+
+
+###### Errors
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| - | - | - |
+
+
+- - -
 #### **GET** `/api/logs/request/{requestId}/deploy/{deployId}`
 
 Retrieve the list of logs stored in S3 for a specific deploy.
