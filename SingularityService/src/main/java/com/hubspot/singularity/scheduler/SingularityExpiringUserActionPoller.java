@@ -320,7 +320,7 @@ public class SingularityExpiringUserActionPoller extends SingularityLeaderOnlyPo
     @Override
     protected void handleExpiringObject(SingularityExpiringMachineState expiringObject, SingularityMachineAbstraction machine, String message) {
       SingularitySlave slave = (SingularitySlave) machine;
-      slaveManager.changeState(slave, expiringObject.getRevertToState(), Optional.of("Reverted due to expiring action"), expiringObject.getUser());
+      slaveManager.changeState(slave, expiringObject.getRevertToState(), Optional.of("Updated due to expiring action"), expiringObject.getUser());
       if (expiringObject.isKillTasksOnDecommissionTimeout() && expiringObject.getRevertToState() == MachineState.DECOMMISSIONED) {
         List<SingularityTaskId> activeTasksIdsOnSlave = taskManager.getActiveTaskIds();
         String sanitizedHost = JavaUtils.getReplaceHyphensWithUnderscores(slave.getHost());
@@ -364,7 +364,7 @@ public class SingularityExpiringUserActionPoller extends SingularityLeaderOnlyPo
   private class SingularityExpiringRackStateHandler extends SingularityExpiringMachineStateHandler {
     @Override
     protected void handleExpiringObject(SingularityExpiringMachineState expiringObject, SingularityMachineAbstraction machine, String message) {
-      rackManager.changeState((SingularityRack) machine, expiringObject.getRevertToState(), Optional.of("Reverted due to expiring action"), expiringObject.getUser());
+      rackManager.changeState((SingularityRack) machine, expiringObject.getRevertToState(), Optional.of("Updated due to expiring action"), expiringObject.getUser());
     }
 
     @Override
