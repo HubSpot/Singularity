@@ -9,6 +9,7 @@ import com.hubspot.singularity.SingularityMachineStateHistoryUpdate;
 import com.hubspot.singularity.SingularityRack;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.transcoders.Transcoder;
+import com.hubspot.singularity.expiring.SingularityExpiringMachineState;
 
 @Singleton
 public class RackManager extends AbstractMachineManager<SingularityRack> {
@@ -17,8 +18,8 @@ public class RackManager extends AbstractMachineManager<SingularityRack> {
 
   @Inject
   public RackManager(CuratorFramework curator, SingularityConfiguration configuration,  MetricRegistry metricRegistry,Transcoder<SingularityRack> rackTranscoder,
-      Transcoder<SingularityMachineStateHistoryUpdate> stateHistoryTranscoder) {
-    super(curator, configuration, metricRegistry, rackTranscoder, stateHistoryTranscoder);
+      Transcoder<SingularityMachineStateHistoryUpdate> stateHistoryTranscoder, Transcoder<SingularityExpiringMachineState> expiringMachineStateTranscoder) {
+    super(curator, configuration, metricRegistry, rackTranscoder, stateHistoryTranscoder, expiringMachineStateTranscoder);
   }
 
   @Override

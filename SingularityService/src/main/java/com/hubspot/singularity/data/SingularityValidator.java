@@ -29,6 +29,7 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Strings;
 import com.google.common.base.Predicate;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
@@ -55,6 +56,7 @@ import com.hubspot.singularity.SingularityShellCommand;
 import com.hubspot.singularity.SingularityWebhook;
 import com.hubspot.singularity.SlavePlacement;
 import com.hubspot.singularity.WebExceptions;
+import com.hubspot.singularity.api.SingularityMachineChangeRequest;
 import com.hubspot.singularity.api.SingularityPriorityFreeze;
 import com.hubspot.singularity.api.SingularityBounceRequest;
 import com.hubspot.singularity.config.SingularityConfiguration;
@@ -62,6 +64,7 @@ import com.hubspot.singularity.config.UIConfiguration;
 import com.hubspot.singularity.config.shell.ShellCommandDescriptor;
 import com.hubspot.singularity.config.shell.ShellCommandOptionDescriptor;
 import com.hubspot.singularity.data.history.DeployHistoryHelper;
+import com.hubspot.singularity.expiring.SingularityExpiringMachineState;
 
 @Singleton
 public class SingularityValidator {
@@ -509,6 +512,28 @@ public class SingularityValidator {
 
       checkBadRequest(currentActiveSlaveCount >= requiredSlaveCount, "Not enough active slaves to successfully complete a bounce of request %s (minimum required: %s, current: %s). Consider deploying, or changing the slave placement strategy instead.", request.getId(), requiredSlaveCount, currentActiveSlaveCount);
     }
+  }
+
+  public void validateExpiringMachineStateChange(Optional<SingularityMachineChangeRequest> maybeChangeRequest, MachineState currentState, Optional<SingularityExpiringMachineState> currentExpiringObject) {
+    if (!maybeChangeRequest.isPresent() || !maybeChangeRequest.get().getDurationMillis().isPresent()) {
+      return;
+    }
+
+    SingularityMachineChangeRequest changeRequest = maybeChangeRequest.get();
+
+    checkBadRequest(changeRequest.getRevertToState().isPresent(), "Must include a machine state to revert to for an expiring machine state change");
+    MachineState newState = changeRequest.getRevertToState().get();
+
+    checkConflict(!currentExpiringObject.isPresent(), "A current expiring object already exists, delete it first");
+    checkBadRequest(!(newState == MachineState.STARTING_DECOMMISSION && currentState.isDecommissioning()), "Cannot start decommission when it has already been started");
+    checkBadRequest(!(((newState == MachineState.DECOMMISSIONING) || (newState == MachineState.DECOMMISSIONED)) && (currentState == MachineState.FROZEN)), "Cannot transition from FROZEN to DECOMMISSIONING or DECOMMISSIONED");
+    checkBadRequest(!(((newState == MachineState.DECOMMISSIONING) || (newState == MachineState.DECOMMISSIONED)) && (currentState == MachineState.ACTIVE)), "Cannot transition from ACTIVE to DECOMMISSIONING or DECOMMISSIONED");
+    checkBadRequest(!(newState == MachineState.FROZEN && currentState.isDecommissioning()), "Cannot transition from a decommissioning state to FROZEN");
+
+    List<MachineState> systemOnlyStateTransitions = ImmutableList.of(MachineState.DEAD, MachineState.MISSING_ON_STARTUP, MachineState.DECOMMISSIONING);
+    checkBadRequest(!systemOnlyStateTransitions.contains(newState), "States {} are reserved for system usage, you cannot manually transition to {}", systemOnlyStateTransitions, newState);
+
+    checkBadRequest(!(newState == MachineState.DECOMMISSIONED && !changeRequest.isKillTasksOnDecommissionTimeout()), "Must specify that all tasks on slave get killed if transitioning to DECOMMISSIONED state");
   }
 
   public void checkActionEnabled(SingularityAction action) {
