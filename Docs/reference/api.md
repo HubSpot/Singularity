@@ -9,8 +9,8 @@ Endpoints:
 - [`/api/logs`](#endpoint-/api/logs) - Manages Singularity task logs stored in S3.
 - [`/api/racks`](#endpoint-/api/racks) - Manages whether or not to schedule tasks based on their priority levels.
 - [`/api/racks`](#endpoint-/api/racks) - Manages Singularity racks.
-- [`/api/requests`](#endpoint-/api/requests) - Manages Singularity Request Groups, which are collections of one or more Singularity Requests
 - [`/api/requests`](#endpoint-/api/requests) - Manages Singularity Requests, the parent object for any deployed task
+- [`/api/requests`](#endpoint-/api/requests) - Manages Singularity Request Groups, which are collections of one or more Singularity Requests
 - [`/api/sandbox`](#endpoint-/api/sandbox) - Provides a proxy to Mesos sandboxes.
 - [`/api/slaves`](#endpoint-/api/slaves) - Manages Singularity slaves.
 - [`/api/state`](#endpoint-/api/state) - Provides information about the current state of Singularity.
@@ -52,6 +52,7 @@ Models:
 - [`SingularityDockerPortMapping`](#model-SingularityDockerPortMapping)
 - [`SingularityExitCooldownRequest`](#model-SingularityExitCooldownRequest)
 - [`SingularityExpiringBounce`](#model-SingularityExpiringBounce)
+- [`SingularityExpiringMachineState`](#model-SingularityExpiringMachineState)
 - [`SingularityExpiringPause`](#model-SingularityExpiringPause)
 - [`SingularityExpiringScale`](#model-SingularityExpiringScale)
 - [`SingularityExpiringSkipHealthchecks`](#model-SingularityExpiringSkipHealthchecks)
@@ -332,9 +333,9 @@ Do not allow the automated poller to disable actions when a disaster is detected
 
 
 - - -
-#### **POST** `/api/disasters/active/{type}`
+#### **DELETE** `/api/disasters/active/{type}`
 
-Create a new active disaster
+Remove an active disaster (make it inactive)
 
 
 ###### Parameters
@@ -355,9 +356,9 @@ Create a new active disaster
 
 
 - - -
-#### **DELETE** `/api/disasters/active/{type}`
+#### **POST** `/api/disasters/active/{type}`
 
-Remove an active disaster (make it inactive)
+Create a new active disaster
 
 
 ###### Parameters
@@ -925,6 +926,37 @@ Retrieve the list of logs stored in S3 for a specific task.
 
 
 - - -
+#### **GET** `/api/logs/request/{requestId}/read`
+
+Retrieve the list of logs stored in S3 for a specific request.
+
+
+###### Parameters
+**path**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| requestId | true | The request ID to search for | string |
+**query**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| key | false | S3 Key for the log to read | string |
+| offset | false | Offset to read in the log file | long |
+| length | false | Length in bytes to read | int |
+| reverse | false | Read backwards from offset | boolean |
+
+###### Response
+[MesosFileChunkObject](#model-MesosFileChunkObject)
+
+
+###### Errors
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| - | - | - |
+
+
+- - -
 #### **GET** `/api/logs/request/{requestId}/deploy/{deployId}`
 
 Retrieve the list of logs stored in S3 for a specific deploy.
@@ -1084,6 +1116,29 @@ Freeze a specific rack
 
 
 - - -
+#### **DELETE** `/api/racks/rack/{rackId}/expiring`
+
+Delete any expiring machine state changes for this rack
+
+
+###### Parameters
+**path**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| rackId | true | Active slaveId | string |
+
+###### Response
+
+
+
+###### Errors
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| - | - | - |
+
+
+- - -
 #### **POST** `/api/racks/rack/{rackId}/decommission`
 
 Begin decommissioning a specific active rack
@@ -1186,6 +1241,25 @@ Remove a known rack, erasing history. This operation will cancel decommissioning
 
 
 - - -
+#### **GET** `/api/racks/expiring`
+
+Get all expiring state changes for all racks
+
+
+###### Parameters
+- No parameters
+
+###### Response
+[List[SingularityExpiringMachineState]](#model-SingularityExpiringMachineState)
+
+
+###### Errors
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| - | - | - |
+
+
+- - -
 #### **GET** `/api/racks/`
 
 Retrieve the list of all known racks, optionally filtering by a particular state
@@ -1200,98 +1274,6 @@ Retrieve the list of all known racks, optionally filtering by a particular state
 
 ###### Response
 [List[SingularityRack]](#model-SingularityRack)
-
-
-###### Errors
-| Status Code | Reason      | Response Model |
-|-------------|-------------|----------------|
-| - | - | - |
-
-
-- - -
-### <a name="endpoint-/api/requests"></a> /api/requests
-#### Overview
-Manages Singularity Request Groups, which are collections of one or more Singularity Requests
-
-#### **GET** `/api/groups/group/{requestGroupId}`
-
-Get a specific Singularity request group by ID
-
-
-###### Parameters
-**path**
-
-| Parameter | Required | Description | Data Type |
-|-----------|----------|-------------|-----------|
-| requestGroupId | true |  | string |
-
-###### Response
-[SingularityRequestGroup](#model-SingularityRequestGroup)
-
-
-###### Errors
-| Status Code | Reason      | Response Model |
-|-------------|-------------|----------------|
-| - | - | - |
-
-
-- - -
-#### **DELETE** `/api/groups/group/{requestGroupId}`
-
-Delete a specific Singularity request group by ID
-
-
-###### Parameters
-**path**
-
-| Parameter | Required | Description | Data Type |
-|-----------|----------|-------------|-----------|
-| requestGroupId | true |  | string |
-
-###### Response
-
-
-
-###### Errors
-| Status Code | Reason      | Response Model |
-|-------------|-------------|----------------|
-| - | - | - |
-
-
-- - -
-#### **GET** `/api/groups`
-
-Get a list of Singularity request groups
-
-
-###### Parameters
-- No parameters
-
-###### Response
-[List[SingularityRequestGroup]](#model-SingularityRequestGroup)
-
-
-###### Errors
-| Status Code | Reason      | Response Model |
-|-------------|-------------|----------------|
-| - | - | - |
-
-
-- - -
-#### **POST** `/api/groups`
-
-Create a Singularity request group
-
-
-###### Parameters
-**body**
-
-| Parameter | Required | Description | Data Type |
-|-----------|----------|-------------|-----------|
-| body | false |  | [SingularityRequestGroup](#model-linkType)</a> |
-
-###### Response
-[SingularityRequestGroup](#model-SingularityRequestGroup)
 
 
 ###### Errors
@@ -1895,6 +1877,98 @@ Create or update a Singularity Request
 
 
 - - -
+### <a name="endpoint-/api/requests"></a> /api/requests
+#### Overview
+Manages Singularity Request Groups, which are collections of one or more Singularity Requests
+
+#### **GET** `/api/groups/group/{requestGroupId}`
+
+Get a specific Singularity request group by ID
+
+
+###### Parameters
+**path**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| requestGroupId | true |  | string |
+
+###### Response
+[SingularityRequestGroup](#model-SingularityRequestGroup)
+
+
+###### Errors
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| - | - | - |
+
+
+- - -
+#### **DELETE** `/api/groups/group/{requestGroupId}`
+
+Delete a specific Singularity request group by ID
+
+
+###### Parameters
+**path**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| requestGroupId | true |  | string |
+
+###### Response
+
+
+
+###### Errors
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| - | - | - |
+
+
+- - -
+#### **GET** `/api/groups`
+
+Get a list of Singularity request groups
+
+
+###### Parameters
+- No parameters
+
+###### Response
+[List[SingularityRequestGroup]](#model-SingularityRequestGroup)
+
+
+###### Errors
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| - | - | - |
+
+
+- - -
+#### **POST** `/api/groups`
+
+Create a Singularity request group
+
+
+###### Parameters
+**body**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| body | false |  | [SingularityRequestGroup](#model-linkType)</a> |
+
+###### Response
+[SingularityRequestGroup](#model-SingularityRequestGroup)
+
+
+###### Errors
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| - | - | - |
+
+
+- - -
 ### <a name="endpoint-/api/sandbox"></a> /api/sandbox
 #### Overview
 Provides a proxy to Mesos sandboxes.
@@ -1978,6 +2052,29 @@ Freeze tasks on a specific slave
 | Parameter | Required | Description | Data Type |
 |-----------|----------|-------------|-----------|
 | body | false |  | [SingularityMachineChangeRequest](#model-linkType)</a> |
+
+###### Response
+
+
+
+###### Errors
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| - | - | - |
+
+
+- - -
+#### **DELETE** `/api/slaves/slave/{slaveId}/expiring`
+
+Delete any expiring machine state changes for this slave
+
+
+###### Parameters
+**path**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| slaveId | true | Active slaveId | string |
 
 ###### Response
 
@@ -2106,6 +2203,25 @@ Remove a known slave, erasing history. This operation will cancel decomissioning
 
 ###### Response
 
+
+
+###### Errors
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| - | - | - |
+
+
+- - -
+#### **GET** `/api/slaves/expiring`
+
+Get all expiring state changes for all slaves
+
+
+###### Parameters
+- No parameters
+
+###### Response
+[List[SingularityExpiringMachineState]](#model-SingularityExpiringMachineState)
 
 
 ###### Errors
@@ -2340,29 +2456,6 @@ Get the cleanup object for the task, if it exists
 
 
 - - -
-#### **GET** `/api/tasks/task/{taskId}`
-
-Retrieve information about a specific active task.
-
-
-###### Parameters
-**path**
-
-| Parameter | Required | Description | Data Type |
-|-----------|----------|-------------|-----------|
-| taskId | true |  | string |
-
-###### Response
-[SingularityTask](#model-SingularityTask)
-
-
-###### Errors
-| Status Code | Reason      | Response Model |
-|-------------|-------------|----------------|
-| - | - | - |
-
-
-- - -
 #### **DELETE** `/api/tasks/task/{taskId}`
 
 Attempt to kill task, optionally overriding an existing cleanup request (that may be waiting for replacement tasks to become healthy)
@@ -2388,6 +2481,29 @@ Attempt to kill task, optionally overriding an existing cleanup request (that ma
 | Status Code | Reason      | Response Model |
 |-------------|-------------|----------------|
 | 409    | Task already has a cleanup request (can be overridden with override=true) | - |
+
+
+- - -
+#### **GET** `/api/tasks/task/{taskId}`
+
+Retrieve information about a specific active task.
+
+
+###### Parameters
+**path**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| taskId | true |  | string |
+
+###### Response
+[SingularityTask](#model-SingularityTask)
+
+
+###### Errors
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| - | - | - |
 
 
 - - -
@@ -3399,6 +3515,19 @@ string
 | expiringAPIRequestObject | [T](#model-T) | optional |  |
 
 
+## <a name="model-SingularityExpiringMachineState"></a> SingularityExpiringMachineState
+
+| name | type | required | description |
+|------|------|----------|-------------|
+| revertToState | [MachineState](#model-MachineState) | optional |  Allowable values: MISSING_ON_STARTUP, ACTIVE, STARTING_DECOMMISSION, DECOMMISSIONING, DECOMMISSIONED, DEAD, FROZEN |
+| user | string | optional |  |
+| startMillis | long | optional |  |
+| actionId | string | optional |  |
+| expiringAPIRequestObject | [T](#model-T) | optional |  |
+| machineId | string | optional |  |
+| killTasksOnDecommissionTimeout | boolean | optional |  |
+
+
 ## <a name="model-SingularityExpiringPause"></a> SingularityExpiringPause
 
 | name | type | required | description |
@@ -3475,7 +3604,11 @@ string
 
 | name | type | required | description |
 |------|------|----------|-------------|
+| durationMillis | long | optional | The number of milliseconds to wait before reversing the effects of this action (letting it expire) |
+| revertToState | [MachineState](#model-MachineState) | optional | If a durationMillis is specified, return to this state when time has elapsed |
 | message | string | optional | A message to show to users about why this action was taken |
+| actionId | string | optional | An id to associate with this action for metadata purposes |
+| killTasksOnDecommissionTimeout | boolean | optional | If a machine has not successfully decommissioned in durationMillis, kill the remaining tasks on the machine |
 
 
 ## <a name="model-SingularityMachineStateHistoryUpdate"></a> SingularityMachineStateHistoryUpdate
@@ -3818,7 +3951,7 @@ string
 |------|------|----------|-------------|
 | taskId | [SingularityTaskId](#model-SingularityTaskId) | optional |  |
 | user | string | optional |  |
-| cleanupType | [TaskCleanupType](#model-TaskCleanupType) | optional |  Allowable values: USER_REQUESTED, USER_REQUESTED_TASK_BOUNCE, DECOMISSIONING, SCALING_DOWN, BOUNCING, INCREMENTAL_BOUNCE, DEPLOY_FAILED, NEW_DEPLOY_SUCCEEDED, DEPLOY_STEP_FINISHED, DEPLOY_CANCELED, TASK_EXCEEDED_TIME_LIMIT, UNHEALTHY_NEW_TASK, OVERDUE_NEW_TASK, USER_REQUESTED_DESTROY, INCREMENTAL_DEPLOY_FAILED, INCREMENTAL_DEPLOY_CANCELLED, PRIORITY_KILL, REBALANCE_RACKS, PAUSING, PAUSE |
+| cleanupType | [TaskCleanupType](#model-TaskCleanupType) | optional |  Allowable values: USER_REQUESTED, USER_REQUESTED_TASK_BOUNCE, DECOMISSIONING, SCALING_DOWN, BOUNCING, INCREMENTAL_BOUNCE, DEPLOY_FAILED, NEW_DEPLOY_SUCCEEDED, DEPLOY_STEP_FINISHED, DEPLOY_CANCELED, TASK_EXCEEDED_TIME_LIMIT, UNHEALTHY_NEW_TASK, OVERDUE_NEW_TASK, USER_REQUESTED_DESTROY, INCREMENTAL_DEPLOY_FAILED, INCREMENTAL_DEPLOY_CANCELLED, PRIORITY_KILL, REBALANCE_RACKS, PAUSING, PAUSE, DECOMMISSION_TIMEOUT |
 | message | string | optional |  |
 | runBeforeKillId | [SingularityTaskShellCommandRequestId](#model-SingularityTaskShellCommandRequestId) | optional |  |
 | timestamp | long | optional |  |
@@ -3846,6 +3979,7 @@ string
 | healthcheckResults | [Array[SingularityTaskHealthcheckResult]](#model-SingularityTaskHealthcheckResult) | optional |  |
 | loadBalancerUpdates | [Array[SingularityLoadBalancerUpdate]](#model-SingularityLoadBalancerUpdate) | optional |  |
 | taskMetadata | [Array[SingularityTaskMetadata]](#model-SingularityTaskMetadata) | optional |  |
+| containerId | string | optional |  |
 | shellCommandHistory | [Array[SingularityTaskShellCommandHistory]](#model-SingularityTaskShellCommandHistory) | optional |  |
 | taskUpdates | [Array[SingularityTaskHistoryUpdate]](#model-SingularityTaskHistoryUpdate) | optional |  |
 
