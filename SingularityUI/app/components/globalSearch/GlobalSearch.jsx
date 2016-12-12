@@ -4,6 +4,8 @@ import { connect } from 'react-redux';
 import { withRouter } from 'react-router';
 import { FetchRequests } from '../../actions/api/requests';
 import { SetVisibility } from '../../actions/ui/globalSearch';
+import { refresh } from '../../actions/ui/requestDetail';
+import { push } from 'react-router-redux';
 
 import { Typeahead } from 'react-typeahead';
 import fuzzy from 'fuzzy';
@@ -86,7 +88,8 @@ class GlobalSearch extends React.Component {
 
   optionSelected(requestIdObject) {
     const requestId = this.getValueFromOption(requestIdObject);
-    this.props.router.push(`/request/${ requestId }`, { trigger: true });
+    this.props.push(`/request/${ requestId }`, { trigger: true });
+    this.props.refresh(requestId);
     this.clear();
     this.props.setVisibility(false);
   }
@@ -143,18 +146,12 @@ class GlobalSearch extends React.Component {
   }
 }
 
-function mapDispatchToProps(dispatch) {
-  return {
-    getRequests: () => dispatch(FetchRequests.trigger()),
-    setVisibility: (visible) => dispatch(SetVisibility(visible))
-  };
-}
-
-function mapStateToProps(state) {
-  return {
-    requests: state.api.requests.data,
-    visible: state.ui.globalSearch.visible
-  };
-}
-
-export default connect(mapStateToProps, mapDispatchToProps)(withRouter(GlobalSearch));
+export default connect((state) => ({
+  requests: state.api.requests.data,
+  visible: state.ui.globalSearch.visible
+}), {
+  getRequests: FetchRequests.trigger,
+  setVisibility: SetVisibility,
+  push,
+  refresh
+})(withRouter(GlobalSearch));
