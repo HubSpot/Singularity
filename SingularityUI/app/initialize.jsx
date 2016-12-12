@@ -3,7 +3,6 @@ import 'core-js/es6';
 
 import React from 'react';
 import ReactDOM from 'react-dom';
-import { AppContainer } from 'react-hot-loader';
 import FormModal from './components/common/modal/FormModal';
 import AppRouter from './router';
 import configureStore from 'store';
@@ -32,7 +31,7 @@ function setApiRoot(data) {
 }
 
 const HMRContainer = (module.hot)
-  ? AppContainer
+  ? require('react-hot-loader').AppContainer
   : ({ children }) => (children);
 
 document.addEventListener('DOMContentLoaded', () => {
