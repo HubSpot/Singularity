@@ -56,4 +56,9 @@ public class ArtifactDownloadRequest {
         Objects.equals(targetDirectory, that.targetDirectory);
   }
 
+  @Override
+  public String toString() {
+    return "ArtifactDownloadRequest [targetDirectory=" + targetDirectory + ", s3Artifact=" + s3Artifact + ", timeoutMillis=" + timeoutMillis + "]";
+  }
+
 }
