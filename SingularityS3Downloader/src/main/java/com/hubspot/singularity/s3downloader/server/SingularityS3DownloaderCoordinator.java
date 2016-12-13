@@ -126,10 +126,25 @@ public class SingularityS3DownloaderCoordinator implements DownloadListener {
       return true;
     }
 
+    private void handleContinuationExpired() {
+      try {
+        LOG.info("Continuation expired for {} after {} - returning 500", artifactDownloadRequest, JavaUtils.duration(start));
+        ((HttpServletResponse) continuation.getServletResponse()).sendError(500);
+      } catch (Throwable t) {
+        LOG.warn("{} while sending error after continuation for {}", t.getClass().getSimpleName(), artifactDownloadRequest.getTargetDirectory());
+      } finally {
+        continuation.complete();
+      }
+    }
+
     @Override
     public void run() {
       try {
         if (!addDownloadRequest()) {
+          if (continuation.isExpired()) {
+            handleContinuationExpired();
+            return;
+          }
           reEnqueue();
         }
       } catch (Throwable t) {

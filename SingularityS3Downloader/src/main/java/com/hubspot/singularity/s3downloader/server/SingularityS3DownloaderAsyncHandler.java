@@ -46,12 +46,12 @@ public class SingularityS3DownloaderAsyncHandler implements Runnable {
     return artifactDownloadRequest.getS3Artifact();
   }
 
-  private void download() throws Exception {
+  private boolean download() throws Exception {
     LOG.info("Beginning download {} after {}", artifactDownloadRequest, JavaUtils.duration(start));
 
     if (continuation.isExpired()) {
       LOG.info("Continuation expired for {}, aborting...", artifactDownloadRequest.getTargetDirectory());
-      return;
+      return false;
     }
 
     final Path fetched = artifactManager.fetch(artifactDownloadRequest.getS3Artifact());
@@ -62,7 +62,7 @@ public class SingularityS3DownloaderAsyncHandler implements Runnable {
 
     if (continuation.isExpired()) {
       LOG.info("Continuation expired for {} after download, aborting...", artifactDownloadRequest.getTargetDirectory());
-      return;
+      return false;
     }
 
     if (Objects.toString(fetched.getFileName()).endsWith(".tar.gz")) {
@@ -74,6 +74,8 @@ public class SingularityS3DownloaderAsyncHandler implements Runnable {
     LOG.info("Finishing request {} after {}", artifactDownloadRequest.getTargetDirectory(), JavaUtils.duration(start));
 
     getResponse().getOutputStream().close();
+
+    return true;
   }
 
   private HttpServletResponse getResponse() {
@@ -82,8 +84,13 @@ public class SingularityS3DownloaderAsyncHandler implements Runnable {
 
   @Override
   public void run() {
+    boolean success = false;
     try (final Context context = metrics.getDownloadTimer().time()) {
-      download();
+      success = download();
+      if (!success) {
+        metrics.getServerErrorsMeter().mark();
+        getResponse().sendError(500, "Hit client timeout");
+      }
     } catch (Throwable t) {
       metrics.getServerErrorsMeter().mark();
       LOG.error("While handling {}", artifactDownloadRequest.getTargetDirectory(), t);

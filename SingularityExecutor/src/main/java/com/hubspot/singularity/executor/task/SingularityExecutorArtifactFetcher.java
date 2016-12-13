@@ -9,6 +9,7 @@ import java.util.concurrent.ExecutionException;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
@@ -66,7 +67,7 @@ public class SingularityExecutorArtifactFetcher {
     private final ExecutorData executorData;
     private final SingularityExecutorTask task;
 
-    public SingularityExecutorTaskArtifactFetcher(ArtifactManager artifactManager, ExecutorData executorData, SingularityExecutorTask task) {
+    private SingularityExecutorTaskArtifactFetcher(ArtifactManager artifactManager, ExecutorData executorData, SingularityExecutorTask task) {
       this.artifactManager = artifactManager;
       this.executorData = executorData;
       this.task = task;
@@ -152,7 +153,8 @@ public class SingularityExecutorArtifactFetcher {
 
       for (S3Artifact s3Artifact : s3Artifacts) {
         String destination = task.getArtifactPath(s3Artifact, task.getTaskDefinition().getTaskDirectoryPath()).toString();
-        ArtifactDownloadRequest artifactDownloadRequest = new ArtifactDownloadRequest(destination, s3Artifact);
+        ArtifactDownloadRequest artifactDownloadRequest = new ArtifactDownloadRequest(destination, s3Artifact,
+            Optional.of(SingularityExecutorArtifactFetcher.this.executorConfiguration.getLocalDownloadServiceTimeoutMillis()));
 
         task.getLog().debug("Requesting {} from {}", artifactDownloadRequest, localDownloadUri);
 
