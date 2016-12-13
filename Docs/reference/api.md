@@ -1,22 +1,22 @@
 # Singularity REST API
 
-Version: 0.13.0-SNAPSHOT
+Version: 0.14.0-SNAPSHOT
 
 Endpoints:
-- [`/api/deploys`](#endpoint-/api/deploys) - Manages Singularity Deploys for existing requests
 - [`/api/disasters`](#endpoint-/api/disasters) - Manages Singularity Deploys for existing requests
-- [`/api/history`](#endpoint-/api/history) - Manages historical data for tasks, requests, and deploys.
 - [`/api/logs`](#endpoint-/api/logs) - Manages Singularity task logs stored in S3.
-- [`/api/racks`](#endpoint-/api/racks) - Manages whether or not to schedule tasks based on their priority levels.
-- [`/api/racks`](#endpoint-/api/racks) - Manages Singularity racks.
-- [`/api/requests`](#endpoint-/api/requests) - Manages Singularity Requests, the parent object for any deployed task
-- [`/api/requests`](#endpoint-/api/requests) - Manages Singularity Request Groups, which are collections of one or more Singularity Requests
-- [`/api/sandbox`](#endpoint-/api/sandbox) - Provides a proxy to Mesos sandboxes.
-- [`/api/slaves`](#endpoint-/api/slaves) - Manages Singularity slaves.
-- [`/api/state`](#endpoint-/api/state) - Provides information about the current state of Singularity.
-- [`/api/tasks`](#endpoint-/api/tasks) - Manages Singularity tasks.
+- [`/api/priority`](#endpoint-/api/priority) - Manages whether or not to schedule tasks based on their priority levels.
 - [`/api/test`](#endpoint-/api/test) - Misc testing endpoints.
+- [`/api/slaves`](#endpoint-/api/slaves) - Manages Singularity slaves.
+- [`/api/racks`](#endpoint-/api/racks) - Manages Singularity racks.
+- [`/api/tasks`](#endpoint-/api/tasks) - Manages Singularity tasks.
 - [`/api/webhooks`](#endpoint-/api/webhooks) - Manages Singularity webhooks.
+- [`/api/state`](#endpoint-/api/state) - Provides information about the current state of Singularity.
+- [`/api/sandbox`](#endpoint-/api/sandbox) - Provides a proxy to Mesos sandboxes.
+- [`/api/history`](#endpoint-/api/history) - Manages historical data for tasks, requests, and deploys.
+- [`/api/groups`](#endpoint-/api/groups) - Manages Singularity Request Groups, which are collections of one or more Singularity Requests
+- [`/api/requests`](#endpoint-/api/requests) - Manages Singularity Requests, the parent object for any deployed task
+- [`/api/deploys`](#endpoint-/api/deploys) - Manages Singularity Deploys for existing requests
 
 Models:
 - [`EmbeddedArtifact`](#model-EmbeddedArtifact)
@@ -108,100 +108,6 @@ Models:
 - - -
 
 ## Endpoints
-### <a name="endpoint-/api/deploys"></a> /api/deploys
-#### Overview
-Manages Singularity Deploys for existing requests
-
-#### **POST** `/api/deploys/update`
-
-Update the target active instance count for a pending deploy
-
-
-###### Parameters
-**body**
-
-| Parameter | Required | Description | Data Type |
-|-----------|----------|-------------|-----------|
-| body | true |  | [SingularityUpdatePendingDeployRequest](#model-linkType)</a> |
-
-###### Response
-[SingularityRequestParent](#model-SingularityRequestParent)
-
-
-###### Errors
-| Status Code | Reason      | Response Model |
-|-------------|-------------|----------------|
-| 400    | Deploy is not in the pending state pending or is not not present | - |
-
-
-- - -
-#### **GET** `/api/deploys/pending`
-
-Retrieve the list of current pending deploys
-
-
-###### Parameters
-- No parameters
-
-###### Response
-[List[SingularityPendingDeploy]](#model-SingularityPendingDeploy)
-
-
-###### Errors
-| Status Code | Reason      | Response Model |
-|-------------|-------------|----------------|
-| - | - | - |
-
-
-- - -
-#### **DELETE** `/api/deploys/deploy/{deployId}/request/{requestId}`
-
-Cancel a pending deployment (best effort - the deploy may still succeed or fail)
-
-
-###### Parameters
-**path**
-
-| Parameter | Required | Description | Data Type |
-|-----------|----------|-------------|-----------|
-| requestId | true | The Singularity Request Id from which the deployment is removed. | string |
-| deployId | true | The Singularity Deploy Id that should be removed. | string |
-
-###### Response
-[SingularityRequestParent](#model-SingularityRequestParent)
-
-
-###### Errors
-| Status Code | Reason      | Response Model |
-|-------------|-------------|----------------|
-| 400    | Deploy is not in the pending state pending or is not not present | - |
-
-
-- - -
-#### **POST** `/api/deploys`
-
-Start a new deployment for a Request
-
-
-###### Parameters
-**body**
-
-| Parameter | Required | Description | Data Type |
-|-----------|----------|-------------|-----------|
-| body | true |  | [SingularityDeployRequest](#model-linkType)</a> |
-
-###### Response
-[SingularityRequestParent](#model-SingularityRequestParent)
-
-
-###### Errors
-| Status Code | Reason      | Response Model |
-|-------------|-------------|----------------|
-| 400    | Deploy object is invalid | - |
-| 409    | A current deploy is in progress. It may be canceled by calling DELETE | - |
-
-
-- - -
 ### <a name="endpoint-/api/disasters"></a> /api/disasters
 #### Overview
 Manages Singularity Deploys for existing requests
@@ -389,6 +295,1531 @@ Get a list of current active disasters
 
 ###### Response
 List[string]
+
+
+###### Errors
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| - | - | - |
+
+
+- - -
+### <a name="endpoint-/api/logs"></a> /api/logs
+#### Overview
+Manages Singularity task logs stored in S3.
+
+#### **GET** `/api/logs/task/{taskId}`
+
+Retrieve the list of logs stored in S3 for a specific task.
+
+
+###### Parameters
+**path**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| taskId | true | The task ID to search for | string |
+**query**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| start | false | Start timestamp (millis, 13 digit) | long |
+| end | false | End timestamp (mills, 13 digit) | long |
+
+###### Response
+[List[SingularityS3Log]](#model-SingularityS3Log)
+
+
+###### Errors
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| - | - | - |
+
+
+- - -
+#### **GET** `/api/logs/request/{requestId}/read`
+
+Retrieve the list of logs stored in S3 for a specific request.
+
+
+###### Parameters
+**path**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| requestId | true | The request ID to search for | string |
+**query**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| key | false | S3 Key for the log to read | string |
+| offset | false | Offset to read in the log file | long |
+| length | false | Length in bytes to read | int |
+| reverse | false | Read backwards from offset | boolean |
+
+###### Response
+[MesosFileChunkObject](#model-MesosFileChunkObject)
+
+
+###### Errors
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| - | - | - |
+
+
+- - -
+#### **GET** `/api/logs/request/{requestId}/deploy/{deployId}`
+
+Retrieve the list of logs stored in S3 for a specific deploy.
+
+
+###### Parameters
+**path**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| requestId | true | The request ID to search for | string |
+| deployId | true | The deploy ID to search for | string |
+**query**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| start | false | Start timestamp (millis, 13 digit) | long |
+| end | false | End timestamp (mills, 13 digit) | long |
+
+###### Response
+[List[SingularityS3Log]](#model-SingularityS3Log)
+
+
+###### Errors
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| - | - | - |
+
+
+- - -
+#### **GET** `/api/logs/request/{requestId}`
+
+Retrieve the list of logs stored in S3 for a specific request.
+
+
+###### Parameters
+**path**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| requestId | true | The request ID to search for | string |
+**query**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| start | false | Start timestamp (millis, 13 digit) | long |
+| end | false | End timestamp (mills, 13 digit) | long |
+
+###### Response
+[List[SingularityS3Log]](#model-SingularityS3Log)
+
+
+###### Errors
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| - | - | - |
+
+
+- - -
+### <a name="endpoint-/api/priority"></a> /api/priority
+#### Overview
+Manages whether or not to schedule tasks based on their priority levels.
+
+#### **DELETE** `/api/priority/freeze`
+
+Stops the active priority freeze.
+
+
+###### Parameters
+- No parameters
+
+###### Response
+
+
+
+###### Errors
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| 202    | The active priority freeze was deleted. | - |
+| 400    | There was no active priority freeze to delete. | - |
+
+
+- - -
+#### **POST** `/api/priority/freeze`
+
+Stop scheduling tasks below a certain priority level.
+
+
+###### Parameters
+**body**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| body | false |  | [SingularityPriorityFreeze](#model-linkType)</a> |
+
+###### Response
+[SingularityPriorityFreezeParent](#model-SingularityPriorityFreezeParent)
+
+
+###### Errors
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| 200    | The priority freeze request was accepted. | - |
+| 400    | There was a validation error with the priority freeze request. | - |
+
+
+- - -
+#### **GET** `/api/priority/freeze`
+
+Get information about the active priority freeze.
+
+
+###### Parameters
+- No parameters
+
+###### Response
+[SingularityPriorityFreezeParent](#model-SingularityPriorityFreezeParent)
+
+
+###### Errors
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| 200    | The active priority freeze. | - |
+| 404    | There was no active priority freeze. | - |
+
+
+- - -
+### <a name="endpoint-/api/test"></a> /api/test
+#### Overview
+Misc testing endpoints.
+
+#### **POST** `/api/test/stop`
+
+Stop the Mesos scheduler driver.
+
+
+###### Parameters
+- No parameters
+
+###### Response
+
+
+
+###### Errors
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| - | - | - |
+
+
+- - -
+#### **POST** `/api/test/start`
+
+Start the Mesos scheduler driver.
+
+
+###### Parameters
+- No parameters
+
+###### Response
+
+
+
+###### Errors
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| - | - | - |
+
+
+- - -
+#### **POST** `/api/test/scheduler/statusUpdate/{taskId}/{taskState}`
+
+Force an update for a specific task.
+
+
+###### Parameters
+**path**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| taskId | true |  | string |
+| taskState | true |  | string |
+
+###### Response
+
+
+
+###### Errors
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| - | - | - |
+
+
+- - -
+#### **POST** `/api/test/reconcile`
+
+Start task reconciliation
+
+
+###### Parameters
+- No parameters
+
+###### Response
+
+
+
+###### Errors
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| - | - | - |
+
+
+- - -
+#### **POST** `/api/test/notleader`
+
+Make this instanceo of Singularity believe it&#39;s lost leadership.
+
+
+###### Parameters
+- No parameters
+
+###### Response
+
+
+
+###### Errors
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| - | - | - |
+
+
+- - -
+#### **POST** `/api/test/leader`
+
+Make this instance of Singularity believe it&#39;s elected leader.
+
+
+###### Parameters
+- No parameters
+
+###### Response
+
+
+
+###### Errors
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| - | - | - |
+
+
+- - -
+#### **POST** `/api/test/exception`
+
+Trigger an exception.
+
+
+###### Parameters
+**query**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| message | false |  | string |
+
+###### Response
+
+
+
+###### Errors
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| - | - | - |
+
+
+- - -
+#### **POST** `/api/test/abort`
+
+Abort the Mesos scheduler driver.
+
+
+###### Parameters
+- No parameters
+
+###### Response
+
+
+
+###### Errors
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| - | - | - |
+
+
+- - -
+### <a name="endpoint-/api/slaves"></a> /api/slaves
+#### Overview
+Manages Singularity slaves.
+
+#### **POST** `/api/slaves/slave/{slaveId}/freeze`
+
+Freeze tasks on a specific slave
+
+
+###### Parameters
+**path**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| slaveId | true | Slave ID | string |
+**body**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| body | false |  | [SingularityMachineChangeRequest](#model-linkType)</a> |
+
+###### Response
+
+
+
+###### Errors
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| - | - | - |
+
+
+- - -
+#### **DELETE** `/api/slaves/slave/{slaveId}/expiring`
+
+Delete any expiring machine state changes for this slave
+
+
+###### Parameters
+**path**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| slaveId | true | Active slaveId | string |
+
+###### Response
+
+
+
+###### Errors
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| - | - | - |
+
+
+- - -
+#### **GET** `/api/slaves/slave/{slaveId}/details`
+
+Get information about a particular slave
+
+
+###### Parameters
+**path**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| slaveId | true | Slave ID | string |
+
+###### Response
+[SingularitySlave](#model-SingularitySlave)
+
+
+###### Errors
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| - | - | - |
+
+
+- - -
+#### **POST** `/api/slaves/slave/{slaveId}/decommission`
+
+Begin decommissioning a specific active slave
+
+
+###### Parameters
+**path**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| slaveId | true | Active slaveId | string |
+**body**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| body | false |  | [SingularityMachineChangeRequest](#model-linkType)</a> |
+
+###### Response
+
+
+
+###### Errors
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| - | - | - |
+
+
+- - -
+#### **POST** `/api/slaves/slave/{slaveId}/activate`
+
+Activate a decomissioning slave, canceling decomission without erasing history
+
+
+###### Parameters
+**path**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| slaveId | true | Active slaveId | string |
+**body**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| body | false |  | [SingularityMachineChangeRequest](#model-linkType)</a> |
+
+###### Response
+
+
+
+###### Errors
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| - | - | - |
+
+
+- - -
+#### **GET** `/api/slaves/slave/{slaveId}`
+
+Retrieve the history of a given slave
+
+
+###### Parameters
+**path**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| slaveId | true | Slave ID | string |
+
+###### Response
+[List[SingularityMachineStateHistoryUpdate]](#model-SingularityMachineStateHistoryUpdate)
+
+
+###### Errors
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| - | - | - |
+
+
+- - -
+#### **DELETE** `/api/slaves/slave/{slaveId}`
+
+Remove a known slave, erasing history. This operation will cancel decomissioning of the slave
+
+
+###### Parameters
+**path**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| slaveId | true | Active SlaveId | string |
+
+###### Response
+
+
+
+###### Errors
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| - | - | - |
+
+
+- - -
+#### **GET** `/api/slaves/expiring`
+
+Get all expiring state changes for all slaves
+
+
+###### Parameters
+- No parameters
+
+###### Response
+[List[SingularityExpiringMachineState]](#model-SingularityExpiringMachineState)
+
+
+###### Errors
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| - | - | - |
+
+
+- - -
+#### **GET** `/api/slaves/`
+
+Retrieve the list of all known slaves, optionally filtering by a particular state
+
+
+###### Parameters
+**query**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| state | false | Optionally specify a particular state to filter slaves by | string |
+
+###### Response
+[List[SingularitySlave]](#model-SingularitySlave)
+
+
+###### Errors
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| - | - | - |
+
+
+- - -
+### <a name="endpoint-/api/racks"></a> /api/racks
+#### Overview
+Manages Singularity racks.
+
+#### **POST** `/api/racks/rack/{rackId}/freeze`
+
+Freeze a specific rack
+
+
+###### Parameters
+**path**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| rackId | true | Rack ID | string |
+**body**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| body | false |  | [SingularityMachineChangeRequest](#model-linkType)</a> |
+
+###### Response
+
+
+
+###### Errors
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| - | - | - |
+
+
+- - -
+#### **DELETE** `/api/racks/rack/{rackId}/expiring`
+
+Delete any expiring machine state changes for this rack
+
+
+###### Parameters
+**path**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| rackId | true | Active slaveId | string |
+
+###### Response
+
+
+
+###### Errors
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| - | - | - |
+
+
+- - -
+#### **POST** `/api/racks/rack/{rackId}/decommission`
+
+Begin decommissioning a specific active rack
+
+
+###### Parameters
+**path**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| rackId | true | Active rack ID | string |
+**body**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| body | false |  | [SingularityMachineChangeRequest](#model-linkType)</a> |
+
+###### Response
+
+
+
+###### Errors
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| - | - | - |
+
+
+- - -
+#### **POST** `/api/racks/rack/{rackId}/activate`
+
+Activate a decomissioning rack, canceling decomission without erasing history
+
+
+###### Parameters
+**path**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| rackId | true | Active rackId | string |
+**body**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| body | false |  | [SingularityMachineChangeRequest](#model-linkType)</a> |
+
+###### Response
+
+
+
+###### Errors
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| - | - | - |
+
+
+- - -
+#### **GET** `/api/racks/rack/{rackId}`
+
+Retrieve the history of a given rack
+
+
+###### Parameters
+**path**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| rackId | true | Rack ID | string |
+
+###### Response
+[List[SingularityMachineStateHistoryUpdate]](#model-SingularityMachineStateHistoryUpdate)
+
+
+###### Errors
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| - | - | - |
+
+
+- - -
+#### **DELETE** `/api/racks/rack/{rackId}`
+
+Remove a known rack, erasing history. This operation will cancel decommissioning of racks
+
+
+###### Parameters
+**path**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| rackId | true | Rack ID | string |
+
+###### Response
+
+
+
+###### Errors
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| - | - | - |
+
+
+- - -
+#### **GET** `/api/racks/expiring`
+
+Get all expiring state changes for all racks
+
+
+###### Parameters
+- No parameters
+
+###### Response
+[List[SingularityExpiringMachineState]](#model-SingularityExpiringMachineState)
+
+
+###### Errors
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| - | - | - |
+
+
+- - -
+#### **GET** `/api/racks/`
+
+Retrieve the list of all known racks, optionally filtering by a particular state
+
+
+###### Parameters
+**query**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| state | false | Optionally specify a particular state to filter racks by | string |
+
+###### Response
+[List[SingularityRack]](#model-SingularityRack)
+
+
+###### Errors
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| - | - | - |
+
+
+- - -
+### <a name="endpoint-/api/tasks"></a> /api/tasks
+#### Overview
+Manages Singularity tasks.
+
+#### **GET** `/api/tasks/task/{taskId}/statistics`
+
+Retrieve statistics about a specific active task.
+
+
+###### Parameters
+**path**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| taskId | true |  | string |
+
+###### Response
+[MesosTaskStatisticsObject](#model-MesosTaskStatisticsObject)
+
+
+###### Errors
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| - | - | - |
+
+
+- - -
+#### **POST** `/api/tasks/task/{taskId}/metadata`
+
+Post metadata about a task that will be persisted along with it and displayed in the UI
+
+
+###### Parameters
+**path**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| taskId | true |  | string |
+**body**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| body | false |  | [SingularityTaskMetadataRequest](#model-linkType)</a> |
+
+###### Response
+
+
+
+###### Errors
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| 400    | Invalid metadata object or doesn&#39;t match allowed types | - |
+| 404    | Task doesn&#39;t exist | - |
+| 409    | Metadata with this type/timestamp already existed | - |
+
+
+- - -
+#### **POST** `/api/tasks/task/{taskId}/command`
+
+Run a configured shell command against the given task
+
+
+###### Parameters
+**path**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| taskId | true |  | string |
+**body**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| body | false |  | [SingularityShellCommand](#model-linkType)</a> |
+
+###### Response
+[SingularityTaskShellCommandRequest](#model-SingularityTaskShellCommandRequest)
+
+
+###### Errors
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| 400    | Given shell command option doesn&#39;t exist | - |
+| 403    | Given shell command doesn&#39;t exist | - |
+
+
+- - -
+#### **GET** `/api/tasks/task/{taskId}/cleanup`
+
+Get the cleanup object for the task, if it exists
+
+
+###### Parameters
+**path**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| taskId | true |  | string |
+
+###### Response
+[SingularityTaskCleanup](#model-SingularityTaskCleanup)
+
+
+###### Errors
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| - | - | - |
+
+
+- - -
+#### **GET** `/api/tasks/task/{taskId}`
+
+Retrieve information about a specific active task.
+
+
+###### Parameters
+**path**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| taskId | true |  | string |
+
+###### Response
+[SingularityTask](#model-SingularityTask)
+
+
+###### Errors
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| - | - | - |
+
+
+- - -
+#### **DELETE** `/api/tasks/task/{taskId}`
+
+Attempt to kill task, optionally overriding an existing cleanup request (that may be waiting for replacement tasks to become healthy)
+
+
+###### Parameters
+**path**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| taskId | true |  | string |
+**body**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| body | false |  | [SingularityKillTaskRequest](#model-linkType)</a> |
+
+###### Response
+[SingularityTaskCleanup](#model-SingularityTaskCleanup)
+
+
+###### Errors
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| 409    | Task already has a cleanup request (can be overridden with override=true) | - |
+
+
+- - -
+#### **GET** `/api/tasks/scheduled/task/{pendingTaskId}`
+
+Retrieve information about a pending task.
+
+
+###### Parameters
+**path**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| pendingTaskId | true |  | string |
+
+###### Response
+[SingularityTaskRequest](#model-SingularityTaskRequest)
+
+
+###### Errors
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| - | - | - |
+
+
+- - -
+#### **GET** `/api/tasks/scheduled/request/{requestId}`
+
+Retrieve list of scheduled tasks for a specific request.
+
+
+###### Parameters
+**path**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| requestId | true |  | string |
+
+###### Response
+[List[SingularityTaskRequest]](#model-SingularityTaskRequest)
+
+
+###### Errors
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| - | - | - |
+
+
+- - -
+#### **GET** `/api/tasks/scheduled/ids`
+
+Retrieve list of scheduled task IDs.
+
+
+###### Parameters
+- No parameters
+
+###### Response
+[UNKNOWN[SingularityPendingTaskId]](#model-UNKNOWN[SingularityPendingTaskId])
+
+
+###### Errors
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| - | - | - |
+
+
+- - -
+#### **GET** `/api/tasks/scheduled`
+
+Retrieve list of scheduled tasks.
+
+
+###### Parameters
+- No parameters
+
+###### Response
+[List[SingularityTaskRequest]](#model-SingularityTaskRequest)
+
+
+###### Errors
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| - | - | - |
+
+
+- - -
+#### **GET** `/api/tasks/lbcleanup`
+
+Retrieve the list of tasks being cleaned from load balancers.
+
+
+###### Parameters
+- No parameters
+
+###### Response
+[UNKNOWN[SingularityTaskId]](#model-UNKNOWN[SingularityTaskId])
+
+
+###### Errors
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| - | - | - |
+
+
+- - -
+#### **GET** `/api/tasks/killed`
+
+Retrieve the list of killed tasks.
+
+
+###### Parameters
+- No parameters
+
+###### Response
+[UNKNOWN[SingularityKilledTaskIdRecord]](#model-UNKNOWN[SingularityKilledTaskIdRecord])
+
+
+###### Errors
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| - | - | - |
+
+
+- - -
+#### **GET** `/api/tasks/cleaning`
+
+Retrieve the list of cleaning tasks.
+
+
+###### Parameters
+- No parameters
+
+###### Response
+[UNKNOWN[SingularityTaskCleanup]](#model-UNKNOWN[SingularityTaskCleanup])
+
+
+###### Errors
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| - | - | - |
+
+
+- - -
+#### **GET** `/api/tasks/active/slave/{slaveId}`
+
+Retrieve list of active tasks on a specific slave.
+
+
+###### Parameters
+**path**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| slaveId | true |  | string |
+
+###### Response
+[UNKNOWN[SingularityTask]](#model-UNKNOWN[SingularityTask])
+
+
+###### Errors
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| - | - | - |
+
+
+- - -
+#### **GET** `/api/tasks/active`
+
+Retrieve the list of active tasks.
+
+
+###### Parameters
+- No parameters
+
+###### Response
+[UNKNOWN[SingularityTask]](#model-UNKNOWN[SingularityTask])
+
+
+###### Errors
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| - | - | - |
+
+
+- - -
+### <a name="endpoint-/api/webhooks"></a> /api/webhooks
+#### Overview
+Manages Singularity webhooks.
+
+#### **DELETE** `/api/webhooks/{webhookId}`
+
+Delete a specific webhook.
+
+
+###### Parameters
+**path**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| webhookId | true |  | string |
+
+###### Response
+string
+
+
+###### Errors
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| - | - | - |
+
+
+- - -
+#### **GET** `/api/webhooks/task/{webhookId}`
+
+Retrieve a list of queued task updates for a specific webhook.
+
+
+###### Parameters
+**path**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| webhookId | true |  | string |
+
+###### Response
+[List[SingularityTaskHistoryUpdate]](#model-SingularityTaskHistoryUpdate)
+
+
+###### Errors
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| - | - | - |
+
+
+- - -
+#### **GET** `/api/webhooks/task`
+
+Retrieve a list of queued task updates for a specific webhook.
+
+
+###### Parameters
+**query**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| webhookId | false |  | string |
+
+###### Response
+[List[SingularityTaskHistoryUpdate]](#model-SingularityTaskHistoryUpdate)
+
+
+###### Errors
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| - | - | - |
+
+
+- - -
+#### **GET** `/api/webhooks/summary`
+
+Retrieve a summary of each active webhook
+
+
+###### Parameters
+- No parameters
+
+###### Response
+[List[SingularityWebhookSummary]](#model-SingularityWebhookSummary)
+
+
+###### Errors
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| - | - | - |
+
+
+- - -
+#### **GET** `/api/webhooks/request/{webhookId}`
+
+Retrieve a list of queued request updates for a specific webhook.
+
+
+###### Parameters
+**path**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| webhookId | true |  | string |
+
+###### Response
+[List[SingularityRequestHistory]](#model-SingularityRequestHistory)
+
+
+###### Errors
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| - | - | - |
+
+
+- - -
+#### **GET** `/api/webhooks/request`
+
+Retrieve a list of queued request updates for a specific webhook.
+
+
+###### Parameters
+**query**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| webhookId | false |  | string |
+
+###### Response
+[List[SingularityRequestHistory]](#model-SingularityRequestHistory)
+
+
+###### Errors
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| - | - | - |
+
+
+- - -
+#### **GET** `/api/webhooks/deploy/{webhookId}`
+
+Retrieve a list of queued deploy updates for a specific webhook.
+
+
+###### Parameters
+**path**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| webhookId | true |  | string |
+
+###### Response
+[List[SingularityDeployUpdate]](#model-SingularityDeployUpdate)
+
+
+###### Errors
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| - | - | - |
+
+
+- - -
+#### **GET** `/api/webhooks/deploy`
+
+Retrieve a list of queued deploy updates for a specific webhook.
+
+
+###### Parameters
+**query**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| webhookId | false |  | string |
+
+###### Response
+[List[SingularityDeployUpdate]](#model-SingularityDeployUpdate)
+
+
+###### Errors
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| - | - | - |
+
+
+- - -
+#### **POST** `/api/webhooks`
+
+Add a new webhook.
+
+
+###### Parameters
+**body**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| body | false |  | [SingularityWebhook](#model-linkType)</a> |
+
+###### Response
+string
+
+
+###### Errors
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| - | - | - |
+
+
+- - -
+#### **DELETE** `/api/webhooks`
+
+Delete a specific webhook.
+
+
+###### Parameters
+**query**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| webhookId | false |  | string |
+
+###### Response
+string
+
+
+###### Errors
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| - | - | - |
+
+
+- - -
+#### **GET** `/api/webhooks`
+
+Retrieve a list of active webhooks.
+
+
+###### Parameters
+- No parameters
+
+###### Response
+[List[SingularityWebhook]](#model-SingularityWebhook)
+
+
+###### Errors
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| - | - | - |
+
+
+- - -
+### <a name="endpoint-/api/state"></a> /api/state
+#### Overview
+Provides information about the current state of Singularity.
+
+#### **GET** `/api/state/task-reconciliation`
+
+Retrieve information about the most recent task reconciliation
+
+
+###### Parameters
+- No parameters
+
+###### Response
+[SingularityTaskReconciliationStatistics](#model-SingularityTaskReconciliationStatistics)
+
+
+###### Errors
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| - | - | - |
+
+
+- - -
+#### **GET** `/api/state/requests/under-provisioned`
+
+Retrieve the list of under-provisioned request IDs.
+
+
+###### Parameters
+**query**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| skipCache | false |  | boolean |
+
+###### Response
+List[string]
+
+
+###### Errors
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| - | - | - |
+
+
+- - -
+#### **GET** `/api/state/requests/over-provisioned`
+
+Retrieve the list of over-provisioned request IDs.
+
+
+###### Parameters
+**query**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| skipCache | false |  | boolean |
+
+###### Response
+List[string]
+
+
+###### Errors
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| - | - | - |
+
+
+- - -
+#### **GET** `/api/state`
+
+Retrieve information about the current state of Singularity.
+
+
+###### Parameters
+**query**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| skipCache | false |  | boolean |
+| includeRequestIds | false |  | boolean |
+
+###### Response
+[SingularityState](#model-SingularityState)
+
+
+###### Errors
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| - | - | - |
+
+
+- - -
+### <a name="endpoint-/api/sandbox"></a> /api/sandbox
+#### Overview
+Provides a proxy to Mesos sandboxes.
+
+#### **GET** `/api/sandbox/{taskId}/read`
+
+Retrieve part of the contents of a file in a specific task&#39;s sandbox.
+
+
+###### Parameters
+**path**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| taskId | true | The task ID of the sandbox to read from | string |
+**query**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| path | false | The path to the file to be read | string |
+| grep | false | Optional string to grep for | string |
+| offset | false | Byte offset to start reading from | long |
+| length | false | Maximum number of bytes to read | long |
+
+###### Response
+[MesosFileChunkObject](#model-MesosFileChunkObject)
+
+
+###### Errors
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| - | - | - |
+
+
+- - -
+#### **GET** `/api/sandbox/{taskId}/browse`
+
+Retrieve information about a specific task&#39;s sandbox.
+
+
+###### Parameters
+**path**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| taskId | true | The task ID to browse | string |
+**query**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| path | false | The path to browse from | string |
+
+###### Response
+[SingularitySandbox](#model-SingularitySandbox)
 
 
 ###### Errors
@@ -893,13 +2324,13 @@ Get a list of recently used command line args for an on-demand or scheduled requ
 
 
 - - -
-### <a name="endpoint-/api/logs"></a> /api/logs
+### <a name="endpoint-/api/groups"></a> /api/groups
 #### Overview
-Manages Singularity task logs stored in S3.
+Manages Singularity Request Groups, which are collections of one or more Singularity Requests
 
-#### **GET** `/api/logs/task/{taskId}`
+#### **GET** `/api/groups/group/{requestGroupId}`
 
-Retrieve the list of logs stored in S3 for a specific task.
+Get a specific Singularity request group by ID
 
 
 ###### Parameters
@@ -907,16 +2338,10 @@ Retrieve the list of logs stored in S3 for a specific task.
 
 | Parameter | Required | Description | Data Type |
 |-----------|----------|-------------|-----------|
-| taskId | true | The task ID to search for | string |
-**query**
-
-| Parameter | Required | Description | Data Type |
-|-----------|----------|-------------|-----------|
-| start | false | Start timestamp (millis, 13 digit) | long |
-| end | false | End timestamp (mills, 13 digit) | long |
+| requestGroupId | true |  | string |
 
 ###### Response
-[List[SingularityS3Log]](#model-SingularityS3Log)
+[SingularityRequestGroup](#model-SingularityRequestGroup)
 
 
 ###### Errors
@@ -926,9 +2351,9 @@ Retrieve the list of logs stored in S3 for a specific task.
 
 
 - - -
-#### **GET** `/api/logs/request/{requestId}/read`
+#### **DELETE** `/api/groups/group/{requestGroupId}`
 
-Retrieve the list of logs stored in S3 for a specific request.
+Delete a specific Singularity request group by ID
 
 
 ###### Parameters
@@ -936,18 +2361,10 @@ Retrieve the list of logs stored in S3 for a specific request.
 
 | Parameter | Required | Description | Data Type |
 |-----------|----------|-------------|-----------|
-| requestId | true | The request ID to search for | string |
-**query**
-
-| Parameter | Required | Description | Data Type |
-|-----------|----------|-------------|-----------|
-| key | false | S3 Key for the log to read | string |
-| offset | false | Offset to read in the log file | long |
-| length | false | Length in bytes to read | int |
-| reverse | false | Read backwards from offset | boolean |
+| requestGroupId | true |  | string |
 
 ###### Response
-[MesosFileChunkObject](#model-MesosFileChunkObject)
+
 
 
 ###### Errors
@@ -957,92 +2374,28 @@ Retrieve the list of logs stored in S3 for a specific request.
 
 
 - - -
-#### **GET** `/api/logs/request/{requestId}/deploy/{deployId}`
+#### **GET** `/api/groups`
 
-Retrieve the list of logs stored in S3 for a specific deploy.
-
-
-###### Parameters
-**path**
-
-| Parameter | Required | Description | Data Type |
-|-----------|----------|-------------|-----------|
-| requestId | true | The request ID to search for | string |
-| deployId | true | The deploy ID to search for | string |
-**query**
-
-| Parameter | Required | Description | Data Type |
-|-----------|----------|-------------|-----------|
-| start | false | Start timestamp (millis, 13 digit) | long |
-| end | false | End timestamp (mills, 13 digit) | long |
-
-###### Response
-[List[SingularityS3Log]](#model-SingularityS3Log)
-
-
-###### Errors
-| Status Code | Reason      | Response Model |
-|-------------|-------------|----------------|
-| - | - | - |
-
-
-- - -
-#### **GET** `/api/logs/request/{requestId}`
-
-Retrieve the list of logs stored in S3 for a specific request.
-
-
-###### Parameters
-**path**
-
-| Parameter | Required | Description | Data Type |
-|-----------|----------|-------------|-----------|
-| requestId | true | The request ID to search for | string |
-**query**
-
-| Parameter | Required | Description | Data Type |
-|-----------|----------|-------------|-----------|
-| start | false | Start timestamp (millis, 13 digit) | long |
-| end | false | End timestamp (mills, 13 digit) | long |
-
-###### Response
-[List[SingularityS3Log]](#model-SingularityS3Log)
-
-
-###### Errors
-| Status Code | Reason      | Response Model |
-|-------------|-------------|----------------|
-| - | - | - |
-
-
-- - -
-### <a name="endpoint-/api/racks"></a> /api/racks
-#### Overview
-Manages whether or not to schedule tasks based on their priority levels.
-
-#### **DELETE** `/api/priority/freeze`
-
-Stops the active priority freeze.
+Get a list of Singularity request groups
 
 
 ###### Parameters
 - No parameters
 
 ###### Response
-
+[List[SingularityRequestGroup]](#model-SingularityRequestGroup)
 
 
 ###### Errors
 | Status Code | Reason      | Response Model |
 |-------------|-------------|----------------|
-| 202    | The active priority freeze was deleted. | - |
-| 400    | There was no active priority freeze to delete. | - |
+| - | - | - |
 
 
 - - -
-#### **POST** `/api/priority/freeze`
+#### **POST** `/api/groups`
 
-Stop scheduling tasks below a certain priority level.
+Create a Singularity request group
 
 
 ###### Parameters
@@ -1050,230 +2403,10 @@ Stop scheduling tasks below a certain priority level.
 
 | Parameter | Required | Description | Data Type |
 |-----------|----------|-------------|-----------|
-| body | false |  | [SingularityPriorityFreeze](#model-linkType)</a> |
+| body | false |  | [SingularityRequestGroup](#model-linkType)</a> |
 
 ###### Response
-[SingularityPriorityFreezeParent](#model-SingularityPriorityFreezeParent)
-
-
-###### Errors
-| Status Code | Reason      | Response Model |
-|-------------|-------------|----------------|
-| 200    | The priority freeze request was accepted. | - |
-| 400    | There was a validation error with the priority freeze request. | - |
-
-
-- - -
-#### **GET** `/api/priority/freeze`
-
-Get information about the active priority freeze.
-
-
-###### Parameters
-- No parameters
-
-###### Response
-[SingularityPriorityFreezeParent](#model-SingularityPriorityFreezeParent)
-
-
-###### Errors
-| Status Code | Reason      | Response Model |
-|-------------|-------------|----------------|
-| 200    | The active priority freeze. | - |
-| 404    | There was no active priority freeze. | - |
-
-
-- - -
-### <a name="endpoint-/api/racks"></a> /api/racks
-#### Overview
-Manages Singularity racks.
-
-#### **POST** `/api/racks/rack/{rackId}/freeze`
-
-Freeze a specific rack
-
-
-###### Parameters
-**path**
-
-| Parameter | Required | Description | Data Type |
-|-----------|----------|-------------|-----------|
-| rackId | true | Rack ID | string |
-**body**
-
-| Parameter | Required | Description | Data Type |
-|-----------|----------|-------------|-----------|
-| body | false |  | [SingularityMachineChangeRequest](#model-linkType)</a> |
-
-###### Response
-
-
-
-###### Errors
-| Status Code | Reason      | Response Model |
-|-------------|-------------|----------------|
-| - | - | - |
-
-
-- - -
-#### **DELETE** `/api/racks/rack/{rackId}/expiring`
-
-Delete any expiring machine state changes for this rack
-
-
-###### Parameters
-**path**
-
-| Parameter | Required | Description | Data Type |
-|-----------|----------|-------------|-----------|
-| rackId | true | Active slaveId | string |
-
-###### Response
-
-
-
-###### Errors
-| Status Code | Reason      | Response Model |
-|-------------|-------------|----------------|
-| - | - | - |
-
-
-- - -
-#### **POST** `/api/racks/rack/{rackId}/decommission`
-
-Begin decommissioning a specific active rack
-
-
-###### Parameters
-**path**
-
-| Parameter | Required | Description | Data Type |
-|-----------|----------|-------------|-----------|
-| rackId | true | Active rack ID | string |
-**body**
-
-| Parameter | Required | Description | Data Type |
-|-----------|----------|-------------|-----------|
-| body | false |  | [SingularityMachineChangeRequest](#model-linkType)</a> |
-
-###### Response
-
-
-
-###### Errors
-| Status Code | Reason      | Response Model |
-|-------------|-------------|----------------|
-| - | - | - |
-
-
-- - -
-#### **POST** `/api/racks/rack/{rackId}/activate`
-
-Activate a decomissioning rack, canceling decomission without erasing history
-
-
-###### Parameters
-**path**
-
-| Parameter | Required | Description | Data Type |
-|-----------|----------|-------------|-----------|
-| rackId | true | Active rackId | string |
-**body**
-
-| Parameter | Required | Description | Data Type |
-|-----------|----------|-------------|-----------|
-| body | false |  | [SingularityMachineChangeRequest](#model-linkType)</a> |
-
-###### Response
-
-
-
-###### Errors
-| Status Code | Reason      | Response Model |
-|-------------|-------------|----------------|
-| - | - | - |
-
-
-- - -
-#### **GET** `/api/racks/rack/{rackId}`
-
-Retrieve the history of a given rack
-
-
-###### Parameters
-**path**
-
-| Parameter | Required | Description | Data Type |
-|-----------|----------|-------------|-----------|
-| rackId | true | Rack ID | string |
-
-###### Response
-[List[SingularityMachineStateHistoryUpdate]](#model-SingularityMachineStateHistoryUpdate)
-
-
-###### Errors
-| Status Code | Reason      | Response Model |
-|-------------|-------------|----------------|
-| - | - | - |
-
-
-- - -
-#### **DELETE** `/api/racks/rack/{rackId}`
-
-Remove a known rack, erasing history. This operation will cancel decommissioning of racks
-
-
-###### Parameters
-**path**
-
-| Parameter | Required | Description | Data Type |
-|-----------|----------|-------------|-----------|
-| rackId | true | Rack ID | string |
-
-###### Response
-
-
-
-###### Errors
-| Status Code | Reason      | Response Model |
-|-------------|-------------|----------------|
-| - | - | - |
-
-
-- - -
-#### **GET** `/api/racks/expiring`
-
-Get all expiring state changes for all racks
-
-
-###### Parameters
-- No parameters
-
-###### Response
-[List[SingularityExpiringMachineState]](#model-SingularityExpiringMachineState)
-
-
-###### Errors
-| Status Code | Reason      | Response Model |
-|-------------|-------------|----------------|
-| - | - | - |
-
-
-- - -
-#### **GET** `/api/racks/`
-
-Retrieve the list of all known racks, optionally filtering by a particular state
-
-
-###### Parameters
-**query**
-
-| Parameter | Required | Description | Data Type |
-|-----------|----------|-------------|-----------|
-| state | false | Optionally specify a particular state to filter racks by | string |
-
-###### Response
-[List[SingularityRack]](#model-SingularityRack)
+[SingularityRequestGroup](#model-SingularityRequestGroup)
 
 
 ###### Errors
@@ -1877,78 +3010,13 @@ Create or update a Singularity Request
 
 
 - - -
-### <a name="endpoint-/api/requests"></a> /api/requests
+### <a name="endpoint-/api/deploys"></a> /api/deploys
 #### Overview
-Manages Singularity Request Groups, which are collections of one or more Singularity Requests
+Manages Singularity Deploys for existing requests
 
-#### **GET** `/api/groups/group/{requestGroupId}`
+#### **POST** `/api/deploys/update`
 
-Get a specific Singularity request group by ID
-
-
-###### Parameters
-**path**
-
-| Parameter | Required | Description | Data Type |
-|-----------|----------|-------------|-----------|
-| requestGroupId | true |  | string |
-
-###### Response
-[SingularityRequestGroup](#model-SingularityRequestGroup)
-
-
-###### Errors
-| Status Code | Reason      | Response Model |
-|-------------|-------------|----------------|
-| - | - | - |
-
-
-- - -
-#### **DELETE** `/api/groups/group/{requestGroupId}`
-
-Delete a specific Singularity request group by ID
-
-
-###### Parameters
-**path**
-
-| Parameter | Required | Description | Data Type |
-|-----------|----------|-------------|-----------|
-| requestGroupId | true |  | string |
-
-###### Response
-
-
-
-###### Errors
-| Status Code | Reason      | Response Model |
-|-------------|-------------|----------------|
-| - | - | - |
-
-
-- - -
-#### **GET** `/api/groups`
-
-Get a list of Singularity request groups
-
-
-###### Parameters
-- No parameters
-
-###### Response
-[List[SingularityRequestGroup]](#model-SingularityRequestGroup)
-
-
-###### Errors
-| Status Code | Reason      | Response Model |
-|-------------|-------------|----------------|
-| - | - | - |
-
-
-- - -
-#### **POST** `/api/groups`
-
-Create a Singularity request group
+Update the target active instance count for a pending deploy
 
 
 ###### Parameters
@@ -1956,272 +3024,29 @@ Create a Singularity request group
 
 | Parameter | Required | Description | Data Type |
 |-----------|----------|-------------|-----------|
-| body | false |  | [SingularityRequestGroup](#model-linkType)</a> |
+| body | true |  | [SingularityUpdatePendingDeployRequest](#model-linkType)</a> |
 
 ###### Response
-[SingularityRequestGroup](#model-SingularityRequestGroup)
+[SingularityRequestParent](#model-SingularityRequestParent)
 
 
 ###### Errors
 | Status Code | Reason      | Response Model |
 |-------------|-------------|----------------|
-| - | - | - |
+| 400    | Deploy is not in the pending state pending or is not not present | - |
 
 
 - - -
-### <a name="endpoint-/api/sandbox"></a> /api/sandbox
-#### Overview
-Provides a proxy to Mesos sandboxes.
+#### **GET** `/api/deploys/pending`
 
-#### **GET** `/api/sandbox/{taskId}/read`
-
-Retrieve part of the contents of a file in a specific task&#39;s sandbox.
-
-
-###### Parameters
-**path**
-
-| Parameter | Required | Description | Data Type |
-|-----------|----------|-------------|-----------|
-| taskId | true | The task ID of the sandbox to read from | string |
-**query**
-
-| Parameter | Required | Description | Data Type |
-|-----------|----------|-------------|-----------|
-| path | false | The path to the file to be read | string |
-| grep | false | Optional string to grep for | string |
-| offset | false | Byte offset to start reading from | long |
-| length | false | Maximum number of bytes to read | long |
-
-###### Response
-[MesosFileChunkObject](#model-MesosFileChunkObject)
-
-
-###### Errors
-| Status Code | Reason      | Response Model |
-|-------------|-------------|----------------|
-| - | - | - |
-
-
-- - -
-#### **GET** `/api/sandbox/{taskId}/browse`
-
-Retrieve information about a specific task&#39;s sandbox.
-
-
-###### Parameters
-**path**
-
-| Parameter | Required | Description | Data Type |
-|-----------|----------|-------------|-----------|
-| taskId | true | The task ID to browse | string |
-**query**
-
-| Parameter | Required | Description | Data Type |
-|-----------|----------|-------------|-----------|
-| path | false | The path to browse from | string |
-
-###### Response
-[SingularitySandbox](#model-SingularitySandbox)
-
-
-###### Errors
-| Status Code | Reason      | Response Model |
-|-------------|-------------|----------------|
-| - | - | - |
-
-
-- - -
-### <a name="endpoint-/api/slaves"></a> /api/slaves
-#### Overview
-Manages Singularity slaves.
-
-#### **POST** `/api/slaves/slave/{slaveId}/freeze`
-
-Freeze tasks on a specific slave
-
-
-###### Parameters
-**path**
-
-| Parameter | Required | Description | Data Type |
-|-----------|----------|-------------|-----------|
-| slaveId | true | Slave ID | string |
-**body**
-
-| Parameter | Required | Description | Data Type |
-|-----------|----------|-------------|-----------|
-| body | false |  | [SingularityMachineChangeRequest](#model-linkType)</a> |
-
-###### Response
-
-
-
-###### Errors
-| Status Code | Reason      | Response Model |
-|-------------|-------------|----------------|
-| - | - | - |
-
-
-- - -
-#### **DELETE** `/api/slaves/slave/{slaveId}/expiring`
-
-Delete any expiring machine state changes for this slave
-
-
-###### Parameters
-**path**
-
-| Parameter | Required | Description | Data Type |
-|-----------|----------|-------------|-----------|
-| slaveId | true | Active slaveId | string |
-
-###### Response
-
-
-
-###### Errors
-| Status Code | Reason      | Response Model |
-|-------------|-------------|----------------|
-| - | - | - |
-
-
-- - -
-#### **GET** `/api/slaves/slave/{slaveId}/details`
-
-Get information about a particular slave
-
-
-###### Parameters
-**path**
-
-| Parameter | Required | Description | Data Type |
-|-----------|----------|-------------|-----------|
-| slaveId | true | Slave ID | string |
-
-###### Response
-[SingularitySlave](#model-SingularitySlave)
-
-
-###### Errors
-| Status Code | Reason      | Response Model |
-|-------------|-------------|----------------|
-| - | - | - |
-
-
-- - -
-#### **POST** `/api/slaves/slave/{slaveId}/decommission`
-
-Begin decommissioning a specific active slave
-
-
-###### Parameters
-**path**
-
-| Parameter | Required | Description | Data Type |
-|-----------|----------|-------------|-----------|
-| slaveId | true | Active slaveId | string |
-**body**
-
-| Parameter | Required | Description | Data Type |
-|-----------|----------|-------------|-----------|
-| body | false |  | [SingularityMachineChangeRequest](#model-linkType)</a> |
-
-###### Response
-
-
-
-###### Errors
-| Status Code | Reason      | Response Model |
-|-------------|-------------|----------------|
-| - | - | - |
-
-
-- - -
-#### **POST** `/api/slaves/slave/{slaveId}/activate`
-
-Activate a decomissioning slave, canceling decomission without erasing history
-
-
-###### Parameters
-**path**
-
-| Parameter | Required | Description | Data Type |
-|-----------|----------|-------------|-----------|
-| slaveId | true | Active slaveId | string |
-**body**
-
-| Parameter | Required | Description | Data Type |
-|-----------|----------|-------------|-----------|
-| body | false |  | [SingularityMachineChangeRequest](#model-linkType)</a> |
-
-###### Response
-
-
-
-###### Errors
-| Status Code | Reason      | Response Model |
-|-------------|-------------|----------------|
-| - | - | - |
-
-
-- - -
-#### **GET** `/api/slaves/slave/{slaveId}`
-
-Retrieve the history of a given slave
-
-
-###### Parameters
-**path**
-
-| Parameter | Required | Description | Data Type |
-|-----------|----------|-------------|-----------|
-| slaveId | true | Slave ID | string |
-
-###### Response
-[List[SingularityMachineStateHistoryUpdate]](#model-SingularityMachineStateHistoryUpdate)
-
-
-###### Errors
-| Status Code | Reason      | Response Model |
-|-------------|-------------|----------------|
-| - | - | - |
-
-
-- - -
-#### **DELETE** `/api/slaves/slave/{slaveId}`
-
-Remove a known slave, erasing history. This operation will cancel decomissioning of the slave
-
-
-###### Parameters
-**path**
-
-| Parameter | Required | Description | Data Type |
-|-----------|----------|-------------|-----------|
-| slaveId | true | Active SlaveId | string |
-
-###### Response
-
-
-
-###### Errors
-| Status Code | Reason      | Response Model |
-|-------------|-------------|----------------|
-| - | - | - |
-
-
-- - -
-#### **GET** `/api/slaves/expiring`
-
-Get all expiring state changes for all slaves
+Retrieve the list of current pending deploys
 
 
 ###### Parameters
 - No parameters
 
 ###### Response
-[List[SingularityExpiringMachineState]](#model-SingularityExpiringMachineState)
+[List[SingularityPendingDeploy]](#model-SingularityPendingDeploy)
 
 
 ###### Errors
@@ -2231,129 +3056,9 @@ Get all expiring state changes for all slaves
 
 
 - - -
-#### **GET** `/api/slaves/`
+#### **DELETE** `/api/deploys/deploy/{deployId}/request/{requestId}`
 
-Retrieve the list of all known slaves, optionally filtering by a particular state
-
-
-###### Parameters
-**query**
-
-| Parameter | Required | Description | Data Type |
-|-----------|----------|-------------|-----------|
-| state | false | Optionally specify a particular state to filter slaves by | string |
-
-###### Response
-[List[SingularitySlave]](#model-SingularitySlave)
-
-
-###### Errors
-| Status Code | Reason      | Response Model |
-|-------------|-------------|----------------|
-| - | - | - |
-
-
-- - -
-### <a name="endpoint-/api/state"></a> /api/state
-#### Overview
-Provides information about the current state of Singularity.
-
-#### **GET** `/api/state/task-reconciliation`
-
-Retrieve information about the most recent task reconciliation
-
-
-###### Parameters
-- No parameters
-
-###### Response
-[SingularityTaskReconciliationStatistics](#model-SingularityTaskReconciliationStatistics)
-
-
-###### Errors
-| Status Code | Reason      | Response Model |
-|-------------|-------------|----------------|
-| - | - | - |
-
-
-- - -
-#### **GET** `/api/state/requests/under-provisioned`
-
-Retrieve the list of under-provisioned request IDs.
-
-
-###### Parameters
-**query**
-
-| Parameter | Required | Description | Data Type |
-|-----------|----------|-------------|-----------|
-| skipCache | false |  | boolean |
-
-###### Response
-List[string]
-
-
-###### Errors
-| Status Code | Reason      | Response Model |
-|-------------|-------------|----------------|
-| - | - | - |
-
-
-- - -
-#### **GET** `/api/state/requests/over-provisioned`
-
-Retrieve the list of over-provisioned request IDs.
-
-
-###### Parameters
-**query**
-
-| Parameter | Required | Description | Data Type |
-|-----------|----------|-------------|-----------|
-| skipCache | false |  | boolean |
-
-###### Response
-List[string]
-
-
-###### Errors
-| Status Code | Reason      | Response Model |
-|-------------|-------------|----------------|
-| - | - | - |
-
-
-- - -
-#### **GET** `/api/state`
-
-Retrieve information about the current state of Singularity.
-
-
-###### Parameters
-**query**
-
-| Parameter | Required | Description | Data Type |
-|-----------|----------|-------------|-----------|
-| skipCache | false |  | boolean |
-| includeRequestIds | false |  | boolean |
-
-###### Response
-[SingularityState](#model-SingularityState)
-
-
-###### Errors
-| Status Code | Reason      | Response Model |
-|-------------|-------------|----------------|
-| - | - | - |
-
-
-- - -
-### <a name="endpoint-/api/tasks"></a> /api/tasks
-#### Overview
-Manages Singularity tasks.
-
-#### **GET** `/api/tasks/task/{taskId}/statistics`
-
-Retrieve statistics about a specific active task.
+Cancel a pending deployment (best effort - the deploy may still succeed or fail)
 
 
 ###### Parameters
@@ -2361,706 +3066,23 @@ Retrieve statistics about a specific active task.
 
 | Parameter | Required | Description | Data Type |
 |-----------|----------|-------------|-----------|
-| taskId | true |  | string |
+| requestId | true | The Singularity Request Id from which the deployment is removed. | string |
+| deployId | true | The Singularity Deploy Id that should be removed. | string |
 
 ###### Response
-[MesosTaskStatisticsObject](#model-MesosTaskStatisticsObject)
+[SingularityRequestParent](#model-SingularityRequestParent)
 
 
 ###### Errors
 | Status Code | Reason      | Response Model |
 |-------------|-------------|----------------|
-| - | - | - |
+| 400    | Deploy is not in the pending state pending or is not not present | - |
 
 
 - - -
-#### **POST** `/api/tasks/task/{taskId}/metadata`
+#### **POST** `/api/deploys`
 
-Post metadata about a task that will be persisted along with it and displayed in the UI
-
-
-###### Parameters
-**path**
-
-| Parameter | Required | Description | Data Type |
-|-----------|----------|-------------|-----------|
-| taskId | true |  | string |
-**body**
-
-| Parameter | Required | Description | Data Type |
-|-----------|----------|-------------|-----------|
-| body | false |  | [SingularityTaskMetadataRequest](#model-linkType)</a> |
-
-###### Response
-
-
-
-###### Errors
-| Status Code | Reason      | Response Model |
-|-------------|-------------|----------------|
-| 400    | Invalid metadata object or doesn&#39;t match allowed types | - |
-| 404    | Task doesn&#39;t exist | - |
-| 409    | Metadata with this type/timestamp already existed | - |
-
-
-- - -
-#### **POST** `/api/tasks/task/{taskId}/command`
-
-Run a configured shell command against the given task
-
-
-###### Parameters
-**path**
-
-| Parameter | Required | Description | Data Type |
-|-----------|----------|-------------|-----------|
-| taskId | true |  | string |
-**body**
-
-| Parameter | Required | Description | Data Type |
-|-----------|----------|-------------|-----------|
-| body | false |  | [SingularityShellCommand](#model-linkType)</a> |
-
-###### Response
-[SingularityTaskShellCommandRequest](#model-SingularityTaskShellCommandRequest)
-
-
-###### Errors
-| Status Code | Reason      | Response Model |
-|-------------|-------------|----------------|
-| 400    | Given shell command option doesn&#39;t exist | - |
-| 403    | Given shell command doesn&#39;t exist | - |
-
-
-- - -
-#### **GET** `/api/tasks/task/{taskId}/cleanup`
-
-Get the cleanup object for the task, if it exists
-
-
-###### Parameters
-**path**
-
-| Parameter | Required | Description | Data Type |
-|-----------|----------|-------------|-----------|
-| taskId | true |  | string |
-
-###### Response
-[SingularityTaskCleanup](#model-SingularityTaskCleanup)
-
-
-###### Errors
-| Status Code | Reason      | Response Model |
-|-------------|-------------|----------------|
-| - | - | - |
-
-
-- - -
-#### **DELETE** `/api/tasks/task/{taskId}`
-
-Attempt to kill task, optionally overriding an existing cleanup request (that may be waiting for replacement tasks to become healthy)
-
-
-###### Parameters
-**path**
-
-| Parameter | Required | Description | Data Type |
-|-----------|----------|-------------|-----------|
-| taskId | true |  | string |
-**body**
-
-| Parameter | Required | Description | Data Type |
-|-----------|----------|-------------|-----------|
-| body | false |  | [SingularityKillTaskRequest](#model-linkType)</a> |
-
-###### Response
-[SingularityTaskCleanup](#model-SingularityTaskCleanup)
-
-
-###### Errors
-| Status Code | Reason      | Response Model |
-|-------------|-------------|----------------|
-| 409    | Task already has a cleanup request (can be overridden with override=true) | - |
-
-
-- - -
-#### **GET** `/api/tasks/task/{taskId}`
-
-Retrieve information about a specific active task.
-
-
-###### Parameters
-**path**
-
-| Parameter | Required | Description | Data Type |
-|-----------|----------|-------------|-----------|
-| taskId | true |  | string |
-
-###### Response
-[SingularityTask](#model-SingularityTask)
-
-
-###### Errors
-| Status Code | Reason      | Response Model |
-|-------------|-------------|----------------|
-| - | - | - |
-
-
-- - -
-#### **GET** `/api/tasks/scheduled/task/{pendingTaskId}`
-
-Retrieve information about a pending task.
-
-
-###### Parameters
-**path**
-
-| Parameter | Required | Description | Data Type |
-|-----------|----------|-------------|-----------|
-| pendingTaskId | true |  | string |
-
-###### Response
-[SingularityTaskRequest](#model-SingularityTaskRequest)
-
-
-###### Errors
-| Status Code | Reason      | Response Model |
-|-------------|-------------|----------------|
-| - | - | - |
-
-
-- - -
-#### **GET** `/api/tasks/scheduled/request/{requestId}`
-
-Retrieve list of scheduled tasks for a specific request.
-
-
-###### Parameters
-**path**
-
-| Parameter | Required | Description | Data Type |
-|-----------|----------|-------------|-----------|
-| requestId | true |  | string |
-
-###### Response
-[List[SingularityTaskRequest]](#model-SingularityTaskRequest)
-
-
-###### Errors
-| Status Code | Reason      | Response Model |
-|-------------|-------------|----------------|
-| - | - | - |
-
-
-- - -
-#### **GET** `/api/tasks/scheduled/ids`
-
-Retrieve list of scheduled task IDs.
-
-
-###### Parameters
-- No parameters
-
-###### Response
-[UNKNOWN[SingularityPendingTaskId]](#model-UNKNOWN[SingularityPendingTaskId])
-
-
-###### Errors
-| Status Code | Reason      | Response Model |
-|-------------|-------------|----------------|
-| - | - | - |
-
-
-- - -
-#### **GET** `/api/tasks/scheduled`
-
-Retrieve list of scheduled tasks.
-
-
-###### Parameters
-- No parameters
-
-###### Response
-[List[SingularityTaskRequest]](#model-SingularityTaskRequest)
-
-
-###### Errors
-| Status Code | Reason      | Response Model |
-|-------------|-------------|----------------|
-| - | - | - |
-
-
-- - -
-#### **GET** `/api/tasks/lbcleanup`
-
-Retrieve the list of tasks being cleaned from load balancers.
-
-
-###### Parameters
-- No parameters
-
-###### Response
-[UNKNOWN[SingularityTaskId]](#model-UNKNOWN[SingularityTaskId])
-
-
-###### Errors
-| Status Code | Reason      | Response Model |
-|-------------|-------------|----------------|
-| - | - | - |
-
-
-- - -
-#### **GET** `/api/tasks/killed`
-
-Retrieve the list of killed tasks.
-
-
-###### Parameters
-- No parameters
-
-###### Response
-[UNKNOWN[SingularityKilledTaskIdRecord]](#model-UNKNOWN[SingularityKilledTaskIdRecord])
-
-
-###### Errors
-| Status Code | Reason      | Response Model |
-|-------------|-------------|----------------|
-| - | - | - |
-
-
-- - -
-#### **GET** `/api/tasks/cleaning`
-
-Retrieve the list of cleaning tasks.
-
-
-###### Parameters
-- No parameters
-
-###### Response
-[UNKNOWN[SingularityTaskCleanup]](#model-UNKNOWN[SingularityTaskCleanup])
-
-
-###### Errors
-| Status Code | Reason      | Response Model |
-|-------------|-------------|----------------|
-| - | - | - |
-
-
-- - -
-#### **GET** `/api/tasks/active/slave/{slaveId}`
-
-Retrieve list of active tasks on a specific slave.
-
-
-###### Parameters
-**path**
-
-| Parameter | Required | Description | Data Type |
-|-----------|----------|-------------|-----------|
-| slaveId | true |  | string |
-
-###### Response
-[UNKNOWN[SingularityTask]](#model-UNKNOWN[SingularityTask])
-
-
-###### Errors
-| Status Code | Reason      | Response Model |
-|-------------|-------------|----------------|
-| - | - | - |
-
-
-- - -
-#### **GET** `/api/tasks/active`
-
-Retrieve the list of active tasks.
-
-
-###### Parameters
-- No parameters
-
-###### Response
-[UNKNOWN[SingularityTask]](#model-UNKNOWN[SingularityTask])
-
-
-###### Errors
-| Status Code | Reason      | Response Model |
-|-------------|-------------|----------------|
-| - | - | - |
-
-
-- - -
-### <a name="endpoint-/api/test"></a> /api/test
-#### Overview
-Misc testing endpoints.
-
-#### **POST** `/api/test/stop`
-
-Stop the Mesos scheduler driver.
-
-
-###### Parameters
-- No parameters
-
-###### Response
-
-
-
-###### Errors
-| Status Code | Reason      | Response Model |
-|-------------|-------------|----------------|
-| - | - | - |
-
-
-- - -
-#### **POST** `/api/test/start`
-
-Start the Mesos scheduler driver.
-
-
-###### Parameters
-- No parameters
-
-###### Response
-
-
-
-###### Errors
-| Status Code | Reason      | Response Model |
-|-------------|-------------|----------------|
-| - | - | - |
-
-
-- - -
-#### **POST** `/api/test/scheduler/statusUpdate/{taskId}/{taskState}`
-
-Force an update for a specific task.
-
-
-###### Parameters
-**path**
-
-| Parameter | Required | Description | Data Type |
-|-----------|----------|-------------|-----------|
-| taskId | true |  | string |
-| taskState | true |  | string |
-
-###### Response
-
-
-
-###### Errors
-| Status Code | Reason      | Response Model |
-|-------------|-------------|----------------|
-| - | - | - |
-
-
-- - -
-#### **POST** `/api/test/reconcile`
-
-Start task reconciliation
-
-
-###### Parameters
-- No parameters
-
-###### Response
-
-
-
-###### Errors
-| Status Code | Reason      | Response Model |
-|-------------|-------------|----------------|
-| - | - | - |
-
-
-- - -
-#### **POST** `/api/test/notleader`
-
-Make this instanceo of Singularity believe it&#39;s lost leadership.
-
-
-###### Parameters
-- No parameters
-
-###### Response
-
-
-
-###### Errors
-| Status Code | Reason      | Response Model |
-|-------------|-------------|----------------|
-| - | - | - |
-
-
-- - -
-#### **POST** `/api/test/leader`
-
-Make this instance of Singularity believe it&#39;s elected leader.
-
-
-###### Parameters
-- No parameters
-
-###### Response
-
-
-
-###### Errors
-| Status Code | Reason      | Response Model |
-|-------------|-------------|----------------|
-| - | - | - |
-
-
-- - -
-#### **POST** `/api/test/exception`
-
-Trigger an exception.
-
-
-###### Parameters
-**query**
-
-| Parameter | Required | Description | Data Type |
-|-----------|----------|-------------|-----------|
-| message | false |  | string |
-
-###### Response
-
-
-
-###### Errors
-| Status Code | Reason      | Response Model |
-|-------------|-------------|----------------|
-| - | - | - |
-
-
-- - -
-#### **POST** `/api/test/abort`
-
-Abort the Mesos scheduler driver.
-
-
-###### Parameters
-- No parameters
-
-###### Response
-
-
-
-###### Errors
-| Status Code | Reason      | Response Model |
-|-------------|-------------|----------------|
-| - | - | - |
-
-
-- - -
-### <a name="endpoint-/api/webhooks"></a> /api/webhooks
-#### Overview
-Manages Singularity webhooks.
-
-#### **DELETE** `/api/webhooks/{webhookId}`
-
-Delete a specific webhook.
-
-
-###### Parameters
-**path**
-
-| Parameter | Required | Description | Data Type |
-|-----------|----------|-------------|-----------|
-| webhookId | true |  | string |
-
-###### Response
-string
-
-
-###### Errors
-| Status Code | Reason      | Response Model |
-|-------------|-------------|----------------|
-| - | - | - |
-
-
-- - -
-#### **GET** `/api/webhooks/task/{webhookId}`
-
-Retrieve a list of queued task updates for a specific webhook.
-
-
-###### Parameters
-**path**
-
-| Parameter | Required | Description | Data Type |
-|-----------|----------|-------------|-----------|
-| webhookId | true |  | string |
-
-###### Response
-[List[SingularityTaskHistoryUpdate]](#model-SingularityTaskHistoryUpdate)
-
-
-###### Errors
-| Status Code | Reason      | Response Model |
-|-------------|-------------|----------------|
-| - | - | - |
-
-
-- - -
-#### **GET** `/api/webhooks/task`
-
-Retrieve a list of queued task updates for a specific webhook.
-
-
-###### Parameters
-**query**
-
-| Parameter | Required | Description | Data Type |
-|-----------|----------|-------------|-----------|
-| webhookId | false |  | string |
-
-###### Response
-[List[SingularityTaskHistoryUpdate]](#model-SingularityTaskHistoryUpdate)
-
-
-###### Errors
-| Status Code | Reason      | Response Model |
-|-------------|-------------|----------------|
-| - | - | - |
-
-
-- - -
-#### **GET** `/api/webhooks/summary`
-
-Retrieve a summary of each active webhook
-
-
-###### Parameters
-- No parameters
-
-###### Response
-[List[SingularityWebhookSummary]](#model-SingularityWebhookSummary)
-
-
-###### Errors
-| Status Code | Reason      | Response Model |
-|-------------|-------------|----------------|
-| - | - | - |
-
-
-- - -
-#### **GET** `/api/webhooks/request/{webhookId}`
-
-Retrieve a list of queued request updates for a specific webhook.
-
-
-###### Parameters
-**path**
-
-| Parameter | Required | Description | Data Type |
-|-----------|----------|-------------|-----------|
-| webhookId | true |  | string |
-
-###### Response
-[List[SingularityRequestHistory]](#model-SingularityRequestHistory)
-
-
-###### Errors
-| Status Code | Reason      | Response Model |
-|-------------|-------------|----------------|
-| - | - | - |
-
-
-- - -
-#### **GET** `/api/webhooks/request`
-
-Retrieve a list of queued request updates for a specific webhook.
-
-
-###### Parameters
-**query**
-
-| Parameter | Required | Description | Data Type |
-|-----------|----------|-------------|-----------|
-| webhookId | false |  | string |
-
-###### Response
-[List[SingularityRequestHistory]](#model-SingularityRequestHistory)
-
-
-###### Errors
-| Status Code | Reason      | Response Model |
-|-------------|-------------|----------------|
-| - | - | - |
-
-
-- - -
-#### **GET** `/api/webhooks/deploy/{webhookId}`
-
-Retrieve a list of queued deploy updates for a specific webhook.
-
-
-###### Parameters
-**path**
-
-| Parameter | Required | Description | Data Type |
-|-----------|----------|-------------|-----------|
-| webhookId | true |  | string |
-
-###### Response
-[List[SingularityDeployUpdate]](#model-SingularityDeployUpdate)
-
-
-###### Errors
-| Status Code | Reason      | Response Model |
-|-------------|-------------|----------------|
-| - | - | - |
-
-
-- - -
-#### **GET** `/api/webhooks/deploy`
-
-Retrieve a list of queued deploy updates for a specific webhook.
-
-
-###### Parameters
-**query**
-
-| Parameter | Required | Description | Data Type |
-|-----------|----------|-------------|-----------|
-| webhookId | false |  | string |
-
-###### Response
-[List[SingularityDeployUpdate]](#model-SingularityDeployUpdate)
-
-
-###### Errors
-| Status Code | Reason      | Response Model |
-|-------------|-------------|----------------|
-| - | - | - |
-
-
-- - -
-#### **GET** `/api/webhooks`
-
-Retrieve a list of active webhooks.
-
-
-###### Parameters
-- No parameters
-
-###### Response
-[List[SingularityWebhook]](#model-SingularityWebhook)
-
-
-###### Errors
-| Status Code | Reason      | Response Model |
-|-------------|-------------|----------------|
-| - | - | - |
-
-
-- - -
-#### **POST** `/api/webhooks`
-
-Add a new webhook.
+Start a new deployment for a Request
 
 
 ###### Parameters
@@ -3068,39 +3090,17 @@ Add a new webhook.
 
 | Parameter | Required | Description | Data Type |
 |-----------|----------|-------------|-----------|
-| body | false |  | [SingularityWebhook](#model-linkType)</a> |
+| body | true |  | [SingularityDeployRequest](#model-linkType)</a> |
 
 ###### Response
-string
+[SingularityRequestParent](#model-SingularityRequestParent)
 
 
 ###### Errors
 | Status Code | Reason      | Response Model |
 |-------------|-------------|----------------|
-| - | - | - |
-
-
-- - -
-#### **DELETE** `/api/webhooks`
-
-Delete a specific webhook.
-
-
-###### Parameters
-**query**
-
-| Parameter | Required | Description | Data Type |
-|-----------|----------|-------------|-----------|
-| webhookId | false |  | string |
-
-###### Response
-string
-
-
-###### Errors
-| Status Code | Reason      | Response Model |
-|-------------|-------------|----------------|
-| - | - | - |
+| 400    | Deploy object is invalid | - |
+| 409    | A current deploy is in progress. It may be canceled by calling DELETE | - |
 
 
 - - -
