@@ -40,4 +40,14 @@ public class HistoryPurgeRequestSettings {
   public void setDeleteTaskHistoryBytesAfterTasksPerRequest(Optional<Integer> deleteTaskHistoryBytesAfterTasksPerRequest) {
     this.deleteTaskHistoryBytesAfterTasksPerRequest = deleteTaskHistoryBytesAfterTasksPerRequest;
   }
+
+  @Override
+  public String toString() {
+    return "HistoryPurgeRequestSettings{" +
+      "deleteTaskHistoryAfterDays=" + deleteTaskHistoryAfterDays +
+      ", deleteTaskHistoryAfterTasksPerRequest=" + deleteTaskHistoryAfterTasksPerRequest +
+      ", deleteTaskHistoryBytesAfterDays=" + deleteTaskHistoryBytesAfterDays +
+      ", deleteTaskHistoryBytesAfterTasksPerRequest=" + deleteTaskHistoryBytesAfterTasksPerRequest +
+      '}';
+  }
 }
