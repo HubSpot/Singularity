@@ -1,5 +1,8 @@
 package com.hubspot.singularity.config;
 
+import java.util.Collections;
+import java.util.Map;
+
 import com.google.common.base.Optional;
 
 public class HistoryPurgingConfiguration {
@@ -13,6 +16,8 @@ public class HistoryPurgingConfiguration {
   private int checkTaskHistoryEveryHours = 24;
 
   private boolean enabled = false;
+
+  private Map<String, HistoryPurgeRequestOverride> requestOverrides = Collections.emptyMap();
 
   private Optional<Integer> absentIfNotOverOne(int value) {
     if (value < 1) {
@@ -61,5 +66,11 @@ public class HistoryPurgingConfiguration {
     this.enabled = enabled;
   }
 
+  public Map<String, HistoryPurgeRequestOverride> getRequestOverrides() {
+    return requestOverrides;
+  }
 
+  public void setRequestOverrides(Map<String, HistoryPurgeRequestOverride> requestOverrides) {
+    this.requestOverrides = requestOverrides;
+  }
 }
