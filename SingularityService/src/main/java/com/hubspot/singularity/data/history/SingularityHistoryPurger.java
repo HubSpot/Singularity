@@ -11,6 +11,7 @@ import org.slf4j.LoggerFactory;
 import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.hubspot.mesos.JavaUtils;
+import com.hubspot.singularity.ExtendedTaskState;
 import com.hubspot.singularity.config.HistoryPurgeRequestSettings;
 import com.hubspot.singularity.config.HistoryPurgingConfiguration;
 import com.hubspot.singularity.scheduler.SingularityLeaderOnlyPoller;
@@ -42,6 +43,7 @@ public class SingularityHistoryPurger extends SingularityLeaderOnlyPoller {
     for (String requestId : historyManager.getRequestIdsInTaskHistory()) {
       HistoryPurgeRequestSettings settings = getRequestPurgeSettings(requestId);
 
+      LOG.debug("Attempting to purge tasks for {}, using purge settings {}", requestId, settings);
       purge(requestId, start, settings.getDeleteTaskHistoryAfterTasksPerRequest(), settings.getDeleteTaskHistoryAfterDays(), true);
       purge(requestId, start, settings.getDeleteTaskHistoryBytesAfterTasksPerRequest(), settings.getDeleteTaskHistoryBytesAfterDays(), false);
     }
@@ -61,7 +63,12 @@ public class SingularityHistoryPurger extends SingularityLeaderOnlyPoller {
 
     LOG.info("Finding taskHistory counts before {} (purging tasks over limit of {} or created before {}) for request {}", checkBefore, afterTasksPerRequest, purgeBefore, requestId);
 
-    int unpurgedCount = historyManager.getUnpurgedTaskHistoryCountByRequestBefore(requestId, checkBefore);
+    int unpurgedCount;
+    if (deleteRow) {
+      unpurgedCount = historyManager.getTaskIdHistoryCount(Optional.of(requestId), Optional.<String>absent(), Optional.<String>absent(), Optional.<String>absent(), Optional.<ExtendedTaskState>absent(), Optional.<Long>absent(), Optional.<Long>absent(), Optional.<Long>absent(), Optional.<Long>absent());
+    } else {
+      unpurgedCount = historyManager.getUnpurgedTaskHistoryCountByRequestBefore(requestId, checkBefore);
+    }
 
     if (!afterDays.isPresent() && afterTasksPerRequest.isPresent() &&
       unpurgedCount < afterTasksPerRequest.get()) {
@@ -73,7 +80,7 @@ public class SingularityHistoryPurger extends SingularityLeaderOnlyPoller {
 
     historyManager.purgeTaskHistory(requestId, unpurgedCount, afterTasksPerRequest, purgeBefore, deleteRow);
 
-    LOG.info("Purged old taskHistory for {} ({} count) in {}", requestId, unpurgedCount, JavaUtils.duration(startRequestId));
+    LOG.info("Purged old taskHistory for {} ({} count) in {} (deleteRows: {})", requestId, unpurgedCount, JavaUtils.duration(startRequestId), deleteRow);
   }
 
   private HistoryPurgeRequestSettings getRequestPurgeSettings(String requestId) {
