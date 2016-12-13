@@ -7,9 +7,9 @@ import com.google.common.base.Optional;
 
 public class HistoryPurgingConfiguration {
 
-  private int deleteTaskHistoryAfterDays = 500;
+  private int deleteTaskHistoryAfterDays = 0;
 
-  private int deleteTaskHistoryAfterTasksPerRequest = 15000;
+  private int deleteTaskHistoryAfterTasksPerRequest = 0;
 
   private int deleteTaskHistoryBytesAfterDays = 365;
 
