@@ -129,7 +129,7 @@ public class SingularityS3DownloaderCoordinator implements DownloadListener {
     private void handleContinuationExpired() {
       try {
         LOG.info("Continuation expired for {} after {} - returning 500", artifactDownloadRequest, JavaUtils.duration(start));
-        ((HttpServletResponse) continuation.getServletResponse()).sendError(500);
+        ((HttpServletResponse) continuation.getServletResponse()).sendError(500, "Hit client timeout");
       } catch (Throwable t) {
         LOG.warn("{} while sending error after continuation for {}", t.getClass().getSimpleName(), artifactDownloadRequest.getTargetDirectory());
       } finally {
