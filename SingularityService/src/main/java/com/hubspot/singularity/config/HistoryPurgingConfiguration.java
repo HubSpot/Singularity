@@ -7,17 +7,19 @@ import com.google.common.base.Optional;
 
 public class HistoryPurgingConfiguration {
 
-  private int deleteTaskHistoryAfterDays = 365;
+  private int deleteTaskHistoryAfterDays = 500;
 
-  private int deleteTaskHistoryAfterTasksPerRequest = 10000;
+  private int deleteTaskHistoryAfterTasksPerRequest = 15000;
 
-  private boolean deleteTaskHistoryBytesInsteadOfEntireRow = true;
+  private int deleteTaskHistoryBytesAfterDays = 365;
+
+  private int deleteTaskHistoryBytesAfterTasksPerRequest = 10000;
 
   private int checkTaskHistoryEveryHours = 24;
 
   private boolean enabled = false;
 
-  private Map<String, HistoryPurgeRequestOverride> requestOverrides = Collections.emptyMap();
+  private Map<String, HistoryPurgeRequestSettings> requestOverrides = Collections.emptyMap();
 
   private Optional<Integer> absentIfNotOverOne(int value) {
     if (value < 1) {
@@ -42,12 +44,20 @@ public class HistoryPurgingConfiguration {
     this.deleteTaskHistoryAfterTasksPerRequest = deleteTaskHistoryAfterTasksPerRequest;
   }
 
-  public boolean isDeleteTaskHistoryBytesInsteadOfEntireRow() {
-    return deleteTaskHistoryBytesInsteadOfEntireRow;
+  public Optional<Integer> getDeleteTaskHistoryBytesAfterDays() {
+    return absentIfNotOverOne(deleteTaskHistoryBytesAfterDays);
   }
 
-  public void setDeleteTaskHistoryBytesInsteadOfEntireRow(boolean deleteTaskHistoryBytesInsteadOfEntireRow) {
-    this.deleteTaskHistoryBytesInsteadOfEntireRow = deleteTaskHistoryBytesInsteadOfEntireRow;
+  public void setDeleteTaskHistoryBytesAfterDays(int deleteTaskHistoryBytesAfterDays) {
+    this.deleteTaskHistoryBytesAfterDays = deleteTaskHistoryBytesAfterDays;
+  }
+
+  public Optional<Integer> getDeleteTaskHistoryBytesAfterTasksPerRequest() {
+    return absentIfNotOverOne(deleteTaskHistoryBytesAfterTasksPerRequest);
+  }
+
+  public void setDeleteTaskHistoryBytesAfterTasksPerRequest(int deleteTaskHistoryBytesAfterTasksPerRequest) {
+    this.deleteTaskHistoryBytesAfterTasksPerRequest = deleteTaskHistoryBytesAfterTasksPerRequest;
   }
 
   public int getCheckTaskHistoryEveryHours() {
@@ -66,11 +76,11 @@ public class HistoryPurgingConfiguration {
     this.enabled = enabled;
   }
 
-  public Map<String, HistoryPurgeRequestOverride> getRequestOverrides() {
+  public Map<String, HistoryPurgeRequestSettings> getRequestOverrides() {
     return requestOverrides;
   }
 
-  public void setRequestOverrides(Map<String, HistoryPurgeRequestOverride> requestOverrides) {
+  public void setRequestOverrides(Map<String, HistoryPurgeRequestSettings> requestOverrides) {
     this.requestOverrides = requestOverrides;
   }
 }
