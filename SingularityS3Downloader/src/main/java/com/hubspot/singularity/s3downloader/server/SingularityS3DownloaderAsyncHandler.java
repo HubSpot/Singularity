@@ -12,6 +12,7 @@ import org.slf4j.LoggerFactory;
 
 import com.codahale.metrics.Timer.Context;
 import com.google.common.collect.ImmutableMap;
+import com.hubspot.deploy.S3Artifact;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.runner.base.sentry.SingularityRunnerExceptionNotifier;
 import com.hubspot.singularity.s3.base.ArtifactDownloadRequest;
@@ -28,14 +29,21 @@ public class SingularityS3DownloaderAsyncHandler implements Runnable {
   private final long start;
   private final SingularityS3DownloaderMetrics metrics;
   private final SingularityRunnerExceptionNotifier exceptionNotifier;
+  private final DownloadListener downloadListener;
 
-  public SingularityS3DownloaderAsyncHandler(ArtifactManager artifactManager, ArtifactDownloadRequest artifactDownloadRequest, Continuation continuation, SingularityS3DownloaderMetrics metrics, SingularityRunnerExceptionNotifier exceptionNotifier) {
+  public SingularityS3DownloaderAsyncHandler(ArtifactManager artifactManager, ArtifactDownloadRequest artifactDownloadRequest, Continuation continuation, SingularityS3DownloaderMetrics metrics,
+      SingularityRunnerExceptionNotifier exceptionNotifier, DownloadListener downloadListener) {
     this.artifactManager = artifactManager;
     this.artifactDownloadRequest = artifactDownloadRequest;
     this.continuation = continuation;
     this.metrics = metrics;
     this.start = System.currentTimeMillis();
     this.exceptionNotifier = exceptionNotifier;
+    this.downloadListener = downloadListener;
+  }
+
+  public S3Artifact getS3Artifact() {
+    return artifactDownloadRequest.getS3Artifact();
   }
 
   private void download() throws Exception {
@@ -47,6 +55,9 @@ public class SingularityS3DownloaderAsyncHandler implements Runnable {
     }
 
     final Path fetched = artifactManager.fetch(artifactDownloadRequest.getS3Artifact());
+
+    downloadListener.notifyDownloadFinished(this);
+
     final Path targetDirectory = Paths.get(artifactDownloadRequest.getTargetDirectory());
 
     if (continuation.isExpired()) {
