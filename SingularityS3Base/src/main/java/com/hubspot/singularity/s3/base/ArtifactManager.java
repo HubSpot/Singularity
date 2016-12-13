@@ -211,10 +211,12 @@ public class ArtifactManager extends SimpleProcessManager {
   public void untar(Path source, Path destination) {
     log.info("Untarring {} to {}", source, destination);
 
-    final ImmutableList.Builder<String> commandBuilder = ImmutableList.<String>builder().add("tar", "-oxzf", source.toString(), "-C", destination.toString());
+    final ImmutableList.Builder<String> commandBuilder = ImmutableList.<String>builder().add("tar", "-oxf", source.toString(), "-C", destination.toString());
 
     if (useCompressProgram.isPresent()) {
-      commandBuilder.add("--use-compress-program", useCompressProgram.get());
+      commandBuilder.add("--use-compress-program=" + useCompressProgram.get());
+    } else {
+      commandBuilder.add("-z");
     }
 
     runCommandAndThrowRuntimeException(commandBuilder.build());
