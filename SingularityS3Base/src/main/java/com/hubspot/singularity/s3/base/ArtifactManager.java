@@ -22,6 +22,7 @@ import com.hubspot.deploy.EmbeddedArtifact;
 import com.hubspot.deploy.ExternalArtifact;
 import com.hubspot.deploy.RemoteArtifact;
 import com.hubspot.deploy.S3Artifact;
+import com.hubspot.singularity.runner.base.configuration.SingularityRunnerBaseConfiguration;
 import com.hubspot.singularity.runner.base.sentry.SingularityRunnerExceptionNotifier;
 import com.hubspot.singularity.runner.base.shared.ProcessFailedException;
 import com.hubspot.singularity.runner.base.shared.SimpleProcessManager;
@@ -32,13 +33,17 @@ public class ArtifactManager extends SimpleProcessManager {
   private final Path cacheDirectory;
   private final Logger log;
   private final S3ArtifactDownloader s3ArtifactDownloader;
+  private final List<String> downloadUriCommand;
+  private final List<String> untarCommand;
 
-  public ArtifactManager(SingularityS3Configuration configuration, Logger log, SingularityRunnerExceptionNotifier exceptionNotifier) {
+  public ArtifactManager(SingularityRunnerBaseConfiguration runnerBaseConfiguration, SingularityS3Configuration configuration, Logger log, SingularityRunnerExceptionNotifier exceptionNotifier) {
     super(log);
 
     this.cacheDirectory = Paths.get(configuration.getArtifactCacheDirectory());
     this.log = log;
     this.s3ArtifactDownloader = new S3ArtifactDownloader(configuration, log, exceptionNotifier);
+    this.downloadUriCommand = runnerBaseConfiguration.getDownloadUriCommand();
+    this.untarCommand = runnerBaseConfiguration.getUntarCommand();
   }
 
   private long getSize(Path path) {
@@ -182,15 +187,13 @@ public class ArtifactManager extends SimpleProcessManager {
   private void downloadUri(String uri, Path path) {
     log.info("Downloading {} to {}", uri, path);
 
-    final List<String> command = ImmutableList.of(
-        "wget",
-        uri,
-        "-O",
-        path.toString(),
-        "-nv",
-        "--no-check-certificate");
+    final ImmutableList.Builder<String> command = ImmutableList.builder();
 
-    runCommandAndThrowRuntimeException(command);
+    for (String arg : downloadUriCommand) {
+      command.add(arg.replaceAll(SingularityRunnerBaseConfiguration.URI_PLACEHOLDER, uri).replaceAll(SingularityRunnerBaseConfiguration.DESTINATION_FILENAME_PLACEHOLDER, path.toString()));
+    }
+
+    runCommandAndThrowRuntimeException(command.build());
   }
 
   public void copy(Path source, Path destination, String destinationFilename) {
@@ -207,14 +210,13 @@ public class ArtifactManager extends SimpleProcessManager {
   public void untar(Path source, Path destination) {
     log.info("Untarring {} to {}", source, destination);
 
-    final List<String> command = ImmutableList.of(
-        "tar",
-        "-oxzf",
-        source.toString(),
-        "-C",
-        destination.toString());
+    final ImmutableList.Builder<String> command = ImmutableList.builder();
 
-    runCommandAndThrowRuntimeException(command);
+    for (String arg : untarCommand) {
+      command.add(arg.replaceAll(SingularityRunnerBaseConfiguration.SOURCE_FILENAME_PLACEHOLDER, source.toString()).replaceAll(SingularityRunnerBaseConfiguration.DESTINATION_FILENAME_PLACEHOLDER, destination.toString()));
+    }
+
+    runCommandAndThrowRuntimeException(command.build());
   }
 
   private void runCommandAndThrowRuntimeException(List<String> command) {

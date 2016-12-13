@@ -1,5 +1,8 @@
 package com.hubspot.singularity.runner.base.configuration;
 
+import java.util.Arrays;
+import java.util.List;
+
 import javax.validation.constraints.NotNull;
 
 import org.hibernate.validator.constraints.NotEmpty;
@@ -10,6 +13,10 @@ import com.hubspot.singularity.runner.base.constraints.DirectoryExists;
 
 @Configuration(filename = "/etc/singularity.base.yaml", consolidatedField = "base")
 public class SingularityRunnerBaseConfiguration extends BaseRunnerConfiguration {
+  public static final String URI_PLACEHOLDER = "{URI}";
+  public static final String SOURCE_FILENAME_PLACEHOLDER = "{SOURCE_FILENAME}";
+  public static final String DESTINATION_FILENAME_PLACEHOLDER = "{DESTINATION_FILENAME}";
+
   @DirectoryExists
   @JsonProperty
   private String s3UploaderMetadataDirectory;
@@ -33,6 +40,27 @@ public class SingularityRunnerBaseConfiguration extends BaseRunnerConfiguration 
   @NotNull
   @JsonProperty
   private String sentryPrefix = "";
+
+  @NotNull
+  @NotEmpty
+  @JsonProperty
+  private List<String> downloadUriCommand = Arrays.asList(
+      "wget",
+      URI_PLACEHOLDER,
+      "-O",
+      DESTINATION_FILENAME_PLACEHOLDER,
+      "-nv",
+      "--no-check-certificate");
+
+  @NotNull
+  @NotEmpty
+  @JsonProperty
+  private List<String> untarCommand = Arrays.asList(
+      "tar",
+      "-oxzf",
+      SOURCE_FILENAME_PLACEHOLDER,
+      "-C",
+      DESTINATION_FILENAME_PLACEHOLDER);
 
   public SingularityRunnerBaseConfiguration() {
     super(Optional.<String>absent());
@@ -87,13 +115,33 @@ public class SingularityRunnerBaseConfiguration extends BaseRunnerConfiguration 
     this.sentryPrefix = sentryPrefix;
   }
 
+  public List<String> getDownloadUriCommand() {
+    return downloadUriCommand;
+  }
+
+  public void setDownloadUriCommand(List<String> downloadUriCommand) {
+    this.downloadUriCommand = downloadUriCommand;
+  }
+
+  public List<String> getUntarCommand() {
+    return untarCommand;
+  }
+
+  public void setUntarCommand(List<String> untarCommand) {
+    this.untarCommand = untarCommand;
+  }
+
   @Override
   public String toString() {
-    return "SingularityRunnerBaseConfiguration[" +
-            "s3UploaderMetadataDirectory='" + s3UploaderMetadataDirectory + '\'' +
-            ", s3UploaderMetadataSuffix='" + s3UploaderMetadataSuffix + '\'' +
-            ", logWatcherMetadataDirectory='" + logWatcherMetadataDirectory + '\'' +
-            ", logWatcherMetadataSuffix='" + logWatcherMetadataSuffix + '\'' +
-            ']';
+    return "SingularityRunnerBaseConfiguration{" +
+        "s3UploaderMetadataDirectory='" + s3UploaderMetadataDirectory + '\'' +
+        ", s3UploaderMetadataSuffix='" + s3UploaderMetadataSuffix + '\'' +
+        ", logWatcherMetadataDirectory='" + logWatcherMetadataDirectory + '\'' +
+        ", logWatcherMetadataSuffix='" + logWatcherMetadataSuffix + '\'' +
+        ", sentryDsn=" + sentryDsn +
+        ", sentryPrefix='" + sentryPrefix + '\'' +
+        ", downloadUriCommand=" + downloadUriCommand +
+        ", untarCommand=" + untarCommand +
+        '}';
   }
 }
