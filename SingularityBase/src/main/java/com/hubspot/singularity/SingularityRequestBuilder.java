@@ -19,9 +19,11 @@ public class SingularityRequestBuilder {
 
   private Optional<String> schedule;
   private Optional<String> quartzSchedule;
+  private Optional<String> scheduleTimeZone;
   private Optional<ScheduleType> scheduleType;
 
   private Optional<Long> killOldNonLongRunningTasksAfterMillis;
+  private Optional<Long> taskExecutionTimeLimitMillis;
   private Optional<Long> scheduledExpectedRuntimeMillis;
 
   private Optional<Long> waitAtLeastMillisAfterTaskFinishesForReschedule;
@@ -30,18 +32,22 @@ public class SingularityRequestBuilder {
   private Optional<Boolean> skipHealthchecks;
 
   private Optional<Boolean> rackSensitive;
+
   private Optional<List<String>> rackAffinity;
   private Optional<SlavePlacement> slavePlacement;
   private Optional<Map<String, String>> requiredSlaveAttributes;
   private Optional<Map<String, String>> allowedSlaveAttributes;
-
   private Optional<Boolean> loadBalanced;
 
   private Optional<String> group;
+  private Optional<Set<String>> readWriteGroups;
   private Optional<Set<String>> readOnlyGroups;
   private Optional<Boolean> bounceAfterScale;
   private Optional<Map<SingularityEmailType, List<SingularityEmailDestination>>> emailConfigurationOverrides;
   private Optional<Boolean> hideEvenNumberAcrossRacksHint;
+  private Optional<String> taskLogErrorRegex;
+  private Optional<Boolean> taskLogErrorRegexCaseSensitive;
+  private Optional<Double> taskPriorityLevel;
 
   public SingularityRequestBuilder(String id, RequestType requestType) {
     this.id = checkNotNull(id, "id cannot be null");
@@ -51,10 +57,12 @@ public class SingularityRequestBuilder {
     this.schedule = Optional.absent();
     this.scheduleType = Optional.absent();
     this.killOldNonLongRunningTasksAfterMillis = Optional.absent();
+    this.taskExecutionTimeLimitMillis = Optional.absent();
     this.instances = Optional.absent();
     this.rackSensitive = Optional.absent();
     this.loadBalanced = Optional.absent();
     this.quartzSchedule = Optional.absent();
+    this.scheduleTimeZone = Optional.absent();
     this.rackAffinity = Optional.absent();
     this.slavePlacement = Optional.absent();
     this.requiredSlaveAttributes = Optional.absent();
@@ -62,17 +70,21 @@ public class SingularityRequestBuilder {
     this.scheduledExpectedRuntimeMillis = Optional.absent();
     this.waitAtLeastMillisAfterTaskFinishesForReschedule = Optional.absent();
     this.group = Optional.absent();
+    this.readWriteGroups = Optional.absent();
     this.readOnlyGroups = Optional.absent();
     this.bounceAfterScale = Optional.absent();
     this.emailConfigurationOverrides = Optional.absent();
     this.skipHealthchecks = Optional.absent();
     this.hideEvenNumberAcrossRacksHint = Optional.absent();
+    this.taskLogErrorRegex = Optional.absent();
+    this.taskLogErrorRegexCaseSensitive = Optional.absent();
+    this.taskPriorityLevel = Optional.absent();
   }
 
   public SingularityRequest build() {
-    return new SingularityRequest(id, requestType, owners, numRetriesOnFailure, schedule, instances, rackSensitive, loadBalanced, killOldNonLongRunningTasksAfterMillis, scheduleType, quartzSchedule,
-        rackAffinity, slavePlacement, requiredSlaveAttributes, allowedSlaveAttributes, scheduledExpectedRuntimeMillis, waitAtLeastMillisAfterTaskFinishesForReschedule, group, readOnlyGroups,
-        bounceAfterScale, skipHealthchecks, emailConfigurationOverrides, Optional.<Boolean>absent(), hideEvenNumberAcrossRacksHint);
+    return new SingularityRequest(id, requestType, owners, numRetriesOnFailure, schedule, instances, rackSensitive, loadBalanced, killOldNonLongRunningTasksAfterMillis, taskExecutionTimeLimitMillis, scheduleType, quartzSchedule, scheduleTimeZone,
+        rackAffinity, slavePlacement, requiredSlaveAttributes, allowedSlaveAttributes, scheduledExpectedRuntimeMillis, waitAtLeastMillisAfterTaskFinishesForReschedule, group, readWriteGroups, readOnlyGroups,
+        bounceAfterScale, skipHealthchecks, emailConfigurationOverrides, Optional.<Boolean>absent(), hideEvenNumberAcrossRacksHint, taskLogErrorRegex, taskLogErrorRegexCaseSensitive, taskPriorityLevel);
   }
 
   public Optional<Boolean> getSkipHealthchecks() {
@@ -151,6 +163,15 @@ public class SingularityRequestBuilder {
     return this;
   }
 
+  public Optional<Long> getTaskExecutionTimeLimitMillis() {
+    return taskExecutionTimeLimitMillis;
+  }
+
+  public SingularityRequestBuilder setTaskExecutionTimeLimitMillis(Optional<Long> taskExecutionTimeLimitMillis) {
+    this.taskExecutionTimeLimitMillis = taskExecutionTimeLimitMillis;
+    return this;
+  }
+
   public Optional<ScheduleType> getScheduleType() {
     return scheduleType;
   }
@@ -166,6 +187,15 @@ public class SingularityRequestBuilder {
 
   public SingularityRequestBuilder setQuartzSchedule(Optional<String> quartzSchedule) {
     this.quartzSchedule = quartzSchedule;
+    return this;
+  }
+
+  public Optional<String> getScheduleTimeZone() {
+    return scheduleTimeZone;
+  }
+
+  public SingularityRequestBuilder setScheduleTimeZone(Optional<String> scheduleTimeZone) {
+    this.scheduleTimeZone = scheduleTimeZone;
     return this;
   }
 
@@ -218,6 +248,16 @@ public class SingularityRequestBuilder {
     return this;
   }
 
+  public Optional<Set<String>> getReadWriteGroups() {
+    return readWriteGroups;
+  }
+
+  public SingularityRequestBuilder setReadWriteGroups(Optional<Set<String>> readWriteGroups) {
+    this.readWriteGroups = readWriteGroups;
+    return this;
+  }
+
+
   public SingularityRequestBuilder setRequiredSlaveAttributes(Optional<Map<String, String>> requiredSlaveAttributes) {
     this.requiredSlaveAttributes = requiredSlaveAttributes;
     return this;
@@ -262,6 +302,29 @@ public class SingularityRequestBuilder {
     return this;
   }
 
+  public Optional<String> getTaskLogErrorRegex() { return taskLogErrorRegex; }
+
+  public SingularityRequestBuilder setTaskLogErrorRegex(Optional<String> taskLogErrorRegex) {
+    this.taskLogErrorRegex = taskLogErrorRegex;
+    return this;
+  }
+
+  public Optional<Boolean> getTaskLogErrorRegexCaseSensitive() { return taskLogErrorRegexCaseSensitive; }
+
+  public SingularityRequestBuilder setTaskLogErrorRegexCaseSensitive(Optional<Boolean> taskLogErrorRegexCaseSensitive) {
+    this.taskLogErrorRegexCaseSensitive = taskLogErrorRegexCaseSensitive;
+    return this;
+  }
+
+  public Optional<Double> getTaskPriorityLevel() {
+    return taskPriorityLevel;
+  }
+
+  public SingularityRequestBuilder setTaskPriorityLevel(Optional<Double> taskPriorityLevel) {
+    this.taskPriorityLevel = taskPriorityLevel;
+    return this;
+  }
+
   @Override
   public String toString() {
     return "SingularityRequestBuilder[" +
@@ -271,8 +334,10 @@ public class SingularityRequestBuilder {
             ", numRetriesOnFailure=" + numRetriesOnFailure +
             ", schedule=" + schedule +
             ", quartzSchedule=" + quartzSchedule +
+            ", scheduleTimeZone=" + scheduleTimeZone +
             ", scheduleType=" + scheduleType +
             ", killOldNonLongRunningTasksAfterMillis=" + killOldNonLongRunningTasksAfterMillis +
+            ", taskExecutionTimeLimitMillis=" + taskExecutionTimeLimitMillis +
             ", scheduledExpectedRuntimeMillis=" + scheduledExpectedRuntimeMillis +
             ", waitAtLeastMillisAfterTaskFinishesForReschedule=" + waitAtLeastMillisAfterTaskFinishesForReschedule +
             ", instances=" + instances +
@@ -284,10 +349,14 @@ public class SingularityRequestBuilder {
             ", loadBalanced=" + loadBalanced +
             ", group=" + group +
             ", readOnlyGroups=" + readOnlyGroups +
+            ", readWriteGroups=" + readWriteGroups +
             ", bounceAfterScale=" + bounceAfterScale +
             ", emailConfigurationOverrides=" + emailConfigurationOverrides +
             ", skipHealthchecks=" + skipHealthchecks +
             ", hideEvenNumberAcrossRacksHint=" + hideEvenNumberAcrossRacksHint +
+            ", taskLogErrorRegex=" + taskLogErrorRegex +
+            ", taskLogErrorRegexCaseSensitive=" + taskLogErrorRegexCaseSensitive +
+            ", taskPriorityLevel=" + taskPriorityLevel +
             ']';
   }
 
@@ -306,8 +375,10 @@ public class SingularityRequestBuilder {
             Objects.equals(numRetriesOnFailure, that.numRetriesOnFailure) &&
             Objects.equals(schedule, that.schedule) &&
             Objects.equals(quartzSchedule, that.quartzSchedule) &&
+            Objects.equals(scheduleTimeZone, that.scheduleTimeZone) &&
             Objects.equals(scheduleType, that.scheduleType) &&
             Objects.equals(killOldNonLongRunningTasksAfterMillis, that.killOldNonLongRunningTasksAfterMillis) &&
+            Objects.equals(taskExecutionTimeLimitMillis, that.taskExecutionTimeLimitMillis) &&
             Objects.equals(scheduledExpectedRuntimeMillis, that.scheduledExpectedRuntimeMillis) &&
             Objects.equals(waitAtLeastMillisAfterTaskFinishesForReschedule, that.waitAtLeastMillisAfterTaskFinishesForReschedule) &&
             Objects.equals(instances, that.instances) &&
@@ -319,17 +390,22 @@ public class SingularityRequestBuilder {
             Objects.equals(loadBalanced, that.loadBalanced) &&
             Objects.equals(group, that.group) &&
             Objects.equals(readOnlyGroups, that.readOnlyGroups) &&
+            Objects.equals(readWriteGroups, that.readWriteGroups) &&
             Objects.equals(bounceAfterScale, that.bounceAfterScale) &&
             Objects.equals(skipHealthchecks, that.skipHealthchecks) &&
             Objects.equals(emailConfigurationOverrides, that.emailConfigurationOverrides) &&
-            Objects.equals(hideEvenNumberAcrossRacksHint, that.hideEvenNumberAcrossRacksHint);
+            Objects.equals(hideEvenNumberAcrossRacksHint, that.hideEvenNumberAcrossRacksHint) &&
+            Objects.equals(taskLogErrorRegex, that.taskLogErrorRegex) &&
+            Objects.equals(taskLogErrorRegexCaseSensitive, that.taskLogErrorRegexCaseSensitive) &&
+            Objects.equals(taskPriorityLevel, that.taskPriorityLevel);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(id, requestType, owners, numRetriesOnFailure, schedule, quartzSchedule, scheduleType, killOldNonLongRunningTasksAfterMillis,
-        scheduledExpectedRuntimeMillis, waitAtLeastMillisAfterTaskFinishesForReschedule, instances, rackSensitive, rackAffinity, slavePlacement,
-        requiredSlaveAttributes, allowedSlaveAttributes, loadBalanced, group, readOnlyGroups, bounceAfterScale, skipHealthchecks, emailConfigurationOverrides, hideEvenNumberAcrossRacksHint);
+    return Objects.hash(id, requestType, owners, numRetriesOnFailure, schedule, quartzSchedule, scheduleTimeZone, scheduleType, killOldNonLongRunningTasksAfterMillis,
+        taskExecutionTimeLimitMillis, scheduledExpectedRuntimeMillis, waitAtLeastMillisAfterTaskFinishesForReschedule, instances, rackSensitive, rackAffinity, slavePlacement,
+        requiredSlaveAttributes, allowedSlaveAttributes, loadBalanced, group, readOnlyGroups, readWriteGroups, bounceAfterScale, skipHealthchecks, emailConfigurationOverrides,
+        hideEvenNumberAcrossRacksHint, taskLogErrorRegex, taskLogErrorRegexCaseSensitive, taskPriorityLevel);
   }
 
 }

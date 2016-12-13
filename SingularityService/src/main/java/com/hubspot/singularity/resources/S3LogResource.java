@@ -3,6 +3,8 @@ package com.hubspot.singularity.resources;
 import static com.hubspot.singularity.WebExceptions.checkNotFound;
 import static com.hubspot.singularity.WebExceptions.timeout;
 
+import java.net.URL;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
@@ -23,6 +25,7 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
 import org.jets3t.service.S3Service;
+import org.jets3t.service.S3ServiceException;
 import org.jets3t.service.model.S3Object;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,6 +42,7 @@ import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Inject;
 import com.hubspot.mesos.JavaUtils;
+import com.hubspot.mesos.json.MesosFileChunkObject;
 import com.hubspot.singularity.SingularityAuthorizationScope;
 import com.hubspot.singularity.SingularityDeployHistory;
 import com.hubspot.singularity.SingularityRequestHistory;
@@ -52,6 +56,7 @@ import com.hubspot.singularity.SingularityTaskHistoryUpdate;
 import com.hubspot.singularity.SingularityTaskHistoryUpdate.SimplifiedTaskState;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityUser;
+import com.hubspot.singularity.WebExceptions;
 import com.hubspot.singularity.auth.SingularityAuthorizationHelper;
 import com.hubspot.singularity.config.S3Configuration;
 import com.hubspot.singularity.data.DeployManager;
@@ -59,6 +64,7 @@ import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.data.history.HistoryManager;
 import com.hubspot.singularity.data.history.RequestHistoryHelper;
+import com.hubspot.singularity.helpers.BlockCompressedFileHelper;
 import com.wordnik.swagger.annotations.Api;
 import com.wordnik.swagger.annotations.ApiOperation;
 import com.wordnik.swagger.annotations.ApiParam;
@@ -68,8 +74,13 @@ import com.wordnik.swagger.annotations.ApiParam;
 @Api(description="Manages Singularity task logs stored in S3.", value=S3LogResource.PATH)
 public class S3LogResource extends AbstractHistoryResource {
   public static final String PATH = SingularityService.API_BASE_PATH + "/logs";
+  private static final List<String> SUPPORTED_COMPRESSED_FILE_EXTENTIONS = Arrays.asList(".gz", ".bz2");
 
   private static final Logger LOG = LoggerFactory.getLogger(S3LogResource.class);
+
+  private static final String FORCE_DOWNLOAD_S3_PARAMS = "response-content-disposition=attachment&response-content-encoding=identity";
+
+  private static final int DEFAULT_READ_LENGTH = 65000;
 
   private final Optional<S3Service> s3ServiceDefault;
   private final Map<String, S3Service> s3GroupOverride;
@@ -236,8 +247,9 @@ public class S3LogResource extends AbstractHistoryResource {
         @Override
         public SingularityS3Log call() throws Exception {
           String getUrl = s3Service.createSignedGetUrl(s3Bucket, s3Object.getKey(), expireAt);
+          String downloadUrl = s3Service.createSignedUrl("GET", s3Bucket, s3Object.getKey(), FORCE_DOWNLOAD_S3_PARAMS, null, expireAt.getTime() / 1000, false);
 
-          return new SingularityS3Log(getUrl, s3Object.getKey(), s3Object.getLastModifiedDate().getTime(), s3Object.getContentLength());
+          return new SingularityS3Log(getUrl, s3Object.getKey(), s3Object.getLastModifiedDate().getTime(), s3Object.getContentLength(), downloadUrl);
         }
 
       }));
@@ -268,11 +280,55 @@ public class S3LogResource extends AbstractHistoryResource {
     checkNotFound(configuration.isPresent(), "S3 configuration was absent");
   }
 
-  private SingularityRequestWithState getRequest(final String requestId) {
+  private void checkForCompressedFile(String key) {
+    boolean isSupportedFileType = false;
+    for (String type : SUPPORTED_COMPRESSED_FILE_EXTENTIONS) {
+      if (key.endsWith(type)) {
+        isSupportedFileType = true;
+      }
+    }
+    if (!isSupportedFileType) {
+      WebExceptions.badRequest(String.format("Not a supported file type. (%s)", key));
+    }
+  }
+
+  private Optional<String> getRequestGroup(final String requestId) {
     final Optional<SingularityRequestWithState> maybeRequest = requestManager.getRequest(requestId);
-    checkNotFound(maybeRequest.isPresent(), "RequestId %s does not exist", requestId);
-    authorizationHelper.checkForAuthorization(maybeRequest.get().getRequest(), user, SingularityAuthorizationScope.READ);
-    return maybeRequest.get();
+    if (maybeRequest.isPresent()) {
+      authorizationHelper.checkForAuthorization(maybeRequest.get().getRequest(), user, SingularityAuthorizationScope.READ);
+      return maybeRequest.get().getRequest().getGroup();
+    } else {
+      Optional<SingularityRequestHistory> maybeRequestHistory = requestHistoryHelper.getLastHistory(requestId);
+      if (maybeRequestHistory.isPresent()) {
+        authorizationHelper.checkForAuthorization(maybeRequestHistory.get().getRequest(), user, SingularityAuthorizationScope.READ);
+        return maybeRequestHistory.get().getRequest().getGroup();
+      } else {
+        // Deleted requests with no history data are searchable, but only by admins since we have no auth information about them
+        authorizationHelper.checkAdminAuthorization(user);
+        return Optional.absent();
+      }
+    }
+  }
+
+  private SingularityS3Log getS3Log(S3Configuration s3Configuration, String requestId, String key) throws Exception {
+    try {
+      Optional<String> group = getRequestGroup(requestId);
+
+      final Date expireAt = new Date(System.currentTimeMillis() + s3Configuration.getExpireS3LinksAfterMillis());
+      final String s3Bucket = (group.isPresent() && s3Configuration.getGroupOverrides().containsKey(group.get())) ? s3Configuration.getGroupOverrides().get(group.get()).getS3Bucket() : s3Configuration.getS3Bucket();
+      final S3Service s3Service = (group.isPresent() && s3GroupOverride.containsKey(group.get())) ? s3GroupOverride.get(group.get()) : s3ServiceDefault.get();
+
+      S3Object s3Object = s3Service.getObject(s3Bucket, key);
+      String getUrl = s3Service.createSignedGetUrl(s3Bucket, s3Object.getKey(), expireAt);
+      String downloadUrl = s3Service.createSignedUrl("GET", s3Bucket, s3Object.getKey(), FORCE_DOWNLOAD_S3_PARAMS, null, expireAt.getTime() / 1000, false);
+      return new SingularityS3Log(getUrl, s3Object.getKey(), s3Object.getLastModifiedDate().getTime(), s3Object.getContentLength(), downloadUrl);
+    } catch (S3ServiceException e) {
+      if (e.getResponseCode() == 404) {
+        throw WebExceptions.notFound(String.format("Object with key %s does not exist", key));
+      }
+
+      throw e;
+    }
   }
 
   @GET
@@ -287,7 +343,7 @@ public class S3LogResource extends AbstractHistoryResource {
     SingularityTaskId taskIdObject = getTaskIdObject(taskId);
 
     try {
-      return getS3Logs(configuration.get(), getRequest(taskIdObject.getRequestId()).getRequest().getGroup(), getS3PrefixesForTask(configuration.get(), taskIdObject, start, end));
+      return getS3Logs(configuration.get(), getRequestGroup(taskIdObject.getRequestId()), getS3PrefixesForTask(configuration.get(), taskIdObject, start, end));
     } catch (TimeoutException te) {
       throw timeout("Timed out waiting for response from S3 for %s", taskId);
     } catch (Throwable t) {
@@ -305,7 +361,39 @@ public class S3LogResource extends AbstractHistoryResource {
     checkS3();
 
     try {
-      return getS3Logs(configuration.get(), getRequest(requestId).getRequest().getGroup(), getS3PrefixesForRequest(configuration.get(), requestId, start, end));
+      return getS3Logs(configuration.get(), getRequestGroup(requestId), getS3PrefixesForRequest(configuration.get(), requestId, start, end));
+    } catch (TimeoutException te) {
+      throw timeout("Timed out waiting for response from S3 for %s", requestId);
+    } catch (Throwable t) {
+      throw Throwables.propagate(t);
+    }
+  }
+
+  @GET
+  @Path("/request/{requestId}/read")
+  @ApiOperation("Retrieve the list of logs stored in S3 for a specific request.")
+  public MesosFileChunkObject readS3LogForRequest(
+    @ApiParam("The request ID to search for") @PathParam("requestId") String requestId,
+    @ApiParam("S3 Key for the log to read") @QueryParam("key") String key,
+    @ApiParam("Offset to read in the log file") @QueryParam("offset") Optional<Long> offset,
+    @ApiParam("Length in bytes to read") @QueryParam("length") Optional<Integer> length,
+    @ApiParam("Read backwards from offset") @QueryParam("reverse") Optional<Boolean> reverse) throws Exception {
+    checkS3();
+    checkForCompressedFile(key);
+
+    try {
+      SingularityS3Log s3Log = getS3Log(configuration.get(), requestId, key);
+
+      if (!offset.isPresent() && length.or(0) == 0) {
+        // Imitate the mesos slave api and return the file size when no length is requested
+        return new MesosFileChunkObject("", s3Log.getSize(), Optional.<Long>absent());
+      }
+
+      if (reverse.or(false)) {
+        return BlockCompressedFileHelper.readInReverseFromOffset(new URL(s3Log.getDownloadUrl()), offset, length.or(DEFAULT_READ_LENGTH));
+      } else {
+        return BlockCompressedFileHelper.getChunkAtOffset(new URL(s3Log.getDownloadUrl()), offset, length.or(DEFAULT_READ_LENGTH));
+      }
     } catch (TimeoutException te) {
       throw timeout("Timed out waiting for response from S3 for %s", requestId);
     } catch (Throwable t) {
@@ -324,7 +412,7 @@ public class S3LogResource extends AbstractHistoryResource {
     checkS3();
 
     try {
-      return getS3Logs(configuration.get(), getRequest(requestId).getRequest().getGroup(), getS3PrefixesForDeploy(configuration.get(), requestId, deployId, start, end));
+      return getS3Logs(configuration.get(), getRequestGroup(requestId), getS3PrefixesForDeploy(configuration.get(), requestId, deployId, start, end));
     } catch (TimeoutException te) {
       throw timeout("Timed out waiting for response from S3 for %s-%s", requestId, deployId);
     } catch (Throwable t) {

@@ -42,7 +42,7 @@ public class SandboxManager {
 
   public Collection<MesosFileObject> browse(String slaveHostname, String fullPath) throws SlaveNotFoundException {
     try {
-      Response response = asyncHttpClient.prepareGet(String.format("http://%s:5051/files/browse.json", slaveHostname))
+      Response response = asyncHttpClient.prepareGet(String.format("http://%s:5051/files/browse", slaveHostname))
           .addQueryParameter("path", fullPath)
           .execute().get();
 
@@ -69,7 +69,7 @@ public class SandboxManager {
   @SuppressWarnings("deprecation")
   public Optional<MesosFileChunkObject> read(String slaveHostname, String fullPath, Optional<Long> offset, Optional<Long> length) throws SlaveNotFoundException {
     try {
-      final AsyncHttpClient.BoundRequestBuilder builder = asyncHttpClient.prepareGet(String.format("http://%s:5051/files/read.json", slaveHostname))
+      final AsyncHttpClient.BoundRequestBuilder builder = asyncHttpClient.prepareGet(String.format("http://%s:5051/files/read", slaveHostname))
           .addQueryParameter("path", fullPath);
 
       PerRequestConfig timeoutConfig = new PerRequestConfig();

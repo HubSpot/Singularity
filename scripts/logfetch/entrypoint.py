@@ -61,11 +61,15 @@ def cat_logs(args):
     try:
         check_dest(args)
         all_logs = []
-        if not args.skip_s3:
-            all_logs += download_s3_logs(args)
-        if not args.skip_live:
-            all_logs += download_live_logs(args)
-        if not args.download_only:
+
+        if args.cached_only:
+            all_logs += find_cached_logs(args)
+        else:
+            if not args.skip_s3:
+                all_logs += download_s3_logs(args)
+            if not args.skip_live:
+                all_logs += download_live_logs(args)
+        if not args.download_only or args.cache_only:
             cat_files(args, all_logs)
     except KeyboardInterrupt:
         exit('Stopping logcat...', 'magenta')
@@ -147,6 +151,7 @@ def fetch():
     parser.add_argument("-L", "--skip-live", dest="skip_live", help="Don't download/search live logs", action='store_true')
     parser.add_argument("-U", "--use-cache", dest="use_cache", help="Use cache for live logs, don't re-download them", action='store_true')
     parser.add_argument("--search", dest="search", help="run logsearch on the local cache of downloaded files", action='store_true')
+    parser.add_argument("-i", "--show-file-info", dest='show_file_info', help="Print the file name before printing log lines", action='store_true')
     parser.add_argument("-V", "--verbose", dest="verbose", help="Print more verbose output", action='store_true')
     parser.add_argument("--silent", dest="silent", help="No stderr (progress, file names, etc) output", action='store_true')
     parser.add_argument("-D" ,"--download-only", dest="download_only", help="Only download files, don't unzip or grep", action='store_true')
@@ -209,6 +214,7 @@ def search():
     parser.add_argument("-p", "--file-pattern", dest="file_pattern", help="S3 uploader file pattern")
     parser.add_argument("-g", "--grep", dest="grep", help="Regex to grep for (normal grep syntax) or a full grep command")
     parser.add_argument("-z", "--local-zone", dest="zone", help="If specified, input times in the local time zone and convert to UTC, if not specified inputs are assumed to be UTC", action="store_true")
+    parser.add_argument("-i", "--show-file-info", dest='show_file_info', help="Print the file name before printing log lines", action='store_true')
     parser.add_argument("-V", "--verbose", dest="verbose", help="Print more verbose output", action='store_true')
     parser.add_argument("--silent", dest="silent", help="No stderr (progress, file names, etc) output", action='store_true')
 
@@ -275,8 +281,10 @@ def cat():
     parser.add_argument("-S", "--skip-s3", dest="skip_s3", help="Don't download/search s3 logs", action='store_true')
     parser.add_argument("-L", "--skip-live", dest="skip_live", help="Don't download/search live logs", action='store_true')
     parser.add_argument("-U", "--use-cache", dest="use_cache", help="Use cache for live logs, don't re-download them", action='store_true')
+    parser.add_argument("-O", "--cached-only", dest="cached_only", help="Find and output content of files already downloaded", action='store_true')
     parser.add_argument("-V", "--verbose", dest="verbose", help="Print more verbose output", action='store_true')
     parser.add_argument("--silent", dest="silent", help="No stderr (progress, file names, etc) output", action='store_true')
+    parser.add_argument("-i", "--show-file-info", dest='show_file_info', help="Print the file name before printing log lines", action='store_true')
     parser.add_argument("-D" ,"--download-only", dest="download_only", help="Only download files, don't unzip or grep", action='store_true')
 
     args = parser.parse_args(remaining_argv)
@@ -324,7 +332,6 @@ def tail():
     parser.add_argument("-r", "--request-id", dest="requestId", help="RequestId of request to fetch logs for (can be a glob)")
     parser.add_argument("-d", "--deploy-id", dest="deployId", help="DeployId of tasks to fetch logs for (can be a glob)")
     parser.add_argument("-u", "--singularity-uri-base", dest="singularity_uri_base", help="The base for singularity (eg. http://localhost:8080/singularity/v1)")
-    parser.add_argument("-g", "--grep", dest="grep", help="String to grep for")
     parser.add_argument("-l", "--logfile", dest="logfile", help="Logfile path/name to tail (ie 'logs/access.log')")
     parser.add_argument("-V", "--verbose", dest="verbose", help="more verbose output", action='store_true')
     parser.add_argument("--silent", dest="silent", help="No stderr (progress, file names, etc) output", action='store_true')

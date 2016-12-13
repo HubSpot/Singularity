@@ -1,6 +1,10 @@
 dateext
 compress
-daily
+{{#if compressCmd}}compresscmd {{{compressCmd}}}{{/if}}
+{{#if uncompressCmd}}uncompresscmd {{{uncompressCmd}}}{{/if}}
+{{#if compressOptions}}compressoptions {{{compressOptions}}}{{/if}}
+{{#if compressExt}}compressext {{{compressExt}}}{{/if}}
+{{{ logrotateFrequency }}}
 copytruncate
 nomail
 nosharedscripts

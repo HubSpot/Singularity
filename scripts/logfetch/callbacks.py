@@ -26,11 +26,12 @@ def update_progress_bar(silent, progress):
 
 
 def generate_callback(request, destination, filename, chunk_size, verbose, silent):
-    path = CALLBACK_FORMAT.format(destination, filename) if destination else filename
-
     def callback(response, **kwargs):
         global progress
         global goal
+        path = CALLBACK_FORMAT.format(destination, filename) if destination else filename
+        if 'content-encoding' in response.headers and response.headers['content-encoding'] == 'gzip' and path.endswith('.gz'):
+            path = path[:-3]
         with open(path, 'wb') as f:
             for chunk in response.iter_content(chunk_size):
                 f.write(chunk)

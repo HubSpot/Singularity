@@ -57,6 +57,10 @@ public class UIConfiguration {
 
   @JsonProperty
   @NotNull
+  private boolean showTaskDiskResource = false;
+
+  @JsonProperty
+  @NotNull
   private List<ShellCommandDescriptor> shellCommands = Collections.emptyList();
 
   private boolean hideNewDeployButton = false;
@@ -82,6 +86,12 @@ public class UIConfiguration {
   @JsonProperty
   @NotNull
   private Optional<String> redirectOnUnauthorizedUrl = Optional.absent();
+
+
+  @JsonProperty
+  @NotNull
+  private Optional<String> extraScript = Optional.absent();
+
 
   public boolean isHideNewDeployButton() {
     return hideNewDeployButton;
@@ -155,6 +165,10 @@ public class UIConfiguration {
     return shellCommands;
   }
 
+  public boolean isShowTaskDiskResource() { return showTaskDiskResource; }
+
+  public void setShowTaskDiskResource(boolean showTaskDiskResource) { this.showTaskDiskResource = showTaskDiskResource; }
+
   public void setShellCommands(List<ShellCommandDescriptor> shellCommands) {
     this.shellCommands = shellCommands;
   }
@@ -197,5 +211,13 @@ public class UIConfiguration {
 
   public void setRedirectOnUnauthorizedUrl(Optional<String> redirectOnUnauthorizedUrl) {
     this.redirectOnUnauthorizedUrl = redirectOnUnauthorizedUrl;
+  }
+
+  public Optional<String> getExtraScript() {
+    return extraScript;
+  }
+
+  public void setExtraScript(Optional<String> extraScript) {
+    this.extraScript = extraScript;
   }
 }

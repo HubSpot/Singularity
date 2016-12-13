@@ -24,6 +24,7 @@ import org.jets3t.service.S3ServiceException;
 import org.jets3t.service.impl.rest.httpclient.RestS3Service;
 import org.jets3t.service.security.AWSCredentials;
 
+import com.codahale.metrics.Meter;
 import com.codahale.metrics.MetricRegistry;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
@@ -56,15 +57,18 @@ import com.hubspot.singularity.hooks.LoadBalancerClient;
 import com.hubspot.singularity.hooks.LoadBalancerClientImpl;
 import com.hubspot.singularity.hooks.SingularityWebhookPoller;
 import com.hubspot.singularity.hooks.SingularityWebhookSender;
+import com.hubspot.singularity.mesos.SingularityMesosStatusUpdateHandler;
 import com.hubspot.singularity.metrics.SingularityGraphiteReporterManaged;
 import com.hubspot.singularity.sentry.NotifyingExceptionMapper;
 import com.hubspot.singularity.sentry.SingularityExceptionNotifier;
 import com.hubspot.singularity.sentry.SingularityExceptionNotifierManaged;
 import com.hubspot.singularity.smtp.JadeTemplateLoader;
 import com.hubspot.singularity.smtp.MailTemplateHelpers;
+import com.hubspot.singularity.smtp.NoopMailer;
 import com.hubspot.singularity.smtp.SingularityMailRecordCleaner;
 import com.hubspot.singularity.smtp.SingularityMailer;
 import com.hubspot.singularity.smtp.SingularitySmtpSender;
+import com.hubspot.singularity.smtp.SmtpMailer;
 import com.ning.http.client.AsyncHttpClient;
 
 import de.neuland.jade4j.parser.Parser;
@@ -80,6 +84,7 @@ public class SingularityMainModule implements Module {
   public static final String REQUEST_IN_COOLDOWN_TEMPLATE = "request.in.cooldown.template";
   public static final String REQUEST_MODIFIED_TEMPLATE = "request.modified.template";
   public static final String RATE_LIMITED_TEMPLATE = "rate.limited.template";
+  public static final String DISASTERS_TEMPLATE = "disasters.template";
 
   public static final String SERVER_ID_PROPERTY = "singularity.server.id";
   public static final String HOST_NAME_PROPERTY = "singularity.host.name";
@@ -94,7 +99,12 @@ public class SingularityMainModule implements Module {
   public static final String NEW_TASK_THREADPOOL_NAME = "_new_task_threadpool";
   public static final Named NEW_TASK_THREADPOOL_NAMED = Names.named(NEW_TASK_THREADPOOL_NAME);
 
+  public static final String STATUS_UPDATE_THREADPOOL_NAME = "_status_update_threadpool";
+  public static final Named STATUS_UPDATE_THREADPOOL_NAMED = Names.named(STATUS_UPDATE_THREADPOOL_NAME);
+
   public static final String CURRENT_HTTP_REQUEST = "_singularity_current_http_request";
+
+  public static final String LOST_TASKS_METER = "singularity.lost.tasks.meter";
 
   private final SingularityConfiguration configuration;
 
@@ -117,7 +127,11 @@ public class SingularityMainModule implements Module {
 
     binder.bind(SingularityDriverManager.class).in(Scopes.SINGLETON);
     binder.bind(SingularityLeaderController.class).in(Scopes.SINGLETON);
-    binder.bind(SingularityMailer.class).in(Scopes.SINGLETON);
+    if (configuration.getSmtpConfiguration().isPresent()) {
+      binder.bind(SingularityMailer.class).to(SmtpMailer.class).in(Scopes.SINGLETON);
+    } else {
+      binder.bind(SingularityMailer.class).toInstance(NoopMailer.getInstance());
+    }
     binder.bind(SingularitySmtpSender.class).in(Scopes.SINGLETON);
     binder.bind(MailTemplateHelpers.class).in(Scopes.SINGLETON);
     binder.bind(SingularityExceptionNotifier.class).in(Scopes.SINGLETON);
@@ -153,7 +167,13 @@ public class SingularityMainModule implements Module {
         configuration.getThreadpoolShutdownDelayInSeconds(),
         "check-new-task")).in(Scopes.SINGLETON);
 
+    binder.bind(ScheduledExecutorService.class).annotatedWith(STATUS_UPDATE_THREADPOOL_NAMED).toProvider(new SingularityManagedScheduledExecutorServiceProvider(1,
+        configuration.getThreadpoolShutdownDelayInSeconds(),
+        "status-update-handler")).in(Scopes.SINGLETON);
+
     binder.bind(SingularityGraphiteReporterManaged.class).in(Scopes.SINGLETON);
+
+    binder.bind(SingularityMesosStatusUpdateHandler.class).in(Scopes.SINGLETON);
   }
 
   @Provides
@@ -323,6 +343,13 @@ public class SingularityMainModule implements Module {
   }
 
   @Provides
+  @Singleton
+  @Named(DISASTERS_TEMPLATE)
+  public JadeTemplate getDisastersTemplate() throws IOException {
+    return getJadeTemplate("disaster.jade");
+  }
+
+  @Provides
   @Named(CURRENT_HTTP_REQUEST)
   public Optional<HttpServletRequest> providesUrl(Provider<HttpServletRequest> requestProvider) {
     try {
@@ -330,5 +357,12 @@ public class SingularityMainModule implements Module {
     } catch (ProvisionException pe) {  // this will happen if we're not in the REQUEST scope
       return Optional.absent();
     }
+  }
+
+  @Provides
+  @Singleton
+  @Named(LOST_TASKS_METER)
+  public Meter providesLostTasksMeter(MetricRegistry registry) {
+    return registry.meter("com.hubspot.singularity.lostTasks");
   }
 }

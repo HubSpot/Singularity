@@ -1,3 +1,4 @@
+import errors
 import os
 import sys
 import logfetch_base
@@ -44,23 +45,21 @@ def logs_folder_files(args, task):
     files_json = get_json_response(uri, args, {'path' : '{0}/logs'.format(task)})
     if 'files' in files_json:
         files = files_json['files']
-        return [f['name'] for f in files if valid_logfile(f)]
+        return [f['name'] for f in files if is_valid_tail_log(f)]
     else:
-        return [f['path'].rsplit('/')[-1] for f in files_json if valid_logfile(f)]
+        return [f['path'].rsplit('/')[-1] for f in files_json if is_valid_tail_log(f)]
 
 def base_directory_files(args, task):
     uri = BROWSE_FOLDER_FORMAT.format(logfetch_base.base_uri(args), task)
     files_json = get_json_response(uri, args)
     if 'files' in files_json:
         files = files_json['files']
-        return [f['name'] for f in files if valid_logfile(f)]
+        return [f['name'] for f in files if is_valid_tail_log(f)]
     else:
-        return [f['path'].rsplit('/')[-1] for f in files_json if valid_logfile(f)]
+        return [f['path'].rsplit('/')[-1] for f in files_json if is_valid_tail_log(f)]
 
-def valid_logfile(fileData):
-    not_a_directory = not fileData['mode'].startswith('d')
-    is_a_logfile = fnmatch.fnmatch(fileData['name'], '*.log') or fnmatch.fnmatch(fileData['name'], '*.out') or fnmatch.fnmatch(fileData['name'], '*.err')
-    return not_a_directory and is_a_logfile
+def is_valid_tail_log(file_data):
+    return logfetch_base.is_valid_log(file_data)
 
 class LogStreamer(threading.Thread):
     def __init__(self, args, task):
@@ -95,36 +94,33 @@ class LogStreamer(threading.Thread):
             except ValueError:
                 sys.stderr.write(colored('Could not tail logs for task {0}, check that the task is still active and that the slave it runs on has not been decommissioned\n'.format(task), 'red'))
                 keep_trying = False
+            except errors.NoTailDataError:
+                sys.stderr.write(colored('Could not tail logs for task {0}, response had no data and was not a 2xx\n'.format(task), 'red'))
+                sys.stderr.flush()
+                keep_trying = False
 
     def fetch_new_log_data(self, uri, path, offset, args, task):
         params = {
             "path" : path,
             "offset" : offset
         }
-        response = requests.get(uri, params=params, headers=args.headers).json()
+        response_obj = requests.get(uri, params=params, headers=args.headers)
+        response = response_obj.json()
+        if 'data' not in response:
+            if response_obj.status_code < 199 or response_obj.status_code > 299:
+                raise errors.NoTailDataError()
+            else:
+                sys.stderr.write(colored('Log tail data missing, retrying...\n'.format(task), 'red'))
+                sys.stderr.flush()
+                return offset
+
         prefix = '({0}) =>\n'.format(task) if args.verbose else ''
         if len(response['data'].encode('utf-8')) > 0:
-            if args.grep:
-                filename = '{0}/.grep{1}'.format(args.dest, self.Task)
-                self.create_grep_file(args, filename, response['data'])
-                output = os.popen(grep_command(args, filename)).read()
-                sys.stdout.write('{0}{1}'.format(colored(prefix, 'cyan'), output))
-                self.remove_grep_file(filename)
-            else:
-                sys.stdout.write('{0}{1}'.format(colored(prefix, 'cyan'), response['data'].encode('utf-8')))
+            sys.stdout.write('{0}{1}'.format(colored(prefix, 'cyan'), response['data'].encode('utf-8')))
+            sys.stdout.flush()
             return offset + len(response['data'].encode('utf-8'))
         else:
             return offset
-
-    def create_grep_file(self, args, filename, content):
-        grep_file = open(filename, 'wb')
-        grep_file.write(content.encode('utf-8'))
-        grep_file.close()
-
-
-    def remove_grep_file(self, grep_file):
-        if os.path.isfile(grep_file):
-            os.remove(grep_file)
 
     def show_available_files(self, args, task):
         sys.stderr.write(colored('Available files (-l arguments):\n', 'cyan'))

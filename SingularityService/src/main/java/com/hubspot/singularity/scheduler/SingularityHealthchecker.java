@@ -142,7 +142,7 @@ public class SingularityHealthchecker {
           asyncHealthcheck(task);
         } catch (Throwable t) {
           LOG.error("Uncaught throwable in async healthcheck", t);
-          exceptionNotifier.notify(t, ImmutableMap.of("taskId", task.getTaskId().toString()));
+          exceptionNotifier.notify(String.format("Uncaught throwable in async healthcheck (%s)", t.getMessage()), t, ImmutableMap.of("taskId", task.getTaskId().toString()));
 
           reEnqueueOrAbort(task);
         }
@@ -156,7 +156,7 @@ public class SingularityHealthchecker {
       enqueueHealthcheck(task, true);
     } catch (Throwable t) {
       LOG.error("Caught throwable while re-enqueuing health check for {}, aborting", task.getTaskId(), t);
-      exceptionNotifier.notify(t, ImmutableMap.of("taskId", task.getTaskId().toString()));
+      exceptionNotifier.notify(String.format("Caught throwable while re-enqueuing health check (%s)", t.getMessage()), t, ImmutableMap.of("taskId", task.getTaskId().toString()));
 
       abort.abort(SingularityAbort.AbortReason.UNRECOVERABLE_ERROR, Optional.of(t));
     }
@@ -243,7 +243,7 @@ public class SingularityHealthchecker {
       http.prepareRequest(builder.build()).execute(handler);
     } catch (Throwable t) {
       LOG.debug("Exception while preparing healthcheck ({}) for task ({})", uri, task.getTaskId(), t);
-      exceptionNotifier.notify(t, ImmutableMap.of("taskId", task.getTaskId().toString()));
+      exceptionNotifier.notify(String.format("Error preparing healthcheck (%s)", t.getMessage()), t, ImmutableMap.of("taskId", task.getTaskId().toString()));
       saveFailure(handler, String.format("Healthcheck failed due to exception: %s", t.getMessage()));
     }
   }

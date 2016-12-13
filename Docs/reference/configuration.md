@@ -21,6 +21,7 @@ Singularity (Service) is configured by DropWizard via a YAML file referenced on 
     - [Resource Limits](#resource-limits)
     - [Racks](#racks)
     - [Slaves](#slaves)
+  - [Network Configuration](#network-configuration)
   - [Database](#database)
     - [History Purging](#history-purging)
   - [S3](#s3)
@@ -57,6 +58,8 @@ These are settings that are more likely to be altered.
 | healthcheckMaxTotalTimeoutSeconds | | Default total time to wait for healthchecks to pass | int |
 
 #### Deploys ####
+| Parameter | Default | Description | Type |
+|-----------|---------|-------------|------|
 | defaultDeployStepWaitTimeMs | 0 | If using an incremental deploy, wait this long between deploy steps if not specified in the deploy | int |
 | defaultDeployMaxTaskRetries | 0 | Allow this many tasks to fail and be retried before failing a new deploy | int |
 
@@ -102,7 +105,7 @@ These settings are less likely to be changed, but were included in the configura
 | cleanupEverySeconds | 5 | Will cleanup request, task, and other queues on this interval | long | 
 | persistHistoryEverySeconds | 3600 (1 hour) | Moves stale historical task data from ZooKeeper into MySQL, setting to 0 will disable history persistence | long |
 | saveStateEverySeconds | 60 | State about this Singularity instance is saved (available over API) on this interval | long |
-| checkScheduledJobsEveryMillis | 600000 (10 mins) | Check for new scheduled jobs and those running into the next scheduled time on this interval | long |
+| checkJobsEveryMillis | 600000 (10 mins) | Check for jobs running longer than the expected time on this interval | long |
 | checkExpiringUserActionEveryMillis | 45000 | Check for expiring actions that should be expired on this interval | long |
 
 #### Mesos ####
@@ -190,6 +193,14 @@ These settings should live under the "mesos" field inside the root configuration
 |-----------|---------|-------------|------|
 | database | | The database connection for SingularityService follows the [dropwizard DataSourceFactory format](http://www.dropwizard.io/0.7.0/dropwizard-db/apidocs/io/dropwizard/db/DataSourceFactory.html) | [DataSourceFactory](http://www.dropwizard.io/0.7.0/dropwizard-db/apidocs/io/dropwizard/db/DataSourceFactory.html) |
 
+## Network Configuration
+
+These settings should live under the "network" field of the root configuration.
+
+| Parameter | Default | Description | Type |
+|-----------|---------|-------------|------|
+| defaultPortMapping | false | If no port mapping is provided, map all Mesos-provided ports to the host | boolean |
+
 #### History Purging ####
 
 These settings live under the "historyPuring" field in the root configuration
@@ -230,7 +241,7 @@ These settings live under the "sentry" field in the root config and enable Singu
 
 ## SMTP ##
 
-These settings live under the "smtp" field in teh root config.
+These settings live under the "smtp" field in the root config.
 
 | Parameter | Default | Description | Type |
 |-----------|---------|-------------|------|

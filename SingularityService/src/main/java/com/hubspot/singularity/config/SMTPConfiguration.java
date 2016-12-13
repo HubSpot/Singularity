@@ -70,6 +70,18 @@ public class SMTPConfiguration {
   @JsonProperty
   private List<String> taskEmailTailFiles = Arrays.asList("stdout", "stderr");
 
+  @NotNull
+  @JsonProperty
+  private Optional<String> taskLogErrorRegex = Optional.absent();
+
+  @NotNull
+  @JsonProperty
+  private Optional<Boolean> taskLogErrorRegexCaseSensitive = Optional.absent();
+
+  @NotNull
+  @JsonProperty
+  private Long maxTaskLogSearchOffset = 100000L;
+
   @JsonProperty
   private TimeZone mailerTimeZone = TimeZone.getTimeZone("UTC");
 
@@ -87,6 +99,7 @@ public class SMTPConfiguration {
       .put(SingularityEmailType.REQUEST_REMOVED, ImmutableList.of(SingularityEmailDestination.OWNERS, SingularityEmailDestination.ADMINS))
       .put(SingularityEmailType.REQUEST_UNPAUSED, ImmutableList.of(SingularityEmailDestination.OWNERS, SingularityEmailDestination.ADMINS))
       .put(SingularityEmailType.REQUEST_SCALED, ImmutableList.of(SingularityEmailDestination.OWNERS))
+      .put(SingularityEmailType.DISASTER_DETECTED, ImmutableList.of(SingularityEmailDestination.ADMINS))
       .build());
 
   public Map<SingularityEmailType, List<SingularityEmailDestination>> getEmailConfiguration() {
@@ -224,4 +237,16 @@ public class SMTPConfiguration {
   public void setMailerTimeZone(TimeZone mailerTimeZone) {
     this.mailerTimeZone = mailerTimeZone;
   }
+
+  public Optional<String> getTaskLogErrorRegex() { return taskLogErrorRegex; }
+
+  public void setTaskLogErrorRegex(Optional<String> taskLogErrorRegex) { this.taskLogErrorRegex = taskLogErrorRegex; }
+
+  public Optional<Boolean> getTaskLogErrorRegexCaseSensitive() { return taskLogErrorRegexCaseSensitive; }
+
+  public void setTaskLogErrorRegexCaseSensitive(Optional<Boolean> taskLogErrorRegexCaseSensitive) { this.taskLogErrorRegexCaseSensitive = taskLogErrorRegexCaseSensitive; }
+
+  public Long getMaxTaskLogSearchOffset() { return maxTaskLogSearchOffset; }
+
+  public void setMaxTaskLogSearchOffset(Long maxTaskLogSearchOffset) { this.maxTaskLogSearchOffset = maxTaskLogSearchOffset; }
 }

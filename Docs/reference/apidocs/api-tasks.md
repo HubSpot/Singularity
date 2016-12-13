@@ -24,6 +24,36 @@ Retrieve statistics about a specific active task.
 
 
 - - -
+#### **POST** `/api/tasks/task/{taskId}/metadata`
+
+Post metadata about a task that will be persisted along with it and displayed in the UI
+
+
+###### Parameters
+**path**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| taskId | true |  | string |
+**body**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| body | false |  | [SingularityTaskMetadataRequest](models.md#model-linkType)</a> |
+
+###### Response
+
+
+
+###### Errors
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| 400    | Invalid metadata object or doesn&#39;t match allowed types | - |
+| 404    | Task doesn&#39;t exist | - |
+| 409    | Metadata with this type/timestamp already existed | - |
+
+
+- - -
 #### **POST** `/api/tasks/task/{taskId}/command`
 
 Run a configured shell command against the given task
@@ -76,29 +106,6 @@ Get the cleanup object for the task, if it exists
 
 
 - - -
-#### **GET** `/api/tasks/task/{taskId}`
-
-Retrieve information about a specific active task.
-
-
-###### Parameters
-**path**
-
-| Parameter | Required | Description | Data Type |
-|-----------|----------|-------------|-----------|
-| taskId | true |  | string |
-
-###### Response
-[SingularityTask](models.md#model-SingularityTask)
-
-
-###### Errors
-| Status Code | Reason      | Response Model |
-|-------------|-------------|----------------|
-| - | - | - |
-
-
-- - -
 #### **DELETE** `/api/tasks/task/{taskId}`
 
 Attempt to kill task, optionally overriding an existing cleanup request (that may be waiting for replacement tasks to become healthy)
@@ -124,6 +131,29 @@ Attempt to kill task, optionally overriding an existing cleanup request (that ma
 | Status Code | Reason      | Response Model |
 |-------------|-------------|----------------|
 | 409    | Task already has a cleanup request (can be overridden with override=true) | - |
+
+
+- - -
+#### **GET** `/api/tasks/task/{taskId}`
+
+Retrieve information about a specific active task.
+
+
+###### Parameters
+**path**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| taskId | true |  | string |
+
+###### Response
+[SingularityTask](models.md#model-SingularityTask)
+
+
+###### Errors
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| - | - | - |
 
 
 - - -

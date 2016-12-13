@@ -134,7 +134,7 @@ public class SingularityS3DownloaderCoordinator implements DownloadListener {
         }
       } catch (Throwable t) {
         LOG.error("While trying to enqueue {}", artifactDownloadRequest.getTargetDirectory(), t);
-        exceptionNotifier.notify(t, ImmutableMap.of("targetDirectory", artifactDownloadRequest.getTargetDirectory()));
+        exceptionNotifier.notify(String.format("Error enqueuing download (%s)", t.getMessage()), t, ImmutableMap.of("targetDirectory", artifactDownloadRequest.getTargetDirectory()));
         try {
           ((HttpServletResponse) continuation.getServletResponse()).sendError(500);
         } catch (IOException e) {

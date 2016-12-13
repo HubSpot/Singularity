@@ -39,6 +39,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hubspot.mesos.JavaUtils;
+import com.hubspot.singularity.s3uploader.config.SingularityS3UploaderContentHeaders;
 import com.hubspot.singularity.SingularityS3FormatHelper;
 import com.hubspot.singularity.runner.base.sentry.SingularityRunnerExceptionNotifier;
 import com.hubspot.singularity.runner.base.shared.S3UploadMetadata;
@@ -179,15 +180,15 @@ public class SingularityS3Uploader implements Closeable {
         } catch (S3ServiceException se) {
           metrics.error();
           LOG.warn("{} Couldn't upload {} due to {} ({}) - {}", logIdentifier, file, se.getErrorCode(), se.getResponseCode(), se.getErrorMessage(), se);
-          exceptionNotifier.notify(se, ImmutableMap.of("logIdentifier", logIdentifier, "file", file.toString(), "errorCode", se.getErrorCode(), "responseCode", Integer.toString(se.getResponseCode()), "errorMessage", se.getErrorMessage()));
+          exceptionNotifier.notify(String.format("S3ServiceException during upload (%s)", se.getMessage()), se, ImmutableMap.of("logIdentifier", logIdentifier, "file", file.toString(), "errorCode", se.getErrorCode(), "responseCode", Integer.toString(se.getResponseCode()), "errorMessage", se.getErrorMessage()));
         } catch (RetryException re) {
           metrics.error();
           LOG.warn("{} Couldn't upload or delete {}", logIdentifier, file, re);
-          exceptionNotifier.notify(re.getCause(), ImmutableMap.of("logIdentifier", logIdentifier, "file", file.toString(), "failedAttempts", Integer.toString(re.getNumberOfFailedAttempts())));
+          exceptionNotifier.notify(String.format("%s exception during upload", re.getCause().getClass()), re.getCause(), ImmutableMap.of("logIdentifier", logIdentifier, "file", file.toString(), "failedAttempts", Integer.toString(re.getNumberOfFailedAttempts())));
         } catch (Exception e) {
           metrics.error();
           LOG.warn("{} Couldn't upload or delete {}", logIdentifier, file, e);
-          exceptionNotifier.notify(e, ImmutableMap.of("logIdentifier", logIdentifier, "file", file.toString()));
+          exceptionNotifier.notify(String.format("Error during upload (%s)", e.getMessage()), e, ImmutableMap.of("logIdentifier", logIdentifier, "file", file.toString()));
         } finally {
           context.stop();
         }
@@ -232,6 +233,19 @@ public class SingularityS3Uploader implements Closeable {
       try {
         S3Object object = new S3Object(s3Bucket, file.toFile());
         object.setKey(key);
+
+        for (SingularityS3UploaderContentHeaders contentHeaders : configuration.getS3ContentHeaders()) {
+          if (file.toString().endsWith(contentHeaders.getFilenameEndsWith())) {
+            LOG.debug("{} Using content headers {} for file {}", logIdentifier, contentHeaders, file);
+            if (contentHeaders.getContentType().isPresent()) {
+              object.setContentType(contentHeaders.getContentType().get());
+            }
+            if (contentHeaders.getContentEncoding().isPresent()) {
+              object.setContentEncoding(contentHeaders.getContentEncoding().get());
+            }
+            break;
+          }
+        }
 
         if (fileSizeBytes > configuration.getMaxSingleUploadSizeBytes()) {
           multipartUpload(object);

@@ -13,6 +13,7 @@ import com.hubspot.horizon.HttpClient;
 import com.hubspot.horizon.HttpRequest;
 import com.hubspot.horizon.HttpResponse;
 import com.hubspot.mesos.JavaUtils;
+import com.hubspot.mesos.json.MesosMasterMetricsSnapshotObject;
 import com.hubspot.mesos.json.MesosMasterStateObject;
 import com.hubspot.mesos.json.MesosSlaveStateObject;
 import com.hubspot.mesos.json.MesosTaskMonitorObject;
@@ -24,9 +25,10 @@ public class MesosClient {
 
   private static final Logger LOG = LoggerFactory.getLogger(MesosClient.class);
 
-  private static final String MASTER_STATE_FORMAT = "http://%s/master/state.json";
-  private static final String MESOS_SLAVE_JSON_URL = "http://%s:5051/slave(1)/state.json";
-  private static final String MESOS_SLAVE_STATISTICS_URL = "http://%s:5051/monitor/statistics.json";
+  private static final String MASTER_STATE_FORMAT = "http://%s/master/state";
+  private static final String MESOS_SLAVE_JSON_URL = "http://%s:5051/slave(1)/state";
+  private static final String MESOS_SLAVE_STATISTICS_URL = "http://%s:5051/monitor/statistics";
+  private static final String MESOS_METRICS_SNAPSHOT_URL = "http://%s/metrics/snapshot";
 
   private static final TypeReference<List<MesosTaskMonitorObject>> TASK_MONITOR_TYPE_REFERENCE = new TypeReference<List<MesosTaskMonitorObject>>() {};
 
@@ -39,6 +41,10 @@ public class MesosClient {
 
   public String getMasterUri(String hostnameAndPort) {
     return String.format(MASTER_STATE_FORMAT, hostnameAndPort);
+  }
+
+  public String getMetricsSnapshotUri(String hostnameAndPort) {
+    return String.format(MESOS_METRICS_SNAPSHOT_URL, hostnameAndPort);
   }
 
   public static class MesosClientException extends RuntimeException {
@@ -88,6 +94,10 @@ public class MesosClient {
 
   public MesosMasterStateObject getMasterState(String uri) {
     return getFromMesos(uri, MesosMasterStateObject.class);
+  }
+
+  public MesosMasterMetricsSnapshotObject getMasterMetricsSnapshot(String uri) {
+    return getFromMesos(uri, MesosMasterMetricsSnapshotObject.class);
   }
 
   public String getSlaveUri(String hostname) {
