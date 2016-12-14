@@ -237,6 +237,14 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
   @JsonProperty
   private SingularityExecutorLogrotateFrequency logrotateFrequency = SingularityExecutorLogrotateFrequency.DAILY;
 
+  @NotNull
+  @JsonProperty
+  private Optional<String> s3StorageClass = Optional.absent();
+
+  @NotNull
+  @JsonProperty
+  private Optional<Long> applyS3StorageClassAfterBytes = Optional.absent();
+
   @NotEmpty
   @JsonProperty
   private String cronDirectory = "/etc/cron.d";
@@ -697,6 +705,22 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
     this.logrotateCompressionSettings = logrotateCompressionSettings;
   }
 
+  public Optional<String> getS3StorageClass() {
+    return s3StorageClass;
+  }
+
+  public void setS3StorageClass(Optional<String> s3StorageClass) {
+    this.s3StorageClass = s3StorageClass;
+  }
+
+  public Optional<Long> getApplyS3StorageClassAfterBytes() {
+    return applyS3StorageClassAfterBytes;
+  }
+
+  public void setApplyS3StorageClassAfterBytes(Optional<Long> applyS3StorageClassAfterBytes) {
+    this.applyS3StorageClassAfterBytes = applyS3StorageClassAfterBytes;
+  }
+
   @Override
   public String toString() {
     return "SingularityExecutorConfiguration[" +
@@ -756,6 +780,8 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
             ", threadCheckerType='" + threadCheckerType + '\'' +
             ", logrotateFrequency='" + logrotateFrequency + '\'' +
             ", cronDirectory='" + cronDirectory + '\'' +
+            ", applyS3StorageClassAfterBytes='" + applyS3StorageClassAfterBytes + '\'' +
+            ", s3StorageClass='" + s3StorageClass + '\'' +
             ']';
   }
 }
