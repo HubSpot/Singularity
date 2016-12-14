@@ -11,7 +11,8 @@ import org.slf4j.LoggerFactory;
 import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.hubspot.mesos.JavaUtils;
-import com.hubspot.singularity.config.HistoryPurgeRequestOverride;
+import com.hubspot.singularity.ExtendedTaskState;
+import com.hubspot.singularity.config.HistoryPurgeRequestSettings;
 import com.hubspot.singularity.config.HistoryPurgingConfiguration;
 import com.hubspot.singularity.scheduler.SingularityLeaderOnlyPoller;
 
@@ -40,46 +41,71 @@ public class SingularityHistoryPurger extends SingularityLeaderOnlyPoller {
   public void runActionOnPoll() {
     final long start = System.currentTimeMillis();
     for (String requestId : historyManager.getRequestIdsInTaskHistory()) {
-      Optional<Integer> deleteTaskHistoryAfterDays;
-      Optional<Integer> deleteTaskHistoryAfterTasksPerRequest;
-      boolean deleteTaskHistoryBytesInsteadOfEntireRow;
-      if (historyPurgingConfiguration.getRequestOverrides().containsKey(requestId)) {
-        HistoryPurgeRequestOverride override = historyPurgingConfiguration.getRequestOverrides().get(requestId);
-        deleteTaskHistoryAfterDays = override.getDeleteTaskHistoryAfterDays().or(historyPurgingConfiguration.getDeleteTaskHistoryAfterDays());
-        deleteTaskHistoryAfterTasksPerRequest = override.getDeleteTaskHistoryAfterTasksPerRequest().or(historyPurgingConfiguration.getDeleteTaskHistoryAfterTasksPerRequest());
-        deleteTaskHistoryBytesInsteadOfEntireRow = override.getDeleteTaskHistoryBytesInsteadOfEntireRow().or(historyPurgingConfiguration.isDeleteTaskHistoryBytesInsteadOfEntireRow());
-      } else {
-        deleteTaskHistoryAfterDays = historyPurgingConfiguration.getDeleteTaskHistoryAfterDays();
-        deleteTaskHistoryAfterTasksPerRequest = historyPurgingConfiguration.getDeleteTaskHistoryAfterTasksPerRequest();
-        deleteTaskHistoryBytesInsteadOfEntireRow = historyPurgingConfiguration.isDeleteTaskHistoryBytesInsteadOfEntireRow();
+      HistoryPurgeRequestSettings settings = getRequestPurgeSettings(requestId);
+
+      LOG.debug("Attempting to purge tasks for {}, using purge settings {}", requestId, settings);
+      purge(requestId, start, settings.getDeleteTaskHistoryAfterTasksPerRequest(), settings.getDeleteTaskHistoryAfterDays(), true);
+      purge(requestId, start, settings.getDeleteTaskHistoryBytesAfterTasksPerRequest(), settings.getDeleteTaskHistoryBytesAfterDays(), false);
+    }
+  }
+
+  private void purge(String requestId, long start, Optional<Integer> afterTasksPerRequest, Optional<Integer> afterDays, boolean deleteRow) {
+    Optional<Date> purgeBefore = Optional.absent();
+    Date checkBefore = new Date();
+
+    if (afterDays.isPresent()) {
+      purgeBefore = Optional.of(new Date(start - TimeUnit.DAYS.toMillis(afterDays.get().longValue())));
+
+      if (!afterTasksPerRequest.isPresent()) {
+        checkBefore = purgeBefore.get();
       }
+    }
 
-      Optional<Date> purgeBefore = Optional.absent();
-      Date checkBefore = new Date();
+    LOG.info("Finding taskHistory counts before {} (purging tasks over limit of {} or created before {}) for request {}", checkBefore, afterTasksPerRequest, purgeBefore, requestId);
 
-      if (deleteTaskHistoryAfterDays.isPresent()) {
-        purgeBefore = Optional.of(new Date(start - TimeUnit.DAYS.toMillis(deleteTaskHistoryAfterDays.get().longValue())));
+    int unpurgedCount;
+    if (deleteRow) {
+      unpurgedCount = historyManager.getTaskIdHistoryCount(Optional.of(requestId), Optional.<String>absent(), Optional.<String>absent(), Optional.<String>absent(), Optional.<ExtendedTaskState>absent(), Optional.<Long>absent(), Optional.<Long>absent(), Optional.<Long>absent(), Optional.<Long>absent());
+    } else {
+      unpurgedCount = historyManager.getUnpurgedTaskHistoryCountByRequestBefore(requestId, checkBefore);
+    }
 
-        if (!deleteTaskHistoryAfterTasksPerRequest.isPresent()) {
-          checkBefore = purgeBefore.get();
-        }
+    if (!afterDays.isPresent() && afterTasksPerRequest.isPresent() &&
+      unpurgedCount < afterTasksPerRequest.get()) {
+      LOG.debug("Not purging old taskHistory for {} - {} count is less than {}", requestId, unpurgedCount, afterTasksPerRequest.get());
+      return;
+    }
+
+    final long startRequestId = System.currentTimeMillis();
+
+    historyManager.purgeTaskHistory(requestId, unpurgedCount, afterTasksPerRequest, purgeBefore, deleteRow);
+
+    LOG.info("Purged old taskHistory for {} ({} count) in {} (deleteRows: {})", requestId, unpurgedCount, JavaUtils.duration(startRequestId), deleteRow);
+  }
+
+  private HistoryPurgeRequestSettings getRequestPurgeSettings(String requestId) {
+    if (historyPurgingConfiguration.getRequestOverrides().containsKey(requestId)) {
+      HistoryPurgeRequestSettings override = historyPurgingConfiguration.getRequestOverrides().get(requestId);
+      if (!override.getDeleteTaskHistoryAfterDays().isPresent()) {
+        override.setDeleteTaskHistoryAfterDays(historyPurgingConfiguration.getDeleteTaskHistoryAfterDays());
       }
-
-      LOG.info("Finding taskHistory counts before {} (purging tasks over limit of {} or created before {}) for request {}", checkBefore, deleteTaskHistoryAfterTasksPerRequest, purgeBefore, requestId);
-
-      int unpurgedCount = historyManager.getUnpurgedTaskHistoryCountByRequestBefore(requestId, checkBefore);
-
-      if (!deleteTaskHistoryAfterDays.isPresent() && deleteTaskHistoryAfterTasksPerRequest.isPresent() &&
-        unpurgedCount < deleteTaskHistoryAfterTasksPerRequest.get()) {
-        LOG.debug("Not purging old taskHistory for {} - {} count is less than {}", requestId, unpurgedCount, deleteTaskHistoryAfterTasksPerRequest.get());
-        continue;
+      if (!override.getDeleteTaskHistoryAfterTasksPerRequest().isPresent()) {
+        override.setDeleteTaskHistoryAfterTasksPerRequest(historyPurgingConfiguration.getDeleteTaskHistoryAfterTasksPerRequest());
       }
-
-      final long startRequestId = System.currentTimeMillis();
-
-      historyManager.purgeTaskHistory(requestId, unpurgedCount, deleteTaskHistoryAfterTasksPerRequest, purgeBefore, !deleteTaskHistoryBytesInsteadOfEntireRow);
-
-      LOG.info("Purged old taskHistory for {} ({} count) in {}", requestId, unpurgedCount, JavaUtils.duration(startRequestId));
+      if (!override.getDeleteTaskHistoryBytesAfterDays().isPresent()) {
+        override.setDeleteTaskHistoryBytesAfterDays(historyPurgingConfiguration.getDeleteTaskHistoryBytesAfterDays());
+      }
+      if (!override.getDeleteTaskHistoryBytesAfterTasksPerRequest().isPresent()) {
+        override.setDeleteTaskHistoryBytesAfterTasksPerRequest(historyPurgingConfiguration.getDeleteTaskHistoryBytesAfterTasksPerRequest());
+      }
+      return override;
+    } else {
+      HistoryPurgeRequestSettings settings = new HistoryPurgeRequestSettings();
+      settings.setDeleteTaskHistoryAfterDays(historyPurgingConfiguration.getDeleteTaskHistoryAfterDays());
+      settings.setDeleteTaskHistoryAfterTasksPerRequest(historyPurgingConfiguration.getDeleteTaskHistoryAfterTasksPerRequest());
+      settings.setDeleteTaskHistoryBytesAfterDays(historyPurgingConfiguration.getDeleteTaskHistoryBytesAfterDays());
+      settings.setDeleteTaskHistoryBytesAfterTasksPerRequest(historyPurgingConfiguration.getDeleteTaskHistoryBytesAfterTasksPerRequest());
+      return settings;
     }
   }
 
