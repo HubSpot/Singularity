@@ -257,7 +257,7 @@ public class SingularityExpiringUserActionPoller extends SingularityLeaderOnlyPo
       try {
         Optional<SingularityBounceRequest> maybeBounceRequest = Optional.absent();
 
-        if (newRequest.getBounceAfterScale().or(false)) {
+        if (expiringObject.getBounce().or(false) || newRequest.getBounceAfterScale().or(false)) {
           LOG.info("Attempting to bounce request {} after expiring scale", newRequest.getId());
           Optional<String> maybeActiveDeployId = deployManager.getInUseDeployId(newRequest.getId());
           if (maybeActiveDeployId.isPresent()) {
