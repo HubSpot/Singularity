@@ -77,13 +77,24 @@ export const FIELDS = {
     {id: 'loadBalancerPortIndex', type: 'number', default: 0}
   ],
   healthChecker: [
-    {id: 'healthcheckUri', type: 'text'},
-    {id: 'healthcheckIntervalSeconds', type: 'number'},
-    {id: 'healthcheckTimeoutSeconds', type: 'number'},
-    {id: 'healthcheckPortIndex', type: 'number'},
-    {id: 'healthcheckMaxTotalTimeoutSeconds', type: 'number'},
+    {
+      id: 'healthcheck',
+      type: 'object',
+      values: [
+        {id: 'uri', type: 'text'},
+        {id: 'portIndex', type: 'number'},
+        {id: 'portNumber', type: 'number'},
+        {id: 'protocol', type: 'text', default: 'HTTP'},
+        {id: 'startupDelaySeconds', type: 'number'},
+        {id: 'startupTimeoutSeconds', type: 'number'},
+        {id: 'startupIntervalSeconds', type: 'number'},
+        {id: 'responseTimeoutSeconds', type: 'number'},
+        {id: 'intervalSeconds', type: 'number'},
+        {id: 'maxRetries', type: 'number'},
+        {id: 'failureStatusCodes', type: 'array', arrayType: 'number', required: false},
+      ]
+    },
     {id: 'deployHealthTimeoutSeconds', type: 'number'},
-    {id: 'healthCheckProtocol', type: 'text', default: 'HTTP'},
     {id: 'skipHealthchecksOnDeploy', type: 'text'},
     {id: 'considerHealthyAfterRunningForSeconds', type: 'number'}
   ]
