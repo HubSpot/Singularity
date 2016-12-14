@@ -19,6 +19,8 @@ public class HistoryPurgingConfiguration {
 
   private boolean enabled = false;
 
+  private int purgeLimitPerQuery = 25000;
+
   private Map<String, HistoryPurgeRequestSettings> requestOverrides = Collections.emptyMap();
 
   private Optional<Integer> absentIfNotOverOne(int value) {
@@ -82,5 +84,13 @@ public class HistoryPurgingConfiguration {
 
   public void setRequestOverrides(Map<String, HistoryPurgeRequestSettings> requestOverrides) {
     this.requestOverrides = requestOverrides;
+  }
+
+  public int getPurgeLimitPerQuery() {
+    return purgeLimitPerQuery;
+  }
+
+  public void setPurgeLimitPerQuery(int purgeLimitPerQuery) {
+    this.purgeLimitPerQuery = purgeLimitPerQuery;
   }
 }
