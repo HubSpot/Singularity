@@ -21,7 +21,7 @@ import com.wordnik.swagger.annotations.ApiOperation;
 
 @Path(RequestGroupResource.PATH)
 @Produces({ MediaType.APPLICATION_JSON })
-@Api(description="Manages Singularity Request Groups, which are collections of one or more Singularity Requests", value=RequestResource.PATH, position=1)
+@Api(description="Manages Singularity Request Groups, which are collections of one or more Singularity Requests", value=RequestGroupResource.PATH, position=1)
 public class RequestGroupResource {
     public static final String PATH = SingularityService.API_BASE_PATH + "/groups";
 

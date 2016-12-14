@@ -27,7 +27,7 @@ import com.wordnik.swagger.annotations.ApiResponses;
 
 @Path(PriorityResource.PATH)
 @Produces({ MediaType.APPLICATION_JSON })
-@Api( description="Manages whether or not to schedule tasks based on their priority levels.", value=RackResource.PATH )
+@Api(description="Manages whether or not to schedule tasks based on their priority levels.", value=PriorityResource.PATH )
 public class PriorityResource {
     public static final String PATH = SingularityService.API_BASE_PATH + "/priority";
 
