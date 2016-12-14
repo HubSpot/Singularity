@@ -119,9 +119,9 @@ export const PersistSkipRequestHealthchecks = buildJsonApiAction(
 export const ScaleRequest = buildJsonApiAction(
   'SCALE_REQUEST',
   'PUT',
-  (requestId, {instances, skipHealthchecks, durationMillis, message, actionId}) => ({
+  (requestId, {instances, skipHealthchecks, durationMillis, message, actionId, bounce, incremental }) => ({
     url: `/requests/request/${requestId}/scale`,
-    body: { instances, skipHealthchecks, durationMillis, message, actionId }
+    body: { instances, skipHealthchecks, durationMillis, message, actionId, bounce, incremental }
   })
 );
 
