@@ -34,6 +34,7 @@ Models:
 - [`SingularityDockerPortMapping`](models.md#model-SingularityDockerPortMapping)
 - [`SingularityExitCooldownRequest`](models.md#model-SingularityExitCooldownRequest)
 - [`SingularityExpiringBounce`](models.md#model-SingularityExpiringBounce)
+- [`SingularityExpiringMachineState`](models.md#model-SingularityExpiringMachineState)
 - [`SingularityExpiringPause`](models.md#model-SingularityExpiringPause)
 - [`SingularityExpiringScale`](models.md#model-SingularityExpiringScale)
 - [`SingularityExpiringSkipHealthchecks`](models.md#model-SingularityExpiringSkipHealthchecks)
@@ -498,6 +499,19 @@ Models:
 | expiringAPIRequestObject | [T](models.md#model-T) | optional |  |
 
 
+## <a name="model-SingularityExpiringMachineState"></a> SingularityExpiringMachineState
+
+| name | type | required | description |
+|------|------|----------|-------------|
+| revertToState | [MachineState](models.md#model-MachineState) | optional |  Allowable values: MISSING_ON_STARTUP, ACTIVE, STARTING_DECOMMISSION, DECOMMISSIONING, DECOMMISSIONED, DEAD, FROZEN |
+| user | string | optional |  |
+| startMillis | long | optional |  |
+| actionId | string | optional |  |
+| expiringAPIRequestObject | [T](models.md#model-T) | optional |  |
+| machineId | string | optional |  |
+| killTasksOnDecommissionTimeout | boolean | optional |  |
+
+
 ## <a name="model-SingularityExpiringPause"></a> SingularityExpiringPause
 
 | name | type | required | description |
@@ -574,7 +588,11 @@ Models:
 
 | name | type | required | description |
 |------|------|----------|-------------|
+| durationMillis | long | optional | The number of milliseconds to wait before reversing the effects of this action (letting it expire) |
+| revertToState | [MachineState](models.md#model-MachineState) | optional | If a durationMillis is specified, return to this state when time has elapsed |
 | message | string | optional | A message to show to users about why this action was taken |
+| actionId | string | optional | An id to associate with this action for metadata purposes |
+| killTasksOnDecommissionTimeout | boolean | optional | If a machine has not successfully decommissioned in durationMillis, kill the remaining tasks on the machine |
 
 
 ## <a name="model-SingularityMachineStateHistoryUpdate"></a> SingularityMachineStateHistoryUpdate
@@ -917,7 +935,7 @@ Models:
 |------|------|----------|-------------|
 | taskId | [SingularityTaskId](models.md#model-SingularityTaskId) | optional |  |
 | user | string | optional |  |
-| cleanupType | [TaskCleanupType](models.md#model-TaskCleanupType) | optional |  Allowable values: USER_REQUESTED, USER_REQUESTED_TASK_BOUNCE, DECOMISSIONING, SCALING_DOWN, BOUNCING, INCREMENTAL_BOUNCE, DEPLOY_FAILED, NEW_DEPLOY_SUCCEEDED, DEPLOY_STEP_FINISHED, DEPLOY_CANCELED, TASK_EXCEEDED_TIME_LIMIT, UNHEALTHY_NEW_TASK, OVERDUE_NEW_TASK, USER_REQUESTED_DESTROY, INCREMENTAL_DEPLOY_FAILED, INCREMENTAL_DEPLOY_CANCELLED, PRIORITY_KILL, REBALANCE_RACKS, PAUSING, PAUSE |
+| cleanupType | [TaskCleanupType](models.md#model-TaskCleanupType) | optional |  Allowable values: USER_REQUESTED, USER_REQUESTED_TASK_BOUNCE, DECOMISSIONING, SCALING_DOWN, BOUNCING, INCREMENTAL_BOUNCE, DEPLOY_FAILED, NEW_DEPLOY_SUCCEEDED, DEPLOY_STEP_FINISHED, DEPLOY_CANCELED, TASK_EXCEEDED_TIME_LIMIT, UNHEALTHY_NEW_TASK, OVERDUE_NEW_TASK, USER_REQUESTED_DESTROY, INCREMENTAL_DEPLOY_FAILED, INCREMENTAL_DEPLOY_CANCELLED, PRIORITY_KILL, REBALANCE_RACKS, PAUSING, PAUSE, DECOMMISSION_TIMEOUT |
 | message | string | optional |  |
 | runBeforeKillId | [SingularityTaskShellCommandRequestId](models.md#model-SingularityTaskShellCommandRequestId) | optional |  |
 | timestamp | long | optional |  |
@@ -945,6 +963,7 @@ Models:
 | healthcheckResults | [Array[SingularityTaskHealthcheckResult]](models.md#model-SingularityTaskHealthcheckResult) | optional |  |
 | loadBalancerUpdates | [Array[SingularityLoadBalancerUpdate]](models.md#model-SingularityLoadBalancerUpdate) | optional |  |
 | taskMetadata | [Array[SingularityTaskMetadata]](models.md#model-SingularityTaskMetadata) | optional |  |
+| containerId | string | optional |  |
 | shellCommandHistory | [Array[SingularityTaskShellCommandHistory]](models.md#model-SingularityTaskShellCommandHistory) | optional |  |
 | taskUpdates | [Array[SingularityTaskHistoryUpdate]](models.md#model-SingularityTaskHistoryUpdate) | optional |  |
 

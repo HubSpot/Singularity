@@ -63,8 +63,8 @@ import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.data.SingularityValidator;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.expiring.SingularityExpiringBounce;
-import com.hubspot.singularity.expiring.SingularityExpiringParent;
 import com.hubspot.singularity.expiring.SingularityExpiringPause;
+import com.hubspot.singularity.expiring.SingularityExpiringRequestActionParent;
 import com.hubspot.singularity.expiring.SingularityExpiringScale;
 import com.hubspot.singularity.expiring.SingularityExpiringSkipHealthchecks;
 import com.hubspot.singularity.helpers.RequestHelper;
@@ -601,7 +601,7 @@ public class RequestResource extends AbstractRequestResource {
     return fillEntireRequest(fetchRequestWithState(requestId));
   }
 
-  private <T extends SingularityExpiringParent<?>> SingularityRequestParent deleteExpiringObject(Class<T> clazz, String requestId) {
+  private <T extends SingularityExpiringRequestActionParent<?>> SingularityRequestParent deleteExpiringObject(Class<T> clazz, String requestId) {
     SingularityRequestWithState requestWithState = fetchRequestWithState(requestId);
 
     SingularityDeleteResult deleteResult = requestManager.deleteExpiringObject(clazz, requestId);

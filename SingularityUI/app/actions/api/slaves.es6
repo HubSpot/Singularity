@@ -8,35 +8,50 @@ export const FetchSlaves = buildApiAction(
 export const FreezeSlave = buildJsonApiAction(
   'FREEZE_SLAVE',
   'POST',
-  (slaveId, message) => ({
+  (slaveId, data) => ({
     url: `/slaves/slave/${slaveId}/freeze`,
-    body: { message }
+    body: data || {}
   })
 );
 
 export const DecommissionSlave = buildJsonApiAction(
   'DECOMMISSION_SLAVE',
   'POST',
-  (slaveId, message) => ({
+  (slaveId, data) => ({
     url: `/slaves/slave/${slaveId}/decommission`,
-    body: { message }
+    body: data || {}
   })
 );
 
 export const RemoveSlave = buildJsonApiAction(
   'REMOVE_SLAVE',
   'DELETE',
-  (slaveId, message) => ({
+  (slaveId, data) => ({
     url: `/slaves/slave/${slaveId}`,
-    body: { message }
+    body: data || {}
   })
 );
 
 export const ReactivateSlave = buildJsonApiAction(
   'ACTIVATE_SLAVE',
   'POST',
-  (slaveId, message) => ({
+  (slaveId, data) => ({
     url: `/slaves/slave/${slaveId}/activate`,
-    body: { message }
+    body: data || {}
   })
 );
+
+export const FetchExpiringSlaveStates = buildApiAction(
+  'FETCH_EXPIRING_SLAVE_STATES',
+  {url: '/slaves/expiring'}
+);
+
+export const RemoveExpiringSlaveState = buildJsonApiAction(
+  'REMOVE_EXPIRING_SLAVE_STATE',
+  'DELETE',
+  (slaveId) => ({
+    url: `/slaves/slave/${slaveId}/expiring`
+  })
+);
+
+
