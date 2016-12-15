@@ -63,6 +63,9 @@ public class SingularityS3DownloaderHandler extends AbstractHandler {
 
     Continuation continuation = ContinuationSupport.getContinuation(request);
     continuation.suspend(response);
+    if (artifactOptional.get().getTimeoutMillis().isPresent()) {
+      continuation.setTimeout(artifactOptional.get().getTimeoutMillis().get());
+    }
 
     downloaderCoordinator.register(continuation, artifactOptional.get());
   }
