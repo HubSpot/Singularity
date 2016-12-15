@@ -67,7 +67,7 @@ fi
 # execute command
 {{#if shouldChangeUser}}
 echo "Executing: {{{ switchUserCommand }}} {{#if maxOpenFiles}}/bin/bash -c 'ulimit -Sn {{{maxOpenFiles}}} && {{/if}}{{{ cmd }}}{{#if maxOpenFiles}}'{{/if}} >> {{{ logFilePath }}} 2>&1"
-exec {{{ switchUserCommand }}} {{#if maxOpenFiles}}/bin/bash -c 'ulimit -Sn {{{maxOpenFiles}}} && {{/if}}{{{ cmd }}}{{#if maxOpenFiles}}'{{/if}} >> {{{ logFilePath }}} 2>&1
+exec {{{ switchUserCommand }}} {{#if maxOpenFiles}}/bin/bash -c 'ulimit -Sn {{{maxOpenFiles}}} && exec {{/if}}{{{ cmd }}}{{#if maxOpenFiles}}'{{/if}} >> {{{ logFilePath }}} 2>&1
 {{else}}
 echo "Executing: {{{ cmd }}} >> {{{ logFilePath }}} 2>&1"
 {{#if maxOpenFiles}}ulimit -Sn {{{maxOpenFiles}}}{{/if}}
