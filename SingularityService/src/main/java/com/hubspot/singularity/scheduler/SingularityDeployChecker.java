@@ -649,19 +649,9 @@ public class SingularityDeployChecker {
     }
 
     SingularityDeployProgress newProgress = deployProgress.withCompletedStep();
-    DeployState deployState;
-    String message;
+    DeployState deployState = isLastStepFinished(newProgress, request) ? DeployState.SUCCEEDED : DeployState.WAITING;
 
-    if (request.getInstancesSafe() == 1) {
-      deployState = DeployState.CANARY_STARTED;
-
-      message = "New deploy is progressing, first step completed";
-    }
-    else {
-      deployState = isLastStepFinished(newProgress, request) ? DeployState.SUCCEEDED : DeployState.WAITING;
-
-      message = deployState == DeployState.SUCCEEDED ? "New deploy succeeded" : "New deploy is progressing, this task is being replaced";
-    }
+    String message = deployState == DeployState.SUCCEEDED ? "New deploy succeeded" : "New deploy is progressing, this task is being replaced";
 
     updatePendingDeploy(pendingDeploy, pendingDeploy.getLastLoadBalancerUpdate(), deployState, Optional.of(newProgress));
     for (SingularityTaskId taskId : tasksToShutDown(deployProgress, otherActiveTasks, request)) {
