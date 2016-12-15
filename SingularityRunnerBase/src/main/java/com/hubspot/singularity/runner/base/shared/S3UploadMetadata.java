@@ -1,7 +1,5 @@
 package com.hubspot.singularity.runner.base.shared;
 
-import static com.hubspot.mesos.JavaUtils.obfuscateValue;
-
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
@@ -49,11 +47,14 @@ public class S3UploadMetadata {
   private final Optional<String> s3AccessKey;
   private final Optional<String> s3SecretKey;
   private final Optional<Long> finishedAfterMillisWithoutNewFile;
+  private final Optional<String> s3StorageClass;
+  private final Optional<Long> applyStorageClassIfOverBytes;
 
   @JsonCreator
   public S3UploadMetadata(@JsonProperty("directory") String directory, @JsonProperty("fileGlob") String fileGlob, @JsonProperty("s3Bucket") String s3Bucket, @JsonProperty("s3KeyFormat") String s3KeyFormat,
       @JsonProperty("finished") boolean finished, @JsonProperty("onFinishGlob") Optional<String> onFinishGlob, @JsonProperty("pid") Optional<Integer> pid, @JsonProperty("s3AccessKey") Optional<String> s3AccessKey,
-      @JsonProperty("s3SecretKey") Optional<String> s3SecretKey, @JsonProperty("finishedAfterMillisWithoutNewFile") Optional<Long> finishedAfterMillisWithoutNewFile) {
+      @JsonProperty("s3SecretKey") Optional<String> s3SecretKey, @JsonProperty("finishedAfterMillisWithoutNewFile") Optional<Long> finishedAfterMillisWithoutNewFile,
+      @JsonProperty("storageClass") Optional<String> s3StorageClass, @JsonProperty("applyStorageClassIfOverBytes") Optional<Long> applyStorageClassIfOverBytes) {
     Preconditions.checkNotNull(directory);
     Preconditions.checkNotNull(fileGlob);
     Preconditions.checkNotNull(s3Bucket);
@@ -68,7 +69,9 @@ public class S3UploadMetadata {
     this.s3AccessKey = s3AccessKey;
     this.s3SecretKey = s3SecretKey;
     this.onFinishGlob = onFinishGlob;
+    this.s3StorageClass = s3StorageClass;
     this.finishedAfterMillisWithoutNewFile = finishedAfterMillisWithoutNewFile;
+    this.applyStorageClassIfOverBytes = applyStorageClassIfOverBytes;
   }
 
   @Override
@@ -149,10 +152,19 @@ public class S3UploadMetadata {
     return finishedAfterMillisWithoutNewFile;
   }
 
+  public Optional<String> getS3StorageClass() {
+    return s3StorageClass;
+  }
+
+  public Optional<Long> getApplyStorageClassIfOverBytes() {
+    return applyStorageClassIfOverBytes;
+  }
+
   @Override
   public String toString() {
     return "S3UploadMetadata [directory=" + directory + ", fileGlob=" + fileGlob + ", s3Bucket=" + s3Bucket + ", s3KeyFormat=" + s3KeyFormat + ", finished=" + finished + ", onFinishGlob="
-        + onFinishGlob + ", pid=" + pid + ", s3AccessKey=" + obfuscateValue(s3AccessKey) + ", s3Secret=" + obfuscateValue(s3SecretKey) + ", finishedAfterMillisWithoutNewFile=" + finishedAfterMillisWithoutNewFile + "]";
+        + onFinishGlob + ", pid=" + pid + ", s3AccessKey=" + s3AccessKey + ", s3SecretKey=" + s3SecretKey + ", finishedAfterMillisWithoutNewFile=" + finishedAfterMillisWithoutNewFile
+        + ", s3StorageClass=" + s3StorageClass + ", applyStorageClassIfOverBytes=" + applyStorageClassIfOverBytes + "]";
   }
 
 }
