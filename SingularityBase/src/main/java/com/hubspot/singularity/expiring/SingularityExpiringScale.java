@@ -4,14 +4,14 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
 import com.hubspot.singularity.api.SingularityScaleRequest;
 
-public class SingularityExpiringScale extends SingularityExpiringParent<SingularityScaleRequest> {
+public class SingularityExpiringScale extends SingularityExpiringRequestActionParent<SingularityScaleRequest> {
 
   private final Optional<Integer> revertToInstances;
 
   public SingularityExpiringScale(@JsonProperty("requestId") String requestId, @JsonProperty("user") Optional<String> user,
       @JsonProperty("startMillis") long startMillis, @JsonProperty("expiringAPIRequestObject") SingularityScaleRequest scaleRequest, @JsonProperty("revertToInstances") Optional<Integer> revertToInstances,
       @JsonProperty("actionId") String actionId) {
-    super(scaleRequest, requestId, user, startMillis, actionId);
+    super(scaleRequest, user, startMillis, actionId, requestId);
 
     this.revertToInstances = revertToInstances;
   }

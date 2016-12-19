@@ -2,6 +2,7 @@ package com.hubspot.singularity.smtp;
 
 import com.google.common.base.Optional;
 import com.hubspot.singularity.ExtendedTaskState;
+import com.hubspot.singularity.SingularityDisastersData;
 import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskHistory;
@@ -18,4 +19,5 @@ public interface SingularityMailer {
   void sendRequestScaledMail(SingularityRequest request, Optional<SingularityScaleRequest> newScaleRequest, Optional<Integer> formerInstances, Optional<String> user);
   void sendRequestRemovedMail(SingularityRequest request, Optional<String> user, Optional<String> message);
   void sendRequestInCooldownMail(final SingularityRequest request);
+  void sendDisasterMail(final SingularityDisastersData disastersData);
 }

@@ -15,6 +15,7 @@ import com.hubspot.singularity.SingularityClientCredentials;
 import com.hubspot.singularity.runner.base.configuration.BaseRunnerConfiguration;
 import com.hubspot.singularity.runner.base.configuration.Configuration;
 import com.hubspot.singularity.runner.base.constraints.DirectoryExists;
+import com.hubspot.singularity.runner.base.shared.CompressionType;
 
 @Configuration(filename = "/etc/singularity.executor.cleanup.yaml", consolidatedField = "executorCleanup")
 public class SingularityExecutorCleanupConfiguration extends BaseRunnerConfiguration {
@@ -50,6 +51,10 @@ public class SingularityExecutorCleanupConfiguration extends BaseRunnerConfigura
 
   @JsonProperty
   private boolean cleanTasksWhenDecommissioned = true;
+
+  @NotNull
+  @JsonProperty
+  private CompressionType compressionType = CompressionType.GZIP;
 
   public SingularityExecutorCleanupConfiguration() {
     super(Optional.of("singularity-executor-cleanup.log"));
@@ -127,6 +132,14 @@ public class SingularityExecutorCleanupConfiguration extends BaseRunnerConfigura
     this.cleanTasksWhenDecommissioned = cleanTasksWhenDecommissioned;
   }
 
+  public CompressionType getCompressionType() {
+    return compressionType;
+  }
+
+  public void setCompressionType(CompressionType compressionType) {
+    this.compressionType = compressionType;
+  }
+
   @Override
   public String toString() {
     return "SingularityExecutorCleanupConfiguration[" +
@@ -138,6 +151,7 @@ public class SingularityExecutorCleanupConfiguration extends BaseRunnerConfigura
             ", singularityContextPath='" + singularityContextPath + '\'' +
             ", runDockerCleanup=" + runDockerCleanup +
             ", singularityClientCredentials=" + singularityClientCredentials +
+            ", compressionType=" + compressionType +
             ']';
   }
 }

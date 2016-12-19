@@ -9,7 +9,7 @@ import FormModal from '../modal/FormModal';
 
 import Messenger from 'messenger';
 import Utils from '../../../utils';
-import uuid from 'node-uuid';
+import uuid from 'uuid';
 
 const LOCAL_STORAGE_AFTER_TRIGGER_VALUE = 'afterRunNowTrigger';
 const LOCAL_STORAGE_TAIL_AFTER_TRIGGER_FILENAME = 'taskRunRedirectFilename';
@@ -46,16 +46,18 @@ class RunNowModal extends Component {
     data.runId = runId;
     if (data.afterTrigger === RunNowModal.AFTER_TRIGGER.TAIL.value) localStorage.setItem(LOCAL_STORAGE_TAIL_AFTER_TRIGGER_FILENAME, data.fileToTail);
     this.props.runNow(data).then((response) => {
-      if (response.error) {
+      let requestFetchResponse = response || {};
+      if (_.isArray(response) && response.length > 0) {
+        requestFetchResponse = response[0];
+      }
+      if (requestFetchResponse.error) {
         Messenger().post({
           message: '<p>This request cannot be run now. This is likely because it is already running.</p>',
           type: 'error'
         });
       } else if (_.contains([RunNowModal.AFTER_TRIGGER.SANDBOX.value, RunNowModal.AFTER_TRIGGER.TAIL.value], data.afterTrigger)) {
-        const requestId = Utils.maybe(response, ['data', 'request', 'id']);
-        if (!requestId) { return; }
         this.refs.taskLauncher.getWrappedInstance().startPolling(
-          requestId,
+          this.props.requestId,
           runId,
           data.afterTrigger === RunNowModal.AFTER_TRIGGER.TAIL.value && data.fileToTail
         );

@@ -2,7 +2,9 @@ package com.hubspot.mesos;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.base.Objects;
 import com.google.common.base.Optional;
+import com.wordnik.swagger.annotations.ApiModelProperty;
 
 public class SingularityDockerPortMapping {
   public static final String DEFAULT_PROTOCOL = "tcp";
@@ -27,35 +29,40 @@ public class SingularityDockerPortMapping {
     this.protocol = protocol.or(DEFAULT_PROTOCOL);
   }
 
+  @ApiModelProperty(required=false, value="Container port. Use the port number provided (LITERAL) or the dynamically allocated port at this index (FROM_OFFER)")
   public SingularityPortMappingType getContainerPortType() {
     return containerPortType;
   }
 
+  @ApiModelProperty(required=true, value="Port number, or index of port from offer within the container")
   public int getContainerPort() {
     return containerPort;
   }
 
+  @ApiModelProperty(required=false, value="Host port. Use the port number provided (LITERAL) or the dynamically allocated port at this index (FROM_OFFER)")
   public SingularityPortMappingType getHostPortType() {
     return hostPortType;
   }
 
+  @ApiModelProperty(required=true, value="Port number, or index of port from offer on the host")
   public int getHostPort() {
     return hostPort;
   }
 
+  @ApiModelProperty(required=false, value="Protocol for binding the port. Default is tcp")
   public String getProtocol() {
     return protocol;
   }
 
   @Override
   public String toString() {
-    return "SingularityDockerPortMapping[" +
-            "containerPortType=" + containerPortType +
-            ", hostPortType=" + hostPortType +
-            ", containerPort=" + containerPort +
-            ", hostPort=" + hostPort +
-            ", protocol=" + protocol +
-            ']';
+    return Objects.toStringHelper(this)
+      .add("containerPortType", containerPortType)
+      .add("hostPortType", hostPortType)
+      .add("containerPort", containerPort)
+      .add("hostPort", hostPort)
+      .add("protocol", protocol)
+      .toString();
   }
 
   @Override

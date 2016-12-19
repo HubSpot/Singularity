@@ -3,13 +3,17 @@ import moment from 'moment';
 const Utils = {
   TERMINAL_TASK_STATES: ['TASK_KILLED', 'TASK_LOST', 'TASK_FAILED', 'TASK_FINISHED', 'TASK_ERROR'],
 
-  DECOMMISION_STATES: ['DECOMMISSIONING', 'DECOMMISSIONED', 'STARTING_DECOMMISSION', 'DECOMISSIONING', 'DECOMISSIONED', 'STARTING_DECOMISSION'],
+  DECOMMISION_STATES: ['DECOMMISSIONING', 'DECOMMISSIONED', 'STARTING_DECOMMISSION'],
+
+  MACHINE_STATES_FOR_REVERT: ['DECOMMISSIONED', 'STARTING_DECOMMISSION', 'ACTIVE', 'FROZEN'],
 
   GLOB_CHARS: ['*', '!', '?', '[', ']'],
 
   LONG_RUNNING_IMMEDIATE_CLEANUPS: ['USER_REQUESTED', 'SCALING_DOWN', 'DEPLOY_FAILED', 'NEW_DEPLOY_SUCCEEDED', 'DEPLOY_STEP_FINISHED', 'DEPLOY_CANCELED' , 'TASK_EXCEEDED_TIME_LIMIT', 'UNHEALTHY_NEW_TASK', 'OVERDUE_NEW_TASK', 'USER_REQUESTED_DESTROY', 'PRIORITY_KILL', 'PAUSE'],
 
   NON_LONG_RUNNING_IMMEDIATE_CLEANUPS: ['USER_REQUESTED', 'DEPLOY_FAILED', 'DEPLOY_CANCELED', 'TASK_EXCEEDED_TIME_LIMIT', 'UNHEALTHY_NEW_TASK', 'OVERDUE_NEW_TASK', 'USER_REQUESTED_DESTROY', 'INCREMENTAL_DEPLOY_FAILED', 'INCREMENTAL_DEPLOY_CANCELLED', 'PRIORITY_KILL', 'PAUSE'],
+
+  DEFAULT_SLAVES_COLUMNS: {'id': true, 'state': true, 'since': true, 'rack': true, 'host': true, 'uptime': true, 'actionUser': true, 'message': true, 'expiring': true},
 
   isIn(needle, haystack) {
     return !_.isEmpty(haystack) && haystack.indexOf(needle) >= 0;
@@ -233,16 +237,28 @@ const Utils = {
     return deployFailed && taskKilled;
   },
 
-  healthcheckFailureReasonMessage(task) {
-    const healthcheckResults = task.healthcheckResults;
-    if (healthcheckResults && healthcheckResults.length > 0) {
-      if (_.last(healthcheckResults).errorMessage && _.last(healthcheckResults).errorMessage.toLowerCase().indexOf('connection refused') !== -1) {
-        const portIndex = task.task.taskRequest.deploy.healthcheckPortIndex || 0;
-        const port = task.ports && task.ports.length > portIndex ? task.ports[portIndex] : false;
-        return `a refused connection. It is possible your app did not start properly or was not listening on the anticipated port (${port}). Please check the logs for more details.`;
+  healthcheckPort(healthcheckOptions, ports) {
+    if (healthcheckOptions) {
+      if (healthcheckOptions.portNumber) {
+        return healthcheckOptions.portNumber;
+      } else if (healthcheckOptions.portIndex && ports.length > healthcheckOptions.portIndex) {
+        return ports[healthcheckOptions.portIndex];
+      } else {
+        return _.first(ports);
       }
+    } else {
+      return _.first(ports);
     }
-    return null;
+  },
+
+  healthcheckTimeout(healthcheckOptions) {
+    if (healthcheckOptions) {
+      let startupTimeout = healthcheckOptions.startupTimeoutSeconds || config.defaultStartupTimeoutSeconds;
+      let attempts = (healthcheckOptions.maxRetries || config.defaultHealthcheckMaxRetries) + 1
+      return startupTimeout + (attempts * (healthcheckOptions.intervalSeconds || config.defaultHealthcheckIntervalSeconds))
+    } else {
+      return config.defaultStartupTimeoutSeconds + ((config.defaultHealthcheckMaxRetries + 1) * config.defaultHealthcheckIntervalSeconds);
+    }
   },
 
   maybe(object, path, defaultValue = undefined) {
@@ -338,7 +354,8 @@ const Utils = {
     // other
     canDisableHealthchecks: (requestParent) => {
       return !!requestParent.activeDeploy
-        && !!requestParent.activeDeploy.healthcheckUri
+        && !!requestParent.activeDeploy.healthcheck
+        && !!requestParent.activeDeploy.healthcheck.uri
         && requestParent.state !== 'PAUSED'
         && !requestParent.expiringSkipHealthchecks;
     },
@@ -405,6 +422,7 @@ const Utils = {
     }
     return array.join('&');
   }
+
 };
 
 export default Utils;

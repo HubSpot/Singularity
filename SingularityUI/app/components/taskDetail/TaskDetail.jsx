@@ -164,7 +164,7 @@ class TaskDetail extends Component {
         if (!file.isDirectory) {
           const regex = /(?:\.([^.]+))?$/;
           const extension = regex.exec(file.name)[1];
-          file.isTailable = !_.contains(['zip', 'gz', 'jar'], extension);
+          file.isTailable = !_.contains(['zip', 'gz', 'jar', 'bz2', 'so', 'png', 'jpg', 'jpeg', 'pdf'], extension);
         }
       }
     }
@@ -438,9 +438,11 @@ function mapHealthchecksToProps(task) {
   const { healthcheckResults } = task;
   task.hasSuccessfulHealthcheck = healthcheckResults && healthcheckResults.length > 0 && !!_.find(healthcheckResults, (healthcheckResult) => healthcheckResult.statusCode === 200);
   task.lastHealthcheckFailed = healthcheckResults && healthcheckResults.length > 0 && _.last(healthcheckResults).statusCode !== 200;
-  task.healthcheckFailureReasonMessage = Utils.healthcheckFailureReasonMessage(task);
-  task.tooManyRetries = healthcheckResults && healthcheckResults.length > task.task.taskRequest.deploy.healthcheckMaxRetries && task.task.taskRequest.deploy.healthcheckMaxRetries > 0;
-  task.secondsElapsed = task.task && task.task.taskRequest && task.task.taskRequest.deploy.healthcheckMaxTotalTimeoutSeconds || config.defaultDeployHealthTimeoutSeconds;
+  if (healthcheckResults && task.task.taskRequest.deploy && task.task.taskRequest.deploy.healthcheck && task.task.taskRequest.deploy.healthcheck.maxRetries && task.task.taskRequest.deploy.healthcheck.maxRetries > 0) {
+    task.tooManyRetries = healthcheckResults.length > task.task.taskRequest.deploy.healthcheck.maxRetries;
+  } else {
+    task.tooManyRetries = false;
+  }
   return task;
 }
 
@@ -455,7 +457,7 @@ function mapTaskToProps(task) {
   task.isCleaning = task.lastKnownState && task.lastKnownState.taskState === 'TASK_CLEANING';
 
   const ports = [];
-  if (task.task && task.task.taskRequest.deploy.resources && task.task.taskRequest.deploy.resources.numPorts > 0) {
+  if (task.task && task.task.taskRequest.deploy && task.task.taskRequest.deploy.resources && task.task.taskRequest.deploy.resources.numPorts > 0) {
     for (const resource of task.task.mesosTask.resources) {
       if (resource.name === 'ports') {
         for (const range of resource.ranges.range) {

@@ -15,6 +15,7 @@ import org.apache.mesos.SchedulerDriver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.codahale.metrics.Meter;
 import com.codahale.metrics.annotation.Timed;
 import com.google.common.base.Optional;
 import com.google.common.base.Strings;
@@ -61,7 +62,7 @@ public class SingularityMesosStatusUpdateHandler implements Managed {
     private final SingularityHealthchecker healthchecker;
     private final SingularityNewTaskChecker newTaskChecker;
     private final SingularitySlaveAndRackManager slaveAndRackManager;
-    private final SingularityLogSupport logSupport;
+    private final SingularityMesosExecutorInfoSupport logSupport;
     private final SingularityScheduler scheduler;
     private final Provider<SingularitySchedulerStateCache> stateCacheProvider;
     private final String serverId;
@@ -74,20 +75,22 @@ public class SingularityMesosStatusUpdateHandler implements Managed {
     private final SingularityAbort singularityAbort;
     private final SingularityConfiguration configuration;
     private final Multiset<Protos.TaskStatus.Reason> taskLostReasons;
+    private final Meter lostTasksMeter;
 
     private Future statusUpdateFuture;
 
     @Inject
     public SingularityMesosStatusUpdateHandler(TaskManager taskManager, DeployManager deployManager, RequestManager requestManager,
         IdTranscoder<SingularityTaskId> taskIdTranscoder, SingularityExceptionNotifier exceptionNotifier, SingularityHealthchecker healthchecker,
-        SingularityNewTaskChecker newTaskChecker, SingularitySlaveAndRackManager slaveAndRackManager, SingularityLogSupport logSupport, SingularityScheduler scheduler,
+        SingularityNewTaskChecker newTaskChecker, SingularitySlaveAndRackManager slaveAndRackManager, SingularityMesosExecutorInfoSupport logSupport, SingularityScheduler scheduler,
         Provider<SingularitySchedulerStateCache> stateCacheProvider, @Named(SingularityMainModule.SERVER_ID_PROPERTY) String serverId,
         SchedulerDriverSupplier schedulerDriverSupplier,
         @Named(SingularityMesosModule.SCHEDULER_LOCK_NAME) final Lock schedulerLock,
         @Named(SingularityMainModule.STATUS_UPDATE_THREADPOOL_NAME) ScheduledExecutorService executorService,
         SingularityConfiguration configuration,
         SingularityAbort singularityAbort,
-        @Named(SingularityMesosModule.TASK_LOST_REASONS_COUNTER) Multiset<Protos.TaskStatus.Reason> taskLostReasons) {
+        @Named(SingularityMesosModule.TASK_LOST_REASONS_COUNTER) Multiset<Protos.TaskStatus.Reason> taskLostReasons,
+        @Named(SingularityMainModule.LOST_TASKS_METER) Meter lostTasksMeter) {
         this.taskManager = taskManager;
         this.deployManager = deployManager;
         this.requestManager = requestManager;
@@ -105,6 +108,7 @@ public class SingularityMesosStatusUpdateHandler implements Managed {
         this.singularityAbort = singularityAbort;
         this.configuration = configuration;
         this.taskLostReasons = taskLostReasons;
+        this.lostTasksMeter = lostTasksMeter;
         this.handlerStarted = new AtomicBoolean();
 
         this.statusUpdateQueue = new ArrayBlockingQueue<>(configuration.getStatusUpdateQueueCapacity());
@@ -167,9 +171,7 @@ public class SingularityMesosStatusUpdateHandler implements Managed {
     }
 
     private void updateDisasterStats(Protos.TaskStatus status) {
-        if (status.getState() == TaskState.TASK_LOST) {
-            taskLostReasons.add(status.getReason());
-        }
+
     }
 
     private SchedulerDriver getSchedulerDriver() {
@@ -214,9 +216,13 @@ public class SingularityMesosStatusUpdateHandler implements Managed {
             return;
         }
 
-        if (configuration.getDisasterDetection().isEnabled()) {
-            updateDisasterStats(status);
+        if (status.getState() == TaskState.TASK_LOST) {
+            lostTasksMeter.mark();
+            if (configuration.getDisasterDetection().isEnabled()) {
+                taskLostReasons.add(status.getReason());
+            }
         }
+
 
         final Optional<SingularityTask> task = taskManager.getTask(taskIdObj);
 
@@ -252,7 +258,7 @@ public class SingularityMesosStatusUpdateHandler implements Managed {
             new SingularityTaskHistoryUpdate(taskIdObj, timestamp, taskState, statusMessage, status.hasReason() ? Optional.of(status.getReason().name()) : Optional.<String>absent());
         final SingularityCreateResult taskHistoryUpdateCreateResult = taskManager.saveTaskHistoryUpdate(taskUpdate);
 
-        logSupport.checkDirectory(taskIdObj);
+        logSupport.checkDirectoryAndContainerId(taskIdObj);
 
         if (taskState.isDone()) {
             healthchecker.cancelHealthcheck(taskId);

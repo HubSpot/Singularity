@@ -122,6 +122,10 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
 
   @NotNull
   @JsonProperty
+  private LogrotateCompressionSettings logrotateCompressionSettings = LogrotateCompressionSettings.empty();
+
+  @NotNull
+  @JsonProperty
   private List<SingularityExecutorLogrotateAdditionalFile> logrotateAdditionalFiles = Collections.emptyList();
 
   /**
@@ -687,64 +691,73 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
     return this;
   }
 
+  public LogrotateCompressionSettings getLogrotateCompressionSettings() {
+    return logrotateCompressionSettings;
+  }
+
+  public void setLogrotateCompressionSettings(LogrotateCompressionSettings logrotateCompressionSettings) {
+    this.logrotateCompressionSettings = logrotateCompressionSettings;
+  }
+
   @Override
   public String toString() {
-    return Objects.toStringHelper(this)
-      .add("executorJavaLog", executorJavaLog)
-      .add("executorBashLog", executorBashLog)
-      .add("serviceLog", serviceLog)
-      .add("defaultRunAsUser", defaultRunAsUser)
-      .add("taskAppDirectory", taskAppDirectory)
-      .add("shutdownTimeoutWaitMillis", shutdownTimeoutWaitMillis)
-      .add("idleExecutorShutdownWaitMillis", idleExecutorShutdownWaitMillis)
-      .add("stopDriverAfterMillis", stopDriverAfterMillis)
-      .add("globalTaskDefinitionDirectory", globalTaskDefinitionDirectory)
-      .add("globalTaskDefinitionSuffix", globalTaskDefinitionSuffix)
-      .add("hardKillAfterMillis", hardKillAfterMillis)
-      .add("killThreads", killThreads)
-      .add("threadCheckThreads", threadCheckThreads)
-      .add("checkThreadsEveryMillis", checkThreadsEveryMillis)
-      .add("maxTaskMessageLength", maxTaskMessageLength)
-      .add("logrotateCommand", logrotateCommand)
-      .add("logrotateStateFile", logrotateStateFile)
-      .add("logrotateConfDirectory", logrotateConfDirectory)
-      .add("logrotateToDirectory", logrotateToDirectory)
-      .add("logrotateMaxageDays", logrotateMaxageDays)
-      .add("logrotateCount", logrotateCount)
-      .add("logrotateDateformat", logrotateDateformat)
-      .add("logrotateExtrasDateformat", logrotateExtrasDateformat)
-      .add("logrotateAdditionalFiles", logrotateAdditionalFiles)
-      .add("s3UploaderAdditionalFiles", s3UploaderAdditionalFiles)
-      .add("tailLogLinesToSave", tailLogLinesToSave)
-      .add("serviceFinishedTailLog", serviceFinishedTailLog)
-      .add("s3UploaderKeyPattern", s3UploaderKeyPattern)
-      .add("s3UploaderBucket", s3UploaderBucket)
-      .add("useLocalDownloadService", useLocalDownloadService)
-      .add("localDownloadServiceTimeoutMillis", localDownloadServiceTimeoutMillis)
-      .add("localDownloadServiceMaxConnections", localDownloadServiceMaxConnections)
-      .add("maxTaskThreads", maxTaskThreads)
-      .add("dockerPrefix", dockerPrefix)
-      .add("dockerStopTimeout", dockerStopTimeout)
-      .add("cgroupsMesosCpuTasksFormat", cgroupsMesosCpuTasksFormat)
-      .add("procCgroupFormat", procCgroupFormat)
-      .add("switchUserCommandFormat", switchUserCommandFormat)
-      .add("artifactSignatureVerificationCommand", artifactSignatureVerificationCommand)
-      .add("failTaskOnInvalidArtifactSignature", failTaskOnInvalidArtifactSignature)
-      .add("signatureVerifyOut", signatureVerifyOut)
-      .add("shellCommands", shellCommands)
-      .add("shellCommandOutFile", shellCommandOutFile)
-      .add("shellCommandPidPlaceholder", shellCommandPidPlaceholder)
-      .add("shellCommandUserPlaceholder", shellCommandUserPlaceholder)
-      .add("shellCommandPidFile", shellCommandPidFile)
-      .add("shellCommandPrefix", shellCommandPrefix)
-      .add("dockerClientTimeLimitSeconds", dockerClientTimeLimitSeconds)
-      .add("dockerClientConnectionPoolSize", dockerClientConnectionPoolSize)
-      .add("maxDockerPullAttempts", maxDockerPullAttempts)
-      .add("dockerAuthConfig", dockerAuthConfig)
-      .add("threadCheckerType", threadCheckerType)
-      .add("logrotateFrequency", logrotateFrequency)
-      .add("cronDirectory", cronDirectory)
-      .add("useFileAttributes", useFileAttributes)
-      .toString();
+    return "SingularityExecutorConfiguration{" +
+        "executorJavaLog='" + executorJavaLog + '\'' +
+        ", executorBashLog='" + executorBashLog + '\'' +
+        ", serviceLog='" + serviceLog + '\'' +
+        ", defaultRunAsUser='" + defaultRunAsUser + '\'' +
+        ", taskAppDirectory='" + taskAppDirectory + '\'' +
+        ", shutdownTimeoutWaitMillis=" + shutdownTimeoutWaitMillis +
+        ", idleExecutorShutdownWaitMillis=" + idleExecutorShutdownWaitMillis +
+        ", stopDriverAfterMillis=" + stopDriverAfterMillis +
+        ", globalTaskDefinitionDirectory='" + globalTaskDefinitionDirectory + '\'' +
+        ", globalTaskDefinitionSuffix='" + globalTaskDefinitionSuffix + '\'' +
+        ", hardKillAfterMillis=" + hardKillAfterMillis +
+        ", killThreads=" + killThreads +
+        ", threadCheckThreads=" + threadCheckThreads +
+        ", checkThreadsEveryMillis=" + checkThreadsEveryMillis +
+        ", maxTaskMessageLength=" + maxTaskMessageLength +
+        ", logrotateCommand='" + logrotateCommand + '\'' +
+        ", logrotateStateFile='" + logrotateStateFile + '\'' +
+        ", logrotateConfDirectory='" + logrotateConfDirectory + '\'' +
+        ", logrotateToDirectory='" + logrotateToDirectory + '\'' +
+        ", logrotateMaxageDays=" + logrotateMaxageDays +
+        ", logrotateCount=" + logrotateCount +
+        ", logrotateDateformat='" + logrotateDateformat + '\'' +
+        ", logrotateExtrasDateformat='" + logrotateExtrasDateformat + '\'' +
+        ", logrotateCompressionSettings=" + logrotateCompressionSettings +
+        ", logrotateAdditionalFiles=" + logrotateAdditionalFiles +
+        ", s3UploaderAdditionalFiles=" + s3UploaderAdditionalFiles +
+        ", tailLogLinesToSave=" + tailLogLinesToSave +
+        ", serviceFinishedTailLog='" + serviceFinishedTailLog + '\'' +
+        ", s3UploaderKeyPattern='" + s3UploaderKeyPattern + '\'' +
+        ", s3UploaderBucket='" + s3UploaderBucket + '\'' +
+        ", useLocalDownloadService=" + useLocalDownloadService +
+        ", localDownloadServiceTimeoutMillis=" + localDownloadServiceTimeoutMillis +
+        ", localDownloadServiceMaxConnections=" + localDownloadServiceMaxConnections +
+        ", maxTaskThreads=" + maxTaskThreads +
+        ", dockerPrefix='" + dockerPrefix + '\'' +
+        ", dockerStopTimeout=" + dockerStopTimeout +
+        ", cgroupsMesosCpuTasksFormat='" + cgroupsMesosCpuTasksFormat + '\'' +
+        ", procCgroupFormat='" + procCgroupFormat + '\'' +
+        ", switchUserCommandFormat='" + switchUserCommandFormat + '\'' +
+        ", artifactSignatureVerificationCommand=" + artifactSignatureVerificationCommand +
+        ", failTaskOnInvalidArtifactSignature=" + failTaskOnInvalidArtifactSignature +
+        ", signatureVerifyOut='" + signatureVerifyOut + '\'' +
+        ", shellCommands=" + shellCommands +
+        ", shellCommandOutFile='" + shellCommandOutFile + '\'' +
+        ", shellCommandPidPlaceholder='" + shellCommandPidPlaceholder + '\'' +
+        ", shellCommandUserPlaceholder='" + shellCommandUserPlaceholder + '\'' +
+        ", shellCommandPidFile='" + shellCommandPidFile + '\'' +
+        ", shellCommandPrefix=" + shellCommandPrefix +
+        ", dockerClientTimeLimitSeconds=" + dockerClientTimeLimitSeconds +
+        ", dockerClientConnectionPoolSize=" + dockerClientConnectionPoolSize +
+        ", maxDockerPullAttempts=" + maxDockerPullAttempts +
+        ", dockerAuthConfig=" + dockerAuthConfig +
+        ", threadCheckerType=" + threadCheckerType +
+        ", logrotateFrequency=" + logrotateFrequency +
+        ", cronDirectory='" + cronDirectory + '\'' +
+        ", useFileAttributes=" + useFileAttributes +
+        '}';
   }
 }

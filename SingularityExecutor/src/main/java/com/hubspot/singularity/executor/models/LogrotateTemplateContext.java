@@ -6,6 +6,7 @@ import java.util.List;
 import com.google.common.base.Optional;
 import com.google.common.base.Strings;
 import com.google.common.io.Files;
+import com.hubspot.singularity.executor.config.LogrotateCompressionSettings;
 import com.hubspot.singularity.executor.config.SingularityExecutorConfiguration;
 import com.hubspot.singularity.executor.config.SingularityExecutorLogrotateAdditionalFile;
 import com.hubspot.singularity.executor.task.SingularityExecutorTaskDefinition;
@@ -46,6 +47,22 @@ public class LogrotateTemplateContext {
 
   public String getLogrotateFrequency() {
     return taskDefinition.getExecutorData().getLogrotateFrequency().or(configuration.getLogrotateFrequency()).getLogrotateValue();
+  }
+
+  public String getCompressCmd() {
+    return configuration.getLogrotateCompressionSettings().getCompressCmd().orNull();
+  }
+
+  public String getUncompressCmd() {
+    return configuration.getLogrotateCompressionSettings().getUncompressCmd().orNull();
+  }
+
+  public String getCompressOptions() {
+    return configuration.getLogrotateCompressionSettings().getCompressOptions().orNull();
+  }
+
+  public String getCompressExt() {
+    return configuration.getLogrotateCompressionSettings().getCompressExt().orNull();
   }
 
   /**
