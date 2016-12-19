@@ -65,12 +65,16 @@ public class SingularityDeployProgress {
     return timestamp;
   }
 
-  public SingularityDeployProgress withNewInstances(int instances) {
+  public SingularityDeployProgress withNewTargetInstances(int instances) {
     return new SingularityDeployProgress(instances, currentActiveInstances, deployInstanceCountPerStep, deployStepWaitTimeMs, false, autoAdvanceDeploySteps, failedDeployTasks, System.currentTimeMillis());
   }
 
+  public SingularityDeployProgress withNewActiveInstances(int instances) {
+    return new SingularityDeployProgress(targetActiveInstances, instances, deployInstanceCountPerStep, deployStepWaitTimeMs, false, autoAdvanceDeploySteps, failedDeployTasks, System.currentTimeMillis());
+  }
+
   public SingularityDeployProgress withCompletedStep() {
-    return new SingularityDeployProgress(targetActiveInstances, currentActiveInstances + 1, deployInstanceCountPerStep, deployStepWaitTimeMs, true, autoAdvanceDeploySteps, failedDeployTasks, System.currentTimeMillis());
+    return new SingularityDeployProgress(targetActiveInstances, currentActiveInstances, deployInstanceCountPerStep, deployStepWaitTimeMs, true, autoAdvanceDeploySteps, failedDeployTasks, System.currentTimeMillis());
   }
 
   public SingularityDeployProgress withFailedTasks(Set<SingularityTaskId> failedTasks) {

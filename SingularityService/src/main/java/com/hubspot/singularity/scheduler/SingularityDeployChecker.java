@@ -528,7 +528,7 @@ public class SingularityDeployChecker {
         return checkOverdue(request, deploy, pendingDeploy, deployActiveTasks, isDeployOverdue);
       case HEALTHY:
         if (!request.isLoadBalanced()) {
-          return markStepFinished(pendingDeploy, deploy, otherActiveTasks, request, updatePendingDeployRequest);
+          return markStepFinished(pendingDeploy, deploy, deployActiveTasks, otherActiveTasks, request, updatePendingDeployRequest);
         }
 
         if (updatePendingDeployRequest.isPresent() && updatePendingDeployRequest.get().getTargetActiveInstances() != deployProgress.getTargetActiveInstances()) {
@@ -552,7 +552,7 @@ public class SingularityDeployChecker {
     Optional<SingularityUpdatePendingDeployRequest> updatePendingDeployRequest) {
     SingularityDeployProgress deployProgress = pendingDeploy.getDeployProgress().get();
     if (canMoveToNextStep(deployProgress) || updatePendingDeployRequest.isPresent()) {
-      SingularityDeployProgress newProgress = deployProgress.withNewInstances(getNewTargetInstances(deployProgress, request, updatePendingDeployRequest));
+      SingularityDeployProgress newProgress = deployProgress.withNewTargetInstances(getNewTargetInstances(deployProgress, request, updatePendingDeployRequest));
       updatePendingDeploy(pendingDeploy, pendingDeploy.getLastLoadBalancerUpdate(), DeployState.WAITING, Optional.of(newProgress));
       requestManager.addToPendingQueue(
         new SingularityPendingRequest(request.getId(), pendingDeploy.getDeployMarker().getDeployId(), System.currentTimeMillis(), pendingDeploy.getDeployMarker().getUser(),
@@ -599,7 +599,7 @@ public class SingularityDeployChecker {
     DeployState deployState = interpretLoadBalancerState(lbUpdate, pendingDeploy.getCurrentDeployState());
     if (deployState == DeployState.SUCCEEDED) {
       updatePendingDeploy(pendingDeploy, Optional.of(lbUpdate), DeployState.WAITING); // A step has completed, markStepFinished will determine SUCCEEDED/WAITING
-      return markStepFinished(pendingDeploy, deploy, otherActiveTasks, request, updatePendingDeployRequest);
+      return markStepFinished(pendingDeploy, deploy, deployActiveTasks, otherActiveTasks, request, updatePendingDeployRequest);
     } else if (deployState == DeployState.WAITING) {
       updatePendingDeploy(pendingDeploy, Optional.of(lbUpdate), deployState);
       maybeUpdatePendingRequest(pendingDeploy, deploy, request, updatePendingDeployRequest, Optional.of(lbUpdate));
@@ -620,7 +620,7 @@ public class SingularityDeployChecker {
     Optional<SingularityUpdatePendingDeployRequest> updatePendingDeployRequest, Optional<SingularityLoadBalancerUpdate> lbUpdate) {
     if (updatePendingDeployRequest.isPresent() && pendingDeploy.getDeployProgress().isPresent()) {
       SingularityDeployProgress newProgress =
-        pendingDeploy.getDeployProgress().get().withNewInstances(Math.min(updatePendingDeployRequest.get().getTargetActiveInstances(), request.getInstancesSafe()));
+        pendingDeploy.getDeployProgress().get().withNewTargetInstances(Math.min(updatePendingDeployRequest.get().getTargetActiveInstances(), request.getInstancesSafe()));
       updatePendingDeploy(pendingDeploy, lbUpdate.or(pendingDeploy.getLastLoadBalancerUpdate()), DeployState.WAITING, Optional.of(newProgress));
       requestManager
         .addToPendingQueue(new SingularityPendingRequest(request.getId(), pendingDeploy.getDeployMarker().getDeployId(), System.currentTimeMillis(), pendingDeploy.getDeployMarker().getUser(),
@@ -639,8 +639,9 @@ public class SingularityDeployChecker {
     return deployProgress.isStepComplete() && deployProgress.getTargetActiveInstances() >= request.getInstancesSafe();
   }
 
-  private SingularityDeployResult markStepFinished(SingularityPendingDeploy pendingDeploy, Optional<SingularityDeploy> deploy, Collection<SingularityTaskId> otherActiveTasks,
-    SingularityRequest request, Optional<SingularityUpdatePendingDeployRequest> updatePendingDeployRequest) {
+  private SingularityDeployResult markStepFinished(SingularityPendingDeploy pendingDeploy, Optional<SingularityDeploy> deploy, Collection<SingularityTaskId> deployActiveTasks,
+                                                   Collection<SingularityTaskId> otherActiveTasks, SingularityRequest request,
+                                                   Optional<SingularityUpdatePendingDeployRequest> updatePendingDeployRequest) {
     SingularityDeployProgress deployProgress = pendingDeploy.getDeployProgress().get();
 
     if (updatePendingDeployRequest.isPresent() && getNewTargetInstances(deployProgress, request, updatePendingDeployRequest) != deployProgress.getTargetActiveInstances()) {
@@ -648,7 +649,7 @@ public class SingularityDeployChecker {
       return new SingularityDeployResult(DeployState.WAITING);
     }
 
-    SingularityDeployProgress newProgress = deployProgress.withCompletedStep();
+    SingularityDeployProgress newProgress = deployProgress.withCompletedStep().withNewActiveInstances(deployActiveTasks.size());
     DeployState deployState = isLastStepFinished(newProgress, request) ? DeployState.SUCCEEDED : DeployState.WAITING;
 
     String message = deployState == DeployState.SUCCEEDED ? "New deploy succeeded" : "New deploy is progressing, this task is being replaced";
