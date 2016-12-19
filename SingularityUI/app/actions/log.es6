@@ -312,7 +312,7 @@ export const switchViewMode = (newViewMode) => (dispatch, getState) => {
   const taskIds = _.flatten(_.pluck(taskGroups, 'taskIds'));
 
   dispatch({viewMode: newViewMode, type: 'LOG_SWITCH_VIEW_MODE'});
-  return dispatch(initialize(activeRequest.requestId, path, search, taskIds, newViewMode);
+  return dispatch(initialize(activeRequest.requestId, path, search, taskIds, newViewMode));
 };
 
 export const setCurrentSearch = (newSearch) =>  // TODO: can we do something less heavyweight?
