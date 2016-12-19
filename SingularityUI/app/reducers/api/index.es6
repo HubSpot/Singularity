@@ -1,3 +1,4 @@
+import _ from 'underscore';
 import { combineReducers } from 'redux';
 import buildApiActionReducer from './base';
 import buildKeyedApiActionReducer from './keyed';
@@ -115,7 +116,7 @@ const deploys = buildApiActionReducer(FetchPendingDeploys, []);
 const deploysForRequest = buildKeyedApiActionReducer(FetchDeploysForRequest, []);
 const saveDeploy = buildApiActionReducer(SaveDeploy);
 const activeTasksForDeploy = buildApiActionReducer(FetchActiveTasksForDeploy);
-const activeTasksForRequest = buildKeyedApiActionReducer(FetchActiveTasksForRequest, []);
+const activeTasksForRequest = buildKeyedApiActionReducer(FetchActiveTasksForRequest, [], (tasks) => _.sortBy(tasks, (task) => task.taskId.instanceNo));
 const scheduledTasksForRequest = buildKeyedApiActionReducer(FetchScheduledTasksForRequest, []);
 const taskHistoryForDeploy = buildApiActionReducer(FetchTaskHistoryForDeploy, []);
 const taskHistoryForRequest = buildKeyedApiActionReducer(FetchTaskHistoryForRequest, []);
