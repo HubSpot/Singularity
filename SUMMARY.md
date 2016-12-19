@@ -40,6 +40,8 @@
     * [/api/webhooks](Docs/reference/apidocs/api-webhooks.md)
     * [/api/racks](Docs/reference/apidocs/api-racks.md)
     * [/api/requests](Docs/reference/apidocs/api-requests.md)
+    * [/api/groups](Docs/reference/apidocs/api-groups.md)
     * [/api/deploys](Docs/reference/apidocs/api-deploys.md)
     * [/api/disasters](Docs/reference/apidocs/api-disasters.md)
+    * [/api/priority](Docs/reference/apidocs/api-priority.md)
     * [Models](Docs/reference/apidocs/models.md)

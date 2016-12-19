@@ -117,17 +117,26 @@ public class SingularityConfiguration extends Configuration {
 
   private boolean enableCorsFilter = false;
 
-  private long healthcheckIntervalSeconds = 5;
+  private int healthcheckIntervalSeconds = 5;
 
   private int healthcheckStartThreads = 3;
 
-  private long healthcheckTimeoutSeconds = 5;
+  private int healthcheckTimeoutSeconds = 5;
+
+  private Optional<Integer> startupDelaySeconds = Optional.absent();
+
+  private int startupTimeoutSeconds = 45;
+
+  private int startupIntervalSeconds = 2;
 
   @NotNull
   private Optional<Integer> healthcheckMaxRetries = Optional.absent();
 
   @NotNull
-  private Optional<Long> healthcheckMaxTotalTimeoutSeconds = Optional.absent();
+  private Optional<Integer> healthcheckMaxTotalTimeoutSeconds = Optional.absent();
+
+  @NotNull
+  private List<Integer> healthcheckFailureStatusCodes = Collections.emptyList();
 
   private String hostname;
 
@@ -475,7 +484,7 @@ public class SingularityConfiguration extends Configuration {
     return deployIdLength;
   }
 
-  public long getHealthcheckIntervalSeconds() {
+  public int getHealthcheckIntervalSeconds() {
     return healthcheckIntervalSeconds;
   }
 
@@ -483,7 +492,7 @@ public class SingularityConfiguration extends Configuration {
     return healthcheckStartThreads;
   }
 
-  public long getHealthcheckTimeoutSeconds() {
+  public int getHealthcheckTimeoutSeconds() {
     return healthcheckTimeoutSeconds;
   }
 
@@ -491,7 +500,7 @@ public class SingularityConfiguration extends Configuration {
     return healthcheckMaxRetries;
   }
 
-  public Optional<Long> getHealthcheckMaxTotalTimeoutSeconds() {
+  public Optional<Integer> getHealthcheckMaxTotalTimeoutSeconds() {
     return healthcheckMaxTotalTimeoutSeconds;
   }
 
@@ -823,7 +832,7 @@ public class SingularityConfiguration extends Configuration {
     this.enableCorsFilter = enableCorsFilter;
   }
 
-  public void setHealthcheckIntervalSeconds(long healthcheckIntervalSeconds) {
+  public void setHealthcheckIntervalSeconds(int healthcheckIntervalSeconds) {
     this.healthcheckIntervalSeconds = healthcheckIntervalSeconds;
   }
 
@@ -831,7 +840,7 @@ public class SingularityConfiguration extends Configuration {
     this.healthcheckStartThreads = healthcheckStartThreads;
   }
 
-  public void setHealthcheckTimeoutSeconds(long healthcheckTimeoutSeconds) {
+  public void setHealthcheckTimeoutSeconds(int healthcheckTimeoutSeconds) {
     this.healthcheckTimeoutSeconds = healthcheckTimeoutSeconds;
   }
 
@@ -839,8 +848,16 @@ public class SingularityConfiguration extends Configuration {
     this.healthcheckMaxRetries = healthcheckMaxRetries;
   }
 
-  public void setHealthcheckMaxTotalTimeoutSeconds(Optional<Long> healthcheckMaxTotalTimeoutSeconds) {
+  public void setHealthcheckMaxTotalTimeoutSeconds(Optional<Integer> healthcheckMaxTotalTimeoutSeconds) {
     this.healthcheckMaxTotalTimeoutSeconds = healthcheckMaxTotalTimeoutSeconds;
+  }
+
+  public List<Integer> getHealthcheckFailureStatusCodes() {
+    return healthcheckFailureStatusCodes;
+  }
+
+  public void setHealthcheckFailureStatusCodes(List<Integer> healthcheckFailureStatusCodes) {
+    this.healthcheckFailureStatusCodes = healthcheckFailureStatusCodes;
   }
 
   public void setHostname(String hostname) {
@@ -975,6 +992,30 @@ public class SingularityConfiguration extends Configuration {
 
   public void setZooKeeperConfiguration(ZooKeeperConfiguration zooKeeperConfiguration) {
     this.zooKeeperConfiguration = zooKeeperConfiguration;
+  }
+
+  public Optional<Integer> getStartupDelaySeconds() {
+    return startupDelaySeconds;
+  }
+
+  public void setStartupDelaySeconds(Optional<Integer> startupDelaySeconds) {
+    this.startupDelaySeconds = startupDelaySeconds;
+  }
+
+  public int getStartupTimeoutSeconds() {
+    return startupTimeoutSeconds;
+  }
+
+  public void setStartupTimeoutSeconds(int startupTimeoutSeconds) {
+    this.startupTimeoutSeconds = startupTimeoutSeconds;
+  }
+
+  public int getStartupIntervalSeconds() {
+    return startupIntervalSeconds;
+  }
+
+  public void setStartupIntervalSeconds(int startupIntervalSeconds) {
+    this.startupIntervalSeconds = startupIntervalSeconds;
   }
 
   public long getReconcileSlavesEveryMinutes() {

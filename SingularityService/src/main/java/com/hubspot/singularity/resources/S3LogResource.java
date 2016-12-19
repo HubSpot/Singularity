@@ -45,6 +45,7 @@ import com.hubspot.mesos.JavaUtils;
 import com.hubspot.mesos.json.MesosFileChunkObject;
 import com.hubspot.singularity.SingularityAuthorizationScope;
 import com.hubspot.singularity.SingularityDeployHistory;
+import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityRequestHistory;
 import com.hubspot.singularity.SingularityRequestHistory.RequestHistoryType;
 import com.hubspot.singularity.SingularityRequestWithState;
@@ -292,6 +293,17 @@ public class S3LogResource extends AbstractHistoryResource {
     }
   }
 
+  private Optional<String> getRequestGroupForTask(final SingularityTaskId taskId) {
+    Optional<SingularityTaskHistory> maybeTaskHistory = getTaskHistory(taskId);
+    if (maybeTaskHistory.isPresent()) {
+      SingularityRequest request = maybeTaskHistory.get().getTask().getTaskRequest().getRequest();
+      authorizationHelper.checkForAuthorization(request, user, SingularityAuthorizationScope.READ);
+      return request.getGroup();
+    } else {
+      return getRequestGroup(taskId.getRequestId());
+    }
+  }
+
   private Optional<String> getRequestGroup(final String requestId) {
     final Optional<SingularityRequestWithState> maybeRequest = requestManager.getRequest(requestId);
     if (maybeRequest.isPresent()) {
@@ -343,7 +355,7 @@ public class S3LogResource extends AbstractHistoryResource {
     SingularityTaskId taskIdObject = getTaskIdObject(taskId);
 
     try {
-      return getS3Logs(configuration.get(), getRequestGroup(taskIdObject.getRequestId()), getS3PrefixesForTask(configuration.get(), taskIdObject, start, end));
+      return getS3Logs(configuration.get(), getRequestGroupForTask(taskIdObject), getS3PrefixesForTask(configuration.get(), taskIdObject, start, end));
     } catch (TimeoutException te) {
       throw timeout("Timed out waiting for response from S3 for %s", taskId);
     } catch (Throwable t) {
