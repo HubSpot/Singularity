@@ -1,6 +1,5 @@
 package com.hubspot.singularity.executor.models;
 
-import com.google.common.base.Objects;
 import com.google.common.base.Optional;
 
 /**
@@ -88,19 +87,19 @@ public class RunnerContext {
 
   @Override
   public String toString() {
-    return Objects.toStringHelper(this)
-      .add("cmd", cmd)
-      .add("taskAppDirectory", taskAppDirectory)
-      .add("logDir", logDir)
-      .add("user", user)
-      .add("logFile", logFile)
-      .add("logFilePath", logFilePath)
-      .add("taskId", taskId)
-      .add("maxTaskThreads", maxTaskThreads)
-      .add("shouldChangeUser", shouldChangeUser)
-      .add("maxOpenFiles", maxOpenFiles)
-      .add("switchUserCommand", switchUserCommand)
-      .add("useFileAttributes", useFileAttributes)
-      .toString();
+    return "RunnerContext{" +
+            "cmd='" + cmd + '\'' +
+            ", taskAppDirectory='" + taskAppDirectory + '\'' +
+            ", logDir='" + logDir + '\'' +
+            ", user='" + user + '\'' +
+            ", logFile='" + logFile + '\'' +
+            ", logFilePath='" + logFilePath + '\'' +
+            ", taskId='" + taskId + '\'' +
+            ", maxTaskThreads=" + maxTaskThreads +
+            ", shouldChangeUser=" + shouldChangeUser +
+            ", maxOpenFiles=" + maxOpenFiles +
+            ", switchUserCommand='" + switchUserCommand + '\'' +
+            ", useFileAttributes=" + useFileAttributes +
+            '}';
   }
 }

@@ -14,7 +14,6 @@ import org.hibernate.validator.constraints.NotEmpty;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.Objects;
 import com.google.common.base.Optional;
 import com.hubspot.mesos.MesosUtils;
 import com.hubspot.singularity.executor.SingularityExecutorLogrotateFrequency;
@@ -702,62 +701,62 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
   @Override
   public String toString() {
     return "SingularityExecutorConfiguration{" +
-        "executorJavaLog='" + executorJavaLog + '\'' +
-        ", executorBashLog='" + executorBashLog + '\'' +
-        ", serviceLog='" + serviceLog + '\'' +
-        ", defaultRunAsUser='" + defaultRunAsUser + '\'' +
-        ", taskAppDirectory='" + taskAppDirectory + '\'' +
-        ", shutdownTimeoutWaitMillis=" + shutdownTimeoutWaitMillis +
-        ", idleExecutorShutdownWaitMillis=" + idleExecutorShutdownWaitMillis +
-        ", stopDriverAfterMillis=" + stopDriverAfterMillis +
-        ", globalTaskDefinitionDirectory='" + globalTaskDefinitionDirectory + '\'' +
-        ", globalTaskDefinitionSuffix='" + globalTaskDefinitionSuffix + '\'' +
-        ", hardKillAfterMillis=" + hardKillAfterMillis +
-        ", killThreads=" + killThreads +
-        ", threadCheckThreads=" + threadCheckThreads +
-        ", checkThreadsEveryMillis=" + checkThreadsEveryMillis +
-        ", maxTaskMessageLength=" + maxTaskMessageLength +
-        ", logrotateCommand='" + logrotateCommand + '\'' +
-        ", logrotateStateFile='" + logrotateStateFile + '\'' +
-        ", logrotateConfDirectory='" + logrotateConfDirectory + '\'' +
-        ", logrotateToDirectory='" + logrotateToDirectory + '\'' +
-        ", logrotateMaxageDays=" + logrotateMaxageDays +
-        ", logrotateCount=" + logrotateCount +
-        ", logrotateDateformat='" + logrotateDateformat + '\'' +
-        ", logrotateExtrasDateformat='" + logrotateExtrasDateformat + '\'' +
-        ", logrotateCompressionSettings=" + logrotateCompressionSettings +
-        ", logrotateAdditionalFiles=" + logrotateAdditionalFiles +
-        ", s3UploaderAdditionalFiles=" + s3UploaderAdditionalFiles +
-        ", tailLogLinesToSave=" + tailLogLinesToSave +
-        ", serviceFinishedTailLog='" + serviceFinishedTailLog + '\'' +
-        ", s3UploaderKeyPattern='" + s3UploaderKeyPattern + '\'' +
-        ", s3UploaderBucket='" + s3UploaderBucket + '\'' +
-        ", useLocalDownloadService=" + useLocalDownloadService +
-        ", localDownloadServiceTimeoutMillis=" + localDownloadServiceTimeoutMillis +
-        ", localDownloadServiceMaxConnections=" + localDownloadServiceMaxConnections +
-        ", maxTaskThreads=" + maxTaskThreads +
-        ", dockerPrefix='" + dockerPrefix + '\'' +
-        ", dockerStopTimeout=" + dockerStopTimeout +
-        ", cgroupsMesosCpuTasksFormat='" + cgroupsMesosCpuTasksFormat + '\'' +
-        ", procCgroupFormat='" + procCgroupFormat + '\'' +
-        ", switchUserCommandFormat='" + switchUserCommandFormat + '\'' +
-        ", artifactSignatureVerificationCommand=" + artifactSignatureVerificationCommand +
-        ", failTaskOnInvalidArtifactSignature=" + failTaskOnInvalidArtifactSignature +
-        ", signatureVerifyOut='" + signatureVerifyOut + '\'' +
-        ", shellCommands=" + shellCommands +
-        ", shellCommandOutFile='" + shellCommandOutFile + '\'' +
-        ", shellCommandPidPlaceholder='" + shellCommandPidPlaceholder + '\'' +
-        ", shellCommandUserPlaceholder='" + shellCommandUserPlaceholder + '\'' +
-        ", shellCommandPidFile='" + shellCommandPidFile + '\'' +
-        ", shellCommandPrefix=" + shellCommandPrefix +
-        ", dockerClientTimeLimitSeconds=" + dockerClientTimeLimitSeconds +
-        ", dockerClientConnectionPoolSize=" + dockerClientConnectionPoolSize +
-        ", maxDockerPullAttempts=" + maxDockerPullAttempts +
-        ", dockerAuthConfig=" + dockerAuthConfig +
-        ", threadCheckerType=" + threadCheckerType +
-        ", logrotateFrequency=" + logrotateFrequency +
-        ", cronDirectory='" + cronDirectory + '\'' +
-        ", useFileAttributes=" + useFileAttributes +
-        '}';
+            "executorJavaLog='" + executorJavaLog + '\'' +
+            ", executorBashLog='" + executorBashLog + '\'' +
+            ", serviceLog='" + serviceLog + '\'' +
+            ", defaultRunAsUser='" + defaultRunAsUser + '\'' +
+            ", taskAppDirectory='" + taskAppDirectory + '\'' +
+            ", shutdownTimeoutWaitMillis=" + shutdownTimeoutWaitMillis +
+            ", idleExecutorShutdownWaitMillis=" + idleExecutorShutdownWaitMillis +
+            ", stopDriverAfterMillis=" + stopDriverAfterMillis +
+            ", globalTaskDefinitionDirectory='" + globalTaskDefinitionDirectory + '\'' +
+            ", globalTaskDefinitionSuffix='" + globalTaskDefinitionSuffix + '\'' +
+            ", hardKillAfterMillis=" + hardKillAfterMillis +
+            ", killThreads=" + killThreads +
+            ", threadCheckThreads=" + threadCheckThreads +
+            ", checkThreadsEveryMillis=" + checkThreadsEveryMillis +
+            ", maxTaskMessageLength=" + maxTaskMessageLength +
+            ", logrotateCommand='" + logrotateCommand + '\'' +
+            ", logrotateStateFile='" + logrotateStateFile + '\'' +
+            ", logrotateConfDirectory='" + logrotateConfDirectory + '\'' +
+            ", logrotateToDirectory='" + logrotateToDirectory + '\'' +
+            ", logrotateMaxageDays=" + logrotateMaxageDays +
+            ", logrotateCount=" + logrotateCount +
+            ", logrotateDateformat='" + logrotateDateformat + '\'' +
+            ", logrotateExtrasDateformat='" + logrotateExtrasDateformat + '\'' +
+            ", logrotateCompressionSettings=" + logrotateCompressionSettings +
+            ", logrotateAdditionalFiles=" + logrotateAdditionalFiles +
+            ", s3UploaderAdditionalFiles=" + s3UploaderAdditionalFiles +
+            ", tailLogLinesToSave=" + tailLogLinesToSave +
+            ", serviceFinishedTailLog='" + serviceFinishedTailLog + '\'' +
+            ", s3UploaderKeyPattern='" + s3UploaderKeyPattern + '\'' +
+            ", s3UploaderBucket='" + s3UploaderBucket + '\'' +
+            ", useLocalDownloadService=" + useLocalDownloadService +
+            ", localDownloadServiceTimeoutMillis=" + localDownloadServiceTimeoutMillis +
+            ", localDownloadServiceMaxConnections=" + localDownloadServiceMaxConnections +
+            ", maxTaskThreads=" + maxTaskThreads +
+            ", dockerPrefix='" + dockerPrefix + '\'' +
+            ", dockerStopTimeout=" + dockerStopTimeout +
+            ", cgroupsMesosCpuTasksFormat='" + cgroupsMesosCpuTasksFormat + '\'' +
+            ", procCgroupFormat='" + procCgroupFormat + '\'' +
+            ", switchUserCommandFormat='" + switchUserCommandFormat + '\'' +
+            ", artifactSignatureVerificationCommand=" + artifactSignatureVerificationCommand +
+            ", failTaskOnInvalidArtifactSignature=" + failTaskOnInvalidArtifactSignature +
+            ", signatureVerifyOut='" + signatureVerifyOut + '\'' +
+            ", shellCommands=" + shellCommands +
+            ", shellCommandOutFile='" + shellCommandOutFile + '\'' +
+            ", shellCommandPidPlaceholder='" + shellCommandPidPlaceholder + '\'' +
+            ", shellCommandUserPlaceholder='" + shellCommandUserPlaceholder + '\'' +
+            ", shellCommandPidFile='" + shellCommandPidFile + '\'' +
+            ", shellCommandPrefix=" + shellCommandPrefix +
+            ", dockerClientTimeLimitSeconds=" + dockerClientTimeLimitSeconds +
+            ", dockerClientConnectionPoolSize=" + dockerClientConnectionPoolSize +
+            ", maxDockerPullAttempts=" + maxDockerPullAttempts +
+            ", dockerAuthConfig=" + dockerAuthConfig +
+            ", threadCheckerType=" + threadCheckerType +
+            ", logrotateFrequency=" + logrotateFrequency +
+            ", cronDirectory='" + cronDirectory + '\'' +
+            ", useFileAttributes=" + useFileAttributes +
+            '}';
   }
 }
