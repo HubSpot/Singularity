@@ -3,8 +3,10 @@ package com.hubspot.singularity.mesos;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.ListIterator;
+import java.util.Map;
 import java.util.Set;
 
 import javax.inject.Singleton;
@@ -149,7 +151,7 @@ public class SingularityMesosScheduler implements Scheduler {
       numDueTasks = taskRequests.size();
 
       final List<SingularityOfferHolder> offerHolders = Lists.newArrayListWithCapacity(offers.size());
-
+      final Map<String, Map<String, Integer>> tasksPerOfferPerRequest = new HashMap<>();
       for (Protos.Offer offer : offers) {
         offerHolders.add(new SingularityOfferHolder(offer, numDueTasks));
       }
@@ -166,7 +168,7 @@ public class SingularityMesosScheduler implements Scheduler {
             continue;
           }
 
-          Optional<SingularityTask> accepted = match(taskRequests, stateCache, offerHolder);
+          Optional<SingularityTask> accepted = match(taskRequests, stateCache, offerHolder, tasksPerOfferPerRequest);
           if (accepted.isPresent()) {
             offerHolder.addMatchedTask(accepted.get());
             addedTaskInLastLoop = true;
@@ -226,9 +228,14 @@ public class SingularityMesosScheduler implements Scheduler {
     return overdueMillis * Math.pow(requestPriority, configuration.getSchedulerPriorityWeightFactor());
   }
 
-  private Optional<SingularityTask> match(Collection<SingularityTaskRequest> taskRequests, SingularitySchedulerStateCache stateCache, SingularityOfferHolder offerHolder) {
-
+  private Optional<SingularityTask> match(Collection<SingularityTaskRequest> taskRequests, SingularitySchedulerStateCache stateCache, SingularityOfferHolder offerHolder, Map<String, Map<String, Integer>> tasksPerOfferPerRequest) {
+    String offerId = offerHolder.getOffer().getId().getValue();
     for (SingularityTaskRequest taskRequest : taskRequests) {
+      if (tooManyTasksPerOfferForRequest(tasksPerOfferPerRequest, offerId, taskRequest)) {
+        LOG.debug("Skipping task request for request id {}, too many tasks already scheduled using offer {}", taskRequest.getRequest().getId(), offerId);
+        continue;
+      }
+
       final Resources taskResources = taskRequest.getPendingTask().getResources().or(taskRequest.getDeploy().getResources()).or(defaultResources);
 
       // only factor in executor resources if we're running a custom executor
@@ -259,6 +266,7 @@ public class SingularityMesosScheduler implements Scheduler {
         taskManager.createTaskAndDeletePendingTask(zkTask);
 
         stateCache.getActiveTaskIds().add(task.getTaskId());
+        addRequestToMapByOfferId(tasksPerOfferPerRequest, offerId, taskRequest.getRequest().getId());
         stateCache.getScheduledTasks().remove(taskRequest.getPendingTask());
 
         return Optional.of(task);
@@ -269,6 +277,33 @@ public class SingularityMesosScheduler implements Scheduler {
     }
 
     return Optional.absent();
+  }
+
+  private void addRequestToMapByOfferId(Map<String, Map<String, Integer>> tasksPerOfferPerRequest, String offerId, String requestId) {
+    if (tasksPerOfferPerRequest.containsKey(offerId)) {
+      if (tasksPerOfferPerRequest.get(offerId).containsKey(requestId)) {
+        int count = tasksPerOfferPerRequest.get(offerId).get(requestId);
+        tasksPerOfferPerRequest.get(offerId).put(requestId, count + 1);
+      } else {
+        tasksPerOfferPerRequest.get(offerId).put(requestId, 0);
+      }
+    } else {
+      tasksPerOfferPerRequest.put(offerId, new HashMap<String, Integer>());
+      tasksPerOfferPerRequest.get(offerId).put(requestId, 1);
+    }
+  }
+
+  private boolean tooManyTasksPerOfferForRequest(Map<String, Map<String, Integer>> tasksPerOfferPerRequest, String offerId, SingularityTaskRequest taskRequest) {
+    if (!taskRequest.getRequest().getMaxTasksPerOffer().isPresent()) {
+      return false;
+    }
+    if (!tasksPerOfferPerRequest.containsKey(offerId)) {
+      return false;
+    }
+    if (!tasksPerOfferPerRequest.get(offerId).containsKey(taskRequest.getRequest().getId())) {
+      return false;
+    }
+    return tasksPerOfferPerRequest.get(offerId).get(taskRequest.getRequest().getId()) > taskRequest.getRequest().getMaxTasksPerOffer().get();
   }
 
   @Override
