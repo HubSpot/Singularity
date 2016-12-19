@@ -54,13 +54,10 @@ class LogLine extends React.Component {
       highlightLine: this.props.isHighlighted
     });
 
-    const linkStyle = this.props.compressedLog
-      ? 'view'
-      : 'tail';
     return (
       <div className={divClass} style={{ backgroundColor: this.props.color }}>
         <a
-          href={`${ config.appRoot }/task/${ this.props.taskId }/${ linkStyle }/${ this.props.path }#${ this.props.offset }`}
+          href={`${ config.appRoot }/task/${ this.props.taskId }/tail/${ this.props.path }#${ this.props.offset }`}
           className="offset-link"
           onClick={() => this.props.clickPermalink(this.props.offset)}
         >
@@ -78,7 +75,6 @@ class LogLine extends React.Component {
 
 LogLine.propTypes = {
   offset: React.PropTypes.number.isRequired,
-  compressedLog: React.PropTypes.bool,
   isHighlighted: React.PropTypes.bool.isRequired,
   content: React.PropTypes.string.isRequired,
   taskId: React.PropTypes.string.isRequired,
