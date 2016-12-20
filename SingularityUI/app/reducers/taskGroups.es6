@@ -152,7 +152,7 @@ const ACTIONS = {
   },
 
   // We've received logging data for a task
-  LOG_TASK_DATA(state, {taskGroupId, taskId, offset, nextOffset, maxLines, data, append, logType}) {
+  LOG_TASK_DATA(state, {taskGroupId, taskId, offset, nextOffset, maxLines, data, append}) {
     let taskGroup = state[taskGroupId];
 
     // bail early if no data
