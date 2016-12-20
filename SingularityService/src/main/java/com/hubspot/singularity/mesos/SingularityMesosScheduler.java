@@ -294,16 +294,18 @@ public class SingularityMesosScheduler implements Scheduler {
   }
 
   private boolean tooManyTasksPerOfferForRequest(Map<String, Map<String, Integer>> tasksPerOfferPerRequest, String offerId, SingularityTaskRequest taskRequest) {
-    if (!taskRequest.getRequest().getMaxTasksPerOffer().isPresent()) {
-      return false;
-    }
     if (!tasksPerOfferPerRequest.containsKey(offerId)) {
       return false;
     }
     if (!tasksPerOfferPerRequest.get(offerId).containsKey(taskRequest.getRequest().getId())) {
       return false;
     }
-    return tasksPerOfferPerRequest.get(offerId).get(taskRequest.getRequest().getId()) > taskRequest.getRequest().getMaxTasksPerOffer().get();
+
+    int maxPerOfferPerRequest = taskRequest.getRequest().getMaxTasksPerOffer().or(configuration.getMaxTasksPerOfferPerRequest());
+    if (!(maxPerOfferPerRequest > 0)) {
+      return false;
+    }
+    return tasksPerOfferPerRequest.get(offerId).get(taskRequest.getRequest().getId()) > maxPerOfferPerRequest;
   }
 
   @Override
