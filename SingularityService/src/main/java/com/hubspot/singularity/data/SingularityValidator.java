@@ -226,6 +226,10 @@ public class SingularityValidator {
       checkBadRequest(!request.getInstances().isPresent(), "one-off requests can not define a # of instances");
     }
 
+    if (request.getMaxTasksPerOffer().isPresent()) {
+      checkBadRequest(request.getMaxTasksPerOffer().get() > 0, "maxTasksPerOffer must be positive");
+    }
+
     return request.toBuilder().setQuartzSchedule(Optional.fromNullable(quartzSchedule)).build();
   }
 
