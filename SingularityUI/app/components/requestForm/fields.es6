@@ -84,6 +84,7 @@ export const FIELDS_BY_REQUEST_TYPE = {
     RACK_SENSITIVE_FIELD,
     HIDE_EVEN_NUMBERS_ACROSS_RACKS_HINT_FIELD,
     {id: 'loadBalanced', type: 'bool'},
+    {id: 'allowBounceToSameHost', type: 'bool'},
     RACK_AFFINITY_FIELD,
     BOUNCE_AFTER_SCALE_FIELD
   ],
@@ -92,6 +93,7 @@ export const FIELDS_BY_REQUEST_TYPE = {
     RACK_SENSITIVE_FIELD,
     HIDE_EVEN_NUMBERS_ACROSS_RACKS_HINT_FIELD,
     {id: 'waitAtLeastMillisAfterTaskFinishesForReschedule', type: 'number'},
+    {id: 'allowBounceToSameHost', type: 'bool'},
     RACK_AFFINITY_FIELD,
     BOUNCE_AFTER_SCALE_FIELD
   ],
