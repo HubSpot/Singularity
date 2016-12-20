@@ -3,7 +3,6 @@ package com.hubspot.singularity.resources;
 import static com.hubspot.singularity.WebExceptions.checkNotFound;
 import static com.hubspot.singularity.WebExceptions.timeout;
 
-import java.net.URL;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -42,7 +41,6 @@ import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Inject;
 import com.hubspot.mesos.JavaUtils;
-import com.hubspot.mesos.json.MesosFileChunkObject;
 import com.hubspot.singularity.SingularityAuthorizationScope;
 import com.hubspot.singularity.SingularityDeployHistory;
 import com.hubspot.singularity.SingularityRequest;
@@ -65,7 +63,6 @@ import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.data.history.HistoryManager;
 import com.hubspot.singularity.data.history.RequestHistoryHelper;
-import com.hubspot.singularity.helpers.BlockCompressedFileHelper;
 import com.wordnik.swagger.annotations.Api;
 import com.wordnik.swagger.annotations.ApiOperation;
 import com.wordnik.swagger.annotations.ApiParam;
@@ -374,38 +371,6 @@ public class S3LogResource extends AbstractHistoryResource {
 
     try {
       return getS3Logs(configuration.get(), getRequestGroup(requestId), getS3PrefixesForRequest(configuration.get(), requestId, start, end));
-    } catch (TimeoutException te) {
-      throw timeout("Timed out waiting for response from S3 for %s", requestId);
-    } catch (Throwable t) {
-      throw Throwables.propagate(t);
-    }
-  }
-
-  @GET
-  @Path("/request/{requestId}/read")
-  @ApiOperation("Retrieve the list of logs stored in S3 for a specific request.")
-  public MesosFileChunkObject readS3LogForRequest(
-    @ApiParam("The request ID to search for") @PathParam("requestId") String requestId,
-    @ApiParam("S3 Key for the log to read") @QueryParam("key") String key,
-    @ApiParam("Offset to read in the log file") @QueryParam("offset") Optional<Long> offset,
-    @ApiParam("Length in bytes to read") @QueryParam("length") Optional<Integer> length,
-    @ApiParam("Read backwards from offset") @QueryParam("reverse") Optional<Boolean> reverse) throws Exception {
-    checkS3();
-    checkForCompressedFile(key);
-
-    try {
-      SingularityS3Log s3Log = getS3Log(configuration.get(), requestId, key);
-
-      if (!offset.isPresent() && length.or(0) == 0) {
-        // Imitate the mesos slave api and return the file size when no length is requested
-        return new MesosFileChunkObject("", s3Log.getSize(), Optional.<Long>absent());
-      }
-
-      if (reverse.or(false)) {
-        return BlockCompressedFileHelper.readInReverseFromOffset(new URL(s3Log.getDownloadUrl()), offset, length.or(DEFAULT_READ_LENGTH));
-      } else {
-        return BlockCompressedFileHelper.getChunkAtOffset(new URL(s3Log.getDownloadUrl()), offset, length.or(DEFAULT_READ_LENGTH));
-      }
     } catch (TimeoutException te) {
       throw timeout("Timed out waiting for response from S3 for %s", requestId);
     } catch (Throwable t) {
