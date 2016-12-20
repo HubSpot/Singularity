@@ -170,6 +170,8 @@ public class SingularityConfiguration extends Configuration {
 
   private int maxTasksPerOffer = 0;
 
+  private int maxTasksPerOfferPerRequest = 0;
+
   private int maxRequestIdSize = 100;
 
   private int maxUserIdSize = 100;
@@ -577,6 +579,10 @@ public class SingularityConfiguration extends Configuration {
     return maxTasksPerOffer;
   }
 
+  public int getMaxTasksPerOfferPerRequest() {
+    return maxTasksPerOfferPerRequest;
+  }
+
   public MesosConfiguration getMesosConfiguration() {
     return mesosConfiguration;
   }
@@ -916,6 +922,10 @@ public class SingularityConfiguration extends Configuration {
 
   public void setMaxTasksPerOffer(int maxTasksPerOffer) {
     this.maxTasksPerOffer = maxTasksPerOffer;
+  }
+
+  public void setMaxTasksPerOfferPerRequest(int maxTasksPerOfferPerRequest) {
+    this.maxTasksPerOfferPerRequest = maxTasksPerOfferPerRequest;
   }
 
   public void setMesosConfiguration(MesosConfiguration mesosConfiguration) {
