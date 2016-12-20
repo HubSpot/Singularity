@@ -53,13 +53,6 @@ const taskSearch = (state = {}, action) => {
 
 const logRequestLength = (state = 30000) => state;
 
-const logType = (state = '', action) => {
-  if (action.type === 'LOG_INIT') {
-    return action.logType;
-  }
-  return state;
-};
-
 const maxLines = (state = 100000) => state;
 
 const showDebugInfo = (state = false, action) => {
@@ -88,7 +81,6 @@ export default combineReducers({
   viewMode,
   search,
   logRequestLength,
-  logType,
   maxLines,
   form: formReducer,
   tailer: tailerReducer,

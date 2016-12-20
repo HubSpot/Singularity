@@ -3,47 +3,34 @@ import Utils from 'utils';
 
 import { fetchTasksForRequest } from './activeTasks';
 
-let fetchData = function(taskId, path, logType, offset = undefined, length = 0, reverse = false) {
-  if (logType == 'COMPRESSED') {
-    let params = {
-      key: path,
-      length: length > 0 ? length : undefined,
-      offset: offset,
-      reverse: reverse
-    };
-    const splits = taskId.split('-');
-    const requestId = splits.slice(0, splits.length - 5).join('-');
-    return $.ajax(
-      {url: `${ config.apiRoot }/logs/request/${ requestId }/read?${$.param(params)}`});
-  } else {
-    length = Math.max(length, 0); // API breaks if you request a negative length
-    return $.ajax(
-      {url: `${ config.apiRoot }/sandbox/${ taskId }/read?${$.param({path, length, offset})}`});
-  }
+let fetchData = function(taskId, path, offset = undefined, length = 0) {
+  length = Math.max(length, 0); // API breaks if you request a negative length
+  return $.ajax(
+    {url: `${ config.apiRoot }/sandbox/${ taskId }/read?${$.param({path, length, offset})}`});
 };
 
 const fetchTaskHistory = (taskId) =>
   $.ajax({url: `${ config.apiRoot }/history/task/${ taskId }`});
 
-export const initializeUsingActiveTasks = (requestId, path, search, viewMode, logType) => (dispatch) => {
+export const initializeUsingActiveTasks = (requestId, path, search, viewMode) => (dispatch) => {
   return fetchTasksForRequest(requestId).then((tasks) => {
     const taskIds = _.sortBy(_.pluck(tasks, 'taskId'), taskId => taskId.instanceNo).map(taskId => taskId.id);
-    return dispatch(initialize(requestId, path, search, taskIds, viewMode, logType));
+    return dispatch(initialize(requestId, path, search, taskIds, viewMode));
   });
 };
 
-export const initialize = (requestId, path, search, taskIds, viewMode, logType) => (dispatch, getState) => {
+export const initialize = (requestId, path, search, taskIds, viewMode) => (dispatch, getState) => {
   const taskIdGroups = viewMode === 'unified'
     ? [taskIds]
     : taskIds.map(taskId => [taskId]);
 
-  dispatch(init(requestId, taskIdGroups, path, search, viewMode, logType));
+  dispatch(init(requestId, taskIdGroups, path, search, viewMode));
 
   return Promise.all(taskIdGroups.map(function(taskIds, taskGroupId) {
     let taskInitPromises = taskIds.map(function(taskId) {
       let taskInitDeferred = Q.defer();
       let resolvedPath = path.replace('$TASK_ID', taskId);
-      fetchData(taskId, resolvedPath, logType).done(function({offset}) {
+      fetchData(taskId, resolvedPath).done(function({offset}) {
         dispatch(initTask(taskId, offset, resolvedPath, true, false));
         return taskInitDeferred.resolve();
       })
@@ -51,8 +38,6 @@ export const initialize = (requestId, path, search, taskIds, viewMode, logType) 
         if (status === 404) {
           dispatch(taskFileDoesNotExist(taskGroupId, taskId));
           return taskInitDeferred.resolve();
-        } else if (status === 400 && logType == 'COMPRESSED') {
-          dispatch(taskFileInvalidCompression(taskGroupId, taskId));
         } else {
           return taskInitDeferred.reject();
         }
@@ -68,24 +53,22 @@ export const initialize = (requestId, path, search, taskIds, viewMode, logType) 
   }));
 };
 
-export const init = (requestId, taskIdGroups, path, search, viewMode, logType) =>
+export const init = (requestId, taskIdGroups, path, search, viewMode) =>
   ({
     requestId,
     taskIdGroups,
     path,
     search,
     viewMode,
-    logType,
     type: 'LOG_INIT'
   });
 
-export const initTask = (taskId, offset, path, exists, invalidCompression) =>
+export const initTask = (taskId, offset, path, exists) =>
   ({
     taskId,
     offset,
     path,
     exists,
-    invalidCompression,
     type: 'LOG_TASK_INIT'
   });
 
@@ -102,14 +85,6 @@ export const addTaskGroup = (taskIds, search) =>
     search,
     type: 'LOG_ADD_TASK_GROUP'
   });
-
-export const taskFileInvalidCompression = (taskGroupId, taskId) =>
-  ({
-    taskId,
-    taskGroupId,
-    type: 'LOG_TASK_FILE_INVALID_COMPRESSION'
-  })
-;
 
 export const finishedLogExists = (taskId) =>
   ({
@@ -134,10 +109,10 @@ export const taskHistory = (taskGroupId, taskId, theTaskHistory) =>
 export const getTasks = (taskGroup, tasks) => taskGroup.taskIds.map(taskId => tasks[taskId]);
 
 export const doesFinishedLogExist = (taskIds) =>
-  (dispatch, getState) => {
+  (dispatch) => {
     taskIds.map((taskId) => {
       const actualPath = config.finishedTaskLogPath.replace('$TASK_ID', taskId);
-      return fetchData(taskId, actualPath, getState().logType)
+      return fetchData(taskId, actualPath)
       .done(() => dispatch(finishedLogExists(taskId)));
     });
   };
@@ -159,7 +134,7 @@ export const updateFilesizes = () => (dispatch, getState) => {
   };
 
 
-export const taskData = (taskGroupId, taskId, data, offset, nextOffset, append, maxLines, logType) =>
+export const taskData = (taskGroupId, taskId, data, offset, nextOffset, append, maxLines) =>
   ({
     taskGroupId,
     taskId,
@@ -168,7 +143,6 @@ export const taskData = (taskGroupId, taskId, data, offset, nextOffset, append, 
     nextOffset,
     append,
     maxLines,
-    logType,
     type: 'LOG_TASK_DATA'
   });
 
@@ -183,7 +157,7 @@ export const emptyFile = (taskGroupId, taskId) =>
 export const taskGroupFetchNext = taskGroupId =>
   (dispatch, getState) => {
     const state = getState();
-    const {taskGroups, logRequestLength, maxLines, logType} = state;
+    const {taskGroups, logRequestLength, maxLines} = state;
 
     const taskGroup = taskGroups[taskGroupId];
     const tasks = getTasks(taskGroup, state.tasks);
@@ -196,11 +170,11 @@ export const taskGroupFetchNext = taskGroupId =>
     dispatch({taskGroupId, type: 'LOG_REQUEST_START'});
     const promises = tasks.map(({taskId, exists, maxOffset, path, initialDataLoaded}) => {
       if (initialDataLoaded && exists !== false) {
-        const xhr = fetchData(taskId, path, logType, maxOffset, logRequestLength);
+        const xhr = fetchData(taskId, path, maxOffset, logRequestLength);
         const promise = xhr.done(({data, offset, nextOffset}) => {
           if (data.length > 0) {
             nextOffset = _.isUndefined(nextOffset) ? offset + data.length : nextOffset;
-            return dispatch(taskData(taskGroupId, taskId, data, offset, nextOffset, true, maxLines, logType));
+            return dispatch(taskData(taskGroupId, taskId, data, offset, nextOffset, true, maxLines));
           } else if (offset == 0) {
             return dispatch(emptyFile(taskGroupId, taskId));
           }
@@ -215,15 +189,12 @@ export const taskGroupFetchNext = taskGroupId =>
       if (error.status === 404) {
         dispatch(taskFileDoesNotExist(taskGroupId, error.taskId));
       }
-      if (error.status === 400 && logType == 'COMPRESSED') {
-        dispatch(taskFileInvalidCompression(taskGroupId, error.taskId))
-      }
     });
   };
 
 export const taskGroupFetchPrevious = (taskGroupId) => (dispatch, getState) => {
   const state = getState();
-  const {taskGroups, logRequestLength, maxLines, logType} = state;
+  const {taskGroups, logRequestLength, maxLines} = state;
 
   const taskGroup = taskGroups[taskGroupId];
   let tasks = getTasks(taskGroup, state.tasks);
@@ -242,16 +213,12 @@ export const taskGroupFetchPrevious = (taskGroupId) => (dispatch, getState) => {
   tasks = _.without(tasks, undefined);
   let promises = tasks.map(function({taskId, exists, minOffset, path, initialDataLoaded}) {
     if (minOffset > 0 && initialDataLoaded && exists !== false) {
-      const requestedOffset = logType == 'COMPRESSED' ? minOffset : Math.max(minOffset - logRequestLength, 0);
-      const xhr = fetchData(taskId, path, logType, requestedOffset, Math.min(logRequestLength, minOffset), true);
+      const requestedOffset = Math.max(minOffset - logRequestLength, 0);
+      const xhr = fetchData(taskId, path, requestedOffset, Math.min(logRequestLength, minOffset));
       return xhr.done(({data, offset, nextOffset}) => {
         if (data.length > 0) {
-          if (logType === 'COMPRESSED') {
-             return dispatch(taskData(taskGroupId, taskId, data, nextOffset, offset, false, maxLines, logType));
-          } else {
-            nextOffset = offset + data.length;
-            return dispatch(taskData(taskGroupId, taskId, data, offset, nextOffset, false, maxLines, logType));
-          }
+          nextOffset = offset + data.length;
+          return dispatch(taskData(taskGroupId, taskId, data, offset, nextOffset, false, maxLines));
         }
         return Promise.resolve();
       });
@@ -336,7 +303,7 @@ export const selectLogColor = color =>
   });
 
 export const switchViewMode = (newViewMode) => (dispatch, getState) => {
-  const { taskGroups, path, activeRequest, search, viewMode, logType } = getState();
+  const { taskGroups, path, activeRequest, search, viewMode } = getState();
 
   if (Utils.isIn(newViewMode, ['custom', viewMode])) {
     return null;
@@ -345,21 +312,21 @@ export const switchViewMode = (newViewMode) => (dispatch, getState) => {
   const taskIds = _.flatten(_.pluck(taskGroups, 'taskIds'));
 
   dispatch({viewMode: newViewMode, type: 'LOG_SWITCH_VIEW_MODE'});
-  return dispatch(initialize(activeRequest.requestId, path, search, taskIds, newViewMode, logType));
+  return dispatch(initialize(activeRequest.requestId, path, search, taskIds, newViewMode));
 };
 
 export const setCurrentSearch = (newSearch) =>  // TODO: can we do something less heavyweight?
   (dispatch, getState) => {
-    const {activeRequest, path, taskGroups, currentSearch, viewMode, logType} = getState();
+    const {activeRequest, path, taskGroups, currentSearch, viewMode} = getState();
     if (newSearch !== currentSearch) {
-      return dispatch(initialize(activeRequest.requestId, path, newSearch, _.flatten(_.pluck(taskGroups, 'taskIds')), viewMode, logType));
+      return dispatch(initialize(activeRequest.requestId, path, newSearch, _.flatten(_.pluck(taskGroups, 'taskIds')), viewMode));
     }
     return null;
   };
 
 export const toggleTaskLog = taskId =>
   (dispatch, getState) => {
-    const {search, path, tasks, viewMode, logType} = getState();
+    const {search, path, tasks, viewMode} = getState();
     if (taskId in tasks) {
       // only remove task if it's not the last one
       if (Object.keys(tasks).length > 1) {
@@ -372,7 +339,7 @@ export const toggleTaskLog = taskId =>
     }
 
     const resolvedPath = path.replace('$TASK_ID', taskId);
-    return fetchData(taskId, resolvedPath, logType).done(function({offset}) {
+    return fetchData(taskId, resolvedPath).done(function({offset}) {
       dispatch(initTask(taskId, offset, resolvedPath, true, false));
 
       return getState().taskGroups.map((taskGroup, taskGroupId) => {
