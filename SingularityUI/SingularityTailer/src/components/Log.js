@@ -22,6 +22,9 @@ class Log extends Component {
     this.loadLine = this.loadLine.bind(this);
     this.tailLog = this.tailLog.bind(this);
     this.pollScroll = this.pollScroll.bind(this);
+    this.handleTail = this.handleTail.bind(this);
+    this.getTailDelayMs = this.getTailDelayMs.bind(this);
+    this.scheduleNextHandleTail = this.scheduleNextHandleTail.bind(this);
 
     this.scrollTop = undefined;
     this.scrollHeight = undefined;
@@ -29,6 +32,8 @@ class Log extends Component {
 
     this.fakeLineCount = 0;
     this.scrollDelta = 0;
+
+    this.tailAttempt = 0;
 
     this.state = {
       tailing: false
@@ -80,12 +85,38 @@ class Log extends Component {
       }
     }
 
-    if (nextState.tailing && this.tailIntervalId == null) {
-      this.tailIntervalId = setInterval(() => {
-        this.loadLine(this.props.lines.size - 1, false);
-      }, nextProps.config.tailIntervalMs);
-    } else if (!nextState.tailing && this.tailIntervalId != null) {
-      clearInterval(this.tailIntervalId);
+    if (nextState.tailing && this.tailTimeoutId == null) {
+      this.handleTail()
+    } else if (!nextState.tailing && this.tailTimeoutId != null) {
+      clearTimeout(this.tailTimeoutId);
+      this.tailTimeoutId = null;
+    }
+  }
+
+  getTailDelayMs() {
+    return Math.min(this.props.maxTailDelayMs, Math.max(this.props.minTailDelayMs, this.props.calculateTailDelayMs(this.tailAttempt)));
+  }
+
+  scheduleNextHandleTail() {
+    if (this.state.tailing) {
+      this.tailTimeoutId = setTimeout(this.handleTail, this.getTailDelayMs());
+    }
+  }
+
+  handleTail() {
+    if (this.props.lines.size > 1) {
+      this.loadLine(this.props.lines.size - 1, false).then((data) => {
+        if (data && data.hasOwnProperty('chunk')) {
+          if (data.chunk.start === data.chunk.end) {
+            this.tailAttempt++;
+          } else {
+            this.tailAttempt = 0;
+          }
+        }
+        this.scheduleNextHandleTail();
+      });
+    } else {
+      this.scheduleNextHandleTail();
     }
   }
 
@@ -100,7 +131,7 @@ class Log extends Component {
 
   componentWillUnmount() {
     window.cancelAnimationFrame(this.rafRequestId);
-    clearInterval(this.tailIntervalId);
+    clearInterval(this.tailTimeoutId);
   }
 
   isLineLoaded(index) {
@@ -133,7 +164,7 @@ class Log extends Component {
       const scrollLoadThreshold = LOG_LINE_HEIGHT * SCROLL_LOAD_THRESHOLD;
       const nearTop = (scrollTop - this.fakeLineCount * LOG_LINE_HEIGHT) <= scrollLoadThreshold;
       const nearBottom = scrollTop >= (scrollHeight - clientHeight - scrollLoadThreshold);
-      const atBottom = scrollTop === (scrollHeight - clientHeight);
+      const atBottom = scrollTop >= (scrollHeight - clientHeight - 1);
 
       const { lines } = this.props;
       if (nearTop && nearBottom && lines.size === 1) {
@@ -221,6 +252,9 @@ Log.propTypes = {
   tailerId: PropTypes.string.isRequired,
   goToOffset: PropTypes.number,
   hrefFunc: PropTypes.func,
+  minTailDelayMs: PropTypes.number.isRequired,
+  maxTailDelayMs: PropTypes.number.isRequired,
+  calculateTailDelayMs: PropTypes.func.isRequired,
   // from connectToTailer HOC
   getTailerState: PropTypes.func.isRequired,
   // from tailer implementation
@@ -236,6 +270,12 @@ Log.propTypes = {
   requests: PropTypes.instanceOf(Immutable.Map),
   config: PropTypes.object.isRequired,
   lineLinkRenderer: PropTypes.func
+};
+
+Log.defaultProps = {
+  minTailDelayMs: 100,
+  maxTailDelayMs: 5000,
+  calculateTailDelayMs: (attempt) => 100 * attempt
 };
 
 const makeMapStateToProps = () => {
