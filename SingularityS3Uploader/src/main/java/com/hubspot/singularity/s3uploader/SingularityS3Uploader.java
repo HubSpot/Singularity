@@ -248,10 +248,12 @@ public class SingularityS3Uploader implements Closeable {
             Optional<Long> maybeStartTime = readFileAttributeAsLong(LOG_START_TIME_ATTR);
             if (maybeStartTime.isPresent()) {
               object.getMetadataMap().put(SingularityS3Log.LOG_START_S3_ATTR, maybeStartTime.get());
+              LOG.debug("Added extra metadata for object ({}:{})", SingularityS3Log.LOG_START_S3_ATTR, maybeStartTime.get());
             }
             Optional<Long> maybeEndTime = readFileAttributeAsLong(LOG_END_TIME_ATTR);
             if (maybeEndTime.isPresent()) {
               object.getMetadataMap().put(SingularityS3Log.LOG_END_S3_ATTR, maybeEndTime.get());
+              LOG.debug("Added extra metadata for object ({}:{})", SingularityS3Log.LOG_END_S3_ATTR, maybeEndTime.get());
             }
           } catch (Exception e) {
             LOG.error("Could not get extra file metadata for {}", file, e);
