@@ -10,7 +10,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.codahale.metrics.MetricRegistry;
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableMap;
@@ -37,7 +36,6 @@ import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.transcoders.Transcoder;
 import com.hubspot.singularity.event.SingularityEventListener;
 import com.hubspot.singularity.expiring.SingularityExpiringBounce;
-import com.hubspot.singularity.expiring.SingularityExpiringParent;
 import com.hubspot.singularity.expiring.SingularityExpiringPause;
 import com.hubspot.singularity.expiring.SingularityExpiringRequestActionParent;
 import com.hubspot.singularity.expiring.SingularityExpiringScale;
@@ -258,6 +256,14 @@ public class RequestManager extends CuratorAsyncManager {
     return save(request, RequestState.ACTIVE, historyType, timestamp, user, message);
   }
 
+  public SingularityCreateResult deleting(SingularityRequest request, RequestHistoryType historyType, long timestamp, Optional<String> user, Optional<String> message) {
+    return save(request, RequestState.DELETING, historyType, timestamp, user, message);
+  }
+
+  public SingularityCreateResult deleted(SingularityRequest request, RequestHistoryType historyType, long timestamp, Optional<String> user, Optional<String> message) {
+    return save(request, RequestState.DELETED, historyType, timestamp, user, message);
+  }
+
   public List<SingularityPendingRequest> getPendingRequests() {
     return getAsyncChildren(PENDING_PATH_ROOT, pendingRequestTranscoder);
   }
@@ -328,7 +334,9 @@ public class RequestManager extends CuratorAsyncManager {
 
     saveHistory(new SingularityRequestHistory(now, user, RequestHistoryType.DELETED, request, message));
 
+    // moves RequestState to DELETED
     SingularityDeleteResult deleteResult = delete(getRequestPath(request.getId()));
+    deleting(request, RequestHistoryType.DELETED, System.currentTimeMillis(), user, message);
 
     LOG.info("Request {} deleted ({}) by {} - {}", request.getId(), deleteResult, user, message);
 

@@ -37,6 +37,7 @@ import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityRequestCleanup;
 import com.hubspot.singularity.SingularityRequestDeployState;
 import com.hubspot.singularity.SingularityRequestHistory;
+import com.hubspot.singularity.SingularityRequestHistory.RequestHistoryType;
 import com.hubspot.singularity.SingularityRequestLbCleanup;
 import com.hubspot.singularity.SingularityRequestWithState;
 import com.hubspot.singularity.SingularityTask;
@@ -336,7 +337,7 @@ public class SingularityCleaner {
               continue;
             }
           } else {
-            if (pause(requestCleanup, matchingActiveTaskIds, killActiveTasks) == TaskCleanupType.PAUSING) {
+            if (pause(requestCleanup, matchingActiveTaskIds) == TaskCleanupType.PAUSING) {
               killActiveTasks = false;
             }
           }
@@ -350,11 +351,16 @@ public class SingularityCleaner {
               createLbCleanupRequest(requestId, matchingActiveTaskIds);
             }
           } else {
-            Optional<SingularityRequestHistory> maybeHistory = requestHistoryHelper.getLastHistory(requestId);
-            if (maybeHistory.isPresent() && maybeHistory.get().getRequest().isLoadBalanced() && configuration.isDeleteRemovedRequestsFromLoadBalancer()) {
-              createLbCleanupRequest(requestId, matchingActiveTaskIds);
+            if (matchingActiveTaskIds.iterator().hasNext()) {
+              delete(requestCleanup, matchingActiveTaskIds);
+            } else {
+              Optional<SingularityRequestHistory> maybeHistory = requestHistoryHelper.getLastHistory(requestId);
+              if (maybeHistory.isPresent() && maybeHistory.get().getRequest().isLoadBalanced() && configuration.isDeleteRemovedRequestsFromLoadBalancer()) {
+                createLbCleanupRequest(requestId, matchingActiveTaskIds);
+                requestManager.deleted(maybeHistory.get().getRequest(), RequestHistoryType.DELETED, System.currentTimeMillis(), Optional.<String>absent(), Optional.<String>absent());
+              }
+              cleanupDeployState(requestCleanup);
             }
-            cleanupDeployState(requestCleanup);
           }
           break;
         case BOUNCE:
@@ -432,7 +438,7 @@ public class SingularityCleaner {
     LOG.info("Added {} tasks for request {} to cleanup bounce queue in {}", matchingTaskIds.size(), requestCleanup.getRequestId(), JavaUtils.duration(start));
   }
 
-  private TaskCleanupType pause(SingularityRequestCleanup requestCleanup, Iterable<SingularityTaskId> activeTaskIds, boolean killActiveTasks) {
+  private TaskCleanupType pause(SingularityRequestCleanup requestCleanup, Iterable<SingularityTaskId> activeTaskIds) {
     final long start = System.currentTimeMillis();
     boolean killTasks = requestCleanup.getKillTasks().or(configuration.isDefaultValueForKillTasksOfPausedRequests());
     if (requestCleanup.getRunShellCommandBeforeKill().isPresent()) {
@@ -456,6 +462,24 @@ public class SingularityCleaner {
     }
 
     return cleanupType;
+  }
+
+  private void delete(SingularityRequestCleanup requestCleanup, Iterable<SingularityTaskId> activeTaskIds){
+    final long start = System.currentTimeMillis();
+
+    for (SingularityTaskId taskId : activeTaskIds) {
+      LOG.debug("Adding task {} to cleanup (delete)", taskId.getId());
+
+      Optional<SingularityTaskShellCommandRequestId> runBeforeKillId = Optional.absent();
+
+      if (requestCleanup.getRunShellCommandBeforeKill().isPresent()) {
+        SingularityTaskShellCommandRequest shellRequest = new SingularityTaskShellCommandRequest(taskId, requestCleanup.getUser(), System.currentTimeMillis(), requestCleanup.getRunShellCommandBeforeKill().get());
+        taskManager.saveTaskShellCommandRequestToQueue(shellRequest);
+        runBeforeKillId = Optional.of(shellRequest.getId());
+      }
+
+      taskManager.createTaskCleanup(new SingularityTaskCleanup(requestCleanup.getUser(), TaskCleanupType.USER_REQUESTED_DESTROY, start, taskId, requestCleanup.getMessage(), requestCleanup.getActionId(), runBeforeKillId));
+    }
   }
 
   private void cleanupDeployState(SingularityRequestCleanup requestCleanup) {
