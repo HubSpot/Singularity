@@ -3,7 +3,6 @@ package com.hubspot.singularity.resources;
 import static com.hubspot.singularity.WebExceptions.checkNotFound;
 import static com.hubspot.singularity.WebExceptions.timeout;
 
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
@@ -70,13 +69,9 @@ import com.wordnik.swagger.annotations.ApiParam;
 @Api(description="Manages Singularity task logs stored in S3.", value=S3LogResource.PATH)
 public class S3LogResource extends AbstractHistoryResource {
   public static final String PATH = SingularityService.API_BASE_PATH + "/logs";
-  private static final List<String> SUPPORTED_COMPRESSED_FILE_EXTENTIONS = Arrays.asList(".gz", ".bz2");
-
   private static final Logger LOG = LoggerFactory.getLogger(S3LogResource.class);
 
   private static final String FORCE_DOWNLOAD_S3_PARAMS = "response-content-disposition=attachment&response-content-encoding=identity";
-
-  private static final int DEFAULT_READ_LENGTH = 65000;
 
   private final Optional<S3Service> s3ServiceDefault;
   private final Map<String, S3Service> s3GroupOverride;

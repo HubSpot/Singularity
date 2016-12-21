@@ -295,6 +295,8 @@ public class SingularityS3Uploader implements Closeable {
           object.addMetadata("x-amz-storage-class", uploadMetadata.getS3StorageClass().get());
         }
 
+        LOG.debug("Uploading object with metadata {}", object.getMetadataMap());
+
         if (fileSizeBytes > configuration.getMaxSingleUploadSizeBytes()) {
           multipartUpload(object);
         } else {
