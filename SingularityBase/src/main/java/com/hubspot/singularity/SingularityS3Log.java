@@ -8,8 +8,8 @@ import com.wordnik.swagger.annotations.ApiModelProperty;
 
 @ApiModel( description = "Represents a task sandbox file that was uploaded to S3" )
 public class SingularityS3Log {
-  public static final String LOG_START_S3_ATTR = "logStartTime";
-  public static final String LOG_END_S3_ATTR = "logEndTime";
+  public static final String LOG_START_S3_ATTR = "starttime";
+  public static final String LOG_END_S3_ATTR = "endtime";
 
   private final String getUrl;
   private final String key;

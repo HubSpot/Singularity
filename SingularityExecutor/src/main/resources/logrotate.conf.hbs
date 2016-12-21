@@ -17,16 +17,17 @@ notifempty
   dateformat -{{{ rotateDateformat }}}{{#if logfileExtension}}.{{{ logfileExtension}}}{{/if}}
   olddir {{{ rotateDirectory }}}
 {{#if useFileAttributes}}
-  postrotate
+  lastaction
     NOW="$(($(date +%s%N)/1000000))"
     LOGSTART=`getfattr --only-values -n user.logstart {{{ logfile }}}`
-    if [ "$LOGSTART" != "" ]; then
-      for filename in "{{{ rotateDirectory }}}/{{{ logfileName }}}-$(date +{{{ rotateDateformat }}})"*
-      do
-        setfattr -n user.logend -v "$NOW" {{{ rotateDirectory }}}/$filename
-        setfattr -n user.logstart -v "$LOGSTART" {{{ rotateDirectory }}}/$filename
-      done
-    fi
+    timestring=`date +%Y-%m-%d-%s`
+    for filename in "{{{ taskDirectory }}}/{{{ rotateDirectory }}}/{{{ logfileName }}}-${timestring%??}"*
+    do
+      setfattr -n user.logend -v "$NOW" $filename
+      if [ "$LOGSTART" != "" ]; then
+        setfattr -n user.logstart -v "$LOGSTART" $filename
+      fi
+    done
     setfattr -n user.logstart -v "$NOW" {{{ logfile }}}
   endscript
 {{/if}}
@@ -38,18 +39,19 @@ notifempty
   dateformat -{{{ dateformat }}}{{#if extension}}.{{{ extension}}}{{/if}}
   missingok
 {{#if useFileAttributes}}
-  postrotate
+  lastaction
     NOW="$(($(date +%s%N)/1000000))"
     for oldfile in $@
     do
       LOGSTART=`getfattr --only-values -n user.logstart $oldfile`
-      if [ "$LOGSTART" != "" ]; then
-        for filename in "$oldfile-$(date +{{{ dateformat }}})"*
-        do
-          setfattr -n user.logend -v "$NOW" $filename
+      timestring=`date +%Y-%m-%d-%s`
+      for filename in "$oldfile-${timestring%??}"*
+      do
+        if [ "$LOGSTART" != "" ]; then
           setfattr -n user.logstart -v "$LOGSTART" $filename
-        done
-      fi
+        fi
+        setfattr -n user.logend -v "$NOW" $filename
+      done
       setfattr -n user.logstart -v "$NOW" $oldfile
     done
   endscript
