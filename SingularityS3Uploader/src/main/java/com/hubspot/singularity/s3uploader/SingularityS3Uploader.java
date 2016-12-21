@@ -55,8 +55,8 @@ import com.hubspot.singularity.s3uploader.config.SingularityS3UploaderConfigurat
 public class SingularityS3Uploader implements Closeable {
 
   private static final Logger LOG = LoggerFactory.getLogger(SingularityS3Uploader.class);
-  private static final String LOG_START_TIME_ATTR = "user.logstart";
-  private static final String LOG_END_TIME_ATTR = "user.logend";
+  private static final String LOG_START_TIME_ATTR = "logstart";
+  private static final String LOG_END_TIME_ATTR = "logend";
 
 
   private final S3UploadMetadata uploadMetadata;
@@ -248,13 +248,14 @@ public class SingularityS3Uploader implements Closeable {
         if (supportedViews.contains("user")) {
           try {
             UserDefinedFileAttributeView view = Files.getFileAttributeView(file, UserDefinedFileAttributeView.class);
-            LOG.debug("Found file attributes {} for file {}", view.list(), file);
-            Optional<Long> maybeStartTime = readFileAttributeAsLong(LOG_START_TIME_ATTR, view);
+            List<String> attributes = view.list();
+            LOG.debug("Found file attributes {} for file {}", attributes, file);
+            Optional<Long> maybeStartTime = readFileAttributeAsLong(LOG_START_TIME_ATTR, view, attributes);
             if (maybeStartTime.isPresent()) {
               object.getMetadataMap().put(SingularityS3Log.LOG_START_S3_ATTR, maybeStartTime.get());
               LOG.debug("Added extra metadata for object ({}:{})", SingularityS3Log.LOG_START_S3_ATTR, maybeStartTime.get());
             }
-            Optional<Long> maybeEndTime = readFileAttributeAsLong(LOG_END_TIME_ATTR, view);
+            Optional<Long> maybeEndTime = readFileAttributeAsLong(LOG_END_TIME_ATTR, view, attributes);
             if (maybeEndTime.isPresent()) {
               object.getMetadataMap().put(SingularityS3Log.LOG_END_S3_ATTR, maybeEndTime.get());
               LOG.debug("Added extra metadata for object ({}:{})", SingularityS3Log.LOG_END_S3_ATTR, maybeEndTime.get());
@@ -292,20 +293,24 @@ public class SingularityS3Uploader implements Closeable {
       return true;
     }
 
-    private Optional<Long> readFileAttributeAsLong(String attribute, UserDefinedFileAttributeView view) {
-      try {
-        LOG.trace("Attempting to read attribute {}, from file {}", attribute, file);
-        ByteBuffer buf = ByteBuffer.allocate(view.size(attribute));
-        view.read(attribute, buf);
-        buf.flip();
-        String value = Charset.defaultCharset().decode(buf).toString();
-        if (Strings.isNullOrEmpty(value)) {
-          LOG.debug("No attrbiute {} found for file {}", attribute, file);
+    private Optional<Long> readFileAttributeAsLong(String attribute, UserDefinedFileAttributeView view, List<String> knownAttributes) {
+      if (knownAttributes.contains(attribute)) {
+        try {
+          LOG.trace("Attempting to read attribute {}, from file {}", attribute, file);
+          ByteBuffer buf = ByteBuffer.allocate(view.size(attribute));
+          view.read(attribute, buf);
+          buf.flip();
+          String value = Charset.defaultCharset().decode(buf).toString();
+          if (Strings.isNullOrEmpty(value)) {
+            LOG.debug("No attrbiute {} found for file {}", attribute, file);
+            return Optional.absent();
+          }
+          return Optional.of(Long.parseLong(value));
+        } catch (Exception e) {
+          LOG.error("Error getting extra file metadata for {}", file, e);
           return Optional.absent();
         }
-        return Optional.of(Long.parseLong(value));
-      } catch (Exception e) {
-        LOG.error("Error getting extra file metadata for {}", file, e);
+      } else {
         return Optional.absent();
       }
     }
