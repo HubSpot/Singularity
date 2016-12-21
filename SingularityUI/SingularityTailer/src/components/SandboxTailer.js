@@ -53,6 +53,7 @@ class SandboxTailer extends Component {
   loadLine(index, loadUp, lines, chunks) {
     let byteRangeStart;
     let byteRangeEnd;
+    let resultPromise = Promise.resolve();
 
     if (index < lines.size) {
       const lineToLoad = lines.get(index);
@@ -70,7 +71,7 @@ class SandboxTailer extends Component {
         byteRangeEnd = byteRangeStart + SANDBOX_MAX_BYTES;
       }
 
-      this.fetchSafe(byteRangeStart, byteRangeEnd);
+      resultPromise = this.fetchSafe(byteRangeStart, byteRangeEnd);
 
       const MIN_LOADED_LINES_TO_TRIGGER_UNLOAD = 800;
       const MIN_LOADED_CHUNKS_TO_TRIGGER_UNLOAD = 5;
@@ -84,6 +85,8 @@ class SandboxTailer extends Component {
         }
       }
     }
+
+    return resultPromise;
   }
 
   loadLines(startIndex, stopIndex, lines) {
