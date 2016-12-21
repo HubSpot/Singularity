@@ -278,6 +278,8 @@ public class SingularityS3Uploader implements Closeable {
           }
         }
 
+        LOG.debug("Uploading object with metadata {}", object.getMetadataMap());
+
         if (fileSizeBytes > configuration.getMaxSingleUploadSizeBytes()) {
           multipartUpload(object);
         } else {
