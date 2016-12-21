@@ -243,7 +243,9 @@ public class SingularityS3Uploader implements Closeable {
         S3Object object = new S3Object(s3Bucket, file.toFile());
         object.setKey(key);
 
-        if (FileSystems.getDefault().supportedFileAttributeViews().contains("user")) {
+        Set<String> supportedViews = FileSystems.getDefault().supportedFileAttributeViews();
+        LOG.trace("Supported attribute views are {}", supportedViews);
+        if (supportedViews.contains("user")) {
           try {
             Optional<Long> maybeStartTime = readFileAttributeAsLong(LOG_START_TIME_ATTR);
             if (maybeStartTime.isPresent()) {
@@ -290,6 +292,7 @@ public class SingularityS3Uploader implements Closeable {
 
     private Optional<Long> readFileAttributeAsLong(String attribute) {
       try {
+        LOG.trace("Attempting to read attribute {}, from file {}", attribute, file);
         UserDefinedFileAttributeView view = Files.getFileAttributeView(file, UserDefinedFileAttributeView.class);
         ByteBuffer buf = ByteBuffer.allocate(view.size(attribute));
         view.read(attribute, buf);
