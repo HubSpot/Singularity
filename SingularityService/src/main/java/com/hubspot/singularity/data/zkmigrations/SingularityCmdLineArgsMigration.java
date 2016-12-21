@@ -143,7 +143,7 @@ public class SingularityCmdLineArgsMigration extends ZkDataMigration {
         Optional<String> cmdLineArgs = getCmdLineArgs(pendingTaskId);
 
         SingularityCreateResult result = taskManager.savePendingTask(new SingularityPendingTask(pendingTaskId, getCmdLineArgs(cmdLineArgs), Optional.<String> absent(),
-            Optional.<String> absent(), Optional.<Boolean> absent(), Optional.<String> absent(), Optional.<Resources>absent()));
+            Optional.<String> absent(), Optional.<Boolean> absent(), Optional.<String> absent(), Optional.<Resources>absent(), Optional.<String>absent()));
 
         LOG.info("Saving {} ({}) {}", pendingTaskId, cmdLineArgs, result);
       }

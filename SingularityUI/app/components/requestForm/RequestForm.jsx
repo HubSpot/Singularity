@@ -348,6 +348,15 @@ const RequestForm = (props) => {
     />
   );
 
+  const allowBounceToSameHost = (
+    <CheckboxFormGroup
+      id="allow-bounce-to-same-host"
+      label="Allow Bounce To Same Host"
+      checked={getValue('allowBounceToSameHost') || false}
+      onChange={(newValue) => updateField('allowBounceToSameHost', newValue)}
+    />
+  );
+
   const waitAtLeastMillisAfterTaskFinishesForReschedule = (
     <TextFormGroup
       id="waitAtLeast"
@@ -631,6 +640,7 @@ const RequestForm = (props) => {
           { shouldRenderField('rackSensitive') && rackSensitive }
           { shouldRenderField('hideEvenNumberAcrossRacksHint') && hideEvenNumberAcrossRacksHint }
           { shouldRenderField('loadBalanced') && loadBalanced }
+          { shouldRenderField('allowBounceToSameHost') && allowBounceToSameHost }
           { shouldRenderField('waitAtLeastMillisAfterTaskFinishesForReschedule') && waitAtLeastMillisAfterTaskFinishesForReschedule }
           { shouldRenderField('rackAffinity') && rackAffinity }
           { shouldRenderField('scheduleType') && scheduleTypeField }
