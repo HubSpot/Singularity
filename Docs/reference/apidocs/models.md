@@ -792,7 +792,7 @@ Models:
 | name | type | required | description |
 |------|------|----------|-------------|
 | expiringSkipHealthchecks | [SingularityExpiringSkipHealthchecks](models.md#model-SingularityExpiringSkipHealthchecks) | optional |  |
-| state | [RequestState](models.md#model-RequestState) | optional |  Allowable values: ACTIVE, DELETED, PAUSED, SYSTEM_COOLDOWN, FINISHED, DEPLOYING_TO_UNPAUSE |
+| state | [RequestState](models.md#model-RequestState) | optional |  Allowable values: ACTIVE, DELETING, DELETED, PAUSED, SYSTEM_COOLDOWN, FINISHED, DEPLOYING_TO_UNPAUSE |
 | pendingDeploy | [SingularityDeploy](models.md#model-SingularityDeploy) | optional |  |
 | activeDeploy | [SingularityDeploy](models.md#model-SingularityDeploy) | optional |  |
 | expiringPause | [SingularityExpiringPause](models.md#model-SingularityExpiringPause) | optional |  |

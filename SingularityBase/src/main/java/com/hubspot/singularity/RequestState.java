@@ -2,7 +2,7 @@ package com.hubspot.singularity;
 
 public enum RequestState {
 
-  ACTIVE(true), DELETED(false), PAUSED(false), SYSTEM_COOLDOWN(true), FINISHED(false), DEPLOYING_TO_UNPAUSE(true);
+  ACTIVE(true), DELETING(false), DELETED(false), PAUSED(false), SYSTEM_COOLDOWN(true), FINISHED(false), DEPLOYING_TO_UNPAUSE(true);
 
   private final boolean isRunnable;
 
