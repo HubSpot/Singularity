@@ -24,7 +24,6 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
 import org.jets3t.service.S3Service;
-import org.jets3t.service.S3ServiceException;
 import org.jets3t.service.model.S3Object;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -55,7 +54,6 @@ import com.hubspot.singularity.SingularityTaskHistoryUpdate;
 import com.hubspot.singularity.SingularityTaskHistoryUpdate.SimplifiedTaskState;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityUser;
-import com.hubspot.singularity.WebExceptions;
 import com.hubspot.singularity.auth.SingularityAuthorizationHelper;
 import com.hubspot.singularity.config.S3Configuration;
 import com.hubspot.singularity.data.DeployManager;
@@ -247,13 +245,34 @@ public class S3LogResource extends AbstractHistoryResource {
           String getUrl = s3Service.createSignedGetUrl(s3Bucket, s3Object.getKey(), expireAt);
           String downloadUrl = s3Service.createSignedUrl("GET", s3Bucket, s3Object.getKey(), FORCE_DOWNLOAD_S3_PARAMS, null, expireAt.getTime() / 1000, false);
 
-          return new SingularityS3Log(getUrl, s3Object.getKey(), s3Object.getLastModifiedDate().getTime(), s3Object.getContentLength(), downloadUrl);
+          Map<String, Object> objectMetadata = s3Object.getMetadataMap();
+          Optional<Long> maybeStartTime = getMetadataAsLong(objectMetadata, SingularityS3Log.LOG_START_S3_ATTR);
+          Optional<Long> maybeEndTime = getMetadataAsLong(objectMetadata, SingularityS3Log.LOG_END_S3_ATTR);
+
+          return new SingularityS3Log(getUrl, s3Object.getKey(), s3Object.getLastModifiedDate().getTime(), s3Object.getContentLength(), downloadUrl, maybeStartTime, maybeEndTime);
         }
 
       }));
     }
 
     return Futures.allAsList(logFutures).get(s3Configuration.getWaitForS3LinksSeconds(), TimeUnit.SECONDS);
+  }
+
+  private Optional<Long> getMetadataAsLong(Map<String, Object> objectMetadata, String keyName) {
+    try {
+      if (objectMetadata.containsKey(keyName)) {
+        Object maybeLong = objectMetadata.get(keyName);
+        if (maybeLong instanceof String) {
+          return Optional.of(Long.parseLong((String) maybeLong));
+        } else {
+          return Optional.of((Long) maybeLong);
+        }
+      } else {
+        return Optional.absent();
+      }
+    } catch (Exception e) {
+      return Optional.absent();
+    }
   }
 
   private List<SingularityS3Log> getS3Logs(S3Configuration s3Configuration, Optional<String> group, Collection<String> prefixes) throws InterruptedException, ExecutionException, TimeoutException {
@@ -276,18 +295,6 @@ public class S3LogResource extends AbstractHistoryResource {
   private void checkS3() {
     checkNotFound(s3ServiceDefault.isPresent(), "S3 configuration was absent");
     checkNotFound(configuration.isPresent(), "S3 configuration was absent");
-  }
-
-  private void checkForCompressedFile(String key) {
-    boolean isSupportedFileType = false;
-    for (String type : SUPPORTED_COMPRESSED_FILE_EXTENTIONS) {
-      if (key.endsWith(type)) {
-        isSupportedFileType = true;
-      }
-    }
-    if (!isSupportedFileType) {
-      WebExceptions.badRequest(String.format("Not a supported file type. (%s)", key));
-    }
   }
 
   private Optional<String> getRequestGroupForTask(final SingularityTaskId taskId) {
@@ -316,27 +323,6 @@ public class S3LogResource extends AbstractHistoryResource {
         authorizationHelper.checkAdminAuthorization(user);
         return Optional.absent();
       }
-    }
-  }
-
-  private SingularityS3Log getS3Log(S3Configuration s3Configuration, String requestId, String key) throws Exception {
-    try {
-      Optional<String> group = getRequestGroup(requestId);
-
-      final Date expireAt = new Date(System.currentTimeMillis() + s3Configuration.getExpireS3LinksAfterMillis());
-      final String s3Bucket = (group.isPresent() && s3Configuration.getGroupOverrides().containsKey(group.get())) ? s3Configuration.getGroupOverrides().get(group.get()).getS3Bucket() : s3Configuration.getS3Bucket();
-      final S3Service s3Service = (group.isPresent() && s3GroupOverride.containsKey(group.get())) ? s3GroupOverride.get(group.get()) : s3ServiceDefault.get();
-
-      S3Object s3Object = s3Service.getObject(s3Bucket, key);
-      String getUrl = s3Service.createSignedGetUrl(s3Bucket, s3Object.getKey(), expireAt);
-      String downloadUrl = s3Service.createSignedUrl("GET", s3Bucket, s3Object.getKey(), FORCE_DOWNLOAD_S3_PARAMS, null, expireAt.getTime() / 1000, false);
-      return new SingularityS3Log(getUrl, s3Object.getKey(), s3Object.getLastModifiedDate().getTime(), s3Object.getContentLength(), downloadUrl);
-    } catch (S3ServiceException e) {
-      if (e.getResponseCode() == 404) {
-        throw WebExceptions.notFound(String.format("Object with key %s does not exist", key));
-      }
-
-      throw e;
     }
   }
 
