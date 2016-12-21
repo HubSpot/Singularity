@@ -44,6 +44,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hubspot.mesos.JavaUtils;
+import com.hubspot.singularity.SingularityS3Log;
 import com.hubspot.singularity.s3uploader.config.SingularityS3UploaderContentHeaders;
 import com.hubspot.singularity.SingularityS3FormatHelper;
 import com.hubspot.singularity.runner.base.sentry.SingularityRunnerExceptionNotifier;
@@ -56,8 +57,7 @@ public class SingularityS3Uploader implements Closeable {
   private static final Logger LOG = LoggerFactory.getLogger(SingularityS3Uploader.class);
   private static final String LOG_START_TIME_ATTR = "user.logstart";
   private static final String LOG_END_TIME_ATTR = "user.logend";
-  private static final String LOG_START_S3_ATTR = "logStartTime";
-  private static final String LOG_END_S3_ATTR = "logEndTime";
+
 
   private final S3UploadMetadata uploadMetadata;
   private final PathMatcher pathMatcher;
@@ -247,11 +247,11 @@ public class SingularityS3Uploader implements Closeable {
           try {
             Optional<Long> maybeStartTime = readFileAttributeAsLong(LOG_START_TIME_ATTR);
             if (maybeStartTime.isPresent()) {
-              object.getMetadataMap().put(LOG_START_S3_ATTR, maybeStartTime.get());
+              object.getMetadataMap().put(SingularityS3Log.LOG_START_S3_ATTR, maybeStartTime.get());
             }
             Optional<Long> maybeEndTime = readFileAttributeAsLong(LOG_END_TIME_ATTR);
             if (maybeEndTime.isPresent()) {
-              object.getMetadataMap().put(LOG_END_S3_ATTR, maybeEndTime.get());
+              object.getMetadataMap().put(SingularityS3Log.LOG_END_S3_ATTR, maybeEndTime.get());
             }
           } catch (Exception e) {
             LOG.error("Could not get extra file metadata for {}", file, e);
