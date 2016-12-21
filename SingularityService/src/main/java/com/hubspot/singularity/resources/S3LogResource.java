@@ -246,6 +246,7 @@ public class S3LogResource extends AbstractHistoryResource {
           String downloadUrl = s3Service.createSignedUrl("GET", s3Bucket, s3Object.getKey(), FORCE_DOWNLOAD_S3_PARAMS, null, expireAt.getTime() / 1000, false);
 
           Map<String, Object> objectMetadata = s3Object.getMetadataMap();
+          LOG.trace("Object metadata for {}: {}", s3Object.getKey(), objectMetadata);
           Optional<Long> maybeStartTime = getMetadataAsLong(objectMetadata, SingularityS3Log.LOG_START_S3_ATTR);
           Optional<Long> maybeEndTime = getMetadataAsLong(objectMetadata, SingularityS3Log.LOG_END_S3_ATTR);
 
