@@ -35,7 +35,19 @@ function TaskS3Logs (props) {
           label="Last modified"
           id="last-modified"
           key="last-modified"
-          cellData={(s3File) => Utils.absoluteTimestamp(s3File.lastModified)}
+          cellData={(s3File) => Utils.absoluteTimestampWithSeconds(s3File.lastModified)}
+        />
+        <Column
+          label="Estimated Start Time"
+          id="estimated-start"
+          key="estimated-start"
+          cellData={(s3File) => (s3File.startTime) ? Utils.absoluteTimestampWithSeconds(s3File.startTime) : Utils.absoluteTimestampWithSeconds(props.taskStartedAt)}
+        />
+        <Column
+          label="Estimated End Time"
+          id="estimtaed-end"
+          key="estimtaed-end"
+          cellData={(s3File) => s3File.endTime && Utils.absoluteTimestampWithSeconds(s3File.endTime)}
         />
         <Column
           id="actions-column"
@@ -57,9 +69,12 @@ TaskS3Logs.propTypes = {
     getUrl: PropTypes.string.isRequired,
     key: PropTypes.string.isRequired,
     size: PropTypes.number.isRequired,
-    lastModified: PropTypes.number.isRequired
+    lastModified: PropTypes.number.isRequired,
+    startTime: PropTypes.number,
+    endTime: PropTypes.number
   })).isRequired,
-  taskId: PropTypes.string.isRequired
+  taskId: PropTypes.string.isRequired,
+  taskStartedAt: PropTypes.number.isRequired
 };
 
 export default TaskS3Logs;

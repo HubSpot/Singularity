@@ -2,11 +2,15 @@ package com.hubspot.singularity.s3uploader;
 
 import java.io.Closeable;
 import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.nio.charset.Charset;
 import java.nio.file.FileSystem;
+import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.PathMatcher;
 import java.nio.file.Paths;
+import java.nio.file.attribute.UserDefinedFileAttributeView;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
@@ -33,12 +37,15 @@ import com.github.rholder.retry.RetryerBuilder;
 import com.github.rholder.retry.StopStrategies;
 import com.github.rholder.retry.WaitStrategies;
 import com.google.common.base.Optional;
+import com.google.common.base.Strings;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hubspot.mesos.JavaUtils;
+import com.hubspot.singularity.SingularityS3Log;
+import com.hubspot.singularity.s3uploader.config.SingularityS3UploaderContentHeaders;
 import com.hubspot.singularity.SingularityS3FormatHelper;
 import com.hubspot.singularity.runner.base.sentry.SingularityRunnerExceptionNotifier;
 import com.hubspot.singularity.runner.base.shared.S3UploadMetadata;
@@ -49,6 +56,9 @@ import com.hubspot.singularity.s3uploader.config.SingularityS3UploaderContentHea
 public class SingularityS3Uploader implements Closeable {
 
   private static final Logger LOG = LoggerFactory.getLogger(SingularityS3Uploader.class);
+  private static final String LOG_START_TIME_ATTR = "logstart";
+  private static final String LOG_END_TIME_ATTR = "logend";
+
 
   private final S3UploadMetadata uploadMetadata;
   private final PathMatcher pathMatcher;
@@ -246,6 +256,28 @@ public class SingularityS3Uploader implements Closeable {
         S3Object object = new S3Object(s3Bucket, file.toFile());
         object.setKey(key);
 
+        Set<String> supportedViews = FileSystems.getDefault().supportedFileAttributeViews();
+        LOG.trace("Supported attribute views are {}", supportedViews);
+        if (supportedViews.contains("user")) {
+          try {
+            UserDefinedFileAttributeView view = Files.getFileAttributeView(file, UserDefinedFileAttributeView.class);
+            List<String> attributes = view.list();
+            LOG.debug("Found file attributes {} for file {}", attributes, file);
+            Optional<Long> maybeStartTime = readFileAttributeAsLong(LOG_START_TIME_ATTR, view, attributes);
+            if (maybeStartTime.isPresent()) {
+              object.addMetadata(SingularityS3Log.LOG_START_S3_ATTR, maybeStartTime.get().toString());
+              LOG.debug("Added extra metadata for object ({}:{})", SingularityS3Log.LOG_START_S3_ATTR, maybeStartTime.get());
+            }
+            Optional<Long> maybeEndTime = readFileAttributeAsLong(LOG_END_TIME_ATTR, view, attributes);
+            if (maybeEndTime.isPresent()) {
+              object.addMetadata(SingularityS3Log.LOG_END_S3_ATTR, maybeEndTime.get().toString());
+              LOG.debug("Added extra metadata for object ({}:{})", SingularityS3Log.LOG_END_S3_ATTR, maybeEndTime.get());
+            }
+          } catch (Exception e) {
+            LOG.error("Could not get extra file metadata for {}", file, e);
+          }
+        }
+
         for (SingularityS3UploaderContentHeaders contentHeaders : configuration.getS3ContentHeaders()) {
           if (file.toString().endsWith(contentHeaders.getFilenameEndsWith())) {
             LOG.debug("{} Using content headers {} for file {}", logIdentifier, contentHeaders, file);
@@ -264,6 +296,8 @@ public class SingularityS3Uploader implements Closeable {
           object.addMetadata("x-amz-storage-class", uploadMetadata.getS3StorageClass().get());
         }
 
+        LOG.debug("Uploading object with metadata {}", object.getMetadataMap());
+
         if (fileSizeBytes > configuration.getMaxSingleUploadSizeBytes()) {
           multipartUpload(object);
         } else {
@@ -277,6 +311,28 @@ public class SingularityS3Uploader implements Closeable {
       LOG.info("{} Uploaded {} in {}", logIdentifier, key, JavaUtils.duration(start));
 
       return true;
+    }
+
+    private Optional<Long> readFileAttributeAsLong(String attribute, UserDefinedFileAttributeView view, List<String> knownAttributes) {
+      if (knownAttributes.contains(attribute)) {
+        try {
+          LOG.trace("Attempting to read attribute {}, from file {}", attribute, file);
+          ByteBuffer buf = ByteBuffer.allocate(view.size(attribute));
+          view.read(attribute, buf);
+          buf.flip();
+          String value = Charset.defaultCharset().decode(buf).toString();
+          if (Strings.isNullOrEmpty(value)) {
+            LOG.debug("No attrbiute {} found for file {}", attribute, file);
+            return Optional.absent();
+          }
+          return Optional.of(Long.parseLong(value));
+        } catch (Exception e) {
+          LOG.error("Error getting extra file metadata for {}", file, e);
+          return Optional.absent();
+        }
+      } else {
+        return Optional.absent();
+      }
     }
   }
 
