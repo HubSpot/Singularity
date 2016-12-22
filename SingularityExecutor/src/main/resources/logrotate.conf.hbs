@@ -20,14 +20,14 @@ notifempty
   lastaction
     NOW="$(($(date +%s%N)/1000000))"
     LOGSTART=`getfattr --only-values -n user.logstart {{{ logfile }}}`
-    if [ "$LOGSTART" != "" ]; then
-      timestring=`date +%Y-%m-%d-%s`
-      for filename in "{{{ taskDirectory }}}/{{{ rotateDirectory }}}/{{{ logfileName }}}-${timestring%??}"*
-      do
-        setfattr -n user.logend -v "$NOW" $filename
+    timestring=`date +%Y-%m-%d-%s`
+    for filename in "{{{ taskDirectory }}}/{{{ rotateDirectory }}}/{{{ logfileName }}}-${timestring%??}"*
+    do
+      setfattr -n user.logend -v "$NOW" $filename
+      if [ "$LOGSTART" != "" ]; then
         setfattr -n user.logstart -v "$LOGSTART" $filename
-      done
-    fi
+      fi
+    done
     setfattr -n user.logstart -v "$NOW" {{{ logfile }}}
   endscript
 {{/if}}
@@ -45,13 +45,13 @@ notifempty
     do
       LOGSTART=`getfattr --only-values -n user.logstart $oldfile`
       timestring=`date +%Y-%m-%d-%s`
-      if [ "$LOGSTART" != "" ]; then
-        for filename in "$oldfile-${timestring%??}"*
-        do
-          setfattr -n user.logend -v "$NOW" $filename
+      for filename in "$oldfile-${timestring%??}"*
+      do
+        if [ "$LOGSTART" != "" ]; then
           setfattr -n user.logstart -v "$LOGSTART" $filename
-        done
-      fi
+        fi
+        setfattr -n user.logend -v "$NOW" $filename
+      done
       setfattr -n user.logstart -v "$NOW" $oldfile
     done
   endscript
