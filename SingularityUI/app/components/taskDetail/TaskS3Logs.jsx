@@ -48,7 +48,7 @@ function TaskS3Logs (props) {
           label="Estimated End Time"
           id="estimtaed-end"
           key="estimtaed-end"
-          cellData={(s3File) => s3File.endTime && Utils.absoluteTimestampWithSeconds(s3File.endTime)}
+          cellData={(s3File) => (s3File.endTime) ? Utils.absoluteTimestampWithSeconds(s3File.endTime) : Utils.absoluteTimestampWithSeconds(s3File.lastModified)}
         />
         <Column
           id="actions-column"
