@@ -1,3 +1,9 @@
+import Raven from 'raven-js';
+
+if (window.config.sentryDsn) {
+  Raven.config(window.config.sentryDsn).install();
+}
+
 // explicit polyfills for older browsers
 import 'core-js/es6';
 
@@ -56,6 +62,9 @@ document.addEventListener('DOMContentLoaded', () => {
       if (!store.getState().api.user.data.user) {
         return renderUserIdForm();
       } else {
+        if (window.config.sentryDsn) {
+          Raven.setUserContext({ email: store.getState().api.user.data.user.email });
+        }
         userId = store.getState().api.user.data.user.id
         // Set up starred requests
         maybeImportStarredRequests(store, store.getState().api.user, userId);
