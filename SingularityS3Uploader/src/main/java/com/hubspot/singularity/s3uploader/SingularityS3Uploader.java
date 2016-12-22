@@ -51,7 +51,6 @@ import com.hubspot.singularity.runner.base.sentry.SingularityRunnerExceptionNoti
 import com.hubspot.singularity.runner.base.shared.S3UploadMetadata;
 import com.hubspot.singularity.runner.base.shared.SimpleProcessManager;
 import com.hubspot.singularity.s3uploader.config.SingularityS3UploaderConfiguration;
-import com.hubspot.singularity.s3uploader.config.SingularityS3UploaderContentHeaders;
 
 public class SingularityS3Uploader implements Closeable {
 
