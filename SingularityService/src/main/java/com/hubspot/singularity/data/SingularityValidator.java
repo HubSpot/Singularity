@@ -126,13 +126,13 @@ public class SingularityValidator {
     this.maxMemoryMbPerRequest = configuration.getMesosConfiguration().getMaxMemoryMbPerRequest();
     this.maxInstancesPerRequest = configuration.getMesosConfiguration().getMaxNumInstancesPerRequest();
 
+    this.allowBounceToSameHost = configuration.isAllowBounceToSameHost();
+
     this.maxTotalHealthcheckTimeoutSeconds = configuration.getHealthcheckMaxTotalTimeoutSeconds();
     this.defaultHealthcheckIntervalSeconds = configuration.getHealthcheckIntervalSeconds();
     this.defaultHealthcheckStartupTimeooutSeconds = configuration.getStartupTimeoutSeconds();
     this.defaultHealthcehckMaxRetries = configuration.getHealthcheckMaxRetries().or(0);
     this.defaultHealthcheckResponseTimeoutSeconds = configuration.getHealthcheckTimeoutSeconds();
-
-    this.allowBounceToSameHost = configuration.isAllowBounceToSameHost();
 
     this.uiConfiguration = uiConfiguration;
 
@@ -223,6 +223,10 @@ public class SingularityValidator {
       checkBadRequest(request.getInstances().or(1) == 1, "Scheduler requests can not be ran on more than one instance");
     } else if (request.isOneOff()) {
       checkBadRequest(!request.getInstances().isPresent(), "one-off requests can not define a # of instances");
+    }
+
+    if (request.getMaxTasksPerOffer().isPresent()) {
+      checkBadRequest(request.getMaxTasksPerOffer().get() > 0, "maxTasksPerOffer must be positive");
     }
 
     return request.toBuilder().setQuartzSchedule(Optional.fromNullable(quartzSchedule)).build();
