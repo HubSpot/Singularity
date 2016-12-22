@@ -36,19 +36,19 @@ function TaskS3Logs (props) {
           label="Last modified"
           id="last-modified"
           key="last-modified"
-          cellData={(s3File) => Utils.absoluteTimestamp(s3File.lastModified)}
+          cellData={(s3File) => Utils.absoluteTimestampWithSeconds(s3File.lastModified)}
         />
         <Column
           label="Estimated Start Time"
           id="estimated-start"
           key="estimated-start"
-          cellData={(s3File) => s3File.startTime && Utils.absoluteTimestamp(s3File.startTime)}
+          cellData={(s3File) => s3File.startTime && Utils.absoluteTimestampWithSeconds(s3File.startTime)}
         />
         <Column
           label="Estimated End Time"
           id="estimtaed-end"
           key="estimtaed-end"
-          cellData={(s3File) => s3File.endTime && Utils.absoluteTimestamp(s3File.endTime)}
+          cellData={(s3File) => s3File.endTime && Utils.absoluteTimestampWithSeconds(s3File.endTime)}
         />
         <Column
           id="actions-column"
