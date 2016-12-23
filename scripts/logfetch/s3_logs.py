@@ -82,7 +82,7 @@ def logs_for_all_requests(args):
             s3_logs = logfetch_base.get_json_response(s3_task_logs_uri(args, task), args, s3_params)
             logs = logs + s3_logs if s3_logs else logs
             tasks_progress += 1
-            logfetch_base.update_progress_bar(tasks_progress, tasks_goal, 'S3 Log Finder', args.silent)
+            logfetch_base.update_progress_bar(tasks_progress, tasks_goal, 'S3 Log Finder', args.silent or args.verbose)
         logfetch_base.log(colored('\nAlso searching s3 history...\n', 'cyan'), args, False)
         for request in logfetch_base.all_requests(args):
             s3_logs = logfetch_base.get_json_response(s3_request_logs_uri(args, request), args, s3_params)
