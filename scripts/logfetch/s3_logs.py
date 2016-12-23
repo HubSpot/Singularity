@@ -23,8 +23,8 @@ def download_s3_logs(args):
     async_requests = []
     all_logs = []
     for log_file in logs:
-        filename = log_file['key'].rsplit("/", 1)[1]
-        if logfetch_base.is_in_date_range(args, int(str(log_file['lastModified'])[0:-3])):
+        if log_file_in_date_range(args, log_file):
+            filename = log_file['key'].rsplit("/", 1)[1]
             if not args.logtype or log_matches(args, filename):
                 logfetch_base.log(colored('Including log {0}'.format(filename), 'blue') + '\n', args, True)
                 if not already_downloaded(args.dest, filename):
@@ -47,6 +47,17 @@ def download_s3_logs(args):
     logfetch_base.log(colored('All S3 logs up to date\n', 'cyan'), args, False)
     all_logs = modify_download_list(all_logs)
     return all_logs
+
+def log_file_in_date_range(args, log_file):
+    if 'startTime' in log_file:
+        if 'endTime' in log_file:
+            return logfetch_base.date_range_overlaps(args, int(str(log_file['startTime'])[0:-3]), int(str(log_file['endTime'])[0:-3]))
+        else:
+            return logfetch_base.date_range_overlaps(args, int(str(log_file['startTime'])[0:-3]), int(str(log_file['lastModified'])[0:-3]))
+    elif 'endTime' in log_file:
+        return logfetch_base.is_in_date_range(args, int(str(log_file['endTime'])[0:-3]))
+    else:
+        return logfetch_base.is_in_date_range(args, int(str(log_file['lastModified'])[0:-3]))
 
 def modify_download_list(all_logs):
     for index, log in enumerate(all_logs):
