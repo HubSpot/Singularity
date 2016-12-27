@@ -336,6 +336,7 @@ public class RequestManager extends CuratorAsyncManager {
 
     // moves RequestState to DELETED
     SingularityDeleteResult deleteResult = delete(getRequestPath(request.getId()));
+
     deleting(request, RequestHistoryType.DELETED, System.currentTimeMillis(), user, message);
 
     LOG.info("Request {} deleted ({}) by {} - {}", request.getId(), deleteResult, user, message);
