@@ -576,14 +576,7 @@ public class SingularityCleaner {
         isBouncing.add(SingularityDeployKey.fromTaskId(cleanupTask.getTaskId()));
       }
       if (cleanupTask.getCleanupType() == TaskCleanupType.USER_REQUESTED_DESTROY) {
-        SingularityTaskId taskId = cleanupTask.getTaskId();
-        List<String> requestTasks = deletedRequestIdToTaskIds.get(taskId.getRequestId());
-        if (requestTasks != null) {
-          requestTasks.add(taskId.getId());
-        } else {
-          requestTasks = new ArrayList<>(Collections.singletonList(taskId.getId()));
-          deletedRequestIdToTaskIds.put(taskId.getRequestId(), requestTasks);
-        }
+        updateRequestToTaskMap(cleanupTask, deletedRequestIdToTaskIds);
       }
     }
 
@@ -601,16 +594,7 @@ public class SingularityCleaner {
         taskManager.deleteCleanupTask(taskId.getId());
       } else if (shouldKillTask(cleanupTask, activeTaskIds, cleaningTasks, incrementalCleaningTasks) && checkLBStateAndShouldKillTask(cleanupTask)) {
         driverManager.killAndRecord(taskId, cleanupTask.getCleanupType(), cleanupTask.getUser());
-
-        List<String> requestTasks = deletedRequestIdToTaskIds.get(taskId.getRequestId());
-        requestTasks.remove(taskId.getId());
-        if (requestTasks.isEmpty()) {
-          requestManager.createCleanupRequest(
-              new SingularityRequestCleanup(
-                  Optional.<String> absent(), RequestCleanupType.DELETING, System.currentTimeMillis(),
-                  Optional.of(Boolean.TRUE), taskId.getRequestId(), Optional.<String> absent(),
-                  Optional.<Boolean> absent(), Optional.<String> absent(), Optional.<String> absent(), Optional.<SingularityShellCommand>absent()));
-        }
+        cleanupRequestIfNoRemainingTasks(taskId, deletedRequestIdToTaskIds);
         taskManager.deleteCleanupTask(taskId.getId());
 
         killedTasks++;
@@ -630,6 +614,29 @@ public class SingularityCleaner {
     }
 
     LOG.info("Killed {} tasks in {}", killedTasks, JavaUtils.duration(start));
+  }
+
+  private void updateRequestToTaskMap(SingularityTaskCleanup cleanupTask, Map<String, List<String>> requestIdToTaskIds) {
+    SingularityTaskId taskId = cleanupTask.getTaskId();
+    List<String> requestTasks = requestIdToTaskIds.get(taskId.getRequestId());
+    if (requestTasks != null) {
+      requestTasks.add(taskId.getId());
+    } else {
+      requestTasks = new ArrayList<>(Collections.singletonList(taskId.getId()));
+      requestIdToTaskIds.put(taskId.getRequestId(), requestTasks);
+    }
+  }
+
+  private void cleanupRequestIfNoRemainingTasks(SingularityTaskId taskId, Map<String, List<String>> requestIdToTaskIds) {
+    List<String> requestTasks = requestIdToTaskIds.get(taskId.getRequestId());
+    requestTasks.remove(taskId.getId());
+    if (requestTasks.isEmpty()) {
+      requestManager.createCleanupRequest(
+          new SingularityRequestCleanup(
+              Optional.<String> absent(), RequestCleanupType.DELETING, System.currentTimeMillis(),
+              Optional.of(Boolean.TRUE), taskId.getRequestId(), Optional.<String> absent(),
+              Optional.<Boolean> absent(), Optional.<String> absent(), Optional.<String> absent(), Optional.<SingularityShellCommand>absent()));
+    }
   }
 
   private boolean checkLBStateAndShouldKillTask(SingularityTaskCleanup cleanupTask) {
