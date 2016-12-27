@@ -58,6 +58,8 @@ public class SingularityRequest {
 
   private final Optional<Double> taskPriorityLevel;
 
+  private final Optional<Boolean> allowBounceToSameHost;
+
   @JsonCreator
   public SingularityRequest(@JsonProperty("id") String id, @JsonProperty("requestType") RequestType requestType, @JsonProperty("owners") Optional<List<String>> owners,
       @JsonProperty("numRetriesOnFailure") Optional<Integer> numRetriesOnFailure, @JsonProperty("schedule") Optional<String> schedule, @JsonProperty("instances") Optional<Integer> instances,
@@ -73,7 +75,7 @@ public class SingularityRequest {
       @JsonProperty("emailConfigurationOverrides") Optional<Map<SingularityEmailType, List<SingularityEmailDestination>>> emailConfigurationOverrides,
       @JsonProperty("daemon") @Deprecated Optional<Boolean> daemon, @JsonProperty("hideEvenNumberAcrossRacks") Optional<Boolean> hideEvenNumberAcrossRacksHint,
       @JsonProperty("taskLogErrorRegex") Optional<String> taskLogErrorRegex, @JsonProperty("taskLogErrorRegexCaseSensitive") Optional<Boolean> taskLogErrorRegexCaseSensitive,
-      @JsonProperty("taskPriorityLevel") Optional<Double> taskPriorityLevel) {
+      @JsonProperty("taskPriorityLevel") Optional<Double> taskPriorityLevel, @JsonProperty("allowBounceToSameHost") Optional<Boolean> allowBounceToSameHost) {
     this.id = checkNotNull(id, "id cannot be null");
     this.owners = owners;
     this.numRetriesOnFailure = numRetriesOnFailure;
@@ -102,6 +104,7 @@ public class SingularityRequest {
     this.taskLogErrorRegex = taskLogErrorRegex;
     this.taskLogErrorRegexCaseSensitive = taskLogErrorRegexCaseSensitive;
     this.taskPriorityLevel = taskPriorityLevel;
+    this.allowBounceToSameHost = allowBounceToSameHost;
     if (requestType == null) {
       this.requestType = RequestType.fromDaemonAndScheduleAndLoadBalanced(schedule, daemon, loadBalanced);
     } else {
@@ -137,7 +140,8 @@ public class SingularityRequest {
     .setHideEvenNumberAcrossRacksHint(hideEvenNumberAcrossRacksHint)
     .setTaskLogErrorRegex(taskLogErrorRegex)
     .setTaskLogErrorRegexCaseSensitive(taskLogErrorRegexCaseSensitive)
-    .setTaskPriorityLevel(taskPriorityLevel);
+    .setTaskPriorityLevel(taskPriorityLevel)
+    .setAllowBounceToSameHost(allowBounceToSameHost);
   }
 
   @ApiModelProperty(required=true, value="A unique id for the request")
@@ -228,6 +232,11 @@ public class SingularityRequest {
   @ApiModelProperty(required=false, value="Allow tasks to run on slaves with these attributes, but do not restrict them to only these slaves")
   public Optional<Map<String, String>> getAllowedSlaveAttributes() {
     return allowedSlaveAttributes;
+  }
+
+  @ApiModelProperty(required=false, value="If set to true, allow tasks to be scheduled on the same host as an existing active task when bouncing")
+  public Optional<Boolean> getAllowBounceToSameHost() {
+    return allowBounceToSameHost;
   }
 
   @JsonIgnore
@@ -364,6 +373,7 @@ public class SingularityRequest {
       .add("taskLogErrorRegex", taskLogErrorRegex)
       .add("taskLogErrorRegexCaseSensitive", taskLogErrorRegexCaseSensitive)
       .add("taskPriorityLevel", taskPriorityLevel)
+      .add("allowBounceToSameHost", allowBounceToSameHost)
       .toString();
   }
 
@@ -403,11 +413,12 @@ public class SingularityRequest {
             Objects.equals(hideEvenNumberAcrossRacksHint, request.hideEvenNumberAcrossRacksHint) &&
             Objects.equals(taskLogErrorRegex, request.taskLogErrorRegex) &&
             Objects.equals(taskLogErrorRegexCaseSensitive, request.taskLogErrorRegexCaseSensitive) &&
-            Objects.equals(taskPriorityLevel, request.taskPriorityLevel);
+            Objects.equals(taskPriorityLevel, request.taskPriorityLevel) &&
+            Objects.equals(allowBounceToSameHost, request.allowBounceToSameHost);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(id, requestType, owners, numRetriesOnFailure, schedule, quartzSchedule, scheduleTimeZone, scheduleType, killOldNonLongRunningTasksAfterMillis, taskExecutionTimeLimitMillis, scheduledExpectedRuntimeMillis, waitAtLeastMillisAfterTaskFinishesForReschedule, instances, rackSensitive, rackAffinity, slavePlacement, requiredSlaveAttributes, allowedSlaveAttributes, loadBalanced, group, readWriteGroups, readOnlyGroups, bounceAfterScale, emailConfigurationOverrides, hideEvenNumberAcrossRacksHint, taskLogErrorRegex, taskLogErrorRegexCaseSensitive, taskPriorityLevel);
+    return Objects.hash(id, requestType, owners, numRetriesOnFailure, schedule, quartzSchedule, scheduleTimeZone, scheduleType, killOldNonLongRunningTasksAfterMillis, taskExecutionTimeLimitMillis, scheduledExpectedRuntimeMillis, waitAtLeastMillisAfterTaskFinishesForReschedule, instances, rackSensitive, rackAffinity, slavePlacement, requiredSlaveAttributes, allowedSlaveAttributes, loadBalanced, group, readWriteGroups, readOnlyGroups, bounceAfterScale, emailConfigurationOverrides, hideEvenNumberAcrossRacksHint, taskLogErrorRegex, taskLogErrorRegexCaseSensitive, taskPriorityLevel, allowBounceToSameHost);
   }
 }
