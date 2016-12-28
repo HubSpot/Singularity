@@ -13,7 +13,6 @@ import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
 
 import javax.inject.Singleton;
-import javax.ws.rs.HEAD;
 
 import org.apache.mesos.Protos;
 import org.apache.mesos.Protos.TaskStatus.Reason;
@@ -524,7 +523,7 @@ public class SingularityScheduler {
     PendingType pendingType = PendingType.TASK_DONE;
     Optional<List<String>> cmdLineArgsList = Optional.absent();
 
-    if (!state.isSuccess() && shouldRetryImmediately(request, deployStatistics)) {
+    if (!state.isSuccess() && shouldRetryImmediately(request, deployStatistics, task)) {
       LOG.debug("Retrying {} because {}", request.getId(), state);
       pendingType = PendingType.RETRY;
       if (task.isPresent()) {
@@ -635,11 +634,15 @@ public class SingularityScheduler {
     deployManager.saveDeployStatistics(newStatistics);
   }
 
-  private boolean shouldRetryImmediately(SingularityRequest request, SingularityDeployStatistics deployStatistics) {
+  private boolean shouldRetryImmediately(SingularityRequest request, SingularityDeployStatistics deployStatistics, Optional<SingularityTask> task) {
     if (!request.getNumRetriesOnFailure().isPresent()) {
       return false;
     }
 
+    if (task.isPresent() && task.get().getTaskRequest().getPendingTask().getPendingTaskId().getPendingType() == PendingType.IMMEDIATE) {
+      return false; // don't retry UI initiated run now
+    }
+q
     final int numRetriesInARow = deployStatistics.getNumSequentialRetries();
 
     if (numRetriesInARow >= request.getNumRetriesOnFailure().get()) {
