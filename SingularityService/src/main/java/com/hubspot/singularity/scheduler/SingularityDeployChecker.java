@@ -657,7 +657,7 @@ public class SingularityDeployChecker {
       return new SingularityDeployResult(DeployState.WAITING);
     }
 
-    SingularityDeployProgress newProgress = deployProgress.withCompletedStep().withNewActiveInstances(deployActiveTasks.size());
+    SingularityDeployProgress newProgress = deployProgress.withNewActiveInstances(deployActiveTasks.size()).withCompletedStep();
     DeployState deployState = isLastStepFinished(newProgress, request) ? DeployState.SUCCEEDED : DeployState.WAITING;
 
     String message = deployState == DeployState.SUCCEEDED ? "New deploy succeeded" : "New deploy is progressing, this task is being replaced";
