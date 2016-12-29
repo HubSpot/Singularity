@@ -585,12 +585,14 @@ public class SingularityScheduler {
   private void updateDeployStatistics(SingularityDeployStatistics deployStatistics, SingularityTaskId taskId, long timestamp, ExtendedTaskState state, Optional<PendingType> scheduleResult) {
     SingularityDeployStatisticsBuilder bldr = deployStatistics.toBuilder();
 
-    if (bldr.getAverageRuntimeMillis().isPresent() && !state.isFailed()) {
-      long newAvgRuntimeMillis = (bldr.getAverageRuntimeMillis().get() * bldr.getNumTasks() + (timestamp - taskId.getStartedAt())) / (bldr.getNumTasks() + 1);
+    if (!state.isFailed()) {
+      if (bldr.getAverageRuntimeMillis().isPresent()) {
+        long newAvgRuntimeMillis = (bldr.getAverageRuntimeMillis().get() * bldr.getNumTasks() + (timestamp - taskId.getStartedAt())) / (bldr.getNumTasks() + 1);
 
-      bldr.setAverageRuntimeMillis(Optional.of(newAvgRuntimeMillis));
-    } else {
-      bldr.setAverageRuntimeMillis(Optional.of(timestamp - taskId.getStartedAt()));
+        bldr.setAverageRuntimeMillis(Optional.of(newAvgRuntimeMillis));
+      } else {
+        bldr.setAverageRuntimeMillis(Optional.of(timestamp - taskId.getStartedAt()));
+      }
     }
 
     bldr.setNumTasks(bldr.getNumTasks() + 1);
@@ -614,6 +616,7 @@ public class SingularityScheduler {
           sequentialFailureTimestamps.set(0, timestamp);
         }
 
+        bldr.setNumFailures(bldr.getNumFailures() + 1);
         Collections.sort(sequentialFailureTimestamps);
       }
     } else {
