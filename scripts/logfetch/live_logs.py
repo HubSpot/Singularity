@@ -50,7 +50,7 @@ def download_live_logs(args):
                 elif args.logtype:
                     logfetch_base.log(colored('Excluding log {0}, doesn\'t match {1}'.format(log_file, args.logtype), 'magenta') + '\n', args, True)
         tasks_check_progress += 1
-        logfetch_base.update_progress_bar(tasks_check_progress, tasks_check_goal, 'Log Finder', args.silent)
+        logfetch_base.update_progress_bar(tasks_check_progress, tasks_check_goal, 'Log Finder', args.silent or args.verbose)
 
     if async_requests:
         logfetch_base.log(colored('\nStarting {0} live logs downloads\n'.format(len(async_requests)), 'cyan'), args, False)
