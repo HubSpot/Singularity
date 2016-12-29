@@ -585,7 +585,7 @@ public class SingularityScheduler {
   private void updateDeployStatistics(SingularityDeployStatistics deployStatistics, SingularityTaskId taskId, long timestamp, ExtendedTaskState state, Optional<PendingType> scheduleResult) {
     SingularityDeployStatisticsBuilder bldr = deployStatistics.toBuilder();
 
-    if (bldr.getAverageRuntimeMillis().isPresent()) {
+    if (bldr.getAverageRuntimeMillis().isPresent() && !state.isFailed()) {
       long newAvgRuntimeMillis = (bldr.getAverageRuntimeMillis().get() * bldr.getNumTasks() + (timestamp - taskId.getStartedAt())) / (bldr.getNumTasks() + 1);
 
       bldr.setAverageRuntimeMillis(Optional.of(newAvgRuntimeMillis));
@@ -642,7 +642,7 @@ public class SingularityScheduler {
     if (task.isPresent() && task.get().getTaskRequest().getPendingTask().getPendingTaskId().getPendingType() == PendingType.IMMEDIATE) {
       return false; // don't retry UI initiated run now
     }
-q
+
     final int numRetriesInARow = deployStatistics.getNumSequentialRetries();
 
     if (numRetriesInARow >= request.getNumRetriesOnFailure().get()) {
