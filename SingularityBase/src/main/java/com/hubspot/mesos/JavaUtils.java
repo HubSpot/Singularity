@@ -45,7 +45,7 @@ public final class JavaUtils {
 
   public static final Splitter COMMA_SPLITTER = Splitter.on(',').omitEmptyStrings().trimResults();
   public static final Joiner COMMA_JOINER = Joiner.on(',');
-  public static final Joiner.MapJoiner COMMA_EQUALS_MAP_JOINER = COMMA_JOINER.skipNulls().withKeyValueSeparator("=");
+  public static final Joiner.MapJoiner COMMA_EQUALS_MAP_JOINER = COMMA_JOINER.withKeyValueSeparator("=");
 
   public static final Joiner SPACE_JOINER = Joiner.on(" ");
 
