@@ -50,7 +50,7 @@ def all_tasks_for_request(args, request):
         elif len(active_tasks) == 0:
             return historical_tasks
         else:
-            return active_tasks + [h for h in historical_tasks if is_task_in_date_range(args, int(str(h['updatedAt'])[0:-3]), int(str(h['taskId']['startedAt'])[0:-3]))]
+            return active_tasks + [h for h in historical_tasks if date_range_overlaps(args, int(str(h['updatedAt'])[0:-3]), int(str(h['taskId']['startedAt'])[0:-3]))]
     else:
         return active_tasks
 
@@ -72,7 +72,7 @@ def is_in_date_range(args, timestamp):
     else:
         return False if timstamp_datetime < args.start else True
 
-def is_task_in_date_range(args, start, end):
+def date_range_overlaps(args, start, end):
     start_datetime = datetime.utcfromtimestamp(start)
     end_datetime = datetime.utcfromtimestamp(end)
     if args.end:
