@@ -3,6 +3,8 @@ package com.hubspot.singularity.metrics;
 import java.net.InetSocketAddress;
 import java.util.concurrent.TimeUnit;
 
+import javax.net.SocketFactory;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -11,6 +13,7 @@ import com.codahale.metrics.MetricFilter;
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.graphite.Graphite;
 import com.codahale.metrics.graphite.GraphiteReporter;
+import com.google.common.base.Charsets;
 import com.google.common.base.Optional;
 import com.google.common.base.Strings;
 import com.google.inject.Inject;
@@ -60,10 +63,10 @@ public class SingularityGraphiteReporterManaged implements Managed {
 
     final String prefix = buildGraphitePrefix();
 
-    LOG.info("Reporting data points to graphite server {}:{} every {} seconds with prefix '{}' and predicates '{}'.", graphiteConfiguration.getHostname(),
-        graphiteConfiguration.getPort(), graphiteConfiguration.getPeriodSeconds(), prefix, JavaUtils.COMMA_JOINER.join(graphiteConfiguration.getPredicates()));
+    LOG.info("Reporting data points to graphite server {}:{} every {} seconds with prefix '{}', predicates '{}', and tags '{}'.", graphiteConfiguration.getHostname(),
+        graphiteConfiguration.getPort(), graphiteConfiguration.getPeriodSeconds(), prefix, JavaUtils.COMMA_JOINER.join(graphiteConfiguration.getPredicates()), JavaUtils.COMMA_EQUALS_MAP_JOINER.join(graphiteConfiguration.getTags()));
 
-    final Graphite graphite = new Graphite(new InetSocketAddress(graphiteConfiguration.getHostname(), graphiteConfiguration.getPort()));
+    final Graphite graphite = new GraphiteWithTags(new InetSocketAddress(graphiteConfiguration.getHostname(), graphiteConfiguration.getPort()), SocketFactory.getDefault(), Charsets.UTF_8, graphiteConfiguration.getTags());
 
     final GraphiteReporter.Builder reporterBuilder = GraphiteReporter.forRegistry(registry);
 
