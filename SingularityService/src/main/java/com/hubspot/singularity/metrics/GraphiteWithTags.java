@@ -11,9 +11,9 @@ import com.codahale.metrics.graphite.Graphite;
 import com.hubspot.mesos.JavaUtils;
 
 public class GraphiteWithTags extends Graphite {
-    private final Map<String, Object> tags;
+    private final Map<String, String> tags;
 
-    public GraphiteWithTags(InetSocketAddress address, SocketFactory socketFactory, Charset charset, Map<String, Object> tags) {
+    public GraphiteWithTags(InetSocketAddress address, SocketFactory socketFactory, Charset charset, Map<String, String> tags) {
         super(address, socketFactory, charset);
         this.tags = tags;
     }
