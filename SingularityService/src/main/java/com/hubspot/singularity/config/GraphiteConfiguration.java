@@ -27,7 +27,7 @@ public class GraphiteConfiguration {
 
   @JsonProperty
   @NotNull
-  private Map<String, Object> tags = new LinkedHashMap<>();
+  private Map<String, String> tags = new LinkedHashMap<>();
 
   @JsonProperty
   @NotNull
@@ -97,11 +97,11 @@ public class GraphiteConfiguration {
     this.hostnameOmitSuffix = hostnameOmitSuffix;
   }
 
-  public Map<String, Object> getTags() {
+  public Map<String, String> getTags() {
     return tags;
   }
 
-  public void setTags(Map<String, Object> tags) {
+  public void setTags(Map<String, String> tags) {
     this.tags = tags;
   }
 }

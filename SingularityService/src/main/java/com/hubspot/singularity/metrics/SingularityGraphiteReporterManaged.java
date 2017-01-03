@@ -1,6 +1,7 @@
 package com.hubspot.singularity.metrics;
 
 import java.net.InetSocketAddress;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import javax.net.SocketFactory;
@@ -16,6 +17,7 @@ import com.codahale.metrics.graphite.GraphiteReporter;
 import com.google.common.base.Charsets;
 import com.google.common.base.Optional;
 import com.google.common.base.Strings;
+import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
@@ -41,7 +43,7 @@ public class SingularityGraphiteReporterManaged implements Managed {
     this.graphiteConfiguration = configuration.getGraphiteConfiguration();
     this.registry = registry;
     this.reporter = Optional.absent();
-    this.hostname = hostname;
+    this.hostname = !Strings.isNullOrEmpty(graphiteConfiguration.getHostnameOmitSuffix()) && hostname.endsWith(graphiteConfiguration.getHostnameOmitSuffix()) ? hostname.substring(0, hostname.length() - graphiteConfiguration.getHostnameOmitSuffix().length()) : hostname;
   }
 
   private String buildGraphitePrefix() {
@@ -49,9 +51,17 @@ public class SingularityGraphiteReporterManaged implements Managed {
       return "";
     }
 
-    final String trimmedHostname = !Strings.isNullOrEmpty(graphiteConfiguration.getHostnameOmitSuffix()) && hostname.endsWith(graphiteConfiguration.getHostnameOmitSuffix()) ? hostname.substring(0, hostname.length() - graphiteConfiguration.getHostnameOmitSuffix().length()) : hostname;
+    return graphiteConfiguration.getPrefix().replace("{hostname}", hostname);
+  }
 
-    return graphiteConfiguration.getPrefix().replace("{hostname}", trimmedHostname);
+  private Map<String, String> buildGraphiteTags() {
+    ImmutableMap.Builder<String, String> builder = ImmutableMap.builder();
+
+    for (Map.Entry<String, String> entry : graphiteConfiguration.getTags().entrySet()) {
+      builder.put(entry.getKey(), entry.getValue().replace("{hostname}", hostname));
+    }
+
+    return builder.build();
   }
 
   @Override
@@ -66,7 +76,7 @@ public class SingularityGraphiteReporterManaged implements Managed {
     LOG.info("Reporting data points to graphite server {}:{} every {} seconds with prefix '{}', predicates '{}', and tags '{}'.", graphiteConfiguration.getHostname(),
         graphiteConfiguration.getPort(), graphiteConfiguration.getPeriodSeconds(), prefix, JavaUtils.COMMA_JOINER.join(graphiteConfiguration.getPredicates()), JavaUtils.COMMA_EQUALS_MAP_JOINER.join(graphiteConfiguration.getTags()));
 
-    final Graphite graphite = new GraphiteWithTags(new InetSocketAddress(graphiteConfiguration.getHostname(), graphiteConfiguration.getPort()), SocketFactory.getDefault(), Charsets.UTF_8, graphiteConfiguration.getTags());
+    final Graphite graphite = new GraphiteWithTags(new InetSocketAddress(graphiteConfiguration.getHostname(), graphiteConfiguration.getPort()), SocketFactory.getDefault(), Charsets.UTF_8, buildGraphiteTags());
 
     final GraphiteReporter.Builder reporterBuilder = GraphiteReporter.forRegistry(registry);
 
