@@ -23,8 +23,8 @@ def download_s3_logs(args):
     async_requests = []
     all_logs = []
     for log_file in logs:
+        filename = log_file['key'].rsplit("/", 1)[1]
         if log_file_in_date_range(args, log_file):
-            filename = log_file['key'].rsplit("/", 1)[1]
             if not args.logtype or log_matches(args, filename):
                 logfetch_base.log(colored('Including log {0}'.format(filename), 'blue') + '\n', args, True)
                 if not already_downloaded(args.dest, filename):
