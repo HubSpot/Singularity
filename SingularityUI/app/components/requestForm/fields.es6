@@ -44,6 +44,7 @@ export const FIELDS_BY_REQUEST_TYPE = {
       }
     },
     {id: 'group', type: 'string'},
+    {id: 'maxTasksPerOffer', type: 'number'},
     {id: 'taskLogErrorRegex', type: 'string'},
     {id: 'taskLogErrorRegexCaseSensitive', type: 'bool'},
     {
