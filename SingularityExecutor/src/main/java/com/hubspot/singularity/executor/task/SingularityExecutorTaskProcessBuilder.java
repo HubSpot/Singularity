@@ -120,7 +120,8 @@ public class SingularityExecutorTaskProcessBuilder implements Callable<ProcessBu
       executorData.getMaxTaskThreads().or(configuration.getMaxTaskThreads()),
       !getExecutorUser().equals(executorData.getUser().or(configuration.getDefaultRunAsUser())),
       executorData.getMaxOpenFiles().orNull(),
-      String.format(configuration.getSwitchUserCommandFormat(), executorData.getUser().or(configuration.getDefaultRunAsUser())));
+      String.format(configuration.getSwitchUserCommandFormat(), executorData.getUser().or(configuration.getDefaultRunAsUser())),
+      configuration.isUseFileAttributes());
 
     EnvironmentContext environmentContext = new EnvironmentContext(taskInfo);
 

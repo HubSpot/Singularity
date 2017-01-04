@@ -6,7 +6,6 @@ import java.util.List;
 import com.google.common.base.Optional;
 import com.google.common.base.Strings;
 import com.google.common.io.Files;
-import com.hubspot.singularity.executor.config.LogrotateCompressionSettings;
 import com.hubspot.singularity.executor.config.SingularityExecutorConfiguration;
 import com.hubspot.singularity.executor.config.SingularityExecutorLogrotateAdditionalFile;
 import com.hubspot.singularity.executor.task.SingularityExecutorTaskDefinition;
@@ -26,7 +25,7 @@ public class LogrotateTemplateContext {
   }
 
   public String getRotateDateformat() {
-    return configuration.getLogrotateDateformat();
+    return configuration.getLogrotateDateformat().startsWith("-") ? configuration.getLogrotateDateformat().substring(1) :configuration.getLogrotateDateformat();
   }
 
   public int getRotateCount() {
@@ -43,6 +42,10 @@ public class LogrotateTemplateContext {
 
   public boolean getShouldLogRotateLogFile() {
     return taskDefinition.shouldLogrotateLogFile();
+  }
+
+  public String getTaskDirectory() {
+    return taskDefinition.getTaskDirectoryPath().toString();
   }
 
   public String getLogrotateFrequency() {
@@ -74,7 +77,19 @@ public class LogrotateTemplateContext {
     final List<LogrotateAdditionalFile> transformed = new ArrayList<>(original.size());
 
     for (SingularityExecutorLogrotateAdditionalFile additionalFile : original) {
-      transformed.add(new LogrotateAdditionalFile(taskDefinition.getTaskDirectoryPath().resolve(additionalFile.getFilename()).toString(), additionalFile.getExtension().or(Strings.emptyToNull(Files.getFileExtension(additionalFile.getFilename()))), additionalFile.getDateformat().or(configuration.getLogrotateExtrasDateformat())));
+      String dateformat;
+      if (additionalFile.getDateformat().isPresent()) {
+        dateformat = additionalFile.getDateformat().get().startsWith("-") ? additionalFile.getDateformat().get().substring(1) : additionalFile.getDateformat().get();
+      } else {
+        dateformat = configuration.getLogrotateExtrasDateformat().startsWith("-") ? configuration.getLogrotateExtrasDateformat().substring(1) : configuration.getLogrotateExtrasDateformat();
+      }
+
+      transformed.add(
+        new LogrotateAdditionalFile(
+          taskDefinition.getTaskDirectoryPath().resolve(additionalFile.getFilename()).toString(),
+          additionalFile.getExtension().or(Strings.emptyToNull(Files.getFileExtension(additionalFile.getFilename()))),
+          dateformat
+      ));
     }
 
     return transformed;
@@ -104,6 +119,14 @@ public class LogrotateTemplateContext {
 
   public String getLogfileExtension() {
     return taskDefinition.getServiceLogOutExtension();
+  }
+
+  public String getLogfileName() {
+    return configuration.getServiceLog();
+  }
+
+  public boolean isUseFileAttributes() {
+    return configuration.isUseFileAttributes();
   }
 
   @Override
