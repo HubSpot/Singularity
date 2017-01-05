@@ -22,6 +22,7 @@ import com.hubspot.deploy.S3ArtifactSignature;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.executor.config.SingularityExecutorConfiguration;
 import com.hubspot.singularity.executor.config.SingularityExecutorModule;
+import com.hubspot.singularity.runner.base.configuration.SingularityRunnerBaseConfiguration;
 import com.hubspot.singularity.runner.base.sentry.SingularityRunnerExceptionNotifier;
 import com.hubspot.singularity.s3.base.ArtifactDownloadRequest;
 import com.hubspot.singularity.s3.base.ArtifactManager;
@@ -37,15 +38,17 @@ public class SingularityExecutorArtifactFetcher {
 
   private final AsyncHttpClient localDownloadHttpClient;
   private final String localDownloadUri;
+  private final SingularityRunnerBaseConfiguration runnerBaseConfiguration;
   private final SingularityExecutorConfiguration executorConfiguration;
   private final SingularityS3Configuration s3Configuration;
   private final ObjectMapper objectMapper;
   private final SingularityRunnerExceptionNotifier exceptionNotifier;
 
   @Inject
-  public SingularityExecutorArtifactFetcher(@Named(SingularityExecutorModule.LOCAL_DOWNLOAD_HTTP_CLIENT) AsyncHttpClient localDownloadHttpClient, SingularityS3Configuration s3Configuration,
+  public SingularityExecutorArtifactFetcher(@Named(SingularityExecutorModule.LOCAL_DOWNLOAD_HTTP_CLIENT) AsyncHttpClient localDownloadHttpClient, SingularityRunnerBaseConfiguration runnerBaseConfiguration, SingularityS3Configuration s3Configuration,
       SingularityExecutorConfiguration executorConfiguration, ObjectMapper objectMapper, SingularityRunnerExceptionNotifier exceptionNotifier) {
     this.localDownloadHttpClient = localDownloadHttpClient;
+    this.runnerBaseConfiguration = runnerBaseConfiguration;
     this.executorConfiguration = executorConfiguration;
     this.s3Configuration = s3Configuration;
     this.objectMapper = objectMapper;
@@ -55,7 +58,7 @@ public class SingularityExecutorArtifactFetcher {
   }
 
   public SingularityExecutorTaskArtifactFetcher buildTaskFetcher(ExecutorData executorData, SingularityExecutorTask task) {
-    ArtifactManager artifactManager = new ArtifactManager(s3Configuration, task.getLog(), exceptionNotifier);
+    ArtifactManager artifactManager = new ArtifactManager(runnerBaseConfiguration, s3Configuration, task.getLog(), exceptionNotifier);
 
     return new SingularityExecutorTaskArtifactFetcher(artifactManager, executorData, task);
   }
