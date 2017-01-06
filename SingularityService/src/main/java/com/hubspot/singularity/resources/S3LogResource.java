@@ -199,7 +199,7 @@ public class S3LogResource extends AbstractHistoryResource {
     return prefixes;
   }
 
-  private List<SingularityS3Log> getS3LogsWithExecutorService(S3Configuration s3Configuration, Optional<String> group, ListeningExecutorService executorService, Collection<String> prefixes, final boolean excldueMetadata) throws InterruptedException, ExecutionException, TimeoutException {
+  private List<SingularityS3Log> getS3LogsWithExecutorService(S3Configuration s3Configuration, Optional<String> group, ListeningExecutorService executorService, Collection<String> prefixes, final boolean excludeMetadata) throws InterruptedException, ExecutionException, TimeoutException {
     List<ListenableFuture<S3Object[]>> futures = Lists.newArrayListWithCapacity(prefixes.size());
 
     final String s3Bucket = (group.isPresent() && s3Configuration.getGroupOverrides().containsKey(group.get())) ? s3Configuration.getGroupOverrides().get(group.get()).getS3Bucket() : s3Configuration.getS3Bucket();
@@ -242,7 +242,7 @@ public class S3LogResource extends AbstractHistoryResource {
 
           Optional<Long> maybeStartTime = Optional.absent();
           Optional<Long> maybeEndTime = Optional.absent();
-          if (!excldueMetadata) {
+          if (!excludeMetadata) {
             Map<String, Object> objectMetadata = s3Service.getObjectDetails(s3Bucket, s3Object.getKey()).getMetadataMap();
             maybeStartTime = getMetadataAsLong(objectMetadata, SingularityS3Log.LOG_START_S3_ATTR);
             maybeEndTime = getMetadataAsLong(objectMetadata, SingularityS3Log.LOG_END_S3_ATTR);
