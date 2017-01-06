@@ -3737,7 +3737,7 @@ Start a new deployment for a Request
 | taskPriorityLevel | double | optional | a priority level from 0.0 to 1.0 for all tasks associated with the request |
 | rackAffinity | Array[string] | optional | If set, prefer this specific rack when launching tasks |
 | emailConfigurationOverrides | [Map[SingularityEmailType,List[SingularityEmailDestination]]](#model-Map[SingularityEmailType,List[SingularityEmailDestination]]) | optional | Overrides for email recipients by email type for this request |
-| slavePlacement | [SlavePlacement](#model-SlavePlacement) | optional | Strategy for determining where to place new tasks. Can be SEPARATE, OPTIMISTIC, GREEDY, SEPARATE_BY_DEPLOY, or SEPARATE_BY_REQUEST |
+| slavePlacement | [SlavePlacement](#model-SlavePlacement) | optional | Strategy for determining where to place new tasks. Can be SEPARATE, OPTIMISTIC, GREEDY, SEPARATE_BY_DEPLOY, SEPARATE_BY_REQUEST, or SPREAD_ALL_SLAVES |
 | bounceAfterScale | boolean | optional | Used for SingularityUI. If true, automatically trigger a bounce after changing the request's instance count |
 | readWriteGroups | [Set](#model-Set) | optional | Users in these groups are allowed read/write access to this request |
 | group | string | optional | Auth group associated with this request. Users in this group are allowed read/write access to this request |

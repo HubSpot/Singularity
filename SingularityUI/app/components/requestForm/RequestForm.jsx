@@ -301,7 +301,8 @@ const RequestForm = (props) => {
         { label: 'Separate', value: 'SEPARATE' },
         { label: 'Optimistic', value: 'OPTIMISTIC' },
         { label: 'Greedy', value: 'GREEDY' },
-        { label: 'Separate by request', value: 'SEPARATE_BY_REQUEST'}
+        { label: 'Separate by request', value: 'SEPARATE_BY_REQUEST'},
+        { label: 'Spread all workers', value: 'SPREAD_ALL_SLAVES'}
       ]}
     />
   );
