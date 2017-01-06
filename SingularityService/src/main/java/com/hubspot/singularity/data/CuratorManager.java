@@ -80,9 +80,8 @@ public abstract class CuratorManager {
     if (bytes.isPresent()) {
       metrics.bytesMeter.mark(bytes.get());
     }
-    if (numItems.isPresent()) {
-      metrics.itemsMeter.mark(numItems.get());
-    }
+
+    metrics.itemsMeter.mark(numItems.or(1));
     metrics.timer.update(duration, TimeUnit.MILLISECONDS);
   }
 

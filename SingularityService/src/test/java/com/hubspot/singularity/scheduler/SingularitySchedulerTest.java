@@ -1239,21 +1239,26 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
   }
 
   @Test
-  public void testScheduledJobRetryKeepsArgs() {
-    Optional<List<String>> cmdLinArgs = Optional.of(Arrays.asList("arg1", "arg2"));
+  public void testRunNowScheduledJobDoesNotRetry() {
     initScheduledRequest();
     SingularityRequest request = requestResource.getRequest(requestId).getRequest();
     SingularityRequest newRequest = request.toBuilder().setNumRetriesOnFailure(Optional.of(2)).build();
     requestResource.postRequest(newRequest);
     initFirstDeploy();
 
-    requestResource.scheduleImmediately(requestId, Optional.of(new SingularityRunNowRequest(Optional.<String>absent(), Optional.<Boolean>absent(), Optional.<String>absent(), cmdLinArgs, Optional.<Resources>absent())));
+    requestResource.scheduleImmediately(requestId, Optional.of(new SingularityRunNowRequest(Optional.<String>absent(), Optional.<Boolean>absent(), Optional.<String>absent(), Optional.<List<String>>absent(), Optional.<Resources>absent())));
     resourceOffers();
 
     SingularityTask task = taskManager.getActiveTasks().get(0);
     statusUpdate(task, TaskState.TASK_FAILED);
 
-    Assert.assertEquals(cmdLinArgs, taskManager.getPendingTasks().get(0).getCmdLineArgsList());
+    SingularityDeployStatistics deployStatistics = deployManager.getDeployStatistics(task.getTaskId().getRequestId(), task.getTaskId().getDeployId()).get();
+
+    Assert.assertEquals(TaskState.TASK_FAILED, deployStatistics.getLastTaskState().get().toTaskState().get());
+    Assert.assertEquals(PendingType.TASK_DONE, taskManager.getPendingTaskIds().get(0).getPendingType());
+    Assert.assertEquals(1, deployStatistics.getNumFailures());
+    Assert.assertEquals(0, deployStatistics.getNumSequentialRetries());
+    Assert.assertEquals(Optional.<Long>absent(), deployStatistics.getAverageRuntimeMillis());
   }
 
   @Test
