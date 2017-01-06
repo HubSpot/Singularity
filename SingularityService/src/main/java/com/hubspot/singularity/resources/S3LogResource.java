@@ -3,8 +3,6 @@ package com.hubspot.singularity.resources;
 import static com.hubspot.singularity.WebExceptions.checkNotFound;
 import static com.hubspot.singularity.WebExceptions.timeout;
 
-import java.net.URL;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
@@ -25,7 +23,6 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
 import org.jets3t.service.S3Service;
-import org.jets3t.service.S3ServiceException;
 import org.jets3t.service.model.S3Object;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,9 +39,9 @@ import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Inject;
 import com.hubspot.mesos.JavaUtils;
-import com.hubspot.mesos.json.MesosFileChunkObject;
 import com.hubspot.singularity.SingularityAuthorizationScope;
 import com.hubspot.singularity.SingularityDeployHistory;
+import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityRequestHistory;
 import com.hubspot.singularity.SingularityRequestHistory.RequestHistoryType;
 import com.hubspot.singularity.SingularityRequestWithState;
@@ -56,7 +53,6 @@ import com.hubspot.singularity.SingularityTaskHistoryUpdate;
 import com.hubspot.singularity.SingularityTaskHistoryUpdate.SimplifiedTaskState;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityUser;
-import com.hubspot.singularity.WebExceptions;
 import com.hubspot.singularity.auth.SingularityAuthorizationHelper;
 import com.hubspot.singularity.config.S3Configuration;
 import com.hubspot.singularity.data.DeployManager;
@@ -64,7 +60,6 @@ import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.data.history.HistoryManager;
 import com.hubspot.singularity.data.history.RequestHistoryHelper;
-import com.hubspot.singularity.helpers.BlockCompressedFileHelper;
 import com.wordnik.swagger.annotations.Api;
 import com.wordnik.swagger.annotations.ApiOperation;
 import com.wordnik.swagger.annotations.ApiParam;
@@ -74,13 +69,9 @@ import com.wordnik.swagger.annotations.ApiParam;
 @Api(description="Manages Singularity task logs stored in S3.", value=S3LogResource.PATH)
 public class S3LogResource extends AbstractHistoryResource {
   public static final String PATH = SingularityService.API_BASE_PATH + "/logs";
-  private static final List<String> SUPPORTED_COMPRESSED_FILE_EXTENTIONS = Arrays.asList(".gz", ".bz2");
-
   private static final Logger LOG = LoggerFactory.getLogger(S3LogResource.class);
 
   private static final String FORCE_DOWNLOAD_S3_PARAMS = "response-content-disposition=attachment&response-content-encoding=identity";
-
-  private static final int DEFAULT_READ_LENGTH = 65000;
 
   private final Optional<S3Service> s3ServiceDefault;
   private final Map<String, S3Service> s3GroupOverride;
@@ -208,7 +199,7 @@ public class S3LogResource extends AbstractHistoryResource {
     return prefixes;
   }
 
-  private List<SingularityS3Log> getS3LogsWithExecutorService(S3Configuration s3Configuration, Optional<String> group, ListeningExecutorService executorService, Collection<String> prefixes) throws InterruptedException, ExecutionException, TimeoutException {
+  private List<SingularityS3Log> getS3LogsWithExecutorService(S3Configuration s3Configuration, Optional<String> group, ListeningExecutorService executorService, Collection<String> prefixes, final boolean excludeMetadata) throws InterruptedException, ExecutionException, TimeoutException {
     List<ListenableFuture<S3Object[]>> futures = Lists.newArrayListWithCapacity(prefixes.size());
 
     final String s3Bucket = (group.isPresent() && s3Configuration.getGroupOverrides().containsKey(group.get())) ? s3Configuration.getGroupOverrides().get(group.get()).getS3Bucket() : s3Configuration.getS3Bucket();
@@ -249,7 +240,15 @@ public class S3LogResource extends AbstractHistoryResource {
           String getUrl = s3Service.createSignedGetUrl(s3Bucket, s3Object.getKey(), expireAt);
           String downloadUrl = s3Service.createSignedUrl("GET", s3Bucket, s3Object.getKey(), FORCE_DOWNLOAD_S3_PARAMS, null, expireAt.getTime() / 1000, false);
 
-          return new SingularityS3Log(getUrl, s3Object.getKey(), s3Object.getLastModifiedDate().getTime(), s3Object.getContentLength(), downloadUrl);
+          Optional<Long> maybeStartTime = Optional.absent();
+          Optional<Long> maybeEndTime = Optional.absent();
+          if (!excludeMetadata) {
+            Map<String, Object> objectMetadata = s3Service.getObjectDetails(s3Bucket, s3Object.getKey()).getMetadataMap();
+            maybeStartTime = getMetadataAsLong(objectMetadata, SingularityS3Log.LOG_START_S3_ATTR);
+            maybeEndTime = getMetadataAsLong(objectMetadata, SingularityS3Log.LOG_END_S3_ATTR);
+          }
+
+          return new SingularityS3Log(getUrl, s3Object.getKey(), s3Object.getLastModifiedDate().getTime(), s3Object.getContentLength(), downloadUrl, maybeStartTime, maybeEndTime);
         }
 
       }));
@@ -258,7 +257,24 @@ public class S3LogResource extends AbstractHistoryResource {
     return Futures.allAsList(logFutures).get(s3Configuration.getWaitForS3LinksSeconds(), TimeUnit.SECONDS);
   }
 
-  private List<SingularityS3Log> getS3Logs(S3Configuration s3Configuration, Optional<String> group, Collection<String> prefixes) throws InterruptedException, ExecutionException, TimeoutException {
+  private Optional<Long> getMetadataAsLong(Map<String, Object> objectMetadata, String keyName) {
+    try {
+      if (objectMetadata.containsKey(keyName)) {
+        Object maybeLong = objectMetadata.get(keyName);
+        if (maybeLong instanceof String) {
+          return Optional.of(Long.parseLong((String) maybeLong));
+        } else {
+          return Optional.of((Long) maybeLong);
+        }
+      } else {
+        return Optional.absent();
+      }
+    } catch (Exception e) {
+      return Optional.absent();
+    }
+  }
+
+  private List<SingularityS3Log> getS3Logs(S3Configuration s3Configuration, Optional<String> group, Collection<String> prefixes, boolean excldueMetadata) throws InterruptedException, ExecutionException, TimeoutException {
     if (prefixes.isEmpty()) {
       return Collections.emptyList();
     }
@@ -267,7 +283,7 @@ public class S3LogResource extends AbstractHistoryResource {
         new ThreadFactoryBuilder().setNameFormat("S3LogFetcher-%d").build()));
 
     try {
-      List<SingularityS3Log> logs = Lists.newArrayList(getS3LogsWithExecutorService(s3Configuration, group, executorService, prefixes));
+      List<SingularityS3Log> logs = Lists.newArrayList(getS3LogsWithExecutorService(s3Configuration, group, executorService, prefixes, excldueMetadata));
       Collections.sort(logs, LOG_COMPARATOR);
       return logs;
     } finally {
@@ -280,15 +296,14 @@ public class S3LogResource extends AbstractHistoryResource {
     checkNotFound(configuration.isPresent(), "S3 configuration was absent");
   }
 
-  private void checkForCompressedFile(String key) {
-    boolean isSupportedFileType = false;
-    for (String type : SUPPORTED_COMPRESSED_FILE_EXTENTIONS) {
-      if (key.endsWith(type)) {
-        isSupportedFileType = true;
-      }
-    }
-    if (!isSupportedFileType) {
-      WebExceptions.badRequest(String.format("Not a supported file type. (%s)", key));
+  private Optional<String> getRequestGroupForTask(final SingularityTaskId taskId) {
+    Optional<SingularityTaskHistory> maybeTaskHistory = getTaskHistory(taskId);
+    if (maybeTaskHistory.isPresent()) {
+      SingularityRequest request = maybeTaskHistory.get().getTask().getTaskRequest().getRequest();
+      authorizationHelper.checkForAuthorization(request, user, SingularityAuthorizationScope.READ);
+      return request.getGroup();
+    } else {
+      return getRequestGroup(taskId.getRequestId());
     }
   }
 
@@ -310,40 +325,20 @@ public class S3LogResource extends AbstractHistoryResource {
     }
   }
 
-  private SingularityS3Log getS3Log(S3Configuration s3Configuration, String requestId, String key) throws Exception {
-    try {
-      Optional<String> group = getRequestGroup(requestId);
-
-      final Date expireAt = new Date(System.currentTimeMillis() + s3Configuration.getExpireS3LinksAfterMillis());
-      final String s3Bucket = (group.isPresent() && s3Configuration.getGroupOverrides().containsKey(group.get())) ? s3Configuration.getGroupOverrides().get(group.get()).getS3Bucket() : s3Configuration.getS3Bucket();
-      final S3Service s3Service = (group.isPresent() && s3GroupOverride.containsKey(group.get())) ? s3GroupOverride.get(group.get()) : s3ServiceDefault.get();
-
-      S3Object s3Object = s3Service.getObject(s3Bucket, key);
-      String getUrl = s3Service.createSignedGetUrl(s3Bucket, s3Object.getKey(), expireAt);
-      String downloadUrl = s3Service.createSignedUrl("GET", s3Bucket, s3Object.getKey(), FORCE_DOWNLOAD_S3_PARAMS, null, expireAt.getTime() / 1000, false);
-      return new SingularityS3Log(getUrl, s3Object.getKey(), s3Object.getLastModifiedDate().getTime(), s3Object.getContentLength(), downloadUrl);
-    } catch (S3ServiceException e) {
-      if (e.getResponseCode() == 404) {
-        throw WebExceptions.notFound(String.format("Object with key %s does not exist", key));
-      }
-
-      throw e;
-    }
-  }
-
   @GET
   @Path("/task/{taskId}")
   @ApiOperation("Retrieve the list of logs stored in S3 for a specific task.")
   public List<SingularityS3Log> getS3LogsForTask(
       @ApiParam("The task ID to search for") @PathParam("taskId") String taskId,
       @ApiParam("Start timestamp (millis, 13 digit)") @QueryParam("start") Optional<Long> start,
-      @ApiParam("End timestamp (mills, 13 digit)") @QueryParam("end") Optional<Long> end) throws Exception {
+      @ApiParam("End timestamp (mills, 13 digit)") @QueryParam("end") Optional<Long> end,
+      @ApiParam("Exclude custom object metadata") @QueryParam("excludeMetadata") Optional<Boolean> excludeMetadata) throws Exception {
     checkS3();
 
     SingularityTaskId taskIdObject = getTaskIdObject(taskId);
 
     try {
-      return getS3Logs(configuration.get(), getRequestGroup(taskIdObject.getRequestId()), getS3PrefixesForTask(configuration.get(), taskIdObject, start, end));
+      return getS3Logs(configuration.get(), getRequestGroupForTask(taskIdObject), getS3PrefixesForTask(configuration.get(), taskIdObject, start, end), excludeMetadata.or(false));
     } catch (TimeoutException te) {
       throw timeout("Timed out waiting for response from S3 for %s", taskId);
     } catch (Throwable t) {
@@ -357,43 +352,12 @@ public class S3LogResource extends AbstractHistoryResource {
   public List<SingularityS3Log> getS3LogsForRequest(
       @ApiParam("The request ID to search for") @PathParam("requestId") String requestId,
       @ApiParam("Start timestamp (millis, 13 digit)") @QueryParam("start") Optional<Long> start,
-      @ApiParam("End timestamp (mills, 13 digit)") @QueryParam("end") Optional<Long> end) throws Exception {
+      @ApiParam("End timestamp (mills, 13 digit)") @QueryParam("end") Optional<Long> end,
+      @ApiParam("Exclude custom object metadata") @QueryParam("excludeMetadata") Optional<Boolean> excludeMetadata) throws Exception {
     checkS3();
 
     try {
-      return getS3Logs(configuration.get(), getRequestGroup(requestId), getS3PrefixesForRequest(configuration.get(), requestId, start, end));
-    } catch (TimeoutException te) {
-      throw timeout("Timed out waiting for response from S3 for %s", requestId);
-    } catch (Throwable t) {
-      throw Throwables.propagate(t);
-    }
-  }
-
-  @GET
-  @Path("/request/{requestId}/read")
-  @ApiOperation("Retrieve the list of logs stored in S3 for a specific request.")
-  public MesosFileChunkObject readS3LogForRequest(
-    @ApiParam("The request ID to search for") @PathParam("requestId") String requestId,
-    @ApiParam("S3 Key for the log to read") @QueryParam("key") String key,
-    @ApiParam("Offset to read in the log file") @QueryParam("offset") Optional<Long> offset,
-    @ApiParam("Length in bytes to read") @QueryParam("length") Optional<Integer> length,
-    @ApiParam("Read backwards from offset") @QueryParam("reverse") Optional<Boolean> reverse) throws Exception {
-    checkS3();
-    checkForCompressedFile(key);
-
-    try {
-      SingularityS3Log s3Log = getS3Log(configuration.get(), requestId, key);
-
-      if (!offset.isPresent() && length.or(0) == 0) {
-        // Imitate the mesos slave api and return the file size when no length is requested
-        return new MesosFileChunkObject("", s3Log.getSize(), Optional.<Long>absent());
-      }
-
-      if (reverse.or(false)) {
-        return BlockCompressedFileHelper.readInReverseFromOffset(new URL(s3Log.getDownloadUrl()), offset, length.or(DEFAULT_READ_LENGTH));
-      } else {
-        return BlockCompressedFileHelper.getChunkAtOffset(new URL(s3Log.getDownloadUrl()), offset, length.or(DEFAULT_READ_LENGTH));
-      }
+      return getS3Logs(configuration.get(), getRequestGroup(requestId), getS3PrefixesForRequest(configuration.get(), requestId, start, end), excludeMetadata.or(false));
     } catch (TimeoutException te) {
       throw timeout("Timed out waiting for response from S3 for %s", requestId);
     } catch (Throwable t) {
@@ -408,11 +372,12 @@ public class S3LogResource extends AbstractHistoryResource {
       @ApiParam("The request ID to search for") @PathParam("requestId") String requestId,
       @ApiParam("The deploy ID to search for") @PathParam("deployId") String deployId,
       @ApiParam("Start timestamp (millis, 13 digit)") @QueryParam("start") Optional<Long> start,
-      @ApiParam("End timestamp (mills, 13 digit)") @QueryParam("end") Optional<Long> end) throws Exception {
+      @ApiParam("End timestamp (mills, 13 digit)") @QueryParam("end") Optional<Long> end,
+      @ApiParam("Exclude custom object metadata") @QueryParam("excludeMetadata") Optional<Boolean> excludeMetadata) throws Exception {
     checkS3();
 
     try {
-      return getS3Logs(configuration.get(), getRequestGroup(requestId), getS3PrefixesForDeploy(configuration.get(), requestId, deployId, start, end));
+      return getS3Logs(configuration.get(), getRequestGroup(requestId), getS3PrefixesForDeploy(configuration.get(), requestId, deployId, start, end), excludeMetadata.or(false));
     } catch (TimeoutException te) {
       throw timeout("Timed out waiting for response from S3 for %s-%s", requestId, deployId);
     } catch (Throwable t) {

@@ -421,7 +421,7 @@ class TaskDetail extends Component {
         <TaskHistory taskUpdates={this.props.task.taskUpdates} />
         <TaskLatestLog taskId={this.props.taskId} isStillRunning={this.props.task.isStillRunning} />
         {this.renderFiles(filesToDisplay)}
-        {_.isEmpty(this.props.s3Logs) || <TaskS3Logs taskId={this.props.task.task.taskId.id} s3Files={this.props.s3Logs} />}
+        {_.isEmpty(this.props.s3Logs) || <TaskS3Logs taskId={this.props.task.task.taskId.id} s3Files={this.props.s3Logs} taskStartedAt={this.props.task.task.taskId.startedAt} />}
         {_.isEmpty(this.props.task.loadBalancerUpdates) || <TaskLbUpdates loadBalancerUpdates={this.props.task.loadBalancerUpdates} />}
         <TaskInfo task={this.props.task.task} ports={this.props.task.ports} directory={this.props.task.directory} />
         {this.renderResourceUsage()}

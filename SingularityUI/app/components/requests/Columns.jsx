@@ -209,6 +209,7 @@ export const Actions = (
           <ScaleButton
             requestId={cellData.id}
             currentInstances={cellData.request.instances}
+            bounceAfterScaleDefault={Utils.maybe(cellData.request, ['bounceAfterScale'], false)}
           />
         );
 

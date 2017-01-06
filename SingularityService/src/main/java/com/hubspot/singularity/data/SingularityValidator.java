@@ -92,6 +92,7 @@ public class SingularityValidator {
   private final boolean allowRequestsWithoutOwners;
   private final boolean createDeployIds;
   private final int deployIdLength;
+  private final boolean allowBounceToSameHost;
   private final UIConfiguration uiConfiguration;
   private final SlavePlacement defaultSlavePlacement;
   private final DeployHistoryHelper deployHistoryHelper;
@@ -124,6 +125,8 @@ public class SingularityValidator {
     this.maxMemoryMbPerInstance = configuration.getMesosConfiguration().getMaxMemoryMbPerInstance();
     this.maxMemoryMbPerRequest = configuration.getMesosConfiguration().getMaxMemoryMbPerRequest();
     this.maxInstancesPerRequest = configuration.getMesosConfiguration().getMaxNumInstancesPerRequest();
+
+    this.allowBounceToSameHost = configuration.isAllowBounceToSameHost();
 
     this.maxTotalHealthcheckTimeoutSeconds = configuration.getHealthcheckMaxTotalTimeoutSeconds();
     this.defaultHealthcheckIntervalSeconds = configuration.getHealthcheckIntervalSeconds();
@@ -220,6 +223,10 @@ public class SingularityValidator {
       checkBadRequest(request.getInstances().or(1) == 1, "Scheduler requests can not be ran on more than one instance");
     } else if (request.isOneOff()) {
       checkBadRequest(!request.getInstances().isPresent(), "one-off requests can not define a # of instances");
+    }
+
+    if (request.getMaxTasksPerOffer().isPresent()) {
+      checkBadRequest(request.getMaxTasksPerOffer().get() > 0, "maxTasksPerOffer must be positive");
     }
 
     return request.toBuilder().setQuartzSchedule(Optional.fromNullable(quartzSchedule)).build();
@@ -524,11 +531,20 @@ public class SingularityValidator {
   public void checkResourcesForBounce(SingularityRequest request, boolean isIncremental) {
     SlavePlacement placement = request.getSlavePlacement().or(defaultSlavePlacement);
 
-    if (placement != SlavePlacement.GREEDY && placement != SlavePlacement.OPTIMISTIC) {
+    if ((isAllowBounceToSameHost(request) && placement == SlavePlacement.SEPARATE_BY_REQUEST)
+      || (!isAllowBounceToSameHost(request) && placement != SlavePlacement.GREEDY && placement != SlavePlacement.OPTIMISTIC)) {
       int currentActiveSlaveCount = slaveManager.getNumObjectsAtState(MachineState.ACTIVE);
       int requiredSlaveCount = isIncremental ? request.getInstancesSafe() + 1 : request.getInstancesSafe() * 2;
 
       checkBadRequest(currentActiveSlaveCount >= requiredSlaveCount, "Not enough active slaves to successfully scale request %s to %s instances (minimum required: %s, current: %s).", request.getId(), request.getInstancesSafe(), requiredSlaveCount, currentActiveSlaveCount);
+    }
+  }
+
+  private boolean isAllowBounceToSameHost(SingularityRequest request) {
+    if (request.getAllowBounceToSameHost().isPresent()) {
+      return request.getAllowBounceToSameHost().get();
+    } else {
+      return allowBounceToSameHost;
     }
   }
 

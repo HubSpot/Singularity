@@ -244,18 +244,6 @@
         <artifactId>rfc5545-datetime</artifactId>
         <version>0.2.2</version>
       </dependency>
-
-      <dependency>
-        <groupId>com.github.samtools</groupId>
-        <artifactId>htsjdk</artifactId>
-        <version>2.6.1</version>
-        <exclusions>
-          <exclusion>
-            <groupId>commons-logging</groupId>
-            <artifactId>commons-logging</artifactId>
-          </exclusion>
-        </exclusions>
-      </dependency>
     </dependencies>
   </dependencyManagement>
 

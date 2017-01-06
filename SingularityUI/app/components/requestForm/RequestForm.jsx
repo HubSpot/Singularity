@@ -348,6 +348,15 @@ const RequestForm = (props) => {
     />
   );
 
+  const allowBounceToSameHost = (
+    <CheckboxFormGroup
+      id="allow-bounce-to-same-host"
+      label="Allow Bounce To Same Host"
+      checked={getValue('allowBounceToSameHost') || false}
+      onChange={(newValue) => updateField('allowBounceToSameHost', newValue)}
+    />
+  );
+
   const waitAtLeastMillisAfterTaskFinishesForReschedule = (
     <TextFormGroup
       id="waitAtLeast"
@@ -517,6 +526,17 @@ const RequestForm = (props) => {
     />
   );
 
+  const maxTasksPerOffer = (
+    <TextFormGroup
+      id="max-per-offer"
+      onChange={event => updateField('maxTasksPerOffer', event.target.value)}
+      value={getValue('maxTasksPerOffer')}
+      label="Schedule at most this many tasks using a single offer form a single slave"
+      required={INDEXED_FIELDS.maxTasksPerOffer.required}
+      feedback={feedback('maxTasksPerOffer')}
+    />
+  );
+
   const taskLogErrorRegex = (
     <TextFormGroup
       id="task-log-error-regex"
@@ -631,6 +651,7 @@ const RequestForm = (props) => {
           { shouldRenderField('rackSensitive') && rackSensitive }
           { shouldRenderField('hideEvenNumberAcrossRacksHint') && hideEvenNumberAcrossRacksHint }
           { shouldRenderField('loadBalanced') && loadBalanced }
+          { shouldRenderField('allowBounceToSameHost') && allowBounceToSameHost }
           { shouldRenderField('waitAtLeastMillisAfterTaskFinishesForReschedule') && waitAtLeastMillisAfterTaskFinishesForReschedule }
           { shouldRenderField('rackAffinity') && rackAffinity }
           { shouldRenderField('scheduleType') && scheduleTypeField }
@@ -651,6 +672,7 @@ const RequestForm = (props) => {
                   { shouldRenderField('group') && group }
                   { shouldRenderField('readOnlyGroups') && readOnlyGroups }
                   { shouldRenderField('readWriteGroups') && readWriteGroups }
+                  { shouldRenderField('maxTasksPerOffer') && maxTasksPerOffer }
                   { shouldRenderField('taskLogErrorRegex') && taskLogErrorRegex }
                   { shouldRenderField('taskLogErrorRegexCaseSensitive') && taskLogErrorRegexCaseSensitive }
                   { shouldRenderField('emailConfigurationOverrides') && emailConfigurationOverrides }

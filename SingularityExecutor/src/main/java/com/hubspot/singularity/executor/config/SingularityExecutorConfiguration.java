@@ -113,11 +113,11 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
 
   @NotEmpty
   @JsonProperty
-  private String logrotateDateformat= "-%Y%m%d%s";
+  private String logrotateDateformat= "%Y%m%d%s";
 
   @NotEmpty
   @JsonProperty
-  private String logrotateExtrasDateformat = "-%Y%m%d";
+  private String logrotateExtrasDateformat = "%Y%m%d";
 
   @NotNull
   @JsonProperty
@@ -245,6 +245,9 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
   @NotEmpty
   @JsonProperty
   private String cronDirectory = "/etc/cron.d";
+
+  @JsonProperty
+  private boolean useFileAttributes = false;
 
   public SingularityExecutorConfiguration() {
     super(Optional.of("singularity-executor.log"));
@@ -686,6 +689,15 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
     this.cronDirectory = cronDirectory;
   }
 
+  public boolean isUseFileAttributes() {
+    return useFileAttributes;
+  }
+
+  public SingularityExecutorConfiguration setUseFileAttributes(boolean useFileAttributes) {
+    this.useFileAttributes = useFileAttributes;
+    return this;
+  }
+
   public LogrotateCompressionSettings getLogrotateCompressionSettings() {
     return logrotateCompressionSettings;
   }
@@ -712,7 +724,7 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
 
   @Override
   public String toString() {
-    return "SingularityExecutorConfiguration[" +
+    return "SingularityExecutorConfiguration{" +
             "executorJavaLog='" + executorJavaLog + '\'' +
             ", executorBashLog='" + executorBashLog + '\'' +
             ", serviceLog='" + serviceLog + '\'' +
@@ -733,19 +745,19 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
             ", logrotateConfDirectory='" + logrotateConfDirectory + '\'' +
             ", logrotateToDirectory='" + logrotateToDirectory + '\'' +
             ", logrotateMaxageDays=" + logrotateMaxageDays +
-            ", localDownloadServiceMaxConnections=" + localDownloadServiceMaxConnections +
             ", logrotateCount=" + logrotateCount +
             ", logrotateDateformat='" + logrotateDateformat + '\'' +
             ", logrotateExtrasDateformat='" + logrotateExtrasDateformat + '\'' +
-            ", logrotateAdditionalFiles=" + logrotateAdditionalFiles + '\'' +
-            ", logrotateCompressionSettings='" + logrotateCompressionSettings + '\'' +
-            ", s3UploaderAdditionalFiles='" + s3UploaderAdditionalFiles + '\'' +
-            ", tailLogLinesToSave='" + tailLogLinesToSave + '\'' +
+            ", logrotateCompressionSettings=" + logrotateCompressionSettings +
+            ", logrotateAdditionalFiles=" + logrotateAdditionalFiles +
+            ", s3UploaderAdditionalFiles=" + s3UploaderAdditionalFiles +
+            ", tailLogLinesToSave=" + tailLogLinesToSave +
             ", serviceFinishedTailLog='" + serviceFinishedTailLog + '\'' +
             ", s3UploaderKeyPattern='" + s3UploaderKeyPattern + '\'' +
             ", s3UploaderBucket='" + s3UploaderBucket + '\'' +
             ", useLocalDownloadService=" + useLocalDownloadService +
             ", localDownloadServiceTimeoutMillis=" + localDownloadServiceTimeoutMillis +
+            ", localDownloadServiceMaxConnections=" + localDownloadServiceMaxConnections +
             ", maxTaskThreads=" + maxTaskThreads +
             ", dockerPrefix='" + dockerPrefix + '\'' +
             ", dockerStopTimeout=" + dockerStopTimeout +
@@ -760,14 +772,17 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
             ", shellCommandPidPlaceholder='" + shellCommandPidPlaceholder + '\'' +
             ", shellCommandUserPlaceholder='" + shellCommandUserPlaceholder + '\'' +
             ", shellCommandPidFile='" + shellCommandPidFile + '\'' +
-            ", shellCommandPrefix='" + shellCommandPrefix + '\'' +
-            ", dockerClientTimeLimitMs='" + dockerClientTimeLimitSeconds + '\'' +
-            ", dockerClientConnectionPoolSize='" + dockerClientConnectionPoolSize + '\'' +
-            ", threadCheckerType='" + threadCheckerType + '\'' +
-            ", logrotateFrequency='" + logrotateFrequency + '\'' +
+            ", shellCommandPrefix=" + shellCommandPrefix +
+            ", dockerClientTimeLimitSeconds=" + dockerClientTimeLimitSeconds +
+            ", dockerClientConnectionPoolSize=" + dockerClientConnectionPoolSize +
+            ", maxDockerPullAttempts=" + maxDockerPullAttempts +
+            ", dockerAuthConfig=" + dockerAuthConfig +
+            ", threadCheckerType=" + threadCheckerType +
+            ", logrotateFrequency=" + logrotateFrequency +
             ", cronDirectory='" + cronDirectory + '\'' +
             ", applyS3StorageClassAfterBytes='" + applyS3StorageClassAfterBytes + '\'' +
             ", s3StorageClass='" + s3StorageClass + '\'' +
-            ']';
+            ", useFileAttributes=" + useFileAttributes +
+            '}';
   }
 }

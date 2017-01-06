@@ -169,6 +169,8 @@ public class SingularityConfiguration extends Configuration {
 
   private int maxTasksPerOffer = 0;
 
+  private int maxTasksPerOfferPerRequest = 0;
+
   private int maxRequestIdSize = 100;
 
   private int maxUserIdSize = 100;
@@ -301,6 +303,8 @@ public class SingularityConfiguration extends Configuration {
   private boolean processStatusUpdatesInSeparateThread = false;
 
   private boolean rebalanceRacksOnScaleDown = false;
+
+  private boolean allowBounceToSameHost = false;
 
   public long getAskDriverToKillTasksAgainAfterMillis() {
     return askDriverToKillTasksAgainAfterMillis;
@@ -572,6 +576,10 @@ public class SingularityConfiguration extends Configuration {
 
   public int getMaxTasksPerOffer() {
     return maxTasksPerOffer;
+  }
+
+  public int getMaxTasksPerOfferPerRequest() {
+    return maxTasksPerOfferPerRequest;
   }
 
   public MesosConfiguration getMesosConfiguration() {
@@ -915,6 +923,10 @@ public class SingularityConfiguration extends Configuration {
     this.maxTasksPerOffer = maxTasksPerOffer;
   }
 
+  public void setMaxTasksPerOfferPerRequest(int maxTasksPerOfferPerRequest) {
+    this.maxTasksPerOfferPerRequest = maxTasksPerOfferPerRequest;
+  }
+
   public void setMesosConfiguration(MesosConfiguration mesosConfiguration) {
     this.mesosConfiguration = mesosConfiguration;
   }
@@ -1206,5 +1218,14 @@ public class SingularityConfiguration extends Configuration {
 
   public void setRebalanceRacksOnScaleDown(boolean rebalanceRacksOnScaleDown) {
     this.rebalanceRacksOnScaleDown = rebalanceRacksOnScaleDown;
+  }
+
+  public boolean isAllowBounceToSameHost() {
+    return allowBounceToSameHost;
+  }
+
+  public SingularityConfiguration setAllowBounceToSameHost(boolean allowBounceToSameHost) {
+    this.allowBounceToSameHost = allowBounceToSameHost;
+    return this;
   }
 }
