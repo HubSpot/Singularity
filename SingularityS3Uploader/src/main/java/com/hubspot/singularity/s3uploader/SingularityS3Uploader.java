@@ -45,12 +45,12 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.SingularityS3Log;
-import com.hubspot.singularity.s3uploader.config.SingularityS3UploaderContentHeaders;
 import com.hubspot.singularity.SingularityS3FormatHelper;
 import com.hubspot.singularity.runner.base.sentry.SingularityRunnerExceptionNotifier;
 import com.hubspot.singularity.runner.base.shared.S3UploadMetadata;
 import com.hubspot.singularity.runner.base.shared.SimpleProcessManager;
 import com.hubspot.singularity.s3uploader.config.SingularityS3UploaderConfiguration;
+import com.hubspot.singularity.s3uploader.config.SingularityS3UploaderContentHeaders;
 
 public class SingularityS3Uploader implements Closeable {
 

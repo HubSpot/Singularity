@@ -8,7 +8,7 @@ import callbacks
 
 TASK_FORMAT = '/task/{0}'
 S3LOGS_URI_FORMAT = '{0}/logs{1}'
-REQUEST_FORMAT = '/request/{0}'
+REQUEST_FORMAT = '/request/{0}?excludeMetadata=true'
 
 FILE_REGEX="\d{13}-([^-]*)-\d{8,20}\.gz"
 
