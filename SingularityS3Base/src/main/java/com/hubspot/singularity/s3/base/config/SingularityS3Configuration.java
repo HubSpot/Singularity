@@ -45,7 +45,7 @@ public class SingularityS3Configuration extends BaseRunnerConfiguration {
 
   @Min(1)
   @JsonProperty
-  private long s3ChunkDownloadTimeoutMillis = TimeUnit.SECONDS.toMillis(30);
+  private int s3ChunkDownloadTimeoutMillis = (int) TimeUnit.SECONDS.toMillis(30);
 
   @Min(1)
   @JsonProperty
@@ -131,11 +131,11 @@ public class SingularityS3Configuration extends BaseRunnerConfiguration {
     this.localDownloadPath = localDownloadPath;
   }
 
-  public Long getS3ChunkDownloadTimeoutMillis() {
+  public int getS3ChunkDownloadTimeoutMillis() {
     return s3ChunkDownloadTimeoutMillis;
   }
 
-  public void setS3ChunkDownloadTimeoutMillis(long s3ChunkDownloadTimeoutMillis) {
+  public void setS3ChunkDownloadTimeoutMillis(int s3ChunkDownloadTimeoutMillis) {
     this.s3ChunkDownloadTimeoutMillis = s3ChunkDownloadTimeoutMillis;
   }
 
