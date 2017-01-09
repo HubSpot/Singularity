@@ -128,8 +128,7 @@ public class SingularityCleaner {
 
     // If pausing, must be a long-running task to kill here
     if (requestWithState.get().getState() == RequestState.PAUSED &&
-      ((taskCleanup.getCleanupType() == TaskCleanupType.PAUSING && request.isLongRunning())
-        || !(taskCleanup.getCleanupType() == TaskCleanupType.PAUSING))) {
+      (!(taskCleanup.getCleanupType() == TaskCleanupType.PAUSING) || request.isLongRunning())) {
       LOG.debug("Killing a task {} immediately because the request was paused", taskCleanup);
       return true;
     }
@@ -355,13 +354,13 @@ public class SingularityCleaner {
               createLbCleanupRequest(requestId, matchingActiveTaskIds);
             }
           } else {
-            if (matchingActiveTaskIds.iterator().hasNext()) {
+            if (!Iterables.isEmpty(matchingActiveTaskIds)) {
               delete(requestCleanup, matchingActiveTaskIds);
             } else {
               Optional<SingularityRequestHistory> maybeHistory = requestHistoryHelper.getLastHistory(requestId);
               if (maybeHistory.isPresent() && maybeHistory.get().getRequest().isLoadBalanced() && configuration.isDeleteRemovedRequestsFromLoadBalancer()) {
                 createLbCleanupRequest(requestId, matchingActiveTaskIds);
-                requestManager.deleted(maybeHistory.get().getRequest(), RequestHistoryType.DELETED, System.currentTimeMillis(), Optional.<String>absent(), Optional.<String>absent());
+                requestManager.markDeleted(maybeHistory.get().getRequest(), RequestHistoryType.DELETED, System.currentTimeMillis(), Optional.<String>absent(), Optional.<String>absent());
               }
               cleanupDeployState(requestCleanup);
             }
@@ -628,13 +627,17 @@ public class SingularityCleaner {
   }
 
   private void cleanupRequestIfNoRemainingTasks(SingularityTaskId taskId, Map<String, List<String>> requestIdToTaskIds) {
-    List<String> requestTasks = requestIdToTaskIds.get(taskId.getRequestId());
+    String requestId = taskId.getRequestId();
+    if (requestIdToTaskIds.get(requestId) == null) {
+      return;
+    }
+    List<String> requestTasks = requestIdToTaskIds.get(requestId);
     requestTasks.remove(taskId.getId());
     if (requestTasks.isEmpty()) {
       requestManager.createCleanupRequest(
           new SingularityRequestCleanup(
               Optional.<String> absent(), RequestCleanupType.DELETING, System.currentTimeMillis(),
-              Optional.of(Boolean.TRUE), taskId.getRequestId(), Optional.<String> absent(),
+              Optional.of(Boolean.TRUE), requestId, Optional.<String> absent(),
               Optional.<Boolean> absent(), Optional.<String> absent(), Optional.<String> absent(), Optional.<SingularityShellCommand>absent()));
     }
   }
