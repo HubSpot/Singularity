@@ -250,6 +250,7 @@ public class S3LogResource extends AbstractHistoryResource {
         if (maybeContinuationToken.isPresent() && maybeContinuationToken.get().isLastPage()) {
           LOG.trace("No further content for prefix {} in bucket {}, skipping", s3Prefix, s3Bucket);
           continuationTokens.add(maybeContinuationToken.get());
+          continue;
         }
         futures.add(executorService.submit(new Callable<List<S3ObjectSummary>>() {
 
