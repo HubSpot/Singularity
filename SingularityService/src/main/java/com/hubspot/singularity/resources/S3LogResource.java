@@ -237,7 +237,7 @@ public class S3LogResource extends AbstractHistoryResource {
   private boolean incrementIfLessThan(AtomicInteger count, int add, int threshold) {
     while (true) {
       int current = count.get();
-      if (current > threshold) {
+      if (current >= threshold) {
         return false;
       }
       if (count.compareAndSet(current, current + add)) {
