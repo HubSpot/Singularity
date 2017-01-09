@@ -18,6 +18,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -442,6 +443,7 @@ public class S3LogResource extends AbstractHistoryResource {
 
   @POST
   @Path("/task/{taskId}/paginated")
+  @Consumes(MediaType.APPLICATION_JSON)
   @ApiOperation("Retrieve the list of logs stored in S3 for a specific task.")
   public SingularityS3SearchResult getPaginatedS3LogsForTask(
       @ApiParam("The task ID to search for") @PathParam("taskId") String taskId,
@@ -485,6 +487,7 @@ public class S3LogResource extends AbstractHistoryResource {
 
   @POST
   @Path("/request/{requestId}/paginated")
+  @Consumes(MediaType.APPLICATION_JSON)
   @ApiOperation("Retrieve the list of logs stored in S3 for a specific request.")
   public SingularityS3SearchResult getPaginatedS3LogsForRequest(
       @ApiParam("The request ID to search for") @PathParam("requestId") String requestId,
@@ -528,6 +531,7 @@ public class S3LogResource extends AbstractHistoryResource {
 
   @POST
   @Path("/request/{requestId}/deploy/{deployId}/paginated")
+  @Consumes(MediaType.APPLICATION_JSON)
   @ApiOperation("Retrieve the list of logs stored in S3 for a specific deploy.")
   public SingularityS3SearchResult getPaginatedS3LogsForDeploy(
       @ApiParam("The request ID to search for") @PathParam("requestId") String requestId,
