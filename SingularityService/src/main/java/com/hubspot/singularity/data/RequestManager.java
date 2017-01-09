@@ -256,11 +256,11 @@ public class RequestManager extends CuratorAsyncManager {
     return save(request, RequestState.ACTIVE, historyType, timestamp, user, message);
   }
 
-  public SingularityCreateResult deleting(SingularityRequest request, RequestHistoryType historyType, long timestamp, Optional<String> user, Optional<String> message) {
+  public SingularityCreateResult markDeleting(SingularityRequest request, RequestHistoryType historyType, long timestamp, Optional<String> user, Optional<String> message) {
     return save(request, RequestState.DELETING, historyType, timestamp, user, message);
   }
 
-  public SingularityCreateResult deleted(SingularityRequest request, RequestHistoryType historyType, long timestamp, Optional<String> user, Optional<String> message) {
+  public SingularityCreateResult markDeleted(SingularityRequest request, RequestHistoryType historyType, long timestamp, Optional<String> user, Optional<String> message) {
     return save(request, RequestState.DELETED, historyType, timestamp, user, message);
   }
 
@@ -325,7 +325,7 @@ public class RequestManager extends CuratorAsyncManager {
     return getData(getRequestPath(requestId), requestTranscoder);
   }
 
-  public SingularityDeleteResult deleteRequest(SingularityRequest request, Optional<String> user, Optional<String> actionId, Optional<String> message) {
+  public SingularityDeleteResult startDeletingRequest(SingularityRequest request, Optional<String> user, Optional<String> actionId, Optional<String> message) {
     final long now = System.currentTimeMillis();
 
     // delete it no matter if the delete request already exists.
@@ -337,7 +337,7 @@ public class RequestManager extends CuratorAsyncManager {
     // moves RequestState to DELETED
     SingularityDeleteResult deleteResult = delete(getRequestPath(request.getId()));
 
-    deleting(request, RequestHistoryType.DELETED, System.currentTimeMillis(), user, message);
+    markDeleting(request, RequestHistoryType.DELETED, System.currentTimeMillis(), user, message);
 
     LOG.info("Request {} deleted ({}) by {} - {}", request.getId(), deleteResult, user, message);
 
