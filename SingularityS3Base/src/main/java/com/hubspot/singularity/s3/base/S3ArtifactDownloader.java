@@ -68,7 +68,7 @@ public class S3ArtifactDownloader {
     log.info("Downloading {}", s3Artifact);
 
     ClientConfiguration clientConfiguration = new ClientConfiguration()
-        .withSocketTimeout(configuration.getS3ChunkDownloadTimeoutMillis().intValue());
+        .withSocketTimeout(configuration.getS3ChunkDownloadTimeoutMillis());
     final AmazonS3 s3Client = new AmazonS3Client(getCredentialsForBucket(s3Artifact.getS3Bucket()), clientConfiguration);
 
     long length = 0;
