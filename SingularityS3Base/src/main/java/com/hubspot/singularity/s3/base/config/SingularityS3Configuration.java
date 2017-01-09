@@ -131,7 +131,7 @@ public class SingularityS3Configuration extends BaseRunnerConfiguration {
     this.localDownloadPath = localDownloadPath;
   }
 
-  public long getS3ChunkDownloadTimeoutMillis() {
+  public Long getS3ChunkDownloadTimeoutMillis() {
     return s3ChunkDownloadTimeoutMillis;
   }
 
