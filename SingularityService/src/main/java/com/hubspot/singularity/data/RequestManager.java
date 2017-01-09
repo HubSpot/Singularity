@@ -339,7 +339,7 @@ public class RequestManager extends CuratorAsyncManager {
 
     markDeleting(request, RequestHistoryType.DELETED, System.currentTimeMillis(), user, message);
 
-    LOG.info("Request {} deleted ({}) by {} - {}", request.getId(), deleteResult, user, message);
+    LOG.info("Request {} enqueued for deletion ({}) by {} - {}", request.getId(), deleteResult, user, message);
 
     return deleteResult;
   }
