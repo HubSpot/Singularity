@@ -9,7 +9,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
-import java.util.Enumeration;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
@@ -93,7 +92,7 @@ public class S3LogResource extends AbstractHistoryResource {
   private static final String CONTENT_DISPOSITION_DOWNLOAD_HEADER = "attachment";
   private static final String CONTENT_ENCODING_DOWNLOAD_HEADER = "identity";
   private static final String CONTINUATION_TOKEN_KEY_FORMAT = "%s-%s";
-  private static final int TARGET_MAX_RESULTS = 10;
+  private static final int DEFAULT_TARGET_MAX_RESULTS = 10;
 
   private final SingularityS3Services s3Services;
   private final Optional<S3Configuration> configuration;
@@ -279,14 +278,15 @@ public class S3LogResource extends AbstractHistoryResource {
               if (search.getContinuationTokens().containsKey(key) && !Strings.isNullOrEmpty(search.getContinuationTokens().get(key).getValue())) {
                 request.setContinuationToken(search.getContinuationTokens().get(key).getValue());
               }
-              request.setMaxKeys(search.getMaxPerPage().or(TARGET_MAX_RESULTS));
-              if (resultCount.get() < TARGET_MAX_RESULTS) {
+              int targetResultCount = search.getMaxPerPage().or(DEFAULT_TARGET_MAX_RESULTS);
+              request.setMaxKeys(targetResultCount);
+              if (resultCount.get() < targetResultCount) {
                 ListObjectsV2Result result = s3Client.listObjectsV2(request);
                 if (result.getObjectSummaries().isEmpty()) {
                   continuationTokens.putIfAbsent(key, new ContinuationToken(result.getNextContinuationToken(), true));
                   return Collections.emptyList();
                 } else {
-                  boolean addToList = incrementIfLessThan(resultCount, result.getObjectSummaries().size(), TARGET_MAX_RESULTS);
+                  boolean addToList = incrementIfLessThan(resultCount, result.getObjectSummaries().size(), targetResultCount);
                   if (addToList) {
                     continuationTokens.putIfAbsent(key, new ContinuationToken(result.getNextContinuationToken(), result.getObjectSummaries().isEmpty()));
                     return result.getObjectSummaries();
@@ -394,15 +394,15 @@ public class S3LogResource extends AbstractHistoryResource {
       final ConcurrentHashMap<String, ContinuationToken> continuationTokens = new ConcurrentHashMap();
       List<SingularityS3LogMetadata> logs = Lists.newArrayList(getS3LogsWithExecutorService(s3Configuration, group, executorService, prefixes, search, continuationTokens, paginated));
       Collections.sort(logs, LOG_COMPARATOR);
-      return new SingularityS3SearchResult(continuationTokens, isFinalPageForAllPrefixes(continuationTokens.elements()), logs);
+      return new SingularityS3SearchResult(continuationTokens, isFinalPageForAllPrefixes(continuationTokens.values()), logs);
     } finally {
       executorService.shutdownNow();
     }
   }
 
-  private boolean isFinalPageForAllPrefixes(Enumeration<ContinuationToken> continuationTokens) {
-    while (continuationTokens.hasMoreElements()) {
-      if (continuationTokens.nextElement().isLastPage()) {
+  private boolean isFinalPageForAllPrefixes(Collection<ContinuationToken> continuationTokens) {
+    for (ContinuationToken token : continuationTokens) {
+      if (!token.isLastPage()) {
         return false;
       }
     }
