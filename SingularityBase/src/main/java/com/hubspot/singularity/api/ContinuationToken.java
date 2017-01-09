@@ -5,30 +5,13 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.wordnik.swagger.annotations.ApiModelProperty;
 
 public class ContinuationToken {
-  String bucket;
-  String prefix;
-  String value;
-  boolean lastPage;
+  private final String value;
+  private final boolean lastPage;
 
   @JsonCreator
-  public ContinuationToken(@JsonProperty("bucket") String bucket,
-                           @JsonProperty("prefix") String prefix,
-                           @JsonProperty("value") String value,
-                           @JsonProperty("lastPage") boolean lastPage) {
-    this.bucket = bucket;
-    this.prefix = prefix;
+  public ContinuationToken(@JsonProperty("value") String value, @JsonProperty("lastPage") boolean lastPage) {
     this.value = value;
     this.lastPage = lastPage;
-  }
-
-  @ApiModelProperty(required=true, value="prefix associated with this continuation token")
-  public String getBucket() {
-    return bucket;
-  }
-
-  @ApiModelProperty(required=true, value="bucket associated with this continuation token")
-  public String getPrefix() {
-    return prefix;
   }
 
   @ApiModelProperty(required=true, value="S3 continuation token specific to a bucket + prefix being searched")
@@ -55,20 +38,12 @@ public class ContinuationToken {
     if (lastPage != token.lastPage) {
       return false;
     }
-    if (bucket != null ? !bucket.equals(token.bucket) : token.bucket != null) {
-      return false;
-    }
-    if (prefix != null ? !prefix.equals(token.prefix) : token.prefix != null) {
-      return false;
-    }
     return value != null ? value.equals(token.value) : token.value == null;
   }
 
   @Override
   public int hashCode() {
-    int result = bucket != null ? bucket.hashCode() : 0;
-    result = 31 * result + (prefix != null ? prefix.hashCode() : 0);
-    result = 31 * result + (value != null ? value.hashCode() : 0);
+    int result = value != null ? value.hashCode() : 0;
     result = 31 * result + (lastPage ? 1 : 0);
     return result;
   }
@@ -76,9 +51,7 @@ public class ContinuationToken {
   @Override
   public String toString() {
     return "ContinuationToken{" +
-        "bucket='" + bucket + '\'' +
-        ", prefix='" + prefix + '\'' +
-        ", value='" + value + '\'' +
+        "value='" + value + '\'' +
         ", lastPage=" + lastPage +
         '}';
   }
