@@ -23,11 +23,16 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
-import org.jets3t.service.S3Service;
-import org.jets3t.service.model.S3Object;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.amazonaws.HttpMethod;
+import com.amazonaws.services.s3.AmazonS3;
+import com.amazonaws.services.s3.model.GeneratePresignedUrlRequest;
+import com.amazonaws.services.s3.model.GetObjectMetadataRequest;
+import com.amazonaws.services.s3.model.ListObjectsV2Request;
+import com.amazonaws.services.s3.model.ResponseHeaderOverrides;
+import com.amazonaws.services.s3.model.S3ObjectSummary;
 import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
 import com.google.common.collect.Iterables;
@@ -74,7 +79,8 @@ import com.wordnik.swagger.annotations.ApiParam;
 public class S3LogResource extends AbstractHistoryResource {
   public static final String PATH = SingularityService.API_BASE_PATH + "/logs";
   private static final Logger LOG = LoggerFactory.getLogger(S3LogResource.class);
-  private static final String FORCE_DOWNLOAD_S3_PARAMS = "response-content-disposition=attachment&response-content-encoding=identity";
+  private static final String CONTENT_DISPOSITION_DOWNLOAD_HEADER = "attachment";
+  private static final String CONTENT_ENCODING_DOWNLOAD_HEADER = "identity";
 
   private final SingularityS3Services s3Services;
   private final Optional<S3Configuration> configuration;
@@ -216,7 +222,7 @@ public class S3LogResource extends AbstractHistoryResource {
   }
 
   private List<SingularityS3LogMetadata> getS3LogsWithExecutorService(S3Configuration s3Configuration, Optional<String> group, ListeningExecutorService executorService, Collection<String> prefixes, final boolean excludeMetadata, final boolean listOnly) throws InterruptedException, ExecutionException, TimeoutException {
-    List<ListenableFuture<S3Object[]>> futures = Lists.newArrayListWithCapacity(prefixes.size());
+    List<ListenableFuture<List<S3ObjectSummary>>> futures = Lists.newArrayListWithCapacity(prefixes.size());
 
     List<String> s3Buckets = new ArrayList<>();
     String defaultS3Bucket = (group.isPresent() && s3Configuration.getGroupOverrides().containsKey(group.get())) ? s3Configuration.getGroupOverrides().get(group.get()).getS3Bucket() : s3Configuration.getS3Bucket();
@@ -228,26 +234,27 @@ public class S3LogResource extends AbstractHistoryResource {
     }
 
     for (final String s3Bucket : s3Buckets) {
-      final S3Service s3Service = s3Services.getServiceByGroupAndBucketOrDefault(group.or(SingularityS3FormatHelper.DEFAULT_GROUP_NAME), s3Bucket);
+      final AmazonS3 s3Client = s3Services.getServiceByGroupAndBucketOrDefault(group.or(SingularityS3FormatHelper.DEFAULT_GROUP_NAME), s3Bucket);
 
       for (final String s3Prefix : prefixes) {
-        futures.add(executorService.submit(new Callable<S3Object[]>() {
+        futures.add(executorService.submit(new Callable<List<S3ObjectSummary>>() {
 
           @Override
-          public S3Object[] call() throws Exception {
-            return s3Service.listObjects(s3Bucket, s3Prefix, null);
+          public List<S3ObjectSummary> call() throws Exception {
+            ListObjectsV2Request request = new ListObjectsV2Request().withBucketName(s3Bucket).withPrefix(s3Prefix);
+            return s3Client.listObjectsV2(request).getObjectSummaries();
           }
         }));
       }
     }
 
     final long start = System.currentTimeMillis();
-    List<S3Object[]> results = Futures.allAsList(futures).get(s3Configuration.getWaitForS3ListSeconds(), TimeUnit.SECONDS);
+    List<List<S3ObjectSummary>> results = Futures.allAsList(futures).get(s3Configuration.getWaitForS3ListSeconds(), TimeUnit.SECONDS);
 
-    List<S3Object> objects = Lists.newArrayListWithExpectedSize(results.size() * 2);
+    List<S3ObjectSummary> objects = Lists.newArrayListWithExpectedSize(results.size() * 2);
 
-    for (S3Object[] s3Objects : results) {
-      for (final S3Object s3Object : s3Objects) {
+    for (List<S3ObjectSummary> s3Objects : results) {
+      for (final S3ObjectSummary s3Object : s3Objects) {
         objects.add(s3Object);
       }
     }
@@ -257,8 +264,8 @@ public class S3LogResource extends AbstractHistoryResource {
     List<ListenableFuture<SingularityS3LogMetadata>> logFutures = Lists.newArrayListWithCapacity(objects.size());
     final Date expireAt = new Date(System.currentTimeMillis() + s3Configuration.getExpireS3LinksAfterMillis());
 
-    for (final S3Object s3Object : objects) {
-      final S3Service s3Service = s3Services.getServiceByGroupAndBucketOrDefault(group.or(SingularityS3FormatHelper.DEFAULT_GROUP_NAME), s3Object.getBucketName());
+    for (final S3ObjectSummary s3Object : objects) {
+      final AmazonS3 s3Client = s3Services.getServiceByGroupAndBucketOrDefault(group.or(SingularityS3FormatHelper.DEFAULT_GROUP_NAME), s3Object.getBucketName());
 
       logFutures.add(executorService.submit(new Callable<SingularityS3LogMetadata>() {
         @Override
@@ -266,17 +273,30 @@ public class S3LogResource extends AbstractHistoryResource {
           Optional<Long> maybeStartTime = Optional.absent();
           Optional<Long> maybeEndTime = Optional.absent();
           if (!excludeMetadata) {
-            Map<String, Object> objectMetadata = s3Service.getObjectDetails(s3Object.getBucketName(), s3Object.getKey()).getMetadataMap();
+            GetObjectMetadataRequest metadataRequest = new GetObjectMetadataRequest(s3Object.getBucketName(), s3Object.getKey());
+            Map<String, Object> objectMetadata = s3Client.getObjectMetadata(metadataRequest).getRawMetadata();
             maybeStartTime = getMetadataAsLong(objectMetadata, SingularityS3Log.LOG_START_S3_ATTR);
             maybeEndTime = getMetadataAsLong(objectMetadata, SingularityS3Log.LOG_END_S3_ATTR);
           }
 
           if (listOnly) {
-            return new SingularityS3LogMetadata(s3Object.getKey(), s3Object.getLastModifiedDate().getTime(), s3Object.getContentLength(), maybeStartTime, maybeEndTime);
+            return new SingularityS3LogMetadata(s3Object.getKey(), s3Object.getLastModified().getTime(), s3Object.getSize(), maybeStartTime, maybeEndTime);
           } else {
-            String getUrl = s3Service.createSignedGetUrl(s3Object.getBucketName(), s3Object.getKey(), expireAt);
-            String downloadUrl = s3Service.createSignedUrl("GET", s3Object.getBucketName(), s3Object.getKey(), FORCE_DOWNLOAD_S3_PARAMS, null, expireAt.getTime() / 1000, false);
-            return new SingularityS3Log(getUrl, s3Object.getKey(), s3Object.getLastModifiedDate().getTime(), s3Object.getContentLength(), downloadUrl, maybeStartTime, maybeEndTime);
+            GeneratePresignedUrlRequest getUrlRequest = new GeneratePresignedUrlRequest(s3Object.getBucketName(), s3Object.getKey())
+                .withMethod(HttpMethod.GET)
+                .withExpiration(expireAt);
+            String getUrl = s3Client.generatePresignedUrl(getUrlRequest).toString();
+
+            ResponseHeaderOverrides downloadHeaders = new ResponseHeaderOverrides();
+            downloadHeaders.setContentDisposition(CONTENT_DISPOSITION_DOWNLOAD_HEADER);
+            downloadHeaders.setContentEncoding(CONTENT_ENCODING_DOWNLOAD_HEADER);
+            GeneratePresignedUrlRequest downloadUrlRequest = new GeneratePresignedUrlRequest(s3Object.getBucketName(), s3Object.getKey())
+                .withMethod(HttpMethod.GET)
+                .withExpiration(expireAt)
+                .withResponseHeaders(downloadHeaders);
+            String downloadUrl = s3Client.generatePresignedUrl(downloadUrlRequest).toString();
+
+            return new SingularityS3Log(getUrl, s3Object.getKey(), s3Object.getLastModified().getTime(), s3Object.getSize(), downloadUrl, maybeStartTime, maybeEndTime);
           }
         }
 
