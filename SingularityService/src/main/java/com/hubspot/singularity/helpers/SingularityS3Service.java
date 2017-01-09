@@ -1,16 +1,16 @@
 package com.hubspot.singularity.helpers;
 
-import org.jets3t.service.S3Service;
+import com.amazonaws.services.s3.AmazonS3;
 
 public class SingularityS3Service {
   private final String group;
   private final String bucket;
-  private final S3Service s3Service;
+  private final AmazonS3 s3Client;
 
-  public SingularityS3Service(String group, String bucket, S3Service s3Service) {
+  public SingularityS3Service(String group, String bucket, AmazonS3 s3Client) {
     this.group = group;
     this.bucket = bucket;
-    this.s3Service = s3Service;
+    this.s3Client = s3Client;
   }
 
   public String getGroup() {
@@ -21,8 +21,8 @@ public class SingularityS3Service {
     return bucket;
   }
 
-  public S3Service getS3Service() {
-    return s3Service;
+  public AmazonS3 getS3Client() {
+    return s3Client;
   }
 
   @Override
@@ -30,7 +30,7 @@ public class SingularityS3Service {
     return "SingularityS3Service{" +
         "group='" + group + '\'' +
         ", bucket='" + bucket + '\'' +
-        ", s3Service=" + s3Service +
+        ", s3Client=" + s3Client +
         '}';
   }
 }

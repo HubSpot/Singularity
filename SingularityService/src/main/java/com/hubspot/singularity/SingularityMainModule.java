@@ -18,10 +18,9 @@ import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.recipes.leader.LeaderLatch;
 import org.apache.curator.framework.recipes.leader.LeaderLatchListener;
 import org.apache.curator.framework.state.ConnectionStateListener;
-import org.jets3t.service.S3ServiceException;
-import org.jets3t.service.impl.rest.httpclient.RestS3Service;
-import org.jets3t.service.security.AWSCredentials;
 
+import com.amazonaws.auth.BasicAWSCredentials;
+import com.amazonaws.services.s3.AmazonS3Client;
 import com.codahale.metrics.Meter;
 import com.codahale.metrics.MetricRegistry;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -242,16 +241,16 @@ public class SingularityMainModule implements Module {
 
   @Provides
   @Singleton
-  public SingularityS3Services provideS3Services(Optional<S3Configuration> config) throws S3ServiceException {
+  public SingularityS3Services provideS3Services(Optional<S3Configuration> config) {
     if (!config.isPresent() || config.get().getGroupOverrides().isEmpty()) {
       return new SingularityS3Services();
     }
 
     final ImmutableList.Builder<SingularityS3Service> s3ServiceBuilder = ImmutableList.builder();
     for (Map.Entry<String, S3GroupOverrideConfiguration> entry : config.get().getGroupOverrides().entrySet()) {
-      s3ServiceBuilder.add(new SingularityS3Service(entry.getKey(), entry.getValue().getS3Bucket(), new RestS3Service(new AWSCredentials(entry.getValue().getS3AccessKey(), entry.getValue().getS3SecretKey()))));
+      s3ServiceBuilder.add(new SingularityS3Service(entry.getKey(), entry.getValue().getS3Bucket(), new AmazonS3Client(new BasicAWSCredentials(entry.getValue().getS3AccessKey(), entry.getValue().getS3SecretKey()))));
     }
-    SingularityS3Service defaultService = new SingularityS3Service(SingularityS3FormatHelper.DEFAULT_GROUP_NAME, config.get().getS3Bucket(), new RestS3Service(new AWSCredentials(config.get().getS3AccessKey(), config.get().getS3SecretKey())));
+    SingularityS3Service defaultService = new SingularityS3Service(SingularityS3FormatHelper.DEFAULT_GROUP_NAME, config.get().getS3Bucket(), new AmazonS3Client(new BasicAWSCredentials(config.get().getS3AccessKey(), config.get().getS3SecretKey())));
 
     return new SingularityS3Services(s3ServiceBuilder.build(), defaultService);
   }
