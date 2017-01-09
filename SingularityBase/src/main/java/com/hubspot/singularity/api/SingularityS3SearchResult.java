@@ -2,7 +2,7 @@ package com.hubspot.singularity.api;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.Set;
+import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -10,16 +10,16 @@ import com.hubspot.singularity.SingularityS3LogMetadata;
 import com.wordnik.swagger.annotations.ApiModelProperty;
 
 public class SingularityS3SearchResult {
-  private final Set<ContinuationToken> continuationTokens;
+  private final Map<String, ContinuationToken> continuationTokens;
   private final boolean lastPage;
   private final List<SingularityS3LogMetadata> results;
 
   public static SingularityS3SearchResult empty() {
-    return new SingularityS3SearchResult(Collections.<ContinuationToken>emptySet(), false, Collections.<SingularityS3LogMetadata>emptyList());
+    return new SingularityS3SearchResult(Collections.<String, ContinuationToken>emptyMap(), false, Collections.<SingularityS3LogMetadata>emptyList());
   }
 
   @JsonCreator
-  public SingularityS3SearchResult(@JsonProperty("continuationTokens") Set<ContinuationToken> continuationTokens,
+  public SingularityS3SearchResult(@JsonProperty("continuationTokens") Map<String, ContinuationToken> continuationTokens,
                                    @JsonProperty("lastPage") boolean lastPage,
                                    @JsonProperty("results") List<SingularityS3LogMetadata> results) {
     this.continuationTokens = continuationTokens;
@@ -28,7 +28,7 @@ public class SingularityS3SearchResult {
   }
 
   @ApiModelProperty(required=false, value="S3 continuation tokens, return these to Singularity to continue searching subsequent pages of results")
-  public Set<ContinuationToken> getContinuationTokens() {
+  public Map<String, ContinuationToken> getContinuationTokens() {
     return continuationTokens;
   }
 
