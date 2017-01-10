@@ -56,6 +56,12 @@ public class SingularityExecutorCleanupConfiguration extends BaseRunnerConfigura
   @JsonProperty
   private CompressionType compressionType = CompressionType.GZIP;
 
+  @NotEmpty
+  private String defaultServiceLog = "service.log";
+
+  @NotEmpty
+  private String defaultServiceFinishedTailLog = "tail_of_finished_service.log";
+
   public SingularityExecutorCleanupConfiguration() {
     super(Optional.of("singularity-executor-cleanup.log"));
   }
@@ -140,18 +146,39 @@ public class SingularityExecutorCleanupConfiguration extends BaseRunnerConfigura
     this.compressionType = compressionType;
   }
 
+  public String getDefaultServiceLog() {
+    return defaultServiceLog;
+  }
+
+  public SingularityExecutorCleanupConfiguration setDefaultServiceLog(String defaultServiceLog) {
+    this.defaultServiceLog = defaultServiceLog;
+    return this;
+  }
+
+  public String getDefaultServiceFinishedTailLog() {
+    return defaultServiceFinishedTailLog;
+  }
+
+  public SingularityExecutorCleanupConfiguration setDefaultServiceFinishedTailLog(String defaultServiceFinishedTailLog) {
+    this.defaultServiceFinishedTailLog = defaultServiceFinishedTailLog;
+    return this;
+  }
+
   @Override
   public String toString() {
-    return "SingularityExecutorCleanupConfiguration[" +
-            "safeModeWontRunWithNoTasks=" + safeModeWontRunWithNoTasks +
-            ", executorCleanupResultsDirectory='" + executorCleanupResultsDirectory + '\'' +
-            ", executorCleanupResultsSuffix='" + executorCleanupResultsSuffix + '\'' +
-            ", cleanupAppDirectoryOfFailedTasksAfterMillis=" + cleanupAppDirectoryOfFailedTasksAfterMillis +
-            ", singularityHosts=" + singularityHosts +
-            ", singularityContextPath='" + singularityContextPath + '\'' +
-            ", runDockerCleanup=" + runDockerCleanup +
-            ", singularityClientCredentials=" + singularityClientCredentials +
-            ", compressionType=" + compressionType +
-            ']';
+    return "SingularityExecutorCleanupConfiguration{" +
+        "safeModeWontRunWithNoTasks=" + safeModeWontRunWithNoTasks +
+        ", executorCleanupResultsDirectory='" + executorCleanupResultsDirectory + '\'' +
+        ", executorCleanupResultsSuffix='" + executorCleanupResultsSuffix + '\'' +
+        ", cleanupAppDirectoryOfFailedTasksAfterMillis=" + cleanupAppDirectoryOfFailedTasksAfterMillis +
+        ", singularityHosts=" + singularityHosts +
+        ", singularityContextPath='" + singularityContextPath + '\'' +
+        ", runDockerCleanup=" + runDockerCleanup +
+        ", singularityClientCredentials=" + singularityClientCredentials +
+        ", cleanTasksWhenDecommissioned=" + cleanTasksWhenDecommissioned +
+        ", compressionType=" + compressionType +
+        ", defaultServiceLog='" + defaultServiceLog + '\'' +
+        ", defaultServiceFinishedTailLog='" + defaultServiceFinishedTailLog + '\'' +
+        "} " + super.toString();
   }
 }
