@@ -250,9 +250,9 @@ public class SingularityMesosScheduler implements Scheduler {
         requestedPorts.addAll(taskRequest.getDeploy().getContainerInfo().get().getDocker().get().getLiteralHostPorts());
       }
 
-      LOG.trace("Attempting to match task {} resources {} ({} for task + {} for executor) with remaining offer resources {}", taskRequest.getPendingTask().getPendingTaskId(), totalResources, taskResources, executorResources, offerHolder.getCurrentResources());
-
       Optional<String> requiredRole = taskRequest.getRequest().getRequiredRole();
+      LOG.trace("Attempting to match task {} resources {} with required role '{}' ({} for task + {} for executor) with remaining offer resources {}", taskRequest.getPendingTask().getPendingTaskId(), totalResources, requiredRole.or("*"),taskResources, executorResources, offerHolder.getCurrentResources());
+
       final boolean matchesResources = MesosUtils.doesOfferMatchResources(requiredRole, totalResources, offerHolder.getCurrentResources(), requestedPorts);
       final SlaveMatchState slaveMatchState = slaveAndRackManager.doesOfferMatch(offerHolder.getOffer(), taskRequest, stateCache);
 
