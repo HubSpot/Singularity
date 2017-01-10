@@ -523,8 +523,6 @@ public class S3LogResource extends AbstractHistoryResource {
       @ApiParam("Do not generate download/get urls, only list the files and metadata") @QueryParam("list") boolean listOnly) throws Exception {
     checkS3();
 
-    SingularityTaskId taskIdObject = getTaskIdObject(taskId);
-
     final SingularityS3SearchRequest search = new SingularityS3SearchRequest(
         Collections.<String, List<String>>emptyMap(),
         Collections.singletonList(taskId),
