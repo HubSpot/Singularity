@@ -35,10 +35,6 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
 
   @NotEmpty
   @JsonProperty
-  private String serviceLog = "service.log";
-
-  @NotEmpty
-  @JsonProperty
   private String defaultRunAsUser;
 
   @NotEmpty
@@ -130,27 +126,9 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
   @JsonProperty
   private List<SingularityExecutorLogrotateAdditionalFile> logrotateAdditionalFiles = Collections.emptyList();
 
-  /**
-   * Extra files to backup to S3 besides the service log.
-   */
-  @NotNull
-  @JsonProperty
-  private List<SingularityExecutorS3UploaderAdditionalFile> s3UploaderAdditionalFiles = Collections.emptyList();
-
   @Min(1)
   @JsonProperty
   private int tailLogLinesToSave = 2500;
-
-  @NotEmpty
-  @JsonProperty
-  private String serviceFinishedTailLog = "tail_of_finished_service.log";
-
-  @NotEmpty
-  @JsonProperty
-  private String s3UploaderKeyPattern = "%requestId/%Y/%m/%taskId_%index-%s-%filename";
-
-  @JsonProperty
-  private String s3UploaderBucket;
 
   @JsonProperty
   private boolean useLocalDownloadService = false;
@@ -237,14 +215,6 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
   @JsonProperty
   private SingularityExecutorLogrotateFrequency logrotateFrequency = SingularityExecutorLogrotateFrequency.DAILY;
 
-  @NotNull
-  @JsonProperty
-  private Optional<String> s3StorageClass = Optional.absent();
-
-  @NotNull
-  @JsonProperty
-  private Optional<Long> applyS3StorageClassAfterBytes = Optional.absent();
-
   @NotEmpty
   @JsonProperty
   private String cronDirectory = "/etc/cron.d";
@@ -280,24 +250,12 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
     this.logrotateAdditionalFiles = logrotateAdditionalFiles;
   }
 
-  public List<SingularityExecutorS3UploaderAdditionalFile> getS3UploaderAdditionalFiles() {
-    return s3UploaderAdditionalFiles;
-  }
-
-  public void setS3UploaderAdditionalFiles(List<SingularityExecutorS3UploaderAdditionalFile> s3UploaderAdditionalFiles) {
-    this.s3UploaderAdditionalFiles = s3UploaderAdditionalFiles;
-  }
-
   public String getExecutorJavaLog() {
     return executorJavaLog;
   }
 
   public String getExecutorBashLog() {
     return executorBashLog;
-  }
-
-  public String getServiceLog() {
-    return serviceLog;
   }
 
   public String getDefaultRunAsUser() {
@@ -392,10 +350,6 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
     return tailLogLinesToSave;
   }
 
-  public String getServiceFinishedTailLog() {
-    return serviceFinishedTailLog;
-  }
-
   public boolean isUseLocalDownloadService() {
     return useLocalDownloadService;
   }
@@ -427,10 +381,6 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
 
   public void setExecutorBashLog(String executorBashLog) {
     this.executorBashLog = executorBashLog;
-  }
-
-  public void setServiceLog(String serviceLog) {
-    this.serviceLog = serviceLog;
   }
 
   public void setDefaultRunAsUser(String defaultRunAsUser) {
@@ -515,26 +465,6 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
 
   public void setTailLogLinesToSave(int tailLogLinesToSave) {
     this.tailLogLinesToSave = tailLogLinesToSave;
-  }
-
-  public void setServiceFinishedTailLog(String serviceFinishedTailLog) {
-    this.serviceFinishedTailLog = serviceFinishedTailLog;
-  }
-
-  public String getS3UploaderKeyPattern() {
-    return s3UploaderKeyPattern;
-  }
-
-  public void setS3UploaderKeyPattern(String s3UploaderKeyPattern) {
-    this.s3UploaderKeyPattern = s3UploaderKeyPattern;
-  }
-
-  public String getS3UploaderBucket() {
-    return s3UploaderBucket;
-  }
-
-  public void setS3UploaderBucket(String s3UploaderBucket) {
-    this.s3UploaderBucket = s3UploaderBucket;
   }
 
   public void setUseLocalDownloadService(boolean useLocalDownloadService) {
@@ -717,28 +647,11 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
     this.logrotateCompressionSettings = logrotateCompressionSettings;
   }
 
-  public Optional<String> getS3StorageClass() {
-    return s3StorageClass;
-  }
-
-  public void setS3StorageClass(Optional<String> s3StorageClass) {
-    this.s3StorageClass = s3StorageClass;
-  }
-
-  public Optional<Long> getApplyS3StorageClassAfterBytes() {
-    return applyS3StorageClassAfterBytes;
-  }
-
-  public void setApplyS3StorageClassAfterBytes(Optional<Long> applyS3StorageClassAfterBytes) {
-    this.applyS3StorageClassAfterBytes = applyS3StorageClassAfterBytes;
-  }
-
   @Override
   public String toString() {
     return "SingularityExecutorConfiguration{" +
         "executorJavaLog='" + executorJavaLog + '\'' +
         ", executorBashLog='" + executorBashLog + '\'' +
-        ", serviceLog='" + serviceLog + '\'' +
         ", defaultRunAsUser='" + defaultRunAsUser + '\'' +
         ", taskAppDirectory='" + taskAppDirectory + '\'' +
         ", shutdownTimeoutWaitMillis=" + shutdownTimeoutWaitMillis +
@@ -762,11 +675,7 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
         ", logrotateExtrasDateformat='" + logrotateExtrasDateformat + '\'' +
         ", logrotateCompressionSettings=" + logrotateCompressionSettings +
         ", logrotateAdditionalFiles=" + logrotateAdditionalFiles +
-        ", s3UploaderAdditionalFiles=" + s3UploaderAdditionalFiles +
         ", tailLogLinesToSave=" + tailLogLinesToSave +
-        ", serviceFinishedTailLog='" + serviceFinishedTailLog + '\'' +
-        ", s3UploaderKeyPattern='" + s3UploaderKeyPattern + '\'' +
-        ", s3UploaderBucket='" + s3UploaderBucket + '\'' +
         ", useLocalDownloadService=" + useLocalDownloadService +
         ", localDownloadServiceTimeoutMillis=" + localDownloadServiceTimeoutMillis +
         ", localDownloadServiceMaxConnections=" + localDownloadServiceMaxConnections +
@@ -791,10 +700,8 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
         ", dockerAuthConfig=" + dockerAuthConfig +
         ", threadCheckerType=" + threadCheckerType +
         ", logrotateFrequency=" + logrotateFrequency +
-        ", s3StorageClass=" + s3StorageClass +
-        ", applyS3StorageClassAfterBytes=" + applyS3StorageClassAfterBytes +
         ", cronDirectory='" + cronDirectory + '\'' +
         ", useFileAttributes=" + useFileAttributes +
-        '}';
+        "} " + super.toString();
   }
 }

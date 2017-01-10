@@ -1,10 +1,15 @@
 package com.hubspot.singularity.config;
 
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import javax.validation.constraints.NotNull;
+
+import com.google.common.base.Optional;
+import com.hubspot.singularity.SingularityS3UploaderFile;
 
 public class S3Configuration {
 
@@ -36,16 +41,24 @@ public class S3Configuration {
   /**
    * S3 Key format for finding logs. Should be the same as
    * configuration set for SingularityS3Uploader
-   * (e.g. '%requestId/%Y/%m/%taskId_%index-%s%fileext')
    */
   @NotNull
-  private String s3KeyFormat;
+  private String s3KeyFormat = "%requestId/%Y/%m/%taskId_%index-%s-%filename";
 
   @NotNull
   private String s3AccessKey;
 
   @NotNull
   private String s3SecretKey;
+
+  @NotNull
+  private List<SingularityS3UploaderFile> s3UploaderAdditionalFiles = Collections.singletonList(SingularityS3UploaderFile.fromString("service.log"));
+
+  @NotNull
+  private Optional<String> s3StorageClass = Optional.absent();
+
+  @NotNull
+  private Optional<Long> applyS3StorageClassAfterBytes = Optional.absent();
 
   public int getMaxS3Threads() {
     return maxS3Threads;
@@ -125,5 +138,29 @@ public class S3Configuration {
 
   public void setGroupOverrides(Map<String, S3GroupOverrideConfiguration> groupOverrides) {
     this.groupOverrides = groupOverrides;
+  }
+
+  public List<SingularityS3UploaderFile> getS3UploaderAdditionalFiles() {
+    return s3UploaderAdditionalFiles;
+  }
+
+  public void setS3UploaderAdditionalFiles(List<SingularityS3UploaderFile> s3UploaderAdditionalFiles) {
+    this.s3UploaderAdditionalFiles = s3UploaderAdditionalFiles;
+  }
+
+  public Optional<String> getS3StorageClass() {
+    return s3StorageClass;
+  }
+
+  public void setS3StorageClass(Optional<String> s3StorageClass) {
+    this.s3StorageClass = s3StorageClass;
+  }
+
+  public Optional<Long> getApplyS3StorageClassAfterBytes() {
+    return applyS3StorageClassAfterBytes;
+  }
+
+  public void setApplyS3StorageClassAfterBytes(Optional<Long> applyS3StorageClassAfterBytes) {
+    this.applyS3StorageClassAfterBytes = applyS3StorageClassAfterBytes;
   }
 }

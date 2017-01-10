@@ -43,6 +43,7 @@
     <mesos.docker.tag>0.28.1-2.0.20.ubuntu1404</mesos.docker.tag>
     <mesos.version>0.28.2</mesos.version>
     <singularitybase.image.revision>2</singularitybase.image.revision>
+    <aws.sdk.version>1.10.77</aws.sdk.version>
   </properties>
 
   <modules>
@@ -243,6 +244,22 @@
         <groupId>org.dmfs</groupId>
         <artifactId>rfc5545-datetime</artifactId>
         <version>0.2.2</version>
+      </dependency>
+
+      <dependency>
+        <groupId>com.amazonaws</groupId>
+        <artifactId>aws-java-sdk-s3</artifactId>
+        <version>${aws.sdk.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>commons-logging</groupId>
+            <artifactId>commons-logging</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>joda-time</groupId>
+            <artifactId>joda-time</artifactId>
+          </exclusion>
+        </exclusions>
       </dependency>
     </dependencies>
   </dependencyManagement>
