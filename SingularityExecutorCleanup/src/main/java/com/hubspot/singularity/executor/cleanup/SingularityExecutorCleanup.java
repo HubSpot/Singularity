@@ -30,6 +30,7 @@ import com.hubspot.mesos.client.MesosClient;
 import com.hubspot.singularity.MachineState;
 import com.hubspot.singularity.SingularitySlave;
 import com.hubspot.singularity.SingularityTask;
+import com.hubspot.singularity.SingularityTaskExecutorData;
 import com.hubspot.singularity.SingularityTaskHistory;
 import com.hubspot.singularity.SingularityTaskHistoryUpdate;
 import com.hubspot.singularity.client.SingularityClient;
@@ -53,6 +54,7 @@ import com.hubspot.singularity.runner.base.shared.JsonObjectFileHelper;
 import com.hubspot.singularity.runner.base.shared.ProcessFailedException;
 import com.hubspot.singularity.runner.base.shared.ProcessUtils;
 import com.hubspot.singularity.runner.base.shared.SimpleProcessManager;
+import com.hubspot.singularity.s3.base.config.SingularityS3Configuration;
 import com.spotify.docker.client.messages.Container;
 import com.spotify.docker.client.messages.ContainerInfo;
 
@@ -63,6 +65,7 @@ public class SingularityExecutorCleanup {
   private final JsonObjectFileHelper jsonObjectFileHelper;
   private final SingularityRunnerBaseConfiguration baseConfiguration;
   private final SingularityExecutorConfiguration executorConfiguration;
+  private final SingularityS3Configuration s3Configuration;
   private final SingularityClient singularityClient;
   private final TemplateManager templateManager;
   private final SingularityExecutorCleanupConfiguration cleanupConfiguration;
@@ -75,7 +78,7 @@ public class SingularityExecutorCleanup {
   @Inject
   public SingularityExecutorCleanup(SingularityClientProvider singularityClientProvider, JsonObjectFileHelper jsonObjectFileHelper, SingularityRunnerBaseConfiguration baseConfiguration,
       SingularityExecutorConfiguration executorConfiguration, SingularityExecutorCleanupConfiguration cleanupConfiguration, TemplateManager templateManager, MesosClient mesosClient,
-      DockerUtils dockerUtils, @Named(SingularityRunnerBaseModule.HOST_NAME_PROPERTY) String hostname, SingularityRunnerExceptionNotifier exceptionNotifier) {
+      DockerUtils dockerUtils, @Named(SingularityRunnerBaseModule.HOST_NAME_PROPERTY) String hostname, SingularityRunnerExceptionNotifier exceptionNotifier, SingularityS3Configuration s3Configuration) {
     this.jsonObjectFileHelper = jsonObjectFileHelper;
     this.baseConfiguration = baseConfiguration;
     this.executorConfiguration = executorConfiguration;
@@ -87,6 +90,7 @@ public class SingularityExecutorCleanup {
     this.dockerUtils = dockerUtils;
     this.hostname = hostname;
     this.exceptionNotifier = exceptionNotifier;
+    this.s3Configuration = s3Configuration;
   }
 
   public SingularityExecutorCleanupStatistics clean() {
@@ -146,7 +150,7 @@ public class SingularityExecutorCleanup {
           continue;
         }
 
-        SingularityExecutorTaskDefinition taskDefinition = withDefaultServiceLog(maybeTaskDefinition.get());
+        SingularityExecutorTaskDefinition taskDefinition = withDefaults(maybeTaskDefinition.get());
 
         final String taskId = taskDefinition.getTaskId();
 
@@ -196,24 +200,30 @@ public class SingularityExecutorCleanup {
     return statisticsBldr.build();
   }
 
-  private SingularityExecutorTaskDefinition withDefaultServiceLog(SingularityExecutorTaskDefinition oldDefinition) {
-    if (Strings.isNullOrEmpty(oldDefinition.getServiceLogFileName())) {
+  private SingularityExecutorTaskDefinition withDefaults(SingularityExecutorTaskDefinition oldDefinition) {
       return new SingularityExecutorTaskDefinition(
-          oldDefinition.getTaskId(),
-          oldDefinition.getExecutorData(),
-          oldDefinition.getTaskDirectory(),
-          oldDefinition.getExecutorPid(),
-          cleanupConfiguration.getDefaultServiceLog(),
-          oldDefinition.getServiceLogOutExtension(),
-          cleanupConfiguration.getDefaultServiceFinishedTailLog(),
-          oldDefinition.getTaskAppDirectory(),
-          oldDefinition.getExecutorBashOut(),
-          oldDefinition.getLogrotateStateFile(),
-          oldDefinition.getSignatureVerifyOut()
-      );
-    } else {
-      return oldDefinition;
-    }
+        oldDefinition.getTaskId(),
+        new SingularityTaskExecutorData(
+            oldDefinition.getExecutorData(),
+            oldDefinition.getExecutorData().getS3UploaderAdditionalFiles() == null ? s3Configuration.getS3UploaderAdditionalFiles() :  oldDefinition.getExecutorData().getS3UploaderAdditionalFiles(),
+            Strings.isNullOrEmpty(oldDefinition.getExecutorData().getDefaultS3Bucket()) ? s3Configuration.getDefaultS3Bucket() : oldDefinition.getExecutorData().getDefaultS3Bucket(),
+            Strings.isNullOrEmpty(oldDefinition.getExecutorData().getS3UploaderKeyPattern()) ? s3Configuration.getS3KeyFormat(): oldDefinition.getExecutorData().getS3UploaderKeyPattern(),
+            Strings.isNullOrEmpty(oldDefinition.getExecutorData().getServiceLog()) ? cleanupConfiguration.getDefaultServiceLog() : oldDefinition.getExecutorData().getServiceLog(),
+            Strings.isNullOrEmpty(oldDefinition.getExecutorData().getServiceFinishedTailLog()) ? cleanupConfiguration.getDefaultServiceFinishedTailLog() : oldDefinition.getExecutorData().getServiceFinishedTailLog(),
+            oldDefinition.getExecutorData().getRequestGroup(),
+            oldDefinition.getExecutorData().getS3StorageClass(),
+            oldDefinition.getExecutorData().getApplyS3StorageClassAfterBytes()
+        ),
+        oldDefinition.getTaskDirectory(),
+        oldDefinition.getExecutorPid(),
+        Strings.isNullOrEmpty(oldDefinition.getServiceLogFileName()) ? cleanupConfiguration.getDefaultServiceLog() :oldDefinition.getServiceLogFileName(),
+        oldDefinition.getServiceLogOutExtension(),
+        Strings.isNullOrEmpty(oldDefinition.getServiceFinishedTailLogFileName()) ? cleanupConfiguration.getDefaultServiceFinishedTailLog() : oldDefinition.getServiceFinishedTailLogFileName(),
+        oldDefinition.getTaskAppDirectory(),
+        oldDefinition.getExecutorBashOut(),
+        oldDefinition.getLogrotateStateFile(),
+        oldDefinition.getSignatureVerifyOut()
+    );
   }
 
   private boolean isDecommissioned() {

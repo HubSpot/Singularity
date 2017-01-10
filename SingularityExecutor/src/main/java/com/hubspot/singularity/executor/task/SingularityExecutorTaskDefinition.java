@@ -92,6 +92,11 @@ public class SingularityExecutorTaskDefinition {
     return serviceLogOut;
   }
 
+  @JsonIgnore
+  public String getServiceFinishedTailLogFileName() {
+    return serviceFinishedTailLog;
+  }
+
   public String getServiceLogOutExtension() {
     return serviceLogOutExtension;
   }

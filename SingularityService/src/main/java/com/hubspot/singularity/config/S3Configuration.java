@@ -40,7 +40,7 @@ public class S3Configuration {
 
   /**
    * S3 Key format for finding logs. Should be the same as
-   * configuration set for SingularityS3Uploader
+   * configuration set for SingularityExecutorCleanup
    */
   @NotNull
   private String s3KeyFormat = "%requestId/%Y/%m/%taskId_%index-%s-%filename";
