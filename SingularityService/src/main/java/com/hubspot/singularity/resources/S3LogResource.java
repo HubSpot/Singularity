@@ -97,7 +97,7 @@ public class S3LogResource extends AbstractHistoryResource {
   private static final Logger LOG = LoggerFactory.getLogger(S3LogResource.class);
   private static final String CONTENT_DISPOSITION_DOWNLOAD_HEADER = "attachment";
   private static final String CONTENT_ENCODING_DOWNLOAD_HEADER = "identity";
-  private static final String CONTINUATION_TOKEN_KEY_FORMAT = "%s-%s";
+  private static final String CONTINUATION_TOKEN_KEY_FORMAT = "%s-%s-%s";
   private static final int DEFAULT_TARGET_MAX_RESULTS = 10;
 
   private final SingularityS3Services s3Services;
@@ -305,7 +305,7 @@ public class S3LogResource extends AbstractHistoryResource {
       final AmazonS3 s3Client = entry.getKey().getS3Client();
 
       for (final String s3Prefix : entry.getValue()) {
-        final String key = String.format(CONTINUATION_TOKEN_KEY_FORMAT, s3Bucket, s3Prefix);
+        final String key = String.format(CONTINUATION_TOKEN_KEY_FORMAT, group, s3Bucket, s3Prefix);
         if (search.getContinuationTokens().containsKey(key) && search.getContinuationTokens().get(key).isLastPage()) {
           LOG.trace("No further content for prefix {} in bucket {}, skipping", s3Prefix, s3Bucket);
           continuationTokens.putIfAbsent(key, search.getContinuationTokens().get(key));
