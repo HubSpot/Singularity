@@ -330,7 +330,7 @@ public class S3LogResource extends AbstractHistoryResource {
                 } else {
                   boolean addToList = incrementIfLessThan(resultCount, result.getObjectSummaries().size(), targetResultCount);
                   if (addToList) {
-                    continuationTokens.putIfAbsent(key, new ContinuationToken(result.getNextContinuationToken(), result.getObjectSummaries().isEmpty()));
+                    continuationTokens.putIfAbsent(key, new ContinuationToken(result.getNextContinuationToken(), !result.isTruncated()));
                     List<S3ObjectSummaryHolder> objectSummaryHolders = new ArrayList<>();
                     for (S3ObjectSummary objectSummary : result.getObjectSummaries()) {
                       objectSummaryHolders.add(new S3ObjectSummaryHolder(group, objectSummary));
