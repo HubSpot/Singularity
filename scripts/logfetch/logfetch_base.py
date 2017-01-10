@@ -2,6 +2,7 @@ import os
 import re
 import sys
 import gzip
+import json
 import fnmatch
 import requests
 from datetime import datetime, timedelta
@@ -20,8 +21,11 @@ def base_uri(args):
     return BASE_URI_FORMAT.format(uri_prefix, args.singularity_uri_base)
 
 def tasks_for_requests(args):
+    return _tasks_for_requests(args, all_requests(args))
+
+def _tasks_for_requests(args, requests):
     all_tasks = []
-    for request in all_requests(args):
+    for request in requests:
         if args.requestId and args.deployId:
             tasks = [task["taskId"]["id"] for task in all_tasks_for_request(args, request) if log_matches(task["taskId"]["deployId"], args.deployId)]
         else:
@@ -115,8 +119,13 @@ def log(message, args, verbose):
     if (not verbose or (verbose and args.verbose)) and not args.silent:
             sys.stderr.write(message)
 
-def get_json_response(uri, args, params={}, skip404ErrMessage=False):
-    singularity_response = requests.get(uri, params=params, headers=args.headers)
+def get_json_response(uri, args, params={}, skip404ErrMessage=False, data={}):
+    if data:
+        headers = {'Content-Type':'application/json'}
+        headers.update(args.headers)
+        singularity_response = requests.post(uri, params=params, headers=headers, data=json.dumps(data))
+    else:
+        singularity_response = requests.get(uri, params=params, headers=args.headers)
     if singularity_response.status_code < 199 or singularity_response.status_code > 299:
         if not (skip404ErrMessage and singularity_response.status_code == 404):
             log('{0} params:{1}\n'.format(uri, str(params)), args, False)
@@ -126,7 +135,6 @@ def get_json_response(uri, args, params={}, skip404ErrMessage=False):
             log(colored(singularity_response.text, 'red') + '\n', args, False)
         return {}
     return singularity_response.json()
-
 
 def is_valid_log(file_data):
     not_a_directory = not file_data['mode'].startswith('d')
