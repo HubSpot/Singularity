@@ -140,18 +140,20 @@ public class SingularityExecutorCleanup {
       statisticsBldr.incrTotalTaskFiles();
 
       try {
-        Optional<SingularityExecutorTaskDefinition> taskDefinition = jsonObjectFileHelper.read(file, LOG, SingularityExecutorTaskDefinition.class);
+        Optional<SingularityExecutorTaskDefinition> maybeTaskDefinition = jsonObjectFileHelper.read(file, LOG, SingularityExecutorTaskDefinition.class);
 
-        if (!taskDefinition.isPresent()) {
+        if (!maybeTaskDefinition.isPresent()) {
           statisticsBldr.incrInvalidTasks();
           continue;
         }
 
-        final String taskId = taskDefinition.get().getTaskId();
+        SingularityExecutorTaskDefinition taskDefinition = withDefaultServiceLog(maybeTaskDefinition.get());
+
+        final String taskId = taskDefinition.getTaskId();
 
         LOG.info("{} - Starting possible cleanup", taskId);
 
-        if (runningTaskIds.contains(taskId) || executorStillRunning(taskDefinition.get())) {
+        if (runningTaskIds.contains(taskId) || executorStillRunning(taskDefinition)) {
           statisticsBldr.incrRunningTasksIgnored();
           continue;
         }
@@ -167,7 +169,7 @@ public class SingularityExecutorCleanup {
           continue;
         }
 
-        TaskCleanupResult result = cleanTask(taskDefinition.get(), taskHistory);
+        TaskCleanupResult result = cleanTask(taskDefinition, taskHistory);
 
         LOG.info("{} - {}", taskId, result);
 
@@ -193,6 +195,22 @@ public class SingularityExecutorCleanup {
     }
 
     return statisticsBldr.build();
+  }
+
+  private SingularityExecutorTaskDefinition withDefaultServiceLog(SingularityExecutorTaskDefinition oldDefinition) {
+    return new SingularityExecutorTaskDefinition(
+        oldDefinition.getTaskId(),
+        oldDefinition.getExecutorData(),
+        oldDefinition.getTaskDirectory(),
+        oldDefinition.getExecutorPid(),
+        oldDefinition.getServiceLogOut() == null ? cleanupConfiguration.getDefaultServiceLog() : oldDefinition.getServiceLogOut(),
+        oldDefinition.getServiceLogOutExtension(),
+        oldDefinition.getServiceFinishedTailLog() == null ? cleanupConfiguration.getDefaultServiceFinishedTailLog() : oldDefinition.getServiceFinishedTailLog(),
+        oldDefinition.getTaskAppDirectory(),
+        oldDefinition.getExecutorBashOut(),
+        oldDefinition.getLogrotateStateFile(),
+        oldDefinition.getSignatureVerifyOut()
+    );
   }
 
   private boolean isDecommissioned() {
