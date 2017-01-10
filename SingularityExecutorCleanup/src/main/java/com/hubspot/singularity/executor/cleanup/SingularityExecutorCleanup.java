@@ -20,6 +20,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Optional;
+import com.google.common.base.Strings;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -198,19 +199,23 @@ public class SingularityExecutorCleanup {
   }
 
   private SingularityExecutorTaskDefinition withDefaultServiceLog(SingularityExecutorTaskDefinition oldDefinition) {
-    return new SingularityExecutorTaskDefinition(
-        oldDefinition.getTaskId(),
-        oldDefinition.getExecutorData(),
-        oldDefinition.getTaskDirectory(),
-        oldDefinition.getExecutorPid(),
-        oldDefinition.getServiceLogOut() == null ? cleanupConfiguration.getDefaultServiceLog() : oldDefinition.getServiceLogOut(),
-        oldDefinition.getServiceLogOutExtension(),
-        oldDefinition.getServiceFinishedTailLog() == null ? cleanupConfiguration.getDefaultServiceFinishedTailLog() : oldDefinition.getServiceFinishedTailLog(),
-        oldDefinition.getTaskAppDirectory(),
-        oldDefinition.getExecutorBashOut(),
-        oldDefinition.getLogrotateStateFile(),
-        oldDefinition.getSignatureVerifyOut()
-    );
+    if (Strings.isNullOrEmpty(oldDefinition.getServiceLogFileName())) {
+      return new SingularityExecutorTaskDefinition(
+          oldDefinition.getTaskId(),
+          oldDefinition.getExecutorData(),
+          oldDefinition.getTaskDirectory(),
+          oldDefinition.getExecutorPid(),
+          cleanupConfiguration.getDefaultServiceLog(),
+          oldDefinition.getServiceLogOutExtension(),
+          cleanupConfiguration.getDefaultServiceFinishedTailLog(),
+          oldDefinition.getTaskAppDirectory(),
+          oldDefinition.getExecutorBashOut(),
+          oldDefinition.getLogrotateStateFile(),
+          oldDefinition.getSignatureVerifyOut()
+      );
+    } else {
+      return oldDefinition;
+    }
   }
 
   private boolean isDecommissioned() {
