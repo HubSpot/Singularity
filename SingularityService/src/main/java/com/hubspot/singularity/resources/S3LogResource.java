@@ -328,12 +328,7 @@ public class S3LogResource extends AbstractHistoryResource {
                   continuationTokens.putIfAbsent(key, new ContinuationToken(result.getNextContinuationToken(), true));
                   return Collections.emptyList();
                 } else {
-                  int newTotal = incrementIfLessThan(resultCount, result.getObjectSummaries().size(), targetResultCount);
-                  if (newTotal != -1) {
-                    if (newTotal > DEFAULT_TARGET_MAX_RESULTS) {
-                      request.setMaxKeys(Math.abs(DEFAULT_TARGET_MAX_RESULTS - newTotal));
-                      result = s3Client.listObjectsV2(request);
-                    }
+                  if (incrementIfLessThan(resultCount, result.getObjectSummaries().size(), targetResultCount)) {
                     continuationTokens.putIfAbsent(key, new ContinuationToken(result.getNextContinuationToken(), !result.isTruncated()));
                     List<S3ObjectSummaryHolder> objectSummaryHolders = new ArrayList<>();
                     for (S3ObjectSummary objectSummary : result.getObjectSummaries()) {
@@ -420,14 +415,14 @@ public class S3LogResource extends AbstractHistoryResource {
     return Futures.allAsList(logFutures).get(s3Configuration.getWaitForS3LinksSeconds(), TimeUnit.SECONDS);
   }
 
-  private int incrementIfLessThan(AtomicInteger count, int add, int threshold) {
+  private boolean incrementIfLessThan(AtomicInteger count, int add, int threshold) {
     while (true) {
       int current = count.get();
       if (current >= threshold) {
-        return -1;
+        return false;
       }
       if (count.compareAndSet(current, current + add)) {
-        return current + add;
+        return true;
       }
     }
   }
