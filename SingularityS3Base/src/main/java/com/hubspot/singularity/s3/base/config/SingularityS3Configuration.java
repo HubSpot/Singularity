@@ -1,8 +1,6 @@
 package com.hubspot.singularity.s3.base.config;
 
-import java.util.Collections;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
@@ -13,7 +11,6 @@ import org.hibernate.validator.constraints.NotEmpty;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
-import com.hubspot.singularity.SingularityS3UploaderFile;
 import com.hubspot.singularity.runner.base.configuration.BaseRunnerConfiguration;
 import com.hubspot.singularity.runner.base.configuration.Configuration;
 import com.hubspot.singularity.runner.base.constraints.DirectoryExists;
@@ -63,19 +60,6 @@ public class SingularityS3Configuration extends BaseRunnerConfiguration {
   @NotNull
   @JsonProperty
   private Map<String, SingularityS3Credentials> s3BucketCredentials = new HashMap<>();
-
-  @NotNull
-  private List<SingularityS3UploaderFile> s3UploaderAdditionalFiles = Collections.singletonList(SingularityS3UploaderFile.fromString("service.log"));
-
-  @NotNull
-  private String defaultS3Bucket = "";
-
-  /**
-   * S3 Key format for finding logs. Should be the same as
-   * configuration set for SingularityService
-   */
-  @NotNull
-  private String s3KeyFormat = "%requestId/%Y/%m/%taskId_%index-%s-%filename";
 
   public SingularityS3Configuration() {
     super(Optional.<String>absent());
@@ -161,33 +145,6 @@ public class SingularityS3Configuration extends BaseRunnerConfiguration {
     this.s3BucketCredentials = s3BucketCredentials;
   }
 
-  public List<SingularityS3UploaderFile> getS3UploaderAdditionalFiles() {
-    return s3UploaderAdditionalFiles;
-  }
-
-  public SingularityS3Configuration setS3UploaderAdditionalFiles(List<SingularityS3UploaderFile> s3UploaderAdditionalFiles) {
-    this.s3UploaderAdditionalFiles = s3UploaderAdditionalFiles;
-    return this;
-  }
-
-  public String getDefaultS3Bucket() {
-    return defaultS3Bucket;
-  }
-
-  public SingularityS3Configuration setDefaultS3Bucket(String defaultS3Bucket) {
-    this.defaultS3Bucket = defaultS3Bucket;
-    return this;
-  }
-
-  public String getS3KeyFormat() {
-    return s3KeyFormat;
-  }
-
-  public SingularityS3Configuration setS3KeyFormat(String s3KeyFormat) {
-    this.s3KeyFormat = s3KeyFormat;
-    return this;
-  }
-
   @Override
   public String toString() {
     return "SingularityS3Configuration{" +
@@ -201,9 +158,6 @@ public class SingularityS3Configuration extends BaseRunnerConfiguration {
         ", localDownloadHttpPort=" + localDownloadHttpPort +
         ", localDownloadPath='" + localDownloadPath + '\'' +
         ", s3BucketCredentials=" + s3BucketCredentials +
-        ", s3UploaderAdditionalFiles=" + s3UploaderAdditionalFiles +
-        ", defaultS3Bucket='" + defaultS3Bucket + '\'' +
-        ", s3KeyFormat='" + s3KeyFormat + '\'' +
         "} " + super.toString();
   }
 }
