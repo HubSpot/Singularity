@@ -3,8 +3,6 @@ package com.hubspot.singularity.helpers;
 import java.util.Collections;
 import java.util.List;
 
-import com.amazonaws.services.s3.AmazonS3;
-
 public class SingularityS3Services {
   private final boolean s3ConfigPresent;
   private final List<SingularityS3Service> s3Services;
@@ -34,12 +32,12 @@ public class SingularityS3Services {
     return defaultS3Service;
   }
 
-  public AmazonS3 getServiceByGroupAndBucketOrDefault(String group, String bucket) {
+  public SingularityS3Service getServiceByGroupAndBucketOrDefault(String group, String bucket) {
     for (SingularityS3Service s3Service : s3Services) {
       if (s3Service.getGroup().equals(group) && s3Service.getBucket().equals(bucket)) {
-        return s3Service.getS3Client();
+        return s3Service;
       }
     }
-    return defaultS3Service.getS3Client();
+    return defaultS3Service;
   }
 }
