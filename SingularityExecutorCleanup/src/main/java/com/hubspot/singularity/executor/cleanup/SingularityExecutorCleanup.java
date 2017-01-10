@@ -56,7 +56,6 @@ import com.hubspot.singularity.runner.base.shared.JsonObjectFileHelper;
 import com.hubspot.singularity.runner.base.shared.ProcessFailedException;
 import com.hubspot.singularity.runner.base.shared.ProcessUtils;
 import com.hubspot.singularity.runner.base.shared.SimpleProcessManager;
-import com.hubspot.singularity.s3.base.config.SingularityS3Configuration;
 import com.spotify.docker.client.messages.Container;
 import com.spotify.docker.client.messages.ContainerInfo;
 
@@ -67,7 +66,6 @@ public class SingularityExecutorCleanup {
   private final JsonObjectFileHelper jsonObjectFileHelper;
   private final SingularityRunnerBaseConfiguration baseConfiguration;
   private final SingularityExecutorConfiguration executorConfiguration;
-  private final SingularityS3Configuration s3Configuration;
   private final SingularityClient singularityClient;
   private final TemplateManager templateManager;
   private final SingularityExecutorCleanupConfiguration cleanupConfiguration;
@@ -80,7 +78,7 @@ public class SingularityExecutorCleanup {
   @Inject
   public SingularityExecutorCleanup(SingularityClientProvider singularityClientProvider, JsonObjectFileHelper jsonObjectFileHelper, SingularityRunnerBaseConfiguration baseConfiguration,
       SingularityExecutorConfiguration executorConfiguration, SingularityExecutorCleanupConfiguration cleanupConfiguration, TemplateManager templateManager, MesosClient mesosClient,
-      DockerUtils dockerUtils, @Named(SingularityRunnerBaseModule.HOST_NAME_PROPERTY) String hostname, SingularityRunnerExceptionNotifier exceptionNotifier, SingularityS3Configuration s3Configuration) {
+      DockerUtils dockerUtils, @Named(SingularityRunnerBaseModule.HOST_NAME_PROPERTY) String hostname, SingularityRunnerExceptionNotifier exceptionNotifier) {
     this.jsonObjectFileHelper = jsonObjectFileHelper;
     this.baseConfiguration = baseConfiguration;
     this.executorConfiguration = executorConfiguration;
@@ -92,7 +90,6 @@ public class SingularityExecutorCleanup {
     this.dockerUtils = dockerUtils;
     this.hostname = hostname;
     this.exceptionNotifier = exceptionNotifier;
-    this.s3Configuration = s3Configuration;
   }
 
   public SingularityExecutorCleanupStatistics clean() {
@@ -207,9 +204,9 @@ public class SingularityExecutorCleanup {
         oldDefinition.getTaskId(),
         new SingularityTaskExecutorData(
             oldDefinition.getExecutorData(),
-            oldDefinition.getExecutorData().getS3UploaderAdditionalFiles() == null ? s3Configuration.getS3UploaderAdditionalFiles() :  oldDefinition.getExecutorData().getS3UploaderAdditionalFiles(),
-            Strings.isNullOrEmpty(oldDefinition.getExecutorData().getDefaultS3Bucket()) ? s3Configuration.getDefaultS3Bucket() : oldDefinition.getExecutorData().getDefaultS3Bucket(),
-            Strings.isNullOrEmpty(oldDefinition.getExecutorData().getS3UploaderKeyPattern()) ? s3Configuration.getS3KeyFormat(): oldDefinition.getExecutorData().getS3UploaderKeyPattern(),
+            oldDefinition.getExecutorData().getS3UploaderAdditionalFiles() == null ? cleanupConfiguration.getS3UploaderAdditionalFiles() :  oldDefinition.getExecutorData().getS3UploaderAdditionalFiles(),
+            Strings.isNullOrEmpty(oldDefinition.getExecutorData().getDefaultS3Bucket()) ? cleanupConfiguration.getDefaultS3Bucket() : oldDefinition.getExecutorData().getDefaultS3Bucket(),
+            Strings.isNullOrEmpty(oldDefinition.getExecutorData().getS3UploaderKeyPattern()) ? cleanupConfiguration.getS3KeyFormat(): oldDefinition.getExecutorData().getS3UploaderKeyPattern(),
             Strings.isNullOrEmpty(oldDefinition.getExecutorData().getServiceLog()) ? cleanupConfiguration.getDefaultServiceLog() : oldDefinition.getExecutorData().getServiceLog(),
             Strings.isNullOrEmpty(oldDefinition.getExecutorData().getServiceFinishedTailLog()) ? cleanupConfiguration.getDefaultServiceFinishedTailLog() : oldDefinition.getExecutorData().getServiceFinishedTailLog(),
             oldDefinition.getExecutorData().getRequestGroup(),

@@ -12,6 +12,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
 import com.hubspot.singularity.SingularityClientCredentials;
+import com.hubspot.singularity.SingularityS3UploaderFile;
 import com.hubspot.singularity.runner.base.configuration.BaseRunnerConfiguration;
 import com.hubspot.singularity.runner.base.configuration.Configuration;
 import com.hubspot.singularity.runner.base.constraints.DirectoryExists;
@@ -61,6 +62,19 @@ public class SingularityExecutorCleanupConfiguration extends BaseRunnerConfigura
 
   @NotEmpty
   private String defaultServiceFinishedTailLog = "tail_of_finished_service.log";
+
+  @NotNull
+  private List<SingularityS3UploaderFile> s3UploaderAdditionalFiles = Collections.singletonList(SingularityS3UploaderFile.fromString("service.log"));
+
+  @NotNull
+  private String defaultS3Bucket = "";
+
+  /**
+   * S3 Key format for finding logs. Should be the same as
+   * configuration set for SingularityService
+   */
+  @NotNull
+  private String s3KeyFormat = "%requestId/%Y/%m/%taskId_%index-%s-%filename";
 
   public SingularityExecutorCleanupConfiguration() {
     super(Optional.of("singularity-executor-cleanup.log"));
@@ -164,6 +178,33 @@ public class SingularityExecutorCleanupConfiguration extends BaseRunnerConfigura
     return this;
   }
 
+  public List<SingularityS3UploaderFile> getS3UploaderAdditionalFiles() {
+    return s3UploaderAdditionalFiles;
+  }
+
+  public SingularityExecutorCleanupConfiguration setS3UploaderAdditionalFiles(List<SingularityS3UploaderFile> s3UploaderAdditionalFiles) {
+    this.s3UploaderAdditionalFiles = s3UploaderAdditionalFiles;
+    return this;
+  }
+
+  public String getDefaultS3Bucket() {
+    return defaultS3Bucket;
+  }
+
+  public SingularityExecutorCleanupConfiguration setDefaultS3Bucket(String defaultS3Bucket) {
+    this.defaultS3Bucket = defaultS3Bucket;
+    return this;
+  }
+
+  public String getS3KeyFormat() {
+    return s3KeyFormat;
+  }
+
+  public SingularityExecutorCleanupConfiguration setS3KeyFormat(String s3KeyFormat) {
+    this.s3KeyFormat = s3KeyFormat;
+    return this;
+  }
+
   @Override
   public String toString() {
     return "SingularityExecutorCleanupConfiguration{" +
@@ -179,6 +220,9 @@ public class SingularityExecutorCleanupConfiguration extends BaseRunnerConfigura
         ", compressionType=" + compressionType +
         ", defaultServiceLog='" + defaultServiceLog + '\'' +
         ", defaultServiceFinishedTailLog='" + defaultServiceFinishedTailLog + '\'' +
+        ", s3UploaderAdditionalFiles=" + s3UploaderAdditionalFiles +
+        ", defaultS3Bucket='" + defaultS3Bucket + '\'' +
+        ", s3KeyFormat='" + s3KeyFormat + '\'' +
         "} " + super.toString();
   }
 }
