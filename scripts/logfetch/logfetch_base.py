@@ -3,6 +3,7 @@ import re
 import sys
 import gzip
 import json
+import time
 import fnmatch
 import requests
 from datetime import datetime, timedelta
@@ -13,6 +14,7 @@ BASE_URI_FORMAT = '{0}{1}'
 ALL_REQUESTS = '/requests'
 REQUEST_TASKS_FORMAT = '/history/request/{0}/tasks'
 ACTIVE_TASKS_FORMAT = '/history/request/{0}/tasks/active'
+PER_PAGE = 100
 
 def base_uri(args):
     if not args.singularity_uri_base:
@@ -30,7 +32,6 @@ def _tasks_for_requests(args, requests):
             tasks = [task["taskId"]["id"] for task in all_tasks_for_request(args, request) if log_matches(task["taskId"]["deployId"], args.deployId)]
         else:
             tasks = [task["taskId"]["id"] for task in all_tasks_for_request(args, request)]
-            tasks = tasks[0:args.task_count] if hasattr(args, 'task_count') else tasks
         all_tasks = all_tasks + tasks
     if not all_tasks:
         if args.taskId:
@@ -45,16 +46,31 @@ def log_matches(inputString, pattern):
 
 def all_tasks_for_request(args, request):
     uri = '{0}{1}'.format(base_uri(args), ACTIVE_TASKS_FORMAT.format(request))
-    active_tasks = get_json_response(uri, args)
+    all_tasks = get_json_response(uri, args)
+    sys.stderr.write("\rFound {0} active tasks ({1} total)".format(len(all_tasks), len(all_tasks)))
     if hasattr(args, 'start'):
         uri = '{0}{1}'.format(base_uri(args), REQUEST_TASKS_FORMAT.format(request))
-        historical_tasks = get_json_response(uri, args)
-        if len(historical_tasks) == 0:
-            return active_tasks
-        elif len(active_tasks) == 0:
-            return historical_tasks
-        else:
-            return active_tasks + [h for h in historical_tasks if date_range_overlaps(args, int(str(h['updatedAt'])[0:-3]), int(str(h['taskId']['startedAt'])[0:-3]))]
+        found_all_history = False
+        page = 1
+        params = {
+          'startedAfter': int(time.mktime(args.start.timetuple()) * 1000),
+          'updatedBefore': int(time.mktime(args.end.timetuple()) * 1000),
+          'count': PER_PAGE,
+          'page': page
+        }
+        while not found_all_history:
+            tasks = get_json_response(uri, args, params)
+            all_tasks.extend([t for t in tasks if date_range_overlaps(args, int(str(t['updatedAt'])[0:-3]), int(str(t['taskId']['startedAt'])[0:-3]))])
+            if not args.silent:
+                sys.stderr.write("\rFound {0} historical tasks ({1} total)".format(len(tasks), len(all_tasks)))
+                sys.stderr.flush()
+            if len(tasks) < PER_PAGE:
+                found_all_history = True
+            page += 1
+            params['page'] = page
+        if not args.silent:
+            sys.stderr.write("\n")
+        return all_tasks
     else:
         return active_tasks
 

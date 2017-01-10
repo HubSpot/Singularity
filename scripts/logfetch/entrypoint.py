@@ -21,7 +21,6 @@ DEFAULT_CONF_FILE = 'default'
 DEFAULT_PARALLEL_FETCHES = 10
 DEFAULT_CHUNK_SIZE = 8192
 DEFAULT_DEST = os.path.expanduser('~/.logfetch_cache')
-DEFAULT_TASK_COUNT = 20
 DEFAULT_DAYS = 7
 DEFAULT_S3_PATTERN = '%requestId/%%Y/%m/%taskId_%index-%s-%filename'
 DEFAULT_S3_PAGE_SIZE = 50
@@ -118,7 +117,6 @@ def fetch():
         "num_parallel_fetches" : DEFAULT_PARALLEL_FETCHES,
         "chunk_size" : DEFAULT_CHUNK_SIZE,
         "dest" : DEFAULT_DEST,
-        "task_count" : DEFAULT_TASK_COUNT,
         "start" : datetime.strptime('{0} 00:00:00'.format(datetime.now().strftime("%Y-%m-%d")), "%Y-%m-%d %H:%M:%S") - timedelta(days=DEFAULT_DAYS),
         "file_pattern" : DEFAULT_S3_PATTERN,
         "end" : datetime.strptime('{0} 23:59:59'.format(datetime.now().strftime("%Y-%m-%d")), "%Y-%m-%d %H:%M:%S"),
@@ -136,7 +134,6 @@ def fetch():
     parser.set_defaults(**defaults)
     parser.add_argument("-t", "--task-id", dest="taskId", help="TaskId of task to fetch logs for")
     parser.add_argument("-r", "--request-id", dest="requestId", help="RequestId of request to fetch logs for (can be a glob)")
-    parser.add_argument("-T", "--task-count", dest="task_count", help="Number of recent tasks per request to fetch logs from", type=int)
     parser.add_argument("-d", "--deploy-id", dest="deployId", help="DeployId of task to fetch logs for (can be a glob)")
     parser.add_argument("-o", "--dest", dest="dest", help="Destination directory")
     parser.add_argument("-n", "--num-parallel-fetches", dest="num_parallel_fetches", help="Number of fetches to make at once", type=int)
@@ -252,7 +249,6 @@ def cat():
         "num_parallel_fetches" : DEFAULT_PARALLEL_FETCHES,
         "chunk_size" : DEFAULT_CHUNK_SIZE,
         "dest" : DEFAULT_DEST,
-        "task_count" : DEFAULT_TASK_COUNT,
         "start" : datetime.strptime('{0} 00:00:00'.format(datetime.now().strftime("%Y-%m-%d")), "%Y-%m-%d %H:%M:%S") - timedelta(days=DEFAULT_DAYS),
         "file_pattern" : DEFAULT_S3_PATTERN,
         "end" : datetime.strptime('{0} 23:59:59'.format(datetime.now().strftime("%Y-%m-%d")), "%Y-%m-%d %H:%M:%S"),
@@ -270,7 +266,6 @@ def cat():
     parser.set_defaults(**defaults)
     parser.add_argument("-t", "--task-id", dest="taskId", help="TaskId of task to fetch logs for")
     parser.add_argument("-r", "--request-id", dest="requestId", help="RequestId of request to fetch logs for (can be a glob)")
-    parser.add_argument("-T", "--task-count", dest="taskCount", help="Number of recent tasks per request to fetch logs from", type=int)
     parser.add_argument("-d", "--deploy-id", dest="deployId", help="DeployId of tasks to fetch logs for (can be a glob)")
     parser.add_argument("-o", "--dest", dest="dest", help="Destination directory")
     parser.add_argument("-n", "--num-parallel-fetches", dest="num_parallel_fetches", help="Number of fetches to make at once", type=int)
