@@ -236,7 +236,7 @@ public class HistoryResource extends AbstractHistoryResource {
   @Path("/request/{requestId}/tasks")
   @ApiOperation("Retrieve the history sorted by startedAt for all inactive tasks of a specific request.")
   public List<SingularityTaskIdHistory> getTaskHistoryForRequest(
-      @ApiParam("Request ID to match") @PathParam("requestId") String requestId,
+      @ApiParam("Request ID to match") @PathParam("resquestId") String requestId,
       @ApiParam("Optional deploy ID to match") @QueryParam("deployId") Optional<String> deployId,
       @ApiParam("Optional runId to match") @QueryParam("runId") Optional<String> runId,
       @ApiParam("Optional host to match") @QueryParam("host") Optional<String> host,
