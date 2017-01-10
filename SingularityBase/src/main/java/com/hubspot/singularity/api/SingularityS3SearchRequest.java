@@ -1,6 +1,7 @@
 package com.hubspot.singularity.api;
 
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
@@ -10,9 +11,8 @@ import com.google.common.base.Optional;
 import com.wordnik.swagger.annotations.ApiModelProperty;
 
 public class SingularityS3SearchRequest {
-  private final Optional<String> requestId;
-  private final Optional<String> deployId;
-  private final Optional<String> taskId;
+  private final Map<String, List<String>> requestsAndDeploys;
+  private final List<String> taskIds;
   private final Optional<Long> start;
   private final Optional<Long> end;
   private final boolean excludeMetadata;
@@ -22,18 +22,16 @@ public class SingularityS3SearchRequest {
 
   @JsonCreator
 
-  public SingularityS3SearchRequest(@JsonProperty("requestId") Optional<String> requestId,
-                                    @JsonProperty("deployId") Optional<String> deployId,
-                                    @JsonProperty("taskId") Optional<String> taskId,
+  public SingularityS3SearchRequest(@JsonProperty("requestsAndDeploys") Map<String, List<String>> requestsAndDeploys,
+                                    @JsonProperty("taskIds") List<String> taskIds,
                                     @JsonProperty("start") Optional<Long> start,
                                     @JsonProperty("end") Optional<Long> end,
                                     @JsonProperty("excludeMetadata") boolean excludeMetadata,
                                     @JsonProperty("listOnly") boolean listOnly,
                                     @JsonProperty("maxPerPage") Optional<Integer> maxPerPage,
                                     @JsonProperty("continuationTokens") Map<String, ContinuationToken> continuationTokens) {
-    this.requestId = requestId;
-    this.deployId = deployId;
-    this.taskId = taskId;
+    this.requestsAndDeploys = Objects.firstNonNull(requestsAndDeploys, Collections.<String, List<String>>emptyMap());
+    this.taskIds = Objects.firstNonNull(taskIds, Collections.<String>emptyList());
     this.start = start;
     this.end = end;
     this.excludeMetadata = excludeMetadata;
@@ -42,19 +40,14 @@ public class SingularityS3SearchRequest {
     this.continuationTokens = Objects.firstNonNull(continuationTokens, Collections.<String, ContinuationToken>emptyMap());
   }
 
-  @ApiModelProperty(required=false, value="The request ID to search for")
-  public Optional<String> getRequestId() {
-    return requestId;
+  @ApiModelProperty(required=false, value="A map of request IDs to a list of deploy ids to search")
+  public Map<String, List<String>> getRequestsAndDeploys() {
+    return requestsAndDeploys;
   }
 
-  @ApiModelProperty(required=false, value="The deploy ID to search for")
-  public Optional<String> getDeployId() {
-    return deployId;
-  }
-
-  @ApiModelProperty(required=false, value="The task ID to search for")
-  public Optional<String> getTaskId() {
-    return taskId;
+  @ApiModelProperty(required=false, value="A list of task IDs to search for")
+  public List<String> getTaskIds() {
+    return taskIds;
   }
 
   @ApiModelProperty(required=false, value="Start timestamp (millis, 13 digit)")
@@ -94,9 +87,8 @@ public class SingularityS3SearchRequest {
   @Override
   public String toString() {
     return "SingularityS3SearchRequest{" +
-        "requestId=" + requestId +
-        ", deployId=" + deployId +
-        ", taskId=" + taskId +
+        "requestsAndDeploys=" + requestsAndDeploys +
+        ", taskIds=" + taskIds +
         ", start=" + start +
         ", end=" + end +
         ", excludeMetadata=" + excludeMetadata +
