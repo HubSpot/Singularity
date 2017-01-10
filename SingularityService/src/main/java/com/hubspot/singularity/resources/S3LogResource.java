@@ -317,8 +317,10 @@ public class S3LogResource extends AbstractHistoryResource {
           public List<S3ObjectSummaryHolder> call() throws Exception {
             ListObjectsV2Request request = new ListObjectsV2Request().withBucketName(s3Bucket).withPrefix(s3Prefix);
             if (paginated) {
+              Optional<ContinuationToken> token = Optional.absent();
               if (search.getContinuationTokens().containsKey(key) && !Strings.isNullOrEmpty(search.getContinuationTokens().get(key).getValue())) {
                 request.setContinuationToken(search.getContinuationTokens().get(key).getValue());
+                token = Optional.of(search.getContinuationTokens().get(key));
               }
               int targetResultCount = search.getMaxPerPage().or(DEFAULT_TARGET_MAX_RESULTS);
               request.setMaxKeys(targetResultCount);
@@ -337,11 +339,12 @@ public class S3LogResource extends AbstractHistoryResource {
                     }
                     return objectSummaryHolders;
                   } else {
-                    continuationTokens.putIfAbsent(key, new ContinuationToken(null, false));
+                    continuationTokens.putIfAbsent(key, token.or(new ContinuationToken(null, false)));
                     return Collections.emptyList();
                   }
                 }
               } else {
+                continuationTokens.putIfAbsent(key, token.or(new ContinuationToken(null, false)));
                 return Collections.emptyList();
               }
             } else {
