@@ -10,7 +10,6 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Random;
 import java.util.Set;
-import java.util.Iterator;
 
 import com.google.common.collect.Sets;
 import org.apache.mesos.Protos.MasterInfo;
@@ -44,8 +43,7 @@ public final class MesosUtils {
 
   private static double getScalar(List<Resource> resources, String name, Optional<String> requiredRole) {
     for (Resource r : resources) {
-
-      if (r.hasName() && r.getName().equals(name) && r.hasScalar() && isRequiredRole(r, requiredRole)) {
+      if (r.hasName() && r.getName().equals(name) && r.hasScalar() && hasRequiredRole(r, requiredRole)) {
         return getScalar(r);
       }
     }
@@ -53,11 +51,11 @@ public final class MesosUtils {
     return 0;
   }
 
-  private static Boolean hasRole(Resource r) {
+  private static boolean hasRole(Resource r) {
     return r.hasRole() && !r.getRole().equals("*");
   }
 
-  private static Boolean isRequiredRole(Resource r, Optional<String> requiredRole) {
+  private static boolean hasRequiredRole(Resource r, Optional<String> requiredRole) {
 
     if (requiredRole.isPresent() && hasRole(r)) {
       // required role with a resource with role
@@ -228,20 +226,7 @@ public final class MesosUtils {
     return Resource.newBuilder().setName(name).setType(Type.RANGES).setRanges(Ranges.newBuilder().addRange(Range.newBuilder().setBegin(begin).setEnd(end).build()).build()).build();
   }
 
-  public static String getRolesInfo(Offer offer) {
-    StringBuilder info = new StringBuilder();
-    info.append("[");
-    for (Iterator<String> itr = getRoles(offer).iterator(); itr.hasNext(); ) {
-      info.append(itr.next());
-      if (itr.hasNext()) {
-        info.append(", ");
-      }
-    }
-    info.append("]");
-    return info.toString();
-  }
-
-  private static Set<String> getRoles(Offer offer) {
+  public static Set<String> getRoles(Offer offer) {
     Set<String> roles = Sets.newHashSet();
 
     for (Resource r : offer.getResourcesList()) {

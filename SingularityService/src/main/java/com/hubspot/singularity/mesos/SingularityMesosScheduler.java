@@ -120,7 +120,7 @@ public class SingularityMesosScheduler implements Scheduler {
     LOG.info("Received {} offer(s)", offers.size());
 
     for (Offer offer : offers) {
-      String rolesInfo = MesosUtils.getRolesInfo(offer);
+      String rolesInfo = MesosUtils.getRoles(offer).toString();
       LOG.debug("Received offer ID {} with roles {} from {} ({}) for {} cpu(s), {} memory, {} ports, and {} disk", offer.getId().getValue(), rolesInfo, offer.getHostname(), offer.getSlaveId().getValue(), MesosUtils.getNumCpus(offer), MesosUtils.getMemory(offer),
           MesosUtils.getNumPorts(offer), MesosUtils.getDisk(offer));
     }
@@ -273,9 +273,9 @@ public class SingularityMesosScheduler implements Scheduler {
 
         return Optional.of(task);
       } else {
-        String rolesInfo = MesosUtils.getRolesInfo(offerHolder.getOffer());
+        String rolesInfo = MesosUtils.getRoles(offerHolder.getOffer()).toString();
         LOG.trace("Ignoring offer {} with roles {} on {} for task {}; matched resources: {}, slave match state: {}", offerHolder.getOffer().getId(), rolesInfo, offerHolder.getOffer().getHostname(), taskRequest
-            .getPendingTask().getPendingTaskId(), matchesResources, slaveMatchState);
+                .getPendingTask().getPendingTaskId(), matchesResources, slaveMatchState);
       }
     }
 
