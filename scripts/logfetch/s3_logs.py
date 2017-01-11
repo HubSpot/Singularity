@@ -7,7 +7,7 @@ from termcolor import colored
 import callbacks
 
 S3LOGS_URI_FORMAT = '{0}/logs/search'
-
+TASK_CHUNK_SIZE = 50
 FILE_REGEX="\d{13}-([^-]*)-\d{8,20}\.gz"
 
 progress = 0
@@ -78,32 +78,31 @@ def find_all_s3_logs(args):
     requests_and_deploys = {}
     requets = []
     if args.taskId:
-        tasks = [args.taskId]
+        all_tasks = [args.taskId]
     else:
         requests = logfetch_base.all_requests(args)
-        tasks = logfetch_base._tasks_for_requests(args, requests)
+        all_tasks = logfetch_base._tasks_for_requests(args, requests)
 
-    logfetch_base.log('Searching {0} tasks\n'.format(len(tasks)), args, False)
-    search_data = {
-        'start': start,
-        'end': end,
-        'taskIds': tasks,
-        'requestsAndDeploys': requests_and_deploys,
-        'maxPerPage': args.s3_page_size
-    }
-
-    finished = False
-    while not finished:
-        s3_search_result = logfetch_base.get_json_response(s3_logs_uri(args), args, data=search_data)
-        found_logs.extend(s3_search_result['results'])
-        search_data['continuationTokens'] = s3_search_result['continuationTokens']
+    for tasks in chunkify(all_tasks, TASK_CHUNK_SIZE):
+        logfetch_base.log('Searching {0} tasks\n'.format(len(tasks)), args, False)
+        search_data = {
+            'start': start,
+            'end': end,
+            'taskIds': tasks,
+            'requestsAndDeploys': requests_and_deploys,
+            'maxPerPage': args.s3_page_size
+        }
+        finished = False
+        while not finished:
+            s3_search_result = logfetch_base.get_json_response(s3_logs_uri(args), args, data=search_data)
+            found_logs.extend(s3_search_result['results'])
+            search_data['continuationTokens'] = s3_search_result['continuationTokens']
+            if not args.silent:
+                sys.stderr.write("\rFound {0} additional logs ({1} total)".format(len(s3_search_result['results']), len(found_logs)))
+                sys.stderr.flush()
+            finished = s3_search_result['lastPage']
         if not args.silent:
-            sys.stderr.write("\rFound {0} additional logs ({1} total)".format(len(s3_search_result['results']), len(found_logs)))
-            sys.stderr.flush()
-        finished = s3_search_result['lastPage']
-        print finished
-    if not args.silent:
-        sys.stderr.write("\n")
+            sys.stderr.write("\n")
 
     if not found_logs:
         logfetch_base.log('No logs found for individual tasks, searching at request level\n', args, False)
