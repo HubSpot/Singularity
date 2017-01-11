@@ -13,6 +13,7 @@ import java.util.List;
 
 import org.slf4j.Logger;
 
+import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.hash.HashCode;
@@ -22,6 +23,7 @@ import com.hubspot.deploy.EmbeddedArtifact;
 import com.hubspot.deploy.ExternalArtifact;
 import com.hubspot.deploy.RemoteArtifact;
 import com.hubspot.deploy.S3Artifact;
+import com.hubspot.singularity.runner.base.configuration.SingularityRunnerBaseConfiguration;
 import com.hubspot.singularity.runner.base.sentry.SingularityRunnerExceptionNotifier;
 import com.hubspot.singularity.runner.base.shared.ProcessFailedException;
 import com.hubspot.singularity.runner.base.shared.SimpleProcessManager;
@@ -32,13 +34,15 @@ public class ArtifactManager extends SimpleProcessManager {
   private final Path cacheDirectory;
   private final Logger log;
   private final S3ArtifactDownloader s3ArtifactDownloader;
+  private final Optional<String> useCompressProgram;
 
-  public ArtifactManager(SingularityS3Configuration configuration, Logger log, SingularityRunnerExceptionNotifier exceptionNotifier) {
+  public ArtifactManager(SingularityRunnerBaseConfiguration runnerBaseConfiguration, SingularityS3Configuration configuration, Logger log, SingularityRunnerExceptionNotifier exceptionNotifier) {
     super(log);
 
     this.cacheDirectory = Paths.get(configuration.getArtifactCacheDirectory());
     this.log = log;
     this.s3ArtifactDownloader = new S3ArtifactDownloader(configuration, log, exceptionNotifier);
+    this.useCompressProgram = runnerBaseConfiguration.getUseCompressProgram();
   }
 
   private long getSize(Path path) {
@@ -207,14 +211,15 @@ public class ArtifactManager extends SimpleProcessManager {
   public void untar(Path source, Path destination) {
     log.info("Untarring {} to {}", source, destination);
 
-    final List<String> command = ImmutableList.of(
-        "tar",
-        "-oxzf",
-        source.toString(),
-        "-C",
-        destination.toString());
+    final ImmutableList.Builder<String> commandBuilder = ImmutableList.<String>builder().add("tar", "-oxf", source.toString(), "-C", destination.toString());
 
-    runCommandAndThrowRuntimeException(command);
+    if (useCompressProgram.isPresent()) {
+      commandBuilder.add("--use-compress-program=" + useCompressProgram.get());
+    } else {
+      commandBuilder.add("-z");
+    }
+
+    runCommandAndThrowRuntimeException(commandBuilder.build());
   }
 
   private void runCommandAndThrowRuntimeException(List<String> command) {
