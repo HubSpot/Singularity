@@ -7,7 +7,7 @@ from termcolor import colored
 import callbacks
 
 S3LOGS_URI_FORMAT = '{0}/logs/search'
-TASK_CHUNK_SIZE = 50
+TASK_CHUNK_SIZE = 200
 FILE_REGEX="\d{13}-([^-]*)-\d{8,20}\.gz"
 
 progress = 0
@@ -84,7 +84,7 @@ def find_all_s3_logs(args):
         all_tasks = logfetch_base._tasks_for_requests(args, requests)
 
     for tasks in chunkify(all_tasks, TASK_CHUNK_SIZE):
-        logfetch_base.log('Searching {0} tasks\n'.format(len(tasks)), args, False)
+        logfetch_base.log('Searching next {0} tasks\n'.format(len(tasks)), args, False)
         search_data = {
             'start': start,
             'end': end,
@@ -98,7 +98,7 @@ def find_all_s3_logs(args):
             found_logs.extend(s3_search_result['results'])
             search_data['continuationTokens'] = s3_search_result['continuationTokens']
             if not args.silent:
-                sys.stderr.write("\rFound {0} additional logs ({1} total)".format(len(s3_search_result['results']), len(found_logs)))
+                sys.stderr.write("\rFound {0} additional logs ({1} total found)".format(len(s3_search_result['results']), len(found_logs)))
                 sys.stderr.flush()
             finished = s3_search_result['lastPage']
         if not args.silent:
