@@ -250,6 +250,9 @@ public class SingularityMainModule implements Module {
     for (Map.Entry<String, S3GroupConfiguration> entry : config.get().getGroupOverrides().entrySet()) {
       s3ServiceBuilder.add(new SingularityS3Service(entry.getKey(), entry.getValue().getS3Bucket(), new AmazonS3Client(new BasicAWSCredentials(entry.getValue().getS3AccessKey(), entry.getValue().getS3SecretKey()))));
     }
+    for (Map.Entry<String, S3GroupConfiguration> entry : config.get().getGroupS3SearchConfigs().entrySet()) {
+      s3ServiceBuilder.add(new SingularityS3Service(entry.getKey(), entry.getValue().getS3Bucket(), new AmazonS3Client(new BasicAWSCredentials(entry.getValue().getS3AccessKey(), entry.getValue().getS3SecretKey()))));
+    }
     SingularityS3Service defaultService = new SingularityS3Service(SingularityS3FormatHelper.DEFAULT_GROUP_NAME, config.get().getS3Bucket(), new AmazonS3Client(new BasicAWSCredentials(config.get().getS3AccessKey(), config.get().getS3SecretKey())));
 
     return new SingularityS3Services(s3ServiceBuilder.build(), defaultService);
