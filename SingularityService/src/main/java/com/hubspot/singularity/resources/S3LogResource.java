@@ -279,6 +279,21 @@ public class S3LogResource extends AbstractHistoryResource {
         }
       }
     }
+
+    // Trim prefixes to search. Less specific prefixes will contain all results of matching + more specific ones
+    for (Map.Entry<SingularityS3Service, Set<String>> entry : servicesToPrefixes.entrySet()) {
+      Set<String> toRemove = new HashSet<>();
+      for (String prefix : entry.getValue()) {
+        for (String compareTo : entry.getValue()) {
+          if (prefix.contains(compareTo)) {
+            toRemove.add(prefix);
+            break;
+          }
+        }
+      }
+      entry.getValue().removeAll(toRemove);
+    }
+
     return servicesToPrefixes;
   }
 
