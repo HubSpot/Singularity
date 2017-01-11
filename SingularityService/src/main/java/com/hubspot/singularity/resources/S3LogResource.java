@@ -285,6 +285,7 @@ public class S3LogResource extends AbstractHistoryResource {
   private Set<String> getBuckets(String group) {
     Set<String> s3Buckets = new HashSet<>();
     s3Buckets.add(configuration.get().getGroupOverrides().containsKey(group) ? configuration.get().getGroupOverrides().get(group).getS3Bucket() : configuration.get().getS3Bucket());
+    s3Buckets.add(configuration.get().getGroupS3SearchConfigs().containsKey(group) ? configuration.get().getGroupS3SearchConfigs().get(group).getS3Bucket() : configuration.get().getS3Bucket());
     for (SingularityS3UploaderFile uploaderFile : configuration.get().getS3UploaderAdditionalFiles()) {
       if (uploaderFile.getS3UploaderBucket().isPresent() && !s3Buckets.contains(uploaderFile.getS3UploaderBucket().get())) {
         s3Buckets.add(uploaderFile.getS3UploaderBucket().get());
