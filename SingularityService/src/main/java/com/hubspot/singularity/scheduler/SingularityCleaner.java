@@ -357,10 +357,12 @@ public class SingularityCleaner {
               delete(requestCleanup, matchingActiveTaskIds);
             } else {
               Optional<SingularityRequestHistory> maybeHistory = requestHistoryHelper.getLastHistory(requestId);
-              if (maybeHistory.isPresent() && maybeHistory.get().getRequest().isLoadBalanced() && configuration.isDeleteRemovedRequestsFromLoadBalancer()) {
-                createLbCleanupRequest(requestId, matchingActiveTaskIds);
+              if (maybeHistory.isPresent()) {
+                if (maybeHistory.get().getRequest().isLoadBalanced() && configuration.isDeleteRemovedRequestsFromLoadBalancer()) {
+                  createLbCleanupRequest(requestId, matchingActiveTaskIds);
+                }
+                requestManager.markDeleted(maybeHistory.get().getRequest(), start, requestCleanup.getUser(), requestCleanup.getMessage());
               }
-              requestManager.markDeleted(maybeHistory.get().getRequest(), start, Optional.<String>absent(), Optional.<String>absent());
               cleanupDeployState(requestCleanup);
             }
           }
