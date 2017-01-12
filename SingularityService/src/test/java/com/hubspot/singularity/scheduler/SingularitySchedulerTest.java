@@ -1,5 +1,6 @@
 package com.hubspot.singularity.scheduler;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -263,7 +264,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     initScheduledRequest();
     initFirstDeploy();
 
-    SingularityTask firstTask = launchTask(request, firstDeploy, 1, TaskState.TASK_RUNNING);
+    launchTask(request, firstDeploy, 1, TaskState.TASK_RUNNING);
 
     requestResource.deleteRequest(requestId, Optional.<SingularityDeleteRequestRequest> absent());
 
@@ -271,15 +272,12 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
 
     cleaner.drainCleanupQueue();
 
-    Assert.assertTrue(requestManager.getCleanupRequests().isEmpty());
     Assert.assertTrue(!taskManager.getKilledTaskIdRecords().isEmpty());
 
+    killKilledTasks();
     cleaner.drainCleanupQueue();
 
-    Assert.assertTrue(!taskManager.getKilledTaskIdRecords().isEmpty());
-
-    statusUpdate(firstTask, TaskState.TASK_KILLED);
-
+    Assert.assertTrue(requestManager.getCleanupRequests().isEmpty());
     Assert.assertTrue(taskManager.getKilledTaskIdRecords().isEmpty());
   }
 
@@ -1328,19 +1326,44 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
 
   @Test
   public void testRemovedRequestData() {
+    long now = System.currentTimeMillis();
+
     initRequest();
     SingularityDeployBuilder db = new SingularityDeployBuilder(requestId, firstDeployId);
     db.setMaxTaskRetries(Optional.of(1));
-    initDeploy(db, System.currentTimeMillis());
+    initDeploy(db, now);
 
     deployChecker.checkDeploys();
     Assert.assertEquals(DeployState.WAITING, deployManager.getPendingDeploys().get(0).getCurrentDeployState());
 
     requestManager.startDeletingRequest(request, Optional.<String>absent(), Optional.<String>absent(), Optional.<String>absent());
+    requestManager.markDeleted(request, now, Optional.<String>absent(), Optional.<String>absent());
     deployChecker.checkDeploys();
     SingularityDeployResult deployResult = deployManager.getDeployResult(requestId, firstDeployId).get();
     Assert.assertEquals(DeployState.FAILED, deployResult.getDeployState());
     Assert.assertTrue(deployResult.getMessage().get().contains("MISSING"));
+  }
+
+  @Test
+  public void testDeletingState() {
+    initRequest();
+    Assert.assertEquals(RequestState.ACTIVE, requestManager.getRequest(requestId).get().getState());
+    Assert.assertEquals(1, requestManager.getRequestHistory(requestId).size());
+
+    requestManager.startDeletingRequest(request, Optional.<String>absent(), Optional.<String>absent(), Optional.of("the cake is a lie"));
+    Assert.assertEquals(RequestState.DELETING, requestManager.getRequest(requestId).get().getState());
+    Assert.assertEquals(2, requestManager.getRequestHistory(requestId).size());
+
+    cleaner.drainCleanupQueue();
+    Assert.assertEquals(3, requestManager.getRequestHistory(requestId).size());
+
+    List<RequestHistoryType> historyTypes = new ArrayList<>();
+    for (SingularityRequestHistory request : requestManager.getRequestHistory(requestId)) {
+      historyTypes.add(request.getEventType());
+    }
+    Assert.assertTrue(historyTypes.contains(RequestHistoryType.CREATED));
+    Assert.assertTrue(historyTypes.contains(RequestHistoryType.DELETING));
+    Assert.assertTrue(historyTypes.contains(RequestHistoryType.DELETED));
   }
 
   @Test

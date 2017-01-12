@@ -497,7 +497,7 @@ public class SingularityHistoryTest extends SingularitySchedulerTestBase {
 
     List<SingularityRequestHistory> history = historyManager.getRequestHistory(requestId, Optional.of(OrderDirection.DESC), 0, 100);
 
-    Assert.assertEquals(3, history.size());
+    Assert.assertEquals(4, history.size());
 
     for (SingularityRequestHistory historyItem : history) {
       if (historyItem.getEventType() == RequestHistoryType.DELETED) {
@@ -508,8 +508,5 @@ public class SingularityHistoryTest extends SingularitySchedulerTestBase {
         Assert.assertTrue(!historyItem.getMessage().isPresent());
       }
     }
-
   }
-
-
 }
