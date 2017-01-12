@@ -326,7 +326,7 @@ public class RequestManager extends CuratorAsyncManager {
     return getData(getRequestPath(requestId), requestTranscoder);
   }
 
-  public SingularityDeleteResult startDeletingRequest(SingularityRequest request, Optional<String> user, Optional<String> actionId, Optional<String> message) {
+  public void startDeletingRequest(SingularityRequest request, Optional<String> user, Optional<String> actionId, Optional<String> message) {
     final long now = System.currentTimeMillis();
 
     // delete it no matter if the delete request already exists.
@@ -336,8 +336,6 @@ public class RequestManager extends CuratorAsyncManager {
     markDeleting(request, System.currentTimeMillis(), user, message);
 
     LOG.info("Request {} enqueued for deletion by {} - {}", request.getId(), user, message);
-
-    return SingularityDeleteResult.DELETING;
   }
 
   public List<SingularityRequestLbCleanup> getLbCleanupRequests() {
