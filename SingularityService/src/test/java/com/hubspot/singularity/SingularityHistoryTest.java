@@ -130,8 +130,7 @@ public class SingularityHistoryTest extends SingularitySchedulerTestBase {
 
     HistoryPurgingConfiguration historyPurgingConfiguration = new HistoryPurgingConfiguration();
     historyPurgingConfiguration.setEnabled(true);
-    historyPurgingConfiguration.setDeleteTaskHistoryBytesInsteadOfEntireRow(true);
-    historyPurgingConfiguration.setDeleteTaskHistoryAfterDays(1);
+    historyPurgingConfiguration.setDeleteTaskHistoryBytesAfterDays(1);
 
     SingularityTaskHistory taskHistory = buildTask(System.currentTimeMillis() - TimeUnit.DAYS.toMillis(3));
 
@@ -161,7 +160,6 @@ public class SingularityHistoryTest extends SingularitySchedulerTestBase {
 
     HistoryPurgingConfiguration historyPurgingConfiguration = new HistoryPurgingConfiguration();
     historyPurgingConfiguration.setEnabled(true);
-    historyPurgingConfiguration.setDeleteTaskHistoryBytesInsteadOfEntireRow(false);
     historyPurgingConfiguration.setDeleteTaskHistoryAfterDays(10);
 
     SingularityHistoryPurger purger = new SingularityHistoryPurger(historyPurgingConfiguration, historyManager);
@@ -488,7 +486,7 @@ public class SingularityHistoryTest extends SingularitySchedulerTestBase {
       msg = msg + i;
     }
 
-    requestResource.scale(requestId, new SingularityScaleRequest(Optional.of(2), Optional.<Long> absent(), Optional.<Boolean> absent(), Optional.<String> absent(), Optional.of(msg)));
+    requestResource.scale(requestId, new SingularityScaleRequest(Optional.of(2), Optional.<Long> absent(), Optional.<Boolean> absent(), Optional.<String> absent(), Optional.of(msg), Optional.<Boolean>absent(), Optional.<Boolean>absent()));
     requestResource.deleteRequest(requestId, Optional.of(new SingularityDeleteRequestRequest(Optional.of("a msg"), Optional.<String> absent())));
 
     cleaner.drainCleanupQueue();

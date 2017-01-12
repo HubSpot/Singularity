@@ -29,14 +29,15 @@ import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityRequestHistory.RequestHistoryType;
 import com.hubspot.singularity.SingularityRequestWithState;
 import com.hubspot.singularity.SingularitySlave;
-import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskCleanup;
 import com.hubspot.singularity.SingularityTaskHistoryUpdate;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTaskShellCommandRequestId;
 import com.hubspot.singularity.TaskCleanupType;
+import com.hubspot.singularity.api.SingularityBounceRequest;
 import com.hubspot.singularity.api.SingularityScaleRequest;
 import com.hubspot.singularity.config.SingularityConfiguration;
+import com.hubspot.singularity.data.DeployManager;
 import com.hubspot.singularity.data.RackManager;
 import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.data.SlaveManager;
@@ -58,6 +59,7 @@ public class SingularityExpiringUserActionPoller extends SingularityLeaderOnlyPo
   private static final Logger LOG = LoggerFactory.getLogger(SingularityExpiringUserActionPoller.class);
 
   private final RequestManager requestManager;
+  private final DeployManager deployManager;
   private final TaskManager taskManager;
   private final SingularityMailer mailer;
   private final RequestHelper requestHelper;
@@ -67,10 +69,11 @@ public class SingularityExpiringUserActionPoller extends SingularityLeaderOnlyPo
   private final SingularityConfiguration configuration;
 
   @Inject
-  SingularityExpiringUserActionPoller(SingularityConfiguration configuration, RequestManager requestManager, TaskManager taskManager, SlaveManager slaveManager, RackManager rackManager,
+  SingularityExpiringUserActionPoller(SingularityConfiguration configuration, RequestManager requestManager, DeployManager deployManager, TaskManager taskManager, SlaveManager slaveManager, RackManager rackManager,
       @Named(SingularityMesosModule.SCHEDULER_LOCK_NAME) final Lock lock, RequestHelper requestHelper, SingularityMailer mailer) {
     super(configuration.getCheckExpiringUserActionEveryMillis(), TimeUnit.MILLISECONDS, lock);
 
+    this.deployManager = deployManager;
     this.requestManager = requestManager;
     this.requestHelper = requestHelper;
     this.mailer = mailer;
@@ -252,8 +255,20 @@ public class SingularityExpiringUserActionPoller extends SingularityLeaderOnlyPo
       final SingularityRequest newRequest = oldRequest.toBuilder().setInstances(expiringObject.getRevertToInstances()).build();
 
       try {
+        Optional<SingularityBounceRequest> maybeBounceRequest = Optional.absent();
+
+        if (expiringObject.getBounce().or(false) || newRequest.getBounceAfterScale().or(false)) {
+          LOG.info("Attempting to bounce request {} after expiring scale", newRequest.getId());
+          Optional<String> maybeActiveDeployId = deployManager.getInUseDeployId(newRequest.getId());
+          if (maybeActiveDeployId.isPresent()) {
+            maybeBounceRequest = Optional.of(SingularityBounceRequest.defaultRequest());
+          } else {
+            LOG.debug("No active deploy id present for request {}, not bouncing after expiring scale", newRequest.getId());
+          }
+        }
+
         requestHelper.updateRequest(newRequest, Optional.of(oldRequest), requestWithState.getState(), Optional.of(RequestHistoryType.SCALE_REVERTED), expiringObject.getUser(),
-            Optional.<Boolean> absent(), Optional.of(message));
+            Optional.<Boolean> absent(), Optional.of(message), maybeBounceRequest);
 
         mailer.sendRequestScaledMail(newRequest, Optional.<SingularityScaleRequest> absent(), oldRequest.getInstances(), expiringObject.getUser());
       } catch (WebApplicationException wae) {
@@ -281,7 +296,7 @@ public class SingularityExpiringUserActionPoller extends SingularityLeaderOnlyPo
 
       try {
         requestHelper.updateRequest(newRequest, Optional.of(oldRequest), requestWithState.getState(), Optional.<RequestHistoryType> absent(), expiringObject.getUser(),
-            Optional.<Boolean> absent(), Optional.of(message));
+            Optional.<Boolean> absent(), Optional.of(message), Optional.<SingularityBounceRequest>absent());
       } catch (WebApplicationException wae) {
         LOG.error("While trying to apply {} for {}", expiringObject, expiringObject.getRequestId(), wae);
       }
