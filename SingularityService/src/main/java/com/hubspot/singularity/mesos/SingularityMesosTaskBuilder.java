@@ -110,11 +110,13 @@ class SingularityMesosTaskBuilder {
       bldr.addResources(portsResource.get());
     }
 
-    bldr.addResources(MesosUtils.getCpuResource(desiredTaskResources.getCpus()));
-    bldr.addResources(MesosUtils.getMemoryResource(desiredTaskResources.getMemoryMb()));
+
+    Optional<String> requiredRole = taskRequest.getRequest().getRequiredRole();
+    bldr.addResources(MesosUtils.getCpuResource(desiredTaskResources.getCpus(), requiredRole));
+    bldr.addResources(MesosUtils.getMemoryResource(desiredTaskResources.getMemoryMb(), requiredRole));
 
     if (desiredTaskResources.getDiskMb() > 0) {
-      bldr.addResources(MesosUtils.getDiskResource(desiredTaskResources.getDiskMb()));
+      bldr.addResources(MesosUtils.getDiskResource(desiredTaskResources.getDiskMb(), requiredRole));
     }
 
     bldr.setSlaveId(offer.getSlaveId());
@@ -317,19 +319,19 @@ class SingularityMesosTaskBuilder {
     bldr.setContainer(containerBuilder);
   }
 
-  private List<Resource> buildMesosResources(final Resources resources) {
+  private List<Resource> buildMesosResources(final Resources resources, Optional<String> role) {
     ImmutableList.Builder<Resource> builder = ImmutableList.builder();
 
     if (resources.getCpus() > 0) {
-      builder.add(MesosUtils.getCpuResource(resources.getCpus()));
+      builder.add(MesosUtils.getCpuResource(resources.getCpus(), role));
     }
 
     if (resources.getMemoryMb() > 0) {
-      builder.add(MesosUtils.getMemoryResource(resources.getMemoryMb()));
+      builder.add(MesosUtils.getMemoryResource(resources.getMemoryMb(), role));
     }
 
     if (resources.getDiskMb() > 0) {
-      builder.add(MesosUtils.getDiskResource(resources.getDiskMb()));
+      builder.add(MesosUtils.getDiskResource(resources.getDiskMb(), role));
     }
 
     return builder.build();
@@ -349,7 +351,7 @@ class SingularityMesosTaskBuilder {
         .setCommand(commandBuilder.build())
         .setExecutorId(ExecutorID.newBuilder().setValue(task.getDeploy().getCustomExecutorId().or(idGenerator.getNextExecutorId())))
         .setSource(task.getDeploy().getCustomExecutorSource().or(task.getPendingTask().getPendingTaskId().getId()))
-        .addAllResources(buildMesosResources(desiredExecutorResources))
+        .addAllResources(buildMesosResources(desiredExecutorResources, task.getRequest().getRequiredRole()))
         .build()
         );
 
