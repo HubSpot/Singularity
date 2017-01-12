@@ -1,5 +1,5 @@
 package com.hubspot.singularity;
 
 public enum SingularityDeleteResult {
-  DELETED, DIDNT_EXIST;
+  DELETING, DELETED, DIDNT_EXIST;
 }

@@ -40,7 +40,6 @@ import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityRequestCleanup;
 import com.hubspot.singularity.SingularityRequestDeployState;
 import com.hubspot.singularity.SingularityRequestHistory;
-import com.hubspot.singularity.SingularityRequestHistory.RequestHistoryType;
 import com.hubspot.singularity.SingularityRequestLbCleanup;
 import com.hubspot.singularity.SingularityRequestWithState;
 import com.hubspot.singularity.SingularityShellCommand;
@@ -346,7 +345,7 @@ public class SingularityCleaner {
           }
           break;
         case DELETING:
-          if (requestWithState.isPresent()) {
+          if (requestWithState.isPresent() && requestWithState.get().getState() != RequestState.DELETING) {
             killActiveTasks = false;
             killScheduledTasks = false;
             LOG.info("Ignoring {}, because {} still existed", requestCleanup, requestCleanup.getRequestId());
@@ -360,8 +359,8 @@ public class SingularityCleaner {
               Optional<SingularityRequestHistory> maybeHistory = requestHistoryHelper.getLastHistory(requestId);
               if (maybeHistory.isPresent() && maybeHistory.get().getRequest().isLoadBalanced() && configuration.isDeleteRemovedRequestsFromLoadBalancer()) {
                 createLbCleanupRequest(requestId, matchingActiveTaskIds);
-                requestManager.markDeleted(maybeHistory.get().getRequest(), RequestHistoryType.DELETED, System.currentTimeMillis(), Optional.<String>absent(), Optional.<String>absent());
               }
+              requestManager.markDeleted(maybeHistory.get().getRequest(), start, Optional.<String>absent(), Optional.<String>absent());
               cleanupDeployState(requestCleanup);
             }
           }
