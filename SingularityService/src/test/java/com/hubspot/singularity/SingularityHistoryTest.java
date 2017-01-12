@@ -28,11 +28,11 @@ import com.hubspot.singularity.api.SingularityScaleRequest;
 import com.hubspot.singularity.config.HistoryPurgingConfiguration;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.data.history.HistoryManager;
-import com.hubspot.singularity.scheduler.SingularitySchedulerTestBase;
 import com.hubspot.singularity.data.history.SingularityHistoryPurger;
 import com.hubspot.singularity.data.history.SingularityRequestHistoryPersister;
 import com.hubspot.singularity.data.history.SingularityTaskHistoryPersister;
 import com.hubspot.singularity.data.history.TaskHistoryHelper;
+import com.hubspot.singularity.scheduler.SingularitySchedulerTestBase;
 
 import liquibase.Liquibase;
 import liquibase.database.Database;
@@ -504,6 +504,8 @@ public class SingularityHistoryTest extends SingularitySchedulerTestBase {
         Assert.assertEquals("a msg", historyItem.getMessage().get());
       } else if (historyItem.getEventType() == RequestHistoryType.SCALED) {
         Assert.assertEquals(280, historyItem.getMessage().get().length());
+      } else if (historyItem.getEventType() == RequestHistoryType.DELETING) {
+        Assert.assertEquals("a msg", historyItem.getMessage().get());
       } else {
         Assert.assertTrue(!historyItem.getMessage().isPresent());
       }
