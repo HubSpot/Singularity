@@ -38,6 +38,7 @@ public class SingularityRequestBuilder {
   private Optional<Map<String, String>> requiredSlaveAttributes;
   private Optional<Map<String, String>> allowedSlaveAttributes;
   private Optional<Boolean> loadBalanced;
+  private Optional<String> requiredRole;
 
   private Optional<String> group;
   private Optional<Set<String>> readWriteGroups;
@@ -83,12 +84,13 @@ public class SingularityRequestBuilder {
     this.taskPriorityLevel = Optional.absent();
     this.maxTasksPerOffer = Optional.absent();
     this.allowBounceToSameHost = Optional.absent();
+    this.requiredRole = Optional.absent();
   }
 
   public SingularityRequest build() {
     return new SingularityRequest(id, requestType, owners, numRetriesOnFailure, schedule, instances, rackSensitive, loadBalanced, killOldNonLongRunningTasksAfterMillis, taskExecutionTimeLimitMillis, scheduleType, quartzSchedule, scheduleTimeZone,
         rackAffinity, slavePlacement, requiredSlaveAttributes, allowedSlaveAttributes, scheduledExpectedRuntimeMillis, waitAtLeastMillisAfterTaskFinishesForReschedule, group, readWriteGroups, readOnlyGroups,
-        bounceAfterScale, skipHealthchecks, emailConfigurationOverrides, Optional.<Boolean>absent(), hideEvenNumberAcrossRacksHint, taskLogErrorRegex, taskLogErrorRegexCaseSensitive, taskPriorityLevel, maxTasksPerOffer, allowBounceToSameHost);
+        bounceAfterScale, skipHealthchecks, emailConfigurationOverrides, Optional.<Boolean>absent(), hideEvenNumberAcrossRacksHint, taskLogErrorRegex, taskLogErrorRegexCaseSensitive, taskPriorityLevel, maxTasksPerOffer, allowBounceToSameHost, requiredRole);
   }
 
   public Optional<Boolean> getSkipHealthchecks() {
@@ -146,6 +148,11 @@ public class SingularityRequestBuilder {
 
   public SingularityRequestBuilder setInstances(Optional<Integer> instances) {
     this.instances = instances;
+    return this;
+  }
+
+  public SingularityRequestBuilder setRequiredRole(Optional<String> requiredRole) {
+    this.requiredRole = requiredRole;
     return this;
   }
 

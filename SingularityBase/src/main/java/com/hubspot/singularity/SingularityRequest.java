@@ -45,6 +45,7 @@ public class SingularityRequest {
   private final Optional<Boolean> loadBalanced;
 
   private final Optional<String> group;
+  private final Optional<String> requiredRole;
   private final Optional<Set<String>> readWriteGroups;
   private final Optional<Set<String>> readOnlyGroups;
   private final Optional<Boolean> bounceAfterScale;
@@ -76,7 +77,7 @@ public class SingularityRequest {
       @JsonProperty("emailConfigurationOverrides") Optional<Map<SingularityEmailType, List<SingularityEmailDestination>>> emailConfigurationOverrides,
       @JsonProperty("daemon") @Deprecated Optional<Boolean> daemon, @JsonProperty("hideEvenNumberAcrossRacks") Optional<Boolean> hideEvenNumberAcrossRacksHint,
       @JsonProperty("taskLogErrorRegex") Optional<String> taskLogErrorRegex, @JsonProperty("taskLogErrorRegexCaseSensitive") Optional<Boolean> taskLogErrorRegexCaseSensitive,
-      @JsonProperty("taskPriorityLevel") Optional<Double> taskPriorityLevel, @JsonProperty("maxTasksPerOffer") Optional<Integer> maxTasksPerOffer, @JsonProperty("allowBounceToSameHost") Optional<Boolean> allowBounceToSameHost) {
+      @JsonProperty("taskPriorityLevel") Optional<Double> taskPriorityLevel, @JsonProperty("maxTasksPerOffer") Optional<Integer> maxTasksPerOffer, @JsonProperty("allowBounceToSameHost") Optional<Boolean> allowBounceToSameHost, @JsonProperty("requiredRole") Optional<String> requiredRole) {
     this.id = checkNotNull(id, "id cannot be null");
     this.owners = owners;
     this.numRetriesOnFailure = numRetriesOnFailure;
@@ -96,6 +97,7 @@ public class SingularityRequest {
     this.scheduledExpectedRuntimeMillis = scheduledExpectedRuntimeMillis;
     this.waitAtLeastMillisAfterTaskFinishesForReschedule = waitAtLeastMillisAfterTaskFinishesForReschedule;
     this.group = group;
+    this.requiredRole = requiredRole;
     this.readWriteGroups = readWriteGroups;
     this.readOnlyGroups = readOnlyGroups;
     this.bounceAfterScale = bounceAfterScale;
@@ -133,6 +135,7 @@ public class SingularityRequest {
     .setRequiredSlaveAttributes(requiredSlaveAttributes)
     .setAllowedSlaveAttributes(allowedSlaveAttributes)
     .setScheduledExpectedRuntimeMillis(scheduledExpectedRuntimeMillis)
+    .setRequiredRole(requiredRole)
     .setGroup(group)
     .setReadWriteGroups(readWriteGroups)
     .setReadOnlyGroups(readOnlyGroups)
@@ -309,6 +312,11 @@ public class SingularityRequest {
   @ApiModelProperty(required=false, value="Auth group associated with this request. Users in this group are allowed read/write access to this request")
   public Optional<String> getGroup() {
     return group;
+  }
+
+  @ApiModelProperty(required=false, value="Mesos Role required for this request. Only offers with the required role will be accepted to execute the tasks associated with the request")
+  public Optional<String> getRequiredRole() {
+    return requiredRole;
   }
 
   @ApiModelProperty(required=false, value="Users in these groups are allowed read/write access to this request")
