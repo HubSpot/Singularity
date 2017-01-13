@@ -157,7 +157,7 @@ const RequestActionButtons = ({requestParent, fetchRequest, fetchRequestHistory,
 
   const navigateAwayOnSuccess = (response) => {
     if (response.statusCode === 200) {
-      router.push('/requests');
+      window.location.reload();
     }
   };
 
