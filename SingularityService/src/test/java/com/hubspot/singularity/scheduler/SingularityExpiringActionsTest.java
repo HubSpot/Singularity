@@ -4,8 +4,11 @@ import org.apache.mesos.Protos.TaskState;
 import org.junit.Assert;
 import org.junit.Test;
 
+import com.fasterxml.jackson.annotation.JsonTypeInfo.As;
 import com.google.common.base.Optional;
 import com.hubspot.singularity.RequestState;
+import com.hubspot.singularity.SingularityRequestHistory;
+import com.hubspot.singularity.SingularityRequestHistory.RequestHistoryType;
 import com.hubspot.singularity.SingularityShellCommand;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.api.SingularityBounceRequest;
@@ -128,7 +131,7 @@ public class SingularityExpiringActionsTest extends SingularitySchedulerTestBase
   public void testExpiringIncrementalBounce() {
     initRequest();
 
-    requestResource.scale(requestId, new SingularityScaleRequest(Optional.of(3), Optional.<Long> absent(), Optional.<Boolean> absent(), Optional.<String> absent(), Optional.<String>absent()));
+    requestResource.scale(requestId, new SingularityScaleRequest(Optional.of(3), Optional.<Long> absent(), Optional.<Boolean> absent(), Optional.<String> absent(), Optional.<String>absent(), Optional.<Boolean>absent(), Optional.<Boolean>absent()));
 
     initFirstDeploy();
 
@@ -186,7 +189,7 @@ public class SingularityExpiringActionsTest extends SingularitySchedulerTestBase
     initRequest();
     initFirstDeploy();
 
-    requestResource.scale(requestId, new SingularityScaleRequest(Optional.of(5), Optional.of(1L), Optional.<Boolean> absent(), Optional.<String> absent(), Optional.<String>absent()));
+    requestResource.scale(requestId, new SingularityScaleRequest(Optional.of(5), Optional.of(1L), Optional.<Boolean> absent(), Optional.<String> absent(), Optional.<String>absent(), Optional.<Boolean>absent(), Optional.<Boolean>absent()));
 
     try {
       Thread.sleep(2);
@@ -228,5 +231,42 @@ public class SingularityExpiringActionsTest extends SingularitySchedulerTestBase
     SingularityTask thirdTask = startTask(firstDeploy);
 
     Assert.assertTrue(healthchecker.cancelHealthcheck(thirdTask.getTaskId().getId()));
+  }
+
+  @Test
+  public void testExpiringScaleWithBounce() {
+    initRequest();
+    initFirstDeploy();
+
+    requestResource.postRequest(request.toBuilder().setBounceAfterScale(Optional.of(true)).build());
+
+    requestResource.scale(requestId, new SingularityScaleRequest(Optional.of(5), Optional.of(1L), Optional.<Boolean> absent(), Optional.<String> absent(), Optional.<String>absent(), Optional.<Boolean>absent(), Optional.<Boolean>absent()));
+
+    Assert.assertEquals(1, requestManager.getCleanupRequests().size());
+    cleaner.drainCleanupQueue();
+    resourceOffers();
+    resourceOffers();
+    resourceOffers();
+    resourceOffers();
+    cleaner.drainCleanupQueue();
+    killKilledTasks();
+    Assert.assertEquals(5, taskManager.getNumActiveTasks());
+
+
+    try {
+      Thread.sleep(2);
+    } catch (InterruptedException e) {
+
+    }
+
+    expiringUserActionPoller.runActionOnPoll();
+    Assert.assertEquals(1, requestManager.getCleanupRequests().size());
+    cleaner.drainCleanupQueue();
+    Assert.assertEquals(4, taskManager.getKilledTaskIdRecords().size());
+
+    launchTask(request, firstDeploy, 1, TaskState.TASK_RUNNING);
+
+    cleaner.drainCleanupQueue();
+    Assert.assertEquals(5, taskManager.getKilledTaskIdRecords().size());
   }
 }
