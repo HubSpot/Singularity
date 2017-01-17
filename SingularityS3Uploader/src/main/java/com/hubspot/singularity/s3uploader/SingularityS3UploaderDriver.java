@@ -202,88 +202,7 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper implements S
   }
 
   private int checkUploads() {
-    if (metadataToUploader.isEmpty()) {
-      return 0;
-    }
-
-    final Set<Path> filesToUpload = Collections.newSetFromMap(new ConcurrentHashMap<Path, Boolean>(metadataToUploader.size() * 2, 0.75f, metadataToUploader.size()));
-    final Map<SingularityS3Uploader, Future<Integer>> futures = Maps.newHashMapWithExpectedSize(metadataToUploader.size());
-    final Map<SingularityS3Uploader, Boolean> finishing = Maps.newHashMapWithExpectedSize(metadataToUploader.size());
-
-    for (final SingularityS3Uploader uploader : metadataToUploader.values()) {
-      final boolean isFinished = isFinished(uploader);
-      // do this here so we run at least once with isFinished = true
-      finishing.put(uploader, isFinished);
-
-      futures.put(uploader, executorService.submit(new Callable<Integer>() {
-
-        @Override
-        public Integer call() {
-
-          Integer returnValue = 0;
-          try {
-            returnValue = uploader.upload(filesToUpload, isFinished);
-          } catch (Throwable t) {
-            metrics.error();
-            LOG.error("Error while processing uploader {}", uploader, t);
-            exceptionNotifier.notify(String.format("Error processing uploader (%s)", t.getMessage()), t, ImmutableMap.of("metadataPath", uploader.getMetadataPath().toString()));
-          }
-          return returnValue;
-        }
-      }));
-    }
-
-    LOG.info("Waiting on {} future(s)", futures.size());
-    int totesUploads = 0;
-
-    final long now = System.currentTimeMillis();
-    final Set<SingularityS3Uploader> expiredUploaders = Sets.newHashSetWithExpectedSize(metadataToUploader.size());
-
-    for (Entry<SingularityS3Uploader, Future<Integer>> uploaderToFuture : futures.entrySet()) {
-      final SingularityS3Uploader uploader = uploaderToFuture.getKey();
-      try {
-        final int foundFiles = uploaderToFuture.getValue().get();
-        final boolean isFinished = finishing.get(uploader);
-
-        if (foundFiles == 0) {
-          if (shouldExpire(uploader, isFinished)) {
-            LOG.info("Expiring {}", uploader);
-            expiredUploaders.add(uploader);
-          }
-        } else {
-          LOG.trace("Updating uploader {} last expire time", uploader);
-          uploaderLastHadFilesAt.put(uploader, now);
-        }
-
-        totesUploads += foundFiles;
-      } catch (Throwable t) {
-        metrics.error();
-        LOG.error("Waiting on future", t);
-        exceptionNotifier.notify(String.format("Error waiting on uploader future (%s)", t.getMessage()), t, ImmutableMap.of("metadataPath", uploader.getMetadataPath().toString()));
-      }
-    }
-
-    for (SingularityS3Uploader expiredUploader : expiredUploaders) {
-      metrics.getUploaderCounter().dec();
-
-      metadataToUploader.remove(expiredUploader.getUploadMetadata());
-      uploaderLastHadFilesAt.remove(expiredUploader);
-      expiring.remove(expiredUploader);
-
-      try {
-        Closeables.close(expiredUploader, true);
-
-        LOG.debug("Deleting expired uploader {}", expiredUploader.getMetadataPath());
-        Files.delete(expiredUploader.getMetadataPath());
-      } catch (NoSuchFileException nfe) {
-        LOG.warn("File {} was alrady deleted");
-      } catch (IOException e) {
-        LOG.warn("Couldn't delete {}", expiredUploader.getMetadataPath(), e);
-        exceptionNotifier.notify("Could not delete metadata file", e, ImmutableMap.of("metadataPath", expiredUploader.getMetadataPath().toString()));
-      }
-    }
-
-    return totesUploads;
+    return performUpload(this.metadataToUploader);
   }
 
   private boolean shouldExpire(SingularityS3Uploader uploader, boolean isFinished) {
@@ -374,9 +293,18 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper implements S
 
       LOG.info("Created new uploader {}", uploader);
 
-      metadataToUploader.put(metadata, uploader);
-      uploaderLastHadFilesAt.put(uploader, System.currentTimeMillis());
-      return true;
+      if (metadata.getUploadImmediately().isPresent()
+          && metadata.getUploadImmediately().get()) {
+        LOG.info("Immediately uploading one file");
+        Map<S3UploadMetadata, SingularityS3Uploader> immediateUpload = Collections
+            .singletonMap(metadata, uploader);
+        performUpload(immediateUpload);
+        return true;
+      } else {
+        metadataToUploader.put(metadata, uploader);
+        uploaderLastHadFilesAt.put(uploader, System.currentTimeMillis());
+        return true;
+      }
     } catch (Throwable t) {
       LOG.info("Ignoring metadata {} because uploader couldn't be created", metadata, t);
       return false;
@@ -442,4 +370,88 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper implements S
     return true;
   }
 
+  private int performUpload(Map<S3UploadMetadata, SingularityS3Uploader> metadataToUploader) {
+    if (metadataToUploader.isEmpty()) {
+      return 0;
+    }
+
+    final Set<Path> filesToUpload = Collections.newSetFromMap(new ConcurrentHashMap<Path, Boolean>(metadataToUploader.size() * 2, 0.75f, metadataToUploader.size()));
+    final Map<SingularityS3Uploader, Future<Integer>> futures = Maps.newHashMapWithExpectedSize(metadataToUploader.size());
+    final Map<SingularityS3Uploader, Boolean> finishing = Maps.newHashMapWithExpectedSize(metadataToUploader.size());
+
+    for (final SingularityS3Uploader uploader : metadataToUploader.values()) {
+      final boolean isFinished = isFinished(uploader);
+      // do this here so we run at least once with isFinished = true
+      finishing.put(uploader, isFinished);
+
+      futures.put(uploader, executorService.submit(new Callable<Integer>() {
+
+        @Override
+        public Integer call() {
+
+          Integer returnValue = 0;
+          try {
+            returnValue = uploader.upload(filesToUpload, isFinished);
+          } catch (Throwable t) {
+            metrics.error();
+            LOG.error("Error while processing uploader {}", uploader, t);
+            exceptionNotifier.notify(String.format("Error processing uploader (%s)", t.getMessage()), t, ImmutableMap.of("metadataPath", uploader.getMetadataPath().toString()));
+          }
+          return returnValue;
+        }
+      }));
+    }
+
+    LOG.info("Waiting on {} future(s)", futures.size());
+    int totesUploads = 0;
+
+    final long now = System.currentTimeMillis();
+    final Set<SingularityS3Uploader> expiredUploaders = Sets.newHashSetWithExpectedSize(metadataToUploader.size());
+
+    for (Entry<SingularityS3Uploader, Future<Integer>> uploaderToFuture : futures.entrySet()) {
+      final SingularityS3Uploader uploader = uploaderToFuture.getKey();
+      try {
+        final int foundFiles = uploaderToFuture.getValue().get();
+        final boolean isFinished = finishing.get(uploader);
+
+        if (foundFiles == 0) {
+          if (shouldExpire(uploader, isFinished)) {
+            LOG.info("Expiring {}", uploader);
+            expiredUploaders.add(uploader);
+          }
+        } else {
+          LOG.trace("Updating uploader {} last expire time", uploader);
+          uploaderLastHadFilesAt.put(uploader, now);
+        }
+
+        totesUploads += foundFiles;
+      } catch (Throwable t) {
+        metrics.error();
+        LOG.error("Waiting on future", t);
+        exceptionNotifier.notify(String.format("Error waiting on uploader future (%s)", t.getMessage()), t, ImmutableMap.of("metadataPath", uploader.getMetadataPath().toString()));
+      }
+    }
+
+    for (SingularityS3Uploader expiredUploader : expiredUploaders) {
+      metrics.getUploaderCounter().dec();
+
+      metadataToUploader.remove(expiredUploader.getUploadMetadata());
+      uploaderLastHadFilesAt.remove(expiredUploader);
+      expiring.remove(expiredUploader);
+
+      try {
+        Closeables.close(expiredUploader, true);
+
+        LOG.debug("Deleting expired uploader {}", expiredUploader.getMetadataPath());
+        Files.delete(expiredUploader.getMetadataPath());
+      } catch (NoSuchFileException nfe) {
+        LOG.warn("File {} was already deleted");
+      } catch (IOException e) {
+        LOG.warn("Couldn't delete {}", expiredUploader.getMetadataPath(), e);
+        exceptionNotifier.notify("Could not delete metadata file", e, ImmutableMap.of("metadataPath", expiredUploader.getMetadataPath().toString()));
+      }
+    }
+
+    return totesUploads;
+  }
 }

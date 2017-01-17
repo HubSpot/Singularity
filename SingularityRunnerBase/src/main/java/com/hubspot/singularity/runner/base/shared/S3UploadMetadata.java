@@ -49,11 +49,13 @@ public class S3UploadMetadata {
   private final Optional<String> s3AccessKey;
   private final Optional<String> s3SecretKey;
   private final Optional<Long> finishedAfterMillisWithoutNewFile;
+  private final Optional<Boolean> uploadImmediately;
 
   @JsonCreator
   public S3UploadMetadata(@JsonProperty("directory") String directory, @JsonProperty("fileGlob") String fileGlob, @JsonProperty("s3Bucket") String s3Bucket, @JsonProperty("s3KeyFormat") String s3KeyFormat,
-      @JsonProperty("finished") boolean finished, @JsonProperty("onFinishGlob") Optional<String> onFinishGlob, @JsonProperty("pid") Optional<Integer> pid, @JsonProperty("s3AccessKey") Optional<String> s3AccessKey,
-      @JsonProperty("s3SecretKey") Optional<String> s3SecretKey, @JsonProperty("finishedAfterMillisWithoutNewFile") Optional<Long> finishedAfterMillisWithoutNewFile) {
+                          @JsonProperty("finished") boolean finished, @JsonProperty("onFinishGlob") Optional<String> onFinishGlob, @JsonProperty("pid") Optional<Integer> pid, @JsonProperty("s3AccessKey") Optional<String> s3AccessKey,
+                          @JsonProperty("s3SecretKey") Optional<String> s3SecretKey, @JsonProperty("finishedAfterMillisWithoutNewFile") Optional<Long> finishedAfterMillisWithoutNewFile,
+                          @JsonProperty("uploadImmediately") Optional<Boolean> uploadImmediately) {
     Preconditions.checkNotNull(directory);
     Preconditions.checkNotNull(fileGlob);
     Preconditions.checkNotNull(s3Bucket);
@@ -69,6 +71,7 @@ public class S3UploadMetadata {
     this.s3SecretKey = s3SecretKey;
     this.onFinishGlob = onFinishGlob;
     this.finishedAfterMillisWithoutNewFile = finishedAfterMillisWithoutNewFile;
+    this.uploadImmediately = uploadImmediately;
   }
 
   @Override
@@ -149,10 +152,15 @@ public class S3UploadMetadata {
     return finishedAfterMillisWithoutNewFile;
   }
 
+  public Optional<Boolean> getUploadImmediately() {
+    return uploadImmediately;
+  }
+
   @Override
   public String toString() {
     return "S3UploadMetadata [directory=" + directory + ", fileGlob=" + fileGlob + ", s3Bucket=" + s3Bucket + ", s3KeyFormat=" + s3KeyFormat + ", finished=" + finished + ", onFinishGlob="
-        + onFinishGlob + ", pid=" + pid + ", s3AccessKey=" + obfuscateValue(s3AccessKey) + ", s3Secret=" + obfuscateValue(s3SecretKey) + ", finishedAfterMillisWithoutNewFile=" + finishedAfterMillisWithoutNewFile + "]";
+        + onFinishGlob + ", pid=" + pid + ", s3AccessKey=" + obfuscateValue(s3AccessKey) + ", s3Secret=" + obfuscateValue(s3SecretKey) + ", finishedAfterMillisWithoutNewFile="
+        + finishedAfterMillisWithoutNewFile + ", uploadImmediately=" + uploadImmediately + "]";
   }
 
 }
