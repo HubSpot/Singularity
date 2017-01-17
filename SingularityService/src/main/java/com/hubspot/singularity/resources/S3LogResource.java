@@ -279,12 +279,28 @@ public class S3LogResource extends AbstractHistoryResource {
         }
       }
     }
+
+    // Trim prefixes to search. Less specific prefixes will contain all results of matching + more specific ones
+    for (Map.Entry<SingularityS3Service, Set<String>> entry : servicesToPrefixes.entrySet()) {
+      Set<String> toRemove = new HashSet<>();
+      for (String prefix : entry.getValue()) {
+        for (String compareTo : entry.getValue()) {
+          if (prefix.contains(compareTo)) {
+            toRemove.add(prefix);
+            break;
+          }
+        }
+      }
+      entry.getValue().removeAll(toRemove);
+    }
+
     return servicesToPrefixes;
   }
 
   private Set<String> getBuckets(String group) {
     Set<String> s3Buckets = new HashSet<>();
     s3Buckets.add(configuration.get().getGroupOverrides().containsKey(group) ? configuration.get().getGroupOverrides().get(group).getS3Bucket() : configuration.get().getS3Bucket());
+    s3Buckets.add(configuration.get().getGroupS3SearchConfigs().containsKey(group) ? configuration.get().getGroupS3SearchConfigs().get(group).getS3Bucket() : configuration.get().getS3Bucket());
     for (SingularityS3UploaderFile uploaderFile : configuration.get().getS3UploaderAdditionalFiles()) {
       if (uploaderFile.getS3UploaderBucket().isPresent() && !s3Buckets.contains(uploaderFile.getS3UploaderBucket().get())) {
         s3Buckets.add(uploaderFile.getS3UploaderBucket().get());
@@ -330,7 +346,8 @@ public class S3LogResource extends AbstractHistoryResource {
                   continuationTokens.putIfAbsent(key, new ContinuationToken(result.getNextContinuationToken(), true));
                   return Collections.emptyList();
                 } else {
-                  if (incrementIfLessThan(resultCount, result.getObjectSummaries().size(), targetResultCount)) {
+                  boolean addToList = incrementIfLessThan(resultCount, result.getObjectSummaries().size(), targetResultCount);
+                  if (addToList) {
                     continuationTokens.putIfAbsent(key, new ContinuationToken(result.getNextContinuationToken(), !result.isTruncated()));
                     List<S3ObjectSummaryHolder> objectSummaryHolders = new ArrayList<>();
                     for (S3ObjectSummary objectSummary : result.getObjectSummaries()) {

@@ -36,7 +36,14 @@ public class S3Configuration {
   private String s3Bucket;
 
   @NotNull
-  private Map<String, S3GroupOverrideConfiguration> groupOverrides = new HashMap<>();
+  private Map<String, S3GroupConfiguration> groupOverrides = new HashMap<>();
+
+  /**
+   * When searching s3 for requests in these groups, additionally search these buckets
+   * for logs. Do not upload new logs to them (that is what `groupOverrides` is for)
+   */
+  @NotNull
+  private Map<String, S3GroupConfiguration> groupS3SearchConfigs = new HashMap<>();
 
   /**
    * S3 Key format for finding logs. Should be the same as
@@ -132,12 +139,21 @@ public class S3Configuration {
     this.s3SecretKey = s3SecretKey;
   }
 
-  public Map<String, S3GroupOverrideConfiguration> getGroupOverrides() {
+  public Map<String, S3GroupConfiguration> getGroupOverrides() {
     return groupOverrides;
   }
 
-  public void setGroupOverrides(Map<String, S3GroupOverrideConfiguration> groupOverrides) {
+  public void setGroupOverrides(Map<String, S3GroupConfiguration> groupOverrides) {
     this.groupOverrides = groupOverrides;
+  }
+
+  public Map<String, S3GroupConfiguration> getGroupS3SearchConfigs() {
+    return groupS3SearchConfigs;
+  }
+
+  public S3Configuration setGroupS3SearchConfigs(Map<String, S3GroupConfiguration> groupS3SearchConfigs) {
+    this.groupS3SearchConfigs = groupS3SearchConfigs;
+    return this;
   }
 
   public List<SingularityS3UploaderFile> getS3UploaderAdditionalFiles() {

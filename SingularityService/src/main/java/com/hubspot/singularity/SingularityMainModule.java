@@ -41,7 +41,7 @@ import com.hubspot.singularity.config.CustomExecutorConfiguration;
 import com.hubspot.singularity.config.HistoryPurgingConfiguration;
 import com.hubspot.singularity.config.MesosConfiguration;
 import com.hubspot.singularity.config.S3Configuration;
-import com.hubspot.singularity.config.S3GroupOverrideConfiguration;
+import com.hubspot.singularity.config.S3GroupConfiguration;
 import com.hubspot.singularity.config.SMTPConfiguration;
 import com.hubspot.singularity.config.SentryConfiguration;
 import com.hubspot.singularity.config.SingularityConfiguration;
@@ -247,7 +247,10 @@ public class SingularityMainModule implements Module {
     }
 
     final ImmutableList.Builder<SingularityS3Service> s3ServiceBuilder = ImmutableList.builder();
-    for (Map.Entry<String, S3GroupOverrideConfiguration> entry : config.get().getGroupOverrides().entrySet()) {
+    for (Map.Entry<String, S3GroupConfiguration> entry : config.get().getGroupOverrides().entrySet()) {
+      s3ServiceBuilder.add(new SingularityS3Service(entry.getKey(), entry.getValue().getS3Bucket(), new AmazonS3Client(new BasicAWSCredentials(entry.getValue().getS3AccessKey(), entry.getValue().getS3SecretKey()))));
+    }
+    for (Map.Entry<String, S3GroupConfiguration> entry : config.get().getGroupS3SearchConfigs().entrySet()) {
       s3ServiceBuilder.add(new SingularityS3Service(entry.getKey(), entry.getValue().getS3Bucket(), new AmazonS3Client(new BasicAWSCredentials(entry.getValue().getS3AccessKey(), entry.getValue().getS3SecretKey()))));
     }
     SingularityS3Service defaultService = new SingularityS3Service(SingularityS3FormatHelper.DEFAULT_GROUP_NAME, config.get().getS3Bucket(), new AmazonS3Client(new BasicAWSCredentials(config.get().getS3AccessKey(), config.get().getS3SecretKey())));
