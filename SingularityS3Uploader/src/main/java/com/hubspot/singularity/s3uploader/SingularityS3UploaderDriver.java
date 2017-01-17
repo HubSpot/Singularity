@@ -37,6 +37,10 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.common.io.Closeables;
+import com.google.common.util.concurrent.FutureCallback;
+import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
@@ -202,175 +206,6 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper implements S
   }
 
   private int checkUploads() {
-    return performUpload(this.metadataToUploader);
-  }
-
-  private boolean shouldExpire(SingularityS3Uploader uploader, boolean isFinished) {
-    if (isFinished) {
-      return true;
-    }
-
-    if (uploader.getUploadMetadata().getFinishedAfterMillisWithoutNewFile().isPresent()) {
-      if (uploader.getUploadMetadata().getFinishedAfterMillisWithoutNewFile().get() < 0) {
-        LOG.trace("{} never expires", uploader);
-        return false;
-      }
-    }
-
-    final long durationSinceLastFile = System.currentTimeMillis() - uploaderLastHadFilesAt.get(uploader);
-
-    final long expireAfterMillis = uploader.getUploadMetadata().getFinishedAfterMillisWithoutNewFile().or(configuration.getStopCheckingAfterMillisWithoutNewFile());
-
-    if (durationSinceLastFile > expireAfterMillis) {
-      return true;
-    } else {
-      LOG.trace("Not expiring uploader {}, duration {} (max {}), isFinished: {})", uploader, JavaUtils.durationFromMillis(durationSinceLastFile), JavaUtils.durationFromMillis(expireAfterMillis), isFinished);
-    }
-
-    return false;
-  }
-
-  private boolean isFinished(SingularityS3Uploader uploader) {
-    if (expiring.contains(uploader)) {
-      return true;
-    }
-
-    if (uploader.getUploadMetadata().getPid().isPresent()) {
-      if (!processUtils.doesProcessExist(uploader.getUploadMetadata().getPid().get())) {
-        LOG.info("Pid {} not present - expiring uploader {}", uploader.getUploadMetadata().getPid().get(), uploader);
-        expiring.add(uploader);
-        return true;
-      }
-    }
-
-    return false;
-  }
-
-  private boolean handleNewOrModifiedS3Metadata(Path filename) throws IOException {
-    Optional<S3UploadMetadata> maybeMetadata = readS3UploadMetadata(filename);
-
-    if (!maybeMetadata.isPresent()) {
-      return false;
-    }
-
-    final S3UploadMetadata metadata = maybeMetadata.get();
-
-    SingularityS3Uploader existingUploader = metadataToUploader.get(metadata);
-
-    if (existingUploader != null) {
-      if (existingUploader.getUploadMetadata().isFinished() == metadata.isFinished()) {
-        LOG.debug("Ignoring metadata {} from {} because there was already one present", metadata, filename);
-        return false;
-      } else {
-        LOG.info("Toggling uploader {} finish state to {}", existingUploader, metadata.isFinished());
-
-        if (metadata.isFinished()) {
-          expiring.add(existingUploader);
-        } else {
-          expiring.remove(existingUploader);
-        }
-
-        return true;
-      }
-    }
-
-    try {
-      metrics.getUploaderCounter().inc();
-
-      Optional<AWSCredentials> bucketCreds = Optional.absent();
-
-      if (configuration.getS3BucketCredentials().containsKey(metadata.getS3Bucket())) {
-        bucketCreds = Optional.of(configuration.getS3BucketCredentials().get(metadata.getS3Bucket()).toAWSCredentials());
-      }
-
-      final AWSCredentials defaultCredentials = new AWSCredentials(configuration.getS3AccessKey().or(s3Configuration.getS3AccessKey()).get(), configuration.getS3SecretKey().or(s3Configuration.getS3SecretKey()).get());
-
-      SingularityS3Uploader uploader = new SingularityS3Uploader(bucketCreds.or(defaultCredentials), metadata, fileSystem, metrics, filename, configuration, hostname, exceptionNotifier);
-
-      if (metadata.isFinished()) {
-        expiring.add(uploader);
-      }
-
-      LOG.info("Created new uploader {}", uploader);
-
-      if (metadata.getUploadImmediately().isPresent()
-          && metadata.getUploadImmediately().get()) {
-        LOG.info("Immediately uploading one file");
-        Map<S3UploadMetadata, SingularityS3Uploader> immediateUpload = Collections
-            .singletonMap(metadata, uploader);
-        performUpload(immediateUpload);
-        return true;
-      } else {
-        metadataToUploader.put(metadata, uploader);
-        uploaderLastHadFilesAt.put(uploader, System.currentTimeMillis());
-        return true;
-      }
-    } catch (Throwable t) {
-      LOG.info("Ignoring metadata {} because uploader couldn't be created", metadata, t);
-      return false;
-    }
-  }
-
-  @Override
-  protected boolean processEvent(Kind<?> kind, final Path filename) throws IOException {
-    metrics.getFilesystemEventsMeter().mark();
-
-    if (!isS3MetadataFile(filename)) {
-      return false;
-    }
-
-    runLock.lock();
-
-    try {
-      if (isStopped()) {
-        LOG.warn("Driver is stopped, ignoring file watch event for {}", filename);
-        return false;
-      }
-
-      final Path fullPath = Paths.get(baseConfiguration.getS3UploaderMetadataDirectory()).resolve(filename);
-
-      if (kind.equals(StandardWatchEventKinds.ENTRY_DELETE)) {
-        Optional<SingularityS3Uploader> found = Iterables.tryFind(metadataToUploader.values(), new Predicate<SingularityS3Uploader>() {
-          @Override
-          public boolean apply(SingularityS3Uploader input) {
-            return input.getMetadataPath().equals(fullPath);
-          }
-        });
-
-        LOG.trace("Found {} to match deleted path {}", found, filename);
-
-        if (found.isPresent()) {
-          expiring.add(found.get());
-        }
-      } else {
-        return handleNewOrModifiedS3Metadata(fullPath);
-      }
-
-      return false;
-    } finally {
-      runLock.unlock();
-    }
-  }
-
-  private Optional<S3UploadMetadata> readS3UploadMetadata(Path filename) throws IOException {
-    try {
-      return jsonObjectFileHelper.read(filename, LOG, S3UploadMetadata.class);
-    } catch (NoSuchFileException nsfe) {
-      LOG.warn("Tried to read {}, but it doesn't exist!", filename);
-      return Optional.absent();
-    }
-  }
-
-  private boolean isS3MetadataFile(Path filename) {
-    if (!filename.toString().endsWith(baseConfiguration.getS3UploaderMetadataSuffix())) {
-      LOG.trace("Ignoring a file {} without {} suffix", filename, baseConfiguration.getS3UploaderMetadataSuffix());
-      return false;
-    }
-
-    return true;
-  }
-
-  private int performUpload(Map<S3UploadMetadata, SingularityS3Uploader> metadataToUploader) {
     if (metadataToUploader.isEmpty()) {
       return 0;
     }
@@ -453,5 +288,214 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper implements S
     }
 
     return totesUploads;
+  }
+
+  private void performImmediateUpload(final SingularityS3Uploader uploader) {
+    final Set<Path> filesToUpload = Collections
+        .newSetFromMap(new ConcurrentHashMap<Path, Boolean>(metadataToUploader.size() * 2, 0.75f, metadataToUploader.size()));
+
+    ListenableFuture<Integer> immediateUpload = MoreExecutors
+        .listeningDecorator(executorService)
+        .submit(new Callable<Integer>() {
+          @Override
+          public Integer call() throws Exception {
+            return uploader.upload(filesToUpload, isFinished(uploader));
+          }
+        });
+
+    Futures.addCallback(immediateUpload, new FutureCallback<Integer>() {
+      @Override
+      public void onSuccess(Integer integer) {
+        try {
+          Closeables.close(uploader, true);
+          metrics.getUploadCounter().dec();
+
+          LOG.debug("Deleting uploader {} for immediate upload", uploader.getMetadataPath());
+          Files.delete(uploader.getMetadataPath());
+        } catch (NoSuchFileException noSuchFileExn) {
+          LOG.warn("File {} was already deleted", uploader.getMetadataPath());
+        } catch (IOException iex) {
+          LOG.warn("Couldn't delete {}", uploader.getMetadataPath());
+          exceptionNotifier.notify("Could not delete metadata file", iex,
+              ImmutableMap.of("metadataPath",
+                  uploader.getMetadataPath().toString()));
+        }
+      }
+
+      @Override
+      public void onFailure(Throwable throwable) {
+        metrics.error();
+        LOG.error("Error while processing uploader {}", uploader, throwable);
+        exceptionNotifier.notify(
+            String.format("Error processing uploader (%s)", throwable.getMessage()),
+            throwable,
+            ImmutableMap.of("metadataPath", uploader.getMetadataPath().toString()));
+
+        // Used to closed down the uploader when finished
+        this.onSuccess(0);
+      }
+    }, executorService);
+  }
+
+  private boolean shouldExpire(SingularityS3Uploader uploader, boolean isFinished) {
+    if (isFinished) {
+      return true;
+    }
+
+    if (uploader.getUploadMetadata().getFinishedAfterMillisWithoutNewFile().isPresent()) {
+      if (uploader.getUploadMetadata().getFinishedAfterMillisWithoutNewFile().get() < 0) {
+        LOG.trace("{} never expires", uploader);
+        return false;
+      }
+    }
+
+    final long durationSinceLastFile = System.currentTimeMillis() - uploaderLastHadFilesAt.get(uploader);
+
+    final long expireAfterMillis = uploader.getUploadMetadata().getFinishedAfterMillisWithoutNewFile().or(configuration.getStopCheckingAfterMillisWithoutNewFile());
+
+    if (durationSinceLastFile > expireAfterMillis) {
+      return true;
+    } else {
+      LOG.trace("Not expiring uploader {}, duration {} (max {}), isFinished: {})", uploader, JavaUtils.durationFromMillis(durationSinceLastFile), JavaUtils.durationFromMillis(expireAfterMillis), isFinished);
+    }
+
+    return false;
+  }
+
+  private boolean isFinished(SingularityS3Uploader uploader) {
+    if (expiring.contains(uploader)) {
+      return true;
+    }
+
+    if (uploader.getUploadMetadata().getPid().isPresent()) {
+      if (!processUtils.doesProcessExist(uploader.getUploadMetadata().getPid().get())) {
+        LOG.info("Pid {} not present - expiring uploader {}", uploader.getUploadMetadata().getPid().get(), uploader);
+        expiring.add(uploader);
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  private boolean handleNewOrModifiedS3Metadata(Path filename) throws IOException {
+    Optional<S3UploadMetadata> maybeMetadata = readS3UploadMetadata(filename);
+
+    if (!maybeMetadata.isPresent()) {
+      return false;
+    }
+
+    final S3UploadMetadata metadata = maybeMetadata.get();
+
+    SingularityS3Uploader existingUploader = metadataToUploader.get(metadata);
+
+    if (existingUploader != null) {
+      if (existingUploader.getUploadMetadata().isFinished() == metadata.isFinished()) {
+        LOG.debug("Ignoring metadata {} from {} because there was already one present", metadata, filename);
+        return false;
+      } else {
+        LOG.info("Toggling uploader {} finish state to {}", existingUploader, metadata.isFinished());
+
+        if (metadata.isFinished()) {
+          expiring.add(existingUploader);
+        } else {
+          expiring.remove(existingUploader);
+        }
+
+        return true;
+      }
+    }
+
+    try {
+      metrics.getUploaderCounter().inc();
+
+      Optional<AWSCredentials> bucketCreds = Optional.absent();
+
+      if (configuration.getS3BucketCredentials().containsKey(metadata.getS3Bucket())) {
+        bucketCreds = Optional.of(configuration.getS3BucketCredentials().get(metadata.getS3Bucket()).toAWSCredentials());
+      }
+
+      final AWSCredentials defaultCredentials = new AWSCredentials(configuration.getS3AccessKey().or(s3Configuration.getS3AccessKey()).get(), configuration.getS3SecretKey().or(s3Configuration.getS3SecretKey()).get());
+
+      final SingularityS3Uploader uploader = new SingularityS3Uploader(bucketCreds.or(defaultCredentials), metadata, fileSystem, metrics, filename, configuration, hostname, exceptionNotifier);
+
+      if (metadata.isFinished()) {
+        expiring.add(uploader);
+      }
+
+      LOG.info("Created new uploader {}", uploader);
+
+      if (metadata.getUploadImmediately().isPresent()
+          && metadata.getUploadImmediately().get()) {
+        LOG.info("Immediately uploading one file");
+        this.performImmediateUpload(uploader);
+      } else {
+        metadataToUploader.put(metadata, uploader);
+        uploaderLastHadFilesAt.put(uploader, System.currentTimeMillis());
+      }
+      return true;
+    } catch (Throwable t) {
+      LOG.info("Ignoring metadata {} because uploader couldn't be created", metadata, t);
+      return false;
+    }
+  }
+
+  @Override
+  protected boolean processEvent(Kind<?> kind, final Path filename) throws IOException {
+    metrics.getFilesystemEventsMeter().mark();
+
+    if (!isS3MetadataFile(filename)) {
+      return false;
+    }
+
+    runLock.lock();
+
+    try {
+      if (isStopped()) {
+        LOG.warn("Driver is stopped, ignoring file watch event for {}", filename);
+        return false;
+      }
+
+      final Path fullPath = Paths.get(baseConfiguration.getS3UploaderMetadataDirectory()).resolve(filename);
+
+      if (kind.equals(StandardWatchEventKinds.ENTRY_DELETE)) {
+        Optional<SingularityS3Uploader> found = Iterables.tryFind(metadataToUploader.values(), new Predicate<SingularityS3Uploader>() {
+          @Override
+          public boolean apply(SingularityS3Uploader input) {
+            return input.getMetadataPath().equals(fullPath);
+          }
+        });
+
+        LOG.trace("Found {} to match deleted path {}", found, filename);
+
+        if (found.isPresent()) {
+          expiring.add(found.get());
+        }
+      } else {
+        return handleNewOrModifiedS3Metadata(fullPath);
+      }
+
+      return false;
+    } finally {
+      runLock.unlock();
+    }
+  }
+
+  private Optional<S3UploadMetadata> readS3UploadMetadata(Path filename) throws IOException {
+    try {
+      return jsonObjectFileHelper.read(filename, LOG, S3UploadMetadata.class);
+    } catch (NoSuchFileException nsfe) {
+      LOG.warn("Tried to read {}, but it doesn't exist!", filename);
+      return Optional.absent();
+    }
+  }
+
+  private boolean isS3MetadataFile(Path filename) {
+    if (!filename.toString().endsWith(baseConfiguration.getS3UploaderMetadataSuffix())) {
+      LOG.trace("Ignoring a file {} without {} suffix", filename, baseConfiguration.getS3UploaderMetadataSuffix());
+      return false;
+    }
+
+    return true;
   }
 }

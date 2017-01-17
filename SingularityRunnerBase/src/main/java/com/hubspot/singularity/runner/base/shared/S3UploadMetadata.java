@@ -35,6 +35,7 @@ import com.google.common.base.Preconditions;
  * s3SecretKey - the secret key to use to talk to s3 (optional in case you want to re-use the default Singularity configuration's key)
  *
  * finishedAfterMillisWithoutNewFile - after millis without a new file, set finished to true (see above for result.) - (-1 never expire) - absent - uses system default.
+ * uploadImmediately - When detected, immediately upload to S3 rather than waiting for polling to upload
  *
  */
 public class S3UploadMetadata {
