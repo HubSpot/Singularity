@@ -286,10 +286,10 @@ public class S3LogResource extends AbstractHistoryResource {
       boolean contains = false;
       for (String prefix : entry.getValue()) {
         for (String unique : results) {
-          if (unique.contains(prefix)) {
+          if (prefix.startsWith(unique) && prefix.length() > unique.length()) {
             contains = true;
             break;
-          } else if (prefix.contains(unique)) {
+          } else if (unique.startsWith(prefix) && unique.length() > prefix.length()) {
             results.remove(unique);
             results.add(prefix);
             contains = true;
