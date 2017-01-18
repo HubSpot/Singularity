@@ -19,7 +19,7 @@ public class UsageResource {
   public static final String PATH = SingularityService.API_BASE_PATH + "/usage";
 
   private final UsageManager usageManager;
-  
+
   @Inject
   public UsageResource(UsageManager usageManager) {
     this.usageManager = usageManager;
@@ -29,5 +29,5 @@ public class UsageResource {
   public List<SingularitySlaveUsageWithId> getSlavesWithUsage() {
     return usageManager.getAllCurrentSlaveUsage();
   }
-  
+
 }
