@@ -14,6 +14,7 @@ import com.hubspot.mesos.json.MesosTaskMonitorObject;
 import com.hubspot.mesos.json.MesosTaskStatisticsObject;
 import com.hubspot.singularity.MachineState;
 import com.hubspot.singularity.SingularityTask;
+import com.hubspot.singularity.SingularityTaskCurrentUsageWithId;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTaskUsage;
 import com.hubspot.singularity.data.UsageManager;
@@ -188,6 +189,18 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
 
     Assert.assertEquals(slaveId, usageManager.getAllCurrentSlaveUsage().get(0).getSlaveId());
     Assert.assertEquals(1125, usageManager.getAllCurrentSlaveUsage().get(0).getMemoryBytesUsed());
+
+    List<SingularityTaskCurrentUsageWithId> taskCurrentUsages = usageManager.getTaskCurrentUsages(taskManager.getActiveTaskIds());
+
+    Assert.assertEquals(2, taskCurrentUsages.size());
+
+    List<SingularityTaskId> activeTaskIds = taskManager.getActiveTaskIds();
+
+    for (SingularityTaskCurrentUsageWithId taskCurrentUsage : taskCurrentUsages) {
+      activeTaskIds.remove(taskCurrentUsage.getTaskId());
+    }
+
+    Assert.assertTrue(activeTaskIds.isEmpty());
   }
 
   private MesosTaskStatisticsObject getStatistics(double cpuSecs, double timestamp, long memBytes) {

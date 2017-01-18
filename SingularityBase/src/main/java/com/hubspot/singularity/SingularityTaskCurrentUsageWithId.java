@@ -14,4 +14,9 @@ public class SingularityTaskCurrentUsageWithId extends SingularityTaskCurrentUsa
     return taskId;
   }
 
+  @Override
+  public String toString() {
+    return "SingularityTaskCurrentUsageWithId [taskId=" + taskId + ", super=" + super.toString() + "]";
+  }
+
 }

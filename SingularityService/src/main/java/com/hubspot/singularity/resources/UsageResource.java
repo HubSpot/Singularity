@@ -9,6 +9,9 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.hubspot.singularity.SingularityService;
@@ -29,6 +32,8 @@ import com.wordnik.swagger.annotations.Api;
 @Produces({ MediaType.APPLICATION_JSON })
 @Api(description="Provides usage data about slaves and tasks", value=UsageResource.PATH)
 public class UsageResource {
+
+  private static final Logger LOG = LoggerFactory.getLogger(UsageResource.class);
 
   public static final String PATH = SingularityService.API_BASE_PATH + "/usage";
 
@@ -54,14 +59,18 @@ public class UsageResource {
   public List<SingularityTaskCurrentUsageWithId> getSlaveCurrentTaskUsage(@PathParam("slaveId") String slaveId) {
     Optional<SingularitySlave> slave = slaveManager.getObject(slaveId);
 
-    WebExceptions.checkNotFound(slave.isPresent(), "No slave found with id {}", slaveId);
+    WebExceptions.checkNotFound(slave.isPresent(), "No slave found with id %s", slaveId);
 
     List<SingularityTask> tasksOnSlave = taskManager.getTasksOnSlave(taskManager.getActiveTaskIds(), slave.get());
+
+    LOG.info("Found tasks on slave {}", tasksOnSlave.size());
 
     List<SingularityTaskId> taskIds = new ArrayList<>(tasksOnSlave.size());
     for (SingularityTask task : tasksOnSlave) {
       taskIds.add(task.getTaskId());
     }
+
+    LOG.info("Task ids: {}", taskIds);
 
     return usageManager.getTaskCurrentUsages(taskIds);
   }
