@@ -293,12 +293,13 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper implements S
   private void performImmediateUpload(final SingularityS3Uploader uploader) {
     final Set<Path> filesToUpload = Collections
         .newSetFromMap(new ConcurrentHashMap<Path, Boolean>(metadataToUploader.size() * 2, 0.75f, metadataToUploader.size()));
-
+    LOG.info("Immediately uploading one file");
     ListenableFuture<Integer> immediateUpload = MoreExecutors
         .listeningDecorator(executorService)
         .submit(new Callable<Integer>() {
           @Override
           public Integer call() throws Exception {
+            LOG.debug("Uploading files from {}", uploader);
             return uploader.upload(filesToUpload, isFinished(uploader));
           }
         });
@@ -427,7 +428,6 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper implements S
 
       if (metadata.getUploadImmediately().isPresent()
           && metadata.getUploadImmediately().get()) {
-        LOG.info("Immediately uploading one file");
         this.performImmediateUpload(uploader);
       } else {
         metadataToUploader.put(metadata, uploader);
