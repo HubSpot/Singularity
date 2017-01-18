@@ -162,7 +162,7 @@ const RequestActionButtons = ({requestParent, fetchRequest, fetchRequestHistory,
 
   const navigateAwayOnSuccess = (response) => {
     if (response.statusCode === 200) {
-      window.location.reload();
+      then={fetchRequestAndHistory}
     }
   };
 
