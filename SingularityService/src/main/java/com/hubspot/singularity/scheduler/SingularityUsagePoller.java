@@ -38,7 +38,7 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
   @Override
   public void runActionOnPoll() {
     final long now = System.currentTimeMillis();
-    
+
     for (SingularitySlave slave : usageHelper.getSlavesToTrackUsageFor()) {
       long memoryBytesUsed = 0;
       double cpusUsed = 0;
@@ -63,11 +63,11 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
           SingularityTaskUsage lastUsage = taskUsages.get(taskUsages.size() - 1);
 
           double taskCpusUsed = ((usage.getCpuSeconds() - lastUsage.getCpuSeconds()) / (usage.getTimestamp() - lastUsage.getTimestamp()));
-        
+
           SingularityTaskCurrentUsage currentUsage = new SingularityTaskCurrentUsage(usage.getMemoryRssBytes(), now, taskCpusUsed);
-          
+
           usageManager.saveCurrentTaskUsage(taskId, currentUsage);
-          
+
           cpusUsed += taskCpusUsed;
         }
       }
