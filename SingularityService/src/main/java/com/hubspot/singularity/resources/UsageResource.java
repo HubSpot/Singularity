@@ -2,6 +2,7 @@ package com.hubspot.singularity.resources;
 
 import java.util.List;
 
+import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
@@ -25,6 +26,7 @@ public class UsageResource {
     this.usageManager = usageManager;
   }
 
+  @GET
   @Path("/slaves")
   public List<SingularitySlaveUsageWithId> getSlavesWithUsage() {
     return usageManager.getAllCurrentSlaveUsage();
