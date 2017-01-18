@@ -45,12 +45,12 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.SingularityS3Log;
-import com.hubspot.singularity.s3uploader.config.SingularityS3UploaderContentHeaders;
 import com.hubspot.singularity.SingularityS3FormatHelper;
 import com.hubspot.singularity.runner.base.sentry.SingularityRunnerExceptionNotifier;
 import com.hubspot.singularity.runner.base.shared.S3UploadMetadata;
 import com.hubspot.singularity.runner.base.shared.SimpleProcessManager;
 import com.hubspot.singularity.s3uploader.config.SingularityS3UploaderConfiguration;
+import com.hubspot.singularity.s3uploader.config.SingularityS3UploaderContentHeaders;
 
 public class SingularityS3Uploader implements Closeable {
 
@@ -230,6 +230,18 @@ public class SingularityS3Uploader implements Closeable {
       this.sequence = sequence;
     }
 
+    private boolean shouldApplyStorageClass(long fileSizeBytes) {
+      if (!uploadMetadata.getS3StorageClass().isPresent()) {
+        return false;
+      }
+
+      if (!uploadMetadata.getApplyStorageClassIfOverBytes().isPresent()) {
+        return true;
+      }
+
+      return fileSizeBytes > uploadMetadata.getApplyStorageClassIfOverBytes().get();
+    }
+
     @Override
     public Boolean call() throws Exception {
       final long start = System.currentTimeMillis();
@@ -276,6 +288,11 @@ public class SingularityS3Uploader implements Closeable {
             }
             break;
           }
+        }
+
+        if (shouldApplyStorageClass(fileSizeBytes)) {
+          LOG.debug("{} adding storage class {} to {}", logIdentifier, uploadMetadata.getS3StorageClass().get(), file);
+          object.addMetadata("x-amz-storage-class", uploadMetadata.getS3StorageClass().get());
         }
 
         LOG.debug("Uploading object with metadata {}", object.getMetadataMap());
