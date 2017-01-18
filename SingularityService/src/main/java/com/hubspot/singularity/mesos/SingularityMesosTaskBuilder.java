@@ -3,7 +3,6 @@ package com.hubspot.singularity.mesos;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.Map.Entry;
 
 import javax.inject.Singleton;
@@ -37,7 +36,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.primitives.Ints;
 import com.google.inject.Inject;
 import com.google.protobuf.ByteString;
-import com.hubspot.deploy.ExecutorData;
 import com.hubspot.deploy.ExecutorDataBuilder;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.mesos.MesosUtils;
@@ -49,7 +47,9 @@ import com.hubspot.mesos.SingularityDockerParameter;
 import com.hubspot.mesos.SingularityDockerPortMapping;
 import com.hubspot.mesos.SingularityMesosTaskLabel;
 import com.hubspot.mesos.SingularityVolume;
+import com.hubspot.singularity.SingularityS3UploaderFile;
 import com.hubspot.singularity.SingularityTask;
+import com.hubspot.singularity.SingularityTaskExecutorData;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTaskRequest;
 import com.hubspot.singularity.config.SingularityConfiguration;
@@ -358,12 +358,16 @@ class SingularityMesosTaskBuilder {
     if (task.getDeploy().getExecutorData().isPresent()) {
       final ExecutorDataBuilder executorDataBldr = task.getDeploy().getExecutorData().get().toBuilder();
 
+      String defaultS3Bucket = "";
+      String s3UploaderKeyPattern = "";
       if (configuration.getS3Configuration().isPresent()) {
         if (task.getRequest().getGroup().isPresent() && configuration.getS3Configuration().get().getGroupOverrides().containsKey(task.getRequest().getGroup().get())) {
-          final Optional<String> loggingS3Bucket = Optional.of(configuration.getS3Configuration().get().getGroupOverrides().get(task.getRequest().getGroup().get()).getS3Bucket());
-          LOG.trace("Setting loggingS3Bucket to {} for task {} executorData", loggingS3Bucket, taskId.getId());
-          executorDataBldr.setLoggingS3Bucket(loggingS3Bucket);
+          defaultS3Bucket = configuration.getS3Configuration().get().getGroupOverrides().get(task.getRequest().getGroup().get()).getS3Bucket();
+          LOG.trace("Setting defaultS3Bucket to {} for task {} executorData", defaultS3Bucket, taskId.getId());
+        } else {
+          defaultS3Bucket = configuration.getS3Configuration().get().getS3Bucket();
         }
+        s3UploaderKeyPattern = configuration.getS3Configuration().get().getS3KeyFormat();
       }
 
       if (task.getPendingTask().getCmdLineArgsList().isPresent() && !task.getPendingTask().getCmdLineArgsList().get().isEmpty()) {
@@ -377,7 +381,13 @@ class SingularityMesosTaskBuilder {
         executorDataBldr.setExtraCmdLineArgs(extraCmdLineArgsBuilder.build());
       }
 
-      final ExecutorData executorData = executorDataBldr.build();
+      List<SingularityS3UploaderFile> uploaderAdditionalFiles = configuration.getS3Configuration().isPresent() ? configuration.getS3Configuration().get().getS3UploaderAdditionalFiles() : Collections.<SingularityS3UploaderFile>emptyList();
+      Optional<String> maybeS3StorageClass = configuration.getS3Configuration().isPresent() ? configuration.getS3Configuration().get().getS3StorageClass() : Optional.<String>absent();
+      Optional<Long> maybeApplyAfterBytes = configuration.getS3Configuration().isPresent() ? configuration.getS3Configuration().get().getApplyS3StorageClassAfterBytes() : Optional.<Long>absent();
+
+      final SingularityTaskExecutorData executorData = new SingularityTaskExecutorData(executorDataBldr.build(), uploaderAdditionalFiles, defaultS3Bucket, s3UploaderKeyPattern,
+          configuration.getCustomExecutorConfiguration().getServiceLog(), configuration.getCustomExecutorConfiguration().getServiceFinishedTailLog(), task.getRequest().getGroup(),
+          maybeS3StorageClass, maybeApplyAfterBytes);
 
       try {
         bldr.setData(ByteString.copyFromUtf8(objectMapper.writeValueAsString(executorData)));
