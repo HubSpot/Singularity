@@ -36,7 +36,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import com.google.common.io.Closeables;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -311,6 +310,7 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper implements S
           Closeables.close(uploader, true);
           metrics.getUploadCounter().dec();
           expiring.remove(uploader);
+          metadataToUploader.remove(uploader.getUploadMetadata());
 
           LOG.debug("Deleting uploader {} for immediate upload", uploader.getMetadataPath());
           Files.delete(uploader.getMetadataPath());
@@ -392,7 +392,10 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper implements S
     SingularityS3Uploader existingUploader = metadataToUploader.get(metadata);
 
     if (existingUploader != null) {
-      if (existingUploader.getUploadMetadata().isFinished() == metadata.isFinished()) {
+      if (metadata.getUploadImmediately().isPresent() && metadata.getUploadImmediately().get()) {
+        LOG.debug("Existing metadata {} from {} changed to be immediate, forcing upload", metadata, filename);
+        performImmediateUpload(existingUploader);
+      } else if (existingUploader.getUploadMetadata().isFinished() == metadata.isFinished()) {
         LOG.debug("Ignoring metadata {} from {} because there was already one present", metadata, filename);
         return false;
       } else {
