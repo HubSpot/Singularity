@@ -18,6 +18,8 @@ import com.hubspot.singularity.SingularityDeleteResult;
 import com.hubspot.singularity.SingularitySlaveUsage;
 import com.hubspot.singularity.SingularitySlaveUsageWithId;
 import com.hubspot.singularity.SingularityTaskCurrentUsage;
+import com.hubspot.singularity.SingularityTaskCurrentUsageWithId;
+import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTaskUsage;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.transcoders.Transcoder;
@@ -58,6 +60,11 @@ public class UsageManager extends CuratorAsyncManager {
   // /slaves/<slaveid>/CURRENT
   private String getSlaveIdFromCurrentUsagePath(String path) {
     return path.substring(path.indexOf(SLAVE_PATH) + SLAVE_PATH.length() + 1, path.lastIndexOf("/"));
+  }
+
+  // /tasks/<taskid>/CURRENT
+  private String getTaskIdFromCurrentUsagePath(String path) {
+    return path.substring(path.indexOf(TASK_PATH) + TASK_PATH.length() + 1, path.lastIndexOf("/"));
   }
 
   private String getSlaveUsagePath(String slaveId) {
@@ -175,6 +182,21 @@ public class UsageManager extends CuratorAsyncManager {
     }
     Collections.sort(timestamps);
     return timestamps;
+  }
+
+  public List<SingularityTaskCurrentUsageWithId> getTaskCurrentUsages(List<SingularityTaskId> taskIds) {
+    List<String> paths = new ArrayList<>(taskIds.size());
+    for (SingularityTaskId taskId : taskIds) {
+      paths.add(getCurrentTaskUsagePath(taskId.getId()));
+    }
+
+    Map<String, SingularityTaskCurrentUsage> currentTaskUsages = getAsyncWithPath("task-current-usage", paths, taskCurrentUsageTranscoder);
+    List<SingularityTaskCurrentUsageWithId> currentTaskUsagesWithIds = new ArrayList<>(paths.size());
+    for (Entry<String, SingularityTaskCurrentUsage> entry : currentTaskUsages.entrySet()) {
+      currentTaskUsagesWithIds.add(new SingularityTaskCurrentUsageWithId(SingularityTaskId.valueOf(getTaskIdFromCurrentUsagePath(entry.getKey())), entry.getValue()));
+    }
+
+    return currentTaskUsagesWithIds;
   }
 
 }
