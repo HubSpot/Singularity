@@ -16,4 +16,11 @@ public class SingularitySlaveUsageWithId extends SingularitySlaveUsage {
     return slaveId;
   }
 
+  @Override
+  public String toString() {
+    return "SingularitySlaveUsageWithId [slaveId=" + slaveId + ", super=" + super.toString() + "]";
+  }
+
+
+
 }
