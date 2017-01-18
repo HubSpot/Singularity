@@ -11,6 +11,7 @@ import com.hubspot.mesos.client.MesosClient;
 import com.hubspot.mesos.json.MesosTaskMonitorObject;
 import com.hubspot.singularity.SingularitySlave;
 import com.hubspot.singularity.SingularitySlaveUsage;
+import com.hubspot.singularity.SingularityTaskCurrentUsage;
 import com.hubspot.singularity.SingularityTaskUsage;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.UsageManager;
@@ -36,6 +37,8 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
 
   @Override
   public void runActionOnPoll() {
+    final long now = System.currentTimeMillis();
+    
     for (SingularitySlave slave : usageHelper.getSlavesToTrackUsageFor()) {
       long memoryBytesUsed = 0;
       double cpusUsed = 0;
@@ -59,18 +62,24 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
         if (!taskUsages.isEmpty()) {
           SingularityTaskUsage lastUsage = taskUsages.get(taskUsages.size() - 1);
 
-          cpusUsed += ((usage.getCpuSeconds() - lastUsage.getCpuSeconds()) / (usage.getTimestamp() - lastUsage.getTimestamp()));
+          double taskCpusUsed = ((usage.getCpuSeconds() - lastUsage.getCpuSeconds()) / (usage.getTimestamp() - lastUsage.getTimestamp()));
+        
+          SingularityTaskCurrentUsage currentUsage = new SingularityTaskCurrentUsage(usage.getMemoryRssBytes(), now, taskCpusUsed);
+          
+          usageManager.saveCurrentTaskUsage(taskId, currentUsage);
+          
+          cpusUsed += taskCpusUsed;
         }
       }
 
-      SingularitySlaveUsage slaveUsage = new SingularitySlaveUsage(memoryBytesUsed, System.currentTimeMillis(), cpusUsed, allTaskUsage.size());
+      SingularitySlaveUsage slaveUsage = new SingularitySlaveUsage(memoryBytesUsed, now, cpusUsed, allTaskUsage.size());
       List<Long> slaveTimestamps = usageManager.getSlaveUsageTimestamps(slave.getId());
       if (slaveTimestamps.size() + 1 > configuration.getNumUsageToKeep()) {
         usageManager.deleteSpecificSlaveUsage(slave.getId(), slaveTimestamps.get(0));
       }
 
       LOG.debug("Saving slave usage {}", slaveUsage);
-      usageManager.saveSpecificSlaveUsage(slave.getId(), slaveUsage);
+      usageManager.saveSpecificSlaveUsageAndSetCurrent(slave.getId(), slaveUsage);
     }
   }
 

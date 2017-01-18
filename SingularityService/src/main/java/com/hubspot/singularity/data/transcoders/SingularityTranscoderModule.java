@@ -35,6 +35,7 @@ import com.hubspot.singularity.SingularitySlaveUsage;
 import com.hubspot.singularity.SingularityState;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskCleanup;
+import com.hubspot.singularity.SingularityTaskCurrentUsage;
 import com.hubspot.singularity.SingularityTaskDestroyFrameworkMessage;
 import com.hubspot.singularity.SingularityTaskHealthcheckResult;
 import com.hubspot.singularity.SingularityTaskHistory;
@@ -99,6 +100,7 @@ public class SingularityTranscoderModule implements Module {
     bindTranscoder(binder).asJson(SingularityUserSettings.class);
     bindTranscoder(binder).asJson(SingularitySlaveUsage.class);
     bindTranscoder(binder).asJson(SingularityTaskUsage.class);
+    bindTranscoder(binder).asJson(SingularityTaskCurrentUsage.class);
 
     bindTranscoder(binder).asCompressedJson(SingularityDeployHistory.class);
     bindTranscoder(binder).asCompressedJson(SingularityDeploy.class);

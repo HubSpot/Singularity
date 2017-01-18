@@ -14,6 +14,7 @@ import com.google.inject.Singleton;
 import com.hubspot.singularity.SingularityCreateResult;
 import com.hubspot.singularity.SingularityDeleteResult;
 import com.hubspot.singularity.SingularitySlaveUsage;
+import com.hubspot.singularity.SingularityTaskCurrentUsage;
 import com.hubspot.singularity.SingularityTaskUsage;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.transcoders.Transcoder;
@@ -26,16 +27,21 @@ public class UsageManager extends CuratorAsyncManager {
   private static final String SLAVE_PATH = ROOT_PATH + "/slaves";
   private static final String TASK_PATH = ROOT_PATH + "/tasks";
 
+  private static final String USAGE_HISTORY_PATH_KEY = "history";
+  private static final String CURRENT_USAGE_NODE_KEY = "CURRENT";
+  
   private final Transcoder<SingularitySlaveUsage> slaveUsageTranscoder;
   private final Transcoder<SingularityTaskUsage> taskUsageTranscoder;
+  private final Transcoder<SingularityTaskCurrentUsage> taskCurrentUsageTranscoder;
 
   @Inject
   public UsageManager(CuratorFramework curator, SingularityConfiguration configuration, MetricRegistry metricRegistry, Transcoder<SingularitySlaveUsage> slaveUsageTranscoder,
-      Transcoder<SingularityTaskUsage> taskUsageTranscoder) {
+      Transcoder<SingularityTaskUsage> taskUsageTranscoder, Transcoder<SingularityTaskCurrentUsage> taskCurrentUsageTranscoder) {
     super(curator, configuration, metricRegistry);
 
     this.slaveUsageTranscoder = slaveUsageTranscoder;
     this.taskUsageTranscoder = taskUsageTranscoder;
+    this.taskCurrentUsageTranscoder = taskCurrentUsageTranscoder;
   }
 
   public List<String> getSlavesWithUsage() {
@@ -53,13 +59,29 @@ public class UsageManager extends CuratorAsyncManager {
   private String getTaskUsagePath(String taskId) {
     return ZKPaths.makePath(TASK_PATH, taskId);
   }
+  
+  private String getSlaveUsageHistoryPath(String slaveId) {
+    return ZKPaths.makePath(getSlaveUsagePath(slaveId), USAGE_HISTORY_PATH_KEY);
+  }
+
+  private String getTaskUsageHistoryPath(String taskId) {
+    return ZKPaths.makePath(getTaskUsagePath(taskId), USAGE_HISTORY_PATH_KEY);
+  }
 
   private String getSpecificSlaveUsagePath(String slaveId, long timestamp) {
-    return ZKPaths.makePath(getSlaveUsagePath(slaveId), Long.toString(timestamp));
+    return ZKPaths.makePath(getSlaveUsageHistoryPath(slaveId), Long.toString(timestamp));
   }
 
   private String getSpecificTaskUsagePath(String taskId, double timestamp) {
-    return ZKPaths.makePath(getTaskUsagePath(taskId), Double.toString(timestamp));
+    return ZKPaths.makePath(getTaskUsageHistoryPath(taskId), Double.toString(timestamp));
+  }
+  
+  private String getCurrentSlaveUsagePath(String slaveId) {
+    return ZKPaths.makePath(getSlaveUsagePath(slaveId), CURRENT_USAGE_NODE_KEY);
+  }
+
+  private String getCurrentTaskUsagePath(String taskId) {
+    return ZKPaths.makePath(getTaskUsagePath(taskId), CURRENT_USAGE_NODE_KEY);
   }
 
   public SingularityDeleteResult deleteSlaveUsage(String slaveId) {
@@ -77,15 +99,20 @@ public class UsageManager extends CuratorAsyncManager {
   public SingularityDeleteResult deleteSpecificTaskUsage(String taskId, double timestamp) {
     return delete(getSpecificTaskUsagePath(taskId, timestamp));
   }
+  
+  public SingularityCreateResult saveCurrentTaskUsage(String taskId, SingularityTaskCurrentUsage usage) {
+    return set(getCurrentTaskUsagePath(taskId), usage, taskCurrentUsageTranscoder);
+  }
 
   public SingularityCreateResult saveSpecificTaskUsage(String taskId, SingularityTaskUsage usage) {
     return save(getSpecificTaskUsagePath(taskId, usage.getTimestamp()), usage, taskUsageTranscoder);
   }
 
-  public SingularityCreateResult saveSpecificSlaveUsage(String slaveId, SingularitySlaveUsage usage) {
+  public SingularityCreateResult saveSpecificSlaveUsageAndSetCurrent(String slaveId, SingularitySlaveUsage usage) {
+    set(getCurrentSlaveUsagePath(slaveId), usage, slaveUsageTranscoder);
     return save(getSpecificSlaveUsagePath(slaveId, usage.getTimestamp()), usage, slaveUsageTranscoder);
   }
-
+  
   private static final Comparator<SingularitySlaveUsage> SLAVE_USAGE_COMPARATOR_TIMESTAMP_ASC = new Comparator<SingularitySlaveUsage>() {
 
     @Override
