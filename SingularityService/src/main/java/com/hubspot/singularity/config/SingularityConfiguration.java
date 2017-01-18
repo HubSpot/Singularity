@@ -55,6 +55,12 @@ public class SingularityConfiguration extends Configuration {
 
   private long checkWebhooksEveryMillis = TimeUnit.SECONDS.toMillis(10);
 
+  private long checkUsageEveryMillis = TimeUnit.MINUTES.toMillis(1);
+
+  private long cleanUsageEveryMillis = TimeUnit.MINUTES.toMillis(5);
+
+  private int numUsageToKeep = 5;
+
   private long cleanupEverySeconds = 5;
 
   private long checkQueuedMailsEveryMillis = TimeUnit.SECONDS.toMillis(15);
@@ -1229,4 +1235,29 @@ public class SingularityConfiguration extends Configuration {
     this.allowBounceToSameHost = allowBounceToSameHost;
     return this;
   }
+
+  public long getCheckUsageEveryMillis() {
+    return checkUsageEveryMillis;
+  }
+
+  public void setCheckUsageEveryMillis(long checkUsageEveryMillis) {
+    this.checkUsageEveryMillis = checkUsageEveryMillis;
+  }
+
+  public long getCleanUsageEveryMillis() {
+    return cleanUsageEveryMillis;
+  }
+
+  public void setCleanUsageEveryMillis(long cleanUsageEveryMillis) {
+    this.cleanUsageEveryMillis = cleanUsageEveryMillis;
+  }
+
+  public int getNumUsageToKeep() {
+    return numUsageToKeep;
+  }
+
+  public void setNumUsageToKeep(int numUsageToKeep) {
+    this.numUsageToKeep = numUsageToKeep;
+  }
+
 }
