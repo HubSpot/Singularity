@@ -26,6 +26,9 @@ public class MesosConfiguration {
   private boolean checkpoint = true;
 
   @NotNull
+  private Optional<String> frameworkRole = Optional.absent();
+
+  @NotNull
   private String rackIdAttributeKey = "rackid";
 
   @NotNull
@@ -126,6 +129,14 @@ public class MesosConfiguration {
 
   public void setFrameworkFailoverTimeout(double frameworkFailoverTimeout) {
     this.frameworkFailoverTimeout = frameworkFailoverTimeout;
+  }
+
+  public Optional<String> getFrameworkRole() {
+    return frameworkRole;
+  }
+
+  public void setFrameworkRole(Optional<String> frameworkRole) {
+    this.frameworkRole = frameworkRole;
   }
 
   public void setMaster(String master) {

@@ -61,6 +61,10 @@ public class SingularityDriver {
       }
     }
 
+    if (configuration.getFrameworkRole().isPresent()) {
+      frameworkInfoBuilder.setRole(configuration.getFrameworkRole().get());
+    }
+
     this.frameworkInfo = frameworkInfoBuilder.build();
 
     this.scheduler = scheduler;
