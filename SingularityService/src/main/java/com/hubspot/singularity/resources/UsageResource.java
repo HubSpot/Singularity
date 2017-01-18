@@ -1,11 +1,14 @@
 package com.hubspot.singularity.resources;
 
+import java.util.List;
+
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
 import com.google.inject.Inject;
 import com.hubspot.singularity.SingularityService;
+import com.hubspot.singularity.SingularitySlaveUsageWithId;
 import com.hubspot.singularity.data.UsageManager;
 import com.wordnik.swagger.annotations.Api;
 
@@ -22,4 +25,9 @@ public class UsageResource {
     this.usageManager = usageManager;
   }
 
+  @Path("/slaves")
+  public List<SingularitySlaveUsageWithId> getSlavesWithUsage() {
+    return usageManager.getAllCurrentSlaveUsage();
+  }
+  
 }

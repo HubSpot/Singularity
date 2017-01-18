@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.utils.ZKPaths;
@@ -14,6 +16,7 @@ import com.google.inject.Singleton;
 import com.hubspot.singularity.SingularityCreateResult;
 import com.hubspot.singularity.SingularityDeleteResult;
 import com.hubspot.singularity.SingularitySlaveUsage;
+import com.hubspot.singularity.SingularitySlaveUsageWithId;
 import com.hubspot.singularity.SingularityTaskCurrentUsage;
 import com.hubspot.singularity.SingularityTaskUsage;
 import com.hubspot.singularity.config.SingularityConfiguration;
@@ -52,6 +55,11 @@ public class UsageManager extends CuratorAsyncManager {
     return getChildren(TASK_PATH);
   }
 
+  // /slaves/<slaveid>/CURRENT
+  private String getSlaveIdFromCurrentUsagePath(String path) {
+    return path.substring(path.indexOf(SLAVE_PATH) + SLAVE_PATH.length(), path.lastIndexOf("/"));
+  }
+  
   private String getSlaveUsagePath(String slaveId) {
     return ZKPaths.makePath(SLAVE_PATH, slaveId);
   }
@@ -143,6 +151,22 @@ public class UsageManager extends CuratorAsyncManager {
     return children;
   }
 
+  public List<SingularitySlaveUsageWithId> getAllCurrentSlaveUsage() {
+    List<String> slaves = getSlavesWithUsage();
+    List<String> paths = new ArrayList<>(slaves.size());
+    for (String slaveId : slaves) {
+      paths.add(getCurrentSlaveUsagePath(slaveId));
+    }
+    
+    Map<String, SingularitySlaveUsage> currentSlaveUsage = getAsyncWithPath("slave-usage", paths, slaveUsageTranscoder);
+    List<SingularitySlaveUsageWithId> slaveUsageWithIds = new ArrayList<>(currentSlaveUsage.size());
+    for (Entry<String, SingularitySlaveUsage> entry : currentSlaveUsage.entrySet()) {
+      slaveUsageWithIds.add(new SingularitySlaveUsageWithId(entry.getValue(), getSlaveIdFromCurrentUsagePath(entry.getKey())));
+    }
+    
+    return slaveUsageWithIds;
+  }
+  
   public List<Long> getSlaveUsageTimestamps(String slaveId) {
     List<String> timestampStrings = getChildren(getSlaveUsagePath(slaveId));
     List<Long> timestamps = new ArrayList<>(timestampStrings.size());
