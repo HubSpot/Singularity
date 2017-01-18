@@ -8,6 +8,7 @@ import org.apache.mesos.Protos.TaskInfo;
 import org.apache.mesos.Protos.TaskState;
 
 import com.google.common.base.Optional;
+import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.hubspot.deploy.ExecutorData;
 import com.hubspot.singularity.executor.TemplateManager;
@@ -94,7 +95,7 @@ public class SingularityExecutorTaskProcessBuilder implements Callable<ProcessBu
   }
 
   private String getCommand(ExecutorData executorData) {
-    final StringBuilder bldr = new StringBuilder(executorData.getCmd());
+    final StringBuilder bldr = new StringBuilder(Strings.isNullOrEmpty(executorData.getCmd()) ? "" : executorData.getCmd());
     for (String extraCmdLineArg : executorData.getExtraCmdLineArgs()) {
       bldr.append(" ");
       bldr.append(extraCmdLineArg);
