@@ -119,6 +119,10 @@
                   <exclude>com.google.common.base.Optional</exclude>
                 </excludes>
               </relocation>
+              <relocation>
+                <pattern>com.google.thirdparty</pattern>
+                <shadedPattern>com.hubspot.singularity.shaded.com.google.thirdparty</shadedPattern>
+              </relocation>
             </relocations>
           </configuration>
         </plugin>
