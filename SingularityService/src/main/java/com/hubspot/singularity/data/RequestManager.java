@@ -10,7 +10,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.codahale.metrics.MetricRegistry;
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableMap;
@@ -37,7 +36,6 @@ import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.transcoders.Transcoder;
 import com.hubspot.singularity.event.SingularityEventListener;
 import com.hubspot.singularity.expiring.SingularityExpiringBounce;
-import com.hubspot.singularity.expiring.SingularityExpiringParent;
 import com.hubspot.singularity.expiring.SingularityExpiringPause;
 import com.hubspot.singularity.expiring.SingularityExpiringRequestActionParent;
 import com.hubspot.singularity.expiring.SingularityExpiringScale;
@@ -262,8 +260,13 @@ public class RequestManager extends CuratorAsyncManager {
     return save(request, RequestState.ACTIVE, historyType, timestamp, user, message);
   }
 
-  public SingularityCreateResult update(SingularityRequest request, RequestState requestState, RequestHistoryType historyType, long timestamp, Optional<String> user, Optional<String> message) {
-    return save(request, requestState, historyType, timestamp, user, message);
+  public SingularityCreateResult markDeleting(SingularityRequest request, long timestamp, Optional<String> user, Optional<String> message) {
+    return save(request, RequestState.DELETING, RequestHistoryType.DELETING, timestamp, user, message);
+  }
+
+  public SingularityDeleteResult markDeleted(SingularityRequest request, long timestamp, Optional<String> user, Optional<String> message) {
+    save(request, RequestState.DELETED, RequestHistoryType.DELETED, timestamp, user, message);
+    return delete(getRequestPath(request.getId()));
   }
 
   public List<SingularityPendingRequest> getPendingRequests() {
@@ -327,20 +330,16 @@ public class RequestManager extends CuratorAsyncManager {
     return getData(getRequestPath(requestId), requestTranscoder);
   }
 
-  public SingularityDeleteResult deleteRequest(SingularityRequest request, Optional<String> user, Optional<String> actionId, Optional<String> message) {
+  public void startDeletingRequest(SingularityRequest request, Optional<String> user, Optional<String> actionId, Optional<String> message) {
     final long now = System.currentTimeMillis();
 
     // delete it no matter if the delete request already exists.
     createCleanupRequest(new SingularityRequestCleanup(user, RequestCleanupType.DELETING, now, Optional.of(Boolean.TRUE), request.getId(), Optional.<String> absent(),
         Optional.<Boolean> absent(), message, actionId, Optional.<SingularityShellCommand>absent()));
 
-    saveHistory(new SingularityRequestHistory(now, user, RequestHistoryType.DELETED, request, message));
+    markDeleting(request, System.currentTimeMillis(), user, message);
 
-    SingularityDeleteResult deleteResult = delete(getRequestPath(request.getId()));
-
-    LOG.info("Request {} deleted ({}) by {} - {}", request.getId(), deleteResult, user, message);
-
-    return deleteResult;
+    LOG.info("Request {} enqueued for deletion by {} - {}", request.getId(), user, message);
   }
 
   public List<SingularityRequestLbCleanup> getLbCleanupRequests() {

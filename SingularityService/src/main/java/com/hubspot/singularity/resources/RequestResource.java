@@ -544,7 +544,7 @@ public class RequestResource extends AbstractRequestResource {
       message = deleteRequest.get().getMessage();
     }
 
-    requestManager.deleteRequest(request, JavaUtils.getUserEmail(user), actionId, message);
+    requestManager.startDeletingRequest(request, JavaUtils.getUserEmail(user), actionId, message);
 
     mailer.sendRequestRemovedMail(request, JavaUtils.getUserEmail(user), message);
 
