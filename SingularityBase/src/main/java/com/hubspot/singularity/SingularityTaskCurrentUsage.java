@@ -32,5 +32,5 @@ public class SingularityTaskCurrentUsage {
   public String toString() {
     return "SingularityTaskCurrentUsage [memoryRssBytes=" + memoryRssBytes + ", timestamp=" + timestamp + ", cpusUsed=" + cpusUsed + "]";
   }
-  
+
 }

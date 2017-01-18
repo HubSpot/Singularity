@@ -4,7 +4,7 @@ import com.wordnik.swagger.annotations.ApiModel;
 
 @ApiModel(description = "Singularity's view of a Mesos slave")
 public class SingularitySlaveUsageWithId extends SingularitySlaveUsage {
-  
+
   private final String slaveId;
 
   public SingularitySlaveUsageWithId(SingularitySlaveUsage usage, String slaveId) {
@@ -15,5 +15,5 @@ public class SingularitySlaveUsageWithId extends SingularitySlaveUsage {
   public String getSlaveId() {
     return slaveId;
   }
-   
+
 }
