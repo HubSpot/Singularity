@@ -366,6 +366,7 @@ public class SingularityS3Uploader {
             .withBucketName(s3BucketName)
             .withUploadId(initResponse.getUploadId())
             .withPartNumber(i)
+            .withKey(key)
             .withFileOffset(filePosition)
             .withPartSize(partSize);
         partETags.add(s3Client.uploadPart(uploadRequest).getPartETag());
