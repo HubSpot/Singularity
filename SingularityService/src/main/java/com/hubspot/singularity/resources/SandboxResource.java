@@ -23,6 +23,7 @@ import com.google.common.base.Strings;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
+import com.hubspot.mesos.json.MesosBinaryChunkObject;
 import com.hubspot.mesos.json.MesosFileChunkObject;
 import com.hubspot.mesos.json.MesosFileObject;
 import com.hubspot.singularity.SingularityAuthorizationScope;
@@ -125,14 +126,18 @@ public class SandboxResource extends AbstractHistoryResource {
     }
   }
 
+
+
+
   @GET
   @Path("/{taskId}/read")
   @ApiOperation("Retrieve part of the contents of a file in a specific task's sandbox.")
-  public MesosFileChunkObject read(@ApiParam("The task ID of the sandbox to read from") @PathParam("taskId") String taskId,
+  public MesosBinaryChunkObject read(@ApiParam("The task ID of the sandbox to read from") @PathParam("taskId") String taskId,
       @ApiParam("The path to the file to be read") @QueryParam("path") String path,
       @ApiParam("Optional string to grep for") @QueryParam("grep") Optional<String> grep,
       @ApiParam("Byte offset to start reading from") @QueryParam("offset") Optional<Long> offset,
-      @ApiParam("Maximum number of bytes to read") @QueryParam("length") Optional<Long> length) {
+      @ApiParam("Maximum number of bytes to read") @QueryParam("length") Optional<Long> length,
+      @ApiParam("Drop invalid UTF-8 characters") @QueryParam("dropInvalidUTF8") Optional<Boolean> dropInvalidUTF8) {
     authorizationHelper.checkForAuthorizationByTaskId(taskId, user, SingularityAuthorizationScope.READ);
 
     final SingularityTaskHistory history = checkHistory(taskId);
@@ -141,23 +146,16 @@ public class SandboxResource extends AbstractHistoryResource {
     final String fullPath = new File(history.getDirectory().get(), path).toString();
 
     try {
-      final Optional<MesosFileChunkObject> maybeChunk = sandboxManager.read(slaveHostname, fullPath, offset, length);
+      final Optional<MesosBinaryChunkObject> maybeChunk = sandboxManager.read(slaveHostname, fullPath, offset, length, dropInvalidUTF8);
 
       checkNotFound(maybeChunk.isPresent(), "File %s does not exist for task ID %s", fullPath, taskId);
 
+      //TODO: make this work
       if (grep.isPresent() && !Strings.isNullOrEmpty(grep.get())) {
-        final Pattern grepPattern = Pattern.compile(grep.get());
-        final StringBuilder strBuilder = new StringBuilder(maybeChunk.get().getData().length());
-
-        for (String line : Splitter.on("\n").split(maybeChunk.get().getData())) {
-          if (grepPattern.matcher(line).find()) {
-            strBuilder.append(line);
-            strBuilder.append("\n");
-          }
-        }
-
-        return new MesosFileChunkObject(strBuilder.toString(), maybeChunk.get().getOffset(), Optional.of(maybeChunk.get().getOffset() + maybeChunk.get().getData().length()));
+        return maybeChunk.get();
       }
+
+      System.out.println("Hi there");
 
       return maybeChunk.get();
     } catch (SlaveNotFoundException snfe) {
