@@ -32,7 +32,7 @@ public class UsageManager extends CuratorAsyncManager {
 
   private static final String USAGE_HISTORY_PATH_KEY = "history";
   private static final String CURRENT_USAGE_NODE_KEY = "CURRENT";
-  
+
   private final Transcoder<SingularitySlaveUsage> slaveUsageTranscoder;
   private final Transcoder<SingularityTaskUsage> taskUsageTranscoder;
   private final Transcoder<SingularityTaskCurrentUsage> taskCurrentUsageTranscoder;
@@ -57,9 +57,9 @@ public class UsageManager extends CuratorAsyncManager {
 
   // /slaves/<slaveid>/CURRENT
   private String getSlaveIdFromCurrentUsagePath(String path) {
-    return path.substring(path.indexOf(SLAVE_PATH) + SLAVE_PATH.length(), path.lastIndexOf("/"));
+    return path.substring(path.indexOf(SLAVE_PATH) + SLAVE_PATH.length() + 1, path.lastIndexOf("/"));
   }
-  
+
   private String getSlaveUsagePath(String slaveId) {
     return ZKPaths.makePath(SLAVE_PATH, slaveId);
   }
@@ -67,7 +67,7 @@ public class UsageManager extends CuratorAsyncManager {
   private String getTaskUsagePath(String taskId) {
     return ZKPaths.makePath(TASK_PATH, taskId);
   }
-  
+
   private String getSlaveUsageHistoryPath(String slaveId) {
     return ZKPaths.makePath(getSlaveUsagePath(slaveId), USAGE_HISTORY_PATH_KEY);
   }
@@ -83,7 +83,7 @@ public class UsageManager extends CuratorAsyncManager {
   private String getSpecificTaskUsagePath(String taskId, double timestamp) {
     return ZKPaths.makePath(getTaskUsageHistoryPath(taskId), Double.toString(timestamp));
   }
-  
+
   private String getCurrentSlaveUsagePath(String slaveId) {
     return ZKPaths.makePath(getSlaveUsagePath(slaveId), CURRENT_USAGE_NODE_KEY);
   }
@@ -107,7 +107,7 @@ public class UsageManager extends CuratorAsyncManager {
   public SingularityDeleteResult deleteSpecificTaskUsage(String taskId, double timestamp) {
     return delete(getSpecificTaskUsagePath(taskId, timestamp));
   }
-  
+
   public SingularityCreateResult saveCurrentTaskUsage(String taskId, SingularityTaskCurrentUsage usage) {
     return set(getCurrentTaskUsagePath(taskId), usage, taskCurrentUsageTranscoder);
   }
@@ -120,7 +120,7 @@ public class UsageManager extends CuratorAsyncManager {
     set(getCurrentSlaveUsagePath(slaveId), usage, slaveUsageTranscoder);
     return save(getSpecificSlaveUsagePath(slaveId, usage.getTimestamp()), usage, slaveUsageTranscoder);
   }
-  
+
   private static final Comparator<SingularitySlaveUsage> SLAVE_USAGE_COMPARATOR_TIMESTAMP_ASC = new Comparator<SingularitySlaveUsage>() {
 
     @Override
@@ -131,7 +131,7 @@ public class UsageManager extends CuratorAsyncManager {
   };
 
   public List<SingularitySlaveUsage> getSlaveUsage(String slaveId) {
-    List<SingularitySlaveUsage> children = getAsyncChildren(getSlaveUsagePath(slaveId), slaveUsageTranscoder);
+    List<SingularitySlaveUsage> children = getAsyncChildren(getSlaveUsageHistoryPath(slaveId), slaveUsageTranscoder);
     Collections.sort(children, SLAVE_USAGE_COMPARATOR_TIMESTAMP_ASC);
     return children;
   }
@@ -146,7 +146,7 @@ public class UsageManager extends CuratorAsyncManager {
   };
 
   public List<SingularityTaskUsage> getTaskUsage(String taskId) {
-    List<SingularityTaskUsage> children = getAsyncChildren(getTaskUsagePath(taskId), taskUsageTranscoder);
+    List<SingularityTaskUsage> children = getAsyncChildren(getTaskUsageHistoryPath(taskId), taskUsageTranscoder);
     Collections.sort(children, TASK_USAGE_COMPARATOR_TIMESTAMP_ASC);
     return children;
   }
@@ -157,18 +157,18 @@ public class UsageManager extends CuratorAsyncManager {
     for (String slaveId : slaves) {
       paths.add(getCurrentSlaveUsagePath(slaveId));
     }
-    
+
     Map<String, SingularitySlaveUsage> currentSlaveUsage = getAsyncWithPath("slave-usage", paths, slaveUsageTranscoder);
     List<SingularitySlaveUsageWithId> slaveUsageWithIds = new ArrayList<>(currentSlaveUsage.size());
     for (Entry<String, SingularitySlaveUsage> entry : currentSlaveUsage.entrySet()) {
       slaveUsageWithIds.add(new SingularitySlaveUsageWithId(entry.getValue(), getSlaveIdFromCurrentUsagePath(entry.getKey())));
     }
-    
+
     return slaveUsageWithIds;
   }
-  
+
   public List<Long> getSlaveUsageTimestamps(String slaveId) {
-    List<String> timestampStrings = getChildren(getSlaveUsagePath(slaveId));
+    List<String> timestampStrings = getChildren(getSlaveUsageHistoryPath(slaveId));
     List<Long> timestamps = new ArrayList<>(timestampStrings.size());
     for (String timestampString : timestampStrings) {
       timestamps.add(Long.parseLong(timestampString));

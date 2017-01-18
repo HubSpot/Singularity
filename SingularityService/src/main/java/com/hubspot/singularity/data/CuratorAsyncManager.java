@@ -55,12 +55,13 @@ public abstract class CuratorAsyncManager extends CuratorManager {
 
   private <T> Map<String, T> getAsyncThrows(final String pathNameForLogs, final Collection<String> paths, final Transcoder<T> transcoder, final Optional<ZkCache<T>> cache) throws Exception {
     final Map<String, T> objects = new HashMap<>(paths.size());
-    
+
     if (cache.isPresent()) {
       for (Iterator<String> itr = paths.iterator(); itr.hasNext();) {
-        Optional<T> fromCache = cache.get().get(itr.next());
+        final String path = itr.next();
+        final Optional<T> fromCache = cache.get().get(path);
         if (fromCache.isPresent()) {
-          objects.put(itr.next(), fromCache.get());
+          objects.put(path, fromCache.get());
           itr.remove();
         }
       }
@@ -231,7 +232,7 @@ public abstract class CuratorAsyncManager extends CuratorManager {
       throw Throwables.propagate(t);
     }
   }
-  
+
   protected <T> Map<String, T> getAsyncWithPath(final String pathNameForLogs, final Collection<String> paths, final Transcoder<T> transcoder) {
     try {
       return getAsyncThrows(pathNameForLogs, paths, transcoder, Optional.<ZkCache<T>> absent());

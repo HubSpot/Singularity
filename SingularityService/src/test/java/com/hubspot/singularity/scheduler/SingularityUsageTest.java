@@ -99,6 +99,8 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
     Assert.assertEquals(2, usageManager.getTasksWithUsage().size());
     Assert.assertEquals(1, usageManager.getSlavesWithUsage().size());
 
+    Assert.assertEquals(1100, usageManager.getAllCurrentSlaveUsage().get(0).getMemoryBytesUsed());
+
     // kill task one
     statusUpdate(taskManager.getActiveTasks().get(0), TaskState.TASK_KILLED);
     killKilledTasks();
@@ -183,6 +185,9 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
 
     Assert.assertEquals(875, usageManager.getSlaveUsage(slaveId).get(0).getMemoryBytesUsed(), 0);
     Assert.assertEquals(1125, usageManager.getSlaveUsage(slaveId).get(1).getMemoryBytesUsed(), 0);
+
+    Assert.assertEquals(slaveId, usageManager.getAllCurrentSlaveUsage().get(0).getSlaveId());
+    Assert.assertEquals(1125, usageManager.getAllCurrentSlaveUsage().get(0).getMemoryBytesUsed());
   }
 
   private MesosTaskStatisticsObject getStatistics(double cpuSecs, double timestamp, long memBytes) {
