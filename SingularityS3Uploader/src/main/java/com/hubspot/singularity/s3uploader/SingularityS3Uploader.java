@@ -364,9 +364,11 @@ public class SingularityS3Uploader {
         partSize = Math.min(partSize, (contentLength - filePosition));
         UploadPartRequest uploadRequest = new UploadPartRequest()
             .withBucketName(s3BucketName)
+            .withKey(key)
             .withUploadId(initResponse.getUploadId())
             .withPartNumber(i)
             .withFileOffset(filePosition)
+            .withFile(file)
             .withPartSize(partSize);
         partETags.add(s3Client.uploadPart(uploadRequest).getPartETag());
         filePosition += partSize;
