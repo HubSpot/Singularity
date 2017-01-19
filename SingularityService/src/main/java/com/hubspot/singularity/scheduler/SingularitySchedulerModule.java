@@ -1,15 +1,8 @@
 package com.hubspot.singularity.scheduler;
 
 import com.google.inject.AbstractModule;
-import com.google.inject.Injector;
-import com.google.inject.Provides;
 import com.google.inject.Scopes;
-import com.google.inject.Singleton;
-import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.history.SingularityHistoryPurger;
-import com.hubspot.singularity.mesos.OfferCache;
-import com.hubspot.singularity.mesos.SingularityNoOfferCache;
-import com.hubspot.singularity.mesos.SingularityOfferCache;
 
 public class SingularitySchedulerModule extends AbstractModule {
 
@@ -46,16 +39,6 @@ public class SingularitySchedulerModule extends AbstractModule {
     bind(SingularityUsagePoller.class).in(Scopes.SINGLETON);
 
     bind(SingularitySchedulerStateCache.class);
-  }
-
-  @Provides
-  @Singleton
-  public OfferCache getOfferCache(SingularityConfiguration configuration, Injector injector) {
-    if (!configuration.isCacheOffers()) {
-      return injector.getInstance(SingularityNoOfferCache.class);
-    }
-
-    return injector.getInstance(SingularityOfferCache.class);
   }
 
 }
