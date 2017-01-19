@@ -60,7 +60,7 @@ public class EnvironmentContext {
       if (parameter.hasValue()) {
         return String.format("-%s=%s", parameter.getKey(), parameter.getValue());
       } else {
-        return String.format("-%s=%s", parameter.getKey());
+        return String.format("-%s", parameter.getKey());
       }
     }
   }
