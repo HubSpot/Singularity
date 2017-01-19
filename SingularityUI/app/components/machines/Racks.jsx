@@ -2,6 +2,7 @@ import React, { PropTypes } from 'react';
 import MachinesPage from './MachinesPage';
 import {Glyphicon} from 'react-bootstrap';
 import FormModalButton from '../common/modal/FormModalButton';
+import FormModal from '../common/modal/FormModal';
 import Utils from '../../utils';
 import { connect } from 'react-redux';
 import { DecommissionRack, RemoveRack, ReactivateRack, FetchRacks } from '../../actions/api/racks';
