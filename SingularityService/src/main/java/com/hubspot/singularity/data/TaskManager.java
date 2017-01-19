@@ -339,6 +339,10 @@ public class TaskManager extends CuratorAsyncManager {
     return getChildrenAsIds(root, taskIdTranscoder);
   }
 
+  public List<String> getActiveTaskIdsAsStrings() {
+    return getChildren(ACTIVE_PATH_ROOT);
+  }
+
   public List<SingularityTaskId> getActiveTaskIds() {
     return getTaskIds(ACTIVE_PATH_ROOT);
   }
