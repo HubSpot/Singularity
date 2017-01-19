@@ -6,10 +6,9 @@ import java.util.List;
 import java.util.UUID;
 
 import com.google.common.base.Optional;
-import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.MachineState;
-import com.hubspot.singularity.SingularityDeleteResult;
 import com.hubspot.singularity.SingularityAction;
+import com.hubspot.singularity.SingularityDeleteResult;
 import com.hubspot.singularity.SingularityMachineAbstraction;
 import com.hubspot.singularity.SingularityUser;
 import com.hubspot.singularity.api.SingularityMachineChangeRequest;

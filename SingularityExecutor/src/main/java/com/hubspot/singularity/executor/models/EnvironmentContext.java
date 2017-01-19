@@ -5,6 +5,7 @@ import java.util.List;
 
 import org.apache.mesos.Protos;
 import org.apache.mesos.Protos.Environment.Variable;
+import org.apache.mesos.Protos.Parameter;
 import org.apache.mesos.Protos.TaskInfo;
 
 public class EnvironmentContext {
@@ -23,8 +24,21 @@ public class EnvironmentContext {
     return taskInfo.getContainer().getDocker();
   }
 
-  public List<Protos.Parameter> getDockerParameters() {
-    return taskInfo.getContainer().getDocker().getParametersList();
+  public List<String> getDockerParameters() {
+    List<String> args = new ArrayList<>();
+    for (Parameter parameter : taskInfo.getContainer().getDocker().getParametersList()) {
+      args.add(toCmdLineArg(parameter));
+    }
+    return args;
+  }
+
+  public boolean isDockerWorkdirOverriden() {
+    for (Parameter parameter : taskInfo.getContainer().getDocker().getParametersList()) {
+      if (parameter.hasKey() && (parameter.getKey().equals("w") || parameter.getKey().equals("workdir"))) {
+        return true;
+      }
+    }
+    return false;
   }
 
   public List<Protos.Volume> getContainerVolumes() {
@@ -33,6 +47,22 @@ public class EnvironmentContext {
 
   public boolean isDocker() {
     return taskInfo.hasContainer() && taskInfo.getContainer().hasDocker();
+  }
+
+  private String toCmdLineArg(Parameter parameter) {
+    if (parameter.hasKey() && parameter.getKey().length() > 1) {
+      if (parameter.hasValue()) {
+        return String.format("--%s=%s", parameter.getKey(), parameter.getValue());
+      } else {
+        return String.format("--%s", parameter.getKey());
+      }
+    } else {
+      if (parameter.hasValue()) {
+        return String.format("-%s=%s", parameter.getKey(), parameter.getValue());
+      } else {
+        return String.format("-%s=%s", parameter.getKey());
+      }
+    }
   }
 
   @Override

@@ -10,7 +10,6 @@ import java.util.concurrent.TimeUnit;
 
 import javax.ws.rs.WebApplicationException;
 
-import org.apache.mesos.Protos.Offer;
 import org.apache.mesos.Protos.SlaveID;
 import org.apache.mesos.Protos.TaskState;
 import org.junit.Assert;
