@@ -56,15 +56,15 @@ public class SingularityMesosScheduler implements Scheduler {
   private final SingularitySlaveAndRackManager slaveAndRackManager;
   private final SingularityTaskSizeOptimizer taskSizeOptimizer;
 
-
   private final Provider<SingularitySchedulerStateCache> stateCacheProvider;
   private final SchedulerDriverSupplier schedulerDriverSupplier;
+  private final OfferCache offerCache;
 
   private final SingularityMesosStatusUpdateHandler statusUpdateHandler;
 
   @Inject
   public SingularityMesosScheduler(MesosConfiguration mesosConfiguration, CustomExecutorConfiguration customExecutorConfiguration, TaskManager taskManager, PriorityManager priorityManager,
-      SingularityScheduler scheduler, SingularityConfiguration configuration, SingularityMesosTaskBuilder mesosTaskBuilder,
+      SingularityScheduler scheduler, SingularityConfiguration configuration, SingularityMesosTaskBuilder mesosTaskBuilder, OfferCache offerCache,
       SingularityMesosFrameworkMessageHandler messageHandler, SingularitySlaveAndRackManager slaveAndRackManager, SingularityTaskSizeOptimizer taskSizeOptimizer,
       Provider<SingularitySchedulerStateCache> stateCacheProvider, SchedulerDriverSupplier schedulerDriverSupplier, SingularityMesosStatusUpdateHandler statusUpdateHandler) {
     this.defaultResources = new Resources(mesosConfiguration.getDefaultCpus(), mesosConfiguration.getDefaultMemory(), 0, mesosConfiguration.getDefaultDisk());
@@ -81,6 +81,7 @@ public class SingularityMesosScheduler implements Scheduler {
     this.schedulerDriverSupplier = schedulerDriverSupplier;
 
     this.statusUpdateHandler = statusUpdateHandler;
+    this.offerCache = offerCache;
   }
 
   @Override
@@ -189,7 +190,7 @@ public class SingularityMesosScheduler implements Scheduler {
 
           acceptedOffers.add(offerHolder.getOffer().getId());
         } else {
-          driver.declineOffer(offerHolder.getOffer().getId());
+          offerCache.cacheOffer(driver, start, offerHolder.getOffer());
         }
       }
     } catch (Throwable t) {
@@ -315,6 +316,8 @@ public class SingularityMesosScheduler implements Scheduler {
   @Override
   public void offerRescinded(SchedulerDriver driver, Protos.OfferID offerId) {
     LOG.info("Offer {} rescinded", offerId);
+
+    offerCache.rescindOffer(driver, offerId);
   }
 
   @Override
