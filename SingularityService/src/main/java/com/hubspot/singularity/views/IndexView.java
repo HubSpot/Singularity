@@ -8,7 +8,6 @@ import com.fasterxml.jackson.databind.ObjectWriter;
 import com.google.common.base.Objects;
 import com.google.common.base.Strings;
 import com.google.common.base.Throwables;
-import com.google.common.base.Optional;
 import com.hubspot.singularity.SingularityService;
 import com.hubspot.singularity.config.SingularityConfiguration;
 
