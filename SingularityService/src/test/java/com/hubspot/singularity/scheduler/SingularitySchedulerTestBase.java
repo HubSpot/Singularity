@@ -437,7 +437,17 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
     request = bldr.build();
 
     saveRequest(request);
+  }
 
+  protected SingularityRequest startAndDeploySecondRequest() {
+    SingularityRequest request = new SingularityRequestBuilder(requestId + "2", RequestType.SERVICE).build();
+    saveRequest(request);
+
+    SingularityDeploy deploy = new SingularityDeployBuilder(request.getId(), "d1").setCommand(Optional.of("sleep 1")).build();
+
+    deployResource.deploy(new SingularityDeployRequest(deploy, Optional.<Boolean> absent(), Optional.<String> absent()));
+
+    return request;
   }
 
   protected void protectedInitRequest(boolean isLoadBalanced, boolean isScheduled) {
@@ -548,8 +558,15 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
     return launchTask(request, deploy, instanceNo, TaskState.TASK_RUNNING, true);
   }
 
-  protected void resourceOffers() {
-    sms.resourceOffers(driver, Arrays.asList(createOffer(20, 20000, "slave1", "host1"), createOffer(20, 20000, "slave2", "host2")));
+  protected List<Offer> resourceOffers() {
+    Offer offer1 = createOffer(20, 20000, "slave1", "host1");
+    Offer offer2 = createOffer(20, 20000, "slave2", "host2");
+
+    List<Offer> offers = Arrays.asList(offer1, offer2);
+
+    sms.resourceOffers(driver, offers);
+
+    return offers;
   }
 
   protected void resourceOffersByNumTasks(int numTasks) {

@@ -94,6 +94,8 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
   @Inject
   private SingularityMesosTaskPrioritizer taskPrioritizer;
 
+  @Inject
+  private SingularitySchedulerPoller schedulerPoller;
 
   public SingularitySchedulerTest() {
     super(false);
@@ -102,6 +104,62 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
   private SingularityPendingTask pendingTask(String requestId, String deployId, PendingType pendingType) {
     return new SingularityPendingTask(new SingularityPendingTaskId(requestId, deployId, System.currentTimeMillis(), 1, pendingType, System.currentTimeMillis()),
         Optional.<List<String>> absent(), Optional.<String> absent(), Optional.<String> absent(), Optional.<Boolean> absent(), Optional.<String> absent(), Optional.<Resources>absent(), Optional.<String>absent());
+  }
+
+  @Test
+  public void testOfferCacheRescindOffers() {
+    configuration.setCacheOffers(true);
+    configuration.setOfferCacheSize(2);
+
+    List<Offer> offers2 = resourceOffers(); // cached as well
+
+    sms.offerRescinded(driver, offers2.get(0).getId());
+    sms.offerRescinded(driver, offers2.get(1).getId());
+
+    initRequest();
+    initFirstDeploy();
+
+    requestResource.postRequest(request.toBuilder().setSlavePlacement(Optional.of(SlavePlacement.SEPARATE)).setInstances(Optional.of(2)).build());
+
+    schedulerPoller.runActionOnPoll();
+
+    Assert.assertEquals(0, taskManager.getActiveTasks().size());
+
+    resourceOffers();
+
+    int numTasks = taskManager.getActiveTasks().size();
+
+    Assert.assertEquals(2, numTasks);
+
+    startAndDeploySecondRequest();
+
+    schedulerPoller.runActionOnPoll();
+
+    Assert.assertEquals(numTasks, taskManager.getActiveTasks().size());
+
+    resourceOffers();
+
+    Assert.assertTrue(taskManager.getActiveTasks().size() > numTasks);
+  }
+
+  @Test
+  public void testOfferCache() {
+    List<Offer> offers2 = resourceOffers();
+
+    sms.offerRescinded(driver, offers2.get(0).getId());
+
+    initRequest();
+    initFirstDeploy();
+
+    requestResource.postRequest(request.toBuilder().setSlavePlacement(Optional.of(SlavePlacement.SEPARATE)).setInstances(Optional.of(2)).build());
+
+    schedulerPoller.runActionOnPoll();
+
+    Assert.assertEquals(1, taskManager.getActiveTasks().size());
+
+    resourceOffers();
+
+    Assert.assertEquals(2, taskManager.getActiveTasks().size());
   }
 
   @Test
@@ -529,6 +587,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
 
     Assert.assertTrue(taskManager.getActiveTaskIds().isEmpty());
   }
+
 
   @Test
   public void testMultipleRunOnceTasks() {
