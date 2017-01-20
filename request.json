@@ -1,0 +1,11 @@
+{
+    "owners": [
+        "mvimalesvaran@hubspot.com"
+    ],
+
+   "id":"Matush_TestServiceDocker-web",
+   "requestType":"SERVICE",
+   "instances":3,
+   "rackSensitive":true,
+   "loadBalanced":true
+}

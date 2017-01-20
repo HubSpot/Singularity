@@ -91,7 +91,9 @@ const mapDispatchToProps = (dispatch, ownProps) => {
     FetchRequest.trigger(ownProps.params.requestId, true),
     FetchActiveTasksForRequest.trigger(ownProps.params.requestId),
     FetchScheduledTasksForRequest.trigger(ownProps.params.requestId),
-    FetchTaskCleanups.trigger()
+    FetchTaskCleanups.trigger(),
+    FetchDeploysForRequest.trigger(ownProps.params.requestId, 5, 1),
+    FetchRequestHistory.trigger(ownProps.params.requestId, 5, 1)
   ];
   return {
     refresh: () => {
