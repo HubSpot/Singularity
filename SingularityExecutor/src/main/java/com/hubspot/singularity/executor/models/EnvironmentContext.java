@@ -8,6 +8,8 @@ import org.apache.mesos.Protos.Environment.Variable;
 import org.apache.mesos.Protos.Parameter;
 import org.apache.mesos.Protos.TaskInfo;
 
+import com.google.common.base.Strings;
+
 public class EnvironmentContext {
 
   private final TaskInfo taskInfo;
@@ -47,13 +49,13 @@ public class EnvironmentContext {
 
   private String toCmdLineArg(Parameter parameter) {
     if (parameter.hasKey() && parameter.getKey().length() > 1) {
-      if (parameter.hasValue()) {
+      if (parameter.hasValue() && !Strings.isNullOrEmpty(parameter.getValue())) {
         return String.format("--%s=%s", parameter.getKey(), parameter.getValue());
       } else {
         return String.format("--%s", parameter.getKey());
       }
     } else {
-      if (parameter.hasValue()) {
+      if (parameter.hasValue() && !Strings.isNullOrEmpty(parameter.getValue())) {
         return String.format("-%s=%s", parameter.getKey(), parameter.getValue());
       } else {
         return String.format("-%s", parameter.getKey());
