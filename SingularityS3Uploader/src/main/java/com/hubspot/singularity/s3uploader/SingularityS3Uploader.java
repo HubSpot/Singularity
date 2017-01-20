@@ -291,7 +291,7 @@ public class SingularityS3Uploader {
         if (fileSizeBytes > configuration.getMaxSingleUploadSizeBytes()) {
           multipartUpload(key, file.toFile(), objectMetadata, maybeStorageClass);
         } else {
-          PutObjectRequest putObjectRequest = new PutObjectRequest(s3BucketName, key, file.toFile());
+          PutObjectRequest putObjectRequest = new PutObjectRequest(s3BucketName, key, file.toFile()).withMetadata(objectMetadata);
           if (maybeStorageClass.isPresent()) {
             putObjectRequest.setStorageClass(maybeStorageClass.get());
           }
