@@ -12,6 +12,7 @@ import org.slf4j.LoggerFactory;
 
 import com.codahale.metrics.Timer.Context;
 import com.google.common.collect.ImmutableMap;
+import com.hubspot.deploy.S3Artifact;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.runner.base.sentry.SingularityRunnerExceptionNotifier;
 import com.hubspot.singularity.s3.base.ArtifactDownloadRequest;
@@ -28,30 +29,40 @@ public class SingularityS3DownloaderAsyncHandler implements Runnable {
   private final long start;
   private final SingularityS3DownloaderMetrics metrics;
   private final SingularityRunnerExceptionNotifier exceptionNotifier;
+  private final DownloadListener downloadListener;
 
-  public SingularityS3DownloaderAsyncHandler(ArtifactManager artifactManager, ArtifactDownloadRequest artifactDownloadRequest, Continuation continuation, SingularityS3DownloaderMetrics metrics, SingularityRunnerExceptionNotifier exceptionNotifier) {
+  public SingularityS3DownloaderAsyncHandler(ArtifactManager artifactManager, ArtifactDownloadRequest artifactDownloadRequest, Continuation continuation, SingularityS3DownloaderMetrics metrics,
+      SingularityRunnerExceptionNotifier exceptionNotifier, DownloadListener downloadListener) {
     this.artifactManager = artifactManager;
     this.artifactDownloadRequest = artifactDownloadRequest;
     this.continuation = continuation;
     this.metrics = metrics;
     this.start = System.currentTimeMillis();
     this.exceptionNotifier = exceptionNotifier;
+    this.downloadListener = downloadListener;
   }
 
-  private void download() throws Exception {
+  public S3Artifact getS3Artifact() {
+    return artifactDownloadRequest.getS3Artifact();
+  }
+
+  private boolean download() throws Exception {
     LOG.info("Beginning download {} after {}", artifactDownloadRequest, JavaUtils.duration(start));
 
     if (continuation.isExpired()) {
       LOG.info("Continuation expired for {}, aborting...", artifactDownloadRequest.getTargetDirectory());
-      return;
+      return false;
     }
 
     final Path fetched = artifactManager.fetch(artifactDownloadRequest.getS3Artifact());
+
+    downloadListener.notifyDownloadFinished(this);
+
     final Path targetDirectory = Paths.get(artifactDownloadRequest.getTargetDirectory());
 
     if (continuation.isExpired()) {
       LOG.info("Continuation expired for {} after download, aborting...", artifactDownloadRequest.getTargetDirectory());
-      return;
+      return false;
     }
 
     if (Objects.toString(fetched.getFileName()).endsWith(".tar.gz")) {
@@ -63,6 +74,8 @@ public class SingularityS3DownloaderAsyncHandler implements Runnable {
     LOG.info("Finishing request {} after {}", artifactDownloadRequest.getTargetDirectory(), JavaUtils.duration(start));
 
     getResponse().getOutputStream().close();
+
+    return true;
   }
 
   private HttpServletResponse getResponse() {
@@ -71,8 +84,13 @@ public class SingularityS3DownloaderAsyncHandler implements Runnable {
 
   @Override
   public void run() {
+    boolean success = false;
     try (final Context context = metrics.getDownloadTimer().time()) {
-      download();
+      success = download();
+      if (!success) {
+        metrics.getServerErrorsMeter().mark();
+        getResponse().sendError(500, "Hit client timeout");
+      }
     } catch (Throwable t) {
       metrics.getServerErrorsMeter().mark();
       LOG.error("While handling {}", artifactDownloadRequest.getTargetDirectory(), t);
