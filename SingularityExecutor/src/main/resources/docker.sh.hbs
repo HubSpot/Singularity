@@ -131,18 +131,20 @@ DOCKER_NETWORK="--net=${raw_network,,}"
 DOCKER_NETWORK="--net=host"
 {{/if}}
 
-DOCKER_WORKDIR="/mnt/mesos/sandbox/{{{ runContext.taskAppDirectory }}}"
-
 PARENT_CGROUP=$(get_deepest_cgroup)
 
-DOCKER_OPTIONS="--name=$CONTAINER_NAME --cgroup-parent=$PARENT_CGROUP -w $DOCKER_WORKDIR $DOCKER_NETWORK --env-file=docker.env ${DOCKER_VOLUMES[@]} ${DOCKER_PORTS[@]}"
+DOCKER_OPTIONS="--name=$CONTAINER_NAME --cgroup-parent=$PARENT_CGROUP $DOCKER_NETWORK --env-file=docker.env ${DOCKER_VOLUMES[@]} ${DOCKER_PORTS[@]}"
+
+{{#unless envContext.dockerWorkdirOverriden }}
+DOCKER_OPTIONS="$DOCKER_OPTIONS -w /mnt/mesos/sandbox/{{{ runContext.taskAppDirectory }}}"
+{{/unless}}
 
 {{#if privileged}}
 DOCKER_OPTIONS="$DOCKER_OPTIONS --privileged"
 {{/if}}
 
 {{#each envContext.dockerParameters}}
-DOCKER_OPTIONS="$DOCKER_OPTIONS --{{{this.key}}}={{{this.value}}}"
+DOCKER_OPTIONS="$DOCKER_OPTIONS {{this}}"
 {{/each}}
 
 echo "Ensuring {{{ runContext.taskAppDirectory }}} is owned by {{{ runContext.user }}}"
