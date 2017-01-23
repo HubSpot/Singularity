@@ -13,6 +13,7 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
 import com.google.common.base.Optional;
@@ -83,7 +84,9 @@ public class DeployResource extends AbstractRequestResource {
     @ApiResponse(code=400, message="Deploy object is invalid"),
     @ApiResponse(code=409, message="A current deploy is in progress. It may be canceled by calling DELETE"),
   })
-  public SingularityRequestParent deploy(@ApiParam(required=true) SingularityDeployRequest deployRequest) {
+  public SingularityRequestParent deploy(
+      @ApiParam(required=true) SingularityDeployRequest deployRequest,
+      @QueryParam("force") Optional<Boolean> forceDeploy) {
     validator.checkActionEnabled(SingularityAction.DEPLOY);
     SingularityDeploy deploy = deployRequest.getDeploy();
     checkNotNullBadRequest(deploy, "DeployRequest must have a deploy object");
@@ -134,8 +137,13 @@ public class DeployResource extends AbstractRequestResource {
 
     SingularityPendingDeploy pendingDeployObj = new SingularityPendingDeploy(deployMarker, Optional.<SingularityLoadBalancerUpdate> absent(), DeployState.WAITING, deployProgress, updatedValidatedRequest);
 
-    checkConflict(deployManager.createPendingDeploy(pendingDeployObj) != SingularityCreateResult.EXISTED,
-        "Pending deploy already in progress for %s - cancel it or wait for it to complete (%s)", requestId, deployManager.getPendingDeploy(requestId).orNull());
+    boolean deployExists = deployManager.createPendingDeploy(pendingDeployObj) == SingularityCreateResult.EXISTED;
+    if (deployExists && forceDeploy.or(false)) {
+      cancelDeploy(requestId, deployManager.getInUseDeployId(requestId).orNull());
+    } else {
+      checkConflict(deployExists,
+          "Pending deploy already in progress for %s - cancel it or wait for it to complete (%s)", requestId, deployManager.getPendingDeploy(requestId).orNull());
+    }
 
     if (requestWithState.getState() == RequestState.PAUSED) {
       requestManager.deployToUnpause(request, now, deployUser, deployRequest.getMessage());
