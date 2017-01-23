@@ -97,7 +97,7 @@ public class SingularityMesosScheduler implements Scheduler {
       throw t;
     }
 
-    LOG.info("Finished handling {} new offer(s) ({}), {} accepted, {} cached", offers.size(), JavaUtils.duration(start), acceptedOffers.size(),
+    LOG.info("Finished handling {} new offer(s) ({}), {} accepted, {} declined/cached", offers.size(), JavaUtils.duration(start), acceptedOffers.size(),
         offers.size() - acceptedOffers.size());
   }
 
