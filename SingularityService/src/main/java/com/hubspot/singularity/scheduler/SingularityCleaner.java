@@ -345,26 +345,20 @@ public class SingularityCleaner {
           }
           break;
         case DELETING:
-          if (requestWithState.isPresent() && requestWithState.get().getState() != RequestState.DELETING) {
+          if (!Iterables.isEmpty(matchingActiveTaskIds)) {
             killActiveTasks = false;
             killScheduledTasks = false;
-            LOG.info("Ignoring {}, because {} still existed", requestCleanup, requestCleanup.getRequestId());
-            if (requestWithState.get().getRequest().isLoadBalanced() && configuration.isDeleteRemovedRequestsFromLoadBalancer()) {
-              createLbCleanupRequest(requestId, matchingActiveTaskIds);
-            }
+
+            delete(requestCleanup, matchingActiveTaskIds);
           } else {
-            if (!Iterables.isEmpty(matchingActiveTaskIds)) {
-              delete(requestCleanup, matchingActiveTaskIds);
-            } else {
-              Optional<SingularityRequestHistory> maybeHistory = requestHistoryHelper.getLastHistory(requestId);
-              if (maybeHistory.isPresent()) {
-                if (maybeHistory.get().getRequest().isLoadBalanced() && configuration.isDeleteRemovedRequestsFromLoadBalancer()) {
-                  createLbCleanupRequest(requestId, matchingActiveTaskIds);
-                }
-                requestManager.markDeleted(maybeHistory.get().getRequest(), start, requestCleanup.getUser(), requestCleanup.getMessage());
+            Optional<SingularityRequestHistory> maybeHistory = requestHistoryHelper.getLastHistory(requestId);
+            if (maybeHistory.isPresent()) {
+              if (maybeHistory.get().getRequest().isLoadBalanced() && configuration.isDeleteRemovedRequestsFromLoadBalancer()) {
+                createLbCleanupRequest(requestId, matchingActiveTaskIds);
               }
-              cleanupDeployState(requestCleanup);
+              requestManager.markDeleted(maybeHistory.get().getRequest(), start, requestCleanup.getUser(), requestCleanup.getMessage());
             }
+            cleanupDeployState(requestCleanup);
           }
           break;
         case BOUNCE:
@@ -594,7 +588,7 @@ public class SingularityCleaner {
         taskManager.deleteCleanupTask(taskId.getId());
       } else if (shouldKillTask(cleanupTask, activeTaskIds, cleaningTasks, incrementalCleaningTasks) && checkLBStateAndShouldKillTask(cleanupTask)) {
         driverManager.killAndRecord(taskId, cleanupTask.getCleanupType(), cleanupTask.getUser());
-        cleanupRequestIfNoRemainingTasks(taskId, deletedRequestIdToTaskIds);
+        cleanupRequestIfNoRemainingTasks(cleanupTask, deletedRequestIdToTaskIds);
         taskManager.deleteCleanupTask(taskId.getId());
 
         killedTasks++;
@@ -627,19 +621,21 @@ public class SingularityCleaner {
     }
   }
 
-  private void cleanupRequestIfNoRemainingTasks(SingularityTaskId taskId, Map<String, List<String>> requestIdToTaskIds) {
-    String requestId = taskId.getRequestId();
+  private void cleanupRequestIfNoRemainingTasks(SingularityTaskCleanup cleanupTask, Map<String, List<String>> requestIdToTaskIds) {
+    String requestId = cleanupTask.getTaskId().getRequestId();
     if (requestIdToTaskIds.get(requestId) == null) {
+      LOG.info("Couldn't find tasks for requestId {}", requestId);
       return;
     }
     List<String> requestTasks = requestIdToTaskIds.get(requestId);
-    requestTasks.remove(taskId.getId());
+    requestTasks.remove(cleanupTask.getTaskId().getId());
     if (requestTasks.isEmpty()) {
+      LOG.info("All tasks for requestId {} are now killed", requestId);
       requestManager.createCleanupRequest(
           new SingularityRequestCleanup(
-              Optional.<String> absent(), RequestCleanupType.DELETING, System.currentTimeMillis(),
+              cleanupTask.getUser(), RequestCleanupType.DELETING, System.currentTimeMillis(),
               Optional.of(Boolean.TRUE), requestId, Optional.<String> absent(),
-              Optional.<Boolean> absent(), Optional.<String> absent(), Optional.<String> absent(), Optional.<SingularityShellCommand>absent()));
+              Optional.<Boolean> absent(), cleanupTask.getMessage(), Optional.<String> absent(), Optional.<SingularityShellCommand>absent()));
     }
   }
 
