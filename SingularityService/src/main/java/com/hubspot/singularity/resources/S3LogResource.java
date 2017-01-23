@@ -412,7 +412,7 @@ public class S3LogResource extends AbstractHistoryResource {
           Optional<Long> maybeEndTime = Optional.absent();
           if (!search.isExcludeMetadata()) {
             GetObjectMetadataRequest metadataRequest = new GetObjectMetadataRequest(s3Object.getBucketName(), s3Object.getKey());
-            Map<String, Object> objectMetadata = s3Client.getObjectMetadata(metadataRequest).getRawMetadata();
+            Map<String, String> objectMetadata = s3Client.getObjectMetadata(metadataRequest).getUserMetadata();
             maybeStartTime = getMetadataAsLong(objectMetadata, SingularityS3Log.LOG_START_S3_ATTR);
             maybeEndTime = getMetadataAsLong(objectMetadata, SingularityS3Log.LOG_END_S3_ATTR);
           }
@@ -456,15 +456,11 @@ public class S3LogResource extends AbstractHistoryResource {
     }
   }
 
-  private Optional<Long> getMetadataAsLong(Map<String, Object> objectMetadata, String keyName) {
+  private Optional<Long> getMetadataAsLong(Map<String, String> objectMetadata, String keyName) {
     try {
       if (objectMetadata.containsKey(keyName)) {
         Object maybeLong = objectMetadata.get(keyName);
-        if (maybeLong instanceof String) {
-          return Optional.of(Long.parseLong((String) maybeLong));
-        } else {
-          return Optional.of((Long) maybeLong);
-        }
+        return Optional.of(Long.parseLong((String) maybeLong));
       } else {
         return Optional.absent();
       }
