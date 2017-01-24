@@ -32,6 +32,4 @@ public class SingularityNoOfferCache implements OfferCache {
     return Collections.emptyList();
   }
 
-
-
 }

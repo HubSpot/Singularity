@@ -125,8 +125,6 @@ public class SingularityMesosOfferScheduler {
     return offerHolders;
   }
 
-
-
   private Optional<SingularityTask> match(Collection<SingularityTaskRequest> taskRequests, SingularitySchedulerStateCache stateCache, SingularityOfferHolder offerHolder,
       Map<String, Map<String, Integer>> tasksPerOfferPerRequest) {
     String offerId = offerHolder.getOffer().getId().getValue();
@@ -176,9 +174,7 @@ public class SingularityMesosOfferScheduler {
       } else {
         String rolesInfo = MesosUtils.getRoles(offerHolder.getOffer()).toString();
         LOG.trace("Ignoring offer {} with roles {} on {} for task {}; matched resources: {}, slave match state: {}", offerHolder.getOffer().getId(), rolesInfo, offerHolder.getOffer().getHostname(),
-            taskRequest
-                .getPendingTask().getPendingTaskId(),
-            matchesResources, slaveMatchState);
+            taskRequest.getPendingTask().getPendingTaskId(), matchesResources, slaveMatchState);
       }
     }
 
