@@ -7,21 +7,6 @@ import rootComponent from '../../rootComponent';
 import { Link } from 'react-router';
 import CopyToClipboard from 'react-copy-to-clipboard';
 
-// TODO:
-// put test data in a global variable
-
-// loop through test data
-// for each slave
-	// draw a small green cube
-
-	// heat map type coloring, warning levels and critical levels should be set
-	// if cpusUsed > 5, color it light red
-	// if cpusUsed > 10, color it red
-	// if numTasks > 10, color it light red
-	// if numTasks > 20, color it red
-
-	// on click show details of slave
-
 const SlaveUsage = (props) => {
 	// console.log(props.slaves);
 
@@ -33,104 +18,78 @@ const SlaveUsage = (props) => {
 		</Nav>
 	);
 
-	const drawUsage = (slaves) => {
-		console.log('drawUsage() G, Ox3, R, Gx5');
+	const drawSlaves = (slaves) => {
+		console.log('drawSlaves() G, Ox3, R, Gx5');
 		
 		var grid = slaves.map((slave, index) => {
-			return checkSlaveStatus(slave, index);
+			return drawSlave(slave, index);
 		});
 		return grid
 	};
 
-	const checkSlaveStatus = (slave, index) => {
+	const drawSlave = (slave, index) => {
+    var criticalGlyph = 'glyphicon glyphicon-remove-sign'
+    var warningGlyph = 'glyphicon glyphicon-minus-sign'
+    var okGlyph = 'glyphicon glyphicon-ok-sign'
+    var criticalStyle = 'danger'
+    var warningStyle = 'warning'
+    var okStyle = 'success'
+
 		if (slave.cpusUsed > props.cpusUsedCritical || slave.numTasks > props.numTasksCritical) {
-			return criticalSlave(slave, index);
+			return slaveWithStats(slave, index, criticalStyle, criticalGlyph);
 		} else if (slave.cpusUsed > props.cpusUsedWarning || slave.numTasks > props.numTasksWarning) {
-			return warningSlave(slave, index);
+			return slaveWithStats(slave, index, warningStyle, warningGlyph);
 		} else {
-			return okSlave(slave, index);
+			return slaveWithStats(slave, index, okStyle, okGlyph);
 		}
 	};
 
-	const okSlave = (slave, index) => (
+  const slaveWithStats = (slave, index, bsStyle, glyphicon) => (
     <Dropdown id={index.toString()}>
-      <Dropdown.Toggle bsSize='large' bsStyle='success' noCaret={true}>
-        <Glyphicon glyph='glyphicon glyphicon-ok-sign' />
+      <Dropdown.Toggle bsSize='large' bsStyle={bsStyle} noCaret={true}>
+        <Glyphicon glyph={glyphicon} />
       </Dropdown.Toggle>
       <Dropdown.Menu>
-        {getSlaveStats(slave)}
+        {checkSlaveStats(slave)}
       </Dropdown.Menu>
     </Dropdown>
   );
 
-  const warningSlave = (slave, index) => (
-    <Dropdown id={index.toString()}>
-      <Dropdown.Toggle bsSize='large' bsStyle='warning' noCaret={true}>
-        <Glyphicon glyph='gglyphicon glyphicon-minus-sign' />
-      </Dropdown.Toggle>
-      <Dropdown.Menu>
-        {getSlaveStats(slave)}
-      </Dropdown.Menu>
-    </Dropdown>
-  );
-
-	const criticalSlave = (slave, index) => (
-		<Dropdown id={index.toString()}>
-      <Dropdown.Toggle bsSize='large' bsStyle='danger' noCaret={true}>
-        <Glyphicon glyph='gglyphicon glyphicon-remove-sign' />
-      </Dropdown.Toggle>
-      <Dropdown.Menu>
-        {getSlaveStats(slave)}
-      </Dropdown.Menu>
-    </Dropdown>
-	);
-
-  const getSlaveStats = (slave) => {
+  const checkSlaveStats = (slave) => {
     return Object.keys(slave).map((slaveStat) => {
-      return drawSlaveStat(slaveStat, slave[slaveStat]);
+      return checkSlaveStat(slaveStat, slave[slaveStat]);
     });
   }
 
-  const drawSlaveStat = (statName, statValue) => {
+  const checkSlaveStat = (statName, statValue) => {
+    var critical = 'color-error';
+    var warning = 'color-warning';
+
     switch (statName) {
       case 'cpusUsed':
         if (statValue > props.cpusUsedCritical) {
-          return criticalStat(statName, statValue);
+          return slaveStat(statName, statValue, critical);
         } else if (statValue > props.cpusUsedWarning) {
-          return warningStat(statName, statValue);
+          return slaveStat(statName, statValue, warning);
         }
         break;
       case 'numTasks':
         if (statValue > props.numTasksCritical) {
-          return criticalStat(statName, statValue);
+          return slaveStat(statName, statValue, critical);
         } else if (statValue > props.numTasksWarning) {
-          return warningStat(statName, statValue);
+          return slaveStat(statName, statValue, warning);
         }
     }
 
-    return okStat(statName, statValue);
+    return slaveStat(statName, statValue, null);
   }
 
   const statItemStyle = {'white-space' : 'nowrap', 'padding-left' : '20px', 'padding-right' : '5px'};
 
-  const criticalStat = (statName, statValue) => (
+  const slaveStat = (statName, statValue, className) => (
     <li 
-      className='color-error' 
+      className={className}
       style={statItemStyle}>
-      {statName} : {statValue}
-    </li>
-  )
-
-  const warningStat = (statName, statValue) => (
-    <li 
-      className='color-warning' 
-      style={statItemStyle}>
-      {statName} : {statValue}
-    </li>
-  )
-
-  const okStat = (statName, statValue) => (
-    <li style={statItemStyle}>
       {statName} : {statValue}
     </li>
   )
@@ -142,12 +101,11 @@ const SlaveUsage = (props) => {
 			</div>
       <hr/>
 			<div id='slaves'>
-				{drawUsage(props.slaves)}
+				{drawSlaves(props.slaves)}
 			</div>
 		</div>
 	);
 };
-
 
 
 SlaveUsage.propTypes = {
