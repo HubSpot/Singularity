@@ -75,6 +75,9 @@ const SlaveUsage = (props) => {
         } else if (statValue > props.numTasksWarning) {
           return slaveStat(statName, statValue, warning, index);
         }
+        break;
+      case 'timestamp':
+        return slaveStat(statName, Utils.absoluteTimestampWithSeconds(statValue), null, index);
     }
 
     return slaveStat(statName, statValue, null, index);
@@ -87,7 +90,7 @@ const SlaveUsage = (props) => {
       key={statName + index}
       className={className}
       style={statItemStyle}>
-      {statName} : {statValue}
+      {Utils.humanizeCamelcase(statName)} : {statValue}
     </li>
   );
 
