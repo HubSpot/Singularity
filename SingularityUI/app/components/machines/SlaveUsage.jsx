@@ -65,7 +65,7 @@ const SlaveUsage = (props) => {
   };
 
   const getMaxAvailableResource = (slave, statName) => {
-    var slaveInfo = _.findWhere(props.slaves, {'id' : slave.slaveId});
+    var slaveInfo = getSlaveInfo(slave);
     
     switch (statName) {
       case props.cpusUsedStat:
@@ -107,34 +107,37 @@ const SlaveUsage = (props) => {
     var warning = 'color-warning';
 
     if (isStatCritical(slave, statName)) {
-      return slaveStat(statName, slave[statName], critical, index);
+      return slaveStat(slave, statName, critical, index);
     } else if (isStatWarning(slave, statName)) {
-      return slaveStat(statName, slave[statName], warning, index);
+      return slaveStat(slave, statName, warning, index);
     } 
 
-    return slaveStat(statName, slave[statName], null, index);
+    return slaveStat(slave, statName, null, index);
   };
 
-  // todo: see if I can update the css to get my coloring to show up over the default #333 set for <a> tags
-  //       then i can use MenuItems
-  // .dropdown-menu > li > a
-  const slaveStat = (statName, statValue, className, index) => (
-    <CopyToClipboard key={statName + index} text={statValue.toString()}>  
+  const slaveStat = (slave, statName, className, index) => (
+    <CopyToClipboard key={statName + index} text={slave[statName].toString()}>  
       <li className={className + ' slave-usage-details'}>
-        {Utils.humanizeCamelcase(statName)} : {humanizeStatValue(statName, statValue)}
+        {humanizeStat(slave, statName)}
       </li>
     </CopyToClipboard>
   );
 
-  const humanizeStatValue = (statName, statValue) => {
+  const humanizeStat = (slave, statName) => {
     switch (statName) {
       case props.memoryBytesUsedStat:
-        return Utils.humanizeFileSize(statValue);
+        return 'Memory used : ' + Utils.humanizeFileSize(slave[statName]);
       case props.timestamp:
-        return Utils.absoluteTimestampWithSeconds(statValue);
+        return Utils.humanizeCamelcase(statName) + ' : ' + Utils.absoluteTimestampWithSeconds(slave[statName]);
+      case props.slaveId:
+        return 'Host : ' + getSlaveInfo(slave).host;
       default:
-        return statValue;
+        return Utils.humanizeCamelcase(statName) + ' : ' + slave[statName];
     }
+  };
+
+  const getSlaveInfo = (slave) => {
+    return _.findWhere(props.slaves, {'id' : slave.slaveId});
   };
 
   return (
@@ -164,6 +167,7 @@ SlaveUsage.propTypes = {
   cpusUsedStat : PropTypes.string,
   memoryBytesUsedStat : PropTypes.string,
   numTasksStat : PropTypes.string,
+  slaveId : PropTypes.string,
   timestamp : PropTypes.string
 };
 
@@ -180,6 +184,7 @@ function mapStateToProps(state) {
     cpusUsedStat : 'cpusUsed',
     memoryBytesUsedStat : 'memoryBytesUsed',
     numTasksStat : 'numTasks',
+    slaveId : 'slaveId',
     timestamp : 'timestamp'
   };
 }
