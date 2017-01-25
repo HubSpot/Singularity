@@ -87,7 +87,7 @@ const SlaveUsage = (props) => {
 
   const slaveWithStats = (slave, index, bsStyle, glyphicon) => (
     <Dropdown key={slave.slaveId} id={index.toString()}>
-      <Dropdown.Toggle bsSize='large' bsStyle={bsStyle} noCaret={true}>
+      <Dropdown.Toggle bsSize='large' bsStyle={bsStyle} noCaret={true} className='single-slave-btn'>
         <Glyphicon glyph={glyphicon} />
       </Dropdown.Toggle>
       <Dropdown.Menu>
@@ -115,15 +115,12 @@ const SlaveUsage = (props) => {
     return slaveStat(statName, slave[statName], null, index);
   };
 
-  const statItemStyle = {'white-space' : 'nowrap', 'padding-left' : '20px', 'padding-right' : '5px'};
   // todo: see if I can update the css to get my coloring to show up over the default #333 set for <a> tags
   //       then i can use MenuItems
   // .dropdown-menu > li > a
   const slaveStat = (statName, statValue, className, index) => (
     <CopyToClipboard key={statName + index} text={statValue.toString()}>  
-      <li
-        className={className}
-        style={statItemStyle}>
+      <li className={className + ' slave-usage-details'}>
         {Utils.humanizeCamelcase(statName)} : {humanizeStatValue(statName, statValue)}
       </li>
     </CopyToClipboard>
