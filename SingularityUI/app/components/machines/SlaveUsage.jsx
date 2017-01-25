@@ -4,7 +4,7 @@ import { Glyphicon } from 'react-bootstrap';
 import Utils from '../../utils';
 import { connect } from 'react-redux';
 import rootComponent from '../../rootComponent';
-import { FetchSlaveUsage } from '../../actions/api/slaves';
+import { FetchSlaveUsage, FetchSlaves } from '../../actions/api/slaves';
 import CopyToClipboard from 'react-copy-to-clipboard';
 
 const SlaveUsage = (props) => {
@@ -31,12 +31,57 @@ const SlaveUsage = (props) => {
     var warningStyle = 'warning';
     var okStyle = 'success';
 
-    if (slave.cpusUsed > props.cpusUsedCritical || slave.numTasks > props.numTasksCritical) {
+    if (isStatCritical(slave, props.cpusUsedStat) || isStatCritical(slave, props.memoryBytesUsedStat) || isStatCritical(slave, props.numTasksStat)) {
       return slaveWithStats(slave, index, criticalStyle, criticalGlyph);
-    } else if (slave.cpusUsed > props.cpusUsedWarning || slave.numTasks > props.numTasksWarning) {
+    } else if (isStatWarning(slave, props.cpusUsedStat) || isStatWarning(slave, props.memoryBytesUsedStat) || isStatWarning(slave, props.numTasksStat)) {
       return slaveWithStats(slave, index, warningStyle, warningGlyph);
     } else {
       return slaveWithStats(slave, index, okStyle, okGlyph);
+    }
+  };
+
+  const isStatWarning = (slave, statName) => {
+    switch (statName) {
+      case props.cpusUsedStat:
+        return (slave.cpusUsed / getMaxAvailableResource(slave, statName)) > props.cpusWarningThreshold;
+      case props.memoryBytesUsedStat:
+        // todo: create util method to convert from mb to bytes
+        return (slave.memoryBytesUsed / (getMaxAvailableResource(slave, statName) * Math.pow(1024, 2))) > props.memoryWarningThreshold;
+      case props.numTasksStat:
+        return slave.numTasks > props.numTasksWarning;
+    }
+  };
+
+  const isStatCritical = (slave, statName) => {
+    switch (statName) {
+      case props.cpusUsedStat:
+        return (slave.cpusUsed / getMaxAvailableResource(slave, statName)) > props.cpusCriticalThreshold;
+      case props.memoryBytesUsedStat:
+        // todo: create util method to convert from mb to bytes
+        return (slave.memoryBytesUsed / (getMaxAvailableResource(slave, statName) * Math.pow(1024, 2))) > props.memoryCriticalThreshold;
+      case props.numTasksStat:
+        return slave.numTasks > props.numTasksWarning;
+    }
+  };
+
+  const getMaxAvailableResource = (slave, statName) => {
+    var slaveInfo = _.findWhere(props.slaves, {'id' : slave.slaveId});
+    
+    switch (statName) {
+      case props.cpusUsedStat:
+        try {
+          return parseFloat(slaveInfo.attributes.real_cpus) || slaveInfo.resources.cpus;
+        } catch (e) {
+          throw 'Could not find resources (cpus) for slave ' + slave.slaveId;
+        }
+      case props.memoryBytesUsedStat:
+        try {
+          return parseFloat(slaveInfo.attributes.real_memory_mb) || slaveInfo.resources.mem;
+        } catch (e) {
+          throw 'Could not find resources (memory) for slave ' + slave.slaveId;
+        }
+      default:
+        throw statName + ' is an unsupported statistic';
     }
   };
 
@@ -53,46 +98,47 @@ const SlaveUsage = (props) => {
 
   const checkSlaveStats = (slave, index) => {
     return Object.keys(slave).map((slaveStat) => {
-      return checkSlaveStat(slaveStat, slave[slaveStat], index);
+      return checkSlaveStat(slave, slaveStat, index);
     });
   };
 
-  const checkSlaveStat = (statName, statValue, index) => {
+  const checkSlaveStat = (slave, statName, index) => {
     var critical = 'color-error';
     var warning = 'color-warning';
 
-    switch (statName) {
-      case 'cpusUsed':
-        if (statValue > props.cpusUsedCritical) {
-          return slaveStat(statName, statValue, critical, index);
-        } else if (statValue > props.cpusUsedWarning) {
-          return slaveStat(statName, statValue, warning, index);
-        }
-        break;
-      case 'numTasks':
-        if (statValue > props.numTasksCritical) {
-          return slaveStat(statName, statValue, critical, index);
-        } else if (statValue > props.numTasksWarning) {
-          return slaveStat(statName, statValue, warning, index);
-        }
-        break;
-      case 'timestamp':
-        return slaveStat(statName, Utils.absoluteTimestampWithSeconds(statValue), null, index);
-    }
+    if (isStatCritical(slave, statName)) {
+      return slaveStat(statName, slave[statName], critical, index);
+    } else if (isStatWarning(slave, statName)) {
+      return slaveStat(statName, slave[statName], warning, index);
+    } 
 
-    return slaveStat(statName, statValue, null, index);
+    return slaveStat(statName, slave[statName], null, index);
   };
 
   const statItemStyle = {'white-space' : 'nowrap', 'padding-left' : '20px', 'padding-right' : '5px'};
-
+  // todo: see if I can update the css to get my coloring to show up over the default #333 set for <a> tags
+  //       then i can use MenuItems
+  // .dropdown-menu > li > a
   const slaveStat = (statName, statValue, className, index) => (
-    <li
-      key={statName + index}
-      className={className}
-      style={statItemStyle}>
-      {Utils.humanizeCamelcase(statName)} : {statValue}
-    </li>
+    <CopyToClipboard key={statName + index} text={statValue.toString()}>  
+      <li
+        className={className}
+        style={statItemStyle}>
+        {Utils.humanizeCamelcase(statName)} : {humanizeStatValue(statName, statValue)}
+      </li>
+    </CopyToClipboard>
   );
+
+  const humanizeStatValue = (statName, statValue) => {
+    switch (statName) {
+      case props.memoryBytesUsedStat:
+        return Utils.humanizeFileSize(statValue);
+      case props.timestamp:
+        return Utils.absoluteTimestampWithSeconds(statValue);
+      default:
+        return statValue;
+    }
+  };
 
   return (
     <div>
@@ -112,37 +158,53 @@ SlaveUsage.propTypes = {
     state : PropTypes.string
   })),
   fetchSlaveUsage : React.PropTypes.func.isRequired,
-  cpusUsedWarning : PropTypes.number,
-  cpusUsedCritical : PropTypes.number,
+  cpusWarningThreshold : PropTypes.number,
+  cpusCriticalThreshold : PropTypes.number,
+  memoryWarningThreshold : PropTypes.number,
+  memoryCriticalThreshold : PropTypes.number,
   numTasksWarning : PropTypes.number,
-  numTasksCritical : PropTypes.number
+  numTasksCritical : PropTypes.number,
+  cpusUsedStat : PropTypes.string,
+  memoryBytesUsedStat : PropTypes.string,
+  numTasksStat : PropTypes.string,
+  timestamp : PropTypes.string
 };
 
 function mapStateToProps(state) {
   return {
     slaveUsage : state.api.slaveUsage.data,
-    cpusUsedWarning : 10,
-    cpusUsedCritical : 12,
+    slaves : state.api.slaves.data,
+    cpusWarningThreshold : .80,
+    cpusCriticalThreshold : .90,
+    memoryWarningThreshold : .80,
+    memoryCriticalThreshold : .90,
     numTasksWarning : 100,
-    numTasksCritical : 120
+    numTasksCritical : 120,
+    cpusUsedStat : 'cpusUsed',
+    memoryBytesUsedStat : 'memoryBytesUsed',
+    numTasksStat : 'numTasks',
+    timestamp : 'timestamp'
   };
 }
 
 function mapDispatchToProps(dispatch) {
   return {
-    fetchSlaveUsage: () => dispatch(FetchSlaveUsage.trigger())
+    fetchSlaveUsage: () => dispatch(FetchSlaveUsage.trigger()),
+    fetchSlaves: () => dispatch(FetchSlaves.trigger())
   };
 }
 
 function initialize(props) {
   return Promise.all([
-    props.fetchSlaveUsage()
+    props.fetchSlaveUsage(),
+    props.fetchSlaves()
   ]);
 }
 
 function refresh(props) {
   return Promise.all([
-    props.fetchSlaveUsage()
+    props.fetchSlaveUsage(),
+    props.fetchSlaves()
   ]);
 }
 
