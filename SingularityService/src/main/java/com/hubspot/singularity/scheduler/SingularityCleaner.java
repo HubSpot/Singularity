@@ -342,19 +342,29 @@ public class SingularityCleaner {
           }
           break;
         case DELETING:
+          Optional<SingularityRequest> maybeRequest = Optional.absent();
           if (requestWithState.isPresent()) {
             killActiveTasks = false;
             killScheduledTasks = false;
+            maybeRequest = Optional.of(requestWithState.get().getRequest());
             LOG.info("Ignoring {}, because {} still existed", requestCleanup, requestCleanup.getRequestId());
             if (requestWithState.get().getRequest().isLoadBalanced() && configuration.isDeleteRemovedRequestsFromLoadBalancer()) {
               createLbCleanupRequest(requestId, matchingActiveTaskIds);
             }
           } else {
             Optional<SingularityRequestHistory> maybeHistory = requestHistoryHelper.getLastHistory(requestId);
-            if (maybeHistory.isPresent() && maybeHistory.get().getRequest().isLoadBalanced() && configuration.isDeleteRemovedRequestsFromLoadBalancer()) {
-              createLbCleanupRequest(requestId, matchingActiveTaskIds);
+            if (maybeHistory.isPresent()) {
+              maybeRequest = Optional.of(maybeHistory.get().getRequest());
+              if (maybeHistory.get().getRequest().isLoadBalanced() && configuration.isDeleteRemovedRequestsFromLoadBalancer()) {
+                createLbCleanupRequest(requestId, matchingActiveTaskIds);
+              }
             }
             cleanupDeployState(requestCleanup);
+          }
+          if (maybeRequest.isPresent()) {
+            requestManager.markAsDeleted(maybeRequest.get(), requestCleanup.getUser(), requestCleanup.getMessage());
+          } else {
+            LOG.warn("No request data to mark request {} as DELETED", requestId);
           }
           break;
         case BOUNCE:
