@@ -30,6 +30,12 @@ public class SingularityConfiguration extends Configuration {
 
   private long askDriverToKillTasksAgainAfterMillis = TimeUnit.MINUTES.toMillis(5);
 
+  private long cacheOffersForMillis = TimeUnit.MINUTES.toMillis(1);
+
+  private int offerCacheSize = 125;
+
+  private boolean cacheOffers = true;
+
   private int cacheTasksMaxSize = 5000;
 
   private int cacheTasksInitialSize = 100;
@@ -1233,6 +1239,30 @@ public class SingularityConfiguration extends Configuration {
   public SingularityConfiguration setAllowBounceToSameHost(boolean allowBounceToSameHost) {
     this.allowBounceToSameHost = allowBounceToSameHost;
     return this;
+  }
+
+  public long getCacheOffersForMillis() {
+    return cacheOffersForMillis;
+  }
+
+  public void setCacheOffersForMillis(long cacheOffersForMillis) {
+    this.cacheOffersForMillis = cacheOffersForMillis;
+  }
+
+  public int getOfferCacheSize() {
+    return offerCacheSize;
+  }
+
+  public void setOfferCacheSize(int offerCacheSize) {
+    this.offerCacheSize = offerCacheSize;
+  }
+
+  public boolean isCacheOffers() {
+    return cacheOffers;
+  }
+
+  public void setCacheOffers(boolean cacheOffers) {
+    this.cacheOffers = cacheOffers;
   }
 
   public long getCheckUsageEveryMillis() {
