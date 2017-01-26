@@ -47,6 +47,8 @@ import com.hubspot.singularity.SingularityTaskStatusHolder;
 import com.hubspot.singularity.SingularityUpdatePendingDeployRequest;
 import com.hubspot.singularity.SingularityUserSettings;
 import com.hubspot.singularity.SingularityWebhook;
+import com.hubspot.singularity.athena.AthenaQueryResult;
+import com.hubspot.singularity.athena.AthenaTable;
 import com.hubspot.singularity.expiring.SingularityExpiringBounce;
 import com.hubspot.singularity.expiring.SingularityExpiringMachineState;
 import com.hubspot.singularity.expiring.SingularityExpiringPause;
@@ -95,6 +97,9 @@ public class SingularityTranscoderModule implements Module {
     bindTranscoder(binder).asJson(SingularityRequestGroup.class);
     bindTranscoder(binder).asJson(SingularityExpiringMachineState.class);
     bindTranscoder(binder).asJson(SingularityUserSettings.class);
+
+    bindTranscoder(binder).asJson(AthenaQueryResult.class);
+    bindTranscoder(binder).asJson(AthenaTable.class);
 
     bindTranscoder(binder).asCompressedJson(SingularityDeployHistory.class);
     bindTranscoder(binder).asCompressedJson(SingularityDeploy.class);

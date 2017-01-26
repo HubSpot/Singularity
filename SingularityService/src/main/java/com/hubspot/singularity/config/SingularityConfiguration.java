@@ -200,6 +200,9 @@ public class SingularityConfiguration extends Configuration {
   @JsonProperty("s3")
   private S3Configuration s3Configuration;
 
+  @JsonProperty("athena")
+  private AthenaConfig athenaConfig;
+
   private boolean sandboxDefaultsToTaskId = false;
 
   private long sandboxHttpTimeoutMillis = TimeUnit.SECONDS.toMillis(5);
@@ -602,6 +605,10 @@ public class SingularityConfiguration extends Configuration {
     return Optional.fromNullable(s3Configuration);
   }
 
+  public Optional<AthenaConfig> getAthenaConfig() {
+    return Optional.fromNullable(athenaConfig);
+  }
+
   public long getSandboxHttpTimeoutMillis() {
     return sandboxHttpTimeoutMillis;
   }
@@ -949,6 +956,11 @@ public class SingularityConfiguration extends Configuration {
 
   public void setS3Configuration(S3Configuration s3Configuration) {
     this.s3Configuration = s3Configuration;
+  }
+
+  public SingularityConfiguration setAthenaConfig(AthenaConfig athenaConfig) {
+    this.athenaConfig = athenaConfig;
+    return this;
   }
 
   public void setSandboxDefaultsToTaskId(boolean sandboxDefaultsToTaskId) {

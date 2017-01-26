@@ -244,8 +244,23 @@
         <artifactId>rfc5545-datetime</artifactId>
         <version>0.2.2</version>
       </dependency>
+
+      <dependency>
+        <groupId>com.amazonaws</groupId>
+        <artifactId>athena-jdbc</artifactId>
+        <version>1.0.0</version>
+        <scope>system</scope>
+        <systemPath>${project.basedir}/lib/AthenaJDBC41-1.0.0.jar</systemPath>
+      </dependency>
     </dependencies>
   </dependencyManagement>
+
+  <repositories>
+    <repository>
+      <id>Amazon AWS Athena</id>
+      <url>https://s3.amazonaws.com/athena-downloads/drivers</url>
+    </repository>
+  </repositories>
 
   <build>
     <pluginManagement>

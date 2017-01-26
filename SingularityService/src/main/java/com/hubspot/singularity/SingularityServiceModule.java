@@ -3,6 +3,7 @@ package com.hubspot.singularity;
 import com.google.inject.Binder;
 import com.hubspot.dropwizard.guicier.DropwizardAwareModule;
 import com.hubspot.mesos.client.SingularityMesosClientModule;
+import com.hubspot.singularity.athena.AthenaModule;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.SingularityDataModule;
 import com.hubspot.singularity.data.history.SingularityHistoryModule;
@@ -23,6 +24,7 @@ public class SingularityServiceModule extends DropwizardAwareModule<SingularityC
 
     binder.install(new SingularityMainModule(getConfiguration()));
     binder.install(new SingularityDataModule());
+    binder.install(new AthenaModule(getConfiguration().getAthenaConfig()));
     binder.install(new SingularitySchedulerModule());
     binder.install(new SingularityResourceModule(getConfiguration().getUiConfiguration()));
     binder.install(new SingularityTranscoderModule());
