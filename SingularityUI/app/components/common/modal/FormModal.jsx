@@ -84,7 +84,7 @@ export default class FormModal extends React.Component {
     this.setState({ formState });
   }
 
-  validateForm() {
+  isValidForm() {
     // Check required values
     const errors = {};
     this.props.formElements.forEach((formElement) => {
@@ -141,11 +141,11 @@ export default class FormModal extends React.Component {
     if (event) {
       event.preventDefault();
     }
-    if (this.validateForm()) {
+    if (this.isValidForm()) {
       let formState = this.parseFormState(this.state.formState);
       this.props.onConfirm(formState);
       if (!this.props.keepCurrentFormState) {
-        const formState = {};
+        formState = {};
         this.props.formElements.forEach((formElement) => {
           formState[formElement.name] = formElement.defaultValue;
         });
