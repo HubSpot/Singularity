@@ -84,11 +84,6 @@ export default class FormModal extends React.Component {
     this.setState({ formState });
   }
 
-  clearForm() {
-    const formState = {}
-    this.setState({ formState })
-  }
-
   validateForm() {
     // Check required values
     const errors = {};
@@ -119,20 +114,24 @@ export default class FormModal extends React.Component {
     const parsed = {};
     _.mapObject(state, (val, key) => {
       const element = _.find(this.props.formElements, (formElement) => formElement.name === key);
-      switch (element.type) {
-        case FormModal.INPUT_TYPES.BOOLEAN:
-          parsed[key] = Boolean(val);
-          break;
-        case FormModal.INPUT_TYPES.NUMBER:
-          parsed[key] = Number.parseFloat(val);
-          break;
-        case FormModal.INPUT_TYPES.DURATION:
-          if (val) {
-            parsed[key] = juration.parse(val) * 1000;
-          }
-          break;
-        default:
-          parsed[key] = val;
+      if (element === undefined) {
+        delete this.state.formState[key];
+      } else {
+        switch (element.type) {
+          case FormModal.INPUT_TYPES.BOOLEAN:
+            parsed[key] = Boolean(val);
+            break;
+          case FormModal.INPUT_TYPES.NUMBER:
+            parsed[key] = Number.parseFloat(val);
+            break;
+          case FormModal.INPUT_TYPES.DURATION:
+            if (val) {
+              parsed[key] = juration.parse(val) * 1000;
+            }
+            break;
+          default:
+            parsed[key] = val;
+        }
       }
     });
     return parsed;
@@ -235,10 +234,10 @@ export default class FormModal extends React.Component {
 
       const selectOptions = () => {
         if (formElement.valueOptions && formElement.valueOptions.length > 0) {
-          const menuItems = []
+          const menuItems = [];
           _.each(formElement.valueOptions, (optionValue, index) => {
             if (index < 5) {
-              if (index != 0) {
+              if (index !== 0) {
                 menuItems.push(<MenuItem divider />);
               }
               menuItems.push(
@@ -264,7 +263,7 @@ export default class FormModal extends React.Component {
             </DropdownButton>
           );
         }
-      }
+      };
 
       let extraHelp;
 
