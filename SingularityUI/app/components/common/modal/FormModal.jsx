@@ -114,9 +114,7 @@ export default class FormModal extends React.Component {
     const parsed = {};
     _.mapObject(state, (val, key) => {
       const element = _.find(this.props.formElements, (formElement) => formElement.name === key);
-      if (element === undefined) {
-        delete this.state.formState[key];
-      } else {
+      if (element !== undefined) {
         switch (element.type) {
           case FormModal.INPUT_TYPES.BOOLEAN:
             parsed[key] = Boolean(val);
