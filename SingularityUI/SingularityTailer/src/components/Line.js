@@ -32,7 +32,7 @@ class Line extends Component {
 
       lineContents = ansiStyled;
     } else {
-      lineContents = data.text;
+      lineContents = (<span>{data.text}</span>);
     }
 
     let maybeLink;
