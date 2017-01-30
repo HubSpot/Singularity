@@ -72,16 +72,16 @@ const SlaveUsage = (props) => {
         try {
           return parseFloat(slaveInfo.attributes.real_cpus) || slaveInfo.resources.cpus;
         } catch (e) {
-          throw 'Could not find resources (cpus) for slave ' + slave.slaveId;
+          throw Utils.formatUnicorn('Could not find resource (cpus) for slave {host} ({id})', slaveInfo);
         }
       case props.memoryBytesUsedStat:
         try {
           return parseFloat(slaveInfo.attributes.real_memory_mb) || slaveInfo.resources.mem;
         } catch (e) {
-          throw 'Could not find resources (memory) for slave ' + slave.slaveId;
+          throw Utils.formatUnicorn('Could not find resources (memory) for slave {host} ({id})', slaveInfo);
         }
       default:
-        throw statName + ' is an unsupported statistic';
+        throw Utils.formatUnicorn('{0} is an unsupported statistic', statName);
     }
   };
 
@@ -126,13 +126,13 @@ const SlaveUsage = (props) => {
   const humanizeStat = (slave, statName) => {
     switch (statName) {
       case props.memoryBytesUsedStat:
-        return 'Memory used : ' + Utils.humanizeFileSize(slave[statName]);
+        return Utils.formatUnicorn('Memory used : {0}', Utils.humanizeFileSize(slave[statName]));
       case props.timestamp:
-        return Utils.humanizeCamelcase(statName) + ' : ' + Utils.absoluteTimestampWithSeconds(slave[statName]);
+        return Utils.formatUnicorn('{0} : {1}', Utils.humanizeCamelcase(statName), Utils.absoluteTimestampWithSeconds(slave[statName]));
       case props.slaveId:
-        return 'Host : ' + getSlaveInfo(slave).host;
+        return Utils.formatUnicorn('Host : {host}', getSlaveInfo(slave));
       default:
-        return Utils.humanizeCamelcase(statName) + ' : ' + slave[statName];
+        return Utils.formatUnicorn('{0} : {1}', Utils.humanizeCamelcase(statName), slave[statName]);
     }
   };
 
