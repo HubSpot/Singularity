@@ -2,6 +2,8 @@ import os
 import re
 import sys
 import gzip
+import json
+import time
 import fnmatch
 import requests
 from datetime import datetime, timedelta
@@ -12,6 +14,7 @@ BASE_URI_FORMAT = '{0}{1}'
 ALL_REQUESTS = '/requests'
 REQUEST_TASKS_FORMAT = '/history/request/{0}/tasks'
 ACTIVE_TASKS_FORMAT = '/history/request/{0}/tasks/active'
+PER_PAGE = 100
 
 def base_uri(args):
     if not args.singularity_uri_base:
@@ -20,13 +23,15 @@ def base_uri(args):
     return BASE_URI_FORMAT.format(uri_prefix, args.singularity_uri_base)
 
 def tasks_for_requests(args):
+    return _tasks_for_requests(args, all_requests(args))
+
+def _tasks_for_requests(args, requests):
     all_tasks = []
-    for request in all_requests(args):
+    for request in requests:
         if args.requestId and args.deployId:
             tasks = [task["taskId"]["id"] for task in all_tasks_for_request(args, request) if log_matches(task["taskId"]["deployId"], args.deployId)]
         else:
             tasks = [task["taskId"]["id"] for task in all_tasks_for_request(args, request)]
-            tasks = tasks[0:args.task_count] if hasattr(args, 'task_count') else tasks
         all_tasks = all_tasks + tasks
     if not all_tasks:
         if args.taskId:
@@ -41,16 +46,31 @@ def log_matches(inputString, pattern):
 
 def all_tasks_for_request(args, request):
     uri = '{0}{1}'.format(base_uri(args), ACTIVE_TASKS_FORMAT.format(request))
-    active_tasks = get_json_response(uri, args)
+    all_tasks = get_json_response(uri, args)
+    sys.stderr.write("\rFound {0} active tasks ({1} total)".format(len(all_tasks), len(all_tasks)))
     if hasattr(args, 'start'):
         uri = '{0}{1}'.format(base_uri(args), REQUEST_TASKS_FORMAT.format(request))
-        historical_tasks = get_json_response(uri, args)
-        if len(historical_tasks) == 0:
-            return active_tasks
-        elif len(active_tasks) == 0:
-            return historical_tasks
-        else:
-            return active_tasks + [h for h in historical_tasks if date_range_overlaps(args, int(str(h['updatedAt'])[0:-3]), int(str(h['taskId']['startedAt'])[0:-3]))]
+        found_all_history = False
+        page = 1
+        params = {
+          'startedAfter': int(time.mktime(args.start.timetuple()) * 1000),
+          'updatedBefore': int(time.mktime(args.end.timetuple()) * 1000),
+          'count': PER_PAGE,
+          'page': page
+        }
+        while not found_all_history:
+            tasks = get_json_response(uri, args, params)
+            all_tasks.extend([t for t in tasks if date_range_overlaps(args, int(str(t['updatedAt'])[0:-3]), int(str(t['taskId']['startedAt'])[0:-3]))])
+            if not args.silent:
+                sys.stderr.write("\rFound {0} historical tasks ({1} total)".format(len(tasks), len(all_tasks)))
+                sys.stderr.flush()
+            if len(tasks) < PER_PAGE:
+                found_all_history = True
+            page += 1
+            params['page'] = page
+        if not args.silent:
+            sys.stderr.write("\n")
+        return all_tasks
     else:
         return active_tasks
 
@@ -115,8 +135,13 @@ def log(message, args, verbose):
     if (not verbose or (verbose and args.verbose)) and not args.silent:
             sys.stderr.write(message)
 
-def get_json_response(uri, args, params={}, skip404ErrMessage=False):
-    singularity_response = requests.get(uri, params=params, headers=args.headers)
+def get_json_response(uri, args, params={}, skip404ErrMessage=False, data={}):
+    if data:
+        headers = {'Content-Type':'application/json'}
+        headers.update(args.headers)
+        singularity_response = requests.post(uri, params=params, headers=headers, data=json.dumps(data))
+    else:
+        singularity_response = requests.get(uri, params=params, headers=args.headers)
     if singularity_response.status_code < 199 or singularity_response.status_code > 299:
         if not (skip404ErrMessage and singularity_response.status_code == 404):
             log('{0} params:{1}\n'.format(uri, str(params)), args, False)
@@ -126,7 +151,6 @@ def get_json_response(uri, args, params={}, skip404ErrMessage=False):
             log(colored(singularity_response.text, 'red') + '\n', args, False)
         return {}
     return singularity_response.json()
-
 
 def is_valid_log(file_data):
     not_a_directory = not file_data['mode'].startswith('d')

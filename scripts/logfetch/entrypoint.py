@@ -21,9 +21,9 @@ DEFAULT_CONF_FILE = 'default'
 DEFAULT_PARALLEL_FETCHES = 10
 DEFAULT_CHUNK_SIZE = 8192
 DEFAULT_DEST = os.path.expanduser('~/.logfetch_cache')
-DEFAULT_TASK_COUNT = 20
 DEFAULT_DAYS = 7
 DEFAULT_S3_PATTERN = '%requestId/%%Y/%m/%taskId_%index-%s-%filename'
+DEFAULT_S3_PAGE_SIZE = 50
 
 IS_A_TTY = sys.stdout.isatty()
 
@@ -117,10 +117,10 @@ def fetch():
         "num_parallel_fetches" : DEFAULT_PARALLEL_FETCHES,
         "chunk_size" : DEFAULT_CHUNK_SIZE,
         "dest" : DEFAULT_DEST,
-        "task_count" : DEFAULT_TASK_COUNT,
         "start" : datetime.strptime('{0} 00:00:00'.format(datetime.now().strftime("%Y-%m-%d")), "%Y-%m-%d %H:%M:%S") - timedelta(days=DEFAULT_DAYS),
         "file_pattern" : DEFAULT_S3_PATTERN,
-        "end" : datetime.strptime('{0} 23:59:59'.format(datetime.now().strftime("%Y-%m-%d")), "%Y-%m-%d %H:%M:%S")
+        "end" : datetime.strptime('{0} 23:59:59'.format(datetime.now().strftime("%Y-%m-%d")), "%Y-%m-%d %H:%M:%S"),
+        "s3_page_size": DEFAULT_S3_PAGE_SIZE
     }
 
     try:
@@ -134,7 +134,6 @@ def fetch():
     parser.set_defaults(**defaults)
     parser.add_argument("-t", "--task-id", dest="taskId", help="TaskId of task to fetch logs for")
     parser.add_argument("-r", "--request-id", dest="requestId", help="RequestId of request to fetch logs for (can be a glob)")
-    parser.add_argument("-T", "--task-count", dest="task_count", help="Number of recent tasks per request to fetch logs from", type=int)
     parser.add_argument("-d", "--deploy-id", dest="deployId", help="DeployId of task to fetch logs for (can be a glob)")
     parser.add_argument("-o", "--dest", dest="dest", help="Destination directory")
     parser.add_argument("-n", "--num-parallel-fetches", dest="num_parallel_fetches", help="Number of fetches to make at once", type=int)
@@ -150,6 +149,7 @@ def fetch():
     parser.add_argument("-S", "--skip-s3", dest="skip_s3", help="Don't download/search s3 logs", action='store_true')
     parser.add_argument("-L", "--skip-live", dest="skip_live", help="Don't download/search live logs", action='store_true')
     parser.add_argument("-U", "--use-cache", dest="use_cache", help="Use cache for live logs, don't re-download them", action='store_true')
+    parser.add_argument("-P", "--page-size", dest="s3_page_size", help="Max page size when listing logs in Singularity", type=int)
     parser.add_argument("--search", dest="search", help="run logsearch on the local cache of downloaded files", action='store_true')
     parser.add_argument("-i", "--show-file-info", dest='show_file_info', help="Print the file name before printing log lines", action='store_true')
     parser.add_argument("-V", "--verbose", dest="verbose", help="Print more verbose output", action='store_true')
@@ -249,10 +249,10 @@ def cat():
         "num_parallel_fetches" : DEFAULT_PARALLEL_FETCHES,
         "chunk_size" : DEFAULT_CHUNK_SIZE,
         "dest" : DEFAULT_DEST,
-        "task_count" : DEFAULT_TASK_COUNT,
         "start" : datetime.strptime('{0} 00:00:00'.format(datetime.now().strftime("%Y-%m-%d")), "%Y-%m-%d %H:%M:%S") - timedelta(days=DEFAULT_DAYS),
         "file_pattern" : DEFAULT_S3_PATTERN,
-        "end" : datetime.strptime('{0} 23:59:59'.format(datetime.now().strftime("%Y-%m-%d")), "%Y-%m-%d %H:%M:%S")
+        "end" : datetime.strptime('{0} 23:59:59'.format(datetime.now().strftime("%Y-%m-%d")), "%Y-%m-%d %H:%M:%S"),
+        "s3_page_size": DEFAULT_S3_PAGE_SIZE
     }
 
     try:
@@ -266,7 +266,6 @@ def cat():
     parser.set_defaults(**defaults)
     parser.add_argument("-t", "--task-id", dest="taskId", help="TaskId of task to fetch logs for")
     parser.add_argument("-r", "--request-id", dest="requestId", help="RequestId of request to fetch logs for (can be a glob)")
-    parser.add_argument("-T", "--task-count", dest="taskCount", help="Number of recent tasks per request to fetch logs from", type=int)
     parser.add_argument("-d", "--deploy-id", dest="deployId", help="DeployId of tasks to fetch logs for (can be a glob)")
     parser.add_argument("-o", "--dest", dest="dest", help="Destination directory")
     parser.add_argument("-n", "--num-parallel-fetches", dest="num_parallel_fetches", help="Number of fetches to make at once", type=int)
@@ -281,6 +280,7 @@ def cat():
     parser.add_argument("-S", "--skip-s3", dest="skip_s3", help="Don't download/search s3 logs", action='store_true')
     parser.add_argument("-L", "--skip-live", dest="skip_live", help="Don't download/search live logs", action='store_true')
     parser.add_argument("-U", "--use-cache", dest="use_cache", help="Use cache for live logs, don't re-download them", action='store_true')
+    parser.add_argument("-P", "--page-size", dest="s3_page_size", help="Max page size when listing logs in Singularity", type=int)
     parser.add_argument("-O", "--cached-only", dest="cached_only", help="Find and output content of files already downloaded", action='store_true')
     parser.add_argument("-V", "--verbose", dest="verbose", help="Print more verbose output", action='store_true')
     parser.add_argument("--silent", dest="silent", help="No stderr (progress, file names, etc) output", action='store_true')

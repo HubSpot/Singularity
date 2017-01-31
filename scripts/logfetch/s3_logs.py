@@ -6,10 +6,8 @@ import time
 from termcolor import colored
 import callbacks
 
-TASK_FORMAT = '/task/{0}'
-S3LOGS_URI_FORMAT = '{0}/logs{1}'
-REQUEST_FORMAT = '/request/{0}?excludeMetadata=true'
-
+S3LOGS_URI_FORMAT = '{0}/logs/search'
+TASK_CHUNK_SIZE = 200
 FILE_REGEX="\d{13}-([^-]*)-\d{8,20}\.gz"
 
 progress = 0
@@ -19,7 +17,7 @@ def download_s3_logs(args):
     if not args.silent:
         sys.stderr.write(colored('Checking for S3 log files', 'cyan') + '\n')
     callbacks.progress = 0
-    logs = logs_for_all_requests(args)
+    logs = find_all_s3_logs(args)
     async_requests = []
     all_logs = []
     for log_file in logs:
@@ -39,12 +37,12 @@ def download_s3_logs(args):
         else:
             logfetch_base.log(colored('Excluding {0}, not in date range'.format(filename), 'magenta') + '\n', args, True)
     if async_requests:
-        logfetch_base.log(colored('Starting {0} S3 Downloads with {1} parallel fetches\n'.format(len(async_requests), args.num_parallel_fetches), 'cyan'), args, False)
+        logfetch_base.log(colored('{0} new logs in time range, starting S3 Downloads with {1} parallel fetches\n'.format(len(async_requests), args.num_parallel_fetches), 'cyan'), args, False)
         callbacks.goal = len(async_requests)
         grequests.map(async_requests, stream=True, size=args.num_parallel_fetches)
     else:
         logfetch_base.log(colored('No S3 logs to download\n', 'cyan'), args, False)
-    logfetch_base.log(colored('All S3 logs up to date\n', 'cyan'), args, False)
+    logfetch_base.log(colored('Finished S3 Logs\n', 'cyan'), args, False)
     all_logs = modify_download_list(all_logs)
     return all_logs
 
@@ -69,37 +67,66 @@ def modify_download_list(all_logs):
 def already_downloaded(dest, filename):
     return (os.path.isfile('{0}/{1}'.format(dest, filename.replace('.gz', '.log'))) or os.path.isfile('{0}/{1}'.format(dest, filename[:-3])) or os.path.isfile('{0}/{1}'.format(dest, filename)))
 
-def logs_for_all_requests(args):
-    s3_params = {'start': int(time.mktime(args.start.timetuple()) * 1000), 'end': int(time.mktime(args.end.timetuple()) * 1000)}
+def chunkify(seq, size):
+    return (seq[pos:pos + size] for pos in xrange(0, len(seq), size))
+
+def find_all_s3_logs(args):
+    start = int(time.mktime(args.start.timetuple()) * 1000)
+    end = int(time.mktime(args.end.timetuple()) * 1000)
+    found_logs = []
+
+    requests_and_deploys = {}
+    requets = []
     if args.taskId:
-        return logfetch_base.get_json_response(s3_task_logs_uri(args, args.taskId), args, s3_params)
+        all_tasks = [args.taskId]
     else:
-        tasks = logfetch_base.tasks_for_requests(args)
-        logs = []
-        tasks_progress = 0
-        tasks_goal = len(tasks)
-        for task in tasks:
-            s3_logs = logfetch_base.get_json_response(s3_task_logs_uri(args, task), args, s3_params)
-            logs = logs + s3_logs if s3_logs else logs
-            tasks_progress += 1
-            logfetch_base.update_progress_bar(tasks_progress, tasks_goal, 'S3 Log Finder', args.silent or args.verbose)
-        logfetch_base.log(colored('\nAlso searching s3 history...\n', 'cyan'), args, False)
-        for request in logfetch_base.all_requests(args):
-            s3_logs = logfetch_base.get_json_response(s3_request_logs_uri(args, request), args, s3_params)
-            logs = logs + s3_logs if s3_logs else logs
-        found_logs = []
-        keys = []
-        for log in logs:
-            if not log['key'] in keys:
-                found_logs.append(log)
-                keys.append(log['key'])
-        return found_logs
+        requests = logfetch_base.all_requests(args)
+        all_tasks = logfetch_base._tasks_for_requests(args, requests)
 
-def s3_task_logs_uri(args, idString):
-    return S3LOGS_URI_FORMAT.format(logfetch_base.base_uri(args), TASK_FORMAT.format(idString))
+    for tasks in chunkify(all_tasks, TASK_CHUNK_SIZE):
+        logfetch_base.log('Searching next {0} tasks\n'.format(len(tasks)), args, False)
+        search_data = {
+            'start': start,
+            'end': end,
+            'taskIds': tasks,
+            'requestsAndDeploys': requests_and_deploys,
+            'maxPerPage': args.s3_page_size
+        }
+        finished = False
+        while not finished:
+            s3_search_result = logfetch_base.get_json_response(s3_logs_uri(args), args, data=search_data)
+            found_logs.extend(s3_search_result['results'])
+            search_data['continuationTokens'] = s3_search_result['continuationTokens']
+            if not args.silent:
+                sys.stderr.write("\rFound {0} additional logs ({1} total found)".format(len(s3_search_result['results']), len(found_logs)))
+                sys.stderr.flush()
+            finished = s3_search_result['lastPage']
+        if not args.silent:
+            sys.stderr.write("\n")
 
-def s3_request_logs_uri(args, idString):
-    return S3LOGS_URI_FORMAT.format(logfetch_base.base_uri(args), REQUEST_FORMAT.format(idString))
+    if not found_logs:
+        logfetch_base.log('No logs found for individual tasks, searching at request level\n', args, False)
+        for request in requests:
+            if args.deployId:
+                search_data['requests_and_deploys'][request] = [args.deployId]
+            else:
+                search_data['requests_and_deploys'][request] = []
+        finished = False
+        while not finished:
+            s3_search_result = logfetch_base.get_json_response(s3_logs_uri(args), args, data=search_data)
+            found_logs.extend(s3_search_result['results'])
+            finished = s3_search_result['lastPage']
+            search_data['continuationTokens'] = s3_search_result['continuationTokens']
+            if not args.silent:
+                sys.stderr.write("\rFound {0} additional logs({1} total)".format(len(s3_search_result['results']), len(found_logs)))
+                sys.stderr.flush()
+        if not args.silent:
+            sys.stderr.write("\n")
+
+    return found_logs
+
+def s3_logs_uri(args):
+    return S3LOGS_URI_FORMAT.format(logfetch_base.base_uri(args))
 
 def log_matches(args, filename):
     if 'filename' in args.file_pattern:
