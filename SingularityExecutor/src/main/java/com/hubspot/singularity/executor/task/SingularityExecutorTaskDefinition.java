@@ -7,32 +7,33 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
-import com.hubspot.deploy.ExecutorData;
+import com.hubspot.singularity.SingularityTaskExecutorData;
 
 public class SingularityExecutorTaskDefinition {
 
-  private final ExecutorData executorData;
+  private final SingularityTaskExecutorData executorData;
   private final String taskId;
   private final Path taskDirectoryPath;
   private final String executorBashOut;
   private final String serviceLogOut;
   private final String serviceLogOutExtension;
+  private final String serviceFinishedTailLog;
   private final String taskAppDirectory;
   private final String logrotateStateFile;
   private final String executorPid;
   private final String signatureVerifyOut;
 
   @JsonCreator
-  public SingularityExecutorTaskDefinition(@JsonProperty("taskId") String taskId, @JsonProperty("executorData") ExecutorData executorData, @JsonProperty("taskDirectory") String taskDirectory, @JsonProperty("executorPid") String executorPid,
-      @JsonProperty("serviceLogOut") String serviceLogOut, @JsonProperty("serviceLogOutExtension") String serviceLogOutExtension, @JsonProperty("taskAppDirectory") String taskAppDirectory, @JsonProperty("executorBashOut") String executorBashOut, @JsonProperty("logrotateStateFilePath") String logrotateStateFile, @JsonProperty("signatureVerifyOut") String signatureVerifyOut) {
+  public SingularityExecutorTaskDefinition(@JsonProperty("taskId") String taskId, @JsonProperty("executorData") SingularityTaskExecutorData executorData, @JsonProperty("taskDirectory") String taskDirectory, @JsonProperty("executorPid") String executorPid,
+      @JsonProperty("serviceLogOut") String serviceLogOut, @JsonProperty("serviceLogOutExtension") String serviceLogOutExtension, @JsonProperty("serviceFinishedTailLog") String serviceFinishedTailLog, @JsonProperty("taskAppDirectory") String taskAppDirectory, @JsonProperty("executorBashOut") String executorBashOut, @JsonProperty("logrotateStateFilePath") String logrotateStateFile, @JsonProperty("signatureVerifyOut") String signatureVerifyOut) {
     this.executorData = executorData;
     this.taskId = taskId;
     this.taskDirectoryPath = Paths.get(taskDirectory);
-
     this.executorPid = executorPid;
     this.executorBashOut = executorBashOut;
     this.serviceLogOut = serviceLogOut;
     this.serviceLogOutExtension = serviceLogOutExtension;
+    this.serviceFinishedTailLog = serviceFinishedTailLog;
     this.taskAppDirectory = taskAppDirectory;
     this.logrotateStateFile = logrotateStateFile;
     this.signatureVerifyOut = signatureVerifyOut;
@@ -86,8 +87,27 @@ public class SingularityExecutorTaskDefinition {
     return getServiceLogOutPath().toString();
   }
 
+  @JsonIgnore
+  public String getServiceLogFileName() {
+    return serviceLogOut;
+  }
+
+  @JsonIgnore
+  public String getServiceFinishedTailLogFileName() {
+    return serviceFinishedTailLog;
+  }
+
   public String getServiceLogOutExtension() {
     return serviceLogOutExtension;
+  }
+
+  public String getServiceFinishedTailLog() {
+    return getServiceFinishedTailLogPath().toString();
+  }
+
+  @JsonIgnore
+  public Path getServiceFinishedTailLogPath() {
+    return taskDirectoryPath.resolve(serviceFinishedTailLog);
   }
 
   public String getTaskAppDirectory() {
@@ -98,7 +118,7 @@ public class SingularityExecutorTaskDefinition {
     return getLogrotateStateFilePath().toString();
   }
 
-  public ExecutorData getExecutorData() {
+  public SingularityTaskExecutorData getExecutorData() {
     return executorData;
   }
 
@@ -125,8 +145,18 @@ public class SingularityExecutorTaskDefinition {
 
   @Override
   public String toString() {
-    return "SingularityExecutorTaskDefinition [executorData=" + executorData + ", taskId=" + taskId + ", taskDirectoryPath=" + taskDirectoryPath + ", executorBashOut=" + executorBashOut
-        + ", serviceLogOut=" + serviceLogOut + ", taskAppDirectory=" + taskAppDirectory + ", logrotateStateFile=" + logrotateStateFile + ", executorPid=" + executorPid + "]";
+    return "SingularityExecutorTaskDefinition{" +
+        "executorData=" + executorData +
+        ", taskId='" + taskId + '\'' +
+        ", taskDirectoryPath=" + taskDirectoryPath +
+        ", executorBashOut='" + executorBashOut + '\'' +
+        ", serviceLogOut='" + serviceLogOut + '\'' +
+        ", serviceLogOutExtension='" + serviceLogOutExtension + '\'' +
+        ", serviceFinishedTailLog='" + serviceFinishedTailLog + '\'' +
+        ", taskAppDirectory='" + taskAppDirectory + '\'' +
+        ", logrotateStateFile='" + logrotateStateFile + '\'' +
+        ", executorPid='" + executorPid + '\'' +
+        ", signatureVerifyOut='" + signatureVerifyOut + '\'' +
+        '}';
   }
-
 }

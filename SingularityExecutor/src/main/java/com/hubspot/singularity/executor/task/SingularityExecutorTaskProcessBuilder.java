@@ -77,7 +77,7 @@ public class SingularityExecutorTaskProcessBuilder implements Callable<ProcessBu
 
     task.getArtifactVerifier().checkSignatures();
 
-    ProcessBuilder processBuilder = buildProcessBuilder(task.getTaskInfo(), executorData);
+    ProcessBuilder processBuilder = buildProcessBuilder(task.getTaskInfo(), executorData, task.getTaskDefinition().getServiceLogFileName());
 
     task.getTaskLogManager().setup();
 
@@ -107,7 +107,7 @@ public class SingularityExecutorTaskProcessBuilder implements Callable<ProcessBu
     return System.getProperty("user.name");  // TODO: better way to do this?
   }
 
-  private ProcessBuilder buildProcessBuilder(TaskInfo taskInfo, ExecutorData executorData) {
+  private ProcessBuilder buildProcessBuilder(TaskInfo taskInfo, ExecutorData executorData, String serviceLog) {
     final String cmd = getCommand(executorData);
 
     RunnerContext runnerContext = new RunnerContext(
@@ -115,8 +115,8 @@ public class SingularityExecutorTaskProcessBuilder implements Callable<ProcessBu
       configuration.getTaskAppDirectory(),
       configuration.getLogrotateToDirectory(),
       executorData.getUser().or(configuration.getDefaultRunAsUser()),
-      configuration.getServiceLog(),
-      serviceLogOutPath(),
+      serviceLog,
+      serviceLogOutPath(serviceLog),
       task.getTaskId(),
       executorData.getMaxTaskThreads().or(configuration.getMaxTaskThreads()),
       !getExecutorUser().equals(executorData.getUser().or(configuration.getDefaultRunAsUser())),
@@ -151,10 +151,10 @@ public class SingularityExecutorTaskProcessBuilder implements Callable<ProcessBu
     return processBuilder;
   }
 
-  private String serviceLogOutPath() {
+  private String serviceLogOutPath(String serviceLog) {
     Path basePath = task.getTaskDefinition().getTaskDirectoryPath();
     Path app = basePath.resolve(configuration.getTaskAppDirectory()).normalize();
-    return app.relativize(basePath).resolve(configuration.getServiceLog()).toString();
+    return app.relativize(basePath).resolve(serviceLog).toString();
   }
 
   @Override
