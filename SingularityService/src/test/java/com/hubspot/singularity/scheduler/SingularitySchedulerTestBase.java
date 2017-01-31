@@ -199,19 +199,27 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
     return createOffer(cpus, memory, "slave1", "host1", Optional.<String> absent());
   }
 
+  protected Offer createOffer(double cpus, double memory, Optional<String> role) {
+    return createOffer(cpus, memory, "slave1", "host1", Optional.<String> absent(), Collections.<String, String> emptyMap(), new String[0], role);
+  }
+
   protected Offer createOffer(double cpus, double memory, String slave, String host) {
     return createOffer(cpus, memory, slave, host, Optional.<String>absent());
   }
 
   protected Offer createOffer(double cpus, double memory, String slave, String host, Optional<String> rack) {
-    return createOffer(cpus, memory, slave, host, rack, Collections.<String, String> emptyMap(), new String[0]);
+    return createOffer(cpus, memory, slave, host, rack, Collections.<String, String> emptyMap(), new String[0], Optional.<String>absent());
   }
 
   protected Offer createOffer(double cpus, double memory, String slave, String host, Optional<String> rack, Map<String, String> attributes) {
-    return createOffer(cpus, memory, slave, host, rack, attributes, new String[0]);
+    return createOffer(cpus, memory, slave, host, rack, attributes, new String[0], Optional.<String>absent());
   }
 
   protected Offer createOffer(double cpus, double memory, String slave, String host, Optional<String> rack, Map<String, String> attributes, String[] portRanges) {
+    return createOffer(cpus, memory, slave, host, rack, attributes, portRanges, Optional.<String>absent());
+  }
+
+  protected Offer createOffer(double cpus, double memory, String slave, String host, Optional<String> rack, Map<String, String> attributes, String[] portRanges, Optional<String> role) {
     SlaveID slaveId = SlaveID.newBuilder().setValue(slave).build();
     FrameworkID frameworkId = FrameworkID.newBuilder().setValue("framework1").build();
 
@@ -226,14 +234,21 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
           .build());
     }
 
+    Resource.Builder cpusResource = Resource.newBuilder().setType(Type.SCALAR).setName(MesosUtils.CPUS).setScalar(Scalar.newBuilder().setValue(cpus));
+    Resource.Builder memoryResources = Resource.newBuilder().setType(Type.SCALAR).setName(MesosUtils.MEMORY).setScalar(Scalar.newBuilder().setValue(memory));
+    if(role.isPresent()) {
+      cpusResource = cpusResource.setRole(role.get());
+      memoryResources = memoryResources.setRole(role.get());
+    }
+
     return Offer.newBuilder()
         .setId(OfferID.newBuilder().setValue("offer" + r.nextInt(1000)).build())
         .setFrameworkId(frameworkId)
         .setSlaveId(slaveId)
         .setHostname(host)
         .addAttributes(Attribute.newBuilder().setType(Type.TEXT).setText(Text.newBuilder().setValue(rack.or(configuration.getMesosConfiguration().getDefaultRackId()))).setName(configuration.getMesosConfiguration().getRackIdAttributeKey()))
-        .addResources(Resource.newBuilder().setType(Type.SCALAR).setName(MesosUtils.CPUS).setScalar(Scalar.newBuilder().setValue(cpus)))
-        .addResources(Resource.newBuilder().setType(Type.SCALAR).setName(MesosUtils.MEMORY).setScalar(Scalar.newBuilder().setValue(memory)))
+        .addResources(cpusResource)
+        .addResources(memoryResources)
         .addResources(MesosUtilsTest.buildPortRanges(portRanges))
         .addAllAttributes(attributesList)
         .build();

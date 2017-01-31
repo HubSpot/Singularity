@@ -28,7 +28,6 @@ public class ExecutorData {
   private final Optional<Long> sigKillProcessesAfterMillis;
   private final Optional<Integer> maxTaskThreads;
   private final Optional<Boolean> preserveTaskSandboxAfterFinish;
-  private final Optional<String> loggingS3Bucket;
   private final Optional<Integer> maxOpenFiles;
   private final Optional<Boolean> skipLogrotateAndCompress;
   private final Optional<List<S3ArtifactSignature>> s3ArtifactSignatures;
@@ -39,8 +38,7 @@ public class ExecutorData {
       @JsonProperty("s3Artifacts") List<S3Artifact> s3Artifacts, @JsonProperty("successfulExitCodes") List<Integer> successfulExitCodes, @JsonProperty("user") Optional<String> user,
       @JsonProperty("runningSentinel") Optional<String> runningSentinel, @JsonProperty("extraCmdLineArgs") List<String> extraCmdLineArgs, @JsonProperty("loggingTag") Optional<String> loggingTag,
       @JsonProperty("loggingExtraFields") Map<String, String> loggingExtraFields, @JsonProperty("sigKillProcessesAfterMillis") Optional<Long> sigKillProcessesAfterMillis,
-      @JsonProperty("maxTaskThreads") Optional<Integer> maxTaskThreads, @JsonProperty("preserveTaskSandboxAfterFinish") Optional<Boolean> preserveTaskSandboxAfterFinish,
-      @JsonProperty("loggingS3Bucket") Optional<String> loggingS3Bucket, @JsonProperty("maxOpenFiles") Optional<Integer> maxOpenFiles,
+      @JsonProperty("maxTaskThreads") Optional<Integer> maxTaskThreads, @JsonProperty("preserveTaskSandboxAfterFinish") Optional<Boolean> preserveTaskSandboxAfterFinish, @JsonProperty("maxOpenFiles") Optional<Integer> maxOpenFiles,
       @JsonProperty("skipLogrotateAndCompress") Optional<Boolean> skipLogrotateAndCompress, @JsonProperty("s3ArtifactSignatures") Optional<List<S3ArtifactSignature>> s3ArtifactSignatures,
       @JsonProperty("logrotateFrequency") Optional<SingularityExecutorLogrotateFrequency> logrotateFrequency) {
     this.cmd = cmd;
@@ -56,7 +54,6 @@ public class ExecutorData {
     this.sigKillProcessesAfterMillis = sigKillProcessesAfterMillis;
     this.maxTaskThreads = maxTaskThreads;
     this.preserveTaskSandboxAfterFinish = preserveTaskSandboxAfterFinish;
-    this.loggingS3Bucket = loggingS3Bucket;
     this.maxOpenFiles = maxOpenFiles;
     this.skipLogrotateAndCompress = skipLogrotateAndCompress;
     this.s3ArtifactSignatures = s3ArtifactSignatures;
@@ -65,7 +62,7 @@ public class ExecutorData {
 
   public ExecutorDataBuilder toBuilder() {
     return new ExecutorDataBuilder(cmd, embeddedArtifacts, externalArtifacts, s3Artifacts, successfulExitCodes, runningSentinel, user, extraCmdLineArgs, loggingTag,
-        loggingExtraFields, sigKillProcessesAfterMillis, maxTaskThreads, preserveTaskSandboxAfterFinish, loggingS3Bucket, maxOpenFiles, skipLogrotateAndCompress, s3ArtifactSignatures, logrotateFrequency);
+        loggingExtraFields, sigKillProcessesAfterMillis, maxTaskThreads, preserveTaskSandboxAfterFinish, maxOpenFiles, skipLogrotateAndCompress, s3ArtifactSignatures, logrotateFrequency);
   }
 
   @ApiModelProperty(required=true, value="Command for the custom executor to run")
@@ -133,11 +130,6 @@ public class ExecutorData {
     return preserveTaskSandboxAfterFinish;
   }
 
-  @ApiModelProperty(required=false, value="Override the default bucket used by the S3Uploader to store log files")
-  public Optional<String> getLoggingS3Bucket() {
-    return loggingS3Bucket;
-  }
-
   @ApiModelProperty(required=false, value="Maximum number of open files the task process is allowed")
   public Optional<Integer> getMaxOpenFiles() {
     return maxOpenFiles;
@@ -174,7 +166,6 @@ public class ExecutorData {
       .add("sigKillProcessesAfterMillis", sigKillProcessesAfterMillis)
       .add("maxTaskThreads", maxTaskThreads)
       .add("preserveTaskSandboxAfterFinish", preserveTaskSandboxAfterFinish)
-      .add("loggingS3Bucket", loggingS3Bucket)
       .add("maxOpenFiles", maxOpenFiles)
       .add("skipLogrotateAndCompress", skipLogrotateAndCompress)
       .add("s3ArtifactSignatures", s3ArtifactSignatures)

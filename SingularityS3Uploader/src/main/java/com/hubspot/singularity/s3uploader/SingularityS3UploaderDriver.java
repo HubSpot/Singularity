@@ -24,10 +24,10 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
-import org.jets3t.service.security.AWSCredentials;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.amazonaws.auth.BasicAWSCredentials;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 import com.google.common.base.Throwables;
@@ -274,12 +274,10 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper implements S
       expiring.remove(expiredUploader);
 
       try {
-        Closeables.close(expiredUploader, true);
-
         LOG.debug("Deleting expired uploader {}", expiredUploader.getMetadataPath());
         Files.delete(expiredUploader.getMetadataPath());
       } catch (NoSuchFileException nfe) {
-        LOG.warn("File {} was already deleted");
+        LOG.warn("File {} was already deleted", nfe.getFile());
       } catch (IOException e) {
         LOG.warn("Couldn't delete {}", expiredUploader.getMetadataPath(), e);
         exceptionNotifier.notify("Could not delete metadata file", e, ImmutableMap.of("metadataPath", expiredUploader.getMetadataPath().toString()));
@@ -307,7 +305,6 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper implements S
       @Override
       public void onSuccess(Integer integer) {
         try {
-          Closeables.close(uploader, true);
           metrics.getUploadCounter().dec();
           expiring.remove(uploader);
           metadataToUploader.remove(uploader.getUploadMetadata());
@@ -414,13 +411,13 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper implements S
     try {
       metrics.getUploaderCounter().inc();
 
-      Optional<AWSCredentials> bucketCreds = Optional.absent();
+      Optional<BasicAWSCredentials> bucketCreds = Optional.absent();
 
       if (configuration.getS3BucketCredentials().containsKey(metadata.getS3Bucket())) {
         bucketCreds = Optional.of(configuration.getS3BucketCredentials().get(metadata.getS3Bucket()).toAWSCredentials());
       }
 
-      final AWSCredentials defaultCredentials = new AWSCredentials(configuration.getS3AccessKey().or(s3Configuration.getS3AccessKey()).get(), configuration.getS3SecretKey().or(s3Configuration.getS3SecretKey()).get());
+      final BasicAWSCredentials defaultCredentials = new BasicAWSCredentials(configuration.getS3AccessKey().or(s3Configuration.getS3AccessKey()).get(), configuration.getS3SecretKey().or(s3Configuration.getS3SecretKey()).get());
 
       final SingularityS3Uploader uploader = new SingularityS3Uploader(bucketCreds.or(defaultCredentials), metadata, fileSystem, metrics, filename, configuration, hostname, exceptionNotifier);
 

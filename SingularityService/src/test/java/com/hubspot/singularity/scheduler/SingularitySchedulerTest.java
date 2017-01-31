@@ -477,7 +477,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     sms.resourceOffers(driver, Arrays.asList(createOffer(5, 5, "slave1", "host1", Optional.of("rack1"))));
 
     SingularityTask task = taskManager.getActiveTasks().get(0);
-    Assert.assertEquals(MesosUtils.getNumCpus(task.getMesosTask().getResourcesList()), 2.0, 0.0);
+    Assert.assertEquals(MesosUtils.getNumCpus(task.getMesosTask().getResourcesList(), Optional.<String>absent()), 2.0, 0.0);
   }
 
   @Test
@@ -1238,21 +1238,26 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
   }
 
   @Test
-  public void testScheduledJobRetryKeepsArgs() {
-    Optional<List<String>> cmdLinArgs = Optional.of(Arrays.asList("arg1", "arg2"));
+  public void testRunNowScheduledJobDoesNotRetry() {
     initScheduledRequest();
     SingularityRequest request = requestResource.getRequest(requestId).getRequest();
     SingularityRequest newRequest = request.toBuilder().setNumRetriesOnFailure(Optional.of(2)).build();
     requestResource.postRequest(newRequest);
     initFirstDeploy();
 
-    requestResource.scheduleImmediately(requestId, Optional.of(new SingularityRunNowRequest(Optional.<String>absent(), Optional.<Boolean>absent(), Optional.<String>absent(), cmdLinArgs, Optional.<Resources>absent())));
+    requestResource.scheduleImmediately(requestId, Optional.of(new SingularityRunNowRequest(Optional.<String>absent(), Optional.<Boolean>absent(), Optional.<String>absent(), Optional.<List<String>>absent(), Optional.<Resources>absent())));
     resourceOffers();
 
     SingularityTask task = taskManager.getActiveTasks().get(0);
     statusUpdate(task, TaskState.TASK_FAILED);
 
-    Assert.assertEquals(cmdLinArgs, taskManager.getPendingTasks().get(0).getCmdLineArgsList());
+    SingularityDeployStatistics deployStatistics = deployManager.getDeployStatistics(task.getTaskId().getRequestId(), task.getTaskId().getDeployId()).get();
+
+    Assert.assertEquals(TaskState.TASK_FAILED, deployStatistics.getLastTaskState().get().toTaskState().get());
+    Assert.assertEquals(PendingType.TASK_DONE, taskManager.getPendingTaskIds().get(0).getPendingType());
+    Assert.assertEquals(1, deployStatistics.getNumFailures());
+    Assert.assertEquals(0, deployStatistics.getNumSequentialRetries());
+    Assert.assertEquals(Optional.<Long>absent(), deployStatistics.getAverageRuntimeMillis());
   }
 
   @Test
@@ -1731,5 +1736,53 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
 
     scheduler.drainPendingQueue(stateCacheProvider.get());
     Assert.assertEquals(5, taskManager.getPendingTaskIds().size());
+  }
+
+  public void testAcceptOffersWithRoleForRequestWithRole() {
+    SingularityRequestBuilder bldr = new SingularityRequestBuilder(requestId, RequestType.ON_DEMAND);
+    bldr.setRequiredRole(Optional.of("test-role"));
+    requestResource.postRequest(bldr.build());
+    deploy("d2");
+
+    SingularityRunNowRequest runNowRequest = new SingularityRunNowRequest(Optional.<String>absent(), Optional.<Boolean>absent(), Optional.<String>absent(), Optional.<List<String>>absent(), Optional.of(new Resources(2, 2, 0)));
+    requestResource.scheduleImmediately(requestId, Optional.of(runNowRequest));
+
+    scheduler.drainPendingQueue(stateCacheProvider.get());
+
+    SingularityPendingTask pendingTaskWithResources = taskManager.getPendingTasks().get(0);
+    Assert.assertTrue(pendingTaskWithResources.getResources().isPresent());
+    Assert.assertEquals(pendingTaskWithResources.getResources().get().getCpus(), 2, 0.0);
+
+    sms.resourceOffers(driver, Arrays.asList(createOffer(5, 5)));
+
+    pendingTaskWithResources = taskManager.getPendingTasks().get(0);
+    Assert.assertTrue(pendingTaskWithResources.getResources().isPresent());
+    Assert.assertEquals(pendingTaskWithResources.getResources().get().getCpus(), 2, 0.0);
+
+    sms.resourceOffers(driver, Arrays.asList(createOffer(5, 5, Optional.of("test-role"))));
+    SingularityTask task = taskManager.getActiveTasks().get(0);
+    Assert.assertEquals(MesosUtils.getNumCpus(task.getMesosTask().getResourcesList(), Optional.of("test-role")), 2.0, 0.0);
+  }
+
+  @Test
+  public void testNotAcceptOfferWithRoleForRequestWithoutRole() {
+    SingularityRequestBuilder bldr = new SingularityRequestBuilder(requestId, RequestType.ON_DEMAND);
+    requestResource.postRequest(bldr.build());
+    deploy("d2");
+
+    SingularityRunNowRequest runNowRequest = new SingularityRunNowRequest(Optional.<String>absent(), Optional.<Boolean>absent(), Optional.<String>absent(), Optional.<List<String>>absent(), Optional.of(new Resources(2, 2, 0)));
+    requestResource.scheduleImmediately(requestId, Optional.of(runNowRequest));
+
+    scheduler.drainPendingQueue(stateCacheProvider.get());
+
+    SingularityPendingTask pendingTaskWithResources = taskManager.getPendingTasks().get(0);
+    Assert.assertTrue(pendingTaskWithResources.getResources().isPresent());
+    Assert.assertEquals(pendingTaskWithResources.getResources().get().getCpus(), 2, 0.0);
+
+    sms.resourceOffers(driver, Arrays.asList(createOffer(5, 5, Optional.of("test-role"))));
+
+    pendingTaskWithResources = taskManager.getPendingTasks().get(0);
+    Assert.assertTrue(pendingTaskWithResources.getResources().isPresent());
+    Assert.assertEquals(pendingTaskWithResources.getResources().get().getCpus(), 2, 0.0);
   }
 }

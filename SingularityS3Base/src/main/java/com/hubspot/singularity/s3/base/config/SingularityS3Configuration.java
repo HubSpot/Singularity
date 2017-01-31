@@ -1,7 +1,5 @@
 package com.hubspot.singularity.s3.base.config;
 
-import static com.hubspot.mesos.JavaUtils.obfuscateValue;
-
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -45,7 +43,7 @@ public class SingularityS3Configuration extends BaseRunnerConfiguration {
 
   @Min(1)
   @JsonProperty
-  private long s3ChunkDownloadTimeoutMillis = TimeUnit.SECONDS.toMillis(30);
+  private int s3ChunkDownloadTimeoutMillis = (int) TimeUnit.SECONDS.toMillis(30);
 
   @Min(1)
   @JsonProperty
@@ -131,11 +129,11 @@ public class SingularityS3Configuration extends BaseRunnerConfiguration {
     this.localDownloadPath = localDownloadPath;
   }
 
-  public long getS3ChunkDownloadTimeoutMillis() {
+  public int getS3ChunkDownloadTimeoutMillis() {
     return s3ChunkDownloadTimeoutMillis;
   }
 
-  public void setS3ChunkDownloadTimeoutMillis(long s3ChunkDownloadTimeoutMillis) {
+  public void setS3ChunkDownloadTimeoutMillis(int s3ChunkDownloadTimeoutMillis) {
     this.s3ChunkDownloadTimeoutMillis = s3ChunkDownloadTimeoutMillis;
   }
 
@@ -149,17 +147,17 @@ public class SingularityS3Configuration extends BaseRunnerConfiguration {
 
   @Override
   public String toString() {
-    return "SingularityS3Configuration[" +
-            "artifactCacheDirectory='" + artifactCacheDirectory + '\'' +
-            ", s3AccessKey='" + obfuscateValue(s3AccessKey) + '\'' +
-            ", s3SecretKey='" + obfuscateValue(s3SecretKey) + '\'' +
-            ", s3ChunkSize=" + s3ChunkSize +
-            ", s3DownloadTimeoutMillis=" + s3DownloadTimeoutMillis +
-            ", s3ChunkDownloadTimeoutMillis=" + s3ChunkDownloadTimeoutMillis +
-            ", s3ChunkRetries=" + s3ChunkRetries +
-            ", localDownloadHttpPort=" + localDownloadHttpPort +
-            ", localDownloadPath='" + localDownloadPath + '\'' +
-            ", s3BucketCredentials=" + s3BucketCredentials +
-            ']';
+    return "SingularityS3Configuration{" +
+        "artifactCacheDirectory='" + artifactCacheDirectory + '\'' +
+        ", s3AccessKey=" + s3AccessKey +
+        ", s3SecretKey=" + s3SecretKey +
+        ", s3ChunkSize=" + s3ChunkSize +
+        ", s3DownloadTimeoutMillis=" + s3DownloadTimeoutMillis +
+        ", s3ChunkDownloadTimeoutMillis=" + s3ChunkDownloadTimeoutMillis +
+        ", s3ChunkRetries=" + s3ChunkRetries +
+        ", localDownloadHttpPort=" + localDownloadHttpPort +
+        ", localDownloadPath='" + localDownloadPath + '\'' +
+        ", s3BucketCredentials=" + s3BucketCredentials +
+        "} " + super.toString();
   }
 }
