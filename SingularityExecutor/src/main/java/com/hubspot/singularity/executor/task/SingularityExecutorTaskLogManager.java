@@ -8,8 +8,6 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.swing.text.html.Option;
-
 import org.slf4j.Logger;
 
 import com.google.common.base.Optional;
