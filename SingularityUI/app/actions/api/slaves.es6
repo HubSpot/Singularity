@@ -54,7 +54,7 @@ export const RemoveExpiringSlaveState = buildJsonApiAction(
   })
 );
 
-export const FetchSlaveUsage = buildApiAction(
-  'FETCH_SLAVE_USAGE',
+export const FetchSlaveUsages = buildApiAction(
+  'FETCH_SLAVE_USAGES',
   {url : 'usage/slaves'}
 );

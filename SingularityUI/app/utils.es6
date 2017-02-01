@@ -379,8 +379,6 @@ const Utils = {
     },
   },
 
-
-
   isImmediateCleanup: (cleanupType, longRunning) => {
     if (longRunning) {
       return _.contains(Utils.LONG_RUNNING_IMMEDIATE_CLEANUPS, cleanupType)

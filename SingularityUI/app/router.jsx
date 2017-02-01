@@ -13,7 +13,7 @@ import RequestsPage from './components/requests/RequestsPage';
 import TasksPage from './components/tasks/TasksPage';
 import Racks from './components/machines/Racks';
 import Slaves from './components/machines/Slaves';
-import SlaveUsage from './components/machines/SlaveUsage';
+import SlaveUsagePage from './components/machines/SlaveUsagePage';
 import Webhooks from './components/webhooks/Webhooks';
 import TaskDetail from './components/taskDetail/TaskDetail';
 import TaskSearch from './components/taskSearch/TaskSearch';
@@ -59,7 +59,7 @@ const AppRouter = (props) => {
           </Route>
           <Route path="racks(/:state)" component={Racks} />
           <Route path="slaves(/:state)" component={Slaves} />
-          <Route path="slave-usage" component={SlaveUsage} />
+          <Route path="slave-usage" component={SlaveUsagePage} />
           <Route path="webhooks" component={Webhooks} />
           <Route path="task-search" component={TaskSearch} />
           <Route path="disasters" component={Disasters} />
