@@ -1,14 +1,20 @@
 package com.hubspot.singularity;
 
-import java.util.Objects;
-
 public abstract class SingularityId {
 
-  public abstract String getId();
+  private final String id;
+
+  public SingularityId(String id) {
+    this.id = id;
+  }
 
   @Override
   public int hashCode() {
-    return Objects.hashCode(getId());
+    return id.hashCode();
+  }
+
+  public String getId() {
+    return id;
   }
 
   @Override
@@ -23,6 +29,8 @@ public abstract class SingularityId {
       return false;
     }
     SingularityId other = (SingularityId) obj;
-    return Objects.equals(getId(), other.getId());
+    return id.equals(other.id);
   }
+
+
 }

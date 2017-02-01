@@ -69,6 +69,7 @@ import com.hubspot.singularity.SingularityTaskHistoryUpdate.SimplifiedTaskState;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTaskRequest;
 import com.hubspot.singularity.SingularityTaskStatusHolder;
+import com.hubspot.singularity.SlavePlacement;
 import com.hubspot.singularity.api.SingularityDeployRequest;
 import com.hubspot.singularity.api.SingularityScaleRequest;
 import com.hubspot.singularity.config.SingularityConfiguration;
@@ -423,6 +424,36 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
 
   protected void initOnDemandRequest() {
     initRequestWithType(RequestType.ON_DEMAND, false);
+  }
+
+  protected SingularityRequest createRequest(String requestId) {
+    SingularityRequestBuilder bldr = new SingularityRequestBuilder(requestId, RequestType.SERVICE);
+
+    bldr.setInstances(Optional.of(5));
+    bldr.setSlavePlacement(Optional.of(SlavePlacement.SEPARATE));
+
+    SingularityRequest request = bldr.build();
+
+    saveRequest(bldr.build());
+
+    return request;
+  }
+
+  protected SingularityDeploy deployRequest(SingularityRequest request, double cpus, double memoryMb) {
+    Resources r = new Resources(cpus, memoryMb, 0);
+
+    SingularityDeploy deploy = new SingularityDeployBuilder(request.getId(), "d1")
+        .setCommand(Optional.of("sleep 1"))
+        .setResources(Optional.of(r))
+        .build();
+
+    deployResource.deploy(new SingularityDeployRequest(deploy, Optional.<Boolean> absent(), Optional.<String> absent()));
+
+    return deploy;
+  }
+
+  protected void createAndDeployRequest(String requestId, double cpus, double memory) {
+    deployRequest(createRequest(requestId), cpus, memory);
   }
 
   protected void initRequestWithType(RequestType requestType, boolean isLoadBalanced) {
