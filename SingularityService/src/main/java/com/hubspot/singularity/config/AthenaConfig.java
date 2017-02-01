@@ -10,10 +10,13 @@ public class AthenaConfig {
   private String s3SecretKey;
 
   @NotNull
-  private String athenaUrl = "jdbc:awsathena://athena.us-east-1.amazonaws.com:443";
+  private String athenaUrl = "https://athena.us-east-1.amazonaws.com:443";
 
   @NotNull
-  private String database = "default";
+  private String databaseName = "singularity";
+
+  @NotNull
+  private String defaultSchema = "default";
 
   @NotNull
   private String s3StagingBucket;
@@ -25,53 +28,55 @@ public class AthenaConfig {
     return s3AccessKey;
   }
 
-  public AthenaConfig setS3AccessKey(String s3AccessKey) {
+  public void setS3AccessKey(String s3AccessKey) {
     this.s3AccessKey = s3AccessKey;
-    return this;
   }
 
   public String getS3SecretKey() {
     return s3SecretKey;
   }
 
-  public AthenaConfig setS3SecretKey(String s3SecretKey) {
+  public void setS3SecretKey(String s3SecretKey) {
     this.s3SecretKey = s3SecretKey;
-    return this;
   }
 
   public String getAthenaUrl() {
     return athenaUrl;
   }
 
-  public AthenaConfig setAthenaUrl(String athenaUrl) {
+  public void setAthenaUrl(String athenaUrl) {
     this.athenaUrl = athenaUrl;
-    return this;
+  }
+
+  public String getDatabaseName() {
+    return databaseName;
+  }
+
+  public void setDatabaseName(String databaseName) {
+    this.databaseName = databaseName;
+  }
+
+  public String getDefaultSchema() {
+    return defaultSchema;
+  }
+
+  public void setDefaultSchema(String defaultSchema) {
+    this.defaultSchema = defaultSchema;
   }
 
   public String getS3StagingBucket() {
     return s3StagingBucket;
   }
 
-  public AthenaConfig setS3StagingBucket(String s3StagingBucket) {
+  public void setS3StagingBucket(String s3StagingBucket) {
     this.s3StagingBucket = s3StagingBucket;
-    return this;
   }
 
   public String getS3StagingPrefix() {
     return s3StagingPrefix;
   }
 
-  public AthenaConfig setS3StagingPrefix(String s3StagingPrefix) {
+  public void setS3StagingPrefix(String s3StagingPrefix) {
     this.s3StagingPrefix = s3StagingPrefix;
-    return this;
-  }
-
-  public String getDatabase() {
-    return database;
-  }
-
-  public AthenaConfig setDatabase(String database) {
-    this.database = database;
-    return this;
   }
 }

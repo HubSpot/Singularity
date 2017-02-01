@@ -9,19 +9,22 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
 import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.hubspot.singularity.SingularityAuthorizationScope;
 import com.hubspot.singularity.SingularityRequestWithState;
-import com.hubspot.singularity.SingularityS3Log;
 import com.hubspot.singularity.SingularityService;
 import com.hubspot.singularity.SingularityUser;
 import com.hubspot.singularity.athena.AthenaQuery;
 import com.hubspot.singularity.athena.AthenaQueryBuilder;
-import com.hubspot.singularity.athena.AthenaQueryResult;
+import com.hubspot.singularity.athena.AthenaQueryException;
+import com.hubspot.singularity.athena.AthenaQueryInfo;
+import com.hubspot.singularity.athena.AthenaQueryResults;
 import com.hubspot.singularity.athena.AthenaTable;
+import com.hubspot.singularity.athena.UpdatePartitionsRequest;
 import com.hubspot.singularity.auth.SingularityAuthorizationHelper;
 import com.hubspot.singularity.data.AthenaQueryManager;
 import com.hubspot.singularity.data.RequestManager;
@@ -35,6 +38,7 @@ import com.wordnik.swagger.annotations.ApiResponses;
 @Api(description="Query logs in s3 using aws athena", value=AthenaQueryResource.PATH)
 public class AthenaQueryResource {
   public static final String PATH = SingularityService.API_BASE_PATH + "/athena";
+  private static final int DEFAULT_RESULT_COUNT = 10;
 
   private final AthenaQueryManager queryManager;
   private final RequestManager requestManager;
@@ -59,7 +63,8 @@ public class AthenaQueryResource {
   })
   public AthenaTable createAthenaTable(AthenaTable table) throws Exception {
     authorizationHelper.checkAdminAuthorization(user);
-    return queryManager.createTableThrows(table);
+    // TODO - validations for table name/etc
+    return queryManager.createTableThrows(user, table);
   }
 
   @GET
@@ -75,7 +80,7 @@ public class AthenaQueryResource {
   @ApiOperation(value="Delete an athena table")
   public void dropAthenaTable(@PathParam("name") String name) throws Exception {
     authorizationHelper.checkAdminAuthorization(user);
-    queryManager.deleteTable(name);
+    queryManager.deleteTable(user, name);
   }
 
   @POST
@@ -86,60 +91,56 @@ public class AthenaQueryResource {
       @ApiResponse(code=404, message="Provided table not found"),
       @ApiResponse(code=403, message="User or Provided AWS keys are not allowed access"),
   })
-  public Optional<AthenaTable> createAthenaTable(String tableName) throws Exception {
+  public Optional<AthenaTable> createAthenaTable(UpdatePartitionsRequest updatePartitionsRequest) throws Exception {
     authorizationHelper.checkAdminAuthorization(user);
-    return queryManager.updatePartitions(tableName);
+    return queryManager.updatePartitions(user, updatePartitionsRequest.getTableName(), updatePartitionsRequest.getStart(), updatePartitionsRequest.getEnd());
   }
 
   @POST
   @Path("/query/raw")
-  @ApiOperation(value="Start a new athena query", response= AthenaQueryResult.class)
+  @ApiOperation(value="Start a new athena query", response= AthenaQueryInfo.class)
   @ApiResponses({
       @ApiResponse(code = 400, message = "Provided query is invalid"),
   })
-  public AthenaQueryResult runRawQuery(String query) {
+  public AthenaQueryInfo runRawQuery(String query) throws Exception {
     authorizationHelper.checkAdminAuthorization(user);
-    return queryManager.runQueryAsync(user, query);
+    return queryManager.runRawQueryAsync(user, query);
   }
 
   @POST
   @Path("/query")
-  @ApiOperation(value="Start a new athena query", response= AthenaQueryResult.class)
+  @ApiOperation(value="Start a new athena query", response= AthenaQueryInfo.class)
   @ApiResponses({
       @ApiResponse(code = 400, message = "Provided query is invalid"),
   })
-  public AthenaQueryResult queryAthena(AthenaQuery query) {
+  public AthenaQueryInfo queryAthena(AthenaQuery query) throws Exception {
     Optional<SingularityRequestWithState> maybeRequest = requestManager.getRequest(query.getRequestId());
     if (maybeRequest.isPresent()) {
       authorizationHelper.checkForAuthorization(maybeRequest.get().getRequest(), user, SingularityAuthorizationScope.READ);
     } else {
       authorizationHelper.checkAdminAuthorization(user);
     }
-    return queryManager.runQueryAsync(user, AthenaQueryBuilder.generateSelectQuerySql(query));
+    return queryManager.runQueryAsync(user, query);
   }
 
   @GET
   @Path("/query/history")
   @ApiOperation(value="Get recent queries for the current user")
-  public List<AthenaQueryResult> getQueryHistory() {
+  public List<AthenaQueryInfo> getQueryHistory() {
     return queryManager.getQueriesForUser(user);
   }
 
   @GET
   @Path("/query/{id}")
-  @ApiOperation(value="Get the result of a query by id", response=AthenaQueryResult.class)
-  public Optional<AthenaQueryResult> getQueryResult(@PathParam("id") String id) {
-    return queryManager.getQueryResult(user, id);
+  @ApiOperation(value="Get info about a query by id", response=AthenaQueryInfo.class)
+  public Optional<AthenaQueryInfo> getQueryInfo(@PathParam("id") String id) {
+    return queryManager.getQueryInfo(user, id);
   }
 
   @GET
-  @Path("/query/{id}/s3object")
-  @ApiOperation(value="Get the download information for query results in S3")
-  @ApiResponses({
-      @ApiResponse(code = 404, message = "Provided query id or s3 result object does not exist"),
-  })
-  public Optional<SingularityS3Log> getQueryResultFromS3(@PathParam("id") String id) {
-    // TODO - similar to s3 log resource
-    return Optional.absent();
+  @Path("/query/{id}/results")
+  @ApiOperation(value="Get lines of results for a query by id", response=AthenaQueryInfo.class)
+  public Optional<AthenaQueryResults> getQueryResults(@PathParam("id") String id, @QueryParam("token") String token, @QueryParam("count") Optional<Integer> count) throws AthenaQueryException {
+    return queryManager.getQueryResults(user, id, token, count.or(DEFAULT_RESULT_COUNT));
   }
 }

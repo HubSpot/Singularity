@@ -8,4 +8,8 @@ public class AthenaQueryException extends Exception {
   public AthenaQueryException(String message) {
     super(message);
   }
+
+  public AthenaQueryException(Exception cause) {
+    super(cause);
+  }
 }
