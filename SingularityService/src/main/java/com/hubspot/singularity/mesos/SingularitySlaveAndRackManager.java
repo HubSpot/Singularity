@@ -149,6 +149,11 @@ public class SingularitySlaveAndRackManager {
 
     for (SingularityTaskId taskId : stateCache.getActiveTaskIdsForRequest(taskRequest.getRequest().getId())) {
       // TODO consider using executorIds
+
+      if (!cleaningTasks.contains(taskId) && taskRequest.getDeploy().getId().equals(taskId.getDeployId())) {
+        countPerRack.add(taskId.getSanitizedRackId());
+      }
+
       if (!taskId.getSanitizedHost().equals(sanitizedHost)) {
         continue;
       }
@@ -184,10 +189,6 @@ public class SingularitySlaveAndRackManager {
         }
       } else {
         numOtherDeploysOnSlave++;
-      }
-
-      if (!cleaningTasks.contains(taskId) && taskRequest.getDeploy().getId().equals(taskId.getDeployId())) {
-        countPerRack.add(taskId.getSanitizedRackId());
       }
     }
 
