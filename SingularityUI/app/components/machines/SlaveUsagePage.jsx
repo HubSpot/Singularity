@@ -48,12 +48,10 @@ function mapStateToProps(state) {
   };
 }
 
-function mapDispatchToProps(dispatch) {
-  return {
-    fetchSlaveUsages: () => dispatch(FetchSlaveUsages.trigger()),
-    fetchSlaves: () => dispatch(FetchSlaves.trigger())
-  };
-}
+const mapDispatchToProps = (dispatch) => ({
+  fetchSlaveUsages: () => dispatch(FetchSlaveUsages.trigger()),
+  fetchSlaves: () => dispatch(FetchSlaves.trigger())
+});
 
 function initialize(props) {
   return Promise.all([

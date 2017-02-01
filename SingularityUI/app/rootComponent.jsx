@@ -36,6 +36,7 @@ const rootComponent = (Wrapped, title, refresh = _.noop, refreshInterval = true,
       }).catch((reason) => {
         // Boot React errors out of the promise so they can be picked up by Sentry
         setTimeout(() => {
+          console.log(reason.stack);
           throw new Error(reason);
         });
       });
