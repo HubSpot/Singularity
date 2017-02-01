@@ -88,6 +88,7 @@ public class SingularityTaskId extends SingularityId implements SingularityHisto
   }
 
   public SingularityTaskId(String requestId, String deployId, long startedAt, int instanceNo, String sanitizedHost, String sanitizedRackId) {
+    super(String.format("%s-%s-%s-%s-%s-%s", requestId, deployId, startedAt, instanceNo, sanitizedHost, sanitizedRackId));
     this.requestId = requestId;
     this.deployId = deployId;
     this.startedAt = startedAt;
@@ -178,11 +179,6 @@ public class SingularityTaskId extends SingularityId implements SingularityHisto
     } catch (IllegalArgumentException e) {
       throw new InvalidSingularityTaskIdException(String.format("TaskId %s had an invalid parameter (%s)", string, e.getMessage()));
     }
-  }
-
-  @Override
-  public String getId() {
-    return String.format("%s-%s-%s-%s-%s-%s", getRequestId(), getDeployId(), getStartedAt(), getInstanceNo(), getSanitizedHost(), getSanitizedRackId());
   }
 
   @Override

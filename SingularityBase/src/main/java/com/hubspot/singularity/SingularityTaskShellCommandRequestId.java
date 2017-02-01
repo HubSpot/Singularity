@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class SingularityTaskShellCommandRequestId extends SingularityId {
+public class SingularityTaskShellCommandRequestId {
 
   private final SingularityTaskId taskId;
   private final String name;
@@ -19,7 +19,6 @@ public class SingularityTaskShellCommandRequestId extends SingularityId {
     this.safeName = name.replace("/", "");
   }
 
-  @Override
   @JsonIgnore
   public String getId() {
     return String.format("%s-%s", getTaskId(), getSubIdForTaskHistory());
@@ -40,6 +39,26 @@ public class SingularityTaskShellCommandRequestId extends SingularityId {
 
   public long getTimestamp() {
     return timestamp;
+  }
+
+  @Override
+  public int hashCode() {
+    return getId().hashCode();
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (this == obj) {
+      return true;
+    }
+    if (obj == null) {
+      return false;
+    }
+    if (getClass() != obj.getClass()) {
+      return false;
+    }
+    SingularityTaskShellCommandRequestId other = (SingularityTaskShellCommandRequestId) obj;
+    return getId().equals(other.getId());
   }
 
   @Override
