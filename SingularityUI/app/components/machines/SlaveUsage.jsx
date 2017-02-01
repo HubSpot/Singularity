@@ -3,38 +3,7 @@ import { Dropdown } from 'react-bootstrap';
 import { Glyphicon } from 'react-bootstrap';
 import Utils from '../../utils';
 import SlaveStat from './SlaveStat';
-
-const SLAVE_TYPES = {
-  critical : {
-    icon : 'glyphicon glyphicon-remove-sign',
-    bsStyle : 'danger'
-  },
-  warning : {
-    icon : 'glyphicon glyphicon-minus-sign',
-    bsStyle : 'warning'
-  },
-  ok : {
-    icon : 'glyphicon glyphicon-ok-sign',
-    bsStyle : 'success'
-  }
-};
-
-const THRESHOLDS = {
-  cpusWarningThreshold : .80,
-  cpusCriticalThreshold : .90,
-  memoryWarningThreshold : .80,
-  memoryCriticalThreshold : .90,
-  numTasksWarning : 100,
-  numTasksCritical : 120
-};
-
-const STAT_NAMES = {
-  cpusUsedStat : 'cpusUsed',
-  memoryBytesUsedStat : 'memoryBytesUsed',
-  numTasksStat : 'numTasks',
-  slaveIdStat : 'slaveId',
-  timestampStat : 'timestamp'
-};
+import { SLAVE_TYPES, THRESHOLDS, STAT_NAMES} from './Constants';
 
 // TODO:
 // move threshold props into constants file
@@ -59,7 +28,7 @@ const STAT_NAMES = {
 const SlaveUsage = (props) => {
   const slaveWithStats = (bsStyle, glyphicon) => (
     <Dropdown key={props.slaveInfo.slaveId} id={props.index.toString()}>
-      <Dropdown.Toggle bsSize='large' bsStyle={bsStyle} noCaret={true} className='single-slave-btn'>
+      <Dropdown.Toggle bsSize="large" bsStyle={bsStyle} noCaret={true} className="single-slave-btn">
         <Glyphicon glyph={glyphicon} />
       </Dropdown.Toggle>
       <Dropdown.Menu>

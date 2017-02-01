@@ -5,35 +5,36 @@ import rootComponent from '../../rootComponent';
 import { FetchSlaveUsages, FetchSlaves } from '../../actions/api/slaves';
 import SlaveUsage from './SlaveUsage';
 
-const SlaveUsagePage = ({slaves, slaveUsages}) => {
-  const navigation = (
-    <Nav bsStyle='pills' activeKey={2} justified={true}>
-      <NavItem eventKey={1} title='aggregate'> Aggregate </NavItem>
-      <NavItem eventKey={2} title='heatmap'> Heatmap </NavItem>
-    </Nav>
-  );
+const navigation = (
+  <Nav bsStyle="pills" activeKey={2} justified={true}>
+    <NavItem eventKey={1} title="aggregate"> Aggregate </NavItem>
+    <NavItem eventKey={2} title="heatmap"> Heatmap </NavItem>
+  </Nav>
+);
 
+const getSlaveInfo = (slaves, slaveUsage) => {
+  return _.findWhere(slaves, {'id' : slaveUsage.slaveId});
+};
+
+const SlaveUsagePage = ({slaves, slaveUsages}) => {
   const slaveUsageData = slaveUsages.map((slaveUsage, index) => {
     const slaveInfo = getSlaveInfo(slaves, slaveUsage);
-    return <SlaveUsage key={index} slaveUsage={slaveUsage} slaveInfo={slaveInfo} index={index}/>;
+    return <SlaveUsage key={index} slaveUsage={slaveUsage} slaveInfo={slaveInfo} index={index} />;
   });
 
   return (
     <div>
-      <div id='nav'>
+      <div id="nav">
         {navigation}
       </div>
-      <hr/>
-      <div id='slaves'>
+      <hr />
+      <div id="slaves">
         {slaveUsageData}
       </div>
     </div>
   );
 };
 
-const getSlaveInfo = (slaves, slaveUsage) => {
-  return _.findWhere(slaves, {'id' : slaveUsage.slaveId});
-};
 
 SlaveUsage.propTypes = {
   slaveUsages : PropTypes.arrayOf(PropTypes.object),
@@ -49,8 +50,8 @@ function mapStateToProps(state) {
 }
 
 const mapDispatchToProps = (dispatch) => ({
-  fetchSlaveUsages: () => dispatch(FetchSlaveUsages.trigger()),
-  fetchSlaves: () => dispatch(FetchSlaves.trigger())
+  fetchSlaveUsages : () => dispatch(FetchSlaveUsages.trigger()),
+  fetchSlaves : () => dispatch(FetchSlaves.trigger())
 });
 
 function initialize(props) {
