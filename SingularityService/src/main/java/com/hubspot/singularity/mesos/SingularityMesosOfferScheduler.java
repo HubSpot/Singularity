@@ -1,6 +1,5 @@
 package com.hubspot.singularity.mesos;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -43,6 +42,7 @@ public class SingularityMesosOfferScheduler {
   private final SingularityConfiguration configuration;
   private final SingularityMesosTaskBuilder mesosTaskBuilder;
   private final SingularitySlaveAndRackManager slaveAndRackManager;
+  private final SingularitySlaveAndRackHelper slaveAndRackHelper;
   private final SingularityTaskSizeOptimizer taskSizeOptimizer;
 
   private final Provider<SingularitySchedulerStateCache> stateCacheProvider;
@@ -51,7 +51,7 @@ public class SingularityMesosOfferScheduler {
   @Inject
   public SingularityMesosOfferScheduler(MesosConfiguration mesosConfiguration, CustomExecutorConfiguration customExecutorConfiguration, TaskManager taskManager, SingularityMesosTaskPrioritizer taskPrioritizer,
       SingularityScheduler scheduler, SingularityConfiguration configuration, SingularityMesosTaskBuilder mesosTaskBuilder,
-      SingularitySlaveAndRackManager slaveAndRackManager, SingularityTaskSizeOptimizer taskSizeOptimizer,
+      SingularitySlaveAndRackManager slaveAndRackManager, SingularityTaskSizeOptimizer taskSizeOptimizer, SingularitySlaveAndRackHelper slaveAndRackHelper,
       Provider<SingularitySchedulerStateCache> stateCacheProvider, SchedulerDriverSupplier schedulerDriverSupplier) {
     this.defaultResources = new Resources(mesosConfiguration.getDefaultCpus(), mesosConfiguration.getDefaultMemory(), 0, mesosConfiguration.getDefaultDisk());
     this.defaultCustomExecutorResources = new Resources(customExecutorConfiguration.getNumCpus(), customExecutorConfiguration.getMemoryMb(), 0, customExecutorConfiguration.getDiskMb());
@@ -62,8 +62,27 @@ public class SingularityMesosOfferScheduler {
     this.slaveAndRackManager = slaveAndRackManager;
     this.taskSizeOptimizer = taskSizeOptimizer;
     this.stateCacheProvider = stateCacheProvider;
+    this.slaveAndRackHelper = slaveAndRackHelper;
     this.schedulerDriverSupplier = schedulerDriverSupplier;
     this.taskPrioritizer = taskPrioritizer;
+  }
+
+  private Map<String, SingularityTaskRequestHolder> getDueTaskRequestHolders() {
+    final List<SingularityTaskRequest> taskRequests = taskPrioritizer.getSortedDueTasks(scheduler.getDueTasks());
+
+    for (SingularityTaskRequest taskRequest : taskRequests) {
+      LOG.trace("Task {} is due", taskRequest.getPendingTask().getPendingTaskId());
+    }
+
+    taskPrioritizer.removeTasksAffectedByPriorityFreeze(taskRequests);
+
+    final Map<String, SingularityTaskRequestHolder> taskRequestHolders = new HashMap<>(taskRequests.size());
+
+    for (SingularityTaskRequest taskRequest : taskRequests) {
+      taskRequestHolders.put(taskRequest.getPendingTask().getPendingTaskId().getId(), new SingularityTaskRequestHolder(taskRequest, defaultResources, defaultCustomExecutorResources));
+    }
+
+    return taskRequestHolders;
   }
 
   public List<SingularityOfferHolder> checkOffers(final List<Protos.Offer> offers, final Set<Protos.OfferID> acceptedOffers) {
@@ -76,27 +95,22 @@ public class SingularityMesosOfferScheduler {
       slaveAndRackManager.checkOffer(offer);
     }
 
-    final List<SingularityTaskRequest> taskRequests = taskPrioritizer.getSortedDueTasks(scheduler.getDueTasks());
+    final Map<String, SingularityTaskRequestHolder> pendingTaskIdToTaskRequest = getDueTaskRequestHolders();
 
-    for (SingularityTaskRequest taskRequest : taskRequests) {
-      LOG.trace("Task {} is due", taskRequest.getPendingTask().getPendingTaskId());
-    }
-
-    taskPrioritizer.removeTasksAffectedByPriorityFreeze(taskRequests);
-
-    final int numDueTasks = taskRequests.size();
+    final int numDueTasks = pendingTaskIdToTaskRequest.size();
 
     final List<SingularityOfferHolder> offerHolders = Lists.newArrayListWithCapacity(offers.size());
     final Map<String, Map<String, Integer>> tasksPerOfferPerRequest = new HashMap<>();
     for (Protos.Offer offer : offers) {
-      offerHolders.add(new SingularityOfferHolder(offer, numDueTasks));
+      offerHolders.add(new SingularityOfferHolder(offer, numDueTasks, slaveAndRackHelper.getRackIdOrDefault(offer), slaveAndRackHelper.getTextAttributes(offer),
+          slaveAndRackHelper.getReservedSlaveAttributes(offer)));
     }
 
     boolean addedTaskInLastLoop = true;
 
     int tasksScheduled = 0;
 
-    while (!taskRequests.isEmpty() && addedTaskInLastLoop) {
+    while (!pendingTaskIdToTaskRequest.isEmpty() && addedTaskInLastLoop) {
       addedTaskInLastLoop = false;
       Collections.shuffle(offerHolders);
 
@@ -106,15 +120,15 @@ public class SingularityMesosOfferScheduler {
           continue;
         }
 
-        Optional<SingularityTask> accepted = match(taskRequests, stateCache, offerHolder, tasksPerOfferPerRequest);
+        Optional<SingularityTask> accepted = match(pendingTaskIdToTaskRequest.values(), stateCache, offerHolder, tasksPerOfferPerRequest);
         if (accepted.isPresent()) {
           tasksScheduled++;
           offerHolder.addMatchedTask(accepted.get());
           addedTaskInLastLoop = true;
-          taskRequests.remove(accepted.get().getTaskRequest());
+          pendingTaskIdToTaskRequest.remove(accepted.get().getTaskRequest().getPendingTask().getPendingTaskId().getId());
         }
 
-        if (taskRequests.isEmpty()) {
+        if (pendingTaskIdToTaskRequest.isEmpty()) {
           break;
         }
       }
@@ -125,56 +139,57 @@ public class SingularityMesosOfferScheduler {
     return offerHolders;
   }
 
-  private Optional<SingularityTask> match(Collection<SingularityTaskRequest> taskRequests, SingularitySchedulerStateCache stateCache, SingularityOfferHolder offerHolder,
+  private Optional<SingularityTask> match(Collection<SingularityTaskRequestHolder> taskRequests, SingularitySchedulerStateCache stateCache, SingularityOfferHolder offerHolder,
       Map<String, Map<String, Integer>> tasksPerOfferPerRequest) {
-    String offerId = offerHolder.getOffer().getId().getValue();
-    for (SingularityTaskRequest taskRequest : taskRequests) {
-      if (tooManyTasksPerOfferForRequest(tasksPerOfferPerRequest, offerId, taskRequest)) {
+    final String offerId = offerHolder.getOffer().getId().getValue();
+    for (SingularityTaskRequestHolder taskRequestHolder : taskRequests) {
+      final SingularityTaskRequest taskRequest = taskRequestHolder.getTaskRequest();
+
+      if (offerHolder.hasRejectedPendingTaskAlready(taskRequest.getPendingTask().getPendingTaskId())) {
+        continue;
+      }
+
+      if (tooManyTasksPerOfferForRequest(tasksPerOfferPerRequest, offerId, taskRequestHolder.getTaskRequest())) {
         LOG.debug("Skipping task request for request id {}, too many tasks already scheduled using offer {}", taskRequest.getRequest().getId(), offerId);
         continue;
       }
 
-      final Resources taskResources = taskRequest.getPendingTask().getResources().or(taskRequest.getDeploy().getResources()).or(defaultResources);
-
-      // only factor in executor resources if we're running a custom executor
-      final Resources executorResources =
-          taskRequest.getDeploy().getCustomExecutorCmd().isPresent() ? taskRequest.getDeploy().getCustomExecutorResources().or(defaultCustomExecutorResources) : Resources.EMPTY_RESOURCES;
-
-      final Resources totalResources = Resources.add(taskResources, executorResources);
-
-      final List<Long> requestedPorts = new ArrayList<>();
-
-      if (taskRequest.getDeploy().getContainerInfo().isPresent() && taskRequest.getDeploy().getContainerInfo().get().getDocker().isPresent()) {
-        requestedPorts.addAll(taskRequest.getDeploy().getContainerInfo().get().getDocker().get().getLiteralHostPorts());
+      if (LOG.isTraceEnabled()) {
+        LOG.trace("Attempting to match task {} resources {} with required role '{}' ({} for task + {} for executor) with remaining offer resources {}", taskRequest.getPendingTask().getPendingTaskId(),
+          taskRequestHolder.getTotalResources(), taskRequest.getRequest().getRequiredRole().or("*"), taskRequestHolder.getTaskResources(), taskRequestHolder.getExecutorResources(),
+          offerHolder.getCurrentResources());
       }
 
-      Optional<String> requiredRole = taskRequest.getRequest().getRequiredRole();
-      LOG.trace("Attempting to match task {} resources {} with required role '{}' ({} for task + {} for executor) with remaining offer resources {}", taskRequest.getPendingTask().getPendingTaskId(),
-          totalResources, requiredRole.or("*"), taskResources, executorResources, offerHolder.getCurrentResources());
-
-      final boolean matchesResources = MesosUtils.doesOfferMatchResources(requiredRole, totalResources, offerHolder.getCurrentResources(), requestedPorts);
-      final SlaveMatchState slaveMatchState = slaveAndRackManager.doesOfferMatch(offerHolder.getOffer(), taskRequest, stateCache);
+      final boolean matchesResources = MesosUtils.doesOfferMatchResources(taskRequest.getRequest().getRequiredRole(), taskRequestHolder.getTotalResources(), offerHolder.getCurrentResources(),
+          taskRequestHolder.getRequestedPorts());
+      final SlaveMatchState slaveMatchState = slaveAndRackManager.doesOfferMatch(offerHolder, taskRequest, stateCache);
 
       if (matchesResources && slaveMatchState.isMatchAllowed()) {
-        final SingularityTask task = mesosTaskBuilder.buildTask(offerHolder.getOffer(), offerHolder.getCurrentResources(), taskRequest, taskResources, executorResources);
+        final SingularityTask task = mesosTaskBuilder.buildTask(offerHolder.getOffer(), offerHolder.getCurrentResources(), taskRequest, taskRequestHolder.getTaskResources(), taskRequestHolder.getExecutorResources());
 
         final SingularityTask zkTask = taskSizeOptimizer.getSizeOptimizedTask(task);
 
-        LOG.trace("Accepted and built task {}", zkTask);
+        if (LOG.isTraceEnabled()) {
+          LOG.trace("Accepted and built task {}", zkTask);
+        }
 
         LOG.info("Launching task {} slot on slave {} ({})", task.getTaskId(), offerHolder.getOffer().getSlaveId().getValue(), offerHolder.getOffer().getHostname());
 
         taskManager.createTaskAndDeletePendingTask(zkTask);
 
         stateCache.getActiveTaskIds().add(task.getTaskId());
+        stateCache.getActiveTaskIdsForRequest(task.getTaskRequest().getRequest().getId()).add(task.getTaskId());
         addRequestToMapByOfferId(tasksPerOfferPerRequest, offerId, taskRequest.getRequest().getId());
         stateCache.getScheduledTasks().remove(taskRequest.getPendingTask());
 
         return Optional.of(task);
       } else {
-        String rolesInfo = MesosUtils.getRoles(offerHolder.getOffer()).toString();
-        LOG.trace("Ignoring offer {} with roles {} on {} for task {}; matched resources: {}, slave match state: {}", offerHolder.getOffer().getId(), rolesInfo, offerHolder.getOffer().getHostname(),
-            taskRequest.getPendingTask().getPendingTaskId(), matchesResources, slaveMatchState);
+        offerHolder.addRejectedTask(taskRequest.getPendingTask().getPendingTaskId());
+
+        if (LOG.isTraceEnabled()) {
+          LOG.trace("Ignoring offer {} with roles {} on {} for task {}; matched resources: {}, slave match state: {}", offerHolder.getOffer().getId().getValue(),
+              MesosUtils.getRoles(offerHolder.getOffer()), offerHolder.getOffer().getHostname(), taskRequest.getPendingTask().getPendingTaskId(), matchesResources, slaveMatchState);
+        }
       }
     }
 

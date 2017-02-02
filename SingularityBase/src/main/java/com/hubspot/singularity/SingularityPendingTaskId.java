@@ -43,6 +43,7 @@ public class SingularityPendingTaskId extends SingularityId implements Comparabl
   @JsonCreator
   public SingularityPendingTaskId(@JsonProperty("requestId") String requestId, @JsonProperty("deployId") String deployId, @JsonProperty("nextRunAt") long nextRunAt,
       @JsonProperty("instanceNo") int instanceNo, @JsonProperty("pendingType") PendingType pendingType, @JsonProperty("createdAt") long createdAt) {
+    super(String.format("%s-%s-%s-%s-%s-%s", requestId, deployId, nextRunAt, instanceNo, pendingType, createdAt));
     this.requestId = requestId;
     this.deployId = deployId;
     this.nextRunAt = nextRunAt;
@@ -98,11 +99,6 @@ public class SingularityPendingTaskId extends SingularityId implements Comparabl
     }
 
   }
-
-  @Override
-  public String getId() {
-   return String.format("%s-%s-%s-%s-%s-%s", getRequestId(), getDeployId(), getNextRunAt(), getInstanceNo(), getPendingType(), getCreatedAt());
-   }
 
   @Override
   public String toString() {
