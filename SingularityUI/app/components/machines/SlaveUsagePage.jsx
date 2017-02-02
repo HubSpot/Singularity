@@ -5,13 +5,6 @@ import rootComponent from '../../rootComponent';
 import { FetchSlaveUsages, FetchSlaves } from '../../actions/api/slaves';
 import SlaveUsage from './SlaveUsage';
 
-const navigation = (
-  <Nav bsStyle="pills" activeKey={2} justified={true}>
-    <NavItem eventKey={1} title="aggregate"> Aggregate </NavItem>
-    <NavItem eventKey={2} title="heatmap"> Heatmap </NavItem>
-  </Nav>
-);
-
 const getSlaveInfo = (slaves, slaveUsage) => {
   return _.findWhere(slaves, {'id' : slaveUsage.slaveId});
 };
@@ -24,9 +17,7 @@ const SlaveUsagePage = ({slaves, slaveUsages}) => {
 
   return (
     <div>
-      <div id="nav">
-        {navigation}
-      </div>
+      <h1>Slave Usage</h1>
       <hr />
       <div id="slaves">
         {slaveUsageData}
@@ -38,8 +29,7 @@ const SlaveUsagePage = ({slaves, slaveUsages}) => {
 
 SlaveUsage.propTypes = {
   slaveUsages : PropTypes.arrayOf(PropTypes.object),
-  slaves : PropTypes.arrayOf(PropTypes.object),
-  fetchSlaveUsages : React.PropTypes.func
+  slaves : PropTypes.arrayOf(PropTypes.object)
 };
 
 function mapStateToProps(state) {
@@ -49,23 +39,21 @@ function mapStateToProps(state) {
   };
 }
 
-const mapDispatchToProps = (dispatch) => ({
-  fetchSlaveUsages : () => dispatch(FetchSlaveUsages.trigger()),
-  fetchSlaves : () => dispatch(FetchSlaves.trigger())
-});
-
-function initialize(props) {
-  return Promise.all([
-    props.fetchSlaveUsages(),
-    props.fetchSlaves()
-  ]);
+function mapDispatchToProps(dispatch) {
+  return {
+    fetchSlaves : () => dispatch(FetchSlaves.trigger()),
+    fetchSlaveUsages : () => dispatch(FetchSlaveUsages.trigger())
+  };
 }
 
-function refresh(props) {
-  return Promise.all([
-    props.fetchSlaveUsages(),
-    props.fetchSlaves()
+const refresh = () => (dispatch) =>
+  Promise.all([
+    dispatch(FetchSlaves.trigger()),
+    dispatch(FetchSlaveUsages.trigger())
   ]);
-}
 
-export default connect(mapStateToProps, mapDispatchToProps)(rootComponent(SlaveUsagePage, 'SlaveUsagePage', refresh, true, true, initialize));
+const initialize = () => (dispatch) =>
+  Promise.all([]).then(() => dispatch(refresh()));
+
+
+export default connect(mapStateToProps, mapDispatchToProps)(rootComponent(SlaveUsagePage, refresh, true, true, initialize));
