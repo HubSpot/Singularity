@@ -19,7 +19,7 @@ const getSlaveInfo = (slaves, slaveUsage) => {
 const SlaveUsagePage = ({slaves, slaveUsages}) => {
   const slaveUsageData = slaveUsages.map((slaveUsage, index) => {
     const slaveInfo = getSlaveInfo(slaves, slaveUsage);
-    return <SlaveUsage key={index} slaveUsage={slaveUsage} slaveInfo={slaveInfo} index={index} />;
+    return <SlaveUsage key={index} slaveUsage={slaveUsage} slaveInfo={slaveInfo} />;
   });
 
   return (

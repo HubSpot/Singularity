@@ -6,49 +6,9 @@ import SlaveStat from './SlaveStat';
 import { SLAVE_TYPES, THRESHOLDS, STAT_NAMES} from './Constants';
 
 // TODO:
-// move threshold props into constants file
-// stats all calculated at once into arrayOf(Objects)
-  // const stats = [
-  //   {
-  //     name: 'cpuUsage',
-  //     value: 500,
-  //     state: 'warning'
-  //   }
-  // ];
 // move helper functions out of component
-// improve method naming
-  // if it renders, call it render
-  // if it has a list, call it somethingList
-  // etc.
-// better type checking
- // SlaveState.propTypes = {
- //    state: PropTypes.oneOf(Object.keys(STATE_STATES))
- //  };
 
 const SlaveUsage = (props) => {
-  const slaveWithStats = (bsStyle, glyphicon) => (
-    <Dropdown key={props.slaveInfo.slaveId} id={props.index.toString()}>
-      <Dropdown.Toggle bsSize="large" bsStyle={bsStyle} noCaret={true} className="single-slave-btn">
-        <Glyphicon glyph={glyphicon} />
-      </Dropdown.Toggle>
-      <Dropdown.Menu>
-        {renderSlaveStats}
-      </Dropdown.Menu>
-    </Dropdown>
-  );
-
-  const isSlaveCritical = () => {
-    return isStatCritical(STAT_NAMES.cpusUsedStat) ||
-           isStatCritical(STAT_NAMES.memoryBytesUsedStat) ||
-           isStatCritical(STAT_NAMES.numTasksStat);
-  };
-
-  const isSlaveWarning = () => {
-    return isStatWarning(STAT_NAMES.cpusUsedStat) ||
-           isStatWarning(STAT_NAMES.memoryBytesUsedStat) ||
-           isStatWarning(STAT_NAMES.numTasksStat);
-  };
-
   const getMaxAvailableResource = (statName) => {
     switch (statName) {
       case STAT_NAMES.cpusUsedStat:
@@ -77,6 +37,8 @@ const SlaveUsage = (props) => {
         return (props.slaveUsage.memoryBytesUsed / (getMaxAvailableResource(statName) * Math.pow(1024, 2))) > THRESHOLDS.memoryCriticalThreshold;
       case STAT_NAMES.numTasksStat:
         return props.slaveUsage.numTasks > THRESHOLDS.numTasksCritical;
+      default:
+        return false;
     }
   };
 
@@ -89,6 +51,8 @@ const SlaveUsage = (props) => {
         return (props.slaveUsage.memoryBytesUsed / (getMaxAvailableResource(statName) * Math.pow(1024, 2))) > THRESHOLDS.memoryWarningThreshold;
       case STAT_NAMES.numTasksStat:
         return props.slaveUsage.numTasks > THRESHOLDS.numTasksWarning;
+      default:
+        return false;
     }
   };
 
@@ -105,39 +69,62 @@ const SlaveUsage = (props) => {
     }
   };
 
-  const checkSlaveStat = (statValue, statName) => {
-    let statStyle = null;
+  const checkStats = (val, stat) => {
+    const newStat = {
+      name : stat,
+      value : val,
+      status : 'ok'
+    };
 
-    if (isStatCritical(statName)) {
-      statStyle = 'color-error';
-    } else if (isStatWarning(statName)) {
-      statStyle = 'color-warning';
+    if (isStatCritical(stat)) {
+      newStat.status = 'critical';
+    } else if (isStatWarning(stat)) {
+      newStat.status = 'warning';
     }
 
-    return <SlaveStat key={statName} name={humanizeStat(statName)} value={statValue.toString()} status={statStyle}/>;
+    return newStat;
   };
 
-  // TODO
-  // const renderSlaveStats = Object.keys(props.slaveUsage).map((data) => <SlaveStat key={statName} name={} value={} status={} />);
-  const renderSlaveStats = _.map(props.slaveUsage, checkSlaveStat);
+  const checkedStats = _.map(props.slaveUsage, checkStats);
 
-  const drawSlave = () => {
-    if (isSlaveCritical()) {
-      return slaveWithStats(SLAVE_TYPES.critical.bsStyle, SLAVE_TYPES.critical.icon);
-    } else if (isSlaveWarning()) {
-      return slaveWithStats(SLAVE_TYPES.warning.bsStyle, SLAVE_TYPES.warning.icon);
-    } else {
-      return slaveWithStats(SLAVE_TYPES.ok.bsStyle, SLAVE_TYPES.ok.icon);
+  const renderSlaveStats = _.map(checkedStats, ({name, value, status}) => {
+    return <SlaveStat key={name} name={humanizeStat(name)} value={value.toString()} status={status} />;
+  });
+
+  const getSlaveStyle = () => {
+    let style = SLAVE_TYPES.ok;
+
+    if (checkedStats.some((obj) => {
+      return obj.status === 'critical';
+    })) {
+      style = SLAVE_TYPES.critical;
+    } else if (checkedStats.some((obj) => {
+      return obj.status === 'warning';
+    })) {
+      style = SLAVE_TYPES.warning;
     }
+
+    return style;
   };
 
-  return drawSlave();
+  const slaveStyle = getSlaveStyle();
+
+  return (
+    <Dropdown key={props.slaveUsage.slaveId} id={props.slaveUsage.slaveId}>
+      <Dropdown.Toggle bsSize="large" bsStyle={slaveStyle.bsStyle} noCaret={true} className="single-slave-btn">
+        <Glyphicon glyph={slaveStyle.icon} />
+      </Dropdown.Toggle>
+      <Dropdown.Menu>
+        {renderSlaveStats}
+      </Dropdown.Menu>
+    </Dropdown>
+  );
 };
 
 
 SlaveUsage.propTypes = {
   slaveUsage : PropTypes.shape({
-    slaveId  : PropTypes.string.isRequired,
+    slaveId : PropTypes.string.isRequired,
     cpusUsed : PropTypes.number.isRequired,
     memoryBytesUsed : PropTypes.number.isRequired,
     numTasks : PropTypes.number.isRequired,
@@ -146,8 +133,7 @@ SlaveUsage.propTypes = {
   slaveInfo : PropTypes.shape({
     attributes : PropTypes.object.isRequired,
     resources : PropTypes.object.isRequired
-  }),
-  index : PropTypes.number.isRequired
+  })
 };
 
 export default SlaveUsage;

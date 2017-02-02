@@ -29,3 +29,9 @@ export const STAT_NAMES = {
   slaveIdStat : 'slaveId',
   timestampStat : 'timestamp'
 };
+
+export const STAT_STYLES = {
+  ok : '',
+  warning : 'color-warning',
+  critical : 'color-error'
+};
