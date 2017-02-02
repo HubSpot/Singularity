@@ -33,7 +33,12 @@ public class SingularityNoOfferCache implements OfferCache {
   }
 
   @Override
-  public List<Offer> getCachedOffers() {
+  public void returnOffer(OfferID offerId) {
+    // no-op
+  }
+
+  @Override
+  public List<Offer> checkoutOffers() {
     return Collections.emptyList();
   }
 
