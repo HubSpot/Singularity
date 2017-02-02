@@ -60,9 +60,9 @@ const SlaveUsage = (props) => {
     switch (statName) {
       case STAT_NAMES.memoryBytesUsedStat:
         return Utils.formatUnicorn('Memory used : {0}', Utils.humanizeFileSize(props.slaveUsage[statName]));
-      case props.timestampStat:
+      case STAT_NAMES.timestampStat:
         return Utils.formatUnicorn('{0} : {1}', Utils.humanizeCamelcase(statName), Utils.absoluteTimestampWithSeconds(props.slaveUsage[statName]));
-      case props.slaveIdStat:
+      case STAT_NAMES.slaveIdStat:
         return Utils.formatUnicorn('Host : {host}', props.slaveInfo);
       default:
         return Utils.formatUnicorn('{0} : {1}', Utils.humanizeCamelcase(statName), props.slaveUsage[statName]);
