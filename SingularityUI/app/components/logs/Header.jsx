@@ -40,20 +40,6 @@ class Header extends React.Component {
     );
   }
 
-  renderSwitchToNewTailer() {
-    if (!this.props.taskGroupHasMultipleTasks) {
-      if ((this.props.taskGroupCount === 1)) {
-        return (<Link to={`/task/${this.props.firstTaskId}/new-tail/${this.props.path}`}>
-          <button type="button" className="btn btn-sm btn-default">Switch to new tailer</button>
-        </Link>);
-      } else if ((this.props.taskGroupCount > 1)) {
-        return (<Link to={`/request/${this.props.requestId}/new-tail/${this.props.path}`}>
-          <button type="button" className="btn btn-sm btn-default">Switch to new tailer</button>
-        </Link>);
-      }
-    }
-  }
-
   render() {
     return (
       <div className="tail-header">
@@ -74,7 +60,6 @@ class Header extends React.Component {
             </ul>
           </div>
           <div className="col-md-3 hidden-xs tail-buttons">
-            {this.renderSwitchToNewTailer()}
             <SearchDropdown />
             <TasksDropdown />
             <ColorDropdown />
