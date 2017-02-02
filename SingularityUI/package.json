@@ -52,6 +52,7 @@
     "react-tagsinput": "^3.13.0",
     "react-typeahead": "git://github.com/HubSpot/react-typeahead.git#hubspot-3",
     "react-waypoint": "^2.0.3",
+    "react-copy-to-clipboard": "^1.0.0",
     "redux": "^3.5.2",
     "redux-form": "^5.3.0",
     "redux-logger": "^2.6.1",
