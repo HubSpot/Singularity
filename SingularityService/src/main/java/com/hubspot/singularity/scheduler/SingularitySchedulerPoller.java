@@ -46,7 +46,7 @@ public class SingularitySchedulerPoller extends SingularityLeaderOnlyPoller {
   public void runActionOnPoll() {
     final long start = System.currentTimeMillis();
 
-    List<SingularityOfferHolder> offerHolders = offerScheduler.checkOffers(offerCache.getCachedOffers(), Sets.<OfferID> newHashSet());
+    List<SingularityOfferHolder> offerHolders = offerScheduler.checkOffers(offerCache.checkoutOffers(), Sets.<OfferID> newHashSet());
 
     if (offerHolders.isEmpty()) {
       return;
@@ -60,16 +60,20 @@ public class SingularitySchedulerPoller extends SingularityLeaderOnlyPoller {
     }
 
     int acceptedOffers = 0;
+    int launchedTasks = 0;
 
     for (SingularityOfferHolder offerHolder : offerHolders) {
       if (!offerHolder.getAcceptedTasks().isEmpty()) {
         offerHolder.launchTasks(driver.get());
+        launchedTasks += offerHolder.getAcceptedTasks().size();
         acceptedOffers++;
         offerCache.useOffer(offerHolder.getOffer().getId());
+      } else {
+        offerCache.returnOffer(offerHolder.getOffer().getId());
       }
     }
 
-    LOG.debug("Accepted {} cached offers in {}", acceptedOffers, JavaUtils.duration(start));
+    LOG.info("Launched {} tasks on {} cached offers (returned {}) in {}", launchedTasks, acceptedOffers, offerHolders.size() - acceptedOffers, JavaUtils.duration(start));
   }
 
 }
