@@ -53,7 +53,6 @@ const rootComponent = (Wrapped, refresh = null, refreshInterval = true, pageMarg
       }).catch((reason) => {
         // Boot React errors out of the promise so they can be picked up by Sentry
         setTimeout(() => {
-          console.log(reason.stack);
           throw new Error(reason);
         });
       });
