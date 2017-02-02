@@ -3,7 +3,6 @@ import { Provider } from 'react-redux';
 import { Router, Route, IndexRoute, useRouterHistory } from 'react-router';
 import { createHistory } from 'history';
 import { syncHistoryWithStore } from 'react-router-redux';
-import parseurl from 'parseurl';
 
 import Application from './components/common/Application';
 import NotFound from './components/common/NotFound';
@@ -20,52 +19,55 @@ import TaskSearch from './components/taskSearch/TaskSearch';
 import DeployDetail from './components/deployDetail/DeployDetail';
 import RequestForm from './components/requestForm/RequestForm';
 import NewDeployForm from './components/newDeployForm/NewDeployForm';
-import { Tail, AggregateTail, CompressedLogView } from './components/logs/Tail';
 import TaskInstanceRedirect from './components/requestDetail/TaskInstanceRedirect';
 import RequestDetailPage from './components/requestDetail/RequestDetailPage';
 import Group from './components/groupDetail/GroupDetail.jsx';
 import Disasters from './components/disasters/Disasters';
+import TaskLogTailerContainer from './containers/TaskLogTailerContainer';
+import RequestLogTailerContainer from './containers/RequestLogTailerContainer';
+import CustomLogTailerContainer from './containers/CustomLogTailerContainer';
+
+const getFilenameFromSplat = (splat) => _.last(splat.split('/'));
+
+const routes = (
+  <Route path="/" component={Application}>
+    <IndexRoute component={DashboardPage} title="Dashboard" />
+    <Route path="status" component={StatusPage} title="Status" />
+    <Route path="requests/new" component={RequestForm} title="New Request" />
+    <Route path="requests/edit/:requestId" component={RequestForm} title="New or Edit Request" />
+    <Route path="requests(/:state)(/:subFilter)(/:searchFilter)" component={RequestsPage} title="Requests" />
+    <Route path="group/:groupId" component={Group} title={(params) => `Group ${params.groupId}`} />
+    <Route path="request">
+      <Route path=":requestId" component={RequestDetailPage} title={(params) => params.requestId} />
+      <Route path=":requestId/task-search" component={TaskSearch} title="Task Search" />
+      <Route path=":requestId/deploy" component={NewDeployForm} title="New Deploy" />
+      <Route path=":requestId/deploy/:deployId" component={DeployDetail} title={(params) => `Deploy ${params.deployId}`} />
+      <Route path=":requestId/tail/**" component={RequestLogTailerContainer} title={(params) => `Tail of ${getFilenameFromSplat(params.splat)}`} />
+      <Route path=":requestId/instance/:instanceNo" component={TaskInstanceRedirect} />
+      <IndexRoute component={NotFound} title="Not Found" />
+    </Route>
+    <Route path="tasks(/:state)(/:requestsSubFilter)(/:searchFilter)" component={TasksPage} title="Tasks" />
+    <Route path="task">
+      <Route path=":taskId(/files**)" component={TaskDetail} title={(params) => params.taskId} />
+      <Route path=":taskId/tail/**" component={TaskLogTailerContainer} title={(params) => `Tail of ${getFilenameFromSplat(params.splat)}`} />
+      <IndexRoute component={NotFound} title="Not Found" />
+    </Route>
+    <Route path="tail/**" component={CustomLogTailerContainer} title="Tailer" />
+    <Route path="racks(/:state)" component={Racks} title="Racks" />
+    <Route path="slaves(/:state)" component={Slaves} title="Slaves" />
+    <Route path="slave-usage" component={SlaveUsagePage} />
+    <Route path="webhooks" component={Webhooks} title="Webhooks" />
+    <Route path="task-search" component={TaskSearch} title="Task Search" />
+    <Route path="disasters" component={Disasters} title="Disasters" />
+    <Route path="*" component={NotFound} title="Not Found" />
+  </Route>);
 
 const AppRouter = (props) => {
-  const parsedUrl = parseurl({ url: config.appRoot });
-  let history = useRouterHistory(createHistory)({
-    basename: parsedUrl.path
-  });
-  history = syncHistoryWithStore(history, props.store);
+  const syncedHistory = syncHistoryWithStore(props.history, props.store);
 
   return (
     <Provider store={props.store}>
-      <Router history={history}>
-        <Route path="/" component={Application}>
-          <IndexRoute component={DashboardPage} />
-          <Route path="status" component={StatusPage} />
-          <Route path="requests/new" component={RequestForm} />
-          <Route path="requests/edit/:requestId" component={RequestForm} />
-          <Route path="requests(/:state)(/:subFilter)(/:searchFilter)" component={RequestsPage} />
-          <Route path="group/:groupId" component={Group} />
-          <Route path="request">
-            <Route path=":requestId" component={RequestDetailPage} />
-            <Route path=":requestId/task-search" component={TaskSearch} />
-            <Route path=":requestId/deploy" component={NewDeployForm} />
-            <Route path=":requestId/deploy/:deployId" component={DeployDetail} store={props.store} />
-            <Route path=":requestId/tail/**" component={AggregateTail} />
-            <Route path=":requestId/instance/:instanceNo" component={TaskInstanceRedirect} />
-          </Route>
-          <Route path="tasks(/:state)(/:requestsSubFilter)(/:searchFilter)" component={TasksPage} />
-          <Route path="task">
-            <Route path=":taskId(/files**)" component={TaskDetail} store={props.store} />
-            <Route path=":taskId/tail/**" component={Tail} />
-            <Route path=":taskId/view/**" component={CompressedLogView} />
-          </Route>
-          <Route path="racks(/:state)" component={Racks} />
-          <Route path="slaves(/:state)" component={Slaves} />
-          <Route path="slave-usage" component={SlaveUsagePage} />
-          <Route path="webhooks" component={Webhooks} />
-          <Route path="task-search" component={TaskSearch} />
-          <Route path="disasters" component={Disasters} />
-          <Route path="*" component={NotFound} />
-        </Route>
-      </Router>
+      <Router history={syncedHistory} routes={routes} />
     </Provider>
   );
 };

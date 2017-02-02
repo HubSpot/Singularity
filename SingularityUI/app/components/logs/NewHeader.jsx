@@ -22,15 +22,6 @@ class NewHeader extends React.Component {
     }
   }
 
-  renderViewButtons() {
-    if (this.props.taskIds.length > 1) {
-      return (<div className="btn-group" role="group" title="Select View Type">
-        <button disabled type="button" className={classNames({btn: true, 'btn-sm': true, 'btn-default': true, 'no-margin': true, active: this.props.viewMode === 'unified'})} onClick={() => { this.props.switchViewMode('unified'); }}>Unified</button>
-        <button type="button" className={classNames({btn: true, 'btn-sm': true, 'btn-default': true, 'no-margin': true, active: this.props.viewMode === 'split'})} onClick={() => { this.props.switchViewMode('split'); }}>Split</button>
-      </div>);
-    }
-  }
-
   renderAnchorButtons() {
     return (this.props.tailerGroupCount > 1) && (
       <span>
@@ -91,7 +82,6 @@ class NewHeader extends React.Component {
           <div className="col-md-3 hidden-xs tail-buttons">
             {this.renderTasksDropdown()}
             <NewColorDropdown activeColor={this.props.activeColor} onSetColor={this.props.setColor} />
-            {this.renderViewButtons()}
             {this.renderAnchorButtons()}
           </div>
         </div>
