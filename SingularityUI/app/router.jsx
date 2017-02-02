@@ -12,6 +12,7 @@ import RequestsPage from './components/requests/RequestsPage';
 import TasksPage from './components/tasks/TasksPage';
 import Racks from './components/machines/Racks';
 import Slaves from './components/machines/Slaves';
+import SlaveUsagePage from './components/machines/SlaveUsagePage';
 import Webhooks from './components/webhooks/Webhooks';
 import TaskDetail from './components/taskDetail/TaskDetail';
 import TaskSearch from './components/taskSearch/TaskSearch';
@@ -57,6 +58,7 @@ const routes = (
     <Route path="new-tail/**" component={CustomLogTailerContainer} title="New Tailer" />
     <Route path="racks(/:state)" component={Racks} title="Racks" />
     <Route path="slaves(/:state)" component={Slaves} title="Slaves" />
+    <Route path="slave-usage" component={SlaveUsagePage} title="Slave Usage" />
     <Route path="webhooks" component={Webhooks} title="Webhooks" />
     <Route path="task-search" component={TaskSearch} title="Task Search" />
     <Route path="disasters" component={Disasters} title="Disasters" />
