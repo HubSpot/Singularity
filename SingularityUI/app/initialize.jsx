@@ -40,6 +40,12 @@ const HMRContainer = (module.hot)
   ? require('react-hot-loader').AppContainer
   : ({ children }) => (children);
 
+document.addEventListener(tailerActions.SINGULARITY_TAILER_AJAX_ERROR_EVENT, (event) => {
+  if (event.detail.status === 401 && window.config.redirectOnUnauthorizedUrl) {
+    window.location.href = config.redirectOnUnauthorizedUrl.replace('{URL}', encodeURIComponent(window.location.href));
+  }
+});
+
 document.addEventListener('DOMContentLoaded', () => {
   loadThirdParty();
 

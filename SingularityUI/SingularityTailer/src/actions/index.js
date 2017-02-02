@@ -3,6 +3,8 @@ import fetch from 'isomorphic-fetch';
 
 const frameworkName = 'SINGULARITY_TAILER';
 
+export const SINGULARITY_TAILER_AJAX_ERROR_EVENT = 'SingularityTailerAjaxError';
+
 /* GENERIC CHUNK ACTIONS */
 const TE = new TextEncoder();
 
@@ -91,6 +93,9 @@ const checkStatus = (response) => {
   }
   const error = new Error(response.statusText);
   error.response = response;
+  if (document && document.dispatchEvent) {
+    document.dispatchEvent(new CustomEvent(SINGULARITY_TAILER_AJAX_ERROR_EVENT, {'detail': response}));
+  }
   throw error;
 };
 
