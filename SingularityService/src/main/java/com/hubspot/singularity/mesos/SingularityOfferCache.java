@@ -138,18 +138,21 @@ public class SingularityOfferCache implements OfferCache, RemovalListener<String
     }
 
     private void checkOut() {
+      LOG.trace("Checking out offer {}", offerId);
       Preconditions.checkState(offerState == OfferState.AVAILABLE, "Offer %s was in state %s", offerId, offerState);
-      offerState = OfferState.CHECKED_OUT;
+      this.offerState = OfferState.CHECKED_OUT;
     }
 
     private void checkIn() {
+      LOG.trace("Checking in offer {}", offerId);
       Preconditions.checkState(offerState == OfferState.CHECKED_OUT, "Offer %s was in state %s", offerId, offerState);
-      offerState = OfferState.AVAILABLE;
+      this.offerState = OfferState.AVAILABLE;
     }
 
     private void expire() {
+      LOG.trace("Expiring offer {}", offerId);
       Preconditions.checkState(offerState == OfferState.CHECKED_OUT, "Offer %s was in state %s", offerId, offerState);
-      offerState = OfferState.EXPIRED;
+      this.offerState = OfferState.EXPIRED;
     }
 
   }
