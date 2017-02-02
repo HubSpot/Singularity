@@ -7,10 +7,15 @@ import org.apache.mesos.Protos.Offer;
 import org.apache.mesos.Protos.OfferID;
 import org.apache.mesos.SchedulerDriver;
 
+import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 @Singleton
 public class SingularityNoOfferCache implements OfferCache {
+
+  @Inject
+  public SingularityNoOfferCache() {
+  }
 
   @Override
   public void cacheOffer(SchedulerDriver driver, long timestamp, Offer offer) {
