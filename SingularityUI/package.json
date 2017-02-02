@@ -85,7 +85,7 @@
     "eslint": "^2.11.1",
     "eslint-config-hubspot": "^6.2.0",
     "eslint-plugin-babel": "^3.2.0",
-    "eslint-plugin-react": "^4.2.3",
+    "eslint-plugin-react": "^4.3.0",
     "expect": "^1.20.2",
     "exports-loader": "^0.6.3",
     "extend": "^3.0.0",
