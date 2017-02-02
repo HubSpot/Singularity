@@ -10,7 +10,7 @@ import { loadColor, removeTailerGroup, pickTailerGroup } from '../actions/tailer
 
 const prefixedLineLinkRenderer = (taskId, path) => ({start}) => {
   return (<a
-    href={`${ config.appRoot }/task/${taskId}/new-tail/${path}?offset=${start}`}
+    href={`${ config.appRoot }/task/${taskId}/tail/${path}?offset=${start}`}
     className="offset-link"
   >
     <div className="pre-line">

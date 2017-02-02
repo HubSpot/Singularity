@@ -100,13 +100,13 @@ export const updateTailerUrl = () => (dispatch, getState) => {
 
   if (tailerView.taskIds.length === 1) {
     // task tailer
-    return dispatch(push(`/task/${tailerView.taskIds[0]}/new-tail/${tailerView.paths[0]}`));
+    return dispatch(push(`/task/${tailerView.taskIds[0]}/tail/${tailerView.paths[0]}`));
   } if (tailerView.requestIds.length === 1) {
     // request tailer
-    return dispatch(push(`/request/${tailerView.requestIds[0]}/new-tail/${tailerView.paths[0]}?instance=${tailerView.taskIds.map(Utils.getInstanceNoFromTaskId).join(',')}`));
+    return dispatch(push(`/request/${tailerView.requestIds[0]}/tail/${tailerView.paths[0]}?instance=${tailerView.taskIds.map(Utils.getInstanceNoFromTaskId).join(',')}`));
   } else if (tailerView.paths.length === 1) {
     // custom tailer
-    return dispatch(push(`/new-tail/${tailerView.paths[0]}?taskIds=${tailerView.taskIds.join(',')}`));
+    return dispatch(push(`/tail/${tailerView.paths[0]}?taskIds=${tailerView.taskIds.join(',')}`));
   } else {
     // ur fucked
   }
