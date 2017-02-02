@@ -23,10 +23,17 @@ public class AthenaQueryBuilder {
     builder.append(table.getName());
     builder.append(" (");
     for (AthenaField field : table.getFields()) {
-      builder.append(field.toQueryFriendlyString());
-      if (!isLast(table.getFields(), field)) {
-        builder.append(", ");
-      }
+        if (field.getType().isPrimitive()) {
+          builder.append("`");
+          builder.append(field.getName());
+          builder.append("` ");
+          builder.append(field.getType());
+          if (!isLast(table.getFields(), field)) {
+            builder.append(", ");
+          }
+        } else {
+          throw new RuntimeException("Support for non-primitive fields not yet implemented");
+        }
     }
     builder.append(") PARTITIONED BY (");
     for (AthenaPartitionType partition : table.getPartitions()) {
@@ -58,8 +65,7 @@ public class AthenaQueryBuilder {
         dataFormatQueryBuilder.append("' )");
         return dataFormatQueryBuilder.toString();
       default:
-        // TODO - more implementations
-        return "";
+        throw new RuntimeException(String.format("No implementation for data format %s", table.getDataFormat()));
     }
   }
 

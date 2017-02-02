@@ -1,16 +1,15 @@
 package com.hubspot.singularity.athena;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class AthenaField {
   private final String name;
-  private final String type; // TODO enum this
+  private final AthenaFieldType type; // TODO enum this
   private final String friendlyName;
 
   @JsonCreator
-  public AthenaField(@JsonProperty("name") String name, @JsonProperty("type") String type, @JsonProperty("friendlyName") String friendlyName) {
+  public AthenaField(@JsonProperty("name") String name, @JsonProperty("type") AthenaFieldType type, @JsonProperty("friendlyName") String friendlyName) {
     this.name = name;
     this.type = type;
     this.friendlyName = friendlyName;
@@ -20,17 +19,12 @@ public class AthenaField {
     return name;
   }
 
-  public String getType() {
+  public AthenaFieldType getType() {
     return type;
   }
 
   public String getFriendlyName() {
     return friendlyName;
-  }
-
-  @JsonIgnore
-  public String toQueryFriendlyString() {
-    return String.format("`%s` %s", name, type);
   }
 
   @Override

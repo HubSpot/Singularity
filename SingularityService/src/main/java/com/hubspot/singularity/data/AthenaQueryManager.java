@@ -2,12 +2,14 @@ package com.hubspot.singularity.data;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Calendar;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -29,17 +31,20 @@ import com.hubspot.singularity.SingularityCreateResult;
 import com.hubspot.singularity.SingularityDeleteResult;
 import com.hubspot.singularity.SingularityUser;
 import com.hubspot.singularity.athena.AthenaField;
+import com.hubspot.singularity.athena.AthenaFieldType;
 import com.hubspot.singularity.athena.AthenaModule;
 import com.hubspot.singularity.athena.AthenaPartitionType;
 import com.hubspot.singularity.athena.AthenaPartitionWithValue;
 import com.hubspot.singularity.athena.AthenaQuery;
 import com.hubspot.singularity.athena.AthenaQueryBuilder;
 import com.hubspot.singularity.athena.AthenaQueryException;
+import com.hubspot.singularity.athena.AthenaQueryField;
 import com.hubspot.singularity.athena.AthenaQueryInfo;
 import com.hubspot.singularity.athena.AthenaQueryResults;
 import com.hubspot.singularity.athena.AthenaQueryRunner;
 import com.hubspot.singularity.athena.AthenaQueryStatus;
 import com.hubspot.singularity.athena.AthenaTable;
+import com.hubspot.singularity.athena.ComparisonOperator;
 import com.hubspot.singularity.config.AthenaConfig;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.transcoders.Transcoder;
@@ -60,6 +65,10 @@ public class AthenaQueryManager extends CuratorAsyncManager {
 
   private static final String PARTITION_FIELD_NAME = "partition";
 
+  private static final List<ComparisonOperator> START_TIME_COMPARISON_OPERATORS =
+      Arrays.asList(ComparisonOperator.EQUAL, ComparisonOperator.GREATER_THAN, ComparisonOperator.GREATER_THAN_OR_EQUAL_TO);
+  private static final List<ComparisonOperator> END_TIME_COMPARISON_OPERATORS =
+      Arrays.asList(ComparisonOperator.EQUAL, ComparisonOperator.LESS_THAN, ComparisonOperator.LESS_THAN_OR_EQUAL_TO);
 
   @Inject
   public AthenaQueryManager(CuratorFramework curator,
@@ -149,13 +158,9 @@ public class AthenaQueryManager extends CuratorAsyncManager {
   }
 
   // Partitions
-  public Optional<AthenaTable> updatePartitions(final Optional<SingularityUser> user, String tableName, long start, long end) throws AthenaQueryException {
-    Optional<AthenaTable> maybeExistingTable = getTable(tableName);
-    if (!maybeExistingTable.isPresent()) {
-      return maybeExistingTable;
-    }
-    AthenaTable table = maybeExistingTable.get();
-    AthenaQueryInfo showPartitionsQuery = runQuery(user, AthenaQueryBuilder.showPartitionsQuery(athenaConfig.get().getDatabaseName(), tableName));
+  public Optional<AthenaTable> updatePartitions(final Optional<SingularityUser> user, AthenaTable table, long start, Optional<Long> maybeEnd) throws AthenaQueryException {
+    long end = maybeEnd.or(System.currentTimeMillis());
+    AthenaQueryInfo showPartitionsQuery = runQuery(user, AthenaQueryBuilder.showPartitionsQuery(athenaConfig.get().getDatabaseName(), table.getName()));
     Set<List<AthenaPartitionWithValue>> partitions = new HashSet<>();
     Optional<AthenaQueryResults> showPartitionsResults = getQueryResults(user, showPartitionsQuery.getQueryExecutionId(), null, 10);
     while (showPartitionsResults.isPresent() && (showPartitionsResults.get().getNextToken() != null || !showPartitionsResults.get().getResults().isEmpty())) {
@@ -172,7 +177,7 @@ public class AthenaQueryManager extends CuratorAsyncManager {
 
     for (List<AthenaPartitionWithValue> partitionToAdd : partitionsToAdd) {
       // TODO - Run in parallel
-      runQuery(user, AthenaQueryBuilder.addPartitionQuery(athenaConfig.get().getDatabaseName(), tableName, partitionsToStatements.get(partitionToAdd)));
+      runQuery(user, AthenaQueryBuilder.addPartitionQuery(athenaConfig.get().getDatabaseName(), table.getName(), partitionsToStatements.get(partitionToAdd)));
     }
 
     return Optional.absent();
@@ -190,32 +195,40 @@ public class AthenaQueryManager extends CuratorAsyncManager {
 
   // Athena Query Running
   public AthenaQueryInfo runQueryAsync(Optional<SingularityUser> user, AthenaQuery query) {
-    // TODO - update partitions + run query
-    String sql = AthenaQueryBuilder.generateSelectQuerySql(query);
-    return null;
+    String singularityId = UUID.randomUUID().toString();
+    final String sql = AthenaQueryBuilder.generateSelectQuerySql(query);
+    AthenaQueryInfo result = new AthenaQueryInfo(singularityId, null, sql, AthenaQueryStatus.RUNNING, Collections.<AthenaField>emptyList(), Optional.<String>absent());
+    saveQueryResult(user, result);
+    startParitionUpdateAndRunQuery(user, singularityId, query, sql);
+    return result;
   }
 
-  public AthenaQueryInfo runRawQueryAsync(final Optional<SingularityUser> user, final String sql) throws AthenaQueryException {
-    AthenaQueryInfo result = new AthenaQueryInfo(queryRunner.runQuery(sql), sql, AthenaQueryStatus.RUNNING, Collections.<AthenaField>emptyList(), Optional.<String>absent());
+  private void startParitionUpdateAndRunQuery(Optional<SingularityUser> user, final String singularityId, final AthenaQuery query, final String sql) {
+
+  }
+
+  public AthenaQueryInfo runRawQueryAsync(final Optional<SingularityUser> user, final String sql, final String singularityId) throws AthenaQueryException {
+    AthenaQueryInfo result = new AthenaQueryInfo(singularityId, queryRunner.runQuery(sql), sql, AthenaQueryStatus.RUNNING, Collections.<AthenaField>emptyList(), Optional.<String>absent());
     saveQueryResult(user, result);
-    queryExecutorService.submit(watchQueryCallable(user, result.getQueryExecutionId(), result.getSql()));
+    queryExecutorService.submit(watchQueryCallable(user, singularityId, result.getQueryExecutionId(), result.getSql()));
     return result;
   }
 
   public AthenaQueryInfo runQuery(final Optional<SingularityUser> user, final String sql) throws AthenaQueryException {
+    String singularityId = UUID.randomUUID().toString();
     String queryExecutionId = queryRunner.runQuery(sql);
     try {
-      return queryExecutorService.submit(watchQueryCallable(user, queryExecutionId, sql)).get();
+      return queryExecutorService.submit(watchQueryCallable(user, singularityId, queryExecutionId, sql)).get();
     } catch (InterruptedException ie) {
       LOG.error("Interrupted while running query {} with id {}", sql, queryExecutionId, ie);
-      return new AthenaQueryInfo(queryExecutionId, sql, AthenaQueryStatus.FAILED, Collections.<AthenaField>emptyList(), Optional.of(ie.getMessage()));
+      return new AthenaQueryInfo(singularityId, queryExecutionId, sql, AthenaQueryStatus.FAILED, Collections.<AthenaField>emptyList(), Optional.of(ie.getMessage()));
     } catch (ExecutionException ee) {
       LOG.error("Error running query {} with id {}", sql, queryExecutionId, ee);
-      return new AthenaQueryInfo(queryExecutionId, sql, AthenaQueryStatus.FAILED, Collections.<AthenaField>emptyList(), Optional.of(ee.getMessage()));
+      return new AthenaQueryInfo(singularityId, queryExecutionId, sql, AthenaQueryStatus.FAILED, Collections.<AthenaField>emptyList(), Optional.of(ee.getMessage()));
     }
   }
 
-  private Callable<AthenaQueryInfo> watchQueryCallable(final Optional<SingularityUser> user, final String queryExecutionId, final String sql) {
+  private Callable<AthenaQueryInfo> watchQueryCallable(final Optional<SingularityUser> user, final String singularityId, final String queryExecutionId, final String sql) {
     return new Callable<AthenaQueryInfo>() {
       @Override
       public AthenaQueryInfo call() throws Exception {
@@ -229,13 +242,13 @@ public class AthenaQueryManager extends CuratorAsyncManager {
           switch (status.getState()) {
             case "SUCCEEDED":
               List<AthenaField> fields = fieldsFromColumnInfos(queryRunner.getQueryResults(queryExecutionId, null, 1).getResultSet().getColumnInfos());
-              result = new AthenaQueryInfo(queryExecutionId, sql, AthenaQueryStatus.SUCCEEDED, fields, Optional.<String>absent());
+              result = new AthenaQueryInfo(singularityId, queryExecutionId, sql, AthenaQueryStatus.SUCCEEDED, fields, Optional.<String>absent());
               saveQueryResult(user, result);
               break;
             case "FAILED":
             case "CANCELED":
             default:
-              result = new AthenaQueryInfo(queryExecutionId, sql, AthenaQueryStatus.FAILED, Collections.<AthenaField>emptyList(), Optional.of(status.getStateChangeReason()));
+              result = new AthenaQueryInfo(singularityId, queryExecutionId, sql, AthenaQueryStatus.FAILED, Collections.<AthenaField>emptyList(), Optional.of(status.getStateChangeReason()));
               saveQueryResult(user, result);
               break;
           }
@@ -247,7 +260,7 @@ public class AthenaQueryManager extends CuratorAsyncManager {
           } catch (Exception cancelException) {
             LOG.error("Could not cancel query {}", queryExecutionId, cancelException);
           }
-          AthenaQueryInfo result = new AthenaQueryInfo(queryExecutionId, sql, AthenaQueryStatus.FAILED, Collections.<AthenaField>emptyList(), Optional.of(e.getMessage()));
+          AthenaQueryInfo result = new AthenaQueryInfo(singularityId, queryExecutionId, sql, AthenaQueryStatus.FAILED, Collections.<AthenaField>emptyList(), Optional.of(e.getMessage()));
           saveQueryResult(user, result);
           return result;
         }
@@ -255,10 +268,79 @@ public class AthenaQueryManager extends CuratorAsyncManager {
     };
   }
 
+  private Callable<Boolean> updatePartitionsCallable(final Optional<SingularityUser> user, final String singularityId, final AthenaQuery query, final String sql) {
+    return new Callable<Boolean>() {
+      @Override
+      public Boolean call() throws Exception {
+        Optional<AthenaTable> maybeExistingTable = getTable(query.getTableName());
+        if (!maybeExistingTable.isPresent()) {
+          return false;
+        }
+
+        List<AthenaQueryField> partitionFieldsQueried = getPartitionFields(query, maybeExistingTable.get());
+
+      }
+    };
+  }
+
+  private Optional<Long> getTimeFromPartitionFields(List<AthenaQueryField> partitionFieldsQueried, List<ComparisonOperator> validComparisonOperators, boolean start) {
+    Optional<String> month = Optional.absent();
+    Optional<String> day = Optional.absent();
+    Optional<String> year = Optional.absent();
+
+
+    for (AthenaQueryField field : partitionFieldsQueried) {
+      switch (AthenaPartitionType.valueOf(field.getField())) {
+        case YEAR:
+          if (validComparisonOperators.contains(field.getComparisonOperator())) {
+            year = Optional.of(field.getValue());
+          }
+          break;
+        case MONTH:
+          if (validComparisonOperators.contains(field.getComparisonOperator())) {
+            month = Optional.of(field.getValue());
+          }
+          break;
+        case DAY:
+          if (validComparisonOperators.contains(field.getComparisonOperator())) {
+            day = Optional.of(field.getValue());
+          }
+          break;
+        default:
+          break;
+      }
+    }
+
+    Calendar calendar = Calendar.getInstance();
+    Calendar now = Calendar.getInstance();
+    now.setTimeInMillis(System.currentTimeMillis());
+    if (day.isPresent() && month.isPresent() && year.isPresent()) {
+      calendar.set();
+    } else if (month.isPresent() && year.isPresent()) {
+
+    } else if (year.isPresent()) {
+
+    } else {
+      // exception?
+    }
+  }
+
+  private List<AthenaQueryField> getPartitionFields(AthenaQuery query, AthenaTable table) {
+    List<AthenaQueryField> partitionFieldsQueried = new ArrayList<>();
+    for (AthenaQueryField field : query.getWhereFields()) {
+      for (AthenaPartitionType partitionType : table.getPartitions()) {
+        if (field.getField().equals(partitionType.getField())) {
+          partitionFieldsQueried.add(field);
+        }
+      }
+    }
+    return partitionFieldsQueried;
+  }
+
   private List<AthenaField> fieldsFromColumnInfos(List<ColumnInfo> columnInfos) {
     List<AthenaField> fields = new ArrayList<>();
     for (ColumnInfo columnInfo : columnInfos) {
-      fields.add(new AthenaField(columnInfo.getName(), columnInfo.getType(), columnInfo.getLabel()));
+      fields.add(new AthenaField(columnInfo.getName(), AthenaFieldType.valueOf(columnInfo.getType().toUpperCase()), columnInfo.getLabel()));
     }
     return fields;
   }
