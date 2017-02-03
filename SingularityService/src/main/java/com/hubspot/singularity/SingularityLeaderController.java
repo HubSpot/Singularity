@@ -155,7 +155,7 @@ public class SingularityLeaderController implements Managed, LeaderLatchListener
     double cachedMemoryBytes = 0;
     int numCachedOffers = 0;
 
-    for (Offer offer : offerCache.getCachedOffers()) {
+    for (Offer offer : offerCache.peakOffers()) {
       cachedCpus += MesosUtils.getNumCpus(offer);
       cachedMemoryBytes += MesosUtils.getMemory(offer);
       numCachedOffers++;

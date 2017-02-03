@@ -14,6 +14,10 @@ public interface OfferCache {
 
   public void useOffer(OfferID offerId);
 
-  public List<Offer> getCachedOffers();
+  public List<Offer> checkoutOffers();
+
+  public void returnOffer(OfferID offerId);
+
+  public List<Offer> peakOffers();
 
 }
