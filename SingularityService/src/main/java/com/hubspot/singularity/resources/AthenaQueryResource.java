@@ -1,6 +1,7 @@
 package com.hubspot.singularity.resources;
 
 import java.util.List;
+import java.util.UUID;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -18,8 +19,8 @@ import com.hubspot.singularity.SingularityAuthorizationScope;
 import com.hubspot.singularity.SingularityRequestWithState;
 import com.hubspot.singularity.SingularityService;
 import com.hubspot.singularity.SingularityUser;
+import com.hubspot.singularity.WebExceptions;
 import com.hubspot.singularity.athena.AthenaQuery;
-import com.hubspot.singularity.athena.AthenaQueryBuilder;
 import com.hubspot.singularity.athena.AthenaQueryException;
 import com.hubspot.singularity.athena.AthenaQueryInfo;
 import com.hubspot.singularity.athena.AthenaQueryResults;
@@ -91,9 +92,11 @@ public class AthenaQueryResource {
       @ApiResponse(code=404, message="Provided table not found"),
       @ApiResponse(code=403, message="User or Provided AWS keys are not allowed access"),
   })
-  public Optional<AthenaTable> createAthenaTable(UpdatePartitionsRequest updatePartitionsRequest) throws Exception {
+  public Boolean createAthenaTable(UpdatePartitionsRequest updatePartitionsRequest) throws Exception {
     authorizationHelper.checkAdminAuthorization(user);
-    return queryManager.updatePartitions(user, updatePartitionsRequest.getTableName(), updatePartitionsRequest.getStart(), updatePartitionsRequest.getEnd());
+    Optional<AthenaTable> maybeTable = queryManager.getTable(updatePartitionsRequest.getTableName());
+    WebExceptions.checkBadRequest(maybeTable.isPresent(), String.format("Table %s does not exist in Singularity", updatePartitionsRequest.getTableName()));
+    return queryManager.updatePartitions(user, maybeTable.get(), updatePartitionsRequest.getStart(), updatePartitionsRequest.getEnd());
   }
 
   @POST
@@ -104,7 +107,7 @@ public class AthenaQueryResource {
   })
   public AthenaQueryInfo runRawQuery(String query) throws Exception {
     authorizationHelper.checkAdminAuthorization(user);
-    return queryManager.runRawQueryAsync(user, query);
+    return queryManager.runRawQueryAsync(user, query, UUID.randomUUID().toString());
   }
 
   @POST

@@ -1,5 +1,5 @@
 package com.hubspot.singularity.athena;
 
 public enum AthenaQueryStatus {
-  RUNNING, SUCCEEDED, FAILED
+  UPDATING_PARTITIONS, RUNNING, SUCCEEDED, FAILED
 }

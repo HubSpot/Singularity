@@ -1,8 +1,9 @@
 package com.hubspot.singularity.athena;
 
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import com.amazonaws.athena.jdbc.shaded.guava.util.concurrent.ListeningExecutorService;
+import com.amazonaws.athena.jdbc.shaded.guava.util.concurrent.MoreExecutors;
 import com.google.common.base.Optional;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
@@ -38,8 +39,8 @@ public class AthenaModule extends AbstractModule {
   @Provides
   @Singleton
   @Named(ATHENA_QUERY_EXECUTOR)
-  public ExecutorService providesQueryExecutor() {
-    return Executors.newFixedThreadPool(1);
+  public ListeningExecutorService providesQueryExecutor() {
+    return MoreExecutors.listeningDecorator(Executors.newFixedThreadPool(1));
   }
 
   @Provides
