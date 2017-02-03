@@ -2,6 +2,7 @@ package com.hubspot.singularity.executor;
 
 import org.apache.mesos.MesosExecutorDriver;
 import org.apache.mesos.Protos;
+import org.slf4j.ILoggerFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -18,6 +19,8 @@ import com.hubspot.singularity.runner.base.config.SingularityRunnerBaseModule;
 import com.hubspot.singularity.runner.base.configuration.BaseRunnerConfiguration;
 import com.hubspot.singularity.s3.base.config.SingularityS3Configuration;
 
+import ch.qos.logback.classic.LoggerContext;
+
 public class SingularityExecutorRunner {
 
   private static final Logger LOG = LoggerFactory.getLogger(SingularityExecutorRunner.class);
@@ -33,10 +36,23 @@ public class SingularityExecutorRunner {
 
       LOG.info("Executor finished after {} with status: {}", JavaUtils.duration(start), driverStatus);
 
+      stopLog();
+
       System.exit(driverStatus == Protos.Status.DRIVER_STOPPED ? 0 : 1);
     } catch (Throwable t) {
       LOG.error("Finished after {} with error", JavaUtils.duration(start), t);
+
+      stopLog();
+
       System.exit(1);
+    }
+  }
+
+  private static void stopLog() {
+   ILoggerFactory loggerFactory = LoggerFactory.getILoggerFactory();
+    if (loggerFactory instanceof LoggerContext) {
+      LoggerContext context = (LoggerContext) loggerFactory;
+      context.stop();
     }
   }
 
