@@ -96,6 +96,15 @@ public class SingularityOfferCache implements OfferCache, RemovalListener<String
   }
 
   @Override
+  public List<Offer> peakOffers() {
+    List<Offer> offers = new ArrayList<>((int) offerCache.size());
+    for (CachedOffer cachedOffer : offerCache.asMap().values()) {
+      offers.add(cachedOffer.offer);
+    }
+    return offers;
+  }
+
+  @Override
   public void returnOffer(OfferID offerId) {
     synchronized (offerCache) {
       CachedOffer existingCachedOffer = offerCache.getIfPresent(offerId.getValue());
@@ -138,19 +147,16 @@ public class SingularityOfferCache implements OfferCache, RemovalListener<String
     }
 
     private void checkOut() {
-      LOG.trace("Checking out offer {}", offerId);
       Preconditions.checkState(offerState == OfferState.AVAILABLE, "Offer %s was in state %s", offerId, offerState);
       this.offerState = OfferState.CHECKED_OUT;
     }
 
     private void checkIn() {
-      LOG.trace("Checking in offer {}", offerId);
       Preconditions.checkState(offerState == OfferState.CHECKED_OUT, "Offer %s was in state %s", offerId, offerState);
       this.offerState = OfferState.AVAILABLE;
     }
 
     private void expire() {
-      LOG.trace("Expiring offer {}", offerId);
       Preconditions.checkState(offerState == OfferState.CHECKED_OUT, "Offer %s was in state %s", offerId, offerState);
       this.offerState = OfferState.EXPIRED;
     }
