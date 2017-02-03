@@ -7,7 +7,6 @@ import org.apache.mesos.Protos.TaskState;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.hubspot.singularity.executor.SingularityExecutorMonitor.KillState;
 import com.hubspot.singularity.executor.SingularityExecutorMonitor.SubmitState;
@@ -91,6 +90,7 @@ public class SingularityExecutor implements Executor {
           task.getLog().info("Launched task {} with data {}", taskId, task.getExecutorData());
           break;
       }
+
     } catch (Throwable t) {
       LOG.error("Unexpected exception starting task {}", taskId, t);
 
@@ -146,7 +146,7 @@ public class SingularityExecutor implements Executor {
   public void shutdown(ExecutorDriver executorDriver) {
     LOG.info("Asked to shutdown executor...");
 
-    monitor.shutdown(Optional.of(executorDriver));
+    monitor.shutdown(executorDriver);
   }
 
   /**

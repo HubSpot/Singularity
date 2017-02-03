@@ -14,11 +14,13 @@ import java.util.concurrent.locks.ReentrantLock;
 
 import org.apache.mesos.ExecutorDriver;
 import org.apache.mesos.Protos;
+import org.apache.mesos.Protos.Status;
 import org.apache.mesos.Protos.TaskState;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.Maps;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
@@ -66,7 +68,8 @@ public class SingularityExecutorMonitor {
   private final Map<String, ListeningExecutorService> taskToShellCommandPool;
 
   @Inject
-  public SingularityExecutorMonitor(@Named(SingularityExecutorModule.ALREADY_SHUT_DOWN) AtomicBoolean alreadyShutDown, SingularityExecutorLogging logging, ExecutorUtils executorUtils, SingularityExecutorProcessKiller processKiller, SingularityExecutorThreadChecker threadChecker, SingularityExecutorConfiguration configuration) {
+  public SingularityExecutorMonitor(@Named(SingularityExecutorModule.ALREADY_SHUT_DOWN) AtomicBoolean alreadyShutDown, SingularityExecutorLogging logging, ExecutorUtils executorUtils,
+      SingularityExecutorProcessKiller processKiller, SingularityExecutorThreadChecker threadChecker, SingularityExecutorConfiguration configuration) {
     this.logging = logging;
     this.configuration = configuration;
     this.executorUtils = executorUtils;
@@ -83,23 +86,27 @@ public class SingularityExecutorMonitor {
     this.processBuilderPool = MoreExecutors.listeningDecorator(Executors.newCachedThreadPool(new ThreadFactoryBuilder().setNameFormat("SingularityExecutorProcessBuilder-%d").build()));
     this.runningProcessPool = MoreExecutors.listeningDecorator(Executors.newCachedThreadPool(new ThreadFactoryBuilder().setNameFormat("SingularityExecutorProcessRunner-%d").build()));
 
-    this.runState = RunState.RUNNING;
+    this.runState = RunState.STARTING;
     this.exitLock = new ReentrantLock();
     this.alreadyShutDown = alreadyShutDown;
     this.latch = new CountDownLatch(4);
+  }
 
-    this.exitCheckerFuture = Optional.of(startExitChecker(Optional.<ExecutorDriver> absent(), configuration.getInitialIdleExecutorShutdownWaitMillis()));
+  public void start(ExecutorDriver driver) {
+    Preconditions.checkState(runState == RunState.STARTING);
+    this.runState = RunState.RUNNING;
+    this.exitCheckerFuture = Optional.of(startExitChecker(driver, configuration.getInitialIdleExecutorShutdownWaitMillis()));
   }
 
   public enum RunState {
-    RUNNING, SHUTDOWN;
+    STARTING, RUNNING, SHUTDOWN;
   }
 
   public enum SubmitState {
     SUBMITTED, REJECTED, TASK_ALREADY_EXISTED;
   }
 
-  public void shutdown(Optional<ExecutorDriver> driver) {
+  public void shutdown(ExecutorDriver driver) {
     if (!alreadyShutDown.compareAndSet(false, true)) {
       LOG.info("Already ran shut down process");
       return;
@@ -151,15 +158,12 @@ public class SingularityExecutorMonitor {
       LOG.warn("While waiting to exit", t);
     }
 
-    if (driver.isPresent()) {
-      LOG.info("Stopping driver {}", driver.get());
-      driver.get().stop();
-    } else {
-      logAndExit(1, "No driver present on shutdown, exiting");
-    }
+    LOG.info("Stopping driver {}", driver);
+    Status status = driver.stop();
+    LOG.info("Driver stopped with status {}", status);
   }
 
-  private void checkForExit(final Optional<ExecutorDriver> driver, final long waitMillis) {
+  private void checkForExit(final ExecutorDriver driver, final long waitMillis) {
     try {
       exitLock.lockInterruptibly();
     } catch (InterruptedException e) {
@@ -189,7 +193,7 @@ public class SingularityExecutorMonitor {
   }
 
   @SuppressWarnings("rawtypes")
-  private Future startExitChecker(final Optional<ExecutorDriver> driver, final long waitTimeMillis) {
+  private Future startExitChecker(final ExecutorDriver driver, final long waitTimeMillis) {
     LOG.info("Starting an exit checker that will run in {}", JavaUtils.durationFromMillis(waitTimeMillis));
 
     return exitChecker.schedule(new Runnable() {
@@ -389,7 +393,7 @@ public class SingularityExecutorMonitor {
       clearExitCheckerUnsafe();
 
       if (tasks.isEmpty() && runState == RunState.RUNNING) {
-        exitCheckerFuture = Optional.of(startExitChecker(Optional.of(driver), configuration.getIdleExecutorShutdownWaitMillis()));
+        exitCheckerFuture = Optional.of(startExitChecker(driver, configuration.getIdleExecutorShutdownWaitMillis()));
       }
     } finally {
       exitLock.unlock();
@@ -469,9 +473,9 @@ public class SingularityExecutorMonitor {
       } else {
         task.getLog().info("Killing process for task {}", taskId);
       }
+
       processKiller.submitKillRequest(runningProcess);
       return KillState.KILLING_PROCESS;
-
     }
 
     return KillState.INCONSISTENT_STATE;
