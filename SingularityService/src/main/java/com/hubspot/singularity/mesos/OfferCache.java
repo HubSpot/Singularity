@@ -18,4 +18,6 @@ public interface OfferCache {
 
   public void returnOffer(OfferID offerId);
 
+  public List<Offer> peakOffers();
+
 }
