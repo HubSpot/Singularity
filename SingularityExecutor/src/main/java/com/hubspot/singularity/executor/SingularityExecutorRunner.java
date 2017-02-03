@@ -1,12 +1,10 @@
 package com.hubspot.singularity.executor;
 
-import org.apache.mesos.ExecutorDriver;
 import org.apache.mesos.MesosExecutorDriver;
 import org.apache.mesos.Protos;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.Guice;
 import com.google.inject.Inject;
@@ -57,13 +55,14 @@ public class SingularityExecutorRunner {
     LOG.info("{} starting MesosExecutorDriver...", name);
 
     final MesosExecutorDriver driver = new MesosExecutorDriver(singularityExecutor);
+    monitor.start(driver);
 
     Runtime.getRuntime().addShutdownHook(new Thread("SingularityExecutorRunnerGracefulShutdown") {
 
       @Override
       public void run() {
         LOG.info("Executor is shutting down, ensuring shutdown via shutdown hook");
-        monitor.shutdown(Optional.of((ExecutorDriver) driver));
+        monitor.shutdown(driver);
       }
 
     });
