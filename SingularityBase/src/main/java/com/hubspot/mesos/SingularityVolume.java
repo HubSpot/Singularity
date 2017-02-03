@@ -48,7 +48,11 @@ public class SingularityVolume {
 
   @Override
   public String toString() {
-    return String.format("Volume [containerPath=%s, hostPath=%s, mode=%s]", containerPath, hostPath, mode);
+    return "SingularityVolume{" +
+        "containerPath='" + containerPath + '\'' +
+        ", hostPath=" + hostPath +
+        ", mode=" + mode +
+        '}';
   }
 
   @Override
