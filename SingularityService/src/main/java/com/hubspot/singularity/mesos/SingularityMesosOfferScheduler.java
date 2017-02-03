@@ -85,7 +85,7 @@ public class SingularityMesosOfferScheduler {
     return taskRequestHolders;
   }
 
-  public List<SingularityOfferHolder> checkOffers(final List<Protos.Offer> offers, final Set<Protos.OfferID> acceptedOffers) {
+  public List<SingularityOfferHolder> checkOffers(final Collection<Protos.Offer> offers, final Set<Protos.OfferID> acceptedOffers) {
     final SingularitySchedulerStateCache stateCache = stateCacheProvider.get();
 
     scheduler.checkForDecomissions(stateCache);

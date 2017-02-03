@@ -6,17 +6,19 @@ import org.apache.mesos.Protos.Offer;
 import org.apache.mesos.Protos.OfferID;
 import org.apache.mesos.SchedulerDriver;
 
+import com.hubspot.singularity.mesos.SingularityOfferCache.CachedOffer;
+
 public interface OfferCache {
 
   public void cacheOffer(SchedulerDriver driver, long timestamp, Offer offer);
 
   public void rescindOffer(SchedulerDriver driver, OfferID offerId);
 
-  public void useOffer(OfferID offerId);
+  public void useOffer(CachedOffer cachedOffer);
 
-  public List<Offer> checkoutOffers();
+  public List<CachedOffer> checkoutOffers();
 
-  public void returnOffer(OfferID offerId);
+  public void returnOffer(CachedOffer cachedOffer);
 
   public List<Offer> peakOffers();
 
