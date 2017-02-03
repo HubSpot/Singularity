@@ -1,9 +1,7 @@
 package com.hubspot.singularity.mesos;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.mesos.Protos.Offer;
@@ -34,7 +32,6 @@ public class SingularityOfferCache implements OfferCache, RemovalListener<String
   private final Cache<String, CachedOffer> offerCache;
   private final SchedulerDriverSupplier schedulerDriverSupplier;
   private final SingularityConfiguration configuration;
-  private final Map<String, CachedOffer> pendingDeclines;
 
   @Inject
   public SingularityOfferCache(SingularityConfiguration configuration, SchedulerDriverSupplier schedulerDriverSupplier) {
@@ -46,8 +43,6 @@ public class SingularityOfferCache implements OfferCache, RemovalListener<String
         .maximumSize(configuration.getOfferCacheSize())
         .removalListener(this)
         .build();
-
-    pendingDeclines = new HashMap<>();
   }
 
   @Override
@@ -69,7 +64,6 @@ public class SingularityOfferCache implements OfferCache, RemovalListener<String
       if (notification.getValue().offerState == OfferState.AVAILABLE) {
         declineOffer(notification.getValue());
       } else {
-        pendingDeclines.put(notification.getKey(), notification.getValue());
         notification.getValue().expire();
       }
     }
@@ -81,16 +75,16 @@ public class SingularityOfferCache implements OfferCache, RemovalListener<String
   }
 
   @Override
-  public void useOffer(OfferID offerId) {
-    offerCache.invalidate(offerId.getValue());
+  public void useOffer(CachedOffer cachedOffer) {
+    offerCache.invalidate(cachedOffer.offerId);
   }
 
   @Override
-  public List<Offer> checkoutOffers() {
-    List<Offer> offers = new ArrayList<>((int) offerCache.size());
+  public List<CachedOffer> checkoutOffers() {
+    List<CachedOffer> offers = new ArrayList<>((int) offerCache.size());
     for (CachedOffer cachedOffer : offerCache.asMap().values()) {
       cachedOffer.checkOut();
-      offers.add(cachedOffer.offer);
+      offers.add(cachedOffer);
     }
     return offers;
   }
@@ -105,14 +99,12 @@ public class SingularityOfferCache implements OfferCache, RemovalListener<String
   }
 
   @Override
-  public void returnOffer(OfferID offerId) {
+  public void returnOffer(CachedOffer cachedOffer) {
     synchronized (offerCache) {
-      CachedOffer existingCachedOffer = offerCache.getIfPresent(offerId.getValue());
-
-      if (existingCachedOffer == null || existingCachedOffer.offerState == OfferState.EXPIRED) {
-        declineOffer(pendingDeclines.get(offerId.getValue()));
+      if (cachedOffer.offerState == OfferState.EXPIRED) {
+        declineOffer(cachedOffer);
       } else {
-        existingCachedOffer.checkIn();
+        cachedOffer.checkIn();
       }
     }
   }
@@ -144,6 +136,14 @@ public class SingularityOfferCache implements OfferCache, RemovalListener<String
       this.offerId = offer.getId().getValue();
       this.offer = offer;
       this.offerState = OfferState.AVAILABLE;
+    }
+
+    public Offer getOffer() {
+      return offer;
+    }
+
+    public String getOfferId() {
+      return offerId;
     }
 
     private void checkOut() {

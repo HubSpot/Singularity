@@ -1,11 +1,15 @@
 package com.hubspot.singularity.scheduler;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
 
 import javax.inject.Singleton;
 
+import org.apache.mesos.Protos.Offer;
 import org.apache.mesos.Protos.OfferID;
 import org.apache.mesos.SchedulerDriver;
 import org.slf4j.Logger;
@@ -21,6 +25,7 @@ import com.hubspot.singularity.mesos.OfferCache;
 import com.hubspot.singularity.mesos.SchedulerDriverSupplier;
 import com.hubspot.singularity.mesos.SingularityMesosModule;
 import com.hubspot.singularity.mesos.SingularityMesosOfferScheduler;
+import com.hubspot.singularity.mesos.SingularityOfferCache.CachedOffer;
 import com.hubspot.singularity.mesos.SingularityOfferHolder;
 
 @Singleton
@@ -46,7 +51,16 @@ public class SingularitySchedulerPoller extends SingularityLeaderOnlyPoller {
   public void runActionOnPoll() {
     final long start = System.currentTimeMillis();
 
-    List<SingularityOfferHolder> offerHolders = offerScheduler.checkOffers(offerCache.checkoutOffers(), Sets.<OfferID> newHashSet());
+    List<CachedOffer> cachedOffers = offerCache.checkoutOffers();
+    Map<String, CachedOffer> offerIdToCachedOffer = new HashMap<>(cachedOffers.size());
+    List<Offer> offers = new ArrayList<>(cachedOffers.size());
+
+    for (CachedOffer cachedOffer : cachedOffers) {
+      offerIdToCachedOffer.put(cachedOffer.getOfferId(), cachedOffer);
+      offers.add(cachedOffer.getOffer());
+    }
+
+    List<SingularityOfferHolder> offerHolders = offerScheduler.checkOffers(offers, Sets.<OfferID> newHashSet());
 
     if (offerHolders.isEmpty()) {
       return;
@@ -63,13 +77,15 @@ public class SingularitySchedulerPoller extends SingularityLeaderOnlyPoller {
     int launchedTasks = 0;
 
     for (SingularityOfferHolder offerHolder : offerHolders) {
+      CachedOffer cachedOffer = offerIdToCachedOffer.get(offerHolder.getOffer().getId().getValue());
+
       if (!offerHolder.getAcceptedTasks().isEmpty()) {
         offerHolder.launchTasks(driver.get());
         launchedTasks += offerHolder.getAcceptedTasks().size();
         acceptedOffers++;
-        offerCache.useOffer(offerHolder.getOffer().getId());
+        offerCache.useOffer(cachedOffer);
       } else {
-        offerCache.returnOffer(offerHolder.getOffer().getId());
+        offerCache.returnOffer(cachedOffer);
       }
     }
 
