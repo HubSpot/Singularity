@@ -47,6 +47,10 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
 
   @Min(0)
   @JsonProperty
+  private long initialIdleExecutorShutdownWaitMillis = TimeUnit.MINUTES.toMillis(1);
+
+  @Min(0)
+  @JsonProperty
   private long idleExecutorShutdownWaitMillis = TimeUnit.SECONDS.toMillis(10);
 
   @Min(0)
@@ -634,6 +638,14 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
 
   public void setLogrotateCompressionSettings(LogrotateCompressionSettings logrotateCompressionSettings) {
     this.logrotateCompressionSettings = logrotateCompressionSettings;
+  }
+
+  public long getInitialIdleExecutorShutdownWaitMillis() {
+    return initialIdleExecutorShutdownWaitMillis;
+  }
+
+  public void setInitialIdleExecutorShutdownWaitMillis(long initialIdleExecutorShutdownWaitMillis) {
+    this.initialIdleExecutorShutdownWaitMillis = initialIdleExecutorShutdownWaitMillis;
   }
 
   @Override

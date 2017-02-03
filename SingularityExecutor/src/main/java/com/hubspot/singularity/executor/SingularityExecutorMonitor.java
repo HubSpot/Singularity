@@ -88,7 +88,7 @@ public class SingularityExecutorMonitor {
     this.alreadyShutDown = alreadyShutDown;
     this.latch = new CountDownLatch(4);
 
-    this.exitCheckerFuture = Optional.of(startExitChecker(Optional.<ExecutorDriver> absent()));
+    this.exitCheckerFuture = Optional.of(startExitChecker(Optional.<ExecutorDriver> absent(), configuration.getInitialIdleExecutorShutdownWaitMillis()));
   }
 
   public enum RunState {
@@ -159,7 +159,7 @@ public class SingularityExecutorMonitor {
     }
   }
 
-  private void checkForExit(final Optional<ExecutorDriver> driver) {
+  private void checkForExit(final Optional<ExecutorDriver> driver, final long waitMillis) {
     try {
       exitLock.lockInterruptibly();
     } catch (InterruptedException e) {
@@ -171,7 +171,7 @@ public class SingularityExecutorMonitor {
 
     try {
       if (tasks.isEmpty()) {
-        LOG.info("Shutting down executor due to no tasks being submitted within {}", JavaUtils.durationFromMillis(configuration.getIdleExecutorShutdownWaitMillis()));
+        LOG.info("Shutting down executor due to no tasks being submitted within {}", JavaUtils.durationFromMillis(waitMillis));
         runState = RunState.SHUTDOWN;
         shuttingDown = true;
       }
@@ -189,8 +189,8 @@ public class SingularityExecutorMonitor {
   }
 
   @SuppressWarnings("rawtypes")
-  private Future startExitChecker(final Optional<ExecutorDriver> driver) {
-    LOG.info("Starting an exit checker that will run in {}", JavaUtils.durationFromMillis(configuration.getIdleExecutorShutdownWaitMillis()));
+  private Future startExitChecker(final Optional<ExecutorDriver> driver, final long waitTimeMillis) {
+    LOG.info("Starting an exit checker that will run in {}", JavaUtils.durationFromMillis(waitTimeMillis));
 
     return exitChecker.schedule(new Runnable() {
 
@@ -199,12 +199,12 @@ public class SingularityExecutorMonitor {
         LOG.info("Exit checker running...");
 
         try {
-          checkForExit(driver);
+          checkForExit(driver, waitTimeMillis);
         } catch (Throwable t) {
           logAndExit(2, "While shutting down", t);
         }
       }
-    }, configuration.getIdleExecutorShutdownWaitMillis(), TimeUnit.MILLISECONDS);
+    }, waitTimeMillis, TimeUnit.MILLISECONDS);
   }
 
   private void clearExitCheckerUnsafe() {
@@ -388,8 +388,8 @@ public class SingularityExecutorMonitor {
     try {
       clearExitCheckerUnsafe();
 
-      if (tasks.isEmpty()) {
-        exitCheckerFuture = Optional.of(startExitChecker(Optional.of(driver)));
+      if (tasks.isEmpty() && runState == RunState.RUNNING) {
+        exitCheckerFuture = Optional.of(startExitChecker(Optional.of(driver), configuration.getIdleExecutorShutdownWaitMillis()));
       }
     } finally {
       exitLock.unlock();
