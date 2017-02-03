@@ -3808,7 +3808,7 @@ Start a new deployment for a Request
 | name | type | required | description |
 |------|------|----------|-------------|
 | expiringSkipHealthchecks | [SingularityExpiringSkipHealthchecks](#model-SingularityExpiringSkipHealthchecks) | optional |  |
-| state | [RequestState](#model-RequestState) | optional |  Allowable values: ACTIVE, DELETED, PAUSED, SYSTEM_COOLDOWN, FINISHED, DEPLOYING_TO_UNPAUSE |
+| state | [RequestState](#model-RequestState) | optional |  Allowable values: ACTIVE, DELETING, DELETED, PAUSED, SYSTEM_COOLDOWN, FINISHED, DEPLOYING_TO_UNPAUSE |
 | pendingDeploy | [SingularityDeploy](#model-SingularityDeploy) | optional |  |
 | activeDeploy | [SingularityDeploy](#model-SingularityDeploy) | optional |  |
 | expiringPause | [SingularityExpiringPause](#model-SingularityExpiringPause) | optional |  |

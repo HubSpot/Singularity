@@ -160,14 +160,8 @@ const RequestActionButtons = ({requestParent, fetchRequest, fetchRequestHistory,
     }
   }
 
-  const navigateAwayOnSuccess = (response) => {
-    if (response.statusCode === 200) {
-      router.push('/requests');
-    }
-  };
-
   const removeButton = (
-    <RemoveButton requestId={request.id} then={navigateAwayOnSuccess}>
+    <RemoveButton requestId={request.id} then={fetchRequestAndHistoryAndActiveTasks}>
       <Button bsStyle="danger">
         Remove
       </Button>
