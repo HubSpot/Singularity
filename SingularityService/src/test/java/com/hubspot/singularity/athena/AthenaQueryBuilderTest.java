@@ -19,19 +19,18 @@ public class AthenaQueryBuilderTest {
         "json_formatted_table",
         AthenaDataFormat.HIVE_JSON,
         ImmutableList.of(
-            new AthenaField("timestamp", "string", "Timestamp"),
-            new AthenaField("ip", "string", "IP Address"),
-            new AthenaField("hostname", "string", "Hostname")
+            new AthenaField("timestamp", AthenaFieldType.TIMESTAMP, "Timestamp"),
+            new AthenaField("ip", AthenaFieldType.STRING, "IP Address"),
+            new AthenaField("hostname", AthenaFieldType.STRING, "Hostname")
         ),
         ImmutableList.of(
             AthenaPartitionType.REQUESTID,
             AthenaPartitionType.YEAR
         ),
         ImmutableList.of("test-request-id"),
-        "serde 'org.apache.hive.hcatalog.data.JsonSerDe'",
         "s3://my-bucket-name/prefix"
     );
-    String expectedQuery = "CREATE EXTERNAL TABLE IF NOT EXISTS json_formatted_table (`timestamp` string, `ip` string, `hostname` string) PARTITIONED BY (`requestId` string, `year` int) ROW FORMAT SERDE 'org.apache.hive.hcatalog.data.JsonSerDe' with serdeproperties ( 'paths'='`timestamp`,`ip`,`hostname`' ) LOCATION 's3://my-bucket-name/prefix';";
+    String expectedQuery = "CREATE EXTERNAL TABLE IF NOT EXISTS json_formatted_table (`timestamp` TIMESTAMP, `ip` STRING, `hostname` STRING) PARTITIONED BY (`requestId` string, `year` int) ROW FORMAT SERDE 'org.apache.hive.hcatalog.data.JsonSerDe' with serdeproperties ( 'paths'='`timestamp`,`ip`,`hostname`' ) LOCATION 's3://my-bucket-name/prefix';";
     Assert.assertEquals(expectedQuery, AthenaQueryBuilder.createTableQuery(table));
   }
 
@@ -68,7 +67,6 @@ public class AthenaQueryBuilderTest {
             AthenaPartitionType.DAY
         ),
         ImmutableList.of("test-request-id"),
-        "serde 'org.apache.hive.hcatalog.data.JsonSerDe'",
         "s3://my-bucket-name/prefix"
     );
 

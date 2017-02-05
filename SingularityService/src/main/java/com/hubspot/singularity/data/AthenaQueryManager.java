@@ -114,7 +114,7 @@ public class AthenaQueryManager extends CuratorAsyncManager {
   }
 
   public SingularityCreateResult saveQueryResult(Optional<SingularityUser> user, AthenaQueryInfo queryResult) {
-    return save(getQueryResultPath(user, queryResult.getQueryExecutionId()), queryResult, queryResultTranscoder);
+    return save(getQueryResultPath(user, queryResult.getId()), queryResult, queryResultTranscoder);
   }
 
   private String getTablePath(String name) {

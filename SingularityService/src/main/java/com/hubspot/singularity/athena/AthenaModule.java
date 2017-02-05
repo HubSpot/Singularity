@@ -2,9 +2,9 @@ package com.hubspot.singularity.athena;
 
 import java.util.concurrent.Executors;
 
-import com.amazonaws.athena.jdbc.shaded.guava.util.concurrent.ListeningExecutorService;
-import com.amazonaws.athena.jdbc.shaded.guava.util.concurrent.MoreExecutors;
 import com.google.common.base.Optional;
+import com.google.common.util.concurrent.ListeningExecutorService;
+import com.google.common.util.concurrent.MoreExecutors;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Scopes;
