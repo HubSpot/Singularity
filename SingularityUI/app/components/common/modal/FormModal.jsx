@@ -245,6 +245,7 @@ export default class FormModal extends React.Component {
                 <MenuItem
                   eventKey={index}
                   onSelect={() => this.handleFormChange(formElement.name, optionValue)}
+                  className="select-options"
                 >
                   {this.renderFormattedOptions(optionValue)}
                 </MenuItem>
