@@ -1,7 +1,7 @@
 import React from 'react';
 import classNames from 'classnames';
 
-import { Modal, Button, Popover, OverlayTrigger, DropdownButton, MenuItem } from 'react-bootstrap';
+import { Modal, Button, Popover, OverlayTrigger, Tooltip, DropdownButton, MenuItem } from 'react-bootstrap';
 import TagsInput from 'react-tagsinput';
 import MultiInput from '../formItems/MultiInput';
 import Select from 'react-select';
@@ -211,6 +211,10 @@ export default class FormModal extends React.Component {
     }
   }
 
+  renderTooltipOptions(optionValue) {
+    return (<Tooltip> {optionValue} </Tooltip>)
+  }
+
   renderForm() {
     const inputs = this.props.formElements.map((formElement) => {
       const error = this.state.errors[formElement.name];
@@ -242,13 +246,18 @@ export default class FormModal extends React.Component {
                 menuItems.push(<MenuItem divider />);
               }
               menuItems.push(
-                <MenuItem
-                  eventKey={index}
-                  onSelect={() => this.handleFormChange(formElement.name, optionValue)}
-                  className="select-options"
-                >
-                  {this.renderFormattedOptions(optionValue)}
-                </MenuItem>
+                <OverlayTrigger
+                  placement='top'
+                  overlay={this.renderTooltipOptions(optionValue)}
+                  >
+                  <MenuItem
+                    eventKey={index}
+                    onSelect={() => this.handleFormChange(formElement.name, optionValue)}
+                    className="select-options"
+                  >
+                    {this.renderFormattedOptions(optionValue)}
+                  </MenuItem>
+                </OverlayTrigger>
               );
             }
           });

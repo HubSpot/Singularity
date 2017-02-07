@@ -92,7 +92,11 @@ class RunNowModal extends Component {
               type: FormModal.INPUT_TYPES.MULTIINPUT,
               label: 'Additional command line arguments: (optional)',
               defaultValue: this.defaultCommandLineArgs(),
-              valueOptions: this.props.requestArgHistory
+              valueOptions: [
+                'This is a very long message that might be appearing in the course of running this application ffffffffff ffffffffffffffff ffffffffffff ffffffffff',
+                'This is also a very long message which might also appear in the course of running this application but this one doesn\'t have garbage at the end',
+                'this one is shorter'
+              ]
             },
             {
               name: 'message',
