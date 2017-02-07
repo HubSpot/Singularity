@@ -1,5 +1,6 @@
 package com.hubspot.singularity;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -10,6 +11,7 @@ import com.hubspot.deploy.ExecutorData;
 import com.hubspot.deploy.HealthcheckOptions;
 import com.hubspot.mesos.Resources;
 import com.hubspot.mesos.SingularityContainerInfo;
+import com.hubspot.mesos.SingularityMesosArtifact;
 import com.hubspot.mesos.SingularityMesosTaskLabel;
 
 public class SingularityDeployBuilder {
@@ -35,7 +37,7 @@ public class SingularityDeployBuilder {
   private Optional<List<String>> arguments;
   private Optional<Map<String, String>> env;
   private Optional<Map<Integer, Map<String, String>>> taskEnv;
-  private Optional<List<String>> uris;
+  private Optional<List<SingularityMesosArtifact>> uris;
   private Optional<ExecutorData> executorData;
   private Optional<Map<String, String>> labels;
   private Optional<List<SingularityMesosTaskLabel>> mesosLabels;
@@ -308,12 +310,26 @@ public class SingularityDeployBuilder {
     return this;
   }
 
-  public Optional<List<String>> getUris() {
+  public Optional<List<SingularityMesosArtifact>> getUris() {
     return uris;
   }
 
+  @Deprecated
   public SingularityDeployBuilder setUris(Optional<List<String>> uris) {
-    this.uris = uris;
+    if (uris.isPresent()) {
+      List<SingularityMesosArtifact> artifactUris = new ArrayList<>();
+      for (String uri : uris.get()) {
+        artifactUris.add(SingularityMesosArtifact.fromString(uri));
+      }
+      this.uris = Optional.of(artifactUris);
+    } else {
+      this.uris = Optional.absent();
+    }
+    return this;
+  }
+
+  public SingularityDeployBuilder setUris(List<SingularityMesosArtifact> uris) {
+    this.uris = Optional.of(uris);
     return this;
   }
 
