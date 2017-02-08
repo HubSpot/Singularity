@@ -146,11 +146,14 @@ public class SingularitySlaveAndRackManager {
     final String sanitizedHost = offer.getSanitizedHost();
     final String sanitizedRackId = offer.getSanitizedRackId();
     Collection<SingularityTaskId> cleaningTasks = stateCache.getCleaningTasks();
+    LOG.debug("cleaningTasks {}", cleaningTasks);
+    LOG.debug("activeTaskIdsForRequest {}", stateCache.getActiveTaskIdsForRequest(taskRequest.getRequest().getId()));
 
     for (SingularityTaskId taskId : stateCache.getActiveTaskIdsForRequest(taskRequest.getRequest().getId())) {
       // TODO consider using executorIds
 
       if (!cleaningTasks.contains(taskId) && taskRequest.getDeploy().getId().equals(taskId.getDeployId())) {
+        LOG.debug("taskId {} is already on rackId {}", taskId, taskId.getSanitizedRackId());
         countPerRack.add(taskId.getSanitizedRackId());
       }
 
@@ -246,6 +249,7 @@ public class SingularitySlaveAndRackManager {
   }
 
   private boolean isRackOk(Multiset<String> countPerRack, String sanitizedRackId, int numDesiredInstances, String requestId, String slaveId, String host, double numCleaningOnSlave, SingularitySchedulerStateCache stateCache) {
+    LOG.debug("countPerRack {}", countPerRack);
     int racksAccountedFor = countPerRack.elementSet().size();
     double numPerRack = numDesiredInstances / (double) stateCache.getNumActiveRacks();
     if (racksAccountedFor < stateCache.getNumActiveRacks()) {
