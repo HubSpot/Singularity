@@ -392,6 +392,7 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper implements S
       if (metadata.getUploadImmediately().isPresent() && metadata.getUploadImmediately().get()) {
         LOG.debug("Existing metadata {} from {} changed to be immediate, forcing upload", metadata, filename);
         performImmediateUpload(existingUploader);
+        return true;
       } else if (existingUploader.getUploadMetadata().isFinished() == metadata.isFinished()) {
         LOG.debug("Ignoring metadata {} from {} because there was already one present", metadata, filename);
         return false;
@@ -499,5 +500,4 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper implements S
 
     return true;
   }
-
 }
