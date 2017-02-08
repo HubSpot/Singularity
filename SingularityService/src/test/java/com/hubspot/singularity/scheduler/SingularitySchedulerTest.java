@@ -243,6 +243,26 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
   }
 
   @Test
+  public void testTaskDestroy() {
+    initRequest();
+    initFirstDeploy();
+
+    SingularityTask firstTask = startTask(firstDeploy, 1);
+    SingularityTask secondTask = startTask(firstDeploy, 2);
+    SingularityTask thirdTask = startTask(firstDeploy, 3);
+
+    taskResource.killTask(secondTask.getTaskId().getId(), Optional.of(
+        new SingularityKillTaskRequest(Optional.of(true), Optional.of("kill -9 bb"), Optional.<String> absent(), Optional.<Boolean> absent(), Optional.<SingularityShellCommand> absent())));
+
+    cleaner.drainCleanupQueue();
+    killKilledTasks();
+
+    Assert.assertEquals(2, taskManager.getNumActiveTasks());
+    Assert.assertEquals(0, requestManager.getCleanupRequests().size());
+    Assert.assertEquals(RequestState.ACTIVE, requestManager.getRequest(requestId).get().getState());
+  }
+
+  @Test
   public void testTaskBounce() {
     initRequest();
     initFirstDeploy();
