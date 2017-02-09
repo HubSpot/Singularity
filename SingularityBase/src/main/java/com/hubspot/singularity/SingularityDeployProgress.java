@@ -7,18 +7,24 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class SingularityDeployProgress {
   private final int targetActiveInstances;
+  private final int currentActiveInstances;
   private final int deployInstanceCountPerStep;
   private final long deployStepWaitTimeMs;
   private final boolean stepComplete;
   private final boolean autoAdvanceDeploySteps;
   private final Set<SingularityTaskId> failedDeployTasks;
   private final long timestamp;
-
   @JsonCreator
-  public SingularityDeployProgress(@JsonProperty("targetActiveInstances") int targetActiveInstances, @JsonProperty("deployInstanceCountPerStep") int deployInstanceCountPerStep,
-    @JsonProperty("deployStepWaitTimeMs") long deployStepWaitTimeMs, @JsonProperty("stepComplete") boolean stepComplete, @JsonProperty("autoAdvanceDeploySteps") boolean autoAdvanceDeploySteps,
-    @JsonProperty("failedDeployTasks") Set<SingularityTaskId> failedDeployTasks, @JsonProperty("timestamp") long timestamp) {
+  public SingularityDeployProgress(@JsonProperty("targetActiveInstances") int targetActiveInstances,
+                                   @JsonProperty("currentActiveInstances") int currentActiveInstances,
+                                   @JsonProperty("deployInstanceCountPerStep") int deployInstanceCountPerStep,
+                                   @JsonProperty("deployStepWaitTimeMs") long deployStepWaitTimeMs,
+                                   @JsonProperty("stepComplete") boolean stepComplete,
+                                   @JsonProperty("autoAdvanceDeploySteps") boolean autoAdvanceDeploySteps,
+                                   @JsonProperty("failedDeployTasks") Set<SingularityTaskId> failedDeployTasks,
+                                   @JsonProperty("timestamp") long timestamp) {
     this.targetActiveInstances = targetActiveInstances;
+    this.currentActiveInstances = currentActiveInstances;
     this.deployInstanceCountPerStep = deployInstanceCountPerStep;
     this.deployStepWaitTimeMs = deployStepWaitTimeMs;
     this.stepComplete = stepComplete;
@@ -29,6 +35,10 @@ public class SingularityDeployProgress {
 
   public int getTargetActiveInstances() {
     return targetActiveInstances;
+  }
+
+  public int getCurrentActiveInstances() {
+    return currentActiveInstances;
   }
 
   public int getDeployInstanceCountPerStep() {
@@ -55,22 +65,27 @@ public class SingularityDeployProgress {
     return timestamp;
   }
 
-  public SingularityDeployProgress withNewInstances(int instances) {
-    return new SingularityDeployProgress(instances, deployInstanceCountPerStep, deployStepWaitTimeMs, false, autoAdvanceDeploySteps, failedDeployTasks, System.currentTimeMillis());
+  public SingularityDeployProgress withNewTargetInstances(int instances) {
+    return new SingularityDeployProgress(instances, currentActiveInstances, deployInstanceCountPerStep, deployStepWaitTimeMs, false, autoAdvanceDeploySteps, failedDeployTasks, System.currentTimeMillis());
+  }
+
+  public SingularityDeployProgress withNewActiveInstances(int instances) {
+    return new SingularityDeployProgress(targetActiveInstances, instances, deployInstanceCountPerStep, deployStepWaitTimeMs, false, autoAdvanceDeploySteps, failedDeployTasks, System.currentTimeMillis());
   }
 
   public SingularityDeployProgress withCompletedStep() {
-    return new SingularityDeployProgress(targetActiveInstances, deployInstanceCountPerStep, deployStepWaitTimeMs, true, autoAdvanceDeploySteps, failedDeployTasks, System.currentTimeMillis());
+    return new SingularityDeployProgress(targetActiveInstances, currentActiveInstances, deployInstanceCountPerStep, deployStepWaitTimeMs, true, autoAdvanceDeploySteps, failedDeployTasks, System.currentTimeMillis());
   }
 
   public SingularityDeployProgress withFailedTasks(Set<SingularityTaskId> failedTasks) {
-    return new SingularityDeployProgress(targetActiveInstances, deployInstanceCountPerStep, deployStepWaitTimeMs, false, autoAdvanceDeploySteps, failedTasks, System.currentTimeMillis());
+    return new SingularityDeployProgress(targetActiveInstances, currentActiveInstances, deployInstanceCountPerStep, deployStepWaitTimeMs, false, autoAdvanceDeploySteps, failedTasks, System.currentTimeMillis());
   }
 
   @Override
   public String toString() {
     return "SingularityIncrementalDeployProgress{" +
       "targetActiveInstances=" + targetActiveInstances +
+      ", currentActiveInstances=" + currentActiveInstances +
       ", deployInstanceCountPerStep=" + deployInstanceCountPerStep +
       ", deployStepWaitTimeMs=" + deployStepWaitTimeMs +
       ", stepComplete=" + stepComplete +
