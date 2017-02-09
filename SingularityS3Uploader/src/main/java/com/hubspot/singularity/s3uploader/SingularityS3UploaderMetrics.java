@@ -19,6 +19,7 @@ public class SingularityS3UploaderMetrics {
   private final MetricRegistry registry;
   private final Counter uploaderCounter;
   private final Counter uploadCounter;
+  private final Counter immediateUploaderCounter;
   private final Counter errorCounter;
   private final Timer uploadTimer;
   private final Meter filesystemEventsMeter;
@@ -33,6 +34,7 @@ public class SingularityS3UploaderMetrics {
   public SingularityS3UploaderMetrics(MetricRegistry registry) {
     this.registry = registry;
     this.uploaderCounter = registry.counter(name("uploaders", "total"));
+    this.immediateUploaderCounter = registry.counter(name("uploaders", "total"));
     this.uploadCounter = registry.counter(name("uploads", "success"));
     this.errorCounter = registry.counter(name("uploads", "errors"));
     this.uploadTimer = registry.timer(name("uploads", "timer"));
@@ -123,6 +125,10 @@ public class SingularityS3UploaderMetrics {
 
   public Counter getUploaderCounter() {
     return uploaderCounter;
+  }
+
+  public Counter getImmediateUploaderCounter() {
+    return immediateUploaderCounter;
   }
 
   public Timer getUploadTimer() {
