@@ -3,7 +3,7 @@ package com.hubspot.singularity.athena;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 public enum AthenaPartitionType {
-  REQUESTID("requestId", "string"), YEAR("year", "int"), MONTH("month", "int"), DAY("day", "int");
+  REQUESTID("requestId", "string"), YEAR("year", "string"), MONTH("month", "string"), DAY("day", "string");
 
   private final String field;
   private final String type;

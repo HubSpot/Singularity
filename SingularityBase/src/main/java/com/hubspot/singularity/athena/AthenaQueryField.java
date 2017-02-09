@@ -1,19 +1,23 @@
 package com.hubspot.singularity.athena;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class AthenaQueryField {
   private final String field;
   private final ComparisonOperator comparisonOperator;
   private final String value;
+  private final AthenaFieldType type;
 
   @JsonCreator
-  public AthenaQueryField(@JsonProperty("field") String field, @JsonProperty("comparisonOperator") ComparisonOperator comparisonOperator, @JsonProperty("value") String value) {
+  public AthenaQueryField(@JsonProperty("field") String field,
+                          @JsonProperty("comparisonOperator") ComparisonOperator comparisonOperator,
+                          @JsonProperty("value") String value,
+                          @JsonProperty("type") AthenaFieldType type) {
     this.field = field;
     this.comparisonOperator = comparisonOperator;
     this.value = value;
+    this.type = type;
   }
 
   public String getField() {
@@ -28,9 +32,8 @@ public class AthenaQueryField {
     return value;
   }
 
-  @JsonIgnore
-  public String toQueryString() {
-    return String.format("%s %s '%s'", field, comparisonOperator.getValue(), value);
+  public AthenaFieldType getType() {
+    return type;
   }
 
   @Override
@@ -50,7 +53,10 @@ public class AthenaQueryField {
     if (comparisonOperator != that.comparisonOperator) {
       return false;
     }
-    return value != null ? value.equals(that.value) : that.value == null;
+    if (value != null ? !value.equals(that.value) : that.value != null) {
+      return false;
+    }
+    return type == that.type;
   }
 
   @Override
@@ -58,6 +64,7 @@ public class AthenaQueryField {
     int result = field != null ? field.hashCode() : 0;
     result = 31 * result + (comparisonOperator != null ? comparisonOperator.hashCode() : 0);
     result = 31 * result + (value != null ? value.hashCode() : 0);
+    result = 31 * result + (type != null ? type.hashCode() : 0);
     return result;
   }
 
@@ -67,6 +74,7 @@ public class AthenaQueryField {
         "field='" + field + '\'' +
         ", comparisonOperator=" + comparisonOperator +
         ", value='" + value + '\'' +
+        ", type=" + type +
         '}';
   }
 }

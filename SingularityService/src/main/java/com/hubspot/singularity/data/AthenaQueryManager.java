@@ -2,7 +2,6 @@ package com.hubspot.singularity.data;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Calendar;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -41,15 +40,14 @@ import com.hubspot.singularity.athena.AthenaModule;
 import com.hubspot.singularity.athena.AthenaPartitionType;
 import com.hubspot.singularity.athena.AthenaPartitionWithValue;
 import com.hubspot.singularity.athena.AthenaQuery;
-import com.hubspot.singularity.athena.AthenaQueryBuilder;
 import com.hubspot.singularity.athena.AthenaQueryException;
 import com.hubspot.singularity.athena.AthenaQueryField;
+import com.hubspot.singularity.athena.AthenaQueryHelper;
 import com.hubspot.singularity.athena.AthenaQueryInfo;
 import com.hubspot.singularity.athena.AthenaQueryResults;
 import com.hubspot.singularity.athena.AthenaQueryRunner;
 import com.hubspot.singularity.athena.AthenaQueryStatus;
 import com.hubspot.singularity.athena.AthenaTable;
-import com.hubspot.singularity.athena.ComparisonOperator;
 import com.hubspot.singularity.config.AthenaConfig;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.transcoders.Transcoder;
@@ -69,11 +67,7 @@ public class AthenaQueryManager extends CuratorAsyncManager {
   private static final String TABLES_PATH = ATHENA_ROOT + "/tables";
 
   private static final String PARTITION_FIELD_NAME = "partition";
-
-  private static final List<ComparisonOperator> START_TIME_COMPARISON_OPERATORS =
-      Arrays.asList(ComparisonOperator.EQUAL, ComparisonOperator.GREATER_THAN, ComparisonOperator.GREATER_THAN_OR_EQUAL_TO);
-  private static final List<ComparisonOperator> END_TIME_COMPARISON_OPERATORS =
-      Arrays.asList(ComparisonOperator.EQUAL, ComparisonOperator.LESS_THAN, ComparisonOperator.LESS_THAN_OR_EQUAL_TO);
+  private static final int PARTITION_LIST_SIZE = 50;
 
   @Inject
   public AthenaQueryManager(CuratorFramework curator,
@@ -139,57 +133,89 @@ public class AthenaQueryManager extends CuratorAsyncManager {
 
   // Query Methods
   public AthenaTable createTableThrows(final Optional<SingularityUser> user, AthenaTable table) throws Exception {
-    String sql;
-    Optional<AthenaTable> maybeExistingTable = getTable(table.getName());
-    if (maybeExistingTable.isPresent()) {
-      sql = AthenaQueryBuilder.alterTableQuery(table, maybeExistingTable.get());
-    } else {
-      sql = AthenaQueryBuilder.createTableQuery(table);
-    }
+    // TODO - alter table not implemented yet
+    String sql = AthenaQueryHelper.createTableQuery(athenaConfig.get().getDatabaseName(), table);
     AthenaQueryInfo result = runQuery(user, sql);
     if (result.getStatus() != AthenaQueryStatus.SUCCEEDED) {
       throw new AthenaQueryException(String.format("Query %s failed (%s)", sql, result.getExceptionMessage()));
     }
+
+    saveTable(table);
 
     return table;
   }
 
   public void deleteTable(final Optional<SingularityUser> user, final String name) throws Exception {
-    String sql = AthenaQueryBuilder.dropTableQuery(name);
+    String sql = AthenaQueryHelper.dropTableQuery(athenaConfig.get().getDatabaseName(), name);
     AthenaQueryInfo result = runQuery(user, sql);
     if (result.getStatus() != AthenaQueryStatus.SUCCEEDED) {
       throw new AthenaQueryException(String.format("Query %s failed (%s)", sql, result.getExceptionMessage()));
     }
+    removeTable(name);
   }
 
   // Partitions
-  public boolean updatePartitions(final Optional<SingularityUser> user, AthenaTable table, long start, Optional<Long> maybeEnd) throws AthenaQueryException {
-    long end = maybeEnd.or(System.currentTimeMillis());
-    AthenaQueryInfo showPartitionsQuery = runQuery(user, AthenaQueryBuilder.showPartitionsQuery(athenaConfig.get().getDatabaseName(), table.getName()));
+  public boolean updatePartitions(final Optional<SingularityUser> user, AthenaTable table, long start, long end) throws AthenaQueryException {
+    LOG.debug("Updating partitions in {} (start: {}, end: {})", table.getName(), start, end);
+
+    Set<List<AthenaPartitionWithValue>> currentPartitions = getCurrentPartitions(user, table);
+
+    Map<List<AthenaPartitionWithValue>, String> partitionsToStatements = AthenaQueryHelper.getPartitionsWithStatements(table, start, end);
+    Set<List<AthenaPartitionWithValue>> partitionsToAdd = partitionsToStatements.keySet();
+    partitionsToAdd.removeAll(currentPartitions);
+
+    List<ListenableFuture<Boolean>> futures = new ArrayList<>();
+    for (List<AthenaPartitionWithValue> partitionToAdd : partitionsToAdd) {
+      futures.add(queryExecutorService.submit(addPartitionCallable(user, table, partitionsToStatements.get(partitionToAdd))));
+    }
+
+    boolean updatedAll = true;
+    for (ListenableFuture<Boolean> future : futures) {
+      boolean succeeded;
+      try {
+        succeeded = future.get();
+      } catch (Exception e) {
+        LOG.warn("Error updating partition", e);
+        succeeded = false;
+      }
+      updatedAll = updatedAll && succeeded;
+    }
+
+    return updatedAll;
+  }
+
+  private Callable<Boolean> addPartitionCallable(final Optional<SingularityUser> user, final AthenaTable table, final String sql) {
+    return new Callable<Boolean>() {
+      @Override
+      public Boolean call() throws Exception {
+        AthenaQueryInfo queryInfo = runQuery(user, AthenaQueryHelper.addPartitionQuery(athenaConfig.get().getDatabaseName(), table.getName(), sql));
+        if (queryInfo.getStatus() != AthenaQueryStatus.SUCCEEDED) {
+          return true;
+        } else {
+          return false;
+        }
+      }
+    };
+  }
+
+  private Set<List<AthenaPartitionWithValue>> getCurrentPartitions(final Optional<SingularityUser> user, AthenaTable table) throws AthenaQueryException {
+    AthenaQueryInfo showPartitionsQuery = runQuery(user, AthenaQueryHelper.showPartitionsQuery(athenaConfig.get().getDatabaseName(), table.getName()));
     Set<List<AthenaPartitionWithValue>> partitions = new HashSet<>();
-    Optional<AthenaQueryResults> showPartitionsResults = getQueryResults(user, showPartitionsQuery.getQueryExecutionId(), null, 10);
-    while (showPartitionsResults.isPresent() && (showPartitionsResults.get().getNextToken() != null || !showPartitionsResults.get().getResults().isEmpty())) {
+    Optional<AthenaQueryResults> showPartitionsResults = getQueryResults(Optional.of(showPartitionsQuery), null, PARTITION_LIST_SIZE);
+    while (showPartitionsResults.isPresent() && !showPartitionsResults.get().getResults().isEmpty()) {
       for (Map<String, String> result : showPartitionsResults.get().getResults()) {
         if (result.containsKey(PARTITION_FIELD_NAME)) {
           partitions.add(fromShowPartitionsResult(result.get(PARTITION_FIELD_NAME)));
         }
       }
-    }
-
-    Map<List<AthenaPartitionWithValue>, String> partitionsToStatements = AthenaQueryBuilder.getPartitionsWithStatements(table, start, end);
-    Set<List<AthenaPartitionWithValue>> partitionsToAdd = partitionsToStatements.keySet();
-    partitionsToAdd.removeAll(partitions);
-
-    boolean updatedAll = true;
-    for (List<AthenaPartitionWithValue> partitionToAdd : partitionsToAdd) {
-      // TODO - Run in parallel
-      AthenaQueryInfo queryInfo = runQuery(user, AthenaQueryBuilder.addPartitionQuery(athenaConfig.get().getDatabaseName(), table.getName(), partitionsToStatements.get(partitionToAdd)));
-      if (queryInfo.getStatus() != AthenaQueryStatus.SUCCEEDED) {
-        updatedAll = false;
+      if (showPartitionsResults.get().getResults().size() < PARTITION_LIST_SIZE || showPartitionsResults.get().getNextToken() == null) {
+        break;
       }
+      showPartitionsResults = getQueryResults(Optional.of(showPartitionsQuery), showPartitionsResults.get().getNextToken(), PARTITION_LIST_SIZE);
     }
 
-    return updatedAll;
+    LOG.trace("Found existing partitions {}", partitions);
+    return partitions;
   }
 
   private List<AthenaPartitionWithValue> fromShowPartitionsResult(String showPartitionResult) {
@@ -205,7 +231,8 @@ public class AthenaQueryManager extends CuratorAsyncManager {
   // Athena Query Running
   public AthenaQueryInfo runQueryAsync(Optional<SingularityUser> user, AthenaQuery query) {
     String singularityId = UUID.randomUUID().toString();
-    final String sql = AthenaQueryBuilder.generateSelectQuerySql(query);
+    final String sql = AthenaQueryHelper.generateSelectQuerySql(athenaConfig.get().getDatabaseName(), query);
+    LOG.trace("Starting query with id {}, sql: {}", singularityId, sql);
     AthenaQueryInfo result = new AthenaQueryInfo(singularityId, null, sql, AthenaQueryStatus.UPDATING_PARTITIONS, Collections.<AthenaField>emptyList(), Optional.<String>absent());
     saveQueryResult(user, result);
     startParitionUpdateAndRunQuery(user, singularityId, query, sql);
@@ -213,7 +240,7 @@ public class AthenaQueryManager extends CuratorAsyncManager {
   }
 
   private void startParitionUpdateAndRunQuery(final Optional<SingularityUser> user, final String singularityId, final AthenaQuery query, final String sql) {
-    ListenableFuture<Boolean> partitionUpdate = queryExecutorService.submit(updatePartitionsCallable(user, singularityId, query, sql));
+    ListenableFuture<Boolean> partitionUpdate = queryExecutorService.submit(updatePartitionsCallable(user, query));
     Futures.addCallback(partitionUpdate, new FutureCallback<Boolean>() {
       @Override
       public void onSuccess(@Nullable Boolean result) {
@@ -248,6 +275,7 @@ public class AthenaQueryManager extends CuratorAsyncManager {
   public AthenaQueryInfo runQuery(final Optional<SingularityUser> user, final String sql) throws AthenaQueryException {
     String singularityId = UUID.randomUUID().toString();
     String queryExecutionId = queryRunner.runQuery(sql);
+    LOG.trace("Running query with id {} athena id {}, sql: {}", singularityId, queryExecutionId, sql);
     try {
       return queryExecutorService.submit(watchQueryCallable(user, singularityId, queryExecutionId, sql)).get();
     } catch (InterruptedException ie) {
@@ -264,6 +292,7 @@ public class AthenaQueryManager extends CuratorAsyncManager {
       @Override
       public AthenaQueryInfo call() throws Exception {
         try {
+          LOG.trace("Starting query with id {}", singularityId);
           QueryExecutionStatus status = queryRunner.getQueryExecutionStatus(queryExecutionId);
           while (status.getState().equals("RUNNING") || status.getState().equals("SUBMITTED")) {
             Thread.sleep(1000);
@@ -283,6 +312,7 @@ public class AthenaQueryManager extends CuratorAsyncManager {
               saveQueryResult(user, result);
               break;
           }
+          LOG.trace("Got query result {} for query with id {}", result, singularityId);
           return result;
         } catch (Exception e) {
           LOG.error("Error waiting for query result with id {}", queryExecutionId, e);
@@ -299,7 +329,7 @@ public class AthenaQueryManager extends CuratorAsyncManager {
     };
   }
 
-  private Callable<Boolean> updatePartitionsCallable(final Optional<SingularityUser> user, final String singularityId, final AthenaQuery query, final String sql) {
+  private Callable<Boolean> updatePartitionsCallable(final Optional<SingularityUser> user, final AthenaQuery query) {
     return new Callable<Boolean>() {
       @Override
       public Boolean call() throws Exception {
@@ -308,67 +338,12 @@ public class AthenaQueryManager extends CuratorAsyncManager {
           return false;
         }
 
-        List<AthenaQueryField> partitionFieldsQueried = getPartitionFields(query, maybeExistingTable.get());
-        long start = getTimeFromPartitionFields(partitionFieldsQueried, START_TIME_COMPARISON_OPERATORS);
-        long end = getTimeFromPartitionFields(partitionFieldsQueried, END_TIME_COMPARISON_OPERATORS);
-        return updatePartitions(user, maybeExistingTable.get(), start, Optional.of(end));
+        List<AthenaQueryField> partitionFieldsQueried = AthenaQueryHelper.getPartitionFields(query, maybeExistingTable.get());
+        long start = AthenaQueryHelper.getTimeFromPartitionFields(partitionFieldsQueried, true);
+        long end = AthenaQueryHelper.getTimeFromPartitionFields(partitionFieldsQueried, false);
+        return updatePartitions(user, maybeExistingTable.get(), start, end);
       }
     };
-  }
-
-  private long getTimeFromPartitionFields(List<AthenaQueryField> partitionFieldsQueried, List<ComparisonOperator> validComparisonOperators) throws AthenaQueryException {
-    Optional<String> month = Optional.absent();
-    Optional<String> day = Optional.absent();
-    Optional<String> year = Optional.absent();
-
-
-    for (AthenaQueryField field : partitionFieldsQueried) {
-      switch (AthenaPartitionType.valueOf(field.getField())) {
-        case YEAR:
-          if (validComparisonOperators.contains(field.getComparisonOperator())) {
-            year = Optional.of(field.getValue());
-          }
-          break;
-        case MONTH:
-          if (validComparisonOperators.contains(field.getComparisonOperator())) {
-            month = Optional.of(field.getValue());
-          }
-          break;
-        case DAY:
-          if (validComparisonOperators.contains(field.getComparisonOperator())) {
-            day = Optional.of(field.getValue());
-          }
-          break;
-        default:
-          break;
-      }
-    }
-
-    Calendar calendar = Calendar.getInstance();
-    Calendar now = Calendar.getInstance();
-    now.setTimeInMillis(System.currentTimeMillis());
-    if (day.isPresent() && month.isPresent() && year.isPresent()) {
-      calendar.set(Integer.parseInt(year.get()), Integer.parseInt(month.get()), Integer.parseInt(day.get()));
-    } else if (month.isPresent() && year.isPresent()) {
-      calendar.set(Integer.parseInt(year.get()), Integer.parseInt(month.get()), 0);
-    } else if (year.isPresent()) {
-      calendar.set(Integer.parseInt(year.get()), 0, 0);
-    } else {
-      throw new AthenaQueryException("Must specify a time range to search");
-    }
-    return calendar.getTimeInMillis();
-  }
-
-  private List<AthenaQueryField> getPartitionFields(AthenaQuery query, AthenaTable table) {
-    List<AthenaQueryField> partitionFieldsQueried = new ArrayList<>();
-    for (AthenaQueryField field : query.getWhereFields()) {
-      for (AthenaPartitionType partitionType : table.getPartitions()) {
-        if (field.getField().equals(partitionType.getField())) {
-          partitionFieldsQueried.add(field);
-        }
-      }
-    }
-    return partitionFieldsQueried;
   }
 
   private List<AthenaField> fieldsFromColumnInfos(List<ColumnInfo> columnInfos) {
@@ -379,25 +354,25 @@ public class AthenaQueryManager extends CuratorAsyncManager {
     return fields;
   }
 
-  public Optional<AthenaQueryResults> getQueryResults(Optional<SingularityUser> user, String queryExecutionId, String token, int pageSize) throws AthenaQueryException {
-    Optional<AthenaQueryInfo> queryInfo = getQueryInfo(user, queryExecutionId);
-    // TODO - separate http statuses here
+  public Optional<AthenaQueryResults> getQueryResults(Optional<AthenaQueryInfo> queryInfo, String token, int pageSize) throws AthenaQueryException {
+    // TODO - use web exceptions here
     if (!queryInfo.isPresent()) {
       return Optional.absent();
     } else if (queryInfo.get().getStatus() == AthenaQueryStatus.FAILED) {
       throw new AthenaQueryException(String.format("Cannot get results of failed query. Failed due to: %s", queryInfo.get().getExceptionMessage()));
     } else if (queryInfo.get().getStatus() == AthenaQueryStatus.RUNNING) {
-      throw new AthenaQueryException(String.format("Query %s is still running, try again later", queryExecutionId));
+      throw new AthenaQueryException(String.format("Query %s is still running, try again later", queryInfo.get().getQueryExecutionId()));
     }
 
-    GetQueryResultsResult resultsResult = queryRunner.getQueryResults(queryExecutionId, token, pageSize);
+    GetQueryResultsResult resultsResult = queryRunner.getQueryResults(queryInfo.get().getQueryExecutionId(), token, pageSize);
     List<AthenaField> fields = fieldsFromColumnInfos(resultsResult.getResultSet().getColumnInfos());
     List<Map<String, String>> results = new ArrayList<>();
-    int index = 0;
     for (ResultRow resultRow : resultsResult.getResultSet().getResultRows()) {
       Map<String, String> rowData = new HashMap<>();
+      int index = 0;
       for (String value : resultRow.getData()) {
         rowData.put(fields.get(index).getName(), value);
+        index ++;
       }
       results.add(rowData);
     }

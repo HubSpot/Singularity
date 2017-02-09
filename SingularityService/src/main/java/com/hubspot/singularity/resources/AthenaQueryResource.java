@@ -96,7 +96,7 @@ public class AthenaQueryResource {
     authorizationHelper.checkAdminAuthorization(user);
     Optional<AthenaTable> maybeTable = queryManager.getTable(updatePartitionsRequest.getTableName());
     WebExceptions.checkBadRequest(maybeTable.isPresent(), String.format("Table %s does not exist in Singularity", updatePartitionsRequest.getTableName()));
-    return queryManager.updatePartitions(user, maybeTable.get(), updatePartitionsRequest.getStart(), updatePartitionsRequest.getEnd());
+    return queryManager.updatePartitions(user, maybeTable.get(), updatePartitionsRequest.getStart(), updatePartitionsRequest.getEnd().or(System.currentTimeMillis()));
   }
 
   @POST
@@ -144,6 +144,7 @@ public class AthenaQueryResource {
   @Path("/query/{id}/results")
   @ApiOperation(value="Get lines of results for a query by id", response=AthenaQueryInfo.class)
   public Optional<AthenaQueryResults> getQueryResults(@PathParam("id") String id, @QueryParam("token") String token, @QueryParam("count") Optional<Integer> count) throws AthenaQueryException {
-    return queryManager.getQueryResults(user, id, token, count.or(DEFAULT_RESULT_COUNT));
+    Optional<AthenaQueryInfo> queryInfo = queryManager.getQueryInfo(user, id);
+    return queryManager.getQueryResults(queryInfo, token, count.or(DEFAULT_RESULT_COUNT));
   }
 }

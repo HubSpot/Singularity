@@ -5,6 +5,7 @@ import java.util.concurrent.Executors;
 import com.google.common.base.Optional;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Scopes;
@@ -40,7 +41,9 @@ public class AthenaModule extends AbstractModule {
   @Singleton
   @Named(ATHENA_QUERY_EXECUTOR)
   public ListeningExecutorService providesQueryExecutor() {
-    return MoreExecutors.listeningDecorator(Executors.newFixedThreadPool(1));
+    return MoreExecutors.listeningDecorator(Executors.newCachedThreadPool(
+        new ThreadFactoryBuilder().setNameFormat("athena-query-runner-%d").build()
+    ));
   }
 
   @Provides
