@@ -204,7 +204,7 @@ export default class FormModal extends React.Component {
         (<li key={value}>{value}</li>)
       );
       return (
-        <ul>{optionLines}</ul>
+        <ul className="unstyled">{optionLines}</ul>
       );
     } else {
       return optionValue;
@@ -212,7 +212,15 @@ export default class FormModal extends React.Component {
   }
 
   renderTooltipOptions(optionValue) {
-    return (<Tooltip> {optionValue} </Tooltip>)
+    if (_.isArray(optionValue)) {
+      return (
+        <Tooltip>
+          { optionValue.map((option) => <span>{option}<br /></span>) }
+        </Tooltip>
+      );
+    } else {
+      return <Tooltip>{ optionValue }</Tooltip>;
+    }
   }
 
   renderForm() {
@@ -242,12 +250,12 @@ export default class FormModal extends React.Component {
           const menuItems = []
           _.each(formElement.valueOptions, (optionValue, index) => {
             if (index < 5) {
-              if (index != 0) {
-                menuItems.push(<MenuItem divider />);
+              if (index !== 0) {
+                menuItems.push(<MenuItem divider={true} />);
               }
               menuItems.push(
                 <OverlayTrigger
-                  placement='top'
+                  placement="top"
                   overlay={this.renderTooltipOptions(optionValue)}
                   >
                   <MenuItem
@@ -261,10 +269,10 @@ export default class FormModal extends React.Component {
               );
             }
           });
-          return (
 
+          return (
             <DropdownButton
-              pullRight
+              pullRight={true}
               bsStyle="info"
               bsSize="small"
               title="Previous Args"
@@ -274,7 +282,9 @@ export default class FormModal extends React.Component {
             </DropdownButton>
           );
         }
-      }
+
+        return null;
+      };
 
       let extraHelp;
 
