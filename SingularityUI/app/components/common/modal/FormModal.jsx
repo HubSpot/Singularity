@@ -197,11 +197,11 @@ export default class FormModal extends React.Component {
 
   renderFormattedOptions(optionValue) {
     if (_.isArray(optionValue)) {
-      let optionLines = optionValue.map((value) =>
-        (<li key={value}>{value}</li>)
+      let optionLines = optionValue.map((value, index) =>
+        (<li key={index}>{value}</li>)
       );
       return (
-        <ul className="unstyled">{optionLines}</ul>
+        <ul>{optionLines}</ul>
       );
     } else {
       return optionValue;
@@ -212,7 +212,7 @@ export default class FormModal extends React.Component {
     if (_.isArray(optionValue)) {
       return (
         <Tooltip id="options">
-          { optionValue.map((option) => <span key={option}>{option}<br /></span>) }
+          { optionValue.map((option, index) => <span key={index}>{option}<br /></span>) }
         </Tooltip>
       );
     } else {
