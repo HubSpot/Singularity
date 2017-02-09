@@ -24,4 +24,12 @@ public class NoopAthenaQueryRunner implements AthenaQueryRunner {
   public void cancelQuery(String queryExecutionId) throws AthenaQueryException {
     throw new AthenaQueryException("No Athena Credentials Provided");
   }
+
+  public boolean isPartitionPathValid(String bucket, String prefix) throws AthenaQueryException {
+    throw new AthenaQueryException("No Athena Credentials Provided");
+  }
+
+  public String generateDownloadLink(String bucket, String key) throws AthenaQueryException {
+    throw new AthenaQueryException("No Athena Credentials Provided");
+  }
 }

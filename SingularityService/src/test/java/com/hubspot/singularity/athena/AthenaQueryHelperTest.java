@@ -127,4 +127,29 @@ public class AthenaQueryHelperTest {
     Assert.assertEquals(1485907200000L, AthenaQueryHelper.getTimeFromPartitionFields(partitionFieldsQueried, true));
     Assert.assertEquals(1486598399999L, AthenaQueryHelper.getTimeFromPartitionFields(partitionFieldsQueried, false));
   }
+
+  @Test
+  public void testPrefixParse() {
+    AthenaTable table = new AthenaTable(
+        "json_formatted_table",
+        AthenaDataFormat.HIVE_JSON,
+        ImmutableList.of(
+            new AthenaField("timestamp", AthenaFieldType.TIMESTAMP, "Timestamp"),
+            new AthenaField("ip", AthenaFieldType.STRING, "IP Address"),
+            new AthenaField("hostname", AthenaFieldType.STRING, "Hostname")
+        ),
+        ImmutableList.of(
+            AthenaPartitionType.REQUESTID,
+            AthenaPartitionType.YEAR
+        ),
+        ImmutableList.of("test-request-id"),
+        "s3://my-bucket-name/prefix"
+    );
+    List<AthenaPartitionWithValue> partitions = ImmutableList.of(
+        new AthenaPartitionWithValue(AthenaPartitionType.REQUESTID, "my-test-request"),
+        new AthenaPartitionWithValue(AthenaPartitionType.YEAR, "2017")
+    );
+
+    Assert.assertEquals("prefix/my-test-request/2017", AthenaQueryHelper.getPrefix(table, partitions));
+  }
 }

@@ -1,5 +1,7 @@
 package com.hubspot.singularity.config;
 
+import java.util.concurrent.TimeUnit;
+
 import javax.validation.constraints.NotNull;
 
 public class AthenaConfig {
@@ -23,6 +25,13 @@ public class AthenaConfig {
 
   @NotNull
   private String s3StagingPrefix = "";
+
+  /**
+   * Links to logs will expire after given number of milliseconds.
+   * A new link is generated for every /logs API call.
+   */
+  @NotNull
+  private long expireS3LinksAfterMillis = TimeUnit.DAYS.toMillis(1);
 
   public String getS3AccessKey() {
     return s3AccessKey;
@@ -78,5 +87,13 @@ public class AthenaConfig {
 
   public void setS3StagingPrefix(String s3StagingPrefix) {
     this.s3StagingPrefix = s3StagingPrefix;
+  }
+
+  public long getExpireS3LinksAfterMillis() {
+    return expireS3LinksAfterMillis;
+  }
+
+  public void setExpireS3LinksAfterMillis(long expireS3LinksAfterMillis) {
+    this.expireS3LinksAfterMillis = expireS3LinksAfterMillis;
   }
 }

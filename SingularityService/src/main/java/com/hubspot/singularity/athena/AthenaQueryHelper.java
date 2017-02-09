@@ -291,4 +291,17 @@ public class AthenaQueryHelper {
     }
     return partitionFieldsQueried;
   }
+
+  public static String getBucket(AthenaTable table) {
+    return table.getLocation().split("/")[2];
+  }
+
+  public static String getPrefix(AthenaTable table, List<AthenaPartitionWithValue> partitions) {
+    String location = table.getLocation();
+    String prefix = location.replace(String.format("s3://%s/", getBucket(table)), "");
+    for (AthenaPartitionWithValue partition : partitions) {
+      prefix = prefix + "/" + partition.getValue();
+    }
+    return prefix;
+  }
 }

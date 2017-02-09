@@ -8,4 +8,6 @@ public interface AthenaQueryRunner {
   String runQuery(String sql) throws AthenaQueryException;
   QueryExecutionStatus getQueryExecutionStatus(String queryExecutionId) throws AthenaQueryException;
   void cancelQuery(String queryExecutionId) throws AthenaQueryException;
+  boolean isPartitionPathValid(String bucket, String prefix) throws AthenaQueryException;
+  String generateDownloadLink(String bucket, String key) throws AthenaQueryException;
 }

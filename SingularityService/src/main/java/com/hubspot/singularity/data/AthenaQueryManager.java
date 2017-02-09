@@ -23,6 +23,7 @@ import com.amazonaws.athena.jdbc.shaded.com.amazonaws.services.athena.model.Colu
 import com.amazonaws.athena.jdbc.shaded.com.amazonaws.services.athena.model.GetQueryResultsResult;
 import com.amazonaws.athena.jdbc.shaded.com.amazonaws.services.athena.model.QueryExecutionStatus;
 import com.amazonaws.athena.jdbc.shaded.com.amazonaws.services.athena.model.ResultRow;
+import com.amazonaws.athena.jdbc.shaded.guava.base.Strings;
 import com.codahale.metrics.MetricRegistry;
 import com.google.common.base.Optional;
 import com.google.common.util.concurrent.FutureCallback;
@@ -166,7 +167,7 @@ public class AthenaQueryManager extends CuratorAsyncManager {
 
     List<ListenableFuture<Boolean>> futures = new ArrayList<>();
     for (List<AthenaPartitionWithValue> partitionToAdd : partitionsToAdd) {
-      futures.add(queryExecutorService.submit(addPartitionCallable(user, table, partitionsToStatements.get(partitionToAdd))));
+      futures.add(queryExecutorService.submit(addPartitionCallable(user, table, partitionsToStatements.get(partitionToAdd), partitionToAdd)));
     }
 
     boolean updatedAll = true;
@@ -184,10 +185,16 @@ public class AthenaQueryManager extends CuratorAsyncManager {
     return updatedAll;
   }
 
-  private Callable<Boolean> addPartitionCallable(final Optional<SingularityUser> user, final AthenaTable table, final String sql) {
+  private Callable<Boolean> addPartitionCallable(final Optional<SingularityUser> user, final AthenaTable table, final String sql, final List<AthenaPartitionWithValue> partitionToAdd) {
     return new Callable<Boolean>() {
       @Override
       public Boolean call() throws Exception {
+        String bucket = AthenaQueryHelper.getBucket(table);
+        String prefix = AthenaQueryHelper.getPrefix(table, partitionToAdd);
+        if (!queryRunner.isPartitionPathValid(bucket, prefix)) {
+          LOG.trace("Partition {} in bucket {} does not exist in s3", bucket, prefix);
+          return true;
+        }
         AthenaQueryInfo queryInfo = runQuery(user, AthenaQueryHelper.addPartitionQuery(athenaConfig.get().getDatabaseName(), table.getName(), sql));
         if (queryInfo.getStatus() != AthenaQueryStatus.SUCCEEDED) {
           return true;
@@ -376,6 +383,17 @@ public class AthenaQueryManager extends CuratorAsyncManager {
       }
       results.add(rowData);
     }
-    return Optional.of(new AthenaQueryResults(queryInfo.get(), results, pageSize, token, resultsResult.getNextToken()));
+
+    String downloadLink = queryRunner.generateDownloadLink(athenaConfig.get().getS3StagingBucket(), getS3ObjectKey(queryInfo.get().getQueryExecutionId()));
+    return Optional.of(new AthenaQueryResults(queryInfo.get(), results, pageSize, token, resultsResult.getNextToken(), downloadLink));
+  }
+
+  private String getS3ObjectKey(String queryExecutionId) {
+    String prefix = athenaConfig.get().getS3StagingPrefix();
+    if (!Strings.isNullOrEmpty(prefix)) {
+      return String.format("%s/%s.csv", prefix, queryExecutionId);
+    } else {
+      return String.format("%s.csv", queryExecutionId);
+    }
   }
 }
