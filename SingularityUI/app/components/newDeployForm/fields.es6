@@ -60,7 +60,7 @@ export const FIELDS = {
           values: [
             {id: 'image', type: 'text', required: true},
             {id: 'network', type: 'text', default: 'NONE'},
-            {id: 'parameters', type: 'map'},
+            {id: 'dockerParameters', type: 'dockerParameters'},
             {id: 'privileged', type: 'text'},
             {id: 'forcePullImage', type: 'text'},
             {id: 'volumes', type: 'volumes'},
@@ -129,6 +129,11 @@ export const DOCKER_PORT_MAPPING_FIELDS = [
   {id: 'protocol', type: 'text', default: 'tcp'}
 ];
 
+export const DOCKER_PARAMETERS_FIELDS = [
+  {id: 'key', type: 'text', required: true},
+  {id: 'value', type: 'text'},
+];
+
 export const DOCKER_VOLUME_FIELDS = [
   {id: 'containerPath', type: 'text', required: true},
   {id: 'hostPath', type: 'text', required: true},
@@ -164,6 +169,7 @@ export const INDEXED_ARTIFACT_FIELDS = _.extend(
   makeIndexedFields(ARTIFACT_FIELDS.s3)
 );
 export const INDEXED_DOCKER_PORT_MAPPING_FIELDS = makeIndexedFields(DOCKER_PORT_MAPPING_FIELDS);
+export const INDEXED_DOCKER_PARAMETERS_FIELDS = makeIndexedFields(DOCKER_PARAMETERS_FIELDS);
 export const INDEXED_DOCKER_VOLUME_FIELDS = makeIndexedFields(DOCKER_VOLUME_FIELDS);
 export const INDEXED_ALL_FIELDS = makeIndexedFields(FIELDS.all);
 export const INDEXED_CUSTOM_EXECUTOR_FIELDS = makeIndexedFields(FIELDS.customExecutor);
