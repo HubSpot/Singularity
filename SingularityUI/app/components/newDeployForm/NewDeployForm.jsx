@@ -376,7 +376,7 @@ class NewDeployForm extends Component {
             MESOS_ARTIFACT_FIELDS,
             (id) => mesosArtifact[id] || INDEXED_MESOS_ARTIFACT_FIELDS[id].default
           ));
-          deployObject[fieldId.id] = volumes;
+          deployObject[fieldId.id] = mesosArtifacts;
         } else if (fieldId.type === 'volumes') {
           const volumes = value.map(volume => this.copyFieldsToObject(
             {},
@@ -447,6 +447,69 @@ class NewDeployForm extends Component {
     this.updateField(fieldId, newArray);
   }
 
+  renderMesosArtifact(mapping, key) {
+    const thisMesosArtifact = this.props.form.uris[key];
+    const uri = (
+      <TextFormGroup
+        id={`mesos-uri-${ key }`}
+        onChange={event => this.updateObjectInArrayField('uris', key, {uri: event.target.value})}
+        value={thisMesosArtifact.uri}
+        label="Uri"
+        required={true}
+        feedback={this.formFieldFeedback(INDEXED_MESOS_ARTIFACT_FIELDS.uri, thisMesosArtifact.uri)}
+      />
+    );
+    const cache = (
+      <CheckboxFormGroup
+        id = "mesos-cahce-${ key }"
+        label="Cache"
+        checked = {thisMesosArtifact.cache}
+        onChange={(newValue) => this.updateObjectInArrayField('uris', key, {cache: newValue})}
+        feedback={this.formFieldFeedback(INDEXED_MESOS_ARTIFACT_FIELDS.cache, thisMesosArtifact.cache)}
+      />
+    );
+    const extract = (
+      <CheckboxFormGroup
+        id = "mesos-extract-${ key }"
+        label="Extract"
+        checked = {thisMesosArtifact.extract}
+        onChange={(newValue) => this.updateObjectInArrayField('uris', key, {extract: newValue})}
+        feedback={this.formFieldFeedback(INDEXED_MESOS_ARTIFACT_FIELDS.extract, thisMesosArtifact.extract)}
+      />
+    );
+    const executable = (
+      <CheckboxFormGroup
+        id = "mesos-executable-${ key }"
+        label="Executable"
+        checked = {thisMesosArtifact.executable}
+        onChange={(newValue) => this.updateObjectInArrayField('uris', key, {executable: newValue})}
+        feedback={this.formFieldFeedback(INDEXED_MESOS_ARTIFACT_FIELDS.executable, thisMesosArtifact.executable)}
+      />
+    );
+    return (
+      <div className="well well-sm mesos-artifact" key={key}>
+        <h5>Mesos Artifact</h5>
+        <button
+          className="remove-button"
+          id={`remove-mesos-artifact-${key}`}
+          onClick={() => this.removeObjectFromArrayField('uris', key)}
+        />
+        {uri}
+        {cache}
+        {executable}
+        {extract}
+      </div>
+    );
+  }
+
+  renderMesosArtifacts() {
+    const mesosArtifacts = this.props.form.uris;
+    if (mesosArtifacts) {
+      return mesosArtifacts.map((mapping, key) => this.renderMesosArtifact(mapping, key));
+    }
+    return null;
+  }
+
   renderDefaultExecutorFields() {
     const command = (
       <TextFormGroup
@@ -468,68 +531,6 @@ class NewDeployForm extends Component {
         couldHaveFeedback={true}
       />
     );
-    renderMesosArtifact(mapping, key) {
-      const thisMesosArtifact = this.props.form.volumes[key];
-      const uri = (
-        <TextFormGroup
-          id={`mesos-uri-${ key }`}
-          onChange={event => this.updateObjectInArrayField('uris', key, {uri: event.target.value})}
-          value={thisMesosArtifact.uri}
-          label="Uri"
-          required={true}
-          feedback={this.formFieldFeedback(INDEXED_MESOS_ARTIFACT_FIELDS.uri, thisMesosArtifact.uri)}
-        />
-      );
-      const cache = (
-        <CheckboxFormGroup
-          id = "mesos-cahce-${ key }"
-          label="Cache"
-          checked = {thisMesosArtifact.cache}
-          onChange={event => this.updateObjectInArrayField('uris', key, {cache: event.target.value})}
-          feedback={this.formFieldFeedback(INDEXED_MESOS_ARTIFACT_FIELDS.cache, thisMesosArtifact.cache)}
-        />
-      );
-      const extract = (
-        <CheckboxFormGroup
-          id = "mesos-extract-${ key }"
-          label="Extract"
-          checked = {thisMesosArtifact.extract}
-          onChange={event => this.updateObjectInArrayField('uris', key, {extract: event.target.value})}
-          feedback={this.formFieldFeedback(INDEXED_MESOS_ARTIFACT_FIELDS.extract, thisMesosArtifact.extract)}
-        />
-      );
-      const executable = (
-        <CheckboxFormGroup
-          id = "mesos-executable-${ key }"
-          label="Cache"
-          checked = {thisMesosArtifact.executable}
-          onChange={event => this.updateObjectInArrayField('uris', key, {executable: event.target.value})}
-          feedback={this.formFieldFeedback(INDEXED_MESOS_ARTIFACT_FIELDS.executable, thisMesosArtifact.executable)}
-        />
-      );
-      return (
-        <div className="well well-sm mesos-artifact" key={key}>
-          <h5>Mesos Artifact</h5>
-          <button
-            className="remove-button"
-            id={`remove-mesos-artifact-${key}`}
-            onClick={() => this.removeObjectFromArrayField('uris', key)}
-          />
-          {uri}
-          {cache}
-          {executable}
-          {extract}
-        </div>
-      );
-    }
-
-    renderMesosArtifacts() {
-      const mesosArtifacts = this.props.form.uris;
-      if (mesosArtifacts) {
-        return mesosArtifacts.map((mapping, key) => this.renderMesosArtifact(mapping, key));
-      }
-      return null;
-    }
 
     return (
       <div>
