@@ -95,7 +95,7 @@ public class SingularityDriverManager implements Managed {
 
       Optional<TaskCleanupType> maybeCleanupFromRequestAndTask = getTaskCleanupType(requestCleanupType, taskCleanupType);
 
-      if (maybeCleanupFromRequestAndTask.isPresent() && maybeCleanupFromRequestAndTask.get() == TaskCleanupType.USER_REQUESTED_DESTROY) {
+      if (maybeCleanupFromRequestAndTask.isPresent() && (maybeCleanupFromRequestAndTask.get() == TaskCleanupType.USER_REQUESTED_DESTROY || maybeCleanupFromRequestAndTask.get() == TaskCleanupType.REQUEST_DELETING)) {
         Optional<SingularityTask> task = taskManager.getTask(taskId);
         if (task.isPresent()) {
           if (task.get().getMesosTask().hasExecutor()) {
