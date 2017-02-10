@@ -1,6 +1,5 @@
 package com.hubspot.singularity;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -314,22 +313,8 @@ public class SingularityDeployBuilder {
     return uris;
   }
 
-  @Deprecated
-  public SingularityDeployBuilder setUris(Optional<List<String>> uris) {
-    if (uris.isPresent()) {
-      List<SingularityMesosArtifact> artifactUris = new ArrayList<>();
-      for (String uri : uris.get()) {
-        artifactUris.add(SingularityMesosArtifact.fromString(uri));
-      }
-      this.uris = Optional.of(artifactUris);
-    } else {
-      this.uris = Optional.absent();
-    }
-    return this;
-  }
-
-  public SingularityDeployBuilder setUris(List<SingularityMesosArtifact> uris) {
-    this.uris = Optional.of(uris);
+  public SingularityDeployBuilder setUris(Optional<List<SingularityMesosArtifact>> uris) {
+    this.uris = uris;
     return this;
   }
 

@@ -1,10 +1,9 @@
 package com.hubspot.singularity;
 
 import static com.hubspot.singularity.JsonHelpers.copyOfList;
-import static com.hubspot.singularity.JsonHelpers.copyOfSet;
 import static com.hubspot.singularity.JsonHelpers.copyOfMap;
+import static com.hubspot.singularity.JsonHelpers.copyOfSet;
 
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -283,7 +282,7 @@ public class SingularityDeploy {
     .setTimestamp(timestamp)
     .setEnv(copyOfMap(env))
     .setTaskEnv(taskEnv)
-    .setUris(copyOfList(uris).or(Collections.<SingularityMesosArtifact>emptyList()))
+    .setUris(uris)
     .setExecutorData(executorData)
     .setLabels(labels)
     .setMesosLabels(mesosLabels)
