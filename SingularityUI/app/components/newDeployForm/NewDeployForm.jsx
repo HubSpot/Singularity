@@ -149,7 +149,6 @@ class NewDeployForm extends Component {
   }
 
   getValueOrDefault(fieldId) {
-    console.log(INDEXED_FIELDS)
     return this.props.form[fieldId] || INDEXED_FIELDS[fieldId].default;
   }
 
@@ -329,8 +328,6 @@ class NewDeployForm extends Component {
 
   copyFieldsToObject(deployObject, fieldsToAdd, valueGetter) {
     for (const fieldId of fieldsToAdd) {
-      console.log(fieldId)
-      console.log(fieldsToAdd)
       if (fieldId.type === 'object') {
         deployObject[fieldId.id] = this.copyFieldsToObject(
           deployObject[fieldId.id] || {},
@@ -386,8 +383,6 @@ class NewDeployForm extends Component {
             (id) => portMapping[id] || INDEXED_DOCKER_PORT_MAPPING_FIELDS[id].default));
           deployObject[fieldId.id] = portMappings;
         } else if (fieldId.type === 'dockerParameters') {
-          console.log(fieldId)
-          debugger
           const dockerParameters = value.map(dockerParameter => this.copyFieldsToObject(
             {},
             DOCKER_PARAMETERS_FIELDS,
@@ -409,7 +404,6 @@ class NewDeployForm extends Component {
       this.copyFieldsToObject(deployObject, FIELDS.customExecutor, (fieldId) => this.getValueOrDefault(fieldId));
     }
     if (this.getValueOrDefault('type') === 'docker') {
-      console.log(FIELDS.dockerContainer)
       this.copyFieldsToObject(deployObject, FIELDS.dockerContainer, (fieldId) => this.getValueOrDefault(fieldId));
     }
     if (this.props.request.request.loadBalanced) {
