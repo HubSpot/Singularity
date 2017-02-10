@@ -49,6 +49,7 @@ class TaskDetail extends Component {
       task: PropTypes.shape({
         taskId: PropTypes.shape({
           id: PropTypes.string.isRequired,
+          startedAt: PropTypes.number.isRequired,
           requestId: PropTypes.string.isRequired,
           deployId: PropTypes.string.isRequired,
           instanceNo: PropTypes.number.isRequired
@@ -112,6 +113,7 @@ class TaskDetail extends Component {
     taskId: PropTypes.string.isRequired,
     params: PropTypes.object,
     fetchTaskHistory: PropTypes.func.isRequired,
+    fetchTaskCleanups: PropTypes.func.isRequired,
     fetchTaskStatistics: PropTypes.func.isRequired,
     fetchTaskFiles: PropTypes.func.isRequired,
     runCommandOnTask: PropTypes.func.isRequired,
@@ -207,7 +209,7 @@ class TaskDetail extends Component {
 
   renderHeader(cleanup) {
     const cleaningUpdate = _.find(Utils.maybe(this.props.task, ['taskUpdates'], []), (taskUpdate) => {
-      return taskUpdate.taskState == "TASK_CLEANING";
+      return taskUpdate.taskState === 'TASK_CLEANING';
     });
 
     let cleanupType;
@@ -231,7 +233,7 @@ class TaskDetail extends Component {
     let removeText = 'Kill Task';
     if (cleanupType) {
       if (Utils.isImmediateCleanup(cleanupType, Utils.request.isLongRunning(this.props.task.task.taskRequest))) {
-        removeText = 'Destroy task';
+        removeText = 'Destroy Task';
         destroy = true;
       } else {
         removeText = 'Override cleanup';
@@ -243,7 +245,7 @@ class TaskDetail extends Component {
       promises.push(this.props.fetchTaskCleanups());
       promises.push(this.props.fetchTaskHistory(this.props.params.taskId));
       return Promise.all(promises);
-    }
+    };
 
     const removeBtn = this.props.task.isStillRunning && (
       <KillTaskButton
