@@ -385,7 +385,7 @@ public final class MesosUtils {
         } else if (resource.hasRanges()) {
           resourceBuilder.setRanges(subtractRanges(resource.getRanges(), matched.get().getRanges()));
         } else {
-          throw new IllegalStateException(String.format("Can't subtract non-scalar or range resources %s", MesosUtils.formatForLogging(resource)));
+          throw new IllegalStateException(String.format("Can't subtract non-scalar or range resources %s", formatForLogging(resource)));
         }
 
         remaining.add(resourceBuilder.build());
