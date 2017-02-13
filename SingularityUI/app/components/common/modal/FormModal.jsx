@@ -1,7 +1,7 @@
 import React from 'react';
 import classNames from 'classnames';
 
-import { Modal, Button, Popover, OverlayTrigger, DropdownButton, MenuItem } from 'react-bootstrap';
+import { Modal, Button, Popover, OverlayTrigger, Tooltip, DropdownButton, MenuItem } from 'react-bootstrap';
 import TagsInput from 'react-tagsinput';
 import MultiInput from '../formItems/MultiInput';
 import Select from 'react-select';
@@ -197,14 +197,26 @@ export default class FormModal extends React.Component {
 
   renderFormattedOptions(optionValue) {
     if (_.isArray(optionValue)) {
-      let optionLines = optionValue.map((value) =>
-        (<li key={value}>{value}</li>)
+      let optionLines = optionValue.map((value, index) =>
+        (<li key={index}>{value}</li>)
       );
       return (
         <ul>{optionLines}</ul>
       );
     } else {
       return optionValue;
+    }
+  }
+
+  renderTooltipOptions(optionValue) {
+    if (_.isArray(optionValue)) {
+      return (
+        <Tooltip id="options">
+          { optionValue.map((option, index) => <span key={index}>{option}<br /></span>) }
+        </Tooltip>
+      );
+    } else {
+      return <Tooltip>{ optionValue }</Tooltip>;
     }
   }
 
@@ -236,22 +248,28 @@ export default class FormModal extends React.Component {
           _.each(formElement.valueOptions, (optionValue, index) => {
             if (index < 5) {
               if (index !== 0) {
-                menuItems.push(<MenuItem divider />);
+                menuItems.push(<MenuItem divider={true} />);
               }
               menuItems.push(
-                <MenuItem
-                  eventKey={index}
-                  onSelect={() => this.handleFormChange(formElement.name, optionValue)}
-                >
-                  {this.renderFormattedOptions(optionValue)}
-                </MenuItem>
+                <OverlayTrigger
+                  placement="top"
+                  overlay={this.renderTooltipOptions(optionValue)}
+                  >
+                  <MenuItem
+                    eventKey={index}
+                    onSelect={() => this.handleFormChange(formElement.name, optionValue)}
+                    className="select-options"
+                  >
+                    {this.renderFormattedOptions(optionValue)}
+                  </MenuItem>
+                </OverlayTrigger>
               );
             }
           });
-          return (
 
+          return (
             <DropdownButton
-              pullRight
+              pullRight={true}
               bsStyle="info"
               bsSize="small"
               title="Previous Args"
@@ -261,6 +279,7 @@ export default class FormModal extends React.Component {
             </DropdownButton>
           );
         }
+        return null;
       };
 
       let extraHelp;
