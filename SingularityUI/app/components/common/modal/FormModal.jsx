@@ -279,7 +279,6 @@ export default class FormModal extends React.Component {
             </DropdownButton>
           );
         }
-
         return null;
       };
 
