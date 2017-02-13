@@ -2,8 +2,6 @@ package com.hubspot.mesos;
 
 import java.util.List;
 
-import org.apache.mesos.Protos.ContainerInfo.Type;
-
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
@@ -41,7 +39,11 @@ public class SingularityContainerInfo {
 
   @Override
   public String toString() {
-    return String.format("ContainerInfo [type=%s, volumes=%s, docker=%s]", type, volumes, docker);
+    return "SingularityContainerInfo{" +
+        "type=" + type +
+        ", volumes=" + volumes +
+        ", docker=" + docker +
+        '}';
   }
 
   @Override

@@ -84,12 +84,7 @@ export default class FormModal extends React.Component {
     this.setState({ formState });
   }
 
-  clearForm() {
-    const formState = {}
-    this.setState({ formState })
-  }
-
-  validateForm() {
+  isValidForm() {
     // Check required values
     const errors = {};
     this.props.formElements.forEach((formElement) => {
@@ -119,20 +114,22 @@ export default class FormModal extends React.Component {
     const parsed = {};
     _.mapObject(state, (val, key) => {
       const element = _.find(this.props.formElements, (formElement) => formElement.name === key);
-      switch (element.type) {
-        case FormModal.INPUT_TYPES.BOOLEAN:
-          parsed[key] = Boolean(val);
-          break;
-        case FormModal.INPUT_TYPES.NUMBER:
-          parsed[key] = Number.parseFloat(val);
-          break;
-        case FormModal.INPUT_TYPES.DURATION:
-          if (val) {
-            parsed[key] = juration.parse(val) * 1000;
-          }
-          break;
-        default:
-          parsed[key] = val;
+      if (element !== undefined) {
+        switch (element.type) {
+          case FormModal.INPUT_TYPES.BOOLEAN:
+            parsed[key] = Boolean(val);
+            break;
+          case FormModal.INPUT_TYPES.NUMBER:
+            parsed[key] = Number.parseFloat(val);
+            break;
+          case FormModal.INPUT_TYPES.DURATION:
+            if (val) {
+              parsed[key] = juration.parse(val) * 1000;
+            }
+            break;
+          default:
+            parsed[key] = val;
+        }
       }
     });
     return parsed;
@@ -142,11 +139,11 @@ export default class FormModal extends React.Component {
     if (event) {
       event.preventDefault();
     }
-    if (this.validateForm()) {
+    if (this.isValidForm()) {
       let formState = this.parseFormState(this.state.formState);
       this.props.onConfirm(formState);
       if (!this.props.keepCurrentFormState) {
-        const formState = {};
+        formState = {};
         this.props.formElements.forEach((formElement) => {
           formState[formElement.name] = formElement.defaultValue;
         });
@@ -247,7 +244,7 @@ export default class FormModal extends React.Component {
 
       const selectOptions = () => {
         if (formElement.valueOptions && formElement.valueOptions.length > 0) {
-          const menuItems = []
+          const menuItems = [];
           _.each(formElement.valueOptions, (optionValue, index) => {
             if (index < 5) {
               if (index !== 0) {
@@ -282,7 +279,6 @@ export default class FormModal extends React.Component {
             </DropdownButton>
           );
         }
-
         return null;
       };
 
