@@ -34,7 +34,7 @@ public class SingularityS3UploaderMetrics {
   public SingularityS3UploaderMetrics(MetricRegistry registry) {
     this.registry = registry;
     this.uploaderCounter = registry.counter(name("uploaders", "total"));
-    this.immediateUploaderCounter = registry.counter(name("uploaders", "total"));
+    this.immediateUploaderCounter = registry.counter(name("uploaders", "immediate"));
     this.uploadCounter = registry.counter(name("uploads", "success"));
     this.errorCounter = registry.counter(name("uploads", "errors"));
     this.uploadTimer = registry.timer(name("uploads", "timer"));
