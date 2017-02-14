@@ -4,6 +4,7 @@ import java.util.List;
 
 import javax.validation.constraints.NotNull;
 
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 import com.google.common.base.Optional;
 import com.hubspot.singularity.HealthcheckProtocol;
@@ -167,7 +168,7 @@ public class HealthcheckOptionsBuilder {
 
   @Override
   public String toString() {
-    return Objects.toStringHelper(this)
+    return MoreObjects.toStringHelper(this)
       .add("uri", uri)
       .add("portIndex", portIndex)
       .add("portNumber", portNumber)

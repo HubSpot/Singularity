@@ -2,6 +2,7 @@ package com.hubspot.singularity;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 import com.google.common.base.Optional;
 
@@ -15,6 +16,7 @@ public class SingularityTaskDestroyFrameworkMessage extends SingularityFramework
     this.user = user;
   }
 
+  @Override
   public SingularityTaskId getTaskId() {
     return taskId;
   }
@@ -43,7 +45,7 @@ public class SingularityTaskDestroyFrameworkMessage extends SingularityFramework
 
   @Override
   public String toString() {
-    return Objects.toStringHelper(this)
+    return MoreObjects.toStringHelper(this)
       .add("taskId", taskId)
       .add("user", user)
       .toString();

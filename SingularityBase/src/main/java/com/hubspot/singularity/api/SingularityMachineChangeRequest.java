@@ -2,7 +2,7 @@ package com.hubspot.singularity.api;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Optional;
 import com.hubspot.singularity.MachineState;
 import com.wordnik.swagger.annotations.ApiModelProperty;
@@ -40,7 +40,7 @@ public class SingularityMachineChangeRequest extends SingularityExpiringRequestP
 
   @Override
   public String toString() {
-    return Objects.toStringHelper(this)
+    return MoreObjects.toStringHelper(this)
       .add("durationMillis", getDurationMillis())
       .add("actionId", getActionId())
       .add("message", getMessage())

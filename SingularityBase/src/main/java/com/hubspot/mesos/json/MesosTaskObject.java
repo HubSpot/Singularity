@@ -1,11 +1,8 @@
 package com.hubspot.mesos.json;
 
-import java.util.List;
-
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.Objects;
-import com.hubspot.mesos.SingularityMesosTaskLabel;
+import com.google.common.base.MoreObjects;
 
 public class MesosTaskObject {
 
@@ -59,7 +56,7 @@ public class MesosTaskObject {
 
   @Override
   public String toString() {
-    return Objects.toStringHelper(this)
+    return MoreObjects.toStringHelper(this)
       .add("resources", resources)
       .add("state", state)
       .add("id", id)

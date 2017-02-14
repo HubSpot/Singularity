@@ -1,6 +1,5 @@
 package com.hubspot.deploy;
 
-import java.util.Collections;
 import java.util.List;
 
 import javax.validation.constraints.NotNull;
@@ -8,6 +7,7 @@ import javax.validation.constraints.NotNull;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 import com.google.common.base.Optional;
 import com.hubspot.singularity.HealthcheckProtocol;
@@ -143,7 +143,7 @@ public class HealthcheckOptions {
 
   @Override
   public String toString() {
-    return Objects.toStringHelper(this)
+    return MoreObjects.toStringHelper(this)
       .add("uri", uri)
       .add("portIndex", portIndex)
       .add("portNumber", portNumber)

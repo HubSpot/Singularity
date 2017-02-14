@@ -2,6 +2,7 @@ package com.hubspot.singularity;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 
 public class SingularityWebhookSummary {
@@ -43,7 +44,7 @@ public class SingularityWebhookSummary {
 
   @Override
   public String toString() {
-    return Objects.toStringHelper(this)
+    return MoreObjects.toStringHelper(this)
       .add("webhook", webhook)
       .add("queueSize", queueSize)
       .toString();

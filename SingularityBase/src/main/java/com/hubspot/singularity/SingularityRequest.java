@@ -11,6 +11,7 @@ import java.util.Set;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Optional;
 import com.wordnik.swagger.annotations.ApiModelProperty;
 
@@ -359,7 +360,7 @@ public class SingularityRequest {
 
   @Override
   public String toString() {
-    return com.google.common.base.Objects.toStringHelper(this)
+    return MoreObjects.toStringHelper(this)
       .add("id", id)
       .add("requestType", requestType)
       .add("owners", owners)

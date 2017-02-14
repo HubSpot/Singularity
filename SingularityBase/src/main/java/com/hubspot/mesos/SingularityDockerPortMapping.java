@@ -2,7 +2,7 @@ package com.hubspot.mesos;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Optional;
 import com.wordnik.swagger.annotations.ApiModelProperty;
 
@@ -56,7 +56,7 @@ public class SingularityDockerPortMapping {
 
   @Override
   public String toString() {
-    return Objects.toStringHelper(this)
+    return MoreObjects.toStringHelper(this)
       .add("containerPortType", containerPortType)
       .add("hostPortType", hostPortType)
       .add("containerPort", containerPort)

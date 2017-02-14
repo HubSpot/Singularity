@@ -2,7 +2,7 @@ package com.hubspot.singularity;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Optional;
 
 public class SingularityTaskCleanup {
@@ -58,7 +58,7 @@ public class SingularityTaskCleanup {
 
   @Override
   public String toString() {
-    return Objects.toStringHelper(this)
+    return MoreObjects.toStringHelper(this)
       .add("user", user)
       .add("cleanupType", cleanupType)
       .add("timestamp", timestamp)

@@ -5,6 +5,7 @@ import java.util.Set;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 
 public class SingularityUserSettings {
@@ -13,7 +14,7 @@ public class SingularityUserSettings {
   @JsonCreator
   public SingularityUserSettings(
       @JsonProperty("starredRequestIds") Set<String> starredRequestIds) {
-    this.starredRequestIds = Objects.firstNonNull(starredRequestIds, Collections.<String>emptySet());
+    this.starredRequestIds = MoreObjects.firstNonNull(starredRequestIds, Collections.<String>emptySet());
   }
 
   public static SingularityUserSettings empty() {
@@ -53,7 +54,7 @@ public class SingularityUserSettings {
 
   @Override
   public String toString() {
-    return Objects.toStringHelper(this)
+    return MoreObjects.toStringHelper(this)
       .add("starredRequestIds", starredRequestIds)
       .toString();
   }
