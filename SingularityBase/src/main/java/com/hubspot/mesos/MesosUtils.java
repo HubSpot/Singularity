@@ -29,6 +29,7 @@ import com.google.common.primitives.Longs;
 public final class MesosUtils {
 
   public static final String CPUS = "cpus";
+  public static final String GPUS = "gpus";
   public static final String MEMORY = "mem";
   public static final String PORTS = "ports";
   public static final String DISK = "disk";
@@ -72,6 +73,10 @@ public final class MesosUtils {
 
   public static Resource getCpuResource(double cpus) {
     return newScalar(CPUS, cpus);
+  }
+  
+  public static Resource getGpuResource(double gpus) {
+    return newScalar(GPUS, gpus);
   }
 
   public static Resource getMemoryResource(double memory) {
@@ -194,6 +199,10 @@ public final class MesosUtils {
   public static double getNumCpus(Offer offer) {
     return getNumCpus(offer.getResourcesList());
   }
+  
+  public static double getNumGpus(Offer offer) {
+    return getNumGpus(offer.getResourcesList());
+  }
 
   public static double getMemory(Offer offer) {
     return getMemory(offer.getResourcesList());
@@ -203,6 +212,10 @@ public final class MesosUtils {
 
   public static double getNumCpus(List<Resource> resources) {
     return getScalar(resources, CPUS);
+  }
+  
+  public static double getNumGpus(List<Resource> resources) {
+    return getScalar(resources, GPUS);
   }
 
   public static double getMemory(List<Resource> resources) {
@@ -223,6 +236,12 @@ public final class MesosUtils {
     double numCpus = getNumCpus(offerResources);
 
     if (numCpus < resources.getCpus()) {
+      return false;
+    }
+    
+    double numGpus = getNumGpus(offerResources);
+
+    if (numGpus < resources.getGpus()) {
       return false;
     }
 
@@ -347,7 +366,7 @@ public final class MesosUtils {
   }
 
   public static Resources buildResourcesFromMesosResourceList(List<Resource> resources) {
-    return new Resources(getNumCpus(resources), getMemory(resources), getNumPorts(resources), getDisk(resources));
+    return new Resources(getNumCpus(resources), getNumGpus(resources), getMemory(resources), getNumPorts(resources), getDisk(resources));
   }
 
   public static Path getTaskDirectoryPath(String taskId) {

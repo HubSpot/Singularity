@@ -18,6 +18,8 @@ public class MesosConfiguration {
   private double frameworkFailoverTimeout = 0.0;
 
   private int defaultCpus = 1;
+  
+  private int defaultGpus = 0;
 
   private int defaultMemory = 64;
 
@@ -38,6 +40,8 @@ public class MesosConfiguration {
   private int maxNumInstancesPerRequest = 25;
   private int maxNumCpusPerInstance = 50;
   private int maxNumCpusPerRequest = 900;
+  private int maxNumGpusPerInstance = 25;
+  private int maxNumGpusPerRequest = 450;
   private int maxMemoryMbPerInstance = 24000;
   private int maxMemoryMbPerRequest = 450000;
 
@@ -66,6 +70,22 @@ public class MesosConfiguration {
 
   public void setMaxNumCpusPerRequest(int maxNumCpusPerRequest) {
     this.maxNumCpusPerRequest = maxNumCpusPerRequest;
+  }
+  
+  public int getMaxNumGpusPerInstance() {
+    return maxNumGpusPerInstance;
+  }
+
+  public void setMaxNumGpusPerInstance(int maxNumGpusPerInstance) {
+    this.maxNumGpusPerInstance = maxNumGpusPerInstance;
+  }
+
+  public int getMaxNumGpusPerRequest() {
+    return maxNumGpusPerRequest;
+  }
+
+  public void setMaxNumGpusPerRequest(int maxNumGpusPerRequest) {
+    this.maxNumGpusPerRequest = maxNumGpusPerRequest;
   }
 
   public int getMaxMemoryMbPerInstance() {
@@ -146,6 +166,14 @@ public class MesosConfiguration {
 
   public void setDefaultCpus(int defaultCpus) {
     this.defaultCpus = defaultCpus;
+  }
+  
+  public int getDefaultGpus() {
+    return defaultGpus;
+  }
+
+  public void setDefaultGpus(int defaultGpus) {
+    this.defaultGpus = defaultGpus;
   }
 
   public int getDefaultMemory() {

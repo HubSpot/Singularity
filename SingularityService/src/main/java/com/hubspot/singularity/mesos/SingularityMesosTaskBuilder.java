@@ -109,6 +109,7 @@ class SingularityMesosTaskBuilder {
     }
 
     bldr.addResources(MesosUtils.getCpuResource(desiredTaskResources.getCpus()));
+    bldr.addResources(MesosUtils.getGpuResource(desiredTaskResources.getGpus()));
     bldr.addResources(MesosUtils.getMemoryResource(desiredTaskResources.getMemoryMb()));
 
     if (desiredTaskResources.getDiskMb() > 0) {
@@ -311,6 +312,10 @@ class SingularityMesosTaskBuilder {
     if (resources.getCpus() > 0) {
       builder.add(MesosUtils.getCpuResource(resources.getCpus()));
     }
+    
+    if (resources.getGpus() > 0) {
+	  builder.add(MesosUtils.getGpuResource(resources.getGpus()));
+	}
 
     if (resources.getMemoryMb() > 0) {
       builder.add(MesosUtils.getMemoryResource(resources.getMemoryMb()));

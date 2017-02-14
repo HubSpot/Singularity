@@ -56,9 +56,12 @@ public class SingularityValidator {
   private final int maxRequestIdSize;
   private final int maxCpusPerRequest;
   private final int maxCpusPerInstance;
+  private final int maxGpusPerRequest;
+  private final int maxGpusPerInstance;
   private final int maxInstancesPerRequest;
   private final int maxMemoryMbPerRequest;
   private final int defaultCpus;
+  private final int defaultGpus;
   private final int defaultMemoryMb;
   private final int defaultDiskMb;
   private final int defaultBounceExpirationMinutes;
@@ -81,14 +84,17 @@ public class SingularityValidator {
     this.priorityManager = priorityManager;
 
     this.defaultCpus = configuration.getMesosConfiguration().getDefaultCpus();
+    this.defaultGpus = configuration.getMesosConfiguration().getDefaultGpus();
     this.defaultMemoryMb = configuration.getMesosConfiguration().getDefaultMemory();
     this.defaultDiskMb = configuration.getMesosConfiguration().getDefaultDisk();
     this.defaultBounceExpirationMinutes = configuration.getDefaultBounceExpirationMinutes();
 
-    defaultResources = new Resources(defaultCpus, defaultMemoryMb, 0, defaultDiskMb);
+    defaultResources = new Resources(defaultCpus, defaultGpus, defaultMemoryMb, 0, defaultDiskMb);
 
     this.maxCpusPerInstance = configuration.getMesosConfiguration().getMaxNumCpusPerInstance();
     this.maxCpusPerRequest = configuration.getMesosConfiguration().getMaxNumCpusPerRequest();
+    this.maxGpusPerInstance = configuration.getMesosConfiguration().getMaxNumGpusPerInstance();
+    this.maxGpusPerRequest = configuration.getMesosConfiguration().getMaxNumGpusPerRequest();
     this.maxMemoryMbPerInstance = configuration.getMesosConfiguration().getMaxMemoryMbPerInstance();
     this.maxMemoryMbPerRequest = configuration.getMesosConfiguration().getMaxMemoryMbPerRequest();
     this.maxInstancesPerRequest = configuration.getMesosConfiguration().getMaxNumInstancesPerRequest();
@@ -102,14 +108,20 @@ public class SingularityValidator {
   private void checkForIllegalResources(SingularityRequest request, SingularityDeploy deploy) {
     int instances = request.getInstancesSafe();
     double cpusPerInstance = deploy.getResources().or(defaultResources).getCpus();
+    double gpusPerInstance = deploy.getResources().or(defaultResources).getGpus();
     double memoryMbPerInstance = deploy.getResources().or(defaultResources).getMemoryMb();
 
     checkBadRequest(cpusPerInstance > 0, "Request must have more than 0 cpus");
+    checkBadRequest(gpusPerInstance > 0, "Request must have more than 0 gpus");
     checkBadRequest(memoryMbPerInstance > 0, "Request must have more than 0 memoryMb");
 
     checkBadRequest(cpusPerInstance <= maxCpusPerInstance, "Deploy %s uses too many cpus %s (maxCpusPerInstance %s in mesos configuration)", deploy.getId(), cpusPerInstance, maxCpusPerInstance);
     checkBadRequest(cpusPerInstance * instances <= maxCpusPerRequest,
         "Deploy %s uses too many cpus %s (%s*%s) (cpusPerRequest %s in mesos configuration)", deploy.getId(), cpusPerInstance * instances, cpusPerInstance, instances, maxCpusPerRequest);
+
+    checkBadRequest(gpusPerInstance <= maxGpusPerInstance, "Deploy %s uses too many gpus %s (maxGpusPerInstance %s in mesos configuration)", deploy.getId(), gpusPerInstance, maxGpusPerInstance);
+    checkBadRequest(gpusPerInstance * instances <= maxGpusPerRequest,
+        "Deploy %s uses too many gpus %s (%s*%s) (gpusPerRequest %s in mesos configuration)", deploy.getId(), gpusPerInstance * instances, cpusPerInstance, instances, maxGpusPerRequest);
 
     checkBadRequest(memoryMbPerInstance <= maxMemoryMbPerInstance,
         "Deploy %s uses too much memoryMb %s (maxMemoryMbPerInstance %s in mesos configuration)", deploy.getId(), memoryMbPerInstance, maxMemoryMbPerInstance);

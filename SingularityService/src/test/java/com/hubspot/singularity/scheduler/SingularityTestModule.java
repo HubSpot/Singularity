@@ -237,6 +237,7 @@ public class SingularityTestModule implements Module {
 
     MesosConfiguration mc = new MesosConfiguration();
     mc.setDefaultCpus(1);
+    mc.setDefaultGpus(0);
     mc.setDefaultMemory(128);
     config.setMesosConfiguration(mc);
 

@@ -7,6 +7,9 @@ public class CustomExecutorConfiguration {
   private double numCpus = 0;
 
   @Min(0)
+  private double numGpus = 0;
+
+  @Min(0)
   private int memoryMb = 0;
 
   @Min(0)
@@ -15,9 +18,17 @@ public class CustomExecutorConfiguration {
   public double getNumCpus() {
     return numCpus;
   }
+  
+  public double getNumGpus() {
+    return numGpus;
+  }
 
   public void setNumCpus(double numCpus) {
     this.numCpus = numCpus;
+  }
+  
+  public void setNumGpus(double numGpus) {
+    this.numGpus = numGpus;
   }
 
   public int getMemoryMb() {

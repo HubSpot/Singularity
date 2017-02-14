@@ -12,23 +12,25 @@ public class Resources {
     checkNotNull(a, "first argument of Resources.add() is null");
     checkNotNull(b, "second argument of Resources.add() is null");
 
-    return new Resources(a.getCpus() + b.getCpus(), a.getMemoryMb() + b.getMemoryMb(), a.getNumPorts() + b.getNumPorts(), a.getDiskMb() + b.getDiskMb());
+    return new Resources(a.getCpus() + b.getCpus(), a.getGpus() + b.getGpus(), a.getMemoryMb() + b.getMemoryMb(), a.getNumPorts() + b.getNumPorts(), a.getDiskMb() + b.getDiskMb());
   }
 
-  public static final Resources EMPTY_RESOURCES = new Resources(0, 0, 0, 0);
+  public static final Resources EMPTY_RESOURCES = new Resources(0, 0, 0, 0, 0);
 
   private final double cpus;
+  private final double gpus;
   private final double memoryMb;
   private final int numPorts;
   private final double diskMb;
 
-  public Resources(double cpus, double memoryMb, int numPorts) {
-    this(cpus, memoryMb, numPorts, 0);
+  public Resources(double cpus, double gpus, double memoryMb, int numPorts) {
+    this(cpus, gpus, memoryMb, numPorts, 0);
   }
 
   @JsonCreator
-  public Resources(@JsonProperty("cpus") double cpus, @JsonProperty("memoryMb") double memoryMb, @JsonProperty("numPorts") int numPorts, @JsonProperty("diskMb") double diskMb) {
+  public Resources(@JsonProperty("cpus") double cpus, @JsonProperty("gpus") double gpus, @JsonProperty("memoryMb") double memoryMb, @JsonProperty("numPorts") int numPorts, @JsonProperty("diskMb") double diskMb) {
     this.cpus = cpus;
+    this.gpus = gpus;
     this.memoryMb = memoryMb;
     this.numPorts = numPorts;
     this.diskMb = diskMb;
@@ -40,6 +42,10 @@ public class Resources {
 
   public double getCpus() {
     return cpus;
+  }
+  
+  public double getGpus() {
+    return gpus;
   }
 
   public double getMemoryMb() {
@@ -54,6 +60,7 @@ public class Resources {
   public String toString() {
     return "Resources[" +
         "cpus=" + cpus +
+        ", gpus=" + gpus +
         ", memoryMb=" + memoryMb +
         ", numPorts=" + numPorts +
         ", diskMb=" + diskMb +
@@ -70,6 +77,7 @@ public class Resources {
     }
     Resources resources = (Resources) o;
     return Double.compare(resources.cpus, cpus) == 0 &&
+    	Double.compare(resources.gpus, gpus) == 0 &&
         Double.compare(resources.memoryMb, memoryMb) == 0 &&
         numPorts == resources.numPorts &&
         Double.compare(resources.diskMb, diskMb) == 0;
@@ -77,6 +85,6 @@ public class Resources {
 
   @Override
   public int hashCode() {
-    return Objects.hash(cpus, memoryMb, numPorts, diskMb);
+    return Objects.hash(cpus, gpus, memoryMb, numPorts, diskMb);
   }
 }

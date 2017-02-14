@@ -23,6 +23,7 @@ public class IndexView extends View {
 
   private final Integer defaultMemory;
   private final Integer defaultCpus;
+  private final Integer defaultGpus;
 
   private final Boolean hideNewDeployButton;
   private final Boolean hideNewRequestButton;
@@ -78,6 +79,7 @@ public class IndexView extends View {
     this.slaveHttpsPort = configuration.getMesosConfiguration().getSlaveHttpsPort().orNull();
 
     this.defaultCpus = configuration.getMesosConfiguration().getDefaultCpus();
+    this.defaultGpus = configuration.getMesosConfiguration().getDefaultGpus();
     this.defaultMemory = configuration.getMesosConfiguration().getDefaultMemory();
 
     this.hideNewDeployButton = configuration.getUiConfiguration().isHideNewDeployButton();
@@ -157,6 +159,10 @@ public class IndexView extends View {
 
   public Integer getDefaultCpus() {
     return defaultCpus;
+  }
+  
+  public Integer getDefaultGpus() {
+    return defaultGpus;
   }
 
   public Boolean getHideNewDeployButton() {
@@ -241,6 +247,7 @@ public class IndexView extends View {
             ", navColor='" + navColor + '\'' +
             ", defaultMemory=" + defaultMemory +
             ", defaultCpus=" + defaultCpus +
+            ", defaultGpus=" + defaultGpus +
             ", hideNewDeployButton=" + hideNewDeployButton +
             ", hideNewRequestButton=" + hideNewRequestButton +
             ", title='" + title + '\'' +

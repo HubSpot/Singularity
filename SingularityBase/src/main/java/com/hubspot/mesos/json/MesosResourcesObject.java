@@ -20,6 +20,10 @@ public class MesosResourcesObject {
   public Optional<Integer> getNumCpus() {
     return getResourceAsInteger("cpus");
   }
+  
+  public Optional<Integer> getNumGpus() {
+    return getResourceAsInteger("gpus");
+  }
 
   public Optional<Long> getDiskSpace() {
     return getResourceAsLong("disk");

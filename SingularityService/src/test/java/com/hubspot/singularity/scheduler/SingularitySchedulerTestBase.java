@@ -194,23 +194,23 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
     migrationRunner.checkMigrations();
   }
 
-  protected Offer createOffer(double cpus, double memory) {
-    return createOffer(cpus, memory, "slave1", "host1", Optional.<String> absent());
+  protected Offer createOffer(double cpus, double gpus, double memory) {
+    return createOffer(cpus, gpus, memory, "slave1", "host1", Optional.<String> absent());
   }
 
-  protected Offer createOffer(double cpus, double memory, String slave, String host) {
-    return createOffer(cpus, memory, slave, host, Optional.<String>absent());
+  protected Offer createOffer(double cpus, double gpus, double memory, String slave, String host) {
+    return createOffer(cpus, gpus, memory, slave, host, Optional.<String>absent());
   }
 
-  protected Offer createOffer(double cpus, double memory, String slave, String host, Optional<String> rack) {
-    return createOffer(cpus, memory, slave, host, rack, Collections.<String, String> emptyMap(), new String[0]);
+  protected Offer createOffer(double cpus, double gpus, double memory, String slave, String host, Optional<String> rack) {
+    return createOffer(cpus, gpus, memory, slave, host, rack, Collections.<String, String> emptyMap(), new String[0]);
   }
 
-  protected Offer createOffer(double cpus, double memory, String slave, String host, Optional<String> rack, Map<String, String> attributes) {
-    return createOffer(cpus, memory, slave, host, rack, attributes, new String[0]);
+  protected Offer createOffer(double cpus, double gpus, double memory, String slave, String host, Optional<String> rack, Map<String, String> attributes) {
+    return createOffer(cpus, gpus, memory, slave, host, rack, attributes, new String[0]);
   }
 
-  protected Offer createOffer(double cpus, double memory, String slave, String host, Optional<String> rack, Map<String, String> attributes, String[] portRanges) {
+  protected Offer createOffer(double cpus, double gpus, double memory, String slave, String host, Optional<String> rack, Map<String, String> attributes, String[] portRanges) {
     SlaveID slaveId = SlaveID.newBuilder().setValue(slave).build();
     FrameworkID frameworkId = FrameworkID.newBuilder().setValue("framework1").build();
 
@@ -232,6 +232,7 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
         .setHostname(host)
         .addAttributes(Attribute.newBuilder().setType(Type.TEXT).setText(Text.newBuilder().setValue(rack.or(configuration.getMesosConfiguration().getDefaultRackId()))).setName(configuration.getMesosConfiguration().getRackIdAttributeKey()))
         .addResources(Resource.newBuilder().setType(Type.SCALAR).setName(MesosUtils.CPUS).setScalar(Scalar.newBuilder().setValue(cpus)))
+        .addResources(Resource.newBuilder().setType(Type.SCALAR).setName(MesosUtils.GPUS).setScalar(Scalar.newBuilder().setValue(gpus)))
         .addResources(Resource.newBuilder().setType(Type.SCALAR).setName(MesosUtils.MEMORY).setScalar(Scalar.newBuilder().setValue(memory)))
         .addResources(MesosUtilsTest.buildPortRanges(portRanges))
         .addAllAttributes(attributesList)
@@ -272,9 +273,9 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
 
     Offer offer;
     if (separateHosts) {
-      offer = createOffer(125, 1024, String.format("slave%s", instanceNo), String.format("host%s", instanceNo));
+      offer = createOffer(125, 0, 1024, String.format("slave%s", instanceNo), String.format("host%s", instanceNo));
     } else {
-      offer = createOffer(125, 1024);
+      offer = createOffer(125, 0, 1024);
     }
 
     SingularityTaskId taskId = new SingularityTaskId(request.getId(), deploy.getId(), launchTime, instanceNo, offer.getHostname(), "rack1");
@@ -527,13 +528,13 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
   }
 
   protected void resourceOffers() {
-    sms.resourceOffers(driver, Arrays.asList(createOffer(20, 20000, "slave1", "host1"), createOffer(20, 20000, "slave2", "host2")));
+    sms.resourceOffers(driver, Arrays.asList(createOffer(20, 0, 20000, "slave1", "host1"), createOffer(20, 0, 20000, "slave2", "host2")));
   }
 
   protected void resourceOffersByNumTasks(int numTasks) {
     List<Offer> offers = new ArrayList<>();
     for (int i = 1; i <= numTasks; i++) {
-      offers.add(createOffer(1, 128, String.format("slave%s", i), String.format("host%s", i)));
+      offers.add(createOffer(1, 0, 128, String.format("slave%s", i), String.format("host%s", i)));
     }
     sms.resourceOffers(driver, offers);
   }
@@ -541,7 +542,7 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
   protected void resourceOffers(int numSlaves) {
     List<Offer> offers = new ArrayList<>();
     for (int i = 1; i <= numSlaves; i++) {
-      offers.add(createOffer(20, 20000, String.format("slave%s", i), String.format("host%s", i)));
+      offers.add(createOffer(20, 0, 20000, String.format("slave%s", i), String.format("host%s", i)));
     }
     sms.resourceOffers(driver, offers);
   }

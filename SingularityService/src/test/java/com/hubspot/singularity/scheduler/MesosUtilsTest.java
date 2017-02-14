@@ -51,26 +51,30 @@ public class MesosUtilsTest {
 
   @Test
   public void testSubtractResources() {
-    Assert.assertEquals(createResources(3, 60, "23:23", "100:175", "771:1000"),
-        MesosUtils.subtractResources(createResources(5, 100, "23:23", "100:1000"), createResources(2, 40, "176:770")));
+    Assert.assertEquals(createResources(3, 0, 60, "23:23", "100:175", "771:1000"),
+        MesosUtils.subtractResources(createResources(5, 0, 100, "23:23", "100:1000"), createResources(2, 0, 40, "176:770")));
 
-    List<Resource> subtracted = createResources(100, 1000, "1:100", "101:1000");
+    List<Resource> subtracted = createResources(100, 0, 1000, "1:100", "101:1000");
 
-    subtracted = MesosUtils.subtractResources(subtracted, createResources(5, 100, "23:74", "101:120", "125:130", "750:756"));
+    subtracted = MesosUtils.subtractResources(subtracted, createResources(5, 0, 100, "23:74", "101:120", "125:130", "750:756"));
 
-    Assert.assertEquals(createResources(95, 900, "1:22", "75:100", "121:124", "131:749", "757:1000"), subtracted);
+    Assert.assertEquals(createResources(95, 0, 900, "1:22", "75:100", "121:124", "131:749", "757:1000"), subtracted);
 
-    subtracted = MesosUtils.subtractResources(subtracted, createResources(20, 20, "75:90", "121:121", "757:1000"));
+    subtracted = MesosUtils.subtractResources(subtracted, createResources(20, 0, 20, "75:90", "121:121", "757:1000"));
 
-    Assert.assertEquals(createResources(75, 880, "1:22", "91:100", "122:124", "131:749"), subtracted);
+    Assert.assertEquals(createResources(75, 0, 880, "1:22", "91:100", "122:124", "131:749"), subtracted);
   }
 
 
-  private List<Resource> createResources(int cpus, int memory, String... ranges) {
+  private List<Resource> createResources(int cpus, int gpus, int memory, String... ranges) {
     List<Resource> resources = Lists.newArrayList();
 
     if (cpus > 0) {
       resources.add(Resource.newBuilder().setType(Type.SCALAR).setName(MesosUtils.CPUS).setScalar(Scalar.newBuilder().setValue(cpus).build()).build());
+    }
+    
+    if (gpus > 0) {
+      resources.add(Resource.newBuilder().setType(Type.SCALAR).setName(MesosUtils.GPUS).setScalar(Scalar.newBuilder().setValue(gpus).build()).build());
     }
 
     if (memory > 0) {

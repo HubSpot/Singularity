@@ -208,7 +208,7 @@ public class SingularityMesosTaskBuilderTest {
     netConf.setDefaultPortMapping(true);
     configuration.setNetworkConfiguration(netConf);
 
-    taskResources = new Resources(1, 1, 2);
+    taskResources = new Resources(1, 0, 1, 2);
 
     final SingularityRequest request = new SingularityRequestBuilder("test", RequestType.WORKER).build();
     final SingularityContainerInfo containerInfo = new SingularityContainerInfo(
