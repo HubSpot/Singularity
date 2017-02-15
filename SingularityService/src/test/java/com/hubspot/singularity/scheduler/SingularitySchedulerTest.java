@@ -987,6 +987,23 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     Assert.assertTrue(taskManager.getActiveTaskIds().size() == 3);
     Assert.assertTrue(taskManager.getPendingTaskIds().size() == 7);
   }
+  
+  @Test
+  public void testSchedulerExhaustsGpuOffers() {
+    initRequest();
+    SingularityRequestBuilder bldr = new SingularityRequestBuilder(requestId, RequestType.WORKER);
+    request = bldr.setInstances(Optional.of(10)).build();
+    saveRequest(request);
+    deployResource.deploy(new SingularityDeployRequest(new SingularityDeployBuilder(requestId, "d1").setCommand(Optional.of("cmd")).setResources(Optional.of(new Resources(0.1, 1, 1024, 0))).build(), Optional.<Boolean> absent(), Optional.<String> absent()));
+
+    scheduler.drainPendingQueue(stateCacheProvider.get());
+    deployChecker.checkDeploys();
+    
+    sms.resourceOffers(driver, Arrays.asList(createOffer(2, 4, 1024), createOffer(1, 0, 1024)));
+
+    Assert.assertTrue(taskManager.getActiveTaskIds().size() == 4);
+    Assert.assertTrue(taskManager.getPendingTaskIds().size() == 6);
+  }
 
   @Test
   public void testSchedulerRandomizesOffers() {
