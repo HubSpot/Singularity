@@ -11,6 +11,7 @@ import java.nio.file.StandardWatchEventKinds;
 import java.nio.file.WatchEvent.Kind;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -398,7 +399,10 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper implements S
     SingularityS3Uploader existingUploader = metadataToUploader.get(metadata);
 
     if (existingUploader != null) {
-      if (metadata.getUploadImmediately().isPresent() && metadata.getUploadImmediately().get()) {
+      if (hasImmediateUploader(metadata)) {
+        LOG.debug("Ignoring metadata {} from {} because it has an immediate uploader", metadata, filename);
+        return false;
+      } else if (metadata.getUploadImmediately().isPresent() && metadata.getUploadImmediately().get()) {
         LOG.debug("Existing metadata {} from {} changed to be immediate, forcing upload", metadata, filename);
         metrics.getUploaderCounter().dec();
         metrics.getImmediateUploaderCounter().inc();
@@ -514,5 +518,14 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper implements S
     }
 
     return true;
+  }
+
+  private boolean hasImmediateUploader(S3UploadMetadata metadata) {
+    Set<S3UploadMetadata> metadataFromUploaders = new HashSet<S3UploadMetadata>();
+    for (SingularityS3Uploader uploader : immediateUploaders.keySet()) {
+      metadataFromUploaders.add(uploader.getUploadMetadata());
+    }
+
+    return metadataFromUploaders.contains(metadata);
   }
 }
