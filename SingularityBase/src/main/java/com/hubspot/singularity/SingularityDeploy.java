@@ -1,8 +1,8 @@
 package com.hubspot.singularity;
 
 import static com.hubspot.singularity.JsonHelpers.copyOfList;
-import static com.hubspot.singularity.JsonHelpers.copyOfSet;
 import static com.hubspot.singularity.JsonHelpers.copyOfMap;
+import static com.hubspot.singularity.JsonHelpers.copyOfSet;
 
 import java.util.HashMap;
 import java.util.List;
@@ -17,6 +17,7 @@ import com.hubspot.deploy.ExecutorData;
 import com.hubspot.deploy.HealthcheckOptions;
 import com.hubspot.mesos.Resources;
 import com.hubspot.mesos.SingularityContainerInfo;
+import com.hubspot.mesos.SingularityMesosArtifact;
 import com.hubspot.mesos.SingularityMesosTaskLabel;
 import com.wordnik.swagger.annotations.ApiModelProperty;
 
@@ -42,7 +43,7 @@ public class SingularityDeploy {
   private final Optional<String> command;
   private final Optional<List<String>> arguments;
   private final Optional<Map<String, String>> env;
-  private final Optional<List<String>> uris;
+  private final Optional<List<SingularityMesosArtifact>> uris;
   private final Optional<ExecutorData> executorData;
   private final Optional<Map<String, String>> labels;
   private final Optional<List<SingularityMesosTaskLabel>> mesosLabels;
@@ -128,7 +129,7 @@ public class SingularityDeploy {
       @JsonProperty("resources") Optional<Resources> resources,
       @JsonProperty("env") Optional<Map<String, String>> env,
       @JsonProperty("taskEnv") Optional<Map<Integer, Map<String, String>>> taskEnv,
-      @JsonProperty("uris") Optional<List<String>> uris,
+      @JsonProperty("uris") Optional<List<SingularityMesosArtifact>> uris,
       @JsonProperty("metadata") Optional<Map<String, String>> metadata,
       @JsonProperty("executorData") Optional<ExecutorData> executorData,
       @JsonProperty("version") Optional<String> version,
@@ -281,7 +282,7 @@ public class SingularityDeploy {
     .setTimestamp(timestamp)
     .setEnv(copyOfMap(env))
     .setTaskEnv(taskEnv)
-    .setUris(copyOfList(uris))
+    .setUris(uris)
     .setExecutorData(executorData)
     .setLabels(labels)
     .setMesosLabels(mesosLabels)
@@ -374,7 +375,7 @@ public class SingularityDeploy {
   }
 
   @ApiModelProperty(required=false, value="List of URIs to download before executing the deploy command.")
-  public Optional<List<String>> getUris() {
+  public Optional<List<SingularityMesosArtifact>> getUris() {
     return uris;
   }
 

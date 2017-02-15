@@ -45,6 +45,7 @@ import com.hubspot.mesos.SingularityDockerInfo;
 import com.hubspot.mesos.SingularityDockerNetworkType;
 import com.hubspot.mesos.SingularityDockerParameter;
 import com.hubspot.mesos.SingularityDockerPortMapping;
+import com.hubspot.mesos.SingularityMesosArtifact;
 import com.hubspot.mesos.SingularityMesosTaskLabel;
 import com.hubspot.mesos.SingularityVolume;
 import com.hubspot.singularity.SingularityS3UploaderFile;
@@ -431,8 +432,13 @@ class SingularityMesosTaskBuilder {
       commandBldr.setShell(false);
     }
 
-    for (String uri : task.getDeploy().getUris().or(Collections.<String> emptyList())) {
-      commandBldr.addUris(URI.newBuilder().setValue(uri).build());
+    for (SingularityMesosArtifact artifact : task.getDeploy().getUris().or(Collections.<SingularityMesosArtifact> emptyList())) {
+      commandBldr.addUris(URI.newBuilder()
+          .setValue(artifact.getUri())
+          .setCache(artifact.isCache())
+          .setExecutable(artifact.isExecutable())
+          .setExtract(artifact.isExtract())
+          .build());
     }
 
     prepareEnvironment(task, taskId, commandBldr, offer, ports);
