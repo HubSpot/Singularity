@@ -10,6 +10,7 @@ import com.hubspot.deploy.ExecutorData;
 import com.hubspot.deploy.HealthcheckOptions;
 import com.hubspot.mesos.Resources;
 import com.hubspot.mesos.SingularityContainerInfo;
+import com.hubspot.mesos.SingularityMesosArtifact;
 import com.hubspot.mesos.SingularityMesosTaskLabel;
 
 public class SingularityDeployBuilder {
@@ -35,7 +36,7 @@ public class SingularityDeployBuilder {
   private Optional<List<String>> arguments;
   private Optional<Map<String, String>> env;
   private Optional<Map<Integer, Map<String, String>>> taskEnv;
-  private Optional<List<String>> uris;
+  private Optional<List<SingularityMesosArtifact>> uris;
   private Optional<ExecutorData> executorData;
   private Optional<Map<String, String>> labels;
   private Optional<List<SingularityMesosTaskLabel>> mesosLabels;
@@ -308,11 +309,11 @@ public class SingularityDeployBuilder {
     return this;
   }
 
-  public Optional<List<String>> getUris() {
+  public Optional<List<SingularityMesosArtifact>> getUris() {
     return uris;
   }
 
-  public SingularityDeployBuilder setUris(Optional<List<String>> uris) {
+  public SingularityDeployBuilder setUris(Optional<List<SingularityMesosArtifact>> uris) {
     this.uris = uris;
     return this;
   }
