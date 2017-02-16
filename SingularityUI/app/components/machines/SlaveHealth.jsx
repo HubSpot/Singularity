@@ -10,16 +10,16 @@ const getMaxAvailableResource = (slaveInfo, statName) => {
       try {
         return parseFloat(slaveInfo.attributes.real_cpus) || slaveInfo.resources.cpus;
       } catch (e) {
-        throw Utils.formatUnicorn('Could not find resource (cpus) for slave {host} ({id})', slaveInfo);
+        throw new Error(`Could not find resource (cpus) for slave ${slaveInfo.host} (${slaveInfo.id})`);
       }
     case STAT_NAMES.memoryBytesUsedStat:
       try {
         return parseFloat(slaveInfo.attributes.real_memory_mb) || slaveInfo.resources.mem;
       } catch (e) {
-        throw Utils.formatUnicorn('Could not find resources (memory) for slave {host} ({id})', slaveInfo);
+        throw new Error(`Could not find resource (memory) for slave ${slaveInfo.host} (${slaveInfo.id})`);
       }
     default:
-      throw Utils.formatUnicorn('{0} is an unsupported statistic', statName);
+      throw new Error(`${statName} is an unsupported statistic'`);
   }
 };
 

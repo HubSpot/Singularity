@@ -425,27 +425,4 @@ const Utils = {
     return array.join('&');
   },
 
-  // printf and dict string formatting based on http://stackoverflow.com/a/18234317/4639232
-  // e.g
-  // formatUnicorn("Classic {0} style formating", "C")
-  // formatUnicorn("The {animal} is big", {'animal' : 'tiger'})
-  formatUnicorn(format) {
-    'use strict';
-    var str = format.toString();
-    if (arguments.length > 1) {
-      var t = typeof arguments[1];
-      var key;
-      var args = ('string' === t || 'number' === t) ?
-        Array.prototype.slice.call(arguments, 1)
-        : arguments[1];
-
-      for (key in args) {
-        str = str.replace(new RegExp('\\{' + key + '\\}', 'gi'), args[key]);
-      }
-    }
-
-    return str;
-  }
-};
-
 export default Utils;
