@@ -6,13 +6,13 @@ const StatItem = ({name, value, percentage, className}) => {
     <CopyToClipboard text={value.toString()}>
       <li className={`${className} stat-item-detail container`}>
           <div className="row">
-            <div className="col-md-4" id="stat-name">
+            <div className="col-xs-4" id="stat-name">
               {name}
             </div>
-            <div className="col-md-4" id="stat-value">
+            <div className="col-xs-4" id="stat-value">
               {value}
             </div>
-            <div className="col-md-4" id="stat-percentage">
+            <div className="col-xs-4" id="stat-percentage">
               {percentage}%
             </div>
           </div>

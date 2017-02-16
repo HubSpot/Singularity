@@ -43,7 +43,7 @@ const humanizeStatValue = (name, value) => {
 
 const SlaveHealthMenuItems = ({stats}) => {
   const renderSlaveStats = _.map(stats.sort(compareStats), ({name, value, style}) => {
-    return <StatItem key={name} name={humanizeStatName(name)} value={humanizeStatValue(name, value)} className={style} percentage="50" />;
+    return <StatItem key={name} name={humanizeStatName(name)} value={humanizeStatValue(name, value)} className={style} percentage={50} />;
   });
 
   return (

@@ -2,6 +2,7 @@ import React, { PropTypes } from 'react';
 import { connect } from 'react-redux';
 import rootComponent from '../../rootComponent';
 import { FetchSlaveUsages, FetchSlaves } from '../../actions/api/slaves';
+import SlaveAggregates from './SlaveAggregates';
 import SlaveHealth from './SlaveHealth';
 
 const getSlaveInfo = (slaves, slaveUsage) => {
@@ -18,9 +19,9 @@ const SlaveUsage = ({slaves, slaveUsages}) => {
     <div id="slave-usage-page">
       <h1>Slave Usage</h1>
       <div>
-        Aggregate data will appear here
+        <SlaveAggregates totalSlaves={20} totalTasks={200} avgCpu={30} avgMemory={40} />
       </div>
-
+      <hr />
       <div id="slave-health">
         <h3>Slave health</h3>
         {slaveHealthData}
