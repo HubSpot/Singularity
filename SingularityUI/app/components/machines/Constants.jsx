@@ -1,16 +1,9 @@
-export const SLAVE_TYPES = {
-  critical : {
-    icon : 'glyphicon glyphicon-remove-sign',
-    bsStyle : 'danger'
-  },
-  warning : {
-    icon : 'glyphicon glyphicon-minus-sign',
-    bsStyle : 'warning'
-  },
-  ok : {
-    icon : 'glyphicon glyphicon-ok-sign',
-    bsStyle : 'success'
-  }
+export const HUNDREDTHS_PLACE = 2;
+
+export const SLAVE_STYLES = {
+  ok : 'ok-slave',
+  warning : 'warning-slave',
+  critical : 'critical-slave'
 };
 
 export const THRESHOLDS = {
@@ -31,7 +24,15 @@ export const STAT_NAMES = {
 };
 
 export const STAT_STYLES = {
-  ok : '',
-  warning : 'color-warning',
-  critical : 'color-error'
+  ok : 'ok-stat',
+  warning : 'warning-stat',
+  critical : 'critical-stat'
 };
+
+export const SLAVE_HEALTH_MENU_ITEM_ORDER = [
+  'host',
+  STAT_NAMES.cpusUsedStat,
+  STAT_NAMES.memoryBytesUsedStat,
+  STAT_NAMES.numTasksStat,
+  STAT_NAMES.timestampStat
+];
