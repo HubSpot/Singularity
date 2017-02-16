@@ -45,6 +45,10 @@ const Utils = {
     ));
   },
 
+  humanizeSlaveHostName(longHostName) {
+    return longHostName.split('.')[0];
+  },
+
   timestampFromNow(millis) {
     const timeObject = moment(millis);
     return `${timeObject.fromNow()} (${timeObject.format(window.config.timestampFormat)})`;
