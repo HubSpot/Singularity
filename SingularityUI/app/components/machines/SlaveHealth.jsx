@@ -10,10 +10,7 @@ const isStatCritical = (slaveInfo, slaveUsage, statName) => {
     case STAT_NAMES.cpusUsedStat:
       return (slaveUsage.cpusUsed / Utils.getMaxAvailableResource(slaveInfo, statName)) > THRESHOLDS.cpusCriticalThreshold;
     case STAT_NAMES.memoryBytesUsedStat:
-      // todo: create util method to convert from mb to bytes
-      return (slaveUsage.memoryBytesUsed / (Utils.getMaxAvailableResource(slaveInfo, statName) * Math.pow(1024, 2))) > THRESHOLDS.memoryCriticalThreshold;
-    case STAT_NAMES.numTasksStat:
-      return slaveUsage.numTasks > THRESHOLDS.numTasksCritical;
+      return (slaveUsage.memoryBytesUsed / (Utils.getMaxAvailableResource(slaveInfo, statName))) > THRESHOLDS.memoryCriticalThreshold;
     default:
       return false;
   }
@@ -24,10 +21,7 @@ const isStatWarning = (slaveInfo, slaveUsage, statName) => {
     case STAT_NAMES.cpusUsedStat:
       return (slaveUsage.cpusUsed / Utils.getMaxAvailableResource(slaveInfo, statName)) > THRESHOLDS.cpusWarningThreshold;
     case STAT_NAMES.memoryBytesUsedStat:
-      // todo: create util method to convert from mb to bytes
-      return (slaveUsage.memoryBytesUsed / (Utils.getMaxAvailableResource(slaveInfo, statName) * Math.pow(1024, 2))) > THRESHOLDS.memoryWarningThreshold;
-    case STAT_NAMES.numTasksStat:
-      return slaveUsage.numTasks > THRESHOLDS.numTasksWarning;
+      return (slaveUsage.memoryBytesUsed / (Utils.getMaxAvailableResource(slaveInfo, statName))) > THRESHOLDS.memoryWarningThreshold;
     default:
       return false;
   }
@@ -50,6 +44,7 @@ const SlaveHealth = ({slaveInfo, slaveUsage}) => {
     const newStat = {
       name : stat,
       value : (stat === STAT_NAMES.slaveIdStat ? slaveInfo.host : val),
+      maybeTotalResource : Utils.isResourceStat(stat) ? Utils.getMaxAvailableResource(slaveInfo, stat) : '',
       style : STAT_STYLES.ok
     };
 

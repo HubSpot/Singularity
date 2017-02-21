@@ -3,28 +3,28 @@ import CircularProgressbar from 'react-circular-progressbar';
 import Utils from '../../utils';
 import { STAT_NAMES, HUNDREDTHS_PLACE } from './Constants';
 
-const getAvgSlaveUsage = (slaves, slaveUsages, usageCallback, resourceCallback) => {
+const getPctSlaveUsage = (slaves, slaveUsages, usageCallback, resourceCallback) => {
   const totalUsage = slaveUsages.map(usageCallback)
                                 .reduce((acc, val) => acc + parseFloat(val), 0);
 
   const totalResource = slaves.map(resourceCallback)
                               .reduce((acc, val) => acc + parseFloat(val), 0);
 
-  return Utils.roundTo((totalUsage / totalResource), HUNDREDTHS_PLACE);
+  return Utils.roundTo((totalUsage / totalResource) * 100, HUNDREDTHS_PLACE);
 };
 
-const getAvgCpu = (slaves, slaveUsages) => {
-  return getAvgSlaveUsage(slaves,
+const getCpuUtilizationPct = (slaves, slaveUsages) => {
+  return getPctSlaveUsage(slaves,
                           slaveUsages,
                           usage => usage.cpusUsed,
                           slave => Utils.getMaxAvailableResource(slave, STAT_NAMES.cpusUsedStat));
 };
 
-const getAvgMem = (slaves, slaveUsages) => {
-  return getAvgSlaveUsage(slaves,
+const getMemUtilizationPct = (slaves, slaveUsages) => {
+  return getPctSlaveUsage(slaves,
                           slaveUsages,
                           usage => usage.memoryBytesUsed,
-                          slave => Utils.getMaxAvailableResource(slave, STAT_NAMES.memoryBytesUsedStat) * Math.pow(1024, 2));
+                          slave => Utils.getMaxAvailableResource(slave, STAT_NAMES.memoryBytesUsedStat));
 };
 
 const SlaveAggregates = ({slaves, slaveUsages}) => {
@@ -47,13 +47,13 @@ const SlaveAggregates = ({slaves, slaveUsages}) => {
         </div>
       </div>
       <div className="avg-cpu col-xs-3">
-        <CircularProgressbar percentage={getAvgCpu(slaves, slaveUsages)} initialAnimation={true} textForPercentage={(pct) => `${pct}%`} />
+        <CircularProgressbar percentage={getCpuUtilizationPct(slaves, slaveUsages)} initialAnimation={true} textForPercentage={(pct) => `${pct}%`} />
         <div id="label">
           Cpu
         </div>
       </div>
       <div className="avg-memory col-xs-3">
-        <CircularProgressbar percentage={getAvgMem(slaves, slaveUsages)} initialAnimation={true} textForPercentage={(pct) => `${pct}%`} />
+        <CircularProgressbar percentage={getMemUtilizationPct(slaves, slaveUsages)} initialAnimation={true} textForPercentage={(pct) => `${pct}%`} />
         <div id="label">
           Memory
         </div>
