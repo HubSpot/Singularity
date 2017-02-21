@@ -33,7 +33,7 @@ const humanizeStatValue = (name, value, maybeTotalResource) => {
     case STAT_NAMES.memoryBytesUsedStat:
       return `${Utils.humanizeFileSize(value)} / ${Utils.humanizeFileSize(maybeTotalResource)}`;
     case STAT_NAMES.numTasksStat:
-      return value;
+      return value.toString();
     case STAT_NAMES.timestampStat:
       return '';
     default:

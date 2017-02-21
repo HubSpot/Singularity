@@ -27,7 +27,7 @@ const getMemUtilizationPct = (slaves, slaveUsages) => {
                           slave => Utils.getMaxAvailableResource(slave, STAT_NAMES.memoryBytesUsedStat));
 };
 
-const SlaveAggregates = ({slaves, slaveUsages}) => {
+const SlaveAggregates = ({slaves, slaveUsages, activeTasks}) => {
   return (
     <div className="slave-aggregates row">
       <div className="total-slaves col-xs-3">
@@ -40,7 +40,7 @@ const SlaveAggregates = ({slaves, slaveUsages}) => {
       </div>
       <div className="total-tasks col-xs-3">
         <div id="value">
-          {"todo"}
+          {activeTasks}
         </div>
         <div id="label">
           Tasks Running
@@ -64,7 +64,8 @@ const SlaveAggregates = ({slaves, slaveUsages}) => {
 
 SlaveAggregates.propTypes = {
   slaves : PropTypes.array,
-  slaveUsages : PropTypes.array
+  slaveUsages : PropTypes.array,
+  activeTasks : PropTypes.number.isRequired
 };
 
 export default SlaveAggregates;
