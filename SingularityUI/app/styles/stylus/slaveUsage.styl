@@ -21,16 +21,20 @@
 	padding : 15px 15px
 	border-radius : 0px
 	display : inline-block
+	opacity : .8
 
-.ok-slave
+.single-slave-btn:hover
+	opacity : 1
+
+.ok-slave, .ok-slave:hover
 	background-color : $color-oz
 	border-color : $color-oz-dark
 
-.warning-slave
+.warning-slave, .warning-slave:hover
 	background-color : $color-marigold
 	border-color : $color-marigold-dark
 
-.critical-slave
+.critical-slave, .critical-slave:hover
 	background-color : $color-norman
 	border-color : $color-norman-dark
 
@@ -40,13 +44,17 @@
 
 .stat-item-detail
 	white-space : nowrap
-	padding-left : 20px
+	padding-left : 30px
 	padding-right : 5px
-	width : 300px
+	width : 350px
+
+.stat-item-detail .row
+	margin-bottom : .5em
 
 #stat-name
+	color : #666
+	font-size : 13px
 	display : inline
-	text-align : right
 
 #stat-value
 	display : inline
