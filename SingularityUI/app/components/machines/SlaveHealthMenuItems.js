@@ -58,6 +58,13 @@ const SlaveHealthMenuItems = ({stats}) => {
   return (
     <div id="slave-stats">
       {renderSlaveStats}
+      <li className="timestamp-stat">
+        <div className="row">
+          <div className="col-xs-12">
+            Last updated {Utils.timestampFromNow(stats.find((stat) => stat.name === STAT_NAMES.timestampStat).value)}
+          </div>
+        </div>
+      </li>
     </div>
   );
 };
