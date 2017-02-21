@@ -29,7 +29,7 @@ const humanizeStatValue = (name, value) => {
     case STAT_NAMES.slaveIdStat:
       return Utils.humanizeSlaveHostName(value);
     case STAT_NAMES.cpusUsedStat:
-      return parseFloat(value).toFixed(HUNDREDTHS_PLACE);
+      return Utils.roundTo(value, HUNDREDTHS_PLACE);
     case STAT_NAMES.memoryBytesUsedStat:
       return Utils.humanizeFileSize(value);
     case STAT_NAMES.numTasksStat:

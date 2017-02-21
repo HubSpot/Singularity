@@ -1,4 +1,5 @@
 import moment from 'moment';
+import { STAT_NAMES } from 'components/machines/Constants';
 
 const Utils = {
   TERMINAL_TASK_STATES: ['TASK_KILLED', 'TASK_LOST', 'TASK_FAILED', 'TASK_FINISHED', 'TASK_ERROR'],
@@ -183,6 +184,29 @@ const Utils = {
     return splits[splits.length-3];
   },
 
+  getMaxAvailableResource(slaveInfo, statName) {
+    switch (statName) {
+      case STAT_NAMES.cpusUsedStat:
+        try {
+          return parseFloat(slaveInfo.attributes.real_cpus || slaveInfo.resources.cpus);
+        } catch (e) {
+          throw new Error(`Could not find resource (cpus) for slave ${slaveInfo.host} (${slaveInfo.id})`);
+        }
+      case STAT_NAMES.memoryBytesUsedStat:
+        try {
+          return parseFloat(slaveInfo.attributes.real_memory_mb || slaveInfo.resources.mem) * Math.pow(1024, 2);
+        } catch (e) {
+          throw new Error(`Could not find resource (memory) for slave ${slaveInfo.host} (${slaveInfo.id})`);
+        }
+      default:
+        throw new Error(`${statName} is an unsupported statistic'`);
+    }
+  },
+
+  isResourceStat(stat) {
+    return stat === STAT_NAMES.cpusUsedStat || stat === STAT_NAMES.memoryBytesUsedStat;
+  },
+
   deepClone(objectToClone) {
     return $.extend(true, {}, objectToClone);
   },
@@ -213,6 +237,10 @@ const Utils = {
     }
     const finalRegex = config.taskS3LogOmitPrefix.replace('%taskId', taskId.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')).replace('%index', '[0-9]+').replace('%s', '[0-9]+');
     return filename.replace(new RegExp(finalRegex), '');
+  },
+
+  roundTo(value, place) {
+    return +(Math.round(parseFloat(value) + 'e+' + place) + 'e-' + place);
   },
 
   millisecondsToSecondsRoundToTenth(millis) {
@@ -433,6 +461,7 @@ const Utils = {
       }
     }
     return array.join('&');
-  },
+  }
+};
 
 export default Utils;

@@ -19,7 +19,7 @@ const SlaveUsage = ({slaves, slaveUsages}) => {
     <div id="slave-usage-page">
       <h1>Slave Usage</h1>
       <div>
-        <SlaveAggregates totalSlaves={20} totalTasks={200} avgCpu={30} avgMemory={40} />
+        <SlaveAggregates slaves={slaves} slaveUsages={slaveUsages} />
       </div>
       <hr />
       <div id="slave-health">
