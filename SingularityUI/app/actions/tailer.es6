@@ -26,14 +26,14 @@ export const jumpToBottom = (id, taskId, path) => (dispatch, getState) => {
   const state = getState();
 
   dispatch(tailerActions.unloadFile(id));
-  dispatch(tailerActions.sandboxFetchTail(id, taskId, path, state.tailer.config));
+  dispatch(tailerActions.sandboxFetchTail(id, taskId, path.replace('$TASK_ID', taskId), state.tailer.config));
 }
 
 export const jumpAllToBottom = () => (dispatch, getState) => {
   const state = getState();
 
   state.tailerView.tailerGroups.map((tailerGroup) => tailerGroup.map((tailer) => {
-    dispatch(jumpToBottom(tailer.tailerId, tailer.taskId, tailer.path, state.tailer.config));
+    dispatch(jumpToBottom(tailer.tailerId, tailer.taskId, tailer.path));
   }));
 }
 
@@ -41,15 +41,15 @@ export const jumpToTop = (id, taskId, path) => (dispatch, getState) => {
   const state = getState();
 
   dispatch(tailerActions.unloadFile(id));
-  dispatch(tailerActions.sandboxFetchLength(id, taskId, path)).then(() =>
-    dispatch(tailerActions.sandboxFetchChunk(id, taskId, path, 0, tailerActions.SANDBOX_MAX_BYTES, state.tailer.config)));
+  dispatch(tailerActions.sandboxFetchLength(id, taskId, path.replace('$TASK_ID', taskId), state.tailer.config));
+  dispatch(tailerActions.sandboxFetchChunk(id, taskId, path.replace('$TASK_ID', taskId), 0, tailerActions.SANDBOX_MAX_BYTES, state.tailer.config));
 }
 
 export const jumpAllToTop = () => (dispatch, getState) => {
   const state = getState();
 
   state.tailerView.tailerGroups.map((tailerGroup) => tailerGroup.map((tailer) => {
-    dispatch(jumpToTop(tailer.tailerId, tailer.taskId, tailer.path, state.tailer.config));
+    dispatch(jumpToTop(tailer.tailerId, tailer.taskId, tailer.path));
   }));
 }
 
