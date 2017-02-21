@@ -11,7 +11,6 @@ import java.nio.file.StandardWatchEventKinds;
 import java.nio.file.WatchEvent.Kind;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -76,6 +75,7 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper implements S
   private final String hostname;
   private final SingularityRunnerExceptionNotifier exceptionNotifier;
 
+  private final Map<S3UploadMetadata, SingularityS3Uploader> metadataToImmediateUploaders;
   private final ConcurrentMap<SingularityS3Uploader, Future<Integer>> immediateUploaders;
 
   private ScheduledFuture<?> future;
@@ -109,6 +109,7 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper implements S
     this.hostname = hostname;
     this.exceptionNotifier = exceptionNotifier;
 
+    this.metadataToImmediateUploaders = Maps.newConcurrentMap();
     this.immediateUploaders = Maps.newConcurrentMap();
   }
 
@@ -238,6 +239,7 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper implements S
     for (SingularityS3Uploader uploader : toRemove) {
       metrics.getImmediateUploaderCounter().dec();
       immediateUploaders.remove(uploader);
+      metadataToImmediateUploaders.remove(uploader.getUploadMetadata());
 
       try {
         LOG.debug("Deleting finished immediate uploader {}", uploader.getMetadataPath());
@@ -397,9 +399,10 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper implements S
     final S3UploadMetadata metadata = maybeMetadata.get();
 
     SingularityS3Uploader existingUploader = metadataToUploader.get(metadata);
+    SingularityS3Uploader existingImmediateUploader = metadataToImmediateUploaders.get(metadata);
 
     if (existingUploader != null) {
-      if (hasImmediateUploader(metadata)) {
+      if (existingImmediateUploader != null) {
         LOG.debug("Ignoring metadata {} from {} because it has an immediate uploader", metadata, filename);
         return false;
       } else if (metadata.getUploadImmediately().isPresent() && metadata.getUploadImmediately().get()) {
@@ -408,6 +411,7 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper implements S
         metrics.getImmediateUploaderCounter().inc();
 
         metadataToUploader.remove(existingUploader.getUploadMetadata());
+        metadataToImmediateUploaders.put(existingUploader.getUploadMetadata(), existingUploader);
         uploaderLastHadFilesAt.remove(existingUploader);
         expiring.remove(existingUploader);
         performImmediateUpload(existingUploader);
@@ -448,6 +452,7 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper implements S
       if (metadata.getUploadImmediately().isPresent()
           && metadata.getUploadImmediately().get()) {
         metrics.getImmediateUploaderCounter().inc();
+        metadataToImmediateUploaders.put(metadata, uploader);
         this.performImmediateUpload(uploader);
       } else {
         metrics.getUploaderCounter().inc();
@@ -518,14 +523,5 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper implements S
     }
 
     return true;
-  }
-
-  private boolean hasImmediateUploader(S3UploadMetadata metadata) {
-    Set<S3UploadMetadata> metadataFromUploaders = new HashSet<S3UploadMetadata>();
-    for (SingularityS3Uploader uploader : immediateUploaders.keySet()) {
-      metadataFromUploaders.add(uploader.getUploadMetadata());
-    }
-
-    return metadataFromUploaders.contains(metadata);
   }
 }
