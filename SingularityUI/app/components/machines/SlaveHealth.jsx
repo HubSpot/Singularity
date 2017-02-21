@@ -4,32 +4,14 @@ import SlaveHealthMenuItems from './SlaveHealthMenuItems';
 import { Dropdown } from 'react-bootstrap';
 import { SLAVE_STYLES, THRESHOLDS, STAT_NAMES, STAT_STYLES } from './Constants';
 
-const getMaxAvailableResource = (slaveInfo, statName) => {
-  switch (statName) {
-    case STAT_NAMES.cpusUsedStat:
-      try {
-        return parseFloat(slaveInfo.attributes.real_cpus) || slaveInfo.resources.cpus;
-      } catch (e) {
-        throw new Error(`Could not find resource (cpus) for slave ${slaveInfo.host} (${slaveInfo.id})`);
-      }
-    case STAT_NAMES.memoryBytesUsedStat:
-      try {
-        return parseFloat(slaveInfo.attributes.real_memory_mb) || slaveInfo.resources.mem;
-      } catch (e) {
-        throw new Error(`Could not find resource (memory) for slave ${slaveInfo.host} (${slaveInfo.id})`);
-      }
-    default:
-      throw new Error(`${statName} is an unsupported statistic'`);
-  }
-};
 
 const isStatCritical = (slaveInfo, slaveUsage, statName) => {
   switch (statName) {
     case STAT_NAMES.cpusUsedStat:
-      return (slaveUsage.cpusUsed / getMaxAvailableResource(slaveInfo, statName)) > THRESHOLDS.cpusCriticalThreshold;
+      return (slaveUsage.cpusUsed / Utils.getMaxAvailableResource(slaveInfo, statName)) > THRESHOLDS.cpusCriticalThreshold;
     case STAT_NAMES.memoryBytesUsedStat:
       // todo: create util method to convert from mb to bytes
-      return (slaveUsage.memoryBytesUsed / (getMaxAvailableResource(slaveInfo, statName) * Math.pow(1024, 2))) > THRESHOLDS.memoryCriticalThreshold;
+      return (slaveUsage.memoryBytesUsed / (Utils.getMaxAvailableResource(slaveInfo, statName) * Math.pow(1024, 2))) > THRESHOLDS.memoryCriticalThreshold;
     case STAT_NAMES.numTasksStat:
       return slaveUsage.numTasks > THRESHOLDS.numTasksCritical;
     default:
@@ -40,10 +22,10 @@ const isStatCritical = (slaveInfo, slaveUsage, statName) => {
 const isStatWarning = (slaveInfo, slaveUsage, statName) => {
   switch (statName) {
     case STAT_NAMES.cpusUsedStat:
-      return (slaveUsage.cpusUsed / getMaxAvailableResource(slaveInfo, statName)) > THRESHOLDS.cpusWarningThreshold;
+      return (slaveUsage.cpusUsed / Utils.getMaxAvailableResource(slaveInfo, statName)) > THRESHOLDS.cpusWarningThreshold;
     case STAT_NAMES.memoryBytesUsedStat:
       // todo: create util method to convert from mb to bytes
-      return (slaveUsage.memoryBytesUsed / (getMaxAvailableResource(slaveInfo, statName) * Math.pow(1024, 2))) > THRESHOLDS.memoryWarningThreshold;
+      return (slaveUsage.memoryBytesUsed / (Utils.getMaxAvailableResource(slaveInfo, statName) * Math.pow(1024, 2))) > THRESHOLDS.memoryWarningThreshold;
     case STAT_NAMES.numTasksStat:
       return slaveUsage.numTasks > THRESHOLDS.numTasksWarning;
     default:
