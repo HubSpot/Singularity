@@ -96,17 +96,22 @@ export const toggleTailerGroup = (taskId, path) => (dispatch, getState) => {
 export const updateTailerUrl = () => (dispatch, getState) => {
   const { tailerView } = getState();
 
-  console.log("updateTailerUrl()");
+  let path = tailerView.paths[0];
+  if (path.indexOf('$TASK_ID') < 0) {
+    for (let i=0; i<tailerView.taskIds.length; i++) {
+      path = path.replace(tailerView.taskIds[i], '$TASK_ID');
+    }
+  }
 
   if (tailerView.taskIds.length === 1) {
     // task tailer
-    return dispatch(push(`/task/${tailerView.taskIds[0]}/tail/${tailerView.paths[0]}`));
+    return dispatch(push(`/task/${tailerView.taskIds[0]}/tail/${path}`));
   } if (tailerView.requestIds.length === 1) {
     // request tailer
-    return dispatch(push(`/request/${tailerView.requestIds[0]}/tail/${tailerView.paths[0]}?instance=${tailerView.taskIds.map(Utils.getInstanceNoFromTaskId).join(',')}`));
+    return dispatch(push(`/request/${tailerView.requestIds[0]}/tail/${path}?instance=${tailerView.taskIds.map(Utils.getInstanceNoFromTaskId).join(',')}`));
   } else if (tailerView.paths.length === 1) {
     // custom tailer
-    return dispatch(push(`/tail/${tailerView.paths[0]}?taskIds=${tailerView.taskIds.join(',')}`));
+    return dispatch(push(`/tail/${path}?taskIds=${tailerView.taskIds.join(',')}`));
   } else {
     // ur fucked
   }
