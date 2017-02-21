@@ -75,7 +75,8 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper implements S
   private final String hostname;
   private final SingularityRunnerExceptionNotifier exceptionNotifier;
 
-  private final Map<S3UploadMetadata, SingularityS3Uploader> metadataToImmediateUploaders;
+  private final List<S3UploadMetadata> immediateUploadMetadata;
+  private final ReentrantLock lock;
   private final ConcurrentMap<SingularityS3Uploader, Future<Integer>> immediateUploaders;
 
   private ScheduledFuture<?> future;
@@ -109,7 +110,8 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper implements S
     this.hostname = hostname;
     this.exceptionNotifier = exceptionNotifier;
 
-    this.metadataToImmediateUploaders = Maps.newConcurrentMap();
+    this.immediateUploadMetadata = new ArrayList<>();
+    this.lock = new ReentrantLock();
     this.immediateUploaders = Maps.newConcurrentMap();
   }
 
@@ -239,7 +241,7 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper implements S
     for (SingularityS3Uploader uploader : toRemove) {
       metrics.getImmediateUploaderCounter().dec();
       immediateUploaders.remove(uploader);
-      metadataToImmediateUploaders.remove(uploader.getUploadMetadata());
+      immediateUploadMetadata.remove(uploader.getUploadMetadata());
 
       try {
         LOG.debug("Deleting finished immediate uploader {}", uploader.getMetadataPath());
@@ -399,23 +401,22 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper implements S
     final S3UploadMetadata metadata = maybeMetadata.get();
 
     SingularityS3Uploader existingUploader = metadataToUploader.get(metadata);
-    SingularityS3Uploader existingImmediateUploader = metadataToImmediateUploaders.get(metadata);
 
     if (existingUploader != null) {
-      if (existingImmediateUploader != null) {
-        LOG.debug("Ignoring metadata {} from {} because it has an immediate uploader", metadata, filename);
-        return false;
-      } else if (metadata.getUploadImmediately().isPresent() && metadata.getUploadImmediately().get()) {
+      if (metadata.getUploadImmediately().isPresent() && metadata.getUploadImmediately().get()) {
         LOG.debug("Existing metadata {} from {} changed to be immediate, forcing upload", metadata, filename);
-        metrics.getUploaderCounter().dec();
-        metrics.getImmediateUploaderCounter().inc();
+        if (canCreateImmediateUploader(metadata)) {
+          metrics.getUploaderCounter().dec();
+          metrics.getImmediateUploaderCounter().inc();
 
-        metadataToUploader.remove(existingUploader.getUploadMetadata());
-        metadataToImmediateUploaders.put(existingUploader.getUploadMetadata(), existingUploader);
-        uploaderLastHadFilesAt.remove(existingUploader);
-        expiring.remove(existingUploader);
-        performImmediateUpload(existingUploader);
-        return true;
+          metadataToUploader.remove(existingUploader.getUploadMetadata());
+          uploaderLastHadFilesAt.remove(existingUploader);
+          expiring.remove(existingUploader);
+          performImmediateUpload(existingUploader);
+          return true;
+        } else {
+          return false;
+        }
       } else if (existingUploader.getUploadMetadata().isFinished() == metadata.isFinished()) {
         LOG.debug("Ignoring metadata {} from {} because there was already one present", metadata, filename);
         return false;
@@ -451,15 +452,19 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper implements S
 
       if (metadata.getUploadImmediately().isPresent()
           && metadata.getUploadImmediately().get()) {
-        metrics.getImmediateUploaderCounter().inc();
-        metadataToImmediateUploaders.put(metadata, uploader);
-        this.performImmediateUpload(uploader);
+        if (canCreateImmediateUploader(metadata)) {
+          metrics.getImmediateUploaderCounter().inc();
+          this.performImmediateUpload(uploader);
+          return true;
+        } else {
+          return false;
+        }
       } else {
         metrics.getUploaderCounter().inc();
         metadataToUploader.put(metadata, uploader);
         uploaderLastHadFilesAt.put(uploader, System.currentTimeMillis());
+        return true;
       }
-      return true;
     } catch (Throwable t) {
       LOG.info("Ignoring metadata {} because uploader couldn't be created", metadata, t);
       return false;
@@ -523,5 +528,28 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper implements S
     }
 
     return true;
+  }
+
+  private boolean canCreateImmediateUploader(S3UploadMetadata metadata) {
+    try {
+      if (lock.tryLock(400, TimeUnit.MILLISECONDS)) {
+        if (this.immediateUploadMetadata.contains(metadata)) {
+          LOG.debug("Stopped from creating a duplicate immediate uploader.");
+          return false;
+        } else {
+          LOG.debug("Preparing to create new immediate uploader.");
+          this.immediateUploadMetadata.add(metadata);
+          return true;
+        }
+      } else {
+        LOG.debug("Could not acquire a lock to create an immediate uploader.");
+        return false;
+      }
+    } catch (InterruptedException exn) {
+      LOG.debug("Interrupted while waiting on a lock to create an immediate uploader.");
+      return false;
+    } finally {
+      lock.unlock();
+    }
   }
 }
