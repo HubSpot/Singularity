@@ -534,19 +534,19 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper implements S
     try {
       if (lock.tryLock(400, TimeUnit.MILLISECONDS)) {
         if (this.immediateUploadMetadata.contains(metadata)) {
-          LOG.debug("Stopped from creating a duplicate immediate uploader.");
+          LOG.debug("Already have an immediate uploader for metadata {}.", metadata);
           return false;
         } else {
-          LOG.debug("Preparing to create new immediate uploader.");
+          LOG.debug("Preparing to create new immediate uploader for metadata {}.", metadata);
           this.immediateUploadMetadata.add(metadata);
           return true;
         }
       } else {
-        LOG.debug("Could not acquire a lock to create an immediate uploader.");
+        LOG.debug("Could not acquire lock to create an immediate uploader for metadata {}.", metadata);
         return false;
       }
     } catch (InterruptedException exn) {
-      LOG.debug("Interrupted while waiting on a lock to create an immediate uploader.");
+      LOG.debug("Interrupted while waiting on a lock to create an immediate uploader for metadata {}.", metadata);
       return false;
     } finally {
       lock.unlock();
