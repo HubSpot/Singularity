@@ -60,8 +60,4 @@ const refresh = () => (dispatch) =>
     dispatch(FetchSingularityStatus.trigger())
   ]);
 
-const initialize = () => (dispatch) =>
-  Promise.all([]).then(() => dispatch(refresh()));
-
-
-export default connect(mapStateToProps, mapDispatchToProps)(rootComponent(SlaveUsage, refresh, true, true, initialize));
+export default connect(mapStateToProps, mapDispatchToProps)(rootComponent(SlaveUsage, refresh, true, true));

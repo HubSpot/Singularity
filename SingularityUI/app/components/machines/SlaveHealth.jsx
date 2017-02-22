@@ -2,15 +2,15 @@ import React, { PropTypes } from 'react';
 import Utils from '../../utils';
 import SlaveHealthMenuItems from './SlaveHealthMenuItems';
 import { Dropdown } from 'react-bootstrap';
-import { SLAVE_STYLES, THRESHOLDS, STAT_NAMES, STAT_STYLES } from './Constants';
+import { SLAVE_STYLES, STAT_NAMES, STAT_STYLES } from './Constants';
 
 
 const isStatCritical = (slaveInfo, slaveUsage, statName) => {
   switch (statName) {
     case STAT_NAMES.cpusUsedStat:
-      return (slaveUsage.cpusUsed / Utils.getMaxAvailableResource(slaveInfo, statName)) > THRESHOLDS.cpusCriticalThreshold;
+      return (slaveUsage.cpusUsed / Utils.getMaxAvailableResource(slaveInfo, statName)) > config.slaveCpusCriticalThreshold;
     case STAT_NAMES.memoryBytesUsedStat:
-      return (slaveUsage.memoryBytesUsed / (Utils.getMaxAvailableResource(slaveInfo, statName))) > THRESHOLDS.memoryCriticalThreshold;
+      return (slaveUsage.memoryBytesUsed / (Utils.getMaxAvailableResource(slaveInfo, statName))) > config.slaveMemoryCriticalThreshold;
     default:
       return false;
   }
@@ -19,9 +19,9 @@ const isStatCritical = (slaveInfo, slaveUsage, statName) => {
 const isStatWarning = (slaveInfo, slaveUsage, statName) => {
   switch (statName) {
     case STAT_NAMES.cpusUsedStat:
-      return (slaveUsage.cpusUsed / Utils.getMaxAvailableResource(slaveInfo, statName)) > THRESHOLDS.cpusWarningThreshold;
+      return (slaveUsage.cpusUsed / Utils.getMaxAvailableResource(slaveInfo, statName)) > config.slaveCpusWarningThreshold;
     case STAT_NAMES.memoryBytesUsedStat:
-      return (slaveUsage.memoryBytesUsed / (Utils.getMaxAvailableResource(slaveInfo, statName))) > THRESHOLDS.memoryWarningThreshold;
+      return (slaveUsage.memoryBytesUsed / (Utils.getMaxAvailableResource(slaveInfo, statName))) > config.slaveMemoryWarningThreshold;
     default:
       return false;
   }
