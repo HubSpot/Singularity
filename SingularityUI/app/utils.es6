@@ -47,7 +47,7 @@ const Utils = {
   },
 
   humanizeSlaveHostName(longHostName) {
-    return longHostName.split('.')[0];
+    return (config.shortenSlaveUsageHostname ? longHostName.split('.')[0] : longHostName);
   },
 
   timestampFromNow(millis) {

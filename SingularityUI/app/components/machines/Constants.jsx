@@ -6,15 +6,6 @@ export const SLAVE_STYLES = {
   critical : 'critical-slave'
 };
 
-export const THRESHOLDS = {
-  cpusWarningThreshold : 0.80,
-  cpusCriticalThreshold : 0.90,
-  memoryWarningThreshold : 0.80,
-  memoryCriticalThreshold : 0.90,
-  numTasksWarning : 100,
-  numTasksCritical : 120
-};
-
 export const STAT_NAMES = {
   cpusUsedStat : 'cpusUsed',
   memoryBytesUsedStat : 'memoryBytesUsed',
