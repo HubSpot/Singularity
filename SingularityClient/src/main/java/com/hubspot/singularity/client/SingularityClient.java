@@ -936,11 +936,23 @@ public class SingularityClient {
   }
 
   public Collection<SingularityTaskIdHistory> getInactiveTaskHistoryForRequest(String requestId) {
+    return getInactiveTaskHistoryForRequest(requestId, 10, 1);
+  }
+
+  public Collection<SingularityTaskIdHistory> getInactiveTaskHistoryForRequest(String requestId, int count, int page) {
+    return getInactiveTaskHistoryForRequest(requestId, count, page, Optional.<String>absent(), Optional.<String>absent(), Optional.<ExtendedTaskState>absent(), Optional.<Long>absent(), Optional.<Long>absent(), Optional.<Long>absent(), Optional.<Long>absent(), Optional.<OrderDirection>absent());
+  }
+
+  public Collection<SingularityTaskIdHistory> getInactiveTaskHistoryForRequest(String requestId, int count, int page, Optional<String> host, Optional<String> runId,
+    Optional<ExtendedTaskState> lastTaskStatus, Optional<Long> startedBefore, Optional<Long> startedAfter, Optional<Long> updatedBefore, Optional<Long> updatedAfter,
+    Optional<OrderDirection> orderDirection) {
     final String requestUri = String.format(REQUEST_INACTIVE_TASKS_HISTORY_FORMAT, getHost(), contextPath, requestId);
 
     final String type = String.format("inactive (failed, killed, lost) task history for request %s", requestId);
 
-    return getCollection(requestUri, type, TASKID_HISTORY_COLLECTION);
+    Map<String, Object> params = taskSearchParams(Optional.of(requestId), Optional.<String>absent(), runId, host, lastTaskStatus, startedBefore, startedAfter, updatedBefore, updatedAfter, orderDirection, count, page);
+
+    return getCollectionWithParams(requestUri, type, Optional.of(params), TASKID_HISTORY_COLLECTION);
   }
 
   public Optional<SingularityDeployHistory> getHistoryForRequestDeploy(String requestId, String deployId) {
