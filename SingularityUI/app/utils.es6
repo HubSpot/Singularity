@@ -1,5 +1,5 @@
 import moment from 'moment';
-import { STAT_NAMES } from 'components/machines/Constants';
+import { STAT_NAMES } from './components/machines/Constants';
 
 const Utils = {
   TERMINAL_TASK_STATES: ['TASK_KILLED', 'TASK_LOST', 'TASK_FAILED', 'TASK_FINISHED', 'TASK_ERROR'],
