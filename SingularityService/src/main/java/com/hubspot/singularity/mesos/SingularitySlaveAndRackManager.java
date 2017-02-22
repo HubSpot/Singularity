@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.inject.Singleton;
@@ -396,13 +397,18 @@ public class SingularitySlaveAndRackManager {
   }
 
   @Timed
-  public void checkOffer(Offer offer) {
+  public void checkOffer(Offer offer, Set<String> inactiveSlaves) {
     final String slaveId = offer.getSlaveId().getValue();
     final String rackId = slaveAndRackHelper.getRackIdOrDefault(offer);
     final String host = slaveAndRackHelper.getMaybeTruncatedHost(offer);
     final Map<String, String> textAttributes = slaveAndRackHelper.getTextAttributes(offer);
 
     final SingularitySlave slave = new SingularitySlave(slaveId, host, rackId, textAttributes, Optional.<MesosResourcesObject>absent());
+
+    if (inactiveSlaves.contains(host)) {
+      LOG.info("Slave {} on inactive host {} made an offer. Ignoring.", slaveId, host);
+      return;
+    }
 
     if (check(slave, slaveManager) == CheckResult.NEW) {
       LOG.info("Offer revealed a new slave {}", slave);

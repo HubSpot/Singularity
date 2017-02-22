@@ -95,6 +95,7 @@ public class SingularityTranscoderModule implements Module {
     bindTranscoder(binder).asJson(SingularityRequestGroup.class);
     bindTranscoder(binder).asJson(SingularityExpiringMachineState.class);
     bindTranscoder(binder).asJson(SingularityUserSettings.class);
+    bindTranscoder(binder).asJson(String[].class);
 
     bindTranscoder(binder).asCompressedJson(SingularityDeployHistory.class);
     bindTranscoder(binder).asCompressedJson(SingularityDeploy.class);

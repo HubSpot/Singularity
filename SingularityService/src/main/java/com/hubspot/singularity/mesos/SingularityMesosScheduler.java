@@ -35,6 +35,7 @@ import com.hubspot.singularity.SlaveMatchState;
 import com.hubspot.singularity.config.CustomExecutorConfiguration;
 import com.hubspot.singularity.config.MesosConfiguration;
 import com.hubspot.singularity.config.SingularityConfiguration;
+import com.hubspot.singularity.data.InactiveSlaveManager;
 import com.hubspot.singularity.data.PriorityManager;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.scheduler.SingularityScheduler;
@@ -49,6 +50,7 @@ public class SingularityMesosScheduler implements Scheduler {
   private final Resources defaultCustomExecutorResources;
   private final TaskManager taskManager;
   private final PriorityManager priorityManager;
+  private final InactiveSlaveManager inactiveSlaveManager;
   private final SingularityScheduler scheduler;
   private final SingularityConfiguration configuration;
   private final SingularityMesosTaskBuilder mesosTaskBuilder;
@@ -64,13 +66,14 @@ public class SingularityMesosScheduler implements Scheduler {
 
   @Inject
   public SingularityMesosScheduler(MesosConfiguration mesosConfiguration, CustomExecutorConfiguration customExecutorConfiguration, TaskManager taskManager, PriorityManager priorityManager,
-      SingularityScheduler scheduler, SingularityConfiguration configuration, SingularityMesosTaskBuilder mesosTaskBuilder,
+      InactiveSlaveManager inactiveSlaveManager, SingularityScheduler scheduler, SingularityConfiguration configuration, SingularityMesosTaskBuilder mesosTaskBuilder,
       SingularityMesosFrameworkMessageHandler messageHandler, SingularitySlaveAndRackManager slaveAndRackManager, SingularityTaskSizeOptimizer taskSizeOptimizer,
       Provider<SingularitySchedulerStateCache> stateCacheProvider, SchedulerDriverSupplier schedulerDriverSupplier, SingularityMesosStatusUpdateHandler statusUpdateHandler) {
     this.defaultResources = new Resources(mesosConfiguration.getDefaultCpus(), mesosConfiguration.getDefaultMemory(), 0, mesosConfiguration.getDefaultDisk());
     this.defaultCustomExecutorResources = new Resources(customExecutorConfiguration.getNumCpus(), customExecutorConfiguration.getMemoryMb(), 0, customExecutorConfiguration.getDiskMb());
     this.taskManager = taskManager;
     this.priorityManager = priorityManager;
+    this.inactiveSlaveManager = inactiveSlaveManager;
     this.scheduler = scheduler;
     this.configuration = configuration;
     this.mesosTaskBuilder = mesosTaskBuilder;
@@ -135,7 +138,7 @@ public class SingularityMesosScheduler implements Scheduler {
     final Set<Protos.OfferID> acceptedOffers = Sets.newHashSetWithExpectedSize(offers.size());
 
     for (Protos.Offer offer : offers) {
-      slaveAndRackManager.checkOffer(offer);
+      slaveAndRackManager.checkOffer(offer, this.inactiveSlaveManager.getInactiveSlaves());
     }
 
     int numDueTasks = 0;
