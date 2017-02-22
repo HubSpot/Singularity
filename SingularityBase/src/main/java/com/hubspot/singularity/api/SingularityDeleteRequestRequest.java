@@ -29,7 +29,9 @@ public class SingularityDeleteRequestRequest {
 
   @Override
   public String toString() {
-    return "SingularityDeleteRequestRequest [message=" + message + ", actionId=" + actionId + "]";
+    return "SingularityDeleteRequestRequest{" +
+        "message=" + message +
+        ", actionId=" + actionId +
+        '}';
   }
-
 }

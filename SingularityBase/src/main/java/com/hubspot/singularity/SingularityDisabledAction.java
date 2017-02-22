@@ -1,8 +1,9 @@
 package com.hubspot.singularity;
 
+import java.util.Objects;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.Objects;
 import com.google.common.base.Optional;
 
 public class SingularityDisabledAction {
@@ -52,25 +53,25 @@ public class SingularityDisabledAction {
     }
     SingularityDisabledAction that = (SingularityDisabledAction) o;
     return automaticallyClearable == that.automaticallyClearable &&
-      type == that.type &&
-      Objects.equal(message, that.message) &&
-      Objects.equal(user, that.user) &&
-      Objects.equal(expiresAt, that.expiresAt);
+        type == that.type &&
+        Objects.equals(message, that.message) &&
+        Objects.equals(user, that.user) &&
+        Objects.equals(expiresAt, that.expiresAt);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hashCode(type, message, user, automaticallyClearable, expiresAt);
+    return Objects.hash(type, message, user, automaticallyClearable, expiresAt);
   }
 
   @Override
   public String toString() {
-    return Objects.toStringHelper(this)
-      .add("type", type)
-      .add("message", message)
-      .add("user", user)
-      .add("automaticallyClearable", automaticallyClearable)
-      .add("expiresAt", expiresAt)
-      .toString();
+    return "SingularityDisabledAction{" +
+        "type=" + type +
+        ", message='" + message + '\'' +
+        ", user=" + user +
+        ", automaticallyClearable=" + automaticallyClearable +
+        ", expiresAt=" + expiresAt +
+        '}';
   }
 }

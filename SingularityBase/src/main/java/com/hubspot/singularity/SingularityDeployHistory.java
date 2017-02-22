@@ -1,9 +1,10 @@
 package com.hubspot.singularity;
 
+import java.util.Objects;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.Objects;
 import com.google.common.base.Optional;
 
 public class SingularityDeployHistory implements Comparable<SingularityDeployHistory>, SingularityHistoryItem {
@@ -25,27 +26,6 @@ public class SingularityDeployHistory implements Comparable<SingularityDeployHis
   @Override
   public int compareTo(SingularityDeployHistory o) {
     return o.getDeployMarker().compareTo(getDeployMarker());
-  }
-
-  @Override
-  public int hashCode() {
-    return Objects.hashCode(deployResult, deployMarker, deploy, deployStatistics);
-  }
-
-  @Override
-  public boolean equals(Object other) {
-    if (other == this) {
-      return true;
-    }
-    if (other == null || other.getClass() != this.getClass()) {
-      return false;
-    }
-
-    SingularityDeployHistory that = (SingularityDeployHistory) other;
-    return Objects.equal(this.deployResult, that.deployResult)
-        && Objects.equal(this.deployMarker, that.deployMarker)
-        && Objects.equal(this.deploy, that.deploy)
-        && Objects.equal(this.deployStatistics, that.deployStatistics);
   }
 
   public Optional<SingularityDeployResult> getDeployResult() {
@@ -71,8 +51,32 @@ public class SingularityDeployHistory implements Comparable<SingularityDeployHis
   }
 
   @Override
-  public String toString() {
-    return "SingularityDeployHistory [deployResult=" + deployResult + ", deployMarker=" + deployMarker + ", deploy=" + deploy + ", deployStatistics=" + deployStatistics + "]";
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+    SingularityDeployHistory that = (SingularityDeployHistory) o;
+    return Objects.equals(deployResult, that.deployResult) &&
+        Objects.equals(deployMarker, that.deployMarker) &&
+        Objects.equals(deploy, that.deploy) &&
+        Objects.equals(deployStatistics, that.deployStatistics);
   }
 
+  @Override
+  public int hashCode() {
+    return Objects.hash(deployResult, deployMarker, deploy, deployStatistics);
+  }
+
+  @Override
+  public String toString() {
+    return "SingularityDeployHistory{" +
+        "deployResult=" + deployResult +
+        ", deployMarker=" + deployMarker +
+        ", deploy=" + deploy +
+        ", deployStatistics=" + deployStatistics +
+        '}';
+  }
 }

@@ -1,5 +1,7 @@
 package com.hubspot.singularity;
 
+import java.util.Objects;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -35,33 +37,20 @@ public class SingularityTaskShellCommandRequest extends SingularityFrameworkMess
   }
 
   @Override
-  public int hashCode() {
-    final int prime = 31;
-    int result = 1;
-    result = prime * result + ((id == null) ? 0 : id.hashCode());
-    return result;
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+    SingularityTaskShellCommandRequest that = (SingularityTaskShellCommandRequest) o;
+    return Objects.equals(id, that.id);
   }
 
   @Override
-  public boolean equals(Object obj) {
-    if (this == obj) {
-      return true;
-    }
-    if (obj == null) {
-      return false;
-    }
-    if (getClass() != obj.getClass()) {
-      return false;
-    }
-    SingularityTaskShellCommandRequest other = (SingularityTaskShellCommandRequest) obj;
-    if (id == null) {
-      if (other.id != null) {
-        return false;
-      }
-    } else if (!id.equals(other.id)) {
-      return false;
-    }
-    return true;
+  public int hashCode() {
+    return Objects.hash(id);
   }
 
   public SingularityTaskId getTaskId() {
@@ -82,7 +71,12 @@ public class SingularityTaskShellCommandRequest extends SingularityFrameworkMess
 
   @Override
   public String toString() {
-    return "SingularityTaskShellCommandRequest [taskId=" + taskId + ", user=" + user + ", shellCommand=" + shellCommand + ", timestamp=" + timestamp + "]";
+    return "SingularityTaskShellCommandRequest{" +
+        "taskId=" + taskId +
+        ", user=" + user +
+        ", shellCommand=" + shellCommand +
+        ", timestamp=" + timestamp +
+        ", id=" + id +
+        "} " + super.toString();
   }
-
 }

@@ -54,7 +54,10 @@ public class SingularityRequestWithState {
 
   @Override
   public String toString() {
-    return "SingularityRequestWithState [request=" + request + ", state=" + state + ", timestamp=" + timestamp + "]";
+    return "SingularityRequestWithState{" +
+        "request=" + request +
+        ", state=" + state +
+        ", timestamp=" + timestamp +
+        '}';
   }
-
 }
