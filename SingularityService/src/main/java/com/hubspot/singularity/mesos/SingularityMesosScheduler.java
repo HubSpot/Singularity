@@ -138,7 +138,7 @@ public class SingularityMesosScheduler implements Scheduler {
     final Set<Protos.OfferID> acceptedOffers = Sets.newHashSetWithExpectedSize(offers.size());
 
     for (Protos.Offer offer : offers) {
-      slaveAndRackManager.checkOffer(offer, this.inactiveSlaveManager.getInactiveSlaves());
+      slaveAndRackManager.checkOffer(offer, inactiveSlaveManager.getInactiveSlaves());
     }
 
     int numDueTasks = 0;

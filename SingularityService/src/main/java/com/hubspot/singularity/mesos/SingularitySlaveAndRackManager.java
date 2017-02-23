@@ -405,13 +405,15 @@ public class SingularitySlaveAndRackManager {
 
     final SingularitySlave slave = new SingularitySlave(slaveId, host, rackId, textAttributes, Optional.<MesosResourcesObject>absent());
 
-    if (inactiveSlaves.contains(host)) {
-      LOG.info("Slave {} on inactive host {} made an offer. Ignoring.", slaveId, host);
-      return;
-    }
-
     if (check(slave, slaveManager) == CheckResult.NEW) {
-      LOG.info("Offer revealed a new slave {}", slave);
+      if (inactiveSlaves.contains(slave.getHost())) {
+        LOG.info("Slave {} on inactive host {} attempted to rejoin. Marking as decommissioned.", slave, host);
+        slaveManager.changeState(slave, MachineState.STARTING_DECOMMISSION,
+            Optional.of(String.format("Slave %s on inactive host %s attempted to rejoin cluster.", slaveId, host)),
+            Optional.<String>absent());
+      } else {
+        LOG.info("Offer revealed a new slave {}", slave);
+      }
     }
 
     final SingularityRack rack = new SingularityRack(rackId);

@@ -37,7 +37,7 @@ public class InactiveSlaveManager extends CuratorManager {
     }
   }
 
-  public void deactiveSlave(String slave) {
+  public void deactivateSlave(String slave) {
     Set<String> inactiveSlaves = getInactiveSlaves();
     inactiveSlaves.add(slave);
 
