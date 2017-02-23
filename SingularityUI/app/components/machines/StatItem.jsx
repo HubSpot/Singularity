@@ -5,15 +5,15 @@ import CopyToClipboard from 'react-copy-to-clipboard';
 const valueWithPotentialLink = (value, maybeLink) => {
   if (maybeLink) {
     return <Link to={maybeLink.href} title={maybeLink.title}>{value}</Link>;
-  } else {
-    return value;
   }
+
+  return value;
 };
 
-const StatItem = ({name, value, maybeLink, percentage, className}) => {
+const StatItem = ({name, value, maybeLink, percentage}) => {
   return (
     <CopyToClipboard text={value.toString()}>
-      <li className={`${className} stat-item-detail container`}>
+      <li className="stat-item-detail container">
           <div className="row">
             <div className="col-xs-3" id="stat-name">
               {name}
@@ -21,9 +21,9 @@ const StatItem = ({name, value, maybeLink, percentage, className}) => {
             <div className="col-xs-6" id="stat-value">
               {valueWithPotentialLink(value, maybeLink)}
             </div>
-            {percentage &&
+            {percentage != null &&
               <div className="col-xs-3" id="stat-percentage">
-                ({percentage}%)
+                {percentage}%
               </div>
             }
           </div>
@@ -39,8 +39,7 @@ StatItem.propTypes = {
     href : PropTypes.string,
     title : PropTypes.string
   }),
-  percentage : PropTypes.number,
-  className : PropTypes.string
+  percentage : PropTypes.number
 };
 
 export default StatItem;

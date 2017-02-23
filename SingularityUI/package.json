@@ -19,6 +19,7 @@
   },
   "dependencies": {
     "bootstrap": "~3.3.0",
+    "chroma-js": "^1.2.2",
     "classnames": "^2.2.3",
     "clipboard": "^1.5.8",
     "core-js": "^1.2.7",
@@ -74,6 +75,7 @@
     "babel-plugin-transform-object-rest-spread": "^6.8.0",
     "babel-plugin-transform-react-jsx": "^6.8.0",
     "babel-preset-es2015": "^6.9.0",
+    "chroma-js": "^1.2.2",
     "case-sensitive-paths-webpack-plugin": "^1.1.3",
     "del": "^2.2.0",
     "eslint": "^2.11.1",

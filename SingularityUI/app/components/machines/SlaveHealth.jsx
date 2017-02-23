@@ -2,68 +2,35 @@ import React, { PropTypes } from 'react';
 import Utils from '../../utils';
 import SlaveHealthMenuItems from './SlaveHealthMenuItems';
 import { Dropdown } from 'react-bootstrap';
-import { SLAVE_STYLES, STAT_NAMES, STAT_STYLES } from './Constants';
+import { HEALTH_SCALE, WHOLE_NUMBER, STAT_NAMES } from './Constants';
 
-
-const isStatCritical = (slaveInfo, slaveUsage, statName) => {
-  switch (statName) {
-    case STAT_NAMES.cpusUsedStat:
-      return (slaveUsage.cpusUsed / Utils.getMaxAvailableResource(slaveInfo, statName)) > config.slaveCpusCriticalThreshold;
-    case STAT_NAMES.memoryBytesUsedStat:
-      return (slaveUsage.memoryBytesUsed / (Utils.getMaxAvailableResource(slaveInfo, statName))) > config.slaveMemoryCriticalThreshold;
-    default:
-      return false;
-  }
-};
-
-const isStatWarning = (slaveInfo, slaveUsage, statName) => {
-  switch (statName) {
-    case STAT_NAMES.cpusUsedStat:
-      return (slaveUsage.cpusUsed / Utils.getMaxAvailableResource(slaveInfo, statName)) > config.slaveCpusWarningThreshold;
-    case STAT_NAMES.memoryBytesUsedStat:
-      return (slaveUsage.memoryBytesUsed / (Utils.getMaxAvailableResource(slaveInfo, statName))) > config.slaveMemoryWarningThreshold;
-    default:
-      return false;
-  }
-};
-
-const getSlaveStyle = (checkedStats) => {
-  let style = SLAVE_STYLES.ok;
-
-  if (checkedStats.some((obj) => {return obj.style === STAT_STYLES.critical;})) {
-    style = SLAVE_STYLES.critical;
-  } else if (checkedStats.some((obj) => {return obj.style === STAT_STYLES.warning;})) {
-    style = SLAVE_STYLES.warning;
-  }
-
-  return style;
-};
-
-const SlaveHealth = ({slaveInfo, slaveUsage}) => {
+const SlaveHealth = ({slaveInfo, slaveUsage, resource}) => {
   const checkStats = (val, stat) => {
+    if (Utils.isResourceStat(stat) && stat !== resource) {
+      return null;
+    }
+
     const newStat = {
       name : stat,
       value : (stat === STAT_NAMES.slaveIdStat ? slaveInfo.host : val),
-      maybeTotalResource : Utils.isResourceStat(stat) ? Utils.getMaxAvailableResource(slaveInfo, stat) : '',
-      style : STAT_STYLES.ok
     };
 
-    if (isStatCritical(slaveInfo, slaveUsage, stat)) {
-      newStat.style = STAT_STYLES.critical;
-    } else if (isStatWarning(slaveInfo, slaveUsage, stat)) {
-      newStat.style = STAT_STYLES.warning;
+    if (Utils.isResourceStat(stat)) {
+      const totalResource = Utils.getMaxAvailableResource(slaveInfo, stat);
+      newStat.maybeTotalResource = totalResource;
+      newStat.style = {
+        backgroundColor : HEALTH_SCALE[Utils.roundTo((val / totalResource) * 100, WHOLE_NUMBER)]
+      };
     }
 
     return newStat;
   };
 
-  const checkedStats = _.map(slaveUsage, checkStats);
-
-  const slaveStyle = getSlaveStyle(checkedStats);
+  const checkedStats = _.map(slaveUsage, checkStats).filter(obj => obj);
 
   return (
     <Dropdown key={slaveUsage.slaveId} id={slaveUsage.slaveId}>
-      <Dropdown.Toggle noCaret={true} className={`${slaveStyle} single-slave-btn`} />
+      <Dropdown.Toggle noCaret={true} className="single-slave-btn" style={checkedStats.find((stat) => stat.style).style} />
       <Dropdown.Menu>
         <SlaveHealthMenuItems stats={checkedStats} />
       </Dropdown.Menu>
@@ -82,7 +49,8 @@ SlaveHealth.propTypes = {
   slaveInfo : PropTypes.shape({
     attributes : PropTypes.object.isRequired,
     resources : PropTypes.object.isRequired
-  })
+  }),
+  resource : PropTypes.string.isRequired
 };
 
 export default SlaveHealth;

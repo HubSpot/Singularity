@@ -3,6 +3,7 @@ import { connect } from 'react-redux';
 import rootComponent from '../../rootComponent';
 import { FetchSlaveUsages, FetchSlaves } from '../../actions/api/slaves';
 import { FetchSingularityStatus } from '../../actions/api/state';
+import { STAT_NAMES } from './Constants';
 import Utils from '../../utils';
 import SlaveAggregates from './SlaveAggregates';
 import SlaveHealth from './SlaveHealth';
@@ -14,9 +15,14 @@ const getSlaveInfo = (slaves, slaveUsage) => {
 const SlaveUsage = ({slaves, slaveUsages, activeTasks}) => {
   const activeSlaves = slaves.filter(Utils.isActiveSlave);
 
-  const slaveHealthData = slaveUsages.map((slaveUsage, index) => {
+  const cpuHealthData = slaveUsages.map((slaveUsage, index) => {
     const slaveInfo = getSlaveInfo(activeSlaves, slaveUsage);
-    return <SlaveHealth key={index} slaveUsage={slaveUsage} slaveInfo={slaveInfo} />;
+    return <SlaveHealth key={index} slaveUsage={slaveUsage} slaveInfo={slaveInfo} resource={STAT_NAMES.cpusUsedStat} />;
+  });
+
+  const memoryHealthData = slaveUsages.map((slaveUsage, index) => {
+    const slaveInfo = getSlaveInfo(activeSlaves, slaveUsage);
+    return <SlaveHealth key={index} slaveUsage={slaveUsage} slaveInfo={slaveInfo} resource={STAT_NAMES.memoryBytesUsedStat} />;
   });
 
   return (
@@ -28,7 +34,14 @@ const SlaveUsage = ({slaves, slaveUsages, activeTasks}) => {
       <hr />
       <div id="slave-health">
         <h3>Slave health</h3>
-        {slaveHealthData}
+        <h4>Cpu</h4>
+        <div className="cpu-health">
+          {cpuHealthData}
+        </div>
+        <h4>Memory</h4>
+        <div className="memory-health">
+          {memoryHealthData}
+        </div>
       </div>
     </div>
   );
