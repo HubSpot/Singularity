@@ -13,9 +13,8 @@ const getSlaveInfo = (slaves, slaveUsage) => {
 
 const SlaveUsage = ({slaves, slaveUsages, activeTasks}) => {
   const activeSlaves = slaves.filter(Utils.isActiveSlave);
-  const activeSlaveUsages = slaveUsages.filter((slaveUsage) => getSlaveInfo(activeSlaves, slaveUsage));
 
-  const slaveHealthData = activeSlaveUsages.map((slaveUsage, index) => {
+  const slaveHealthData = slaveUsages.map((slaveUsage, index) => {
     const slaveInfo = getSlaveInfo(activeSlaves, slaveUsage);
     return <SlaveHealth key={index} slaveUsage={slaveUsage} slaveInfo={slaveInfo} />;
   });
@@ -24,7 +23,7 @@ const SlaveUsage = ({slaves, slaveUsages, activeTasks}) => {
     <div id="slave-usage-page">
       <h1>Slave Usage</h1>
       <div>
-        <SlaveAggregates slaves={activeSlaves} slaveUsages={activeSlaveUsages} activeTasks={activeTasks} />
+        <SlaveAggregates slaves={activeSlaves} slaveUsages={slaveUsages} activeTasks={activeTasks} />
       </div>
       <hr />
       <div id="slave-health">
