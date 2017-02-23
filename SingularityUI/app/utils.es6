@@ -429,6 +429,10 @@ const Utils = {
     }
   },
 
+  isActiveSlave(slaveInfo) {
+    return !Utils.isIn(slaveInfo.currentState.state, ['DEAD', 'MISSING_ON_STARTUP']);
+  },
+
   enums: {
     SingularityRequestTypes: ['SERVICE', 'WORKER', 'SCHEDULED', 'ON_DEMAND', 'RUN_ONCE'],
     SingularityEmailDestination: ['OWNERS', 'ACTION_TAKER', 'ADMINS'],

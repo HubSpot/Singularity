@@ -3,6 +3,7 @@ import { connect } from 'react-redux';
 import rootComponent from '../../rootComponent';
 import { FetchSlaveUsages, FetchSlaves } from '../../actions/api/slaves';
 import { FetchSingularityStatus } from '../../actions/api/state';
+import Utils from '../../utils';
 import SlaveAggregates from './SlaveAggregates';
 import SlaveHealth from './SlaveHealth';
 
@@ -11,8 +12,11 @@ const getSlaveInfo = (slaves, slaveUsage) => {
 };
 
 const SlaveUsage = ({slaves, slaveUsages, activeTasks}) => {
-  const slaveHealthData = slaveUsages.map((slaveUsage, index) => {
-    const slaveInfo = getSlaveInfo(slaves, slaveUsage);
+  const activeSlaves = slaves.filter(Utils.isActiveSlave);
+  const activeSlaveUsages = slaveUsages.filter((slaveUsage) => getSlaveInfo(activeSlaves, slaveUsage));
+
+  const slaveHealthData = activeSlaveUsages.map((slaveUsage, index) => {
+    const slaveInfo = getSlaveInfo(activeSlaves, slaveUsage);
     return <SlaveHealth key={index} slaveUsage={slaveUsage} slaveInfo={slaveInfo} />;
   });
 
@@ -20,7 +24,7 @@ const SlaveUsage = ({slaves, slaveUsages, activeTasks}) => {
     <div id="slave-usage-page">
       <h1>Slave Usage</h1>
       <div>
-        <SlaveAggregates slaves={slaves} slaveUsages={slaveUsages} activeTasks={activeTasks} />
+        <SlaveAggregates slaves={activeSlaves} slaveUsages={activeSlaveUsages} activeTasks={activeTasks} />
       </div>
       <hr />
       <div id="slave-health">
