@@ -66,6 +66,12 @@ public class UIConfiguration {
   private boolean hideNewDeployButton = false;
   private boolean hideNewRequestButton = false;
 
+  private boolean shortenSlaveUsageHostname = false;
+  private double slaveCpusWarningThreshold = 0.80;
+  private double slaveCpusCriticalThreshold = 0.90;
+  private double slaveMemoryWarningThreshold = 0.80;
+  private double slaveMemoryCriticalThreshold = 0.90;
+
   /**
    * If true, the root of the server (http://.../singularity/) will open the UI. Otherwise,
    * the UI URI (http://.../singularity/ui/) must be used.
@@ -107,6 +113,46 @@ public class UIConfiguration {
 
   public void setHideNewRequestButton(boolean hideNewRequestButton) {
     this.hideNewRequestButton = hideNewRequestButton;
+  }
+
+  public boolean isShortenSlaveUsageHostname() {
+    return shortenSlaveUsageHostname;
+  }
+
+  public void setShortenSlaveUsageHostname(boolean shortenSlaveUsageHostname) {
+    this.shortenSlaveUsageHostname = shortenSlaveUsageHostname;
+  }
+
+  public double getSlaveCpusWarningThreshold() {
+    return slaveCpusWarningThreshold;
+  }
+
+  public void setSlaveCpusWarningThreshold(double slaveCpusWarningThreshold) {
+    this.slaveCpusWarningThreshold = slaveCpusWarningThreshold;
+  }
+
+  public double getSlaveCpusCriticalThreshold() {
+    return slaveCpusCriticalThreshold;
+  }
+
+  public void setSlaveCpusCriticalThreshold(double slaveCpusCriticalThreshold) {
+    this.slaveCpusCriticalThreshold = slaveCpusCriticalThreshold;
+  }
+
+  public double getSlaveMemoryWarningThreshold() {
+    return slaveMemoryWarningThreshold;
+  }
+
+  public void setSlaveMemoryWarningThreshold(double slaveMemoryWarningThreshold) {
+    this.slaveMemoryWarningThreshold = slaveMemoryWarningThreshold;
+  }
+
+  public double getSlaveMemoryCriticalThreshold() {
+    return slaveMemoryCriticalThreshold;
+  }
+
+  public void setSlaveMemoryCriticalThreshold(double slaveMemoryCriticalThreshold) {
+    this.slaveMemoryCriticalThreshold = slaveMemoryCriticalThreshold;
   }
 
   public String getTitle() {
