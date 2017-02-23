@@ -203,6 +203,10 @@ const Utils = {
     }
   },
 
+  isResourceStat(stat) {
+    return stat === STAT_NAMES.cpusUsedStat || stat === STAT_NAMES.memoryBytesUsedStat;
+  },
+
   deepClone(objectToClone) {
     return $.extend(true, {}, objectToClone);
   },
@@ -423,6 +427,10 @@ const Utils = {
     } else {
       return _.contains(Utils.NON_LONG_RUNNING_IMMEDIATE_CLEANUPS, cleanupType)
     }
+  },
+
+  isActiveSlave(slaveInfo) {
+    return !Utils.isIn(slaveInfo.currentState.state, ['DEAD', 'MISSING_ON_STARTUP']);
   },
 
   enums: {

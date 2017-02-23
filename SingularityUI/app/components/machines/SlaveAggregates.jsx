@@ -35,7 +35,7 @@ const SlaveAggregates = ({slaves, slaveUsages, activeTasks}) => {
           {slaves.length}
         </div>
         <div id="label">
-          Total Slaves
+          Active Slaves
         </div>
       </div>
       <div className="total-tasks col-xs-3">
