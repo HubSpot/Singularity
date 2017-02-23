@@ -184,7 +184,7 @@ const Utils = {
         }
       case STAT_NAMES.memoryBytesUsedStat:
         try {
-          return parseFloat(slaveInfo.attributes.real_memory_mb || slaveInfo.resources.mem);
+          return parseFloat(slaveInfo.attributes.real_memory_mb || slaveInfo.resources.mem) * Math.pow(1024, 2);
         } catch (e) {
           throw new Error(`Could not find resource (memory) for slave ${slaveInfo.host} (${slaveInfo.id})`);
         }
