@@ -49,10 +49,19 @@ const humanizeStatPct = (name, value, maybeTotalResource) => {
   return null;
 };
 
+const maybeLink = (name, value) => {
+  if (name === STAT_NAMES.slaveIdStat) {
+    return { href : `tasks/active/all/${value}`,
+             title : `All tasks running on host ${value}`
+           };
+  }
+
+  return null;
+};
 
 const SlaveHealthMenuItems = ({stats}) => {
   const renderSlaveStats = _.map(stats.sort(compareStats), ({name, value, maybeTotalResource, style}) => {
-    return <StatItem key={name} name={humanizeStatName(name)} value={humanizeStatValue(name, value, maybeTotalResource)} className={style} percentage={humanizeStatPct(name, value, maybeTotalResource)} />;
+    return <StatItem key={name} name={humanizeStatName(name)} value={humanizeStatValue(name, value, maybeTotalResource)} maybeLink={maybeLink(name, value)} className={style} percentage={humanizeStatPct(name, value, maybeTotalResource)} />;
   });
 
   return (
