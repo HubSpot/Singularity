@@ -12,23 +12,27 @@ const valueWithPotentialLink = (value, maybeLink) => {
 
 const StatItem = ({name, value, maybeLink, percentage}) => {
   return (
-    <CopyToClipboard text={value.toString()}>
-      <li className="stat-item-detail container">
-          <div className="row">
+    <li className="stat-item-detail container">
+        <div className="row">
+          <CopyToClipboard text={name.toString()}>
             <div className="col-xs-3" id="stat-name">
               {name}
             </div>
+          </CopyToClipboard>
+          <CopyToClipboard text={value.toString()}>
             <div className="col-xs-6" id="stat-value">
               {valueWithPotentialLink(value, maybeLink)}
             </div>
-            {percentage != null &&
+          </CopyToClipboard>
+          {percentage != null &&
+            <CopyToClipboard text={percentage.toString()}>
               <div className="col-xs-3" id="stat-percentage">
                 {percentage}%
               </div>
-            }
-          </div>
-      </li>
-    </CopyToClipboard>
+            </CopyToClipboard>
+          }
+        </div>
+    </li>
   );
 };
 
