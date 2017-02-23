@@ -51,10 +51,6 @@ public class IndexView extends View {
   private final String shellCommands;
 
   private final boolean shortenSlaveUsageHostname;
-  private final double slaveCpusWarningThreshold;
-  private final double slaveCpusCriticalThreshold;
-  private final double slaveMemoryWarningThreshold;
-  private final double slaveMemoryCriticalThreshold;
 
   private final String timestampFormat;
 
@@ -119,10 +115,6 @@ public class IndexView extends View {
     }
 
     this.shortenSlaveUsageHostname = configuration.getUiConfiguration().isShortenSlaveUsageHostname();
-    this.slaveCpusWarningThreshold = configuration.getUiConfiguration().getSlaveCpusWarningThreshold();
-    this.slaveCpusCriticalThreshold = configuration.getUiConfiguration().getSlaveCpusCriticalThreshold();
-    this.slaveMemoryWarningThreshold = configuration.getUiConfiguration().getSlaveMemoryWarningThreshold();
-    this.slaveMemoryCriticalThreshold = configuration.getUiConfiguration().getSlaveMemoryCriticalThreshold();
 
     this.timestampFormat = configuration.getUiConfiguration().getTimestampFormat();
 
