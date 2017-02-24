@@ -26,6 +26,7 @@ public class SingularityDataModule extends AbstractModule {
     bind(SandboxManager.class).in(Scopes.SINGLETON);
     bind(SingularityValidator.class).in(Scopes.SINGLETON);
     bind(UserManager.class).in(Scopes.SINGLETON);
+    bind(UsageManager.class).in(Scopes.SINGLETON);
 
     bind(ExecutorIdGenerator.class).in(Scopes.SINGLETON);
     bind(WebhookManager.class).in(Scopes.SINGLETON);
@@ -37,7 +38,7 @@ public class SingularityDataModule extends AbstractModule {
   @Provides
   @Singleton
   public ZkCache<SingularityTask> taskCache(SingularityConfiguration configuration, MetricRegistry registry) {
-    return new ZkCache<SingularityTask>(configuration.getCacheTasksMaxSize(), configuration.getCacheTasksInitialSize(), configuration.getCacheTasksForMillis(), registry, "tasks");
+    return new ZkCache<>(configuration.getCacheTasksMaxSize(), configuration.getCacheTasksInitialSize(), configuration.getCacheTasksForMillis(), registry, "tasks");
   }
 
 }
