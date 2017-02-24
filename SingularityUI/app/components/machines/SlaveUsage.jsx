@@ -3,7 +3,7 @@ import { connect } from 'react-redux';
 import rootComponent from '../../rootComponent';
 import { FetchSlaveUsages, FetchSlaves } from '../../actions/api/slaves';
 import { FetchSingularityStatus } from '../../actions/api/state';
-import { STAT_NAMES, WHOLE_NUMBER } from './Constants';
+import { STAT_NAMES, WHOLE_NUMBER, HEALTH_SCALE_MAX } from './Constants';
 import Utils from '../../utils';
 import SlaveAggregates from './SlaveAggregates';
 import SlaveResourceHealth from './SlaveResourceHealth';
@@ -17,10 +17,10 @@ const getUtilizationData = (slaves, slaveUsages) => {
     const slaveInfo = getSlaveInfo(slaves, slaveUsage);
 
     const totalCpuResource = Utils.getMaxAvailableResource(slaveInfo, STAT_NAMES.cpusUsedStat);
-    const cpuUtilized = Utils.roundTo((slaveUsage[STAT_NAMES.cpusUsedStat] / totalCpuResource) * 100, WHOLE_NUMBER);
+    const cpuUtilized = Utils.roundTo((slaveUsage[STAT_NAMES.cpusUsedStat] / totalCpuResource) * HEALTH_SCALE_MAX, WHOLE_NUMBER);
 
     const totalMemoryResource = Utils.getMaxAvailableResource(slaveInfo, STAT_NAMES.memoryBytesUsedStat);
-    const memoryUtilized = Utils.roundTo((slaveUsage[STAT_NAMES.memoryBytesUsedStat] / totalMemoryResource) * 100, WHOLE_NUMBER);
+    const memoryUtilized = Utils.roundTo((slaveUsage[STAT_NAMES.memoryBytesUsedStat] / totalMemoryResource) * HEALTH_SCALE_MAX, WHOLE_NUMBER);
 
     return {slaveInfo, slaveUsage, totalCpuResource, cpuUtilized, totalMemoryResource, memoryUtilized};
   });
