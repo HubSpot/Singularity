@@ -37,16 +37,16 @@ public class InactiveSlaveManager extends CuratorManager {
     }
   }
 
-  public void deactivateSlave(String slave) {
+  public void deactivateSlave(String host) {
     Set<String> inactiveSlaves = getInactiveSlaves();
-    inactiveSlaves.add(slave);
+    inactiveSlaves.add(host);
 
     save(ROOT_PATH, inactiveSlaves.toArray(new String[0]), inactiveSlaveTranscoder);
   }
 
-  public void activateSlave(String slave) {
+  public void activateSlave(String host) {
     Set<String> inactiveSlaves = getInactiveSlaves();
-    inactiveSlaves.remove(slave);
+    inactiveSlaves.remove(host);
 
     save(ROOT_PATH, inactiveSlaves.toArray(new String[0]), inactiveSlaveTranscoder);
   }
