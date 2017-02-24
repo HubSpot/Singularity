@@ -19,4 +19,4 @@ export const SLAVE_HEALTH_MENU_ITEM_ORDER = [
   STAT_NAMES.timestampStat
 ];
 
-export const HEALTH_SCALE = chroma.bezier(['blue', 'yellow', 'red']).scale().colors(100);
+export const HEALTH_SCALE = chroma.bezier(['MidnightBlue', 'DarkBlue', 'Blue', 'Orange', 'OrangeRed']).scale().colors(100);
