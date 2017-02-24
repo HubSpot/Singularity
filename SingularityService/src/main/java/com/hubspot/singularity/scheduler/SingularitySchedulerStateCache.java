@@ -5,7 +5,9 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.base.Optional;
+import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.hubspot.singularity.MachineState;
@@ -35,6 +37,8 @@ public class SingularitySchedulerStateCache {
   private Optional<Integer> numActiveRacks;
   private Optional<Integer> numActiveSlaves;
 
+  private Optional<Multimap<String, SingularityTaskId>> requestToActiveTaskIds;
+
   @Inject
   public SingularitySchedulerStateCache(TaskManager taskManager, SlaveManager slaveManager, RackManager rackManager) {
     this.taskManager = taskManager;
@@ -50,6 +54,20 @@ public class SingularitySchedulerStateCache {
 
     slaveCache = Maps.newHashMap();
     rackCache = Maps.newHashMap();
+
+    requestToActiveTaskIds = Optional.absent();
+  }
+
+  public Collection<SingularityTaskId> getActiveTaskIdsForRequest(String requestId) {
+    if (!requestToActiveTaskIds.isPresent()) {
+      Multimap<String, SingularityTaskId> requestToActiveTaskIdsLocal = HashMultimap.create();
+      for (SingularityTaskId taskId : getActiveTaskIds()) {
+        requestToActiveTaskIdsLocal.put(taskId.getRequestId(), taskId);
+      }
+      requestToActiveTaskIds = Optional.of(requestToActiveTaskIdsLocal);
+    }
+
+    return requestToActiveTaskIds.get().get(requestId);
   }
 
   public Collection<SingularityTaskId> getActiveTaskIds() {
