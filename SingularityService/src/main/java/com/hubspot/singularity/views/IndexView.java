@@ -50,6 +50,8 @@ public class IndexView extends View {
 
   private final String shellCommands;
 
+  private final boolean shortenSlaveUsageHostname;
+
   private final String timestampFormat;
 
   private final boolean showTaskDiskResource;
@@ -111,6 +113,8 @@ public class IndexView extends View {
     } catch (JsonProcessingException e) {
       throw Throwables.propagate(e);
     }
+
+    this.shortenSlaveUsageHostname = configuration.getUiConfiguration().isShortenSlaveUsageHostname();
 
     this.timestampFormat = configuration.getUiConfiguration().getTimestampFormat();
 
