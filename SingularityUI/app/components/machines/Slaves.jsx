@@ -8,6 +8,7 @@ import { connect } from 'react-redux';
 import rootComponent from '../../rootComponent';
 import { Link } from 'react-router';
 import { FetchSlaves, FreezeSlave, DecommissionSlave, RemoveSlave, ReactivateSlave, FetchExpiringSlaveStates, RemoveExpiringSlaveState } from '../../actions/api/slaves';
+import { DeactivateHost, ReactivateHost, FetchInactiveHosts } from '../../actions/api/inactive';
 import Column from '../common/table/Column';
 import JSONButton from '../common/JSONButton';
 import CustomizeSlavesTableButton from './CustomizeSlavesTableButton';
@@ -71,7 +72,48 @@ const Slaves = (props) => {
 
   const expiringSlaveState = (slave) => (
     _.find(props.expiringSlaveStates, (expiring) => expiring.machineId == slave.id)
-  )
+  );
+
+  const getMaybeDeactivateHostButton = (slave) => (
+    ! Utils.isIn(slave.host, props.inactiveHosts) && (
+      <FormModalButton
+        name="Mark Inactive"
+        buttonChildren={<Glyphicon glyph="remove-circle" />}
+        action="Mark Host Inactive"
+        onConfirm={() => props.deactivateHost(slave.host)}
+        tooltipText={`Flag host '${slave.host}' as inactive`}
+        formElements={[]}
+      >
+        <p>Are you sure you want to mark the host {slave.host} as inactive?</p>
+        <p>
+          This will decommission every slave on this host until you reactivate
+          it. You will also need to manually re-commission the slaves from
+          this host after you reactivate it.
+        </p>
+      </FormModalButton>
+    )
+  );
+
+  const getMaybeReactivateHostButton = (slave) => (
+    Utils.isIn(slave.host, props.inactiveHosts) && (
+      <FormModalButton
+        name="Reactivate Host"
+        buttonChildren={<Glyphicon glyph="ok-circle" />}
+        action="Mark Host Active"
+        onConfirm={() => props.reactivateHost(slave.host)}
+        tooltipText={`Mark host '${slave.host}' as active`}
+        formElements={[]}
+      >
+        <p>Are you sure you want to reactivate host {slave.host}?</p>
+        <p>
+          This will allow new slaves from this host to make offers without
+          being marked as decommissioned. It will not remove the decommissioned
+          state from any existing slaves on this host; you can manually activate
+          them if you want the existing slaves.
+        </p>
+      </FormModalButton>
+    )
+  );
 
   const getMaybeReactivateButton = (slave) => (
     Utils.isIn(slave.currentState.state, ['DECOMMISSIONING', 'DECOMMISSIONED', 'STARTING_DECOMMISSION', 'FROZEN']) && (
@@ -318,6 +360,8 @@ const Slaves = (props) => {
         className="actions-column"
         cellData={(slave) => (
           <span>
+            {getMaybeDeactivateHostButton(slave)}
+            {getMaybeReactivateHostButton(slave)}
             {getMaybeRemoveExpiring(slave)}
             {getMaybeReactivateButton(slave)}
             {getMaybeFreezeButton(slave)}
@@ -343,6 +387,20 @@ const Slaves = (props) => {
   const decommissionedSlaves = props.slaves.filter(({currentState}) => currentState.state === 'DECOMMISSIONED');
 
   const inactiveSlaves = props.slaves.filter(({currentState}) => Utils.isIn(currentState.state, ['DEAD', 'MISSING_ON_STARTUP']));
+
+  const inactiveHostsPanel = (inactiveHosts) => (
+    inactiveHosts && inactiveHosts.length > 0 && (
+      <div className="row">
+        <h3>Inactive Hosts</h3>
+        <p>These hosts are marked as inactive: </p>
+        <ul className="list-group">
+          {inactiveHosts.map((host) => (
+            <li className="list-group-item" key={host}>{host}</li>
+          ))}
+        </ul>
+      </div>
+    )
+  );
 
   const states = [
     {
@@ -402,6 +460,7 @@ const Slaves = (props) => {
         states = {states}
         error = {props.error}
       />
+    {inactiveHostsPanel(props.inactiveHosts)}
     </div>
   );
 };
@@ -419,6 +478,7 @@ Slaves.propTypes = {
   slaves: PropTypes.arrayOf(PropTypes.shape({
     state: PropTypes.string
   })),
+  inactiveHosts: PropTypes.arrayOf(PropTypes.string),
   columnSettings: PropTypes.object.isRequired,
   paginated: PropTypes.bool.isRequired
 };
@@ -442,6 +502,7 @@ function getErrorFromState(state) {
 
 function mapStateToProps(state) {
   return {
+    inactiveHosts: state.api.inactiveHosts.data,
     slaves: state.api.slaves.data,
     error: getErrorFromState(state),
     columnSettings: state.ui.slaves.columns,
@@ -470,6 +531,21 @@ function mapDispatchToProps(dispatch) {
     freezeSlave: (slave, message) => { clear().then(() => dispatch(FreezeSlave.trigger(slave.id, message)).then(() => fetchSlavesAndExpiring())); },
     decommissionSlave: (slave, message) => { clear().then(() => dispatch(DecommissionSlave.trigger(slave.id, message)).then(() => fetchSlavesAndExpiring())); },
     removeSlave: (slave, message) => { clear().then(() => dispatch(RemoveSlave.trigger(slave.id, message)).then(() => fetchSlavesAndExpiring())); },
+    deactivateHost: (host) =>
+      clear()
+        .then(() => dispatch(DeactivateHost.trigger(host)))
+        .then(() => Promise.all([
+          fetchSlavesAndExpiring(),
+          dispatch(FetchInactiveHosts.trigger()),
+        ])),
+    reactivateHost: (host) =>
+      clear()
+        .then(() => dispatch(ReactivateHost.trigger(host)))
+        .then(() => Promise.all([
+          fetchSlavesAndExpiring(),
+          dispatch(FetchInactiveHosts.trigger()),
+        ])),
+    fetchInactiveHosts: () => dispatch(FetchInactiveHosts.trigger()),
     reactivateSlave: (slave, message) => { clear().then(() => dispatch(ReactivateSlave.trigger(slave.id, message)).then(() => fetchSlavesAndExpiring())); },
     fetchExpiringSlaveStates: () => dispatch(FetchExpiringSlaveStates.trigger()),
     removeExpiringState: (slaveId) => { clear().then(() => dispatch(RemoveExpiringSlaveState.trigger(slaveId)).then(() => fetchSlavesAndExpiring())); },
@@ -477,19 +553,15 @@ function mapDispatchToProps(dispatch) {
   };
 }
 
-function initialize(props) {
-  return Promise.all([
-    props.clear(),
+export const refresh = (props) =>
+  Promise.all([
     props.fetchSlaves(),
-    props.fetchExpiringSlaveStates()
+    props.fetchExpiringSlaveStates(),
+    props.fetchInactiveHosts()
   ]);
-}
 
-function refresh(props) {
-  return Promise.all([
-    props.fetchSlaves(),
-    props.fetchExpiringSlaveStates()
-  ]);
-}
+export const initialize = (props) =>
+  props.clear()
+    .then(() => refresh(props));
 
 export default connect(mapStateToProps, mapDispatchToProps)(rootComponent(Slaves, 'Slaves', refresh, true, true, initialize));
