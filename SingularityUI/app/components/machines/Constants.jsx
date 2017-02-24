@@ -1,5 +1,6 @@
 import chroma from 'chroma-js';
 
+export const HEALTH_SCALE_MAX = 10000;
 export const WHOLE_NUMBER = 0;
 export const HUNDREDTHS_PLACE = 2;
 
@@ -19,4 +20,4 @@ export const SLAVE_HEALTH_MENU_ITEM_ORDER = [
   STAT_NAMES.timestampStat
 ];
 
-export const HEALTH_SCALE = chroma.bezier(['blue', 'yellow', 'red']).scale().colors(100);
+export const HEALTH_SCALE = chroma.bezier(['MidnightBlue', 'DarkBlue', 'Blue', 'Orange', 'OrangeRed']).scale().colors(HEALTH_SCALE_MAX);

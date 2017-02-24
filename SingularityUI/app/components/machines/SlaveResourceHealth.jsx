@@ -1,10 +1,10 @@
 import React, { PropTypes } from 'react';
 import Utils from '../../utils';
-import SlaveHealthMenuItems from './SlaveHealthMenuItems';
+import SlaveResourceHealthMenuItems from './SlaveResourceHealthMenuItems';
 import { Dropdown } from 'react-bootstrap';
-import { HEALTH_SCALE, WHOLE_NUMBER, STAT_NAMES } from './Constants';
+import { HEALTH_SCALE, STAT_NAMES } from './Constants';
 
-const SlaveHealth = ({slaveInfo, slaveUsage, resource}) => {
+const SlaveResourceHealth = ({slaveInfo, slaveUsage, resource, totalResource, utilization}) => {
   const checkStats = (val, stat) => {
     if (Utils.isResourceStat(stat) && stat !== resource) {
       return null;
@@ -16,11 +16,7 @@ const SlaveHealth = ({slaveInfo, slaveUsage, resource}) => {
     };
 
     if (Utils.isResourceStat(stat)) {
-      const totalResource = Utils.getMaxAvailableResource(slaveInfo, stat);
       newStat.maybeTotalResource = totalResource;
-      newStat.style = {
-        backgroundColor : HEALTH_SCALE[Utils.roundTo((val / totalResource) * 100, WHOLE_NUMBER)]
-      };
     }
 
     return newStat;
@@ -30,15 +26,15 @@ const SlaveHealth = ({slaveInfo, slaveUsage, resource}) => {
 
   return (
     <Dropdown key={slaveUsage.slaveId} id={slaveUsage.slaveId}>
-      <Dropdown.Toggle noCaret={true} className="single-slave-btn" style={checkedStats.find((stat) => stat.style).style} />
+      <Dropdown.Toggle noCaret={true} className="single-slave-btn" style={{backgroundColor : HEALTH_SCALE[utilization]}} />
       <Dropdown.Menu>
-        <SlaveHealthMenuItems stats={checkedStats} />
+        <SlaveResourceHealthMenuItems stats={checkedStats} />
       </Dropdown.Menu>
     </Dropdown>
   );
 };
 
-SlaveHealth.propTypes = {
+SlaveResourceHealth.propTypes = {
   slaveUsage : PropTypes.shape({
     slaveId : PropTypes.string.isRequired,
     cpusUsed : PropTypes.number.isRequired,
@@ -47,10 +43,13 @@ SlaveHealth.propTypes = {
     timestamp : PropTypes.number.isRequired
   }),
   slaveInfo : PropTypes.shape({
+    host : PropTypes.string.isRequired,
     attributes : PropTypes.object.isRequired,
     resources : PropTypes.object.isRequired
   }),
-  resource : PropTypes.string.isRequired
+  resource : PropTypes.string.isRequired,
+  totalResource : PropTypes.number.isRequired,
+  utilization : PropTypes.number.isRequired
 };
 
-export default SlaveHealth;
+export default SlaveResourceHealth;

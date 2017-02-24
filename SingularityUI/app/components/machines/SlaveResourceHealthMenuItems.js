@@ -59,7 +59,7 @@ const maybeLink = (name, value) => {
   return null;
 };
 
-const SlaveHealthMenuItems = ({stats}) => {
+const SlaveResourceHealthMenuItems = ({stats}) => {
   const renderSlaveStats = _.map(stats.sort(compareStats), ({name, value, maybeTotalResource}) => {
     return <StatItem key={name} name={humanizeStatName(name)} value={humanizeStatValue(name, value, maybeTotalResource)} maybeLink={maybeLink(name, value)} percentage={humanizeStatPct(name, value, maybeTotalResource)} />;
   });
@@ -78,7 +78,7 @@ const SlaveHealthMenuItems = ({stats}) => {
   );
 };
 
-SlaveHealthMenuItems.propTypes = {
+SlaveResourceHealthMenuItems.propTypes = {
   stats : PropTypes.arrayOf(
     PropTypes.shape({
       name : PropTypes.string.isRequired,
@@ -94,4 +94,4 @@ SlaveHealthMenuItems.propTypes = {
   )
 };
 
-export default SlaveHealthMenuItems;
+export default SlaveResourceHealthMenuItems;
