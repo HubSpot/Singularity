@@ -258,7 +258,7 @@ public class SingularityDeployChecker {
 
     deployManager.saveDeployResult(pendingDeploy.getDeployMarker(), deploy, deployResult);
 
-    if (request.isDeployable() && (deployResult.getDeployState() == DeployState.CANCELED || deployResult.getDeployState() == DeployState.FAILED)) {
+    if (request.isDeployable() && (deployResult.getDeployState() == DeployState.CANCELED || deployResult.getDeployState() == DeployState.FAILED || deployResult.getDeployState() == DeployState.OVERDUE)) {
       Optional<SingularityRequestDeployState> maybeRequestDeployState = deployManager.getRequestDeployState(request.getId());
       if (maybeRequestDeployState.isPresent()
         && maybeRequestDeployState.get().getActiveDeploy().isPresent()
