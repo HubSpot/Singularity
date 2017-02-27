@@ -2,6 +2,7 @@ package com.hubspot.mesos;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.base.Optional;
 
 public class SingularityMesosArtifact {
   private final String uri;
@@ -11,18 +12,18 @@ public class SingularityMesosArtifact {
 
   @JsonCreator
   public static SingularityMesosArtifact fromString(String uri) {
-    return new SingularityMesosArtifact(uri, false, false, false);
+    return new SingularityMesosArtifact(uri, Optional.<Boolean>absent(), Optional.<Boolean>absent(), Optional.<Boolean>absent());
   }
 
   @JsonCreator
   public SingularityMesosArtifact(@JsonProperty("uri") String uri,
-                                  @JsonProperty("cache") boolean cache,
-                                  @JsonProperty("executable") boolean executable,
-                                  @JsonProperty("extract") boolean extract) {
+                                  @JsonProperty("cache") Optional<Boolean> cache,
+                                  @JsonProperty("executable") Optional<Boolean> executable,
+                                  @JsonProperty("extract") Optional<Boolean> extract) {
     this.uri = uri;
-    this.cache = cache;
-    this.executable = executable;
-    this.extract = extract;
+    this.cache = cache.or(false);
+    this.executable = executable.or(true);
+    this.extract = extract.or(false);
   }
 
   public String getUri() {
