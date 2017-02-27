@@ -87,8 +87,7 @@ const Slaves = (props) => {
         <p>Are you sure you want to mark the host {slave.host} as inactive?</p>
         <p>
           This will decommission every slave on this host until you reactivate
-          it. You will also need to manually re-commission the slaves from
-          this host after you reactivate it.
+          it.
         </p>
       </FormModalButton>
     )
@@ -106,10 +105,8 @@ const Slaves = (props) => {
       >
         <p>Are you sure you want to reactivate host {slave.host}?</p>
         <p>
-          This will allow new slaves from this host to make offers without
-          being marked as decommissioned. It will not remove the decommissioned
-          state from any existing slaves on this host; you can manually activate
-          them if you want the existing slaves.
+          New slaves from this host will no longer automatically be marked as
+          decommissioned.
         </p>
       </FormModalButton>
     )
@@ -395,7 +392,12 @@ const Slaves = (props) => {
         <p>These hosts are marked as inactive: </p>
         <ul className="list-group">
           {inactiveHosts.map((host) => (
-            <li className="list-group-item" key={host}>{host}</li>
+            <li className="list-group-item" key={host}>
+              {host}
+              <span className="pull-right">
+                {getMaybeReactivateHostButton({host})}
+              </span>
+            </li>
           ))}
         </ul>
       </div>

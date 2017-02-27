@@ -5,7 +5,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.inject.Singleton;
@@ -42,6 +41,7 @@ import com.hubspot.singularity.SlaveMatchState;
 import com.hubspot.singularity.SlavePlacement;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.AbstractMachineManager;
+import com.hubspot.singularity.data.InactiveSlaveManager;
 import com.hubspot.singularity.data.RackManager;
 import com.hubspot.singularity.data.SlaveManager;
 import com.hubspot.singularity.data.TaskManager;
@@ -59,12 +59,14 @@ public class SingularitySlaveAndRackManager {
   private final RackManager rackManager;
   private final SlaveManager slaveManager;
   private final TaskManager taskManager;
+  private final InactiveSlaveManager inactiveSlaveManager;
   private final SingularitySlaveAndRackHelper slaveAndRackHelper;
   private final AtomicInteger activeSlavesLost;
 
   @Inject
   SingularitySlaveAndRackManager(SingularitySlaveAndRackHelper slaveAndRackHelper, SingularityConfiguration configuration, SingularityExceptionNotifier exceptionNotifier,
-                                 RackManager rackManager, SlaveManager slaveManager, TaskManager taskManager, @Named(SingularityMesosModule.ACTIVE_SLAVES_LOST_COUNTER) AtomicInteger activeSlavesLost) {
+                                 RackManager rackManager, SlaveManager slaveManager, TaskManager taskManager, InactiveSlaveManager inactiveSlaveManager,
+                                 @Named(SingularityMesosModule.ACTIVE_SLAVES_LOST_COUNTER) AtomicInteger activeSlavesLost) {
     this.configuration = configuration;
 
     this.exceptionNotifier = exceptionNotifier;
@@ -73,6 +75,7 @@ public class SingularitySlaveAndRackManager {
     this.rackManager = rackManager;
     this.slaveManager = slaveManager;
     this.taskManager = taskManager;
+    this.inactiveSlaveManager = inactiveSlaveManager;
     this.activeSlavesLost = activeSlavesLost;
   }
 
@@ -397,7 +400,7 @@ public class SingularitySlaveAndRackManager {
   }
 
   @Timed
-  public void checkOffer(Offer offer, Set<String> inactiveSlaves) {
+  public void checkOffer(Offer offer) {
     final String slaveId = offer.getSlaveId().getValue();
     final String rackId = slaveAndRackHelper.getRackIdOrDefault(offer);
     final String host = slaveAndRackHelper.getMaybeTruncatedHost(offer);
@@ -406,7 +409,7 @@ public class SingularitySlaveAndRackManager {
     final SingularitySlave slave = new SingularitySlave(slaveId, host, rackId, textAttributes, Optional.<MesosResourcesObject>absent());
 
     if (check(slave, slaveManager) == CheckResult.NEW) {
-      if (inactiveSlaves.contains(slave.getHost())) {
+      if (inactiveSlaveManager.isInactive(slave.getHost())) {
         LOG.info("Slave {} on inactive host {} attempted to rejoin. Marking as decommissioned.", slave, host);
         slaveManager.changeState(slave, MachineState.STARTING_DECOMMISSION,
             Optional.of(String.format("Slave %s on inactive host %s attempted to rejoin cluster.", slaveId, host)),
