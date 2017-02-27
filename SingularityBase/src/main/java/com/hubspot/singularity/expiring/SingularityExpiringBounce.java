@@ -22,7 +22,8 @@ public class SingularityExpiringBounce extends SingularityExpiringRequestActionP
 
   @Override
   public String toString() {
-    return "SingularityExpiringBounce [toString()=" + super.toString() + "]";
+    return "SingularityExpiringBounce{" +
+        "deployId='" + deployId + '\'' +
+        "} " + super.toString();
   }
-
 }

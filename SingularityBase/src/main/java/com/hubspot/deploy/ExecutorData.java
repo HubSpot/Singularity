@@ -6,7 +6,6 @@ import java.util.Map;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.Objects;
 import com.google.common.base.Optional;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.executor.SingularityExecutorLogrotateFrequency;
@@ -152,25 +151,24 @@ public class ExecutorData {
 
   @Override
   public String toString() {
-    return Objects.toStringHelper(this)
-      .add("cmd", cmd)
-      .add("embeddedArtifacts", embeddedArtifacts)
-      .add("externalArtifacts", externalArtifacts)
-      .add("s3Artifacts", s3Artifacts)
-      .add("successfulExitCodes", successfulExitCodes)
-      .add("runningSentinel", runningSentinel)
-      .add("user", user)
-      .add("extraCmdLineArgs", extraCmdLineArgs)
-      .add("loggingTag", loggingTag)
-      .add("loggingExtraFields", loggingExtraFields)
-      .add("sigKillProcessesAfterMillis", sigKillProcessesAfterMillis)
-      .add("maxTaskThreads", maxTaskThreads)
-      .add("preserveTaskSandboxAfterFinish", preserveTaskSandboxAfterFinish)
-      .add("maxOpenFiles", maxOpenFiles)
-      .add("skipLogrotateAndCompress", skipLogrotateAndCompress)
-      .add("s3ArtifactSignatures", s3ArtifactSignatures)
-      .add("logrotateFrequency", logrotateFrequency)
-      .add("builder", toBuilder())
-      .toString();
+    return "ExecutorData{" +
+        "cmd='" + cmd + '\'' +
+        ", embeddedArtifacts=" + embeddedArtifacts +
+        ", externalArtifacts=" + externalArtifacts +
+        ", s3Artifacts=" + s3Artifacts +
+        ", successfulExitCodes=" + successfulExitCodes +
+        ", runningSentinel=" + runningSentinel +
+        ", user=" + user +
+        ", extraCmdLineArgs=" + extraCmdLineArgs +
+        ", loggingTag=" + loggingTag +
+        ", loggingExtraFields=" + loggingExtraFields +
+        ", sigKillProcessesAfterMillis=" + sigKillProcessesAfterMillis +
+        ", maxTaskThreads=" + maxTaskThreads +
+        ", preserveTaskSandboxAfterFinish=" + preserveTaskSandboxAfterFinish +
+        ", maxOpenFiles=" + maxOpenFiles +
+        ", skipLogrotateAndCompress=" + skipLogrotateAndCompress +
+        ", s3ArtifactSignatures=" + s3ArtifactSignatures +
+        ", logrotateFrequency=" + logrotateFrequency +
+        '}';
   }
 }

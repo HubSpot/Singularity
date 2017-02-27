@@ -63,8 +63,13 @@ public class SingularityLoadBalancerUpdate {
 
   @Override
   public String toString() {
-    return "SingularityLoadBalancerUpdate [loadBalancerState=" + loadBalancerState + ", message=" + message + ", timestamp=" + timestamp + ", uri=" + uri + ", method=" + method
-      + ", loadBalancerRequestId=" + loadBalancerRequestId + "]";
+    return "SingularityLoadBalancerUpdate{" +
+        "loadBalancerState=" + loadBalancerState +
+        ", message=" + message +
+        ", timestamp=" + timestamp +
+        ", uri=" + uri +
+        ", method=" + method +
+        ", loadBalancerRequestId=" + loadBalancerRequestId +
+        '}';
   }
-
 }

@@ -44,7 +44,11 @@ public class SingularityTaskMetadataRequest {
 
   @Override
   public String toString() {
-    return "SingularityTaskMetadataRequest [type=" + type + ", title=" + title + ", message=" + message + ", level=" + level + "]";
+    return "SingularityTaskMetadataRequest{" +
+        "type='" + type + '\'' +
+        ", title='" + title + '\'' +
+        ", message=" + message +
+        ", level=" + level +
+        '}';
   }
-
 }

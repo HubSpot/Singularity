@@ -131,8 +131,9 @@ public class LogrotateTemplateContext {
 
   @Override
   public String toString() {
-    return "LogrotateTemplateContext [taskId=" + taskDefinition.getTaskId() + "]";
+    return "LogrotateTemplateContext{" +
+        "taskDefinition=" + taskDefinition +
+        ", configuration=" + configuration +
+        '}';
   }
-
-
 }

@@ -5,7 +5,6 @@ import java.util.List;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.Objects;
 import com.google.common.base.Optional;
 import com.hubspot.mesos.JavaUtils;
 
@@ -75,16 +74,15 @@ public class SingularityTaskHistory {
 
   @Override
   public String toString() {
-    return Objects.toStringHelper(this)
-      .add("taskUpdates", taskUpdates)
-      .add("directory", directory)
-      .add("containerId", containerId)
-      .add("task", task)
-      .add("healthcheckResults", healthcheckResults)
-      .add("loadBalancerUpdates", loadBalancerUpdates)
-      .add("shellCommandHistory", shellCommandHistory)
-      .add("taskMetadata", taskMetadata)
-      .add("lastTaskUpdate", getLastTaskUpdate())
-      .toString();
+    return "SingularityTaskHistory{" +
+        "taskUpdates=" + taskUpdates +
+        ", directory=" + directory +
+        ", containerId=" + containerId +
+        ", task=" + task +
+        ", healthcheckResults=" + healthcheckResults +
+        ", loadBalancerUpdates=" + loadBalancerUpdates +
+        ", shellCommandHistory=" + shellCommandHistory +
+        ", taskMetadata=" + taskMetadata +
+        '}';
   }
 }

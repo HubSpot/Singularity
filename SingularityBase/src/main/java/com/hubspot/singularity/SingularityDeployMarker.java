@@ -34,37 +34,21 @@ public class SingularityDeployMarker implements Comparable<SingularityDeployMark
   }
 
   @Override
-  public int hashCode() {
-    return Objects.hash(requestId, deployId);
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+    SingularityDeployMarker that = (SingularityDeployMarker) o;
+    return Objects.equals(requestId, that.requestId) &&
+        Objects.equals(deployId, that.deployId);
   }
 
   @Override
-  public boolean equals(Object obj) {
-    if (this == obj) {
-      return true;
-    }
-    if (obj == null) {
-      return false;
-    }
-    if (getClass() != obj.getClass()) {
-      return false;
-    }
-    SingularityDeployMarker other = (SingularityDeployMarker) obj;
-    if (deployId == null) {
-      if (other.deployId != null) {
-        return false;
-      }
-    } else if (!deployId.equals(other.deployId)) {
-      return false;
-    }
-    if (requestId == null) {
-      if (other.requestId != null) {
-        return false;
-      }
-    } else if (!requestId.equals(other.requestId)) {
-      return false;
-    }
-    return true;
+  public int hashCode() {
+    return Objects.hash(requestId, deployId);
   }
 
   public String getRequestId() {
@@ -89,7 +73,12 @@ public class SingularityDeployMarker implements Comparable<SingularityDeployMark
 
   @Override
   public String toString() {
-    return "SingularityDeployMarker [requestId=" + requestId + ", deployId=" + deployId + ", timestamp=" + timestamp + ", user=" + user + ", message=" + message + "]";
+    return "SingularityDeployMarker{" +
+        "requestId='" + requestId + '\'' +
+        ", deployId='" + deployId + '\'' +
+        ", timestamp=" + timestamp +
+        ", user=" + user +
+        ", message=" + message +
+        '}';
   }
-
 }

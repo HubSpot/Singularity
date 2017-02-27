@@ -69,7 +69,8 @@ public class EnvironmentContext {
 
   @Override
   public String toString() {
-    return "EnvironmentContext [taskInfo=" + taskInfo + "]";
+    return "EnvironmentContext{" +
+        "taskInfo=" + taskInfo +
+        '}';
   }
-
 }

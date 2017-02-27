@@ -1,5 +1,7 @@
 package com.hubspot.mesos;
 
+import java.util.Objects;
+
 import org.apache.mesos.Protos;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
@@ -47,15 +49,6 @@ public class SingularityVolume {
   }
 
   @Override
-  public String toString() {
-    return "SingularityVolume{" +
-        "containerPath='" + containerPath + '\'' +
-        ", hostPath=" + hostPath +
-        ", mode=" + mode +
-        '}';
-  }
-
-  @Override
   public boolean equals(Object o) {
     if (this == o) {
       return true;
@@ -63,26 +56,23 @@ public class SingularityVolume {
     if (o == null || getClass() != o.getClass()) {
       return false;
     }
-
     SingularityVolume that = (SingularityVolume) o;
-
-    if (!containerPath.equals(that.containerPath)) {
-      return false;
-    }
-    if (!hostPath.equals(that.hostPath)) {
-      return false;
-    }
-    if (!mode.equals(that.mode)) {
-      return false;
-    }
-    return true;
+    return Objects.equals(containerPath, that.containerPath) &&
+        Objects.equals(hostPath, that.hostPath) &&
+        Objects.equals(mode, that.mode);
   }
 
   @Override
   public int hashCode() {
-    int result = containerPath.hashCode();
-    result = 31 * result + hostPath.hashCode();
-    result = 31 * result + mode.hashCode();
-    return result;
+    return Objects.hash(containerPath, hostPath, mode);
+  }
+
+  @Override
+  public String toString() {
+    return "SingularityVolume{" +
+        "containerPath='" + containerPath + '\'' +
+        ", hostPath=" + hostPath +
+        ", mode=" + mode +
+        '}';
   }
 }

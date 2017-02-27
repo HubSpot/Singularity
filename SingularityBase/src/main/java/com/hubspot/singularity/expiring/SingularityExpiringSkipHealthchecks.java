@@ -22,7 +22,8 @@ public class SingularityExpiringSkipHealthchecks extends SingularityExpiringRequ
 
   @Override
   public String toString() {
-    return "SingularityExpiringSkipHealthchecks [revertToSkipHealthchecks=" + revertToSkipHealthchecks + ", toString()=" + super.toString() + "]";
+    return "SingularityExpiringSkipHealthchecks{" +
+        "revertToSkipHealthchecks=" + revertToSkipHealthchecks +
+        "} " + super.toString();
   }
-
 }

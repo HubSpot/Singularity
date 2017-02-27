@@ -70,7 +70,11 @@ public abstract class Artifact {
 
   @Override
   public String toString() {
-    return "Artifact [name=" + name + ", filename=" + filename + ", md5sum=" + md5sum + ", targetFolderRelativeToTask=" + targetFolderRelativeToTask + "]";
+    return "Artifact{" +
+        "name='" + name + '\'' +
+        ", filename='" + filename + '\'' +
+        ", md5sum=" + md5sum +
+        ", targetFolderRelativeToTask=" + targetFolderRelativeToTask +
+        '}';
   }
-
 }

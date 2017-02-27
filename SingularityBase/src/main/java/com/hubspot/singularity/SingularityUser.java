@@ -41,12 +41,12 @@ public class SingularityUser {
 
   @Override
   public String toString() {
-    return "SingularityUser[" +
-            "id='" + id + '\'' +
-            ", name=" + name +
-            ", email=" + email +
-            ", groups=" + groups +
-            ']';
+    return "SingularityUser{" +
+        "id='" + id + '\'' +
+        ", name=" + name +
+        ", email=" + email +
+        ", groups=" + groups +
+        '}';
   }
 
   @Override
