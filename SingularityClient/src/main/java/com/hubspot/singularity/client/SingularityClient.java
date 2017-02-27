@@ -936,7 +936,7 @@ public class SingularityClient {
   }
 
   public Collection<SingularityTaskIdHistory> getInactiveTaskHistoryForRequest(String requestId) {
-    return getInactiveTaskHistoryForRequest(requestId, 10, 1);
+    return getInactiveTaskHistoryForRequest(requestId, 100, 1);
   }
 
   public Collection<SingularityTaskIdHistory> getInactiveTaskHistoryForRequest(String requestId, int count, int page) {
