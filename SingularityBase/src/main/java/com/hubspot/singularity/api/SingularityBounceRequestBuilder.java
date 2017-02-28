@@ -1,6 +1,5 @@
 package com.hubspot.singularity.api;
 
-import com.google.common.base.Objects;
 import com.google.common.base.Optional;
 import com.hubspot.singularity.SingularityShellCommand;
 
@@ -84,13 +83,13 @@ public class SingularityBounceRequestBuilder {
 
   @Override
   public String toString() {
-    return Objects.toStringHelper(this)
-      .add("incremental", incremental)
-      .add("skipHealthchecks", skipHealthchecks)
-      .add("runShellCommandBeforeKill", runShellCommandBeforeKill)
-      .add("durationMillis", durationMillis)
-      .add("actionId", actionId)
-      .add("message", message)
-      .toString();
+    return "SingularityBounceRequestBuilder{" +
+        "incremental=" + incremental +
+        ", skipHealthchecks=" + skipHealthchecks +
+        ", runShellCommandBeforeKill=" + runShellCommandBeforeKill +
+        ", durationMillis=" + durationMillis +
+        ", actionId=" + actionId +
+        ", message=" + message +
+        '}';
   }
 }

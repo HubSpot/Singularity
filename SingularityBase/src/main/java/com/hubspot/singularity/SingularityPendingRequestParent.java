@@ -35,8 +35,8 @@ public class SingularityPendingRequestParent extends SingularityRequestParent {
 
   @Override
   public String toString() {
-    return "SingularityRequestParent [request=" + getRequest() + ", state=" + getState() + ", requestDeployState=" + getRequestDeployState() + ", activeDeploy=" + getActiveDeploy() + ", pendingDeploy=" + getPendingDeploy() + ", pendingDeployState="
-            + getPendingDeployState() + ", pendingRequest=" + pendingRequest + "]";
+    return "SingularityPendingRequestParent{" +
+        "pendingRequest=" + pendingRequest +
+        "} " + super.toString();
   }
-
 }

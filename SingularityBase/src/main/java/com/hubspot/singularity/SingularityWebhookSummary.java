@@ -1,8 +1,9 @@
 package com.hubspot.singularity;
 
+import java.util.Objects;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.Objects;
 
 public class SingularityWebhookSummary {
   private final SingularityWebhook webhook;
@@ -33,19 +34,19 @@ public class SingularityWebhookSummary {
     }
     SingularityWebhookSummary that = (SingularityWebhookSummary) o;
     return queueSize == that.queueSize &&
-      Objects.equal(webhook, that.webhook);
+        Objects.equals(webhook, that.webhook);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hashCode(webhook, queueSize);
+    return Objects.hash(webhook, queueSize);
   }
 
   @Override
   public String toString() {
-    return Objects.toStringHelper(this)
-      .add("webhook", webhook)
-      .add("queueSize", queueSize)
-      .toString();
+    return "SingularityWebhookSummary{" +
+        "webhook=" + webhook +
+        ", queueSize=" + queueSize +
+        '}';
   }
 }

@@ -4,7 +4,6 @@ import java.util.Objects;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.hubspot.mesos.JavaUtils;
 
 public class SingularityClientCredentials {
   private final String headerName;
@@ -25,14 +24,6 @@ public class SingularityClientCredentials {
   }
 
   @Override
-  public String toString() {
-    return "SingularityClientCredentials[" +
-            "headerName='" + headerName + '\'' +
-            ", token='" + JavaUtils.obfuscateValue(token) + '\'' +
-            ']';
-  }
-
-  @Override
   public boolean equals(Object o) {
     if (this == o) {
       return true;
@@ -42,11 +33,19 @@ public class SingularityClientCredentials {
     }
     SingularityClientCredentials that = (SingularityClientCredentials) o;
     return Objects.equals(headerName, that.headerName) &&
-            Objects.equals(token, that.token);
+        Objects.equals(token, that.token);
   }
 
   @Override
   public int hashCode() {
     return Objects.hash(headerName, token);
+  }
+
+  @Override
+  public String toString() {
+    return "SingularityClientCredentials{" +
+        "headerName='" + headerName + '\'' +
+        ", token='" + token + '\'' +
+        '}';
   }
 }

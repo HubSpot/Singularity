@@ -10,7 +10,6 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Function;
-import com.google.common.base.Objects;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.collect.Iterables;
@@ -101,7 +100,7 @@ public class SingularityTaskId extends SingularityId implements SingularityHisto
   public SingularityTaskId(@JsonProperty("requestId") String requestId, @JsonProperty("deployId") String deployId, @JsonProperty("nextRunAt") Long nextRunAt, @JsonProperty("startedAt") Long startedAt,
       @JsonProperty("instanceNo") int instanceNo, @JsonProperty("host") String host, @JsonProperty("sanitizedHost") String sanitizedHost,
       @JsonProperty("sanitizedRackId") String sanitizedRackId, @JsonProperty("rackId") String rackId) {
-    this(requestId, deployId, Objects.firstNonNull(startedAt, nextRunAt), instanceNo, Objects.firstNonNull(sanitizedHost, host), Objects.firstNonNull(sanitizedRackId, rackId));
+    this(requestId, deployId, startedAt != null ? startedAt : nextRunAt, instanceNo, sanitizedHost != null ? sanitizedHost : host, sanitizedRackId != null ? sanitizedRackId : rackId);
   }
 
   /**

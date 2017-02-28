@@ -63,7 +63,11 @@ public class SingularityTaskShellCommandRequestId {
 
   @Override
   public String toString() {
-    return "SingularityTaskShellCommandRequestId [taskId=" + taskId + ", name=" + name + ", timestamp=" + timestamp + "]";
+    return "SingularityTaskShellCommandRequestId{" +
+        "taskId=" + taskId +
+        ", name='" + name + '\'' +
+        ", safeName='" + safeName + '\'' +
+        ", timestamp=" + timestamp +
+        "} " + super.toString();
   }
-
 }

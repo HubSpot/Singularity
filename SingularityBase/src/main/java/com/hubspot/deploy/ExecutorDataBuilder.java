@@ -213,24 +213,24 @@ public class ExecutorDataBuilder {
 
   @Override
   public String toString() {
-    return "ExecutorDataBuilder[" +
-            "cmd='" + cmd + '\'' +
-            ", embeddedArtifacts=" + embeddedArtifacts +
-            ", externalArtifacts=" + externalArtifacts +
-            ", s3Artifacts=" + s3Artifacts +
-            ", successfulExitCodes=" + successfulExitCodes +
-            ", runningSentinel=" + runningSentinel +
-            ", user=" + user +
-            ", extraCmdLineArgs=" + extraCmdLineArgs +
-            ", loggingTag=" + loggingTag +
-            ", loggingExtraFields=" + loggingExtraFields +
-            ", sigKillProcessesAfterMillis=" + sigKillProcessesAfterMillis +
-            ", maxTaskThreads=" + maxTaskThreads +
-            ", preserveTaskSandboxAfterFinish=" + preserveTaskSandboxAfterFinish +
-            ", maxOpenFiles=" + maxOpenFiles +
-            ", skipLogrotateAndCompress=" + skipLogrotateAndCompress +
-            ", s3ArtifactSignatures=" + s3ArtifactSignatures +
-            ", logrotateFrequency=" + logrotateFrequency +
-            ']';
+    return "ExecutorDataBuilder{" +
+        "cmd='" + cmd + '\'' +
+        ", embeddedArtifacts=" + embeddedArtifacts +
+        ", externalArtifacts=" + externalArtifacts +
+        ", s3Artifacts=" + s3Artifacts +
+        ", successfulExitCodes=" + successfulExitCodes +
+        ", runningSentinel=" + runningSentinel +
+        ", user=" + user +
+        ", extraCmdLineArgs=" + extraCmdLineArgs +
+        ", loggingTag=" + loggingTag +
+        ", loggingExtraFields=" + loggingExtraFields +
+        ", sigKillProcessesAfterMillis=" + sigKillProcessesAfterMillis +
+        ", maxTaskThreads=" + maxTaskThreads +
+        ", preserveTaskSandboxAfterFinish=" + preserveTaskSandboxAfterFinish +
+        ", maxOpenFiles=" + maxOpenFiles +
+        ", skipLogrotateAndCompress=" + skipLogrotateAndCompress +
+        ", s3ArtifactSignatures=" + s3ArtifactSignatures +
+        ", logrotateFrequency=" + logrotateFrequency +
+        '}';
   }
 }

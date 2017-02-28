@@ -7,7 +7,6 @@ import java.util.Map;
 import com.fasterxml.jackson.annotation.JsonAnyGetter;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.google.common.base.Objects;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 
@@ -74,18 +73,18 @@ public class MesosResourcesObject {
       return false;
     }
     MesosResourcesObject that = (MesosResourcesObject) o;
-    return Objects.equal(properties, that.properties);
+    return java.util.Objects.equals(properties, that.properties);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hashCode(properties);
+    return java.util.Objects.hash(properties);
   }
 
   @Override
   public String toString() {
-    return Objects.toStringHelper(this)
-      .add("properties", properties)
-      .toString();
+    return "MesosResourcesObject{" +
+        "properties=" + properties +
+        '}';
   }
 }

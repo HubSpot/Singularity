@@ -32,12 +32,12 @@ public class SingularityMesosTaskLabel {
     return value;
   }
 
-  @Override
-  public String toString() {
-    return "SingularityLabel{" +
-      "key='" + key + '\'' +
-      ", value=" + value +
-      '}';
+  public static List<SingularityMesosTaskLabel> labelsFromMap(Map<String, String> parametersMap) {
+    List<SingularityMesosTaskLabel> labels = new ArrayList<>();
+    for (Map.Entry<String, String> entry : parametersMap.entrySet()) {
+      labels.add(new SingularityMesosTaskLabel(entry.getKey(), Optional.of(entry.getValue())));
+    }
+    return labels;
   }
 
   @Override
@@ -50,7 +50,7 @@ public class SingularityMesosTaskLabel {
     }
     SingularityMesosTaskLabel that = (SingularityMesosTaskLabel) o;
     return Objects.equals(key, that.key) &&
-      Objects.equals(value, that.value);
+        Objects.equals(value, that.value);
   }
 
   @Override
@@ -58,11 +58,11 @@ public class SingularityMesosTaskLabel {
     return Objects.hash(key, value);
   }
 
-  public static List<SingularityMesosTaskLabel> labelsFromMap(Map<String, String> parametersMap) {
-    List<SingularityMesosTaskLabel> labels = new ArrayList<>();
-    for (Map.Entry<String, String> entry : parametersMap.entrySet()) {
-      labels.add(new SingularityMesosTaskLabel(entry.getKey(), Optional.of(entry.getValue())));
-    }
-    return labels;
+  @Override
+  public String toString() {
+    return "SingularityMesosTaskLabel{" +
+        "key='" + key + '\'' +
+        ", value=" + value +
+        '}';
   }
 }

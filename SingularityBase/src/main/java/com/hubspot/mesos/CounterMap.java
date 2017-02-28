@@ -105,7 +105,8 @@ public class CounterMap<K> {
 
   @Override
   public String toString() {
-    return "CounterMap [map=" + map + "]";
+    return "CounterMap{" +
+        "map=" + map +
+        '}';
   }
-
 }

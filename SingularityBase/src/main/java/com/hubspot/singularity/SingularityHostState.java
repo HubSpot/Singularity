@@ -94,9 +94,18 @@ public class SingularityHostState {
 
   @Override
   public String toString() {
-    return "SingularityHostState [master=" + master + ", uptime=" + uptime + ", driverStatus=" + driverStatus + ", millisSinceLastOffer=" + millisSinceLastOffer + ", offerCacheSize=" + offerCacheSize
-        + ", availableCachedCpus=" + availableCachedCpus + ", availableCachedMemory=" + availableCachedMemory + ", hostAddress=" + hostAddress + ", hostname=" + hostname + ", mesosMaster="
-        + mesosMaster + ", mesosConnected=" + mesosConnected + "]";
+    return "SingularityHostState{" +
+        "master=" + master +
+        ", uptime=" + uptime +
+        ", driverStatus='" + driverStatus + '\'' +
+        ", millisSinceLastOffer=" + millisSinceLastOffer +
+        ", offerCacheSize=" + offerCacheSize +
+        ", availableCachedCpus=" + availableCachedCpus +
+        ", availableCachedMemory=" + availableCachedMemory +
+        ", hostAddress='" + hostAddress + '\'' +
+        ", hostname='" + hostname + '\'' +
+        ", mesosMaster='" + mesosMaster + '\'' +
+        ", mesosConnected=" + mesosConnected +
+        '}';
   }
-
 }
