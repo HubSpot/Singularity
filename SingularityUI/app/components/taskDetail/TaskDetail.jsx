@@ -520,4 +520,26 @@ function mapDispatchToProps(dispatch) {
   };
 }
 
-export default connect(mapStateToProps, mapDispatchToProps)(rootComponent(withRouter(TaskDetail), (props) => refresh(props.params.taskId, props.params.splat)));
+function refresh(props) {
+  props.fetchTaskFiles(props.params.taskId, _.isUndefined(props.params.splat) ? undefined : props.params.splat.substring(1), [400, 404]);
+  const promises = [];
+  const taskPromise = props.fetchTaskHistory(props.params.taskId);
+  taskPromise.then(() => {
+    const apiData = props.route.store.getState().api.task[props.params.taskId];
+    if (apiData.statusCode === 404) return;
+    const task = apiData.data;
+    promises.push(props.fetchDeployForRequest(task.task.taskId.requestId, task.task.taskId.deployId));
+    if (task.isStillRunning) {
+      promises.push(props.fetchTaskStatistics(props.params.taskId));
+    }
+  });
+  promises.push(taskPromise);
+  promises.push(props.fetchTaskCleanups());
+  promises.push(props.fetchPendingDeploys());
+
+  props.fechS3Logs(props.taskId);
+
+  return Promise.all(promises);
+}
+
+export default connect(mapStateToProps, mapDispatchToProps)(rootComponent(withRouter(TaskDetail), (props) => props.params.taskId, refresh));
