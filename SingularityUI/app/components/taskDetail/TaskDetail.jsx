@@ -132,6 +132,8 @@ class TaskDetail extends Component {
     if (this.props.task.isStillRunning) {
       this.props.fetchTaskStatistics(this.props.params.taskId);
     }
+
+    this.props.fechS3Logs(this.props.taskId);
   }
 
   componentWillReceiveProps(nextProps) {
@@ -535,7 +537,6 @@ function refresh(props) {
   promises.push(taskPromise);
   promises.push(props.fetchTaskCleanups());
   promises.push(props.fetchPendingDeploys());
-  promises.push(props.fechS3Logs(props.params.taskId));
   return Promise.all(promises);
 }
 
