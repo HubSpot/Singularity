@@ -553,7 +553,7 @@ class NewDeployForm extends Component {
 
           <div id="mesos-artifact-button-row" className="row">
             <div className="col-sm-6">
-              <button className="btn btn-success btn-block" onClick={event => this.addObjectToArrayFieldPreventDefault('uris', {}, event)}>
+              <button className="btn btn-success btn-block" onClick={event => this.addObjectToArrayFieldPreventDefault('uris', {extract: true}, event)}>
                 <span className="glyphicon glyphicon-plus"></span>
                 {" Artifact"}
               </button>
