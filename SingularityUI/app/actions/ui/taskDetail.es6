@@ -27,7 +27,6 @@ export const refresh = (taskId, splat) => (dispatch, getState) => {
   promises.push(taskPromise);
   promises.push(dispatch(FetchTaskCleanups.trigger()));
   promises.push(dispatch(FetchPendingDeploys.trigger()));
-  dispatch(FetchTaskS3Logs.trigger(taskId, [404]));
 
-  return Promise.all(promises);
+  return Promise.all(promises).then(() => dispatch(FetchTaskS3Logs.trigger(taskId, [404])));
 };
