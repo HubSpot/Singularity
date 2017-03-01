@@ -239,6 +239,10 @@ public class IndexView extends View {
     return redirectOnUnauthorizedUrl;
   }
 
+  public boolean isShortenSlaveUsageHostname() {
+    return shortenSlaveUsageHostname;
+  }
+
   @Override public String toString() {
     return Objects.toStringHelper(this)
       .add("appRoot", appRoot)
