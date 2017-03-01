@@ -2,7 +2,7 @@ import React, { PropTypes, Component } from 'react';
 import classNames from 'classnames';
 import { NotFoundNoRoot } from 'components/common/NotFound';
 
-const rootComponent = (Wrapped, refresh = null, refreshInterval = true, pageMargin = true, initialize = null) => class extends Component {
+const rootComponent = (Wrapped, refresh = null, onLoad = null, refreshInterval = true, pageMargin = true, initialize = null) => class extends Component {
 
   static propTypes = {
     notFound: PropTypes.bool,
@@ -29,6 +29,12 @@ const rootComponent = (Wrapped, refresh = null, refreshInterval = true, pageMarg
   dispatchRefresh() {
     return (refresh !== null)
       ? this.context.store.dispatch(refresh(this.props))
+      : Promise.resolve();
+  }
+
+  dispatchOnLoad() {
+    return (onLoad !== null)
+      ? this.context.store.dispatch(onLoad(this.props))
       : Promise.resolve();
   }
 
@@ -69,6 +75,13 @@ const rootComponent = (Wrapped, refresh = null, refreshInterval = true, pageMarg
     }
   }
 
+  componentDidMount() {
+    const onLoadPromise = this.dispatchOnLoad();
+    if (onLoadPromise) {
+      onLoadPromise.catch((reason) => { throw new Error(reason); });
+    }
+  }
+
   componentWillUnmount() {
     this.unmounted = true;
     if (refreshInterval) {
@@ -93,8 +106,12 @@ const rootComponent = (Wrapped, refresh = null, refreshInterval = true, pageMarg
   startRefreshInterval() {
     this.refreshInterval = setInterval(() => {
       const promise = this.dispatchRefresh();
+      const onLoadPromise = this.dispatchOnLoad();
       if (promise) {
         promise.catch((reason) => setTimeout(() => { throw new Error(reason); }));
+      }
+      if (onLoadPromise) {
+        onLoadPromise.catch((reason) => setTimeout(() => { throw new Error(reason); }));
       }
     }, config.globalRefreshInterval);
   }

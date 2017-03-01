@@ -107,4 +107,4 @@ const refresh = () => (dispatch) =>
     dispatch(FetchSingularityStatus.trigger())
   ]);
 
-export default connect(mapStateToProps, mapDispatchToProps)(rootComponent(SlaveUsage, refresh, true, true));
+export default connect(mapStateToProps, mapDispatchToProps)(rootComponent(SlaveUsage, refresh, null, true, true));
