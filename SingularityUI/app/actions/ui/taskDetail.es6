@@ -1,7 +1,6 @@
 import { FetchTaskHistory, FetchDeployForRequest } from '../api/history';
 import { FetchTaskStatistics, FetchTaskCleanups } from '../api/tasks';
 import { FetchPendingDeploys } from '../api/deploys';
-import { FetchTaskS3Logs } from '../api/logs';
 import { FetchTaskFiles } from '../../actions/api/sandbox';
 
 export const refresh = (taskId, splat) => (dispatch, getState) => {
@@ -27,7 +26,6 @@ export const refresh = (taskId, splat) => (dispatch, getState) => {
   promises.push(taskPromise);
   promises.push(dispatch(FetchTaskCleanups.trigger()));
   promises.push(dispatch(FetchPendingDeploys.trigger()));
-  promises.push(dispatch(FetchTaskS3Logs.trigger(taskId, [404])));
 
   return Promise.all(promises);
 };
