@@ -53,7 +53,10 @@ const rootComponent = (Wrapped, title, refresh = _.noop, onLoad = _.noop, refres
   }
 
   componentDidMount() {
-    onLoad(this.props);
+    const onLoadPromise = onLoad(this.props);
+    if (onLoadPromise) {
+      onLoadPromise.catch((reason) => setTimeout(() => { throw new Error(reason); }));
+    }
   }
 
   componentWillUnmount() {
