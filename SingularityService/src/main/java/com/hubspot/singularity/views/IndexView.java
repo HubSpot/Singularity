@@ -240,6 +240,10 @@ public class IndexView extends View {
     return redirectOnUnauthorizedUrl;
   }
 
+  public boolean isShortenSlaveUsageHostname() {
+    return shortenSlaveUsageHostname;
+  }
+
   @Override
   public String toString() {
     return "IndexView{" +
@@ -267,6 +271,7 @@ public class IndexView extends View {
         ", taskS3LogOmitPrefix='" + taskS3LogOmitPrefix + '\'' +
         ", warnIfScheduledJobIsRunningPastNextRunPct=" + warnIfScheduledJobIsRunningPastNextRunPct +
         ", shellCommands='" + shellCommands + '\'' +
+        ", shortenSlaveUsageHostname=" + shortenSlaveUsageHostname +
         ", timestampFormat='" + timestampFormat + '\'' +
         ", showTaskDiskResource=" + showTaskDiskResource +
         ", timestampWithSecondsFormat='" + timestampWithSecondsFormat + '\'' +
