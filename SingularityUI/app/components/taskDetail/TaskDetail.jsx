@@ -536,9 +536,11 @@ function refresh(props) {
   promises.push(props.fetchTaskCleanups());
   promises.push(props.fetchPendingDeploys());
 
-  return Promise.all(promises).then(() => {
-    props.fechS3Logs(props.taskId))
-  });
+  return Promise.all(promises);
 }
 
-export default connect(mapStateToProps, mapDispatchToProps)(rootComponent(withRouter(TaskDetail), (props) => props.params.taskId, refresh));
+function onLoad(props) {
+  props.fechS3Logs(props.params.taskId);
+}
+
+export default connect(mapStateToProps, mapDispatchToProps)(rootComponent(withRouter(TaskDetail), (props) => props.params.taskId, refresh, onLoad));
