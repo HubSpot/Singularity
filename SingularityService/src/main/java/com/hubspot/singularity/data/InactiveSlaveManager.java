@@ -12,7 +12,7 @@ import com.hubspot.singularity.config.SingularityConfiguration;
 
 @Singleton
 public class InactiveSlaveManager extends CuratorManager {
-  private static final String ROOT_PATH = "/inactive";
+  private static final String ROOT_PATH = "/inactiveSlaves";
 
   @Inject
   public InactiveSlaveManager(CuratorFramework curator,
