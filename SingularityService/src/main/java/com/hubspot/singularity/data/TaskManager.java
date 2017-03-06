@@ -477,20 +477,15 @@ public class TaskManager extends CuratorAsyncManager {
 
     if (overwriteExisting) {
       Optional<SingularityTaskHistoryUpdate> maybeExisting = getTaskHistoryUpdate(taskHistoryUpdate.getTaskId(), taskHistoryUpdate.getTaskState());
-      SingularityTaskHistoryUpdate updateWithMessage;
-      if (maybeExisting.isPresent() && maybeExisting.get().getStatusMessage().isPresent() && taskHistoryUpdate.getStatusMessage().isPresent()) {
-        updateWithMessage = new SingularityTaskHistoryUpdate(
-            taskHistoryUpdate.getTaskId(),
-            taskHistoryUpdate.getTimestamp(),
-            taskHistoryUpdate.getTaskState(),
-            Optional.of(String.format("%s\n  Previously: %s (At %s)", taskHistoryUpdate.getStatusMessage().get(), maybeExisting.get().getStatusMessage().get(), JavaUtils.formatTimestamp(maybeExisting.get().getTimestamp()))),
-            taskHistoryUpdate.getStatusReason()
-        );
+      LOG.info("Found existing history {}", maybeExisting);
+      SingularityTaskHistoryUpdate updateWithPrevious;
+      if (maybeExisting.isPresent()) {
+        updateWithPrevious = taskHistoryUpdate.withPrevious(maybeExisting.get());
       } else {
-        updateWithMessage = taskHistoryUpdate;
+        updateWithPrevious = taskHistoryUpdate;
       }
 
-      return save(getUpdatePath(taskHistoryUpdate.getTaskId(), taskHistoryUpdate.getTaskState()), updateWithMessage, taskHistoryUpdateTranscoder);
+      return save(getUpdatePath(taskHistoryUpdate.getTaskId(), taskHistoryUpdate.getTaskState()), updateWithPrevious, taskHistoryUpdateTranscoder);
     } else {
       return create(getUpdatePath(taskHistoryUpdate.getTaskId(), taskHistoryUpdate.getTaskState()), taskHistoryUpdate, taskHistoryUpdateTranscoder);
     }
