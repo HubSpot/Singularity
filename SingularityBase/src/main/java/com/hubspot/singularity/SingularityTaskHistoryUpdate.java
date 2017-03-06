@@ -1,9 +1,9 @@
 package com.hubspot.singularity;
 
 import java.util.Objects;
-import java.util.ArrayList;
 import java.util.Collections;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
 import javax.annotation.Nonnull;
 
@@ -20,7 +20,7 @@ public class SingularityTaskHistoryUpdate extends SingularityTaskIdHolder implem
   private final ExtendedTaskState taskState;
   private final Optional<String> statusMessage;
   private final Optional<String> statusReason;
-  private final List<SingularityTaskHistoryUpdate> previous;
+  private final Set<SingularityTaskHistoryUpdate> previous;
 
   public enum SimplifiedTaskState {
     UNKNOWN, WAITING, RUNNING, DONE
@@ -56,7 +56,7 @@ public class SingularityTaskHistoryUpdate extends SingularityTaskIdHolder implem
   }
 
   public SingularityTaskHistoryUpdate(SingularityTaskId taskId, long timestamp, ExtendedTaskState taskState, Optional<String> statusMessage, Optional<String> statusReason) {
-    this(taskId, timestamp, taskState, statusMessage, statusReason, Collections.<SingularityTaskHistoryUpdate>emptyList());
+    this(taskId, timestamp, taskState, statusMessage, statusReason, Collections.<SingularityTaskHistoryUpdate>emptySet());
   }
 
   @JsonCreator
@@ -65,28 +65,34 @@ public class SingularityTaskHistoryUpdate extends SingularityTaskIdHolder implem
                                       @JsonProperty("taskState") ExtendedTaskState taskState,
                                       @JsonProperty("statusMessage") Optional<String> statusMessage,
                                       @JsonProperty("statusReason") Optional<String> statusReason,
-                                      @JsonProperty("previous") List<SingularityTaskHistoryUpdate> previous) {
+                                      @JsonProperty("previous") Set<SingularityTaskHistoryUpdate> previous) {
     super(taskId);
 
     this.timestamp = timestamp;
     this.taskState = taskState;
     this.statusMessage = statusMessage;
     this.statusReason = statusReason;
-    this.previous = previous != null ? previous : Collections.<SingularityTaskHistoryUpdate>emptyList();
+    this.previous = previous != null ? previous : Collections.<SingularityTaskHistoryUpdate>emptySet();
   }
 
   public SingularityTaskHistoryUpdate withPrevious(SingularityTaskHistoryUpdate previousUpdate) {
-    List<SingularityTaskHistoryUpdate> newPreviousUpdates = getFlattenedPreviousUpdates(this);
+    Set<SingularityTaskHistoryUpdate> newPreviousUpdates = getFlattenedPreviousUpdates(this);
+    newPreviousUpdates.add(previousUpdate.withoutPrevious());
     newPreviousUpdates.addAll(getFlattenedPreviousUpdates(previousUpdate));
     return new SingularityTaskHistoryUpdate(getTaskId(), timestamp, taskState, statusMessage, statusReason, newPreviousUpdates);
   }
 
-  private List<SingularityTaskHistoryUpdate> getFlattenedPreviousUpdates(SingularityTaskHistoryUpdate update) {
-    List<SingularityTaskHistoryUpdate> previousUpdates = new ArrayList<>();
+  private Set<SingularityTaskHistoryUpdate> getFlattenedPreviousUpdates(SingularityTaskHistoryUpdate update) {
+    Set<SingularityTaskHistoryUpdate> previousUpdates = new HashSet<>();
     for (SingularityTaskHistoryUpdate preivousUpdate : update.getPrevious()) {
+      previousUpdates.add(preivousUpdate.withoutPrevious());
       previousUpdates.addAll(getFlattenedPreviousUpdates(preivousUpdate));
     }
     return previousUpdates;
+  }
+
+  public SingularityTaskHistoryUpdate withoutPrevious() {
+    return new SingularityTaskHistoryUpdate(getTaskId(), timestamp, taskState, statusMessage, statusReason, Collections.<SingularityTaskHistoryUpdate>emptySet());
   }
 
   @Override
@@ -134,7 +140,7 @@ public class SingularityTaskHistoryUpdate extends SingularityTaskIdHolder implem
     return statusReason;
   }
 
-  public List<SingularityTaskHistoryUpdate> getPrevious() {
+  public Set<SingularityTaskHistoryUpdate> getPrevious() {
     return previous;
   }
 

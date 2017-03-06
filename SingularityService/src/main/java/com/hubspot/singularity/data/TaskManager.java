@@ -485,6 +485,8 @@ public class TaskManager extends CuratorAsyncManager {
       SingularityTaskHistoryUpdate updateWithPrevious;
       if (maybeExisting.isPresent()) {
         updateWithPrevious = taskHistoryUpdate.withPrevious(maybeExisting.get());
+        LOG.info("Will save new update {}", updateWithPrevious);
+
       } else {
         updateWithPrevious = taskHistoryUpdate;
       }
