@@ -81,7 +81,7 @@ function ManageDisasters (props) {
         <div className="col-md-6">
           <h3>Disasters</h3>
           <div className="row">
-            <AutomatedActionsButton 
+            <AutomatedActionsButton
               user={props.user}
               action={automatedActionButtonAction}
             >
@@ -112,7 +112,7 @@ function ManageDisasters (props) {
               label="State"
               id="state"
               key="state"
-              cellData={(disaster) => 
+              cellData={(disaster) =>
                 <span className={disaster.active ? 'label label-danger' : 'label label-primary'}>
                   {disaster.active ? "Active" : "Inactive"}
                 </span>
@@ -123,7 +123,7 @@ function ManageDisasters (props) {
               key="actions-column"
               className="actions-column"
               cellData={(disaster) =>
-                <DisasterButton 
+                <DisasterButton
                   user={props.user}
                   action={disaster.active ? "Deactivate" : "Activate"}
                   type={disaster.type}
@@ -155,7 +155,7 @@ ManageDisasters.propTypes = {
       killTasks: PropTypes.bool,
       message: PropTypes.string,
       actionId: PropTypes.string
-    }).isRequired,
+    }),
     timestamp: PropTypes.number,
     user: PropTypes.string
   }),
