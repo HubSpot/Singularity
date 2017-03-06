@@ -407,6 +407,10 @@ public class TaskManager extends CuratorAsyncManager {
     return updates;
   }
 
+  public Optional<SingularityTaskHistoryUpdate> getTaskHistoryUpdate(SingularityTaskId taskId, ExtendedTaskState taskState) {
+    return getData(getUpdatePath(taskId, taskState), taskHistoryUpdateTranscoder);
+  }
+
   public Map<SingularityTaskId, List<SingularityTaskHistoryUpdate>> getTaskHistoryUpdates(Collection<SingularityTaskId> taskIds) {
     Map<String, SingularityTaskId> pathsMap = Maps.newHashMap();
     for (SingularityTaskId taskId : taskIds) {
@@ -472,7 +476,21 @@ public class TaskManager extends CuratorAsyncManager {
     singularityEventListener.taskHistoryUpdateEvent(taskHistoryUpdate);
 
     if (overwriteExisting) {
-      return save(getUpdatePath(taskHistoryUpdate.getTaskId(), taskHistoryUpdate.getTaskState()), taskHistoryUpdate, taskHistoryUpdateTranscoder);
+      Optional<SingularityTaskHistoryUpdate> maybeExisting = getTaskHistoryUpdate(taskHistoryUpdate.getTaskId(), taskHistoryUpdate.getTaskState());
+      SingularityTaskHistoryUpdate updateWithMessage;
+      if (maybeExisting.isPresent() && maybeExisting.get().getStatusMessage().isPresent() && taskHistoryUpdate.getStatusMessage().isPresent()) {
+        updateWithMessage = new SingularityTaskHistoryUpdate(
+            taskHistoryUpdate.getTaskId(),
+            taskHistoryUpdate.getTimestamp(),
+            taskHistoryUpdate.getTaskState(),
+            Optional.of(String.format("%s\n  Previously: %s (At %s)", taskHistoryUpdate.getStatusMessage().get(), maybeExisting.get().getStatusMessage().get(), JavaUtils.formatTimestamp(maybeExisting.get().getTimestamp()))),
+            taskHistoryUpdate.getStatusReason()
+        );
+      } else {
+        updateWithMessage = taskHistoryUpdate;
+      }
+
+      return save(getUpdatePath(taskHistoryUpdate.getTaskId(), taskHistoryUpdate.getTaskState()), updateWithMessage, taskHistoryUpdateTranscoder);
     } else {
       return create(getUpdatePath(taskHistoryUpdate.getTaskId(), taskHistoryUpdate.getTaskState()), taskHistoryUpdate, taskHistoryUpdateTranscoder);
     }
