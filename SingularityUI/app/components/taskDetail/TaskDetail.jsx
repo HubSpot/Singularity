@@ -520,4 +520,8 @@ function mapDispatchToProps(dispatch) {
   };
 }
 
-export default connect(mapStateToProps, mapDispatchToProps)(rootComponent(withRouter(TaskDetail), (props) => refresh(props.params.taskId, props.params.splat)));
+const onLoad = (taskId) => (dispatch) => {
+  return dispatch(FetchTaskS3Logs.trigger(taskId, [404]));
+};
+
+export default connect(mapStateToProps, mapDispatchToProps)(rootComponent(withRouter(TaskDetail), (props) => refresh(props.params.taskId, props.params.splat)), (props) => onLoad(props.params.taskId));
