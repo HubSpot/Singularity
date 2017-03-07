@@ -219,8 +219,6 @@ public class SingularityValidator {
 
     if (request.isScheduled()) {
       checkBadRequest(request.getInstances().or(1) == 1, "Scheduler requests can not be ran on more than one instance");
-    } else if (request.isOneOff()) {
-      checkBadRequest(!request.getInstances().isPresent(), "one-off requests can not define a # of instances");
     }
 
     if (request.getMaxTasksPerOffer().isPresent()) {
