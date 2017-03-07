@@ -358,43 +358,6 @@ public class SingularityRequest {
   }
 
   @Override
-  public String toString() {
-    return com.google.common.base.Objects.toStringHelper(this)
-      .add("id", id)
-      .add("requestType", requestType)
-      .add("owners", owners)
-      .add("numRetriesOnFailure", numRetriesOnFailure)
-      .add("schedule", schedule)
-      .add("quartzSchedule", quartzSchedule)
-      .add("scheduleType", scheduleType)
-      .add("scheduleTimeZone", scheduleTimeZone)
-      .add("killOldNonLongRunningTasksAfterMillis", killOldNonLongRunningTasksAfterMillis)
-      .add("taskExecutionTimeLimitMillis", taskExecutionTimeLimitMillis)
-      .add("scheduledExpectedRuntimeMillis", scheduledExpectedRuntimeMillis)
-      .add("waitAtLeastMillisAfterTaskFinishesForReschedule", waitAtLeastMillisAfterTaskFinishesForReschedule)
-      .add("instances", instances)
-      .add("skipHealthchecks", skipHealthchecks)
-      .add("rackSensitive", rackSensitive)
-      .add("rackAffinity", rackAffinity)
-      .add("slavePlacement", slavePlacement)
-      .add("requiredSlaveAttributes", requiredSlaveAttributes)
-      .add("allowedSlaveAttributes", allowedSlaveAttributes)
-      .add("loadBalanced", loadBalanced)
-      .add("group", group)
-      .add("readWriteGroups", readWriteGroups)
-      .add("readOnlyGroups", readOnlyGroups)
-      .add("bounceAfterScale", bounceAfterScale)
-      .add("emailConfigurationOverrides", emailConfigurationOverrides)
-      .add("hideEvenNumberAcrossRacksHint", hideEvenNumberAcrossRacksHint)
-      .add("taskLogErrorRegex", taskLogErrorRegex)
-      .add("taskLogErrorRegexCaseSensitive", taskLogErrorRegexCaseSensitive)
-      .add("taskPriorityLevel", taskPriorityLevel)
-      .add("maxTasksPerOffer", maxTasksPerOffer)
-      .add("allowBounceToSameHost", allowBounceToSameHost)
-      .toString();
-  }
-
-  @Override
   public boolean equals(Object o) {
     if (this == o) {
       return true;
@@ -402,41 +365,81 @@ public class SingularityRequest {
     if (o == null || getClass() != o.getClass()) {
       return false;
     }
-    SingularityRequest request = (SingularityRequest) o;
-    return Objects.equals(id, request.id) &&
-            Objects.equals(requestType, request.requestType) &&
-            Objects.equals(owners, request.owners) &&
-            Objects.equals(numRetriesOnFailure, request.numRetriesOnFailure) &&
-            Objects.equals(schedule, request.schedule) &&
-            Objects.equals(quartzSchedule, request.quartzSchedule) &&
-            Objects.equals(scheduleTimeZone, request.scheduleTimeZone) &&
-            Objects.equals(scheduleType, request.scheduleType) &&
-            Objects.equals(killOldNonLongRunningTasksAfterMillis, request.killOldNonLongRunningTasksAfterMillis) &&
-            Objects.equals(taskExecutionTimeLimitMillis, request.taskExecutionTimeLimitMillis) &&
-            Objects.equals(scheduledExpectedRuntimeMillis, request.scheduledExpectedRuntimeMillis) &&
-            Objects.equals(waitAtLeastMillisAfterTaskFinishesForReschedule, request.waitAtLeastMillisAfterTaskFinishesForReschedule) &&
-            Objects.equals(instances, request.instances) &&
-            Objects.equals(rackSensitive, request.rackSensitive) &&
-            Objects.equals(rackAffinity, request.rackAffinity) &&
-            Objects.equals(slavePlacement, request.slavePlacement) &&
-            Objects.equals(requiredSlaveAttributes, request.requiredSlaveAttributes) &&
-            Objects.equals(allowedSlaveAttributes, request.allowedSlaveAttributes) &&
-            Objects.equals(loadBalanced, request.loadBalanced) &&
-            Objects.equals(group, request.group) &&
-            Objects.equals(readWriteGroups, request.readWriteGroups) &&
-            Objects.equals(readOnlyGroups, request.readOnlyGroups) &&
-            Objects.equals(bounceAfterScale, request.bounceAfterScale) &&
-            Objects.equals(emailConfigurationOverrides, request.emailConfigurationOverrides) &&
-            Objects.equals(hideEvenNumberAcrossRacksHint, request.hideEvenNumberAcrossRacksHint) &&
-            Objects.equals(taskLogErrorRegex, request.taskLogErrorRegex) &&
-            Objects.equals(taskLogErrorRegexCaseSensitive, request.taskLogErrorRegexCaseSensitive) &&
-            Objects.equals(taskPriorityLevel, request.taskPriorityLevel) &&
-            Objects.equals(maxTasksPerOffer, request.maxTasksPerOffer) &&
-            Objects.equals(allowBounceToSameHost, request.allowBounceToSameHost);
+    SingularityRequest that = (SingularityRequest) o;
+    return Objects.equals(id, that.id) &&
+        requestType == that.requestType &&
+        Objects.equals(owners, that.owners) &&
+        Objects.equals(numRetriesOnFailure, that.numRetriesOnFailure) &&
+        Objects.equals(schedule, that.schedule) &&
+        Objects.equals(quartzSchedule, that.quartzSchedule) &&
+        Objects.equals(scheduleType, that.scheduleType) &&
+        Objects.equals(scheduleTimeZone, that.scheduleTimeZone) &&
+        Objects.equals(killOldNonLongRunningTasksAfterMillis, that.killOldNonLongRunningTasksAfterMillis) &&
+        Objects.equals(taskExecutionTimeLimitMillis, that.taskExecutionTimeLimitMillis) &&
+        Objects.equals(scheduledExpectedRuntimeMillis, that.scheduledExpectedRuntimeMillis) &&
+        Objects.equals(waitAtLeastMillisAfterTaskFinishesForReschedule, that.waitAtLeastMillisAfterTaskFinishesForReschedule) &&
+        Objects.equals(instances, that.instances) &&
+        Objects.equals(skipHealthchecks, that.skipHealthchecks) &&
+        Objects.equals(rackSensitive, that.rackSensitive) &&
+        Objects.equals(rackAffinity, that.rackAffinity) &&
+        Objects.equals(slavePlacement, that.slavePlacement) &&
+        Objects.equals(requiredSlaveAttributes, that.requiredSlaveAttributes) &&
+        Objects.equals(allowedSlaveAttributes, that.allowedSlaveAttributes) &&
+        Objects.equals(loadBalanced, that.loadBalanced) &&
+        Objects.equals(group, that.group) &&
+        Objects.equals(requiredRole, that.requiredRole) &&
+        Objects.equals(readWriteGroups, that.readWriteGroups) &&
+        Objects.equals(readOnlyGroups, that.readOnlyGroups) &&
+        Objects.equals(bounceAfterScale, that.bounceAfterScale) &&
+        Objects.equals(emailConfigurationOverrides, that.emailConfigurationOverrides) &&
+        Objects.equals(hideEvenNumberAcrossRacksHint, that.hideEvenNumberAcrossRacksHint) &&
+        Objects.equals(taskLogErrorRegex, that.taskLogErrorRegex) &&
+        Objects.equals(taskLogErrorRegexCaseSensitive, that.taskLogErrorRegexCaseSensitive) &&
+        Objects.equals(taskPriorityLevel, that.taskPriorityLevel) &&
+        Objects.equals(maxTasksPerOffer, that.maxTasksPerOffer) &&
+        Objects.equals(allowBounceToSameHost, that.allowBounceToSameHost);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(id, requestType, owners, numRetriesOnFailure, schedule, quartzSchedule, scheduleTimeZone, scheduleType, killOldNonLongRunningTasksAfterMillis, taskExecutionTimeLimitMillis, scheduledExpectedRuntimeMillis, waitAtLeastMillisAfterTaskFinishesForReschedule, instances, rackSensitive, rackAffinity, slavePlacement, requiredSlaveAttributes, allowedSlaveAttributes, loadBalanced, group, readWriteGroups, readOnlyGroups, bounceAfterScale, emailConfigurationOverrides, hideEvenNumberAcrossRacksHint, taskLogErrorRegex, taskLogErrorRegexCaseSensitive, taskPriorityLevel, maxTasksPerOffer, allowBounceToSameHost);
+    return Objects.hash(id, requestType, owners, numRetriesOnFailure, schedule, quartzSchedule, scheduleType, scheduleTimeZone, killOldNonLongRunningTasksAfterMillis, taskExecutionTimeLimitMillis, scheduledExpectedRuntimeMillis, waitAtLeastMillisAfterTaskFinishesForReschedule, instances, skipHealthchecks, rackSensitive, rackAffinity, slavePlacement, requiredSlaveAttributes, allowedSlaveAttributes, loadBalanced, group, requiredRole, readWriteGroups, readOnlyGroups, bounceAfterScale, emailConfigurationOverrides, hideEvenNumberAcrossRacksHint, taskLogErrorRegex, taskLogErrorRegexCaseSensitive, taskPriorityLevel, maxTasksPerOffer, allowBounceToSameHost);
+  }
+
+  @Override
+  public String toString() {
+    return "SingularityRequest{" +
+        "id='" + id + '\'' +
+        ", requestType=" + requestType +
+        ", owners=" + owners +
+        ", numRetriesOnFailure=" + numRetriesOnFailure +
+        ", schedule=" + schedule +
+        ", quartzSchedule=" + quartzSchedule +
+        ", scheduleType=" + scheduleType +
+        ", scheduleTimeZone=" + scheduleTimeZone +
+        ", killOldNonLongRunningTasksAfterMillis=" + killOldNonLongRunningTasksAfterMillis +
+        ", taskExecutionTimeLimitMillis=" + taskExecutionTimeLimitMillis +
+        ", scheduledExpectedRuntimeMillis=" + scheduledExpectedRuntimeMillis +
+        ", waitAtLeastMillisAfterTaskFinishesForReschedule=" + waitAtLeastMillisAfterTaskFinishesForReschedule +
+        ", instances=" + instances +
+        ", skipHealthchecks=" + skipHealthchecks +
+        ", rackSensitive=" + rackSensitive +
+        ", rackAffinity=" + rackAffinity +
+        ", slavePlacement=" + slavePlacement +
+        ", requiredSlaveAttributes=" + requiredSlaveAttributes +
+        ", allowedSlaveAttributes=" + allowedSlaveAttributes +
+        ", loadBalanced=" + loadBalanced +
+        ", group=" + group +
+        ", requiredRole=" + requiredRole +
+        ", readWriteGroups=" + readWriteGroups +
+        ", readOnlyGroups=" + readOnlyGroups +
+        ", bounceAfterScale=" + bounceAfterScale +
+        ", emailConfigurationOverrides=" + emailConfigurationOverrides +
+        ", hideEvenNumberAcrossRacksHint=" + hideEvenNumberAcrossRacksHint +
+        ", taskLogErrorRegex=" + taskLogErrorRegex +
+        ", taskLogErrorRegexCaseSensitive=" + taskLogErrorRegexCaseSensitive +
+        ", taskPriorityLevel=" + taskPriorityLevel +
+        ", maxTasksPerOffer=" + maxTasksPerOffer +
+        ", allowBounceToSameHost=" + allowBounceToSameHost +
+        '}';
   }
 }

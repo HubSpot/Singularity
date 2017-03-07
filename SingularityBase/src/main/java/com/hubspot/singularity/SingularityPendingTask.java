@@ -59,23 +59,20 @@ public class SingularityPendingTask {
   }
 
   @Override
-  public int hashCode() {
-    return Objects.hashCode(pendingTaskId);
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+    SingularityPendingTask that = (SingularityPendingTask) o;
+    return Objects.equals(pendingTaskId, that.pendingTaskId);
   }
 
   @Override
-  public boolean equals(Object obj) {
-    if (this == obj) {
-      return true;
-    }
-    if (obj == null) {
-      return false;
-    }
-    if (getClass() != obj.getClass()) {
-      return false;
-    }
-    SingularityPendingTask other = (SingularityPendingTask) obj;
-    return Objects.equals(pendingTaskId, other.getPendingTaskId());
+  public int hashCode() {
+    return Objects.hash(pendingTaskId);
   }
 
   public Optional<String> getUser() {
@@ -112,8 +109,15 @@ public class SingularityPendingTask {
 
   @Override
   public String toString() {
-    return "SingularityPendingTask [pendingTaskId=" + pendingTaskId + ", cmdLineArgsList=" + cmdLineArgsList + ", user=" + user + ", runId=" + runId + ", skipHealthchecks=" + skipHealthchecks
-        + ", message=" + message + ", resources=" + resources + ", actionId=" + actionId + "]";
+    return "SingularityPendingTask{" +
+        "pendingTaskId=" + pendingTaskId +
+        ", cmdLineArgsList=" + cmdLineArgsList +
+        ", user=" + user +
+        ", runId=" + runId +
+        ", skipHealthchecks=" + skipHealthchecks +
+        ", message=" + message +
+        ", resources=" + resources +
+        ", actionId=" + actionId +
+        '}';
   }
-
 }

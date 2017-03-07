@@ -94,7 +94,7 @@ public class MesosTaskStatisticsObject {
 
   @Override
   public String toString() {
-    return "MesosTaskStatisticsObject [" +
+    return "MesosTaskStatisticsObject{" +
         "cpusLimit=" + cpusLimit +
         ", cpusNrPeriods=" + cpusNrPeriods +
         ", cpusNrThrottled=" + cpusNrThrottled +
@@ -107,6 +107,6 @@ public class MesosTaskStatisticsObject {
         ", memMappedFileBytes=" + memMappedFileBytes +
         ", memRssBytes=" + memRssBytes +
         ", timestamp=" + timestamp +
-        ']';
+        '}';
   }
 }

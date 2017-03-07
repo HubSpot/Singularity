@@ -98,8 +98,18 @@ public class SingularityPendingRequest {
 
   @Override
   public String toString() {
-    return "SingularityPendingRequest [requestId=" + requestId + ", deployId=" + deployId + ", timestamp=" + timestamp + ", pendingType=" + pendingType + ", user=" + user + ", cmdLineArgsList="
-        + cmdLineArgsList + ", runId=" + runId + ", skipHealthchecks=" + skipHealthchecks + ", message=" + message + ", actionId=" + actionId + ", resources=" + resources + "]";
+    return "SingularityPendingRequest{" +
+        "requestId='" + requestId + '\'' +
+        ", deployId='" + deployId + '\'' +
+        ", timestamp=" + timestamp +
+        ", pendingType=" + pendingType +
+        ", user=" + user +
+        ", cmdLineArgsList=" + cmdLineArgsList +
+        ", runId=" + runId +
+        ", skipHealthchecks=" + skipHealthchecks +
+        ", message=" + message +
+        ", actionId=" + actionId +
+        ", resources=" + resources +
+        '}';
   }
-
 }

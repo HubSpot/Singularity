@@ -51,7 +51,9 @@ public class S3Artifact extends RemoteArtifact {
 
   @Override
   public String toString() {
-    return "S3Artifact [s3Bucket=" + s3Bucket + ", s3ObjectKey=" + s3ObjectKey + ", parent=" + super.toString() + "]";
+    return "S3Artifact{" +
+        "s3Bucket='" + s3Bucket + '\'' +
+        ", s3ObjectKey='" + s3ObjectKey + '\'' +
+        "} " + super.toString();
   }
-
 }

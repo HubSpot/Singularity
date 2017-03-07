@@ -64,7 +64,10 @@ public class SingularityTaskRequest implements Comparable<SingularityTaskRequest
 
   @Override
   public String toString() {
-    return "SingularityTaskRequest [request=" + request + ", deploy=" + deploy + ", pendingTask=" + pendingTask + "]";
+    return "SingularityTaskRequest{" +
+        "request=" + request +
+        ", deploy=" + deploy +
+        ", pendingTask=" + pendingTask +
+        '}';
   }
-
 }

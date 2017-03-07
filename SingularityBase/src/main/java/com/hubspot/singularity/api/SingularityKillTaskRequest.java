@@ -52,8 +52,12 @@ public class SingularityKillTaskRequest {
 
   @Override
   public String toString() {
-    return "SingularityKillTaskRequest [message=" + message + ", override=" + override + ", actionId=" + actionId + ", waitForReplacementTask=" + waitForReplacementTask + ", runShellCommandBeforeKill=" + runShellCommandBeforeKill
-      + "]";
+    return "SingularityKillTaskRequest{" +
+        "message=" + message +
+        ", override=" + override +
+        ", actionId=" + actionId +
+        ", waitForReplacementTask=" + waitForReplacementTask +
+        ", runShellCommandBeforeKill=" + runShellCommandBeforeKill +
+        '}';
   }
-
 }

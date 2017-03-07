@@ -76,9 +76,17 @@ public class SingularityRequestCleanup {
 
   @Override
   public String toString() {
-    return "SingularityRequestCleanup [user=" + user + ", cleanupType=" + cleanupType + ", killTasks=" + killTasks + ", skipHealthchecks=" + skipHealthchecks + ", deployId=" + deployId
-        + ", timestamp=" + timestamp + ", requestId=" + requestId + ", message=" + message + ", actionId=" + actionId + ", runShellCommandBeforeKill=" + runShellCommandBeforeKill + "]";
+    return "SingularityRequestCleanup{" +
+        "user=" + user +
+        ", cleanupType=" + cleanupType +
+        ", killTasks=" + killTasks +
+        ", skipHealthchecks=" + skipHealthchecks +
+        ", deployId=" + deployId +
+        ", timestamp=" + timestamp +
+        ", requestId='" + requestId + '\'' +
+        ", message=" + message +
+        ", actionId=" + actionId +
+        ", runShellCommandBeforeKill=" + runShellCommandBeforeKill +
+        '}';
   }
-
-
 }

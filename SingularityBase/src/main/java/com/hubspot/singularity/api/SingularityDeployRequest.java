@@ -58,7 +58,11 @@ public class SingularityDeployRequest {
 
   @Override
   public String toString() {
-    return "SingularityDeployRequest [unpauseOnSuccessfulDeploy=" + unpauseOnSuccessfulDeploy + ", deploy=" + deploy + ", message=" + message + ", updatedRequest=" + updatedRequest + "]";
+    return "SingularityDeployRequest{" +
+        "unpauseOnSuccessfulDeploy=" + unpauseOnSuccessfulDeploy +
+        ", deploy=" + deploy +
+        ", message=" + message +
+        ", updatedRequest=" + updatedRequest +
+        '}';
   }
-
 }
