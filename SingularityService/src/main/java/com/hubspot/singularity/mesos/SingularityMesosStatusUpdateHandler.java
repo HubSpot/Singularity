@@ -1,9 +1,8 @@
 package com.hubspot.singularity.mesos;
 
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
+import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.Lock;
@@ -67,7 +66,7 @@ public class SingularityMesosStatusUpdateHandler implements Managed {
   private final SingularityScheduler scheduler;
   private final Provider<SingularitySchedulerStateCache> stateCacheProvider;
   private final String serverId;
-  private final BlockingQueue<Protos.TaskStatus> statusUpdateQueue;
+  private final LinkedBlockingDeque<Protos.TaskStatus> statusUpdateQueue;
   private final ExecutorService executorService;
   private final SchedulerDriverSupplier schedulerDriverSupplier;
   private final AtomicBoolean handlerStarted;
@@ -78,7 +77,7 @@ public class SingularityMesosStatusUpdateHandler implements Managed {
   private final Multiset<Protos.TaskStatus.Reason> taskLostReasons;
   private final Meter lostTasksMeter;
 
-  private Future statusUpdateFuture;
+  private Future<?> statusUpdateFuture;
 
   @Inject
   public SingularityMesosStatusUpdateHandler(TaskManager taskManager, DeployManager deployManager, RequestManager requestManager,
@@ -112,7 +111,7 @@ public class SingularityMesosStatusUpdateHandler implements Managed {
     this.lostTasksMeter = lostTasksMeter;
     this.handlerStarted = new AtomicBoolean();
 
-    this.statusUpdateQueue = new ArrayBlockingQueue<>(configuration.getStatusUpdateQueueCapacity());
+    this.statusUpdateQueue = new LinkedBlockingDeque<>(configuration.getStatusUpdateQueueCapacity());
     this.executorService = executorService;
     this.processStatusUpdatesInSeparateThread = configuration.isProcessStatusUpdatesInSeparateThread();
   }
@@ -172,10 +171,6 @@ public class SingularityMesosStatusUpdateHandler implements Managed {
     return Optional.absent();
   }
 
-  private void updateDisasterStats(Protos.TaskStatus status) {
-
-  }
-
   private SchedulerDriver getSchedulerDriver() {
     final Optional<SchedulerDriver> maybeSchedulerDriver = schedulerDriverSupplier.get();
 
@@ -200,7 +195,7 @@ public class SingularityMesosStatusUpdateHandler implements Managed {
 
     LOG.debug("Update: task {} is now {} ({}) at {} (delta: {})", taskId, status.getState(), status.getMessage(), timestamp, JavaUtils.durationFromMillis(delta));
 
-    if (delta > configuration.getIgnoreStatusUpdatesOlderThanMillis()) {
+    if (configuration.getIgnoreStatusUpdatesOlderThanMillis() > 0 && delta > configuration.getIgnoreStatusUpdatesOlderThanMillis()) {
       LOG.warn("Ignoring status update for task {} - delta {} is higher than {}", taskId, JavaUtils.durationFromMillis(delta),
           JavaUtils.durationFromMillis(configuration.getIgnoreStatusUpdatesOlderThanMillis()));
       return;
@@ -335,7 +330,7 @@ public class SingularityMesosStatusUpdateHandler implements Managed {
         LOG.info("Status update handler thread started");
         while (!Thread.currentThread().isInterrupted()) {
           try {
-            final Protos.TaskStatus status = statusUpdateQueue.take();
+            final Protos.TaskStatus status = statusUpdateQueue.takeLast();
             LOG.info("Handling status update for {} to {} - queue size {}", status.getTaskId().getValue(), status.getState(), statusUpdateQueue.size());
             processStatusUpdate(status);
           } catch (InterruptedException ie) {

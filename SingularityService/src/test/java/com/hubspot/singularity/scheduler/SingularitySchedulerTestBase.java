@@ -193,6 +193,8 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
   public final void setupDriver() throws Exception {
     driver = driverSupplier.get().get();
 
+    configuration.setIgnoreStatusUpdatesOlderThanMillis(0);
+
     migrationRunner.checkMigrations();
   }
 
