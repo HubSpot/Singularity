@@ -19,6 +19,7 @@ import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.hubspot.mesos.MesosUtils;
 import com.hubspot.mesos.Resources;
+import com.hubspot.singularity.RequestType;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskRequest;
 import com.hubspot.singularity.SlaveMatchState;
@@ -152,6 +153,17 @@ public class SingularityMesosOfferScheduler {
       if (tooManyTasksPerOfferForRequest(tasksPerOfferPerRequest, offerId, taskRequestHolder.getTaskRequest())) {
         LOG.debug("Skipping task request for request id {}, too many tasks already scheduled using offer {}", taskRequest.getRequest().getId(), offerId);
         continue;
+      }
+
+      if (taskRequest.getRequest().getRequestType() == RequestType.ON_DEMAND) {
+        int maxActiveOnDemandTasks = taskRequest.getRequest().getInstances().or(configuration.getMaxActiveOnDemandTasksPerRequest());
+        if (maxActiveOnDemandTasks > 0) {
+          int activeTasksForRequest = stateCache.getActiveTaskIdsForRequest(taskRequest.getRequest().getId()).size();
+          if (activeTasksForRequest >= maxActiveOnDemandTasks) {
+            LOG.debug("Skipping pending task {}, already running {} instances for request {} (max is {})", taskRequest.getPendingTask().getPendingTaskId(), activeTasksForRequest);
+            continue;
+          }
+        }
       }
 
       if (LOG.isTraceEnabled()) {

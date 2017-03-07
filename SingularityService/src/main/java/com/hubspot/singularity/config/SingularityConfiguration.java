@@ -312,6 +312,8 @@ public class SingularityConfiguration extends Configuration {
 
   private boolean allowBounceToSameHost = false;
 
+  private int maxActiveOnDemandTasksPerRequest = 0;
+
   public long getAskDriverToKillTasksAgainAfterMillis() {
     return askDriverToKillTasksAgainAfterMillis;
   }
@@ -1259,4 +1261,11 @@ public class SingularityConfiguration extends Configuration {
     this.cacheOffers = cacheOffers;
   }
 
+  public int getMaxActiveOnDemandTasksPerRequest() {
+    return maxActiveOnDemandTasksPerRequest;
+  }
+
+  public void setMaxActiveOnDemandTasksPerRequest(int maxActiveOnDemandTasksPerRequest) {
+    this.maxActiveOnDemandTasksPerRequest = maxActiveOnDemandTasksPerRequest;
+  }
 }
