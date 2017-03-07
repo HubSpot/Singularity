@@ -319,6 +319,8 @@ public class SingularityConfiguration extends Configuration {
   @Min(1)
   private int statusUpdateQueueCapacity = 1000;
 
+  private long ignoreStatusUpdatesOlderThanMillis = TimeUnit.MINUTES.toMillis(3);
+
   private boolean processStatusUpdatesInSeparateThread = false;
 
   private boolean rebalanceRacksOnScaleDown = false;
@@ -1318,6 +1320,14 @@ public class SingularityConfiguration extends Configuration {
 
   public void setNumUsageToKeep(int numUsageToKeep) {
     this.numUsageToKeep = numUsageToKeep;
+  }
+
+  public long getIgnoreStatusUpdatesOlderThanMillis() {
+    return ignoreStatusUpdatesOlderThanMillis;
+  }
+
+  public void setIgnoreStatusUpdatesOlderThanMillis(long ignoreStatusUpdatesOlderThanMillis) {
+    this.ignoreStatusUpdatesOlderThanMillis = ignoreStatusUpdatesOlderThanMillis;
   }
 
 }
