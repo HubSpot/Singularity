@@ -17,6 +17,8 @@ import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.mesos.MesosUtils;
+import com.hubspot.singularity.SingularityAction;
+import com.hubspot.singularity.data.DisasterManager;
 
 @Singleton
 public class SingularityMesosScheduler implements Scheduler {
@@ -32,16 +34,18 @@ public class SingularityMesosScheduler implements Scheduler {
   private final SingularityMesosOfferScheduler offerScheduler;
 
   private final SingularityMesosStatusUpdateHandler statusUpdateHandler;
+  private final DisasterManager disasterManager;
 
   @Inject
   public SingularityMesosScheduler(SingularityMesosFrameworkMessageHandler messageHandler, SingularitySlaveAndRackManager slaveAndRackManager, SchedulerDriverSupplier schedulerDriverSupplier,
-      OfferCache offerCache, SingularityMesosOfferScheduler offerScheduler, SingularityMesosStatusUpdateHandler statusUpdateHandler) {
+                                   OfferCache offerCache, SingularityMesosOfferScheduler offerScheduler, SingularityMesosStatusUpdateHandler statusUpdateHandler, DisasterManager disasterManager) {
     this.messageHandler = messageHandler;
     this.slaveAndRackManager = slaveAndRackManager;
     this.schedulerDriverSupplier = schedulerDriverSupplier;
     this.offerCache = offerCache;
     this.offerScheduler = offerScheduler;
     this.statusUpdateHandler = statusUpdateHandler;
+    this.disasterManager = disasterManager;
   }
 
   @Override
@@ -60,6 +64,13 @@ public class SingularityMesosScheduler implements Scheduler {
   @Timed
   public void resourceOffers(SchedulerDriver driver, List<Protos.Offer> offers) {
     LOG.info("Received {} offer(s)", offers.size());
+    if (disasterManager.isDisabled(SingularityAction.PROCESS_OFFERS)) {
+      LOG.info("Processing offers is currently disabled, declining {} offers", offers.size());
+      for (Protos.Offer offer : offers) {
+        driver.declineOffer(offer.getId());
+      }
+      return;
+    }
 
     for (Offer offer : offers) {
       String rolesInfo = MesosUtils.getRoles(offer).toString();
