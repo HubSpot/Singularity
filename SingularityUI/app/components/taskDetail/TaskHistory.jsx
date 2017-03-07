@@ -16,7 +16,7 @@ function TaskHistory (props) {
         data={_.sortBy(props.taskUpdates.concat(previousHistories), 'timestamp').reverse()}
         keyGetter={(taskUpdate) => taskUpdate.timestamp}
         rowChunkSize={5}
-        paginated={true}
+        paginated={false}
         rowClassName={(rowData, index) => classNames({'medium-weight': index === 0})}
       >
         <Column
