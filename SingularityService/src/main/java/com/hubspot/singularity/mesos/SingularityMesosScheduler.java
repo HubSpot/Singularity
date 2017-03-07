@@ -27,6 +27,7 @@ import com.google.inject.Provider;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.mesos.MesosUtils;
 import com.hubspot.mesos.Resources;
+import com.hubspot.singularity.SingularityAction;
 import com.hubspot.singularity.SingularityPriorityFreezeParent;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskRequest;
@@ -35,6 +36,7 @@ import com.hubspot.singularity.SlaveMatchState;
 import com.hubspot.singularity.config.CustomExecutorConfiguration;
 import com.hubspot.singularity.config.MesosConfiguration;
 import com.hubspot.singularity.config.SingularityConfiguration;
+import com.hubspot.singularity.data.DisasterManager;
 import com.hubspot.singularity.data.PriorityManager;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.scheduler.SingularityScheduler;
@@ -55,6 +57,7 @@ public class SingularityMesosScheduler implements Scheduler {
   private final SingularityMesosFrameworkMessageHandler messageHandler;
   private final SingularitySlaveAndRackManager slaveAndRackManager;
   private final SingularityTaskSizeOptimizer taskSizeOptimizer;
+  private final DisasterManager disasterManager;
 
 
   private final Provider<SingularitySchedulerStateCache> stateCacheProvider;
@@ -66,7 +69,7 @@ public class SingularityMesosScheduler implements Scheduler {
   public SingularityMesosScheduler(MesosConfiguration mesosConfiguration, CustomExecutorConfiguration customExecutorConfiguration, TaskManager taskManager, PriorityManager priorityManager,
       SingularityScheduler scheduler, SingularityConfiguration configuration, SingularityMesosTaskBuilder mesosTaskBuilder,
       SingularityMesosFrameworkMessageHandler messageHandler, SingularitySlaveAndRackManager slaveAndRackManager, SingularityTaskSizeOptimizer taskSizeOptimizer,
-      Provider<SingularitySchedulerStateCache> stateCacheProvider, SchedulerDriverSupplier schedulerDriverSupplier, SingularityMesosStatusUpdateHandler statusUpdateHandler) {
+      Provider<SingularitySchedulerStateCache> stateCacheProvider, SchedulerDriverSupplier schedulerDriverSupplier, SingularityMesosStatusUpdateHandler statusUpdateHandler, DisasterManager disasterManager) {
     this.defaultResources = new Resources(mesosConfiguration.getDefaultCpus(), mesosConfiguration.getDefaultMemory(), 0, mesosConfiguration.getDefaultDisk());
     this.defaultCustomExecutorResources = new Resources(customExecutorConfiguration.getNumCpus(), customExecutorConfiguration.getMemoryMb(), 0, customExecutorConfiguration.getDiskMb());
     this.taskManager = taskManager;
@@ -79,6 +82,7 @@ public class SingularityMesosScheduler implements Scheduler {
     this.taskSizeOptimizer = taskSizeOptimizer;
     this.stateCacheProvider = stateCacheProvider;
     this.schedulerDriverSupplier = schedulerDriverSupplier;
+    this.disasterManager = disasterManager;
 
     this.statusUpdateHandler = statusUpdateHandler;
   }
@@ -118,6 +122,13 @@ public class SingularityMesosScheduler implements Scheduler {
   @Timed
   public void resourceOffers(SchedulerDriver driver, List<Protos.Offer> offers) {
     LOG.info("Received {} offer(s)", offers.size());
+    if (disasterManager.isDisabled(SingularityAction.PROCESS_OFFERS)) {
+      LOG.info("Processing offers is currently disabled, declining {} offers", offers.size());
+      for (Protos.Offer offer : offers) {
+        driver.declineOffer(offer.getId());
+      }
+      return;
+    }
 
     for (Offer offer : offers) {
       String rolesInfo = MesosUtils.getRoles(offer).toString();
