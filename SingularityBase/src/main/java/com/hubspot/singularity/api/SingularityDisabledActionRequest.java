@@ -2,6 +2,7 @@ package com.hubspot.singularity.api;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 import com.google.common.base.Optional;
 import com.hubspot.singularity.SingularityAction;
@@ -47,7 +48,7 @@ public class SingularityDisabledActionRequest {
 
   @Override
   public String toString() {
-    return Objects.toStringHelper(this)
+    return MoreObjects.toStringHelper(this)
       .add("type", type)
       .add("message", message)
       .toString();

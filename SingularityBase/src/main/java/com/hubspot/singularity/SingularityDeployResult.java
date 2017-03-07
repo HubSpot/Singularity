@@ -5,7 +5,7 @@ import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Optional;
 
 public class SingularityDeployResult {
@@ -39,7 +39,7 @@ public class SingularityDeployResult {
     this.deployState = deployState;
     this.lbUpdate = lbUpdate;
     this.message = message;
-    this.deployFailures = Objects.firstNonNull(deployFailures, Collections.<SingularityDeployFailure> emptyList());
+    this.deployFailures = MoreObjects.firstNonNull(deployFailures, Collections.<SingularityDeployFailure> emptyList());
     this.timestamp = timestamp;
   }
 

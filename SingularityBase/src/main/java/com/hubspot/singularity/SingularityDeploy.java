@@ -11,7 +11,7 @@ import java.util.Set;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Optional;
 import com.hubspot.deploy.ExecutorData;
 import com.hubspot.deploy.HealthcheckOptions;
@@ -532,7 +532,7 @@ public class SingularityDeploy {
 
   @Override
   public String toString() {
-    return Objects.toStringHelper(this)
+    return MoreObjects.toStringHelper(this)
       .add("requestId", requestId)
       .add("id", id)
       .add("version", version)

@@ -4,6 +4,7 @@ import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 
 public class SingularityDisastersData {
@@ -53,7 +54,7 @@ public class SingularityDisastersData {
 
   @Override
   public String toString() {
-    return Objects.toStringHelper(this)
+    return MoreObjects.toStringHelper(this)
       .add("stats", stats)
       .add("disasters", disasters)
       .add("automatedActionDisabled", automatedActionDisabled)

@@ -2,6 +2,7 @@ package com.hubspot.singularity;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 import com.google.common.primitives.Longs;
 
@@ -92,7 +93,7 @@ public class SingularityDisasterDataPoint implements Comparable<SingularityDisas
 
   @Override
   public String toString() {
-    return Objects.toStringHelper(this)
+    return MoreObjects.toStringHelper(this)
       .add("timestamp", timestamp)
       .add("numActiveTasks", numActiveTasks)
       .add("numPendingTasks", numPendingTasks)

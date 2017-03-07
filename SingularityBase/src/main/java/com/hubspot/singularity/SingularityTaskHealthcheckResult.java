@@ -3,6 +3,7 @@ package com.hubspot.singularity;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 import com.google.common.base.Optional;
 import com.google.common.collect.ComparisonChain;
@@ -91,7 +92,7 @@ public class SingularityTaskHealthcheckResult extends SingularityTaskIdHolder im
 
   @Override
   public String toString() {
-    return Objects.toStringHelper(this)
+    return MoreObjects.toStringHelper(this)
       .add("statusCode", statusCode)
       .add("durationMillis", durationMillis)
       .add("responseBody", responseBody)

@@ -44,6 +44,7 @@
     <mesos.version>0.28.2</mesos.version>
     <singularitybase.image.revision>2</singularitybase.image.revision>
     <aws.sdk.version>1.10.77</aws.sdk.version>
+    <dep.guava.version>20.0</dep.guava.version>
   </properties>
 
   <modules>
