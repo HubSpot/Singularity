@@ -202,7 +202,9 @@ public class SingularityMesosStatusUpdateHandler implements Managed {
     final Optional<SingularityTaskId> maybeTaskId = getTaskId(taskId);
 
     if (!maybeTaskId.isPresent()) {
-      getSchedulerDriver().acknowledgeStatusUpdate(status);
+      if (processStatusUpdatesInSeparateThread) {
+        getSchedulerDriver().acknowledgeStatusUpdate(status);
+      }
       return;
     }
 
@@ -215,7 +217,9 @@ public class SingularityMesosStatusUpdateHandler implements Managed {
     if (isDuplicateOrIgnorableStatusUpdate(previousTaskStatusHolder, newTaskStatusHolder)) {
       LOG.trace("Ignoring status update {} to {}", taskState, taskIdObj);
       saveNewTaskStatusHolder(taskIdObj, newTaskStatusHolder, taskState);
-      getSchedulerDriver().acknowledgeStatusUpdate(status);
+      if (processStatusUpdatesInSeparateThread) {
+        getSchedulerDriver().acknowledgeStatusUpdate(status);
+      }
       return;
     }
 
@@ -276,7 +280,9 @@ public class SingularityMesosStatusUpdateHandler implements Managed {
     }
 
     saveNewTaskStatusHolder(taskIdObj, newTaskStatusHolder, taskState);
-    getSchedulerDriver().acknowledgeStatusUpdate(status);
+    if (processStatusUpdatesInSeparateThread) {
+      getSchedulerDriver().acknowledgeStatusUpdate(status);
+    }
   }
 
   @Timed
