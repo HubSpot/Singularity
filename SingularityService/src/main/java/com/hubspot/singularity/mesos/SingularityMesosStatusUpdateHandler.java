@@ -4,6 +4,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.Lock;
 
@@ -15,6 +16,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.codahale.metrics.Meter;
+import com.codahale.metrics.Timer;
 import com.codahale.metrics.annotation.Timed;
 import com.google.common.base.Optional;
 import com.google.common.base.Strings;
@@ -76,6 +78,7 @@ public class SingularityMesosStatusUpdateHandler implements Managed {
   private final SingularityConfiguration configuration;
   private final Multiset<Protos.TaskStatus.Reason> taskLostReasons;
   private final Meter lostTasksMeter;
+  private final Timer statusUpdateDeltaTimer;
 
   private Future<?> statusUpdateFuture;
 
@@ -90,7 +93,8 @@ public class SingularityMesosStatusUpdateHandler implements Managed {
       SingularityConfiguration configuration,
       SingularityAbort singularityAbort,
       @Named(SingularityMesosModule.TASK_LOST_REASONS_COUNTER) Multiset<Protos.TaskStatus.Reason> taskLostReasons,
-      @Named(SingularityMainModule.LOST_TASKS_METER) Meter lostTasksMeter) {
+      @Named(SingularityMainModule.LOST_TASKS_METER) Meter lostTasksMeter,
+      @Named(SingularityMainModule.STATUS_UPDATE_DELTA_TIMER) Timer statusUpdateDeltaTimer) {
     this.taskManager = taskManager;
     this.deployManager = deployManager;
     this.requestManager = requestManager;
@@ -114,6 +118,7 @@ public class SingularityMesosStatusUpdateHandler implements Managed {
     this.statusUpdateQueue = new LinkedBlockingDeque<>(configuration.getStatusUpdateQueueCapacity());
     this.executorService = executorService;
     this.processStatusUpdatesInSeparateThread = configuration.isProcessStatusUpdatesInSeparateThread();
+    this.statusUpdateDeltaTimer = statusUpdateDeltaTimer;
   }
 
   /**
@@ -194,6 +199,7 @@ public class SingularityMesosStatusUpdateHandler implements Managed {
     long delta = System.currentTimeMillis() - timestamp;
 
     LOG.debug("Update: task {} is now {} ({}) at {} (delta: {})", taskId, status.getState(), status.getMessage(), timestamp, JavaUtils.durationFromMillis(delta));
+    statusUpdateDeltaTimer.update(delta, TimeUnit.MILLISECONDS);
 
     final Optional<SingularityTaskId> maybeTaskId = getTaskId(taskId);
 
