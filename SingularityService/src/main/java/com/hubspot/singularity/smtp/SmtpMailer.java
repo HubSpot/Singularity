@@ -31,7 +31,6 @@ import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.ExtendedTaskState;
 import com.hubspot.singularity.RequestType;
 import com.hubspot.singularity.SingularityAction;
-import com.hubspot.singularity.SingularityDisaster;
 import com.hubspot.singularity.SingularityDisastersData;
 import com.hubspot.singularity.SingularityEmailDestination;
 import com.hubspot.singularity.SingularityEmailType;
@@ -91,6 +90,7 @@ public class SmtpMailer implements SingularityMailer, Managed {
       MetadataManager metadataManager,
       SingularityExceptionNotifier exceptionNotifier,
       MailTemplateHelpers mailTemplateHelpers,
+      DisasterManager disasterManager,
       @Named(SingularityMainModule.TASK_TEMPLATE) JadeTemplate taskTemplate,
       @Named(SingularityMainModule.REQUEST_IN_COOLDOWN_TEMPLATE) JadeTemplate requestInCooldownTemplate,
       @Named(SingularityMainModule.REQUEST_MODIFIED_TEMPLATE) JadeTemplate requestModifiedTemplate,
@@ -112,6 +112,7 @@ public class SmtpMailer implements SingularityMailer, Managed {
     this.requestInCooldownTemplate = requestInCooldownTemplate;
     this.rateLimitedTemplate = rateLimitedTemplate;
     this.disastersTemplate = disastersTemplate;
+    this.disasterManager = disasterManager;
 
     this.mailPreparerExecutorService = JavaUtils.newFixedTimingOutThreadPool(smtpConfiguration.getMailMaxThreads(), TimeUnit.SECONDS.toMillis(1), "SingularityMailPreparer-%d");
   }
