@@ -238,6 +238,10 @@ public class IndexView extends View {
     return redirectOnUnauthorizedUrl;
   }
 
+  public boolean isShortenSlaveUsageHostname() {
+    return shortenSlaveUsageHostname;
+  }
+
   @Override
   public String toString() {
     return "IndexView{" +
@@ -271,6 +275,6 @@ public class IndexView extends View {
         ", timestampWithSecondsFormat='" + timestampWithSecondsFormat + '\'' +
         ", redirectOnUnauthorizedUrl='" + redirectOnUnauthorizedUrl + '\'' +
         ", extraScript='" + extraScript + '\'' +
-        '}';
+        "} " + super.toString();
   }
 }
