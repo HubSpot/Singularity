@@ -23,6 +23,7 @@ import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.codahale.metrics.Meter;
 import com.codahale.metrics.MetricRegistry;
+import com.codahale.metrics.Timer;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
@@ -105,7 +106,7 @@ public class SingularityMainModule implements Module {
 
   public static final String LOST_TASKS_METER = "singularity.lost.tasks.meter";
 
-  public static final String STATUS_UPDATE_DELTA_METER = "singularity.status.update.delta.meter";
+  public static final String STATUS_UPDATE_DELTA_TIMER = "singularity.status.update.delta.timer";
 
   private final SingularityConfiguration configuration;
 
@@ -362,8 +363,8 @@ public class SingularityMainModule implements Module {
 
   @Provides
   @Singleton
-  @Named(STATUS_UPDATE_DELTA_METER)
-  public Meter providesStatusUpdateDeltaMeter(MetricRegistry registry) {
-    return registry.meter("com.hubspot.singularity.statusUpdateDelta");
+  @Named(STATUS_UPDATE_DELTA_TIMER)
+  public Timer providesStatusUpdateDeltaMeter(MetricRegistry registry) {
+    return registry.timer("com.hubspot.singularity.statusUpdateDelta");
   }
 }
