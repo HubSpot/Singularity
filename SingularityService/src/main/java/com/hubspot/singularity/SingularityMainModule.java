@@ -105,6 +105,8 @@ public class SingularityMainModule implements Module {
 
   public static final String LOST_TASKS_METER = "singularity.lost.tasks.meter";
 
+  public static final String STATUS_UPDATE_DELTA_METER = "singularity.status.update.delta.meter";
+
   private final SingularityConfiguration configuration;
 
   public SingularityMainModule(final SingularityConfiguration configuration) {
@@ -356,5 +358,12 @@ public class SingularityMainModule implements Module {
   @Named(LOST_TASKS_METER)
   public Meter providesLostTasksMeter(MetricRegistry registry) {
     return registry.meter("com.hubspot.singularity.lostTasks");
+  }
+
+  @Provides
+  @Singleton
+  @Named(STATUS_UPDATE_DELTA_METER)
+  public Meter providesStatusUpdateDeltaMeter(MetricRegistry registry) {
+    return registry.meter("com.hubspot.singularity.statusUpdateDelta");
   }
 }
