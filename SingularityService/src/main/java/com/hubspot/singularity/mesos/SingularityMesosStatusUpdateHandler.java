@@ -197,12 +197,6 @@ public class SingularityMesosStatusUpdateHandler implements Managed {
 
     LOG.debug("Update: task {} is now {} ({}) at {} (delta: {})", taskId, status.getState(), status.getMessage(), timestamp, JavaUtils.durationFromMillis(delta));
 
-    if (configuration.getIgnoreStatusUpdatesOlderThanMillis() > 0 && delta > configuration.getIgnoreStatusUpdatesOlderThanMillis()) {
-      LOG.warn("Ignoring status update for task {} - delta {} is higher than {}", taskId, JavaUtils.durationFromMillis(delta),
-          JavaUtils.durationFromMillis(configuration.getIgnoreStatusUpdatesOlderThanMillis()));
-      return;
-    }
-
     final Optional<SingularityTaskId> maybeTaskId = getTaskId(taskId);
 
     if (!maybeTaskId.isPresent()) {
@@ -309,7 +303,7 @@ public class SingularityMesosStatusUpdateHandler implements Managed {
         if (statusUpdateFuture == null || statusUpdateFuture.isDone()) {
           singularityAbort.abort(AbortReason.NO_RUNNING_STATUS_UPDATE_THREAD, Optional.<Throwable>absent());
         }
-        LOG.info("Enqueing status update {} for {} - queue size: {} (max: {})", status.getTaskId().getValue(), status.getState(), statusUpdateQueue.size(),
+        LOG.info("Enqueing status update {}-{} for {} - queue size: {} (max: {})", status.getState(), status.getUuid(), status.getTaskId().getValue(), statusUpdateQueue.size(),
             configuration.getStatusUpdateQueueCapacity());
         statusUpdateQueue.put(status);
       } catch (InterruptedException ie) {
@@ -338,7 +332,7 @@ public class SingularityMesosStatusUpdateHandler implements Managed {
         LOG.info("Status update handler thread started");
         while (!Thread.currentThread().isInterrupted()) {
           try {
-            final Protos.TaskStatus status = statusUpdateQueue.takeLast();
+            final Protos.TaskStatus status = statusUpdateQueue.take();
             LOG.info("Handling status update for {} to {} - queue size {}", status.getTaskId().getValue(), status.getState(), statusUpdateQueue.size());
             processStatusUpdate(status);
           } catch (InterruptedException ie) {
