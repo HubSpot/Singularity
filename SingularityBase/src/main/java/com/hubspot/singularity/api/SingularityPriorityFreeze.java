@@ -51,23 +51,23 @@ public class SingularityPriorityFreeze {
     }
     SingularityPriorityFreeze that = (SingularityPriorityFreeze) o;
     return Double.compare(that.minimumPriorityLevel, minimumPriorityLevel) == 0 &&
-      Objects.equals(killTasks, that.killTasks) &&
-      Objects.equals(message, that.message) &&
-      Objects.equals(actionId, that.actionId);
+        killTasks == that.killTasks &&
+        Objects.equals(message, that.message) &&
+        Objects.equals(actionId, that.actionId);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(minimumPriorityLevel, message, actionId);
+    return Objects.hash(minimumPriorityLevel, killTasks, message, actionId);
   }
 
   @Override
   public String toString() {
-    return "SingularityPriorityFreeze[" +
-      "minimumPriorityLevel=" + minimumPriorityLevel +
-      ", killTasks=" + killTasks +
-      ", message=" + message +
-      ", actionId=" + actionId +
-      ']';
+    return "SingularityPriorityFreeze{" +
+        "minimumPriorityLevel=" + minimumPriorityLevel +
+        ", killTasks=" + killTasks +
+        ", message=" + message +
+        ", actionId=" + actionId +
+        '}';
   }
 }

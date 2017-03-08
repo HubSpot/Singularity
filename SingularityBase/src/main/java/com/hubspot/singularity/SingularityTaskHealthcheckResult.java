@@ -1,9 +1,10 @@
 package com.hubspot.singularity;
 
+import java.util.Objects;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.Objects;
 import com.google.common.base.Optional;
 import com.google.common.collect.ComparisonChain;
 import com.hubspot.mesos.JavaUtils;
@@ -48,16 +49,16 @@ public class SingularityTaskHealthcheckResult extends SingularityTaskIdHolder im
     }
     SingularityTaskHealthcheckResult that = (SingularityTaskHealthcheckResult) o;
     return startup == that.startup &&
-      timestamp == that.timestamp &&
-      Objects.equal(statusCode, that.statusCode) &&
-      Objects.equal(durationMillis, that.durationMillis) &&
-      Objects.equal(responseBody, that.responseBody) &&
-      Objects.equal(errorMessage, that.errorMessage);
+        timestamp == that.timestamp &&
+        Objects.equals(statusCode, that.statusCode) &&
+        Objects.equals(durationMillis, that.durationMillis) &&
+        Objects.equals(responseBody, that.responseBody) &&
+        Objects.equals(errorMessage, that.errorMessage);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hashCode(statusCode, durationMillis, responseBody, errorMessage, startup, timestamp);
+    return Objects.hash(statusCode, durationMillis, responseBody, errorMessage, startup, timestamp);
   }
 
   public Optional<Integer> getStatusCode() {
@@ -91,13 +92,13 @@ public class SingularityTaskHealthcheckResult extends SingularityTaskIdHolder im
 
   @Override
   public String toString() {
-    return Objects.toStringHelper(this)
-      .add("statusCode", statusCode)
-      .add("durationMillis", durationMillis)
-      .add("responseBody", responseBody)
-      .add("errorMessage", errorMessage)
-      .add("startup", startup)
-      .add("timestamp", timestamp)
-      .toString();
+    return "SingularityTaskHealthcheckResult{" +
+        "statusCode=" + statusCode +
+        ", durationMillis=" + durationMillis +
+        ", responseBody=" + responseBody +
+        ", errorMessage=" + errorMessage +
+        ", startup=" + startup +
+        ", timestamp=" + timestamp +
+        "} " + super.toString();
   }
 }

@@ -4,11 +4,11 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.Objects;
 import com.google.common.base.Optional;
 import com.wordnik.swagger.annotations.ApiModelProperty;
 
@@ -109,6 +109,7 @@ public class SingularityDockerInfo {
     return dockerParameters;
   }
 
+
   @Override
   public boolean equals(Object o) {
     if (this == o) {
@@ -119,29 +120,29 @@ public class SingularityDockerInfo {
     }
     SingularityDockerInfo that = (SingularityDockerInfo) o;
     return privileged == that.privileged &&
-      forcePullImage == that.forcePullImage &&
-      Objects.equal(image, that.image) &&
-      Objects.equal(network, that.network) &&
-      Objects.equal(portMappings, that.portMappings) &&
-      Objects.equal(parameters, that.parameters) &&
-      Objects.equal(dockerParameters, that.dockerParameters);
+        forcePullImage == that.forcePullImage &&
+        Objects.equals(image, that.image) &&
+        Objects.equals(network, that.network) &&
+        Objects.equals(portMappings, that.portMappings) &&
+        Objects.equals(parameters, that.parameters) &&
+        Objects.equals(dockerParameters, that.dockerParameters);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hashCode(image, privileged, network, portMappings, forcePullImage, parameters, dockerParameters);
+    return Objects.hash(image, privileged, network, portMappings, forcePullImage, parameters, dockerParameters);
   }
 
   @Override
   public String toString() {
-    return Objects.toStringHelper(this)
-      .add("image", image)
-      .add("privileged", privileged)
-      .add("network", network)
-      .add("portMappings", portMappings)
-      .add("forcePullImage", forcePullImage)
-      .add("parameters", parameters)
-      .add("dockerParameters", dockerParameters)
-      .toString();
+    return "SingularityDockerInfo{" +
+        "image='" + image + '\'' +
+        ", privileged=" + privileged +
+        ", network=" + network +
+        ", portMappings=" + portMappings +
+        ", forcePullImage=" + forcePullImage +
+        ", parameters=" + parameters +
+        ", dockerParameters=" + dockerParameters +
+        '}';
   }
 }

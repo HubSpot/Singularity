@@ -51,16 +51,6 @@ public class Resources {
   }
 
   @Override
-  public String toString() {
-    return "Resources[" +
-        "cpus=" + cpus +
-        ", memoryMb=" + memoryMb +
-        ", numPorts=" + numPorts +
-        ", diskMb=" + diskMb +
-        ']';
-  }
-
-  @Override
   public boolean equals(Object o) {
     if (this == o) {
       return true;
@@ -78,5 +68,15 @@ public class Resources {
   @Override
   public int hashCode() {
     return Objects.hash(cpus, memoryMb, numPorts, diskMb);
+  }
+
+  @Override
+  public String toString() {
+    return "Resources{" +
+        "cpus=" + cpus +
+        ", memoryMb=" + memoryMb +
+        ", numPorts=" + numPorts +
+        ", diskMb=" + diskMb +
+        '}';
   }
 }

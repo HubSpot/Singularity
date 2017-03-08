@@ -1,5 +1,7 @@
 package com.hubspot.singularity.api;
 
+import java.util.Objects;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.wordnik.swagger.annotations.ApiModelProperty;
@@ -32,20 +34,14 @@ public class ContinuationToken {
     if (o == null || getClass() != o.getClass()) {
       return false;
     }
-
-    ContinuationToken token = (ContinuationToken) o;
-
-    if (lastPage != token.lastPage) {
-      return false;
-    }
-    return value != null ? value.equals(token.value) : token.value == null;
+    ContinuationToken that = (ContinuationToken) o;
+    return lastPage == that.lastPage &&
+        Objects.equals(value, that.value);
   }
 
   @Override
   public int hashCode() {
-    int result = value != null ? value.hashCode() : 0;
-    result = 31 * result + (lastPage ? 1 : 0);
-    return result;
+    return Objects.hash(value, lastPage);
   }
 
   @Override

@@ -246,13 +246,40 @@ public class SingularityState {
 
   @Override
   public String toString() {
-    return "SingularityState [activeTasks=" + activeTasks + ", launchingTasks=" + launchingTasks + ", pausedRequests=" + pausedRequests + ", activeRequests=" + activeRequests + ", cooldownRequests=" + cooldownRequests + ", scheduledTasks=" + scheduledTasks
-        + ", lateTasks=" + lateTasks + ", futureTasks=" + futureTasks + ", cleaningTasks=" + cleaningTasks + ", lbCleanupTasks=" + lbCleanupTasks + ", lbCleanupRequests=" + lbCleanupRequests
-        + ", maxTaskLag=" + maxTaskLag + ", pendingRequests=" + pendingRequests + ", cleaningRequests=" + cleaningRequests + ", finishedRequests=" + finishedRequests + ", activeSlaves="
-        + activeSlaves + ", deadSlaves=" + deadSlaves + ", decommissioningSlaves=" + decommissioningSlaves + ", unknownSlaves=" + unknownSlaves + ", activeRacks=" + activeRacks + ", deadRacks="
-        + deadRacks + ", decommissioningRacks=" + decommissioningRacks + ", unknownRacks=" + unknownRacks + ", oldestDeploy=" + oldestDeploy + ", numDeploys=" + numDeploys + ", generatedAt="
-        + generatedAt + ", hostStates=" + hostStates + ", overProvisionedRequestIds=" + overProvisionedRequestIds + ", underProvisionedRequestIds=" + underProvisionedRequestIds
-        + ", overProvisionedRequests=" + overProvisionedRequests + ", underProvisionedRequests=" + underProvisionedRequests + ", authDatastoreHealthy=" + authDatastoreHealthy + ", minimumPriorityLevel=" + minimumPriorityLevel + "]";
+    return "SingularityState{" +
+        "activeTasks=" + activeTasks +
+        ", launchingTasks=" + launchingTasks +
+        ", pausedRequests=" + pausedRequests +
+        ", activeRequests=" + activeRequests +
+        ", cooldownRequests=" + cooldownRequests +
+        ", scheduledTasks=" + scheduledTasks +
+        ", lateTasks=" + lateTasks +
+        ", futureTasks=" + futureTasks +
+        ", cleaningTasks=" + cleaningTasks +
+        ", lbCleanupTasks=" + lbCleanupTasks +
+        ", lbCleanupRequests=" + lbCleanupRequests +
+        ", maxTaskLag=" + maxTaskLag +
+        ", pendingRequests=" + pendingRequests +
+        ", cleaningRequests=" + cleaningRequests +
+        ", finishedRequests=" + finishedRequests +
+        ", activeSlaves=" + activeSlaves +
+        ", deadSlaves=" + deadSlaves +
+        ", decommissioningSlaves=" + decommissioningSlaves +
+        ", unknownSlaves=" + unknownSlaves +
+        ", activeRacks=" + activeRacks +
+        ", deadRacks=" + deadRacks +
+        ", decommissioningRacks=" + decommissioningRacks +
+        ", unknownRacks=" + unknownRacks +
+        ", oldestDeploy=" + oldestDeploy +
+        ", numDeploys=" + numDeploys +
+        ", generatedAt=" + generatedAt +
+        ", hostStates=" + hostStates +
+        ", overProvisionedRequestIds=" + overProvisionedRequestIds +
+        ", underProvisionedRequestIds=" + underProvisionedRequestIds +
+        ", overProvisionedRequests=" + overProvisionedRequests +
+        ", underProvisionedRequests=" + underProvisionedRequests +
+        ", authDatastoreHealthy=" + authDatastoreHealthy +
+        ", minimumPriorityLevel=" + minimumPriorityLevel +
+        '}';
   }
-
 }

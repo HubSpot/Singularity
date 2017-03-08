@@ -45,7 +45,11 @@ public class SingularityScaleRequest extends SingularityExpiringRequestParent {
 
   @Override
   public String toString() {
-    return "SingularityScaleRequest [instances=" + instances + ", skipHealthchecks=" + skipHealthchecks + ", bounce=" + bounce + ", incremental=" + incremental + ", toString()=" + super.toString() + "]";
+    return "SingularityScaleRequest{" +
+        "instances=" + instances +
+        ", skipHealthchecks=" + skipHealthchecks +
+        ", bounce=" + bounce +
+        ", incremental=" + incremental +
+        "} " + super.toString();
   }
-
 }
