@@ -324,7 +324,7 @@ public class SingularityMesosStatusUpdateHandler implements Managed {
         LOG.info("Status update handler thread started");
         while (!Thread.currentThread().isInterrupted()) {
           try {
-            final Protos.TaskStatus status = statusUpdateQueue.takeLast();
+            final Protos.TaskStatus status = statusUpdateQueue.take();
             LOG.info("Handling status update for {} to {} - queue size {}", status.getTaskId().getValue(), status.getState(), statusUpdateQueue.size());
             processStatusUpdate(status);
           } catch (InterruptedException ie) {
