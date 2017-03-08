@@ -76,6 +76,7 @@ public class SingularityMesosStatusUpdateHandler implements Managed {
   private final SingularityConfiguration configuration;
   private final Multiset<Protos.TaskStatus.Reason> taskLostReasons;
   private final Meter lostTasksMeter;
+  private final Meter statusUpdateDeltaMeter;
 
   private Future<?> statusUpdateFuture;
 
@@ -90,7 +91,8 @@ public class SingularityMesosStatusUpdateHandler implements Managed {
       SingularityConfiguration configuration,
       SingularityAbort singularityAbort,
       @Named(SingularityMesosModule.TASK_LOST_REASONS_COUNTER) Multiset<Protos.TaskStatus.Reason> taskLostReasons,
-      @Named(SingularityMainModule.LOST_TASKS_METER) Meter lostTasksMeter) {
+      @Named(SingularityMainModule.LOST_TASKS_METER) Meter lostTasksMeter,
+      @Named(SingularityMainModule.STATUS_UPDATE_DELTA_METER) Meter statusUpdateDeltaMeter) {
     this.taskManager = taskManager;
     this.deployManager = deployManager;
     this.requestManager = requestManager;
@@ -114,6 +116,7 @@ public class SingularityMesosStatusUpdateHandler implements Managed {
     this.statusUpdateQueue = new LinkedBlockingDeque<>(configuration.getStatusUpdateQueueCapacity());
     this.executorService = executorService;
     this.processStatusUpdatesInSeparateThread = configuration.isProcessStatusUpdatesInSeparateThread();
+    this.statusUpdateDeltaMeter = statusUpdateDeltaMeter;
   }
 
   /**
@@ -194,6 +197,7 @@ public class SingularityMesosStatusUpdateHandler implements Managed {
     long delta = System.currentTimeMillis() - timestamp;
 
     LOG.debug("Update: task {} is now {} ({}) at {} (delta: {})", taskId, status.getState(), status.getMessage(), timestamp, JavaUtils.durationFromMillis(delta));
+    statusUpdateDeltaMeter.mark(delta);
 
     final Optional<SingularityTaskId> maybeTaskId = getTaskId(taskId);
 
