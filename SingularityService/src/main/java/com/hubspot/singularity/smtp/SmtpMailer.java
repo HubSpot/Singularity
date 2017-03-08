@@ -30,6 +30,8 @@ import com.google.inject.name.Named;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.ExtendedTaskState;
 import com.hubspot.singularity.RequestType;
+import com.hubspot.singularity.SingularityAction;
+import com.hubspot.singularity.SingularityDisaster;
 import com.hubspot.singularity.SingularityDisastersData;
 import com.hubspot.singularity.SingularityEmailDestination;
 import com.hubspot.singularity.SingularityEmailType;
@@ -45,6 +47,7 @@ import com.hubspot.singularity.api.SingularityPauseRequest;
 import com.hubspot.singularity.api.SingularityScaleRequest;
 import com.hubspot.singularity.config.SMTPConfiguration;
 import com.hubspot.singularity.config.SingularityConfiguration;
+import com.hubspot.singularity.data.DisasterManager;
 import com.hubspot.singularity.data.MetadataManager;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.sentry.SingularityExceptionNotifier;
@@ -75,6 +78,8 @@ public class SmtpMailer implements SingularityMailer, Managed {
 
   private final Joiner adminJoiner;
   private final MailTemplateHelpers mailTemplateHelpers;
+
+  private final DisasterManager disasterManager;
 
   private static final Pattern TASK_STATUS_BY_PATTERN = Pattern.compile("(\\w+) by \\w+");
 
@@ -277,6 +282,11 @@ public class SmtpMailer implements SingularityMailer, Managed {
 
     if (emailDestination.isEmpty()) {
       LOG.debug("Not configured to send task mail for {}", emailType);
+      return false;
+    }
+
+    if (disasterManager.isDisabled(SingularityAction.SEND_EMAIL)) {
+      LOG.debug("Not sending email because SEND_EMAIL action is disabled.");
       return false;
     }
 
