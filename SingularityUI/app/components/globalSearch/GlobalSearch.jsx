@@ -4,9 +4,9 @@ import { connect } from 'react-redux';
 import { withRouter } from 'react-router';
 import { FetchRequests } from '../../actions/api/requests';
 import { SetVisibility } from '../../actions/ui/globalSearch';
+import { Link } from 'react-router';
 
 import { Typeahead } from 'react-typeahead';
-import fuzzy from 'fuzzy';
 import key from 'keymaster';
 import filterSelector from '../../selectors/requests/filterSelector';
 
@@ -17,7 +17,7 @@ class GlobalSearch extends React.Component {
     visible: React.PropTypes.bool,
     getRequests: React.PropTypes.func,
     setVisibility: React.PropTypes.func,
-    router: React.PropTypes.object
+    router: React.PropTypes.object,
   }
 
   constructor() {
@@ -100,7 +100,11 @@ class GlobalSearch extends React.Component {
   }
 
   renderOption(option, index) {
-    return <span key={index}>{option.id}</span>;
+    return (
+      <Link to={`/request/${option.id}`} key={index}>
+        {option.id}
+      </Link>
+    );
   }
 
   render() {
@@ -150,7 +154,7 @@ class GlobalSearch extends React.Component {
 function mapDispatchToProps(dispatch) {
   return {
     getRequests: () => dispatch(FetchRequests.trigger()),
-    setVisibility: (visible) => dispatch(SetVisibility(visible))
+    setVisibility: (visible) => dispatch(SetVisibility(visible)),
   };
 }
 
