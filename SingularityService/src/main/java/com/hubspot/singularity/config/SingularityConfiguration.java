@@ -1258,4 +1258,5 @@ public class SingularityConfiguration extends Configuration {
     this.allowBounceToSameHost = allowBounceToSameHost;
     return this;
   }
+
 }
