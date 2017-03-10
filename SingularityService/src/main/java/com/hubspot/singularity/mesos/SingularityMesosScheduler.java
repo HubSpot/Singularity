@@ -128,7 +128,7 @@ public class SingularityMesosScheduler implements Scheduler {
 
   @Override
   public void statusUpdate(SchedulerDriver driver, Protos.TaskStatus status) {
-    statusUpdateHandler.enqueueStatusUpdate(status);
+    statusUpdateHandler.processStatusUpdate(status);
   }
 
   @Override
