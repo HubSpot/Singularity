@@ -6,12 +6,19 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.inject.AbstractModule;
+import com.google.inject.Provides;
 import com.google.inject.Scopes;
+import com.google.inject.Singleton;
+import com.google.inject.name.Named;
+import com.hubspot.horizon.HttpClient;
+import com.hubspot.horizon.ning.NingHttpClient;
 import com.hubspot.singularity.config.UIConfiguration;
 import com.hubspot.singularity.guice.GuicePropertyFilteringMessageBodyWriter;
 
 public class SingularityResourceModule extends AbstractModule {
   private static final Logger LOG = LoggerFactory.getLogger(SingularityResourceModule.class);
+
+  public static final String PROXY_TO_LEADER_HTTP_CLIENT = "proxy.to.leader.http.client";
 
   private final UIConfiguration uiConfiguration;
 
@@ -60,5 +67,12 @@ public class SingularityResourceModule extends AbstractModule {
       break;
     }
     }
+  }
+
+  @Provides
+  @Singleton
+  @Named(PROXY_TO_LEADER_HTTP_CLIENT)
+  public HttpClient provideHttpClient() {
+    return new NingHttpClient();
   }
 }

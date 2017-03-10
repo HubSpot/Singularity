@@ -543,4 +543,4 @@ function onLoad(props) {
   props.fechS3Logs(props.params.taskId);
 }
 
-export default connect(mapStateToProps, mapDispatchToProps)(rootComponent(withRouter(TaskDetail), (props) => props.params.taskId, refresh, onLoad));
+export default connect(mapStateToProps, mapDispatchToProps)(rootComponent(withRouter(TaskDetail), (props) => props.params.taskId, refresh, true, true, null, onLoad));
