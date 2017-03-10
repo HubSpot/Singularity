@@ -46,8 +46,8 @@ const Utils = {
     ));
   },
 
-  humanizeSlaveHostName(longHostName) {
-    return (config.shortenSlaveUsageHostname ? longHostName.split('.')[0] : longHostName);
+  humanizeSlaveHostName(longHostName, override=false) {
+    return (config.shortenSlaveUsageHostname || override ? longHostName.split('.')[0] : longHostName);
   },
 
   timestampFromNow(millis) {
