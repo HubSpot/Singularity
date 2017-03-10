@@ -9,7 +9,7 @@ public enum SingularityAction {
   RUN_HEALTH_CHECKS(true),
   ADD_DISASTER(false), REMOVE_DISASTER(false), DISABLE_ACTION(false), ENABLE_ACTION(false), VIEW_DISASTERS(false),
   FREEZE_SLAVE(true), ACTIVATE_SLAVE(true), DECOMMISSION_SLAVE(true), VIEW_SLAVES(false),
-  FREEZE_RACK(true), ACTIVATE_RACK(true), DECOMMISSION_RACK(true), VIEW_RACKS(false), SEND_EMAIL(true);
+  FREEZE_RACK(true), ACTIVATE_RACK(true), DECOMMISSION_RACK(true), VIEW_RACKS(false), SEND_EMAIL(true), PROCESS_OFFERS(true);
 
   private final boolean canDisable;
 
