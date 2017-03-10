@@ -30,7 +30,7 @@ const getMemUtilizationPct = (slaves, slaveUsages) => {
 const SlaveAggregates = ({slaves, slaveUsages, activeTasks}) => {
   return (
     <div className="slave-aggregates row">
-      <div className="total-slaves col-xs-3">
+      <div className="total-slaves col-xs-2">
         <div id="value">
           {slaves.length}
         </div>
@@ -38,7 +38,7 @@ const SlaveAggregates = ({slaves, slaveUsages, activeTasks}) => {
           Active Slaves
         </div>
       </div>
-      <div className="total-tasks col-xs-3">
+      <div className="total-tasks col-xs-2">
         <div id="value">
           {activeTasks}
         </div>
@@ -46,13 +46,13 @@ const SlaveAggregates = ({slaves, slaveUsages, activeTasks}) => {
           Tasks Running
         </div>
       </div>
-      <div className="avg-cpu col-xs-3">
+      <div className="avg-cpu col-xs-2">
         <CircularProgressbar percentage={getCpuUtilizationPct(slaves, slaveUsages)} initialAnimation={true} textForPercentage={(pct) => `${pct}%`} />
         <div id="label">
           Cpu
         </div>
       </div>
-      <div className="avg-memory col-xs-3">
+      <div className="avg-memory col-xs-2">
         <CircularProgressbar percentage={getMemUtilizationPct(slaves, slaveUsages)} initialAnimation={true} textForPercentage={(pct) => `${pct}%`} />
         <div id="label">
           Memory
