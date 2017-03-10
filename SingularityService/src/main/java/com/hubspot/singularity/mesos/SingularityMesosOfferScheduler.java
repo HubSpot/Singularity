@@ -129,11 +129,14 @@ public class SingularityMesosOfferScheduler {
         Optional<SingularityTask> accepted = match(pendingTaskIdToTaskRequest.values(), stateCache, offerHolder, tasksPerOfferPerRequest);
         if (accepted.isPresent()) {
           tasksScheduled++;
-          taskCredits--;
+          if (useTaskCredits) {
+            taskCredits--;
+            LOG.debug("Remaining task credits: {}", taskCredits);
+          }
           offerHolder.addMatchedTask(accepted.get());
           addedTaskInLastLoop = true;
           pendingTaskIdToTaskRequest.remove(accepted.get().getTaskRequest().getPendingTask().getPendingTaskId().getId());
-          if (taskCredits <= 0) {
+          if (useTaskCredits && taskCredits == 0) {
             LOG.info("Used all available task credits, not scheduling any more tasks");
             break;
           }
@@ -155,7 +158,6 @@ public class SingularityMesosOfferScheduler {
   }
 
   private boolean canScheduleAdditionalTasks(int taskCredits) {
-    LOG.debug("Current task credits: {}", taskCredits);
     return taskCredits == -1 || taskCredits > 0;
   }
 

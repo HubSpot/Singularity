@@ -237,7 +237,7 @@ public class DisasterManager extends CuratorAsyncManager {
     int currentCredits = getTaskCredits();
     List<String> updates = getChildren(TASK_CREDITS_UPDATES_PATH);
     if (updates.isEmpty()) {
-      return 0;
+      return currentCredits;
     }
     for (String update : updates) {
       String path = ZKPaths.makePath(TASK_CREDITS_UPDATES_PATH, update);
