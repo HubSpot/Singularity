@@ -674,6 +674,16 @@ public class TaskManager extends CuratorAsyncManager {
     return getChildrenAsIds(PENDING_PATH_ROOT, pendingTaskIdTranscoder);
   }
 
+  public List<SingularityPendingTaskId> getPendingTaskIdsForRequest(final String requestId) {
+    List<SingularityPendingTaskId> pendingTaskIds = getChildrenAsIds(PENDING_PATH_ROOT, pendingTaskIdTranscoder);
+    return ImmutableList.copyOf(Iterables.filter(pendingTaskIds, new Predicate<SingularityPendingTaskId>() {
+      @Override
+      public boolean apply(SingularityPendingTaskId pendingTaskId) {
+        return pendingTaskId.getRequestId().equals(requestId);
+      }
+    }));
+  }
+
   public List<SingularityPendingTask> getPendingTasks() {
     return getAsyncChildren(PENDING_PATH_ROOT, pendingTaskTranscoder);
   }
