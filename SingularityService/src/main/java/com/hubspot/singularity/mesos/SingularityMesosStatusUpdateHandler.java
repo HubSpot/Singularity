@@ -1,6 +1,5 @@
 package com.hubspot.singularity.mesos;
 
-import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
 
@@ -68,8 +67,6 @@ public class SingularityMesosStatusUpdateHandler {
   private final Multiset<Protos.TaskStatus.Reason> taskLostReasons;
   private final Meter lostTasksMeter;
   private final Timer statusUpdateDeltaTimer;
-
-  private Future<?> statusUpdateFuture;
 
   @Inject
   public SingularityMesosStatusUpdateHandler(TaskManager taskManager, DeployManager deployManager, RequestManager requestManager,
