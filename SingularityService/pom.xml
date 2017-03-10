@@ -166,16 +166,6 @@
     </dependency>
 
     <dependency>
-      <groupId>com.hubspot</groupId>
-      <artifactId>HorizonCore</artifactId>
-    </dependency>
-
-    <dependency>
-      <groupId>com.hubspot</groupId>
-      <artifactId>HorizonNing</artifactId>
-    </dependency>
-
-    <dependency>
       <groupId>io.dropwizard</groupId>
       <artifactId>dropwizard-jdbi</artifactId>
     </dependency>
