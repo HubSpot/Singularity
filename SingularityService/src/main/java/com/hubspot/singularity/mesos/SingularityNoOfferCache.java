@@ -48,5 +48,14 @@ public class SingularityNoOfferCache implements OfferCache {
     return Collections.emptyList();
   }
 
+  @Override
+  public void disableOfferCache() {
+    // no-op
+  }
+
+  @Override
+  public void enableOfferCache() {
+    // no-op
+  }
 
 }
