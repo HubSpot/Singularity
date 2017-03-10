@@ -55,7 +55,10 @@ public class SingularityBounceRequest extends SingularityExpiringRequestParent {
 
   @Override
   public String toString() {
-    return "SingularityBounceRequest [incremental=" + incremental + ", skipHealthchecks=" + skipHealthchecks + ", runShellCommandBeforeKill=" + runShellCommandBeforeKill + ", toString()=" + super.toString() + "]";
+    return "SingularityBounceRequest{" +
+        "incremental=" + incremental +
+        ", skipHealthchecks=" + skipHealthchecks +
+        ", runShellCommandBeforeKill=" + runShellCommandBeforeKill +
+        "} " + super.toString();
   }
-
 }

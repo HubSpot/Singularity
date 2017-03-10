@@ -119,3 +119,8 @@ ALTER TABLE `requestHistory` MODIFY `createdAt` TIMESTAMP(3) NOT NULL DEFAULT '1
 ALTER TABLE `taskHistory`
   ADD COLUMN `purged` BOOLEAN NOT NULL DEFAULT false,
   ADD KEY `purged` (`requestId`, `purged`, `updatedAt`);
+
+--changeset ssalinas:16 dbms:mysql
+ALTER TABLE `taskHistory`
+  DROP KEY `startedAt2`,
+  ADD KEY `startedAt3` (`startedAt`)

@@ -2,10 +2,10 @@ package com.hubspot.singularity;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.Objects;
 
 public class SingularityDisasterDataPoints {
   private final List<SingularityDisasterDataPoint> dataPoints;
@@ -32,18 +32,18 @@ public class SingularityDisasterDataPoints {
       return false;
     }
     SingularityDisasterDataPoints that = (SingularityDisasterDataPoints) o;
-    return Objects.equal(dataPoints, that.dataPoints);
+    return Objects.equals(dataPoints, that.dataPoints);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hashCode(dataPoints);
+    return Objects.hash(dataPoints);
   }
 
   @Override
   public String toString() {
-    return Objects.toStringHelper(this)
-      .add("dataPoints", dataPoints)
-      .toString();
+    return "SingularityDisasterDataPoints{" +
+        "dataPoints=" + dataPoints +
+        '}';
   }
 }

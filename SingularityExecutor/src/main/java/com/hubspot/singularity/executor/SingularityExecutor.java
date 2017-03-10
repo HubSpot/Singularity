@@ -7,8 +7,8 @@ import org.apache.mesos.Protos.TaskState;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Optional;
 import com.google.inject.Inject;
+import com.hubspot.mesos.MesosUtils;
 import com.hubspot.singularity.executor.SingularityExecutorMonitor.KillState;
 import com.hubspot.singularity.executor.SingularityExecutorMonitor.SubmitState;
 import com.hubspot.singularity.executor.config.SingularityExecutorTaskBuilder;
@@ -41,7 +41,8 @@ public class SingularityExecutor implements Executor {
    */
   @Override
   public void registered(ExecutorDriver executorDriver, Protos.ExecutorInfo executorInfo, Protos.FrameworkInfo frameworkInfo, Protos.SlaveInfo slaveInfo) {
-    LOG.info("Registered {} with Mesos slave {} for framework {}", executorInfo, slaveInfo, frameworkInfo);
+    LOG.debug("Registered {} with Mesos slave {} for framework {}", executorInfo.getExecutorId().getValue(), slaveInfo.getId().getValue(), frameworkInfo.getId().getValue());
+    LOG.trace("Registered {} with Mesos slave {} for framework {}", MesosUtils.formatForLogging(executorInfo), MesosUtils.formatForLogging(slaveInfo), MesosUtils.formatForLogging(frameworkInfo));
   }
 
   /**
@@ -49,7 +50,8 @@ public class SingularityExecutor implements Executor {
    */
   @Override
   public void reregistered(ExecutorDriver executorDriver, Protos.SlaveInfo slaveInfo) {
-    LOG.info("Re-registered with Mesos slave {}", slaveInfo);
+    LOG.debug("Re-registered with Mesos slave {}", slaveInfo.getId().getValue());
+    LOG.info("Re-registered with Mesos slave {}", MesosUtils.formatForLogging(slaveInfo));
   }
 
   /**
@@ -91,6 +93,7 @@ public class SingularityExecutor implements Executor {
           task.getLog().info("Launched task {} with data {}", taskId, task.getExecutorData());
           break;
       }
+
     } catch (Throwable t) {
       LOG.error("Unexpected exception starting task {}", taskId, t);
 
@@ -146,7 +149,7 @@ public class SingularityExecutor implements Executor {
   public void shutdown(ExecutorDriver executorDriver) {
     LOG.info("Asked to shutdown executor...");
 
-    monitor.shutdown(Optional.of(executorDriver));
+    monitor.shutdown(executorDriver);
   }
 
   /**

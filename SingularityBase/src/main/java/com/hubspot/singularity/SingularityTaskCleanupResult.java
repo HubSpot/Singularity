@@ -24,6 +24,9 @@ public class SingularityTaskCleanupResult {
 
   @Override
   public String toString() {
-    return "SingularityTaskCleanupResult [result=" + result + ", taskId=" + task.getTaskId() + "]";
+    return "SingularityTaskCleanupResult{" +
+        "result=" + result +
+        ", task=" + task +
+        '}';
   }
 }

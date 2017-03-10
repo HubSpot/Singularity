@@ -4,7 +4,7 @@ import java.util.Objects;
 
 import javax.validation.constraints.NotNull;
 
-public class S3GroupOverrideConfiguration {
+public class S3GroupConfiguration {
   @NotNull
   private String s3Bucket;
 
@@ -46,7 +46,7 @@ public class S3GroupOverrideConfiguration {
     if (o == null || getClass() != o.getClass()) {
       return false;
     }
-    S3GroupOverrideConfiguration that = (S3GroupOverrideConfiguration) o;
+    S3GroupConfiguration that = (S3GroupConfiguration) o;
     return Objects.equals(s3Bucket, that.s3Bucket) &&
             Objects.equals(s3AccessKey, that.s3AccessKey) &&
             Objects.equals(s3SecretKey, that.s3SecretKey);

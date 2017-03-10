@@ -1,9 +1,8 @@
 package com.hubspot.singularity;
 
-import com.google.common.base.Objects;
-import com.google.common.base.Optional;
-
 import java.util.List;
+
+import com.google.common.base.Optional;
 
 public class SingularityPaginatedResponse<Q> {
 
@@ -37,11 +36,11 @@ public class SingularityPaginatedResponse<Q> {
 
   @Override
   public String toString() {
-    return Objects.toStringHelper(this)
-      .add("dataCount", dataCount)
-      .add("pageCount", pageCount)
-      .add("page", page)
-      .add("objects", objects)
-      .toString();
+    return "SingularityPaginatedResponse{" +
+        "dataCount=" + dataCount +
+        ", pageCount=" + pageCount +
+        ", page=" + page +
+        ", objects=" + objects +
+        '}';
   }
 }

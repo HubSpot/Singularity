@@ -64,6 +64,12 @@ public class SingularityConfiguration extends Configuration {
 
   private long checkQueuedMailsEveryMillis = TimeUnit.SECONDS.toMillis(15);
 
+  private boolean ldapCacheEnabled = true;
+
+  private long ldapCacheSize = 100;
+
+  private long ldapCacheExpireMillis = TimeUnit.MINUTES.toMillis(1);
+
   private long closeWaitSeconds = 5;
 
   private String commonHostnameSuffixToOmit;
@@ -458,6 +464,30 @@ public class SingularityConfiguration extends Configuration {
 
   public int getDefaultDeployMaxTaskRetries() {
     return defaultDeployMaxTaskRetries;
+  }
+
+  public boolean isLdapCacheEnabled() {
+    return ldapCacheEnabled;
+  }
+
+  public void setLdapCacheEnabled(boolean ldapCacheEnabled) {
+    this.ldapCacheEnabled = ldapCacheEnabled;
+  }
+
+  public long getLdapCacheSize() {
+    return ldapCacheSize;
+  }
+
+  public void setLdapCacheSize(long ldapCacheSize) {
+    this.ldapCacheSize = ldapCacheSize;
+  }
+
+  public long getLdapCacheExpireMillis() {
+    return ldapCacheExpireMillis;
+  }
+
+  public void setLdapCacheExpireMillis(long ldapCacheExpireMillis) {
+    this.ldapCacheExpireMillis = ldapCacheExpireMillis;
   }
 
   public void setDefaultDeployMaxTaskRetries(int defaultDeployMaxTaskRetries) {

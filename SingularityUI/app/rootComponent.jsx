@@ -2,7 +2,7 @@ import React, { PropTypes, Component } from 'react';
 import classNames from 'classnames';
 import { NotFoundNoRoot } from 'components/common/NotFound';
 
-const rootComponent = (Wrapped, title, refresh = _.noop, refreshInterval = true, pageMargin = true, initialize) => class extends Component {
+const rootComponent = (Wrapped, title, refresh = _.noop, onLoad = _.noop, refreshInterval = true, pageMargin = true, initialize) => class extends Component {
 
   static propTypes = {
     notFound: PropTypes.bool,
@@ -52,6 +52,13 @@ const rootComponent = (Wrapped, title, refresh = _.noop, refreshInterval = true,
     }
   }
 
+  componentDidMount() {
+    const onLoadPromise = onLoad(this.props);
+    if (onLoadPromise) {
+      onLoadPromise.catch((reason) => setTimeout(() => { throw new Error(reason); }));
+    }
+  }
+
   componentWillUnmount() {
     this.unmounted = true;
     if (refreshInterval) {
@@ -76,8 +83,12 @@ const rootComponent = (Wrapped, title, refresh = _.noop, refreshInterval = true,
   startRefreshInterval() {
     this.refreshInterval = setInterval(() => {
       const promise = refresh(this.props);
+      const onLoadPromise = onLoad(this.props);
       if (promise) {
         promise.catch((reason) => setTimeout(() => { throw new Error(reason); }));
+      }
+      if (onLoadPromise) {
+        onLoadPromise.catch((reason) => setTimeout(() => { throw new Error(reason); }));
       }
     }, config.globalRefreshInterval);
   }

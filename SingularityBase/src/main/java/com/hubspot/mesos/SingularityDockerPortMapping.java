@@ -1,8 +1,9 @@
 package com.hubspot.mesos;
 
+import java.util.Objects;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.Objects;
 import com.google.common.base.Optional;
 import com.wordnik.swagger.annotations.ApiModelProperty;
 
@@ -55,17 +56,6 @@ public class SingularityDockerPortMapping {
   }
 
   @Override
-  public String toString() {
-    return Objects.toStringHelper(this)
-      .add("containerPortType", containerPortType)
-      .add("hostPortType", hostPortType)
-      .add("containerPort", containerPort)
-      .add("hostPort", hostPort)
-      .add("protocol", protocol)
-      .toString();
-  }
-
-  @Override
   public boolean equals(Object o) {
     if (this == o) {
       return true;
@@ -73,31 +63,27 @@ public class SingularityDockerPortMapping {
     if (o == null || getClass() != o.getClass()) {
       return false;
     }
-
     SingularityDockerPortMapping that = (SingularityDockerPortMapping) o;
-
-    if (!containerPortType.equals(that.containerPortType)) {
-      return false;
-    }
-    if (containerPort != that.containerPort) {
-      return false;
-    }
-    if (!hostPortType.equals(that.hostPortType)) {
-      return false;
-    }
-    if (!protocol.equals(that.protocol)) {
-      return false;
-    }
-    return true;
+    return containerPort == that.containerPort &&
+        hostPort == that.hostPort &&
+        containerPortType == that.containerPortType &&
+        hostPortType == that.hostPortType &&
+        Objects.equals(protocol, that.protocol);
   }
 
   @Override
   public int hashCode() {
-    int result = containerPortType.hashCode();
-    result = 31 * result + hostPortType.hashCode();
-    result = 31 * result + containerPort;
-    result = 31 * result + hostPort;
-    result = 31 * result + protocol.hashCode();
-    return result;
+    return Objects.hash(containerPortType, hostPortType, containerPort, hostPort, protocol);
+  }
+
+  @Override
+  public String toString() {
+    return "SingularityDockerPortMapping{" +
+        "containerPortType=" + containerPortType +
+        ", hostPortType=" + hostPortType +
+        ", containerPort=" + containerPort +
+        ", hostPort=" + hostPort +
+        ", protocol='" + protocol + '\'' +
+        '}';
   }
 }

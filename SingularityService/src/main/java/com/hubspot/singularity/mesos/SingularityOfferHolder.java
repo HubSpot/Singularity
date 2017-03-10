@@ -100,7 +100,8 @@ public class SingularityOfferHolder {
     for (SingularityTask task : acceptedTasks) {
       taskIds.add(task.getTaskId());
       toLaunch.add(task.getMesosTask());
-      LOG.trace("Launching {} mesos task: {}", task.getTaskId(), task.getMesosTask());
+      LOG.debug("Launching {} with offer {}", task.getTaskId(), offer.getId());
+      LOG.trace("Launching {} mesos task: {}", task.getTaskId(), MesosUtils.formatForLogging(task.getMesosTask()));
     }
 
     Status initialStatus = driver.launchTasks(ImmutableList.of(offer.getId()), toLaunch);
