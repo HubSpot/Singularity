@@ -2,7 +2,6 @@ package com.hubspot.singularity.resources;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.DELETE;
@@ -15,15 +14,8 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 
-import org.apache.curator.framework.recipes.leader.LeaderLatch;
-
 import com.google.common.base.Optional;
 import com.google.inject.Inject;
-import com.google.inject.name.Named;
-import com.hubspot.horizon.HttpClient;
-import com.hubspot.horizon.HttpRequest;
-import com.hubspot.horizon.HttpRequest.Method;
-import com.hubspot.horizon.HttpResponse;
 import com.hubspot.singularity.SingularityAction;
 import com.hubspot.singularity.SingularityDisabledAction;
 import com.hubspot.singularity.SingularityDisasterType;
@@ -31,11 +23,9 @@ import com.hubspot.singularity.SingularityDisastersData;
 import com.hubspot.singularity.SingularityService;
 import com.hubspot.singularity.SingularityTaskCredits;
 import com.hubspot.singularity.SingularityUser;
-import com.hubspot.singularity.WebExceptions;
 import com.hubspot.singularity.api.SingularityDisabledActionRequest;
 import com.hubspot.singularity.auth.SingularityAuthorizationHelper;
 import com.hubspot.singularity.data.DisasterManager;
-import com.hubspot.singularity.mesos.SingularityMesosModule;
 import com.wordnik.swagger.annotations.Api;
 import com.wordnik.swagger.annotations.ApiOperation;
 
@@ -48,23 +38,13 @@ public class DisastersResource {
   private final DisasterManager disasterManager;
   private final SingularityAuthorizationHelper authorizationHelper;
   private final Optional<SingularityUser> user;
-  private final LeaderLatch leaderLatch;
-  private final AtomicInteger taskCredits;
-  private final HttpClient httpClient;
-
   @Inject
   public DisastersResource(DisasterManager disasterManager,
                            SingularityAuthorizationHelper authorizationHelper,
-                           Optional<SingularityUser> user,
-                           LeaderLatch leaderLatch,
-                           @Named(SingularityMesosModule.TASK_CREDITS) AtomicInteger taskCredits,
-                           @Named(SingularityResourceModule.PROXY_TO_LEADER_HTTP_CLIENT) HttpClient httpClient) {
+                           Optional<SingularityUser> user) {
     this.disasterManager = disasterManager;
     this.authorizationHelper = authorizationHelper;
     this.user = user;
-    this.leaderLatch = leaderLatch;
-    this.taskCredits = taskCredits;
-    this.httpClient = httpClient;
   }
 
   @GET
@@ -144,26 +124,10 @@ public class DisastersResource {
   @POST
   @Path("/task-credits")
   @ApiOperation(value="Add task credits, enables task credit system if not already enabled")
-  public void addTaskCredits(@QueryParam("credits") Optional<Integer> credits, @Context HttpServletRequest request) throws Exception {
+  public void addTaskCredits(@QueryParam("credits") Optional<Integer> credits) throws Exception {
     authorizationHelper.checkAdminAuthorization(user);
-    WebExceptions.checkBadRequest(credits.isPresent(), "Must specify credits to add");
-    if (leaderLatch.hasLeadership()) {
-      int previous = taskCredits.getAndAdd(credits.get());
-      if (previous == -1) {
-        // If previously disabled, we are starting from -1 not 0. Add one more
-        taskCredits.getAndIncrement();
-      }
-    } else {
-      String leaderUri = leaderLatch.getLeader().getId();
-      HttpRequest.Builder requestBuilder = HttpRequest.newBuilder()
-          .setUrl(String.format("%s/task-credits", leaderUri))
-          .setMethod(Method.POST);
-      copyHeadersAndParams(requestBuilder, request);
-      HttpResponse response = httpClient.execute(requestBuilder.build());
-      if (response.isError()) {
-        throw new RuntimeException(response.getAsString());
-      }
-    }
+    disasterManager.enableTaskCredits();
+    disasterManager.enqueueCreditsChange(credits.or(0));
   }
 
   @DELETE
@@ -171,51 +135,14 @@ public class DisastersResource {
   @ApiOperation(value="Disable task credit system")
   public void disableTaskCredits(@Context HttpServletRequest request) throws Exception {
     authorizationHelper.checkAdminAuthorization(user);
-    if (leaderLatch.hasLeadership()) {
-      taskCredits.getAndSet(-1);
-    } else {
-      String leaderUri = leaderLatch.getLeader().getId();
-      HttpRequest.Builder requestBuilder = HttpRequest.newBuilder()
-          .setUrl(String.format("%s/task-credits", leaderUri))
-          .setMethod(Method.DELETE);
-      copyHeadersAndParams(requestBuilder, request);
-      HttpResponse response = httpClient.execute(requestBuilder.build());
-      if (response.isError()) {
-        throw new RuntimeException(response.getAsString());
-      }
-    }
+    disasterManager.disableTaskCredits();
   }
 
   @GET
   @Path("/task-credits")
   @ApiOperation(value="Get task credit data")
-  public SingularityTaskCredits getTaskCreditData(@Context HttpServletRequest request) throws Exception {
+  public SingularityTaskCredits getTaskCreditData() throws Exception {
     authorizationHelper.checkAdminAuthorization(user);
-    if (leaderLatch.hasLeadership()) {
-      return new SingularityTaskCredits(taskCredits.get() != -1, taskCredits.get());
-    } else {
-      String leaderUri = leaderLatch.getLeader().getId();
-      HttpRequest.Builder requestBuilder = HttpRequest.newBuilder()
-          .setUrl(String.format("%s/task-credits", leaderUri))
-          .setMethod(Method.GET);
-      copyHeadersAndParams(requestBuilder, request);
-      HttpResponse response = httpClient.execute(requestBuilder.build());
-      if (response.isError()) {
-        throw new RuntimeException(response.getAsString());
-      } else {
-        return response.getAs(SingularityTaskCredits.class);
-      }
-    }
-  }
-
-  private void copyHeadersAndParams(HttpRequest.Builder requestBuilder, HttpServletRequest request) {
-    while (request.getHeaderNames().hasMoreElements()) {
-      String headerName = request.getHeaderNames().nextElement();
-      requestBuilder.addHeader(headerName, request.getHeader(headerName));
-    }
-    while (request.getParameterNames().hasMoreElements()) {
-      String parameterName = request.getParameterNames().nextElement();
-      requestBuilder.setQueryParam(parameterName).to(request.getParameter(parameterName));
-    }
+    return new SingularityTaskCredits(disasterManager.isTaskCreditEnabled(), disasterManager.getTaskCredits());
   }
 }

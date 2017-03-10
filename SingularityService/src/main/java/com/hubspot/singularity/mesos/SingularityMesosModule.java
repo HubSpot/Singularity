@@ -56,11 +56,4 @@ public class SingularityMesosModule extends AbstractModule {
   public AtomicInteger provideActiveSlavesLostCounter() {
     return new AtomicInteger();
   }
-
-  @Provides
-  @Named(TASK_CREDITS)
-  @Singleton
-  public AtomicInteger provideTaskCredits() {
-    return new AtomicInteger(-1);
-  }
 }
