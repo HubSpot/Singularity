@@ -6,7 +6,6 @@ import Column from '../common/table/Column';
 import classNames from 'classnames';
 
 function TaskHistory (props) {
-  console.log(_.pluck(_.filter(props.taskUpdates, (update) => {return update.previous.length > 0}), 'previous'));
   const previousHistories = _.flatten(_.pluck(_.filter(props.taskUpdates, (update) => {return update.previous.length > 0}), 'previous'));
 
   return (
