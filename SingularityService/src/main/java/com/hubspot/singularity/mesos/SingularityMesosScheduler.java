@@ -18,6 +18,7 @@ import com.google.inject.Inject;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.mesos.MesosUtils;
 import com.hubspot.singularity.SingularityAction;
+import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.DisasterManager;
 
 @Singleton
@@ -28,17 +29,15 @@ public class SingularityMesosScheduler implements Scheduler {
   private final SingularityMesosFrameworkMessageHandler messageHandler;
   private final SingularitySlaveAndRackManager slaveAndRackManager;
   private final DisasterManager disasterManager;
-
   private final SchedulerDriverSupplier schedulerDriverSupplier;
   private final OfferCache offerCache;
-
   private final SingularityMesosOfferScheduler offerScheduler;
-
   private final SingularityMesosStatusUpdateHandler statusUpdateHandler;
+  private final boolean offerCacheEnabled;
 
   @Inject
   public SingularityMesosScheduler(SingularityMesosFrameworkMessageHandler messageHandler, SingularitySlaveAndRackManager slaveAndRackManager, SchedulerDriverSupplier schedulerDriverSupplier,
-      OfferCache offerCache, SingularityMesosOfferScheduler offerScheduler, SingularityMesosStatusUpdateHandler statusUpdateHandler, DisasterManager disasterManager) {
+      OfferCache offerCache, SingularityMesosOfferScheduler offerScheduler, SingularityMesosStatusUpdateHandler statusUpdateHandler, DisasterManager disasterManager, SingularityConfiguration configuration) {
     this.messageHandler = messageHandler;
     this.slaveAndRackManager = slaveAndRackManager;
     this.schedulerDriverSupplier = schedulerDriverSupplier;
@@ -46,6 +45,7 @@ public class SingularityMesosScheduler implements Scheduler {
     this.offerCache = offerCache;
     this.offerScheduler = offerScheduler;
     this.statusUpdateHandler = statusUpdateHandler;
+    this.offerCacheEnabled = configuration.isCacheOffers();
   }
 
   @Override
@@ -70,6 +70,13 @@ public class SingularityMesosScheduler implements Scheduler {
         driver.declineOffer(offer.getId());
       }
       return;
+    }
+    if (offerCacheEnabled) {
+      if (disasterManager.isDisabled(SingularityAction.CACHE_OFFERS)) {
+        offerCache.disableOfferCache();
+      } else {
+        offerCache.enableOfferCache();
+      }
     }
 
     for (Offer offer : offers) {
