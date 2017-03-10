@@ -20,6 +20,6 @@ public interface OfferCache {
 
   public void returnOffer(CachedOffer cachedOffer);
 
-  public List<Offer> peakOffers();
+  public List<Offer> peekOffers();
 
 }
