@@ -135,7 +135,7 @@ public class SingularityMesosOfferScheduler {
           offerHolder.addMatchedTask(accepted.get());
           addedTaskInLastLoop = true;
           pendingTaskIdToTaskRequest.remove(accepted.get().getTaskRequest().getPendingTask().getPendingTaskId().getId());
-          if (useTaskCredits && taskCredits <= 0) {
+          if (useTaskCredits && taskCredits == 0) {
             LOG.info("Used all available task credits, not scheduling any more tasks");
             break;
           }
