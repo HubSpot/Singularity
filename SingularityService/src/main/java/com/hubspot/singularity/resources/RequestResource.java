@@ -4,6 +4,7 @@ import static com.hubspot.singularity.WebExceptions.badRequest;
 import static com.hubspot.singularity.WebExceptions.checkBadRequest;
 import static com.hubspot.singularity.WebExceptions.checkConflict;
 import static com.hubspot.singularity.WebExceptions.checkNotNullBadRequest;
+import static com.hubspot.singularity.WebExceptions.checkRateLimited;
 
 import java.util.List;
 import java.util.Map;
@@ -37,6 +38,7 @@ import com.hubspot.singularity.SingularityPendingDeploy;
 import com.hubspot.singularity.SingularityPendingRequest;
 import com.hubspot.singularity.SingularityPendingRequest.PendingType;
 import com.hubspot.singularity.SingularityPendingRequestParent;
+import com.hubspot.singularity.SingularityPendingTaskId;
 import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityRequestCleanup;
 import com.hubspot.singularity.SingularityRequestDeployState;
@@ -234,11 +236,19 @@ public class RequestResource extends AbstractRequestResource {
 
     PendingType pendingType = null;
 
+    List<SingularityTaskId> activeTaskIds = taskManager.getActiveTaskIdsForRequest(requestId);
+
     if (requestWithState.getRequest().isScheduled()) {
       pendingType = PendingType.IMMEDIATE;
-      checkConflict(taskManager.getActiveTaskIdsForRequest(requestId).isEmpty(), "Can not request an immediate run of a scheduled job which is currently running (%s)", taskManager.getActiveTaskIdsForRequest(requestId));
+      checkConflict(activeTaskIds.isEmpty(), "Can not request an immediate run of a scheduled job which is currently running (%s)", taskManager.getActiveTaskIdsForRequest(requestId));
     } else if (requestWithState.getRequest().isOneOff()) {
       pendingType = PendingType.ONEOFF;
+      if (requestWithState.getRequest().getInstances().isPresent()) {
+        List<SingularityPendingTaskId> pendingTaskIds = taskManager.getPendingTaskIdsForRequest(requestWithState.getRequest().getId());
+        checkRateLimited(activeTaskIds.size() + pendingTaskIds.size() < requestWithState.getRequest().getInstances().get(),
+            "No more than %s tasks allowed to run concurrently for request %s (%s active, %s pending). Wait for tasks to finish before enqueuing more",
+            requestWithState.getRequest().getInstances().get(), activeTaskIds.size(), pendingTaskIds.size(), requestWithState.getRequest().getId());
+      }
     } else {
       throw badRequest("Can not request an immediate run of a non-scheduled / always running request (%s)", requestWithState.getRequest());
     }
