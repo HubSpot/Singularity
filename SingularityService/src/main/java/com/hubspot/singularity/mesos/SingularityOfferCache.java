@@ -90,7 +90,7 @@ public class SingularityOfferCache implements OfferCache, RemovalListener<String
   }
 
   @Override
-  public List<Offer> peakOffers() {
+  public List<Offer> peekOffers() {
     List<Offer> offers = new ArrayList<>((int) offerCache.size());
     for (CachedOffer cachedOffer : offerCache.asMap().values()) {
       offers.add(cachedOffer.offer);
