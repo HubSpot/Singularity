@@ -84,9 +84,9 @@ public class SingularityTaskHistoryUpdate extends SingularityTaskIdHolder implem
 
   private Set<SingularityTaskHistoryUpdate> getFlattenedPreviousUpdates(SingularityTaskHistoryUpdate update) {
     Set<SingularityTaskHistoryUpdate> previousUpdates = new HashSet<>();
-    for (SingularityTaskHistoryUpdate preivousUpdate : update.getPrevious()) {
-      previousUpdates.add(preivousUpdate.withoutPrevious());
-      previousUpdates.addAll(getFlattenedPreviousUpdates(preivousUpdate));
+    for (SingularityTaskHistoryUpdate previousUpdate : update.getPrevious()) {
+      previousUpdates.add(previousUpdate.withoutPrevious());
+      previousUpdates.addAll(getFlattenedPreviousUpdates(previousUpdate));
     }
     return previousUpdates;
   }
