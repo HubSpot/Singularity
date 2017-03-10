@@ -5,8 +5,8 @@ import { FetchSlaveUsages, FetchSlaves } from '../../actions/api/slaves';
 import { FetchSingularityStatus } from '../../actions/api/state';
 import { STAT_NAMES, WHOLE_NUMBER, HEALTH_SCALE_MAX } from './Constants';
 import Utils from '../../utils';
+import ResourceHealthData from './ResourceHealthData';
 import SlaveAggregates from './SlaveAggregates';
-import SlaveResourceHealth from './SlaveResourceHealth';
 
 const getSlaveInfo = (slaves, slaveUsage) => {
   return _.findWhere(slaves, {'id' : slaveUsage.slaveId});
@@ -31,29 +31,11 @@ const SlaveUsage = ({slaves, slaveUsages, activeTasks}) => {
   const utilizationData = getUtilizationData(activeSlaves, slaveUsages);
 
   const cpuHealthData = utilizationData.sort((a, b) => a.cpuUtilized - b.cpuUtilized).map((data, index) => {
-    return (
-      <SlaveResourceHealth
-        key={index}
-        slaveUsage={data.slaveUsage}
-        slaveInfo={data.slaveInfo}
-        resource={STAT_NAMES.cpusUsedStat}
-        totalResource={data.totalCpuResource}
-        utilization={data.cpuUtilized}
-      />
-    );
+    return <ResourceHealthData key={index} utilizationData={data} statName={STAT_NAMES.cpusUsedStat} />;
   });
 
   const memoryHealthData = utilizationData.sort((a, b) => a.memoryUtilized - b.memoryUtilized).map((data, index) => {
-    return (
-      <SlaveResourceHealth
-        key={index}
-        slaveUsage={data.slaveUsage}
-        slaveInfo={data.slaveInfo}
-        resource={STAT_NAMES.memoryBytesUsedStat}
-        totalResource={data.totalMemoryResource}
-        utilization={data.memoryUtilized}
-      />
-    );
+    return <ResourceHealthData key={index} utilizationData={data} statName={STAT_NAMES.memoryBytesUsedStat} />;
   });
 
   return (
