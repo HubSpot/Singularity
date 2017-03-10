@@ -6,6 +6,8 @@ import UITable from '../common/table/UITable';
 import DisasterButton from './DisasterButton';
 import AutomatedActionsButton from './AutomatedActionsButton';
 import DeletePriorityFreezeButton from './DeletePriorityFreezeButton';
+import DisableTaskCreditsButton from './DisableTaskCreditsButton';
+import AddTaskCreditsButton from './AddTaskCreditsButton';
 import NewPriorityFreezeButton from './NewPriorityFreezeButton';
 import Utils from '../../utils';
 
@@ -70,13 +72,62 @@ function ManageDisasters (props) {
       </div>
     );
   }
+  var taskCredits;
+  if (props.taskCredits.enabled) {
+    taskCredits = (
+      <div>
+        <div className="row">
+          <Panel header="Task Credits">
+            <p>Remaining Credits: {props.taskCredits.remaining}</p>
+            <AddTaskCreditsButton user={props.user} >
+              <button
+                className="btn btn-primary"
+                alt="Add/Enable Task Credits"
+                title="Add/Enable Task Credits">
+                Add Task Credits
+              </button>
+            </AddTaskCreditsButton>
+          </Panel>
+        </div>
+        <div className="row">
+          <DisableTaskCreditsButton user={props.user} >
+            <button
+              className="btn btn-primary"
+              alt="Disable Task Credits"
+              title="Disable Task Credits">
+              Disable Task Credits
+            </button>
+          </DisableTaskCreditsButton>
+        </div>
+      </div>
+    );
+  } else {
+    taskCredits = (
+      <div>
+        <div className="row">
+          <AddTaskCreditsButton user={props.user} >
+            <button
+              className="btn btn-primary"
+              alt="Add/Enable Task Credits"
+              title="Add/Enable Task Credits">
+              Add + Enable Task Credits
+            </button>
+          </AddTaskCreditsButton>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <Section title="Manage">
       <div className="row">
-        <div className="col-md-6">
+        <div className="col-md-3">
           <h3>Priority Freeze</h3>
           {priority}
+        </div>
+        <div className="col-md-3">
+          <h3>Task Credits</h3>
+          {taskCredits}
         </div>
         <div className="col-md-6">
           <h3>Disasters</h3>
@@ -158,6 +209,10 @@ ManageDisasters.propTypes = {
     }).isRequired,
     timestamp: PropTypes.number,
     user: PropTypes.string
+  }),
+  taskCredits: PropTypes.shape({
+    enabled: PropTypes.bool,
+    remaining: PropTypes.number
   }),
   automatedActionsDisabled: PropTypes.bool
 };

@@ -524,4 +524,4 @@ const onLoad = (taskId) => (dispatch) => {
   return dispatch(FetchTaskS3Logs.trigger(taskId));
 };
 
-export default connect(mapStateToProps, mapDispatchToProps)(rootComponent(withRouter(TaskDetail), (props) => refresh(props.params.taskId), (props) => onLoad(props.params.taskId)));
+export default connect(mapStateToProps, mapDispatchToProps)(rootComponent(withRouter(TaskDetail), (props) => refresh(props.params.taskId), true, true, null, (props) => onLoad(props.params.taskId)));

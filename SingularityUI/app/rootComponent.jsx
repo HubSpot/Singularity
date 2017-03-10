@@ -2,7 +2,7 @@ import React, { PropTypes, Component } from 'react';
 import classNames from 'classnames';
 import { NotFoundNoRoot } from 'components/common/NotFound';
 
-const rootComponent = (Wrapped, refresh = null, onLoad = null, refreshInterval = true, pageMargin = true, initialize = null) => class extends Component {
+const rootComponent = (Wrapped, refresh = null, refreshInterval = true, pageMargin = true, initialize = null, onLoad = null) => class extends Component {
 
   static propTypes = {
     notFound: PropTypes.bool,
