@@ -1,6 +1,6 @@
 import React, { Component, PropTypes } from 'react';
 import { connect } from 'react-redux';
-import { FetchPriorityFreeze, DeletePriorityFreeze, ClearPriorityFreeze } from '../../actions/api/disasters';
+import { FetchPriorityFreeze, DeletePriorityFreeze } from '../../actions/api/disasters';
 import FormModal from '../common/modal/FormModal';
 
 class DeletePriorityFreezeModal extends Component {
@@ -30,7 +30,7 @@ class DeletePriorityFreezeModal extends Component {
 }
 
 const mapDispatchToProps = (dispatch) => ({
-  deletePriorityFreeze: () => dispatch(ClearPriorityFreeze.trigger())
+  deletePriorityFreeze: () => Promise.resolve(dispatch(FetchPriorityFreeze.clear()))
     .then(() => dispatch(DeletePriorityFreeze.trigger()))
     .then(() => dispatch(FetchPriorityFreeze.trigger([404]))),
 });
