@@ -44,7 +44,7 @@ public class SingularityNoOfferCache implements OfferCache {
   }
 
   @Override
-  public List<Offer> peakOffers() {
+  public List<Offer> peekOffers() {
     return Collections.emptyList();
   }
 
