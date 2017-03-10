@@ -148,7 +148,11 @@ public class DisastersResource {
     authorizationHelper.checkAdminAuthorization(user);
     WebExceptions.checkBadRequest(credits.isPresent(), "Must specify credits to add");
     if (leaderLatch.hasLeadership()) {
-      taskCredits.getAndAdd(credits.get());
+      int previous = taskCredits.getAndAdd(credits.get());
+      if (previous == -1) {
+        // If previously disabled, we are starting from -1 not 0. Add one more
+        taskCredits.getAndIncrement();
+      }
     } else {
       String leaderUri = leaderLatch.getLeader().getId();
       HttpRequest.Builder requestBuilder = HttpRequest.newBuilder()
