@@ -99,6 +99,9 @@ public class SingularityHostState {
         ", uptime=" + uptime +
         ", driverStatus='" + driverStatus + '\'' +
         ", millisSinceLastOffer=" + millisSinceLastOffer +
+        ", offerCacheSize=" + offerCacheSize +
+        ", availableCachedCpus=" + availableCachedCpus +
+        ", availableCachedMemory=" + availableCachedMemory +
         ", hostAddress='" + hostAddress + '\'' +
         ", hostname='" + hostname + '\'' +
         ", mesosMaster='" + mesosMaster + '\'' +
