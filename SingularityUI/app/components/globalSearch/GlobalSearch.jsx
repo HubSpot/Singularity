@@ -6,9 +6,9 @@ import { FetchRequests } from '../../actions/api/requests';
 import { SetVisibility } from '../../actions/ui/globalSearch';
 import { refresh } from '../../actions/ui/requestDetail';
 import { push } from 'react-router-redux';
+import { Link } from 'react-router';
 
 import { Typeahead } from 'react-typeahead';
-import fuzzy from 'fuzzy';
 import key from 'keymaster';
 import filterSelector from '../../selectors/requests/filterSelector';
 
@@ -19,7 +19,9 @@ class GlobalSearch extends React.Component {
     visible: React.PropTypes.bool,
     getRequests: React.PropTypes.func,
     setVisibility: React.PropTypes.func,
-    router: React.PropTypes.object
+    router: React.PropTypes.object,
+    push: React.PropTypes.func.isRequired,
+    refresh: React.PropTypes.func.isRequired,
   }
 
   constructor() {
@@ -103,7 +105,11 @@ class GlobalSearch extends React.Component {
   }
 
   renderOption(option, index) {
-    return <span key={index}>{option.id}</span>;
+    return (
+      <Link to={`/request/${option.id}`} key={index}>
+        {option.id}
+      </Link>
+    );
   }
 
   render() {
@@ -150,12 +156,20 @@ class GlobalSearch extends React.Component {
   }
 }
 
-export default connect((state) => ({
-  requests: state.api.requests.data,
-  visible: state.ui.globalSearch.visible
-}), {
-  getRequests: FetchRequests.trigger,
-  setVisibility: SetVisibility,
-  push,
-  refresh
-})(withRouter(GlobalSearch));
+function mapDispatchToProps(dispatch) {
+  return {
+    getRequests: () => dispatch(FetchRequests.trigger()),
+    setVisibility: (visible) => dispatch(SetVisibility(visible)),
+    refresh: (requestId) => dispatch(refresh(requestId)),
+    push: (url) => dispatch(push(url)),
+  };
+}
+
+function mapStateToProps(state) {
+  return {
+    requests: state.api.requests.data,
+    visible: state.ui.globalSearch.visible
+  };
+}
+
+export default connect(mapStateToProps, mapDispatchToProps)(withRouter(GlobalSearch));
