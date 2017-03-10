@@ -57,7 +57,10 @@ import com.hubspot.singularity.hooks.LoadBalancerClient;
 import com.hubspot.singularity.hooks.LoadBalancerClientImpl;
 import com.hubspot.singularity.hooks.SingularityWebhookPoller;
 import com.hubspot.singularity.hooks.SingularityWebhookSender;
+import com.hubspot.singularity.mesos.OfferCache;
 import com.hubspot.singularity.mesos.SingularityMesosStatusUpdateHandler;
+import com.hubspot.singularity.mesos.SingularityNoOfferCache;
+import com.hubspot.singularity.mesos.SingularityOfferCache;
 import com.hubspot.singularity.metrics.SingularityGraphiteReporterManaged;
 import com.hubspot.singularity.sentry.NotifyingExceptionMapper;
 import com.hubspot.singularity.sentry.SingularityExceptionNotifier;
@@ -176,6 +179,12 @@ public class SingularityMainModule implements Module {
     binder.bind(SingularityGraphiteReporterManaged.class).in(Scopes.SINGLETON);
 
     binder.bind(SingularityMesosStatusUpdateHandler.class).in(Scopes.SINGLETON);
+
+    if (configuration.isCacheOffers()) {
+      binder.bind(OfferCache.class).to(SingularityOfferCache.class).in(Scopes.SINGLETON);
+    } else {
+      binder.bind(OfferCache.class).to(SingularityNoOfferCache.class).in(Scopes.SINGLETON);
+    }
   }
 
   @Provides
