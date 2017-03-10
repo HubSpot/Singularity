@@ -1,12 +1,12 @@
 import React, { Component, PropTypes } from 'react';
 import { connect } from 'react-redux';
-import { FetchPriorityFreeze, DeletePriorityFreeze } from '../../actions/api/disasters';
+import { FetchPriorityFreeze, DeletePriorityFreeze, ClearPriorityFreeze } from '../../actions/api/disasters';
 import FormModal from '../common/modal/FormModal';
 
 class DeletePriorityFreezeModal extends Component {
   static propTypes = {
     user: PropTypes.string,
-    action: PropTypes.string.isRequired
+    deletePriorityFreeze: PropTypes.func.isRequired,
   };
 
   show() {
@@ -29,8 +29,10 @@ class DeletePriorityFreezeModal extends Component {
   }
 }
 
-const mapDispatchToProps = (dispatch, ownProps) => ({
-  deletePriorityFreeze: () => dispatch(DeletePriorityFreeze.trigger()).then(() => {dispatch(FetchPriorityFreeze.trigger([404]));}),
+const mapDispatchToProps = (dispatch) => ({
+  deletePriorityFreeze: () => dispatch(ClearPriorityFreeze.trigger())
+    .then(() => dispatch(DeletePriorityFreeze.trigger()))
+    .then(() => dispatch(FetchPriorityFreeze.trigger([404]))),
 });
 
 export default connect(

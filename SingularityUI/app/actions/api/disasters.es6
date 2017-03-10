@@ -81,3 +81,13 @@ export const NewPriorityFreeze = buildJsonApiAction(
     body: message == null ? {minimumPriorityLevel: minPriority, killTasks: killTasks} : {minimumPriorityLevel: minPriority, killTasks: killTasks, message: message}
   })
 );
+
+export const ClearPriorityFreeze = {
+  type: 'CLEAR_PRIORITY_FREEZE',
+  trigger() {
+    return (dispatch) => {
+      dispatch({type: this.type});
+      return Promise.resolve();
+    };
+  }
+};

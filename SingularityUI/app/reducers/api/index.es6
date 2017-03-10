@@ -2,6 +2,7 @@ import _ from 'underscore';
 import { combineReducers } from 'redux';
 import buildApiActionReducer from './base';
 import buildKeyedApiActionReducer from './keyed';
+import compose from './compose';
 
 import { FetchUser } from '../../actions/api/auth';
 
@@ -75,11 +76,13 @@ import {
 
 import { FetchWebhooks } from '../../actions/api/webhooks';
 
-import { 
+import {
   FetchDisastersData,
   FetchDisabledActions,
   FetchPriorityFreeze
-} from '../../actions/api/disasters'
+} from '../../actions/api/disasters';
+
+import clearPriorityFreeze from './clearPriorityFreeze';
 
 import { FetchGroups } from '../../actions/api/requestGroups';
 
@@ -89,7 +92,7 @@ const deleteStarredRequests = buildApiActionReducer(DeleteStarredRequests, []);
 const webhooks = buildApiActionReducer(FetchWebhooks, []);
 const disabledActions = buildApiActionReducer(FetchDisabledActions, []);
 const disastersData = buildApiActionReducer(FetchDisastersData, []);
-const priorityFreeze = buildApiActionReducer(FetchPriorityFreeze, []);
+const priorityFreeze = compose(clearPriorityFreeze, buildApiActionReducer(FetchPriorityFreeze, []));
 const slaves = buildApiActionReducer(FetchSlaves, []);
 const freezeSlave = buildApiActionReducer(FreezeSlave, []);
 const decommissionSlave = buildApiActionReducer(DecommissionSlave, []);

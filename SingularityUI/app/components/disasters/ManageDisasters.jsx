@@ -7,6 +7,7 @@ import DisasterButton from './DisasterButton';
 import AutomatedActionsButton from './AutomatedActionsButton';
 import DeletePriorityFreezeButton from './DeletePriorityFreezeButton';
 import NewPriorityFreezeButton from './NewPriorityFreezeButton';
+import EditPriorityFreezeButton from './EditPriorityFreezeButton';
 import Utils from '../../utils';
 
 const DISASTER_TYPES = ['EXCESSIVE_TASK_LAG', 'LOST_SLAVES', 'LOST_TASKS', 'USER_INITIATED']
@@ -50,10 +51,20 @@ function ManageDisasters (props) {
             <button
               className="btn btn-primary"
               alt="Remove Priority Freeze"
-              title="Remove Priority Freeze">
+              title="Remove Priority Freeze"
+            >
               Remove Priority Freeze
             </button>
           </DeletePriorityFreezeButton>
+          <EditPriorityFreezeButton user={props.user} freeze={props.priorityFreeze.priorityFreeze}>
+            <button
+              className="btn btn-default"
+              alt="Edit Priority Freeze"
+              title="Edit Priority Freeze"
+            >
+            Edit Priority Freeze
+            </button>
+          </EditPriorityFreezeButton>
         </div>
         <div className="row">
           <Panel header="Active Priority Freeze">
