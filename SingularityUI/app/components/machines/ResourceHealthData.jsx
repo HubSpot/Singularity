@@ -5,6 +5,7 @@ import { OverlayTrigger, Popover } from 'react-bootstrap';
 import { STAT_NAMES, HUNDREDTHS_PLACE, HEALTH_SCALE, HEALTH_SCALE_MAX } from './Constants';
 
 const overlayTriggers = ['hover', 'focus'];
+const overlayPlacement = 'bottom';
 
 const getTotalForStat = (statName, data) => {
   switch (statName) {
@@ -60,7 +61,7 @@ const slaveQuickStats = (data) => {
 
 const ResourceHealthData = ({utilizationData, statName}) => {
   return (
-    <OverlayTrigger trigger={overlayTriggers} overlay={slaveQuickStats(utilizationData)}>
+    <OverlayTrigger trigger={overlayTriggers} overlay={slaveQuickStats(utilizationData)} placement={overlayPlacement}>
       <span>
         <SlaveResourceHealth
           slaveUsage={utilizationData.slaveUsage}
