@@ -44,6 +44,7 @@
     <mesos.version>0.28.2</mesos.version>
     <singularitybase.image.revision>2</singularitybase.image.revision>
     <aws.sdk.version>1.10.77</aws.sdk.version>
+    <project.build.targetJdk>1.8</project.build.targetJdk>
   </properties>
 
   <modules>
