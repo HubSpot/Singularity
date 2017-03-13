@@ -18,9 +18,11 @@ Retrieve the list of logs stored in S3 for a specific task.
 |-----------|----------|-------------|-----------|
 | start | false | Start timestamp (millis, 13 digit) | long |
 | end | false | End timestamp (mills, 13 digit) | long |
+| excludeMetadata | false | Exclude custom object metadata | boolean |
+| list | false | Do not generate download/get urls, only list the files and metadata | boolean |
 
 ###### Response
-[List[SingularityS3Log]](models.md#model-SingularityS3Log)
+[List[SingularityS3LogMetadata]](models.md#model-SingularityS3LogMetadata)
 
 
 ###### Errors
@@ -30,28 +32,20 @@ Retrieve the list of logs stored in S3 for a specific task.
 
 
 - - -
-#### **GET** `/api/logs/request/{requestId}/read`
+#### **POST** `/api/logs/search`
 
-Retrieve the list of logs stored in S3 for a specific request.
+Retrieve a paginated list of logs stored in S3
 
 
 ###### Parameters
-**path**
+**body**
 
 | Parameter | Required | Description | Data Type |
 |-----------|----------|-------------|-----------|
-| requestId | true | The request ID to search for | string |
-**query**
-
-| Parameter | Required | Description | Data Type |
-|-----------|----------|-------------|-----------|
-| key | false | S3 Key for the log to read | string |
-| offset | false | Offset to read in the log file | long |
-| length | false | Length in bytes to read | int |
-| reverse | false | Read backwards from offset | boolean |
+| body | true |  | [SingularityS3SearchRequest](models.md#model-linkType)</a> |
 
 ###### Response
-[MesosFileChunkObject](models.md#model-MesosFileChunkObject)
+[SingularityS3SearchResult](models.md#model-SingularityS3SearchResult)
 
 
 ###### Errors
@@ -79,9 +73,12 @@ Retrieve the list of logs stored in S3 for a specific deploy.
 |-----------|----------|-------------|-----------|
 | start | false | Start timestamp (millis, 13 digit) | long |
 | end | false | End timestamp (mills, 13 digit) | long |
+| excludeMetadata | false | Exclude custom object metadata | boolean |
+| list | false | Do not generate download/get urls, only list the files and metadata | boolean |
+| maxPerPage | false | Max number of results to return per bucket searched | int |
 
 ###### Response
-[List[SingularityS3Log]](models.md#model-SingularityS3Log)
+[List[SingularityS3LogMetadata]](models.md#model-SingularityS3LogMetadata)
 
 
 ###### Errors
@@ -108,9 +105,12 @@ Retrieve the list of logs stored in S3 for a specific request.
 |-----------|----------|-------------|-----------|
 | start | false | Start timestamp (millis, 13 digit) | long |
 | end | false | End timestamp (mills, 13 digit) | long |
+| excludeMetadata | false | Exclude custom object metadata | boolean |
+| list | false | Do not generate download/get urls, only list the files and metadata | boolean |
+| maxPerPage | false | Max number of results to return per bucket searched | int |
 
 ###### Response
-[List[SingularityS3Log]](models.md#model-SingularityS3Log)
+[List[SingularityS3LogMetadata]](models.md#model-SingularityS3LogMetadata)
 
 
 ###### Errors
