@@ -82,6 +82,25 @@ Start task reconciliation
 
 
 - - -
+#### **POST** `/api/test/purge-history`
+
+Run history purge
+
+
+###### Parameters
+- No parameters
+
+###### Response
+
+
+
+###### Errors
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| - | - | - |
+
+
+- - -
 #### **POST** `/api/test/notleader`
 
 Make this instanceo of Singularity believe it&#39;s lost leadership.
