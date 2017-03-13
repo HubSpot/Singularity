@@ -5,5 +5,5 @@ export const refresh = () => (dispatch) =>
     dispatch(FetchDisabledActions.trigger()),
     dispatch(FetchDisastersData.trigger()),
     dispatch(FetchPriorityFreeze.trigger()),
-    dispathc(FetchTaskCredits.trigger())
+    dispatch(FetchTaskCredits.trigger())
   ]);
