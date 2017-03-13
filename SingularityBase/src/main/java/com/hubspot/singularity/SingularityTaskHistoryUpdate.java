@@ -1,8 +1,9 @@
 package com.hubspot.singularity;
 
-import java.util.Objects;
+
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
 
 import javax.annotation.Nonnull;
