@@ -26,6 +26,7 @@ import com.hubspot.singularity.SlaveMatchState;
 import com.hubspot.singularity.config.CustomExecutorConfiguration;
 import com.hubspot.singularity.config.MesosConfiguration;
 import com.hubspot.singularity.config.SingularityConfiguration;
+import com.hubspot.singularity.data.DisasterManager;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.scheduler.SingularityScheduler;
 import com.hubspot.singularity.scheduler.SingularitySchedulerStateCache;
@@ -45,6 +46,7 @@ public class SingularityMesosOfferScheduler {
   private final SingularitySlaveAndRackManager slaveAndRackManager;
   private final SingularitySlaveAndRackHelper slaveAndRackHelper;
   private final SingularityTaskSizeOptimizer taskSizeOptimizer;
+  private final DisasterManager disasterManager;
 
   private final Provider<SingularitySchedulerStateCache> stateCacheProvider;
   private final SchedulerDriverSupplier schedulerDriverSupplier;
@@ -53,7 +55,7 @@ public class SingularityMesosOfferScheduler {
   public SingularityMesosOfferScheduler(MesosConfiguration mesosConfiguration, CustomExecutorConfiguration customExecutorConfiguration, TaskManager taskManager, SingularityMesosTaskPrioritizer taskPrioritizer,
       SingularityScheduler scheduler, SingularityConfiguration configuration, SingularityMesosTaskBuilder mesosTaskBuilder,
       SingularitySlaveAndRackManager slaveAndRackManager, SingularityTaskSizeOptimizer taskSizeOptimizer, SingularitySlaveAndRackHelper slaveAndRackHelper,
-      Provider<SingularitySchedulerStateCache> stateCacheProvider, SchedulerDriverSupplier schedulerDriverSupplier) {
+      Provider<SingularitySchedulerStateCache> stateCacheProvider, SchedulerDriverSupplier schedulerDriverSupplier, DisasterManager disasterManager) {
     this.defaultResources = new Resources(mesosConfiguration.getDefaultCpus(), mesosConfiguration.getDefaultMemory(), 0, mesosConfiguration.getDefaultDisk());
     this.defaultCustomExecutorResources = new Resources(customExecutorConfiguration.getNumCpus(), customExecutorConfiguration.getMemoryMb(), 0, customExecutorConfiguration.getDiskMb());
     this.taskManager = taskManager;
@@ -64,6 +66,7 @@ public class SingularityMesosOfferScheduler {
     this.taskSizeOptimizer = taskSizeOptimizer;
     this.stateCacheProvider = stateCacheProvider;
     this.slaveAndRackHelper = slaveAndRackHelper;
+    this.disasterManager = disasterManager;
     this.schedulerDriverSupplier = schedulerDriverSupplier;
     this.taskPrioritizer = taskPrioritizer;
   }
@@ -87,6 +90,8 @@ public class SingularityMesosOfferScheduler {
   }
 
   public List<SingularityOfferHolder> checkOffers(final Collection<Protos.Offer> offers, final Set<Protos.OfferID> acceptedOffers) {
+    boolean useTaskCredits = disasterManager.isTaskCreditEnabled();
+    int taskCredits = useTaskCredits ? disasterManager.getUpdatedCreditCount() : -1;
     final SingularitySchedulerStateCache stateCache = stateCacheProvider.get();
 
     scheduler.checkForDecomissions(stateCache);
@@ -111,7 +116,7 @@ public class SingularityMesosOfferScheduler {
 
     int tasksScheduled = 0;
 
-    while (!pendingTaskIdToTaskRequest.isEmpty() && addedTaskInLastLoop) {
+    while (!pendingTaskIdToTaskRequest.isEmpty() && addedTaskInLastLoop && canScheduleAdditionalTasks(taskCredits)) {
       addedTaskInLastLoop = false;
       Collections.shuffle(offerHolders);
 
@@ -124,9 +129,17 @@ public class SingularityMesosOfferScheduler {
         Optional<SingularityTask> accepted = match(pendingTaskIdToTaskRequest.values(), stateCache, offerHolder, tasksPerOfferPerRequest);
         if (accepted.isPresent()) {
           tasksScheduled++;
+          if (useTaskCredits) {
+            taskCredits--;
+            LOG.debug("Remaining task credits: {}", taskCredits);
+          }
           offerHolder.addMatchedTask(accepted.get());
           addedTaskInLastLoop = true;
           pendingTaskIdToTaskRequest.remove(accepted.get().getTaskRequest().getPendingTask().getPendingTaskId().getId());
+          if (useTaskCredits && taskCredits == 0) {
+            LOG.info("Used all available task credits, not scheduling any more tasks");
+            break;
+          }
         }
 
         if (pendingTaskIdToTaskRequest.isEmpty()) {
@@ -135,9 +148,17 @@ public class SingularityMesosOfferScheduler {
       }
     }
 
+    if (useTaskCredits) {
+      disasterManager.saveTaskCreditCount(taskCredits);
+    }
+
     LOG.info("{} tasks scheduled, {} tasks remaining after examining {} offers", tasksScheduled, numDueTasks - tasksScheduled, offers.size());
 
     return offerHolders;
+  }
+
+  private boolean canScheduleAdditionalTasks(int taskCredits) {
+    return taskCredits == -1 || taskCredits > 0;
   }
 
   private Optional<SingularityTask> match(Collection<SingularityTaskRequestHolder> taskRequests, SingularitySchedulerStateCache stateCache, SingularityOfferHolder offerHolder,

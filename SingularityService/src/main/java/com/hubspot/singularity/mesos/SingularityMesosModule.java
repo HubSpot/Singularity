@@ -19,6 +19,7 @@ public class SingularityMesosModule extends AbstractModule {
   public static final String SCHEDULER_LOCK_NAME = "scheduler-lock";
   public static final String TASK_LOST_REASONS_COUNTER = "task-lost-reasons";
   public static final String ACTIVE_SLAVES_LOST_COUNTER = "active-slaves-lost";
+  public static final String TASK_CREDITS = "task-credits";
 
   @Override
   public void configure() {

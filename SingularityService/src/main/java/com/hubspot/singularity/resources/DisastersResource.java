@@ -3,12 +3,15 @@ package com.hubspot.singularity.resources;
 import java.util.Collections;
 import java.util.List;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 
 import com.google.common.base.Optional;
@@ -18,6 +21,7 @@ import com.hubspot.singularity.SingularityDisabledAction;
 import com.hubspot.singularity.SingularityDisasterType;
 import com.hubspot.singularity.SingularityDisastersData;
 import com.hubspot.singularity.SingularityService;
+import com.hubspot.singularity.SingularityTaskCredits;
 import com.hubspot.singularity.SingularityUser;
 import com.hubspot.singularity.api.SingularityDisabledActionRequest;
 import com.hubspot.singularity.auth.SingularityAuthorizationHelper;
@@ -34,9 +38,10 @@ public class DisastersResource {
   private final DisasterManager disasterManager;
   private final SingularityAuthorizationHelper authorizationHelper;
   private final Optional<SingularityUser> user;
-
   @Inject
-  public DisastersResource(DisasterManager disasterManager, SingularityAuthorizationHelper authorizationHelper, Optional<SingularityUser> user) {
+  public DisastersResource(DisasterManager disasterManager,
+                           SingularityAuthorizationHelper authorizationHelper,
+                           Optional<SingularityUser> user) {
     this.disasterManager = disasterManager;
     this.authorizationHelper = authorizationHelper;
     this.user = user;
@@ -114,5 +119,30 @@ public class DisastersResource {
   public void enableAction(@PathParam("action") SingularityAction action) {
     authorizationHelper.checkAdminAuthorization(user);
     disasterManager.enable(action);
+  }
+
+  @POST
+  @Path("/task-credits")
+  @ApiOperation(value="Add task credits, enables task credit system if not already enabled")
+  public void addTaskCredits(@QueryParam("credits") Optional<Integer> credits) throws Exception {
+    authorizationHelper.checkAdminAuthorization(user);
+    disasterManager.enableTaskCredits();
+    disasterManager.enqueueCreditsChange(credits.or(0));
+  }
+
+  @DELETE
+  @Path("/task-credits")
+  @ApiOperation(value="Disable task credit system")
+  public void disableTaskCredits(@Context HttpServletRequest request) throws Exception {
+    authorizationHelper.checkAdminAuthorization(user);
+    disasterManager.disableTaskCredits();
+  }
+
+  @GET
+  @Path("/task-credits")
+  @ApiOperation(value="Get task credit data")
+  public SingularityTaskCredits getTaskCreditData() throws Exception {
+    authorizationHelper.checkAdminAuthorization(user);
+    return new SingularityTaskCredits(disasterManager.isTaskCreditEnabled(), disasterManager.getTaskCredits());
   }
 }
