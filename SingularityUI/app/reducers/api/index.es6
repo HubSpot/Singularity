@@ -78,13 +78,15 @@ import {
 
 import { FetchWebhooks } from '../../actions/api/webhooks';
 
-import { 
+import {
   FetchDisastersData,
   FetchDisabledActions,
   FetchPriorityFreeze
 } from '../../actions/api/disasters'
 
 import { FetchGroups } from '../../actions/api/requestGroups';
+
+import { FetchInactiveHosts } from '../../actions/api/inactive';
 
 const user = buildApiActionReducer(FetchUser);
 const addStarredRequests = buildApiActionReducer(AddStarredRequests, []);
@@ -137,6 +139,7 @@ const task = buildKeyedApiActionReducer(FetchTaskHistory);
 const taskHistory = buildApiActionReducer(FetchTaskSearchParams, []);
 const tasks = buildApiActionReducer(FetchTasksInState, []);
 const requestGroups = buildApiActionReducer(FetchGroups, []);
+const inactiveHosts = buildApiActionReducer(FetchInactiveHosts, []);
 
 export default combineReducers({
   user,
@@ -189,5 +192,6 @@ export default combineReducers({
   runningTask,
   taskKill,
   taskHistory,
-  requestGroups
+  requestGroups,
+  inactiveHosts,
 });

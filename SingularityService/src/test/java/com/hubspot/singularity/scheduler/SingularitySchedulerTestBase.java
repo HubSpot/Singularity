@@ -75,6 +75,7 @@ import com.hubspot.singularity.api.SingularityScaleRequest;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.config.SingularityTaskMetadataConfiguration;
 import com.hubspot.singularity.data.DeployManager;
+import com.hubspot.singularity.data.InactiveSlaveManager;
 import com.hubspot.singularity.data.PriorityManager;
 import com.hubspot.singularity.data.RackManager;
 import com.hubspot.singularity.data.RequestManager;
@@ -111,6 +112,8 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
   protected SlaveManager slaveManager;
   @Inject
   protected RackManager rackManager;
+  @Inject
+  protected InactiveSlaveManager inactiveSlaveManager;
   @Inject
   protected SchedulerDriverSupplier driverSupplier;
   protected SchedulerDriver driver;

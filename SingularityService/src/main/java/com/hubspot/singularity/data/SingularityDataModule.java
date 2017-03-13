@@ -24,6 +24,7 @@ public class SingularityDataModule extends AbstractModule {
     bind(RackManager.class).in(Scopes.SINGLETON);
     bind(RequestManager.class).in(Scopes.SINGLETON);
     bind(SlaveManager.class).in(Scopes.SINGLETON);
+    bind(InactiveSlaveManager.class).in(Scopes.SINGLETON);
     bind(TaskRequestManager.class).in(Scopes.SINGLETON);
     bind(SandboxManager.class).in(Scopes.SINGLETON);
     bind(SingularityValidator.class).in(Scopes.SINGLETON);
