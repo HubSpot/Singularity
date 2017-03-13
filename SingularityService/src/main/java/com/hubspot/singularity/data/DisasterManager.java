@@ -11,6 +11,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.codahale.metrics.MetricRegistry;
+import com.google.common.base.Charsets;
 import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.hubspot.singularity.SingularityAction;
@@ -212,7 +213,7 @@ public class DisasterManager extends CuratorAsyncManager {
   }
 
   public void enqueueCreditsChange(int credits) {
-    save(ZKPaths.makePath(TASK_CREDITS_UPDATES_PATH, UUID.randomUUID().toString()), Optional.of(Integer.toString(credits).getBytes()));
+    save(ZKPaths.makePath(TASK_CREDITS_UPDATES_PATH, UUID.randomUUID().toString()), Optional.of(Integer.toString(credits).getBytes(Charsets.UTF_8)));
   }
 
   public int getTaskCredits() {
@@ -230,7 +231,7 @@ public class DisasterManager extends CuratorAsyncManager {
   }
 
   public void saveTaskCreditCount(int remaining) {
-    save(TASK_CREDIT_COUNT_PATH, Optional.of(Integer.toString(remaining).getBytes()));
+    save(TASK_CREDIT_COUNT_PATH, Optional.of(Integer.toString(remaining).getBytes(Charsets.UTF_8)));
   }
 
   public int getUpdatedCreditCount() {
