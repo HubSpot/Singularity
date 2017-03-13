@@ -1,11 +1,11 @@
 package com.hubspot.singularity;
 
 import java.util.Collections;
+import java.util.Objects;
 import java.util.Set;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.Objects;
 
 public class SingularityUserSettings {
   private final Set<String> starredRequestIds;
@@ -13,7 +13,7 @@ public class SingularityUserSettings {
   @JsonCreator
   public SingularityUserSettings(
       @JsonProperty("starredRequestIds") Set<String> starredRequestIds) {
-    this.starredRequestIds = Objects.firstNonNull(starredRequestIds, Collections.<String>emptySet());
+    this.starredRequestIds = starredRequestIds != null ? starredRequestIds : Collections.<String>emptySet();
   }
 
   public static SingularityUserSettings empty() {
@@ -43,18 +43,18 @@ public class SingularityUserSettings {
       return false;
     }
     SingularityUserSettings that = (SingularityUserSettings) o;
-    return Objects.equal(starredRequestIds, that.starredRequestIds);
+    return Objects.equals(starredRequestIds, that.starredRequestIds);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hashCode(starredRequestIds);
+    return Objects.hash(starredRequestIds);
   }
 
   @Override
   public String toString() {
-    return Objects.toStringHelper(this)
-      .add("starredRequestIds", starredRequestIds)
-      .toString();
+    return "SingularityUserSettings{" +
+        "starredRequestIds=" + starredRequestIds +
+        '}';
   }
 }

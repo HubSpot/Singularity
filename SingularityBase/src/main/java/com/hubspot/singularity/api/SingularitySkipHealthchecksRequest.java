@@ -23,7 +23,8 @@ public class SingularitySkipHealthchecksRequest extends SingularityExpiringReque
 
   @Override
   public String toString() {
-    return "SingularitySkipHealthchecksRequest [skipHealthchecks=" + skipHealthchecks + ", toString()=" + super.toString() + "]";
+    return "SingularitySkipHealthchecksRequest{" +
+        "skipHealthchecks=" + skipHealthchecks +
+        "} " + super.toString();
   }
-
 }

@@ -1,9 +1,10 @@
 package com.hubspot.singularity;
 
+import java.util.Objects;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.Objects;
 import com.google.common.base.Optional;
 import com.google.common.collect.ComparisonChain;
 
@@ -36,28 +37,6 @@ public class SingularityRequestHistory implements Comparable<SingularityRequestH
         .compare(o.getCreatedAt(), createdAt)
         .compare(request.getId(), o.getRequest().getId())
         .result();
-  }
-
-  @Override
-  public int hashCode() {
-    return Objects.hashCode(createdAt, user, eventType, request, message);
-  }
-
-  @Override
-  public boolean equals(Object other) {
-    if (this == other) {
-      return true;
-    }
-    if (other == null || other.getClass() != this.getClass()) {
-      return false;
-    }
-
-    SingularityRequestHistory that = (SingularityRequestHistory) other;
-    return Objects.equal(this.createdAt, that.createdAt)
-        && Objects.equal(this.user, that.user)
-        && Objects.equal(this.eventType, that.eventType)
-        && Objects.equal(this.request, that.request)
-        && Objects.equal(this.message, that.message);
   }
 
   public long getCreatedAt() {
@@ -93,8 +72,34 @@ public class SingularityRequestHistory implements Comparable<SingularityRequestH
   }
 
   @Override
-  public String toString() {
-    return "SingularityRequestHistory [createdAt=" + createdAt + ", user=" + user + ", eventType=" + eventType + ", request=" + request + ", message=" + message + "]";
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+    SingularityRequestHistory that = (SingularityRequestHistory) o;
+    return createdAt == that.createdAt &&
+        Objects.equals(user, that.user) &&
+        eventType == that.eventType &&
+        Objects.equals(request, that.request) &&
+        Objects.equals(message, that.message);
   }
 
+  @Override
+  public int hashCode() {
+    return Objects.hash(createdAt, user, eventType, request, message);
+  }
+
+  @Override
+  public String toString() {
+    return "SingularityRequestHistory{" +
+        "createdAt=" + createdAt +
+        ", user=" + user +
+        ", eventType=" + eventType +
+        ", request=" + request +
+        ", message=" + message +
+        '}';
+  }
 }

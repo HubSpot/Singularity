@@ -1,8 +1,9 @@
 package com.hubspot.singularity;
 
+import java.util.Objects;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.Objects;
 import com.google.common.primitives.Longs;
 
 public class SingularityDisasterDataPoint implements Comparable<SingularityDisasterDataPoint> {
@@ -76,32 +77,32 @@ public class SingularityDisasterDataPoint implements Comparable<SingularityDisas
     }
     SingularityDisasterDataPoint that = (SingularityDisasterDataPoint) o;
     return timestamp == that.timestamp &&
-      numActiveTasks == that.numActiveTasks &&
-      numPendingTasks == that.numPendingTasks &&
-      numLateTasks == that.numLateTasks &&
-      avgTaskLagMillis == that.avgTaskLagMillis &&
-      numLostTasks == that.numLostTasks &&
-      numActiveSlaves == that.numActiveSlaves &&
-      numLostSlaves == that.numLostSlaves;
+        numActiveTasks == that.numActiveTasks &&
+        numPendingTasks == that.numPendingTasks &&
+        numLateTasks == that.numLateTasks &&
+        avgTaskLagMillis == that.avgTaskLagMillis &&
+        numLostTasks == that.numLostTasks &&
+        numActiveSlaves == that.numActiveSlaves &&
+        numLostSlaves == that.numLostSlaves;
   }
 
   @Override
   public int hashCode() {
-    return Objects.hashCode(timestamp, numActiveTasks, numPendingTasks, numLateTasks, avgTaskLagMillis, numLostTasks, numActiveSlaves, numLostSlaves);
+    return Objects.hash(timestamp, numActiveTasks, numPendingTasks, numLateTasks, avgTaskLagMillis, numLostTasks, numActiveSlaves, numLostSlaves);
   }
 
   @Override
   public String toString() {
-    return Objects.toStringHelper(this)
-      .add("timestamp", timestamp)
-      .add("numActiveTasks", numActiveTasks)
-      .add("numPendingTasks", numPendingTasks)
-      .add("numLateTasks", numLateTasks)
-      .add("avgTaskLagMillis", avgTaskLagMillis)
-      .add("numLostTasks", numLostTasks)
-      .add("numActiveSlaves", numActiveSlaves)
-      .add("numLostSlaves", numLostSlaves)
-      .toString();
+    return "SingularityDisasterDataPoint{" +
+        "timestamp=" + timestamp +
+        ", numActiveTasks=" + numActiveTasks +
+        ", numPendingTasks=" + numPendingTasks +
+        ", numLateTasks=" + numLateTasks +
+        ", avgTaskLagMillis=" + avgTaskLagMillis +
+        ", numLostTasks=" + numLostTasks +
+        ", numActiveSlaves=" + numActiveSlaves +
+        ", numLostSlaves=" + numLostSlaves +
+        '}';
   }
 
   @Override

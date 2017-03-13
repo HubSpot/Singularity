@@ -93,9 +93,17 @@ public class SingularityRequestParent {
 
   @Override
   public String toString() {
-    return "SingularityRequestParent [request=" + request + ", state=" + state + ", requestDeployState=" + requestDeployState + ", activeDeploy=" + activeDeploy + ", pendingDeploy=" + pendingDeploy
-        + ", pendingDeployState=" + pendingDeployState + ", expiringBounce=" + expiringBounce + ", expiringPause=" + expiringPause + ", expiringScale=" + expiringScale + ", expiringSkipHealthchecks="
-        + expiringSkipHealthchecks + "]";
+    return "SingularityRequestParent{" +
+        "request=" + request +
+        ", state=" + state +
+        ", requestDeployState=" + requestDeployState +
+        ", activeDeploy=" + activeDeploy +
+        ", pendingDeploy=" + pendingDeploy +
+        ", pendingDeployState=" + pendingDeployState +
+        ", expiringBounce=" + expiringBounce +
+        ", expiringPause=" + expiringPause +
+        ", expiringScale=" + expiringScale +
+        ", expiringSkipHealthchecks=" + expiringSkipHealthchecks +
+        '}';
   }
-
 }

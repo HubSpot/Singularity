@@ -1,8 +1,9 @@
 package com.hubspot.singularity;
 
+import java.util.Objects;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.Objects;
 import com.google.common.base.Optional;
 
 public class SingularityTaskDestroyFrameworkMessage extends SingularityFrameworkMessage {
@@ -32,20 +33,20 @@ public class SingularityTaskDestroyFrameworkMessage extends SingularityFramework
       return false;
     }
     SingularityTaskDestroyFrameworkMessage that = (SingularityTaskDestroyFrameworkMessage) o;
-    return Objects.equal(taskId, that.taskId) &&
-      Objects.equal(user, that.user);
+    return Objects.equals(taskId, that.taskId) &&
+        Objects.equals(user, that.user);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hashCode(taskId, user);
+    return Objects.hash(taskId, user);
   }
 
   @Override
   public String toString() {
-    return Objects.toStringHelper(this)
-      .add("taskId", taskId)
-      .add("user", user)
-      .toString();
+    return "SingularityTaskDestroyFrameworkMessage{" +
+        "taskId=" + taskId +
+        ", user=" + user +
+        "} " + super.toString();
   }
 }

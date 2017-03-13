@@ -31,15 +31,6 @@ public class MesosFileChunkObject {
   }
 
   @Override
-  public String toString() {
-    return "MesosFileChunkObject[" +
-            "data='" + data + '\'' +
-            ", offset=" + offset +
-            ", nextOffset=" + nextOffset +
-            ']';
-  }
-
-  @Override
   public boolean equals(Object o) {
     if (this == o) {
       return true;
@@ -48,13 +39,22 @@ public class MesosFileChunkObject {
       return false;
     }
     MesosFileChunkObject that = (MesosFileChunkObject) o;
-    return Objects.equals(offset, that.offset) &&
-            Objects.equals(data, that.data) &&
-            Objects.equals(nextOffset, that.nextOffset);
+    return offset == that.offset &&
+        Objects.equals(data, that.data) &&
+        Objects.equals(nextOffset, that.nextOffset);
   }
 
   @Override
   public int hashCode() {
     return Objects.hash(data, offset, nextOffset);
+  }
+
+  @Override
+  public String toString() {
+    return "MesosFileChunkObject{" +
+        "data='" + data + '\'' +
+        ", offset=" + offset +
+        ", nextOffset=" + nextOffset +
+        '}';
   }
 }

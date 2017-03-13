@@ -23,6 +23,7 @@ import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.codahale.metrics.Meter;
 import com.codahale.metrics.MetricRegistry;
+import com.codahale.metrics.Timer;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
@@ -56,7 +57,10 @@ import com.hubspot.singularity.hooks.LoadBalancerClient;
 import com.hubspot.singularity.hooks.LoadBalancerClientImpl;
 import com.hubspot.singularity.hooks.SingularityWebhookPoller;
 import com.hubspot.singularity.hooks.SingularityWebhookSender;
+import com.hubspot.singularity.mesos.OfferCache;
 import com.hubspot.singularity.mesos.SingularityMesosStatusUpdateHandler;
+import com.hubspot.singularity.mesos.SingularityNoOfferCache;
+import com.hubspot.singularity.mesos.SingularityOfferCache;
 import com.hubspot.singularity.metrics.SingularityGraphiteReporterManaged;
 import com.hubspot.singularity.sentry.NotifyingExceptionMapper;
 import com.hubspot.singularity.sentry.SingularityExceptionNotifier;
@@ -104,6 +108,8 @@ public class SingularityMainModule implements Module {
   public static final String CURRENT_HTTP_REQUEST = "_singularity_current_http_request";
 
   public static final String LOST_TASKS_METER = "singularity.lost.tasks.meter";
+
+  public static final String STATUS_UPDATE_DELTA_TIMER = "singularity.status.update.delta.timer";
 
   private final SingularityConfiguration configuration;
 
@@ -173,6 +179,12 @@ public class SingularityMainModule implements Module {
     binder.bind(SingularityGraphiteReporterManaged.class).in(Scopes.SINGLETON);
 
     binder.bind(SingularityMesosStatusUpdateHandler.class).in(Scopes.SINGLETON);
+
+    if (configuration.isCacheOffers()) {
+      binder.bind(OfferCache.class).to(SingularityOfferCache.class).in(Scopes.SINGLETON);
+    } else {
+      binder.bind(OfferCache.class).to(SingularityNoOfferCache.class).in(Scopes.SINGLETON);
+    }
   }
 
   @Provides
@@ -356,5 +368,12 @@ public class SingularityMainModule implements Module {
   @Named(LOST_TASKS_METER)
   public Meter providesLostTasksMeter(MetricRegistry registry) {
     return registry.meter("com.hubspot.singularity.lostTasks");
+  }
+
+  @Provides
+  @Singleton
+  @Named(STATUS_UPDATE_DELTA_TIMER)
+  public Timer providesStatusUpdateDeltaMeter(MetricRegistry registry) {
+    return registry.timer("com.hubspot.singularity.statusUpdateDelta");
   }
 }

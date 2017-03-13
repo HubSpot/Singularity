@@ -156,9 +156,17 @@ public class SingularityTaskHistoryQuery {
 
   @Override
   public String toString() {
-    return "SingularityTaskHistoryQuery [requestId=" + requestId + ", deployId=" + deployId + ", runId=" + runId + ", host=" + host + ", lastTaskStatus=" + lastTaskStatus + ", startedBefore=" + startedBefore
-        + ", startedAfter=" + startedAfter + ", orderDirection=" + orderDirection + "]";
+    return "SingularityTaskHistoryQuery{" +
+        "requestId=" + requestId +
+        ", deployId=" + deployId +
+        ", runId=" + runId +
+        ", host=" + host +
+        ", lastTaskStatus=" + lastTaskStatus +
+        ", startedBefore=" + startedBefore +
+        ", startedAfter=" + startedAfter +
+        ", updatedBefore=" + updatedBefore +
+        ", updatedAfter=" + updatedAfter +
+        ", orderDirection=" + orderDirection +
+        '}';
   }
-
-
 }

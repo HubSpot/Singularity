@@ -6,7 +6,6 @@ import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.Objects;
 import com.google.common.base.Optional;
 import com.wordnik.swagger.annotations.ApiModelProperty;
 
@@ -30,14 +29,14 @@ public class SingularityS3SearchRequest {
                                     @JsonProperty("listOnly") boolean listOnly,
                                     @JsonProperty("maxPerPage") Optional<Integer> maxPerPage,
                                     @JsonProperty("continuationTokens") Map<String, ContinuationToken> continuationTokens) {
-    this.requestsAndDeploys = Objects.firstNonNull(requestsAndDeploys, Collections.<String, List<String>>emptyMap());
-    this.taskIds = Objects.firstNonNull(taskIds, Collections.<String>emptyList());
+    this.requestsAndDeploys = requestsAndDeploys != null ? requestsAndDeploys : Collections.<String, List<String>>emptyMap();
+    this.taskIds = taskIds != null ? taskIds : Collections.<String>emptyList();
     this.start = start;
     this.end = end;
     this.excludeMetadata = excludeMetadata;
     this.listOnly = listOnly;
     this.maxPerPage = maxPerPage;
-    this.continuationTokens = Objects.firstNonNull(continuationTokens, Collections.<String, ContinuationToken>emptyMap());
+    this.continuationTokens = continuationTokens != null ? continuationTokens : Collections.<String, ContinuationToken>emptyMap();
   }
 
   @ApiModelProperty(required=false, value="A map of request IDs to a list of deploy ids to search")
