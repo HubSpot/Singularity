@@ -349,11 +349,6 @@
     </dependency>
 
     <dependency>
-      <groupId>com.hubspot</groupId>
-      <artifactId>HorizonCore</artifactId>
-    </dependency>
-
-    <dependency>
       <groupId>com.squarespace.jersey2-guice</groupId>
       <artifactId>jersey2-guice-impl</artifactId>
     </dependency>
