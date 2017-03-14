@@ -92,7 +92,6 @@ import com.hubspot.singularity.resources.SlaveResource;
 import com.hubspot.singularity.resources.TaskResource;
 import com.hubspot.singularity.smtp.SingularityMailer;
 import com.ning.http.client.AsyncHttpClient;
-import com.squarespace.jersey2.guice.JerseyGuiceUtils;
 
 public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
 
