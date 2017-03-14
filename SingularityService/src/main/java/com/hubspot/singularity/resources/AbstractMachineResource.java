@@ -5,6 +5,9 @@ import static com.hubspot.singularity.WebExceptions.checkNotFound;
 import java.util.List;
 import java.util.UUID;
 
+import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.Response.Status;
+
 import com.google.common.base.Optional;
 import com.hubspot.singularity.MachineState;
 import com.hubspot.singularity.SingularityAction;
@@ -17,8 +20,6 @@ import com.hubspot.singularity.data.AbstractMachineManager;
 import com.hubspot.singularity.data.AbstractMachineManager.StateChangeResult;
 import com.hubspot.singularity.data.SingularityValidator;
 import com.hubspot.singularity.expiring.SingularityExpiringMachineState;
-import com.sun.jersey.api.ConflictException;
-import com.sun.jersey.api.NotFoundException;
 
 public abstract class AbstractMachineResource<T extends SingularityMachineAbstraction<T>> {
 
@@ -63,10 +64,10 @@ public abstract class AbstractMachineResource<T extends SingularityMachineAbstra
 
     switch (result) {
       case FAILURE_NOT_FOUND:
-        throw new NotFoundException(String.format("Couldn't find an active %s with id %s (result: %s)", getObjectTypeString(), objectId, result.name()));
+        throw new WebApplicationException(String.format("Couldn't find an active %s with id %s (result: %s)", getObjectTypeString(), objectId, result.name()), Status.NOT_FOUND);
       case FAILURE_ALREADY_AT_STATE:
       case FAILURE_ILLEGAL_TRANSITION:
-        throw new ConflictException(String.format("%s - %s %s is in %s state", result.name(), getObjectTypeString(), objectId, newState));
+        throw new WebApplicationException(String.format("%s - %s %s is in %s state", result.name(), getObjectTypeString(), objectId, newState), Status.CONFLICT);
       default:
         break;
     }
