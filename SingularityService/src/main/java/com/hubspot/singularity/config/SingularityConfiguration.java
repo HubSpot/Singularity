@@ -9,8 +9,8 @@ import javax.validation.Valid;
 import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
-import javax.ws.rs.HEAD;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
@@ -634,7 +634,8 @@ public class SingularityConfiguration extends Configuration {
     return persistHistoryEverySeconds;
   }
 
-  public Optional<S3Configuration> getS3Configuration() {
+  @JsonIgnore
+  public Optional<S3Configuration> getS3ConfigurationOptional() {
     return Optional.fromNullable(s3Configuration);
   }
 
@@ -646,12 +647,26 @@ public class SingularityConfiguration extends Configuration {
     return saveStateEverySeconds;
   }
 
-  public Optional<SentryConfiguration> getSentryConfiguration(){
+  @JsonIgnore
+  public Optional<SentryConfiguration> getSentryConfigurationOptional(){
     return Optional.fromNullable(sentryConfiguration);
   }
 
-  public Optional<SMTPConfiguration> getSmtpConfiguration() {
+  @JsonIgnore
+  public Optional<SMTPConfiguration> getSmtpConfigurationOptional() {
     return Optional.fromNullable(smtpConfiguration);
+  }
+
+  public S3Configuration getS3Configuration() {
+    return s3Configuration;
+  }
+
+  public SentryConfiguration getSentryConfiguration() {
+    return sentryConfiguration;
+  }
+
+  public SMTPConfiguration getSmtpConfiguration() {
+    return smtpConfiguration;
   }
 
   public long getStartNewReconcileEverySeconds() {
@@ -1088,7 +1103,12 @@ public class SingularityConfiguration extends Configuration {
     this.taskPersistAfterStartupBufferMillis = taskPersistAfterStartupBufferMillis;
   }
 
-  public Optional<LDAPConfiguration> getLdapConfiguration() {
+  public LDAPConfiguration getLdapConfiguration() {
+    return ldapConfiguration;
+  }
+
+  @JsonIgnore
+  public Optional<LDAPConfiguration> getLdapConfigurationOptional() {
     return Optional.fromNullable(ldapConfiguration);
   }
 
