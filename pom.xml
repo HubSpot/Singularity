@@ -248,6 +248,14 @@
 
       <dependency>
         <groupId>com.amazonaws</groupId>
+        <artifactId>athena-jdbc</artifactId>
+        <version>1.0.0</version>
+        <scope>system</scope>
+        <systemPath>${project.basedir}/lib/AthenaJDBC41-1.0.0.jar</systemPath>
+      </dependency>
+
+      <dependency>
+        <groupId>com.amazonaws</groupId>
         <artifactId>aws-java-sdk-s3</artifactId>
         <version>${aws.sdk.version}</version>
         <exclusions>
@@ -263,6 +271,13 @@
       </dependency>
     </dependencies>
   </dependencyManagement>
+
+  <repositories>
+    <repository>
+      <id>Amazon AWS Athena</id>
+      <url>https://s3.amazonaws.com/athena-downloads/drivers</url>
+    </repository>
+  </repositories>
 
   <build>
     <pluginManagement>

@@ -23,7 +23,7 @@ SingularityUI/node_modules/*
 SingularityUI/bower_components/*
 SingularityUI/brunchlog
 SingularityUI/app/env.coffee
-
+query.txt
 node_modules/*
 .vagrant
 vagrant/Berksfile.lock

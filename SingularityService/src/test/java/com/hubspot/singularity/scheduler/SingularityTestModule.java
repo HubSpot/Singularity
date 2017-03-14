@@ -42,6 +42,7 @@ import com.hubspot.singularity.SingularityAuthModule;
 import com.hubspot.singularity.SingularityMainModule;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTestAuthenticator;
+import com.hubspot.singularity.athena.AthenaModule;
 import com.hubspot.singularity.auth.authenticator.SingularityAuthenticator;
 import com.hubspot.singularity.config.MesosConfiguration;
 import com.hubspot.singularity.config.SMTPConfiguration;
@@ -198,6 +199,7 @@ public class SingularityTestModule implements Module {
         }));
 
     mainBinder.install(new SingularityDataModule());
+    mainBinder.install(new AthenaModule(configuration.getAthenaConfig()));
     mainBinder.install(new SingularitySchedulerModule());
     mainBinder.install(new SingularityTranscoderModule());
     mainBinder.install(new SingularityHistoryModule(configuration));
