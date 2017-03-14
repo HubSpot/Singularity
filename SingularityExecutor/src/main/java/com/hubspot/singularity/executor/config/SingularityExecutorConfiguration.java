@@ -142,7 +142,6 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
   @JsonProperty
   private int localDownloadServiceMaxConnections = 25;
 
-  @NotNull
   @JsonProperty
   private Optional<Integer> maxTaskThreads = Optional.absent();
 
