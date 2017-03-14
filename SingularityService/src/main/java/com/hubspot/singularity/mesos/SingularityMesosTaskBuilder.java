@@ -361,14 +361,14 @@ class SingularityMesosTaskBuilder {
 
       String defaultS3Bucket = "";
       String s3UploaderKeyPattern = "";
-      if (configuration.getS3Configuration().isPresent()) {
-        if (task.getRequest().getGroup().isPresent() && configuration.getS3Configuration().get().getGroupOverrides().containsKey(task.getRequest().getGroup().get())) {
-          defaultS3Bucket = configuration.getS3Configuration().get().getGroupOverrides().get(task.getRequest().getGroup().get()).getS3Bucket();
+      if (configuration.getS3ConfigurationOptional().isPresent()) {
+        if (task.getRequest().getGroup().isPresent() && configuration.getS3ConfigurationOptional().get().getGroupOverrides().containsKey(task.getRequest().getGroup().get())) {
+          defaultS3Bucket = configuration.getS3ConfigurationOptional().get().getGroupOverrides().get(task.getRequest().getGroup().get()).getS3Bucket();
           LOG.trace("Setting defaultS3Bucket to {} for task {} executorData", defaultS3Bucket, taskId.getId());
         } else {
-          defaultS3Bucket = configuration.getS3Configuration().get().getS3Bucket();
+          defaultS3Bucket = configuration.getS3ConfigurationOptional().get().getS3Bucket();
         }
-        s3UploaderKeyPattern = configuration.getS3Configuration().get().getS3KeyFormat();
+        s3UploaderKeyPattern = configuration.getS3ConfigurationOptional().get().getS3KeyFormat();
       }
 
       if (task.getPendingTask().getCmdLineArgsList().isPresent() && !task.getPendingTask().getCmdLineArgsList().get().isEmpty()) {
@@ -382,9 +382,9 @@ class SingularityMesosTaskBuilder {
         executorDataBldr.setExtraCmdLineArgs(extraCmdLineArgsBuilder.build());
       }
 
-      List<SingularityS3UploaderFile> uploaderAdditionalFiles = configuration.getS3Configuration().isPresent() ? configuration.getS3Configuration().get().getS3UploaderAdditionalFiles() : Collections.<SingularityS3UploaderFile>emptyList();
-      Optional<String> maybeS3StorageClass = configuration.getS3Configuration().isPresent() ? configuration.getS3Configuration().get().getS3StorageClass() : Optional.<String>absent();
-      Optional<Long> maybeApplyAfterBytes = configuration.getS3Configuration().isPresent() ? configuration.getS3Configuration().get().getApplyS3StorageClassAfterBytes() : Optional.<Long>absent();
+      List<SingularityS3UploaderFile> uploaderAdditionalFiles = configuration.getS3ConfigurationOptional().isPresent() ? configuration.getS3ConfigurationOptional().get().getS3UploaderAdditionalFiles() : Collections.<SingularityS3UploaderFile>emptyList();
+      Optional<String> maybeS3StorageClass = configuration.getS3ConfigurationOptional().isPresent() ? configuration.getS3ConfigurationOptional().get().getS3StorageClass() : Optional.<String>absent();
+      Optional<Long> maybeApplyAfterBytes = configuration.getS3ConfigurationOptional().isPresent() ? configuration.getS3ConfigurationOptional().get().getApplyS3StorageClassAfterBytes() : Optional.<Long>absent();
 
       final SingularityTaskExecutorData executorData = new SingularityTaskExecutorData(executorDataBldr.build(), uploaderAdditionalFiles, defaultS3Bucket, s3UploaderKeyPattern,
           configuration.getCustomExecutorConfiguration().getServiceLog(), configuration.getCustomExecutorConfiguration().getServiceFinishedTailLog(), task.getRequest().getGroup(),

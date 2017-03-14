@@ -93,7 +93,7 @@ public class SmtpMailer implements SingularityMailer, Managed {
       @Named(SingularityMainModule.DISASTERS_TEMPLATE) JadeTemplate disastersTemplate) {
 
     this.smtpSender = smtpSender;
-    this.smtpConfiguration = configuration.getSmtpConfiguration().get();
+    this.smtpConfiguration = configuration.getSmtpConfigurationOptional().get();
     this.configuration = configuration;
     this.taskManager = taskManager;
     this.metadataManager = metadataManager;
@@ -531,7 +531,7 @@ public class SmtpMailer implements SingularityMailer, Managed {
   }
 
   private void prepareDisasterMail(final SingularityDisastersData disastersData) {
-    final List<SingularityEmailDestination> emailDestination = configuration.getSmtpConfiguration().get().getEmailConfiguration().get(SingularityEmailType.DISASTER_DETECTED);
+    final List<SingularityEmailDestination> emailDestination = configuration.getSmtpConfigurationOptional().get().getEmailConfiguration().get(SingularityEmailType.DISASTER_DETECTED);
     if (emailDestination.isEmpty() || !emailDestination.contains(SingularityEmailDestination.ADMINS) || smtpConfiguration.getAdmins().isEmpty()) {
       LOG.info("Not configured to send disaster detected mail");
       return;

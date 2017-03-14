@@ -53,7 +53,7 @@ public class MailTemplateHelpers {
   public MailTemplateHelpers(SandboxManager sandboxManager, SingularityConfiguration singularityConfiguration) {
     this.uiBaseUrl = singularityConfiguration.getUiConfiguration().getBaseUrl();
     this.sandboxManager = sandboxManager;
-    this.smtpConfiguration = singularityConfiguration.getSmtpConfiguration();
+    this.smtpConfiguration = singularityConfiguration.getSmtpConfigurationOptional();
     if (this.smtpConfiguration.isPresent()) {
       this.taskDatePattern = Optional.of(this.smtpConfiguration.get().getMailerDatePattern());
       this.timeZone = Optional.of(this.smtpConfiguration.get().getMailerTimeZone());
