@@ -141,10 +141,8 @@ public class SingularityConfiguration extends Configuration {
 
   private int startupIntervalSeconds = 2;
 
-  @NotNull
   private Optional<Integer> healthcheckMaxRetries = Optional.absent();
 
-  @NotNull
   private Optional<Integer> healthcheckMaxTotalTimeoutSeconds = Optional.absent();
 
   @NotNull
@@ -242,8 +240,6 @@ public class SingularityConfiguration extends Configuration {
   private long warnIfScheduledJobIsRunningForAtLeastMillis = TimeUnit.DAYS.toMillis(1);
 
   @JsonProperty("taskExecutionTimeLimitMillis")
-  @Valid
-  @NotNull
   private Optional<Long> taskExecutionTimeLimitMillis = Optional.absent();
 
   private int warnIfScheduledJobIsRunningPastNextRunPct = 200;
