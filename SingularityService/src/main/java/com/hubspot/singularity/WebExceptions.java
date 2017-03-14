@@ -6,9 +6,6 @@ import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
-import com.sun.jersey.api.ConflictException;
-import com.sun.jersey.api.NotFoundException;
-
 public final class WebExceptions {
 
   private WebExceptions() {
@@ -63,14 +60,14 @@ public final class WebExceptions {
     if (args.length > 0) {
       message = format(message, args);
     }
-    throw new ConflictException(message);
+    throw new WebApplicationException(message, Status.CONFLICT);
   }
 
   public static WebApplicationException notFound(String message, Object... args) {
     if (args.length > 0) {
       message = format(message, args);
     }
-    throw new NotFoundException(message);
+    throw new WebApplicationException(message, Status.NOT_FOUND);
   }
 
   public static WebApplicationException forbidden(String message, Object... args) {

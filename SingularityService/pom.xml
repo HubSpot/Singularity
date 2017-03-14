@@ -236,12 +236,12 @@
     </dependency>
 
     <dependency>
-      <groupId>com.codahale.metrics</groupId>
+      <groupId>io.dropwizard.metrics</groupId>
       <artifactId>metrics-core</artifactId>
     </dependency>
 
     <dependency>
-      <groupId>com.codahale.metrics</groupId>
+      <groupId>io.dropwizard.metrics</groupId>
       <artifactId>metrics-healthchecks</artifactId>
     </dependency>
 
@@ -278,16 +278,6 @@
     <dependency>
       <groupId>com.fasterxml.jackson.datatype</groupId>
       <artifactId>jackson-datatype-guava</artifactId>
-    </dependency>
-
-    <dependency>
-      <groupId>com.sun.jersey</groupId>
-      <artifactId>jersey-core</artifactId>
-    </dependency>
-
-    <dependency>
-      <groupId>com.sun.jersey</groupId>
-      <artifactId>jersey-server</artifactId>
     </dependency>
 
     <dependency>
@@ -361,6 +351,11 @@
     <dependency>
       <groupId>com.hubspot</groupId>
       <artifactId>HorizonCore</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>com.squarespace.jersey2-guice</groupId>
+      <artifactId>jersey2-guice-impl</artifactId>
     </dependency>
 
     <dependency>

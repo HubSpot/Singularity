@@ -3,12 +3,10 @@ package com.hubspot.singularity.jersey;
 import java.util.List;
 
 import javax.inject.Inject;
+import javax.ws.rs.container.ContainerRequestContext;
+import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MultivaluedMap;
-
-import com.sun.jersey.core.header.InBoundHeaders;
-import com.sun.jersey.spi.container.ContainerRequest;
-import com.sun.jersey.spi.container.ContainerRequestFilter;
 
 /**
  * Replaces language header containing es-419 (LATAM spanish) with es-ES.
@@ -23,8 +21,8 @@ public class ReplaceES419LanguageFilter implements ContainerRequestFilter {
   {}
 
   @Override
-  public ContainerRequest filter(ContainerRequest request) {
-    MultivaluedMap<String, String> headers = request.getRequestHeaders();
+  public void filter(ContainerRequestContext request) {
+    MultivaluedMap<String, String> headers = request.getHeaders();
     if (headers.containsKey(HttpHeaders.ACCEPT_LANGUAGE)) {
       List<String> acceptLanguageValues = headers.remove(HttpHeaders.ACCEPT_LANGUAGE);
 
@@ -38,10 +36,6 @@ public class ReplaceES419LanguageFilter implements ContainerRequestFilter {
       }
 
       headers.put(HttpHeaders.ACCEPT_LANGUAGE, acceptLanguageValues);
-
-      request.setHeaders((InBoundHeaders) headers);
     }
-
-    return request;
   }
 }

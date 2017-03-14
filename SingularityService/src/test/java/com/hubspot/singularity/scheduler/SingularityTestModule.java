@@ -25,14 +25,16 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.net.HostAndPort;
 import com.google.inject.Binder;
+import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Module;
 import com.google.inject.OutOfScopeException;
 import com.google.inject.Provider;
 import com.google.inject.Scopes;
+import com.google.inject.Stage;
 import com.google.inject.TypeLiteral;
 import com.google.inject.util.Modules;
-import com.hubspot.dropwizard.guicier.DropwizardAwareModule;
+import com.hubspot.dropwizard.guicier.DropwizardModule;
 import com.hubspot.dropwizard.guicier.GuiceBundle;
 import com.hubspot.jackson.datatype.protobuf.ProtobufModule;
 import com.hubspot.mesos.client.SingularityMesosClientModule;
@@ -74,16 +76,21 @@ import io.dropwizard.jackson.Jackson;
 import io.dropwizard.setup.Environment;
 import net.kencochrane.raven.Raven;
 
-public class SingularityTestModule extends DropwizardAwareModule<SingularityConfiguration> {
+public class SingularityTestModule implements Module {
   private final TestingServer ts;
-  private final GuiceBundle guiceBundle;
+  private final DropwizardModule dropwizardModule;
+  private final ObjectMapper om = Jackson.newObjectMapper()
+      .setSerializationInclusion(Include.NON_NULL)
+      .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+      .registerModule(new ProtobufModule());
+  private final Environment environment = new Environment("test-env", om, null, new MetricRegistry(), null);
 
   private final boolean useDBTests;
 
   public SingularityTestModule(boolean useDbTests) throws Exception {
     this.useDBTests = useDbTests;
 
-    guiceBundle = GuiceBundle.defaultBuilder(SingularityConfiguration.class).build();
+    dropwizardModule = new DropwizardModule(environment);
 
     LoggerContext context = (LoggerContext) LoggerFactory.getILoggerFactory();
     Logger rootLogger = context.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME);
@@ -96,19 +103,19 @@ public class SingularityTestModule extends DropwizardAwareModule<SingularityConf
   }
 
   public Injector getInjector() throws Exception {
-    return guiceBundle.getInjector();
+    return Guice.createInjector(Stage.PRODUCTION, dropwizardModule, this);
   }
 
   public void start() throws Exception {
     // Start all the managed instances in dropwizard.
-    Set<LifeCycle> managedObjects = ImmutableSet.copyOf(getEnvironment().lifecycle().getManagedObjects());
+    Set<LifeCycle> managedObjects = ImmutableSet.copyOf(environment.lifecycle().getManagedObjects());
     for (LifeCycle managed : managedObjects) {
       managed.start();
     }
   }
 
   public void stop() throws Exception {
-    ImmutableSet<LifeCycle> managedObjects = ImmutableSet.copyOf(getEnvironment().lifecycle().getManagedObjects());
+    ImmutableSet<LifeCycle> managedObjects = ImmutableSet.copyOf(environment.lifecycle().getManagedObjects());
     for (LifeCycle managed : Lists.reverse(managedObjects.asList())) {
       managed.stop();
     }
@@ -145,14 +152,7 @@ public class SingularityTestModule extends DropwizardAwareModule<SingularityConf
             binder.bind(LoadBalancerClient.class).toInstance(tlbc);
             binder.bind(TestingLoadBalancerClient.class).toInstance(tlbc);
 
-            ObjectMapper om = Jackson.newObjectMapper()
-              .setSerializationInclusion(Include.NON_NULL)
-              .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
-              .registerModule(new ProtobufModule());
-
             binder.bind(ObjectMapper.class).toInstance(om);
-
-            Environment environment = new Environment("test-env", om, null, new MetricRegistry(), null);
             binder.bind(Environment.class).toInstance(environment);
 
             binder.bind(HostAndPort.class).annotatedWith(named(HTTP_HOST_AND_PORT)).toInstance(HostAndPort.fromString("localhost:8080"));
@@ -203,13 +203,13 @@ public class SingularityTestModule extends DropwizardAwareModule<SingularityConf
     mainBinder.install(new SingularityMesosClientModule());
     mainBinder.install(new SingularityEventModule(configuration));
     mainBinder.install(Modules.override(new SingularityAuthModule(configuration))
-            .with(new Module() {
-              @Override
-              public void configure(Binder binder) {
-                binder.bind(SingularityAuthenticator.class).to(SingularityTestAuthenticator.class);
-                binder.bind(SingularityTestAuthenticator.class).in(Scopes.SINGLETON);
-              }
-            }));
+        .with(new Module() {
+          @Override
+          public void configure(Binder binder) {
+            binder.bind(SingularityAuthenticator.class).to(SingularityTestAuthenticator.class);
+            binder.bind(SingularityTestAuthenticator.class).in(Scopes.SINGLETON);
+          }
+        }));
 
     mainBinder.bind(DeployResource.class);
     mainBinder.bind(RequestResource.class);

@@ -10,6 +10,7 @@ import com.google.inject.name.Named;
 import com.hubspot.horizon.HttpClient;
 import com.hubspot.mesos.client.MesosClient;
 import com.hubspot.singularity.scheduler.SingularityTestModule;
+import com.squarespace.jersey2.guice.JerseyGuiceUtils;
 
 public class SingularityCuratorTestBase {
 
@@ -27,6 +28,7 @@ public class SingularityCuratorTestBase {
 
   @Before
   public final void curatorSetup() throws Exception {
+    JerseyGuiceUtils.reset();
     singularityTestModule = new SingularityTestModule(useDBTests);
 
     singularityTestModule.getInjector().injectMembers(this);
