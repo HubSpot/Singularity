@@ -213,4 +213,4 @@ function mapDispatchToProps(dispatch) {
   };
 }
 
-export default connect(mapStateToProps, mapDispatchToProps)(rootComponent(TaskSearch, (props) => refresh(Utils.maybe(props, ['params', 'requestId'], undefined), INITIAL_TASKS_PER_PAGE, 1), null, false));
+export default connect(mapStateToProps, mapDispatchToProps)(rootComponent(TaskSearch, (props) => refresh(Utils.maybe(props, ['params', 'requestId'], undefined), INITIAL_TASKS_PER_PAGE, 1), false));
