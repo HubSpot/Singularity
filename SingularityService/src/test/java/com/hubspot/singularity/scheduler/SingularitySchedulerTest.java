@@ -1893,4 +1893,25 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     Assert.assertTrue(pendingTaskWithResources.getResources().isPresent());
     Assert.assertEquals(pendingTaskWithResources.getResources().get().getCpus(), 2, 0.0);
   }
+
+  @Test
+  public void testMaxOnDemandTasks() {
+    SingularityRequestBuilder bldr = new SingularityRequestBuilder(requestId, RequestType.ON_DEMAND);
+    bldr.setInstances(Optional.of(1));
+    requestResource.postRequest(bldr.build());
+    deploy("on_demand_deploy");
+    deployChecker.checkDeploys();
+
+
+    requestManager.addToPendingQueue(new SingularityPendingRequest(requestId, "on_demand_deploy", System.currentTimeMillis(), Optional.<String>absent(), PendingType.ONEOFF,
+        Optional.<List<String>>absent(), Optional.<String>absent(), Optional.<Boolean>absent(), Optional.<String>absent(), Optional.<String>absent()));
+    requestManager.addToPendingQueue(new SingularityPendingRequest(requestId, "on_demand_deploy", System.currentTimeMillis(), Optional.<String>absent(), PendingType.ONEOFF,
+        Optional.<List<String>>absent(), Optional.<String>absent(), Optional.<Boolean>absent(), Optional.<String>absent(), Optional.<String>absent()));
+
+    scheduler.drainPendingQueue(stateCacheProvider.get());
+
+    resourceOffers();
+
+    Assert.assertEquals(1, taskManager.getActiveTaskIds().size());
+  }
 }
