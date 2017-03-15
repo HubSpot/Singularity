@@ -356,4 +356,4 @@ function mapStateToProps(state, ownProps) {
 
 export default connect(mapStateToProps, (dispatch) => bindActionCreators({
   fetchTaskHistoryForDeploy: FetchTaskHistoryForDeploy.trigger,
-}, dispatch))(rootComponent(DeployDetail, (props) => refresh(props.params.requestId, props.params.deployId), null, true, true, (props) => initialize(props.params.requestId, props.params.deployId)));
+}, dispatch))(rootComponent(DeployDetail, (props) => refresh(props.params.requestId, props.params.deployId), true, true, (props) => initialize(props.params.requestId, props.params.deployId)));

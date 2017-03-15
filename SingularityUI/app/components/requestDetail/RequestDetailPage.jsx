@@ -109,4 +109,4 @@ const mapDispatchToProps = (dispatch, ownProps) => {
 export default connect(
   mapStateToProps,
   mapDispatchToProps
-)(rootComponent(RequestDetailPage, (props) => refresh(props.params.requestId), null, false));
+)(rootComponent(RequestDetailPage, (props) => refresh(props.params.requestId), false));
