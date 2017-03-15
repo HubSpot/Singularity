@@ -227,4 +227,4 @@ function mapDispatchToProps(dispatch) {
   };
 }
 
-export default connect(mapStateToProps, mapDispatchToProps)(rootComponent(Racks, refresh, null, true, true, initialize));
+export default connect(mapStateToProps, mapDispatchToProps)(rootComponent(Racks, refresh, true, true, initialize));
