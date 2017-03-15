@@ -1,4 +1,8 @@
 import React, { PropTypes, Component } from 'react';
+<<<<<<< HEAD
+=======
+import { FetchDisabledActions, FetchDisastersData, FetchPriorityFreeze, FetchTaskCredits } from '../../actions/api/disasters';
+>>>>>>> task_credits
 import { connect } from 'react-redux';
 import rootComponent from '../../rootComponent';
 import Utils from '../../utils';
@@ -26,11 +30,13 @@ class Disasters extends Component {
       })).isRequired,
       automatedActionsDisabled: PropTypes.bool.isRequired
     }).isRequired,
+    taskCredits: PropTypes.object,
     priorityFreeze: PropTypes.object,
     user: PropTypes.string,
     fetchDisabledActions: PropTypes.func.isRequired,
     fetchDisastersData: PropTypes.func.isRequired,
-    fetchPriorityFreeze: PropTypes.func.isRequired
+    fetchPriorityFreeze: PropTypes.func.isRequired,
+    fetchTaskCredits: PropTypes.func.isRequired
   };
 
   constructor(props) {
@@ -47,6 +53,7 @@ class Disasters extends Component {
           priorityFreeze={this.props.priorityFreeze}
           user={this.props.user}
           automatedActionsDisabled={this.props.disastersData.automatedActionsDisabled}
+          taskCredits={this.props.taskCredits}
         />
         <DisasterStats stats={this.props.disastersData.stats} />
       </div>
@@ -61,8 +68,32 @@ function mapStateToProps(state) {
     user,
     disastersData: state.api.disastersData.data,
     disabledActions: state.api.disabledActions.data,
+    taskCredits: state.api.taskCredits.data,
     priorityFreeze: _.isEmpty(priorityFreeze) ? {} : priorityFreeze
   };
 }
 
+<<<<<<< HEAD
 export default connect(mapStateToProps)(rootComponent(Disasters, refresh));
+=======
+function mapDispatchToProps(dispatch) {
+  return {
+    fetchDisastersData: () => dispatch(FetchDisastersData.trigger()),
+    fetchDisabledActions: () => dispatch(FetchDisabledActions.trigger()),
+    fetchPriorityFreeze: () => dispatch(FetchPriorityFreeze.trigger([404])),
+    fetchTaskCredits: () => dispatch(FetchTaskCredits.trigger())
+  };
+}
+
+function refresh(props) {
+	const promises = [];
+	promises.push(props.fetchDisastersData());
+	promises.push(props.fetchDisabledActions());
+  promises.push(props.fetchPriorityFreeze());
+  promises.push(props.fetchTaskCredits());
+  return Promise.all(promises);
+}
+
+
+export default connect(mapStateToProps, mapDispatchToProps)(rootComponent(Disasters, refresh));
+>>>>>>> task_credits

@@ -3,11 +3,15 @@ package com.hubspot.singularity.data;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.UUID;
 
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.utils.ZKPaths;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.codahale.metrics.MetricRegistry;
+import com.google.common.base.Charsets;
 import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.hubspot.singularity.SingularityAction;
@@ -20,14 +24,21 @@ import com.hubspot.singularity.SingularityDisasterType;
 import com.hubspot.singularity.SingularityDisastersData;
 import com.hubspot.singularity.SingularityUser;
 import com.hubspot.singularity.config.SingularityConfiguration;
+import com.hubspot.singularity.data.transcoders.StringTranscoder;
 import com.hubspot.singularity.data.transcoders.Transcoder;
 
 public class DisasterManager extends CuratorAsyncManager {
+  private static final Logger LOG = LoggerFactory.getLogger(DisasterManager.class);
+
   private static final String DISASTERS_ROOT = "/disasters";
   private static final String DISABLED_ACTIONS_PATH = DISASTERS_ROOT + "/disabled-actions";
   private static final String ACTIVE_DISASTERS_PATH = DISASTERS_ROOT + "/active";
   private static final String DISASTER_STATS_PATH = DISASTERS_ROOT + "/statistics";
   private static final String DISABLE_AUTOMATED_PATH = DISASTERS_ROOT + "/disabled";
+  private static final String TASK_CREDITS_PATH = DISASTERS_ROOT + "/task-credits";
+  private static final String TASK_CREDITS_ENABLED_PATH = TASK_CREDITS_PATH + "/enabled";
+  private static final String TASK_CREDITS_UPDATES_PATH = TASK_CREDITS_PATH + "/updates";
+  private static final String TASK_CREDIT_COUNT_PATH = TASK_CREDITS_PATH + "/count";
 
   private static final String MESSAGE_FORMAT = "Cannot perform action %s: %s";
   private static final String DEFAULT_MESSAGE = "Action is currently disabled";
@@ -187,5 +198,64 @@ public class DisasterManager extends CuratorAsyncManager {
 
   public boolean isAutomatedDisabledActionsDisabled() {
     return exists(DISABLE_AUTOMATED_PATH);
+  }
+
+  public boolean isTaskCreditEnabled() {
+    return exists(TASK_CREDITS_ENABLED_PATH);
+  }
+
+  public void enableTaskCredits() {
+    create(TASK_CREDITS_ENABLED_PATH);
+  }
+
+  public void disableTaskCredits() {
+    delete(TASK_CREDITS_ENABLED_PATH);
+  }
+
+  public void enqueueCreditsChange(int credits) {
+    save(ZKPaths.makePath(TASK_CREDITS_UPDATES_PATH, UUID.randomUUID().toString()), Optional.of(Integer.toString(credits).getBytes(Charsets.UTF_8)));
+  }
+
+  public int getTaskCredits() {
+    Optional<String> data = getData(TASK_CREDIT_COUNT_PATH, StringTranscoder.INSTANCE);
+    try {
+      if (data.isPresent()) {
+        return Integer.parseInt(data.get());
+      } else {
+        return 0;
+      }
+    } catch (NumberFormatException nfe) {
+      LOG.error("Could not read integer from path {}", TASK_CREDIT_COUNT_PATH, nfe);
+      return 0;
+    }
+  }
+
+  public void saveTaskCreditCount(int remaining) {
+    save(TASK_CREDIT_COUNT_PATH, Optional.of(Integer.toString(remaining).getBytes(Charsets.UTF_8)));
+  }
+
+  public int getUpdatedCreditCount() {
+    int currentCredits = getTaskCredits();
+    List<String> updates = getChildren(TASK_CREDITS_UPDATES_PATH);
+    if (updates.isEmpty()) {
+      return currentCredits;
+    }
+    for (String update : updates) {
+      String path = ZKPaths.makePath(TASK_CREDITS_UPDATES_PATH, update);
+      try {
+        Optional<String> data = getData(path, StringTranscoder.INSTANCE);
+        if (data.isPresent()) {
+          currentCredits = currentCredits + Integer.parseInt(data.get());
+        }
+      } catch (NumberFormatException nfe) {
+        LOG.error("Could not read integer from path {}", path, nfe);
+      } finally {
+        delete(path);
+      }
+    }
+
+    currentCredits = Math.max(currentCredits, 0);
+    saveTaskCreditCount(currentCredits);
+    return currentCredits;
   }
 }

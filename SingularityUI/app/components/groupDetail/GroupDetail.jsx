@@ -55,4 +55,4 @@ const mapStateToProps = (state, ownProps) => {
   });
 };
 
-export default connect(mapStateToProps)(rootComponent(GroupDetail, refresh, null, false));
+export default connect(mapStateToProps)(rootComponent(GroupDetail, refresh, false));

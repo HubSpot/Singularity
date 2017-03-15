@@ -34,4 +34,4 @@ const refreshAggregateTail = (props) => (dispatch) => {
   });
 }
 
-export const AggregateTail = rootComponent(LogContainer, refreshAggregateTail, null, false, false);
+export const AggregateTail = rootComponent(LogContainer, refreshAggregateTail, false, false);

@@ -768,4 +768,4 @@ function mapDispatchToProps(dispatch, ownProps) {
 export default withRouter(connect(
   mapStateToProps,
   mapDispatchToProps
-)(rootComponent(RequestForm, (props) => refresh(props.params.requestId, FORM_ID), null, false)));
+)(rootComponent(RequestForm, (props) => refresh(props.params.requestId, FORM_ID), false)));
