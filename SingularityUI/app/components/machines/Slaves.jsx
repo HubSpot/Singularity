@@ -12,7 +12,7 @@ import { DeactivateHost, ReactivateHost, FetchInactiveHosts } from '../../action
 import Column from '../common/table/Column';
 import JSONButton from '../common/JSONButton';
 import CustomizeSlavesTableButton from './CustomizeSlavesTableButton';
-import { refresh, initialize } from '../../actions/ui/slaves'
+import { refresh, initialize } from '../../actions/ui/slaves';
 
 const typeName = {
   'active': 'Activated By',
@@ -556,4 +556,4 @@ function mapDispatchToProps(dispatch) {
   };
 }
 
-export default connect(mapStateToProps, mapDispatchToProps)(rootComponent(Slaves, refresh, null, true, true, initialize));
+export default connect(mapStateToProps, mapDispatchToProps)(rootComponent(Slaves, refresh, true, true, initialize));
