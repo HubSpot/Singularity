@@ -43,7 +43,6 @@ public class UIConfiguration {
   private String title = "Singularity";
 
   @JsonProperty
-  @NotNull
   private Optional<String> navColor = Optional.absent();
 
   @JsonProperty
@@ -76,7 +75,6 @@ public class UIConfiguration {
   private String rootUrlMode = RootUrlMode.INDEX_CATCHALL.name();
 
   @JsonProperty
-  @NotNull
   private Optional<String> taskS3LogOmitPrefix = Optional.absent();
 
   @NotEmpty
@@ -86,12 +84,10 @@ public class UIConfiguration {
   private String timestampWithSecondsFormat = "lll:ss";
 
   @JsonProperty
-  @NotNull
   private Optional<String> redirectOnUnauthorizedUrl = Optional.absent();
 
 
   @JsonProperty
-  @NotNull
   private Optional<String> extraScript = Optional.absent();
 
 

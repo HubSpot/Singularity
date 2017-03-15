@@ -46,7 +46,6 @@ public class SingularityExecutorCleanupConfiguration extends BaseRunnerConfigura
   @JsonProperty
   private boolean runDockerCleanup = false;
 
-  @NotNull
   @JsonProperty
   private Optional<SingularityClientCredentials> singularityClientCredentials = Optional.absent();
 

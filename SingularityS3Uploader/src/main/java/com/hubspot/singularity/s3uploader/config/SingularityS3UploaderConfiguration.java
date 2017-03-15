@@ -36,12 +36,10 @@ public class SingularityS3UploaderConfiguration extends BaseRunnerConfiguration 
   @JsonProperty
   private long stopCheckingAfterMillisWithoutNewFile = TimeUnit.HOURS.toMillis(168);
 
-  @NotNull
   @JsonProperty
   @Obfuscate
   private Optional<String> s3AccessKey = Optional.absent();
 
-  @NotNull
   @JsonProperty
   @Obfuscate
   private Optional<String> s3SecretKey = Optional.absent();
