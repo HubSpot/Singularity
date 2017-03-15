@@ -1,8 +1,5 @@
 import React, { PropTypes, Component } from 'react';
-<<<<<<< HEAD
-=======
 import { FetchDisabledActions, FetchDisastersData, FetchPriorityFreeze, FetchTaskCredits } from '../../actions/api/disasters';
->>>>>>> task_credits
 import { connect } from 'react-redux';
 import rootComponent from '../../rootComponent';
 import Utils from '../../utils';
@@ -73,27 +70,4 @@ function mapStateToProps(state) {
   };
 }
 
-<<<<<<< HEAD
 export default connect(mapStateToProps)(rootComponent(Disasters, refresh));
-=======
-function mapDispatchToProps(dispatch) {
-  return {
-    fetchDisastersData: () => dispatch(FetchDisastersData.trigger()),
-    fetchDisabledActions: () => dispatch(FetchDisabledActions.trigger()),
-    fetchPriorityFreeze: () => dispatch(FetchPriorityFreeze.trigger([404])),
-    fetchTaskCredits: () => dispatch(FetchTaskCredits.trigger())
-  };
-}
-
-function refresh(props) {
-	const promises = [];
-	promises.push(props.fetchDisastersData());
-	promises.push(props.fetchDisabledActions());
-  promises.push(props.fetchPriorityFreeze());
-  promises.push(props.fetchTaskCredits());
-  return Promise.all(promises);
-}
-
-
-export default connect(mapStateToProps, mapDispatchToProps)(rootComponent(Disasters, refresh));
->>>>>>> task_credits
