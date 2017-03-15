@@ -22,4 +22,8 @@ public interface OfferCache {
 
   public List<Offer> peekOffers();
 
+  public void disableOfferCache();
+
+  public void enableOfferCache();
+
 }
