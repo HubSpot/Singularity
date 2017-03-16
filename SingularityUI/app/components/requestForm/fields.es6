@@ -107,7 +107,7 @@ export const FIELDS_BY_REQUEST_TYPE = {
     KILL_OLD_NRL_FIELD,
     {id: 'scheduledExpectedRuntimeMillis', type: 'number'}
   ],
-  ON_DEMAND: [KILL_OLD_NRL_FIELD],
+  ON_DEMAND: [INSTANCES_FIELD, KILL_OLD_NRL_FIELD],
   RUN_ONCE: [KILL_OLD_NRL_FIELD]
 };
 
