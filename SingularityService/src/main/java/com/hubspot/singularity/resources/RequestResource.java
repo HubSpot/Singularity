@@ -197,11 +197,11 @@ public class RequestResource extends AbstractRequestResource {
 
     final String deployId = getAndCheckDeployId(requestId);
 
-    SingularityCreateResult createResult = requestManager.createCleanupRequest(
+    checkConflict(!(requestManager.markAsBouncing(requestId) == SingularityCreateResult.EXISTED), "%s is already bouncing", requestId);
+
+    requestManager.createCleanupRequest(
         new SingularityRequestCleanup(JavaUtils.getUserEmail(user), isIncrementalBounce ? RequestCleanupType.INCREMENTAL_BOUNCE : RequestCleanupType.BOUNCE,
             System.currentTimeMillis(), Optional.<Boolean> absent(), requestId, Optional.of(deployId), skipHealthchecks, message, actionId, runBeforeKill));
-
-    checkConflict(createResult != SingularityCreateResult.EXISTED, "%s is already bouncing", requestId);
 
     requestManager.bounce(requestWithState.getRequest(), System.currentTimeMillis(), JavaUtils.getUserEmail(user), message);
 

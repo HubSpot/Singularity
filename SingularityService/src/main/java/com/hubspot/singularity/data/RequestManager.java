@@ -61,6 +61,7 @@ public class RequestManager extends CuratorAsyncManager {
   private static final String CLEANUP_PATH_ROOT = REQUEST_ROOT + "/cleanup";
   private static final String HISTORY_PATH_ROOT = REQUEST_ROOT + "/history";
   private static final String LB_CLEANUP_PATH_ROOT = REQUEST_ROOT + "/lbCleanup";
+  private static final String BOUNCING_ROOT = REQUEST_ROOT + "/bouncing";
   private static final String EXPIRING_ACTION_PATH_ROOT = REQUEST_ROOT + "/expiring";
   private static final String EXPIRING_BOUNCE_PATH_ROOT = EXPIRING_ACTION_PATH_ROOT + "/bounce";
   private static final String EXPIRING_PAUSE_PATH_ROOT = EXPIRING_ACTION_PATH_ROOT + "/pause";
@@ -408,4 +409,15 @@ public class RequestManager extends CuratorAsyncManager {
     return getExpiringObject(SingularityExpiringSkipHealthchecks.class, requestId);
   }
 
+  public String getIsBouncingPath(String requestId) {
+    return ZKPaths.makePath(BOUNCING_ROOT, requestId);
+  }
+
+  public SingularityCreateResult markAsBouncing(String requestId) {
+    return create(getIsBouncingPath(requestId));
+  }
+
+  public SingularityDeleteResult markBounceComplete(String requestId) {
+    return delete(getIsBouncingPath(requestId));
+  }
 }
