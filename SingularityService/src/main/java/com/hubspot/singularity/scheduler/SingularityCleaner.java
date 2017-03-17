@@ -605,6 +605,7 @@ public class SingularityCleaner {
 
         requestManager.deleteExpiringObject(SingularityExpiringBounce.class, bounceSucceeded.getRequestId());
       }
+      requestManager.markBounceComplete(bounceSucceeded.getRequestId());
     }
 
     LOG.info("Killed {} tasks in {}", killedTasks, JavaUtils.duration(start));
