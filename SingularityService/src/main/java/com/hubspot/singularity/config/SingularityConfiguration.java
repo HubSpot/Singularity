@@ -1269,30 +1269,6 @@ public class SingularityConfiguration extends Configuration {
     return this;
   }
 
-  public long getCacheOffersForMillis() {
-    return cacheOffersForMillis;
-  }
-
-  public void setCacheOffersForMillis(long cacheOffersForMillis) {
-    this.cacheOffersForMillis = cacheOffersForMillis;
-  }
-
-  public int getOfferCacheSize() {
-    return offerCacheSize;
-  }
-
-  public void setOfferCacheSize(int offerCacheSize) {
-    this.offerCacheSize = offerCacheSize;
-  }
-
-  public boolean isCacheOffers() {
-    return cacheOffers;
-  }
-
-  public void setCacheOffers(boolean cacheOffers) {
-    this.cacheOffers = cacheOffers;
-  }
-
   public long getCheckUsageEveryMillis() {
     return checkUsageEveryMillis;
   }
@@ -1315,6 +1291,30 @@ public class SingularityConfiguration extends Configuration {
 
   public void setNumUsageToKeep(int numUsageToKeep) {
     this.numUsageToKeep = numUsageToKeep;
+  }
+
+  public long getCacheOffersForMillis() {
+    return cacheOffersForMillis;
+  }
+
+  public void setCacheOffersForMillis(long cacheOffersForMillis) {
+    this.cacheOffersForMillis = cacheOffersForMillis;
+  }
+
+  public int getOfferCacheSize() {
+    return offerCacheSize;
+  }
+
+  public void setOfferCacheSize(int offerCacheSize) {
+    this.offerCacheSize = offerCacheSize;
+  }
+
+  public boolean isCacheOffers() {
+    return cacheOffers;
+  }
+
+  public void setCacheOffers(boolean cacheOffers) {
+    this.cacheOffers = cacheOffers;
   }
 
   public int getMaxActiveOnDemandTasksPerRequest() {
