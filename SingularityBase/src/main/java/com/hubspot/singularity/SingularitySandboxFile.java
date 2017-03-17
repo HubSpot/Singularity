@@ -43,7 +43,11 @@ public class SingularitySandboxFile {
 
   @Override
   public String toString() {
-    return "SingularitySandboxFile [name=" + name + ", mtime=" + mtime + ", size=" + size + ", mode=" + mode + "]";
+    return "SingularitySandboxFile{" +
+        "name='" + name + '\'' +
+        ", mtime=" + mtime +
+        ", size=" + size +
+        ", mode='" + mode + '\'' +
+        '}';
   }
-
 }

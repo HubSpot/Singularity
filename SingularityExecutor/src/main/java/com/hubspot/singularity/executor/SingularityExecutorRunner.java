@@ -1,12 +1,11 @@
 package com.hubspot.singularity.executor;
 
-import org.apache.mesos.ExecutorDriver;
 import org.apache.mesos.MesosExecutorDriver;
 import org.apache.mesos.Protos;
+import org.slf4j.ILoggerFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.Guice;
 import com.google.inject.Inject;
@@ -19,6 +18,8 @@ import com.hubspot.singularity.executor.config.SingularityExecutorModule;
 import com.hubspot.singularity.runner.base.config.SingularityRunnerBaseModule;
 import com.hubspot.singularity.runner.base.configuration.BaseRunnerConfiguration;
 import com.hubspot.singularity.s3.base.config.SingularityS3Configuration;
+
+import ch.qos.logback.classic.LoggerContext;
 
 public class SingularityExecutorRunner {
 
@@ -35,10 +36,23 @@ public class SingularityExecutorRunner {
 
       LOG.info("Executor finished after {} with status: {}", JavaUtils.duration(start), driverStatus);
 
+      stopLog();
+
       System.exit(driverStatus == Protos.Status.DRIVER_STOPPED ? 0 : 1);
     } catch (Throwable t) {
       LOG.error("Finished after {} with error", JavaUtils.duration(start), t);
+
+      stopLog();
+
       System.exit(1);
+    }
+  }
+
+  private static void stopLog() {
+   ILoggerFactory loggerFactory = LoggerFactory.getILoggerFactory();
+    if (loggerFactory instanceof LoggerContext) {
+      LoggerContext context = (LoggerContext) loggerFactory;
+      context.stop();
     }
   }
 
@@ -57,13 +71,14 @@ public class SingularityExecutorRunner {
     LOG.info("{} starting MesosExecutorDriver...", name);
 
     final MesosExecutorDriver driver = new MesosExecutorDriver(singularityExecutor);
+    monitor.start(driver);
 
     Runtime.getRuntime().addShutdownHook(new Thread("SingularityExecutorRunnerGracefulShutdown") {
 
       @Override
       public void run() {
         LOG.info("Executor is shutting down, ensuring shutdown via shutdown hook");
-        monitor.shutdown(Optional.of((ExecutorDriver) driver));
+        monitor.shutdown(driver);
       }
 
     });

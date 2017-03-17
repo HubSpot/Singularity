@@ -138,6 +138,7 @@ public abstract class CuratorManager {
     final long start = System.currentTimeMillis();
 
     try {
+      // moves RequestState to DELETED
       curator.delete().deletingChildrenIfNeeded().forPath(path);
       return SingularityDeleteResult.DELETED;
     } catch (NoNodeException nne) {

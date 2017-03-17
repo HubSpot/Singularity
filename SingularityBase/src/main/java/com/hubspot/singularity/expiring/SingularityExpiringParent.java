@@ -35,7 +35,11 @@ public abstract class SingularityExpiringParent<T extends SingularityExpiringReq
 
   @Override
   public String toString() {
-    return "SingularityExpiringParent [user=" + user + ", startMillis=" + startMillis + ", actionId=" + actionId + ", expiringAPIRequestObject=" + expiringAPIRequestObject + "]";
+    return "SingularityExpiringParent{" +
+        "user=" + user +
+        ", startMillis=" + startMillis +
+        ", actionId='" + actionId + '\'' +
+        ", expiringAPIRequestObject=" + expiringAPIRequestObject +
+        '}';
   }
-
 }

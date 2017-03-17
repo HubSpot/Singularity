@@ -18,11 +18,12 @@ import {
   FIELDS, ARTIFACT_FIELDS, DOCKER_PORT_MAPPING_FIELDS, DOCKER_VOLUME_FIELDS,
   INDEXED_FIELDS, INDEXED_ARTIFACT_FIELDS, INDEXED_DOCKER_PORT_MAPPING_FIELDS,
   INDEXED_DOCKER_VOLUME_FIELDS, INDEXED_ALL_FIELDS,
+  INDEXED_MESOS_ARTIFACT_FIELDS, MESOS_ARTIFACT_FIELDS,
   INDEXED_CUSTOM_EXECUTOR_FIELDS, INDEXED_DEFAULT_EXECUTOR_FIELDS,
   INDEXED_DOCKER_CONTAINER_FIELDS, INDEXED_LOAD_BALANCER_FIELDS,
   INDEXED_HEALTH_CHECKER_FIELDS, INDEXED_ALL_ARTIFACT_FIELDS,
   INDEXED_EMBEDDED_ARTIFACT_FIELDS, INDEXED_EXTERNAL_ARTIFACT_FIELDS,
-  INDEXED_S3_ARTIFACT_FIELDS
+  INDEXED_S3_ARTIFACT_FIELDS, INDEXED_DOCKER_PARAMETERS_FIELDS, DOCKER_PARAMETERS_FIELDS
 } from './fields';
 
 
@@ -47,7 +48,12 @@ class NewDeployForm extends Component {
   static propTypes = {
     form: PropTypes.shape({
       arguments: PropTypes.arrayOf(PropTypes.string),
-      uris: PropTypes.arrayOf(PropTypes.string),
+      uris: PropTypes.arrayOf(PropTypes.shape({
+        uri: PropTypes.string,
+        cache: PropTypes.bool,
+        executable: PropTypes.bool,
+        extract: PropTypes.bool
+      })),
       embeddedArtifacts: PropTypes.arrayOf(ARTIFACT_SHAPE),
       externalArtifacts: PropTypes.arrayOf(ARTIFACT_SHAPE),
       s3Artifacts: PropTypes.arrayOf(ARTIFACT_SHAPE),
@@ -70,6 +76,10 @@ class NewDeployForm extends Component {
         hostPortType: PropTypes.string,
         hostPort: PropTypes.string,
         protocol: PropTypes.string
+      })),
+      dockerParameters: PropTypes.arrayOf(PropTypes.shape({
+        key: PropTypes.string,
+        value: PropTypes.string
       })),
       volumes: PropTypes.arrayOf(PropTypes.shape({
         containerPath: PropTypes.string,
@@ -308,7 +318,8 @@ class NewDeployForm extends Component {
     if (this.getValueOrDefault('type') === 'docker') {
       if (!this.validateFields(INDEXED_DOCKER_CONTAINER_FIELDS) ||
         !this.validateObjects('portMappings', INDEXED_DOCKER_PORT_MAPPING_FIELDS) ||
-        !this.validateObjects('volumes', INDEXED_DOCKER_VOLUME_FIELDS)) {
+        !this.validateObjects('volumes', INDEXED_DOCKER_VOLUME_FIELDS) ||
+        !this.validateObjects('dockerParameters', INDEXED_DOCKER_PARAMETERS_FIELDS)) {
         return false;
       }
     }
@@ -364,6 +375,13 @@ class NewDeployForm extends Component {
             return newArtifact;
           });
           deployObject[fieldId.id] = artifacts;
+        } else if (fieldId.type === 'mesosArtifacts') {
+          const mesosArtifacts = value.map(mesosArtifact => this.copyFieldsToObject(
+            {},
+            MESOS_ARTIFACT_FIELDS,
+            (id) => mesosArtifact[id] || INDEXED_MESOS_ARTIFACT_FIELDS[id].default
+          ));
+          deployObject[fieldId.id] = mesosArtifacts;
         } else if (fieldId.type === 'volumes') {
           const volumes = value.map(volume => this.copyFieldsToObject(
             {},
@@ -377,6 +395,12 @@ class NewDeployForm extends Component {
             DOCKER_PORT_MAPPING_FIELDS,
             (id) => portMapping[id] || INDEXED_DOCKER_PORT_MAPPING_FIELDS[id].default));
           deployObject[fieldId.id] = portMappings;
+        } else if (fieldId.type === 'dockerParameters') {
+          const dockerParameters = value.map(dockerParameter => this.copyFieldsToObject(
+            {},
+            DOCKER_PARAMETERS_FIELDS,
+            (id) => dockerParameter[id] || INDEXED_DOCKER_PARAMETERS_FIELDS[id].default));
+          deployObject[fieldId.id] = dockerParameters;
         }
       }
     }
@@ -434,6 +458,69 @@ class NewDeployForm extends Component {
     this.updateField(fieldId, newArray);
   }
 
+  renderMesosArtifact(mapping, key) {
+    const thisMesosArtifact = this.props.form.uris[key];
+    const uri = (
+      <TextFormGroup
+        id={`mesos-uri-${ key }`}
+        onChange={event => this.updateObjectInArrayField('uris', key, {uri: event.target.value})}
+        value={thisMesosArtifact.uri}
+        label="Uri"
+        required={true}
+        feedback={this.formFieldFeedback(INDEXED_MESOS_ARTIFACT_FIELDS.uri, thisMesosArtifact.uri)}
+      />
+    );
+    const cache = (
+      <CheckboxFormGroup
+        id = "mesos-cahce-${ key }"
+        label="Cache"
+        checked = {thisMesosArtifact.cache}
+        onChange={(newValue) => this.updateObjectInArrayField('uris', key, {cache: newValue})}
+        feedback={this.formFieldFeedback(INDEXED_MESOS_ARTIFACT_FIELDS.cache, thisMesosArtifact.cache)}
+      />
+    );
+    const extract = (
+      <CheckboxFormGroup
+        id = "mesos-extract-${ key }"
+        label="Extract"
+        checked = {thisMesosArtifact.extract}
+        onChange={(newValue) => this.updateObjectInArrayField('uris', key, {extract: newValue})}
+        feedback={this.formFieldFeedback(INDEXED_MESOS_ARTIFACT_FIELDS.extract, thisMesosArtifact.extract)}
+      />
+    );
+    const executable = (
+      <CheckboxFormGroup
+        id = "mesos-executable-${ key }"
+        label="Executable"
+        checked = {thisMesosArtifact.executable}
+        onChange={(newValue) => this.updateObjectInArrayField('uris', key, {executable: newValue})}
+        feedback={this.formFieldFeedback(INDEXED_MESOS_ARTIFACT_FIELDS.executable, thisMesosArtifact.executable)}
+      />
+    );
+    return (
+      <div className="well well-sm mesos-artifact" key={key}>
+        <h5>Mesos Artifact</h5>
+        <button
+          className="remove-button"
+          id={`remove-mesos-artifact-${key}`}
+          onClick={() => this.removeObjectFromArrayField('uris', key)}
+        />
+        {uri}
+        {cache}
+        {executable}
+        {extract}
+      </div>
+    );
+  }
+
+  renderMesosArtifacts() {
+    const mesosArtifacts = this.props.form.uris;
+    if (mesosArtifacts) {
+      return mesosArtifacts.map((mapping, key) => this.renderMesosArtifact(mapping, key));
+    }
+    return null;
+  }
+
   renderDefaultExecutorFields() {
     const command = (
       <TextFormGroup
@@ -455,24 +542,23 @@ class NewDeployForm extends Component {
         couldHaveFeedback={true}
       />
     );
-    const artifacts = (
-      <MultiInputFormGroup
-        id="artifacts"
-        value={this.props.form.uris || []}
-        onChange={(newValue) => this.updateField('uris', newValue)}
-        label="Artifacts"
-        placeholder="eg: http://s3.example/my-artifact"
-        errorIndices={this.errorsInArrayField(INDEXED_FIELDS.uris, () => this.props.form.uris)}
-        couldHaveFeedback={true}
-      />
-    );
+
     return (
       <div>
         <fieldset id="default-expandable" className="expandable">
           <h4>Default Executor Settings</h4>
           {command}
           {cmdLineArguments}
-          {artifacts}
+          {this.renderMesosArtifacts()}
+
+          <div id="mesos-artifact-button-row" className="row">
+            <div className="col-sm-6">
+              <button className="btn btn-success btn-block" onClick={event => this.addObjectToArrayFieldPreventDefault('uris', {extract: true}, event)}>
+                <span className="glyphicon glyphicon-plus"></span>
+                {" Artifact"}
+              </button>
+            </div>
+          </div>
         </fieldset>
       </div>
     );
@@ -896,6 +982,48 @@ class NewDeployForm extends Component {
     return null;
   }
 
+  renderDockerParameter(mapping, key) {
+    const thisDockerParameter = this.props.form.dockerParameters[key];
+    const keyValue = (
+      <TextFormGroup
+        id={`parameter-key-${ key }`}
+        onChange={event => this.updateObjectInArrayField('dockerParameters', key, {key: event.target.value})}
+        value={thisDockerParameter.key}
+        label="Key"
+        required={true}
+      />
+    );
+    const realValue = (
+      <TextFormGroup
+        id={`parameter-value-${ key }`}
+        onChange={event => this.updateObjectInArrayField('dockerParameters', key, {value: event.target.value})}
+        value={thisDockerParameter.value}
+        label="Value"
+        required={false}
+      />
+    );
+    return (
+      <div className="well well-sm docker-port" key={key}>
+        <h5>Docker Parameter</h5>
+        <button
+          className="remove-button"
+          id={`remove-docker-parameter-${key}`}
+          onClick={() => this.removeObjectFromArrayField('dockerParameters', key)}
+        />
+        {keyValue}
+        {realValue}
+      </div>
+    );
+  }
+
+  renderDockerParameters() {
+    const dockerParameters = this.props.form.dockerParameters;
+    if (dockerParameters) {
+      return dockerParameters.map((mapping, key) => this.renderDockerParameter(mapping, key));
+    }
+    return null;
+  }
+
   renderDockerVolume(mapping, key) {
     const thisVolume = this.props.form.volumes[key];
     const containerPath = (
@@ -996,17 +1124,6 @@ class NewDeployForm extends Component {
         onChange = {(newValue) => this.updateField('forcePullImage', newValue)}
       />
     );
-    const parameters = (
-      <MultiInputFormGroup
-        id="docker-params"
-        value={this.props.form.parameters || []}
-        onChange={(newValue) => this.updateField('parameters', newValue)}
-        label="Docker Parameters"
-        placeholder="format: key=value"
-        errorIndices={this.errorsInArrayField(INDEXED_FIELDS.parameters, () => this.props.form.parameters)}
-        couldHaveFeedback={true}
-      />
-    );
     //
     return (
       <div className="container-info">
@@ -1025,7 +1142,16 @@ class NewDeployForm extends Component {
             </div>
           </div>
 
-          {parameters}
+          {this.renderDockerParameters()}
+
+          <div id="docker-parameter-row" className="row">
+            <div className="col-sm-6">
+              <button className="btn btn-success btn-block" onClick={event => this.addObjectToArrayFieldPreventDefault('dockerParameters', {}, event)}>
+                <span className="glyphicon glyphicon-plus"></span>
+                {" Docker Parameter"}
+              </button>
+            </div>
+          </div>
 
           {this.renderDockerPortMappings()}
 

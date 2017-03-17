@@ -58,12 +58,12 @@ public class SingularityTaskShellCommandUpdate {
 
   @Override
   public String toString() {
-    return "SingularityTaskShellCommandUpdate[" +
-            "shellRequestId=" + shellRequestId +
-            ", timestamp=" + timestamp +
-            ", message=" + message +
-            ", outputFilename=" + outputFilename +
-            ", updateType=" + updateType +
-            ']';
+    return "SingularityTaskShellCommandUpdate{" +
+        "shellRequestId=" + shellRequestId +
+        ", timestamp=" + timestamp +
+        ", message=" + message +
+        ", outputFilename=" + outputFilename +
+        ", updateType=" + updateType +
+        '}';
   }
 }

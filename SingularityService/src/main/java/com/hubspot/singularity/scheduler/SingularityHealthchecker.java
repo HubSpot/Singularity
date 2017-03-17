@@ -23,6 +23,7 @@ import com.hubspot.deploy.HealthcheckOptions;
 import com.hubspot.singularity.ExtendedTaskState;
 import com.hubspot.singularity.HealthcheckProtocol;
 import com.hubspot.singularity.SingularityAbort;
+import com.hubspot.singularity.SingularityAction;
 import com.hubspot.singularity.SingularityMainModule;
 import com.hubspot.singularity.SingularityPendingDeploy;
 import com.hubspot.singularity.SingularityRequestWithState;
@@ -31,6 +32,7 @@ import com.hubspot.singularity.SingularityTaskHealthcheckResult;
 import com.hubspot.singularity.SingularityTaskHistoryUpdate;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.config.SingularityConfiguration;
+import com.hubspot.singularity.data.DisasterManager;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.sentry.SingularityExceptionNotifier;
 import com.ning.http.client.AsyncHttpClient;
@@ -55,11 +57,12 @@ public class SingularityHealthchecker {
   private final ScheduledExecutorService executorService;
 
   private final SingularityExceptionNotifier exceptionNotifier;
+  private final DisasterManager disasterManager;
 
   @Inject
   public SingularityHealthchecker(@Named(SingularityMainModule.HEALTHCHECK_THREADPOOL_NAME) ScheduledExecutorService executorService,
-      AsyncHttpClient http, SingularityConfiguration configuration, SingularityNewTaskChecker newTaskChecker,
-      TaskManager taskManager, SingularityAbort abort, SingularityExceptionNotifier exceptionNotifier) {
+                                  AsyncHttpClient http, SingularityConfiguration configuration, SingularityNewTaskChecker newTaskChecker,
+                                  TaskManager taskManager, SingularityAbort abort, SingularityExceptionNotifier exceptionNotifier, DisasterManager disasterManager) {
     this.http = http;
     this.configuration = configuration;
     this.newTaskChecker = newTaskChecker;
@@ -70,6 +73,7 @@ public class SingularityHealthchecker {
     this.taskIdToHealthcheck = Maps.newConcurrentMap();
 
     this.executorService = executorService;
+    this.disasterManager = disasterManager;
   }
 
   public void enqueueHealthcheck(SingularityTask task, boolean ignoreExisting, boolean inStartup, boolean isFirstCheck) {
@@ -233,6 +237,9 @@ public class SingularityHealthchecker {
   }
 
   private boolean shouldHealthcheck(final SingularityTask task, final Optional<SingularityRequestWithState> request, Optional<SingularityPendingDeploy> pendingDeploy) {
+    if (disasterManager.isDisabled(SingularityAction.RUN_HEALTH_CHECKS)) {
+      return false;
+    }
     if (!task.getTaskRequest().getRequest().isLongRunning() || !task.getTaskRequest().getDeploy().getHealthcheck().isPresent()) {
       return false;
     }

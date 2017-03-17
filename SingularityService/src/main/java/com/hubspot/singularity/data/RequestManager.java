@@ -61,6 +61,7 @@ public class RequestManager extends CuratorAsyncManager {
   private static final String CLEANUP_PATH_ROOT = REQUEST_ROOT + "/cleanup";
   private static final String HISTORY_PATH_ROOT = REQUEST_ROOT + "/history";
   private static final String LB_CLEANUP_PATH_ROOT = REQUEST_ROOT + "/lbCleanup";
+  private static final String BOUNCING_ROOT = REQUEST_ROOT + "/bouncing";
   private static final String EXPIRING_ACTION_PATH_ROOT = REQUEST_ROOT + "/expiring";
   private static final String EXPIRING_BOUNCE_PATH_ROOT = EXPIRING_ACTION_PATH_ROOT + "/bounce";
   private static final String EXPIRING_PAUSE_PATH_ROOT = EXPIRING_ACTION_PATH_ROOT + "/pause";
@@ -260,6 +261,15 @@ public class RequestManager extends CuratorAsyncManager {
     return save(request, RequestState.ACTIVE, historyType, timestamp, user, message);
   }
 
+  public SingularityCreateResult markDeleting(SingularityRequest request, long timestamp, Optional<String> user, Optional<String> message) {
+    return save(request, RequestState.DELETING, RequestHistoryType.DELETING, timestamp, user, message);
+  }
+
+  public SingularityDeleteResult markDeleted(SingularityRequest request, long timestamp, Optional<String> user, Optional<String> message) {
+    save(request, RequestState.DELETED, RequestHistoryType.DELETED, timestamp, user, message);
+    return delete(getRequestPath(request.getId()));
+  }
+
   public List<SingularityPendingRequest> getPendingRequests() {
     return getAsyncChildren(PENDING_PATH_ROOT, pendingRequestTranscoder);
   }
@@ -321,20 +331,16 @@ public class RequestManager extends CuratorAsyncManager {
     return getData(getRequestPath(requestId), requestTranscoder);
   }
 
-  public SingularityDeleteResult deleteRequest(SingularityRequest request, Optional<String> user, Optional<String> actionId, Optional<String> message) {
+  public void startDeletingRequest(SingularityRequest request, Optional<String> user, Optional<String> actionId, Optional<String> message) {
     final long now = System.currentTimeMillis();
 
     // delete it no matter if the delete request already exists.
     createCleanupRequest(new SingularityRequestCleanup(user, RequestCleanupType.DELETING, now, Optional.of(Boolean.TRUE), request.getId(), Optional.<String> absent(),
         Optional.<Boolean> absent(), message, actionId, Optional.<SingularityShellCommand>absent()));
 
-    saveHistory(new SingularityRequestHistory(now, user, RequestHistoryType.DELETED, request, message));
+    markDeleting(request, System.currentTimeMillis(), user, message);
 
-    SingularityDeleteResult deleteResult = delete(getRequestPath(request.getId()));
-
-    LOG.info("Request {} deleted ({}) by {} - {}", request.getId(), deleteResult, user, message);
-
-    return deleteResult;
+    LOG.info("Request {} enqueued for deletion by {} - {}", request.getId(), user, message);
   }
 
   public List<SingularityRequestLbCleanup> getLbCleanupRequests() {
@@ -403,4 +409,15 @@ public class RequestManager extends CuratorAsyncManager {
     return getExpiringObject(SingularityExpiringSkipHealthchecks.class, requestId);
   }
 
+  public String getIsBouncingPath(String requestId) {
+    return ZKPaths.makePath(BOUNCING_ROOT, requestId);
+  }
+
+  public SingularityCreateResult markAsBouncing(String requestId) {
+    return create(getIsBouncingPath(requestId));
+  }
+
+  public SingularityDeleteResult markBounceComplete(String requestId) {
+    return delete(getIsBouncingPath(requestId));
+  }
 }

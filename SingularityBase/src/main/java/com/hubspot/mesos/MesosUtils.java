@@ -11,7 +11,6 @@ import java.util.List;
 import java.util.Random;
 import java.util.Set;
 
-import com.google.common.collect.Sets;
 import org.apache.mesos.Protos.MasterInfo;
 import org.apache.mesos.Protos.Offer;
 import org.apache.mesos.Protos.Resource;
@@ -25,6 +24,7 @@ import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.google.common.net.InetAddresses;
 import com.google.common.primitives.Longs;
 
@@ -156,7 +156,7 @@ public final class MesosUtils {
     List<Long> requestedPorts = new ArrayList<>(otherRequestedPorts);
     Ranges ranges = getRanges(resources, PORTS);
 
-    Preconditions.checkState(ranges.getRangeCount() > 0, "Ports %s should have existed in resources %s", PORTS, resources);
+    Preconditions.checkState(ranges.getRangeCount() > 0, "Ports %s should have existed in resources %s", PORTS, formatForLogging(resources));
 
     Ranges.Builder rangesBldr = Ranges.newBuilder();
 
@@ -385,7 +385,7 @@ public final class MesosUtils {
         } else if (resource.hasRanges()) {
           resourceBuilder.setRanges(subtractRanges(resource.getRanges(), matched.get().getRanges()));
         } else {
-          throw new IllegalStateException(String.format("Can't subtract non-scalar or range resources %s", resource));
+          throw new IllegalStateException(String.format("Can't subtract non-scalar or range resources %s", formatForLogging(resource)));
         }
 
         remaining.add(resourceBuilder.build());
@@ -405,5 +405,9 @@ public final class MesosUtils {
 
   public static String getSafeTaskIdForDirectory(String taskId) {
     return taskId.replace(":", "_");
+  }
+
+  public static String formatForLogging(Object object) {
+    return object.toString().replace("\n", "").replaceAll("( )+", " ");
   }
 }

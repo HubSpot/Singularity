@@ -1,8 +1,9 @@
 package com.hubspot.singularity;
 
+import java.util.Objects;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.Objects;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ComparisonChain;
@@ -64,33 +65,36 @@ public class SingularityTaskMetadata extends SingularityTaskIdHolder implements 
   }
 
   @Override
-  public int hashCode() {
-    return Objects.hashCode(user, type, title, message, timestamp, getTaskId());
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+    SingularityTaskMetadata that = (SingularityTaskMetadata) o;
+    return timestamp == that.timestamp &&
+        Objects.equals(type, that.type) &&
+        Objects.equals(title, that.title) &&
+        level == that.level &&
+        Objects.equals(message, that.message) &&
+        Objects.equals(user, that.user);
   }
 
   @Override
-  public boolean equals(Object other) {
-    if (this == other) {
-        return true;
-    }
-    if (other == null || other.getClass() != this.getClass()) {
-        return false;
-    }
-
-    SingularityTaskMetadata that = (SingularityTaskMetadata) other;
-
-    return Objects.equal(this.user, that.user)
-            && Objects.equal(this.type, that.type)
-            && Objects.equal(this.title, that.title)
-            && Objects.equal(this.message, that.message)
-            && Objects.equal(this.timestamp, that.timestamp)
-            && Objects.equal(this.getTaskId(), that.getTaskId())
-            && Objects.equal(this.level, that.level);
+  public int hashCode() {
+    return Objects.hash(timestamp, type, title, level, message, user);
   }
 
   @Override
   public String toString() {
-    return "SingularityTaskMetadata [timestamp=" + timestamp + ", type=" + type + ", title=" + title + ", message=" + message + ", user=" + user + ", taskId=" + getTaskId() + ", level=" + getLevel() + "]";
+    return "SingularityTaskMetadata{" +
+        "timestamp=" + timestamp +
+        ", type='" + type + '\'' +
+        ", title='" + title + '\'' +
+        ", level=" + level +
+        ", message=" + message +
+        ", user=" + user +
+        "} " + super.toString();
   }
-
 }

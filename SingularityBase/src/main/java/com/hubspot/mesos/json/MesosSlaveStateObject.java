@@ -1,6 +1,7 @@
 package com.hubspot.mesos.json;
 
 import java.util.List;
+import java.util.Objects;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -96,5 +97,51 @@ public class MesosSlaveStateObject {
 
   public int getStagedTasks() {
     return stagedTasks;
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+    MesosSlaveStateObject that = (MesosSlaveStateObject) o;
+    return startTime == that.startTime &&
+        finishedTasks == that.finishedTasks &&
+        lostTasks == that.lostTasks &&
+        startedTasks == that.startedTasks &&
+        failedTasks == that.failedTasks &&
+        killedTasks == that.killedTasks &&
+        stagedTasks == that.stagedTasks &&
+        Objects.equals(id, that.id) &&
+        Objects.equals(pid, that.pid) &&
+        Objects.equals(hostname, that.hostname) &&
+        Objects.equals(resources, that.resources) &&
+        Objects.equals(frameworks, that.frameworks);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(id, pid, hostname, startTime, resources, frameworks, finishedTasks, lostTasks, startedTasks, failedTasks, killedTasks, stagedTasks);
+  }
+
+  @Override
+  public String toString() {
+    return "MesosSlaveStateObject{" +
+        "id='" + id + '\'' +
+        ", pid='" + pid + '\'' +
+        ", hostname='" + hostname + '\'' +
+        ", startTime=" + startTime +
+        ", resources=" + resources +
+        ", frameworks=" + frameworks +
+        ", finishedTasks=" + finishedTasks +
+        ", lostTasks=" + lostTasks +
+        ", startedTasks=" + startedTasks +
+        ", failedTasks=" + failedTasks +
+        ", killedTasks=" + killedTasks +
+        ", stagedTasks=" + stagedTasks +
+        '}';
   }
 }

@@ -44,8 +44,12 @@ public class SingularityPendingDeploy {
 
   @Override
   public String toString() {
-    return "SingularityPendingDeploy [deployMarker=" + deployMarker + ", lastLoadBalancerUpdate=" + lastLoadBalancerUpdate + ", currentDeployState=" + currentDeployState + ", deployProgress=" + deployProgress + ", updatedRequest=" + updatedRequest
-      + "]";
+    return "SingularityPendingDeploy{" +
+        "deployMarker=" + deployMarker +
+        ", lastLoadBalancerUpdate=" + lastLoadBalancerUpdate +
+        ", currentDeployState=" + currentDeployState +
+        ", deployProgress=" + deployProgress +
+        ", updatedRequest=" + updatedRequest +
+        '}';
   }
-
 }

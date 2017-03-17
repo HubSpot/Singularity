@@ -4,8 +4,7 @@ import static com.hubspot.mesos.JavaUtils.obfuscateValue;
 
 import java.util.Objects;
 
-import org.jets3t.service.security.AWSCredentials;
-
+import com.amazonaws.auth.BasicAWSCredentials;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -59,7 +58,7 @@ public class SingularityS3Credentials {
   }
 
   @JsonIgnore
-  public AWSCredentials toAWSCredentials() {
-    return new AWSCredentials(accessKey, secretKey);
+  public BasicAWSCredentials toAWSCredentials() {
+    return new BasicAWSCredentials(accessKey, secretKey);
   }
 }

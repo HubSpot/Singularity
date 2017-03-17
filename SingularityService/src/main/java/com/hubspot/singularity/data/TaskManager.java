@@ -411,6 +411,10 @@ public class TaskManager extends CuratorAsyncManager {
     return updates;
   }
 
+  public Optional<SingularityTaskHistoryUpdate> getTaskHistoryUpdate(SingularityTaskId taskId, ExtendedTaskState taskState) {
+    return getData(getUpdatePath(taskId, taskState), taskHistoryUpdateTranscoder);
+  }
+
   public Map<SingularityTaskId, List<SingularityTaskHistoryUpdate>> getTaskHistoryUpdates(Collection<SingularityTaskId> taskIds) {
     Map<String, SingularityTaskId> pathsMap = Maps.newHashMap();
     for (SingularityTaskId taskId : taskIds) {
@@ -476,7 +480,18 @@ public class TaskManager extends CuratorAsyncManager {
     singularityEventListener.taskHistoryUpdateEvent(taskHistoryUpdate);
 
     if (overwriteExisting) {
-      return save(getUpdatePath(taskHistoryUpdate.getTaskId(), taskHistoryUpdate.getTaskState()), taskHistoryUpdate, taskHistoryUpdateTranscoder);
+      Optional<SingularityTaskHistoryUpdate> maybeExisting = getTaskHistoryUpdate(taskHistoryUpdate.getTaskId(), taskHistoryUpdate.getTaskState());
+      LOG.info("Found existing history {}", maybeExisting);
+      SingularityTaskHistoryUpdate updateWithPrevious;
+      if (maybeExisting.isPresent()) {
+        updateWithPrevious = taskHistoryUpdate.withPrevious(maybeExisting.get());
+        LOG.info("Will save new update {}", updateWithPrevious);
+
+      } else {
+        updateWithPrevious = taskHistoryUpdate;
+      }
+
+      return save(getUpdatePath(taskHistoryUpdate.getTaskId(), taskHistoryUpdate.getTaskState()), updateWithPrevious, taskHistoryUpdateTranscoder);
     } else {
       return create(getUpdatePath(taskHistoryUpdate.getTaskId(), taskHistoryUpdate.getTaskState()), taskHistoryUpdate, taskHistoryUpdateTranscoder);
     }
@@ -676,6 +691,16 @@ public class TaskManager extends CuratorAsyncManager {
 
   public List<SingularityPendingTaskId> getPendingTaskIds() {
     return getChildrenAsIds(PENDING_PATH_ROOT, pendingTaskIdTranscoder);
+  }
+
+  public List<SingularityPendingTaskId> getPendingTaskIdsForRequest(final String requestId) {
+    List<SingularityPendingTaskId> pendingTaskIds = getChildrenAsIds(PENDING_PATH_ROOT, pendingTaskIdTranscoder);
+    return ImmutableList.copyOf(Iterables.filter(pendingTaskIds, new Predicate<SingularityPendingTaskId>() {
+      @Override
+      public boolean apply(SingularityPendingTaskId pendingTaskId) {
+        return pendingTaskId.getRequestId().equals(requestId);
+      }
+    }));
   }
 
   public List<SingularityPendingTask> getPendingTasks() {

@@ -1,6 +1,6 @@
 package com.hubspot.singularity.s3uploader;
 
-import java.io.Closeable;
+import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
@@ -11,25 +11,29 @@ import java.nio.file.Path;
 import java.nio.file.PathMatcher;
 import java.nio.file.Paths;
 import java.nio.file.attribute.UserDefinedFileAttributeView;
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 
-import org.jets3t.service.S3Service;
-import org.jets3t.service.S3ServiceException;
-import org.jets3t.service.ServiceException;
-import org.jets3t.service.impl.rest.httpclient.RestS3Service;
-import org.jets3t.service.model.S3Bucket;
-import org.jets3t.service.model.S3Object;
-import org.jets3t.service.model.StorageObject;
-import org.jets3t.service.security.AWSCredentials;
-import org.jets3t.service.utils.MultipartUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.amazonaws.auth.BasicAWSCredentials;
+import com.amazonaws.services.s3.AmazonS3;
+import com.amazonaws.services.s3.AmazonS3Client;
+import com.amazonaws.services.s3.model.AbortMultipartUploadRequest;
+import com.amazonaws.services.s3.model.AmazonS3Exception;
+import com.amazonaws.services.s3.model.CompleteMultipartUploadRequest;
+import com.amazonaws.services.s3.model.InitiateMultipartUploadRequest;
+import com.amazonaws.services.s3.model.InitiateMultipartUploadResult;
+import com.amazonaws.services.s3.model.ObjectMetadata;
+import com.amazonaws.services.s3.model.PartETag;
+import com.amazonaws.services.s3.model.PutObjectRequest;
+import com.amazonaws.services.s3.model.StorageClass;
+import com.amazonaws.services.s3.model.UploadPartRequest;
 import com.codahale.metrics.Timer.Context;
 import com.github.rholder.retry.RetryException;
 import com.github.rholder.retry.Retryer;
@@ -44,15 +48,15 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hubspot.mesos.JavaUtils;
-import com.hubspot.singularity.SingularityS3Log;
 import com.hubspot.singularity.SingularityS3FormatHelper;
+import com.hubspot.singularity.SingularityS3Log;
 import com.hubspot.singularity.runner.base.sentry.SingularityRunnerExceptionNotifier;
 import com.hubspot.singularity.runner.base.shared.S3UploadMetadata;
 import com.hubspot.singularity.runner.base.shared.SimpleProcessManager;
 import com.hubspot.singularity.s3uploader.config.SingularityS3UploaderConfiguration;
 import com.hubspot.singularity.s3uploader.config.SingularityS3UploaderContentHeaders;
 
-public class SingularityS3Uploader implements Closeable {
+public class SingularityS3Uploader {
 
   private static final Logger LOG = LoggerFactory.getLogger(SingularityS3Uploader.class);
   private static final String LOG_START_TIME_ATTR = "logstart";
@@ -63,8 +67,8 @@ public class SingularityS3Uploader implements Closeable {
   private final PathMatcher pathMatcher;
   private final Optional<PathMatcher> finishedPathMatcher;
   private final String fileDirectory;
-  private final S3Service s3Service;
-  private final S3Bucket s3Bucket;
+  private final AmazonS3 s3Client;
+  private final String s3BucketName;
   private final Path metadataPath;
   private final SingularityS3UploaderMetrics metrics;
   private final String logIdentifier;
@@ -72,20 +76,15 @@ public class SingularityS3Uploader implements Closeable {
   private final SingularityS3UploaderConfiguration configuration;
   private final SingularityRunnerExceptionNotifier exceptionNotifier;
 
-  public SingularityS3Uploader(AWSCredentials defaultCredentials, S3UploadMetadata uploadMetadata, FileSystem fileSystem, SingularityS3UploaderMetrics metrics, Path metadataPath,
-      SingularityS3UploaderConfiguration configuration, String hostname, SingularityRunnerExceptionNotifier exceptionNotifier) {
-    AWSCredentials credentials = defaultCredentials;
+  public SingularityS3Uploader(BasicAWSCredentials defaultCredentials, S3UploadMetadata uploadMetadata, FileSystem fileSystem, SingularityS3UploaderMetrics metrics, Path metadataPath,
+                               SingularityS3UploaderConfiguration configuration, String hostname, SingularityRunnerExceptionNotifier exceptionNotifier) {
+    BasicAWSCredentials credentials = defaultCredentials;
 
     if (uploadMetadata.getS3SecretKey().isPresent() && uploadMetadata.getS3AccessKey().isPresent()) {
-      credentials = new AWSCredentials(uploadMetadata.getS3AccessKey().get(), uploadMetadata.getS3SecretKey().get());
+      credentials = new BasicAWSCredentials(uploadMetadata.getS3AccessKey().get(), uploadMetadata.getS3SecretKey().get());
     }
 
-    try {
-      this.s3Service = new RestS3Service(credentials);
-    } catch (S3ServiceException e) {
-      throw Throwables.propagate(e);
-    }
-
+    this.s3Client = new AmazonS3Client(credentials);
     this.metrics = metrics;
     this.uploadMetadata = uploadMetadata;
     this.fileDirectory = uploadMetadata.getDirectory();
@@ -98,7 +97,7 @@ public class SingularityS3Uploader implements Closeable {
     }
 
     this.hostname = hostname;
-    this.s3Bucket = new S3Bucket(uploadMetadata.getS3Bucket());
+    this.s3BucketName = uploadMetadata.getS3Bucket();
     this.metadataPath = metadataPath;
     this.logIdentifier = String.format("[%s]", metadataPath.getFileName());
     this.configuration = configuration;
@@ -111,15 +110,6 @@ public class SingularityS3Uploader implements Closeable {
 
   public S3UploadMetadata getUploadMetadata() {
     return uploadMetadata;
-  }
-
-  @Override
-  public void close() throws IOException {
-    try {
-      s3Service.shutdown();
-    } catch (ServiceException e) {
-      throw new IOException(e);
-    }
   }
 
   @Override
@@ -186,10 +176,10 @@ public class SingularityS3Uploader implements Closeable {
           metrics.upload();
           success++;
           Files.delete(file);
-        } catch (S3ServiceException se) {
+        } catch (AmazonS3Exception se) {
           metrics.error();
-          LOG.warn("{} Couldn't upload {} due to {} ({}) - {}", logIdentifier, file, se.getErrorCode(), se.getResponseCode(), se.getErrorMessage(), se);
-          exceptionNotifier.notify(String.format("S3ServiceException during upload (%s)", se.getMessage()), se, ImmutableMap.of("logIdentifier", logIdentifier, "file", file.toString(), "errorCode", se.getErrorCode(), "responseCode", Integer.toString(se.getResponseCode()), "errorMessage", se.getErrorMessage()));
+          LOG.warn("{} Couldn't upload {} due to {} - {}", logIdentifier, file, se.getErrorCode(), se.getErrorMessage(), se);
+          exceptionNotifier.notify(String.format("S3ServiceException during upload (%s)", se.getMessage()), se, ImmutableMap.of("logIdentifier", logIdentifier, "file", file.toString(), "errorCode", se.getErrorCode(), "errorMessage", se.getErrorMessage()));
         } catch (RetryException re) {
           metrics.error();
           LOG.warn("{} Couldn't upload or delete {}", logIdentifier, file, re);
@@ -213,7 +203,7 @@ public class SingularityS3Uploader implements Closeable {
     Callable<Boolean> uploader = new Uploader(sequence, file);
 
     Retryer<Boolean> retryer = RetryerBuilder.<Boolean>newBuilder()
-      .retryIfExceptionOfType(S3ServiceException.class)
+      .retryIfExceptionOfType(AmazonS3Exception.class)
       .retryIfRuntimeException()
       .withWaitStrategy(WaitStrategies.fixedWait(configuration.getRetryWaitMs(), TimeUnit.MILLISECONDS))
       .withStopStrategy(StopStrategies.stopAfterAttempt(configuration.getRetryCount()))
@@ -249,11 +239,10 @@ public class SingularityS3Uploader implements Closeable {
       final String key = SingularityS3FormatHelper.getKey(uploadMetadata.getS3KeyFormat(), sequence, Files.getLastModifiedTime(file).toMillis(), Objects.toString(file.getFileName()), hostname);
 
       long fileSizeBytes = Files.size(file);
-      LOG.info("{} Uploading {} to {}/{} (size {})", logIdentifier, file, s3Bucket.getName(), key, fileSizeBytes);
+      LOG.info("{} Uploading {} to {}/{} (size {})", logIdentifier, file, s3BucketName, key, fileSizeBytes);
 
       try {
-        S3Object object = new S3Object(s3Bucket, file.toFile());
-        object.setKey(key);
+        ObjectMetadata objectMetadata = new ObjectMetadata();
 
         Set<String> supportedViews = FileSystems.getDefault().supportedFileAttributeViews();
         LOG.trace("Supported attribute views are {}", supportedViews);
@@ -264,12 +253,12 @@ public class SingularityS3Uploader implements Closeable {
             LOG.debug("Found file attributes {} for file {}", attributes, file);
             Optional<Long> maybeStartTime = readFileAttributeAsLong(LOG_START_TIME_ATTR, view, attributes);
             if (maybeStartTime.isPresent()) {
-              object.addMetadata(SingularityS3Log.LOG_START_S3_ATTR, maybeStartTime.get().toString());
+              objectMetadata.addUserMetadata(SingularityS3Log.LOG_START_S3_ATTR, maybeStartTime.get().toString());
               LOG.debug("Added extra metadata for object ({}:{})", SingularityS3Log.LOG_START_S3_ATTR, maybeStartTime.get());
             }
             Optional<Long> maybeEndTime = readFileAttributeAsLong(LOG_END_TIME_ATTR, view, attributes);
             if (maybeEndTime.isPresent()) {
-              object.addMetadata(SingularityS3Log.LOG_END_S3_ATTR, maybeEndTime.get().toString());
+              objectMetadata.addUserMetadata(SingularityS3Log.LOG_END_S3_ATTR, maybeEndTime.get().toString());
               LOG.debug("Added extra metadata for object ({}:{})", SingularityS3Log.LOG_END_S3_ATTR, maybeEndTime.get());
             }
           } catch (Exception e) {
@@ -281,26 +270,32 @@ public class SingularityS3Uploader implements Closeable {
           if (file.toString().endsWith(contentHeaders.getFilenameEndsWith())) {
             LOG.debug("{} Using content headers {} for file {}", logIdentifier, contentHeaders, file);
             if (contentHeaders.getContentType().isPresent()) {
-              object.setContentType(contentHeaders.getContentType().get());
+              objectMetadata.setContentType(contentHeaders.getContentType().get());
             }
             if (contentHeaders.getContentEncoding().isPresent()) {
-              object.setContentEncoding(contentHeaders.getContentEncoding().get());
+              objectMetadata.setContentEncoding(contentHeaders.getContentEncoding().get());
             }
             break;
           }
         }
 
+        Optional<StorageClass> maybeStorageClass = Optional.absent();
+
         if (shouldApplyStorageClass(fileSizeBytes)) {
           LOG.debug("{} adding storage class {} to {}", logIdentifier, uploadMetadata.getS3StorageClass().get(), file);
-          object.addMetadata("x-amz-storage-class", uploadMetadata.getS3StorageClass().get());
+          maybeStorageClass = Optional.of(StorageClass.fromValue(uploadMetadata.getS3StorageClass().get()));
         }
 
-        LOG.debug("Uploading object with metadata {}", object.getMetadataMap());
+        LOG.debug("Uploading object with metadata {}", objectMetadata);
 
         if (fileSizeBytes > configuration.getMaxSingleUploadSizeBytes()) {
-          multipartUpload(object);
+          multipartUpload(key, file.toFile(), objectMetadata, maybeStorageClass);
         } else {
-          s3Service.putObject(s3Bucket, object);
+          PutObjectRequest putObjectRequest = new PutObjectRequest(s3BucketName, key, file.toFile()).withMetadata(objectMetadata);
+          if (maybeStorageClass.isPresent()) {
+            putObjectRequest.setStorageClass(maybeStorageClass.get());
+          }
+          s3Client.putObject(putObjectRequest);
         }
       } catch (Exception e) {
         LOG.warn("Exception uploading {}", file, e);
@@ -352,12 +347,39 @@ public class SingularityS3Uploader implements Closeable {
     return false;
   }
 
-  private void multipartUpload(S3Object object) throws Exception {
+  private void multipartUpload(String key, File file, ObjectMetadata objectMetadata, Optional<StorageClass> maybeStorageClass) throws Exception {
+    List<PartETag> partETags = new ArrayList<>();
+    InitiateMultipartUploadRequest initRequest = new InitiateMultipartUploadRequest(s3BucketName, key, objectMetadata);
+    if (maybeStorageClass.isPresent()) {
+      initRequest.setStorageClass(maybeStorageClass.get());
+    }
+    InitiateMultipartUploadResult initResponse = s3Client.initiateMultipartUpload(initRequest);
 
-    List<StorageObject> objectsToUploadAsMultipart = Arrays.<StorageObject>asList(object);
+    long contentLength = file.length();
+    long partSize = configuration.getUploadPartSize();
 
-    MultipartUtils mpUtils = new MultipartUtils(configuration.getUploadPartSize());
-    mpUtils.uploadObjects(s3Bucket.getName(), s3Service, objectsToUploadAsMultipart, null);
+    try {
+      long filePosition = 0;
+      for (int i = 1; filePosition < contentLength; i++) {
+        partSize = Math.min(partSize, (contentLength - filePosition));
+        UploadPartRequest uploadRequest = new UploadPartRequest()
+            .withBucketName(s3BucketName)
+            .withKey(key)
+            .withUploadId(initResponse.getUploadId())
+            .withPartNumber(i)
+            .withFileOffset(filePosition)
+            .withFile(file)
+            .withPartSize(partSize);
+        partETags.add(s3Client.uploadPart(uploadRequest).getPartETag());
+        filePosition += partSize;
+      }
+
+      CompleteMultipartUploadRequest completeRequest = new CompleteMultipartUploadRequest(s3BucketName, key, initResponse.getUploadId(), partETags);
+      s3Client.completeMultipartUpload(completeRequest);
+    } catch (Exception e) {
+      s3Client.abortMultipartUpload(new AbortMultipartUploadRequest(s3BucketName, key, initResponse.getUploadId()));
+      Throwables.propagate(e);
+    }
   }
 
 }

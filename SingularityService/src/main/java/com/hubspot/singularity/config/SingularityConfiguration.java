@@ -30,6 +30,12 @@ public class SingularityConfiguration extends Configuration {
 
   private long askDriverToKillTasksAgainAfterMillis = TimeUnit.MINUTES.toMillis(5);
 
+  private long cacheOffersForMillis = TimeUnit.MINUTES.toMillis(1);
+
+  private int offerCacheSize = 125;
+
+  private boolean cacheOffers = true;
+
   private int cacheTasksMaxSize = 5000;
 
   private int cacheTasksInitialSize = 100;
@@ -63,6 +69,12 @@ public class SingularityConfiguration extends Configuration {
   private long cleanupEverySeconds = 5;
 
   private long checkQueuedMailsEveryMillis = TimeUnit.SECONDS.toMillis(15);
+
+  private boolean ldapCacheEnabled = true;
+
+  private long ldapCacheSize = 100;
+
+  private long ldapCacheExpireMillis = TimeUnit.MINUTES.toMillis(1);
 
   private long closeWaitSeconds = 5;
 
@@ -303,14 +315,11 @@ public class SingularityConfiguration extends Configuration {
   @Max(5)
   private double schedulerPriorityWeightFactor = 1.0;
 
-  @Min(1)
-  private int statusUpdateQueueCapacity = 1000;
-
-  private boolean processStatusUpdatesInSeparateThread = false;
-
   private boolean rebalanceRacksOnScaleDown = false;
 
   private boolean allowBounceToSameHost = false;
+
+  private int maxActiveOnDemandTasksPerRequest = 0;
 
   public long getAskDriverToKillTasksAgainAfterMillis() {
     return askDriverToKillTasksAgainAfterMillis;
@@ -458,6 +467,30 @@ public class SingularityConfiguration extends Configuration {
 
   public int getDefaultDeployMaxTaskRetries() {
     return defaultDeployMaxTaskRetries;
+  }
+
+  public boolean isLdapCacheEnabled() {
+    return ldapCacheEnabled;
+  }
+
+  public void setLdapCacheEnabled(boolean ldapCacheEnabled) {
+    this.ldapCacheEnabled = ldapCacheEnabled;
+  }
+
+  public long getLdapCacheSize() {
+    return ldapCacheSize;
+  }
+
+  public void setLdapCacheSize(long ldapCacheSize) {
+    this.ldapCacheSize = ldapCacheSize;
+  }
+
+  public long getLdapCacheExpireMillis() {
+    return ldapCacheExpireMillis;
+  }
+
+  public void setLdapCacheExpireMillis(long ldapCacheExpireMillis) {
+    this.ldapCacheExpireMillis = ldapCacheExpireMillis;
   }
 
   public void setDefaultDeployMaxTaskRetries(int defaultDeployMaxTaskRetries) {
@@ -1202,22 +1235,6 @@ public class SingularityConfiguration extends Configuration {
     this.schedulerPriorityWeightFactor = schedulerPriorityWeightFactor;
   }
 
-  public int getStatusUpdateQueueCapacity() {
-    return statusUpdateQueueCapacity;
-  }
-
-  public void setStatusUpdateQueueCapacity(int statusUpdateQueueCapacity) {
-    this.statusUpdateQueueCapacity = statusUpdateQueueCapacity;
-  }
-
-  public boolean isProcessStatusUpdatesInSeparateThread() {
-    return processStatusUpdatesInSeparateThread;
-  }
-
-  public void setProcessStatusUpdatesInSeparateThread(boolean processStatusUpdatesInSeparateThread) {
-    this.processStatusUpdatesInSeparateThread = processStatusUpdatesInSeparateThread;
-  }
-
   public boolean isRebalanceRacksOnScaleDown() {
     return rebalanceRacksOnScaleDown;
   }
@@ -1259,4 +1276,35 @@ public class SingularityConfiguration extends Configuration {
     this.numUsageToKeep = numUsageToKeep;
   }
 
+  public long getCacheOffersForMillis() {
+    return cacheOffersForMillis;
+  }
+
+  public void setCacheOffersForMillis(long cacheOffersForMillis) {
+    this.cacheOffersForMillis = cacheOffersForMillis;
+  }
+
+  public int getOfferCacheSize() {
+    return offerCacheSize;
+  }
+
+  public void setOfferCacheSize(int offerCacheSize) {
+    this.offerCacheSize = offerCacheSize;
+  }
+
+  public boolean isCacheOffers() {
+    return cacheOffers;
+  }
+
+  public void setCacheOffers(boolean cacheOffers) {
+    this.cacheOffers = cacheOffers;
+  }
+
+  public int getMaxActiveOnDemandTasksPerRequest() {
+    return maxActiveOnDemandTasksPerRequest;
+  }
+
+  public void setMaxActiveOnDemandTasksPerRequest(int maxActiveOnDemandTasksPerRequest) {
+    this.maxActiveOnDemandTasksPerRequest = maxActiveOnDemandTasksPerRequest;
+  }
 }
