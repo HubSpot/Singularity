@@ -24,8 +24,8 @@ public class SingularityMesosArtifact {
                                   @JsonProperty("extract") Optional<Boolean> extract) {
     this.uri = uri;
     this.cache = cache.or(false);
-    this.executable = executable.or(true);
-    this.extract = extract.or(false);
+    this.executable = executable.or(false);
+    this.extract = extract.or(true);
   }
 
   public String getUri() {
