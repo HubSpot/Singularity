@@ -138,6 +138,7 @@ public abstract class CuratorManager {
     final long start = System.currentTimeMillis();
 
     try {
+      // moves RequestState to DELETED
       curator.delete().deletingChildrenIfNeeded().forPath(path);
       return SingularityDeleteResult.DELETED;
     } catch (NoNodeException nne) {
@@ -218,6 +219,10 @@ public abstract class CuratorManager {
 
       log(OperationType.WRITE, Optional.<Integer> absent(), Optional.<Integer> of(data.or(EMPTY_BYTES).length), start, path);
     }
+  }
+
+  protected <T> SingularityCreateResult set(String path, T object, Transcoder<T> transcoder) {
+    return set(path, Optional.of(transcoder.toBytes(object)));
   }
 
   protected SingularityCreateResult set(String path, Optional<byte[]> data) {

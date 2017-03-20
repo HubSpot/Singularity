@@ -4,10 +4,13 @@ import { connect } from 'react-redux';
 import { withRouter } from 'react-router';
 import { FetchRequests } from '../../actions/api/requests';
 import { SetVisibility } from '../../actions/ui/globalSearch';
+import { refresh } from '../../actions/ui/requestDetail';
+import { push } from 'react-router-redux';
 
 import { Typeahead } from 'react-typeahead';
 import fuzzy from 'fuzzy';
 import key from 'keymaster';
+import filterSelector from '../../selectors/requests/filterSelector';
 
 class GlobalSearch extends React.Component {
 
@@ -69,42 +72,46 @@ class GlobalSearch extends React.Component {
   }
 
   searchOptions(inputValue, options) {
-    // fuzzy lazily just appends a string before and after a matching char
-    // we have to later use a simple shift-in shift-out state machine to convert
-    const fuzzyOptions = {
-      returnMatchInfo: true
-    };
-
-    const searched = fuzzy.filter(inputValue, options, fuzzyOptions);
+    const searched = filterSelector({
+      requestsInState: options,
+      filter: {
+        state: 'all',
+        searchFilter: inputValue,
+        subFilter: [
+          'SERVICE',
+          'WORKER',
+          'SCHEDULED',
+          'ON_DEMAND',
+          'RUN_ONCE'
+        ]
+      }
+    });
 
     return searched;
   }
 
   getValueFromOption(option) {
-    return option.original;
+    return option.id;
   }
 
   optionSelected(requestIdObject) {
     const requestId = this.getValueFromOption(requestIdObject);
-    this.props.router.push(`/request/${ requestId }`, { trigger: true });
+    this.props.push(`/request/${ requestId }`, { trigger: true });
+    this.props.refresh(requestId);
     this.clear();
     this.props.setVisibility(false);
   }
 
   renderOption(option, index) {
-    // transform fuzzy string into react component
-    const bolded = option.string.map((matchInfo) => {
-      if (matchInfo.match) {
-        return <strong>{matchInfo.char}</strong>;
-      }
-      return matchInfo.char;
-    });
-
-    return <span key={index}>{bolded}</span>;
+    return <span key={index}>{option.id}</span>;
   }
 
   render() {
-    const options = _.map(this.props.requests, (requestParent) => requestParent.request.id);
+    const options = _.map(this.props.requests, (requestParent) => ({
+      request: requestParent.request,
+      id: requestParent.request.id,
+      requestDeployState: requestParent.requestDeployState
+    }));
 
     const globalSearchClasses = classNames('global-search', {
       'global-search-active': this.props.visible
@@ -143,18 +150,12 @@ class GlobalSearch extends React.Component {
   }
 }
 
-function mapDispatchToProps(dispatch) {
-  return {
-    getRequests: () => dispatch(FetchRequests.trigger()),
-    setVisibility: (visible) => dispatch(SetVisibility(visible))
-  };
-}
-
-function mapStateToProps(state) {
-  return {
-    requests: state.api.requests.data,
-    visible: state.ui.globalSearch.visible
-  };
-}
-
-export default connect(mapStateToProps, mapDispatchToProps)(withRouter(GlobalSearch));
+export default connect((state) => ({
+  requests: state.api.requests.data,
+  visible: state.ui.globalSearch.visible
+}), {
+  getRequests: FetchRequests.trigger,
+  setVisibility: SetVisibility,
+  push,
+  refresh
+})(withRouter(GlobalSearch));

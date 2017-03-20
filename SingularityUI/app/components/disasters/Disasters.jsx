@@ -1,11 +1,11 @@
 import React, { PropTypes, Component } from 'react';
-import { FetchDisabledActions, FetchDisastersData, FetchPriorityFreeze } from '../../actions/api/disasters';
 import { connect } from 'react-redux';
 import rootComponent from '../../rootComponent';
 import Utils from '../../utils';
 import DisabledActions from './DisabledActions';
 import ManageDisasters from './ManageDisasters';
 import DisasterStats from './DisasterStats';
+import { refresh } from '../../actions/ui/disasters';
 
 class Disasters extends Component {
   static propTypes = {
@@ -28,9 +28,11 @@ class Disasters extends Component {
     }).isRequired,
     priorityFreeze: PropTypes.object,
     user: PropTypes.string,
-    fetchDisabledActions: PropTypes.func.isRequired,
-    fetchDisastersData: PropTypes.func.isRequired,
-    fetchPriorityFreeze: PropTypes.func.isRequired
+    disabledActions: PropTypes.arrayOf(PropTypes.shape({
+      type: PropTypes.string.isRequired,
+      message: PropTypes.string,
+      user: PropTypes.string
+    })).isRequired,
   };
 
   constructor(props) {
@@ -42,7 +44,7 @@ class Disasters extends Component {
     return (
       <div>
         <DisabledActions disabledActions={this.props.disabledActions} user={this.props.user} />
-        <ManageDisasters 
+        <ManageDisasters
           disasters={this.props.disastersData.disasters}
           priorityFreeze={this.props.priorityFreeze}
           user={this.props.user}
@@ -65,21 +67,4 @@ function mapStateToProps(state) {
   };
 }
 
-function mapDispatchToProps(dispatch) {
-  return {
-    fetchDisastersData: () => dispatch(FetchDisastersData.trigger()),
-    fetchDisabledActions: () => dispatch(FetchDisabledActions.trigger()),
-    fetchPriorityFreeze: () => dispatch(FetchPriorityFreeze.trigger([404]))
-  };
-}
-
-function refresh(props) {
-	const promises = [];
-	promises.push(props.fetchDisastersData());
-	promises.push(props.fetchDisabledActions());
-  promises.push(props.fetchPriorityFreeze());
-  return Promise.all(promises);
-}
-
-
-export default connect(mapStateToProps, mapDispatchToProps)(rootComponent(Disasters, 'Disasters', refresh));
+export default connect(mapStateToProps)(rootComponent(Disasters, refresh));

@@ -27,15 +27,18 @@ class TaskGroupHeader extends React.Component {
     } else if (this.props.tasks.length > 0) {
       const taskData = Utils.getTaskDataFromTaskId(this.props.tasks[0].taskId);
       return <span><div className="width-constrained"><OverlayTrigger placement="bottom" overlay={this.getInstanceNoToolTip(taskData)}><Link className="instance-link" to={`task/${ this.props.tasks[0].taskId }`}>Instance {taskData.instanceNo}</Link></OverlayTrigger></div><TaskStatusIndicator status={this.props.tasks[0].lastTaskStatus} /></span>;
-    } else {
-      return <div className="width-constrained" />;
     }
+    return <div className="width-constrained" />;
   }
 
   renderTaskLegend() {
-    if (this.props.tasks.length > 1) {
-      return <span className="right-buttons"><a className="action-link" onClick={this.toggleLegend}><span className="glyphicon glyphicon-menu-hamburger" /></a></span>;
-    }
+    return (this.props.tasks.length > 1) && (
+      <span className="right-buttons">
+        <a className="action-link" onClick={this.toggleLegend}>
+          <span className="glyphicon glyphicon-menu-hamburger" />
+        </a>
+      </span>
+    );
   }
 
   renderClose() {
@@ -60,7 +63,7 @@ TaskGroupHeader.propTypes = {
   tasks: React.PropTypes.array.isRequired
 };
 
-let mapStateToProps = function (state, ownProps) {
+const mapStateToProps = (state, ownProps) => {
   if (!(ownProps.taskGroupId in state.taskGroups)) {
     return {
       taskGroupsCount: state.taskGroups.length,
@@ -73,6 +76,6 @@ let mapStateToProps = function (state, ownProps) {
   };
 };
 
-let mapDispatchToProps = { scrollToTop, scrollToBottom, removeTaskGroup, expandTaskGroup };
+const mapDispatchToProps = { scrollToTop, scrollToBottom, removeTaskGroup, expandTaskGroup };
 
 export default connect(mapStateToProps, mapDispatchToProps)(TaskGroupHeader);

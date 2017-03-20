@@ -25,10 +25,10 @@ public class LogrotateAdditionalFile {
 
     @Override
     public String toString() {
-        return "LogrotateAdditionalFile[" +
+        return "LogrotateAdditionalFile{" +
             "filename='" + filename + '\'' +
             ", extension='" + extension + '\'' +
             ", dateformat='" + dateformat + '\'' +
-            ']';
+            '}';
     }
 }

@@ -122,7 +122,7 @@ public class LogrotateTemplateContext {
   }
 
   public String getLogfileName() {
-    return configuration.getServiceLog();
+    return taskDefinition.getServiceLogFileName();
   }
 
   public boolean isUseFileAttributes() {
@@ -131,8 +131,9 @@ public class LogrotateTemplateContext {
 
   @Override
   public String toString() {
-    return "LogrotateTemplateContext [taskId=" + taskDefinition.getTaskId() + "]";
+    return "LogrotateTemplateContext{" +
+        "taskDefinition=" + taskDefinition +
+        ", configuration=" + configuration +
+        '}';
   }
-
-
 }

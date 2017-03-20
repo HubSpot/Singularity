@@ -1,3 +1,4 @@
+import _ from 'underscore';
 import { combineReducers } from 'redux';
 import buildApiActionReducer from './base';
 import buildKeyedApiActionReducer from './keyed';
@@ -77,13 +78,15 @@ import {
 
 import { FetchWebhooks } from '../../actions/api/webhooks';
 
-import { 
+import {
   FetchDisastersData,
   FetchDisabledActions,
   FetchPriorityFreeze
-} from '../../actions/api/disasters'
+} from '../../actions/api/disasters';
 
 import { FetchGroups } from '../../actions/api/requestGroups';
+
+import { FetchInactiveHosts } from '../../actions/api/inactive';
 
 const user = buildApiActionReducer(FetchUser);
 const addStarredRequests = buildApiActionReducer(AddStarredRequests, []);
@@ -121,7 +124,7 @@ const deploys = buildApiActionReducer(FetchPendingDeploys, []);
 const deploysForRequest = buildKeyedApiActionReducer(FetchDeploysForRequest, []);
 const saveDeploy = buildApiActionReducer(SaveDeploy);
 const activeTasksForDeploy = buildApiActionReducer(FetchActiveTasksForDeploy);
-const activeTasksForRequest = buildKeyedApiActionReducer(FetchActiveTasksForRequest, []);
+const activeTasksForRequest = buildKeyedApiActionReducer(FetchActiveTasksForRequest, [], (tasks) => _.sortBy(tasks, (task) => task.taskId.instanceNo));
 const scheduledTasksForRequest = buildKeyedApiActionReducer(FetchScheduledTasksForRequest, []);
 const taskHistoryForDeploy = buildApiActionReducer(FetchTaskHistoryForDeploy, []);
 const taskHistoryForRequest = buildKeyedApiActionReducer(FetchTaskHistoryForRequest, []);
@@ -136,6 +139,7 @@ const task = buildKeyedApiActionReducer(FetchTaskHistory);
 const taskHistory = buildApiActionReducer(FetchTaskSearchParams, []);
 const tasks = buildApiActionReducer(FetchTasksInState, []);
 const requestGroups = buildApiActionReducer(FetchGroups, []);
+const inactiveHosts = buildApiActionReducer(FetchInactiveHosts, []);
 
 export default combineReducers({
   user,
@@ -188,5 +192,6 @@ export default combineReducers({
   runningTask,
   taskKill,
   taskHistory,
-  requestGroups
+  requestGroups,
+  inactiveHosts,
 });

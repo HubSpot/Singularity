@@ -33,7 +33,9 @@ public class SingularityPauseRequest extends SingularityExpiringRequestParent {
 
   @Override
   public String toString() {
-    return "SingularityPauseRequest [killTasks=" + killTasks + ", toString()=" + super.toString() + "]";
+    return "SingularityPauseRequest{" +
+        "killTasks=" + killTasks +
+        ", runShellCommandBeforeKill=" + runShellCommandBeforeKill +
+        "} " + super.toString();
   }
-
 }

@@ -1,11 +1,9 @@
 package com.hubspot.mesos.json;
 
-import java.util.List;
+import java.util.Objects;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.Objects;
-import com.hubspot.mesos.SingularityMesosTaskLabel;
 
 public class MesosTaskObject {
 
@@ -58,15 +56,38 @@ public class MesosTaskObject {
   }
 
   @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+    MesosTaskObject that = (MesosTaskObject) o;
+    return Objects.equals(resources, that.resources) &&
+        Objects.equals(state, that.state) &&
+        Objects.equals(id, that.id) &&
+        Objects.equals(name, that.name) &&
+        Objects.equals(slaveId, that.slaveId) &&
+        Objects.equals(frameworkId, that.frameworkId) &&
+        Objects.equals(executorId, that.executorId);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(resources, state, id, name, slaveId, frameworkId, executorId);
+  }
+
+  @Override
   public String toString() {
-    return Objects.toStringHelper(this)
-      .add("resources", resources)
-      .add("state", state)
-      .add("id", id)
-      .add("name", name)
-      .add("slaveId", slaveId)
-      .add("frameworkId", frameworkId)
-      .add("executorId", executorId)
-      .toString();
+    return "MesosTaskObject{" +
+        "resources=" + resources +
+        ", state='" + state + '\'' +
+        ", id='" + id + '\'' +
+        ", name='" + name + '\'' +
+        ", slaveId='" + slaveId + '\'' +
+        ", frameworkId='" + frameworkId + '\'' +
+        ", executorId='" + executorId + '\'' +
+        '}';
   }
 }

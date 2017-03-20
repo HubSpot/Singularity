@@ -28,7 +28,9 @@ public class SingularityTaskShellCommandHistory {
 
   @Override
   public String toString() {
-    return "SingularityTaskShellCommandHistory [shellRequest=" + shellRequest + ", shellUpdates=" + shellUpdates + "]";
+    return "SingularityTaskShellCommandHistory{" +
+        "shellRequest=" + shellRequest +
+        ", shellUpdates=" + shellUpdates +
+        '}';
   }
-
 }

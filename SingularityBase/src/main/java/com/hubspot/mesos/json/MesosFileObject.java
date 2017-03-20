@@ -1,5 +1,7 @@
 package com.hubspot.mesos.json;
 
+import java.util.Objects;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -52,5 +54,41 @@ public class MesosFileObject {
 
   public String getUid() {
     return uid;
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+    MesosFileObject that = (MesosFileObject) o;
+    return mtime == that.mtime &&
+        nlink == that.nlink &&
+        size == that.size &&
+        Objects.equals(gid, that.gid) &&
+        Objects.equals(mode, that.mode) &&
+        Objects.equals(path, that.path) &&
+        Objects.equals(uid, that.uid);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(gid, mode, mtime, nlink, path, size, uid);
+  }
+
+  @Override
+  public String toString() {
+    return "MesosFileObject{" +
+        "gid='" + gid + '\'' +
+        ", mode='" + mode + '\'' +
+        ", mtime=" + mtime +
+        ", nlink=" + nlink +
+        ", path='" + path + '\'' +
+        ", size=" + size +
+        ", uid='" + uid + '\'' +
+        '}';
   }
 }

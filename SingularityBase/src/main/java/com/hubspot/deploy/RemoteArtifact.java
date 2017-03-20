@@ -39,7 +39,8 @@ public abstract class RemoteArtifact extends Artifact {
 
   @Override
   public String toString() {
-    return "RemoteArtifact [filesize=" + filesize + ", parent=" + super.toString() + "]";
+    return "RemoteArtifact{" +
+        "filesize=" + filesize +
+        "} " + super.toString();
   }
-
 }

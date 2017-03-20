@@ -37,13 +37,12 @@ public class DockerContext {
 
   @Override
   public String toString() {
-    return "DockerContext [" +
-      "envContext=" + envContext +
-      "runContext=" + runContext +
-      "prefix=" + prefix +
-      "stopTimeout=" + stopTimeout +
-      "privileged=" + privileged +
-      "]";
-
+    return "DockerContext{" +
+        "envContext=" + envContext +
+        ", runContext=" + runContext +
+        ", prefix='" + prefix + '\'' +
+        ", stopTimeout=" + stopTimeout +
+        ", privileged=" + privileged +
+        '}';
   }
 }

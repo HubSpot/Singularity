@@ -44,7 +44,8 @@ public class ExternalArtifact extends RemoteArtifact {
 
   @Override
   public String toString() {
-    return "ExternalArtifact [url=" + url + ", parent=" + super.toString() + "]";
+    return "ExternalArtifact{" +
+        "url='" + url + '\'' +
+        "} " + super.toString();
   }
-
 }

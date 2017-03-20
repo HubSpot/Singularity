@@ -3,9 +3,7 @@ package com.hubspot.singularity;
 import java.util.List;
 
 import org.apache.mesos.Protos.Offer;
-import org.apache.mesos.Protos.Resource;
 import org.apache.mesos.Protos.TaskInfo;
-import org.apache.mesos.Protos.Value.Range;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -61,7 +59,11 @@ public class SingularityTask extends SingularityTaskIdHolder {
 
   @Override
   public String toString() {
-    return "SingularityTask [taskRequest=" + taskRequest + ", offer=" + offer + ", mesosTask=" + mesosTask + ", rackId=" + rackId + "]";
+    return "SingularityTask{" +
+        "taskRequest=" + taskRequest +
+        ", offer=" + MesosUtils.formatForLogging(offer) +
+        ", mesosTask=" + MesosUtils.formatForLogging(mesosTask) +
+        ", rackId=" + rackId +
+        '}';
   }
-
 }

@@ -5,6 +5,7 @@ import org.apache.mesos.Protos.TaskStatus;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
+import com.hubspot.mesos.MesosUtils;
 
 public class SingularityTaskStatusHolder {
 
@@ -45,7 +46,12 @@ public class SingularityTaskStatusHolder {
 
   @Override
   public String toString() {
-    return "SingularityTaskStatusHolder [taskStatus=" + taskStatus + ", taskId=" + taskId + ", serverTimestamp=" + serverTimestamp + ", serverId=" + serverId + ", slaveId=" + slaveId + "]";
+    return "SingularityTaskStatusHolder{" +
+        "taskStatus=" + MesosUtils.formatForLogging(taskStatus) +
+        ", taskId=" + taskId +
+        ", serverTimestamp=" + serverTimestamp +
+        ", serverId='" + serverId + '\'' +
+        ", slaveId=" + slaveId +
+        '}';
   }
-
 }

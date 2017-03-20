@@ -21,7 +21,7 @@ export const FIELDS = {
   ],
   defaultExecutor: [
     {id: 'command', type: 'text'},
-    {id: 'uris', type: 'array', arrayType: 'text'},
+    {id: 'uris', type: 'mesosArtifacts'},
     {id: 'arguments', type: 'array', arrayType: 'text'}
   ],
   customExecutor: [
@@ -60,7 +60,7 @@ export const FIELDS = {
           values: [
             {id: 'image', type: 'text', required: true},
             {id: 'network', type: 'text', default: 'NONE'},
-            {id: 'parameters', type: 'map'},
+            {id: 'dockerParameters', type: 'dockerParameters'},
             {id: 'privileged', type: 'text'},
             {id: 'forcePullImage', type: 'text'},
             {id: 'volumes', type: 'volumes'},
@@ -100,6 +100,13 @@ export const FIELDS = {
   ]
 };
 
+export const MESOS_ARTIFACT_FIELDS = [
+  {id: 'uri', type: 'text', required: true},
+  {id: 'cache', type: 'text'},
+  {id: 'executable', type: 'text'},
+  {id: 'extract', type: 'text', default: true}
+];
+
 export const ARTIFACT_FIELDS = {
   all: [
     {id: 'name', type: 'text', required: true},
@@ -127,6 +134,11 @@ export const DOCKER_PORT_MAPPING_FIELDS = [
   {id: 'hostPortType', type: 'text', default: 'LITERAL', required: true},
   {id: 'hostPort', type: 'text', required: true},
   {id: 'protocol', type: 'text', default: 'tcp'}
+];
+
+export const DOCKER_PARAMETERS_FIELDS = [
+  {id: 'key', type: 'text', required: true},
+  {id: 'value', type: 'text'},
 ];
 
 export const DOCKER_VOLUME_FIELDS = [
@@ -164,6 +176,7 @@ export const INDEXED_ARTIFACT_FIELDS = _.extend(
   makeIndexedFields(ARTIFACT_FIELDS.s3)
 );
 export const INDEXED_DOCKER_PORT_MAPPING_FIELDS = makeIndexedFields(DOCKER_PORT_MAPPING_FIELDS);
+export const INDEXED_DOCKER_PARAMETERS_FIELDS = makeIndexedFields(DOCKER_PARAMETERS_FIELDS);
 export const INDEXED_DOCKER_VOLUME_FIELDS = makeIndexedFields(DOCKER_VOLUME_FIELDS);
 export const INDEXED_ALL_FIELDS = makeIndexedFields(FIELDS.all);
 export const INDEXED_CUSTOM_EXECUTOR_FIELDS = makeIndexedFields(FIELDS.customExecutor);
@@ -171,6 +184,7 @@ export const INDEXED_DEFAULT_EXECUTOR_FIELDS = makeIndexedFields(FIELDS.defaultE
 export const INDEXED_DOCKER_CONTAINER_FIELDS = makeIndexedFields(FIELDS.dockerContainer);
 export const INDEXED_LOAD_BALANCER_FIELDS = makeIndexedFields(FIELDS.loadBalancer);
 export const INDEXED_HEALTH_CHECKER_FIELDS = makeIndexedFields(FIELDS.healthChecker);
+export const INDEXED_MESOS_ARTIFACT_FIELDS = makeIndexedFields(MESOS_ARTIFACT_FIELDS)
 export const INDEXED_ALL_ARTIFACT_FIELDS = makeIndexedFields(ARTIFACT_FIELDS.all);
 export const INDEXED_EMBEDDED_ARTIFACT_FIELDS = makeIndexedFields(ARTIFACT_FIELDS.embedded);
 export const INDEXED_EXTERNAL_ARTIFACT_FIELDS = makeIndexedFields(ARTIFACT_FIELDS.external);

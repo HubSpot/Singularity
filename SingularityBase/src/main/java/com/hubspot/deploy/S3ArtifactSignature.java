@@ -5,7 +5,9 @@ import java.util.Objects;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
+import com.wordnik.swagger.annotations.ApiModel;
 
+@ApiModel(description="A file with name `filename` containing the signature (e.g. gpg signature) for an artifact with the specified `artifactFilename`. Used to verify the validity of the artifact being downloaded")
 public class S3ArtifactSignature extends S3Artifact {
 
   private final String artifactFilename;
@@ -45,7 +47,8 @@ public class S3ArtifactSignature extends S3Artifact {
 
   @Override
   public String toString() {
-    return "S3ArtifactSignature [artifactFilename=" + artifactFilename + ", parent=" + super.toString() + "]";
+    return "S3ArtifactSignature{" +
+        "artifactFilename='" + artifactFilename + '\'' +
+        "} " + super.toString();
   }
-
 }

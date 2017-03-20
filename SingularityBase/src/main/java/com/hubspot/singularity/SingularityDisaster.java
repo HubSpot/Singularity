@@ -1,8 +1,9 @@
 package com.hubspot.singularity;
 
+import java.util.Objects;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.Objects;
 
 public class SingularityDisaster {
   private final SingularityDisasterType type;
@@ -32,19 +33,19 @@ public class SingularityDisaster {
     }
     SingularityDisaster that = (SingularityDisaster) o;
     return active == that.active &&
-      type == that.type;
+        type == that.type;
   }
 
   @Override
   public int hashCode() {
-    return Objects.hashCode(type, active);
+    return Objects.hash(type, active);
   }
 
   @Override
   public String toString() {
-    return Objects.toStringHelper(this)
-      .add("type", type)
-      .add("active", active)
-      .toString();
+    return "SingularityDisaster{" +
+        "type=" + type +
+        ", active=" + active +
+        '}';
   }
 }

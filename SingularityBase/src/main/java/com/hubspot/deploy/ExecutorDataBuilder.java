@@ -21,7 +21,6 @@ public class ExecutorDataBuilder {
   private Optional<Long> sigKillProcessesAfterMillis;
   private Optional<Integer> maxTaskThreads;
   private Optional<Boolean> preserveTaskSandboxAfterFinish;
-  private Optional<String> loggingS3Bucket;
   private Optional<Integer> maxOpenFiles;
   private Optional<Boolean> skipLogrotateAndCompress;
   private Optional<List<S3ArtifactSignature>> s3ArtifactSignatures;
@@ -29,7 +28,7 @@ public class ExecutorDataBuilder {
 
   public ExecutorDataBuilder(String cmd, List<EmbeddedArtifact> embeddedArtifacts, List<ExternalArtifact> externalArtifacts, List<S3Artifact> s3Artifacts, List<Integer> successfulExitCodes,
       Optional<String> runningSentinel, Optional<String> user, List<String> extraCmdLineArgs, Optional<String> loggingTag, Map<String, String> loggingExtraFields,
-      Optional<Long> sigKillProcessesAfterMillis, Optional<Integer> maxTaskThreads, Optional<Boolean> preserveTaskSandboxAfterFinish, Optional<String> loggingS3Bucket,
+      Optional<Long> sigKillProcessesAfterMillis, Optional<Integer> maxTaskThreads, Optional<Boolean> preserveTaskSandboxAfterFinish,
       Optional<Integer> maxOpenFiles, Optional<Boolean> skipLogrotateAndCompress, Optional<List<S3ArtifactSignature>> s3ArtifactSignatures, Optional<SingularityExecutorLogrotateFrequency> logrotateFrequency) {
     this.cmd = cmd;
     this.embeddedArtifacts = embeddedArtifacts;
@@ -44,7 +43,6 @@ public class ExecutorDataBuilder {
     this.sigKillProcessesAfterMillis = sigKillProcessesAfterMillis;
     this.maxTaskThreads = maxTaskThreads;
     this.preserveTaskSandboxAfterFinish = preserveTaskSandboxAfterFinish;
-    this.loggingS3Bucket = loggingS3Bucket;
     this.maxOpenFiles = maxOpenFiles;
     this.skipLogrotateAndCompress = skipLogrotateAndCompress;
     this.s3ArtifactSignatures = s3ArtifactSignatures;
@@ -57,7 +55,7 @@ public class ExecutorDataBuilder {
 
   public ExecutorData build() {
     return new ExecutorData(cmd, embeddedArtifacts, externalArtifacts, s3Artifacts, successfulExitCodes, user, runningSentinel, extraCmdLineArgs, loggingTag, loggingExtraFields,
-        sigKillProcessesAfterMillis, maxTaskThreads, preserveTaskSandboxAfterFinish, loggingS3Bucket, maxOpenFiles, skipLogrotateAndCompress, s3ArtifactSignatures, logrotateFrequency);
+        sigKillProcessesAfterMillis, maxTaskThreads, preserveTaskSandboxAfterFinish, maxOpenFiles, skipLogrotateAndCompress, s3ArtifactSignatures, logrotateFrequency);
   }
 
   public Optional<String> getLoggingTag() {
@@ -177,15 +175,6 @@ public class ExecutorDataBuilder {
     return this;
   }
 
-  public Optional<String> getLoggingS3Bucket() {
-    return loggingS3Bucket;
-  }
-
-  public ExecutorDataBuilder setLoggingS3Bucket(Optional<String> loggingS3Bucket) {
-    this.loggingS3Bucket = loggingS3Bucket;
-    return this;
-  }
-
   public Optional<Integer> getMaxOpenFiles() {
     return maxOpenFiles;
   }
@@ -224,25 +213,24 @@ public class ExecutorDataBuilder {
 
   @Override
   public String toString() {
-    return "ExecutorDataBuilder[" +
-            "cmd='" + cmd + '\'' +
-            ", embeddedArtifacts=" + embeddedArtifacts +
-            ", externalArtifacts=" + externalArtifacts +
-            ", s3Artifacts=" + s3Artifacts +
-            ", successfulExitCodes=" + successfulExitCodes +
-            ", runningSentinel=" + runningSentinel +
-            ", user=" + user +
-            ", extraCmdLineArgs=" + extraCmdLineArgs +
-            ", loggingTag=" + loggingTag +
-            ", loggingExtraFields=" + loggingExtraFields +
-            ", sigKillProcessesAfterMillis=" + sigKillProcessesAfterMillis +
-            ", maxTaskThreads=" + maxTaskThreads +
-            ", preserveTaskSandboxAfterFinish=" + preserveTaskSandboxAfterFinish +
-            ", loggingS3Bucket=" + loggingS3Bucket +
-            ", maxOpenFiles=" + maxOpenFiles +
-            ", skipLogrotateAndCompress=" + skipLogrotateAndCompress +
-            ", s3ArtifactSignatures=" + s3ArtifactSignatures +
-            ", logrotateFrequency=" + logrotateFrequency +
-            ']';
+    return "ExecutorDataBuilder{" +
+        "cmd='" + cmd + '\'' +
+        ", embeddedArtifacts=" + embeddedArtifacts +
+        ", externalArtifacts=" + externalArtifacts +
+        ", s3Artifacts=" + s3Artifacts +
+        ", successfulExitCodes=" + successfulExitCodes +
+        ", runningSentinel=" + runningSentinel +
+        ", user=" + user +
+        ", extraCmdLineArgs=" + extraCmdLineArgs +
+        ", loggingTag=" + loggingTag +
+        ", loggingExtraFields=" + loggingExtraFields +
+        ", sigKillProcessesAfterMillis=" + sigKillProcessesAfterMillis +
+        ", maxTaskThreads=" + maxTaskThreads +
+        ", preserveTaskSandboxAfterFinish=" + preserveTaskSandboxAfterFinish +
+        ", maxOpenFiles=" + maxOpenFiles +
+        ", skipLogrotateAndCompress=" + skipLogrotateAndCompress +
+        ", s3ArtifactSignatures=" + s3ArtifactSignatures +
+        ", logrotateFrequency=" + logrotateFrequency +
+        '}';
   }
 }

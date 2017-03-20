@@ -32,7 +32,10 @@ public class SingularityRequestDeployState {
 
   @Override
   public String toString() {
-    return "SingularityRequestDeployState [requestId=" + requestId + ", activeDeploy=" + activeDeploy + ", pendingDeploy=" + pendingDeploy + "]";
+    return "SingularityRequestDeployState{" +
+        "requestId='" + requestId + '\'' +
+        ", activeDeploy=" + activeDeploy +
+        ", pendingDeploy=" + pendingDeploy +
+        '}';
   }
-
 }

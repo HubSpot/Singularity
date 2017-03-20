@@ -124,6 +124,7 @@ public class DeployResource extends AbstractRequestResource {
     if (request.isLongRunning()) {
       deployProgress = Optional.of(new SingularityDeployProgress(
           Math.min(deploy.getDeployInstanceCountPerStep().or(request.getInstancesSafe()), request.getInstancesSafe()),
+          0,
           deploy.getDeployInstanceCountPerStep().or(request.getInstancesSafe()),
           deploy.getDeployStepWaitTimeMs().or(configuration.getDefaultDeployStepWaitTimeMs()),
           false,
@@ -134,12 +135,19 @@ public class DeployResource extends AbstractRequestResource {
 
     SingularityPendingDeploy pendingDeployObj = new SingularityPendingDeploy(deployMarker, Optional.<SingularityLoadBalancerUpdate> absent(), DeployState.WAITING, deployProgress, updatedValidatedRequest);
 
-    checkConflict(deployManager.createPendingDeploy(pendingDeployObj) != SingularityCreateResult.EXISTED,
-        "Pending deploy already in progress for %s - cancel it or wait for it to complete (%s)", requestId, deployManager.getPendingDeploy(requestId).orNull());
-
+    boolean deployToUnpause = false;
     if (requestWithState.getState() == RequestState.PAUSED) {
+      deployToUnpause = true;
       requestManager.deployToUnpause(request, now, deployUser, deployRequest.getMessage());
     }
+
+    boolean deployAlreadyInProgress = deployManager.createPendingDeploy(pendingDeployObj) == SingularityCreateResult.EXISTED;
+    if (deployAlreadyInProgress && deployToUnpause) {
+      requestManager.pause(request, now, deployUser, Optional.<String>absent());
+    }
+
+    checkConflict(!deployAlreadyInProgress,
+        "Pending deploy already in progress for %s - cancel it or wait for it to complete (%s)", requestId, deployManager.getPendingDeploy(requestId).orNull());
 
     deployManager.saveDeploy(request, deployMarker, deploy);
 
