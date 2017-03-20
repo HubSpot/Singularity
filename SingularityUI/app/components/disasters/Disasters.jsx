@@ -1,11 +1,15 @@
 import React, { PropTypes, Component } from 'react';
+<<<<<<< HEAD
 import { FetchDisabledActions, FetchDisastersData, FetchPriorityFreeze, FetchTaskCredits } from '../../actions/api/disasters';
+=======
+>>>>>>> master
 import { connect } from 'react-redux';
 import rootComponent from '../../rootComponent';
 import Utils from '../../utils';
 import DisabledActions from './DisabledActions';
 import ManageDisasters from './ManageDisasters';
 import DisasterStats from './DisasterStats';
+import { refresh } from '../../actions/ui/disasters';
 
 class Disasters extends Component {
   static propTypes = {
@@ -69,23 +73,4 @@ function mapStateToProps(state) {
   };
 }
 
-function mapDispatchToProps(dispatch) {
-  return {
-    fetchDisastersData: () => dispatch(FetchDisastersData.trigger()),
-    fetchDisabledActions: () => dispatch(FetchDisabledActions.trigger()),
-    fetchPriorityFreeze: () => dispatch(FetchPriorityFreeze.trigger([404])),
-    fetchTaskCredits: () => dispatch(FetchTaskCredits.trigger())
-  };
-}
-
-function refresh(props) {
-	const promises = [];
-	promises.push(props.fetchDisastersData());
-	promises.push(props.fetchDisabledActions());
-  promises.push(props.fetchPriorityFreeze());
-  promises.push(props.fetchTaskCredits());
-  return Promise.all(promises);
-}
-
-
-export default connect(mapStateToProps, mapDispatchToProps)(rootComponent(Disasters, 'Disasters', refresh));
+export default connect(mapStateToProps)(rootComponent(Disasters, refresh));

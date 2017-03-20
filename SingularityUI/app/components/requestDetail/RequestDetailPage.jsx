@@ -26,15 +26,7 @@ import RequestHistoryTable from './RequestHistoryTable';
 
 import Utils from '../../utils';
 
-function refresh(props) {
-  props.fetchRequest(props.params.requestId);
-  props.fetchActiveTasksForRequest(props.params.requestId);
-  props.fetchTaskCleanups();
-  props.fetchTaskHistoryForRequest(props.params.requestId, 5, 1);
-  props.fetchDeploysForRequest(props.params.requestId, 5, 1);
-  props.fetchRequestHistory(props.params.requestId, 5, 1);
-  props.fetchScheduledTasksForRequest(props.params.requestId);
-}
+import { refresh } from '../../actions/ui/requestDetail';
 
 class RequestDetailPage extends Component {
   componentDidMount() {
@@ -117,4 +109,4 @@ const mapDispatchToProps = (dispatch, ownProps) => {
 export default connect(
   mapStateToProps,
   mapDispatchToProps
-)(rootComponent(RequestDetailPage, (props) => props.params.requestId, refresh, false));
+)(rootComponent(RequestDetailPage, (props) => refresh(props.params.requestId), false));

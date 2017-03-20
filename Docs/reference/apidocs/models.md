@@ -4,6 +4,7 @@ Models:
 - [`EmbeddedArtifact`](models.md#model-EmbeddedArtifact)
 - [`ExecutorData`](models.md#model-ExecutorData)
 - [`ExternalArtifact`](models.md#model-ExternalArtifact)
+- [`HealthcheckOptions`](models.md#model-HealthcheckOptions)
 - [`LoadBalancerRequestId`](models.md#model-LoadBalancerRequestId)
 - [`MesosFileChunkObject`](models.md#model-MesosFileChunkObject)
 - [`MesosResourcesObject`](models.md#model-MesosResourcesObject)
@@ -43,6 +44,7 @@ Models:
 - [`SingularityLoadBalancerUpdate`](models.md#model-SingularityLoadBalancerUpdate)
 - [`SingularityMachineChangeRequest`](models.md#model-SingularityMachineChangeRequest)
 - [`SingularityMachineStateHistoryUpdate`](models.md#model-SingularityMachineStateHistoryUpdate)
+- [`SingularityMesosArtifact`](models.md#model-SingularityMesosArtifact)
 - [`SingularityMesosTaskLabel`](models.md#model-SingularityMesosTaskLabel)
 - [`SingularityPauseRequest`](models.md#model-SingularityPauseRequest)
 - [`SingularityPendingDeploy`](models.md#model-SingularityPendingDeploy)
@@ -59,6 +61,9 @@ Models:
 - [`SingularityRequestHistory`](models.md#model-SingularityRequestHistory)
 - [`SingularityRequestParent`](models.md#model-SingularityRequestParent)
 - [`SingularityRunNowRequest`](models.md#model-SingularityRunNowRequest)
+- [`SingularityS3LogMetadata`](models.md#model-SingularityS3LogMetadata)
+- [`SingularityS3SearchRequest`](models.md#model-SingularityS3SearchRequest)
+- [`SingularityS3SearchResult`](models.md#model-SingularityS3SearchResult)
 - [`SingularitySandbox`](models.md#model-SingularitySandbox)
 - [`SingularitySandboxFile`](models.md#model-SingularitySandboxFile)
 - [`SingularityScaleRequest`](models.md#model-SingularityScaleRequest)
@@ -119,7 +124,6 @@ Models:
 | preserveTaskSandboxAfterFinish | boolean | optional | If true, do not delete files in the task sandbox after the task process has terminated |
 | extraCmdLineArgs | Array[string] | optional | Extra arguments in addition to any provided in the cmd field |
 | loggingTag | string | optional |  |
-| loggingS3Bucket | string | optional | Override the default bucket used by the S3Uploader to store log files |
 | sigKillProcessesAfterMillis | long | optional | Send a sigkill to a process if it has not shut down this many millis after being sent a term signal |
 | maxTaskThreads | int | optional | Maximum number of threads a task is allowed to use |
 | s3ArtifactSignatures | [Array[S3ArtifactSignature]](models.md#model-S3ArtifactSignature) | optional | A list of signatures use to verify downloaded s3artifacts |
@@ -136,6 +140,23 @@ Models:
 | filename | string | optional |  |
 | filesize | long | optional |  |
 | name | string | optional |  |
+
+
+## <a name="model-HealthcheckOptions"></a> HealthcheckOptions
+
+| name | type | required | description |
+|------|------|----------|-------------|
+| startupDelaySeconds | int | optional | Wait this long before issuing the first healthcheck |
+| responseTimeoutSeconds | int | optional | Single healthcheck HTTP timeout in seconds. |
+| intervalSeconds | int | optional | Time to wait after a valid but failed healthcheck response to try again in seconds. |
+| uri | string | required | Healthcheck uri to hit |
+| failureStatusCodes | Array[int] | optional | Fail the healthcheck with no further retries if one of these status codes is returned |
+| maxRetries | int | optional | Maximum number of times to retry an individual healthcheck before failing the deploy. |
+| startupTimeoutSeconds | int | optional | Consider the task unhealthy/failed if the app has not started responding to healthchecks in this amount of time |
+| portNumber | long | optional | Perform healthcheck on this port (portIndex cannot also be used when using this setting) |
+| startupIntervalSeconds | int | optional | Time to wait after a failed healthcheck to try again in seconds. |
+| protocol | [HealthcheckProtocol](models.md#model-HealthcheckProtocol) | optional | Healthcheck protocol - HTTP or HTTPS |
+| portIndex | int | optional | Perform healthcheck on this dynamically allocated port (e.g. 0 for first port), defaults to first port |
 
 
 ## <a name="model-LoadBalancerRequestId"></a> LoadBalancerRequestId
@@ -260,9 +281,10 @@ Models:
 |------|------|----------|-------------|
 | customExecutorId | string | optional | Custom Mesos executor id. |
 | resources | [com.hubspot.mesos.Resources](models.md#model-com.hubspot.mesos.Resources) | optional | Resources required for this deploy. |
-| uris | Array[string] | optional | List of URIs to download before executing the deploy command. |
+| uris | [Array[SingularityMesosArtifact]](models.md#model-SingularityMesosArtifact) | optional | List of URIs to download before executing the deploy command. |
 | containerInfo | [SingularityContainerInfo](models.md#model-SingularityContainerInfo) | optional | Container information for deployment into a container. |
 | loadBalancerDomains | [Set](models.md#model-Set) | optional | List of domains to host this service on, for use with the load balancer api |
+| healthcheck | [HealthcheckOptions](models.md#model-HealthcheckOptions) | optional | HTTP Healthcheck settings |
 | arguments | Array[string] | optional | Command arguments. |
 | taskEnv | [Map[int,Map[string,string]]](models.md#model-Map[int,Map[string,string]]) | optional | Map of environment variable overrides for specific task instances. |
 | autoAdvanceDeploySteps | boolean | optional | automatically advance to the next target instance count after `deployStepWaitTimeMs` seconds |
@@ -346,6 +368,7 @@ Models:
 | timestamp | long | optional |  |
 | deployInstanceCountPerStep | int | optional |  |
 | failedDeployTasks | [Set](models.md#model-Set) | optional |  |
+| currentActiveInstances | int | optional |  |
 | targetActiveInstances | int | optional |  |
 
 
@@ -530,6 +553,7 @@ Models:
 | revertToInstances | int | optional |  |
 | user | string | optional |  |
 | requestId | string | optional |  |
+| bounce | boolean | optional |  |
 | startMillis | long | optional |  |
 | actionId | string | optional |  |
 | expiringAPIRequestObject | [T](models.md#model-T) | optional |  |
@@ -551,6 +575,7 @@ Models:
 
 | name | type | required | description |
 |------|------|----------|-------------|
+| availableCachedMemory | double | optional |  |
 | hostAddress | string | optional |  |
 | hostname | string | optional |  |
 | mesosConnected | boolean | optional |  |
@@ -558,6 +583,8 @@ Models:
 | master | boolean | optional |  |
 | mesosMaster | string | optional |  |
 | uptime | long | optional |  |
+| availableCachedCpus | double | optional |  |
+| offerCacheSize | int | optional |  |
 | millisSinceLastOffer | long | optional |  |
 
 
@@ -604,6 +631,16 @@ Models:
 | message | string | optional |  |
 | timestamp | long | optional |  |
 | objectId | string | optional |  |
+
+
+## <a name="model-SingularityMesosArtifact"></a> SingularityMesosArtifact
+
+| name | type | required | description |
+|------|------|----------|-------------|
+| cache | boolean | optional |  |
+| uri | string | optional |  |
+| extract | boolean | optional |  |
+| executable | boolean | optional |  |
 
 
 ## <a name="model-SingularityMesosTaskLabel"></a> SingularityMesosTaskLabel
@@ -663,6 +700,7 @@ Models:
 | pendingTaskId | [SingularityPendingTaskId](models.md#model-SingularityPendingTaskId) | optional |  |
 | user | string | optional |  |
 | message | string | optional |  |
+| actionId | string | optional |  |
 | cmdLineArgsList | Array[string] | optional |  |
 
 
@@ -719,8 +757,9 @@ Models:
 | skipHealthchecks | boolean | optional | If true, do not run healthchecks |
 | waitAtLeastMillisAfterTaskFinishesForReschedule | long | optional | When a scheduled job finishes, wait at least this long before rescheduling it |
 | taskPriorityLevel | double | optional | a priority level from 0.0 to 1.0 for all tasks associated with the request |
-| rackAffinity | Array[string] | optional | If set, prefer this specific rack when launching tasks |
 | emailConfigurationOverrides | [Map[SingularityEmailType,List[SingularityEmailDestination]]](models.md#model-Map[SingularityEmailType,List[SingularityEmailDestination]]) | optional | Overrides for email recipients by email type for this request |
+| rackAffinity | Array[string] | optional | If set, prefer this specific rack when launching tasks |
+| maxTasksPerOffer | int | optional | Do not schedule more than this many tasks using a single offer from a single mesos slave |
 | slavePlacement | [SlavePlacement](models.md#model-SlavePlacement) | optional | Strategy for determining where to place new tasks. Can be SEPARATE, OPTIMISTIC, GREEDY, SEPARATE_BY_DEPLOY, or SEPARATE_BY_REQUEST |
 | bounceAfterScale | boolean | optional | Used for SingularityUI. If true, automatically trigger a bounce after changing the request's instance count |
 | readWriteGroups | [Set](models.md#model-Set) | optional | Users in these groups are allowed read/write access to this request |
@@ -728,6 +767,7 @@ Models:
 | rackSensitive | boolean | optional | Spread instances for this request evenly across separate racks |
 | allowedSlaveAttributes | [Map[string,string]](models.md#model-Map[string,string]) | optional | Allow tasks to run on slaves with these attributes, but do not restrict them to only these slaves |
 | owners | Array[string] | optional | A list of emails for the owners of this request |
+| requiredRole | string | optional | Mesos Role required for this request. Only offers with the required role will be accepted to execute the tasks associated with the request |
 | requestType | [RequestType](models.md#model-RequestType) | required | The type of request, can be SERVICE, WORKER, SCHEDULED, ON_DEMAND, or RUN_ONCE Allowable values: SERVICE, WORKER, SCHEDULED, ON_DEMAND, RUN_ONCE |
 | scheduledExpectedRuntimeMillis | long | optional | Expected time for a non-long-running task to run. Singularity will notify owners if a task exceeds this time |
 | quartzSchedule | string | optional | A schedule in quartz format |
@@ -738,6 +778,7 @@ Models:
 | instances | int | optional | A count of tasks to run for long-running requests |
 | scheduleType | [ScheduleType](models.md#model-ScheduleType) | optional | The type of schedule associated with the scheduled field. Can be CRON, QUARTZ, or RFC5545 |
 | scheduleTimeZone | string | optional | Time zone to use when running the |
+| allowBounceToSameHost | boolean | optional | If set to true, allow tasks to be scheduled on the same host as an existing active task when bouncing |
 | taskLogErrorRegex | string | optional | Searching for errors in task logs to include in emails using this regex |
 | id | string | required | A unique id for the request |
 
@@ -783,7 +824,7 @@ Models:
 | user | string | optional |  |
 | message | string | optional |  |
 | request | [SingularityRequest](models.md#model-SingularityRequest) | optional |  |
-| eventType | [RequestHistoryType](models.md#model-RequestHistoryType) | optional |  Allowable values: CREATED, UPDATED, DELETED, PAUSED, UNPAUSED, ENTERED_COOLDOWN, EXITED_COOLDOWN, FINISHED, DEPLOYED_TO_UNPAUSE, BOUNCED, SCALED, SCALE_REVERTED |
+| eventType | [RequestHistoryType](models.md#model-RequestHistoryType) | optional |  Allowable values: CREATED, UPDATED, DELETING, DELETED, PAUSED, UNPAUSED, ENTERED_COOLDOWN, EXITED_COOLDOWN, FINISHED, DEPLOYED_TO_UNPAUSE, BOUNCED, SCALED, SCALE_REVERTED |
 | createdAt | long | optional |  |
 
 
@@ -814,6 +855,40 @@ Models:
 | message | string | optional | A message to show to users about why this action was taken |
 
 
+## <a name="model-SingularityS3LogMetadata"></a> SingularityS3LogMetadata
+
+| name | type | required | description |
+|------|------|----------|-------------|
+| key | string | optional | S3 key |
+| size | long | optional | File size (in bytes) |
+| lastModified | long | optional | Last modified time |
+| endTime | long | optional | Time the log file was finished being written to |
+| startTime | long | optional | Time the log file started being written to |
+
+
+## <a name="model-SingularityS3SearchRequest"></a> SingularityS3SearchRequest
+
+| name | type | required | description |
+|------|------|----------|-------------|
+| requestsAndDeploys | [Map[string,List[string]]](models.md#model-Map[string,List[string]]) | optional | A map of request IDs to a list of deploy ids to search |
+| listOnly | boolean | optional | If true, do not generate download/get urls, only list objects |
+| maxPerPage | int | optional | Target number of results to return |
+| taskIds | Array[string] | optional | A list of task IDs to search for |
+| excludeMetadata | boolean | optional | if true, do not query for custom start/end time metadata |
+| continuationTokens | [Map[string,ContinuationToken]](models.md#model-Map[string,ContinuationToken]) | optional | S3 continuation tokens, return these to Singularity to continue searching subsequent pages of results |
+| end | long | optional | End timestamp (millis, 13 digit) |
+| start | long | optional | Start timestamp (millis, 13 digit) |
+
+
+## <a name="model-SingularityS3SearchResult"></a> SingularityS3SearchResult
+
+| name | type | required | description |
+|------|------|----------|-------------|
+| results | [Array[SingularityS3LogMetadata]](models.md#model-SingularityS3LogMetadata) | optional | List of S3 log metadata |
+| lastPage | boolean | required | If true, there are no further results for any bucket + prefix being searched |
+| continuationTokens | [Map[string,ContinuationToken]](models.md#model-Map[string,ContinuationToken]) | optional | S3 continuation tokens, return these to Singularity to continue searching subsequent pages of results |
+
+
 ## <a name="model-SingularitySandbox"></a> SingularitySandbox
 
 | name | type | required | description |
@@ -840,9 +915,11 @@ Models:
 |------|------|----------|-------------|
 | skipHealthchecks | boolean | optional | If set to true, healthchecks will be skipped while scaling this request (only) |
 | durationMillis | long | optional | The number of milliseconds to wait before reversing the effects of this action (letting it expire) |
+| bounce | boolean | optional | Bounce the request to get to the new scale |
 | message | string | optional | A message to show to users about why this action was taken |
 | actionId | string | optional | An id to associate with this action for metadata purposes |
 | instances | int | optional | The number of instances to scale to |
+| incremental | boolean | optional | If present and set to true, old tasks will be killed as soon as replacement tasks are available, instead of waiting for all replacement tasks to be healthy |
 
 
 ## <a name="model-SingularityShellCommand"></a> SingularityShellCommand
@@ -935,7 +1012,7 @@ Models:
 |------|------|----------|-------------|
 | taskId | [SingularityTaskId](models.md#model-SingularityTaskId) | optional |  |
 | user | string | optional |  |
-| cleanupType | [TaskCleanupType](models.md#model-TaskCleanupType) | optional |  Allowable values: USER_REQUESTED, USER_REQUESTED_TASK_BOUNCE, DECOMISSIONING, SCALING_DOWN, BOUNCING, INCREMENTAL_BOUNCE, DEPLOY_FAILED, NEW_DEPLOY_SUCCEEDED, DEPLOY_STEP_FINISHED, DEPLOY_CANCELED, TASK_EXCEEDED_TIME_LIMIT, UNHEALTHY_NEW_TASK, OVERDUE_NEW_TASK, USER_REQUESTED_DESTROY, INCREMENTAL_DEPLOY_FAILED, INCREMENTAL_DEPLOY_CANCELLED, PRIORITY_KILL, REBALANCE_RACKS, PAUSING, PAUSE, DECOMMISSION_TIMEOUT |
+| cleanupType | [TaskCleanupType](models.md#model-TaskCleanupType) | optional |  Allowable values: USER_REQUESTED, USER_REQUESTED_TASK_BOUNCE, DECOMISSIONING, SCALING_DOWN, BOUNCING, INCREMENTAL_BOUNCE, DEPLOY_FAILED, NEW_DEPLOY_SUCCEEDED, DEPLOY_STEP_FINISHED, DEPLOY_CANCELED, TASK_EXCEEDED_TIME_LIMIT, UNHEALTHY_NEW_TASK, OVERDUE_NEW_TASK, USER_REQUESTED_DESTROY, INCREMENTAL_DEPLOY_FAILED, INCREMENTAL_DEPLOY_CANCELLED, PRIORITY_KILL, REBALANCE_RACKS, PAUSING, PAUSE, DECOMMISSION_TIMEOUT, REQUEST_DELETING |
 | message | string | optional |  |
 | runBeforeKillId | [SingularityTaskShellCommandRequestId](models.md#model-SingularityTaskShellCommandRequestId) | optional |  |
 | timestamp | long | optional |  |
@@ -947,6 +1024,7 @@ Models:
 | name | type | required | description |
 |------|------|----------|-------------|
 | taskId | [SingularityTaskId](models.md#model-SingularityTaskId) | optional |  |
+| startup | boolean | optional |  |
 | durationMillis | long | optional |  |
 | errorMessage | string | optional |  |
 | statusCode | int | optional |  |
@@ -1081,7 +1159,6 @@ Models:
 | taskId | [SingularityTaskId](models.md#model-SingularityTaskId) | optional |  |
 | name | string | optional |  |
 | timestamp | long | optional |  |
-| id | string | optional |  |
 
 
 ## <a name="model-SingularityTaskShellCommandUpdate"></a> SingularityTaskShellCommandUpdate

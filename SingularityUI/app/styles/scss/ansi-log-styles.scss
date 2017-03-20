@@ -1,0 +1,26 @@
+.tail-contents {
+  .bold { font-weight: 'bold'; }
+  .dim { opacity: 0.7; }
+  .italic { font-style: 'italic'; }
+  .underline { text-decoration: 'underline'; }
+  .inverse { filter: invert(100%); }
+  .hidden { opacity: 0; }
+  .strikethrough { text-decoration: 'line-through'; }
+  .black { color: #1E1E1E; }
+  .red { color: #CF6A4C; }
+  .green { color: #8F9D6A; }
+  .yellow { color: #F9EE98; }
+  .blue { color: #7587A6; }
+  .magenta { color: #9B859D; }
+  .cyan { color: #AFC4DB; }
+  .white { color: #FFFFFF; }
+  .gray { color: #5F5A60; }
+  .bgBlack { color: #1E1E1E; }
+  .bgRed { color: #CF6A4C; }
+  .bgGreen { color: #8F9D6A; }
+  .bgYellow { color: #F9EE98; }
+  .bgBlue { color: #7587A6; }
+  .bgMagenta { color: #9B859D; }
+  .bgCyan { color: #AFC4DB; }
+  .bgWhite { color: #FFFFFF; }
+}

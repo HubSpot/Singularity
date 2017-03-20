@@ -37,7 +37,6 @@ import com.google.inject.Singleton;
 import com.google.inject.multibindings.Multibinder;
 import com.google.inject.name.Named;
 import com.google.inject.name.Names;
-import com.hubspot.mesos.client.MesosClient;
 import com.hubspot.singularity.config.CustomExecutorConfiguration;
 import com.hubspot.singularity.config.HistoryPurgingConfiguration;
 import com.hubspot.singularity.config.MesosConfiguration;
@@ -62,6 +61,7 @@ import com.hubspot.singularity.mesos.SingularityMesosStatusUpdateHandler;
 import com.hubspot.singularity.mesos.SingularityNoOfferCache;
 import com.hubspot.singularity.mesos.SingularityOfferCache;
 import com.hubspot.singularity.metrics.SingularityGraphiteReporterManaged;
+import com.hubspot.singularity.scheduler.SingularityUsageHelper;
 import com.hubspot.singularity.sentry.NotifyingExceptionMapper;
 import com.hubspot.singularity.sentry.SingularityExceptionNotifier;
 import com.hubspot.singularity.sentry.SingularityExceptionNotifierManaged;
@@ -101,9 +101,6 @@ public class SingularityMainModule implements Module {
 
   public static final String NEW_TASK_THREADPOOL_NAME = "_new_task_threadpool";
   public static final Named NEW_TASK_THREADPOOL_NAMED = Names.named(NEW_TASK_THREADPOOL_NAME);
-
-  public static final String STATUS_UPDATE_THREADPOOL_NAME = "_status_update_threadpool";
-  public static final Named STATUS_UPDATE_THREADPOOL_NAMED = Names.named(STATUS_UPDATE_THREADPOOL_NAME);
 
   public static final String CURRENT_HTTP_REQUEST = "_singularity_current_http_request";
 
@@ -145,11 +142,11 @@ public class SingularityMainModule implements Module {
 
     binder.bind(SingularityWebhookPoller.class).in(Scopes.SINGLETON);
 
-    binder.bind(MesosClient.class).in(Scopes.SINGLETON);
-
     binder.bind(SingularityAbort.class).in(Scopes.SINGLETON);
     binder.bind(SingularityExceptionNotifierManaged.class).in(Scopes.SINGLETON);
     binder.bind(SingularityWebhookSender.class).in(Scopes.SINGLETON);
+
+    binder.bind(SingularityUsageHelper.class).in(Scopes.SINGLETON);
 
     binder.bind(NotifyingExceptionMapper.class).in(Scopes.SINGLETON);
 
@@ -171,10 +168,6 @@ public class SingularityMainModule implements Module {
     binder.bind(ScheduledExecutorService.class).annotatedWith(NEW_TASK_THREADPOOL_NAMED).toProvider(new SingularityManagedScheduledExecutorServiceProvider(configuration.getCheckNewTasksScheduledThreads(),
         configuration.getThreadpoolShutdownDelayInSeconds(),
         "check-new-task")).in(Scopes.SINGLETON);
-
-    binder.bind(ScheduledExecutorService.class).annotatedWith(STATUS_UPDATE_THREADPOOL_NAMED).toProvider(new SingularityManagedScheduledExecutorServiceProvider(1,
-        configuration.getThreadpoolShutdownDelayInSeconds(),
-        "status-update-handler")).in(Scopes.SINGLETON);
 
     binder.bind(SingularityGraphiteReporterManaged.class).in(Scopes.SINGLETON);
 

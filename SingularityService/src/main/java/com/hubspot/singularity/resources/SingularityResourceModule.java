@@ -43,6 +43,7 @@ public class SingularityResourceModule extends AbstractModule {
     bind(UserResource.class);
     bind(DisastersResource.class);
     bind(PriorityResource.class);
+    bind(UsageResource.class);
     bind(RequestGroupResource.class);
 
     switch (uiConfiguration.getRootUrlMode()) {

@@ -6,14 +6,16 @@ import Column from '../common/table/Column';
 import classNames from 'classnames';
 
 function TaskHistory (props) {
+  const previousHistories = _.flatten(_.pluck(_.filter(props.taskUpdates, (update) => {return update.previous.length > 0}), 'previous'));
+
   return (
     <Section title="History">
       <UITable
         emptyTableMessage="This task has no history yet"
-        data={props.taskUpdates.concat().reverse()}
+        data={_.sortBy(props.taskUpdates.concat(previousHistories), 'timestamp').reverse()}
         keyGetter={(taskUpdate) => taskUpdate.timestamp}
         rowChunkSize={5}
-        paginated={true}
+        paginated={false}
         rowClassName={(rowData, index) => classNames({'medium-weight': index === 0})}
       >
         <Column
