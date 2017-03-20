@@ -122,7 +122,7 @@ public class SingularityMesosTaskBuilderTest {
 
     boolean success = false;
     for (Variable environmentVariable : environmentVariables) {
-      success = success || (environmentVariable.getName().equals("JOB_USER") && environmentVariable.getValue().equals(user));
+      success = success || (environmentVariable.getName().equals("STARTED_BY_USER") && environmentVariable.getValue().equals(user));
     }
 
     assertTrue("Expected env variable JOB_USER to be set to " + user, success);
