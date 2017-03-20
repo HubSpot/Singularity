@@ -1,8 +1,4 @@
 import React, { PropTypes, Component } from 'react';
-<<<<<<< HEAD
-import { FetchDisabledActions, FetchDisastersData, FetchPriorityFreeze, FetchTaskCredits } from '../../actions/api/disasters';
-=======
->>>>>>> task_credits
 import { connect } from 'react-redux';
 import rootComponent from '../../rootComponent';
 import Utils from '../../utils';
