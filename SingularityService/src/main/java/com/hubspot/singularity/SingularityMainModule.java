@@ -37,7 +37,6 @@ import com.google.inject.Singleton;
 import com.google.inject.multibindings.Multibinder;
 import com.google.inject.name.Named;
 import com.google.inject.name.Names;
-import com.hubspot.mesos.client.MesosClient;
 import com.hubspot.singularity.config.CustomExecutorConfiguration;
 import com.hubspot.singularity.config.HistoryPurgingConfiguration;
 import com.hubspot.singularity.config.MesosConfiguration;
@@ -62,6 +61,7 @@ import com.hubspot.singularity.mesos.SingularityMesosStatusUpdateHandler;
 import com.hubspot.singularity.mesos.SingularityNoOfferCache;
 import com.hubspot.singularity.mesos.SingularityOfferCache;
 import com.hubspot.singularity.metrics.SingularityGraphiteReporterManaged;
+import com.hubspot.singularity.scheduler.SingularityUsageHelper;
 import com.hubspot.singularity.sentry.NotifyingExceptionMapper;
 import com.hubspot.singularity.sentry.SingularityExceptionNotifier;
 import com.hubspot.singularity.sentry.SingularityExceptionNotifierManaged;
@@ -142,11 +142,11 @@ public class SingularityMainModule implements Module {
 
     binder.bind(SingularityWebhookPoller.class).in(Scopes.SINGLETON);
 
-    binder.bind(MesosClient.class).in(Scopes.SINGLETON);
-
     binder.bind(SingularityAbort.class).in(Scopes.SINGLETON);
     binder.bind(SingularityExceptionNotifierManaged.class).in(Scopes.SINGLETON);
     binder.bind(SingularityWebhookSender.class).in(Scopes.SINGLETON);
+
+    binder.bind(SingularityUsageHelper.class).in(Scopes.SINGLETON);
 
     binder.bind(NotifyingExceptionMapper.class).in(Scopes.SINGLETON);
 
