@@ -5,7 +5,6 @@ import java.util.Map;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.Objects;
 import com.google.common.base.Optional;
 import com.hubspot.mesos.json.MesosResourcesObject;
 import com.wordnik.swagger.annotations.ApiModel;
@@ -80,11 +79,11 @@ public class SingularitySlave extends SingularityMachineAbstraction<SingularityS
 
   @Override
   public String toString() {
-    return Objects.toStringHelper(this)
-      .add("host", host)
-      .add("rackId", rackId)
-      .add("attributes", attributes)
-      .add("resources", resources)
-      .toString();
+    return "SingularitySlave{" +
+        "host='" + host + '\'' +
+        ", rackId='" + rackId + '\'' +
+        ", attributes=" + attributes +
+        ", resources=" + resources +
+        "} " + super.toString();
   }
 }

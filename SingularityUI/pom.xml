@@ -5,8 +5,13 @@
     <parent>
         <groupId>com.hubspot</groupId>
         <artifactId>Singularity</artifactId>
-        <version>0.14.0-SNAPSHOT</version>
+        <version>0.15.0-SNAPSHOT</version>
     </parent>
+
+    <properties>
+        <nodeVersion>v6.2.1</nodeVersion>
+        <npmVersion>3.9.3</npmVersion>
+    </properties>
 
     <artifactId>SingularityUI</artifactId>
     <packaging>pom</packaging>
@@ -31,10 +36,6 @@
                                 <goals>
                                     <goal>install-node-and-npm</goal>
                                 </goals>
-                                <configuration>
-                                    <nodeVersion>v6.2.1</nodeVersion>
-                                    <npmVersion>3.9.3</npmVersion>
-                                </configuration>
                             </execution>
 
                             <execution>

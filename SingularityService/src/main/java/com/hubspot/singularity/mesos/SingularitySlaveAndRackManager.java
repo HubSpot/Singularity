@@ -9,7 +9,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.inject.Singleton;
 
-import org.apache.mesos.Protos;
 import org.apache.mesos.Protos.Offer;
 import org.apache.mesos.Protos.SlaveID;
 import org.slf4j.Logger;
@@ -23,7 +22,6 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Multiset;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
-import com.hubspot.mesos.JavaUtils;
 import com.hubspot.mesos.json.MesosMasterSlaveObject;
 import com.hubspot.mesos.json.MesosMasterStateObject;
 import com.hubspot.mesos.json.MesosResourcesObject;
@@ -79,10 +77,10 @@ public class SingularitySlaveAndRackManager {
     this.activeSlavesLost = activeSlavesLost;
   }
 
-  public SlaveMatchState doesOfferMatch(Protos.Offer offer, SingularityTaskRequest taskRequest, SingularitySchedulerStateCache stateCache) {
-    final String host = offer.getHostname();
-    final String rackId = slaveAndRackHelper.getRackIdOrDefault(offer);
-    final String slaveId = offer.getSlaveId().getValue();
+  public SlaveMatchState doesOfferMatch(SingularityOfferHolder offer, SingularityTaskRequest taskRequest, SingularitySchedulerStateCache stateCache) {
+    final String host = offer.getOffer().getHostname();
+    final String rackId = offer.getRackId();
+    final String slaveId = offer.getOffer().getSlaveId().getValue();
 
     final MachineState currentSlaveState = stateCache.getSlave(slaveId).get().getCurrentState().getState();
 
@@ -111,8 +109,9 @@ public class SingularitySlaveAndRackManager {
       }
     }
 
-    Map<String, String> reservedSlaveAttributes = slaveAndRackHelper.reservedSlaveAttributes(offer);
-    if (!reservedSlaveAttributes.isEmpty()) {
+    if (offer.hasReservedSlaveAttributes()) {
+      Map<String, String> reservedSlaveAttributes = offer.getReservedSlaveAttributes();
+
       if ((taskRequest.getRequest().getRequiredSlaveAttributes().isPresent() && !taskRequest.getRequest().getRequiredSlaveAttributes().get().isEmpty())
         || (taskRequest.getRequest().getAllowedSlaveAttributes().isPresent() && !taskRequest.getRequest().getAllowedSlaveAttributes().get().isEmpty())) {
         Map<String, String> mergedAttributes = taskRequest.getRequest().getRequiredSlaveAttributes().or(new HashMap<String, String>());
@@ -128,8 +127,8 @@ public class SingularitySlaveAndRackManager {
     }
 
     if (taskRequest.getRequest().getRequiredSlaveAttributes().isPresent()
-      && !slaveAndRackHelper.hasRequiredAttributes(slaveAndRackHelper.getTextAttributes(offer), taskRequest.getRequest().getRequiredSlaveAttributes().get())) {
-      LOG.trace("Task requires slave with attributes {}, (slave attributes are {})", taskRequest.getRequest().getRequiredSlaveAttributes().get(), slaveAndRackHelper.getTextAttributes(offer));
+      && !slaveAndRackHelper.hasRequiredAttributes(offer.getTextAttributes(), taskRequest.getRequest().getRequiredSlaveAttributes().get())) {
+      LOG.trace("Task requires slave with attributes {}, (slave attributes are {})", taskRequest.getRequest().getRequiredSlaveAttributes().get(), offer.getTextAttributes());
       return SlaveMatchState.SLAVE_ATTRIBUTES_DO_NOT_MATCH;
     }
 
@@ -148,48 +147,52 @@ public class SingularitySlaveAndRackManager {
     double numOtherDeploysOnSlave = 0;
     boolean taskLaunchedFromBounceWithActionId = taskRequest.getPendingTask().getPendingTaskId().getPendingType() == PendingType.BOUNCE && taskRequest.getPendingTask().getActionId().isPresent();
 
-    final String sanitizedHost = JavaUtils.getReplaceHyphensWithUnderscores(host);
-    final String sanitizedRackId = JavaUtils.getReplaceHyphensWithUnderscores(rackId);
+    final String sanitizedHost = offer.getSanitizedHost();
+    final String sanitizedRackId = offer.getSanitizedRackId();
     Collection<SingularityTaskId> cleaningTasks = stateCache.getCleaningTasks();
 
-    for (SingularityTaskId taskId : SingularityTaskId.matchingAndNotIn(stateCache.getActiveTaskIds(), taskRequest.getRequest().getId(), Collections.<SingularityTaskId>emptyList())) {
+    for (SingularityTaskId taskId : stateCache.getActiveTaskIdsForRequest(taskRequest.getRequest().getId())) {
       // TODO consider using executorIds
-      if (taskId.getSanitizedHost().equals(sanitizedHost)) {
-        if (taskRequest.getDeploy().getId().equals(taskId.getDeployId())) {
-          if (cleaningTasks.contains(taskId)) {
-            numCleaningOnSlave++;
-          } else {
-            numOnSlave++;
-          }
-          if (taskLaunchedFromBounceWithActionId) {
-            Optional<SingularityTask> maybeTask = taskManager.getTask(taskId);
-            boolean errorInTaskData = false;
-            if (maybeTask.isPresent()) {
-              SingularityPendingTask pendingTask = maybeTask.get().getTaskRequest().getPendingTask();
-              if (pendingTask.getPendingTaskId().getPendingType() == PendingType.BOUNCE) {
-                if (pendingTask.getActionId().isPresent()) {
-                  if (pendingTask.getActionId().get().equals(taskRequest.getPendingTask().getActionId().get())) {
-                    numFromSameBounceOnSlave++;
-                  }
-                } else {
-                  // No actionId present on bounce, fall back to more restrictive placement strategy
-                  errorInTaskData = true;
-                }
-              }
-            } else {
-              // Could not find appropriate task data, fall back to more restrictive placement strategy
-              errorInTaskData = true;
-            }
-            if (errorInTaskData) {
-              allowBounceToSameHost = false;
-            }
-          }
-        } else {
-          numOtherDeploysOnSlave++;
-        }
-      }
+
       if (!cleaningTasks.contains(taskId) && taskRequest.getDeploy().getId().equals(taskId.getDeployId())) {
         countPerRack.add(taskId.getSanitizedRackId());
+      }
+
+      if (!taskId.getSanitizedHost().equals(sanitizedHost)) {
+        continue;
+      }
+
+      if (taskRequest.getDeploy().getId().equals(taskId.getDeployId())) {
+        if (cleaningTasks.contains(taskId)) {
+          numCleaningOnSlave++;
+        } else {
+          numOnSlave++;
+        }
+        if (taskLaunchedFromBounceWithActionId) {
+          Optional<SingularityTask> maybeTask = taskManager.getTask(taskId);
+          boolean errorInTaskData = false;
+          if (maybeTask.isPresent()) {
+            SingularityPendingTask pendingTask = maybeTask.get().getTaskRequest().getPendingTask();
+            if (pendingTask.getPendingTaskId().getPendingType() == PendingType.BOUNCE) {
+              if (pendingTask.getActionId().isPresent()) {
+                if (pendingTask.getActionId().get().equals(taskRequest.getPendingTask().getActionId().get())) {
+                  numFromSameBounceOnSlave++;
+                }
+              } else {
+                // No actionId present on bounce, fall back to more restrictive placement strategy
+                errorInTaskData = true;
+              }
+            }
+          } else {
+            // Could not find appropriate task data, fall back to more restrictive placement strategy
+            errorInTaskData = true;
+          }
+          if (errorInTaskData) {
+            allowBounceToSameHost = false;
+          }
+        }
+      } else {
+        numOtherDeploysOnSlave++;
       }
     }
 

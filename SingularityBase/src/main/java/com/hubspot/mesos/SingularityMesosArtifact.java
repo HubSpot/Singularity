@@ -1,7 +1,10 @@
 package com.hubspot.mesos;
 
+import java.util.Objects;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.base.Optional;
 
 public class SingularityMesosArtifact {
   private final String uri;
@@ -11,18 +14,18 @@ public class SingularityMesosArtifact {
 
   @JsonCreator
   public static SingularityMesosArtifact fromString(String uri) {
-    return new SingularityMesosArtifact(uri, false, false, false);
+    return new SingularityMesosArtifact(uri, Optional.<Boolean>absent(), Optional.<Boolean>absent(), Optional.<Boolean>absent());
   }
 
   @JsonCreator
   public SingularityMesosArtifact(@JsonProperty("uri") String uri,
-                                  @JsonProperty("cache") boolean cache,
-                                  @JsonProperty("executable") boolean executable,
-                                  @JsonProperty("extract") boolean extract) {
+                                  @JsonProperty("cache") Optional<Boolean> cache,
+                                  @JsonProperty("executable") Optional<Boolean> executable,
+                                  @JsonProperty("extract") Optional<Boolean> extract) {
     this.uri = uri;
-    this.cache = cache;
-    this.executable = executable;
-    this.extract = extract;
+    this.cache = cache.or(false);
+    this.executable = executable.or(false);
+    this.extract = extract.or(true);
   }
 
   public String getUri() {
@@ -49,28 +52,16 @@ public class SingularityMesosArtifact {
     if (o == null || getClass() != o.getClass()) {
       return false;
     }
-
     SingularityMesosArtifact that = (SingularityMesosArtifact) o;
-
-    if (cache != that.cache) {
-      return false;
-    }
-    if (executable != that.executable) {
-      return false;
-    }
-    if (extract != that.extract) {
-      return false;
-    }
-    return uri != null ? uri.equals(that.uri) : that.uri == null;
+    return cache == that.cache &&
+        executable == that.executable &&
+        extract == that.extract &&
+        Objects.equals(uri, that.uri);
   }
 
   @Override
   public int hashCode() {
-    int result = uri != null ? uri.hashCode() : 0;
-    result = 31 * result + (cache ? 1 : 0);
-    result = 31 * result + (executable ? 1 : 0);
-    result = 31 * result + (extract ? 1 : 0);
-    return result;
+    return Objects.hash(uri, cache, executable, extract);
   }
 
   @Override

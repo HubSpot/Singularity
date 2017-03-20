@@ -104,7 +104,7 @@ export const MESOS_ARTIFACT_FIELDS = [
   {id: 'uri', type: 'text', required: true},
   {id: 'cache', type: 'text'},
   {id: 'executable', type: 'text'},
-  {id: 'extract', type: 'text'}
+  {id: 'extract', type: 'text', default: true}
 ];
 
 export const ARTIFACT_FIELDS = {

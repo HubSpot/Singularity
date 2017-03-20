@@ -5,23 +5,24 @@ This log fetcher uses singularity endpoints to find and download log files relev
 
 ![my log has something to tell you](https://cloud.githubusercontent.com/assets/47152/7101893/b6910826-e03b-11e4-8d25-38ea1b5aa492.gif)
 
-##Installation
+## Installation
 ```
 pip install singularity-logfetch
 ```
 
-##Configuration
+## Configuration
 - Configuration can either be read from a file, or from command line arguments.
 - An example configuration files lives in this directory at .logfetch.example
 - Any arguments specified in the log file can be overriden on the command line
 - You can store a number of configuration files for different clusters in the config directory (`~/.logfetch` by default) and choose which config to use with the -c option
 
-#Logfetch and Logcat
+# Logfetch and Logcat
 Two commands exist for downloading logs. 
 - `logfetch` will download and optionally output a grep command for the logs
 - `logcat` will download logs and pipe the contents to stdout
 
-##Options
+## Options
+
 |Flags|Description|Default|
 |:---:|:---------|:-----:|
 |-f , --conf-folder|Folder to look for configuration files|`~/.logfetch`|
@@ -50,13 +51,13 @@ Two commands exist for downloading logs.
 |-V, --verbose|More verbose output|false|
 |--silent|No output except for log content, overrides -V|false|
 
-##Grep and Log Files
+## Grep and Log Files
 When the `-g` option is set, the log fetcher will grep the downloaded files for the provided regex.
 
 - you can pass in a full grep command (including options) to run or just the grep regex
 - the default command will just be `grep (your regex)` if a full grep command is not supplied
 
-##Example Usage
+## Example Usage
 - Specify a configuration file AND folder to use
 
 `logfetch -r 'My_Jobs_Id' -c somefile -f ~/.somefolder` (uses ~/.somefolder/somefile as config file)
@@ -90,7 +91,7 @@ When the `-g` option is set, the log fetcher will grep the downloaded files for 
 `logfetch -r 'My_Request_Id' -l '*.out'`
 `logfetch -r 'My_Request_Id' -l 'access.log'`
 
-#Logtail
+# Logtail
 You can tail live log files using `logtail`. Just provide the request, task, or request and deploy along with a log file path.
 
 For example, to tail the `service.log` file for all tasks for a request named `MyRequest`, you would use the command:
@@ -101,7 +102,8 @@ For example, to tail the `service.log` file for all tasks for a request named `M
 
 As of `0.25.0` a grep option is no longer supported in `logtail`. it more efficient/usable, and therefore recommended, to pipe output to grep for this type of functionality.
 
-##Options
+## Options
+
 |Flags|Description|Default|
 |:---:|:---------|:-----:|
 |-f , --conf-folder|Folder to look for configuration files|`~/.logfetch`|
@@ -114,11 +116,12 @@ As of `0.25.0` a grep option is no longer supported in `logtail`. it more effici
 |-V, --verbose|Extra output about the task id associated with logs in the output|False|
 |--silent|No output except for log content, overrides -V|false|
 
-#Logsearch
+# Logsearch
 
 An offline version of `logfetch` that will aid in searching through your directory of cached files. The syntax is the same as for `logfetch` with a smaller list of options, shown below:
 
-##Options
+## Options
+
 |Flags|Description|Default|
 |:---:|:---------|:-----:|
 |-f , --conf-folder|Folder to look for configuration files|`~/.logfetch`|

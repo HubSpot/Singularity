@@ -7,7 +7,6 @@ import java.util.Objects;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.Optional;
 
 public class SingularityDockerParameter {
   private final String key;
@@ -32,12 +31,12 @@ public class SingularityDockerParameter {
     return value;
   }
 
-  @Override
-  public String toString() {
-    return "SingularityDockerParameter{" +
-      "key='" + key + '\'' +
-      ", value=" + value +
-      '}';
+  public static List<SingularityDockerParameter> parametersFromMap(Map<String, String> parametersMap) {
+    List<SingularityDockerParameter> parameters = new ArrayList<>();
+    for (Map.Entry<String, String> entry : parametersMap.entrySet()) {
+      parameters.add(new SingularityDockerParameter(entry.getKey(), entry.getValue()));
+    }
+    return parameters;
   }
 
   @Override
@@ -50,7 +49,7 @@ public class SingularityDockerParameter {
     }
     SingularityDockerParameter that = (SingularityDockerParameter) o;
     return Objects.equals(key, that.key) &&
-      Objects.equals(value, that.value);
+        Objects.equals(value, that.value);
   }
 
   @Override
@@ -58,11 +57,11 @@ public class SingularityDockerParameter {
     return Objects.hash(key, value);
   }
 
-  public static List<SingularityDockerParameter> parametersFromMap(Map<String, String> parametersMap) {
-    List<SingularityDockerParameter> parameters = new ArrayList<>();
-    for (Map.Entry<String, String> entry : parametersMap.entrySet()) {
-      parameters.add(new SingularityDockerParameter(entry.getKey(), entry.getValue()));
-    }
-    return parameters;
+  @Override
+  public String toString() {
+    return "SingularityDockerParameter{" +
+        "key='" + key + '\'' +
+        ", value='" + value + '\'' +
+        '}';
   }
 }

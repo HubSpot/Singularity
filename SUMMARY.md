@@ -29,6 +29,7 @@
   * [Webhooks](Docs/reference/webhooks.md)
   * [Slave Extras](Docs/reference/slave-extras.md)
   * [Deploy Defaults](Docs/reference/deploy-defaults.md)
+  * [Health Checks](Docs/reference/healthchecks.md)
   * [API](Docs/reference/apidocs/api-index.md)
     * [/api/sandbox](Docs/reference/apidocs/api-sandbox.md)
     * [/api/slaves](Docs/reference/apidocs/api-slaves.md)

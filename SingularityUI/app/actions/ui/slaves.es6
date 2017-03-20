@@ -1,3 +1,6 @@
+import { FetchSlaves, FreezeSlave, DecommissionSlave, RemoveSlave, ReactivateSlave, FetchExpiringSlaveStates } from '../../actions/api/slaves';
+import { FetchInactiveHosts } from '../api/inactive';
+
 export const UPDATE_SLAVES_TABLE_SETTINGS = 'UPDATE_SLAVES_TABLE_SETTINGS';
 
 export const UpdateSlavesTableSettings = (columns, paginated) => {
@@ -11,3 +14,18 @@ export const UpdateSlavesTableSettings = (columns, paginated) => {
     });
   };
 };
+
+export const refresh = () => (dispatch) =>
+  Promise.all([
+    dispatch(FetchSlaves.trigger()),
+    dispatch(FetchExpiringSlaveStates.trigger()),
+    dispatch(FetchInactiveHosts.trigger()),
+  ]);
+
+export const initialize = () => (dispatch) =>
+  Promise.all([
+    dispatch(FreezeSlave.clear()),
+    dispatch(DecommissionSlave.clear()),
+    dispatch(RemoveSlave.clear()),
+    dispatch(ReactivateSlave.clear())
+  ]).then(() => dispatch(refresh()));

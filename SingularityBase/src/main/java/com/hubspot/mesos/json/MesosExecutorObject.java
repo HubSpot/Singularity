@@ -4,7 +4,6 @@ import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.Objects;
 
 public class MesosExecutorObject {
 
@@ -57,14 +56,14 @@ public class MesosExecutorObject {
 
   @Override
   public String toString() {
-    return Objects.toStringHelper(this)
-      .add("directory", directory)
-      .add("id", id)
-      .add("container", container)
-      .add("name", name)
-      .add("resources", resources)
-      .add("tasks", tasks)
-      .add("completedTasks", completedTasks)
-      .toString();
+    return "MesosExecutorObject{" +
+        "directory='" + directory + '\'' +
+        ", id='" + id + '\'' +
+        ", container='" + container + '\'' +
+        ", name='" + name + '\'' +
+        ", resources=" + resources +
+        ", tasks=" + tasks +
+        ", completedTasks=" + completedTasks +
+        '}';
   }
 }

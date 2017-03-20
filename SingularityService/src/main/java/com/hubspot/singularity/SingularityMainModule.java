@@ -23,6 +23,7 @@ import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.codahale.metrics.Meter;
 import com.codahale.metrics.MetricRegistry;
+import com.codahale.metrics.Timer;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
@@ -36,7 +37,6 @@ import com.google.inject.Singleton;
 import com.google.inject.multibindings.Multibinder;
 import com.google.inject.name.Named;
 import com.google.inject.name.Names;
-import com.hubspot.mesos.client.MesosClient;
 import com.hubspot.singularity.config.CustomExecutorConfiguration;
 import com.hubspot.singularity.config.HistoryPurgingConfiguration;
 import com.hubspot.singularity.config.MesosConfiguration;
@@ -56,8 +56,12 @@ import com.hubspot.singularity.hooks.LoadBalancerClient;
 import com.hubspot.singularity.hooks.LoadBalancerClientImpl;
 import com.hubspot.singularity.hooks.SingularityWebhookPoller;
 import com.hubspot.singularity.hooks.SingularityWebhookSender;
+import com.hubspot.singularity.mesos.OfferCache;
 import com.hubspot.singularity.mesos.SingularityMesosStatusUpdateHandler;
+import com.hubspot.singularity.mesos.SingularityNoOfferCache;
+import com.hubspot.singularity.mesos.SingularityOfferCache;
 import com.hubspot.singularity.metrics.SingularityGraphiteReporterManaged;
+import com.hubspot.singularity.scheduler.SingularityUsageHelper;
 import com.hubspot.singularity.sentry.NotifyingExceptionMapper;
 import com.hubspot.singularity.sentry.SingularityExceptionNotifier;
 import com.hubspot.singularity.sentry.SingularityExceptionNotifierManaged;
@@ -98,12 +102,11 @@ public class SingularityMainModule implements Module {
   public static final String NEW_TASK_THREADPOOL_NAME = "_new_task_threadpool";
   public static final Named NEW_TASK_THREADPOOL_NAMED = Names.named(NEW_TASK_THREADPOOL_NAME);
 
-  public static final String STATUS_UPDATE_THREADPOOL_NAME = "_status_update_threadpool";
-  public static final Named STATUS_UPDATE_THREADPOOL_NAMED = Names.named(STATUS_UPDATE_THREADPOOL_NAME);
-
   public static final String CURRENT_HTTP_REQUEST = "_singularity_current_http_request";
 
   public static final String LOST_TASKS_METER = "singularity.lost.tasks.meter";
+
+  public static final String STATUS_UPDATE_DELTA_TIMER = "singularity.status.update.delta.timer";
 
   private final SingularityConfiguration configuration;
 
@@ -139,11 +142,11 @@ public class SingularityMainModule implements Module {
 
     binder.bind(SingularityWebhookPoller.class).in(Scopes.SINGLETON);
 
-    binder.bind(MesosClient.class).in(Scopes.SINGLETON);
-
     binder.bind(SingularityAbort.class).in(Scopes.SINGLETON);
     binder.bind(SingularityExceptionNotifierManaged.class).in(Scopes.SINGLETON);
     binder.bind(SingularityWebhookSender.class).in(Scopes.SINGLETON);
+
+    binder.bind(SingularityUsageHelper.class).in(Scopes.SINGLETON);
 
     binder.bind(NotifyingExceptionMapper.class).in(Scopes.SINGLETON);
 
@@ -166,13 +169,15 @@ public class SingularityMainModule implements Module {
         configuration.getThreadpoolShutdownDelayInSeconds(),
         "check-new-task")).in(Scopes.SINGLETON);
 
-    binder.bind(ScheduledExecutorService.class).annotatedWith(STATUS_UPDATE_THREADPOOL_NAMED).toProvider(new SingularityManagedScheduledExecutorServiceProvider(1,
-        configuration.getThreadpoolShutdownDelayInSeconds(),
-        "status-update-handler")).in(Scopes.SINGLETON);
-
     binder.bind(SingularityGraphiteReporterManaged.class).in(Scopes.SINGLETON);
 
     binder.bind(SingularityMesosStatusUpdateHandler.class).in(Scopes.SINGLETON);
+
+    if (configuration.isCacheOffers()) {
+      binder.bind(OfferCache.class).to(SingularityOfferCache.class).in(Scopes.SINGLETON);
+    } else {
+      binder.bind(OfferCache.class).to(SingularityNoOfferCache.class).in(Scopes.SINGLETON);
+    }
   }
 
   @Provides
@@ -356,5 +361,12 @@ public class SingularityMainModule implements Module {
   @Named(LOST_TASKS_METER)
   public Meter providesLostTasksMeter(MetricRegistry registry) {
     return registry.meter("com.hubspot.singularity.lostTasks");
+  }
+
+  @Provides
+  @Singleton
+  @Named(STATUS_UPDATE_DELTA_TIMER)
+  public Timer providesStatusUpdateDeltaMeter(MetricRegistry registry) {
+    return registry.timer("com.hubspot.singularity.statusUpdateDelta");
   }
 }

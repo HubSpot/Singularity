@@ -6,9 +6,12 @@ public enum SingularityAction {
   DEPLOY(true), CANCEL_DEPLOY(true),
   ADD_WEBHOOK(true), REMOVE_WEBHOOK(true), VIEW_WEBHOOKS(false),
   TASK_RECONCILIATION(true),
+  RUN_HEALTH_CHECKS(true),
   ADD_DISASTER(false), REMOVE_DISASTER(false), DISABLE_ACTION(false), ENABLE_ACTION(false), VIEW_DISASTERS(false),
   FREEZE_SLAVE(true), ACTIVATE_SLAVE(true), DECOMMISSION_SLAVE(true), VIEW_SLAVES(false),
-  FREEZE_RACK(true), ACTIVATE_RACK(true), DECOMMISSION_RACK(true), VIEW_RACKS(false);
+  FREEZE_RACK(true), ACTIVATE_RACK(true), DECOMMISSION_RACK(true), VIEW_RACKS(false),
+  SEND_EMAIL(true),
+  PROCESS_OFFERS(true), CACHE_OFFERS(true);
 
   private final boolean canDisable;
 

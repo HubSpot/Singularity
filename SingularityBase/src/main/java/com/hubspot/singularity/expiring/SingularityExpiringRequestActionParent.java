@@ -18,7 +18,8 @@ public abstract class SingularityExpiringRequestActionParent<T extends Singulari
 
   @Override
   public String toString() {
-    return "SingularityExpiringParent [requestId=" + requestId + ", user=" + getUser() + ", startMillis=" + getStartMillis() + ", actionId=" + getActionId() + ", expiringAPIRequestObject=" + getExpiringAPIRequestObject() + "]";
+    return "SingularityExpiringRequestActionParent{" +
+        "requestId='" + requestId + '\'' +
+        "} " + super.toString();
   }
-
 }
