@@ -49,6 +49,8 @@ public class IndexView extends View {
 
   private final String shellCommands;
 
+  private final boolean shortenSlaveUsageHostname;
+
   private final String timestampFormat;
 
   private final boolean showTaskDiskResource;
@@ -110,6 +112,8 @@ public class IndexView extends View {
     } catch (JsonProcessingException e) {
       throw Throwables.propagate(e);
     }
+
+    this.shortenSlaveUsageHostname = configuration.getUiConfiguration().isShortenSlaveUsageHostname();
 
     this.timestampFormat = configuration.getUiConfiguration().getTimestampFormat();
 
@@ -234,6 +238,10 @@ public class IndexView extends View {
     return redirectOnUnauthorizedUrl;
   }
 
+  public boolean isShortenSlaveUsageHostname() {
+    return shortenSlaveUsageHostname;
+  }
+
   @Override
   public String toString() {
     return "IndexView{" +
@@ -261,6 +269,7 @@ public class IndexView extends View {
         ", taskS3LogOmitPrefix='" + taskS3LogOmitPrefix + '\'' +
         ", warnIfScheduledJobIsRunningPastNextRunPct=" + warnIfScheduledJobIsRunningPastNextRunPct +
         ", shellCommands='" + shellCommands + '\'' +
+        ", shortenSlaveUsageHostname=" + shortenSlaveUsageHostname +
         ", timestampFormat='" + timestampFormat + '\'' +
         ", showTaskDiskResource=" + showTaskDiskResource +
         ", timestampWithSecondsFormat='" + timestampWithSecondsFormat + '\'' +
