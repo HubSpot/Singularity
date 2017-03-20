@@ -28,7 +28,12 @@ class Disasters extends Component {
     }).isRequired,
     taskCredits: PropTypes.object,
     priorityFreeze: PropTypes.object,
-    user: PropTypes.string
+    user: PropTypes.string,
+    disabledActions: PropTypes.arrayOf(PropTypes.shape({
+      type: PropTypes.string.isRequired,
+      message: PropTypes.string,
+      user: PropTypes.string
+    })).isRequired,
   };
 
   constructor(props) {
@@ -40,7 +45,7 @@ class Disasters extends Component {
     return (
       <div>
         <DisabledActions disabledActions={this.props.disabledActions} user={this.props.user} />
-        <ManageDisasters 
+        <ManageDisasters
           disasters={this.props.disastersData.disasters}
           priorityFreeze={this.props.priorityFreeze}
           user={this.props.user}
