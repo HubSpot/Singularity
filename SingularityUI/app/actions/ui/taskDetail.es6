@@ -29,3 +29,7 @@ export const refresh = (taskId, splat) => (dispatch, getState) => {
 
   return Promise.all(promises);
 };
+
+export const onLoad = (taskId) => (dispatch) => {
+  return dispatch(FetchTaskS3Logs.trigger(taskId, [404]));
+};
