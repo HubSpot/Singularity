@@ -174,16 +174,6 @@ const Utils = {
     };
   },
 
-  getRequestIdFromTaskId(taskId) {
-    const splits = taskId.split('-');
-    return splits.slice(0, splits.length - 5).join('-');
-  },
-
-  getInstanceNoFromTaskId(taskId) {
-    const splits = taskId.split('-')
-    return splits[splits.length-3];
-  },
-
   getMaxAvailableResource(slaveInfo, statName) {
     switch (statName) {
       case STAT_NAMES.cpusUsedStat:
@@ -205,6 +195,16 @@ const Utils = {
 
   isResourceStat(stat) {
     return stat === STAT_NAMES.cpusUsedStat || stat === STAT_NAMES.memoryBytesUsedStat;
+  },
+
+  getRequestIdFromTaskId(taskId) {
+    const splits = taskId.split('-');
+    return splits.slice(0, splits.length - 5).join('-');
+  },
+
+  getInstanceNoFromTaskId(taskId) {
+    const splits = taskId.split('-')
+    return splits[splits.length-3];
   },
 
   deepClone(objectToClone) {
