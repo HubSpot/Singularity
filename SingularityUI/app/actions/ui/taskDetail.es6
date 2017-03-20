@@ -1,6 +1,8 @@
 import { FetchTaskHistory, FetchDeployForRequest } from '../api/history';
 import { FetchTaskStatistics, FetchTaskCleanups } from '../api/tasks';
 import { FetchPendingDeploys } from '../api/deploys';
+import { FetchTaskS3Logs } from '../api/logs';
+
 import { FetchTaskFiles } from '../../actions/api/sandbox';
 
 export const refresh = (taskId, splat) => (dispatch, getState) => {
