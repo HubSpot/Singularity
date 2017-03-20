@@ -1,5 +1,4 @@
 import React, { PropTypes, Component } from 'react';
-import { FetchDisabledActions, FetchDisastersData, FetchPriorityFreeze, FetchTaskCredits } from '../../actions/api/disasters';
 import { connect } from 'react-redux';
 import rootComponent from '../../rootComponent';
 import Utils from '../../utils';
@@ -34,8 +33,7 @@ class Disasters extends Component {
       type: PropTypes.string.isRequired,
       message: PropTypes.string,
       user: PropTypes.string
-    })).isRequired,
-    fetchTaskCredits: PropTypes.func.isRequired
+    })).isRequired
   };
 
   constructor(props) {
