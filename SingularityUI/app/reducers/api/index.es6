@@ -78,7 +78,7 @@ import {
 
 import { FetchWebhooks } from '../../actions/api/webhooks';
 
-import { 
+import {
   FetchDisastersData,
   FetchDisabledActions,
   FetchPriorityFreeze,
