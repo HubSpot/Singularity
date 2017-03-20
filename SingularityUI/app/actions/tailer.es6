@@ -26,14 +26,14 @@ export const jumpToBottom = (id, taskId, path) => (dispatch, getState) => {
   const state = getState();
 
   dispatch(tailerActions.unloadFile(id));
-  dispatch(tailerActions.sandboxFetchTail(id, taskId, path, state.tailer.config));
+  dispatch(tailerActions.sandboxFetchTail(id, taskId, path.replace('$TASK_ID', taskId), state.tailer.config));
 }
 
 export const jumpAllToBottom = () => (dispatch, getState) => {
   const state = getState();
 
   state.tailerView.tailerGroups.map((tailerGroup) => tailerGroup.map((tailer) => {
-    dispatch(jumpToBottom(tailer.tailerId, tailer.taskId, tailer.path, state.tailer.config));
+    dispatch(jumpToBottom(tailer.tailerId, tailer.taskId, tailer.path));
   }));
 }
 
@@ -41,15 +41,15 @@ export const jumpToTop = (id, taskId, path) => (dispatch, getState) => {
   const state = getState();
 
   dispatch(tailerActions.unloadFile(id));
-  dispatch(tailerActions.sandboxFetchLength(id, taskId, path)).then(() =>
-    dispatch(tailerActions.sandboxFetchChunk(id, taskId, path, 0, tailerActions.SANDBOX_MAX_BYTES, state.tailer.config)));
+  dispatch(tailerActions.sandboxFetchLength(id, taskId, path.replace('$TASK_ID', taskId), state.tailer.config));
+  dispatch(tailerActions.sandboxFetchChunk(id, taskId, path.replace('$TASK_ID', taskId), 0, tailerActions.SANDBOX_MAX_BYTES, state.tailer.config));
 }
 
 export const jumpAllToTop = () => (dispatch, getState) => {
   const state = getState();
 
   state.tailerView.tailerGroups.map((tailerGroup) => tailerGroup.map((tailer) => {
-    dispatch(jumpToTop(tailer.tailerId, tailer.taskId, tailer.path, state.tailer.config));
+    dispatch(jumpToTop(tailer.tailerId, tailer.taskId, tailer.path));
   }));
 }
 
@@ -96,17 +96,22 @@ export const toggleTailerGroup = (taskId, path) => (dispatch, getState) => {
 export const updateTailerUrl = () => (dispatch, getState) => {
   const { tailerView } = getState();
 
-  console.log("updateTailerUrl()");
+  let path = tailerView.paths[0];
+  if (path.indexOf('$TASK_ID') < 0) {
+    for (let i=0; i<tailerView.taskIds.length; i++) {
+      path = path.replace(tailerView.taskIds[i], '$TASK_ID');
+    }
+  }
 
   if (tailerView.taskIds.length === 1) {
     // task tailer
-    return dispatch(push(`/task/${tailerView.taskIds[0]}/new-tail/${tailerView.paths[0]}`));
+    return dispatch(push(`/task/${tailerView.taskIds[0]}/tail/${path}`));
   } if (tailerView.requestIds.length === 1) {
     // request tailer
-    return dispatch(push(`/request/${tailerView.requestIds[0]}/new-tail/${tailerView.paths[0]}?instance=${tailerView.taskIds.map(Utils.getInstanceNoFromTaskId).join(',')}`));
+    return dispatch(push(`/request/${tailerView.requestIds[0]}/tail/${path}?instance=${tailerView.taskIds.map(Utils.getInstanceNoFromTaskId).join(',')}`));
   } else if (tailerView.paths.length === 1) {
     // custom tailer
-    return dispatch(push(`/new-tail/${tailerView.paths[0]}?taskIds=${tailerView.taskIds.join(',')}`));
+    return dispatch(push(`/tail/${path}?taskIds=${tailerView.taskIds.join(',')}`));
   } else {
     // ur fucked
   }

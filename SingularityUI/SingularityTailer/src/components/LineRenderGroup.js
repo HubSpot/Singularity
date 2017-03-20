@@ -6,7 +6,9 @@ class LineRenderGroup extends Component {
   shouldComponentUpdate(nextProps) {
     return nextProps.lines.size !== this.props.lines.size
       || nextProps.lines.first().start !== this.props.lines.first().start
-      || nextProps.lines.last().end !== this.props.lines.last().end;
+      || nextProps.lines.first().isMissingMarker !== this.props.lines.first().isMissingMarker
+      || nextProps.lines.last().end !== this.props.lines.last().end
+      || nextProps.lines.last().isMissingMarker !== this.props.lines.last().isMissingMarker;
   }
 
   renderLines() {
