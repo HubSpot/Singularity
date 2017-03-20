@@ -10,11 +10,8 @@ import { Link } from 'react-router';
 import { FetchSlaves, FreezeSlave, DecommissionSlave, RemoveSlave, ReactivateSlave, FetchExpiringSlaveStates, RemoveExpiringSlaveState } from '../../actions/api/slaves';
 import Column from '../common/table/Column';
 import JSONButton from '../common/JSONButton';
-<<<<<<< HEAD
 import { refresh, initialize } from '../../actions/ui/slaves'
-=======
 import CustomizeSlavesTableButton from './CustomizeSlavesTableButton';
->>>>>>> master
 
 const typeName = {
   'active': 'Activated By',
