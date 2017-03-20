@@ -14,6 +14,7 @@ import { FetchTasksInState, FetchTaskCleanups, KillTask } from '../../actions/ap
 import { FetchRequestRun, RunRequest } from '../../actions/api/requests';
 import { FetchRequestRunHistory } from '../../actions/api/history';
 import { FetchTaskFiles } from '../../actions/api/sandbox';
+import { refresh } from '../../actions/ui/tasks';
 
 import UITable from '../common/table/UITable';
 import Utils from '../../utils';
@@ -183,11 +184,4 @@ function mapDispatchToProps(dispatch) {
   };
 }
 
-function refresh(props) {
-  const promises = [];
-  promises.push(props.fetchFilter(props.params.state || 'active'));
-  promises.push(props.fetchCleanups());
-  return Promise.all(promises);
-}
-
-export default connect(mapStateToProps, mapDispatchToProps)(rootComponent(withRouter(TasksPage), 'Tasks', refresh));
+export default connect(mapStateToProps, mapDispatchToProps)(rootComponent(withRouter(TasksPage), (props) => refresh(props.params.state)));

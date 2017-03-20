@@ -32,7 +32,10 @@ public abstract class SingularityExpiringRequestParent {
 
   @Override
   public String toString() {
-    return "SingularityExpiringRequestParent [durationMillis=" + durationMillis + ", actionId=" + actionId + ", message=" + message + "]";
+    return "SingularityExpiringRequestParent{" +
+        "durationMillis=" + durationMillis +
+        ", actionId=" + actionId +
+        ", message=" + message +
+        '}';
   }
-
 }

@@ -13,6 +13,10 @@ public class SingularityHostState {
 
   private final Optional<Long> millisSinceLastOffer;
 
+  private final int offerCacheSize;
+  private final double availableCachedCpus;
+  private final double availableCachedMemory;
+
   private final String hostAddress;
   private final String hostname;
 
@@ -27,7 +31,10 @@ public class SingularityHostState {
       @JsonProperty("hostAddress") String hostAddress,
       @JsonProperty("hostname") String hostname,
       @JsonProperty("mesosMaster") String mesosMaster,
-      @JsonProperty("mesosConnected") boolean mesosConnected) {
+      @JsonProperty("mesosConnected") boolean mesosConnected,
+      @JsonProperty("offerCacheSize") int offerCacheSize,
+      @JsonProperty("availableCachedCpus") double availableCachedCpus,
+      @JsonProperty("availableCachedMemory") double availableCachedMemory) {
     this.master = master;
     this.uptime = uptime;
     this.driverStatus = driverStatus;
@@ -36,6 +43,9 @@ public class SingularityHostState {
     this.hostname = hostname;
     this.mesosMaster = mesosMaster;
     this.mesosConnected = mesosConnected;
+    this.availableCachedCpus = availableCachedCpus;
+    this.availableCachedMemory = availableCachedMemory;
+    this.offerCacheSize = offerCacheSize;
   }
 
   public String getHostAddress() {
@@ -70,10 +80,32 @@ public class SingularityHostState {
     return mesosConnected;
   }
 
-  @Override
-  public String toString() {
-    return "SingularityHostState [master=" + master + ", uptime=" + uptime + ", driverStatus=" + driverStatus + ", millisSinceLastOffer=" + millisSinceLastOffer + ", hostAddress=" + hostAddress + ", hostname=" + hostname + ", mesosMaster="
-        + mesosMaster + ", mesosConnected=" + mesosConnected + "]";
+  public int getOfferCacheSize() {
+    return offerCacheSize;
   }
 
+  public double getAvailableCachedCpus() {
+    return availableCachedCpus;
+  }
+
+  public double getAvailableCachedMemory() {
+    return availableCachedMemory;
+  }
+
+  @Override
+  public String toString() {
+    return "SingularityHostState{" +
+        "master=" + master +
+        ", uptime=" + uptime +
+        ", driverStatus='" + driverStatus + '\'' +
+        ", millisSinceLastOffer=" + millisSinceLastOffer +
+        ", offerCacheSize=" + offerCacheSize +
+        ", availableCachedCpus=" + availableCachedCpus +
+        ", availableCachedMemory=" + availableCachedMemory +
+        ", hostAddress='" + hostAddress + '\'' +
+        ", hostname='" + hostname + '\'' +
+        ", mesosMaster='" + mesosMaster + '\'' +
+        ", mesosConnected=" + mesosConnected +
+        '}';
+  }
 }

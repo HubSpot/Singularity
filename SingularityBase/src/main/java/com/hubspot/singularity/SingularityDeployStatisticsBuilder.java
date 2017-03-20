@@ -117,11 +117,17 @@ public class SingularityDeployStatisticsBuilder {
 
   @Override
   public String toString() {
-    return "SingularityDeployStatisticsBuilder [requestId=" + requestId + ", deployId=" + deployId + ", numTasks=" + numTasks + ", numSuccess=" + numSuccess + ", numFailures=" + numFailures
-        + ", numSequentialRetries=" + numSequentialRetries + ", instanceSequentialFailureTimestamps=" + instanceSequentialFailureTimestamps + ", lastFinishAt=" + lastFinishAt + ", lastTaskState="
-        + lastTaskState + ", averageRuntimeMillis=" + averageRuntimeMillis + "]";
+    return "SingularityDeployStatisticsBuilder{" +
+        "requestId='" + requestId + '\'' +
+        ", deployId='" + deployId + '\'' +
+        ", numTasks=" + numTasks +
+        ", numSuccess=" + numSuccess +
+        ", numFailures=" + numFailures +
+        ", numSequentialRetries=" + numSequentialRetries +
+        ", instanceSequentialFailureTimestamps=" + instanceSequentialFailureTimestamps +
+        ", lastFinishAt=" + lastFinishAt +
+        ", lastTaskState=" + lastTaskState +
+        ", averageRuntimeMillis=" + averageRuntimeMillis +
+        '}';
   }
-
-
-
 }

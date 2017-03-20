@@ -2,7 +2,6 @@ package com.hubspot.singularity.executor.config;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.Objects;
 import com.google.common.base.Optional;
 
 public class LogrotateCompressionSettings {
@@ -60,11 +59,11 @@ public class LogrotateCompressionSettings {
 
   @Override
   public String toString() {
-    return Objects.toStringHelper(this)
-      .add("compressCmd", compressCmd)
-      .add("uncompressCmd", uncompressCmd)
-      .add("compressOptions", compressOptions)
-      .add("compressExt", compressExt)
-      .toString();
+    return "LogrotateCompressionSettings{" +
+        "compressCmd=" + compressCmd +
+        ", uncompressCmd=" + uncompressCmd +
+        ", compressOptions=" + compressOptions +
+        ", compressExt=" + compressExt +
+        '}';
   }
 }

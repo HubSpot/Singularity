@@ -10,6 +10,7 @@ import { Link } from 'react-router';
 import { FetchSlaves, FreezeSlave, DecommissionSlave, RemoveSlave, ReactivateSlave, FetchExpiringSlaveStates, RemoveExpiringSlaveState } from '../../actions/api/slaves';
 import Column from '../common/table/Column';
 import JSONButton from '../common/JSONButton';
+import { refresh, initialize } from '../../actions/ui/slaves'
 import CustomizeSlavesTableButton from './CustomizeSlavesTableButton';
 
 const typeName = {
@@ -477,19 +478,4 @@ function mapDispatchToProps(dispatch) {
   };
 }
 
-function initialize(props) {
-  return Promise.all([
-    props.clear(),
-    props.fetchSlaves(),
-    props.fetchExpiringSlaveStates()
-  ]);
-}
-
-function refresh(props) {
-  return Promise.all([
-    props.fetchSlaves(),
-    props.fetchExpiringSlaveStates()
-  ]);
-}
-
-export default connect(mapStateToProps, mapDispatchToProps)(rootComponent(Slaves, 'Slaves', refresh, true, true, initialize));
+export default connect(mapStateToProps, mapDispatchToProps)(rootComponent(Slaves, refresh, true, true, initialize));

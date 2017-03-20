@@ -1,10 +1,10 @@
 package com.hubspot.singularity;
 
 import java.util.List;
+import java.util.Objects;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.Objects;
 
 public class SingularityDisastersData {
   private final List<SingularityDisasterDataPoint> stats;
@@ -42,21 +42,21 @@ public class SingularityDisastersData {
     }
     SingularityDisastersData that = (SingularityDisastersData) o;
     return automatedActionDisabled == that.automatedActionDisabled &&
-      Objects.equal(stats, that.stats) &&
-      Objects.equal(disasters, that.disasters);
+        Objects.equals(stats, that.stats) &&
+        Objects.equals(disasters, that.disasters);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hashCode(stats, disasters, automatedActionDisabled);
+    return Objects.hash(stats, disasters, automatedActionDisabled);
   }
 
   @Override
   public String toString() {
-    return Objects.toStringHelper(this)
-      .add("stats", stats)
-      .add("disasters", disasters)
-      .add("automatedActionDisabled", automatedActionDisabled)
-      .toString();
+    return "SingularityDisastersData{" +
+        "stats=" + stats +
+        ", disasters=" + disasters +
+        ", automatedActionDisabled=" + automatedActionDisabled +
+        '}';
   }
 }

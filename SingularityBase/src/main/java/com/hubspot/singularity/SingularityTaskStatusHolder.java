@@ -46,7 +46,12 @@ public class SingularityTaskStatusHolder {
 
   @Override
   public String toString() {
-    return "SingularityTaskStatusHolder [taskStatus=" + MesosUtils.formatForLogging(taskStatus) + ", taskId=" + taskId + ", serverTimestamp=" + serverTimestamp + ", serverId=" + serverId + ", slaveId=" + slaveId + "]";
+    return "SingularityTaskStatusHolder{" +
+        "taskStatus=" + MesosUtils.formatForLogging(taskStatus) +
+        ", taskId=" + taskId +
+        ", serverTimestamp=" + serverTimestamp +
+        ", serverId='" + serverId + '\'' +
+        ", slaveId=" + slaveId +
+        '}';
   }
-
 }

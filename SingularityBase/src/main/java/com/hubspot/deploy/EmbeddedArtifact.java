@@ -29,11 +29,6 @@ public class EmbeddedArtifact extends Artifact {
   }
 
   @Override
-  public int hashCode() {
-    return Objects.hash(super.hashCode(), content);
-  }
-
-  @Override
   public boolean equals(Object o) {
     if (this == o) {
       return true;
@@ -44,14 +39,19 @@ public class EmbeddedArtifact extends Artifact {
     if (!super.equals(o)) {
       return false;
     }
-
     EmbeddedArtifact that = (EmbeddedArtifact) o;
     return Arrays.equals(content, that.content);
   }
 
   @Override
-  public String toString() {
-    return "EmbeddedArtifact [parent=" + super.toString() + "]";
+  public int hashCode() {
+    return Objects.hash(super.hashCode(), content);
   }
 
+  @Override
+  public String toString() {
+    return "EmbeddedArtifact{" +
+        "content=" + Arrays.toString(content) +
+        "} " + super.toString();
+  }
 }

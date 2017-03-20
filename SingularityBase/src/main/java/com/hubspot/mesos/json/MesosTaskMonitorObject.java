@@ -45,7 +45,12 @@ public class MesosTaskMonitorObject {
 
   @Override
   public String toString() {
-    return "MesosTaskMonitorObject [executorId=" + executorId + ", executorName=" + executorName + ", frameworkId=" + frameworkId + ", source=" + source + ", statistics=" + statistics + "]";
+    return "MesosTaskMonitorObject{" +
+        "executorId='" + executorId + '\'' +
+        ", executorName='" + executorName + '\'' +
+        ", frameworkId='" + frameworkId + '\'' +
+        ", source='" + source + '\'' +
+        ", statistics=" + statistics +
+        '}';
   }
-
 }

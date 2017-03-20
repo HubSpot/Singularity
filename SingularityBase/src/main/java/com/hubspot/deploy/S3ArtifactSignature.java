@@ -47,7 +47,8 @@ public class S3ArtifactSignature extends S3Artifact {
 
   @Override
   public String toString() {
-    return "S3ArtifactSignature [artifactFilename=" + artifactFilename + ", parent=" + super.toString() + "]";
+    return "S3ArtifactSignature{" +
+        "artifactFilename='" + artifactFilename + '\'' +
+        "} " + super.toString();
   }
-
 }
