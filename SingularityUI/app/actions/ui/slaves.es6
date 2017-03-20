@@ -1,4 +1,5 @@
 import { FetchSlaves, FreezeSlave, DecommissionSlave, RemoveSlave, ReactivateSlave, FetchExpiringSlaveStates } from '../../actions/api/slaves';
+import { FetchInactiveHosts } from '../api/inactive';
 
 export const UPDATE_SLAVES_TABLE_SETTINGS = 'UPDATE_SLAVES_TABLE_SETTINGS';
 
@@ -18,6 +19,7 @@ export const refresh = () => (dispatch) =>
   Promise.all([
     dispatch(FetchSlaves.trigger()),
     dispatch(FetchExpiringSlaveStates.trigger()),
+    dispatch(FetchInactiveHosts.trigger()),
   ]);
 
 export const initialize = () => (dispatch) =>
