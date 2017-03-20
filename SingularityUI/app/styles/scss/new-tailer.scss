@@ -1,0 +1,95 @@
+.new-tailer {
+  display: flex;
+  flex-flow: column;
+
+  section.log-pane {
+    color: #000;
+    background-color: #FFF;
+  }
+
+  &.light {
+    section.log-pane {
+      background: #FDF6E3;
+      color: #657b83;
+    }
+  }
+
+  &.dark {
+    section.log-pane {
+      color: #839496;
+      background-color: #002b36;
+    }
+  }
+
+  .tail-row {
+    display: flex;
+    flex-flow: row;
+
+    section.log-pane {
+      align-items: stretch;
+      display: flex;
+      flex-flow: column;
+      width: 100%;
+      height: 100%;
+
+      overflow: scroll;
+      // will repaint on scroll if you don't put this in!!!
+      transform: translateZ(0);
+
+      font-family: Consolas, "Liberation Mono", Courier, monospace;
+
+      .log-row {
+        font-size: 12px;
+        line-height: 12px;
+        height: 14px;
+        padding: 0;
+        white-space: pre;
+        display: table-row;
+
+        a {
+          text-decoration: none;
+          visibility: hidden;
+
+          div.pre-line {
+            position: absolute;
+            left: 0;
+            padding-left: 5px;
+          }
+        }
+
+        &:hover {
+          background-color: rgba(255, 255, 255, 0.1);
+
+          a {
+            visibility: visible;
+          }
+        }
+
+        > span {
+          padding-left: 2em;
+          padding-right: 10px;
+        }
+
+        &.missing {
+          background-color: rgba(255, 255, 255, 0.1);
+        }
+
+        &.loading {
+          background-color: rgba(255, 255, 255, 0.4);
+        }
+
+        &.selected {
+          background-color: rgba(255, 255, 255, 0.4);
+        }
+      }
+
+      header {
+        flex: 0 1 30px;
+      }
+
+      footer {
+        flex: 0 1 40px;
+      }
+    }
+  }
+}

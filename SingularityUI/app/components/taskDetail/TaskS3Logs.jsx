@@ -20,7 +20,6 @@ function TaskS3Logs (props) {
           id="log-file"
           key="log-file"
           cellData={(s3File) => (
-            // <a className="long-link" href={`${props.taskId}/view/${s3File.key}`} title={s3File.key}>
             <a className="long-link" href={s3File.getUrl} target="_blank" title={s3File.key}>
               {Utils.trimS3File(s3File.key.substring(s3File.key.lastIndexOf('/') + 1), props.taskId)}
             </a>

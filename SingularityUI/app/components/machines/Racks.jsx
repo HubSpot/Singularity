@@ -10,6 +10,7 @@ import rootComponent from '../../rootComponent';
 import { Link } from 'react-router';
 import Column from '../common/table/Column';
 import JSONButton from '../common/JSONButton';
+import { refresh, initialize } from '../../actions/ui/racks';
 
 const typeName = {
   'active': 'Activated By',
@@ -226,15 +227,4 @@ function mapDispatchToProps(dispatch) {
   };
 }
 
-function initialize(props) {
-  return Promise.all([
-    props.clear(),
-    props.fetchRacks()
-  ]);
-}
-
-function refresh(props) {
-  return props.fetchRacks();
-}
-
-export default connect(mapStateToProps, mapDispatchToProps)(rootComponent(Racks, 'Racks', refresh, true, true, initialize));
+export default connect(mapStateToProps, mapDispatchToProps)(rootComponent(Racks, refresh, true, true, initialize));
