@@ -21,7 +21,7 @@ export const FIELDS = {
   ],
   defaultExecutor: [
     {id: 'command', type: 'text'},
-    {id: 'uris', type: 'array', arrayType: 'text'},
+    {id: 'uris', type: 'mesosArtifacts'},
     {id: 'arguments', type: 'array', arrayType: 'text'}
   ],
   customExecutor: [
@@ -60,7 +60,7 @@ export const FIELDS = {
           values: [
             {id: 'image', type: 'text', required: true},
             {id: 'network', type: 'text', default: 'NONE'},
-            {id: 'parameters', type: 'map'},
+            {id: 'dockerParameters', type: 'dockerParameters'},
             {id: 'privileged', type: 'text'},
             {id: 'forcePullImage', type: 'text'},
             {id: 'volumes', type: 'volumes'},
@@ -77,17 +77,35 @@ export const FIELDS = {
     {id: 'loadBalancerPortIndex', type: 'number', default: 0}
   ],
   healthChecker: [
-    {id: 'healthcheckUri', type: 'text'},
-    {id: 'healthcheckIntervalSeconds', type: 'number'},
-    {id: 'healthcheckTimeoutSeconds', type: 'number'},
-    {id: 'healthcheckPortIndex', type: 'number'},
-    {id: 'healthcheckMaxTotalTimeoutSeconds', type: 'number'},
+    {
+      id: 'healthcheck',
+      type: 'object',
+      values: [
+        {id: 'uri', type: 'text'},
+        {id: 'portIndex', type: 'number'},
+        {id: 'portNumber', type: 'number'},
+        {id: 'protocol', type: 'text', default: 'HTTP'},
+        {id: 'startupDelaySeconds', type: 'number'},
+        {id: 'startupTimeoutSeconds', type: 'number'},
+        {id: 'startupIntervalSeconds', type: 'number'},
+        {id: 'responseTimeoutSeconds', type: 'number'},
+        {id: 'intervalSeconds', type: 'number'},
+        {id: 'maxRetries', type: 'number'},
+        {id: 'failureStatusCodes', type: 'array', arrayType: 'number', required: false},
+      ]
+    },
     {id: 'deployHealthTimeoutSeconds', type: 'number'},
-    {id: 'healthCheckProtocol', type: 'text', default: 'HTTP'},
     {id: 'skipHealthchecksOnDeploy', type: 'text'},
     {id: 'considerHealthyAfterRunningForSeconds', type: 'number'}
   ]
 };
+
+export const MESOS_ARTIFACT_FIELDS = [
+  {id: 'uri', type: 'text', required: true},
+  {id: 'cache', type: 'text'},
+  {id: 'executable', type: 'text'},
+  {id: 'extract', type: 'text', default: true}
+];
 
 export const ARTIFACT_FIELDS = {
   all: [
@@ -116,6 +134,11 @@ export const DOCKER_PORT_MAPPING_FIELDS = [
   {id: 'hostPortType', type: 'text', default: 'LITERAL', required: true},
   {id: 'hostPort', type: 'text', required: true},
   {id: 'protocol', type: 'text', default: 'tcp'}
+];
+
+export const DOCKER_PARAMETERS_FIELDS = [
+  {id: 'key', type: 'text', required: true},
+  {id: 'value', type: 'text'},
 ];
 
 export const DOCKER_VOLUME_FIELDS = [
@@ -153,6 +176,7 @@ export const INDEXED_ARTIFACT_FIELDS = _.extend(
   makeIndexedFields(ARTIFACT_FIELDS.s3)
 );
 export const INDEXED_DOCKER_PORT_MAPPING_FIELDS = makeIndexedFields(DOCKER_PORT_MAPPING_FIELDS);
+export const INDEXED_DOCKER_PARAMETERS_FIELDS = makeIndexedFields(DOCKER_PARAMETERS_FIELDS);
 export const INDEXED_DOCKER_VOLUME_FIELDS = makeIndexedFields(DOCKER_VOLUME_FIELDS);
 export const INDEXED_ALL_FIELDS = makeIndexedFields(FIELDS.all);
 export const INDEXED_CUSTOM_EXECUTOR_FIELDS = makeIndexedFields(FIELDS.customExecutor);
@@ -160,6 +184,7 @@ export const INDEXED_DEFAULT_EXECUTOR_FIELDS = makeIndexedFields(FIELDS.defaultE
 export const INDEXED_DOCKER_CONTAINER_FIELDS = makeIndexedFields(FIELDS.dockerContainer);
 export const INDEXED_LOAD_BALANCER_FIELDS = makeIndexedFields(FIELDS.loadBalancer);
 export const INDEXED_HEALTH_CHECKER_FIELDS = makeIndexedFields(FIELDS.healthChecker);
+export const INDEXED_MESOS_ARTIFACT_FIELDS = makeIndexedFields(MESOS_ARTIFACT_FIELDS)
 export const INDEXED_ALL_ARTIFACT_FIELDS = makeIndexedFields(ARTIFACT_FIELDS.all);
 export const INDEXED_EMBEDDED_ARTIFACT_FIELDS = makeIndexedFields(ARTIFACT_FIELDS.embedded);
 export const INDEXED_EXTERNAL_ARTIFACT_FIELDS = makeIndexedFields(ARTIFACT_FIELDS.external);

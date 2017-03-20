@@ -41,7 +41,11 @@ public class SingularityDeployUpdate {
 
   @Override
   public String toString() {
-    return "SingularityDeployWebhook [deployMarker=" + deployMarker + ", deploy=" + deploy + ", eventType=" + eventType + ", deployResult=" + deployResult + "]";
+    return "SingularityDeployUpdate{" +
+        "deployMarker=" + deployMarker +
+        ", deploy=" + deploy +
+        ", eventType=" + eventType +
+        ", deployResult=" + deployResult +
+        '}';
   }
-
 }

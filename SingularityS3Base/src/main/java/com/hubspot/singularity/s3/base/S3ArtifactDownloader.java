@@ -13,14 +13,13 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import org.jets3t.service.Constants;
-import org.jets3t.service.Jets3tProperties;
-import org.jets3t.service.S3Service;
-import org.jets3t.service.impl.rest.httpclient.RestS3Service;
-import org.jets3t.service.model.StorageObject;
-import org.jets3t.service.security.AWSCredentials;
 import org.slf4j.Logger;
 
+import com.amazonaws.ClientConfiguration;
+import com.amazonaws.auth.BasicAWSCredentials;
+import com.amazonaws.services.s3.AmazonS3;
+import com.amazonaws.services.s3.AmazonS3Client;
+import com.amazonaws.services.s3.model.S3Object;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableMap;
@@ -57,32 +56,31 @@ public class S3ArtifactDownloader {
     }
   }
 
-  private AWSCredentials getCredentialsForBucket(String bucketName) {
+  private BasicAWSCredentials getCredentialsForBucket(String bucketName) {
     if (configuration.getS3BucketCredentials().containsKey(bucketName)) {
       return configuration.getS3BucketCredentials().get(bucketName).toAWSCredentials();
     }
 
-    return new AWSCredentials(configuration.getS3AccessKey().get(), configuration.getS3SecretKey().get());
+    return new BasicAWSCredentials(configuration.getS3AccessKey().get(), configuration.getS3SecretKey().get());
   }
 
   private void downloadThrows(final S3Artifact s3Artifact, final Path downloadTo) throws Exception {
     log.info("Downloading {}", s3Artifact);
 
-    Jets3tProperties jets3tProperties = Jets3tProperties.getInstance(Constants.JETS3T_PROPERTIES_FILENAME);
-    jets3tProperties.setProperty("httpclient.socket-timeout-ms", Long.toString(configuration.getS3ChunkDownloadTimeoutMillis()));
-
-    final S3Service s3 = new RestS3Service(getCredentialsForBucket(s3Artifact.getS3Bucket()), null, null, jets3tProperties);
+    ClientConfiguration clientConfiguration = new ClientConfiguration()
+        .withSocketTimeout(configuration.getS3ChunkDownloadTimeoutMillis());
+    final AmazonS3 s3Client = new AmazonS3Client(getCredentialsForBucket(s3Artifact.getS3Bucket()), clientConfiguration);
 
     long length = 0;
 
     if (s3Artifact.getFilesize().isPresent()) {
       length = s3Artifact.getFilesize().get();
     } else {
-      StorageObject details = s3.getObjectDetails(s3Artifact.getS3Bucket(), s3Artifact.getS3ObjectKey());
+      S3Object details = s3Client.getObject(s3Artifact.getS3Bucket(), s3Artifact.getS3ObjectKey());
 
       Preconditions.checkNotNull(details, "Couldn't find object at %s/%s", s3Artifact.getS3Bucket(), s3Artifact.getS3ObjectKey());
 
-      length = details.getContentLength();
+      length = details.getObjectMetadata().getContentLength();
     }
 
     int numChunks = (int) (length / configuration.getS3ChunkSize());
@@ -99,7 +97,7 @@ public class S3ArtifactDownloader {
     final List<Future<Path>> futures = Lists.newArrayListWithCapacity(numChunks);
 
     for (int chunk = 0; chunk < numChunks; chunk++) {
-      futures.add(chunkExecutorService.submit(new S3ArtifactChunkDownloader(configuration, log, s3, s3Artifact, downloadTo, chunk, chunkSize, length, exceptionNotifier)));
+      futures.add(chunkExecutorService.submit(new S3ArtifactChunkDownloader(configuration, log, s3Client, s3Artifact, downloadTo, chunk, chunkSize, length, exceptionNotifier)));
     }
 
     long remainingMillis = configuration.getS3DownloadTimeoutMillis();

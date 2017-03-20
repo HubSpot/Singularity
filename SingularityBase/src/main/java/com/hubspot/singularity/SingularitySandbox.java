@@ -45,6 +45,11 @@ public class SingularitySandbox {
 
   @Override
   public String toString() {
-    return "SingularitySandbox [files=" + files + ", fullPathToRoot=" + fullPathToRoot + ", currentDirectory=" + currentDirectory + ", slaveHostname=" + slaveHostname + "]";
+    return "SingularitySandbox{" +
+        "files=" + files +
+        ", fullPathToRoot='" + fullPathToRoot + '\'' +
+        ", currentDirectory='" + currentDirectory + '\'' +
+        ", slaveHostname='" + slaveHostname + '\'' +
+        '}';
   }
 }

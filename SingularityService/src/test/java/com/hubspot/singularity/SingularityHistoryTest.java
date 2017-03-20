@@ -28,11 +28,11 @@ import com.hubspot.singularity.api.SingularityScaleRequest;
 import com.hubspot.singularity.config.HistoryPurgingConfiguration;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.data.history.HistoryManager;
-import com.hubspot.singularity.scheduler.SingularitySchedulerTestBase;
 import com.hubspot.singularity.data.history.SingularityHistoryPurger;
 import com.hubspot.singularity.data.history.SingularityRequestHistoryPersister;
 import com.hubspot.singularity.data.history.SingularityTaskHistoryPersister;
 import com.hubspot.singularity.data.history.TaskHistoryHelper;
+import com.hubspot.singularity.scheduler.SingularitySchedulerTestBase;
 
 import liquibase.Liquibase;
 import liquibase.database.Database;
@@ -130,8 +130,7 @@ public class SingularityHistoryTest extends SingularitySchedulerTestBase {
 
     HistoryPurgingConfiguration historyPurgingConfiguration = new HistoryPurgingConfiguration();
     historyPurgingConfiguration.setEnabled(true);
-    historyPurgingConfiguration.setDeleteTaskHistoryBytesInsteadOfEntireRow(true);
-    historyPurgingConfiguration.setDeleteTaskHistoryAfterDays(1);
+    historyPurgingConfiguration.setDeleteTaskHistoryBytesAfterDays(1);
 
     SingularityTaskHistory taskHistory = buildTask(System.currentTimeMillis() - TimeUnit.DAYS.toMillis(3));
 
@@ -161,7 +160,6 @@ public class SingularityHistoryTest extends SingularitySchedulerTestBase {
 
     HistoryPurgingConfiguration historyPurgingConfiguration = new HistoryPurgingConfiguration();
     historyPurgingConfiguration.setEnabled(true);
-    historyPurgingConfiguration.setDeleteTaskHistoryBytesInsteadOfEntireRow(false);
     historyPurgingConfiguration.setDeleteTaskHistoryAfterDays(10);
 
     SingularityHistoryPurger purger = new SingularityHistoryPurger(historyPurgingConfiguration, historyManager);
@@ -488,7 +486,7 @@ public class SingularityHistoryTest extends SingularitySchedulerTestBase {
       msg = msg + i;
     }
 
-    requestResource.scale(requestId, new SingularityScaleRequest(Optional.of(2), Optional.<Long> absent(), Optional.<Boolean> absent(), Optional.<String> absent(), Optional.of(msg)));
+    requestResource.scale(requestId, new SingularityScaleRequest(Optional.of(2), Optional.<Long> absent(), Optional.<Boolean> absent(), Optional.<String> absent(), Optional.of(msg), Optional.<Boolean>absent(), Optional.<Boolean>absent()));
     requestResource.deleteRequest(requestId, Optional.of(new SingularityDeleteRequestRequest(Optional.of("a msg"), Optional.<String> absent())));
 
     cleaner.drainCleanupQueue();
@@ -497,19 +495,18 @@ public class SingularityHistoryTest extends SingularitySchedulerTestBase {
 
     List<SingularityRequestHistory> history = historyManager.getRequestHistory(requestId, Optional.of(OrderDirection.DESC), 0, 100);
 
-    Assert.assertEquals(3, history.size());
+    Assert.assertEquals(4, history.size());
 
     for (SingularityRequestHistory historyItem : history) {
       if (historyItem.getEventType() == RequestHistoryType.DELETED) {
         Assert.assertEquals("a msg", historyItem.getMessage().get());
       } else if (historyItem.getEventType() == RequestHistoryType.SCALED) {
         Assert.assertEquals(280, historyItem.getMessage().get().length());
+      } else if (historyItem.getEventType() == RequestHistoryType.DELETING) {
+        Assert.assertEquals("a msg", historyItem.getMessage().get());
       } else {
         Assert.assertTrue(!historyItem.getMessage().isPresent());
       }
     }
-
   }
-
-
 }

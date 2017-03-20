@@ -80,9 +80,8 @@ public abstract class CuratorManager {
     if (bytes.isPresent()) {
       metrics.bytesMeter.mark(bytes.get());
     }
-    if (numItems.isPresent()) {
-      metrics.itemsMeter.mark(numItems.get());
-    }
+
+    metrics.itemsMeter.mark(numItems.or(1));
     metrics.timer.update(duration, TimeUnit.MILLISECONDS);
   }
 
@@ -139,6 +138,7 @@ public abstract class CuratorManager {
     final long start = System.currentTimeMillis();
 
     try {
+      // moves RequestState to DELETED
       curator.delete().deletingChildrenIfNeeded().forPath(path);
       return SingularityDeleteResult.DELETED;
     } catch (NoNodeException nne) {

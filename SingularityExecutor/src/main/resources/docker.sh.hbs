@@ -131,23 +131,31 @@ DOCKER_NETWORK="--net=${raw_network,,}"
 DOCKER_NETWORK="--net=host"
 {{/if}}
 
-DOCKER_WORKDIR="/mnt/mesos/sandbox/{{{ runContext.taskAppDirectory }}}"
-
 PARENT_CGROUP=$(get_deepest_cgroup)
 
-DOCKER_OPTIONS="--name=$CONTAINER_NAME --cgroup-parent=$PARENT_CGROUP -w $DOCKER_WORKDIR $DOCKER_NETWORK --env-file=docker.env ${DOCKER_VOLUMES[@]} ${DOCKER_PORTS[@]}"
+DOCKER_OPTIONS="--name=$CONTAINER_NAME --cgroup-parent=$PARENT_CGROUP $DOCKER_NETWORK --env-file=docker.env ${DOCKER_VOLUMES[@]} ${DOCKER_PORTS[@]}"
+
+{{#unless envContext.dockerWorkdirOverriden }}
+DOCKER_OPTIONS="$DOCKER_OPTIONS -w /mnt/mesos/sandbox/{{{ runContext.taskAppDirectory }}}"
+{{/unless}}
 
 {{#if privileged}}
 DOCKER_OPTIONS="$DOCKER_OPTIONS --privileged"
 {{/if}}
 
 {{#each envContext.dockerParameters}}
-DOCKER_OPTIONS="$DOCKER_OPTIONS --{{{this.key}}}={{{this.value}}}"
+DOCKER_OPTIONS="$DOCKER_OPTIONS {{this}}"
 {{/each}}
 
 echo "Ensuring {{{ runContext.taskAppDirectory }}} is owned by {{{ runContext.user }}}"
 mkdir -p {{{ runContext.taskAppDirectory }}}
 sudo chown -R {{{ runContext.user }}} {{{ runContext.taskAppDirectory }}}
+
+{{#if runContext.useFileAttributes}}
+touch {{{ runContext.logFile }}}
+sudo chown {{{ runContext.user }}} {{{ runContext.logFile }}}
+setfattr -n user.logstart -v "$(($(date +%s%N)/1000000))" {{{ runContext.logFile }}}
+{{/if}}
 
 # Start up the container
 echo -e "Creating continer with: sudo -E -H -u {{{ runContext.user }}} docker create $DOCKER_OPTIONS {{#each envContext.env}}{{#ifHasNewLines value}}-e {{{name}}}={{#escapeNewLinesAndQuotes value}}{{/escapeNewLinesAndQuotes}}{{/ifHasNewLines}}{{/each}} $DOCKER_IMAGE {{{ runContext.cmd }}}"

@@ -82,7 +82,12 @@ const RequestActionButtons = ({requestParent, fetchRequest, fetchRequestHistory,
   let maybeScaleButton;
   if (Utils.request.canBeScaled(requestParent)) {
     maybeScaleButton = (
-      <ScaleButton requestId={request.id} currentInstances={request.instances} then={fetchRequestAndHistoryAndActiveTasks}>
+      <ScaleButton
+        requestId={request.id}
+        currentInstances={request.instances}
+        then={fetchRequestAndHistoryAndActiveTasks}
+        bounceAfterScaleDefault={Utils.maybe(request, ['bounceAfterScale'], false)}
+      >
         <Button bsStyle="primary" disabled={Utils.request.scaleDisabled(requestParent)}>
           Scale
         </Button>
@@ -155,14 +160,8 @@ const RequestActionButtons = ({requestParent, fetchRequest, fetchRequestHistory,
     }
   }
 
-  const navigateAwayOnSuccess = (response) => {
-    if (response.statusCode === 200) {
-      router.push('/requests');
-    }
-  };
-
   const removeButton = (
-    <RemoveButton requestId={request.id} then={navigateAwayOnSuccess}>
+    <RemoveButton requestId={request.id} then={fetchRequestAndHistoryAndActiveTasks}>
       <Button bsStyle="danger">
         Remove
       </Button>

@@ -13,7 +13,6 @@ import org.apache.curator.framework.api.transaction.CuratorTransactionFinal;
 import org.apache.curator.utils.ZKPaths;
 import org.apache.mesos.Protos.TaskStatus;
 import org.apache.zookeeper.KeeperException;
-import org.apache.zookeeper.KeeperException.NodeExistsException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -48,7 +47,6 @@ import com.hubspot.singularity.SingularityTaskHealthcheckResult;
 import com.hubspot.singularity.SingularityTaskHistory;
 import com.hubspot.singularity.SingularityTaskHistoryUpdate;
 import com.hubspot.singularity.SingularityTaskId;
-import com.hubspot.singularity.SingularityTaskIdHistory;
 import com.hubspot.singularity.SingularityTaskIdHolder;
 import com.hubspot.singularity.SingularityTaskMetadata;
 import com.hubspot.singularity.SingularityTaskShellCommandHistory;
@@ -93,6 +91,9 @@ public class TaskManager extends CuratorAsyncManager {
   private static final String SHELL_UPDATES_PATH = "/updates";
 
   private static final String HEALTHCHECKS_PATH = "/healthchecks";
+  private static final String HEALTHCHECKS_FINISHED_PATH = "/healthchecks-finished";
+  private static final String STARTUP_HEALTHCHECK_PATH_SUFFIX = "-STARTUP";
+
   private static final String METADATA_PATH = "/metadata";
   private static final String UPDATES_PATH = "/updates";
 
@@ -167,12 +168,16 @@ public class TaskManager extends CuratorAsyncManager {
     return ZKPaths.makePath(getHistoryPath(taskId), HEALTHCHECKS_PATH);
   }
 
+  private String getHealthchecksFinishedPath(SingularityTaskId taskId) {
+    return ZKPaths.makePath(getHistoryPath(taskId), HEALTHCHECKS_FINISHED_PATH);
+  }
+
   private String getLastActiveTaskStatusPath(SingularityTaskId taskId) {
     return ZKPaths.makePath(LAST_ACTIVE_TASK_STATUSES_PATH_ROOT, taskId.getId());
   }
 
   private String getHealthcheckPath(SingularityTaskHealthcheckResult healthcheck) {
-    return ZKPaths.makePath(getHealthcheckParentPath(healthcheck.getTaskId()), Long.toString(healthcheck.getTimestamp()));
+    return ZKPaths.makePath(getHealthcheckParentPath(healthcheck.getTaskId()), String.format("%s%s", Long.toString(healthcheck.getTimestamp()), healthcheck.isStartup() ? STARTUP_HEALTHCHECK_PATH_SUFFIX : ""));
   }
 
   private String getShellRequestQueuePath(SingularityTaskShellCommandRequest shellRequest) {
@@ -295,10 +300,22 @@ public class TaskManager extends CuratorAsyncManager {
   }
 
   public void saveHealthcheckResult(SingularityTaskHealthcheckResult healthcheckResult) {
-    final Optional<byte[]> bytes = Optional.of(healthcheckResultTranscoder.toBytes(healthcheckResult));
+    if (canSaveNewHealthcheck(healthcheckResult)) {
+      final Optional<byte[]> bytes = Optional.of(healthcheckResultTranscoder.toBytes(healthcheckResult));
 
-    save(getHealthcheckPath(healthcheckResult), bytes);
-    save(getLastHealthcheckPath(healthcheckResult.getTaskId()), bytes);
+      save(getHealthcheckPath(healthcheckResult), bytes);
+      save(getLastHealthcheckPath(healthcheckResult.getTaskId()), bytes);
+    } else {
+      LOG.warn("Healthchecks have finished, could not save new result {}", healthcheckResult);
+    }
+  }
+
+  private boolean canSaveNewHealthcheck(SingularityTaskHealthcheckResult healthcheckResult) {
+    return !exists(getHealthchecksFinishedPath(healthcheckResult.getTaskId()));
+  }
+
+  public void markHealthchecksFinished(SingularityTaskId taskId) {
+    create(getHealthchecksFinishedPath(taskId));
   }
 
   public SingularityCreateResult savePendingTask(SingularityPendingTask task) {
@@ -390,6 +407,10 @@ public class TaskManager extends CuratorAsyncManager {
     return updates;
   }
 
+  public Optional<SingularityTaskHistoryUpdate> getTaskHistoryUpdate(SingularityTaskId taskId, ExtendedTaskState taskState) {
+    return getData(getUpdatePath(taskId, taskState), taskHistoryUpdateTranscoder);
+  }
+
   public Map<SingularityTaskId, List<SingularityTaskHistoryUpdate>> getTaskHistoryUpdates(Collection<SingularityTaskId> taskIds) {
     Map<String, SingularityTaskId> pathsMap = Maps.newHashMap();
     for (SingularityTaskId taskId : taskIds) {
@@ -403,10 +424,32 @@ public class TaskManager extends CuratorAsyncManager {
     return getNumChildren(getHealthcheckParentPath(taskId));
   }
 
+  public int getNumNonstartupHealthchecks(SingularityTaskId taskId) {
+    int numChecks = 0;
+    List<String> checks = getChildren(getHealthcheckParentPath(taskId));
+    for (String check : checks) {
+      if (!check.endsWith(STARTUP_HEALTHCHECK_PATH_SUFFIX)) {
+        numChecks++;
+      }
+    }
+    return numChecks;
+  }
+
   public List<SingularityTaskHealthcheckResult> getHealthcheckResults(SingularityTaskId taskId) {
     List<SingularityTaskHealthcheckResult> healthcheckResults = getAsyncChildren(getHealthcheckParentPath(taskId), healthcheckResultTranscoder);
     Collections.sort(healthcheckResults);
     return healthcheckResults;
+  }
+
+  public void clearStartupHealthchecks(SingularityTaskId taskId) {
+    Optional<SingularityTaskHealthcheckResult> maybeLastHealthcheck = getLastHealthcheck(taskId);
+    String parentPath = getHealthcheckParentPath(taskId);
+    for (String healthcheckPath : getChildren(parentPath)) {
+      String fullPath = ZKPaths.makePath(parentPath, healthcheckPath);
+      if (healthcheckPath.endsWith(STARTUP_HEALTHCHECK_PATH_SUFFIX) && (!maybeLastHealthcheck.isPresent() || !getHealthcheckPath(maybeLastHealthcheck.get()).equals(fullPath))) {
+        delete(fullPath);
+      }
+    }
   }
 
   public Optional<SingularityTaskHealthcheckResult> getLastHealthcheck(SingularityTaskId taskId) {
@@ -433,7 +476,18 @@ public class TaskManager extends CuratorAsyncManager {
     singularityEventListener.taskHistoryUpdateEvent(taskHistoryUpdate);
 
     if (overwriteExisting) {
-      return save(getUpdatePath(taskHistoryUpdate.getTaskId(), taskHistoryUpdate.getTaskState()), taskHistoryUpdate, taskHistoryUpdateTranscoder);
+      Optional<SingularityTaskHistoryUpdate> maybeExisting = getTaskHistoryUpdate(taskHistoryUpdate.getTaskId(), taskHistoryUpdate.getTaskState());
+      LOG.info("Found existing history {}", maybeExisting);
+      SingularityTaskHistoryUpdate updateWithPrevious;
+      if (maybeExisting.isPresent()) {
+        updateWithPrevious = taskHistoryUpdate.withPrevious(maybeExisting.get());
+        LOG.info("Will save new update {}", updateWithPrevious);
+
+      } else {
+        updateWithPrevious = taskHistoryUpdate;
+      }
+
+      return save(getUpdatePath(taskHistoryUpdate.getTaskId(), taskHistoryUpdate.getTaskState()), updateWithPrevious, taskHistoryUpdateTranscoder);
     } else {
       return create(getUpdatePath(taskHistoryUpdate.getTaskId(), taskHistoryUpdate.getTaskState()), taskHistoryUpdate, taskHistoryUpdateTranscoder);
     }
@@ -633,6 +687,16 @@ public class TaskManager extends CuratorAsyncManager {
 
   public List<SingularityPendingTaskId> getPendingTaskIds() {
     return getChildrenAsIds(PENDING_PATH_ROOT, pendingTaskIdTranscoder);
+  }
+
+  public List<SingularityPendingTaskId> getPendingTaskIdsForRequest(final String requestId) {
+    List<SingularityPendingTaskId> pendingTaskIds = getChildrenAsIds(PENDING_PATH_ROOT, pendingTaskIdTranscoder);
+    return ImmutableList.copyOf(Iterables.filter(pendingTaskIds, new Predicate<SingularityPendingTaskId>() {
+      @Override
+      public boolean apply(SingularityPendingTaskId pendingTaskId) {
+        return pendingTaskId.getRequestId().equals(requestId);
+      }
+    }));
   }
 
   public List<SingularityPendingTask> getPendingTasks() {

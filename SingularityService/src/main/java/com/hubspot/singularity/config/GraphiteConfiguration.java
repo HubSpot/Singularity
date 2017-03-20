@@ -1,7 +1,9 @@
 package com.hubspot.singularity.config;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
@@ -22,6 +24,10 @@ public class GraphiteConfiguration {
   @JsonProperty
   @NotNull
   private String prefix = "";
+
+  @JsonProperty
+  @NotNull
+  private Map<String, String> tags = new LinkedHashMap<>();
 
   @JsonProperty
   @NotNull
@@ -89,5 +95,13 @@ public class GraphiteConfiguration {
 
   public void setHostnameOmitSuffix(String hostnameOmitSuffix) {
     this.hostnameOmitSuffix = hostnameOmitSuffix;
+  }
+
+  public Map<String, String> getTags() {
+    return tags;
+  }
+
+  public void setTags(Map<String, String> tags) {
+    this.tags = tags;
   }
 }

@@ -36,7 +36,10 @@ public class SingularityExitCooldownRequest {
 
   @Override
   public String toString() {
-    return "SingularityExitCooldownRequest [message=" + message + ", actionId=" + actionId + ", skipHealthchecks=" + skipHealthchecks + "]";
+    return "SingularityExitCooldownRequest{" +
+        "message=" + message +
+        ", actionId=" + actionId +
+        ", skipHealthchecks=" + skipHealthchecks +
+        '}';
   }
-
 }

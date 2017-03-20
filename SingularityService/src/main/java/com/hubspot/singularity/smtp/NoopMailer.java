@@ -5,6 +5,7 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Optional;
 import com.hubspot.singularity.ExtendedTaskState;
+import com.hubspot.singularity.SingularityDisastersData;
 import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskHistory;
@@ -65,5 +66,10 @@ public class NoopMailer implements SingularityMailer {
 
   private void logNotSendingEmail(String type) {
     LOG.debug("Not sending " + type + " mail - no SMTP configuration is present");
+  }
+
+  @Override
+  public void sendDisasterMail(final SingularityDisastersData disastersData) {
+    logNotSendingEmail("new disaster");
   }
 }

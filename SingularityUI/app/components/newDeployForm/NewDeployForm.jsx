@@ -19,11 +19,12 @@ import {
   FIELDS, ARTIFACT_FIELDS, DOCKER_PORT_MAPPING_FIELDS, DOCKER_VOLUME_FIELDS,
   INDEXED_FIELDS, INDEXED_ARTIFACT_FIELDS, INDEXED_DOCKER_PORT_MAPPING_FIELDS,
   INDEXED_DOCKER_VOLUME_FIELDS, INDEXED_ALL_FIELDS,
+  INDEXED_MESOS_ARTIFACT_FIELDS, MESOS_ARTIFACT_FIELDS,
   INDEXED_CUSTOM_EXECUTOR_FIELDS, INDEXED_DEFAULT_EXECUTOR_FIELDS,
   INDEXED_DOCKER_CONTAINER_FIELDS, INDEXED_LOAD_BALANCER_FIELDS,
   INDEXED_HEALTH_CHECKER_FIELDS, INDEXED_ALL_ARTIFACT_FIELDS,
   INDEXED_EMBEDDED_ARTIFACT_FIELDS, INDEXED_EXTERNAL_ARTIFACT_FIELDS,
-  INDEXED_S3_ARTIFACT_FIELDS
+  INDEXED_S3_ARTIFACT_FIELDS, INDEXED_DOCKER_PARAMETERS_FIELDS, DOCKER_PARAMETERS_FIELDS
 } from './fields';
 
 
@@ -48,7 +49,12 @@ class NewDeployForm extends Component {
   static propTypes = {
     form: PropTypes.shape({
       arguments: PropTypes.arrayOf(PropTypes.string),
-      uris: PropTypes.arrayOf(PropTypes.string),
+      uris: PropTypes.arrayOf(PropTypes.shape({
+        uri: PropTypes.string,
+        cache: PropTypes.bool,
+        executable: PropTypes.bool,
+        extract: PropTypes.bool
+      })),
       embeddedArtifacts: PropTypes.arrayOf(ARTIFACT_SHAPE),
       externalArtifacts: PropTypes.arrayOf(ARTIFACT_SHAPE),
       s3Artifacts: PropTypes.arrayOf(ARTIFACT_SHAPE),
@@ -72,6 +78,10 @@ class NewDeployForm extends Component {
         hostPort: PropTypes.string,
         protocol: PropTypes.string
       })),
+      dockerParameters: PropTypes.arrayOf(PropTypes.shape({
+        key: PropTypes.string,
+        value: PropTypes.string
+      })),
       volumes: PropTypes.arrayOf(PropTypes.shape({
         containerPath: PropTypes.string,
         hostPath: PropTypes.string,
@@ -90,10 +100,15 @@ class NewDeployForm extends Component {
       diskMb: PropTypes.string,
       env: PropTypes.arrayOf(PropTypes.string),
       healthcheckUri: PropTypes.string,
-      healthcheckIntervalSeconds: PropTypes.string,
-      healthcheckTimeoutSeconds: PropTypes.string,
       healthcheckPortIndex: PropTypes.string,
-      healthcheckMaxTotalTimeoutSeconds: PropTypes.string,
+      healthcheckPortNumber: PropTypes.string,
+      healthcheckStartupDelaySeconds: PropTypes.string,
+      healthcheckStartupTimeoutSeconds: PropTypes.string,
+      healthcheckStartupIntervalSeconds: PropTypes.string,
+      healthcheckTimeoutSeconds: PropTypes.string,
+      healthcheckIntervalSeconds: PropTypes.string,
+      healthcheckMaxRetries: PropTypes.string,
+      failureStatusCodes: PropTypes.arrayOf(PropTypes.string),
       deployHealthTimeoutSeconds: PropTypes.string,
       skipHealthchecksOnDeploy: PropTypes.bool,
       considerHealthyAfterRunningForSeconds: PropTypes.string,
@@ -304,7 +319,8 @@ class NewDeployForm extends Component {
     if (this.getValueOrDefault('type') === 'docker') {
       if (!this.validateFields(INDEXED_DOCKER_CONTAINER_FIELDS) ||
         !this.validateObjects('portMappings', INDEXED_DOCKER_PORT_MAPPING_FIELDS) ||
-        !this.validateObjects('volumes', INDEXED_DOCKER_VOLUME_FIELDS)) {
+        !this.validateObjects('volumes', INDEXED_DOCKER_VOLUME_FIELDS) ||
+        !this.validateObjects('dockerParameters', INDEXED_DOCKER_PARAMETERS_FIELDS)) {
         return false;
       }
     }
@@ -360,6 +376,13 @@ class NewDeployForm extends Component {
             return newArtifact;
           });
           deployObject[fieldId.id] = artifacts;
+        } else if (fieldId.type === 'mesosArtifacts') {
+          const mesosArtifacts = value.map(mesosArtifact => this.copyFieldsToObject(
+            {},
+            MESOS_ARTIFACT_FIELDS,
+            (id) => mesosArtifact[id] || INDEXED_MESOS_ARTIFACT_FIELDS[id].default
+          ));
+          deployObject[fieldId.id] = mesosArtifacts;
         } else if (fieldId.type === 'volumes') {
           const volumes = value.map(volume => this.copyFieldsToObject(
             {},
@@ -373,6 +396,12 @@ class NewDeployForm extends Component {
             DOCKER_PORT_MAPPING_FIELDS,
             (id) => portMapping[id] || INDEXED_DOCKER_PORT_MAPPING_FIELDS[id].default));
           deployObject[fieldId.id] = portMappings;
+        } else if (fieldId.type === 'dockerParameters') {
+          const dockerParameters = value.map(dockerParameter => this.copyFieldsToObject(
+            {},
+            DOCKER_PARAMETERS_FIELDS,
+            (id) => dockerParameter[id] || INDEXED_DOCKER_PARAMETERS_FIELDS[id].default));
+          deployObject[fieldId.id] = dockerParameters;
         }
       }
     }
@@ -430,6 +459,69 @@ class NewDeployForm extends Component {
     this.updateField(fieldId, newArray);
   }
 
+  renderMesosArtifact(mapping, key) {
+    const thisMesosArtifact = this.props.form.uris[key];
+    const uri = (
+      <TextFormGroup
+        id={`mesos-uri-${ key }`}
+        onChange={event => this.updateObjectInArrayField('uris', key, {uri: event.target.value})}
+        value={thisMesosArtifact.uri}
+        label="Uri"
+        required={true}
+        feedback={this.formFieldFeedback(INDEXED_MESOS_ARTIFACT_FIELDS.uri, thisMesosArtifact.uri)}
+      />
+    );
+    const cache = (
+      <CheckboxFormGroup
+        id = "mesos-cahce-${ key }"
+        label="Cache"
+        checked = {thisMesosArtifact.cache}
+        onChange={(newValue) => this.updateObjectInArrayField('uris', key, {cache: newValue})}
+        feedback={this.formFieldFeedback(INDEXED_MESOS_ARTIFACT_FIELDS.cache, thisMesosArtifact.cache)}
+      />
+    );
+    const extract = (
+      <CheckboxFormGroup
+        id = "mesos-extract-${ key }"
+        label="Extract"
+        checked = {thisMesosArtifact.extract}
+        onChange={(newValue) => this.updateObjectInArrayField('uris', key, {extract: newValue})}
+        feedback={this.formFieldFeedback(INDEXED_MESOS_ARTIFACT_FIELDS.extract, thisMesosArtifact.extract)}
+      />
+    );
+    const executable = (
+      <CheckboxFormGroup
+        id = "mesos-executable-${ key }"
+        label="Executable"
+        checked = {thisMesosArtifact.executable}
+        onChange={(newValue) => this.updateObjectInArrayField('uris', key, {executable: newValue})}
+        feedback={this.formFieldFeedback(INDEXED_MESOS_ARTIFACT_FIELDS.executable, thisMesosArtifact.executable)}
+      />
+    );
+    return (
+      <div className="well well-sm mesos-artifact" key={key}>
+        <h5>Mesos Artifact</h5>
+        <button
+          className="remove-button"
+          id={`remove-mesos-artifact-${key}`}
+          onClick={() => this.removeObjectFromArrayField('uris', key)}
+        />
+        {uri}
+        {cache}
+        {executable}
+        {extract}
+      </div>
+    );
+  }
+
+  renderMesosArtifacts() {
+    const mesosArtifacts = this.props.form.uris;
+    if (mesosArtifacts) {
+      return mesosArtifacts.map((mapping, key) => this.renderMesosArtifact(mapping, key));
+    }
+    return null;
+  }
+
   renderDefaultExecutorFields() {
     const command = (
       <TextFormGroup
@@ -451,24 +543,23 @@ class NewDeployForm extends Component {
         couldHaveFeedback={true}
       />
     );
-    const artifacts = (
-      <MultiInputFormGroup
-        id="artifacts"
-        value={this.props.form.uris || []}
-        onChange={(newValue) => this.updateField('uris', newValue)}
-        label="Artifacts"
-        placeholder="eg: http://s3.example/my-artifact"
-        errorIndices={this.errorsInArrayField(INDEXED_FIELDS.uris, () => this.props.form.uris)}
-        couldHaveFeedback={true}
-      />
-    );
+
     return (
       <div>
         <fieldset id="default-expandable" className="expandable">
           <h4>Default Executor Settings</h4>
           {command}
           {cmdLineArguments}
-          {artifacts}
+          {this.renderMesosArtifacts()}
+
+          <div id="mesos-artifact-button-row" className="row">
+            <div className="col-sm-6">
+              <button className="btn btn-success btn-block" onClick={event => this.addObjectToArrayFieldPreventDefault('uris', {extract: true}, event)}>
+                <span className="glyphicon glyphicon-plus"></span>
+                {" Artifact"}
+              </button>
+            </div>
+          </div>
         </fieldset>
       </div>
     );
@@ -892,6 +983,48 @@ class NewDeployForm extends Component {
     return null;
   }
 
+  renderDockerParameter(mapping, key) {
+    const thisDockerParameter = this.props.form.dockerParameters[key];
+    const keyValue = (
+      <TextFormGroup
+        id={`parameter-key-${ key }`}
+        onChange={event => this.updateObjectInArrayField('dockerParameters', key, {key: event.target.value})}
+        value={thisDockerParameter.key}
+        label="Key"
+        required={true}
+      />
+    );
+    const realValue = (
+      <TextFormGroup
+        id={`parameter-value-${ key }`}
+        onChange={event => this.updateObjectInArrayField('dockerParameters', key, {value: event.target.value})}
+        value={thisDockerParameter.value}
+        label="Value"
+        required={false}
+      />
+    );
+    return (
+      <div className="well well-sm docker-port" key={key}>
+        <h5>Docker Parameter</h5>
+        <button
+          className="remove-button"
+          id={`remove-docker-parameter-${key}`}
+          onClick={() => this.removeObjectFromArrayField('dockerParameters', key)}
+        />
+        {keyValue}
+        {realValue}
+      </div>
+    );
+  }
+
+  renderDockerParameters() {
+    const dockerParameters = this.props.form.dockerParameters;
+    if (dockerParameters) {
+      return dockerParameters.map((mapping, key) => this.renderDockerParameter(mapping, key));
+    }
+    return null;
+  }
+
   renderDockerVolume(mapping, key) {
     const thisVolume = this.props.form.volumes[key];
     const containerPath = (
@@ -992,17 +1125,6 @@ class NewDeployForm extends Component {
         onChange = {(newValue) => this.updateField('forcePullImage', newValue)}
       />
     );
-    const parameters = (
-      <MultiInputFormGroup
-        id="docker-params"
-        value={this.props.form.parameters || []}
-        onChange={(newValue) => this.updateField('parameters', newValue)}
-        label="Docker Parameters"
-        placeholder="format: key=value"
-        errorIndices={this.errorsInArrayField(INDEXED_FIELDS.parameters, () => this.props.form.parameters)}
-        couldHaveFeedback={true}
-      />
-    );
     //
     return (
       <div className="container-info">
@@ -1021,7 +1143,16 @@ class NewDeployForm extends Component {
             </div>
           </div>
 
-          {parameters}
+          {this.renderDockerParameters()}
+
+          <div id="docker-parameter-row" className="row">
+            <div className="col-sm-6">
+              <button className="btn btn-success btn-block" onClick={event => this.addObjectToArrayFieldPreventDefault('dockerParameters', {}, event)}>
+                <span className="glyphicon glyphicon-plus"></span>
+                {" Docker Parameter"}
+              </button>
+            </div>
+          </div>
 
           {this.renderDockerPortMappings()}
 
@@ -1141,50 +1272,120 @@ class NewDeployForm extends Component {
     const healthcheckUri = (
       <TextFormGroup
         id="healthcheck-uri"
-        onChange={event => this.updateField('healthcheckUri', event.target.value)}
-        value={this.props.form.healthcheckUri}
+        onChange={event => this.updateField('uri', event.target.value)}
+        value={this.props.form.uri}
         label="Healthcheck URI"
-        feedback={this.formFieldFeedback(INDEXED_FIELDS.healthcheckUri, this.props.form.healthcheckUri)}
-      />
-    );
-    const healthcheckIntervalSeconds = (
-      <TextFormGroup
-        id="healthcheck-interval"
-        onChange={event => this.updateField('healthcheckIntervalSeconds', event.target.value)}
-        value={this.props.form.healthcheckIntervalSeconds}
-        label="HC interval (sec)"
-        placeholder="default: 5"
-        feedback={this.formFieldFeedback(INDEXED_FIELDS.healthcheckIntervalSeconds, this.props.form.healthcheckIntervalSeconds)}
-      />
-    );
-    const healthcheckTimeoutSeconds = (
-      <TextFormGroup
-        id="healthcheck-timeout"
-        onChange={event => this.updateField('healthcheckTimeoutSeconds', event.target.value)}
-        value={this.props.form.healthcheckTimeoutSeconds}
-        label="HC timeout (sec)"
-        placeholder="default: 5"
-        feedback={this.formFieldFeedback(INDEXED_FIELDS.healthcheckTimeoutSeconds, this.props.form.healthcheckTimeoutSeconds)}
+        feedback={this.formFieldFeedback(INDEXED_FIELDS.uri, this.props.form.uri)}
       />
     );
     const healthcheckPortIndex = (
       <TextFormGroup
         id="healthcheck-port-index"
-        onChange={event => this.updateField('healthcheckPortIndex', event.target.value)}
-        value={this.props.form.healthcheckPortIndex}
+        onChange={event => this.updateField('portIndex', event.target.value)}
+        value={this.props.form.portIndex}
         label="HC Port Index"
         placeholder="default: 0 (first allocated port)"
-        feedback={this.formFieldFeedback(INDEXED_FIELDS.healthcheckPortIndex, this.props.form.healthcheckPortIndex)}
+        feedback={this.formFieldFeedback(INDEXED_FIELDS.portIndex, this.props.form.portIndex)}
       />
     );
-    const healthcheckMaxTotalTimeoutSeconds = (
+    const healthcheckPortNumber = (
       <TextFormGroup
-        id="total-healthcheck-timeout"
-        onChange={event => this.updateField('healthcheckMaxTotalTimeoutSeconds', event.target.value)}
-        value={this.props.form.healthcheckMaxTotalTimeoutSeconds}
-        label="Total Healthcheck Timeout (sec)"
-        placeholder="default: None"
-        feedback={this.formFieldFeedback(INDEXED_FIELDS.healthcheckMaxTotalTimeoutSeconds, this.props.form.healthcheckMaxTotalTimeoutSeconds)}
+        id="healthcheck-port-number"
+        onChange={event => this.updateField('portNumber', event.target.value)}
+        value={this.props.form.portNumber}
+        label="HC Port Number"
+        feedback={this.formFieldFeedback(INDEXED_FIELDS.portNumber, this.props.form.portNumber)}
+      />
+    );
+    const healthCheckProtocol = (
+      <SelectFormGroup
+        id="hc-protocol"
+        label="HC Protocol"
+        value={this.getValueOrDefault('protocol')}
+        onChange={newValue => this.updateField('protocol', newValue.value)}
+        options={[
+          { label: 'HTTP', value: 'HTTP' },
+          { label: 'HTTPS', value: 'HTTPS' }
+        ]}
+      />
+    );
+    const healthcheckStartupDelaySeconds = (
+      <TextFormGroup
+        id="healthcheck-startup-delay"
+        onChange={event => this.updateField('startupDelaySeconds', event.target.value)}
+        value={this.props.form.startupDelaySeconds}
+        label="HC startup delay"
+        placeholder="default: 0"
+        feedback={this.formFieldFeedback(INDEXED_FIELDS.startupDelaySeconds, this.props.form.startupDelaySeconds)}
+      />
+    );
+    const healthcheckStartupIntervalSeconds = (
+      <TextFormGroup
+        id="healthcheck-startup-interval"
+        onChange={event => this.updateField('startupIntervalSeconds', event.target.value)}
+        value={this.props.form.startupIntervalSeconds}
+        label="HC startup check interval"
+        placeholder="default: 5"
+        feedback={this.formFieldFeedback(INDEXED_FIELDS.startupIntervalSeconds, this.props.form.startupIntervalSeconds)}
+      />
+    );
+    const healthcheckStartupTimeoutSeconds = (
+      <TextFormGroup
+        id="healthcheck-startup-timeout"
+        onChange={event => this.updateField('startupTimeoutSeconds', event.target.value)}
+        value={this.props.form.startupTimeoutSeconds}
+        label="HC startup delay"
+        placeholder="default: 30"
+        feedback={this.formFieldFeedback(INDEXED_FIELDS.startupTimeoutSeconds, this.props.form.startupTimeoutSeconds)}
+      />
+    );
+    const healthcheckTimeoutSeconds = (
+      <TextFormGroup
+        id="healthcheck-timeout"
+        onChange={event => this.updateField('responseTimeoutSeconds', event.target.value)}
+        value={this.props.form.responseTimeoutSeconds}
+        label="HC response timeout (sec)"
+        placeholder="default: 5"
+        feedback={this.formFieldFeedback(INDEXED_FIELDS.responseTimeoutSeconds, this.props.form.responseTimeoutSeconds)}
+      />
+    );
+    const healthcheckIntervalSeconds = (
+      <TextFormGroup
+        id="healthcheck-interval"
+        onChange={event => this.updateField('intervalSeconds', event.target.value)}
+        value={this.props.form.intervalSeconds}
+        label="HC interval (sec)"
+        placeholder="default: 5"
+        feedback={this.formFieldFeedback(INDEXED_FIELDS.intervalSeconds, this.props.form.intervalSeconds)}
+      />
+    );
+    const healthcheckMaxRetries = (
+      <TextFormGroup
+        id="healthcheck-max-retries"
+        onChange={event => this.updateField('maxRetries', event.target.value)}
+        value={this.props.form.maxRetries}
+        label="HC Max Retries"
+        placeholder="default: 0 (no retries)"
+        feedback={this.formFieldFeedback(INDEXED_FIELDS.maxRetries, this.props.form.maxRetries)}
+      />
+    );
+    const failureStatusCodes = (
+      <MultiInputFormGroup
+        id="hc-failure-status-codes"
+        value={this.props.form.failureStatusCodes || []}
+        onChange={(newValue) => this.updateField('failureStatusCodes', newValue)}
+        label="HC failureStatusCodes"
+        required={false}
+        errorIndices={this.errorsInArrayField(INDEXED_FIELDS.failureStatusCodes, () => this.props.form.failureStatusCodes)}
+        couldHaveFeedback={true}
+      />
+    );
+    const skipHealthchecksOnDeploy = (
+      <CheckboxFormGroup
+        id = "skip-healthcheck"
+        label="Skip healthcheck on deploy"
+        checked = {this.props.form.skipHealthchecksOnDeploy}
+        onChange = {(newValue) => this.updateField('skipHealthchecksOnDeploy', newValue)}
       />
     );
     const deployHealthTimeoutSeconds = (
@@ -1195,26 +1396,6 @@ class NewDeployForm extends Component {
         label="Deploy healthcheck timeout (sec)"
         placeholder="default: 120"
         feedback={this.formFieldFeedback(INDEXED_FIELDS.deployHealthTimeoutSeconds, this.props.form.deployHealthTimeoutSeconds)}
-      />
-    );
-    const healthCheckProtocol = (
-      <SelectFormGroup
-        id="hc-protocol"
-        label="HC Protocol"
-        value={this.getValueOrDefault('healthCheckProtocol')}
-        onChange={newValue => this.updateField('healthCheckProtocol', newValue.value)}
-        options={[
-          { label: 'HTTP', value: 'HTTP' },
-          { label: 'HTTPS', value: 'HTTPS' }
-        ]}
-      />
-    );
-    const skipHealthchecksOnDeploy = (
-      <CheckboxFormGroup
-        id = "skip-healthcheck"
-        label="Skip healthcheck on deploy"
-        checked = {this.props.form.skipHealthchecksOnDeploy}
-        onChange = {(newValue) => this.updateField('skipHealthchecksOnDeploy', newValue)}
       />
     );
     const considerHealthyAfterRunningForSeconds = (
@@ -1352,29 +1533,48 @@ class NewDeployForm extends Component {
               {healthcheckUri}
               <div className="row">
                 <div className="col-md-6">
-                  {healthcheckIntervalSeconds}
+                  {healthcheckPortIndex}
                 </div>
                 <div className="col-md-6">
-                  {healthcheckTimeoutSeconds}
+                  {healthcheckPortNumber}
                 </div>
               </div>
               <div className="row">
                 <div className="col-md-6">
-                  {healthcheckPortIndex}
+                  {healthCheckProtocol}
                 </div>
                 <div className="col-md-6">
-                  {healthcheckMaxTotalTimeoutSeconds}
+                  {healthcheckStartupDelaySeconds}
+                </div>
+              </div>
+              <div className="row">
+                <div className="col-md-6">
+                  {healthcheckStartupTimeoutSeconds}
+                </div>
+                <div className="col-md-6">
+                  {healthcheckStartupIntervalSeconds}
+                </div>
+              </div>
+              <div className="row">
+                <div className="col-md-6">
+                  {healthcheckTimeoutSeconds}
+                </div>
+                <div className="col-md-6">
+                  {healthcheckIntervalSeconds}
+                </div>
+              </div>
+              <div className="row">
+                <div className="col-md-6">
+                  {healthcheckMaxRetries}
+                </div>
+                <div className="col-md-6">
+                  {failureStatusCodes}
                 </div>
               </div>
               <div className="row">
                 <div className="col-md-6">
                   {deployHealthTimeoutSeconds}
                 </div>
-                <div className="col-md-6">
-                  {healthCheckProtocol}
-                </div>
-              </div>
-              <div className="row">
                 <div className="col-md-6">
                   {skipHealthchecksOnDeploy}
                 </div>

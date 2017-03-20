@@ -17,7 +17,7 @@ import {
 } from '../../actions/api/history';
 import { FetchPendingDeploys } from '../../actions/api/deploys';
 import { FetchTaskS3Logs } from '../../actions/api/logs';
-import { refresh } from '../../actions/ui/taskDetail';
+import { refresh, onLoad } from '../../actions/ui/taskDetail';
 
 import { InfoBox, UsageInfo } from '../common/statelessComponents';
 import { Alert } from 'react-bootstrap';
@@ -49,6 +49,7 @@ class TaskDetail extends Component {
       task: PropTypes.shape({
         taskId: PropTypes.shape({
           id: PropTypes.string.isRequired,
+          startedAt: PropTypes.number.isRequired,
           requestId: PropTypes.string.isRequired,
           deployId: PropTypes.string.isRequired,
           instanceNo: PropTypes.number.isRequired
@@ -112,6 +113,7 @@ class TaskDetail extends Component {
     taskId: PropTypes.string.isRequired,
     params: PropTypes.object,
     fetchTaskHistory: PropTypes.func.isRequired,
+    fetchTaskCleanups: PropTypes.func.isRequired,
     fetchTaskStatistics: PropTypes.func.isRequired,
     fetchTaskFiles: PropTypes.func.isRequired,
     runCommandOnTask: PropTypes.func.isRequired,
@@ -207,7 +209,7 @@ class TaskDetail extends Component {
 
   renderHeader(cleanup) {
     const cleaningUpdate = _.find(Utils.maybe(this.props.task, ['taskUpdates'], []), (taskUpdate) => {
-      return taskUpdate.taskState == "TASK_CLEANING";
+      return taskUpdate.taskState === 'TASK_CLEANING';
     });
 
     let cleanupType;
@@ -231,7 +233,7 @@ class TaskDetail extends Component {
     let removeText = 'Kill Task';
     if (cleanupType) {
       if (Utils.isImmediateCleanup(cleanupType, Utils.request.isLongRunning(this.props.task.task.taskRequest))) {
-        removeText = 'Destroy task';
+        removeText = 'Destroy Task';
         destroy = true;
       } else {
         removeText = 'Override cleanup';
@@ -243,7 +245,7 @@ class TaskDetail extends Component {
       promises.push(this.props.fetchTaskCleanups());
       promises.push(this.props.fetchTaskHistory(this.props.params.taskId));
       return Promise.all(promises);
-    }
+    };
 
     const removeBtn = this.props.task.isStillRunning && (
       <KillTaskButton
@@ -422,7 +424,7 @@ class TaskDetail extends Component {
         <TaskHistory taskUpdates={this.props.task.taskUpdates} />
         <TaskLatestLog taskId={this.props.taskId} isStillRunning={this.props.task.isStillRunning} />
         {this.renderFiles(filesToDisplay)}
-        {_.isEmpty(this.props.s3Logs) || <TaskS3Logs taskId={this.props.task.task.taskId.id} s3Files={this.props.s3Logs} />}
+        {_.isEmpty(this.props.s3Logs) || <TaskS3Logs taskId={this.props.task.task.taskId.id} s3Files={this.props.s3Logs} taskStartedAt={this.props.task.task.taskId.startedAt} />}
         {_.isEmpty(this.props.task.loadBalancerUpdates) || <TaskLbUpdates loadBalancerUpdates={this.props.task.loadBalancerUpdates} />}
         <TaskInfo task={this.props.task.task} ports={this.props.task.ports} directory={this.props.task.directory} />
         {this.renderResourceUsage()}
@@ -439,9 +441,11 @@ function mapHealthchecksToProps(task) {
   const { healthcheckResults } = task;
   task.hasSuccessfulHealthcheck = healthcheckResults && healthcheckResults.length > 0 && !!_.find(healthcheckResults, (healthcheckResult) => healthcheckResult.statusCode === 200);
   task.lastHealthcheckFailed = healthcheckResults && healthcheckResults.length > 0 && _.last(healthcheckResults).statusCode !== 200;
-  task.healthcheckFailureReasonMessage = Utils.healthcheckFailureReasonMessage(task);
-  task.tooManyRetries = healthcheckResults && healthcheckResults.length > task.task.taskRequest.deploy.healthcheckMaxRetries && task.task.taskRequest.deploy.healthcheckMaxRetries > 0;
-  task.secondsElapsed = task.task && task.task.taskRequest && task.task.taskRequest.deploy.healthcheckMaxTotalTimeoutSeconds || config.defaultDeployHealthTimeoutSeconds;
+  if (healthcheckResults && task.task.taskRequest.deploy && task.task.taskRequest.deploy.healthcheck && task.task.taskRequest.deploy.healthcheck.maxRetries && task.task.taskRequest.deploy.healthcheck.maxRetries > 0) {
+    task.tooManyRetries = healthcheckResults.length > task.task.taskRequest.deploy.healthcheck.maxRetries;
+  } else {
+    task.tooManyRetries = false;
+  }
   return task;
 }
 
@@ -456,7 +460,7 @@ function mapTaskToProps(task) {
   task.isCleaning = task.lastKnownState && task.lastKnownState.taskState === 'TASK_CLEANING';
 
   const ports = [];
-  if (task.task && task.task.taskRequest.deploy.resources && task.task.taskRequest.deploy.resources.numPorts > 0) {
+  if (task.task && task.task.taskRequest.deploy && task.task.taskRequest.deploy.resources && task.task.taskRequest.deploy.resources.numPorts > 0) {
     for (const resource of task.task.mesosTask.resources) {
       if (resource.name === 'ports') {
         for (const range of resource.ranges.range) {
@@ -516,4 +520,5 @@ function mapDispatchToProps(dispatch) {
   };
 }
 
-export default connect(mapStateToProps, mapDispatchToProps)(rootComponent(withRouter(TaskDetail), (props) => refresh(props.params.taskId, props.params.splat)));
+export default connect(mapStateToProps, mapDispatchToProps)(rootComponent(withRouter(TaskDetail), (props) => refresh(props.params.taskId), true, true, null, (props) => onLoad(props.params.taskId)));
+

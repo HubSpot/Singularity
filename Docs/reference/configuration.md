@@ -51,11 +51,14 @@ These are settings that are more likely to be altered.
 | Parameter | Default | Description | Type |
 |-----------|---------|-------------|------|
 | considerTaskHealthyAfterRunningForSeconds | 5 | Tasks which make it to TASK_RUNNING and run for at least this long (that are not health-checked) are considered healthy | long | 
-| healthcheckIntervalSeconds | 5 | Default amount of time to wait in between attempting task healthchecks | long |
-| healthcheckTimeoutSeconds | 5 | Default amount of time to wait for healthchecks to return before considering them failed | long | 
+| healthcheckIntervalSeconds | 5 | Default amount of time to wait in between attempting task healthchecks | int |
+| healthcheckTimeoutSeconds | 5 | Default amount of time to wait for healthchecks to return before considering them failed | int | 
 | killAfterTasksDoNotRunDefaultSeconds | 600 (10 minutes) | Amount of time after which new tasks (that are not part of a deploy) will be killed if they do not enter TASK_RUNNING | long |
 | healthcheckMaxRetries | | Default max number of time to retry a failed healthcheck for a task before considering the task to be unhealthy | int |
-| healthcheckMaxTotalTimeoutSeconds | | Default total time to wait for healthchecks to pass | int |
+| startupDelaySeconds | | By default, wait this long before starting any healthchecks on a task | int |
+| startupTimeoutSeconds | 45 | If a healthcehcked task has not responded with a valid http response in `startupTimeoutSeconds` consider it unhealthy | int |
+| startupIntervalSeconds | 2 | In the startup period (before a valid http response has been received) wait this long between healthcheck attempts | int |
+| healthcheckFailureStatusCodes | [] | If any of these status codes is received during a healthcheck, immediately consider the task unhealthy, do not retry the check | List<Integer> |
 
 #### Deploys ####
 | Parameter | Default | Description | Type |
@@ -160,6 +163,7 @@ These settings should live under the "mesos" field inside the root configuration
 | frameworkName | null | | string |
 | frameworkId | null | | string |
 | frameworkFailoverTimeout | 0.0 | | double |
+| frameworkRole | null | Specify framework's desired role when Singularity registers with the master | String |
 | checkpoint | true | | boolean |
 | credentialPrincipal | | Enable framework auth by setting both this and credentialSecret | String |
 | credentialSecret | | Enable framework auth by setting both this and credentialPrincipal | String |

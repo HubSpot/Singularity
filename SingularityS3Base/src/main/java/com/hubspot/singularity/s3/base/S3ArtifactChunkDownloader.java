@@ -12,10 +12,11 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import org.jets3t.service.S3Service;
-import org.jets3t.service.model.S3Object;
 import org.slf4j.Logger;
 
+import com.amazonaws.services.s3.AmazonS3;
+import com.amazonaws.services.s3.model.GetObjectRequest;
+import com.amazonaws.services.s3.model.S3Object;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.hubspot.deploy.S3Artifact;
@@ -26,7 +27,7 @@ import com.hubspot.singularity.s3.base.config.SingularityS3Configuration;
 public class S3ArtifactChunkDownloader implements Callable<Path> {
 
   private final SingularityS3Configuration configuration;
-  private final S3Service s3;
+  private final AmazonS3 s3;
   private final S3Artifact s3Artifact;
   private final Path downloadTo;
   private final int chunk;
@@ -37,7 +38,7 @@ public class S3ArtifactChunkDownloader implements Callable<Path> {
 
   private int retryNum;
 
-  public S3ArtifactChunkDownloader(SingularityS3Configuration configuration, Logger log, S3Service s3, S3Artifact s3Artifact, Path downloadTo, int chunk, long chunkSize, long length, SingularityRunnerExceptionNotifier exceptionNotifier) {
+  public S3ArtifactChunkDownloader(SingularityS3Configuration configuration, Logger log, AmazonS3 s3, S3Artifact s3Artifact, Path downloadTo, int chunk, long chunkSize, long length, SingularityRunnerExceptionNotifier exceptionNotifier) {
     this.configuration = configuration;
     this.log = log;
     this.s3 = s3;
@@ -99,9 +100,12 @@ public class S3ArtifactChunkDownloader implements Callable<Path> {
 
         log.info("Downloading {} - chunk {} (retry {}) ({}-{}) to {}", s3Artifact.getFilename(), chunk, retryNum, byteRangeStart, byteRangeEnd, chunkPath);
 
-        S3Object fetchedObject = s3.getObject(s3Artifact.getS3Bucket(), s3Artifact.getS3ObjectKey(), null, null, null, null, byteRangeStart, byteRangeEnd);
+        GetObjectRequest getObjectRequest = new GetObjectRequest(s3Artifact.getS3Bucket(), s3Artifact.getS3ObjectKey())
+            .withRange(byteRangeStart, byteRangeEnd);
 
-        try (InputStream is = fetchedObject.getDataInputStream()) {
+        S3Object fetchedObject = s3.getObject(getObjectRequest);
+
+        try (InputStream is = fetchedObject.getObjectContent()) {
           Files.copy(is, chunkPath, StandardCopyOption.REPLACE_EXISTING);
         }
 

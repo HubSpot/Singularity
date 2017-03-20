@@ -13,7 +13,6 @@ import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
 
 import javax.inject.Singleton;
-import javax.ws.rs.HEAD;
 
 import org.apache.mesos.Protos;
 import org.apache.mesos.Protos.TaskStatus.Reason;
@@ -524,7 +523,7 @@ public class SingularityScheduler {
     PendingType pendingType = PendingType.TASK_DONE;
     Optional<List<String>> cmdLineArgsList = Optional.absent();
 
-    if (!state.isSuccess() && shouldRetryImmediately(request, deployStatistics)) {
+    if (!state.isSuccess() && shouldRetryImmediately(request, deployStatistics, task)) {
       LOG.debug("Retrying {} because {}", request.getId(), state);
       pendingType = PendingType.RETRY;
       if (task.isPresent()) {
@@ -586,12 +585,14 @@ public class SingularityScheduler {
   private void updateDeployStatistics(SingularityDeployStatistics deployStatistics, SingularityTaskId taskId, long timestamp, ExtendedTaskState state, Optional<PendingType> scheduleResult) {
     SingularityDeployStatisticsBuilder bldr = deployStatistics.toBuilder();
 
-    if (bldr.getAverageRuntimeMillis().isPresent()) {
-      long newAvgRuntimeMillis = (bldr.getAverageRuntimeMillis().get() * bldr.getNumTasks() + (timestamp - taskId.getStartedAt())) / (bldr.getNumTasks() + 1);
+    if (!state.isFailed()) {
+      if (bldr.getAverageRuntimeMillis().isPresent()) {
+        long newAvgRuntimeMillis = (bldr.getAverageRuntimeMillis().get() * bldr.getNumTasks() + (timestamp - taskId.getStartedAt())) / (bldr.getNumTasks() + 1);
 
-      bldr.setAverageRuntimeMillis(Optional.of(newAvgRuntimeMillis));
-    } else {
-      bldr.setAverageRuntimeMillis(Optional.of(timestamp - taskId.getStartedAt()));
+        bldr.setAverageRuntimeMillis(Optional.of(newAvgRuntimeMillis));
+      } else {
+        bldr.setAverageRuntimeMillis(Optional.of(timestamp - taskId.getStartedAt()));
+      }
     }
 
     bldr.setNumTasks(bldr.getNumTasks() + 1);
@@ -615,6 +616,7 @@ public class SingularityScheduler {
           sequentialFailureTimestamps.set(0, timestamp);
         }
 
+        bldr.setNumFailures(bldr.getNumFailures() + 1);
         Collections.sort(sequentialFailureTimestamps);
       }
     } else {
@@ -635,9 +637,13 @@ public class SingularityScheduler {
     deployManager.saveDeployStatistics(newStatistics);
   }
 
-  private boolean shouldRetryImmediately(SingularityRequest request, SingularityDeployStatistics deployStatistics) {
+  private boolean shouldRetryImmediately(SingularityRequest request, SingularityDeployStatistics deployStatistics, Optional<SingularityTask> task) {
     if (!request.getNumRetriesOnFailure().isPresent()) {
       return false;
+    }
+
+    if (task.isPresent() && task.get().getTaskRequest().getPendingTask().getPendingTaskId().getPendingType() == PendingType.IMMEDIATE) {
+      return false; // don't retry UI initiated run now
     }
 
     final int numRetriesInARow = deployStatistics.getNumSequentialRetries();
@@ -709,7 +715,7 @@ public class SingularityScheduler {
 
       newTasks
         .add(new SingularityPendingTask(new SingularityPendingTaskId(request.getId(), deployId, nextRunAt.get(), nextInstanceNumber, pendingRequest.getPendingType(), pendingRequest.getTimestamp()),
-          pendingRequest.getCmdLineArgsList(), pendingRequest.getUser(), pendingRequest.getRunId(), pendingRequest.getSkipHealthchecks(), pendingRequest.getMessage(), pendingRequest.getResources()));
+          pendingRequest.getCmdLineArgsList(), pendingRequest.getUser(), pendingRequest.getRunId(), pendingRequest.getSkipHealthchecks(), pendingRequest.getMessage(), pendingRequest.getResources(), pendingRequest.getActionId()));
 
       nextInstanceNumber++;
     }
