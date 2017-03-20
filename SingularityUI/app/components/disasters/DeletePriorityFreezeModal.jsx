@@ -6,7 +6,7 @@ import FormModal from '../common/modal/FormModal';
 class DeletePriorityFreezeModal extends Component {
   static propTypes = {
     user: PropTypes.string,
-    action: PropTypes.string.isRequired
+    deletePriorityFreeze: PropTypes.func.isRequired,
   };
 
   show() {
@@ -29,8 +29,10 @@ class DeletePriorityFreezeModal extends Component {
   }
 }
 
-const mapDispatchToProps = (dispatch, ownProps) => ({
-  deletePriorityFreeze: () => dispatch(DeletePriorityFreeze.trigger()).then(() => {dispatch(FetchPriorityFreeze.trigger([404]));}),
+const mapDispatchToProps = (dispatch) => ({
+  deletePriorityFreeze: () => Promise.resolve(dispatch(FetchPriorityFreeze.clear()))
+    .then(() => dispatch(DeletePriorityFreeze.trigger()))
+    .then(() => dispatch(FetchPriorityFreeze.trigger([404]))),
 });
 
 export default connect(
