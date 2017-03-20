@@ -82,8 +82,8 @@ import {
   FetchDisastersData,
   FetchDisabledActions,
   FetchPriorityFreeze,
-  FetchTaskCredits,
-} from '../../actions/api/disasters'
+  FetchTaskCredits
+} from '../../actions/api/disasters';
 
 import { FetchGroups } from '../../actions/api/requestGroups';
 

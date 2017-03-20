@@ -33,8 +33,7 @@ class Disasters extends Component {
       type: PropTypes.string.isRequired,
       message: PropTypes.string,
       user: PropTypes.string
-    })).isRequired,
-    fetchTaskCredits: PropTypes.func.isRequired,
+    })).isRequired
   };
 
   constructor(props) {
