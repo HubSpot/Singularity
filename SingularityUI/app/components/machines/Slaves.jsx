@@ -11,8 +11,8 @@ import { FetchSlaves, FreezeSlave, DecommissionSlave, RemoveSlave, ReactivateSla
 import { DeactivateHost, ReactivateHost, FetchInactiveHosts } from '../../actions/api/inactive';
 import Column from '../common/table/Column';
 import JSONButton from '../common/JSONButton';
-import CustomizeSlavesTableButton from './CustomizeSlavesTableButton';
 import { refresh, initialize } from '../../actions/ui/slaves'
+import CustomizeSlavesTableButton from './CustomizeSlavesTableButton';
 
 const typeName = {
   'active': 'Activated By',
