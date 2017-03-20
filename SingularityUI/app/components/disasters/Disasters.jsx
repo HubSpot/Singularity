@@ -1,8 +1,4 @@
 import React, { PropTypes, Component } from 'react';
-<<<<<<< HEAD
-import { FetchDisabledActions, FetchDisastersData, FetchPriorityFreeze, FetchTaskCredits } from '../../actions/api/disasters';
-=======
->>>>>>> master
 import { connect } from 'react-redux';
 import rootComponent from '../../rootComponent';
 import Utils from '../../utils';
@@ -32,11 +28,7 @@ class Disasters extends Component {
     }).isRequired,
     taskCredits: PropTypes.object,
     priorityFreeze: PropTypes.object,
-    user: PropTypes.string,
-    fetchDisabledActions: PropTypes.func.isRequired,
-    fetchDisastersData: PropTypes.func.isRequired,
-    fetchPriorityFreeze: PropTypes.func.isRequired,
-    fetchTaskCredits: PropTypes.func.isRequired
+    user: PropTypes.string
   };
 
   constructor(props) {
