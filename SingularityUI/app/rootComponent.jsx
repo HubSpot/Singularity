@@ -76,7 +76,7 @@ const rootComponent = (Wrapped, refresh = null, refreshInterval = true, pageMarg
   }
 
   componentDidMount() {
-    const onLoadPromise = onLoad(this.props);
+    const onLoadPromise = this.dispatchOnLoad();
     if (onLoadPromise) {
       onLoadPromise.catch((reason) => setTimeout(() => { throw new Error(reason); }));
     }
