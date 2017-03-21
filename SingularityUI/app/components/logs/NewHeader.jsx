@@ -61,6 +61,18 @@ class NewHeader extends React.Component {
     }
   }
 
+  renderSwitchToOldTailer() {
+    if ((this.props.tailerGroupCount === 1)) {
+      return (<Link to={`/task/${this.props.taskIds[0]}/old-tail/${this.props.paths[0]}`}>
+        <button type="button" className="btn btn-sm btn-default">Back to old tailer</button>
+      </Link>);
+    } else if ((this.props.tailerGroupCount > 1)) {
+      return (<Link to={`/request/${this.props.requestIds[0]}/old-tail/${this.props.paths[0]}`}>
+        <button type="button" className="btn btn-sm btn-default">Back to old tailer</button>
+      </Link>);
+    }
+  }
+
   render() {
     if (!this.props.ready) {
       return (<div>Loading...</div>);
@@ -80,6 +92,7 @@ class NewHeader extends React.Component {
             </ul>
           </div>
           <div className="col-md-3 hidden-xs tail-buttons">
+            {this.renderSwitchToOldTailer()}
             {this.renderTasksDropdown()}
             <NewColorDropdown activeColor={this.props.activeColor} onSetColor={this.props.setColor} />
             {this.renderAnchorButtons()}
