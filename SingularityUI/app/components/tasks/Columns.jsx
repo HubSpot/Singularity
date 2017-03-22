@@ -361,8 +361,7 @@ export const LogLinkAndJSON = logPath => (
     cellRender={(taskId, rowData) => (
       <div className="hidden-xs">
         <OverlayTrigger placement="top" id="view-log-overlay" overlay={logTooltip}>
-          <Link
-            to={`request/${taskId.requestId}/tail/${logPath}?taskIds=${taskId.id}`}
+          <Link to={`task/${taskId.id}/tail/${Utils.substituteTaskId(logPath, taskId.id)}`}
             title="Log"
           >
             <Glyphicon glyph="file" />
