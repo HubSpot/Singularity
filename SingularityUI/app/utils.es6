@@ -73,6 +73,10 @@ const Utils = {
     return moment.duration(millis).humanize();
   },
 
+  tailerPath(taskId, logpath) {
+    return `task/${taskId}/tail/${Utils.substituteTaskId(logpath, taskId)}`;
+  },
+
   substituteTaskId(value, taskId) {
     return value.replace('$TASK_ID', taskId);
   },
