@@ -7,11 +7,11 @@ import Section from '../common/Section';
 
 function TaskLatestLog (props) {
   const link = props.isStillRunning ? (
-    <Link to={`task/${props.taskId}/tail/${Utils.substituteTaskId(config.runningTaskLogPath, props.taskId)}`} title="Log">
+    <Link to={Utils.tailerPath(props.taskId, config.runningTaskLogPath)} title="Log">
         <span><Glyphicon glyph="file" /> {Utils.fileName(config.runningTaskLogPath)}</span>
     </Link>
   ) : (
-    <Link to={`task/${props.taskId}/tail/${Utils.substituteTaskId(config.finishedTaskLogPath, props.taskId)}`} title="Log">
+    <Link to={Utils.tailerPath(props.taskId, config.finishedTaskLogPath)} title="Log">
         <span><Glyphicon glyph="file" /> {Utils.fileName(config.finishedTaskLogPath)}</span>
     </Link>
   );
