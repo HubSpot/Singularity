@@ -11,11 +11,14 @@ import javax.ws.rs.core.MediaType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.codahale.metrics.Gauge;
 import com.codahale.metrics.Metric;
 import com.codahale.metrics.MetricRegistry;
 import com.google.inject.Inject;
 import com.hubspot.singularity.SingularityService;
 import com.hubspot.singularity.metrics.SingularityMetricsContainer;
+
+import io.dropwizard.db.ManagedPooledDataSource;
 
 @Path(MetricsResource.PATH)
 @Produces({ MediaType.APPLICATION_JSON })
@@ -34,10 +37,26 @@ public class MetricsResource {
   public SingularityMetricsContainer getRegistry() {
     Map<String, Metric> metrics = new HashMap<>(registry.getMetrics());
     LOG.debug("Found metrics: {}", metrics);
-    metrics.entrySet().removeIf((e) -> e.getKey().contains("Lambda"));
+    metrics.entrySet().removeIf((e) -> {
+      if (e.getKey().contains("ManagedPooledDataSource")) {
+        ManagedPooledDataSource metric = (ManagedPooledDataSource) e.getValue();
+        try {
+          Gauge<Integer> gauge = (Gauge<Integer>) e.getValue();
+          LOG.debug("Cast to gauge {}", gauge);
+        } catch (Exception ex) {
+          // didn't see that...
+        }
+
+        try {
+          Gauge<Integer> gauge = (Gauge<Integer>) metric;
+          LOG.debug("Cast from metric {}", gauge);
+        } catch (Exception ex) {
+          // didn't see that...
+        }
+      }
+      return e.getKey().contains("ManagedPooledDataSource");
+    });
     LOG.debug("Found metrics: {}", metrics);
-    metrics.entrySet().removeIf((e) -> e.getKey().contains("ManagedPooledDataSource"));
-    LOG.debug("Found metrics: {}", metrics);
-    return new SingularityMetricsContainer(registry.getMetrics());
+    return new SingularityMetricsContainer(metrics);
   }
 }
