@@ -8,6 +8,7 @@ import javax.ws.rs.core.MediaType;
 import com.codahale.metrics.MetricRegistry;
 import com.google.inject.Inject;
 import com.hubspot.singularity.SingularityService;
+import com.hubspot.singularity.metrics.SingularityMetricsContainer;
 
 @Path(MetricsResource.PATH)
 @Produces({ MediaType.APPLICATION_JSON })
@@ -22,7 +23,7 @@ public class MetricsResource {
   }
 
   @GET
-  public MetricRegistry getRegistry() {
-    return registry;
+  public SingularityMetricsContainer getRegistry() {
+    return new SingularityMetricsContainer(registry.getMetrics());
   }
 }
