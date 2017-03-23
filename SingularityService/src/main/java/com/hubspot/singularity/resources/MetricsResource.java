@@ -1,5 +1,6 @@
 package com.hubspot.singularity.resources;
 
+import java.util.HashMap;
 import java.util.Map;
 
 import javax.ws.rs.GET;
@@ -31,7 +32,7 @@ public class MetricsResource {
 
   @GET
   public SingularityMetricsContainer getRegistry() {
-    Map<String, Metric> metrics = registry.getMetrics();
+    Map<String, Metric> metrics = new HashMap<>(registry.getMetrics());
     LOG.debug("Found metrics: {}", metrics);
     metrics.entrySet().removeIf((e) -> e.getKey().contains("Lambda"));
     LOG.debug("Found metrics: {}", metrics);
