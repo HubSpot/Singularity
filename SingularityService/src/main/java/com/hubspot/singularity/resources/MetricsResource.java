@@ -8,13 +8,8 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.codahale.metrics.Gauge;
 import com.codahale.metrics.Metric;
 import com.codahale.metrics.MetricRegistry;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Inject;
 import com.hubspot.singularity.SingularityService;
 import com.hubspot.singularity.metrics.SingularityMetricsContainer;
@@ -22,7 +17,6 @@ import com.hubspot.singularity.metrics.SingularityMetricsContainer;
 @Path(MetricsResource.PATH)
 @Produces({ MediaType.APPLICATION_JSON })
 public class MetricsResource {
-  private static final Logger LOG = LoggerFactory.getLogger(MetricsResource.class);
   public static final String PATH = SingularityService.API_BASE_PATH + "/metrics";
 
   private final MetricRegistry registry;
@@ -34,6 +28,9 @@ public class MetricsResource {
 
   @GET
   public SingularityMetricsContainer getRegistry() {
-    return new SingularityMetricsContainer(registry.getMetrics());
+    Map<String, Metric> metrics = new HashMap<>(registry.getMetrics());
+    // Not an easy way to serialize this particular one since it is a lambda, exclude it for now from the endpoint
+    metrics.entrySet().removeIf((e) -> e.getKey().contains("ManagedPooledDataSource"));
+    return new SingularityMetricsContainer(metrics);
   }
 }
