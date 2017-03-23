@@ -37,6 +37,7 @@
     <!-- build the docs for releases -->
     <basepom.release.profiles>oss-release,build-swagger-documentation</basepom.release.profiles>
 
+    <dep.jackson.version>2.8.7</dep.jackson.version>
     <dropwizard.guicier.version>1.0.6.0</dropwizard.guicier.version>
     <baragon.version>0.4.0</baragon.version>
     <horizon.version>0.0.25</horizon.version>
