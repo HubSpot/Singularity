@@ -51,6 +51,8 @@ class Log extends Component {
   componentDidMount() {
     if (!this.props.isLoaded) {
       this.props.initializeFile(this.props.goToOffset);
+    } else {
+      this.tailLog();
     }
 
     this.rafRequestId = window.requestAnimationFrame(this.pollScroll);
