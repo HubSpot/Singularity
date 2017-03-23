@@ -1,8 +1,10 @@
 package com.hubspot.singularity.mesos;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.mesos.Protos.Offer;
 import org.apache.mesos.Protos.OfferID;
@@ -32,6 +34,7 @@ public class SingularityOfferCache implements OfferCache, RemovalListener<String
   private final Cache<String, CachedOffer> offerCache;
   private final SchedulerDriverSupplier schedulerDriverSupplier;
   private final SingularityConfiguration configuration;
+  private final AtomicBoolean useOfferCache = new AtomicBoolean(true);
 
   @Inject
   public SingularityOfferCache(SingularityConfiguration configuration, SchedulerDriverSupplier schedulerDriverSupplier) {
@@ -47,6 +50,9 @@ public class SingularityOfferCache implements OfferCache, RemovalListener<String
 
   @Override
   public void cacheOffer(SchedulerDriver driver, long timestamp, Offer offer) {
+    if (!useOfferCache.get()) {
+      return;
+    }
     LOG.debug("Caching offer {} for {}", offer.getId().getValue(), JavaUtils.durationFromMillis(configuration.getCacheOffersForMillis()));
 
     offerCache.put(offer.getId().getValue(), new CachedOffer(offer));
@@ -81,6 +87,9 @@ public class SingularityOfferCache implements OfferCache, RemovalListener<String
 
   @Override
   public List<CachedOffer> checkoutOffers() {
+    if (!useOfferCache.get()) {
+      return Collections.emptyList();
+    }
     List<CachedOffer> offers = new ArrayList<>((int) offerCache.size());
     for (CachedOffer cachedOffer : offerCache.asMap().values()) {
       cachedOffer.checkOut();
@@ -91,6 +100,9 @@ public class SingularityOfferCache implements OfferCache, RemovalListener<String
 
   @Override
   public List<Offer> peekOffers() {
+    if (!useOfferCache.get()) {
+      return Collections.emptyList();
+    }
     List<Offer> offers = new ArrayList<>((int) offerCache.size());
     for (CachedOffer cachedOffer : offerCache.asMap().values()) {
       offers.add(cachedOffer.offer);
@@ -107,6 +119,16 @@ public class SingularityOfferCache implements OfferCache, RemovalListener<String
         cachedOffer.checkIn();
       }
     }
+  }
+
+  @Override
+  public void disableOfferCache() {
+    useOfferCache.set(false);
+  }
+
+  @Override
+  public void enableOfferCache() {
+    useOfferCache.set(true);
   }
 
   private void declineOffer(CachedOffer offer) {
@@ -162,5 +184,4 @@ public class SingularityOfferCache implements OfferCache, RemovalListener<String
     }
 
   }
-
 }

@@ -6,7 +6,9 @@ import activeRequest from './activeRequest';
 import tasks from './tasks';
 import api from './api';
 import ui from './ui';
-import {reducer as formReducer} from 'redux-form';
+import { reducer as formReducer } from 'redux-form';
+import { reducer as tailerReducer } from 'singularityui-tailer';
+import tailerViewReducer from './tailerView';
 
 const path = (state = '', action) => {
   if (action.type === 'LOG_INIT') {
@@ -51,13 +53,6 @@ const taskSearch = (state = {}, action) => {
 
 const logRequestLength = (state = 30000) => state;
 
-const logType = (state = '', action) => {
-  if (action.type === 'LOG_INIT') {
-    return action.logType;
-  }
-  return state;
-};
-
 const maxLines = (state = 100000) => state;
 
 const showDebugInfo = (state = false, action) => {
@@ -86,7 +81,8 @@ export default combineReducers({
   viewMode,
   search,
   logRequestLength,
-  logType,
   maxLines,
-  form: formReducer
+  form: formReducer,
+  tailer: tailerReducer,
+  tailerView: tailerViewReducer
 });

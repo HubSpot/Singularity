@@ -24,7 +24,6 @@ const DeletePriorityFreezeButton = ({children, user}) => {
 DeletePriorityFreezeButton.propTypes = {
   children: PropTypes.node,
   user: PropTypes.string,
-  action: PropTypes.string.isRequired
 };
 
 DeletePriorityFreezeButton.defaultProps = {

@@ -1,3 +1,5 @@
+import { FetchRequests } from '../../actions/api/requests';
+
 export const SET_DASHBOARD_GROUP = 'SET_DASHBOARD_GROUP';
 
 export const SetDashboardGroup = (group) => {
@@ -9,3 +11,5 @@ export const SetDashboardGroup = (group) => {
     });
   };
 };
+
+export const refresh = () => (dispatch) => dispatch(FetchRequests.trigger());

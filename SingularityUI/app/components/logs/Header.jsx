@@ -10,12 +10,11 @@ import { switchViewMode, scrollAllToTop, scrollAllToBottom } from '../../actions
 
 class Header extends React.Component {
   renderBreadcrumbs() {
-    return this.props.path.split('/').map(function (subpath, i) {
+    return this.props.path.split('/').map((subpath, key) => {
       if (subpath === '$TASK_ID') {
-        return <li key={i}><span className="label label-info">Task ID</span></li>;
-      } else {
-        return <li key={i}>{subpath}</li>;
+        return <li key={key}><span className="label label-info">Task ID</span></li>;
       }
+      return <li key={key}>{subpath}</li>;
     });
   }
 
@@ -29,15 +28,29 @@ class Header extends React.Component {
   }
 
   renderAnchorButtons() {
-    if (this.props.taskGroupCount > 1) {
-      return (<span>
+    return (this.props.taskGroupCount > 1) && (
+      <span>
         <a className="btn btn-default btn-sm tail-bottom-button" onClick={this.props.scrollAllToBottom} title="Scroll All to Bottom">
           <span className="glyphicon glyphicon-chevron-down"></span>
         </a>
         <a className="btn btn-default btn-sm tail-top-button" onClick={this.props.scrollAllToTop} title="Scroll All to Top">
           <span className="glyphicon glyphicon-chevron-up"></span>
         </a>
-      </span>);
+      </span>
+    );
+  }
+
+  renderSwitchToNewTailer() {
+    if (!this.props.taskGroupHasMultipleTasks) {
+      if ((this.props.taskGroupCount === 1)) {
+        return (<Link to={`/task/${this.props.firstTaskId}/tail/${this.props.path}`}>
+          <button type="button" className="btn btn-sm btn-default">Switch to new tailer</button>
+        </Link>);
+      } else if ((this.props.taskGroupCount > 1)) {
+        return (<Link to={`/request/${this.props.requestId}/tail/${this.props.path}`}>
+          <button type="button" className="btn btn-sm btn-default">Switch to new tailer</button>
+        </Link>);
+      }
     }
   }
 
@@ -61,8 +74,9 @@ class Header extends React.Component {
             </ul>
           </div>
           <div className="col-md-3 hidden-xs tail-buttons">
+            {this.renderSwitchToNewTailer()}
             <SearchDropdown />
-            {this.props.compressedLogsView ? null : <TasksDropdown />}
+            <TasksDropdown />
             <ColorDropdown />
             {this.renderViewButtons()}
             {this.renderAnchorButtons()}
@@ -78,21 +92,21 @@ Header.propTypes = {
   path: React.PropTypes.string.isRequired,
   multipleTasks: React.PropTypes.bool.isRequired,
   viewMode: React.PropTypes.string.isRequired,
-
+  taskGroupCount: React.PropTypes.number.isRequired,
   switchViewMode: React.PropTypes.func.isRequired,
   scrollAllToBottom: React.PropTypes.func.isRequired,
   scrollAllToTop: React.PropTypes.func.isRequired,
-  compressedLogsView: React.PropTypes.bool.isRequired,
 };
 
 function mapStateToProps(state) {
   return {
     taskGroupCount: state.taskGroups.length,
     multipleTasks: (state.taskGroups.length > 1) || ((state.taskGroups.length > 0) && (state.taskGroups[0].taskIds.length > 1)),
+    taskGroupHasMultipleTasks: _.some(state.taskGroups.map((tg) => tg.taskIds.length > 1)),
+    firstTaskId: state.taskGroups[0] && state.taskGroups[0].taskIds[0],
     path: state.path,
     viewMode: state.viewMode,
-    requestId: state.activeRequest.requestId,
-    compressedLogsView: state.logType == 'COMPRESSED'
+    requestId: state.activeRequest.requestId
   };
 }
 

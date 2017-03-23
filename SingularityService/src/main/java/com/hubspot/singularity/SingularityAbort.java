@@ -58,7 +58,7 @@ public class SingularityAbort implements ConnectionStateListener {
   }
 
   public enum AbortReason {
-    LOST_ZK_CONNECTION, LOST_LEADERSHIP, UNRECOVERABLE_ERROR, TEST_ABORT, MESOS_ERROR, NO_RUNNING_STATUS_UPDATE_THREAD;
+    LOST_ZK_CONNECTION, LOST_LEADERSHIP, UNRECOVERABLE_ERROR, TEST_ABORT, MESOS_ERROR;
   }
 
   public void abort(AbortReason abortReason, Optional<Throwable> throwable) {

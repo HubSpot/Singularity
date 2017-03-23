@@ -221,6 +221,10 @@ public abstract class CuratorManager {
     }
   }
 
+  protected <T> SingularityCreateResult set(String path, T object, Transcoder<T> transcoder) {
+    return set(path, Optional.of(transcoder.toBytes(object)));
+  }
+
   protected SingularityCreateResult set(String path, Optional<byte[]> data) {
     try {
       privateSet(path, data);

@@ -81,3 +81,22 @@ export const NewPriorityFreeze = buildJsonApiAction(
     body: message == null ? {minimumPriorityLevel: minPriority, killTasks: killTasks} : {minimumPriorityLevel: minPriority, killTasks: killTasks, message: message}
   })
 );
+
+export const FetchTaskCredits = buildApiAction(
+  'FETCH_TASK_CREDITS',
+  {url: '/disasters/task-credits'}
+);
+
+export const DisableTaskCredits = buildJsonApiAction(
+  'DISABLE_TASK_CREDITS',
+  'DELETE',
+  {url: '/disasters/task-credits'}
+);
+
+export const AddTaskCredits = buildJsonApiAction(
+  'ADD_TASK_CREDITS',
+  'POST',
+  (credits) => ({
+    url: `/disasters/task-credits?credits=${ credits }`
+  })
+);

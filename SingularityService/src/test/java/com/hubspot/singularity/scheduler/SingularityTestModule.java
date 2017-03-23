@@ -37,7 +37,7 @@ import com.google.inject.util.Modules;
 import com.hubspot.dropwizard.guicier.DropwizardModule;
 import com.hubspot.dropwizard.guicier.GuiceBundle;
 import com.hubspot.jackson.datatype.protobuf.ProtobufModule;
-import com.hubspot.mesos.client.SingularityMesosClientModule;
+import com.hubspot.mesos.client.MesosClient;
 import com.hubspot.singularity.SingularityAbort;
 import com.hubspot.singularity.SingularityAuthModule;
 import com.hubspot.singularity.SingularityMainModule;
@@ -126,6 +126,10 @@ public class SingularityTestModule implements Module {
 
     mainBinder.install(new GuiceBundle.GuiceEnforcerModule());
 
+    TestingMesosClient tmc = new TestingMesosClient();
+    mainBinder.bind(MesosClient.class).toInstance(tmc);
+    mainBinder.bind(TestingMesosClient.class).toInstance(tmc);
+
     mainBinder.bind(TestingServer.class).toInstance(ts);
     final SingularityConfiguration configuration = getSingularityConfigurationForTestingServer(ts);
 
@@ -200,7 +204,7 @@ public class SingularityTestModule implements Module {
     mainBinder.install(new SingularityTranscoderModule());
     mainBinder.install(new SingularityHistoryModule(configuration));
     mainBinder.install(new SingularityZkMigrationsModule());
-    mainBinder.install(new SingularityMesosClientModule());
+
     mainBinder.install(new SingularityEventModule(configuration));
     mainBinder.install(Modules.override(new SingularityAuthModule(configuration))
         .with(new Module() {

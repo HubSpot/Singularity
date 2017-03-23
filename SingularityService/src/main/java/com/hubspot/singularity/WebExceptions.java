@@ -41,6 +41,12 @@ public final class WebExceptions {
     }
   }
 
+  public static void checkRateLimited(boolean condition, String message, Object... args) {
+    if (!condition) {
+      rateLimited(message, args);
+    }
+  }
+
   public static <T> T checkNotNullBadRequest(T value, String message, Object... args) {
     if (value == null) {
       badRequest(message, args);
@@ -76,6 +82,10 @@ public final class WebExceptions {
 
   public static WebApplicationException unauthorized(String message, Object... args) {
     return webException(Status.UNAUTHORIZED.getStatusCode(), message, args);
+  }
+
+  public static WebApplicationException rateLimited(String message, Object... args) {
+    return webException(429, message, args);
   }
 
   private static WebApplicationException webException(int statusCode, String message, Object... formatArgs) {
