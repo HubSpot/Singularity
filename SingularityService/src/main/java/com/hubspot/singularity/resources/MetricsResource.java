@@ -18,8 +18,6 @@ import com.google.inject.Inject;
 import com.hubspot.singularity.SingularityService;
 import com.hubspot.singularity.metrics.SingularityMetricsContainer;
 
-import io.dropwizard.db.ManagedPooledDataSource;
-
 @Path(MetricsResource.PATH)
 @Produces({ MediaType.APPLICATION_JSON })
 public class MetricsResource {
@@ -39,17 +37,9 @@ public class MetricsResource {
     LOG.debug("Found metrics: {}", metrics);
     metrics.entrySet().removeIf((e) -> {
       if (e.getKey().contains("ManagedPooledDataSource")) {
-        ManagedPooledDataSource metric = (ManagedPooledDataSource) e.getValue();
         try {
           Gauge<Integer> gauge = (Gauge<Integer>) e.getValue();
           LOG.debug("Cast to gauge {}", gauge);
-        } catch (Exception ex) {
-          // didn't see that...
-        }
-
-        try {
-          Gauge<Integer> gauge = (Gauge<Integer>) metric;
-          LOG.debug("Cast from metric {}", gauge);
         } catch (Exception ex) {
           // didn't see that...
         }
