@@ -34,21 +34,6 @@ public class MetricsResource {
 
   @GET
   public SingularityMetricsContainer getRegistry() {
-    Map<String, Metric> metrics = new HashMap<>(registry.getMetrics());
-    LOG.debug("Found metrics: {}", metrics);
-    metrics.entrySet().removeIf((e) -> {
-      if (e.getKey().contains("ManagedPooledDataSource")) {
-        try {
-          Gauge<Integer> gauge = (Gauge<Integer>) e.getValue();
-          new ObjectMapper().writeValueAsString(gauge);
-          LOG.debug("Cast to gauge {}", gauge);
-        } catch (Exception ex) {
-          // didn't see that...
-        }
-      }
-      return e.getKey().contains("ManagedPooledDataSource");
-    });
-    LOG.debug("Found metrics: {}", metrics);
-    return new SingularityMetricsContainer(metrics);
+    return new SingularityMetricsContainer(registry.getMetrics());
   }
 }
