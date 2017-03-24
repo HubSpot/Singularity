@@ -113,7 +113,7 @@ public class SingularityHistoryModule extends AbstractModule {
         }
 
         return dbi;
-      } catch (ClassNotFoundException e) {
+      } catch (Exception e) {
         throw new ProvisionException("while instantiating DBI", e);
       }
     }

@@ -61,10 +61,8 @@ public class S3Configuration {
   @NotNull
   private List<SingularityS3UploaderFile> s3UploaderAdditionalFiles = Collections.singletonList(SingularityS3UploaderFile.fromString("service.log"));
 
-  @NotNull
   private Optional<String> s3StorageClass = Optional.absent();
 
-  @NotNull
   private Optional<Long> applyS3StorageClassAfterBytes = Optional.absent();
 
   public int getMaxS3Threads() {

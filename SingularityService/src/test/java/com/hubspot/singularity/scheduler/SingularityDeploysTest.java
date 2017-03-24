@@ -5,6 +5,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+import javax.ws.rs.WebApplicationException;
+
 import org.apache.mesos.Protos.TaskState;
 import org.junit.Assert;
 import org.junit.Test;
@@ -28,7 +30,6 @@ import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityUpdatePendingDeployRequest;
 import com.hubspot.singularity.TaskCleanupType;
 import com.hubspot.singularity.api.SingularityDeployRequest;
-import com.sun.jersey.api.ConflictException;
 
 public class SingularityDeploysTest extends SingularitySchedulerTestBase {
 
@@ -816,7 +817,7 @@ public class SingularityDeploysTest extends SingularitySchedulerTestBase {
   }
 
 
-  @Test(expected = ConflictException.class)
+  @Test(expected = WebApplicationException.class)
   public void testCannotUpdateRequestDuringPendingDeployWithNewData() {
     initRequest();
     SingularityRequest request = requestResource.getRequest(requestId).getRequest();
