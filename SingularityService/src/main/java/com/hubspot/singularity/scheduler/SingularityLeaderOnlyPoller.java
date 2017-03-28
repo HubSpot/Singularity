@@ -98,10 +98,10 @@ public abstract class SingularityLeaderOnlyPoller implements Managed {
 
     LOG.trace("Running {} (period: {})", getClass().getSimpleName(), JavaUtils.durationFromMillis(pollTimeUnit.toMillis(pollDelay)));
 
-    final long start = System.currentTimeMillis();
+    long start = System.currentTimeMillis();
 
     if (lockHolder.isPresent()) {
-      lockHolder.get().lock(getClass().getSimpleName());
+      start = lockHolder.get().lock(getClass().getSimpleName());
     }
 
     try {
@@ -114,7 +114,7 @@ public abstract class SingularityLeaderOnlyPoller implements Managed {
       }
     } finally {
       if (lockHolder.isPresent()) {
-        lockHolder.get().unlock(getClass().getSimpleName());
+        lockHolder.get().unlock(getClass().getSimpleName(), start);
       }
 
       LOG.debug("Ran {} in {}", getClass().getSimpleName(), JavaUtils.duration(start));
