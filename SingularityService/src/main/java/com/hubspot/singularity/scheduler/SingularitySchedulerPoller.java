@@ -5,7 +5,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.locks.Lock;
 
 import javax.inject.Singleton;
 
@@ -18,15 +17,14 @@ import org.slf4j.LoggerFactory;
 import com.google.common.base.Optional;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
-import com.google.inject.name.Named;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.mesos.OfferCache;
 import com.hubspot.singularity.mesos.SchedulerDriverSupplier;
-import com.hubspot.singularity.mesos.SingularityMesosModule;
 import com.hubspot.singularity.mesos.SingularityMesosOfferScheduler;
 import com.hubspot.singularity.mesos.SingularityOfferCache.CachedOffer;
 import com.hubspot.singularity.mesos.SingularityOfferHolder;
+import com.hubspot.singularity.mesos.SingularitySchedulerLock;
 
 @Singleton
 public class SingularitySchedulerPoller extends SingularityLeaderOnlyPoller {
@@ -39,7 +37,7 @@ public class SingularitySchedulerPoller extends SingularityLeaderOnlyPoller {
 
   @Inject
   SingularitySchedulerPoller(SingularityMesosOfferScheduler offerScheduler, OfferCache offerCache, SchedulerDriverSupplier schedulerDriverSupplier,
-      SingularityConfiguration configuration, @Named(SingularityMesosModule.SCHEDULER_LOCK_NAME) final Lock lock) {
+      SingularityConfiguration configuration, SingularitySchedulerLock lock) {
     super(configuration.getCheckSchedulerEverySeconds(), TimeUnit.SECONDS, lock);
 
     this.offerCache = offerCache;

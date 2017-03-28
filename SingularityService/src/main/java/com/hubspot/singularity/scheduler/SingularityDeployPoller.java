@@ -1,7 +1,6 @@
 package com.hubspot.singularity.scheduler;
 
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.locks.Lock;
 
 import javax.inject.Singleton;
 
@@ -9,10 +8,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.inject.Inject;
-import com.google.inject.name.Named;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.config.SingularityConfiguration;
-import com.hubspot.singularity.mesos.SingularityMesosModule;
+import com.hubspot.singularity.mesos.SingularitySchedulerLock;
 
 @Singleton
 public class SingularityDeployPoller extends SingularityLeaderOnlyPoller {
@@ -22,7 +20,7 @@ public class SingularityDeployPoller extends SingularityLeaderOnlyPoller {
   private final SingularityDeployChecker deployChecker;
 
   @Inject
-  SingularityDeployPoller(SingularityDeployChecker deployChecker, SingularityConfiguration configuration, @Named(SingularityMesosModule.SCHEDULER_LOCK_NAME) final Lock lock) {
+  SingularityDeployPoller(SingularityDeployChecker deployChecker, SingularityConfiguration configuration, SingularitySchedulerLock lock) {
     super(configuration.getCheckDeploysEverySeconds(), TimeUnit.SECONDS, lock);
 
     this.deployChecker = deployChecker;

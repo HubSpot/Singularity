@@ -3,7 +3,6 @@ package com.hubspot.singularity.scheduler;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.locks.Lock;
 
 import javax.inject.Singleton;
 import javax.ws.rs.WebApplicationException;
@@ -16,7 +15,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
-import com.google.inject.name.Named;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.ExtendedTaskState;
 import com.hubspot.singularity.MachineState;
@@ -50,7 +48,7 @@ import com.hubspot.singularity.expiring.SingularityExpiringRequestActionParent;
 import com.hubspot.singularity.expiring.SingularityExpiringScale;
 import com.hubspot.singularity.expiring.SingularityExpiringSkipHealthchecks;
 import com.hubspot.singularity.helpers.RequestHelper;
-import com.hubspot.singularity.mesos.SingularityMesosModule;
+import com.hubspot.singularity.mesos.SingularitySchedulerLock;
 import com.hubspot.singularity.smtp.SingularityMailer;
 
 @Singleton
@@ -70,7 +68,7 @@ public class SingularityExpiringUserActionPoller extends SingularityLeaderOnlyPo
 
   @Inject
   SingularityExpiringUserActionPoller(SingularityConfiguration configuration, RequestManager requestManager, DeployManager deployManager, TaskManager taskManager, SlaveManager slaveManager, RackManager rackManager,
-      @Named(SingularityMesosModule.SCHEDULER_LOCK_NAME) final Lock lock, RequestHelper requestHelper, SingularityMailer mailer) {
+      SingularitySchedulerLock lock, RequestHelper requestHelper, SingularityMailer mailer) {
     super(configuration.getCheckExpiringUserActionEveryMillis(), TimeUnit.MILLISECONDS, lock);
 
     this.deployManager = deployManager;
