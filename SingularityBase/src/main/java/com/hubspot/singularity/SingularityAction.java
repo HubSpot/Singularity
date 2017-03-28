@@ -11,7 +11,7 @@ public enum SingularityAction {
   FREEZE_SLAVE(true), ACTIVATE_SLAVE(true), DECOMMISSION_SLAVE(true), VIEW_SLAVES(false),
   FREEZE_RACK(true), ACTIVATE_RACK(true), DECOMMISSION_RACK(true), VIEW_RACKS(false),
   SEND_EMAIL(true),
-  PROCESS_OFFERS(true), CACHE_OFFERS(true);
+  PROCESS_OFFERS(true), CACHE_OFFERS(true), EXPENSIVE_API_CALLS(true);
 
   private final boolean canDisable;
 
