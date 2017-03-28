@@ -23,7 +23,7 @@ public class SingularitySchedulerLock {
     final long start = System.currentTimeMillis();
     LOG.info("{} - Locking", name);
     lock.lock();
-    LOG.info("{} - Acquired (after {})", name, JavaUtils.duration(start));
+    LOG.info("{} - Acquired ({})", name, JavaUtils.duration(start));
     return System.currentTimeMillis();
   }
 
