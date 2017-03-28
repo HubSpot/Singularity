@@ -255,14 +255,13 @@ public class SingularityMesosStatusUpdateHandler {
 
   @Timed
   public void processStatusUpdate(Protos.TaskStatus status) {
-    final long start = System.currentTimeMillis();
     long insideLock = 0;
-    schedulerLock.lock("statusUpdate");
+    final long start = schedulerLock.lock("statusUpdate");
     try {
       insideLock = System.currentTimeMillis();
       unsafeProcessStatusUpdate(status);
     } finally {
-      schedulerLock.unlock("statusUpdate");
+      schedulerLock.unlock("statusUpdate", start);
       LOG.info("Processed status update for {} ({}) in {} (waited {} for lock)", status.getTaskId().getValue(), status.getState(), JavaUtils.duration(start), JavaUtils.durationFromMillis(insideLock - start));
     }
   }
