@@ -20,7 +20,9 @@ import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import com.hubspot.mesos.JavaUtils;
+import com.hubspot.singularity.SingularityAction;
 import com.hubspot.singularity.config.SingularityConfiguration;
+import com.hubspot.singularity.data.DisasterManager;
 import com.hubspot.singularity.mesos.OfferCache;
 import com.hubspot.singularity.mesos.SchedulerDriverSupplier;
 import com.hubspot.singularity.mesos.SingularityMesosModule;
@@ -36,19 +38,25 @@ public class SingularitySchedulerPoller extends SingularityLeaderOnlyPoller {
   private final OfferCache offerCache;
   private final SchedulerDriverSupplier schedulerDriverSupplier;
   private final SingularityMesosOfferScheduler offerScheduler;
+  private final DisasterManager disasterManager;
 
   @Inject
   SingularitySchedulerPoller(SingularityMesosOfferScheduler offerScheduler, OfferCache offerCache, SchedulerDriverSupplier schedulerDriverSupplier,
-      SingularityConfiguration configuration, @Named(SingularityMesosModule.SCHEDULER_LOCK_NAME) final Lock lock) {
+      SingularityConfiguration configuration, @Named(SingularityMesosModule.SCHEDULER_LOCK_NAME) final Lock lock, DisasterManager disasterManager) {
     super(configuration.getCheckSchedulerEverySeconds(), TimeUnit.SECONDS, lock);
 
     this.offerCache = offerCache;
     this.offerScheduler = offerScheduler;
     this.schedulerDriverSupplier = schedulerDriverSupplier;
+    this.disasterManager = disasterManager;
   }
 
   @Override
   public void runActionOnPoll() {
+    if (disasterManager.isDisabled(SingularityAction.RUN_SCHEDULER_POLLER)) {
+      LOG.warn("Scheduler poller is disabled");
+      return;
+    }
     final long start = System.currentTimeMillis();
 
     List<CachedOffer> cachedOffers = offerCache.checkoutOffers();
