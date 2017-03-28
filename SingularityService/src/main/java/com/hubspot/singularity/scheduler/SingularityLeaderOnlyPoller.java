@@ -4,7 +4,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.locks.Lock;
 
 import org.apache.curator.framework.recipes.leader.LeaderLatch;
 import org.slf4j.Logger;
@@ -17,6 +16,7 @@ import com.hubspot.singularity.SingularityAbort;
 import com.hubspot.singularity.SingularityAbort.AbortReason;
 import com.hubspot.singularity.SingularityManagedScheduledExecutorServiceFactory;
 import com.hubspot.singularity.mesos.SingularityMesosSchedulerDelegator;
+import com.hubspot.singularity.mesos.SingularitySchedulerLock;
 import com.hubspot.singularity.sentry.SingularityExceptionNotifier;
 
 import io.dropwizard.lifecycle.Managed;
@@ -27,7 +27,7 @@ public abstract class SingularityLeaderOnlyPoller implements Managed {
 
   private final long pollDelay;
   private final TimeUnit pollTimeUnit;
-  private final Optional<Lock> lockHolder;
+  private final Optional<SingularitySchedulerLock> lockHolder;
 
   private ScheduledExecutorService executorService;
   private LeaderLatch leaderLatch;
@@ -36,14 +36,14 @@ public abstract class SingularityLeaderOnlyPoller implements Managed {
   private SingularityMesosSchedulerDelegator mesosScheduler;
 
   protected SingularityLeaderOnlyPoller(long pollDelay, TimeUnit pollTimeUnit) {
-    this(pollDelay, pollTimeUnit, Optional.<Lock> absent());
+    this(pollDelay, pollTimeUnit, Optional.<SingularitySchedulerLock> absent());
   }
 
-  protected SingularityLeaderOnlyPoller(long pollDelay, TimeUnit pollTimeUnit, Lock lock) {
+  protected SingularityLeaderOnlyPoller(long pollDelay, TimeUnit pollTimeUnit, SingularitySchedulerLock lock) {
     this(pollDelay, pollTimeUnit, Optional.of(lock));
   }
 
-  private SingularityLeaderOnlyPoller(long pollDelay, TimeUnit pollTimeUnit, Optional<Lock> lockHolder) {
+  private SingularityLeaderOnlyPoller(long pollDelay, TimeUnit pollTimeUnit, Optional<SingularitySchedulerLock> lockHolder) {
     this.pollDelay = pollDelay;
     this.pollTimeUnit = pollTimeUnit;
     this.lockHolder = lockHolder;
@@ -101,7 +101,7 @@ public abstract class SingularityLeaderOnlyPoller implements Managed {
     final long start = System.currentTimeMillis();
 
     if (lockHolder.isPresent()) {
-      lockHolder.get().lock();
+      lockHolder.get().lock(getClass().getSimpleName());
     }
 
     try {
@@ -114,7 +114,7 @@ public abstract class SingularityLeaderOnlyPoller implements Managed {
       }
     } finally {
       if (lockHolder.isPresent()) {
-        lockHolder.get().unlock();
+        lockHolder.get().unlock(getClass().getSimpleName());
       }
 
       LOG.debug("Ran {} in {}", getClass().getSimpleName(), JavaUtils.duration(start));
