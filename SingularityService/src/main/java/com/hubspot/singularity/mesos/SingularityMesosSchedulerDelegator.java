@@ -120,7 +120,7 @@ public class SingularityMesosSchedulerDelegator implements Scheduler {
 
   @Override
   public void registered(SchedulerDriver driver, FrameworkID frameworkId, MasterInfo masterInfo) {
-    lock.lock("registering");
+    final long start = lock.lock("registering");
 
     try {
       scheduler.registered(driver, frameworkId, masterInfo);
@@ -129,13 +129,13 @@ public class SingularityMesosSchedulerDelegator implements Scheduler {
     } catch (Throwable t) {
       handleUncaughtSchedulerException(t);
     } finally {
-      lock.unlock("registering");
+      lock.unlock("registering", start);
     }
   }
 
   @Override
   public void reregistered(SchedulerDriver driver, MasterInfo masterInfo) {
-    lock.lock("reregistered");
+    final long start = lock.lock("reregistered");
 
     try {
       scheduler.reregistered(driver, masterInfo);
@@ -144,7 +144,7 @@ public class SingularityMesosSchedulerDelegator implements Scheduler {
     } catch (Throwable t) {
       handleUncaughtSchedulerException(t);
     } finally {
-      lock.unlock("reregistered");
+      lock.unlock("reregistered", start);
     }
   }
 
@@ -166,16 +166,14 @@ public class SingularityMesosSchedulerDelegator implements Scheduler {
       return;
     }
 
-    final long start = System.currentTimeMillis();
-
-    lock.lock("offers");
+    final long start = lock.lock("resourceOffers");
 
     try {
       scheduler.resourceOffers(driver, offers);
     } catch (Throwable t) {
       handleUncaughtSchedulerException(t);
     } finally {
-      lock.unlock("offers");
+      lock.unlock("resourceOffers", start);
 
       LOG.debug("Handled {} resource offers in {}", offers.size(), JavaUtils.duration(start));
     }
@@ -188,14 +186,14 @@ public class SingularityMesosSchedulerDelegator implements Scheduler {
       return;
     }
 
-    lock.lock("rescind");
+    final long start = lock.lock("offerRescinded");
 
     try {
       scheduler.offerRescinded(driver, offerId);
     } catch (Throwable t) {
       handleUncaughtSchedulerException(t);
     } finally {
-      lock.unlock("rescind");
+      lock.unlock("offerRescinded", start);
     }
   }
 
@@ -234,14 +232,14 @@ public class SingularityMesosSchedulerDelegator implements Scheduler {
       return;
     }
 
-    lock.lock("message");
+    final long start = lock.lock("frameworkMessage");
 
     try {
       scheduler.frameworkMessage(driver, executorId, slaveId, data);
     } catch (Throwable t) {
       handleUncaughtSchedulerException(t);
     } finally {
-      lock.unlock("message");
+      lock.unlock("frameworkMessage", start);
     }
   }
 
@@ -252,14 +250,14 @@ public class SingularityMesosSchedulerDelegator implements Scheduler {
       return;
     }
 
-    lock.lock("disconnected");
+    final long start = lock.lock("disconnected");
 
     try {
       scheduler.disconnected(driver);
     } catch (Throwable t) {
       handleUncaughtSchedulerException(t);
     } finally {
-      lock.unlock("disconnected");
+      lock.unlock("disconnected", start);
     }
   }
 
@@ -270,14 +268,14 @@ public class SingularityMesosSchedulerDelegator implements Scheduler {
       return;
     }
 
-    lock.lock("slaveLost");
+    final long start = lock.lock("slaveLost");
 
     try {
       scheduler.slaveLost(driver, slaveId);
     } catch (Throwable t) {
       handleUncaughtSchedulerException(t);
     } finally {
-      lock.unlock("slaveLost");
+      lock.unlock("slaveLost", start);
     }
   }
 
@@ -288,14 +286,14 @@ public class SingularityMesosSchedulerDelegator implements Scheduler {
       return;
     }
 
-    lock.lock("executorLost");
+    final long start = lock.lock("executorLost");
 
     try {
       scheduler.executorLost(driver, executorId, slaveId, status);
     } catch (Throwable t) {
       handleUncaughtSchedulerException(t);
     } finally {
-      lock.unlock("executorLost");
+      lock.unlock("executorLost", start);
     }
   }
 
@@ -306,7 +304,7 @@ public class SingularityMesosSchedulerDelegator implements Scheduler {
       return;
     }
 
-    lock.lock("error");
+    final long start = lock.lock("error");
 
     try {
       scheduler.error(driver, message);
@@ -317,7 +315,7 @@ public class SingularityMesosSchedulerDelegator implements Scheduler {
     } catch (Throwable t) {
       handleUncaughtSchedulerException(t);
     } finally {
-      lock.unlock("error");
+      lock.unlock("error", start);
     }
   }
 

@@ -13,22 +13,22 @@ public class SingularitySchedulerLock {
   private static final Logger LOG = LoggerFactory.getLogger(SingularitySchedulerLock.class);
 
   private final ReentrantLock lock;
-  private long start;
 
   @Inject
   public SingularitySchedulerLock() {
     this.lock = new ReentrantLock();
   }
 
-  public void lock(String name) {
-    start = System.currentTimeMillis();
-    LOG.info("{} locking", name);
+  public long lock(String name) {
+    final long start = System.currentTimeMillis();
+    LOG.info("{} - Locking", name);
     lock.lock();
-    LOG.info("{} acquired lock after {}", name, JavaUtils.duration(start));
+    LOG.info("{} - Acquired (after {})", name, JavaUtils.duration(start));
+    return System.currentTimeMillis();
   }
 
-  public void unlock(String name) {
-    LOG.info("{} unlocking after {}", name, JavaUtils.duration(start));
+  public void unlock(String name, long start) {
+    LOG.info("{} - Unlocking ({})", name, JavaUtils.duration(start));
     lock.unlock();
   }
 
