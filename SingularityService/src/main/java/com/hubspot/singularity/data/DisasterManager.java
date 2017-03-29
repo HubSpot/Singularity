@@ -91,7 +91,7 @@ public class DisasterManager extends CuratorAsyncManager {
       paths.add(ZKPaths.makePath(DISABLED_ACTIONS_PATH, path));
     }
 
-    return getAsync(DISABLED_ACTIONS_PATH, paths, disabledActionTranscoder);
+    return getAsync("getDisabledActions", paths, disabledActionTranscoder);
   }
 
   public void addDisaster(SingularityDisasterType disaster) {
