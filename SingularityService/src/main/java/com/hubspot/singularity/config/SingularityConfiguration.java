@@ -220,7 +220,7 @@ public class SingularityConfiguration extends Configuration {
 
   private boolean sandboxDefaultsToTaskId = false;
 
-  private long sandboxHttpTimeoutMillis = TimeUnit.SECONDS.toMillis(5);
+  private long sandboxHttpTimeoutMillis = TimeUnit.SECONDS.toMillis(2);
 
   private long saveStateEverySeconds = 60;
 
