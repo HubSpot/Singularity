@@ -42,12 +42,13 @@ public abstract class CuratorManager {
     this.configuration = configuration;
     this.curator = curator;
 
-    this.typeToMetrics = ImmutableMap.of(
-        OperationType.GET_MULTI, new Metrics(metricRegistry, OperationType.GET_MULTI),
-        OperationType.GET, new Metrics(metricRegistry, OperationType.GET),
-        OperationType.CHECK_EXISTS, new Metrics(metricRegistry, OperationType.CHECK_EXISTS),
-        OperationType.GET_CHILDREN, new Metrics(metricRegistry, OperationType.GET_CHILDREN),
-        OperationType.WRITE, new Metrics(metricRegistry, OperationType.WRITE));
+    typeToMetrics = ImmutableMap.<OperationType, Metrics> builder()
+        .put(OperationType.GET_MULTI, new Metrics(metricRegistry, OperationType.GET_MULTI))
+        .put(OperationType.GET, new Metrics(metricRegistry, OperationType.GET))
+        .put(OperationType.CHECK_EXISTS, new Metrics(metricRegistry, OperationType.CHECK_EXISTS))
+        .put(OperationType.GET_CHILDREN, new Metrics(metricRegistry, OperationType.GET_CHILDREN))
+        .put(OperationType.DELETE, new Metrics(metricRegistry, OperationType.DELETE))
+        .put(OperationType.WRITE, new Metrics(metricRegistry, OperationType.WRITE)).build();
   }
 
   public enum OperationType {
