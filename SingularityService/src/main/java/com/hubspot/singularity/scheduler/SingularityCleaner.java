@@ -52,7 +52,6 @@ import com.hubspot.singularity.SingularityTaskShellCommandUpdate;
 import com.hubspot.singularity.TaskCleanupType;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.DeployManager;
-import com.hubspot.singularity.data.MetadataManager;
 import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.data.history.RequestHistoryHelper;
@@ -90,7 +89,6 @@ public class SingularityCleaner {
     this.driverManager = driverManager;
     this.exceptionNotifier = exceptionNotifier;
     this.requestHistoryHelper = requestHistoryHelper;
-    this.metadataManager = metadataManager;
 
     this.configuration = configuration;
 
