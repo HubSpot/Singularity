@@ -379,12 +379,22 @@ public class SingularityScheduler {
 
   private List<SingularityTaskId> getMatchingTaskIds(SingularitySchedulerStateCache stateCache, SingularityRequest request, SingularityPendingRequest pendingRequest) {
     if (request.isLongRunning()) {
-      Collection<SingularityTaskId> exclude = Sets.newHashSet();
-      exclude.addAll(stateCache.getCleaningTasks());
-      exclude.addAll(stateCache.getKilledTasks());
-      return SingularityTaskId.matchingAndNotIn(stateCache.getActiveTaskIds(), request.getId(), pendingRequest.getDeployId(), exclude);
+      List<SingularityTaskId> matchingTaskIds = new ArrayList<>();
+      for (SingularityTaskId taskId : stateCache.getActiveTaskIdsForRequest(request.getId())) {
+        if (!taskId.getDeployId().equals(pendingRequest.getDeployId())) {
+          continue;
+        }
+        if (stateCache.getCleaningTasks().contains(taskId)) {
+          continue;
+        }
+        if (stateCache.getKilledTasks().contains(taskId)) {
+          continue;
+        }
+        matchingTaskIds.add(taskId);
+      }
+      return matchingTaskIds;
     } else {
-      return Lists.newArrayList(Iterables.filter(stateCache.getActiveTaskIds(), SingularityTaskId.matchingRequest(request.getId())));
+      return new ArrayList<>(stateCache.getActiveTaskIdsForRequest(request.getId()));
     }
   }
 
