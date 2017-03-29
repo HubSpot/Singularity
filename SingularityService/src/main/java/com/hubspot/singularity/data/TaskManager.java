@@ -343,7 +343,7 @@ public class TaskManager extends CuratorAsyncManager {
       paths.add(getRequestPath(requestId));
     }
 
-    return getChildrenAsIdsForParents(HISTORY_PATH_ROOT, paths, taskIdTranscoder);
+    return getChildrenAsIdsForParents("getAllTaskIds", paths, taskIdTranscoder);
   }
 
   private List<SingularityTaskId> getTaskIds(String root) {
@@ -386,7 +386,7 @@ public class TaskManager extends CuratorAsyncManager {
 
     });
 
-    return getAsync("active_tasks", children, taskTranscoder, taskCache);
+    return getAsync("getActiveTasks", children, taskTranscoder, taskCache);
   }
 
   public List<SingularityTaskStatusHolder> getLastActiveTaskStatuses() {
@@ -403,7 +403,7 @@ public class TaskManager extends CuratorAsyncManager {
     for (SingularityTaskId taskId : activeTaskIds) {
       paths.add(getLastActiveTaskStatusPath(taskId));
     }
-    return getAsync(LAST_ACTIVE_TASK_STATUSES_PATH_ROOT, paths, taskStatusTranscoder);
+    return getAsync("getLastActiveTaskStatusesFor", paths, taskStatusTranscoder);
   }
 
   public List<SingularityTask> getTasksOnSlave(Collection<SingularityTaskId> activeTaskIds, SingularitySlave slave) {
@@ -438,7 +438,7 @@ public class TaskManager extends CuratorAsyncManager {
       pathsMap.put(getHistoryPath(taskId), taskId);
     }
 
-    return getAsyncNestedChildDataAsMap(HISTORY_PATH_ROOT, pathsMap, UPDATES_PATH, taskHistoryUpdateTranscoder);
+    return getAsyncNestedChildDataAsMap("getTaskHistoryUpdates", pathsMap, UPDATES_PATH, taskHistoryUpdateTranscoder);
   }
 
   public int getNumHealthchecks(SingularityTaskId taskId) {
@@ -483,7 +483,7 @@ public class TaskManager extends CuratorAsyncManager {
       paths.add(getLastHealthcheckPath(taskId));
     }
 
-    List<SingularityTaskHealthcheckResult> healthcheckResults = getAsync("healthchecks_by_ids", paths, healthcheckResultTranscoder);
+    List<SingularityTaskHealthcheckResult> healthcheckResults = getAsync("getLastHealthcheck", paths, healthcheckResultTranscoder);
 
     return Maps.uniqueIndex(healthcheckResults, SingularityTaskIdHolder.getTaskIdFunction());
   }
@@ -566,7 +566,7 @@ public class TaskManager extends CuratorAsyncManager {
       paths.add(getActivePath(taskId.getId()));
     }
 
-    return exists(ACTIVE_PATH_ROOT, paths, taskIdTranscoder);
+    return exists("filterActiveTaskIds", paths, taskIdTranscoder);
   }
 
   public int getNumLaunchingTasks() {
@@ -578,7 +578,7 @@ public class TaskManager extends CuratorAsyncManager {
       paths.put(getUpdatePath(taskId, ExtendedTaskState.TASK_RUNNING), taskId);
     }
 
-    return notExists(ACTIVE_PATH_ROOT, paths).size();
+    return notExists("getNumLaunchingTasks", paths).size();
   }
 
   public List<SingularityTaskId> filterInactiveTaskIds(List<SingularityTaskId> taskIds) {
@@ -592,7 +592,7 @@ public class TaskManager extends CuratorAsyncManager {
       pathsMap.put(getActivePath(taskId.getId()), taskId);
     }
 
-    return notExists(ACTIVE_PATH_ROOT, pathsMap);
+    return notExists("filterInactiveTaskIds", pathsMap);
   }
 
   private List<SingularityTaskId> getTaskIdsForRequest(String requestId, TaskFilter taskFilter) {
@@ -633,7 +633,7 @@ public class TaskManager extends CuratorAsyncManager {
       paths.add(getRequestPath(requestId));
     }
 
-    List<SingularityTaskId> taskIds = getChildrenAsIdsForParents("requestIds", paths, taskIdTranscoder);
+    List<SingularityTaskId> taskIds = getChildrenAsIdsForParents("getInactiveTaskIds", paths, taskIdTranscoder);
 
     return filterInactiveTaskIds(taskIds);
   }
@@ -769,7 +769,7 @@ public class TaskManager extends CuratorAsyncManager {
       paths.add(getTaskPath(taskId));
     }
 
-    return Maps.uniqueIndex(getAsync("tasks_by_ids", paths, taskTranscoder, taskCache), SingularityTaskIdHolder.getTaskIdFunction());
+    return Maps.uniqueIndex(getAsync("getTasks", paths, taskTranscoder, taskCache), SingularityTaskIdHolder.getTaskIdFunction());
   }
 
   private void createTaskAndDeletePendingTaskPrivate(SingularityTask task) throws Exception {
@@ -882,7 +882,7 @@ public class TaskManager extends CuratorAsyncManager {
       paths.add(ZKPaths.makePath(parentPath, ZKPaths.makePath(child, SHELL_REQUEST_KEY)));
     }
 
-    List<SingularityTaskShellCommandRequest> shellRequests = getAsync(parentPath, paths, taskShellCommandRequestTranscoder);
+    List<SingularityTaskShellCommandRequest> shellRequests = getAsync("getTaskShellCommandRequestsForTask", paths, taskShellCommandRequestTranscoder);
 
     Collections.sort(shellRequests);
 

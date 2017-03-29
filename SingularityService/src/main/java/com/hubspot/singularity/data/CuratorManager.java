@@ -42,12 +42,16 @@ public abstract class CuratorManager {
     this.configuration = configuration;
     this.curator = curator;
 
-    this.typeToMetrics = ImmutableMap.of(OperationType.READ, new Metrics(metricRegistry, OperationType.READ),
+    this.typeToMetrics = ImmutableMap.of(
+        OperationType.GET_MULTI, new Metrics(metricRegistry, OperationType.GET_MULTI),
+        OperationType.GET, new Metrics(metricRegistry, OperationType.GET),
+        OperationType.CHECK_EXISTS, new Metrics(metricRegistry, OperationType.CHECK_EXISTS),
+        OperationType.GET_CHILDREN, new Metrics(metricRegistry, OperationType.GET_CHILDREN),
         OperationType.WRITE, new Metrics(metricRegistry, OperationType.WRITE));
   }
 
   public enum OperationType {
-    READ, WRITE;
+    GET_MULTI, GET, CHECK_EXISTS, GET_CHILDREN, DELETE, WRITE;
   }
 
   private static class Metrics {
@@ -130,7 +134,7 @@ public abstract class CuratorManager {
     } catch (Throwable t) {
       throw Throwables.propagate(t);
     } finally {
-      log(OperationType.READ, Optional.of(numChildren), Optional.<Integer> absent(), start, root);
+      log(OperationType.GET_CHILDREN, Optional.of(numChildren), Optional.<Integer> absent(), start, root);
     }
   }
 
@@ -146,7 +150,7 @@ public abstract class CuratorManager {
     } catch (Throwable t) {
       throw Throwables.propagate(t);
     } finally {
-      log(OperationType.WRITE, Optional.<Integer> absent(), Optional.<Integer> absent(), start, path);
+      log(OperationType.DELETE, Optional.<Integer> absent(), Optional.<Integer> absent(), start, path);
     }
   }
 
@@ -215,7 +219,6 @@ public abstract class CuratorManager {
         setDataBuilder.forPath(path);
       }
     } finally {
-
       log(OperationType.WRITE, Optional.<Integer> absent(), Optional.<Integer> of(data.or(EMPTY_BYTES).length), start, path);
     }
   }
@@ -276,7 +279,7 @@ public abstract class CuratorManager {
     } catch (Throwable t) {
       throw Throwables.propagate(t);
     } finally {
-      log(OperationType.READ, Optional.<Integer> absent(), Optional.<Integer> of(bytes), start, path);
+      log(OperationType.GET, Optional.<Integer> absent(), Optional.<Integer> of(bytes), start, path);
     }
   }
 
