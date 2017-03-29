@@ -52,9 +52,17 @@ public class SandboxManager {
 
   public Collection<MesosFileObject> browse(String slaveHostname, String fullPath) throws SlaveNotFoundException {
     try {
-      Response response = asyncHttpClient.prepareGet(String.format("http://%s:5051/files/browse", slaveHostname))
+      PerRequestConfig timeoutConfig = new PerRequestConfig();
+      timeoutConfig.setRequestTimeoutInMs((int) configuration.getSandboxHttpTimeoutMillis());
+
+      Response response = asyncHttpClient
+          .prepareGet(String.format("http://%s:5051/files/browse", slaveHostname))
+          .setPerRequestConfig(timeoutConfig)
           .addQueryParameter("path", fullPath)
-          .execute().get();
+          .execute()
+          .get();
+
+
 
       if (response.getStatusCode() == 404) {
         return Collections.emptyList();
