@@ -21,6 +21,8 @@ public class HistoryPurgingConfiguration {
 
   private int purgeLimitPerQuery = 25000;
 
+  private int purgeStaleRequestIdsAfterDays = 7;
+
   private Map<String, HistoryPurgeRequestSettings> requestOverrides = Collections.emptyMap();
 
   private Optional<Integer> absentIfNotOverOne(int value) {
@@ -92,5 +94,13 @@ public class HistoryPurgingConfiguration {
 
   public void setPurgeLimitPerQuery(int purgeLimitPerQuery) {
     this.purgeLimitPerQuery = purgeLimitPerQuery;
+  }
+
+  public int getPurgeStaleRequestIdsAfterDays() {
+    return purgeStaleRequestIdsAfterDays;
+  }
+
+  public void setPurgeStaleRequestIdsAfterDays(int purgeStaleRequestIdsAfterDays) {
+    this.purgeStaleRequestIdsAfterDays = purgeStaleRequestIdsAfterDays;
   }
 }
