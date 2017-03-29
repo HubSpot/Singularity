@@ -26,7 +26,6 @@ import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.StateManager;
 import com.hubspot.singularity.mesos.OfferCache;
 import com.hubspot.singularity.mesos.SingularityMesosScheduler;
-import com.hubspot.singularity.scheduler.SingularityLeaderCache;
 import com.hubspot.singularity.sentry.SingularityExceptionNotifier;
 
 import io.dropwizard.lifecycle.Managed;
@@ -45,12 +44,11 @@ public class SingularityLeaderController implements Managed, LeaderLatchListener
   private final StatePoller statePoller;
   private final SingularityMesosScheduler scheduler;
   private final OfferCache offerCache;
-  private final SingularityLeaderCache leaderCache;
 
   private volatile boolean master;
 
   @Inject
-  public SingularityLeaderController(StateManager stateManager, SingularityLeaderCache leaderCache, SingularityConfiguration configuration, SingularityDriverManager driverManager,
+  public SingularityLeaderController(StateManager stateManager, SingularityConfiguration configuration, SingularityDriverManager driverManager,
       SingularityAbort abort, SingularityExceptionNotifier exceptionNotifier, @Named(SingularityMainModule.HTTP_HOST_AND_PORT) HostAndPort hostAndPort, SingularityMesosScheduler scheduler,
       OfferCache offerCache) {
     this.driverManager = driverManager;
@@ -62,8 +60,6 @@ public class SingularityLeaderController implements Managed, LeaderLatchListener
     this.saveStateEveryMs = TimeUnit.SECONDS.toMillis(configuration.getSaveStateEverySeconds());
     this.statePoller = new StatePoller();
     this.scheduler = scheduler;
-
-    this.leaderCache = leaderCache;
 
     this.offerCache = offerCache;
 
@@ -123,7 +119,6 @@ public class SingularityLeaderController implements Managed, LeaderLatchListener
     LOG.info("We are not the leader! Current status {}", driverManager.getCurrentStatus());
 
     master = false;
-    leaderCache.stop();
 
     if (driverManager.getCurrentStatus() == Protos.Status.DRIVER_RUNNING) {
       try {

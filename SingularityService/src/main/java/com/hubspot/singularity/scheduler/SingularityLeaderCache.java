@@ -102,7 +102,7 @@ public class SingularityLeaderCache {
   public List<SingularityTaskId> exists(List<SingularityTaskId> taskIds) {
     List<SingularityTaskId> activeTaskIds = new ArrayList<>(taskIds.size());
     for (SingularityTaskId taskId : taskIds) {
-      if (activeTaskIds.contains(taskId)) {
+      if (this.activeTaskIds.contains(taskId)) {
         activeTaskIds.add(taskId);
       }
     }
@@ -151,7 +151,5 @@ public class SingularityLeaderCache {
 
     activeTaskIds.add(task.getTaskId());
   }
-
-
 
 }
