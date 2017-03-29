@@ -118,19 +118,60 @@ public abstract class CuratorManager {
   }
 
   protected List<String> getChildren(String root) {
-    final long start = System.currentTimeMillis();
-    int numChildren = 0;
+    return getChildren(root, Optional.<ZkChildrenCache> absent());
+  }
+
+  protected <T> void checkLock(Optional<ZkChildrenCache> childrenCache) {
+    if (childrenCache.isPresent()) {
+      childrenCache.get().lock();
+    }
+  }
+
+  protected <T> void checkUnlock(Optional<ZkChildrenCache> childrenCache) {
+    if (childrenCache.isPresent()) {
+      childrenCache.get().unlock();
+    }
+  }
+
+  protected List<String> getChildren(String root, Optional<ZkChildrenCache> childrenCache) {
+    checkLock(childrenCache);
 
     try {
-      final List<String> children = curator.getChildren().forPath(root);
-      numChildren = children.size();
-      return children;
-    } catch (NoNodeException nne) {
-      return Collections.emptyList();
-    } catch (Throwable t) {
-      throw Throwables.propagate(t);
+      if (childrenCache.isPresent()) {
+        if (childrenCache.get().checkCacheUpToDate(root)) {
+          return childrenCache.get().getCache();
+        }
+      }
+
+      final long start = System.currentTimeMillis();
+      int numChildren = 0;
+
+      try {
+        final List<String> children = curator.getChildren().forPath(root);
+        numChildren = children.size();
+
+        if (childrenCache.isPresent()) {
+          childrenCache.get().setCache(children);
+        }
+
+        return children;
+      } catch (NoNodeException nne) {
+        clearCache(childrenCache);
+        return Collections.emptyList();
+      } catch (Throwable t) {
+        clearCache(childrenCache);
+        throw Throwables.propagate(t);
+      } finally {
+        log(OperationType.READ, Optional.of(numChildren), Optional.<Integer>absent(), start, root);
+      }
     } finally {
-      log(OperationType.READ, Optional.of(numChildren), Optional.<Integer> absent(), start, root);
+      checkUnlock(childrenCache);
+    }
+  }
+
+  protected <T> void clearCache(Optional<ZkChildrenCache> childrenCache) {
+    if (childrenCache.isPresent()) {
+      childrenCache.get().clearCache();
     }
   }
 
@@ -146,12 +187,12 @@ public abstract class CuratorManager {
     } catch (Throwable t) {
       throw Throwables.propagate(t);
     } finally {
-      log(OperationType.WRITE, Optional.<Integer> absent(), Optional.<Integer> absent(), start, path);
+      log(OperationType.WRITE, Optional.<Integer>absent(), Optional.<Integer>absent(), start, path);
     }
   }
 
   protected SingularityCreateResult create(String path) {
-    return create(path, Optional.<byte[]> absent());
+    return create(path, Optional.<byte[]>absent());
   }
 
   protected <T> SingularityCreateResult create(String path, T object, Transcoder<T> transcoder) {
@@ -183,7 +224,7 @@ public abstract class CuratorManager {
         createBuilder.forPath(path);
       }
     } finally {
-      log(OperationType.WRITE, Optional.<Integer> absent(), Optional.<Integer> of(data.or(EMPTY_BYTES).length), start, path);
+      log(OperationType.WRITE, Optional.<Integer>absent(), Optional.<Integer>of(data.or(EMPTY_BYTES).length), start, path);
     }
   }
 
@@ -216,7 +257,7 @@ public abstract class CuratorManager {
       }
     } finally {
 
-      log(OperationType.WRITE, Optional.<Integer> absent(), Optional.<Integer> of(data.or(EMPTY_BYTES).length), start, path);
+      log(OperationType.WRITE, Optional.<Integer>absent(), Optional.<Integer>of(data.or(EMPTY_BYTES).length), start, path);
     }
   }
 
@@ -276,20 +317,20 @@ public abstract class CuratorManager {
     } catch (Throwable t) {
       throw Throwables.propagate(t);
     } finally {
-      log(OperationType.READ, Optional.<Integer> absent(), Optional.<Integer> of(bytes), start, path);
+      log(OperationType.READ, Optional.<Integer>absent(), Optional.<Integer>of(bytes), start, path);
     }
   }
 
   protected <T> Optional<T> getData(String path, Transcoder<T> transcoder) {
-    return getData(path, Optional.<Stat> absent(), transcoder, Optional.<ZkCache<T>> absent(), Optional.<Boolean> absent());
+    return getData(path, Optional.<Stat>absent(), transcoder, Optional.<ZkCache<T>>absent(), Optional.<Boolean>absent());
   }
 
   protected <T> Optional<T> getData(String path, Transcoder<T> transcoder, ZkCache<T> zkCache, boolean shouldCheckExists) {
-    return getData(path, Optional.<Stat> absent(), transcoder, Optional.of(zkCache), Optional.of(shouldCheckExists));
+    return getData(path, Optional.<Stat>absent(), transcoder, Optional.of(zkCache), Optional.of(shouldCheckExists));
   }
 
   protected Optional<String> getStringData(String path) {
-    return getData(path, Optional.<Stat> absent(), StringTranscoder.INSTANCE, Optional.<ZkCache<String>> absent(), Optional.<Boolean> absent());
+    return getData(path, Optional.<Stat>absent(), StringTranscoder.INSTANCE, Optional.<ZkCache<String>>absent(), Optional.<Boolean>absent());
   }
 
 }

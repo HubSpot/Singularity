@@ -42,15 +42,42 @@ public abstract class CuratorAsyncManager extends CuratorManager {
     GET_DATA, CHECK_EXISTS, GET_CHILDREN
   }
 
-  private <T> List<T> getAsyncChildrenThrows(final String parent, final Transcoder<T> transcoder) throws Exception {
-    final List<String> children = getChildren(parent);
-    final List<String> paths = Lists.newArrayListWithCapacity(children.size());
+  private <T> List<T> getAsyncChildrenThrows(final String parent, final Optional<ZkChildrenCache> childrenCache, final Transcoder<T> transcoder) throws Exception {
+    checkLock(childrenCache);
 
-    for (String child : children) {
-      paths.add(ZKPaths.makePath(parent, child));
+    try {
+      List<String> children = null;
+
+      if (childrenCache.isPresent()) {
+        if (childrenCache.get().checkCacheUpToDate(parent)) {
+          children = childrenCache.get().getCache();
+        }
+      }
+
+      if (children == null) {
+        children = getChildren(parent);
+        if (childrenCache.isPresent()) {
+          childrenCache.get().setCache(children);
+        }
+      }
+
+      final List<String> paths = Lists.newArrayListWithCapacity(children.size());
+
+      for (String child : children) {
+        paths.add(ZKPaths.makePath(parent, child));
+      }
+
+      List<T> result = new ArrayList<>(getAsyncThrows(parent, paths, transcoder, Optional.<ZkCache<T>> absent()).values());
+
+
+      return result;
+    } catch (Throwable t) {
+      clearCache(childrenCache);
+
+      throw t;
+    } finally {
+      checkUnlock(childrenCache);
     }
-
-    return new ArrayList<>(getAsyncThrows(parent, paths, transcoder, Optional.<ZkCache<T>> absent()).values());
   }
 
   private <T> Map<String, T> getAsyncThrows(final String pathNameForLogs, final Collection<String> paths, final Transcoder<T> transcoder, final Optional<ZkCache<T>> cache) throws Exception {
@@ -146,7 +173,11 @@ public abstract class CuratorAsyncManager extends CuratorManager {
   }
 
   protected <T extends SingularityId> List<T> getChildrenAsIds(final String rootPath, final IdTranscoder<T> idTranscoder) {
-    return Lists.transform(getChildren(rootPath), Transcoders.getFromStringFunction(idTranscoder));
+    return getChildrenAsIds(rootPath, Optional.<ZkChildrenCache> absent(), idTranscoder);
+  }
+
+  protected <T extends SingularityId> List<T> getChildrenAsIds(final String rootPath, final Optional<ZkChildrenCache> childrenCache, final IdTranscoder<T> idTranscoder) {
+    return Lists.transform(getChildren(rootPath, childrenCache), Transcoders.getFromStringFunction(idTranscoder));
   }
 
   private <T extends SingularityId> List<T> existsThrows(final String pathNameforLogs, final Collection<String> paths, final IdTranscoder<T> idTranscoder) throws Exception {
@@ -242,8 +273,12 @@ public abstract class CuratorAsyncManager extends CuratorManager {
   }
 
   protected <T> List<T> getAsyncChildren(final String parent, final Transcoder<T> transcoder) {
+    return getAsyncChildren(parent, Optional.<ZkChildrenCache> absent(), transcoder);
+  }
+
+  protected <T> List<T> getAsyncChildren(final String parent, final Optional<ZkChildrenCache> childrenCache, final Transcoder<T> transcoder) {
     try {
-      return getAsyncChildrenThrows(parent, transcoder);
+      return getAsyncChildrenThrows(parent, childrenCache, transcoder);
     } catch (Throwable t) {
       throw Throwables.propagate(t);
     }
