@@ -321,6 +321,8 @@ public class SingularityConfiguration extends Configuration {
 
   private int maxActiveOnDemandTasksPerRequest = 0;
 
+  private int maxDecommissioningSlaves = 2;
+
   public long getAskDriverToKillTasksAgainAfterMillis() {
     return askDriverToKillTasksAgainAfterMillis;
   }
@@ -1306,5 +1308,13 @@ public class SingularityConfiguration extends Configuration {
 
   public void setMaxActiveOnDemandTasksPerRequest(int maxActiveOnDemandTasksPerRequest) {
     this.maxActiveOnDemandTasksPerRequest = maxActiveOnDemandTasksPerRequest;
+  }
+
+  public int getMaxDecommissioningSlaves() {
+    return maxDecommissioningSlaves;
+  }
+
+  public void setMaxDecommissioningSlaves(int maxDecommissioningSlaves) {
+    this.maxDecommissioningSlaves = maxDecommissioningSlaves;
   }
 }
