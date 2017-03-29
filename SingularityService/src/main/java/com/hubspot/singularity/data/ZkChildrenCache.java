@@ -42,7 +42,7 @@ public class ZkChildrenCache {
     registry.register(String.format("zk.children.caches.%s.size", name), new Gauge<Long>() {
       @Override
       public Long getValue() {
-          return new Long(cache.size());
+          return Long.valueOf(cache.size());
       }});
   }
 
