@@ -1,7 +1,6 @@
 package com.hubspot.singularity.mesos;
 
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.locks.Lock;
 
 import javax.ws.rs.HEAD;
 
@@ -62,7 +61,7 @@ public class SingularityMesosStatusUpdateHandler {
   private final Provider<SingularitySchedulerStateCache> stateCacheProvider;
   private final String serverId;
   private final SchedulerDriverSupplier schedulerDriverSupplier;
-  private final Lock schedulerLock;
+  private final SingularitySchedulerLock schedulerLock;
   private final SingularityConfiguration configuration;
   private final Multiset<Protos.TaskStatus.Reason> taskLostReasons;
   private final Meter lostTasksMeter;
@@ -74,7 +73,7 @@ public class SingularityMesosStatusUpdateHandler {
       SingularityNewTaskChecker newTaskChecker, SingularitySlaveAndRackManager slaveAndRackManager, SingularityMesosExecutorInfoSupport logSupport, SingularityScheduler scheduler,
       Provider<SingularitySchedulerStateCache> stateCacheProvider, @Named(SingularityMainModule.SERVER_ID_PROPERTY) String serverId,
       SchedulerDriverSupplier schedulerDriverSupplier,
-      @Named(SingularityMesosModule.SCHEDULER_LOCK_NAME) final Lock schedulerLock,
+      SingularitySchedulerLock schedulerLock,
       SingularityConfiguration configuration,
       @Named(SingularityMesosModule.TASK_LOST_REASONS_COUNTER) Multiset<Protos.TaskStatus.Reason> taskLostReasons,
       @Named(SingularityMainModule.LOST_TASKS_METER) Meter lostTasksMeter,
@@ -258,14 +257,13 @@ public class SingularityMesosStatusUpdateHandler {
 
   @Timed
   public void processStatusUpdate(Protos.TaskStatus status) {
-    final long start = System.currentTimeMillis();
     long insideLock = 0;
-    schedulerLock.lock();
+    final long start = schedulerLock.lock("statusUpdate");
     try {
       insideLock = System.currentTimeMillis();
       unsafeProcessStatusUpdate(status);
     } finally {
-      schedulerLock.unlock();
+      schedulerLock.unlock("statusUpdate", start);
       LOG.info("Processed status update for {} ({}) in {} (waited {} for lock)", status.getTaskId().getValue(), status.getState(), JavaUtils.duration(start), JavaUtils.durationFromMillis(insideLock - start));
     }
   }
