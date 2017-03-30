@@ -295,7 +295,7 @@ public class SingularityMesosOfferScheduler {
 
   private double score(Offer offer, SingularityTaskRequest taskRequest, Map<String, Map<RequestType, Map<String, Integer>>> usagesPerRequestTypePerSlave) {
     double requestTypeCpuWeight = 0.20;
-    double requestTypeMemWeight = 0.20;
+    double requestTypeMemWeight = 0.30;
     double freeCpuWeight = 0.20;
     double freeMemWeight = 0.30;
     double score = 0;
