@@ -87,6 +87,7 @@ public class SingularityValidator {
   private final int defaultHealthcheckStartupTimeooutSeconds;
   private final int defaultHealthcehckMaxRetries;
   private final int defaultHealthcheckResponseTimeoutSeconds;
+  private final int maxDecommissioningSlaves;
   private final boolean allowRequestsWithoutOwners;
   private final boolean createDeployIds;
   private final int deployIdLength;
@@ -131,6 +132,8 @@ public class SingularityValidator {
     this.defaultHealthcheckStartupTimeooutSeconds = configuration.getStartupTimeoutSeconds();
     this.defaultHealthcehckMaxRetries = configuration.getHealthcheckMaxRetries().or(0);
     this.defaultHealthcheckResponseTimeoutSeconds = configuration.getHealthcheckTimeoutSeconds();
+
+    this.maxDecommissioningSlaves = configuration.getMaxDecommissioningSlaves();
 
     this.uiConfiguration = uiConfiguration;
 
@@ -578,6 +581,12 @@ public class SingularityValidator {
     checkBadRequest(!systemOnlyStateTransitions.contains(newState), "States {} are reserved for system usage, you cannot manually transition to {}", systemOnlyStateTransitions, newState);
 
     checkBadRequest(!(newState == MachineState.DECOMMISSIONED && !changeRequest.isKillTasksOnDecommissionTimeout()), "Must specify that all tasks on slave get killed if transitioning to DECOMMISSIONED state");
+  }
+
+  public void validateDecommissioningCount() {
+    int decommissioning = slaveManager.getObjectsFiltered(MachineState.DECOMMISSIONING).size() + slaveManager.getObjectsFiltered(MachineState.STARTING_DECOMMISSION).size();
+    checkBadRequest(decommissioning < maxDecommissioningSlaves,
+        "{} slaves are already decommissioning state ({} allowed at once). Allow these slaves to finish before decommissioning another", decommissioning, maxDecommissioningSlaves);
   }
 
   public void checkActionEnabled(SingularityAction action) {

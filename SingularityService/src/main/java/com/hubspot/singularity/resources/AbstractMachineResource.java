@@ -77,6 +77,7 @@ public abstract class AbstractMachineResource<T extends SingularityMachineAbstra
     authorizationHelper.checkAdminAuthorization(user);
     validator.checkActionEnabled(action);
     validator.validateExpiringMachineStateChange(decommissionRequest, MachineState.STARTING_DECOMMISSION, manager.getExpiringObject(objectId));
+    validator.validateDecommissioningCount();
     changeState(objectId, MachineState.STARTING_DECOMMISSION, decommissionRequest, queryUser);
     saveExpiring(decommissionRequest, queryUser, objectId);
   }
