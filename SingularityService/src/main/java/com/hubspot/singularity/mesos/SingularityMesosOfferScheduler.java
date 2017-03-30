@@ -15,14 +15,17 @@ import org.apache.mesos.Protos.Offer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.hubspot.mesos.MesosUtils;
 import com.hubspot.mesos.Resources;
+import com.hubspot.mesos.json.MesosResourcesObject;
 import com.hubspot.singularity.RequestType;
 import com.hubspot.singularity.SingularityPendingTaskId;
+import com.hubspot.singularity.SingularitySlave;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskCurrentUsage;
 import com.hubspot.singularity.SingularityTaskCurrentUsageWithId;
@@ -206,9 +209,18 @@ public class SingularityMesosOfferScheduler {
     Map<String, Map<RequestType, Map<String, Integer>>> usagesPerRequestTypePerSlave = new HashMap<>();
 
     for (String slaveId : tasksPerRequestTypePerSlave.keySet()) {
-      // todo: fix the unchecked Optional.get()
-      int totalCpu = slaveManager.getObject(slaveId).get().getResources().get().getMemoryMegaBytes().get();
-      int totalMem = slaveManager.getObject(slaveId).get().getResources().get().getNumCpus().get();
+      final Optional<SingularitySlave> slave = slaveManager.getObject(slaveId);
+      if (!slave.isPresent() || !slave.get().getResources().isPresent() ||
+          !slave.get().getResources().get().getMemoryMegaBytes().isPresent() ||
+          !slave.get().getResources().get().getNumCpus().isPresent()) {
+        LOG.debug("Could not find slave or resources for slave {}", slaveId);
+        continue;
+      }
+
+      final MesosResourcesObject resources = slave.get().getResources().get();
+
+      int totalCpu = resources.getMemoryMegaBytes().get();
+      int totalMem = resources.getNumCpus().get();
       Map<RequestType, Map<String, Integer>> usagesPerRequestType = new HashMap<>();
 
       for (RequestType type : RequestType.values()) {
@@ -284,8 +296,14 @@ public class SingularityMesosOfferScheduler {
     double freeCpuWeight = 0.20;
     double freeMemWeight = 0.30;
     double score = 0;
+    double defaultScoreForMissingUsage = 0.10;
 
     String slaveId = offer.getSlaveId().getValue();
+    if (!usagesPerRequestTypePerSlave.containsKey(slaveId)) {
+      LOG.info("Offer {} has no usage data. Will default to {}", offer.getId(), defaultScoreForMissingUsage);
+      return defaultScoreForMissingUsage;
+    }
+
     RequestType requestType = taskRequest.getRequest().getRequestType();
     Map<String, Integer> usagePerResource = usagesPerRequestTypePerSlave.get(slaveId).get(requestType);
 
