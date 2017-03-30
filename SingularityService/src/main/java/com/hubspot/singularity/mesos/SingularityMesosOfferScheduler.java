@@ -5,7 +5,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 import javax.inject.Singleton;
@@ -101,25 +100,7 @@ public class SingularityMesosOfferScheduler {
     this.slaveManager = slaveManager;
   }
 
-  private Map<String, SingularityTaskRequestHolder> getDueTaskRequestHolders() {
-    final List<SingularityTaskRequest> taskRequests = taskPrioritizer.getSortedDueTasks(scheduler.getDueTasks());
-
-    for (SingularityTaskRequest taskRequest : taskRequests) {
-      LOG.trace("Task {} is due", taskRequest.getPendingTask().getPendingTaskId());
-    }
-
-    taskPrioritizer.removeTasksAffectedByPriorityFreeze(taskRequests);
-
-    final Map<String, SingularityTaskRequestHolder> taskRequestHolders = new HashMap<>(taskRequests.size());
-
-    for (SingularityTaskRequest taskRequest : taskRequests) {
-      taskRequestHolders.put(taskRequest.getPendingTask().getPendingTaskId().getId(), new SingularityTaskRequestHolder(taskRequest, defaultResources, defaultCustomExecutorResources));
-    }
-
-    return taskRequestHolders;
-  }
-
-  public List<SingularityOfferHolder> checkOffers(final Collection<Protos.Offer> offers, final Set<Protos.OfferID> acceptedOffers) {
+  public List<SingularityOfferHolder> checkOffers(final Collection<Protos.Offer> offers) {
     boolean useTaskCredits = disasterManager.isTaskCreditEnabled();
     int taskCredits = useTaskCredits ? disasterManager.getUpdatedCreditCount() : -1;
     final SingularitySchedulerStateCache stateCache = stateCacheProvider.get();
@@ -170,6 +151,7 @@ public class SingularityMesosOfferScheduler {
         if (!scorePerOffer.isEmpty()) {
           SingularityOfferHolder bestOffer = Collections.max(scorePerOffer.entrySet(), Map.Entry.comparingByValue()).getKey();
           LOG.info("Best offer is {} with a score of {}/1", bestOffer, scorePerOffer.get(bestOffer));
+
           SingularityTask task = acceptTask(bestOffer, stateCache, tasksPerOfferPerRequest, taskRequestHolder);
 
           tasksScheduled++;
@@ -197,7 +179,28 @@ public class SingularityMesosOfferScheduler {
     return offerHolders;
   }
 
-  //todo: improve logic here
+  public boolean isConnected() {
+    return schedulerDriverSupplier.get().isPresent();
+  }
+
+  private Map<String, SingularityTaskRequestHolder> getDueTaskRequestHolders() {
+    final List<SingularityTaskRequest> taskRequests = taskPrioritizer.getSortedDueTasks(scheduler.getDueTasks());
+
+    for (SingularityTaskRequest taskRequest : taskRequests) {
+      LOG.trace("Task {} is due", taskRequest.getPendingTask().getPendingTaskId());
+    }
+
+    taskPrioritizer.removeTasksAffectedByPriorityFreeze(taskRequests);
+
+    final Map<String, SingularityTaskRequestHolder> taskRequestHolders = new HashMap<>(taskRequests.size());
+
+    for (SingularityTaskRequest taskRequest : taskRequests) {
+      taskRequestHolders.put(taskRequest.getPendingTask().getPendingTaskId().getId(), new SingularityTaskRequestHolder(taskRequest, defaultResources, defaultCustomExecutorResources));
+    }
+
+    return taskRequestHolders;
+  }
+
   private Map<String, Map<RequestType, Map<String, Integer>>> getUsagesPerRequestTypePerSlave() {
     List<String> slavesWithUsage = usageManager.getSlavesWithUsage();
 
@@ -213,7 +216,7 @@ public class SingularityMesosOfferScheduler {
       if (!slave.isPresent() || !slave.get().getResources().isPresent() ||
           !slave.get().getResources().get().getMemoryMegaBytes().isPresent() ||
           !slave.get().getResources().get().getNumCpus().isPresent()) {
-        LOG.debug("Could not find slave or resources for slave {}", slaveId);
+        LOG.debug("Could not find slave or resources for slave {}, skipping", slaveId);
         continue;
       }
 
@@ -380,9 +383,5 @@ public class SingularityMesosOfferScheduler {
     }
 
     return false;
-  }
-
-  public boolean isConnected() {
-    return schedulerDriverSupplier.get().isPresent();
   }
 }

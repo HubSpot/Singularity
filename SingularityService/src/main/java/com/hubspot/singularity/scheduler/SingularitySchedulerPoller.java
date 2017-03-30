@@ -10,13 +10,11 @@ import java.util.concurrent.locks.Lock;
 import javax.inject.Singleton;
 
 import org.apache.mesos.Protos.Offer;
-import org.apache.mesos.Protos.OfferID;
 import org.apache.mesos.SchedulerDriver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Optional;
-import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import com.hubspot.mesos.JavaUtils;
@@ -60,7 +58,7 @@ public class SingularitySchedulerPoller extends SingularityLeaderOnlyPoller {
       offers.add(cachedOffer.getOffer());
     }
 
-    List<SingularityOfferHolder> offerHolders = offerScheduler.checkOffers(offers, Sets.<OfferID> newHashSet());
+    List<SingularityOfferHolder> offerHolders = offerScheduler.checkOffers(offers);
 
     if (offerHolders.isEmpty()) {
       return;
