@@ -15,8 +15,9 @@ public class S3ArtifactSignature extends S3Artifact {
   @JsonCreator
   public S3ArtifactSignature(@JsonProperty("name") String name, @JsonProperty("filename") String filename, @JsonProperty("md5sum") Optional<String> md5sum,
       @JsonProperty("filesize") Optional<Long> filesize, @JsonProperty("s3Bucket") String s3Bucket, @JsonProperty("s3ObjectKey") String s3ObjectKey,
-      @JsonProperty("artifactFilename") String artifactFilename, @JsonProperty("targetFolderRelativeToTask") Optional<String> targetFolderRelativeToTask) {
-    super(name, filename, md5sum, filesize, s3Bucket, s3ObjectKey, targetFolderRelativeToTask);
+      @JsonProperty("artifactFilename") String artifactFilename, @JsonProperty("targetFolderRelativeToTask") Optional<String> targetFolderRelativeToTask,
+      @JsonProperty("isArtifactList") Optional<Boolean> isArtifactList) {
+    super(name, filename, md5sum, filesize, s3Bucket, s3ObjectKey, targetFolderRelativeToTask, isArtifactList);
 
     this.artifactFilename = artifactFilename;
   }

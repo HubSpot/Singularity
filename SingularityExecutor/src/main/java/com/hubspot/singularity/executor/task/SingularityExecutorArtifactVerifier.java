@@ -27,13 +27,13 @@ public class SingularityExecutorArtifactVerifier {
     this.taskDefinition = taskDefinition;
   }
 
-  public void checkSignatures() {
-    if (!taskDefinition.getExecutorData().getS3ArtifactSignatures().isPresent() || taskDefinition.getExecutorData().getS3ArtifactSignatures().get().isEmpty()) {
+  public void checkSignatures(List<S3ArtifactSignature> s3ArtifactsWithSignatures) {
+    if (s3ArtifactsWithSignatures.isEmpty()) {
       log.info("No files containing artifact signatures specified, skipping verification.");
       return;
     }
 
-    for (S3ArtifactSignature s3ArtifactSignature : taskDefinition.getExecutorData().getS3ArtifactSignatures().get()) {
+    for (S3ArtifactSignature s3ArtifactSignature : s3ArtifactsWithSignatures) {
       checkArtifactSignature(s3ArtifactSignature);
     }
   }

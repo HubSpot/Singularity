@@ -80,7 +80,7 @@ public class SingularityExecutorTaskBuilder {
 
     jsonObjectFileHelper.writeObject(taskDefinition, executorConfiguration.getTaskDefinitionPath(taskId), log);
 
-    return new SingularityExecutorTask(driver, executorUtils, baseConfiguration, executorConfiguration, taskDefinition, executorPid, artifactFetcher, taskInfo, templateManager, log, jsonObjectFileHelper, dockerUtils, s3Configuration);
+    return new SingularityExecutorTask(driver, executorUtils, baseConfiguration, executorConfiguration, taskDefinition, executorPid, artifactFetcher, taskInfo, templateManager, log, jsonObjectFileHelper, dockerUtils, s3Configuration, jsonObjectMapper);
   }
 
   private SingularityTaskExecutorData readExecutorData(ObjectMapper objectMapper, Protos.TaskInfo taskInfo) {
