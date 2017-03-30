@@ -1,16 +1,27 @@
 package com.hubspot.singularity.executor.task;
 
+import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Callable;
 
 import org.apache.mesos.Protos.TaskInfo;
 import org.apache.mesos.Protos.TaskState;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
+import com.hubspot.deploy.Artifact;
+import com.hubspot.deploy.EmbeddedArtifact;
 import com.hubspot.deploy.ExecutorData;
+import com.hubspot.deploy.ExternalArtifact;
+import com.hubspot.deploy.RemoteArtifact;
+import com.hubspot.deploy.S3Artifact;
+import com.hubspot.deploy.S3ArtifactSignature;
 import com.hubspot.singularity.executor.TemplateManager;
 import com.hubspot.singularity.executor.config.SingularityExecutorConfiguration;
 import com.hubspot.singularity.executor.models.DockerContext;
@@ -41,14 +52,17 @@ public class SingularityExecutorTaskProcessBuilder implements Callable<ProcessBu
 
   private DockerUtils dockerUtils;
 
+  private final ObjectMapper objectMapper;
+
   public SingularityExecutorTaskProcessBuilder(SingularityExecutorTask task,
-                                               ExecutorUtils executorUtils,
-                                               SingularityExecutorArtifactFetcher artifactFetcher,
-                                               TemplateManager templateManager,
-                                               SingularityExecutorConfiguration configuration,
-                                               ExecutorData executorData, String executorPid,
-                                               DockerUtils dockerUtils) {
+      ExecutorUtils executorUtils,
+      SingularityExecutorArtifactFetcher artifactFetcher,
+      TemplateManager templateManager,
+      SingularityExecutorConfiguration configuration,
+      ExecutorData executorData, String executorPid,
+      DockerUtils dockerUtils, ObjectMapper objectMapper) {
     this.executorData = executorData;
+    this.objectMapper = objectMapper;
     this.task = task;
     this.executorUtils = executorUtils;
     this.artifactFetcher = artifactFetcher;
@@ -73,15 +87,60 @@ public class SingularityExecutorTaskProcessBuilder implements Callable<ProcessBu
     executorUtils.sendStatusUpdate(task.getDriver(), task.getTaskInfo(), TaskState.TASK_STARTING, String.format("Staging files... (executor pid: %s)", executorPid), task.getLog());
 
     taskArtifactFetcher = Optional.of(artifactFetcher.buildTaskFetcher(executorData, task));
-    taskArtifactFetcher.get().fetchFiles();
 
-    task.getArtifactVerifier().checkSignatures();
+    taskArtifactFetcher.get().fetchFiles(executorData.getEmbeddedArtifacts(), executorData.getS3Artifacts(),
+        executorData.getS3ArtifactSignaturesOrEmpty(), executorData.getExternalArtifacts());
+    task.getArtifactVerifier().checkSignatures(executorData.getS3ArtifactSignaturesOrEmpty());
+
+    List<Artifact> listedArtifacts = new ArrayList<>();
+    checkArtifactForArtifactList(executorData.getS3Artifacts(), listedArtifacts);
+    checkArtifactForArtifactList(executorData.getS3ArtifactSignaturesOrEmpty(), listedArtifacts);
+    checkArtifactForArtifactList(executorData.getExternalArtifacts(), listedArtifacts);
+
+    if (!listedArtifacts.isEmpty()) {
+      List<EmbeddedArtifact> embeddedArtifacts = new ArrayList<>();
+      List<S3Artifact> s3Artifacts = new ArrayList<>();
+      List<S3ArtifactSignature> s3ArtifactSignatures = new ArrayList<>();
+      List<ExternalArtifact> externalArtifacts = new ArrayList<>();
+
+      for (Artifact artifact : listedArtifacts) {
+        if (artifact instanceof EmbeddedArtifact) {
+          embeddedArtifacts.add((EmbeddedArtifact) artifact);
+        } else if (artifact instanceof S3Artifact) {
+          s3Artifacts.add((S3Artifact) artifact);
+        } else if (artifact instanceof S3ArtifactSignature) {
+          s3ArtifactSignatures.add((S3ArtifactSignature) artifact);
+        } else if (artifact instanceof ExternalArtifact) {
+          externalArtifacts.add((ExternalArtifact) artifact);
+        }
+      }
+
+      taskArtifactFetcher.get().fetchFiles(embeddedArtifacts, s3Artifacts, s3ArtifactSignatures, externalArtifacts);
+      task.getArtifactVerifier().checkSignatures(s3ArtifactSignatures);
+    }
 
     ProcessBuilder processBuilder = buildProcessBuilder(task.getTaskInfo(), executorData, task.getTaskDefinition().getServiceLogFileName());
 
     task.getTaskLogManager().setup();
 
     return processBuilder;
+  }
+
+  private void checkArtifactForArtifactList(List<? extends RemoteArtifact> remoteArtifacts, List<Artifact> foundArtifacts) {
+    for (RemoteArtifact remoteArtifact : remoteArtifacts) {
+      if (remoteArtifact.isArtifactList()) {
+        Path pathToArtifact = task.getArtifactPath(remoteArtifact, task.getTaskDefinition().getTaskAppDirectoryPath()).resolve(remoteArtifact.getFilename());
+        if (!Files.exists(pathToArtifact)) {
+          throw new IllegalStateException(String.format("Couldn't find artifact at %s - %s", pathToArtifact, remoteArtifact));
+        }
+        try {
+          List<Artifact> listOfArtifacts = objectMapper.readValue(pathToArtifact.toFile(), new TypeReference<List<Artifact>>() {});
+          foundArtifacts.addAll(listOfArtifacts);
+        } catch (IOException e) {
+          throw new RuntimeException("Couldn't read artifacts from " + pathToArtifact, e);
+        }
+      }
+    }
   }
 
   public void cancel() {
@@ -104,31 +163,32 @@ public class SingularityExecutorTaskProcessBuilder implements Callable<ProcessBu
   }
 
   private String getExecutorUser() {
-    return System.getProperty("user.name");  // TODO: better way to do this?
+    return System.getProperty("user.name"); // TODO: better way to do this?
   }
 
   private ProcessBuilder buildProcessBuilder(TaskInfo taskInfo, ExecutorData executorData, String serviceLog) {
     final String cmd = getCommand(executorData);
 
     RunnerContext runnerContext = new RunnerContext(
-      cmd,
-      configuration.getTaskAppDirectory(),
-      configuration.getLogrotateToDirectory(),
-      executorData.getUser().or(configuration.getDefaultRunAsUser()),
-      serviceLog,
-      serviceLogOutPath(serviceLog),
-      task.getTaskId(),
-      executorData.getMaxTaskThreads().or(configuration.getMaxTaskThreads()),
-      !getExecutorUser().equals(executorData.getUser().or(configuration.getDefaultRunAsUser())),
-      executorData.getMaxOpenFiles().orNull(),
-      String.format(configuration.getSwitchUserCommandFormat(), executorData.getUser().or(configuration.getDefaultRunAsUser())),
-      configuration.isUseFileAttributes());
+        cmd,
+        configuration.getTaskAppDirectory(),
+        configuration.getLogrotateToDirectory(),
+        executorData.getUser().or(configuration.getDefaultRunAsUser()),
+        serviceLog,
+        serviceLogOutPath(serviceLog),
+        task.getTaskId(),
+        executorData.getMaxTaskThreads().or(configuration.getMaxTaskThreads()),
+        !getExecutorUser().equals(executorData.getUser().or(configuration.getDefaultRunAsUser())),
+        executorData.getMaxOpenFiles().orNull(),
+        String.format(configuration.getSwitchUserCommandFormat(), executorData.getUser().or(configuration.getDefaultRunAsUser())),
+        configuration.isUseFileAttributes());
 
     EnvironmentContext environmentContext = new EnvironmentContext(taskInfo);
 
     if (taskInfo.hasContainer() && taskInfo.getContainer().hasDocker()) {
       task.getLog().info("Writing a runner script to execute {} in docker container", cmd);
-      templateManager.writeDockerScript(getPath("runner.sh"), new DockerContext(environmentContext, runnerContext, configuration.getDockerPrefix(), configuration.getDockerStopTimeout(), taskInfo.getContainer().getDocker().getPrivileged()));
+      templateManager.writeDockerScript(getPath("runner.sh"),
+          new DockerContext(environmentContext, runnerContext, configuration.getDockerPrefix(), configuration.getDockerStopTimeout(), taskInfo.getContainer().getDocker().getPrivileged()));
     } else {
       templateManager.writeEnvironmentScript(getPath("deploy.env"), environmentContext);
 
