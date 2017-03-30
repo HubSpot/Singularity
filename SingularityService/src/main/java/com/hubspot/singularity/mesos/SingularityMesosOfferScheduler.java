@@ -313,8 +313,8 @@ public class SingularityMesosOfferScheduler {
     score += requestTypeCpuWeight * (1 - (usagePerResource.get(CPU_USED) / usagePerResource.get(CPU_TOTAL)));
     score += requestTypeMemWeight * (1 - (usagePerResource.get(MEMORY_USED) / usagePerResource.get(MEMORY_TOTAL)));
 
-    score += freeCpuWeight * (1 - (MesosUtils.getNumCpus(offer) / usagePerResource.get(CPU_TOTAL)));
-    score += freeMemWeight * (1 - (MesosUtils.getMemory(offer) / usagePerResource.get(MEMORY_TOTAL)));
+    score += freeCpuWeight * (MesosUtils.getNumCpus(offer) / usagePerResource.get(CPU_TOTAL));
+    score += freeMemWeight * (MesosUtils.getMemory(offer) / usagePerResource.get(MEMORY_TOTAL));
 
     return score;
   }
