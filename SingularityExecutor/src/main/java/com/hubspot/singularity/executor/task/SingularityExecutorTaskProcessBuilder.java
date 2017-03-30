@@ -109,6 +109,9 @@ public class SingularityExecutorTaskProcessBuilder implements Callable<ProcessBu
         externalArtifacts.addAll(artifactList.getExternalArtifacts());
       }
 
+      task.getLog().info("Found {} artifact lists with {} embedded, {} s3, {} external, fetching...", artifactLists.size(), embeddedArtifacts.size(), s3Artifacts.size() + s3ArtifactSignatures.size(),
+          externalArtifacts.size());
+
       taskArtifactFetcher.get().fetchFiles(embeddedArtifacts, s3Artifacts, s3ArtifactSignatures, externalArtifacts);
       task.getArtifactVerifier().checkSignatures(s3ArtifactSignatures);
     }
