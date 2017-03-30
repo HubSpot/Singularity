@@ -4,18 +4,9 @@ import java.util.Objects;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonSubTypes;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.google.common.base.Optional;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY)
-@JsonSubTypes({
-    @JsonSubTypes.Type(value = EmbeddedArtifact.class, name = "EmbeddedArtifact"),
-    @JsonSubTypes.Type(value = S3Artifact.class, name = "S3Artifact"),
-    @JsonSubTypes.Type(value = S3ArtifactSignature.class, name = "S3ArtifactSignature"),
-    @JsonSubTypes.Type(value = ExternalArtifact.class, name = "ExternalArtifact")
-})
 public abstract class Artifact {
 
   private final String name;
