@@ -587,7 +587,7 @@ public class SingularityValidator {
   public void validateDecommissioningCount() {
     int decommissioning = slaveManager.getObjectsFiltered(MachineState.DECOMMISSIONING).size() + slaveManager.getObjectsFiltered(MachineState.STARTING_DECOMMISSION).size();
     checkBadRequest(decommissioning < maxDecommissioningSlaves,
-        "{} slaves are already decommissioning state ({} allowed at once). Allow these slaves to finish before decommissioning another", decommissioning, maxDecommissioningSlaves);
+        "%s slaves are already decommissioning state (%s allowed at once). Allow these slaves to finish before decommissioning another", decommissioning, maxDecommissioningSlaves);
   }
 
   public void checkActionEnabled(SingularityAction action) {
