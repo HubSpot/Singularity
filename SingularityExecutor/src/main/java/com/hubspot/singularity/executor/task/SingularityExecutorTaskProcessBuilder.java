@@ -127,7 +127,7 @@ public class SingularityExecutorTaskProcessBuilder implements Callable<ProcessBu
     List<ArtifactList> artifactLists = new ArrayList<>();
     for (RemoteArtifact remoteArtifact : remoteArtifacts) {
       if (remoteArtifact.isArtifactList()) {
-        Path pathToArtifact = task.getArtifactPath(remoteArtifact, task.getTaskDefinition().getTaskAppDirectoryPath()).resolve(remoteArtifact.getFilename());
+        Path pathToArtifact = task.getArtifactPath(remoteArtifact, task.getTaskDefinition().getTaskDirectoryPath()).resolve(remoteArtifact.getFilename());
         if (!Files.exists(pathToArtifact)) {
           throw new IllegalStateException(String.format("Couldn't find artifact at %s - %s", pathToArtifact, remoteArtifact));
         }
