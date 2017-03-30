@@ -10,12 +10,11 @@ import java.util.concurrent.Callable;
 import org.apache.mesos.Protos.TaskInfo;
 import org.apache.mesos.Protos.TaskState;
 
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
-import com.hubspot.deploy.Artifact;
+import com.hubspot.deploy.ArtifactList;
 import com.hubspot.deploy.EmbeddedArtifact;
 import com.hubspot.deploy.ExecutorData;
 import com.hubspot.deploy.ExternalArtifact;
@@ -92,27 +91,22 @@ public class SingularityExecutorTaskProcessBuilder implements Callable<ProcessBu
         executorData.getS3ArtifactSignaturesOrEmpty(), executorData.getExternalArtifacts());
     task.getArtifactVerifier().checkSignatures(executorData.getS3ArtifactSignaturesOrEmpty());
 
-    List<Artifact> listedArtifacts = new ArrayList<>();
-    checkArtifactForArtifactList(executorData.getS3Artifacts(), listedArtifacts);
-    checkArtifactForArtifactList(executorData.getS3ArtifactSignaturesOrEmpty(), listedArtifacts);
-    checkArtifactForArtifactList(executorData.getExternalArtifacts(), listedArtifacts);
+    List<ArtifactList> artifactLists = new ArrayList<>();
+    artifactLists.addAll(checkArtifactsForArtifactLists(executorData.getS3Artifacts()));
+    artifactLists.addAll(checkArtifactsForArtifactLists(executorData.getS3ArtifactSignaturesOrEmpty()));
+    artifactLists.addAll(checkArtifactsForArtifactLists(executorData.getExternalArtifacts()));
 
-    if (!listedArtifacts.isEmpty()) {
+    if (!artifactLists.isEmpty()) {
       List<EmbeddedArtifact> embeddedArtifacts = new ArrayList<>();
       List<S3Artifact> s3Artifacts = new ArrayList<>();
       List<S3ArtifactSignature> s3ArtifactSignatures = new ArrayList<>();
       List<ExternalArtifact> externalArtifacts = new ArrayList<>();
 
-      for (Artifact artifact : listedArtifacts) {
-        if (artifact instanceof EmbeddedArtifact) {
-          embeddedArtifacts.add((EmbeddedArtifact) artifact);
-        } else if (artifact instanceof S3Artifact) {
-          s3Artifacts.add((S3Artifact) artifact);
-        } else if (artifact instanceof S3ArtifactSignature) {
-          s3ArtifactSignatures.add((S3ArtifactSignature) artifact);
-        } else if (artifact instanceof ExternalArtifact) {
-          externalArtifacts.add((ExternalArtifact) artifact);
-        }
+      for (ArtifactList artifactList : artifactLists) {
+        embeddedArtifacts.addAll(artifactList.getEmbeddedArtifacts());
+        s3Artifacts.addAll(artifactList.getS3Artifacts());
+        s3ArtifactSignatures.addAll(artifactList.getS3ArtifactSignatures());
+        externalArtifacts.addAll(artifactList.getExternalArtifacts());
       }
 
       taskArtifactFetcher.get().fetchFiles(embeddedArtifacts, s3Artifacts, s3ArtifactSignatures, externalArtifacts);
@@ -126,7 +120,8 @@ public class SingularityExecutorTaskProcessBuilder implements Callable<ProcessBu
     return processBuilder;
   }
 
-  private void checkArtifactForArtifactList(List<? extends RemoteArtifact> remoteArtifacts, List<Artifact> foundArtifacts) {
+  private List<ArtifactList> checkArtifactsForArtifactLists(List<? extends RemoteArtifact> remoteArtifacts) {
+    List<ArtifactList> artifactLists = new ArrayList<>();
     for (RemoteArtifact remoteArtifact : remoteArtifacts) {
       if (remoteArtifact.isArtifactList()) {
         Path pathToArtifact = task.getArtifactPath(remoteArtifact, task.getTaskDefinition().getTaskAppDirectoryPath()).resolve(remoteArtifact.getFilename());
@@ -134,13 +129,13 @@ public class SingularityExecutorTaskProcessBuilder implements Callable<ProcessBu
           throw new IllegalStateException(String.format("Couldn't find artifact at %s - %s", pathToArtifact, remoteArtifact));
         }
         try {
-          List<Artifact> listOfArtifacts = objectMapper.readValue(pathToArtifact.toFile(), new TypeReference<List<Artifact>>() {});
-          foundArtifacts.addAll(listOfArtifacts);
+          artifactLists.add(objectMapper.readValue(pathToArtifact.toFile(), ArtifactList.class));
         } catch (IOException e) {
           throw new RuntimeException("Couldn't read artifacts from " + pathToArtifact, e);
         }
       }
     }
+    return artifactLists;
   }
 
   public void cancel() {
