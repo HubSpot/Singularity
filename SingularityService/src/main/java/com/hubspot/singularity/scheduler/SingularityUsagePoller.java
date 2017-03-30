@@ -19,7 +19,7 @@ import com.hubspot.singularity.sentry.SingularityExceptionNotifier;
 
 public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
 
-  private static final Logger LOG = LoggerFactory.getLogger(SingularityTaskReconciliationPoller.class);
+  private static final Logger LOG = LoggerFactory.getLogger(SingularityUsagePoller.class);
 
   private final SingularityConfiguration configuration;
   private final MesosClient mesosClient;
