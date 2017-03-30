@@ -23,12 +23,10 @@ public class SingularityS3Configuration extends BaseRunnerConfiguration {
   @JsonProperty
   private String artifactCacheDirectory;
 
-  @NotNull
   @Obfuscate
   @JsonProperty
   private Optional<String> s3AccessKey = Optional.absent();
 
-  @NotNull
   @Obfuscate
   @JsonProperty
   private Optional<String> s3SecretKey = Optional.absent();
