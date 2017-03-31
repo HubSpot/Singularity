@@ -296,5 +296,4 @@ public abstract class CuratorManager {
   protected Optional<String> getStringData(String path) {
     return getData(path, Optional.<Stat> absent(), StringTranscoder.INSTANCE, Optional.<ZkCache<String>> absent(), Optional.<Boolean> absent());
   }
-
 }

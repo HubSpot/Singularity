@@ -358,7 +358,7 @@ public class SingularityCleaner {
               }
               requestManager.markDeleted(maybeHistory.get().getRequest(), start, requestCleanup.getUser(), requestCleanup.getMessage());
             }
-            cleanupDeployState(requestCleanup);
+            cleanupRequestData(requestCleanup);
           }
           break;
         case BOUNCE:
@@ -480,10 +480,13 @@ public class SingularityCleaner {
     }
   }
 
-  private void cleanupDeployState(SingularityRequestCleanup requestCleanup) {
+  private void cleanupRequestData(SingularityRequestCleanup requestCleanup) {
     SingularityDeleteResult deletePendingDeployResult = deployManager.deletePendingDeploy(requestCleanup.getRequestId());
     SingularityDeleteResult deleteRequestDeployStateResult = deployManager.deleteRequestDeployState(requestCleanup.getRequestId());
     LOG.trace("Deleted pendingDeploy ({}) and requestDeployState ({}) due to {}", deletePendingDeployResult, deleteRequestDeployStateResult, requestCleanup);
+    taskManager.deleteRequestId(requestCleanup.getRequestId());
+    deployManager.deleteRequestId(requestCleanup.getRequestId());
+    LOG.trace("Deleted stale request data for {}", requestCleanup.getRequestId());
   }
 
   public void drainCleanupQueue() {
