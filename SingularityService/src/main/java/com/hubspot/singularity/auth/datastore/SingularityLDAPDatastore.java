@@ -81,10 +81,10 @@ public class SingularityLDAPDatastore implements SingularityAuthDatastore {
   @Inject
   public SingularityLDAPDatastore(SingularityConfiguration configuration,
                                   SingularityExceptionNotifier exceptionNotifier) throws IOException {
-    checkArgument(configuration.getLdapConfiguration().isPresent(), "LDAP configuration not present");
+    checkArgument(configuration.getLdapConfigurationOptional().isPresent(), "LDAP configuration not present");
 
-    this.connectionPool = createConnectionPool(configuration.getLdapConfiguration().get());
-    this.configuration = configuration.getLdapConfiguration().get();
+    this.connectionPool = createConnectionPool(configuration.getLdapConfigurationOptional().get());
+    this.configuration = configuration.getLdapConfigurationOptional().get();
     this.exceptionNotifier = exceptionNotifier;
 
     if (configuration.isLdapCacheEnabled()) {
