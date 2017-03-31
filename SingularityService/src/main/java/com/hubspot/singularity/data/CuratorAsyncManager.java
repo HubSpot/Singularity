@@ -39,7 +39,14 @@ public abstract class CuratorAsyncManager extends CuratorManager {
   }
 
   private enum CuratorQueryMethod {
-    GET_DATA, CHECK_EXISTS, GET_CHILDREN
+    GET_DATA(OperationType.GET_MULTI), CHECK_EXISTS(OperationType.CHECK_EXISTS), GET_CHILDREN(OperationType.GET_CHILDREN);
+
+    private final OperationType operationType;
+
+    private CuratorQueryMethod(OperationType operationType) {
+      this.operationType = operationType;
+    }
+
   }
 
   private <T> List<T> getAsyncChildrenThrows(final String parent, final Transcoder<T> transcoder) throws Exception {
@@ -315,7 +322,7 @@ public abstract class CuratorAsyncManager extends CuratorManager {
 
       checkLatch(latch, pathNameForLogs);
     } finally {
-      log(OperationType.READ, Optional.of(paths.size()), bytes.get() > 0 ? Optional.of(bytes.get()) : Optional.<Integer>absent(), start, pathNameForLogs);
+      log(method.operationType, Optional.of(paths.size()), bytes.get() > 0 ? Optional.of(bytes.get()) : Optional.<Integer>absent(), start, pathNameForLogs);
     }
 
     return results;
