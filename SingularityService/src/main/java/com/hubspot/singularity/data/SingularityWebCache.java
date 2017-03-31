@@ -8,6 +8,7 @@ import java.util.Map;
 import com.codahale.metrics.Meter;
 import com.codahale.metrics.MetricRegistry;
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import com.hubspot.singularity.SingularityPendingTask;
 import com.hubspot.singularity.SingularityPendingTaskId;
 import com.hubspot.singularity.SingularityTask;
@@ -15,6 +16,7 @@ import com.hubspot.singularity.SingularityTaskCleanup;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.config.SingularityConfiguration;
 
+@Singleton
 public class SingularityWebCache {
 
   private volatile Map<SingularityPendingTaskId, SingularityPendingTask> cachedPendingTasks;
