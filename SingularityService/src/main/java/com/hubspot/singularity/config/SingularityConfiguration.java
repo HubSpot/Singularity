@@ -37,6 +37,8 @@ public class SingularityConfiguration extends Configuration {
 
   private boolean cacheOffers = true;
 
+  private long cacheForWebForMillis = TimeUnit.SECONDS.toMillis(30);
+
   private int cacheTasksMaxSize = 5000;
 
   private int cacheTasksInitialSize = 100;
@@ -390,6 +392,14 @@ public class SingularityConfiguration extends Configuration {
 
   public long getPendingDeployHoldTaskDuringDecommissionMillis() {
     return pendingDeployHoldTaskDuringDecommissionMillis;
+  }
+
+  public long getCacheForWebForMillis() {
+    return cacheForWebForMillis;
+  }
+
+  public void setCacheForWebForMillis(long cacheForWebForMillis) {
+    this.cacheForWebForMillis = cacheForWebForMillis;
   }
 
   public void setPendingDeployHoldTaskDuringDecommissionMillis(long pendingDeployHoldTaskDuringDecommissionMillis) {

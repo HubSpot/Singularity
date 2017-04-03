@@ -60,6 +60,7 @@ import com.hubspot.singularity.data.transcoders.IdTranscoder;
 import com.hubspot.singularity.data.transcoders.StringTranscoder;
 import com.hubspot.singularity.data.transcoders.Transcoder;
 import com.hubspot.singularity.event.SingularityEventListener;
+import com.hubspot.singularity.scheduler.SingularityLeaderCache;
 
 @Singleton
 public class TaskManager extends CuratorAsyncManager {
@@ -114,6 +115,9 @@ public class TaskManager extends CuratorAsyncManager {
   private final IdTranscoder<SingularityTaskId> taskIdTranscoder;
 
   private final ZkCache<SingularityTask> taskCache;
+  private final SingularityWebCache webCache;
+  private final SingularityLeaderCache leaderCache;
+  private final ZkChildrenCache taskCleanupIdCache;
 
   private final SingularityEventListener singularityEventListener;
   private final String serverId;
@@ -125,7 +129,8 @@ public class TaskManager extends CuratorAsyncManager {
       Transcoder<SingularityTaskCleanup> taskCleanupTranscoder, Transcoder<SingularityTaskHistoryUpdate> taskHistoryUpdateTranscoder, Transcoder<SingularityPendingTask> pendingTaskTranscoder,
       Transcoder<SingularityKilledTaskIdRecord> killedTaskIdRecordTranscoder, Transcoder<SingularityTaskShellCommandRequest> taskShellCommandRequestTranscoder,
       Transcoder<SingularityTaskShellCommandUpdate> taskShellCommandUpdateTranscoder,  Transcoder<SingularityTaskMetadata> taskMetadataTranscoder,
-      ZkCache<SingularityTask> taskCache, @Named(SingularityMainModule.SERVER_ID_PROPERTY) String serverId) {
+      ZkCache<SingularityTask> taskCache, SingularityWebCache webCache, SingularityLeaderCache leaderCache, @Named(SingularityDataModule.TASK_CLEANUP_ID_CACHE_NAME) ZkChildrenCache taskCleanupIdCache,
+      @Named(SingularityMainModule.SERVER_ID_PROPERTY) String serverId) {
     super(curator, configuration, metricRegistry);
 
     this.healthcheckResultTranscoder = healthcheckResultTranscoder;
@@ -144,6 +149,9 @@ public class TaskManager extends CuratorAsyncManager {
     this.taskShellCommandUpdateTranscoder = taskShellCommandUpdateTranscoder;
     this.taskMetadataTranscoder = taskMetadataTranscoder;
 
+    this.webCache = webCache;
+    this.leaderCache = leaderCache;
+    this.taskCleanupIdCache = taskCleanupIdCache;
     this.serverId = serverId;
   }
 
@@ -266,10 +274,16 @@ public class TaskManager extends CuratorAsyncManager {
   }
 
   public int getNumActiveTasks() {
+    if (leaderCache.active()) {
+      return leaderCache.getNumActiveTasks();
+    }
     return getNumChildren(ACTIVE_PATH_ROOT);
   }
 
   public int getNumScheduledTasks() {
+    if (leaderCache.active()) {
+      return leaderCache.getNumPendingTasks();
+    }
     return getNumChildren(PENDING_PATH_ROOT);
   }
 
@@ -322,6 +336,8 @@ public class TaskManager extends CuratorAsyncManager {
   public SingularityCreateResult savePendingTask(SingularityPendingTask task) {
     final String pendingPath = getPendingPath(task.getPendingTaskId());
 
+    leaderCache.savePendingTask(task);
+
     return save(pendingPath, task, pendingTaskTranscoder);
   }
 
@@ -341,19 +357,48 @@ public class TaskManager extends CuratorAsyncManager {
   }
 
   public List<String> getActiveTaskIdsAsStrings() {
+    if (leaderCache.active()) {
+      return leaderCache.getActiveTaskIdsAsStrings();
+    }
     return getChildren(ACTIVE_PATH_ROOT);
   }
 
   public List<SingularityTaskId> getActiveTaskIds() {
+    return getActiveTaskIds(false);
+  }
+
+  public List<SingularityTaskId> getActiveTaskIds(boolean useWebCache) {
+    if (leaderCache.active()) {
+      return leaderCache.getActiveTaskIds();
+    }
+
+    if (useWebCache && webCache.useCachedActiveTasks()) {
+      return webCache.getActiveTaskIds();
+    }
+
     return getTaskIds(ACTIVE_PATH_ROOT);
   }
 
   public List<SingularityTaskId> getCleanupTaskIds() {
-    return getTaskIds(CLEANUP_PATH_ROOT);
+    return getChildrenAsIds(CLEANUP_PATH_ROOT, Optional.of(taskCleanupIdCache), taskIdTranscoder);
+  }
+
+  public List<SingularityTaskCleanup> getCleanupTasks(boolean useWebCache) {
+    if (useWebCache && webCache.useCachedCleanupTasks()) {
+      return webCache.getCleanupTasks();
+    }
+
+    List<SingularityTaskCleanup> cleanupTasks = getAsyncChildren(CLEANUP_PATH_ROOT, Optional.of(taskCleanupIdCache), taskCleanupTranscoder);
+
+    if (useWebCache) {
+      webCache.cacheTaskCleanup(cleanupTasks);
+    }
+
+    return cleanupTasks;
   }
 
   public List<SingularityTaskCleanup> getCleanupTasks() {
-    return getAsyncChildren(CLEANUP_PATH_ROOT, taskCleanupTranscoder);
+    return getCleanupTasks(false);
   }
 
   public Optional<SingularityTaskCleanup> getTaskCleanup(String taskId) {
@@ -361,7 +406,15 @@ public class TaskManager extends CuratorAsyncManager {
   }
 
   public List<SingularityTask> getActiveTasks() {
-    List<String> children = Lists.transform(getChildrenAsIds(ACTIVE_PATH_ROOT, taskIdTranscoder), new Function<SingularityTaskId, String>() {
+    return getActiveTasks(false);
+  }
+
+  public List<SingularityTask> getActiveTasks(boolean useWebCache) {
+    if (useWebCache && webCache.useCachedActiveTasks()) {
+      return webCache.getActiveTasks();
+    }
+
+    List<String> children = Lists.transform(getActiveTaskIds(), new Function<SingularityTaskId, String>() {
 
       @Override
       public String apply(SingularityTaskId taskId) {
@@ -370,7 +423,13 @@ public class TaskManager extends CuratorAsyncManager {
 
     });
 
-    return getAsync("getActiveTasks", children, taskTranscoder, taskCache);
+    List<SingularityTask> activeTasks = getAsync("getActiveTasks", children, taskTranscoder, taskCache);
+
+    if (useWebCache) {
+      webCache.cacheActiveTasks(activeTasks);
+    }
+
+    return activeTasks;
   }
 
   public List<SingularityTaskStatusHolder> getLastActiveTaskStatuses() {
@@ -506,6 +565,10 @@ public class TaskManager extends CuratorAsyncManager {
   }
 
   public boolean isActiveTask(String taskId) {
+    if (leaderCache.active()) {
+      return leaderCache.isActiveTask(taskId);
+    }
+
     return exists(getActivePath(taskId));
   }
 
@@ -536,6 +599,10 @@ public class TaskManager extends CuratorAsyncManager {
   }
 
   public List<SingularityTaskId> filterActiveTaskIds(List<SingularityTaskId> taskIds) {
+    if (leaderCache.active()) {
+      return leaderCache.exists(taskIds);
+    }
+
     final List<String> paths = Lists.newArrayListWithCapacity(taskIds.size());
 
     for (SingularityTaskId taskId : taskIds) {
@@ -558,6 +625,10 @@ public class TaskManager extends CuratorAsyncManager {
   }
 
   public List<SingularityTaskId> filterInactiveTaskIds(List<SingularityTaskId> taskIds) {
+    if (leaderCache.active()) {
+      return leaderCache.getInactiveTaskIds(taskIds);
+    }
+
     final Map<String, SingularityTaskId> pathsMap = Maps.newHashMap();
 
     for (SingularityTaskId taskId : taskIds) {
@@ -672,6 +743,9 @@ public class TaskManager extends CuratorAsyncManager {
   }
 
   public Optional<SingularityPendingTask> getPendingTask(SingularityPendingTaskId pendingTaskId) {
+    if (leaderCache.active()) {
+      return leaderCache.getPendingTask(pendingTaskId);
+    }
     return getData(getPendingPath(pendingTaskId), pendingTaskTranscoder);
   }
 
@@ -690,12 +764,33 @@ public class TaskManager extends CuratorAsyncManager {
     return checkExists(getTaskPath(taskId)).isPresent();
   }
 
+  public void activateLeaderCache() {
+    leaderCache.cachePendingTasks(fetchPendingTasks());
+    leaderCache.cacheActiveTaskIds(getTaskIds(ACTIVE_PATH_ROOT));
+  }
+
+  private List<SingularityPendingTask> fetchPendingTasks() {
+    return getAsyncChildren(PENDING_PATH_ROOT, pendingTaskTranscoder);
+  }
+
   public List<SingularityPendingTaskId> getPendingTaskIds() {
+    return getPendingTaskIds(false);
+  }
+
+  public List<SingularityPendingTaskId> getPendingTaskIds(boolean useWebCache) {
+    if (leaderCache.active()) {
+      return leaderCache.getPendingTaskIds();
+    }
+
+    if (useWebCache && webCache.useCachedPendingTasks()) {
+      return webCache.getPendingTaskIds();
+    }
+
     return getChildrenAsIds(PENDING_PATH_ROOT, pendingTaskIdTranscoder);
   }
 
   public List<SingularityPendingTaskId> getPendingTaskIdsForRequest(final String requestId) {
-    List<SingularityPendingTaskId> pendingTaskIds = getChildrenAsIds(PENDING_PATH_ROOT, pendingTaskIdTranscoder);
+    List<SingularityPendingTaskId> pendingTaskIds = getPendingTaskIds();
     return ImmutableList.copyOf(Iterables.filter(pendingTaskIds, new Predicate<SingularityPendingTaskId>() {
       @Override
       public boolean apply(SingularityPendingTaskId pendingTaskId) {
@@ -705,7 +800,25 @@ public class TaskManager extends CuratorAsyncManager {
   }
 
   public List<SingularityPendingTask> getPendingTasks() {
-    return getAsyncChildren(PENDING_PATH_ROOT, pendingTaskTranscoder);
+    return getPendingTasks(false);
+  }
+
+  public List<SingularityPendingTask> getPendingTasks(boolean useWebCache) {
+    if (leaderCache.active()) {
+      return leaderCache.getPendingTasks();
+    }
+
+    if (useWebCache && webCache.useCachedPendingTasks()) {
+      return webCache.getPendingTasks();
+    }
+
+    List<SingularityPendingTask> pendingTasks = fetchPendingTasks();
+
+    if (useWebCache) {
+      webCache.cachePendingTasks(pendingTasks);
+    }
+
+    return pendingTasks;
   }
 
   public void createTaskAndDeletePendingTask(SingularityTask task) {
@@ -727,7 +840,7 @@ public class TaskManager extends CuratorAsyncManager {
   }
 
   private void createTaskAndDeletePendingTaskPrivate(SingularityTask task) throws Exception {
-    delete(getPendingPath(task.getTaskRequest().getPendingTask().getPendingTaskId()));
+    deletePendingTask(task.getTaskRequest().getPendingTask().getPendingTaskId());
 
     final long now = System.currentTimeMillis();
 
@@ -751,6 +864,7 @@ public class TaskManager extends CuratorAsyncManager {
 
       transaction.create().forPath(getActivePath(task.getTaskId().getId())).and().commit();
 
+      leaderCache.putActiveTask(task);
       taskCache.set(path, task);
     } catch (KeeperException.NodeExistsException nee) {
       LOG.error("Task or active path already existed for {}", task.getTaskId());
@@ -883,10 +997,13 @@ public class TaskManager extends CuratorAsyncManager {
   }
 
   public void deleteActiveTask(String taskId) {
+    leaderCache.deleteActiveTaskId(taskId);
+
     delete(getActivePath(taskId));
   }
 
   public void deletePendingTask(SingularityPendingTaskId pendingTaskId) {
+    leaderCache.deletePendingTask(pendingTaskId);
     delete(getPendingPath(pendingTaskId));
   }
 

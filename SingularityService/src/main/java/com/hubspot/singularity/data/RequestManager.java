@@ -17,6 +17,7 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.google.inject.name.Named;
 import com.hubspot.singularity.RequestCleanupType;
 import com.hubspot.singularity.RequestState;
 import com.hubspot.singularity.SingularityCreateResult;
@@ -53,6 +54,7 @@ public class RequestManager extends CuratorAsyncManager {
   private final Transcoder<SingularityRequestLbCleanup> requestLbCleanupTranscoder;
 
   private final SingularityEventListener singularityEventListener;
+  private final ZkChildrenCache requestIdCache;
 
   private static final String REQUEST_ROOT = "/requests";
 
@@ -78,7 +80,7 @@ public class RequestManager extends CuratorAsyncManager {
   private final Map<Class<? extends SingularityExpiringRequestActionParent<? extends SingularityExpiringRequestParent>>, Transcoder<? extends SingularityExpiringRequestActionParent<? extends SingularityExpiringRequestParent>>> expiringTranscoderMap;
 
   @Inject
-  public RequestManager(CuratorFramework curator, SingularityConfiguration configuration, MetricRegistry metricRegistry, SingularityEventListener singularityEventListener,
+  public RequestManager(CuratorFramework curator, SingularityConfiguration configuration, MetricRegistry metricRegistry, SingularityEventListener singularityEventListener, @Named(SingularityDataModule.REQUEST_ID_CACHE_NAME) ZkChildrenCache requestIdCache,
       Transcoder<SingularityRequestCleanup> requestCleanupTranscoder, Transcoder<SingularityRequestWithState> requestTranscoder, Transcoder<SingularityRequestLbCleanup> requestLbCleanupTranscoder,
       Transcoder<SingularityPendingRequest> pendingRequestTranscoder, Transcoder<SingularityRequestHistory> requestHistoryTranscoder, Transcoder<SingularityExpiringBounce> expiringBounceTranscoder,
       Transcoder<SingularityExpiringScale> expiringScaleTranscoder,  Transcoder<SingularityExpiringPause> expiringPauseTranscoder, Transcoder<SingularityExpiringSkipHealthchecks> expiringSkipHealthchecksTranscoder) {
@@ -89,6 +91,7 @@ public class RequestManager extends CuratorAsyncManager {
     this.requestHistoryTranscoder = requestHistoryTranscoder;
     this.singularityEventListener = singularityEventListener;
     this.requestLbCleanupTranscoder = requestLbCleanupTranscoder;
+    this.requestIdCache = requestIdCache;
 
     this.expiringTranscoderMap = ImmutableMap.of(
         SingularityExpiringBounce.class, expiringBounceTranscoder,
@@ -184,7 +187,7 @@ public class RequestManager extends CuratorAsyncManager {
   }
 
   public List<String> getAllRequestIds() {
-    return getChildren(NORMAL_PATH_ROOT);
+    return getChildren(NORMAL_PATH_ROOT, Optional.of(requestIdCache));
   }
 
   public List<String> getRequestIdsWithHistory() {
@@ -324,7 +327,7 @@ public class RequestManager extends CuratorAsyncManager {
   }
 
   public List<SingularityRequestWithState> getRequests() {
-    return getAsyncChildren(NORMAL_PATH_ROOT, requestTranscoder);
+    return getAsyncChildren(NORMAL_PATH_ROOT, Optional.of(requestIdCache), requestTranscoder);
   }
 
   public Optional<SingularityRequestWithState> getRequest(String requestId) {
