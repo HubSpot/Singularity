@@ -2,7 +2,6 @@ package com.hubspot.singularity.executor.task;
 
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.ExecutionException;
@@ -17,6 +16,7 @@ import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import com.hubspot.deploy.EmbeddedArtifact;
 import com.hubspot.deploy.ExecutorData;
+import com.hubspot.deploy.ExternalArtifact;
 import com.hubspot.deploy.RemoteArtifact;
 import com.hubspot.deploy.S3Artifact;
 import com.hubspot.deploy.S3ArtifactSignature;
@@ -61,18 +61,16 @@ public class SingularityExecutorArtifactFetcher {
   public SingularityExecutorTaskArtifactFetcher buildTaskFetcher(ExecutorData executorData, SingularityExecutorTask task) {
     ArtifactManager artifactManager = new ArtifactManager(runnerBaseConfiguration, s3Configuration, task.getLog(), exceptionNotifier);
 
-    return new SingularityExecutorTaskArtifactFetcher(artifactManager, executorData, task);
+    return new SingularityExecutorTaskArtifactFetcher(artifactManager, task);
   }
 
   public class SingularityExecutorTaskArtifactFetcher {
 
     private final ArtifactManager artifactManager;
-    private final ExecutorData executorData;
     private final SingularityExecutorTask task;
 
-    private SingularityExecutorTaskArtifactFetcher(ArtifactManager artifactManager, ExecutorData executorData, SingularityExecutorTask task) {
+    private SingularityExecutorTaskArtifactFetcher(ArtifactManager artifactManager, SingularityExecutorTask task) {
       this.artifactManager = artifactManager;
-      this.executorData = executorData;
       this.task = task;
     }
 
@@ -81,29 +79,30 @@ public class SingularityExecutorArtifactFetcher {
       artifactManager.signalKillToProcessIfActive();
     }
 
-    public void fetchFiles() throws InterruptedException {
-      extractFiles(task, artifactManager, executorData);
+    public void fetchFiles(List<EmbeddedArtifact> embeddedArtifacts, List<S3Artifact> s3Artifacts, List<S3ArtifactSignature> s3ArtifactsWithSignature,
+        List<ExternalArtifact> remoteArtifacts)
+        throws InterruptedException {
+      extractFiles(task, artifactManager, embeddedArtifacts);
 
       boolean fetchS3ArtifactsLocally = true;
 
       final ImmutableList<S3Artifact> allS3Artifacts = ImmutableList.<S3Artifact>builder()
-          .addAll(executorData.getS3Artifacts())
-          .addAll(executorData.getS3ArtifactSignatures().or(Collections.<S3ArtifactSignature>emptyList()))
+          .addAll(s3Artifacts)
+          .addAll(s3ArtifactsWithSignature)
           .build();
 
       if (executorConfiguration.isUseLocalDownloadService() && !allS3Artifacts.isEmpty()) {
         final long start = System.currentTimeMillis();
 
-        task.getLog().info("Fetching {} (S3) artifacts and {} (S3) artifact signatures from {}", executorData.getS3Artifacts().size(),
-            executorData.getS3ArtifactSignatures().isPresent() ? executorData.getS3ArtifactSignatures().get().size() : 0, localDownloadUri);
+        task.getLog().info("Fetching {} (S3) artifacts and {} (S3) artifact signatures from {}", s3Artifacts.size(), s3ArtifactsWithSignature.size(), localDownloadUri);
 
         try {
           downloadFilesFromLocalDownloadService(allS3Artifacts, task);
 
           fetchS3ArtifactsLocally = false;
 
-          task.getLog().info("Fetched {} (S3) artifacts and {} (S3) artifact signatures from local download service in {}", executorData.getS3Artifacts().size(),
-              executorData.getS3ArtifactSignatures().isPresent() ? executorData.getS3ArtifactSignatures().get().size() : 0, JavaUtils.duration(start));
+          task.getLog().info("Fetched {} (S3) artifacts and {} (S3) artifact signatures from local download service in {}", s3Artifacts.size(), s3ArtifactsWithSignature.size(),
+              JavaUtils.duration(start));
         } catch (InterruptedException ie) {
           task.getLog().warn("Interrupted while downloading S3 artifacts from local download service");
           throw ie;
@@ -118,13 +117,13 @@ public class SingularityExecutorArtifactFetcher {
         }
       }
 
-      for (RemoteArtifact externalArtifact : executorData.getExternalArtifacts()) {
+      for (RemoteArtifact externalArtifact : remoteArtifacts) {
         downloadRemoteArtifact(externalArtifact, artifactManager, task);
       }
     }
 
-    private void extractFiles(SingularityExecutorTask task, ArtifactManager artifactManager, ExecutorData executorData) {
-      for (EmbeddedArtifact artifact : executorData.getEmbeddedArtifacts()) {
+    private void extractFiles(SingularityExecutorTask task, ArtifactManager artifactManager, List<EmbeddedArtifact> embeddedArtifacts) {
+      for (EmbeddedArtifact artifact : embeddedArtifacts) {
         artifactManager.extract(artifact, task.getArtifactPath(artifact, task.getTaskDefinition().getTaskDirectoryPath()));
       }
     }
