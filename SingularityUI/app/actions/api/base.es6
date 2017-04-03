@@ -76,16 +76,7 @@ export function buildApiAction(actionName, opts = {}, keyFunc = undefined) {
           userParam = `?user=${localStorage.getItem('singularityUserId')}`
         }
       }
-      let cacheParam = '';
-      const newUrl = options.url + userParam;
-      if (!newUrl.includes('useWebCache'))
-        if (newUrl.includes('?')) {
-          cacheParam = '&useWebCache=true'
-        } else {
-          cacheParam = '?useWebCache=true'
-        }
-      }
-      return fetch(config.apiRoot + options.url + userParam + cacheParam, _.extend({credentials: 'include'}, _.omit(options, 'url')))
+      return fetch(config.apiRoot + options.url + userParam, _.extend({credentials: 'include'}, _.omit(options, 'url')))
         .then(response => {
           apiResponse = response;
           if (response.status === 204) {
