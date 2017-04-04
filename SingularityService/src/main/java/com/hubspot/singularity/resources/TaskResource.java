@@ -7,6 +7,7 @@ import static com.hubspot.singularity.WebExceptions.notFound;
 import java.util.Collections;
 import java.util.List;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -16,6 +17,7 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
@@ -28,6 +30,8 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
+import com.google.inject.name.Named;
+import com.hubspot.horizon.HttpClient;
 import com.hubspot.jackson.jaxrs.PropertyFiltering;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.mesos.client.MesosClient;
@@ -38,6 +42,7 @@ import com.hubspot.singularity.SingularityAction;
 import com.hubspot.singularity.SingularityAuthorizationScope;
 import com.hubspot.singularity.SingularityCreateResult;
 import com.hubspot.singularity.SingularityKilledTaskIdRecord;
+import com.hubspot.singularity.SingularityLeaderLatch;
 import com.hubspot.singularity.SingularityPendingRequest;
 import com.hubspot.singularity.SingularityPendingRequest.PendingType;
 import com.hubspot.singularity.SingularityPendingTask;
@@ -73,7 +78,7 @@ import com.wordnik.swagger.annotations.ApiResponses;
 @Path(TaskResource.PATH)
 @Produces({ MediaType.APPLICATION_JSON })
 @Api(description="Manages Singularity tasks.", value=TaskResource.PATH)
-public class TaskResource {
+public class TaskResource extends AbstractLeaderAwareResource {
   public static final String PATH = SingularityService.API_BASE_PATH + "/tasks";
   private static final Logger LOG = LoggerFactory.getLogger(TaskResource.class);
 
@@ -89,7 +94,9 @@ public class TaskResource {
 
   @Inject
   public TaskResource(TaskRequestManager taskRequestManager, TaskManager taskManager, SlaveManager slaveManager, MesosClient mesosClient, SingularityTaskMetadataConfiguration taskMetadataConfiguration,
-      SingularityAuthorizationHelper authorizationHelper, Optional<SingularityUser> user, RequestManager requestManager, SingularityValidator validator) {
+                      SingularityAuthorizationHelper authorizationHelper, Optional<SingularityUser> user, RequestManager requestManager, SingularityValidator validator,
+                      @Named(SingularityResourceModule.PROXY_TO_LEADER_HTTP_CLIENT) HttpClient httpClient, SingularityLeaderLatch leaderLatch) {
+    super(httpClient, leaderLatch);
     this.taskManager = taskManager;
     this.taskRequestManager = taskRequestManager;
     this.taskMetadataConfiguration = taskMetadataConfiguration;
@@ -265,8 +272,8 @@ public class TaskResource {
 
   @DELETE
   @Path("/task/{taskId}")
-  public SingularityTaskCleanup killTask(@PathParam("taskId") String taskId) {
-    return killTask(taskId, Optional.<SingularityKillTaskRequest> absent());
+  public SingularityTaskCleanup killTask(@PathParam("taskId") String taskId, @Context HttpServletRequest requestContext) {
+    return killTask(taskId, Optional.absent(), requestContext);
   }
 
   @DELETE
@@ -276,7 +283,12 @@ public class TaskResource {
   @ApiResponses({
     @ApiResponse(code=409, message="Task already has a cleanup request (can be overridden with override=true)")
   })
-  public SingularityTaskCleanup killTask(@PathParam("taskId") String taskId, Optional<SingularityKillTaskRequest> killTaskRequest) {
+  public SingularityTaskCleanup killTask(@PathParam("taskId") String taskId, Optional<SingularityKillTaskRequest> killTaskRequest,
+                                         @Context HttpServletRequest requestContext) {
+    if (!leaderLatch.hasLeadership()) {
+      return proxyToLeader(requestContext, SingularityTaskCleanup.class);
+    }
+
     final SingularityTask task = checkActiveTask(taskId, SingularityAuthorizationScope.WRITE);
 
     Optional<String> message = Optional.absent();

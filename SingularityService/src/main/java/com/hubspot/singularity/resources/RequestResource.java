@@ -92,18 +92,16 @@ public class RequestResource extends AbstractRequestResource {
   private final SingularityMailer mailer;
   private final TaskManager taskManager;
   private final RequestHelper requestHelper;
-  private final SingularityLeaderLatch leaderLatch;
 
   @Inject
   public RequestResource(SingularityValidator validator, DeployManager deployManager, TaskManager taskManager, RequestManager requestManager, SingularityMailer mailer,
-    SingularityAuthorizationHelper authorizationHelper, Optional<SingularityUser> user, RequestHelper requestHelper, SingularityLeaderLatch leaderLatch,
+                         SingularityAuthorizationHelper authorizationHelper, Optional<SingularityUser> user, RequestHelper requestHelper, SingularityLeaderLatch leaderLatch,
                          @Named(SingularityResourceModule.PROXY_TO_LEADER_HTTP_CLIENT) HttpClient httpClient) {
     super(requestManager, deployManager, user, validator, authorizationHelper, httpClient, leaderLatch);
 
     this.mailer = mailer;
     this.taskManager = taskManager;
     this.requestHelper = requestHelper;
-    this.leaderLatch = leaderLatch;
   }
 
   private void submitRequest(SingularityRequest request, Optional<SingularityRequestWithState> oldRequestWithState, Optional<RequestHistoryType> historyType,

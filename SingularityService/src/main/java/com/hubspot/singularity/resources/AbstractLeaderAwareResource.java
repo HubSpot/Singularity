@@ -10,8 +10,8 @@ import com.hubspot.singularity.SingularityLeaderLatch;
 import com.hubspot.singularity.WebExceptions;
 
 public class AbstractLeaderAwareResource {
-  private final HttpClient httpClient;
-  private final SingularityLeaderLatch leaderLatch;
+  protected final HttpClient httpClient;
+  protected final SingularityLeaderLatch leaderLatch;
 
   public AbstractLeaderAwareResource(HttpClient httpClient, SingularityLeaderLatch leaderLatch) {
     this.httpClient = httpClient;

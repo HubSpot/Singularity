@@ -18,6 +18,7 @@ import com.hubspot.singularity.SingularityPendingTask;
 import com.hubspot.singularity.SingularityPendingTaskId;
 import com.hubspot.singularity.SingularityRequestWithState;
 import com.hubspot.singularity.SingularityTask;
+import com.hubspot.singularity.SingularityTaskCleanup;
 import com.hubspot.singularity.SingularityTaskId;
 
 @Singleton
@@ -28,6 +29,7 @@ public class SingularityLeaderCache {
   private Map<SingularityPendingTaskId, SingularityPendingTask> pendingTaskIdToPendingTask;
   private Set<SingularityTaskId> activeTaskIds;
   private Map<String, SingularityRequestWithState> requests;
+  private Map<SingularityTaskId, SingularityTaskCleanup> cleanupTasks;
 
   private volatile boolean active;
 
@@ -47,14 +49,17 @@ public class SingularityLeaderCache {
 
   public void cacheActiveTaskIds(List<SingularityTaskId> activeTaskIds) {
     this.activeTaskIds = Collections.synchronizedSet(new HashSet<SingularityTaskId>(activeTaskIds.size()));
-    for (SingularityTaskId activeTaskId : activeTaskIds) {
-      this.activeTaskIds.add(activeTaskId);
-    }
+    activeTaskIds.forEach(activeTaskIds::add);
   }
 
   public void cacheRequests(List<SingularityRequestWithState> requestsWithState) {
     this.requests = new ConcurrentHashMap<>(requestsWithState.size());
     requestsWithState.forEach((r) -> requests.put(r.getRequest().getId(), r));
+  }
+
+  public void cacheCleanupTasks(List<SingularityTaskCleanup> cleanups) {
+    this.cleanupTasks = new ConcurrentHashMap<>(cleanups.size());
+    cleanups.forEach((c) -> cleanupTasks.put(c.getTaskId(), c));
   }
 
   public void stop() {
@@ -170,12 +175,27 @@ public class SingularityLeaderCache {
     requests.put(requestWithState.getRequest().getId(), requestWithState);
   }
 
-  public void deleteRequest(String requestId) {
-    if (!active) {
-      LOG.warn("deleteRequest {}, but not active", requestId);
-      return;
-    }
+  public List<SingularityTaskCleanup> getCleanupTasks() {
+    return new ArrayList<>(cleanupTasks.values());
+  }
 
-    requests.remove(requestId);
+  public List<SingularityTaskId> getCleanupTaskIds() {
+    return new ArrayList<>(cleanupTasks.keySet());
+  }
+
+  public Optional<SingularityTaskCleanup> getTaskCleanup(SingularityTaskId taskId) {
+    return Optional.fromNullable(cleanupTasks.get(taskId));
+  }
+
+  public void deleteTaskCleanup(SingularityTaskId taskId) {
+    cleanupTasks.remove(taskId);
+  }
+
+  public void saveTaskCleanup(SingularityTaskCleanup cleanup) {
+    cleanupTasks.put(cleanup.getTaskId(), cleanup);
+  }
+
+  public void createTaskCleanupIfNotExists(SingularityTaskCleanup cleanup) {
+    cleanupTasks.putIfAbsent(cleanup.getTaskId(), cleanup);
   }
 }

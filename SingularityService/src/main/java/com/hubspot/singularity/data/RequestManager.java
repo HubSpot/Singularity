@@ -213,11 +213,7 @@ public class RequestManager extends CuratorAsyncManager {
 
   public SingularityCreateResult save(SingularityRequest request, RequestState state, RequestHistoryType eventType, long timestamp, Optional<String> user, Optional<String> message) {
     saveHistory(new SingularityRequestHistory(timestamp, user, eventType, request, message));
-
-    if (leaderCache.active()) {
-      leaderCache.putRequest(new SingularityRequestWithState(request, state, timestamp));
-    }
-
+    leaderCache.putRequest(new SingularityRequestWithState(request, state, timestamp));
     return save(getRequestPath(request.getId()), new SingularityRequestWithState(request, state, timestamp), requestTranscoder);
   }
 
