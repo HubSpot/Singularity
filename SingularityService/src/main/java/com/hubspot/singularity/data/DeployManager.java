@@ -98,7 +98,7 @@ public class DeployManager extends CuratorAsyncManager {
       paths.add(getDeployIdPath(requestId));
     }
 
-    return getChildrenAsIdsForParents(BY_REQUEST_ROOT, paths, deployKeyTranscoder);
+    return getChildrenAsIdsForParents("getAllDeployIds", paths, deployKeyTranscoder);
   }
 
   @Timed
@@ -109,7 +109,7 @@ public class DeployManager extends CuratorAsyncManager {
       paths.add(getRequestDeployStatePath(requestId));
     }
 
-    return Maps.uniqueIndex(getAsync("request_deploy_states", paths, requestDeployStateTranscoder), new Function<SingularityRequestDeployState, String>() {
+    return Maps.uniqueIndex(getAsync("getRequestDeployStatesByRequestIds", paths, requestDeployStateTranscoder), new Function<SingularityRequestDeployState, String>() {
 
       @Override
       public String apply(SingularityRequestDeployState input) {
@@ -174,7 +174,7 @@ public class DeployManager extends CuratorAsyncManager {
       paths.add(getDeployDataPath(deployKey.getRequestId(), deployKey.getDeployId()));
     }
 
-    final List<SingularityDeploy> deploys = getAsync("deploys-by-key", paths, deployTranscoder);
+    final List<SingularityDeploy> deploys = getAsync("getDeploysForKeys", paths, deployTranscoder);
 
     final Map<SingularityDeployKey, SingularityDeploy> deployKeyToDeploy = Maps.uniqueIndex(deploys, new Function<SingularityDeploy, SingularityDeployKey>() {
       @Override

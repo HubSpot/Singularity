@@ -70,11 +70,9 @@ public class SMTPConfiguration {
   @JsonProperty
   private List<String> taskEmailTailFiles = Arrays.asList("stdout", "stderr");
 
-  @NotNull
   @JsonProperty
   private Optional<String> taskLogErrorRegex = Optional.absent();
 
-  @NotNull
   @JsonProperty
   private Optional<Boolean> taskLogErrorRegexCaseSensitive = Optional.absent();
 
