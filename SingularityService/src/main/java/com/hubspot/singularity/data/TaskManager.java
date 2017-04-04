@@ -13,6 +13,7 @@ import org.apache.curator.framework.api.transaction.CuratorTransactionFinal;
 import org.apache.curator.utils.ZKPaths;
 import org.apache.mesos.Protos.TaskStatus;
 import org.apache.zookeeper.KeeperException;
+import org.apache.zookeeper.data.Stat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -899,4 +900,20 @@ public class TaskManager extends CuratorAsyncManager {
     return delete(getHistoryPath(taskId));
   }
 
+  public void purgeStaleRequests(List<String> activeRequestIds, long deleteBeforeTime) {
+    final List<String> requestIds = getChildren(HISTORY_PATH_ROOT);
+    for (String requestId : requestIds) {
+      if (!activeRequestIds.contains(requestId)) {
+        String path = getRequestPath(requestId);
+        Optional<Stat> maybeStat = checkExists(path);
+        if (maybeStat.isPresent() && maybeStat.get().getMtime() < deleteBeforeTime && getChildren(path).size() == 0) {
+          delete(path);
+        }
+      }
+    }
+  }
+
+  public SingularityDeleteResult deleteRequestId(String requestId) {
+    return delete(getRequestPath(requestId));
+  }
 }
