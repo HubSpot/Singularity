@@ -11,6 +11,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.hubspot.singularity.SingularityPendingTask;
 import com.hubspot.singularity.SingularityPendingTaskId;
+import com.hubspot.singularity.SingularityRequestWithState;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskCleanup;
 import com.hubspot.singularity.SingularityTaskId;
@@ -28,6 +29,9 @@ public class SingularityWebCache {
   private volatile Map<SingularityTaskId, SingularityTask> cachedActiveTasks;
   private volatile long lastActiveTaskCache;
 
+  private volatile  Map<String, SingularityRequestWithState> cachedRequests;
+  private volatile long lastRequestsCache;
+
   private final long cacheForMillis;
 
   private final Meter cleanupHitMeter;
@@ -38,6 +42,9 @@ public class SingularityWebCache {
 
   private final Meter activeHitMeter;
   private final Meter activeMissMeter;
+
+  private final Meter requestsHitMeter;
+  private final Meter requestsMissMeter;
 
   @Inject
   public SingularityWebCache(SingularityConfiguration configuration, MetricRegistry metrics) {
@@ -51,6 +58,9 @@ public class SingularityWebCache {
 
     this.activeHitMeter = metrics.meter("zk.web.caches.active.hits");
     this.activeMissMeter = metrics.meter("zk.web.caches.active.miss");
+
+    this.requestsHitMeter = metrics.meter("zk.web.caches.requests.hits");
+    this.requestsMissMeter = metrics.meter("zk.web.caches.requests.miss");
   }
 
   public boolean useCachedPendingTasks() {
@@ -63,6 +73,10 @@ public class SingularityWebCache {
 
   public boolean useCachedActiveTasks() {
     return useCache(lastActiveTaskCache);
+  }
+
+  public boolean useCachedRequests() {
+    return useCache(lastRequestsCache);
   }
 
   private boolean useCache(long lastCache) {
@@ -94,6 +108,11 @@ public class SingularityWebCache {
     return new ArrayList<>(cachedActiveTasks.values());
   }
 
+  public List<SingularityRequestWithState> getRequests() {
+    requestsHitMeter.mark();
+    return new ArrayList<>(cachedRequests.values());
+  }
+
   public void cacheTaskCleanup(List<SingularityTaskCleanup> newTaskCleanup) {
     cleanupMissMeter.mark();
     cachedTaskCleanup = new ArrayList<>(newTaskCleanup);
@@ -118,6 +137,16 @@ public class SingularityWebCache {
     }
     cachedActiveTasks = newActiveTasks;
     lastActiveTaskCache = System.currentTimeMillis();
+  }
+
+  public void cacheRequests(List<SingularityRequestWithState> requests) {
+    activeMissMeter.mark();
+    Map<String, SingularityRequestWithState> newRequests = new HashMap<>(requests.size());
+    for (SingularityRequestWithState request : requests) {
+      newRequests.put(request.getRequest().getId(), request);
+    }
+    cachedRequests = newRequests;
+    lastRequestsCache = System.currentTimeMillis();
   }
 
 }

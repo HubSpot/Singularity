@@ -3,6 +3,7 @@ package com.hubspot.singularity.data;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.utils.ZKPaths;
@@ -41,6 +42,7 @@ import com.hubspot.singularity.expiring.SingularityExpiringPause;
 import com.hubspot.singularity.expiring.SingularityExpiringRequestActionParent;
 import com.hubspot.singularity.expiring.SingularityExpiringScale;
 import com.hubspot.singularity.expiring.SingularityExpiringSkipHealthchecks;
+import com.hubspot.singularity.scheduler.SingularityLeaderCache;
 
 @Singleton
 public class RequestManager extends CuratorAsyncManager {
@@ -55,6 +57,9 @@ public class RequestManager extends CuratorAsyncManager {
 
   private final SingularityEventListener singularityEventListener;
   private final ZkChildrenCache requestIdCache;
+
+  private final SingularityWebCache webCache;
+  private final SingularityLeaderCache leaderCache;
 
   private static final String REQUEST_ROOT = "/requests";
 
@@ -83,7 +88,8 @@ public class RequestManager extends CuratorAsyncManager {
   public RequestManager(CuratorFramework curator, SingularityConfiguration configuration, MetricRegistry metricRegistry, SingularityEventListener singularityEventListener, @Named(SingularityDataModule.REQUEST_ID_CACHE_NAME) ZkChildrenCache requestIdCache,
       Transcoder<SingularityRequestCleanup> requestCleanupTranscoder, Transcoder<SingularityRequestWithState> requestTranscoder, Transcoder<SingularityRequestLbCleanup> requestLbCleanupTranscoder,
       Transcoder<SingularityPendingRequest> pendingRequestTranscoder, Transcoder<SingularityRequestHistory> requestHistoryTranscoder, Transcoder<SingularityExpiringBounce> expiringBounceTranscoder,
-      Transcoder<SingularityExpiringScale> expiringScaleTranscoder,  Transcoder<SingularityExpiringPause> expiringPauseTranscoder, Transcoder<SingularityExpiringSkipHealthchecks> expiringSkipHealthchecksTranscoder) {
+      Transcoder<SingularityExpiringScale> expiringScaleTranscoder,  Transcoder<SingularityExpiringPause> expiringPauseTranscoder, Transcoder<SingularityExpiringSkipHealthchecks> expiringSkipHealthchecksTranscoder,
+      SingularityWebCache webCache, SingularityLeaderCache leaderCache) {
     super(curator, configuration, metricRegistry);
     this.requestTranscoder = requestTranscoder;
     this.requestCleanupTranscoder = requestCleanupTranscoder;
@@ -99,6 +105,9 @@ public class RequestManager extends CuratorAsyncManager {
         SingularityExpiringScale.class, expiringScaleTranscoder,
         SingularityExpiringSkipHealthchecks.class, expiringSkipHealthchecksTranscoder
         );
+
+    this.leaderCache = leaderCache;
+    this.webCache = webCache;
   }
 
   private String getRequestPath(String requestId) {
@@ -282,6 +291,20 @@ public class RequestManager extends CuratorAsyncManager {
   }
 
   public List<SingularityRequestWithState> getRequests(Collection<String> requestIds) {
+    return getRequests(requestIds, false);
+  }
+
+  public List<SingularityRequestWithState> getRequests(Collection<String> requestIds, boolean useWebCache) {
+    if (useWebCache) {
+      if (webCache.useCachedRequests()) {
+        return webCache.getRequests().stream().filter((r) -> requestIds.contains(r.getRequest().getId())).collect(Collectors.toList());
+      } else {
+        List<SingularityRequestWithState> requests = getRequests(useWebCache);
+        webCache.cacheRequests(requests);
+        return requests.stream().filter((r) -> requestIds.contains(r.getRequest().getId())).collect(Collectors.toList());
+      }
+    }
+
     final List<String> paths = Lists.newArrayListWithCapacity(requestIds.size());
     for (String requestId : requestIds) {
       paths.add(getRequestPath(requestId));
@@ -306,29 +329,47 @@ public class RequestManager extends CuratorAsyncManager {
     });
   }
 
-  private Iterable<SingularityRequestWithState> getRequests(RequestState... states) {
-    return filter(getRequests(), states);
+  private Iterable<SingularityRequestWithState> getRequests(boolean useWebCache, RequestState... states) {
+    return filter(getRequests(useWebCache), states);
   }
 
-  public Iterable<SingularityRequestWithState> getPausedRequests() {
-    return getRequests(RequestState.PAUSED);
+  public Iterable<SingularityRequestWithState> getPausedRequests(boolean useWebCache) {
+    return getRequests(useWebCache, RequestState.PAUSED);
   }
 
   public Iterable<SingularityRequestWithState> getActiveRequests() {
-    return getRequests(RequestState.ACTIVE, RequestState.DEPLOYING_TO_UNPAUSE);
+    return getActiveRequests(false);
   }
 
-  public Iterable<SingularityRequestWithState> getCooldownRequests() {
-    return getRequests(RequestState.SYSTEM_COOLDOWN);
+  public Iterable<SingularityRequestWithState> getActiveRequests(boolean useWebCache) {
+    return getRequests(useWebCache, RequestState.ACTIVE, RequestState.DEPLOYING_TO_UNPAUSE);
   }
 
-  public Iterable<SingularityRequestWithState> getFinishedRequests() {
-    return getRequests(RequestState.FINISHED);
+  public Iterable<SingularityRequestWithState> getCooldownRequests(boolean useWebCache) {
+    return getRequests(useWebCache, RequestState.SYSTEM_COOLDOWN);
+  }
+
+  public Iterable<SingularityRequestWithState> getFinishedRequests(boolean useWebCache) {
+    return getRequests(useWebCache, RequestState.FINISHED);
   }
 
   public List<SingularityRequestWithState> getRequests() {
-    return getAsyncChildren(NORMAL_PATH_ROOT, Optional.of(requestIdCache), requestTranscoder);
+    return getRequests(false);
   }
+
+  public List<SingularityRequestWithState> getRequests(boolean useWebCache) {
+    if (useWebCache && webCache.useCachedRequests()) {
+      return webCache.getRequests();
+    }
+    List<SingularityRequestWithState> requests = getAsyncChildren(NORMAL_PATH_ROOT, Optional.of(requestIdCache), requestTranscoder);
+
+    if (useWebCache) {
+      webCache.cacheRequests(requests);
+    }
+    return requests;
+  }
+
+
 
   public Optional<SingularityRequestWithState> getRequest(String requestId) {
     return getData(getRequestPath(requestId), requestTranscoder);
