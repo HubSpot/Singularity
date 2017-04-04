@@ -158,10 +158,6 @@ public class RequestManager extends CuratorAsyncManager {
     return getNumChildren(LB_CLEANUP_PATH_ROOT);
   }
 
-  public int getNumRequests() {
-    return getNumChildren(NORMAL_PATH_ROOT);
-  }
-
   public SingularityDeleteResult deletePendingRequest(SingularityPendingRequest pendingRequest) {
     return delete(getPendingPath(pendingRequest));
   }
@@ -217,6 +213,10 @@ public class RequestManager extends CuratorAsyncManager {
 
   public SingularityCreateResult save(SingularityRequest request, RequestState state, RequestHistoryType eventType, long timestamp, Optional<String> user, Optional<String> message) {
     saveHistory(new SingularityRequestHistory(timestamp, user, eventType, request, message));
+
+    if (leaderCache.active()) {
+      leaderCache.putRequest(new SingularityRequestWithState(request, state, timestamp));
+    }
 
     return save(getRequestPath(request.getId()), new SingularityRequestWithState(request, state, timestamp), requestTranscoder);
   }
@@ -295,11 +295,15 @@ public class RequestManager extends CuratorAsyncManager {
   }
 
   public List<SingularityRequestWithState> getRequests(Collection<String> requestIds, boolean useWebCache) {
+    if (leaderCache.active()) {
+      return leaderCache.getRequests().stream().filter((r) -> requestIds.contains(r.getRequest().getId())).collect(Collectors.toList());
+    }
+
     if (useWebCache) {
       if (webCache.useCachedRequests()) {
         return webCache.getRequests().stream().filter((r) -> requestIds.contains(r.getRequest().getId())).collect(Collectors.toList());
       } else {
-        List<SingularityRequestWithState> requests = getRequests(useWebCache);
+        List<SingularityRequestWithState> requests = getRequests(true);
         webCache.cacheRequests(requests);
         return requests.stream().filter((r) -> requestIds.contains(r.getRequest().getId())).collect(Collectors.toList());
       }
@@ -353,11 +357,19 @@ public class RequestManager extends CuratorAsyncManager {
     return getRequests(useWebCache, RequestState.FINISHED);
   }
 
+  public void activateLeaderCache() {
+    leaderCache.cacheRequests(getRequests());
+  }
+
   public List<SingularityRequestWithState> getRequests() {
     return getRequests(false);
   }
 
   public List<SingularityRequestWithState> getRequests(boolean useWebCache) {
+    if (leaderCache.active()) {
+      return leaderCache.getRequests();
+    }
+
     if (useWebCache && webCache.useCachedRequests()) {
       return webCache.getRequests();
     }

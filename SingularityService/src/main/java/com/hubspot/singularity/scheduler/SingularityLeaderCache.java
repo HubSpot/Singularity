@@ -16,6 +16,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.hubspot.singularity.SingularityPendingTask;
 import com.hubspot.singularity.SingularityPendingTaskId;
+import com.hubspot.singularity.SingularityRequestWithState;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskId;
 
@@ -26,6 +27,7 @@ public class SingularityLeaderCache {
 
   private Map<SingularityPendingTaskId, SingularityPendingTask> pendingTaskIdToPendingTask;
   private Set<SingularityTaskId> activeTaskIds;
+  private Map<String, SingularityRequestWithState> requests;
 
   private volatile boolean active;
 
@@ -40,9 +42,7 @@ public class SingularityLeaderCache {
 
   public void cachePendingTasks(List<SingularityPendingTask> pendingTasks) {
     this.pendingTaskIdToPendingTask = new ConcurrentHashMap<>(pendingTasks.size());
-    for (SingularityPendingTask pendingTask : pendingTasks) {
-      this.pendingTaskIdToPendingTask.put(pendingTask.getPendingTaskId(), pendingTask);
-    }
+    pendingTasks.forEach((t) -> pendingTaskIdToPendingTask.put(t.getPendingTaskId(), t));
   }
 
   public void cacheActiveTaskIds(List<SingularityTaskId> activeTaskIds) {
@@ -50,6 +50,11 @@ public class SingularityLeaderCache {
     for (SingularityTaskId activeTaskId : activeTaskIds) {
       this.activeTaskIds.add(activeTaskId);
     }
+  }
+
+  public void cacheRequests(List<SingularityRequestWithState> requestsWithState) {
+    this.requests = new ConcurrentHashMap<>(requestsWithState.size());
+    requestsWithState.forEach((r) -> requests.put(r.getRequest().getId(), r));
   }
 
   public void stop() {
@@ -152,4 +157,25 @@ public class SingularityLeaderCache {
     activeTaskIds.add(task.getTaskId());
   }
 
+  public List<SingularityRequestWithState> getRequests() {
+    return new ArrayList<>(requests.values());
+  }
+
+  public void putRequest(SingularityRequestWithState requestWithState) {
+    if (!active) {
+      LOG.warn("putRequest {}, but not active", requestWithState.getRequest().getId());
+      return;
+    }
+
+    requests.put(requestWithState.getRequest().getId(), requestWithState);
+  }
+
+  public void deleteRequest(String requestId) {
+    if (!active) {
+      LOG.warn("deleteRequest {}, but not active", requestId);
+      return;
+    }
+
+    requests.remove(requestId);
+  }
 }

@@ -479,7 +479,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
 
     Assert.assertTrue(requestManager.getPendingRequests().isEmpty());
 
-    requestResource.scheduleImmediately(requestId);
+    requestResource.scheduleImmediately(requestId, Optional.absent());
 
     resourceOffers();
 
@@ -491,7 +491,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     Assert.assertEquals(0, taskManager.getActiveTaskIds().size());
     Assert.assertEquals(0, taskManager.getPendingTaskIds().size());
 
-    requestResource.scheduleImmediately(requestId);
+    requestResource.scheduleImmediately(requestId, Optional.absent());
 
     resourceOffers();
 
@@ -510,7 +510,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     requestResource.postRequest(bldr.build());
     deploy("d2");
 
-    requestResource.scheduleImmediately(requestId);
+    requestResource.scheduleImmediately(requestId, Optional.absent());
 
     validateTaskDoesntMoveDuringDecommission();
   }
@@ -1294,21 +1294,21 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     deploy("d2");
     deployChecker.checkDeploys();
 
-    requestResource.scheduleImmediately(requestId);
+    requestResource.scheduleImmediately(requestId, Optional.absent());
 
     resourceOffers();
 
-    requestResource.scheduleImmediately(requestId);
+    requestResource.scheduleImmediately(requestId, Optional.absent());
 
     resourceOffers();
 
     Assert.assertEquals(2, taskManager.getActiveTaskIds().size());
 
-    requestResource.scheduleImmediately(requestId);
+    requestResource.scheduleImmediately(requestId, Optional.absent());
 
     scheduler.drainPendingQueue(stateCacheProvider.get());
 
-    requestResource.scheduleImmediately(requestId);
+    requestResource.scheduleImmediately(requestId, Optional.absent());
 
     scheduler.drainPendingQueue(stateCacheProvider.get());
 
@@ -1616,8 +1616,8 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
         new SingularityPriorityFreezeParent(new SingularityPriorityFreeze(0.3, true, Optional.<String>absent(), Optional.<String>absent()), System.currentTimeMillis(), Optional.<String>absent()));
 
     // launch both tasks
-    requestResource.scheduleImmediately(lowPriorityRequest.getId());
-    requestResource.scheduleImmediately(mediumPriorityRequest.getId());
+    requestResource.scheduleImmediately(lowPriorityRequest.getId(), Optional.absent());
+    requestResource.scheduleImmediately(mediumPriorityRequest.getId(), Optional.absent());
 
     // drain pending queue
     scheduler.drainPendingQueue(stateCacheProvider.get());

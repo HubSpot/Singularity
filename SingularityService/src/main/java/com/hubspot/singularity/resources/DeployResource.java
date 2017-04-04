@@ -17,6 +17,8 @@ import javax.ws.rs.core.MediaType;
 
 import com.google.common.base.Optional;
 import com.google.inject.Inject;
+import com.google.inject.name.Named;
+import com.hubspot.horizon.HttpClient;
 import com.hubspot.jackson.jaxrs.PropertyFiltering;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.DeployState;
@@ -27,6 +29,7 @@ import com.hubspot.singularity.SingularityCreateResult;
 import com.hubspot.singularity.SingularityDeploy;
 import com.hubspot.singularity.SingularityDeployMarker;
 import com.hubspot.singularity.SingularityDeployProgress;
+import com.hubspot.singularity.SingularityLeaderLatch;
 import com.hubspot.singularity.SingularityLoadBalancerUpdate;
 import com.hubspot.singularity.SingularityPendingDeploy;
 import com.hubspot.singularity.SingularityPendingRequest;
@@ -62,8 +65,10 @@ public class DeployResource extends AbstractRequestResource {
   private final TaskManager taskManager;
 
   @Inject
-  public DeployResource(RequestManager requestManager, DeployManager deployManager, SingularityValidator validator, SingularityAuthorizationHelper authorizationHelper, Optional<SingularityUser> user, SingularityConfiguration configuration, TaskManager taskManager) {
-    super(requestManager, deployManager, user, validator, authorizationHelper);
+  public DeployResource(RequestManager requestManager, DeployManager deployManager, SingularityValidator validator, SingularityAuthorizationHelper authorizationHelper, Optional<SingularityUser> user,
+                        SingularityConfiguration configuration, TaskManager taskManager, SingularityLeaderLatch leaderLatch,
+                        @Named(SingularityResourceModule.PROXY_TO_LEADER_HTTP_CLIENT) HttpClient httpClient) {
+    super(requestManager, deployManager, user, validator, authorizationHelper, httpClient, leaderLatch);
     this.configuration = configuration;
     this.taskManager = taskManager;
   }
