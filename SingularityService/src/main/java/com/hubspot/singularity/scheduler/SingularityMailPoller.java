@@ -50,7 +50,7 @@ public class SingularityMailPoller extends SingularityLeaderOnlyPoller {
 
   @Override
   protected boolean isEnabled() {
-    return configuration.getSmtpConfiguration().isPresent();
+    return configuration.getSmtpConfigurationOptional().isPresent();
   }
 
   private enum ShouldSendMailState {

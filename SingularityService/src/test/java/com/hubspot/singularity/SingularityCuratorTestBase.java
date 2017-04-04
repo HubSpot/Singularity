@@ -7,6 +7,7 @@ import org.junit.Before;
 
 import com.google.inject.Inject;
 import com.hubspot.singularity.scheduler.SingularityTestModule;
+import com.squarespace.jersey2.guice.JerseyGuiceUtils;
 
 public class SingularityCuratorTestBase {
 
@@ -21,6 +22,7 @@ public class SingularityCuratorTestBase {
 
   @Before
   public final void curatorSetup() throws Exception {
+    JerseyGuiceUtils.reset();
     singularityTestModule = new SingularityTestModule(useDBTests);
 
     singularityTestModule.getInjector().injectMembers(this);

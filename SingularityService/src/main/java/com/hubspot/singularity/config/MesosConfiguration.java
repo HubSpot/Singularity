@@ -25,7 +25,6 @@ public class MesosConfiguration {
 
   private boolean checkpoint = true;
 
-  @NotNull
   private Optional<String> frameworkRole = Optional.absent();
 
   @NotNull
@@ -35,7 +34,7 @@ public class MesosConfiguration {
   private String defaultRackId = "DEFAULT";
 
   private int slaveHttpPort = 5051;
-  @NotNull
+
   private Optional<Integer> slaveHttpsPort = Optional.absent();
 
   private int maxNumInstancesPerRequest = 25;
