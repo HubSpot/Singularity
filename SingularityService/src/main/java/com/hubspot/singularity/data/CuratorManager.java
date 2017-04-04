@@ -192,7 +192,7 @@ public abstract class CuratorManager {
     } catch (Throwable t) {
       throw Throwables.propagate(t);
     } finally {
-      log(OperationType.DELETE, Optional.<Integer> absent(), Optional.<Integer> absent(), start, path);
+      log(OperationType.DELETE, Optional.absent(), Optional.<Integer> absent(), start, path);
     }
   }
 
@@ -321,7 +321,7 @@ public abstract class CuratorManager {
     } catch (Throwable t) {
       throw Throwables.propagate(t);
     } finally {
-      log(OperationType.GET, Optional.<Integer> absent(), Optional.<Integer> of(bytes), start, path);
+      log(OperationType.GET, Optional.absent(), Optional.<Integer> of(bytes), start, path);
     }
   }
 
