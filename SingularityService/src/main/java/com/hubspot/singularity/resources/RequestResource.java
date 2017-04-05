@@ -252,6 +252,10 @@ public class RequestResource extends AbstractRequestResource {
     return scheduleImmediately(requestId, requestContext, Optional.absent());
   }
 
+  public SingularityPendingRequestParent scheduleImmediately(String requestId) {
+    return scheduleImmediately(requestId, Optional.absent())
+  }
+
   @POST
   @Path("/request/{requestId}/run")
   @Consumes({ MediaType.APPLICATION_JSON })
