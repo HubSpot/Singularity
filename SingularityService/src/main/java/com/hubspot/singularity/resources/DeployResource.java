@@ -17,6 +17,7 @@ import javax.ws.rs.core.MediaType;
 
 import org.apache.curator.framework.recipes.leader.LeaderLatch;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
@@ -31,7 +32,6 @@ import com.hubspot.singularity.SingularityCreateResult;
 import com.hubspot.singularity.SingularityDeploy;
 import com.hubspot.singularity.SingularityDeployMarker;
 import com.hubspot.singularity.SingularityDeployProgress;
-import com.hubspot.singularity.SingularityLeaderLatch;
 import com.hubspot.singularity.SingularityLoadBalancerUpdate;
 import com.hubspot.singularity.SingularityPendingDeploy;
 import com.hubspot.singularity.SingularityPendingRequest;
@@ -69,8 +69,8 @@ public class DeployResource extends AbstractRequestResource {
   @Inject
   public DeployResource(RequestManager requestManager, DeployManager deployManager, SingularityValidator validator, SingularityAuthorizationHelper authorizationHelper, Optional<SingularityUser> user,
                         SingularityConfiguration configuration, TaskManager taskManager, LeaderLatch leaderLatch,
-                        @Named(SingularityResourceModule.PROXY_TO_LEADER_HTTP_CLIENT) HttpClient httpClient) {
-    super(requestManager, deployManager, user, validator, authorizationHelper, httpClient, leaderLatch);
+                        @Named(SingularityResourceModule.PROXY_TO_LEADER_HTTP_CLIENT) HttpClient httpClient, ObjectMapper objectMapper) {
+    super(requestManager, deployManager, user, validator, authorizationHelper, httpClient, leaderLatch, objectMapper);
     this.configuration = configuration;
     this.taskManager = taskManager;
   }

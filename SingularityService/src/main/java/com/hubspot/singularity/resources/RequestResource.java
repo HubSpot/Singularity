@@ -28,6 +28,7 @@ import org.apache.curator.framework.recipes.leader.LeaderLatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Iterables;
@@ -103,8 +104,8 @@ public class RequestResource extends AbstractRequestResource {
   @Inject
   public RequestResource(SingularityValidator validator, DeployManager deployManager, TaskManager taskManager, RequestManager requestManager, SingularityMailer mailer,
                          SingularityAuthorizationHelper authorizationHelper, Optional<SingularityUser> user, RequestHelper requestHelper, LeaderLatch leaderLatch,
-                         DisasterManager disasterManager, @Named(SingularityResourceModule.PROXY_TO_LEADER_HTTP_CLIENT) HttpClient httpClient) {
-    super(requestManager, deployManager, user, validator, authorizationHelper, httpClient, leaderLatch);
+                         DisasterManager disasterManager, @Named(SingularityResourceModule.PROXY_TO_LEADER_HTTP_CLIENT) HttpClient httpClient, ObjectMapper objectMapper) {
+    super(requestManager, deployManager, user, validator, authorizationHelper, httpClient, leaderLatch, objectMapper);
     this.mailer = mailer;
     this.taskManager = taskManager;
     this.requestHelper = requestHelper;
@@ -154,7 +155,7 @@ public class RequestResource extends AbstractRequestResource {
   public SingularityRequestParent postRequest(@Context HttpServletRequest requestContext,
                                               @ApiParam("The Singularity request to create or update") SingularityRequest request) {
     if (!leaderLatch.hasLeadership()) {
-      return proxyToLeader(requestContext, SingularityRequestParent.class);
+      return proxyToLeader(requestContext, SingularityRequestParent.class, request);
     }
     return postRequest(request);
   }
@@ -188,7 +189,7 @@ public class RequestResource extends AbstractRequestResource {
                                          @Context HttpServletRequest requestContext,
                                          @ApiParam("Bounce request options") Optional<SingularityBounceRequest> bounceRequest) {
     if (!leaderLatch.hasLeadership()) {
-      return proxyToLeader(requestContext, SingularityRequestParent.class);
+      return proxyToLeader(requestContext, SingularityRequestParent.class, bounceRequest.orNull());
     }
     return bounce(requestId, bounceRequest);
   }
@@ -262,7 +263,7 @@ public class RequestResource extends AbstractRequestResource {
                                                              @Context HttpServletRequest requestContext,
                                                              Optional<SingularityRunNowRequest> runNowRequest) {
     if (!leaderLatch.hasLeadership()) {
-      return proxyToLeader(requestContext, SingularityPendingRequestParent.class);
+      return proxyToLeader(requestContext, SingularityPendingRequestParent.class, runNowRequest.orNull());
     }
     return scheduleImmediately(requestId, runNowRequest);
   }
@@ -353,7 +354,7 @@ public class RequestResource extends AbstractRequestResource {
                                         @Context HttpServletRequest requestContext,
                                         @ApiParam("Pause Request Options") Optional<SingularityPauseRequest> pauseRequest) {
     if (!leaderLatch.hasLeadership()) {
-      return proxyToLeader(requestContext, SingularityRequestParent.class);
+      return proxyToLeader(requestContext, SingularityRequestParent.class, pauseRequest.orNull());
     }
     return pause(requestId, pauseRequest);
   }
@@ -421,7 +422,7 @@ public class RequestResource extends AbstractRequestResource {
                                           @Context HttpServletRequest requestContext,
                                           Optional<SingularityUnpauseRequest> unpauseRequest) {
     if (!leaderLatch.hasLeadership()) {
-      return proxyToLeader(requestContext, SingularityRequestParent.class);
+      return proxyToLeader(requestContext, SingularityRequestParent.class, unpauseRequest.orNull());
     }
     return unpause(requestId, unpauseRequest);
   }
@@ -467,7 +468,7 @@ public class RequestResource extends AbstractRequestResource {
                                                @Context HttpServletRequest requestContext,
                                                Optional<SingularityExitCooldownRequest> exitCooldownRequest) {
     if(!leaderLatch.hasLeadership()) {
-      return proxyToLeader(requestContext, SingularityRequestParent.class);
+      return proxyToLeader(requestContext, SingularityRequestParent.class, exitCooldownRequest.orNull());
     }
     final SingularityRequestWithState requestWithState = fetchRequestWithState(requestId);
 
@@ -602,7 +603,7 @@ public class RequestResource extends AbstractRequestResource {
   @Path("/request/{requestId}")
   public SingularityRequest deleteRequest(@PathParam("requestId") String requestId,
                                           @Context HttpServletRequest requestContext) {
-    return deleteRequest(requestId, Optional.<SingularityDeleteRequestRequest> absent(), requestContext);
+    return deleteRequest(requestId, requestContext, Optional.absent());
   }
 
   @DELETE
@@ -613,10 +614,10 @@ public class RequestResource extends AbstractRequestResource {
     @ApiResponse(code=404, message="No Request with that ID"),
   })
   public SingularityRequest deleteRequest(@ApiParam("The request ID to delete.") @PathParam("requestId") String requestId,
-                                          @ApiParam("Delete options") Optional<SingularityDeleteRequestRequest> deleteRequest,
-                                          @Context HttpServletRequest requestContext) {
+                                          @Context HttpServletRequest requestContext,
+                                          @ApiParam("Delete options") Optional<SingularityDeleteRequestRequest> deleteRequest) {
     if (!leaderLatch.hasLeadership()) {
-      return proxyToLeader(requestContext, SingularityRequest.class);
+      return proxyToLeader(requestContext, SingularityRequest.class, deleteRequest.orNull());
     }
 
     return deleteRequest(requestId, deleteRequest);
@@ -654,7 +655,7 @@ public class RequestResource extends AbstractRequestResource {
                                         @Context HttpServletRequest requestContext,
                                         @ApiParam("Object to hold number of instances to request") SingularityScaleRequest scaleRequest) {
     if (!leaderLatch.hasLeadership()) {
-      return proxyToLeader(requestContext, SingularityRequestParent.class);
+      return proxyToLeader(requestContext, SingularityRequestParent.class, scaleRequest);
     }
 
     return scale(requestId, scaleRequest);
@@ -787,7 +788,7 @@ public class RequestResource extends AbstractRequestResource {
                                                    @Context HttpServletRequest requestContext,
                                                    @ApiParam("SkipHealtchecks options") SingularitySkipHealthchecksRequest skipHealthchecksRequest) {
     if (!leaderLatch.hasLeadership()) {
-      return proxyToLeader(requestContext, SingularityRequestParent.class);
+      return proxyToLeader(requestContext, SingularityRequestParent.class, skipHealthchecksRequest);
     }
     return skipHealthchecks(requestId, skipHealthchecksRequest);
   }
