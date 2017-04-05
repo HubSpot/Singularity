@@ -595,12 +595,8 @@ public class RequestResource extends AbstractRequestResource {
   @ApiResponses({
     @ApiResponse(code=404, message="No Request with that ID"),
   })
-  public SingularityRequestParent getRequest(@ApiParam("Request ID") @PathParam("requestId") String requestId) {
-    return fillEntireRequest(fetchRequestWithState(requestId));
-  }
-
-  private SingularityRequest fetchRequest(String requestId) {
-    return fetchRequestWithState(requestId).getRequest();
+  public SingularityRequestParent getRequest(@ApiParam("Request ID") @PathParam("requestId") String requestId, @QueryParam("useWebCache") Boolean useWebCache) {
+    return fillEntireRequest(fetchRequestWithState(requestId, useWebCache(useWebCache)));
   }
 
   @DELETE
@@ -628,7 +624,7 @@ public class RequestResource extends AbstractRequestResource {
   }
 
   public SingularityRequest deleteRequest(String requestId, Optional<SingularityDeleteRequestRequest> deleteRequest) {
-    SingularityRequest request = fetchRequest(requestId);
+    SingularityRequest request = fetchRequestWithState(requestId).getRequest();
 
     authorizationHelper.checkForAuthorization(request, user, SingularityAuthorizationScope.WRITE);
     validator.checkActionEnabled(SingularityAction.REMOVE_REQUEST);
