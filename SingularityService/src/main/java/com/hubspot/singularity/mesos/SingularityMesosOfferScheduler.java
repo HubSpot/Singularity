@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import javax.inject.Singleton;
@@ -56,6 +57,8 @@ public class SingularityMesosOfferScheduler {
 
   private final Provider<SingularitySchedulerStateCache> stateCacheProvider;
   private final SchedulerDriverSupplier schedulerDriverSupplier;
+
+  private final Map<String, Integer> offerMatchAttemptsPerTask = new HashMap<>();
 
   @Inject
   public SingularityMesosOfferScheduler(MesosConfiguration mesosConfiguration,
@@ -122,7 +125,7 @@ public class SingularityMesosOfferScheduler {
       for (SingularityTaskRequestHolder taskRequestHolder : pendingTaskIdToTaskRequest.values()) {
 
         Map<SingularityOfferHolder, Double> scorePerOffer = new HashMap<>();
-
+        double minScore = minScore(taskRequestHolder.getTaskRequest());
         for (SingularityOfferHolder offerHolder : offerHolders) {
 
           if (configuration.getMaxTasksPerOffer() > 0 && offerHolder.getAcceptedTasks().size() >= configuration.getMaxTasksPerOffer()) {
@@ -131,11 +134,14 @@ public class SingularityMesosOfferScheduler {
           }
 
           double score = score(offerHolder, stateCache, tasksPerOfferPerRequest, taskRequestHolder, getSlaveUsage(currentSlaveUsages, offerHolder.getOffer().getSlaveId().getValue()));
-          if (score > 0) {
-            // todo: can short circuit here if score is high enough
+          if (score >= minScore) {
+            // todo: can short circuit here if score is high enough (>= .9)
             scorePerOffer.put(offerHolder, score);
           }
         }
+
+        offerMatchAttemptsPerTask.compute(taskRequestHolder.getTaskRequest().getPendingTask().getPendingTaskId().getId(),
+            (k, v) -> (scorePerOffer.isEmpty() ? (v == null ? offerHolders.size() : v + offerHolders.size()) : null));
 
         if (!scorePerOffer.isEmpty()) {
           SingularityOfferHolder bestOffer = Collections.max(scorePerOffer.entrySet(), Map.Entry.comparingByValue()).getKey();
@@ -273,7 +279,25 @@ public class SingularityMesosOfferScheduler {
     return score;
   }
 
-  private SingularityTask acceptTask(SingularityOfferHolder offerHolder, SingularitySchedulerStateCache stateCache, Map<String, Map<String, Integer>> tasksPerOfferPerRequest, SingularityTaskRequestHolder taskRequestHolder) {
+  private double minScore(SingularityTaskRequest taskRequest) {
+    double minScore = 0.80;
+    int maxOfferAttempts = 20;
+    long maxMillisPastDue = TimeUnit.MILLISECONDS.convert(10, TimeUnit.MINUTES);
+
+    minScore -= offerMatchAttemptsPerTask.getOrDefault(taskRequest.getPendingTask().getPendingTaskId().getId(), 0) / maxOfferAttempts;
+    minScore -= millisPastDue(taskRequest, System.currentTimeMillis()) / maxMillisPastDue;
+
+    return Math.max(minScore, 0);
+  }
+
+  private long millisPastDue(SingularityTaskRequest taskRequest, long now) {
+    return Math.max(now - taskRequest.getPendingTask().getPendingTaskId().getNextRunAt(), 1);
+  }
+
+  private SingularityTask acceptTask(SingularityOfferHolder offerHolder,
+                                     SingularitySchedulerStateCache stateCache,
+                                     Map<String, Map<String, Integer>> tasksPerOfferPerRequest,
+                                     SingularityTaskRequestHolder taskRequestHolder) {
     final SingularityTaskRequest taskRequest = taskRequestHolder.getTaskRequest();
     final SingularityTask task = mesosTaskBuilder.buildTask(offerHolder.getOffer(), offerHolder.getCurrentResources(), taskRequest, taskRequestHolder.getTaskResources(), taskRequestHolder.getExecutorResources());
 
