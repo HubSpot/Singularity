@@ -124,8 +124,9 @@ public class SingularityLeaderCache {
   }
 
   public List<String> getActiveTaskIdsAsStrings() {
-    List<String> strings = new ArrayList<>(activeTaskIds.size());
-    for (SingularityTaskId taskId : activeTaskIds) {
+    List<SingularityTaskId> localActiveTaskIds = getActiveTaskIds();
+    List<String> strings = new ArrayList<>(localActiveTaskIds.size());
+    for (SingularityTaskId taskId : localActiveTaskIds) {
       strings.add(taskId.getId());
     }
     return strings;
