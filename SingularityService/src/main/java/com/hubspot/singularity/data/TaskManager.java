@@ -777,6 +777,7 @@ public class TaskManager extends CuratorAsyncManager {
   public void activateLeaderCache() {
     leaderCache.cachePendingTasks(fetchPendingTasks());
     leaderCache.cacheActiveTaskIds(getTaskIds(ACTIVE_PATH_ROOT));
+    leaderCache.cacheCleanupTasks(getCleanupTasks());
   }
 
   private List<SingularityPendingTask> fetchPendingTasks() {
