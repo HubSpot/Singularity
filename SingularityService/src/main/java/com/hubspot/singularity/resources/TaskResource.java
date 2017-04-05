@@ -22,6 +22,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
+import org.apache.curator.framework.recipes.leader.LeaderLatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -42,7 +43,6 @@ import com.hubspot.singularity.SingularityAction;
 import com.hubspot.singularity.SingularityAuthorizationScope;
 import com.hubspot.singularity.SingularityCreateResult;
 import com.hubspot.singularity.SingularityKilledTaskIdRecord;
-import com.hubspot.singularity.SingularityLeaderLatch;
 import com.hubspot.singularity.SingularityPendingRequest;
 import com.hubspot.singularity.SingularityPendingRequest.PendingType;
 import com.hubspot.singularity.SingularityPendingTask;
@@ -97,7 +97,7 @@ public class TaskResource extends AbstractLeaderAwareResource {
   @Inject
   public TaskResource(TaskRequestManager taskRequestManager, TaskManager taskManager, SlaveManager slaveManager, MesosClient mesosClient, SingularityTaskMetadataConfiguration taskMetadataConfiguration,
                       SingularityAuthorizationHelper authorizationHelper, Optional<SingularityUser> user, RequestManager requestManager, SingularityValidator validator, DisasterManager disasterManager,
-                      @Named(SingularityResourceModule.PROXY_TO_LEADER_HTTP_CLIENT) HttpClient httpClient, SingularityLeaderLatch leaderLatch) {
+                      @Named(SingularityResourceModule.PROXY_TO_LEADER_HTTP_CLIENT) HttpClient httpClient, LeaderLatch leaderLatch) {
     super(httpClient, leaderLatch);
     this.taskManager = taskManager;
     this.taskRequestManager = taskRequestManager;

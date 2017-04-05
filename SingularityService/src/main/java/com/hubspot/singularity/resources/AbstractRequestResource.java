@@ -2,12 +2,13 @@ package com.hubspot.singularity.resources;
 
 import static com.hubspot.singularity.WebExceptions.checkNotFound;
 
+import org.apache.curator.framework.recipes.leader.LeaderLatch;
+
 import com.google.common.base.Optional;
 import com.hubspot.horizon.HttpClient;
 import com.hubspot.singularity.SingularityAuthorizationScope;
 import com.hubspot.singularity.SingularityDeploy;
 import com.hubspot.singularity.SingularityDeployMarker;
-import com.hubspot.singularity.SingularityLeaderLatch;
 import com.hubspot.singularity.SingularityPendingDeploy;
 import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityRequestDeployState;
@@ -28,7 +29,7 @@ public class AbstractRequestResource extends AbstractLeaderAwareResource {
   protected final SingularityAuthorizationHelper authorizationHelper;
 
   public AbstractRequestResource(RequestManager requestManager, DeployManager deployManager, Optional<SingularityUser> user, SingularityValidator validator, SingularityAuthorizationHelper authorizationHelper,
-                                 HttpClient httpClient, SingularityLeaderLatch leaderLatch) {
+                                 HttpClient httpClient, LeaderLatch leaderLatch) {
     super(httpClient, leaderLatch);
     this.requestManager = requestManager;
     this.deployManager = deployManager;

@@ -24,6 +24,7 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 
+import org.apache.curator.framework.recipes.leader.LeaderLatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -102,7 +103,7 @@ public class RequestResource extends AbstractRequestResource {
 
   @Inject
   public RequestResource(SingularityValidator validator, DeployManager deployManager, TaskManager taskManager, RequestManager requestManager, SingularityMailer mailer,
-                         SingularityAuthorizationHelper authorizationHelper, Optional<SingularityUser> user, RequestHelper requestHelper, SingularityLeaderLatch leaderLatch,
+                         SingularityAuthorizationHelper authorizationHelper, Optional<SingularityUser> user, RequestHelper requestHelper, LeaderLatch leaderLatch,
                          DisasterManager disasterManager, @Named(SingularityResourceModule.PROXY_TO_LEADER_HTTP_CLIENT) HttpClient httpClient) {
     super(requestManager, deployManager, user, validator, authorizationHelper, httpClient, leaderLatch);
     this.mailer = mailer;
