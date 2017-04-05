@@ -20,9 +20,9 @@ public class SingularityLeaderCacheCoordinator {
   }
 
   public void activateLeaderCache() {
-    leaderCache.activate();
     taskManager.activateLeaderCache();
     requestManager.activateLeaderCache();
+    leaderCache.activate();
   }
 
   public void stopLeaderCache() {
