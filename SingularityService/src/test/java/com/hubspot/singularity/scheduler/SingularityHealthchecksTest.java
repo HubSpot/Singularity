@@ -122,7 +122,7 @@ public class SingularityHealthchecksTest extends SingularitySchedulerTestBase {
 
     startTask(firstDeploy);
 
-    requestResource.bounce(requestId);
+    requestResource.bounce(requestId, Optional.absent());
 
     cleaner.drainCleanupQueue();
 
