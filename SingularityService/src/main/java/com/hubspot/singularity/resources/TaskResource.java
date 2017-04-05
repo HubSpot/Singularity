@@ -111,10 +111,6 @@ public class TaskResource extends AbstractLeaderAwareResource {
     this.disasterManager = disasterManager;
   }
 
-  private boolean useWebCache(Boolean useWebCache) {
-    return useWebCache != null && useWebCache.booleanValue();
-  }
-
   @GET
   @PropertyFiltering
   @Path("/scheduled")

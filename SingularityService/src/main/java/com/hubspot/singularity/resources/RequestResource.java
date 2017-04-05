@@ -44,7 +44,6 @@ import com.hubspot.singularity.SingularityAction;
 import com.hubspot.singularity.SingularityAuthorizationScope;
 import com.hubspot.singularity.SingularityCreateResult;
 import com.hubspot.singularity.SingularityDeleteResult;
-import com.hubspot.singularity.SingularityLeaderLatch;
 import com.hubspot.singularity.SingularityPendingDeploy;
 import com.hubspot.singularity.SingularityPendingRequest;
 import com.hubspot.singularity.SingularityPendingRequest.PendingType;
@@ -504,7 +503,7 @@ public class RequestResource extends AbstractRequestResource {
   @Path("/active")
   @ApiOperation(value="Retrieve the list of active requests", response=SingularityRequestParent.class, responseContainer="List")
   public List<SingularityRequestParent> getActiveRequests(@QueryParam("useWebCache") Boolean useWebCache) {
-    return getRequestsWithDeployState(requestManager.getActiveRequests(useWebCache), SingularityAuthorizationScope.READ);
+    return getRequestsWithDeployState(requestManager.getActiveRequests(useWebCache(useWebCache)), SingularityAuthorizationScope.READ);
   }
 
   private List<SingularityRequestParent> getRequestsWithDeployState(Iterable<SingularityRequestWithState> requests, final SingularityAuthorizationScope scope) {
@@ -544,7 +543,7 @@ public class RequestResource extends AbstractRequestResource {
   @Path("/paused")
   @ApiOperation(value="Retrieve the list of paused requests", response=SingularityRequestParent.class, responseContainer="List")
   public List<SingularityRequestParent> getPausedRequests(@QueryParam("useWebCache") Boolean useWebCache) {
-    return getRequestsWithDeployState(requestManager.getPausedRequests(useWebCache), SingularityAuthorizationScope.READ);
+    return getRequestsWithDeployState(requestManager.getPausedRequests(useWebCache(useWebCache)), SingularityAuthorizationScope.READ);
   }
 
   @GET
@@ -552,7 +551,7 @@ public class RequestResource extends AbstractRequestResource {
   @Path("/cooldown")
   @ApiOperation(value="Retrieve the list of requests in system cooldown", response=SingularityRequestParent.class, responseContainer="List")
   public List<SingularityRequestParent> getCooldownRequests(@QueryParam("useWebCache") Boolean useWebCache) {
-    return getRequestsWithDeployState(requestManager.getCooldownRequests(useWebCache), SingularityAuthorizationScope.READ);
+    return getRequestsWithDeployState(requestManager.getCooldownRequests(useWebCache(useWebCache)), SingularityAuthorizationScope.READ);
   }
 
   @GET
@@ -560,14 +559,14 @@ public class RequestResource extends AbstractRequestResource {
   @Path("/finished")
   @ApiOperation(value="Retreive the list of finished requests (Scheduled requests which have exhausted their schedules)", response=SingularityRequestParent.class, responseContainer="List")
   public List<SingularityRequestParent> getFinishedRequests(@QueryParam("useWebCache") Boolean useWebCache) {
-    return getRequestsWithDeployState(requestManager.getFinishedRequests(useWebCache), SingularityAuthorizationScope.READ);
+    return getRequestsWithDeployState(requestManager.getFinishedRequests(useWebCache(useWebCache)), SingularityAuthorizationScope.READ);
   }
 
   @GET
   @PropertyFiltering
   @ApiOperation(value="Retrieve the list of all requests", response=SingularityRequestParent.class, responseContainer="List")
   public List<SingularityRequestParent> getRequests(@QueryParam("useWebCache") Boolean useWebCache) {
-    return getRequestsWithDeployState(requestManager.getRequests(useWebCache), SingularityAuthorizationScope.READ);
+    return getRequestsWithDeployState(requestManager.getRequests(useWebCache(useWebCache)), SingularityAuthorizationScope.READ);
   }
 
   @GET
@@ -815,6 +814,6 @@ public class RequestResource extends AbstractRequestResource {
   @Path("/lbcleanup")
   @ApiOperation("Retrieve the list of tasks being cleaned from load balancers.")
   public Iterable<String> getLbCleanupRequests(@QueryParam("useWebCache") Boolean useWebCache) {
-    return authorizationHelper.filterAuthorizedRequestIds(user, requestManager.getLbCleanupRequestIds(), SingularityAuthorizationScope.READ, useWebCache);
+    return authorizationHelper.filterAuthorizedRequestIds(user, requestManager.getLbCleanupRequestIds(), SingularityAuthorizationScope.READ, useWebCache(useWebCache));
   }
 }
