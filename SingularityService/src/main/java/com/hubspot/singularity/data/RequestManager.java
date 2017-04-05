@@ -382,6 +382,18 @@ public class RequestManager extends CuratorAsyncManager {
   }
 
   public Optional<SingularityRequestWithState> getRequest(String requestId) {
+    return getRequest(requestId, false);
+  }
+
+  public Optional<SingularityRequestWithState> getRequest(String requestId, boolean useWebCache) {
+    if (leaderCache.active()) {
+      return leaderCache.getRequest(requestId);
+    }
+
+    if (useWebCache && webCache.useCachedRequests()) {
+      return webCache.getRequest(requestId);
+    }
+
     return getData(getRequestPath(requestId), requestTranscoder);
   }
 
