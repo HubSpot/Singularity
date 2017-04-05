@@ -11,7 +11,7 @@ export const FetchRequestsInState = buildApiAction(
     if (_.contains(['pending', 'cleanup'], state)) {
       return {url: `/requests/queued/${state}`, renderNotFoundIf404};
     } else if (_.contains(['all', 'noDeploy', 'activeDeploy'], state)) {
-      return {url: '/requests', renderNotFoundIf404};
+      return {url: '/requests?useWebCache=true', renderNotFoundIf404};
     }
     return {url: `/requests/${state}?useWebCache=true`, renderNotFoundIf404};
   }
