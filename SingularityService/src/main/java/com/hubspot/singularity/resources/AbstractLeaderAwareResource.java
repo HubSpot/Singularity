@@ -50,4 +50,8 @@ public class AbstractLeaderAwareResource {
       requestBuilder.setQueryParam(parameterName).to(request.getParameter(parameterName));
     }
   }
+
+  protected boolean useWebCache(Boolean useWebCache) {
+    return useWebCache != null && useWebCache.booleanValue();
+  }
 }
