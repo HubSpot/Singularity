@@ -56,7 +56,6 @@ public class AbstractLeaderAwareResource {
     HttpRequest httpRequest = requestBuilder.build();
     LOG.trace("Sending request to leader: {}", httpRequest);
     HttpResponse response = httpClient.execute(httpRequest);
-    LOG.trace("Got proxied response ({}) {}", response.getStatusCode(), response.getAsString());
     if (response.isServerError()) {
       throw WebExceptions.badRequest(response.getAsString());
     } else if (response.isServerError()) {
