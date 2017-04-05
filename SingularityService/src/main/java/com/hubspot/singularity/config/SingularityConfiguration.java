@@ -10,6 +10,7 @@ import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
@@ -149,10 +150,8 @@ public class SingularityConfiguration extends Configuration {
 
   private int startupIntervalSeconds = 2;
 
-  @NotNull
   private Optional<Integer> healthcheckMaxRetries = Optional.absent();
 
-  @NotNull
   private Optional<Integer> healthcheckMaxTotalTimeoutSeconds = Optional.absent();
 
   @NotNull
@@ -222,7 +221,7 @@ public class SingularityConfiguration extends Configuration {
 
   private boolean sandboxDefaultsToTaskId = false;
 
-  private long sandboxHttpTimeoutMillis = TimeUnit.SECONDS.toMillis(5);
+  private long sandboxHttpTimeoutMillis = TimeUnit.SECONDS.toMillis(2);
 
   private long saveStateEverySeconds = 60;
 
@@ -250,8 +249,6 @@ public class SingularityConfiguration extends Configuration {
   private long warnIfScheduledJobIsRunningForAtLeastMillis = TimeUnit.DAYS.toMillis(1);
 
   @JsonProperty("taskExecutionTimeLimitMillis")
-  @Valid
-  @NotNull
   private Optional<Long> taskExecutionTimeLimitMillis = Optional.absent();
 
   private int warnIfScheduledJobIsRunningPastNextRunPct = 200;
@@ -322,6 +319,8 @@ public class SingularityConfiguration extends Configuration {
   private boolean allowBounceToSameHost = false;
 
   private int maxActiveOnDemandTasksPerRequest = 0;
+
+  private int maxDecommissioningSlaves = 2;
 
   public long getAskDriverToKillTasksAgainAfterMillis() {
     return askDriverToKillTasksAgainAfterMillis;
@@ -647,7 +646,8 @@ public class SingularityConfiguration extends Configuration {
     return persistHistoryEverySeconds;
   }
 
-  public Optional<S3Configuration> getS3Configuration() {
+  @JsonIgnore
+  public Optional<S3Configuration> getS3ConfigurationOptional() {
     return Optional.fromNullable(s3Configuration);
   }
 
@@ -659,12 +659,26 @@ public class SingularityConfiguration extends Configuration {
     return saveStateEverySeconds;
   }
 
-  public Optional<SentryConfiguration> getSentryConfiguration(){
+  @JsonIgnore
+  public Optional<SentryConfiguration> getSentryConfigurationOptional(){
     return Optional.fromNullable(sentryConfiguration);
   }
 
-  public Optional<SMTPConfiguration> getSmtpConfiguration() {
+  @JsonIgnore
+  public Optional<SMTPConfiguration> getSmtpConfigurationOptional() {
     return Optional.fromNullable(smtpConfiguration);
+  }
+
+  public S3Configuration getS3Configuration() {
+    return s3Configuration;
+  }
+
+  public SentryConfiguration getSentryConfiguration() {
+    return sentryConfiguration;
+  }
+
+  public SMTPConfiguration getSmtpConfiguration() {
+    return smtpConfiguration;
   }
 
   public long getStartNewReconcileEverySeconds() {
@@ -1101,7 +1115,12 @@ public class SingularityConfiguration extends Configuration {
     this.taskPersistAfterStartupBufferMillis = taskPersistAfterStartupBufferMillis;
   }
 
-  public Optional<LDAPConfiguration> getLdapConfiguration() {
+  public LDAPConfiguration getLdapConfiguration() {
+    return ldapConfiguration;
+  }
+
+  @JsonIgnore
+  public Optional<LDAPConfiguration> getLdapConfigurationOptional() {
     return Optional.fromNullable(ldapConfiguration);
   }
 
@@ -1316,5 +1335,13 @@ public class SingularityConfiguration extends Configuration {
 
   public void setMaxActiveOnDemandTasksPerRequest(int maxActiveOnDemandTasksPerRequest) {
     this.maxActiveOnDemandTasksPerRequest = maxActiveOnDemandTasksPerRequest;
+  }
+
+  public int getMaxDecommissioningSlaves() {
+    return maxDecommissioningSlaves;
+  }
+
+  public void setMaxDecommissioningSlaves(int maxDecommissioningSlaves) {
+    this.maxDecommissioningSlaves = maxDecommissioningSlaves;
   }
 }

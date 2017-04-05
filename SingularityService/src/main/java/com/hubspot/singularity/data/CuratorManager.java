@@ -42,12 +42,17 @@ public abstract class CuratorManager {
     this.configuration = configuration;
     this.curator = curator;
 
-    this.typeToMetrics = ImmutableMap.of(OperationType.READ, new Metrics(metricRegistry, OperationType.READ),
-        OperationType.WRITE, new Metrics(metricRegistry, OperationType.WRITE));
+    typeToMetrics = ImmutableMap.<OperationType, Metrics> builder()
+        .put(OperationType.GET_MULTI, new Metrics(metricRegistry, OperationType.GET_MULTI))
+        .put(OperationType.GET, new Metrics(metricRegistry, OperationType.GET))
+        .put(OperationType.CHECK_EXISTS, new Metrics(metricRegistry, OperationType.CHECK_EXISTS))
+        .put(OperationType.GET_CHILDREN, new Metrics(metricRegistry, OperationType.GET_CHILDREN))
+        .put(OperationType.DELETE, new Metrics(metricRegistry, OperationType.DELETE))
+        .put(OperationType.WRITE, new Metrics(metricRegistry, OperationType.WRITE)).build();
   }
 
   public enum OperationType {
-    READ, WRITE;
+    GET_MULTI, GET, CHECK_EXISTS, GET_CHILDREN, DELETE, WRITE;
   }
 
   private static class Metrics {
@@ -162,7 +167,7 @@ public abstract class CuratorManager {
         clearCache(childrenCache);
         throw Throwables.propagate(t);
       } finally {
-        log(OperationType.READ, Optional.of(numChildren), Optional.<Integer>absent(), start, root);
+        log(OperationType.GET_CHILDREN, Optional.of(numChildren), Optional.<Integer>absent(), start, root);
       }
     } finally {
       checkUnlock(childrenCache);
@@ -187,7 +192,7 @@ public abstract class CuratorManager {
     } catch (Throwable t) {
       throw Throwables.propagate(t);
     } finally {
-      log(OperationType.WRITE, Optional.<Integer>absent(), Optional.<Integer>absent(), start, path);
+      log(OperationType.DELETE, Optional.absent(), Optional.<Integer> absent(), start, path);
     }
   }
 
@@ -256,7 +261,6 @@ public abstract class CuratorManager {
         setDataBuilder.forPath(path);
       }
     } finally {
-
       log(OperationType.WRITE, Optional.<Integer>absent(), Optional.<Integer>of(data.or(EMPTY_BYTES).length), start, path);
     }
   }
@@ -317,7 +321,7 @@ public abstract class CuratorManager {
     } catch (Throwable t) {
       throw Throwables.propagate(t);
     } finally {
-      log(OperationType.READ, Optional.<Integer>absent(), Optional.<Integer>of(bytes), start, path);
+      log(OperationType.GET, Optional.absent(), Optional.<Integer> of(bytes), start, path);
     }
   }
 
@@ -332,5 +336,4 @@ public abstract class CuratorManager {
   protected Optional<String> getStringData(String path) {
     return getData(path, Optional.<Stat>absent(), StringTranscoder.INSTANCE, Optional.<ZkCache<String>>absent(), Optional.<Boolean>absent());
   }
-
 }

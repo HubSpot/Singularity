@@ -129,7 +129,7 @@ public class SingularityMainModule implements Module {
 
     binder.bind(SingularityDriverManager.class).in(Scopes.SINGLETON);
     binder.bind(SingularityLeaderController.class).in(Scopes.SINGLETON);
-    if (configuration.getSmtpConfiguration().isPresent()) {
+    if (configuration.getSmtpConfigurationOptional().isPresent()) {
       binder.bind(SingularityMailer.class).to(SmtpMailer.class).in(Scopes.SINGLETON);
     } else {
       binder.bind(SingularityMailer.class).toInstance(NoopMailer.getInstance());
@@ -235,7 +235,7 @@ public class SingularityMainModule implements Module {
   @Provides
   @Singleton
   public Optional<SentryConfiguration> sentryConfiguration(final SingularityConfiguration config) {
-    return config.getSentryConfiguration();
+    return config.getSentryConfigurationOptional();
   }
 
   @Provides
@@ -284,13 +284,13 @@ public class SingularityMainModule implements Module {
   @Provides
   @Singleton
   public Optional<SMTPConfiguration> smtpConfiguration(final SingularityConfiguration config) {
-    return config.getSmtpConfiguration();
+    return config.getSmtpConfigurationOptional();
   }
 
   @Provides
   @Singleton
   public Optional<S3Configuration> s3Configuration(final SingularityConfiguration config) {
-    return config.getS3Configuration();
+    return config.getS3ConfigurationOptional();
   }
 
   @Provides

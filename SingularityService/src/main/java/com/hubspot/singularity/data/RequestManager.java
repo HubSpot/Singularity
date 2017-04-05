@@ -287,7 +287,7 @@ public class RequestManager extends CuratorAsyncManager {
       paths.add(getRequestPath(requestId));
     }
 
-    return getAsync(RequestManager.NORMAL_PATH_ROOT, paths, requestTranscoder);
+    return getAsync("getRequests", paths, requestTranscoder);
   }
 
   private Iterable<SingularityRequestWithState> filter(List<SingularityRequestWithState> requests, final RequestState... states) {

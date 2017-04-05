@@ -6,6 +6,7 @@ import java.util.Map;
 
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.utils.ZKPaths;
+import org.apache.zookeeper.data.Stat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -98,7 +99,7 @@ public class DeployManager extends CuratorAsyncManager {
       paths.add(getDeployIdPath(requestId));
     }
 
-    return getChildrenAsIdsForParents(BY_REQUEST_ROOT, paths, deployKeyTranscoder);
+    return getChildrenAsIdsForParents("getAllDeployIds", paths, deployKeyTranscoder);
   }
 
   @Timed
@@ -109,7 +110,7 @@ public class DeployManager extends CuratorAsyncManager {
       paths.add(getRequestDeployStatePath(requestId));
     }
 
-    return Maps.uniqueIndex(getAsync("request_deploy_states", paths, requestDeployStateTranscoder), new Function<SingularityRequestDeployState, String>() {
+    return Maps.uniqueIndex(getAsync("getRequestDeployStatesByRequestIds", paths, requestDeployStateTranscoder), new Function<SingularityRequestDeployState, String>() {
 
       @Override
       public String apply(SingularityRequestDeployState input) {
@@ -174,7 +175,7 @@ public class DeployManager extends CuratorAsyncManager {
       paths.add(getDeployDataPath(deployKey.getRequestId(), deployKey.getDeployId()));
     }
 
-    final List<SingularityDeploy> deploys = getAsync("deploys-by-key", paths, deployTranscoder);
+    final List<SingularityDeploy> deploys = getAsync("getDeploysForKeys", paths, deployTranscoder);
 
     final Map<SingularityDeployKey, SingularityDeploy> deployKeyToDeploy = Maps.uniqueIndex(deploys, new Function<SingularityDeploy, SingularityDeployKey>() {
       @Override
@@ -336,5 +337,22 @@ public class DeployManager extends CuratorAsyncManager {
 
   public List<SingularityUpdatePendingDeployRequest> getPendingDeployUpdates() {
     return getAsyncChildren(UPDATE_ROOT, updateRequestTranscoder);
+  }
+
+  public void purgeStaleRequests(List<String> activeRequestIds, long deleteBeforeTime) {
+    final List<String> requestIds = getChildren(BY_REQUEST_ROOT);
+    for (String requestId : requestIds) {
+      if (!activeRequestIds.contains(requestId)) {
+        String path = getRequestDeployPath(requestId);
+        Optional<Stat> maybeStat = checkExists(path);
+        if (maybeStat.isPresent() && maybeStat.get().getMtime() < deleteBeforeTime && !getChildren(path).contains(REQUEST_DEPLOY_STATE_KEY)) {
+          delete(path);
+        }
+      }
+    }
+  }
+
+  public SingularityDeleteResult deleteRequestId(String requestId) {
+    return delete(getRequestDeployPath(requestId));
   }
 }
