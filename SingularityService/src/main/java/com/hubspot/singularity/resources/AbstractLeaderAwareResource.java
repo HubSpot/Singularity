@@ -44,13 +44,16 @@ public class AbstractLeaderAwareResource {
     try {
       if (body != null) {
         requestBuilder.setBody(objectMapper.writeValueAsBytes(body));
+        LOG.trace("Added body {} to reqeust", body);
       }
     } catch (JsonProcessingException jpe) {
-      LOG.error("Could not write body form object {}", body);
+      LOG.error("Could not write body from object {}", body);
     }
 
     copyHeadersAndParams(requestBuilder, request);
-    HttpResponse response = httpClient.execute(requestBuilder.build());
+    HttpRequest httpRequest = requestBuilder.build();
+    LOG.trace("Sending request to leader: {}", httpRequest);
+    HttpResponse response = httpClient.execute(httpRequest);
     LOG.trace("Got proxied response ({}) {}", response.getStatusCode(), response.getAsString());
     if (response.isServerError()) {
       throw WebExceptions.badRequest(response.getAsString());
@@ -65,10 +68,12 @@ public class AbstractLeaderAwareResource {
     while (request.getHeaderNames().hasMoreElements()) {
       String headerName = request.getHeaderNames().nextElement();
       requestBuilder.addHeader(headerName, request.getHeader(headerName));
+      LOG.trace("Copied header {}:{}", headerName, request.getHeader(headerName));
     }
     while (request.getParameterNames().hasMoreElements()) {
       String parameterName = request.getParameterNames().nextElement();
       requestBuilder.setQueryParam(parameterName).to(request.getParameter(parameterName));
+      LOG.trace("Copied query param {}={}", parameterName, request.getParameter(parameterName));
     }
   }
 
