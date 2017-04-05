@@ -121,6 +121,7 @@ public class TaskResource extends AbstractLeaderAwareResource {
       LOG.trace("Short circuting getScheduledTasks() to [] due to EXPENSIVE_API_CALLS disabled");
       return Collections.emptyList();
     }
+
     return taskRequestManager.getTaskRequests(ImmutableList.copyOf(authorizationHelper.filterByAuthorizedRequests(user,
         taskManager.getPendingTasks(useWebCache(useWebCache)), SingularityTransformHelpers.PENDING_TASK_TO_REQUEST_ID, SingularityAuthorizationScope.READ)));
   }
@@ -207,6 +208,7 @@ public class TaskResource extends AbstractLeaderAwareResource {
       LOG.trace("Short circuting getCleaningTasks() to [] due to EXPENSIVE_API_CALLS disabled");
       return Collections.emptyList();
     }
+
     return authorizationHelper.filterByAuthorizedRequests(user, taskManager.getCleanupTasks(useWebCache(useWebCache)), SingularityTransformHelpers.TASK_CLEANUP_TO_REQUEST_ID, SingularityAuthorizationScope.READ);
   }
 
