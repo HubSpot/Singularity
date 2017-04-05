@@ -31,14 +31,14 @@ public class AbstractLeaderAwareResource {
       throw new RuntimeException("Could not get leader uri to proxy request");
     }
 
-    String protocol = request.getRequestURI().contains("https") ? "https://" : "http://";
-    String url = protocol + leaderUri + request.getContextPath() + request.getPathInfo();
-    LOG.debug("No the leader, proxying request to {}", url);
+    String url = "http://" + leaderUri + request.getContextPath() + request.getPathInfo();
+    LOG.debug("Not the leader, proxying request to {}", url);
     HttpRequest.Builder requestBuilder = HttpRequest.newBuilder()
         .setUrl(url)
         .setMethod(Method.valueOf(request.getMethod()));
     copyHeadersAndParams(requestBuilder, request);
     HttpResponse response = httpClient.execute(requestBuilder.build());
+    LOG.trace("Got proxied response ({}) {}", response.getStatusCode(), response.getAsString());
     if (response.isServerError()) {
       throw WebExceptions.badRequest(response.getAsString());
     } else if (response.isServerError()) {
