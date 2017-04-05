@@ -232,7 +232,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
 
     SingularityTask firstTask = startTask(firstDeploy);
 
-    taskResource.killTask(firstTask.getTaskId().getId());
+    taskResource.killTask(firstTask.getTaskId().getId(), Optional.absent());
 
     cleaner.drainCleanupQueue();
     killKilledTasks();

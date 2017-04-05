@@ -151,8 +151,8 @@ public class RequestResource extends AbstractRequestResource {
     @ApiResponse(code=400, message="Request object is invalid"),
     @ApiResponse(code=409, message="Request object is being cleaned. Try again shortly"),
   })
-  public SingularityRequestParent postRequest(@ApiParam("The Singularity request to create or update") SingularityRequest request,
-                                              @Context HttpServletRequest requestContext) {
+  public SingularityRequestParent postRequest(@Context HttpServletRequest requestContext,
+                                              @ApiParam("The Singularity request to create or update") SingularityRequest request) {
     if (!leaderLatch.hasLeadership()) {
       return proxyToLeader(requestContext, SingularityRequestParent.class);
     }
@@ -176,7 +176,7 @@ public class RequestResource extends AbstractRequestResource {
   @Path("/request/{requestId}/bounce")
   public SingularityRequestParent bounce(@PathParam("requestId") String requestId,
                                          @Context HttpServletRequest requestContext) {
-    return bounce(requestId, Optional.<SingularityBounceRequest> absent(), requestContext);
+    return bounce(requestId, requestContext, Optional.absent());
   }
 
   @POST
@@ -185,8 +185,8 @@ public class RequestResource extends AbstractRequestResource {
   @ApiOperation(value="Bounce a specific Singularity request. A bounce launches replacement task(s), and then kills the original task(s) if the replacement(s) are healthy.",
   response=SingularityRequestParent.class)
   public SingularityRequestParent bounce(@ApiParam("The request ID to bounce") @PathParam("requestId") String requestId,
-                                         @ApiParam("Bounce request options") Optional<SingularityBounceRequest> bounceRequest,
-                                         @Context HttpServletRequest requestContext) {
+                                         @Context HttpServletRequest requestContext,
+                                         @ApiParam("Bounce request options") Optional<SingularityBounceRequest> bounceRequest) {
     if (!leaderLatch.hasLeadership()) {
       return proxyToLeader(requestContext, SingularityRequestParent.class);
     }
@@ -249,7 +249,7 @@ public class RequestResource extends AbstractRequestResource {
   @Path("/request/{requestId}/run")
   public SingularityPendingRequestParent scheduleImmediately(@PathParam("requestId") String requestId,
                                                              @Context HttpServletRequest requestContext) {
-    return scheduleImmediately(requestId, Optional.<SingularityRunNowRequest> absent(), requestContext);
+    return scheduleImmediately(requestId, requestContext, Optional.absent());
   }
 
   @POST
@@ -260,8 +260,8 @@ public class RequestResource extends AbstractRequestResource {
     @ApiResponse(code=400, message="Singularity Request is not scheduled or one-off"),
   })
   public SingularityPendingRequestParent scheduleImmediately(@ApiParam("The request ID to run") @PathParam("requestId") String requestId,
-                                                             Optional<SingularityRunNowRequest> runNowRequest,
-                                                             @Context HttpServletRequest requestContext) {
+                                                             @Context HttpServletRequest requestContext,
+                                                             Optional<SingularityRunNowRequest> runNowRequest) {
     if (!leaderLatch.hasLeadership()) {
       return proxyToLeader(requestContext, SingularityPendingRequestParent.class);
     }
@@ -340,7 +340,7 @@ public class RequestResource extends AbstractRequestResource {
   @Path("/request/{requestId}/pause")
   public SingularityRequestParent pause(@PathParam("requestId") String requestId,
                                         @Context HttpServletRequest requestContext) {
-    return pause(requestId, Optional.<SingularityPauseRequest> absent(), requestContext);
+    return pause(requestId, requestContext, Optional.absent());
   }
 
   @POST
@@ -351,8 +351,8 @@ public class RequestResource extends AbstractRequestResource {
     @ApiResponse(code=409, message="Request is already paused or being cleaned"),
   })
   public SingularityRequestParent pause(@ApiParam("The request ID to pause") @PathParam("requestId") String requestId,
-                                        @ApiParam("Pause Request Options") Optional<SingularityPauseRequest> pauseRequest,
-                                        @Context HttpServletRequest requestContext) {
+                                        @Context HttpServletRequest requestContext,
+                                        @ApiParam("Pause Request Options") Optional<SingularityPauseRequest> pauseRequest) {
     if (!leaderLatch.hasLeadership()) {
       return proxyToLeader(requestContext, SingularityRequestParent.class);
     }
@@ -408,7 +408,7 @@ public class RequestResource extends AbstractRequestResource {
   @Path("/request/{requestId}/unpause")
   public SingularityRequestParent unpauseNoBody(@PathParam("requestId") String requestId,
                                                 @Context HttpServletRequest requestContext) {
-    return unpause(requestId, Optional.<SingularityUnpauseRequest> absent(), requestContext);
+    return unpause(requestId, requestContext, Optional.absent());
   }
 
   @POST
@@ -419,8 +419,8 @@ public class RequestResource extends AbstractRequestResource {
     @ApiResponse(code=409, message="Request is not paused"),
   })
   public SingularityRequestParent unpause(@ApiParam("The request ID to unpause") @PathParam("requestId") String requestId,
-                                          Optional<SingularityUnpauseRequest> unpauseRequest,
-                                          @Context HttpServletRequest requestContext) {
+                                          @Context HttpServletRequest requestContext,
+                                          Optional<SingularityUnpauseRequest> unpauseRequest) {
     if (!leaderLatch.hasLeadership()) {
       return proxyToLeader(requestContext, SingularityRequestParent.class);
     }
@@ -454,7 +454,7 @@ public class RequestResource extends AbstractRequestResource {
   @Path("/request/{requestId}/exit-cooldown")
   public SingularityRequestParent exitCooldown(@PathParam("requestId") String requestId,
                                                @Context HttpServletRequest requestContext) {
-    return exitCooldown(requestId, Optional.<SingularityExitCooldownRequest> absent(), requestContext);
+    return exitCooldown(requestId, requestContext, Optional.absent());
   }
 
   @POST
@@ -464,8 +464,9 @@ public class RequestResource extends AbstractRequestResource {
   @ApiResponses({
     @ApiResponse(code=409, message="Request is not in cooldown"),
   })
-  public SingularityRequestParent exitCooldown(@PathParam("requestId") String requestId, Optional<SingularityExitCooldownRequest> exitCooldownRequest,
-                                               @Context HttpServletRequest requestContext) {
+  public SingularityRequestParent exitCooldown(@PathParam("requestId") String requestId,
+                                               @Context HttpServletRequest requestContext,
+                                               Optional<SingularityExitCooldownRequest> exitCooldownRequest) {
     if(!leaderLatch.hasLeadership()) {
       return proxyToLeader(requestContext, SingularityRequestParent.class);
     }
@@ -651,10 +652,10 @@ public class RequestResource extends AbstractRequestResource {
     @ApiResponse(code=404, message="No Request with that ID"),
   })
   public SingularityRequestParent scale(@ApiParam("The Request ID to scale") @PathParam("requestId") String requestId,
-                                        @ApiParam("Object to hold number of instances to request") SingularityScaleRequest scaleRequest,
-                                        @Context HttpServletRequest request) {
+                                        @Context HttpServletRequest requestContext,
+                                        @ApiParam("Object to hold number of instances to request") SingularityScaleRequest scaleRequest) {
     if (!leaderLatch.hasLeadership()) {
-      return proxyToLeader(request, SingularityRequestParent.class);
+      return proxyToLeader(requestContext, SingularityRequestParent.class);
     }
 
     return scale(requestId, scaleRequest);
@@ -771,9 +772,9 @@ public class RequestResource extends AbstractRequestResource {
       @ApiResponse(code=404, message="No Request with that ID"),
   })
   public SingularityRequestParent skipHealthchecksDeprecated(@ApiParam("The Request ID to scale") @PathParam("requestId") String requestId,
-                                                             @ApiParam("SkipHealtchecks options") SingularitySkipHealthchecksRequest skipHealthchecksRequest,
-                                                             @Context HttpServletRequest request) {
-    return skipHealthchecks(requestId, skipHealthchecksRequest, request);
+                                                             @Context HttpServletRequest requestContext,
+                                                             @ApiParam("SkipHealtchecks options") SingularitySkipHealthchecksRequest skipHealthchecksRequest) {
+    return skipHealthchecks(requestId, requestContext, skipHealthchecksRequest);
   }
 
   @PUT
@@ -784,10 +785,10 @@ public class RequestResource extends AbstractRequestResource {
     @ApiResponse(code=404, message="No Request with that ID"),
   })
   public SingularityRequestParent skipHealthchecks(@ApiParam("The Request ID to scale") @PathParam("requestId") String requestId,
-                                                   @ApiParam("SkipHealtchecks options") SingularitySkipHealthchecksRequest skipHealthchecksRequest,
-                                                   @Context HttpServletRequest request) {
+                                                   @Context HttpServletRequest requestContext,
+                                                   @ApiParam("SkipHealtchecks options") SingularitySkipHealthchecksRequest skipHealthchecksRequest) {
     if (!leaderLatch.hasLeadership()) {
-      return proxyToLeader(request, SingularityRequestParent.class);
+      return proxyToLeader(requestContext, SingularityRequestParent.class);
     }
     return skipHealthchecks(requestId, skipHealthchecksRequest);
   }
