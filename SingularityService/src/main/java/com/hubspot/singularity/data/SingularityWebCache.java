@@ -7,6 +7,7 @@ import java.util.Map;
 
 import com.codahale.metrics.Meter;
 import com.codahale.metrics.MetricRegistry;
+import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.hubspot.singularity.SingularityPendingTask;
@@ -111,6 +112,10 @@ public class SingularityWebCache {
   public List<SingularityRequestWithState> getRequests() {
     requestsHitMeter.mark();
     return new ArrayList<>(cachedRequests.values());
+  }
+
+  public Optional<SingularityRequestWithState> getRequest(String requestId) {
+    return Optional.fromNullable(cachedRequests.get(requestId));
   }
 
   public void cacheTaskCleanup(List<SingularityTaskCleanup> newTaskCleanup) {

@@ -167,6 +167,10 @@ public class SingularityLeaderCache {
     return new ArrayList<>(requests.values());
   }
 
+  public Optional<SingularityRequestWithState> getRequest(String requestId) {
+    return Optional.fromNullable(requests.get(requestId));
+  }
+
   public void putRequest(SingularityRequestWithState requestWithState) {
     if (!active) {
       LOG.warn("putRequest {}, but not active", requestWithState.getRequest().getId());
