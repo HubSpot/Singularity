@@ -6,6 +6,7 @@ import java.util.List;
 
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.utils.ZKPaths;
+import org.apache.zookeeper.data.Stat;
 
 import com.codahale.metrics.MetricRegistry;
 import com.google.common.base.Optional;
@@ -90,4 +91,16 @@ public class MetadataManager extends CuratorManager {
     delete(getMailRecordPathForRequestAndTypeAndTime(requestId, emailType, mailRecordTimestamp));
   }
 
+  public void purgeStaleRequests(List<String> activeRequestIds, long deleteBeforeTime) {
+    final List<String> requestIds = getChildren(MAIL_HISTORY_PATH);
+    for (String requestId : requestIds) {
+      if (!activeRequestIds.contains(requestId)) {
+        String path = getMailRecordPathForRequest(requestId);
+        Optional<Stat> maybeStat = checkExists(ZKPaths.makePath(path, SingularityEmailType.REQUEST_REMOVED.name()));
+        if (maybeStat.isPresent() && maybeStat.get().getMtime() < deleteBeforeTime) {
+          delete(path);
+        }
+      }
+    }
+  }
 }
