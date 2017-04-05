@@ -26,6 +26,7 @@ import org.apache.curator.framework.recipes.leader.LeaderLatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
@@ -97,8 +98,8 @@ public class TaskResource extends AbstractLeaderAwareResource {
   @Inject
   public TaskResource(TaskRequestManager taskRequestManager, TaskManager taskManager, SlaveManager slaveManager, MesosClient mesosClient, SingularityTaskMetadataConfiguration taskMetadataConfiguration,
                       SingularityAuthorizationHelper authorizationHelper, Optional<SingularityUser> user, RequestManager requestManager, SingularityValidator validator, DisasterManager disasterManager,
-                      @Named(SingularityResourceModule.PROXY_TO_LEADER_HTTP_CLIENT) HttpClient httpClient, LeaderLatch leaderLatch) {
-    super(httpClient, leaderLatch);
+                      @Named(SingularityResourceModule.PROXY_TO_LEADER_HTTP_CLIENT) HttpClient httpClient, LeaderLatch leaderLatch, ObjectMapper objectMapper) {
+    super(httpClient, leaderLatch, objectMapper);
     this.taskManager = taskManager;
     this.taskRequestManager = taskRequestManager;
     this.taskMetadataConfiguration = taskMetadataConfiguration;
@@ -293,7 +294,7 @@ public class TaskResource extends AbstractLeaderAwareResource {
   public SingularityTaskCleanup killTask(@PathParam("taskId") String taskId, @Context HttpServletRequest requestContext, Optional<SingularityKillTaskRequest> killTaskRequest
                                          ) {
     if (!leaderLatch.hasLeadership()) {
-      return proxyToLeader(requestContext, SingularityTaskCleanup.class);
+      return proxyToLeader(requestContext, SingularityTaskCleanup.class, killTaskRequest.orNull());
     }
     return killTask(taskId, killTaskRequest);
   }

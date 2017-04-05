@@ -6,6 +6,8 @@ import org.apache.curator.framework.recipes.leader.LeaderLatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hubspot.horizon.HttpClient;
 import com.hubspot.horizon.HttpRequest;
 import com.hubspot.horizon.HttpRequest.Method;
@@ -17,13 +19,15 @@ public class AbstractLeaderAwareResource {
 
   protected final HttpClient httpClient;
   protected final LeaderLatch leaderLatch;
+  protected final ObjectMapper objectMapper;
 
-  public AbstractLeaderAwareResource(HttpClient httpClient, LeaderLatch leaderLatch) {
+  public AbstractLeaderAwareResource(HttpClient httpClient, LeaderLatch leaderLatch, ObjectMapper objectMapper) {
     this.httpClient = httpClient;
     this.leaderLatch = leaderLatch;
+    this.objectMapper = objectMapper;
   }
 
-  protected <T> T proxyToLeader(HttpServletRequest request, Class<T> clazz) {
+  protected <T, Q> T proxyToLeader(HttpServletRequest request, Class<T> clazz, Q body) {
     String leaderUri;
     try {
       leaderUri = leaderLatch.getLeader().getId();
@@ -36,6 +40,15 @@ public class AbstractLeaderAwareResource {
     HttpRequest.Builder requestBuilder = HttpRequest.newBuilder()
         .setUrl(url)
         .setMethod(Method.valueOf(request.getMethod()));
+
+    try {
+      if (body != null) {
+        requestBuilder.setBody(objectMapper.writeValueAsBytes(body));
+      }
+    } catch (JsonProcessingException jpe) {
+      LOG.error("Could not write body form object {}", body);
+    }
+
     copyHeadersAndParams(requestBuilder, request);
     HttpResponse response = httpClient.execute(requestBuilder.build());
     LOG.trace("Got proxied response ({}) {}", response.getStatusCode(), response.getAsString());
