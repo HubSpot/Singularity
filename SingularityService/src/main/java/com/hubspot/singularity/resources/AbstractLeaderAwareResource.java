@@ -3,6 +3,7 @@ package com.hubspot.singularity.resources;
 import java.util.Enumeration;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.WebApplicationException;
 
 import org.apache.curator.framework.recipes.leader.LeaderLatch;
 import org.slf4j.Logger;
@@ -14,7 +15,6 @@ import com.hubspot.horizon.HttpClient;
 import com.hubspot.horizon.HttpRequest;
 import com.hubspot.horizon.HttpRequest.Method;
 import com.hubspot.horizon.HttpResponse;
-import com.hubspot.singularity.WebExceptions;
 
 public class AbstractLeaderAwareResource {
   private static final Logger LOG = LoggerFactory.getLogger(AbstractLeaderAwareResource.class);
@@ -56,10 +56,8 @@ public class AbstractLeaderAwareResource {
     HttpRequest httpRequest = requestBuilder.build();
     LOG.trace("Sending request to leader: {}", httpRequest);
     HttpResponse response = httpClient.execute(httpRequest);
-    if (response.isServerError()) {
-      throw WebExceptions.badRequest(response.getAsString());
-    } else if (response.isServerError()) {
-      throw new RuntimeException(response.getAsString());
+    if (response.isError()) {
+      throw new WebApplicationException(response.getAsString(), response.getStatusCode());
     } else {
       return response.getAs(clazz);
     }
