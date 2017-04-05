@@ -214,12 +214,12 @@ public class SingularityAuthorizationHelper {
     });
   }
 
-  public Iterable<String> filterAuthorizedRequestIds(final Optional<SingularityUser> user, List<String> requestIds, final SingularityAuthorizationScope scope) {
+  public Iterable<String> filterAuthorizedRequestIds(final Optional<SingularityUser> user, List<String> requestIds, final SingularityAuthorizationScope scope, boolean useWebCache) {
     if (hasAdminAuthorization(user)) {
       return requestIds;
     }
 
-    final Map<String, SingularityRequestWithState> requestMap = Maps.uniqueIndex(requestManager.getRequests(requestIds), new Function<SingularityRequestWithState, String>() {
+    final Map<String, SingularityRequestWithState> requestMap = Maps.uniqueIndex(requestManager.getRequests(requestIds, useWebCache), new Function<SingularityRequestWithState, String>() {
       @Override
       public String apply(@Nonnull SingularityRequestWithState input) {
         return input.getRequest().getId();
