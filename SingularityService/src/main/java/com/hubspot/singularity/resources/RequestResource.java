@@ -599,6 +599,10 @@ public class RequestResource extends AbstractRequestResource {
     return fillEntireRequest(fetchRequestWithState(requestId, useWebCache(useWebCache)));
   }
 
+  public SingularityRequestParent getRequest(String requestId) {
+    return fillEntireRequest(fetchRequestWithState(requestId, false));
+  }
+
   @DELETE
   @Path("/request/{requestId}")
   public SingularityRequest deleteRequest(@PathParam("requestId") String requestId,
