@@ -1,6 +1,7 @@
 package com.hubspot.singularity.data.history;
 
 import java.util.Date;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import javax.inject.Singleton;
@@ -14,6 +15,10 @@ import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.ExtendedTaskState;
 import com.hubspot.singularity.config.HistoryPurgeRequestSettings;
 import com.hubspot.singularity.config.HistoryPurgingConfiguration;
+import com.hubspot.singularity.data.DeployManager;
+import com.hubspot.singularity.data.MetadataManager;
+import com.hubspot.singularity.data.RequestManager;
+import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.scheduler.SingularityLeaderOnlyPoller;
 
 @Singleton
@@ -23,13 +28,22 @@ public class SingularityHistoryPurger extends SingularityLeaderOnlyPoller {
 
   private final HistoryPurgingConfiguration historyPurgingConfiguration;
   private final HistoryManager historyManager;
+  private final TaskManager taskManager;
+  private final DeployManager deployManager;
+  private final RequestManager requestManager;
+  private final MetadataManager metadataManager;
 
   @Inject
-  public SingularityHistoryPurger(HistoryPurgingConfiguration historyPurgingConfiguration, HistoryManager historyManager) {
+  public SingularityHistoryPurger(HistoryPurgingConfiguration historyPurgingConfiguration, HistoryManager historyManager,
+                                  TaskManager taskManager, DeployManager deployManager, RequestManager requestManager, MetadataManager metadataManager) {
     super(historyPurgingConfiguration.getCheckTaskHistoryEveryHours(), TimeUnit.HOURS);
 
     this.historyPurgingConfiguration = historyPurgingConfiguration;
     this.historyManager = historyManager;
+    this.taskManager = taskManager;
+    this.deployManager = deployManager;
+    this.requestManager = requestManager;
+    this.metadataManager = metadataManager;
   }
 
   @Override
@@ -55,6 +69,7 @@ public class SingularityHistoryPurger extends SingularityLeaderOnlyPoller {
         LOG.debug("No purge settings for removing task bytes, skipping for request {}", requestId);
       }
     }
+    purgeStaleZkData();
   }
 
   private void purge(String requestId, long start, Optional<Integer> afterTasksPerRequest, Optional<Integer> afterDays, boolean deleteRow) {
@@ -114,6 +129,18 @@ public class SingularityHistoryPurger extends SingularityLeaderOnlyPoller {
       settings.setDeleteTaskHistoryBytesAfterDays(historyPurgingConfiguration.getDeleteTaskHistoryBytesAfterDays());
       settings.setDeleteTaskHistoryBytesAfterTasksPerRequest(historyPurgingConfiguration.getDeleteTaskHistoryBytesAfterTasksPerRequest());
       return settings;
+    }
+  }
+
+  private void purgeStaleZkData() {
+    try {
+      List<String> activeRequestIds = requestManager.getAllRequestIds();
+      long deleteBeforeTime = System.currentTimeMillis() - TimeUnit.DAYS.toMillis(historyPurgingConfiguration.getPurgeStaleRequestIdsAfterDays());
+      taskManager.purgeStaleRequests(activeRequestIds, deleteBeforeTime);
+      deployManager.purgeStaleRequests(activeRequestIds, deleteBeforeTime);
+      metadataManager.purgeStaleRequests(activeRequestIds, deleteBeforeTime);
+    } catch (Exception e) {
+      LOG.error("Could not purge stale zk data", e);
     }
   }
 

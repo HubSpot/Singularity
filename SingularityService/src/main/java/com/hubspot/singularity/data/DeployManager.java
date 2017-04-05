@@ -6,6 +6,7 @@ import java.util.Map;
 
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.utils.ZKPaths;
+import org.apache.zookeeper.data.Stat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -336,5 +337,22 @@ public class DeployManager extends CuratorAsyncManager {
 
   public List<SingularityUpdatePendingDeployRequest> getPendingDeployUpdates() {
     return getAsyncChildren(UPDATE_ROOT, updateRequestTranscoder);
+  }
+
+  public void purgeStaleRequests(List<String> activeRequestIds, long deleteBeforeTime) {
+    final List<String> requestIds = getChildren(BY_REQUEST_ROOT);
+    for (String requestId : requestIds) {
+      if (!activeRequestIds.contains(requestId)) {
+        String path = getRequestDeployPath(requestId);
+        Optional<Stat> maybeStat = checkExists(path);
+        if (maybeStat.isPresent() && maybeStat.get().getMtime() < deleteBeforeTime && !getChildren(path).contains(REQUEST_DEPLOY_STATE_KEY)) {
+          delete(path);
+        }
+      }
+    }
+  }
+
+  public SingularityDeleteResult deleteRequestId(String requestId) {
+    return delete(getRequestDeployPath(requestId));
   }
 }
