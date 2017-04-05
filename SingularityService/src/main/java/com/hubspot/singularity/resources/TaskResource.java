@@ -65,6 +65,7 @@ import com.hubspot.singularity.api.SingularityKillTaskRequest;
 import com.hubspot.singularity.api.SingularityTaskMetadataRequest;
 import com.hubspot.singularity.auth.SingularityAuthorizationHelper;
 import com.hubspot.singularity.config.SingularityTaskMetadataConfiguration;
+import com.hubspot.singularity.data.DisasterManager;
 import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.data.SingularityValidator;
 import com.hubspot.singularity.data.SlaveManager;
@@ -91,10 +92,11 @@ public class TaskResource extends AbstractLeaderAwareResource {
   private final Optional<SingularityUser> user;
   private final SingularityTaskMetadataConfiguration taskMetadataConfiguration;
   private final SingularityValidator validator;
+  private final DisasterManager disasterManager;
 
   @Inject
   public TaskResource(TaskRequestManager taskRequestManager, TaskManager taskManager, SlaveManager slaveManager, MesosClient mesosClient, SingularityTaskMetadataConfiguration taskMetadataConfiguration,
-                      SingularityAuthorizationHelper authorizationHelper, Optional<SingularityUser> user, RequestManager requestManager, SingularityValidator validator,
+                      SingularityAuthorizationHelper authorizationHelper, Optional<SingularityUser> user, RequestManager requestManager, SingularityValidator validator, DisasterManager disasterManager,
                       @Named(SingularityResourceModule.PROXY_TO_LEADER_HTTP_CLIENT) HttpClient httpClient, SingularityLeaderLatch leaderLatch) {
     super(httpClient, leaderLatch);
     this.taskManager = taskManager;
@@ -106,6 +108,7 @@ public class TaskResource extends AbstractLeaderAwareResource {
     this.authorizationHelper = authorizationHelper;
     this.user = user;
     this.validator = validator;
+    this.disasterManager = disasterManager;
   }
 
   private boolean useWebCache(Boolean useWebCache) {
@@ -117,6 +120,10 @@ public class TaskResource extends AbstractLeaderAwareResource {
   @Path("/scheduled")
   @ApiOperation("Retrieve list of scheduled tasks.")
   public List<SingularityTaskRequest> getScheduledTasks(@QueryParam("useWebCache") Boolean useWebCache) {
+    if (!authorizationHelper.hasAdminAuthorization(user) && disasterManager.isDisabled(SingularityAction.EXPENSIVE_API_CALLS)) {
+      LOG.trace("Short circuting getScheduledTasks() to [] due to EXPENSIVE_API_CALLS disabled");
+      return Collections.emptyList();
+    }
     return taskRequestManager.getTaskRequests(ImmutableList.copyOf(authorizationHelper.filterByAuthorizedRequests(user,
         taskManager.getPendingTasks(useWebCache(useWebCache)), SingularityTransformHelpers.PENDING_TASK_TO_REQUEST_ID, SingularityAuthorizationScope.READ)));
   }
@@ -199,6 +206,10 @@ public class TaskResource extends AbstractLeaderAwareResource {
   @Path("/cleaning")
   @ApiOperation("Retrieve the list of cleaning tasks.")
   public Iterable<SingularityTaskCleanup> getCleaningTasks(@QueryParam("useWebCache") Boolean useWebCache) {
+    if (!authorizationHelper.hasAdminAuthorization(user) && disasterManager.isDisabled(SingularityAction.EXPENSIVE_API_CALLS)) {
+      LOG.trace("Short circuting getCleaningTasks() to [] due to EXPENSIVE_API_CALLS disabled");
+      return Collections.emptyList();
+    }
     return authorizationHelper.filterByAuthorizedRequests(user, taskManager.getCleanupTasks(useWebCache(useWebCache)), SingularityTransformHelpers.TASK_CLEANUP_TO_REQUEST_ID, SingularityAuthorizationScope.READ);
   }
 

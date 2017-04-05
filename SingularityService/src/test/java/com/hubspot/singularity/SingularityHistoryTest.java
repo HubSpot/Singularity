@@ -26,6 +26,7 @@ import com.hubspot.singularity.api.SingularityDeleteRequestRequest;
 import com.hubspot.singularity.api.SingularityRunNowRequest;
 import com.hubspot.singularity.api.SingularityScaleRequest;
 import com.hubspot.singularity.config.HistoryPurgingConfiguration;
+import com.hubspot.singularity.data.MetadataManager;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.data.history.HistoryManager;
 import com.hubspot.singularity.data.history.SingularityHistoryPurger;
@@ -47,6 +48,9 @@ public class SingularityHistoryTest extends SingularitySchedulerTestBase {
 
   @Inject
   protected HistoryManager historyManager;
+
+  @Inject
+  protected MetadataManager metadataManager;
 
   @Inject
   protected SingularityTaskHistoryPersister taskHistoryPersister;
@@ -140,7 +144,7 @@ public class SingularityHistoryTest extends SingularitySchedulerTestBase {
 
     Assert.assertEquals(1, getTaskHistoryForRequest(requestId, 0, 100).size());
 
-    SingularityHistoryPurger purger = new SingularityHistoryPurger(historyPurgingConfiguration, historyManager);
+    SingularityHistoryPurger purger = new SingularityHistoryPurger(historyPurgingConfiguration, historyManager, taskManager, deployManager, requestManager, metadataManager);
 
     purger.runActionOnPoll();
 
@@ -162,7 +166,7 @@ public class SingularityHistoryTest extends SingularitySchedulerTestBase {
     historyPurgingConfiguration.setEnabled(true);
     historyPurgingConfiguration.setDeleteTaskHistoryAfterDays(10);
 
-    SingularityHistoryPurger purger = new SingularityHistoryPurger(historyPurgingConfiguration, historyManager);
+    SingularityHistoryPurger purger = new SingularityHistoryPurger(historyPurgingConfiguration, historyManager, taskManager, deployManager, requestManager, metadataManager);
 
     purger.runActionOnPoll();
 
