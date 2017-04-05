@@ -253,7 +253,7 @@ public class RequestResource extends AbstractRequestResource {
   }
 
   public SingularityPendingRequestParent scheduleImmediately(String requestId) {
-    return scheduleImmediately(requestId, Optional.absent())
+    return scheduleImmediately(requestId, Optional.absent());
   }
 
   @POST
