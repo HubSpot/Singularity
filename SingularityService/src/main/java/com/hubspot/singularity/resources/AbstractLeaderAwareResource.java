@@ -3,6 +3,8 @@ package com.hubspot.singularity.resources;
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.curator.framework.recipes.leader.LeaderLatch;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.hubspot.horizon.HttpClient;
 import com.hubspot.horizon.HttpRequest;
@@ -11,6 +13,8 @@ import com.hubspot.horizon.HttpResponse;
 import com.hubspot.singularity.WebExceptions;
 
 public class AbstractLeaderAwareResource {
+  private static final Logger LOG = LoggerFactory.getLogger(AbstractLeaderAwareResource.class);
+
   protected final HttpClient httpClient;
   protected final LeaderLatch leaderLatch;
 
@@ -26,8 +30,12 @@ public class AbstractLeaderAwareResource {
     } catch (Exception e) {
       throw new RuntimeException("Could not get leader uri to proxy request");
     }
+
+    String protocol = request.getRequestURI().contains("https") ? "https://" : "http://";
+    String url = protocol + leaderUri + request.getContextPath() + request.getPathInfo();
+    LOG.debug("No the leader, proxying request to {}", url);
     HttpRequest.Builder requestBuilder = HttpRequest.newBuilder()
-        .setUrl(String.format("%s%s", leaderUri, request.getServletPath()))
+        .setUrl(url)
         .setMethod(Method.valueOf(request.getMethod()));
     copyHeadersAndParams(requestBuilder, request);
     HttpResponse response = httpClient.execute(requestBuilder.build());
