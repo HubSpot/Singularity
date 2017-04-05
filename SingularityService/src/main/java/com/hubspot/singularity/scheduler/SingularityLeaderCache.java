@@ -49,7 +49,7 @@ public class SingularityLeaderCache {
 
   public void cacheActiveTaskIds(List<SingularityTaskId> activeTaskIds) {
     this.activeTaskIds = Collections.synchronizedSet(new HashSet<SingularityTaskId>(activeTaskIds.size()));
-    activeTaskIds.forEach(activeTaskIds::add);
+    activeTaskIds.forEach(this.activeTaskIds::add);
   }
 
   public void cacheRequests(List<SingularityRequestWithState> requestsWithState) {
