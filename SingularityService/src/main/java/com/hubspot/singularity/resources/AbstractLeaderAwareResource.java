@@ -1,5 +1,7 @@
 package com.hubspot.singularity.resources;
 
+import java.util.Enumeration;
+
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.curator.framework.recipes.leader.LeaderLatch;
@@ -65,15 +67,21 @@ public class AbstractLeaderAwareResource {
   }
 
   private void copyHeadersAndParams(HttpRequest.Builder requestBuilder, HttpServletRequest request) {
-    while (request.getHeaderNames().hasMoreElements()) {
-      String headerName = request.getHeaderNames().nextElement();
-      requestBuilder.addHeader(headerName, request.getHeader(headerName));
-      LOG.trace("Copied header {}:{}", headerName, request.getHeader(headerName));
+    Enumeration<String> headerNames = request.getHeaderNames();
+    if (headerNames != null) {
+      while (headerNames.hasMoreElements()) {
+        String headerName = headerNames.nextElement();
+        requestBuilder.addHeader(headerName, request.getHeader(headerName));
+        LOG.trace("Copied header {}:{}", headerName, request.getHeader(headerName));
+      }
     }
-    while (request.getParameterNames().hasMoreElements()) {
-      String parameterName = request.getParameterNames().nextElement();
-      requestBuilder.setQueryParam(parameterName).to(request.getParameter(parameterName));
-      LOG.trace("Copied query param {}={}", parameterName, request.getParameter(parameterName));
+    Enumeration<String> parameterNames = request.getParameterNames();
+    if (parameterNames != null) {
+      while (parameterNames.hasMoreElements()) {
+        String parameterName = parameterNames.nextElement();
+        requestBuilder.setQueryParam(parameterName).to(request.getParameter(parameterName));
+        LOG.trace("Copied query param {}={}", parameterName, request.getParameter(parameterName));
+      }
     }
   }
 
