@@ -15,6 +15,8 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
+import org.apache.curator.framework.recipes.leader.LeaderLatch;
+
 import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
@@ -66,7 +68,7 @@ public class DeployResource extends AbstractRequestResource {
 
   @Inject
   public DeployResource(RequestManager requestManager, DeployManager deployManager, SingularityValidator validator, SingularityAuthorizationHelper authorizationHelper, Optional<SingularityUser> user,
-                        SingularityConfiguration configuration, TaskManager taskManager, SingularityLeaderLatch leaderLatch,
+                        SingularityConfiguration configuration, TaskManager taskManager, LeaderLatch leaderLatch,
                         @Named(SingularityResourceModule.PROXY_TO_LEADER_HTTP_CLIENT) HttpClient httpClient) {
     super(requestManager, deployManager, user, validator, authorizationHelper, httpClient, leaderLatch);
     this.configuration = configuration;

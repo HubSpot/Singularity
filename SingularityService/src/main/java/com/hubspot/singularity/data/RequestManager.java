@@ -354,7 +354,7 @@ public class RequestManager extends CuratorAsyncManager {
   }
 
   public void activateLeaderCache() {
-    leaderCache.cacheRequests(getRequests());
+    leaderCache.cacheRequests(fetchRequests());
   }
 
   public List<SingularityRequestWithState> getRequests() {
@@ -369,7 +369,7 @@ public class RequestManager extends CuratorAsyncManager {
     if (useWebCache && webCache.useCachedRequests()) {
       return webCache.getRequests();
     }
-    List<SingularityRequestWithState> requests = getAsyncChildren(NORMAL_PATH_ROOT, Optional.of(requestIdCache), requestTranscoder);
+    List<SingularityRequestWithState> requests = fetchRequests();
 
     if (useWebCache) {
       webCache.cacheRequests(requests);
@@ -377,7 +377,9 @@ public class RequestManager extends CuratorAsyncManager {
     return requests;
   }
 
-
+  public List<SingularityRequestWithState> fetchRequests() {
+    return getAsyncChildren(NORMAL_PATH_ROOT, Optional.of(requestIdCache), requestTranscoder);
+  }
 
   public Optional<SingularityRequestWithState> getRequest(String requestId) {
     return getData(getRequestPath(requestId), requestTranscoder);

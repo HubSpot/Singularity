@@ -2,18 +2,19 @@ package com.hubspot.singularity.resources;
 
 import javax.servlet.http.HttpServletRequest;
 
+import org.apache.curator.framework.recipes.leader.LeaderLatch;
+
 import com.hubspot.horizon.HttpClient;
 import com.hubspot.horizon.HttpRequest;
 import com.hubspot.horizon.HttpRequest.Method;
 import com.hubspot.horizon.HttpResponse;
-import com.hubspot.singularity.SingularityLeaderLatch;
 import com.hubspot.singularity.WebExceptions;
 
 public class AbstractLeaderAwareResource {
   protected final HttpClient httpClient;
-  protected final SingularityLeaderLatch leaderLatch;
+  protected final LeaderLatch leaderLatch;
 
-  public AbstractLeaderAwareResource(HttpClient httpClient, SingularityLeaderLatch leaderLatch) {
+  public AbstractLeaderAwareResource(HttpClient httpClient, LeaderLatch leaderLatch) {
     this.httpClient = httpClient;
     this.leaderLatch = leaderLatch;
   }
