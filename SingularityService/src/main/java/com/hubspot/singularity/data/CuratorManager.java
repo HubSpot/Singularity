@@ -123,60 +123,20 @@ public abstract class CuratorManager {
   }
 
   protected List<String> getChildren(String root) {
-    return getChildren(root, Optional.<ZkChildrenCache> absent());
-  }
-
-  protected <T> void checkLock(Optional<ZkChildrenCache> childrenCache) {
-    if (childrenCache.isPresent()) {
-      childrenCache.get().lock();
-    }
-  }
-
-  protected <T> void checkUnlock(Optional<ZkChildrenCache> childrenCache) {
-    if (childrenCache.isPresent()) {
-      childrenCache.get().unlock();
-    }
-  }
-
-  protected List<String> getChildren(String root, Optional<ZkChildrenCache> childrenCache) {
-    checkLock(childrenCache);
+    final long start = System.currentTimeMillis();
+    int numChildren = 0;
 
     try {
-      if (childrenCache.isPresent()) {
-        if (childrenCache.get().checkCacheUpToDate(root)) {
-          return childrenCache.get().getCache();
-        }
-      }
+      final List<String> children = curator.getChildren().forPath(root);
+      numChildren = children.size();
 
-      final long start = System.currentTimeMillis();
-      int numChildren = 0;
-
-      try {
-        final List<String> children = curator.getChildren().forPath(root);
-        numChildren = children.size();
-
-        if (childrenCache.isPresent()) {
-          childrenCache.get().setCache(children);
-        }
-
-        return children;
-      } catch (NoNodeException nne) {
-        clearCache(childrenCache);
-        return Collections.emptyList();
-      } catch (Throwable t) {
-        clearCache(childrenCache);
-        throw Throwables.propagate(t);
-      } finally {
-        log(OperationType.GET_CHILDREN, Optional.of(numChildren), Optional.<Integer>absent(), start, root);
-      }
+      return children;
+    } catch (NoNodeException nne) {
+      return Collections.emptyList();
+    } catch (Throwable t) {
+      throw Throwables.propagate(t);
     } finally {
-      checkUnlock(childrenCache);
-    }
-  }
-
-  protected <T> void clearCache(Optional<ZkChildrenCache> childrenCache) {
-    if (childrenCache.isPresent()) {
-      childrenCache.get().clearCache();
+      log(OperationType.GET_CHILDREN, Optional.of(numChildren), Optional.<Integer>absent(), start, root);
     }
   }
 

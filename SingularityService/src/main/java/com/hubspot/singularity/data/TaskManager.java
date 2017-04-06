@@ -117,7 +117,6 @@ public class TaskManager extends CuratorAsyncManager {
   private final ZkCache<SingularityTask> taskCache;
   private final SingularityWebCache webCache;
   private final SingularityLeaderCache leaderCache;
-  private final ZkChildrenCache taskCleanupIdCache;
 
   private final SingularityEventListener singularityEventListener;
   private final String serverId;
@@ -129,7 +128,7 @@ public class TaskManager extends CuratorAsyncManager {
       Transcoder<SingularityTaskCleanup> taskCleanupTranscoder, Transcoder<SingularityTaskHistoryUpdate> taskHistoryUpdateTranscoder, Transcoder<SingularityPendingTask> pendingTaskTranscoder,
       Transcoder<SingularityKilledTaskIdRecord> killedTaskIdRecordTranscoder, Transcoder<SingularityTaskShellCommandRequest> taskShellCommandRequestTranscoder,
       Transcoder<SingularityTaskShellCommandUpdate> taskShellCommandUpdateTranscoder,  Transcoder<SingularityTaskMetadata> taskMetadataTranscoder,
-      ZkCache<SingularityTask> taskCache, SingularityWebCache webCache, SingularityLeaderCache leaderCache, @Named(SingularityDataModule.TASK_CLEANUP_ID_CACHE_NAME) ZkChildrenCache taskCleanupIdCache,
+      ZkCache<SingularityTask> taskCache, SingularityWebCache webCache, SingularityLeaderCache leaderCache,
       @Named(SingularityMainModule.SERVER_ID_PROPERTY) String serverId) {
     super(curator, configuration, metricRegistry);
 
@@ -151,7 +150,6 @@ public class TaskManager extends CuratorAsyncManager {
 
     this.webCache = webCache;
     this.leaderCache = leaderCache;
-    this.taskCleanupIdCache = taskCleanupIdCache;
     this.serverId = serverId;
   }
 
@@ -384,7 +382,7 @@ public class TaskManager extends CuratorAsyncManager {
       return leaderCache.getCleanupTaskIds();
     }
 
-    return getChildrenAsIds(CLEANUP_PATH_ROOT, Optional.of(taskCleanupIdCache), taskIdTranscoder);
+    return getChildrenAsIds(CLEANUP_PATH_ROOT, taskIdTranscoder);
   }
 
   public List<SingularityTaskCleanup> getCleanupTasks(boolean useWebCache) {
@@ -417,7 +415,7 @@ public class TaskManager extends CuratorAsyncManager {
   }
 
   public List<SingularityTaskCleanup> fetchCleanupTasks() {
-    return getAsyncChildren(CLEANUP_PATH_ROOT, Optional.of(taskCleanupIdCache), taskCleanupTranscoder);
+    return getAsyncChildren(CLEANUP_PATH_ROOT, taskCleanupTranscoder);
   }
 
   public List<SingularityTask> getActiveTasks() {

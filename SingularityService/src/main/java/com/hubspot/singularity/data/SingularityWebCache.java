@@ -145,7 +145,7 @@ public class SingularityWebCache {
   }
 
   public void cacheRequests(List<SingularityRequestWithState> requests) {
-    activeMissMeter.mark();
+    requestsMissMeter.mark();
     Map<String, SingularityRequestWithState> newRequests = new HashMap<>(requests.size());
     for (SingularityRequestWithState request : requests) {
       newRequests.put(request.getRequest().getId(), request);
