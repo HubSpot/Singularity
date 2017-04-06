@@ -1,6 +1,7 @@
 package com.hubspot.singularity.resources;
 
 import java.util.Enumeration;
+import java.util.function.Supplier;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.WebApplicationException;
@@ -29,12 +30,21 @@ public class AbstractLeaderAwareResource {
     this.objectMapper = objectMapper;
   }
 
-  protected <T, Q> T proxyToLeader(HttpServletRequest request, Class<T> clazz, Q body) {
+  protected <T, Q> T maybeProxyToLeader(HttpServletRequest request, Class<T> clazz, Q body, Supplier<T> runnable) {
+    if (leaderLatch.hasLeadership()) {
+      return runnable.get();
+    }
+
     String leaderUri;
     try {
       leaderUri = leaderLatch.getLeader().getId();
     } catch (Exception e) {
       throw new RuntimeException("Could not get leader uri to proxy request");
+    }
+
+    if (leaderUri.equals(leaderLatch.getId())) {
+      LOG.warn("Got own leader id when not the leader! There is likely no leader, will not proxy");
+      return runnable.get();
     }
 
     String url = "http://" + leaderUri + request.getContextPath() + request.getPathInfo();
@@ -83,6 +93,6 @@ public class AbstractLeaderAwareResource {
   }
 
   protected boolean useWebCache(Boolean useWebCache) {
-    return useWebCache != null && useWebCache.booleanValue();
+    return useWebCache != null && useWebCache;
   }
 }

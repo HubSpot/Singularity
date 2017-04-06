@@ -295,10 +295,7 @@ public class TaskResource extends AbstractLeaderAwareResource {
   })
   public SingularityTaskCleanup killTask(@PathParam("taskId") String taskId, @Context HttpServletRequest requestContext, Optional<SingularityKillTaskRequest> killTaskRequest
                                          ) {
-    if (!leaderLatch.hasLeadership()) {
-      return proxyToLeader(requestContext, SingularityTaskCleanup.class, killTaskRequest.orNull());
-    }
-    return killTask(taskId, killTaskRequest);
+    return maybeProxyToLeader(requestContext, SingularityTaskCleanup.class, killTaskRequest.orNull(), () -> killTask(taskId, killTaskRequest));
   }
 
   public SingularityTaskCleanup killTask(String taskId, Optional<SingularityKillTaskRequest> killTaskRequest) {

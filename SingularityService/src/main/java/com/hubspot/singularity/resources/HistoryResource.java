@@ -372,7 +372,7 @@ public class HistoryResource extends AbstractHistoryResource {
 
     List<String> requestIds = historyManager.getRequestHistoryLike(requestIdLike, limitStart, limitCount);
 
-    return authorizationHelper.filterAuthorizedRequestIds(user, requestIds, SingularityAuthorizationScope.READ, useWebCache);  // TODO: will this screw up pagination? A: yes.
+    return authorizationHelper.filterAuthorizedRequestIds(user, requestIds, SingularityAuthorizationScope.READ, useWebCache != null && useWebCache);  // TODO: will this screw up pagination? A: yes.
   }
 
   @GET
