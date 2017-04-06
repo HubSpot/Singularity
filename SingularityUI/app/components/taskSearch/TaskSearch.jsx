@@ -4,7 +4,7 @@ import { Link } from 'react-router';
 import { Glyphicon, Label } from 'react-bootstrap';
 import rootComponent from '../../rootComponent';
 import { FetchTaskSearchParams } from '../../actions/api/history';
-import { UpdateFilter, refresh } from '../../actions/ui/taskSearch';
+import { UpdateFilter } from '../../actions/ui/taskSearch';
 
 import Breadcrumbs from '../common/Breadcrumbs';
 import TaskSearchFilters from './TaskSearchFilters';
@@ -121,7 +121,7 @@ class TaskSearch extends React.Component {
           ref={(table) => this.bindResetPageAndCount(table)}
         >
           <Column
-            label=""
+            label="Task"
             id="url"
             key="url"
             className="actions-column"
@@ -213,4 +213,4 @@ function mapDispatchToProps(dispatch) {
   };
 }
 
-export default connect(mapStateToProps, mapDispatchToProps)(rootComponent(TaskSearch, (props) => refresh(Utils.maybe(props, ['params', 'requestId'], undefined), INITIAL_TASKS_PER_PAGE, 1), false));
+export default connect(mapStateToProps, mapDispatchToProps)(rootComponent(TaskSearch, null, false));
