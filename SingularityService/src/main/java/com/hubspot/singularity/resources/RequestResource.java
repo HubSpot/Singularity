@@ -581,7 +581,7 @@ public class RequestResource extends AbstractRequestResource {
     validator.checkScale(newRequest, Optional.<Integer>absent());
 
     checkBadRequest(oldRequest.getInstancesSafe() != newRequest.getInstancesSafe(), "Scale request has no affect on the # of instances (%s)", newRequest.getInstancesSafe());
-    String scaleMessage = String.format("Scaling from %d instance(s) to %d instances", oldRequest.getInstancesSafe(), newRequest.getInstancesSafe());
+    String scaleMessage = String.format("Scaling from %d -> %d", oldRequest.getInstancesSafe(), newRequest.getInstancesSafe());
     if (scaleRequest.getMessage().isPresent()) {
       scaleMessage = String.format("%s -- %s", scaleRequest.getMessage().get(), scaleMessage);
     } else {
