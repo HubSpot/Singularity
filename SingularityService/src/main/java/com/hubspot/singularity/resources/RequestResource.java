@@ -248,12 +248,7 @@ public class RequestResource extends AbstractRequestResource {
 
   @POST
   @Path("/request/{requestId}/run")
-  public SingularityPendingRequestParent scheduleImmediately(@PathParam("requestId") String requestId,
-                                                             @Context HttpServletRequest requestContext) {
-    return scheduleImmediately(requestId, requestContext, Optional.absent());
-  }
-
-  public SingularityPendingRequestParent scheduleImmediately(String requestId) {
+  public SingularityPendingRequestParent scheduleImmediately(@PathParam("requestId") String requestId) {
     return scheduleImmediately(requestId, Optional.absent());
   }
 
@@ -265,16 +260,7 @@ public class RequestResource extends AbstractRequestResource {
     @ApiResponse(code=400, message="Singularity Request is not scheduled or one-off"),
   })
   public SingularityPendingRequestParent scheduleImmediately(@ApiParam("The request ID to run") @PathParam("requestId") String requestId,
-                                                             @Context HttpServletRequest requestContext,
                                                              Optional<SingularityRunNowRequest> runNowRequest) {
-    if (!leaderLatch.hasLeadership()) {
-      return proxyToLeader(requestContext, SingularityPendingRequestParent.class, runNowRequest.orNull());
-    }
-    return scheduleImmediately(requestId, runNowRequest);
-  }
-
-  public SingularityPendingRequestParent scheduleImmediately(String requestId, Optional<SingularityRunNowRequest> runNowRequest) {
-
     SingularityRequestWithState requestWithState = fetchRequestWithState(requestId);
 
     authorizationHelper.checkForAuthorization(requestWithState.getRequest(), user, SingularityAuthorizationScope.WRITE);

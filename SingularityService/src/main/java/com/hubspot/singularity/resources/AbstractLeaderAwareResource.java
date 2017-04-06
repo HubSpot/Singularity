@@ -83,6 +83,6 @@ public class AbstractLeaderAwareResource {
   }
 
   protected boolean useWebCache(Boolean useWebCache) {
-    return useWebCache != null && useWebCache.booleanValue();
+    return useWebCache != null && useWebCache;
   }
 }
