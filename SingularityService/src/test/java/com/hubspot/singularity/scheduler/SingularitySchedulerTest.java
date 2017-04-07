@@ -1430,7 +1430,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     deployChecker.checkDeploys();
     SingularityDeployResult deployResult = deployManager.getDeployResult(requestId, firstDeployId).get();
     Assert.assertEquals(DeployState.FAILED, deployResult.getDeployState());
-    Assert.assertTrue(deployResult.getMessage().get().contains("DELETED"));
+    Assert.assertTrue(deployResult.getMessage().get().contains("MISSING"));
   }
 
   @Test
