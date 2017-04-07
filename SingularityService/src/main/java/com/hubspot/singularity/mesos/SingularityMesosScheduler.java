@@ -82,7 +82,7 @@ public class SingularityMesosScheduler implements Scheduler {
       }
     }
 
-    List<Protos.Offer> offersToDecline = new ArrayList<>();
+    List<Protos.Offer> offersToCheck = new ArrayList<>(offers);
 
     for (Offer offer : offers) {
       String rolesInfo = MesosUtils.getRoles(offer).toString();
@@ -91,18 +91,16 @@ public class SingularityMesosScheduler implements Scheduler {
 
       CheckResult checkResult = slaveAndRackManager.checkOffer(offer);
       if (checkResult == CheckResult.DECOMMISSIONING) {
-        offersToDecline.add(offer);
+        driver.declineOffer(offer.getId());
+        offersToCheck.remove(offer);
         LOG.debug("Will decline offer {}, slave {} is decommissioning", offer.getId().getValue(), offer.getHostname());
       }
     }
 
-    offersToDecline.forEach((o) -> driver.declineOffer(o.getId()));
-    offers.removeAll(offersToDecline);
-
-    final Set<Protos.OfferID> acceptedOffers = Sets.newHashSetWithExpectedSize(offers.size());
+    final Set<Protos.OfferID> acceptedOffers = Sets.newHashSetWithExpectedSize(offersToCheck.size());
 
     try {
-      List<SingularityOfferHolder> offerHolders = offerScheduler.checkOffers(offers, acceptedOffers);
+      List<SingularityOfferHolder> offerHolders = offerScheduler.checkOffers(offersToCheck, acceptedOffers);
 
       for (SingularityOfferHolder offerHolder : offerHolders) {
         if (!offerHolder.getAcceptedTasks().isEmpty()) {
@@ -116,7 +114,7 @@ public class SingularityMesosScheduler implements Scheduler {
     } catch (Throwable t) {
       LOG.error("Received fatal error while handling offers - will decline all available offers", t);
 
-      for (Protos.Offer offer : offers) {
+      for (Protos.Offer offer : offersToCheck) {
         if (acceptedOffers.contains(offer.getId())) {
           continue;
         }
