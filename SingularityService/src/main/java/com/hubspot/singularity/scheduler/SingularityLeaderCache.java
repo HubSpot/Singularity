@@ -16,6 +16,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.hubspot.singularity.SingularityPendingTask;
 import com.hubspot.singularity.SingularityPendingTaskId;
+import com.hubspot.singularity.SingularityRequestDeployState;
 import com.hubspot.singularity.SingularityRequestWithState;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskCleanup;
@@ -30,6 +31,7 @@ public class SingularityLeaderCache {
   private Set<SingularityTaskId> activeTaskIds;
   private Map<String, SingularityRequestWithState> requests;
   private Map<SingularityTaskId, SingularityTaskCleanup> cleanupTasks;
+  private Map<String, SingularityRequestDeployState> requestIdToDeployState;
 
   private volatile boolean active;
 
@@ -60,6 +62,11 @@ public class SingularityLeaderCache {
   public void cacheCleanupTasks(List<SingularityTaskCleanup> cleanups) {
     this.cleanupTasks = new ConcurrentHashMap<>(cleanups.size());
     cleanups.forEach((c) -> cleanupTasks.put(c.getTaskId(), c));
+  }
+
+  public void cacheRequestDeployStates(List<SingularityRequestDeployState> requestDeployStates) {
+    this.requestIdToDeployState = new ConcurrentHashMap<>(requestDeployStates.size());
+    requestDeployStates.forEach((r) -> requestIdToDeployState.put(r.getRequestId(), r));
   }
 
   public void stop() {
@@ -202,5 +209,26 @@ public class SingularityLeaderCache {
 
   public void createTaskCleanupIfNotExists(SingularityTaskCleanup cleanup) {
     cleanupTasks.putIfAbsent(cleanup.getTaskId(), cleanup);
+  }
+
+  public Optional<SingularityRequestDeployState> getRequestDeployState(String requestId) {
+    return Optional.fromNullable(requestIdToDeployState.get(requestId));
+  }
+
+  public List<SingularityRequestDeployState> getRequestDeployStates() {
+    return new ArrayList<>(requestIdToDeployState.values());
+  }
+
+  public void deleteRequestDeployState(String requestId) {
+    requestIdToDeployState.remove(requestId);
+  }
+
+  public void putRequestDeployState(SingularityRequestDeployState requestDeployState) {
+    if (!active) {
+      LOG.warn("putRequestDeployState {}, but not active", requestDeployState.getRequestId());
+      return;
+    }
+
+    requestIdToDeployState.put(requestDeployState.getRequestId(), requestDeployState);
   }
 }
