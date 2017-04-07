@@ -12,19 +12,19 @@ import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.hubspot.horizon.HttpClient;
 import com.hubspot.horizon.HttpRequest;
 import com.hubspot.horizon.HttpRequest.Method;
 import com.hubspot.horizon.HttpResponse;
+import com.hubspot.horizon.ning.NingHttpClient;
 
 public class AbstractLeaderAwareResource {
   private static final Logger LOG = LoggerFactory.getLogger(AbstractLeaderAwareResource.class);
 
-  protected final HttpClient httpClient;
+  protected final NingHttpClient httpClient;
   protected final LeaderLatch leaderLatch;
   protected final ObjectMapper objectMapper;
 
-  public AbstractLeaderAwareResource(HttpClient httpClient, LeaderLatch leaderLatch, ObjectMapper objectMapper) {
+  public AbstractLeaderAwareResource(NingHttpClient httpClient, LeaderLatch leaderLatch, ObjectMapper objectMapper) {
     this.httpClient = httpClient;
     this.leaderLatch = leaderLatch;
     this.objectMapper = objectMapper;
