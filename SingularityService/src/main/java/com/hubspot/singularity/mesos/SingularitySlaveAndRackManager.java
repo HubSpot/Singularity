@@ -371,7 +371,7 @@ public class SingularitySlaveAndRackManager {
     LOG.info("Found {} new racks ({} missing) and {} new slaves ({} missing)", racks, remainingActiveRacks.size(), slaves, activeSlavesById.size());
   }
 
-  private enum CheckResult {
+  public enum CheckResult {
     NEW, DECOMMISSIONING, ALREADY_ACTIVE;
   }
 
@@ -404,7 +404,7 @@ public class SingularitySlaveAndRackManager {
   }
 
   @Timed
-  public void checkOffer(Offer offer) {
+  public CheckResult checkOffer(Offer offer) {
     final String slaveId = offer.getSlaveId().getValue();
     final String rackId = slaveAndRackHelper.getRackIdOrDefault(offer);
     final String host = slaveAndRackHelper.getMaybeTruncatedHost(offer);
@@ -412,7 +412,9 @@ public class SingularitySlaveAndRackManager {
 
     final SingularitySlave slave = new SingularitySlave(slaveId, host, rackId, textAttributes, Optional.<MesosResourcesObject>absent());
 
-    if (check(slave, slaveManager) == CheckResult.NEW) {
+    CheckResult result = check(slave, slaveManager);
+
+    if (result == CheckResult.NEW) {
       if (inactiveSlaveManager.isInactive(slave.getHost())) {
         LOG.info("Slave {} on inactive host {} attempted to rejoin. Marking as decommissioned.", slave, host);
         slaveManager.changeState(slave, MachineState.STARTING_DECOMMISSION,
@@ -428,6 +430,8 @@ public class SingularitySlaveAndRackManager {
     if (check(rack, rackManager) == CheckResult.NEW) {
       LOG.info("Offer revealed a new rack {}", rack);
     }
+
+    return result;
   }
 
   @Timed
