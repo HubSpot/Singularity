@@ -36,6 +36,7 @@ import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.transcoders.IdTranscoder;
 import com.hubspot.singularity.data.transcoders.Transcoder;
 import com.hubspot.singularity.event.SingularityEventListener;
+import com.hubspot.singularity.scheduler.SingularityLeaderCache;
 
 @Singleton
 public class DeployManager extends CuratorAsyncManager {
@@ -54,6 +55,7 @@ public class DeployManager extends CuratorAsyncManager {
   private final IdTranscoder<SingularityDeployKey> deployKeyTranscoder;
 
   private final ZkCache<SingularityDeploy> deploysCache;
+  private final SingularityLeaderCache leaderCache;
 
   private static final String DEPLOY_ROOT = "/deploys";
 
@@ -73,9 +75,9 @@ public class DeployManager extends CuratorAsyncManager {
 
   @Inject
   public DeployManager(CuratorFramework curator, SingularityConfiguration configuration, MetricRegistry metricRegistry, SingularityEventListener singularityEventListener, Transcoder<SingularityDeploy> deployTranscoder,
-      Transcoder<SingularityRequestDeployState> requestDeployStateTranscoder, Transcoder<SingularityPendingDeploy> pendingDeployTranscoder, Transcoder<SingularityDeployMarker> deployMarkerTranscoder,
-      Transcoder<SingularityDeployStatistics> deployStatisticsTranscoder, Transcoder<SingularityDeployResult> deployStateTranscoder, IdTranscoder<SingularityDeployKey> deployKeyTranscoder,
-      Transcoder<SingularityUpdatePendingDeployRequest> updateRequestTranscoder, ZkCache<SingularityDeploy> deploysCache) {
+                       Transcoder<SingularityRequestDeployState> requestDeployStateTranscoder, Transcoder<SingularityPendingDeploy> pendingDeployTranscoder, Transcoder<SingularityDeployMarker> deployMarkerTranscoder,
+                       Transcoder<SingularityDeployStatistics> deployStatisticsTranscoder, Transcoder<SingularityDeployResult> deployStateTranscoder, IdTranscoder<SingularityDeployKey> deployKeyTranscoder,
+                       Transcoder<SingularityUpdatePendingDeployRequest> updateRequestTranscoder, ZkCache<SingularityDeploy> deploysCache, SingularityLeaderCache leaderCache) {
     super(curator, configuration, metricRegistry);
 
     this.singularityEventListener = singularityEventListener;
@@ -88,6 +90,7 @@ public class DeployManager extends CuratorAsyncManager {
     this.deployKeyTranscoder = deployKeyTranscoder;
     this.updateRequestTranscoder = updateRequestTranscoder;
     this.deploysCache = deploysCache;
+    this.leaderCache = leaderCache;
   }
 
   public List<SingularityDeployKey> getDeployIdsFor(String requestId) {
@@ -261,10 +264,17 @@ public class DeployManager extends CuratorAsyncManager {
   }
 
   public Optional<SingularityRequestDeployState> getRequestDeployState(String requestId) {
+    if (leaderCache.active()) {
+      return leaderCache.getRequestDeployState(requestId);
+    }
     return getData(getRequestDeployStatePath(requestId), requestDeployStateTranscoder);
   }
 
   public SingularityCreateResult saveNewRequestDeployState(SingularityRequestDeployState newDeployState) {
+    if (leaderCache.active()) {
+      leaderCache.putRequestDeployState(newDeployState);
+    }
+
     return save(getRequestDeployStatePath(newDeployState.getRequestId()), newDeployState, requestDeployStateTranscoder);
   }
 
@@ -289,6 +299,9 @@ public class DeployManager extends CuratorAsyncManager {
   }
 
   public SingularityDeleteResult deleteRequestDeployState(String requestId) {
+    if (leaderCache.active()) {
+      leaderCache.deleteRequestDeployState(requestId);
+    }
     return delete(getRequestDeployStatePath(requestId));
   }
 
