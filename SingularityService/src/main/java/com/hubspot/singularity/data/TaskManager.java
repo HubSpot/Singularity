@@ -117,7 +117,6 @@ public class TaskManager extends CuratorAsyncManager {
   private final ZkCache<SingularityTask> taskCache;
   private final SingularityWebCache webCache;
   private final SingularityLeaderCache leaderCache;
-  private final ZkChildrenCache taskCleanupIdCache;
 
   private final SingularityEventListener singularityEventListener;
   private final String serverId;
@@ -129,7 +128,7 @@ public class TaskManager extends CuratorAsyncManager {
       Transcoder<SingularityTaskCleanup> taskCleanupTranscoder, Transcoder<SingularityTaskHistoryUpdate> taskHistoryUpdateTranscoder, Transcoder<SingularityPendingTask> pendingTaskTranscoder,
       Transcoder<SingularityKilledTaskIdRecord> killedTaskIdRecordTranscoder, Transcoder<SingularityTaskShellCommandRequest> taskShellCommandRequestTranscoder,
       Transcoder<SingularityTaskShellCommandUpdate> taskShellCommandUpdateTranscoder,  Transcoder<SingularityTaskMetadata> taskMetadataTranscoder,
-      ZkCache<SingularityTask> taskCache, SingularityWebCache webCache, SingularityLeaderCache leaderCache, @Named(SingularityDataModule.TASK_CLEANUP_ID_CACHE_NAME) ZkChildrenCache taskCleanupIdCache,
+      ZkCache<SingularityTask> taskCache, SingularityWebCache webCache, SingularityLeaderCache leaderCache,
       @Named(SingularityMainModule.SERVER_ID_PROPERTY) String serverId) {
     super(curator, configuration, metricRegistry);
 
@@ -151,7 +150,6 @@ public class TaskManager extends CuratorAsyncManager {
 
     this.webCache = webCache;
     this.leaderCache = leaderCache;
-    this.taskCleanupIdCache = taskCleanupIdCache;
     this.serverId = serverId;
   }
 
@@ -380,15 +378,23 @@ public class TaskManager extends CuratorAsyncManager {
   }
 
   public List<SingularityTaskId> getCleanupTaskIds() {
-    return getChildrenAsIds(CLEANUP_PATH_ROOT, Optional.of(taskCleanupIdCache), taskIdTranscoder);
+    if (leaderCache.active()) {
+      return leaderCache.getCleanupTaskIds();
+    }
+
+    return getChildrenAsIds(CLEANUP_PATH_ROOT, taskIdTranscoder);
   }
 
   public List<SingularityTaskCleanup> getCleanupTasks(boolean useWebCache) {
+    if (leaderCache.active()) {
+      return leaderCache.getCleanupTasks();
+    }
+
     if (useWebCache && webCache.useCachedCleanupTasks()) {
       return webCache.getCleanupTasks();
     }
 
-    List<SingularityTaskCleanup> cleanupTasks = getAsyncChildren(CLEANUP_PATH_ROOT, Optional.of(taskCleanupIdCache), taskCleanupTranscoder);
+    List<SingularityTaskCleanup> cleanupTasks = fetchCleanupTasks();
 
     if (useWebCache) {
       webCache.cacheTaskCleanup(cleanupTasks);
@@ -402,7 +408,14 @@ public class TaskManager extends CuratorAsyncManager {
   }
 
   public Optional<SingularityTaskCleanup> getTaskCleanup(String taskId) {
+    if (leaderCache.active()) {
+      return leaderCache.getTaskCleanup(SingularityTaskId.valueOf(taskId));
+    }
     return getData(getCleanupPath(taskId), taskCleanupTranscoder);
+  }
+
+  public List<SingularityTaskCleanup> fetchCleanupTasks() {
+    return getAsyncChildren(CLEANUP_PATH_ROOT, taskCleanupTranscoder);
   }
 
   public List<SingularityTask> getActiveTasks() {
@@ -767,6 +780,7 @@ public class TaskManager extends CuratorAsyncManager {
   public void activateLeaderCache() {
     leaderCache.cachePendingTasks(fetchPendingTasks());
     leaderCache.cacheActiveTaskIds(getTaskIds(ACTIVE_PATH_ROOT));
+    leaderCache.cacheCleanupTasks(fetchCleanupTasks());
   }
 
   private List<SingularityPendingTask> fetchPendingTasks() {
@@ -966,7 +980,7 @@ public class TaskManager extends CuratorAsyncManager {
 
   public SingularityCreateResult saveTaskCleanup(SingularityTaskCleanup cleanup) {
     saveTaskHistoryUpdate(cleanup);
-
+    leaderCache.saveTaskCleanup(cleanup);
     return save(getCleanupPath(cleanup.getTaskId().getId()), cleanup, taskCleanupTranscoder);
   }
 
@@ -987,6 +1001,7 @@ public class TaskManager extends CuratorAsyncManager {
   }
 
   public SingularityCreateResult createTaskCleanup(SingularityTaskCleanup cleanup) {
+    leaderCache.createTaskCleanupIfNotExists(cleanup);
     final SingularityCreateResult result = create(getCleanupPath(cleanup.getTaskId().getId()), cleanup, taskCleanupTranscoder);
 
     if (result == SingularityCreateResult.CREATED) {
@@ -998,7 +1013,6 @@ public class TaskManager extends CuratorAsyncManager {
 
   public void deleteActiveTask(String taskId) {
     leaderCache.deleteActiveTaskId(taskId);
-
     delete(getActivePath(taskId));
   }
 
@@ -1008,12 +1022,12 @@ public class TaskManager extends CuratorAsyncManager {
   }
 
   public void deleteCleanupTask(String taskId) {
+    leaderCache.deleteTaskCleanup(SingularityTaskId.valueOf(taskId));
     delete(getCleanupPath(taskId));
   }
 
   public SingularityDeleteResult deleteTaskHistory(SingularityTaskId taskId) {
     taskCache.delete(getTaskPath(taskId));
-
     return delete(getHistoryPath(taskId));
   }
 
