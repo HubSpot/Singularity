@@ -643,6 +643,12 @@ public class RequestResource extends AbstractRequestResource {
     validator.checkScale(newRequest, Optional.<Integer>absent());
 
     checkBadRequest(oldRequest.getInstancesSafe() != newRequest.getInstancesSafe(), "Scale request has no affect on the # of instances (%s)", newRequest.getInstancesSafe());
+    String scaleMessage = String.format("Scaling from %d -> %d", oldRequest.getInstancesSafe(), newRequest.getInstancesSafe());
+    if (scaleRequest.getMessage().isPresent()) {
+      scaleMessage = String.format("%s -- %s", scaleRequest.getMessage().get(), scaleMessage);
+    } else {
+      scaleMessage = String.format("%s", scaleMessage);
+    }
 
     if (newRequest.getBounceAfterScale().or(scaleRequest.getBounce().or(false))) {
       validator.checkActionEnabled(SingularityAction.BOUNCE_REQUEST);
@@ -658,9 +664,9 @@ public class RequestResource extends AbstractRequestResource {
 
       SingularityBounceRequest bounceRequest = new SingularityBounceRequest(Optional.of(isIncrementalBounce), scaleRequest.getSkipHealthchecks(), Optional.<Long>absent(), Optional.of(UUID.randomUUID().toString()), Optional.<String>absent(), Optional.<SingularityShellCommand>absent());
 
-      submitRequest(newRequest, Optional.of(oldRequestWithState), Optional.of(RequestHistoryType.SCALED), scaleRequest.getSkipHealthchecks(), scaleRequest.getMessage(), Optional.of(bounceRequest));
+      submitRequest(newRequest, Optional.of(oldRequestWithState), Optional.of(RequestHistoryType.SCALED), scaleRequest.getSkipHealthchecks(), Optional.of(scaleMessage), Optional.of(bounceRequest));
     } else {
-      submitRequest(newRequest, Optional.of(oldRequestWithState), Optional.of(RequestHistoryType.SCALED), scaleRequest.getSkipHealthchecks(), scaleRequest.getMessage(), Optional.<SingularityBounceRequest>absent());
+      submitRequest(newRequest, Optional.of(oldRequestWithState), Optional.of(RequestHistoryType.SCALED), scaleRequest.getSkipHealthchecks(), Optional.of(scaleMessage), Optional.<SingularityBounceRequest>absent());
     }
 
     if (scaleRequest.getDurationMillis().isPresent()) {
