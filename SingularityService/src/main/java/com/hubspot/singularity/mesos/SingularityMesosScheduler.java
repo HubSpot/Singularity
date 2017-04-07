@@ -89,10 +89,10 @@ public class SingularityMesosScheduler implements Scheduler {
       LOG.debug("Received offer ID {} with roles {} from {} ({}) for {} cpu(s), {} memory, {} ports, and {} disk", offer.getId().getValue(), rolesInfo, offer.getHostname(), offer.getSlaveId().getValue(), MesosUtils.getNumCpus(offer), MesosUtils.getMemory(offer),
           MesosUtils.getNumPorts(offer), MesosUtils.getDisk(offer));
 
-
       CheckResult checkResult = slaveAndRackManager.checkOffer(offer);
       if (checkResult == CheckResult.DECOMMISSIONING) {
         offersToDecline.add(offer);
+        LOG.debug("Will decline offer {}, slave {} is decommissioning", offer.getId().getValue(), offer.getHostname());
       }
     }
 
