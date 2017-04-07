@@ -1,12 +1,15 @@
 package com.hubspot.singularity;
 
-import javax.inject.Inject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import com.ning.http.client.AsyncHttpClient;
+import com.google.inject.Inject;
+import com.hubspot.horizon.ning.NingHttpClient;
 
 import io.dropwizard.lifecycle.Managed;
 
-public class SingularityHttpClient extends AsyncHttpClient implements Managed {
+public class SingularityHttpClient extends NingHttpClient implements Managed {
+  private static final Logger LOG = LoggerFactory.getLogger(SingularityHttpClient.class);
 
   @Inject
   public SingularityHttpClient() {}
@@ -15,7 +18,7 @@ public class SingularityHttpClient extends AsyncHttpClient implements Managed {
   public void start() {}
 
   @Override
-  public void stop() {
+  public void stop() throws Exception {
     close();
   }
 
