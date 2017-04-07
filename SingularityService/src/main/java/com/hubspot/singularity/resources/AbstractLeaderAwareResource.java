@@ -15,6 +15,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hubspot.horizon.HttpRequest;
 import com.hubspot.horizon.HttpRequest.Method;
 import com.hubspot.horizon.HttpResponse;
+import com.hubspot.horizon.RetryStrategy;
 import com.hubspot.horizon.ning.NingHttpClient;
 
 public class AbstractLeaderAwareResource {
@@ -51,6 +52,7 @@ public class AbstractLeaderAwareResource {
     LOG.debug("Not the leader, proxying request to {}", url);
     HttpRequest.Builder requestBuilder = HttpRequest.newBuilder()
         .setUrl(url)
+        .setRetryStrategy(RetryStrategy.NEVER_RETRY)
         .setMethod(Method.valueOf(request.getMethod()));
 
     try {
@@ -66,7 +68,7 @@ public class AbstractLeaderAwareResource {
     HttpRequest httpRequest = requestBuilder.build();
     LOG.trace("Sending request to leader: {}", httpRequest);
     HttpResponse response = httpClient.execute(httpRequest);
-    if (response.isError()) {
+    if (response.isServerError() || response.isClientError()) {
       throw new WebApplicationException(response.getAsString(), response.getStatusCode());
     } else {
       return response.getAs(clazz);
