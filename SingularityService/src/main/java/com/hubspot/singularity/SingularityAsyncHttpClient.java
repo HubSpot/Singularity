@@ -6,10 +6,10 @@ import com.ning.http.client.AsyncHttpClient;
 
 import io.dropwizard.lifecycle.Managed;
 
-public class SingularityHttpClient extends AsyncHttpClient implements Managed {
+public class SingularityAsyncHttpClient extends AsyncHttpClient implements Managed {
 
   @Inject
-  public SingularityHttpClient() {}
+  public SingularityAsyncHttpClient() {}
 
   @Override
   public void start() {}

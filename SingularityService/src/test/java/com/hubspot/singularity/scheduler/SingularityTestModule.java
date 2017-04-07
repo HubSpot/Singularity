@@ -33,16 +33,15 @@ import com.google.inject.Provider;
 import com.google.inject.Scopes;
 import com.google.inject.Stage;
 import com.google.inject.TypeLiteral;
-import com.google.inject.name.Names;
 import com.google.inject.util.Modules;
 import com.hubspot.dropwizard.guicier.DropwizardModule;
 import com.hubspot.dropwizard.guicier.GuiceBundle;
-import com.hubspot.horizon.HttpClient;
 import com.hubspot.horizon.ning.NingHttpClient;
 import com.hubspot.jackson.datatype.protobuf.ProtobufModule;
 import com.hubspot.mesos.client.MesosClient;
 import com.hubspot.singularity.SingularityAbort;
 import com.hubspot.singularity.SingularityAuthModule;
+import com.hubspot.singularity.SingularityHttpClient;
 import com.hubspot.singularity.SingularityMainModule;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTestAuthenticator;
@@ -66,7 +65,6 @@ import com.hubspot.singularity.resources.DeployResource;
 import com.hubspot.singularity.resources.PriorityResource;
 import com.hubspot.singularity.resources.RackResource;
 import com.hubspot.singularity.resources.RequestResource;
-import com.hubspot.singularity.resources.SingularityResourceModule;
 import com.hubspot.singularity.resources.SlaveResource;
 import com.hubspot.singularity.resources.TaskResource;
 import com.hubspot.singularity.sentry.SingularityExceptionNotifier;
@@ -209,7 +207,7 @@ public class SingularityTestModule implements Module {
     mainBinder.install(new SingularityHistoryModule(configuration));
     mainBinder.install(new SingularityZkMigrationsModule());
 
-    mainBinder.bind(HttpClient.class).annotatedWith(Names.named(SingularityResourceModule.PROXY_TO_LEADER_HTTP_CLIENT)).toInstance(new NingHttpClient());
+    mainBinder.bind(NingHttpClient.class).to(SingularityHttpClient.class).in(Scopes.SINGLETON);
 
     mainBinder.install(new SingularityEventModule(configuration));
     mainBinder.install(Modules.override(new SingularityAuthModule(configuration))
