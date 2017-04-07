@@ -102,7 +102,7 @@ public class RequestHelper {
               System.currentTimeMillis(), Optional.<Boolean> absent(), newRequest.getId(), Optional.of(maybeDeployId.get()), skipHealthchecks, message, actionId, maybeBounceRequest.get().getRunShellCommandBeforeKill()));
 
           if (createResult != SingularityCreateResult.EXISTED) {
-            requestManager.bounce(newRequest, System.currentTimeMillis(), user, Optional.of(String.format("Bouncing due to bounce after scale by %s", user)));
+            requestManager.bounce(newRequest, System.currentTimeMillis(), user, Optional.of("Bouncing due to bounce after scale"));
             final SingularityBounceRequest validatedBounceRequest = validator.checkBounceRequest(maybeBounceRequest.get());
             requestManager.saveExpiringObject(new SingularityExpiringBounce(newRequest.getId(), maybeDeployId.get(), user, System.currentTimeMillis(), validatedBounceRequest, actionId.get()));
           } else {
