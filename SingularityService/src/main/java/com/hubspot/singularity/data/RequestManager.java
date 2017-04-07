@@ -272,6 +272,9 @@ public class RequestManager extends CuratorAsyncManager {
 
   public SingularityDeleteResult markDeleted(SingularityRequest request, long timestamp, Optional<String> user, Optional<String> message) {
     save(request, RequestState.DELETED, RequestHistoryType.DELETED, timestamp, user, message);
+    if (leaderCache.active()) {
+      leaderCache.deleteRequest(request.getId());
+    }
     return delete(getRequestPath(request.getId()));
   }
 
