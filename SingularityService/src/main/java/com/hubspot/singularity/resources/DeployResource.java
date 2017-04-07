@@ -6,6 +6,7 @@ import static com.hubspot.singularity.WebExceptions.checkNotNullBadRequest;
 
 import java.util.Collections;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -13,6 +14,7 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 
 import org.apache.curator.framework.recipes.leader.LeaderLatch;
@@ -90,7 +92,11 @@ public class DeployResource extends AbstractRequestResource {
     @ApiResponse(code=400, message="Deploy object is invalid"),
     @ApiResponse(code=409, message="A current deploy is in progress. It may be canceled by calling DELETE"),
   })
-  public SingularityRequestParent deploy(@ApiParam(required=true) SingularityDeployRequest deployRequest) {
+  public SingularityRequestParent deploy(@Context HttpServletRequest requestContext, @ApiParam(required=true) SingularityDeployRequest deployRequest) {
+    return maybeProxyToLeader(requestContext, SingularityRequestParent.class, deployRequest, () -> deploy(deployRequest));
+  }
+
+  public SingularityRequestParent deploy(SingularityDeployRequest deployRequest) {
     validator.checkActionEnabled(SingularityAction.DEPLOY);
     SingularityDeploy deploy = deployRequest.getDeploy();
     checkNotNullBadRequest(deploy, "DeployRequest must have a deploy object");
