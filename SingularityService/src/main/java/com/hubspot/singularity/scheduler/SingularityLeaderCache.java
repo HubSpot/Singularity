@@ -187,6 +187,15 @@ public class SingularityLeaderCache {
     requests.put(requestWithState.getRequest().getId(), requestWithState);
   }
 
+  public void deleteRequest(String reqeustId) {
+    if (!active) {
+      LOG.warn("deleteRequest {}, but not active", reqeustId);
+      return;
+    }
+
+    requests.remove(reqeustId);
+  }
+
   public List<SingularityTaskCleanup> getCleanupTasks() {
     return new ArrayList<>(cleanupTasks.values());
   }
