@@ -215,6 +215,7 @@ public class RequestManager extends CuratorAsyncManager {
   }
 
   public SingularityCreateResult pause(SingularityRequest request, long timestamp, Optional<String> user, Optional<String> message) {
+    markBounceComplete(request.getId());
     return save(request, RequestState.PAUSED, RequestHistoryType.PAUSED, timestamp, user, message);
   }
 
