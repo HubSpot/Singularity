@@ -8,6 +8,7 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
 import com.google.common.base.Optional;
@@ -36,8 +37,8 @@ public class RequestGroupResource {
 
     @GET
     @ApiOperation(value="Get a list of Singularity request groups")
-    public List<SingularityRequestGroup> getRequestGroupIds() {
-        return requestGroupManager.getRequestGroups();
+    public List<SingularityRequestGroup> getRequestGroupIds(@QueryParam("useWebCache") Boolean useWebCache) {
+        return requestGroupManager.getRequestGroups(useWebCache != null && useWebCache);
     }
 
     @GET
