@@ -19,10 +19,8 @@ class TaskInstanceRedirect extends Component {
           this.props.router.replace(`task/${task.taskId.id}`);
         }
       });
-      if (!found) {
-        this.props.router.replace(`request/${nextProps.params.requestId}`);
-      }
     }
+    this.props.router.replace(`request/${nextProps.params.requestId}`);
   }
 
   render() {
