@@ -3,6 +3,7 @@ package com.hubspot.singularity.data;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.utils.ZKPaths;
@@ -370,5 +371,10 @@ public class DeployManager extends CuratorAsyncManager {
 
   public SingularityDeleteResult deleteRequestId(String requestId) {
     return delete(getRequestDeployPath(requestId));
+  }
+
+  public void activateLeaderCache() {
+    List<String> paths = getChildren(BY_REQUEST_ROOT).stream().map(this::getRequestDeployStatePath).collect(Collectors.toList());
+    leaderCache.cacheRequestDeployStates(getAsync("getRequestDeployStates", paths, requestDeployStateTranscoder));
   }
 }
