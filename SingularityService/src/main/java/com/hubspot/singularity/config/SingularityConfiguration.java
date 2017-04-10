@@ -71,6 +71,10 @@ public class SingularityConfiguration extends Configuration {
 
   private long cleanupEverySeconds = 5;
 
+  private int delayCleanupWhenAboveTasks = 1000;
+
+  private int delayCleanupForMsWhenAboveTasks = 30000;
+
   private long checkQueuedMailsEveryMillis = TimeUnit.SECONDS.toMillis(15);
 
   private boolean ldapCacheEnabled = true;
@@ -364,6 +368,22 @@ public class SingularityConfiguration extends Configuration {
 
   public long getCleanupEverySeconds() {
     return cleanupEverySeconds;
+  }
+
+  public int getDelayCleanupWhenAboveTasks() {
+    return delayCleanupWhenAboveTasks;
+  }
+
+  public int getDelayCleanupForMsWhenAboveTasks() {
+    return delayCleanupForMsWhenAboveTasks;
+  }
+
+  public void setDelayCleanupForMsWhenAboveTasks(int delayCleanupForMsWhenAboveTasks) {
+    this.delayCleanupForMsWhenAboveTasks = delayCleanupForMsWhenAboveTasks;
+  }
+
+  public void setDelayCleanupWhenAboveTasks(int delayCleanupWhenAboveTasks) {
+    this.delayCleanupWhenAboveTasks = delayCleanupWhenAboveTasks;
   }
 
   public long getCloseWaitSeconds() {
