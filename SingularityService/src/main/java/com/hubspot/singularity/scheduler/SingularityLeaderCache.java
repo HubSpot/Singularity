@@ -72,9 +72,9 @@ public class SingularityLeaderCache {
     cleanups.forEach((c) -> cleanupTasks.put(c.getTaskId(), c));
   }
 
-  public void cacheRequestDeployStates(List<SingularityRequestDeployState> requestDeployStates) {
+  public void cacheRequestDeployStates(Map<String, SingularityRequestDeployState> requestDeployStates) {
     this.requestIdToDeployState = new ConcurrentHashMap<>(requestDeployStates.size());
-    requestDeployStates.forEach((r) -> requestIdToDeployState.put(r.getRequestId(), r));
+    requestDeployStates.putAll(requestDeployStates);
   }
 
   public void cacheKilledTasks(List<SingularityKilledTaskIdRecord> killedTasks) {
@@ -245,6 +245,17 @@ public class SingularityLeaderCache {
 
   public Optional<SingularityRequestDeployState> getRequestDeployState(String requestId) {
     return Optional.fromNullable(requestIdToDeployState.get(requestId));
+  }
+
+  public Map<String, SingularityRequestDeployState> getRequestDeployStateByRequestId() {
+    return new HashMap<>(requestIdToDeployState);
+  }
+
+  public Map<String, SingularityRequestDeployState> getRequestDeployStateByRequestId(Collection<String> requestIds) {
+    return new HashMap<>(requestIdToDeployState.entrySet().stream()
+        .filter((e) -> requestIds.contains(e.getKey()))
+        .collect(Collectors.toMap((e) -> e.getKey(), (e) -> e.getValue()))
+    );
   }
 
   public void deleteRequestDeployState(String requestId) {
