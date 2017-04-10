@@ -71,7 +71,7 @@ public class SingularityLeaderCache {
 
   public void cacheRequestDeployStates(Map<String, SingularityRequestDeployState> requestDeployStates) {
     this.requestIdToDeployState = new ConcurrentHashMap<>(requestDeployStates.size());
-    requestDeployStates.putAll(requestDeployStates);
+    requestIdToDeployState.putAll(requestDeployStates);
   }
 
   public void cacheKilledTasks(List<SingularityKilledTaskIdRecord> killedTasks) {
