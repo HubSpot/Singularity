@@ -297,10 +297,11 @@ public class SingularityLeaderCache {
       LOG.warn("saveTaskHistoryUpdate {}, but not active", taskHistoryUpdate);
       return;
     }
+    historyUpdates.putIfAbsent(taskHistoryUpdate.getTaskId(), new ConcurrentHashMap<>());
     if (overwrite) {
-      historyUpdates.putIfAbsent(taskHistoryUpdate.getTaskId(), new ConcurrentHashMap<>()).put(taskHistoryUpdate.getTaskState(), taskHistoryUpdate);
+      historyUpdates.get(taskHistoryUpdate.getTaskId()).put(taskHistoryUpdate.getTaskState(), taskHistoryUpdate);
     } else {
-      historyUpdates.putIfAbsent(taskHistoryUpdate.getTaskId(), new ConcurrentHashMap<>()).putIfAbsent(taskHistoryUpdate.getTaskState(), taskHistoryUpdate);
+      historyUpdates.get(taskHistoryUpdate.getTaskId()).putIfAbsent(taskHistoryUpdate.getTaskState(), taskHistoryUpdate);
     }
   }
 
