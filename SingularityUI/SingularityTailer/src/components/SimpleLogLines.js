@@ -7,7 +7,7 @@ export const LOG_LINE_HEIGHT = 14;
 
 const SimpleLogLines = (props) => {
   if (!props.isLoaded) {
-    return <div>Not loaded</div>;
+    return <div>Loading...</div>;
   }
 
   return (
