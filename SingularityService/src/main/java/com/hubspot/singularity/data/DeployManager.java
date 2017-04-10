@@ -55,6 +55,7 @@ public class DeployManager extends CuratorAsyncManager {
 
   private final IdTranscoder<SingularityDeployKey> deployKeyTranscoder;
 
+  private final ZkCache<SingularityDeploy> deploysCache;
   private final SingularityLeaderCache leaderCache;
 
   private static final String DEPLOY_ROOT = "/deploys";
@@ -77,7 +78,7 @@ public class DeployManager extends CuratorAsyncManager {
   public DeployManager(CuratorFramework curator, SingularityConfiguration configuration, MetricRegistry metricRegistry, SingularityEventListener singularityEventListener, Transcoder<SingularityDeploy> deployTranscoder,
                        Transcoder<SingularityRequestDeployState> requestDeployStateTranscoder, Transcoder<SingularityPendingDeploy> pendingDeployTranscoder, Transcoder<SingularityDeployMarker> deployMarkerTranscoder,
                        Transcoder<SingularityDeployStatistics> deployStatisticsTranscoder, Transcoder<SingularityDeployResult> deployStateTranscoder, IdTranscoder<SingularityDeployKey> deployKeyTranscoder,
-                       Transcoder<SingularityUpdatePendingDeployRequest> updateRequestTranscoder, SingularityLeaderCache leaderCache) {
+                       Transcoder<SingularityUpdatePendingDeployRequest> updateRequestTranscoder, ZkCache<SingularityDeploy> deploysCache, SingularityLeaderCache leaderCache) {
     super(curator, configuration, metricRegistry);
 
     this.singularityEventListener = singularityEventListener;
@@ -89,6 +90,7 @@ public class DeployManager extends CuratorAsyncManager {
     this.deployStateTranscoder = deployStateTranscoder;
     this.deployKeyTranscoder = deployKeyTranscoder;
     this.updateRequestTranscoder = updateRequestTranscoder;
+    this.deploysCache = deploysCache;
     this.leaderCache = leaderCache;
   }
 
@@ -180,7 +182,7 @@ public class DeployManager extends CuratorAsyncManager {
       paths.add(getDeployDataPath(deployKey.getRequestId(), deployKey.getDeployId()));
     }
 
-    final List<SingularityDeploy> deploys = getAsync("getDeploysForKeys", paths, deployTranscoder);
+    final List<SingularityDeploy> deploys = getAsync("getDeploysForKeys", paths, deployTranscoder, deploysCache);
 
     final Map<SingularityDeployKey, SingularityDeploy> deployKeyToDeploy = Maps.uniqueIndex(deploys, new Function<SingularityDeploy, SingularityDeployKey>() {
       @Override
@@ -249,7 +251,7 @@ public class DeployManager extends CuratorAsyncManager {
   public Optional<SingularityDeploy> getDeploy(String requestId, String deployId) {
     final String deployPath = getDeployDataPath(requestId, deployId);
 
-    return getData(deployPath, deployTranscoder);
+    return getData(deployPath, deployTranscoder, deploysCache, true);
   }
 
   public Optional<String> getInUseDeployId(String requestId) {

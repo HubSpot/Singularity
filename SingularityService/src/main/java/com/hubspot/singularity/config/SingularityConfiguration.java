@@ -45,6 +45,12 @@ public class SingularityConfiguration extends Configuration {
 
   private long cacheTasksForMillis = TimeUnit.DAYS.toMillis(1);
 
+  private int cacheDeploysMaxSize = 2000;
+
+  private int cacheDeploysInitialSize = 100;
+
+  private long cacheDeploysForMillis = TimeUnit.DAYS.toMillis(5);
+
   private long cacheStateForMillis = TimeUnit.SECONDS.toMillis(30);
 
   private long checkDeploysEverySeconds = 5;
@@ -440,6 +446,30 @@ public class SingularityConfiguration extends Configuration {
 
   public void setCacheTasksInitialSize(int cacheTasksInitialSize) {
     this.cacheTasksInitialSize = cacheTasksInitialSize;
+  }
+
+  public int getCacheDeploysMaxSize() {
+    return cacheDeploysMaxSize;
+  }
+
+  public void setCacheDeploysMaxSize(int cacheDeploysMaxSize) {
+    this.cacheDeploysMaxSize = cacheDeploysMaxSize;
+  }
+
+  public int getCacheDeploysInitialSize() {
+    return cacheDeploysInitialSize;
+  }
+
+  public void setCacheDeploysInitialSize(int cacheDeploysInitialSize) {
+    this.cacheDeploysInitialSize = cacheDeploysInitialSize;
+  }
+
+  public long getCacheDeploysForMillis() {
+    return cacheDeploysForMillis;
+  }
+
+  public void setCacheDeploysForMillis(long cacheDeploysForMillis) {
+    this.cacheDeploysForMillis = cacheDeploysForMillis;
   }
 
   public int getCoreThreadpoolSize() {
