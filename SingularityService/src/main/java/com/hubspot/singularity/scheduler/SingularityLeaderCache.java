@@ -314,4 +314,12 @@ public class SingularityLeaderCache {
     }
     historyUpdates.getOrDefault(taskId, new HashMap<>()).remove(state);
   }
+
+  public void deleteTaskHistory(SingularityTaskId taskId) {
+    if (!active) {
+      LOG.warn("deleteTaskHistory {}, but not active", taskId);
+      return;
+    }
+    historyUpdates.remove(taskId);
+  }
 }
