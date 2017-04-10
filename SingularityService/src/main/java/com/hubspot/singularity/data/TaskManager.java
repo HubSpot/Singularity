@@ -781,6 +781,7 @@ public class TaskManager extends CuratorAsyncManager {
     leaderCache.cachePendingTasks(fetchPendingTasks());
     leaderCache.cacheActiveTaskIds(getTaskIds(ACTIVE_PATH_ROOT));
     leaderCache.cacheCleanupTasks(fetchCleanupTasks());
+    leaderCache.cacheKilledTasks(fetchKilledTaskIdRecords());
   }
 
   private List<SingularityPendingTask> fetchPendingTasks() {
@@ -906,14 +907,27 @@ public class TaskManager extends CuratorAsyncManager {
   }
 
   public SingularityCreateResult saveKilledRecord(SingularityKilledTaskIdRecord killedTaskIdRecord) {
+    if (leaderCache.active()) {
+      leaderCache.addKilledTask(killedTaskIdRecord);
+    }
     return save(getKilledPath(killedTaskIdRecord.getTaskId()), killedTaskIdRecord, killedTaskIdRecordTranscoder);
   }
 
   public List<SingularityKilledTaskIdRecord> getKilledTaskIdRecords() {
+    if (leaderCache.active()) {
+      return leaderCache.getKilledTasks();
+    }
+    return fetchKilledTaskIdRecords();
+  }
+
+  public List<SingularityKilledTaskIdRecord> fetchKilledTaskIdRecords() {
     return getAsyncChildren(DRIVER_KILLED_PATH_ROOT, killedTaskIdRecordTranscoder);
   }
 
   public SingularityDeleteResult deleteKilledRecord(SingularityTaskId taskId) {
+    if (leaderCache.active()) {
+      leaderCache.deleteKilledTask(taskId);
+    }
     return delete(getKilledPath(taskId));
   }
 

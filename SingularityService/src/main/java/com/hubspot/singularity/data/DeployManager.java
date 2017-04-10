@@ -3,6 +3,7 @@ package com.hubspot.singularity.data;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.utils.ZKPaths;
@@ -36,6 +37,7 @@ import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.transcoders.IdTranscoder;
 import com.hubspot.singularity.data.transcoders.Transcoder;
 import com.hubspot.singularity.event.SingularityEventListener;
+import com.hubspot.singularity.scheduler.SingularityLeaderCache;
 
 @Singleton
 public class DeployManager extends CuratorAsyncManager {
@@ -52,6 +54,8 @@ public class DeployManager extends CuratorAsyncManager {
   private final Transcoder<SingularityUpdatePendingDeployRequest> updateRequestTranscoder;
 
   private final IdTranscoder<SingularityDeployKey> deployKeyTranscoder;
+
+  private final SingularityLeaderCache leaderCache;
 
   private static final String DEPLOY_ROOT = "/deploys";
 
@@ -71,9 +75,9 @@ public class DeployManager extends CuratorAsyncManager {
 
   @Inject
   public DeployManager(CuratorFramework curator, SingularityConfiguration configuration, MetricRegistry metricRegistry, SingularityEventListener singularityEventListener, Transcoder<SingularityDeploy> deployTranscoder,
-      Transcoder<SingularityRequestDeployState> requestDeployStateTranscoder, Transcoder<SingularityPendingDeploy> pendingDeployTranscoder, Transcoder<SingularityDeployMarker> deployMarkerTranscoder,
-      Transcoder<SingularityDeployStatistics> deployStatisticsTranscoder, Transcoder<SingularityDeployResult> deployStateTranscoder, IdTranscoder<SingularityDeployKey> deployKeyTranscoder,
-      Transcoder<SingularityUpdatePendingDeployRequest> updateRequestTranscoder) {
+                       Transcoder<SingularityRequestDeployState> requestDeployStateTranscoder, Transcoder<SingularityPendingDeploy> pendingDeployTranscoder, Transcoder<SingularityDeployMarker> deployMarkerTranscoder,
+                       Transcoder<SingularityDeployStatistics> deployStatisticsTranscoder, Transcoder<SingularityDeployResult> deployStateTranscoder, IdTranscoder<SingularityDeployKey> deployKeyTranscoder,
+                       Transcoder<SingularityUpdatePendingDeployRequest> updateRequestTranscoder, SingularityLeaderCache leaderCache) {
     super(curator, configuration, metricRegistry);
 
     this.singularityEventListener = singularityEventListener;
@@ -85,6 +89,7 @@ public class DeployManager extends CuratorAsyncManager {
     this.deployStateTranscoder = deployStateTranscoder;
     this.deployKeyTranscoder = deployKeyTranscoder;
     this.updateRequestTranscoder = updateRequestTranscoder;
+    this.leaderCache = leaderCache;
   }
 
   public List<SingularityDeployKey> getDeployIdsFor(String requestId) {
@@ -258,10 +263,17 @@ public class DeployManager extends CuratorAsyncManager {
   }
 
   public Optional<SingularityRequestDeployState> getRequestDeployState(String requestId) {
+    if (leaderCache.active()) {
+      return leaderCache.getRequestDeployState(requestId);
+    }
     return getData(getRequestDeployStatePath(requestId), requestDeployStateTranscoder);
   }
 
   public SingularityCreateResult saveNewRequestDeployState(SingularityRequestDeployState newDeployState) {
+    if (leaderCache.active()) {
+      leaderCache.putRequestDeployState(newDeployState);
+    }
+
     return save(getRequestDeployStatePath(newDeployState.getRequestId()), newDeployState, requestDeployStateTranscoder);
   }
 
@@ -286,6 +298,9 @@ public class DeployManager extends CuratorAsyncManager {
   }
 
   public SingularityDeleteResult deleteRequestDeployState(String requestId) {
+    if (leaderCache.active()) {
+      leaderCache.deleteRequestDeployState(requestId);
+    }
     return delete(getRequestDeployStatePath(requestId));
   }
 
@@ -354,5 +369,10 @@ public class DeployManager extends CuratorAsyncManager {
 
   public SingularityDeleteResult deleteRequestId(String requestId) {
     return delete(getRequestDeployPath(requestId));
+  }
+
+  public void activateLeaderCache() {
+    List<String> paths = getChildren(BY_REQUEST_ROOT).stream().map(this::getRequestDeployStatePath).collect(Collectors.toList());
+    leaderCache.cacheRequestDeployStates(getAsync("getRequestDeployStates", paths, requestDeployStateTranscoder));
   }
 }
