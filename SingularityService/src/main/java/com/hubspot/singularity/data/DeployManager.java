@@ -3,7 +3,6 @@ package com.hubspot.singularity.data;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.utils.ZKPaths;
@@ -109,6 +108,14 @@ public class DeployManager extends CuratorAsyncManager {
 
   @Timed
   public Map<String, SingularityRequestDeployState> getRequestDeployStatesByRequestIds(Collection<String> requestIds) {
+    if (leaderCache.active()) {
+      return leaderCache.getRequestDeployStateByRequestId(requestIds);
+    }
+
+    return fetchDeployStatesByRequestIds(requestIds);
+  }
+
+  public Map<String, SingularityRequestDeployState> fetchDeployStatesByRequestIds(Collection<String> requestIds) {
     final List<String> paths = Lists.newArrayListWithCapacity(requestIds.size());
 
     for (String requestId : requestIds) {
@@ -127,9 +134,11 @@ public class DeployManager extends CuratorAsyncManager {
 
   @Timed
   public Map<String, SingularityRequestDeployState> getAllRequestDeployStatesByRequestId() {
+    if (leaderCache.active()) {
+      return leaderCache.getRequestDeployStateByRequestId();
+    }
     final List<String> requestIds = getChildren(BY_REQUEST_ROOT);
-
-    return getRequestDeployStatesByRequestIds(requestIds);
+    return fetchDeployStatesByRequestIds(requestIds);
   }
 
   public List<SingularityDeployMarker> getCancelDeploys() {
@@ -372,7 +381,7 @@ public class DeployManager extends CuratorAsyncManager {
   }
 
   public void activateLeaderCache() {
-    List<String> paths = getChildren(BY_REQUEST_ROOT).stream().map(this::getRequestDeployStatePath).collect(Collectors.toList());
-    leaderCache.cacheRequestDeployStates(getAsync("getRequestDeployStates", paths, requestDeployStateTranscoder));
+    final List<String> requestIds = getChildren(BY_REQUEST_ROOT);
+    leaderCache.cacheRequestDeployStates(fetchDeployStatesByRequestIds(requestIds));
   }
 }

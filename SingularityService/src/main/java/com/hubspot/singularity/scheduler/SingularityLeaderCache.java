@@ -1,12 +1,15 @@
 package com.hubspot.singularity.scheduler;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -66,9 +69,9 @@ public class SingularityLeaderCache {
     cleanups.forEach((c) -> cleanupTasks.put(c.getTaskId(), c));
   }
 
-  public void cacheRequestDeployStates(List<SingularityRequestDeployState> requestDeployStates) {
+  public void cacheRequestDeployStates(Map<String, SingularityRequestDeployState> requestDeployStates) {
     this.requestIdToDeployState = new ConcurrentHashMap<>(requestDeployStates.size());
-    requestDeployStates.forEach((r) -> requestIdToDeployState.put(r.getRequestId(), r));
+    requestDeployStates.putAll(requestDeployStates);
   }
 
   public void cacheKilledTasks(List<SingularityKilledTaskIdRecord> killedTasks) {
@@ -229,6 +232,17 @@ public class SingularityLeaderCache {
 
   public Optional<SingularityRequestDeployState> getRequestDeployState(String requestId) {
     return Optional.fromNullable(requestIdToDeployState.get(requestId));
+  }
+
+  public Map<String, SingularityRequestDeployState> getRequestDeployStateByRequestId() {
+    return new HashMap<>(requestIdToDeployState);
+  }
+
+  public Map<String, SingularityRequestDeployState> getRequestDeployStateByRequestId(Collection<String> requestIds) {
+    return new HashMap<>(requestIdToDeployState.entrySet().stream()
+        .filter((e) -> requestIds.contains(e.getKey()))
+        .collect(Collectors.toMap((e) -> e.getKey(), (e) -> e.getValue()))
+    );
   }
 
   public void deleteRequestDeployState(String requestId) {
