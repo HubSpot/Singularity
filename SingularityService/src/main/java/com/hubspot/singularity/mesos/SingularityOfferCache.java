@@ -51,6 +51,7 @@ public class SingularityOfferCache implements OfferCache, RemovalListener<String
   @Override
   public void cacheOffer(SchedulerDriver driver, long timestamp, Offer offer) {
     if (!useOfferCache.get()) {
+      driver.declineOffer(offer.getId());
       return;
     }
     LOG.debug("Caching offer {} for {}", offer.getId().getValue(), JavaUtils.durationFromMillis(configuration.getCacheOffersForMillis()));
