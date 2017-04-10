@@ -504,7 +504,7 @@ public class TaskManager extends CuratorAsyncManager {
   }
 
   public Map<SingularityTaskId, List<SingularityTaskHistoryUpdate>> getAllTaskHistoryUpdates() {
-    return getTaskHistoryUpdates(getChildrenAsIds(UPDATES_PATH, taskIdTranscoder));
+    return getTaskHistoryUpdates(getAllTaskIds());
   }
 
   public int getNumHealthchecks(SingularityTaskId taskId) {
@@ -1063,6 +1063,9 @@ public class TaskManager extends CuratorAsyncManager {
 
   public SingularityDeleteResult deleteTaskHistory(SingularityTaskId taskId) {
     taskCache.delete(getTaskPath(taskId));
+    if (leaderCache.active()) {
+      leaderCache.deleteTaskHistory(taskId);
+    }
     return delete(getHistoryPath(taskId));
   }
 
