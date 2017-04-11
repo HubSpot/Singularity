@@ -64,6 +64,7 @@ public class ValidatorTest extends SingularityTestBaseNoDb {
 
   @Test
   public void itForbidsHealthCheckStartupDelaysLongerThanKillWait() {
+    // Default kill wait time is 10 minutes (600 seconds)
     HealthcheckOptions healthCheck = new HealthcheckOptionsBuilder("/")
         .setPortNumber(Optional.of(8080L))
         .setStartupDelaySeconds(Optional.of(10000))
