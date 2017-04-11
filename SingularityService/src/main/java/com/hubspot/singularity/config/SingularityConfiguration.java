@@ -322,7 +322,7 @@ public class SingularityConfiguration extends Configuration {
 
   private int maxDecommissioningSlaves = 2;
 
-  private long delayPollersWhenDeltaOverMs = 30000;
+  private long delayPollersWhenDeltaOverMs = 15000;
 
   private boolean delayOfferProcessingForLargeStatusUpdateDelta = true;
 
