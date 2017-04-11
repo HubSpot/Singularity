@@ -1,6 +1,6 @@
 package com.hubspot.singularity.mesos;
 
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.ConcurrentHashMap;
 
 import javax.ws.rs.HEAD;
 
@@ -12,7 +12,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.codahale.metrics.Meter;
-import com.codahale.metrics.Timer;
 import com.codahale.metrics.annotation.Timed;
 import com.google.common.base.Optional;
 import com.google.common.base.Strings;
@@ -65,7 +64,7 @@ public class SingularityMesosStatusUpdateHandler {
   private final SingularityConfiguration configuration;
   private final Multiset<Protos.TaskStatus.Reason> taskLostReasons;
   private final Meter lostTasksMeter;
-  private final Timer statusUpdateDeltaTimer;
+  private final ConcurrentHashMap<Long, Long> statusUpdateDeltas;
 
   @Inject
   public SingularityMesosStatusUpdateHandler(TaskManager taskManager, DeployManager deployManager, RequestManager requestManager,
@@ -77,7 +76,7 @@ public class SingularityMesosStatusUpdateHandler {
       SingularityConfiguration configuration,
       @Named(SingularityMesosModule.TASK_LOST_REASONS_COUNTER) Multiset<Protos.TaskStatus.Reason> taskLostReasons,
       @Named(SingularityMainModule.LOST_TASKS_METER) Meter lostTasksMeter,
-      @Named(SingularityMainModule.STATUS_UPDATE_DELTA_TIMER) Timer statusUpdateDeltaTimer) {
+      @Named(SingularityMainModule.STATUS_UPDATE_DELTAS) ConcurrentHashMap<Long, Long> statusUpdateDeltas) {
     this.taskManager = taskManager;
     this.deployManager = deployManager;
     this.requestManager = requestManager;
@@ -95,7 +94,7 @@ public class SingularityMesosStatusUpdateHandler {
     this.configuration = configuration;
     this.taskLostReasons = taskLostReasons;
     this.lostTasksMeter = lostTasksMeter;
-    this.statusUpdateDeltaTimer = statusUpdateDeltaTimer;
+    this.statusUpdateDeltas = statusUpdateDeltas;
   }
 
   /**
@@ -173,10 +172,11 @@ public class SingularityMesosStatusUpdateHandler {
       timestamp = (long) (status.getTimestamp() * 1000);
     }
 
-    long delta = System.currentTimeMillis() - timestamp;
+    long now = System.currentTimeMillis();
+    long delta = now - timestamp;
 
     LOG.debug("Update: task {} is now {} ({}) at {} (delta: {})", taskId, status.getState(), status.getMessage(), timestamp, JavaUtils.durationFromMillis(delta));
-    statusUpdateDeltaTimer.update(delta, TimeUnit.MILLISECONDS);
+    statusUpdateDeltas.put(now, delta);
 
     final Optional<SingularityTaskId> maybeTaskId = getTaskId(taskId);
 

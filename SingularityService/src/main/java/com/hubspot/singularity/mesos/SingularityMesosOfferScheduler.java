@@ -88,7 +88,7 @@ public class SingularityMesosOfferScheduler {
     return taskRequestHolders;
   }
 
-  public SingularityOfferProcessingResult checkOffers(final Collection<Protos.Offer> offers) {
+  public List<SingularityOfferHolder> checkOffers(final Collection<Protos.Offer> offers) {
     boolean useTaskCredits = disasterManager.isTaskCreditEnabled();
     int taskCredits = useTaskCredits ? disasterManager.getUpdatedCreditCount() : -1;
     final SingularitySchedulerStateCache stateCache = stateCacheProvider.get();
@@ -102,7 +102,7 @@ public class SingularityMesosOfferScheduler {
 
     if (offers.isEmpty()) {
       LOG.debug("No offers to check");
-      return new SingularityOfferProcessingResult(0, numDueTasks, Collections.emptyList());
+      return Collections.emptyList();
     }
 
     final List<SingularityOfferHolder> offerHolders = Lists.newArrayListWithCapacity(offers.size());
@@ -154,7 +154,7 @@ public class SingularityMesosOfferScheduler {
 
     LOG.info("{} tasks scheduled, {} tasks remaining after examining {} offers", tasksScheduled, numDueTasks - tasksScheduled, offers.size());
 
-    return new SingularityOfferProcessingResult(tasksScheduled, numDueTasks - tasksScheduled, offerHolders);
+    return offerHolders;
   }
 
   private boolean canScheduleAdditionalTasks(int taskCredits) {
