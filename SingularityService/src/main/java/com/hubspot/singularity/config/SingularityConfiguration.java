@@ -324,7 +324,7 @@ public class SingularityConfiguration extends Configuration {
 
   private long delayPollersWhenDeltaOverMs = 30000;
 
-  private boolean delayOfferProcessingForLargeStatusUpdateDelta;
+  private boolean delayOfferProcessingForLargeStatusUpdateDelta = true;
 
   public long getAskDriverToKillTasksAgainAfterMillis() {
     return askDriverToKillTasksAgainAfterMillis;
