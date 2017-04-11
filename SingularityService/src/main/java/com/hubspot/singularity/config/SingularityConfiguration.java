@@ -324,6 +324,8 @@ public class SingularityConfiguration extends Configuration {
 
   private long delayPollersWhenDeltaOverMs = 30000;
 
+  private boolean delayOfferProcessingForLargeStatusUpdateDelta;
+
   public long getAskDriverToKillTasksAgainAfterMillis() {
     return askDriverToKillTasksAgainAfterMillis;
   }
@@ -1353,5 +1355,13 @@ public class SingularityConfiguration extends Configuration {
 
   public void setDelayPollersWhenDeltaOverMs(long delayPollersWhenDeltaOverMs) {
     this.delayPollersWhenDeltaOverMs = delayPollersWhenDeltaOverMs;
+  }
+
+  public boolean isDelayOfferProcessingForLargeStatusUpdateDelta() {
+    return delayOfferProcessingForLargeStatusUpdateDelta;
+  }
+
+  public void setDelayOfferProcessingForLargeStatusUpdateDelta(boolean delayOfferProcessingForLargeStatusUpdateDelta) {
+    this.delayOfferProcessingForLargeStatusUpdateDelta = delayOfferProcessingForLargeStatusUpdateDelta;
   }
 }
