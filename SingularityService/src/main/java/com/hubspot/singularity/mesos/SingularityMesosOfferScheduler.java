@@ -97,10 +97,6 @@ public class SingularityMesosOfferScheduler {
     scheduler.checkForDecomissions(stateCache);
     scheduler.drainPendingQueue(stateCache);
 
-    for (Protos.Offer offer : offers) {
-      slaveAndRackManager.checkOffer(offer);
-    }
-
     final Map<String, SingularityTaskRequestHolder> pendingTaskIdToTaskRequest = getDueTaskRequestHolders();
 
     final int numDueTasks = pendingTaskIdToTaskRequest.size();
