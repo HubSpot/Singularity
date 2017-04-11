@@ -41,6 +41,7 @@ import TaskLbUpdates from './TaskLbUpdates';
 import TaskInfo from './TaskInfo';
 import TaskEnvVars from './TaskEnvVars';
 import TaskHealthchecks from './TaskHealthchecks';
+import TaskStatus from './TaskStatus';
 
 class TaskDetail extends Component {
 
@@ -76,6 +77,7 @@ class TaskDetail extends Component {
       healthcheckResults: PropTypes.array,
       ports: PropTypes.array,
       directory: PropTypes.string,
+      status: PropTypes.oneOf([TaskStatus.RUNNING, TaskStatus.STOPPED, TaskStatus.NEVER_RAN]),
       isStillRunning: PropTypes.bool,
       isCleaning: PropTypes.bool,
       loadBalancerUpdates: PropTypes.array
@@ -422,7 +424,7 @@ class TaskDetail extends Component {
         <TaskAlerts task={this.props.task} deploy={this.props.deploy} pendingDeploys={this.props.pendingDeploys} />
         <TaskMetadataAlerts task={this.props.task} />
         <TaskHistory taskUpdates={this.props.task.taskUpdates} />
-        <TaskLatestLog taskId={this.props.taskId} isStillRunning={this.props.task.isStillRunning} />
+        <TaskLatestLog taskId={this.props.taskId} status={this.props.task.status} />
         {this.renderFiles(filesToDisplay)}
         {_.isEmpty(this.props.s3Logs) || <TaskS3Logs taskId={this.props.task.task.taskId.id} s3Files={this.props.s3Logs} taskStartedAt={this.props.task.task.taskId.startedAt} />}
         {_.isEmpty(this.props.task.loadBalancerUpdates) || <TaskLbUpdates loadBalancerUpdates={this.props.task.loadBalancerUpdates} />}
@@ -452,10 +454,18 @@ function mapHealthchecksToProps(task) {
 function mapTaskToProps(task) {
   task.lastKnownState = _.last(task.taskUpdates);
   let isStillRunning = true;
+  let status = TaskStatus.RUNNING;
+
   if (task.taskUpdates && _.contains(Utils.TERMINAL_TASK_STATES, task.lastKnownState.taskState)) {
+    if (_.contains(_.map(task.taskUpdates, (update) => update.taskState), 'TASK_RUNNING')) {
+      status = TaskStatus.STOPPED;
+    } else {
+      status = TaskStatus.NEVER_RAN;
+    }
     isStillRunning = false;
   }
   task.isStillRunning = isStillRunning;
+  task.status = status;
 
   task.isCleaning = task.lastKnownState && task.lastKnownState.taskState === 'TASK_CLEANING';
 
