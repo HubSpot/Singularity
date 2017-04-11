@@ -1,6 +1,8 @@
 package com.hubspot.singularity.resources;
 
+import java.io.IOException;
 import java.util.Enumeration;
+import java.util.concurrent.ExecutionException;
 import java.util.function.Supplier;
 
 import javax.servlet.http.HttpServletRequest;
@@ -12,20 +14,20 @@ import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.hubspot.horizon.HttpRequest;
-import com.hubspot.horizon.HttpRequest.Method;
-import com.hubspot.horizon.HttpResponse;
-import com.hubspot.horizon.RetryStrategy;
-import com.hubspot.horizon.ning.NingHttpClient;
+import com.google.common.base.Charsets;
+import com.ning.http.client.AsyncHttpClient;
+import com.ning.http.client.AsyncHttpClient.BoundRequestBuilder;
+import com.ning.http.client.Request;
+import com.ning.http.client.Response;
 
 public class AbstractLeaderAwareResource {
   private static final Logger LOG = LoggerFactory.getLogger(AbstractLeaderAwareResource.class);
 
-  protected final NingHttpClient httpClient;
+  protected final AsyncHttpClient httpClient;
   protected final LeaderLatch leaderLatch;
   protected final ObjectMapper objectMapper;
 
-  public AbstractLeaderAwareResource(NingHttpClient httpClient, LeaderLatch leaderLatch, ObjectMapper objectMapper) {
+  public AbstractLeaderAwareResource(AsyncHttpClient httpClient, LeaderLatch leaderLatch, ObjectMapper objectMapper) {
     this.httpClient = httpClient;
     this.leaderLatch = leaderLatch;
     this.objectMapper = objectMapper;
@@ -50,10 +52,21 @@ public class AbstractLeaderAwareResource {
 
     String url = "http://" + leaderUri + request.getContextPath() + request.getPathInfo();
     LOG.debug("Not the leader, proxying request to {}", url);
-    HttpRequest.Builder requestBuilder = HttpRequest.newBuilder()
-        .setUrl(url)
-        .setRetryStrategy(RetryStrategy.NEVER_RETRY)
-        .setMethod(Method.valueOf(request.getMethod()));
+
+    BoundRequestBuilder requestBuilder;
+    switch (request.getMethod().toUpperCase()) {
+      case "POST":
+        requestBuilder = httpClient.preparePost(url);
+        break;
+      case "PUT":
+        requestBuilder = httpClient.preparePut(url);
+        break;
+      case "DELETE":
+        requestBuilder = httpClient.prepareDelete(url);
+        break;
+      default:
+        throw new WebApplicationException(String.format("Not meant to proxy request of method %s", request.getMethod()), 400);
+    }
 
     try {
       if (body != null) {
@@ -62,20 +75,35 @@ public class AbstractLeaderAwareResource {
       }
     } catch (JsonProcessingException jpe) {
       LOG.error("Could not write body from object {}", body);
+      throw new WebApplicationException(jpe, 500);
     }
 
     copyHeadersAndParams(requestBuilder, request);
-    HttpRequest httpRequest = requestBuilder.build();
-    LOG.trace("Sending request to leader: {}", httpRequest);
-    HttpResponse response = httpClient.execute(httpRequest);
-    if (response.isServerError() || response.isClientError()) {
-      throw new WebApplicationException(response.getAsString(), response.getStatusCode());
-    } else {
-      return response.getAs(clazz);
+    Request httpRequest = requestBuilder.build();
+
+    Response response;
+    try {
+      LOG.trace("Sending request to leader: {}", httpRequest);
+      response = httpClient.executeRequest(httpRequest).get();
+    } catch (IOException|ExecutionException|InterruptedException e) {
+      LOG.error("Could not proxy request {} to leader", e);
+      throw new WebApplicationException(e, 500);
+    }
+
+    try {
+      if (response.getStatusCode() > 399) {
+        throw new WebApplicationException(response.getResponseBody(Charsets.UTF_8.toString()), response.getStatusCode());
+      } else {
+        return objectMapper.readValue(response.getResponseBodyAsStream(), clazz);
+      }
+    } catch (IOException ioe) {
+      String message = String.format("Request to leader succeeded with status {}, but could not interpret response", response.getStatusCode());
+      LOG.error(message, ioe);
+      throw new WebApplicationException(message, ioe, 500);
     }
   }
 
-  private void copyHeadersAndParams(HttpRequest.Builder requestBuilder, HttpServletRequest request) {
+  private void copyHeadersAndParams(BoundRequestBuilder requestBuilder, HttpServletRequest request) {
     Enumeration<String> headerNames = request.getHeaderNames();
     if (headerNames != null) {
       while (headerNames.hasMoreElements()) {
@@ -88,7 +116,7 @@ public class AbstractLeaderAwareResource {
     if (parameterNames != null) {
       while (parameterNames.hasMoreElements()) {
         String parameterName = parameterNames.nextElement();
-        requestBuilder.setQueryParam(parameterName).to(request.getParameter(parameterName));
+        requestBuilder.addQueryParameter(parameterName, request.getParameter(parameterName));
         LOG.trace("Copied query param {}={}", parameterName, request.getParameter(parameterName));
       }
     }
