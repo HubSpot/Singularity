@@ -3,6 +3,7 @@ package com.hubspot.singularity.data;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicLong;
 
 import javax.inject.Singleton;
 
@@ -19,10 +20,12 @@ import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
+import com.google.inject.name.Named;
 import com.hubspot.mesos.CounterMap;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.SingularityCreateResult;
 import com.hubspot.singularity.SingularityHostState;
+import com.hubspot.singularity.SingularityMainModule;
 import com.hubspot.singularity.SingularityPendingDeploy;
 import com.hubspot.singularity.SingularityPendingTaskId;
 import com.hubspot.singularity.SingularityPriorityFreezeParent;
@@ -58,11 +61,13 @@ public class StateManager extends CuratorManager {
   private final SingularityAuthDatastore authDatastore;
   private final Transcoder<SingularityTaskReconciliationStatistics> taskReconciliationStatisticsTranscoder;
   private final PriorityManager priorityManager;
+  private final AtomicLong statusUpdateDeltaAvg;
 
   @Inject
   public StateManager(CuratorFramework curatorFramework, SingularityConfiguration configuration, MetricRegistry metricRegistry, RequestManager requestManager, TaskManager taskManager,
       DeployManager deployManager, SlaveManager slaveManager, RackManager rackManager, Transcoder<SingularityState> stateTranscoder, Transcoder<SingularityHostState> hostStateTranscoder,
-      SingularityConfiguration singularityConfiguration, SingularityAuthDatastore authDatastore, PriorityManager priorityManager, Transcoder<SingularityTaskReconciliationStatistics> taskReconciliationStatisticsTranscoder) {
+      SingularityConfiguration singularityConfiguration, SingularityAuthDatastore authDatastore, PriorityManager priorityManager, Transcoder<SingularityTaskReconciliationStatistics> taskReconciliationStatisticsTranscoder,
+      @Named(SingularityMainModule.STATUS_UPDATE_DELTA_30S_AVERAGE) AtomicLong statusUpdateDeltaAvg) {
     super(curatorFramework, configuration, metricRegistry);
 
     this.requestManager = requestManager;
@@ -76,6 +81,7 @@ public class StateManager extends CuratorManager {
     this.authDatastore = authDatastore;
     this.priorityManager = priorityManager;
     this.taskReconciliationStatisticsTranscoder = taskReconciliationStatisticsTranscoder;
+    this.statusUpdateDeltaAvg = statusUpdateDeltaAvg;
   }
 
   public SingularityCreateResult saveTaskReconciliationStatistics(SingularityTaskReconciliationStatistics taskReconciliationStatistics) {
@@ -320,6 +326,7 @@ public class StateManager extends CuratorManager {
     return new SingularityState(activeTasks, launchingTasks, numActiveRequests, cooldownRequests, numPausedRequests, scheduledTasks, pendingRequests, lbCleanupTasks, lbCleanupRequests, cleaningRequests, activeSlaves,
         deadSlaves, decommissioningSlaves, activeRacks, deadRacks, decommissioningRacks, cleaningTasks, states, oldestDeploy, numDeploys, scheduledTasksInfo.getNumLateTasks(),
         scheduledTasksInfo.getNumFutureTasks(), scheduledTasksInfo.getMaxTaskLag(), System.currentTimeMillis(), includeRequestIds ? overProvisionedRequestIds : null,
-        includeRequestIds ? underProvisionedRequestIds : null, overProvisionedRequestIds.size(), underProvisionedRequestIds.size(), numFinishedRequests, unknownRacks, unknownSlaves, authDatastoreHealthy, minimumPriorityLevel);
+        includeRequestIds ? underProvisionedRequestIds : null, overProvisionedRequestIds.size(), underProvisionedRequestIds.size(), numFinishedRequests, unknownRacks, unknownSlaves, authDatastoreHealthy, minimumPriorityLevel,
+        statusUpdateDeltaAvg.get());
   }
 }
