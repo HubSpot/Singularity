@@ -3,6 +3,7 @@ package com.hubspot.singularity.mesos;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicLong;
 
 import javax.inject.Singleton;
 
@@ -16,9 +17,11 @@ import org.slf4j.LoggerFactory;
 import com.codahale.metrics.annotation.Timed;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
+import com.google.inject.name.Named;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.mesos.MesosUtils;
 import com.hubspot.singularity.SingularityAction;
+import com.hubspot.singularity.SingularityMainModule;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.DisasterManager;
 import com.hubspot.singularity.mesos.SingularitySlaveAndRackManager.CheckResult;
@@ -36,10 +39,14 @@ public class SingularityMesosScheduler implements Scheduler {
   private final SingularityMesosStatusUpdateHandler statusUpdateHandler;
   private final DisasterManager disasterManager;
   private final boolean offerCacheEnabled;
+  private final boolean delayWhenStatusUpdateDeltaTooLarge;
+  private final long delayWhenDeltaOverMs;
+  private final AtomicLong statusUpdateDeltaAvg;
 
   @Inject
   public SingularityMesosScheduler(SingularityMesosFrameworkMessageHandler messageHandler, SingularitySlaveAndRackManager slaveAndRackManager, SchedulerDriverSupplier schedulerDriverSupplier,
-                                   OfferCache offerCache, SingularityMesosOfferScheduler offerScheduler, SingularityMesosStatusUpdateHandler statusUpdateHandler, DisasterManager disasterManager, SingularityConfiguration configuration) {
+      OfferCache offerCache, SingularityMesosOfferScheduler offerScheduler, SingularityMesosStatusUpdateHandler statusUpdateHandler, DisasterManager disasterManager, SingularityConfiguration configuration,
+      @Named(SingularityMainModule.STATUS_UPDATE_DELTA_30S_AVERAGE) AtomicLong statusUpdateDeltaAvg) {
     this.messageHandler = messageHandler;
     this.slaveAndRackManager = slaveAndRackManager;
     this.schedulerDriverSupplier = schedulerDriverSupplier;
@@ -48,6 +55,9 @@ public class SingularityMesosScheduler implements Scheduler {
     this.statusUpdateHandler = statusUpdateHandler;
     this.disasterManager = disasterManager;
     this.offerCacheEnabled = configuration.isCacheOffers();
+    this.delayWhenStatusUpdateDeltaTooLarge = configuration.isDelayOfferProcessingForLargeStatusUpdateDelta();
+    this.delayWhenDeltaOverMs = configuration.getDelayPollersWhenDeltaOverMs();
+    this.statusUpdateDeltaAvg = statusUpdateDeltaAvg;
   }
 
   @Override
@@ -67,13 +77,23 @@ public class SingularityMesosScheduler implements Scheduler {
   public void resourceOffers(SchedulerDriver driver, List<Protos.Offer> offers) {
     final long start = System.currentTimeMillis();
     LOG.info("Received {} offer(s)", offers.size());
+    boolean delclineImmediately = false;
     if (disasterManager.isDisabled(SingularityAction.PROCESS_OFFERS)) {
       LOG.info("Processing offers is currently disabled, declining {} offers", offers.size());
+      delclineImmediately = true;
+    }
+    if (delayWhenStatusUpdateDeltaTooLarge && statusUpdateDeltaAvg.get() > delayWhenDeltaOverMs) {
+      LOG.info("Status update delta is too large ({}), declining offers while status updates catch up", statusUpdateDeltaAvg.get());
+      delclineImmediately = true;
+    }
+
+    if (delclineImmediately) {
       for (Protos.Offer offer : offers) {
         driver.declineOffer(offer.getId());
       }
       return;
     }
+
     if (offerCacheEnabled) {
       if (disasterManager.isDisabled(SingularityAction.CACHE_OFFERS)) {
         offerCache.disableOfferCache();
@@ -100,7 +120,7 @@ public class SingularityMesosScheduler implements Scheduler {
     final Set<Protos.OfferID> acceptedOffers = Sets.newHashSetWithExpectedSize(offersToCheck.size());
 
     try {
-      List<SingularityOfferHolder> offerHolders = offerScheduler.checkOffers(offersToCheck, acceptedOffers);
+      List<SingularityOfferHolder> offerHolders = offerScheduler.checkOffers(offers);
 
       for (SingularityOfferHolder offerHolder : offerHolders) {
         if (!offerHolder.getAcceptedTasks().isEmpty()) {

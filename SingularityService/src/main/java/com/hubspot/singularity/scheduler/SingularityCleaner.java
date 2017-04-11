@@ -508,15 +508,16 @@ public class SingularityCleaner {
     LOG.trace("Deleted stale request data for {}", requestCleanup.getRequestId());
   }
 
-  public void drainCleanupQueue() {
+  public int drainCleanupQueue() {
     drainRequestCleanupQueue();
-    drainTaskCleanupQueue();
+    int cleanupTasks = drainTaskCleanupQueue();
 
     final List<SingularityTaskId> lbCleanupTasks = taskManager.getLBCleanupTasks();
     drainLBTaskCleanupQueue(lbCleanupTasks);
     drainLBRequestCleanupQueue(lbCleanupTasks);
 
     checkKilledTaskIdRecords();
+    return cleanupTasks;
   }
 
   private boolean isValidTask(SingularityTaskCleanup cleanupTask) {
@@ -568,14 +569,14 @@ public class SingularityCleaner {
     LOG.info("{} obsolete, {} waiting, {} rekilled tasks based on {} killedTaskIdRecords", obsolete, waiting, rekilled, killedTaskIdRecords.size());
   }
 
-  private void drainTaskCleanupQueue() {
+  private int drainTaskCleanupQueue() {
     final long start = System.currentTimeMillis();
 
     final List<SingularityTaskCleanup> cleanupTasks = taskManager.getCleanupTasks();
 
     if (cleanupTasks.isEmpty()) {
       LOG.trace("Task cleanup queue is empty");
-      return;
+      return 0;
     }
 
     final Multiset<SingularityDeployKey> incrementalCleaningTasks = HashMultiset.create(cleanupTasks.size());
@@ -631,6 +632,7 @@ public class SingularityCleaner {
     }
 
     LOG.info("Killed {} tasks in {}", killedTasks, JavaUtils.duration(start));
+    return cleanupTasks.size();
   }
 
   private void updateRequestToTaskMap(SingularityTaskCleanup cleanupTask, Map<String, List<String>> requestIdToTaskIds) {

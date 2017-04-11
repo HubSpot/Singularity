@@ -72,7 +72,7 @@ public class SingularityExpiringUserActionPoller extends SingularityLeaderOnlyPo
   @Inject
   SingularityExpiringUserActionPoller(SingularityConfiguration configuration, RequestManager requestManager, DeployManager deployManager, TaskManager taskManager, SlaveManager slaveManager, RackManager rackManager,
       SingularitySchedulerLock lock, RequestHelper requestHelper, SingularityMailer mailer, DisasterManager disasterManager) {
-    super(configuration.getCheckExpiringUserActionEveryMillis(), TimeUnit.MILLISECONDS, lock);
+    super(configuration.getCheckExpiringUserActionEveryMillis(), TimeUnit.MILLISECONDS, lock, true);
 
     this.deployManager = deployManager;
     this.requestManager = requestManager;
