@@ -37,7 +37,6 @@ import com.google.inject.Singleton;
 import com.google.inject.multibindings.Multibinder;
 import com.google.inject.name.Named;
 import com.google.inject.name.Names;
-import com.hubspot.horizon.ning.NingHttpClient;
 import com.hubspot.singularity.config.CustomExecutorConfiguration;
 import com.hubspot.singularity.config.HistoryPurgingConfiguration;
 import com.hubspot.singularity.config.MesosConfiguration;
@@ -155,7 +154,6 @@ public class SingularityMainModule implements Module {
     binder.bind(MetricRegistry.class).toProvider(DropwizardMetricRegistryProvider.class).in(Scopes.SINGLETON);
 
     binder.bind(AsyncHttpClient.class).to(SingularityAsyncHttpClient.class).in(Scopes.SINGLETON);
-    binder.bind(NingHttpClient.class).to(SingularityHttpClient.class).in(Scopes.SINGLETON);
     binder.bind(ServerProvider.class).in(Scopes.SINGLETON);
 
     binder.bind(SingularityDropwizardHealthcheck.class).in(Scopes.SINGLETON);

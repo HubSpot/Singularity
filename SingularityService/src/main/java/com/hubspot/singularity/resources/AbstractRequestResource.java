@@ -6,11 +6,9 @@ import org.apache.curator.framework.recipes.leader.LeaderLatch;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
-import com.hubspot.horizon.ning.NingHttpClient;
 import com.hubspot.singularity.SingularityAuthorizationScope;
 import com.hubspot.singularity.SingularityDeploy;
 import com.hubspot.singularity.SingularityDeployMarker;
-import com.hubspot.singularity.SingularityHttpClient;
 import com.hubspot.singularity.SingularityPendingDeploy;
 import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityRequestDeployState;
@@ -21,6 +19,7 @@ import com.hubspot.singularity.auth.SingularityAuthorizationHelper;
 import com.hubspot.singularity.data.DeployManager;
 import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.data.SingularityValidator;
+import com.ning.http.client.AsyncHttpClient;
 
 public class AbstractRequestResource extends AbstractLeaderAwareResource {
 
@@ -31,7 +30,7 @@ public class AbstractRequestResource extends AbstractLeaderAwareResource {
   protected final SingularityAuthorizationHelper authorizationHelper;
 
   public AbstractRequestResource(RequestManager requestManager, DeployManager deployManager, Optional<SingularityUser> user, SingularityValidator validator, SingularityAuthorizationHelper authorizationHelper,
-                                 NingHttpClient httpClient, LeaderLatch leaderLatch, ObjectMapper objectMapper) {
+                                 AsyncHttpClient httpClient, LeaderLatch leaderLatch, ObjectMapper objectMapper) {
     super(httpClient, leaderLatch, objectMapper);
     this.requestManager = requestManager;
     this.deployManager = deployManager;
