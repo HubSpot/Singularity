@@ -10,6 +10,7 @@ public class SingularitySlaveUsage {
 
   public static final String CPU_USED = "cpusUsed";
   public static final String MEMORY_USED = "memoryRssBytes";
+  public static final long BYTES_PER_MEGABYTE = 1024L * 1024L;
 
   private final long memoryBytesUsed;
   private final int numTasks;
@@ -52,9 +53,12 @@ public class SingularitySlaveUsage {
     return numTasks;
   }
 
-  public Optional<Long> getMemoryTotal() {
-    // todo: this is in megabytes
-    return memoryTotal;
+  public Optional<Long> getMemoryBytesTotal() {
+    if (memoryTotal.isPresent()) {
+      return Optional.of(memoryTotal.get() * BYTES_PER_MEGABYTE);
+    }
+
+    return Optional.empty();
   }
 
   public Optional<Double> getCpuTotal() {
