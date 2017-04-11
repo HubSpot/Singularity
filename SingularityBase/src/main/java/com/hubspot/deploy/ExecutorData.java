@@ -1,9 +1,11 @@
 package com.hubspot.deploy;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
@@ -142,6 +144,11 @@ public class ExecutorData {
   @ApiModelProperty(required=false, value="A list of signatures use to verify downloaded s3artifacts")
   public Optional<List<S3ArtifactSignature>> getS3ArtifactSignatures() {
     return s3ArtifactSignatures;
+  }
+
+  @JsonIgnore
+  public List<S3ArtifactSignature> getS3ArtifactSignaturesOrEmpty() {
+    return s3ArtifactSignatures.or(Collections.<S3ArtifactSignature> emptyList());
   }
 
   @ApiModelProperty(required=false, value="Run logrotate this often. Can be HOURLY, DAILY, WEEKLY, MONTHLY")
