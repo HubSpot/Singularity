@@ -61,6 +61,12 @@ public class SingularityConfiguration extends Configuration {
 
   private long checkSchedulerEverySeconds = 5;
 
+  private int delaySchedulerWhenAboveDueTasks = 500;
+
+  private int delaySchedulerWhenAboveLaunchedTasks = 200;
+
+  private int delaySchedulerForMsWhenAboveDueTasks = 30000;
+
   private long checkWebhooksEveryMillis = TimeUnit.SECONDS.toMillis(10);
 
   private long checkUsageEveryMillis = TimeUnit.MINUTES.toMillis(1);
@@ -360,6 +366,30 @@ public class SingularityConfiguration extends Configuration {
 
   public long getCheckSchedulerEverySeconds() {
     return checkSchedulerEverySeconds;
+  }
+
+  public int getDelaySchedulerWhenAboveDueTasks() {
+    return delaySchedulerWhenAboveDueTasks;
+  }
+
+  public void setDelaySchedulerWhenAboveDueTasks(int delaySchedulerWhenAboveDueTasks) {
+    this.delaySchedulerWhenAboveDueTasks = delaySchedulerWhenAboveDueTasks;
+  }
+
+  public int getDelaySchedulerWhenAboveLaunchedTasks() {
+    return delaySchedulerWhenAboveLaunchedTasks;
+  }
+
+  public void setDelaySchedulerWhenAboveLaunchedTasks(int delaySchedulerWhenAboveLaunchedTasks) {
+    this.delaySchedulerWhenAboveLaunchedTasks = delaySchedulerWhenAboveLaunchedTasks;
+  }
+
+  public int getDelaySchedulerForMsWhenAboveDueTasks() {
+    return delaySchedulerForMsWhenAboveDueTasks;
+  }
+
+  public void setDelaySchedulerForMsWhenAboveDueTasks(int delaySchedulerForMsWhenAboveDueTasks) {
+    this.delaySchedulerForMsWhenAboveDueTasks = delaySchedulerForMsWhenAboveDueTasks;
   }
 
   public long getCheckWebhooksEveryMillis() {

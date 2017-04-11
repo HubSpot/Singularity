@@ -24,7 +24,7 @@ public class SingularityCleanupPoller extends SingularityLeaderOnlyPoller {
   private final int delayCleanupWhenAboveTasks;
   private final long delayCleanupForMs;
 
-  private AtomicLong nextRunAfter = new AtomicLong(0);
+  private final AtomicLong nextRunAfter = new AtomicLong(0);
 
   @Inject
   SingularityCleanupPoller(SingularityConfiguration configuration, SingularityCleaner cleaner, SingularitySchedulerLock lock, DisasterManager disasterManager) {

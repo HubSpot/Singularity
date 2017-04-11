@@ -90,9 +90,9 @@ public class SingularityMesosScheduler implements Scheduler {
     final Set<Protos.OfferID> acceptedOffers = Sets.newHashSetWithExpectedSize(offers.size());
 
     try {
-      List<SingularityOfferHolder> offerHolders = offerScheduler.checkOffers(offers, acceptedOffers);
+      SingularityOfferProcessingResult offerResult = offerScheduler.checkOffers(offers);
 
-      for (SingularityOfferHolder offerHolder : offerHolders) {
+      for (SingularityOfferHolder offerHolder : offerResult.getOfferHolders()) {
         if (!offerHolder.getAcceptedTasks().isEmpty()) {
           offerHolder.launchTasks(driver);
 

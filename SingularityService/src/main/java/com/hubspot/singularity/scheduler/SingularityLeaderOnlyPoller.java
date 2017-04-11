@@ -4,7 +4,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.curator.framework.recipes.leader.LeaderLatch;
 import org.slf4j.Logger;
@@ -35,8 +34,6 @@ public abstract class SingularityLeaderOnlyPoller implements Managed {
   private SingularityExceptionNotifier exceptionNotifier;
   private SingularityAbort abort;
   private SingularityMesosSchedulerDelegator mesosScheduler;
-
-  private AtomicLong nextRunAfter = new AtomicLong(0);
 
   protected SingularityLeaderOnlyPoller(long pollDelay, TimeUnit pollTimeUnit) {
     this(pollDelay, pollTimeUnit, Optional.<SingularitySchedulerLock> absent());

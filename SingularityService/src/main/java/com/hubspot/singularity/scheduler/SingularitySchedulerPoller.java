@@ -5,17 +5,16 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
 
 import javax.inject.Singleton;
 
 import org.apache.mesos.Protos.Offer;
-import org.apache.mesos.Protos.OfferID;
 import org.apache.mesos.SchedulerDriver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Optional;
-import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.SingularityAction;
@@ -26,6 +25,7 @@ import com.hubspot.singularity.mesos.SchedulerDriverSupplier;
 import com.hubspot.singularity.mesos.SingularityMesosOfferScheduler;
 import com.hubspot.singularity.mesos.SingularityOfferCache.CachedOffer;
 import com.hubspot.singularity.mesos.SingularityOfferHolder;
+import com.hubspot.singularity.mesos.SingularityOfferProcessingResult;
 import com.hubspot.singularity.mesos.SingularitySchedulerLock;
 
 @Singleton
@@ -37,6 +37,11 @@ public class SingularitySchedulerPoller extends SingularityLeaderOnlyPoller {
   private final SchedulerDriverSupplier schedulerDriverSupplier;
   private final SingularityMesosOfferScheduler offerScheduler;
   private final DisasterManager disasterManager;
+  private final int delaySchedulerWhenAboveDueTasks;
+  private final int delaySchedulerWhenAboveLaunchedTasks;
+  private final long delaySchedulerForMs;
+
+  private final AtomicLong nextRunAfter = new AtomicLong(0);
 
   @Inject
   SingularitySchedulerPoller(SingularityMesosOfferScheduler offerScheduler, OfferCache offerCache, SchedulerDriverSupplier schedulerDriverSupplier,
@@ -47,6 +52,9 @@ public class SingularitySchedulerPoller extends SingularityLeaderOnlyPoller {
     this.offerScheduler = offerScheduler;
     this.schedulerDriverSupplier = schedulerDriverSupplier;
     this.disasterManager = disasterManager;
+    this.delaySchedulerWhenAboveDueTasks = configuration.getDelaySchedulerWhenAboveDueTasks();
+    this.delaySchedulerWhenAboveLaunchedTasks = configuration.getDelaySchedulerWhenAboveLaunchedTasks();
+    this.delaySchedulerForMs = configuration.getDelaySchedulerForMsWhenAboveDueTasks();
   }
 
   @Override
@@ -66,9 +74,13 @@ public class SingularitySchedulerPoller extends SingularityLeaderOnlyPoller {
       offers.add(cachedOffer.getOffer());
     }
 
-    List<SingularityOfferHolder> offerHolders = offerScheduler.checkOffers(offers, Sets.<OfferID> newHashSet());
+    SingularityOfferProcessingResult offerResult = offerScheduler.checkOffers(offers);
 
-    if (offerHolders.isEmpty()) {
+    if (offerResult.getTasksScheduled() > delaySchedulerWhenAboveLaunchedTasks || offerResult.getTasksRemaining() > delaySchedulerWhenAboveDueTasks) {
+      nextRunAfter.set(System.currentTimeMillis() + delaySchedulerForMs);
+    }
+
+    if (offerResult.getOfferHolders().isEmpty()) {
       return;
     }
 
@@ -82,7 +94,7 @@ public class SingularitySchedulerPoller extends SingularityLeaderOnlyPoller {
     int acceptedOffers = 0;
     int launchedTasks = 0;
 
-    for (SingularityOfferHolder offerHolder : offerHolders) {
+    for (SingularityOfferHolder offerHolder : offerResult.getOfferHolders()) {
       CachedOffer cachedOffer = offerIdToCachedOffer.get(offerHolder.getOffer().getId().getValue());
 
       if (!offerHolder.getAcceptedTasks().isEmpty()) {
@@ -95,7 +107,11 @@ public class SingularitySchedulerPoller extends SingularityLeaderOnlyPoller {
       }
     }
 
-    LOG.info("Launched {} tasks on {} cached offers (returned {}) in {}", launchedTasks, acceptedOffers, offerHolders.size() - acceptedOffers, JavaUtils.duration(start));
+    LOG.info("Launched {} tasks on {} cached offers (returned {}) in {}", launchedTasks, acceptedOffers, offerResult.getOfferHolders().size() - acceptedOffers, JavaUtils.duration(start));
   }
 
+  @Override
+  protected long getNextRunAfterTime() {
+    return nextRunAfter.get();
+  }
 }
