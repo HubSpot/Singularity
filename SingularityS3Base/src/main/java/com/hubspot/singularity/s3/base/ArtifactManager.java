@@ -58,7 +58,7 @@ public class ArtifactManager extends SimpleProcessManager {
   }
 
   private boolean md5Matches(Artifact artifact, Path path) {
-    return !artifact.getMd5sum().isPresent() || artifact.getMd5sum().get().equals(calculateMd5sum(path));
+    return !artifact.getMd5sum().isPresent() || artifact.getMd5sum().get().equalsIgnoreCase(calculateMd5sum(path));
   }
 
   private void checkFilesize(RemoteArtifact artifact, Path path) {
