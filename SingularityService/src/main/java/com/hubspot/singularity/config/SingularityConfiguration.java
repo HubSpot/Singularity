@@ -322,7 +322,7 @@ public class SingularityConfiguration extends Configuration {
 
   private int maxDecommissioningSlaves = 2;
 
-  private long delayPollersWhenDeltaOverMs = 60000;
+  private long delayPollersWhenDeltaOverMs = 30000;
 
   public long getAskDriverToKillTasksAgainAfterMillis() {
     return askDriverToKillTasksAgainAfterMillis;
