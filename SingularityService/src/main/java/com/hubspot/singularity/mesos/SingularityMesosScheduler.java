@@ -90,10 +90,10 @@ public class SingularityMesosScheduler implements Scheduler {
           MesosUtils.getNumPorts(offer), MesosUtils.getDisk(offer));
 
       CheckResult checkResult = slaveAndRackManager.checkOffer(offer);
-      if (checkResult == CheckResult.DECOMMISSIONING) {
+      if (checkResult == CheckResult.NOT_ACCEPTING_TASKS) {
         driver.declineOffer(offer.getId());
         offersToCheck.remove(offer);
-        LOG.debug("Will decline offer {}, slave {} is decommissioning", offer.getId().getValue(), offer.getHostname());
+        LOG.debug("Will decline offer {}, slave {} is not currently in a state to launch tasks", offer.getId().getValue(), offer.getHostname());
       }
     }
 

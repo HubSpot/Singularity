@@ -372,7 +372,7 @@ public class SingularitySlaveAndRackManager {
   }
 
   public enum CheckResult {
-    NEW, DECOMMISSIONING, ALREADY_ACTIVE;
+    NEW, NOT_ACCEPTING_TASKS, ALREADY_ACTIVE;
   }
 
   private <T extends SingularityMachineAbstraction<T>> CheckResult check(T object, AbstractMachineManager<T> manager) {
@@ -388,16 +388,16 @@ public class SingularitySlaveAndRackManager {
 
     switch (currentState) {
       case ACTIVE:
-      case FROZEN:
         return CheckResult.ALREADY_ACTIVE;
       case DEAD:
       case MISSING_ON_STARTUP:
         manager.changeState(object.getId(), MachineState.ACTIVE, Optional.<String> absent(), Optional.<String> absent());
         return CheckResult.NEW;
+      case FROZEN:
       case DECOMMISSIONED:
       case DECOMMISSIONING:
       case STARTING_DECOMMISSION:
-        return CheckResult.DECOMMISSIONING;
+        return CheckResult.NOT_ACCEPTING_TASKS;
     }
 
     throw new IllegalStateException(String.format("Invalid state %s for %s", currentState, object.getId()));
