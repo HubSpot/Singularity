@@ -81,11 +81,6 @@ public abstract class SingularityLeaderOnlyPoller implements Managed {
       return;
     }
 
-    if (delayWhenLargeStatusUpdateDelta && statusUpdateDelta30sAverage.get() > delayPollersWhenDeltaOverMs) {
-      LOG.info("Delaying run of {} until status updates have caught up", getClass().getSimpleName());
-      return;
-    }
-
     if (pollDelay < 1) {
       LOG.warn("Not running {} due to delay value of {}", getClass().getSimpleName(), pollDelay);
       return;
@@ -110,6 +105,11 @@ public abstract class SingularityLeaderOnlyPoller implements Managed {
     if (!leadership || !schedulerRunning || !isEnabled()) {
       LOG.trace("Skipping {} (period: {}) (leadership: {}, mesos running: {}, enabled: {})", getClass().getSimpleName(), JavaUtils.durationFromMillis(pollTimeUnit.toMillis(pollDelay)), leadership,
           schedulerRunning, isEnabled());
+      return;
+    }
+
+    if (delayWhenLargeStatusUpdateDelta && statusUpdateDelta30sAverage.get() > delayPollersWhenDeltaOverMs) {
+      LOG.info("Delaying run of {} until status updates have caught up", getClass().getSimpleName());
       return;
     }
 
