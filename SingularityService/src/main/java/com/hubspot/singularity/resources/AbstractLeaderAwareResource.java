@@ -97,7 +97,7 @@ public class AbstractLeaderAwareResource {
         return objectMapper.readValue(response.getResponseBodyAsStream(), clazz);
       }
     } catch (IOException ioe) {
-      String message = String.format("Request to leader succeeded with status {}, but could not interpret response", response.getStatusCode());
+      String message = String.format("Request to leader succeeded with status %s, but could not interpret response", response.getStatusCode());
       LOG.error(message, ioe);
       throw new WebApplicationException(message, ioe, 500);
     }
