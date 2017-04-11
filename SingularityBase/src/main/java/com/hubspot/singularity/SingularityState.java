@@ -53,6 +53,8 @@ public class SingularityState {
 
   private final Optional<Double> minimumPriorityLevel;
 
+  private final long avgStatusUpdateDelayMs;
+
   @JsonCreator
   public SingularityState(@JsonProperty("activeTasks") int activeTasks, @JsonProperty("launchingTasks") int launchingTasks, @JsonProperty("activeRequests") int activeRequests, @JsonProperty("cooldownRequests") int cooldownRequests,
       @JsonProperty("pausedRequests") int pausedRequests, @JsonProperty("scheduledTasks") int scheduledTasks, @JsonProperty("pendingRequests") int pendingRequests, @JsonProperty("lbCleanupTasks") int lbCleanupTasks,
@@ -62,7 +64,8 @@ public class SingularityState {
       @JsonProperty("lateTasks") int lateTasks, @JsonProperty("futureTasks") int futureTasks, @JsonProperty("maxTaskLag") long maxTaskLag, @JsonProperty("generatedAt") long generatedAt,
       @JsonProperty("overProvisionedRequestIds") List<String> overProvisionedRequestIds, @JsonProperty("underProvisionedRequestIds") List<String> underProvisionedRequestIds,
       @JsonProperty("overProvisionedRequests") int overProvisionedRequests, @JsonProperty("underProvisionedRequests") int underProvisionedRequests, @JsonProperty("finishedRequests") int finishedRequests,
-      @JsonProperty("unknownRacks") int unknownRacks, @JsonProperty("unknownSlaves") int unknownSlaves, @JsonProperty("authDatastoreHealthy") Optional<Boolean> authDatastoreHealthy, @JsonProperty("minimumPriorityLevel") Optional<Double> minimumPriorityLevel) {
+      @JsonProperty("unknownRacks") int unknownRacks, @JsonProperty("unknownSlaves") int unknownSlaves, @JsonProperty("authDatastoreHealthy") Optional<Boolean> authDatastoreHealthy, @JsonProperty("minimumPriorityLevel") Optional<Double> minimumPriorityLevel,
+      @JsonProperty("avgStatusUpdateDelayMs") long avgStatusUpdateDelayMs) {
     this.activeTasks = activeTasks;
     this.launchingTasks = launchingTasks;
     this.activeRequests = activeRequests;
@@ -96,6 +99,7 @@ public class SingularityState {
     this.underProvisionedRequestIds = underProvisionedRequestIds;
     this.authDatastoreHealthy = authDatastoreHealthy;
     this.minimumPriorityLevel = minimumPriorityLevel;
+    this.avgStatusUpdateDelayMs = avgStatusUpdateDelayMs;
   }
 
   public int getFinishedRequests() {
@@ -244,6 +248,10 @@ public class SingularityState {
     return minimumPriorityLevel;
   }
 
+  public long getAvgStatusUpdateDelayMs() {
+    return avgStatusUpdateDelayMs;
+  }
+
   @Override
   public String toString() {
     return "SingularityState{" +
@@ -280,6 +288,7 @@ public class SingularityState {
         ", underProvisionedRequests=" + underProvisionedRequests +
         ", authDatastoreHealthy=" + authDatastoreHealthy +
         ", minimumPriorityLevel=" + minimumPriorityLevel +
+        ", avgStatusUpdateDelayMs=" + avgStatusUpdateDelayMs +
         '}';
   }
 }
