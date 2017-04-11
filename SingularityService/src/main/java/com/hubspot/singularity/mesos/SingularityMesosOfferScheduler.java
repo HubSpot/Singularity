@@ -5,7 +5,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import javax.inject.Singleton;
 
@@ -89,7 +88,7 @@ public class SingularityMesosOfferScheduler {
     return taskRequestHolders;
   }
 
-  public List<SingularityOfferHolder> checkOffers(final Collection<Protos.Offer> offers, final Set<Protos.OfferID> acceptedOffers) {
+  public SingularityOfferProcessingResult checkOffers(final Collection<Protos.Offer> offers) {
     boolean useTaskCredits = disasterManager.isTaskCreditEnabled();
     int taskCredits = useTaskCredits ? disasterManager.getUpdatedCreditCount() : -1;
     final SingularitySchedulerStateCache stateCache = stateCacheProvider.get();
@@ -100,6 +99,11 @@ public class SingularityMesosOfferScheduler {
     final Map<String, SingularityTaskRequestHolder> pendingTaskIdToTaskRequest = getDueTaskRequestHolders();
 
     final int numDueTasks = pendingTaskIdToTaskRequest.size();
+
+    if (offers.isEmpty()) {
+      LOG.debug("No offers to check");
+      return new SingularityOfferProcessingResult(0, numDueTasks, Collections.emptyList());
+    }
 
     final List<SingularityOfferHolder> offerHolders = Lists.newArrayListWithCapacity(offers.size());
     final Map<String, Map<String, Integer>> tasksPerOfferPerRequest = new HashMap<>();
@@ -150,7 +154,7 @@ public class SingularityMesosOfferScheduler {
 
     LOG.info("{} tasks scheduled, {} tasks remaining after examining {} offers", tasksScheduled, numDueTasks - tasksScheduled, offers.size());
 
-    return offerHolders;
+    return new SingularityOfferProcessingResult(tasksScheduled, numDueTasks - tasksScheduled, offerHolders);
   }
 
   private boolean canScheduleAdditionalTasks(int taskCredits) {

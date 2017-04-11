@@ -96,6 +96,11 @@ public abstract class SingularityLeaderOnlyPoller implements Managed {
       return;
     }
 
+    long nextRunAfter = getNextRunAfterTime();
+    if (System.currentTimeMillis() < nextRunAfter) {
+      LOG.debug("Skipping run of {}, will run again after time {}", getClass().getSimpleName(), nextRunAfter);
+    }
+
     LOG.trace("Running {} (period: {})", getClass().getSimpleName(), JavaUtils.durationFromMillis(pollTimeUnit.toMillis(pollDelay)));
 
     long start = System.currentTimeMillis();
@@ -133,5 +138,9 @@ public abstract class SingularityLeaderOnlyPoller implements Managed {
 
   @Override
   public void stop() {
+  }
+
+  protected long getNextRunAfterTime() {
+    return 0L;
   }
 }
