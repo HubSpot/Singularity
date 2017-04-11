@@ -27,16 +27,23 @@ export default class JSONButton extends Component {
 
     this.showJSON = this.showJSON.bind(this);
     this.hideJSON = this.hideJSON.bind(this);
-  }
 
-  componentDidMount() {
-    this.clipboard = new Clipboard('.copy-btn');
+    this.attachClipboard = this.attachClipboard.bind(this);
+    this.removeClipboard = this.removeClipboard.bind(this);
   }
 
   showJSON() {
     this.setState({
       modalOpen: true
     });
+  }
+
+  attachClipboard() {
+    this.clipboard = new Clipboard('.copy-btn');
+  }
+
+  removeClipboard() {
+    this.clipboard.destroy();
   }
 
   hideJSON() {
@@ -61,7 +68,11 @@ export default class JSONButton extends Component {
             {button}
           </OverlayTrigger>) : button
         }
-        <Modal show={this.state.modalOpen} onHide={this.hideJSON} bsSize="large">
+        <Modal show={this.state.modalOpen} onHide={this.hideJSON} bsSize="large"
+          enforceFocus={false}
+          onEntered={this.attachClipboard}
+          onExit={this.removeClipboard}
+        >
           <Modal.Body>
             <div className="constrained-modal json-modal">
               <JSONTree
