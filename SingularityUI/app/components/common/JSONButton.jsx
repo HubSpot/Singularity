@@ -25,11 +25,7 @@ export default class JSONButton extends Component {
       modalOpen: false
     };
 
-    this.showJSON = this.showJSON.bind(this);
-    this.hideJSON = this.hideJSON.bind(this);
-
-    this.attachClipboard = this.attachClipboard.bind(this);
-    this.removeClipboard = this.removeClipboard.bind(this);
+    _.bindAll(this, 'showJSON', 'hideJSON', 'attachClipboard', 'removeClipboard');
   }
 
   showJSON() {
