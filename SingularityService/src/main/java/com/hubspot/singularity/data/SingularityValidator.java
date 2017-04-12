@@ -313,7 +313,7 @@ public class SingularityValidator {
       int startUpDelay = deploy.getHealthcheck().get().getStartupDelaySeconds().get();
 
       checkBadRequest(startUpDelay < defaultKillAfterNotHealthySeconds,
-          String.format("Health check startup delay time must be less than kill after wait time %s (was %s)", defaultKillAfterNotHealthySeconds, startUpDelay));
+          String.format("Health check startup delay time must be less than %s (was %s)", defaultKillAfterNotHealthySeconds, startUpDelay));
     }
 
     checkBadRequest(deploy.getCommand().isPresent() && !deploy.getExecutorData().isPresent() ||
