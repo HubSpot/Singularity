@@ -60,7 +60,7 @@ class LogLines extends Component {
 
   render() {
     if (!this.props.isLoaded) {
-      return <div>Not loaded</div>;
+      return <div>Loading...</div>;
     }
 
     return (
