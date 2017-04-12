@@ -41,6 +41,7 @@ import TaskLbUpdates from './TaskLbUpdates';
 import TaskInfo from './TaskInfo';
 import TaskEnvVars from './TaskEnvVars';
 import TaskHealthchecks from './TaskHealthchecks';
+import TaskState from './TaskState';
 import TaskStatus from './TaskStatus';
 
 class TaskDetail extends Component {
@@ -221,14 +222,12 @@ class TaskDetail extends Component {
       cleanupType = cleanup.cleanupType;
     }
 
-    const taskState = this.props.task.taskUpdates && (
-      <div className="col-xs-6 task-state-header">
-        <h1>
-          <span className={`label label-${Utils.getLabelClassFromTaskState(_.last(this.props.task.taskUpdates).taskState)} task-state-header-label`}>
-            {Utils.humanizeText(_.last(this.props.task.taskUpdates).taskState)} {cleanupType && `(${Utils.humanizeText(cleanupType)})`}
-          </span>
-        </h1>
-      </div>
+    const taskState = (
+      <TaskState
+        status={this.props.task.status}
+        updates={this.props.task.taskUpdates}
+        cleanupType={cleanupType}
+      />
     );
 
     let destroy = false;
