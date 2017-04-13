@@ -52,7 +52,7 @@ public class CounterMap<K> {
   }
 
   public void incr(K key, long amount) {
-    Counter c = map.computeIfAbsent(key, k -> new Counter());
+    Counter c = map.putIfAbsent(key, new Counter());
 
     c.count += amount;
   }
@@ -62,7 +62,7 @@ public class CounterMap<K> {
   }
 
   public void decr(K key) {
-    Counter c = map.computeIfAbsent(key, k -> new Counter());
+    Counter c = map.putIfAbsent(key, new Counter());
 
     c.count--;
   }
