@@ -1,7 +1,5 @@
 package com.hubspot.singularity.smtp;
 
-import com.google.common.base.Optional;
-
 /**
  * POJO for Jade to generate task metadata tables in emails.
  */

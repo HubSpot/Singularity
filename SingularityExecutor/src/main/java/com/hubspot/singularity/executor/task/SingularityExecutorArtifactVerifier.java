@@ -29,7 +29,7 @@ public class SingularityExecutorArtifactVerifier {
 
   public void checkSignatures() {
     if (!taskDefinition.getExecutorData().getS3ArtifactSignatures().isPresent() || taskDefinition.getExecutorData().getS3ArtifactSignatures().get().isEmpty()) {
-      log.info("No s3 artifact signatures, skipping verification.");
+      log.info("No files containing artifact signatures specified, skipping verification.");
       return;
     }
 
@@ -66,13 +66,13 @@ public class SingularityExecutorArtifactVerifier {
       p.waitFor();  // TODO: add some sort of timeout?
 
       if (p.exitValue() != 0) {
-        log.error("Failed to validate signature {} for artifact {}", s3ArtifactSignature.getFilename(), s3ArtifactSignature.getArtifactFilename());
+        log.error("Failed to validate signature in file {} for artifact file {}", s3ArtifactSignature.getFilename(), s3ArtifactSignature.getArtifactFilename());
 
         if (executorConfiguration.isFailTaskOnInvalidArtifactSignature()) {
           throw new RuntimeException(String.format("Failed to validate signature for artifact %s", artifactPath));
         }
       } else {
-        log.info("Signature {} for artifact {} is valid!", s3ArtifactSignature.getFilename(), s3ArtifactSignature.getArtifactFilename());
+        log.info("Signature in {} for artifact {} is valid!", s3ArtifactSignature.getFilename(), s3ArtifactSignature.getArtifactFilename());
       }
     } catch (InterruptedException | IOException e) {
       throw Throwables.propagate(e);

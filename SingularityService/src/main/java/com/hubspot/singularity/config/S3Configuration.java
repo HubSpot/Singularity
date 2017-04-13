@@ -1,10 +1,15 @@
 package com.hubspot.singularity.config;
 
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import javax.validation.constraints.NotNull;
+
+import com.google.common.base.Optional;
+import com.hubspot.singularity.SingularityS3UploaderFile;
 
 public class S3Configuration {
 
@@ -31,21 +36,34 @@ public class S3Configuration {
   private String s3Bucket;
 
   @NotNull
-  private Map<String, S3GroupOverrideConfiguration> groupOverrides = new HashMap<>();
+  private Map<String, S3GroupConfiguration> groupOverrides = new HashMap<>();
+
+  /**
+   * When searching s3 for requests in these groups, additionally search these buckets
+   * for logs. Do not upload new logs to them (that is what `groupOverrides` is for)
+   */
+  @NotNull
+  private Map<String, S3GroupConfiguration> groupS3SearchConfigs = new HashMap<>();
 
   /**
    * S3 Key format for finding logs. Should be the same as
-   * configuration set for SingularityS3Uploader
-   * (e.g. '%requestId/%Y/%m/%taskId_%index-%s%fileext')
+   * configuration set for SingularityExecutorCleanup
    */
   @NotNull
-  private String s3KeyFormat;
+  private String s3KeyFormat = "%requestId/%Y/%m/%taskId_%index-%s-%filename";
 
   @NotNull
   private String s3AccessKey;
 
   @NotNull
   private String s3SecretKey;
+
+  @NotNull
+  private List<SingularityS3UploaderFile> s3UploaderAdditionalFiles = Collections.singletonList(SingularityS3UploaderFile.fromString("service.log"));
+
+  private Optional<String> s3StorageClass = Optional.absent();
+
+  private Optional<Long> applyS3StorageClassAfterBytes = Optional.absent();
 
   public int getMaxS3Threads() {
     return maxS3Threads;
@@ -119,11 +137,44 @@ public class S3Configuration {
     this.s3SecretKey = s3SecretKey;
   }
 
-  public Map<String, S3GroupOverrideConfiguration> getGroupOverrides() {
+  public Map<String, S3GroupConfiguration> getGroupOverrides() {
     return groupOverrides;
   }
 
-  public void setGroupOverrides(Map<String, S3GroupOverrideConfiguration> groupOverrides) {
+  public void setGroupOverrides(Map<String, S3GroupConfiguration> groupOverrides) {
     this.groupOverrides = groupOverrides;
+  }
+
+  public Map<String, S3GroupConfiguration> getGroupS3SearchConfigs() {
+    return groupS3SearchConfigs;
+  }
+
+  public S3Configuration setGroupS3SearchConfigs(Map<String, S3GroupConfiguration> groupS3SearchConfigs) {
+    this.groupS3SearchConfigs = groupS3SearchConfigs;
+    return this;
+  }
+
+  public List<SingularityS3UploaderFile> getS3UploaderAdditionalFiles() {
+    return s3UploaderAdditionalFiles;
+  }
+
+  public void setS3UploaderAdditionalFiles(List<SingularityS3UploaderFile> s3UploaderAdditionalFiles) {
+    this.s3UploaderAdditionalFiles = s3UploaderAdditionalFiles;
+  }
+
+  public Optional<String> getS3StorageClass() {
+    return s3StorageClass;
+  }
+
+  public void setS3StorageClass(Optional<String> s3StorageClass) {
+    this.s3StorageClass = s3StorageClass;
+  }
+
+  public Optional<Long> getApplyS3StorageClassAfterBytes() {
+    return applyS3StorageClassAfterBytes;
+  }
+
+  public void setApplyS3StorageClassAfterBytes(Optional<Long> applyS3StorageClassAfterBytes) {
+    this.applyS3StorageClassAfterBytes = applyS3StorageClassAfterBytes;
   }
 }

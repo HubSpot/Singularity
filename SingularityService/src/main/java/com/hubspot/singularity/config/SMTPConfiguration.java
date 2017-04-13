@@ -1,10 +1,10 @@
 package com.hubspot.singularity.config;
 
-import java.util.List;
-import java.util.TimeZone;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
+import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
 
 import javax.validation.constraints.NotNull;
@@ -70,11 +70,9 @@ public class SMTPConfiguration {
   @JsonProperty
   private List<String> taskEmailTailFiles = Arrays.asList("stdout", "stderr");
 
-  @NotNull
   @JsonProperty
   private Optional<String> taskLogErrorRegex = Optional.absent();
 
-  @NotNull
   @JsonProperty
   private Optional<Boolean> taskLogErrorRegexCaseSensitive = Optional.absent();
 

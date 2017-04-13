@@ -1,9 +1,9 @@
 package com.hubspot.mesos.json;
 
 import java.util.List;
+import java.util.Objects;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class MesosFrameworkObject {
@@ -110,5 +110,59 @@ public class MesosFrameworkObject {
 
   public List<MesosTaskObject> getTasks() {
     return tasks;
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+    MesosFrameworkObject that = (MesosFrameworkObject) o;
+    return registeredTime == that.registeredTime &&
+        unregisteredTime == that.unregisteredTime &&
+        reregisteredTime == that.reregisteredTime &&
+        active == that.active &&
+        checkpoint == that.checkpoint &&
+        Objects.equals(name, that.name) &&
+        Objects.equals(id, that.id) &&
+        Objects.equals(pid, that.pid) &&
+        Objects.equals(hostname, that.hostname) &&
+        Objects.equals(webuiUrl, that.webuiUrl) &&
+        Objects.equals(user, that.user) &&
+        Objects.equals(role, that.role) &&
+        Objects.equals(resources, that.resources) &&
+        Objects.equals(usedResources, that.usedResources) &&
+        Objects.equals(offeredResources, that.offeredResources) &&
+        Objects.equals(tasks, that.tasks);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(name, id, pid, hostname, webuiUrl, user, role, registeredTime, unregisteredTime, reregisteredTime, active, checkpoint, resources, usedResources, offeredResources, tasks);
+  }
+
+  @Override
+  public String toString() {
+    return "MesosFrameworkObject{" +
+        "name='" + name + '\'' +
+        ", id='" + id + '\'' +
+        ", pid='" + pid + '\'' +
+        ", hostname='" + hostname + '\'' +
+        ", webuiUrl='" + webuiUrl + '\'' +
+        ", user='" + user + '\'' +
+        ", role='" + role + '\'' +
+        ", registeredTime=" + registeredTime +
+        ", unregisteredTime=" + unregisteredTime +
+        ", reregisteredTime=" + reregisteredTime +
+        ", active=" + active +
+        ", checkpoint=" + checkpoint +
+        ", resources=" + resources +
+        ", usedResources=" + usedResources +
+        ", offeredResources=" + offeredResources +
+        ", tasks=" + tasks +
+        '}';
   }
 }

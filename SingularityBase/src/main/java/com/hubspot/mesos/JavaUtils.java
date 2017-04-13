@@ -20,6 +20,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.commons.lang3.time.DateFormatUtils;
 import org.apache.commons.lang3.time.DurationFormatUtils;
 
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
@@ -45,6 +46,7 @@ public final class JavaUtils {
 
   public static final Splitter COMMA_SPLITTER = Splitter.on(',').omitEmptyStrings().trimResults();
   public static final Joiner COMMA_JOINER = Joiner.on(',');
+  public static final Joiner.MapJoiner COMMA_EQUALS_MAP_JOINER = COMMA_JOINER.withKeyValueSeparator("=");
 
   public static final Joiner SPACE_JOINER = Joiner.on(" ");
 
@@ -117,6 +119,10 @@ public final class JavaUtils {
 
   public static String durationFromMillis(final long millis) {
     return DurationFormatUtils.formatDuration(Math.max(millis, 0), DURATION_FORMAT);
+  }
+
+  public static String formatTimestamp(final long millis) {
+    return DateFormatUtils.ISO_DATETIME_TIME_ZONE_FORMAT.format(millis);
   }
 
   public static Thread awaitTerminationWithLatch(final CountDownLatch latch, final String threadNameSuffix, final ExecutorService service, final long millis) {

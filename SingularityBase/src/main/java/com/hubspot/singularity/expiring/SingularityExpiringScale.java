@@ -28,7 +28,9 @@ public class SingularityExpiringScale extends SingularityExpiringRequestActionPa
 
   @Override
   public String toString() {
-    return "SingularityExpiringScale [revertToInstances=" + revertToInstances + ", bounce=" + bounce + "]";
+    return "SingularityExpiringScale{" +
+        "revertToInstances=" + revertToInstances +
+        ", bounce=" + bounce +
+        "} " + super.toString();
   }
-
 }

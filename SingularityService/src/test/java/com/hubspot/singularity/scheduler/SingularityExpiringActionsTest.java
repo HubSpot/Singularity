@@ -4,11 +4,8 @@ import org.apache.mesos.Protos.TaskState;
 import org.junit.Assert;
 import org.junit.Test;
 
-import com.fasterxml.jackson.annotation.JsonTypeInfo.As;
 import com.google.common.base.Optional;
 import com.hubspot.singularity.RequestState;
-import com.hubspot.singularity.SingularityRequestHistory;
-import com.hubspot.singularity.SingularityRequestHistory.RequestHistoryType;
 import com.hubspot.singularity.SingularityShellCommand;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.api.SingularityBounceRequest;

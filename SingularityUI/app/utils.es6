@@ -1,4 +1,5 @@
 import moment from 'moment';
+import { STAT_NAMES } from './components/machines/Constants';
 
 const Utils = {
   TERMINAL_TASK_STATES: ['TASK_KILLED', 'TASK_LOST', 'TASK_FAILED', 'TASK_FINISHED', 'TASK_ERROR'],
@@ -45,6 +46,10 @@ const Utils = {
     ));
   },
 
+  humanizeSlaveHostName(longHostName, override=false) {
+    return (config.shortenSlaveUsageHostname || override ? longHostName.split('.')[0] : longHostName);
+  },
+
   timestampFromNow(millis) {
     const timeObject = moment(millis);
     return `${timeObject.fromNow()} (${timeObject.format(window.config.timestampFormat)})`;
@@ -66,6 +71,10 @@ const Utils = {
 
   duration(millis) {
     return moment.duration(millis).humanize();
+  },
+
+  tailerPath(taskId, logpath) {
+    return `task/${taskId}/tail/${Utils.substituteTaskId(logpath, taskId)}`;
   },
 
   substituteTaskId(value, taskId) {
@@ -169,6 +178,39 @@ const Utils = {
     };
   },
 
+  getMaxAvailableResource(slaveInfo, statName) {
+    switch (statName) {
+      case STAT_NAMES.cpusUsedStat:
+        try {
+          return parseFloat(slaveInfo.attributes.real_cpus || slaveInfo.resources.cpus);
+        } catch (e) {
+          throw new Error(`Could not find resource (cpus) for slave ${slaveInfo.host} (${slaveInfo.id})`);
+        }
+      case STAT_NAMES.memoryBytesUsedStat:
+        try {
+          return parseFloat(slaveInfo.attributes.real_memory_mb || slaveInfo.resources.mem) * Math.pow(1024, 2);
+        } catch (e) {
+          throw new Error(`Could not find resource (memory) for slave ${slaveInfo.host} (${slaveInfo.id})`);
+        }
+      default:
+        throw new Error(`${statName} is an unsupported statistic'`);
+    }
+  },
+
+  isResourceStat(stat) {
+    return stat === STAT_NAMES.cpusUsedStat || stat === STAT_NAMES.memoryBytesUsedStat;
+  },
+
+  getRequestIdFromTaskId(taskId) {
+    const splits = taskId.split('-');
+    return splits.slice(0, splits.length - 5).join('-');
+  },
+
+  getInstanceNoFromTaskId(taskId) {
+    const splits = taskId.split('-')
+    return splits[splits.length-3];
+  },
+
   deepClone(objectToClone) {
     return $.extend(true, {}, objectToClone);
   },
@@ -199,6 +241,10 @@ const Utils = {
     }
     const finalRegex = config.taskS3LogOmitPrefix.replace('%taskId', taskId.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')).replace('%index', '[0-9]+').replace('%s', '[0-9]+');
     return filename.replace(new RegExp(finalRegex), '');
+  },
+
+  roundTo(value, place) {
+    return +(Math.round(parseFloat(value) + 'e+' + place) + 'e-' + place);
   },
 
   millisecondsToSecondsRoundToTenth(millis) {
@@ -379,14 +425,16 @@ const Utils = {
     },
   },
 
-
-
   isImmediateCleanup: (cleanupType, longRunning) => {
     if (longRunning) {
       return _.contains(Utils.LONG_RUNNING_IMMEDIATE_CLEANUPS, cleanupType)
     } else {
       return _.contains(Utils.NON_LONG_RUNNING_IMMEDIATE_CLEANUPS, cleanupType)
     }
+  },
+
+  isActiveSlave(slaveInfo) {
+    return !Utils.isIn(slaveInfo.currentState.state, ['DEAD', 'MISSING_ON_STARTUP']);
   },
 
   enums: {
@@ -422,7 +470,6 @@ const Utils = {
     }
     return array.join('&');
   }
-
 };
 
 export default Utils;

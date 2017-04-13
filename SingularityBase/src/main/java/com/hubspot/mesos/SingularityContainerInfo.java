@@ -1,8 +1,7 @@
 package com.hubspot.mesos;
 
 import java.util.List;
-
-import org.apache.mesos.Protos.ContainerInfo.Type;
+import java.util.Objects;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -40,11 +39,6 @@ public class SingularityContainerInfo {
   }
 
   @Override
-  public String toString() {
-    return String.format("ContainerInfo [type=%s, volumes=%s, docker=%s]", type, volumes, docker);
-  }
-
-  @Override
   public boolean equals(Object o) {
     if (this == o) {
       return true;
@@ -52,26 +46,23 @@ public class SingularityContainerInfo {
     if (o == null || getClass() != o.getClass()) {
       return false;
     }
-
     SingularityContainerInfo that = (SingularityContainerInfo) o;
-
-    if (!type.equals(that.type)) {
-      return false;
-    }
-    if (!volumes.equals(that.volumes)) {
-      return false;
-    }
-    if (!docker.equals(that.docker)) {
-      return false;
-    }
-    return true;
+    return type == that.type &&
+        Objects.equals(volumes, that.volumes) &&
+        Objects.equals(docker, that.docker);
   }
 
   @Override
   public int hashCode() {
-    int result = type.hashCode();
-    result = 31 * result + volumes.hashCode();
-    result = 31 *result + docker.hashCode();
-    return result;
+    return Objects.hash(type, volumes, docker);
+  }
+
+  @Override
+  public String toString() {
+    return "SingularityContainerInfo{" +
+        "type=" + type +
+        ", volumes=" + volumes +
+        ", docker=" + docker +
+        '}';
   }
 }

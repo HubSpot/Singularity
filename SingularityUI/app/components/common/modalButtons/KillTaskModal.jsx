@@ -43,10 +43,10 @@ class KillTaskModal extends Component {
     if (config.shellCommands.length > 0) {
       formElements.push(
         {
-        name: 'runShellCommand',
-        type: FormModal.INPUT_TYPES.BOOLEAN,
-        label: 'Run shell command before killing tasks',
-        defaultValue: false
+          name: 'runShellCommand',
+          type: FormModal.INPUT_TYPES.BOOLEAN,
+          label: 'Run shell command before killing tasks',
+          defaultValue: false
         },
         {
           name: 'runShellCommandBeforeKill',

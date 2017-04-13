@@ -53,7 +53,12 @@ public class SingularityRunNowRequest {
 
   @Override
   public String toString() {
-    return "SingularityRunNowRequest [message=" + message + ", runId=" + runId + ", commandLineArgs=" + commandLineArgs + ", skipHealthchecks=" + skipHealthchecks + ", resources=" + resources + "]";
+    return "SingularityRunNowRequest{" +
+        "message=" + message +
+        ", runId=" + runId +
+        ", commandLineArgs=" + commandLineArgs +
+        ", skipHealthchecks=" + skipHealthchecks +
+        ", resources=" + resources +
+        '}';
   }
-
 }

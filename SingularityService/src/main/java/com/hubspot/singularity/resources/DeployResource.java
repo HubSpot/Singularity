@@ -21,15 +21,14 @@ import com.hubspot.jackson.jaxrs.PropertyFiltering;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.DeployState;
 import com.hubspot.singularity.RequestState;
+import com.hubspot.singularity.SingularityAction;
 import com.hubspot.singularity.SingularityAuthorizationScope;
 import com.hubspot.singularity.SingularityCreateResult;
 import com.hubspot.singularity.SingularityDeploy;
 import com.hubspot.singularity.SingularityDeployMarker;
 import com.hubspot.singularity.SingularityDeployProgress;
-import com.hubspot.singularity.SingularityAction;
 import com.hubspot.singularity.SingularityLoadBalancerUpdate;
 import com.hubspot.singularity.SingularityPendingDeploy;
-import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityPendingRequest;
 import com.hubspot.singularity.SingularityPendingRequest.PendingType;
 import com.hubspot.singularity.SingularityRequest;
@@ -37,6 +36,7 @@ import com.hubspot.singularity.SingularityRequestDeployState;
 import com.hubspot.singularity.SingularityRequestParent;
 import com.hubspot.singularity.SingularityRequestWithState;
 import com.hubspot.singularity.SingularityService;
+import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTransformHelpers;
 import com.hubspot.singularity.SingularityUpdatePendingDeployRequest;
 import com.hubspot.singularity.SingularityUser;
@@ -124,6 +124,7 @@ public class DeployResource extends AbstractRequestResource {
     if (request.isLongRunning()) {
       deployProgress = Optional.of(new SingularityDeployProgress(
           Math.min(deploy.getDeployInstanceCountPerStep().or(request.getInstancesSafe()), request.getInstancesSafe()),
+          0,
           deploy.getDeployInstanceCountPerStep().or(request.getInstancesSafe()),
           deploy.getDeployStepWaitTimeMs().or(configuration.getDefaultDeployStepWaitTimeMs()),
           false,
@@ -134,12 +135,19 @@ public class DeployResource extends AbstractRequestResource {
 
     SingularityPendingDeploy pendingDeployObj = new SingularityPendingDeploy(deployMarker, Optional.<SingularityLoadBalancerUpdate> absent(), DeployState.WAITING, deployProgress, updatedValidatedRequest);
 
-    checkConflict(deployManager.createPendingDeploy(pendingDeployObj) != SingularityCreateResult.EXISTED,
-        "Pending deploy already in progress for %s - cancel it or wait for it to complete (%s)", requestId, deployManager.getPendingDeploy(requestId).orNull());
-
+    boolean deployToUnpause = false;
     if (requestWithState.getState() == RequestState.PAUSED) {
+      deployToUnpause = true;
       requestManager.deployToUnpause(request, now, deployUser, deployRequest.getMessage());
     }
+
+    boolean deployAlreadyInProgress = deployManager.createPendingDeploy(pendingDeployObj) == SingularityCreateResult.EXISTED;
+    if (deployAlreadyInProgress && deployToUnpause) {
+      requestManager.pause(request, now, deployUser, Optional.<String>absent());
+    }
+
+    checkConflict(!deployAlreadyInProgress,
+        "Pending deploy already in progress for %s - cancel it or wait for it to complete (%s)", requestId, deployManager.getPendingDeploy(requestId).orNull());
 
     deployManager.saveDeploy(request, deployMarker, deploy);
 

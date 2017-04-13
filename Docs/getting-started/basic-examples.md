@@ -43,7 +43,7 @@ You can POST this JSON (saved in request.json) using curl:
 
 ```sh
 curl -i -X POST -H "Content-Type: application/json" -d@request.json \
-http://locahost:7099/singularity/api/requests
+http://localhost:7099/singularity/api/requests
 ```
 
 ## Basic Service Using the Mesos Executor
@@ -166,7 +166,7 @@ You can POST this JSON (saved in request.json) using curl:
 
 ```sh
 curl -i -X POST -H "Content-Type: application/json" -d@request.json \
-http://locahost:7099/singularity/api/requests
+http://localhost:7099/singularity/api/requests
 ```
 
 We will need to add some information for the load balancer api to our JSON:

@@ -9,6 +9,7 @@ import java.util.concurrent.ExecutionException;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
@@ -22,6 +23,7 @@ import com.hubspot.deploy.S3ArtifactSignature;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.executor.config.SingularityExecutorConfiguration;
 import com.hubspot.singularity.executor.config.SingularityExecutorModule;
+import com.hubspot.singularity.runner.base.configuration.SingularityRunnerBaseConfiguration;
 import com.hubspot.singularity.runner.base.sentry.SingularityRunnerExceptionNotifier;
 import com.hubspot.singularity.s3.base.ArtifactDownloadRequest;
 import com.hubspot.singularity.s3.base.ArtifactManager;
@@ -41,21 +43,23 @@ public class SingularityExecutorArtifactFetcher {
   private final SingularityS3Configuration s3Configuration;
   private final ObjectMapper objectMapper;
   private final SingularityRunnerExceptionNotifier exceptionNotifier;
+  private final SingularityRunnerBaseConfiguration runnerBaseConfiguration;
 
   @Inject
   public SingularityExecutorArtifactFetcher(@Named(SingularityExecutorModule.LOCAL_DOWNLOAD_HTTP_CLIENT) AsyncHttpClient localDownloadHttpClient, SingularityS3Configuration s3Configuration,
-      SingularityExecutorConfiguration executorConfiguration, ObjectMapper objectMapper, SingularityRunnerExceptionNotifier exceptionNotifier) {
+      SingularityExecutorConfiguration executorConfiguration, ObjectMapper objectMapper, SingularityRunnerExceptionNotifier exceptionNotifier, SingularityRunnerBaseConfiguration runnerBaseConfiguration) {
     this.localDownloadHttpClient = localDownloadHttpClient;
     this.executorConfiguration = executorConfiguration;
     this.s3Configuration = s3Configuration;
     this.objectMapper = objectMapper;
     this.exceptionNotifier = exceptionNotifier;
+    this.runnerBaseConfiguration = runnerBaseConfiguration;
 
     this.localDownloadUri = String.format(LOCAL_DOWNLOAD_STRING_FORMAT, s3Configuration.getLocalDownloadHttpPort(), s3Configuration.getLocalDownloadPath());
   }
 
   public SingularityExecutorTaskArtifactFetcher buildTaskFetcher(ExecutorData executorData, SingularityExecutorTask task) {
-    ArtifactManager artifactManager = new ArtifactManager(s3Configuration, task.getLog(), exceptionNotifier);
+    ArtifactManager artifactManager = new ArtifactManager(runnerBaseConfiguration, s3Configuration, task.getLog(), exceptionNotifier);
 
     return new SingularityExecutorTaskArtifactFetcher(artifactManager, executorData, task);
   }
@@ -66,7 +70,7 @@ public class SingularityExecutorArtifactFetcher {
     private final ExecutorData executorData;
     private final SingularityExecutorTask task;
 
-    public SingularityExecutorTaskArtifactFetcher(ArtifactManager artifactManager, ExecutorData executorData, SingularityExecutorTask task) {
+    private SingularityExecutorTaskArtifactFetcher(ArtifactManager artifactManager, ExecutorData executorData, SingularityExecutorTask task) {
       this.artifactManager = artifactManager;
       this.executorData = executorData;
       this.task = task;
@@ -152,7 +156,8 @@ public class SingularityExecutorArtifactFetcher {
 
       for (S3Artifact s3Artifact : s3Artifacts) {
         String destination = task.getArtifactPath(s3Artifact, task.getTaskDefinition().getTaskDirectoryPath()).toString();
-        ArtifactDownloadRequest artifactDownloadRequest = new ArtifactDownloadRequest(destination, s3Artifact);
+        ArtifactDownloadRequest artifactDownloadRequest = new ArtifactDownloadRequest(destination, s3Artifact,
+            Optional.of(SingularityExecutorArtifactFetcher.this.executorConfiguration.getLocalDownloadServiceTimeoutMillis()));
 
         task.getLog().debug("Requesting {} from {}", artifactDownloadRequest, localDownloadUri);
 

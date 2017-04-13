@@ -1,10 +1,10 @@
 package com.hubspot.deploy;
 
 import java.util.List;
+import java.util.Objects;
 
 import javax.validation.constraints.NotNull;
 
-import com.google.common.base.Objects;
 import com.google.common.base.Optional;
 import com.hubspot.singularity.HealthcheckProtocol;
 
@@ -147,37 +147,39 @@ public class HealthcheckOptionsBuilder {
     if (o == null || getClass() != o.getClass()) {
       return false;
     }
-    HealthcheckOptionsBuilder options = (HealthcheckOptionsBuilder) o;
-    return Objects.equal(uri, options.uri) &&
-      Objects.equal(portIndex, options.portIndex) &&
-      Objects.equal(portNumber, options.portNumber) &&
-      Objects.equal(protocol, options.protocol) &&
-      Objects.equal(startupTimeoutSeconds, options.startupTimeoutSeconds) &&
-      Objects.equal(startupDelaySeconds, options.startupDelaySeconds) &&
-      Objects.equal(startupIntervalSeconds, options.startupIntervalSeconds) &&
-      Objects.equal(intervalSeconds, options.intervalSeconds) &&
-      Objects.equal(responseTimeoutSeconds, options.responseTimeoutSeconds) &&
-      Objects.equal(maxRetries, options.maxRetries);
+    HealthcheckOptionsBuilder that = (HealthcheckOptionsBuilder) o;
+    return Objects.equals(uri, that.uri) &&
+        Objects.equals(portIndex, that.portIndex) &&
+        Objects.equals(portNumber, that.portNumber) &&
+        Objects.equals(protocol, that.protocol) &&
+        Objects.equals(startupTimeoutSeconds, that.startupTimeoutSeconds) &&
+        Objects.equals(startupDelaySeconds, that.startupDelaySeconds) &&
+        Objects.equals(startupIntervalSeconds, that.startupIntervalSeconds) &&
+        Objects.equals(intervalSeconds, that.intervalSeconds) &&
+        Objects.equals(responseTimeoutSeconds, that.responseTimeoutSeconds) &&
+        Objects.equals(maxRetries, that.maxRetries) &&
+        Objects.equals(failureStatusCodes, that.failureStatusCodes);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hashCode(uri, portIndex, portNumber, protocol, startupTimeoutSeconds, startupDelaySeconds, startupIntervalSeconds, intervalSeconds, responseTimeoutSeconds, maxRetries);
+    return Objects.hash(uri, portIndex, portNumber, protocol, startupTimeoutSeconds, startupDelaySeconds, startupIntervalSeconds, intervalSeconds, responseTimeoutSeconds, maxRetries, failureStatusCodes);
   }
 
   @Override
   public String toString() {
-    return Objects.toStringHelper(this)
-      .add("uri", uri)
-      .add("portIndex", portIndex)
-      .add("portNumber", portNumber)
-      .add("protocol", protocol)
-      .add("startupTimeoutSeconds", startupTimeoutSeconds)
-      .add("startupDelaySeconds", startupDelaySeconds)
-      .add("startupIntervalSeconds", startupIntervalSeconds)
-      .add("intervalSeconds", intervalSeconds)
-      .add("responseTimeoutSeconds", responseTimeoutSeconds)
-      .add("maxRetries", maxRetries)
-      .toString();
+    return "HealthcheckOptionsBuilder{" +
+        "uri='" + uri + '\'' +
+        ", portIndex=" + portIndex +
+        ", portNumber=" + portNumber +
+        ", protocol=" + protocol +
+        ", startupTimeoutSeconds=" + startupTimeoutSeconds +
+        ", startupDelaySeconds=" + startupDelaySeconds +
+        ", startupIntervalSeconds=" + startupIntervalSeconds +
+        ", intervalSeconds=" + intervalSeconds +
+        ", responseTimeoutSeconds=" + responseTimeoutSeconds +
+        ", maxRetries=" + maxRetries +
+        ", failureStatusCodes=" + failureStatusCodes +
+        '}';
   }
 }

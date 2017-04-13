@@ -37,7 +37,6 @@ import com.hubspot.singularity.SingularityTaskReconciliationStatistics;
 import com.hubspot.singularity.auth.datastore.SingularityAuthDatastore;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.transcoders.Transcoder;
-import com.hubspot.singularity.scheduler.SingularityTaskReconciliation;
 
 @Singleton
 public class StateManager extends CuratorManager {

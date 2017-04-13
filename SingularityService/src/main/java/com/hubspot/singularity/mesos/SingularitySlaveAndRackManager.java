@@ -9,7 +9,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.inject.Singleton;
 
-import org.apache.mesos.Protos;
 import org.apache.mesos.Protos.Offer;
 import org.apache.mesos.Protos.SlaveID;
 import org.slf4j.Logger;
@@ -23,7 +22,6 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Multiset;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
-import com.hubspot.mesos.JavaUtils;
 import com.hubspot.mesos.json.MesosMasterSlaveObject;
 import com.hubspot.mesos.json.MesosMasterStateObject;
 import com.hubspot.mesos.json.MesosResourcesObject;
@@ -41,6 +39,7 @@ import com.hubspot.singularity.SlaveMatchState;
 import com.hubspot.singularity.SlavePlacement;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.AbstractMachineManager;
+import com.hubspot.singularity.data.InactiveSlaveManager;
 import com.hubspot.singularity.data.RackManager;
 import com.hubspot.singularity.data.SlaveManager;
 import com.hubspot.singularity.data.TaskManager;
@@ -58,12 +57,14 @@ public class SingularitySlaveAndRackManager {
   private final RackManager rackManager;
   private final SlaveManager slaveManager;
   private final TaskManager taskManager;
+  private final InactiveSlaveManager inactiveSlaveManager;
   private final SingularitySlaveAndRackHelper slaveAndRackHelper;
   private final AtomicInteger activeSlavesLost;
 
   @Inject
   SingularitySlaveAndRackManager(SingularitySlaveAndRackHelper slaveAndRackHelper, SingularityConfiguration configuration, SingularityExceptionNotifier exceptionNotifier,
-                                 RackManager rackManager, SlaveManager slaveManager, TaskManager taskManager, @Named(SingularityMesosModule.ACTIVE_SLAVES_LOST_COUNTER) AtomicInteger activeSlavesLost) {
+                                 RackManager rackManager, SlaveManager slaveManager, TaskManager taskManager, InactiveSlaveManager inactiveSlaveManager,
+                                 @Named(SingularityMesosModule.ACTIVE_SLAVES_LOST_COUNTER) AtomicInteger activeSlavesLost) {
     this.configuration = configuration;
 
     this.exceptionNotifier = exceptionNotifier;
@@ -72,13 +73,14 @@ public class SingularitySlaveAndRackManager {
     this.rackManager = rackManager;
     this.slaveManager = slaveManager;
     this.taskManager = taskManager;
+    this.inactiveSlaveManager = inactiveSlaveManager;
     this.activeSlavesLost = activeSlavesLost;
   }
 
-  public SlaveMatchState doesOfferMatch(Protos.Offer offer, SingularityTaskRequest taskRequest, SingularitySchedulerStateCache stateCache) {
-    final String host = offer.getHostname();
-    final String rackId = slaveAndRackHelper.getRackIdOrDefault(offer);
-    final String slaveId = offer.getSlaveId().getValue();
+  public SlaveMatchState doesOfferMatch(SingularityOfferHolder offer, SingularityTaskRequest taskRequest, SingularitySchedulerStateCache stateCache) {
+    final String host = offer.getOffer().getHostname();
+    final String rackId = offer.getRackId();
+    final String slaveId = offer.getOffer().getSlaveId().getValue();
 
     final MachineState currentSlaveState = stateCache.getSlave(slaveId).get().getCurrentState().getState();
 
@@ -107,8 +109,9 @@ public class SingularitySlaveAndRackManager {
       }
     }
 
-    Map<String, String> reservedSlaveAttributes = slaveAndRackHelper.reservedSlaveAttributes(offer);
-    if (!reservedSlaveAttributes.isEmpty()) {
+    if (offer.hasReservedSlaveAttributes()) {
+      Map<String, String> reservedSlaveAttributes = offer.getReservedSlaveAttributes();
+
       if ((taskRequest.getRequest().getRequiredSlaveAttributes().isPresent() && !taskRequest.getRequest().getRequiredSlaveAttributes().get().isEmpty())
         || (taskRequest.getRequest().getAllowedSlaveAttributes().isPresent() && !taskRequest.getRequest().getAllowedSlaveAttributes().get().isEmpty())) {
         Map<String, String> mergedAttributes = taskRequest.getRequest().getRequiredSlaveAttributes().or(new HashMap<String, String>());
@@ -124,8 +127,8 @@ public class SingularitySlaveAndRackManager {
     }
 
     if (taskRequest.getRequest().getRequiredSlaveAttributes().isPresent()
-      && !slaveAndRackHelper.hasRequiredAttributes(slaveAndRackHelper.getTextAttributes(offer), taskRequest.getRequest().getRequiredSlaveAttributes().get())) {
-      LOG.trace("Task requires slave with attributes {}, (slave attributes are {})", taskRequest.getRequest().getRequiredSlaveAttributes().get(), slaveAndRackHelper.getTextAttributes(offer));
+      && !slaveAndRackHelper.hasRequiredAttributes(offer.getTextAttributes(), taskRequest.getRequest().getRequiredSlaveAttributes().get())) {
+      LOG.trace("Task requires slave with attributes {}, (slave attributes are {})", taskRequest.getRequest().getRequiredSlaveAttributes().get(), offer.getTextAttributes());
       return SlaveMatchState.SLAVE_ATTRIBUTES_DO_NOT_MATCH;
     }
 
@@ -144,48 +147,52 @@ public class SingularitySlaveAndRackManager {
     double numOtherDeploysOnSlave = 0;
     boolean taskLaunchedFromBounceWithActionId = taskRequest.getPendingTask().getPendingTaskId().getPendingType() == PendingType.BOUNCE && taskRequest.getPendingTask().getActionId().isPresent();
 
-    final String sanitizedHost = JavaUtils.getReplaceHyphensWithUnderscores(host);
-    final String sanitizedRackId = JavaUtils.getReplaceHyphensWithUnderscores(rackId);
+    final String sanitizedHost = offer.getSanitizedHost();
+    final String sanitizedRackId = offer.getSanitizedRackId();
     Collection<SingularityTaskId> cleaningTasks = stateCache.getCleaningTasks();
 
-    for (SingularityTaskId taskId : SingularityTaskId.matchingAndNotIn(stateCache.getActiveTaskIds(), taskRequest.getRequest().getId(), Collections.<SingularityTaskId>emptyList())) {
+    for (SingularityTaskId taskId : stateCache.getActiveTaskIdsForRequest(taskRequest.getRequest().getId())) {
       // TODO consider using executorIds
-      if (taskId.getSanitizedHost().equals(sanitizedHost)) {
-        if (taskRequest.getDeploy().getId().equals(taskId.getDeployId())) {
-          if (cleaningTasks.contains(taskId)) {
-            numCleaningOnSlave++;
-          } else {
-            numOnSlave++;
-          }
-          if (taskLaunchedFromBounceWithActionId) {
-            Optional<SingularityTask> maybeTask = taskManager.getTask(taskId);
-            boolean errorInTaskData = false;
-            if (maybeTask.isPresent()) {
-              SingularityPendingTask pendingTask = maybeTask.get().getTaskRequest().getPendingTask();
-              if (pendingTask.getPendingTaskId().getPendingType() == PendingType.BOUNCE) {
-                if (pendingTask.getActionId().isPresent()) {
-                  if (pendingTask.getActionId().get().equals(taskRequest.getPendingTask().getActionId().get())) {
-                    numFromSameBounceOnSlave++;
-                  }
-                } else {
-                  // No actionId present on bounce, fall back to more restrictive placement strategy
-                  errorInTaskData = true;
-                }
-              }
-            } else {
-              // Could not find appropriate task data, fall back to more restrictive placement strategy
-              errorInTaskData = true;
-            }
-            if (errorInTaskData) {
-              allowBounceToSameHost = false;
-            }
-          }
-        } else {
-          numOtherDeploysOnSlave++;
-        }
-      }
+
       if (!cleaningTasks.contains(taskId) && taskRequest.getDeploy().getId().equals(taskId.getDeployId())) {
         countPerRack.add(taskId.getSanitizedRackId());
+      }
+
+      if (!taskId.getSanitizedHost().equals(sanitizedHost)) {
+        continue;
+      }
+
+      if (taskRequest.getDeploy().getId().equals(taskId.getDeployId())) {
+        if (cleaningTasks.contains(taskId)) {
+          numCleaningOnSlave++;
+        } else {
+          numOnSlave++;
+        }
+        if (taskLaunchedFromBounceWithActionId) {
+          Optional<SingularityTask> maybeTask = taskManager.getTask(taskId);
+          boolean errorInTaskData = false;
+          if (maybeTask.isPresent()) {
+            SingularityPendingTask pendingTask = maybeTask.get().getTaskRequest().getPendingTask();
+            if (pendingTask.getPendingTaskId().getPendingType() == PendingType.BOUNCE) {
+              if (pendingTask.getActionId().isPresent()) {
+                if (pendingTask.getActionId().get().equals(taskRequest.getPendingTask().getActionId().get())) {
+                  numFromSameBounceOnSlave++;
+                }
+              } else {
+                // No actionId present on bounce, fall back to more restrictive placement strategy
+                errorInTaskData = true;
+              }
+            }
+          } else {
+            // Could not find appropriate task data, fall back to more restrictive placement strategy
+            errorInTaskData = true;
+          }
+          if (errorInTaskData) {
+            allowBounceToSameHost = false;
+          }
+        }
+      } else {
+        numOtherDeploysOnSlave++;
       }
     }
 
@@ -406,7 +413,14 @@ public class SingularitySlaveAndRackManager {
     final SingularitySlave slave = new SingularitySlave(slaveId, host, rackId, textAttributes, Optional.<MesosResourcesObject>absent());
 
     if (check(slave, slaveManager) == CheckResult.NEW) {
-      LOG.info("Offer revealed a new slave {}", slave);
+      if (inactiveSlaveManager.isInactive(slave.getHost())) {
+        LOG.info("Slave {} on inactive host {} attempted to rejoin. Marking as decommissioned.", slave, host);
+        slaveManager.changeState(slave, MachineState.STARTING_DECOMMISSION,
+            Optional.of(String.format("Slave %s on inactive host %s attempted to rejoin cluster.", slaveId, host)),
+            Optional.<String>absent());
+      } else {
+        LOG.info("Offer revealed a new slave {}", slave);
+      }
     }
 
     final SingularityRack rack = new SingularityRack(rackId);

@@ -8,7 +8,6 @@ import static com.hubspot.singularity.WebExceptions.checkConflict;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -20,15 +19,14 @@ import java.util.regex.Pattern;
 import javax.inject.Singleton;
 
 import org.apache.commons.lang3.ArrayUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.dmfs.rfc5545.recur.InvalidRecurrenceRuleException;
 import org.dmfs.rfc5545.recur.RecurrenceRule;
 import org.quartz.CronExpression;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
-import com.google.common.base.Strings;
 import com.google.common.base.Predicate;
+import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
@@ -46,9 +44,9 @@ import com.hubspot.mesos.SingularityPortMappingType;
 import com.hubspot.mesos.SingularityVolume;
 import com.hubspot.singularity.MachineState;
 import com.hubspot.singularity.ScheduleType;
+import com.hubspot.singularity.SingularityAction;
 import com.hubspot.singularity.SingularityDeploy;
 import com.hubspot.singularity.SingularityDeployBuilder;
-import com.hubspot.singularity.SingularityAction;
 import com.hubspot.singularity.SingularityPriorityFreezeParent;
 import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityRequestGroup;
@@ -56,9 +54,9 @@ import com.hubspot.singularity.SingularityShellCommand;
 import com.hubspot.singularity.SingularityWebhook;
 import com.hubspot.singularity.SlavePlacement;
 import com.hubspot.singularity.WebExceptions;
+import com.hubspot.singularity.api.SingularityBounceRequest;
 import com.hubspot.singularity.api.SingularityMachineChangeRequest;
 import com.hubspot.singularity.api.SingularityPriorityFreeze;
-import com.hubspot.singularity.api.SingularityBounceRequest;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.config.UIConfiguration;
 import com.hubspot.singularity.config.shell.ShellCommandDescriptor;
@@ -69,8 +67,8 @@ import com.hubspot.singularity.expiring.SingularityExpiringMachineState;
 @Singleton
 public class SingularityValidator {
   private static final Joiner JOINER = Joiner.on(" ");
-  private static final List<Character> DEPLOY_ID_ILLEGAL_CHARACTERS = Arrays.asList('@', '-', '\\', '/', '*', '?', '%', ' ', '[', ']', '#', '$'); // Characters that make Mesos or URL bars sad
-  private static final List<Character> REQUEST_ID_ILLEGAL_CHARACTERS = Arrays.asList('@', '\\', '/', '*', '?', '%', ' ', '[', ']', '#', '$'); // Characters that make Mesos or URL bars sad
+  private static final Pattern DEPLOY_ID_ILLEGAL_PATTERN = Pattern.compile("[^a-zA-Z0-9_]");
+  private static final Pattern REQUEST_ID_ILLEGAL_PATTERN = Pattern.compile("[^a-zA-Z0-9_-]");
   private static final Pattern DAY_RANGE_REGEXP = Pattern.compile("[0-7]-[0-7]");
   private static final Pattern COMMA_DAYS_REGEXP = Pattern.compile("([0-7],)+([0-7])?");
   private static final int MAX_STARRED_REQUESTS = 5000;
@@ -89,6 +87,7 @@ public class SingularityValidator {
   private final int defaultHealthcheckStartupTimeooutSeconds;
   private final int defaultHealthcehckMaxRetries;
   private final int defaultHealthcheckResponseTimeoutSeconds;
+  private final int maxDecommissioningSlaves;
   private final boolean allowRequestsWithoutOwners;
   private final boolean createDeployIds;
   private final int deployIdLength;
@@ -134,6 +133,8 @@ public class SingularityValidator {
     this.defaultHealthcehckMaxRetries = configuration.getHealthcheckMaxRetries().or(0);
     this.defaultHealthcheckResponseTimeoutSeconds = configuration.getHealthcheckTimeoutSeconds();
 
+    this.maxDecommissioningSlaves = configuration.getMaxDecommissioningSlaves();
+
     this.uiConfiguration = uiConfiguration;
 
     this.disasterManager = disasterManager;
@@ -143,7 +144,7 @@ public class SingularityValidator {
   public SingularityRequest checkSingularityRequest(SingularityRequest request, Optional<SingularityRequest> existingRequest, Optional<SingularityDeploy> activeDeploy,
                                                     Optional<SingularityDeploy> pendingDeploy) {
 
-    checkBadRequest(request.getId() != null && !StringUtils.containsAny(request.getId(), JOINER.join(REQUEST_ID_ILLEGAL_CHARACTERS)), "Id can not be null or contain any of the following characters: %s", REQUEST_ID_ILLEGAL_CHARACTERS);
+    checkBadRequest(request.getId() != null && ! REQUEST_ID_ILLEGAL_PATTERN.matcher(request.getId()).find(), "Id cannot be null or contain characters other than [a-zA-Z0-9_]");
     checkBadRequest(request.getRequestType() != null, "RequestType cannot be null or missing");
 
     if (request.getOwners().isPresent()) {
@@ -221,8 +222,6 @@ public class SingularityValidator {
 
     if (request.isScheduled()) {
       checkBadRequest(request.getInstances().or(1) == 1, "Scheduler requests can not be ran on more than one instance");
-    } else if (request.isOneOff()) {
-      checkBadRequest(!request.getInstances().isPresent(), "one-off requests can not define a # of instances");
     }
 
     if (request.getMaxTasksPerOffer().isPresent()) {
@@ -259,7 +258,7 @@ public class SingularityValidator {
       deployId = deploy.getId();
     }
 
-    checkBadRequest(deployId != null && !StringUtils.containsAny(deployId, JOINER.join(DEPLOY_ID_ILLEGAL_CHARACTERS)), "Id must not be null and can not contain any of the following characters: %s", DEPLOY_ID_ILLEGAL_CHARACTERS);
+    checkBadRequest(deployId != null && ! DEPLOY_ID_ILLEGAL_PATTERN.matcher(deployId).find(), "Id cannot be null or contain characters other than [a-zA-Z0-9_]");
     checkBadRequest(deployId.length() < maxDeployIdSize, "Deploy id must be less than %s characters, it is %s (%s)", maxDeployIdSize, deployId.length(), deployId);
     checkBadRequest(deploy.getRequestId() != null && deploy.getRequestId().equals(request.getId()), "Deploy id must match request id");
 
@@ -585,6 +584,12 @@ public class SingularityValidator {
     checkBadRequest(!(newState == MachineState.DECOMMISSIONED && !changeRequest.isKillTasksOnDecommissionTimeout()), "Must specify that all tasks on slave get killed if transitioning to DECOMMISSIONED state");
   }
 
+  public void validateDecommissioningCount() {
+    int decommissioning = slaveManager.getObjectsFiltered(MachineState.DECOMMISSIONING).size() + slaveManager.getObjectsFiltered(MachineState.STARTING_DECOMMISSION).size();
+    checkBadRequest(decommissioning < maxDecommissioningSlaves,
+        "%s slaves are already decommissioning state (%s allowed at once). Allow these slaves to finish before decommissioning another", decommissioning, maxDecommissioningSlaves);
+  }
+
   public void checkActionEnabled(SingularityAction action) {
     checkConflict(!disasterManager.isDisabled(action), disasterManager.getDisabledAction(action).getMessage());
   }
@@ -643,7 +648,7 @@ public class SingularityValidator {
   }
 
   public void checkRequestGroup(SingularityRequestGroup requestGroup) {
-    checkBadRequest(requestGroup.getId() != null && !StringUtils.containsAny(requestGroup.getId(), JOINER.join(REQUEST_ID_ILLEGAL_CHARACTERS)), "Id can not be null or contain any of the following characters: %s", REQUEST_ID_ILLEGAL_CHARACTERS);
+    checkBadRequest(requestGroup.getId() != null && ! REQUEST_ID_ILLEGAL_PATTERN.matcher(requestGroup.getId()).find(), "Id cannot be null or contain characters other than [a-zA-Z0-9_-]");
     checkBadRequest(requestGroup.getId().length() < maxRequestIdSize, "Id must be less than %s characters, it is %s (%s)", maxRequestIdSize, requestGroup.getId().length(), requestGroup.getId());
 
     checkBadRequest(requestGroup.getRequestIds() != null, "requestIds cannot be null");

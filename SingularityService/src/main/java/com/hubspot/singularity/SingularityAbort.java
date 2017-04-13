@@ -42,7 +42,7 @@ public class SingularityAbort implements ConnectionStateListener {
 
   @Inject
   public SingularityAbort(SingularitySmtpSender smtpSender, ServerProvider serverProvider, SingularityConfiguration configuration, SingularityExceptionNotifier exceptionNotifier, @Named(SingularityMainModule.HTTP_HOST_AND_PORT) HostAndPort hostAndPort) {
-    this.maybeSmtpConfiguration = configuration.getSmtpConfiguration();
+    this.maybeSmtpConfiguration = configuration.getSmtpConfigurationOptional();
     this.serverProvider = serverProvider;
     this.smtpSender = smtpSender;
     this.exceptionNotifier = exceptionNotifier;
@@ -58,7 +58,7 @@ public class SingularityAbort implements ConnectionStateListener {
   }
 
   public enum AbortReason {
-    LOST_ZK_CONNECTION, LOST_LEADERSHIP, UNRECOVERABLE_ERROR, TEST_ABORT, MESOS_ERROR, NO_RUNNING_STATUS_UPDATE_THREAD;
+    LOST_ZK_CONNECTION, LOST_LEADERSHIP, UNRECOVERABLE_ERROR, TEST_ABORT, MESOS_ERROR;
   }
 
   public void abort(AbortReason abortReason, Optional<Throwable> throwable) {

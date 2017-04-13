@@ -10,6 +10,7 @@ import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
@@ -29,6 +30,12 @@ public class SingularityConfiguration extends Configuration {
   private boolean allowTestResourceCalls = false;
 
   private long askDriverToKillTasksAgainAfterMillis = TimeUnit.MINUTES.toMillis(5);
+
+  private long cacheOffersForMillis = TimeUnit.MINUTES.toMillis(1);
+
+  private int offerCacheSize = 125;
+
+  private boolean cacheOffers = true;
 
   private int cacheTasksMaxSize = 5000;
 
@@ -56,9 +63,21 @@ public class SingularityConfiguration extends Configuration {
 
   private long checkWebhooksEveryMillis = TimeUnit.SECONDS.toMillis(10);
 
+  private long checkUsageEveryMillis = TimeUnit.MINUTES.toMillis(1);
+
+  private long cleanUsageEveryMillis = TimeUnit.MINUTES.toMillis(5);
+
+  private int numUsageToKeep = 5;
+
   private long cleanupEverySeconds = 5;
 
   private long checkQueuedMailsEveryMillis = TimeUnit.SECONDS.toMillis(15);
+
+  private boolean ldapCacheEnabled = true;
+
+  private long ldapCacheSize = 100;
+
+  private long ldapCacheExpireMillis = TimeUnit.MINUTES.toMillis(1);
 
   private long closeWaitSeconds = 5;
 
@@ -131,10 +150,8 @@ public class SingularityConfiguration extends Configuration {
 
   private int startupIntervalSeconds = 2;
 
-  @NotNull
   private Optional<Integer> healthcheckMaxRetries = Optional.absent();
 
-  @NotNull
   private Optional<Integer> healthcheckMaxTotalTimeoutSeconds = Optional.absent();
 
   @NotNull
@@ -204,7 +221,7 @@ public class SingularityConfiguration extends Configuration {
 
   private boolean sandboxDefaultsToTaskId = false;
 
-  private long sandboxHttpTimeoutMillis = TimeUnit.SECONDS.toMillis(5);
+  private long sandboxHttpTimeoutMillis = TimeUnit.SECONDS.toMillis(2);
 
   private long saveStateEverySeconds = 60;
 
@@ -232,8 +249,6 @@ public class SingularityConfiguration extends Configuration {
   private long warnIfScheduledJobIsRunningForAtLeastMillis = TimeUnit.DAYS.toMillis(1);
 
   @JsonProperty("taskExecutionTimeLimitMillis")
-  @Valid
-  @NotNull
   private Optional<Long> taskExecutionTimeLimitMillis = Optional.absent();
 
   private int warnIfScheduledJobIsRunningPastNextRunPct = 200;
@@ -299,14 +314,13 @@ public class SingularityConfiguration extends Configuration {
   @Max(5)
   private double schedulerPriorityWeightFactor = 1.0;
 
-  @Min(1)
-  private int statusUpdateQueueCapacity = 1000;
-
-  private boolean processStatusUpdatesInSeparateThread = false;
-
   private boolean rebalanceRacksOnScaleDown = false;
 
   private boolean allowBounceToSameHost = false;
+
+  private int maxActiveOnDemandTasksPerRequest = 0;
+
+  private int maxDecommissioningSlaves = 2;
 
   public long getAskDriverToKillTasksAgainAfterMillis() {
     return askDriverToKillTasksAgainAfterMillis;
@@ -460,6 +474,30 @@ public class SingularityConfiguration extends Configuration {
     return defaultDeployMaxTaskRetries;
   }
 
+  public boolean isLdapCacheEnabled() {
+    return ldapCacheEnabled;
+  }
+
+  public void setLdapCacheEnabled(boolean ldapCacheEnabled) {
+    this.ldapCacheEnabled = ldapCacheEnabled;
+  }
+
+  public long getLdapCacheSize() {
+    return ldapCacheSize;
+  }
+
+  public void setLdapCacheSize(long ldapCacheSize) {
+    this.ldapCacheSize = ldapCacheSize;
+  }
+
+  public long getLdapCacheExpireMillis() {
+    return ldapCacheExpireMillis;
+  }
+
+  public void setLdapCacheExpireMillis(long ldapCacheExpireMillis) {
+    this.ldapCacheExpireMillis = ldapCacheExpireMillis;
+  }
+
   public void setDefaultDeployMaxTaskRetries(int defaultDeployMaxTaskRetries) {
     this.defaultDeployMaxTaskRetries = defaultDeployMaxTaskRetries;
   }
@@ -604,7 +642,8 @@ public class SingularityConfiguration extends Configuration {
     return persistHistoryEverySeconds;
   }
 
-  public Optional<S3Configuration> getS3Configuration() {
+  @JsonIgnore
+  public Optional<S3Configuration> getS3ConfigurationOptional() {
     return Optional.fromNullable(s3Configuration);
   }
 
@@ -616,12 +655,26 @@ public class SingularityConfiguration extends Configuration {
     return saveStateEverySeconds;
   }
 
-  public Optional<SentryConfiguration> getSentryConfiguration(){
+  @JsonIgnore
+  public Optional<SentryConfiguration> getSentryConfigurationOptional(){
     return Optional.fromNullable(sentryConfiguration);
   }
 
-  public Optional<SMTPConfiguration> getSmtpConfiguration() {
+  @JsonIgnore
+  public Optional<SMTPConfiguration> getSmtpConfigurationOptional() {
     return Optional.fromNullable(smtpConfiguration);
+  }
+
+  public S3Configuration getS3Configuration() {
+    return s3Configuration;
+  }
+
+  public SentryConfiguration getSentryConfiguration() {
+    return sentryConfiguration;
+  }
+
+  public SMTPConfiguration getSmtpConfiguration() {
+    return smtpConfiguration;
   }
 
   public long getStartNewReconcileEverySeconds() {
@@ -1058,7 +1111,12 @@ public class SingularityConfiguration extends Configuration {
     this.taskPersistAfterStartupBufferMillis = taskPersistAfterStartupBufferMillis;
   }
 
-  public Optional<LDAPConfiguration> getLdapConfiguration() {
+  public LDAPConfiguration getLdapConfiguration() {
+    return ldapConfiguration;
+  }
+
+  @JsonIgnore
+  public Optional<LDAPConfiguration> getLdapConfigurationOptional() {
     return Optional.fromNullable(ldapConfiguration);
   }
 
@@ -1202,22 +1260,6 @@ public class SingularityConfiguration extends Configuration {
     this.schedulerPriorityWeightFactor = schedulerPriorityWeightFactor;
   }
 
-  public int getStatusUpdateQueueCapacity() {
-    return statusUpdateQueueCapacity;
-  }
-
-  public void setStatusUpdateQueueCapacity(int statusUpdateQueueCapacity) {
-    this.statusUpdateQueueCapacity = statusUpdateQueueCapacity;
-  }
-
-  public boolean isProcessStatusUpdatesInSeparateThread() {
-    return processStatusUpdatesInSeparateThread;
-  }
-
-  public void setProcessStatusUpdatesInSeparateThread(boolean processStatusUpdatesInSeparateThread) {
-    this.processStatusUpdatesInSeparateThread = processStatusUpdatesInSeparateThread;
-  }
-
   public boolean isRebalanceRacksOnScaleDown() {
     return rebalanceRacksOnScaleDown;
   }
@@ -1233,5 +1275,69 @@ public class SingularityConfiguration extends Configuration {
   public SingularityConfiguration setAllowBounceToSameHost(boolean allowBounceToSameHost) {
     this.allowBounceToSameHost = allowBounceToSameHost;
     return this;
+  }
+
+  public long getCheckUsageEveryMillis() {
+    return checkUsageEveryMillis;
+  }
+
+  public void setCheckUsageEveryMillis(long checkUsageEveryMillis) {
+    this.checkUsageEveryMillis = checkUsageEveryMillis;
+  }
+
+  public long getCleanUsageEveryMillis() {
+    return cleanUsageEveryMillis;
+  }
+
+  public void setCleanUsageEveryMillis(long cleanUsageEveryMillis) {
+    this.cleanUsageEveryMillis = cleanUsageEveryMillis;
+  }
+
+  public int getNumUsageToKeep() {
+    return numUsageToKeep;
+  }
+
+  public void setNumUsageToKeep(int numUsageToKeep) {
+    this.numUsageToKeep = numUsageToKeep;
+  }
+
+  public long getCacheOffersForMillis() {
+    return cacheOffersForMillis;
+  }
+
+  public void setCacheOffersForMillis(long cacheOffersForMillis) {
+    this.cacheOffersForMillis = cacheOffersForMillis;
+  }
+
+  public int getOfferCacheSize() {
+    return offerCacheSize;
+  }
+
+  public void setOfferCacheSize(int offerCacheSize) {
+    this.offerCacheSize = offerCacheSize;
+  }
+
+  public boolean isCacheOffers() {
+    return cacheOffers;
+  }
+
+  public void setCacheOffers(boolean cacheOffers) {
+    this.cacheOffers = cacheOffers;
+  }
+
+  public int getMaxActiveOnDemandTasksPerRequest() {
+    return maxActiveOnDemandTasksPerRequest;
+  }
+
+  public void setMaxActiveOnDemandTasksPerRequest(int maxActiveOnDemandTasksPerRequest) {
+    this.maxActiveOnDemandTasksPerRequest = maxActiveOnDemandTasksPerRequest;
+  }
+
+  public int getMaxDecommissioningSlaves() {
+    return maxDecommissioningSlaves;
+  }
+
+  public void setMaxDecommissioningSlaves(int maxDecommissioningSlaves) {
+    this.maxDecommissioningSlaves = maxDecommissioningSlaves;
   }
 }

@@ -178,9 +178,10 @@ public class SingularityAuthorizationHelper {
     if (oldRequest.getGroup().isPresent() && !oldRequest.getReadWriteGroups().equals(request.getReadWriteGroups())) {
       final Set<String> userGroups = user.get().getGroups();
       final boolean userIsAdmin = !adminGroups.isEmpty() && groupsIntersect(userGroups, adminGroups);
+      final boolean userIsJITA = !jitaGroups.isEmpty() && groupsIntersect(userGroups, jitaGroups);
       final boolean userIsRequestOwner = userGroups.contains(oldRequest.getGroup().get());
 
-      checkUnauthorized(userIsAdmin || userIsRequestOwner,
+      checkUnauthorized(userIsAdmin || userIsRequestOwner || userIsJITA,
           "Only admins and members of the request's owner group can add or remove groups from readWriteGroups");
     }
   }

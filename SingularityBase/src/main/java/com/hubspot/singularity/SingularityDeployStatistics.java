@@ -96,9 +96,17 @@ public class SingularityDeployStatistics {
 
   @Override
   public String toString() {
-    return "SingularityDeployStatistics [requestId=" + requestId + ", deployId=" + deployId + ", numTasks=" + numTasks + ", numSuccess=" + numSuccess + ", numFailures=" + numFailures
-        + ", numSequentialRetries=" + numSequentialRetries + ", instanceSequentialFailureTimestamps=" + instanceSequentialFailureTimestamps + ", lastFinishAt=" + lastFinishAt + ", lastTaskState="
-        + lastTaskState + ", averageRuntimeMillis=" + averageRuntimeMillis + "]";
+    return "SingularityDeployStatistics{" +
+        "requestId='" + requestId + '\'' +
+        ", deployId='" + deployId + '\'' +
+        ", numTasks=" + numTasks +
+        ", numSuccess=" + numSuccess +
+        ", numFailures=" + numFailures +
+        ", numSequentialRetries=" + numSequentialRetries +
+        ", instanceSequentialFailureTimestamps=" + instanceSequentialFailureTimestamps +
+        ", lastFinishAt=" + lastFinishAt +
+        ", lastTaskState=" + lastTaskState +
+        ", averageRuntimeMillis=" + averageRuntimeMillis +
+        '}';
   }
-
 }

@@ -163,6 +163,7 @@ These settings should live under the "mesos" field inside the root configuration
 | frameworkName | null | | string |
 | frameworkId | null | | string |
 | frameworkFailoverTimeout | 0.0 | | double |
+| frameworkRole | null | Specify framework's desired role when Singularity registers with the master | String |
 | checkpoint | true | | boolean |
 | credentialPrincipal | | Enable framework auth by setting both this and credentialSecret | String |
 | credentialSecret | | Enable framework auth by setting both this and credentialPrincipal | String |

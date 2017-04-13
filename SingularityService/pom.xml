@@ -5,7 +5,7 @@
   <parent>
     <groupId>com.hubspot</groupId>
     <artifactId>Singularity</artifactId>
-    <version>0.14.0-SNAPSHOT</version>
+    <version>0.15.0-SNAPSHOT</version>
   </parent>
 
   <artifactId>SingularityService</artifactId>
@@ -15,6 +15,7 @@
   </properties>
 
   <dependencies>
+
     <dependency>
       <groupId>com.hubspot</groupId>
       <artifactId>SingularityBase</artifactId>
@@ -89,7 +90,7 @@
 
     <dependency>
       <groupId>javax.ws.rs</groupId>
-      <artifactId>jsr311-api</artifactId>
+      <artifactId>javax.ws.rs-api</artifactId>
     </dependency>
 
     <dependency>
@@ -102,7 +103,7 @@
       <artifactId>slf4j-api</artifactId>
     </dependency>
 
-    <!-- for jade and jets3t -->
+    <!-- for jade -->
     <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>jcl-over-slf4j</artifactId>
@@ -152,6 +153,11 @@
     <dependency>
       <groupId>org.eclipse.jetty</groupId>
       <artifactId>jetty-servlets</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>org.eclipse.jetty</groupId>
+      <artifactId>jetty-util</artifactId>
     </dependency>
 
     <dependency>
@@ -226,22 +232,22 @@
     </dependency>
 
     <dependency>
-      <groupId>com.codahale.metrics</groupId>
-      <artifactId>metrics-core</artifactId>
-    </dependency>
-
-    <dependency>
-      <groupId>com.codahale.metrics</groupId>
-      <artifactId>metrics-healthchecks</artifactId>
-    </dependency>
-
-    <dependency>
-      <groupId>com.codahale.metrics</groupId>
+      <groupId>io.dropwizard.metrics</groupId>
       <artifactId>metrics-annotation</artifactId>
     </dependency>
 
     <dependency>
-      <groupId>com.codahale.metrics</groupId>
+      <groupId>io.dropwizard.metrics</groupId>
+      <artifactId>metrics-core</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>io.dropwizard.metrics</groupId>
+      <artifactId>metrics-healthchecks</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>io.dropwizard.metrics</groupId>
       <artifactId>metrics-graphite</artifactId>
     </dependency>
 
@@ -273,16 +279,6 @@
     <dependency>
       <groupId>com.fasterxml.jackson.datatype</groupId>
       <artifactId>jackson-datatype-guava</artifactId>
-    </dependency>
-
-    <dependency>
-      <groupId>com.sun.jersey</groupId>
-      <artifactId>jersey-core</artifactId>
-    </dependency>
-
-    <dependency>
-      <groupId>com.sun.jersey</groupId>
-      <artifactId>jersey-server</artifactId>
     </dependency>
 
     <dependency>
@@ -328,8 +324,13 @@
     </dependency>
 
     <dependency>
-      <groupId>net.java.dev.jets3t</groupId>
-      <artifactId>jets3t</artifactId>
+      <groupId>com.amazonaws</groupId>
+      <artifactId>aws-java-sdk-s3</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>com.amazonaws</groupId>
+      <artifactId>aws-java-sdk-core</artifactId>
     </dependency>
 
     <dependency>
@@ -349,13 +350,19 @@
     </dependency>
 
     <dependency>
-      <groupId>com.hubspot</groupId>
-      <artifactId>HorizonCore</artifactId>
+      <groupId>com.squarespace.jersey2-guice</groupId>
+      <artifactId>jersey2-guice-impl</artifactId>
     </dependency>
 
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>org.assertj</groupId>
+      <artifactId>assertj-core</artifactId>
       <scope>test</scope>
     </dependency>
 

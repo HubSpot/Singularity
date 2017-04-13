@@ -69,11 +69,13 @@ import com.hubspot.singularity.SingularityTaskHistoryUpdate.SimplifiedTaskState;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTaskRequest;
 import com.hubspot.singularity.SingularityTaskStatusHolder;
+import com.hubspot.singularity.SlavePlacement;
 import com.hubspot.singularity.api.SingularityDeployRequest;
 import com.hubspot.singularity.api.SingularityScaleRequest;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.config.SingularityTaskMetadataConfiguration;
 import com.hubspot.singularity.data.DeployManager;
+import com.hubspot.singularity.data.InactiveSlaveManager;
 import com.hubspot.singularity.data.PriorityManager;
 import com.hubspot.singularity.data.RackManager;
 import com.hubspot.singularity.data.RequestManager;
@@ -110,6 +112,8 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
   protected SlaveManager slaveManager;
   @Inject
   protected RackManager rackManager;
+  @Inject
+  protected InactiveSlaveManager inactiveSlaveManager;
   @Inject
   protected SchedulerDriverSupplier driverSupplier;
   protected SchedulerDriver driver;
@@ -201,19 +205,27 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
     return createOffer(cpus, memory, "slave1", "host1", Optional.<String> absent());
   }
 
+  protected Offer createOffer(double cpus, double memory, Optional<String> role) {
+    return createOffer(cpus, memory, "slave1", "host1", Optional.<String> absent(), Collections.<String, String> emptyMap(), new String[0], role);
+  }
+
   protected Offer createOffer(double cpus, double memory, String slave, String host) {
     return createOffer(cpus, memory, slave, host, Optional.<String>absent());
   }
 
   protected Offer createOffer(double cpus, double memory, String slave, String host, Optional<String> rack) {
-    return createOffer(cpus, memory, slave, host, rack, Collections.<String, String> emptyMap(), new String[0]);
+    return createOffer(cpus, memory, slave, host, rack, Collections.<String, String> emptyMap(), new String[0], Optional.<String>absent());
   }
 
   protected Offer createOffer(double cpus, double memory, String slave, String host, Optional<String> rack, Map<String, String> attributes) {
-    return createOffer(cpus, memory, slave, host, rack, attributes, new String[0]);
+    return createOffer(cpus, memory, slave, host, rack, attributes, new String[0], Optional.<String>absent());
   }
 
   protected Offer createOffer(double cpus, double memory, String slave, String host, Optional<String> rack, Map<String, String> attributes, String[] portRanges) {
+    return createOffer(cpus, memory, slave, host, rack, attributes, portRanges, Optional.<String>absent());
+  }
+
+  protected Offer createOffer(double cpus, double memory, String slave, String host, Optional<String> rack, Map<String, String> attributes, String[] portRanges, Optional<String> role) {
     SlaveID slaveId = SlaveID.newBuilder().setValue(slave).build();
     FrameworkID frameworkId = FrameworkID.newBuilder().setValue("framework1").build();
 
@@ -228,14 +240,21 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
           .build());
     }
 
+    Resource.Builder cpusResource = Resource.newBuilder().setType(Type.SCALAR).setName(MesosUtils.CPUS).setScalar(Scalar.newBuilder().setValue(cpus));
+    Resource.Builder memoryResources = Resource.newBuilder().setType(Type.SCALAR).setName(MesosUtils.MEMORY).setScalar(Scalar.newBuilder().setValue(memory));
+    if(role.isPresent()) {
+      cpusResource = cpusResource.setRole(role.get());
+      memoryResources = memoryResources.setRole(role.get());
+    }
+
     return Offer.newBuilder()
         .setId(OfferID.newBuilder().setValue("offer" + r.nextInt(1000)).build())
         .setFrameworkId(frameworkId)
         .setSlaveId(slaveId)
         .setHostname(host)
         .addAttributes(Attribute.newBuilder().setType(Type.TEXT).setText(Text.newBuilder().setValue(rack.or(configuration.getMesosConfiguration().getDefaultRackId()))).setName(configuration.getMesosConfiguration().getRackIdAttributeKey()))
-        .addResources(Resource.newBuilder().setType(Type.SCALAR).setName(MesosUtils.CPUS).setScalar(Scalar.newBuilder().setValue(cpus)))
-        .addResources(Resource.newBuilder().setType(Type.SCALAR).setName(MesosUtils.MEMORY).setScalar(Scalar.newBuilder().setValue(memory)))
+        .addResources(cpusResource)
+        .addResources(memoryResources)
         .addResources(MesosUtilsTest.buildPortRanges(portRanges))
         .addAllAttributes(attributesList)
         .build();
@@ -412,6 +431,36 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
     initRequestWithType(RequestType.ON_DEMAND, false);
   }
 
+  protected SingularityRequest createRequest(String requestId) {
+    SingularityRequestBuilder bldr = new SingularityRequestBuilder(requestId, RequestType.SERVICE);
+
+    bldr.setInstances(Optional.of(5));
+    bldr.setSlavePlacement(Optional.of(SlavePlacement.SEPARATE));
+
+    SingularityRequest request = bldr.build();
+
+    saveRequest(bldr.build());
+
+    return request;
+  }
+
+  protected SingularityDeploy deployRequest(SingularityRequest request, double cpus, double memoryMb) {
+    Resources r = new Resources(cpus, memoryMb, 0);
+
+    SingularityDeploy deploy = new SingularityDeployBuilder(request.getId(), "d1")
+        .setCommand(Optional.of("sleep 1"))
+        .setResources(Optional.of(r))
+        .build();
+
+    deployResource.deploy(new SingularityDeployRequest(deploy, Optional.<Boolean> absent(), Optional.<String> absent()));
+
+    return deploy;
+  }
+
+  protected void createAndDeployRequest(String requestId, double cpus, double memory) {
+    deployRequest(createRequest(requestId), cpus, memory);
+  }
+
   protected void initRequestWithType(RequestType requestType, boolean isLoadBalanced) {
     SingularityRequestBuilder bldr = new SingularityRequestBuilder(requestId, requestType);
 
@@ -424,7 +473,17 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
     request = bldr.build();
 
     saveRequest(request);
+  }
 
+  protected SingularityRequest startAndDeploySecondRequest() {
+    SingularityRequest request = new SingularityRequestBuilder(requestId + "2", RequestType.SERVICE).build();
+    saveRequest(request);
+
+    SingularityDeploy deploy = new SingularityDeployBuilder(request.getId(), "d1").setCommand(Optional.of("sleep 1")).build();
+
+    deployResource.deploy(new SingularityDeployRequest(deploy, Optional.<Boolean> absent(), Optional.<String> absent()));
+
+    return request;
   }
 
   protected void protectedInitRequest(boolean isLoadBalanced, boolean isScheduled) {
@@ -505,7 +564,7 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
   }
 
   protected void startDeploy(SingularityDeployMarker deployMarker, long timestamp) {
-    SingularityDeployProgress startingDeployProgress = new SingularityDeployProgress(1, 1, 10, false, true, Collections.<SingularityTaskId>emptySet(), timestamp);
+    SingularityDeployProgress startingDeployProgress = new SingularityDeployProgress(1, 0, 1, 10, false, true, Collections.<SingularityTaskId>emptySet(), timestamp);
     deployManager.savePendingDeploy(new SingularityPendingDeploy(deployMarker, Optional.<SingularityLoadBalancerUpdate>absent(), DeployState.WAITING, Optional.of(startingDeployProgress), Optional.<SingularityRequest>absent()));
   }
 
@@ -535,8 +594,15 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
     return launchTask(request, deploy, instanceNo, TaskState.TASK_RUNNING, true);
   }
 
-  protected void resourceOffers() {
-    sms.resourceOffers(driver, Arrays.asList(createOffer(20, 20000, "slave1", "host1"), createOffer(20, 20000, "slave2", "host2")));
+  protected List<Offer> resourceOffers() {
+    Offer offer1 = createOffer(20, 20000, "slave1", "host1");
+    Offer offer2 = createOffer(20, 20000, "slave2", "host2");
+
+    List<Offer> offers = Arrays.asList(offer1, offer2);
+
+    sms.resourceOffers(driver, offers);
+
+    return offers;
   }
 
   protected void resourceOffersByNumTasks(int numTasks) {

@@ -59,7 +59,7 @@ import com.hubspot.singularity.api.SingularityKillTaskRequest;
 import com.hubspot.singularity.api.SingularityTaskMetadataRequest;
 import com.hubspot.singularity.auth.SingularityAuthorizationHelper;
 import com.hubspot.singularity.config.SingularityTaskMetadataConfiguration;
-import com.hubspot.singularity.config.UIConfiguration;
+import com.hubspot.singularity.data.DisasterManager;
 import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.data.SingularityValidator;
 import com.hubspot.singularity.data.SlaveManager;
@@ -86,10 +86,11 @@ public class TaskResource {
   private final Optional<SingularityUser> user;
   private final SingularityTaskMetadataConfiguration taskMetadataConfiguration;
   private final SingularityValidator validator;
+  private final DisasterManager disasterManager;
 
   @Inject
   public TaskResource(TaskRequestManager taskRequestManager, TaskManager taskManager, SlaveManager slaveManager, MesosClient mesosClient, SingularityTaskMetadataConfiguration taskMetadataConfiguration,
-      SingularityAuthorizationHelper authorizationHelper, Optional<SingularityUser> user, RequestManager requestManager, SingularityValidator validator) {
+      SingularityAuthorizationHelper authorizationHelper, Optional<SingularityUser> user, RequestManager requestManager, SingularityValidator validator, DisasterManager disasterManager) {
     this.taskManager = taskManager;
     this.taskRequestManager = taskRequestManager;
     this.taskMetadataConfiguration = taskMetadataConfiguration;
@@ -99,6 +100,7 @@ public class TaskResource {
     this.authorizationHelper = authorizationHelper;
     this.user = user;
     this.validator = validator;
+    this.disasterManager = disasterManager;
   }
 
   @GET
@@ -106,6 +108,11 @@ public class TaskResource {
   @Path("/scheduled")
   @ApiOperation("Retrieve list of scheduled tasks.")
   public List<SingularityTaskRequest> getScheduledTasks() {
+    if (!authorizationHelper.hasAdminAuthorization(user) && disasterManager.isDisabled(SingularityAction.EXPENSIVE_API_CALLS)) {
+      LOG.trace("Short circuting getScheduledTasks() to [] due to EXPENSIVE_API_CALLS disabled");
+      return Collections.emptyList();
+    }
+
     return taskRequestManager.getTaskRequests(ImmutableList.copyOf(authorizationHelper.filterByAuthorizedRequests(user, taskManager.getPendingTasks(), SingularityTransformHelpers.PENDING_TASK_TO_REQUEST_ID, SingularityAuthorizationScope.READ)));
   }
 
@@ -187,6 +194,11 @@ public class TaskResource {
   @Path("/cleaning")
   @ApiOperation("Retrieve the list of cleaning tasks.")
   public Iterable<SingularityTaskCleanup> getCleaningTasks() {
+    if (!authorizationHelper.hasAdminAuthorization(user) && disasterManager.isDisabled(SingularityAction.EXPENSIVE_API_CALLS)) {
+      LOG.trace("Short circuting getCleaningTasks() to [] due to EXPENSIVE_API_CALLS disabled");
+      return Collections.emptyList();
+    }
+
     return authorizationHelper.filterByAuthorizedRequests(user, taskManager.getCleanupTasks(), SingularityTransformHelpers.TASK_CLEANUP_TO_REQUEST_ID, SingularityAuthorizationScope.READ);
   }
 
@@ -380,7 +392,7 @@ public class TaskResource {
           taskMetadataRequest.getType(), taskMetadataConfiguration.getAllowedMetadataTypes().get());
     }
 
-    WebExceptions.checkNotFound(taskManager.taskExistsInZk(taskIdObj), "Task {} not found in ZooKeeper (can not save metadata to tasks which have been persisted", taskIdObj);
+    WebExceptions.checkNotFound(taskManager.taskExistsInZk(taskIdObj), "Task %s not found in ZooKeeper (can not save metadata to tasks which have been persisted", taskIdObj);
 
     final SingularityTaskMetadata taskMetadata = new SingularityTaskMetadata(taskIdObj, System.currentTimeMillis(), taskMetadataRequest.getType(), taskMetadataRequest.getTitle(),
         taskMetadataRequest.getMessage(), JavaUtils.getUserEmail(user), taskMetadataRequest.getLevel());

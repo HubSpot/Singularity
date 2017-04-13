@@ -13,7 +13,6 @@ public class SingularityExpiringPause extends SingularityExpiringRequestActionPa
 
   @Override
   public String toString() {
-    return "SingularityExpiringPause [toString()=" + super.toString() + "]";
+    return "SingularityExpiringPause{} " + super.toString();
   }
-
 }

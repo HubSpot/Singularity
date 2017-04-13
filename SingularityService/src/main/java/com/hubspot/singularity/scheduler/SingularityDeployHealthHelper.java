@@ -12,12 +12,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Optional;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.hubspot.deploy.HealthcheckOptions;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.ExtendedTaskState;
+import com.hubspot.singularity.SingularityAction;
 import com.hubspot.singularity.SingularityDeploy;
 import com.hubspot.singularity.SingularityDeployFailure;
 import com.hubspot.singularity.SingularityDeployFailureReason;
@@ -29,7 +30,7 @@ import com.hubspot.singularity.SingularityTaskHistoryUpdate;
 import com.hubspot.singularity.SingularityTaskHistoryUpdate.SimplifiedTaskState;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.config.SingularityConfiguration;
-import com.hubspot.singularity.data.DeployManager;
+import com.hubspot.singularity.data.DisasterManager;
 import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.data.TaskManager;
 
@@ -41,12 +42,14 @@ public class SingularityDeployHealthHelper {
   private final TaskManager taskManager;
   private final SingularityConfiguration configuration;
   private final RequestManager requestManager;
+  private final DisasterManager disasterManager;
 
   @Inject
-  public SingularityDeployHealthHelper(TaskManager taskManager, SingularityConfiguration configuration, RequestManager requestManager) {
+  public SingularityDeployHealthHelper(TaskManager taskManager, SingularityConfiguration configuration, RequestManager requestManager, DisasterManager disasterManager) {
     this.taskManager = taskManager;
     this.configuration = configuration;
     this.requestManager = requestManager;
+    this.disasterManager = disasterManager;
   }
 
   public enum DeployHealth {
@@ -54,6 +57,9 @@ public class SingularityDeployHealthHelper {
   }
 
   private boolean shouldCheckHealthchecks(final SingularityRequest request, final Optional<SingularityDeploy> deploy, final Collection<SingularityTaskId> activeTasks, final boolean isDeployPending) {
+    if (disasterManager.isDisabled(SingularityAction.RUN_HEALTH_CHECKS)) {
+      return false;
+    }
     if (!deploy.isPresent()) {
       return false;
     }

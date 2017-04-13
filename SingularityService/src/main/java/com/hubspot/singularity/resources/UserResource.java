@@ -1,7 +1,5 @@
 package com.hubspot.singularity.resources;
 
-import static com.hubspot.singularity.WebExceptions.checkUnauthorized;
-
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;

@@ -1,6 +1,5 @@
 package com.hubspot.singularity.scheduler;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -16,7 +15,6 @@ import com.hubspot.deploy.HealthcheckOptions;
 import com.hubspot.deploy.HealthcheckOptionsBuilder;
 import com.hubspot.mesos.Resources;
 import com.hubspot.singularity.DeployState;
-import com.hubspot.singularity.HealthcheckProtocol;
 import com.hubspot.singularity.SingularityDeploy;
 import com.hubspot.singularity.SingularityDeployBuilder;
 import com.hubspot.singularity.SingularityShellCommand;

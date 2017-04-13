@@ -4,7 +4,9 @@ import static com.hubspot.singularity.WebExceptions.badRequest;
 import static com.hubspot.singularity.WebExceptions.checkBadRequest;
 import static com.hubspot.singularity.WebExceptions.checkConflict;
 import static com.hubspot.singularity.WebExceptions.checkNotNullBadRequest;
+import static com.hubspot.singularity.WebExceptions.checkRateLimited;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -19,6 +21,9 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Iterables;
@@ -30,14 +35,15 @@ import com.hubspot.mesos.Resources;
 import com.hubspot.singularity.MachineState;
 import com.hubspot.singularity.RequestCleanupType;
 import com.hubspot.singularity.RequestState;
+import com.hubspot.singularity.SingularityAction;
 import com.hubspot.singularity.SingularityAuthorizationScope;
 import com.hubspot.singularity.SingularityCreateResult;
 import com.hubspot.singularity.SingularityDeleteResult;
-import com.hubspot.singularity.SingularityAction;
 import com.hubspot.singularity.SingularityPendingDeploy;
 import com.hubspot.singularity.SingularityPendingRequest;
 import com.hubspot.singularity.SingularityPendingRequest.PendingType;
 import com.hubspot.singularity.SingularityPendingRequestParent;
+import com.hubspot.singularity.SingularityPendingTaskId;
 import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityRequestCleanup;
 import com.hubspot.singularity.SingularityRequestDeployState;
@@ -61,6 +67,7 @@ import com.hubspot.singularity.api.SingularitySkipHealthchecksRequest;
 import com.hubspot.singularity.api.SingularityUnpauseRequest;
 import com.hubspot.singularity.auth.SingularityAuthorizationHelper;
 import com.hubspot.singularity.data.DeployManager;
+import com.hubspot.singularity.data.DisasterManager;
 import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.data.SingularityValidator;
 import com.hubspot.singularity.data.SlaveManager;
@@ -83,21 +90,24 @@ import com.wordnik.swagger.annotations.ApiResponses;
 @Api(description="Manages Singularity Requests, the parent object for any deployed task", value=RequestResource.PATH, position=1)
 public class RequestResource extends AbstractRequestResource {
   public static final String PATH = SingularityService.API_BASE_PATH + "/requests";
+  private static final Logger LOG = LoggerFactory.getLogger(RequestResource.class);
 
   private final SingularityMailer mailer;
   private final TaskManager taskManager;
   private final RequestHelper requestHelper;
   private final SlaveManager slaveManager;
+  private final DisasterManager disasterManager;
 
   @Inject
   public RequestResource(SingularityValidator validator, DeployManager deployManager, TaskManager taskManager, RequestManager requestManager, SingularityMailer mailer,
-      SingularityAuthorizationHelper authorizationHelper, Optional<SingularityUser> user, RequestHelper requestHelper, SlaveManager slaveManager) {
+      SingularityAuthorizationHelper authorizationHelper, Optional<SingularityUser> user, RequestHelper requestHelper, DisasterManager disasterManager, SlaveManager slaveManager) {
     super(requestManager, deployManager, user, validator, authorizationHelper);
 
     this.mailer = mailer;
     this.taskManager = taskManager;
     this.requestHelper = requestHelper;
     this.slaveManager = slaveManager;
+    this.disasterManager = disasterManager;
   }
 
   private void submitRequest(SingularityRequest request, Optional<SingularityRequestWithState> oldRequestWithState, Optional<RequestHistoryType> historyType,
@@ -206,11 +216,11 @@ public class RequestResource extends AbstractRequestResource {
 
     final String deployId = getAndCheckDeployId(requestId);
 
-    SingularityCreateResult createResult = requestManager.createCleanupRequest(
+    checkConflict(!(requestManager.markAsBouncing(requestId) == SingularityCreateResult.EXISTED), "%s is already bouncing", requestId);
+
+    requestManager.createCleanupRequest(
         new SingularityRequestCleanup(JavaUtils.getUserEmail(user), isIncrementalBounce ? RequestCleanupType.INCREMENTAL_BOUNCE : RequestCleanupType.BOUNCE,
             System.currentTimeMillis(), Optional.<Boolean> absent(), requestId, Optional.of(deployId), skipHealthchecks, message, actionId, runBeforeKill));
-
-    checkConflict(createResult != SingularityCreateResult.EXISTED, "%s is already bouncing", requestId);
 
     requestManager.bounce(requestWithState.getRequest(), System.currentTimeMillis(), JavaUtils.getUserEmail(user), message);
 
@@ -245,11 +255,19 @@ public class RequestResource extends AbstractRequestResource {
 
     PendingType pendingType = null;
 
+    List<SingularityTaskId> activeTaskIds = taskManager.getActiveTaskIdsForRequest(requestId);
+
     if (requestWithState.getRequest().isScheduled()) {
       pendingType = PendingType.IMMEDIATE;
-      checkConflict(taskManager.getActiveTaskIdsForRequest(requestId).isEmpty(), "Can not request an immediate run of a scheduled job which is currently running (%s)", taskManager.getActiveTaskIdsForRequest(requestId));
+      checkConflict(activeTaskIds.isEmpty(), "Can not request an immediate run of a scheduled job which is currently running (%s)", taskManager.getActiveTaskIdsForRequest(requestId));
     } else if (requestWithState.getRequest().isOneOff()) {
       pendingType = PendingType.ONEOFF;
+      if (requestWithState.getRequest().getInstances().isPresent()) {
+        List<SingularityPendingTaskId> pendingTaskIds = taskManager.getPendingTaskIdsForRequest(requestWithState.getRequest().getId());
+        checkRateLimited(activeTaskIds.size() + pendingTaskIds.size() < requestWithState.getRequest().getInstances().get(),
+            "No more than %s tasks allowed to run concurrently for request %s (%s active, %s pending). Wait for tasks to finish before enqueuing more",
+            requestWithState.getRequest().getInstances().get(), activeTaskIds.size(), pendingTaskIds.size(), requestWithState.getRequest().getId());
+      }
     } else {
       throw badRequest("Can not request an immediate run of a non-scheduled / always running request (%s)", requestWithState.getRequest());
     }
@@ -440,6 +458,11 @@ public class RequestResource extends AbstractRequestResource {
   }
 
   private List<SingularityRequestParent> getRequestsWithDeployState(Iterable<SingularityRequestWithState> requests, final SingularityAuthorizationScope scope) {
+    if (!authorizationHelper.hasAdminAuthorization(user) && disasterManager.isDisabled(SingularityAction.EXPENSIVE_API_CALLS)) {
+      LOG.trace("Short circuting getRequestsWithDeployState() to [] due to EXPENSIVE_API_CALLS disabled");
+      return Collections.emptyList();
+    }
+
     if (!authorizationHelper.hasAdminAuthorization(user)) {
       requests = Iterables.filter(requests, new Predicate<SingularityRequestWithState>() {
         @Override
@@ -555,7 +578,7 @@ public class RequestResource extends AbstractRequestResource {
       message = deleteRequest.get().getMessage();
     }
 
-    requestManager.deleteRequest(request, JavaUtils.getUserEmail(user), actionId, message);
+    requestManager.startDeletingRequest(request, JavaUtils.getUserEmail(user), actionId, message);
 
     mailer.sendRequestRemovedMail(request, JavaUtils.getUserEmail(user), message);
 
@@ -581,6 +604,12 @@ public class RequestResource extends AbstractRequestResource {
     validator.checkScale(newRequest, Optional.<Integer>absent());
 
     checkBadRequest(oldRequest.getInstancesSafe() != newRequest.getInstancesSafe(), "Scale request has no affect on the # of instances (%s)", newRequest.getInstancesSafe());
+    String scaleMessage = String.format("Scaling from %d -> %d", oldRequest.getInstancesSafe(), newRequest.getInstancesSafe());
+    if (scaleRequest.getMessage().isPresent()) {
+      scaleMessage = String.format("%s -- %s", scaleRequest.getMessage().get(), scaleMessage);
+    } else {
+      scaleMessage = String.format("%s", scaleMessage);
+    }
 
     if (newRequest.getBounceAfterScale().or(scaleRequest.getBounce().or(false))) {
       validator.checkActionEnabled(SingularityAction.BOUNCE_REQUEST);
@@ -596,9 +625,9 @@ public class RequestResource extends AbstractRequestResource {
 
       SingularityBounceRequest bounceRequest = new SingularityBounceRequest(Optional.of(isIncrementalBounce), scaleRequest.getSkipHealthchecks(), Optional.<Long>absent(), Optional.of(UUID.randomUUID().toString()), Optional.<String>absent(), Optional.<SingularityShellCommand>absent());
 
-      submitRequest(newRequest, Optional.of(oldRequestWithState), Optional.of(RequestHistoryType.SCALED), scaleRequest.getSkipHealthchecks(), scaleRequest.getMessage(), Optional.of(bounceRequest));
+      submitRequest(newRequest, Optional.of(oldRequestWithState), Optional.of(RequestHistoryType.SCALED), scaleRequest.getSkipHealthchecks(), Optional.of(scaleMessage), Optional.of(bounceRequest));
     } else {
-      submitRequest(newRequest, Optional.of(oldRequestWithState), Optional.of(RequestHistoryType.SCALED), scaleRequest.getSkipHealthchecks(), scaleRequest.getMessage(), Optional.<SingularityBounceRequest>absent());
+      submitRequest(newRequest, Optional.of(oldRequestWithState), Optional.of(RequestHistoryType.SCALED), scaleRequest.getSkipHealthchecks(), Optional.of(scaleMessage), Optional.<SingularityBounceRequest>absent());
     }
 
     if (scaleRequest.getDurationMillis().isPresent()) {

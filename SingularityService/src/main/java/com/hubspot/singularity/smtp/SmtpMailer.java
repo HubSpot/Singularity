@@ -30,6 +30,7 @@ import com.google.inject.name.Named;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.ExtendedTaskState;
 import com.hubspot.singularity.RequestType;
+import com.hubspot.singularity.SingularityAction;
 import com.hubspot.singularity.SingularityDisastersData;
 import com.hubspot.singularity.SingularityEmailDestination;
 import com.hubspot.singularity.SingularityEmailType;
@@ -45,6 +46,7 @@ import com.hubspot.singularity.api.SingularityPauseRequest;
 import com.hubspot.singularity.api.SingularityScaleRequest;
 import com.hubspot.singularity.config.SMTPConfiguration;
 import com.hubspot.singularity.config.SingularityConfiguration;
+import com.hubspot.singularity.data.DisasterManager;
 import com.hubspot.singularity.data.MetadataManager;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.sentry.SingularityExceptionNotifier;
@@ -76,6 +78,8 @@ public class SmtpMailer implements SingularityMailer, Managed {
   private final Joiner adminJoiner;
   private final MailTemplateHelpers mailTemplateHelpers;
 
+  private final DisasterManager disasterManager;
+
   private static final Pattern TASK_STATUS_BY_PATTERN = Pattern.compile("(\\w+) by \\w+");
 
   @Inject
@@ -86,6 +90,7 @@ public class SmtpMailer implements SingularityMailer, Managed {
       MetadataManager metadataManager,
       SingularityExceptionNotifier exceptionNotifier,
       MailTemplateHelpers mailTemplateHelpers,
+      DisasterManager disasterManager,
       @Named(SingularityMainModule.TASK_TEMPLATE) JadeTemplate taskTemplate,
       @Named(SingularityMainModule.REQUEST_IN_COOLDOWN_TEMPLATE) JadeTemplate requestInCooldownTemplate,
       @Named(SingularityMainModule.REQUEST_MODIFIED_TEMPLATE) JadeTemplate requestModifiedTemplate,
@@ -93,7 +98,7 @@ public class SmtpMailer implements SingularityMailer, Managed {
       @Named(SingularityMainModule.DISASTERS_TEMPLATE) JadeTemplate disastersTemplate) {
 
     this.smtpSender = smtpSender;
-    this.smtpConfiguration = configuration.getSmtpConfiguration().get();
+    this.smtpConfiguration = configuration.getSmtpConfigurationOptional().get();
     this.configuration = configuration;
     this.taskManager = taskManager;
     this.metadataManager = metadataManager;
@@ -107,6 +112,7 @@ public class SmtpMailer implements SingularityMailer, Managed {
     this.requestInCooldownTemplate = requestInCooldownTemplate;
     this.rateLimitedTemplate = rateLimitedTemplate;
     this.disastersTemplate = disastersTemplate;
+    this.disasterManager = disasterManager;
 
     this.mailPreparerExecutorService = JavaUtils.newFixedTimingOutThreadPool(smtpConfiguration.getMailMaxThreads(), TimeUnit.SECONDS.toMillis(1), "SingularityMailPreparer-%d");
   }
@@ -277,6 +283,11 @@ public class SmtpMailer implements SingularityMailer, Managed {
 
     if (emailDestination.isEmpty()) {
       LOG.debug("Not configured to send task mail for {}", emailType);
+      return false;
+    }
+
+    if (disasterManager.isDisabled(SingularityAction.SEND_EMAIL)) {
+      LOG.debug("Not sending email because SEND_EMAIL action is disabled.");
       return false;
     }
 
@@ -531,7 +542,7 @@ public class SmtpMailer implements SingularityMailer, Managed {
   }
 
   private void prepareDisasterMail(final SingularityDisastersData disastersData) {
-    final List<SingularityEmailDestination> emailDestination = configuration.getSmtpConfiguration().get().getEmailConfiguration().get(SingularityEmailType.DISASTER_DETECTED);
+    final List<SingularityEmailDestination> emailDestination = configuration.getSmtpConfigurationOptional().get().getEmailConfiguration().get(SingularityEmailType.DISASTER_DETECTED);
     if (emailDestination.isEmpty() || !emailDestination.contains(SingularityEmailDestination.ADMINS) || smtpConfiguration.getAdmins().isEmpty()) {
       LOG.info("Not configured to send disaster detected mail");
       return;

@@ -61,6 +61,10 @@ public class SingularityDriver {
       }
     }
 
+    if (configuration.getFrameworkRole().isPresent()) {
+      frameworkInfoBuilder.setRole(configuration.getFrameworkRole().get());
+    }
+
     this.frameworkInfo = frameworkInfoBuilder.build();
 
     this.scheduler = scheduler;
@@ -70,9 +74,9 @@ public class SingularityDriver {
         .setPrincipal(configuration.getCredentialPrincipal().get())
         .setSecret(configuration.getCredentialSecret().get())
         .build();
-      this.driver = new MesosSchedulerDriver(scheduler, frameworkInfo, configuration.getMaster(), false, credential);
+      this.driver = new MesosSchedulerDriver(scheduler, frameworkInfo, configuration.getMaster(), true, credential);
     } else {
-      this.driver = new MesosSchedulerDriver(scheduler, frameworkInfo, configuration.getMaster(), false);
+      this.driver = new MesosSchedulerDriver(scheduler, frameworkInfo, configuration.getMaster(), true);
     }
   }
 
