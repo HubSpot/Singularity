@@ -52,18 +52,19 @@ public class CounterMap<K> {
   }
 
   public void incr(K key, long amount) {
-    Counter c = map.get(key);
-
-    if (c == null) {
-      c = new Counter();
-      map.put(key, c);
-    }
+    Counter c = map.putIfAbsent(key, new Counter());
 
     c.count += amount;
   }
 
   public void incr(K key) {
     incr(key, 1);
+  }
+
+  public void decr(K key) {
+    Counter c = map.putIfAbsent(key, new Counter());
+
+    c.count--;
   }
 
   public long getCount(K key) {

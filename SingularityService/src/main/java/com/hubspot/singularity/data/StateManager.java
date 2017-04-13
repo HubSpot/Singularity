@@ -30,6 +30,7 @@ import com.hubspot.singularity.SingularityPendingDeploy;
 import com.hubspot.singularity.SingularityPendingTaskId;
 import com.hubspot.singularity.SingularityPriorityFreezeParent;
 import com.hubspot.singularity.SingularityRack;
+import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityRequestDeployState;
 import com.hubspot.singularity.SingularityRequestWithState;
 import com.hubspot.singularity.SingularityScheduledTasksInfo;
@@ -139,6 +140,10 @@ public class StateManager extends CuratorManager {
       numTasks.incr(pendingTaskId.getRequestId());
     }
 
+    for (SingularityTaskId cleaningTaskId : taskManager.getCleanupTaskIds()) {
+      numTasks.decr(cleaningTaskId.getRequestId());
+    }
+
     return numTasks.toCountMap();
   }
 
@@ -214,14 +219,15 @@ public class StateManager extends CuratorManager {
       }
 
       if (requestWithState.getState().isRunnable() && requestWithState.getRequest().isAlwaysRunning()) {
-        final int instances = requestWithState.getRequest().getInstancesSafe();
+        SingularityRequest request = requestWithState.getRequest();
+        final int expectedInstances = request.getInstancesSafe();
 
-        final Long numActualInstances = numInstances.get(requestWithState.getRequest().getId());
+        final Long numActualInstances = numInstances.get(request.getId());
 
-        if (numActualInstances == null || numActualInstances.longValue() < instances) {
-          possiblyUnderProvisionedRequestIds.add(requestWithState.getRequest().getId());
-        } else if (numActualInstances.longValue() > instances) {
-          overProvisionedRequestIds.add(requestWithState.getRequest().getId());
+        if (numActualInstances == null || numActualInstances < expectedInstances) {
+          possiblyUnderProvisionedRequestIds.add(request.getId());
+        } else if (numActualInstances > expectedInstances) {
+          overProvisionedRequestIds.add(request.getId());
         }
       }
     }
