@@ -16,6 +16,7 @@ import org.apache.mesos.Protos.Offer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
@@ -57,8 +58,6 @@ public class SingularityMesosOfferScheduler {
 
   private final Provider<SingularitySchedulerStateCache> stateCacheProvider;
   private final SchedulerDriverSupplier schedulerDriverSupplier;
-
-  private final Map<String, Integer> offerMatchAttemptsPerTask = new HashMap<>();
 
   @Inject
   public SingularityMesosOfferScheduler(MesosConfiguration mesosConfiguration,
@@ -118,6 +117,8 @@ public class SingularityMesosOfferScheduler {
 
     int tasksScheduled = 0;
     final List<SingularitySlaveUsageWithId> currentSlaveUsages = usageManager.getCurrentSlaveUsages(offerHolders.stream().map(o -> o.getOffer().getSlaveId().getValue()).collect(Collectors.toList()));
+    final Map<String, Integer> offerMatchAttemptsPerTask = new HashMap<>();
+
 
     while (!pendingTaskIdToTaskRequest.isEmpty() && addedTaskInLastLoop && canScheduleAdditionalTasks(taskCredits)) {
       addedTaskInLastLoop = false;
@@ -125,7 +126,8 @@ public class SingularityMesosOfferScheduler {
       for (SingularityTaskRequestHolder taskRequestHolder : pendingTaskIdToTaskRequest.values()) {
 
         Map<SingularityOfferHolder, Double> scorePerOffer = new HashMap<>();
-        double minScore = minScore(taskRequestHolder.getTaskRequest());
+        double minScore = minScore(taskRequestHolder.getTaskRequest(), offerMatchAttemptsPerTask, System.currentTimeMillis());
+
         LOG.info("Minimum score for task {} is {}", taskRequestHolder.getTaskRequest().getPendingTask().getPendingTaskId().getId(), minScore);
 
         for (SingularityOfferHolder offerHolder : offerHolders) {
@@ -255,7 +257,8 @@ public class SingularityMesosOfferScheduler {
     return 0;
   }
 
-  private double score(Offer offer, SingularityTaskRequest taskRequest, Optional<SingularitySlaveUsageWithId> maybeSlaveUsage) {
+  @VisibleForTesting
+  double score(Offer offer, SingularityTaskRequest taskRequest, Optional<SingularitySlaveUsageWithId> maybeSlaveUsage) {
     double requestTypeCpuWeight = 0.20;
     double requestTypeMemWeight = 0.30;
     double freeCpuWeight = 0.20;
@@ -263,9 +266,8 @@ public class SingularityMesosOfferScheduler {
     double score = 0;
     double defaultScoreForMissingUsage = 0.10;
 
-    String slaveId = offer.getSlaveId().getValue();
-    if (!maybeSlaveUsage.isPresent() || !maybeSlaveUsage.get().getCpuTotal().isPresent() || !maybeSlaveUsage.get().getMemoryTotal().isPresent()) {
-      LOG.info("Slave {} has no total usage data. Will default to {}", slaveId, defaultScoreForMissingUsage);
+    if (!maybeSlaveUsage.isPresent() || !maybeSlaveUsage.get().getCpuTotal().isPresent() || !maybeSlaveUsage.get().getMemoryMbTotal().isPresent()) {
+      LOG.info("Slave {} has no total usage data. Will default to {}", offer.getSlaveId().getValue(), defaultScoreForMissingUsage);
       return defaultScoreForMissingUsage;
     }
 
@@ -273,28 +275,29 @@ public class SingularityMesosOfferScheduler {
     Map<RequestType, Map<String, Number>> usagesPerRequestType = slaveUsage.getUsagePerRequestType();
     Map<String, Number> usagePerResource = usagesPerRequestType.get(taskRequest.getRequest().getRequestType());
 
-    score += requestTypeCpuWeight * (1 - (usagePerResource.get(SingularitySlaveUsage.CPU_USED).doubleValue() / slaveUsage.getCpuTotal().get()));
-    score += requestTypeMemWeight * (1 - (usagePerResource.get(SingularitySlaveUsage.MEMORY_USED).longValue() / slaveUsage.getMemoryTotal().get()));
+    score += requestTypeCpuWeight * (1 - usagePerResource.get(SingularitySlaveUsage.CPU_USED).doubleValue() / slaveUsage.getCpuTotal().get());
+    score += requestTypeMemWeight * (1 - ((double) usagePerResource.get(SingularitySlaveUsage.MEMORY_BYTES_USED).longValue() / slaveUsage.getMemoryBytesTotal().get()));
 
     score += freeCpuWeight * (MesosUtils.getNumCpus(offer) / slaveUsage.getCpuTotal().get());
-    score += freeMemWeight * (MesosUtils.getMemory(offer) / slaveUsage.getMemoryTotal().get());
+    score += freeMemWeight * (MesosUtils.getMemory(offer) / slaveUsage.getMemoryMbTotal().get());
 
     return score;
   }
 
-  private double minScore(SingularityTaskRequest taskRequest) {
+  @VisibleForTesting
+  double minScore(SingularityTaskRequest taskRequest, Map<String, Integer> offerMatchAttemptsPerTask, long now) {
     double minScore = 0.80;
     int maxOfferAttempts = 20;
     long maxMillisPastDue = TimeUnit.MILLISECONDS.convert(10, TimeUnit.MINUTES);
 
-    minScore -= offerMatchAttemptsPerTask.getOrDefault(taskRequest.getPendingTask().getPendingTaskId().getId(), 0) / maxOfferAttempts;
-    minScore -= millisPastDue(taskRequest, System.currentTimeMillis()) / maxMillisPastDue;
+    minScore -= offerMatchAttemptsPerTask.getOrDefault(taskRequest.getPendingTask().getPendingTaskId().getId(), 0) / (double) maxOfferAttempts;
+    minScore -= millisPastDue(taskRequest, now) / (double) maxMillisPastDue;
 
     return Math.max(minScore, 0);
   }
 
   private long millisPastDue(SingularityTaskRequest taskRequest, long now) {
-    return Math.max(now - taskRequest.getPendingTask().getPendingTaskId().getNextRunAt(), 1);
+    return Math.max(now - taskRequest.getPendingTask().getPendingTaskId().getNextRunAt(), 0);
   }
 
   private SingularityTask acceptTask(SingularityOfferHolder offerHolder,
