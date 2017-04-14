@@ -24,10 +24,10 @@ const getLink = (status, taskId) => {
   return null;
 };
 
-function TaskLatestLog (props) {
-  const link = getLink(props.status, props.taskId);
+function TaskLatestLog({status, taskId, available}) {
+  const link = getLink(status, taskId);
 
-  return (props.status !== TaskStatus.NEVER_RAN &&
+  return (status !== TaskStatus.NEVER_RAN && available &&
     <Section title="Logs" id="logs">
       <div className="row">
         <div className="col-md-4">
@@ -41,6 +41,7 @@ function TaskLatestLog (props) {
 TaskLatestLog.propTypes = {
   taskId: PropTypes.string.isRequired,
   status: PropTypes.oneOf([TaskStatus.RUNNING, TaskStatus.STOPPED, TaskStatus.NEVER_RAN]),
+  available: PropTypes.bool,
 };
 
 export default TaskLatestLog;
