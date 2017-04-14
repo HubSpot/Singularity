@@ -1,11 +1,17 @@
 package com.hubspot.singularity.data;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.AssertionsForClassTypes.catchThrowable;
+
 import javax.ws.rs.WebApplicationException;
 
 import org.junit.Assert;
 import org.junit.Test;
 
+import com.google.common.base.Optional;
 import com.google.inject.Inject;
+import com.hubspot.deploy.HealthcheckOptions;
+import com.hubspot.deploy.HealthcheckOptionsBuilder;
 import com.hubspot.singularity.RequestType;
 import com.hubspot.singularity.SingularityDeploy;
 import com.hubspot.singularity.SingularityRequest;
@@ -44,14 +50,34 @@ public class ValidatorTest extends SingularityTestBaseNoDb {
     validator.checkDeploy(singularityRequest, singularityDeploy);
   }
 
-  @Test(expected = WebApplicationException.class)
+  @Test
   public void itForbidsQuotesInDeployIds() throws Exception {
     final String badDeployId = "deployKey'";
 
     SingularityDeploy singularityDeploy = SingularityDeploy.newBuilder(badDeployId, badDeployId).build();
     SingularityRequest singularityRequest = new SingularityRequestBuilder(badDeployId, RequestType.SERVICE).build();
 
-    validator.checkDeploy(singularityRequest, singularityDeploy);
+    WebApplicationException exn = (WebApplicationException) catchThrowable(() -> validator.checkDeploy(singularityRequest, singularityDeploy));
+    assertThat((String) exn.getResponse().getEntity())
+        .contains("[a-zA-Z0-9_]");
+  }
+
+  @Test
+  public void itForbidsHealthCheckStartupDelaysLongerThanKillWait() {
+    // Default kill wait time is 10 minutes (600 seconds)
+    HealthcheckOptions healthCheck = new HealthcheckOptionsBuilder("/")
+        .setPortNumber(Optional.of(8080L))
+        .setStartupDelaySeconds(Optional.of(10000))
+        .build();
+    SingularityDeploy deploy = SingularityDeploy
+        .newBuilder("1234567", "1234567")
+        .setHealthcheck(Optional.of(healthCheck))
+        .build();
+    SingularityRequest request = new SingularityRequestBuilder("1234567", RequestType.SERVICE).build();
+
+    WebApplicationException exn = (WebApplicationException) catchThrowable(() -> validator.checkDeploy(request, deploy));
+    assertThat((String) exn.getResponse().getEntity())
+        .contains("Health check startup delay");
   }
 
 }

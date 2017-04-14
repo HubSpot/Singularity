@@ -83,6 +83,7 @@ public class SingularityValidator {
   private final int maxMemoryMbPerRequest;
   private final int maxMemoryMbPerInstance;
   private final Optional<Integer> maxTotalHealthcheckTimeoutSeconds;
+  private final long defaultKillAfterNotHealthySeconds;
   private final int defaultHealthcheckIntervalSeconds;
   private final int defaultHealthcheckStartupTimeooutSeconds;
   private final int defaultHealthcehckMaxRetries;
@@ -129,6 +130,7 @@ public class SingularityValidator {
     this.allowBounceToSameHost = configuration.isAllowBounceToSameHost();
 
     this.maxTotalHealthcheckTimeoutSeconds = configuration.getHealthcheckMaxTotalTimeoutSeconds();
+    this.defaultKillAfterNotHealthySeconds = configuration.getKillAfterTasksDoNotRunDefaultSeconds();
     this.defaultHealthcheckIntervalSeconds = configuration.getHealthcheckIntervalSeconds();
     this.defaultHealthcheckStartupTimeooutSeconds = configuration.getStartupTimeoutSeconds();
     this.defaultHealthcehckMaxRetries = configuration.getHealthcheckMaxRetries().or(0);
@@ -303,8 +305,16 @@ public class SingularityValidator {
       int httpTimeoutSeconds = options.getResponseTimeoutSeconds().or(defaultHealthcheckResponseTimeoutSeconds);
       int startupTime = options.getStartupTimeoutSeconds().or(defaultHealthcheckStartupTimeooutSeconds);
       int attempts = options.getMaxRetries().or(defaultHealthcehckMaxRetries) + 1;
+
       checkBadRequest((startupTime + ((httpTimeoutSeconds + intervalSeconds) * attempts)) > maxTotalHealthcheckTimeoutSeconds.get(),
         String.format("Max healthcheck time cannot be greater than %s, (was startup timeout: %s, interval: %s, attempts: %s)", maxTotalHealthcheckTimeoutSeconds.get(), startupTime, intervalSeconds, attempts));
+    }
+
+    if (deploy.getHealthcheck().isPresent() && deploy.getHealthcheck().get().getStartupDelaySeconds().isPresent()) {
+      int startUpDelay = deploy.getHealthcheck().get().getStartupDelaySeconds().get();
+
+      checkBadRequest(startUpDelay < defaultKillAfterNotHealthySeconds,
+          String.format("Health check startup delay time must be less than %s (was %s)", defaultKillAfterNotHealthySeconds, startUpDelay));
     }
 
     checkBadRequest(deploy.getCommand().isPresent() && !deploy.getExecutorData().isPresent() ||
