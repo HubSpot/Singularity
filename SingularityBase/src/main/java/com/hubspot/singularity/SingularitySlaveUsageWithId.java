@@ -8,7 +8,7 @@ public class SingularitySlaveUsageWithId extends SingularitySlaveUsage {
   private final String slaveId;
 
   public SingularitySlaveUsageWithId(SingularitySlaveUsage usage, String slaveId) {
-    super(usage.getMemoryBytesUsed(), usage.getTimestamp(), usage.getCpusUsed(), usage.getNumTasks(), usage.getMemoryBytesTotal(), usage.getCpuTotal(), usage.getUsagePerRequestType());
+    super(usage.getMemoryBytesUsed(), usage.getTimestamp(), usage.getCpusUsed(), usage.getNumTasks(), usage.getMemoryMbTotal(), usage.getCpuTotal(), usage.getUsagePerRequestType());
     this.slaveId = slaveId;
   }
 

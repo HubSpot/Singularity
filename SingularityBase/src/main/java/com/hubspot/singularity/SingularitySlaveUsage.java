@@ -9,14 +9,14 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 public class SingularitySlaveUsage {
 
   public static final String CPU_USED = "cpusUsed";
-  public static final String MEMORY_USED = "memoryRssBytes";
+  public static final String MEMORY_BYTES_USED = "memoryRssBytes";
   public static final long BYTES_PER_MEGABYTE = 1024L * 1024L;
 
   private final long memoryBytesUsed;
   private final int numTasks;
   private final long timestamp;
   private final double cpusUsed;
-  private final Optional<Long> memoryTotal;
+  private final Optional<Long> memoryMbTotal;
   private final Optional<Double> cpuTotal;
   private final Map<RequestType, Map<String, Number>> usagePerRequestType;
 
@@ -25,14 +25,14 @@ public class SingularitySlaveUsage {
                                @JsonProperty("timestamp") long timestamp,
                                @JsonProperty("cpusUsed") double cpusUsed,
                                @JsonProperty("numTasks") int numTasks,
-                               @JsonProperty("memoryTotal") Optional<Long> memoryTotal,
+                               @JsonProperty("memoryMbTotal") Optional<Long> memoryMbTotal,
                                @JsonProperty("cpuTotal") Optional<Double> cpuTotal,
                                @JsonProperty("usagePerRequestType") Map<RequestType, Map<String, Number>> usagePerRequestType) {
     this.memoryBytesUsed = memoryBytesUsed;
     this.timestamp = timestamp;
     this.cpusUsed = cpusUsed;
     this.numTasks = numTasks;
-    this.memoryTotal = memoryTotal;
+    this.memoryMbTotal = memoryMbTotal;
     this.cpuTotal = cpuTotal;
     this.usagePerRequestType = usagePerRequestType;
   }
@@ -54,11 +54,11 @@ public class SingularitySlaveUsage {
   }
 
   public Optional<Long> getMemoryBytesTotal() {
-    if (memoryTotal.isPresent()) {
-      return Optional.of(memoryTotal.get() * BYTES_PER_MEGABYTE);
-    }
+    return memoryMbTotal.isPresent() ? Optional.of(memoryMbTotal.get() * BYTES_PER_MEGABYTE) : Optional.empty();
+  }
 
-    return Optional.empty();
+  public Optional<Long> getMemoryMbTotal() {
+    return memoryMbTotal.isPresent() ? Optional.of(memoryMbTotal.get()) : Optional.empty();
   }
 
   public Optional<Double> getCpuTotal() {
@@ -73,8 +73,8 @@ public class SingularitySlaveUsage {
     return usagePerRequestType.get(type).get(CPU_USED).doubleValue();
   }
 
-  public long getMemUsedForRequestType(RequestType type) {
-    return usagePerRequestType.get(type).get(MEMORY_USED).longValue();
+  public long getMemBytesUsedForRequestType(RequestType type) {
+    return usagePerRequestType.get(type).get(MEMORY_BYTES_USED).longValue();
   }
 
   @Override

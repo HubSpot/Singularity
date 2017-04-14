@@ -58,7 +58,7 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
     Map<RequestType, Map<String, Number>> usagesPerRequestType = new HashMap<>();
 
     for (SingularitySlave slave : usageHelper.getSlavesToTrackUsageFor()) {
-      Optional<Long> memoryTotal = Optional.empty();
+      Optional<Long> memoryMbTotal = Optional.empty();
       Optional<Double> cpuTotal = Optional.empty();
       long memoryBytesUsed = 0;
       double cpusUsed = 0;
@@ -99,11 +99,11 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
             !slave.getResources().get().getNumCpus().isPresent()) {
           LOG.debug("Could not find slave or resources for slave {}", slave.getId());
         } else {
-          memoryTotal = Optional.of(slave.getResources().get().getMemoryMegaBytes().get().longValue());
+          memoryMbTotal = Optional.of(slave.getResources().get().getMemoryMegaBytes().get().longValue());
           cpuTotal = Optional.of(slave.getResources().get().getNumCpus().get().doubleValue());
         }
 
-        SingularitySlaveUsage slaveUsage = new SingularitySlaveUsage(memoryBytesUsed, now, cpusUsed, allTaskUsage.size(), memoryTotal, cpuTotal, usagesPerRequestType);
+        SingularitySlaveUsage slaveUsage = new SingularitySlaveUsage(memoryBytesUsed, now, cpusUsed, allTaskUsage.size(), memoryMbTotal, cpuTotal, usagesPerRequestType);
         List<Long> slaveTimestamps = usageManager.getSlaveUsageTimestamps(slave.getId());
         if (slaveTimestamps.size() + 1 > configuration.getNumUsageToKeep()) {
           usageManager.deleteSpecificSlaveUsage(slave.getId(), slaveTimestamps.get(0));
@@ -126,26 +126,25 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
   }
 
   private RequestType getRequestType(MesosTaskMonitorObject task) {
-    //todo: check optional.get()
     return requestManager.getRequest(SingularityTaskId.valueOf(task.getSource()).getRequestId()).get().getRequest().getRequestType();
   }
 
-  private void updateUsagesPerRequestType(Map<RequestType, Map<String, Number>> usagePerRequestType, RequestType type, long memUsed, double cpuUsed) {
+  private void updateUsagesPerRequestType(Map<RequestType, Map<String, Number>> usagePerRequestType, RequestType type, long memBytesUsed, double cpuUsed) {
     if (usagePerRequestType.containsKey(type)) {
       long oldMemUsed = 0L;
       double oldCpuUsed = 0;
 
-      if (usagePerRequestType.get(type).containsKey(SingularitySlaveUsage.MEMORY_USED)) {
-         oldMemUsed = usagePerRequestType.get(type).get(SingularitySlaveUsage.MEMORY_USED).longValue();
+      if (usagePerRequestType.get(type).containsKey(SingularitySlaveUsage.MEMORY_BYTES_USED)) {
+         oldMemUsed = usagePerRequestType.get(type).get(SingularitySlaveUsage.MEMORY_BYTES_USED).longValue();
       }
       if (usagePerRequestType.get(type).containsKey(SingularitySlaveUsage.CPU_USED)) {
         oldCpuUsed = usagePerRequestType.get(type).get(SingularitySlaveUsage.CPU_USED).doubleValue();
       }
 
-      usagePerRequestType.get(type).put(SingularitySlaveUsage.MEMORY_USED, oldMemUsed + memUsed);
+      usagePerRequestType.get(type).put(SingularitySlaveUsage.MEMORY_BYTES_USED, oldMemUsed + memBytesUsed);
       usagePerRequestType.get(type).put(SingularitySlaveUsage.CPU_USED, oldCpuUsed + cpuUsed);
     } else {
-      usagePerRequestType.put(type, ImmutableMap.of(SingularitySlaveUsage.MEMORY_USED, memUsed));
+      usagePerRequestType.put(type, ImmutableMap.of(SingularitySlaveUsage.MEMORY_BYTES_USED, memBytesUsed));
       usagePerRequestType.put(type, ImmutableMap.of(SingularitySlaveUsage.CPU_USED, cpuUsed));
     }
   }
