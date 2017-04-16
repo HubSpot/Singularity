@@ -8,6 +8,8 @@
 
 ## Overview ##
 
+[![Gitter](https://badges.gitter.im/Join Chat.svg)](https://gitter.im/HubSpot/Singularity?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 Singularity is an API and web application for running and scheduling [Apache Mesos](http://mesos.apache.org/) tasks — including long running processes, scheduled jobs, and one-off tasks.
 
 It focuses on a batteries-included approach: Singularity and its components provide an entire Platform as a Service (PaaS) to end-users. It has many features which have been introduced to reduce developer friction and ensure proper operation and reliable deployment of tasks. Users may even be unfamiliar with and shielded from the details of Mesos.
