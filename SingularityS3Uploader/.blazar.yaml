@@ -1,0 +1,2 @@
+env:
+  MAVEN_ARGS: -Dsingularity.jar.name.format=${project.artifactId}
