@@ -79,7 +79,7 @@ public class StateManager extends CuratorManager {
                       PriorityManager priorityManager,
                       Transcoder<SingularityTaskReconciliationStatistics> taskReconciliationStatisticsTranscoder,
                       @Named(SingularityMainModule.STATUS_UPDATE_DELTA_30S_AVERAGE) AtomicLong statusUpdateDeltaAvg) {
-    
+
     super(curatorFramework, configuration, metricRegistry);
 
     this.requestManager = requestManager;
