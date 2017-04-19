@@ -10,8 +10,6 @@ TASK_FORMAT = '/task/{0}'
 S3LOGS_URI_FORMAT = '{0}/logs{1}'
 REQUEST_FORMAT = '/request/{0}?excludeMetadata=true'
 
-FILE_REGEX="\d{13}-([^-]*)-\d{8,20}\.gz"
-
 progress = 0
 goal = 0
 
@@ -61,13 +59,19 @@ def log_file_in_date_range(args, log_file):
 
 def modify_download_list(all_logs):
     for index, log in enumerate(all_logs):
-        if log.endswith('.gz') and not os.path.isfile(log) and os.path.isfile(log[:-3]):
+        if (log.endswith('.gz') or log.endswith('.bz2')) and not os.path.isfile(log) and os.path.isfile(remove_compression_extention(log)):
             all_logs[index] = log[:-3]
     return all_logs
 
+def remove_compression_extention(filename):
+    if filename.endswith('.bz2'):
+        return filename[:-4]
+    else:
+        return filename[:-3]
+
 
 def already_downloaded(dest, filename):
-    return (os.path.isfile('{0}/{1}'.format(dest, filename.replace('.gz', '.log'))) or os.path.isfile('{0}/{1}'.format(dest, filename[:-3])) or os.path.isfile('{0}/{1}'.format(dest, filename)))
+    return (os.path.isfile('{0}/{1}'.format(dest, filename.replace('.gz', '.log').replace('.bz2', '.log'))) or os.path.isfile('{0}/{1}'.format(dest, filename[:-3])) or os.path.isfile('{0}/{1}'.format(dest, filename)))
 
 def logs_for_all_requests(args):
     s3_params = {'start': int(time.mktime(args.start.timetuple()) * 1000), 'end': int(time.mktime(args.end.timetuple()) * 1000)}

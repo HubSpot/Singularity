@@ -1,7 +1,6 @@
 import os
 import re
 import sys
-import gzip
 import fnmatch
 import requests
 from datetime import datetime, timedelta
@@ -40,7 +39,7 @@ def tasks_for_requests(args):
     return all_tasks
 
 def log_matches(inputString, pattern):
-    return fnmatch.fnmatch(inputString, pattern) or fnmatch.fnmatch(inputString, pattern + '*.gz')
+    return fnmatch.fnmatch(inputString, pattern) or fnmatch.fnmatch(inputString, pattern + '*.[bg]*')
 
 def all_tasks_for_request(args, request):
     uri = '{0}{1}'.format(base_uri(args), ACTIVE_TASKS_FORMAT.format(request))
