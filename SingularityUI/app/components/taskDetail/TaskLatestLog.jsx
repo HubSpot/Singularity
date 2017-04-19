@@ -27,15 +27,19 @@ const getLink = (status, taskId) => {
 function TaskLatestLog({status, taskId, available}) {
   const link = getLink(status, taskId);
 
-  return (status !== TaskStatus.NEVER_RAN && available &&
-    <Section title="Logs" id="logs">
-      <div className="row">
-        <div className="col-md-4">
-          <h4>{link}</h4>
+  if (status === TaskStatus.NEVER_RAN || !available) {
+    return null;
+  } else {
+    return (
+      <Section title="Logs" id="logs">
+        <div className="row">
+          <div className="col-md-4">
+            <h4>{link}</h4>
+          </div>
         </div>
-      </div>
-    </Section>
-  );
+      </Section>
+    );
+  }
 }
 
 TaskLatestLog.propTypes = {
