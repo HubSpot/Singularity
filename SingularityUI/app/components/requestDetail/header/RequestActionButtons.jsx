@@ -161,7 +161,10 @@ const RequestActionButtons = ({requestParent, fetchRequest, fetchRequestHistory,
   }
 
   const removeButton = (
-    <RemoveButton requestId={request.id} then={fetchRequestAndHistoryAndActiveTasks}>
+    <RemoveButton 
+      requestId={request.id}
+      loadBalancerData={Utils.maybe(requestParent, ['activeDeploy', 'loadBalancerOptions'], {})}
+      then={fetchRequestAndHistoryAndActiveTasks}>
       <Button bsStyle="danger">
         Remove
       </Button>
