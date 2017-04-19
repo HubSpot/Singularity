@@ -50,14 +50,21 @@ public abstract class CuratorAsyncManager extends CuratorManager {
   }
 
   private <T> List<T> getAsyncChildrenThrows(final String parent, final Transcoder<T> transcoder) throws Exception {
-    final List<String> children = getChildren(parent);
-    final List<String> paths = Lists.newArrayListWithCapacity(children.size());
+    try {
+      List<String> children = getChildren(parent);
+      final List<String> paths = Lists.newArrayListWithCapacity(children.size());
 
-    for (String child : children) {
-      paths.add(ZKPaths.makePath(parent, child));
+      for (String child : children) {
+        paths.add(ZKPaths.makePath(parent, child));
+      }
+
+      List<T> result = new ArrayList<>(getAsyncThrows(parent, paths, transcoder, Optional.<ZkCache<T>> absent()).values());
+
+
+      return result;
+    } catch (Throwable t) {
+      throw t;
     }
-
-    return new ArrayList<>(getAsyncThrows(parent, paths, transcoder, Optional.<ZkCache<T>> absent()).values());
   }
 
   private <T> Map<String, T> getAsyncThrows(final String pathNameForLogs, final Collection<String> paths, final Transcoder<T> transcoder, final Optional<ZkCache<T>> cache) throws Exception {
