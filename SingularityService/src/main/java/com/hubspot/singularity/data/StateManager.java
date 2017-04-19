@@ -295,6 +295,11 @@ public class StateManager extends CuratorManager {
     }
 
     for (SingularityTaskId cleaningTaskId : taskManager.getCleanupTaskIds()) {
+      Optional<SingularityRequestWithState> request = requestManager.getRequest(cleaningTaskId.getRequestId());
+      if (request.isPresent() && request.get().getRequest().isScheduled()) {
+        continue;
+      }
+
       numTasks.decr(cleaningTaskId.getRequestId());
     }
 
