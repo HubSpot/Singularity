@@ -328,6 +328,10 @@ public class SingularityConfiguration extends Configuration {
 
   private int maxDecommissioningSlaves = 2;
 
+  private long delayPollersWhenDeltaOverMs = 15000;
+
+  private boolean delayOfferProcessingForLargeStatusUpdateDelta = true;
+
   public long getAskDriverToKillTasksAgainAfterMillis() {
     return askDriverToKillTasksAgainAfterMillis;
   }
@@ -1373,5 +1377,21 @@ public class SingularityConfiguration extends Configuration {
 
   public void setMaxDecommissioningSlaves(int maxDecommissioningSlaves) {
     this.maxDecommissioningSlaves = maxDecommissioningSlaves;
+  }
+
+  public long getDelayPollersWhenDeltaOverMs() {
+    return delayPollersWhenDeltaOverMs;
+  }
+
+  public void setDelayPollersWhenDeltaOverMs(long delayPollersWhenDeltaOverMs) {
+    this.delayPollersWhenDeltaOverMs = delayPollersWhenDeltaOverMs;
+  }
+
+  public boolean isDelayOfferProcessingForLargeStatusUpdateDelta() {
+    return delayOfferProcessingForLargeStatusUpdateDelta;
+  }
+
+  public void setDelayOfferProcessingForLargeStatusUpdateDelta(boolean delayOfferProcessingForLargeStatusUpdateDelta) {
+    this.delayOfferProcessingForLargeStatusUpdateDelta = delayOfferProcessingForLargeStatusUpdateDelta;
   }
 }

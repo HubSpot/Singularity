@@ -9,13 +9,11 @@ import java.util.concurrent.TimeUnit;
 import javax.inject.Singleton;
 
 import org.apache.mesos.Protos.Offer;
-import org.apache.mesos.Protos.OfferID;
 import org.apache.mesos.SchedulerDriver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Optional;
-import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.SingularityAction;
@@ -42,7 +40,7 @@ public class SingularitySchedulerPoller extends SingularityLeaderOnlyPoller {
   @Inject
   SingularitySchedulerPoller(SingularityMesosOfferScheduler offerScheduler, OfferCache offerCache, SchedulerDriverSupplier schedulerDriverSupplier,
       SingularityConfiguration configuration, SingularitySchedulerLock lock, DisasterManager disasterManager) {
-    super(configuration.getCheckSchedulerEverySeconds(), TimeUnit.SECONDS, lock);
+    super(configuration.getCheckSchedulerEverySeconds(), TimeUnit.SECONDS, lock, true);
 
     this.offerCache = offerCache;
     this.offerScheduler = offerScheduler;
@@ -68,7 +66,7 @@ public class SingularitySchedulerPoller extends SingularityLeaderOnlyPoller {
       offers.add(cachedOffer.getOffer());
     }
 
-    List<SingularityOfferHolder> offerHolders = offerScheduler.checkOffers(offers, Sets.<OfferID> newHashSet());
+    List<SingularityOfferHolder> offerHolders = offerScheduler.checkOffers(offers);
 
     if (offerHolders.isEmpty()) {
       return;
@@ -98,10 +96,5 @@ public class SingularitySchedulerPoller extends SingularityLeaderOnlyPoller {
     }
 
     LOG.info("Launched {} tasks on {} cached offers (returned {}) in {}", launchedTasks, acceptedOffers, offerHolders.size() - acceptedOffers, JavaUtils.duration(start));
-  }
-
-  @Override
-  protected boolean isEnabled() {
-    return configuration.isCacheOffers();
   }
 }
