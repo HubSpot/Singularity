@@ -1,12 +1,15 @@
 package com.hubspot.singularity.scheduler;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,6 +17,7 @@ import org.slf4j.LoggerFactory;
 import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.hubspot.singularity.ExtendedTaskState;
 import com.hubspot.singularity.SingularityKilledTaskIdRecord;
 import com.hubspot.singularity.SingularityPendingTask;
 import com.hubspot.singularity.SingularityPendingTaskId;
@@ -21,6 +25,7 @@ import com.hubspot.singularity.SingularityRequestDeployState;
 import com.hubspot.singularity.SingularityRequestWithState;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskCleanup;
+import com.hubspot.singularity.SingularityTaskHistoryUpdate;
 import com.hubspot.singularity.SingularityTaskId;
 
 @Singleton
@@ -34,6 +39,7 @@ public class SingularityLeaderCache {
   private Map<SingularityTaskId, SingularityTaskCleanup> cleanupTasks;
   private Map<String, SingularityRequestDeployState> requestIdToDeployState;
   private Map<SingularityTaskId, SingularityKilledTaskIdRecord> killedTasks;
+  private Map<SingularityTaskId, Map<ExtendedTaskState, SingularityTaskHistoryUpdate>> historyUpdates;
 
   private volatile boolean active;
 
@@ -66,14 +72,24 @@ public class SingularityLeaderCache {
     cleanups.forEach((c) -> cleanupTasks.put(c.getTaskId(), c));
   }
 
-  public void cacheRequestDeployStates(List<SingularityRequestDeployState> requestDeployStates) {
+  public void cacheRequestDeployStates(Map<String, SingularityRequestDeployState> requestDeployStates) {
     this.requestIdToDeployState = new ConcurrentHashMap<>(requestDeployStates.size());
-    requestDeployStates.forEach((r) -> requestIdToDeployState.put(r.getRequestId(), r));
+    requestIdToDeployState.putAll(requestDeployStates);
   }
 
   public void cacheKilledTasks(List<SingularityKilledTaskIdRecord> killedTasks) {
     this.killedTasks = new ConcurrentHashMap<>(killedTasks.size());
     killedTasks.forEach((k) -> this.killedTasks.put(k.getTaskId(), k));
+  }
+
+  public void cacheTaskHistoryUpdates(Map<SingularityTaskId, List<SingularityTaskHistoryUpdate>> historyUpdates) {
+    this.historyUpdates = new ConcurrentHashMap<>(historyUpdates.size());
+    historyUpdates.entrySet().stream().forEach((e) ->
+        this.historyUpdates.put(
+            e.getKey(),
+            e.getValue().stream()
+                .collect(Collectors.toMap((u) -> u.getTaskState(), (u) -> u)))
+    );
   }
 
   public void stop() {
@@ -231,6 +247,17 @@ public class SingularityLeaderCache {
     return Optional.fromNullable(requestIdToDeployState.get(requestId));
   }
 
+  public Map<String, SingularityRequestDeployState> getRequestDeployStateByRequestId() {
+    return new HashMap<>(requestIdToDeployState);
+  }
+
+  public Map<String, SingularityRequestDeployState> getRequestDeployStateByRequestId(Collection<String> requestIds) {
+    return new HashMap<>(requestIdToDeployState.entrySet().stream()
+        .filter((e) -> requestIds.contains(e.getKey()))
+        .collect(Collectors.toMap((e) -> e.getKey(), (e) -> e.getValue()))
+    );
+  }
+
   public void deleteRequestDeployState(String requestId) {
     requestIdToDeployState.remove(requestId);
   }
@@ -262,5 +289,48 @@ public class SingularityLeaderCache {
       return;
     }
     killedTasks.remove(killedTaskId);
+  }
+
+  public List<SingularityTaskHistoryUpdate> getTaskHistoryUpdates(SingularityTaskId taskId) {
+    List<SingularityTaskHistoryUpdate> updates = new ArrayList<>(Optional.fromNullable(historyUpdates.get(taskId)).or(new HashMap<>()).values());
+    Collections.sort(updates);
+    return updates;
+  }
+
+  public Map<SingularityTaskId, List<SingularityTaskHistoryUpdate>> getTaskHistoryUpdates(Collection<SingularityTaskId> taskIds) {
+    return new HashMap<>(historyUpdates.entrySet()
+        .stream()
+        .filter((e) -> taskIds.contains(e.getKey()))
+        .collect(Collectors.toMap((e) -> e.getKey(), (e) -> new ArrayList<>(e.getValue().values())))
+    );
+  }
+
+  public void saveTaskHistoryUpdate(SingularityTaskHistoryUpdate taskHistoryUpdate, boolean overwrite) {
+    if (!active) {
+      LOG.warn("saveTaskHistoryUpdate {}, but not active", taskHistoryUpdate);
+      return;
+    }
+    historyUpdates.putIfAbsent(taskHistoryUpdate.getTaskId(), new ConcurrentHashMap<>());
+    if (overwrite) {
+      historyUpdates.get(taskHistoryUpdate.getTaskId()).put(taskHistoryUpdate.getTaskState(), taskHistoryUpdate);
+    } else {
+      historyUpdates.get(taskHistoryUpdate.getTaskId()).putIfAbsent(taskHistoryUpdate.getTaskState(), taskHistoryUpdate);
+    }
+  }
+
+  public void deleteTaskHistoryUpdate(SingularityTaskId taskId, ExtendedTaskState state) {
+    if (!active) {
+      LOG.warn("deleteTaskHistoryUpdate {}, but not active", taskId);
+      return;
+    }
+    historyUpdates.getOrDefault(taskId, new HashMap<>()).remove(state);
+  }
+
+  public void deleteTaskHistory(SingularityTaskId taskId) {
+    if (!active) {
+      LOG.warn("deleteTaskHistory {}, but not active", taskId);
+      return;
+    }
+    historyUpdates.remove(taskId);
   }
 }

@@ -35,6 +35,7 @@ public class SingularitySchedulerPoller extends SingularityLeaderOnlyPoller {
   private final SchedulerDriverSupplier schedulerDriverSupplier;
   private final SingularityMesosOfferScheduler offerScheduler;
   private final DisasterManager disasterManager;
+  private final SingularityConfiguration configuration;
 
   @Inject
   SingularitySchedulerPoller(SingularityMesosOfferScheduler offerScheduler, OfferCache offerCache, SchedulerDriverSupplier schedulerDriverSupplier,
@@ -45,6 +46,7 @@ public class SingularitySchedulerPoller extends SingularityLeaderOnlyPoller {
     this.offerScheduler = offerScheduler;
     this.schedulerDriverSupplier = schedulerDriverSupplier;
     this.disasterManager = disasterManager;
+    this.configuration = configuration;
   }
 
   @Override

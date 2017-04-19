@@ -1,5 +1,6 @@
 package com.hubspot.singularity.mesos;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicLong;
@@ -23,6 +24,7 @@ import com.hubspot.singularity.SingularityAction;
 import com.hubspot.singularity.SingularityMainModule;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.DisasterManager;
+import com.hubspot.singularity.mesos.SingularitySlaveAndRackManager.CheckResult;
 
 @Singleton
 public class SingularityMesosScheduler implements Scheduler {
@@ -73,6 +75,7 @@ public class SingularityMesosScheduler implements Scheduler {
   @Override
   @Timed
   public void resourceOffers(SchedulerDriver driver, List<Protos.Offer> offers) {
+    final long start = System.currentTimeMillis();
     LOG.info("Received {} offer(s)", offers.size());
     boolean delclineImmediately = false;
     if (disasterManager.isDisabled(SingularityAction.PROCESS_OFFERS)) {
@@ -99,15 +102,22 @@ public class SingularityMesosScheduler implements Scheduler {
       }
     }
 
+    List<Protos.Offer> offersToCheck = new ArrayList<>(offers);
+
     for (Offer offer : offers) {
       String rolesInfo = MesosUtils.getRoles(offer).toString();
       LOG.debug("Received offer ID {} with roles {} from {} ({}) for {} cpu(s), {} memory, {} ports, and {} disk", offer.getId().getValue(), rolesInfo, offer.getHostname(), offer.getSlaveId().getValue(), MesosUtils.getNumCpus(offer), MesosUtils.getMemory(offer),
           MesosUtils.getNumPorts(offer), MesosUtils.getDisk(offer));
+
+      CheckResult checkResult = slaveAndRackManager.checkOffer(offer);
+      if (checkResult == CheckResult.NOT_ACCEPTING_TASKS) {
+        driver.declineOffer(offer.getId());
+        offersToCheck.remove(offer);
+        LOG.debug("Will decline offer {}, slave {} is not currently in a state to launch tasks", offer.getId().getValue(), offer.getHostname());
+      }
     }
 
-    final long start = System.currentTimeMillis();
-
-    final Set<Protos.OfferID> acceptedOffers = Sets.newHashSetWithExpectedSize(offers.size());
+    final Set<Protos.OfferID> acceptedOffers = Sets.newHashSetWithExpectedSize(offersToCheck.size());
 
     try {
       List<SingularityOfferHolder> offerHolders = offerScheduler.checkOffers(offers);
@@ -124,7 +134,7 @@ public class SingularityMesosScheduler implements Scheduler {
     } catch (Throwable t) {
       LOG.error("Received fatal error while handling offers - will decline all available offers", t);
 
-      for (Protos.Offer offer : offers) {
+      for (Protos.Offer offer : offersToCheck) {
         if (acceptedOffers.contains(offer.getId())) {
           continue;
         }

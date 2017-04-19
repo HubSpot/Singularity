@@ -479,6 +479,9 @@ public class TaskManager extends CuratorAsyncManager {
   }
 
   public List<SingularityTaskHistoryUpdate> getTaskHistoryUpdates(SingularityTaskId taskId) {
+    if (leaderCache.active()) {
+      return leaderCache.getTaskHistoryUpdates(taskId);
+    }
     List<SingularityTaskHistoryUpdate> updates = getAsyncChildren(getUpdatesPath(taskId), taskHistoryUpdateTranscoder);
     Collections.sort(updates);
     return updates;
@@ -489,12 +492,19 @@ public class TaskManager extends CuratorAsyncManager {
   }
 
   public Map<SingularityTaskId, List<SingularityTaskHistoryUpdate>> getTaskHistoryUpdates(Collection<SingularityTaskId> taskIds) {
+    if (leaderCache.active()) {
+      return leaderCache.getTaskHistoryUpdates(taskIds);
+    }
     Map<String, SingularityTaskId> pathsMap = Maps.newHashMap();
     for (SingularityTaskId taskId : taskIds) {
       pathsMap.put(getHistoryPath(taskId), taskId);
     }
 
     return getAsyncNestedChildDataAsMap("getTaskHistoryUpdates", pathsMap, UPDATES_PATH, taskHistoryUpdateTranscoder);
+  }
+
+  public Map<SingularityTaskId, List<SingularityTaskHistoryUpdate>> getAllTaskHistoryUpdates() {
+    return getTaskHistoryUpdates(getAllTaskIds());
   }
 
   public int getNumHealthchecks(SingularityTaskId taskId) {
@@ -564,8 +574,15 @@ public class TaskManager extends CuratorAsyncManager {
         updateWithPrevious = taskHistoryUpdate;
       }
 
+      if (leaderCache.active()) {
+        leaderCache.saveTaskHistoryUpdate(updateWithPrevious, overwriteExisting);
+      }
+
       return save(getUpdatePath(taskHistoryUpdate.getTaskId(), taskHistoryUpdate.getTaskState()), updateWithPrevious, taskHistoryUpdateTranscoder);
     } else {
+      if (leaderCache.active()) {
+        leaderCache.saveTaskHistoryUpdate(taskHistoryUpdate, overwriteExisting);
+      }
       return create(getUpdatePath(taskHistoryUpdate.getTaskId(), taskHistoryUpdate.getTaskState()), taskHistoryUpdate, taskHistoryUpdateTranscoder);
     }
   }
@@ -573,6 +590,9 @@ public class TaskManager extends CuratorAsyncManager {
   public SingularityDeleteResult deleteTaskHistoryUpdate(SingularityTaskId taskId, ExtendedTaskState state, Optional<SingularityTaskHistoryUpdate> previousStateUpdate) {
     if (previousStateUpdate.isPresent()) {
       singularityEventListener.taskHistoryUpdateEvent(previousStateUpdate.get());
+    }
+    if (leaderCache.active()) {
+      leaderCache.deleteTaskHistoryUpdate(taskId, state);
     }
     return delete(getUpdatePath(taskId, state));
   }
@@ -592,6 +612,12 @@ public class TaskManager extends CuratorAsyncManager {
   public Optional<SingularityTaskId> getTaskByRunId(String requestId, String runId) {
     Map<SingularityTaskId, SingularityTask> activeTasks = getTasks(getActiveTaskIdsForRequest(requestId));
     for (Map.Entry<SingularityTaskId, SingularityTask> entry : activeTasks.entrySet()) {
+      if (entry.getValue().getTaskRequest().getPendingTask().getRunId().isPresent() && entry.getValue().getTaskRequest().getPendingTask().getRunId().get().equals(runId)) {
+        return Optional.of(entry.getKey());
+      }
+    }
+    Map<SingularityTaskId, SingularityTask> inactiveTasks = getTasks(getInactiveTaskIdsForRequest(requestId));
+    for (Map.Entry<SingularityTaskId, SingularityTask> entry : inactiveTasks.entrySet()) {
       if (entry.getValue().getTaskRequest().getPendingTask().getRunId().isPresent() && entry.getValue().getTaskRequest().getPendingTask().getRunId().get().equals(runId)) {
         return Optional.of(entry.getKey());
       }
@@ -782,6 +808,7 @@ public class TaskManager extends CuratorAsyncManager {
     leaderCache.cacheActiveTaskIds(getTaskIds(ACTIVE_PATH_ROOT));
     leaderCache.cacheCleanupTasks(fetchCleanupTasks());
     leaderCache.cacheKilledTasks(fetchKilledTaskIdRecords());
+    leaderCache.cacheTaskHistoryUpdates(getAllTaskHistoryUpdates());
   }
 
   private List<SingularityPendingTask> fetchPendingTasks() {
@@ -1042,6 +1069,9 @@ public class TaskManager extends CuratorAsyncManager {
 
   public SingularityDeleteResult deleteTaskHistory(SingularityTaskId taskId) {
     taskCache.delete(getTaskPath(taskId));
+    if (leaderCache.active()) {
+      leaderCache.deleteTaskHistory(taskId);
+    }
     return delete(getHistoryPath(taskId));
   }
 
