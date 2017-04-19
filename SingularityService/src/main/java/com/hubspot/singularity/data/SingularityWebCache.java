@@ -133,6 +133,7 @@ public class SingularityWebCache {
   }
 
   public List<SingularityRequestGroup> getRequestGroups() {
+    requestGroupsHitMeter.mark();
     return new ArrayList<>(cachedRequestGroups);
   }
 
