@@ -416,7 +416,8 @@ class TaskDetail extends Component {
       return cleanupToTest.taskId.id === this.props.taskId;
     });
     const filesToDisplay = this.props.files[`${this.props.params.taskId}/${this.props.currentFilePath}`] && this.analyzeFiles(this.props.files[`${this.props.taskId}/${this.props.currentFilePath}`].data);
-    const filesAvailable = filesToDisplay && !_.isEmpty(filesToDisplay.files);
+    const topLevelFiles = this.props.files[`${this.props.params.taskId}/`] && this.analyzeFiles(this.props.files[`${this.props.taskId}/`].data);
+    const filesAvailable = topLevelFiles && !_.isEmpty(topLevelFiles.files);
 
     return (
       <div className="task-detail detail-view">
