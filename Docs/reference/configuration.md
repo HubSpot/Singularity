@@ -171,13 +171,13 @@ These settings should live under the "mesos" field inside the root configuration
 #### Resource Limits ####
 | Parameter | Default | Description | Type |
 |-----------|---------|-------------|------|
-| defaultCpus | 1 | Number of CPUs to request for a task if none are specified | int | 
+| defaultCpus | 1 | Number of CPUs to request for a task if none are specified | int |
 | defaultMemory | 64 | MB of memory to request for a task if none is specified | int |
 | maxNumInstancesPerRequest | 25 | Max instances (tasks) to allow for a request (requests using over this will return a 400) | int |
-| maxNumCpusPerInstance | 50 | Max number of CPUs allowed on a given task | int | 
-| maxNumCpusPerRequest | 900 | Max number of CPUs allowed for a given request (cpus per task * task instance) | int | 
-| maxMemoryMbPerInstance | 24000 | Max MB of memory allowed on a given task | int | 
-| maxMemoryMbPerRequest | 450000 | Max MB of memory allowed for a given request (memoryMb per task * task instances) | int | 
+| maxNumCpusPerInstance | 50 | Max number of CPUs allowed on a given task | int |
+| maxNumCpusPerRequest | 900 | Max number of CPUs allowed for a given request (cpus per task * task instance) | int |
+| maxMemoryMbPerInstance | 24000 | Max MB of memory allowed on a given task | int |
+| maxMemoryMbPerRequest | 450000 | Max MB of memory allowed for a given request (memoryMb per task * task instances) | int |
 
 #### Racks ####
 | Parameter | Default | Description | Type |
@@ -189,7 +189,19 @@ These settings should live under the "mesos" field inside the root configuration
 | Parameter | Default | Description | Type |
 |-----------|---------|-------------|------|
 | slaveHttpPort | 5051 | The port to talk to slaves on | int |
-| slaveHttpsPort | absent | The HTTPS port to talk to slaves on | Integer (Optional) | 
+| slaveHttpsPort | absent | The HTTPS port to talk to slaves on | Integer (Optional) |
+
+#### Offers ####
+| Parameter | Default | Description | Type |
+|-----------|---------|-------------|------|
+| minOfferScore | 0.80 | The starting minimum score a task will accept for a mesos offer. The best possible offer score is 1.00 | double |
+| maxOfferAttemptsPerTask | 20 | The max number of offers a task will reject | int |
+| maxMillisPastDuePerTask | 600000 | The max milliseconds a task can be past due when scoring an offer | long |
+| requestTypeCpuWeightForOffer | 0.20 | The weight the request type's utilization carries when scoring an offer | double |
+| requestTypeMemWeightForOffer | 0.30 | The weight the request type's utilization carries when scoring an offer | double |
+| freeCpuWeightForOffer | 0.20 | The weight the slave's cpu utilization carries when scoring an offer | double |
+| freeMemWeightForOffer | 0.30 | The weight the slave's memory utilization carries when scoring an offer | double |
+| defaultOfferScoreForMissingUsage | 0.10 | The default offer score used for offers without utilization metrics | double |
 
 ## Database ##
 

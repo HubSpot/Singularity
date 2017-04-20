@@ -188,6 +188,22 @@ public class SingularityConfiguration extends Configuration {
 
   private int maxTasksPerOfferPerRequest = 0;
 
+  private double minOfferScore = 0.80;
+
+  private int maxOfferAttemptsPerTask = 20;
+
+  private long maxMillisPastDuePerTask = TimeUnit.MILLISECONDS.convert(10, TimeUnit.MINUTES);
+
+  private double requestTypeCpuWeightForOffer = 0.20;
+
+  private double requestTypeMemWeightForOffer = 0.30;
+
+  private double freeCpuWeightForOffer = 0.20;
+
+  private double freeMemWeightForOffer = 0.30;
+
+  private double defaultOfferScoreForMissingUsage = 0.10;
+
   private int maxRequestIdSize = 100;
 
   private int maxUserIdSize = 100;
@@ -618,6 +634,38 @@ public class SingularityConfiguration extends Configuration {
     return maxTasksPerOfferPerRequest;
   }
 
+  public double getMinOfferScore() {
+    return minOfferScore;
+  }
+
+  public int getMaxOfferAttemptsPerTask() {
+    return maxOfferAttemptsPerTask;
+  }
+
+  public long getMaxMillisPastDuePerTask() {
+    return maxMillisPastDuePerTask;
+  }
+
+  public double getRequestTypeCpuWeightForOffer() {
+    return requestTypeCpuWeightForOffer;
+  }
+
+  public double getFreeCpuWeightForOffer() {
+    return freeCpuWeightForOffer;
+  }
+
+  public double getDefaultOfferScoreForMissingUsage() {
+    return defaultOfferScoreForMissingUsage;
+  }
+
+  public double getFreeMemWeightForOffer() {
+    return freeMemWeightForOffer;
+  }
+
+  public double getRequestTypeMemWeightForOffer() {
+    return requestTypeMemWeightForOffer;
+  }
+
   public MesosConfiguration getMesosConfiguration() {
     return mesosConfiguration;
   }
@@ -976,6 +1024,46 @@ public class SingularityConfiguration extends Configuration {
 
   public void setMaxTasksPerOfferPerRequest(int maxTasksPerOfferPerRequest) {
     this.maxTasksPerOfferPerRequest = maxTasksPerOfferPerRequest;
+  }
+
+  public SingularityConfiguration setMinOfferScore(double minOfferScore) {
+    this.minOfferScore = minOfferScore;
+    return this;
+  }
+
+  public SingularityConfiguration setMaxOfferAttemptsPerTask(int maxOfferAttemptsPerTask) {
+    this.maxOfferAttemptsPerTask = maxOfferAttemptsPerTask;
+    return this;
+  }
+
+  public SingularityConfiguration setMaxMillisPastDuePerTask(long maxMillisPastDuePerTask) {
+    this.maxMillisPastDuePerTask = maxMillisPastDuePerTask;
+    return this;
+  }
+
+  public SingularityConfiguration setRequestTypeCpuWeightForOffer(double requestTypeCpuWeightForOffer) {
+    this.requestTypeCpuWeightForOffer = requestTypeCpuWeightForOffer;
+    return this;
+  }
+
+  public SingularityConfiguration setRequestTypeMemWeightForOffer(double requestTypeMemWeightForOffer) {
+    this.requestTypeMemWeightForOffer = requestTypeMemWeightForOffer;
+    return this;
+  }
+
+  public SingularityConfiguration setFreeCpuWeightForOffer(double freeCpuWeightForOffer) {
+    this.freeCpuWeightForOffer = freeCpuWeightForOffer;
+    return this;
+  }
+
+  public SingularityConfiguration setFreeMemWeightForOffer(double freeMemWeightForOffer) {
+    this.freeMemWeightForOffer = freeMemWeightForOffer;
+    return this;
+  }
+
+  public SingularityConfiguration setDefaultOfferScoreForMissingUsage(double defaultOfferScoreForMissingUsage) {
+    this.defaultOfferScoreForMissingUsage = defaultOfferScoreForMissingUsage;
+    return this;
   }
 
   public void setMesosConfiguration(MesosConfiguration mesosConfiguration) {

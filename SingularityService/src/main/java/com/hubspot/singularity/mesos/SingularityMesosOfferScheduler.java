@@ -6,7 +6,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import javax.inject.Singleton;
@@ -128,7 +127,7 @@ public class SingularityMesosOfferScheduler {
         Map<SingularityOfferHolder, Double> scorePerOffer = new HashMap<>();
         double minScore = minScore(taskRequestHolder.getTaskRequest(), offerMatchAttemptsPerTask, System.currentTimeMillis());
 
-        LOG.info("Minimum score for task {} is {}", taskRequestHolder.getTaskRequest().getPendingTask().getPendingTaskId().getId(), minScore);
+        LOG.trace("Minimum score for task {} is {}", taskRequestHolder.getTaskRequest().getPendingTask().getPendingTaskId().getId(), minScore);
 
         for (SingularityOfferHolder offerHolder : offerHolders) {
 
@@ -259,39 +258,32 @@ public class SingularityMesosOfferScheduler {
 
   @VisibleForTesting
   double score(Offer offer, SingularityTaskRequest taskRequest, Optional<SingularitySlaveUsageWithId> maybeSlaveUsage) {
-    double requestTypeCpuWeight = 0.20;
-    double requestTypeMemWeight = 0.30;
-    double freeCpuWeight = 0.20;
-    double freeMemWeight = 0.30;
     double score = 0;
-    double defaultScoreForMissingUsage = 0.10;
 
     if (!maybeSlaveUsage.isPresent() || !maybeSlaveUsage.get().getCpuTotal().isPresent() || !maybeSlaveUsage.get().getMemoryMbTotal().isPresent()) {
-      LOG.info("Slave {} has no total usage data. Will default to {}", offer.getSlaveId().getValue(), defaultScoreForMissingUsage);
-      return defaultScoreForMissingUsage;
+      LOG.info("Slave {} has no total usage data. Will default to {}", offer.getSlaveId().getValue(), configuration.getDefaultOfferScoreForMissingUsage());
+      return configuration.getDefaultOfferScoreForMissingUsage();
     }
 
     SingularitySlaveUsageWithId slaveUsage = maybeSlaveUsage.get();
     Map<RequestType, Map<String, Number>> usagesPerRequestType = slaveUsage.getUsagePerRequestType();
     Map<String, Number> usagePerResource = usagesPerRequestType.get(taskRequest.getRequest().getRequestType());
 
-    score += requestTypeCpuWeight * (1 - usagePerResource.get(SingularitySlaveUsage.CPU_USED).doubleValue() / slaveUsage.getCpuTotal().get());
-    score += requestTypeMemWeight * (1 - ((double) usagePerResource.get(SingularitySlaveUsage.MEMORY_BYTES_USED).longValue() / slaveUsage.getMemoryBytesTotal().get()));
+    score += configuration.getRequestTypeCpuWeightForOffer() * (1 - usagePerResource.get(SingularitySlaveUsage.CPU_USED).doubleValue() / slaveUsage.getCpuTotal().get());
+    score += configuration.getRequestTypeMemWeightForOffer() * (1 - ((double) usagePerResource.get(SingularitySlaveUsage.MEMORY_BYTES_USED).longValue() / slaveUsage.getMemoryBytesTotal().get()));
 
-    score += freeCpuWeight * (MesosUtils.getNumCpus(offer) / slaveUsage.getCpuTotal().get());
-    score += freeMemWeight * (MesosUtils.getMemory(offer) / slaveUsage.getMemoryMbTotal().get());
+    score += configuration.getFreeCpuWeightForOffer() * (MesosUtils.getNumCpus(offer) / slaveUsage.getCpuTotal().get());
+    score += configuration.getFreeMemWeightForOffer() * (MesosUtils.getMemory(offer) / slaveUsage.getMemoryMbTotal().get());
 
     return score;
   }
 
   @VisibleForTesting
   double minScore(SingularityTaskRequest taskRequest, Map<String, Integer> offerMatchAttemptsPerTask, long now) {
-    double minScore = 0.80;
-    int maxOfferAttempts = 20;
-    long maxMillisPastDue = TimeUnit.MILLISECONDS.convert(10, TimeUnit.MINUTES);
+    double minScore = configuration.getMinOfferScore();
 
-    minScore -= offerMatchAttemptsPerTask.getOrDefault(taskRequest.getPendingTask().getPendingTaskId().getId(), 0) / (double) maxOfferAttempts;
-    minScore -= millisPastDue(taskRequest, now) / (double) maxMillisPastDue;
+    minScore -= offerMatchAttemptsPerTask.getOrDefault(taskRequest.getPendingTask().getPendingTaskId().getId(), 0) / (double) configuration.getMaxOfferAttemptsPerTask();
+    minScore -= millisPastDue(taskRequest, now) / (double) configuration.getMaxMillisPastDuePerTask();
 
     return Math.max(minScore, 0);
   }
