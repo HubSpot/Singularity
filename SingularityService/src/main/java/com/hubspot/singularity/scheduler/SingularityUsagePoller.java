@@ -16,6 +16,7 @@ import com.hubspot.mesos.json.MesosTaskMonitorObject;
 import com.hubspot.singularity.RequestType;
 import com.hubspot.singularity.SingularitySlave;
 import com.hubspot.singularity.SingularitySlaveUsage;
+import com.hubspot.singularity.SingularitySlaveUsage.ResourceUsageType;
 import com.hubspot.singularity.SingularityTaskCurrentUsage;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTaskUsage;
@@ -55,7 +56,7 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
   @Override
   public void runActionOnPoll() {
     final long now = System.currentTimeMillis();
-    Map<RequestType, Map<String, Number>> usagesPerRequestType = new HashMap<>();
+    Map<RequestType, Map<ResourceUsageType, Number>> usagesPerRequestType = new HashMap<>();
 
     for (SingularitySlave slave : usageHelper.getSlavesToTrackUsageFor()) {
       Optional<Long> memoryMbTotal = Optional.empty();
@@ -129,23 +130,23 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
     return requestManager.getRequest(SingularityTaskId.valueOf(task.getSource()).getRequestId()).get().getRequest().getRequestType();
   }
 
-  private void updateUsagesPerRequestType(Map<RequestType, Map<String, Number>> usagePerRequestType, RequestType type, long memBytesUsed, double cpuUsed) {
+  private void updateUsagesPerRequestType(Map<RequestType, Map<ResourceUsageType, Number>> usagePerRequestType, RequestType type, long memBytesUsed, double cpuUsed) {
     if (usagePerRequestType.containsKey(type)) {
       long oldMemUsed = 0L;
       double oldCpuUsed = 0;
 
-      if (usagePerRequestType.get(type).containsKey(SingularitySlaveUsage.MEMORY_BYTES_USED)) {
-         oldMemUsed = usagePerRequestType.get(type).get(SingularitySlaveUsage.MEMORY_BYTES_USED).longValue();
+      if (usagePerRequestType.get(type).containsKey(ResourceUsageType.MEMORY_BYTES_USED)) {
+         oldMemUsed = usagePerRequestType.get(type).get(ResourceUsageType.MEMORY_BYTES_USED).longValue();
       }
-      if (usagePerRequestType.get(type).containsKey(SingularitySlaveUsage.CPU_USED)) {
-        oldCpuUsed = usagePerRequestType.get(type).get(SingularitySlaveUsage.CPU_USED).doubleValue();
+      if (usagePerRequestType.get(type).containsKey(ResourceUsageType.CPU_USED)) {
+        oldCpuUsed = usagePerRequestType.get(type).get(ResourceUsageType.CPU_USED).doubleValue();
       }
 
-      usagePerRequestType.get(type).put(SingularitySlaveUsage.MEMORY_BYTES_USED, oldMemUsed + memBytesUsed);
-      usagePerRequestType.get(type).put(SingularitySlaveUsage.CPU_USED, oldCpuUsed + cpuUsed);
+      usagePerRequestType.get(type).put(ResourceUsageType.MEMORY_BYTES_USED, oldMemUsed + memBytesUsed);
+      usagePerRequestType.get(type).put(ResourceUsageType.CPU_USED, oldCpuUsed + cpuUsed);
     } else {
-      usagePerRequestType.put(type, ImmutableMap.of(SingularitySlaveUsage.MEMORY_BYTES_USED, memBytesUsed));
-      usagePerRequestType.put(type, ImmutableMap.of(SingularitySlaveUsage.CPU_USED, cpuUsed));
+      usagePerRequestType.put(type, ImmutableMap.of(ResourceUsageType.MEMORY_BYTES_USED, memBytesUsed));
+      usagePerRequestType.put(type, ImmutableMap.of(ResourceUsageType.CPU_USED, cpuUsed));
     }
   }
 }

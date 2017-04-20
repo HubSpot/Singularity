@@ -8,8 +8,10 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class SingularitySlaveUsage {
 
-  public static final String CPU_USED = "cpusUsed";
-  public static final String MEMORY_BYTES_USED = "memoryRssBytes";
+  public enum ResourceUsageType {
+    CPU_USED, MEMORY_BYTES_USED
+  }
+
   public static final long BYTES_PER_MEGABYTE = 1024L * 1024L;
 
   private final long memoryBytesUsed;
@@ -18,7 +20,7 @@ public class SingularitySlaveUsage {
   private final double cpusUsed;
   private final Optional<Long> memoryMbTotal;
   private final Optional<Double> cpuTotal;
-  private final Map<RequestType, Map<String, Number>> usagePerRequestType;
+  private final Map<RequestType, Map<ResourceUsageType, Number>> usagePerRequestType;
 
   @JsonCreator
   public SingularitySlaveUsage(@JsonProperty("memoryBytesUsed") long memoryBytesUsed,
@@ -27,7 +29,7 @@ public class SingularitySlaveUsage {
                                @JsonProperty("numTasks") int numTasks,
                                @JsonProperty("memoryMbTotal") Optional<Long> memoryMbTotal,
                                @JsonProperty("cpuTotal") Optional<Double> cpuTotal,
-                               @JsonProperty("usagePerRequestType") Map<RequestType, Map<String, Number>> usagePerRequestType) {
+                               @JsonProperty("usagePerRequestType") Map<RequestType, Map<ResourceUsageType, Number>> usagePerRequestType) {
     this.memoryBytesUsed = memoryBytesUsed;
     this.timestamp = timestamp;
     this.cpusUsed = cpusUsed;
@@ -65,16 +67,8 @@ public class SingularitySlaveUsage {
     return cpuTotal;
   }
 
-  public Map<RequestType, Map<String, Number>> getUsagePerRequestType() {
+  public Map<RequestType, Map<ResourceUsageType, Number>> getUsagePerRequestType() {
     return usagePerRequestType;
-  }
-
-  public double getCpusUsedForRequestType(RequestType type) {
-    return usagePerRequestType.get(type).get(CPU_USED).doubleValue();
-  }
-
-  public long getMemBytesUsedForRequestType(RequestType type) {
-    return usagePerRequestType.get(type).get(MEMORY_BYTES_USED).longValue();
   }
 
   @Override

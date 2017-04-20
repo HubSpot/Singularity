@@ -27,6 +27,7 @@ import com.hubspot.singularity.SingularityPendingTask;
 import com.hubspot.singularity.SingularityPendingTaskId;
 import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularitySlaveUsage;
+import com.hubspot.singularity.SingularitySlaveUsage.ResourceUsageType;
 import com.hubspot.singularity.SingularitySlaveUsageWithId;
 import com.hubspot.singularity.SingularityTaskRequest;
 
@@ -56,59 +57,59 @@ public class SingularityMesosOfferSchedulerTest extends SingularityCuratorTestBa
   @Test
   public void itGetsTheCorrectScore() {
     String slaveId = "slave";
-    Map<RequestType, Map<String, Number>> usagePerRequestType = new HashMap<>();
+    Map<RequestType, Map<ResourceUsageType, Number>> usagePerRequestType = new HashMap<>();
     setRequestType(RequestType.SERVICE);
 
     // no usage tracked -> default score
     assertScoreIs(0.10, scheduler.score(getOffer(10, 10, slaveId), taskRequest, Optional.empty()));
 
     // new slave (no resources used) -> perfect score
-    usagePerRequestType.put(RequestType.SERVICE, ImmutableMap.of(SingularitySlaveUsage.CPU_USED, 0, SingularitySlaveUsage.MEMORY_BYTES_USED, 0));
+    usagePerRequestType.put(RequestType.SERVICE, ImmutableMap.of(ResourceUsageType.CPU_USED, 0, ResourceUsageType.MEMORY_BYTES_USED, 0));
     assertScoreIs(1, scheduler.score(getOffer(10, 10, slaveId), taskRequest, Optional.of(getUsage(0, 0, 10, 10, usagePerRequestType, slaveId))));
 
 
     // cpu used, no mem used --- different request type
-    usagePerRequestType.put(RequestType.SERVICE, ImmutableMap.of(SingularitySlaveUsage.CPU_USED, 0, SingularitySlaveUsage.MEMORY_BYTES_USED, 0));
+    usagePerRequestType.put(RequestType.SERVICE, ImmutableMap.of(ResourceUsageType.CPU_USED, 0, ResourceUsageType.MEMORY_BYTES_USED, 0));
     assertScoreIs(0.90, scheduler.score(getOffer(5, 10, slaveId), taskRequest, Optional.of(getUsage(0, 5, 10, 10, usagePerRequestType, slaveId))));
 
-    usagePerRequestType.put(RequestType.SERVICE, ImmutableMap.of(SingularitySlaveUsage.CPU_USED, 0, SingularitySlaveUsage.MEMORY_BYTES_USED, 0));
+    usagePerRequestType.put(RequestType.SERVICE, ImmutableMap.of(ResourceUsageType.CPU_USED, 0, ResourceUsageType.MEMORY_BYTES_USED, 0));
     assertScoreIs(0.84, scheduler.score(getOffer(2, 10, slaveId), taskRequest, Optional.of(getUsage(0, 8, 10, 10, usagePerRequestType, slaveId))));
 
     // cpu used, no mem used --- same request type
-    usagePerRequestType.put(RequestType.SERVICE, ImmutableMap.of(SingularitySlaveUsage.CPU_USED, 5, SingularitySlaveUsage.MEMORY_BYTES_USED, 0));
+    usagePerRequestType.put(RequestType.SERVICE, ImmutableMap.of(ResourceUsageType.CPU_USED, 5, ResourceUsageType.MEMORY_BYTES_USED, 0));
     assertScoreIs(0.80, scheduler.score(getOffer(5, 10, slaveId), taskRequest, Optional.of(getUsage(0, 5, 10, 10, usagePerRequestType, slaveId))));
 
-    usagePerRequestType.put(RequestType.SERVICE, ImmutableMap.of(SingularitySlaveUsage.CPU_USED, 8, SingularitySlaveUsage.MEMORY_BYTES_USED, 0));
+    usagePerRequestType.put(RequestType.SERVICE, ImmutableMap.of(ResourceUsageType.CPU_USED, 8, ResourceUsageType.MEMORY_BYTES_USED, 0));
     assertScoreIs(0.68, scheduler.score(getOffer(2, 10, slaveId), taskRequest, Optional.of(getUsage(0, 8, 10, 10, usagePerRequestType, slaveId))));
 
 
     // cpu used, no mem used --- different request type
-    usagePerRequestType.put(RequestType.SERVICE, ImmutableMap.of(SingularitySlaveUsage.CPU_USED, 0, SingularitySlaveUsage.MEMORY_BYTES_USED, 0));
+    usagePerRequestType.put(RequestType.SERVICE, ImmutableMap.of(ResourceUsageType.CPU_USED, 0, ResourceUsageType.MEMORY_BYTES_USED, 0));
     assertScoreIs(0.85, scheduler.score(getOffer(10, 5, slaveId), taskRequest, Optional.of(getUsage(mbToBytes(5), 0, 10, 10, usagePerRequestType, slaveId))));
 
-    usagePerRequestType.put(RequestType.SERVICE, ImmutableMap.of(SingularitySlaveUsage.CPU_USED, 0, SingularitySlaveUsage.MEMORY_BYTES_USED, 0));
+    usagePerRequestType.put(RequestType.SERVICE, ImmutableMap.of(ResourceUsageType.CPU_USED, 0, ResourceUsageType.MEMORY_BYTES_USED, 0));
     assertScoreIs(0.76, scheduler.score(getOffer(10, 2, slaveId), taskRequest, Optional.of(getUsage(mbToBytes(8), 0, 10, 10, usagePerRequestType, slaveId))));
 
     // no cpu used, mem used --- same request type
-    usagePerRequestType.put(RequestType.SERVICE, ImmutableMap.of(SingularitySlaveUsage.CPU_USED, 0, SingularitySlaveUsage.MEMORY_BYTES_USED, mbToBytes(5)));
+    usagePerRequestType.put(RequestType.SERVICE, ImmutableMap.of(ResourceUsageType.CPU_USED, 0, ResourceUsageType.MEMORY_BYTES_USED, mbToBytes(5)));
     assertScoreIs(0.70, scheduler.score(getOffer(10, 5, slaveId), taskRequest, Optional.of(getUsage(mbToBytes(5), 0, 10, 10, usagePerRequestType, slaveId))));
 
-    usagePerRequestType.put(RequestType.SERVICE, ImmutableMap.of(SingularitySlaveUsage.CPU_USED, 0, SingularitySlaveUsage.MEMORY_BYTES_USED, mbToBytes(8)));
+    usagePerRequestType.put(RequestType.SERVICE, ImmutableMap.of(ResourceUsageType.CPU_USED, 0, ResourceUsageType.MEMORY_BYTES_USED, mbToBytes(8)));
     assertScoreIs(0.52, scheduler.score(getOffer(10, 2, slaveId), taskRequest, Optional.of(getUsage(mbToBytes(8), 0, 10, 10, usagePerRequestType, slaveId))));
 
 
     // cpu used, mem used --- different request type
-    usagePerRequestType.put(RequestType.SERVICE, ImmutableMap.of(SingularitySlaveUsage.CPU_USED, 0, SingularitySlaveUsage.MEMORY_BYTES_USED, 0));
+    usagePerRequestType.put(RequestType.SERVICE, ImmutableMap.of(ResourceUsageType.CPU_USED, 0, ResourceUsageType.MEMORY_BYTES_USED, 0));
     assertScoreIs(0.75, scheduler.score(getOffer(5, 5, slaveId), taskRequest, Optional.of(getUsage(mbToBytes(5), 5, 10, 10, usagePerRequestType, slaveId))));
 
-    usagePerRequestType.put(RequestType.SERVICE, ImmutableMap.of(SingularitySlaveUsage.CPU_USED, 0, SingularitySlaveUsage.MEMORY_BYTES_USED, 0));
+    usagePerRequestType.put(RequestType.SERVICE, ImmutableMap.of(ResourceUsageType.CPU_USED, 0, ResourceUsageType.MEMORY_BYTES_USED, 0));
     assertScoreIs(0.60, scheduler.score(getOffer(2, 2, slaveId), taskRequest, Optional.of(getUsage(mbToBytes(8), 8, 10, 10, usagePerRequestType, slaveId))));
 
     // cpu used, mem used --- same request type
-    usagePerRequestType.put(RequestType.SERVICE, ImmutableMap.of(SingularitySlaveUsage.CPU_USED, 5, SingularitySlaveUsage.MEMORY_BYTES_USED, mbToBytes(5)));
+    usagePerRequestType.put(RequestType.SERVICE, ImmutableMap.of(ResourceUsageType.CPU_USED, 5, ResourceUsageType.MEMORY_BYTES_USED, mbToBytes(5)));
     assertScoreIs(0.50, scheduler.score(getOffer(5, 5, slaveId), taskRequest, Optional.of(getUsage(mbToBytes(5), 5, 10, 10, usagePerRequestType, slaveId))));
 
-    usagePerRequestType.put(RequestType.SERVICE, ImmutableMap.of(SingularitySlaveUsage.CPU_USED, 8, SingularitySlaveUsage.MEMORY_BYTES_USED, mbToBytes(8)));
+    usagePerRequestType.put(RequestType.SERVICE, ImmutableMap.of(ResourceUsageType.CPU_USED, 8, ResourceUsageType.MEMORY_BYTES_USED, mbToBytes(8)));
     assertScoreIs(0.20, scheduler.score(getOffer(2, 2, slaveId), taskRequest, Optional.of(getUsage(mbToBytes(8), 8, 10, 10, usagePerRequestType, slaveId))));
   }
 
@@ -159,7 +160,7 @@ public class SingularityMesosOfferSchedulerTest extends SingularityCuratorTestBa
     return memMb * 1024L * 1024L;
   }
 
-  private SingularitySlaveUsageWithId getUsage(long memBytes, double cpus, long memMbTotal, double cpusTotal, Map<RequestType, Map<String, Number>> usagePerRequestType, String slaveId) {
+  private SingularitySlaveUsageWithId getUsage(long memBytes, double cpus, long memMbTotal, double cpusTotal, Map<RequestType, Map<ResourceUsageType, Number>> usagePerRequestType, String slaveId) {
     return new SingularitySlaveUsageWithId(new SingularitySlaveUsage(memBytes, 0L, cpus, 1, Optional.of(memMbTotal), Optional.of(cpusTotal), usagePerRequestType), slaveId);
   }
 

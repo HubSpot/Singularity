@@ -23,7 +23,7 @@ import com.hubspot.mesos.MesosUtils;
 import com.hubspot.mesos.Resources;
 import com.hubspot.singularity.RequestType;
 import com.hubspot.singularity.SingularityPendingTaskId;
-import com.hubspot.singularity.SingularitySlaveUsage;
+import com.hubspot.singularity.SingularitySlaveUsage.ResourceUsageType;
 import com.hubspot.singularity.SingularitySlaveUsageWithId;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskRequest;
@@ -266,11 +266,11 @@ public class SingularityMesosOfferScheduler {
     }
 
     SingularitySlaveUsageWithId slaveUsage = maybeSlaveUsage.get();
-    Map<RequestType, Map<String, Number>> usagesPerRequestType = slaveUsage.getUsagePerRequestType();
-    Map<String, Number> usagePerResource = usagesPerRequestType.get(taskRequest.getRequest().getRequestType());
+    Map<RequestType, Map<ResourceUsageType, Number>> usagesPerRequestType = slaveUsage.getUsagePerRequestType();
+    Map<ResourceUsageType, Number> usagePerResource = usagesPerRequestType.get(taskRequest.getRequest().getRequestType());
 
-    score += configuration.getRequestTypeCpuWeightForOffer() * (1 - usagePerResource.get(SingularitySlaveUsage.CPU_USED).doubleValue() / slaveUsage.getCpuTotal().get());
-    score += configuration.getRequestTypeMemWeightForOffer() * (1 - ((double) usagePerResource.get(SingularitySlaveUsage.MEMORY_BYTES_USED).longValue() / slaveUsage.getMemoryBytesTotal().get()));
+    score += configuration.getRequestTypeCpuWeightForOffer() * (1 - usagePerResource.get(ResourceUsageType.CPU_USED).doubleValue() / slaveUsage.getCpuTotal().get());
+    score += configuration.getRequestTypeMemWeightForOffer() * (1 - ((double) usagePerResource.get(ResourceUsageType.MEMORY_BYTES_USED).longValue() / slaveUsage.getMemoryBytesTotal().get()));
 
     score += configuration.getFreeCpuWeightForOffer() * (MesosUtils.getNumCpus(offer) / slaveUsage.getCpuTotal().get());
     score += configuration.getFreeMemWeightForOffer() * (MesosUtils.getMemory(offer) / slaveUsage.getMemoryMbTotal().get());
