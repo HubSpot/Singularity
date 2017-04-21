@@ -4,31 +4,48 @@ import { Glyphicon } from 'react-bootstrap';
 import { Link } from 'react-router';
 
 import Section from '../common/Section';
+import TaskStatus from './TaskStatus';
 
-function TaskLatestLog (props) {
-  const link = props.isStillRunning ? (
-    <Link to={Utils.tailerPath(props.taskId, config.runningTaskLogPath)} title="Log">
-        <span><Glyphicon glyph="file" /> {Utils.fileName(config.runningTaskLogPath)}</span>
-    </Link>
-  ) : (
-    <Link to={Utils.tailerPath(props.taskId, config.finishedTaskLogPath)} title="Log">
-        <span><Glyphicon glyph="file" /> {Utils.fileName(config.finishedTaskLogPath)}</span>
-    </Link>
-  );
-  return (
-    <Section title="Logs" id="logs">
-      <div className="row">
-        <div className="col-md-4">
-          <h4>{link}</h4>
+const getLink = (status, taskId) => {
+  if (status === TaskStatus.RUNNING) {
+    return (
+      <Link to={Utils.tailerPath(taskId, config.runningTaskLogPath)} title="Log">
+          <span><Glyphicon glyph="file" /> {Utils.fileName(config.runningTaskLogPath)}</span>
+      </Link>
+    );
+  } else if (status === TaskStatus.STOPPED) {
+    return (
+      <Link to={Utils.tailerPath(taskId, config.finishedTaskLogPath)} title="Log">
+          <span><Glyphicon glyph="file" /> {Utils.fileName(config.finishedTaskLogPath)}</span>
+      </Link>
+    );
+  }
+
+  return null;
+};
+
+function TaskLatestLog({status, taskId, available}) {
+  const link = getLink(status, taskId);
+
+  if (status === TaskStatus.NEVER_RAN || !available) {
+    return null;
+  } else {
+    return (
+      <Section title="Logs" id="logs">
+        <div className="row">
+          <div className="col-md-4">
+            <h4>{link}</h4>
+          </div>
         </div>
-      </div>
-    </Section>
-  );
+      </Section>
+    );
+  }
 }
 
 TaskLatestLog.propTypes = {
   taskId: PropTypes.string.isRequired,
-  isStillRunning: PropTypes.bool
+  status: PropTypes.oneOf([TaskStatus.RUNNING, TaskStatus.STOPPED, TaskStatus.NEVER_RAN]),
+  available: PropTypes.bool,
 };
 
 export default TaskLatestLog;
