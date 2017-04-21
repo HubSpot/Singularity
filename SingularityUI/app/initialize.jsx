@@ -61,7 +61,7 @@ document.addEventListener('DOMContentLoaded', () => {
     store.dispatch(tailerActions.sandboxSetApiRoot(config.apiRoot));
 
     // set up user
-    let userId;
+    let userId=null;
     window.app = {};
     window.app.setupUser = () => store.dispatch(FetchUser.trigger());
     window.app.setupUser().then(() => {
@@ -74,6 +74,7 @@ document.addEventListener('DOMContentLoaded', () => {
         userId = store.getState().api.user.data.user.id
         // Set up starred requests
         maybeImportStarredRequests(store, store.getState().api.user, userId);
+        setHeapUserId(userId);
       }
     });
 
@@ -176,5 +177,16 @@ function maybeImportStarredRequests(store, userState, userId) {
       if (response.statusCode >= 300 || response.statusCode < 200) return;
       window.localStorage.removeItem('starredRequests');
     });
+  }
+}
+
+function setHeapUserId(userId) {
+  if (typeof window.heap != 'undefined') {
+    if (userId !== null) {
+      window.heap.identify('${userId}-singularity');
+    }
+    else {
+      window.heap.identify('UNKNOWN_USER-singularity');
+    }
   }
 }
