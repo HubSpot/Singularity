@@ -1334,7 +1334,7 @@ class NewDeployForm extends Component {
         id="healthcheck-startup-timeout"
         onChange={event => this.updateField('startupTimeoutSeconds', event.target.value)}
         value={this.props.form.startupTimeoutSeconds}
-        label="HC startup delay"
+        label="HC startup timeout"
         placeholder="default: 30"
         feedback={this.formFieldFeedback(INDEXED_FIELDS.startupTimeoutSeconds, this.props.form.startupTimeoutSeconds)}
       />
