@@ -72,17 +72,13 @@ public class SingularitySmtpSender implements Managed {
       return;
     }
 
-    final Runnable cmd = new Runnable() {
+    final String realSubject = maybeSmtpConfiguration.isPresent() && maybeSmtpConfiguration.get().getSubjectPrefix().isPresent() ?
+        maybeSmtpConfiguration.get().getSubjectPrefix().get() + subject :
+        subject;
 
-      @Override
-      public void run() {
-        sendMail(toList, ccList, subject, body);
-      }
-    };
+    LOG.debug("Queuing an email to {}/{} (subject: {})", toList, ccList, realSubject);
 
-    LOG.debug("Queuing an email to {}/{} (subject: {})", toList, ccList, subject);
-
-    mailSenderExecutorService.get().submit(cmd);
+    mailSenderExecutorService.get().submit(() -> sendMail(toList, ccList, realSubject, body));
   }
 
   private String getEmailLogFormat(List<String> toList, String subject) {
