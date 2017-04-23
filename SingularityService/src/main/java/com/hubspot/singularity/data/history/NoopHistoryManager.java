@@ -23,17 +23,14 @@ public class NoopHistoryManager implements HistoryManager {
 
   @Override
   public void saveRequestHistoryUpdate(SingularityRequestHistory requestHistory) {
-    throw new UnsupportedOperationException("NoopHistoryManager can not save");
   }
 
   @Override
   public void saveTaskHistory(SingularityTaskHistory taskHistory) {
-    throw new UnsupportedOperationException("NoopHistoryManager can not save");
   }
 
   @Override
   public void saveDeployHistory(SingularityDeployHistory deployHistory) {
-    throw new UnsupportedOperationException("NoopHistoryManager can not save");
   }
 
   @Override
