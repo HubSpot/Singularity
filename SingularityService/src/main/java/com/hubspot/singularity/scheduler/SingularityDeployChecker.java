@@ -50,6 +50,7 @@ import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTaskShellCommandRequestId;
 import com.hubspot.singularity.SingularityUpdatePendingDeployRequest;
 import com.hubspot.singularity.TaskCleanupType;
+import com.hubspot.singularity.api.SingularityRunNowRequest;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.DeployManager;
 import com.hubspot.singularity.data.RequestManager;
@@ -251,10 +252,22 @@ public class SingularityDeployChecker {
     }
 
     if (!request.isDeployable() && !request.isOneOff()) {
-      // TODO should this override? What if someone has mucked with the pending queue for this deploy ?
-      requestManager.addToPendingQueue(new SingularityPendingRequest(request.getId(), pendingDeploy.getDeployMarker().getDeployId(), deployResult.getTimestamp(),
-        pendingDeploy.getDeployMarker().getUser(), deployResult.getDeployState() == DeployState.CANCELED ? PendingType.DEPLOY_CANCELLED : PendingType.NEW_DEPLOY,
-        deploy.isPresent() ? deploy.get().getSkipHealthchecksOnDeploy() : Optional.<Boolean> absent(), pendingDeploy.getDeployMarker().getMessage()));
+      Optional<String> user = pendingDeploy.getDeployMarker().getUser();
+      String deployID = pendingDeploy.getDeployMarker().getDeployId();
+      String requestId = request.getId();
+
+      if (deploy.isPresent() && deploy.get().getRunImmediately().isPresent()) {
+        LOG.info("Scheduled deploy {} set to run immediately", pendingDeploy);
+        SingularityRunNowRequest runNowRequest = deploy.get().getRunImmediately().get();
+        requestManager.addToPendingQueue(new SingularityPendingRequest(requestId, deployID, System.currentTimeMillis(),
+            user, PendingType.IMMEDIATE, runNowRequest.getCommandLineArgs(), runNowRequest.getRunId(),
+            runNowRequest.getSkipHealthchecks(), runNowRequest.getMessage(), Optional.absent(), runNowRequest.getResources()));
+      } else {
+        PendingType pendingType = deployResult.getDeployState() == DeployState.CANCELED ? PendingType.DEPLOY_CANCELLED : PendingType.NEW_DEPLOY;
+        Optional<Boolean> skipHealthChecks = deploy.isPresent() ? deploy.get().getSkipHealthchecksOnDeploy() : Optional.absent();
+        requestManager.addToPendingQueue(new SingularityPendingRequest(requestId, deployID, deployResult.getTimestamp(),
+            user, pendingType, skipHealthChecks, pendingDeploy.getDeployMarker().getMessage()));
+      }
 
       if (deployResult.getDeployState() == DeployState.SUCCEEDED) {
         // remove the lock on bounces in case we deployed during a bounce

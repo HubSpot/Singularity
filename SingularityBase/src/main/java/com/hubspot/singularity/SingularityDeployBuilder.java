@@ -11,6 +11,7 @@ import com.hubspot.mesos.Resources;
 import com.hubspot.mesos.SingularityContainerInfo;
 import com.hubspot.mesos.SingularityMesosArtifact;
 import com.hubspot.mesos.SingularityMesosTaskLabel;
+import com.hubspot.singularity.api.SingularityRunNowRequest;
 
 public class SingularityDeployBuilder {
 
@@ -35,6 +36,7 @@ public class SingularityDeployBuilder {
   private Optional<List<String>> arguments;
   private Optional<Map<String, String>> env;
   private Optional<Map<Integer, Map<String, String>>> taskEnv;
+  private Optional<SingularityRunNowRequest> runImmediately;
   private Optional<List<SingularityMesosArtifact>> uris;
   private Optional<ExecutorData> executorData;
   private Optional<Map<String, String>> labels;
@@ -119,6 +121,7 @@ public class SingularityDeployBuilder {
     this.arguments = Optional.absent();
     this.env = Optional.absent();
     this.taskEnv = Optional.absent();
+    this.runImmediately = Optional.absent();
     this.uris = Optional.absent();
     this.executorData = Optional.absent();
     this.labels = Optional.absent();
@@ -155,7 +158,7 @@ public class SingularityDeployBuilder {
 
   public SingularityDeploy build() {
     return new SingularityDeploy(requestId, id, command, arguments, containerInfo, customExecutorCmd, customExecutorId, customExecutorSource, customExecutorResources, resources,
-      env, taskEnv, uris, metadata, executorData, version, timestamp, labels, mesosLabels, taskLabels, mesosTaskLabels, deployHealthTimeoutSeconds, healthcheckUri, healthcheckIntervalSeconds, healthcheckTimeoutSeconds, healthcheckPortIndex, healthcheckMaxRetries,
+      env, taskEnv, runImmediately, uris, metadata, executorData, version, timestamp, labels, mesosLabels, taskLabels, mesosTaskLabels, deployHealthTimeoutSeconds, healthcheckUri, healthcheckIntervalSeconds, healthcheckTimeoutSeconds, healthcheckPortIndex, healthcheckMaxRetries,
       healthcheckMaxTotalTimeoutSeconds, healthcheck, serviceBasePath, loadBalancerGroups, loadBalancerPortIndex, considerHealthyAfterRunningForSeconds, loadBalancerOptions, loadBalancerDomains, loadBalancerAdditionalRoutes,
       loadBalancerTemplate, loadBalancerServiceIdOverride, loadBalancerUpstreamGroup, skipHealthchecksOnDeploy, healthcheckProtocol, deployInstanceCountPerStep, deployStepWaitTimeMs, autoAdvanceDeploySteps, maxTaskRetries, shell, user);
   }
@@ -305,6 +308,15 @@ public class SingularityDeployBuilder {
 
   public SingularityDeployBuilder setTaskEnv(Optional<Map<Integer, Map<String, String>>> taskEnv) {
     this.taskEnv = taskEnv;
+    return this;
+  }
+
+  public Optional<SingularityRunNowRequest> getRunImmediately() {
+    return runImmediately;
+  }
+
+  public SingularityDeployBuilder setRunImmediately(Optional<SingularityRunNowRequest> runImmediately) {
+    this.runImmediately = runImmediately;
     return this;
   }
 
