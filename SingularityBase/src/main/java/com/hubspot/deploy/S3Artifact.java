@@ -13,8 +13,9 @@ public class S3Artifact extends RemoteArtifact {
 
   @JsonCreator
   public S3Artifact(@JsonProperty("name") String name, @JsonProperty("filename") String filename, @JsonProperty("md5sum") Optional<String> md5sum, @JsonProperty("filesize") Optional<Long> filesize,
-      @JsonProperty("s3Bucket") String s3Bucket, @JsonProperty("s3ObjectKey") String s3ObjectKey, @JsonProperty("targetFolderRelativeToTask") Optional<String> targetFolderRelativeToTask) {
-    super(name, filename, md5sum, filesize, targetFolderRelativeToTask);
+      @JsonProperty("s3Bucket") String s3Bucket, @JsonProperty("s3ObjectKey") String s3ObjectKey, @JsonProperty("targetFolderRelativeToTask") Optional<String> targetFolderRelativeToTask,
+      @JsonProperty("isArtifactList") Optional<Boolean> isArtifactList) {
+    super(name, filename, md5sum, filesize, targetFolderRelativeToTask, isArtifactList);
 
     this.s3Bucket = s3Bucket;
     this.s3ObjectKey = s3ObjectKey;
