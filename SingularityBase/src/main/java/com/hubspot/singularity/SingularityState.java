@@ -38,6 +38,7 @@ public class SingularityState {
 
   private final long oldestDeploy;
   private final int numDeploys;
+  private final long oldestDeployStep;
   private final List<SingularityDeployMarker> activeDeploys;
 
   private final long generatedAt;
@@ -59,7 +60,8 @@ public class SingularityState {
       @JsonProperty("pausedRequests") int pausedRequests, @JsonProperty("scheduledTasks") int scheduledTasks, @JsonProperty("pendingRequests") int pendingRequests, @JsonProperty("lbCleanupTasks") int lbCleanupTasks,
       @JsonProperty("lbCleanupRequests") int lbCleanupRequests, @JsonProperty("cleaningRequests") int cleaningRequests, @JsonProperty("activeSlaves") int activeSlaves, @JsonProperty("deadSlaves") int deadSlaves,
       @JsonProperty("decommissioningSlaves") int decommissioningSlaves, @JsonProperty("activeRacks") int activeRacks, @JsonProperty("deadRacks") int deadRacks, @JsonProperty("decommissioningRacks") int decommissioningRacks,
-      @JsonProperty("cleaningTasks") int cleaningTasks, @JsonProperty("hostStates") List<SingularityHostState> hostStates, @JsonProperty("oldestDeploy") long oldestDeploy, @JsonProperty("numDeploys") int numDeploys, @JsonProperty("activeDeploys") List<SingularityDeployMarker> activeDeploys,
+      @JsonProperty("cleaningTasks") int cleaningTasks, @JsonProperty("hostStates") List<SingularityHostState> hostStates, @JsonProperty("oldestDeploy") long oldestDeploy, @JsonProperty("numDeploys") int numDeploys,
+      @JsonProperty("oldestDeployStep") long oldestDeployStep, @JsonProperty("activeDeploys") List<SingularityDeployMarker> activeDeploys,
       @JsonProperty("lateTasks") int lateTasks, @JsonProperty("futureTasks") int futureTasks, @JsonProperty("maxTaskLag") long maxTaskLag, @JsonProperty("generatedAt") long generatedAt,
       @JsonProperty("overProvisionedRequestIds") List<String> overProvisionedRequestIds, @JsonProperty("underProvisionedRequestIds") List<String> underProvisionedRequestIds,
       @JsonProperty("overProvisionedRequests") int overProvisionedRequests, @JsonProperty("underProvisionedRequests") int underProvisionedRequests, @JsonProperty("finishedRequests") int finishedRequests,
@@ -89,6 +91,7 @@ public class SingularityState {
     this.maxTaskLag = maxTaskLag;
     this.oldestDeploy = oldestDeploy;
     this.numDeploys = numDeploys;
+    this.oldestDeployStep = oldestDeployStep;
     this.activeDeploys = activeDeploys;
     this.lbCleanupTasks = lbCleanupTasks;
     this.lbCleanupRequests = lbCleanupRequests;
@@ -114,6 +117,10 @@ public class SingularityState {
 
   public int getNumDeploys() {
     return numDeploys;
+  }
+
+  public long getOldestDeployStep() {
+    return oldestDeployStep;
   }
 
   public List<SingularityDeployMarker> getActiveDeploys() {
@@ -278,6 +285,7 @@ public class SingularityState {
         ", unknownRacks=" + unknownRacks +
         ", oldestDeploy=" + oldestDeploy +
         ", numDeploys=" + numDeploys +
+        ", oldestDeployStep=" + oldestDeployStep +
         ", activeDeploys=" + activeDeploys +
         ", generatedAt=" + generatedAt +
         ", hostStates=" + hostStates +
