@@ -21,7 +21,7 @@ notifempty
     NOW="$(($(date +%s%N)/1000000))"
     LOGSTART=`getfattr --only-values -n user.logstart {{{ logfile }}}`
     timestring=`date +%Y-%m-%d-%s`
-    for filename in "{{{ taskDirectory }}}/{{{ rotateDirectory }}}/{{{ logfileName }}}-${timestring%??}"*
+    for filename in "{{{ taskDirectory }}}/{{{ rotateDirectory }}}/{{{ logfileName }}}-${timestring%???}"*
     do
       setfattr -n user.logend -v "$NOW" $filename
       if [ "$LOGSTART" != "" ]; then
@@ -45,7 +45,7 @@ notifempty
     do
       LOGSTART=`getfattr --only-values -n user.logstart $oldfile`
       timestring=`date +%Y-%m-%d-%s`
-      for filename in "$oldfile-${timestring%??}"*
+      for filename in "$oldfile-${timestring%???}"*
       do
         if [ "$LOGSTART" != "" ]; then
           setfattr -n user.logstart -v "$LOGSTART" $filename
