@@ -24,6 +24,7 @@ import com.google.inject.name.Named;
 import com.hubspot.mesos.CounterMap;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.SingularityCreateResult;
+import com.hubspot.singularity.SingularityDeployMarker;
 import com.hubspot.singularity.SingularityHostState;
 import com.hubspot.singularity.SingularityMainModule;
 import com.hubspot.singularity.SingularityPendingDeploy;
@@ -302,9 +303,18 @@ public class StateManager extends CuratorManager {
 
     int numDeploys = 0;
     long oldestDeploy = 0;
+    long oldestDeployStep = 0;
+    List<SingularityDeployMarker> activeDeploys = new ArrayList<>();
     final long now = System.currentTimeMillis();
 
     for (SingularityPendingDeploy pendingDeploy : deployManager.getPendingDeploys()) {
+      activeDeploys.add(pendingDeploy.getDeployMarker());
+      if (pendingDeploy.getDeployProgress().isPresent() && !pendingDeploy.getDeployProgress().get().isStepComplete()) {
+        long deployStepDelta = now - pendingDeploy.getDeployProgress().get().getTimestamp();
+        if (deployStepDelta > oldestDeployStep) {
+          oldestDeployStep = deployStepDelta;
+        }
+      }
       long delta = now - pendingDeploy.getDeployMarker().getTimestamp();
       if (delta > oldestDeploy) {
         oldestDeploy = delta;
@@ -324,7 +334,7 @@ public class StateManager extends CuratorManager {
     }
 
     return new SingularityState(activeTasks, launchingTasks, numActiveRequests, cooldownRequests, numPausedRequests, scheduledTasks, pendingRequests, lbCleanupTasks, lbCleanupRequests, cleaningRequests, activeSlaves,
-        deadSlaves, decommissioningSlaves, activeRacks, deadRacks, decommissioningRacks, cleaningTasks, states, oldestDeploy, numDeploys, scheduledTasksInfo.getNumLateTasks(),
+        deadSlaves, decommissioningSlaves, activeRacks, deadRacks, decommissioningRacks, cleaningTasks, states, oldestDeploy, numDeploys, oldestDeployStep, activeDeploys, scheduledTasksInfo.getNumLateTasks(),
         scheduledTasksInfo.getNumFutureTasks(), scheduledTasksInfo.getMaxTaskLag(), System.currentTimeMillis(), includeRequestIds ? overProvisionedRequestIds : null,
         includeRequestIds ? underProvisionedRequestIds : null, overProvisionedRequestIds.size(), underProvisionedRequestIds.size(), numFinishedRequests, unknownRacks, unknownSlaves, authDatastoreHealthy, minimumPriorityLevel,
         statusUpdateDeltaAvg.get());

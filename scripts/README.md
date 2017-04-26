@@ -55,7 +55,7 @@ Two commands exist for downloading logs.
 When the `-g` option is set, the log fetcher will grep the downloaded files for the provided regex.
 
 - you can pass in a full grep command (including options) to run or just the grep regex
-- the default command will just be `grep (your regex)` if a full grep command is not supplied
+- the default command will just be `grep --color-always (your regex)` if a full grep command is not supplied
 
 ## Example Usage
 - Specify a configuration file AND folder to use
