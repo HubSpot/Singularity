@@ -22,6 +22,7 @@ import com.google.inject.Inject;
 import com.hubspot.mesos.CounterMap;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.SingularityCreateResult;
+import com.hubspot.singularity.SingularityDeployMarker;
 import com.hubspot.singularity.SingularityHostState;
 import com.hubspot.singularity.SingularityPendingDeploy;
 import com.hubspot.singularity.SingularityPendingTaskId;
@@ -296,9 +297,11 @@ public class StateManager extends CuratorManager {
 
     int numDeploys = 0;
     long oldestDeploy = 0;
+    List<SingularityDeployMarker> activeDeploys = new ArrayList<>();
     final long now = System.currentTimeMillis();
 
     for (SingularityPendingDeploy pendingDeploy : deployManager.getPendingDeploys()) {
+      activeDeploys.add(pendingDeploy.getDeployMarker());
       long delta = now - pendingDeploy.getDeployMarker().getTimestamp();
       if (delta > oldestDeploy) {
         oldestDeploy = delta;
@@ -318,7 +321,7 @@ public class StateManager extends CuratorManager {
     }
 
     return new SingularityState(activeTasks, launchingTasks, numActiveRequests, cooldownRequests, numPausedRequests, scheduledTasks, pendingRequests, lbCleanupTasks, lbCleanupRequests, cleaningRequests, activeSlaves,
-        deadSlaves, decommissioningSlaves, activeRacks, deadRacks, decommissioningRacks, cleaningTasks, states, oldestDeploy, numDeploys, scheduledTasksInfo.getNumLateTasks(),
+        deadSlaves, decommissioningSlaves, activeRacks, deadRacks, decommissioningRacks, cleaningTasks, states, oldestDeploy, numDeploys, activeDeploys, scheduledTasksInfo.getNumLateTasks(),
         scheduledTasksInfo.getNumFutureTasks(), scheduledTasksInfo.getMaxTaskLag(), System.currentTimeMillis(), includeRequestIds ? overProvisionedRequestIds : null,
             includeRequestIds ? underProvisionedRequestIds : null, overProvisionedRequestIds.size(), underProvisionedRequestIds.size(), numFinishedRequests, unknownRacks, unknownSlaves, authDatastoreHealthy, minimumPriorityLevel);
   }
