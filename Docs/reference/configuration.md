@@ -195,13 +195,15 @@ These settings should live under the "mesos" field inside the root configuration
 | Parameter | Default | Description | Type |
 |-----------|---------|-------------|------|
 | minOfferScore | 0.80 | The starting minimum score a task will accept for a mesos offer. The best possible offer score is 1.00 | double |
-| maxOfferAttemptsPerTask | 20 | The max number of offers a task will reject | int |
-| maxMillisPastDuePerTask | 600000 | The max milliseconds a task can be past due when scoring an offer | long |
-| requestTypeCpuWeightForOffer | 0.20 | The weight the request type's utilization carries when scoring an offer | double |
-| requestTypeMemWeightForOffer | 0.30 | The weight the request type's utilization carries when scoring an offer | double |
-| freeCpuWeightForOffer | 0.20 | The weight the slave's cpu utilization carries when scoring an offer | double |
-| freeMemWeightForOffer | 0.30 | The weight the slave's memory utilization carries when scoring an offer | double |
+| maxOfferAttemptsPerTask | 20 | The max number of matching attempts a task will take without accepting a possible offer | int |
+| maxMillisPastDuePerTask | 600000 (10 min) | The max milliseconds a task can be past due when scoring an offer | long |
+| longRunningUsedCpuWeightForOffer | 0.40 | The weight long running tasks' cpu utilization carries when scoring an offer (must add up to 1 with longRunningUsedMemWeightForOffer) | double |
+| longRunningUsedMemWeightForOffer | 0.60 | The weight long running tasks' memory utilization carries when scoring an offer (must add up to 1 with longRunningUsedCpuWeightForOffer) | double |
+| freeCpuWeightForOffer | 0.40 | The weight the slave's free cpu carries when scoring an offer (must add up to 1 with freeMemWeightForOffer) | double |
+| freeMemWeightForOffer | 0.60 | The weight the slave's free memory carries when scoring an offer (must add up to 1 with freeCpuWeightForOffer) | double |
 | defaultOfferScoreForMissingUsage | 0.10 | The default offer score used for offers without utilization metrics | double |
+| considerNonLongRunningTaskLongRunningAfterRunningForSeconds | 21600 (6 hours) | If a non long running task runs, on average, this long or more, it's considered a long running task | long |
+| maxNonLongRunningUsedResourceWeight | 0.50 | The max weight long running tasks' utilization can carry when scoring a non long running task for an offer | double
 
 ## Database ##
 
