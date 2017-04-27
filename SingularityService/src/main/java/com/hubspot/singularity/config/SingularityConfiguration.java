@@ -192,17 +192,21 @@ public class SingularityConfiguration extends Configuration {
 
   private int maxOfferAttemptsPerTask = 20;
 
-  private long maxMillisPastDuePerTask = TimeUnit.MILLISECONDS.convert(10, TimeUnit.MINUTES);
+  private long maxMillisPastDuePerTask = TimeUnit.MINUTES.toMillis(10);
 
-  private double requestTypeCpuWeightForOffer = 0.20;
+  private double usedCpuWeightForOffer = 0.40;
 
-  private double requestTypeMemWeightForOffer = 0.30;
+  private double usedMemWeightForOffer = 0.60;
 
-  private double freeCpuWeightForOffer = 0.20;
+  private double freeCpuWeightForOffer = 0.40;
 
-  private double freeMemWeightForOffer = 0.30;
+  private double freeMemWeightForOffer = 0.60;
 
   private double defaultOfferScoreForMissingUsage = 0.10;
+
+  private long considerNonLongRunningTaskLongRunningAfterRunningForSeconds = TimeUnit.HOURS.toSeconds(6);
+
+  private double maxNonLongRunningUsedResourceWeight = 0.50;
 
   private int maxRequestIdSize = 100;
 
@@ -646,26 +650,33 @@ public class SingularityConfiguration extends Configuration {
     return maxMillisPastDuePerTask;
   }
 
-  public double getRequestTypeCpuWeightForOffer() {
-    return requestTypeCpuWeightForOffer;
+  public double getUsedCpuWeightForOffer() {
+    return usedCpuWeightForOffer;
+  }
+
+  public double getUsedMemWeightForOffer() {
+    return usedMemWeightForOffer;
   }
 
   public double getFreeCpuWeightForOffer() {
     return freeCpuWeightForOffer;
   }
 
-  public double getDefaultOfferScoreForMissingUsage() {
-    return defaultOfferScoreForMissingUsage;
-  }
-
   public double getFreeMemWeightForOffer() {
     return freeMemWeightForOffer;
   }
 
-  public double getRequestTypeMemWeightForOffer() {
-    return requestTypeMemWeightForOffer;
+  public double getDefaultOfferScoreForMissingUsage() {
+    return defaultOfferScoreForMissingUsage;
   }
 
+  public long getConsiderNonLongRunningTaskLongRunningAfterRunningForSeconds() {
+    return considerNonLongRunningTaskLongRunningAfterRunningForSeconds;
+  }
+
+  public double getMaxNonLongRunningUsedResourceWeight() {
+    return maxNonLongRunningUsedResourceWeight;
+  }
   public MesosConfiguration getMesosConfiguration() {
     return mesosConfiguration;
   }
@@ -1041,13 +1052,13 @@ public class SingularityConfiguration extends Configuration {
     return this;
   }
 
-  public SingularityConfiguration setRequestTypeCpuWeightForOffer(double requestTypeCpuWeightForOffer) {
-    this.requestTypeCpuWeightForOffer = requestTypeCpuWeightForOffer;
+  public SingularityConfiguration setUsedCpuWeightForOffer(double usedCpuWeightForOffer) {
+    this.usedCpuWeightForOffer = usedCpuWeightForOffer;
     return this;
   }
 
-  public SingularityConfiguration setRequestTypeMemWeightForOffer(double requestTypeMemWeightForOffer) {
-    this.requestTypeMemWeightForOffer = requestTypeMemWeightForOffer;
+  public SingularityConfiguration setUsedMemWeightForOffer(double usedMemWeightForOffer) {
+    this.usedMemWeightForOffer = usedMemWeightForOffer;
     return this;
   }
 
@@ -1066,6 +1077,15 @@ public class SingularityConfiguration extends Configuration {
     return this;
   }
 
+  public SingularityConfiguration setConsiderNonLongRunningTaskLongRunningAfterRunningForSeconds(long considerNonLongRunningTaskLongRunningAfterRunningForSeconds) {
+    this.considerNonLongRunningTaskLongRunningAfterRunningForSeconds = considerNonLongRunningTaskLongRunningAfterRunningForSeconds;
+    return this;
+  }
+
+  public SingularityConfiguration setMaxNonLongRunningUsedResourceWeight(double maxNonLongRunningUsedResourceWeight) {
+    this.maxNonLongRunningUsedResourceWeight = maxNonLongRunningUsedResourceWeight;
+    return this;
+  }
   public void setMesosConfiguration(MesosConfiguration mesosConfiguration) {
     this.mesosConfiguration = mesosConfiguration;
   }
