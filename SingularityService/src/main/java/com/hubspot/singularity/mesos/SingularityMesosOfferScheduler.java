@@ -5,7 +5,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import javax.inject.Singleton;
@@ -15,6 +15,7 @@ import org.apache.mesos.Protos.Offer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Optional;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
@@ -22,6 +23,7 @@ import com.google.inject.Provider;
 import com.hubspot.mesos.MesosUtils;
 import com.hubspot.mesos.Resources;
 import com.hubspot.singularity.RequestType;
+import com.hubspot.singularity.SingularityDeployStatistics;
 import com.hubspot.singularity.SingularityPendingTaskId;
 import com.hubspot.singularity.SingularitySlaveUsage.ResourceUsageType;
 import com.hubspot.singularity.SingularitySlaveUsageWithId;
@@ -31,6 +33,7 @@ import com.hubspot.singularity.SlaveMatchState;
 import com.hubspot.singularity.config.CustomExecutorConfiguration;
 import com.hubspot.singularity.config.MesosConfiguration;
 import com.hubspot.singularity.config.SingularityConfiguration;
+import com.hubspot.singularity.data.DeployManager;
 import com.hubspot.singularity.data.DisasterManager;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.data.UsageManager;
@@ -54,6 +57,8 @@ public class SingularityMesosOfferScheduler {
   private final SingularityTaskSizeOptimizer taskSizeOptimizer;
   private final DisasterManager disasterManager;
   private final UsageManager usageManager;
+  private final DeployManager deployManager;
+
 
   private final Provider<SingularitySchedulerStateCache> stateCacheProvider;
   private final SchedulerDriverSupplier schedulerDriverSupplier;
@@ -72,7 +77,8 @@ public class SingularityMesosOfferScheduler {
                                         Provider<SingularitySchedulerStateCache> stateCacheProvider,
                                         SchedulerDriverSupplier schedulerDriverSupplier,
                                         DisasterManager disasterManager,
-                                        UsageManager usageManager) {
+                                        UsageManager usageManager,
+                                        DeployManager deployManager) {
     this.defaultResources = new Resources(mesosConfiguration.getDefaultCpus(), mesosConfiguration.getDefaultMemory(), 0, mesosConfiguration.getDefaultDisk());
     this.defaultCustomExecutorResources = new Resources(customExecutorConfiguration.getNumCpus(), customExecutorConfiguration.getMemoryMb(), 0, customExecutorConfiguration.getDiskMb());
     this.taskManager = taskManager;
@@ -87,6 +93,7 @@ public class SingularityMesosOfferScheduler {
     this.schedulerDriverSupplier = schedulerDriverSupplier;
     this.taskPrioritizer = taskPrioritizer;
     this.usageManager = usageManager;
+    this.deployManager = deployManager;
   }
 
   public List<SingularityOfferHolder> checkOffers(final Collection<Protos.Offer> offers) {
@@ -178,10 +185,6 @@ public class SingularityMesosOfferScheduler {
     return offerHolders;
   }
 
-  public boolean isConnected() {
-    return schedulerDriverSupplier.get().isPresent();
-  }
-
   private Map<String, SingularityTaskRequestHolder> getDueTaskRequestHolders() {
     final List<SingularityTaskRequest> taskRequests = taskPrioritizer.getSortedDueTasks(scheduler.getDueTasks());
 
@@ -207,7 +210,7 @@ public class SingularityMesosOfferScheduler {
   private Optional<SingularitySlaveUsageWithId> getSlaveUsage(List<SingularitySlaveUsageWithId> slaveUsages, String slaveId) {
     List<SingularitySlaveUsageWithId> filteredSlaveUsages = slaveUsages.stream().filter(u -> u.getSlaveId().equals(slaveId)).collect(Collectors.toList());
 
-    return filteredSlaveUsages.size() == 1 ? Optional.of(filteredSlaveUsages.get(0)) : Optional.empty();
+    return filteredSlaveUsages.size() == 1 ? Optional.of(filteredSlaveUsages.get(0)) : Optional.absent();
   }
 
   private double score(SingularityOfferHolder offerHolder, SingularitySchedulerStateCache stateCache, Map<String, Map<String, Integer>> tasksPerOfferPerRequest,
@@ -258,22 +261,61 @@ public class SingularityMesosOfferScheduler {
 
   @VisibleForTesting
   double score(Offer offer, SingularityTaskRequest taskRequest, Optional<SingularitySlaveUsageWithId> maybeSlaveUsage) {
-    double score = 0;
-
     if (!maybeSlaveUsage.isPresent() || !maybeSlaveUsage.get().getCpuTotal().isPresent() || !maybeSlaveUsage.get().getMemoryMbTotal().isPresent()) {
       LOG.info("Slave {} has no total usage data. Will default to {}", offer.getSlaveId().getValue(), configuration.getDefaultOfferScoreForMissingUsage());
       return configuration.getDefaultOfferScoreForMissingUsage();
     }
 
     SingularitySlaveUsageWithId slaveUsage = maybeSlaveUsage.get();
-    Map<RequestType, Map<ResourceUsageType, Number>> usagesPerRequestType = slaveUsage.getUsagePerRequestType();
-    Map<ResourceUsageType, Number> usagePerResource = usagesPerRequestType.get(taskRequest.getRequest().getRequestType());
+    Map<ResourceUsageType, Number> longRunningTasksUsage = slaveUsage.getLongRunningTasksUsage();
 
-    score += configuration.getRequestTypeCpuWeightForOffer() * (1 - usagePerResource.get(ResourceUsageType.CPU_USED).doubleValue() / slaveUsage.getCpuTotal().get());
-    score += configuration.getRequestTypeMemWeightForOffer() * (1 - ((double) usagePerResource.get(ResourceUsageType.MEMORY_BYTES_USED).longValue() / slaveUsage.getMemoryBytesTotal().get()));
+    double longRunningCpusUsedScore = longRunningTasksUsage.get(ResourceUsageType.CPU_USED).doubleValue() / slaveUsage.getCpuTotal().get();
+    double longRunningMemUsedScore = ((double) longRunningTasksUsage.get(ResourceUsageType.MEMORY_BYTES_USED).longValue() / slaveUsage.getMemoryBytesTotal().get());
 
-    score += configuration.getFreeCpuWeightForOffer() * (MesosUtils.getNumCpus(offer) / slaveUsage.getCpuTotal().get());
-    score += configuration.getFreeMemWeightForOffer() * (MesosUtils.getMemory(offer) / slaveUsage.getMemoryMbTotal().get());
+    double cpusTotalScore = (MesosUtils.getNumCpus(offer) / slaveUsage.getCpuTotal().get());
+    double memTotalScore = (MesosUtils.getMemory(offer) / slaveUsage.getMemoryMbTotal().get());
+
+    return isLongRunning(taskRequest) ? scoreLongRunningTask(longRunningMemUsedScore, memTotalScore, longRunningCpusUsedScore, cpusTotalScore)
+        : scoreNonLongRunningTask(taskRequest, longRunningMemUsedScore, memTotalScore, longRunningCpusUsedScore, cpusTotalScore);
+  }
+
+  private boolean isLongRunning(SingularityTaskRequest taskRequest) {
+    return taskRequest.getRequest().getRequestType().isLongRunning();
+  }
+
+  private double scoreLongRunningTask(double longRunningMemUsedScore, double memTotalScore, double longRunningCpusUsedScore, double cpusTotalScore) {
+    // usage improves score
+    return calculateScore(1 - longRunningMemUsedScore, memTotalScore, 1 - longRunningCpusUsedScore, cpusTotalScore, 0.50, 0.50);
+  }
+
+  private double scoreNonLongRunningTask(SingularityTaskRequest taskRequest, double longRunningMemUsedScore, double memTotalScore, double longRunningCpusUsedScore, double cpusTotalScore) {
+    Optional<SingularityDeployStatistics> statistics = deployManager.getDeployStatistics(taskRequest.getRequest().getId(), taskRequest.getDeploy().getId());
+
+    double freeResourceWeight = 0.75;
+    double usedResourceWeight = 0.25;
+
+    if (statistics.isPresent() && statistics.get().getAverageRuntimeMillis().isPresent()) {
+      final double maxNonLongRunningUsedResourceWeight = configuration.getMaxNonLongRunningUsedResourceWeight();
+      usedResourceWeight = Math.min((double) TimeUnit.MILLISECONDS.toSeconds(statistics.get().getAverageRuntimeMillis().get()) / configuration.getConsiderNonLongRunningTaskLongRunningAfterRunningForSeconds(), 1) * maxNonLongRunningUsedResourceWeight;
+
+      if (usedResourceWeight == maxNonLongRunningUsedResourceWeight) {
+        return scoreLongRunningTask(longRunningMemUsedScore, memTotalScore, longRunningCpusUsedScore, cpusTotalScore);
+      }
+      freeResourceWeight = 1 - usedResourceWeight;
+    }
+
+    // usage reduces score
+    return calculateScore(longRunningMemUsedScore, memTotalScore, longRunningCpusUsedScore, cpusTotalScore, freeResourceWeight, usedResourceWeight * -1);
+  }
+
+  private double calculateScore(double longRunningMemUsedScore, double memTotalScore, double longRunningCpusUsedScore, double cpusTotalScore, double freeResourceWeight, double usedResourceWeight) {
+    double score = 0;
+
+    score += (configuration.getUsedCpuWeightForOffer() * usedResourceWeight) * longRunningCpusUsedScore;
+    score += (configuration.getUsedMemWeightForOffer() * usedResourceWeight) * longRunningMemUsedScore;
+
+    score += (configuration.getFreeCpuWeightForOffer() * freeResourceWeight) * cpusTotalScore;
+    score += (configuration.getFreeMemWeightForOffer() * freeResourceWeight) * memTotalScore;
 
     return score;
   }
