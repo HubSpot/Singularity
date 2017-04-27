@@ -1,8 +1,8 @@
 package com.hubspot.singularity;
 
 import java.util.Map;
-import java.util.Optional;
 
+import com.google.common.base.Optional;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -20,7 +20,7 @@ public class SingularitySlaveUsage {
   private final double cpusUsed;
   private final Optional<Long> memoryMbTotal;
   private final Optional<Double> cpuTotal;
-  private final Map<RequestType, Map<ResourceUsageType, Number>> usagePerRequestType;
+  private final Map<ResourceUsageType, Number> longRunningTasksUsage;
 
   @JsonCreator
   public SingularitySlaveUsage(@JsonProperty("memoryBytesUsed") long memoryBytesUsed,
@@ -29,14 +29,14 @@ public class SingularitySlaveUsage {
                                @JsonProperty("numTasks") int numTasks,
                                @JsonProperty("memoryMbTotal") Optional<Long> memoryMbTotal,
                                @JsonProperty("cpuTotal") Optional<Double> cpuTotal,
-                               @JsonProperty("usagePerRequestType") Map<RequestType, Map<ResourceUsageType, Number>> usagePerRequestType) {
+                               @JsonProperty("longRunningTasksUsage") Map<ResourceUsageType, Number> longRunningTasksUsage) {
     this.memoryBytesUsed = memoryBytesUsed;
     this.timestamp = timestamp;
     this.cpusUsed = cpusUsed;
     this.numTasks = numTasks;
     this.memoryMbTotal = memoryMbTotal;
     this.cpuTotal = cpuTotal;
-    this.usagePerRequestType = usagePerRequestType;
+    this.longRunningTasksUsage = longRunningTasksUsage;
   }
 
   public long getMemoryBytesUsed() {
@@ -56,19 +56,19 @@ public class SingularitySlaveUsage {
   }
 
   public Optional<Long> getMemoryBytesTotal() {
-    return memoryMbTotal.isPresent() ? Optional.of(memoryMbTotal.get() * BYTES_PER_MEGABYTE) : Optional.empty();
+    return memoryMbTotal.isPresent() ? Optional.of(memoryMbTotal.get() * BYTES_PER_MEGABYTE) : Optional.absent();
   }
 
   public Optional<Long> getMemoryMbTotal() {
-    return memoryMbTotal.isPresent() ? Optional.of(memoryMbTotal.get()) : Optional.empty();
+    return memoryMbTotal.isPresent() ? Optional.of(memoryMbTotal.get()) : Optional.absent();
   }
 
   public Optional<Double> getCpuTotal() {
     return cpuTotal;
   }
 
-  public Map<RequestType, Map<ResourceUsageType, Number>> getUsagePerRequestType() {
-    return usagePerRequestType;
+  public Map<ResourceUsageType, Number> getLongRunningTasksUsage() {
+    return longRunningTasksUsage;
   }
 
   @Override

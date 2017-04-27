@@ -3,17 +3,17 @@ package com.hubspot.singularity.scheduler;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
+import com.google.common.base.Optional;
 import com.hubspot.mesos.client.MesosClient;
 import com.hubspot.mesos.json.MesosTaskMonitorObject;
 import com.hubspot.singularity.RequestType;
+import com.hubspot.singularity.SingularityDeployStatistics;
 import com.hubspot.singularity.SingularitySlave;
 import com.hubspot.singularity.SingularitySlaveUsage;
 import com.hubspot.singularity.SingularitySlaveUsage.ResourceUsageType;
@@ -21,6 +21,7 @@ import com.hubspot.singularity.SingularityTaskCurrentUsage;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTaskUsage;
 import com.hubspot.singularity.config.SingularityConfiguration;
+import com.hubspot.singularity.data.DeployManager;
 import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.data.UsageManager;
 import com.hubspot.singularity.sentry.SingularityExceptionNotifier;
@@ -35,6 +36,7 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
   private final SingularityUsageHelper usageHelper;
   private final SingularityExceptionNotifier exceptionNotifier;
   private final RequestManager requestManager;
+  private final DeployManager deployManager;
 
   @Inject
   SingularityUsagePoller(SingularityConfiguration configuration,
@@ -42,7 +44,8 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
                          UsageManager usageManager,
                          MesosClient mesosClient,
                          SingularityExceptionNotifier exceptionNotifier,
-                         RequestManager requestManager) {
+                         RequestManager requestManager,
+                         DeployManager deployManager) {
     super(configuration.getCheckUsageEveryMillis(), TimeUnit.MILLISECONDS);
 
     this.configuration = configuration;
@@ -51,16 +54,18 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
     this.usageManager = usageManager;
     this.exceptionNotifier = exceptionNotifier;
     this.requestManager = requestManager;
+    this.deployManager = deployManager;
   }
 
   @Override
   public void runActionOnPoll() {
     final long now = System.currentTimeMillis();
-    Map<RequestType, Map<ResourceUsageType, Number>> usagesPerRequestType = new HashMap<>();
+
+    Map<ResourceUsageType, Number> longRunningTasksUsage = new HashMap<>();
 
     for (SingularitySlave slave : usageHelper.getSlavesToTrackUsageFor()) {
-      Optional<Long> memoryMbTotal = Optional.empty();
-      Optional<Double> cpuTotal = Optional.empty();
+      Optional<Long> memoryMbTotal = Optional.absent();
+      Optional<Double> cpuTotal = Optional.absent();
       long memoryBytesUsed = 0;
       double cpusUsed = 0;
 
@@ -86,7 +91,9 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
 
             double taskCpusUsed = ((usage.getCpuSeconds() - lastUsage.getCpuSeconds()) / (usage.getTimestamp() - lastUsage.getTimestamp()));
 
-            updateUsagesPerRequestType(usagesPerRequestType, getRequestType(taskUsage), usage.getMemoryRssBytes(), taskCpusUsed);
+            if (getRequestType(taskUsage).isLongRunning() ||  isConsideredLongRunning(taskUsage)) {
+              updateLongRunningTasksUsage(longRunningTasksUsage, usage.getMemoryRssBytes(), taskCpusUsed);
+            }
             SingularityTaskCurrentUsage currentUsage = new SingularityTaskCurrentUsage(usage.getMemoryRssBytes(), now, taskCpusUsed);
 
             usageManager.saveCurrentTaskUsage(taskId, currentUsage);
@@ -104,7 +111,7 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
           cpuTotal = Optional.of(slave.getResources().get().getNumCpus().get().doubleValue());
         }
 
-        SingularitySlaveUsage slaveUsage = new SingularitySlaveUsage(memoryBytesUsed, now, cpusUsed, allTaskUsage.size(), memoryMbTotal, cpuTotal, usagesPerRequestType);
+        SingularitySlaveUsage slaveUsage = new SingularitySlaveUsage(memoryBytesUsed, now, cpusUsed, allTaskUsage.size(), memoryMbTotal, cpuTotal, longRunningTasksUsage);
         List<Long> slaveTimestamps = usageManager.getSlaveUsageTimestamps(slave.getId());
         if (slaveTimestamps.size() + 1 > configuration.getNumUsageToKeep()) {
           usageManager.deleteSpecificSlaveUsage(slave.getId(), slaveTimestamps.get(0));
@@ -130,23 +137,19 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
     return requestManager.getRequest(SingularityTaskId.valueOf(task.getSource()).getRequestId()).get().getRequest().getRequestType();
   }
 
-  private void updateUsagesPerRequestType(Map<RequestType, Map<ResourceUsageType, Number>> usagePerRequestType, RequestType type, long memBytesUsed, double cpuUsed) {
-    if (usagePerRequestType.containsKey(type)) {
-      long oldMemUsed = 0L;
-      double oldCpuUsed = 0;
+  private boolean isConsideredLongRunning(MesosTaskMonitorObject task) {
+    SingularityTaskId taskId = SingularityTaskId.valueOf(task.getSource());
+    final Optional<SingularityDeployStatistics> deployStatistics = deployManager.getDeployStatistics(taskId.getRequestId(), taskId.getDeployId());
 
-      if (usagePerRequestType.get(type).containsKey(ResourceUsageType.MEMORY_BYTES_USED)) {
-         oldMemUsed = usagePerRequestType.get(type).get(ResourceUsageType.MEMORY_BYTES_USED).longValue();
-      }
-      if (usagePerRequestType.get(type).containsKey(ResourceUsageType.CPU_USED)) {
-        oldCpuUsed = usagePerRequestType.get(type).get(ResourceUsageType.CPU_USED).doubleValue();
-      }
-
-      usagePerRequestType.get(type).put(ResourceUsageType.MEMORY_BYTES_USED, oldMemUsed + memBytesUsed);
-      usagePerRequestType.get(type).put(ResourceUsageType.CPU_USED, oldCpuUsed + cpuUsed);
-    } else {
-      usagePerRequestType.put(type, ImmutableMap.of(ResourceUsageType.MEMORY_BYTES_USED, memBytesUsed));
-      usagePerRequestType.put(type, ImmutableMap.of(ResourceUsageType.CPU_USED, cpuUsed));
+    if (deployStatistics.isPresent() && deployStatistics.get().getAverageRuntimeMillis().isPresent()) {
+      return deployStatistics.get().getAverageRuntimeMillis().get() >= configuration.getConsiderNonLongRunningTaskLongRunningAfterRunningForSeconds();
     }
+
+    return false;
+  }
+
+  private void updateLongRunningTasksUsage(Map<ResourceUsageType, Number> longRunningTasksUsage, long memBytesUsed, double cpuUsed) {
+    longRunningTasksUsage.compute(ResourceUsageType.MEMORY_BYTES_USED, (k, v) -> (v == null) ? memBytesUsed : v.longValue() + memBytesUsed);
+    longRunningTasksUsage.compute(ResourceUsageType.CPU_USED, (k, v) -> (v == null) ? cpuUsed : v.doubleValue() + cpuUsed);
   }
 }
