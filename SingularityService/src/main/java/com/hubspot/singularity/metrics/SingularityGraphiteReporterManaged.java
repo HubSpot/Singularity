@@ -106,7 +106,9 @@ public class SingularityGraphiteReporterManaged implements Managed {
   @Override
   public void stop() throws Exception {
     if (reporter.isPresent()) {
+      LOG.info("Shutting down graphite reporter");
       reporter.get().stop();
+      LOG.info("Shut down graphite reporter");
     }
   }
 
