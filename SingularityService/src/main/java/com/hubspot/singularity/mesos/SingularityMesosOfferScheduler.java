@@ -311,8 +311,8 @@ public class SingularityMesosOfferScheduler {
   private double calculateScore(double longRunningMemUsedScore, double memTotalScore, double longRunningCpusUsedScore, double cpusTotalScore, double freeResourceWeight, double usedResourceWeight) {
     double score = 0;
 
-    score += (configuration.getUsedCpuWeightForOffer() * usedResourceWeight) * longRunningCpusUsedScore;
-    score += (configuration.getUsedMemWeightForOffer() * usedResourceWeight) * longRunningMemUsedScore;
+    score += (configuration.getLongRunningUsedCpuWeightForOffer() * usedResourceWeight) * longRunningCpusUsedScore;
+    score += (configuration.getLongRunningUsedMemWeightForOffer() * usedResourceWeight) * longRunningMemUsedScore;
 
     score += (configuration.getFreeCpuWeightForOffer() * freeResourceWeight) * cpusTotalScore;
     score += (configuration.getFreeMemWeightForOffer() * freeResourceWeight) * memTotalScore;

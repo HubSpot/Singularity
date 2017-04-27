@@ -65,8 +65,8 @@ public class SingularityMesosOfferSchedulerTest extends SingularityCuratorTestBa
     configuration.setMinOfferScore(0.80);
     configuration.setMaxOfferAttemptsPerTask(20);
     configuration.setMaxMillisPastDuePerTask(TimeUnit.MINUTES.toMillis(10));
-    configuration.setUsedCpuWeightForOffer(0.40);
-    configuration.setUsedMemWeightForOffer(0.60);
+    configuration.setLongRunningUsedCpuWeightForOffer(0.40);
+    configuration.setLongRunningUsedMemWeightForOffer(0.60);
     configuration.setFreeCpuWeightForOffer(0.40);
     configuration.setFreeMemWeightForOffer(0.60);
     configuration.setDefaultOfferScoreForMissingUsage(0.10);

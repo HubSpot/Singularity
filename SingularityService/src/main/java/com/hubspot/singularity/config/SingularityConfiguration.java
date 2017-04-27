@@ -194,9 +194,9 @@ public class SingularityConfiguration extends Configuration {
 
   private long maxMillisPastDuePerTask = TimeUnit.MINUTES.toMillis(10);
 
-  private double usedCpuWeightForOffer = 0.40;
+  private double longRunningUsedCpuWeightForOffer = 0.40;
 
-  private double usedMemWeightForOffer = 0.60;
+  private double longRunningUsedMemWeightForOffer = 0.60;
 
   private double freeCpuWeightForOffer = 0.40;
 
@@ -650,12 +650,12 @@ public class SingularityConfiguration extends Configuration {
     return maxMillisPastDuePerTask;
   }
 
-  public double getUsedCpuWeightForOffer() {
-    return usedCpuWeightForOffer;
+  public double getLongRunningUsedCpuWeightForOffer() {
+    return longRunningUsedCpuWeightForOffer;
   }
 
-  public double getUsedMemWeightForOffer() {
-    return usedMemWeightForOffer;
+  public double getLongRunningUsedMemWeightForOffer() {
+    return longRunningUsedMemWeightForOffer;
   }
 
   public double getFreeCpuWeightForOffer() {
@@ -1052,13 +1052,13 @@ public class SingularityConfiguration extends Configuration {
     return this;
   }
 
-  public SingularityConfiguration setUsedCpuWeightForOffer(double usedCpuWeightForOffer) {
-    this.usedCpuWeightForOffer = usedCpuWeightForOffer;
+  public SingularityConfiguration setLongRunningUsedCpuWeightForOffer(double longRunningUsedCpuWeightForOffer) {
+    this.longRunningUsedCpuWeightForOffer = longRunningUsedCpuWeightForOffer;
     return this;
   }
 
-  public SingularityConfiguration setUsedMemWeightForOffer(double usedMemWeightForOffer) {
-    this.usedMemWeightForOffer = usedMemWeightForOffer;
+  public SingularityConfiguration setLongRunningUsedMemWeightForOffer(double longRunningUsedMemWeightForOffer) {
+    this.longRunningUsedMemWeightForOffer = longRunningUsedMemWeightForOffer;
     return this;
   }
 
