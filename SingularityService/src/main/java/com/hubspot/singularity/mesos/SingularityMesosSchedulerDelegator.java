@@ -27,6 +27,7 @@ import com.google.inject.Inject;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.SingularityAbort;
 import com.hubspot.singularity.SingularityAbort.AbortReason;
+import com.hubspot.singularity.scheduler.SingularityLeaderCacheCoordinator;
 import com.hubspot.singularity.sentry.SingularityExceptionNotifier;
 
 @Singleton
@@ -39,6 +40,7 @@ public class SingularityMesosSchedulerDelegator implements Scheduler {
   private final SingularityMesosScheduler scheduler;
   private final SingularityStartup startup;
   private final SingularityAbort abort;
+  private final SingularityLeaderCacheCoordinator leaderCacheCoordinator;
 
   private final Lock stateLock;
 
@@ -57,13 +59,14 @@ public class SingularityMesosSchedulerDelegator implements Scheduler {
 
   @Inject
   SingularityMesosSchedulerDelegator(SingularitySchedulerLock lock, SingularityExceptionNotifier exceptionNotifier, SingularityMesosScheduler scheduler,
-      SingularityStartup startup, SingularityAbort abort) {
+      SingularityStartup startup, SingularityLeaderCacheCoordinator leaderCacheCoordinator, SingularityAbort abort) {
     this.exceptionNotifier = exceptionNotifier;
 
     this.scheduler = scheduler;
     this.startup = startup;
     this.abort = abort;
 
+    this.leaderCacheCoordinator = leaderCacheCoordinator;
     this.queuedUpdates = Lists.newArrayList();
 
     this.lock = lock;
@@ -86,6 +89,8 @@ public class SingularityMesosSchedulerDelegator implements Scheduler {
 
     state = SchedulerState.STOPPED;
 
+    leaderCacheCoordinator.stopLeaderCache();
+
     LOG.info("Scheduler now in state: {}", state);
   }
 
@@ -101,6 +106,8 @@ public class SingularityMesosSchedulerDelegator implements Scheduler {
     Preconditions.checkState(state == SchedulerState.STARTUP, "Asked to startup - but in invalid state: %s", state.name());
 
     masterInfoHolder.set(masterInfo);
+
+    leaderCacheCoordinator.activateLeaderCache();
 
     startup.startup(masterInfo, driver);
 

@@ -38,6 +38,8 @@ public class SingularityState {
 
   private final long oldestDeploy;
   private final int numDeploys;
+  private final long oldestDeployStep;
+  private final List<SingularityDeployMarker> activeDeploys;
 
   private final long generatedAt;
 
@@ -53,16 +55,20 @@ public class SingularityState {
 
   private final Optional<Double> minimumPriorityLevel;
 
+  private final long avgStatusUpdateDelayMs;
+
   @JsonCreator
   public SingularityState(@JsonProperty("activeTasks") int activeTasks, @JsonProperty("launchingTasks") int launchingTasks, @JsonProperty("activeRequests") int activeRequests, @JsonProperty("cooldownRequests") int cooldownRequests,
       @JsonProperty("pausedRequests") int pausedRequests, @JsonProperty("scheduledTasks") int scheduledTasks, @JsonProperty("pendingRequests") int pendingRequests, @JsonProperty("lbCleanupTasks") int lbCleanupTasks,
       @JsonProperty("lbCleanupRequests") int lbCleanupRequests, @JsonProperty("cleaningRequests") int cleaningRequests, @JsonProperty("activeSlaves") int activeSlaves, @JsonProperty("deadSlaves") int deadSlaves,
       @JsonProperty("decommissioningSlaves") int decommissioningSlaves, @JsonProperty("activeRacks") int activeRacks, @JsonProperty("deadRacks") int deadRacks, @JsonProperty("decommissioningRacks") int decommissioningRacks,
       @JsonProperty("cleaningTasks") int cleaningTasks, @JsonProperty("hostStates") List<SingularityHostState> hostStates, @JsonProperty("oldestDeploy") long oldestDeploy, @JsonProperty("numDeploys") int numDeploys,
+      @JsonProperty("oldestDeployStep") long oldestDeployStep, @JsonProperty("activeDeploys") List<SingularityDeployMarker> activeDeploys,
       @JsonProperty("lateTasks") int lateTasks, @JsonProperty("futureTasks") int futureTasks, @JsonProperty("maxTaskLag") long maxTaskLag, @JsonProperty("generatedAt") long generatedAt,
       @JsonProperty("overProvisionedRequestIds") List<String> overProvisionedRequestIds, @JsonProperty("underProvisionedRequestIds") List<String> underProvisionedRequestIds,
       @JsonProperty("overProvisionedRequests") int overProvisionedRequests, @JsonProperty("underProvisionedRequests") int underProvisionedRequests, @JsonProperty("finishedRequests") int finishedRequests,
-      @JsonProperty("unknownRacks") int unknownRacks, @JsonProperty("unknownSlaves") int unknownSlaves, @JsonProperty("authDatastoreHealthy") Optional<Boolean> authDatastoreHealthy, @JsonProperty("minimumPriorityLevel") Optional<Double> minimumPriorityLevel) {
+      @JsonProperty("unknownRacks") int unknownRacks, @JsonProperty("unknownSlaves") int unknownSlaves, @JsonProperty("authDatastoreHealthy") Optional<Boolean> authDatastoreHealthy, @JsonProperty("minimumPriorityLevel") Optional<Double> minimumPriorityLevel,
+      @JsonProperty("avgStatusUpdateDelayMs") long avgStatusUpdateDelayMs) {
     this.activeTasks = activeTasks;
     this.launchingTasks = launchingTasks;
     this.activeRequests = activeRequests;
@@ -88,6 +94,8 @@ public class SingularityState {
     this.maxTaskLag = maxTaskLag;
     this.oldestDeploy = oldestDeploy;
     this.numDeploys = numDeploys;
+    this.oldestDeployStep = oldestDeployStep;
+    this.activeDeploys = activeDeploys;
     this.lbCleanupTasks = lbCleanupTasks;
     this.lbCleanupRequests = lbCleanupRequests;
     this.underProvisionedRequests = underProvisionedRequests;
@@ -96,6 +104,7 @@ public class SingularityState {
     this.underProvisionedRequestIds = underProvisionedRequestIds;
     this.authDatastoreHealthy = authDatastoreHealthy;
     this.minimumPriorityLevel = minimumPriorityLevel;
+    this.avgStatusUpdateDelayMs = avgStatusUpdateDelayMs;
   }
 
   public int getFinishedRequests() {
@@ -112,6 +121,14 @@ public class SingularityState {
 
   public int getNumDeploys() {
     return numDeploys;
+  }
+
+  public long getOldestDeployStep() {
+    return oldestDeployStep;
+  }
+
+  public List<SingularityDeployMarker> getActiveDeploys() {
+    return activeDeploys;
   }
 
   public int getPausedRequests() {
@@ -244,6 +261,10 @@ public class SingularityState {
     return minimumPriorityLevel;
   }
 
+  public long getAvgStatusUpdateDelayMs() {
+    return avgStatusUpdateDelayMs;
+  }
+
   @Override
   public String toString() {
     return "SingularityState{" +
@@ -272,6 +293,8 @@ public class SingularityState {
         ", unknownRacks=" + unknownRacks +
         ", oldestDeploy=" + oldestDeploy +
         ", numDeploys=" + numDeploys +
+        ", oldestDeployStep=" + oldestDeployStep +
+        ", activeDeploys=" + activeDeploys +
         ", generatedAt=" + generatedAt +
         ", hostStates=" + hostStates +
         ", overProvisionedRequestIds=" + overProvisionedRequestIds +
@@ -280,6 +303,7 @@ public class SingularityState {
         ", underProvisionedRequests=" + underProvisionedRequests +
         ", authDatastoreHealthy=" + authDatastoreHealthy +
         ", minimumPriorityLevel=" + minimumPriorityLevel +
+        ", avgStatusUpdateDelayMs=" + avgStatusUpdateDelayMs +
         '}';
   }
 }

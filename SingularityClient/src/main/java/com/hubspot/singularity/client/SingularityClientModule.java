@@ -5,6 +5,7 @@ import java.util.List;
 import org.apache.curator.framework.CuratorFramework;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.base.Optional;
 import com.google.inject.AbstractModule;
 import com.google.inject.Binder;
 import com.google.inject.Scopes;
@@ -33,20 +34,30 @@ public class SingularityClientModule extends AbstractModule {
   public static final String CREDENTIALS_PROPERTY_NAME = "singularity.client.credentials";
 
   private final List<String> hosts;
+  private final Optional<HttpConfig> httpConfig;
+
+  public SingularityClientModule(HttpConfig httpConfig) {
+    this(null, httpConfig);
+  }
 
   public SingularityClientModule() {
-    this(null);
+    this(null, null);
   }
 
   public SingularityClientModule(List<String> hosts) {
+    this(hosts, null);
+  }
+
+  public SingularityClientModule(List<String> hosts, HttpConfig httpConfig) {
     this.hosts = hosts;
+    this.httpConfig = Optional.fromNullable(httpConfig);
   }
 
   @Override
   protected void configure() {
     ObjectMapper objectMapper = JavaUtils.newObjectMapper();
 
-    HttpClient httpClient = new NingHttpClient(HttpConfig.newBuilder().setObjectMapper(objectMapper).build());
+    HttpClient httpClient = new NingHttpClient(httpConfig.or(HttpConfig.newBuilder().setObjectMapper(objectMapper).build()));
     bind(HttpClient.class).annotatedWith(Names.named(HTTP_CLIENT_NAME)).toInstance(httpClient);
 
     bind(SingularityClient.class).toProvider(SingularityClientProvider.class).in(Scopes.SINGLETON);
