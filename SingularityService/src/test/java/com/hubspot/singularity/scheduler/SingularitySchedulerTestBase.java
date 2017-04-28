@@ -167,6 +167,9 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
   protected SingularityAutoScaleSpreadAllPoller spreadAllPoller;
 
   @Inject
+  protected SingularityLeaderCacheCoordinator cacheCoordinator;
+
+  @Inject
   @Named(SingularityMainModule.SERVER_ID_PROPERTY)
   protected String serverId;
 
@@ -197,6 +200,8 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
   @Before
   public final void setupDriver() throws Exception {
     driver = driverSupplier.get().get();
+
+    cacheCoordinator.activateLeaderCache();
 
     migrationRunner.checkMigrations();
   }
@@ -447,7 +452,7 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
   protected SingularityDeploy deployRequest(SingularityRequest request, double cpus, double memoryMb) {
     Resources r = new Resources(cpus, memoryMb, 0);
 
-    SingularityDeploy deploy = new SingularityDeployBuilder(request.getId(), "d1")
+    SingularityDeploy deploy = new SingularityDeployBuilder(request.getId(), "deploy1")
         .setCommand(Optional.of("sleep 1"))
         .setResources(Optional.of(r))
         .build();

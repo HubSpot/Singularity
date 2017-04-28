@@ -2,6 +2,9 @@ package com.hubspot.singularity.resources;
 
 import static com.hubspot.singularity.WebExceptions.checkNotFound;
 
+import org.apache.curator.framework.recipes.leader.LeaderLatch;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
 import com.hubspot.singularity.SingularityAuthorizationScope;
 import com.hubspot.singularity.SingularityDeploy;
@@ -16,8 +19,9 @@ import com.hubspot.singularity.auth.SingularityAuthorizationHelper;
 import com.hubspot.singularity.data.DeployManager;
 import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.data.SingularityValidator;
+import com.ning.http.client.AsyncHttpClient;
 
-public class AbstractRequestResource {
+public class AbstractRequestResource extends AbstractLeaderAwareResource {
 
   protected final RequestManager requestManager;
   protected final DeployManager deployManager;
@@ -25,7 +29,9 @@ public class AbstractRequestResource {
   protected final SingularityValidator validator;
   protected final SingularityAuthorizationHelper authorizationHelper;
 
-  public AbstractRequestResource(RequestManager requestManager, DeployManager deployManager, Optional<SingularityUser> user, SingularityValidator validator, SingularityAuthorizationHelper authorizationHelper) {
+  public AbstractRequestResource(RequestManager requestManager, DeployManager deployManager, Optional<SingularityUser> user, SingularityValidator validator, SingularityAuthorizationHelper authorizationHelper,
+                                 AsyncHttpClient httpClient, LeaderLatch leaderLatch, ObjectMapper objectMapper) {
+    super(httpClient, leaderLatch, objectMapper);
     this.requestManager = requestManager;
     this.deployManager = deployManager;
     this.user = user;
@@ -34,7 +40,11 @@ public class AbstractRequestResource {
   }
 
   protected SingularityRequestWithState fetchRequestWithState(String requestId) {
-    Optional<SingularityRequestWithState> request = requestManager.getRequest(requestId);
+    return fetchRequestWithState(requestId, false);
+  }
+
+  protected SingularityRequestWithState fetchRequestWithState(String requestId, boolean useWebCache) {
+    Optional<SingularityRequestWithState> request = requestManager.getRequest(requestId, useWebCache);
 
     checkNotFound(request.isPresent(), "Couldn't find request with id %s", requestId);
 

@@ -8,7 +8,9 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.atomic.AtomicLong;
 
 import javax.inject.Inject;
 import javax.inject.Provider;
@@ -23,7 +25,6 @@ import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.codahale.metrics.Meter;
 import com.codahale.metrics.MetricRegistry;
-import com.codahale.metrics.Timer;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
@@ -106,7 +107,8 @@ public class SingularityMainModule implements Module {
 
   public static final String LOST_TASKS_METER = "singularity.lost.tasks.meter";
 
-  public static final String STATUS_UPDATE_DELTA_TIMER = "singularity.status.update.delta.timer";
+  public static final String STATUS_UPDATE_DELTA_30S_AVERAGE = "singularity.status.update.delta.minute.average";
+  public static final String STATUS_UPDATE_DELTAS = "singularity.status.update.deltas";
 
   private final SingularityConfiguration configuration;
 
@@ -153,7 +155,7 @@ public class SingularityMainModule implements Module {
     binder.bind(ObjectMapper.class).toProvider(DropwizardObjectMapperProvider.class).in(Scopes.SINGLETON);
     binder.bind(MetricRegistry.class).toProvider(DropwizardMetricRegistryProvider.class).in(Scopes.SINGLETON);
 
-    binder.bind(AsyncHttpClient.class).to(SingularityHttpClient.class).in(Scopes.SINGLETON);
+    binder.bind(AsyncHttpClient.class).to(SingularityAsyncHttpClient.class).in(Scopes.SINGLETON);
     binder.bind(ServerProvider.class).in(Scopes.SINGLETON);
 
     binder.bind(SingularityDropwizardHealthcheck.class).in(Scopes.SINGLETON);
@@ -365,8 +367,15 @@ public class SingularityMainModule implements Module {
 
   @Provides
   @Singleton
-  @Named(STATUS_UPDATE_DELTA_TIMER)
-  public Timer providesStatusUpdateDeltaMeter(MetricRegistry registry) {
-    return registry.timer("com.hubspot.singularity.statusUpdateDelta");
+  @Named(STATUS_UPDATE_DELTA_30S_AVERAGE)
+  public AtomicLong provideDeltasMap() {
+    return new AtomicLong(0);
+  }
+
+  @Provides
+  @Singleton
+  @Named(STATUS_UPDATE_DELTAS)
+  public ConcurrentHashMap<Long, Long> provideUpdateDeltasMap() {
+    return new ConcurrentHashMap<>();
   }
 }

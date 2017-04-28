@@ -60,6 +60,7 @@ import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskCleanupResult;
 import com.hubspot.singularity.SingularityTaskHistory;
 import com.hubspot.singularity.SingularityTaskHistoryUpdate;
+import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTaskIdHistory;
 import com.hubspot.singularity.SingularityTaskReconciliationStatistics;
 import com.hubspot.singularity.SingularityTaskRequest;
@@ -127,6 +128,7 @@ public class SingularityClient {
 
   private static final String REQUEST_GET_FORMAT = REQUESTS_FORMAT + "/request/%s";
   private static final String REQUEST_CREATE_OR_UPDATE_FORMAT = REQUESTS_FORMAT;
+  private static final String REQUEST_BY_RUN_ID_FORMAT = REQUEST_GET_FORMAT + "/run/%s";
   private static final String REQUEST_DELETE_ACTIVE_FORMAT = REQUESTS_FORMAT + "/request/%s";
   private static final String REQUEST_BOUNCE_FORMAT = REQUESTS_FORMAT + "/request/%s/bounce";
   private static final String REQUEST_PAUSE_FORMAT = REQUESTS_FORMAT + "/request/%s/pause";
@@ -528,6 +530,12 @@ public class SingularityClient {
     final String singularityApiRequestUri = String.format(REQUEST_GET_FORMAT, getHost(), contextPath, requestId);
 
     return getSingle(singularityApiRequestUri, "request", requestId, SingularityRequestParent.class);
+  }
+
+  public Optional<SingularityTaskId> getTaskByRunIdForRequest(String requestId, String runId) {
+    final String singularityApiRequestUri = String.format(REQUEST_BY_RUN_ID_FORMAT, getHost(), contextPath, requestId, runId);
+
+    return getSingle(singularityApiRequestUri, "requestByRunId", runId, SingularityTaskId.class);
   }
 
   public void createOrUpdateSingularityRequest(SingularityRequest request) {

@@ -1,10 +1,15 @@
 package com.hubspot.singularity.scheduler;
 
+import java.util.concurrent.TimeUnit;
+
+import javax.inject.Singleton;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.google.common.base.Optional;
 import com.google.inject.Inject;
-import com.google.inject.name.Named;
 import com.hubspot.singularity.MachineState;
-import com.hubspot.singularity.RequestState;
 import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityRequestHistory;
 import com.hubspot.singularity.SingularityRequestWithState;
@@ -14,13 +19,7 @@ import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.data.SlaveManager;
 import com.hubspot.singularity.helpers.RequestHelper;
-import com.hubspot.singularity.mesos.SingularityMesosModule;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import javax.inject.Singleton;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.locks.Lock;
+import com.hubspot.singularity.mesos.SingularitySchedulerLock;
 
 @Singleton
 public class SingularityAutoScaleSpreadAllPoller extends SingularityLeaderOnlyPoller {
@@ -31,14 +30,16 @@ public class SingularityAutoScaleSpreadAllPoller extends SingularityLeaderOnlyPo
   private final RequestManager requestManager;
   private final SlavePlacement defaultSlavePlacement;
   private final RequestHelper requestHelper;
+  private final boolean spreadAllSlavesEnabled;
 
   @Inject
-  SingularityAutoScaleSpreadAllPoller(SingularityConfiguration configuration, SlaveManager slaveManager, RequestManager requestManager, RequestHelper requestHelper, @Named(SingularityMesosModule.SCHEDULER_LOCK_NAME) final Lock lock) {
-    super(configuration.getCheckAutoSpreadAllSlavesEverySeconds(), TimeUnit.SECONDS, lock);
+  SingularityAutoScaleSpreadAllPoller(SingularityConfiguration configuration, SlaveManager slaveManager, RequestManager requestManager, RequestHelper requestHelper, SingularitySchedulerLock lock) {
+    super(configuration.getCheckAutoSpreadAllSlavesEverySeconds(), TimeUnit.SECONDS, lock, true);
     this.slaveManager = slaveManager;
     this.requestManager = requestManager;
     this.defaultSlavePlacement = configuration.getDefaultSlavePlacement();
     this.requestHelper = requestHelper;
+    this.spreadAllSlavesEnabled = configuration.isSpreadAllSlavesEnabled();
   }
 
   @Override
@@ -48,7 +49,6 @@ public class SingularityAutoScaleSpreadAllPoller extends SingularityLeaderOnlyPo
     for (SingularityRequestWithState requestWithState : requestManager.getActiveRequests()) {
       SingularityRequest request = requestWithState.getRequest();
       SlavePlacement placement = request.getSlavePlacement().or(defaultSlavePlacement);
-      RequestState state = requestWithState.getState();
 
       if (placement != SlavePlacement.SPREAD_ALL_SLAVES) {
         continue;
@@ -72,6 +72,11 @@ public class SingularityAutoScaleSpreadAllPoller extends SingularityLeaderOnlyPo
     Optional<String> message = Optional.of(String.format("Auto scale number of instances to spread to all %d available slaves", newRequestedInstances));
 
     requestHelper.updateRequest(newRequest, Optional.of(oldRequest), oldRequestWithState.getState(), historyType, Optional.<String>absent(), oldRequest.getSkipHealthchecks(), message, Optional.<SingularityBounceRequest>absent());
+  }
+
+  @Override
+  public boolean isEnabled() {
+    return spreadAllSlavesEnabled;
   }
 
 }
