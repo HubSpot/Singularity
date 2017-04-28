@@ -199,6 +199,8 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
 
   @Before
   public final void setupDriver() throws Exception {
+    configuration.setMinOfferScore(0.00); // disable task balancing
+
     driver = driverSupplier.get().get();
 
     cacheCoordinator.activateLeaderCache();
