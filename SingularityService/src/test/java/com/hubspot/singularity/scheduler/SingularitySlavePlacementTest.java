@@ -305,7 +305,7 @@ public class SingularitySlavePlacementTest extends SingularitySchedulerTestBase 
     sms.resourceOffers(driver, Arrays.asList(createOffer(1, 128, "slave2", "host2", Optional.of("rack1"))));
     Assert.assertEquals(2, taskManager.getActiveTaskIds().size());
 
-    requestResource.bounce(requestId);
+    requestResource.bounce(requestId, Optional.absent());
     cleaner.drainCleanupQueue();
     scheduler.drainPendingQueue(stateCacheProvider.get());
 

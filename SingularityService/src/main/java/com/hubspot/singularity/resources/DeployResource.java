@@ -6,6 +6,7 @@ import static com.hubspot.singularity.WebExceptions.checkNotNullBadRequest;
 
 import java.util.Collections;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -13,8 +14,12 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 
+import org.apache.curator.framework.recipes.leader.LeaderLatch;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.hubspot.jackson.jaxrs.PropertyFiltering;
@@ -47,6 +52,7 @@ import com.hubspot.singularity.data.DeployManager;
 import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.data.SingularityValidator;
 import com.hubspot.singularity.data.TaskManager;
+import com.ning.http.client.AsyncHttpClient;
 import com.wordnik.swagger.annotations.Api;
 import com.wordnik.swagger.annotations.ApiOperation;
 import com.wordnik.swagger.annotations.ApiParam;
@@ -62,8 +68,10 @@ public class DeployResource extends AbstractRequestResource {
   private final TaskManager taskManager;
 
   @Inject
-  public DeployResource(RequestManager requestManager, DeployManager deployManager, SingularityValidator validator, SingularityAuthorizationHelper authorizationHelper, Optional<SingularityUser> user, SingularityConfiguration configuration, TaskManager taskManager) {
-    super(requestManager, deployManager, user, validator, authorizationHelper);
+  public DeployResource(RequestManager requestManager, DeployManager deployManager, SingularityValidator validator, SingularityAuthorizationHelper authorizationHelper, Optional<SingularityUser> user,
+                        SingularityConfiguration configuration, TaskManager taskManager, LeaderLatch leaderLatch,
+                        AsyncHttpClient httpClient, ObjectMapper objectMapper) {
+    super(requestManager, deployManager, user, validator, authorizationHelper, httpClient, leaderLatch, objectMapper);
     this.configuration = configuration;
     this.taskManager = taskManager;
   }
@@ -83,7 +91,11 @@ public class DeployResource extends AbstractRequestResource {
     @ApiResponse(code=400, message="Deploy object is invalid"),
     @ApiResponse(code=409, message="A current deploy is in progress. It may be canceled by calling DELETE"),
   })
-  public SingularityRequestParent deploy(@ApiParam(required=true) SingularityDeployRequest deployRequest) {
+  public SingularityRequestParent deploy(@Context HttpServletRequest requestContext, @ApiParam(required=true) SingularityDeployRequest deployRequest) {
+    return maybeProxyToLeader(requestContext, SingularityRequestParent.class, deployRequest, () -> deploy(deployRequest));
+  }
+
+  public SingularityRequestParent deploy(SingularityDeployRequest deployRequest) {
     validator.checkActionEnabled(SingularityAction.DEPLOY);
     SingularityDeploy deploy = deployRequest.getDeploy();
     checkNotNullBadRequest(deploy, "DeployRequest must have a deploy object");

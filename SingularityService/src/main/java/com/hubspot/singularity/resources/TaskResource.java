@@ -7,6 +7,7 @@ import static com.hubspot.singularity.WebExceptions.notFound;
 import java.util.Collections;
 import java.util.List;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -14,14 +15,18 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
+import org.apache.curator.framework.recipes.leader.LeaderLatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
@@ -65,6 +70,7 @@ import com.hubspot.singularity.data.SingularityValidator;
 import com.hubspot.singularity.data.SlaveManager;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.data.TaskRequestManager;
+import com.ning.http.client.AsyncHttpClient;
 import com.wordnik.swagger.annotations.Api;
 import com.wordnik.swagger.annotations.ApiOperation;
 import com.wordnik.swagger.annotations.ApiResponse;
@@ -73,7 +79,7 @@ import com.wordnik.swagger.annotations.ApiResponses;
 @Path(TaskResource.PATH)
 @Produces({ MediaType.APPLICATION_JSON })
 @Api(description="Manages Singularity tasks.", value=TaskResource.PATH)
-public class TaskResource {
+public class TaskResource extends AbstractLeaderAwareResource {
   public static final String PATH = SingularityService.API_BASE_PATH + "/tasks";
   private static final Logger LOG = LoggerFactory.getLogger(TaskResource.class);
 
@@ -90,7 +96,9 @@ public class TaskResource {
 
   @Inject
   public TaskResource(TaskRequestManager taskRequestManager, TaskManager taskManager, SlaveManager slaveManager, MesosClient mesosClient, SingularityTaskMetadataConfiguration taskMetadataConfiguration,
-      SingularityAuthorizationHelper authorizationHelper, Optional<SingularityUser> user, RequestManager requestManager, SingularityValidator validator, DisasterManager disasterManager) {
+                      SingularityAuthorizationHelper authorizationHelper, Optional<SingularityUser> user, RequestManager requestManager, SingularityValidator validator, DisasterManager disasterManager,
+                      AsyncHttpClient httpClient, LeaderLatch leaderLatch, ObjectMapper objectMapper) {
+    super(httpClient, leaderLatch, objectMapper);
     this.taskManager = taskManager;
     this.taskRequestManager = taskRequestManager;
     this.taskMetadataConfiguration = taskMetadataConfiguration;
@@ -107,21 +115,22 @@ public class TaskResource {
   @PropertyFiltering
   @Path("/scheduled")
   @ApiOperation("Retrieve list of scheduled tasks.")
-  public List<SingularityTaskRequest> getScheduledTasks() {
+  public List<SingularityTaskRequest> getScheduledTasks(@QueryParam("useWebCache") Boolean useWebCache) {
     if (!authorizationHelper.hasAdminAuthorization(user) && disasterManager.isDisabled(SingularityAction.EXPENSIVE_API_CALLS)) {
       LOG.trace("Short circuting getScheduledTasks() to [] due to EXPENSIVE_API_CALLS disabled");
       return Collections.emptyList();
     }
 
-    return taskRequestManager.getTaskRequests(ImmutableList.copyOf(authorizationHelper.filterByAuthorizedRequests(user, taskManager.getPendingTasks(), SingularityTransformHelpers.PENDING_TASK_TO_REQUEST_ID, SingularityAuthorizationScope.READ)));
+    return taskRequestManager.getTaskRequests(ImmutableList.copyOf(authorizationHelper.filterByAuthorizedRequests(user,
+        taskManager.getPendingTasks(useWebCache(useWebCache)), SingularityTransformHelpers.PENDING_TASK_TO_REQUEST_ID, SingularityAuthorizationScope.READ)));
   }
 
   @GET
   @PropertyFiltering
   @Path("/scheduled/ids")
   @ApiOperation("Retrieve list of scheduled task IDs.")
-  public Iterable<SingularityPendingTaskId> getScheduledTaskIds() {
-    return authorizationHelper.filterByAuthorizedRequests(user, taskManager.getPendingTaskIds(), SingularityTransformHelpers.PENDING_TASK_ID_TO_REQUEST_ID, SingularityAuthorizationScope.READ);
+  public Iterable<SingularityPendingTaskId> getScheduledTaskIds(@QueryParam("useWebCache") Boolean useWebCache) {
+    return authorizationHelper.filterByAuthorizedRequests(user, taskManager.getPendingTaskIds(useWebCache(useWebCache)), SingularityTransformHelpers.PENDING_TASK_ID_TO_REQUEST_ID, SingularityAuthorizationScope.READ);
   }
 
   private SingularityPendingTaskId getPendingTaskIdFromStr(String pendingTaskIdStr) {
@@ -162,10 +171,10 @@ public class TaskResource {
   @PropertyFiltering
   @Path("/scheduled/request/{requestId}")
   @ApiOperation("Retrieve list of scheduled tasks for a specific request.")
-  public List<SingularityTaskRequest> getScheduledTasksForRequest(@PathParam("requestId") String requestId) {
+  public List<SingularityTaskRequest> getScheduledTasksForRequest(@PathParam("requestId") String requestId, @QueryParam("useWebCache") Boolean useWebCache) {
     authorizationHelper.checkForAuthorizationByRequestId(requestId, user, SingularityAuthorizationScope.READ);
 
-    final List<SingularityPendingTask> tasks = Lists.newArrayList(Iterables.filter(taskManager.getPendingTasks(), SingularityPendingTask.matchingRequest(requestId)));
+    final List<SingularityPendingTask> tasks = Lists.newArrayList(Iterables.filter(taskManager.getPendingTasks(useWebCache(useWebCache)), SingularityPendingTask.matchingRequest(requestId)));
 
     return taskRequestManager.getTaskRequests(tasks);
   }
@@ -173,33 +182,33 @@ public class TaskResource {
   @GET
   @Path("/active/slave/{slaveId}")
   @ApiOperation("Retrieve list of active tasks on a specific slave.")
-  public Iterable<SingularityTask> getTasksForSlave(@PathParam("slaveId") String slaveId) {
+  public Iterable<SingularityTask> getTasksForSlave(@PathParam("slaveId") String slaveId, @QueryParam("useWebCache") Boolean useWebCache) {
     Optional<SingularitySlave> maybeSlave = slaveManager.getObject(slaveId);
 
     checkNotFound(maybeSlave.isPresent(), "Couldn't find a slave in any state with id %s", slaveId);
 
-    return authorizationHelper.filterByAuthorizedRequests(user, taskManager.getTasksOnSlave(taskManager.getActiveTaskIds(), maybeSlave.get()), SingularityTransformHelpers.TASK_TO_REQUEST_ID, SingularityAuthorizationScope.READ);
+    return authorizationHelper.filterByAuthorizedRequests(user, taskManager.getTasksOnSlave(taskManager.getActiveTaskIds(useWebCache(useWebCache)), maybeSlave.get()), SingularityTransformHelpers.TASK_TO_REQUEST_ID, SingularityAuthorizationScope.READ);
   }
 
   @GET
   @PropertyFiltering
   @Path("/active")
   @ApiOperation("Retrieve the list of active tasks.")
-  public Iterable<SingularityTask> getActiveTasks() {
-    return authorizationHelper.filterByAuthorizedRequests(user, taskManager.getActiveTasks(), SingularityTransformHelpers.TASK_TO_REQUEST_ID, SingularityAuthorizationScope.READ);
+  public Iterable<SingularityTask> getActiveTasks(@QueryParam("useWebCache") Boolean useWebCache) {
+    return authorizationHelper.filterByAuthorizedRequests(user, taskManager.getActiveTasks(useWebCache(useWebCache)), SingularityTransformHelpers.TASK_TO_REQUEST_ID, SingularityAuthorizationScope.READ);
   }
 
   @GET
   @PropertyFiltering
   @Path("/cleaning")
   @ApiOperation("Retrieve the list of cleaning tasks.")
-  public Iterable<SingularityTaskCleanup> getCleaningTasks() {
+  public Iterable<SingularityTaskCleanup> getCleaningTasks(@QueryParam("useWebCache") Boolean useWebCache) {
     if (!authorizationHelper.hasAdminAuthorization(user) && disasterManager.isDisabled(SingularityAction.EXPENSIVE_API_CALLS)) {
       LOG.trace("Short circuting getCleaningTasks() to [] due to EXPENSIVE_API_CALLS disabled");
       return Collections.emptyList();
     }
 
-    return authorizationHelper.filterByAuthorizedRequests(user, taskManager.getCleanupTasks(), SingularityTransformHelpers.TASK_CLEANUP_TO_REQUEST_ID, SingularityAuthorizationScope.READ);
+    return authorizationHelper.filterByAuthorizedRequests(user, taskManager.getCleanupTasks(useWebCache(useWebCache)), SingularityTransformHelpers.TASK_CLEANUP_TO_REQUEST_ID, SingularityAuthorizationScope.READ);
   }
 
   @GET
@@ -272,8 +281,8 @@ public class TaskResource {
 
   @DELETE
   @Path("/task/{taskId}")
-  public SingularityTaskCleanup killTask(@PathParam("taskId") String taskId) {
-    return killTask(taskId, Optional.<SingularityKillTaskRequest> absent());
+  public SingularityTaskCleanup killTask(@PathParam("taskId") String taskId, @Context HttpServletRequest requestContext) {
+    return killTask(taskId, requestContext, Optional.absent());
   }
 
   @DELETE
@@ -283,7 +292,12 @@ public class TaskResource {
   @ApiResponses({
     @ApiResponse(code=409, message="Task already has a cleanup request (can be overridden with override=true)")
   })
-  public SingularityTaskCleanup killTask(@PathParam("taskId") String taskId, Optional<SingularityKillTaskRequest> killTaskRequest) {
+  public SingularityTaskCleanup killTask(@PathParam("taskId") String taskId, @Context HttpServletRequest requestContext, Optional<SingularityKillTaskRequest> killTaskRequest
+                                         ) {
+    return maybeProxyToLeader(requestContext, SingularityTaskCleanup.class, killTaskRequest.orNull(), () -> killTask(taskId, killTaskRequest));
+  }
+
+  public SingularityTaskCleanup killTask(String taskId, Optional<SingularityKillTaskRequest> killTaskRequest) {
     final SingularityTask task = checkActiveTask(taskId, SingularityAuthorizationScope.WRITE);
 
     Optional<String> message = Optional.absent();

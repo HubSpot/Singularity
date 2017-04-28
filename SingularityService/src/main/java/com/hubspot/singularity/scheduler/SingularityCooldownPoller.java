@@ -15,7 +15,7 @@ public class SingularityCooldownPoller extends SingularityLeaderOnlyPoller {
 
   @Inject
   SingularityCooldownPoller(SingularityConfiguration configuration, SingularityCooldownChecker checker, SingularitySchedulerLock lock) {
-    super(TimeUnit.MINUTES.toMillis(configuration.getCooldownExpiresAfterMinutes()) / 2, TimeUnit.MILLISECONDS, lock);
+    super(TimeUnit.MINUTES.toMillis(configuration.getCooldownExpiresAfterMinutes()) / 2, TimeUnit.MILLISECONDS, lock, true);
 
     this.checker = checker;
   }

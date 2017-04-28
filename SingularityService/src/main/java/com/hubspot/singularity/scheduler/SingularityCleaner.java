@@ -18,7 +18,6 @@ import com.google.common.base.Optional;
 import com.google.common.collect.HashMultiset;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Multiset;
 import com.google.inject.Inject;
 import com.hubspot.baragon.models.BaragonRequestState;
@@ -95,7 +94,7 @@ public class SingularityCleaner {
     this.killNonLongRunningTasksInCleanupAfterMillis = TimeUnit.SECONDS.toMillis(configuration.getKillNonLongRunningTasksInCleanupAfterSeconds());
   }
 
-  private boolean shouldKillTask(SingularityTaskCleanup taskCleanup, List<SingularityTaskId> activeTaskIds, List<SingularityTaskId> cleaningTasks, Multiset<SingularityDeployKey> incrementalCleaningTasks) {
+  private boolean shouldKillTask(SingularityTaskCleanup taskCleanup, List<SingularityTaskId> activeTaskIds, Set<SingularityTaskId> cleaningTasks, Multiset<SingularityDeployKey> incrementalCleaningTasks) {
     final Optional<SingularityRequestWithState> requestWithState = requestManager.getRequest(taskCleanup.getTaskId().getRequestId());
 
     if (!requestWithState.isPresent()) {
@@ -174,7 +173,16 @@ public class SingularityCleaner {
     final String matchingTasksDeployId = taskCleanup.getCleanupType() == TaskCleanupType.INCREMENTAL_DEPLOY_CANCELLED || taskCleanup.getCleanupType() == TaskCleanupType.INCREMENTAL_DEPLOY_FAILED ? activeDeployId : taskCleanup.getTaskId().getDeployId();
 
     // check to see if there are enough active tasks out there that have been active for long enough that we can safely shut this task down.
-    final List<SingularityTaskId> matchingTasks = SingularityTaskId.matchingAndNotIn(activeTaskIds, taskCleanup.getTaskId().getRequestId(), matchingTasksDeployId, cleaningTasks);
+    final List<SingularityTaskId> matchingTasks = new ArrayList<>();
+    for (SingularityTaskId taskId : activeTaskIds) {
+      if (!taskId.getRequestId().equals(requestId) || !taskId.getDeployId().equals(matchingTasksDeployId)) {
+        continue;
+      }
+      if (cleaningTasks.contains(taskId)) {
+        continue;
+      }
+      matchingTasks.add(taskId);
+    }
 
     // For an incremental bounce or incremental deploy cleanup, shut down old tasks as new ones are started
     final SingularityDeployKey key = SingularityDeployKey.fromTaskId(taskCleanup.getTaskId());
@@ -325,7 +333,12 @@ public class SingularityCleaner {
       boolean killActiveTasks = requestCleanup.getKillTasks().or(configuration.isDefaultValueForKillTasksOfPausedRequests());
       boolean killScheduledTasks = true;
 
-      final Iterable<SingularityTaskId> matchingActiveTaskIds = Iterables.filter(activeTaskIds, SingularityTaskId.matchingRequest(requestId));
+      final List<SingularityTaskId> matchingActiveTaskIds = new ArrayList<>();
+      for (SingularityTaskId activeTaskId : activeTaskIds) {
+        if (activeTaskId.getRequestId().equals(requestId)) {
+          matchingActiveTaskIds.add(activeTaskId);
+        }
+      }
 
       switch (requestCleanup.getCleanupType()) {
         case PAUSING:
@@ -414,7 +427,13 @@ public class SingularityCleaner {
   private void bounce(SingularityRequestCleanup requestCleanup, final List<SingularityTaskId> activeTaskIds) {
     final long start = System.currentTimeMillis();
 
-    final List<SingularityTaskId> matchingTaskIds = SingularityTaskId.matchingAndNotIn(activeTaskIds, requestCleanup.getRequestId(), requestCleanup.getDeployId().get(), Collections.<SingularityTaskId> emptyList());
+    final List<SingularityTaskId> matchingTaskIds = new ArrayList<>();
+
+    for (SingularityTaskId activeTaskId : activeTaskIds) {
+      if (activeTaskId.getRequestId().equals(requestCleanup.getRequestId()) && activeTaskId.getDeployId().equals(requestCleanup.getDeployId().get())) {
+        matchingTaskIds.add(activeTaskId);
+      }
+    }
 
     for (SingularityTaskId matchingTaskId : matchingTaskIds) {
       LOG.debug("Adding task {} to cleanup (bounce)", matchingTaskId.getId());
@@ -489,15 +508,16 @@ public class SingularityCleaner {
     LOG.trace("Deleted stale request data for {}", requestCleanup.getRequestId());
   }
 
-  public void drainCleanupQueue() {
+  public int drainCleanupQueue() {
     drainRequestCleanupQueue();
-    drainTaskCleanupQueue();
+    int cleanupTasks = drainTaskCleanupQueue();
 
     final List<SingularityTaskId> lbCleanupTasks = taskManager.getLBCleanupTasks();
     drainLBTaskCleanupQueue(lbCleanupTasks);
     drainLBRequestCleanupQueue(lbCleanupTasks);
 
     checkKilledTaskIdRecords();
+    return cleanupTasks;
   }
 
   private boolean isValidTask(SingularityTaskCleanup cleanupTask) {
@@ -549,21 +569,21 @@ public class SingularityCleaner {
     LOG.info("{} obsolete, {} waiting, {} rekilled tasks based on {} killedTaskIdRecords", obsolete, waiting, rekilled, killedTaskIdRecords.size());
   }
 
-  private void drainTaskCleanupQueue() {
+  private int drainTaskCleanupQueue() {
     final long start = System.currentTimeMillis();
 
     final List<SingularityTaskCleanup> cleanupTasks = taskManager.getCleanupTasks();
 
     if (cleanupTasks.isEmpty()) {
       LOG.trace("Task cleanup queue is empty");
-      return;
+      return 0;
     }
 
     final Multiset<SingularityDeployKey> incrementalCleaningTasks = HashMultiset.create(cleanupTasks.size());
     final Set<SingularityDeployKey> isBouncing = new HashSet<>(cleanupTasks.size());
     final Map<String, List<String>> deletedRequestIdToTaskIds = new HashMap<>();
 
-    final List<SingularityTaskId> cleaningTasks = Lists.newArrayListWithCapacity(cleanupTasks.size());
+    final Set<SingularityTaskId> cleaningTasks = new HashSet<>(cleanupTasks.size());
     for (SingularityTaskCleanup cleanupTask : cleanupTasks) {
       cleaningTasks.add(cleanupTask.getTaskId());
       if (isIncrementalDeployCleanup(cleanupTask) || cleanupTask.getCleanupType() == TaskCleanupType.INCREMENTAL_BOUNCE) {
@@ -612,6 +632,7 @@ public class SingularityCleaner {
     }
 
     LOG.info("Killed {} tasks in {}", killedTasks, JavaUtils.duration(start));
+    return cleanupTasks.size();
   }
 
   private void updateRequestToTaskMap(SingularityTaskCleanup cleanupTask, Map<String, List<String>> requestIdToTaskIds) {

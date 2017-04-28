@@ -38,7 +38,7 @@ public class SingularityCooldownChecker {
   public void checkCooldowns() {
     final long start = System.currentTimeMillis();
 
-    final List<SingularityRequestWithState> cooldownRequests = Lists.newArrayList(requestManager.getCooldownRequests());
+    final List<SingularityRequestWithState> cooldownRequests = Lists.newArrayList(requestManager.getCooldownRequests(false));
 
     if (cooldownRequests.isEmpty()) {
       LOG.trace("No cooldown requests");
