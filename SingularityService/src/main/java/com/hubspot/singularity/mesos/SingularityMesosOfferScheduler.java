@@ -1,5 +1,6 @@
 package com.hubspot.singularity.mesos;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -129,6 +130,7 @@ public class SingularityMesosOfferScheduler {
 
     while (!pendingTaskIdToTaskRequest.isEmpty() && addedTaskInLastLoop && canScheduleAdditionalTasks(taskCredits)) {
       addedTaskInLastLoop = false;
+      List<String> acceptedTasks = new ArrayList<>();
 
       for (SingularityTaskRequestHolder taskRequestHolder : pendingTaskIdToTaskRequest.values()) {
 
@@ -170,13 +172,14 @@ public class SingularityMesosOfferScheduler {
           }
           bestOffer.addMatchedTask(task);
           addedTaskInLastLoop = true;
-          pendingTaskIdToTaskRequest.remove(task.getTaskRequest().getPendingTask().getPendingTaskId().getId());
+          acceptedTasks.add(task.getTaskRequest().getPendingTask().getPendingTaskId().getId());
           if (useTaskCredits && taskCredits == 0) {
             LOG.info("Used all available task credits, not scheduling any more tasks");
             break;
           }
         }
       }
+      acceptedTasks.forEach(pendingTaskIdToTaskRequest::remove);
     }
 
     if (useTaskCredits) {
