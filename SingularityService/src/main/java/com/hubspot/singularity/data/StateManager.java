@@ -80,22 +80,21 @@ public class StateManager extends CuratorManager {
                       PriorityManager priorityManager,
                       Transcoder<SingularityTaskReconciliationStatistics> taskReconciliationStatisticsTranscoder,
                       @Named(SingularityMainModule.STATUS_UPDATE_DELTA_30S_AVERAGE) AtomicLong statusUpdateDeltaAvg) {
+    super(curatorFramework, configuration, metricRegistry);
 
-      super(curatorFramework, configuration, metricRegistry);
-
-      this.requestManager = requestManager;
-      this.taskManager = taskManager;
-      this.stateTranscoder = stateTranscoder;
-      this.hostStateTranscoder = hostStateTranscoder;
-      this.slaveManager = slaveManager;
-      this.rackManager = rackManager;
-      this.deployManager = deployManager;
-      this.singularityConfiguration = singularityConfiguration;
-      this.authDatastore = authDatastore;
-      this.priorityManager = priorityManager;
-      this.taskReconciliationStatisticsTranscoder = taskReconciliationStatisticsTranscoder;
-      this.statusUpdateDeltaAvg = statusUpdateDeltaAvg;
-    }
+    this.requestManager = requestManager;
+    this.taskManager = taskManager;
+    this.stateTranscoder = stateTranscoder;
+    this.hostStateTranscoder = hostStateTranscoder;
+    this.slaveManager = slaveManager;
+    this.rackManager = rackManager;
+    this.deployManager = deployManager;
+    this.singularityConfiguration = singularityConfiguration;
+    this.authDatastore = authDatastore;
+    this.priorityManager = priorityManager;
+    this.taskReconciliationStatisticsTranscoder = taskReconciliationStatisticsTranscoder;
+    this.statusUpdateDeltaAvg = statusUpdateDeltaAvg;
+  }
 
   public SingularityCreateResult saveTaskReconciliationStatistics(SingularityTaskReconciliationStatistics taskReconciliationStatistics) {
     return save(TASK_RECONCILIATION_STATISTICS_PATH, taskReconciliationStatistics, taskReconciliationStatisticsTranscoder);
