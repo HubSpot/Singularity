@@ -46,6 +46,8 @@ public class SingularitySchedulerModule extends AbstractModule {
     bind(SingularityLeaderCacheCoordinator.class).in(Scopes.SINGLETON);
 
     bind(SingularitySchedulerStateCache.class);
+
+    bind(SingularityAutoScaleSpreadAllPoller.class).in(Scopes.SINGLETON);
   }
 
 }
