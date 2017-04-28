@@ -760,7 +760,7 @@ Models:
 | emailConfigurationOverrides | [Map[SingularityEmailType,List[SingularityEmailDestination]]](models.md#model-Map[SingularityEmailType,List[SingularityEmailDestination]]) | optional | Overrides for email recipients by email type for this request |
 | rackAffinity | Array[string] | optional | If set, prefer this specific rack when launching tasks |
 | maxTasksPerOffer | int | optional | Do not schedule more than this many tasks using a single offer from a single mesos slave |
-| slavePlacement | [SlavePlacement](models.md#model-SlavePlacement) | optional | Strategy for determining where to place new tasks. Can be SEPARATE, OPTIMISTIC, GREEDY, SEPARATE_BY_DEPLOY, or SEPARATE_BY_REQUEST |
+| slavePlacement | [SlavePlacement](models.md#model-SlavePlacement) | optional | Strategy for determining where to place new tasks. Can be SEPARATE, OPTIMISTIC, GREEDY, SEPARATE_BY_DEPLOY, SEPARATE_BY_REQUEST, or SPREAD_ALL_SLAVES |
 | bounceAfterScale | boolean | optional | Used for SingularityUI. If true, automatically trigger a bounce after changing the request's instance count |
 | readWriteGroups | [Set](models.md#model-Set) | optional | Users in these groups are allowed read/write access to this request |
 | group | string | optional | Auth group associated with this request. Users in this group are allowed read/write access to this request |

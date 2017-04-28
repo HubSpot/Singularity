@@ -89,6 +89,7 @@ public class SingularityValidator {
   private final int defaultHealthcehckMaxRetries;
   private final int defaultHealthcheckResponseTimeoutSeconds;
   private final int maxDecommissioningSlaves;
+  private final boolean spreadAllSlavesEnabled;
   private final boolean allowRequestsWithoutOwners;
   private final boolean createDeployIds;
   private final int deployIdLength;
@@ -137,6 +138,7 @@ public class SingularityValidator {
     this.defaultHealthcheckResponseTimeoutSeconds = configuration.getHealthcheckTimeoutSeconds();
 
     this.maxDecommissioningSlaves = configuration.getMaxDecommissioningSlaves();
+    this.spreadAllSlavesEnabled = configuration.isSpreadAllSlavesEnabled();
 
     this.uiConfiguration = uiConfiguration;
 
@@ -612,6 +614,10 @@ public class SingularityValidator {
     } catch (NumberFormatException nfe) {
       return false;
     }
+  }
+
+  public boolean isSpreadAllSlavesEnabled() {
+    return spreadAllSlavesEnabled;
   }
 
   public void checkUserId(String userId) {
