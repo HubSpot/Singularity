@@ -378,8 +378,8 @@ public class SingularitySlaveAndRackManager {
     LOG.info("Found {} new racks ({} missing) and {} new slaves ({} missing)", racks, remainingActiveRacks.size(), slaves, activeSlavesById.size());
   }
 
-  private enum CheckResult {
-    NEW, DECOMMISSIONING, ALREADY_ACTIVE;
+  public enum CheckResult {
+    NEW, NOT_ACCEPTING_TASKS, ALREADY_ACTIVE;
   }
 
   private <T extends SingularityMachineAbstraction<T>> CheckResult check(T object, AbstractMachineManager<T> manager) {
@@ -395,23 +395,23 @@ public class SingularitySlaveAndRackManager {
 
     switch (currentState) {
       case ACTIVE:
-      case FROZEN:
         return CheckResult.ALREADY_ACTIVE;
       case DEAD:
       case MISSING_ON_STARTUP:
         manager.changeState(object.getId(), MachineState.ACTIVE, Optional.absent(), Optional.absent());
         return CheckResult.NEW;
+      case FROZEN:
       case DECOMMISSIONED:
       case DECOMMISSIONING:
       case STARTING_DECOMMISSION:
-        return CheckResult.DECOMMISSIONING;
+        return CheckResult.NOT_ACCEPTING_TASKS;
     }
 
     throw new IllegalStateException(String.format("Invalid state %s for %s", currentState, object.getId()));
   }
 
   @Timed
-  public void checkOffer(Offer offer) {
+  public CheckResult checkOffer(Offer offer) {
     final String slaveId = offer.getSlaveId().getValue();
     final String rackId = slaveAndRackHelper.getRackIdOrDefault(offer);
     final String host = slaveAndRackHelper.getMaybeTruncatedHost(offer);
@@ -419,7 +419,9 @@ public class SingularitySlaveAndRackManager {
 
     final SingularitySlave slave = new SingularitySlave(slaveId, host, rackId, textAttributes, Optional.absent());
 
-    if (check(slave, slaveManager) == CheckResult.NEW) {
+    CheckResult result = check(slave, slaveManager);
+
+    if (result == CheckResult.NEW) {
       if (inactiveSlaveManager.isInactive(slave.getHost())) {
         LOG.info("Slave {} on inactive host {} attempted to rejoin. Marking as decommissioned.", slave, host);
         slaveManager.changeState(slave, MachineState.STARTING_DECOMMISSION,
@@ -435,6 +437,8 @@ public class SingularitySlaveAndRackManager {
     if (check(rack, rackManager) == CheckResult.NEW) {
       LOG.info("Offer revealed a new rack {}", rack);
     }
+
+    return result;
   }
 
   @Timed

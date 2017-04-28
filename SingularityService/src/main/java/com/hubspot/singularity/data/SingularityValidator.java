@@ -83,10 +83,12 @@ public class SingularityValidator {
   private final int maxMemoryMbPerRequest;
   private final int maxMemoryMbPerInstance;
   private final Optional<Integer> maxTotalHealthcheckTimeoutSeconds;
+  private final long defaultKillAfterNotHealthySeconds;
   private final int defaultHealthcheckIntervalSeconds;
   private final int defaultHealthcheckStartupTimeooutSeconds;
   private final int defaultHealthcehckMaxRetries;
   private final int defaultHealthcheckResponseTimeoutSeconds;
+  private final int maxDecommissioningSlaves;
   private final boolean allowRequestsWithoutOwners;
   private final boolean createDeployIds;
   private final int deployIdLength;
@@ -127,10 +129,13 @@ public class SingularityValidator {
     this.allowBounceToSameHost = configuration.isAllowBounceToSameHost();
 
     this.maxTotalHealthcheckTimeoutSeconds = configuration.getHealthcheckMaxTotalTimeoutSeconds();
+    this.defaultKillAfterNotHealthySeconds = configuration.getKillAfterTasksDoNotRunDefaultSeconds();
     this.defaultHealthcheckIntervalSeconds = configuration.getHealthcheckIntervalSeconds();
     this.defaultHealthcheckStartupTimeooutSeconds = configuration.getStartupTimeoutSeconds();
     this.defaultHealthcehckMaxRetries = configuration.getHealthcheckMaxRetries().or(0);
     this.defaultHealthcheckResponseTimeoutSeconds = configuration.getHealthcheckTimeoutSeconds();
+
+    this.maxDecommissioningSlaves = configuration.getMaxDecommissioningSlaves();
 
     this.uiConfiguration = uiConfiguration;
 
@@ -299,8 +304,16 @@ public class SingularityValidator {
       int httpTimeoutSeconds = options.getResponseTimeoutSeconds().or(defaultHealthcheckResponseTimeoutSeconds);
       int startupTime = options.getStartupTimeoutSeconds().or(defaultHealthcheckStartupTimeooutSeconds);
       int attempts = options.getMaxRetries().or(defaultHealthcehckMaxRetries) + 1;
+
       checkBadRequest((startupTime + ((httpTimeoutSeconds + intervalSeconds) * attempts)) > maxTotalHealthcheckTimeoutSeconds.get(),
         String.format("Max healthcheck time cannot be greater than %s, (was startup timeout: %s, interval: %s, attempts: %s)", maxTotalHealthcheckTimeoutSeconds.get(), startupTime, intervalSeconds, attempts));
+    }
+
+    if (deploy.getHealthcheck().isPresent() && deploy.getHealthcheck().get().getStartupDelaySeconds().isPresent()) {
+      int startUpDelay = deploy.getHealthcheck().get().getStartupDelaySeconds().get();
+
+      checkBadRequest(startUpDelay < defaultKillAfterNotHealthySeconds,
+          String.format("Health check startup delay time must be less than %s (was %s)", defaultKillAfterNotHealthySeconds, startUpDelay));
     }
 
     checkBadRequest(deploy.getCommand().isPresent() && !deploy.getExecutorData().isPresent() ||
@@ -579,6 +592,12 @@ public class SingularityValidator {
     checkBadRequest(!systemOnlyStateTransitions.contains(newState), "States {} are reserved for system usage, you cannot manually transition to {}", systemOnlyStateTransitions, newState);
 
     checkBadRequest(!(newState == MachineState.DECOMMISSIONED && !changeRequest.isKillTasksOnDecommissionTimeout()), "Must specify that all tasks on slave get killed if transitioning to DECOMMISSIONED state");
+  }
+
+  public void validateDecommissioningCount() {
+    int decommissioning = slaveManager.getObjectsFiltered(MachineState.DECOMMISSIONING).size() + slaveManager.getObjectsFiltered(MachineState.STARTING_DECOMMISSION).size();
+    checkBadRequest(decommissioning < maxDecommissioningSlaves,
+        "%s slaves are already decommissioning state (%s allowed at once). Allow these slaves to finish before decommissioning another", decommissioning, maxDecommissioningSlaves);
   }
 
   public void checkActionEnabled(SingularityAction action) {

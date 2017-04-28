@@ -1,7 +1,6 @@
 package com.hubspot.singularity.mesos;
 
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.locks.Lock;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.mesos.Protos;
 import org.apache.mesos.Protos.TaskState;
@@ -11,7 +10,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.codahale.metrics.Meter;
-import com.codahale.metrics.Timer;
 import com.codahale.metrics.annotation.Timed;
 import com.google.common.base.Optional;
 import com.google.common.base.Strings;
@@ -60,11 +58,11 @@ public class SingularityMesosStatusUpdateHandler {
   private final Provider<SingularitySchedulerStateCache> stateCacheProvider;
   private final String serverId;
   private final SchedulerDriverSupplier schedulerDriverSupplier;
-  private final Lock schedulerLock;
+  private final SingularitySchedulerLock schedulerLock;
   private final SingularityConfiguration configuration;
   private final Multiset<Protos.TaskStatus.Reason> taskLostReasons;
   private final Meter lostTasksMeter;
-  private final Timer statusUpdateDeltaTimer;
+  private final ConcurrentHashMap<Long, Long> statusUpdateDeltas;
 
   @Inject
   public SingularityMesosStatusUpdateHandler(TaskManager taskManager, DeployManager deployManager, RequestManager requestManager,
@@ -72,11 +70,11 @@ public class SingularityMesosStatusUpdateHandler {
       SingularityNewTaskChecker newTaskChecker, SingularitySlaveAndRackManager slaveAndRackManager, SingularityMesosExecutorInfoSupport logSupport, SingularityScheduler scheduler,
       Provider<SingularitySchedulerStateCache> stateCacheProvider, @Named(SingularityMainModule.SERVER_ID_PROPERTY) String serverId,
       SchedulerDriverSupplier schedulerDriverSupplier,
-      @Named(SingularityMesosModule.SCHEDULER_LOCK_NAME) final Lock schedulerLock,
+      SingularitySchedulerLock schedulerLock,
       SingularityConfiguration configuration,
       @Named(SingularityMesosModule.TASK_LOST_REASONS_COUNTER) Multiset<Protos.TaskStatus.Reason> taskLostReasons,
       @Named(SingularityMainModule.LOST_TASKS_METER) Meter lostTasksMeter,
-      @Named(SingularityMainModule.STATUS_UPDATE_DELTA_TIMER) Timer statusUpdateDeltaTimer) {
+      @Named(SingularityMainModule.STATUS_UPDATE_DELTAS) ConcurrentHashMap<Long, Long> statusUpdateDeltas) {
     this.taskManager = taskManager;
     this.deployManager = deployManager;
     this.requestManager = requestManager;
@@ -94,7 +92,7 @@ public class SingularityMesosStatusUpdateHandler {
     this.configuration = configuration;
     this.taskLostReasons = taskLostReasons;
     this.lostTasksMeter = lostTasksMeter;
-    this.statusUpdateDeltaTimer = statusUpdateDeltaTimer;
+    this.statusUpdateDeltas = statusUpdateDeltas;
   }
 
   /**
@@ -172,10 +170,11 @@ public class SingularityMesosStatusUpdateHandler {
       timestamp = (long) (status.getTimestamp() * 1000);
     }
 
-    long delta = System.currentTimeMillis() - timestamp;
+    long now = System.currentTimeMillis();
+    long delta = now - timestamp;
 
     LOG.debug("Update: task {} is now {} ({}) at {} (delta: {})", taskId, status.getState(), status.getMessage(), timestamp, JavaUtils.durationFromMillis(delta));
-    statusUpdateDeltaTimer.update(delta, TimeUnit.MILLISECONDS);
+    statusUpdateDeltas.put(now, delta);
 
     final Optional<SingularityTaskId> maybeTaskId = getTaskId(taskId);
 
@@ -256,14 +255,13 @@ public class SingularityMesosStatusUpdateHandler {
 
   @Timed
   public void processStatusUpdate(Protos.TaskStatus status) {
-    final long start = System.currentTimeMillis();
     long insideLock = 0;
-    schedulerLock.lock();
+    final long start = schedulerLock.lock("statusUpdate");
     try {
       insideLock = System.currentTimeMillis();
       unsafeProcessStatusUpdate(status);
     } finally {
-      schedulerLock.unlock();
+      schedulerLock.unlock("statusUpdate", start);
       LOG.info("Processed status update for {} ({}) in {} (waited {} for lock)", status.getTaskId().getValue(), status.getState(), JavaUtils.duration(start), JavaUtils.durationFromMillis(insideLock - start));
     }
   }

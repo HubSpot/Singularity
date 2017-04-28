@@ -41,6 +41,8 @@ import TaskLbUpdates from './TaskLbUpdates';
 import TaskInfo from './TaskInfo';
 import TaskEnvVars from './TaskEnvVars';
 import TaskHealthchecks from './TaskHealthchecks';
+import TaskState from './TaskState';
+import TaskStatus from './TaskStatus';
 
 class TaskDetail extends Component {
 
@@ -76,6 +78,7 @@ class TaskDetail extends Component {
       healthcheckResults: PropTypes.array,
       ports: PropTypes.array,
       directory: PropTypes.string,
+      status: PropTypes.oneOf([TaskStatus.RUNNING, TaskStatus.STOPPED, TaskStatus.NEVER_RAN]),
       isStillRunning: PropTypes.bool,
       isCleaning: PropTypes.bool,
       loadBalancerUpdates: PropTypes.array
@@ -219,14 +222,12 @@ class TaskDetail extends Component {
       cleanupType = cleanup.cleanupType;
     }
 
-    const taskState = this.props.task.taskUpdates && (
-      <div className="col-xs-6 task-state-header">
-        <h1>
-          <span className={`label label-${Utils.getLabelClassFromTaskState(_.last(this.props.task.taskUpdates).taskState)} task-state-header-label`}>
-            {Utils.humanizeText(_.last(this.props.task.taskUpdates).taskState)} {cleanupType && `(${Utils.humanizeText(cleanupType)})`}
-          </span>
-        </h1>
-      </div>
+    const taskState = (
+      <TaskState
+        status={this.props.task.status}
+        updates={this.props.task.taskUpdates}
+        cleanupType={cleanupType}
+      />
     );
 
     let destroy = false;
@@ -415,6 +416,8 @@ class TaskDetail extends Component {
       return cleanupToTest.taskId.id === this.props.taskId;
     });
     const filesToDisplay = this.props.files[`${this.props.params.taskId}/${this.props.currentFilePath}`] && this.analyzeFiles(this.props.files[`${this.props.taskId}/${this.props.currentFilePath}`].data);
+    const topLevelFiles = this.props.files[`${this.props.params.taskId}/`] && this.analyzeFiles(this.props.files[`${this.props.taskId}/`].data);
+    const filesAvailable = topLevelFiles && !_.isEmpty(topLevelFiles.files);
 
     return (
       <div className="task-detail detail-view">
@@ -422,7 +425,7 @@ class TaskDetail extends Component {
         <TaskAlerts task={this.props.task} deploy={this.props.deploy} pendingDeploys={this.props.pendingDeploys} />
         <TaskMetadataAlerts task={this.props.task} />
         <TaskHistory taskUpdates={this.props.task.taskUpdates} />
-        <TaskLatestLog taskId={this.props.taskId} isStillRunning={this.props.task.isStillRunning} />
+        <TaskLatestLog taskId={this.props.taskId} status={this.props.task.status} available={filesAvailable} />
         {this.renderFiles(filesToDisplay)}
         {_.isEmpty(this.props.s3Logs) || <TaskS3Logs taskId={this.props.task.task.taskId.id} s3Files={this.props.s3Logs} taskStartedAt={this.props.task.task.taskId.startedAt} />}
         {_.isEmpty(this.props.task.loadBalancerUpdates) || <TaskLbUpdates loadBalancerUpdates={this.props.task.loadBalancerUpdates} />}
@@ -452,10 +455,18 @@ function mapHealthchecksToProps(task) {
 function mapTaskToProps(task) {
   task.lastKnownState = _.last(task.taskUpdates);
   let isStillRunning = true;
+  let status = TaskStatus.RUNNING;
+
   if (task.taskUpdates && _.contains(Utils.TERMINAL_TASK_STATES, task.lastKnownState.taskState)) {
+    if (_.contains(_.map(task.taskUpdates, (update) => update.taskState), 'TASK_RUNNING')) {
+      status = TaskStatus.STOPPED;
+    } else {
+      status = TaskStatus.NEVER_RAN;
+    }
     isStillRunning = false;
   }
   task.isStillRunning = isStillRunning;
+  task.status = status;
 
   task.isCleaning = task.lastKnownState && task.lastKnownState.taskState === 'TASK_CLEANING';
 
@@ -520,4 +531,4 @@ function mapDispatchToProps(dispatch) {
   };
 }
 
-export default connect(mapStateToProps, mapDispatchToProps)(rootComponent(withRouter(TaskDetail), (props) => refresh(props.params.taskId), true, true, null, (props) => onLoad(props.params.taskId)));
+export default connect(mapStateToProps, mapDispatchToProps)(rootComponent(withRouter(TaskDetail), (props) => refresh(props.params.taskId, props.params.splat), true, true, null, (props) => onLoad(props.params.taskId)));

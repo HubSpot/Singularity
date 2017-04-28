@@ -48,8 +48,9 @@ public class SingularityLeaderController implements Managed, LeaderLatchListener
   private volatile boolean master;
 
   @Inject
-  public SingularityLeaderController(StateManager stateManager, SingularityConfiguration configuration, SingularityDriverManager driverManager, SingularityAbort abort, SingularityExceptionNotifier exceptionNotifier,
-      @Named(SingularityMainModule.HTTP_HOST_AND_PORT) HostAndPort hostAndPort, SingularityMesosScheduler scheduler, OfferCache offerCache) {
+  public SingularityLeaderController(StateManager stateManager, SingularityConfiguration configuration, SingularityDriverManager driverManager,
+      SingularityAbort abort, SingularityExceptionNotifier exceptionNotifier, @Named(SingularityMainModule.HTTP_HOST_AND_PORT) HostAndPort hostAndPort, SingularityMesosScheduler scheduler,
+      OfferCache offerCache) {
     this.driverManager = driverManager;
     this.stateManager = stateManager;
     this.abort = abort;

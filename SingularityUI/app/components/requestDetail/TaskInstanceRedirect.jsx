@@ -11,17 +11,22 @@ class TaskInstanceRedirect extends Component {
   }
 
   componentWillReceiveProps(nextProps) {
-    if (nextProps.activeTasksForRequest && nextProps.activeTasksForRequest[nextProps.params.requestId].data.length > 0) {
-      let found = false;
-      nextProps.activeTasksForRequest[nextProps.params.requestId].data.forEach((task) => {
-        if (task.taskId.instanceNo == parseInt(nextProps.params.instanceNo) && !found) {
-          found = true;
-          this.props.router.replace(`task/${task.taskId.id}`);
-        }
-      });
-      if (!found) {
-        this.props.router.replace(`request/${nextProps.params.requestId}`);
+    let found = false;
+    if (nextProps.activeTasksForRequest) {
+      if (nextProps.activeTasksForRequest[nextProps.params.requestId].isFetching) {
+        return;
       }
+      if (nextProps.activeTasksForRequest[nextProps.params.requestId].data.length > 0) {
+        nextProps.activeTasksForRequest[nextProps.params.requestId].data.forEach((task) => {
+          if (task.taskId.instanceNo == parseInt(nextProps.params.instanceNo) && !found) {
+            found = true;
+            this.props.router.replace(`task/${task.taskId.id}`);
+          }
+        });
+      }
+    }
+    if (!found) {
+      this.props.router.replace(`request/${nextProps.params.requestId}`);
     }
   }
 

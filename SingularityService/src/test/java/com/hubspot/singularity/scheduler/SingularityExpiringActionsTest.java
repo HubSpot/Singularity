@@ -39,7 +39,7 @@ public class SingularityExpiringActionsTest extends SingularitySchedulerTestBase
     Assert.assertEquals(0, taskManager.getActiveTaskIds().size());
     Assert.assertEquals(0, taskManager.getPendingTasks().size());
     Assert.assertEquals(RequestState.PAUSED, requestManager.getRequest(requestId).get().getState());
-    Assert.assertEquals(requestId, requestManager.getPausedRequests().iterator().next().getRequest().getId());
+    Assert.assertEquals(requestId, requestManager.getPausedRequests(false).iterator().next().getRequest().getId());
 
     try {
       Thread.sleep(2);
@@ -54,7 +54,7 @@ public class SingularityExpiringActionsTest extends SingularitySchedulerTestBase
     Assert.assertEquals(0, taskManager.getPendingTasks().size());
 
     Assert.assertEquals(RequestState.ACTIVE, requestManager.getRequest(requestId).get().getState());
-    Assert.assertEquals(requestId, requestManager.getActiveRequests().iterator().next().getRequest().getId());
+    Assert.assertEquals(requestId, requestManager.getActiveRequests(false).iterator().next().getRequest().getId());
   }
 
   @Test

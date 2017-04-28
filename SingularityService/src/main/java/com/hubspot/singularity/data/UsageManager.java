@@ -164,7 +164,7 @@ public class UsageManager extends CuratorAsyncManager {
       paths.add(getCurrentSlaveUsagePath(slaveId));
     }
 
-    Map<String, SingularitySlaveUsage> currentSlaveUsage = getAsyncWithPath("slave-usage", paths, slaveUsageTranscoder);
+    Map<String, SingularitySlaveUsage> currentSlaveUsage = getAsyncWithPath("getAllCurrentSlaveUsage", paths, slaveUsageTranscoder);
     List<SingularitySlaveUsageWithId> slaveUsageWithIds = new ArrayList<>(currentSlaveUsage.size());
     for (Entry<String, SingularitySlaveUsage> entry : currentSlaveUsage.entrySet()) {
       slaveUsageWithIds.add(new SingularitySlaveUsageWithId(entry.getValue(), getSlaveIdFromCurrentUsagePath(entry.getKey())));
@@ -193,7 +193,7 @@ public class UsageManager extends CuratorAsyncManager {
       paths.add(getCurrentTaskUsagePath(taskId.getId()));
     }
 
-    Map<String, SingularityTaskCurrentUsage> currentTaskUsages = getAsyncWithPath("task-current-usage", paths, taskCurrentUsageTranscoder);
+    Map<String, SingularityTaskCurrentUsage> currentTaskUsages = getAsyncWithPath("getTaskCurrentUsages", paths, taskCurrentUsageTranscoder);
     List<SingularityTaskCurrentUsageWithId> currentTaskUsagesWithIds = new ArrayList<>(paths.size());
     for (Entry<String, SingularityTaskCurrentUsage> entry : currentTaskUsages.entrySet()) {
       currentTaskUsagesWithIds.add(new SingularityTaskCurrentUsageWithId(SingularityTaskId.valueOf(getTaskIdFromCurrentUsagePath(entry.getKey())), entry.getValue()));
