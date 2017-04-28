@@ -15,6 +15,7 @@ master:
     MESOS_QUORUM: 1
     MESOS_CLUSTER: docker-compose
     MESOS_WORK_DIR: /var/lib/mesos
+    MESOS_ROLES: "OPS"
 
 slave:
   image: hubspot/singularityexecutorslave:0.15.0-SNAPSHOT
@@ -25,6 +26,8 @@ slave:
     MESOS_HOSTNAME: localhost
     MESOS_IP: 127.0.0.1
     MESOS_CONTAINERIZERS: docker,mesos
+    MESOS_ROLES: "OPS"
+    MESOS_RESOURCES: "cpus(OPS):1;cpus(*):1;mem(OPS):512;mem(*):1024"
     MESOS_ATTRIBUTES: "example:value;myNumber:1"
     MESOS_ISOLATION: cgroups/cpu,cgroups/mem
   volumes:
@@ -39,6 +42,7 @@ scheduler:
     - LOAD_BALANCER_URI=http://localhost:8080/baragon/v2/request
     - SINGULARITY_SMTP_HOST=localhost
     - SINGULARITY_SMTP_PORT=1025
+    - SINGULARITY_MESOS_FRAMEWORK_ROLE=OPS
 
 baragonservice:
   image: hubspot/baragonservice:0.4.0

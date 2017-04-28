@@ -208,6 +208,7 @@ public class SingularitySlaveAndRackManager {
     switch (slavePlacement) {
       case SEPARATE:
       case SEPARATE_BY_DEPLOY:
+      case SPREAD_ALL_SLAVES:
         if (allowBounceToSameHost && taskLaunchedFromBounceWithActionId) {
           if (numFromSameBounceOnSlave > 0) {
             LOG.trace("Rejecting SEPARATE task {} from slave {} ({}) due to numFromSameBounceOnSlave {}", taskRequest.getRequest().getId(), slaveId, host, numFromSameBounceOnSlave);
@@ -215,7 +216,7 @@ public class SingularitySlaveAndRackManager {
           }
         } else {
           if (numOnSlave > 0 || numCleaningOnSlave > 0) {
-            LOG.trace("Rejecting SEPARATE task {} from slave {} ({}) due to numOnSlave {} numCleaningOnSlave {}", taskRequest.getRequest().getId(), slaveId, host, numOnSlave, numCleaningOnSlave);
+            LOG.trace("Rejecting {} task {} from slave {} ({}) due to numOnSlave {} numCleaningOnSlave {}", slavePlacement.name(), taskRequest.getRequest().getId(), slaveId, host, numOnSlave, numCleaningOnSlave);
             return SlaveMatchState.SLAVE_SATURATED;
           }
         }
