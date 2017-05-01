@@ -332,7 +332,7 @@ public class SingularityMachineStatesTest extends SingularitySchedulerTestBase {
     initRequest();
     initFirstDeploy();
 
-    saveAndSchedule(request.toBuilder().setInstances(Optional.of(2)));
+    saveAndSchedule(request.toBuilder().setSlavePlacement(Optional.of(SlavePlacement.OPTIMISTIC)).setInstances(Optional.of(2)));
 
     resourceOffers();
 
