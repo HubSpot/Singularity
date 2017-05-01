@@ -1,5 +1,5 @@
 #!/bin/bash
-
+set -e
 
 git checkout hs_staging
 git pull
