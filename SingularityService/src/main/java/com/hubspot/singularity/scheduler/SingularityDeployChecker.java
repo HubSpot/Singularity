@@ -7,6 +7,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 import javax.inject.Singleton;
@@ -22,6 +23,7 @@ import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.hubspot.baragon.models.BaragonRequestState;
 import com.hubspot.mesos.JavaUtils;
+import com.hubspot.mesos.Resources;
 import com.hubspot.singularity.DeployState;
 import com.hubspot.singularity.LoadBalancerRequestType;
 import com.hubspot.singularity.LoadBalancerRequestType.LoadBalancerRequestId;
@@ -251,24 +253,25 @@ public class SingularityDeployChecker {
       cleanupTasks(pendingDeploy, request, deployResult, tasksToKill);
     }
 
-    if (!request.isDeployable() && !request.isOneOff()) {
-      Optional<String> user = pendingDeploy.getDeployMarker().getUser();
-      String deployID = pendingDeploy.getDeployMarker().getDeployId();
-      String requestId = request.getId();
-
-      if (deploy.isPresent() && deploy.get().getRunImmediately().isPresent()) {
-        LOG.info("Scheduled deploy {} set to run immediately", pendingDeploy);
-        SingularityRunNowRequest runNowRequest = deploy.get().getRunImmediately().get();
-        requestManager.addToPendingQueue(new SingularityPendingRequest(requestId, deployID, System.currentTimeMillis(),
-            user, PendingType.IMMEDIATE, runNowRequest.getCommandLineArgs(), runNowRequest.getRunId(),
-            runNowRequest.getSkipHealthchecks(), runNowRequest.getMessage(), Optional.absent(), runNowRequest.getResources()));
-      } else {
-        PendingType pendingType = deployResult.getDeployState() == DeployState.CANCELED ? PendingType.DEPLOY_CANCELLED : PendingType.NEW_DEPLOY;
-        Optional<Boolean> skipHealthChecks = deploy.isPresent() ? deploy.get().getSkipHealthchecksOnDeploy() : Optional.absent();
-        requestManager.addToPendingQueue(new SingularityPendingRequest(requestId, deployID, deployResult.getTimestamp(),
-            user, pendingType, skipHealthChecks, pendingDeploy.getDeployMarker().getMessage()));
+    if (deploy.isPresent()) {
+      Optional<SingularityPendingRequest> maybePendingRequest = buildPendingRequest(request,
+          pendingDeploy,
+          deployResult,
+          deploy.get().getRunImmediately());
+      if (maybePendingRequest.isPresent()) {
+        requestManager.addToPendingQueue(maybePendingRequest.get());
       }
+    } else {
+      Optional<SingularityPendingRequest> maybePendingRequest = buildPendingRequest(request,
+          pendingDeploy,
+          deployResult,
+          Optional.absent());
+      if (maybePendingRequest.isPresent()) {
+        requestManager.addToPendingQueue(maybePendingRequest.get());
+      }
+    }
 
+    if (!request.isDeployable() && !request.isOneOff()) {
       if (deployResult.getDeployState() == DeployState.SUCCEEDED) {
         // remove the lock on bounces in case we deployed during a bounce
         requestManager.markBounceComplete(request.getId());
@@ -315,6 +318,92 @@ public class SingularityDeployChecker {
     }
 
     removePendingDeploy(pendingDeploy);
+  }
+
+  private Optional<SingularityPendingRequest> buildPendingRequest(SingularityRequest request,
+                                                                  SingularityPendingDeploy pendingDeploy,
+                                                                  SingularityDeployResult deployResult,
+                                                                  Optional<SingularityRunNowRequest> maybeRunNowRequest) {
+    String requestId = request.getId();
+    String deployId = pendingDeploy.getDeployMarker().getDeployId();
+    Optional<String> user = pendingDeploy.getDeployMarker().getUser();
+    long timestamp = deployResult.getTimestamp();
+    PendingType pendingType;
+    Optional<Boolean> skipHealthChecks = request.getSkipHealthchecks();
+    Optional<String> message = pendingDeploy.getDeployMarker().getMessage();
+    Optional<List<String>> commandLineArgs;
+    Optional<String> runId;
+    Optional<Resources> resources;
+    List<SingularityTaskId> activeTasks = taskManager.getActiveTaskIdsForRequest(requestId);
+    List<SingularityPendingTaskId> pendingTasks = taskManager.getPendingTaskIdsForRequest(requestId);
+
+    SingularityPendingRequest pendingRequest;
+
+    if (request.isScheduled()
+        && maybeRunNowRequest.isPresent()
+        && activeTasks.isEmpty()) {
+      SingularityRunNowRequest runNowRequest = maybeRunNowRequest.get();
+      runId = runNowRequest.getRunId().or(Optional.of(UUID.randomUUID().toString()));
+      message = runNowRequest.getMessage()
+          .or(message);
+      commandLineArgs = runNowRequest.getCommandLineArgs();
+      skipHealthChecks = runNowRequest.getSkipHealthchecks().or(skipHealthChecks);
+      pendingType = PendingType.IMMEDIATE;
+      resources = runNowRequest.getResources();
+      pendingRequest = new SingularityPendingRequest(
+          requestId,
+          deployId,
+          timestamp,
+          user,
+          pendingType,
+          commandLineArgs,
+          runId,
+          skipHealthChecks,
+          message,
+          Optional.absent(),
+          resources);
+      return Optional.of(pendingRequest);
+    } else if (request.isScheduled()) {
+      // There is already a running task for this request. Don't attempt to run now, just redeploy
+      pendingType = deployResult.getDeployState() == DeployState.CANCELED
+          ? PendingType.DEPLOY_CANCELLED
+          : PendingType.NEW_DEPLOY;
+      pendingRequest = new SingularityPendingRequest(
+          requestId,
+          deployId,
+          timestamp,
+          user,
+          pendingType,
+          skipHealthChecks,
+          message);
+      return Optional.of(pendingRequest);
+    } else if (request.isOneOff()
+        && request.getInstances().isPresent()
+        && (activeTasks.size() + pendingTasks.size() < request.getInstances().get())) {
+      SingularityRunNowRequest runNowRequest = maybeRunNowRequest.get();
+      pendingType = PendingType.ONEOFF;
+      runId = runNowRequest.getRunId().or(Optional.of(UUID.randomUUID().toString()));
+      message = runNowRequest.getMessage()
+          .or(message);
+      commandLineArgs = runNowRequest.getCommandLineArgs();
+      skipHealthChecks = runNowRequest.getSkipHealthchecks().or(skipHealthChecks);
+      resources = runNowRequest.getResources();
+      pendingRequest = new SingularityPendingRequest(
+          requestId,
+          deployId,
+          timestamp,
+          user,
+          pendingType,
+          commandLineArgs,
+          runId,
+          skipHealthChecks,
+          message,
+          Optional.absent(),
+          resources);
+      return Optional.of(pendingRequest);
+    } else {
+      return Optional.absent();
+    }
   }
 
   private void removePendingDeploy(SingularityPendingDeploy pendingDeploy) {
