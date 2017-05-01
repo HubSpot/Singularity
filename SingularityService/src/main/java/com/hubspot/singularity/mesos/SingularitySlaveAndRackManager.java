@@ -229,25 +229,26 @@ public class SingularitySlaveAndRackManager {
 
       if ((taskRequest.getRequest().getRequiredSlaveAttributes().isPresent() && !taskRequest.getRequest().getRequiredSlaveAttributes().get().isEmpty())
           || (taskRequest.getRequest().getAllowedSlaveAttributes().isPresent() && !taskRequest.getRequest().getAllowedSlaveAttributes().get().isEmpty())) {
-        Map<String, String> mergedAttributes = taskRequest.getRequest().getRequiredSlaveAttributes().or(new HashMap<String, String>());
-        mergedAttributes.putAll(taskRequest.getRequest().getAllowedSlaveAttributes().or(new HashMap<String, String>()));
+        Map<String, String> mergedAttributes = new HashMap<>();
+        mergedAttributes.putAll(taskRequest.getRequest().getRequiredSlaveAttributes().or(new HashMap<>()));
+        mergedAttributes.putAll(taskRequest.getRequest().getAllowedSlaveAttributes().or(new HashMap<>()));
         if (!slaveAndRackHelper.hasRequiredAttributes(mergedAttributes, reservedSlaveAttributes)) {
           LOG.trace("Slaves with attributes {} are reserved for matching tasks. Task with attributes {} does not match", reservedSlaveAttributes, taskRequest.getRequest().getRequiredSlaveAttributes().or(Collections.emptyMap()));
-          return true;
+          return false;
         }
       } else {
         LOG.trace("Slaves with attributes {} are reserved for matching tasks. No attributes specified for task {}", reservedSlaveAttributes, taskRequest.getPendingTask().getPendingTaskId().getId());
-        return true;
+        return false;
       }
     }
 
     if (taskRequest.getRequest().getRequiredSlaveAttributes().isPresent()
         && !slaveAndRackHelper.hasRequiredAttributes(offer.getTextAttributes(), taskRequest.getRequest().getRequiredSlaveAttributes().get())) {
       LOG.trace("Task requires slave with attributes {}, (slave attributes are {})", taskRequest.getRequest().getRequiredSlaveAttributes().get(), offer.getTextAttributes());
-      return true;
+      return false;
     }
 
-    return false;
+    return true;
   }
 
   private boolean isAllowBounceToSameHost(SingularityRequest request) {
