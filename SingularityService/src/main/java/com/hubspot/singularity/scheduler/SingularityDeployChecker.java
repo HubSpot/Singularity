@@ -377,7 +377,8 @@ public class SingularityDeployChecker {
           skipHealthChecks,
           message);
       return Optional.of(pendingRequest);
-    } else if (request.isOneOff()
+    } else if (!request.isAlwaysRunning()
+        && maybeRunNowRequest.isPresent()
         && request.getInstances().isPresent()
         && (activeTasks.size() + pendingTasks.size() < request.getInstances().get())) {
       SingularityRunNowRequest runNowRequest = maybeRunNowRequest.get();
@@ -400,6 +401,19 @@ public class SingularityDeployChecker {
           message,
           Optional.absent(),
           resources);
+      return Optional.of(pendingRequest);
+    } else if (!request.isOneOff()) {
+      pendingType = deployResult.getDeployState() == DeployState.CANCELED
+          ? PendingType.DEPLOY_CANCELLED
+          : PendingType.NEW_DEPLOY;
+      pendingRequest = new SingularityPendingRequest(
+            requestId,
+            deployId,
+            timestamp,
+            user,
+            pendingType,
+            skipHealthChecks,
+            message);
       return Optional.of(pendingRequest);
     } else {
       return Optional.absent();
