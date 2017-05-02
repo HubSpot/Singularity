@@ -1,9 +1,9 @@
 package com.hubspot.singularity.mesos;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -16,8 +16,8 @@ import org.apache.mesos.Protos.Offer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Optional;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
@@ -130,9 +130,9 @@ public class SingularityMesosOfferScheduler {
 
     while (!pendingTaskIdToTaskRequest.isEmpty() && addedTaskInLastLoop && canScheduleAdditionalTasks(taskCredits)) {
       addedTaskInLastLoop = false;
-      List<String> acceptedTasks = new ArrayList<>();
 
-      for (SingularityTaskRequestHolder taskRequestHolder : pendingTaskIdToTaskRequest.values()) {
+      for (Iterator<SingularityTaskRequestHolder> iterator = pendingTaskIdToTaskRequest.values().iterator(); iterator.hasNext();) {
+        SingularityTaskRequestHolder taskRequestHolder = iterator.next();
 
         Map<SingularityOfferHolder, Double> scorePerOffer = new HashMap<>();
         double minScore = minScore(taskRequestHolder.getTaskRequest(), offerMatchAttemptsPerTask, System.currentTimeMillis());
@@ -172,14 +172,13 @@ public class SingularityMesosOfferScheduler {
           }
           bestOffer.addMatchedTask(task);
           addedTaskInLastLoop = true;
-          acceptedTasks.add(task.getTaskRequest().getPendingTask().getPendingTaskId().getId());
+          iterator.remove();
           if (useTaskCredits && taskCredits == 0) {
             LOG.info("Used all available task credits, not scheduling any more tasks");
             break;
           }
         }
       }
-      acceptedTasks.forEach(pendingTaskIdToTaskRequest::remove);
     }
 
     if (useTaskCredits) {
@@ -296,6 +295,7 @@ public class SingularityMesosOfferScheduler {
 
   private double scoreNonLongRunningTask(SingularityTaskRequest taskRequest, double longRunningMemUsedScore, double memTotalScore, double longRunningCpusUsedScore, double cpusTotalScore) {
     Optional<SingularityDeployStatistics> statistics = deployManager.getDeployStatistics(taskRequest.getRequest().getId(), taskRequest.getDeploy().getId());
+    final double epsilon = 0.0001;
 
     double freeResourceWeight = 0.75;
     double usedResourceWeight = 0.25;
@@ -304,7 +304,7 @@ public class SingularityMesosOfferScheduler {
       final double maxNonLongRunningUsedResourceWeight = configuration.getMaxNonLongRunningUsedResourceWeight();
       usedResourceWeight = Math.min((double) TimeUnit.MILLISECONDS.toSeconds(statistics.get().getAverageRuntimeMillis().get()) / configuration.getConsiderNonLongRunningTaskLongRunningAfterRunningForSeconds(), 1) * maxNonLongRunningUsedResourceWeight;
 
-      if (usedResourceWeight == maxNonLongRunningUsedResourceWeight) {
+      if (Math.abs(usedResourceWeight - maxNonLongRunningUsedResourceWeight) < epsilon) {
         return scoreLongRunningTask(longRunningMemUsedScore, memTotalScore, longRunningCpusUsedScore, cpusTotalScore);
       }
       freeResourceWeight = 1 - usedResourceWeight;
