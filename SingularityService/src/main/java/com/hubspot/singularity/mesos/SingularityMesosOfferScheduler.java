@@ -137,7 +137,7 @@ public class SingularityMesosOfferScheduler {
         Map<SingularityOfferHolder, Double> scorePerOffer = new HashMap<>();
         double minScore = minScore(taskRequestHolder.getTaskRequest(), offerMatchAttemptsPerTask, System.currentTimeMillis());
 
-        LOG.trace("Minimum score for task {} is {}", taskRequestHolder.getTaskRequest().getPendingTask().getPendingTaskId().getId(), minScore);
+        LOG.trace("Minimum score {} for task {}", minScore, taskRequestHolder.getTaskRequest().getPendingTask().getPendingTaskId().getId());
 
         for (SingularityOfferHolder offerHolder : offerHolders) {
 
@@ -147,7 +147,7 @@ public class SingularityMesosOfferScheduler {
           }
 
           double score = score(offerHolder, stateCache, tasksPerOfferPerRequest, taskRequestHolder, getSlaveUsage(currentSlaveUsages, offerHolder.getOffer().getSlaveId().getValue()));
-          LOG.trace("Offer {} with resources {} scored {} for Task {}", offerHolder.getOffer(), offerHolder.getCurrentResources(), score, taskRequestHolder.getTaskRequest().getPendingTask().getPendingTaskId().getId());
+          LOG.trace("Scored {} for task {} with offer for slave {} and resources {} ", score, taskRequestHolder.getTaskRequest().getPendingTask().getPendingTaskId().getId(), offerHolder.getOffer().getSlaveId(), offerHolder.getCurrentResources());
 
           if (score != 0 && score >= minScore) {
             // todo: can short circuit here if score is high enough (>= .9)
@@ -266,8 +266,8 @@ public class SingularityMesosOfferScheduler {
 
   @VisibleForTesting
   double score(Offer offer, SingularityTaskRequest taskRequest, Optional<SingularitySlaveUsageWithId> maybeSlaveUsage) {
-    if (!maybeSlaveUsage.isPresent() || !maybeSlaveUsage.get().getCpuTotal().isPresent() || !maybeSlaveUsage.get().getMemoryMbTotal().isPresent()) {
-      LOG.info("Slave {} has no total usage data. Will default to {}", offer.getSlaveId().getValue(), configuration.getDefaultOfferScoreForMissingUsage());
+    if (isMissingUsageData(maybeSlaveUsage)) {
+      LOG.info("Slave {} has missing usage data ({}). Will default to {}", offer.getSlaveId().getValue(), maybeSlaveUsage, configuration.getDefaultOfferScoreForMissingUsage());
       return configuration.getDefaultOfferScoreForMissingUsage();
     }
 
@@ -282,6 +282,14 @@ public class SingularityMesosOfferScheduler {
 
     return isLongRunning(taskRequest) ? scoreLongRunningTask(longRunningMemUsedScore, memTotalScore, longRunningCpusUsedScore, cpusTotalScore)
         : scoreNonLongRunningTask(taskRequest, longRunningMemUsedScore, memTotalScore, longRunningCpusUsedScore, cpusTotalScore);
+  }
+
+  private boolean isMissingUsageData(Optional<SingularitySlaveUsageWithId> maybeSlaveUsage) {
+    return !maybeSlaveUsage.isPresent() ||
+        !maybeSlaveUsage.get().getCpuTotal().isPresent() || !maybeSlaveUsage.get().getMemoryMbTotal().isPresent() ||
+        maybeSlaveUsage.get().getLongRunningTasksUsage() == null ||
+        !maybeSlaveUsage.get().getLongRunningTasksUsage().containsKey(ResourceUsageType.CPU_USED) ||
+        !maybeSlaveUsage.get().getLongRunningTasksUsage().containsKey(ResourceUsageType.MEMORY_BYTES_USED);
   }
 
   private boolean isLongRunning(SingularityTaskRequest taskRequest) {
