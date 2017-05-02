@@ -105,6 +105,7 @@ Search for requests.
 | requestIdLike | false | Request ID prefix to search for | string |
 | count | false | Maximum number of items to return | int |
 | page | false | Which page of items to view | int |
+| useWebCache | false |  | boolean |
 
 ###### Response
 [UNKNOWN[string]](models.md#model-UNKNOWN[string])
