@@ -200,7 +200,7 @@ public class SingularityConfiguration extends Configuration {
 
   private int maxOfferAttemptsPerTask = 20;
 
-  private long maxMillisPastDuePerTask = TimeUnit.MINUTES.toMillis(10);
+  private long maxMillisPastDuePerTask = TimeUnit.MINUTES.toMillis(5);
 
   private double longRunningUsedCpuWeightForOffer = 0.40;
 
