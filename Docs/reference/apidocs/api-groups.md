@@ -53,7 +53,11 @@ Get a list of Singularity request groups
 
 
 ###### Parameters
-- No parameters
+**query**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| useWebCache | false |  | boolean |
 
 ###### Response
 [List[SingularityRequestGroup]](models.md#model-SingularityRequestGroup)
