@@ -210,7 +210,7 @@ public class SingularityConfiguration extends Configuration {
 
   private double freeMemWeightForOffer = 0.60;
 
-  private double defaultOfferScoreForMissingUsage = 0.10;
+  private double defaultOfferScoreForMissingUsage = 0.30;
 
   private long considerNonLongRunningTaskLongRunningAfterRunningForSeconds = TimeUnit.HOURS.toSeconds(6);
 
