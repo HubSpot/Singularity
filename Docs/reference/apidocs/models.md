@@ -73,6 +73,7 @@ Models:
 - [`SingularityState`](models.md#model-SingularityState)
 - [`SingularityTask`](models.md#model-SingularityTask)
 - [`SingularityTaskCleanup`](models.md#model-SingularityTaskCleanup)
+- [`SingularityTaskCredits`](models.md#model-SingularityTaskCredits)
 - [`SingularityTaskHealthcheckResult`](models.md#model-SingularityTaskHealthcheckResult)
 - [`SingularityTaskHistory`](models.md#model-SingularityTaskHistory)
 - [`SingularityTaskHistoryUpdate`](models.md#model-SingularityTaskHistoryUpdate)
@@ -140,6 +141,7 @@ Models:
 | filename | string | optional |  |
 | filesize | long | optional |  |
 | name | string | optional |  |
+| isArtifactList | boolean | optional |  |
 
 
 ## <a name="model-HealthcheckOptions"></a> HealthcheckOptions
@@ -223,6 +225,7 @@ Models:
 | filesize | long | optional |  |
 | s3ObjectKey | string | optional |  |
 | name | string | optional |  |
+| isArtifactList | boolean | optional |  |
 
 
 ## <a name="model-S3ArtifactSignature"></a> S3ArtifactSignature
@@ -237,6 +240,7 @@ Models:
 | s3ObjectKey | string | optional |  |
 | name | string | optional |  |
 | artifactFilename | string | optional |  |
+| isArtifactList | boolean | optional |  |
 
 
 ## <a name="model-Set"></a> Set
@@ -424,7 +428,7 @@ Models:
 | name | type | required | description |
 |------|------|----------|-------------|
 | expiresAt | long | optional |  |
-| type | [SingularityAction](models.md#model-SingularityAction) | optional |  Allowable values: BOUNCE_REQUEST, SCALE_REQUEST, REMOVE_REQUEST, CREATE_REQUEST, UPDATE_REQUEST, VIEW_REQUEST, PAUSE_REQUEST, KILL_TASK, BOUNCE_TASK, RUN_SHELL_COMMAND, ADD_METADATA, DEPLOY, CANCEL_DEPLOY, ADD_WEBHOOK, REMOVE_WEBHOOK, VIEW_WEBHOOKS, TASK_RECONCILIATION, ADD_DISASTER, REMOVE_DISASTER, DISABLE_ACTION, ENABLE_ACTION, VIEW_DISASTERS, FREEZE_SLAVE, ACTIVATE_SLAVE, DECOMMISSION_SLAVE, VIEW_SLAVES, FREEZE_RACK, ACTIVATE_RACK, DECOMMISSION_RACK, VIEW_RACKS |
+| type | [SingularityAction](models.md#model-SingularityAction) | optional |  Allowable values: BOUNCE_REQUEST, SCALE_REQUEST, REMOVE_REQUEST, CREATE_REQUEST, UPDATE_REQUEST, VIEW_REQUEST, PAUSE_REQUEST, KILL_TASK, BOUNCE_TASK, RUN_SHELL_COMMAND, ADD_METADATA, DEPLOY, CANCEL_DEPLOY, ADD_WEBHOOK, REMOVE_WEBHOOK, VIEW_WEBHOOKS, TASK_RECONCILIATION, STARTUP_TASK_RECONCILIATION, RUN_HEALTH_CHECKS, ADD_DISASTER, REMOVE_DISASTER, DISABLE_ACTION, ENABLE_ACTION, VIEW_DISASTERS, FREEZE_SLAVE, ACTIVATE_SLAVE, DECOMMISSION_SLAVE, VIEW_SLAVES, FREEZE_RACK, ACTIVATE_RACK, DECOMMISSION_RACK, VIEW_RACKS, SEND_EMAIL, PROCESS_OFFERS, CACHE_OFFERS, EXPENSIVE_API_CALLS, RUN_CLEANUP_POLLER, RUN_DEPLOY_POLLER, RUN_SCHEDULER_POLLER, RUN_EXPIRING_ACTION_POLLER |
 | automaticallyClearable | boolean | optional |  |
 | user | string | optional |  |
 | message | string | optional |  |
@@ -434,7 +438,7 @@ Models:
 
 | name | type | required | description |
 |------|------|----------|-------------|
-| type | [SingularityAction](models.md#model-SingularityAction) | required | The type of action to disable Allowable values: BOUNCE_REQUEST, SCALE_REQUEST, REMOVE_REQUEST, CREATE_REQUEST, UPDATE_REQUEST, VIEW_REQUEST, PAUSE_REQUEST, KILL_TASK, BOUNCE_TASK, RUN_SHELL_COMMAND, ADD_METADATA, DEPLOY, CANCEL_DEPLOY, ADD_WEBHOOK, REMOVE_WEBHOOK, VIEW_WEBHOOKS, TASK_RECONCILIATION, ADD_DISASTER, REMOVE_DISASTER, DISABLE_ACTION, ENABLE_ACTION, VIEW_DISASTERS, FREEZE_SLAVE, ACTIVATE_SLAVE, DECOMMISSION_SLAVE, VIEW_SLAVES, FREEZE_RACK, ACTIVATE_RACK, DECOMMISSION_RACK, VIEW_RACKS |
+| type | [SingularityAction](models.md#model-SingularityAction) | required | The type of action to disable Allowable values: BOUNCE_REQUEST, SCALE_REQUEST, REMOVE_REQUEST, CREATE_REQUEST, UPDATE_REQUEST, VIEW_REQUEST, PAUSE_REQUEST, KILL_TASK, BOUNCE_TASK, RUN_SHELL_COMMAND, ADD_METADATA, DEPLOY, CANCEL_DEPLOY, ADD_WEBHOOK, REMOVE_WEBHOOK, VIEW_WEBHOOKS, TASK_RECONCILIATION, STARTUP_TASK_RECONCILIATION, RUN_HEALTH_CHECKS, ADD_DISASTER, REMOVE_DISASTER, DISABLE_ACTION, ENABLE_ACTION, VIEW_DISASTERS, FREEZE_SLAVE, ACTIVATE_SLAVE, DECOMMISSION_SLAVE, VIEW_SLAVES, FREEZE_RACK, ACTIVATE_RACK, DECOMMISSION_RACK, VIEW_RACKS, SEND_EMAIL, PROCESS_OFFERS, CACHE_OFFERS, EXPENSIVE_API_CALLS, RUN_CLEANUP_POLLER, RUN_DEPLOY_POLLER, RUN_SCHEDULER_POLLER, RUN_EXPIRING_ACTION_POLLER |
 | message | string | optional | An optional message/reason for disabling the action specified |
 
 
@@ -978,11 +982,13 @@ Models:
 | cleaningTasks | int | optional |  |
 | launchingTasks | int | optional |  |
 | unknownSlaves | int | optional |  |
+| oldestDeployStep | long | optional |  |
 | activeRequests | int | optional |  |
 | futureTasks | int | optional |  |
 | lbCleanupRequests | int | optional |  |
 | decommissioningRacks | int | optional |  |
 | finishedRequests | int | optional |  |
+| avgStatusUpdateDelayMs | long | optional |  |
 | deadRacks | int | optional |  |
 | pendingRequests | int | optional |  |
 | maxTaskLag | long | optional |  |
@@ -992,6 +998,7 @@ Models:
 | underProvisionedRequests | int | optional |  |
 | decomissioningSlaves | int | optional |  |
 | oldestDeploy | long | optional |  |
+| activeDeploys | [Array[SingularityDeployMarker]](models.md#model-SingularityDeployMarker) | optional |  |
 | minimumPriorityLevel | double | optional |  |
 | scheduledTasks | int | optional |  |
 | underProvisionedRequestIds | Array[string] | optional |  |
@@ -1017,6 +1024,14 @@ Models:
 | runBeforeKillId | [SingularityTaskShellCommandRequestId](models.md#model-SingularityTaskShellCommandRequestId) | optional |  |
 | timestamp | long | optional |  |
 | actionId | string | optional |  |
+
+
+## <a name="model-SingularityTaskCredits"></a> SingularityTaskCredits
+
+| name | type | required | description |
+|------|------|----------|-------------|
+| remaining | int | optional |  |
+| enabled | boolean | optional |  |
 
 
 ## <a name="model-SingularityTaskHealthcheckResult"></a> SingularityTaskHealthcheckResult
@@ -1055,6 +1070,7 @@ Models:
 | statusMessage | string | optional |  |
 | taskState | [ExtendedTaskState](models.md#model-ExtendedTaskState) | optional |  Allowable values: TASK_LAUNCHED, TASK_STAGING, TASK_STARTING, TASK_RUNNING, TASK_CLEANING, TASK_KILLING, TASK_FINISHED, TASK_FAILED, TASK_KILLED, TASK_LOST, TASK_LOST_WHILE_DOWN, TASK_ERROR |
 | timestamp | long | optional |  |
+| previous | [Set](models.md#model-Set) | optional |  |
 
 
 ## <a name="model-SingularityTaskId"></a> SingularityTaskId

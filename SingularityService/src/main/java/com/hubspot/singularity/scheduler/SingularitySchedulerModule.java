@@ -13,6 +13,7 @@ public class SingularitySchedulerModule extends AbstractModule {
     bind(SingularityHealthchecker.class).in(Scopes.SINGLETON);
     bind(SingularityNewTaskChecker.class).in(Scopes.SINGLETON);
     bind(SingularityCleanupPoller.class).in(Scopes.SINGLETON);
+    bind(SingularityStatusUpdateDeltaPoller.class).in(Scopes.SINGLETON);
     bind(SingularityExpiringUserActionPoller.class).in(Scopes.SINGLETON);
     bind(SingularityHistoryPurger.class).in(Scopes.SINGLETON);
     bind(SingularitySlaveReconciliationPoller.class).in(Scopes.SINGLETON);
@@ -41,8 +42,12 @@ public class SingularitySchedulerModule extends AbstractModule {
     bind(SingularityUsagePoller.class).in(Scopes.SINGLETON);
     bind(SingularityMesosTaskPrioritizer.class).in(Scopes.SINGLETON);
     bind(SingularityMesosOfferScheduler.class).in(Scopes.SINGLETON);
+    bind(SingularityLeaderCache.class).in(Scopes.SINGLETON);
+    bind(SingularityLeaderCacheCoordinator.class).in(Scopes.SINGLETON);
 
     bind(SingularitySchedulerStateCache.class);
+
+    bind(SingularityAutoScaleSpreadAllPoller.class).in(Scopes.SINGLETON);
   }
 
 }

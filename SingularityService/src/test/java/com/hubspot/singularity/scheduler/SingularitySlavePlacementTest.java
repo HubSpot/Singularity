@@ -5,11 +5,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.mesos.Protos.TaskState;
 import org.junit.Assert;
 import org.junit.Test;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
+import com.hubspot.singularity.MachineState;
 import com.hubspot.singularity.ExtendedTaskState;
 import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityTaskCleanup;
@@ -51,6 +53,48 @@ public class SingularitySlavePlacementTest extends SingularitySchedulerTestBase 
 
     Assert.assertTrue(taskManager.getPendingTaskIds().isEmpty());
     Assert.assertTrue(taskManager.getActiveTaskIds().size() == 2);
+  }
+
+  @Test
+  public void testSlavePlacementSpread() {
+    initRequest();
+    initFirstDeploy();
+
+    saveAndSchedule(request.toBuilder().setInstances(Optional.of(1)).setSlavePlacement(Optional.of(SlavePlacement.SPREAD_ALL_SLAVES)));
+
+    sms.resourceOffers(driver, Arrays.asList(createOffer(20, 20000, "slave1", "host1", Optional.of("rack1"))));
+
+    // assert one Request on one slave.
+    Assert.assertTrue(slaveManager.getNumObjectsAtState(MachineState.ACTIVE) == 1);
+    Assert.assertTrue(taskManager.getPendingTaskIds().size() == 0);
+    Assert.assertTrue(taskManager.getActiveTaskIds().size() == 1);
+
+    sms.resourceOffers(driver, Arrays.asList(createOffer(20, 20000, "slave2", "host2")));
+    Assert.assertTrue(slaveManager.getNumObjectsAtState(MachineState.ACTIVE) == 2);
+
+    spreadAllPoller.runActionOnPoll();
+    scheduler.drainPendingQueue(stateCacheProvider.get());
+
+    sms.resourceOffers(driver, Arrays.asList(createOffer(20, 20000, "slave2", "host2")));
+
+    // assert Request is spread over the two slaves
+    Assert.assertTrue(taskManager.getPendingTaskIds().size() == 0);
+    Assert.assertTrue(taskManager.getActiveTaskIds().size() == 2);
+    Assert.assertEquals(1, taskManager.getTasksOnSlave(taskManager.getActiveTaskIds(), slaveManager.getObject("slave1").get()).size());
+    Assert.assertEquals(1, taskManager.getTasksOnSlave(taskManager.getActiveTaskIds(), slaveManager.getObject("slave2").get()).size());
+
+    // decommission slave and kill task
+    slaveManager.changeState("slave2", MachineState.FROZEN, Optional.<String>absent(), Optional.<String>absent());
+    slaveManager.changeState("slave2", MachineState.STARTING_DECOMMISSION, Optional.<String>absent(), Optional.<String>absent());
+    cleaner.drainCleanupQueue();
+    statusUpdate(taskManager.getTasksOnSlave(taskManager.getActiveTaskIds(), slaveManager.getObject("slave2").get()).get(0), TaskState.TASK_KILLED);
+
+
+    spreadAllPoller.runActionOnPoll();
+    scheduler.drainPendingQueue(stateCacheProvider.get());
+
+    Assert.assertTrue(taskManager.getPendingTaskIds().isEmpty());
+    Assert.assertTrue(taskManager.getActiveTaskIds().size() == 1);
   }
 
   @Test
@@ -305,7 +349,7 @@ public class SingularitySlavePlacementTest extends SingularitySchedulerTestBase 
     sms.resourceOffers(driver, Arrays.asList(createOffer(1, 128, "slave2", "host2", Optional.of("rack1"))));
     Assert.assertEquals(2, taskManager.getActiveTaskIds().size());
 
-    requestResource.bounce(requestId);
+    requestResource.bounce(requestId, Optional.absent());
     cleaner.drainCleanupQueue();
     scheduler.drainPendingQueue(stateCacheProvider.get());
 

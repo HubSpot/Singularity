@@ -24,7 +24,7 @@ public class SingularityDeployPoller extends SingularityLeaderOnlyPoller {
 
   @Inject
   SingularityDeployPoller(SingularityDeployChecker deployChecker, SingularityConfiguration configuration, SingularitySchedulerLock lock, DisasterManager disasterManager) {
-    super(configuration.getCheckDeploysEverySeconds(), TimeUnit.SECONDS, lock);
+    super(configuration.getCheckDeploysEverySeconds(), TimeUnit.SECONDS, lock, true);
 
     this.deployChecker = deployChecker;
     this.disasterManager = disasterManager;

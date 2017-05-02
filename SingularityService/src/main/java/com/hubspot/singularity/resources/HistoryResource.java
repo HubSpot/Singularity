@@ -365,13 +365,14 @@ public class HistoryResource extends AbstractHistoryResource {
   public Iterable<String> getRequestHistoryForRequestLike(
       @ApiParam("Request ID prefix to search for") @QueryParam("requestIdLike") String requestIdLike,
       @ApiParam("Maximum number of items to return") @QueryParam("count") Integer count,
-      @ApiParam("Which page of items to view") @QueryParam("page") Integer page) {
+      @ApiParam("Which page of items to view") @QueryParam("page") Integer page,
+      @QueryParam("useWebCache") Boolean useWebCache) {
     final Integer limitCount = getLimitCount(count);
     final Integer limitStart = getLimitStart(limitCount, page);
 
     List<String> requestIds = historyManager.getRequestHistoryLike(requestIdLike, limitStart, limitCount);
 
-    return authorizationHelper.filterAuthorizedRequestIds(user, requestIds, SingularityAuthorizationScope.READ);  // TODO: will this screw up pagination? A: yes.
+    return authorizationHelper.filterAuthorizedRequestIds(user, requestIds, SingularityAuthorizationScope.READ, useWebCache != null && useWebCache);  // TODO: will this screw up pagination? A: yes.
   }
 
   @GET

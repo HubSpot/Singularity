@@ -13,8 +13,6 @@ import com.hubspot.singularity.guice.GuicePropertyFilteringMessageBodyWriter;
 public class SingularityResourceModule extends AbstractModule {
   private static final Logger LOG = LoggerFactory.getLogger(SingularityResourceModule.class);
 
-  public static final String PROXY_TO_LEADER_HTTP_CLIENT = "proxy.to.leader.http.client";
-
   private final UIConfiguration uiConfiguration;
 
   public SingularityResourceModule(UIConfiguration uiConfiguration) {

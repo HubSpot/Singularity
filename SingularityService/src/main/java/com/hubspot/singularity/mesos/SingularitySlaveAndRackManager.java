@@ -114,8 +114,9 @@ public class SingularitySlaveAndRackManager {
 
       if ((taskRequest.getRequest().getRequiredSlaveAttributes().isPresent() && !taskRequest.getRequest().getRequiredSlaveAttributes().get().isEmpty())
         || (taskRequest.getRequest().getAllowedSlaveAttributes().isPresent() && !taskRequest.getRequest().getAllowedSlaveAttributes().get().isEmpty())) {
-        Map<String, String> mergedAttributes = taskRequest.getRequest().getRequiredSlaveAttributes().or(new HashMap<String, String>());
-        mergedAttributes.putAll(taskRequest.getRequest().getAllowedSlaveAttributes().or(new HashMap<String, String>()));
+        Map<String, String> mergedAttributes = new HashMap<>();
+        mergedAttributes.putAll(taskRequest.getRequest().getRequiredSlaveAttributes().or(new HashMap<>()));
+        mergedAttributes.putAll(taskRequest.getRequest().getAllowedSlaveAttributes().or(new HashMap<>()));
         if (!slaveAndRackHelper.hasRequiredAttributes(mergedAttributes, reservedSlaveAttributes)) {
           LOG.trace("Slaves with attributes {} are reserved for matching tasks. Task with attributes {} does not match", reservedSlaveAttributes, taskRequest.getRequest().getRequiredSlaveAttributes().or(Collections.<String, String>emptyMap()));
           return SlaveMatchState.SLAVE_ATTRIBUTES_DO_NOT_MATCH;
@@ -207,6 +208,7 @@ public class SingularitySlaveAndRackManager {
     switch (slavePlacement) {
       case SEPARATE:
       case SEPARATE_BY_DEPLOY:
+      case SPREAD_ALL_SLAVES:
         if (allowBounceToSameHost && taskLaunchedFromBounceWithActionId) {
           if (numFromSameBounceOnSlave > 0) {
             LOG.trace("Rejecting SEPARATE task {} from slave {} ({}) due to numFromSameBounceOnSlave {}", taskRequest.getRequest().getId(), slaveId, host, numFromSameBounceOnSlave);
@@ -214,7 +216,7 @@ public class SingularitySlaveAndRackManager {
           }
         } else {
           if (numOnSlave > 0 || numCleaningOnSlave > 0) {
-            LOG.trace("Rejecting SEPARATE task {} from slave {} ({}) due to numOnSlave {} numCleaningOnSlave {}", taskRequest.getRequest().getId(), slaveId, host, numOnSlave, numCleaningOnSlave);
+            LOG.trace("Rejecting {} task {} from slave {} ({}) due to numOnSlave {} numCleaningOnSlave {}", slavePlacement.name(), taskRequest.getRequest().getId(), slaveId, host, numOnSlave, numCleaningOnSlave);
             return SlaveMatchState.SLAVE_SATURATED;
           }
         }
@@ -370,8 +372,8 @@ public class SingularitySlaveAndRackManager {
     LOG.info("Found {} new racks ({} missing) and {} new slaves ({} missing)", racks, remainingActiveRacks.size(), slaves, activeSlavesById.size());
   }
 
-  private enum CheckResult {
-    NEW, DECOMMISSIONING, ALREADY_ACTIVE;
+  public enum CheckResult {
+    NEW, NOT_ACCEPTING_TASKS, ALREADY_ACTIVE;
   }
 
   private <T extends SingularityMachineAbstraction<T>> CheckResult check(T object, AbstractMachineManager<T> manager) {
@@ -387,23 +389,23 @@ public class SingularitySlaveAndRackManager {
 
     switch (currentState) {
       case ACTIVE:
-      case FROZEN:
         return CheckResult.ALREADY_ACTIVE;
       case DEAD:
       case MISSING_ON_STARTUP:
         manager.changeState(object.getId(), MachineState.ACTIVE, Optional.<String> absent(), Optional.<String> absent());
         return CheckResult.NEW;
+      case FROZEN:
       case DECOMMISSIONED:
       case DECOMMISSIONING:
       case STARTING_DECOMMISSION:
-        return CheckResult.DECOMMISSIONING;
+        return CheckResult.NOT_ACCEPTING_TASKS;
     }
 
     throw new IllegalStateException(String.format("Invalid state %s for %s", currentState, object.getId()));
   }
 
   @Timed
-  public void checkOffer(Offer offer) {
+  public CheckResult checkOffer(Offer offer) {
     final String slaveId = offer.getSlaveId().getValue();
     final String rackId = slaveAndRackHelper.getRackIdOrDefault(offer);
     final String host = slaveAndRackHelper.getMaybeTruncatedHost(offer);
@@ -411,7 +413,9 @@ public class SingularitySlaveAndRackManager {
 
     final SingularitySlave slave = new SingularitySlave(slaveId, host, rackId, textAttributes, Optional.<MesosResourcesObject>absent());
 
-    if (check(slave, slaveManager) == CheckResult.NEW) {
+    CheckResult result = check(slave, slaveManager);
+
+    if (result == CheckResult.NEW) {
       if (inactiveSlaveManager.isInactive(slave.getHost())) {
         LOG.info("Slave {} on inactive host {} attempted to rejoin. Marking as decommissioned.", slave, host);
         slaveManager.changeState(slave, MachineState.STARTING_DECOMMISSION,
@@ -427,6 +431,8 @@ public class SingularitySlaveAndRackManager {
     if (check(rack, rackManager) == CheckResult.NEW) {
       LOG.info("Offer revealed a new rack {}", rack);
     }
+
+    return result;
   }
 
   @Timed

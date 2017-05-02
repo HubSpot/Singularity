@@ -1,6 +1,67 @@
 #### Overview
 Manages Singularity Deploys for existing requests
 
+#### **POST** `/api/disasters/task-credits`
+
+Add task credits, enables task credit system if not already enabled
+
+
+###### Parameters
+**query**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| credits | false |  | int |
+
+###### Response
+
+
+
+###### Errors
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| - | - | - |
+
+
+- - -
+#### **DELETE** `/api/disasters/task-credits`
+
+Disable task credit system
+
+
+###### Parameters
+- No parameters
+
+###### Response
+
+
+
+###### Errors
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| - | - | - |
+
+
+- - -
+#### **GET** `/api/disasters/task-credits`
+
+Get task credit data
+
+
+###### Parameters
+- No parameters
+
+###### Response
+[SingularityTaskCredits](models.md#model-SingularityTaskCredits)
+
+
+###### Errors
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| - | - | - |
+
+
+- - -
 #### **GET** `/api/disasters/stats`
 
 Get current data related to disaster detection

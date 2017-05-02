@@ -37,15 +37,25 @@ public class SingularityConfiguration extends Configuration {
 
   private boolean cacheOffers = true;
 
+  private long cacheForWebForMillis = TimeUnit.SECONDS.toMillis(30);
+
   private int cacheTasksMaxSize = 5000;
 
   private int cacheTasksInitialSize = 100;
 
   private long cacheTasksForMillis = TimeUnit.DAYS.toMillis(1);
 
+  private int cacheDeploysMaxSize = 2000;
+
+  private int cacheDeploysInitialSize = 100;
+
+  private long cacheDeploysForMillis = TimeUnit.DAYS.toMillis(5);
+
   private long cacheStateForMillis = TimeUnit.SECONDS.toMillis(30);
 
   private long checkDeploysEverySeconds = 5;
+
+  private long checkAutoSpreadAllSlavesEverySeconds = 30;
 
   private long checkNewTasksEverySeconds = 5;
 
@@ -320,6 +330,12 @@ public class SingularityConfiguration extends Configuration {
 
   private int maxDecommissioningSlaves = 2;
 
+  private boolean spreadAllSlavesEnabled = false;
+
+  private long delayPollersWhenDeltaOverMs = 15000;
+
+  private boolean delayOfferProcessingForLargeStatusUpdateDelta = true;
+
   public long getAskDriverToKillTasksAgainAfterMillis() {
     return askDriverToKillTasksAgainAfterMillis;
   }
@@ -334,6 +350,10 @@ public class SingularityConfiguration extends Configuration {
 
   public long getCheckDeploysEverySeconds() {
     return checkDeploysEverySeconds;
+  }
+
+  public long getCheckAutoSpreadAllSlavesEverySeconds() {
+    return checkAutoSpreadAllSlavesEverySeconds;
   }
 
   public long getCheckNewTasksEverySeconds() {
@@ -392,6 +412,14 @@ public class SingularityConfiguration extends Configuration {
     return pendingDeployHoldTaskDuringDecommissionMillis;
   }
 
+  public long getCacheForWebForMillis() {
+    return cacheForWebForMillis;
+  }
+
+  public void setCacheForWebForMillis(long cacheForWebForMillis) {
+    this.cacheForWebForMillis = cacheForWebForMillis;
+  }
+
   public void setPendingDeployHoldTaskDuringDecommissionMillis(long pendingDeployHoldTaskDuringDecommissionMillis) {
     this.pendingDeployHoldTaskDuringDecommissionMillis = pendingDeployHoldTaskDuringDecommissionMillis;
   }
@@ -430,6 +458,30 @@ public class SingularityConfiguration extends Configuration {
 
   public void setCacheTasksInitialSize(int cacheTasksInitialSize) {
     this.cacheTasksInitialSize = cacheTasksInitialSize;
+  }
+
+  public int getCacheDeploysMaxSize() {
+    return cacheDeploysMaxSize;
+  }
+
+  public void setCacheDeploysMaxSize(int cacheDeploysMaxSize) {
+    this.cacheDeploysMaxSize = cacheDeploysMaxSize;
+  }
+
+  public int getCacheDeploysInitialSize() {
+    return cacheDeploysInitialSize;
+  }
+
+  public void setCacheDeploysInitialSize(int cacheDeploysInitialSize) {
+    this.cacheDeploysInitialSize = cacheDeploysInitialSize;
+  }
+
+  public long getCacheDeploysForMillis() {
+    return cacheDeploysForMillis;
+  }
+
+  public void setCacheDeploysForMillis(long cacheDeploysForMillis) {
+    this.cacheDeploysForMillis = cacheDeploysForMillis;
   }
 
   public int getCoreThreadpoolSize() {
@@ -1333,5 +1385,33 @@ public class SingularityConfiguration extends Configuration {
 
   public void setMaxDecommissioningSlaves(int maxDecommissioningSlaves) {
     this.maxDecommissioningSlaves = maxDecommissioningSlaves;
+  }
+
+  public boolean isSpreadAllSlavesEnabled() {
+    return spreadAllSlavesEnabled;
+  }
+
+  public void setSpreadAllSlavesEnabled(boolean spreadAllSlavesEnabled) {
+    this.spreadAllSlavesEnabled = spreadAllSlavesEnabled;
+  }
+
+  public void setCheckAutoSpreadAllSlavesEverySeconds(long checkAutoSpreadAllSlavesEverySeconds) {
+    this.checkAutoSpreadAllSlavesEverySeconds = checkAutoSpreadAllSlavesEverySeconds;
+  }
+
+  public long getDelayPollersWhenDeltaOverMs() {
+    return delayPollersWhenDeltaOverMs;
+  }
+
+  public void setDelayPollersWhenDeltaOverMs(long delayPollersWhenDeltaOverMs) {
+    this.delayPollersWhenDeltaOverMs = delayPollersWhenDeltaOverMs;
+  }
+
+  public boolean isDelayOfferProcessingForLargeStatusUpdateDelta() {
+    return delayOfferProcessingForLargeStatusUpdateDelta;
+  }
+
+  public void setDelayOfferProcessingForLargeStatusUpdateDelta(boolean delayOfferProcessingForLargeStatusUpdateDelta) {
+    this.delayOfferProcessingForLargeStatusUpdateDelta = delayOfferProcessingForLargeStatusUpdateDelta;
   }
 }

@@ -17,6 +17,7 @@ args+=( -Ddw.server.applicationContextPath="${SINGULARITY_APP_CTX:=/singularity}
 args+=( -Ddw.mesos.master="${SINGULARITY_MESOS_MASTER:=zk://localhost:2181/mesos}" )
 args+=( -Ddw.mesos.frameworkName="${SINGULARITY_MESOS_FRAMEWORK_NAME:=Singularity}" )
 args+=( -Ddw.mesos.frameworkId="${SINGULARITY_MESOS_FRAMEWORK_ID:=Singularity}" )
+[[ ! ${SINGULARITY_MESOS_FRAMEWORK_ROLE:-} ]] || args+=( -Ddw.mesos.frameworkRole="${SINGULARITY_MESOS_FRAMEWORK_ROLE}" )
 args+=( -Ddw.mesos.defaultCpus="${SINGULARITY_MESOS_DEFAULT_CPUS:=1}" )
 args+=( -Ddw.mesos.defaultMemory="${SINGULARITY_MESOS_DEFAULT_MEMORY:=128}" )
 args+=( -Ddw.zookeeper.quorum="${SINGULARITY_ZK:=localhost:2181}" )

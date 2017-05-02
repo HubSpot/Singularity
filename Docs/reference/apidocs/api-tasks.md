@@ -191,6 +191,11 @@ Retrieve list of scheduled tasks for a specific request.
 | Parameter | Required | Description | Data Type |
 |-----------|----------|-------------|-----------|
 | requestId | true |  | string |
+**query**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| useWebCache | false |  | boolean |
 
 ###### Response
 [List[SingularityTaskRequest]](models.md#model-SingularityTaskRequest)
@@ -209,7 +214,11 @@ Retrieve list of scheduled task IDs.
 
 
 ###### Parameters
-- No parameters
+**query**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| useWebCache | false |  | boolean |
 
 ###### Response
 [UNKNOWN[SingularityPendingTaskId]](models.md#model-UNKNOWN[SingularityPendingTaskId])
@@ -228,7 +237,11 @@ Retrieve list of scheduled tasks.
 
 
 ###### Parameters
-- No parameters
+**query**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| useWebCache | false |  | boolean |
 
 ###### Response
 [List[SingularityTaskRequest]](models.md#model-SingularityTaskRequest)
@@ -285,7 +298,11 @@ Retrieve the list of cleaning tasks.
 
 
 ###### Parameters
-- No parameters
+**query**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| useWebCache | false |  | boolean |
 
 ###### Response
 [UNKNOWN[SingularityTaskCleanup]](models.md#model-UNKNOWN[SingularityTaskCleanup])
@@ -309,6 +326,11 @@ Retrieve list of active tasks on a specific slave.
 | Parameter | Required | Description | Data Type |
 |-----------|----------|-------------|-----------|
 | slaveId | true |  | string |
+**query**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| useWebCache | false |  | boolean |
 
 ###### Response
 [UNKNOWN[SingularityTask]](models.md#model-UNKNOWN[SingularityTask])
@@ -327,7 +349,11 @@ Retrieve the list of active tasks.
 
 
 ###### Parameters
-- No parameters
+**query**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| useWebCache | false |  | boolean |
 
 ###### Response
 [UNKNOWN[SingularityTask]](models.md#model-UNKNOWN[SingularityTask])

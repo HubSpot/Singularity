@@ -147,9 +147,24 @@ public class SingularityDeployChecker {
     final List<SingularityTaskId> requestTasks = taskManager.getTaskIdsForRequest(request.getId());
     final List<SingularityTaskId> activeTasks = taskManager.filterActiveTaskIds(requestTasks);
 
-    final List<SingularityTaskId> inactiveDeployMatchingTasks = SingularityTaskId.matchingAndNotIn(requestTasks, pendingDeployMarker.getRequestId(), pendingDeployMarker.getDeployId(), activeTasks);
-    final List<SingularityTaskId> deployMatchingTasks = Lists.newArrayList(Iterables.filter(activeTasks, SingularityTaskId.matchingDeploy(pendingDeployMarker.getDeployId())));
-    final List<SingularityTaskId> allOtherMatchingTasks = Lists.newArrayList(Iterables.filter(activeTasks, Predicates.not(SingularityTaskId.matchingDeploy(pendingDeployMarker.getDeployId()))));
+    final List<SingularityTaskId> inactiveDeployMatchingTasks = new ArrayList<>(requestTasks.size());
+
+    for (SingularityTaskId taskId : requestTasks) {
+      if (taskId.getDeployId().equals(pendingDeployMarker.getDeployId()) && !activeTasks.contains(taskId)) {
+        inactiveDeployMatchingTasks.add(taskId);
+      }
+    }
+
+    final List<SingularityTaskId> deployMatchingTasks = new ArrayList<>(activeTasks.size());
+    final List<SingularityTaskId> allOtherMatchingTasks = new ArrayList<>(activeTasks.size());
+
+    for (SingularityTaskId taskId : activeTasks) {
+      if (taskId.getDeployId().equals(pendingDeployMarker.getDeployId())) {
+        deployMatchingTasks.add(taskId);
+      } else {
+        allOtherMatchingTasks.add(taskId);
+      }
+    }
 
     SingularityDeployResult deployResult =
       getDeployResult(request, cancelRequest, pendingDeploy, updatePendingDeployRequest, deploy, deployMatchingTasks, allOtherMatchingTasks, inactiveDeployMatchingTasks);
@@ -253,7 +268,7 @@ public class SingularityDeployChecker {
       cleanupTasks(pendingDeploy, request, deployResult, tasksToKill);
     }
 
-    if (deploy.isPresent()) {
+    if (deploy.isPresent() && deploy.get().getRunImmediately().isPresent()) {
       Optional<SingularityPendingRequest> maybePendingRequest = buildPendingRequest(request,
           pendingDeploy,
           deployResult,
@@ -261,7 +276,7 @@ public class SingularityDeployChecker {
       if (maybePendingRequest.isPresent()) {
         requestManager.addToPendingQueue(maybePendingRequest.get());
       }
-    } else {
+    } else if (!request.isDeployable() && !request.isOneOff()) {
       Optional<SingularityPendingRequest> maybePendingRequest = buildPendingRequest(request,
           pendingDeploy,
           deployResult,

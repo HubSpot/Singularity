@@ -36,6 +36,7 @@ import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.transcoders.IdTranscoder;
 import com.hubspot.singularity.data.transcoders.Transcoder;
 import com.hubspot.singularity.event.SingularityEventListener;
+import com.hubspot.singularity.scheduler.SingularityLeaderCache;
 
 @Singleton
 public class DeployManager extends CuratorAsyncManager {
@@ -52,6 +53,9 @@ public class DeployManager extends CuratorAsyncManager {
   private final Transcoder<SingularityUpdatePendingDeployRequest> updateRequestTranscoder;
 
   private final IdTranscoder<SingularityDeployKey> deployKeyTranscoder;
+
+  private final ZkCache<SingularityDeploy> deploysCache;
+  private final SingularityLeaderCache leaderCache;
 
   private static final String DEPLOY_ROOT = "/deploys";
 
@@ -71,9 +75,9 @@ public class DeployManager extends CuratorAsyncManager {
 
   @Inject
   public DeployManager(CuratorFramework curator, SingularityConfiguration configuration, MetricRegistry metricRegistry, SingularityEventListener singularityEventListener, Transcoder<SingularityDeploy> deployTranscoder,
-      Transcoder<SingularityRequestDeployState> requestDeployStateTranscoder, Transcoder<SingularityPendingDeploy> pendingDeployTranscoder, Transcoder<SingularityDeployMarker> deployMarkerTranscoder,
-      Transcoder<SingularityDeployStatistics> deployStatisticsTranscoder, Transcoder<SingularityDeployResult> deployStateTranscoder, IdTranscoder<SingularityDeployKey> deployKeyTranscoder,
-      Transcoder<SingularityUpdatePendingDeployRequest> updateRequestTranscoder) {
+                       Transcoder<SingularityRequestDeployState> requestDeployStateTranscoder, Transcoder<SingularityPendingDeploy> pendingDeployTranscoder, Transcoder<SingularityDeployMarker> deployMarkerTranscoder,
+                       Transcoder<SingularityDeployStatistics> deployStatisticsTranscoder, Transcoder<SingularityDeployResult> deployStateTranscoder, IdTranscoder<SingularityDeployKey> deployKeyTranscoder,
+                       Transcoder<SingularityUpdatePendingDeployRequest> updateRequestTranscoder, ZkCache<SingularityDeploy> deploysCache, SingularityLeaderCache leaderCache) {
     super(curator, configuration, metricRegistry);
 
     this.singularityEventListener = singularityEventListener;
@@ -85,6 +89,8 @@ public class DeployManager extends CuratorAsyncManager {
     this.deployStateTranscoder = deployStateTranscoder;
     this.deployKeyTranscoder = deployKeyTranscoder;
     this.updateRequestTranscoder = updateRequestTranscoder;
+    this.deploysCache = deploysCache;
+    this.leaderCache = leaderCache;
   }
 
   public List<SingularityDeployKey> getDeployIdsFor(String requestId) {
@@ -104,6 +110,14 @@ public class DeployManager extends CuratorAsyncManager {
 
   @Timed
   public Map<String, SingularityRequestDeployState> getRequestDeployStatesByRequestIds(Collection<String> requestIds) {
+    if (leaderCache.active()) {
+      return leaderCache.getRequestDeployStateByRequestId(requestIds);
+    }
+
+    return fetchDeployStatesByRequestIds(requestIds);
+  }
+
+  public Map<String, SingularityRequestDeployState> fetchDeployStatesByRequestIds(Collection<String> requestIds) {
     final List<String> paths = Lists.newArrayListWithCapacity(requestIds.size());
 
     for (String requestId : requestIds) {
@@ -122,9 +136,11 @@ public class DeployManager extends CuratorAsyncManager {
 
   @Timed
   public Map<String, SingularityRequestDeployState> getAllRequestDeployStatesByRequestId() {
+    if (leaderCache.active()) {
+      return leaderCache.getRequestDeployStateByRequestId();
+    }
     final List<String> requestIds = getChildren(BY_REQUEST_ROOT);
-
-    return getRequestDeployStatesByRequestIds(requestIds);
+    return fetchDeployStatesByRequestIds(requestIds);
   }
 
   public List<SingularityDeployMarker> getCancelDeploys() {
@@ -175,7 +191,7 @@ public class DeployManager extends CuratorAsyncManager {
       paths.add(getDeployDataPath(deployKey.getRequestId(), deployKey.getDeployId()));
     }
 
-    final List<SingularityDeploy> deploys = getAsync("getDeploysForKeys", paths, deployTranscoder);
+    final List<SingularityDeploy> deploys = getAsync("getDeploysForKeys", paths, deployTranscoder, deploysCache);
 
     final Map<SingularityDeployKey, SingularityDeploy> deployKeyToDeploy = Maps.uniqueIndex(deploys, new Function<SingularityDeploy, SingularityDeployKey>() {
       @Override
@@ -244,7 +260,7 @@ public class DeployManager extends CuratorAsyncManager {
   public Optional<SingularityDeploy> getDeploy(String requestId, String deployId) {
     final String deployPath = getDeployDataPath(requestId, deployId);
 
-    return getData(deployPath, deployTranscoder);
+    return getData(deployPath, deployTranscoder, deploysCache, true);
   }
 
   public Optional<String> getInUseDeployId(String requestId) {
@@ -258,10 +274,17 @@ public class DeployManager extends CuratorAsyncManager {
   }
 
   public Optional<SingularityRequestDeployState> getRequestDeployState(String requestId) {
+    if (leaderCache.active()) {
+      return leaderCache.getRequestDeployState(requestId);
+    }
     return getData(getRequestDeployStatePath(requestId), requestDeployStateTranscoder);
   }
 
   public SingularityCreateResult saveNewRequestDeployState(SingularityRequestDeployState newDeployState) {
+    if (leaderCache.active()) {
+      leaderCache.putRequestDeployState(newDeployState);
+    }
+
     return save(getRequestDeployStatePath(newDeployState.getRequestId()), newDeployState, requestDeployStateTranscoder);
   }
 
@@ -286,6 +309,9 @@ public class DeployManager extends CuratorAsyncManager {
   }
 
   public SingularityDeleteResult deleteRequestDeployState(String requestId) {
+    if (leaderCache.active()) {
+      leaderCache.deleteRequestDeployState(requestId);
+    }
     return delete(getRequestDeployStatePath(requestId));
   }
 
@@ -354,5 +380,10 @@ public class DeployManager extends CuratorAsyncManager {
 
   public SingularityDeleteResult deleteRequestId(String requestId) {
     return delete(getRequestDeployPath(requestId));
+  }
+
+  public void activateLeaderCache() {
+    final List<String> requestIds = getChildren(BY_REQUEST_ROOT);
+    leaderCache.cacheRequestDeployStates(fetchDeployStatesByRequestIds(requestIds));
   }
 }

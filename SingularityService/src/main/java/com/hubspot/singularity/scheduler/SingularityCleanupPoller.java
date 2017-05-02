@@ -8,10 +8,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.inject.Inject;
-import com.hubspot.singularity.config.SingularityConfiguration;
-import com.hubspot.singularity.mesos.SingularitySchedulerLock;
 import com.hubspot.singularity.SingularityAction;
+import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.DisasterManager;
+import com.hubspot.singularity.mesos.SingularitySchedulerLock;
 
 @Singleton
 public class SingularityCleanupPoller extends SingularityLeaderOnlyPoller {
@@ -23,7 +23,7 @@ public class SingularityCleanupPoller extends SingularityLeaderOnlyPoller {
 
   @Inject
   SingularityCleanupPoller(SingularityConfiguration configuration, SingularityCleaner cleaner, SingularitySchedulerLock lock, DisasterManager disasterManager) {
-    super(configuration.getCleanupEverySeconds(), TimeUnit.SECONDS, lock);
+    super(configuration.getCleanupEverySeconds(), TimeUnit.SECONDS, lock, true);
 
     this.cleaner = cleaner;
     this.disasterManager = disasterManager;
