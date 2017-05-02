@@ -2,6 +2,7 @@ package com.hubspot.singularity.mesos;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.mesos.Protos.FrameworkID;
@@ -18,7 +19,6 @@ import org.mockito.Mockito;
 
 import com.google.inject.Inject;
 import com.google.common.base.Optional;
-import com.hubspot.horizon.shaded.org.jboss.netty.util.internal.ThreadLocalRandom;
 import com.hubspot.mesos.MesosUtils;
 import com.hubspot.singularity.RequestType;
 import com.hubspot.singularity.SingularityCuratorTestBase;
