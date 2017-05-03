@@ -1904,6 +1904,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     Assert.assertEquals(5, taskManager.getPendingTaskIds().size());
   }
 
+  @Test
   public void testAcceptOffersWithRoleForRequestWithRole() {
     SingularityRequestBuilder bldr = new SingularityRequestBuilder(requestId, RequestType.ON_DEMAND);
     bldr.setRequiredRole(Optional.of("test-role"));
