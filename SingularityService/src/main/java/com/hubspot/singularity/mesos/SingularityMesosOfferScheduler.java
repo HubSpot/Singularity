@@ -147,7 +147,7 @@ public class SingularityMesosOfferScheduler {
           }
 
           double score = score(offerHolder, stateCache, tasksPerOfferPerRequest, taskRequestHolder, getSlaveUsage(currentSlaveUsages, offerHolder.getOffer().getSlaveId().getValue()));
-          LOG.trace("Scored {} for task {} with offer for slave {} and resources {} ", score, taskRequestHolder.getTaskRequest().getPendingTask().getPendingTaskId().getId(), offerHolder.getOffer().getSlaveId(), offerHolder.getCurrentResources());
+          LOG.trace("Scored {} for task {} with offer for slave {} and resources {} ", score, taskRequestHolder.getTaskRequest().getPendingTask().getPendingTaskId().getId(), offerHolder.getOffer().getHostname(), offerHolder.getCurrentResources());
 
           if (score != 0 && score >= minScore) {
             // todo: can short circuit here if score is high enough (>= .9)
@@ -161,7 +161,7 @@ public class SingularityMesosOfferScheduler {
 
         if (!scorePerOffer.isEmpty()) {
           SingularityOfferHolder bestOffer = Collections.max(scorePerOffer.entrySet(), Map.Entry.comparingByValue()).getKey();
-          LOG.info("Best offer is {} with a score of {}/1", bestOffer, scorePerOffer.get(bestOffer));
+          LOG.info("Best offer {}/1 is on {}", scorePerOffer.get(bestOffer), bestOffer.getSanitizedHost());
 
           SingularityTask task = acceptTask(bestOffer, stateCache, tasksPerOfferPerRequest, taskRequestHolder);
 
