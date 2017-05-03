@@ -31,6 +31,7 @@ import com.hubspot.singularity.ExtendedTaskState;
 import com.hubspot.singularity.MachineState;
 import com.hubspot.singularity.OrderDirection;
 import com.hubspot.singularity.SingularityAction;
+import com.hubspot.singularity.SingularityAuthorizationScope;
 import com.hubspot.singularity.SingularityClientCredentials;
 import com.hubspot.singularity.SingularityCreateResult;
 import com.hubspot.singularity.SingularityDeleteResult;
@@ -82,6 +83,8 @@ import com.hubspot.singularity.api.SingularityUnpauseRequest;
 public class SingularityClient {
 
   private static final Logger LOG = LoggerFactory.getLogger(SingularityClient.class);
+
+  private static final String AUTH_CHECK_FORMAT = "http://%s/%s/auth/%s/auth-check/%s";
 
   private static final String STATE_FORMAT = "http://%s/%s/state";
   private static final String TASK_RECONCILIATION_FORMAT = STATE_FORMAT + "/task-reconciliation";
@@ -1285,6 +1288,18 @@ public class SingularityClient {
   public void deletePriorityFreeze() {
     final String requestUri = String.format(PRIORITY_FREEZE_FORMAT, getHost(), contextPath);
     delete(requestUri, "priority freeze", "");
+  }
+
+  //
+  // Auth
+  //
+
+  public boolean isUserAuthorized(String requestId, String userId, SingularityAuthorizationScope scope) {
+    final String requestUri = String.format(AUTH_CHECK_FORMAT, getHost(), contextPath, requestId, userId);
+    Map<String, Object> params = new HashMap<>();
+    params.put("scope", scope.name());
+    HttpResponse response = executeGetSingleWithParams(requestUri, "auth check", "", Optional.of(params));
+    return response.isSuccess();
   }
 
 }
