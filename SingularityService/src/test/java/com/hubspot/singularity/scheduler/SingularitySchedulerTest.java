@@ -879,6 +879,39 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
   }
 
   @Test
+  public void testLbCleanupSkippedOnSkipRemoveFlag() {
+    configuration.setDeleteRemovedRequestsFromLoadBalancer(true);
+    initLoadBalancedRequest();
+    initLoadBalancedDeploy();
+
+    boolean removeFromLoadBalancer = false;
+    SingularityDeleteRequestRequest deleteRequest = new SingularityDeleteRequestRequest(Optional.absent(), Optional.absent(), Optional.of(removeFromLoadBalancer));
+
+    requestResource.deleteRequest(requestId, Optional.of(deleteRequest));
+
+    testingLbClient.setNextBaragonRequestState(BaragonRequestState.WAITING);
+
+    Assert.assertFalse("Should be a request cleanup request", requestManager.getCleanupRequests().isEmpty());
+    cleaner.drainCleanupQueue();
+    Assert.assertTrue("Should not be a load balancer cleanup request", requestManager.getLbCleanupRequests().isEmpty());
+  }
+
+  @Test
+  public void testLbCleanupOccursOnRequestDelete() {
+    configuration.setDeleteRemovedRequestsFromLoadBalancer(true);
+    initLoadBalancedRequest();
+    initLoadBalancedDeploy();
+
+    requestResource.deleteRequest(requestId, Optional.absent());
+
+    testingLbClient.setNextBaragonRequestState(BaragonRequestState.WAITING);
+
+    Assert.assertFalse("Should be a request cleanup request", requestManager.getCleanupRequests().isEmpty());
+    cleaner.drainCleanupQueue();
+    Assert.assertFalse("Should be a request to cleanup the load balancer", requestManager.getLbCleanupRequestIds().isEmpty());
+  }
+
+  @Test
   public void testReconciliation() {
     Assert.assertTrue(!taskReconciliation.isReconciliationRunning());
 
@@ -960,7 +993,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     initRequest();
 
     requestManager.createCleanupRequest(new SingularityRequestCleanup(Optional.<String>absent(), RequestCleanupType.PAUSING, System.currentTimeMillis(),
-        Optional.<Boolean>absent(), requestId, Optional.<String>absent(), Optional.<Boolean> absent(), Optional.<String>absent(), Optional.<String>absent(), Optional.<SingularityShellCommand>absent()));
+        Optional.<Boolean>absent(), Optional.absent(), requestId, Optional.<String>absent(), Optional.<Boolean> absent(), Optional.<String>absent(), Optional.<String>absent(), Optional.<SingularityShellCommand>absent()));
 
     cleaner.drainCleanupQueue();
 
@@ -1142,7 +1175,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     SingularityTask taskTwo = startSeparatePlacementTask(firstDeploy, 2);
 
     requestManager.createCleanupRequest(new SingularityRequestCleanup(user, RequestCleanupType.INCREMENTAL_BOUNCE, System.currentTimeMillis(),
-        Optional.<Boolean>absent(), requestId, Optional.of(firstDeployId), Optional.<Boolean> absent(), Optional.<String>absent(), Optional.<String>absent(), Optional.<SingularityShellCommand>absent()));
+        Optional.<Boolean>absent(), Optional.absent(), requestId, Optional.of(firstDeployId), Optional.<Boolean> absent(), Optional.<String>absent(), Optional.<String>absent(), Optional.<SingularityShellCommand>absent()));
 
     Assert.assertTrue(requestManager.cleanupRequestExists(requestId));
 
@@ -1426,7 +1459,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     deployChecker.checkDeploys();
     Assert.assertEquals(DeployState.WAITING, deployManager.getPendingDeploys().get(0).getCurrentDeployState());
 
-    requestManager.startDeletingRequest(request, Optional.<String>absent(), Optional.<String>absent(), Optional.<String>absent());
+    requestManager.startDeletingRequest(request, Optional.absent(), Optional.<String>absent(), Optional.<String>absent(), Optional.<String>absent());
     requestManager.markDeleted(request, now, Optional.<String>absent(), Optional.<String>absent());
     deployChecker.checkDeploys();
     SingularityDeployResult deployResult = deployManager.getDeployResult(requestId, firstDeployId).get();
@@ -1440,7 +1473,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     Assert.assertEquals(RequestState.ACTIVE, requestManager.getRequest(requestId).get().getState());
     Assert.assertEquals(1, requestManager.getRequestHistory(requestId).size());
 
-    requestManager.startDeletingRequest(request, Optional.<String>absent(), Optional.<String>absent(), Optional.of("the cake is a lie"));
+    requestManager.startDeletingRequest(request, Optional.absent(), Optional.<String>absent(), Optional.<String>absent(), Optional.of("the cake is a lie"));
     Assert.assertEquals(RequestState.DELETING, requestManager.getRequest(requestId).get().getState());
     Assert.assertEquals(2, requestManager.getRequestHistory(requestId).size());
 
@@ -1846,6 +1879,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     Assert.assertEquals(5, taskManager.getPendingTaskIds().size());
   }
 
+  @Test
   public void testAcceptOffersWithRoleForRequestWithRole() {
     SingularityRequestBuilder bldr = new SingularityRequestBuilder(requestId, RequestType.ON_DEMAND);
     bldr.setRequiredRole(Optional.of("test-role"));

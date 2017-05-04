@@ -398,11 +398,11 @@ public class RequestManager extends CuratorAsyncManager {
     return getData(getRequestPath(requestId), requestTranscoder);
   }
 
-  public void startDeletingRequest(SingularityRequest request, Optional<String> user, Optional<String> actionId, Optional<String> message) {
+  public void startDeletingRequest(SingularityRequest request, Optional<Boolean> removeFromLoadBalancer, Optional<String> user, Optional<String> actionId, Optional<String> message) {
     final long now = System.currentTimeMillis();
 
     // delete it no matter if the delete request already exists.
-    createCleanupRequest(new SingularityRequestCleanup(user, RequestCleanupType.DELETING, now, Optional.of(Boolean.TRUE), request.getId(), Optional.<String> absent(),
+    createCleanupRequest(new SingularityRequestCleanup(user, RequestCleanupType.DELETING, now, Optional.of(Boolean.TRUE), removeFromLoadBalancer, request.getId(), Optional.<String> absent(),
         Optional.<Boolean> absent(), message, actionId, Optional.<SingularityShellCommand>absent()));
 
     markDeleting(request, System.currentTimeMillis(), user, message);
