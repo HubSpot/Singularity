@@ -497,7 +497,7 @@ public class SingularityCleaner {
         runBeforeKillId = Optional.of(shellRequest.getId());
       }
 
-      taskManager.createTaskCleanup(new SingularityTaskCleanup(requestCleanup.getUser(), TaskCleanupType.REQUEST_DELETING, start, taskId, requestCleanup.getMessage(), requestCleanup.getActionId(), runBeforeKillId));
+      taskManager.createTaskCleanup(new SingularityTaskCleanup(requestCleanup.getUser(), TaskCleanupType.REQUEST_DELETING, start, taskId, requestCleanup.getMessage(), requestCleanup.getActionId(), runBeforeKillId, requestCleanup.getRemoveFromLoadBalancer()));
     }
   }
 
@@ -661,7 +661,7 @@ public class SingularityCleaner {
       requestManager.createCleanupRequest(
           new SingularityRequestCleanup(
               cleanupTask.getUser(), RequestCleanupType.DELETING, System.currentTimeMillis(),
-              Optional.of(Boolean.TRUE), Optional.absent(), requestId, Optional.<String> absent(),
+              Optional.of(Boolean.TRUE), cleanupTask.getRemoveFromLoadBalancer(), requestId, Optional.<String> absent(),
               Optional.<Boolean> absent(), cleanupTask.getMessage(), Optional.<String> absent(), Optional.<SingularityShellCommand>absent()));
     }
   }

@@ -883,6 +883,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     configuration.setDeleteRemovedRequestsFromLoadBalancer(true);
     initLoadBalancedRequest();
     initLoadBalancedDeploy();
+    startTask(firstDeploy);
 
     boolean removeFromLoadBalancer = false;
     SingularityDeleteRequestRequest deleteRequest = new SingularityDeleteRequestRequest(Optional.absent(), Optional.absent(), Optional.of(removeFromLoadBalancer));
@@ -891,9 +892,14 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
 
     testingLbClient.setNextBaragonRequestState(BaragonRequestState.WAITING);
 
-    Assert.assertFalse("Should be a request cleanup request", requestManager.getCleanupRequests().isEmpty());
+    Assert.assertFalse("Tasks should get cleaned up", requestManager.getCleanupRequests().isEmpty());
     cleaner.drainCleanupQueue();
-    Assert.assertTrue("Should not be a load balancer cleanup request", requestManager.getLbCleanupRequests().isEmpty());
+    killKilledTasks();
+
+    Assert.assertFalse("The request should get cleaned up", requestManager.getCleanupRequests().isEmpty());
+    cleaner.drainCleanupQueue();
+
+    Assert.assertTrue("The request should not be removed from the load balancer", requestManager.getLbCleanupRequestIds().isEmpty());
   }
 
   @Test
@@ -901,14 +907,20 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     configuration.setDeleteRemovedRequestsFromLoadBalancer(true);
     initLoadBalancedRequest();
     initLoadBalancedDeploy();
+    startTask(firstDeploy);
 
     requestResource.deleteRequest(requestId, Optional.absent());
 
     testingLbClient.setNextBaragonRequestState(BaragonRequestState.WAITING);
 
-    Assert.assertFalse("Should be a request cleanup request", requestManager.getCleanupRequests().isEmpty());
+    Assert.assertFalse("Tasks should get cleaned up", requestManager.getCleanupRequests().isEmpty());
     cleaner.drainCleanupQueue();
-    Assert.assertFalse("Should be a request to cleanup the load balancer", requestManager.getLbCleanupRequestIds().isEmpty());
+    killKilledTasks();
+
+    Assert.assertFalse("The request should get cleaned up", requestManager.getCleanupRequests().isEmpty());
+    cleaner.drainCleanupQueue();
+
+    Assert.assertFalse("The request should get removed from the load balancer", requestManager.getLbCleanupRequestIds().isEmpty());
   }
 
   @Test
