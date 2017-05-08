@@ -41,7 +41,6 @@ import com.hubspot.singularity.SingularityRequestDeployState;
 import com.hubspot.singularity.SingularityRequestHistory;
 import com.hubspot.singularity.SingularityRequestLbCleanup;
 import com.hubspot.singularity.SingularityRequestWithState;
-import com.hubspot.singularity.SingularityShellCommand;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskCleanup;
 import com.hubspot.singularity.SingularityTaskId;
@@ -388,7 +387,7 @@ public class SingularityCleaner {
       if (killActiveTasks) {
         for (SingularityTaskId matchingTaskId : matchingActiveTaskIds) {
           LOG.debug("Killing task {} due to {}", matchingTaskId, requestCleanup);
-          driverManager.killAndRecord(matchingTaskId, requestCleanup.getCleanupType(), Optional.<String>absent());
+          driverManager.killAndRecord(matchingTaskId, requestCleanup.getCleanupType(), Optional.absent());
           numTasksKilled++;
         }
       } else {
@@ -419,7 +418,7 @@ public class SingularityCleaner {
         for (SingularityTaskId taskId : matchingActiveTaskIds) {
           taskIds.add(taskId.getId());
         }
-        requestManager.saveLbCleanupRequest(new SingularityRequestLbCleanup(requestId, maybeDeploy.get().getLoadBalancerGroups().get(), maybeDeploy.get().getServiceBasePath().get(), taskIds, Optional.<SingularityLoadBalancerUpdate>absent()));
+        requestManager.saveLbCleanupRequest(new SingularityRequestLbCleanup(requestId, maybeDeploy.get().getLoadBalancerGroups().get(), maybeDeploy.get().getServiceBasePath().get(), taskIds, Optional.absent()));
         return;
       }
     }
@@ -452,7 +451,7 @@ public class SingularityCleaner {
     }
 
     requestManager.addToPendingQueue(new SingularityPendingRequest(requestCleanup.getRequestId(), requestCleanup.getDeployId().get(), requestCleanup.getTimestamp(),
-        requestCleanup.getUser(), PendingType.BOUNCE, Optional.<List<String>> absent(), Optional.<String> absent(), requestCleanup.getSkipHealthchecks(), requestCleanup.getMessage(), requestCleanup.getActionId()));
+        requestCleanup.getUser(), PendingType.BOUNCE, Optional.absent(), Optional.absent(), requestCleanup.getSkipHealthchecks(), requestCleanup.getMessage(), requestCleanup.getActionId()));
 
     LOG.info("Added {} tasks for request {} to cleanup bounce queue in {}", matchingTaskIds.size(), requestCleanup.getRequestId(), JavaUtils.duration(start));
   }
@@ -557,7 +556,7 @@ public class SingularityCleaner {
             killedTaskIdRecord, JavaUtils.durationFromMillis(duration), JavaUtils.durationFromMillis(configuration.getAskDriverToKillTasksAgainAfterMillis()));
 
         driverManager.killAndRecord(killedTaskIdRecord.getTaskId(), killedTaskIdRecord.getRequestCleanupType(),
-            killedTaskIdRecord.getTaskCleanupType(), Optional.of(killedTaskIdRecord.getOriginalTimestamp()), Optional.of(killedTaskIdRecord.getRetries()), Optional.<String>absent());
+            killedTaskIdRecord.getTaskCleanupType(), Optional.of(killedTaskIdRecord.getOriginalTimestamp()), Optional.of(killedTaskIdRecord.getRetries()), Optional.absent());
 
         rekilled++;
       } else {
@@ -613,13 +612,14 @@ public class SingularityCleaner {
         taskManager.deleteCleanupTask(taskId.getId());
       } else if (shouldKillTask(cleanupTask, activeTaskIds, cleaningTasks, incrementalCleaningTasks) && checkLBStateAndShouldKillTask(cleanupTask)) {
         driverManager.killAndRecord(taskId, cleanupTask.getCleanupType(), cleanupTask.getUser());
-        cleanupRequestIfNoRemainingTasks(cleanupTask, deletedRequestIdToTaskIds);
         taskManager.deleteCleanupTask(taskId.getId());
 
         killedTasks++;
       } else if (cleanupTask.getCleanupType() == TaskCleanupType.BOUNCING || cleanupTask.getCleanupType() == TaskCleanupType.INCREMENTAL_BOUNCE) {
         isBouncing.remove(SingularityDeployKey.fromTaskId(taskId));
       }
+
+      cleanupRequestIfNoRemainingTasks(cleanupTask, deletedRequestIdToTaskIds);
     }
 
     for (SingularityDeployKey bounceSucceeded : isBouncing) {
@@ -650,19 +650,18 @@ public class SingularityCleaner {
 
   private void cleanupRequestIfNoRemainingTasks(SingularityTaskCleanup cleanupTask, Map<String, List<String>> requestIdToTaskIds) {
     String requestId = cleanupTask.getTaskId().getRequestId();
-    if (requestIdToTaskIds.get(requestId) == null) {
-      LOG.info("Couldn't find tasks for requestId {}", requestId);
-      return;
-    }
-    List<String> requestTasks = requestIdToTaskIds.get(requestId);
-    requestTasks.remove(cleanupTask.getTaskId().getId());
-    if (requestTasks.isEmpty()) {
-      LOG.info("All tasks for requestId {} are now killed", requestId);
-      requestManager.createCleanupRequest(
-          new SingularityRequestCleanup(
-              cleanupTask.getUser(), RequestCleanupType.DELETING, System.currentTimeMillis(),
-              Optional.of(Boolean.TRUE), cleanupTask.getRemoveFromLoadBalancer(), requestId, Optional.<String> absent(),
-              Optional.<Boolean> absent(), cleanupTask.getMessage(), Optional.<String> absent(), Optional.<SingularityShellCommand>absent()));
+
+    if (requestIdToTaskIds.containsKey(requestId)) {
+      List<String> requestTasks = requestIdToTaskIds.get(requestId);
+      requestTasks.remove(cleanupTask.getTaskId().getId());
+      if (requestTasks.isEmpty()) {
+        LOG.info("All tasks for requestId {} are now killed, re-enqueueing request cleanup", requestId);
+        requestManager.createCleanupRequest(
+            new SingularityRequestCleanup(
+                cleanupTask.getUser(), RequestCleanupType.DELETING, System.currentTimeMillis(),
+                Optional.of(Boolean.TRUE), cleanupTask.getRemoveFromLoadBalancer(), requestId, Optional.absent(),
+                Optional.absent(), cleanupTask.getMessage(), Optional.absent(), Optional.absent()));
+      }
     }
   }
 
@@ -706,7 +705,7 @@ public class SingularityCleaner {
 
   private LoadBalancerRequestId getLoadBalancerRequestId(SingularityTaskId taskId, Optional<SingularityLoadBalancerUpdate> lbRemoveUpdate) {
     if (!lbRemoveUpdate.isPresent()) {
-      return new LoadBalancerRequestId(taskId.getId(), LoadBalancerRequestType.REMOVE, Optional.<Integer> absent());
+      return new LoadBalancerRequestId(taskId.getId(), LoadBalancerRequestType.REMOVE, Optional.absent());
     }
 
     switch (lbRemoveUpdate.get().getLoadBalancerState()) {
@@ -761,7 +760,7 @@ public class SingularityCleaner {
         return CheckLBState.MISSING_TASK;
       }
 
-      lbRemoveUpdate = lbClient.enqueue(loadBalancerRequestId, task.get().getTaskRequest().getRequest(), task.get().getTaskRequest().getDeploy(), Collections.<SingularityTask>emptyList(), Collections.singletonList(task.get()));
+      lbRemoveUpdate = lbClient.enqueue(loadBalancerRequestId, task.get().getTaskRequest().getRequest(), task.get().getTaskRequest().getDeploy(), Collections.emptyList(), Collections.singletonList(task.get()));
 
       taskManager.saveLoadBalancerState(taskId, LoadBalancerRequestType.REMOVE, lbRemoveUpdate);
     } else if (maybeLbRemoveUpdate.get().getLoadBalancerState() == BaragonRequestState.WAITING || maybeLbRemoveUpdate.get().getLoadBalancerState() == BaragonRequestState.CANCELING) {
@@ -949,7 +948,7 @@ public class SingularityCleaner {
 
   private LoadBalancerRequestId getLoadBalancerRequestId(String requestId, Optional<SingularityLoadBalancerUpdate> lbDeleteUpdate) {
     if (!lbDeleteUpdate.isPresent()) {
-      return new LoadBalancerRequestId(String.format("%s-%s", requestId, System.currentTimeMillis()), LoadBalancerRequestType.DELETE, Optional.<Integer>absent());
+      return new LoadBalancerRequestId(String.format("%s-%s", requestId, System.currentTimeMillis()), LoadBalancerRequestType.DELETE, Optional.absent());
     }
 
     switch (lbDeleteUpdate.get().getLoadBalancerState()) {

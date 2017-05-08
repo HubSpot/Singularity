@@ -1480,7 +1480,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
   }
 
   @Test
-  public void testDeletingState() {
+  public void itCorrectlyUpdatesRequestDeletingStateHistory() {
     initRequest();
     Assert.assertEquals(RequestState.ACTIVE, requestManager.getRequest(requestId).get().getState());
     Assert.assertEquals(1, requestManager.getRequestHistory(requestId).size());
@@ -1499,6 +1499,62 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     Assert.assertTrue(historyTypes.contains(RequestHistoryType.CREATED));
     Assert.assertTrue(historyTypes.contains(RequestHistoryType.DELETING));
     Assert.assertTrue(historyTypes.contains(RequestHistoryType.DELETED));
+  }
+
+
+  @Test
+  public void itSetsRequestStateToDeletedAfterAllTasksAreCleanedUp() {
+    initRequest();
+
+    SingularityRequest request = requestResource.getRequest(requestId).getRequest();
+    requestResource.postRequest(request.toBuilder().setInstances(Optional.of(2)).build());
+    initFirstDeploy();
+
+    launchTask(request, firstDeploy, 1, TaskState.TASK_RUNNING);
+    launchTask(request, firstDeploy, 2, TaskState.TASK_RUNNING);
+
+    Assert.assertEquals(requestId, requestManager.getActiveRequests().iterator().next().getRequest().getId());
+    Assert.assertEquals(2, taskManager.getActiveTaskIds().size());
+
+    requestManager.startDeletingRequest(request, Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent());
+
+    Assert.assertEquals(requestId, requestManager.getCleanupRequests().get(0).getRequestId());
+    Assert.assertEquals(RequestState.DELETING, requestManager.getRequest(requestId).get().getState());
+
+    cleaner.drainCleanupQueue();
+    Assert.assertEquals(0, taskManager.getCleanupTaskIds().size());
+    killKilledTasks();
+    cleaner.drainCleanupQueue();
+    Assert.assertFalse(requestManager.getRequest(requestId).isPresent());
+  }
+
+  @Test
+  public void itSetsRequestStateToDeletedIfTaskCleanupFails() {
+    initRequest();
+
+    SingularityRequest request = requestResource.getRequest(requestId).getRequest();
+    requestResource.postRequest(request.toBuilder().setInstances(Optional.of(2)).build());
+    initFirstDeploy();
+
+    SingularityTask firstTask = launchTask(request, firstDeploy, 1, TaskState.TASK_RUNNING);
+    launchTask(request, firstDeploy, 2, TaskState.TASK_RUNNING);
+
+    Assert.assertEquals(requestId, requestManager.getActiveRequests().iterator().next().getRequest().getId());
+    Assert.assertEquals(2, taskManager.getActiveTaskIds().size());
+
+    requestManager.startDeletingRequest(request, Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent());
+
+    Assert.assertEquals(requestId, requestManager.getCleanupRequests().get(0).getRequestId());
+    Assert.assertEquals(RequestState.DELETING, requestManager.getRequest(requestId).get().getState());
+
+    statusUpdate(firstTask, TaskState.TASK_FAILED);
+    Assert.assertEquals(1, taskManager.getActiveTaskIds().size());
+
+    cleaner.drainCleanupQueue();
+    Assert.assertEquals(0, taskManager.getCleanupTaskIds().size());
+    killKilledTasks();
+    cleaner.drainCleanupQueue();
+    Assert.assertFalse(requestManager.getRequest(requestId).isPresent());
   }
 
   @Test
