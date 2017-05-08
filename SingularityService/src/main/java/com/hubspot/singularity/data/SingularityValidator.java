@@ -159,7 +159,7 @@ public class SingularityValidator {
       checkBadRequest(request.getOwners().isPresent() && !request.getOwners().get().isEmpty(), "Request must have owners defined (this can be turned off in Singularity configuration)");
     }
 
-    checkBadRequest(request.getId().length() < maxRequestIdSize, "Request id must be less than %s characters, it is %s (%s)", maxRequestIdSize, request.getId().length(), request.getId());
+    checkBadRequest(request.getId().length() <= maxRequestIdSize, "Request id must be less %s characters or less, it is %s (%s)", maxRequestIdSize, request.getId().length(), request.getId());
     checkBadRequest(!request.getInstances().isPresent() || request.getInstances().get() > 0, "Instances must be greater than 0");
     checkBadRequest(request.getInstancesSafe() <= maxInstancesPerRequest, "Instances (%s) be greater than %s (maxInstancesPerRequest in mesos configuration)", request.getInstancesSafe(), maxInstancesPerRequest);
 
@@ -263,7 +263,7 @@ public class SingularityValidator {
     }
 
     checkBadRequest(deployId != null && ! DEPLOY_ID_ILLEGAL_PATTERN.matcher(deployId).find(), "Id cannot be null or contain characters other than [a-zA-Z0-9_]");
-    checkBadRequest(deployId.length() < maxDeployIdSize, "Deploy id must be less than %s characters, it is %s (%s)", maxDeployIdSize, deployId.length(), deployId);
+    checkBadRequest(deployId.length() <= maxDeployIdSize, "Deploy id must be %s characters or less, it is %s (%s)", maxDeployIdSize, deployId.length(), deployId);
     checkBadRequest(deploy.getRequestId() != null && deploy.getRequestId().equals(request.getId()), "Deploy id must match request id");
 
     if (request.isLoadBalanced()) {
