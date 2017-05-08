@@ -71,22 +71,25 @@ public class RackResource extends AbstractMachineResource<SingularityRack> {
   @POST
   @Path("/rack/{rackId}/decommission")
   @ApiOperation("Begin decommissioning a specific active rack")
-  public void decommissionRack(@ApiParam("Active rack ID") @PathParam("rackId") String rackId, Optional<SingularityMachineChangeRequest> changeRequest) {
-    super.decommission(rackId, changeRequest, JavaUtils.getUserEmail(user), SingularityAction.DECOMMISSION_RACK);
+  public void decommissionRack(@ApiParam("Active rack ID") @PathParam("rackId") String rackId, SingularityMachineChangeRequest changeRequest) {
+    final Optional<SingularityMachineChangeRequest> maybeChangeRequest = Optional.fromNullable(changeRequest);
+    super.decommission(rackId, maybeChangeRequest, JavaUtils.getUserEmail(user), SingularityAction.DECOMMISSION_RACK);
   }
 
   @POST
   @Path("/rack/{rackId}/freeze")
   @ApiOperation("Freeze a specific rack")
-  public void freezeRack(@ApiParam("Rack ID") @PathParam("rackId") String rackId, Optional<SingularityMachineChangeRequest> changeRequest) {
-    super.freeze(rackId, changeRequest, JavaUtils.getUserEmail(user), SingularityAction.FREEZE_RACK);
+  public void freezeRack(@ApiParam("Rack ID") @PathParam("rackId") String rackId, SingularityMachineChangeRequest changeRequest) {
+    final Optional<SingularityMachineChangeRequest> maybeChangeRequest = Optional.fromNullable(changeRequest);
+    super.freeze(rackId, maybeChangeRequest, JavaUtils.getUserEmail(user), SingularityAction.FREEZE_RACK);
   }
 
   @POST
   @Path("/rack/{rackId}/activate")
   @ApiOperation("Activate a decomissioning rack, canceling decomission without erasing history")
-  public void activateRack(@ApiParam("Active rackId") @PathParam("rackId") String rackId, Optional<SingularityMachineChangeRequest> changeRequest) {
-    super.activate(rackId, changeRequest, JavaUtils.getUserEmail(user), SingularityAction.ACTIVATE_RACK);
+  public void activateRack(@ApiParam("Active rackId") @PathParam("rackId") String rackId, SingularityMachineChangeRequest changeRequest) {
+    final Optional<SingularityMachineChangeRequest> maybeChangeRequest = Optional.fromNullable(changeRequest);
+    super.activate(rackId, maybeChangeRequest, JavaUtils.getUserEmail(user), SingularityAction.ACTIVATE_RACK);
   }
 
   @DELETE
