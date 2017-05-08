@@ -76,22 +76,25 @@ public class SlaveResource extends AbstractMachineResource<SingularitySlave> {
   @POST
   @Path("/slave/{slaveId}/decommission")
   @ApiOperation("Begin decommissioning a specific active slave")
-  public void decommissionSlave(@ApiParam("Active slaveId") @PathParam("slaveId") String slaveId, Optional<SingularityMachineChangeRequest> changeRequest) {
-    super.decommission(slaveId, changeRequest, JavaUtils.getUserEmail(user), SingularityAction.DECOMMISSION_SLAVE);
+  public void decommissionSlave(@ApiParam("Active slaveId") @PathParam("slaveId") String slaveId, SingularityMachineChangeRequest changeRequest) {
+    final Optional<SingularityMachineChangeRequest> maybeChangeRequest = Optional.fromNullable(changeRequest);
+    super.decommission(slaveId, maybeChangeRequest, JavaUtils.getUserEmail(user), SingularityAction.DECOMMISSION_SLAVE);
   }
 
   @POST
   @Path("/slave/{slaveId}/freeze")
   @ApiOperation("Freeze tasks on a specific slave")
-  public void freezeSlave(@ApiParam("Slave ID") @PathParam("slaveId") String slaveId, Optional<SingularityMachineChangeRequest> changeRequest) {
-    super.freeze(slaveId, changeRequest, JavaUtils.getUserEmail(user), SingularityAction.FREEZE_SLAVE);
+  public void freezeSlave(@ApiParam("Slave ID") @PathParam("slaveId") String slaveId, SingularityMachineChangeRequest changeRequest) {
+    final Optional<SingularityMachineChangeRequest> maybeChangeRequest = Optional.fromNullable(changeRequest);
+    super.freeze(slaveId, maybeChangeRequest, JavaUtils.getUserEmail(user), SingularityAction.FREEZE_SLAVE);
   }
 
   @POST
   @Path("/slave/{slaveId}/activate")
   @ApiOperation("Activate a decomissioning slave, canceling decomission without erasing history")
-  public void activateSlave(@ApiParam("Active slaveId") @PathParam("slaveId") String slaveId, Optional<SingularityMachineChangeRequest> changeRequest) {
-    super.activate(slaveId, changeRequest, JavaUtils.getUserEmail(user), SingularityAction.ACTIVATE_SLAVE);
+  public void activateSlave(@ApiParam("Active slaveId") @PathParam("slaveId") String slaveId, SingularityMachineChangeRequest changeRequest) {
+    final Optional<SingularityMachineChangeRequest> maybeChangeRequest = Optional.fromNullable(changeRequest);
+    super.activate(slaveId, maybeChangeRequest, JavaUtils.getUserEmail(user), SingularityAction.ACTIVATE_SLAVE);
   }
 
   @DELETE
