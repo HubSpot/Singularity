@@ -91,6 +91,12 @@
     </dependency>
 
     <dependency>
+      <groupId>org.apache.httpcomponents</groupId>
+      <artifactId>httpcore</artifactId>
+      <scope>runtime</scope>
+    </dependency>
+
+    <dependency>
       <groupId>com.ning</groupId>
       <artifactId>async-http-client</artifactId>
     </dependency>
