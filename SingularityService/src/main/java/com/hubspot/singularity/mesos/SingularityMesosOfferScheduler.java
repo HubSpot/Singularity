@@ -121,8 +121,8 @@ public class SingularityMesosOfferScheduler {
           slaveAndRackHelper.getReservedSlaveAttributes(offer)));
     }
 
+    normalizeConfiguredWeights();
     boolean addedTaskInLastLoop = true;
-
     int tasksScheduled = 0;
     final List<SingularitySlaveUsageWithId> currentSlaveUsages = usageManager.getCurrentSlaveUsages(offerHolders.stream().map(o -> o.getOffer().getSlaveId().getValue()).collect(Collectors.toList()));
     final Map<String, Integer> offerMatchAttemptsPerTask = new HashMap<>();
@@ -188,6 +188,22 @@ public class SingularityMesosOfferScheduler {
     LOG.info("{} tasks scheduled, {} tasks remaining after examining {} offers", tasksScheduled, numDueTasks - tasksScheduled, offers.size());
 
     return offerHolders;
+  }
+
+  private void normalizeConfiguredWeights() {
+    double freeCpuWeight = configuration.getFreeCpuWeightForOffer();
+    double freeMemWeight = configuration.getFreeMemWeightForOffer();
+    if (freeCpuWeight + freeMemWeight != 1) {
+      configuration.setFreeCpuWeightForOffer(freeCpuWeight / (freeCpuWeight + freeMemWeight));
+      configuration.setFreeMemWeightForOffer(freeMemWeight / (freeCpuWeight + freeMemWeight));
+    }
+
+    double usedCpuWeight = configuration.getLongRunningUsedCpuWeightForOffer();
+    double usedMemWeight = configuration.getLongRunningUsedMemWeightForOffer();
+    if (usedCpuWeight + usedMemWeight != 1) {
+      configuration.setLongRunningUsedCpuWeightForOffer(usedCpuWeight / (usedCpuWeight + usedMemWeight));
+      configuration.setLongRunningUsedMemWeightForOffer(usedMemWeight / (usedCpuWeight + usedMemWeight));
+    }
   }
 
   private Map<String, SingularityTaskRequestHolder> getDueTaskRequestHolders() {
@@ -337,11 +353,18 @@ public class SingularityMesosOfferScheduler {
   @VisibleForTesting
   double minScore(SingularityTaskRequest taskRequest, Map<String, Integer> offerMatchAttemptsPerTask, long now) {
     double minScore = configuration.getMinOfferScore();
-
-    minScore -= offerMatchAttemptsPerTask.getOrDefault(taskRequest.getPendingTask().getPendingTaskId().getId(), 0) / (double) configuration.getMaxOfferAttemptsPerTask();
+    minScore -= offerMatchAttemptsPerTask.getOrDefault(taskRequest.getPendingTask().getPendingTaskId().getId(), 0) / getMaxOfferAttemptsPerTask();
     minScore -= millisPastDue(taskRequest, now) / (double) configuration.getMaxMillisPastDuePerTask();
 
     return Math.max(minScore, 0);
+  }
+
+  private double getMaxOfferAttemptsPerTask() {
+    if (configuration.getMaxOfferAttemptsPerTask() != 0) {
+      return (double) configuration.getMaxOfferAttemptsPerTask();
+    } else {
+      return stateCacheProvider.get().getNumActiveSlaves() * 0.66;
+    }
   }
 
   private long millisPastDue(SingularityTaskRequest taskRequest, long now) {
