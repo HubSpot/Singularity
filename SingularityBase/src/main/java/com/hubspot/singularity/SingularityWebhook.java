@@ -52,6 +52,12 @@ public class SingularityWebhook {
 
   @Override
   public String toString() {
-    return "SingularityWebhook [uri=" + uri + ", timestamp=" + timestamp + ", id=" + id + ", user=" + user + ", type=" + type + "]";
+    return "SingularityWebhook{" +
+        "uri='" + uri + '\'' +
+        ", type=" + type +
+        ", user=" + user +
+        ", timestamp=" + timestamp +
+        ", id='" + id + '\'' +
+        '}';
   }
 }

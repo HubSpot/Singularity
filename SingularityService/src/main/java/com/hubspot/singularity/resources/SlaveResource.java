@@ -24,6 +24,7 @@ import com.hubspot.singularity.api.SingularityMachineChangeRequest;
 import com.hubspot.singularity.auth.SingularityAuthorizationHelper;
 import com.hubspot.singularity.data.SingularityValidator;
 import com.hubspot.singularity.data.SlaveManager;
+import com.hubspot.singularity.expiring.SingularityExpiringMachineState;
 import com.wordnik.swagger.annotations.Api;
 import com.wordnik.swagger.annotations.ApiOperation;
 import com.wordnik.swagger.annotations.ApiParam;
@@ -58,6 +59,13 @@ public class SlaveResource extends AbstractMachineResource<SingularitySlave> {
     return manager.getHistory(slaveId);
   }
 
+  @GET
+  @Path("/slave/{slaveId}/details")
+  @ApiOperation("Get information about a particular slave")
+  public Optional<SingularitySlave> getSlave(@ApiParam("Slave ID") @PathParam("slaveId") String slaveId) {
+    return manager.getObject(slaveId);
+  }
+
   @DELETE
   @Path("/slave/{slaveId}")
   @ApiOperation("Remove a known slave, erasing history. This operation will cancel decomissioning of the slave")
@@ -84,6 +92,20 @@ public class SlaveResource extends AbstractMachineResource<SingularitySlave> {
   @ApiOperation("Activate a decomissioning slave, canceling decomission without erasing history")
   public void activateSlave(@ApiParam("Active slaveId") @PathParam("slaveId") String slaveId, Optional<SingularityMachineChangeRequest> changeRequest) {
     super.activate(slaveId, changeRequest, JavaUtils.getUserEmail(user), SingularityAction.ACTIVATE_SLAVE);
+  }
+
+  @DELETE
+  @Path("/slave/{slaveId}/expiring")
+  @ApiOperation("Delete any expiring machine state changes for this slave")
+  public void deleteExpiringStateChange(@ApiParam("Active slaveId") @PathParam("slaveId") String slaveId) {
+    super.cancelExpiring(slaveId);
+  }
+
+  @GET
+  @Path("/expiring")
+  @ApiOperation("Get all expiring state changes for all slaves")
+  public List<SingularityExpiringMachineState> getExpiringStateChanges() {
+    return super.getExpiringStateChanges();
   }
 
 }

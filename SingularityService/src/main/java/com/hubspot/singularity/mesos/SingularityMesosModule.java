@@ -1,8 +1,6 @@
 package com.hubspot.singularity.mesos;
 
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 
 import org.apache.mesos.Protos.TaskStatus.Reason;
 
@@ -16,14 +14,14 @@ import com.google.inject.name.Named;
 
 public class SingularityMesosModule extends AbstractModule {
 
-  public static final String SCHEDULER_LOCK_NAME = "scheduler-lock";
   public static final String TASK_LOST_REASONS_COUNTER = "task-lost-reasons";
   public static final String ACTIVE_SLAVES_LOST_COUNTER = "active-slaves-lost";
+  public static final String TASK_CREDITS = "task-credits";
 
   @Override
   public void configure() {
     bind(SingularityDriver.class).in(Scopes.SINGLETON);
-    bind(SingularityLogSupport.class).in(Scopes.SINGLETON);
+    bind(SingularityMesosExecutorInfoSupport.class).in(Scopes.SINGLETON);
     bind(SingularityMesosScheduler.class).in(Scopes.SINGLETON);
     bind(SingularityMesosFrameworkMessageHandler.class).in(Scopes.SINGLETON);
     bind(SingularityMesosSchedulerDelegator.class).in(Scopes.SINGLETON);
@@ -33,13 +31,7 @@ public class SingularityMesosModule extends AbstractModule {
     bind(SingularitySlaveAndRackHelper.class).in(Scopes.SINGLETON);
     bind(SingularityStartup.class).in(Scopes.SINGLETON);
     bind(SchedulerDriverSupplier.class).in(Scopes.SINGLETON);
-  }
-
-  @Provides
-  @Named(SCHEDULER_LOCK_NAME)
-  @Singleton
-  public Lock getSchedulerLock() {
-    return new ReentrantLock();
+    bind(SingularitySchedulerLock.class).in(Scopes.SINGLETON);
   }
 
   @Provides

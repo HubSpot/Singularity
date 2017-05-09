@@ -42,12 +42,17 @@ public abstract class CuratorManager {
     this.configuration = configuration;
     this.curator = curator;
 
-    this.typeToMetrics = ImmutableMap.of(OperationType.READ, new Metrics(metricRegistry, OperationType.READ),
-        OperationType.WRITE, new Metrics(metricRegistry, OperationType.WRITE));
+    typeToMetrics = ImmutableMap.<OperationType, Metrics> builder()
+        .put(OperationType.GET_MULTI, new Metrics(metricRegistry, OperationType.GET_MULTI))
+        .put(OperationType.GET, new Metrics(metricRegistry, OperationType.GET))
+        .put(OperationType.CHECK_EXISTS, new Metrics(metricRegistry, OperationType.CHECK_EXISTS))
+        .put(OperationType.GET_CHILDREN, new Metrics(metricRegistry, OperationType.GET_CHILDREN))
+        .put(OperationType.DELETE, new Metrics(metricRegistry, OperationType.DELETE))
+        .put(OperationType.WRITE, new Metrics(metricRegistry, OperationType.WRITE)).build();
   }
 
   public enum OperationType {
-    READ, WRITE;
+    GET_MULTI, GET, CHECK_EXISTS, GET_CHILDREN, DELETE, WRITE;
   }
 
   private static class Metrics {
@@ -80,9 +85,8 @@ public abstract class CuratorManager {
     if (bytes.isPresent()) {
       metrics.bytesMeter.mark(bytes.get());
     }
-    if (numItems.isPresent()) {
-      metrics.itemsMeter.mark(numItems.get());
-    }
+
+    metrics.itemsMeter.mark(numItems.or(1));
     metrics.timer.update(duration, TimeUnit.MILLISECONDS);
   }
 
@@ -125,13 +129,14 @@ public abstract class CuratorManager {
     try {
       final List<String> children = curator.getChildren().forPath(root);
       numChildren = children.size();
+
       return children;
     } catch (NoNodeException nne) {
       return Collections.emptyList();
     } catch (Throwable t) {
       throw Throwables.propagate(t);
     } finally {
-      log(OperationType.READ, Optional.of(numChildren), Optional.<Integer> absent(), start, root);
+      log(OperationType.GET_CHILDREN, Optional.of(numChildren), Optional.<Integer>absent(), start, root);
     }
   }
 
@@ -147,12 +152,12 @@ public abstract class CuratorManager {
     } catch (Throwable t) {
       throw Throwables.propagate(t);
     } finally {
-      log(OperationType.WRITE, Optional.<Integer> absent(), Optional.<Integer> absent(), start, path);
+      log(OperationType.DELETE, Optional.absent(), Optional.<Integer> absent(), start, path);
     }
   }
 
   protected SingularityCreateResult create(String path) {
-    return create(path, Optional.<byte[]> absent());
+    return create(path, Optional.<byte[]>absent());
   }
 
   protected <T> SingularityCreateResult create(String path, T object, Transcoder<T> transcoder) {
@@ -184,7 +189,7 @@ public abstract class CuratorManager {
         createBuilder.forPath(path);
       }
     } finally {
-      log(OperationType.WRITE, Optional.<Integer> absent(), Optional.<Integer> of(data.or(EMPTY_BYTES).length), start, path);
+      log(OperationType.WRITE, Optional.<Integer>absent(), Optional.<Integer>of(data.or(EMPTY_BYTES).length), start, path);
     }
   }
 
@@ -216,9 +221,12 @@ public abstract class CuratorManager {
         setDataBuilder.forPath(path);
       }
     } finally {
-
-      log(OperationType.WRITE, Optional.<Integer> absent(), Optional.<Integer> of(data.or(EMPTY_BYTES).length), start, path);
+      log(OperationType.WRITE, Optional.<Integer>absent(), Optional.<Integer>of(data.or(EMPTY_BYTES).length), start, path);
     }
+  }
+
+  protected <T> SingularityCreateResult set(String path, T object, Transcoder<T> transcoder) {
+    return set(path, Optional.of(transcoder.toBytes(object)));
   }
 
   protected SingularityCreateResult set(String path, Optional<byte[]> data) {
@@ -273,20 +281,19 @@ public abstract class CuratorManager {
     } catch (Throwable t) {
       throw Throwables.propagate(t);
     } finally {
-      log(OperationType.READ, Optional.<Integer> absent(), Optional.<Integer> of(bytes), start, path);
+      log(OperationType.GET, Optional.absent(), Optional.<Integer> of(bytes), start, path);
     }
   }
 
   protected <T> Optional<T> getData(String path, Transcoder<T> transcoder) {
-    return getData(path, Optional.<Stat> absent(), transcoder, Optional.<ZkCache<T>> absent(), Optional.<Boolean> absent());
+    return getData(path, Optional.<Stat>absent(), transcoder, Optional.<ZkCache<T>>absent(), Optional.<Boolean>absent());
   }
 
   protected <T> Optional<T> getData(String path, Transcoder<T> transcoder, ZkCache<T> zkCache, boolean shouldCheckExists) {
-    return getData(path, Optional.<Stat> absent(), transcoder, Optional.of(zkCache), Optional.of(shouldCheckExists));
+    return getData(path, Optional.<Stat>absent(), transcoder, Optional.of(zkCache), Optional.of(shouldCheckExists));
   }
 
   protected Optional<String> getStringData(String path) {
-    return getData(path, Optional.<Stat> absent(), StringTranscoder.INSTANCE, Optional.<ZkCache<String>> absent(), Optional.<Boolean> absent());
+    return getData(path, Optional.<Stat>absent(), StringTranscoder.INSTANCE, Optional.<ZkCache<String>>absent(), Optional.<Boolean>absent());
   }
-
 }

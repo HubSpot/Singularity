@@ -5,6 +5,12 @@ import ToolTip from 'react-bootstrap/lib/Tooltip';
 import { getClickComponent } from '../common/modal/ModalWrapper';
 import DeletePriorityFreezeModal from './DeletePriorityFreezeModal';
 
+const freezeTooltip = (
+  <ToolTip id="freeze">
+    Remove the current priority freeze
+  </ToolTip>
+);
+
 const DeletePriorityFreezeButton = ({children, user}) => {
   const clickComponentData = {props: {children}};
   return (
@@ -18,12 +24,11 @@ const DeletePriorityFreezeButton = ({children, user}) => {
 DeletePriorityFreezeButton.propTypes = {
   children: PropTypes.node,
   user: PropTypes.string,
-  action: PropTypes.string.isRequired
 };
 
 DeletePriorityFreezeButton.defaultProps = {
   children: (
-    <OverlayTrigger placement="top" id="view-bounce-overlay">
+    <OverlayTrigger placement="top" id="view-bounce-overlay" overlay={freezeTooltip}>
       <a>
         <Glyphicon glyph="plus" />
       </a>

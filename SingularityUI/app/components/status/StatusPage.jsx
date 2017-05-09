@@ -3,7 +3,7 @@ import { connect } from 'react-redux';
 import classNames from 'classnames';
 import { Link } from 'react-router';
 import rootComponent from '../../rootComponent';
-import { FetchSingularityStatus } from '../../actions/api/state';
+import { refresh } from '../../actions/ui/status';
 
 import HostStates from './HostStates';
 import StatusList from './StatusList';
@@ -68,7 +68,7 @@ const StatusPage = (props) => {
   };
 
   const taskDetail = (status) => {
-    const totalTasks = status.activeTasks + status.lateTasks + status.scheduledTasks + status.cleaningTasks + status.lbCleanupTasks;
+    const totalTasks = status.activeTasks + status.launchingTasks + status.lateTasks + status.scheduledTasks + status.cleaningTasks + status.lbCleanupTasks;
     const tasks = [
       {
         type: 'active',
@@ -76,6 +76,14 @@ const StatusPage = (props) => {
         label: 'active',
         count: status.activeTasks,
         percent: status.activeTasks / totalTasks * 100,
+        link: '/tasks'
+      },
+      {
+        type: 'launching',
+        attribute: 'launchingTasks',
+        label: 'launching',
+        count: status.launchingTasks,
+        percent: status.launchingTasks / totalTasks * 100,
         link: '/tasks'
       },
       {
@@ -294,15 +302,8 @@ const StatusPage = (props) => {
 };
 
 StatusPage.propTypes = {
-  fetchStatus: React.PropTypes.func.isRequired,
   status: React.PropTypes.object
 };
-
-function mapDispatchToProps(dispatch) {
-  return {
-    fetchStatus: () => dispatch(FetchSingularityStatus.trigger())
-  };
-}
 
 function mapStateToProps(state) {
   return {
@@ -310,8 +311,6 @@ function mapStateToProps(state) {
   };
 }
 
-function refresh(props) {
-  return props.fetchStatus();
-}
-
-export default connect(mapStateToProps, mapDispatchToProps)(rootComponent(StatusPage, 'Status', refresh));
+export default connect((state) => ({
+  status: state.api.status.data
+}))(rootComponent(StatusPage, refresh));

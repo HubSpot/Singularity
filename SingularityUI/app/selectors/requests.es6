@@ -8,6 +8,7 @@ import Utils from '../utils';
 const getRequestsAPI = (state) => state.api.requests;
 const getUserAPI = (state) => state.api.user;
 const getSearchFilter = (state) => state.ui.requestsPage;
+const getCurrentGroup = (state) => state.ui.dashboard.currentGroup;
 
 function findRequestIds(requests) {
   return _.map(requests, (request) => {
@@ -15,13 +16,20 @@ function findRequestIds(requests) {
   });
 }
 
-export const getStarred = (state) => new Set(state.ui.starred);
-
 export const getStarredRequests = createSelector(
-  [getStarred, getRequestsAPI],
-  (starredData, requestsAPI) => {
+  [getUserAPI, getRequestsAPI],
+  (userAPI, requestsAPI) => {
+    const starredRequests = Utils.maybe(userAPI, ['data', 'settings', 'starredRequestIds'], []);
     const requests = findRequestIds(requestsAPI.data);
-    return requests.filter((requestParent) => starredData.has(requestParent.request.id));
+    return requests.filter((requestParent) => _.contains(starredRequests, requestParent.request.id));
+  }
+);
+
+export const getUserGroupRequests = createSelector(
+  [getCurrentGroup, getRequestsAPI],
+  (currentGroup, requestsAPI) => {
+    const requests = findRequestIds(requestsAPI.data);
+    return requests.filter((requestParent) => requestParent.request.group === currentGroup);
   }
 );
 
@@ -149,17 +157,7 @@ export const getFilteredRequests = createSelector(
         }
       );
 
-      filteredRequests = _.uniq(
-        _.pluck(
-          _.sortBy(
-            _.union(byUser, byId),
-            (requestParent) => {
-              return Utils.fuzzyAdjustScore(searchFilter.textFilter, requestParent);
-            }
-          ),
-          'original'
-        ).reverse()
-      );
+      filteredRequests = Utils.fuzzyFilter(searchFilter.textFilter, _.union(byUser, byId));
     }
 
     return filteredRequests;

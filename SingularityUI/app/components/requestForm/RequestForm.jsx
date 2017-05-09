@@ -20,6 +20,7 @@ import timeZones from '../../timeZones';
 import classNames from 'classnames';
 import {FIELDS_BY_REQUEST_TYPE, INDEXED_FIELDS} from './fields';
 import { FetchRacks } from '../../actions/api/racks';
+import { refresh } from '../../actions/ui/requestForm';
 
 const QUARTZ_SCHEDULE = 'quartzSchedule';
 const CRON_SCHEDULE = 'cronSchedule';
@@ -301,7 +302,8 @@ const RequestForm = (props) => {
         { label: 'Separate', value: 'SEPARATE' },
         { label: 'Optimistic', value: 'OPTIMISTIC' },
         { label: 'Greedy', value: 'GREEDY' },
-        { label: 'Separate by request', value: 'SEPARATE_BY_REQUEST'}
+        { label: 'Separate by request', value: 'SEPARATE_BY_REQUEST'},
+        { label: 'Spread all workers', value: 'SPREAD_ALL_SLAVES'}
       ]}
     />
   );
@@ -345,6 +347,15 @@ const RequestForm = (props) => {
       disabled={isEditing && true}
       hasTooltip={isEditing && true}
       tooltipText="Option cannot be altered after creation"
+    />
+  );
+
+  const allowBounceToSameHost = (
+    <CheckboxFormGroup
+      id="allow-bounce-to-same-host"
+      label="Allow Bounce To Same Host"
+      checked={getValue('allowBounceToSameHost') || false}
+      onChange={(newValue) => updateField('allowBounceToSameHost', newValue)}
     />
   );
 
@@ -505,6 +516,29 @@ const RequestForm = (props) => {
     />
   );
 
+  const readWriteGroups = (
+    <MultiInputFormGroup
+      id="read-write-groups"
+      value={getValue('readWriteGroups') || []}
+      onChange={(newValue) => updateField('readWriteGroups', newValue)}
+      label="Read-write groups"
+      required={INDEXED_FIELDS.readWriteGroups.required}
+      errorIndices={INDEXED_FIELDS.readWriteGroups.required && _.isEmpty(getValue('readWriteGroups')) && [0] || []}
+      couldHaveFeedback={true}
+    />
+  );
+
+  const maxTasksPerOffer = (
+    <TextFormGroup
+      id="max-per-offer"
+      onChange={event => updateField('maxTasksPerOffer', event.target.value)}
+      value={getValue('maxTasksPerOffer')}
+      label="Schedule at most this many tasks using a single offer form a single slave"
+      required={INDEXED_FIELDS.maxTasksPerOffer.required}
+      feedback={feedback('maxTasksPerOffer')}
+    />
+  );
+
   const taskLogErrorRegex = (
     <TextFormGroup
       id="task-log-error-regex"
@@ -619,6 +653,7 @@ const RequestForm = (props) => {
           { shouldRenderField('rackSensitive') && rackSensitive }
           { shouldRenderField('hideEvenNumberAcrossRacksHint') && hideEvenNumberAcrossRacksHint }
           { shouldRenderField('loadBalanced') && loadBalanced }
+          { shouldRenderField('allowBounceToSameHost') && allowBounceToSameHost }
           { shouldRenderField('waitAtLeastMillisAfterTaskFinishesForReschedule') && waitAtLeastMillisAfterTaskFinishesForReschedule }
           { shouldRenderField('rackAffinity') && rackAffinity }
           { shouldRenderField('scheduleType') && scheduleTypeField }
@@ -638,6 +673,8 @@ const RequestForm = (props) => {
                   { shouldRenderField('allowedSlaveAttributes') && allowedSlaveAttributes }
                   { shouldRenderField('group') && group }
                   { shouldRenderField('readOnlyGroups') && readOnlyGroups }
+                  { shouldRenderField('readWriteGroups') && readWriteGroups }
+                  { shouldRenderField('maxTasksPerOffer') && maxTasksPerOffer }
                   { shouldRenderField('taskLogErrorRegex') && taskLogErrorRegex }
                   { shouldRenderField('taskLogErrorRegexCaseSensitive') && taskLogErrorRegexCaseSensitive }
                   { shouldRenderField('emailConfigurationOverrides') && emailConfigurationOverrides }
@@ -729,22 +766,7 @@ function mapDispatchToProps(dispatch, ownProps) {
   };
 }
 
-function refresh(props) {
-  const promises = [];
-
-  promises.push(props.fetchRacks());
-  if (props.params.requestId) {
-    promises.push(props.fetchRequest(props.params.requestId));
-  } else {
-    promises.push(props.clearRequestData());
-  }
-  promises.push(props.clearSaveRequestData());
-  promises.push(props.clearForm(FORM_ID));
-
-  return Promise.all(promises);
-}
-
 export default withRouter(connect(
   mapStateToProps,
   mapDispatchToProps
-)(rootComponent(RequestForm, 'New or Edit Request', refresh, false)));
+)(rootComponent(RequestForm, (props) => refresh(props.params.requestId, FORM_ID), false)));

@@ -51,8 +51,13 @@ public class SingularityKilledTaskIdRecord {
 
   @Override
   public String toString() {
-    return "SingularityKilledTaskIdRecord [taskId=" + taskId + ", originalTimestamp=" + originalTimestamp + ", timestamp=" + timestamp + ", requestCleanupType=" + requestCleanupType + ", taskCleanupType=" + taskCleanupType + ", retries="
-        + retries + "]";
+    return "SingularityKilledTaskIdRecord{" +
+        "taskId=" + taskId +
+        ", originalTimestamp=" + originalTimestamp +
+        ", timestamp=" + timestamp +
+        ", requestCleanupType=" + requestCleanupType +
+        ", taskCleanupType=" + taskCleanupType +
+        ", retries=" + retries +
+        '}';
   }
-
 }

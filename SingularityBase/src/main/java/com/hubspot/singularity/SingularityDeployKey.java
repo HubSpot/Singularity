@@ -60,6 +60,7 @@ public class SingularityDeployKey extends SingularityId {
   };
 
   public SingularityDeployKey(String requestId, String deployId) {
+    super(String.format("%s-%s", requestId, deployId));
     this.requestId = requestId;
     this.deployId = deployId;
   }
@@ -79,11 +80,6 @@ public class SingularityDeployKey extends SingularityId {
     final String deployId = splits[1];
 
     return new SingularityDeployKey(requestId, deployId);
-  }
-
-  @Override
-  public String getId() {
-    return String.format("%s-%s", getRequestId(), getDeployId());
   }
 
   @Override

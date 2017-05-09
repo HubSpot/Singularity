@@ -1,7 +1,7 @@
 import buildApiActionReducer from './base';
 
-export default function buildKeyedApiActionReducer(ActionGroup, initialData = {}) {
-  const baseReducer = buildApiActionReducer(ActionGroup, initialData);
+export default function buildKeyedApiActionReducer(ActionGroup, ...args) {
+  const baseReducer = buildApiActionReducer(ActionGroup, ...args);
 
   return function reducer(state = {}, action) {
     if (action.type === ActionGroup.CLEAR) {

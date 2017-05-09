@@ -20,5 +20,5 @@ NotFound.propTypes = {
   location: React.PropTypes.object.isRequired
 };
 
-export default rootComponent(NotFound, 'Not Found');
+export default rootComponent(NotFound);
 export const NotFoundNoRoot = NotFound;

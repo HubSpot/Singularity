@@ -18,6 +18,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Optional;
+import com.google.common.base.Strings;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -29,6 +30,7 @@ import com.hubspot.mesos.client.MesosClient;
 import com.hubspot.singularity.MachineState;
 import com.hubspot.singularity.SingularitySlave;
 import com.hubspot.singularity.SingularityTask;
+import com.hubspot.singularity.SingularityTaskExecutorData;
 import com.hubspot.singularity.SingularityTaskHistory;
 import com.hubspot.singularity.SingularityTaskHistoryUpdate;
 import com.hubspot.singularity.client.SingularityClient;
@@ -47,6 +49,7 @@ import com.hubspot.singularity.executor.utils.DockerUtils;
 import com.hubspot.singularity.runner.base.config.SingularityRunnerBaseModule;
 import com.hubspot.singularity.runner.base.configuration.SingularityRunnerBaseConfiguration;
 import com.hubspot.singularity.runner.base.sentry.SingularityRunnerExceptionNotifier;
+import com.hubspot.singularity.runner.base.shared.CompressionType;
 import com.hubspot.singularity.runner.base.shared.JsonObjectFileHelper;
 import com.hubspot.singularity.runner.base.shared.ProcessFailedException;
 import com.hubspot.singularity.runner.base.shared.ProcessUtils;
@@ -97,7 +100,7 @@ public class SingularityExecutorCleanup {
       runningTaskIds = getRunningTaskIds();
     } catch (Exception e) {
       LOG.error("While fetching running tasks from singularity", e);
-      exceptionNotifier.notify(e, Collections.<String, String>emptyMap());
+      exceptionNotifier.notify(String.format("Error fetching running tasks (%s)", e.getMessage()), e, Collections.<String, String>emptyMap());
       statisticsBldr.setErrorMessage(e.getMessage());
       return statisticsBldr.build();
     }
@@ -109,7 +112,7 @@ public class SingularityExecutorCleanup {
     if (runningTaskIds.isEmpty()) {
       if (!isDecommissioned()) {
         if (cleanupConfiguration.isSafeModeWontRunWithNoTasks()) {
-          final String errorMessage = String.format("Running in safe mode and found 0 running tasks - aborting cleanup");
+          final String errorMessage = "Running in safe mode and found 0 running tasks - aborting cleanup";
           LOG.error(errorMessage);
           statisticsBldr.setErrorMessage(errorMessage);
           return statisticsBldr.build();
@@ -137,18 +140,20 @@ public class SingularityExecutorCleanup {
       statisticsBldr.incrTotalTaskFiles();
 
       try {
-        Optional<SingularityExecutorTaskDefinition> taskDefinition = jsonObjectFileHelper.read(file, LOG, SingularityExecutorTaskDefinition.class);
+        Optional<SingularityExecutorTaskDefinition> maybeTaskDefinition = jsonObjectFileHelper.read(file, LOG, SingularityExecutorTaskDefinition.class);
 
-        if (!taskDefinition.isPresent()) {
+        if (!maybeTaskDefinition.isPresent()) {
           statisticsBldr.incrInvalidTasks();
           continue;
         }
 
-        final String taskId = taskDefinition.get().getTaskId();
+        SingularityExecutorTaskDefinition taskDefinition = withDefaults(maybeTaskDefinition.get());
+
+        final String taskId = taskDefinition.getTaskId();
 
         LOG.info("{} - Starting possible cleanup", taskId);
 
-        if (runningTaskIds.contains(taskId) || executorStillRunning(taskDefinition.get())) {
+        if (runningTaskIds.contains(taskId) || executorStillRunning(taskDefinition)) {
           statisticsBldr.incrRunningTasksIgnored();
           continue;
         }
@@ -159,12 +164,12 @@ public class SingularityExecutorCleanup {
           taskHistory = singularityClient.getHistoryForTask(taskId);
         } catch (SingularityClientException sce) {
           LOG.error("{} - Failed fetching history", taskId, sce);
-          exceptionNotifier.notify(sce, Collections.<String, String>emptyMap());
+          exceptionNotifier.notify(String.format("Error fetching history (%s)", sce.getMessage()), sce, ImmutableMap.<String, String>of("taskId", taskId));
           statisticsBldr.incrErrorTasks();
           continue;
         }
 
-        TaskCleanupResult result = cleanTask(taskDefinition.get(), taskHistory);
+        TaskCleanupResult result = cleanTask(taskDefinition, taskHistory);
 
         LOG.info("{} - {}", taskId, result);
 
@@ -184,12 +189,38 @@ public class SingularityExecutorCleanup {
 
       } catch (IOException ioe) {
         LOG.error("Couldn't read file {}", file, ioe);
-        exceptionNotifier.notify(ioe, ImmutableMap.of("file", file.toString()));
+        exceptionNotifier.notify(String.format("Error reading file (%s)", ioe.getMessage()), ioe, ImmutableMap.of("file", file.toString()));
         statisticsBldr.incrIoErrorTasks();
       }
     }
 
     return statisticsBldr.build();
+  }
+
+  private SingularityExecutorTaskDefinition withDefaults(SingularityExecutorTaskDefinition oldDefinition) {
+      return new SingularityExecutorTaskDefinition(
+        oldDefinition.getTaskId(),
+        new SingularityTaskExecutorData(
+            oldDefinition.getExecutorData(),
+            oldDefinition.getExecutorData().getS3UploaderAdditionalFiles() == null ? cleanupConfiguration.getS3UploaderAdditionalFiles() :  oldDefinition.getExecutorData().getS3UploaderAdditionalFiles(),
+            Strings.isNullOrEmpty(oldDefinition.getExecutorData().getDefaultS3Bucket()) ? cleanupConfiguration.getDefaultS3Bucket() : oldDefinition.getExecutorData().getDefaultS3Bucket(),
+            Strings.isNullOrEmpty(oldDefinition.getExecutorData().getS3UploaderKeyPattern()) ? cleanupConfiguration.getS3KeyFormat(): oldDefinition.getExecutorData().getS3UploaderKeyPattern(),
+            Strings.isNullOrEmpty(oldDefinition.getExecutorData().getServiceLog()) ? cleanupConfiguration.getDefaultServiceLog() : oldDefinition.getExecutorData().getServiceLog(),
+            Strings.isNullOrEmpty(oldDefinition.getExecutorData().getServiceFinishedTailLog()) ? cleanupConfiguration.getDefaultServiceFinishedTailLog() : oldDefinition.getExecutorData().getServiceFinishedTailLog(),
+            oldDefinition.getExecutorData().getRequestGroup(),
+            oldDefinition.getExecutorData().getS3StorageClass(),
+            oldDefinition.getExecutorData().getApplyS3StorageClassAfterBytes()
+        ),
+        oldDefinition.getTaskDirectory(),
+        oldDefinition.getExecutorPid(),
+        Strings.isNullOrEmpty(oldDefinition.getServiceLogFileName()) ? cleanupConfiguration.getDefaultServiceLog() :oldDefinition.getServiceLogFileName(),
+        oldDefinition.getServiceLogOutExtension(),
+        Strings.isNullOrEmpty(oldDefinition.getServiceFinishedTailLogFileName()) ? cleanupConfiguration.getDefaultServiceFinishedTailLog() : oldDefinition.getServiceFinishedTailLogFileName(),
+        oldDefinition.getTaskAppDirectory(),
+        oldDefinition.getExecutorBashOut(),
+        oldDefinition.getLogrotateStateFile(),
+        oldDefinition.getSignatureVerifyOut()
+    );
   }
 
   private boolean isDecommissioned() {
@@ -281,42 +312,53 @@ public class SingularityExecutorCleanup {
   private void checkForUncompressedLogrotatedFile(SingularityExecutorTaskDefinition taskDefinition) {
     final Iterator<Path> iterator = getUncompressedLogrotatedFileIterator(taskDefinition);
     final Set<String> emptyPaths = new HashSet<>();
-    final List<Path> ungzippedFiles = new ArrayList<>();
+    final List<Path> uncompressedFiles = new ArrayList<>();
 
-    // check for matched 0 byte gz files.. and delete/gzip them
+    // check for matched 0 byte compressed files.. and delete/compress them
 
     while (iterator.hasNext()) {
       Path path = iterator.next();
 
       final String fileName = Objects.toString(path.getFileName());
-      if (fileName.endsWith(".gz")) {
+      Optional<CompressionType> maybeCompressionType = getFileCompressionType(fileName);
+      if (maybeCompressionType.isPresent()) {
         try {
           if (Files.size(path) == 0) {
             Files.deleteIfExists(path);
 
-            emptyPaths.add(fileName.substring(0, fileName.length() - 3)); // removing .gz
+            emptyPaths.add(fileName.substring(0, fileName.length() - maybeCompressionType.get().getExtention().length()));
           }
         } catch (IOException ioe) {
-          LOG.error("Failed to handle empty gz file {}", path, ioe);
-          exceptionNotifier.notify(ioe, ImmutableMap.of("file", path.toString()));
+          LOG.error("Failed to handle empty {} file {}", maybeCompressionType.get(), path, ioe);
+          exceptionNotifier.notify(String.format("Error handling empty file (%s)", ioe.getMessage()), ioe, ImmutableMap.of("file", path.toString()));
         }
       } else {
-        ungzippedFiles.add(path);
+        uncompressedFiles.add(path);
       }
     }
 
-    for (Path path : ungzippedFiles) {
+    for (Path path : uncompressedFiles) {
       if (emptyPaths.contains(Objects.toString(path.getFileName()))) {
-        LOG.info("Gzipping abandoned file {}", path);
+        LOG.info("Compressing abandoned file {}", path);
         try {
-          new SimpleProcessManager(LOG).runCommand(ImmutableList.<String> of("gzip", path.toString()));
+          new SimpleProcessManager(LOG).runCommand(ImmutableList.<String> of(cleanupConfiguration.getCompressionType().getCommand(), path.toString()));
         } catch (InterruptedException | ProcessFailedException e) {
-          LOG.error("Failed to gzip {}", path, e);
-          exceptionNotifier.notify(e, ImmutableMap.of("file", path.toString()));
+          LOG.error("Failed to {} {}", cleanupConfiguration.getCompressionType(), path, e);
+          exceptionNotifier.notify(String.format("Failed to gzip (%s)", e.getMessage()), e, ImmutableMap.of("file", path.toString()));
         }
       } else {
-        LOG.debug("Didn't find matched empty gz file for {}", path);
+        LOG.debug("Didn't find matched empty {} file for {}", cleanupConfiguration.getCompressionType(), path);
       }
+    }
+  }
+
+  private Optional<CompressionType> getFileCompressionType(String fileName) {
+    if (fileName.endsWith(CompressionType.GZIP.getExtention())) {
+      return Optional.of(CompressionType.GZIP);
+    } else if (fileName.endsWith(CompressionType.BZIP2.getExtention())) {
+      return Optional.of(CompressionType.BZIP2);
+    } else {
+      return Optional.absent();
     }
   }
 
@@ -333,7 +375,7 @@ public class SingularityExecutorCleanup {
       }
     } catch (Exception e) {
       LOG.error("Could not get list of Docker containers", e);
-      exceptionNotifier.notify(e, Collections.<String, String>emptyMap());
+      exceptionNotifier.notify(String.format("Error listing docker containers (%s)", e.getMessage()), e, Collections.<String, String>emptyMap());
     }
   }
 
@@ -348,7 +390,7 @@ public class SingularityExecutorCleanup {
       LOG.debug("Removed container {}", container.names());
     } catch (Exception e) {
       LOG.error("Failed to stop or remove container {}", container.names(), e);
-      exceptionNotifier.notify(e, Collections.<String, String>emptyMap());
+      exceptionNotifier.notify(String.format("Failed stopping container (%s)", e.getMessage()), e, Collections.<String, String>emptyMap());
     }
   }
 

@@ -47,9 +47,20 @@ public class NoopHistoryManager implements HistoryManager {
   }
 
   @Override
-  public List<SingularityTaskIdHistory> getTaskIdHistory(Optional<String> requestId, Optional<String> deployId, Optional<String> host, Optional<ExtendedTaskState> lastTaskStatus, Optional<Long> startedBefore,
+  public int getDeployHistoryForRequestCount(String requestId) {
+    return 0;
+  }
+
+  @Override
+  public List<SingularityTaskIdHistory> getTaskIdHistory(Optional<String> requestId, Optional<String> deployId, Optional<String> runId, Optional<String> host, Optional<ExtendedTaskState> lastTaskStatus, Optional<Long> startedBefore,
       Optional<Long> startedAfter, Optional<Long> updatedBefore, Optional<Long> updatedAfter, Optional<OrderDirection> orderDirection, Optional<Integer> limitStart, Integer limitCount) {
     return Collections.emptyList();
+  }
+
+  @Override
+  public int getTaskIdHistoryCount(Optional<String> requestId, Optional<String> deployId, Optional<String> runId, Optional<String> host, Optional<ExtendedTaskState> lastTaskStatus, Optional<Long> startedBefore,
+        Optional<Long> startedAfter, Optional<Long> updatedBefore, Optional<Long> updatedAfter) {
+    return 0;
   }
 
   @Override
@@ -68,6 +79,11 @@ public class NoopHistoryManager implements HistoryManager {
   }
 
   @Override
+  public int getRequestHistoryCount(String requestId) {
+    return 0;
+  }
+
+  @Override
   public List<String> getRequestHistoryLike(String requestIdLike, Integer limitStart, Integer limitCount) {
     return Collections.emptyList();
   }
@@ -78,7 +94,17 @@ public class NoopHistoryManager implements HistoryManager {
   }
 
   @Override
-  public void purgeTaskHistory(String requestId, int count, Optional<Integer> limit, Optional<Date> purgeBefore, boolean deleteRowInsteadOfUpdate) {
+  public List<String> getRequestIdsInTaskHistory() {
+    return Collections.emptyList();
+  }
+
+  @Override
+  public int getUnpurgedTaskHistoryCountByRequestBefore(String requestId, Date before) {
+    return 0;
+  }
+
+  @Override
+  public void purgeTaskHistory(String requestId, int count, Optional<Integer> limit, Optional<Date> purgeBefore, boolean deleteRowInsteadOfUpdate, Integer maxPurgeCount) {
     throw new UnsupportedOperationException("NoopHistoryManager can not update/delete");
   }
 

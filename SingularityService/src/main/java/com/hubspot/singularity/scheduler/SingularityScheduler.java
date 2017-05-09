@@ -1,6 +1,7 @@
 package com.hubspot.singularity.scheduler;
 
 import java.text.ParseException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
@@ -24,15 +25,16 @@ import com.codahale.metrics.annotation.Timed;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicates;
 import com.google.common.base.Throwables;
+import com.google.common.collect.HashMultiset;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Multiset;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.hubspot.mesos.JavaUtils;
-import com.hubspot.mesos.Resources;
 import com.hubspot.singularity.DeployState;
 import com.hubspot.singularity.ExtendedTaskState;
 import com.hubspot.singularity.MachineState;
@@ -60,6 +62,7 @@ import com.hubspot.singularity.SingularityTaskCleanup;
 import com.hubspot.singularity.SingularityTaskHistoryUpdate;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTaskRequest;
+import com.hubspot.singularity.SingularityTaskShellCommandRequestId;
 import com.hubspot.singularity.TaskCleanupType;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.AbstractMachineManager;
@@ -113,7 +116,7 @@ public class SingularityScheduler {
     LOG.trace("Scheduling a cleanup task for {} due to decomissioning {}", task.getTaskId(), decommissioningObject);
 
     taskManager.createTaskCleanup(new SingularityTaskCleanup(decommissioningObject.getCurrentState().getUser(), TaskCleanupType.DECOMISSIONING, System.currentTimeMillis(),
-      task.getTaskId(), Optional.of(String.format("%s %s is decomissioning", decommissioningObject.getTypeName(), decommissioningObject.getName())), Optional.<String>absent()));
+      task.getTaskId(), Optional.of(String.format("%s %s is decomissioning", decommissioningObject.getTypeName(), decommissioningObject.getName())), Optional.<String>absent(), Optional.<SingularityTaskShellCommandRequestId>absent()));
   }
 
   private <T extends SingularityMachineAbstraction<T>> Map<T, MachineState> getDefaultMap(List<T> objects) {
@@ -376,12 +379,22 @@ public class SingularityScheduler {
 
   private List<SingularityTaskId> getMatchingTaskIds(SingularitySchedulerStateCache stateCache, SingularityRequest request, SingularityPendingRequest pendingRequest) {
     if (request.isLongRunning()) {
-      Collection<SingularityTaskId> exclude = Sets.newHashSet();
-      exclude.addAll(stateCache.getCleaningTasks());
-      exclude.addAll(stateCache.getKilledTasks());
-      return SingularityTaskId.matchingAndNotIn(stateCache.getActiveTaskIds(), request.getId(), pendingRequest.getDeployId(), exclude);
+      List<SingularityTaskId> matchingTaskIds = new ArrayList<>();
+      for (SingularityTaskId taskId : stateCache.getActiveTaskIdsForRequest(request.getId())) {
+        if (!taskId.getDeployId().equals(pendingRequest.getDeployId())) {
+          continue;
+        }
+        if (stateCache.getCleaningTasks().contains(taskId)) {
+          continue;
+        }
+        if (stateCache.getKilledTasks().contains(taskId)) {
+          continue;
+        }
+        matchingTaskIds.add(taskId);
+      }
+      return matchingTaskIds;
     } else {
-      return Lists.newArrayList(Iterables.filter(stateCache.getActiveTaskIds(), SingularityTaskId.matchingRequest(request.getId())));
+      return new ArrayList<>(stateCache.getActiveTaskIdsForRequest(request.getId()));
     }
   }
 
@@ -397,19 +410,7 @@ public class SingularityScheduler {
       maybePendingDeploy);
 
     if (numMissingInstances > 0) {
-      final List<SingularityPendingTask> scheduledTasks =
-        getScheduledTaskIds(numMissingInstances, matchingTaskIds, request, state, deployStatistics, pendingRequest.getDeployId(), pendingRequest, maybePendingDeploy);
-
-      if (!scheduledTasks.isEmpty()) {
-        LOG.trace("Scheduling tasks: {}", scheduledTasks);
-
-        for (SingularityPendingTask scheduledTask : scheduledTasks) {
-          taskManager.savePendingTask(scheduledTask);
-        }
-      } else {
-        LOG.info("No new scheduled tasks found for {}, setting state to {}", request.getId(), RequestState.FINISHED);
-        requestManager.finish(request, System.currentTimeMillis());
-      }
+      schedule(numMissingInstances, matchingTaskIds, request, state, deployStatistics, pendingRequest, maybePendingDeploy);
     } else if (numMissingInstances < 0) {
       final long now = System.currentTimeMillis();
 
@@ -419,16 +420,55 @@ public class SingularityScheduler {
         Collections.sort(matchingTaskIds, Collections.reverseOrder(SingularityTaskId.INSTANCE_NO_COMPARATOR)); // clean the highest numbers
       }
 
+      List<SingularityTaskId> remainingActiveTasks = new ArrayList<>(matchingTaskIds);
       for (int i = 0; i < Math.abs(numMissingInstances); i++) {
         final SingularityTaskId toCleanup = matchingTaskIds.get(i);
-
+        remainingActiveTasks.remove(toCleanup);
         LOG.info("Cleaning up task {} due to new request {} - scaling down to {} instances", toCleanup.getId(), request.getId(), request.getInstancesSafe());
-
-        taskManager.createTaskCleanup(new SingularityTaskCleanup(pendingRequest.getUser(), TaskCleanupType.SCALING_DOWN, now, toCleanup, Optional.<String>absent(), Optional.<String>absent()));
+        taskManager.createTaskCleanup(new SingularityTaskCleanup(pendingRequest.getUser(), TaskCleanupType.SCALING_DOWN, now, toCleanup, Optional.<String>absent(), Optional.<String>absent(), Optional.<SingularityTaskShellCommandRequestId>absent()));
       }
+
+      if (request.isRackSensitive() && configuration.isRebalanceRacksOnScaleDown()) {
+        List<SingularityTaskId> extraCleanedTasks = new ArrayList<>();
+        int numActiveRacks = stateCache.getNumActiveRacks();
+        double perRack = request.getInstancesSafe() / (double) numActiveRacks;
+
+        Multiset<String> countPerRack = HashMultiset.create();
+        for (SingularityTaskId taskId : remainingActiveTasks) {
+          countPerRack.add(taskId.getRackId());
+          LOG.info("{} - {} - {} - {}", countPerRack, perRack, extraCleanedTasks.size(), taskId);
+          if (countPerRack.count(taskId.getRackId()) > perRack && extraCleanedTasks.size() < numActiveRacks / 2) {
+            extraCleanedTasks.add(taskId);
+            LOG.info("Cleaning up task {} to evenly distribute tasks among racks", taskId);
+            taskManager.createTaskCleanup(new SingularityTaskCleanup(pendingRequest.getUser(), TaskCleanupType.REBALANCE_RACKS, now, taskId, Optional.<String>absent(), Optional.<String>absent(), Optional.<SingularityTaskShellCommandRequestId>absent()));
+          }
+        }
+        remainingActiveTasks.removeAll(extraCleanedTasks);
+        if (extraCleanedTasks.size() > 0) {
+          schedule(extraCleanedTasks.size(), remainingActiveTasks, request, state, deployStatistics, pendingRequest, maybePendingDeploy);
+        }
+      }
+
     }
 
     return numMissingInstances;
+  }
+
+  private void schedule(int numMissingInstances, List<SingularityTaskId> matchingTaskIds, SingularityRequest request, RequestState state, SingularityDeployStatistics deployStatistics,
+    SingularityPendingRequest pendingRequest, Optional<SingularityPendingDeploy> maybePendingDeploy) {
+    final List<SingularityPendingTask> scheduledTasks =
+      getScheduledTaskIds(numMissingInstances, matchingTaskIds, request, state, deployStatistics, pendingRequest.getDeployId(), pendingRequest, maybePendingDeploy);
+
+    if (!scheduledTasks.isEmpty()) {
+      LOG.trace("Scheduling tasks: {}", scheduledTasks);
+
+      for (SingularityPendingTask scheduledTask : scheduledTasks) {
+        taskManager.savePendingTask(scheduledTask);
+      }
+    } else {
+      LOG.info("No new scheduled tasks found for {}, setting state to {}", request.getId(), RequestState.FINISHED);
+      requestManager.finish(request, System.currentTimeMillis());
+    }
   }
 
   private boolean isRequestActive(Optional<SingularityRequestWithState> maybeRequestWithState) {
@@ -493,7 +533,7 @@ public class SingularityScheduler {
     PendingType pendingType = PendingType.TASK_DONE;
     Optional<List<String>> cmdLineArgsList = Optional.absent();
 
-    if (!state.isSuccess() && shouldRetryImmediately(request, deployStatistics)) {
+    if (!state.isSuccess() && shouldRetryImmediately(request, deployStatistics, task)) {
       LOG.debug("Retrying {} because {}", request.getId(), state);
       pendingType = PendingType.RETRY;
       if (task.isPresent()) {
@@ -555,12 +595,14 @@ public class SingularityScheduler {
   private void updateDeployStatistics(SingularityDeployStatistics deployStatistics, SingularityTaskId taskId, long timestamp, ExtendedTaskState state, Optional<PendingType> scheduleResult) {
     SingularityDeployStatisticsBuilder bldr = deployStatistics.toBuilder();
 
-    if (bldr.getAverageRuntimeMillis().isPresent()) {
-      long newAvgRuntimeMillis = (bldr.getAverageRuntimeMillis().get() * bldr.getNumTasks() + (timestamp - taskId.getStartedAt())) / (bldr.getNumTasks() + 1);
+    if (!state.isFailed()) {
+      if (bldr.getAverageRuntimeMillis().isPresent()) {
+        long newAvgRuntimeMillis = (bldr.getAverageRuntimeMillis().get() * bldr.getNumTasks() + (timestamp - taskId.getStartedAt())) / (bldr.getNumTasks() + 1);
 
-      bldr.setAverageRuntimeMillis(Optional.of(newAvgRuntimeMillis));
-    } else {
-      bldr.setAverageRuntimeMillis(Optional.of(timestamp - taskId.getStartedAt()));
+        bldr.setAverageRuntimeMillis(Optional.of(newAvgRuntimeMillis));
+      } else {
+        bldr.setAverageRuntimeMillis(Optional.of(timestamp - taskId.getStartedAt()));
+      }
     }
 
     bldr.setNumTasks(bldr.getNumTasks() + 1);
@@ -584,6 +626,7 @@ public class SingularityScheduler {
           sequentialFailureTimestamps.set(0, timestamp);
         }
 
+        bldr.setNumFailures(bldr.getNumFailures() + 1);
         Collections.sort(sequentialFailureTimestamps);
       }
     } else {
@@ -604,9 +647,13 @@ public class SingularityScheduler {
     deployManager.saveDeployStatistics(newStatistics);
   }
 
-  private boolean shouldRetryImmediately(SingularityRequest request, SingularityDeployStatistics deployStatistics) {
+  private boolean shouldRetryImmediately(SingularityRequest request, SingularityDeployStatistics deployStatistics, Optional<SingularityTask> task) {
     if (!request.getNumRetriesOnFailure().isPresent()) {
       return false;
+    }
+
+    if (task.isPresent() && task.get().getTaskRequest().getPendingTask().getPendingTaskId().getPendingType() == PendingType.IMMEDIATE) {
+      return false; // don't retry UI initiated run now
     }
 
     final int numRetriesInARow = deployStatistics.getNumSequentialRetries();
@@ -678,7 +725,7 @@ public class SingularityScheduler {
 
       newTasks
         .add(new SingularityPendingTask(new SingularityPendingTaskId(request.getId(), deployId, nextRunAt.get(), nextInstanceNumber, pendingRequest.getPendingType(), pendingRequest.getTimestamp()),
-          pendingRequest.getCmdLineArgsList(), pendingRequest.getUser(), pendingRequest.getRunId(), pendingRequest.getSkipHealthchecks(), pendingRequest.getMessage(), pendingRequest.getResources()));
+          pendingRequest.getCmdLineArgsList(), pendingRequest.getUser(), pendingRequest.getRunId(), pendingRequest.getSkipHealthchecks(), pendingRequest.getMessage(), pendingRequest.getResources(), pendingRequest.getActionId()));
 
       nextInstanceNumber++;
     }

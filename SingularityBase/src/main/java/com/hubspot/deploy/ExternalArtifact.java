@@ -12,8 +12,9 @@ public class ExternalArtifact extends RemoteArtifact {
 
   @JsonCreator
   public ExternalArtifact(@JsonProperty("name") String name, @JsonProperty("filename") String filename, @JsonProperty("md5sum") Optional<String> md5sum,
-      @JsonProperty("url") String url, @JsonProperty("filesize") Optional<Long> filesize, @JsonProperty("targetFolderRelativeToTask") Optional<String> targetFolderRelativeToTask) {
-    super(name, filename, md5sum, filesize, targetFolderRelativeToTask);
+      @JsonProperty("url") String url, @JsonProperty("filesize") Optional<Long> filesize, @JsonProperty("targetFolderRelativeToTask") Optional<String> targetFolderRelativeToTask,
+      @JsonProperty("isArtifactList") Optional<Boolean> isArtifactList) {
+    super(name, filename, md5sum, filesize, targetFolderRelativeToTask, isArtifactList);
     this.url = url;
   }
 
@@ -44,7 +45,8 @@ public class ExternalArtifact extends RemoteArtifact {
 
   @Override
   public String toString() {
-    return "ExternalArtifact [url=" + url + ", parent=" + super.toString() + "]";
+    return "ExternalArtifact{" +
+        "url='" + url + '\'' +
+        "} " + super.toString();
   }
-
 }

@@ -2,6 +2,7 @@ package com.hubspot.deploy;
 
 import java.util.Objects;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.google.common.base.Optional;
 
@@ -26,6 +27,15 @@ public abstract class Artifact {
 
   public String getFilename() {
     return filename;
+  }
+
+  @JsonIgnore
+  public String getFilenameForCache() {
+    if (md5sum.isPresent()) {
+      return String.format("%s-%s", md5sum.get(), filename);
+    } else {
+      return filename;
+    }
   }
 
   public Optional<String> getMd5sum() {
@@ -60,7 +70,11 @@ public abstract class Artifact {
 
   @Override
   public String toString() {
-    return "Artifact [name=" + name + ", filename=" + filename + ", md5sum=" + md5sum + ", targetFolderRelativeToTask=" + targetFolderRelativeToTask + "]";
+    return "Artifact{" +
+        "name='" + name + '\'' +
+        ", filename='" + filename + '\'' +
+        ", md5sum=" + md5sum +
+        ", targetFolderRelativeToTask=" + targetFolderRelativeToTask +
+        '}';
   }
-
 }

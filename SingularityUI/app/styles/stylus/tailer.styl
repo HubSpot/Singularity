@@ -1,0 +1,344 @@
+@import colors
+
+.tail-root
+    position: absolute
+    left 0
+    width 100vw
+    height calc(100vh - 80px)
+    padding 0 20px 0 20px
+
+    .row.unified
+        position fixed
+        width 100%
+        bottom 0
+        top 130px
+
+@media (max-width: 1522px)
+    .tail-root
+        .row.unified
+            top 160px
+
+@media (max-width: 990px)
+    .tail-root
+        .row.unified
+            top 200px
+
+@media (max-width: 862px)
+    .tail-root
+        .row.unified
+            top 250px
+
+@media (max-width: 768px)
+    .tail-root
+        .row.unified
+            top 170px
+
+.tail-row
+    height calc(100vh - 130px)
+    margin-bottom 0
+
+.tail-row-half
+    height calc(50vh - 65px)
+    margin-bottom 0
+
+.tail-column
+    height 100%
+    padding 5px
+    overflow hidden
+    border 1px solid #ccc
+
+.tail-header
+
+    .breadcrumb
+        margin-bottom 0
+
+    .tail-buttons
+        text-align right
+
+        & .btn:not(.no-margin)
+            margin 2px
+
+        ul
+            max-height calc(100vh - 150px)
+            overflow auto
+
+    .disabled
+      color #AAA
+
+    .help-link
+      margin-left 5px
+
+.help-container
+    max-height calc(100vh - 351px)
+    overflow-y auto
+
+.log-search
+    width 200px
+    margin 0 5px
+
+.breadcrumb-request li
+    max-width 100%
+
+.individual-header
+    position absolute
+    top 0
+    left 0
+    width 100%
+    height 30px
+    background white
+    line-height 30px
+
+    .width-constrained
+        display inline-flex
+        max-width 33%
+
+    .instance-link
+        padding-left 5px
+        text-overflow ellipsis
+        overflow hidden
+
+    .right-buttons
+        float right
+
+    .action-link
+        display inline-block
+        text-decoration none
+        color inherit
+        width 30px
+        text-align center
+
+        &:hover
+            background #e6e6e6
+
+.status
+    display inline-block
+    padding-left 10px
+    color #AAA
+    text-transform capitalize
+
+    .indicator
+        display inline-block
+        width 10px
+        height 10px
+        border-radius 50%
+        margin-right 5px
+
+        &.running
+            opacity 1
+            animation blinker 1s ease-in infinite alternate
+
+        @keyframes blinker
+            from
+                opacity 1
+            to
+                opacity 0
+
+.tail-indicator
+    z-index 500
+    position absolute
+    bottom 0
+    right 0
+    padding 1em
+    background rgba(255, 255, 255, .8)
+    opacity .9
+    border-radius 4px 0 0 0
+    width 90px
+    text-align center
+
+    &:hover
+        opacity .33
+
+    &, span, .page-loader
+        display none
+
+    span
+        font-weight 600
+        text-shadow 0 0 0 #fff
+        letter-spacing .15em
+        color $green
+
+    .page-loader
+        height 13px
+        width 13px
+        border-width 2px
+        border-top-color $blue
+        border-right-color $blue
+
+.legend
+    position absolute
+    right 0
+    top 30px
+    padding 10px
+    max-width 500px
+    background rgba(white, 0.8)
+    z-index 999
+
+    ul
+        list-style-type none
+
+    .swatch
+        display inline-block
+        width 1em
+        height 1em
+        margin-right 10px
+        border 1px solid #ccc
+
+.tail-contents
+    overflow auto
+    position absolute
+    top 30px
+    left 0
+    bottom 0
+    right 0
+    background #f6f6f6
+
+    .empty-table-message
+        margin 20px
+
+    .line
+        font-family Consolas, "Liberation Mono", Courier, monospace
+        min-height 1.6em // Show empty lines too
+        line-height 1.6em
+        white-space pre
+        font-size 12px
+        height 20px
+        display table-row
+
+        &>span
+          padding 0 2em
+
+        &:hover
+            .pre-line
+                background rgba(0, 0, 0, 0)
+            .offset-link
+                visibility visible
+
+        .offset-link
+            text-decoration none
+            visibility hidden
+
+        .pre-line
+            position absolute
+            left 0
+            padding-left: 5px
+            background #f6f6f6
+
+    .first-line
+        margin-top 20px
+
+    .last-line
+        margin-bottom 20px
+
+.search-match
+    background yellow
+    color #333
+
+.line span::selection
+    background rgba(#849496, 0.5)
+
+.tail-contents.dark
+    background #002b36
+    color #839496
+
+.tail-contents.light
+    background #FDF6E3
+    color #657b83
+
+.lines-wrapper
+    padding-top 10px
+    overflow scroll
+
+
+// Edge of fetched log content indicators/spinners (start hidden and toggled by Backbone)
+.tail-fetching-start, .tail-fetching-end
+    display: none
+    text-align center
+    font-size 1.5em
+    padding .8em 1.5em
+    color #AAA
+    font-weight: 200
+
+    .page-loader
+        display inline-block
+        margin-left 1em
+        opacity .5
+
+
+// States
+.tailing
+
+    .tail-indicator
+        display inline-block !important
+
+        span
+            display inline-block
+
+        .page-loader
+            display none
+
+.fetching-data
+
+    .tail-indicator
+        display inline-block !important
+
+        span
+            display none
+
+        .page-loader
+            display inline-block
+
+
+.highlightLine
+    background: #F8EEC7
+
+.infinite
+    position absolute
+    top 0
+    width 100%
+    overflow-x auto !important
+
+.loading-spinner
+  position absolute
+  bottom 0
+  right 0
+  background-color rgba(white, 0.8)
+  padding 5px
+
+  .loading
+    color $green
+    width 80px
+    float left
+
+  .loading:after
+    overflow hidden
+    display inline-block
+    vertical-align bottom
+    animation ellipsis steps(4,end) 2s infinite
+    content "\2026"
+    width 0px
+
+  @keyframes ellipsis
+    to
+      width 1.25em
+
+  @-webkit-keyframes ellipsis
+    to
+      width 1.25em
+
+.tailer-tooltip .tooltip-inner
+  max-width 400px
+  text-align left
+
+.status-changed-stopped
+  animation background-fade-stopped 2s forwards;
+
+@keyframes background-fade-stopped
+    to
+      background #f3dede
+
+.status-changed-finished
+  animation background-fade-finished 2s forwards;
+
+@keyframes background-fade-finished
+    to
+      background #c9e8d6

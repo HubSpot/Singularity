@@ -25,7 +25,7 @@ public class LogrotateTemplateContext {
   }
 
   public String getRotateDateformat() {
-    return configuration.getLogrotateDateformat();
+    return configuration.getLogrotateDateformat().startsWith("-") ? configuration.getLogrotateDateformat().substring(1) :configuration.getLogrotateDateformat();
   }
 
   public int getRotateCount() {
@@ -44,8 +44,28 @@ public class LogrotateTemplateContext {
     return taskDefinition.shouldLogrotateLogFile();
   }
 
+  public String getTaskDirectory() {
+    return taskDefinition.getTaskDirectoryPath().toString();
+  }
+
   public String getLogrotateFrequency() {
     return taskDefinition.getExecutorData().getLogrotateFrequency().or(configuration.getLogrotateFrequency()).getLogrotateValue();
+  }
+
+  public String getCompressCmd() {
+    return configuration.getLogrotateCompressionSettings().getCompressCmd().orNull();
+  }
+
+  public String getUncompressCmd() {
+    return configuration.getLogrotateCompressionSettings().getUncompressCmd().orNull();
+  }
+
+  public String getCompressOptions() {
+    return configuration.getLogrotateCompressionSettings().getCompressOptions().orNull();
+  }
+
+  public String getCompressExt() {
+    return configuration.getLogrotateCompressionSettings().getCompressExt().orNull();
   }
 
   /**
@@ -57,7 +77,19 @@ public class LogrotateTemplateContext {
     final List<LogrotateAdditionalFile> transformed = new ArrayList<>(original.size());
 
     for (SingularityExecutorLogrotateAdditionalFile additionalFile : original) {
-      transformed.add(new LogrotateAdditionalFile(taskDefinition.getTaskDirectoryPath().resolve(additionalFile.getFilename()).toString(), additionalFile.getExtension().or(Strings.emptyToNull(Files.getFileExtension(additionalFile.getFilename()))), additionalFile.getDateformat().or(configuration.getLogrotateExtrasDateformat())));
+      String dateformat;
+      if (additionalFile.getDateformat().isPresent()) {
+        dateformat = additionalFile.getDateformat().get().startsWith("-") ? additionalFile.getDateformat().get().substring(1) : additionalFile.getDateformat().get();
+      } else {
+        dateformat = configuration.getLogrotateExtrasDateformat().startsWith("-") ? configuration.getLogrotateExtrasDateformat().substring(1) : configuration.getLogrotateExtrasDateformat();
+      }
+
+      transformed.add(
+        new LogrotateAdditionalFile(
+          taskDefinition.getTaskDirectoryPath().resolve(additionalFile.getFilename()).toString(),
+          additionalFile.getExtension().or(Strings.emptyToNull(Files.getFileExtension(additionalFile.getFilename()))),
+          dateformat
+      ));
     }
 
     return transformed;
@@ -89,10 +121,19 @@ public class LogrotateTemplateContext {
     return taskDefinition.getServiceLogOutExtension();
   }
 
-  @Override
-  public String toString() {
-    return "LogrotateTemplateContext [taskId=" + taskDefinition.getTaskId() + "]";
+  public String getLogfileName() {
+    return taskDefinition.getServiceLogFileName();
   }
 
+  public boolean isUseFileAttributes() {
+    return configuration.isUseFileAttributes();
+  }
 
+  @Override
+  public String toString() {
+    return "LogrotateTemplateContext{" +
+        "taskDefinition=" + taskDefinition +
+        ", configuration=" + configuration +
+        '}';
+  }
 }

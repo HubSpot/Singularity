@@ -44,10 +44,18 @@ export const FIELDS_BY_REQUEST_TYPE = {
       }
     },
     {id: 'group', type: 'string'},
+    {id: 'maxTasksPerOffer', type: 'number'},
     {id: 'taskLogErrorRegex', type: 'string'},
     {id: 'taskLogErrorRegexCaseSensitive', type: 'bool'},
     {
       id: 'readOnlyGroups',
+      type: {
+        typeName: 'array',
+        arrayType: 'string'
+      }
+    },
+    {
+      id: 'readWriteGroups',
       type: {
         typeName: 'array',
         arrayType: 'string'
@@ -77,6 +85,7 @@ export const FIELDS_BY_REQUEST_TYPE = {
     RACK_SENSITIVE_FIELD,
     HIDE_EVEN_NUMBERS_ACROSS_RACKS_HINT_FIELD,
     {id: 'loadBalanced', type: 'bool'},
+    {id: 'allowBounceToSameHost', type: 'bool'},
     RACK_AFFINITY_FIELD,
     BOUNCE_AFTER_SCALE_FIELD
   ],
@@ -85,6 +94,7 @@ export const FIELDS_BY_REQUEST_TYPE = {
     RACK_SENSITIVE_FIELD,
     HIDE_EVEN_NUMBERS_ACROSS_RACKS_HINT_FIELD,
     {id: 'waitAtLeastMillisAfterTaskFinishesForReschedule', type: 'number'},
+    {id: 'allowBounceToSameHost', type: 'bool'},
     RACK_AFFINITY_FIELD,
     BOUNCE_AFTER_SCALE_FIELD
   ],
@@ -97,7 +107,7 @@ export const FIELDS_BY_REQUEST_TYPE = {
     KILL_OLD_NRL_FIELD,
     {id: 'scheduledExpectedRuntimeMillis', type: 'number'}
   ],
-  ON_DEMAND: [KILL_OLD_NRL_FIELD],
+  ON_DEMAND: [INSTANCES_FIELD, KILL_OLD_NRL_FIELD],
   RUN_ONCE: [KILL_OLD_NRL_FIELD]
 };
 

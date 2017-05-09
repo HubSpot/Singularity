@@ -1,11 +1,20 @@
 import moment from 'moment';
+import { STAT_NAMES } from './components/machines/Constants';
 
 const Utils = {
   TERMINAL_TASK_STATES: ['TASK_KILLED', 'TASK_LOST', 'TASK_FAILED', 'TASK_FINISHED', 'TASK_ERROR'],
 
-  DECOMMISION_STATES: ['DECOMMISSIONING', 'DECOMMISSIONED', 'STARTING_DECOMMISSION', 'DECOMISSIONING', 'DECOMISSIONED', 'STARTING_DECOMISSION'],
+  DECOMMISION_STATES: ['DECOMMISSIONING', 'DECOMMISSIONED', 'STARTING_DECOMMISSION'],
+
+  MACHINE_STATES_FOR_REVERT: ['DECOMMISSIONED', 'STARTING_DECOMMISSION', 'ACTIVE', 'FROZEN'],
 
   GLOB_CHARS: ['*', '!', '?', '[', ']'],
+
+  LONG_RUNNING_IMMEDIATE_CLEANUPS: ['USER_REQUESTED', 'SCALING_DOWN', 'DEPLOY_FAILED', 'NEW_DEPLOY_SUCCEEDED', 'DEPLOY_STEP_FINISHED', 'DEPLOY_CANCELED' , 'TASK_EXCEEDED_TIME_LIMIT', 'UNHEALTHY_NEW_TASK', 'OVERDUE_NEW_TASK', 'USER_REQUESTED_DESTROY', 'PRIORITY_KILL', 'PAUSE'],
+
+  NON_LONG_RUNNING_IMMEDIATE_CLEANUPS: ['USER_REQUESTED', 'DEPLOY_FAILED', 'DEPLOY_CANCELED', 'TASK_EXCEEDED_TIME_LIMIT', 'UNHEALTHY_NEW_TASK', 'OVERDUE_NEW_TASK', 'USER_REQUESTED_DESTROY', 'INCREMENTAL_DEPLOY_FAILED', 'INCREMENTAL_DEPLOY_CANCELLED', 'PRIORITY_KILL', 'PAUSE'],
+
+  DEFAULT_SLAVES_COLUMNS: {'id': true, 'state': true, 'since': true, 'rack': true, 'host': true, 'uptime': true, 'actionUser': true, 'message': true, 'expiring': true},
 
   isIn(needle, haystack) {
     return !_.isEmpty(haystack) && haystack.indexOf(needle) >= 0;
@@ -37,6 +46,10 @@ const Utils = {
     ));
   },
 
+  humanizeSlaveHostName(longHostName, override=false) {
+    return (config.shortenSlaveUsageHostname || override ? longHostName.split('.')[0] : longHostName);
+  },
+
   timestampFromNow(millis) {
     const timeObject = moment(millis);
     return `${timeObject.fromNow()} (${timeObject.format(window.config.timestampFormat)})`;
@@ -58,6 +71,10 @@ const Utils = {
 
   duration(millis) {
     return moment.duration(millis).humanize();
+  },
+
+  tailerPath(taskId, logpath) {
+    return `task/${taskId}/tail/${Utils.substituteTaskId(logpath, taskId)}`;
   },
 
   substituteTaskId(value, taskId) {
@@ -104,13 +121,32 @@ const Utils = {
     return false;
   },
 
-  fuzzyAdjustScore(filter, fuzzyObject) {
-    if (fuzzyObject.original.id.toLowerCase().startsWith(filter.toLowerCase())) {
-      return fuzzyObject.score * 10;
-    } else if (fuzzyObject.original.id.toLowerCase().indexOf(filter.toLowerCase()) > -1) {
-      return fuzzyObject.score * 5;
-    }
-    return fuzzyObject.score;
+  fuzzyFilter(filter, fuzzyObjects) {
+    const maxScore = _.max(fuzzyObjects, (fuzzyObject) => fuzzyObject.score).score;
+    _.chain(fuzzyObjects).map((fuzzyObject) => {
+        if (fuzzyObject.original.id.toLowerCase().startsWith(filter.toLowerCase())) {
+          fuzzyObject.score = fuzzyObject.score * 10;
+        } else if (fuzzyObject.original.id.toLowerCase().indexOf(filter.toLowerCase()) > -1) {
+          fuzzyObject.score = fuzzyObject.score * 5;
+        }
+        return fuzzyObject;
+    });
+    return _.uniq(
+      _.pluck(
+        _.sortBy(
+          _.filter(
+            fuzzyObjects,
+            (fuzzyObject) => {
+              return fuzzyObject.score > (maxScore / 10) && fuzzyObject.score > 20;
+            }
+          ),
+          (fuzzyObject) => {
+            return fuzzyObject.score;
+          }
+        ).reverse(),
+        'original'
+      )
+    );
   },
 
   convertMapFromObjectToArray(mapAsObj) {
@@ -140,6 +176,39 @@ const Utils = {
       deployId: splits[splits.length - 5],
       requestId: splits.slice(0, +(splits.length - 6) + 1 || 9e9).join('-')
     };
+  },
+
+  getMaxAvailableResource(slaveInfo, statName) {
+    switch (statName) {
+      case STAT_NAMES.cpusUsedStat:
+        try {
+          return parseFloat(slaveInfo.attributes.real_cpus || slaveInfo.resources.cpus);
+        } catch (e) {
+          throw new Error(`Could not find resource (cpus) for slave ${slaveInfo.host} (${slaveInfo.id})`);
+        }
+      case STAT_NAMES.memoryBytesUsedStat:
+        try {
+          return parseFloat(slaveInfo.attributes.real_memory_mb || slaveInfo.resources.mem) * Math.pow(1024, 2);
+        } catch (e) {
+          throw new Error(`Could not find resource (memory) for slave ${slaveInfo.host} (${slaveInfo.id})`);
+        }
+      default:
+        throw new Error(`${statName} is an unsupported statistic'`);
+    }
+  },
+
+  isResourceStat(stat) {
+    return stat === STAT_NAMES.cpusUsedStat || stat === STAT_NAMES.memoryBytesUsedStat;
+  },
+
+  getRequestIdFromTaskId(taskId) {
+    const splits = taskId.split('-');
+    return splits.slice(0, splits.length - 5).join('-');
+  },
+
+  getInstanceNoFromTaskId(taskId) {
+    const splits = taskId.split('-')
+    return splits[splits.length-3];
   },
 
   deepClone(objectToClone) {
@@ -172,6 +241,10 @@ const Utils = {
     }
     const finalRegex = config.taskS3LogOmitPrefix.replace('%taskId', taskId.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')).replace('%index', '[0-9]+').replace('%s', '[0-9]+');
     return filename.replace(new RegExp(finalRegex), '');
+  },
+
+  roundTo(value, place) {
+    return +(Math.round(parseFloat(value) + 'e+' + place) + 'e-' + place);
   },
 
   millisecondsToSecondsRoundToTenth(millis) {
@@ -210,16 +283,28 @@ const Utils = {
     return deployFailed && taskKilled;
   },
 
-  healthcheckFailureReasonMessage(task) {
-    const healthcheckResults = task.healthcheckResults;
-    if (healthcheckResults && healthcheckResults.length > 0) {
-      if (_.last(healthcheckResults).errorMessage && _.last(healthcheckResults).errorMessage.toLowerCase().indexOf('connection refused') !== -1) {
-        const portIndex = task.task.taskRequest.deploy.healthcheckPortIndex || 0;
-        const port = task.ports && task.ports.length > portIndex ? task.ports[portIndex] : false;
-        return `a refused connection. It is possible your app did not start properly or was not listening on the anticipated port (${port}). Please check the logs for more details.`;
+  healthcheckPort(healthcheckOptions, ports) {
+    if (healthcheckOptions) {
+      if (healthcheckOptions.portNumber) {
+        return healthcheckOptions.portNumber;
+      } else if (healthcheckOptions.portIndex && ports.length > healthcheckOptions.portIndex) {
+        return ports[healthcheckOptions.portIndex];
+      } else {
+        return _.first(ports);
       }
+    } else {
+      return _.first(ports);
     }
-    return null;
+  },
+
+  healthcheckTimeout(healthcheckOptions) {
+    if (healthcheckOptions) {
+      let startupTimeout = healthcheckOptions.startupTimeoutSeconds || config.defaultStartupTimeoutSeconds;
+      let attempts = (healthcheckOptions.maxRetries || config.defaultHealthcheckMaxRetries) + 1
+      return startupTimeout + (attempts * (healthcheckOptions.intervalSeconds || config.defaultHealthcheckIntervalSeconds))
+    } else {
+      return config.defaultStartupTimeoutSeconds + ((config.defaultHealthcheckMaxRetries + 1) * config.defaultHealthcheckIntervalSeconds);
+    }
   },
 
   maybe(object, path, defaultValue = undefined) {
@@ -315,7 +400,8 @@ const Utils = {
     // other
     canDisableHealthchecks: (requestParent) => {
       return !!requestParent.activeDeploy
-        && !!requestParent.activeDeploy.healthcheckUri
+        && !!requestParent.activeDeploy.healthcheck
+        && !!requestParent.activeDeploy.healthcheck.uri
         && requestParent.state !== 'PAUSED'
         && !requestParent.expiringSkipHealthchecks;
     },
@@ -336,7 +422,19 @@ const Utils = {
       return expiringBounce
         ? (expiringBounce.startMillis + expiringBounce.expiringAPIRequestObject.durationMillis) > new Date().getTime()
         : false;
+    },
+  },
+
+  isImmediateCleanup: (cleanupType, longRunning) => {
+    if (longRunning) {
+      return _.contains(Utils.LONG_RUNNING_IMMEDIATE_CLEANUPS, cleanupType)
+    } else {
+      return _.contains(Utils.NON_LONG_RUNNING_IMMEDIATE_CLEANUPS, cleanupType)
     }
+  },
+
+  isActiveSlave(slaveInfo) {
+    return !Utils.isIn(slaveInfo.currentState.state, ['DEAD', 'MISSING_ON_STARTUP']);
   },
 
   enums: {

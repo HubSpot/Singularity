@@ -3,7 +3,6 @@ package com.hubspot.singularity.helpers;
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
 
-import org.dmfs.rfc5545.DateTime;
 import org.junit.Assert;
 import org.junit.Test;
 

@@ -7,7 +7,17 @@ import com.google.common.base.Optional;
 public class SingularityTaskShellCommandUpdate {
 
   public enum UpdateType {
-    INVALID, ACKED, STARTED, FINISHED, FAILED;
+    INVALID(true), ACKED(false), STARTED(false), FINISHED(true), FAILED(true);
+
+    private final boolean finished;
+
+    UpdateType(boolean finished) {
+      this.finished = finished;
+    }
+
+    public boolean isFinished() {
+      return finished;
+    }
   }
 
   private final SingularityTaskShellCommandRequestId shellRequestId;
@@ -48,12 +58,12 @@ public class SingularityTaskShellCommandUpdate {
 
   @Override
   public String toString() {
-    return "SingularityTaskShellCommandUpdate[" +
-            "shellRequestId=" + shellRequestId +
-            ", timestamp=" + timestamp +
-            ", message=" + message +
-            ", outputFilename=" + outputFilename +
-            ", updateType=" + updateType +
-            ']';
+    return "SingularityTaskShellCommandUpdate{" +
+        "shellRequestId=" + shellRequestId +
+        ", timestamp=" + timestamp +
+        ", message=" + message +
+        ", outputFilename=" + outputFilename +
+        ", updateType=" + updateType +
+        '}';
   }
 }

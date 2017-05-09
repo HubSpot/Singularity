@@ -6,6 +6,7 @@ import static com.hubspot.singularity.WebExceptions.checkNotNullBadRequest;
 
 import java.util.Collections;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -13,23 +14,26 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 
+import org.apache.curator.framework.recipes.leader.LeaderLatch;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.hubspot.jackson.jaxrs.PropertyFiltering;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.DeployState;
 import com.hubspot.singularity.RequestState;
+import com.hubspot.singularity.SingularityAction;
 import com.hubspot.singularity.SingularityAuthorizationScope;
 import com.hubspot.singularity.SingularityCreateResult;
 import com.hubspot.singularity.SingularityDeploy;
 import com.hubspot.singularity.SingularityDeployMarker;
 import com.hubspot.singularity.SingularityDeployProgress;
-import com.hubspot.singularity.SingularityAction;
 import com.hubspot.singularity.SingularityLoadBalancerUpdate;
 import com.hubspot.singularity.SingularityPendingDeploy;
-import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityPendingRequest;
 import com.hubspot.singularity.SingularityPendingRequest.PendingType;
 import com.hubspot.singularity.SingularityRequest;
@@ -37,6 +41,7 @@ import com.hubspot.singularity.SingularityRequestDeployState;
 import com.hubspot.singularity.SingularityRequestParent;
 import com.hubspot.singularity.SingularityRequestWithState;
 import com.hubspot.singularity.SingularityService;
+import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTransformHelpers;
 import com.hubspot.singularity.SingularityUpdatePendingDeployRequest;
 import com.hubspot.singularity.SingularityUser;
@@ -46,6 +51,8 @@ import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.DeployManager;
 import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.data.SingularityValidator;
+import com.hubspot.singularity.data.TaskManager;
+import com.ning.http.client.AsyncHttpClient;
 import com.wordnik.swagger.annotations.Api;
 import com.wordnik.swagger.annotations.ApiOperation;
 import com.wordnik.swagger.annotations.ApiParam;
@@ -58,11 +65,15 @@ import com.wordnik.swagger.annotations.ApiResponses;
 public class DeployResource extends AbstractRequestResource {
   public static final String PATH = SingularityService.API_BASE_PATH + "/deploys";
   private final SingularityConfiguration configuration;
+  private final TaskManager taskManager;
 
   @Inject
-  public DeployResource(RequestManager requestManager, DeployManager deployManager, SingularityValidator validator, SingularityAuthorizationHelper authorizationHelper, Optional<SingularityUser> user, SingularityConfiguration configuration) {
-    super(requestManager, deployManager, user, validator, authorizationHelper);
+  public DeployResource(RequestManager requestManager, DeployManager deployManager, SingularityValidator validator, SingularityAuthorizationHelper authorizationHelper, Optional<SingularityUser> user,
+                        SingularityConfiguration configuration, TaskManager taskManager, LeaderLatch leaderLatch,
+                        AsyncHttpClient httpClient, ObjectMapper objectMapper) {
+    super(requestManager, deployManager, user, validator, authorizationHelper, httpClient, leaderLatch, objectMapper);
     this.configuration = configuration;
+    this.taskManager = taskManager;
   }
 
   @GET
@@ -80,7 +91,11 @@ public class DeployResource extends AbstractRequestResource {
     @ApiResponse(code=400, message="Deploy object is invalid"),
     @ApiResponse(code=409, message="A current deploy is in progress. It may be canceled by calling DELETE"),
   })
-  public SingularityRequestParent deploy(@ApiParam(required=true) SingularityDeployRequest deployRequest) {
+  public SingularityRequestParent deploy(@Context HttpServletRequest requestContext, @ApiParam(required=true) SingularityDeployRequest deployRequest) {
+    return maybeProxyToLeader(requestContext, SingularityRequestParent.class, deployRequest, () -> deploy(deployRequest));
+  }
+
+  public SingularityRequestParent deploy(SingularityDeployRequest deployRequest) {
     validator.checkActionEnabled(SingularityAction.DEPLOY);
     SingularityDeploy deploy = deployRequest.getDeploy();
     checkNotNullBadRequest(deploy, "DeployRequest must have a deploy object");
@@ -95,6 +110,7 @@ public class DeployResource extends AbstractRequestResource {
     SingularityRequest request = requestWithState.getRequest();
     final Optional<SingularityRequest> updatedValidatedRequest;
     if (deployRequest.getUpdatedRequest().isPresent()) {
+      authorizationHelper.checkForAuthorizedChanges(deployRequest.getUpdatedRequest().get(), requestWithState.getRequest(), user);
       updatedValidatedRequest = Optional.of(validator.checkSingularityRequest(deployRequest.getUpdatedRequest().get(), Optional.of(requestWithState.getRequest()), Optional.<SingularityDeploy>absent(), Optional.of(deploy)));
     } else {
       updatedValidatedRequest = Optional.absent();
@@ -103,6 +119,8 @@ public class DeployResource extends AbstractRequestResource {
     if (updatedValidatedRequest.isPresent()) {
       request = updatedValidatedRequest.get();
     }
+
+    validator.checkScale(request, Optional.of(taskManager.getActiveTaskIdsForRequest(request.getId()).size()));
 
     if (!deployRequest.isUnpauseOnSuccessfulDeploy()) {
       checkConflict(requestWithState.getState() != RequestState.PAUSED, "Request %s is paused. Unable to deploy (it must be manually unpaused first)", requestWithState.getRequest().getId());
@@ -118,6 +136,7 @@ public class DeployResource extends AbstractRequestResource {
     if (request.isLongRunning()) {
       deployProgress = Optional.of(new SingularityDeployProgress(
           Math.min(deploy.getDeployInstanceCountPerStep().or(request.getInstancesSafe()), request.getInstancesSafe()),
+          0,
           deploy.getDeployInstanceCountPerStep().or(request.getInstancesSafe()),
           deploy.getDeployStepWaitTimeMs().or(configuration.getDefaultDeployStepWaitTimeMs()),
           false,
@@ -128,12 +147,19 @@ public class DeployResource extends AbstractRequestResource {
 
     SingularityPendingDeploy pendingDeployObj = new SingularityPendingDeploy(deployMarker, Optional.<SingularityLoadBalancerUpdate> absent(), DeployState.WAITING, deployProgress, updatedValidatedRequest);
 
-    checkConflict(deployManager.createPendingDeploy(pendingDeployObj) != SingularityCreateResult.EXISTED,
-        "Pending deploy already in progress for %s - cancel it or wait for it to complete (%s)", requestId, deployManager.getPendingDeploy(requestId).orNull());
-
+    boolean deployToUnpause = false;
     if (requestWithState.getState() == RequestState.PAUSED) {
+      deployToUnpause = true;
       requestManager.deployToUnpause(request, now, deployUser, deployRequest.getMessage());
     }
+
+    boolean deployAlreadyInProgress = deployManager.createPendingDeploy(pendingDeployObj) == SingularityCreateResult.EXISTED;
+    if (deployAlreadyInProgress && deployToUnpause) {
+      requestManager.pause(request, now, deployUser, Optional.<String>absent());
+    }
+
+    checkConflict(!deployAlreadyInProgress,
+        "Pending deploy already in progress for %s - cancel it or wait for it to complete (%s)", requestId, deployManager.getPendingDeploy(requestId).orNull());
 
     deployManager.saveDeploy(request, deployMarker, deploy);
 

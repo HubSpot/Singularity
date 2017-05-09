@@ -8,9 +8,9 @@ import static com.hubspot.singularity.WebExceptions.checkConflict;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.TimeZone;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
@@ -19,77 +19,105 @@ import java.util.regex.Pattern;
 import javax.inject.Singleton;
 
 import org.apache.commons.lang3.ArrayUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.dmfs.rfc5545.recur.InvalidRecurrenceRuleException;
 import org.dmfs.rfc5545.recur.RecurrenceRule;
 import org.quartz.CronExpression;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
+import com.google.common.base.Predicate;
+import com.google.common.base.Strings;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.google.common.hash.Hashing;
 import com.google.inject.Inject;
+import com.hubspot.deploy.HealthcheckOptions;
 import com.hubspot.mesos.Resources;
 import com.hubspot.mesos.SingularityContainerInfo;
 import com.hubspot.mesos.SingularityContainerType;
 import com.hubspot.mesos.SingularityDockerInfo;
-import com.hubspot.mesos.SingularityDockerParameter;
 import com.hubspot.mesos.SingularityDockerPortMapping;
 import com.hubspot.mesos.SingularityMesosTaskLabel;
 import com.hubspot.mesos.SingularityPortMappingType;
 import com.hubspot.mesos.SingularityVolume;
+import com.hubspot.singularity.MachineState;
 import com.hubspot.singularity.ScheduleType;
+import com.hubspot.singularity.SingularityAction;
 import com.hubspot.singularity.SingularityDeploy;
 import com.hubspot.singularity.SingularityDeployBuilder;
-import com.hubspot.singularity.SingularityAction;
 import com.hubspot.singularity.SingularityPriorityFreezeParent;
 import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityRequestGroup;
+import com.hubspot.singularity.SingularityShellCommand;
 import com.hubspot.singularity.SingularityWebhook;
-import com.hubspot.singularity.api.SingularityPriorityFreeze;
+import com.hubspot.singularity.SlavePlacement;
+import com.hubspot.singularity.WebExceptions;
 import com.hubspot.singularity.api.SingularityBounceRequest;
+import com.hubspot.singularity.api.SingularityMachineChangeRequest;
+import com.hubspot.singularity.api.SingularityPriorityFreeze;
 import com.hubspot.singularity.config.SingularityConfiguration;
+import com.hubspot.singularity.config.UIConfiguration;
+import com.hubspot.singularity.config.shell.ShellCommandDescriptor;
+import com.hubspot.singularity.config.shell.ShellCommandOptionDescriptor;
 import com.hubspot.singularity.data.history.DeployHistoryHelper;
+import com.hubspot.singularity.expiring.SingularityExpiringMachineState;
 
 @Singleton
 public class SingularityValidator {
   private static final Joiner JOINER = Joiner.on(" ");
-  private static final List<Character> DEPLOY_ID_ILLEGAL_CHARACTERS = Arrays.asList('@', '-', '\\', '/', '*', '?', '%', ' ', '[', ']', '#', '$'); // Characters that make Mesos or URL bars sad
-  private static final List<Character> REQUEST_ID_ILLEGAL_CHARACTERS = Arrays.asList('@', '\\', '/', '*', '?', '%', ' ', '[', ']', '#', '$'); // Characters that make Mesos or URL bars sad
+  private static final Pattern DEPLOY_ID_ILLEGAL_PATTERN = Pattern.compile("[^a-zA-Z0-9_]");
+  private static final Pattern REQUEST_ID_ILLEGAL_PATTERN = Pattern.compile("[^a-zA-Z0-9_-]");
+  private static final Pattern DAY_RANGE_REGEXP = Pattern.compile("[0-7]-[0-7]");
+  private static final Pattern COMMA_DAYS_REGEXP = Pattern.compile("([0-7],)+([0-7])?");
+  private static final int MAX_STARRED_REQUESTS = 5000;
 
   private final int maxDeployIdSize;
   private final int maxRequestIdSize;
+  private final int maxUserIdSize;
   private final int maxCpusPerRequest;
   private final int maxCpusPerInstance;
   private final int maxInstancesPerRequest;
-  private final int maxMemoryMbPerRequest;
-  private final int defaultCpus;
-  private final int defaultMemoryMb;
-  private final int defaultDiskMb;
   private final int defaultBounceExpirationMinutes;
+  private final int maxMemoryMbPerRequest;
   private final int maxMemoryMbPerInstance;
+  private final Optional<Integer> maxTotalHealthcheckTimeoutSeconds;
+  private final long defaultKillAfterNotHealthySeconds;
+  private final int defaultHealthcheckIntervalSeconds;
+  private final int defaultHealthcheckStartupTimeooutSeconds;
+  private final int defaultHealthcehckMaxRetries;
+  private final int defaultHealthcheckResponseTimeoutSeconds;
+  private final int maxDecommissioningSlaves;
+  private final boolean spreadAllSlavesEnabled;
   private final boolean allowRequestsWithoutOwners;
   private final boolean createDeployIds;
   private final int deployIdLength;
+  private final boolean allowBounceToSameHost;
+  private final UIConfiguration uiConfiguration;
+  private final SlavePlacement defaultSlavePlacement;
   private final DeployHistoryHelper deployHistoryHelper;
   private final Resources defaultResources;
   private final PriorityManager priorityManager;
   private final DisasterManager disasterManager;
+  private final SlaveManager slaveManager;
 
   @Inject
-  public SingularityValidator(SingularityConfiguration configuration, DeployHistoryHelper deployHistoryHelper, PriorityManager priorityManager, DisasterManager disasterManager) {
+  public SingularityValidator(SingularityConfiguration configuration, DeployHistoryHelper deployHistoryHelper, PriorityManager priorityManager, DisasterManager disasterManager, SlaveManager slaveManager, UIConfiguration uiConfiguration) {
     this.maxDeployIdSize = configuration.getMaxDeployIdSize();
     this.maxRequestIdSize = configuration.getMaxRequestIdSize();
+    this.maxUserIdSize = configuration.getMaxUserIdSize();
     this.allowRequestsWithoutOwners = configuration.isAllowRequestsWithoutOwners();
     this.createDeployIds = configuration.isCreateDeployIds();
     this.deployIdLength = configuration.getDeployIdLength();
     this.deployHistoryHelper = deployHistoryHelper;
     this.priorityManager = priorityManager;
 
-    this.defaultCpus = configuration.getMesosConfiguration().getDefaultCpus();
-    this.defaultMemoryMb = configuration.getMesosConfiguration().getDefaultMemory();
-    this.defaultDiskMb = configuration.getMesosConfiguration().getDefaultDisk();
+    int defaultCpus = configuration.getMesosConfiguration().getDefaultCpus();
+    int defaultMemoryMb = configuration.getMesosConfiguration().getDefaultMemory();
+    int defaultDiskMb = configuration.getMesosConfiguration().getDefaultDisk();
     this.defaultBounceExpirationMinutes = configuration.getDefaultBounceExpirationMinutes();
+    this.defaultSlavePlacement = configuration.getDefaultSlavePlacement();
 
     defaultResources = new Resources(defaultCpus, defaultMemoryMb, 0, defaultDiskMb);
 
@@ -99,36 +127,28 @@ public class SingularityValidator {
     this.maxMemoryMbPerRequest = configuration.getMesosConfiguration().getMaxMemoryMbPerRequest();
     this.maxInstancesPerRequest = configuration.getMesosConfiguration().getMaxNumInstancesPerRequest();
 
+    this.allowBounceToSameHost = configuration.isAllowBounceToSameHost();
+
+    this.maxTotalHealthcheckTimeoutSeconds = configuration.getHealthcheckMaxTotalTimeoutSeconds();
+    this.defaultKillAfterNotHealthySeconds = configuration.getKillAfterTasksDoNotRunDefaultSeconds();
+    this.defaultHealthcheckIntervalSeconds = configuration.getHealthcheckIntervalSeconds();
+    this.defaultHealthcheckStartupTimeooutSeconds = configuration.getStartupTimeoutSeconds();
+    this.defaultHealthcehckMaxRetries = configuration.getHealthcheckMaxRetries().or(0);
+    this.defaultHealthcheckResponseTimeoutSeconds = configuration.getHealthcheckTimeoutSeconds();
+
+    this.maxDecommissioningSlaves = configuration.getMaxDecommissioningSlaves();
+    this.spreadAllSlavesEnabled = configuration.isSpreadAllSlavesEnabled();
+
+    this.uiConfiguration = uiConfiguration;
+
     this.disasterManager = disasterManager;
-  }
-
-  private void checkForIllegalChanges(SingularityRequest request, SingularityRequest existingRequest) {
-    checkBadRequest(request.getRequestType() == existingRequest.getRequestType(), String.format("Request can not change requestType from %s to %s", existingRequest.getRequestType(), request.getRequestType()));
-    checkBadRequest(request.isLoadBalanced() == existingRequest.isLoadBalanced(), "Request can not change whether it is load balanced");
-  }
-
-  private void checkForIllegalResources(SingularityRequest request, SingularityDeploy deploy) {
-    int instances = request.getInstancesSafe();
-    double cpusPerInstance = deploy.getResources().or(defaultResources).getCpus();
-    double memoryMbPerInstance = deploy.getResources().or(defaultResources).getMemoryMb();
-
-    checkBadRequest(cpusPerInstance > 0, "Request must have more than 0 cpus");
-    checkBadRequest(memoryMbPerInstance > 0, "Request must have more than 0 memoryMb");
-
-    checkBadRequest(cpusPerInstance <= maxCpusPerInstance, "Deploy %s uses too many cpus %s (maxCpusPerInstance %s in mesos configuration)", deploy.getId(), cpusPerInstance, maxCpusPerInstance);
-    checkBadRequest(cpusPerInstance * instances <= maxCpusPerRequest,
-        "Deploy %s uses too many cpus %s (%s*%s) (cpusPerRequest %s in mesos configuration)", deploy.getId(), cpusPerInstance * instances, cpusPerInstance, instances, maxCpusPerRequest);
-
-    checkBadRequest(memoryMbPerInstance <= maxMemoryMbPerInstance,
-        "Deploy %s uses too much memoryMb %s (maxMemoryMbPerInstance %s in mesos configuration)", deploy.getId(), memoryMbPerInstance, maxMemoryMbPerInstance);
-    checkBadRequest(memoryMbPerInstance * instances <= maxMemoryMbPerRequest, "Deploy %s uses too much memoryMb %s (%s*%s) (maxMemoryMbPerRequest %s in mesos configuration)", deploy.getId(),
-        memoryMbPerInstance * instances, memoryMbPerInstance, instances, maxMemoryMbPerRequest);
+    this.slaveManager = slaveManager;
   }
 
   public SingularityRequest checkSingularityRequest(SingularityRequest request, Optional<SingularityRequest> existingRequest, Optional<SingularityDeploy> activeDeploy,
-      Optional<SingularityDeploy> pendingDeploy) {
+                                                    Optional<SingularityDeploy> pendingDeploy) {
 
-    checkBadRequest(request.getId() != null && !StringUtils.containsAny(request.getId(), JOINER.join(REQUEST_ID_ILLEGAL_CHARACTERS)), "Id can not be null or contain any of the following characters: %s", REQUEST_ID_ILLEGAL_CHARACTERS);
+    checkBadRequest(request.getId() != null && ! REQUEST_ID_ILLEGAL_PATTERN.matcher(request.getId()).find(), "Id cannot be null or contain characters other than [a-zA-Z0-9_]");
     checkBadRequest(request.getRequestType() != null, "RequestType cannot be null or missing");
 
     if (request.getOwners().isPresent()) {
@@ -139,10 +159,9 @@ public class SingularityValidator {
       checkBadRequest(request.getOwners().isPresent() && !request.getOwners().get().isEmpty(), "Request must have owners defined (this can be turned off in Singularity configuration)");
     }
 
-    checkBadRequest(request.getId().length() < maxRequestIdSize, "Request id must be less than %s characters, it is %s (%s)", maxRequestIdSize, request.getId().length(), request.getId());
+    checkBadRequest(request.getId().length() <= maxRequestIdSize, "Request id must be less %s characters or less, it is %s (%s)", maxRequestIdSize, request.getId().length(), request.getId());
     checkBadRequest(!request.getInstances().isPresent() || request.getInstances().get() > 0, "Instances must be greater than 0");
-
-    checkBadRequest(request.getInstancesSafe() <= maxInstancesPerRequest,"Instances (%s) be greater than %s (maxInstancesPerRequest in mesos configuration)", request.getInstancesSafe(), maxInstancesPerRequest);
+    checkBadRequest(request.getInstancesSafe() <= maxInstancesPerRequest, "Instances (%s) be greater than %s (maxInstancesPerRequest in mesos configuration)", request.getInstancesSafe(), maxInstancesPerRequest);
 
     if (request.getTaskPriorityLevel().isPresent()) {
       checkBadRequest(request.getTaskPriorityLevel().get() >= 0 && request.getTaskPriorityLevel().get() <= 1, "Request taskPriorityLevel %s is invalid, must be between 0 and 1 (inclusive).", request.getTaskPriorityLevel().get());
@@ -200,25 +219,20 @@ public class SingularityValidator {
       checkBadRequest(!request.isLoadBalanced(), "non-longRunning (scheduled/oneoff) requests can not be load balanced");
       checkBadRequest(!request.isRackSensitive(), "non-longRunning (scheduled/oneoff) requests can not be rack sensitive");
     } else {
-      checkBadRequest(!request.getNumRetriesOnFailure().isPresent(), "NumRetriesOnFailure can only be set for non-long running requests");
+      checkBadRequest(!request.getNumRetriesOnFailure().isPresent(), "longRunning requests can not define a NumRetriesOnFailure value");
       checkBadRequest(!request.getKillOldNonLongRunningTasksAfterMillis().isPresent(), "longRunning requests can not define a killOldNonLongRunningTasksAfterMillis value");
+      checkBadRequest(!request.getTaskExecutionTimeLimitMillis().isPresent(), "longRunning requests can not define a taskExecutionTimeLimitMillis value");
     }
 
     if (request.isScheduled()) {
       checkBadRequest(request.getInstances().or(1) == 1, "Scheduler requests can not be ran on more than one instance");
-    } else if (request.isOneOff()) {
-      checkBadRequest(!request.getInstances().isPresent(), "one-off requests can not define a # of instances");
+    }
+
+    if (request.getMaxTasksPerOffer().isPresent()) {
+      checkBadRequest(request.getMaxTasksPerOffer().get() > 0, "maxTasksPerOffer must be positive");
     }
 
     return request.toBuilder().setQuartzSchedule(Optional.fromNullable(quartzSchedule)).build();
-  }
-
-  private void checkForValidRFC5545Schedule(String schedule) {
-    try {
-      new RecurrenceRule(schedule);
-    } catch (InvalidRecurrenceRuleException ex) {
-      badRequest("Schedule %s is not a valid RFC5545 schedule, error is: %s", schedule, ex);
-    }
   }
 
   public SingularityWebhook checkSingularityWebhook(SingularityWebhook webhook) {
@@ -248,8 +262,8 @@ public class SingularityValidator {
       deployId = deploy.getId();
     }
 
-    checkBadRequest(deployId != null && !StringUtils.containsAny(deployId, JOINER.join(DEPLOY_ID_ILLEGAL_CHARACTERS)), "Id must not be null and can not contain any of the following characters: %s", DEPLOY_ID_ILLEGAL_CHARACTERS);
-    checkBadRequest(deployId.length() < maxDeployIdSize, "Deploy id must be less than %s characters, it is %s (%s)", maxDeployIdSize, deployId.length(), deployId);
+    checkBadRequest(deployId != null && ! DEPLOY_ID_ILLEGAL_PATTERN.matcher(deployId).find(), "Id cannot be null or contain characters other than [a-zA-Z0-9_]");
+    checkBadRequest(deployId.length() <= maxDeployIdSize, "Deploy id must be %s characters or less, it is %s (%s)", maxDeployIdSize, deployId.length(), deployId);
     checkBadRequest(deploy.getRequestId() != null && deploy.getRequestId().equals(request.getId()), "Deploy id must match request id");
 
     if (request.isLoadBalanced()) {
@@ -260,23 +274,53 @@ public class SingularityValidator {
     checkForIllegalResources(request, deploy);
 
     if (deploy.getResources().isPresent()) {
-      if (deploy.getHealthcheckPortIndex().isPresent()) {
-        checkBadRequest(deploy.getHealthcheckPortIndex().get() >= 0, "healthcheckPortIndex must be greater than 0");
-        checkBadRequest(deploy.getResources().get().getNumPorts() > deploy.getHealthcheckPortIndex().get(), String
-          .format("Must request %s ports for healthcheckPortIndex %s, only requested %s", deploy.getHealthcheckPortIndex().get() + 1, deploy.getHealthcheckPortIndex().get(),
-            deploy.getResources().get().getNumPorts()));
+      if (deploy.getHealthcheck().isPresent()) {
+        HealthcheckOptions healthcheck = deploy.getHealthcheck().get();
+        checkBadRequest(!(healthcheck.getPortIndex().isPresent() && healthcheck.getPortNumber().isPresent()),
+          "Can only specify one of portIndex or portNumber for healthchecks");
+        if (healthcheck.getPortIndex().isPresent()) {
+          checkBadRequest(healthcheck.getPortIndex().get() >= 0, "healthcheckPortIndex cannot be negative");
+          checkBadRequest(deploy.getResources().get().getNumPorts() > healthcheck.getPortIndex().get(), String
+            .format("Must request %s ports for healthcheckPortIndex %s, only requested %s", healthcheck.getPortIndex().get() + 1, healthcheck.getPortIndex().get(),
+              deploy.getResources().get().getNumPorts()));
+        }
       }
       if (deploy.getLoadBalancerPortIndex().isPresent()) {
         checkBadRequest(deploy.getLoadBalancerPortIndex().get() >= 0, "loadBalancerPortIndex must be greater than 0");
         checkBadRequest(deploy.getResources().get().getNumPorts() > deploy.getLoadBalancerPortIndex().get(), String
-          .format("Must request %s ports for loadBalancerPortIndex %s, only requested %s", deploy.getLoadBalancerPortIndex().get() + 1, deploy.getLoadBalancerPortIndex().get(),
-            deploy.getResources().get().getNumPorts()));
+            .format("Must request %s ports for loadBalancerPortIndex %s, only requested %s", deploy.getLoadBalancerPortIndex().get() + 1, deploy.getLoadBalancerPortIndex().get(),
+                deploy.getResources().get().getNumPorts()));
       }
     }
 
+    if (deploy.getHealthcheck().isPresent() && !Strings.isNullOrEmpty(deploy.getHealthcheck().get().getUri())) {
+      if (!deploy.getResources().isPresent() || deploy.getResources().get().getNumPorts() == 0) {
+        checkBadRequest(deploy.getHealthcheck().get().getPortNumber().isPresent(),
+          "Either an explicit port number, or port resources and port index must be specified to run healthchecks against a uri");
+      }
+    }
+
+    if (deploy.getHealthcheck().isPresent() && maxTotalHealthcheckTimeoutSeconds.isPresent()) {
+      HealthcheckOptions options = deploy.getHealthcheck().get();
+      int intervalSeconds = options.getIntervalSeconds().or(defaultHealthcheckIntervalSeconds);
+      int httpTimeoutSeconds = options.getResponseTimeoutSeconds().or(defaultHealthcheckResponseTimeoutSeconds);
+      int startupTime = options.getStartupTimeoutSeconds().or(defaultHealthcheckStartupTimeooutSeconds);
+      int attempts = options.getMaxRetries().or(defaultHealthcehckMaxRetries) + 1;
+
+      checkBadRequest((startupTime + ((httpTimeoutSeconds + intervalSeconds) * attempts)) > maxTotalHealthcheckTimeoutSeconds.get(),
+        String.format("Max healthcheck time cannot be greater than %s, (was startup timeout: %s, interval: %s, attempts: %s)", maxTotalHealthcheckTimeoutSeconds.get(), startupTime, intervalSeconds, attempts));
+    }
+
+    if (deploy.getHealthcheck().isPresent() && deploy.getHealthcheck().get().getStartupDelaySeconds().isPresent()) {
+      int startUpDelay = deploy.getHealthcheck().get().getStartupDelaySeconds().get();
+
+      checkBadRequest(startUpDelay < defaultKillAfterNotHealthySeconds,
+          String.format("Health check startup delay time must be less than %s (was %s)", defaultKillAfterNotHealthySeconds, startUpDelay));
+    }
+
     checkBadRequest(deploy.getCommand().isPresent() && !deploy.getExecutorData().isPresent() ||
-        deploy.getExecutorData().isPresent() && deploy.getCustomExecutorCmd().isPresent() && !deploy.getCommand().isPresent() ||
-        deploy.getContainerInfo().isPresent(),
+            deploy.getExecutorData().isPresent() && deploy.getCustomExecutorCmd().isPresent() && !deploy.getCommand().isPresent() ||
+            deploy.getContainerInfo().isPresent(),
         "If not using custom executor, specify a command or containerInfo. If using custom executor, specify executorData and customExecutorCmd and no command.");
 
     checkBadRequest(!deploy.getContainerInfo().isPresent() || deploy.getContainerInfo().get().getType() != null, "Container type must not be null");
@@ -318,45 +362,6 @@ public class SingularityValidator {
     return deploy;
   }
 
-  private String createUniqueDeployId() {
-    UUID id = UUID.randomUUID();
-    String result = Hashing.sha256().newHasher().putLong(id.getLeastSignificantBits()).putLong(id.getMostSignificantBits()).hash().toString();
-    return result.substring(0, deployIdLength);
-  }
-
-  private void checkDocker(SingularityDeploy deploy) {
-    if (deploy.getResources().isPresent() && deploy.getContainerInfo().get().getDocker().isPresent()) {
-      final SingularityDockerInfo dockerInfo = deploy.getContainerInfo().get().getDocker().get();
-      final int numPorts = deploy.getResources().get().getNumPorts();
-
-      checkBadRequest(dockerInfo.getImage() != null, "docker image may not be null");
-
-      if (dockerInfo.getParameters().isPresent()) {
-        List<SingularityDockerParameter> deprecatedParameters = SingularityDockerParameter.parametersFromMap(dockerInfo.getParameters().get());
-        checkBadRequest(deprecatedParameters.containsAll(dockerInfo.getDockerParameters()) && dockerInfo.getDockerParameters().containsAll(deprecatedParameters), "Can only specify one of 'parameters' or 'dockerParameters'");
-      }
-
-      for (SingularityDockerPortMapping portMapping : dockerInfo.getPortMappings()) {
-        if (portMapping.getContainerPortType() == SingularityPortMappingType.FROM_OFFER) {
-          checkBadRequest(portMapping.getContainerPort() >= 0 && portMapping.getContainerPort() < numPorts,
-              "Index of port resource for containerPort must be between 0 and %d (inclusive)", numPorts - 1);
-        }
-
-        if (portMapping.getHostPortType() == SingularityPortMappingType.FROM_OFFER) {
-          checkBadRequest(portMapping.getHostPort() >= 0 && portMapping.getHostPort() < numPorts,
-              "Index of port resource for hostPort must be between 0 and %d (inclusive)", numPorts - 1);
-        }
-      }
-    }
-  }
-
-  private boolean isValidCronSchedule(String schedule) {
-    return CronExpression.isValidExpression(schedule);
-  }
-
-  private final Pattern DAY_RANGE_REGEXP = Pattern.compile("[0-7]-[0-7]");
-  private final Pattern COMMA_DAYS_REGEXP = Pattern.compile("([0-7],)+([0-7])?");
-
   /**
    *
    * Transforms unix cron into quartz compatible cron;
@@ -394,7 +399,7 @@ public class SingularityValidator {
 
     int indexMod = hasSeconds ? 1 : 0;
 
-    newSchedule.add(split[indexMod + 0]);
+    newSchedule.add(split[indexMod]);
     newSchedule.add(split[indexMod + 1]);
 
     String dayOfMonth = split[indexMod + 2];
@@ -430,6 +435,68 @@ public class SingularityValidator {
     newSchedule.add(dayOfWeek);
 
     return JOINER.join(newSchedule);
+  }
+
+  private void checkForIllegalChanges(SingularityRequest request, SingularityRequest existingRequest) {
+    checkBadRequest(request.getRequestType() == existingRequest.getRequestType(), String.format("Request can not change requestType from %s to %s", existingRequest.getRequestType(), request.getRequestType()));
+    checkBadRequest(request.isLoadBalanced() == existingRequest.isLoadBalanced(), "Request can not change whether it is load balanced");
+  }
+
+  private void checkForIllegalResources(SingularityRequest request, SingularityDeploy deploy) {
+    int instances = request.getInstancesSafe();
+    double cpusPerInstance = deploy.getResources().or(defaultResources).getCpus();
+    double memoryMbPerInstance = deploy.getResources().or(defaultResources).getMemoryMb();
+
+    checkBadRequest(cpusPerInstance > 0, "Request must have more than 0 cpus");
+    checkBadRequest(memoryMbPerInstance > 0, "Request must have more than 0 memoryMb");
+
+    checkBadRequest(cpusPerInstance <= maxCpusPerInstance, "Deploy %s uses too many cpus %s (maxCpusPerInstance %s in mesos configuration)", deploy.getId(), cpusPerInstance, maxCpusPerInstance);
+    checkBadRequest(cpusPerInstance * instances <= maxCpusPerRequest,
+        "Deploy %s uses too many cpus %s (%s*%s) (cpusPerRequest %s in mesos configuration)", deploy.getId(), cpusPerInstance * instances, cpusPerInstance, instances, maxCpusPerRequest);
+
+    checkBadRequest(memoryMbPerInstance <= maxMemoryMbPerInstance,
+        "Deploy %s uses too much memoryMb %s (maxMemoryMbPerInstance %s in mesos configuration)", deploy.getId(), memoryMbPerInstance, maxMemoryMbPerInstance);
+    checkBadRequest(memoryMbPerInstance * instances <= maxMemoryMbPerRequest, "Deploy %s uses too much memoryMb %s (%s*%s) (maxMemoryMbPerRequest %s in mesos configuration)", deploy.getId(),
+        memoryMbPerInstance * instances, memoryMbPerInstance, instances, maxMemoryMbPerRequest);
+  }
+
+  private void checkForValidRFC5545Schedule(String schedule) {
+    try {
+      new RecurrenceRule(schedule);
+    } catch (InvalidRecurrenceRuleException ex) {
+      badRequest("Schedule %s is not a valid RFC5545 schedule, error is: %s", schedule, ex);
+    }
+  }
+
+  private String createUniqueDeployId() {
+    UUID id = UUID.randomUUID();
+    String result = Hashing.sha256().newHasher().putLong(id.getLeastSignificantBits()).putLong(id.getMostSignificantBits()).hash().toString();
+    return result.substring(0, deployIdLength);
+  }
+
+  private void checkDocker(SingularityDeploy deploy) {
+    if (deploy.getResources().isPresent() && deploy.getContainerInfo().get().getDocker().isPresent()) {
+      final SingularityDockerInfo dockerInfo = deploy.getContainerInfo().get().getDocker().get();
+      final int numPorts = deploy.getResources().get().getNumPorts();
+
+      checkBadRequest(dockerInfo.getImage() != null, "docker image may not be null");
+
+      for (SingularityDockerPortMapping portMapping : dockerInfo.getPortMappings()) {
+        if (portMapping.getContainerPortType() == SingularityPortMappingType.FROM_OFFER) {
+          checkBadRequest(portMapping.getContainerPort() >= 0 && portMapping.getContainerPort() < numPorts,
+              "Index of port resource for containerPort must be between 0 and %d (inclusive)", numPorts - 1);
+        }
+
+        if (portMapping.getHostPortType() == SingularityPortMappingType.FROM_OFFER) {
+          checkBadRequest(portMapping.getHostPort() >= 0 && portMapping.getHostPort() < numPorts,
+              "Index of port resource for hostPort must be between 0 and %d (inclusive)", numPorts - 1);
+        }
+      }
+    }
+  }
+
+  private boolean isValidCronSchedule(String schedule) {
+    return CronExpression.isValidExpression(schedule);
   }
 
   /**
@@ -472,6 +539,69 @@ public class SingularityValidator {
     return newDayOfWeekValue;
   }
 
+  public void checkResourcesForBounce(SingularityRequest request, boolean isIncremental) {
+    SlavePlacement placement = request.getSlavePlacement().or(defaultSlavePlacement);
+
+    if ((isAllowBounceToSameHost(request) && placement == SlavePlacement.SEPARATE_BY_REQUEST)
+      || (!isAllowBounceToSameHost(request) && placement != SlavePlacement.GREEDY && placement != SlavePlacement.OPTIMISTIC)) {
+      int currentActiveSlaveCount = slaveManager.getNumObjectsAtState(MachineState.ACTIVE);
+      int requiredSlaveCount = isIncremental ? request.getInstancesSafe() + 1 : request.getInstancesSafe() * 2;
+
+      checkBadRequest(currentActiveSlaveCount >= requiredSlaveCount, "Not enough active slaves to successfully scale request %s to %s instances (minimum required: %s, current: %s).", request.getId(), request.getInstancesSafe(), requiredSlaveCount, currentActiveSlaveCount);
+    }
+  }
+
+  private boolean isAllowBounceToSameHost(SingularityRequest request) {
+    if (request.getAllowBounceToSameHost().isPresent()) {
+      return request.getAllowBounceToSameHost().get();
+    } else {
+      return allowBounceToSameHost;
+    }
+  }
+
+  public void checkScale(SingularityRequest request, Optional<Integer> previousScale) {
+    SlavePlacement placement = request.getSlavePlacement().or(defaultSlavePlacement);
+
+    if (placement != SlavePlacement.GREEDY && placement != SlavePlacement.OPTIMISTIC) {
+      int currentActiveSlaveCount = slaveManager.getNumObjectsAtState(MachineState.ACTIVE);
+      int requiredSlaveCount = request.getInstancesSafe();
+
+      if (previousScale.isPresent() && placement == SlavePlacement.SEPARATE_BY_REQUEST) {
+        requiredSlaveCount += previousScale.get();
+      }
+
+      checkBadRequest(currentActiveSlaveCount >= requiredSlaveCount, "Not enough active slaves to successfully complete a bounce of request %s (minimum required: %s, current: %s). Consider deploying, or changing the slave placement strategy instead.", request.getId(), requiredSlaveCount, currentActiveSlaveCount);
+    }
+  }
+
+  public void validateExpiringMachineStateChange(Optional<SingularityMachineChangeRequest> maybeChangeRequest, MachineState currentState, Optional<SingularityExpiringMachineState> currentExpiringObject) {
+    if (!maybeChangeRequest.isPresent() || !maybeChangeRequest.get().getDurationMillis().isPresent()) {
+      return;
+    }
+
+    SingularityMachineChangeRequest changeRequest = maybeChangeRequest.get();
+
+    checkBadRequest(changeRequest.getRevertToState().isPresent(), "Must include a machine state to revert to for an expiring machine state change");
+    MachineState newState = changeRequest.getRevertToState().get();
+
+    checkConflict(!currentExpiringObject.isPresent(), "A current expiring object already exists, delete it first");
+    checkBadRequest(!(newState == MachineState.STARTING_DECOMMISSION && currentState.isDecommissioning()), "Cannot start decommission when it has already been started");
+    checkBadRequest(!(((newState == MachineState.DECOMMISSIONING) || (newState == MachineState.DECOMMISSIONED)) && (currentState == MachineState.FROZEN)), "Cannot transition from FROZEN to DECOMMISSIONING or DECOMMISSIONED");
+    checkBadRequest(!(((newState == MachineState.DECOMMISSIONING) || (newState == MachineState.DECOMMISSIONED)) && (currentState == MachineState.ACTIVE)), "Cannot transition from ACTIVE to DECOMMISSIONING or DECOMMISSIONED");
+    checkBadRequest(!(newState == MachineState.FROZEN && currentState.isDecommissioning()), "Cannot transition from a decommissioning state to FROZEN");
+
+    List<MachineState> systemOnlyStateTransitions = ImmutableList.of(MachineState.DEAD, MachineState.MISSING_ON_STARTUP, MachineState.DECOMMISSIONING);
+    checkBadRequest(!systemOnlyStateTransitions.contains(newState), "States {} are reserved for system usage, you cannot manually transition to {}", systemOnlyStateTransitions, newState);
+
+    checkBadRequest(!(newState == MachineState.DECOMMISSIONED && !changeRequest.isKillTasksOnDecommissionTimeout()), "Must specify that all tasks on slave get killed if transitioning to DECOMMISSIONED state");
+  }
+
+  public void validateDecommissioningCount() {
+    int decommissioning = slaveManager.getObjectsFiltered(MachineState.DECOMMISSIONING).size() + slaveManager.getObjectsFiltered(MachineState.STARTING_DECOMMISSION).size();
+    checkBadRequest(decommissioning < maxDecommissioningSlaves,
+        "%s slaves are already decommissioning state (%s allowed at once). Allow these slaves to finish before decommissioning another", decommissioning, maxDecommissioningSlaves);
+  }
+
   public void checkActionEnabled(SingularityAction action) {
     checkConflict(!disasterManager.isDisabled(action), disasterManager.getDisabledAction(action).getMessage());
   }
@@ -483,6 +613,19 @@ public class SingularityValidator {
     } catch (NumberFormatException nfe) {
       return false;
     }
+  }
+
+  public boolean isSpreadAllSlavesEnabled() {
+    return spreadAllSlavesEnabled;
+  }
+
+  public void checkUserId(String userId) {
+    checkBadRequest(!Strings.isNullOrEmpty(userId), "User ID must be present and non-null");
+    checkBadRequest(!(userId.length() > maxUserIdSize), "User ID cannot be more than %s characters, it was %s", maxUserIdSize, userId.length());
+  }
+
+  public void checkStarredRequests(Set<String> starredRequests) {
+    checkBadRequest(!(starredRequests.size() > MAX_STARRED_REQUESTS), "Cannot have more than %s starred requests", MAX_STARRED_REQUESTS);
   }
 
   public SingularityPriorityFreeze checkSingularityPriorityFreeze(SingularityPriorityFreeze priorityFreeze) {
@@ -521,9 +664,35 @@ public class SingularityValidator {
   }
 
   public void checkRequestGroup(SingularityRequestGroup requestGroup) {
-    checkBadRequest(requestGroup.getId() != null && !StringUtils.containsAny(requestGroup.getId(), JOINER.join(REQUEST_ID_ILLEGAL_CHARACTERS)), "Id can not be null or contain any of the following characters: %s", REQUEST_ID_ILLEGAL_CHARACTERS);
+    checkBadRequest(requestGroup.getId() != null && ! REQUEST_ID_ILLEGAL_PATTERN.matcher(requestGroup.getId()).find(), "Id cannot be null or contain characters other than [a-zA-Z0-9_-]");
     checkBadRequest(requestGroup.getId().length() < maxRequestIdSize, "Id must be less than %s characters, it is %s (%s)", maxRequestIdSize, requestGroup.getId().length(), requestGroup.getId());
 
     checkBadRequest(requestGroup.getRequestIds() != null, "requestIds cannot be null");
+  }
+
+  public void checkValidShellCommand(final SingularityShellCommand shellCommand) {
+    Optional<ShellCommandDescriptor> commandDescriptor = Iterables.tryFind(uiConfiguration.getShellCommands(), new Predicate<ShellCommandDescriptor>() {
+      @Override
+      public boolean apply(ShellCommandDescriptor input) {
+        return input.getName().equals(shellCommand.getName());
+      }
+    });
+
+    if (!commandDescriptor.isPresent()) {
+      throw WebExceptions.badRequest("Shell command %s not in %s", shellCommand.getName(), uiConfiguration.getShellCommands());
+    }
+
+    Set<String> options = Sets.newHashSetWithExpectedSize(commandDescriptor.get().getOptions().size());
+    for (ShellCommandOptionDescriptor option : commandDescriptor.get().getOptions()) {
+      options.add(option.getName());
+    }
+
+    if (shellCommand.getOptions().isPresent()) {
+      for (String option : shellCommand.getOptions().get()) {
+        if (!options.contains(option)) {
+          throw WebExceptions.badRequest("Shell command %s does not have option %s (%s)", shellCommand.getName(), option, options);
+        }
+      }
+    }
   }
 }

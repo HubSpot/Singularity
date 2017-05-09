@@ -12,16 +12,19 @@ public class SingularityTaskCleanup {
   private final SingularityTaskId taskId;
   private final Optional<String> message;
   private final Optional<String> actionId;
+  private final Optional<SingularityTaskShellCommandRequestId> runBeforeKillId;
 
   @JsonCreator
   public SingularityTaskCleanup(@JsonProperty("user") Optional<String> user, @JsonProperty("cleanupType") TaskCleanupType cleanupType, @JsonProperty("timestamp") long timestamp,
-      @JsonProperty("taskId") SingularityTaskId taskId, @JsonProperty("message") Optional<String> message, @JsonProperty("actionId") Optional<String> actionId) {
+      @JsonProperty("taskId") SingularityTaskId taskId, @JsonProperty("message") Optional<String> message, @JsonProperty("actionId") Optional<String> actionId,
+      @JsonProperty("runBeforeKillId") Optional<SingularityTaskShellCommandRequestId> runBeforeKillId) {
     this.user = user;
     this.cleanupType = cleanupType;
     this.timestamp = timestamp;
     this.taskId = taskId;
     this.message = message;
     this.actionId = actionId;
+    this.runBeforeKillId = runBeforeKillId;
   }
 
   public Optional<String> getActionId() {
@@ -48,9 +51,20 @@ public class SingularityTaskCleanup {
     return taskId;
   }
 
-  @Override
-  public String toString() {
-    return "SingularityTaskCleanup [user=" + user + ", cleanupType=" + cleanupType + ", timestamp=" + timestamp + ", taskId=" + taskId + ", message=" + message + ", actionId=" + actionId + "]";
+  public Optional<SingularityTaskShellCommandRequestId> getRunBeforeKillId() {
+    return runBeforeKillId;
   }
 
+  @Override
+  public String toString() {
+    return "SingularityTaskCleanup{" +
+        "user=" + user +
+        ", cleanupType=" + cleanupType +
+        ", timestamp=" + timestamp +
+        ", taskId=" + taskId +
+        ", message=" + message +
+        ", actionId=" + actionId +
+        ", runBeforeKillId=" + runBeforeKillId +
+        '}';
+  }
 }

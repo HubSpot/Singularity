@@ -33,7 +33,7 @@ public abstract class HistoryJDBI implements GetHandle {
   @SqlUpdate("INSERT INTO deployHistory (requestId, deployId, createdAt, user, message, deployStateAt, deployState, bytes) VALUES (:requestId, :deployId, :createdAt, :user, :message, :deployStateAt, :deployState, :bytes)")
   abstract void insertDeployHistory(@Bind("requestId") String requestId, @Bind("deployId") String deployId, @Bind("createdAt") Date createdAt, @Bind("user") String user, @Bind("message") String message, @Bind("deployStateAt") Date deployStateAt, @Bind("deployState") String deployState, @Bind("bytes") byte[] bytes);
 
-  @SqlUpdate("INSERT INTO taskHistory (requestId, taskId, bytes, updatedAt, lastTaskStatus, runId, deployId, host, startedAt) VALUES (:requestId, :taskId, :bytes, :updatedAt, :lastTaskStatus, :runId, :deployId, :host, :startedAt)")
+  @SqlUpdate("INSERT INTO taskHistory (requestId, taskId, bytes, updatedAt, lastTaskStatus, runId, deployId, host, startedAt, purged) VALUES (:requestId, :taskId, :bytes, :updatedAt, :lastTaskStatus, :runId, :deployId, :host, :startedAt, false)")
   abstract void insertTaskHistory(@Bind("requestId") String requestId, @Bind("taskId") String taskId, @Bind("bytes") byte[] bytes, @Bind("updatedAt") Date updatedAt,
       @Bind("lastTaskStatus") String lastTaskStatus, @Bind("runId") String runId, @Bind("deployId") String deployId, @Bind("host") String host,
       @Bind("startedAt") Date startedAt);
@@ -50,8 +50,14 @@ public abstract class HistoryJDBI implements GetHandle {
   @SqlQuery("SELECT requestId, deployId, createdAt, user, message, deployStateAt, deployState FROM deployHistory WHERE requestId = :requestId ORDER BY createdAt DESC LIMIT :limitStart, :limitCount")
   abstract List<SingularityDeployHistory> getDeployHistoryForRequest(@Bind("requestId") String requestId, @Bind("limitStart") Integer limitStart, @Bind("limitCount") Integer limitCount);
 
+  @SqlQuery("SELECT COUNT(*) FROM deployHistory WHERE requestId = :requestId")
+  abstract int getDeployHistoryForRequestCount(@Bind("requestId") String requestId);
+
   @SqlQuery("SELECT request, createdAt, requestState, user, message FROM requestHistory WHERE requestId = :requestId ORDER BY createdAt <orderDirection> LIMIT :limitStart, :limitCount")
   abstract List<SingularityRequestHistory> getRequestHistory(@Bind("requestId") String requestId, @Define("orderDirection") String orderDirection, @Bind("limitStart") Integer limitStart, @Bind("limitCount") Integer limitCount);
+
+  @SqlQuery("SELECT COUNT(*) FROM requestHistory WHERE requestId = :requestId")
+  abstract int getRequestHistoryCount(@Bind("requestId") String requestId);
 
   @SqlQuery("SELECT DISTINCT requestId FROM requestHistory WHERE requestId LIKE CONCAT(:requestIdLike, '%') LIMIT :limitStart, :limitCount")
   abstract List<String> getRequestHistoryLike(@Bind("requestIdLike") String requestIdLike, @Bind("limitStart") Integer limitStart, @Bind("limitCount") Integer limitCount);
@@ -62,15 +68,24 @@ public abstract class HistoryJDBI implements GetHandle {
   @SqlQuery("SELECT MIN(updatedAt) from (SELECT updatedAt FROM taskHistory WHERE requestId = :requestId ORDER BY updatedAt DESC LIMIT :limit) as alias")
   abstract Date getMinUpdatedAtWithLimitForRequest(@Bind("requestId") String requestId, @Bind("limit") Integer limit);
 
-  @SqlUpdate("UPDATE taskHistory SET bytes = '' WHERE requestId = :requestId AND updatedAt \\< :updatedAtBefore")
-  abstract void updateTaskHistoryNullBytesForRequestBefore(@Bind("requestId") String requestId, @Bind("updatedAtBefore") Date updatedAtBefore);
+  @SqlUpdate("UPDATE taskHistory SET bytes = '', purged = true WHERE requestId = :requestId AND purged = false AND updatedAt \\< :updatedAtBefore LIMIT :purgeLimitPerQuery")
+  abstract void updateTaskHistoryNullBytesForRequestBefore(@Bind("requestId") String requestId, @Bind("updatedAtBefore") Date updatedAtBefore, @Bind("purgeLimitPerQuery") Integer purgeLimitPerQuery);
 
-  @SqlUpdate("DELETE FROM taskHistory WHERE requestId = :requestId AND updatedAt \\< :updatedAtBefore")
-  abstract void deleteTaskHistoryForRequestBefore(@Bind("requestId") String requestId, @Bind("updatedAtBefore") Date updatedAtBefore);
+  @SqlUpdate("DELETE FROM taskHistory WHERE requestId = :requestId AND updatedAt \\< :updatedAtBefore LIMIT :purgeLimitPerQuery")
+  abstract void deleteTaskHistoryForRequestBefore(@Bind("requestId") String requestId, @Bind("updatedAtBefore") Date updatedAtBefore, @Bind("purgeLimitPerQuery") Integer purgeLimitPerQuery);
+
+  @SqlQuery("SELECT DISTINCT requestId FROM taskHistory")
+  abstract List<String> getRequestIdsInTaskHistory();
+
+  @SqlQuery("SELECT COUNT(*) FROM taskHistory WHERE requestId = :requestId AND purged = false AND updatedAt \\< :updatedAtBefore")
+  abstract int getUnpurgedTaskHistoryCountByRequestBefore(@Bind("requestId") String requestId, @Bind("updatedAtBefore") Date updatedAtBefore);
+
 
   abstract void close();
 
   private static final String GET_TASK_ID_HISTORY_QUERY = "SELECT taskId, requestId, updatedAt, lastTaskStatus, runId FROM taskHistory";
+  private static final String GET_TASK_ID_HISTORY_COUNT_QUERY = "SELECT COUNT(*) FROM taskHistory";
+
 
   private void addWhereOrAnd(StringBuilder sqlBuilder, boolean shouldUseWhere) {
     if (shouldUseWhere) {
@@ -80,13 +95,9 @@ public abstract class HistoryJDBI implements GetHandle {
     }
   }
 
-  public List<SingularityTaskIdHistory> getTaskIdHistory(Optional<String> requestId, Optional<String> deployId, Optional<String> host,
+  private void applyTaskIdHistoryBaseQuery(StringBuilder sqlBuilder, Map<String, Object> binds, Optional<String> requestId, Optional<String> deployId, Optional<String> runId, Optional<String> host,
       Optional<ExtendedTaskState> lastTaskStatus, Optional<Long> startedBefore, Optional<Long> startedAfter, Optional<Long> updatedBefore,
-      Optional<Long> updatedAfter, Optional<OrderDirection> orderDirection, Optional<Integer> limitStart, Integer limitCount) {
-
-    final Map<String, Object> binds = new HashMap<>();
-    final StringBuilder sqlBuilder = new StringBuilder(GET_TASK_ID_HISTORY_QUERY);
-
+      Optional<Long> updatedAfter) {
     if (requestId.isPresent()) {
       addWhereOrAnd(sqlBuilder, binds.isEmpty());
       sqlBuilder.append("requestId = :requestId");
@@ -97,6 +108,12 @@ public abstract class HistoryJDBI implements GetHandle {
       addWhereOrAnd(sqlBuilder, binds.isEmpty());
       sqlBuilder.append("deployId = :deployId");
       binds.put("deployId", deployId.get());
+    }
+
+    if (runId.isPresent()) {
+      addWhereOrAnd(sqlBuilder, binds.isEmpty());
+      sqlBuilder.append("runId = :runId");
+      binds.put("runId", runId.get());
     }
 
     if (host.isPresent()) {
@@ -134,6 +151,16 @@ public abstract class HistoryJDBI implements GetHandle {
       sqlBuilder.append("updatedAt > :updatedAfter");
       binds.put("updatedAfter", new Date(updatedAfter.get()));
     }
+  }
+
+    public List<SingularityTaskIdHistory> getTaskIdHistory(Optional<String> requestId, Optional<String> deployId, Optional<String> runId, Optional<String> host,
+      Optional<ExtendedTaskState> lastTaskStatus, Optional<Long> startedBefore, Optional<Long> startedAfter, Optional<Long> updatedBefore,
+      Optional<Long> updatedAfter, Optional<OrderDirection> orderDirection, Optional<Integer> limitStart, Integer limitCount) {
+
+    final Map<String, Object> binds = new HashMap<>();
+    final StringBuilder sqlBuilder = new StringBuilder(GET_TASK_ID_HISTORY_QUERY);
+
+    applyTaskIdHistoryBaseQuery(sqlBuilder, binds, requestId, deployId, runId, host, lastTaskStatus, startedBefore, startedAfter, updatedBefore, updatedAfter);
 
     sqlBuilder.append(" ORDER BY startedAt ");
     sqlBuilder.append(orderDirection.or(OrderDirection.DESC).name());
@@ -163,6 +190,27 @@ public abstract class HistoryJDBI implements GetHandle {
     }
 
     return query.list();
+  }
+
+  public int getTaskIdHistoryCount(Optional<String> requestId, Optional<String> deployId, Optional<String> runId, Optional<String> host,
+      Optional<ExtendedTaskState> lastTaskStatus, Optional<Long> startedBefore, Optional<Long> startedAfter, Optional<Long> updatedBefore,
+      Optional<Long> updatedAfter) {
+
+    final Map<String, Object> binds = new HashMap<>();
+    final StringBuilder sqlBuilder = new StringBuilder(GET_TASK_ID_HISTORY_COUNT_QUERY);
+
+    applyTaskIdHistoryBaseQuery(sqlBuilder, binds, requestId, deployId, runId, host, lastTaskStatus, startedBefore, startedAfter, updatedBefore, updatedAfter);
+
+    final String sql = sqlBuilder.toString();
+
+    LOG.trace("Generated sql for task search count: {}, binds: {}", sql, binds);
+
+    final Query<Integer> query = getHandle().createQuery(sql).mapTo(Integer.class);
+    for (Map.Entry<String, Object> entry : binds.entrySet()) {
+      query.bind(entry.getKey(), entry.getValue());
+    }
+
+    return query.first();
   }
 
 }

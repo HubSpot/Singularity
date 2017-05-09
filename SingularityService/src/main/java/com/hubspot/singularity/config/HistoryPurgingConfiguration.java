@@ -1,18 +1,29 @@
 package com.hubspot.singularity.config;
 
+import java.util.Collections;
+import java.util.Map;
+
 import com.google.common.base.Optional;
 
 public class HistoryPurgingConfiguration {
 
-  private int deleteTaskHistoryAfterDays = 365;
+  private int deleteTaskHistoryAfterDays = 0;
 
-  private int deleteTaskHistoryAfterTasksPerRequest = 10000;
+  private int deleteTaskHistoryAfterTasksPerRequest = 0;
 
-  private boolean deleteTaskHistoryBytesInsteadOfEntireRow = true;
+  private int deleteTaskHistoryBytesAfterDays = 365;
+
+  private int deleteTaskHistoryBytesAfterTasksPerRequest = 10000;
 
   private int checkTaskHistoryEveryHours = 24;
 
   private boolean enabled = false;
+
+  private int purgeLimitPerQuery = 25000;
+
+  private int purgeStaleRequestIdsAfterDays = 7;
+
+  private Map<String, HistoryPurgeRequestSettings> requestOverrides = Collections.emptyMap();
 
   private Optional<Integer> absentIfNotOverOne(int value) {
     if (value < 1) {
@@ -37,12 +48,20 @@ public class HistoryPurgingConfiguration {
     this.deleteTaskHistoryAfterTasksPerRequest = deleteTaskHistoryAfterTasksPerRequest;
   }
 
-  public boolean isDeleteTaskHistoryBytesInsteadOfEntireRow() {
-    return deleteTaskHistoryBytesInsteadOfEntireRow;
+  public Optional<Integer> getDeleteTaskHistoryBytesAfterDays() {
+    return absentIfNotOverOne(deleteTaskHistoryBytesAfterDays);
   }
 
-  public void setDeleteTaskHistoryBytesInsteadOfEntireRow(boolean deleteTaskHistoryBytesInsteadOfEntireRow) {
-    this.deleteTaskHistoryBytesInsteadOfEntireRow = deleteTaskHistoryBytesInsteadOfEntireRow;
+  public void setDeleteTaskHistoryBytesAfterDays(int deleteTaskHistoryBytesAfterDays) {
+    this.deleteTaskHistoryBytesAfterDays = deleteTaskHistoryBytesAfterDays;
+  }
+
+  public Optional<Integer> getDeleteTaskHistoryBytesAfterTasksPerRequest() {
+    return absentIfNotOverOne(deleteTaskHistoryBytesAfterTasksPerRequest);
+  }
+
+  public void setDeleteTaskHistoryBytesAfterTasksPerRequest(int deleteTaskHistoryBytesAfterTasksPerRequest) {
+    this.deleteTaskHistoryBytesAfterTasksPerRequest = deleteTaskHistoryBytesAfterTasksPerRequest;
   }
 
   public int getCheckTaskHistoryEveryHours() {
@@ -61,5 +80,27 @@ public class HistoryPurgingConfiguration {
     this.enabled = enabled;
   }
 
+  public Map<String, HistoryPurgeRequestSettings> getRequestOverrides() {
+    return requestOverrides;
+  }
 
+  public void setRequestOverrides(Map<String, HistoryPurgeRequestSettings> requestOverrides) {
+    this.requestOverrides = requestOverrides;
+  }
+
+  public int getPurgeLimitPerQuery() {
+    return purgeLimitPerQuery;
+  }
+
+  public void setPurgeLimitPerQuery(int purgeLimitPerQuery) {
+    this.purgeLimitPerQuery = purgeLimitPerQuery;
+  }
+
+  public int getPurgeStaleRequestIdsAfterDays() {
+    return purgeStaleRequestIdsAfterDays;
+  }
+
+  public void setPurgeStaleRequestIdsAfterDays(int purgeStaleRequestIdsAfterDays) {
+    this.purgeStaleRequestIdsAfterDays = purgeStaleRequestIdsAfterDays;
+  }
 }

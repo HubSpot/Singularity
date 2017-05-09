@@ -17,6 +17,7 @@ import {
 } from '../../actions/api/history';
 import { FetchPendingDeploys } from '../../actions/api/deploys';
 import { FetchTaskS3Logs } from '../../actions/api/logs';
+import { refresh, onLoad } from '../../actions/ui/taskDetail';
 
 import { InfoBox, UsageInfo } from '../common/statelessComponents';
 import { Alert } from 'react-bootstrap';
@@ -40,6 +41,8 @@ import TaskLbUpdates from './TaskLbUpdates';
 import TaskInfo from './TaskInfo';
 import TaskEnvVars from './TaskEnvVars';
 import TaskHealthchecks from './TaskHealthchecks';
+import TaskState from './TaskState';
+import TaskStatus from './TaskStatus';
 
 class TaskDetail extends Component {
 
@@ -48,6 +51,7 @@ class TaskDetail extends Component {
       task: PropTypes.shape({
         taskId: PropTypes.shape({
           id: PropTypes.string.isRequired,
+          startedAt: PropTypes.number.isRequired,
           requestId: PropTypes.string.isRequired,
           deployId: PropTypes.string.isRequired,
           instanceNo: PropTypes.number.isRequired
@@ -74,6 +78,7 @@ class TaskDetail extends Component {
       healthcheckResults: PropTypes.array,
       ports: PropTypes.array,
       directory: PropTypes.string,
+      status: PropTypes.oneOf([TaskStatus.RUNNING, TaskStatus.STOPPED, TaskStatus.NEVER_RAN]),
       isStillRunning: PropTypes.bool,
       isCleaning: PropTypes.bool,
       loadBalancerUpdates: PropTypes.array
@@ -111,6 +116,7 @@ class TaskDetail extends Component {
     taskId: PropTypes.string.isRequired,
     params: PropTypes.object,
     fetchTaskHistory: PropTypes.func.isRequired,
+    fetchTaskCleanups: PropTypes.func.isRequired,
     fetchTaskStatistics: PropTypes.func.isRequired,
     fetchTaskFiles: PropTypes.func.isRequired,
     runCommandOnTask: PropTypes.func.isRequired,
@@ -164,7 +170,7 @@ class TaskDetail extends Component {
         if (!file.isDirectory) {
           const regex = /(?:\.([^.]+))?$/;
           const extension = regex.exec(file.name)[1];
-          file.isTailable = !_.contains(['zip', 'gz', 'jar'], extension);
+          file.isTailable = !_.contains(['zip', 'gz', 'jar', 'bz2', 'so', 'png', 'jpg', 'jpeg', 'pdf'], extension);
         }
       }
     }
@@ -173,10 +179,16 @@ class TaskDetail extends Component {
 
   renderFiles(files) {
     if (!files || _.isUndefined(files.currentDirectory)) {
+      let message;
+      if (this.props.task.isStillRunning) {
+        message = 'Could not retrieve files. The task may still be starting.';
+      } else {
+        message = 'Could not retrieve files. The directory may have already been cleaned up.';
+      }
       return (
         <Section title="Files">
           <div className="empty-table-message">
-            {'Could not retrieve files. The host of this task is likely offline or its directory has been cleaned up.'}
+            {message}
           </div>
         </Section>
       );
@@ -188,7 +200,7 @@ class TaskDetail extends Component {
           files={files.files}
           currentDirectory={files.currentDirectory}
           changeDir={(path) => {
-            if (path.startsWith('/')) path = path.substring(1);
+            if (!_.isUndefined(path) && path.startsWith('/')) path = path.substring(1);
             this.props.fetchTaskFiles(this.props.params.taskId, path).then(() => {
               this.props.router.push(Utils.joinPath(`task/${this.props.params.taskId}/files/`, path));
             });
@@ -199,34 +211,57 @@ class TaskDetail extends Component {
   }
 
   renderHeader(cleanup) {
-    const taskState = this.props.task.taskUpdates && (
-      <div className="col-xs-6 task-state-header">
-        <h1>
-          <span className={`label label-${Utils.getLabelClassFromTaskState(_.last(this.props.task.taskUpdates).taskState)} task-state-header-label`}>
-            {Utils.humanizeText(_.last(this.props.task.taskUpdates).taskState)} {cleanup && `(${Utils.humanizeText(cleanup.cleanupType)})`}
-          </span>
-        </h1>
-      </div>
+    const cleaningUpdate = _.find(Utils.maybe(this.props.task, ['taskUpdates'], []), (taskUpdate) => {
+      return taskUpdate.taskState === 'TASK_CLEANING';
+    });
+
+    let cleanupType;
+    if (cleaningUpdate) {
+      cleanupType = cleaningUpdate.statusMessage.split(/\s+/)[0];
+    } else if (cleanup) {
+      cleanupType = cleanup.cleanupType;
+    }
+
+    const taskState = (
+      <TaskState
+        status={this.props.task.status}
+        updates={this.props.task.taskUpdates}
+        cleanupType={cleanupType}
+      />
     );
 
-    let removeText;
-    if (cleanup) {
-      removeText = cleanup.isImmediate ? 'Destroy task' : 'Override cleanup';
-    } else {
-      removeText = this.props.task.isCleaning ? 'Destroy task' : 'Kill Task';
+    let destroy = false;
+    let removeText = 'Kill Task';
+    if (cleanupType) {
+      if (Utils.isImmediateCleanup(cleanupType, Utils.request.isLongRunning(this.props.task.task.taskRequest))) {
+        removeText = 'Destroy Task';
+        destroy = true;
+      } else {
+        removeText = 'Override cleanup';
+      }
     }
+
+    const refreshHistoryAndCleanups = () => {
+      const promises = [];
+      promises.push(this.props.fetchTaskCleanups());
+      promises.push(this.props.fetchTaskHistory(this.props.params.taskId));
+      return Promise.all(promises);
+    };
+
     const removeBtn = this.props.task.isStillRunning && (
       <KillTaskButton
         name={removeText}
         taskId={this.props.params.taskId}
-        shouldShowWaitForReplacementTask={Utils.isIn(this.props.task.task.taskRequest.request.requestType, ['SERVICE', 'WORKER'])}
+        destroy={destroy}
+        then={refreshHistoryAndCleanups}
+        shouldShowWaitForReplacementTask={Utils.isIn(this.props.task.task.taskRequest.request.requestType, ['SERVICE', 'WORKER']) && !destroy}
       >
         <a className="btn btn-danger">
           {removeText}
         </a>
       </KillTaskButton>
     );
-    const terminationAlert = this.props.task.isStillRunning && !cleanup && this.props.task.isCleaning && (
+    const terminationAlert = this.props.task.isStillRunning && this.props.task.isCleaning && destroy && (
       <Alert bsStyle="warning">
           <strong>Task is terminating:</strong> To issue a non-graceful termination (kill -term), click Destroy Task.
       </Alert>
@@ -381,6 +416,8 @@ class TaskDetail extends Component {
       return cleanupToTest.taskId.id === this.props.taskId;
     });
     const filesToDisplay = this.props.files[`${this.props.params.taskId}/${this.props.currentFilePath}`] && this.analyzeFiles(this.props.files[`${this.props.taskId}/${this.props.currentFilePath}`].data);
+    const topLevelFiles = this.props.files[`${this.props.params.taskId}/`] && this.analyzeFiles(this.props.files[`${this.props.taskId}/`].data);
+    const filesAvailable = topLevelFiles && !_.isEmpty(topLevelFiles.files);
 
     return (
       <div className="task-detail detail-view">
@@ -388,9 +425,9 @@ class TaskDetail extends Component {
         <TaskAlerts task={this.props.task} deploy={this.props.deploy} pendingDeploys={this.props.pendingDeploys} />
         <TaskMetadataAlerts task={this.props.task} />
         <TaskHistory taskUpdates={this.props.task.taskUpdates} />
-        <TaskLatestLog taskId={this.props.taskId} isStillRunning={this.props.task.isStillRunning} />
+        <TaskLatestLog taskId={this.props.taskId} status={this.props.task.status} available={filesAvailable} />
         {this.renderFiles(filesToDisplay)}
-        {_.isEmpty(this.props.s3Logs) || <TaskS3Logs taskId={this.props.task.task.taskId.id} s3Files={this.props.s3Logs} />}
+        {_.isEmpty(this.props.s3Logs) || <TaskS3Logs taskId={this.props.task.task.taskId.id} s3Files={this.props.s3Logs} taskStartedAt={this.props.task.task.taskId.startedAt} />}
         {_.isEmpty(this.props.task.loadBalancerUpdates) || <TaskLbUpdates loadBalancerUpdates={this.props.task.loadBalancerUpdates} />}
         <TaskInfo task={this.props.task.task} ports={this.props.task.ports} directory={this.props.task.directory} />
         {this.renderResourceUsage()}
@@ -407,24 +444,34 @@ function mapHealthchecksToProps(task) {
   const { healthcheckResults } = task;
   task.hasSuccessfulHealthcheck = healthcheckResults && healthcheckResults.length > 0 && !!_.find(healthcheckResults, (healthcheckResult) => healthcheckResult.statusCode === 200);
   task.lastHealthcheckFailed = healthcheckResults && healthcheckResults.length > 0 && _.last(healthcheckResults).statusCode !== 200;
-  task.healthcheckFailureReasonMessage = Utils.healthcheckFailureReasonMessage(task);
-  task.tooManyRetries = healthcheckResults && healthcheckResults.length > task.task.taskRequest.deploy.healthcheckMaxRetries && task.task.taskRequest.deploy.healthcheckMaxRetries > 0;
-  task.secondsElapsed = task.task && task.task.taskRequest && task.task.taskRequest.deploy.healthcheckMaxTotalTimeoutSeconds || config.defaultDeployHealthTimeoutSeconds;
+  if (healthcheckResults && task.task.taskRequest.deploy && task.task.taskRequest.deploy.healthcheck && task.task.taskRequest.deploy.healthcheck.maxRetries && task.task.taskRequest.deploy.healthcheck.maxRetries > 0) {
+    task.tooManyRetries = healthcheckResults.length > task.task.taskRequest.deploy.healthcheck.maxRetries;
+  } else {
+    task.tooManyRetries = false;
+  }
   return task;
 }
 
 function mapTaskToProps(task) {
   task.lastKnownState = _.last(task.taskUpdates);
   let isStillRunning = true;
+  let status = TaskStatus.RUNNING;
+
   if (task.taskUpdates && _.contains(Utils.TERMINAL_TASK_STATES, task.lastKnownState.taskState)) {
+    if (_.contains(_.map(task.taskUpdates, (update) => update.taskState), 'TASK_RUNNING')) {
+      status = TaskStatus.STOPPED;
+    } else {
+      status = TaskStatus.NEVER_RAN;
+    }
     isStillRunning = false;
   }
   task.isStillRunning = isStillRunning;
+  task.status = status;
 
   task.isCleaning = task.lastKnownState && task.lastKnownState.taskState === 'TASK_CLEANING';
 
   const ports = [];
-  if (task.task && task.task.taskRequest.deploy.resources.numPorts > 0) {
+  if (task.task && task.task.taskRequest.deploy && task.task.taskRequest.deploy.resources && task.task.taskRequest.deploy.resources.numPorts > 0) {
     for (const resource of task.task.mesosTask.resources) {
       if (resource.name === 'ports') {
         for (const range of resource.ranges.range) {
@@ -452,10 +499,12 @@ function mapStateToProps(state, ownProps) {
   }
   task = mapTaskToProps(task.data);
   task = mapHealthchecksToProps(task);
+  const defaultFilePath = _.isUndefined(ownProps.files) ? '' : ownProps.files.currentDirectory;
+
   return {
     task,
     taskId: ownProps.params.taskId,
-    currentFilePath: _.isUndefined(ownProps.params.splat) ? ownProps.params.taskId : ownProps.params.splat,
+    currentFilePath: _.isUndefined(ownProps.params.splat) ? defaultFilePath : ownProps.params.splat.substring(1),
     taskCleanups: state.api.taskCleanups.data,
     files: state.api.taskFiles,
     resourceUsageNotFound: state.api.taskResourceUsage.statusCode === 404,
@@ -482,24 +531,4 @@ function mapDispatchToProps(dispatch) {
   };
 }
 
-function refresh(props) {
-  props.fetchTaskFiles(props.params.taskId, props.params.splat || props.params.taskId, [400, 404]);
-  const promises = [];
-  const taskPromise = props.fetchTaskHistory(props.params.taskId);
-  taskPromise.then(() => {
-    const apiData = props.route.store.getState().api.task[props.params.taskId];
-    if (apiData.statusCode === 404) return;
-    const task = apiData.data;
-    promises.push(props.fetchDeployForRequest(task.task.taskId.requestId, task.task.taskId.deployId));
-    if (task.isStillRunning) {
-      promises.push(props.fetchTaskStatistics(props.params.taskId));
-    }
-  });
-  promises.push(taskPromise);
-  promises.push(props.fetchTaskCleanups());
-  promises.push(props.fetchPendingDeploys());
-  promises.push(props.fechS3Logs(props.params.taskId));
-  return Promise.all(promises);
-}
-
-export default connect(mapStateToProps, mapDispatchToProps)(rootComponent(withRouter(TaskDetail), (props) => props.params.taskId, refresh));
+export default connect(mapStateToProps, mapDispatchToProps)(rootComponent(withRouter(TaskDetail), (props) => refresh(props.params.taskId, props.params.splat), true, true, null, (props) => onLoad(props.params.taskId)));

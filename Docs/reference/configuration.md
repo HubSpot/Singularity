@@ -40,7 +40,7 @@ These are settings that are more likely to be altered.
 |-----------|---------|-------------|------|
 | allowRequestsWithoutOwners | true | If false, submitting a request without at least one owner will return a 400 | boolean |
 | commonHostnameSuffixToOmit | null | If specified, will remove this hostname suffix from all taskIds | string |
-| defaultSlavePlacement | GREEDY | See [Slave Placement](../about/how-it-works.md#user-content-placement) | enum / string [GREEDY, OPTIMISTIC, SEPARATE (deprecated), SEPARATE_BY_DEPLOY, SEPARATE_BY_REQUEST]
+| defaultSlavePlacement | GREEDY | See [Slave Placement](../about/how-it-works.md#user-content-placement) | enum / string [GREEDY, OPTIMISTIC, SEPARATE (deprecated), SEPARATE_BY_DEPLOY, SEPARATE_BY_REQUEST, SPREAD_ALL_SLAVES]
 | defaultValueForKillTasksOfPausedRequests | true | When a task is paused, the API allows for the tasks of that request to optionally not be killed. If that parameter is not set in the pause request, this value is used | boolean |
 | deltaAfterWhichTasksAreLateMillis | 30000 (30 seconds) | The amount of time after a task's schedule time that Singularity will classify it (in state API and dashboard) as a late task | long | 
 | deployHealthyBySeconds | 120 | Default amount of time to allow pending deploys to run for before transitioning them into active deploys. If more than this time passes before a deploy can be considered healthy (all of its tasks either make it to TASK_RUNNING or pass healthchecks), then the deploy will be rejected | long |
@@ -51,11 +51,14 @@ These are settings that are more likely to be altered.
 | Parameter | Default | Description | Type |
 |-----------|---------|-------------|------|
 | considerTaskHealthyAfterRunningForSeconds | 5 | Tasks which make it to TASK_RUNNING and run for at least this long (that are not health-checked) are considered healthy | long | 
-| healthcheckIntervalSeconds | 5 | Default amount of time to wait in between attempting task healthchecks | long |
-| healthcheckTimeoutSeconds | 5 | Default amount of time to wait for healthchecks to return before considering them failed | long | 
+| healthcheckIntervalSeconds | 5 | Default amount of time to wait in between attempting task healthchecks | int |
+| healthcheckTimeoutSeconds | 5 | Default amount of time to wait for healthchecks to return before considering them failed | int | 
 | killAfterTasksDoNotRunDefaultSeconds | 600 (10 minutes) | Amount of time after which new tasks (that are not part of a deploy) will be killed if they do not enter TASK_RUNNING | long |
 | healthcheckMaxRetries | | Default max number of time to retry a failed healthcheck for a task before considering the task to be unhealthy | int |
-| healthcheckMaxTotalTimeoutSeconds | | Default total time to wait for healthchecks to pass | int |
+| startupDelaySeconds | | By default, wait this long before starting any healthchecks on a task | int |
+| startupTimeoutSeconds | 45 | If a healthchecked task has not responded with a valid http response in `startupTimeoutSeconds` consider it unhealthy | int |
+| startupIntervalSeconds | 2 | In the startup period (before a valid http response has been received) wait this long between healthcheck attempts | int |
+| healthcheckFailureStatusCodes | [] | If any of these status codes is received during a healthcheck, immediately consider the task unhealthy, do not retry the check | List<Integer> |
 
 #### Deploys ####
 | Parameter | Default | Description | Type |
@@ -105,7 +108,7 @@ These settings are less likely to be changed, but were included in the configura
 | cleanupEverySeconds | 5 | Will cleanup request, task, and other queues on this interval | long | 
 | persistHistoryEverySeconds | 3600 (1 hour) | Moves stale historical task data from ZooKeeper into MySQL, setting to 0 will disable history persistence | long |
 | saveStateEverySeconds | 60 | State about this Singularity instance is saved (available over API) on this interval | long |
-| checkScheduledJobsEveryMillis | 600000 (10 mins) | Check for new scheduled jobs and those running into the next scheduled time on this interval | long |
+| checkJobsEveryMillis | 600000 (10 mins) | Check for jobs running longer than the expected time on this interval | long |
 | checkExpiringUserActionEveryMillis | 45000 | Check for expiring actions that should be expired on this interval | long |
 
 #### Mesos ####
@@ -160,6 +163,7 @@ These settings should live under the "mesos" field inside the root configuration
 | frameworkName | null | | string |
 | frameworkId | null | | string |
 | frameworkFailoverTimeout | 0.0 | | double |
+| frameworkRole | null | Specify framework's desired role when Singularity registers with the master | String |
 | checkpoint | true | | boolean |
 | credentialPrincipal | | Enable framework auth by setting both this and credentialSecret | String |
 | credentialSecret | | Enable framework auth by setting both this and credentialPrincipal | String |

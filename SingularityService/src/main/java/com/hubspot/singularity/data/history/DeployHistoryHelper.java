@@ -56,4 +56,11 @@ public class DeployHistoryHelper extends BlendedHistoryHelper<SingularityDeployH
     return !historyManager.getDeployHistory(requestId, deployId).isPresent();
   }
 
+  @Override
+  protected Optional<Integer> getTotalCount(String requestId) {
+    final int numFromZk = deployManager.getDeployIdsFor(requestId).size();
+    final int numFromHistory = historyManager.getDeployHistoryForRequestCount(requestId);
+
+    return Optional.of(numFromZk + numFromHistory);
+  }
 }

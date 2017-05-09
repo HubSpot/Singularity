@@ -1,44 +1,46 @@
 import moment from 'moment';
-import Messenger from 'messenger';
+import 'messenger/build/css/messenger';
+import 'messenger/build/css/messenger-theme-air';
+import 'messenger';
 
-/* eslint-disable id-length */
-// Eat M/D/Y & 24h-time, yanks! Mwahahahahaha!
-moment.updateLocale('en', {
-  longDateFormat: {
-    LT: 'HH:mm',
-    L: 'DD/MM/YYYY',
-    LL: 'D MMMM YYYY',
-    LLL: 'D MMMM YYYY LT',
-    LLLL: 'dddd, D MMMM YYYY LT'
-  }
-});
-/* eslint-enable id-length */
+export const loadThirdParty = () => {
+  // Eat M/D/Y & 24h-time, yanks! Mwahahahahaha!
+  moment.locale('en', {
+    longDateFormat: {
+      LT: 'HH:mm',
+      L: 'DD/MM/YYYY',
+      LL: 'D MMMM YYYY',
+      LLL: 'D MMMM YYYY LT',
+      LLLL: 'dddd, D MMMM YYYY LT'
+    }
+  });
 
-// Time out requests within 10 seconds
-$.ajaxSetup(
-  {timeout: 10 * 1000}
-);
+  // Time out requests within 10 seconds
+  $.ajaxSetup(
+    {timeout: 10 * 1000}
+  );
 
-// Patch jQuery ajax to always use xhrFields.withCredentials true
-const _oldAjax = jQuery.ajax;
-jQuery.ajax = (opts) => {
-  if (opts.xhrFields == null) { opts.xhrFields = {}; }
-  opts.xhrFields.withCredentials = true;
+  // Patch jQuery ajax to always use xhrFields.withCredentials true
+  const _oldAjax = jQuery.ajax;
+  jQuery.ajax = (opts) => {
+    if (opts.xhrFields == null) { opts.xhrFields = {}; }
+    opts.xhrFields.withCredentials = true;
 
-  return _oldAjax.call(jQuery, opts);
-};
+    return _oldAjax.call(jQuery, opts);
+  };
 
-// Messenger options
-Messenger.options = {
-  extraClasses: 'messenger-fixed messenger-on-top',
-  theme: 'air',
-  hideOnNavigate: true,
-  maxMessages: 1,
-  messageDefaults: {
-    type: 'error',
-    hideAfter: false,
-    showCloseButton: true
-  }
+  // Messenger options
+  window.Messenger.options = {
+    extraClasses: 'messenger-fixed messenger-on-top',
+    theme: 'air',
+    hideOnNavigate: true,
+    maxMessages: 1,
+    messageDefaults: {
+      type: 'error',
+      hideAfter: false,
+      showCloseButton: true
+    }
+  };
 };
 
 // Color scheme for json view

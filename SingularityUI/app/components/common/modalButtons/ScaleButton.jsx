@@ -17,6 +17,7 @@ const scaleTooltip = (
 export default class ScaleButton extends Component {
   static propTypes = {
     requestId: PropTypes.string.isRequired,
+    bounceAfterScaleDefault: PropTypes.bool.isRequired,
     currentInstances: PropTypes.number,
     children: PropTypes.node,
     then: PropTypes.func
@@ -41,6 +42,7 @@ export default class ScaleButton extends Component {
           requestId={this.props.requestId}
           currentInstances={this.props.currentInstances}
           then={this.props.then}
+          bounceAfterScaleDefault={this.props.bounceAfterScaleDefault}
         />
       </span>
     );

@@ -1,5 +1,7 @@
 package com.hubspot.singularity;
 
+import java.util.Objects;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
@@ -43,62 +45,34 @@ public class SingularityMachineStateHistoryUpdate {
   }
 
   @Override
-  public int hashCode() {
-    final int prime = 31;
-    int result = 1;
-    result = prime * result + ((message == null) ? 0 : message.hashCode());
-    result = prime * result + ((objectId == null) ? 0 : objectId.hashCode());
-    result = prime * result + ((state == null) ? 0 : state.hashCode());
-    result = prime * result + (int) (timestamp ^ (timestamp >>> 32));
-    result = prime * result + ((user == null) ? 0 : user.hashCode());
-    return result;
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+    SingularityMachineStateHistoryUpdate that = (SingularityMachineStateHistoryUpdate) o;
+    return timestamp == that.timestamp &&
+        Objects.equals(objectId, that.objectId) &&
+        state == that.state &&
+        Objects.equals(user, that.user) &&
+        Objects.equals(message, that.message);
   }
 
   @Override
-  public boolean equals(Object obj) {
-    if (this == obj) {
-      return true;
-    }
-    if (obj == null) {
-      return false;
-    }
-    if (getClass() != obj.getClass()) {
-      return false;
-    }
-    SingularityMachineStateHistoryUpdate other = (SingularityMachineStateHistoryUpdate) obj;
-    if (message == null) {
-      if (other.message != null) {
-        return false;
-      }
-    } else if (!message.equals(other.message)) {
-      return false;
-    }
-    if (objectId == null) {
-      if (other.objectId != null) {
-        return false;
-      }
-    } else if (!objectId.equals(other.objectId)) {
-      return false;
-    }
-    if (state != other.state) {
-      return false;
-    }
-    if (timestamp != other.timestamp) {
-      return false;
-    }
-    if (user == null) {
-      if (other.user != null) {
-        return false;
-      }
-    } else if (!user.equals(other.user)) {
-      return false;
-    }
-    return true;
+  public int hashCode() {
+    return Objects.hash(objectId, state, user, message, timestamp);
   }
 
   @Override
   public String toString() {
-    return "SingularityMachineStateHistoryUpdate [objectId=" + objectId + ", state=" + state + ", user=" + user + ", message=" + message + ", timestamp=" + timestamp + "]";
+    return "SingularityMachineStateHistoryUpdate{" +
+        "objectId='" + objectId + '\'' +
+        ", state=" + state +
+        ", user=" + user +
+        ", message=" + message +
+        ", timestamp=" + timestamp +
+        '}';
   }
-
 }

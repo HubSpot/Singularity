@@ -1,10 +1,12 @@
 package com.hubspot.singularity.api;
 
+import java.util.Objects;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.Objects;
 import com.google.common.base.Optional;
 import com.hubspot.singularity.SingularityAction;
+import com.wordnik.swagger.annotations.ApiModelProperty;
 
 public class SingularityDisabledActionRequest {
   private final SingularityAction type;
@@ -16,10 +18,12 @@ public class SingularityDisabledActionRequest {
     this.message = message;
   }
 
+  @ApiModelProperty(required=true, value="The type of action to disable")
   public SingularityAction getType() {
     return type;
   }
 
+  @ApiModelProperty(required=false, value="An optional message/reason for disabling the action specified")
   public Optional<String> getMessage() {
     return message;
   }
@@ -34,19 +38,19 @@ public class SingularityDisabledActionRequest {
     }
     SingularityDisabledActionRequest that = (SingularityDisabledActionRequest) o;
     return type == that.type &&
-      Objects.equal(message, that.message);
+        Objects.equals(message, that.message);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hashCode(type, message);
+    return Objects.hash(type, message);
   }
 
   @Override
   public String toString() {
-    return Objects.toStringHelper(this)
-      .add("type", type)
-      .add("message", message)
-      .toString();
+    return "SingularityDisabledActionRequest{" +
+        "type=" + type +
+        ", message=" + message +
+        '}';
   }
 }

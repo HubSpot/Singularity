@@ -10,7 +10,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Multiset;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
@@ -20,8 +19,6 @@ import com.hubspot.singularity.SingularityDisasterDataPoint;
 import com.hubspot.singularity.SingularityDisasterDataPoints;
 import com.hubspot.singularity.SingularityDisasterType;
 import com.hubspot.singularity.SingularityDisastersData;
-import com.hubspot.singularity.SingularityEmailDestination;
-import com.hubspot.singularity.SingularityEmailType;
 import com.hubspot.singularity.SingularityPendingTaskId;
 import com.hubspot.singularity.SingularitySlave;
 import com.hubspot.singularity.config.DisasterDetectionConfiguration;
@@ -30,7 +27,7 @@ import com.hubspot.singularity.data.DisasterManager;
 import com.hubspot.singularity.data.SlaveManager;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.mesos.SingularityMesosModule;
-import com.hubspot.singularity.smtp.SingularitySmtpSender;
+import com.hubspot.singularity.smtp.SingularityMailer;
 
 public class SingularityDisasterDetectionPoller extends SingularityLeaderOnlyPoller {
 
@@ -41,12 +38,12 @@ public class SingularityDisasterDetectionPoller extends SingularityLeaderOnlyPol
   private final TaskManager taskManager;
   private final SlaveManager slaveManager;
   private final DisasterManager disasterManager;
-  private final SingularitySmtpSender smtpSender;
+  private final SingularityMailer mailer;
   private final Multiset<Reason> taskLostReasons;
   private final AtomicInteger activeSlavesLost;
 
   @Inject
-  public SingularityDisasterDetectionPoller(SingularityConfiguration configuration,  TaskManager taskManager, SlaveManager slaveManager, DisasterManager disasterManager, SingularitySmtpSender smtpSender,
+  public SingularityDisasterDetectionPoller(SingularityConfiguration configuration,  TaskManager taskManager, SlaveManager slaveManager, DisasterManager disasterManager, SingularityMailer mailer,
                                             @Named(SingularityMesosModule.TASK_LOST_REASONS_COUNTER) Multiset<Reason> taskLostReasons, @Named(SingularityMesosModule.ACTIVE_SLAVES_LOST_COUNTER) AtomicInteger activeSlavesLost) {
     super(configuration.getDisasterDetection().getRunEveryMillis(), TimeUnit.MILLISECONDS);
     this.configuration = configuration;
@@ -54,7 +51,7 @@ public class SingularityDisasterDetectionPoller extends SingularityLeaderOnlyPol
     this.taskManager = taskManager;
     this.slaveManager = slaveManager;
     this.disasterManager = disasterManager;
-    this.smtpSender = smtpSender;
+    this.mailer = mailer;
     this.taskLostReasons = taskLostReasons;
     this.activeSlavesLost = activeSlavesLost;
   }
@@ -98,7 +95,9 @@ public class SingularityDisasterDetectionPoller extends SingularityLeaderOnlyPol
       if (!disasterManager.isAutomatedDisabledActionsDisabled()) {
         disasterManager.addDisabledActionsForDisasters(newActiveDisasters);
       }
-      queueDisasterEmail(dataPoints, newActiveDisasters);
+      if (!previouslyActiveDisasters.containsAll(newActiveDisasters)) {
+        queueDisasterEmail(dataPoints, newActiveDisasters);
+      }
     } else {
       disasterManager.clearSystemGeneratedDisabledActions();
     }
@@ -184,7 +183,7 @@ public class SingularityDisasterDetectionPoller extends SingularityLeaderOnlyPol
       double overdueTaskPortion = dataPoint.getNumLateTasks() / (double) Math.max((dataPoint.getNumActiveTasks() + dataPoint.getNumPendingTasks()), 1);
       boolean criticalOverdueTasksPortion = overdueTaskPortion > disasterConfiguration.getCriticalOverdueTaskPortion();
       boolean warningOverdueTasksPortion = overdueTaskPortion > disasterConfiguration.getWarningOverdueTaskPortion();
-      boolean criticalAvgTaskLag = dataPoint.getAvgTaskLagMillis() > disasterConfiguration.getCriticalAvgTaskLagMillis();
+      boolean criticalAvgTaskLag = dataPoint.getAvgTaskLagMillis() > disasterConfiguration.getCriticalAvgTaskLagMillis() && warningOverdueTasksPortion;
       boolean warningAvgTaskLag = dataPoint.getAvgTaskLagMillis() > disasterConfiguration.getWarningAvgTaskLagMillis();
 
       if (criticalOverdueTasksPortion) {
@@ -240,23 +239,13 @@ public class SingularityDisasterDetectionPoller extends SingularityLeaderOnlyPol
   }
 
   private void queueDisasterEmail(List<SingularityDisasterDataPoint> dataPoints, List<SingularityDisasterType> disasters) {
-    if (!configuration.getSmtpConfiguration().isPresent()) {
-      LOG.warn("Couldn't send disaster detected mail because no SMTP configuration is present");
-      return;
-    }
+    SingularityDisastersData data = new SingularityDisastersData(
+      dataPoints,
+      disasterManager.getAllDisasterStates(disasters),
+      disasterManager.isAutomatedDisabledActionsDisabled()
+    );
 
-    final List<SingularityEmailDestination> emailDestination = configuration.getSmtpConfiguration().get().getEmailConfiguration().get(SingularityEmailType.DISASTER_DETECTED);
-    if (emailDestination.isEmpty() || !emailDestination.contains(SingularityEmailDestination.ADMINS)) {
-      LOG.info("Not configured to send disaster detected mail");
-      return;
-    }
-
-    SingularityDisastersData data = new SingularityDisastersData(dataPoints, disasterManager.getAllDisasterStates(disasters), disasterManager.isAutomatedDisabledActionsDisabled());
-
-    final String body = String.format("New disasters detected. Data: %s ", data);
-    final String subject = String.format("Disaster(s) Detected %s", disasters);
-
-    smtpSender.queueMail(configuration.getSmtpConfiguration().get().getAdmins(), ImmutableList.<String> of(), subject, body);
+    mailer.sendDisasterMail(data);
   }
 
 }

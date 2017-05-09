@@ -13,6 +13,7 @@ import java.util.List;
 
 import org.slf4j.Logger;
 
+import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.hash.HashCode;
@@ -22,6 +23,7 @@ import com.hubspot.deploy.EmbeddedArtifact;
 import com.hubspot.deploy.ExternalArtifact;
 import com.hubspot.deploy.RemoteArtifact;
 import com.hubspot.deploy.S3Artifact;
+import com.hubspot.singularity.runner.base.configuration.SingularityRunnerBaseConfiguration;
 import com.hubspot.singularity.runner.base.sentry.SingularityRunnerExceptionNotifier;
 import com.hubspot.singularity.runner.base.shared.ProcessFailedException;
 import com.hubspot.singularity.runner.base.shared.SimpleProcessManager;
@@ -32,13 +34,15 @@ public class ArtifactManager extends SimpleProcessManager {
   private final Path cacheDirectory;
   private final Logger log;
   private final S3ArtifactDownloader s3ArtifactDownloader;
+  private final Optional<String> useCompressProgram;
 
-  public ArtifactManager(SingularityS3Configuration configuration, Logger log, SingularityRunnerExceptionNotifier exceptionNotifier) {
+  public ArtifactManager(SingularityRunnerBaseConfiguration runnerBaseConfiguration, SingularityS3Configuration configuration, Logger log, SingularityRunnerExceptionNotifier exceptionNotifier) {
     super(log);
 
     this.cacheDirectory = Paths.get(configuration.getArtifactCacheDirectory());
     this.log = log;
     this.s3ArtifactDownloader = new S3ArtifactDownloader(configuration, log, exceptionNotifier);
+    this.useCompressProgram = runnerBaseConfiguration.getUseCompressProgram();
   }
 
   private long getSize(Path path) {
@@ -54,7 +58,7 @@ public class ArtifactManager extends SimpleProcessManager {
   }
 
   private boolean md5Matches(Artifact artifact, Path path) {
-    return !artifact.getMd5sum().isPresent() || artifact.getMd5sum().get().equals(calculateMd5sum(path));
+    return !artifact.getMd5sum().isPresent() || artifact.getMd5sum().get().equalsIgnoreCase(calculateMd5sum(path));
   }
 
   private void checkFilesize(RemoteArtifact artifact, Path path) {
@@ -113,7 +117,7 @@ public class ArtifactManager extends SimpleProcessManager {
     checkMd5(embeddedArtifact, extractTo);
   }
 
-  private Path downloadAndCache(RemoteArtifact artifact, String filename) {
+  private Path downloadAndCache(RemoteArtifact artifact, String filename, String cacheMissMessage) {
     Path tempFilePath = createTempPath(filename);
 
     downloadAndCheck(artifact, tempFilePath);
@@ -123,7 +127,7 @@ public class ArtifactManager extends SimpleProcessManager {
     try {
       Files.move(tempFilePath, cachedPath, StandardCopyOption.ATOMIC_MOVE);
     } catch (IOException e) {
-      throw new RuntimeException(String.format("Couldn't move %s to %s", tempFilePath, cachedPath), e);
+      throw new RuntimeException(String.format("Couldn't move %s to cache at %s (Not cached because %s)", tempFilePath, cachedPath, cacheMissMessage), e);
     }
 
     return cachedPath;
@@ -133,31 +137,37 @@ public class ArtifactManager extends SimpleProcessManager {
     return cacheDirectory.resolve(filename);
   }
 
-  private boolean checkCached(RemoteArtifact artifact, Path cachedPath) {
+  private CacheCheck checkCached(RemoteArtifact artifact, Path cachedPath) {
     if (!Files.exists(cachedPath)) {
-      log.debug("Cached {} did not exist", cachedPath);
-      return false;
+      String message = String.format("Cached %s did not exist", cachedPath);
+      log.debug(message);
+      return new CacheCheck(CacheCheckResult.DOES_NOT_EXIST, message);
     }
 
     if (!filesSizeMatches(artifact, cachedPath)) {
-      log.debug("Cached {} ({}) did not match file size {}", cachedPath, getSize(cachedPath), artifact.getFilesize());
-      return false;
+      String message = String.format("Cached %s (%s) did not match file size %s", cachedPath, getSize(cachedPath), artifact.getFilesize());
+      log.debug(message);
+      return new CacheCheck(CacheCheckResult.FILE_SIZE_MISMATCH, message);
     }
 
     if (!md5Matches(artifact, cachedPath)) {
-      log.debug("Cached {} ({}) did not match md5 {}", cachedPath, calculateMd5sum(cachedPath), artifact.getMd5sum().get());
-      return false;
+      String message = String.format("Cached %s (%s) did not match md5 %s", cachedPath, calculateMd5sum(cachedPath), artifact.getMd5sum().get());
+      log.debug(message);
+      return new CacheCheck(CacheCheckResult.MD5_MISMATCH, message);
     }
 
-    return true;
+    return new CacheCheck(CacheCheckResult.FOUND, "");
   }
 
   public Path fetch(RemoteArtifact artifact) {
-    String filename = artifact.getFilename();
+    String filename = artifact.getFilenameForCache();
     Path cachedPath = getCachedPath(filename);
 
-    if (!checkCached(artifact, cachedPath)) {
-      downloadAndCache(artifact, filename);
+    CacheCheck cacheCheck = checkCached(artifact, cachedPath);
+
+    if (cacheCheck.getCacheCheckResult() != CacheCheckResult.FOUND) {
+      log.info(cacheCheck.getMessage());
+      downloadAndCache(artifact, filename, cacheCheck.getMessage());
     } else {
       log.info("Using cached file {}", cachedPath);
     }
@@ -187,12 +197,12 @@ public class ArtifactManager extends SimpleProcessManager {
     runCommandAndThrowRuntimeException(command);
   }
 
-  public void copy(Path source, Path destination) {
+  public void copy(Path source, Path destination, String destinationFilename) {
     log.info("Copying {} to {}", source, destination);
 
     try {
       Files.createDirectories(destination);
-      Files.copy(source, destination.resolve(source.getFileName()));
+      Files.copy(source, destination.resolve(destinationFilename));
     } catch (IOException e) {
       throw Throwables.propagate(e);
     }
@@ -201,14 +211,15 @@ public class ArtifactManager extends SimpleProcessManager {
   public void untar(Path source, Path destination) {
     log.info("Untarring {} to {}", source, destination);
 
-    final List<String> command = ImmutableList.of(
-        "tar",
-        "-oxzf",
-        source.toString(),
-        "-C",
-        destination.toString());
+    final ImmutableList.Builder<String> commandBuilder = ImmutableList.<String>builder().add("tar", "-oxf", source.toString(), "-C", destination.toString());
 
-    runCommandAndThrowRuntimeException(command);
+    if (useCompressProgram.isPresent()) {
+      commandBuilder.add("--use-compress-program=" + useCompressProgram.get());
+    } else {
+      commandBuilder.add("-z");
+    }
+
+    runCommandAndThrowRuntimeException(commandBuilder.build());
   }
 
   private void runCommandAndThrowRuntimeException(List<String> command) {
@@ -228,5 +239,4 @@ public class ArtifactManager extends SimpleProcessManager {
       throw Throwables.propagate(e);
     }
   }
-
 }

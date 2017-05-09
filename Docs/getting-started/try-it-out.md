@@ -2,6 +2,12 @@
 
 If you want to give Singularity a try, you can install [docker](https://docs.docker.com/installation/) and [docker-compose](https://docs.docker.com/compose/#installation-and-set-up) to run our example cluster.
 
+**Note:** The Docker development setup is currently not compatible with Docker for Mac due to its usage of `HOST` network mode. You can instead run Singularity via `docker-machine` using the following commands:
+
+Create a new docker machine: `docker-machine create --driver=virtualbox singularity`
+Set the docker env to the new machine: `eval $(docker-machine env singularity)`
+Get the IP for the machine. Use this instead of `localhost` for the UI addresses: `docker-machine ip singularity`
+
 Run `docker-compose pull` first to get all of the needed images. *Note: This may take a few minutes*
 
 Then simply run `docker-compose up` and it will start containers for...

@@ -34,6 +34,10 @@ public class SingularityRunnerBaseConfiguration extends BaseRunnerConfiguration 
   @JsonProperty
   private String sentryPrefix = "";
 
+  @NotNull
+  @JsonProperty
+  private Optional<String> useCompressProgram = Optional.absent();
+
   public SingularityRunnerBaseConfiguration() {
     super(Optional.<String>absent());
     this.setLoggingDirectory(Optional.of("/var/log/singularity/"));
@@ -87,6 +91,14 @@ public class SingularityRunnerBaseConfiguration extends BaseRunnerConfiguration 
     this.sentryPrefix = sentryPrefix;
   }
 
+  public Optional<String> getUseCompressProgram() {
+    return useCompressProgram;
+  }
+
+  public void setUseCompressProgram(Optional<String> useCompressProgram) {
+    this.useCompressProgram = useCompressProgram;
+  }
+
   @Override
   public String toString() {
     return "SingularityRunnerBaseConfiguration[" +
@@ -94,6 +106,7 @@ public class SingularityRunnerBaseConfiguration extends BaseRunnerConfiguration 
             ", s3UploaderMetadataSuffix='" + s3UploaderMetadataSuffix + '\'' +
             ", logWatcherMetadataDirectory='" + logWatcherMetadataDirectory + '\'' +
             ", logWatcherMetadataSuffix='" + logWatcherMetadataSuffix + '\'' +
+            ", useCompressProgram=" + useCompressProgram +
             ']';
   }
 }

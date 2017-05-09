@@ -8,6 +8,7 @@ import FormModal from '../modal/FormModal';
 class RemoveModal extends Component {
   static propTypes = {
     requestId: PropTypes.string.isRequired,
+    loadBalancerData: PropTypes.object,
     removeRequest: PropTypes.func.isRequired
   };
 
@@ -16,6 +17,13 @@ class RemoveModal extends Component {
   }
 
   render() {
+    const loadBalancerWarning = (
+      <div>
+        <p>Removing this request will also remove the following settings from the load balancer</p>
+        <pre>{JSON.stringify(this.props.loadBalancerData, null, 2)}</pre>
+      </div>
+    );
+
     return (
       <FormModal
         name="Remove Request"
@@ -33,6 +41,7 @@ class RemoveModal extends Component {
         <p>Are you sure you want to remove this request?</p>
         <pre>{this.props.requestId}</pre>
         <p>If not paused, removing this request will kill all active and scheduled tasks and tasks for it will not run again unless it is reposted to Singularity.</p>
+        {!_.isEmpty(this.props.loadBalancerData) && loadBalancerWarning}
       </FormModal>
     );
   }

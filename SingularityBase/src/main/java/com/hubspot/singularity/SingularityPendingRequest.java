@@ -10,7 +10,7 @@ import com.hubspot.mesos.Resources;
 public class SingularityPendingRequest {
 
   public enum PendingType {
-    IMMEDIATE, ONEOFF, BOUNCE, NEW_DEPLOY, NEXT_DEPLOY_STEP, UNPAUSED, RETRY, UPDATED_REQUEST, DECOMISSIONED_SLAVE_OR_RACK, TASK_DONE, STARTUP, CANCEL_BOUNCE, TASK_BOUNCE, DEPLOY_CANCELLED;
+    IMMEDIATE, ONEOFF, BOUNCE, NEW_DEPLOY, NEXT_DEPLOY_STEP, UNPAUSED, RETRY, UPDATED_REQUEST, DECOMISSIONED_SLAVE_OR_RACK, TASK_DONE, STARTUP, CANCEL_BOUNCE, TASK_BOUNCE, DEPLOY_CANCELLED, DEPLOY_FAILED;
   }
 
   private final String requestId;
@@ -98,8 +98,18 @@ public class SingularityPendingRequest {
 
   @Override
   public String toString() {
-    return "SingularityPendingRequest [requestId=" + requestId + ", deployId=" + deployId + ", timestamp=" + timestamp + ", pendingType=" + pendingType + ", user=" + user + ", cmdLineArgsList="
-        + cmdLineArgsList + ", runId=" + runId + ", skipHealthchecks=" + skipHealthchecks + ", message=" + message + ", actionId=" + actionId + ", resources=" + resources + "]";
+    return "SingularityPendingRequest{" +
+        "requestId='" + requestId + '\'' +
+        ", deployId='" + deployId + '\'' +
+        ", timestamp=" + timestamp +
+        ", pendingType=" + pendingType +
+        ", user=" + user +
+        ", cmdLineArgsList=" + cmdLineArgsList +
+        ", runId=" + runId +
+        ", skipHealthchecks=" + skipHealthchecks +
+        ", message=" + message +
+        ", actionId=" + actionId +
+        ", resources=" + resources +
+        '}';
   }
-
 }

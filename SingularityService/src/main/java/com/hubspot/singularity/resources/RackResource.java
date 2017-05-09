@@ -24,6 +24,7 @@ import com.hubspot.singularity.api.SingularityMachineChangeRequest;
 import com.hubspot.singularity.auth.SingularityAuthorizationHelper;
 import com.hubspot.singularity.data.RackManager;
 import com.hubspot.singularity.data.SingularityValidator;
+import com.hubspot.singularity.expiring.SingularityExpiringMachineState;
 import com.wordnik.swagger.annotations.Api;
 import com.wordnik.swagger.annotations.ApiOperation;
 import com.wordnik.swagger.annotations.ApiParam;
@@ -62,7 +63,7 @@ public class RackResource extends AbstractMachineResource<SingularityRack> {
 
   @DELETE
   @Path("/rack/{rackId}")
-  @ApiOperation("Remove a known rack, erasing history. This operation will cancel decomissioning of racks")
+  @ApiOperation("Remove a known rack, erasing history. This operation will cancel decommissioning of racks")
   public void removeRack(@ApiParam("Rack ID") @PathParam("rackId") String rackId) {
     super.remove(rackId);
   }
@@ -86,6 +87,20 @@ public class RackResource extends AbstractMachineResource<SingularityRack> {
   @ApiOperation("Activate a decomissioning rack, canceling decomission without erasing history")
   public void activateRack(@ApiParam("Active rackId") @PathParam("rackId") String rackId, Optional<SingularityMachineChangeRequest> changeRequest) {
     super.activate(rackId, changeRequest, JavaUtils.getUserEmail(user), SingularityAction.ACTIVATE_RACK);
+  }
+
+  @DELETE
+  @Path("/rack/{rackId}/expiring")
+  @ApiOperation("Delete any expiring machine state changes for this rack")
+  public void deleteExpiringStateChange(@ApiParam("Active slaveId") @PathParam("rackId") String rackId) {
+    super.cancelExpiring(rackId);
+  }
+
+  @GET
+  @Path("/expiring")
+  @ApiOperation("Get all expiring state changes for all racks")
+  public List<SingularityExpiringMachineState> getExpiringStateChanges() {
+    return super.getExpiringStateChanges();
   }
 
 }

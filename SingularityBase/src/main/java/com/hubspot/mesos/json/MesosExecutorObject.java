@@ -54,4 +54,16 @@ public class MesosExecutorObject {
     return id;
   }
 
+  @Override
+  public String toString() {
+    return "MesosExecutorObject{" +
+        "directory='" + directory + '\'' +
+        ", id='" + id + '\'' +
+        ", container='" + container + '\'' +
+        ", name='" + name + '\'' +
+        ", resources=" + resources +
+        ", tasks=" + tasks +
+        ", completedTasks=" + completedTasks +
+        '}';
+  }
 }

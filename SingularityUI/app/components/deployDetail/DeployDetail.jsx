@@ -1,18 +1,15 @@
 import React, { PropTypes } from 'react';
 import { connect } from 'react-redux';
+import { bindActionCreators } from 'redux';
 import rootComponent from '../../rootComponent';
 
 import Clipboard from 'clipboard';
 
 import Utils from '../../utils';
 import { Link } from 'react-router';
-import { Glyphicon } from 'react-bootstrap';
-import {
-  FetchTaskHistory,
-  FetchActiveTasksForDeploy,
-  FetchTaskHistoryForDeploy,
-  FetchDeployForRequest
-} from '../../actions/api/history';
+import { Glyphicon, Button } from 'react-bootstrap';
+import { FetchTaskHistoryForDeploy } from '../../actions/api/history';
+import { initialize, refresh } from '../../actions/ui/deployDetail';
 
 import { DeployState, InfoBox } from '../common/statelessComponents';
 
@@ -21,6 +18,7 @@ import JSONButton from '../common/JSONButton';
 import UITable from '../common/table/UITable';
 import Column from '../common/table/Column';
 import CollapsableSection from '../common/CollapsableSection';
+import RedeployButton from '../common/modalButtons/RedeployButton';
 
 import ActiveTasksTable from './ActiveTasksTable';
 
@@ -122,6 +120,9 @@ class DeployDetail extends React.Component {
             </h1>
           </div>
           <div className="col-md-4 button-container">
+            <RedeployButton requestId={deploy.deploy.requestId} deployId={deploy.deploy.id}>
+              <Button bsStyle="primary">Redeploy</Button>
+            </RedeployButton>
             <JSONButton object={deploy} linkClassName="btn btn-default">
               JSON
             </JSONButton>
@@ -220,7 +221,7 @@ class DeployDetail extends React.Component {
     if (deploy.deploy.executorData && deploy.deploy.executorData.cmd) {
       stats.push(<InfoBox key="cmd" copyableClassName="info-copyable" name="Command" value={deploy.deploy.executorData.cmd} />);
     }
-    if (deploy.deploy.resources.cpus) {
+    if (deploy.deploy.resources && deploy.deploy.resources.cpus) {
       let value = `CPUs: ${deploy.deploy.resources.cpus} | Memory (Mb): ${deploy.deploy.resources.memoryMb} | Ports: ${deploy.deploy.resources.numPorts}`;
       stats.push(<InfoBox key="cpus" copyableClassName="info-copyable" name="Resources" value={value} />);
     }
@@ -330,16 +331,6 @@ class DeployDetail extends React.Component {
   }
 }
 
-function mapDispatchToProps(dispatch) {
-  return {
-    fetchDeployForRequest: (requestId, deployId) => dispatch(FetchDeployForRequest.trigger(requestId, deployId, true)),
-    fetchActiveTasksForDeploy: (requestId, deployId) => dispatch(FetchActiveTasksForDeploy.trigger(requestId, deployId)),
-    clearTaskHistoryForDeploy: () => dispatch(FetchTaskHistoryForDeploy.clearData()),
-    fetchTaskHistoryForDeploy: (requestId, deployId, count, page) => dispatch(FetchTaskHistoryForDeploy.trigger(requestId, deployId, count, page)),
-    fetchTaskHistory: (taskId) => dispatch(FetchTaskHistory.trigger(taskId))
-  };
-}
-
 function mapStateToProps(state, ownProps) {
   let latestHealthchecks = _.mapObject(state.api.task, (val) => {
     if (val.data && val.data.healthcheckResults && val.data.healthcheckResults.length > 0) {
@@ -362,24 +353,7 @@ function mapStateToProps(state, ownProps) {
   };
 }
 
-function refresh(props, promises = []) {
-  promises.push(props.fetchDeployForRequest(props.params.requestId, props.params.deployId));
-  promises.push(props.fetchActiveTasksForDeploy(props.params.requestId, props.params.deployId));
 
-  const allPromises = Promise.all(promises);
-  allPromises.then(() => {
-    for (const task of props.route.store.getState().api.activeTasksForDeploy.data) {
-      props.fetchTaskHistory(task.taskId.id);
-    }
-  });
-  return allPromises;
-}
-
-function initialize(props) {
-  const promises = [];
-  promises.push(props.clearTaskHistoryForDeploy());
-  promises.push(props.fetchTaskHistoryForDeploy(props.params.requestId, props.params.deployId, 5, 1));
-  return refresh(props, promises);
-}
-
-export default connect(mapStateToProps, mapDispatchToProps)(rootComponent(DeployDetail, (props) => `Deploy ${props.params.deployId}`, refresh, true, true, initialize));
+export default connect(mapStateToProps, (dispatch) => bindActionCreators({
+  fetchTaskHistoryForDeploy: FetchTaskHistoryForDeploy.trigger,
+}, dispatch))(rootComponent(DeployDetail, (props) => refresh(props.params.requestId, props.params.deployId), true, true, (props) => initialize(props.params.requestId, props.params.deployId)));

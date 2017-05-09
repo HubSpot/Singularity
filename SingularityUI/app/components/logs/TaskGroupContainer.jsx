@@ -39,6 +39,7 @@ class TaskGroupContainer extends React.Component {
         </div>
       );
     }
+    
     return <LoadingSpinner centered={true}>Loading logs...</LoadingSpinner>;
   }
 
