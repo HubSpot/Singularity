@@ -158,6 +158,7 @@ public class SingularityMesosOfferScheduler {
         offerMatchAttemptsPerTask.compute(taskRequestHolder.getTaskRequest().getPendingTask().getPendingTaskId().getId(),
             (k, v) -> (scorePerOffer.isEmpty() ? (v == null ? offerHolders.size() : v + offerHolders.size()) : null));
         LOG.trace("Match attempts per task is currently {}", offerMatchAttemptsPerTask);
+        LOG.trace("Score per offer is {}", scorePerOffer);
 
         if (!scorePerOffer.isEmpty()) {
           SingularityOfferHolder bestOffer = Collections.max(scorePerOffer.entrySet(), Map.Entry.comparingByValue()).getKey();
