@@ -102,6 +102,8 @@ public class SingularityClient {
   private static final String SLAVES_ACTIVATE_FORMAT = SLAVES_FORMAT + "/slave/%s/activate";
   private static final String SLAVES_DELETE_FORMAT = SLAVES_FORMAT + "/slave/%s";
 
+  private static final String INACTIVE_SLAVES_FORMAT = "http://%s/%s/inactive";
+
   private static final String TASKS_FORMAT = "http://%s/%s/tasks";
   private static final String TASKS_KILL_TASK_FORMAT = TASKS_FORMAT + "/task/%s";
   private static final String TASKS_GET_ACTIVE_FORMAT = TASKS_FORMAT + "/active";
@@ -190,6 +192,8 @@ public class SingularityClient {
   private static final TypeReference<Collection<SingularityDisasterType>> DISASTERS_COLLECTION = new TypeReference<Collection<SingularityDisasterType>>() {};
   private static final TypeReference<Collection<SingularityDisabledAction>> DISABLED_ACTIONS_COLLECTION = new TypeReference<Collection<SingularityDisabledAction>>() {};
   private static final TypeReference<SingularityPaginatedResponse<SingularityTaskIdHistory>> PAGINATED_HISTORY = new TypeReference<SingularityPaginatedResponse<SingularityTaskIdHistory>>() {};
+  private static final TypeReference<Collection<String>> STRING_COLLECTION = new TypeReference<Collection<String>>() {};
+
 
   private final Random random;
   private final Provider<List<String>> hostsProvider;
@@ -428,12 +432,12 @@ public class SingularityClient {
   }
 
   private HttpResponse put(String uri, String type, Optional<?> body) {
-    return executeRequest(uri, type, body, Method.PUT);
+    return executeRequest(uri, type, body, Method.PUT, Optional.absent());
   }
 
   private <T> Optional<T> post(String uri, String type, Optional<?> body, Optional<Class<T>> clazz) {
     try {
-      HttpResponse response = executeRequest(uri, type, body, Method.POST);
+      HttpResponse response = executeRequest(uri, type, body, Method.POST, Optional.absent());
 
       if (clazz.isPresent()) {
         return Optional.of(response.getAs(clazz.get()));
@@ -445,11 +449,15 @@ public class SingularityClient {
     return Optional.<T>absent();
   }
 
-  private HttpResponse post(String uri, String type, Optional<?> body) {
-    return executeRequest(uri, type, body, Method.POST);
+  private HttpResponse postWithParams(String uri, String type, Optional<?> body, Optional<Map<String, Object>> queryParams) {
+    return executeRequest(uri, type, body, Method.POST, queryParams);
   }
 
-  private HttpResponse executeRequest(String uri, String type, Optional<?> body, Method method) {
+  private HttpResponse post(String uri, String type, Optional<?> body) {
+    return executeRequest(uri, type, body, Method.POST, Optional.absent());
+  }
+
+  private HttpResponse executeRequest(String uri, String type, Optional<?> body, Method method, Optional<Map<String, Object>> queryParams) {
 
     final long start = System.currentTimeMillis();
 
@@ -457,6 +465,10 @@ public class SingularityClient {
 
     if (body.isPresent()) {
       request.setBody(body.get());
+    }
+
+    if (queryParams.isPresent()) {
+      addQueryParams(request, queryParams.get());
     }
 
     addCredentials(request);
@@ -926,6 +938,29 @@ public class SingularityClient {
     }
 
     return getCollectionWithParams(requestUri, "request history", maybeQueryParams, REQUEST_HISTORY_COLLECTION);
+  }
+
+  //
+  // Inactive/Bad Slaves
+  //
+
+  public Collection<String> getInactiveSlaves() {
+    final String requestUri = String.format(INACTIVE_SLAVES_FORMAT, getHost(), contextPath);
+    return getCollection(requestUri, "inactiveSlaves", STRING_COLLECTION);
+  }
+
+  public void markSlaveAsInactive(String host) {
+    final String requestUri = String.format(INACTIVE_SLAVES_FORMAT, getHost(), contextPath);
+    Map<String, Object> params = new HashMap<>();
+    params.put("host", host);
+    deleteWithParams(requestUri, "activateSlave", host, Optional.absent(), Optional.of(params), Optional.of(HttpResponse.class));
+  }
+
+  public void markSlaveAsActive(String host) {
+    final String requestUri = String.format(INACTIVE_SLAVES_FORMAT, getHost(), contextPath);
+    Map<String, Object> params = new HashMap<>();
+    params.put("host", host);
+    postWithParams(requestUri, "activateSlave", Optional.absent(), Optional.of(params));
   }
 
   //

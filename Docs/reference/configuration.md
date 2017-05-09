@@ -56,7 +56,7 @@ These are settings that are more likely to be altered.
 | killAfterTasksDoNotRunDefaultSeconds | 600 (10 minutes) | Amount of time after which new tasks (that are not part of a deploy) will be killed if they do not enter TASK_RUNNING | long |
 | healthcheckMaxRetries | | Default max number of time to retry a failed healthcheck for a task before considering the task to be unhealthy | int |
 | startupDelaySeconds | | By default, wait this long before starting any healthchecks on a task | int |
-| startupTimeoutSeconds | 45 | If a healthcehcked task has not responded with a valid http response in `startupTimeoutSeconds` consider it unhealthy | int |
+| startupTimeoutSeconds | 45 | If a healthchecked task has not responded with a valid http response in `startupTimeoutSeconds` consider it unhealthy | int |
 | startupIntervalSeconds | 2 | In the startup period (before a valid http response has been received) wait this long between healthcheck attempts | int |
 | healthcheckFailureStatusCodes | [] | If any of these status codes is received during a healthcheck, immediately consider the task unhealthy, do not retry the check | List<Integer> |
 
@@ -151,6 +151,9 @@ These settings are less likely to be changed, but were included in the configura
 | warnIfScheduledJobIsRunningPastNextRunPct | 200 | Warn if a scheduled job has run this much past its next scheduled run time (e.g. 200 => ran through next two run times) | int |
 | pendingDeployHoldTaskDuringDecommissionMillis | 600000ms (10 minutes) | Don't kill tasks on a decommissioning slave that are part of a pending deploy for this amount of time to allow the deploy to complete | long |
 | defaultBounceExpirationMinutes | 60 | Expire a bounce after this many minutes if an expiration is not provided in the request to bounce | int |
+| cacheOffers | false | Hold on to unused offers for up to `cacheOffersForMillis` | boolean |
+| cacheOffersForMillis | If `cacheOffers` is true, decline offers after this amount of time if they ahve not been used | long |
+| offerCacheSize | The maximum number of offers to cache at once | int |
 
 ## Mesos Configuration ##
 

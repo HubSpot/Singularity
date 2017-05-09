@@ -107,7 +107,8 @@ public class DisastersResource {
   @POST
   @Path("/disabled-actions/{action}")
   @ApiOperation(value="Disable a specific action")
-  public void disableAction(@PathParam("action") SingularityAction action, Optional<SingularityDisabledActionRequest> maybeRequest) {
+  public void disableAction(@PathParam("action") SingularityAction action, SingularityDisabledActionRequest disabledActionRequest) {
+    final Optional<SingularityDisabledActionRequest> maybeRequest = Optional.fromNullable(disabledActionRequest);
     authorizationHelper.checkAdminAuthorization(user);
     Optional<String> message = maybeRequest.isPresent() ? maybeRequest.get().getMessage() : Optional.<String>absent();
     disasterManager.disable(action, message, user, false, Optional.<Long>absent());
