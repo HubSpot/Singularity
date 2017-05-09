@@ -192,6 +192,8 @@ public class SingularityClient {
   private static final TypeReference<Collection<SingularityDisasterType>> DISASTERS_COLLECTION = new TypeReference<Collection<SingularityDisasterType>>() {};
   private static final TypeReference<Collection<SingularityDisabledAction>> DISABLED_ACTIONS_COLLECTION = new TypeReference<Collection<SingularityDisabledAction>>() {};
   private static final TypeReference<SingularityPaginatedResponse<SingularityTaskIdHistory>> PAGINATED_HISTORY = new TypeReference<SingularityPaginatedResponse<SingularityTaskIdHistory>>() {};
+  private static final TypeReference<Collection<String>> STRING_COLLECTION = new TypeReference<Collection<String>>() {};
+
 
   private final Random random;
   private final Provider<List<String>> hostsProvider;
@@ -936,6 +938,15 @@ public class SingularityClient {
     }
 
     return getCollectionWithParams(requestUri, "request history", maybeQueryParams, REQUEST_HISTORY_COLLECTION);
+  }
+
+  //
+  // Inactive/Bad Slaves
+  //
+
+  public Collection<String> getInactiveSlaves() {
+    final String requestUri = String.format(INACTIVE_SLAVES_FORMAT, getHost(), contextPath);
+    return getCollection(requestUri, "inactiveSlaves", STRING_COLLECTION);
   }
 
   public void markSlaveAsInactive(String host) {
