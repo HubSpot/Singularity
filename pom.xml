@@ -174,7 +174,7 @@
       <dependency>
         <groupId>com.spotify</groupId>
         <artifactId>docker-client</artifactId>
-        <version>3.1.5</version>
+        <version>8.4.0</version>
         <exclusions>
           <exclusion>
             <groupId>commons-logging</groupId>
@@ -191,6 +191,10 @@
           <exclusion>
             <groupId>org.glassfish.hk2.external</groupId>
             <artifactId>aopalliance-repackaged</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpcore</artifactId>
           </exclusion>
         </exclusions>
       </dependency>

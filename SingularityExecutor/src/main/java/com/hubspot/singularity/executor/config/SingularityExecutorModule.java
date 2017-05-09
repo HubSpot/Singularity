@@ -6,6 +6,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import com.github.jknack.handlebars.Handlebars;
 import com.github.jknack.handlebars.Template;
+import com.google.common.base.Throwables;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
@@ -21,7 +22,7 @@ import com.ning.http.client.extra.ThrottleRequestFilter;
 import com.spotify.docker.client.DefaultDockerClient;
 import com.spotify.docker.client.DefaultDockerClient.Builder;
 import com.spotify.docker.client.DockerClient;
-import com.spotify.docker.client.messages.AuthConfig;
+import com.spotify.docker.client.messages.RegistryAuth;
 
 public class SingularityExecutorModule extends AbstractModule {
 
@@ -108,12 +109,22 @@ public class SingularityExecutorModule extends AbstractModule {
     if(configuration.getDockerAuthConfig().isPresent()) {
       SingularityExecutorDockerAuthConfig authConfig = configuration.getDockerAuthConfig().get();
 
-      dockerClientBuilder.authConfig(AuthConfig.builder()
-        .email(authConfig.getEmail())
-        .username(authConfig.getUsername())
-        .password(authConfig.getPassword())
-        .serverAddress(authConfig.getServerAddress())
-        .build());
+      if(authConfig.isFromDockerConfig()) {
+        try {
+          dockerClientBuilder.registryAuth(RegistryAuth.fromDockerConfig().build());
+
+        } catch(IOException e) {
+          throw Throwables.propagate(e);
+        }
+      }
+      else {
+        dockerClientBuilder.registryAuth(RegistryAuth.builder()
+                  .email(authConfig.getEmail())
+                  .username(authConfig.getUsername())
+                  .password(authConfig.getPassword())
+                  .serverAddress(authConfig.getServerAddress())
+                  .build());
+      }
     }
 
     return dockerClientBuilder.build();
