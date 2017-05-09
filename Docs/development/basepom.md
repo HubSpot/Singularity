@@ -25,13 +25,7 @@ settings are kept at default value.
 #### `project.build.targetJdk`
 
 Controls the JDK level to which the code is compiled. Singularity uses
-*1.7* (JDK 7).
-
-#### `project.jdk7.home`
-
-To ensure a stable build independent of the JDK used, the singularity
-build enforces using a JDK7 class library if a newer JDK (JDK8 or
-newer) is used. See below for *[Compilation using JDK8 or newer]*.
+*1.8* (JDK 8).
 
 #### `basepom.check.skip-license`
 
@@ -61,10 +55,10 @@ suitable for new projects. It may be necessary to override some
 dependency versions when converting legacy codes or when a third-party
 library requires a fixed version of a dependency.
 
-For Singularity, dropwizard 0.7.x enforces the following versions:
+For Singularity, dropwizard 1.0.x enforces the following versions:
 
-* `dep.jackson.version`, `dep.jackson.core.version`, `dep.jackson.databind.version` - Enforces *2.3.2*, because dw uses Jackson 2.3.x.
-* `dep.jetty.version` - Enforces *9.0.7.v20131107* because dw uses Jetty 9.0.x.
+* `dep.jackson.version`, `dep.jackson.core.version`, `dep.jackson.databind.version` - Enforces *2.7.9*, because dw uses Jackson 2.3.x.
+* `dep.jetty.version` - Enforces *9.3.9.v20160517* because dw uses Jetty 9.3.x.
 
 ## Notes on dependencies
 
@@ -146,21 +140,6 @@ optional arguments:
   -v, --version          show the application version and exit
 ```
   
-
-## Compilation using JDK8 or newer
-
-Singularity targets JDK7 but can be compiled with any JDK starting
-with JDK7. Especially, the code base can be built with JDK8 (but will
-generate code that can be run on JDK7). However, one of the biggest
-gotchas here is that the compiler will use the Java 8 runtime library
-(bundled with the JDK8) to build code that is supposed to run on JDK7
-with the JDK7 runtime library. As the JDK8 runtime contains a newer
-version of the runtime, the bindings in the java code will match JDK8
-but may or may not match JDK7.
-
-Therefore the Singularity build enforces that a JDK7 is installed on
-the machine if JDK8 or newer is used to compile Singularity and its
-home location must be set as an environment variable, `JAVA7_HOME`.
 
 ### Compiling with Travis CI
 
