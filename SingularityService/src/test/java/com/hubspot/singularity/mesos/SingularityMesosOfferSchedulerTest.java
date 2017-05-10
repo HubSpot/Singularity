@@ -346,7 +346,7 @@ public class SingularityMesosOfferSchedulerTest extends SingularityCuratorTestBa
   }
 
   private SingularitySlaveUsageWithId getUsage(long memMbTotal, double cpusTotal, Map<ResourceUsageType, Number> longRunningTasksUsage) {
-    return new SingularitySlaveUsageWithId(new SingularitySlaveUsage(0, 0L, 0, 1, Optional.of(memMbTotal), Optional.of(cpusTotal), longRunningTasksUsage), SLAVE_ID);
+    return new SingularitySlaveUsageWithId(new SingularitySlaveUsage(0, 0,0L, 0, 0,1, Optional.of(memMbTotal), Optional.of(cpusTotal), longRunningTasksUsage), SLAVE_ID);
   }
 
   private Resource.Builder getCpuResource(double cpus) {

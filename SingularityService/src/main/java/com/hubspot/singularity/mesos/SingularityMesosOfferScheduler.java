@@ -146,8 +146,10 @@ public class SingularityMesosOfferScheduler {
             continue;
           }
 
-          double score = score(offerHolder, stateCache, tasksPerOfferPerRequest, taskRequestHolder, getSlaveUsage(currentSlaveUsages, offerHolder.getOffer().getSlaveId().getValue()));
-          LOG.trace("Scored {} for task {} with offer for slave {} : mem {} - cpu {}", score, taskRequestHolder.getTaskRequest().getPendingTask().getPendingTaskId().getId(), offerHolder.getOffer().getHostname(), MesosUtils.getMemory(offerHolder.getOffer()), MesosUtils.getNumCpus(offerHolder.getOffer()));
+          Optional<SingularitySlaveUsageWithId> maybeSlaveUsage = getSlaveUsage(currentSlaveUsages, offerHolder.getOffer().getSlaveId().getValue());
+          double score = score(offerHolder, stateCache, tasksPerOfferPerRequest, taskRequestHolder, maybeSlaveUsage);
+          LOG.trace("Scored {} | Task {} | Offer - mem {} - cpu {} | Slave {} | maybeSlaveUsage - {}", score, taskRequestHolder.getTaskRequest().getPendingTask().getPendingTaskId().getId(),
+              MesosUtils.getMemory(offerHolder.getOffer()), MesosUtils.getNumCpus(offerHolder.getOffer()), offerHolder.getOffer().getHostname(), maybeSlaveUsage);
 
           if (score != 0 && score >= minScore) {
             // todo: can short circuit here if score is high enough (>= .9)
