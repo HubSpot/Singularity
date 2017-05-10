@@ -3,7 +3,7 @@ import classNames from 'classnames';
 import { TailerProvider, SandboxTailer } from 'singularityui-tailer';
 import NewTaskGroupHeader from '../components/logs/NewTaskGroupHeader';
 import NewHeader from '../components/logs/NewHeader';
-
+import { withRouter } from 'react-router';
 import { connect } from 'react-redux';
 
 import { loadColor, removeTailerGroup, pickTailerGroup, jumpToBottom, jumpToTop } from '../actions/tailer';
@@ -35,7 +35,7 @@ class LogTailerContainer extends React.PureComponent {
           showCloseAndExpandButtons={this.props.tailerGroups.length > 1}
           onClose={() => this.props.removeTailerGroup(key)}
           onExpand={() => this.props.pickTailerGroup(key)}
-          onJumpToTop={() => this.props.jumpToTop(tailerId, taskId, path)}
+          onJumpToTop={() => this.props.jumpToTop(tailerId, taskId, path, this.props.router)}
           onJumpToBottom={() => this.props.jumpToBottom(tailerId, taskId, path)} />
         <SandboxTailer
           goToOffset={parseInt(offset)}
@@ -69,4 +69,4 @@ export default connect((state) => ({
   pickTailerGroup,
   jumpToBottom,
   jumpToTop,
-})(LogTailerContainer);
+})(withRouter(LogTailerContainer));

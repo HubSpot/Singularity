@@ -37,9 +37,10 @@ export const jumpAllToBottom = () => (dispatch, getState) => {
   }));
 }
 
-export const jumpToTop = (id, taskId, path) => (dispatch, getState) => {
+export const jumpToTop = (id, taskId, path, router) => (dispatch, getState) => {
   const state = getState();
 
+  router.push(`/task/${taskId}/tail/${path}?offset=0`)
   dispatch(tailerActions.unloadFile(id));
   dispatch(tailerActions.sandboxFetchLength(id, taskId, path.replace('$TASK_ID', taskId), state.tailer.config));
   dispatch(tailerActions.sandboxFetchChunk(id, taskId, path.replace('$TASK_ID', taskId), 0, tailerActions.SANDBOX_MAX_BYTES, state.tailer.config));
