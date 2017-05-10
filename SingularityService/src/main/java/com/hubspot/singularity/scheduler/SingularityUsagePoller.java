@@ -83,6 +83,7 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
 
         for (MesosTaskMonitorObject taskUsage : allTaskUsage) {
           String taskId = taskUsage.getSource();
+          SingularityTaskId task = SingularityTaskId.valueOf(taskId);
 
           SingularityTaskUsage usage = getUsage(taskUsage);
 
@@ -93,11 +94,10 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
           }
           usageManager.saveSpecificTaskUsage(taskId, usage);
 
-          SingularityTaskId task = SingularityTaskId.valueOf(taskId);
           Optional<SingularityTask> maybeTask = taskManager.getTask(task);
           if (maybeTask.isPresent() && maybeTask.get().getTaskRequest().getPendingTask().getResources().isPresent()) {
-            memoryMbReserved += maybeTask.get().getTaskRequest().getPendingTask().getResources().get().getMemoryMb();
-            cpuReserved += maybeTask.get().getTaskRequest().getPendingTask().getResources().get().getCpus();
+            memoryMbReserved += maybeTask.get().getTaskRequest().getDeploy().getResources().get().getMemoryMb();
+            cpuReserved += maybeTask.get().getTaskRequest().getDeploy().getResources().get().getCpus();
           }
           memoryBytesUsed += usage.getMemoryRssBytes();
 
