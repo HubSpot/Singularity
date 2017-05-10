@@ -132,7 +132,7 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
           usageManager.deleteSpecificSlaveUsage(slave.getId(), slaveTimestamps.get(0));
         }
 
-        LOG.debug("Saving slave usage {}", slaveUsage);
+        LOG.debug("Saving slave {} usage {}", slave.getHost(), slaveUsage);
         usageManager.saveSpecificSlaveUsageAndSetCurrent(slave.getId(), slaveUsage);
       } catch (Exception e) {
         String message = String.format("Could not get slave usage for host %s", slave.getHost());
