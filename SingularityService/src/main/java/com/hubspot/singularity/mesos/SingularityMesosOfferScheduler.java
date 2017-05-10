@@ -269,7 +269,7 @@ public class SingularityMesosOfferScheduler {
     final SlaveMatchState slaveMatchState = slaveAndRackManager.doesOfferMatch(offerHolder, taskRequest, stateCache);
 
     if (matchesResources && slaveMatchState.isMatchAllowed()) {
-      return score(offer, taskRequest, maybeSlaveUsage);
+      return score(offer.getHostname(), taskRequest, maybeSlaveUsage);
     } else {
       offerHolder.addRejectedTask(pendingTaskId);
 
@@ -283,9 +283,9 @@ public class SingularityMesosOfferScheduler {
   }
 
   @VisibleForTesting
-  double score(Offer offer, SingularityTaskRequest taskRequest, Optional<SingularitySlaveUsageWithId> maybeSlaveUsage) {
+  double score(String hostname, SingularityTaskRequest taskRequest, Optional<SingularitySlaveUsageWithId> maybeSlaveUsage) {
     if (isMissingUsageData(maybeSlaveUsage)) {
-      LOG.info("Slave {} has missing usage data ({}). Will default to {}", offer.getSlaveId().getValue(), maybeSlaveUsage, configuration.getDefaultOfferScoreForMissingUsage());
+      LOG.info("Slave {} has missing usage data ({}). Will default to {}", hostname, maybeSlaveUsage, configuration.getDefaultOfferScoreForMissingUsage());
       return configuration.getDefaultOfferScoreForMissingUsage();
     }
 
