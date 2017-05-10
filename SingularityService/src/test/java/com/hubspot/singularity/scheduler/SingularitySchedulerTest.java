@@ -144,6 +144,8 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
 
   @Test
   public void testOfferCache() {
+    configuration.setCacheOffers(true);
+    configuration.setOfferCacheSize(2);
     List<Offer> offers2 = resourceOffers();
 
     sms.offerRescinded(driver, offers2.get(0).getId());

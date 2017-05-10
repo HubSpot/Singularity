@@ -35,7 +35,7 @@ public class SingularityConfiguration extends Configuration {
 
   private int offerCacheSize = 125;
 
-  private boolean cacheOffers = true;
+  private boolean cacheOffers = false;
 
   private long cacheForWebForMillis = TimeUnit.SECONDS.toMillis(30);
 

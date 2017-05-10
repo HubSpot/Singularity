@@ -151,6 +151,9 @@ These settings are less likely to be changed, but were included in the configura
 | warnIfScheduledJobIsRunningPastNextRunPct | 200 | Warn if a scheduled job has run this much past its next scheduled run time (e.g. 200 => ran through next two run times) | int |
 | pendingDeployHoldTaskDuringDecommissionMillis | 600000ms (10 minutes) | Don't kill tasks on a decommissioning slave that are part of a pending deploy for this amount of time to allow the deploy to complete | long |
 | defaultBounceExpirationMinutes | 60 | Expire a bounce after this many minutes if an expiration is not provided in the request to bounce | int |
+| cacheOffers | false | Hold on to unused offers for up to `cacheOffersForMillis` | boolean |
+| cacheOffersForMillis | If `cacheOffers` is true, decline offers after this amount of time if they ahve not been used | long |
+| offerCacheSize | The maximum number of offers to cache at once | int |
 
 ## Mesos Configuration ##
 
