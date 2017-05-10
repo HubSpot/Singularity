@@ -3,8 +3,11 @@ import classNames from 'classnames';
 import { TailerProvider, SandboxTailer } from 'singularityui-tailer';
 import NewTaskGroupHeader from '../components/logs/NewTaskGroupHeader';
 import NewHeader from '../components/logs/NewHeader';
-import { withRouter } from 'react-router';
+import FileNotFound from '../components/logs/FileNotFound';
+import { withRouter, Link } from 'react-router';
 import { connect } from 'react-redux';
+import ReactDOM from 'react-dom';
+import { actions as tailerActions } from 'singularityui-tailer';
 
 import { loadColor, removeTailerGroup, pickTailerGroup, jumpToBottom, jumpToTop } from '../actions/tailer';
 
@@ -20,8 +23,23 @@ const prefixedLineLinkRenderer = (taskId, path) => ({start}) => {
 }
 
 class LogTailerContainer extends React.PureComponent {
+  constructor() {
+    super();
+    this.state = {
+      notFound: false
+    };
+  }
+
   componentWillMount() {
     this.props.loadColor();
+    document.addEventListener(tailerActions.SINGULARITY_TAILER_AJAX_ERROR_EVENT, (event) => {
+      if (event.detail.status == 404) {
+        console.log(event)
+        this.setState({
+          notFound: true
+        })
+      }
+    });
   }
 
   render() {
@@ -46,16 +64,49 @@ class LogTailerContainer extends React.PureComponent {
       </section>);
     };
 
-    return (
-      <TailerProvider getTailerState={(state) => state.tailer}>
-        <div className={classNames(['new-tailer', 'tail-root', this.props.color])}>
-          <NewHeader />
-          <div className="row tail-row">
-            {this.props.tailerGroups.map(renderTailerPane)}
+    const renderNotFound = (tasks, key) => {
+      const {taskId, path, offset, tailerId} = tasks[0];
+
+      return (<section className="log-pane" key={key}>
+        <div className="row tail-row">
+          <div className="lines-wrapper">
+            <div className="empty-table-message">
+              <p>
+                {_.last(path.split('/'))} does not exist in this directory.
+              </p>
+              <Link to={`/task/${taskId}`}>
+                Back to Task Detail Page
+              </Link>
+            </div>
           </div>
         </div>
-      </TailerProvider>
-    );
+      </section>);
+    };
+
+
+    if (this.state.notFound) {
+      return (
+         <TailerProvider getTailerState={(state) => state.tailer}>
+          <div className={classNames(['new-tailer', 'tail-root', this.props.color])}>
+            <NewHeader />
+            <div className="row tail-row">
+              {this.props.tailerGroups.map(renderNotFound)}
+            </div>
+          </div>
+        </TailerProvider>
+      );
+    } else {
+      return (
+        <TailerProvider getTailerState={(state) => state.tailer}>
+          <div className={classNames(['new-tailer', 'tail-root', this.props.color])}>
+            <NewHeader />
+            <div className="row tail-row">
+              {this.props.tailerGroups.map(renderTailerPane)}
+            </div>
+          </div>
+        </TailerProvider>
+      );
+    }
   }
 }
 
