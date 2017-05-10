@@ -21,7 +21,7 @@ public class SingularitySlaveUsage {
   private final double cpusUsed;
   private final double cpusReserved;
   private final Optional<Long> memoryMbTotal;
-  private final Optional<Double> cpuTotal;
+  private final Optional<Double> cpusTotal;
   private final Map<ResourceUsageType, Number> longRunningTasksUsage;
 
   @JsonCreator
@@ -32,7 +32,7 @@ public class SingularitySlaveUsage {
                                @JsonProperty("cpusReserved") double cpusReserved,
                                @JsonProperty("numTasks") int numTasks,
                                @JsonProperty("memoryMbTotal") Optional<Long> memoryMbTotal,
-                               @JsonProperty("cpuTotal") Optional<Double> cpuTotal,
+                               @JsonProperty("cpusTotal") Optional<Double> cpusTotal,
                                @JsonProperty("longRunningTasksUsage") Map<ResourceUsageType, Number> longRunningTasksUsage) {
     this.memoryBytesUsed = memoryBytesUsed;
     this.memoryMbReserved = memoryMbReserved;
@@ -41,7 +41,7 @@ public class SingularitySlaveUsage {
     this.cpusReserved = cpusReserved;
     this.numTasks = numTasks;
     this.memoryMbTotal = memoryMbTotal;
-    this.cpuTotal = cpuTotal;
+    this.cpusTotal = cpusTotal;
     this.longRunningTasksUsage = longRunningTasksUsage;
   }
 
@@ -77,8 +77,8 @@ public class SingularitySlaveUsage {
     return memoryMbTotal.isPresent() ? Optional.of(memoryMbTotal.get()) : Optional.absent();
   }
 
-  public Optional<Double> getCpuTotal() {
-    return cpuTotal;
+  public Optional<Double> getCpusTotal() {
+    return cpusTotal;
   }
 
   public Map<ResourceUsageType, Number> getLongRunningTasksUsage() {
@@ -87,6 +87,6 @@ public class SingularitySlaveUsage {
 
   @Override
   public String toString() {
-    return "SingularitySlaveUsage [memoryBytesUsed=" + memoryBytesUsed + ", numTasks=" + numTasks + ", timestamp=" + timestamp + ", cpusUsed=" + cpusUsed + "]";
+    return "SingularitySlaveUsage [memoryBytesUsed=" + memoryBytesUsed + ", memoryMbReserved=" + memoryMbReserved + ", memoryMbTotal=" + memoryMbTotal + ", cpusUsed=" + cpusUsed + ", cpusReserved" + cpusReserved + ", cpusTotal=" + cpusTotal + ", numTasks=" + numTasks + ", timestamp=" + timestamp + "]";
   }
 }
