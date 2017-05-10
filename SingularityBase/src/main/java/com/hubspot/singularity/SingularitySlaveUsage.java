@@ -87,6 +87,6 @@ public class SingularitySlaveUsage {
 
   @Override
   public String toString() {
-    return "SingularitySlaveUsage [memoryBytesUsed=" + memoryBytesUsed + ", memoryMbReserved=" + memoryMbReserved + ", memoryMbTotal=" + memoryMbTotal + ", cpusUsed=" + cpusUsed + ", cpusReserved" + cpusReserved + ", cpusTotal=" + cpusTotal + ", numTasks=" + numTasks + ", timestamp=" + timestamp + "]";
+    return "SingularitySlaveUsage [memoryBytesUsed=" + memoryBytesUsed + ", memoryMbReserved=" + memoryMbReserved + ", memoryMbTotal=" + memoryMbTotal + ", cpusUsed=" + cpusUsed + ", cpusReserved=" + cpusReserved + ", cpusTotal=" + cpusTotal + ", numTasks=" + numTasks + ", timestamp=" + timestamp + "]";
   }
 }
