@@ -1387,6 +1387,28 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
 
       scheduler.drainPendingQueue(stateCacheProvider.get());
     }
+  }
+
+  @Test
+  public void testRequestsInPendingQueueAreOrderedByTimestamp() {
+    long now = System.currentTimeMillis();
+    initRequestWithType(RequestType.SCHEDULED, false);
+    startFirstDeploy();
+    requestManager.addToPendingQueue(new SingularityPendingRequest(requestId, firstDeploy.getId(), now, Optional.absent(), PendingType.NEW_DEPLOY,
+        firstDeploy.getSkipHealthchecksOnDeploy(), Optional.absent()));
+
+
+    SingularityRunNowRequest runNowRequest = new SingularityRunNowRequest(Optional.<String>absent(), Optional.<Boolean>absent(), Optional.<String>absent(), Optional.<List<String>>absent(), Optional.of(new Resources(2, 2, 0)));
+    requestResource.scheduleImmediately(requestId, Optional.of(runNowRequest));
+
+    Assert.assertEquals(2, requestManager.getPendingRequests().size());
+    // Was added first
+    Assert.assertEquals(PendingType.NEW_DEPLOY, requestManager.getPendingRequests().get(0).getPendingType());
+    // Was added second
+    Assert.assertEquals(PendingType.IMMEDIATE, requestManager.getPendingRequests().get(1).getPendingType());
+
+    resourceOffers();
+
 
   }
 
@@ -1902,6 +1924,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     Assert.assertEquals(5, taskManager.getPendingTaskIds().size());
   }
 
+  @Test
   public void testAcceptOffersWithRoleForRequestWithRole() {
     SingularityRequestBuilder bldr = new SingularityRequestBuilder(requestId, RequestType.ON_DEMAND);
     bldr.setRequiredRole(Optional.of("test-role"));
