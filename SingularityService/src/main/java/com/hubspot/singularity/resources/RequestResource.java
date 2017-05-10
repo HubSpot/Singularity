@@ -184,7 +184,7 @@ public class RequestResource extends AbstractRequestResource {
   @Path("/request/{requestId}/bounce")
   public SingularityRequestParent bounce(@PathParam("requestId") String requestId,
                                          @Context HttpServletRequest requestContext) {
-    return bounce(requestId, requestContext, Optional.absent());
+    return bounce(requestId, requestContext, null);
   }
 
   @POST
@@ -194,8 +194,9 @@ public class RequestResource extends AbstractRequestResource {
   response=SingularityRequestParent.class)
   public SingularityRequestParent bounce(@ApiParam("The request ID to bounce") @PathParam("requestId") String requestId,
                                          @Context HttpServletRequest requestContext,
-                                         @ApiParam("Bounce request options") Optional<SingularityBounceRequest> bounceRequest) {
-    return maybeProxyToLeader(requestContext, SingularityRequestParent.class, bounceRequest.orNull(), () -> bounce(requestId, bounceRequest));
+                                         @ApiParam("Bounce request options") SingularityBounceRequest bounceRequest) {
+    final Optional<SingularityBounceRequest> maybeBounceRequest = Optional.fromNullable(bounceRequest);
+    return maybeProxyToLeader(requestContext, SingularityRequestParent.class, maybeBounceRequest.orNull(), () -> bounce(requestId, maybeBounceRequest));
   }
 
   public SingularityRequestParent bounce(String requestId, Optional<SingularityBounceRequest> bounceRequest) {
@@ -253,7 +254,7 @@ public class RequestResource extends AbstractRequestResource {
   @POST
   @Path("/request/{requestId}/run")
   public SingularityPendingRequestParent scheduleImmediately(@PathParam("requestId") String requestId) {
-    return scheduleImmediately(requestId, Optional.absent());
+    return scheduleImmediately(requestId, null);
   }
 
   @POST
@@ -264,7 +265,8 @@ public class RequestResource extends AbstractRequestResource {
     @ApiResponse(code=400, message="Singularity Request is not scheduled or one-off"),
   })
   public SingularityPendingRequestParent scheduleImmediately(@ApiParam("The request ID to run") @PathParam("requestId") String requestId,
-                                                             Optional<SingularityRunNowRequest> runNowRequest) {
+                                                             SingularityRunNowRequest runNowRequest) {
+    final Optional<SingularityRunNowRequest> maybeRunNowRequest = Optional.fromNullable(runNowRequest);
     SingularityRequestWithState requestWithState = fetchRequestWithState(requestId);
 
     authorizationHelper.checkForAuthorization(requestWithState.getRequest(), user, SingularityAuthorizationScope.WRITE);
@@ -296,12 +298,12 @@ public class RequestResource extends AbstractRequestResource {
     Optional<List<String>> commandLineArgs = Optional.absent();
     Optional<Resources> resources = Optional.absent();
 
-    if (runNowRequest.isPresent()) {
-      message = runNowRequest.get().getMessage();
-      runId = runNowRequest.get().getRunId();
-      skipHealthchecks = runNowRequest.get().getSkipHealthchecks();
-      commandLineArgs = runNowRequest.get().getCommandLineArgs();
-      resources = runNowRequest.get().getResources();
+    if (maybeRunNowRequest.isPresent()) {
+      message = maybeRunNowRequest.get().getMessage();
+      runId = maybeRunNowRequest.get().getRunId();
+      skipHealthchecks = maybeRunNowRequest.get().getSkipHealthchecks();
+      commandLineArgs = maybeRunNowRequest.get().getCommandLineArgs();
+      resources = maybeRunNowRequest.get().getResources();
     }
 
     if (runId.isPresent() && runId.get().length() > 100) {
@@ -335,7 +337,7 @@ public class RequestResource extends AbstractRequestResource {
   @Path("/request/{requestId}/pause")
   public SingularityRequestParent pause(@PathParam("requestId") String requestId,
                                         @Context HttpServletRequest requestContext) {
-    return pause(requestId, requestContext, Optional.absent());
+    return pause(requestId, requestContext, null);
   }
 
   @POST
@@ -347,8 +349,9 @@ public class RequestResource extends AbstractRequestResource {
   })
   public SingularityRequestParent pause(@ApiParam("The request ID to pause") @PathParam("requestId") String requestId,
                                         @Context HttpServletRequest requestContext,
-                                        @ApiParam("Pause Request Options") Optional<SingularityPauseRequest> pauseRequest) {
-    return maybeProxyToLeader(requestContext, SingularityRequestParent.class, pauseRequest.orNull(), () -> pause(requestId, pauseRequest));
+                                        @ApiParam("Pause Request Options") SingularityPauseRequest pauseRequest) {
+    final Optional<SingularityPauseRequest> maybePauseRequest = Optional.fromNullable(pauseRequest);
+    return maybeProxyToLeader(requestContext, SingularityRequestParent.class, maybePauseRequest.orNull(), () -> pause(requestId, maybePauseRequest));
   }
 
   public SingularityRequestParent pause(String requestId, Optional<SingularityPauseRequest> pauseRequest) {
@@ -400,7 +403,7 @@ public class RequestResource extends AbstractRequestResource {
   @Path("/request/{requestId}/unpause")
   public SingularityRequestParent unpauseNoBody(@PathParam("requestId") String requestId,
                                                 @Context HttpServletRequest requestContext) {
-    return unpause(requestId, requestContext, Optional.absent());
+    return unpause(requestId, requestContext, null);
   }
 
   @POST
@@ -412,8 +415,9 @@ public class RequestResource extends AbstractRequestResource {
   })
   public SingularityRequestParent unpause(@ApiParam("The request ID to unpause") @PathParam("requestId") String requestId,
                                           @Context HttpServletRequest requestContext,
-                                          Optional<SingularityUnpauseRequest> unpauseRequest) {
-    return maybeProxyToLeader(requestContext, SingularityRequestParent.class, unpauseRequest.orNull(), () -> unpause(requestId, unpauseRequest));
+                                          SingularityUnpauseRequest unpauseRequest) {
+    final Optional<SingularityUnpauseRequest> maybeUnpauseRequest = Optional.fromNullable(unpauseRequest);
+    return maybeProxyToLeader(requestContext, SingularityRequestParent.class, maybeUnpauseRequest.orNull(), () -> unpause(requestId, maybeUnpauseRequest));
   }
 
   public SingularityRequestParent unpause(String requestId, Optional<SingularityUnpauseRequest> unpauseRequest) {
@@ -443,7 +447,7 @@ public class RequestResource extends AbstractRequestResource {
   @Path("/request/{requestId}/exit-cooldown")
   public SingularityRequestParent exitCooldown(@PathParam("requestId") String requestId,
                                                @Context HttpServletRequest requestContext) {
-    return exitCooldown(requestId, requestContext, Optional.absent());
+    return exitCooldown(requestId, requestContext, null);
   }
 
   @POST
@@ -455,8 +459,9 @@ public class RequestResource extends AbstractRequestResource {
   })
   public SingularityRequestParent exitCooldown(@PathParam("requestId") String requestId,
                                                @Context HttpServletRequest requestContext,
-                                               Optional<SingularityExitCooldownRequest> exitCooldownRequest) {
-    return maybeProxyToLeader(requestContext, SingularityRequestParent.class, exitCooldownRequest.orNull(), () -> exitCooldown(requestId, exitCooldownRequest));
+                                               SingularityExitCooldownRequest exitCooldownRequest) {
+    final Optional<SingularityExitCooldownRequest> maybeExitCooldownRequest = Optional.fromNullable(exitCooldownRequest);
+    return maybeProxyToLeader(requestContext, SingularityRequestParent.class, maybeExitCooldownRequest.orNull(), () -> exitCooldown(requestId, maybeExitCooldownRequest));
   }
 
   public SingularityRequestParent exitCooldown(String requestId, Optional<SingularityExitCooldownRequest> exitCooldownRequest) {
@@ -591,13 +596,6 @@ public class RequestResource extends AbstractRequestResource {
 
   @DELETE
   @Path("/request/{requestId}")
-  public SingularityRequest deleteRequest(@PathParam("requestId") String requestId,
-                                          @Context HttpServletRequest requestContext) {
-    return deleteRequest(requestId, requestContext, Optional.absent());
-  }
-
-  @DELETE
-  @Path("/request/{requestId}")
   @Consumes({ MediaType.APPLICATION_JSON })
   @ApiOperation(value="Delete a specific Request by ID and return the deleted Request", response=SingularityRequest.class)
   @ApiResponses({
@@ -605,8 +603,9 @@ public class RequestResource extends AbstractRequestResource {
   })
   public SingularityRequest deleteRequest(@ApiParam("The request ID to delete.") @PathParam("requestId") String requestId,
                                           @Context HttpServletRequest requestContext,
-                                          @ApiParam("Delete options") Optional<SingularityDeleteRequestRequest> deleteRequest) {
-    return maybeProxyToLeader(requestContext, SingularityRequest.class, deleteRequest.orNull(), () -> deleteRequest(requestId, deleteRequest));
+                                          @ApiParam("Delete options") SingularityDeleteRequestRequest deleteRequest) {
+    final Optional<SingularityDeleteRequestRequest> maybeDeleteRequest = Optional.fromNullable(deleteRequest);
+    return maybeProxyToLeader(requestContext, SingularityRequest.class, maybeDeleteRequest.orNull(), () -> deleteRequest(requestId, maybeDeleteRequest));
   }
 
   public SingularityRequest deleteRequest(String requestId, Optional<SingularityDeleteRequestRequest> deleteRequest) {
