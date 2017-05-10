@@ -15,24 +15,30 @@ public class SingularitySlaveUsage {
   public static final long BYTES_PER_MEGABYTE = 1024L * 1024L;
 
   private final long memoryBytesUsed;
+  private final long memoryMbReserved;
   private final int numTasks;
   private final long timestamp;
   private final double cpusUsed;
+  private final double cpusReserved;
   private final Optional<Long> memoryMbTotal;
   private final Optional<Double> cpuTotal;
   private final Map<ResourceUsageType, Number> longRunningTasksUsage;
 
   @JsonCreator
   public SingularitySlaveUsage(@JsonProperty("memoryBytesUsed") long memoryBytesUsed,
+                               @JsonProperty("memoryMbReserved") long memoryMbReserved,
                                @JsonProperty("timestamp") long timestamp,
                                @JsonProperty("cpusUsed") double cpusUsed,
+                               @JsonProperty("cpusReserved") double cpusReserved,
                                @JsonProperty("numTasks") int numTasks,
                                @JsonProperty("memoryMbTotal") Optional<Long> memoryMbTotal,
                                @JsonProperty("cpuTotal") Optional<Double> cpuTotal,
                                @JsonProperty("longRunningTasksUsage") Map<ResourceUsageType, Number> longRunningTasksUsage) {
     this.memoryBytesUsed = memoryBytesUsed;
+    this.memoryMbReserved = memoryMbReserved;
     this.timestamp = timestamp;
     this.cpusUsed = cpusUsed;
+    this.cpusReserved = cpusReserved;
     this.numTasks = numTasks;
     this.memoryMbTotal = memoryMbTotal;
     this.cpuTotal = cpuTotal;
@@ -43,12 +49,20 @@ public class SingularitySlaveUsage {
     return memoryBytesUsed;
   }
 
+  public long getMemoryMbReserved() {
+    return memoryMbReserved;
+  }
+
   public long getTimestamp() {
     return timestamp;
   }
 
   public double getCpusUsed() {
     return cpusUsed;
+  }
+
+  public double getCpusReserved() {
+    return cpusReserved;
   }
 
   public int getNumTasks() {
@@ -75,5 +89,4 @@ public class SingularitySlaveUsage {
   public String toString() {
     return "SingularitySlaveUsage [memoryBytesUsed=" + memoryBytesUsed + ", numTasks=" + numTasks + ", timestamp=" + timestamp + ", cpusUsed=" + cpusUsed + "]";
   }
-
 }

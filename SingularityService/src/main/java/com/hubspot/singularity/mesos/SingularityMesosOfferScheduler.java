@@ -146,8 +146,10 @@ public class SingularityMesosOfferScheduler {
             continue;
           }
 
-          double score = score(offerHolder, stateCache, tasksPerOfferPerRequest, taskRequestHolder, getSlaveUsage(currentSlaveUsages, offerHolder.getOffer().getSlaveId().getValue()));
-          LOG.trace("Scored {} for task {} with offer for slave {} : mem {} - cpu {}", score, taskRequestHolder.getTaskRequest().getPendingTask().getPendingTaskId().getId(), offerHolder.getOffer().getHostname(), MesosUtils.getMemory(offerHolder.getOffer()), MesosUtils.getNumCpus(offerHolder.getOffer()));
+          Optional<SingularitySlaveUsageWithId> maybeSlaveUsage = getSlaveUsage(currentSlaveUsages, offerHolder.getOffer().getSlaveId().getValue());
+          double score = score(offerHolder, stateCache, tasksPerOfferPerRequest, taskRequestHolder, maybeSlaveUsage);
+          LOG.trace("Scored {} | Task {} | Offer - mem {} - cpu {} | Slave {} | maybeSlaveUsage - {}", score, taskRequestHolder.getTaskRequest().getPendingTask().getPendingTaskId().getId(),
+              MesosUtils.getMemory(offerHolder.getOffer()), MesosUtils.getNumCpus(offerHolder.getOffer()), offerHolder.getOffer().getHostname(), maybeSlaveUsage);
 
           if (score != 0 && score >= minScore) {
             // todo: can short circuit here if score is high enough (>= .9)
@@ -293,11 +295,11 @@ public class SingularityMesosOfferScheduler {
     double longRunningCpusUsedScore = longRunningTasksUsage.get(ResourceUsageType.CPU_USED).doubleValue() / slaveUsage.getCpuTotal().get();
     double longRunningMemUsedScore = ((double) longRunningTasksUsage.get(ResourceUsageType.MEMORY_BYTES_USED).longValue() / slaveUsage.getMemoryBytesTotal().get());
 
-    double cpusTotalScore = (MesosUtils.getNumCpus(offer) / slaveUsage.getCpuTotal().get());
-    double memTotalScore = (MesosUtils.getMemory(offer) / slaveUsage.getMemoryMbTotal().get());
+    double cpusFreeScore = 1 - (slaveUsage.getCpusReserved() / slaveUsage.getCpuTotal().get());
+    double memFreeScore = 1 - ((double) slaveUsage.getMemoryMbReserved() / slaveUsage.getMemoryMbTotal().get());
 
-    return isLongRunning(taskRequest) ? scoreLongRunningTask(longRunningMemUsedScore, memTotalScore, longRunningCpusUsedScore, cpusTotalScore)
-        : scoreNonLongRunningTask(taskRequest, longRunningMemUsedScore, memTotalScore, longRunningCpusUsedScore, cpusTotalScore);
+    return isLongRunning(taskRequest) ? scoreLongRunningTask(longRunningMemUsedScore, memFreeScore, longRunningCpusUsedScore, cpusFreeScore)
+        : scoreNonLongRunningTask(taskRequest, longRunningMemUsedScore, memFreeScore, longRunningCpusUsedScore, cpusFreeScore);
   }
 
   private boolean isMissingUsageData(Optional<SingularitySlaveUsageWithId> maybeSlaveUsage) {
@@ -312,12 +314,12 @@ public class SingularityMesosOfferScheduler {
     return taskRequest.getRequest().getRequestType().isLongRunning();
   }
 
-  private double scoreLongRunningTask(double longRunningMemUsedScore, double memTotalScore, double longRunningCpusUsedScore, double cpusTotalScore) {
+  private double scoreLongRunningTask(double longRunningMemUsedScore, double memFreeScore, double longRunningCpusUsedScore, double cpusFreeScore) {
     // usage improves score
-    return calculateScore(1 - longRunningMemUsedScore, memTotalScore, 1 - longRunningCpusUsedScore, cpusTotalScore, 0.50, 0.50);
+    return calculateScore(1 - longRunningMemUsedScore, memFreeScore, 1 - longRunningCpusUsedScore, cpusFreeScore, 0.50, 0.50);
   }
 
-  private double scoreNonLongRunningTask(SingularityTaskRequest taskRequest, double longRunningMemUsedScore, double memTotalScore, double longRunningCpusUsedScore, double cpusTotalScore) {
+  private double scoreNonLongRunningTask(SingularityTaskRequest taskRequest, double longRunningMemUsedScore, double memFreeScore, double longRunningCpusUsedScore, double cpusFreeScore) {
     Optional<SingularityDeployStatistics> statistics = deployManager.getDeployStatistics(taskRequest.getRequest().getId(), taskRequest.getDeploy().getId());
     final double epsilon = 0.0001;
 
@@ -329,23 +331,23 @@ public class SingularityMesosOfferScheduler {
       usedResourceWeight = Math.min((double) TimeUnit.MILLISECONDS.toSeconds(statistics.get().getAverageRuntimeMillis().get()) / configuration.getConsiderNonLongRunningTaskLongRunningAfterRunningForSeconds(), 1) * maxNonLongRunningUsedResourceWeight;
 
       if (Math.abs(usedResourceWeight - maxNonLongRunningUsedResourceWeight) < epsilon) {
-        return scoreLongRunningTask(longRunningMemUsedScore, memTotalScore, longRunningCpusUsedScore, cpusTotalScore);
+        return scoreLongRunningTask(longRunningMemUsedScore, memFreeScore, longRunningCpusUsedScore, cpusFreeScore);
       }
       freeResourceWeight = 1 - usedResourceWeight;
     }
 
     // usage reduces score
-    return calculateScore(longRunningMemUsedScore, memTotalScore, longRunningCpusUsedScore, cpusTotalScore, freeResourceWeight, usedResourceWeight * -1);
+    return calculateScore(longRunningMemUsedScore, memFreeScore, longRunningCpusUsedScore, cpusFreeScore, freeResourceWeight, usedResourceWeight * -1);
   }
 
-  private double calculateScore(double longRunningMemUsedScore, double memTotalScore, double longRunningCpusUsedScore, double cpusTotalScore, double freeResourceWeight, double usedResourceWeight) {
+  private double calculateScore(double longRunningMemUsedScore, double memFreeScore, double longRunningCpusUsedScore, double cpusFreeScore, double freeResourceWeight, double usedResourceWeight) {
     double score = 0;
 
     score += (configuration.getLongRunningUsedCpuWeightForOffer() * usedResourceWeight) * longRunningCpusUsedScore;
     score += (configuration.getLongRunningUsedMemWeightForOffer() * usedResourceWeight) * longRunningMemUsedScore;
 
-    score += (configuration.getFreeCpuWeightForOffer() * freeResourceWeight) * cpusTotalScore;
-    score += (configuration.getFreeMemWeightForOffer() * freeResourceWeight) * memTotalScore;
+    score += (configuration.getFreeCpuWeightForOffer() * freeResourceWeight) * cpusFreeScore;
+    score += (configuration.getFreeMemWeightForOffer() * freeResourceWeight) * memFreeScore;
 
     return score;
   }

@@ -198,7 +198,7 @@ public class SingularityConfiguration extends Configuration {
 
   private int maxTasksPerOfferPerRequest = 0;
 
-  private double minOfferScore = 0.70;
+  private double minOfferScore = 0.40;
 
   private int maxOfferAttemptsPerTask = 0;
 
