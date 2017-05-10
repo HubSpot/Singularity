@@ -72,7 +72,7 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
 
     for (SingularitySlave slave : usageHelper.getSlavesToTrackUsageFor()) {
       Optional<Long> memoryMbTotal = Optional.absent();
-      Optional<Double> cpuTotal = Optional.absent();
+      Optional<Double> cpusTotal = Optional.absent();
       long memoryMbReserved = 0;
       long cpuReserved = 0;
       long memoryBytesUsed = 0;
@@ -123,10 +123,10 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
           LOG.debug("Could not find slave or resources for slave {}", slave.getId());
         } else {
           memoryMbTotal = Optional.of(slave.getResources().get().getMemoryMegaBytes().get().longValue());
-          cpuTotal = Optional.of(slave.getResources().get().getNumCpus().get().doubleValue());
+          cpusTotal = Optional.of(slave.getResources().get().getNumCpus().get().doubleValue());
         }
 
-        SingularitySlaveUsage slaveUsage = new SingularitySlaveUsage(memoryBytesUsed, memoryMbReserved, now, cpusUsed, cpuReserved, allTaskUsage.size(), memoryMbTotal, cpuTotal, longRunningTasksUsage);
+        SingularitySlaveUsage slaveUsage = new SingularitySlaveUsage(memoryBytesUsed, memoryMbReserved, now, cpusUsed, cpuReserved, allTaskUsage.size(), memoryMbTotal, cpusTotal, longRunningTasksUsage);
         List<Long> slaveTimestamps = usageManager.getSlaveUsageTimestamps(slave.getId());
         if (slaveTimestamps.size() + 1 > configuration.getNumUsageToKeep()) {
           usageManager.deleteSpecificSlaveUsage(slave.getId(), slaveTimestamps.get(0));
