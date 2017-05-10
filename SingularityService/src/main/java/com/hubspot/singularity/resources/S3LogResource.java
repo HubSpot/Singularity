@@ -476,7 +476,7 @@ public class S3LogResource extends AbstractHistoryResource {
     }
 
     if (totalPrefixCount == 0) {
-      return SingularityS3SearchResult.empty();
+      return SingularityS3SearchResult.builder().build();
     }
 
     ListeningExecutorService executorService = MoreExecutors.listeningDecorator(Executors.newFixedThreadPool(Math.min(totalPrefixCount, s3Configuration.getMaxS3Threads()),

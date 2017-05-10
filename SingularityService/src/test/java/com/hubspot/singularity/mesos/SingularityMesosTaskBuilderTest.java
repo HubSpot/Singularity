@@ -3,13 +3,11 @@ package com.hubspot.singularity.mesos;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.mesos.Protos;
@@ -156,17 +154,22 @@ public class SingularityMesosTaskBuilderTest {
                 .setBegin(31000)
                 .setEnd(31000).build()).build()).build();
 
-    final SingularityDockerPortMapping literalMapping = new SingularityDockerPortMapping(Optional.<SingularityPortMappingType>absent(), 80, Optional.of(SingularityPortMappingType.LITERAL), 8080, Optional.<String>absent());
-    final SingularityDockerPortMapping offerMapping = new SingularityDockerPortMapping(Optional.<SingularityPortMappingType>absent(), 81, Optional.of(SingularityPortMappingType.FROM_OFFER), 0, Optional.of("udp"));
+    final SingularityDockerPortMapping literalMapping = SingularityDockerPortMapping.builder().setContainerPort(80).setHostPortType(SingularityPortMappingType.LITERAL).setHostPort(8080).build();
+    final SingularityDockerPortMapping offerMapping = SingularityDockerPortMapping.builder().setContainerPort(81).setHostPortType(SingularityPortMappingType.FROM_OFFER).setHostPort(0).setProtocol("udp").build();
 
     final SingularityRequest request = new SingularityRequestBuilder("test", RequestType.WORKER).build();
     final SingularityContainerInfo containerInfo = new SingularityContainerInfo(
         SingularityContainerType.DOCKER,
         Optional.of(Arrays.asList(
-            new SingularityVolume("/container", Optional.of("/host"), SingularityDockerVolumeMode.RW),
-            new SingularityVolume("/container/${TASK_REQUEST_ID}/${TASK_DEPLOY_ID}", Optional.of("/host/${TASK_ID}"), SingularityDockerVolumeMode.RO))),
-        Optional.of(new SingularityDockerInfo("docker-image", true, SingularityDockerNetworkType.BRIDGE, Optional.of(Arrays.asList(literalMapping, offerMapping)), Optional.of(false), Optional.<Map<String, String>>of(
-          ImmutableMap.of("env", "var=value")))));
+            SingularityVolume.builder().setContainerPath("/container").setHostPath("/host").setMode(SingularityDockerVolumeMode.RW).build(),
+            SingularityVolume.builder().setContainerPath("/container/${TASK_REQUEST_ID}/${TASK_DEPLOY_ID}").setHostPath("/host/${TASK_ID}").setMode(SingularityDockerVolumeMode.RO).build())),
+        Optional.of(SingularityDockerInfo.builder()
+            .setImage("docker-image")
+            .setPrivileged(true)
+            .setNetwork(SingularityDockerNetworkType.BRIDGE)
+            .setPortMappings(Arrays.asList(literalMapping, offerMapping))
+            .setParameters(ImmutableMap.of("env", "var=value"))
+            .build()));
     final SingularityDeploy deploy = new SingularityDeployBuilder("test", "1")
         .setContainerInfo(Optional.of(containerInfo))
         .setCommand(Optional.of("/bin/echo"))
@@ -215,10 +218,11 @@ public class SingularityMesosTaskBuilderTest {
     final SingularityContainerInfo containerInfo = new SingularityContainerInfo(
         SingularityContainerType.DOCKER,
         Optional.<List<SingularityVolume>>absent(),
-        Optional.of(new SingularityDockerInfo("docker-image", true, SingularityDockerNetworkType.NONE,
-            Optional.<List<SingularityDockerPortMapping>>absent(),
-            Optional.<Boolean>absent(),
-            Optional.<Map<String, String>>absent())));
+        Optional.of(SingularityDockerInfo.builder()
+            .setImage("docker-image")
+            .setPrivileged(true)
+            .setNetwork(SingularityDockerNetworkType.NONE)
+            .build()));
     final SingularityDeploy deploy = new SingularityDeployBuilder("test", "1")
         .setContainerInfo(Optional.of(containerInfo))
         .build();
@@ -235,16 +239,17 @@ public class SingularityMesosTaskBuilderTest {
     netConf.setDefaultPortMapping(true);
     configuration.setNetworkConfiguration(netConf);
 
-    taskResources = new Resources(1, 1, 2);
+    taskResources = Resources.builder().setCpus(1).setMemoryMb(1).setNumPorts(2).build();
 
     final SingularityRequest request = new SingularityRequestBuilder("test", RequestType.WORKER).build();
     final SingularityContainerInfo containerInfo = new SingularityContainerInfo(
         SingularityContainerType.DOCKER,
         Optional.<List<SingularityVolume>>absent(),
-        Optional.of(new SingularityDockerInfo("docker-image", false, SingularityDockerNetworkType.BRIDGE,
-            Optional.<List<SingularityDockerPortMapping>>absent(),
-            Optional.<Boolean>absent(),
-            Optional.<Map<String, String>>absent())));
+        Optional.of(SingularityDockerInfo.builder()
+            .setImage("docker-image")
+            .setPrivileged(false)
+            .setNetwork(SingularityDockerNetworkType.BRIDGE)
+            .build()));
     final SingularityDeploy deploy = new SingularityDeployBuilder("test", "1")
         .setContainerInfo(Optional.of(containerInfo))
         .build();

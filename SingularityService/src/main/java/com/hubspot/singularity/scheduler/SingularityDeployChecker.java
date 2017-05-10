@@ -178,8 +178,13 @@ public class SingularityDeployChecker {
       } else {
         LOG.warn("Failing deploy {} because it failed to save deploy state", pendingDeployMarker);
         deployResult =
-          new SingularityDeployResult(DeployState.FAILED_INTERNAL_STATE, Optional.of(String.format("Deploy had state %s but failed to persist it correctly", deployResult.getDeployState())),
-            deployResult.getLbUpdate(), SingularityDeployFailure.failedToSave(), deployResult.getTimestamp());
+          SingularityDeployResult.builder()
+              .setDeployState(DeployState.FAILED_INTERNAL_STATE)
+              .setMessage(String.format("Deploy had state %s but failed to persist it correctly", deployResult.getDeployState()))
+              .setLbUpdate(deployResult.getLbUpdate())
+              .setDeployFailures(SingularityDeployFailure.failedToSave())
+              .setTimestamp(deployResult.getTimestamp())
+              .build();
       }
     } else if (!deployResult.getDeployState().isDeployFinished()) {
       return;
@@ -324,7 +329,7 @@ public class SingularityDeployChecker {
   }
 
   private void failPendingDeployDueToState(SingularityPendingDeploy pendingDeploy, Optional<SingularityRequestWithState> maybeRequestWithState, Optional<SingularityDeploy> deploy) {
-    SingularityDeployResult deployResult = new SingularityDeployResult(DeployState.FAILED, Optional.of(String.format("Request in state %s is not deployable", SingularityRequestWithState.getRequestState(maybeRequestWithState))), Optional.<SingularityLoadBalancerUpdate>absent());
+    SingularityDeployResult deployResult = SingularityDeployResult.builder().setDeployState(DeployState.FAILED).setMessage(String.format("Request in state %s is not deployable", SingularityRequestWithState.getRequestState(maybeRequestWithState))).build();
     if (!maybeRequestWithState.isPresent()) {
       deployManager.saveDeployResult(pendingDeploy.getDeployMarker(), deploy, deployResult);
       removePendingDeploy(pendingDeploy);
@@ -434,7 +439,7 @@ public class SingularityDeployChecker {
 
     updatePendingDeploy(pendingDeploy, Optional.of(lbUpdate), deployState);
 
-    return new SingularityDeployResult(deployState, lbUpdate, deployFailures);
+    return SingularityDeployResult.fromLbFailures(deployState, lbUpdate, deployFailures);
   }
 
   private boolean shouldCancelLoadBalancer(final SingularityPendingDeploy pendingDeploy) {
@@ -459,11 +464,11 @@ public class SingularityDeployChecker {
     if (!request.isDeployable()) {
       LOG.info("Succeeding a deploy {} because the request {} was not deployable", pendingDeploy, request);
 
-      return new SingularityDeployResult(DeployState.SUCCEEDED, "Request not deployable");
+      return SingularityDeployResult.builder().setDeployState(DeployState.SUCCEEDED).setMessage("Request not deployable").build();
     }
 
     if (!pendingDeploy.getDeployProgress().isPresent()) {
-      return new SingularityDeployResult(DeployState.FAILED, "No deploy progress data present in Zookeeper. Please reattempt your deploy");
+      return SingularityDeployResult.builder().setDeployState(DeployState.FAILED).setMessage("No deploy progress data present in Zookeeper. Please reattempt your deploy").build();
     }
 
     Set<SingularityTaskId> newInactiveDeployTasks = getNewInactiveDeployTasks(pendingDeploy, inactiveDeployMatchingTasks);
@@ -476,7 +481,7 @@ public class SingularityDeployChecker {
           new SingularityPendingRequest(request.getId(), pendingDeploy.getDeployMarker().getDeployId(), System.currentTimeMillis(), pendingDeploy.getDeployMarker().getUser(),
             PendingType.NEXT_DEPLOY_STEP, deploy.isPresent() ? deploy.get().getSkipHealthchecksOnDeploy() : Optional.<Boolean> absent(),
             pendingDeploy.getDeployMarker().getMessage()));
-        return new SingularityDeployResult(DeployState.WAITING);
+        return SingularityDeployResult.of(DeployState.WAITING);
       }
 
       if (request.isLoadBalanced() && shouldCancelLoadBalancer(pendingDeploy)) {
@@ -515,8 +520,11 @@ public class SingularityDeployChecker {
     if (cancelRequest.isPresent()) {
       LOG.info("Canceling a deploy {} due to cancel request {}", pendingDeploy, cancelRequest.get());
       String userMessage = cancelRequest.get().getUser().isPresent() ? String.format(" by %s", cancelRequest.get().getUser().get()) : "";
-      return new SingularityDeployResult(DeployState.CANCELED, Optional.of(String.format("Canceled due to request%s at %s", userMessage, cancelRequest.get().getTimestamp())),
-        pendingDeploy.getLastLoadBalancerUpdate(), Collections.<SingularityDeployFailure>emptyList(), System.currentTimeMillis());
+      return SingularityDeployResult.builder()
+          .setDeployState(DeployState.CANCELED)
+          .setMessage(String.format("Canceled due to request%s at %s", userMessage, cancelRequest.get().getTimestamp()))
+          .setLbUpdate(pendingDeploy.getLastLoadBalancerUpdate())
+          .build();
     }
 
     if (deployProgress.isStepComplete()) {
@@ -539,7 +547,7 @@ public class SingularityDeployChecker {
     }
 
     if (isWaitingForCurrentLbRequest(pendingDeploy)) {
-      return new SingularityDeployResult(DeployState.WAITING, Optional.of("Waiting on load balancer API"), pendingDeploy.getLastLoadBalancerUpdate());
+      return SingularityDeployResult.builder().setDeployState(DeployState.WAITING).setMessage("Waiting on load balancer API").setLbUpdate(pendingDeploy.getLastLoadBalancerUpdate()).build();
     }
 
     final DeployHealth deployHealth = deployHealthHelper.getDeployHealth(request, deploy, deployActiveTasks, true);
@@ -554,12 +562,12 @@ public class SingularityDeployChecker {
 
         if (updatePendingDeployRequest.isPresent() && updatePendingDeployRequest.get().getTargetActiveInstances() != deployProgress.getTargetActiveInstances()) {
           maybeUpdatePendingRequest(pendingDeploy, deploy, request, updatePendingDeployRequest);
-          return new SingularityDeployResult(DeployState.WAITING);
+          return SingularityDeployResult.of(DeployState.WAITING);
         }
 
         if (configuration.getLoadBalancerUri() == null) {
           LOG.warn("Deploy {} required a load balancer URI but it wasn't set", pendingDeploy);
-          return new SingularityDeployResult(DeployState.FAILED, Optional.of("No valid load balancer URI was present"), Optional.<SingularityLoadBalancerUpdate>absent(), Collections.<SingularityDeployFailure>emptyList(), System.currentTimeMillis());
+          return SingularityDeployResult.builder().setDeployState(DeployState.FAILED).setMessage("No valid load balancer URI was present").build();
         }
 
         for (SingularityTaskId activeTaskId : deployActiveTasks) {
@@ -588,7 +596,7 @@ public class SingularityDeployChecker {
         new SingularityPendingRequest(request.getId(), pendingDeploy.getDeployMarker().getDeployId(), System.currentTimeMillis(), pendingDeploy.getDeployMarker().getUser(),
           PendingType.NEXT_DEPLOY_STEP, deploy.isPresent() ? deploy.get().getSkipHealthchecksOnDeploy() : Optional.<Boolean> absent(), pendingDeploy.getDeployMarker().getMessage()));
     }
-    return new SingularityDeployResult(DeployState.WAITING);
+    return SingularityDeployResult.of(DeployState.WAITING);
   }
 
   private SingularityDeployResult enqueueAndProcessLbRequest(SingularityRequest request, Optional<SingularityDeploy> deploy, SingularityPendingDeploy pendingDeploy,
@@ -633,11 +641,11 @@ public class SingularityDeployChecker {
     } else if (deployState == DeployState.WAITING) {
       updatePendingDeploy(pendingDeploy, Optional.of(lbUpdate), deployState);
       maybeUpdatePendingRequest(pendingDeploy, deploy, request, updatePendingDeployRequest, Optional.of(lbUpdate));
-      return new SingularityDeployResult(DeployState.WAITING);
+      return SingularityDeployResult.of(DeployState.WAITING);
     } else {
       updatePendingDeploy(pendingDeploy, Optional.of(lbUpdate), deployState);
       maybeUpdatePendingRequest(pendingDeploy, deploy, request, updatePendingDeployRequest, Optional.of(lbUpdate));
-      return new SingularityDeployResult(deployState, lbUpdate, SingularityDeployFailure.lbUpdateFailed());
+      return SingularityDeployResult.fromLbFailures(deployState, lbUpdate, SingularityDeployFailure.lbUpdateFailed());
     }
   }
 
@@ -676,7 +684,7 @@ public class SingularityDeployChecker {
 
     if (updatePendingDeployRequest.isPresent() && getNewTargetInstances(deployProgress, request, updatePendingDeployRequest) != deployProgress.getTargetActiveInstances()) {
       maybeUpdatePendingRequest(pendingDeploy, deploy, request, updatePendingDeployRequest);
-      return new SingularityDeployResult(DeployState.WAITING);
+      return SingularityDeployResult.of(DeployState.WAITING);
     }
 
     SingularityDeployProgress newProgress = deployProgress.withNewActiveInstances(deployActiveTasks.size()).withCompletedStep();
@@ -690,7 +698,7 @@ public class SingularityDeployChecker {
         new SingularityTaskCleanup(Optional.<String> absent(), TaskCleanupType.DEPLOY_STEP_FINISHED, System.currentTimeMillis(), taskId, Optional.of(message),
           Optional.<String> absent(), Optional.<SingularityTaskShellCommandRequestId>absent()));
     }
-    return new SingularityDeployResult(deployState);
+    return SingularityDeployResult.of(deployState);
   }
 
   private List<SingularityTaskId> tasksToShutDown(SingularityDeployProgress deployProgress, Collection<SingularityTaskId> otherActiveTasks, SingularityRequest request) {
@@ -723,16 +731,16 @@ public class SingularityDeployChecker {
     if (deploy.isPresent() && isOverdue) {
       return getDeployResultWithFailures(request, deploy, pendingDeploy, DeployState.OVERDUE, message, deployActiveTasks);
     } else {
-      return new SingularityDeployResult(DeployState.WAITING);
+      return SingularityDeployResult.of(DeployState.WAITING);
     }
   }
 
   private SingularityDeployResult getDeployResultWithFailures(SingularityRequest request, Optional<SingularityDeploy> deploy, SingularityPendingDeploy pendingDeploy, DeployState state, String message, Collection<SingularityTaskId> matchingTasks) {
     List<SingularityDeployFailure> deployFailures = getDeployFailures(request, deploy, pendingDeploy, state, matchingTasks);
     if (deployFailures.size() == 1 && !deployFailures.get(0).getTaskId().isPresent()) { // Single non-task-specific failure should become the deploy result message (e.g. not enough resources to launch all tasks)
-      return new SingularityDeployResult(state, deployFailures.get(0).getMessage() , pendingDeploy.getLastLoadBalancerUpdate(), Collections.<SingularityDeployFailure>emptyList(), System.currentTimeMillis());
+      return SingularityDeployResult.builder().setDeployState(state).setMessage(deployFailures.get(0).getMessage()).setLbUpdate(pendingDeploy.getLastLoadBalancerUpdate()).build();
     } else {
-      return new SingularityDeployResult(state, Optional.of(message), pendingDeploy.getLastLoadBalancerUpdate(), deployFailures, System.currentTimeMillis());
+      return SingularityDeployResult.builder().setDeployState(state).setMessage(message).setLbUpdate(pendingDeploy.getLastLoadBalancerUpdate()).setDeployFailures(deployFailures).build();
     }
   }
 

@@ -88,12 +88,12 @@ public class SingularityExecutorTaskProcessBuilder implements Callable<ProcessBu
     taskArtifactFetcher = Optional.of(artifactFetcher.buildTaskFetcher(executorData, task));
 
     taskArtifactFetcher.get().fetchFiles(executorData.getEmbeddedArtifacts(), executorData.getS3Artifacts(),
-        executorData.getS3ArtifactSignaturesOrEmpty(), executorData.getExternalArtifacts());
-    task.getArtifactVerifier().checkSignatures(executorData.getS3ArtifactSignaturesOrEmpty());
+        executorData.getS3ArtifactSignatures(), executorData.getExternalArtifacts());
+    task.getArtifactVerifier().checkSignatures(executorData.getS3ArtifactSignatures());
 
     List<ArtifactList> artifactLists = new ArrayList<>();
     artifactLists.addAll(checkArtifactsForArtifactLists(executorData.getS3Artifacts()));
-    artifactLists.addAll(checkArtifactsForArtifactLists(executorData.getS3ArtifactSignaturesOrEmpty()));
+    artifactLists.addAll(checkArtifactsForArtifactLists(executorData.getS3ArtifactSignatures()));
     artifactLists.addAll(checkArtifactsForArtifactLists(executorData.getExternalArtifacts()));
 
     if (!artifactLists.isEmpty()) {

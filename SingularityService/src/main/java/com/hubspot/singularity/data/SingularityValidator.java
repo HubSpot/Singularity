@@ -46,7 +46,6 @@ import com.hubspot.singularity.MachineState;
 import com.hubspot.singularity.ScheduleType;
 import com.hubspot.singularity.SingularityAction;
 import com.hubspot.singularity.SingularityDeploy;
-import com.hubspot.singularity.SingularityDeployBuilder;
 import com.hubspot.singularity.SingularityPriorityFreezeParent;
 import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityRequestGroup;
@@ -232,7 +231,7 @@ public class SingularityValidator {
       checkBadRequest(request.getMaxTasksPerOffer().get() > 0, "maxTasksPerOffer must be positive");
     }
 
-    return request.toBuilder().setQuartzSchedule(Optional.fromNullable(quartzSchedule)).build();
+    return SingularityRequest.builder().from(request).setQuartzSchedule(Optional.fromNullable(quartzSchedule)).build();
   }
 
   public SingularityWebhook checkSingularityWebhook(SingularityWebhook webhook) {
@@ -256,7 +255,7 @@ public class SingularityValidator {
 
     if (deployId == null) {
       checkBadRequest(createDeployIds, "Id must not be null");
-      SingularityDeployBuilder builder = deploy.toBuilder();
+      SingularityDeploy.Builder builder = SingularityDeploy.builder().from(deploy);
       builder.setId(createUniqueDeployId());
       deploy = builder.build();
       deployId = deploy.getId();
@@ -657,8 +656,7 @@ public class SingularityValidator {
       return defaultBounceRequest;
     }
     final long durationMillis = TimeUnit.MINUTES.toMillis(defaultBounceExpirationMinutes);
-    return defaultBounceRequest
-        .toBuilder()
+    return SingularityBounceRequest.builder().from(defaultBounceRequest)
         .setDurationMillis(Optional.of(durationMillis))
         .build();
   }

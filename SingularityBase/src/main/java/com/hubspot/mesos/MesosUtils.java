@@ -14,7 +14,6 @@ import java.util.Set;
 import org.apache.mesos.Protos.MasterInfo;
 import org.apache.mesos.Protos.Offer;
 import org.apache.mesos.Protos.Resource;
-import org.apache.mesos.Protos.TaskState;
 import org.apache.mesos.Protos.Value;
 import org.apache.mesos.Protos.Value.Range;
 import org.apache.mesos.Protos.Value.Ranges;
@@ -300,10 +299,6 @@ public final class MesosUtils {
     return true;
   }
 
-  public static boolean isTaskDone(TaskState state) {
-    return state == TaskState.TASK_FAILED || state == TaskState.TASK_LOST || state == TaskState.TASK_KILLED || state == TaskState.TASK_FINISHED;
-  }
-
   public static String getMasterHostAndPort(MasterInfo masterInfo) {
     byte[] fromIp = ByteBuffer.allocate(4).putInt(masterInfo.getIp()).array();
 
@@ -393,10 +388,6 @@ public final class MesosUtils {
     }
 
     return remaining;
-  }
-
-  public static Resources buildResourcesFromMesosResourceList(List<Resource> resources) {
-    return new Resources(getNumCpus(resources, Optional.<String>absent()), getMemory(resources, Optional.<String>absent()), getNumPorts(resources), getDisk(resources, Optional.<String>absent()));
   }
 
   public static Path getTaskDirectoryPath(String taskId) {

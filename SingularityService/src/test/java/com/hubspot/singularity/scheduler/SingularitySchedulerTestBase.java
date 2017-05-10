@@ -450,11 +450,9 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
   }
 
   protected SingularityDeploy deployRequest(SingularityRequest request, double cpus, double memoryMb) {
-    Resources r = new Resources(cpus, memoryMb, 0);
-
     SingularityDeploy deploy = new SingularityDeployBuilder(request.getId(), "deploy1")
         .setCommand(Optional.of("sleep 1"))
-        .setResources(Optional.of(r))
+        .setResources(Optional.of(Resources.builder().setCpus(cpus).setMemoryMb(memoryMb).build()))
         .build();
 
     deployResource.deploy(new SingularityDeployRequest(deploy, Optional.<Boolean> absent(), Optional.<String> absent()));

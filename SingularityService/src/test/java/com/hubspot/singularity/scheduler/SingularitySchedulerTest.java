@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
@@ -547,7 +546,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     requestResource.postRequest(bldr.build());
     deploy("d2");
 
-    SingularityRunNowRequest runNowRequest = new SingularityRunNowRequest(Optional.<String>absent(), Optional.<Boolean>absent(), Optional.<String>absent(), Optional.<List<String>>absent(), Optional.of(new Resources(2, 2, 0)));
+    SingularityRunNowRequest runNowRequest = new SingularityRunNowRequest(Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent(), Optional.of(Resources.builder().setCpus(2).setMemoryMb(2).build()));
     requestResource.scheduleImmediately(requestId, runNowRequest);
 
     scheduler.drainPendingQueue(stateCacheProvider.get());
@@ -1565,18 +1564,19 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
   }
 
   private SingularityDeployBuilder dockerDeployWithPorts(int numPorts) {
-    final SingularityDockerPortMapping literalMapping = new SingularityDockerPortMapping(Optional.<SingularityPortMappingType>absent(), 80, Optional.of(SingularityPortMappingType.LITERAL), 8080, Optional.<String>absent());
-    final SingularityDockerPortMapping offerMapping = new SingularityDockerPortMapping(Optional.<SingularityPortMappingType>absent(), 81, Optional.of(SingularityPortMappingType.FROM_OFFER), 0, Optional.of("udp"));
+    final SingularityDockerPortMapping literalMapping = new SingularityDockerPortMapping(SingularityPortMappingType.LITERAL, 80, SingularityPortMappingType.LITERAL, 8080, "tcp");
+    final SingularityDockerPortMapping offerMapping = new SingularityDockerPortMapping(SingularityPortMappingType.LITERAL, 81, SingularityPortMappingType.FROM_OFFER, 0, "udp");
     final SingularityContainerInfo containerInfo = new SingularityContainerInfo(
       SingularityContainerType.DOCKER,
       Optional.<List<SingularityVolume>>absent(),
       Optional.of(
-        new SingularityDockerInfo("docker-image",
-          true,
-          SingularityDockerNetworkType.BRIDGE,
-          Optional.of(Arrays.asList(literalMapping, offerMapping)),
-          Optional.of(false),
-          Optional.<Map<String, String>>of(ImmutableMap.of("env", "var=value")))
+        SingularityDockerInfo.builder()
+            .setImage("docker-image")
+          .setPrivileged(true)
+          .setNetwork(SingularityDockerNetworkType.BRIDGE)
+          .setPortMappings(Arrays.asList(literalMapping, offerMapping))
+          .setParameters(ImmutableMap.of("env", "var=value"))
+          .build()
         ));
     final SingularityDeployBuilder deployBuilder = new SingularityDeployBuilder(requestId, "test-docker-ports-deploy");
     deployBuilder.setContainerInfo(Optional.of(containerInfo)).setResources(Optional.of(new Resources(1, 64, numPorts, 0)));
@@ -1909,7 +1909,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     requestResource.postRequest(bldr.build());
     deploy("d2");
 
-    SingularityRunNowRequest runNowRequest = new SingularityRunNowRequest(Optional.<String>absent(), Optional.<Boolean>absent(), Optional.<String>absent(), Optional.<List<String>>absent(), Optional.of(new Resources(2, 2, 0)));
+    SingularityRunNowRequest runNowRequest = new SingularityRunNowRequest(Optional.<String>absent(), Optional.<Boolean>absent(), Optional.<String>absent(), Optional.<List<String>>absent(), Optional.of(Resources.builder().setCpus(2).setMemoryMb(2).build()));
     requestResource.scheduleImmediately(requestId, runNowRequest);
 
     scheduler.drainPendingQueue(stateCacheProvider.get());
@@ -1935,7 +1935,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     requestResource.postRequest(bldr.build());
     deploy("d2");
 
-    SingularityRunNowRequest runNowRequest = new SingularityRunNowRequest(Optional.<String>absent(), Optional.<Boolean>absent(), Optional.<String>absent(), Optional.<List<String>>absent(), Optional.of(new Resources(2, 2, 0)));
+    SingularityRunNowRequest runNowRequest = new SingularityRunNowRequest(Optional.<String>absent(), Optional.<Boolean>absent(), Optional.<String>absent(), Optional.<List<String>>absent(), Optional.of(Resources.builder().setCpus(2).setMemoryMb(2).build()));
     requestResource.scheduleImmediately(requestId, runNowRequest);
 
     scheduler.drainPendingQueue(stateCacheProvider.get());
