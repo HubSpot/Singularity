@@ -27,17 +27,19 @@ class LogTailerContainer extends React.PureComponent {
   constructor() {
     super();
     this.state = {
-      notFound: false
+      notFound: {}
     };
   }
 
   componentWillMount() {
     this.props.loadColor();
     document.addEventListener(tailerActions.SINGULARITY_TAILER_AJAX_ERROR_EVENT, (event) => {
-      if (event.detail.status == 404) {
+      if (event.detail.response.status == 404 && event.detail.taskId) {
+        const notFound = {};
+        notFound[event.detail.taskId] = true;
         this.setState({
-          notFound: true
-        })
+          notFound: notFound
+        });
       }
     });
   }
@@ -46,67 +48,53 @@ class LogTailerContainer extends React.PureComponent {
     const renderTailerPane = (tasks, key) => {
       const {taskId, path, offset, tailerId} = tasks[0];
 
-      return (<section className="log-pane" key={key}>
-        <NewTaskGroupHeader
-          taskId={taskId}
-          showRequestId={this.props.requestIds.length > 1}
-          showCloseAndExpandButtons={this.props.tailerGroups.length > 1}
-          onClose={() => this.props.removeTailerGroup(key)}
-          onExpand={() => this.props.pickTailerGroup(key)}
-          onJumpToTop={() => this.props.jumpToTop(tailerId, taskId, path, this.props.router)}
-          onJumpToBottom={() => this.props.jumpToBottom(tailerId, taskId, path)} />
-        <SandboxTailer
-          goToOffset={parseInt(offset)}
-          tailerId={tailerId}
-          taskId={taskId}
-          path={path.replace('$TASK_ID', taskId)}
-          lineLinkRenderer={prefixedLineLinkRenderer(taskId, path)} />
-      </section>);
+      if (this.state.notFound[taskId]) {
+        const fileName = _.last(path.split('/'));
+        console.log(fileName)
+
+        return (<section className="log-pane" key={key}>
+          <div className="row tail-row tail-row-centered">
+              <div className="not-found-message">
+                <p>
+                  {fileName} does not exist in this directory.
+                </p>
+                <Link to={`/task/${taskId}`}>
+                  <Glyphicon glyph="arrow-left" /> Back to Task Detail Page
+                </Link>
+              </div>
+          </div>
+        </section>);
+      } else {
+
+        return (<section className="log-pane" key={key}>
+          <NewTaskGroupHeader
+            taskId={taskId}
+            showRequestId={this.props.requestIds.length > 1}
+            showCloseAndExpandButtons={this.props.tailerGroups.length > 1}
+            onClose={() => this.props.removeTailerGroup(key)}
+            onExpand={() => this.props.pickTailerGroup(key)}
+            onJumpToTop={() => this.props.jumpToTop(tailerId, taskId, path, this.props.router)}
+            onJumpToBottom={() => this.props.jumpToBottom(tailerId, taskId, path)} />
+          <SandboxTailer
+            goToOffset={parseInt(offset)}
+            tailerId={tailerId}
+            taskId={taskId}
+            path={path.replace('$TASK_ID', taskId)}
+            lineLinkRenderer={prefixedLineLinkRenderer(taskId, path)} />
+        </section>);
+      }
     };
 
-    const renderNotFound = (tasks, key) => {
-      const {taskId, path, offset, tailerId} = tasks[0];
-
-      const fileName = _.last(path.split('/'));
-
-      return (<section className="log-pane" key={key}>
-        <div className="row tail-row tail-row-centered">
-            <div className="not-found-message">
-              <p>
-                {fileName} does not exist in this directory.
-              </p>
-              <Link to={`/task/${taskId}`}>
-                <Glyphicon glyph="arrow-left" /> Back to Task Detail Page
-              </Link>
-            </div>
+    return (
+      <TailerProvider getTailerState={(state) => state.tailer}>
+        <div className={classNames(['new-tailer', 'tail-root', this.props.color])}>
+          <NewHeader />
+          <div className="row tail-row">
+            {this.props.tailerGroups.map(renderTailerPane)}
+          </div>
         </div>
-      </section>);
-    };
-
-
-    if (this.state.notFound) {
-      return (
-         <TailerProvider getTailerState={(state) => state.tailer}>
-          <div className={classNames(['new-tailer', 'tail-root', this.props.color])}>
-            <NewHeader />
-            <div className="row tail-row">
-              {this.props.tailerGroups.map(renderNotFound)}
-            </div>
-          </div>
-        </TailerProvider>
-      );
-    } else {
-      return (
-        <TailerProvider getTailerState={(state) => state.tailer}>
-          <div className={classNames(['new-tailer', 'tail-root', this.props.color])}>
-            <NewHeader />
-            <div className="row tail-row">
-              {this.props.tailerGroups.map(renderTailerPane)}
-            </div>
-          </div>
-        </TailerProvider>
-      );
-    }
+      </TailerProvider>
+    );
   }
 }
 
