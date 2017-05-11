@@ -315,7 +315,7 @@ public class SingularityMesosOfferScheduler {
   }
 
   private double scoreLongRunningTask(double longRunningMemUsedScore, double memFreeScore, double longRunningCpusUsedScore, double cpusFreeScore) {
-    // usage improves score
+    // unused, reserved resources improve score
     return calculateScore(1 - longRunningMemUsedScore, memFreeScore, 1 - longRunningCpusUsedScore, cpusFreeScore, 0.50, 0.50);
   }
 
