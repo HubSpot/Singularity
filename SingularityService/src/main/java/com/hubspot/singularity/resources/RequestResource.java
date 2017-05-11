@@ -235,7 +235,7 @@ public class RequestResource extends AbstractRequestResource {
 
     requestManager.createCleanupRequest(
         new SingularityRequestCleanup(JavaUtils.getUserEmail(user), isIncrementalBounce ? RequestCleanupType.INCREMENTAL_BOUNCE : RequestCleanupType.BOUNCE,
-            System.currentTimeMillis(), Optional.<Boolean> absent(), requestId, Optional.of(deployId), skipHealthchecks, message, actionId, runBeforeKill));
+            System.currentTimeMillis(), Optional.<Boolean> absent(), Optional.absent(), requestId, Optional.of(deployId), skipHealthchecks, message, actionId, runBeforeKill));
 
     requestManager.bounce(requestWithState.getRequest(), System.currentTimeMillis(), JavaUtils.getUserEmail(user), message);
 
@@ -341,9 +341,10 @@ public class RequestResource extends AbstractRequestResource {
     }
 
     final long now = System.currentTimeMillis();
+    Optional<Boolean> removeFromLoadBalancer = Optional.absent();
 
     SingularityCreateResult result = requestManager.createCleanupRequest(new SingularityRequestCleanup(JavaUtils.getUserEmail(user),
-        RequestCleanupType.PAUSING, now, killTasks, requestId, Optional.<String> absent(), Optional.<Boolean> absent(), message, actionId, runBeforeKill));
+        RequestCleanupType.PAUSING, now, killTasks, removeFromLoadBalancer, requestId, Optional.<String> absent(), Optional.<Boolean> absent(), message, actionId, runBeforeKill));
 
     checkConflict(result == SingularityCreateResult.CREATED, "%s is already pausing - try again soon", requestId, result);
 
@@ -576,13 +577,15 @@ public class RequestResource extends AbstractRequestResource {
 
     Optional<String> message = Optional.absent();
     Optional<String> actionId = Optional.absent();
+    Optional<Boolean> deleteFromLoadBalancer = Optional.absent();
 
     if (deleteRequest.isPresent()) {
       actionId = deleteRequest.get().getActionId();
       message = deleteRequest.get().getMessage();
+      deleteFromLoadBalancer = deleteRequest.get().getDeleteFromLoadBalancer();
     }
 
-    requestManager.startDeletingRequest(request, JavaUtils.getUserEmail(user), actionId, message);
+    requestManager.startDeletingRequest(request, deleteFromLoadBalancer, JavaUtils.getUserEmail(user), actionId, message);
 
     mailer.sendRequestRemovedMail(request, JavaUtils.getUserEmail(user), message);
 
