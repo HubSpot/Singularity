@@ -66,11 +66,10 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
   public void runActionOnPoll() {
     final long now = System.currentTimeMillis();
 
-    Map<ResourceUsageType, Number> longRunningTasksUsage = new HashMap<>();
-    longRunningTasksUsage.put(ResourceUsageType.MEMORY_BYTES_USED, 0);
-    longRunningTasksUsage.put(ResourceUsageType.CPU_USED, 0);
-
     for (SingularitySlave slave : usageHelper.getSlavesToTrackUsageFor()) {
+      Map<ResourceUsageType, Number> longRunningTasksUsage = new HashMap<>();
+      longRunningTasksUsage.put(ResourceUsageType.MEMORY_BYTES_USED, 0);
+      longRunningTasksUsage.put(ResourceUsageType.CPU_USED, 0);
       Optional<Long> memoryMbTotal = Optional.absent();
       Optional<Double> cpusTotal = Optional.absent();
       long memoryMbReserved = 0;
