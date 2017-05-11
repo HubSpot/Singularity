@@ -1399,7 +1399,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
 
 
     SingularityRunNowRequest runNowRequest = new SingularityRunNowRequest(Optional.<String>absent(), Optional.<Boolean>absent(), Optional.<String>absent(), Optional.<List<String>>absent(), Optional.of(new Resources(2, 2, 0)));
-    requestResource.scheduleImmediately(requestId, Optional.of(runNowRequest));
+    requestResource.scheduleImmediately(requestId, runNowRequest);
 
     Assert.assertEquals(2, requestManager.getPendingRequests().size());
     // Was added first
@@ -1789,7 +1789,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     Assert.assertEquals(1, taskManager.getPendingTaskIds().size());
     Assert.assertEquals(PendingType.NEW_DEPLOY, taskManager.getPendingTaskIds().get(0).getPendingType());
 
-    requestResource.scheduleImmediately(requestId, Optional.of(new SingularityRunNowRequest(Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent())));
+    requestResource.scheduleImmediately(requestId, new SingularityRunNowRequest(Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent()));
     scheduler.drainPendingQueue(stateCacheProvider.get());
 
     Assert.assertEquals(1, taskManager.getPendingTaskIds().size());
