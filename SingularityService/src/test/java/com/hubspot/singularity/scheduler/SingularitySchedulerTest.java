@@ -1388,7 +1388,27 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
 
       scheduler.drainPendingQueue(stateCacheProvider.get());
     }
+  }
 
+  @Test
+  public void testRequestsInPendingQueueAreOrderedByTimestamp() {
+    long now = System.currentTimeMillis();
+    initRequestWithType(RequestType.SCHEDULED, false);
+    startFirstDeploy();
+    requestManager.addToPendingQueue(new SingularityPendingRequest(requestId, firstDeploy.getId(), now, Optional.absent(), PendingType.NEW_DEPLOY,
+        firstDeploy.getSkipHealthchecksOnDeploy(), Optional.absent()));
+
+
+    SingularityRunNowRequest runNowRequest = new SingularityRunNowRequest(Optional.<String>absent(), Optional.<Boolean>absent(), Optional.<String>absent(), Optional.<List<String>>absent(), Optional.of(new Resources(2, 2, 0)));
+    requestResource.scheduleImmediately(requestId, runNowRequest);
+
+    Assert.assertEquals(2, requestManager.getPendingRequests().size());
+    // Was added first
+    Assert.assertEquals(PendingType.NEW_DEPLOY, requestManager.getPendingRequests().get(0).getPendingType());
+    // Was added second
+    Assert.assertEquals(PendingType.IMMEDIATE, requestManager.getPendingRequests().get(1).getPendingType());
+
+    resourceOffers();
   }
 
   @Test
@@ -1751,6 +1771,30 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     scheduler.drainPendingQueue(stateCacheProvider.get());
 
     Assert.assertEquals(newScheduleQuartz, requestManager.getRequest(requestId).get().getRequest().getQuartzScheduleSafe());
+  }
+
+  @Test
+  public void testImmediateRunReplacesScheduledTask() {
+    initScheduledRequest();
+
+    SingularityDeploy deploy = SingularityDeploy.newBuilder(requestId, firstDeployId)
+        .setCommand(Optional.of("sleep 100"))
+        .build();
+    SingularityDeployRequest singularityDeployRequest = new SingularityDeployRequest(deploy, Optional.absent(), Optional.absent(), Optional.absent());
+    deployResource.deploy(singularityDeployRequest);
+
+    scheduler.drainPendingQueue(stateCacheProvider.get());
+
+    SingularityPendingTask task1 = createAndSchedulePendingTask(firstDeployId);
+
+    Assert.assertEquals(1, taskManager.getPendingTaskIds().size());
+    Assert.assertEquals(PendingType.NEW_DEPLOY, taskManager.getPendingTaskIds().get(0).getPendingType());
+
+    requestResource.scheduleImmediately(requestId, new SingularityRunNowRequest(Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent()));
+    scheduler.drainPendingQueue(stateCacheProvider.get());
+
+    Assert.assertEquals(1, taskManager.getPendingTaskIds().size());
+    Assert.assertEquals(PendingType.IMMEDIATE, taskManager.getPendingTaskIds().get(0).getPendingType());
   }
 
   @Test(expected = WebApplicationException.class)
