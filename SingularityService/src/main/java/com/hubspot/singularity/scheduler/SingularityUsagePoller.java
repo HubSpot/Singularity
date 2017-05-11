@@ -95,7 +95,7 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
           usageManager.saveSpecificTaskUsage(taskId, usage);
 
           Optional<SingularityTask> maybeTask = taskManager.getTask(task);
-          if (maybeTask.isPresent() && maybeTask.get().getTaskRequest().getPendingTask().getResources().isPresent()) {
+          if (maybeTask.isPresent() && maybeTask.get().getTaskRequest().getDeploy().getResources().isPresent()) {
             memoryMbReserved += maybeTask.get().getTaskRequest().getDeploy().getResources().get().getMemoryMb();
             cpuReserved += maybeTask.get().getTaskRequest().getDeploy().getResources().get().getCpus();
           }
