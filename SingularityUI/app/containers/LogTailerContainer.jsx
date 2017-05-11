@@ -39,7 +39,6 @@ class LogTailerContainer extends React.PureComponent {
   render() {
     const renderTailerPane = (tasks, key) => {
       const {taskId, path, offset, tailerId} = tasks[0];
-      console.log(Utils.maybe(this.props.notFound, [taskId], false))
 
       if (Utils.maybe(this.props.notFound, [taskId], false)) {
         const fileName = _.last(path.split('/'));
