@@ -9,8 +9,9 @@ import { connect } from 'react-redux';
 import ReactDOM from 'react-dom';
 import { actions as tailerActions } from 'singularityui-tailer';
 import { Glyphicon } from 'react-bootstrap';
+import Utils from '../utils';
 
-import { loadColor, removeTailerGroup, pickTailerGroup, jumpToBottom, jumpToTop } from '../actions/tailer';
+import { loadColor, removeTailerGroup, pickTailerGroup, jumpToBottom, jumpToTop, markNotFound } from '../actions/tailer';
 
 const prefixedLineLinkRenderer = (taskId, path) => ({start}) => {
   return (<a
@@ -24,22 +25,13 @@ const prefixedLineLinkRenderer = (taskId, path) => ({start}) => {
 }
 
 class LogTailerContainer extends React.PureComponent {
-  constructor() {
-    super();
-    this.state = {
-      notFound: {}
-    };
-  }
 
   componentWillMount() {
     this.props.loadColor();
     document.addEventListener(tailerActions.SINGULARITY_TAILER_AJAX_ERROR_EVENT, (event) => {
       if (event.detail.response.status == 404 && event.detail.taskId) {
-        const notFound = {};
-        notFound[event.detail.taskId] = true;
-        this.setState({
-          notFound: notFound
-        });
+        this.props.markNotFound(event.detail.taskId);
+        this.forceUpdate();
       }
     });
   }
@@ -47,10 +39,10 @@ class LogTailerContainer extends React.PureComponent {
   render() {
     const renderTailerPane = (tasks, key) => {
       const {taskId, path, offset, tailerId} = tasks[0];
+      console.log(Utils.maybe(this.props.notFound, [taskId], false))
 
-      if (this.state.notFound[taskId]) {
+      if (Utils.maybe(this.props.notFound, [taskId], false)) {
         const fileName = _.last(path.split('/'));
-        console.log(fileName)
 
         return (<section className="log-pane" key={key}>
           <div className="row tail-row tail-row-centered">
@@ -101,11 +93,13 @@ class LogTailerContainer extends React.PureComponent {
 export default connect((state) => ({
   tailerGroups: state.tailerView.tailerGroups,
   requestIds: state.tailerView.requestIds,
-  color: state.tailerView.color
+  color: state.tailerView.color,
+  notFound: state.tailerView.notFound
 }), {
   loadColor,
   removeTailerGroup,
   pickTailerGroup,
   jumpToBottom,
   jumpToTop,
+  markNotFound
 })(withRouter(LogTailerContainer));
