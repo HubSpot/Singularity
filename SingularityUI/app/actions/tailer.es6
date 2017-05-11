@@ -37,17 +37,37 @@ export const jumpAllToBottom = () => (dispatch, getState) => {
   }));
 }
 
+export const setOffsetZero = (router, state) => {
+  const currentPath = state.routing.locationBeforeTransitions.pathname;
+  let queryString = "offset=0";
+  if (state.routing.locationBeforeTransitions.query) {
+    _.each(_.keys(state.routing.locationBeforeTransitions.query), (k) => {
+      if (k != "offset") {
+        queryString = queryString + "&" + k + "=" + state.routing.locationBeforeTransitions.query[k]
+      }
+    });
+  }
+
+  router.push(`${currentPath}?${queryString}`)
+}
+
 export const jumpToTop = (id, taskId, path, router) => (dispatch, getState) => {
   const state = getState();
 
-  router.push(`/task/${taskId}/tail/${path}?offset=0`)
+  if (router) {
+    setOffsetZero(router, state)
+  }
   dispatch(tailerActions.unloadFile(id));
   dispatch(tailerActions.sandboxFetchLength(id, taskId, path.replace('$TASK_ID', taskId), state.tailer.config));
   dispatch(tailerActions.sandboxFetchChunk(id, taskId, path.replace('$TASK_ID', taskId), 0, tailerActions.SANDBOX_MAX_BYTES, state.tailer.config));
 }
 
-export const jumpAllToTop = () => (dispatch, getState) => {
+export const jumpAllToTop = (router) => (dispatch, getState) => {
   const state = getState();
+
+  if (router) {
+    setOffsetZero(router, state)
+  }
 
   state.tailerView.tailerGroups.map((tailerGroup) => tailerGroup.map((tailer) => {
     dispatch(jumpToTop(tailer.tailerId, tailer.taskId, tailer.path));

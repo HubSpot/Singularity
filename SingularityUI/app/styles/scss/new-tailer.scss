@@ -21,6 +21,21 @@
     }
   }
 
+  .not-found-message {
+    text-align: center;
+    border: 3px dashed #e7e7e7;
+    padding: 2.5em;
+    color: #888;
+    font-size: 1.3em;
+    font-weight: 300;
+    letter-spacing: .03em;
+    width: 90%;
+  }
+
+  .tail-row-centered {
+    justify-content: center;
+  }
+
   .tail-row {
     display: flex;
     flex-flow: row;

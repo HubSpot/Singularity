@@ -8,6 +8,7 @@ import { withRouter, Link } from 'react-router';
 import { connect } from 'react-redux';
 import ReactDOM from 'react-dom';
 import { actions as tailerActions } from 'singularityui-tailer';
+import { Glyphicon } from 'react-bootstrap';
 
 import { loadColor, removeTailerGroup, pickTailerGroup, jumpToBottom, jumpToTop } from '../actions/tailer';
 
@@ -34,7 +35,6 @@ class LogTailerContainer extends React.PureComponent {
     this.props.loadColor();
     document.addEventListener(tailerActions.SINGULARITY_TAILER_AJAX_ERROR_EVENT, (event) => {
       if (event.detail.status == 404) {
-        console.log(event)
         this.setState({
           notFound: true
         })
@@ -68,17 +68,15 @@ class LogTailerContainer extends React.PureComponent {
       const {taskId, path, offset, tailerId} = tasks[0];
 
       return (<section className="log-pane" key={key}>
-        <div className="row tail-row">
-          <div className="lines-wrapper">
-            <div className="empty-table-message">
+        <div className="row tail-row tail-row-centered">
+            <div className="not-found-message">
               <p>
                 {_.last(path.split('/'))} does not exist in this directory.
               </p>
               <Link to={`/task/${taskId}`}>
-                Back to Task Detail Page
+                <Glyphicon glyph="arrow-left" /> Back to Task Detail Page
               </Link>
             </div>
-          </div>
         </div>
       </section>);
     };
