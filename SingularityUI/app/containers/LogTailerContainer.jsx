@@ -67,11 +67,13 @@ class LogTailerContainer extends React.PureComponent {
     const renderNotFound = (tasks, key) => {
       const {taskId, path, offset, tailerId} = tasks[0];
 
+      const fileName = _.last(path.split('/'));
+
       return (<section className="log-pane" key={key}>
         <div className="row tail-row tail-row-centered">
             <div className="not-found-message">
               <p>
-                {_.last(path.split('/'))} does not exist in this directory.
+                {fileName} does not exist in this directory.
               </p>
               <Link to={`/task/${taskId}`}>
                 <Glyphicon glyph="arrow-left" /> Back to Task Detail Page
