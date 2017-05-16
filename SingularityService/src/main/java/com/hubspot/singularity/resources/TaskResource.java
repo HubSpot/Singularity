@@ -282,7 +282,7 @@ public class TaskResource extends AbstractLeaderAwareResource {
   @DELETE
   @Path("/task/{taskId}")
   public SingularityTaskCleanup killTask(@PathParam("taskId") String taskId, @Context HttpServletRequest requestContext) {
-    return killTask(taskId, requestContext, Optional.absent());
+    return killTask(taskId, requestContext, null);
   }
 
   @DELETE
@@ -292,9 +292,11 @@ public class TaskResource extends AbstractLeaderAwareResource {
   @ApiResponses({
     @ApiResponse(code=409, message="Task already has a cleanup request (can be overridden with override=true)")
   })
-  public SingularityTaskCleanup killTask(@PathParam("taskId") String taskId, @Context HttpServletRequest requestContext, Optional<SingularityKillTaskRequest> killTaskRequest
-                                         ) {
-    return maybeProxyToLeader(requestContext, SingularityTaskCleanup.class, killTaskRequest.orNull(), () -> killTask(taskId, killTaskRequest));
+  public SingularityTaskCleanup killTask(@PathParam("taskId") String taskId,
+                                         @Context HttpServletRequest requestContext,
+                                         SingularityKillTaskRequest killTaskRequest) {
+    final Optional<SingularityKillTaskRequest> maybeKillTaskRequest = Optional.fromNullable(killTaskRequest);
+    return maybeProxyToLeader(requestContext, SingularityTaskCleanup.class, maybeKillTaskRequest.orNull(), () -> killTask(taskId, maybeKillTaskRequest));
   }
 
   public SingularityTaskCleanup killTask(String taskId, Optional<SingularityKillTaskRequest> killTaskRequest) {
