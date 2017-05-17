@@ -87,8 +87,7 @@ const Slaves = (props) => {
       >
         <p>Are you sure you want to mark the host {slave.host} as inactive?</p>
         <p>
-          This will decommission every slave on this host until you reactivate
-          it.
+          This will automatically decommission any slave that joins with this hostname.
         </p>
       </FormModalButton>
     )
