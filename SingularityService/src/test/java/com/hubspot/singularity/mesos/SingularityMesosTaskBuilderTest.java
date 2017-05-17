@@ -17,6 +17,7 @@ import org.apache.mesos.Protos.ContainerInfo.DockerInfo.PortMapping;
 import org.apache.mesos.Protos.ContainerInfo.Type;
 import org.apache.mesos.Protos.Environment.Variable;
 import org.apache.mesos.Protos.FrameworkID;
+import org.apache.mesos.Protos.Image;
 import org.apache.mesos.Protos.Offer;
 import org.apache.mesos.Protos.OfferID;
 import org.apache.mesos.Protos.Parameter;
@@ -38,6 +39,7 @@ import com.hubspot.mesos.SingularityDockerInfo;
 import com.hubspot.mesos.SingularityDockerNetworkType;
 import com.hubspot.mesos.SingularityDockerPortMapping;
 import com.hubspot.mesos.SingularityDockerVolumeMode;
+import com.hubspot.mesos.SingularityMesosInfo;
 import com.hubspot.mesos.SingularityPortMappingType;
 import com.hubspot.mesos.SingularityVolume;
 import com.hubspot.singularity.RequestType;
@@ -262,6 +264,52 @@ public class SingularityMesosTaskBuilderTest {
 
     assertEquals(31011, portMappings.get(1).getHostPort());
     assertEquals(31011, portMappings.get(1).getContainerPort());
+  }
+
+  @Test
+  public void testMesosContainerTask() {
+    taskResources = new Resources(1, 1, 1, 0);
+
+    final Protos.Resource portsResource = Protos.Resource.newBuilder()
+        .setName("ports")
+        .setType(Protos.Value.Type.RANGES)
+        .setRanges(Protos.Value.Ranges.newBuilder()
+            .addRange(Protos.Value.Range.newBuilder()
+                .setBegin(31000)
+                .setEnd(31000).build()).build()).build();
+
+    final SingularityRequest request = new SingularityRequestBuilder("test", RequestType.WORKER).build();
+    final SingularityContainerInfo containerInfo = new SingularityContainerInfo(
+        SingularityContainerType.MESOS,
+        Optional.of(Arrays.asList(
+            new SingularityVolume("/container", Optional.of("/host"), SingularityDockerVolumeMode.RW),
+            new SingularityVolume("/container/${TASK_REQUEST_ID}/${TASK_DEPLOY_ID}", Optional.of("/host/${TASK_ID}"), SingularityDockerVolumeMode.RO))),
+        Optional.absent(),
+        Optional.of(new SingularityMesosInfo("test-image", org.apache.mesos.Protos.Image.Type.DOCKER)));
+    final SingularityDeploy deploy = new SingularityDeployBuilder("test", "1")
+        .setContainerInfo(Optional.of(containerInfo))
+        .setCommand(Optional.of("/bin/echo"))
+        .setArguments(Optional.of(Collections.singletonList("wat")))
+        .build();
+    final SingularityTaskRequest taskRequest = new SingularityTaskRequest(request, deploy, pendingTask);
+    final SingularityTask task = builder.buildTask(offer, Collections.singletonList(portsResource), taskRequest, taskResources, executorResources);
+
+    assertEquals("/bin/echo", task.getMesosTask().getCommand().getValue());
+    assertEquals(1, task.getMesosTask().getCommand().getArgumentsCount());
+    assertEquals("wat", task.getMesosTask().getCommand().getArguments(0));
+    assertFalse(task.getMesosTask().getCommand().getShell());
+
+    assertEquals(Type.MESOS, task.getMesosTask().getContainer().getType());
+    assertEquals(Image.Type.DOCKER, task.getMesosTask().getContainer().getMesos().getImage().getType());
+    assertEquals("test-image", task.getMesosTask().getContainer().getMesos().getImage().getDocker().getName());
+
+    assertEquals("/container", task.getMesosTask().getContainer().getVolumes(0).getContainerPath());
+    assertEquals("/host", task.getMesosTask().getContainer().getVolumes(0).getHostPath());
+    assertEquals(Mode.RW, task.getMesosTask().getContainer().getVolumes(0).getMode());
+
+    assertEquals(String.format("/container/%s/%s", task.getTaskRequest().getDeploy().getRequestId(), task.getTaskRequest().getDeploy().getId()), task.getMesosTask().getContainer().getVolumes(1).getContainerPath());
+    assertEquals(String.format("/host/%s", task.getMesosTask().getTaskId().getValue()), task.getMesosTask().getContainer().getVolumes(1).getHostPath());
+    assertEquals(Mode.RO, task.getMesosTask().getContainer().getVolumes(1).getMode());
   }
 
   private static class CreateFakeId implements Answer<String> {

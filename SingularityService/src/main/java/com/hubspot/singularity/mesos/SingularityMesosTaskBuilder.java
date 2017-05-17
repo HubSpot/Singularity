@@ -12,10 +12,13 @@ import org.apache.mesos.Protos.CommandInfo;
 import org.apache.mesos.Protos.CommandInfo.URI;
 import org.apache.mesos.Protos.ContainerInfo;
 import org.apache.mesos.Protos.ContainerInfo.DockerInfo;
+import org.apache.mesos.Protos.ContainerInfo.MesosInfo;
 import org.apache.mesos.Protos.Environment;
 import org.apache.mesos.Protos.Environment.Variable;
 import org.apache.mesos.Protos.ExecutorID;
 import org.apache.mesos.Protos.ExecutorInfo;
+import org.apache.mesos.Protos.Image;
+import org.apache.mesos.Protos.Image.Docker;
 import org.apache.mesos.Protos.Label;
 import org.apache.mesos.Protos.Labels;
 import org.apache.mesos.Protos.Labels.Builder;
@@ -46,6 +49,7 @@ import com.hubspot.mesos.SingularityDockerNetworkType;
 import com.hubspot.mesos.SingularityDockerParameter;
 import com.hubspot.mesos.SingularityDockerPortMapping;
 import com.hubspot.mesos.SingularityMesosArtifact;
+import com.hubspot.mesos.SingularityMesosInfo;
 import com.hubspot.mesos.SingularityMesosTaskLabel;
 import com.hubspot.mesos.SingularityVolume;
 import com.hubspot.singularity.SingularityS3UploaderFile;
@@ -259,12 +263,13 @@ class SingularityMesosTaskBuilder {
 
   private void prepareContainerInfo(final Offer offer, final SingularityTaskId taskId, final TaskInfo.Builder bldr, final SingularityContainerInfo containerInfo, final Optional<long[]> ports) {
     ContainerInfo.Builder containerBuilder = ContainerInfo.newBuilder();
-    containerBuilder.setType(ContainerInfo.Type.valueOf(containerInfo.getType().toString()));
 
     final Optional<SingularityDockerInfo> dockerInfo = containerInfo.getDocker();
+    final Optional<SingularityMesosInfo> mesosInfo = containerInfo.getMesos();
 
     if (dockerInfo.isPresent()) {
       final DockerInfo.Builder dockerInfoBuilder = DockerInfo.newBuilder();
+      containerBuilder.setType(ContainerInfo.Type.DOCKER);
       dockerInfoBuilder.setImage(dockerInfo.get().getImage());
 
       if (dockerInfo.get().getNetwork().isPresent()) {
@@ -305,6 +310,13 @@ class SingularityMesosTaskBuilder {
       dockerInfoBuilder.setForcePullImage(dockerInfo.get().isForcePullImage());
 
       containerBuilder.setDocker(dockerInfoBuilder);
+    } else if (mesosInfo.isPresent()) {
+      containerBuilder.setType(ContainerInfo.Type.MESOS);
+      containerBuilder.setMesos(MesosInfo.newBuilder()
+        .setImage(Image.newBuilder()
+          .setType(mesosInfo.get().getType())
+          .setDocker(Docker.newBuilder() // TODO: don't assume docker here
+              .setName(mesosInfo.get().getImage()))));
     }
 
     for (SingularityVolume volumeInfo : containerInfo.getVolumes().or(Collections.<SingularityVolume>emptyList())) {
