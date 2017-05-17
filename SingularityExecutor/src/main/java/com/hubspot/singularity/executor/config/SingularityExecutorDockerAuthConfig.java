@@ -2,10 +2,20 @@ package com.hubspot.singularity.executor.config;
 
 public class SingularityExecutorDockerAuthConfig {
 
+  private boolean fromDockerConfig;
+
   private String username;
   private String password;
   private String email;
   private String serverAddress;
+
+  public boolean isFromDockerConfig() {
+    return fromDockerConfig;
+  }
+
+  public void setFromDockerConfig(boolean fromDockerConfig) {
+    this.fromDockerConfig = fromDockerConfig;
+  }
 
   public String getUsername() {
     return username;

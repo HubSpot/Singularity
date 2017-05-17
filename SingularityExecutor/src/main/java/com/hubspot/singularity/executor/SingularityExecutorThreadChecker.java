@@ -31,7 +31,7 @@ import com.hubspot.singularity.executor.task.SingularityExecutorTaskProcessCalla
 import com.hubspot.singularity.executor.utils.DockerUtils;
 import com.hubspot.singularity.runner.base.shared.ProcessFailedException;
 import com.hubspot.singularity.runner.base.shared.SimpleProcessManager;
-import com.spotify.docker.client.DockerException;
+import com.spotify.docker.client.exceptions.DockerException;
 
 @Singleton
 public class SingularityExecutorThreadChecker {
