@@ -26,6 +26,18 @@ export const unloadFile = (id) => ({
   id
 });
 
+export const STOP_TAILING = `${frameworkName}_STOP_TAILING`;
+export const stopTailing = (id) => ({
+  type: STOP_TAILING,
+  id
+});
+
+export const START_TAILING = `${frameworkName}_START_TAILING`;
+export const startTailing = (id) => ({
+  type: START_TAILING,
+  id
+});
+
 export const UNLOAD_FILE_CHUNK = `${frameworkName}_UNLOAD_FILE_CHUNK`;
 export const unloadFileChunk = (id, index) => ({
   type: UNLOAD_FILE_CHUNK,
