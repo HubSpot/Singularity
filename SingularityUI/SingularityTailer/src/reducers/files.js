@@ -5,7 +5,9 @@ import {
   ADD_FILE_CHUNK,
   UNLOAD_FILE,
   UNLOAD_FILE_CHUNK,
-  SET_FILE_SIZE
+  SET_FILE_SIZE,
+  STOP_TAILING,
+  START_TAILING
 } from '../actions';
 
 const TE = new TextEncoder();
@@ -526,6 +528,20 @@ const filesReducer = (state = initialState, action) => {
       }
     case UNLOAD_FILE_CHUNK:
       return removeChunkReducer(state, action);
+    case STOP_TAILING:
+      const newStopTailState = { ...state };
+      if (!newStopTailState.tailing) {
+        newStopTailState.tailing = {}
+      }
+      newStopTailState.tailing[action.id] = false;
+      return newStopTailState;
+    case START_TAILING:
+      const newStartTailState = { ...state };
+      if (!newStartTailState.tailing) {
+        newStartTailState.tailing = {}
+      }
+      newStartTailState.tailing[action.id] = true;
+      return newStartTailState;
     case SET_FILE_SIZE:
       if (!state[action.id]) {
         return {

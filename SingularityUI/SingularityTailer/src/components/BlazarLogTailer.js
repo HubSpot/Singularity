@@ -9,6 +9,8 @@ import {
   blazarLogFetchChunk,
   blazarLogFetchLength,
   blazarLogFetchTail,
+  startTailing,
+  stopTailing,
   BLAZAR_LOG_MAX_BYTES
 } from '../actions';
 import connectToTailer from './connectToTailer';
@@ -127,6 +129,8 @@ class BlazarLogTailer extends Component {
         tailLog={this.tailLog}
         goToOffset={this.props.goToOffset}
         lineLinkRenderer={this.props.lineLinkRenderer}
+        startTailing={this.props.startTailing}
+        stopTailing={this.props.stopTailing}
       />
     );
   }
@@ -184,6 +188,12 @@ const mapDispatchToProps = (dispatch, ownProps) => ({
       ownProps.tailerId,
       index
     )
+  ),
+  startTailing: () => dispatch(
+    startTailing(ownProps.tailerId)
+  ),
+  stopTailing: () => dispatch(
+    stopTailing(ownProps.tailerId)
   )
 });
 
