@@ -1,6 +1,7 @@
 package com.hubspot.singularity.resources;
 
 import static com.hubspot.singularity.WebExceptions.badRequest;
+import static com.hubspot.singularity.WebExceptions.checkBadRequest;
 import static com.hubspot.singularity.WebExceptions.checkNotFound;
 import static com.hubspot.singularity.WebExceptions.notFound;
 
@@ -136,6 +137,8 @@ public class SandboxResource extends AbstractHistoryResource {
     authorizationHelper.checkForAuthorizationByTaskId(taskId, user, SingularityAuthorizationScope.READ);
 
     final SingularityTaskHistory history = checkHistory(taskId);
+
+    checkBadRequest(!Strings.isNullOrEmpty(path), "Must specify 'path'");
 
     final String slaveHostname = history.getTask().getOffer().getHostname();
     final String fullPath = new File(history.getDirectory().get(), path).toString();
