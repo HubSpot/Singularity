@@ -41,7 +41,7 @@ const HMRContainer = (module.hot)
   : ({ children }) => (children);
 
 document.addEventListener(tailerActions.SINGULARITY_TAILER_AJAX_ERROR_EVENT, (event) => {
-  if (event.detail.status === 401 && window.config.redirectOnUnauthorizedUrl) {
+  if (event.detail.response.status === 401 && window.config.redirectOnUnauthorizedUrl) {
     window.location.href = config.redirectOnUnauthorizedUrl.replace('{URL}', encodeURIComponent(window.location.href));
   }
 });
