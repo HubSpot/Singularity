@@ -65,6 +65,10 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
   @Override
   public void runActionOnPoll() {
     final long now = System.currentTimeMillis();
+    double totalMemBytesUsed = 0.00;
+    double totalMemBytesAvailable = 0.00;
+    double totalCpuUsed = 0.00;
+    double totalCpuAvailable = 0.00;
 
     for (SingularitySlave slave : usageHelper.getSlavesToTrackUsageFor()) {
       Map<ResourceUsageType, Number> longRunningTasksUsage = new HashMap<>();
@@ -131,6 +135,14 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
           usageManager.deleteSpecificSlaveUsage(slave.getId(), slaveTimestamps.get(0));
         }
 
+        if (slaveUsage.getMemoryBytesTotal().isPresent() && slaveUsage.getCpusTotal().isPresent()) {
+          totalMemBytesUsed += slaveUsage.getMemoryBytesUsed();
+          totalCpuUsed += slaveUsage.getCpusUsed();
+
+          totalMemBytesAvailable += slaveUsage.getMemoryBytesTotal().get();
+          totalCpuAvailable += slaveUsage.getCpusTotal().get();
+        }
+
         LOG.debug("Saving slave {} usage {}", slave.getHost(), slaveUsage);
         usageManager.saveSpecificSlaveUsageAndSetCurrent(slave.getId(), slaveUsage);
       } catch (Exception e) {
@@ -138,6 +150,8 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
         LOG.error(message, e);
         exceptionNotifier.notify(message, e);
       }
+
+      setMinScore(totalMemBytesUsed, totalMemBytesAvailable, totalCpuUsed, totalCpuAvailable);
     }
   }
 
@@ -167,5 +181,10 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
   private void updateLongRunningTasksUsage(Map<ResourceUsageType, Number> longRunningTasksUsage, long memBytesUsed, double cpuUsed) {
     longRunningTasksUsage.compute(ResourceUsageType.MEMORY_BYTES_USED, (k, v) -> (v == null) ? memBytesUsed : v.longValue() + memBytesUsed);
     longRunningTasksUsage.compute(ResourceUsageType.CPU_USED, (k, v) -> (v == null) ? cpuUsed : v.doubleValue() + cpuUsed);
+  }
+
+  private void setMinScore(double totalMemBytesUsed, double totalMemBytesAvailable, double totalCpuUsed, double totalCpuAvailable) {
+    configuration.setMinOfferScore((((1 - (totalMemBytesUsed / totalMemBytesAvailable)) * configuration.getFreeMemWeightForOffer()) +
+        ((1 - (totalCpuUsed / totalCpuAvailable)) * configuration.getFreeCpuWeightForOffer())) / 3);
   }
 }
