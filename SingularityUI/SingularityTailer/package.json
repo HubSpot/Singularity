@@ -1,6 +1,6 @@
 {
   "name": "singularityui-tailer",
-  "version": "0.3.9",
+  "version": "0.3.10",
   "description": "A robust log tailer",
   "author": "Danny Wolf <dwolf@hubspot.com>",
   "contributors": [
