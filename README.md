@@ -16,7 +16,7 @@ For a more thorough explanation of the concepts behind Singularity and Mesos cli
 
 ----------
 
-### Features###
+### Features ###
 
  - [Native Docker Support](Docs/reference/container-options.md)
  - [JSON REST API and Java Client](Docs/reference/apidocs/api-index.md)
@@ -69,7 +69,7 @@ Then simply run `docker-compose up` and it will start containers for...
 
 ## Reference ##
 
-#### Install ####
+#### Installation ####
 
  - [Installation Instructions](Docs/getting-started/install.md)
 

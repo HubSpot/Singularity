@@ -51,7 +51,7 @@ public class MailTemplateHelpers {
 
   @Inject
   public MailTemplateHelpers(SandboxManager sandboxManager, SingularityConfiguration singularityConfiguration) {
-    this.uiBaseUrl = singularityConfiguration.getUiConfiguration().getBaseUrl();
+    this.uiBaseUrl = singularityConfiguration.getSmtpConfiguration().getUiBaseUrl().or(singularityConfiguration.getUiConfiguration().getBaseUrl());
     this.sandboxManager = sandboxManager;
     this.smtpConfiguration = singularityConfiguration.getSmtpConfigurationOptional();
     if (this.smtpConfiguration.isPresent()) {

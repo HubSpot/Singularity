@@ -86,6 +86,9 @@ public class SMTPConfiguration {
   @JsonProperty
   private Optional<String> subjectPrefix = Optional.absent();
 
+  @JsonProperty
+  private Optional<String> uiBaseUrl = Optional.absent();
+
   @JsonProperty("emails")
   private Map<SingularityEmailType, List<SingularityEmailDestination>> emailConfiguration = Maps.newHashMap(ImmutableMap.<SingularityEmailType, List<SingularityEmailDestination>>builder()
       .put(SingularityEmailType.REQUEST_IN_COOLDOWN, ImmutableList.of(SingularityEmailDestination.ADMINS, SingularityEmailDestination.OWNERS))
@@ -257,5 +260,13 @@ public class SMTPConfiguration {
 
   public void setSubjectPrefix(Optional<String> subjectPrefix) {
     this.subjectPrefix = subjectPrefix;
+  }
+
+  public Optional<String> getUiBaseUrl() {
+    return uiBaseUrl;
+  }
+
+  public void setUiBaseUrl(Optional<String> uiBaseUrl) {
+    this.uiBaseUrl = uiBaseUrl;
   }
 }
