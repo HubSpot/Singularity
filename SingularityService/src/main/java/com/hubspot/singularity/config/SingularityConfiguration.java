@@ -35,7 +35,7 @@ public class SingularityConfiguration extends Configuration {
 
   private int offerCacheSize = 125;
 
-  private boolean cacheOffers = true;
+  private boolean cacheOffers = false;
 
   private long cacheForWebForMillis = TimeUnit.SECONDS.toMillis(30);
 
@@ -54,6 +54,8 @@ public class SingularityConfiguration extends Configuration {
   private long cacheStateForMillis = TimeUnit.SECONDS.toMillis(30);
 
   private long checkDeploysEverySeconds = 5;
+
+  private long checkAutoSpreadAllSlavesEverySeconds = 30;
 
   private long checkNewTasksEverySeconds = 5;
 
@@ -348,6 +350,8 @@ public class SingularityConfiguration extends Configuration {
 
   private int maxDecommissioningSlaves = 2;
 
+  private boolean spreadAllSlavesEnabled = false;
+
   private long delayPollersWhenDeltaOverMs = 15000;
 
   private boolean delayOfferProcessingForLargeStatusUpdateDelta = true;
@@ -366,6 +370,10 @@ public class SingularityConfiguration extends Configuration {
 
   public long getCheckDeploysEverySeconds() {
     return checkDeploysEverySeconds;
+  }
+
+  public long getCheckAutoSpreadAllSlavesEverySeconds() {
+    return checkAutoSpreadAllSlavesEverySeconds;
   }
 
   public long getCheckNewTasksEverySeconds() {
@@ -1485,6 +1493,18 @@ public class SingularityConfiguration extends Configuration {
 
   public void setMaxDecommissioningSlaves(int maxDecommissioningSlaves) {
     this.maxDecommissioningSlaves = maxDecommissioningSlaves;
+  }
+
+  public boolean isSpreadAllSlavesEnabled() {
+    return spreadAllSlavesEnabled;
+  }
+
+  public void setSpreadAllSlavesEnabled(boolean spreadAllSlavesEnabled) {
+    this.spreadAllSlavesEnabled = spreadAllSlavesEnabled;
+  }
+
+  public void setCheckAutoSpreadAllSlavesEverySeconds(long checkAutoSpreadAllSlavesEverySeconds) {
+    this.checkAutoSpreadAllSlavesEverySeconds = checkAutoSpreadAllSlavesEverySeconds;
   }
 
   public long getDelayPollersWhenDeltaOverMs() {

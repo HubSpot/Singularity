@@ -163,6 +163,8 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
   protected SingularityPriorityKillPoller priorityKillPoller;
   @Inject
   protected SingularityHealthchecker healthchecker;
+  @Inject
+  protected SingularityAutoScaleSpreadAllPoller spreadAllPoller;
 
   @Inject
   protected SingularityLeaderCacheCoordinator cacheCoordinator;

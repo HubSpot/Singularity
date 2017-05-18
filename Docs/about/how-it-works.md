@@ -52,6 +52,7 @@ When matching a Mesos resource offer to a deploy, Singularity can use one of sev
 - `SEPARATE_BY_DEPLOY`/`SEPARATE`: ensures no 2 instances / tasks of the same request *and* deploy id are ever placed on the same slave
 - `SEPARATE_BY_REQUEST`: ensures no two tasks belonging to the same request (regardless if deploy id) are placed on the same host
 - `OPTIMISTIC`: attempts to spread out tasks but may schedule some on the same slave
+- `SPREAD_ALL_SLAVES`: ensure the task is running on every slave. Some behaviour as `SEPARATE_BY_DEPLOY` but with autoscaling the Request to keep instances equal number of slaves. 
 
 Slave placement can also be impacted by slave attributes. There are three scenarios that Singularity supports:
 

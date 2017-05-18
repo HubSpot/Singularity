@@ -17,11 +17,11 @@ public class CounterMap<K> {
   private final Map<K, Counter> map;
 
   public CounterMap() {
-    this.map = new HashMap<K, Counter>();
+    this.map = new HashMap<>();
   }
 
   public CounterMap(int initialCapacity) {
-    this.map = new HashMap<K, Counter>(initialCapacity);
+    this.map = new HashMap<>(initialCapacity);
   }
 
   public Map<K, Long> toCountMap() {
@@ -52,18 +52,19 @@ public class CounterMap<K> {
   }
 
   public void incr(K key, long amount) {
-    Counter c = map.get(key);
-
-    if (c == null) {
-      c = new Counter();
-      map.put(key, c);
-    }
+    Counter c = map.computeIfAbsent(key, k -> new Counter());
 
     c.count += amount;
   }
 
   public void incr(K key) {
     incr(key, 1);
+  }
+
+  public void decr(K key) {
+    Counter c = map.computeIfAbsent(key, k -> new Counter());
+
+    c.count--;
   }
 
   public long getCount(K key) {
@@ -85,7 +86,7 @@ public class CounterMap<K> {
   }
 
   public List<Entry<K, Counter>> asSortedEntryList() {
-    List<Entry<K, Counter>> entries = new ArrayList<Entry<K, Counter>>(map.size());
+    List<Entry<K, Counter>> entries = new ArrayList<>(map.size());
 
     for (Entry<K, Counter> entry : map.entrySet()) {
       entries.add(entry);

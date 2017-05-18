@@ -375,6 +375,11 @@ Retrieve a specific Request by ID
 | Parameter | Required | Description | Data Type |
 |-----------|----------|-------------|-----------|
 | requestId | true | Request ID | string |
+**query**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| useWebCache | false |  | boolean |
 
 ###### Response
 [SingularityRequestParent](models.md#model-SingularityRequestParent)
@@ -459,7 +464,11 @@ Retrieve the list of paused requests
 
 
 ###### Parameters
-- No parameters
+**query**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| useWebCache | false |  | boolean |
 
 ###### Response
 [List[SingularityRequestParent]](models.md#model-SingularityRequestParent)
@@ -478,7 +487,11 @@ Retrieve the list of tasks being cleaned from load balancers.
 
 
 ###### Parameters
-- No parameters
+**query**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| useWebCache | false |  | boolean |
 
 ###### Response
 [UNKNOWN[string]](models.md#model-UNKNOWN[string])
@@ -497,7 +510,11 @@ Retreive the list of finished requests (Scheduled requests which have exhausted 
 
 
 ###### Parameters
-- No parameters
+**query**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| useWebCache | false |  | boolean |
 
 ###### Response
 [List[SingularityRequestParent]](models.md#model-SingularityRequestParent)
@@ -516,7 +533,11 @@ Retrieve the list of requests in system cooldown
 
 
 ###### Parameters
-- No parameters
+**query**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| useWebCache | false |  | boolean |
 
 ###### Response
 [List[SingularityRequestParent]](models.md#model-SingularityRequestParent)
@@ -535,7 +556,11 @@ Retrieve the list of active requests
 
 
 ###### Parameters
-- No parameters
+**query**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| useWebCache | false |  | boolean |
 
 ###### Response
 [List[SingularityRequestParent]](models.md#model-SingularityRequestParent)
@@ -554,7 +579,11 @@ Retrieve the list of all requests
 
 
 ###### Parameters
-- No parameters
+**query**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| useWebCache | false |  | boolean |
 
 ###### Response
 [List[SingularityRequestParent]](models.md#model-SingularityRequestParent)

@@ -31,6 +31,7 @@ import com.hubspot.singularity.ExtendedTaskState;
 import com.hubspot.singularity.MachineState;
 import com.hubspot.singularity.OrderDirection;
 import com.hubspot.singularity.SingularityAction;
+import com.hubspot.singularity.SingularityAuthorizationScope;
 import com.hubspot.singularity.SingularityClientCredentials;
 import com.hubspot.singularity.SingularityCreateResult;
 import com.hubspot.singularity.SingularityDeleteResult;
@@ -83,6 +84,8 @@ public class SingularityClient {
 
   private static final Logger LOG = LoggerFactory.getLogger(SingularityClient.class);
 
+  private static final String AUTH_CHECK_FORMAT = "http://%s/%s/auth/%s/auth-check/%s";
+
   private static final String STATE_FORMAT = "http://%s/%s/state";
   private static final String TASK_RECONCILIATION_FORMAT = STATE_FORMAT + "/task-reconciliation";
 
@@ -98,6 +101,8 @@ public class SingularityClient {
   private static final String SLAVES_FREEZE_FORMAT = SLAVES_FORMAT + "/slave/%s/freeze";
   private static final String SLAVES_ACTIVATE_FORMAT = SLAVES_FORMAT + "/slave/%s/activate";
   private static final String SLAVES_DELETE_FORMAT = SLAVES_FORMAT + "/slave/%s";
+
+  private static final String INACTIVE_SLAVES_FORMAT = "http://%s/%s/inactive";
 
   private static final String TASKS_FORMAT = "http://%s/%s/tasks";
   private static final String TASKS_KILL_TASK_FORMAT = TASKS_FORMAT + "/task/%s";
@@ -187,6 +192,8 @@ public class SingularityClient {
   private static final TypeReference<Collection<SingularityDisasterType>> DISASTERS_COLLECTION = new TypeReference<Collection<SingularityDisasterType>>() {};
   private static final TypeReference<Collection<SingularityDisabledAction>> DISABLED_ACTIONS_COLLECTION = new TypeReference<Collection<SingularityDisabledAction>>() {};
   private static final TypeReference<SingularityPaginatedResponse<SingularityTaskIdHistory>> PAGINATED_HISTORY = new TypeReference<SingularityPaginatedResponse<SingularityTaskIdHistory>>() {};
+  private static final TypeReference<Collection<String>> STRING_COLLECTION = new TypeReference<Collection<String>>() {};
+
 
   private final Random random;
   private final Provider<List<String>> hostsProvider;
@@ -425,12 +432,12 @@ public class SingularityClient {
   }
 
   private HttpResponse put(String uri, String type, Optional<?> body) {
-    return executeRequest(uri, type, body, Method.PUT);
+    return executeRequest(uri, type, body, Method.PUT, Optional.absent());
   }
 
   private <T> Optional<T> post(String uri, String type, Optional<?> body, Optional<Class<T>> clazz) {
     try {
-      HttpResponse response = executeRequest(uri, type, body, Method.POST);
+      HttpResponse response = executeRequest(uri, type, body, Method.POST, Optional.absent());
 
       if (clazz.isPresent()) {
         return Optional.of(response.getAs(clazz.get()));
@@ -442,11 +449,15 @@ public class SingularityClient {
     return Optional.<T>absent();
   }
 
-  private HttpResponse post(String uri, String type, Optional<?> body) {
-    return executeRequest(uri, type, body, Method.POST);
+  private HttpResponse postWithParams(String uri, String type, Optional<?> body, Optional<Map<String, Object>> queryParams) {
+    return executeRequest(uri, type, body, Method.POST, queryParams);
   }
 
-  private HttpResponse executeRequest(String uri, String type, Optional<?> body, Method method) {
+  private HttpResponse post(String uri, String type, Optional<?> body) {
+    return executeRequest(uri, type, body, Method.POST, Optional.absent());
+  }
+
+  private HttpResponse executeRequest(String uri, String type, Optional<?> body, Method method, Optional<Map<String, Object>> queryParams) {
 
     final long start = System.currentTimeMillis();
 
@@ -454,6 +465,10 @@ public class SingularityClient {
 
     if (body.isPresent()) {
       request.setBody(body.get());
+    }
+
+    if (queryParams.isPresent()) {
+      addQueryParams(request, queryParams.get());
     }
 
     addCredentials(request);
@@ -926,6 +941,29 @@ public class SingularityClient {
   }
 
   //
+  // Inactive/Bad Slaves
+  //
+
+  public Collection<String> getInactiveSlaves() {
+    final String requestUri = String.format(INACTIVE_SLAVES_FORMAT, getHost(), contextPath);
+    return getCollection(requestUri, "inactiveSlaves", STRING_COLLECTION);
+  }
+
+  public void markSlaveAsInactive(String host) {
+    final String requestUri = String.format(INACTIVE_SLAVES_FORMAT, getHost(), contextPath);
+    Map<String, Object> params = new HashMap<>();
+    params.put("host", host);
+    deleteWithParams(requestUri, "activateSlave", host, Optional.absent(), Optional.of(params), Optional.of(HttpResponse.class));
+  }
+
+  public void markSlaveAsActive(String host) {
+    final String requestUri = String.format(INACTIVE_SLAVES_FORMAT, getHost(), contextPath);
+    Map<String, Object> params = new HashMap<>();
+    params.put("host", host);
+    postWithParams(requestUri, "activateSlave", Optional.absent(), Optional.of(params));
+  }
+
+  //
   // TASK HISTORY
   //
 
@@ -1285,6 +1323,18 @@ public class SingularityClient {
   public void deletePriorityFreeze() {
     final String requestUri = String.format(PRIORITY_FREEZE_FORMAT, getHost(), contextPath);
     delete(requestUri, "priority freeze", "");
+  }
+
+  //
+  // Auth
+  //
+
+  public boolean isUserAuthorized(String requestId, String userId, SingularityAuthorizationScope scope) {
+    final String requestUri = String.format(AUTH_CHECK_FORMAT, getHost(), contextPath, requestId, userId);
+    Map<String, Object> params = new HashMap<>();
+    params.put("scope", scope.name());
+    HttpResponse response = executeGetSingleWithParams(requestUri, "auth check", "", Optional.of(params));
+    return response.isSuccess();
   }
 
 }
