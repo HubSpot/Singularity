@@ -158,10 +158,9 @@ public class UsageManager extends CuratorAsyncManager {
     return children;
   }
 
-  public List<SingularitySlaveUsageWithId> getAllCurrentSlaveUsage() {
-    List<String> slaves = getSlavesWithUsage();
-    List<String> paths = new ArrayList<>(slaves.size());
-    for (String slaveId : slaves) {
+  public List<SingularitySlaveUsageWithId> getCurrentSlaveUsages(List<String> slaveIds) {
+    List<String> paths = new ArrayList<>(slaveIds.size());
+    for (String slaveId : slaveIds) {
       paths.add(getCurrentSlaveUsagePath(slaveId));
     }
 
@@ -172,6 +171,10 @@ public class UsageManager extends CuratorAsyncManager {
     }
 
     return slaveUsageWithIds;
+  }
+
+  public List<SingularitySlaveUsageWithId> getAllCurrentSlaveUsage() {
+    return getCurrentSlaveUsages(getSlavesWithUsage());
   }
 
   public List<Long> getSlaveUsageTimestamps(String slaveId) {
