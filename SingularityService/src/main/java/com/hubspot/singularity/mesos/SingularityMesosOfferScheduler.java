@@ -121,7 +121,6 @@ public class SingularityMesosOfferScheduler {
           slaveAndRackHelper.getReservedSlaveAttributes(offer)));
     }
 
-    normalizeConfiguredWeights();
     boolean addedTaskInLastLoop = true;
     int tasksScheduled = 0;
     final List<SingularitySlaveUsageWithId> currentSlaveUsages = usageManager.getCurrentSlaveUsages(offerHolders.stream().map(o -> o.getOffer().getSlaveId().getValue()).collect(Collectors.toList()));
@@ -192,19 +191,24 @@ public class SingularityMesosOfferScheduler {
     return offerHolders;
   }
 
-  private void normalizeConfiguredWeights() {
+  private double getNormalizedWeight(ResourceUsageType type) {
     double freeCpuWeight = configuration.getFreeCpuWeightForOffer();
     double freeMemWeight = configuration.getFreeMemWeightForOffer();
-    if (freeCpuWeight + freeMemWeight != 1) {
-      configuration.setFreeCpuWeightForOffer(freeCpuWeight / (freeCpuWeight + freeMemWeight));
-      configuration.setFreeMemWeightForOffer(freeMemWeight / (freeCpuWeight + freeMemWeight));
-    }
-
     double usedCpuWeight = configuration.getLongRunningUsedCpuWeightForOffer();
     double usedMemWeight = configuration.getLongRunningUsedMemWeightForOffer();
-    if (usedCpuWeight + usedMemWeight != 1) {
-      configuration.setLongRunningUsedCpuWeightForOffer(usedCpuWeight / (usedCpuWeight + usedMemWeight));
-      configuration.setLongRunningUsedMemWeightForOffer(usedMemWeight / (usedCpuWeight + usedMemWeight));
+
+    switch (type) {
+      case CPU_FREE:
+        return freeCpuWeight + freeMemWeight != 1 ? freeCpuWeight / (freeCpuWeight + freeMemWeight) : freeCpuWeight;
+      case MEMORY_BYTES_FREE:
+        return freeCpuWeight + freeMemWeight != 1 ? freeMemWeight / (freeCpuWeight + freeMemWeight) : freeMemWeight;
+      case CPU_USED:
+        return usedCpuWeight + usedMemWeight != 1 ? usedCpuWeight / (usedCpuWeight + usedMemWeight) : usedCpuWeight;
+      case MEMORY_BYTES_USED:
+        return usedCpuWeight + usedMemWeight != 1 ? usedMemWeight / (usedCpuWeight + usedMemWeight) : usedMemWeight;
+      default:
+        LOG.error("Invalid ResourceUsageType {}", type);
+        return 0;
     }
   }
 
@@ -343,11 +347,11 @@ public class SingularityMesosOfferScheduler {
   private double calculateScore(double longRunningMemUsedScore, double memFreeScore, double longRunningCpusUsedScore, double cpusFreeScore, double freeResourceWeight, double usedResourceWeight) {
     double score = 0;
 
-    score += (configuration.getLongRunningUsedCpuWeightForOffer() * usedResourceWeight) * longRunningCpusUsedScore;
-    score += (configuration.getLongRunningUsedMemWeightForOffer() * usedResourceWeight) * longRunningMemUsedScore;
+    score += (getNormalizedWeight(ResourceUsageType.CPU_USED) * usedResourceWeight) * longRunningCpusUsedScore;
+    score += (getNormalizedWeight(ResourceUsageType.MEMORY_BYTES_USED) * usedResourceWeight) * longRunningMemUsedScore;
 
-    score += (configuration.getFreeCpuWeightForOffer() * freeResourceWeight) * cpusFreeScore;
-    score += (configuration.getFreeMemWeightForOffer() * freeResourceWeight) * memFreeScore;
+    score += (getNormalizedWeight(ResourceUsageType.CPU_FREE) * freeResourceWeight) * cpusFreeScore;
+    score += (getNormalizedWeight(ResourceUsageType.MEMORY_BYTES_FREE) * freeResourceWeight) * memFreeScore;
 
     return score;
   }
