@@ -21,13 +21,22 @@ public class SingularityExecutorConfigurationTest {
     @Test
     public void itLoadsDockerAuthConfig() {
         SingularityExecutorConfiguration config = loadConfig("config/executor-conf-dockerauth.yaml");
-        
+
         assertThat(config.getDockerAuthConfig().isPresent()).isTrue();
+        assertThat(config.getDockerAuthConfig().get().isFromDockerConfig()).isFalse();
         assertThat(config.getDockerAuthConfig().get().getUsername()).isEqualTo("dockeruser");
         assertThat(config.getDockerAuthConfig().get().getPassword()).isEqualTo("dockerpassword");
         assertThat(config.getDockerAuthConfig().get().getServerAddress()).isEqualTo("https://private.docker.registry/path");
     }
 
+    @Test
+    public void itLoadsDockerAuthFromConfigFileIfSpecified() {
+        SingularityExecutorConfiguration config = loadConfig("config/executor-conf-dockerauth-fromconfig.yaml");
+
+        assertThat(config.getDockerAuthConfig().isPresent()).isTrue();
+        assertThat(config.getDockerAuthConfig().get().isFromDockerConfig()).isTrue();
+    }
+    
     private SingularityExecutorConfiguration loadConfig(String file)  {
         try {
             ObjectMapper mapper = new SingularityRunnerBaseModule(null).providesYamlMapper();
