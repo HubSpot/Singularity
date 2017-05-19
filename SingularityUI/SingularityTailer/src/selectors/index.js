@@ -66,7 +66,7 @@ export const getConfig = (state, props) => (
 );
 
 export const isTailing = (state, props) => {
-  props.getTailerState(state).tailing && props.getTailerState(state).tailing[props.tailerId]
+  return props.getTailerState(state).files && props.getTailerState(state).files.tailing && props.getTailerState(state).files.tailing[props.tailerId] || false;
 };
 
 const getEnhancedLine = (line, requests, config) => {
