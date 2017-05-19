@@ -12,6 +12,7 @@ import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.hubspot.mesos.client.MesosClient;
 import com.hubspot.mesos.json.MesosTaskMonitorObject;
+import com.hubspot.singularity.InvalidSingularityTaskIdException;
 import com.hubspot.singularity.SingularityDeployStatistics;
 import com.hubspot.singularity.SingularityRequestWithState;
 import com.hubspot.singularity.SingularitySlave;
@@ -86,7 +87,13 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
 
         for (MesosTaskMonitorObject taskUsage : allTaskUsage) {
           String taskId = taskUsage.getSource();
-          SingularityTaskId task = SingularityTaskId.valueOf(taskId);
+          SingularityTaskId task;
+          try {
+            task = SingularityTaskId.valueOf(taskId);
+          } catch (InvalidSingularityTaskIdException e) {
+            LOG.error("Couldn't get SingularityTaskId for {}", taskUsage);
+            continue;
+          }
 
           SingularityTaskUsage usage = getUsage(taskUsage);
 
