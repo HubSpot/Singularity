@@ -191,7 +191,9 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
   }
 
   private void setMinScore(double totalMemBytesUsed, double totalMemBytesAvailable, double totalCpuUsed, double totalCpuAvailable) {
-    configuration.setMinOfferScore((((1 - (totalMemBytesUsed / totalMemBytesAvailable)) * configuration.getFreeMemWeightForOffer()) +
-        ((1 - (totalCpuUsed / totalCpuAvailable)) * configuration.getFreeCpuWeightForOffer())) / 3);
+    double tolerance = 3.00;
+    double memScore = (1 - (totalMemBytesUsed / totalMemBytesAvailable)) * configuration.getFreeMemWeightForOffer();
+    double cpuScore = (1 - (totalCpuUsed / totalCpuAvailable)) * configuration.getFreeCpuWeightForOffer();
+    configuration.setMinOfferScore((memScore + cpuScore) / tolerance);
   }
 }
