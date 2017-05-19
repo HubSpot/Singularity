@@ -54,10 +54,9 @@ export const jumpToTop = (id, taskId, path) => (dispatch, getState) => {
 
   dispatch(tailerActions.unloadFile(id));
   dispatch(tailerActions.sandboxFetchLength(id, taskId, path.replace('$TASK_ID', taskId), state.tailer.config));
-  dispatch(tailerActions.sandboxFetchChunk(id, taskId, path.replace('$TASK_ID', taskId), 0, tailerActions.SANDBOX_MAX_BYTES, state.tailer.config)).then(() => {
-    dispatch(tailerActions.stopTailing(id));
-    $.find('log-pane').scrollTop = 0;
-  });
+  dispatch(tailerActions.sandboxFetchChunk(id, taskId, path.replace('$TASK_ID', taskId), 0, tailerActions.SANDBOX_MAX_BYTES, state.tailer.config));
+  $.find('log-pane').scrollTop = 0;
+  dispatch(tailerActions.stopTailing(id));
 }
 
 export const jumpAllToTop = () => (dispatch, getState) => {
