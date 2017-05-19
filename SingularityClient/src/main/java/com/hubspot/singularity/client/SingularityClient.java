@@ -953,14 +953,14 @@ public class SingularityClient {
     final String requestUri = String.format(INACTIVE_SLAVES_FORMAT, getHost(), contextPath);
     Map<String, Object> params = new HashMap<>();
     params.put("host", host);
-    deleteWithParams(requestUri, "activateSlave", host, Optional.absent(), Optional.of(params), Optional.of(HttpResponse.class));
+    postWithParams(requestUri, "deactivateSlave", Optional.absent(), Optional.of(params));
   }
 
-  public void markSlaveAsActive(String host) {
+  public void clearInactiveSlave(String host) {
     final String requestUri = String.format(INACTIVE_SLAVES_FORMAT, getHost(), contextPath);
     Map<String, Object> params = new HashMap<>();
     params.put("host", host);
-    postWithParams(requestUri, "activateSlave", Optional.absent(), Optional.of(params));
+    deleteWithParams(requestUri, "clearInactiveSlave", host, Optional.absent(), Optional.of(params), Optional.of(HttpResponse.class));
   }
 
   //
