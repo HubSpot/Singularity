@@ -9,6 +9,7 @@ export const REMOVE_TAILER_GROUP = "TAILER_REMOVE_TAILER_GROUP";
 export const PICK_TAILER_GROUP = "TAILER_PICK_TAILER_GROUP";
 export const TOGGLE_TAILER_GROUP = "TAILER_TOGGLE_TAILER_GROUP";
 export const SET_COLOR = "TAILER_SET_COLOR";
+export const TAILER_SET_NOT_FOUND = "TAILER_SET_NOT_FOUND";
 
 export const buildTailerGroupInfo = (taskId, path, offset=-1) => ({taskId, path, offset});
 
@@ -22,11 +23,22 @@ export const setSearch = (search) => ({
   search
 });
 
+export const markNotFound = (taskId) => (dispatch, getState) => {
+  const { tailerView } = getState();
+  const notFound = tailerView.notFound;
+  notFound[taskId] = true;
+  dispatch({
+    type: TAILER_SET_NOT_FOUND,
+    notFound: notFound
+  });
+}
+
 export const jumpToBottom = (id, taskId, path) => (dispatch, getState) => {
   const state = getState();
 
   dispatch(tailerActions.unloadFile(id));
-  dispatch(tailerActions.sandboxFetchTail(id, taskId, path.replace('$TASK_ID', taskId), state.tailer.config));
+  dispatch(tailerActions.sandboxFetchTail(id, taskId, path.replace('$TASK_ID', taskId), state.tailer.config))
+  dispatch(tailerActions.startTailing(id));
 }
 
 export const jumpAllToBottom = () => (dispatch, getState) => {
@@ -43,6 +55,8 @@ export const jumpToTop = (id, taskId, path) => (dispatch, getState) => {
   dispatch(tailerActions.unloadFile(id));
   dispatch(tailerActions.sandboxFetchLength(id, taskId, path.replace('$TASK_ID', taskId), state.tailer.config));
   dispatch(tailerActions.sandboxFetchChunk(id, taskId, path.replace('$TASK_ID', taskId), 0, tailerActions.SANDBOX_MAX_BYTES, state.tailer.config));
+  $.find('log-pane').scrollTop = 0;
+  dispatch(tailerActions.stopTailing(id));
 }
 
 export const jumpAllToTop = () => (dispatch, getState) => {
@@ -81,7 +95,7 @@ export const addTailerGroup = (tailerGroup) => (dispatch, getState) => {
   dispatch(updateTailerUrl());
 }
 
-export const toggleTailerGroup = (taskId, path) => (dispatch, getState) => {
+export const toggleTailerGroup = (taskId, path, visibleTaskIds) => (dispatch, getState) => {
   const { tailerView } = getState();
 
   const tailerGroupIndex = _.findIndex(tailerView.tailerGroups, (tg) => tg[0].taskId === taskId);
@@ -89,7 +103,13 @@ export const toggleTailerGroup = (taskId, path) => (dispatch, getState) => {
   if (tailerGroupIndex > -1) {
     return dispatch(removeTailerGroup(tailerGroupIndex));
   } else {
-    return dispatch(addTailerGroup([buildTailerGroupInfo(taskId, path)]));
+    let newPath = path;
+    if (newPath.indexOf('$TASK_ID') < 0) {
+      for (let i=0; i<visibleTaskIds.length; i++) {
+        newPath = newPath.replace(visibleTaskIds[i], '$TASK_ID');
+      }
+    }
+    return dispatch(addTailerGroup([buildTailerGroupInfo(taskId, newPath)]));
   }
 }
 
