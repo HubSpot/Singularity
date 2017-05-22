@@ -136,7 +136,7 @@ public abstract class CuratorManager {
     } catch (Throwable t) {
       throw Throwables.propagate(t);
     } finally {
-      log(OperationType.GET_CHILDREN, Optional.of(numChildren), Optional.<Integer>absent(), start, root);
+      log(OperationType.GET_CHILDREN, Optional.of(numChildren), Optional.absent(), start, root);
     }
   }
 
@@ -189,7 +189,7 @@ public abstract class CuratorManager {
         createBuilder.forPath(path);
       }
     } finally {
-      log(OperationType.WRITE, Optional.<Integer>absent(), Optional.<Integer>of(data.or(EMPTY_BYTES).length), start, path);
+      log(OperationType.WRITE, Optional.absent(), Optional.of(data.or(EMPTY_BYTES).length), start, path);
     }
   }
 

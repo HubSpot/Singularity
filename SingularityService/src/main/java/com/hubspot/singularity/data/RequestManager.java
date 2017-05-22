@@ -1,6 +1,7 @@
 package com.hubspot.singularity.data;
 
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -133,10 +134,26 @@ public class RequestManager extends CuratorAsyncManager {
   }
 
   private String getPendingPath(SingularityPendingRequest pendingRequest) {
-    String nodeName = String.format("%s%s",
-      new SingularityDeployKey(pendingRequest.getRequestId(), pendingRequest.getDeployId()),
-      pendingRequest.getPendingType().equals(PendingType.ONEOFF) ? pendingRequest.getTimestamp()  : "");
+    String nodeName = pendingQueueKey(pendingRequest);
     return ZKPaths.makePath(PENDING_PATH_ROOT, nodeName);
+  }
+
+  private String pendingQueueKey(SingularityPendingRequest pendingRequest) {
+    SingularityDeployKey deployKey = new SingularityDeployKey(pendingRequest.getRequestId(), pendingRequest.getDeployId());
+    if (pendingRequest.getPendingType() == PendingType.ONEOFF) {
+      return String.format("%s%s", deployKey, pendingRequest.getTimestamp());
+    } else if (pendingRequest.getPendingType() == PendingType.IMMEDIATE) {
+      Optional<SingularityPendingRequest> existingRequest = getPendingRequest(pendingRequest.getRequestId(), pendingRequest.getDeployId());
+      if (existingRequest.isPresent() &&
+          (existingRequest.get().getPendingType() == PendingType.TASK_DONE
+          || existingRequest.get().getPendingType() == PendingType.NEW_DEPLOY)) {
+        return String.format("%s%s", deployKey, "-immediate");
+      } else {
+        return deployKey.toString();
+      }
+    } else {
+      return deployKey.toString();
+    }
   }
 
   private String getCleanupPath(String requestId, RequestCleanupType type) {
@@ -280,7 +297,11 @@ public class RequestManager extends CuratorAsyncManager {
   }
 
   public List<SingularityPendingRequest> getPendingRequests() {
-    return getAsyncChildren(PENDING_PATH_ROOT, pendingRequestTranscoder);
+    List<SingularityPendingRequest> pendingRequests = getAsyncChildren(PENDING_PATH_ROOT, pendingRequestTranscoder);
+    // Strictly enforce ordering of pending requests
+    pendingRequests.sort(Comparator.comparingLong(SingularityPendingRequest::getTimestamp));
+
+    return pendingRequests;
   }
 
   public List<SingularityRequestCleanup> getCleanupRequests() {
