@@ -97,9 +97,10 @@ public class RequestHelper {
       if (maybeDeployId.isPresent()) {
         if (maybeBounceRequest.isPresent()) {
           Optional<String> actionId = maybeBounceRequest.get().getActionId().or(Optional.of(UUID.randomUUID().toString()));
+          Optional<Boolean> removeFromLoadBalancer = Optional.absent();
           SingularityCreateResult createResult = requestManager.createCleanupRequest(
             new SingularityRequestCleanup(user, maybeBounceRequest.get().getIncremental().or(true) ? RequestCleanupType.INCREMENTAL_BOUNCE : RequestCleanupType.BOUNCE,
-              System.currentTimeMillis(), Optional.<Boolean> absent(), newRequest.getId(), Optional.of(maybeDeployId.get()), skipHealthchecks, message, actionId, maybeBounceRequest.get().getRunShellCommandBeforeKill()));
+              System.currentTimeMillis(), Optional.<Boolean> absent(), removeFromLoadBalancer, newRequest.getId(), Optional.of(maybeDeployId.get()), skipHealthchecks, message, actionId, maybeBounceRequest.get().getRunShellCommandBeforeKill()));
 
           if (createResult != SingularityCreateResult.EXISTED) {
             requestManager.bounce(newRequest, System.currentTimeMillis(), user, Optional.of("Bouncing due to bounce after scale"));

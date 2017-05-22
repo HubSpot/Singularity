@@ -9,12 +9,15 @@ public class SingularityDeleteRequestRequest {
 
   private final Optional<String> message;
   private final Optional<String> actionId;
+  private final Optional<Boolean> deleteFromLoadBalancer;
 
   @JsonCreator
   public SingularityDeleteRequestRequest(@JsonProperty("message") Optional<String> message,
-      @JsonProperty("actionId") Optional<String> actionId) {
+                                         @JsonProperty("actionId") Optional<String> actionId,
+                                         @JsonProperty("deleteFromLoadBalancer") Optional<Boolean> deleteFromLoadBalancer) {
     this.message = message;
     this.actionId = actionId;
+    this.deleteFromLoadBalancer = deleteFromLoadBalancer;
   }
 
   @ApiModelProperty(required=false, value="A message to show to users about why this action was taken")
@@ -27,11 +30,17 @@ public class SingularityDeleteRequestRequest {
     return actionId;
   }
 
+  @ApiModelProperty(required = false, value = "Should the service associated with the request be removed from the load balancer")
+  public Optional<Boolean> getDeleteFromLoadBalancer() {
+    return deleteFromLoadBalancer;
+  }
+
   @Override
   public String toString() {
     return "SingularityDeleteRequestRequest{" +
         "message=" + message +
         ", actionId=" + actionId +
+        ", deleteFromLoadBalancer=" + deleteFromLoadBalancer +
         '}';
   }
 }
