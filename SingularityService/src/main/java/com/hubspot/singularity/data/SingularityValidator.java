@@ -365,12 +365,7 @@ public class SingularityValidator {
     checkBadRequest(deployHistoryHelper.isDeployIdAvailable(request.getId(), deployId), "Can not deploy a deploy that has already been deployed");
 
     if (deploy.getRunImmediately().isPresent()) {
-      deploy = checkImmediateRunDeploy(
-          request,
-          deploy,
-          deploy.getRunImmediately().get(),
-          activeTasks,
-          pendingTasks);
+      deploy = checkImmediateRunDeploy(request, deploy, deploy.getRunImmediately().get(), activeTasks, pendingTasks);
     }
 
     if (request.isDeployable()) {
@@ -389,20 +384,9 @@ public class SingularityValidator {
       throw badRequest("Can not request an immediate run of a non-scheduled / always running request (%s)", request);
     }
 
-    boolean canRunImmediately =
-        (request.isScheduled() && activeTasks.isEmpty())
-        || (request.isOneOff() && ! request.getInstances().isPresent())
-        || (request.isOneOff() && request.getInstances().get() > activeTasks.size() + pendingTasks.size());
-
-    if (canRunImmediately) {
-      return deploy.toBuilder()
-          .setRunImmediately(Optional.of(fillRunNowRequest(Optional.of(runNowRequest))))
-          .build();
-    } else {
-      return deploy.toBuilder()
-          .setRunImmediately(Optional.absent())
-          .build();
-    }
+    return deploy.toBuilder()
+        .setRunImmediately(Optional.of(fillRunNowRequest(Optional.of(runNowRequest))))
+        .build();
   }
 
   public SingularityPendingRequest checkRunNowRequest(String deployId,
