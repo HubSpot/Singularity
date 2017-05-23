@@ -13,6 +13,7 @@ import com.google.inject.Inject;
 import com.hubspot.mesos.client.MesosClient;
 import com.hubspot.mesos.json.MesosTaskMonitorObject;
 import com.hubspot.singularity.InvalidSingularityTaskIdException;
+import com.hubspot.singularity.SingularityClusterUtilization;
 import com.hubspot.singularity.SingularityDeployStatistics;
 import com.hubspot.singularity.SingularityRequestWithState;
 import com.hubspot.singularity.SingularitySlave;
@@ -66,8 +67,8 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
   @Override
   public void runActionOnPoll() {
     final long now = System.currentTimeMillis();
-    double totalMemBytesUsed = 0.00;
-    double totalMemBytesAvailable = 0.00;
+    long totalMemBytesUsed = 0;
+    long totalMemBytesAvailable = 0;
     double totalCpuUsed = 0.00;
     double totalCpuAvailable = 0.00;
 
@@ -158,7 +159,7 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
         exceptionNotifier.notify(message, e);
       }
 
-      setMinScore(totalMemBytesUsed, totalMemBytesAvailable, totalCpuUsed, totalCpuAvailable);
+      saveClusterUtilization(totalMemBytesUsed, totalMemBytesAvailable, totalCpuUsed, totalCpuAvailable, now);
     }
   }
 
@@ -190,10 +191,11 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
     longRunningTasksUsage.compute(ResourceUsageType.CPU_USED, (k, v) -> (v == null) ? cpuUsed : v.doubleValue() + cpuUsed);
   }
 
-  private void setMinScore(double totalMemBytesUsed, double totalMemBytesAvailable, double totalCpuUsed, double totalCpuAvailable) {
-    double tolerance = 3.00;
-    double memScore = (1 - (totalMemBytesUsed / totalMemBytesAvailable)) * configuration.getFreeMemWeightForOffer();
-    double cpuScore = (1 - (totalCpuUsed / totalCpuAvailable)) * configuration.getFreeCpuWeightForOffer();
-    configuration.setMinOfferScore((memScore + cpuScore) / tolerance);
+  private void saveClusterUtilization(long totalMemBytesUsed, long totalMemBytesAvailable, double totalCpuUsed, double totalCpuAvailable, long now) {
+    List<SingularityClusterUtilization> utilizations = usageManager.getClusterUtilization();
+    if (utilizations.size() + 1 > configuration.getNumUsageToKeep()) {
+      usageManager.deleteSpecificClusterUtilization(utilizations.get(0).getTimestamp());
+    }
+    usageManager.saveSpecificClusterUtilization(new SingularityClusterUtilization(totalMemBytesUsed, totalMemBytesAvailable, totalCpuUsed, totalCpuAvailable, now));
   }
 }

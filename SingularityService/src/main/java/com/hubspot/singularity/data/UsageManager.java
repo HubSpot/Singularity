@@ -13,6 +13,7 @@ import org.apache.curator.utils.ZKPaths;
 import com.codahale.metrics.MetricRegistry;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.hubspot.singularity.SingularityClusterUtilization;
 import com.hubspot.singularity.SingularityCreateResult;
 import com.hubspot.singularity.SingularityDeleteResult;
 import com.hubspot.singularity.SingularitySlaveUsage;
@@ -31,6 +32,7 @@ public class UsageManager extends CuratorAsyncManager {
 
   private static final String SLAVE_PATH = ROOT_PATH + "/slaves";
   private static final String TASK_PATH = ROOT_PATH + "/tasks";
+  private static final String USAGE_SUMMARY_PATH = ROOT_PATH + "/summary";
 
   private static final String USAGE_HISTORY_PATH_KEY = "history";
   private static final String CURRENT_USAGE_NODE_KEY = "CURRENT";
@@ -38,15 +40,22 @@ public class UsageManager extends CuratorAsyncManager {
   private final Transcoder<SingularitySlaveUsage> slaveUsageTranscoder;
   private final Transcoder<SingularityTaskUsage> taskUsageTranscoder;
   private final Transcoder<SingularityTaskCurrentUsage> taskCurrentUsageTranscoder;
+  private final Transcoder<SingularityClusterUtilization> clusterUtilizationTranscoder;
 
   @Inject
-  public UsageManager(CuratorFramework curator, SingularityConfiguration configuration, MetricRegistry metricRegistry, Transcoder<SingularitySlaveUsage> slaveUsageTranscoder,
-      Transcoder<SingularityTaskUsage> taskUsageTranscoder, Transcoder<SingularityTaskCurrentUsage> taskCurrentUsageTranscoder) {
+  public UsageManager(CuratorFramework curator,
+                      SingularityConfiguration configuration,
+                      MetricRegistry metricRegistry,
+                      Transcoder<SingularitySlaveUsage> slaveUsageTranscoder,
+                      Transcoder<SingularityTaskUsage> taskUsageTranscoder,
+                      Transcoder<SingularityTaskCurrentUsage> taskCurrentUsageTranscoder,
+                      Transcoder<SingularityClusterUtilization> clusterUtilizationTranscoder) {
     super(curator, configuration, metricRegistry);
 
     this.slaveUsageTranscoder = slaveUsageTranscoder;
     this.taskUsageTranscoder = taskUsageTranscoder;
     this.taskCurrentUsageTranscoder = taskCurrentUsageTranscoder;
+    this.clusterUtilizationTranscoder = clusterUtilizationTranscoder;
   }
 
   public List<String> getSlavesWithUsage() {
@@ -95,6 +104,10 @@ public class UsageManager extends CuratorAsyncManager {
     return ZKPaths.makePath(getSlaveUsagePath(slaveId), CURRENT_USAGE_NODE_KEY);
   }
 
+  private String getSpecificClusterUtilizationPath(long timestamp) {
+    return ZKPaths.makePath(USAGE_SUMMARY_PATH, Long.toString(timestamp));
+  }
+
   private String getCurrentTaskUsagePath(String taskId) {
     return ZKPaths.makePath(getTaskUsagePath(taskId), CURRENT_USAGE_NODE_KEY);
   }
@@ -105,6 +118,10 @@ public class UsageManager extends CuratorAsyncManager {
 
   public SingularityDeleteResult deleteTaskUsage(String taskId) {
     return delete(getTaskUsagePath(taskId));
+  }
+
+  public SingularityDeleteResult deleteSpecificClusterUtilization(long timestamp) {
+    return delete(getSpecificClusterUtilizationPath(timestamp));
   }
 
   public SingularityDeleteResult deleteSpecificSlaveUsage(String slaveId, long timestamp) {
@@ -123,6 +140,10 @@ public class UsageManager extends CuratorAsyncManager {
     return save(getSpecificTaskUsagePath(taskId, usage.getTimestamp()), usage, taskUsageTranscoder);
   }
 
+  public SingularityCreateResult saveSpecificClusterUtilization(SingularityClusterUtilization utilization) {
+    return save(getSpecificClusterUtilizationPath(utilization.getTimestamp()) , utilization, clusterUtilizationTranscoder);
+  }
+
   public SingularityCreateResult saveSpecificSlaveUsageAndSetCurrent(String slaveId, SingularitySlaveUsage usage) {
     set(getCurrentSlaveUsagePath(slaveId), usage, slaveUsageTranscoder);
     return save(getSpecificSlaveUsagePath(slaveId, usage.getTimestamp()), usage, slaveUsageTranscoder);
@@ -139,7 +160,7 @@ public class UsageManager extends CuratorAsyncManager {
 
   public List<SingularitySlaveUsage> getSlaveUsage(String slaveId) {
     List<SingularitySlaveUsage> children = getAsyncChildren(getSlaveUsageHistoryPath(slaveId), slaveUsageTranscoder);
-    Collections.sort(children, SLAVE_USAGE_COMPARATOR_TIMESTAMP_ASC);
+    children.sort(SLAVE_USAGE_COMPARATOR_TIMESTAMP_ASC);
     return children;
   }
 
@@ -154,7 +175,23 @@ public class UsageManager extends CuratorAsyncManager {
 
   public List<SingularityTaskUsage> getTaskUsage(String taskId) {
     List<SingularityTaskUsage> children = getAsyncChildren(getTaskUsageHistoryPath(taskId), taskUsageTranscoder);
-    Collections.sort(children, TASK_USAGE_COMPARATOR_TIMESTAMP_ASC);
+    children.sort(TASK_USAGE_COMPARATOR_TIMESTAMP_ASC);
+    return children;
+  }
+
+  private static final Comparator<SingularityClusterUtilization> CLUSTER_UTILIZATION_COMPARATOR_TIMESTAMP_ASC = new Comparator<SingularityClusterUtilization>() {
+
+    @Override
+    public int compare(SingularityClusterUtilization o1, SingularityClusterUtilization o2) {
+      return Long.compare(o1.getTimestamp(), o2.getTimestamp());
+    }
+
+  };
+
+
+  public List<SingularityClusterUtilization> getClusterUtilization() {
+    List<SingularityClusterUtilization> children = getAsyncChildren(USAGE_SUMMARY_PATH, clusterUtilizationTranscoder);
+    children.sort(CLUSTER_UTILIZATION_COMPARATOR_TIMESTAMP_ASC);
     return children;
   }
 

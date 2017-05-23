@@ -24,6 +24,7 @@ import com.google.inject.Provider;
 import com.hubspot.mesos.MesosUtils;
 import com.hubspot.mesos.Resources;
 import com.hubspot.singularity.RequestType;
+import com.hubspot.singularity.SingularityClusterUtilization;
 import com.hubspot.singularity.SingularityDeployStatistics;
 import com.hubspot.singularity.SingularityPendingTaskId;
 import com.hubspot.singularity.SingularitySlaveUsage.ResourceUsageType;
@@ -134,7 +135,7 @@ public class SingularityMesosOfferScheduler {
         SingularityTaskRequestHolder taskRequestHolder = iterator.next();
 
         Map<SingularityOfferHolder, Double> scorePerOffer = new HashMap<>();
-        double minScore = minScore(taskRequestHolder.getTaskRequest(), offerMatchAttemptsPerTask, System.currentTimeMillis());
+        double minScore = minScore(taskRequestHolder.getTaskRequest(), offerMatchAttemptsPerTask, getLatestClusterUtilization(), System.currentTimeMillis());
 
         LOG.trace("Minimum score {} for task {}", minScore, taskRequestHolder.getTaskRequest().getPendingTask().getPendingTaskId().getId());
 
@@ -189,6 +190,11 @@ public class SingularityMesosOfferScheduler {
     LOG.info("{} tasks scheduled, {} tasks remaining after examining {} offers", tasksScheduled, numDueTasks - tasksScheduled, offers.size());
 
     return offerHolders;
+  }
+
+  private Optional<SingularityClusterUtilization> getLatestClusterUtilization() {
+    List<SingularityClusterUtilization> clusterUtilizations = usageManager.getClusterUtilization();
+    return clusterUtilizations.isEmpty() ? Optional.absent() : Optional.of(clusterUtilizations.get(clusterUtilizations.size() - 1));
   }
 
   private double getNormalizedWeight(ResourceUsageType type) {
@@ -357,8 +363,17 @@ public class SingularityMesosOfferScheduler {
   }
 
   @VisibleForTesting
-  double minScore(SingularityTaskRequest taskRequest, Map<String, Integer> offerMatchAttemptsPerTask, long now) {
-    double minScore = configuration.getMinOfferScore();
+  double minScore(SingularityTaskRequest taskRequest, Map<String, Integer> offerMatchAttemptsPerTask, Optional<SingularityClusterUtilization> maybeUtilization, long now) {
+    if (!maybeUtilization.isPresent()) {
+      return 0.00;
+    }
+
+    SingularityClusterUtilization utilization = maybeUtilization.get();
+    double memScore = (1 - (utilization.getTotalMemBytesUsed() / (double) utilization.getTotalMemBytesAvailable())) * configuration.getFreeMemWeightForOffer();
+    double cpuScore = (1 - (utilization.getTotalCpuUsed() / utilization.getTotalCpuAvailable())) * configuration.getFreeCpuWeightForOffer();
+
+    double tolerance = 0.30;
+    double minScore = memScore + cpuScore - tolerance;
     minScore -= offerMatchAttemptsPerTask.getOrDefault(taskRequest.getPendingTask().getPendingTaskId().getId(), 0) / getMaxOfferAttemptsPerTask();
     minScore -= millisPastDue(taskRequest, now) / (double) configuration.getMaxMillisPastDuePerTask();
 
