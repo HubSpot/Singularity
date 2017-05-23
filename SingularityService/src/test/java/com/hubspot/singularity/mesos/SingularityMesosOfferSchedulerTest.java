@@ -289,7 +289,7 @@ public class SingularityMesosOfferSchedulerTest extends SingularityCuratorTestBa
   }
 
   @Test
-  public void itGetsTheCorrectMinScore()  {
+  public void itGetsTheCorrectMinScore() {
     long now = System.currentTimeMillis();
     String taskId = "taskId";
     setNextRunAt(now);

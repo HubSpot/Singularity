@@ -11,6 +11,7 @@ import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.utils.ZKPaths;
 
 import com.codahale.metrics.MetricRegistry;
+import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.hubspot.singularity.SingularityClusterUtilization;
@@ -104,10 +105,6 @@ public class UsageManager extends CuratorAsyncManager {
     return ZKPaths.makePath(getSlaveUsagePath(slaveId), CURRENT_USAGE_NODE_KEY);
   }
 
-  private String getSpecificClusterUtilizationPath(long timestamp) {
-    return ZKPaths.makePath(USAGE_SUMMARY_PATH, Long.toString(timestamp));
-  }
-
   private String getCurrentTaskUsagePath(String taskId) {
     return ZKPaths.makePath(getTaskUsagePath(taskId), CURRENT_USAGE_NODE_KEY);
   }
@@ -118,10 +115,6 @@ public class UsageManager extends CuratorAsyncManager {
 
   public SingularityDeleteResult deleteTaskUsage(String taskId) {
     return delete(getTaskUsagePath(taskId));
-  }
-
-  public SingularityDeleteResult deleteSpecificClusterUtilization(long timestamp) {
-    return delete(getSpecificClusterUtilizationPath(timestamp));
   }
 
   public SingularityDeleteResult deleteSpecificSlaveUsage(String slaveId, long timestamp) {
@@ -140,8 +133,8 @@ public class UsageManager extends CuratorAsyncManager {
     return save(getSpecificTaskUsagePath(taskId, usage.getTimestamp()), usage, taskUsageTranscoder);
   }
 
-  public SingularityCreateResult saveSpecificClusterUtilization(SingularityClusterUtilization utilization) {
-    return save(getSpecificClusterUtilizationPath(utilization.getTimestamp()) , utilization, clusterUtilizationTranscoder);
+  public SingularityCreateResult saveClusterUtilization(SingularityClusterUtilization utilization) {
+    return save(USAGE_SUMMARY_PATH, utilization, clusterUtilizationTranscoder);
   }
 
   public SingularityCreateResult saveSpecificSlaveUsageAndSetCurrent(String slaveId, SingularitySlaveUsage usage) {
@@ -179,20 +172,8 @@ public class UsageManager extends CuratorAsyncManager {
     return children;
   }
 
-  private static final Comparator<SingularityClusterUtilization> CLUSTER_UTILIZATION_COMPARATOR_TIMESTAMP_ASC = new Comparator<SingularityClusterUtilization>() {
-
-    @Override
-    public int compare(SingularityClusterUtilization o1, SingularityClusterUtilization o2) {
-      return Long.compare(o1.getTimestamp(), o2.getTimestamp());
-    }
-
-  };
-
-
-  public List<SingularityClusterUtilization> getClusterUtilization() {
-    List<SingularityClusterUtilization> children = getAsyncChildren(USAGE_SUMMARY_PATH, clusterUtilizationTranscoder);
-    children.sort(CLUSTER_UTILIZATION_COMPARATOR_TIMESTAMP_ASC);
-    return children;
+  public Optional<SingularityClusterUtilization> getClusterUtilization() {
+    return getData(USAGE_SUMMARY_PATH, clusterUtilizationTranscoder);
   }
 
   public List<SingularitySlaveUsageWithId> getCurrentSlaveUsages(List<String> slaveIds) {

@@ -135,7 +135,7 @@ public class SingularityMesosOfferScheduler {
         SingularityTaskRequestHolder taskRequestHolder = iterator.next();
 
         Map<SingularityOfferHolder, Double> scorePerOffer = new HashMap<>();
-        double minScore = minScore(taskRequestHolder.getTaskRequest(), offerMatchAttemptsPerTask, getLatestClusterUtilization(), System.currentTimeMillis());
+        double minScore = minScore(taskRequestHolder.getTaskRequest(), offerMatchAttemptsPerTask, usageManager.getClusterUtilization(), System.currentTimeMillis());
 
         LOG.trace("Minimum score {} for task {}", minScore, taskRequestHolder.getTaskRequest().getPendingTask().getPendingTaskId().getId());
 
@@ -190,11 +190,6 @@ public class SingularityMesosOfferScheduler {
     LOG.info("{} tasks scheduled, {} tasks remaining after examining {} offers", tasksScheduled, numDueTasks - tasksScheduled, offers.size());
 
     return offerHolders;
-  }
-
-  private Optional<SingularityClusterUtilization> getLatestClusterUtilization() {
-    List<SingularityClusterUtilization> clusterUtilizations = usageManager.getClusterUtilization();
-    return clusterUtilizations.isEmpty() ? Optional.absent() : Optional.of(clusterUtilizations.get(clusterUtilizations.size() - 1));
   }
 
   private double getNormalizedWeight(ResourceUsageType type) {

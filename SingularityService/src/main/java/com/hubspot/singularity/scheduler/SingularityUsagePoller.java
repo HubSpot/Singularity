@@ -159,7 +159,7 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
         exceptionNotifier.notify(message, e);
       }
 
-      saveClusterUtilization(totalMemBytesUsed, totalMemBytesAvailable, totalCpuUsed, totalCpuAvailable, now);
+      usageManager.saveClusterUtilization(new SingularityClusterUtilization(totalMemBytesUsed, totalMemBytesAvailable, totalCpuUsed, totalCpuAvailable, now));
     }
   }
 
@@ -189,13 +189,5 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
   private void updateLongRunningTasksUsage(Map<ResourceUsageType, Number> longRunningTasksUsage, long memBytesUsed, double cpuUsed) {
     longRunningTasksUsage.compute(ResourceUsageType.MEMORY_BYTES_USED, (k, v) -> (v == null) ? memBytesUsed : v.longValue() + memBytesUsed);
     longRunningTasksUsage.compute(ResourceUsageType.CPU_USED, (k, v) -> (v == null) ? cpuUsed : v.doubleValue() + cpuUsed);
-  }
-
-  private void saveClusterUtilization(long totalMemBytesUsed, long totalMemBytesAvailable, double totalCpuUsed, double totalCpuAvailable, long now) {
-    List<SingularityClusterUtilization> utilizations = usageManager.getClusterUtilization();
-    if (utilizations.size() + 1 > configuration.getNumUsageToKeep()) {
-      usageManager.deleteSpecificClusterUtilization(utilizations.get(0).getTimestamp());
-    }
-    usageManager.saveSpecificClusterUtilization(new SingularityClusterUtilization(totalMemBytesUsed, totalMemBytesAvailable, totalCpuUsed, totalCpuAvailable, now));
   }
 }
