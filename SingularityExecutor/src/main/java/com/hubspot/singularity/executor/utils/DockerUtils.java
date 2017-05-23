@@ -13,7 +13,8 @@ import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.hubspot.singularity.executor.config.SingularityExecutorConfiguration;
 import com.spotify.docker.client.DockerClient;
-import com.spotify.docker.client.DockerException;
+import com.spotify.docker.client.DockerClient.RemoveContainerParam;
+import com.spotify.docker.client.exceptions.DockerException;
 import com.spotify.docker.client.messages.Container;
 import com.spotify.docker.client.messages.ContainerInfo;
 
@@ -97,7 +98,7 @@ public class DockerUtils {
   public void removeContainer(final String containerId, final boolean removeRunning) throws DockerException {
     Callable<Void> callable = new Callable<Void>() {
       @Override public Void call() throws Exception {
-        dockerClient.removeContainer(containerId, removeRunning);
+        dockerClient.removeContainer(containerId, RemoveContainerParam.removeVolumes(removeRunning));
         return null;
       }
     };
