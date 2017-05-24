@@ -198,8 +198,6 @@ public class SingularityConfiguration extends Configuration {
 
   private int maxTasksPerOfferPerRequest = 0;
 
-  private double minOfferScore = 0.40;
-
   private int maxOfferAttemptsPerTask = 0;
 
   private long maxMillisPastDuePerTask = TimeUnit.MINUTES.toMillis(5);
@@ -692,10 +690,6 @@ public class SingularityConfiguration extends Configuration {
     return maxTasksPerOfferPerRequest;
   }
 
-  public double getMinOfferScore() {
-    return minOfferScore;
-  }
-
   public int getMaxOfferAttemptsPerTask() {
     return maxOfferAttemptsPerTask;
   }
@@ -1089,11 +1083,6 @@ public class SingularityConfiguration extends Configuration {
 
   public void setMaxTasksPerOfferPerRequest(int maxTasksPerOfferPerRequest) {
     this.maxTasksPerOfferPerRequest = maxTasksPerOfferPerRequest;
-  }
-
-  public SingularityConfiguration setMinOfferScore(double minOfferScore) {
-    this.minOfferScore = minOfferScore;
-    return this;
   }
 
   public SingularityConfiguration setMaxOfferAttemptsPerTask(int maxOfferAttemptsPerTask) {

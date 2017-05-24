@@ -9,9 +9,10 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
 
-import com.google.inject.Inject;
 import com.google.common.base.Optional;
+import com.google.inject.Inject;
 import com.hubspot.singularity.RequestType;
+import com.hubspot.singularity.SingularityClusterUtilization;
 import com.hubspot.singularity.SingularityCuratorTestBase;
 import com.hubspot.singularity.SingularityDeploy;
 import com.hubspot.singularity.SingularityDeployStatistics;
@@ -44,6 +45,7 @@ public class SingularityMesosOfferSchedulerTest extends SingularityCuratorTestBa
   private SingularityRequest request = Mockito.mock(SingularityRequest.class);
   private SingularityPendingTask task = Mockito.mock(SingularityPendingTask.class);
   private SingularityPendingTaskId taskId = Mockito.mock(SingularityPendingTaskId.class);
+  private SingularityClusterUtilization utilization = Mockito.mock(SingularityClusterUtilization.class);
   private final Map<String, Integer> offerMatchAttemptsPerTask = new HashMap<>();
 
 
@@ -53,9 +55,8 @@ public class SingularityMesosOfferSchedulerTest extends SingularityCuratorTestBa
 
   @Before
   public void setup() {
-    configuration.setMinOfferScore(0.80);
     configuration.setMaxOfferAttemptsPerTask(20);
-    configuration.setMaxMillisPastDuePerTask(TimeUnit.MINUTES.toMillis(10));
+    configuration.setMaxMillisPastDuePerTask(TimeUnit.MINUTES.toMillis(5));
     configuration.setLongRunningUsedCpuWeightForOffer(0.40);
     configuration.setLongRunningUsedMemWeightForOffer(0.60);
     configuration.setFreeCpuWeightForOffer(0.40);
@@ -294,25 +295,42 @@ public class SingularityMesosOfferSchedulerTest extends SingularityCuratorTestBa
     setNextRunAt(now);
     setTaskId(taskId);
 
-    // no attempts, no delay
+    // no attempts, no delay, no utilization
+    setUtilization(0L, 1L, 0.00, 1.00);
     addOrUpdateOfferMatchAttempt(taskId, 0);
-    assertScoreIs(0.80, scheduler.minScore(taskRequest, offerMatchAttemptsPerTask, now));
+    assertScoreIs(0.70, scheduler.minScore(taskRequest, offerMatchAttemptsPerTask, Optional.of(utilization), now));
 
-    // no attempts, delay
-    assertScoreIs(0.30, scheduler.minScore(taskRequest, offerMatchAttemptsPerTask, now + TimeUnit.MILLISECONDS.convert(5, TimeUnit.MINUTES)));
+    // no attempts, delay, no utilization
+    assertScoreIs(0.60, scheduler.minScore(taskRequest, offerMatchAttemptsPerTask, Optional.of(utilization), now + TimeUnit.SECONDS.toMillis(30)));
 
-    // attempts, no delay
+    // attempts, no delay, no utilization
     addOrUpdateOfferMatchAttempt(taskId, 10);
-    assertScoreIs(0.30, scheduler.minScore(taskRequest, offerMatchAttemptsPerTask, now));
+    assertScoreIs(0.20, scheduler.minScore(taskRequest, offerMatchAttemptsPerTask, Optional.of(utilization), now));
 
-    // attempts, delay
-    assertScoreIs(0, scheduler.minScore(taskRequest, offerMatchAttemptsPerTask, now + TimeUnit.MILLISECONDS.convert(5, TimeUnit.MINUTES)));
+    // attempts, delay, no utilization
+    assertScoreIs(0.15, scheduler.minScore(taskRequest, offerMatchAttemptsPerTask, Optional.of(utilization), now + TimeUnit.SECONDS.toMillis(15)));
 
     addOrUpdateOfferMatchAttempt(taskId, 1);
-    assertScoreIs(0.25, scheduler.minScore(taskRequest, offerMatchAttemptsPerTask, now + TimeUnit.MILLISECONDS.convert(5, TimeUnit.MINUTES)));
+    assertScoreIs(0.60, scheduler.minScore(taskRequest, offerMatchAttemptsPerTask, Optional.of(utilization), now + TimeUnit.SECONDS.toMillis(15)));
 
     addOrUpdateOfferMatchAttempt(taskId, 4);
-    assertScoreIs(0.10, scheduler.minScore(taskRequest, offerMatchAttemptsPerTask, now + TimeUnit.MILLISECONDS.convert(5, TimeUnit.MINUTES)));
+    assertScoreIs(0.45, scheduler.minScore(taskRequest, offerMatchAttemptsPerTask, Optional.of(utilization), now + TimeUnit.SECONDS.toMillis(15)));
+
+    // no attempts, no delay, utilization
+    setUtilization(2L, 5L, 2.00, 10.00);
+    addOrUpdateOfferMatchAttempt(taskId, 0);
+    assertScoreIs(0.38, scheduler.minScore(taskRequest, offerMatchAttemptsPerTask, Optional.of(utilization), now));
+
+    // no attempts, delay, utilization
+    assertScoreIs(0.33, scheduler.minScore(taskRequest, offerMatchAttemptsPerTask, Optional.of(utilization), now + TimeUnit.SECONDS.toMillis(15)));
+
+    // attempts, no delay, utilization
+    addOrUpdateOfferMatchAttempt(taskId, 2);
+    assertScoreIs(0.28, scheduler.minScore(taskRequest, offerMatchAttemptsPerTask, Optional.of(utilization), now));
+
+    // attempts, delay, utilization
+    addOrUpdateOfferMatchAttempt(taskId, 2);
+    assertScoreIs(0.23, scheduler.minScore(taskRequest, offerMatchAttemptsPerTask, Optional.of(utilization), now + TimeUnit.SECONDS.toMillis(15)));
   }
 
   private void assertScoreIs(double expectedScore, double actualScore) {
@@ -352,5 +370,12 @@ public class SingularityMesosOfferSchedulerTest extends SingularityCuratorTestBa
 
   private void addOrUpdateOfferMatchAttempt(String id, int attempts) {
     offerMatchAttemptsPerTask.put(id, attempts);
+  }
+
+  private void setUtilization(long totalMemBytesUsed, long totalMemBytesAvailable, double totalCpuUsed, double totalCpuAvailable) {
+    Mockito.when(utilization.getTotalMemBytesUsed()).thenReturn(totalMemBytesUsed);
+    Mockito.when(utilization.getTotalMemBytesAvailable()).thenReturn(totalMemBytesAvailable);
+    Mockito.when(utilization.getTotalCpuUsed()).thenReturn(totalCpuUsed);
+    Mockito.when(utilization.getTotalCpuAvailable()).thenReturn(totalCpuAvailable);
   }
 }

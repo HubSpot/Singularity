@@ -6,6 +6,7 @@ import javax.ws.rs.HEAD;
 
 import com.google.inject.Binder;
 import com.google.inject.Module;
+import com.hubspot.singularity.SingularityClusterUtilization;
 import com.hubspot.singularity.SingularityDeploy;
 import com.hubspot.singularity.SingularityDeployHistory;
 import com.hubspot.singularity.SingularityDeployKey;
@@ -102,6 +103,7 @@ public class SingularityTranscoderModule implements Module {
     bindTranscoder(binder).asJson(SingularityExpiringMachineState.class);
     bindTranscoder(binder).asJson(SingularitySlaveUsage.class);
     bindTranscoder(binder).asJson(SingularityTaskUsage.class);
+    bindTranscoder(binder).asJson(SingularityClusterUtilization.class);
     bindTranscoder(binder).asJson(SingularityTaskCurrentUsage.class);
 
     bindTranscoder(binder).asCompressedJson(SingularityDeployHistory.class);
