@@ -64,7 +64,7 @@ class PauseModal extends Component {
     if (this.props.isScheduled) {
       formElements = [
         {
-          name: 'killTasks',
+          name: 'allowRunningTasksToFinish',
           type: FormModal.INPUT_TYPES.BOOLEAN,
           label: 'Allow currently executing tasks to finish'
         },
