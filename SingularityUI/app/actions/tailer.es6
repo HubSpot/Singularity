@@ -33,6 +33,13 @@ export const markNotFound = (taskId) => (dispatch, getState) => {
   });
 }
 
+export const clearNotFound = () => (dispatch, getState) => {
+  dispatch({
+    type: TAILER_SET_NOT_FOUND,
+    notFound: {}
+  });
+}
+
 export const jumpToBottom = (id, taskId, path) => (dispatch, getState) => {
   const state = getState();
 
