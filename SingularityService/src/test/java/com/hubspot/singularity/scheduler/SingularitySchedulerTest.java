@@ -65,6 +65,7 @@ import com.hubspot.singularity.SingularityShellCommand;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskCleanup;
 import com.hubspot.singularity.SingularityTaskHealthcheckResult;
+import com.hubspot.singularity.SingularityTaskHistoryUpdate;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTaskRequest;
 import com.hubspot.singularity.SlavePlacement;
@@ -1101,7 +1102,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     startTask(firstDeploy, 3);
 
     requestResource.bounce(requestId,
-        Optional.of(new SingularityBounceRequest(Optional.of(true), Optional.<Boolean>absent(), Optional.of(1L), Optional.<String>absent(), Optional.of("msg"), Optional.<SingularityShellCommand>absent())));
+        Optional.of(new SingularityBounceRequest(Optional.of(true), Optional.absent(), Optional.of(1L), Optional.absent(), Optional.of("msg"), Optional.absent())));
 
     Assert.assertTrue(requestManager.cleanupRequestExists(requestId));
 
@@ -1123,6 +1124,71 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
 
     Assert.assertEquals(1, taskManager.getKilledTaskIdRecords().size());
     Assert.assertEquals(4, taskManager.getActiveTaskIds().size());
+  }
+
+  @Test
+  public void testBounceOnPendingInstancesReleasesLock() {
+    initRequest();
+    initFirstDeploy();
+
+    SingularityTask task = startTask(firstDeploy, 1);
+    statusUpdate(task, TaskState.TASK_FAILED);
+    killKilledTasks();
+
+    Assert.assertEquals("Bounce starts when tasks have not yet been launched", 0, taskManager.getActiveTaskIds().size());
+
+    requestResource.bounce(requestId, Optional.of(new SingularityBounceRequest(Optional.absent(), Optional.of(true), Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent())));
+    cleaner.drainCleanupQueue();
+
+    // It acquires a lock on the bounce
+    Assert.assertTrue("Lock on bounce should be acquired during bounce", requestManager.getExpiringBounce(requestId).isPresent());
+
+    scheduler.drainPendingQueue(stateCacheProvider.get());
+    resourceOffers();
+
+    for (SingularityTaskId singularityTaskId : taskManager.getActiveTaskIds()) {
+      taskManager.saveTaskHistoryUpdate(new SingularityTaskHistoryUpdate(singularityTaskId, System.currentTimeMillis(), ExtendedTaskState.TASK_RUNNING, Optional.absent(), Optional.absent(), Collections.emptySet()));
+    }
+
+    cleaner.drainCleanupQueue();
+    killKilledTasks();
+
+    // It finishes with one task running and the bounce released
+    Assert.assertEquals("Should end bounce with target number of tasks", 1, taskManager.getActiveTaskIds().size());
+    Assert.assertFalse("Lock on bounce should be released after bounce", requestManager.getExpiringBounce(requestId).isPresent());
+  }
+
+
+
+  @Test
+  public void testBounceOnRunningInstancesReleasesLock() {
+    initRequest();
+    initFirstDeploy();
+
+    startTask(firstDeploy, 1);
+    Assert.assertEquals(1, taskManager.getActiveTaskIds().size());
+
+    requestResource.bounce(requestId, Optional.of(new SingularityBounceRequest(Optional.absent(), Optional.of(true), Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent())));
+    cleaner.drainCleanupQueue();
+
+    // It acquires a lock on the bounce
+    Assert.assertTrue("Lock on bounce should be acquired during bounce", requestManager.getExpiringBounce(requestId).isPresent());
+
+    scheduler.drainPendingQueue(stateCacheProvider.get());
+    resourceOffers();
+
+    for (SingularityTaskId singularityTaskId : taskManager.getActiveTaskIds()) {
+      taskManager.saveTaskHistoryUpdate(new SingularityTaskHistoryUpdate(singularityTaskId, System.currentTimeMillis(), ExtendedTaskState.TASK_RUNNING, Optional.absent(), Optional.absent(), Collections.emptySet()));
+    }
+
+    Assert.assertTrue("Need to start at least 1 instance to begin killing old instances", taskManager.getActiveTaskIds().size() >= 2);
+    cleaner.drainCleanupQueue();
+    killKilledTasks();
+
+
+    // It finishes with one task running and the bounce released
+    Assert.assertEquals("Should end bounce with target number of tasks", 1, taskManager.getActiveTaskIds().size());
+    Assert.assertFalse("Lock on bounce should be released after bounce", requestManager.getExpiringBounce(requestId).isPresent());
   }
 
   @Test
