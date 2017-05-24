@@ -11,7 +11,7 @@ import { actions as tailerActions } from 'singularityui-tailer';
 import { Glyphicon } from 'react-bootstrap';
 import Utils from '../utils';
 
-import { loadColor, removeTailerGroup, pickTailerGroup, jumpToBottom, jumpToTop, markNotFound } from '../actions/tailer';
+import { loadColor, removeTailerGroup, pickTailerGroup, jumpToBottom, jumpToTop, markNotFound, clearNotFound } from '../actions/tailer';
 
 const prefixedLineLinkRenderer = (taskId, path) => ({start}) => {
   return (<a
@@ -28,6 +28,7 @@ class LogTailerContainer extends React.PureComponent {
 
   componentWillMount() {
     this.props.loadColor();
+    this.props.clearNotFound();
     document.addEventListener(tailerActions.SINGULARITY_TAILER_AJAX_ERROR_EVENT, (event) => {
       if (event.detail.response.status == 404 && event.detail.taskId) {
         this.props.markNotFound(event.detail.taskId);
@@ -100,5 +101,6 @@ export default connect((state) => ({
   pickTailerGroup,
   jumpToBottom,
   jumpToTop,
-  markNotFound
+  markNotFound,
+  clearNotFound
 })(LogTailerContainer);
