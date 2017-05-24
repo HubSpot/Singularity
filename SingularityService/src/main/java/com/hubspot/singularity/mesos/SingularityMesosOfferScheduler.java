@@ -367,12 +367,16 @@ public class SingularityMesosOfferScheduler {
     double memScore = (1 - (utilization.getTotalMemBytesUsed() / (double) utilization.getTotalMemBytesAvailable())) * configuration.getFreeMemWeightForOffer();
     double cpuScore = (1 - (utilization.getTotalCpuUsed() / utilization.getTotalCpuAvailable())) * configuration.getFreeCpuWeightForOffer();
 
-    double tolerance = 0.30;
-    double minScore = memScore + cpuScore - tolerance;
+    double minScore = memScore + cpuScore - getScoreTolerance();
     minScore -= offerMatchAttemptsPerTask.getOrDefault(taskRequest.getPendingTask().getPendingTaskId().getId(), 0) / getMaxOfferAttemptsPerTask();
     minScore -= millisPastDue(taskRequest, now) / (double) configuration.getMaxMillisPastDuePerTask();
 
     return Math.max(minScore, 0);
+  }
+
+  private double getScoreTolerance() {
+    double maxTolerance = 0.15;
+    return Math.max(-0.09 * Math.log(0.00026 * usageManager.getNumSlavesWithUsage()), maxTolerance);
   }
 
   private double getMaxOfferAttemptsPerTask() {
