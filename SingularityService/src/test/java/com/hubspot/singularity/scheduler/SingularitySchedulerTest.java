@@ -1155,6 +1155,13 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
 
     // It finishes with one task running and the bounce released
     Assert.assertEquals("Should end bounce with target number of tasks", 1, taskManager.getActiveTaskIds().size());
+    for (SingularityTaskId singularityTaskId : taskManager.getActiveTaskIds()) {
+      String statusMessage = taskManager.getTaskHistoryUpdates(singularityTaskId)
+          .get(0)
+          .getStatusMessage()
+          .get();
+      Assert.assertTrue("Task was started by bounce", statusMessage.contains("BOUNCE"));
+    }
     Assert.assertFalse("Lock on bounce should be released after bounce", requestManager.getExpiringBounce(requestId).isPresent());
   }
 
@@ -1188,6 +1195,13 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
 
     // It finishes with one task running and the bounce released
     Assert.assertEquals("Should end bounce with target number of tasks", 1, taskManager.getActiveTaskIds().size());
+    for (SingularityTaskId singularityTaskId : taskManager.getActiveTaskIds()) {
+      String statusMessage = taskManager.getTaskHistoryUpdates(singularityTaskId)
+          .get(0)
+          .getStatusMessage()
+          .get();
+      Assert.assertTrue("Task was started by bounce", statusMessage.contains("BOUNCE"));
+    }
     Assert.assertFalse("Lock on bounce should be released after bounce", requestManager.getExpiringBounce(requestId).isPresent());
   }
 
