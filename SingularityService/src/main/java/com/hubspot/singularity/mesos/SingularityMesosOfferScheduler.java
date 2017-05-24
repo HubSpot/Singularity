@@ -375,8 +375,8 @@ public class SingularityMesosOfferScheduler {
   }
 
   private double getScoreTolerance() {
-    double maxTolerance = 0.15;
-    return Math.max(-0.09 * Math.log(0.00026 * usageManager.getNumSlavesWithUsage()), maxTolerance);
+    double minTolerance = 0.10;
+    return Math.max(-0.09 * Math.log10(0.00026 * Math.max(usageManager.getNumSlavesWithUsage(), 1)), minTolerance);
   }
 
   private double getMaxOfferAttemptsPerTask() {
