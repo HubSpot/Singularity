@@ -63,6 +63,9 @@ public class UsageManager extends CuratorAsyncManager {
     return getChildren(SLAVE_PATH);
   }
 
+  public int getNumSlavesWithUsage() {
+    return getNumChildren(SLAVE_PATH);
+  }
   public List<String> getTasksWithUsage() {
     return getChildren(TASK_PATH);
   }
