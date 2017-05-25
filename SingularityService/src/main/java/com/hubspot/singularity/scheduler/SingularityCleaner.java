@@ -448,6 +448,16 @@ public class SingularityCleaner {
       taskManager.createTaskCleanup(new SingularityTaskCleanup(requestCleanup.getUser(), requestCleanup.getCleanupType().getTaskCleanupType().get(), start, matchingTaskId, requestCleanup.getMessage(), requestCleanup.getActionId(), runBeforeKillId));
     }
 
+    if (matchingTaskIds.isEmpty() && requestCleanup.getDeployId().isPresent()) {
+      Optional<SingularityExpiringBounce> expiringBounce = requestManager.getExpiringBounce(requestCleanup.getRequestId());
+      if (expiringBounce.isPresent() && expiringBounce.get().getDeployId().equalsIgnoreCase(requestCleanup.getDeployId().get())) {
+        LOG.info("No running tasks for request {}. Marking bounce {} complete and starting new tasks", expiringBounce.get().getRequestId(), expiringBounce.get());
+
+        requestManager.deleteExpiringObject(SingularityExpiringBounce.class, requestCleanup.getRequestId());
+      }
+      requestManager.markBounceComplete(requestCleanup.getRequestId());
+    }
+
     requestManager.addToPendingQueue(new SingularityPendingRequest(requestCleanup.getRequestId(), requestCleanup.getDeployId().get(), requestCleanup.getTimestamp(),
         requestCleanup.getUser(), PendingType.BOUNCE, Optional.absent(), Optional.absent(), requestCleanup.getSkipHealthchecks(), requestCleanup.getMessage(), requestCleanup.getActionId()));
 

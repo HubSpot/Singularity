@@ -1138,10 +1138,11 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     Assert.assertEquals("Bounce starts when tasks have not yet been launched", 0, taskManager.getActiveTaskIds().size());
 
     requestResource.bounce(requestId, Optional.of(new SingularityBounceRequest(Optional.absent(), Optional.of(true), Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent())));
-    cleaner.drainCleanupQueue();
 
     // It acquires a lock on the bounce
     Assert.assertTrue("Lock on bounce should be acquired during bounce", requestManager.getExpiringBounce(requestId).isPresent());
+
+    cleaner.drainCleanupQueue();
 
     scheduler.drainPendingQueue(stateCacheProvider.get());
     resourceOffers();

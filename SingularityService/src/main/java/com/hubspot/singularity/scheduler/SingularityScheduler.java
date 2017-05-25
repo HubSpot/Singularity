@@ -72,7 +72,6 @@ import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.data.SlaveManager;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.data.TaskRequestManager;
-import com.hubspot.singularity.expiring.SingularityExpiringBounce;
 import com.hubspot.singularity.helpers.RFC5545Schedule;
 import com.hubspot.singularity.smtp.SingularityMailer;
 
@@ -412,12 +411,6 @@ public class SingularityScheduler {
 
     if (numMissingInstances > 0) {
       schedule(numMissingInstances, matchingTaskIds, request, state, deployStatistics, pendingRequest, maybePendingDeploy);
-
-      List<SingularityTaskId> remainingActiveTasks = new ArrayList<>(matchingTaskIds);
-      if (requestManager.getExpiringBounce(request.getId()).isPresent() && remainingActiveTasks.size() == 0) {
-        requestManager.deleteExpiringObject(SingularityExpiringBounce.class, request.getId());
-        requestManager.markBounceComplete(request.getId());
-      }
     } else if (numMissingInstances < 0) {
       final long now = System.currentTimeMillis();
 
