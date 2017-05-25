@@ -12,6 +12,8 @@ import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.hubspot.mesos.client.MesosClient;
 import com.hubspot.mesos.json.MesosTaskMonitorObject;
+import com.hubspot.singularity.InvalidSingularityTaskIdException;
+import com.hubspot.singularity.SingularityClusterUtilization;
 import com.hubspot.singularity.SingularityDeployStatistics;
 import com.hubspot.singularity.SingularityRequestWithState;
 import com.hubspot.singularity.SingularitySlave;
@@ -65,6 +67,10 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
   @Override
   public void runActionOnPoll() {
     final long now = System.currentTimeMillis();
+    long totalMemBytesUsed = 0;
+    long totalMemBytesAvailable = 0;
+    double totalCpuUsed = 0.00;
+    double totalCpuAvailable = 0.00;
 
     for (SingularitySlave slave : usageHelper.getSlavesToTrackUsageFor()) {
       Map<ResourceUsageType, Number> longRunningTasksUsage = new HashMap<>();
@@ -82,7 +88,13 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
 
         for (MesosTaskMonitorObject taskUsage : allTaskUsage) {
           String taskId = taskUsage.getSource();
-          SingularityTaskId task = SingularityTaskId.valueOf(taskId);
+          SingularityTaskId task;
+          try {
+            task = SingularityTaskId.valueOf(taskId);
+          } catch (InvalidSingularityTaskIdException e) {
+            LOG.error("Couldn't get SingularityTaskId for {}", taskUsage);
+            continue;
+          }
 
           SingularityTaskUsage usage = getUsage(taskUsage);
 
@@ -131,6 +143,14 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
           usageManager.deleteSpecificSlaveUsage(slave.getId(), slaveTimestamps.get(0));
         }
 
+        if (slaveUsage.getMemoryBytesTotal().isPresent() && slaveUsage.getCpusTotal().isPresent()) {
+          totalMemBytesUsed += slaveUsage.getMemoryBytesUsed();
+          totalCpuUsed += slaveUsage.getCpusUsed();
+
+          totalMemBytesAvailable += slaveUsage.getMemoryBytesTotal().get();
+          totalCpuAvailable += slaveUsage.getCpusTotal().get();
+        }
+
         LOG.debug("Saving slave {} usage {}", slave.getHost(), slaveUsage);
         usageManager.saveSpecificSlaveUsageAndSetCurrent(slave.getId(), slaveUsage);
       } catch (Exception e) {
@@ -138,6 +158,8 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
         LOG.error(message, e);
         exceptionNotifier.notify(message, e);
       }
+
+      usageManager.saveClusterUtilization(new SingularityClusterUtilization(totalMemBytesUsed, totalMemBytesAvailable, totalCpuUsed, totalCpuAvailable, now));
     }
   }
 
