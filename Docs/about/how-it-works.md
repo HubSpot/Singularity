@@ -44,6 +44,7 @@ Rollback of failed deploys, health checking and load balancing are also part of 
 When a service or worker instance fails in a new deploy, the Singularity scheduler will rollback all instances to the version running before the deploy, keeping the deploys always consistent. After the scheduler makes sure that a Mesos task (corresponding to a service instance) has entered the TASK_RUNNING state it will use the provided health check URL and the specified health check timeout settings to perform health checks. If health checks go well, the next step is to perform load balancing of service instances. Load balancing is attempted only if the corresponding deployable item has been defined to be *loadBalanced*. To perform load balancing between service instances, Singularity supports a rich integration with a specific Load Balancer API. Singularity will post requests to the Load Balancer API to add the newly deployed service instances and to remove those that were previously running. Check [Integration with Load Balancers](../development/load-balancer-integration.md) to learn more. Singularity also provides generic webhooks which allow third party integrations, which can be registered to follow request, deploy, or task updates.
 
 <a name="placement"/>
+
 #### Slave Placement
 
 When matching a Mesos resource offer to a deploy, Singularity can use one of several strategies to determine if the host in the offer is appropriate for the task in question, or `SlavePlacement` in Singularity terms. Available placement strategies are:
@@ -75,6 +76,7 @@ The [*Singularity UI*](ui.md) is a single page static web application served fro
 It is a fully-featured application which provides historical as well as active task information. It allows users to view task logs and interact directly with tasks and deploy requests.
 
 <a name="optional-components"/>
+
 ### Optional Slave Components
 
 #### Singularity Executor

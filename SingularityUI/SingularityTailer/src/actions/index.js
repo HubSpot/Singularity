@@ -26,6 +26,18 @@ export const unloadFile = (id) => ({
   id
 });
 
+export const STOP_TAILING = `${frameworkName}_STOP_TAILING`;
+export const stopTailing = (id) => ({
+  type: STOP_TAILING,
+  id
+});
+
+export const START_TAILING = `${frameworkName}_START_TAILING`;
+export const startTailing = (id) => ({
+  type: START_TAILING,
+  id
+});
+
 export const UNLOAD_FILE_CHUNK = `${frameworkName}_UNLOAD_FILE_CHUNK`;
 export const unloadFileChunk = (id, index) => ({
   type: UNLOAD_FILE_CHUNK,
@@ -87,14 +99,14 @@ const fetchChunkError = (apiName, id, start, end, error) => ({
 });
 
 /* GENERAL API HELPERS */
-const checkStatus = (response) => {
+const checkStatus = (response, taskId) => {
   if (response.status >= 200 && response.status < 300) {
     return response;
   }
   const error = new Error(response.statusText);
   error.response = response;
   if (document && document.dispatchEvent) {
-    document.dispatchEvent(new CustomEvent(SINGULARITY_TAILER_AJAX_ERROR_EVENT, {'detail': response}));
+    document.dispatchEvent(new CustomEvent(SINGULARITY_TAILER_AJAX_ERROR_EVENT, {'detail': {'response': response, 'taskId': taskId}}));
   }
   throw error;
 };
@@ -135,7 +147,7 @@ export const sandboxFetchChunk = (id, taskId, path, start, end, config) => {
     const apiPath = `${apiRoot}/sandbox/${taskId}/read${query}`;
 
     return fetch(apiPath, {credentials: 'include'})
-      .then(checkStatus)
+      .then((r) => {return checkStatus(r, taskId)})
       .then(parseJSON)
       .then(({data, offset}) => {
         // the API lies, so let's just figure out the bytelength ourselves
@@ -174,7 +186,7 @@ export const sandboxFetchLength = (id, taskId, path, config) => {
     const apiPath = `${apiRoot}/sandbox/${taskId}/read${query}`;
 
     return fetch(apiPath, {credentials: 'include'})
-      .then(checkStatus)
+      .then((r) => {return checkStatus(r, taskId)})
       .then(parseJSON)
       .then(({offset}) => {
         return dispatch(setFileSize(id, offset));

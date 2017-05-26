@@ -5,6 +5,8 @@ import {
   REMOVE_TAILER_GROUP,
   PICK_TAILER_GROUP,
   SET_COLOR,
+  TAILER_SET_NOT_FOUND
+
 } from '../actions/tailer';
 
 import Utils from '../utils';
@@ -19,7 +21,8 @@ const initialState = {
   viewMode: 'split',
   ready: false,
   search: null,
-  color: 'default'
+  color: 'default',
+  notFound: {}
 }
 
 const splice = (array, index, length=1) => [...array.slice(0, index), ...array.slice(index+length)];
@@ -77,6 +80,11 @@ export default (state = initialState, action) => {
       return {
         ...state,
         color: action.color
+      };
+    case TAILER_SET_NOT_FOUND:
+      return {
+        ...state,
+        notFound: action.notFound
       };
     default:
       return state;

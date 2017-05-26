@@ -9,6 +9,8 @@ import {
   sandboxFetchChunk,
   sandboxFetchLength,
   sandboxFetchTail,
+  startTailing,
+  stopTailing,
   SANDBOX_MAX_BYTES
 } from '../actions';
 import connectToTailer from './connectToTailer';
@@ -130,6 +132,8 @@ class SandboxTailer extends Component {
         tailLog={this.tailLog}
         goToOffset={this.props.goToOffset}
         lineLinkRenderer={this.props.lineLinkRenderer}
+        startTailing={this.props.startTailing}
+        stopTailing={this.props.stopTailing}
       />
     );
   }
@@ -146,7 +150,9 @@ SandboxTailer.propTypes = {
   unloadFile: PropTypes.func.isRequired,
   unloadFileChunk: PropTypes.func.isRequired,
   goToOffset: PropTypes.number,
-  lineLinkRenderer: PropTypes.func
+  lineLinkRenderer: PropTypes.func,
+  startTailing: PropTypes.func.isRequired,
+  stopTailing: PropTypes.func.isRequired
 };
 
 const mapStateToProps = (state, ownProps) => ({
@@ -191,6 +197,12 @@ const mapDispatchToProps = (dispatch, ownProps) => ({
       ownProps.tailerId,
       index
     )
+  ),
+  startTailing: () => dispatch(
+    startTailing(ownProps.tailerId)
+  ),
+  stopTailing: () => dispatch(
+    stopTailing(ownProps.tailerId)
   )
 });
 
@@ -205,7 +217,9 @@ const mergeProps = (stateProps, dispatchProps, ownProps) => ({
   ),
   fetchTail: () => dispatchProps.fetchTail(stateProps.config),
   unloadFile: () => dispatchProps.unloadFile(),
-  unloadFileChunk: (start) => dispatchProps.unloadFileChunk(start)
+  unloadFileChunk: (start) => dispatchProps.unloadFileChunk(start),
+  startTailing: () => dispatchProps.startTailing(),
+  stopTailing: () => dispatchProps.stopTailing()
 });
 
 export default connectToTailer(connect(

@@ -30,7 +30,7 @@ import com.hubspot.singularity.executor.task.SingularityExecutorArtifactFetcher.
 import com.hubspot.singularity.executor.utils.DockerUtils;
 import com.hubspot.singularity.executor.utils.ExecutorUtils;
 import com.hubspot.singularity.runner.base.shared.ProcessFailedException;
-import com.spotify.docker.client.DockerException;
+import com.spotify.docker.client.exceptions.DockerException;
 
 public class SingularityExecutorTaskProcessBuilder implements Callable<ProcessBuilder> {
 
