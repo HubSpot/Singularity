@@ -216,46 +216,6 @@ public class ValidatorTest extends SingularityTestBaseNoDb {
     validator.checkDeploy(request, deploy, Collections.emptyList(), Collections.emptyList());
   }
 
-  @Test
-  public void whenRunNowSetAndScheduledTaskAndAlreadyRunningItWillNotRunImmediately() {
-    String requestId = "request";
-    String deployID = "deploy";
-    SingularityRequest request = new SingularityRequestBuilder(requestId, RequestType.SCHEDULED)
-        .build();
-    Optional<SingularityRunNowRequest> runNowRequest = Optional.of(runNowRequest());
-    SingularityTaskId activeTask = new SingularityTaskId(requestId, deployID, 0, 1, "host", "rack");
-
-    SingularityDeploy deploy = SingularityDeploy.newBuilder(requestId, deployID)
-        .setCommand(Optional.of("printenv"))
-        .setRunImmediately(runNowRequest)
-        .build();
-
-    SingularityDeploy result = validator.checkDeploy(request, deploy, Collections.singletonList(activeTask()), Collections.emptyList());
-
-    Assert.assertFalse("Run immediately is no longer set", result.getRunImmediately().isPresent());
-  }
-
-  @Test
-  public void whenRunNowSetAndOneOffAndTasksAlreadyRunningItWillNotRunImmediately() {
-    String requestId = "request";
-    String deployID = "deploy";
-    SingularityRequest request = new SingularityRequestBuilder(requestId, RequestType.ON_DEMAND)
-        .setInstances(Optional.of(2))
-        .build();
-    Optional<SingularityRunNowRequest> runNowRequest = Optional.of(runNowRequest());
-    SingularityTaskId activeTask1 = new SingularityTaskId(requestId, deployID, 0, 1, "host", "rack");
-    SingularityTaskId activeTask2 = new SingularityTaskId(requestId, deployID, 0, 1, "host", "rack");
-
-    SingularityDeploy deploy = SingularityDeploy.newBuilder(requestId, deployID)
-        .setCommand(Optional.of("printenv"))
-        .setRunImmediately(runNowRequest)
-        .build();
-
-    SingularityDeploy result = validator.checkDeploy(request, deploy, Arrays.asList(activeTask1, activeTask2), Collections.emptyList());
-
-    Assert.assertFalse("Run immediately is no longer set", result.getRunImmediately().isPresent());
-  }
-
   private SingularityTaskId activeTask() {
     return new SingularityTaskId(
         "requestId",
