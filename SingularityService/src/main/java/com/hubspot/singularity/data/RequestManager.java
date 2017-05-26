@@ -1,6 +1,7 @@
 package com.hubspot.singularity.data;
 
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -132,11 +133,29 @@ public class RequestManager extends CuratorAsyncManager {
     return ZKPaths.makePath(PENDING_PATH_ROOT, new SingularityDeployKey(requestId, deployId).getId());
   }
 
-  private String getPendingPath(SingularityPendingRequest pendingRequest) {
-    String nodeName = String.format("%s%s",
-      new SingularityDeployKey(pendingRequest.getRequestId(), pendingRequest.getDeployId()),
-      pendingRequest.getPendingType().equals(PendingType.ONEOFF) ? pendingRequest.getTimestamp()  : "");
+  private String getPendingPath(SingularityPendingRequest pendingRequest, boolean forceImmediate) {
+    String nodeName = pendingQueueKey(pendingRequest, forceImmediate);
     return ZKPaths.makePath(PENDING_PATH_ROOT, nodeName);
+  }
+
+  private String pendingQueueKey(SingularityPendingRequest pendingRequest, boolean forceImmediate) {
+    SingularityDeployKey deployKey = new SingularityDeployKey(pendingRequest.getRequestId(), pendingRequest.getDeployId());
+    if (pendingRequest.getPendingType() == PendingType.ONEOFF) {
+      return String.format("%s%s", deployKey, pendingRequest.getTimestamp());
+    } else if (pendingRequest.getPendingType() == PendingType.IMMEDIATE) {
+      Optional<SingularityPendingRequest> existingRequest = getPendingRequest(pendingRequest.getRequestId(), pendingRequest.getDeployId());
+      boolean markImmediate = forceImmediate
+          || (existingRequest.isPresent()
+              && (existingRequest.get().getPendingType() == PendingType.NEW_DEPLOY
+      || existingRequest.get().getPendingType() == PendingType.TASK_DONE));
+      if (markImmediate) {
+        return String.format("%s%s", deployKey, "-immediate");
+      } else {
+        return deployKey.toString();
+      }
+    } else {
+      return deployKey.toString();
+    }
   }
 
   private String getCleanupPath(String requestId, RequestCleanupType type) {
@@ -156,7 +175,13 @@ public class RequestManager extends CuratorAsyncManager {
   }
 
   public SingularityDeleteResult deletePendingRequest(SingularityPendingRequest pendingRequest) {
-    return delete(getPendingPath(pendingRequest));
+    SingularityDeleteResult deleteResult = delete(getPendingPath(pendingRequest, false));
+    if (deleteResult == SingularityDeleteResult.DIDNT_EXIST
+        && pendingRequest.getPendingType() == PendingType.IMMEDIATE) {
+      return delete(getPendingPath(pendingRequest, true));
+    } else {
+      return deleteResult;
+    }
   }
 
   public SingularityDeleteResult deleteHistoryParent(String requestId) {
@@ -228,7 +253,7 @@ public class RequestManager extends CuratorAsyncManager {
   }
 
   public SingularityCreateResult addToPendingQueue(SingularityPendingRequest pendingRequest) {
-    SingularityCreateResult result = create(getPendingPath(pendingRequest), pendingRequest, pendingRequestTranscoder);
+    SingularityCreateResult result = create(getPendingPath(pendingRequest, false), pendingRequest, pendingRequestTranscoder);
 
     LOG.info("{} added to pending queue with result: {}", pendingRequest, result);
 
@@ -280,7 +305,11 @@ public class RequestManager extends CuratorAsyncManager {
   }
 
   public List<SingularityPendingRequest> getPendingRequests() {
-    return getAsyncChildren(PENDING_PATH_ROOT, pendingRequestTranscoder);
+    List<SingularityPendingRequest> pendingRequests = getAsyncChildren(PENDING_PATH_ROOT, pendingRequestTranscoder);
+    // Strictly enforce ordering of pending requests
+    pendingRequests.sort(Comparator.comparingLong(SingularityPendingRequest::getTimestamp));
+
+    return pendingRequests;
   }
 
   public List<SingularityRequestCleanup> getCleanupRequests() {
