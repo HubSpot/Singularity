@@ -8,7 +8,7 @@ import { Link } from 'react-router';
 import JSONButton from '../../common/JSONButton';
 
 import { FetchRequest } from '../../../actions/api/requests';
-import { 
+import {
   FetchActiveTasksForRequest,
   FetchRequestHistory
 } from '../../../actions/api/history';
@@ -161,8 +161,9 @@ const RequestActionButtons = ({requestParent, fetchRequest, fetchRequestHistory,
   }
 
   const removeButton = (
-    <RemoveButton 
+    <RemoveButton
       requestId={request.id}
+      loadBalanced={request.loadBalanced}
       loadBalancerData={Utils.maybe(requestParent, ['activeDeploy', 'loadBalancerOptions'], {})}
       then={fetchRequestAndHistoryAndActiveTasks}>
       <Button bsStyle="danger">
