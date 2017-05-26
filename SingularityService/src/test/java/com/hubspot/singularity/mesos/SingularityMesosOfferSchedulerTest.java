@@ -298,39 +298,39 @@ public class SingularityMesosOfferSchedulerTest extends SingularityCuratorTestBa
     // no attempts, no delay, no utilization
     setUtilization(0L, 1L, 0.00, 1.00);
     addOrUpdateOfferMatchAttempt(taskId, 0);
-    assertScoreIs(0.677, scheduler.minScore(taskRequest, offerMatchAttemptsPerTask, Optional.of(utilization), now));
+    assertScoreIs(0.641, scheduler.minScore(taskRequest, offerMatchAttemptsPerTask, Optional.of(utilization), now));
 
     // no attempts, delay, no utilization
-    assertScoreIs(0.577, scheduler.minScore(taskRequest, offerMatchAttemptsPerTask, Optional.of(utilization), now + TimeUnit.SECONDS.toMillis(30)));
+    assertScoreIs(0.541, scheduler.minScore(taskRequest, offerMatchAttemptsPerTask, Optional.of(utilization), now + TimeUnit.SECONDS.toMillis(30)));
 
     // attempts, no delay, no utilization
     addOrUpdateOfferMatchAttempt(taskId, 10);
-    assertScoreIs(0.177, scheduler.minScore(taskRequest, offerMatchAttemptsPerTask, Optional.of(utilization), now));
+    assertScoreIs(0.141, scheduler.minScore(taskRequest, offerMatchAttemptsPerTask, Optional.of(utilization), now));
 
     // attempts, delay, no utilization
-    assertScoreIs(0.127, scheduler.minScore(taskRequest, offerMatchAttemptsPerTask, Optional.of(utilization), now + TimeUnit.SECONDS.toMillis(15)));
+    assertScoreIs(0.091, scheduler.minScore(taskRequest, offerMatchAttemptsPerTask, Optional.of(utilization), now + TimeUnit.SECONDS.toMillis(15)));
 
     addOrUpdateOfferMatchAttempt(taskId, 1);
-    assertScoreIs(0.577, scheduler.minScore(taskRequest, offerMatchAttemptsPerTask, Optional.of(utilization), now + TimeUnit.SECONDS.toMillis(15)));
+    assertScoreIs(0.541, scheduler.minScore(taskRequest, offerMatchAttemptsPerTask, Optional.of(utilization), now + TimeUnit.SECONDS.toMillis(15)));
 
     addOrUpdateOfferMatchAttempt(taskId, 4);
-    assertScoreIs(0.427, scheduler.minScore(taskRequest, offerMatchAttemptsPerTask, Optional.of(utilization), now + TimeUnit.SECONDS.toMillis(15)));
+    assertScoreIs(0.391, scheduler.minScore(taskRequest, offerMatchAttemptsPerTask, Optional.of(utilization), now + TimeUnit.SECONDS.toMillis(15)));
 
     // no attempts, no delay, utilization
     setUtilization(2L, 5L, 2.00, 10.00);
     addOrUpdateOfferMatchAttempt(taskId, 0);
-    assertScoreIs(0.357, scheduler.minScore(taskRequest, offerMatchAttemptsPerTask, Optional.of(utilization), now));
+    assertScoreIs(0.321, scheduler.minScore(taskRequest, offerMatchAttemptsPerTask, Optional.of(utilization), now));
 
     // no attempts, delay, utilization
-    assertScoreIs(0.307, scheduler.minScore(taskRequest, offerMatchAttemptsPerTask, Optional.of(utilization), now + TimeUnit.SECONDS.toMillis(15)));
+    assertScoreIs(0.271, scheduler.minScore(taskRequest, offerMatchAttemptsPerTask, Optional.of(utilization), now + TimeUnit.SECONDS.toMillis(15)));
 
     // attempts, no delay, utilization
     addOrUpdateOfferMatchAttempt(taskId, 2);
-    assertScoreIs(0.257, scheduler.minScore(taskRequest, offerMatchAttemptsPerTask, Optional.of(utilization), now));
+    assertScoreIs(0.221, scheduler.minScore(taskRequest, offerMatchAttemptsPerTask, Optional.of(utilization), now));
 
     // attempts, delay, utilization
     addOrUpdateOfferMatchAttempt(taskId, 2);
-    assertScoreIs(0.207, scheduler.minScore(taskRequest, offerMatchAttemptsPerTask, Optional.of(utilization), now + TimeUnit.SECONDS.toMillis(15)));
+    assertScoreIs(0.171, scheduler.minScore(taskRequest, offerMatchAttemptsPerTask, Optional.of(utilization), now + TimeUnit.SECONDS.toMillis(15)));
   }
 
   private void assertScoreIs(double expectedScore, double actualScore) {
