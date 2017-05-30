@@ -8,7 +8,7 @@ import TaskStatus from './TaskStatus';
 
 const getLink = (status, taskId, files, available) => {
   const runningTaskLogFound = _.find(files.files, (f) => {
-    return f.name === config.runningTaskLogPath;
+    return f.uiPath === Utils.substituteTaskId(config.runningTaskLogPath, taskId);
   });
 
   if (status === TaskStatus.RUNNING || runningTaskLogFound) {
