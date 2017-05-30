@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Random;
 
 import org.apache.mesos.Protos.Offer;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import com.hubspot.mesos.JavaUtils;
@@ -17,6 +18,7 @@ public class SingularityOfferPerformanceTestRunner extends SingularitySchedulerT
   }
 
   @Test
+  @Ignore
   public void testOfferCache() {
     long start = System.currentTimeMillis();
 

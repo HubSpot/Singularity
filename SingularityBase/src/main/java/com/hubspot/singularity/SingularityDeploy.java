@@ -18,6 +18,7 @@ import com.hubspot.mesos.Resources;
 import com.hubspot.mesos.SingularityContainerInfo;
 import com.hubspot.mesos.SingularityMesosArtifact;
 import com.hubspot.mesos.SingularityMesosTaskLabel;
+import com.hubspot.singularity.api.SingularityRunNowRequest;
 import com.wordnik.swagger.annotations.ApiModelProperty;
 
 public class SingularityDeploy {
@@ -49,6 +50,8 @@ public class SingularityDeploy {
   private final Optional<Map<Integer, Map<String, String>>> taskLabels;
   private final Optional<Map<Integer, List<SingularityMesosTaskLabel>>> mesosTaskLabels;
   private final Optional<Map<Integer, Map<String, String>>> taskEnv;
+
+  private final Optional<SingularityRunNowRequest> runImmediatelyRequest;
 
   /**
    * @deprecated use {@link #healthcheck}
@@ -128,6 +131,7 @@ public class SingularityDeploy {
       @JsonProperty("resources") Optional<Resources> resources,
       @JsonProperty("env") Optional<Map<String, String>> env,
       @JsonProperty("taskEnv") Optional<Map<Integer, Map<String, String>>> taskEnv,
+      @JsonProperty("runImmediately") Optional<SingularityRunNowRequest> runImmediatelyRequest,
       @JsonProperty("uris") Optional<List<SingularityMesosArtifact>> uris,
       @JsonProperty("metadata") Optional<Map<String, String>> metadata,
       @JsonProperty("executorData") Optional<ExecutorData> executorData,
@@ -184,6 +188,8 @@ public class SingularityDeploy {
     this.taskEnv = taskEnv;
     this.uris = uris;
     this.executorData = executorData;
+
+    this.runImmediatelyRequest = runImmediatelyRequest;
 
     this.labels = labels;
     this.mesosLabels = mesosLabels.or(labels.isPresent() ? Optional.of(SingularityMesosTaskLabel.labelsFromMap(labels.get())) : Optional.<List<SingularityMesosTaskLabel>>absent());
@@ -373,6 +379,11 @@ public class SingularityDeploy {
     return taskEnv;
   }
 
+  @ApiModelProperty(required = false, value = "Settings used to run this deploy immediately")
+  public Optional<SingularityRunNowRequest> getRunImmediately() {
+    return runImmediatelyRequest;
+  }
+
   @ApiModelProperty(required=false, value="List of URIs to download before executing the deploy command.")
   public Optional<List<SingularityMesosArtifact>> getUris() {
     return uris;
@@ -546,6 +557,7 @@ public class SingularityDeploy {
         ", command=" + command +
         ", arguments=" + arguments +
         ", env=" + env +
+        ", runImmediately" + runImmediatelyRequest +
         ", uris=" + uris +
         ", executorData=" + executorData +
         ", labels=" + labels +

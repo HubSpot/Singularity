@@ -126,7 +126,7 @@ public class DeployResource extends AbstractRequestResource {
       checkConflict(requestWithState.getState() != RequestState.PAUSED, "Request %s is paused. Unable to deploy (it must be manually unpaused first)", requestWithState.getRequest().getId());
     }
 
-    deploy = validator.checkDeploy(request, deploy);
+    deploy = validator.checkDeploy(request, deploy, taskManager.getActiveTaskIdsForRequest(requestId), taskManager.getPendingTaskIdsForRequest(requestId));
 
     final long now = System.currentTimeMillis();
 
