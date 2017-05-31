@@ -25,7 +25,6 @@ import com.hubspot.singularity.SingularityCreateResult;
 import com.hubspot.singularity.SingularityDeleteResult;
 import com.hubspot.singularity.SingularityDeployKey;
 import com.hubspot.singularity.SingularityPendingRequest;
-import com.hubspot.singularity.SingularityPendingRequest.PendingType;
 import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityRequestCleanup;
 import com.hubspot.singularity.SingularityRequestHistory;
@@ -133,29 +132,14 @@ public class RequestManager extends CuratorAsyncManager {
     return ZKPaths.makePath(PENDING_PATH_ROOT, new SingularityDeployKey(requestId, deployId).getId());
   }
 
-  private String getPendingPath(SingularityPendingRequest pendingRequest, boolean forceImmediate) {
-    String nodeName = pendingQueueKey(pendingRequest, forceImmediate);
+  private String getPendingPath(SingularityPendingRequest pendingRequest) {
+    String nodeName = pendingQueueKey(pendingRequest);
     return ZKPaths.makePath(PENDING_PATH_ROOT, nodeName);
   }
 
-  private String pendingQueueKey(SingularityPendingRequest pendingRequest, boolean forceImmediate) {
+  private String pendingQueueKey(SingularityPendingRequest pendingRequest) {
     SingularityDeployKey deployKey = new SingularityDeployKey(pendingRequest.getRequestId(), pendingRequest.getDeployId());
-    if (pendingRequest.getPendingType() == PendingType.ONEOFF) {
-      return String.format("%s%s", deployKey, pendingRequest.getTimestamp());
-    } else if (pendingRequest.getPendingType() == PendingType.IMMEDIATE) {
-      Optional<SingularityPendingRequest> existingRequest = getPendingRequest(pendingRequest.getRequestId(), pendingRequest.getDeployId());
-      boolean markImmediate = forceImmediate
-          || (existingRequest.isPresent()
-              && (existingRequest.get().getPendingType() == PendingType.NEW_DEPLOY
-      || existingRequest.get().getPendingType() == PendingType.TASK_DONE));
-      if (markImmediate) {
-        return String.format("%s%s", deployKey, "-immediate");
-      } else {
-        return deployKey.toString();
-      }
-    } else {
-      return deployKey.toString();
-    }
+    return String.format("%s%s", deployKey.toString(), pendingRequest.getTimestamp());
   }
 
   private String getCleanupPath(String requestId, RequestCleanupType type) {
@@ -175,13 +159,7 @@ public class RequestManager extends CuratorAsyncManager {
   }
 
   public SingularityDeleteResult deletePendingRequest(SingularityPendingRequest pendingRequest) {
-    SingularityDeleteResult deleteResult = delete(getPendingPath(pendingRequest, false));
-    if (deleteResult == SingularityDeleteResult.DIDNT_EXIST
-        && pendingRequest.getPendingType() == PendingType.IMMEDIATE) {
-      return delete(getPendingPath(pendingRequest, true));
-    } else {
-      return deleteResult;
-    }
+    return delete(getPendingPath(pendingRequest));
   }
 
   public SingularityDeleteResult deleteHistoryParent(String requestId) {
@@ -253,7 +231,7 @@ public class RequestManager extends CuratorAsyncManager {
   }
 
   public SingularityCreateResult addToPendingQueue(SingularityPendingRequest pendingRequest) {
-    SingularityCreateResult result = create(getPendingPath(pendingRequest, false), pendingRequest, pendingRequestTranscoder);
+    SingularityCreateResult result = create(getPendingPath(pendingRequest), pendingRequest, pendingRequestTranscoder);
 
     LOG.info("{} added to pending queue with result: {}", pendingRequest, result);
 

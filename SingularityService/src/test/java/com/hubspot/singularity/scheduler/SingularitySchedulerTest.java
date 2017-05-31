@@ -1419,7 +1419,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     startFirstDeploy();
     SingularityPendingRequest pendingDeployRequest = new SingularityPendingRequest(requestId, firstDeploy.getId(), now, Optional.absent(), PendingType.NEW_DEPLOY,
         firstDeploy.getSkipHealthchecksOnDeploy(), Optional.absent());
-    SingularityPendingRequest pendingRunNowRequest = new SingularityPendingRequest(requestId, firstDeploy.getId(), now, Optional.absent(), PendingType.IMMEDIATE,
+    SingularityPendingRequest pendingRunNowRequest = new SingularityPendingRequest(requestId, firstDeploy.getId(), now + 200, Optional.absent(), PendingType.IMMEDIATE,
         firstDeploy.getSkipHealthchecksOnDeploy(), Optional.absent());
 
     requestManager.addToPendingQueue(pendingDeployRequest);
