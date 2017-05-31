@@ -197,7 +197,6 @@ These settings should live under the "mesos" field inside the root configuration
 #### Offers ####
 | Parameter | Default | Description | Type |
 |-----------|---------|-------------|------|
-| maxMillisPastDuePerTask | 300000 (5 min) | The max milliseconds a task can be past due when scoring an offer | long |
 | longRunningUsedCpuWeightForOffer | 0.30 | The weight long running tasks' cpu utilization carries when scoring an offer (should add up to 1 with longRunningUsedMemWeightForOffer) | double |
 | longRunningUsedMemWeightForOffer | 0.70 | The weight long running tasks' memory utilization carries when scoring an offer (should add up to 1 with longRunningUsedCpuWeightForOffer) | double |
 | freeCpuWeightForOffer | 0.30 | The weight the slave's free cpu carries when scoring an offer (should add up to 1 with freeMemWeightForOffer) | double |

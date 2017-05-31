@@ -27,6 +27,7 @@ import com.hubspot.singularity.RequestType;
 import com.hubspot.singularity.SingularityClusterUtilization;
 import com.hubspot.singularity.SingularityDeployStatistics;
 import com.hubspot.singularity.SingularityPendingTaskId;
+import com.hubspot.singularity.SingularityScheduledTasksInfo;
 import com.hubspot.singularity.SingularitySlaveUsage.ResourceUsageType;
 import com.hubspot.singularity.SingularitySlaveUsageWithId;
 import com.hubspot.singularity.SingularityTask;
@@ -130,12 +131,13 @@ public class SingularityMesosOfferScheduler {
 
     while (!pendingTaskIdToTaskRequest.isEmpty() && addedTaskInLastLoop && canScheduleAdditionalTasks(taskCredits)) {
       addedTaskInLastLoop = false;
+      double maxTaskMillisPastDue = maxTaskMillisPastDue(SingularityScheduledTasksInfo.getInfo(taskManager.getPendingTasks(), configuration.getDeltaAfterWhichTasksAreLateMillis()).getMaxTaskLagMillis());
 
       for (Iterator<SingularityTaskRequestHolder> iterator = pendingTaskIdToTaskRequest.values().iterator(); iterator.hasNext();) {
         SingularityTaskRequestHolder taskRequestHolder = iterator.next();
 
         Map<SingularityOfferHolder, Double> scorePerOffer = new HashMap<>();
-        double minScore = minScore(taskRequestHolder.getTaskRequest(), offerMatchAttemptsPerTask, usageManager.getClusterUtilization(), System.currentTimeMillis());
+        double minScore = minScore(taskRequestHolder.getTaskRequest(), offerMatchAttemptsPerTask, usageManager.getClusterUtilization(), System.currentTimeMillis(), maxTaskMillisPastDue);
 
         LOG.trace("Minimum score {} for task {}", minScore, taskRequestHolder.getTaskRequest().getPendingTask().getPendingTaskId().getId());
 
@@ -152,7 +154,6 @@ public class SingularityMesosOfferScheduler {
               MesosUtils.getMemory(offerHolder.getOffer()), MesosUtils.getNumCpus(offerHolder.getOffer()), offerHolder.getOffer().getHostname(), maybeSlaveUsage);
 
           if (score != 0 && score >= minScore) {
-            // todo: can short circuit here if score is high enough (>= .9)
             scorePerOffer.put(offerHolder, score);
           }
         }
@@ -358,7 +359,7 @@ public class SingularityMesosOfferScheduler {
   }
 
   @VisibleForTesting
-  double minScore(SingularityTaskRequest taskRequest, Map<String, Integer> offerMatchAttemptsPerTask, Optional<SingularityClusterUtilization> maybeUtilization, long now) {
+  double minScore(SingularityTaskRequest taskRequest, Map<String, Integer> offerMatchAttemptsPerTask, Optional<SingularityClusterUtilization> maybeUtilization, long now, double maxTaskMillisPastDue) {
     if (!maybeUtilization.isPresent()) {
       return 0.00;
     }
@@ -369,7 +370,7 @@ public class SingularityMesosOfferScheduler {
 
     double minScore = memScore + cpuScore - getScoreTolerance();
     minScore -= offerMatchAttemptsPerTask.getOrDefault(taskRequest.getPendingTask().getPendingTaskId().getId(), 0) / getMaxOfferAttemptsPerTask();
-    minScore -= millisPastDue(taskRequest, now) / (double) configuration.getMaxMillisPastDuePerTask();
+    minScore -= millisPastDue(taskRequest, now) / maxTaskMillisPastDue;
 
     return Math.max(minScore, 0);
   }
@@ -389,6 +390,14 @@ public class SingularityMesosOfferScheduler {
 
   private long millisPastDue(SingularityTaskRequest taskRequest, long now) {
     return Math.max(now - taskRequest.getPendingTask().getPendingTaskId().getNextRunAt(), 0);
+  }
+
+  @VisibleForTesting
+  double maxTaskMillisPastDue(long lag) {
+    long maxMillisPastDueForNoLag = TimeUnit.MINUTES.toMillis(3);
+    double slope = -1 * maxMillisPastDueForNoLag / (double) configuration.getDeltaAfterWhichTasksAreLateMillis();
+
+    return Math.max((slope * lag) + maxMillisPastDueForNoLag, 1.00);
   }
 
   private SingularityTask acceptTask(SingularityOfferHolder offerHolder, SingularitySchedulerStateCache stateCache, Map<String, Map<String, Integer>> tasksPerOfferPerRequest, SingularityTaskRequestHolder taskRequestHolder) {

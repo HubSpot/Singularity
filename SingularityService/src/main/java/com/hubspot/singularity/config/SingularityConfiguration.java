@@ -200,8 +200,6 @@ public class SingularityConfiguration extends Configuration {
 
   private int maxOfferAttemptsPerTask = 0;
 
-  private long maxMillisPastDuePerTask = TimeUnit.MINUTES.toMillis(5);
-
   private double longRunningUsedCpuWeightForOffer = 0.30;
 
   private double longRunningUsedMemWeightForOffer = 0.70;
@@ -694,10 +692,6 @@ public class SingularityConfiguration extends Configuration {
     return maxOfferAttemptsPerTask;
   }
 
-  public long getMaxMillisPastDuePerTask() {
-    return maxMillisPastDuePerTask;
-  }
-
   public double getLongRunningUsedCpuWeightForOffer() {
     return longRunningUsedCpuWeightForOffer;
   }
@@ -1087,11 +1081,6 @@ public class SingularityConfiguration extends Configuration {
 
   public SingularityConfiguration setMaxOfferAttemptsPerTask(int maxOfferAttemptsPerTask) {
     this.maxOfferAttemptsPerTask = maxOfferAttemptsPerTask;
-    return this;
-  }
-
-  public SingularityConfiguration setMaxMillisPastDuePerTask(long maxMillisPastDuePerTask) {
-    this.maxMillisPastDuePerTask = maxMillisPastDuePerTask;
     return this;
   }
 
