@@ -12,7 +12,6 @@ import org.mockito.Mockito;
 import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.hubspot.singularity.RequestType;
-import com.hubspot.singularity.SingularityClusterUtilization;
 import com.hubspot.singularity.SingularityCuratorTestBase;
 import com.hubspot.singularity.SingularityDeploy;
 import com.hubspot.singularity.SingularityDeployStatistics;
@@ -39,15 +38,12 @@ public class SingularityMesosOfferSchedulerTest extends SingularityCuratorTestBa
   protected SingularityConfiguration configuration;
 
   private static final String SLAVE_ID = "slave";
-  private static final long MAX_TASK_MILLIS_PAST_DUE = TimeUnit.MINUTES.toMillis(5);
 
   private SingularityTaskRequest taskRequest = Mockito.mock(SingularityTaskRequest.class);
   private SingularityDeploy deploy = Mockito.mock(SingularityDeploy.class);
   private SingularityRequest request = Mockito.mock(SingularityRequest.class);
   private SingularityPendingTask task = Mockito.mock(SingularityPendingTask.class);
   private SingularityPendingTaskId taskId = Mockito.mock(SingularityPendingTaskId.class);
-  private SingularityClusterUtilization utilization = Mockito.mock(SingularityClusterUtilization.class);
-  private final Map<String, Integer> offerMatchAttemptsPerTask = new HashMap<>();
 
 
   public SingularityMesosOfferSchedulerTest() {
@@ -56,7 +52,6 @@ public class SingularityMesosOfferSchedulerTest extends SingularityCuratorTestBa
 
   @Before
   public void setup() {
-    configuration.setMaxOfferAttemptsPerTask(20);
     configuration.setLongRunningUsedCpuWeightForOffer(0.40);
     configuration.setLongRunningUsedMemWeightForOffer(0.60);
     configuration.setFreeCpuWeightForOffer(0.40);
@@ -288,81 +283,6 @@ public class SingularityMesosOfferSchedulerTest extends SingularityCuratorTestBa
     Assert.assertTrue(nlrScore > lrScore);
   }
 
-  @Test
-  public void itGetsTheCorrectMinScore() {
-    long now = System.currentTimeMillis();
-    String taskId = "taskId";
-    setNextRunAt(now);
-    setTaskId(taskId);
-
-    // no attempts, no delay, no utilization
-    setUtilization(0L, 1L, 0.00, 1.00);
-    addOrUpdateOfferMatchAttempt(taskId, 0);
-    assertValueIs(0.641, getMinScore(now));
-
-    // no attempts, delay, no utilization
-    setNextRunAt(now - TimeUnit.SECONDS.toMillis(30));
-    assertValueIs(0.541, getMinScore(now));
-
-    // attempts, no delay, no utilization
-    addOrUpdateOfferMatchAttempt(taskId, 10);
-    setNextRunAt(now);
-    assertValueIs(0.141, getMinScore(now));
-
-    // attempts, delay, no utilization
-    setNextRunAt(now - TimeUnit.SECONDS.toMillis(15));
-    assertValueIs(0.091, getMinScore(now));
-
-    addOrUpdateOfferMatchAttempt(taskId, 1);
-    assertValueIs(0.541, getMinScore(now));
-
-    addOrUpdateOfferMatchAttempt(taskId, 4);
-    assertValueIs(0.391, getMinScore(now));
-
-    // no attempts, no delay, utilization
-    setUtilization(2L, 5L, 2.00, 10.00);
-    addOrUpdateOfferMatchAttempt(taskId, 0);
-    setNextRunAt(now);
-    assertValueIs(0.321, getMinScore(now));
-
-    // no attempts, delay, utilization
-    setNextRunAt(now - TimeUnit.SECONDS.toMillis(15));
-    assertValueIs(0.271, getMinScore(now));
-
-    // attempts, no delay, utilization
-    addOrUpdateOfferMatchAttempt(taskId, 2);
-    setNextRunAt(now);
-    assertValueIs(0.221, getMinScore(now));
-
-    // attempts, delay, utilization
-    addOrUpdateOfferMatchAttempt(taskId, 2);
-    setNextRunAt(now - TimeUnit.SECONDS.toMillis(15));
-    assertValueIs(0.171, getMinScore(now));
-  }
-
-  @Test
-  public void itGetsTheCorrectMaxMillisPastDue() {
-    configuration.setDeltaAfterWhichTasksAreLateMillis(TimeUnit.SECONDS.toMillis(30));
-
-    assertValueIs(1, scheduler.maxTaskMillisPastDue(TimeUnit.SECONDS.toMillis(30)));
-    assertValueIs(1, scheduler.maxTaskMillisPastDue(TimeUnit.SECONDS.toMillis(45)));
-    assertValueIs(1, scheduler.maxTaskMillisPastDue(TimeUnit.MINUTES.toMillis(1)));
-
-    assertValueIs(150000, scheduler.maxTaskMillisPastDue(TimeUnit.SECONDS.toMillis(5)));
-    assertValueIs(120000, scheduler.maxTaskMillisPastDue(TimeUnit.SECONDS.toMillis(10)));
-    assertValueIs(60000, scheduler.maxTaskMillisPastDue(TimeUnit.SECONDS.toMillis(20)));
-
-    configuration.setDeltaAfterWhichTasksAreLateMillis(TimeUnit.SECONDS.toMillis(60));
-
-    assertValueIs(165000, scheduler.maxTaskMillisPastDue(TimeUnit.SECONDS.toMillis(5)));
-    assertValueIs(150000, scheduler.maxTaskMillisPastDue(TimeUnit.SECONDS.toMillis(10)));
-    assertValueIs(120000, scheduler.maxTaskMillisPastDue(TimeUnit.SECONDS.toMillis(20)));
-  }
-
-  private double getMinScore(long now) {
-    return scheduler.minScore(taskRequest, offerMatchAttemptsPerTask, Optional.of(utilization), now, MAX_TASK_MILLIS_PAST_DUE);
-  }
-
   private void assertValueIs(double expectedValue, double actualValue) {
     actualValue = Math.round(actualValue * 1000.0) / 1000.0;
     Assert.assertTrue(String.format("Expected %f but found %f", expectedValue, actualValue),  actualValue == expectedValue);
@@ -386,26 +306,7 @@ public class SingularityMesosOfferSchedulerTest extends SingularityCuratorTestBa
         .build();
   }
 
-  private void setNextRunAt(long time) {
-    Mockito.when(taskId.getNextRunAt()).thenReturn(time);
-  }
-
-  private void setTaskId(String id) {
-    Mockito.when(taskId.getId()).thenReturn(id);
-  }
-
   private void setRequestType(RequestType type) {
     Mockito.when(request.getRequestType()).thenReturn(type);
-  }
-
-  private void addOrUpdateOfferMatchAttempt(String id, int attempts) {
-    offerMatchAttemptsPerTask.put(id, attempts);
-  }
-
-  private void setUtilization(long totalMemBytesUsed, long totalMemBytesAvailable, double totalCpuUsed, double totalCpuAvailable) {
-    Mockito.when(utilization.getTotalMemBytesUsed()).thenReturn(totalMemBytesUsed);
-    Mockito.when(utilization.getTotalMemBytesAvailable()).thenReturn(totalMemBytesAvailable);
-    Mockito.when(utilization.getTotalCpuUsed()).thenReturn(totalCpuUsed);
-    Mockito.when(utilization.getTotalCpuAvailable()).thenReturn(totalCpuAvailable);
   }
 }

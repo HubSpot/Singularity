@@ -198,8 +198,6 @@ public class SingularityConfiguration extends Configuration {
 
   private int maxTasksPerOfferPerRequest = 0;
 
-  private int maxOfferAttemptsPerTask = 0;
-
   private double longRunningUsedCpuWeightForOffer = 0.30;
 
   private double longRunningUsedMemWeightForOffer = 0.70;
@@ -688,10 +686,6 @@ public class SingularityConfiguration extends Configuration {
     return maxTasksPerOfferPerRequest;
   }
 
-  public int getMaxOfferAttemptsPerTask() {
-    return maxOfferAttemptsPerTask;
-  }
-
   public double getLongRunningUsedCpuWeightForOffer() {
     return longRunningUsedCpuWeightForOffer;
   }
@@ -1077,11 +1071,6 @@ public class SingularityConfiguration extends Configuration {
 
   public void setMaxTasksPerOfferPerRequest(int maxTasksPerOfferPerRequest) {
     this.maxTasksPerOfferPerRequest = maxTasksPerOfferPerRequest;
-  }
-
-  public SingularityConfiguration setMaxOfferAttemptsPerTask(int maxOfferAttemptsPerTask) {
-    this.maxOfferAttemptsPerTask = maxOfferAttemptsPerTask;
-    return this;
   }
 
   public SingularityConfiguration setLongRunningUsedCpuWeightForOffer(double longRunningUsedCpuWeightForOffer) {

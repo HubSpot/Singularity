@@ -24,10 +24,8 @@ import com.google.inject.Provider;
 import com.hubspot.mesos.MesosUtils;
 import com.hubspot.mesos.Resources;
 import com.hubspot.singularity.RequestType;
-import com.hubspot.singularity.SingularityClusterUtilization;
 import com.hubspot.singularity.SingularityDeployStatistics;
 import com.hubspot.singularity.SingularityPendingTaskId;
-import com.hubspot.singularity.SingularityScheduledTasksInfo;
 import com.hubspot.singularity.SingularitySlaveUsage.ResourceUsageType;
 import com.hubspot.singularity.SingularitySlaveUsageWithId;
 import com.hubspot.singularity.SingularityTask;
@@ -64,7 +62,6 @@ public class SingularityMesosOfferScheduler {
 
 
   private final Provider<SingularitySchedulerStateCache> stateCacheProvider;
-  private final SchedulerDriverSupplier schedulerDriverSupplier;
 
   @Inject
   public SingularityMesosOfferScheduler(MesosConfiguration mesosConfiguration,
@@ -78,7 +75,6 @@ public class SingularityMesosOfferScheduler {
                                         SingularityTaskSizeOptimizer taskSizeOptimizer,
                                         SingularitySlaveAndRackHelper slaveAndRackHelper,
                                         Provider<SingularitySchedulerStateCache> stateCacheProvider,
-                                        SchedulerDriverSupplier schedulerDriverSupplier,
                                         DisasterManager disasterManager,
                                         UsageManager usageManager,
                                         DeployManager deployManager) {
@@ -93,7 +89,6 @@ public class SingularityMesosOfferScheduler {
     this.stateCacheProvider = stateCacheProvider;
     this.slaveAndRackHelper = slaveAndRackHelper;
     this.disasterManager = disasterManager;
-    this.schedulerDriverSupplier = schedulerDriverSupplier;
     this.taskPrioritizer = taskPrioritizer;
     this.usageManager = usageManager;
     this.deployManager = deployManager;
@@ -126,20 +121,15 @@ public class SingularityMesosOfferScheduler {
     boolean addedTaskInLastLoop = true;
     int tasksScheduled = 0;
     final List<SingularitySlaveUsageWithId> currentSlaveUsages = usageManager.getCurrentSlaveUsages(offerHolders.stream().map(o -> o.getOffer().getSlaveId().getValue()).collect(Collectors.toList()));
-    final Map<String, Integer> offerMatchAttemptsPerTask = new HashMap<>();
 
 
     while (!pendingTaskIdToTaskRequest.isEmpty() && addedTaskInLastLoop && canScheduleAdditionalTasks(taskCredits)) {
       addedTaskInLastLoop = false;
-      double maxTaskMillisPastDue = maxTaskMillisPastDue(SingularityScheduledTasksInfo.getInfo(taskManager.getPendingTasks(), configuration.getDeltaAfterWhichTasksAreLateMillis()).getMaxTaskLagMillis());
 
       for (Iterator<SingularityTaskRequestHolder> iterator = pendingTaskIdToTaskRequest.values().iterator(); iterator.hasNext();) {
         SingularityTaskRequestHolder taskRequestHolder = iterator.next();
 
         Map<SingularityOfferHolder, Double> scorePerOffer = new HashMap<>();
-        double minScore = minScore(taskRequestHolder.getTaskRequest(), offerMatchAttemptsPerTask, usageManager.getClusterUtilization(), System.currentTimeMillis(), maxTaskMillisPastDue);
-
-        LOG.trace("Minimum score {} for task {}", minScore, taskRequestHolder.getTaskRequest().getPendingTask().getPendingTaskId().getId());
 
         for (SingularityOfferHolder offerHolder : offerHolders) {
 
@@ -153,14 +143,10 @@ public class SingularityMesosOfferScheduler {
           LOG.trace("Scored {} | Task {} | Offer - mem {} - cpu {} | Slave {} | maybeSlaveUsage - {}", score, taskRequestHolder.getTaskRequest().getPendingTask().getPendingTaskId().getId(),
               MesosUtils.getMemory(offerHolder.getOffer()), MesosUtils.getNumCpus(offerHolder.getOffer()), offerHolder.getOffer().getHostname(), maybeSlaveUsage);
 
-          if (score != 0 && score >= minScore) {
+          if (score != 0) {
             scorePerOffer.put(offerHolder, score);
           }
         }
-
-        offerMatchAttemptsPerTask.compute(taskRequestHolder.getTaskRequest().getPendingTask().getPendingTaskId().getId(),
-            (k, v) -> (scorePerOffer.isEmpty() ? (v == null ? offerHolders.size() : v + offerHolders.size()) : null));
-        LOG.trace("Match attempts per task is currently {}", offerMatchAttemptsPerTask);
 
         if (!scorePerOffer.isEmpty()) {
           SingularityOfferHolder bestOffer = Collections.max(scorePerOffer.entrySet(), Map.Entry.comparingByValue()).getKey();
@@ -356,48 +342,6 @@ public class SingularityMesosOfferScheduler {
     score += (getNormalizedWeight(ResourceUsageType.MEMORY_BYTES_FREE) * freeResourceWeight) * memFreeScore;
 
     return score;
-  }
-
-  @VisibleForTesting
-  double minScore(SingularityTaskRequest taskRequest, Map<String, Integer> offerMatchAttemptsPerTask, Optional<SingularityClusterUtilization> maybeUtilization, long now, double maxTaskMillisPastDue) {
-    if (!maybeUtilization.isPresent()) {
-      return 0.00;
-    }
-
-    SingularityClusterUtilization utilization = maybeUtilization.get();
-    double memScore = (1 - (utilization.getTotalMemBytesUsed() / (double) utilization.getTotalMemBytesAvailable())) * configuration.getFreeMemWeightForOffer();
-    double cpuScore = (1 - (utilization.getTotalCpuUsed() / utilization.getTotalCpuAvailable())) * configuration.getFreeCpuWeightForOffer();
-
-    double minScore = memScore + cpuScore - getScoreTolerance();
-    minScore -= offerMatchAttemptsPerTask.getOrDefault(taskRequest.getPendingTask().getPendingTaskId().getId(), 0) / getMaxOfferAttemptsPerTask();
-    minScore -= millisPastDue(taskRequest, now) / maxTaskMillisPastDue;
-
-    return Math.max(minScore, 0);
-  }
-
-  private double getScoreTolerance() {
-    double minTolerance = 0.10;
-    return Math.max(-0.10 * Math.log10(0.00026 * Math.max(usageManager.getNumSlavesWithUsage(), 1)), minTolerance);
-  }
-
-  private double getMaxOfferAttemptsPerTask() {
-    if (configuration.getMaxOfferAttemptsPerTask() != 0) {
-      return (double) configuration.getMaxOfferAttemptsPerTask();
-    } else {
-      return stateCacheProvider.get().getNumActiveSlaves() * 0.66;
-    }
-  }
-
-  private long millisPastDue(SingularityTaskRequest taskRequest, long now) {
-    return Math.max(now - taskRequest.getPendingTask().getPendingTaskId().getNextRunAt(), 0);
-  }
-
-  @VisibleForTesting
-  double maxTaskMillisPastDue(long lag) {
-    long maxMillisPastDueForNoLag = TimeUnit.MINUTES.toMillis(3);
-    double slope = -1 * maxMillisPastDueForNoLag / (double) configuration.getDeltaAfterWhichTasksAreLateMillis();
-
-    return Math.max((slope * lag) + maxMillisPastDueForNoLag, 1.00);
   }
 
   private SingularityTask acceptTask(SingularityOfferHolder offerHolder, SingularitySchedulerStateCache stateCache, Map<String, Map<String, Integer>> tasksPerOfferPerRequest, SingularityTaskRequestHolder taskRequestHolder) {
