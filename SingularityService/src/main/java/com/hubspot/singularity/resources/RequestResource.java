@@ -34,7 +34,6 @@ import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.hubspot.jackson.jaxrs.PropertyFiltering;
 import com.hubspot.mesos.JavaUtils;
-import com.hubspot.mesos.Resources;
 import com.hubspot.singularity.MachineState;
 import com.hubspot.singularity.RequestCleanupType;
 import com.hubspot.singularity.RequestState;
