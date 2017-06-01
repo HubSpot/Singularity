@@ -42,7 +42,7 @@ Retrieve a paginated list of logs stored in S3
 
 | Parameter | Required | Description | Data Type |
 |-----------|----------|-------------|-----------|
-| body | true |  | [SingularityS3SearchRequest](models.md#model-linkType)</a> |
+| body | true |  | [SingularityS3SearchRequest](models.md#model-linkType)|
 
 ###### Response
 [SingularityS3SearchResult](models.md#model-SingularityS3SearchResult)

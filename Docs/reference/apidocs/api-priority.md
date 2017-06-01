@@ -51,7 +51,7 @@ Stop scheduling tasks below a certain priority level.
 
 | Parameter | Required | Description | Data Type |
 |-----------|----------|-------------|-----------|
-| body | false |  | [SingularityPriorityFreeze](models.md#model-linkType)</a> |
+| body | false |  | [SingularityPriorityFreeze](models.md#model-linkType)|
 
 ###### Response
 [SingularityPriorityFreezeParent](models.md#model-SingularityPriorityFreezeParent)

@@ -80,7 +80,7 @@ Create a Singularity request group
 
 | Parameter | Required | Description | Data Type |
 |-----------|----------|-------------|-----------|
-| body | false |  | [SingularityRequestGroup](models.md#model-linkType)</a> |
+| body | false |  | [SingularityRequestGroup](models.md#model-linkType)|
 
 ###### Response
 [SingularityRequestGroup](models.md#model-SingularityRequestGroup)

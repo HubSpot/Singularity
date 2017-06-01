@@ -39,7 +39,7 @@ Post metadata about a task that will be persisted along with it and displayed in
 
 | Parameter | Required | Description | Data Type |
 |-----------|----------|-------------|-----------|
-| body | false |  | [SingularityTaskMetadataRequest](models.md#model-linkType)</a> |
+| body | false |  | [SingularityTaskMetadataRequest](models.md#model-linkType)|
 
 ###### Response
 
@@ -69,7 +69,7 @@ Run a configured shell command against the given task
 
 | Parameter | Required | Description | Data Type |
 |-----------|----------|-------------|-----------|
-| body | false |  | [SingularityShellCommand](models.md#model-linkType)</a> |
+| body | false |  | [SingularityShellCommand](models.md#model-linkType)|
 
 ###### Response
 [SingularityTaskShellCommandRequest](models.md#model-SingularityTaskShellCommandRequest)
@@ -144,7 +144,7 @@ Attempt to kill task, optionally overriding an existing cleanup request (that ma
 
 | Parameter | Required | Description | Data Type |
 |-----------|----------|-------------|-----------|
-| body | false |  | [SingularityKillTaskRequest](models.md#model-linkType)</a> |
+| body | false |  | [SingularityKillTaskRequest](models.md#model-linkType)|
 
 ###### Response
 [SingularityTaskCleanup](models.md#model-SingularityTaskCleanup)

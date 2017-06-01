@@ -11,7 +11,7 @@ Update the target active instance count for a pending deploy
 
 | Parameter | Required | Description | Data Type |
 |-----------|----------|-------------|-----------|
-| body | true |  | [SingularityUpdatePendingDeployRequest](models.md#model-linkType)</a> |
+| body | true |  | [SingularityUpdatePendingDeployRequest](models.md#model-linkType)|
 
 ###### Response
 [SingularityRequestParent](models.md#model-SingularityRequestParent)
@@ -77,7 +77,7 @@ Start a new deployment for a Request
 
 | Parameter | Required | Description | Data Type |
 |-----------|----------|-------------|-----------|
-| body | true |  | [SingularityDeployRequest](models.md#model-linkType)</a> |
+| body | true |  | [SingularityDeployRequest](models.md#model-linkType)|
 
 ###### Response
 [SingularityRequestParent](models.md#model-SingularityRequestParent)
