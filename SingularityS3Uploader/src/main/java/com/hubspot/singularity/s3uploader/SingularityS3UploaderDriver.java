@@ -283,11 +283,9 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper implements S
         final int foundFiles = uploaderToFuture.getValue().get();
         final boolean isFinished = finishing.get(uploader);
 
-        if (foundFiles == 0) {
-          if (shouldExpire(uploader, isFinished)) {
-            LOG.info("Expiring {}", uploader);
-            expiredUploaders.add(uploader);
-          }
+        if (foundFiles == 0 && shouldExpire(uploader, isFinished)) {
+          LOG.info("Expiring {}", uploader);
+          expiredUploaders.add(uploader);
         } else {
           LOG.trace("Updating uploader {} last expire time", uploader);
           uploaderLastHadFilesAt.put(uploader, now);
