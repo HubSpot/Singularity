@@ -254,6 +254,7 @@ public class SingularityScheduler {
 
       List<SingularityPendingRequest> effectivePendingRequests = new ArrayList<>();
       pendingRequestsForDeploy.sort(Comparator.comparingLong(SingularityPendingRequest::getTimestamp));
+      int scheduledTasks = 0;
       for (SingularityPendingRequest pendingRequest : pendingRequestsForDeploy) {
         final SingularityRequest updatedRequest = updatedRequest(maybePendingDeploy, pendingRequest, maybeRequest.get());
 
@@ -273,25 +274,28 @@ public class SingularityScheduler {
 
         if (effectivePendingRequests.isEmpty()) {
           effectivePendingRequests.add(pendingRequest);
+          RequestState requestState = checkCooldown(maybeRequest.get().getState(), maybeRequest.get().getRequest(), deployStatistics);
+          scheduledTasks += scheduleTasks(stateCache, maybeRequest.get().getRequest(), requestState,
+              deployStatistics, pendingRequest, matchingTaskIds, maybePendingDeploy);
+          requestManager.deletePendingRequest(pendingRequest);
         } else if (pendingRequest.getPendingType() == PendingType.IMMEDIATE) {
           effectivePendingRequests.add(pendingRequest);
+          RequestState requestState = checkCooldown(maybeRequest.get().getState(), maybeRequest.get().getRequest(), deployStatistics);
+          scheduledTasks += scheduleTasks(stateCache, maybeRequest.get().getRequest(), requestState,
+              deployStatistics, pendingRequest, matchingTaskIds, maybePendingDeploy);
+          requestManager.deletePendingRequest(pendingRequest);
         } else if (pendingRequest.getPendingType() == PendingType.ONEOFF) {
           effectivePendingRequests.add(pendingRequest);
+          RequestState requestState = checkCooldown(maybeRequest.get().getState(), maybeRequest.get().getRequest(), deployStatistics);
+          scheduledTasks += scheduleTasks(stateCache, maybeRequest.get().getRequest(), requestState,
+              deployStatistics, pendingRequest, matchingTaskIds, maybePendingDeploy);
+          requestManager.deletePendingRequest(pendingRequest);
         } else {
           // Any other subsequent requests are not honored until after the pending queue is cleared.
         }
-
-        requestManager.deletePendingRequest(pendingRequest);
       }
 
-      int scheduledInstances = 0;
-      for (SingularityPendingRequest effectivePendingRequest : effectivePendingRequests) {
-        RequestState requestState = checkCooldown(maybeRequest.get().getState(), maybeRequest.get().getRequest(), deployStatistics);
-        scheduledInstances += scheduleTasks(stateCache, maybeRequest.get().getRequest(), requestState,
-            deployStatistics, effectivePendingRequest, matchingTaskIds, maybePendingDeploy);
-      }
-
-      totalNewScheduledTasks += scheduledInstances;
+      totalNewScheduledTasks += scheduledTasks;
     }
 
     LOG.info("Scheduled {} new tasks ({} obsolete requests, {} held) in {}", totalNewScheduledTasks, obsoleteRequests, heldForScheduledActiveTask, JavaUtils.duration(start));
@@ -392,27 +396,6 @@ public class SingularityScheduler {
       .filter(scheduledTasks, Predicates.and(SingularityPendingTask.matchingRequest(pendingRequest.getRequestId()), SingularityPendingTask.matchingDeploy(pendingRequest.getDeployId())))) {
       LOG.debug("Deleting pending task {} in order to reschedule {}", task.getPendingTaskId().getId(), pendingRequest);
       taskManager.deletePendingTask(task.getPendingTaskId());
-    }
-  }
-
-  private List<SingularityTaskId> getMatchingTaskIds(SingularitySchedulerStateCache stateCache, SingularityRequest request, SingularityPendingRequest pendingRequest) {
-    if (request.isLongRunning()) {
-      List<SingularityTaskId> matchingTaskIds = new ArrayList<>();
-      for (SingularityTaskId taskId : stateCache.getActiveTaskIdsForRequest(request.getId())) {
-        if (!taskId.getDeployId().equals(pendingRequest.getDeployId())) {
-          continue;
-        }
-        if (stateCache.getCleaningTasks().contains(taskId)) {
-          continue;
-        }
-        if (stateCache.getKilledTasks().contains(taskId)) {
-          continue;
-        }
-        matchingTaskIds.add(taskId);
-      }
-      return matchingTaskIds;
-    } else {
-      return new ArrayList<>(stateCache.getActiveTaskIdsForRequest(request.getId()));
     }
   }
 
@@ -594,7 +577,8 @@ public class SingularityScheduler {
       System.currentTimeMillis(), Optional.<String>absent(), pendingType, cmdLineArgsList, Optional.<String>absent(), Optional.<Boolean>absent(), Optional.<String>absent(),
       Optional.<String>absent());
 
-    scheduleTasks(stateCache, request, requestState, deployStatistics, pendingRequest, getMatchingTaskIds(stateCache, request, pendingRequest), maybePendingDeploy);
+    SingularityDeployKey deployKey = new SingularityDeployKey(taskId.getRequestId(), taskId.getDeployId());
+    scheduleTasks(stateCache, request, requestState, deployStatistics, pendingRequest, getMatchingTaskIds(stateCache, request, deployKey), maybePendingDeploy);
 
     return Optional.of(pendingType);
   }

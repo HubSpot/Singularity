@@ -68,9 +68,8 @@ public class SingularityStartupTest extends SingularitySchedulerTestBase {
 
     startup.checkSchedulerForInconsistentState();
 
-    Assert.assertEquals("NEW_DEPLOY and STARTUP requests added", 2, requestManager.getPendingRequests().size());
+    Assert.assertEquals("NEW_DEPLOY request added", 1, requestManager.getPendingRequests().size());
     Assert.assertEquals("NEW_DEPLOY is first", PendingType.NEW_DEPLOY, requestManager.getPendingRequests().get(0).getPendingType());
-    Assert.assertEquals("STARTUP is second", PendingType.STARTUP, requestManager.getPendingRequests().get(1).getPendingType());
     Assert.assertTrue("No tasks started yet", taskManager.getPendingTaskIds().isEmpty());
 
     scheduler.drainPendingQueue(stateCacheProvider.get());

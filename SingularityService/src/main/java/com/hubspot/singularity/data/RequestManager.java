@@ -25,6 +25,7 @@ import com.hubspot.singularity.SingularityCreateResult;
 import com.hubspot.singularity.SingularityDeleteResult;
 import com.hubspot.singularity.SingularityDeployKey;
 import com.hubspot.singularity.SingularityPendingRequest;
+import com.hubspot.singularity.SingularityPendingRequest.PendingType;
 import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityRequestCleanup;
 import com.hubspot.singularity.SingularityRequestHistory;
@@ -139,7 +140,12 @@ public class RequestManager extends CuratorAsyncManager {
 
   private String pendingQueueKey(SingularityPendingRequest pendingRequest) {
     SingularityDeployKey deployKey = new SingularityDeployKey(pendingRequest.getRequestId(), pendingRequest.getDeployId());
-    return String.format("%s%s", deployKey.toString(), pendingRequest.getTimestamp());
+    if (pendingRequest.getPendingType() == PendingType.ONEOFF
+        || pendingRequest.getPendingType() == PendingType.IMMEDIATE) {
+      return String.format("%s%s", deployKey.toString(), pendingRequest.getTimestamp());
+    } else {
+      return deployKey.toString();
+    }
   }
 
   private String getCleanupPath(String requestId, RequestCleanupType type) {
