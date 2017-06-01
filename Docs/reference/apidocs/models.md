@@ -991,7 +991,7 @@ Models:
 | avgStatusUpdateDelayMs | long | optional |  |
 | deadRacks | int | optional |  |
 | pendingRequests | int | optional |  |
-| maxTaskLagMillis | long | optional |  |
+| maxTaskLag | long | optional |  |
 | cooldownRequests | int | optional |  |
 | hostStates | [Array[SingularityHostState]](models.md#model-SingularityHostState) | optional |  |
 | allRequests | int | optional |  |
