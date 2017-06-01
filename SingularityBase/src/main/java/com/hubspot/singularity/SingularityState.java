@@ -20,7 +20,7 @@ public class SingularityState {
   private final int lbCleanupTasks;
   private final int lbCleanupRequests;
 
-  private final long maxTaskLagMillis;
+  private final long maxTaskLag;
 
   private final int pendingRequests;
   private final int cleaningRequests;
@@ -64,7 +64,7 @@ public class SingularityState {
                           @JsonProperty("decommissioningSlaves") int decommissioningSlaves, @JsonProperty("activeRacks") int activeRacks, @JsonProperty("deadRacks") int deadRacks, @JsonProperty("decommissioningRacks") int decommissioningRacks,
                           @JsonProperty("cleaningTasks") int cleaningTasks, @JsonProperty("hostStates") List<SingularityHostState> hostStates, @JsonProperty("oldestDeploy") long oldestDeploy, @JsonProperty("numDeploys") int numDeploys,
                           @JsonProperty("oldestDeployStep") long oldestDeployStep, @JsonProperty("activeDeploys") List<SingularityDeployMarker> activeDeploys,
-                          @JsonProperty("lateTasks") int lateTasks, @JsonProperty("futureTasks") int futureTasks, @JsonProperty("maxTaskLagMillis") long maxTaskLagMillis, @JsonProperty("generatedAt") long generatedAt,
+                          @JsonProperty("lateTasks") int lateTasks, @JsonProperty("futureTasks") int futureTasks, @JsonProperty("maxTaskLag") long maxTaskLag, @JsonProperty("generatedAt") long generatedAt,
                           @JsonProperty("overProvisionedRequestIds") List<String> overProvisionedRequestIds, @JsonProperty("underProvisionedRequestIds") List<String> underProvisionedRequestIds,
                           @JsonProperty("overProvisionedRequests") int overProvisionedRequests, @JsonProperty("underProvisionedRequests") int underProvisionedRequests, @JsonProperty("finishedRequests") int finishedRequests,
                           @JsonProperty("unknownRacks") int unknownRacks, @JsonProperty("unknownSlaves") int unknownSlaves, @JsonProperty("authDatastoreHealthy") Optional<Boolean> authDatastoreHealthy, @JsonProperty("minimumPriorityLevel") Optional<Double> minimumPriorityLevel,
@@ -91,7 +91,7 @@ public class SingularityState {
     this.lateTasks = lateTasks;
     this.finishedRequests = finishedRequests;
     this.futureTasks = futureTasks;
-    this.maxTaskLagMillis = maxTaskLagMillis;
+    this.maxTaskLag = maxTaskLag;
     this.oldestDeploy = oldestDeploy;
     this.numDeploys = numDeploys;
     this.oldestDeployStep = oldestDeployStep;
@@ -217,8 +217,8 @@ public class SingularityState {
     return futureTasks;
   }
 
-  public long getMaxTaskLagMillis() {
-    return maxTaskLagMillis;
+  public long getMaxTaskLag() {
+    return maxTaskLag;
   }
 
   public int getLbCleanupTasks() {
@@ -279,7 +279,7 @@ public class SingularityState {
         ", cleaningTasks=" + cleaningTasks +
         ", lbCleanupTasks=" + lbCleanupTasks +
         ", lbCleanupRequests=" + lbCleanupRequests +
-        ", maxTaskLagMillis=" + maxTaskLagMillis +
+        ", maxTaskLag=" + maxTaskLag +
         ", pendingRequests=" + pendingRequests +
         ", cleaningRequests=" + cleaningRequests +
         ", finishedRequests=" + finishedRequests +

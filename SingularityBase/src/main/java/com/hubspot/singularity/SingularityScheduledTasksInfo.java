@@ -24,7 +24,7 @@ public class SingularityScheduledTasksInfo {
     return numFutureTasks;
   }
 
-  public long getMaxTaskLagMillis() {
+  public long getMaxTaskLag() {
     return maxTaskLag;
   }
 
