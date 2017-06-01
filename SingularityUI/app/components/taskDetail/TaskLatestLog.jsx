@@ -7,7 +7,7 @@ import Section from '../common/Section';
 import TaskStatus from './TaskStatus';
 
 const getLink = (status, taskId, files, available) => {
-  const runningTaskLogFound = _.find(files.files, (f) => {
+  const runningTaskLogFound = files.files && _.find(files.files, (f) => {
     return f.uiPath === Utils.substituteTaskId(config.runningTaskLogPath, taskId);
   });
 
