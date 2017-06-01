@@ -343,7 +343,7 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper implements S
 
   private void performImmediateUpload(final SingularityS3Uploader uploader) {
     final Set<Path> filesToUpload = Collections
-        .newSetFromMap(new ConcurrentHashMap<Path, Boolean>(metadataToUploader.size() * 2, 0.75f, metadataToUploader.size()));
+        .newSetFromMap(new ConcurrentHashMap<Path, Boolean>(Math.max(metadataToUploader.size(), 1) * 2, 0.75f, Math.max(metadataToUploader.size(), 1)));
     final boolean finished = isFinished(uploader);
     immediateUploaders.put(uploader, executorService.submit(performUploadCallable(uploader, filesToUpload, finished, true)));
   }
