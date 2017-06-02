@@ -21,8 +21,9 @@ export const FetchActiveTasksForRequest = buildApiAction(
 
 export const FetchTaskHistoryForRequest = buildApiAction(
   'FETCH_TASK_HISTORY_FOR_REQUEST',
-  (requestId, count, page) => ({
-    url: `/history/request/${requestId}/tasks?requestId=${requestId}&count=${count}&page=${page}`
+  (requestId, count, page, catchStatusCodes = []) => ({
+    url: `/history/request/${requestId}/tasks?requestId=${requestId}&count=${count}&page=${page}`,
+    catchStatusCodes
   }),
   (requestId) => requestId
 );
