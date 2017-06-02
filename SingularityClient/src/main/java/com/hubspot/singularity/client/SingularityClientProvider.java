@@ -32,6 +32,7 @@ public class SingularityClientProvider implements Provider<SingularityClient> {
   private String contextPath = DEFAULT_CONTEXT_PATH;
   private List<String> hosts = Collections.emptyList();
   private Optional<SingularityClientCredentials> credentials = Optional.absent();
+  private boolean ssl = false;
 
   @Inject
   public SingularityClientProvider(@Named(SingularityClientModule.HTTP_CLIENT_NAME) HttpClient httpClient) {
@@ -71,23 +72,24 @@ public class SingularityClientProvider implements Provider<SingularityClient> {
     return this;
   }
 
+  @Inject(optional=true)
+  public SingularityClientProvider setSsl(boolean ssl) {
+    this.ssl = ssl;
+    return this;
+  }
+
   @Override
   public SingularityClient get() {
     Preconditions.checkState(contextPath != null, "contextPath null");
     Preconditions.checkState(!hosts.isEmpty(), "no hosts provided");
-    return new SingularityClient(contextPath, httpClient, hosts, credentials);
+    return new SingularityClient(contextPath, httpClient, hosts, credentials, ssl);
   }
 
   public SingularityClient get(Optional<SingularityClientCredentials> credentials) {
     Preconditions.checkState(contextPath != null, "contextPath null");
     Preconditions.checkState(!hosts.isEmpty(), "no hosts provided");
     Preconditions.checkNotNull(credentials);
-    return new SingularityClient(contextPath, httpClient, hosts, credentials);
-  }
-
-  @Deprecated
-  public SingularityClient buildClient(String contextPath, String hosts) {
-    return new SingularityClient(contextPath, httpClient, hosts);
+    return new SingularityClient(contextPath, httpClient, hosts, credentials, ssl);
   }
 
   static String getClusterMembers(CuratorFramework curator) {

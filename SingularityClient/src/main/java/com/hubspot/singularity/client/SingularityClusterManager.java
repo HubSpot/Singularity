@@ -40,7 +40,7 @@ public class SingularityClusterManager {
 
   @SuppressWarnings("deprecation")
   public SingularityClient getClusterClient(String cluster) {
-    return clientProvider.buildClient(contextPath, getClusterMembers(cluster));
+    return clientProvider.setContextPath(contextPath).setHosts(getClusterMembers(cluster)).get();
   }
 
 }
