@@ -839,6 +839,14 @@ public class TaskManager extends CuratorAsyncManager {
         .collect(Collectors.collectingAndThen(Collectors.toList(), ImmutableList::copyOf));
   }
 
+  public List<SingularityPendingTask> getPendingTasksForRequest(final String requestId) {
+    return getAsync(
+        PENDING_PATH_ROOT,
+        getPendingTaskIdsForRequest(requestId).stream().map(this::getPendingPath).collect(Collectors.toList()),
+        pendingTaskTranscoder
+    );
+  }
+
   public List<SingularityPendingTask> getPendingTasks() {
     return getPendingTasks(false);
   }

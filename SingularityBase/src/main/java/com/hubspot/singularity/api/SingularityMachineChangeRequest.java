@@ -16,6 +16,10 @@ public class SingularityMachineChangeRequest extends SingularityExpiringRequestP
     this(Optional.<Long>absent(), Optional.<String>absent(), message, Optional.<MachineState>absent(), Optional.<Boolean>absent());
   }
 
+  public static SingularityMachineChangeRequest empty() {
+    return new SingularityMachineChangeRequest(Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent());
+  }
+
   @JsonCreator
   public SingularityMachineChangeRequest(@JsonProperty("durationMillis") Optional<Long> durationMillis,
                                          @JsonProperty("actionId") Optional<String> actionId,
