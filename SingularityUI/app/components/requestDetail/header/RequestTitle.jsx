@@ -25,6 +25,8 @@ const RequestTitle = ({requestId, requestAPI, deleted}) => {
       const errorText = errorDescription(requestAPI);
       maybeInfo = <p className="text-danger">{requestAPI.statusCode}: {errorText}</p>;
     }
+  } else if (!requestAPI.data.request) {
+    maybeInfo = <p className="text-danger">No request data found for {requestId}</p>;
   } else {
     const requestParent = requestAPI.data;
     const {request, state} = requestParent;
