@@ -242,7 +242,7 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper implements S
       metrics.getImmediateUploaderCounter().dec();
       immediateUploaders.remove(uploader);
       immediateUploadMetadata.remove(uploader.getUploadMetadata());
-      expiring.remove(uploader);
+      LOG.debug("Removed expiring uploader (toRemove immediate loop): {}", expiring.remove(uploader));
 
       try {
         LOG.debug("Deleting finished immediate uploader {}", uploader.getMetadataPath());
@@ -306,7 +306,7 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper implements S
 
       metadataToUploader.remove(expiredUploader.getUploadMetadata());
       uploaderLastHadFilesAt.remove(expiredUploader);
-      expiring.remove(expiredUploader);
+      LOG.debug("Removed expiring uploader (expired loop): {}", expiring.remove(expiredUploader));
 
       try {
         LOG.debug("Deleting expired uploader {}", expiredUploader.getMetadataPath());
@@ -383,7 +383,7 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper implements S
     if (uploader.getUploadMetadata().getPid().isPresent()) {
       if (!processUtils.doesProcessExist(uploader.getUploadMetadata().getPid().get())) {
         LOG.info("Pid {} not present - expiring uploader {}", uploader.getUploadMetadata().getPid().get(), uploader);
-        expiring.add(uploader);
+        LOG.debug("added expiring uploader (isFinished): {}", expiring.add(uploader));
         return true;
       }
     }
@@ -405,7 +405,7 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper implements S
     if (existingUploader != null) {
       if (metadata.getUploadImmediately().isPresent() && metadata.getUploadImmediately().get()) {
         LOG.debug("Existing metadata {} from {} changed to be immediate, forcing upload", metadata, filename);
-        expiring.remove(existingUploader);
+        LOG.debug("Removed expiring uploader (uploadImmediately start): {}", expiring.remove(existingUploader));
         if (canCreateImmediateUploader(metadata)) {
           metrics.getUploaderCounter().dec();
           metrics.getImmediateUploaderCounter().inc();
@@ -424,9 +424,9 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper implements S
         LOG.info("Toggling uploader {} finish state to {}", existingUploader, metadata.isFinished());
 
         if (metadata.isFinished()) {
-          expiring.add(existingUploader);
+          LOG.debug("added expiring uploader (toggle finish): {}", expiring.add(existingUploader));
         } else {
-          expiring.remove(existingUploader);
+          LOG.debug("Removed expiring uploader (toggle finish)", expiring.remove(existingUploader));
         }
 
         return true;
@@ -445,7 +445,7 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper implements S
       final SingularityS3Uploader uploader = new SingularityS3Uploader(bucketCreds.or(defaultCredentials), metadata, fileSystem, metrics, filename, configuration, hostname, exceptionNotifier);
 
       if (metadata.isFinished()) {
-        expiring.add(uploader);
+        LOG.debug("added expiring uploader (added new finished): {}", expiring.add(uploader));
       }
 
       LOG.info("Created new uploader {}", uploader);
@@ -500,7 +500,7 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper implements S
         LOG.trace("Found {} to match deleted path {}", found, filename);
 
         if (found.isPresent()) {
-          expiring.add(found.get());
+          LOG.debug("added expiring uploader (already found): {}", expiring.add(found.get()));
         }
       } else {
         return handleNewOrModifiedS3Metadata(fullPath);
