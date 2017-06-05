@@ -39,6 +39,9 @@ public class SingularityExecutorCleanupConfiguration extends BaseRunnerConfigura
   @JsonProperty
   private List<String> singularityHosts = Collections.emptyList();
 
+  @JsonProperty
+  private boolean singularityUseSsl = false;
+
   @NotEmpty
   @JsonProperty
   private String singularityContextPath = "";
@@ -117,6 +120,14 @@ public class SingularityExecutorCleanupConfiguration extends BaseRunnerConfigura
 
   public void setSingularityHosts(List<String> singularityHosts) {
     this.singularityHosts = singularityHosts;
+  }
+
+  public boolean isSingularityUseSsl() {
+    return singularityUseSsl;
+  }
+
+  public void setSingularityUseSsl(boolean singularityUseSsl) {
+    this.singularityUseSsl = singularityUseSsl;
   }
 
   public String getSingularityContextPath() {
@@ -212,6 +223,7 @@ public class SingularityExecutorCleanupConfiguration extends BaseRunnerConfigura
         ", executorCleanupResultsSuffix='" + executorCleanupResultsSuffix + '\'' +
         ", cleanupAppDirectoryOfFailedTasksAfterMillis=" + cleanupAppDirectoryOfFailedTasksAfterMillis +
         ", singularityHosts=" + singularityHosts +
+        ", singularityUseSsl=" + singularityUseSsl +
         ", singularityContextPath='" + singularityContextPath + '\'' +
         ", runDockerCleanup=" + runDockerCleanup +
         ", singularityClientCredentials=" + singularityClientCredentials +
