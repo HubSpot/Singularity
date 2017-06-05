@@ -56,6 +56,19 @@ public class TaskTrackerResource {
       @ApiResponse(code=404, message="Task with this runId does not exist")
   })
   public Optional<SingularityTaskState> getTaskStateByRunId(@PathParam("requestId") String requestId, @PathParam("runId") String runId) {
+    // Check if it's active or inactive
+    Optional<SingularityTaskId> maybeTaskId = taskManager.getTaskByRunId(requestId, runId);
+    if (maybeTaskId.isPresent()) {
+      Optional<SingularityTaskState> maybeTaskState = getTaskStateFromId(maybeTaskId.get());
+      if (maybeTaskState.isPresent()) {
+        return maybeTaskState;
+      }
+    } else {
+      Optional<SingularityTaskHistory> maybeTaskHistory = historyManager.getTaskHistoryByRunId(requestId, runId);
+      if (maybeTaskHistory.isPresent()) {
+        return Optional.of(SingularityTaskState.fromTaskHistory(maybeTaskHistory.get()));
+      }
+    }
     // Check if it's pending
     for (SingularityPendingTask pendingTask : taskManager.getPendingTasksForRequest(requestId)) {
       if (pendingTask.getRunId().isPresent() && pendingTask.getRunId().get().equals(runId)) {
@@ -66,14 +79,6 @@ public class TaskTrackerResource {
             Collections.emptyList(),
             true
         ));
-      }
-    }
-    // Check if it's active or inactive
-    Optional<SingularityTaskId> maybeTaskId = taskManager.getTaskByRunId(requestId, runId);
-    if (maybeTaskId.isPresent()) {
-      Optional<SingularityTaskState> maybeTaskState = getTaskStateFromId(maybeTaskId.get());
-      if (maybeTaskState.isPresent()) {
-        return maybeTaskState;
       }
     }
     return Optional.absent();
