@@ -14,6 +14,7 @@ import org.slf4j.LoggerFactory;
 import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.hubspot.singularity.SingularityPendingTask;
+import com.hubspot.singularity.SingularityService;
 import com.hubspot.singularity.SingularityTaskHistory;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTaskState;
@@ -26,7 +27,7 @@ import com.wordnik.swagger.annotations.ApiResponses;
 @Path(TaskTrackerResource.PATH)
 @Produces({MediaType.APPLICATION_JSON})
 public class TaskTrackerResource {
-  public static final String PATH = "/track";
+  public static final String PATH = SingularityService.API_BASE_PATH + "/track";
   private static final Logger LOG = LoggerFactory.getLogger(TaskTrackerResource.class);
 
   private final TaskManager taskManager;
