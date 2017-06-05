@@ -242,6 +242,7 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper implements S
       metrics.getImmediateUploaderCounter().dec();
       immediateUploaders.remove(uploader);
       immediateUploadMetadata.remove(uploader.getUploadMetadata());
+      expiring.remove(uploader);
 
       try {
         LOG.debug("Deleting finished immediate uploader {}", uploader.getMetadataPath());
