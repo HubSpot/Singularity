@@ -83,9 +83,9 @@ public class SingularityValidator {
   private final int maxMemoryMbPerRequest;
   private final int maxMemoryMbPerInstance;
   private final Optional<Integer> maxTotalHealthcheckTimeoutSeconds;
-  private final long defaultKillAfterNotHealthySeconds;
+  private final long defaultKillHealthcheckAfterSeconds;
   private final int defaultHealthcheckIntervalSeconds;
-  private final int defaultHealthcheckStartupTimeooutSeconds;
+  private final int defaultHealthcheckStartupTimeoutSeconds;
   private final int defaultHealthcehckMaxRetries;
   private final int defaultHealthcheckResponseTimeoutSeconds;
   private final int maxDecommissioningSlaves;
@@ -130,9 +130,9 @@ public class SingularityValidator {
     this.allowBounceToSameHost = configuration.isAllowBounceToSameHost();
 
     this.maxTotalHealthcheckTimeoutSeconds = configuration.getHealthcheckMaxTotalTimeoutSeconds();
-    this.defaultKillAfterNotHealthySeconds = configuration.getKillAfterTasksDoNotRunDefaultSeconds();
+    this.defaultKillHealthcheckAfterSeconds = configuration.getKillHealthcheckAfterDefaultSeconds();
     this.defaultHealthcheckIntervalSeconds = configuration.getHealthcheckIntervalSeconds();
-    this.defaultHealthcheckStartupTimeooutSeconds = configuration.getStartupTimeoutSeconds();
+    this.defaultHealthcheckStartupTimeoutSeconds = configuration.getStartupTimeoutSeconds();
     this.defaultHealthcehckMaxRetries = configuration.getHealthcheckMaxRetries().or(0);
     this.defaultHealthcheckResponseTimeoutSeconds = configuration.getHealthcheckTimeoutSeconds();
 
@@ -304,7 +304,7 @@ public class SingularityValidator {
       HealthcheckOptions options = deploy.getHealthcheck().get();
       int intervalSeconds = options.getIntervalSeconds().or(defaultHealthcheckIntervalSeconds);
       int httpTimeoutSeconds = options.getResponseTimeoutSeconds().or(defaultHealthcheckResponseTimeoutSeconds);
-      int startupTime = options.getStartupTimeoutSeconds().or(defaultHealthcheckStartupTimeooutSeconds);
+      int startupTime = options.getStartupTimeoutSeconds().or(defaultHealthcheckStartupTimeoutSeconds);
       int attempts = options.getMaxRetries().or(defaultHealthcehckMaxRetries) + 1;
 
       checkBadRequest((startupTime + ((httpTimeoutSeconds + intervalSeconds) * attempts)) > maxTotalHealthcheckTimeoutSeconds.get(),
@@ -314,8 +314,8 @@ public class SingularityValidator {
     if (deploy.getHealthcheck().isPresent() && deploy.getHealthcheck().get().getStartupDelaySeconds().isPresent()) {
       int startUpDelay = deploy.getHealthcheck().get().getStartupDelaySeconds().get();
 
-      checkBadRequest(startUpDelay < defaultKillAfterNotHealthySeconds,
-          String.format("Health check startup delay time must be less than %s (was %s)", defaultKillAfterNotHealthySeconds, startUpDelay));
+      checkBadRequest(startUpDelay < defaultKillHealthcheckAfterSeconds,
+          String.format("Health check startup delay time must be less than max health check run time %s (was %s)", defaultKillHealthcheckAfterSeconds, startUpDelay));
     }
 
     checkBadRequest(deploy.getCommand().isPresent() && !deploy.getExecutorData().isPresent() ||

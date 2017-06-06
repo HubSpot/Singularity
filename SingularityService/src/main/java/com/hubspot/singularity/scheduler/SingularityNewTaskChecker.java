@@ -109,8 +109,12 @@ public class SingularityNewTaskChecker {
     return true;
   }
 
-  private long getKillAfterUnhealthyMillis() {
+  private long getKillAfterTaskNotRunningMillis() {
     return TimeUnit.SECONDS.toMillis(configuration.getKillAfterTasksDoNotRunDefaultSeconds());
+  }
+
+  private long getKillAfterHealthcheckRunningForMillis() {
+    return TimeUnit.SECONDS.toMillis(configuration.getKillHealthcheckAfterDefaultSeconds());
   }
 
   private int getDelaySeconds(SingularityTask task, Optional<SingularityRequestWithState> requestWithState) {
@@ -243,7 +247,7 @@ public class SingularityNewTaskChecker {
   }
 
   public enum CheckTaskState {
-    UNHEALTHY_KILL_TASK, OBSOLETE, CHECK_IF_OVERDUE, LB_IN_PROGRESS_CHECK_AGAIN, HEALTHY;
+    UNHEALTHY_KILL_TASK, OBSOLETE, CHECK_IF_TASK_OVERDUE, CHECK_IF_HEALTHCHECK_OVERDUE, LB_IN_PROGRESS_CHECK_AGAIN, HEALTHY;
   }
 
   private boolean checkTask(SingularityTask task, Optional<SingularityRequestWithState> requestWithState, SingularityHealthchecker healthchecker) {
@@ -254,12 +258,22 @@ public class SingularityNewTaskChecker {
     LOG.debug("Got task state {} for task {} in {}", state, task.getTaskId(), JavaUtils.duration(start));
 
     switch (state) {
-      case CHECK_IF_OVERDUE:
-        if (isOverdue(task)) {
-          LOG.info("Killing {} because it did not become healthy after {}", task.getTaskId(), JavaUtils.durationFromMillis(getKillAfterUnhealthyMillis()));
+      case CHECK_IF_HEALTHCHECK_OVERDUE:
+        if (isHealthcheckOverdue(task)) {
+          LOG.info("Killing {} because it did not become healthy after {}", task.getTaskId(), JavaUtils.durationFromMillis(getKillAfterHealthcheckRunningForMillis()));
 
           taskManager.createTaskCleanup(new SingularityTaskCleanup(Optional.<String> absent(), TaskCleanupType.OVERDUE_NEW_TASK, System.currentTimeMillis(),
-              task.getTaskId(), Optional.of(String.format("Task did not become healthy after %s", JavaUtils.durationFromMillis(getKillAfterUnhealthyMillis()))), Optional.<String>absent(), Optional.<SingularityTaskShellCommandRequestId>absent()));
+              task.getTaskId(), Optional.of(String.format("Task did not become healthy after %s", JavaUtils.durationFromMillis(getKillAfterHealthcheckRunningForMillis()))), Optional.<String>absent(), Optional.<SingularityTaskShellCommandRequestId>absent()));
+          return false;
+        } else {
+          return true;
+        }
+      case CHECK_IF_TASK_OVERDUE:
+        if (isTaskOverdue(task)) {
+          LOG.info("Killing {} because it did not reach the task running state after {}", task.getTaskId(), JavaUtils.durationFromMillis(getKillAfterTaskNotRunningMillis()));
+
+          taskManager.createTaskCleanup(new SingularityTaskCleanup(Optional.<String> absent(), TaskCleanupType.OVERDUE_NEW_TASK, System.currentTimeMillis(),
+              task.getTaskId(), Optional.of(String.format("Task did not reach the task running state after %s", JavaUtils.durationFromMillis(getKillAfterTaskNotRunningMillis()))), Optional.<String>absent(), Optional.<SingularityTaskShellCommandRequestId>absent()));
           return false;
         } else {
           return true;
@@ -293,7 +307,7 @@ public class SingularityNewTaskChecker {
         return CheckTaskState.OBSOLETE;
       case WAITING:
       case UNKNOWN:
-        return CheckTaskState.CHECK_IF_OVERDUE;
+        return CheckTaskState.CHECK_IF_TASK_OVERDUE;
       case RUNNING:
         break;
     }
@@ -305,7 +319,7 @@ public class SingularityNewTaskChecker {
       switch (health) {
         case WAITING:
           healthchecker.checkHealthcheck(task);
-          return CheckTaskState.CHECK_IF_OVERDUE;
+          return CheckTaskState.CHECK_IF_HEALTHCHECK_OVERDUE;
         case UNHEALTHY:
           taskManager.clearStartupHealthchecks(task.getTaskId());
           return CheckTaskState.UNHEALTHY_KILL_TASK;
@@ -368,16 +382,27 @@ public class SingularityNewTaskChecker {
     return Optional.absent();
   }
 
-  private boolean isOverdue(SingularityTask task) {
-    final long taskDuration = System.currentTimeMillis() - task.getTaskId().getStartedAt();
+  private boolean isHealthcheckOverdue(SingularityTask task) {
+    final long healthcheckDuration = taskManager.getLastHealthcheck(task.getTaskId()).get().getDurationMillis().or(0L);
 
-    final boolean isOverdue = taskDuration > getKillAfterUnhealthyMillis();
+    final boolean isOverdue = healthcheckDuration > getKillAfterHealthcheckRunningForMillis();
 
     if (isOverdue) {
-      LOG.debug("Task {} is overdue (duration: {}), allowed limit {}", task.getTaskId(), JavaUtils.durationFromMillis(taskDuration), JavaUtils.durationFromMillis(getKillAfterUnhealthyMillis()));
+      LOG.debug("Task {} healthcheck is overdue (duration: {}), allowed limit {}", task.getTaskId(), JavaUtils.durationFromMillis(healthcheckDuration), JavaUtils.durationFromMillis(getKillAfterHealthcheckRunningForMillis()));
     }
 
     return isOverdue;
   }
 
+  private boolean isTaskOverdue(SingularityTask task) {
+    final long taskDuration = System.currentTimeMillis() - task.getTaskId().getStartedAt();
+
+    final boolean isOverdue = taskDuration > getKillAfterTaskNotRunningMillis();
+
+    if (isOverdue) {
+      LOG.debug("Task {} is overdue (duration: {}), allowed limit {}", task.getTaskId(), JavaUtils.durationFromMillis(taskDuration), JavaUtils.durationFromMillis(getKillAfterTaskNotRunningMillis()));
+    }
+
+    return isOverdue;
+  }
 }
