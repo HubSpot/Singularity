@@ -242,6 +242,7 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper implements S
       metrics.getImmediateUploaderCounter().dec();
       immediateUploaders.remove(uploader);
       immediateUploadMetadata.remove(uploader.getUploadMetadata());
+      expiring.remove(uploader);
 
       try {
         LOG.debug("Deleting finished immediate uploader {}", uploader.getMetadataPath());
@@ -404,13 +405,13 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper implements S
     if (existingUploader != null) {
       if (metadata.getUploadImmediately().isPresent() && metadata.getUploadImmediately().get()) {
         LOG.debug("Existing metadata {} from {} changed to be immediate, forcing upload", metadata, filename);
+        expiring.remove(existingUploader);
         if (canCreateImmediateUploader(metadata)) {
           metrics.getUploaderCounter().dec();
           metrics.getImmediateUploaderCounter().inc();
 
           metadataToUploader.remove(existingUploader.getUploadMetadata());
           uploaderLastHadFilesAt.remove(existingUploader);
-          expiring.remove(existingUploader);
           performImmediateUpload(existingUploader);
           return true;
         } else {
