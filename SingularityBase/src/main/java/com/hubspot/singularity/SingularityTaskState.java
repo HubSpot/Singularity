@@ -4,6 +4,7 @@ import java.util.Collections;
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
 
@@ -59,6 +60,21 @@ public class SingularityTaskState {
 
   public boolean isPending() {
     return pending;
+  }
+
+  @JsonIgnore
+  public boolean isFailed() {
+    return currentState.isPresent() && currentState.get().isFailed();
+  }
+
+  @JsonIgnore
+  public boolean isDone() {
+    return currentState.isPresent() && currentState.get().isDone();
+  }
+
+  @JsonIgnore
+  public boolean isSuccess() {
+    return currentState.isPresent() && currentState.get().isSuccess();
   }
 
   @Override
