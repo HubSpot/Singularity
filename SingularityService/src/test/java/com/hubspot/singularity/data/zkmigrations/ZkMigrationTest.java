@@ -5,6 +5,7 @@ import java.util.List;
 
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.utils.ZKPaths;
+import org.assertj.core.api.Assertions;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -146,6 +147,50 @@ public class ZkMigrationTest extends SingularityTestBaseNoDb {
 
     // assert that the migration properly carried over any additional fields on the request
     Assert.assertEquals(Optional.of(owners), requestManager.getRequest(oldOnDemandRequest.getId()).get().getRequest().getOwners());
+  }
+
+  @Test
+  public void testPendingRequestRewriteTest() throws Exception {
+    metadataManager.setZkDataVersion("9");
+    long now = System.currentTimeMillis();
+
+    SingularityPendingRequest immediateRequest = new SingularityPendingRequest("immediateRequest", "immediateDeploy", now, Optional.absent(), PendingType.IMMEDIATE, Optional.absent(), Optional.absent());
+    SingularityPendingRequest newDeploy = new SingularityPendingRequest("newDeployRequest", "newDeploy", now, Optional.absent(), PendingType.NEW_DEPLOY, Optional.absent(), Optional.absent());
+    SingularityPendingRequest oneOffRequest = new SingularityPendingRequest("oneOffRequest", "oneOffDeploy", now, Optional.absent(), PendingType.ONEOFF, Optional.absent(), Optional.absent());
+    curator.create().creatingParentsIfNeeded().forPath("/requests/pending/immediateRequest-immediateDeploy", objectMapper.writeValueAsBytes(immediateRequest));
+    curator.create().creatingParentsIfNeeded().forPath("/requests/pending/newDeployRequest-newDeploy", objectMapper.writeValueAsBytes(newDeploy));
+    curator.create().creatingParentsIfNeeded().forPath(String.format("%s%s", "/requests/pending/oneOffRequest-oneOffDeploy", now), objectMapper.writeValueAsBytes(oneOffRequest));
+
+    Assert.assertEquals("3 existing requests under old paths", 3, requestManager.getPendingRequests().size());
+    System.out.println(curator.getChildren().forPath("/requests/pending"));
+
+    migrationRunner.checkMigrations();
+
+    Assert.assertEquals("3 existing requests under new paths", 3, requestManager.getPendingRequests().size());
+    System.out.println(curator.getChildren().forPath("/requests/pending"));
+
+    requestManager.deletePendingRequest(newDeploy);
+    Assertions.assertThat(requestManager.getPendingRequests())
+        .as("Non-renamed, non-timestamped nodes can be deleted")
+        .hasSize(2)
+        // Shim for the fact that SinguarityPendingRequest does not implement `equals`/`hashCode`
+        // Can be removed when immutables PR is merged
+        .extracting(SingularityPendingRequest::toString)
+        .doesNotContain(newDeploy.toString())
+        .contains(oneOffRequest.toString(), immediateRequest.toString());
+
+    requestManager.deletePendingRequest(oneOffRequest);
+    Assertions.assertThat(requestManager.getPendingRequests())
+        .as("Non-renamed timestamped nodes can be deleted")
+        .hasSize(1)
+        .extracting(SingularityPendingRequest::toString)
+        .doesNotContain(oneOffRequest.toString())
+        .contains(immediateRequest.toString());
+
+    requestManager.deletePendingRequest(immediateRequest);
+    Assertions.assertThat(requestManager.getPendingRequests())
+        .as("Renamed nodes can be deleted")
+        .hasSize(0);
   }
 
 
