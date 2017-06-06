@@ -382,4 +382,43 @@ public class SingularityS3Uploader {
     }
   }
 
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+
+    SingularityS3Uploader that = (SingularityS3Uploader) o;
+
+    if (uploadMetadata != null ? !uploadMetadata.equals(that.uploadMetadata) : that.uploadMetadata != null) {
+      return false;
+    }
+    if (fileDirectory != null ? !fileDirectory.equals(that.fileDirectory) : that.fileDirectory != null) {
+      return false;
+    }
+    if (s3BucketName != null ? !s3BucketName.equals(that.s3BucketName) : that.s3BucketName != null) {
+      return false;
+    }
+    if (metadataPath != null ? !metadataPath.equals(that.metadataPath) : that.metadataPath != null) {
+      return false;
+    }
+    if (logIdentifier != null ? !logIdentifier.equals(that.logIdentifier) : that.logIdentifier != null) {
+      return false;
+    }
+    return hostname != null ? hostname.equals(that.hostname) : that.hostname == null;
+  }
+
+  @Override
+  public int hashCode() {
+    int result = uploadMetadata != null ? uploadMetadata.hashCode() : 0;
+    result = 31 * result + (fileDirectory != null ? fileDirectory.hashCode() : 0);
+    result = 31 * result + (s3BucketName != null ? s3BucketName.hashCode() : 0);
+    result = 31 * result + (metadataPath != null ? metadataPath.hashCode() : 0);
+    result = 31 * result + (logIdentifier != null ? logIdentifier.hashCode() : 0);
+    result = 31 * result + (hostname != null ? hostname.hashCode() : 0);
+    return result;
+  }
 }
