@@ -35,11 +35,11 @@ public class SingularityTask extends SingularityTaskIdHolder {
   public SingularityTask(@JsonProperty("taskRequest") SingularityTaskRequest taskRequest, @JsonProperty("taskId") SingularityTaskId taskId, @JsonProperty("offer") Offer offer, @JsonProperty("offers") List<Offer> offers,
                          @JsonProperty("mesosTask") TaskInfo task, @JsonProperty("rackId") Optional<String> rackId) {
     super(taskId);
-    Preconditions.checkArgument(offer != null ^ offers != null, "Must specify one or the other of offer / offers");
+    Preconditions.checkArgument(offer != null || offers != null, "Must specify at least one of offer / offers");
     this.taskRequest = taskRequest;
     this.mesosTask = task;
     this.rackId = rackId;
-    if (offer == null) {
+    if (offers != null) {
       this.offers = offers;
     } else {
       this.offers = Collections.singletonList(offer);
@@ -55,7 +55,6 @@ public class SingularityTask extends SingularityTaskIdHolder {
    */
   @Deprecated
   @ApiModelProperty(hidden=true)
-  @JsonIgnore
   public Offer getOffer() {
     return offers.get(0);
   }
