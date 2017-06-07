@@ -73,6 +73,7 @@ public class TaskTrackerResource {
     for (SingularityPendingTask pendingTask : taskManager.getPendingTasksForRequest(requestId)) {
       if (pendingTask.getRunId().isPresent() && pendingTask.getRunId().get().equals(runId)) {
         return Optional.of(new SingularityTaskState(
+            Optional.absent(),
             pendingTask.getPendingTaskId(),
             pendingTask.getRunId(),
             Optional.absent(),
