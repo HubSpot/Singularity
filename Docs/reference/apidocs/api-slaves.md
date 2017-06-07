@@ -16,7 +16,7 @@ Freeze tasks on a specific slave
 
 | Parameter | Required | Description | Data Type |
 |-----------|----------|-------------|-----------|
-| body | false |  | [SingularityMachineChangeRequest](models.md#model-linkType)</a> |
+| body | false |  | [SingularityMachineChangeRequest](models.md#model-linkType)|
 
 ###### Response
 
@@ -90,7 +90,7 @@ Begin decommissioning a specific active slave
 
 | Parameter | Required | Description | Data Type |
 |-----------|----------|-------------|-----------|
-| body | false |  | [SingularityMachineChangeRequest](models.md#model-linkType)</a> |
+| body | false |  | [SingularityMachineChangeRequest](models.md#model-linkType)|
 
 ###### Response
 
@@ -118,7 +118,7 @@ Activate a decomissioning slave, canceling decomission without erasing history
 
 | Parameter | Required | Description | Data Type |
 |-----------|----------|-------------|-----------|
-| body | false |  | [SingularityMachineChangeRequest](models.md#model-linkType)</a> |
+| body | false |  | [SingularityMachineChangeRequest](models.md#model-linkType)|
 
 ###### Response
 

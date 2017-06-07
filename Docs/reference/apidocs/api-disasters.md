@@ -115,7 +115,7 @@ Disable a specific action
 
 | Parameter | Required | Description | Data Type |
 |-----------|----------|-------------|-----------|
-| body | false |  | [SingularityDisabledActionRequest](models.md#model-linkType)</a> |
+| body | false |  | [SingularityDisabledActionRequest](models.md#model-linkType)|
 
 ###### Response
 

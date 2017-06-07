@@ -232,7 +232,7 @@ Disable a specific action
 
 | Parameter | Required | Description | Data Type |
 |-----------|----------|-------------|-----------|
-| body | false |  | [SingularityDisabledActionRequest](#model-linkType)</a> |
+| body | false |  | [SingularityDisabledActionRequest](#model-linkType)|
 
 ###### Response
 
@@ -584,7 +584,7 @@ Add a new webhook.
 
 | Parameter | Required | Description | Data Type |
 |-----------|----------|-------------|-----------|
-| body | false |  | [SingularityWebhook](#model-linkType)</a> |
+| body | false |  | [SingularityWebhook](#model-linkType)|
 
 ###### Response
 string
@@ -662,7 +662,7 @@ Post metadata about a task that will be persisted along with it and displayed in
 
 | Parameter | Required | Description | Data Type |
 |-----------|----------|-------------|-----------|
-| body | false |  | [SingularityTaskMetadataRequest](#model-linkType)</a> |
+| body | false |  | [SingularityTaskMetadataRequest](#model-linkType)|
 
 ###### Response
 
@@ -692,7 +692,7 @@ Run a configured shell command against the given task
 
 | Parameter | Required | Description | Data Type |
 |-----------|----------|-------------|-----------|
-| body | false |  | [SingularityShellCommand](#model-linkType)</a> |
+| body | false |  | [SingularityShellCommand](#model-linkType)|
 
 ###### Response
 [SingularityTaskShellCommandRequest](#model-SingularityTaskShellCommandRequest)
@@ -767,7 +767,7 @@ Attempt to kill task, optionally overriding an existing cleanup request (that ma
 
 | Parameter | Required | Description | Data Type |
 |-----------|----------|-------------|-----------|
-| body | false |  | [SingularityKillTaskRequest](#model-linkType)</a> |
+| body | false |  | [SingularityKillTaskRequest](#model-linkType)|
 
 ###### Response
 [SingularityTaskCleanup](#model-SingularityTaskCleanup)
@@ -1539,7 +1539,7 @@ Stop scheduling tasks below a certain priority level.
 
 | Parameter | Required | Description | Data Type |
 |-----------|----------|-------------|-----------|
-| body | false |  | [SingularityPriorityFreeze](#model-linkType)</a> |
+| body | false |  | [SingularityPriorityFreeze](#model-linkType)|
 
 ###### Response
 [SingularityPriorityFreezeParent](#model-SingularityPriorityFreezeParent)
@@ -1598,7 +1598,7 @@ Retrieve a paginated list of logs stored in S3
 
 | Parameter | Required | Description | Data Type |
 |-----------|----------|-------------|-----------|
-| body | true |  | [SingularityS3SearchRequest](#model-linkType)</a> |
+| body | true |  | [SingularityS3SearchRequest](#model-linkType)|
 
 ###### Response
 [SingularityS3SearchResult](#model-SingularityS3SearchResult)
@@ -1695,7 +1695,7 @@ Freeze a specific rack
 
 | Parameter | Required | Description | Data Type |
 |-----------|----------|-------------|-----------|
-| body | false |  | [SingularityMachineChangeRequest](#model-linkType)</a> |
+| body | false |  | [SingularityMachineChangeRequest](#model-linkType)|
 
 ###### Response
 
@@ -1746,7 +1746,7 @@ Begin decommissioning a specific active rack
 
 | Parameter | Required | Description | Data Type |
 |-----------|----------|-------------|-----------|
-| body | false |  | [SingularityMachineChangeRequest](#model-linkType)</a> |
+| body | false |  | [SingularityMachineChangeRequest](#model-linkType)|
 
 ###### Response
 
@@ -1774,7 +1774,7 @@ Activate a decomissioning rack, canceling decomission without erasing history
 
 | Parameter | Required | Description | Data Type |
 |-----------|----------|-------------|-----------|
-| body | false |  | [SingularityMachineChangeRequest](#model-linkType)</a> |
+| body | false |  | [SingularityMachineChangeRequest](#model-linkType)|
 
 ###### Response
 
@@ -1987,7 +1987,7 @@ Freeze tasks on a specific slave
 
 | Parameter | Required | Description | Data Type |
 |-----------|----------|-------------|-----------|
-| body | false |  | [SingularityMachineChangeRequest](#model-linkType)</a> |
+| body | false |  | [SingularityMachineChangeRequest](#model-linkType)|
 
 ###### Response
 
@@ -2061,7 +2061,7 @@ Begin decommissioning a specific active slave
 
 | Parameter | Required | Description | Data Type |
 |-----------|----------|-------------|-----------|
-| body | false |  | [SingularityMachineChangeRequest](#model-linkType)</a> |
+| body | false |  | [SingularityMachineChangeRequest](#model-linkType)|
 
 ###### Response
 
@@ -2089,7 +2089,7 @@ Activate a decomissioning slave, canceling decomission without erasing history
 
 | Parameter | Required | Description | Data Type |
 |-----------|----------|-------------|-----------|
-| body | false |  | [SingularityMachineChangeRequest](#model-linkType)</a> |
+| body | false |  | [SingularityMachineChangeRequest](#model-linkType)|
 
 ###### Response
 
@@ -2520,7 +2520,7 @@ Create a Singularity request group
 
 | Parameter | Required | Description | Data Type |
 |-----------|----------|-------------|-----------|
-| body | false |  | [SingularityRequestGroup](#model-linkType)</a> |
+| body | false |  | [SingularityRequestGroup](#model-linkType)|
 
 ###### Response
 [SingularityRequestGroup](#model-SingularityRequestGroup)
@@ -2552,7 +2552,7 @@ Unpause a Singularity Request, scheduling new tasks immediately
 
 | Parameter | Required | Description | Data Type |
 |-----------|----------|-------------|-----------|
-| body | false |  | [SingularityUnpauseRequest](#model-linkType)</a> |
+| body | false |  | [SingularityUnpauseRequest](#model-linkType)|
 
 ###### Response
 [SingularityRequestParent](#model-SingularityRequestParent)
@@ -2603,7 +2603,7 @@ Update the skipHealthchecks field for the request, possibly temporarily
 
 | Parameter | Required | Description | Data Type |
 |-----------|----------|-------------|-----------|
-| body | false | SkipHealtchecks options | [SingularitySkipHealthchecksRequest](#model-linkType)</a> |
+| body | false | SkipHealtchecks options | [SingularitySkipHealthchecksRequest](#model-linkType)|
 
 ###### Response
 [SingularityRequestParent](#model-SingularityRequestParent)
@@ -2631,7 +2631,7 @@ Update the skipHealthchecks field for the request, possibly temporarily
 
 | Parameter | Required | Description | Data Type |
 |-----------|----------|-------------|-----------|
-| body | false | SkipHealtchecks options | [SingularitySkipHealthchecksRequest](#model-linkType)</a> |
+| body | false | SkipHealtchecks options | [SingularitySkipHealthchecksRequest](#model-linkType)|
 
 ###### Response
 [SingularityRequestParent](#model-SingularityRequestParent)
@@ -2682,7 +2682,7 @@ Scale the number of instances up or down for a specific Request
 
 | Parameter | Required | Description | Data Type |
 |-----------|----------|-------------|-----------|
-| body | false | Object to hold number of instances to request | [SingularityScaleRequest](#model-linkType)</a> |
+| body | false | Object to hold number of instances to request | [SingularityScaleRequest](#model-linkType)|
 
 ###### Response
 [SingularityRequestParent](#model-SingularityRequestParent)
@@ -2757,7 +2757,7 @@ Schedule a one-off or scheduled Singularity request for immediate execution.
 
 | Parameter | Required | Description | Data Type |
 |-----------|----------|-------------|-----------|
-| body | false |  | [SingularityRunNowRequest](#model-linkType)</a> |
+| body | false |  | [SingularityRunNowRequest](#model-linkType)|
 
 ###### Response
 [SingularityRequestParent](#model-SingularityRequestParent)
@@ -2785,7 +2785,7 @@ Pause a Singularity request, future tasks will not run until it is manually unpa
 
 | Parameter | Required | Description | Data Type |
 |-----------|----------|-------------|-----------|
-| body | false | Pause Request Options | [SingularityPauseRequest](#model-linkType)</a> |
+| body | false | Pause Request Options | [SingularityPauseRequest](#model-linkType)|
 
 ###### Response
 [SingularityRequestParent](#model-SingularityRequestParent)
@@ -2836,7 +2836,7 @@ Immediately exits cooldown, scheduling new tasks immediately
 
 | Parameter | Required | Description | Data Type |
 |-----------|----------|-------------|-----------|
-| body | false |  | [SingularityExitCooldownRequest](#model-linkType)</a> |
+| body | false |  | [SingularityExitCooldownRequest](#model-linkType)|
 
 ###### Response
 [SingularityRequestParent](#model-SingularityRequestParent)
@@ -2864,7 +2864,7 @@ Bounce a specific Singularity request. A bounce launches replacement task(s), an
 
 | Parameter | Required | Description | Data Type |
 |-----------|----------|-------------|-----------|
-| body | false | Bounce request options | [SingularityBounceRequest](#model-linkType)</a> |
+| body | false | Bounce request options | [SingularityBounceRequest](#model-linkType)|
 
 ###### Response
 [SingularityRequestParent](#model-SingularityRequestParent)
@@ -2943,7 +2943,7 @@ Delete a specific Request by ID and return the deleted Request
 
 | Parameter | Required | Description | Data Type |
 |-----------|----------|-------------|-----------|
-| body | false | Delete options | [SingularityDeleteRequestRequest](#model-linkType)</a> |
+| body | false | Delete options | [SingularityDeleteRequestRequest](#model-linkType)|
 
 ###### Response
 [SingularityRequest](#model-SingularityRequest)
@@ -3142,7 +3142,7 @@ Create or update a Singularity Request
 
 | Parameter | Required | Description | Data Type |
 |-----------|----------|-------------|-----------|
-| body | false | The Singularity request to create or update | [SingularityRequest](#model-linkType)</a> |
+| body | false | The Singularity request to create or update | [SingularityRequest](#model-linkType)|
 
 ###### Response
 [SingularityRequestParent](#model-SingularityRequestParent)
@@ -3170,7 +3170,7 @@ Update the target active instance count for a pending deploy
 
 | Parameter | Required | Description | Data Type |
 |-----------|----------|-------------|-----------|
-| body | true |  | [SingularityUpdatePendingDeployRequest](#model-linkType)</a> |
+| body | true |  | [SingularityUpdatePendingDeployRequest](#model-linkType)|
 
 ###### Response
 [SingularityRequestParent](#model-SingularityRequestParent)
@@ -3236,7 +3236,7 @@ Start a new deployment for a Request
 
 | Parameter | Required | Description | Data Type |
 |-----------|----------|-------------|-----------|
-| body | true |  | [SingularityDeployRequest](#model-linkType)</a> |
+| body | true |  | [SingularityDeployRequest](#model-linkType)|
 
 ###### Response
 [SingularityRequestParent](#model-SingularityRequestParent)

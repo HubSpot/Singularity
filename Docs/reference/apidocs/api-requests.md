@@ -16,7 +16,7 @@ Unpause a Singularity Request, scheduling new tasks immediately
 
 | Parameter | Required | Description | Data Type |
 |-----------|----------|-------------|-----------|
-| body | false |  | [SingularityUnpauseRequest](models.md#model-linkType)</a> |
+| body | false |  | [SingularityUnpauseRequest](models.md#model-linkType)|
 
 ###### Response
 [SingularityRequestParent](models.md#model-SingularityRequestParent)
@@ -67,7 +67,7 @@ Update the skipHealthchecks field for the request, possibly temporarily
 
 | Parameter | Required | Description | Data Type |
 |-----------|----------|-------------|-----------|
-| body | false | SkipHealtchecks options | [SingularitySkipHealthchecksRequest](models.md#model-linkType)</a> |
+| body | false | SkipHealtchecks options | [SingularitySkipHealthchecksRequest](models.md#model-linkType)|
 
 ###### Response
 [SingularityRequestParent](models.md#model-SingularityRequestParent)
@@ -95,7 +95,7 @@ Update the skipHealthchecks field for the request, possibly temporarily
 
 | Parameter | Required | Description | Data Type |
 |-----------|----------|-------------|-----------|
-| body | false | SkipHealtchecks options | [SingularitySkipHealthchecksRequest](models.md#model-linkType)</a> |
+| body | false | SkipHealtchecks options | [SingularitySkipHealthchecksRequest](models.md#model-linkType)|
 
 ###### Response
 [SingularityRequestParent](models.md#model-SingularityRequestParent)
@@ -146,7 +146,7 @@ Scale the number of instances up or down for a specific Request
 
 | Parameter | Required | Description | Data Type |
 |-----------|----------|-------------|-----------|
-| body | false | Object to hold number of instances to request | [SingularityScaleRequest](models.md#model-linkType)</a> |
+| body | false | Object to hold number of instances to request | [SingularityScaleRequest](models.md#model-linkType)|
 
 ###### Response
 [SingularityRequestParent](models.md#model-SingularityRequestParent)
@@ -221,7 +221,7 @@ Schedule a one-off or scheduled Singularity request for immediate execution.
 
 | Parameter | Required | Description | Data Type |
 |-----------|----------|-------------|-----------|
-| body | false |  | [SingularityRunNowRequest](models.md#model-linkType)</a> |
+| body | false |  | [SingularityRunNowRequest](models.md#model-linkType)|
 
 ###### Response
 [SingularityRequestParent](models.md#model-SingularityRequestParent)
@@ -249,7 +249,7 @@ Pause a Singularity request, future tasks will not run until it is manually unpa
 
 | Parameter | Required | Description | Data Type |
 |-----------|----------|-------------|-----------|
-| body | false | Pause Request Options | [SingularityPauseRequest](models.md#model-linkType)</a> |
+| body | false | Pause Request Options | [SingularityPauseRequest](models.md#model-linkType)|
 
 ###### Response
 [SingularityRequestParent](models.md#model-SingularityRequestParent)
@@ -300,7 +300,7 @@ Immediately exits cooldown, scheduling new tasks immediately
 
 | Parameter | Required | Description | Data Type |
 |-----------|----------|-------------|-----------|
-| body | false |  | [SingularityExitCooldownRequest](models.md#model-linkType)</a> |
+| body | false |  | [SingularityExitCooldownRequest](models.md#model-linkType)|
 
 ###### Response
 [SingularityRequestParent](models.md#model-SingularityRequestParent)
@@ -328,7 +328,7 @@ Bounce a specific Singularity request. A bounce launches replacement task(s), an
 
 | Parameter | Required | Description | Data Type |
 |-----------|----------|-------------|-----------|
-| body | false | Bounce request options | [SingularityBounceRequest](models.md#model-linkType)</a> |
+| body | false | Bounce request options | [SingularityBounceRequest](models.md#model-linkType)|
 
 ###### Response
 [SingularityRequestParent](models.md#model-SingularityRequestParent)
@@ -407,7 +407,7 @@ Delete a specific Request by ID and return the deleted Request
 
 | Parameter | Required | Description | Data Type |
 |-----------|----------|-------------|-----------|
-| body | false | Delete options | [SingularityDeleteRequestRequest](models.md#model-linkType)</a> |
+| body | false | Delete options | [SingularityDeleteRequestRequest](models.md#model-linkType)|
 
 ###### Response
 [SingularityRequest](models.md#model-SingularityRequest)
@@ -606,7 +606,7 @@ Create or update a Singularity Request
 
 | Parameter | Required | Description | Data Type |
 |-----------|----------|-------------|-----------|
-| body | false | The Singularity request to create or update | [SingularityRequest](models.md#model-linkType)</a> |
+| body | false | The Singularity request to create or update | [SingularityRequest](models.md#model-linkType)|
 
 ###### Response
 [SingularityRequestParent](models.md#model-SingularityRequestParent)

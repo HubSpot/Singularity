@@ -210,7 +210,7 @@ Add a new webhook.
 
 | Parameter | Required | Description | Data Type |
 |-----------|----------|-------------|-----------|
-| body | false |  | [SingularityWebhook](models.md#model-linkType)</a> |
+| body | false |  | [SingularityWebhook](models.md#model-linkType)|
 
 ###### Response
 string
