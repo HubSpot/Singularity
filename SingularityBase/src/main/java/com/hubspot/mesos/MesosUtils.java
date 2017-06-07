@@ -395,6 +395,33 @@ public final class MesosUtils {
     return remaining;
   }
 
+  public static List<Resource> combineResources(List<List<Resource>> resourcesList) {
+    List<Resource> resources = resourcesList.remove(0);
+    for (List<Resource> resourcesToAdd : resourcesList) {
+      for (Resource resource : resourcesToAdd) {
+        Optional<Resource> matched = getMatchingResource(resource, resources);
+        if (!matched.isPresent()) {
+          resources.add(resource);
+        } else {
+          int index = resources.indexOf(matched.get());
+          Resource.Builder resourceBuilder = resource.toBuilder().clone();
+          if (resource.hasScalar()) {
+            resourceBuilder.setScalar(resource.toBuilder().getScalarBuilder().setValue(resource.getScalar().getValue() + matched.get().getScalar().getValue()).build());
+          } else if (resource.hasRanges()) {
+            Ranges.Builder newRanges = Ranges.newBuilder();
+            resource.getRanges().getRangeList().forEach(newRanges::addRange);
+            matched.get().getRanges().getRangeList().forEach(newRanges::addRange);
+            resourceBuilder.setRanges(newRanges);
+            resources.set(index, resourceBuilder.build());
+          } else {
+            throw new IllegalStateException(String.format("Can't subtract non-scalar or range resources %s", formatForLogging(resource)));
+          }
+        }
+      }
+    }
+    return resources;
+  }
+
   public static Resources buildResourcesFromMesosResourceList(List<Resource> resources) {
     return new Resources(getNumCpus(resources, Optional.<String>absent()), getMemory(resources, Optional.<String>absent()), getNumPorts(resources), getDisk(resources, Optional.<String>absent()));
   }

@@ -60,6 +60,7 @@ public class SingularityMesosTaskBuilderTest {
   private Resources taskResources;
   private Resources executorResources;
   private Offer offer;
+  private SingularityOfferHolder offerHolder;
   private SingularityPendingTask pendingTask;
 
   private final String user = "testUser";
@@ -74,7 +75,7 @@ public class SingularityMesosTaskBuilderTest {
 
     when(idGenerator.getNextExecutorId()).then(new CreateFakeId());
 
-    builder = new SingularityMesosTaskBuilder(new ObjectMapper(), slaveAndRackHelper, idGenerator, configuration);
+    builder = new SingularityMesosTaskBuilder(new ObjectMapper(), idGenerator, configuration);
 
     taskResources = new Resources(1, 1, 0, 0);
     executorResources = new Resources(0.1, 1, 0, 0);
@@ -85,6 +86,15 @@ public class SingularityMesosTaskBuilderTest {
         .setFrameworkId(FrameworkID.newBuilder().setValue("1"))
         .setHostname("test")
         .build();
+    offerHolder = new SingularityOfferHolder(
+        Collections.singletonList(offer),
+        1,
+        slaveAndRackHelper.getRackIdOrDefault(offer),
+        offer.getSlaveId().getValue(),
+        offer.getHostname(),
+        Collections.emptyMap(),
+        Collections.emptyMap());
+
 
     when(slaveAndRackHelper.getRackId(offer)).thenReturn(Optional.<String> absent());
     when(slaveAndRackHelper.getMaybeTruncatedHost(offer)).thenReturn("host");
@@ -98,7 +108,7 @@ public class SingularityMesosTaskBuilderTest {
         .setCommand(Optional.of("/bin/echo hi"))
         .build();
     final SingularityTaskRequest taskRequest = new SingularityTaskRequest(request, deploy, pendingTask);
-    final SingularityTask task = builder.buildTask(offer, null, taskRequest, taskResources, executorResources);
+    final SingularityTask task = builder.buildTask(offerHolder, null, taskRequest, taskResources, executorResources);
 
     assertEquals("/bin/echo hi", task.getMesosTask().getCommand().getValue());
     assertEquals(0, task.getMesosTask().getCommand().getArgumentsCount());
@@ -113,7 +123,7 @@ public class SingularityMesosTaskBuilderTest {
         .setCommand(Optional.of("/bin/echo hi"))
         .build();
     final SingularityTaskRequest taskRequest = new SingularityTaskRequest(request, deploy, pendingTask);
-    final SingularityTask task = builder.buildTask(offer, null, taskRequest, taskResources, executorResources);
+    final SingularityTask task = builder.buildTask(offerHolder, null, taskRequest, taskResources, executorResources);
 
     List<Variable> environmentVariables = task.getMesosTask()
         .getCommand()
@@ -136,7 +146,7 @@ public class SingularityMesosTaskBuilderTest {
         .setArguments(Optional.of(Collections.singletonList("wat")))
         .build();
     final SingularityTaskRequest taskRequest = new SingularityTaskRequest(request, deploy, pendingTask);
-    final SingularityTask task = builder.buildTask(offer, null, taskRequest, taskResources, executorResources);
+    final SingularityTask task = builder.buildTask(offerHolder, null, taskRequest, taskResources, executorResources);
 
     assertEquals("/bin/echo", task.getMesosTask().getCommand().getValue());
     assertEquals(1, task.getMesosTask().getCommand().getArgumentsCount());
@@ -173,7 +183,7 @@ public class SingularityMesosTaskBuilderTest {
         .setArguments(Optional.of(Collections.singletonList("wat")))
         .build();
     final SingularityTaskRequest taskRequest = new SingularityTaskRequest(request, deploy, pendingTask);
-    final SingularityTask task = builder.buildTask(offer, Collections.singletonList(portsResource), taskRequest, taskResources, executorResources);
+    final SingularityTask task = builder.buildTask(offerHolder, Collections.singletonList(portsResource), taskRequest, taskResources, executorResources);
 
     assertEquals("/bin/echo", task.getMesosTask().getCommand().getValue());
     assertEquals(1, task.getMesosTask().getCommand().getArgumentsCount());
@@ -223,7 +233,7 @@ public class SingularityMesosTaskBuilderTest {
         .setContainerInfo(Optional.of(containerInfo))
         .build();
     final SingularityTaskRequest taskRequest = new SingularityTaskRequest(request, deploy, pendingTask);
-    final SingularityTask task = builder.buildTask(offer, Collections.<Protos.Resource>emptyList(), taskRequest, taskResources, executorResources);
+    final SingularityTask task = builder.buildTask(offerHolder, Collections.emptyList(), taskRequest, taskResources, executorResources);
 
     assertEquals(Type.DOCKER, task.getMesosTask().getContainer().getType());
     assertEquals(Protos.ContainerInfo.DockerInfo.Network.NONE, task.getMesosTask().getContainer().getDocker().getNetwork());
@@ -249,7 +259,7 @@ public class SingularityMesosTaskBuilderTest {
         .setContainerInfo(Optional.of(containerInfo))
         .build();
     final SingularityTaskRequest taskRequest = new SingularityTaskRequest(request, deploy, pendingTask);
-    final SingularityTask task = builder.buildTask(offer, Collections.singletonList(MesosUtils.getPortRangeResource(31010, 31011)), taskRequest, taskResources, executorResources);
+    final SingularityTask task = builder.buildTask(offerHolder, Collections.singletonList(MesosUtils.getPortRangeResource(31010, 31011)), taskRequest, taskResources, executorResources);
 
     assertEquals(Type.DOCKER, task.getMesosTask().getContainer().getType());
     assertEquals(Protos.ContainerInfo.DockerInfo.Network.BRIDGE, task.getMesosTask().getContainer().getDocker().getNetwork());

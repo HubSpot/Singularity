@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 import javax.ws.rs.WebApplicationException;
 
@@ -436,7 +437,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     Set<String> offerIds = Sets.newHashSet();
 
     for (SingularityTask activeTask : taskManager.getActiveTasks()) {
-      offerIds.add(activeTask.getOffer().getId().getValue());
+      offerIds.addAll(activeTask.getOffers().stream().map((o) -> o.getId().getValue()).collect(Collectors.toList()));
     }
 
     Assert.assertTrue(offerIds.size() == 2);
@@ -655,7 +656,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
 
     Assert.assertEquals(1, taskManager.getNumActiveTasks());
 
-    slaveResource.decommissionSlave(taskManager.getActiveTasks().get(0).getOffer().getSlaveId().getValue(), null);
+    slaveResource.decommissionSlave(taskManager.getActiveTasks().get(0).getSlaveId().getValue(), null);
 
     scheduler.checkForDecomissions(stateCacheProvider.get());
 

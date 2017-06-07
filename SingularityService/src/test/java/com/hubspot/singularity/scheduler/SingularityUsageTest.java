@@ -50,14 +50,14 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
 
     SingularityTask firstTask = taskManager.getActiveTasks().get(0);
 
-    String hostname = firstTask.getOffer().getHostname();
+    String hostname = firstTask.getHostname();
     MesosTaskMonitorObject usage = new MesosTaskMonitorObject(null, null, null, firstTask.getTaskId().getId(), getStatistics(2, 5, 100));
 
     mesosClient.setSlaveResourceUsage(hostname, Collections.singletonList(usage));
 
     usagePoller.runActionOnPoll();
 
-    String slaveId = firstTask.getOffer().getSlaveId().getValue().toString();
+    String slaveId = firstTask.getSlaveId().getValue();
 
     List<String> slaves = usageManager.getSlavesWithUsage();
 

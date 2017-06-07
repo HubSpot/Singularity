@@ -469,7 +469,7 @@ public class TaskManager extends CuratorAsyncManager {
     for (SingularityTaskId activeTaskId : activeTaskIds) {
       if (activeTaskId.getSanitizedHost().equals(sanitizedHost)) {
         Optional<SingularityTask> maybeTask = getTask(activeTaskId);
-        if (maybeTask.isPresent() && slave.getId().equals(maybeTask.get().getOffer().getSlaveId().getValue())) {
+        if (maybeTask.isPresent() && slave.getId().equals(maybeTask.get().getSlaveId().getValue())) {
           tasks.add(maybeTask.get());
         }
       }
@@ -897,7 +897,7 @@ public class TaskManager extends CuratorAsyncManager {
     }
 
     saveTaskHistoryUpdate(new SingularityTaskHistoryUpdate(task.getTaskId(), now, ExtendedTaskState.TASK_LAUNCHED, Optional.of(msg), Optional.<String>absent()));
-    saveLastActiveTaskStatus(new SingularityTaskStatusHolder(task.getTaskId(), Optional.<TaskStatus>absent(), now, serverId, Optional.of(task.getOffer().getSlaveId().getValue())));
+    saveLastActiveTaskStatus(new SingularityTaskStatusHolder(task.getTaskId(), Optional.<TaskStatus>absent(), now, serverId, Optional.of(task.getSlaveId().getValue())));
 
     try {
       final String path = getTaskPath(task.getTaskId());

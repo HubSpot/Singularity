@@ -1,5 +1,8 @@
 package com.hubspot.singularity.mesos;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 import org.apache.mesos.Protos.Offer;
 import org.apache.mesos.Protos.TaskInfo;
 
@@ -31,10 +34,10 @@ public class SingularityTaskSizeOptimizer {
 
     mesosTask.clearData();
 
-    Offer.Builder offer = task.getOffer().toBuilder();
-
-    offer.clearExecutorIds();
-    offer.clearResources();
+    List<Offer> offers = task.getOffers()
+        .stream()
+        .map((o) -> o.toBuilder().clearExecutorIds().clearResources().build())
+        .collect(Collectors.toList());
 
     SingularityTaskRequest taskRequest = task.getTaskRequest();
 
@@ -48,7 +51,7 @@ public class SingularityTaskSizeOptimizer {
           deploy.build(), task.getTaskRequest().getPendingTask());
     }
 
-    return new SingularityTask(taskRequest, task.getTaskId(), offer.build(), mesosTask.build(), task.getRackId());
+    return new SingularityTask(taskRequest, task.getTaskId(), offers, mesosTask.build(), task.getRackId());
   }
 
 }

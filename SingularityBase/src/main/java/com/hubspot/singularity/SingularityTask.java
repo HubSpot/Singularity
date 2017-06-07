@@ -1,8 +1,10 @@
 package com.hubspot.singularity;
 
+import java.util.Collections;
 import java.util.List;
 
 import org.apache.mesos.Protos.Offer;
+import org.apache.mesos.Protos.SlaveID;
 import org.apache.mesos.Protos.TaskInfo;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
@@ -15,16 +17,27 @@ import com.wordnik.swagger.annotations.ApiModelProperty;
 public class SingularityTask extends SingularityTaskIdHolder {
 
   private final SingularityTaskRequest taskRequest;
-  private final Offer offer;
+  private final List<Offer> offers;
   private final TaskInfo mesosTask;
   private final Optional<String> rackId;
 
   @JsonCreator
+  @Deprecated
   public SingularityTask(@JsonProperty("taskRequest") SingularityTaskRequest taskRequest, @JsonProperty("taskId") SingularityTaskId taskId, @JsonProperty("offer") Offer offer,
       @JsonProperty("mesosTask") TaskInfo task, @JsonProperty("rackId") Optional<String> rackId) {
     super(taskId);
     this.taskRequest = taskRequest;
-    this.offer = offer;
+    this.offers = Collections.singletonList(offer);
+    this.mesosTask = task;
+    this.rackId = rackId;
+  }
+
+  @JsonCreator
+  public SingularityTask(@JsonProperty("taskRequest") SingularityTaskRequest taskRequest, @JsonProperty("taskId") SingularityTaskId taskId, @JsonProperty("offers") List<Offer> offers,
+                         @JsonProperty("mesosTask") TaskInfo task, @JsonProperty("rackId") Optional<String> rackId) {
+    super(taskId);
+    this.taskRequest = taskRequest;
+    this.offers = offers;
     this.mesosTask = task;
     this.rackId = rackId;
   }
@@ -33,9 +46,18 @@ public class SingularityTask extends SingularityTaskIdHolder {
     return taskRequest;
   }
 
+  /*
+   * Use getOffers instead. getOffer will currently return the first offer in getOffers
+   */
+  @Deprecated
   @ApiModelProperty(hidden=true)
   public Offer getOffer() {
-    return offer;
+    return offers.get(0);
+  }
+
+  @ApiModelProperty(hidden=true)
+  public List<Offer> getOffers() {
+    return offers;
   }
 
   @ApiModelProperty(hidden=true)
@@ -57,11 +79,21 @@ public class SingularityTask extends SingularityTaskIdHolder {
     }
   }
 
+  @JsonIgnore
+  public SlaveID getSlaveId() {
+    return offers.get(0).getSlaveId();
+  }
+
+  @JsonIgnore
+  public String getHostname() {
+    return offers.get(0).getHostname();
+  }
+
   @Override
   public String toString() {
     return "SingularityTask{" +
         "taskRequest=" + taskRequest +
-        ", offer=" + MesosUtils.formatForLogging(offer) +
+        ", offer=" + MesosUtils.formatForLogging(offers) +
         ", mesosTask=" + MesosUtils.formatForLogging(mesosTask) +
         ", rackId=" + rackId +
         '}';
