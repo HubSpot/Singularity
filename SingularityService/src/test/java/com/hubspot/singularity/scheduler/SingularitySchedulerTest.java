@@ -418,8 +418,8 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
 
     sms.resourceOffers(driver, Arrays.asList(createOffer(2, 1024), createOffer(1, 1024)));
 
-    Assert.assertTrue(taskManager.getActiveTaskIds().size() == 3);
-    Assert.assertTrue(taskManager.getPendingTaskIds().size() == 7);
+    Assert.assertEquals(3, taskManager.getActiveTaskIds().size());
+    Assert.assertEquals(7, taskManager.getPendingTaskIds().size());
   }
 
   @Test

@@ -80,6 +80,10 @@ public class SingularityMesosTaskBuilderTest {
     taskResources = new Resources(1, 1, 0, 0);
     executorResources = new Resources(0.1, 1, 0, 0);
 
+    when(slaveAndRackHelper.getRackId(offer)).thenReturn(Optional.absent());
+    when(slaveAndRackHelper.getMaybeTruncatedHost(offer)).thenReturn("host");
+    when(slaveAndRackHelper.getRackIdOrDefault(offer)).thenReturn("DEFAULT");
+
     offer = Offer.newBuilder()
         .setSlaveId(SlaveID.newBuilder().setValue("1"))
         .setId(OfferID.newBuilder().setValue("1"))
@@ -89,16 +93,11 @@ public class SingularityMesosTaskBuilderTest {
     offerHolder = new SingularityOfferHolder(
         Collections.singletonList(offer),
         1,
-        slaveAndRackHelper.getRackIdOrDefault(offer),
+        "DEFAULT",
         offer.getSlaveId().getValue(),
         offer.getHostname(),
         Collections.emptyMap(),
         Collections.emptyMap());
-
-
-    when(slaveAndRackHelper.getRackId(offer)).thenReturn(Optional.<String> absent());
-    when(slaveAndRackHelper.getMaybeTruncatedHost(offer)).thenReturn("host");
-    when(slaveAndRackHelper.getRackIdOrDefault(offer)).thenReturn("DEFAULT");
   }
 
   @Test

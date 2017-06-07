@@ -396,7 +396,7 @@ public final class MesosUtils {
   }
 
   public static List<Resource> combineResources(List<List<Resource>> resourcesList) {
-    List<Resource> resources = resourcesList.remove(0);
+    List<Resource> resources = new ArrayList<>();
     for (List<Resource> resourcesToAdd : resourcesList) {
       for (Resource resource : resourcesToAdd) {
         Optional<Resource> matched = getMatchingResource(resource, resources);
@@ -407,6 +407,7 @@ public final class MesosUtils {
           Resource.Builder resourceBuilder = resource.toBuilder().clone();
           if (resource.hasScalar()) {
             resourceBuilder.setScalar(resource.toBuilder().getScalarBuilder().setValue(resource.getScalar().getValue() + matched.get().getScalar().getValue()).build());
+            resources.set(index, resourceBuilder.build());
           } else if (resource.hasRanges()) {
             Ranges.Builder newRanges = Ranges.newBuilder();
             resource.getRanges().getRangeList().forEach(newRanges::addRange);
