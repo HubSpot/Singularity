@@ -120,9 +120,9 @@ public class SingularityMesosOfferScheduler {
           return new SingularityOfferHolder(
               offersList,
               numDueTasks,
+              slaveAndRackHelper.getRackIdOrDefault(offersList.get(0)),
               slaveId,
               offersList.get(0).getHostname(),
-              slaveAndRackHelper.getRackIdOrDefault(offersList.get(0)),
               slaveAndRackHelper.getTextAttributes(offersList.get(0)),
               slaveAndRackHelper.getReservedSlaveAttributes(offersList.get(0)));
         })

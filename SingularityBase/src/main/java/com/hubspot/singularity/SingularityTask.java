@@ -11,6 +11,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
 import com.hubspot.mesos.MesosUtils;
 import com.wordnik.swagger.annotations.ApiModelProperty;
 
@@ -21,25 +22,28 @@ public class SingularityTask extends SingularityTaskIdHolder {
   private final TaskInfo mesosTask;
   private final Optional<String> rackId;
 
-  @JsonCreator
   @Deprecated
-  public SingularityTask(@JsonProperty("taskRequest") SingularityTaskRequest taskRequest, @JsonProperty("taskId") SingularityTaskId taskId, @JsonProperty("offer") Offer offer,
-      @JsonProperty("mesosTask") TaskInfo task, @JsonProperty("rackId") Optional<String> rackId) {
-    super(taskId);
-    this.taskRequest = taskRequest;
-    this.offers = Collections.singletonList(offer);
-    this.mesosTask = task;
-    this.rackId = rackId;
+  public SingularityTask(SingularityTaskRequest taskRequest, SingularityTaskId taskId, Offer offer, TaskInfo task, Optional<String> rackId) {
+    this(taskRequest, taskId, null, Collections.singletonList(offer), task, rackId);
+  }
+
+  public SingularityTask(SingularityTaskRequest taskRequest, SingularityTaskId taskId, List<Offer> offers, TaskInfo task, Optional<String> rackId) {
+    this(taskRequest, taskId, null, offers, task, rackId);
   }
 
   @JsonCreator
-  public SingularityTask(@JsonProperty("taskRequest") SingularityTaskRequest taskRequest, @JsonProperty("taskId") SingularityTaskId taskId, @JsonProperty("offers") List<Offer> offers,
+  public SingularityTask(@JsonProperty("taskRequest") SingularityTaskRequest taskRequest, @JsonProperty("taskId") SingularityTaskId taskId, @JsonProperty("offer") Offer offer, @JsonProperty("offers") List<Offer> offers,
                          @JsonProperty("mesosTask") TaskInfo task, @JsonProperty("rackId") Optional<String> rackId) {
     super(taskId);
+    Preconditions.checkArgument(offer != null ^ offers != null, "Must specify one or the other of offer / offers");
     this.taskRequest = taskRequest;
-    this.offers = offers;
     this.mesosTask = task;
     this.rackId = rackId;
+    if (offer == null) {
+      this.offers = offers;
+    } else {
+      this.offers = Collections.singletonList(offer);
+    }
   }
 
   public SingularityTaskRequest getTaskRequest() {
@@ -51,6 +55,7 @@ public class SingularityTask extends SingularityTaskIdHolder {
    */
   @Deprecated
   @ApiModelProperty(hidden=true)
+  @JsonIgnore
   public Offer getOffer() {
     return offers.get(0);
   }

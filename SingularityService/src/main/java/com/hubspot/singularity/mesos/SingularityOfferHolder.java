@@ -138,4 +138,22 @@ public class SingularityOfferHolder {
   public List<Protos.Offer> getOffers() {
     return offers;
   }
+
+  @Override
+  public String toString() {
+    return "SingularityOfferHolder{" +
+        "offers=" + offers +
+        ", acceptedTasks=" + acceptedTasks +
+        ", rejectedPendingTaskIds=" + rejectedPendingTaskIds +
+        ", currentResources=" + currentResources +
+        ", roles=" + roles +
+        ", rackId='" + rackId + '\'' +
+        ", slaveId='" + slaveId + '\'' +
+        ", hostname='" + hostname + '\'' +
+        ", sanitizedHost='" + sanitizedHost + '\'' +
+        ", sanitizedRackId='" + sanitizedRackId + '\'' +
+        ", textAttributes=" + textAttributes +
+        ", reservedSlaveAttributes=" + reservedSlaveAttributes +
+        '}';
+  }
 }

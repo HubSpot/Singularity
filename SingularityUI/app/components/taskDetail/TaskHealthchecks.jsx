@@ -40,7 +40,7 @@ function TaskHealthchecks (props) {
       <div className="well">
         <p>
           Beginning {beginningOnMessage}, wait a max of <strong>{healthcheckOptions.startupTimeoutSeconds || config.defaultStartupTimeoutSeconds}s</strong> for app to start responding, then hit
-          <a className="healthcheck-link" target="_blank" href={`http://${props.task.offer.hostname}:${Utils.healthcheckPort(healthcheckOptions, props.ports)}${healthcheckOptions.uri}`}>
+          <a className="healthcheck-link" target="_blank" href={`http://${props.task.offers[0].hostname}:${Utils.healthcheckPort(healthcheckOptions, props.ports)}${healthcheckOptions.uri}`}>
             {healthcheckOptions.uri}
           </a>
           with a <strong>{healthcheckOptions.responseTimeoutSeconds || config.defaultHealthcheckTimeoutSeconds}</strong> second timeout
@@ -116,9 +116,9 @@ TaskHealthchecks.propTypes = {
         })
       })
     }).isRequired,
-    offer: PropTypes.shape({
+    offers: PropTypes.arrayOf(PropTypes.shape({
       hostname: PropTypes.string
-    }).isRequired,
+    })).isRequired,
   }).isRequired,
   healthcheckResults: PropTypes.arrayOf(PropTypes.shape({
     timestamp: PropTypes.number,
