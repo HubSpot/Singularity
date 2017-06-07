@@ -9,19 +9,22 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
 
 public class SingularityTaskState {
-  private final SingularityId id;
+  private final Optional<SingularityTaskId> taskId;
+  private final SingularityPendingTaskId pendingTaskId;
   private final Optional<String> runId;
   private final Optional<ExtendedTaskState> currentState;
   private final List<SingularityTaskHistoryUpdate> taskHistory;
   private final boolean pending;
 
   @JsonCreator
-  public SingularityTaskState(@JsonProperty("taskId") SingularityId id,
+  public SingularityTaskState(@JsonProperty("taskId") Optional<SingularityTaskId> taskId,
+                              @JsonProperty("pendingTaskId") SingularityPendingTaskId pendingTaskId,
                               @JsonProperty("runId") Optional<String> runId,
                               @JsonProperty("currentState") Optional<ExtendedTaskState> currentState,
                               @JsonProperty("taskHistory") List<SingularityTaskHistoryUpdate> taskHistory,
                               @JsonProperty("pending") boolean pending) {
-    this.id = id;
+    this.taskId = taskId;
+    this.pendingTaskId = pendingTaskId;
     this.runId = runId;
     this.currentState = currentState;
     this.taskHistory = taskHistory != null ? taskHistory : Collections.emptyList();
@@ -30,7 +33,8 @@ public class SingularityTaskState {
 
   public static SingularityTaskState fromTaskHistory(SingularityTaskHistory taskHistory) {
     return new SingularityTaskState(
-        taskHistory.getTask().getTaskId(),
+        Optional.of(taskHistory.getTask().getTaskId()),
+        taskHistory.getTask().getTaskRequest().getPendingTask().getPendingTaskId(),
         taskHistory.getTask().getTaskRequest().getPendingTask().getRunId(),
         Optional.of(taskHistory.getLastTaskUpdate().get().getTaskState()),
         taskHistory.getTaskUpdates(),
@@ -39,11 +43,14 @@ public class SingularityTaskState {
   }
 
   /*
-   * If the task is pending, id will be a SingularityPendingTaskId
-   * otherwise id will be a SingularityTaskId
+   * Will be present when pending is `false`
    */
-  public SingularityId getId() {
-    return id;
+  public Optional<SingularityTaskId> getTaskId() {
+    return taskId;
+  }
+
+  public SingularityPendingTaskId getPendingTaskId() {
+    return pendingTaskId;
   }
 
   public Optional<String> getRunId() {
@@ -91,7 +98,10 @@ public class SingularityTaskState {
     if (pending != that.pending) {
       return false;
     }
-    if (id != null ? !id.equals(that.id) : that.id != null) {
+    if (taskId != null ? !taskId.equals(that.taskId) : that.taskId != null) {
+      return false;
+    }
+    if (pendingTaskId != null ? !pendingTaskId.equals(that.pendingTaskId) : that.pendingTaskId != null) {
       return false;
     }
     if (runId != null ? !runId.equals(that.runId) : that.runId != null) {
@@ -105,7 +115,8 @@ public class SingularityTaskState {
 
   @Override
   public int hashCode() {
-    int result = id != null ? id.hashCode() : 0;
+    int result = taskId != null ? taskId.hashCode() : 0;
+    result = 31 * result + (pendingTaskId != null ? pendingTaskId.hashCode() : 0);
     result = 31 * result + (runId != null ? runId.hashCode() : 0);
     result = 31 * result + (currentState != null ? currentState.hashCode() : 0);
     result = 31 * result + (taskHistory != null ? taskHistory.hashCode() : 0);
@@ -116,7 +127,8 @@ public class SingularityTaskState {
   @Override
   public String toString() {
     return "SingularityTaskState{" +
-        "id=" + id +
+        "taskId=" + taskId +
+        ", pendingTaskId=" + pendingTaskId +
         ", runId=" + runId +
         ", currentState=" + currentState +
         ", taskHistory=" + taskHistory +
