@@ -200,7 +200,7 @@ public class SingularityHistoryTest extends SingularitySchedulerTestBase {
     String runId = "my-run-id";
 
     SingularityPendingRequestParent parent = requestResource.scheduleImmediately(requestId,
-        new SingularityRunNowRequest(Optional.<String> absent(), Optional.<Boolean> absent(), Optional.of(runId), Optional.<List<String>> absent(), Optional.<Resources>absent()));
+        new SingularityRunNowRequest(Optional.<String> absent(), Optional.<Boolean> absent(), Optional.of(runId), Optional.<List<String>> absent(), Optional.<Resources>absent(), Optional.<Long>absent()));
 
     Assert.assertEquals(runId, parent.getPendingRequest().getRunId().get());
 
