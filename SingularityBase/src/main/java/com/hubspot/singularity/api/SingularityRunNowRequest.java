@@ -23,7 +23,7 @@ public class SingularityRunNowRequest {
                                   @JsonProperty("runId") Optional<String> runId,
                                   @JsonProperty("commandLineArgs") Optional<List<String>> commandLineArgs,
                                   @JsonProperty("resources") Optional<Resources> resources,
-                                  Optional<Long> runAt) {
+                                  @JsonProperty("runAt") Optional<Long> runAt) {
     this.message = message;
     this.commandLineArgs = commandLineArgs;
     this.runId = runId;
