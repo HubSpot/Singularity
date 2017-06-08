@@ -39,7 +39,7 @@ public class SingularityPendingRequest {
   public SingularityPendingRequest(@JsonProperty("requestId") String requestId, @JsonProperty("deployId") String deployId, @JsonProperty("timestamp") long timestamp,
       @JsonProperty("user") Optional<String> user, @JsonProperty("pendingType") PendingType pendingType, @JsonProperty("cmdLineArgsList") Optional<List<String>> cmdLineArgsList,
       @JsonProperty("runId") Optional<String> runId, @JsonProperty("skipHealthchecks") Optional<Boolean> skipHealthchecks, @JsonProperty("message") Optional<String> message,
-      @JsonProperty("actionId") Optional<String> actionId, @JsonProperty("resources") Optional<Resources> resources, Optional<Long> runAt) {
+      @JsonProperty("actionId") Optional<String> actionId, @JsonProperty("resources") Optional<Resources> resources, @JsonProperty("runAt") Optional<Long> runAt) {
     this.requestId = requestId;
     this.deployId = deployId;
     this.timestamp = timestamp;
