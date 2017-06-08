@@ -297,6 +297,7 @@ public class RequestResource extends AbstractRequestResource {
     Optional<Boolean> skipHealthchecks = Optional.absent();
     Optional<List<String>> commandLineArgs = Optional.absent();
     Optional<Resources> resources = Optional.absent();
+    Optional<Long> runAt = Optional.absent();
 
     if (maybeRunNowRequest.isPresent()) {
       message = maybeRunNowRequest.get().getMessage();
@@ -304,6 +305,7 @@ public class RequestResource extends AbstractRequestResource {
       skipHealthchecks = maybeRunNowRequest.get().getSkipHealthchecks();
       commandLineArgs = maybeRunNowRequest.get().getCommandLineArgs();
       resources = maybeRunNowRequest.get().getResources();
+      runAt = maybeRunNowRequest.get().getRunAt();
     }
 
     if (runId.isPresent() && runId.get().length() > 100) {
@@ -315,7 +317,7 @@ public class RequestResource extends AbstractRequestResource {
     }
 
     final SingularityPendingRequest pendingRequest = new SingularityPendingRequest(requestId, getAndCheckDeployId(requestId), System.currentTimeMillis(),
-        JavaUtils.getUserEmail(user), pendingType, commandLineArgs, runId, skipHealthchecks, message, Optional.<String> absent(), resources);
+        JavaUtils.getUserEmail(user), pendingType, commandLineArgs, runId, skipHealthchecks, message, Optional.<String> absent(), resources, runAt);
 
     SingularityCreateResult result = requestManager.addToPendingQueue(pendingRequest);
 
