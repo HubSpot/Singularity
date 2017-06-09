@@ -73,7 +73,7 @@ public class SingularityMesosExecutorInfoSupport implements Managed {
   private void loadDirectoryAndContainer(SingularityTask task) {
     final long start = System.currentTimeMillis();
 
-    final String slaveUri = mesosClient.getSlaveUri(task.getOffer().getHostname());
+    final String slaveUri = mesosClient.getSlaveUri(task.getHostname());
 
     LOG.info("Fetching slave data to find log directory and container id for task {} from uri {}", task.getTaskId(), slaveUri);
 

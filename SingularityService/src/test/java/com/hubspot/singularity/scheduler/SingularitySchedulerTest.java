@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 import javax.ws.rs.HEAD;
 import javax.ws.rs.WebApplicationException;
@@ -22,6 +23,7 @@ import org.mockito.Matchers;
 import org.mockito.Mockito;
 
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
@@ -163,6 +165,28 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     resourceOffers();
 
     Assert.assertEquals(2, taskManager.getActiveTasks().size());
+  }
+
+  @Test
+  public void testOfferCombination() {
+    configuration.setCacheOffers(true);
+    configuration.setOfferCacheSize(2);
+
+    // Each are half of needed memory
+    Offer offer1 = createOffer(1, 64, "slave1", "host1");
+    Offer offer2 = createOffer(1, 64, "slave1", "host1");
+    sms.resourceOffers(driver, ImmutableList.of(offer1, offer2));
+
+    initRequest();
+    initFirstDeploy();
+    requestManager.addToPendingQueue(new SingularityPendingRequest(requestId, firstDeployId, System.currentTimeMillis(), Optional.absent(), PendingType.TASK_DONE,
+        Optional.absent(), Optional.absent()));
+
+    schedulerPoller.runActionOnPoll();
+
+    Assert.assertEquals(1, taskManager.getActiveTasks().size());
+
+    Assert.assertEquals(2, taskManager.getActiveTasks().get(0).getOffers().size());
   }
 
   @Test
@@ -418,8 +442,8 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
 
     sms.resourceOffers(driver, Arrays.asList(createOffer(2, 1024), createOffer(1, 1024)));
 
-    Assert.assertTrue(taskManager.getActiveTaskIds().size() == 3);
-    Assert.assertTrue(taskManager.getPendingTaskIds().size() == 7);
+    Assert.assertEquals(3, taskManager.getActiveTaskIds().size());
+    Assert.assertEquals(7, taskManager.getPendingTaskIds().size());
   }
 
   @Test
@@ -437,7 +461,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     Set<String> offerIds = Sets.newHashSet();
 
     for (SingularityTask activeTask : taskManager.getActiveTasks()) {
-      offerIds.add(activeTask.getOffer().getId().getValue());
+      offerIds.addAll(activeTask.getOffers().stream().map((o) -> o.getId().getValue()).collect(Collectors.toList()));
     }
 
     Assert.assertTrue(offerIds.size() == 2);
@@ -656,7 +680,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
 
     Assert.assertEquals(1, taskManager.getNumActiveTasks());
 
-    slaveResource.decommissionSlave(taskManager.getActiveTasks().get(0).getOffer().getSlaveId().getValue(), null);
+    slaveResource.decommissionSlave(taskManager.getActiveTasks().get(0).getSlaveId().getValue(), null);
 
     scheduler.checkForDecomissions(stateCacheProvider.get());
 
