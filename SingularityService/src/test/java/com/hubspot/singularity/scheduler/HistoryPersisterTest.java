@@ -48,7 +48,7 @@ public class HistoryPersisterTest extends SingularitySchedulerTestBase {
 
     Assert.assertTrue(!requestManager.getRequestHistory(requestId).isEmpty());
 
-    requestManager.startDeletingRequest(request, user, Optional.<String> absent(), Optional.<String> absent());
+    requestManager.startDeletingRequest(request, Optional.absent(), user, Optional.<String> absent(), Optional.<String> absent());
 
     requestManager.deleteHistoryParent(requestId);
 
@@ -79,17 +79,17 @@ public class HistoryPersisterTest extends SingularitySchedulerTestBase {
     configuration.setMaxRequestsWithHistoryInZkWhenNoDatabase(Optional.of(2));
     configuration.setDeleteStaleRequestsFromZkWhenNoDatabaseAfterHours(7);
 
-    requestManager.startDeletingRequest(requestOne, user, Optional.<String>absent(), Optional.<String>absent());
+    requestManager.startDeletingRequest(requestOne, Optional.absent(), user, Optional.<String>absent(), Optional.<String>absent());
     requestManager.deleteHistoryParent(requestOne.getId());
     requestManager.activate(requestOne, RequestHistoryType.CREATED, System.currentTimeMillis() - TimeUnit.HOURS.toMillis(4), Optional.<String> absent(), Optional.<String> absent());
     requestManager.cooldown(requestOne, System.currentTimeMillis() - TimeUnit.HOURS.toMillis(3));
 
-    requestManager.startDeletingRequest(requestTwo, user, Optional.<String>absent(), Optional.<String>absent());
+    requestManager.startDeletingRequest(requestTwo, Optional.absent(), user, Optional.<String>absent(), Optional.<String>absent());
     requestManager.deleteHistoryParent(requestTwo.getId());
     requestManager.activate(requestTwo, RequestHistoryType.CREATED, System.currentTimeMillis() - TimeUnit.HOURS.toMillis(4), Optional.<String> absent(), Optional.<String> absent());
     requestManager.cooldown(requestTwo, System.currentTimeMillis() - TimeUnit.HOURS.toMillis(3));
 
-    requestManager.startDeletingRequest(requestThree, user, Optional.<String>absent(), Optional.<String>absent());
+    requestManager.startDeletingRequest(requestThree, Optional.absent(), user, Optional.<String>absent(), Optional.<String>absent());
     requestManager.deleteHistoryParent(requestThree.getId());
     requestManager.activate(requestThree, RequestHistoryType.CREATED, System.currentTimeMillis() - TimeUnit.HOURS.toMillis(4), Optional.<String> absent(), Optional.<String> absent());
     requestManager.cooldown(requestThree, System.currentTimeMillis() - TimeUnit.HOURS.toMillis(3));
@@ -198,7 +198,7 @@ public class HistoryPersisterTest extends SingularitySchedulerTestBase {
     initRequest();
     initFirstDeploy();
 
-    requestManager.startDeletingRequest(request, user, Optional.<String> absent(), Optional.<String> absent());
+    requestManager.startDeletingRequest(request, Optional.absent(), user, Optional.<String> absent(), Optional.<String> absent());
 
     requestManager.deleteHistoryParent(requestId);
 

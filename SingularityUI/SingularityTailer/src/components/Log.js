@@ -34,17 +34,11 @@ class Log extends Component {
     this.scrollDelta = 0;
 
     this.tailAttempt = 0;
-
-    this.state = {
-      tailing: false
-    };
   }
 
   componentWillMount() {
-    if (this.props.goToOffset === -1 && !this.state.tailing) {
-      this.setState({
-        tailing: true
-      });
+    if (this.props.goToOffset === -1 && !this.props.tailing) {
+      this.props.startTailing();
     }
   }
 
@@ -61,7 +55,7 @@ class Log extends Component {
   componentWillUpdate(nextProps, nextState) {
     if (nextProps.lines !== this.props.lines) {
       this.invalidate = true;
-      if (this.state.tailing) {
+      if (this.props.tailing) {
         this.scrollDelta = -1;
       }
     }
@@ -87,9 +81,9 @@ class Log extends Component {
       }
     }
 
-    if (nextState.tailing && this.tailTimeoutId == null) {
+    if (nextProps.tailing && this.tailTimeoutId == null) {
       this.handleTail()
-    } else if (!nextState.tailing && this.tailTimeoutId != null) {
+    } else if (!nextProps.tailing && this.tailTimeoutId != null) {
       clearTimeout(this.tailTimeoutId);
       this.tailTimeoutId = null;
     }
@@ -100,7 +94,7 @@ class Log extends Component {
   }
 
   scheduleNextHandleTail() {
-    if (this.state.tailing) {
+    if (this.props.tailing) {
       this.tailTimeoutId = setTimeout(this.handleTail, this.getTailDelayMs());
     }
   }
@@ -185,19 +179,15 @@ class Log extends Component {
             setTimeout(() => this.loadLine(lines.size - 1, false), 0);
           } else if (atBottom) {
             // we're tailing here.
-            if (!this.state.tailing) {
-              this.setState({
-                tailing: true
-              });
+            if (!this.props.tailing) {
+              this.props.startTailing();
             }
           }
         }
       }
 
-      if (!atBottom && this.state.tailing) {
-        this.setState({
-          tailing: false
-        });
+      if (!atBottom && this.props.tailing) {
+        this.props.stopTailing();
       }
       // update the scroll position.
       this.scrollTop = domNode.scrollTop;
@@ -229,7 +219,7 @@ class Log extends Component {
 
     const logPaneClasses = classNames({
       'log-pane': true,
-      tailing: this.state.tailing
+      tailing: this.props.tailing
     });
 
     return (
@@ -271,7 +261,10 @@ Log.propTypes = {
   chunks: PropTypes.instanceOf(Immutable.List),
   requests: PropTypes.instanceOf(Immutable.Map),
   config: PropTypes.object.isRequired,
-  lineLinkRenderer: PropTypes.func
+  lineLinkRenderer: PropTypes.func,
+  startTailing: PropTypes.func.isRequired,
+  stopTailing: PropTypes.func.isRequired,
+  tailing: PropTypes.bool
 };
 
 Log.defaultProps = {
@@ -288,7 +281,8 @@ const makeMapStateToProps = () => {
     lines: getEnhancedLines(state, ownProps),
     chunks: Selectors.getChunks(state, ownProps),
     requests: Selectors.getRequests(state, ownProps),
-    config: Selectors.getConfig(state, ownProps)
+    config: Selectors.getConfig(state, ownProps),
+    tailing: Selectors.isTailing(state, ownProps)
   });
   return mapStateToProps;
 };

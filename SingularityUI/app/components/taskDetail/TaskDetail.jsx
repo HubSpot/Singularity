@@ -425,7 +425,7 @@ class TaskDetail extends Component {
         <TaskAlerts task={this.props.task} deploy={this.props.deploy} pendingDeploys={this.props.pendingDeploys} />
         <TaskMetadataAlerts task={this.props.task} />
         <TaskHistory taskUpdates={this.props.task.taskUpdates} />
-        <TaskLatestLog taskId={this.props.taskId} status={this.props.task.status} available={filesAvailable} />
+        <TaskLatestLog taskId={this.props.taskId} status={this.props.task.status} files={filesToDisplay} available={filesAvailable} />
         {this.renderFiles(filesToDisplay)}
         {_.isEmpty(this.props.s3Logs) || <TaskS3Logs taskId={this.props.task.task.taskId.id} s3Files={this.props.s3Logs} taskStartedAt={this.props.task.task.taskId.startedAt} />}
         {_.isEmpty(this.props.task.loadBalancerUpdates) || <TaskLbUpdates loadBalancerUpdates={this.props.task.loadBalancerUpdates} />}

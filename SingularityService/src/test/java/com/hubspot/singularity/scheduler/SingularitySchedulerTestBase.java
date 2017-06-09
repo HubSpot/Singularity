@@ -528,6 +528,14 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
     firstDeploy = initAndFinishDeploy(request, new SingularityDeployBuilder(request.getId(), firstDeployId).setCommand(Optional.of("sleep 100")).setHealthcheck(Optional.of(new HealthcheckOptionsBuilder("http://uri").build())));
   }
 
+  protected void initLoadBalancedDeploy() {
+    SingularityDeployBuilder builder = new SingularityDeployBuilder(requestId, firstDeployId)
+        .setCommand(Optional.of("sleep 100"))
+        .setServiceBasePath(Optional.of("/basepath"))
+        .setLoadBalancerGroups(Optional.of(Collections.singleton("test")));
+    firstDeploy = initAndFinishDeploy(request, builder);
+  }
+
   protected SingularityDeploy initAndFinishDeploy(SingularityRequest request, String deployId) {
     return initAndFinishDeploy(request, new SingularityDeployBuilder(request.getId(), deployId).setCommand(Optional.of("sleep 100")));
   }

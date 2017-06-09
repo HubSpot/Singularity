@@ -39,9 +39,9 @@ export const SaveRequest = buildJsonApiAction(
 export const RemoveRequest = buildJsonApiAction(
   'REMOVE_REQUEST',
   'DELETE',
-  (requestId, { message }) => ({
+  (requestId, { message, deleteFromLoadBalancer }) => ({
     url: `/requests/request/${requestId}`,
-    body: { message }
+    body: { message, deleteFromLoadBalancer }
   })
 );
 
@@ -65,9 +65,15 @@ export const FetchRequestRun = buildApiAction(
 export const PauseRequest = buildJsonApiAction(
   'PAUSE_REQUEST',
   'POST',
-  (requestId, { durationMillis, killTasks, message, actionId, runShellCommandBeforeKill }, catchStatusCodes = null) => ({
+  (requestId, { durationMillis, allowRunningTasksToFinish, message, actionId, runShellCommandBeforeKill }, catchStatusCodes = null) => ({
     url: `/requests/request/${requestId}/pause`,
-    body: { durationMillis, killTasks, message, actionId, runShellCommandBeforeKill },
+    body: {
+      killTasks: !allowRunningTasksToFinish,
+      durationMillis,
+      message,
+      actionId,
+      runShellCommandBeforeKill
+    },
     catchStatusCodes
   })
 );

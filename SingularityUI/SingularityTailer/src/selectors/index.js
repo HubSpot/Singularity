@@ -43,7 +43,7 @@ export const getFileSize = (state, props) => {
 
 export const getChunks = (state, props) => {
   const file = getFile(state, props);
-  if (file) {
+  if (file && file.chunks) {
     return file.chunks;
   }
   return new List();
@@ -51,7 +51,7 @@ export const getChunks = (state, props) => {
 
 export const getLines = (state, props) => {
   const file = getFile(state, props);
-  if (file) {
+  if (file && file.lines) {
     return file.lines;
   }
   return new List();
@@ -64,6 +64,10 @@ export const getRequests = (state, props) => (
 export const getConfig = (state, props) => (
   props.getTailerState(state).config
 );
+
+export const isTailing = (state, props) => {
+  return props.getTailerState(state).files && props.getTailerState(state).files.tailing && props.getTailerState(state).files.tailing[props.tailerId] || false;
+};
 
 const getEnhancedLine = (line, requests, config) => {
   const enhancedLine = {

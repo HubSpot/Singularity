@@ -56,7 +56,7 @@ class NewHeader extends React.Component {
         ready={this.props.ready}
         runningTasks={this.props.runningTasks}
         visibleTasks={this.props.taskIds}
-        onToggle={(taskId) => this.props.toggleTailerGroup(taskId, this.props.paths[0])}
+        onToggle={(taskId) => this.props.toggleTailerGroup(taskId, this.props.paths[0], this.props.taskIds)}
         />);
     }
   }

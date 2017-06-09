@@ -242,6 +242,7 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper implements S
       metrics.getImmediateUploaderCounter().dec();
       immediateUploaders.remove(uploader);
       immediateUploadMetadata.remove(uploader.getUploadMetadata());
+      expiring.remove(uploader);
 
       try {
         LOG.debug("Deleting finished immediate uploader {}", uploader.getMetadataPath());
@@ -260,9 +261,10 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper implements S
     }
 
     // Check regular uploaders
-    final Set<Path> filesToUpload = Collections.newSetFromMap(new ConcurrentHashMap<Path, Boolean>(metadataToUploader.size() * 2, 0.75f, metadataToUploader.size()));
-    final Map<SingularityS3Uploader, Future<Integer>> futures = Maps.newHashMapWithExpectedSize(metadataToUploader.size());
-    final Map<SingularityS3Uploader, Boolean> finishing = Maps.newHashMapWithExpectedSize(metadataToUploader.size());
+    int initialExpectedSize = Math.max(metadataToUploader.size(), 1);
+    final Set<Path> filesToUpload = Collections.newSetFromMap(new ConcurrentHashMap<Path, Boolean>(initialExpectedSize * 2, 0.75f, initialExpectedSize));
+    final Map<SingularityS3Uploader, Future<Integer>> futures = Maps.newHashMapWithExpectedSize(initialExpectedSize);
+    final Map<SingularityS3Uploader, Boolean> finishing = Maps.newHashMapWithExpectedSize(initialExpectedSize);
 
     for (final SingularityS3Uploader uploader : metadataToUploader.values()) {
       final boolean isFinished = isFinished(uploader);
@@ -275,7 +277,7 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper implements S
     LOG.info("Waiting on {} future(s)", futures.size());
 
     final long now = System.currentTimeMillis();
-    final Set<SingularityS3Uploader> expiredUploaders = Sets.newHashSetWithExpectedSize(metadataToUploader.size());
+    final Set<SingularityS3Uploader> expiredUploaders = Sets.newHashSetWithExpectedSize(initialExpectedSize);
 
     for (Entry<SingularityS3Uploader, Future<Integer>> uploaderToFuture : futures.entrySet()) {
       final SingularityS3Uploader uploader = uploaderToFuture.getKey();
@@ -283,11 +285,9 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper implements S
         final int foundFiles = uploaderToFuture.getValue().get();
         final boolean isFinished = finishing.get(uploader);
 
-        if (foundFiles == 0) {
-          if (shouldExpire(uploader, isFinished)) {
-            LOG.info("Expiring {}", uploader);
-            expiredUploaders.add(uploader);
-          }
+        if (foundFiles == 0 && shouldExpire(uploader, isFinished)) {
+          LOG.info("Expiring {}", uploader);
+          expiredUploaders.add(uploader);
         } else {
           LOG.trace("Updating uploader {} last expire time", uploader);
           uploaderLastHadFilesAt.put(uploader, now);
@@ -345,7 +345,7 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper implements S
 
   private void performImmediateUpload(final SingularityS3Uploader uploader) {
     final Set<Path> filesToUpload = Collections
-        .newSetFromMap(new ConcurrentHashMap<Path, Boolean>(metadataToUploader.size() * 2, 0.75f, metadataToUploader.size()));
+        .newSetFromMap(new ConcurrentHashMap<Path, Boolean>(Math.max(metadataToUploader.size(), 1) * 2, 0.75f, Math.max(metadataToUploader.size(), 1)));
     final boolean finished = isFinished(uploader);
     immediateUploaders.put(uploader, executorService.submit(performUploadCallable(uploader, filesToUpload, finished, true)));
   }
@@ -405,13 +405,13 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper implements S
     if (existingUploader != null) {
       if (metadata.getUploadImmediately().isPresent() && metadata.getUploadImmediately().get()) {
         LOG.debug("Existing metadata {} from {} changed to be immediate, forcing upload", metadata, filename);
+        expiring.remove(existingUploader);
         if (canCreateImmediateUploader(metadata)) {
           metrics.getUploaderCounter().dec();
           metrics.getImmediateUploaderCounter().inc();
 
           metadataToUploader.remove(existingUploader.getUploadMetadata());
           uploaderLastHadFilesAt.remove(existingUploader);
-          expiring.remove(existingUploader);
           performImmediateUpload(existingUploader);
           return true;
         } else {
