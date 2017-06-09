@@ -77,7 +77,6 @@ public class SingularitySlaveAndRackManager {
   }
 
   public SlaveMatchState doesOfferMatch(SingularityOfferHolder offerHolder, SingularityTaskRequest taskRequest, SingularitySchedulerStateCache stateCache) {
-    LOG.info("OfferHolder: {}", offerHolder);
     final String host = offerHolder.getHostname();
     final String rackId = offerHolder.getRackId();
     final String slaveId = offerHolder.getSlaveId();
