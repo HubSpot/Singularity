@@ -212,7 +212,7 @@ public class SingularityHealthchecker {
 
     HealthcheckOptions options = task.getTaskRequest().getDeploy().getHealthcheck().get();
 
-    final String hostname = task.getOffer().getHostname();
+    final String hostname = task.getHostname();
 
     Optional<Long> healthcheckPort = options.getPortNumber().or(task.getPortByIndex(options.getPortIndex().or(0)));
 

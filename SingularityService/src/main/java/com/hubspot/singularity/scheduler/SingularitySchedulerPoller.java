@@ -81,15 +81,17 @@ public class SingularitySchedulerPoller extends SingularityLeaderOnlyPoller {
     int launchedTasks = 0;
 
     for (SingularityOfferHolder offerHolder : offerHolders) {
-      CachedOffer cachedOffer = offerIdToCachedOffer.get(offerHolder.getOffer().getId().getValue());
+      for (Offer offer : offerHolder.getOffers()) {
+        CachedOffer cachedOffer = offerIdToCachedOffer.get(offer.getId().getValue());
 
-      if (!offerHolder.getAcceptedTasks().isEmpty()) {
-        offerHolder.launchTasks(driver.get());
-        launchedTasks += offerHolder.getAcceptedTasks().size();
-        acceptedOffers++;
-        offerCache.useOffer(cachedOffer);
-      } else {
-        offerCache.returnOffer(cachedOffer);
+        if (!offerHolder.getAcceptedTasks().isEmpty()) {
+          offerHolder.launchTasks(driver.get());
+          launchedTasks += offerHolder.getAcceptedTasks().size();
+          acceptedOffers++;
+          offerCache.useOffer(cachedOffer);
+        } else {
+          offerCache.returnOffer(cachedOffer);
+        }
       }
     }
 
