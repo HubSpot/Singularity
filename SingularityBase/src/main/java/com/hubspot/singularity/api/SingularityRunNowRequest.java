@@ -17,6 +17,16 @@ public class SingularityRunNowRequest {
   private final Optional<Resources> resources;
   private final Optional<Long> runAt;
 
+  public SingularityRunNowRequest(
+      Optional<String> message,
+      Optional<Boolean> skipHealthchecks,
+      Optional<String> runId,
+      Optional<List<String>> commandLineArgs,
+      Optional<Resources> resources
+  ) {
+    this(message, skipHealthchecks, runId, commandLineArgs, resources, Optional.<Long>absent());
+  }
+
   @JsonCreator
   public SingularityRunNowRequest(@JsonProperty("message") Optional<String> message,
                                   @JsonProperty("skipHealthchecks") Optional<Boolean> skipHealthchecks,
