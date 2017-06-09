@@ -22,6 +22,7 @@ import org.mockito.Matchers;
 import org.mockito.Mockito;
 
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
@@ -164,6 +165,28 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     resourceOffers();
 
     Assert.assertEquals(2, taskManager.getActiveTasks().size());
+  }
+
+  @Test
+  public void testOfferCombination() {
+    configuration.setCacheOffers(true);
+    configuration.setOfferCacheSize(2);
+
+    // Each are half of needed memory
+    Offer offer1 = createOffer(1, 64, "slave1", "host1");
+    Offer offer2 = createOffer(1, 64, "slave1", "host1");
+    sms.resourceOffers(driver, ImmutableList.of(offer1, offer2));
+
+    initRequest();
+    initFirstDeploy();
+    requestManager.addToPendingQueue(new SingularityPendingRequest(requestId, firstDeployId, System.currentTimeMillis(), Optional.absent(), PendingType.TASK_DONE,
+        Optional.absent(), Optional.absent()));
+
+    schedulerPoller.runActionOnPoll();
+
+    Assert.assertEquals(1, taskManager.getActiveTasks().size());
+
+    Assert.assertEquals(2, taskManager.getActiveTasks().get(0).getOffers().size());
   }
 
   @Test
