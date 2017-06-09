@@ -2,6 +2,7 @@ package com.hubspot.singularity.client;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -12,6 +13,7 @@ import java.util.Map.Entry;
 import java.util.Random;
 import java.util.concurrent.ExecutionException;
 import java.util.function.Function;
+import java.util.function.Predicate;
 
 import javax.inject.Provider;
 
@@ -34,6 +36,7 @@ import com.hubspot.horizon.HttpClient;
 import com.hubspot.horizon.HttpRequest;
 import com.hubspot.horizon.HttpRequest.Method;
 import com.hubspot.horizon.HttpResponse;
+import com.hubspot.horizon.RetryStrategy;
 import com.hubspot.mesos.json.MesosFileChunkObject;
 import com.hubspot.singularity.ExtendedTaskState;
 import com.hubspot.singularity.MachineState;
@@ -217,11 +220,8 @@ public class SingularityClient {
 
   private final HttpClient httpClient;
   private final Optional<SingularityClientCredentials> credentials;
-  private final Retryer<HttpResponse> httpResponseRetryer = RetryerBuilder.<HttpResponse>newBuilder()
-      .withStopStrategy(StopStrategies.stopAfterAttempt(3))
-      .withWaitStrategy(WaitStrategies.exponentialWait())
-      .retryIfResult(response -> response == null || response.getStatusCode() == 503)
-      .build();
+
+  private final Retryer<HttpResponse> httpResponseRetryer;
 
   @Inject
   @Deprecated
@@ -242,6 +242,10 @@ public class SingularityClient {
   }
 
   public SingularityClient(String contextPath, HttpClient httpClient, Provider<List<String>> hostsProvider, Optional<SingularityClientCredentials> credentials, boolean ssl) {
+    this(contextPath, httpClient, hostsProvider, credentials, ssl, 3, HttpResponse::isServerError);
+  }
+
+  public SingularityClient(String contextPath, HttpClient httpClient, Provider<List<String>> hostsProvider, Optional<SingularityClientCredentials> credentials, boolean ssl, int retryAttempts, Predicate<HttpResponse> retryStrategy) {
     this.httpClient = httpClient;
     this.contextPath = contextPath;
 
@@ -250,15 +254,17 @@ public class SingularityClient {
 
     this.credentials = credentials;
     this.ssl = ssl;
+
+    this.httpResponseRetryer = RetryerBuilder.<HttpResponse>newBuilder()
+        .withStopStrategy(StopStrategies.stopAfterAttempt(retryAttempts))
+        .withWaitStrategy(WaitStrategies.exponentialWait())
+        .retryIfResult(retryStrategy::test)
+        .retryIfException()
+        .build();
   }
 
   private String getApiBase(String host) {
     return String.format(BASE_API_FORMAT, ssl ? "https" : "http", host, contextPath);
-  }
-
-  private String getHost() {
-    final List<String> hosts = hostsProvider.get();
-    return hosts.get(random.nextInt(hosts.size()));
   }
 
   //
@@ -456,9 +462,22 @@ public class SingularityClient {
     addQueryParams(request, queryParams);
     addCredentials(request);
 
+    List<String> hosts = new ArrayList<>(hostsProvider.get());
+    request
+        .setRetryStrategy(RetryStrategy.NEVER_RETRY)
+        .setMaxRetries(1);
+
     try {
       return httpResponseRetryer.call(() -> {
-        String url = hostToUri.apply(getHost());
+        if (hosts.isEmpty()) {
+          // We've tried everything we started with. Look again.
+          hosts.addAll(hostsProvider.get());
+        }
+
+        int selection = random.nextInt(hosts.size());
+        String host = hosts.get(selection);
+        String url = hostToUri.apply(host);
+        hosts.remove(selection);
         LOG.info("Making {} request to {}", method, url);
         request.setUrl(hostToUri.apply(url));
         return httpClient.execute(request.build());

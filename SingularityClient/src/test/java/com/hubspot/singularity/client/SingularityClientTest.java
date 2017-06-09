@@ -46,6 +46,9 @@ public class SingularityClientTest {
     when(response.getStatusCode())
         .thenReturn(503)
         .thenReturn(200);
+    when(response.isServerError())
+        .thenReturn(true)
+        .thenReturn(false);
 
     singularityClient.pauseSingularityRequest("requestId", Optional.absent());
 
