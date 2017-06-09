@@ -7,6 +7,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.apache.mesos.Protos;
+import org.apache.mesos.Protos.Offer;
 import org.apache.mesos.Protos.Resource;
 import org.apache.mesos.Protos.Status;
 import org.apache.mesos.Protos.TaskInfo;
@@ -100,6 +101,7 @@ public class SingularityOfferHolder {
   }
 
   public void addMatchedTask(SingularityTask task) {
+    LOG.trace("Accepting task {} for offers {}", task.getTaskId(), offers.stream().map(Offer::getId).collect(Collectors.toList()));
     acceptedTasks.add(task);
 
     // subtract task resources from offer

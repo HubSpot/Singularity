@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 import javax.inject.Singleton;
 
@@ -81,18 +82,16 @@ public class SingularitySchedulerPoller extends SingularityLeaderOnlyPoller {
     int launchedTasks = 0;
 
     for (SingularityOfferHolder offerHolder : offerHolders) {
-      for (Offer offer : offerHolder.getOffers()) {
-        CachedOffer cachedOffer = offerIdToCachedOffer.get(offer.getId().getValue());
+        List<CachedOffer> cachedOffersFromHolder = offerHolder.getOffers().stream().map((o) -> offerIdToCachedOffer.get(o.getId().getValue())).collect(Collectors.toList());
 
         if (!offerHolder.getAcceptedTasks().isEmpty()) {
           offerHolder.launchTasks(driver.get());
           launchedTasks += offerHolder.getAcceptedTasks().size();
           acceptedOffers++;
-          offerCache.useOffer(cachedOffer);
+          cachedOffersFromHolder.forEach(offerCache::useOffer);
         } else {
-          offerCache.returnOffer(cachedOffer);
+          cachedOffersFromHolder.forEach(offerCache::returnOffer);
         }
-      }
     }
 
     LOG.info("Launched {} tasks on {} cached offers (returned {}) in {}", launchedTasks, acceptedOffers, offerHolders.size() - acceptedOffers, JavaUtils.duration(start));
