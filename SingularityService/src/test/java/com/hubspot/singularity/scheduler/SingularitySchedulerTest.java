@@ -1390,8 +1390,35 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
   }
 
   @Test
-  public void testRunNowJobRespectsSpecifiedRunAtTime() {
+  public void testOnDemandRunNowJobRespectsSpecifiedRunAtTime() {
     initOnDemandRequest();
+    initFirstDeploy();
+
+    long requestedLaunchTime = System.currentTimeMillis() + TimeUnit.MINUTES.toMillis(10);
+
+    requestResource.scheduleImmediately(
+        requestId,
+        new SingularityRunNowRequest(
+            Optional.absent(),
+            Optional.absent(),
+            Optional.absent(),
+            Optional.absent(),
+            Optional.absent(),
+            Optional.of(requestedLaunchTime)
+        )
+    );
+
+    scheduler.drainPendingQueue(stateCacheProvider.get());
+
+    SingularityPendingTaskId task = taskManager.getPendingTaskIds().get(0);
+    long runAt = task.getNextRunAt();
+
+    Assert.assertEquals(requestedLaunchTime, runAt);
+  }
+
+  @Test
+  public void testScheduledRunNowJobRespectsSpecifiedRunAtTime() {
+    initScheduledRequest();
     initFirstDeploy();
 
     long requestedLaunchTime = System.currentTimeMillis() + TimeUnit.MINUTES.toMillis(10);
