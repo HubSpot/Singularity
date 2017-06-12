@@ -72,6 +72,7 @@ import com.hubspot.singularity.api.SingularityScaleRequest;
 import com.hubspot.singularity.api.SingularitySkipHealthchecksRequest;
 import com.hubspot.singularity.api.SingularityUnpauseRequest;
 import com.hubspot.singularity.auth.SingularityAuthorizationHelper;
+import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.DeployManager;
 import com.hubspot.singularity.data.DisasterManager;
 import com.hubspot.singularity.data.RequestManager;
@@ -104,17 +105,19 @@ public class RequestResource extends AbstractRequestResource {
   private final RequestHelper requestHelper;
   private final SlaveManager slaveManager;
   private final DisasterManager disasterManager;
+  private final SingularityConfiguration singularityConfiguration;
 
   @Inject
   public RequestResource(SingularityValidator validator, DeployManager deployManager, TaskManager taskManager, RequestManager requestManager, SingularityMailer mailer,
                          SingularityAuthorizationHelper authorizationHelper, Optional<SingularityUser> user, RequestHelper requestHelper, LeaderLatch leaderLatch,
-                         SlaveManager slaveManager, DisasterManager disasterManager, AsyncHttpClient httpClient, ObjectMapper objectMapper) {
+                         SlaveManager slaveManager, DisasterManager disasterManager, AsyncHttpClient httpClient, ObjectMapper objectMapper, SingularityConfiguration singularityConfiguration) {
     super(requestManager, deployManager, user, validator, authorizationHelper, httpClient, leaderLatch, objectMapper);
     this.mailer = mailer;
     this.taskManager = taskManager;
     this.requestHelper = requestHelper;
     this.slaveManager = slaveManager;
     this.disasterManager = disasterManager;
+    this.singularityConfiguration = singularityConfiguration;
   }
 
   private void submitRequest(SingularityRequest request, Optional<SingularityRequestWithState> oldRequestWithState, Optional<RequestHistoryType> historyType,
@@ -308,8 +311,8 @@ public class RequestResource extends AbstractRequestResource {
       resources = maybeRunNowRequest.get().getResources();
       runAt = maybeRunNowRequest.get().getRunAt();
 
-      if (runAt.isPresent() && runAt.get() > (System.currentTimeMillis() + TimeUnit.DAYS.toMillis(30))) {
-        throw badRequest("Task launch delay can be at most 30 days from now.");
+      if (runAt.isPresent() && runAt.get() > (System.currentTimeMillis() + TimeUnit.DAYS.toMillis(singularityConfiguration.getMaxRunNowTaskLaunchDelayDays()))) {
+        throw badRequest("Task launch delay can be at most %d days from now.", singularityConfiguration.getMaxRunNowTaskLaunchDelayDays());
       }
     }
 
