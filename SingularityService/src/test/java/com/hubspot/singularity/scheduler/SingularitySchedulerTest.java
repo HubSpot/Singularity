@@ -1394,7 +1394,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     initOnDemandRequest();
     initFirstDeploy();
 
-    Long requestedLaunchTime = System.currentTimeMillis() + TimeUnit.MINUTES.toMillis(10);
+    long requestedLaunchTime = System.currentTimeMillis() + TimeUnit.MINUTES.toMillis(10);
 
     requestResource.scheduleImmediately(
         requestId,
@@ -1413,7 +1413,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     SingularityPendingTaskId task = taskManager.getPendingTaskIds().get(0);
     long runAt = task.getNextRunAt();
 
-    Assert.assertTrue(requestedLaunchTime == runAt);
+    Assert.assertEquals(requestedLaunchTime, runAt);
   }
 
   @Test
