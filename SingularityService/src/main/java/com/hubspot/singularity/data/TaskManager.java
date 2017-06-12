@@ -834,12 +834,9 @@ public class TaskManager extends CuratorAsyncManager {
 
   public List<SingularityPendingTaskId> getPendingTaskIdsForRequest(final String requestId) {
     List<SingularityPendingTaskId> pendingTaskIds = getPendingTaskIds();
-    return ImmutableList.copyOf(Iterables.filter(pendingTaskIds, new Predicate<SingularityPendingTaskId>() {
-      @Override
-      public boolean apply(SingularityPendingTaskId pendingTaskId) {
-        return pendingTaskId.getRequestId().equals(requestId);
-      }
-    }));
+    return pendingTaskIds.stream()
+        .filter(pendingTaskId -> pendingTaskId.getRequestId().equals(requestId))
+        .collect(Collectors.collectingAndThen(Collectors.toList(), ImmutableList::copyOf));
   }
 
   public List<SingularityPendingTask> getPendingTasksForRequest(final String requestId) {

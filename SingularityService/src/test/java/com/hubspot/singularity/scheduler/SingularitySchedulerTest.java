@@ -1487,7 +1487,57 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
 
       scheduler.drainPendingQueue(stateCacheProvider.get());
     }
+  }
 
+  @Test
+  public void testRequestsInPendingQueueAreOrderedByTimestamp() {
+    long now = System.currentTimeMillis();
+    initRequestWithType(RequestType.SCHEDULED, false);
+    startFirstDeploy();
+    SingularityPendingRequest pendingDeployRequest = new SingularityPendingRequest(requestId, firstDeploy.getId(), now, Optional.absent(), PendingType.NEW_DEPLOY,
+        firstDeploy.getSkipHealthchecksOnDeploy(), Optional.absent());
+    SingularityPendingRequest pendingRunNowRequest = new SingularityPendingRequest(requestId, firstDeploy.getId(), now + 200, Optional.absent(), PendingType.IMMEDIATE,
+        firstDeploy.getSkipHealthchecksOnDeploy(), Optional.absent());
+    requestManager.addToPendingQueue(pendingDeployRequest);
+
+
+    requestManager.addToPendingQueue(pendingRunNowRequest);
+
+    Assert.assertEquals(2, requestManager.getPendingRequests().size());
+    // Was added first
+    Assert.assertEquals(PendingType.NEW_DEPLOY, requestManager.getPendingRequests().get(0).getPendingType());
+    // Was added second
+    Assert.assertEquals(PendingType.IMMEDIATE, requestManager.getPendingRequests().get(1).getPendingType());
+
+    resourceOffers();
+  }
+
+  @Test
+  public void testImmediateRequestsAreConsistentlyDeleted() {
+    long now = System.currentTimeMillis();
+    initRequestWithType(RequestType.SCHEDULED, false);
+    startFirstDeploy();
+    SingularityPendingRequest pendingDeployRequest = new SingularityPendingRequest(requestId, firstDeploy.getId(), now, Optional.absent(), PendingType.NEW_DEPLOY,
+        firstDeploy.getSkipHealthchecksOnDeploy(), Optional.absent());
+    SingularityPendingRequest pendingRunNowRequest = new SingularityPendingRequest(requestId, firstDeploy.getId(), now + 200, Optional.absent(), PendingType.IMMEDIATE,
+        firstDeploy.getSkipHealthchecksOnDeploy(), Optional.absent());
+
+    requestManager.addToPendingQueue(pendingDeployRequest);
+    requestManager.addToPendingQueue(pendingRunNowRequest);
+
+    // Pending queue has two requests: NEW_DEPLOY & IMMEDIATE
+    Assert.assertEquals(2, requestManager.getPendingRequests().size());
+    finishNewTaskChecks();
+
+    requestManager.deletePendingRequest(pendingDeployRequest);
+
+    // Just the immediate run
+    Assert.assertEquals(1, requestManager.getPendingRequests().size());
+
+    requestManager.deletePendingRequest(pendingRunNowRequest);
+
+    // Immediate run was successfully deleted
+    Assert.assertEquals(0, requestManager.getPendingRequests().size());
   }
 
   @Test
@@ -1850,6 +1900,31 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     scheduler.drainPendingQueue(stateCacheProvider.get());
 
     Assert.assertEquals(newScheduleQuartz, requestManager.getRequest(requestId).get().getRequest().getQuartzScheduleSafe());
+  }
+
+  @Test
+  public void testImmediateRunReplacesScheduledTask() {
+    initScheduledRequest();
+
+    SingularityDeploy deploy = SingularityDeploy.newBuilder(requestId, firstDeployId)
+        .setCommand(Optional.of("sleep 100"))
+        .build();
+    SingularityDeployRequest singularityDeployRequest = new SingularityDeployRequest(deploy, Optional.absent(), Optional.absent(), Optional.absent());
+    deployResource.deploy(singularityDeployRequest);
+
+    scheduler.drainPendingQueue(stateCacheProvider.get());
+
+    SingularityPendingTask task1 = createAndSchedulePendingTask(firstDeployId);
+
+    Assert.assertEquals(1, taskManager.getPendingTaskIds().size());
+    Assert.assertEquals(PendingType.NEW_DEPLOY, taskManager.getPendingTaskIds().get(0).getPendingType());
+
+    requestManager.addToPendingQueue(new SingularityPendingRequest(requestId, deploy.getId(), System.currentTimeMillis(), Optional.absent(), PendingType.IMMEDIATE,
+        deploy.getSkipHealthchecksOnDeploy(), Optional.absent()));
+    scheduler.drainPendingQueue(stateCacheProvider.get());
+
+    Assert.assertEquals(1, taskManager.getPendingTaskIds().size());
+    Assert.assertEquals(PendingType.IMMEDIATE, taskManager.getPendingTaskIds().get(0).getPendingType());
   }
 
   @Test(expected = WebApplicationException.class)
