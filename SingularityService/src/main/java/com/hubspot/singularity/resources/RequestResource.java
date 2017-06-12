@@ -10,6 +10,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
@@ -306,6 +307,12 @@ public class RequestResource extends AbstractRequestResource {
       commandLineArgs = maybeRunNowRequest.get().getCommandLineArgs();
       resources = maybeRunNowRequest.get().getResources();
       runAt = maybeRunNowRequest.get().getRunAt();
+
+      if (runAt.isPresent() && runAt.get() > (System.currentTimeMillis() + TimeUnit.DAYS.toMillis(30))) {
+        throw badRequest("Task launch delay can be at most 30 days from now.");
+      }
+
+      LOG.info("runAt: " + runAt.toString());
     }
 
     if (runId.isPresent() && runId.get().length() > 100) {
