@@ -764,13 +764,6 @@ public class SingularityScheduler {
 
     long nextRunAt = now;
 
-    if (request.isOneOff()) {
-      Optional<Long> maybeRunAt = pendingRequest.getRunAt();
-      if (maybeRunAt.isPresent()) {
-        nextRunAt = Math.max(maybeRunAt.get(), now);
-      }
-    }
-
     if (request.isScheduled()) {
       if (pendingType == PendingType.IMMEDIATE || pendingType == PendingType.RETRY) {
         LOG.info("Scheduling requested immediate run of {}", request.getId());
@@ -805,6 +798,10 @@ public class SingularityScheduler {
           throw Throwables.propagate(pe);
         }
       }
+    }
+
+    if (!request.isLongRunning() && pendingRequest.getRunAt().isPresent()) {
+      nextRunAt = Math.max(nextRunAt, pendingRequest.getRunAt().get());
     }
 
     if (pendingType == PendingType.TASK_DONE && request.getWaitAtLeastMillisAfterTaskFinishesForReschedule().or(0L) > 0) {
