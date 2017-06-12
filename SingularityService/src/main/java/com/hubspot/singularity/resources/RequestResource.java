@@ -311,8 +311,6 @@ public class RequestResource extends AbstractRequestResource {
       if (runAt.isPresent() && runAt.get() > (System.currentTimeMillis() + TimeUnit.DAYS.toMillis(30))) {
         throw badRequest("Task launch delay can be at most 30 days from now.");
       }
-
-      LOG.info("runAt: " + runAt.toString());
     }
 
     if (runId.isPresent() && runId.get().length() > 100) {
