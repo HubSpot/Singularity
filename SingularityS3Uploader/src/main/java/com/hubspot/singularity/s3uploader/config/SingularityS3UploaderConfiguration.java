@@ -125,6 +125,22 @@ public class SingularityS3UploaderConfiguration extends BaseRunnerConfiguration 
     this.s3SecretKey = s3SecretKey;
   }
 
+  public int getRetryWaitMs() {
+    return retryWaitMs;
+  }
+
+  public void setRetryWaitMs(int retryWaitMs) {
+    this.retryWaitMs = retryWaitMs;
+  }
+
+  public int getRetryCount() {
+    return retryCount;
+  }
+
+  public void setRetryCount(int retryCount) {
+    this.retryCount = retryCount;
+  }
+
   public long getMaxSingleUploadSizeBytes() {
     return maxSingleUploadSizeBytes;
   }
@@ -139,22 +155,6 @@ public class SingularityS3UploaderConfiguration extends BaseRunnerConfiguration 
 
   public void setUploadPartSize(long uploadPartSize) {
     this.uploadPartSize = uploadPartSize;
-  }
-
-  public int getRetryCount() {
-    return retryCount;
-  }
-
-  public void setRetryCount(int retryCount) {
-    this.retryCount = retryCount;
-  }
-
-  public int getRetryWaitMs() {
-    return retryWaitMs;
-  }
-
-  public void setRetryWaitMs(int retryWaitMs) {
-    this.retryWaitMs = retryWaitMs;
   }
 
   public boolean isCheckForOpenFiles() {

@@ -338,7 +338,7 @@ public class SingularityClient {
     final long start = System.currentTimeMillis();
 
     HttpRequest.Builder requestBuilder = HttpRequest.newBuilder()
-        .setUrl(uri);
+      .setUrl(uri);
 
     if (queryParams.isPresent()) {
       addQueryParams(requestBuilder, queryParams.get());
@@ -371,7 +371,7 @@ public class SingularityClient {
         requestBuilder.setQueryParam(queryParamEntry.getKey()).to((Boolean) queryParamEntry.getValue());
       } else {
         throw new RuntimeException(String.format("The type '%s' of query param %s is not supported. Only String, long, int and boolean values are supported",
-            queryParamEntry.getValue().getClass().getName(), queryParamEntry.getKey()));
+          queryParamEntry.getValue().getClass().getName(), queryParamEntry.getKey()));
       }
     }
   }
@@ -669,7 +669,7 @@ public class SingularityClient {
     final String requestUri = String.format(DELETE_DEPLOY_FORMAT, getApiBase(), deployId, requestId);
 
     SingularityRequestParent singularityRequestParent = delete(requestUri, "pending deploy", new SingularityDeployKey(requestId, deployId).getId(), Optional.absent(),
-        Optional.of(SingularityRequestParent.class)).get();
+      Optional.of(SingularityRequestParent.class)).get();
 
     return getAndLogRequestAndDeployStatus(singularityRequestParent);
   }

@@ -33,7 +33,7 @@ class Disasters extends Component {
       type: PropTypes.string.isRequired,
       message: PropTypes.string,
       user: PropTypes.string
-    })).isRequired,
+    })).isRequired
   };
 
   constructor(props) {

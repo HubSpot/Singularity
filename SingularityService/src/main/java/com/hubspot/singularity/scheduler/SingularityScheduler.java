@@ -217,10 +217,11 @@ public class SingularityScheduler {
   @Timed
   public void drainPendingQueue(final SingularitySchedulerStateCache stateCache) {
     final long start = System.currentTimeMillis();
+
     final ImmutableList<SingularityPendingRequest> pendingRequests = ImmutableList.copyOf(requestManager.getPendingRequests());
 
     if (pendingRequests.isEmpty()) {
-      LOG.trace("Pending queue was empty");
+      LOG.trace("Pending request queue was empty");
       return;
     }
 
@@ -265,7 +266,7 @@ public class SingularityScheduler {
           continue;
         }
 
-        int missingInstances = getNumMissingInstances(matchingTaskIds, updatedRequest, pendingRequest, maybePendingDeploy);
+        int missingInstances = getNumMissingInstances(matchingTaskIds, maybeRequest.get().getRequest(), pendingRequest, maybePendingDeploy);
         if (missingInstances == 0 && !matchingTaskIds.isEmpty() && updatedRequest.isScheduled() && pendingRequest.getPendingType() == PendingType.NEW_DEPLOY) {
           LOG.trace("Holding pending request {} because it is scheduled and has an active task", pendingRequest);
           heldForScheduledActiveTask++;

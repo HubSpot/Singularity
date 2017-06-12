@@ -4,9 +4,9 @@ import { connect } from 'react-redux';
 import { withRouter } from 'react-router';
 import { FetchRequests } from '../../actions/api/requests';
 import { SetVisibility } from '../../actions/ui/globalSearch';
+import { Link } from 'react-router';
 import { refresh } from '../../actions/ui/requestDetail';
 import { push } from 'react-router-redux';
-import { Link } from 'react-router';
 
 import { Typeahead } from 'react-typeahead';
 import key from 'keymaster';

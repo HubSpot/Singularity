@@ -5,6 +5,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+import javax.ws.rs.HEAD;
+
 import org.apache.mesos.Protos.TaskState;
 import org.junit.Assert;
 import org.junit.Test;

@@ -280,6 +280,8 @@ public class S3LogResource extends AbstractHistoryResource {
       }
     }
 
+    LOG.trace("Found services and prefixes {} for search {}", servicesToPrefixes, search);
+
     // Trim prefixes to search. Less specific prefixes will contain all results of matching + more specific ones
     for (Map.Entry<SingularityS3Service, Set<String>> entry : servicesToPrefixes.entrySet()) {
       Set<String> results = new HashSet<>();
@@ -302,6 +304,8 @@ public class S3LogResource extends AbstractHistoryResource {
       }
       entry.getValue().retainAll(results);
     }
+
+    LOG.trace("Trimmed services and prefixes to {} for search {}", servicesToPrefixes, search);
 
     return servicesToPrefixes;
   }

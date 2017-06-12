@@ -228,7 +228,7 @@ public class SingularityMesosSchedulerDelegator implements Scheduler {
       handleUncaughtSchedulerException(t);
     } finally {
 
-      LOG.debug("Handled status update for {} in {}", status.getTaskId().getValue(), JavaUtils.duration(start));
+      LOG.debug("Handled status update {} for {} in {}", status.getState(), status.getTaskId().getValue(), JavaUtils.duration(start));
     }
   }
 

@@ -47,6 +47,10 @@ public class EnvironmentContext {
     return taskInfo.getContainer().getVolumesList();
   }
 
+  public boolean isDocker() {
+    return taskInfo.hasContainer() && taskInfo.getContainer().hasDocker();
+  }
+
   private String toCmdLineArg(Parameter parameter) {
     if (parameter.hasKey() && parameter.getKey().length() > 1) {
       if (parameter.hasValue() && !Strings.isNullOrEmpty(parameter.getValue())) {

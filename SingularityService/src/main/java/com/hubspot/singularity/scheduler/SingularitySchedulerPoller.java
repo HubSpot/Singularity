@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 import javax.inject.Singleton;
 
@@ -35,7 +36,6 @@ public class SingularitySchedulerPoller extends SingularityLeaderOnlyPoller {
   private final SchedulerDriverSupplier schedulerDriverSupplier;
   private final SingularityMesosOfferScheduler offerScheduler;
   private final DisasterManager disasterManager;
-  private final SingularityConfiguration configuration;
 
   @Inject
   SingularitySchedulerPoller(SingularityMesosOfferScheduler offerScheduler, OfferCache offerCache, SchedulerDriverSupplier schedulerDriverSupplier,
@@ -46,7 +46,6 @@ public class SingularitySchedulerPoller extends SingularityLeaderOnlyPoller {
     this.offerScheduler = offerScheduler;
     this.schedulerDriverSupplier = schedulerDriverSupplier;
     this.disasterManager = disasterManager;
-    this.configuration = configuration;
   }
 
   @Override
@@ -83,16 +82,16 @@ public class SingularitySchedulerPoller extends SingularityLeaderOnlyPoller {
     int launchedTasks = 0;
 
     for (SingularityOfferHolder offerHolder : offerHolders) {
-      CachedOffer cachedOffer = offerIdToCachedOffer.get(offerHolder.getOffer().getId().getValue());
+        List<CachedOffer> cachedOffersFromHolder = offerHolder.getOffers().stream().map((o) -> offerIdToCachedOffer.get(o.getId().getValue())).collect(Collectors.toList());
 
-      if (!offerHolder.getAcceptedTasks().isEmpty()) {
-        offerHolder.launchTasks(driver.get());
-        launchedTasks += offerHolder.getAcceptedTasks().size();
-        acceptedOffers++;
-        offerCache.useOffer(cachedOffer);
-      } else {
-        offerCache.returnOffer(cachedOffer);
-      }
+        if (!offerHolder.getAcceptedTasks().isEmpty()) {
+          offerHolder.launchTasks(driver.get());
+          launchedTasks += offerHolder.getAcceptedTasks().size();
+          acceptedOffers++;
+          cachedOffersFromHolder.forEach(offerCache::useOffer);
+        } else {
+          cachedOffersFromHolder.forEach(offerCache::returnOffer);
+        }
     }
 
     LOG.info("Launched {} tasks on {} cached offers (returned {}) in {}", launchedTasks, acceptedOffers, offerHolders.size() - acceptedOffers, JavaUtils.duration(start));

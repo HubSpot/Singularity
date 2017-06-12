@@ -2,6 +2,8 @@ package com.hubspot.singularity.data.transcoders;
 
 import static com.hubspot.singularity.data.transcoders.SingularityJsonTranscoderBinder.bindTranscoder;
 
+import javax.ws.rs.HEAD;
+
 import com.google.inject.Binder;
 import com.google.inject.Module;
 import com.hubspot.singularity.SingularityClusterUtilization;
@@ -97,8 +99,8 @@ public class SingularityTranscoderModule implements Module {
     bindTranscoder(binder).asJson(SingularityDisabledAction.class);
     bindTranscoder(binder).asJson(SingularityDisasterDataPoints.class);
     bindTranscoder(binder).asJson(SingularityRequestGroup.class);
-    bindTranscoder(binder).asJson(SingularityExpiringMachineState.class);
     bindTranscoder(binder).asJson(SingularityUserSettings.class);
+    bindTranscoder(binder).asJson(SingularityExpiringMachineState.class);
     bindTranscoder(binder).asJson(SingularitySlaveUsage.class);
     bindTranscoder(binder).asJson(SingularityTaskUsage.class);
     bindTranscoder(binder).asJson(SingularityClusterUtilization.class);

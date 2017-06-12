@@ -2,6 +2,8 @@ package com.hubspot.singularity.mesos;
 
 import java.util.concurrent.ConcurrentHashMap;
 
+import javax.ws.rs.HEAD;
+
 import org.apache.mesos.Protos;
 import org.apache.mesos.Protos.TaskState;
 import org.apache.mesos.Protos.TaskStatus.Reason;

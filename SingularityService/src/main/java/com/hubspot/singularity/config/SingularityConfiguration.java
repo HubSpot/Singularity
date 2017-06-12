@@ -138,11 +138,11 @@ public class SingularityConfiguration extends Configuration {
 
   private long deployHealthyBySeconds = 120;
 
-  private int dispatchTaskShellCommandsEverySeconds = 5;
-
   private long debugCuratorCallOverBytes = 25000;
 
   private long debugCuratorCallOverMillis = 250;
+
+  private int dispatchTaskShellCommandsEverySeconds = 5;
 
   private boolean enableCorsFilter = false;
 
