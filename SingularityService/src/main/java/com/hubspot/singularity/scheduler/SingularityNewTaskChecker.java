@@ -23,6 +23,7 @@ import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import com.hubspot.baragon.models.BaragonRequestState;
 import com.hubspot.mesos.JavaUtils;
+import com.hubspot.singularity.ExtendedTaskState;
 import com.hubspot.singularity.LoadBalancerRequestType;
 import com.hubspot.singularity.LoadBalancerRequestType.LoadBalancerRequestId;
 import com.hubspot.singularity.SingularityAbort;
@@ -35,8 +36,10 @@ import com.hubspot.singularity.SingularityRequestWithState;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskCleanup;
 import com.hubspot.singularity.SingularityTaskHealthcheckResult;
+import com.hubspot.singularity.SingularityTaskHistory;
 import com.hubspot.singularity.SingularityTaskHistoryUpdate;
 import com.hubspot.singularity.SingularityTaskHistoryUpdate.SimplifiedTaskState;
+import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.TaskCleanupType;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.DisasterManager;
@@ -379,7 +382,7 @@ public class SingularityNewTaskChecker {
   }
 
   private boolean isHealthcheckOverdue(SingularityTask task) {
-    final long healthcheckDuration = taskManager.getLastHealthcheck(task.getTaskId()).get().getDurationMillis().or(0L);
+    final long healthcheckDuration = System.currentTimeMillis() - getTaskRunningStartTime(task.getTaskId());
 
     final boolean isOverdue = healthcheckDuration > getKillAfterHealthcheckRunningForMillis();
 
@@ -400,6 +403,24 @@ public class SingularityNewTaskChecker {
     }
 
     return isOverdue;
+  }
+
+  private long getTaskRunningStartTime(SingularityTaskId task) {
+    Optional<SingularityTaskHistory> taskHistory = taskManager.getTaskHistory(task);
+
+    if (taskHistory.isPresent()) {
+      java.util.Optional<SingularityTaskHistoryUpdate> taskRunningState = taskHistory.get().getTaskUpdates().stream().filter(h -> h.getTaskState().equals(ExtendedTaskState.TASK_RUNNING)).findFirst();
+
+      if (taskRunningState.isPresent()) {
+        return taskRunningState.get().getTimestamp();
+      }
+
+      LOG.error("Could not find time when task {} reached TASK_RUNNING state", task);
+    } else {
+      LOG.error("Could not find task history for {}", task);
+    }
+
+    return System.currentTimeMillis();
   }
 
   private boolean unknownNotRemoving(SingularityLoadBalancerUpdate update) {
