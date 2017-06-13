@@ -726,7 +726,7 @@ public class SingularityScheduler {
 
   private List<SingularityPendingTask> getScheduledTaskIds(int numMissingInstances, List<SingularityTaskId> matchingTaskIds, SingularityRequest request, RequestState state,
     SingularityDeployStatistics deployStatistics, String deployId, SingularityPendingRequest pendingRequest, Optional<SingularityPendingDeploy> maybePendingDeploy) {
-    final Optional<Long> nextRunAt = getNextRunAt(request, state, deployStatistics, pendingRequest.getPendingType(), maybePendingDeploy);
+    final Optional<Long> nextRunAt = getNextRunAt(request, state, deployStatistics, pendingRequest, maybePendingDeploy);
 
     if (!nextRunAt.isPresent()) {
       return Collections.emptyList();
@@ -757,8 +757,9 @@ public class SingularityScheduler {
     return newTasks;
   }
 
-  private Optional<Long> getNextRunAt(SingularityRequest request, RequestState state, SingularityDeployStatistics deployStatistics, PendingType pendingType,
+  private Optional<Long> getNextRunAt(SingularityRequest request, RequestState state, SingularityDeployStatistics deployStatistics, SingularityPendingRequest pendingRequest,
     Optional<SingularityPendingDeploy> maybePendingDeploy) {
+    PendingType pendingType = pendingRequest.getPendingType();
     final long now = System.currentTimeMillis();
 
     long nextRunAt = now;
@@ -797,6 +798,10 @@ public class SingularityScheduler {
           throw Throwables.propagate(pe);
         }
       }
+    }
+
+    if (!request.isLongRunning() && pendingRequest.getRunAt().isPresent()) {
+      nextRunAt = Math.max(nextRunAt, pendingRequest.getRunAt().get());
     }
 
     if (pendingType == PendingType.TASK_DONE && request.getWaitAtLeastMillisAfterTaskFinishesForReschedule().or(0L) > 0) {
