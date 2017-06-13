@@ -17,10 +17,8 @@ const humanizeStatName = (name) => {
       return 'MEM';
     case STAT_NAMES.numTasksStat:
       return 'TASKS';
-    case STAT_NAMES.timestampStat:
-      return '';
     default:
-      throw new Error(`${name} is an unsupported statistic`);
+      return '';
   }
 };
 
@@ -34,10 +32,8 @@ const humanizeStatValue = (name, value, maybeTotalResource) => {
       return `${Utils.humanizeFileSize(value)} / ${Utils.humanizeFileSize(maybeTotalResource)}`;
     case STAT_NAMES.numTasksStat:
       return value.toString();
-    case STAT_NAMES.timestampStat:
-      return '';
     default:
-      throw new Error(`${name} is an unsupported statistic`);
+      return '';
   }
 };
 

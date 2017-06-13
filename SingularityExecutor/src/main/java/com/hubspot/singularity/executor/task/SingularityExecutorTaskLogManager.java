@@ -252,7 +252,7 @@ public class SingularityExecutorTaskLogManager {
     }
 
     S3UploadMetadata s3UploadMetadata = new S3UploadMetadata(pathToS3Directory.toString(), globForS3Files, s3UploaderBucket, getS3KeyPattern(s3KeyPattern.or(taskDefinition.getExecutorData().getS3UploaderKeyPattern())), finished, Optional.<String> absent(),
-        Optional.<Integer> absent(), Optional.<String> absent(), Optional.<String> absent(), Optional.<Long> absent(), s3StorageClass, applyS3StorageClassAfterBytes, Optional.<Boolean>absent());
+        Optional.<Integer> absent(), Optional.<String> absent(), Optional.<String> absent(), Optional.<Long> absent(), s3StorageClass, applyS3StorageClassAfterBytes, Optional.of(finished));
 
     String s3UploadMetadataFileName = String.format("%s-%s%s", taskDefinition.getTaskId(), filenameHint, baseConfiguration.getS3UploaderMetadataSuffix());
 

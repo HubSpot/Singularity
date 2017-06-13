@@ -174,13 +174,13 @@ These settings should live under the "mesos" field inside the root configuration
 #### Resource Limits ####
 | Parameter | Default | Description | Type |
 |-----------|---------|-------------|------|
-| defaultCpus | 1 | Number of CPUs to request for a task if none are specified | int | 
+| defaultCpus | 1 | Number of CPUs to request for a task if none are specified | int |
 | defaultMemory | 64 | MB of memory to request for a task if none is specified | int |
 | maxNumInstancesPerRequest | 25 | Max instances (tasks) to allow for a request (requests using over this will return a 400) | int |
-| maxNumCpusPerInstance | 50 | Max number of CPUs allowed on a given task | int | 
-| maxNumCpusPerRequest | 900 | Max number of CPUs allowed for a given request (cpus per task * task instance) | int | 
-| maxMemoryMbPerInstance | 24000 | Max MB of memory allowed on a given task | int | 
-| maxMemoryMbPerRequest | 450000 | Max MB of memory allowed for a given request (memoryMb per task * task instances) | int | 
+| maxNumCpusPerInstance | 50 | Max number of CPUs allowed on a given task | int |
+| maxNumCpusPerRequest | 900 | Max number of CPUs allowed for a given request (cpus per task * task instance) | int |
+| maxMemoryMbPerInstance | 24000 | Max MB of memory allowed on a given task | int |
+| maxMemoryMbPerRequest | 450000 | Max MB of memory allowed for a given request (memoryMb per task * task instances) | int |
 
 #### Racks ####
 | Parameter | Default | Description | Type |
@@ -192,7 +192,18 @@ These settings should live under the "mesos" field inside the root configuration
 | Parameter | Default | Description | Type |
 |-----------|---------|-------------|------|
 | slaveHttpPort | 5051 | The port to talk to slaves on | int |
-| slaveHttpsPort | absent | The HTTPS port to talk to slaves on | Integer (Optional) | 
+| slaveHttpsPort | absent | The HTTPS port to talk to slaves on | Integer (Optional) |
+
+#### Offers ####
+| Parameter | Default | Description | Type |
+|-----------|---------|-------------|------|
+| longRunningUsedCpuWeightForOffer | 0.30 | The weight long running tasks' cpu utilization carries when scoring an offer (should add up to 1 with longRunningUsedMemWeightForOffer) | double |
+| longRunningUsedMemWeightForOffer | 0.70 | The weight long running tasks' memory utilization carries when scoring an offer (should add up to 1 with longRunningUsedCpuWeightForOffer) | double |
+| freeCpuWeightForOffer | 0.30 | The weight the slave's free cpu carries when scoring an offer (should add up to 1 with freeMemWeightForOffer) | double |
+| freeMemWeightForOffer | 0.70 | The weight the slave's free memory carries when scoring an offer (should add up to 1 with freeCpuWeightForOffer) | double |
+| defaultOfferScoreForMissingUsage | 0.30 | The default offer score used for offers without utilization metrics | double |
+| considerNonLongRunningTaskLongRunningAfterRunningForSeconds | 21600 (6 hours) | If a non long running task runs, on average, this long or more, it's considered a long running task | long |
+| maxNonLongRunningUsedResourceWeight | 0.50 | The max weight long running tasks' utilization can carry when scoring a non long running task for an offer | double
 
 ## Database ##
 

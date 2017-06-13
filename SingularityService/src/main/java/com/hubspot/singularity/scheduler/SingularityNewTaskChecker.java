@@ -333,8 +333,9 @@ public class SingularityNewTaskChecker {
     SingularityLoadBalancerUpdate newLbUpdate;
 
     final LoadBalancerRequestId loadBalancerRequestId = new LoadBalancerRequestId(task.getTaskId().getId(), LoadBalancerRequestType.ADD, Optional.absent());
+    boolean taskCleaning = taskManager.getCleanupTaskIds().contains(task.getTaskId());
 
-    if (!lbUpdate.isPresent() || lbUpdate.get().getLoadBalancerState() == BaragonRequestState.UNKNOWN) {
+    if ((!lbUpdate.isPresent() || unknownNotRemoving(lbUpdate.get())) && !taskCleaning) {
       taskManager.saveLoadBalancerState(task.getTaskId(), LoadBalancerRequestType.ADD,
           new SingularityLoadBalancerUpdate(BaragonRequestState.UNKNOWN, loadBalancerRequestId, Optional.absent(), System.currentTimeMillis(), LoadBalancerMethod.PRE_ENQUEUE, Optional.absent()));
 
@@ -399,5 +400,10 @@ public class SingularityNewTaskChecker {
     }
 
     return isOverdue;
+  }
+
+  private boolean unknownNotRemoving(SingularityLoadBalancerUpdate update) {
+    return update.getLoadBalancerState() == BaragonRequestState.UNKNOWN
+        && update.getLoadBalancerRequestId().getRequestType() != LoadBalancerRequestType.REMOVE;
   }
 }
