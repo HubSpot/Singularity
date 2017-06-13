@@ -130,7 +130,7 @@ public class SingularityValidator {
     this.allowBounceToSameHost = configuration.isAllowBounceToSameHost();
 
     this.maxTotalHealthcheckTimeoutSeconds = configuration.getHealthcheckMaxTotalTimeoutSeconds();
-    this.defaultKillHealthcheckAfterSeconds = configuration.getKillHealthcheckAfterDefaultSeconds();
+    this.defaultKillHealthcheckAfterSeconds = configuration.getKillTaskIfNotHealthyAfterSeconds();
     this.defaultHealthcheckIntervalSeconds = configuration.getHealthcheckIntervalSeconds();
     this.defaultHealthcheckStartupTimeoutSeconds = configuration.getStartupTimeoutSeconds();
     this.defaultHealthcehckMaxRetries = configuration.getHealthcheckMaxRetries().or(0);

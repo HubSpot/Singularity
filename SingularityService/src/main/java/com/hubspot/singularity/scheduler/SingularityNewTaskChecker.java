@@ -113,7 +113,7 @@ public class SingularityNewTaskChecker {
   }
 
   private long getKillAfterHealthcheckRunningForMillis() {
-    return TimeUnit.SECONDS.toMillis(configuration.getKillHealthcheckAfterDefaultSeconds());
+    return TimeUnit.SECONDS.toMillis(configuration.getKillTaskIfNotHealthyAfterSeconds());
   }
 
   private int getDelaySeconds(SingularityTask task, Optional<SingularityRequestWithState> requestWithState) {

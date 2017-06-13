@@ -162,7 +162,7 @@ public class SingularityConfiguration extends Configuration {
 
   private Optional<Integer> healthcheckMaxTotalTimeoutSeconds = Optional.absent();
 
-  private long killHealthcheckAfterDefaultSeconds = 600;
+  private long killTaskIfNotHealthyAfterSeconds = 600;
 
   @NotNull
   private List<Integer> healthcheckFailureStatusCodes = Collections.emptyList();
@@ -598,8 +598,8 @@ public class SingularityConfiguration extends Configuration {
     return healthcheckMaxTotalTimeoutSeconds;
   }
 
-  public long getKillHealthcheckAfterDefaultSeconds() {
-    return killHealthcheckAfterDefaultSeconds;
+  public long getKillTaskIfNotHealthyAfterSeconds() {
+    return killTaskIfNotHealthyAfterSeconds;
   }
 
   public Optional<String> getHostname() {
@@ -969,8 +969,8 @@ public class SingularityConfiguration extends Configuration {
     this.healthcheckMaxTotalTimeoutSeconds = healthcheckMaxTotalTimeoutSeconds;
   }
 
-  public SingularityConfiguration setKillHealthcheckAfterDefaultSeconds(long killHealthcheckAfterDefaultSeconds) {
-    this.killHealthcheckAfterDefaultSeconds = killHealthcheckAfterDefaultSeconds;
+  public SingularityConfiguration setKillTaskIfNotHealthyAfterSeconds(long killTaskIfNotHealthyAfterSeconds) {
+    this.killTaskIfNotHealthyAfterSeconds = killTaskIfNotHealthyAfterSeconds;
     return this;
   }
 
