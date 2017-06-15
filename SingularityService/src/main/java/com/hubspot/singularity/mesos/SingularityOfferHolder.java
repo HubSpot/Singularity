@@ -113,7 +113,7 @@ public class SingularityOfferHolder {
     }
   }
 
-  public void launchTasks(SchedulerDriver driver) {
+  public void launchTasks(SchedulerDriver driver, OfferCache cache) {
     final List<TaskInfo> toLaunch = Lists.newArrayListWithCapacity(acceptedTasks.size());
     final List<SingularityTaskId> taskIds = Lists.newArrayListWithCapacity(acceptedTasks.size());
 
@@ -124,7 +124,20 @@ public class SingularityOfferHolder {
       LOG.trace("Launching {} mesos task: {}", task.getTaskId(), MesosUtils.formatForLogging(task.getMesosTask()));
     }
 
-    Status initialStatus = driver.launchTasks(offers.stream().map(Protos.Offer::getId).collect(Collectors.toList()), toLaunch);
+    // At this point, `currentResources` contains a list of unused resources, because we subtracted out the required resources of every task we accepted.
+    // Let's try and reclaim offers by trying to pull each offer's list of resources out of the combined pool of leftover resources.
+    List<Offer> neededOffers = offers.stream().filter(o -> {
+      List<Resource> remainingAfterSavingOffer = MesosUtils.subtractResources(currentResources, o.getResourcesList());
+      if (MesosUtils.allResourceCountsNonNegative(remainingAfterSavingOffer)) {
+        cache.cacheOffer(driver, System.currentTimeMillis(), o); // TODO: do we need this timestamp to be something specific, e.g. the time at which we got the offer originally?
+        currentResources = remainingAfterSavingOffer;
+        return false;
+      } else {
+        return true;
+      }
+    }).collect(Collectors.toList());
+
+    Status initialStatus = driver.launchTasks(neededOffers.stream().map(Protos.Offer::getId).collect(Collectors.toList()), toLaunch);
 
     LOG.info("{} tasks ({}) launched with status {}", taskIds.size(), taskIds, initialStatus);
   }

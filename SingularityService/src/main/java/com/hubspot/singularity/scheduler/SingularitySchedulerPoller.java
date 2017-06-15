@@ -87,7 +87,7 @@ public class SingularitySchedulerPoller extends SingularityLeaderOnlyPoller {
         List<CachedOffer> cachedOffersFromHolder = offerHolder.getOffers().stream().map((o) -> offerIdToCachedOffer.get(o.getId().getValue())).collect(Collectors.toList());
 
         if (!offerHolder.getAcceptedTasks().isEmpty()) {
-          offerHolder.launchTasks(driver.get());
+          offerHolder.launchTasks(driver.get(), offerCache);
           launchedTasks += offerHolder.getAcceptedTasks().size();
           acceptedOffers++;
           cachedOffersFromHolder.forEach(offerCache::useOffer);

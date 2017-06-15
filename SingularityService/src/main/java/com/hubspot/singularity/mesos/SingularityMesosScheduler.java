@@ -125,7 +125,9 @@ public class SingularityMesosScheduler implements Scheduler {
 
       for (SingularityOfferHolder offerHolder : offerHolders) {
         if (!offerHolder.getAcceptedTasks().isEmpty()) {
-          offerHolder.launchTasks(driver);
+          // Here we're launching tasks by accepting every offer the master gave us for this host (i.e., all tasks in this offer holder).
+          // We want to launch these tasks using only the offers absolutely necessary, and cache the rest.
+          offerHolder.launchTasks(driver, offerCache);
 
           acceptedOffers.addAll(offerHolder.getOffers().stream().map(Offer::getId).collect(Collectors.toList()));
         } else {

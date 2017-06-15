@@ -300,6 +300,17 @@ public final class MesosUtils {
     return true;
   }
 
+  public static boolean allResourceCountsNonNegative(List<Resource> resources) {
+    return doesOfferMatchResources(
+        Optional.absent(),
+        new Resources(0, 0, 0, 0),
+        resources,
+        Collections.emptyList() // TODO: does something special need to be done here for ports?
+                                // TODO: No, because individual ports will have already been subtracted by the time we call this.
+                                // TODO: we just need to check that number of ports is nonnegative
+    );
+  }
+
   public static boolean isTaskDone(TaskState state) {
     return state == TaskState.TASK_FAILED || state == TaskState.TASK_LOST || state == TaskState.TASK_KILLED || state == TaskState.TASK_FINISHED;
   }
