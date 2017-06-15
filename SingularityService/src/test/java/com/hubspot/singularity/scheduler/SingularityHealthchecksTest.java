@@ -229,12 +229,12 @@ public class SingularityHealthchecksTest extends SingularitySchedulerTestBase {
 
     SingularityTask task = launchTask(request, deploy, System.currentTimeMillis(), 1, TaskState.TASK_RUNNING);
 
-    Assert.assertEquals(CheckTaskState.CHECK_IF_OVERDUE, newTaskChecker.getTaskState(task, requestManager.getRequest(requestId), healthchecker));
+    Assert.assertEquals(CheckTaskState.CHECK_IF_HEALTHCHECK_OVERDUE, newTaskChecker.getTaskState(task, requestManager.getRequest(requestId), healthchecker));
     Assert.assertTrue(taskManager.getCleanupTaskIds().isEmpty());
 
     taskManager.saveHealthcheckResult(new SingularityTaskHealthcheckResult(Optional.of(503), Optional.of(1000L), System.currentTimeMillis() + 1, Optional.<String> absent(), Optional.<String> absent(), task.getTaskId(), Optional.<Boolean>absent()));
 
-    Assert.assertEquals(CheckTaskState.CHECK_IF_OVERDUE, newTaskChecker.getTaskState(task, requestManager.getRequest(requestId), healthchecker));
+    Assert.assertEquals(CheckTaskState.CHECK_IF_HEALTHCHECK_OVERDUE, newTaskChecker.getTaskState(task, requestManager.getRequest(requestId), healthchecker));
 
     taskManager.saveHealthcheckResult(new SingularityTaskHealthcheckResult(Optional.of(503), Optional.of(1000L), System.currentTimeMillis() + 1, Optional.<String> absent(), Optional.<String> absent(), task.getTaskId(), Optional.<Boolean>absent()));
 
