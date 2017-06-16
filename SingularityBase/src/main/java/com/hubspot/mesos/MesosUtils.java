@@ -293,7 +293,7 @@ public final class MesosUtils {
       return false;
     }
 
-    if (!getAllPorts(offerResources).containsAll(otherRequestedPorts)) {
+    if (resources.getNumPorts() > 0 && !getAllPorts(offerResources).containsAll(otherRequestedPorts)) {
       return false;
     }
 
