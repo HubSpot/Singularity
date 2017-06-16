@@ -300,17 +300,6 @@ public final class MesosUtils {
     return true;
   }
 
-  public static boolean allResourceCountsNonNegative(List<Resource> resources) {
-    return doesOfferMatchResources(
-        Optional.absent(),
-        new Resources(0, 0, 0, 0),
-        resources,
-        Collections.emptyList() // TODO: does something special need to be done here for ports?
-                                // TODO: No, because individual ports will have already been subtracted by the time we call this.
-                                // TODO: we just need to check that number of ports is nonnegative
-    );
-  }
-
   public static boolean isTaskDone(TaskState state) {
     return state == TaskState.TASK_FAILED || state == TaskState.TASK_LOST || state == TaskState.TASK_KILLED || state == TaskState.TASK_FINISHED;
   }
@@ -434,8 +423,8 @@ public final class MesosUtils {
     return resources;
   }
 
-  public static Resources buildResourcesFromMesosResourceList(List<Resource> resources) {
-    return new Resources(getNumCpus(resources, Optional.<String>absent()), getMemory(resources, Optional.<String>absent()), getNumPorts(resources), getDisk(resources, Optional.<String>absent()));
+  public static Resources buildResourcesFromMesosResourceList(List<Resource> resources, Optional<String> requiredRole) {
+    return new Resources(getNumCpus(resources, requiredRole), getMemory(resources, requiredRole), getNumPorts(resources), getDisk(resources, requiredRole));
   }
 
   public static Path getTaskDirectoryPath(String taskId) {
