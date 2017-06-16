@@ -38,3 +38,5 @@ enableCorsFilter: true
 
 disasterDetection:
   enabled: true
+
+cacheOffers: true
