@@ -293,7 +293,7 @@ public final class MesosUtils {
       return false;
     }
 
-    if (!getAllPorts(offerResources).containsAll(otherRequestedPorts)) {
+    if (resources.getNumPorts() > 0 && !getAllPorts(offerResources).containsAll(otherRequestedPorts)) {
       return false;
     }
 
@@ -423,8 +423,8 @@ public final class MesosUtils {
     return resources;
   }
 
-  public static Resources buildResourcesFromMesosResourceList(List<Resource> resources) {
-    return new Resources(getNumCpus(resources, Optional.<String>absent()), getMemory(resources, Optional.<String>absent()), getNumPorts(resources), getDisk(resources, Optional.<String>absent()));
+  public static Resources buildResourcesFromMesosResourceList(List<Resource> resources, Optional<String> requiredRole) {
+    return new Resources(getNumCpus(resources, requiredRole), getMemory(resources, requiredRole), getNumPorts(resources), getDisk(resources, requiredRole));
   }
 
   public static Path getTaskDirectoryPath(String taskId) {
