@@ -110,12 +110,11 @@ else
 fi
 
 # set up port mappings
-DOCKER_PORTS=()
-{{#each envContext.dockerInfo.portMappingsList}}DOCKER_PORTS+=( -p {{{ hostPort }}}:{{{ containerPort }}} )
+DOCKER_OPTIONS=()
+{{#each envContext.dockerInfo.portMappingsList}}DOCKER_OPTIONS+=( -p {{{ hostPort }}}:{{{ containerPort }}} )
 {{/each}}
 
 # set up attached volumes
-DOCKER_OPTIONS=()
 DOCKER_OPTIONS+=( -v "$CURRENT_DIR:/mnt/mesos/sandbox" )
 echo "MESOS_SANDBOX=/mnt/mesos/sandbox" >> docker.env
 echo "LOG_HOME=/mnt/mesos/sandbox/logs" >> docker.env
