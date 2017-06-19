@@ -86,10 +86,10 @@ DOCKER_IMAGE={{{ envContext.dockerInfo.image }}}
 touch docker.env
 {{#each envContext.env}}
 {{#ifHasNewLines value}}
-{{{name}}}={{{bashEscaped value}}}
+{{{name}}}={{{shellQuote value}}}
 {{else}}
-{{{name}}}={{{bashEscaped value}}}
-echo "{{{name}}}={{{value}}}" >> docker.env
+{{{name}}}={{{shellQuote value}}}
+echo "{{{name}}}=${{{name}}}" >> docker.env
 {{/ifHasNewLines}}
 {{/each}}
 
