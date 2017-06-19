@@ -75,7 +75,7 @@ public class SingularityConfiguration extends Configuration {
 
   private long cleanUsageEveryMillis = TimeUnit.MINUTES.toMillis(5);
 
-  private int numUsageToKeep = 5;
+  private int numUsageToKeep = 15;
 
   private long cleanupEverySeconds = 5;
 

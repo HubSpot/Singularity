@@ -27,6 +27,7 @@ import com.hubspot.horizon.HttpRequest;
 import com.hubspot.horizon.HttpRequest.Method;
 import com.hubspot.horizon.HttpResponse;
 import com.hubspot.mesos.json.MesosFileChunkObject;
+import com.hubspot.singularity.ClusterUtilization;
 import com.hubspot.singularity.ExtendedTaskState;
 import com.hubspot.singularity.MachineState;
 import com.hubspot.singularity.OrderDirection;
@@ -91,6 +92,9 @@ public class SingularityClient {
 
   private static final String STATE_FORMAT = "%s/state";
   private static final String TASK_RECONCILIATION_FORMAT = STATE_FORMAT + "/task-reconciliation";
+
+  private static final String USAGE_FORMAT = "%s/usage";
+  private static final String CLUSTER_UTILIZATION_FORMAT = USAGE_FORMAT + "/cluster/utilization";
 
   private static final String RACKS_FORMAT = "%s/racks";
   private static final String RACKS_DECOMISSION_FORMAT = RACKS_FORMAT + "/rack/%s/decommission";
@@ -560,6 +564,26 @@ public class SingularityClient {
     LOG.info("Got task reconciliation statistics in {}ms", System.currentTimeMillis() - start);
 
     return Optional.of(response.getAs(SingularityTaskReconciliationStatistics.class));
+  }
+
+  public ClusterUtilization getClusterUtilization() {
+    final String uri = String.format(CLUSTER_UTILIZATION_FORMAT, getApiBase());
+
+    LOG.info("Fetch cluster utilization statistics from {}", uri);
+
+    final long start = System.currentTimeMillis();
+
+    HttpRequest.Builder request = HttpRequest.newBuilder().setUrl(uri);
+
+    addCredentials(request);
+
+    HttpResponse response = httpClient.execute(request.build());
+
+    checkResponse("cluster utilization statistics", response);
+
+    LOG.info("Got cluster utilization statistics in {}ms", System.currentTimeMillis() - start);
+
+    return response.getAs(ClusterUtilization.class);
   }
 
   //
