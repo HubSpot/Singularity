@@ -107,9 +107,18 @@ public class SingularityValidator {
   private final PriorityManager priorityManager;
   private final DisasterManager disasterManager;
   private final SlaveManager slaveManager;
+  private final SingularityConfiguration singularityConfiguration;
 
   @Inject
-  public SingularityValidator(SingularityConfiguration configuration, DeployHistoryHelper deployHistoryHelper, PriorityManager priorityManager, DisasterManager disasterManager, SlaveManager slaveManager, UIConfiguration uiConfiguration) {
+  public SingularityValidator(
+      SingularityConfiguration configuration,
+      DeployHistoryHelper deployHistoryHelper,
+      PriorityManager priorityManager,
+      DisasterManager disasterManager,
+      SlaveManager slaveManager,
+      UIConfiguration uiConfiguration,
+      SingularityConfiguration singularityConfiguration
+  ) {
     this.maxDeployIdSize = configuration.getMaxDeployIdSize();
     this.maxRequestIdSize = configuration.getMaxRequestIdSize();
     this.maxUserIdSize = configuration.getMaxUserIdSize();
@@ -149,6 +158,7 @@ public class SingularityValidator {
 
     this.disasterManager = disasterManager;
     this.slaveManager = slaveManager;
+    this.singularityConfiguration = singularityConfiguration;
   }
 
   public SingularityRequest checkSingularityRequest(SingularityRequest request, Optional<SingularityRequest> existingRequest, Optional<SingularityDeploy> activeDeploy,
@@ -412,6 +422,10 @@ public class SingularityValidator {
       throw badRequest("Can not request an immediate run of a non-scheduled / always running request (%s)", request);
     }
 
+    if (runNowRequest.getRunAt().isPresent() && runNowRequest.getRunAt().get() > (System.currentTimeMillis() + TimeUnit.DAYS.toMillis(singularityConfiguration.getMaxRunNowTaskLaunchDelayDays()))) {
+      throw badRequest("Task launch delay can be at most %d days from now.", singularityConfiguration.getMaxRunNowTaskLaunchDelayDays());
+    }
+
     return new SingularityPendingRequest(
         request.getId(),
         deployId,
@@ -423,7 +437,8 @@ public class SingularityValidator {
         runNowRequest.getSkipHealthchecks(),
         runNowRequest.getMessage(),
         Optional.absent(),
-        runNowRequest.getResources()
+        runNowRequest.getResources(),
+        runNowRequest.getRunAt()
     );
   }
 
@@ -435,7 +450,9 @@ public class SingularityValidator {
           request.getSkipHealthchecks(),
           Optional.of(getRunId(request.getRunId())),
           request.getCommandLineArgs(),
-          request.getResources());
+          request.getResources(),
+          request.getRunAt()
+      );
     } else {
       return new SingularityRunNowRequest(
           Optional.absent(),
