@@ -15,6 +15,7 @@ import org.apache.mesos.SchedulerDriver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.mesos.MesosUtils;
@@ -113,7 +114,7 @@ public class SingularityOfferHolder {
     }
   }
 
-  public void launchTasks(SchedulerDriver driver) {
+  public List<Offer> launchTasksAndGetUnusedOffers(SchedulerDriver driver) {
     final List<TaskInfo> toLaunch = Lists.newArrayListWithCapacity(acceptedTasks.size());
     final List<SingularityTaskId> taskIds = Lists.newArrayListWithCapacity(acceptedTasks.size());
 
@@ -124,9 +125,52 @@ public class SingularityOfferHolder {
       LOG.trace("Launching {} mesos task: {}", task.getTaskId(), MesosUtils.formatForLogging(task.getMesosTask()));
     }
 
-    Status initialStatus = driver.launchTasks(offers.stream().map(Protos.Offer::getId).collect(Collectors.toList()), toLaunch);
+    // At this point, `currentResources` contains a list of unused resources, because we subtracted out the required resources of every task we accepted.
+    // Let's try and reclaim offers by trying to pull each offer's list of resources out of the combined pool of leftover resources.
+    // n.b., This is currently not optimal. We just look through the offers in this instance and try to reclaim them with no particular priority or order.
+    Map<Boolean, List<Offer>> partitionedOffers = offers.stream().collect(Collectors.partitioningBy(offer -> {
+      List<Long> ports = MesosUtils.getAllPorts(offer.getResourcesList());
+      boolean offerCanBeReclaimedFromUnusedResources = offer.getResourcesList().stream()
+          // When matching resource requirements with resource offers, we need to take roles into account.
+          // Therefore, before we can check if this offer can be reclaimed from the pool of Resources in this SingularityOfferHolder,
+          // we have to group the offer's Resources by role first.
+          .collect(Collectors.groupingBy(Resource::getRole))
+          .entrySet().stream()
+          .map((entry) -> {
+            // Now, for each set of offer Resources grouped by role...
+            String role = entry.getKey();
+            List<Resource> offerResources = entry.getValue();
+            Optional<String> maybeRole = (!role.equals("") && !role.equals("*")) ? Optional.of(role) : Optional.absent();
+            // ...Check if we can pull the Resources belonging to this offer out of the pool of `currentResources`.
+            return MesosUtils.doesOfferMatchResources(
+                maybeRole,
+                MesosUtils.buildResourcesFromMesosResourceList(offerResources, maybeRole),
+                currentResources,
+                ports
+            );
+          }).reduce(true, (x, y) -> x && y);
+      //      ^ the `reduce()` call determines whether we can pull *every* role-group of Resources belonging to this offer
+      //        out of the combined `currentResources` pool.
+
+      if (offerCanBeReclaimedFromUnusedResources) {
+        // We can reclaim this offer in its entirety! Pull all of its resources out of the combined pool for this SingularityOfferHolder instance.
+        LOG.info(
+            "Able to reclaim offer {} from unused resources in OfferHolder from host {}. cpu: {}, mem: {}, disk: {}",
+            offer.getId(), offer.getHostname(), MesosUtils.getNumCpus(offer), MesosUtils.getMemory(offer), MesosUtils.getDisk(offer)
+        );
+        currentResources = MesosUtils.subtractResources(currentResources, offer.getResourcesList());
+      }
+
+      return offerCanBeReclaimedFromUnusedResources;
+    }));
+
+    List<Offer> leftoverOffers = partitionedOffers.get(true);
+    List<Offer> neededOffers = partitionedOffers.get(false);
+
+    Status initialStatus = driver.launchTasks(neededOffers.stream().map(Protos.Offer::getId).collect(Collectors.toList()), toLaunch);
 
     LOG.info("{} tasks ({}) launched with status {}", taskIds.size(), taskIds, initialStatus);
+    return leftoverOffers;
   }
 
   public List<SingularityTask> getAcceptedTasks() {

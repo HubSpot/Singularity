@@ -84,6 +84,7 @@ import com.hubspot.singularity.api.SingularityScaleRequest;
 import com.hubspot.singularity.api.SingularityUnpauseRequest;
 import com.hubspot.singularity.data.AbstractMachineManager.StateChangeResult;
 import com.hubspot.singularity.data.SingularityValidator;
+import com.hubspot.singularity.mesos.OfferCache;
 import com.hubspot.singularity.mesos.SingularityMesosTaskPrioritizer;
 import com.hubspot.singularity.scheduler.SingularityDeployHealthHelper.DeployHealth;
 import com.hubspot.singularity.scheduler.SingularityTaskReconciliation.ReconciliationState;
@@ -100,6 +101,9 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
 
   @Inject
   private SingularitySchedulerPoller schedulerPoller;
+
+  @Inject
+  private OfferCache offerCache;
 
   public SingularitySchedulerTest() {
     super(false);
@@ -188,6 +192,67 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     Assert.assertEquals(1, taskManager.getActiveTasks().size());
 
     Assert.assertEquals(2, taskManager.getActiveTasks().get(0).getOffers().size());
+  }
+
+  @Test
+  public void testLeftoverCachedOffersAreReturnedToCache() throws Exception {
+    configuration.setCacheOffers(true);
+
+    Offer neededOffer = createOffer(1, 128, "slave1", "host1", Optional.absent(), Collections.emptyMap(), new String[]{"80:81"});
+    Offer extraOffer = createOffer(4, 256, "slave1", "host1", Optional.absent(), Collections.emptyMap(), new String[]{"83:84"});
+
+    sms.resourceOffers(driver, ImmutableList.of(neededOffer, extraOffer));
+
+    initRequest();
+
+    firstDeploy = initAndFinishDeploy(request, new SingularityDeployBuilder(request.getId(), firstDeployId)
+        .setCommand(Optional.of("sleep 100")).setResources(Optional.of(new Resources(1, 128, 2, 0)))
+    );
+
+    requestManager.addToPendingQueue(
+        new SingularityPendingRequest(
+            requestId,
+            firstDeployId,
+            System.currentTimeMillis(),
+            Optional.absent(),
+            PendingType.TASK_DONE,
+            Optional.absent(),
+            Optional.absent()
+        )
+    );
+
+    schedulerPoller.runActionOnPoll();
+
+    List<Offer> cachedOffers = offerCache.peekOffers();
+    Assert.assertEquals(1, cachedOffers.size());
+  }
+
+  @Test
+  public void testLeftoverNewOffersAreCached() {
+    configuration.setCacheOffers(true);
+
+    Offer neededOffer = createOffer(1, 128, "slave1", "host1");
+    Offer extraOffer = createOffer(4, 256, "slave1", "host1");
+
+    initRequest();
+    initFirstDeploy();
+
+    requestManager.addToPendingQueue(
+        new SingularityPendingRequest(
+            requestId,
+            firstDeployId,
+            System.currentTimeMillis(),
+            Optional.absent(),
+            PendingType.TASK_DONE,
+            Optional.absent(),
+            Optional.absent()
+        )
+    );
+
+    sms.resourceOffers(driver, ImmutableList.of(neededOffer, extraOffer));
+
+    List<Offer> cachedOffers = offerCache.peekOffers();
+    Assert.assertEquals(1, cachedOffers.size());
   }
 
   @Test
