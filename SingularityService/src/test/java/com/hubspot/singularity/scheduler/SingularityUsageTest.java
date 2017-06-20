@@ -3,6 +3,7 @@ package com.hubspot.singularity.scheduler;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.mesos.Protos.TaskState;
 import org.junit.Assert;
@@ -203,8 +204,68 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
     Assert.assertTrue(activeTaskIds.isEmpty());
   }
 
-  private MesosTaskStatisticsObject getStatistics(double cpuSecs, double timestamp, long memBytes) {
-    return new MesosTaskStatisticsObject(1, 0L, 0L, 0, 0, cpuSecs, 0L, 0L, 0L, 0L, memBytes, timestamp);
+  @Test
+  public void itCorrectlyDeletesOldUsage() {
+    configuration.setNumUsageToKeep(3);
+    configuration.setUsageIntervalMultiplier(3);
+    configuration.setCheckUsageEveryMillis(TimeUnit.MINUTES.toMillis(1));
+    long now = System.currentTimeMillis();
+
+    // no usages exist, none are deleted
+    String taskId = "newTask";
+    clearUsages(taskId);
+
+    // 1 usage exists, none are deleted
+    taskId = "singleUsage";
+    saveTaskUsage(taskId, now);
+    clearUsages(taskId);
+    Assert.assertEquals(1, usageManager.getTaskUsage(taskId).size());
+
+    // 2 usages exist 1 min apart, none are deleted
+    taskId = "twoUsages";
+    saveTaskUsage(taskId, now, now + TimeUnit.MINUTES.toMillis(1));
+    clearUsages(taskId);
+    Assert.assertEquals(2, usageManager.getTaskUsage(taskId).size());
+
+    // x1 (3 min apart) x2 (1 min apart) x3
+      // x3 is deleted
+    taskId = "threeUsages";
+    saveTaskUsage(taskId, now, now + TimeUnit.MINUTES.toMillis(3), now + TimeUnit.MINUTES.toMillis(4));
+    clearUsages(taskId);
+    Assert.assertEquals(2, usageManager.getTaskUsage(taskId).size());
+    Assert.assertEquals(now, (long) usageManager.getTaskUsage(taskId).get(0).getTimestamp());
+    Assert.assertEquals(now + TimeUnit.MINUTES.toMillis(3), (long) usageManager.getTaskUsage(taskId).get(1).getTimestamp());
+
+    // x1 (1 min apart) x2 (1 min apart) x3
+      // x2 is deleted
+    taskId = "threeUsages2";
+    saveTaskUsage(taskId, now, now + TimeUnit.MINUTES.toMillis(1), now + TimeUnit.MINUTES.toMillis(2));
+    clearUsages(taskId);
+    Assert.assertEquals(2, usageManager.getTaskUsage(taskId).size());
+    Assert.assertEquals(now, (long) usageManager.getTaskUsage(taskId).get(0).getTimestamp());
+    Assert.assertEquals(now + TimeUnit.MINUTES.toMillis(2), (long) usageManager.getTaskUsage(taskId).get(1).getTimestamp());
+
+    // x1 (3 min apart) x2 (3 min apart) x3
+      // x1 is deleted
+    taskId = "threeUsages3";
+    saveTaskUsage(taskId, now, now + TimeUnit.MINUTES.toMillis(3), now + TimeUnit.MINUTES.toMillis(6));
+    clearUsages(taskId);
+    Assert.assertEquals(2, usageManager.getTaskUsage(taskId).size());
+    Assert.assertEquals(now + TimeUnit.MINUTES.toMillis(3), (long) usageManager.getTaskUsage(taskId).get(0).getTimestamp());
+    Assert.assertEquals(now + TimeUnit.MINUTES.toMillis(6), (long) usageManager.getTaskUsage(taskId).get(1).getTimestamp());
   }
 
+  private MesosTaskStatisticsObject getStatistics(double cpuSecs, double timestamp, long memBytes) {
+    return new MesosTaskStatisticsObject(1, 0L, 0L, 0, 0, cpuSecs, 0L, 0L, 0L, 0L, 0L, memBytes, timestamp);
+  }
+
+  private void saveTaskUsage(String taskId, long... times) {
+    for (long time : times) {
+      usageManager.saveSpecificTaskUsage(taskId, new SingularityTaskUsage(0, time, 0));
+    }
+  }
+
+  private void clearUsages(String taskId) {
+    usagePoller.clearOldUsage(usageManager.getTaskUsage(taskId), taskId);
+  }
 }
