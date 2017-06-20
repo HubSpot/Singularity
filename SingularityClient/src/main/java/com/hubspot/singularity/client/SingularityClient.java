@@ -479,7 +479,7 @@ public class SingularityClient {
         String url = hostToUri.apply(host);
         hosts.remove(selection);
         LOG.info("Making {} request to {}", method, url);
-        request.setUrl(hostToUri.apply(url));
+        request.setUrl(url);
         return httpClient.execute(request.build());
       });
     } catch (ExecutionException | RetryException exn) {
