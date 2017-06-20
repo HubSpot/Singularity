@@ -197,9 +197,11 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
       for (int i = 0; i < taskUsages.size() - 1; i++) {
         if (taskUsages.get(i + 1).getTimestamp() - taskUsages.get(i).getTimestamp() < minMillisApart) {
           usageManager.deleteSpecificTaskUsage(taskId, taskUsages.get(i + 1).getTimestamp());
-          break;
+          return;
         }
       }
+
+      usageManager.deleteSpecificTaskUsage(taskId, taskUsages.get(0).getTimestamp());
     }
   }
 }
