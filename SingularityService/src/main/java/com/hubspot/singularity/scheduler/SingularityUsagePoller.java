@@ -1,19 +1,25 @@
 package com.hubspot.singularity.scheduler;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.hubspot.mesos.client.MesosClient;
 import com.hubspot.mesos.json.MesosTaskMonitorObject;
 import com.hubspot.singularity.InvalidSingularityTaskIdException;
+import com.hubspot.singularity.RequestUtilization;
 import com.hubspot.singularity.SingularityClusterUtilization;
+import com.hubspot.singularity.SingularityDeploy;
 import com.hubspot.singularity.SingularityDeployStatistics;
 import com.hubspot.singularity.SingularityRequestWithState;
 import com.hubspot.singularity.SingularitySlave;
@@ -66,7 +72,9 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
 
   @Override
   public void runActionOnPoll() {
+    Map<String, RequestUtilization> utilizationPerRequestId = new HashMap<>();
     final long now = System.currentTimeMillis();
+
     long totalMemBytesUsed = 0;
     long totalMemBytesAvailable = 0;
     double totalCpuUsed = 0.00;
@@ -96,9 +104,19 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
             continue;
           }
 
+          RequestUtilization requestUtilization = utilizationPerRequestId.getOrDefault(task.getRequestId(), new RequestUtilization(task.getRequestId(), task.getDeployId()));
+
           SingularityTaskUsage usage = getUsage(taskUsage);
 
           List<SingularityTaskUsage> taskUsages = usageManager.getTaskUsage(taskId);
+
+          taskUsages.forEach(tu -> {
+            requestUtilization.addCpu(tu.getCpuSeconds());
+            requestUtilization.addMemBytes(tu.getMemoryRssBytes());
+            requestUtilization.incrementTaskCount();
+          });
+
+          utilizationPerRequestId.put(task.getRequestId(), requestUtilization);
 
           clearOldUsage(taskUsages, taskId);
 
@@ -157,9 +175,8 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
         LOG.error(message, e);
         exceptionNotifier.notify(message, e);
       }
-
-      usageManager.saveClusterUtilization(new SingularityClusterUtilization(totalMemBytesUsed, totalMemBytesAvailable, totalCpuUsed, totalCpuAvailable, now));
     }
+    usageManager.saveClusterUtilization(getClusterUtilization(utilizationPerRequestId, configuration.getMinUnderUtilizedPct(), totalMemBytesUsed, totalMemBytesAvailable, totalCpuUsed, totalCpuAvailable, now));
   }
 
   private SingularityTaskUsage getUsage(MesosTaskMonitorObject taskUsage) {
@@ -190,7 +207,76 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
     longRunningTasksUsage.compute(ResourceUsageType.CPU_USED, (k, v) -> (v == null) ? cpuUsed : v.doubleValue() + cpuUsed);
   }
 
-  private void clearOldUsage(List<SingularityTaskUsage> taskUsages, String taskId) {
+  private SingularityClusterUtilization getClusterUtilization(Map<String, RequestUtilization> utilizationPerRequestId, double minUnderUtilizedPct, long totalMemBytesUsed, long totalMemBytesAvailable, double totalCpuUsed, double totalCpuAvailable, long now) {
+    int numRequestsWithUnderUtilizedCpu = 0;
+    int numRequestsWithOverUtilizedCpu = 0;
+    int numRequestsWithUnderUtilizedMemBytes = 0;
+
+    double totalUnderUtilizedCpu = 0;
+    double totalOverUtilizedCpu = 0;
+    long totalUnderUtilizedMemBytes = 0;
+
+    double maxUnderUtilizedCpu = Double.MIN_VALUE;
+    double maxOverUtilizedCpu = Double.MIN_VALUE;
+    long maxUnderUtilizedMemBytes = Long.MIN_VALUE;
+
+    double minUnderUtilizedCpu = Double.MAX_VALUE;
+    double minOverUtilizedCpu = Double.MAX_VALUE;
+    long minUnderUtilizedMemBytes = Long.MAX_VALUE;
+
+
+    for (Iterator<Entry<String, RequestUtilization>> it = utilizationPerRequestId.entrySet().iterator(); it.hasNext(); ) {
+      RequestUtilization utilization = it.next().getValue();
+      Optional<SingularityDeploy> maybeDeploy = deployManager.getDeploy(utilization.getRequestId(), utilization.getDeployId());
+
+      if (maybeDeploy.isPresent() && maybeDeploy.get().getResources().isPresent()) {
+        boolean includeUtilization = true;
+        long memoryBytesReserved = (long) (maybeDeploy.get().getResources().get().getMemoryMb() * SingularitySlaveUsage.BYTES_PER_MEGABYTE);
+        double cpuReserved = maybeDeploy.get().getResources().get().getCpus();
+
+        double unusedCpu = cpuReserved - utilization.getAvgCpuUsed();
+        long unusedMemBytes = memoryBytesReserved - utilization.getMemBytesTotal();
+
+        if (unusedCpu / cpuReserved >= minUnderUtilizedPct) {
+          numRequestsWithUnderUtilizedCpu++;
+          totalUnderUtilizedCpu += unusedCpu;
+          maxUnderUtilizedCpu = Math.max(unusedCpu, maxUnderUtilizedCpu);
+          minUnderUtilizedCpu = Math.min(unusedCpu, minUnderUtilizedCpu);
+        } else if (unusedCpu < 0) {
+          double overusedCpu = Math.abs(unusedCpu);
+
+          numRequestsWithOverUtilizedCpu++;
+          totalOverUtilizedCpu += overusedCpu;
+          maxOverUtilizedCpu = Math.max(overusedCpu, maxOverUtilizedCpu);
+          minOverUtilizedCpu = Math.min(overusedCpu, minOverUtilizedCpu);
+        } else {
+          includeUtilization = false;
+        }
+
+        if (unusedMemBytes / memoryBytesReserved >= minUnderUtilizedPct) {
+          numRequestsWithUnderUtilizedMemBytes++;
+          totalUnderUtilizedMemBytes += unusedMemBytes;
+          maxUnderUtilizedMemBytes = Math.max(unusedMemBytes, maxUnderUtilizedMemBytes);
+          minUnderUtilizedMemBytes = Math.min(unusedMemBytes, minUnderUtilizedMemBytes);
+        } else if (!includeUtilization) {
+          it.remove();
+        }
+      }
+    }
+
+    double avgUnderUtilizedCpu = totalUnderUtilizedCpu / numRequestsWithUnderUtilizedCpu;
+    double avgOverUtilizedCpu = totalOverUtilizedCpu / numRequestsWithOverUtilizedCpu;
+    double avgUnderUtilizedMemBytes = totalUnderUtilizedMemBytes / numRequestsWithUnderUtilizedMemBytes;
+
+    return new SingularityClusterUtilization(new ArrayList<>(utilizationPerRequestId.values()), numRequestsWithUnderUtilizedCpu, numRequestsWithOverUtilizedCpu,
+        numRequestsWithUnderUtilizedMemBytes, totalUnderUtilizedCpu, totalOverUtilizedCpu, totalUnderUtilizedMemBytes, avgUnderUtilizedCpu,
+        avgOverUtilizedCpu, avgUnderUtilizedMemBytes, maxUnderUtilizedCpu, maxOverUtilizedCpu, maxUnderUtilizedMemBytes, minUnderUtilizedCpu,
+        minOverUtilizedCpu, minUnderUtilizedMemBytes, totalMemBytesUsed, totalMemBytesAvailable, totalCpuUsed, totalCpuAvailable, now);
+  }
+
+
+  @VisibleForTesting
+  void clearOldUsage(List<SingularityTaskUsage> taskUsages, String taskId) {
     if (taskUsages.size() + 1 > configuration.getNumUsageToKeep()) {
       long minMillisApart = configuration.getUsageIntervalMultiplier() * configuration.getCheckUsageEveryMillis();
 

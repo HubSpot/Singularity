@@ -27,13 +27,13 @@ import com.hubspot.horizon.HttpRequest;
 import com.hubspot.horizon.HttpRequest.Method;
 import com.hubspot.horizon.HttpResponse;
 import com.hubspot.mesos.json.MesosFileChunkObject;
-import com.hubspot.singularity.ClusterUtilization;
 import com.hubspot.singularity.ExtendedTaskState;
 import com.hubspot.singularity.MachineState;
 import com.hubspot.singularity.OrderDirection;
 import com.hubspot.singularity.SingularityAction;
 import com.hubspot.singularity.SingularityAuthorizationScope;
 import com.hubspot.singularity.SingularityClientCredentials;
+import com.hubspot.singularity.SingularityClusterUtilization;
 import com.hubspot.singularity.SingularityCreateResult;
 import com.hubspot.singularity.SingularityDeleteResult;
 import com.hubspot.singularity.SingularityDeploy;
@@ -566,7 +566,7 @@ public class SingularityClient {
     return Optional.of(response.getAs(SingularityTaskReconciliationStatistics.class));
   }
 
-  public ClusterUtilization getClusterUtilization() {
+  public SingularityClusterUtilization getClusterUtilization() {
     final String uri = String.format(CLUSTER_UTILIZATION_FORMAT, getApiBase());
 
     LOG.info("Fetch cluster utilization statistics from {}", uri);
@@ -583,7 +583,7 @@ public class SingularityClient {
 
     LOG.info("Got cluster utilization statistics in {}ms", System.currentTimeMillis() - start);
 
-    return response.getAs(ClusterUtilization.class);
+    return response.getAs(SingularityClusterUtilization.class);
   }
 
   //
