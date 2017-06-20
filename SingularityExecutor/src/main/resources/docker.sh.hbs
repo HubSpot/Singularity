@@ -85,12 +85,12 @@ DOCKER_IMAGE={{{ envContext.dockerInfo.image }}}
 # load env vars
 touch docker.env
 {{#each envContext.env}}
-{{#ifHasNewLines value}}
+{{#ifHasNewLinesOrBackticks value}}
 {{{name}}}={{{shellQuote value}}}
 {{else}}
-{{{name}}}={{{shellQuote value}}}
+{{{name}}}={{{bashEscaped value}}}
 echo "{{{name}}}=${{{name}}}" >> docker.env
-{{/ifHasNewLines}}
+{{/ifHasNewLinesOrBackticks}}
 {{/each}}
 
 # Create log directory for logrotate runs

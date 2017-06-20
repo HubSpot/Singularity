@@ -95,7 +95,7 @@ public class SingularityExecutorModule extends AbstractModule {
     handlebars.registerHelper(BashEscapedHelper.NAME, new BashEscapedHelper());
     handlebars.registerHelper(ShellQuoteHelper.NAME, new ShellQuoteHelper());
     handlebars.registerHelper(IfPresentHelper.NAME, new IfPresentHelper());
-    handlebars.registerHelper(IfHasNewLinesHelper.NAME, new IfHasNewLinesHelper());
+    handlebars.registerHelper(IfHasNewLinesOrBackticksHelper.NAME, new IfHasNewLinesOrBackticksHelper());
     handlebars.registerHelper(EscapeNewLinesAndQuotesHelper.NAME, new EscapeNewLinesAndQuotesHelper());
 
     return handlebars;
