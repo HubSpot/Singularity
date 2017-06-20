@@ -161,7 +161,7 @@ setfattr -n user.logstart -v "$(($(date +%s%N)/1000000))" {{{ runContext.logFile
 {{/if}}
 
 # Start up the container
-env_args=({{#each envContext.env}}{{#ifHasNewLines value}}-e {{#shellQuote name}}{{/shellQuote}}={{#shellQuote value}}{{/shellQuote}} {{/ifHasNewLines}}{{/each}})
+env_args=({{#each envContext.env}}{{#ifHasNewLinesOrBackticks value}}-e {{#shellQuote name}}{{/shellQuote}}={{#shellQuote value}}{{/shellQuote}} {{/ifHasNewLinesOrBackticks}}{{/each}})
 cmd=(sudo -E -H -u "$user" docker create "${DOCKER_OPTIONS[@]}" "${env_args[@]}" "$DOCKER_IMAGE" {{{ runContext.cmd }}})
 echo -e "Creating container with: ${cmd[*]}"
 cid="$("${cmd[@]}")"
