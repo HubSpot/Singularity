@@ -131,9 +131,9 @@ public class UsageResource {
 
 
     for (Iterator<Map.Entry<String, RequestUtilization>> it = utilizationPerRequestId.entrySet().iterator(); it.hasNext(); ) {
-      Map.Entry<String, RequestUtilization> entry = it.next();
-      RequestUtilization utilization = entry.getValue();
+      RequestUtilization utilization = it.next().getValue();
       Optional<SingularityDeploy> maybeDeploy = deployManager.getDeploy(utilization.getRequestId(), utilization.getDeployId());
+
       if (maybeDeploy.isPresent() && maybeDeploy.get().getResources().isPresent()) {
         boolean includeUtilization = true;
         long memoryBytesReserved = (long) (maybeDeploy.get().getResources().get().getMemoryMb() * SingularitySlaveUsage.BYTES_PER_MEGABYTE);
@@ -145,24 +145,15 @@ public class UsageResource {
         if (unusedCpu / cpuReserved >= minUnderUtilizedPct) {
           numRequestsWithUnderUtilizedCpu++;
           totalUnderUtilizedCpu += unusedCpu;
-
-          if (unusedCpu > maxUnderUtilizedCpu) {
-            maxUnderUtilizedCpu = unusedCpu;
-          }
-          if (unusedCpu < minUnderUtilizedCpu) {
-            minUnderUtilizedCpu = unusedCpu;
-          }
+          maxUnderUtilizedCpu = Math.max(unusedCpu, maxUnderUtilizedCpu);
+          minUnderUtilizedCpu = Math.min(unusedCpu, minUnderUtilizedCpu);
         } else if (unusedCpu < 0) {
-          numRequestsWithOverUtilizedCpu++;
           double overusedCpu = Math.abs(unusedCpu);
-          totalOverUtilizedCpu += overusedCpu;
 
-          if (overusedCpu > maxOverUtilizedCpu) {
-            maxOverUtilizedCpu = overusedCpu;
-          }
-          if (overusedCpu < minOverUtilizedCpu) {
-            minOverUtilizedCpu = overusedCpu;
-          }
+          numRequestsWithOverUtilizedCpu++;
+          totalOverUtilizedCpu += overusedCpu;
+          maxOverUtilizedCpu = Math.max(overusedCpu, maxOverUtilizedCpu);
+          minOverUtilizedCpu = Math.min(overusedCpu, minOverUtilizedCpu);
         } else {
           includeUtilization = false;
         }
@@ -170,13 +161,8 @@ public class UsageResource {
         if (unusedMemBytes / memoryBytesReserved >= minUnderUtilizedPct) {
           numRequestsWithUnderUtilizedMemBytes++;
           totalUnderUtilizedMemBytes += unusedMemBytes;
-
-          if (unusedMemBytes > maxUnderUtilizedMemBytes) {
-            maxUnderUtilizedMemBytes = unusedMemBytes;
-          }
-          if (unusedMemBytes < minUnderUtilizedMemBytes) {
-            minUnderUtilizedMemBytes = unusedMemBytes;
-          }
+          maxUnderUtilizedMemBytes = Math.max(unusedMemBytes, maxUnderUtilizedMemBytes);
+          minUnderUtilizedMemBytes = Math.min(unusedMemBytes, minUnderUtilizedMemBytes);
         } else if (!includeUtilization) {
           it.remove();
         }
