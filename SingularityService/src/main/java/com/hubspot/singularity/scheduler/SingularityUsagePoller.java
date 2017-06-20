@@ -100,9 +100,8 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
 
           List<SingularityTaskUsage> taskUsages = usageManager.getTaskUsage(taskId);
 
-          if (taskUsages.size() + 1 > configuration.getNumUsageToKeep()) {
-            usageManager.deleteSpecificTaskUsage(taskId, taskUsages.get(0).getTimestamp());
-          }
+          clearOldUsage(taskUsages, taskId);
+
           usageManager.saveSpecificTaskUsage(taskId, usage);
 
           Optional<SingularityTask> maybeTask = taskManager.getTask(task);
@@ -189,5 +188,18 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
   private void updateLongRunningTasksUsage(Map<ResourceUsageType, Number> longRunningTasksUsage, long memBytesUsed, double cpuUsed) {
     longRunningTasksUsage.compute(ResourceUsageType.MEMORY_BYTES_USED, (k, v) -> (v == null) ? memBytesUsed : v.longValue() + memBytesUsed);
     longRunningTasksUsage.compute(ResourceUsageType.CPU_USED, (k, v) -> (v == null) ? cpuUsed : v.doubleValue() + cpuUsed);
+  }
+
+  private void clearOldUsage(List<SingularityTaskUsage> taskUsages, String taskId) {
+    if (taskUsages.size() + 1 > configuration.getNumUsageToKeep()) {
+      long minMillisApart = configuration.getUsageIntervalMultiplier() * configuration.getCheckUsageEveryMillis();
+
+      for (int i = 0; i < taskUsages.size() - 1; i++) {
+        if (taskUsages.get(i + 1).getTimestamp() - taskUsages.get(i).getTimestamp() < minMillisApart) {
+          usageManager.deleteSpecificTaskUsage(taskId, taskUsages.get(i + 1).getTimestamp());
+          break;
+        }
+      }
+    }
   }
 }
