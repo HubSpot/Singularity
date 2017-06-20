@@ -1,5 +1,7 @@
 package com.hubspot.singularity.scheduler;
 
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -15,6 +17,7 @@ import org.apache.mesos.Protos.SlaveID;
 import org.apache.mesos.Protos.TaskID;
 import org.apache.mesos.Protos.TaskState;
 import org.apache.mesos.Protos.TaskStatus;
+import org.assertj.core.api.Assertions;
 import org.junit.Assert;
 import org.junit.Test;
 import org.mockito.Matchers;
@@ -1925,6 +1928,44 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
 
     Assert.assertEquals(1, taskManager.getPendingTaskIds().size());
     Assert.assertEquals(PendingType.IMMEDIATE, taskManager.getPendingTaskIds().get(0).getPendingType());
+  }
+
+  @Test
+  public void testSchedulerDropsMultipleScheduledTaskInstances() {
+    initScheduledRequest();
+
+    SingularityDeploy deploy = SingularityDeploy.newBuilder(requestId, firstDeployId)
+        .setCommand(Optional.of("sleep 100"))
+        .build();
+    SingularityDeployRequest singularityDeployRequest = new SingularityDeployRequest(deploy, Optional.absent(), Optional.absent(), Optional.absent());
+    deployResource.deploy(singularityDeployRequest);
+
+
+    scheduler.drainPendingQueue(stateCacheProvider.get());
+    requestManager.addToPendingQueue(new SingularityPendingRequest(requestId, firstDeployId, Instant.now().plus(3, ChronoUnit.DAYS).toEpochMilli(), Optional.absent(), PendingType.NEW_DEPLOY, Optional.absent(), Optional.absent()));
+
+    SingularityRunNowRequest runNowRequest = new SingularityRunNowRequest(Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent());
+    requestResource.scheduleImmediately(requestId, runNowRequest);
+
+
+
+
+    Assert.assertEquals("Both requests make it into the pending queue", 2, requestManager.getPendingRequests().size());
+    Assert.assertEquals(PendingType.IMMEDIATE, requestManager.getPendingRequests().get(0).getPendingType());
+    Assert.assertEquals(PendingType.NEW_DEPLOY, requestManager.getPendingRequests().get(1).getPendingType());
+
+
+    scheduler.drainPendingQueue(stateCacheProvider.get());
+    Assertions.assertThat(taskManager.getPendingTaskIds())
+        .describedAs("Only the immediate request gets run")
+        .hasSize(1)
+        .extracting(SingularityPendingTaskId::getPendingType)
+        .containsExactly(PendingType.IMMEDIATE);
+
+
+    Assertions.assertThat(requestManager.getPendingRequests())
+        .describedAs("The scheduled request is dropped from the pending queue")
+        .hasSize(0);
   }
 
   @Test(expected = WebApplicationException.class)
