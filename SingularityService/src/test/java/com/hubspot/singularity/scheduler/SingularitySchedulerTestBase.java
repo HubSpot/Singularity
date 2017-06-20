@@ -14,20 +14,19 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.mesos.Protos.Attribute;
-import org.apache.mesos.Protos.FrameworkID;
-import org.apache.mesos.Protos.Offer;
-import org.apache.mesos.Protos.OfferID;
-import org.apache.mesos.Protos.Resource;
-import org.apache.mesos.Protos.SlaveID;
-import org.apache.mesos.Protos.TaskID;
-import org.apache.mesos.Protos.TaskInfo;
-import org.apache.mesos.Protos.TaskState;
-import org.apache.mesos.Protos.TaskStatus;
-import org.apache.mesos.Protos.Value.Scalar;
-import org.apache.mesos.Protos.Value.Text;
-import org.apache.mesos.Protos.Value.Type;
-import org.apache.mesos.SchedulerDriver;
+import org.apache.mesos.v1.Protos.AgentID;
+import org.apache.mesos.v1.Protos.Attribute;
+import org.apache.mesos.v1.Protos.FrameworkID;
+import org.apache.mesos.v1.Protos.Offer;
+import org.apache.mesos.v1.Protos.OfferID;
+import org.apache.mesos.v1.Protos.Resource;
+import org.apache.mesos.v1.Protos.TaskID;
+import org.apache.mesos.v1.Protos.TaskInfo;
+import org.apache.mesos.v1.Protos.TaskState;
+import org.apache.mesos.v1.Protos.TaskStatus;
+import org.apache.mesos.v1.Protos.Value.Scalar;
+import org.apache.mesos.v1.Protos.Value.Text;
+import org.apache.mesos.v1.Protos.Value.Type;
 import org.junit.After;
 import org.junit.Before;
 
@@ -83,7 +82,6 @@ import com.hubspot.singularity.data.SlaveManager;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.data.zkmigrations.ZkDataMigrationRunner;
 import com.hubspot.singularity.event.SingularityEventListener;
-import com.hubspot.singularity.mesos.SchedulerDriverSupplier;
 import com.hubspot.singularity.mesos.SingularityMesosScheduler;
 import com.hubspot.singularity.resources.DeployResource;
 import com.hubspot.singularity.resources.PriorityResource;
@@ -114,9 +112,6 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
   protected RackManager rackManager;
   @Inject
   protected InactiveSlaveManager inactiveSlaveManager;
-  @Inject
-  protected SchedulerDriverSupplier driverSupplier;
-  protected SchedulerDriver driver;
   @Inject
   protected SingularityScheduler scheduler;
   @Inject
@@ -199,10 +194,8 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
 
   @Before
   public final void setupDriver() throws Exception {
-    driver = driverSupplier.get().get();
-
     cacheCoordinator.activateLeaderCache();
-
+    sms.setSubscribed();
     migrationRunner.checkMigrations();
   }
 
@@ -231,7 +224,7 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
   }
 
   protected Offer createOffer(double cpus, double memory, String slave, String host, Optional<String> rack, Map<String, String> attributes, String[] portRanges, Optional<String> role) {
-    SlaveID slaveId = SlaveID.newBuilder().setValue(slave).build();
+    AgentID slaveId = AgentID.newBuilder().setValue(slave).build();
     FrameworkID frameworkId = FrameworkID.newBuilder().setValue("framework1").build();
 
     Random r = new Random();
@@ -255,7 +248,7 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
     return Offer.newBuilder()
         .setId(OfferID.newBuilder().setValue("offer" + r.nextInt(1000)).build())
         .setFrameworkId(frameworkId)
-        .setSlaveId(slaveId)
+        .setAgentId(slaveId)
         .setHostname(host)
         .addAttributes(Attribute.newBuilder().setType(Type.TEXT).setText(Text.newBuilder().setValue(rack.or(configuration.getMesosConfiguration().getDefaultRackId()))).setName(configuration.getMesosConfiguration().getRackIdAttributeKey()))
         .addResources(cpusResource)
@@ -312,7 +305,7 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
     TaskID taskIdProto = TaskID.newBuilder().setValue(taskId.toString()).build();
 
     TaskInfo taskInfo = TaskInfo.newBuilder()
-        .setSlaveId(offer.getSlaveId())
+        .setAgentId(offer.getAgentId())
         .setTaskId(taskIdProto)
         .setName("name")
         .build();
@@ -341,14 +334,14 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
   protected void statusUpdate(SingularityTask task, TaskState state, Optional<Long> timestamp) {
     TaskStatus.Builder bldr = TaskStatus.newBuilder()
         .setTaskId(task.getMesosTask().getTaskId())
-        .setSlaveId(task.getOffer().getSlaveId())
+        .setAgentId(task.getOffer().getAgentId())
         .setState(state);
 
     if (timestamp.isPresent()) {
       bldr.setTimestamp(timestamp.get() / 1000);
     }
 
-    sms.statusUpdate(driver, bldr.build());
+    sms.statusUpdate(bldr.build());
   }
 
   protected void statusUpdate(SingularityTask task, TaskState state) {
@@ -613,7 +606,7 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
 
     List<Offer> offers = Arrays.asList(offer1, offer2);
 
-    sms.resourceOffers(driver, offers);
+    sms.resourceOffers(offers);
 
     return offers;
   }
@@ -623,7 +616,7 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
     for (int i = 1; i <= numTasks; i++) {
       offers.add(createOffer(1, 128, String.format("slave%s", i), String.format("host%s", i)));
     }
-    sms.resourceOffers(driver, offers);
+    sms.resourceOffers(offers);
   }
 
   protected void resourceOffers(int numSlaves) {
@@ -631,7 +624,7 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
     for (int i = 1; i <= numSlaves; i++) {
       offers.add(createOffer(20, 20000, String.format("slave%s", i), String.format("host%s", i)));
     }
-    sms.resourceOffers(driver, offers);
+    sms.resourceOffers(offers);
   }
 
   protected void deploy(String deployId) {

@@ -11,8 +11,7 @@ import java.util.stream.Collectors;
 
 import javax.inject.Singleton;
 
-import org.apache.mesos.Protos;
-import org.apache.mesos.Protos.Offer;
+import org.apache.mesos.v1.Protos.Offer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -94,7 +93,7 @@ public class SingularityMesosOfferScheduler {
     this.deployManager = deployManager;
   }
 
-  public List<SingularityOfferHolder> checkOffers(final Collection<Protos.Offer> offers) {
+  public List<SingularityOfferHolder> checkOffers(final Collection<Offer> offers) {
     boolean useTaskCredits = disasterManager.isTaskCreditEnabled();
     int taskCredits = useTaskCredits ? disasterManager.getUpdatedCreditCount() : -1;
     final SingularitySchedulerStateCache stateCache = stateCacheProvider.get();
@@ -113,14 +112,14 @@ public class SingularityMesosOfferScheduler {
 
     final List<SingularityOfferHolder> offerHolders = Lists.newArrayListWithCapacity(offers.size());
     final Map<String, Map<String, Integer>> tasksPerOfferPerRequest = new HashMap<>();
-    for (Protos.Offer offer : offers) {
+    for (Offer offer : offers) {
       offerHolders.add(new SingularityOfferHolder(offer, numDueTasks, slaveAndRackHelper.getRackIdOrDefault(offer), slaveAndRackHelper.getTextAttributes(offer),
           slaveAndRackHelper.getReservedSlaveAttributes(offer)));
     }
 
     boolean addedTaskInLastLoop = true;
     int tasksScheduled = 0;
-    final List<SingularitySlaveUsageWithId> currentSlaveUsages = usageManager.getCurrentSlaveUsages(offerHolders.stream().map(o -> o.getOffer().getSlaveId().getValue()).collect(Collectors.toList()));
+    final List<SingularitySlaveUsageWithId> currentSlaveUsages = usageManager.getCurrentSlaveUsages(offerHolders.stream().map(o -> o.getOffer().getAgentId().getValue()).collect(Collectors.toList()));
 
 
     while (!pendingTaskIdToTaskRequest.isEmpty() && addedTaskInLastLoop && canScheduleAdditionalTasks(taskCredits)) {
@@ -138,7 +137,7 @@ public class SingularityMesosOfferScheduler {
             continue;
           }
 
-          Optional<SingularitySlaveUsageWithId> maybeSlaveUsage = getSlaveUsage(currentSlaveUsages, offerHolder.getOffer().getSlaveId().getValue());
+          Optional<SingularitySlaveUsageWithId> maybeSlaveUsage = getSlaveUsage(currentSlaveUsages, offerHolder.getOffer().getAgentId().getValue());
           double score = score(offerHolder, stateCache, tasksPerOfferPerRequest, taskRequestHolder, maybeSlaveUsage);
           LOG.trace("Scored {} | Task {} | Offer - mem {} - cpu {} | Slave {} | maybeSlaveUsage - {}", score, taskRequestHolder.getTaskRequest().getPendingTask().getPendingTaskId().getId(),
               MesosUtils.getMemory(offerHolder.getOffer()), MesosUtils.getNumCpus(offerHolder.getOffer()), offerHolder.getOffer().getHostname(), maybeSlaveUsage);
@@ -354,7 +353,7 @@ public class SingularityMesosOfferScheduler {
       LOG.trace("Accepted and built task {}", zkTask);
     }
 
-    LOG.info("Launching task {} slot on slave {} ({})", task.getTaskId(), offerHolder.getOffer().getSlaveId().getValue(), offerHolder.getOffer().getHostname());
+    LOG.info("Launching task {} slot on slave {} ({})", task.getTaskId(), offerHolder.getOffer().getAgentId().getValue(), offerHolder.getOffer().getHostname());
 
     taskManager.createTaskAndDeletePendingTask(zkTask);
 

@@ -16,8 +16,8 @@ import java.util.stream.Collectors;
 
 import javax.inject.Singleton;
 
-import org.apache.mesos.Protos;
-import org.apache.mesos.Protos.TaskStatus.Reason;
+import org.apache.mesos.v1.Protos;
+import org.apache.mesos.v1.Protos.TaskStatus.Reason;
 import org.dmfs.rfc5545.recur.InvalidRecurrenceRuleException;
 import org.quartz.CronExpression;
 import org.slf4j.Logger;

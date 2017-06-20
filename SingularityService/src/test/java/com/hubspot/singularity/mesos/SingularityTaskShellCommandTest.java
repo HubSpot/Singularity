@@ -9,7 +9,7 @@ import java.util.List;
 
 import javax.ws.rs.WebApplicationException;
 
-import org.apache.mesos.Protos.TaskState;
+import org.apache.mesos.v1.Protos.TaskState;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -91,15 +91,15 @@ public class SingularityTaskShellCommandTest extends SingularitySchedulerTestBas
 
     assertEquals(2, taskManager.getTaskShellCommandRequestsForTask(task.getTaskId()).size());
 
-    mesosScheduler.frameworkMessage(driver, task.getMesosTask().getExecutor().getExecutorId(), task.getMesosTask().getSlaveId(),
+    mesosScheduler.frameworkMessage(task.getMesosTask().getExecutor().getExecutorId(), task.getMesosTask().getAgentId(),
         updateTranscoder.toBytes(
             new SingularityTaskShellCommandUpdate(firstShellRequest.getId(), System.currentTimeMillis(), Optional.<String> of("hi"), Optional.<String>absent(), UpdateType.STARTED)));
 
-    mesosScheduler.frameworkMessage(driver, task.getMesosTask().getExecutor().getExecutorId(), task.getMesosTask().getSlaveId(),
+    mesosScheduler.frameworkMessage(task.getMesosTask().getExecutor().getExecutorId(), task.getMesosTask().getAgentId(),
         updateTranscoder.toBytes(
             new SingularityTaskShellCommandUpdate(new SingularityTaskShellCommandRequestId(task.getTaskId(), "wat", System.currentTimeMillis()), System.currentTimeMillis(), Optional.<String> of("hi"), Optional.<String>absent(), UpdateType.STARTED)));
 
-    mesosScheduler.frameworkMessage(driver, task.getMesosTask().getExecutor().getExecutorId(), task.getMesosTask().getSlaveId(),
+    mesosScheduler.frameworkMessage(task.getMesosTask().getExecutor().getExecutorId(), task.getMesosTask().getAgentId(),
         updateTranscoder.toBytes(
             new SingularityTaskShellCommandUpdate(new SingularityTaskShellCommandRequestId(new SingularityTaskId("makingitup", "did", System.currentTimeMillis(), 1, "host", "rack"), "wat", System.currentTimeMillis()), System.currentTimeMillis(), Optional.<String> of("hi"), Optional.<String>absent(), UpdateType.STARTED)));
 

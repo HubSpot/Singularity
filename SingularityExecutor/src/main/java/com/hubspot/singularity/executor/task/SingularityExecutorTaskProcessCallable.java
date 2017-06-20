@@ -25,7 +25,7 @@ public class SingularityExecutorTaskProcessCallable extends SafeProcessManager i
   public Integer call() throws Exception {
     Process process = startProcess(processBuilder);
 
-    executorUtils.sendStatusUpdate(task.getDriver(), task.getTaskInfo(), Protos.TaskState.TASK_RUNNING, String.format("Task running process %s", getCurrentProcessToString()), task.getLog());
+    executorUtils.sendStatusUpdate(task.getDriver(), task.getTaskInfo().getTaskId(), Protos.TaskState.TASK_RUNNING, String.format("Task running process %s", getCurrentProcessToString()), task.getLog());
 
     return process.waitFor();
   }

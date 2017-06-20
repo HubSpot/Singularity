@@ -9,8 +9,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.inject.Singleton;
 
-import org.apache.mesos.Protos.Offer;
-import org.apache.mesos.Protos.SlaveID;
+import org.apache.mesos.v1.Protos.Offer;
+import org.apache.mesos.v1.Protos.AgentID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -79,7 +79,7 @@ public class SingularitySlaveAndRackManager {
   public SlaveMatchState doesOfferMatch(SingularityOfferHolder offer, SingularityTaskRequest taskRequest, SingularitySchedulerStateCache stateCache) {
     final String host = offer.getOffer().getHostname();
     final String rackId = offer.getRackId();
-    final String slaveId = offer.getOffer().getSlaveId().getValue();
+    final String slaveId = offer.getOffer().getAgentId().getValue();
 
     final MachineState currentSlaveState = stateCache.getSlave(slaveId).get().getCurrentState().getState();
 
@@ -286,7 +286,7 @@ public class SingularitySlaveAndRackManager {
     return false;
   }
 
-  public void slaveLost(SlaveID slaveIdObj) {
+  public void slaveLost(AgentID slaveIdObj) {
     final String slaveId = slaveIdObj.getValue();
 
     Optional<SingularitySlave> slave = slaveManager.getObject(slaveId);
@@ -414,7 +414,7 @@ public class SingularitySlaveAndRackManager {
 
   @Timed
   public CheckResult checkOffer(Offer offer) {
-    final String slaveId = offer.getSlaveId().getValue();
+    final String slaveId = offer.getAgentId().getValue();
     final String rackId = slaveAndRackHelper.getRackIdOrDefault(offer);
     final String host = slaveAndRackHelper.getMaybeTruncatedHost(offer);
     final Map<String, String> textAttributes = slaveAndRackHelper.getTextAttributes(offer);
@@ -490,7 +490,7 @@ public class SingularitySlaveAndRackManager {
     for (SingularityTaskId activeTaskId : stateCache.getActiveTaskIds()) {
       if (!activeTaskId.equals(taskId) && activeTaskId.getSanitizedHost().equals(taskId.getSanitizedHost())) {
         Optional<SingularityTask> maybeTask = taskManager.getTask(activeTaskId);
-        if (maybeTask.isPresent() && slaveId.equals(maybeTask.get().getOffer().getSlaveId().getValue())) {
+        if (maybeTask.isPresent() && slaveId.equals(maybeTask.get().getOffer().getAgentId().getValue())) {
           return true;
         }
       }

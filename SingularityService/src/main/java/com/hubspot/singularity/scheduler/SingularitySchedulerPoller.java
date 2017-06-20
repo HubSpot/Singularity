@@ -8,19 +8,17 @@ import java.util.concurrent.TimeUnit;
 
 import javax.inject.Singleton;
 
-import org.apache.mesos.Protos.Offer;
-import org.apache.mesos.SchedulerDriver;
+import org.apache.mesos.v1.Protos.Offer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.SingularityAction;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.DisasterManager;
 import com.hubspot.singularity.mesos.OfferCache;
-import com.hubspot.singularity.mesos.SchedulerDriverSupplier;
+import com.hubspot.singularity.mesos.SingularityDriver;
 import com.hubspot.singularity.mesos.SingularityMesosOfferScheduler;
 import com.hubspot.singularity.mesos.SingularityOfferCache.CachedOffer;
 import com.hubspot.singularity.mesos.SingularityOfferHolder;
@@ -32,21 +30,19 @@ public class SingularitySchedulerPoller extends SingularityLeaderOnlyPoller {
   private static final Logger LOG = LoggerFactory.getLogger(SingularitySchedulerPoller.class);
 
   private final OfferCache offerCache;
-  private final SchedulerDriverSupplier schedulerDriverSupplier;
+  private final SingularityDriver singularityDriver;
   private final SingularityMesosOfferScheduler offerScheduler;
   private final DisasterManager disasterManager;
-  private final SingularityConfiguration configuration;
 
   @Inject
-  SingularitySchedulerPoller(SingularityMesosOfferScheduler offerScheduler, OfferCache offerCache, SchedulerDriverSupplier schedulerDriverSupplier,
+  SingularitySchedulerPoller(SingularityMesosOfferScheduler offerScheduler, OfferCache offerCache, SingularityDriver singularityDriver,
       SingularityConfiguration configuration, SingularitySchedulerLock lock, DisasterManager disasterManager) {
     super(configuration.getCheckSchedulerEverySeconds(), TimeUnit.SECONDS, lock, true);
 
     this.offerCache = offerCache;
     this.offerScheduler = offerScheduler;
-    this.schedulerDriverSupplier = schedulerDriverSupplier;
+    this.singularityDriver = singularityDriver;
     this.disasterManager = disasterManager;
-    this.configuration = configuration;
   }
 
   @Override
@@ -72,9 +68,7 @@ public class SingularitySchedulerPoller extends SingularityLeaderOnlyPoller {
       return;
     }
 
-    Optional<SchedulerDriver> driver = schedulerDriverSupplier.get();
-
-    if (!driver.isPresent()) {
+    if (!singularityDriver.isActive()) {
       LOG.error("No driver present, can't accept cached offers");
       return;
     }
@@ -86,7 +80,7 @@ public class SingularitySchedulerPoller extends SingularityLeaderOnlyPoller {
       CachedOffer cachedOffer = offerIdToCachedOffer.get(offerHolder.getOffer().getId().getValue());
 
       if (!offerHolder.getAcceptedTasks().isEmpty()) {
-        offerHolder.launchTasks(driver.get());
+        offerHolder.launchTasks(singularityDriver);
         launchedTasks += offerHolder.getAcceptedTasks().size();
         acceptedOffers++;
         offerCache.useOffer(cachedOffer);

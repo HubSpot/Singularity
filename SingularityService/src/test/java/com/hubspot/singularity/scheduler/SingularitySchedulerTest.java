@@ -4,20 +4,19 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import javax.ws.rs.WebApplicationException;
 
-import org.apache.mesos.Protos.Offer;
-import org.apache.mesos.Protos.SlaveID;
-import org.apache.mesos.Protos.TaskID;
-import org.apache.mesos.Protos.TaskState;
-import org.apache.mesos.Protos.TaskStatus;
+import org.apache.mesos.v1.Protos.AgentID;
+import org.apache.mesos.v1.Protos.Offer;
+import org.apache.mesos.v1.Protos.TaskID;
+import org.apache.mesos.v1.Protos.TaskState;
+import org.apache.mesos.v1.Protos.TaskStatus;
 import org.junit.Assert;
 import org.junit.Test;
-import org.mockito.Matchers;
+import org.mockito.ArgumentMatchers;
 import org.mockito.Mockito;
 
 import com.google.common.base.Optional;
@@ -113,8 +112,8 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
 
     List<Offer> offers2 = resourceOffers(); // cached as well
 
-    sms.offerRescinded(driver, offers2.get(0).getId());
-    sms.offerRescinded(driver, offers2.get(1).getId());
+    sms.offerRescinded(offers2.get(0).getId());
+    sms.offerRescinded(offers2.get(1).getId());
 
     initRequest();
     initFirstDeploy();
@@ -148,7 +147,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     configuration.setOfferCacheSize(2);
     List<Offer> offers2 = resourceOffers();
 
-    sms.offerRescinded(driver, offers2.get(0).getId());
+    sms.offerRescinded(offers2.get(0).getId());
 
     initRequest();
     initFirstDeploy();
@@ -400,7 +399,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     scheduler.drainPendingQueue(stateCacheProvider.get());
 
     List<Offer> oneOffer = Arrays.asList(createOffer(12, 1024));
-    sms.resourceOffers(driver, oneOffer);
+    sms.resourceOffers(oneOffer);
 
     Assert.assertTrue(taskManager.getActiveTasks().size() == 3);
     Assert.assertTrue(taskManager.getPendingTaskIds().isEmpty());
@@ -415,7 +414,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     requestResource.postRequest(request.toBuilder().setInstances(Optional.of(10)).build());
     scheduler.drainPendingQueue(stateCacheProvider.get());
 
-    sms.resourceOffers(driver, Arrays.asList(createOffer(2, 1024), createOffer(1, 1024)));
+    sms.resourceOffers(Arrays.asList(createOffer(2, 1024), createOffer(1, 1024)));
 
     Assert.assertTrue(taskManager.getActiveTaskIds().size() == 3);
     Assert.assertTrue(taskManager.getPendingTaskIds().size() == 7);
@@ -429,7 +428,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     requestResource.postRequest(request.toBuilder().setInstances(Optional.of(15)).build());
     scheduler.drainPendingQueue(stateCacheProvider.get());
 
-    sms.resourceOffers(driver, Arrays.asList(createOffer(20, 1024), createOffer(20, 1024)));
+    sms.resourceOffers(Arrays.asList(createOffer(20, 1024), createOffer(20, 1024)));
 
     Assert.assertTrue(taskManager.getActiveTaskIds().size() == 15);
 
@@ -517,8 +516,8 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
   }
 
   private void validateTaskDoesntMoveDuringDecommission() {
-    sms.resourceOffers(driver, Arrays.asList(createOffer(1, 129, "slave1", "host1", Optional.of("rack1"))));
-    sms.resourceOffers(driver, Arrays.asList(createOffer(1, 129, "slave2", "host2", Optional.of("rack1"))));
+    sms.resourceOffers(Arrays.asList(createOffer(1, 129, "slave1", "host1", Optional.of("rack1"))));
+    sms.resourceOffers(Arrays.asList(createOffer(1, 129, "slave2", "host2", Optional.of("rack1"))));
 
     Assert.assertEquals(1, taskManager.getActiveTaskIds().size());
 
@@ -526,11 +525,11 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
 
     Assert.assertEquals(StateChangeResult.SUCCESS, slaveManager.changeState("slave1", MachineState.STARTING_DECOMMISSION, Optional.<String> absent(), Optional.of("user1")));
 
-    sms.resourceOffers(driver, Arrays.asList(createOffer(1, 129, "slave2", "host2", Optional.of("rack1"))));
+    sms.resourceOffers(Arrays.asList(createOffer(1, 129, "slave2", "host2", Optional.of("rack1"))));
 
     cleaner.drainCleanupQueue();
 
-    sms.resourceOffers(driver, Arrays.asList(createOffer(1, 129, "slave2", "host2", Optional.of("rack1"))));
+    sms.resourceOffers(Arrays.asList(createOffer(1, 129, "slave2", "host2", Optional.of("rack1"))));
 
     cleaner.drainCleanupQueue();
 
@@ -556,7 +555,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     Assert.assertTrue(pendingTaskWithResourcs.getResources().isPresent());
     Assert.assertEquals(pendingTaskWithResourcs.getResources().get().getCpus(), 2, 0.0);
 
-    sms.resourceOffers(driver, Arrays.asList(createOffer(5, 5, "slave1", "host1", Optional.of("rack1"))));
+    sms.resourceOffers(Arrays.asList(createOffer(5, 5, "slave1", "host1", Optional.of("rack1"))));
 
     SingularityTask task = taskManager.getActiveTasks().get(0);
     Assert.assertEquals(MesosUtils.getNumCpus(task.getMesosTask().getResourcesList(), Optional.<String>absent()), 2.0, 0.0);
@@ -655,7 +654,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
 
     Assert.assertEquals(1, taskManager.getNumActiveTasks());
 
-    slaveResource.decommissionSlave(taskManager.getActiveTasks().get(0).getOffer().getSlaveId().getValue(), null);
+    slaveResource.decommissionSlave(taskManager.getActiveTasks().get(0).getOffer().getAgentId().getValue(), null);
 
     scheduler.checkForDecomissions(stateCacheProvider.get());
 
@@ -1254,17 +1253,17 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
 
     scheduledJobPoller.runActionOnPoll();
 
-    Mockito.verify(mailer, Mockito.times(0)).sendTaskOverdueMail(Matchers.<Optional<SingularityTask>> any(), Matchers.<SingularityTaskId> any(), Matchers.<SingularityRequest> any(), Matchers.anyLong(), Matchers.anyLong());
+    Mockito.verify(mailer, Mockito.times(0)).sendTaskOverdueMail(ArgumentMatchers.<Optional<SingularityTask>> any(), ArgumentMatchers.<SingularityTaskId> any(), ArgumentMatchers.<SingularityRequest> any(), ArgumentMatchers.anyLong(), ArgumentMatchers.anyLong());
 
     configuration.setWarnIfScheduledJobIsRunningForAtLeastMillis(TimeUnit.HOURS.toMillis(1));
 
     scheduledJobPoller.runActionOnPoll();
 
-    Mockito.verify(mailer, Mockito.times(1)).sendTaskOverdueMail(Matchers.<Optional<SingularityTask>> any(), Matchers.<SingularityTaskId> any(), Matchers.<SingularityRequest> any(), Matchers.anyLong(), Matchers.anyLong());
+    Mockito.verify(mailer, Mockito.times(1)).sendTaskOverdueMail(ArgumentMatchers.<Optional<SingularityTask>> any(), ArgumentMatchers.<SingularityTaskId> any(), ArgumentMatchers.<SingularityRequest> any(), ArgumentMatchers.anyLong(), ArgumentMatchers.anyLong());
 
     scheduledJobPoller.runActionOnPoll();
 
-    Mockito.verify(mailer, Mockito.times(1)).sendTaskOverdueMail(Matchers.<Optional<SingularityTask>> any(), Matchers.<SingularityTaskId> any(), Matchers.<SingularityRequest> any(), Matchers.anyLong(), Matchers.anyLong());
+    Mockito.verify(mailer, Mockito.times(1)).sendTaskOverdueMail(ArgumentMatchers.<Optional<SingularityTask>> any(), ArgumentMatchers.<SingularityTaskId> any(), ArgumentMatchers.<SingularityRequest> any(), ArgumentMatchers.anyLong(), ArgumentMatchers.anyLong());
 
     statusUpdate(firstTask, TaskState.TASK_FINISHED);
 
@@ -1281,7 +1280,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
 
     scheduledJobPoller.runActionOnPoll();
 
-    Mockito.verify(mailer, Mockito.times(1)).sendTaskOverdueMail(Matchers.<Optional<SingularityTask>> any(), Matchers.<SingularityTaskId> any(), Matchers.<SingularityRequest> any(), Matchers.anyLong(), Matchers.anyLong());
+    Mockito.verify(mailer, Mockito.times(1)).sendTaskOverdueMail(ArgumentMatchers.<Optional<SingularityTask>> any(), ArgumentMatchers.<SingularityTaskId> any(), ArgumentMatchers.<SingularityRequest> any(), ArgumentMatchers.anyLong(), ArgumentMatchers.anyLong());
 
     statusUpdate(secondTask, TaskState.TASK_FINISHED);
 
@@ -1296,13 +1295,13 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
 
     scheduledJobPoller.runActionOnPoll();
 
-    Mockito.verify(mailer, Mockito.times(2)).sendTaskOverdueMail(Matchers.<Optional<SingularityTask>> any(), Matchers.<SingularityTaskId> any(), Matchers.<SingularityRequest> any(), Matchers.anyLong(), Matchers.anyLong());
+    Mockito.verify(mailer, Mockito.times(2)).sendTaskOverdueMail(ArgumentMatchers.<Optional<SingularityTask>> any(), ArgumentMatchers.<SingularityTaskId> any(), ArgumentMatchers.<SingularityRequest> any(), ArgumentMatchers.anyLong(), ArgumentMatchers.anyLong());
 
     taskManager.deleteTaskHistory(thirdTask.getTaskId());
 
     scheduledJobPoller.runActionOnPoll();
 
-    Mockito.verify(mailer, Mockito.times(3)).sendTaskOverdueMail(Matchers.<Optional<SingularityTask>> any(), Matchers.<SingularityTaskId> any(), Matchers.<SingularityRequest> any(), Matchers.anyLong(), Matchers.anyLong());
+    Mockito.verify(mailer, Mockito.times(3)).sendTaskOverdueMail(ArgumentMatchers.<Optional<SingularityTask>> any(), ArgumentMatchers.<SingularityTaskId> any(), ArgumentMatchers.<SingularityRequest> any(), ArgumentMatchers.anyLong(), ArgumentMatchers.anyLong());
   }
 
   @Test
@@ -1310,11 +1309,11 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     // test unparseable status update
     TaskStatus.Builder bldr = TaskStatus.newBuilder()
         .setTaskId(TaskID.newBuilder().setValue("task"))
-        .setSlaveId(SlaveID.newBuilder().setValue("slave1"))
+        .setAgentId(AgentID.newBuilder().setValue("slave1"))
         .setState(TaskState.TASK_RUNNING);
 
     // should not throw exception:
-    sms.statusUpdate(driver, bldr.build());
+    sms.statusUpdate(bldr.build());
 
     initRequest();
     initFirstDeploy();
@@ -1618,11 +1617,11 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     requestResource.postRequest(request.toBuilder().setInstances(Optional.of(20)).build());
     scheduler.drainPendingQueue(stateCacheProvider.get());
 
-    sms.resourceOffers(driver, Arrays.asList(createOffer(36, 12024)));
+    sms.resourceOffers(Arrays.asList(createOffer(36, 12024)));
 
     Assert.assertTrue(taskManager.getActiveTasks().size() == 3);
 
-    sms.resourceOffers(driver, Arrays.asList(createOffer(20, 20000, "slave1", "host1"), createOffer(20, 20000, "slave2", "host2")));
+    sms.resourceOffers(Arrays.asList(createOffer(20, 20000, "slave1", "host1"), createOffer(20, 20000, "slave2", "host2")));
 
     Assert.assertTrue(taskManager.getActiveTasks().size() == 9);
 
@@ -1643,19 +1642,19 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     scheduler.drainPendingQueue(stateCacheProvider.get());
 
     String[] portRangeWithNoRequestedPorts = {"65:70"};
-    sms.resourceOffers(driver, Arrays.asList(createOffer(20, 20000, "slave1", "host1", Optional.<String> absent(), Collections.<String, String>emptyMap(), portRangeWithNoRequestedPorts)));
+    sms.resourceOffers(Arrays.asList(createOffer(20, 20000, "slave1", "host1", Optional.<String> absent(), Collections.<String, String>emptyMap(), portRangeWithNoRequestedPorts)));
     Assert.assertEquals(0, taskManager.getActiveTasks().size());
 
     String[] portRangeWithSomeRequestedPorts = {"80:82"};
-    sms.resourceOffers(driver, Arrays.asList(createOffer(20, 20000, "slave1", "host1", Optional.<String> absent(), Collections.<String, String>emptyMap(), portRangeWithSomeRequestedPorts)));
+    sms.resourceOffers(Arrays.asList(createOffer(20, 20000, "slave1", "host1", Optional.<String> absent(), Collections.<String, String>emptyMap(), portRangeWithSomeRequestedPorts)));
     Assert.assertEquals(0, taskManager.getActiveTasks().size());
 
     String[] portRangeWithRequestedButNotEnoughPorts = {"80:80", "8080:8080"};
-    sms.resourceOffers(driver, Arrays.asList(createOffer(20, 20000, "slave1", "host1", Optional.<String> absent(), Collections.<String, String>emptyMap(), portRangeWithRequestedButNotEnoughPorts)));
+    sms.resourceOffers(Arrays.asList(createOffer(20, 20000, "slave1", "host1", Optional.<String> absent(), Collections.<String, String>emptyMap(), portRangeWithRequestedButNotEnoughPorts)));
     Assert.assertEquals(0, taskManager.getActiveTasks().size());
 
     String[] portRangeWithNeededPorts = {"80:83", "8080:8080"};
-    sms.resourceOffers(driver, Arrays.asList(createOffer(20, 20000, "slave1", "host1", Optional.<String> absent(), Collections.<String, String>emptyMap(), portRangeWithNeededPorts)));
+    sms.resourceOffers(Arrays.asList(createOffer(20, 20000, "slave1", "host1", Optional.<String> absent(), Collections.<String, String>emptyMap(), portRangeWithNeededPorts)));
     Assert.assertEquals(1, taskManager.getActiveTaskIds().size());
   }
 
@@ -1671,7 +1670,8 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
           SingularityDockerNetworkType.BRIDGE,
           Optional.of(Arrays.asList(literalMapping, offerMapping)),
           Optional.of(false),
-          Optional.<Map<String, String>>of(ImmutableMap.of("env", "var=value")))
+          Optional.of(ImmutableMap.of("env", "var=value")),
+          Optional.absent())
         ));
     final SingularityDeployBuilder deployBuilder = new SingularityDeployBuilder(requestId, "test-docker-ports-deploy");
     deployBuilder.setContainerInfo(Optional.of(containerInfo)).setResources(Optional.of(new Resources(1, 64, numPorts, 0)));
@@ -2039,13 +2039,13 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     Assert.assertTrue(pendingTaskWithResources.getResources().isPresent());
     Assert.assertEquals(pendingTaskWithResources.getResources().get().getCpus(), 2, 0.0);
 
-    sms.resourceOffers(driver, Arrays.asList(createOffer(5, 5)));
+    sms.resourceOffers(Arrays.asList(createOffer(5, 5)));
 
     pendingTaskWithResources = taskManager.getPendingTasks().get(0);
     Assert.assertTrue(pendingTaskWithResources.getResources().isPresent());
     Assert.assertEquals(pendingTaskWithResources.getResources().get().getCpus(), 2, 0.0);
 
-    sms.resourceOffers(driver, Arrays.asList(createOffer(5, 5, Optional.of("test-role"))));
+    sms.resourceOffers(Arrays.asList(createOffer(5, 5, Optional.of("test-role"))));
     SingularityTask task = taskManager.getActiveTasks().get(0);
     Assert.assertEquals(MesosUtils.getNumCpus(task.getMesosTask().getResourcesList(), Optional.of("test-role")), 2.0, 0.0);
   }
@@ -2065,7 +2065,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     Assert.assertTrue(pendingTaskWithResources.getResources().isPresent());
     Assert.assertEquals(pendingTaskWithResources.getResources().get().getCpus(), 2, 0.0);
 
-    sms.resourceOffers(driver, Arrays.asList(createOffer(5, 5, Optional.of("test-role"))));
+    sms.resourceOffers(Arrays.asList(createOffer(5, 5, Optional.of("test-role"))));
 
     pendingTaskWithResources = taskManager.getPendingTasks().get(0);
     Assert.assertTrue(pendingTaskWithResources.getResources().isPresent());

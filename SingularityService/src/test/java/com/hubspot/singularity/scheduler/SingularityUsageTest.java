@@ -4,7 +4,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-import org.apache.mesos.Protos.TaskState;
+import org.apache.mesos.v1.Protos.TaskState;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -57,7 +57,7 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
 
     usagePoller.runActionOnPoll();
 
-    String slaveId = firstTask.getOffer().getSlaveId().getValue().toString();
+    String slaveId = firstTask.getOffer().getAgentId().getValue().toString();
 
     List<String> slaves = usageManager.getSlavesWithUsage();
 

@@ -842,19 +842,19 @@ public class SingularityClient {
   public void decommissionRack(String rackId, Optional<SingularityMachineChangeRequest> machineChangeRequest) {
     final String requestUri = String.format(RACKS_DECOMISSION_FORMAT, getApiBase(), rackId);
 
-    post(requestUri, String.format("decomission rack %s", rackId), machineChangeRequest.or(Optional.of(new SingularityMachineChangeRequest(Optional.<String>absent()))));
+    post(requestUri, String.format("decomission rack %s", rackId), machineChangeRequest.or(Optional.of(SingularityMachineChangeRequest.empty())));
   }
 
   public void freezeRack(String rackId, Optional<SingularityMachineChangeRequest> machineChangeRequest) {
     final String requestUri = String.format(RACKS_FREEZE_FORMAT, getApiBase(), rackId);
 
-    post(requestUri, String.format("freeze rack %s", rackId), machineChangeRequest.or(Optional.of(new SingularityMachineChangeRequest(Optional.<String>absent()))));
+    post(requestUri, String.format("freeze rack %s", rackId), machineChangeRequest.or(Optional.of(SingularityMachineChangeRequest.empty())));
   }
 
   public void activateRack(String rackId, Optional<SingularityMachineChangeRequest> machineChangeRequest) {
     final String requestUri = String.format(RACKS_ACTIVATE_FORMAT, getApiBase(), rackId);
 
-    post(requestUri, String.format("decommission rack %s", rackId), machineChangeRequest.or(Optional.of(new SingularityMachineChangeRequest(Optional.<String>absent()))));
+    post(requestUri, String.format("decommission rack %s", rackId), machineChangeRequest.or(Optional.of(SingularityMachineChangeRequest.empty())));
   }
 
   public void deleteRack(String rackId) {

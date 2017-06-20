@@ -8,9 +8,9 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.QueryParam;
 
-import org.apache.mesos.Protos.TaskID;
-import org.apache.mesos.Protos.TaskState;
-import org.apache.mesos.Protos.TaskStatus;
+import org.apache.mesos.v1.Protos.TaskID;
+import org.apache.mesos.v1.Protos.TaskState;
+import org.apache.mesos.v1.Protos.TaskStatus;
 
 import com.google.common.base.Optional;
 import com.google.inject.Inject;
@@ -20,7 +20,7 @@ import com.hubspot.singularity.SingularityLeaderController;
 import com.hubspot.singularity.SingularityService;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.history.SingularityHistoryPurger;
-import com.hubspot.singularity.mesos.SingularityDriver;
+import com.hubspot.singularity.mesos.SingularityMesosScheduler;
 import com.hubspot.singularity.scheduler.SingularityTaskReconciliation;
 import com.wordnik.swagger.annotations.Api;
 import com.wordnik.swagger.annotations.ApiOperation;
@@ -33,16 +33,16 @@ public class TestResource {
   private final SingularityAbort abort;
   private final SingularityLeaderController managed;
   private final SingularityConfiguration configuration;
-  private final SingularityDriver driver;
+  private final SingularityMesosScheduler scheduler;
   private final SingularityTaskReconciliation taskReconciliation;
   private final SingularityHistoryPurger historyPurger;
 
   @Inject
-  public TestResource(SingularityConfiguration configuration, SingularityLeaderController managed, SingularityAbort abort, final SingularityDriver driver, SingularityTaskReconciliation taskReconciliation, SingularityHistoryPurger historyPurger) {
+  public TestResource(SingularityConfiguration configuration, SingularityLeaderController managed, SingularityAbort abort, final SingularityMesosScheduler scheduler, SingularityTaskReconciliation taskReconciliation, SingularityHistoryPurger historyPurger) {
     this.configuration = configuration;
     this.managed = managed;
     this.abort = abort;
-    this.driver = driver;
+    this.scheduler = scheduler;
     this.taskReconciliation = taskReconciliation;
     this.historyPurger = historyPurger;
   }
@@ -53,7 +53,7 @@ public class TestResource {
   public void statusUpdate(@PathParam("taskId") String taskId, @PathParam("taskState") String taskState) {
     checkForbidden(configuration.isAllowTestResourceCalls(), "Test resource calls are disabled (set isAllowTestResourceCalls to true in configuration)");
 
-    driver.getScheduler().statusUpdate(null, TaskStatus.newBuilder()
+    scheduler.statusUpdate(TaskStatus.newBuilder()
         .setTaskId(TaskID.newBuilder().setValue(taskId))
         .setState(TaskState.valueOf(taskState))
         .build());

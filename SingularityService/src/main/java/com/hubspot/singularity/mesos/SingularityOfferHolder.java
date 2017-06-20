@@ -5,15 +5,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.mesos.Protos;
-import org.apache.mesos.Protos.Resource;
-import org.apache.mesos.Protos.Status;
-import org.apache.mesos.Protos.TaskInfo;
-import org.apache.mesos.SchedulerDriver;
+import org.apache.mesos.v1.Protos;
+import org.apache.mesos.v1.Protos.Resource;
+import org.apache.mesos.v1.Protos.TaskInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.mesos.MesosUtils;
@@ -37,7 +34,7 @@ public class SingularityOfferHolder {
   private final Map<String, String> textAttributes;
   private final Map<String, String> reservedSlaveAttributes;
 
-  public SingularityOfferHolder(Protos.Offer offer, int taskSizeHint, String rackId, Map<String, String> textAttributes, Map<String, String> reservedSlaveAttributes) {
+  SingularityOfferHolder(Protos.Offer offer, int taskSizeHint, String rackId, Map<String, String> textAttributes, Map<String, String> reservedSlaveAttributes) {
     this.rackId = rackId;
     this.offer = offer;
     this.acceptedTasks = Lists.newArrayListWithCapacity(taskSizeHint);
@@ -49,39 +46,39 @@ public class SingularityOfferHolder {
     this.reservedSlaveAttributes = reservedSlaveAttributes;
   }
 
-  public Map<String, String> getTextAttributes() {
+  Map<String, String> getTextAttributes() {
     return textAttributes;
   }
 
-  public String getRackId() {
+  String getRackId() {
     return rackId;
   }
 
-  public boolean hasReservedSlaveAttributes() {
+  boolean hasReservedSlaveAttributes() {
     return !reservedSlaveAttributes.isEmpty();
   }
 
-  public Map<String, String> getReservedSlaveAttributes() {
+  Map<String, String> getReservedSlaveAttributes() {
     return reservedSlaveAttributes;
   }
 
-  public String getSanitizedHost() {
+  String getSanitizedHost() {
     return sanitizedHost;
   }
 
-  public String getSanitizedRackId() {
+  String getSanitizedRackId() {
     return sanitizedRackId;
   }
 
-  public void addRejectedTask(SingularityPendingTaskId pendingTaskId) {
+  void addRejectedTask(SingularityPendingTaskId pendingTaskId) {
     rejectedPendingTaskIds.add(pendingTaskId);
   }
 
-  public boolean hasRejectedPendingTaskAlready(SingularityPendingTaskId pendingTaskId) {
+  boolean hasRejectedPendingTaskAlready(SingularityPendingTaskId pendingTaskId) {
     return rejectedPendingTaskIds.contains(pendingTaskId);
   }
 
-  public void addMatchedTask(SingularityTask task) {
+  void addMatchedTask(SingularityTask task) {
     acceptedTasks.add(task);
 
     // subtract task resources from offer
@@ -93,7 +90,7 @@ public class SingularityOfferHolder {
     }
   }
 
-  public void launchTasks(SchedulerDriver driver) {
+  public void launchTasks(SingularityDriver driver) {
     final List<TaskInfo> toLaunch = Lists.newArrayListWithCapacity(acceptedTasks.size());
     final List<SingularityTaskId> taskIds = Lists.newArrayListWithCapacity(acceptedTasks.size());
 
@@ -104,16 +101,14 @@ public class SingularityOfferHolder {
       LOG.trace("Launching {} mesos task: {}", task.getTaskId(), MesosUtils.formatForLogging(task.getMesosTask()));
     }
 
-    Status initialStatus = driver.launchTasks(ImmutableList.of(offer.getId()), toLaunch);
-
-    LOG.info("{} tasks ({}) launched with status {}", taskIds.size(), taskIds, initialStatus);
+    driver.launchTasks(offer, toLaunch);
   }
 
   public List<SingularityTask> getAcceptedTasks() {
     return acceptedTasks;
   }
 
-  public List<Resource> getCurrentResources() {
+  List<Resource> getCurrentResources() {
     return currentResources;
   }
 

@@ -2,7 +2,7 @@ package com.hubspot.mesos;
 
 import java.util.Objects;
 
-import org.apache.mesos.Protos;
+import org.apache.mesos.v1.Protos;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;

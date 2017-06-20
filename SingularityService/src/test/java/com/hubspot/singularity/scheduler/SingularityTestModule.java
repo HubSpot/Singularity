@@ -9,11 +9,9 @@ import java.util.Set;
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.curator.test.TestingServer;
-import org.apache.mesos.Protos.MasterInfo;
-import org.apache.mesos.Protos.Status;
-import org.apache.mesos.SchedulerDriver;
+import org.apache.mesos.v1.Protos;
 import org.eclipse.jetty.util.component.LifeCycle;
-import org.mockito.Matchers;
+import org.mockito.Mockito;
 import org.slf4j.LoggerFactory;
 
 import com.codahale.metrics.MetricRegistry;
@@ -41,7 +39,6 @@ import com.hubspot.mesos.client.MesosClient;
 import com.hubspot.singularity.SingularityAbort;
 import com.hubspot.singularity.SingularityAuthModule;
 import com.hubspot.singularity.SingularityMainModule;
-import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTestAuthenticator;
 import com.hubspot.singularity.auth.authenticator.SingularityAuthenticator;
 import com.hubspot.singularity.config.MesosConfiguration;
@@ -56,7 +53,6 @@ import com.hubspot.singularity.data.zkmigrations.SingularityZkMigrationsModule;
 import com.hubspot.singularity.event.SingularityEventModule;
 import com.hubspot.singularity.hooks.LoadBalancerClient;
 import com.hubspot.singularity.mesos.OfferCache;
-import com.hubspot.singularity.mesos.SchedulerDriverSupplier;
 import com.hubspot.singularity.mesos.SingularityDriver;
 import com.hubspot.singularity.mesos.SingularityMesosExecutorInfoSupport;
 import com.hubspot.singularity.mesos.SingularityMesosModule;
@@ -184,21 +180,18 @@ public class SingularityTestModule implements Module {
             SingularityMesosExecutorInfoSupport logSupport = mock(SingularityMesosExecutorInfoSupport.class);
             binder.bind(SingularityMesosExecutorInfoSupport.class).toInstance(logSupport);
 
-            SingularityDriver mock = mock(SingularityDriver.class);
-            when(mock.kill((SingularityTaskId) Matchers.any())).thenReturn(Status.DRIVER_RUNNING);
-            when(mock.getMaster()).thenReturn(Optional.<MasterInfo>absent());
-            when(mock.start()).thenReturn(Status.DRIVER_RUNNING);
-            when(mock.getLastOfferTimestamp()).thenReturn(Optional.<Long>absent());
-            binder.bind(SingularityDriver.class).toInstance(mock);
-
-            SchedulerDriver driver = mock(SchedulerDriver.class);
-
-            when(driver.killTask(null)).thenReturn(Status.DRIVER_RUNNING);
-
-            SchedulerDriverSupplier driverSupplier = new SchedulerDriverSupplier();
-            driverSupplier.setSchedulerDriver(driver);
-
-            binder.bind(SchedulerDriverSupplier.class).toInstance(driverSupplier);
+            SingularityDriver mock = mock(SingularityDriver.class, Mockito.CALLS_REAL_METHODS);
+            SingularityDriver spy = Mockito.spy(mock);
+            Mockito.doNothing().when(spy).start(any());
+            Mockito.doNothing().when(spy).declineOffer(any());
+            Mockito.doNothing().when(spy).reconcileTasks(any());
+            Mockito.doNothing().when(spy).kill(any());
+            Mockito.doNothing().when(spy).launchTasks(any(), anyList());
+            Mockito.doNothing().when(spy).sendFrameworkMessage(any(), any(), any(), any());
+            when(spy.canKillTask()).thenReturn(true);
+            when(spy.getCurrentStatus()).thenReturn(Protos.Status.DRIVER_RUNNING);
+            when(spy.isActive()).thenReturn(true);
+            binder.bind(SingularityDriver.class).toInstance(spy);
           }
         }));
 
