@@ -13,7 +13,7 @@ import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import com.hubspot.singularity.executor.handlebars.BashEscapedHelper;
 import com.hubspot.singularity.executor.handlebars.EscapeNewLinesAndQuotesHelper;
-import com.hubspot.singularity.executor.handlebars.IfHasNewLinesHelper;
+import com.hubspot.singularity.executor.handlebars.IfHasNewLinesOrBackticksHelper;
 import com.hubspot.singularity.executor.handlebars.IfPresentHelper;
 import com.hubspot.singularity.executor.handlebars.ShellQuoteHelper;
 import com.hubspot.singularity.runner.base.config.SingularityRunnerBaseLogging;
