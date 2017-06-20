@@ -1,5 +1,6 @@
 package com.hubspot.singularity.client;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
@@ -10,6 +11,8 @@ import java.net.URI;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
@@ -26,6 +29,9 @@ public class SingularityClientTest {
   private HttpResponse response;
   @Mock
   private HttpRequest request;
+  @Captor
+  private ArgumentCaptor<HttpRequest> requestCaptor;
+
   private SingularityClient singularityClient;
 
   @Before
@@ -53,7 +59,10 @@ public class SingularityClientTest {
     singularityClient.pauseSingularityRequest("requestId", Optional.absent());
 
     verify(httpClient, times(2))
-        .execute(any());
+        .execute(requestCaptor.capture());
+    HttpRequest sentRequest = requestCaptor.getValue();
+    assertThat(sentRequest.getUrl().toString())
+        .matches("http://host(1|2)/singularity/v2/api/requests/request/requestId/pause");
   }
 
   @Test
