@@ -295,8 +295,10 @@ public class SingularityValidator {
 
     if (deploy.getHealthcheck().isPresent() && !Strings.isNullOrEmpty(deploy.getHealthcheck().get().getUri())) {
       if (!deploy.getResources().isPresent() || deploy.getResources().get().getNumPorts() == 0) {
-        checkBadRequest(deploy.getHealthcheck().get().getPortNumber().isPresent(),
-          "Either an explicit port number, or port resources and port index must be specified to run healthchecks against a uri");
+        if (!(deploy.getSkipHealthchecksOnDeploy().isPresent() && deploy.getSkipHealthchecksOnDeploy().get())) {
+          checkBadRequest(deploy.getHealthcheck().get().getPortNumber().isPresent(),
+            "Either an explicit port number, or port resources and port index must be specified to run healthchecks against a uri");
+        }
       }
     }
 

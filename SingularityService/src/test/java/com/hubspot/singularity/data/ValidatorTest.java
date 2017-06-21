@@ -12,6 +12,7 @@ import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.hubspot.deploy.HealthcheckOptions;
 import com.hubspot.deploy.HealthcheckOptionsBuilder;
+import com.hubspot.mesos.Resources;
 import com.hubspot.singularity.RequestType;
 import com.hubspot.singularity.SingularityDeploy;
 import com.hubspot.singularity.SingularityRequest;
@@ -80,4 +81,35 @@ public class ValidatorTest extends SingularityTestBaseNoDb {
         .contains("Health check startup delay");
   }
 
+  @Test
+  public void itForbidsZeroPortsWithHealthCheckConfiguration() {
+    HealthcheckOptions healthCheck = new HealthcheckOptionsBuilder("/").build();
+    Resources resources = new Resources(0.125, 256, 0);
+    SingularityDeploy deploy = SingularityDeploy
+        .newBuilder("1234567", "1234567")
+        .setHealthcheck(Optional.of(healthCheck))
+        .setResources(Optional.of(resources))
+        .build();
+    SingularityRequest request = new SingularityRequestBuilder("1234567", RequestType.SERVICE).build();
+
+    WebApplicationException exn = (WebApplicationException) catchThrowable(() -> validator.checkDeploy(request, deploy));
+    assertThat((String) exn.getResponse().getEntity())
+        .contains("Either an explicit port number, or port resources and port");
+  }
+
+  @Test
+  public void itIgnoresZeroPortsWithHealthCheckConfigurationButSkipped() {
+    HealthcheckOptions healthCheck = new HealthcheckOptionsBuilder("/").build();
+    Resources resources = new Resources(0.125, 256, 0);
+    SingularityDeploy deploy = SingularityDeploy
+        .newBuilder("1234567", "1234567")
+        .setHealthcheck(Optional.of(healthCheck))
+        .setResources(Optional.of(resources))
+        .setSkipHealthchecksOnDeploy(Optional.of(Boolean.TRUE))
+        .build();
+    SingularityRequest request = new SingularityRequestBuilder("1234567", RequestType.SERVICE).build();
+    WebApplicationException exn = (WebApplicationException) catchThrowable(() -> validator.checkDeploy(request, deploy));
+    assertThat((String) exn.getResponse().getEntity())
+        .doesNotContain("Either an explicit port number, or port resources and port");
+  }
 }
