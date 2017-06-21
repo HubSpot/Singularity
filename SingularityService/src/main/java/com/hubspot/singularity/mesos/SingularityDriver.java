@@ -61,12 +61,13 @@ public class SingularityDriver {
   }
 
   public synchronized void start(SingularityMesosScheduler scheduler) {
+    LOG.info("Starting mesos driver for framework {}", mesosConfiguration.getFrameworkName());
     final FrameworkInfo.Builder frameworkInfoBuilder = FrameworkInfo.newBuilder()
-        .setCheckpoint(mesosConfiguration.getCheckpoint())
+        .setCheckpoint(mesosConfiguration.isCheckpoint())
         .setFailoverTimeout(mesosConfiguration.getFrameworkFailoverTimeout())
         .setName(mesosConfiguration.getFrameworkName())
         .setId(FrameworkID.newBuilder().setValue(mesosConfiguration.getFrameworkId()))
-        .setUser("");
+        .setUser(mesosConfiguration.getFrameworkUser());
 
     if (singularityConfiguration.getHostname().isPresent()) {
       frameworkInfoBuilder.setHostname(singularityConfiguration.getHostname().get());
@@ -119,6 +120,7 @@ public class SingularityDriver {
     LOG.info("Sending subscribe call");
     Call.Builder callBuilder = Call.newBuilder()
         .setType(Call.Type.SUBSCRIBE)
+        .setFrameworkId(frameworkInfo.getId())
         .setSubscribe(Call.Subscribe.newBuilder()
             .setFrameworkInfo(frameworkInfo)
             .build());
@@ -190,8 +192,21 @@ public class SingularityDriver {
   public void reconcileTasks(List<TaskStatus> taskStatuses) {
     driver.send(Call.newBuilder()
         .setType(Type.RECONCILE)
+        .setFrameworkId(frameworkInfo.getId())
         .setReconcile(Reconcile.newBuilder()
             .addAllTasks(taskStatuses.stream().map((t) -> Task.newBuilder().setTaskId(t.getTaskId()).setAgentId(t.getAgentId()).build()).collect(Collectors.toList()))
+            .build())
+        .build());
+  }
+
+  public void acknowledge(TaskStatus status) {
+    driver.send(Call.newBuilder()
+        .setType(Call.Type.ACKNOWLEDGE)
+        .setFrameworkId(frameworkInfo.getId())
+        .setAcknowledge(Call.Acknowledge.newBuilder()
+            .setAgentId(status.getAgentId())
+            .setTaskId(status.getTaskId())
+            .setUuid(status.getUuid())
             .build())
         .build());
   }

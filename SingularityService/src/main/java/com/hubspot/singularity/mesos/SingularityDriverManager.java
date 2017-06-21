@@ -53,7 +53,7 @@ public class SingularityDriverManager {
     if (maybeCleanupFromRequestAndTask.isPresent() && (maybeCleanupFromRequestAndTask.get() == TaskCleanupType.USER_REQUESTED_DESTROY || maybeCleanupFromRequestAndTask.get() == TaskCleanupType.REQUEST_DELETING)) {
       Optional<SingularityTask> task = taskManager.getTask(taskId);
       if (task.isPresent()) {
-        if (task.get().getMesosTask().hasExecutor()) {
+        if (task.get().getTaskRequest().getDeploy().getCustomExecutorCmd().isPresent()) {
           byte[] messageBytes = transcoder.toBytes(new SingularityTaskDestroyFrameworkMessage(taskId, user));
           singularityDriver.sendFrameworkMessage(taskId, task.get().getMesosTask().getExecutor().getExecutorId(), task.get().getMesosTask().getAgentId(), messageBytes);
         } else {

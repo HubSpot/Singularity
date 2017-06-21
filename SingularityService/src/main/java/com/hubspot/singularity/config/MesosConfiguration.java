@@ -27,6 +27,8 @@ public class MesosConfiguration {
 
   private Optional<String> frameworkRole = Optional.absent();
 
+  private String frameworkUser = "root";
+
   @NotNull
   private String rackIdAttributeKey = "rackid";
 
@@ -142,7 +144,7 @@ public class MesosConfiguration {
     this.master = master;
   }
 
-  public boolean getCheckpoint() {
+  public boolean isCheckpoint() {
     return checkpoint;
   }
 
@@ -204,5 +206,13 @@ public class MesosConfiguration {
 
   public void setDefaultDisk(int defaultDisk) {
     this.defaultDisk = defaultDisk;
+  }
+
+  public String getFrameworkUser() {
+    return frameworkUser;
+  }
+
+  public void setFrameworkUser(String frameworkUser) {
+    this.frameworkUser = frameworkUser;
   }
 }

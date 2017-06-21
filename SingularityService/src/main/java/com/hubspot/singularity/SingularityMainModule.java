@@ -79,7 +79,6 @@ import de.neuland.jade4j.parser.Parser;
 import de.neuland.jade4j.parser.node.Node;
 import de.neuland.jade4j.template.JadeTemplate;
 import io.dropwizard.jetty.HttpConnectorFactory;
-import io.dropwizard.server.DefaultServerFactory;
 import io.dropwizard.server.SimpleServerFactory;
 
 
@@ -224,7 +223,7 @@ public class SingularityMainModule implements Module {
   @Provides
   @Named(SINGULARITY_URI_BASE)
   String getSingularityUriBase(final SingularityConfiguration configuration) {
-    final String singularityUiPrefix = configuration.getUiConfiguration().getBaseUrl().or(((DefaultServerFactory) configuration.getServerFactory()).getApplicationContextPath());
+    final String singularityUiPrefix = configuration.getUiConfiguration().getBaseUrl().or(((SimpleServerFactory) configuration.getServerFactory()).getApplicationContextPath());
     return (singularityUiPrefix.endsWith("/")) ?  singularityUiPrefix.substring(0, singularityUiPrefix.length() - 1) : singularityUiPrefix;
   }
 

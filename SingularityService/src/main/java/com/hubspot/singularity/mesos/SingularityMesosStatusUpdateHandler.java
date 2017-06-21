@@ -256,6 +256,7 @@ public class SingularityMesosStatusUpdateHandler {
     }
 
     saveNewTaskStatusHolder(taskIdObj, newTaskStatusHolder, taskState);
+    singularityDriver.acknowledge(status);
   }
 
   @Timed

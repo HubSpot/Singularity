@@ -1,4 +1,4 @@
-FROM mesosphere/mesos:1.3.0
+FROM mesosphere/mesos:1.1.1
 ## mesos + java used to build hubspot/singularitybase
 
 MAINTAINER platform-infrastructure-groups@hubspot.com
@@ -30,7 +30,7 @@ RUN mkdir -p /usr/share/mesos/logwatcher && \
     mkdir -p /usr/share/mesos/s3 && \
     mkdir -p /usr/share/mesos/artifacts
 
-ENV JAVA_HOME /opt/jdk1.8.0_77
+ENV JAVA_HOME /opt/jdk1.8.0_131
 
 RUN update-alternatives --install /usr/bin/java java ${JAVA_HOME}/bin/java 20000 && \
     update-alternatives --install /usr/bin/javac javac ${JAVA_HOME}/bin/javac 20000 && \

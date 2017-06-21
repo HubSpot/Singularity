@@ -26,6 +26,7 @@ import org.slf4j.LoggerFactory;
 import com.codahale.metrics.annotation.Timed;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
@@ -122,8 +123,9 @@ public class SingularityMesosScheduler implements Scheduler {
 
   @Override
   public void connected(Mesos driver) {
+    LOG.info("Connected to mesos");
     connected.set(true);
-    callWithLock(this::registerWithRetry, "subscribe");
+    callWithLock(this::registerWithRetry, "subscribe", false);
   }
 
   @Override
@@ -135,13 +137,13 @@ public class SingularityMesosScheduler implements Scheduler {
 
   @Override
   public void received(Mesos driver, Event event) {
-    // counting/metrics for events??
+    LOG.trace("Received mesos event {}", event);
     switch (event.getType()) {
       case SUBSCRIBED:
         Event.Subscribed subscribed = event.getSubscribed();
         callWithLock(() -> startup(subscribed.getMasterInfo()), "subscribed", false);
       case OFFERS:
-        List<Offer> offers = event.getOffers().getOffersList();
+        List<Offer> offers = ImmutableList.copyOf(event.getOffers().getOffersList());
         if (!isRunning()) {
           LOG.info("Scheduler is in state {}, declining {} offer(s)", state.name(), offers.size());
           declineOffers(offers);
@@ -307,6 +309,7 @@ public class SingularityMesosScheduler implements Scheduler {
   public void resourceOffers(List<Offer> offers) {
     final long start = System.currentTimeMillis();
     LOG.info("Received {} offer(s)", offers.size());
+    lastOfferTimestamp = Optional.of(System.currentTimeMillis());
     boolean delclineImmediately = false;
     if (disasterManager.isDisabled(SingularityAction.PROCESS_OFFERS)) {
       LOG.info("Processing offers is currently disabled, declining {} offers", offers.size());
