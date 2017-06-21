@@ -6,6 +6,7 @@ import static org.assertj.core.api.AssertionsForClassTypes.catchThrowable;
 import javax.ws.rs.WebApplicationException;
 
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 
 import com.google.common.base.Optional;
@@ -17,12 +18,32 @@ import com.hubspot.singularity.SingularityDeploy;
 import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityRequestBuilder;
 import com.hubspot.singularity.SingularityTestBaseNoDb;
+import com.hubspot.singularity.config.SingularityConfiguration;
+import com.hubspot.singularity.config.UIConfiguration;
+import com.hubspot.singularity.data.history.DeployHistoryHelper;
 
 
 public class ValidatorTest extends SingularityTestBaseNoDb {
 
   @Inject
+  private SingularityConfiguration singularityConfiguration;
+  @Inject
+  private DeployHistoryHelper deployHistoryHelper;
+  @Inject
+  private PriorityManager priorityManager;
+  @Inject
+  private DisasterManager disasterManager;
+  @Inject
+  private SlaveManager slaveManager;
+  @Inject
+  private UIConfiguration uiConfiguration;
+
   private SingularityValidator validator;
+
+  @Before
+  public void createValidator() {
+    validator = new SingularityValidator(singularityConfiguration, deployHistoryHelper, priorityManager, disasterManager, slaveManager, uiConfiguration);
+  }
 
   /**
    * Standard cron: day of week (0 - 6) (0 to 6 are Sunday to Saturday, or use names; 7 is Sunday, the same as 0)
@@ -78,6 +99,34 @@ public class ValidatorTest extends SingularityTestBaseNoDb {
     WebApplicationException exn = (WebApplicationException) catchThrowable(() -> validator.checkDeploy(request, deploy));
     assertThat((String) exn.getResponse().getEntity())
         .contains("Health check startup delay");
+  }
+
+  @Test
+  public void itForbidsHealthCheckGreaterThanMaxTotalHealthCheck() {
+    singularityConfiguration.setHealthcheckMaxTotalTimeoutSeconds(Optional.of(100));
+    createValidator();
+
+    // Total wait time on this request is (startup time) + ((interval) + (http timeout)) * (1 + retries)
+    // = 50 + (5 + 5) * (9 + 1)
+    // = 150
+    HealthcheckOptions healthCheck = new HealthcheckOptionsBuilder("/")
+        .setPortNumber(Optional.of(8080L))
+        .setStartupTimeoutSeconds(Optional.of(50))
+        .setIntervalSeconds(Optional.of(5))
+        .setResponseTimeoutSeconds(Optional.of(5))
+        .setMaxRetries(Optional.of(9))
+        .build();
+    SingularityDeploy deploy = SingularityDeploy
+        .newBuilder("1234567", "1234567")
+        .setHealthcheck(Optional.of(healthCheck))
+        .setCommand(Optional.of("sleep 100;"))
+        .build();
+    SingularityRequest request = new SingularityRequestBuilder("1234567", RequestType.SERVICE).build();
+
+    WebApplicationException exn = (WebApplicationException) catchThrowable(() -> validator.checkDeploy(request, deploy));
+    System.out.println(exn.getResponse().getEntity());
+    assertThat((String) exn.getResponse().getEntity())
+        .contains("Max healthcheck time");
   }
 
 }
