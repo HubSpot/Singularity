@@ -10,10 +10,10 @@ export const FetchTasksInState = buildApiAction(
 
     switch (stateToFetch) {
       case 'active':
-        propertyString += ['offer.hostname', 'taskId', 'mesosTask.resources', 'rackId', 'taskRequest.request.requestType'].join(propertyJoin);
+        propertyString += ['offers', 'taskId', 'mesosTask.resources', 'rackId', 'taskRequest.request.requestType'].join(propertyJoin);
         break;
       case 'scheduled':
-        propertyString += ['offer.hostname', 'taskId', 'mesosTask.resources', 'rackId', 'taskRequest.request.requestType', 'pendingTask'].join(propertyJoin);
+        propertyString += ['offers', 'taskId', 'mesosTask.resources', 'rackId', 'taskRequest.request.requestType', 'pendingTask'].join(propertyJoin);
         break;
       default:
         propertyString = '';

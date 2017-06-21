@@ -46,7 +46,7 @@ public class LastTaskStatusMigration extends ZkDataMigration {
 
           taskStatus = Optional.of(TaskStatus.newBuilder()
               .setTaskId(TaskID.newBuilder().setValue(taskId.getId()))
-              .setSlaveId(task.get().getOffer().getSlaveId())
+              .setSlaveId(task.get().getSlaveId())
               .setState(update.getTaskState().toTaskState().get())
               .build());
 
