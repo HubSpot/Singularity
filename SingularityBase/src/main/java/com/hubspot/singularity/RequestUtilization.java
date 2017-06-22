@@ -1,6 +1,7 @@
 package com.hubspot.singularity;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class RequestUtilization {
@@ -44,10 +45,12 @@ public class RequestUtilization {
     return numTasks;
   }
 
+  @JsonIgnore
   public double getAvgMemBytesUsed() {
     return memBytesTotal / (double) numTasks;
   }
 
+  @JsonIgnore
   public double getAvgCpuUsed() {
     return cpuTotal / (double) numTasks;
   }
@@ -58,5 +61,16 @@ public class RequestUtilization {
 
   public String getRequestId() {
     return requestId;
+  }
+
+  @Override
+  public String toString() {
+    return "RequestUtilization{" +
+        "requestId=" + requestId +
+        ", deployId=" + deployId +
+        ", memBytesTotal=" + memBytesTotal +
+        ", cpuTotal=" + cpuTotal +
+        ", numTasks=" + numTasks +
+        '}';
   }
 }
