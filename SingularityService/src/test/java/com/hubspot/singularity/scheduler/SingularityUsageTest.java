@@ -252,55 +252,7 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
   }
 
   @Test
-  public void itRemovesWellUtilizedRequestsFromClusterUtilization() {
-    initRequest();
-    initFirstDeployWithResources(2, .001);
-    saveAndSchedule(request.toBuilder().setInstances(Optional.of(3)));
-    resourceOffers(1);
-
-    List<SingularityTaskId> taskIds = taskManager.getActiveTaskIds();
-
-    String t1 = taskIds.get(0).getId();
-    String t2 = taskIds.get(1).getId();
-    String t3 = taskIds.get(2).getId();
-
-    String host = slaveManager.getObjects().get(0).getHost();
-
-    MesosTaskMonitorObject t1u1 = new MesosTaskMonitorObject(null, null, null, t1, getStatistics(2, 5, 1000));
-    MesosTaskMonitorObject t2u1 = new MesosTaskMonitorObject(null, null, null, t2, getStatistics(1.95, 5, 975));
-    MesosTaskMonitorObject t3u1 = new MesosTaskMonitorObject(null, null, null, t3, getStatistics(1.98, 5, 850));
-
-    mesosClient.setSlaveResourceUsage(host, Arrays.asList(t1u1, t2u1, t3u1));
-
-    usagePoller.runActionOnPoll();
-
-    Assert.assertTrue("Couldn't find cluster utilization", usageManager.getClusterUtilization().isPresent());
-
-    SingularityClusterUtilization utilization = usageManager.getClusterUtilization().get();
-
-    Assert.assertEquals(1, usageManager.getTaskUsage(t1).size());
-    Assert.assertEquals(1, usageManager.getTaskUsage(t2).size());
-    Assert.assertEquals(1, usageManager.getTaskUsage(t3).size());
-
-    Assert.assertEquals(0, utilization.getNumRequestsWithOverUtilizedCpu());
-    Assert.assertEquals(0, utilization.getNumRequestsWithUnderUtilizedCpu());
-    Assert.assertEquals(1, utilization.getNumRequestsWithUnderUtilizedMemBytes());
-
-    Assert.assertEquals(0, utilization.getAvgOverUtilizedCpu(), 0);
-    Assert.assertEquals(0, utilization.getAvgUnderUtilizedCpu(), 0);
-    Assert.assertEquals(58.0, utilization.getAvgUnderUtilizedMemBytes(), 0);
-
-    Assert.assertEquals(0, utilization.getMaxOverUtilizedCpu(), 0);
-    Assert.assertEquals(0, utilization.getMaxUnderUtilizedCpu(), 0);
-    Assert.assertEquals(58.0, utilization.getMaxUnderUtilizedMemBytes(), 0);
-
-    Assert.assertEquals(0, utilization.getMinOverUtilizedCpu(), 0);
-    Assert.assertEquals(0, utilization.getMinUnderUtilizedCpu(), 0);
-    Assert.assertEquals(58.0, utilization.getMinUnderUtilizedMemBytes(), 0);
-  }
-
-  @Test
-  public void itRemovesPerfectlyUtilizedRequestsFromClusterUtilization() {
+  public void itDoesntIncludePerfectlyUtilizedRequestsInClusterUtilization() {
     initRequest();
     initFirstDeployWithResources(2, .001);
     saveAndSchedule(request.toBuilder().setInstances(Optional.of(3)));
@@ -363,8 +315,8 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
     String host = slaveManager.getObjects().get(0).getHost();
 
     MesosTaskMonitorObject t1u1 = new MesosTaskMonitorObject(null, null, null, t1, getStatistics(3, 5, 1000));
-    MesosTaskMonitorObject t2u1 = new MesosTaskMonitorObject(null, null, null, t2, getStatistics(5, 5, 975));
-    MesosTaskMonitorObject t3u1 = new MesosTaskMonitorObject(null, null, null, t3, getStatistics(4.5, 5, 950));
+    MesosTaskMonitorObject t2u1 = new MesosTaskMonitorObject(null, null, null, t2, getStatistics(5, 5, 1000));
+    MesosTaskMonitorObject t3u1 = new MesosTaskMonitorObject(null, null, null, t3, getStatistics(4.5, 5, 1000));
 
     mesosClient.setSlaveResourceUsage(host, Arrays.asList(t1u1, t2u1, t3u1));
 

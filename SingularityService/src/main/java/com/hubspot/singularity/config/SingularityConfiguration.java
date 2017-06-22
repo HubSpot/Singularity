@@ -79,8 +79,6 @@ public class SingularityConfiguration extends Configuration {
 
   private int numUsageToKeep = 15;
 
-  private double minUnderUtilizedPct = 0.05;
-
   private long cleanupEverySeconds = 5;
 
   private long checkQueuedMailsEveryMillis = TimeUnit.SECONDS.toMillis(15);
@@ -1433,15 +1431,6 @@ public class SingularityConfiguration extends Configuration {
 
   public void setNumUsageToKeep(int numUsageToKeep) {
     this.numUsageToKeep = numUsageToKeep;
-  }
-
-  public double getMinUnderUtilizedPct() {
-    return minUnderUtilizedPct;
-  }
-
-  public SingularityConfiguration setMinUnderUtilizedPct(double minUnderUtilizedPct) {
-    this.minUnderUtilizedPct = minUnderUtilizedPct;
-    return this;
   }
 
   public long getCacheOffersForMillis() {
