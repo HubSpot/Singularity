@@ -25,11 +25,9 @@ import org.slf4j.LoggerFactory;
 
 import com.codahale.metrics.annotation.Timed;
 import com.google.common.base.Optional;
-import com.google.common.base.Predicates;
 import com.google.common.base.Throwables;
 import com.google.common.collect.HashMultiset;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -254,6 +252,8 @@ public class SingularityScheduler {
       List<SingularityTaskId> matchingTaskIds = getMatchingTaskIds(stateCache, maybeRequest.get().getRequest(), deployKey);
 
       List<SingularityPendingRequest> effectivePendingRequests = new ArrayList<>();
+
+      // Things that are closest to now (ie smaller timestamps) should come first in the queue
       pendingRequestsForDeploy.sort(Comparator.comparingLong(SingularityPendingRequest::getTimestamp));
       int scheduledTasks = 0;
       for (SingularityPendingRequest pendingRequest : pendingRequestsForDeploy) {
@@ -290,6 +290,12 @@ public class SingularityScheduler {
           RequestState requestState = checkCooldown(maybeRequest.get().getState(), maybeRequest.get().getRequest(), deployStatistics);
           scheduledTasks += scheduleTasks(stateCache, maybeRequest.get().getRequest(), requestState,
               deployStatistics, pendingRequest, matchingTaskIds, maybePendingDeploy);
+          requestManager.deletePendingRequest(pendingRequest);
+        } else if (updatedRequest.isScheduled()
+            && (pendingRequest.getPendingType() == PendingType.NEW_DEPLOY
+            || pendingRequest.getPendingType() == PendingType.TASK_DONE)) {
+          // If we are here, there is already an immediate of run of the scheduled task launched. Drop anything that would
+          // leave a second instance of the request in the pending queue.
           requestManager.deletePendingRequest(pendingRequest);
         } else {
           // Any other subsequent requests are not honored until after the pending queue is cleared.
@@ -393,8 +399,13 @@ public class SingularityScheduler {
   }
 
   private void deleteScheduledTasks(final Collection<SingularityPendingTask> scheduledTasks, SingularityPendingRequest pendingRequest) {
-    for (SingularityPendingTask task : Iterables
-      .filter(scheduledTasks, Predicates.and(SingularityPendingTask.matchingRequest(pendingRequest.getRequestId()), SingularityPendingTask.matchingDeploy(pendingRequest.getDeployId())))) {
+    List<SingularityPendingTask> tasksForDeploy = scheduledTasks
+        .stream()
+        .filter(task -> pendingRequest.getRequestId().equals(task.getPendingTaskId().getRequestId()))
+        .filter(task -> pendingRequest.getDeployId().equals(task.getPendingTaskId().getDeployId()))
+        .collect(Collectors.toList());
+
+    for (SingularityPendingTask task : tasksForDeploy) {
       LOG.debug("Deleting pending task {} in order to reschedule {}", task.getPendingTaskId().getId(), pendingRequest);
       taskManager.deletePendingTask(task.getPendingTaskId());
     }
