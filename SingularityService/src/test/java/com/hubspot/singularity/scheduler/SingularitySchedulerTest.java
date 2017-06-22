@@ -112,8 +112,8 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
 
     List<Offer> offers2 = resourceOffers(); // cached as well
 
-    sms.offerRescinded(offers2.get(0).getId());
-    sms.offerRescinded(offers2.get(1).getId());
+    sms.rescind(offers2.get(0).getId());
+    sms.rescind(offers2.get(1).getId());
 
     initRequest();
     initFirstDeploy();
@@ -147,7 +147,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     configuration.setOfferCacheSize(2);
     List<Offer> offers2 = resourceOffers();
 
-    sms.offerRescinded(offers2.get(0).getId());
+    sms.rescind(offers2.get(0).getId());
 
     initRequest();
     initFirstDeploy();

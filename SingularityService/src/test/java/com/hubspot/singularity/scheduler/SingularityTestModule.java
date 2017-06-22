@@ -9,7 +9,6 @@ import java.util.Set;
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.curator.test.TestingServer;
-import org.apache.mesos.v1.Protos;
 import org.eclipse.jetty.util.component.LifeCycle;
 import org.mockito.Mockito;
 import org.slf4j.LoggerFactory;
@@ -53,9 +52,10 @@ import com.hubspot.singularity.data.zkmigrations.SingularityZkMigrationsModule;
 import com.hubspot.singularity.event.SingularityEventModule;
 import com.hubspot.singularity.hooks.LoadBalancerClient;
 import com.hubspot.singularity.mesos.OfferCache;
-import com.hubspot.singularity.mesos.SingularityDriver;
 import com.hubspot.singularity.mesos.SingularityMesosExecutorInfoSupport;
 import com.hubspot.singularity.mesos.SingularityMesosModule;
+import com.hubspot.singularity.mesos.SingularityMesosScheduler;
+import com.hubspot.singularity.mesos.SingularityMesosScheduler.SchedulerState;
 import com.hubspot.singularity.mesos.SingularityOfferCache;
 import com.hubspot.singularity.resources.DeployResource;
 import com.hubspot.singularity.resources.PriorityResource;
@@ -180,18 +180,24 @@ public class SingularityTestModule implements Module {
             SingularityMesosExecutorInfoSupport logSupport = mock(SingularityMesosExecutorInfoSupport.class);
             binder.bind(SingularityMesosExecutorInfoSupport.class).toInstance(logSupport);
 
-            SingularityDriver mock = mock(SingularityDriver.class, Mockito.CALLS_REAL_METHODS);
-            SingularityDriver spy = Mockito.spy(mock);
-            Mockito.doNothing().when(spy).start(any());
-            Mockito.doNothing().when(spy).declineOffer(any());
-            Mockito.doNothing().when(spy).reconcileTasks(any());
+            SingularityMesosScheduler mock = mock(SingularityMesosScheduler.class, Mockito.CALLS_REAL_METHODS);
+
+            SingularityMesosScheduler spy = Mockito.spy(mock);
+            try {
+              Mockito.doNothing().when(spy).start();
+            } catch (Exception e) {
+              // Skip
+            }
+            Mockito.doNothing().when(spy).decline(any());
+            Mockito.doNothing().when(spy).reconcile(any());
             Mockito.doNothing().when(spy).kill(any());
-            Mockito.doNothing().when(spy).launchTasks(any(), anyList());
-            Mockito.doNothing().when(spy).sendFrameworkMessage(any(), any(), any(), any());
-            when(spy.canKillTask()).thenReturn(true);
-            when(spy.getCurrentStatus()).thenReturn(Protos.Status.DRIVER_RUNNING);
-            when(spy.isActive()).thenReturn(true);
-            binder.bind(SingularityDriver.class).toInstance(spy);
+            Mockito.doNothing().when(spy).setSubscribed();
+            Mockito.doNothing().when(spy).accept(any(), anyList());
+            Mockito.doNothing().when(spy).frameworkMessage(any(), any(), any());
+            when(spy.isRunning()).thenReturn(true);
+            when(spy.getState()).thenReturn(SchedulerState.SUBSCRIBED);
+            when(spy.getLastOfferTimestamp()).thenReturn(Optional.absent());
+            binder.bind(SingularityMesosScheduler.class).toInstance(spy);
           }
         }));
 

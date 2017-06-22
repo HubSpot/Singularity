@@ -54,7 +54,7 @@ import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.data.history.RequestHistoryHelper;
 import com.hubspot.singularity.expiring.SingularityExpiringBounce;
 import com.hubspot.singularity.hooks.LoadBalancerClient;
-import com.hubspot.singularity.mesos.SingularityDriverManager;
+import com.hubspot.singularity.mesos.SingularityMesosScheduler;
 import com.hubspot.singularity.scheduler.SingularityDeployHealthHelper.DeployHealth;
 import com.hubspot.singularity.sentry.SingularityExceptionNotifier;
 
@@ -70,7 +70,7 @@ public class SingularityCleaner {
   private final LoadBalancerClient lbClient;
   private final SingularityExceptionNotifier exceptionNotifier;
   private final RequestHistoryHelper requestHistoryHelper;
-  private final SingularityDriverManager singularityDriverManager;
+  private final SingularityMesosScheduler scheduler;
 
   private final SingularityConfiguration configuration;
   private final long killNonLongRunningTasksInCleanupAfterMillis;
@@ -78,7 +78,7 @@ public class SingularityCleaner {
   @Inject
   public SingularityCleaner(TaskManager taskManager, SingularityDeployHealthHelper deployHealthHelper, DeployManager deployManager, RequestManager requestManager,
       SingularityConfiguration configuration, LoadBalancerClient lbClient, SingularityExceptionNotifier exceptionNotifier,
-      RequestHistoryHelper requestHistoryHelper, SingularityDriverManager singularityDriverManager) {
+      RequestHistoryHelper requestHistoryHelper, SingularityMesosScheduler scheduler) {
     this.taskManager = taskManager;
     this.lbClient = lbClient;
     this.deployHealthHelper = deployHealthHelper;
@@ -86,7 +86,7 @@ public class SingularityCleaner {
     this.requestManager = requestManager;
     this.exceptionNotifier = exceptionNotifier;
     this.requestHistoryHelper = requestHistoryHelper;
-    this.singularityDriverManager = singularityDriverManager;
+    this.scheduler = scheduler;
 
     this.configuration = configuration;
 
@@ -387,7 +387,7 @@ public class SingularityCleaner {
       if (killActiveTasks) {
         for (SingularityTaskId matchingTaskId : matchingActiveTaskIds) {
           LOG.debug("Killing task {} due to {}", matchingTaskId, requestCleanup);
-          singularityDriverManager.killAndRecord(matchingTaskId, requestCleanup.getCleanupType(), Optional.absent());
+          scheduler.killAndRecord(matchingTaskId, requestCleanup.getCleanupType(), Optional.absent());
           numTasksKilled++;
         }
       } else {
@@ -555,7 +555,7 @@ public class SingularityCleaner {
         LOG.info("{} is still active, and time since last kill {} is greater than configured (askDriverToKillTasksAgainAfterMillis) {} - asking driver to kill again",
             killedTaskIdRecord, JavaUtils.durationFromMillis(duration), JavaUtils.durationFromMillis(configuration.getAskDriverToKillTasksAgainAfterMillis()));
 
-        singularityDriverManager.killAndRecord(killedTaskIdRecord.getTaskId(), killedTaskIdRecord.getRequestCleanupType(),
+        scheduler.killAndRecord(killedTaskIdRecord.getTaskId(), killedTaskIdRecord.getRequestCleanupType(),
             killedTaskIdRecord.getTaskCleanupType(), Optional.of(killedTaskIdRecord.getOriginalTimestamp()), Optional.of(killedTaskIdRecord.getRetries()), Optional.absent());
 
         rekilled++;
@@ -611,7 +611,7 @@ public class SingularityCleaner {
         LOG.info("Couldn't find a matching active task for cleanup task {}, deleting..", cleanupTask);
         taskManager.deleteCleanupTask(taskId.getId());
       } else if (shouldKillTask(cleanupTask, activeTaskIds, cleaningTasks, incrementalCleaningTasks) && checkLBStateAndShouldKillTask(cleanupTask)) {
-        singularityDriverManager.killAndRecord(taskId, cleanupTask.getCleanupType(), cleanupTask.getUser());
+        scheduler.killAndRecord(taskId, cleanupTask.getCleanupType(), cleanupTask.getUser());
         taskManager.deleteCleanupTask(taskId.getId());
 
         killedTasks++;

@@ -29,14 +29,14 @@ public class SingularityOfferCache implements OfferCache, RemovalListener<String
   private static final Logger LOG = LoggerFactory.getLogger(SingularityOfferCache.class);
 
   private final Cache<String, CachedOffer> offerCache;
-  private final SingularityDriver singularityDriver;
+  private final SingularityMesosScheduler scheduler;
   private final SingularityConfiguration configuration;
   private final AtomicBoolean useOfferCache = new AtomicBoolean(true);
 
   @Inject
-  public SingularityOfferCache(SingularityConfiguration configuration, SingularityDriver singularityDriver) {
+  public SingularityOfferCache(SingularityConfiguration configuration, SingularityMesosScheduler scheduler) {
     this.configuration = configuration;
-    this.singularityDriver = singularityDriver;
+    this.scheduler = scheduler;
 
     offerCache = CacheBuilder.newBuilder()
         .expireAfterWrite(configuration.getCacheOffersForMillis(), TimeUnit.MILLISECONDS)
@@ -48,7 +48,7 @@ public class SingularityOfferCache implements OfferCache, RemovalListener<String
   @Override
   public void cacheOffer(long timestamp, Offer offer) {
     if (!useOfferCache.get()) {
-      singularityDriver.declineOffer(offer.getId());
+      scheduler.decline(Collections.singletonList(offer.getId()));
       return;
     }
     LOG.debug("Caching offer {} for {}", offer.getId().getValue(), JavaUtils.durationFromMillis(configuration.getCacheOffersForMillis()));
@@ -130,12 +130,12 @@ public class SingularityOfferCache implements OfferCache, RemovalListener<String
   }
 
   private void declineOffer(CachedOffer offer) {
-    if (!singularityDriver.isActive()) {
+    if (!scheduler.isRunning()) {
       LOG.error("No active scheduler driver present to handle expired offer {} - this should never happen", offer.offerId);
       return;
     }
 
-    singularityDriver.declineOffer(offer.offer.getId());
+    scheduler.decline(Collections.singletonList(offer.offer.getId()));
 
     LOG.debug("Declined cached offer {}", offer.offerId);
   }

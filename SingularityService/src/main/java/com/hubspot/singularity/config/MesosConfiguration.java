@@ -8,8 +8,10 @@ import com.google.common.base.Optional;
 @JsonIgnoreProperties( ignoreUnknown = true )
 public class MesosConfiguration {
 
-  @NotNull
+  @Deprecated
   private String master;
+  @NotNull
+  private String masterUri;
   @NotNull
   private String frameworkName;
   @NotNull
@@ -214,5 +216,13 @@ public class MesosConfiguration {
 
   public void setFrameworkUser(String frameworkUser) {
     this.frameworkUser = frameworkUser;
+  }
+
+  public String getMasterUri() {
+    return masterUri;
+  }
+
+  public void setMasterUri(String masterUri) {
+    this.masterUri = masterUri;
   }
 }

@@ -1,11 +1,14 @@
 package com.hubspot.singularity.mesos;
 
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import org.apache.mesos.v1.Protos;
+import org.apache.mesos.v1.Protos.Offer.Operation;
+import org.apache.mesos.v1.Protos.Offer.Operation.Launch;
 import org.apache.mesos.v1.Protos.Resource;
 import org.apache.mesos.v1.Protos.TaskInfo;
 import org.slf4j.Logger;
@@ -90,7 +93,7 @@ public class SingularityOfferHolder {
     }
   }
 
-  public void launchTasks(SingularityDriver driver) {
+  public void launchTasks(SingularityMesosScheduler scheduler) {
     final List<TaskInfo> toLaunch = Lists.newArrayListWithCapacity(acceptedTasks.size());
     final List<SingularityTaskId> taskIds = Lists.newArrayListWithCapacity(acceptedTasks.size());
 
@@ -101,7 +104,7 @@ public class SingularityOfferHolder {
       LOG.trace("Launching {} mesos task: {}", task.getTaskId(), MesosUtils.formatForLogging(task.getMesosTask()));
     }
 
-    driver.launchTasks(offer, toLaunch);
+    scheduler.accept(Collections.singletonList(offer.getId()), Collections.singletonList(Operation.newBuilder().setLaunch(Launch.newBuilder().addAllTaskInfos(toLaunch)).build()));
   }
 
   public List<SingularityTask> getAcceptedTasks() {

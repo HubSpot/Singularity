@@ -18,7 +18,7 @@ import com.hubspot.singularity.SingularityTaskShellCommandRequest;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.data.transcoders.Transcoder;
-import com.hubspot.singularity.mesos.SingularityDriver;
+import com.hubspot.singularity.mesos.SingularityMesosScheduler;
 
 @Singleton
 public class SingularityTaskShellCommandDispatchPoller extends SingularityLeaderOnlyPoller {
@@ -26,15 +26,15 @@ public class SingularityTaskShellCommandDispatchPoller extends SingularityLeader
   private static final Logger LOG = LoggerFactory.getLogger(SingularityTaskShellCommandDispatchPoller.class);
 
   private final TaskManager taskManager;
-  private final SingularityDriver singularityDriver;
+  private final SingularityMesosScheduler scheduler;
   private final Transcoder<SingularityTaskShellCommandRequest> transcoder;
 
   @Inject
-  SingularityTaskShellCommandDispatchPoller(TaskManager taskManager, SingularityConfiguration configuration, SingularityDriver singularityDriver, Transcoder<SingularityTaskShellCommandRequest> transcoder) {
+  SingularityTaskShellCommandDispatchPoller(TaskManager taskManager, SingularityConfiguration configuration, SingularityMesosScheduler scheduler, Transcoder<SingularityTaskShellCommandRequest> transcoder) {
     super(configuration.getCheckDeploysEverySeconds(), TimeUnit.SECONDS);
 
     this.taskManager = taskManager;
-    this.singularityDriver = singularityDriver;
+    this.scheduler = scheduler;
     this.transcoder = transcoder;
   }
 
@@ -44,7 +44,7 @@ public class SingularityTaskShellCommandDispatchPoller extends SingularityLeader
 
     final List<SingularityTaskShellCommandRequest> shellRequests = taskManager.getAllQueuedTaskShellCommandRequests();
 
-    if (!singularityDriver.isActive()) {
+    if (!scheduler.isRunning()) {
       LOG.warn("Unable to process shell requests because scheduler driver isn't present ({} tasks waiting)", shellRequests.size());
       return;
     }
@@ -66,7 +66,7 @@ public class SingularityTaskShellCommandDispatchPoller extends SingularityLeader
       final AgentID slaveId = task.get().getMesosTask().getAgentId();
       final byte[] bytes = transcoder.toBytes(shellRequest);
 
-      singularityDriver.sendFrameworkMessage(task.get().getTaskId(), executorId, slaveId, bytes);
+      scheduler.frameworkMessage(executorId, slaveId, bytes);
 
       LOG.info("Sent {} ({} bytes) to {} on {}", shellRequest, bytes.length, executorId, slaveId);
 

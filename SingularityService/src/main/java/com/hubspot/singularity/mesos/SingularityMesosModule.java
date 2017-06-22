@@ -19,8 +19,6 @@ public class SingularityMesosModule extends AbstractModule {
 
   @Override
   public void configure() {
-    bind(SingularityDriver.class).in(Scopes.SINGLETON);
-    bind(SingularityDriverManager.class).in(Scopes.SINGLETON);
     bind(SingularityMesosExecutorInfoSupport.class).in(Scopes.SINGLETON);
     bind(SingularityMesosScheduler.class).in(Scopes.SINGLETON);
     bind(SingularityMesosFrameworkMessageHandler.class).in(Scopes.SINGLETON);

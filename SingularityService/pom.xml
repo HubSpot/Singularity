@@ -126,6 +126,11 @@
     </dependency>
 
     <dependency>
+      <groupId>com.mesosphere.mesos.rx.java</groupId>
+      <artifactId>mesos-rxjava-protobuf-client</artifactId>
+    </dependency>
+
+    <dependency>
       <groupId>org.apache.commons</groupId>
       <artifactId>commons-lang3</artifactId>
     </dependency>

@@ -172,6 +172,12 @@
       </dependency>
 
       <dependency>
+        <groupId>com.mesosphere.mesos.rx.java</groupId>
+        <artifactId>mesos-rxjava-protobuf-client</artifactId>
+        <version>0.1.2</version>
+      </dependency>
+
+      <dependency>
         <groupId>com.spotify</groupId>
         <artifactId>docker-client</artifactId>
         <version>8.4.0</version>

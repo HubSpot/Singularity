@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.stream.Collectors;
 
 import javax.inject.Singleton;
 
@@ -13,6 +14,7 @@ import org.apache.mesos.v1.Protos.AgentID;
 import org.apache.mesos.v1.Protos.TaskID;
 import org.apache.mesos.v1.Protos.TaskState;
 import org.apache.mesos.v1.Protos.TaskStatus;
+import org.apache.mesos.v1.scheduler.Protos.Call.Reconcile.Task;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,7 +37,7 @@ import com.hubspot.singularity.SingularityTaskStatusHolder;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.StateManager;
 import com.hubspot.singularity.data.TaskManager;
-import com.hubspot.singularity.mesos.SingularityDriver;
+import com.hubspot.singularity.mesos.SingularityMesosScheduler;
 import com.hubspot.singularity.sentry.SingularityExceptionNotifier;
 
 @Singleton
@@ -50,7 +52,7 @@ public class SingularityTaskReconciliation {
   private final SingularityConfiguration configuration;
   private final SingularityAbort abort;
   private final SingularityExceptionNotifier exceptionNotifier;
-  private final SingularityDriver singularityDriver;
+  private final SingularityMesosScheduler scheduler;
   private final StateManager stateManager;
 
   @Inject
@@ -61,7 +63,7 @@ public class SingularityTaskReconciliation {
                                        SingularityConfiguration configuration,
                                        @Named(SingularityMainModule.SERVER_ID_PROPERTY) String serverId,
                                        SingularityAbort abort,
-                                       SingularityDriver singularityDriver) {
+                                       SingularityMesosScheduler scheduler) {
     this.taskManager = taskManager;
     this.stateManager = stateManager;
     this.serverId = serverId;
@@ -69,7 +71,7 @@ public class SingularityTaskReconciliation {
     this.exceptionNotifier = exceptionNotifier;
     this.configuration = configuration;
     this.abort = abort;
-    this.singularityDriver = singularityDriver;
+    this.scheduler = scheduler;
 
     this.isRunningReconciliation = new AtomicBoolean(false);
     this.executorService = executorServiceFactory.get(getClass().getSimpleName());
@@ -92,8 +94,8 @@ public class SingularityTaskReconciliation {
       return ReconciliationState.ALREADY_RUNNING;
     }
 
-    if (!singularityDriver.isActive()) {
-      LOG.trace("Not running reconciliation - no active schedulerDriver present");
+    if (!scheduler.isRunning()) {
+      LOG.trace("Not running reconciliation - no active scheduler present");
       isRunningReconciliation.set(false);
       return ReconciliationState.NO_DRIVER;
     }
@@ -102,7 +104,7 @@ public class SingularityTaskReconciliation {
 
     LOG.info("Starting a reconciliation cycle - {} current active tasks", activeTaskIds.size());
 
-    singularityDriver.reconcileTasks(Collections.emptyList());
+    scheduler.reconcile(Collections.emptyList());
 
     scheduleReconciliationCheck(taskReconciliationStartedAt, activeTaskIds, 0, new Histogram(new UniformReservoir()));
 
@@ -167,7 +169,7 @@ public class SingularityTaskReconciliation {
 
     LOG.info("Requesting reconciliation of {} taskStatuses, task reconciliation has been running for {}", taskStatuses.size(), JavaUtils.duration(reconciliationStart));
 
-    singularityDriver.reconcileTasks(taskStatuses);
+    scheduler.reconcile(taskStatuses.stream().map((t) -> Task.newBuilder().setTaskId(t.getTaskId()).setAgentId(t.getAgentId()).build()).collect(Collectors.toList()));
 
     scheduleReconciliationCheck(reconciliationStart, remainingTaskIds, numTimes, histogram);
   }

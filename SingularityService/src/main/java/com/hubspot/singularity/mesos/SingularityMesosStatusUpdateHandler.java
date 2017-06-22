@@ -56,7 +56,7 @@ public class SingularityMesosStatusUpdateHandler {
   private final SingularityScheduler scheduler;
   private final Provider<SingularitySchedulerStateCache> stateCacheProvider;
   private final String serverId;
-  private final SingularityDriver singularityDriver;
+  private final SingularityMesosScheduler mesosScheduler;
   private final SingularitySchedulerLock schedulerLock;
   private final SingularityConfiguration configuration;
   private final Multiset<Protos.TaskStatus.Reason> taskLostReasons;
@@ -76,7 +76,7 @@ public class SingularityMesosStatusUpdateHandler {
                                              SingularityScheduler scheduler,
                                              Provider<SingularitySchedulerStateCache> stateCacheProvider,
                                              @Named(SingularityMainModule.SERVER_ID_PROPERTY) String serverId,
-                                             SingularityDriver singularityDriver,
+                                             SingularityMesosScheduler mesosScheduler,
                                              SingularitySchedulerLock schedulerLock,
                                              SingularityConfiguration configuration,
                                              @Named(SingularityMesosModule.TASK_LOST_REASONS_COUNTER) Multiset<Protos.TaskStatus.Reason> taskLostReasons,
@@ -94,7 +94,7 @@ public class SingularityMesosStatusUpdateHandler {
     this.scheduler = scheduler;
     this.stateCacheProvider = stateCacheProvider;
     this.serverId = serverId;
-    this.singularityDriver = singularityDriver;
+    this.mesosScheduler = mesosScheduler;
     this.schedulerLock = schedulerLock;
     this.configuration = configuration;
     this.taskLostReasons = taskLostReasons;
@@ -155,15 +155,6 @@ public class SingularityMesosStatusUpdateHandler {
     }
 
     return Optional.absent();
-  }
-
-  private SingularityDriver getSchedulerDriver() {
-    if (!singularityDriver.isActive()) {
-      throw new RuntimeException("scheduler driver not active!");
-      // TODO: how best to handle?
-    }
-
-    return singularityDriver;
   }
 
   private void unsafeProcessStatusUpdate(Protos.TaskStatus status) {
@@ -256,7 +247,7 @@ public class SingularityMesosStatusUpdateHandler {
     }
 
     saveNewTaskStatusHolder(taskIdObj, newTaskStatusHolder, taskState);
-    singularityDriver.acknowledge(status);
+    mesosScheduler.acknowledge(status.getAgentId(), status.getTaskId(), status.getUuid());
   }
 
   @Timed
