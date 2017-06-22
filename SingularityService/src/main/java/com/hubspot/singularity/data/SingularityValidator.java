@@ -95,6 +95,7 @@ public class SingularityValidator {
   private final int defaultHealthcehckMaxRetries;
   private final int defaultHealthcheckResponseTimeoutSeconds;
   private final int maxDecommissioningSlaves;
+  private final int maxRunNowTaskLaunchDelayDays;
   private final boolean spreadAllSlavesEnabled;
   private final boolean allowRequestsWithoutOwners;
   private final boolean createDeployIds;
@@ -107,7 +108,6 @@ public class SingularityValidator {
   private final PriorityManager priorityManager;
   private final DisasterManager disasterManager;
   private final SlaveManager slaveManager;
-  private final SingularityConfiguration singularityConfiguration;
 
   @Inject
   public SingularityValidator(
@@ -116,8 +116,7 @@ public class SingularityValidator {
       PriorityManager priorityManager,
       DisasterManager disasterManager,
       SlaveManager slaveManager,
-      UIConfiguration uiConfiguration,
-      SingularityConfiguration singularityConfiguration
+      UIConfiguration uiConfiguration
   ) {
     this.maxDeployIdSize = configuration.getMaxDeployIdSize();
     this.maxRequestIdSize = configuration.getMaxRequestIdSize();
@@ -125,6 +124,7 @@ public class SingularityValidator {
     this.allowRequestsWithoutOwners = configuration.isAllowRequestsWithoutOwners();
     this.createDeployIds = configuration.isCreateDeployIds();
     this.deployIdLength = configuration.getDeployIdLength();
+    this.maxRunNowTaskLaunchDelayDays = configuration.getMaxRunNowTaskLaunchDelayDays();
     this.deployHistoryHelper = deployHistoryHelper;
     this.priorityManager = priorityManager;
 
@@ -159,7 +159,6 @@ public class SingularityValidator {
 
     this.disasterManager = disasterManager;
     this.slaveManager = slaveManager;
-    this.singularityConfiguration = singularityConfiguration;
   }
 
   public SingularityRequest checkSingularityRequest(SingularityRequest request, Optional<SingularityRequest> existingRequest, Optional<SingularityDeploy> activeDeploy,
@@ -327,7 +326,8 @@ public class SingularityValidator {
       int startupTime = options.getStartupTimeoutSeconds().or(defaultHealthcheckStartupTimeoutSeconds);
       int attempts = options.getMaxRetries().or(defaultHealthcehckMaxRetries) + 1;
 
-      checkBadRequest((startupTime + ((httpTimeoutSeconds + intervalSeconds) * attempts)) > maxTotalHealthcheckTimeoutSeconds.get(),
+      int totalHealthCheckTime = startupTime + ((httpTimeoutSeconds + intervalSeconds) * attempts);
+      checkBadRequest(totalHealthCheckTime < maxTotalHealthcheckTimeoutSeconds.get(),
         String.format("Max healthcheck time cannot be greater than %s, (was startup timeout: %s, interval: %s, attempts: %s)", maxTotalHealthcheckTimeoutSeconds.get(), startupTime, intervalSeconds, attempts));
     }
 
@@ -423,8 +423,8 @@ public class SingularityValidator {
       throw badRequest("Can not request an immediate run of a non-scheduled / always running request (%s)", request);
     }
 
-    if (runNowRequest.getRunAt().isPresent() && runNowRequest.getRunAt().get() > (System.currentTimeMillis() + TimeUnit.DAYS.toMillis(singularityConfiguration.getMaxRunNowTaskLaunchDelayDays()))) {
-      throw badRequest("Task launch delay can be at most %d days from now.", singularityConfiguration.getMaxRunNowTaskLaunchDelayDays());
+    if (runNowRequest.getRunAt().isPresent() && runNowRequest.getRunAt().get() > (System.currentTimeMillis() + TimeUnit.DAYS.toMillis(maxRunNowTaskLaunchDelayDays))) {
+      throw badRequest("Task launch delay can be at most %d days from now.", maxRunNowTaskLaunchDelayDays);
     }
 
     return new SingularityPendingRequest(
