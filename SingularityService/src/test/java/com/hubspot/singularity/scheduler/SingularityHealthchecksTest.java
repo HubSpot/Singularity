@@ -223,7 +223,7 @@ public class SingularityHealthchecksTest extends SingularitySchedulerTestBase {
     HealthcheckOptions options =  new HealthcheckOptionsBuilder("http://uri").setMaxRetries(Optional.of(1)).build();
     SingularityDeployBuilder db = new SingularityDeployBuilder(requestId, deployId).setHealthcheck(Optional.of(options));
 
-    SingularityDeploy deploy = initAndFinishDeploy(request, db);
+    SingularityDeploy deploy = initAndFinishDeploy(request, db, Optional.absent());
 
     SingularityTask task = launchTask(request, deploy, System.currentTimeMillis(), 1, TaskState.TASK_RUNNING);
 
@@ -371,7 +371,7 @@ public class SingularityHealthchecksTest extends SingularitySchedulerTestBase {
       HealthcheckOptions options = new HealthcheckOptionsBuilder("http://uri").setPortIndex(Optional.of(1)).build();
       firstDeploy = initAndFinishDeploy(request, new SingularityDeployBuilder(request.getId(), firstDeployId)
         .setCommand(Optional.of("sleep 100")).setResources(Optional.of(new Resources(1, 64, 3, 0)))
-        .setHealthcheck(Optional.of(options)));
+        .setHealthcheck(Optional.of(options)), Optional.absent());
 
       requestResource.postRequest(request.toBuilder().setInstances(Optional.of(2)).build());
       scheduler.drainPendingQueue(stateCacheProvider.get());
@@ -404,7 +404,7 @@ public class SingularityHealthchecksTest extends SingularitySchedulerTestBase {
       HealthcheckOptions options = new HealthcheckOptionsBuilder("http://uri").setPortNumber(Optional.of(81L)).build();
       firstDeploy = initAndFinishDeploy(request, new SingularityDeployBuilder(request.getId(), firstDeployId)
         .setCommand(Optional.of("sleep 100")).setResources(Optional.of(new Resources(1, 64, 3, 0)))
-        .setHealthcheck(Optional.of(options)));
+        .setHealthcheck(Optional.of(options)), Optional.absent());
 
       requestResource.postRequest(request.toBuilder().setInstances(Optional.of(2)).build());
       scheduler.drainPendingQueue(stateCacheProvider.get());

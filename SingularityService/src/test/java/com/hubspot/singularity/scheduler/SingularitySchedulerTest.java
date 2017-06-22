@@ -1638,7 +1638,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     final SingularityDeployBuilder deployBuilder = dockerDeployWithPorts(3);
 
     initRequest();
-    initAndFinishDeploy(request, deployBuilder);
+    initAndFinishDeploy(request, deployBuilder, Optional.absent());
     requestResource.postRequest(request.toBuilder().setInstances(Optional.of(2)).build());
     scheduler.drainPendingQueue(stateCacheProvider.get());
 
