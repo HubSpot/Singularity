@@ -202,8 +202,8 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
     RequestUtilization requestUtilization = utilizationPerRequestId.getOrDefault(task.getRequestId(), new RequestUtilization(task.getRequestId(), task.getDeployId()));
 
     for (int i = 0; i < pastTaskUsagesCopy.size(); i++) {
-      SingularityTaskUsage olderUsage = pastTaskUsages.get(i);
-      SingularityTaskUsage newerUsage = pastTaskUsages.get(i + 1);
+      SingularityTaskUsage olderUsage = pastTaskUsagesCopy.get(i);
+      SingularityTaskUsage newerUsage = pastTaskUsagesCopy.get(i + 1);
 
       double cpusUsed = (newerUsage.getCpuSeconds() - olderUsage.getCpuSeconds()) / (newerUsage.getTimestamp() - olderUsage.getTimestamp());
 
