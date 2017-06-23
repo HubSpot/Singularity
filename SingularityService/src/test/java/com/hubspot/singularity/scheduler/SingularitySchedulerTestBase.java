@@ -313,7 +313,7 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
         .setName("name")
         .build();
 
-    SingularityTask task = new SingularityTask(taskRequest, taskId, offer, taskInfo, Optional.of("rack1"));
+    SingularityTask task = new SingularityTask(taskRequest, taskId, Collections.singletonList(offer), taskInfo, Optional.of("rack1"));
 
     taskManager.savePendingTask(pendingTask);
 
@@ -337,7 +337,7 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
   protected void statusUpdate(SingularityTask task, TaskState state, Optional<Long> timestamp) {
     TaskStatus.Builder bldr = TaskStatus.newBuilder()
         .setTaskId(task.getMesosTask().getTaskId())
-        .setAgentId(task.getOffer().getAgentId())
+        .setAgentId(task.getAgentId())
         .setState(state);
 
     if (timestamp.isPresent()) {

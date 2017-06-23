@@ -147,11 +147,11 @@ public abstract class SingularityMesosScheduler {
   public abstract void killAndRecord(SingularityTaskId taskId, Optional<RequestCleanupType> requestCleanupType, Optional<TaskCleanupType> taskCleanupType, Optional<Long> originalTimestamp, Optional<Integer> retries, Optional<String> user);
 
   public void killAndRecord(SingularityTaskId taskId, RequestCleanupType requestCleanupType, Optional<String> user) {
-    killAndRecord(taskId, Optional.of(requestCleanupType), Optional.<TaskCleanupType> absent(), Optional.<Long> absent(), Optional.<Integer> absent(), user);
+    killAndRecord(taskId, Optional.of(requestCleanupType), Optional.absent(), Optional.absent(), Optional.absent(), user);
   }
 
   public void killAndRecord(SingularityTaskId taskId, TaskCleanupType taskCleanupType, Optional<String> user) {
-    killAndRecord(taskId, Optional.<RequestCleanupType> absent(), Optional.of(taskCleanupType), Optional.<Long> absent(), Optional.<Integer> absent(), user);
+    killAndRecord(taskId, Optional.absent(), Optional.of(taskCleanupType), Optional.absent(), Optional.absent(), user);
   }
 
   public abstract Optional<Long> getLastOfferTimestamp();

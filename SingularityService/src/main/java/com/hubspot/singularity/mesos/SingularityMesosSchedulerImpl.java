@@ -160,7 +160,6 @@ public class SingularityMesosSchedulerImpl extends SingularityMesosScheduler {
     callWithLock(() -> {
       final long start = System.currentTimeMillis();
       LOG.info("Received {} offer(s)", offers.size());
-      lastOfferTimestamp = Optional.of(System.currentTimeMillis());
       boolean delclineImmediately = false;
       if (disasterManager.isDisabled(SingularityAction.PROCESS_OFFERS)) {
         LOG.info("Processing offers is currently disabled, declining {} offers", offers.size());
@@ -184,12 +183,11 @@ public class SingularityMesosSchedulerImpl extends SingularityMesosScheduler {
         }
       }
 
-      List<Protos.Offer> offersToCheck = new ArrayList<>(offers);
+      List<Offer> offersToCheck = new ArrayList<>(offers);
 
       for (Offer offer : offers) {
         String rolesInfo = MesosUtils.getRoles(offer).toString();
-        LOG.debug("Received offer ID {} with roles {} from {} ({}) for {} cpu(s), {} memory, {} ports, and {} disk", offer.getId().getValue(), rolesInfo, offer.getHostname(), offer.getAgentId()
-                .getValue(), MesosUtils.getNumCpus(offer), MesosUtils.getMemory(offer),
+        LOG.debug("Received offer ID {} with roles {} from {} ({}) for {} cpu(s), {} memory, {} ports, and {} disk", offer.getId().getValue(), rolesInfo, offer.getHostname(), offer.getAgentId().getValue(), MesosUtils.getNumCpus(offer), MesosUtils.getMemory(offer),
             MesosUtils.getNumPorts(offer), MesosUtils.getDisk(offer));
 
         CheckResult checkResult = slaveAndRackManager.checkOffer(offer);
@@ -207,23 +205,26 @@ public class SingularityMesosSchedulerImpl extends SingularityMesosScheduler {
 
         for (SingularityOfferHolder offerHolder : offerHolders) {
           if (!offerHolder.getAcceptedTasks().isEmpty()) {
-            offerHolder.launchTasks(mesosSchedulerClient);
+            List<Offer> leftoverOffers = offerHolder.launchTasksAndGetUnusedOffers(mesosSchedulerClient);
 
-            acceptedOffers.add(offerHolder.getOffer().getId());
+            leftoverOffers.forEach((o) -> {
+              offerCache.cacheOffer(start, o);
+            });
+
+            List<Offer> offersAcceptedFromSlave = offerHolder.getOffers();
+            offersAcceptedFromSlave.removeAll(leftoverOffers);
+            acceptedOffers.addAll(offersAcceptedFromSlave.stream().map(Offer::getId).collect(Collectors.toList()));
           } else {
-            offerCache.cacheOffer(start, offerHolder.getOffer());
+            offerHolder.getOffers().forEach((o) -> offerCache.cacheOffer(start, o));
           }
         }
       } catch (Throwable t) {
         LOG.error("Received fatal error while handling offers - will decline all available offers", t);
 
-        for (Protos.Offer offer : offersToCheck) {
-          if (acceptedOffers.contains(offer.getId())) {
-            continue;
-          }
-
-          mesosSchedulerClient.decline(Collections.singletonList(offer.getId()));
-        }
+        mesosSchedulerClient.decline(offersToCheck.stream()
+        .filter((o) -> !acceptedOffers.contains(o.getId()))
+        .map(Offer::getId)
+        .collect(Collectors.toList()));
 
         throw t;
       }

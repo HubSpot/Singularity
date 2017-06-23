@@ -186,7 +186,7 @@ public class MailTemplateHelpers {
       return Optional.absent();
     }
 
-    final String slaveHostname = task.get().getOffer().getHostname();
+    final String slaveHostname = task.get().getHostname();
 
     final String fullPath = String.format("%s/%s", directory.get(), filename);
 
