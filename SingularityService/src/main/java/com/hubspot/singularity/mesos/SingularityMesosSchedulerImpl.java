@@ -125,14 +125,14 @@ public class SingularityMesosSchedulerImpl extends SingularityMesosScheduler {
     this.queuedUpdates = Lists.newArrayList();
     this.lock = lock;
     this.stateLock = new ReentrantLock();
-    this.state = SchedulerState.STARTUP;
+    this.state = SchedulerState.NOT_STARTED;
     this.configuration = configuration;
   }
 
   @Override
   public void subscribed(Subscribed subscribed) {
     callWithLock(() -> {
-      Preconditions.checkState(state == SchedulerState.STARTUP, "Asked to startup - but in invalid state: %s", state.name());
+      Preconditions.checkState(state == SchedulerState.NOT_STARTED, "Asked to startup - but in invalid state: %s", state.name());
 
       leaderCacheCoordinator.activateLeaderCache();
       MasterInfo newMasterInfo = subscribed.getMasterInfo();

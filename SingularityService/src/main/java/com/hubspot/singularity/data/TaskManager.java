@@ -94,7 +94,7 @@ public class TaskManager extends CuratorAsyncManager {
 
   private static final String HEALTHCHECKS_PATH = "/healthchecks";
   private static final String HEALTHCHECKS_FINISHED_PATH = "/healthchecks-finished";
-  private static final String STARTUP_HEALTHCHECK_PATH_SUFFIX = "-STARTUP";
+  private static final String STARTUP_HEALTHCHECK_PATH_SUFFIX = "-NOT_STARTED";
 
   private static final String METADATA_PATH = "/metadata";
   private static final String UPDATES_PATH = "/updates";

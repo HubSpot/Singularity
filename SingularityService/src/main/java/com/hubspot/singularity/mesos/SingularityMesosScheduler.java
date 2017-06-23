@@ -17,7 +17,7 @@ import com.hubspot.singularity.TaskCleanupType;
 public abstract class SingularityMesosScheduler {
 
   public enum SchedulerState {
-    STARTUP, SUBSCRIBED, STOPPED;
+    NOT_STARTED, SUBSCRIBED, STOPPED;
   }
 
   /**

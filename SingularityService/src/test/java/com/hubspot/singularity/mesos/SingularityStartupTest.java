@@ -157,7 +157,7 @@ public class SingularityStartupTest extends SingularitySchedulerTestBase {
 
     startup.checkSchedulerForInconsistentState();
 
-    // assert that SingularityStartup does not enqueue a SingularityPendingRequest (pendingType=STARTUP) for the RUN_ONCE request
+    // assert that SingularityStartup does not enqueue a SingularityPendingRequest (pendingType=NOT_STARTED) for the RUN_ONCE request
     Assert.assertTrue(requestManager.getPendingRequests().isEmpty());
   }
 }
