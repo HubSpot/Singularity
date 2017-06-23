@@ -18,7 +18,7 @@ public class SingularityClusterUtilization {
 
   private final double avgUnderUtilizedCpu;
   private final double avgOverUtilizedCpu;
-  private final double avgUnderUtilizedMemBytes;
+  private final long avgUnderUtilizedMemBytes;
 
   private final double maxUnderUtilizedCpu;
   private final double maxOverUtilizedCpu;
@@ -46,7 +46,7 @@ public class SingularityClusterUtilization {
                                        @JsonProperty("totalUnderUtilizedMemBytes") long totalUnderUtilizedMemBytes,
                                        @JsonProperty("avgUnderUtilizedCpu") double avgUnderUtilizedCpu,
                                        @JsonProperty("avgOverUtilizedCpu") double avgOverUtilizedCpu,
-                                       @JsonProperty("avgUnderUtilizedMemBytes") double avgUnderUtilizedMemBytes,
+                                       @JsonProperty("avgUnderUtilizedMemBytes") long avgUnderUtilizedMemBytes,
                                        @JsonProperty("maxUnderUtilizedCpu") double maxUnderUtilizedCpu,
                                        @JsonProperty("maxOverUtilizedCpu") double maxOverUtilizedCpu,
                                        @JsonProperty("maxUnderUtilizedMemBytes") long maxUnderUtilizedMemBytes,
@@ -117,7 +117,7 @@ public class SingularityClusterUtilization {
     return avgOverUtilizedCpu;
   }
 
-  public double getAvgUnderUtilizedMemBytes() {
+  public long getAvgUnderUtilizedMemBytes() {
     return avgUnderUtilizedMemBytes;
   }
 
