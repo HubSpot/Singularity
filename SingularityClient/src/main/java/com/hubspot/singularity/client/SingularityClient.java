@@ -566,24 +566,10 @@ public class SingularityClient {
     return Optional.of(response.getAs(SingularityTaskReconciliationStatistics.class));
   }
 
-  public SingularityClusterUtilization getClusterUtilization() {
+  public Optional<SingularityClusterUtilization> getClusterUtilization() {
     final String uri = String.format(CLUSTER_UTILIZATION_FORMAT, getApiBase());
 
-    LOG.info("Fetch cluster utilization statistics from {}", uri);
-
-    final long start = System.currentTimeMillis();
-
-    HttpRequest.Builder request = HttpRequest.newBuilder().setUrl(uri);
-
-    addCredentials(request);
-
-    HttpResponse response = httpClient.execute(request.build());
-
-    checkResponse("cluster utilization statistics", response);
-
-    LOG.info("Got cluster utilization statistics in {}ms", System.currentTimeMillis() - start);
-
-    return response.getAs(SingularityClusterUtilization.class);
+    return getSingle(uri, "clusterUtilization", "", SingularityClusterUtilization.class);
   }
 
   //
