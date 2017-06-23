@@ -1,11 +1,9 @@
 package com.hubspot.singularity.mesos;
 
-import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.Lock;
@@ -17,8 +15,6 @@ import javax.inject.Singleton;
 import org.apache.mesos.v1.Protos;
 import org.apache.mesos.v1.Protos.AgentID;
 import org.apache.mesos.v1.Protos.ExecutorID;
-import org.apache.mesos.v1.Protos.FrameworkID;
-import org.apache.mesos.v1.Protos.FrameworkInfo;
 import org.apache.mesos.v1.Protos.InverseOffer;
 import org.apache.mesos.v1.Protos.MasterInfo;
 import org.apache.mesos.v1.Protos.Offer;
@@ -50,14 +46,11 @@ import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskDestroyFrameworkMessage;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.TaskCleanupType;
-import com.hubspot.singularity.config.MesosConfiguration;
 import com.hubspot.singularity.config.SingularityConfiguration;
-import com.hubspot.singularity.config.UIConfiguration;
 import com.hubspot.singularity.data.DisasterManager;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.data.transcoders.Transcoder;
 import com.hubspot.singularity.mesos.SingularitySlaveAndRackManager.CheckResult;
-import com.hubspot.singularity.resources.UiResource;
 import com.hubspot.singularity.scheduler.SingularityLeaderCacheCoordinator;
 import com.hubspot.singularity.sentry.SingularityExceptionNotifier;
 
@@ -83,22 +76,16 @@ public class SingularityMesosSchedulerImpl extends SingularityMesosScheduler {
   private final long delayWhenDeltaOverMs;
   private final AtomicLong statusUpdateDeltaAvg;
   private final SingularityConfiguration configuration;
-  private final MesosConfiguration mesosConfiguration;
-  private final String singularityUriBase;
   private final TaskManager taskManager;
   private final Transcoder<SingularityTaskDestroyFrameworkMessage> transcoder;
 
   private final Lock stateLock;
-
   private final SingularitySchedulerLock lock;
 
   private volatile SchedulerState state;
   private Optional<Long> lastOfferTimestamp = Optional.absent();
 
-  private final AtomicBoolean connected = new AtomicBoolean(false);
   private final AtomicReference<MasterInfo> masterInfo = new AtomicReference<>();
-
-
   private final List<TaskStatus> queuedUpdates;
 
   @Inject
@@ -117,8 +104,7 @@ public class SingularityMesosSchedulerImpl extends SingularityMesosScheduler {
                             SingularityConfiguration configuration,
                             TaskManager taskManager,
                             Transcoder<SingularityTaskDestroyFrameworkMessage> transcoder,
-                            @Named(SingularityMainModule.STATUS_UPDATE_DELTA_30S_AVERAGE) AtomicLong statusUpdateDeltaAvg,
-                            @Named(SingularityMainModule.SINGULARITY_URI_BASE) final String singularityUriBase) {
+                            @Named(SingularityMainModule.STATUS_UPDATE_DELTA_30S_AVERAGE) AtomicLong statusUpdateDeltaAvg) {
     this.exceptionNotifier = exceptionNotifier;
     this.startup = startup;
     this.abort = abort;
@@ -140,8 +126,6 @@ public class SingularityMesosSchedulerImpl extends SingularityMesosScheduler {
     this.lock = lock;
     this.stateLock = new ReentrantLock();
     this.state = SchedulerState.STARTUP;
-    this.singularityUriBase = singularityUriBase;
-    this.mesosConfiguration = configuration.getMesosConfiguration();
     this.configuration = configuration;
   }
 
@@ -323,41 +307,8 @@ public class SingularityMesosSchedulerImpl extends SingularityMesosScheduler {
     LOG.debug("Heartbeat from mesos");
   }
 
-  private FrameworkInfo buildFrameworkInfo() {
-    final FrameworkInfo.Builder frameworkInfoBuilder = FrameworkInfo.newBuilder()
-        .setCheckpoint(mesosConfiguration.isCheckpoint())
-        .setFailoverTimeout(mesosConfiguration.getFrameworkFailoverTimeout())
-        .setName(mesosConfiguration.getFrameworkName())
-        .setId(FrameworkID.newBuilder().setValue(mesosConfiguration.getFrameworkId()))
-        .setUser(mesosConfiguration.getFrameworkUser()); // https://issues.apache.org/jira/browse/MESOS-3747
-
-    if (configuration.getHostname().isPresent()) {
-      frameworkInfoBuilder.setHostname(configuration.getHostname().get());
-    }
-
-    // only set the web UI URL if it's fully qualified
-    if (singularityUriBase.startsWith("http://") || singularityUriBase.startsWith("https://")) {
-      if (configuration.getUiConfiguration().getRootUrlMode() == UIConfiguration.RootUrlMode.INDEX_CATCHALL) {
-        frameworkInfoBuilder.setWebuiUrl(singularityUriBase);
-      } else {
-        frameworkInfoBuilder.setWebuiUrl(singularityUriBase + UiResource.UI_RESOURCE_LOCATION);
-      }
-    }
-
-    if (mesosConfiguration.getFrameworkRole().isPresent()) {
-      frameworkInfoBuilder.setRole(mesosConfiguration.getFrameworkRole().get());
-    }
-
-    return frameworkInfoBuilder.build();
-  }
-
   public void start() throws Exception {
-    String masterURI = configuration.getMesosConfiguration().getMaster();
-    // check for old format to help make things 'just work'
-    if (masterURI.contains("zk:")) {
-      throw new IllegalArgumentException(String.format("Must use master address for http api (e.g. http://localhost:5050/api/v1/scheduler) was %s", masterURI));
-    }
-    mesosSchedulerClient.subscribe(URI.create(masterURI), buildFrameworkInfo(), this);
+    mesosSchedulerClient.subscribe(configuration.getMesosConfiguration().getMaster(), this);
   }
 
   private void callWithLock(Runnable function, String name) {
@@ -365,10 +316,6 @@ public class SingularityMesosSchedulerImpl extends SingularityMesosScheduler {
   }
 
   private void callWithLock(Runnable function, String name, boolean ignoreIfNotRunning) {
-    if (!connected.get()) {
-      // This should never happen
-      LOG.warn("Attempted to process message, but not connected");
-    }
     if (ignoreIfNotRunning && !isRunning()) {
       LOG.info("Ignoring {} because scheduler isn't running ({})", name, state);
       return;
@@ -416,10 +363,6 @@ public class SingularityMesosSchedulerImpl extends SingularityMesosScheduler {
   public void slaveLost(Protos.AgentID slaveId) {
     LOG.warn("Lost a slave {}", slaveId);
     slaveAndRackManager.slaveLost(slaveId);
-  }
-
-  public boolean isConnected() {
-    return connected.get();
   }
 
   public Optional<Long> getLastOfferTimestamp() {

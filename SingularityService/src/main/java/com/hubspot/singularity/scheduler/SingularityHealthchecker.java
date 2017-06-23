@@ -39,7 +39,6 @@ import com.ning.http.client.AsyncHttpClient;
 import com.ning.http.client.PerRequestConfig;
 import com.ning.http.client.RequestBuilder;
 
-@SuppressWarnings("deprecation")
 @Singleton
 public class SingularityHealthchecker {
   private static final HealthcheckProtocol DEFAULT_HEALTH_CHECK_SCHEME = HealthcheckProtocol.HTTP;

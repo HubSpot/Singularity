@@ -30,7 +30,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.inject.Inject;
+import com.google.inject.name.Named;
 import com.google.protobuf.ByteString;
+import com.hubspot.singularity.SingularityMainModule;
+import com.hubspot.singularity.config.MesosConfiguration;
+import com.hubspot.singularity.config.SingularityConfiguration;
+import com.hubspot.singularity.config.UIConfiguration;
+import com.hubspot.singularity.resources.UiResource;
 import com.mesosphere.mesos.rx.java.AwaitableSubscription;
 import com.mesosphere.mesos.rx.java.MesosClientBuilder;
 import com.mesosphere.mesos.rx.java.SinkOperation;
@@ -51,16 +57,21 @@ import rx.subjects.SerializedSubject;
 public class SingularityMesosSchedulerClient {
   private static final Logger log = LoggerFactory.getLogger(SingularityMesosSchedulerClient.class);
 
+  private final SingularityConfiguration configuration;
+  private final MesosConfiguration mesosConfiguration;
+  private final String singularityUriBase;
+
   private SerializedSubject<Optional<SinkOperation<Call>>, Optional<SinkOperation<Call>>> publisher;
-
   private FrameworkID frameworkId;
-
   private AwaitableSubscription openStream;
-
   private Thread subscriberThread;
 
   @Inject
-  public SingularityMesosSchedulerClient() {}
+  public SingularityMesosSchedulerClient(SingularityConfiguration configuration, @Named(SingularityMainModule.SINGULARITY_URI_BASE) final String singularityUriBase) {
+    this.configuration = configuration;
+    this.mesosConfiguration = configuration.getMesosConfiguration();
+    this.singularityUriBase = singularityUriBase;
+  }
 
   /**
    * The first call to mesos, needed to setup connection properly and identify
@@ -68,7 +79,13 @@ public class SingularityMesosSchedulerClient {
    *
    * @throws URISyntaxException if the URL provided was not a syntactically correct URL.
    */
-  public void subscribe(URI mesosMasterURI, FrameworkInfo frameworkInfo, SingularityMesosScheduler scheduler) throws URISyntaxException {
+  public void subscribe(String mesosMasterURI, SingularityMesosScheduler scheduler) throws URISyntaxException {
+
+    FrameworkInfo frameworkInfo = buildFrameworkInfo();
+
+    if (mesosMasterURI == null || mesosMasterURI.contains("zk:")) {
+      throw new IllegalArgumentException(String.format("Must use master address for http api (e.g. http://localhost:5050/api/v1/scheduler) was %s", mesosMasterURI));
+    }
 
     if (openStream == null || openStream.isUnsubscribed()) {
 
@@ -80,7 +97,7 @@ public class SingularityMesosSchedulerClient {
       subscriberThread = new Thread() {
         public void run() {
           try {
-            connect(mesosMasterURI, frameworkInfo, scheduler);
+            connect(URI.create(mesosMasterURI), frameworkInfo, scheduler);
           } catch (URISyntaxException e) {
             log.error("Could not connect: ", e);
           }
@@ -89,6 +106,34 @@ public class SingularityMesosSchedulerClient {
       };
       subscriberThread.start();
     }
+  }
+
+  private FrameworkInfo buildFrameworkInfo() {
+    final FrameworkInfo.Builder frameworkInfoBuilder = FrameworkInfo.newBuilder()
+        .setCheckpoint(mesosConfiguration.isCheckpoint())
+        .setFailoverTimeout(mesosConfiguration.getFrameworkFailoverTimeout())
+        .setName(mesosConfiguration.getFrameworkName())
+        .setId(FrameworkID.newBuilder().setValue(mesosConfiguration.getFrameworkId()))
+        .setUser(mesosConfiguration.getFrameworkUser()); // https://issues.apache.org/jira/browse/MESOS-3747
+
+    if (configuration.getHostname().isPresent()) {
+      frameworkInfoBuilder.setHostname(configuration.getHostname().get());
+    }
+
+    // only set the web UI URL if it's fully qualified
+    if (singularityUriBase.startsWith("http://") || singularityUriBase.startsWith("https://")) {
+      if (configuration.getUiConfiguration().getRootUrlMode() == UIConfiguration.RootUrlMode.INDEX_CATCHALL) {
+        frameworkInfoBuilder.setWebuiUrl(singularityUriBase);
+      } else {
+        frameworkInfoBuilder.setWebuiUrl(singularityUriBase + UiResource.UI_RESOURCE_LOCATION);
+      }
+    }
+
+    if (mesosConfiguration.getFrameworkRole().isPresent()) {
+      frameworkInfoBuilder.setRole(mesosConfiguration.getFrameworkRole().get());
+    }
+
+    return frameworkInfoBuilder.build();
   }
 
   /**
