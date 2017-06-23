@@ -65,6 +65,7 @@ import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTaskIdHistory;
 import com.hubspot.singularity.SingularityTaskReconciliationStatistics;
 import com.hubspot.singularity.SingularityTaskRequest;
+import com.hubspot.singularity.SingularityTaskState;
 import com.hubspot.singularity.SingularityUpdatePendingDeployRequest;
 import com.hubspot.singularity.SingularityWebhook;
 import com.hubspot.singularity.api.SingularityBounceRequest;
@@ -84,34 +85,36 @@ public class SingularityClient {
 
   private static final Logger LOG = LoggerFactory.getLogger(SingularityClient.class);
 
-  private static final String AUTH_CHECK_FORMAT = "http://%s/%s/auth/%s/auth-check/%s";
+  private static final String BASE_API_FORMAT = "%s://%s/%s";
 
-  private static final String STATE_FORMAT = "http://%s/%s/state";
+  private static final String AUTH_CHECK_FORMAT = "%s/auth/%s/auth-check/%s";
+
+  private static final String STATE_FORMAT = "%s/state";
   private static final String TASK_RECONCILIATION_FORMAT = STATE_FORMAT + "/task-reconciliation";
 
-  private static final String RACKS_FORMAT = "http://%s/%s/racks";
+  private static final String RACKS_FORMAT = "%s/racks";
   private static final String RACKS_DECOMISSION_FORMAT = RACKS_FORMAT + "/rack/%s/decommission";
   private static final String RACKS_FREEZE_FORMAT = RACKS_FORMAT + "/rack/%s/freeze";
   private static final String RACKS_ACTIVATE_FORMAT = RACKS_FORMAT + "/rack/%s/activate";
   private static final String RACKS_DELETE_FORMAT = RACKS_FORMAT + "/rack/%s";
 
-  private static final String SLAVES_FORMAT = "http://%s/%s/slaves";
+  private static final String SLAVES_FORMAT = "%s/slaves";
   private static final String SLAVE_DETAIL_FORMAT = SLAVES_FORMAT + "/slave/%s/details";
   private static final String SLAVES_DECOMISSION_FORMAT = SLAVES_FORMAT + "/slave/%s/decommission";
   private static final String SLAVES_FREEZE_FORMAT = SLAVES_FORMAT + "/slave/%s/freeze";
   private static final String SLAVES_ACTIVATE_FORMAT = SLAVES_FORMAT + "/slave/%s/activate";
   private static final String SLAVES_DELETE_FORMAT = SLAVES_FORMAT + "/slave/%s";
 
-  private static final String INACTIVE_SLAVES_FORMAT = "http://%s/%s/inactive";
+  private static final String INACTIVE_SLAVES_FORMAT = "%s/inactive";
 
-  private static final String TASKS_FORMAT = "http://%s/%s/tasks";
+  private static final String TASKS_FORMAT = "%s/tasks";
   private static final String TASKS_KILL_TASK_FORMAT = TASKS_FORMAT + "/task/%s";
   private static final String TASKS_GET_ACTIVE_FORMAT = TASKS_FORMAT + "/active";
   private static final String TASKS_GET_ACTIVE_ON_SLAVE_FORMAT = TASKS_FORMAT + "/active/slave/%s";
   private static final String TASKS_GET_SCHEDULED_FORMAT = TASKS_FORMAT + "/scheduled";
   private static final String TASKS_GET_SCHEDULED_IDS_FORMAT = TASKS_GET_SCHEDULED_FORMAT + "/ids";
 
-  private static final String HISTORY_FORMAT = "http://%s/%s/history";
+  private static final String HISTORY_FORMAT = "%s/history";
   private static final String TASKS_HISTORY_FORMAT = HISTORY_FORMAT + "/tasks";
   private static final String TASKS_HISTORY_WITHMETADATA_FORMAT = HISTORY_FORMAT + "/tasks/withmetadata";
   private static final String TASK_HISTORY_FORMAT = HISTORY_FORMAT + "/task/%s";
@@ -121,14 +124,18 @@ public class SingularityClient {
   private static final String REQUEST_INACTIVE_TASKS_HISTORY_FORMAT = HISTORY_FORMAT + "/request/%s/tasks";
   private static final String REQUEST_DEPLOY_HISTORY_FORMAT = HISTORY_FORMAT + "/request/%s/deploy/%s";
 
-  private static final String REQUESTS_FORMAT = "http://%s/%s/requests";
+  private static final String TASK_TRACKER_FORMAT = "%s/track";
+  private static final String TRACK_BY_TASK_ID_FORMAT = TASK_TRACKER_FORMAT + "/task/%s";
+  private static final String TRACK_BY_RUN_ID_FORMAT = TASK_TRACKER_FORMAT + "/run/%s/%s";
+
+  private static final String REQUESTS_FORMAT = "%s/requests";
   private static final String REQUESTS_GET_ACTIVE_FORMAT = REQUESTS_FORMAT + "/active";
   private static final String REQUESTS_GET_PAUSED_FORMAT = REQUESTS_FORMAT + "/paused";
   private static final String REQUESTS_GET_COOLDOWN_FORMAT = REQUESTS_FORMAT + "/cooldown";
   private static final String REQUESTS_GET_PENDING_FORMAT = REQUESTS_FORMAT + "/queued/pending";
   private static final String REQUESTS_GET_CLEANUP_FORMAT = REQUESTS_FORMAT + "/queued/cleanup";
 
-  private static final String REQUEST_GROUPS_FORMAT = "http://%s/%s/groups";
+  private static final String REQUEST_GROUPS_FORMAT = "%s/groups";
   private static final String REQUEST_GROUP_FORMAT = REQUEST_GROUPS_FORMAT + "/group/%s";
 
   private static final String REQUEST_GET_FORMAT = REQUESTS_FORMAT + "/request/%s";
@@ -142,26 +149,26 @@ public class SingularityClient {
   private static final String REQUEST_RUN_FORMAT = REQUESTS_FORMAT + "/request/%s/run";
   private static final String REQUEST_EXIT_COOLDOWN_FORMAT = REQUESTS_FORMAT + "/request/%s/exit-cooldown";
 
-  private static final String DEPLOYS_FORMAT = "http://%s/%s/deploys";
+  private static final String DEPLOYS_FORMAT = "%s/deploys";
   private static final String DELETE_DEPLOY_FORMAT = DEPLOYS_FORMAT + "/deploy/%s/request/%s";
   private static final String UPDATE_DEPLOY_FORMAT = DEPLOYS_FORMAT + "/update";
 
-  private static final String WEBHOOKS_FORMAT = "http://%s/%s/webhooks";
+  private static final String WEBHOOKS_FORMAT = "%s/webhooks";
   private static final String WEBHOOKS_DELETE_FORMAT = WEBHOOKS_FORMAT;
   private static final String WEBHOOKS_GET_QUEUED_DEPLOY_UPDATES_FORMAT = WEBHOOKS_FORMAT + "/deploy";
   private static final String WEBHOOKS_GET_QUEUED_REQUEST_UPDATES_FORMAT = WEBHOOKS_FORMAT + "/request";
   private static final String WEBHOOKS_GET_QUEUED_TASK_UPDATES_FORMAT = WEBHOOKS_FORMAT + "/task";
 
-  private static final String SANDBOX_FORMAT = "http://%s/%s/sandbox";
+  private static final String SANDBOX_FORMAT = "%s/sandbox";
   private static final String SANDBOX_BROWSE_FORMAT = SANDBOX_FORMAT + "/%s/browse";
   private static final String SANDBOX_READ_FILE_FORMAT = SANDBOX_FORMAT + "/%s/read";
 
-  private static final String S3_LOG_FORMAT = "http://%s/%s/logs";
+  private static final String S3_LOG_FORMAT = "%s/logs";
   private static final String S3_LOG_GET_TASK_LOGS = S3_LOG_FORMAT + "/task/%s";
   private static final String S3_LOG_GET_REQUEST_LOGS = S3_LOG_FORMAT + "/request/%s";
   private static final String S3_LOG_GET_DEPLOY_LOGS = S3_LOG_FORMAT + "/request/%s/deploy/%s";
 
-  private static final String DISASTERS_FORMAT = "http://%s/%s/disasters";
+  private static final String DISASTERS_FORMAT = "%s/disasters";
   private static final String DISASTER_STATS_FORMAT = DISASTERS_FORMAT + "/stats";
   private static final String ACTIVE_DISASTERS_FORMAT = DISASTERS_FORMAT + "/active";
   private static final String DISABLE_AUTOMATED_ACTIONS_FORMAT = DISASTERS_FORMAT + "/disable";
@@ -170,7 +177,7 @@ public class SingularityClient {
   private static final String DISABLED_ACTIONS_FORMAT = DISASTERS_FORMAT + "/disabled-actions";
   private static final String DISABLED_ACTION_FORMAT = DISASTERS_FORMAT + "/disabled-actions/%s";
 
-  private static final String PRIORITY_FORMAT = "http://%s/%s/priority";
+  private static final String PRIORITY_FORMAT = "%s/priority";
   private static final String PRIORITY_FREEZE_FORMAT = PRIORITY_FORMAT + "/freeze";
 
   private static final TypeReference<Collection<SingularityRequestParent>> REQUESTS_COLLECTION = new TypeReference<Collection<SingularityRequestParent>>() {};
@@ -198,6 +205,7 @@ public class SingularityClient {
   private final Random random;
   private final Provider<List<String>> hostsProvider;
   private final String contextPath;
+  private final boolean ssl;
 
   private final HttpClient httpClient;
   private final Optional<SingularityClientCredentials> credentials;
@@ -209,10 +217,18 @@ public class SingularityClient {
   }
 
   public SingularityClient(String contextPath, HttpClient httpClient, List<String> hosts, Optional<SingularityClientCredentials> credentials) {
-    this(contextPath, httpClient, ProviderUtils.<List<String>>of(ImmutableList.copyOf(hosts)), credentials);
+    this(contextPath, httpClient, ProviderUtils.of(ImmutableList.copyOf(hosts)), credentials);
   }
 
   public SingularityClient(String contextPath, HttpClient httpClient, Provider<List<String>> hostsProvider, Optional<SingularityClientCredentials> credentials) {
+    this(contextPath, httpClient, hostsProvider, credentials, false);
+  }
+
+  public SingularityClient(String contextPath, HttpClient httpClient, List<String> hosts, Optional<SingularityClientCredentials> credentials, boolean ssl) {
+    this(contextPath, httpClient, ProviderUtils.of(ImmutableList.copyOf(hosts)), credentials, ssl);
+  }
+
+  public SingularityClient(String contextPath, HttpClient httpClient, Provider<List<String>> hostsProvider, Optional<SingularityClientCredentials> credentials, boolean ssl) {
     this.httpClient = httpClient;
     this.contextPath = contextPath;
 
@@ -220,12 +236,21 @@ public class SingularityClient {
     this.random = new Random();
 
     this.credentials = credentials;
+    this.ssl = ssl;
+  }
+
+  private String getApiBase() {
+    return String.format(BASE_API_FORMAT, ssl ? "https" : "http", getHost(), contextPath);
   }
 
   private String getHost() {
     final List<String> hosts = hostsProvider.get();
     return hosts.get(random.nextInt(hosts.size()));
   }
+
+  //
+  // HttpClient Methods
+  //
 
   private void checkResponse(String type, HttpResponse response) {
     if (response.isError()) {
@@ -254,7 +279,7 @@ public class SingularityClient {
   }
 
   private <T> Optional<T> getSingle(String uri, String type, String id, Class<T> clazz) {
-    return getSingleWithParams(uri, type, id, Optional.<Map<String, Object>>absent(), clazz);
+    return getSingleWithParams(uri, type, id, Optional.absent(), clazz);
   }
 
   private <T> Optional<T> getSingleWithParams(String uri, String type, String id, Optional<Map<String, Object>> queryParams, Class<T> clazz) {
@@ -304,7 +329,7 @@ public class SingularityClient {
   }
 
   private <T> Collection<T> getCollection(String uri, String type, TypeReference<Collection<T>> typeReference) {
-    return getCollectionWithParams(uri, type, Optional.<Map<String, Object>>absent(), typeReference);
+    return getCollectionWithParams(uri, type, Optional.absent(), typeReference);
   }
 
   private <T> Collection<T> getCollectionWithParams(String uri, String type, Optional<Map<String, Object>> queryParams, TypeReference<Collection<T>> typeReference) {
@@ -362,7 +387,7 @@ public class SingularityClient {
   }
 
   private <T> void delete(String uri, String type, String id, Optional<?> body) {
-    delete(uri, type, id, body, Optional.<Class<T>> absent());
+    delete(uri, type, id, body, Optional.<Class<T>>absent());
   }
 
   private <T> Optional<T> delete(String uri, String type, String id, Optional<?> body, Optional<Class<T>> clazz) {
@@ -487,7 +512,7 @@ public class SingularityClient {
   //
 
   public SingularityState getState(Optional<Boolean> skipCache, Optional<Boolean> includeRequestIds) {
-    final String uri = String.format(STATE_FORMAT, getHost(), contextPath);
+    final String uri = String.format(STATE_FORMAT, getApiBase());
 
     LOG.info("Fetching state from {}", uri);
 
@@ -514,7 +539,7 @@ public class SingularityClient {
   }
 
   public Optional<SingularityTaskReconciliationStatistics> getTaskReconciliationStatistics() {
-    final String uri = String.format(TASK_RECONCILIATION_FORMAT, getHost(), contextPath);
+    final String uri = String.format(TASK_RECONCILIATION_FORMAT, getApiBase());
 
     LOG.info("Fetch task reconciliation statistics from {}", uri);
 
@@ -542,13 +567,13 @@ public class SingularityClient {
   //
 
   public Optional<SingularityRequestParent> getSingularityRequest(String requestId) {
-    final String singularityApiRequestUri = String.format(REQUEST_GET_FORMAT, getHost(), contextPath, requestId);
+    final String singularityApiRequestUri = String.format(REQUEST_GET_FORMAT, getApiBase(), requestId);
 
     return getSingle(singularityApiRequestUri, "request", requestId, SingularityRequestParent.class);
   }
 
   public Optional<SingularityTaskId> getTaskByRunIdForRequest(String requestId, String runId) {
-    final String singularityApiRequestUri = String.format(REQUEST_BY_RUN_ID_FORMAT, getHost(), contextPath, requestId, runId);
+    final String singularityApiRequestUri = String.format(REQUEST_BY_RUN_ID_FORMAT, getApiBase(), requestId, runId);
 
     return getSingle(singularityApiRequestUri, "requestByRunId", runId, SingularityTaskId.class);
   }
@@ -556,51 +581,47 @@ public class SingularityClient {
   public void createOrUpdateSingularityRequest(SingularityRequest request) {
     checkNotNull(request.getId(), "A posted Singularity Request must have an id");
 
-    final String requestUri = String.format(REQUEST_CREATE_OR_UPDATE_FORMAT, getHost(), contextPath);
+    final String requestUri = String.format(REQUEST_CREATE_OR_UPDATE_FORMAT, getApiBase());
 
     post(requestUri, String.format("request %s", request.getId()), Optional.of(request));
   }
 
   /**
-   * Delete a singularity request .
-   * If the deletion is successful the deleted singularity request is returned.
+   * Delete a singularity request.
+   * If the deletion is successful the singularity request is moved to a DELETING state and is returned.
    * If the request to be deleted is not found {code Optional.absent()} is returned
    * If an error occurs during deletion an exception is returned
-   * If the singularity request to be deleted is paused the deletion will fail with an exception
-   * If you want to delete a paused singularity request use the provided {@link SingularityClient#deletePausedSingularityRequest}
    *
    * @param requestId
    *      the id of the singularity request to delete
-   * @param user
-   *      the ...
    * @return
-   *      the singularity request that was deleted
+   *      the singularity request that has been moved to deleting
    */
   public Optional<SingularityRequest> deleteSingularityRequest(String requestId, Optional<SingularityDeleteRequestRequest> deleteRequest) {
-    final String requestUri = String.format(REQUEST_DELETE_ACTIVE_FORMAT, getHost(), contextPath, requestId);
+    final String requestUri = String.format(REQUEST_DELETE_ACTIVE_FORMAT, getApiBase(), requestId);
 
     return delete(requestUri, "active request", requestId, deleteRequest, Optional.of(SingularityRequest.class));
   }
 
   public void pauseSingularityRequest(String requestId, Optional<SingularityPauseRequest> pauseRequest) {
-    final String requestUri = String.format(REQUEST_PAUSE_FORMAT, getHost(), contextPath, requestId);
+    final String requestUri = String.format(REQUEST_PAUSE_FORMAT, getApiBase(), requestId);
 
     post(requestUri, String.format("pause of request %s", requestId), pauseRequest);
   }
 
   public void unpauseSingularityRequest(String requestId, Optional<SingularityUnpauseRequest> unpauseRequest) {
-    final String requestUri = String.format(REQUEST_UNPAUSE_FORMAT, getHost(), contextPath, requestId);
+    final String requestUri = String.format(REQUEST_UNPAUSE_FORMAT, getApiBase(), requestId);
 
     post(requestUri, String.format("unpause of request %s", requestId), unpauseRequest);
   }
 
   public void scaleSingularityRequest(String requestId, SingularityScaleRequest scaleRequest) {
-    final String requestUri = String.format(REQUEST_SCALE_FORMAT, getHost(), contextPath, requestId);
+    final String requestUri = String.format(REQUEST_SCALE_FORMAT, getApiBase(), requestId);
     put(requestUri, String.format("Scale of Request %s", requestId), Optional.of(scaleRequest));
   }
 
   public SingularityPendingRequestParent runSingularityRequest(String requestId, Optional<SingularityRunNowRequest> runNowRequest) {
-    final String requestUri = String.format(REQUEST_RUN_FORMAT, getHost(), contextPath, requestId);
+    final String requestUri = String.format(REQUEST_RUN_FORMAT, getApiBase(), requestId);
 
     final HttpResponse response = post(requestUri, String.format("run of request %s", requestId), runNowRequest);
 
@@ -608,13 +629,13 @@ public class SingularityClient {
   }
 
   public void bounceSingularityRequest(String requestId, Optional<SingularityBounceRequest> bounceOptions) {
-    final String requestUri = String.format(REQUEST_BOUNCE_FORMAT, getHost(), contextPath, requestId);
+    final String requestUri = String.format(REQUEST_BOUNCE_FORMAT, getApiBase(), requestId);
 
     post(requestUri, String.format("bounce of request %s", requestId), bounceOptions);
   }
 
   public void exitCooldown(String requestId, Optional<SingularityExitCooldownRequest> exitCooldownRequest) {
-    final String requestUri = String.format(REQUEST_EXIT_COOLDOWN_FORMAT, getHost(), contextPath, requestId);
+    final String requestUri = String.format(REQUEST_EXIT_COOLDOWN_FORMAT, getApiBase(), requestId);
 
     post(requestUri, String.format("exit cooldown of request %s", requestId), exitCooldownRequest);
   }
@@ -628,7 +649,7 @@ public class SingularityClient {
   }
 
   public SingularityRequestParent createDeployForSingularityRequest(String requestId, SingularityDeploy pendingDeploy, Optional<Boolean> deployUnpause, Optional<String> message, Optional<SingularityRequest> updatedRequest) {
-    final String requestUri = String.format(DEPLOYS_FORMAT, getHost(), contextPath);
+    final String requestUri = String.format(DEPLOYS_FORMAT, getApiBase());
 
     HttpResponse response = post(requestUri, String.format("new deploy %s", new SingularityDeployKey(requestId, pendingDeploy.getId())),
         Optional.of(new SingularityDeployRequest(pendingDeploy, deployUnpause, message, updatedRequest)));
@@ -645,7 +666,7 @@ public class SingularityClient {
   }
 
   public SingularityRequestParent cancelPendingDeployForSingularityRequest(String requestId, String deployId) {
-    final String requestUri = String.format(DELETE_DEPLOY_FORMAT, getHost(), contextPath, deployId, requestId);
+    final String requestUri = String.format(DELETE_DEPLOY_FORMAT, getApiBase(), deployId, requestId);
 
     SingularityRequestParent singularityRequestParent = delete(requestUri, "pending deploy", new SingularityDeployKey(requestId, deployId).getId(), Optional.absent(),
         Optional.of(SingularityRequestParent.class)).get();
@@ -654,13 +675,17 @@ public class SingularityClient {
   }
 
   public SingularityRequestParent updateIncrementalDeployInstanceCount(SingularityUpdatePendingDeployRequest updateRequest) {
-    final String requestUri = String.format(UPDATE_DEPLOY_FORMAT, getHost(), contextPath);
+    final String requestUri = String.format(UPDATE_DEPLOY_FORMAT, getApiBase());
 
     HttpResponse response = post(requestUri, String.format("update deploy %s", new SingularityDeployKey(updateRequest.getRequestId(), updateRequest.getDeployId())),
       Optional.of(updateRequest));
 
     return getAndLogRequestAndDeployStatus(response.getAs(SingularityRequestParent.class));
   }
+
+  //
+  // REQUESTS
+  //
 
   /**
    * Get all singularity requests that their state is either ACTIVE, PAUSED or COOLDOWN
@@ -680,7 +705,7 @@ public class SingularityClient {
    *
    */
   public Collection<SingularityRequestParent> getSingularityRequests() {
-    final String requestUri = String.format(REQUESTS_FORMAT, getHost(), contextPath);
+    final String requestUri = String.format(REQUESTS_FORMAT, getApiBase());
 
     return getCollection(requestUri, "[ACTIVE, PAUSED, COOLDOWN] requests", REQUESTS_COLLECTION);
   }
@@ -692,7 +717,7 @@ public class SingularityClient {
    *    All ACTIVE {@link SingularityRequestParent} instances
    */
   public Collection<SingularityRequestParent> getActiveSingularityRequests() {
-    final String requestUri = String.format(REQUESTS_GET_ACTIVE_FORMAT, getHost(), contextPath);
+    final String requestUri = String.format(REQUESTS_GET_ACTIVE_FORMAT, getApiBase());
 
     return getCollection(requestUri, "ACTIVE requests", REQUESTS_COLLECTION);
   }
@@ -705,7 +730,7 @@ public class SingularityClient {
    *    All PAUSED {@link SingularityRequestParent} instances
    */
   public Collection<SingularityRequestParent> getPausedSingularityRequests() {
-    final String requestUri = String.format(REQUESTS_GET_PAUSED_FORMAT, getHost(), contextPath);
+    final String requestUri = String.format(REQUESTS_GET_PAUSED_FORMAT, getApiBase());
 
     return getCollection(requestUri, "PAUSED requests", REQUESTS_COLLECTION);
   }
@@ -717,7 +742,7 @@ public class SingularityClient {
    *    All {@link SingularityRequestParent} instances that their state is COOLDOWN
    */
   public Collection<SingularityRequestParent> getCoolDownSingularityRequests() {
-    final String requestUri = String.format(REQUESTS_GET_COOLDOWN_FORMAT, getHost(), contextPath);
+    final String requestUri = String.format(REQUESTS_GET_COOLDOWN_FORMAT, getApiBase());
 
     return getCollection(requestUri, "COOLDOWN requests", REQUESTS_COLLECTION);
   }
@@ -729,7 +754,7 @@ public class SingularityClient {
    *    A collection of {@link SingularityPendingRequest} instances that hold information about the singularity requests that are pending to become ACTIVE
    */
   public Collection<SingularityPendingRequest> getPendingSingularityRequests() {
-    final String requestUri = String.format(REQUESTS_GET_PENDING_FORMAT, getHost(), contextPath);
+    final String requestUri = String.format(REQUESTS_GET_PENDING_FORMAT, getApiBase());
 
     return getCollection(requestUri, "pending requests", PENDING_REQUESTS_COLLECTION);
   }
@@ -744,7 +769,7 @@ public class SingularityClient {
    *    that are marked for deletion and are currently cleaning up.
    */
   public Collection<SingularityRequestCleanup> getCleanupSingularityRequests() {
-    final String requestUri = String.format(REQUESTS_GET_CLEANUP_FORMAT, getHost(), contextPath);
+    final String requestUri = String.format(REQUESTS_GET_CLEANUP_FORMAT, getApiBase());
 
     return getCollection(requestUri, "cleaning requests", CLEANUP_REQUESTS_COLLECTION);
   }
@@ -758,19 +783,19 @@ public class SingularityClient {
   //
 
   public Collection<SingularityTask> getActiveTasks() {
-    final String requestUri = String.format(TASKS_GET_ACTIVE_FORMAT, getHost(), contextPath);
+    final String requestUri = String.format(TASKS_GET_ACTIVE_FORMAT, getApiBase());
 
     return getCollection(requestUri, "active tasks", TASKS_COLLECTION);
   }
 
   public Collection<SingularityTask> getActiveTasksOnSlave(final String slaveId) {
-    final String requestUri = String.format(TASKS_GET_ACTIVE_ON_SLAVE_FORMAT, getHost(), contextPath, slaveId);
+    final String requestUri = String.format(TASKS_GET_ACTIVE_ON_SLAVE_FORMAT, getApiBase(), slaveId);
 
     return getCollection(requestUri, String.format("active tasks on slave %s", slaveId), TASKS_COLLECTION);
   }
 
   public Optional<SingularityTaskCleanupResult> killTask(String taskId, Optional<SingularityKillTaskRequest> killTaskRequest) {
-    final String requestUri = String.format(TASKS_KILL_TASK_FORMAT, getHost(), contextPath, taskId);
+    final String requestUri = String.format(TASKS_KILL_TASK_FORMAT, getApiBase(), taskId);
 
     return delete(requestUri, "task", taskId, killTaskRequest, Optional.of(SingularityTaskCleanupResult.class));
   }
@@ -780,13 +805,13 @@ public class SingularityClient {
   //
 
   public Collection<SingularityTaskRequest> getScheduledTasks() {
-    final String requestUri = String.format(TASKS_GET_SCHEDULED_FORMAT, getHost(), contextPath);
+    final String requestUri = String.format(TASKS_GET_SCHEDULED_FORMAT, getApiBase());
 
     return getCollection(requestUri, "scheduled tasks", TASKS_REQUEST_COLLECTION);
   }
 
   public Collection<SingularityPendingTaskId> getScheduledTaskIds() {
-    final String requestUri = String.format(TASKS_GET_SCHEDULED_IDS_FORMAT, getHost(), contextPath);
+    final String requestUri = String.format(TASKS_GET_SCHEDULED_IDS_FORMAT, getApiBase());
 
     return getCollection(requestUri, "scheduled task ids", PENDING_TASK_ID_COLLECTION);
   }
@@ -795,7 +820,7 @@ public class SingularityClient {
   // RACKS
   //
   private Collection<SingularityRack> getRacks(Optional<MachineState> rackState) {
-    final String requestUri = String.format(RACKS_FORMAT, getHost(), contextPath);
+    final String requestUri = String.format(RACKS_FORMAT, getApiBase());
     Optional<Map<String, Object>> maybeQueryParams = Optional.<Map<String, Object>>absent();
 
     String type = "racks";
@@ -815,25 +840,25 @@ public class SingularityClient {
   }
 
   public void decommissionRack(String rackId, Optional<SingularityMachineChangeRequest> machineChangeRequest) {
-    final String requestUri = String.format(RACKS_DECOMISSION_FORMAT, getHost(), contextPath, rackId);
+    final String requestUri = String.format(RACKS_DECOMISSION_FORMAT, getApiBase(), rackId);
 
     post(requestUri, String.format("decomission rack %s", rackId), machineChangeRequest.or(Optional.of(new SingularityMachineChangeRequest(Optional.<String>absent()))));
   }
 
   public void freezeRack(String rackId, Optional<SingularityMachineChangeRequest> machineChangeRequest) {
-    final String requestUri = String.format(RACKS_FREEZE_FORMAT, getHost(), contextPath, rackId);
+    final String requestUri = String.format(RACKS_FREEZE_FORMAT, getApiBase(), rackId);
 
     post(requestUri, String.format("freeze rack %s", rackId), machineChangeRequest.or(Optional.of(new SingularityMachineChangeRequest(Optional.<String>absent()))));
   }
 
   public void activateRack(String rackId, Optional<SingularityMachineChangeRequest> machineChangeRequest) {
-    final String requestUri = String.format(RACKS_ACTIVATE_FORMAT, getHost(), contextPath, rackId);
+    final String requestUri = String.format(RACKS_ACTIVATE_FORMAT, getApiBase(), rackId);
 
     post(requestUri, String.format("decommission rack %s", rackId), machineChangeRequest.or(Optional.of(new SingularityMachineChangeRequest(Optional.<String>absent()))));
   }
 
   public void deleteRack(String rackId) {
-    final String requestUri = String.format(RACKS_DELETE_FORMAT, getHost(), contextPath, rackId);
+    final String requestUri = String.format(RACKS_DELETE_FORMAT, getApiBase(), rackId);
 
     delete(requestUri, "dead rack", rackId);
   }
@@ -851,7 +876,7 @@ public class SingularityClient {
    *    A collection of {@link SingularitySlave}
    */
   public Collection<SingularitySlave> getSlaves(Optional<MachineState> slaveState) {
-    final String requestUri = String.format(SLAVES_FORMAT, getHost(), contextPath);
+    final String requestUri = String.format(SLAVES_FORMAT, getApiBase());
 
     Optional<Map<String, Object>> maybeQueryParams = Optional.<Map<String, Object>>absent();
 
@@ -866,37 +891,40 @@ public class SingularityClient {
     return getCollectionWithParams(requestUri, type, maybeQueryParams, SLAVES_COLLECTION);
   }
 
+  /**
+   * Retrieve a single slave by ID
+   *
+   * @param slaveId
+   *    The slave ID to search for
+   * @return
+   *    A {@link SingularitySlave}
+   */
   public Optional<SingularitySlave> getSlave(String slaveId) {
-    final String requestUri = String.format(SLAVE_DETAIL_FORMAT, getHost(), contextPath, slaveId);
+    final String requestUri = String.format(SLAVE_DETAIL_FORMAT, getApiBase(), slaveId);
 
     return getSingle(requestUri, "slave", slaveId, SingularitySlave.class);
   }
 
-  @Deprecated
-  public void decomissionSlave(String slaveId) {
-    decommissionSlave(slaveId, Optional.<SingularityMachineChangeRequest>absent());
-  }
-
   public void decommissionSlave(String slaveId, Optional<SingularityMachineChangeRequest> machineChangeRequest) {
-    final String requestUri = String.format(SLAVES_DECOMISSION_FORMAT, getHost(), contextPath, slaveId);
+    final String requestUri = String.format(SLAVES_DECOMISSION_FORMAT, getApiBase(), slaveId);
 
-    post(requestUri, String.format("decommission slave %s", slaveId), machineChangeRequest.or(Optional.of(new SingularityMachineChangeRequest(Optional.<String>absent()))));
+    post(requestUri, String.format("decommission slave %s", slaveId), machineChangeRequest.or(Optional.of(SingularityMachineChangeRequest.empty())));
   }
 
   public void freezeSlave(String slaveId, Optional<SingularityMachineChangeRequest> machineChangeRequest) {
-    final String requestUri = String.format(SLAVES_FREEZE_FORMAT, getHost(), contextPath, slaveId);
+    final String requestUri = String.format(SLAVES_FREEZE_FORMAT, getApiBase(), slaveId);
 
-    post(requestUri, String.format("freeze slave %s", slaveId), machineChangeRequest.or(Optional.of(new SingularityMachineChangeRequest(Optional.<String>absent()))));
+    post(requestUri, String.format("freeze slave %s", slaveId), machineChangeRequest.or(Optional.of(SingularityMachineChangeRequest.empty())));
   }
 
   public void activateSlave(String slaveId, Optional<SingularityMachineChangeRequest> machineChangeRequest) {
-    final String requestUri = String.format(SLAVES_ACTIVATE_FORMAT, getHost(), contextPath, slaveId);
+    final String requestUri = String.format(SLAVES_ACTIVATE_FORMAT, getApiBase(), slaveId);
 
-    post(requestUri, String.format("activate slave %s", slaveId), machineChangeRequest.or(Optional.of(new SingularityMachineChangeRequest(Optional.<String>absent()))));
+    post(requestUri, String.format("activate slave %s", slaveId), machineChangeRequest.or(Optional.of(SingularityMachineChangeRequest.empty())));
   }
 
   public void deleteSlave(String slaveId) {
-    final String requestUri = String.format(SLAVES_DELETE_FORMAT, getHost(), contextPath, slaveId);
+    final String requestUri = String.format(SLAVES_DELETE_FORMAT, getApiBase(), slaveId);
 
     delete(requestUri, "deleting slave", slaveId);
   }
@@ -918,7 +946,7 @@ public class SingularityClient {
    *    A list of {@link SingularityRequestHistory}
    */
   public Collection<SingularityRequestHistory> getHistoryForRequest(String requestId,  Optional<Integer> count, Optional<Integer> page) {
-    final String requestUri = String.format(REQUEST_HISTORY_FORMAT, getHost(), contextPath, requestId);
+    final String requestUri = String.format(REQUEST_HISTORY_FORMAT, getApiBase(), requestId);
 
     Optional<Map<String, Object>> maybeQueryParams = Optional.<Map<String, Object>>absent();
 
@@ -945,36 +973,44 @@ public class SingularityClient {
   //
 
   public Collection<String> getInactiveSlaves() {
-    final String requestUri = String.format(INACTIVE_SLAVES_FORMAT, getHost(), contextPath);
+    final String requestUri = String.format(INACTIVE_SLAVES_FORMAT, getApiBase());
     return getCollection(requestUri, "inactiveSlaves", STRING_COLLECTION);
   }
 
   public void markSlaveAsInactive(String host) {
-    final String requestUri = String.format(INACTIVE_SLAVES_FORMAT, getHost(), contextPath);
+    final String requestUri = String.format(INACTIVE_SLAVES_FORMAT, getApiBase());
     Map<String, Object> params = new HashMap<>();
     params.put("host", host);
     postWithParams(requestUri, "deactivateSlave", Optional.absent(), Optional.of(params));
   }
 
   public void clearInactiveSlave(String host) {
-    final String requestUri = String.format(INACTIVE_SLAVES_FORMAT, getHost(), contextPath);
+    final String requestUri = String.format(INACTIVE_SLAVES_FORMAT, getApiBase());
     Map<String, Object> params = new HashMap<>();
     params.put("host", host);
-    deleteWithParams(requestUri, "clearInactiveSlave", host, Optional.absent(), Optional.of(params), Optional.of(HttpResponse.class));
+    deleteWithParams(requestUri, "clearInactiveSlave", host, Optional.absent(), Optional.of(params), Optional.absent());
   }
 
   //
   // TASK HISTORY
   //
 
+  /**
+   * Retrieve information about an inactive task by its id
+   *
+   * @param taskId
+   *    The task ID to search for
+   * @return
+   *    A {@link SingularityTaskIdHistory} object if the task exists
+   */
   public Optional<SingularityTaskHistory> getHistoryForTask(String taskId) {
-    final String requestUri = String.format(TASK_HISTORY_FORMAT, getHost(), contextPath, taskId);
+    final String requestUri = String.format(TASK_HISTORY_FORMAT, getApiBase(), taskId);
 
     return getSingle(requestUri, "task history", taskId, SingularityTaskHistory.class);
   }
 
   public Collection<SingularityTaskIdHistory> getActiveTaskHistoryForRequest(String requestId) {
-    final String requestUri = String.format(REQUEST_ACTIVE_TASKS_HISTORY_FORMAT, getHost(), contextPath, requestId);
+    final String requestUri = String.format(REQUEST_ACTIVE_TASKS_HISTORY_FORMAT, getApiBase(), requestId);
 
     final String type = String.format("active task history for %s", requestId);
 
@@ -992,7 +1028,7 @@ public class SingularityClient {
   public Collection<SingularityTaskIdHistory> getInactiveTaskHistoryForRequest(String requestId, int count, int page, Optional<String> host, Optional<String> runId,
     Optional<ExtendedTaskState> lastTaskStatus, Optional<Long> startedBefore, Optional<Long> startedAfter, Optional<Long> updatedBefore, Optional<Long> updatedAfter,
     Optional<OrderDirection> orderDirection) {
-    final String requestUri = String.format(REQUEST_INACTIVE_TASKS_HISTORY_FORMAT, getHost(), contextPath, requestId);
+    final String requestUri = String.format(REQUEST_INACTIVE_TASKS_HISTORY_FORMAT, getApiBase(), requestId);
 
     final String type = String.format("inactive (failed, killed, lost) task history for request %s", requestId);
 
@@ -1002,21 +1038,37 @@ public class SingularityClient {
   }
 
   public Optional<SingularityDeployHistory> getHistoryForRequestDeploy(String requestId, String deployId) {
-    final String requestUri = String.format(REQUEST_DEPLOY_HISTORY_FORMAT, getHost(), contextPath, requestId, deployId);
+    final String requestUri = String.format(REQUEST_DEPLOY_HISTORY_FORMAT, getApiBase(), requestId, deployId);
 
     return getSingle(requestUri, "deploy history", new SingularityDeployKey(requestId, deployId).getId(), SingularityDeployHistory.class);
   }
 
+  /**
+   * Retrieve the task id and state for an inactive task by its runId
+   *
+   * @param requestId
+   *    The request ID to search for
+   * @param runId
+   *    The run ID to search for
+   * @return
+   *    A {@link SingularityTaskIdHistory} object if the task exists
+   * @deprecated use {@link #getTaskIdHistoryByRunId}
+   */
+  @Deprecated
   public Optional<SingularityTaskIdHistory> getHistoryForTask(String requestId, String runId) {
-    final String requestUri = String.format(TASK_HISTORY_BY_RUN_ID_FORMAT, getHost(), contextPath, requestId, runId);
+    final String requestUri = String.format(TASK_HISTORY_BY_RUN_ID_FORMAT, getApiBase(), requestId, runId);
 
     return getSingle(requestUri, "task history", requestId, SingularityTaskIdHistory.class);
+  }
+
+  public Optional<SingularityTaskIdHistory> getTaskIdHistoryByRunId(String requestId, String runId) {
+    return getHistoryForTask(requestId, runId);
   }
 
   public Collection<SingularityTaskIdHistory> getTaskHistory(Optional<String> requestId, Optional<String> deployId, Optional<String> runId, Optional<String> host,
     Optional<ExtendedTaskState> lastTaskStatus, Optional<Long> startedBefore, Optional<Long> startedAfter, Optional<Long> updatedBefore,
     Optional<Long> updatedAfter, Optional<OrderDirection> orderDirection, Integer count, Integer page) {
-    final String requestUri = String.format(TASKS_HISTORY_FORMAT, getHost(), contextPath);
+    final String requestUri = String.format(TASKS_HISTORY_FORMAT, getApiBase());
 
     Map<String, Object> params = taskSearchParams(requestId, deployId, runId, host, lastTaskStatus, startedBefore, startedAfter, updatedBefore, updatedAfter, orderDirection, count, page);
 
@@ -1026,7 +1078,7 @@ public class SingularityClient {
   public Optional<SingularityPaginatedResponse<SingularityTaskIdHistory>> getTaskHistoryWithMetadata(Optional<String> requestId, Optional<String> deployId, Optional<String> runId, Optional<String> host,
     Optional<ExtendedTaskState> lastTaskStatus, Optional<Long> startedBefore, Optional<Long> startedAfter, Optional<Long> updatedBefore,
     Optional<Long> updatedAfter, Optional<OrderDirection> orderDirection, Integer count, Integer page) {
-    final String requestUri = String.format(TASKS_HISTORY_WITHMETADATA_FORMAT, getHost(), contextPath);
+    final String requestUri = String.format(TASKS_HISTORY_WITHMETADATA_FORMAT, getApiBase());
 
     Map<String, Object> params = taskSearchParams(requestId, deployId, runId, host, lastTaskStatus, startedBefore, startedAfter, updatedBefore, updatedAfter, orderDirection, count, page);
 
@@ -1077,13 +1129,13 @@ public class SingularityClient {
   //
 
   public Optional<SingularityCreateResult> addWebhook(SingularityWebhook webhook) {
-    final String requestUri = String.format(WEBHOOKS_FORMAT, getHost(), contextPath);
+    final String requestUri = String.format(WEBHOOKS_FORMAT, getApiBase());
 
     return post(requestUri, String.format("webhook %s", webhook.getUri()), Optional.of(webhook), Optional.of(SingularityCreateResult.class));
   }
 
   public Optional<SingularityDeleteResult> deleteWebhook(String webhookId) {
-    final String requestUri = String.format(WEBHOOKS_DELETE_FORMAT, getHost(), contextPath);
+    final String requestUri = String.format(WEBHOOKS_DELETE_FORMAT, getApiBase());
 
     Builder<String, Object> queryParamBuider = ImmutableMap.<String, Object>builder().put("webhookId", webhookId);
 
@@ -1091,13 +1143,13 @@ public class SingularityClient {
   }
 
   public Collection<SingularityWebhook> getActiveWebhook() {
-    final String requestUri = String.format(WEBHOOKS_FORMAT, getHost(), contextPath);
+    final String requestUri = String.format(WEBHOOKS_FORMAT, getApiBase());
 
     return getCollection(requestUri, "active webhooks", WEBHOOKS_COLLECTION);
   }
 
   public Collection<SingularityDeployUpdate> getQueuedDeployUpdates(String webhookId) {
-    final String requestUri = String.format(WEBHOOKS_GET_QUEUED_DEPLOY_UPDATES_FORMAT, getHost(), contextPath);
+    final String requestUri = String.format(WEBHOOKS_GET_QUEUED_DEPLOY_UPDATES_FORMAT, getApiBase());
 
     Builder<String, Object> queryParamBuider = ImmutableMap.<String, Object>builder().put("webhookId", webhookId);
 
@@ -1105,7 +1157,7 @@ public class SingularityClient {
   }
 
   public Collection<SingularityRequestHistory> getQueuedRequestUpdates(String webhookId) {
-    final String requestUri = String.format(WEBHOOKS_GET_QUEUED_REQUEST_UPDATES_FORMAT, getHost(), contextPath);
+    final String requestUri = String.format(WEBHOOKS_GET_QUEUED_REQUEST_UPDATES_FORMAT, getApiBase());
 
     Builder<String, Object> queryParamBuider = ImmutableMap.<String, Object>builder().put("webhookId", webhookId);
 
@@ -1113,7 +1165,7 @@ public class SingularityClient {
   }
 
   public Collection<SingularityTaskHistoryUpdate> getQueuedTaskUpdates(String webhookId) {
-    final String requestUri = String.format(WEBHOOKS_GET_QUEUED_TASK_UPDATES_FORMAT, getHost(), contextPath);
+    final String requestUri = String.format(WEBHOOKS_GET_QUEUED_TASK_UPDATES_FORMAT, getApiBase());
 
     Builder<String, Object> queryParamBuider = ImmutableMap.<String, Object>builder().put("webhookId", webhookId);
 
@@ -1136,7 +1188,7 @@ public class SingularityClient {
    *    A {@link SingularitySandbox} object that captures the information for the path to a specific task's Mesos sandbox
    */
   public Optional<SingularitySandbox> browseTaskSandBox(String taskId, String path) {
-    final String requestUrl = String.format(SANDBOX_BROWSE_FORMAT, getHost(), contextPath, taskId);
+    final String requestUrl = String.format(SANDBOX_BROWSE_FORMAT, getApiBase(), taskId);
 
     return getSingleWithParams(requestUrl, "browse sandbox for task", taskId, Optional.<Map<String, Object>>of(ImmutableMap.<String, Object>of("path", path)), SingularitySandbox.class);
 
@@ -1159,7 +1211,7 @@ public class SingularityClient {
    *    A {@link MesosFileChunkObject} that contains the requested partial file contents
    */
   public Optional<MesosFileChunkObject> readSandBoxFile(String taskId, String path, Optional<String> grep, Optional<Long> offset, Optional<Long> length) {
-    final String requestUrl = String.format(SANDBOX_READ_FILE_FORMAT, getHost(), contextPath, taskId);
+    final String requestUrl = String.format(SANDBOX_READ_FILE_FORMAT, getApiBase(), taskId);
 
     Builder<String, Object> queryParamBuider = ImmutableMap.<String, Object>builder().put("path", path);
 
@@ -1190,7 +1242,7 @@ public class SingularityClient {
    *    A collection of {@link SingularityS3Log}
    */
   public Collection<SingularityS3Log> getTaskLogs(String taskId) {
-    final String requestUri = String.format(S3_LOG_GET_TASK_LOGS, getHost(), contextPath, taskId);
+    final String requestUri = String.format(S3_LOG_GET_TASK_LOGS, getApiBase(), taskId);
 
     final String type = String.format("S3 logs for task %s", taskId);
 
@@ -1207,7 +1259,7 @@ public class SingularityClient {
    *     A collection of {@link SingularityS3Log}
    */
   public Collection<SingularityS3Log> getRequestLogs(String requestId) {
-    final String requestUri = String.format(S3_LOG_GET_REQUEST_LOGS, getHost(), contextPath, requestId);
+    final String requestUri = String.format(S3_LOG_GET_REQUEST_LOGS, getApiBase(), requestId);
 
     final String type = String.format("S3 logs for request %s", requestId);
 
@@ -1226,33 +1278,63 @@ public class SingularityClient {
    *    A collection of {@link SingularityS3Log}
    */
   public Collection<SingularityS3Log> getDeployLogs(String requestId, String deployId) {
-    final String requestUri = String.format(S3_LOG_GET_DEPLOY_LOGS, getHost(), contextPath, requestId, deployId);
+    final String requestUri = String.format(S3_LOG_GET_DEPLOY_LOGS, getApiBase(), requestId, deployId);
 
     final String type = String.format("S3 logs for deploy %s of request %s", deployId, requestId);
 
     return getCollection(requestUri, type, S3_LOG_COLLECTION);
   }
 
+  /**
+   * Retrieve the list of request groups
+   *
+   * @return
+   *     A collection of {@link SingularityRequestGroup}
+   */
   public Collection<SingularityRequestGroup> getRequestGroups() {
-    final String requestUri = String.format(REQUEST_GROUPS_FORMAT, getHost(), contextPath);
+    final String requestUri = String.format(REQUEST_GROUPS_FORMAT, getApiBase());
 
     return getCollection(requestUri, "request groups", REQUEST_GROUP_COLLECTION);
   }
 
+  /**
+   * Retrieve a specific request group by id
+   *
+   * @param requestGroupId
+   *    The request group ID to search for
+   *
+   * @return
+   *    A {@link SingularityRequestGroup}
+   */
   public Optional<SingularityRequestGroup> getRequestGroup(String requestGroupId) {
-    final String requestUri = String.format(REQUEST_GROUP_FORMAT, getHost(), contextPath, requestGroupId);
+    final String requestUri = String.format(REQUEST_GROUP_FORMAT, getApiBase(), requestGroupId);
 
     return getSingle(requestUri, "request group", requestGroupId, SingularityRequestGroup.class);
   }
 
+  /**
+   * Update or add a {@link SingularityRequestGroup}
+   *
+   * @param requestGroup
+   *    The request group to update or add
+   *
+   * @return
+   *    A {@link SingularityRequestGroup} if the update was successful
+   */
   public Optional<SingularityRequestGroup> saveRequestGroup(SingularityRequestGroup requestGroup) {
-    final String requestUri = String.format(REQUEST_GROUPS_FORMAT, getHost(), contextPath);
+    final String requestUri = String.format(REQUEST_GROUPS_FORMAT, getApiBase());
 
     return post(requestUri, "request group", Optional.of(requestGroup), Optional.of(SingularityRequestGroup.class));
   }
 
+  /**
+   * Remove a {@link SingularityRequestGroup}
+   *
+   * @param requestGroupId
+   *    The request group ID to search for
+   */
   public void deleteRequestGroup(String requestGroupId) {
-    final String requestUri = String.format(REQUEST_GROUP_FORMAT, getHost(), contextPath, requestGroupId);
+    final String requestUri = String.format(REQUEST_GROUP_FORMAT, getApiBase(), requestGroupId);
 
     delete(requestUri, "request group", requestGroupId);
   }
@@ -1262,47 +1344,47 @@ public class SingularityClient {
   //
 
   public Optional<SingularityDisastersData> getDisasterStats() {
-    final String requestUri = String.format(DISASTER_STATS_FORMAT, getHost(), contextPath);
+    final String requestUri = String.format(DISASTER_STATS_FORMAT, getApiBase());
     return getSingle(requestUri, "disaster stats", "", SingularityDisastersData.class);
   }
 
   public Collection<SingularityDisasterType> getActiveDisasters() {
-    final String requestUri = String.format(ACTIVE_DISASTERS_FORMAT, getHost(), contextPath);
+    final String requestUri = String.format(ACTIVE_DISASTERS_FORMAT, getApiBase());
     return getCollection(requestUri, "active disasters", DISASTERS_COLLECTION);
   }
 
   public void disableAutomatedDisasterCreation() {
-    final String requestUri = String.format(DISABLE_AUTOMATED_ACTIONS_FORMAT, getHost(), contextPath);
+    final String requestUri = String.format(DISABLE_AUTOMATED_ACTIONS_FORMAT, getApiBase());
     post(requestUri, "disable automated disasters", Optional.absent());
   }
 
   public void enableAutomatedDisasterCreation() {
-    final String requestUri = String.format(ENABLE_AUTOMATED_ACTIONS_FORMAT, getHost(), contextPath);
+    final String requestUri = String.format(ENABLE_AUTOMATED_ACTIONS_FORMAT, getApiBase());
     post(requestUri, "enable automated disasters", Optional.absent());
   }
 
   public void removeDisaster(SingularityDisasterType disasterType) {
-    final String requestUri = String.format(DISASTER_FORMAT, getHost(), contextPath, disasterType);
+    final String requestUri = String.format(DISASTER_FORMAT, getApiBase(), disasterType);
     delete(requestUri, "remove disaster", disasterType.toString());
   }
 
   public void activateDisaster(SingularityDisasterType disasterType) {
-    final String requestUri = String.format(DISASTER_FORMAT, getHost(), contextPath, disasterType);
+    final String requestUri = String.format(DISASTER_FORMAT, getApiBase(), disasterType);
     post(requestUri, "activate disaster", Optional.absent());
   }
 
   public Collection<SingularityDisabledAction> getDisabledActions() {
-    final String requestUri = String.format(DISABLED_ACTIONS_FORMAT, getHost(), contextPath);
+    final String requestUri = String.format(DISABLED_ACTIONS_FORMAT, getApiBase());
     return getCollection(requestUri, "disabled actions", DISABLED_ACTIONS_COLLECTION);
   }
 
   public void disableAction(SingularityAction action, Optional<SingularityDisabledActionRequest> request) {
-    final String requestUri = String.format(DISABLED_ACTION_FORMAT, getHost(), contextPath, action);
+    final String requestUri = String.format(DISABLED_ACTION_FORMAT, getApiBase(), action);
     post(requestUri, "disable action", request);
   }
 
   public void enableAction(SingularityAction action) {
-    final String requestUri = String.format(DISABLED_ACTION_FORMAT, getHost(), contextPath, action);
+    final String requestUri = String.format(DISABLED_ACTION_FORMAT, getApiBase(), action);
     delete(requestUri, "disable action", action.toString());
   }
 
@@ -1311,17 +1393,17 @@ public class SingularityClient {
   //
 
   public Optional<SingularityPriorityFreezeParent> getActivePriorityFreeze() {
-    final String requestUri = String.format(PRIORITY_FREEZE_FORMAT, getHost(), contextPath);
+    final String requestUri = String.format(PRIORITY_FREEZE_FORMAT, getApiBase());
     return getSingle(requestUri, "priority freeze", "", SingularityPriorityFreezeParent.class);
   }
 
   public Optional<SingularityPriorityFreezeParent> createPriorityFreeze(SingularityPriorityFreeze priorityFreezeRequest) {
-    final String requestUri = String.format(PRIORITY_FREEZE_FORMAT, getHost(), contextPath);
+    final String requestUri = String.format(PRIORITY_FREEZE_FORMAT, getApiBase());
     return post(requestUri, "priority freeze", Optional.of(priorityFreezeRequest), Optional.of(SingularityPriorityFreezeParent.class));
   }
 
   public void deletePriorityFreeze() {
-    final String requestUri = String.format(PRIORITY_FREEZE_FORMAT, getHost(), contextPath);
+    final String requestUri = String.format(PRIORITY_FREEZE_FORMAT, getApiBase());
     delete(requestUri, "priority freeze", "");
   }
 
@@ -1329,12 +1411,59 @@ public class SingularityClient {
   // Auth
   //
 
+  /**
+   * Check if a user is authorized for the specified scope on the specified request
+   *
+   * @param requestId
+   *    The request to check authorization on
+   * @param userId
+   *    The user whose authorization will be checked
+   * @param scope
+   *    The scope to check that `user` has
+   *
+   * @return
+   *    true if the user is authorized for scope, false otherwise
+   */
   public boolean isUserAuthorized(String requestId, String userId, SingularityAuthorizationScope scope) {
-    final String requestUri = String.format(AUTH_CHECK_FORMAT, getHost(), contextPath, requestId, userId);
+    final String requestUri = String.format(AUTH_CHECK_FORMAT, getApiBase(), requestId, userId);
     Map<String, Object> params = new HashMap<>();
     params.put("scope", scope.name());
     HttpResponse response = executeGetSingleWithParams(requestUri, "auth check", "", Optional.of(params));
     return response.isSuccess();
+  }
+
+  //
+  // TASK STATE
+  //
+
+  /**
+   * Get the current state of a task by its task ID, will only search active/inactive tasks, not pending
+   *
+   * @param taskId
+   *    The task ID to search for
+   *
+   * @return
+   *    A {@link SingularityTaskState} if the task was found among active or inactive tasks
+   */
+  public Optional<SingularityTaskState> getTaskState(String taskId) {
+    final String requestUri = String.format(TRACK_BY_TASK_ID_FORMAT, getApiBase(), taskId);
+    return getSingle(requestUri, "track by task id", taskId, SingularityTaskState.class);
+  }
+
+  /**
+   * Get the current state of a task by its run IDg
+   *
+   * @param requestId
+   *    The request ID to search for the specified runId
+   * @param runId
+   *    The run ID to search for
+   *
+   * @return
+   *    A {@link SingularityTaskState} if the task was found among pending, active or inactive tasks
+   */
+  public Optional<SingularityTaskState> getTaskState(String requestId, String runId) {
+    final String requestUri = String.format(TRACK_BY_RUN_ID_FORMAT, getApiBase(), requestId, runId);
+    return getSingle(requestUri, "track by task id", String.format("%s-%s", requestId, runId), SingularityTaskState.class);
   }
 
 }

@@ -58,7 +58,7 @@ public abstract class CuratorAsyncManager extends CuratorManager {
         paths.add(ZKPaths.makePath(parent, child));
       }
 
-      List<T> result = new ArrayList<>(getAsyncThrows(parent, paths, transcoder, Optional.<ZkCache<T>> absent()).values());
+      List<T> result = new ArrayList<>(getAsyncThrows(parent, paths, transcoder, Optional.absent()).values());
 
 
       return result;

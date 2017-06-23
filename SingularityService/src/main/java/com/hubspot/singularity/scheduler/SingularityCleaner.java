@@ -365,7 +365,9 @@ public class SingularityCleaner {
           } else {
             Optional<SingularityRequestHistory> maybeHistory = requestHistoryHelper.getLastHistory(requestId);
             if (maybeHistory.isPresent()) {
-              if (maybeHistory.get().getRequest().isLoadBalanced() && configuration.isDeleteRemovedRequestsFromLoadBalancer()) {
+              if (maybeHistory.get().getRequest().isLoadBalanced()
+                  && configuration.isDeleteRemovedRequestsFromLoadBalancer()
+                  && requestCleanup.getRemoveFromLoadBalancer().or(true)) {
                 createLbCleanupRequest(requestId, matchingActiveTaskIds);
               }
               requestManager.markDeleted(maybeHistory.get().getRequest(), start, requestCleanup.getUser(), requestCleanup.getMessage());
@@ -448,6 +450,16 @@ public class SingularityCleaner {
       taskManager.createTaskCleanup(new SingularityTaskCleanup(requestCleanup.getUser(), requestCleanup.getCleanupType().getTaskCleanupType().get(), start, matchingTaskId, requestCleanup.getMessage(), requestCleanup.getActionId(), runBeforeKillId));
     }
 
+    if (matchingTaskIds.isEmpty() && requestCleanup.getDeployId().isPresent()) {
+      Optional<SingularityExpiringBounce> expiringBounce = requestManager.getExpiringBounce(requestCleanup.getRequestId());
+      if (expiringBounce.isPresent() && expiringBounce.get().getDeployId().equalsIgnoreCase(requestCleanup.getDeployId().get())) {
+        LOG.info("No running tasks for request {}. Marking bounce {} complete and starting new tasks", expiringBounce.get().getRequestId(), expiringBounce.get());
+
+        requestManager.deleteExpiringObject(SingularityExpiringBounce.class, requestCleanup.getRequestId());
+      }
+      requestManager.markBounceComplete(requestCleanup.getRequestId());
+    }
+
     requestManager.addToPendingQueue(new SingularityPendingRequest(requestCleanup.getRequestId(), requestCleanup.getDeployId().get(), requestCleanup.getTimestamp(),
         requestCleanup.getUser(), PendingType.BOUNCE, Optional.absent(), Optional.absent(), requestCleanup.getSkipHealthchecks(), requestCleanup.getMessage(), requestCleanup.getActionId()));
 
@@ -494,7 +506,7 @@ public class SingularityCleaner {
         runBeforeKillId = Optional.of(shellRequest.getId());
       }
 
-      taskManager.createTaskCleanup(new SingularityTaskCleanup(requestCleanup.getUser(), TaskCleanupType.REQUEST_DELETING, start, taskId, requestCleanup.getMessage(), requestCleanup.getActionId(), runBeforeKillId));
+      taskManager.createTaskCleanup(new SingularityTaskCleanup(requestCleanup.getUser(), TaskCleanupType.REQUEST_DELETING, start, taskId, requestCleanup.getMessage(), requestCleanup.getActionId(), runBeforeKillId, requestCleanup.getRemoveFromLoadBalancer()));
     }
   }
 
@@ -657,7 +669,7 @@ public class SingularityCleaner {
         requestManager.createCleanupRequest(
             new SingularityRequestCleanup(
                 cleanupTask.getUser(), RequestCleanupType.DELETING, System.currentTimeMillis(),
-                Optional.of(Boolean.TRUE), requestId, Optional.absent(),
+                Optional.of(Boolean.TRUE), cleanupTask.getRemoveFromLoadBalancer(), requestId, Optional.absent(),
                 Optional.absent(), cleanupTask.getMessage(), Optional.absent(), Optional.absent()));
       }
     }

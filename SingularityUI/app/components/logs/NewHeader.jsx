@@ -28,7 +28,7 @@ class NewHeader extends React.Component {
         <a className="btn btn-default btn-sm tail-bottom-button" onClick={this.props.jumpAllToBottom} title="Scroll All to Bottom">
           <span className="glyphicon glyphicon-chevron-down"></span>
         </a>
-        <a className="btn btn-default btn-sm tail-top-button" onClick={this.props.jumpAllToTop()} title="Scroll All to Top">
+        <a className="btn btn-default btn-sm tail-top-button" onClick={this.props.jumpAllToTop} title="Scroll All to Top">
           <span className="glyphicon glyphicon-chevron-up"></span>
         </a>
       </span>

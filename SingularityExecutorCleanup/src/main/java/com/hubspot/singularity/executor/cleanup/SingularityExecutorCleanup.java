@@ -81,13 +81,16 @@ public class SingularityExecutorCleanup {
     this.baseConfiguration = baseConfiguration;
     this.executorConfiguration = executorConfiguration;
     this.cleanupConfiguration = cleanupConfiguration;
-    this.singularityClient = singularityClientProvider.get(cleanupConfiguration.getSingularityClientCredentials());
     this.templateManager = templateManager;
     this.mesosClient = mesosClient;
     this.processUtils = new ProcessUtils(LOG);
     this.dockerUtils = dockerUtils;
     this.hostname = hostname;
     this.exceptionNotifier = exceptionNotifier;
+    if (cleanupConfiguration.getSingularityClientCredentials().isPresent()) {
+      singularityClientProvider.setCredentials(cleanupConfiguration.getSingularityClientCredentials().get());
+    }
+    this.singularityClient = singularityClientProvider.setSsl(cleanupConfiguration.isSingularityUseSsl()).get();
   }
 
   public SingularityExecutorCleanupStatistics clean() {

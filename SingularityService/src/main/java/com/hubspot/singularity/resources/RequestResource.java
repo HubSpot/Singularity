@@ -67,6 +67,7 @@ import com.hubspot.singularity.api.SingularityScaleRequest;
 import com.hubspot.singularity.api.SingularitySkipHealthchecksRequest;
 import com.hubspot.singularity.api.SingularityUnpauseRequest;
 import com.hubspot.singularity.auth.SingularityAuthorizationHelper;
+import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.DeployManager;
 import com.hubspot.singularity.data.DisasterManager;
 import com.hubspot.singularity.data.RequestManager;
@@ -99,17 +100,19 @@ public class RequestResource extends AbstractRequestResource {
   private final RequestHelper requestHelper;
   private final SlaveManager slaveManager;
   private final DisasterManager disasterManager;
+  private final SingularityConfiguration singularityConfiguration;
 
   @Inject
   public RequestResource(SingularityValidator validator, DeployManager deployManager, TaskManager taskManager, RequestManager requestManager, SingularityMailer mailer,
                          SingularityAuthorizationHelper authorizationHelper, Optional<SingularityUser> user, RequestHelper requestHelper, LeaderLatch leaderLatch,
-                         SlaveManager slaveManager, DisasterManager disasterManager, AsyncHttpClient httpClient, ObjectMapper objectMapper) {
+                         SlaveManager slaveManager, DisasterManager disasterManager, AsyncHttpClient httpClient, ObjectMapper objectMapper, SingularityConfiguration singularityConfiguration) {
     super(requestManager, deployManager, user, validator, authorizationHelper, httpClient, leaderLatch, objectMapper);
     this.mailer = mailer;
     this.taskManager = taskManager;
     this.requestHelper = requestHelper;
     this.slaveManager = slaveManager;
     this.disasterManager = disasterManager;
+    this.singularityConfiguration = singularityConfiguration;
   }
 
   private void submitRequest(SingularityRequest request, Optional<SingularityRequestWithState> oldRequestWithState, Optional<RequestHistoryType> historyType,
@@ -235,7 +238,7 @@ public class RequestResource extends AbstractRequestResource {
 
     requestManager.createCleanupRequest(
         new SingularityRequestCleanup(JavaUtils.getUserEmail(user), isIncrementalBounce ? RequestCleanupType.INCREMENTAL_BOUNCE : RequestCleanupType.BOUNCE,
-            System.currentTimeMillis(), Optional.<Boolean> absent(), requestId, Optional.of(deployId), skipHealthchecks, message, actionId, runBeforeKill));
+            System.currentTimeMillis(), Optional.<Boolean> absent(), Optional.absent(), requestId, Optional.of(deployId), skipHealthchecks, message, actionId, runBeforeKill));
 
     requestManager.bounce(requestWithState.getRequest(), System.currentTimeMillis(), JavaUtils.getUserEmail(user), message);
 
@@ -256,7 +259,7 @@ public class RequestResource extends AbstractRequestResource {
   @POST
   @Path("/request/{requestId}/run")
   @Consumes({ MediaType.APPLICATION_JSON })
-  @ApiOperation(value="Schedule a one-off or scheduled Singularity request for immediate execution.", response=SingularityRequestParent.class)
+  @ApiOperation(value="Schedule a one-off or scheduled Singularity request for immediate or delayed execution.", response=SingularityRequestParent.class)
   @ApiResponses({
     @ApiResponse(code=400, message="Singularity Request is not scheduled or one-off"),
   })
@@ -342,9 +345,10 @@ public class RequestResource extends AbstractRequestResource {
     }
 
     final long now = System.currentTimeMillis();
+    Optional<Boolean> removeFromLoadBalancer = Optional.absent();
 
     SingularityCreateResult result = requestManager.createCleanupRequest(new SingularityRequestCleanup(JavaUtils.getUserEmail(user),
-        RequestCleanupType.PAUSING, now, killTasks, requestId, Optional.<String> absent(), Optional.<Boolean> absent(), message, actionId, runBeforeKill));
+        RequestCleanupType.PAUSING, now, killTasks, removeFromLoadBalancer, requestId, Optional.<String> absent(), Optional.<Boolean> absent(), message, actionId, runBeforeKill));
 
     checkConflict(result == SingularityCreateResult.CREATED, "%s is already pausing - try again soon", requestId, result);
 
@@ -577,13 +581,15 @@ public class RequestResource extends AbstractRequestResource {
 
     Optional<String> message = Optional.absent();
     Optional<String> actionId = Optional.absent();
+    Optional<Boolean> deleteFromLoadBalancer = Optional.absent();
 
     if (deleteRequest.isPresent()) {
       actionId = deleteRequest.get().getActionId();
       message = deleteRequest.get().getMessage();
+      deleteFromLoadBalancer = deleteRequest.get().getDeleteFromLoadBalancer();
     }
 
-    requestManager.startDeletingRequest(request, JavaUtils.getUserEmail(user), actionId, message);
+    requestManager.startDeletingRequest(request, deleteFromLoadBalancer, JavaUtils.getUserEmail(user), actionId, message);
 
     mailer.sendRequestRemovedMail(request, JavaUtils.getUserEmail(user), message);
 

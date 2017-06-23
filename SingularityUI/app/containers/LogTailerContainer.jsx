@@ -42,7 +42,18 @@ class LogTailerContainer extends React.PureComponent {
       const {taskId, path, offset, tailerId} = tasks[0];
 
       if (Utils.maybe(this.props.notFound, [taskId], false)) {
-        const fileName = _.last(path.split('/'));
+        const fileName = Utils.fileName(path);
+
+        let toTailOfFinished;
+        const pathWithTaskId = Utils.substituteTaskId(config.runningTaskLogPath, taskId);
+        if (path === pathWithTaskId) {
+          const tailOfLogPath = Utils.tailerPath(taskId, path.replace(pathWithTaskId, Utils.substituteTaskId(config.finishedTaskLogPath, taskId)));
+          toTailOfFinished = (
+            <p>
+              It may have been moved to <Link onClick={this.forceUpdate} to={`${tailOfLogPath}`}>{Utils.fileName(config.finishedTaskLogPath)}</Link>
+            </p>
+          );
+        }
 
         return (<section className="log-pane" key={key}>
           <div className="row tail-row tail-row-centered">
@@ -50,6 +61,7 @@ class LogTailerContainer extends React.PureComponent {
                 <p>
                   {fileName} does not exist in this directory.
                 </p>
+                {toTailOfFinished}
                 <Link to={`/task/${taskId}`}>
                   <Glyphicon glyph="arrow-left" /> Back to Task Detail Page
                 </Link>

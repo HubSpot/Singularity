@@ -200,7 +200,7 @@ public class SingularityHistoryTest extends SingularitySchedulerTestBase {
     String runId = "my-run-id";
 
     SingularityPendingRequestParent parent = requestResource.scheduleImmediately(requestId,
-        new SingularityRunNowRequest(Optional.<String> absent(), Optional.<Boolean> absent(), Optional.of(runId), Optional.<List<String>> absent(), Optional.<Resources>absent()));
+        new SingularityRunNowRequest(Optional.<String> absent(), Optional.<Boolean> absent(), Optional.of(runId), Optional.<List<String>> absent(), Optional.<Resources>absent(), Optional.<Long>absent()));
 
     Assert.assertEquals(runId, parent.getPendingRequest().getRunId().get());
 
@@ -491,7 +491,7 @@ public class SingularityHistoryTest extends SingularitySchedulerTestBase {
     }
 
     requestResource.scale(requestId, new SingularityScaleRequest(Optional.of(2), Optional.<Long> absent(), Optional.<Boolean> absent(), Optional.<String> absent(), Optional.of(msg), Optional.<Boolean>absent(), Optional.<Boolean>absent()));
-    requestResource.deleteRequest(requestId, Optional.of(new SingularityDeleteRequestRequest(Optional.of("a msg"), Optional.<String> absent())));
+    requestResource.deleteRequest(requestId, Optional.of(new SingularityDeleteRequestRequest(Optional.of("a msg"), Optional.<String> absent(), Optional.absent())));
 
     cleaner.drainCleanupQueue();
 

@@ -6,8 +6,12 @@ import { Link } from 'react-router';
 import Section from '../common/Section';
 import TaskStatus from './TaskStatus';
 
-const getLink = (status, taskId) => {
-  if (status === TaskStatus.RUNNING) {
+const getLink = (status, taskId, files, available) => {
+  const runningTaskLogFound = files.files && _.find(files.files, (f) => {
+    return f.uiPath === Utils.substituteTaskId(config.runningTaskLogPath, taskId);
+  });
+
+  if (status === TaskStatus.RUNNING || runningTaskLogFound) {
     return (
       <Link to={Utils.tailerPath(taskId, config.runningTaskLogPath)} title="Log">
           <span><Glyphicon glyph="file" /> {Utils.fileName(config.runningTaskLogPath)}</span>
@@ -24,8 +28,8 @@ const getLink = (status, taskId) => {
   return null;
 };
 
-function TaskLatestLog({status, taskId, available}) {
-  const link = getLink(status, taskId);
+function TaskLatestLog({status, taskId, files, available}) {
+  const link = getLink(status, taskId, files, available);
 
   if (status === TaskStatus.NEVER_RAN || !available) {
     return null;
@@ -44,6 +48,7 @@ function TaskLatestLog({status, taskId, available}) {
 
 TaskLatestLog.propTypes = {
   taskId: PropTypes.string.isRequired,
+  files: PropTypes.object.isRequired,
   status: PropTypes.oneOf([TaskStatus.RUNNING, TaskStatus.STOPPED, TaskStatus.NEVER_RAN]),
   available: PropTypes.bool,
 };

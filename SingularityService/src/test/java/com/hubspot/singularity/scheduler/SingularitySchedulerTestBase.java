@@ -528,6 +528,14 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
     firstDeploy = initAndFinishDeploy(request, new SingularityDeployBuilder(request.getId(), firstDeployId).setCommand(Optional.of("sleep 100")).setHealthcheck(Optional.of(new HealthcheckOptionsBuilder("http://uri").build())));
   }
 
+  protected void initLoadBalancedDeploy() {
+    SingularityDeployBuilder builder = new SingularityDeployBuilder(requestId, firstDeployId)
+        .setCommand(Optional.of("sleep 100"))
+        .setServiceBasePath(Optional.of("/basepath"))
+        .setLoadBalancerGroups(Optional.of(Collections.singleton("test")));
+    firstDeploy = initAndFinishDeploy(request, builder);
+  }
+
   protected SingularityDeploy initAndFinishDeploy(SingularityRequest request, String deployId) {
     return initAndFinishDeploy(request, new SingularityDeployBuilder(request.getId(), deployId).setCommand(Optional.of("sleep 100")));
   }
@@ -654,7 +662,7 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
     Random random = new Random();
 
     SingularityPendingTaskId pendingTaskId = new SingularityPendingTaskId(requestId, deployId,
-        System.currentTimeMillis() + TimeUnit.DAYS.toMillis(random.nextInt(3)), random.nextInt(10), PendingType.IMMEDIATE, System.currentTimeMillis());
+        System.currentTimeMillis() + TimeUnit.DAYS.toMillis(random.nextInt(3)), random.nextInt(10), PendingType.NEW_DEPLOY, System.currentTimeMillis());
 
     SingularityPendingTask pendingTask = new SingularityPendingTask(pendingTaskId, Optional.<List<String>> absent(), Optional.<String> absent(), Optional.<String> absent(), Optional.<Boolean> absent(), Optional.<String> absent(), Optional.<Resources>absent(), Optional.<String>absent());
 
