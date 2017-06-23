@@ -1862,10 +1862,10 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
 
   @Test
   public void testRequestedPorts() {
-    final SingularityDeployBuilder deployBuilder = dockerDeployWithPorts(3);
+    final SingularityDeployBuilder deployBuilder = dockerDeployWithPorts();
 
     initRequest();
-    initAndFinishDeploy(request, deployBuilder);
+    initAndFinishDeploy(request, deployBuilder, Optional.of(new Resources(1, 64, 3, 0)));
     requestResource.postRequest(request.toBuilder().setInstances(Optional.of(2)).build());
     scheduler.drainPendingQueue(stateCacheProvider.get());
 
@@ -1886,7 +1886,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     Assert.assertEquals(1, taskManager.getActiveTaskIds().size());
   }
 
-  private SingularityDeployBuilder dockerDeployWithPorts(int numPorts) {
+  private SingularityDeployBuilder dockerDeployWithPorts() {
     final SingularityDockerPortMapping literalMapping = new SingularityDockerPortMapping(Optional.<SingularityPortMappingType>absent(), 80, Optional.of(SingularityPortMappingType.LITERAL), 8080, Optional.<String>absent());
     final SingularityDockerPortMapping offerMapping = new SingularityDockerPortMapping(Optional.<SingularityPortMappingType>absent(), 81, Optional.of(SingularityPortMappingType.FROM_OFFER), 0, Optional.of("udp"));
     final SingularityContainerInfo containerInfo = new SingularityContainerInfo(
@@ -1901,7 +1901,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
           Optional.<Map<String, String>>of(ImmutableMap.of("env", "var=value")))
         ));
     final SingularityDeployBuilder deployBuilder = new SingularityDeployBuilder(requestId, "test-docker-ports-deploy");
-    deployBuilder.setContainerInfo(Optional.of(containerInfo)).setResources(Optional.of(new Resources(1, 64, numPorts, 0)));
+    deployBuilder.setContainerInfo(Optional.of(containerInfo));
     return deployBuilder;
   }
 

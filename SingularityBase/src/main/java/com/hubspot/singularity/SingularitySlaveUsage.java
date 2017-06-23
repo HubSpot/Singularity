@@ -12,7 +12,7 @@ public class SingularitySlaveUsage {
     CPU_USED, MEMORY_BYTES_USED, CPU_FREE, MEMORY_BYTES_FREE
   }
 
-  public static final long BYTES_PER_MEGABYTE = 1024L * 1024L;
+  public static final long BYTES_PER_MEGABYTE = 1000L * 1000L;
 
   private final long memoryBytesUsed;
   private final long memoryMbReserved;

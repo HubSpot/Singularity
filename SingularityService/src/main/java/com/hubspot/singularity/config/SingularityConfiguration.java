@@ -73,9 +73,11 @@ public class SingularityConfiguration extends Configuration {
 
   private long checkUsageEveryMillis = TimeUnit.MINUTES.toMillis(1);
 
+  private int usageIntervalMultiplier = 3;
+
   private long cleanUsageEveryMillis = TimeUnit.MINUTES.toMillis(5);
 
-  private int numUsageToKeep = 5;
+  private int numUsageToKeep = 15;
 
   private long cleanupEverySeconds = 5;
 
@@ -1417,6 +1419,15 @@ public class SingularityConfiguration extends Configuration {
 
   public void setCheckUsageEveryMillis(long checkUsageEveryMillis) {
     this.checkUsageEveryMillis = checkUsageEveryMillis;
+  }
+
+  public int getUsageIntervalMultiplier() {
+    return usageIntervalMultiplier;
+  }
+
+  public SingularityConfiguration setUsageIntervalMultiplier(int usageIntervalMultiplier) {
+    this.usageIntervalMultiplier = usageIntervalMultiplier;
+    return this;
   }
 
   public long getCleanUsageEveryMillis() {
