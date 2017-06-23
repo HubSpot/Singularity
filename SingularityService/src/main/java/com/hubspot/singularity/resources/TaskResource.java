@@ -261,13 +261,13 @@ public class TaskResource extends AbstractLeaderAwareResource {
       executorIdToMatch = taskId;
     }
 
-    for (MesosTaskMonitorObject taskMonitor : mesosClient.getSlaveResourceUsage(task.getOffer().getHostname())) {
+    for (MesosTaskMonitorObject taskMonitor : mesosClient.getSlaveResourceUsage(task.getHostname())) {
       if (taskMonitor.getExecutorId().equals(executorIdToMatch)) {
         return taskMonitor.getStatistics();
       }
     }
 
-    throw notFound("Couldn't find executor %s for %s on slave %s", executorIdToMatch, taskId, task.getOffer().getHostname());
+    throw notFound("Couldn't find executor %s for %s on slave %s", executorIdToMatch, taskId, task.getHostname());
   }
 
   @GET

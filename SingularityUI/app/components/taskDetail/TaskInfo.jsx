@@ -10,7 +10,7 @@ function TaskInfo (props) {
           <InfoBox copyableClassName="info-copyable" name="Task ID" value={props.task.taskId.id} />
           <InfoBox copyableClassName="info-copyable" name="Directory" value={props.directory} />
           {props.task.mesosTask.executor && <InfoBox copyableClassName="info-copyable" name="Executor GUID" value={props.task.mesosTask.executor.executorId.value} />}
-          <InfoBox copyableClassName="info-copyable" name="Hostname" value={props.task.offer.hostname} />
+          <InfoBox copyableClassName="info-copyable" name="Hostname" value={props.task.offers[0].hostname} />
           {!_.isEmpty(props.ports) && <InfoBox copyableClassName="info-copyable" name="Ports" value={props.ports.toString()} />}
           <InfoBox copyableClassName="info-copyable" name="Rack ID" value={props.task.rackId} />
           {props.task.taskRequest.deploy.executorData && <InfoBox copyableClassName="info-copyable" name="Extra Cmd Line Arguments (for Deploy)" join=" " value={props.task.taskRequest.deploy.executorData.extraCmdLineArgs} />}
@@ -43,9 +43,9 @@ TaskInfo.propTypes = {
         cmdLineArgsList: PropTypes.arrayOf(PropTypes.string)
       })
     }).isRequired,
-    offer: PropTypes.shape({
+    offers: PropTypes.arrayOf(PropTypes.shape({
       hostname: PropTypes.string
-    }).isRequired,
+    })).isRequired,
     rackId: PropTypes.string
   }).isRequired,
   ports: PropTypes.arrayOf(PropTypes.number),

@@ -64,9 +64,9 @@ class TaskDetail extends Component {
             customExecutorCmd: PropTypes.string
           }).isRequired
         }).isRequired,
-        offer: PropTypes.shape({
+        offers: PropTypes.arrayOf(PropTypes.shape({
           hostname: PropTypes.string
-        }).isRequired,
+        })).isRequired,
         mesosTask: PropTypes.shape({
           executor: PropTypes.object
         }).isRequired,
@@ -296,7 +296,7 @@ class TaskDetail extends Component {
           <div className="col-md-12">
             <Breadcrumbs
               items={breadcrumbs}
-              right={<span><strong>Hostname: </strong>{this.props.task.task.offer.hostname}</span>}
+              right={<span><strong>Hostname: </strong>{this.props.task.task.offers[0].hostname}</span>}
             />
           </div>
         </div>
