@@ -540,7 +540,7 @@ public class SingularityClient {
   }
 
   public Optional<SingularityClusterUtilization> getClusterUtilization() {
-    final String uri = String.format(CLUSTER_UTILIZATION_FORMAT, getApiBase());
+    final Function<String, String> uri = (host) -> String.format(CLUSTER_UTILIZATION_FORMAT, getApiBase(host));
 
     return getSingle(uri, "clusterUtilization", "", SingularityClusterUtilization.class);
   }
