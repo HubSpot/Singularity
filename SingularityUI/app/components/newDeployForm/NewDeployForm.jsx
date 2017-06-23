@@ -1214,8 +1214,8 @@ class NewDeployForm extends Component {
         onChange={newValue => this.updateField('type', newValue.value)}
         required={true}
         options={[
-          { label: 'Mesos', value: 'mesos' },
-          { label: 'Docker', value: 'docker' }
+          { label: 'Mesos', value: 'MESOS' },
+          { label: 'Docker', value: 'DOCKER' }
         ]}
       />
     );

@@ -352,6 +352,8 @@ public class SingularityConfiguration extends Configuration {
 
   private boolean delayOfferProcessingForLargeStatusUpdateDelta = true;
 
+  private int maxRunNowTaskLaunchDelayDays = 30;
+
   public long getAskDriverToKillTasksAgainAfterMillis() {
     return askDriverToKillTasksAgainAfterMillis;
   }
@@ -1499,5 +1501,13 @@ public class SingularityConfiguration extends Configuration {
 
   public void setDelayOfferProcessingForLargeStatusUpdateDelta(boolean delayOfferProcessingForLargeStatusUpdateDelta) {
     this.delayOfferProcessingForLargeStatusUpdateDelta = delayOfferProcessingForLargeStatusUpdateDelta;
+  }
+
+  public int getMaxRunNowTaskLaunchDelayDays() {
+    return maxRunNowTaskLaunchDelayDays;
+  }
+
+  public void setMaxRunNowTaskLaunchDelayDays(int maxRunNowTaskLaunchDelayDays) {
+    this.maxRunNowTaskLaunchDelayDays = maxRunNowTaskLaunchDelayDays;
   }
 }
