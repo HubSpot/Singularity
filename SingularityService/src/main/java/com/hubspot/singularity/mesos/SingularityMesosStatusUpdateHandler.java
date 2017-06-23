@@ -56,7 +56,7 @@ public class SingularityMesosStatusUpdateHandler {
   private final SingularityScheduler scheduler;
   private final Provider<SingularitySchedulerStateCache> stateCacheProvider;
   private final String serverId;
-  private final SingularityMesosScheduler mesosScheduler;
+  private final SingularityMesosSchedulerClient schedulerClient;
   private final SingularitySchedulerLock schedulerLock;
   private final SingularityConfiguration configuration;
   private final Multiset<Protos.TaskStatus.Reason> taskLostReasons;
@@ -76,7 +76,7 @@ public class SingularityMesosStatusUpdateHandler {
                                              SingularityScheduler scheduler,
                                              Provider<SingularitySchedulerStateCache> stateCacheProvider,
                                              @Named(SingularityMainModule.SERVER_ID_PROPERTY) String serverId,
-                                             SingularityMesosScheduler mesosScheduler,
+                                             SingularityMesosSchedulerClient schedulerClient,
                                              SingularitySchedulerLock schedulerLock,
                                              SingularityConfiguration configuration,
                                              @Named(SingularityMesosModule.TASK_LOST_REASONS_COUNTER) Multiset<Protos.TaskStatus.Reason> taskLostReasons,
@@ -94,7 +94,7 @@ public class SingularityMesosStatusUpdateHandler {
     this.scheduler = scheduler;
     this.stateCacheProvider = stateCacheProvider;
     this.serverId = serverId;
-    this.mesosScheduler = mesosScheduler;
+    this.schedulerClient = schedulerClient;
     this.schedulerLock = schedulerLock;
     this.configuration = configuration;
     this.taskLostReasons = taskLostReasons;
@@ -247,7 +247,7 @@ public class SingularityMesosStatusUpdateHandler {
     }
 
     saveNewTaskStatusHolder(taskIdObj, newTaskStatusHolder, taskState);
-    mesosScheduler.acknowledge(status.getAgentId(), status.getTaskId(), status.getUuid());
+    schedulerClient.acknowledge(status.getAgentId(), status.getTaskId(), status.getUuid());
   }
 
   @Timed

@@ -13,16 +13,16 @@ import com.hubspot.singularity.mesos.SingularityOfferCache.CachedOffer;
 @Singleton
 public class SingularityNoOfferCache implements OfferCache {
 
-  private final SingularityMesosScheduler scheduler;
+  private final SingularityMesosSchedulerClient schedulerClient;
 
   @Inject
-  public SingularityNoOfferCache(SingularityMesosScheduler scheduler) {
-    this.scheduler = scheduler;
+  public SingularityNoOfferCache(SingularityMesosSchedulerClient schedulerClient) {
+    this.schedulerClient = schedulerClient;
   }
 
   @Override
   public void cacheOffer(long timestamp, Offer offer) {
-    scheduler.decline(Collections.singletonList(offer.getId()));
+    schedulerClient.decline(Collections.singletonList(offer.getId()));
   }
 
   @Override

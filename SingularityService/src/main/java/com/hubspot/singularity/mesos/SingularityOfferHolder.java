@@ -9,6 +9,7 @@ import java.util.Set;
 import org.apache.mesos.v1.Protos;
 import org.apache.mesos.v1.Protos.Offer.Operation;
 import org.apache.mesos.v1.Protos.Offer.Operation.Launch;
+import org.apache.mesos.v1.Protos.Offer.Operation.Type;
 import org.apache.mesos.v1.Protos.Resource;
 import org.apache.mesos.v1.Protos.TaskInfo;
 import org.slf4j.Logger;
@@ -93,7 +94,7 @@ public class SingularityOfferHolder {
     }
   }
 
-  public void launchTasks(SingularityMesosScheduler scheduler) {
+  public void launchTasks(SingularityMesosSchedulerClient schedulerClient) {
     final List<TaskInfo> toLaunch = Lists.newArrayListWithCapacity(acceptedTasks.size());
     final List<SingularityTaskId> taskIds = Lists.newArrayListWithCapacity(acceptedTasks.size());
 
@@ -104,7 +105,7 @@ public class SingularityOfferHolder {
       LOG.trace("Launching {} mesos task: {}", task.getTaskId(), MesosUtils.formatForLogging(task.getMesosTask()));
     }
 
-    scheduler.accept(Collections.singletonList(offer.getId()), Collections.singletonList(Operation.newBuilder().setLaunch(Launch.newBuilder().addAllTaskInfos(toLaunch)).build()));
+    schedulerClient.accept(Collections.singletonList(offer.getId()), Collections.singletonList(Operation.newBuilder().setType(Type.LAUNCH).setLaunch(Launch.newBuilder().addAllTaskInfos(toLaunch)).build()));
   }
 
   public List<SingularityTask> getAcceptedTasks() {

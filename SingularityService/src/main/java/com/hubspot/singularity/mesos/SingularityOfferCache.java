@@ -29,14 +29,14 @@ public class SingularityOfferCache implements OfferCache, RemovalListener<String
   private static final Logger LOG = LoggerFactory.getLogger(SingularityOfferCache.class);
 
   private final Cache<String, CachedOffer> offerCache;
-  private final SingularityMesosScheduler scheduler;
+  private final SingularityMesosSchedulerClient schedulerClient;
   private final SingularityConfiguration configuration;
   private final AtomicBoolean useOfferCache = new AtomicBoolean(true);
 
   @Inject
-  public SingularityOfferCache(SingularityConfiguration configuration, SingularityMesosScheduler scheduler) {
+  public SingularityOfferCache(SingularityConfiguration configuration, SingularityMesosSchedulerClient schedulerClient) {
     this.configuration = configuration;
-    this.scheduler = scheduler;
+    this.schedulerClient = schedulerClient;
 
     offerCache = CacheBuilder.newBuilder()
         .expireAfterWrite(configuration.getCacheOffersForMillis(), TimeUnit.MILLISECONDS)
@@ -48,7 +48,7 @@ public class SingularityOfferCache implements OfferCache, RemovalListener<String
   @Override
   public void cacheOffer(long timestamp, Offer offer) {
     if (!useOfferCache.get()) {
-      scheduler.decline(Collections.singletonList(offer.getId()));
+      schedulerClient.decline(Collections.singletonList(offer.getId()));
       return;
     }
     LOG.debug("Caching offer {} for {}", offer.getId().getValue(), JavaUtils.durationFromMillis(configuration.getCacheOffersForMillis()));
@@ -130,12 +130,12 @@ public class SingularityOfferCache implements OfferCache, RemovalListener<String
   }
 
   private void declineOffer(CachedOffer offer) {
-    if (!scheduler.isRunning()) {
+    if (!schedulerClient.isRunning()) {
       LOG.error("No active scheduler driver present to handle expired offer {} - this should never happen", offer.offerId);
       return;
     }
 
-    scheduler.decline(Collections.singletonList(offer.offer.getId()));
+    schedulerClient.decline(Collections.singletonList(offer.offer.getId()));
 
     LOG.debug("Declined cached offer {}", offer.offerId);
   }

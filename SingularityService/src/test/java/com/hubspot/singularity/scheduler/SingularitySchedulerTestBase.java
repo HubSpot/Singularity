@@ -16,6 +16,8 @@ import java.util.concurrent.TimeUnit;
 
 import org.apache.mesos.v1.Protos.AgentID;
 import org.apache.mesos.v1.Protos.Attribute;
+import org.apache.mesos.v1.Protos.ExecutorID;
+import org.apache.mesos.v1.Protos.ExecutorInfo;
 import org.apache.mesos.v1.Protos.FrameworkID;
 import org.apache.mesos.v1.Protos.Offer;
 import org.apache.mesos.v1.Protos.OfferID;
@@ -306,6 +308,7 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
 
     TaskInfo taskInfo = TaskInfo.newBuilder()
         .setAgentId(offer.getAgentId())
+        .setExecutor(ExecutorInfo.newBuilder().setExecutorId(ExecutorID.newBuilder().setValue("executorID")))
         .setTaskId(taskIdProto)
         .setName("name")
         .build();

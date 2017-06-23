@@ -20,7 +20,7 @@ public class SingularityMesosModule extends AbstractModule {
   @Override
   public void configure() {
     bind(SingularityMesosExecutorInfoSupport.class).in(Scopes.SINGLETON);
-    bind(SingularityMesosScheduler.class).in(Scopes.SINGLETON);
+    bind(SingularityMesosScheduler.class).to(SingularityMesosSchedulerImpl.class).in(Scopes.SINGLETON);
     bind(SingularityMesosFrameworkMessageHandler.class).in(Scopes.SINGLETON);
     bind(SingularityMesosTaskBuilder.class).in(Scopes.SINGLETON);
     bind(SingularityTaskSizeOptimizer.class).in(Scopes.SINGLETON);
@@ -28,6 +28,7 @@ public class SingularityMesosModule extends AbstractModule {
     bind(SingularitySlaveAndRackHelper.class).in(Scopes.SINGLETON);
     bind(SingularityStartup.class).in(Scopes.SINGLETON);
     bind(SingularitySchedulerLock.class).in(Scopes.SINGLETON);
+    bind(SingularityMesosSchedulerClient.class).in(Scopes.SINGLETON);
   }
 
   @Provides

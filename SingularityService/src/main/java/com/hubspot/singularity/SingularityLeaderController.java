@@ -150,7 +150,7 @@ public class SingularityLeaderController implements Managed, LeaderLatchListener
       numCachedOffers++;
     }
 
-    return new SingularityHostState(master, uptime, scheduler.getState().name(), millisSinceLastOfferTimestamp, hostAndPort.getHostText(), hostAndPort.getHostText(), mesosMaster, scheduler.isConnected(),
+    return new SingularityHostState(master, uptime, scheduler.getState().name(), millisSinceLastOfferTimestamp, hostAndPort.getHostText(), hostAndPort.getHostText(), mesosMaster, scheduler.isRunning(),
        numCachedOffers, cachedCpus, cachedMemoryBytes);
   }
 
