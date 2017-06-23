@@ -97,7 +97,7 @@ public class SingularityExecutor implements Executor {
     } catch (Throwable t) {
       LOG.error("Unexpected exception starting task {}", taskId, t);
 
-      executorUtils.sendStatusUpdate(executorDriver, taskInfo, TaskState.TASK_LOST, String.format("Unexpected exception while launching task %s - %s", taskId, t.getMessage()), LOG);
+      executorUtils.sendStatusUpdate(executorDriver, taskInfo.getTaskId(), TaskState.TASK_LOST, String.format("Unexpected exception while launching task %s - %s", taskId, t.getMessage()), LOG);
     }
   }
 

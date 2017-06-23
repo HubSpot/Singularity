@@ -1,6 +1,7 @@
 package com.hubspot.singularity.data;
 
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -133,10 +134,18 @@ public class RequestManager extends CuratorAsyncManager {
   }
 
   private String getPendingPath(SingularityPendingRequest pendingRequest) {
-    String nodeName = String.format("%s%s",
-      new SingularityDeployKey(pendingRequest.getRequestId(), pendingRequest.getDeployId()),
-      pendingRequest.getPendingType().equals(PendingType.ONEOFF) ? pendingRequest.getTimestamp()  : "");
+    String nodeName = pendingQueueKey(pendingRequest);
     return ZKPaths.makePath(PENDING_PATH_ROOT, nodeName);
+  }
+
+  private String pendingQueueKey(SingularityPendingRequest pendingRequest) {
+    SingularityDeployKey deployKey = new SingularityDeployKey(pendingRequest.getRequestId(), pendingRequest.getDeployId());
+    if (pendingRequest.getPendingType() == PendingType.ONEOFF
+        || pendingRequest.getPendingType() == PendingType.IMMEDIATE) {
+      return String.format("%s%s", deployKey.toString(), pendingRequest.getTimestamp());
+    } else {
+      return deployKey.toString();
+    }
   }
 
   private String getCleanupPath(String requestId, RequestCleanupType type) {
@@ -280,7 +289,11 @@ public class RequestManager extends CuratorAsyncManager {
   }
 
   public List<SingularityPendingRequest> getPendingRequests() {
-    return getAsyncChildren(PENDING_PATH_ROOT, pendingRequestTranscoder);
+    List<SingularityPendingRequest> pendingRequests = getAsyncChildren(PENDING_PATH_ROOT, pendingRequestTranscoder);
+    // Strictly enforce ordering of pending requests
+    pendingRequests.sort(Comparator.comparingLong(SingularityPendingRequest::getTimestamp));
+
+    return pendingRequests;
   }
 
   public List<SingularityRequestCleanup> getCleanupRequests() {
@@ -398,11 +411,11 @@ public class RequestManager extends CuratorAsyncManager {
     return getData(getRequestPath(requestId), requestTranscoder);
   }
 
-  public void startDeletingRequest(SingularityRequest request, Optional<String> user, Optional<String> actionId, Optional<String> message) {
+  public void startDeletingRequest(SingularityRequest request, Optional<Boolean> removeFromLoadBalancer, Optional<String> user, Optional<String> actionId, Optional<String> message) {
     final long now = System.currentTimeMillis();
 
     // delete it no matter if the delete request already exists.
-    createCleanupRequest(new SingularityRequestCleanup(user, RequestCleanupType.DELETING, now, Optional.of(Boolean.TRUE), request.getId(), Optional.<String> absent(),
+    createCleanupRequest(new SingularityRequestCleanup(user, RequestCleanupType.DELETING, now, Optional.of(Boolean.TRUE), removeFromLoadBalancer, request.getId(), Optional.<String> absent(),
         Optional.<Boolean> absent(), message, actionId, Optional.<SingularityShellCommand>absent()));
 
     markDeleting(request, System.currentTimeMillis(), user, message);

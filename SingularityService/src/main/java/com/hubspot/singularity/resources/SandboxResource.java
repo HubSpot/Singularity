@@ -1,6 +1,7 @@
 package com.hubspot.singularity.resources;
 
 import static com.hubspot.singularity.WebExceptions.badRequest;
+import static com.hubspot.singularity.WebExceptions.checkBadRequest;
 import static com.hubspot.singularity.WebExceptions.checkNotFound;
 import static com.hubspot.singularity.WebExceptions.notFound;
 
@@ -102,7 +103,7 @@ public class SandboxResource extends AbstractHistoryResource {
     final String currentDirectory = getCurrentDirectory(taskId, path);
     final SingularityTaskHistory history = checkHistory(taskId);
 
-    final String slaveHostname = history.getTask().getOffer().getHostname();
+    final String slaveHostname = history.getTask().getHostname();
     final String pathToRoot = history.getDirectory().get();
     final String fullPath = new File(pathToRoot, currentDirectory).toString();
 
@@ -137,7 +138,9 @@ public class SandboxResource extends AbstractHistoryResource {
 
     final SingularityTaskHistory history = checkHistory(taskId);
 
-    final String slaveHostname = history.getTask().getOffer().getHostname();
+    checkBadRequest(!Strings.isNullOrEmpty(path), "Must specify 'path'");
+
+    final String slaveHostname = history.getTask().getHostname();
     final String fullPath = new File(history.getDirectory().get(), path).toString();
 
     try {

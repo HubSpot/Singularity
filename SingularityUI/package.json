@@ -64,7 +64,7 @@
     "redux-thunk": "^2.0.1",
     "reselect": "^2.5.1",
     "select2": "~3.5.1",
-    "singularityui-tailer": "0.3.7",
+    "singularityui-tailer": "0.3.11",
     "typeahead.js": "~0.10.4",
     "underscore": "~1.8.0",
     "uuid": "^3.0.0",

@@ -42,8 +42,15 @@ class RunNowModal extends Component {
   handleRunNow(dataFromForm) {
     const data = Utils.deepClone(dataFromForm);
     localStorage.setItem(LOCAL_STORAGE_AFTER_TRIGGER_VALUE, data.afterTrigger);
+
     const runId = uuid.v4();
     data.runId = runId;
+
+    if (data.launchDelay !== undefined) {
+      const runAt = (+new Date()) + data.launchDelay;
+      data.runAt = runAt;
+    }
+
     if (data.afterTrigger === RunNowModal.AFTER_TRIGGER.TAIL.value) localStorage.setItem(LOCAL_STORAGE_TAIL_AFTER_TRIGGER_FILENAME, data.fileToTail);
     this.props.runNow(data).then((response) => {
       let requestFetchResponse = response || {};
@@ -88,6 +95,11 @@ class RunNowModal extends Component {
           buttonStyle="primary"
           formElements={[
             {
+              name: 'launchDelay',
+              type: FormModal.INPUT_TYPES.DURATION,
+              label: 'Task launch delay: (optional)'
+            },
+            {
               name: 'commandLineArgs',
               type: FormModal.INPUT_TYPES.MULTIINPUT,
               label: 'Additional command line arguments: (optional)',
@@ -113,7 +125,7 @@ class RunNowModal extends Component {
             }
           ]}>
           <span>
-            <p>Are you sure you want to immediately {this.props.rerun ? 'rerun this task' : 'launch a task for this request'}?</p>
+            <p>Are you sure you want to {this.props.rerun ? 'rerun this task' : 'launch a task for this request'}?</p>
             <pre>{this.props.rerun && maybeTaskId || this.props.requestId}</pre>
           </span>
         </FormModal>

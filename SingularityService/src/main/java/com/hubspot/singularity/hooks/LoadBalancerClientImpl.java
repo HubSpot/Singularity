@@ -8,7 +8,7 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import org.apache.mesos.Protos;
+import org.apache.mesos.v1.Protos;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -189,7 +189,7 @@ public class LoadBalancerClientImpl implements LoadBalancerClient {
       final Optional<Long> maybeLoadBalancerPort = task.getPortByIndex(task.getTaskRequest().getDeploy().getLoadBalancerPortIndex().or(0));
 
       if (maybeLoadBalancerPort.isPresent()) {
-        String upstream = String.format("%s:%d", task.getOffer().getHostname(), maybeLoadBalancerPort.get());
+        String upstream = String.format("%s:%d", task.getHostname(), maybeLoadBalancerPort.get());
         Optional<String> group = loadBalancerUpstreamGroup;
 
         if (taskLabelForLoadBalancerUpstreamGroup.isPresent()) {

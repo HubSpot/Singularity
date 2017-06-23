@@ -1,7 +1,6 @@
 package com.hubspot.deploy;
 
 import org.immutables.value.Value.Immutable;
-import org.immutables.value.Value.Parameter;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.google.common.base.Optional;
@@ -22,6 +21,5 @@ public abstract class AbstractEmbeddedArtifact extends AbstractArtifact {
   public abstract Optional<String> getTargetFolderRelativeToTask();
 
   @SuppressFBWarnings("EI_EXPOSE_REP")
-  @Parameter(order = 4)
   public abstract byte[] getContent();
 }

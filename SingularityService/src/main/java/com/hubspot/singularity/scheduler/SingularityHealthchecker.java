@@ -39,7 +39,6 @@ import com.ning.http.client.AsyncHttpClient;
 import com.ning.http.client.PerRequestConfig;
 import com.ning.http.client.RequestBuilder;
 
-@SuppressWarnings("deprecation")
 @Singleton
 public class SingularityHealthchecker {
   private static final HealthcheckProtocol DEFAULT_HEALTH_CHECK_SCHEME = HealthcheckProtocol.HTTP;
@@ -212,7 +211,7 @@ public class SingularityHealthchecker {
 
     HealthcheckOptions options = task.getTaskRequest().getDeploy().getHealthcheck().get();
 
-    final String hostname = task.getOffer().getHostname();
+    final String hostname = task.getHostname();
 
     Optional<Long> healthcheckPort = options.getPortNumber().or(task.getPortByIndex(options.getPortIndex().or(0)));
 

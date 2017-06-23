@@ -96,7 +96,7 @@ const mapStateToProps = (state, ownProps) => {
 };
 
 const mapDispatchToProps = (dispatch) => ({
-  fetchLastRunTask: (requestId) => dispatch(FetchTaskHistoryForRequest.trigger(requestId, 1, 1)),
+  fetchLastRunTask: (requestId) => dispatch(FetchTaskHistoryForRequest.trigger(requestId, 1, 1, [404])),
   fetchTaskHistory: (taskId) => dispatch(FetchTaskHistory.trigger(taskId), false, [404]),
   fetchRequestArgHistory: (requestId) => dispatch(FetchRequestArgHistory.trigger(requestId))
 });

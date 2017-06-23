@@ -29,4 +29,7 @@ public interface SingularityRunNowRequestIF {
 
   @ApiModelProperty(required=false, value="Override the resources from the active deploy for this run")
   Optional<Resources> getResources();
+
+  @ApiModelProperty(required=false, value="Schedule this task to run at a specified time")
+  Optional<Long> getRunAt();
 }

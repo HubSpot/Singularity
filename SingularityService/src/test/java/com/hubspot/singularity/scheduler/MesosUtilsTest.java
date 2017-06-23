@@ -4,19 +4,20 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-import org.apache.mesos.Protos.FrameworkID;
-import org.apache.mesos.Protos.Offer;
-import org.apache.mesos.Protos.OfferID;
-import org.apache.mesos.Protos.Resource;
-import org.apache.mesos.Protos.SlaveID;
-import org.apache.mesos.Protos.Value.Range;
-import org.apache.mesos.Protos.Value.Ranges;
-import org.apache.mesos.Protos.Value.Scalar;
-import org.apache.mesos.Protos.Value.Type;
+import org.apache.mesos.v1.Protos.FrameworkID;
+import org.apache.mesos.v1.Protos.Offer;
+import org.apache.mesos.v1.Protos.OfferID;
+import org.apache.mesos.v1.Protos.Resource;
+import org.apache.mesos.v1.Protos.AgentID;
+import org.apache.mesos.v1.Protos.Value.Range;
+import org.apache.mesos.v1.Protos.Value.Ranges;
+import org.apache.mesos.v1.Protos.Value.Scalar;
+import org.apache.mesos.v1.Protos.Value.Type;
 import org.junit.Assert;
 import org.junit.Test;
 
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.hubspot.mesos.MesosUtils;
 import com.hubspot.singularity.ExtendedTaskState;
@@ -29,6 +30,28 @@ public class MesosUtilsTest {
     Resource resource = MesosUtils.getPortsResource(numPorts, buildOffer(ranges));
 
     Assert.assertEquals(numPorts, MesosUtils.getNumPorts(Collections.singletonList(resource)));
+  }
+
+  @Test
+  public void testResourceAddition() {
+    List<List<Resource>> toAdd = ImmutableList.of(
+        ImmutableList.of(
+            Resource.newBuilder().setType(Type.SCALAR).setName(MesosUtils.CPUS).setScalar(Scalar.newBuilder().setValue(1)).build(),
+            Resource.newBuilder().setType(Type.SCALAR).setName(MesosUtils.MEMORY).setScalar(Scalar.newBuilder().setValue(1024)).build()
+        ),
+        ImmutableList.of(
+            Resource.newBuilder().setType(Type.SCALAR).setName(MesosUtils.CPUS).setScalar(Scalar.newBuilder().setValue(2)).build(),
+            Resource.newBuilder().setType(Type.SCALAR).setName(MesosUtils.MEMORY).setScalar(Scalar.newBuilder().setValue(1024)).build()
+        ),
+        ImmutableList.of(
+            Resource.newBuilder().setType(Type.SCALAR).setName(MesosUtils.CPUS).setScalar(Scalar.newBuilder().setValue(3)).build(),
+            Resource.newBuilder().setType(Type.SCALAR).setName(MesosUtils.MEMORY).setScalar(Scalar.newBuilder().setValue(1024)).build()
+        )
+    );
+    List<Resource> combined = MesosUtils.combineResources(toAdd);
+
+    Assert.assertEquals(6, MesosUtils.getNumCpus(combined, Optional.absent()), 0.1);
+    Assert.assertEquals(3072, MesosUtils.getMemory(combined, Optional.absent()), 0.1);
   }
 
   @Test
@@ -146,7 +169,7 @@ public class MesosUtilsTest {
         .setId(OfferID.newBuilder().setValue("offerid").build())
         .setFrameworkId(FrameworkID.newBuilder().setValue("frameworkid").build())
         .setHostname("hostname")
-        .setSlaveId(SlaveID.newBuilder().setValue("slaveid").build());
+        .setAgentId(AgentID.newBuilder().setValue("slaveid").build());
 
     offer.addResources(buildPortRanges(ranges));
 

@@ -30,12 +30,12 @@ public interface SingularityMesosArtifactIF {
   }
 
   @JsonCreator
-  public static SingularityMesosArtifact fromString(String uri) {
+  static SingularityMesosArtifact fromString(String uri) {
     return SingularityMesosArtifact.builder().setUri(uri).build();
   }
 
   @Deprecated
-  public static SingularityMesosArtifact of(String uri,
+  static SingularityMesosArtifact of(String uri,
                                             Optional<Boolean> cache,
                                             Optional<Boolean> executable,
                                             Optional<Boolean> extract) {

@@ -4,7 +4,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-import org.apache.mesos.Protos.TaskState;
+import org.apache.mesos.v1.Protos.TaskState;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -50,14 +50,14 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
 
     SingularityTask firstTask = taskManager.getActiveTasks().get(0);
 
-    String hostname = firstTask.getOffer().getHostname();
+    String hostname = firstTask.getHostname();
     MesosTaskMonitorObject usage = new MesosTaskMonitorObject(null, null, null, firstTask.getTaskId().getId(), getStatistics(2, 5, 100));
 
     mesosClient.setSlaveResourceUsage(hostname, Collections.singletonList(usage));
 
     usagePoller.runActionOnPoll();
 
-    String slaveId = firstTask.getOffer().getSlaveId().getValue().toString();
+    String slaveId = firstTask.getAgentId().getValue();
 
     List<String> slaves = usageManager.getSlavesWithUsage();
 

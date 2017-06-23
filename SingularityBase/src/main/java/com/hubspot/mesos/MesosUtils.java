@@ -11,13 +11,13 @@ import java.util.List;
 import java.util.Random;
 import java.util.Set;
 
-import org.apache.mesos.Protos.MasterInfo;
-import org.apache.mesos.Protos.Offer;
-import org.apache.mesos.Protos.Resource;
-import org.apache.mesos.Protos.Value;
-import org.apache.mesos.Protos.Value.Range;
-import org.apache.mesos.Protos.Value.Ranges;
-import org.apache.mesos.Protos.Value.Type;
+import org.apache.mesos.v1.Protos.MasterInfo;
+import org.apache.mesos.v1.Protos.Offer;
+import org.apache.mesos.v1.Protos.Resource;
+import org.apache.mesos.v1.Protos.Value.Range;
+import org.apache.mesos.v1.Protos.Value.Ranges;
+import org.apache.mesos.v1.Protos.Value.Scalar;
+import org.apache.mesos.v1.Protos.Value.Type;
 
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -213,7 +213,7 @@ public final class MesosUtils {
   }
 
   private static Resource newScalar(String name, double value, Optional<String> role) {
-    Resource.Builder builder = Resource.newBuilder().setName(name).setType(Value.Type.SCALAR).setScalar(Value.Scalar.newBuilder().setValue(value).build());
+    Resource.Builder builder = Resource.newBuilder().setName(name).setType(Type.SCALAR).setScalar(Scalar.newBuilder().setValue(value).build());
     if (role.isPresent()) {
       builder.setRole(role.get());
     }
@@ -292,7 +292,7 @@ public final class MesosUtils {
       return false;
     }
 
-    if (!getAllPorts(offerResources).containsAll(otherRequestedPorts)) {
+    if (resources.getNumPorts() > 0 && !getAllPorts(offerResources).containsAll(otherRequestedPorts)) {
       return false;
     }
 
@@ -388,6 +388,38 @@ public final class MesosUtils {
     }
 
     return remaining;
+  }
+
+  public static List<Resource> combineResources(List<List<Resource>> resourcesList) {
+    List<Resource> resources = new ArrayList<>();
+    for (List<Resource> resourcesToAdd : resourcesList) {
+      for (Resource resource : resourcesToAdd) {
+        Optional<Resource> matched = getMatchingResource(resource, resources);
+        if (!matched.isPresent()) {
+          resources.add(resource);
+        } else {
+          int index = resources.indexOf(matched.get());
+          Resource.Builder resourceBuilder = resource.toBuilder().clone();
+          if (resource.hasScalar()) {
+            resourceBuilder.setScalar(resource.toBuilder().getScalarBuilder().setValue(resource.getScalar().getValue() + matched.get().getScalar().getValue()).build());
+            resources.set(index, resourceBuilder.build());
+          } else if (resource.hasRanges()) {
+            Ranges.Builder newRanges = Ranges.newBuilder();
+            resource.getRanges().getRangeList().forEach(newRanges::addRange);
+            matched.get().getRanges().getRangeList().forEach(newRanges::addRange);
+            resourceBuilder.setRanges(newRanges);
+            resources.set(index, resourceBuilder.build());
+          } else {
+            throw new IllegalStateException(String.format("Can't subtract non-scalar or range resources %s", formatForLogging(resource)));
+          }
+        }
+      }
+    }
+    return resources;
+  }
+
+  public static Resources buildResourcesFromMesosResourceList(List<Resource> resources, Optional<String> requiredRole) {
+    return new Resources(getNumCpus(resources, requiredRole), getMemory(resources, requiredRole), getNumPorts(resources), getDisk(resources, requiredRole));
   }
 
   public static Path getTaskDirectoryPath(String taskId) {

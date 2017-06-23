@@ -17,7 +17,7 @@ import com.wordnik.swagger.annotations.ApiModelProperty;
 public interface SingularityS3SearchResultIF {
 
   @ApiModelProperty(required=false, value="S3 continuation tokens, return these to Singularity to continue searching subsequent pages of results")
-  public Map<String, ContinuationToken> getContinuationTokens();
+  Map<String, ContinuationToken> getContinuationTokens();
 
   @Default
   @ApiModelProperty(required=true, value="If true, there are no further results for any bucket + prefix being searched")
@@ -26,5 +26,5 @@ public interface SingularityS3SearchResultIF {
   }
 
   @ApiModelProperty("List of S3 log metadata")
-  public List<SingularityS3LogMetadata> getResults();
+  List<SingularityS3LogMetadata> getResults();
 }

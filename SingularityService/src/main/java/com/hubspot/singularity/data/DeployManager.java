@@ -207,7 +207,7 @@ public class DeployManager extends CuratorAsyncManager {
     final SingularityCreateResult deploySaveResult = create(getDeployDataPath(deploy.getRequestId(), deploy.getId()), deploy, deployTranscoder);
 
     if (deploySaveResult == SingularityCreateResult.EXISTED) {
-      LOG.info(String.format("Deploy object for %s already existed (new marker: %s)", deploy, deployMarker));
+      LOG.info("Deploy object for {} already existed (new marker: {})", deploy, deployMarker);
     }
 
     singularityEventListener.deployHistoryEvent(new SingularityDeployUpdate(deployMarker, Optional.of(deploy), DeployEventType.STARTING, Optional.<SingularityDeployResult>absent()));

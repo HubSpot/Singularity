@@ -67,7 +67,7 @@ public class SingularityExecutorTask {
   }
 
   public void cleanup(TaskState state) {
-    ExtendedTaskState extendedTaskState = ExtendedTaskState.fromTaskState(state);
+    ExtendedTaskState extendedTaskState = ExtendedTaskState.fromTaskState(org.apache.mesos.v1.Protos.TaskState.valueOf(state.toString())); // #gross
 
     boolean cleanupAppTaskDirectory = !extendedTaskState.isFailed() && !taskDefinition.getExecutorData().getPreserveTaskSandboxAfterFinish().or(Boolean.FALSE);
 

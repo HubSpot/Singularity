@@ -17,4 +17,7 @@ public interface SingularityDeleteRequestRequestIF {
 
   @ApiModelProperty(required=false, value="An id to associate with this action for metadata purposes")
   Optional<String> getActionId();
+
+  @ApiModelProperty(required = false, value = "Should the service associated with the request be removed from the load balancer")
+  Optional<Boolean> getDeleteFromLoadBalancer();
 }
