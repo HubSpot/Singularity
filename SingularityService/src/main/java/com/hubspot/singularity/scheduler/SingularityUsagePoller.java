@@ -196,15 +196,16 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
   }
 
   private void updateRequestUtilization(Map<String, RequestUtilization> utilizationPerRequestId, List<SingularityTaskUsage> pastTaskUsages, SingularityTaskUsage latestUsage, SingularityTaskId task) {
-    List<SingularityTaskUsage> pastTaskUsagesCopy = new ArrayList<>(pastTaskUsages);
+    List<SingularityTaskUsage> pastTaskUsagesCopy = new ArrayList<>();
+    pastTaskUsagesCopy.add(new SingularityTaskUsage(0, task.getStartedAt(), 0)); // to calculate oldest cpu usage
+    pastTaskUsagesCopy.addAll(pastTaskUsages);
     pastTaskUsagesCopy.add(latestUsage);
 
     RequestUtilization requestUtilization = utilizationPerRequestId.getOrDefault(task.getRequestId(), new RequestUtilization(task.getRequestId(), task.getDeployId()));
 
-    for (int i = 0; i < pastTaskUsagesCopy.size(); i++) {
+    for (int i = 0; i < pastTaskUsagesCopy.size() - 1; i++) {
       SingularityTaskUsage olderUsage = pastTaskUsagesCopy.get(i);
       SingularityTaskUsage newerUsage = pastTaskUsagesCopy.get(i + 1);
-
       double cpusUsed = (newerUsage.getCpuSeconds() - olderUsage.getCpuSeconds()) / (newerUsage.getTimestamp() - olderUsage.getTimestamp());
 
       requestUtilization.addCpu(cpusUsed);
