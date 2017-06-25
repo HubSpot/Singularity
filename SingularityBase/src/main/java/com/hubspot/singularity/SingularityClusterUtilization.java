@@ -24,6 +24,10 @@ public class SingularityClusterUtilization {
   private final double maxOverUtilizedCpu;
   private final long maxUnderUtilizedMemBytes;
 
+  String maxUnderUtilizedCpuRequestId;
+  String maxOverUtilizedCpuRequestId;
+  String maxUnderUtilizedMemBytesRequestId;
+
   private final double minUnderUtilizedCpu;
   private final double minOverUtilizedCpu;
   private final long minUnderUtilizedMemBytes;
@@ -50,6 +54,9 @@ public class SingularityClusterUtilization {
                                        @JsonProperty("maxUnderUtilizedCpu") double maxUnderUtilizedCpu,
                                        @JsonProperty("maxOverUtilizedCpu") double maxOverUtilizedCpu,
                                        @JsonProperty("maxUnderUtilizedMemBytes") long maxUnderUtilizedMemBytes,
+                                       @JsonProperty("maxUnderUtilizedCpuRequestId") String maxUnderUtilizedCpuRequestId,
+                                       @JsonProperty("maxOverUtilizedCpuRequestId") String maxOverUtilizedCpuRequestId,
+                                       @JsonProperty("maxUnderUtilizedMemBytesRequestId") String maxUnderUtilizedMemBytesRequestId,
                                        @JsonProperty("minUnderUtilizedCpu") double minUnderUtilizedCpu,
                                        @JsonProperty("minOverUtilizedCpu") double minOverUtilizedCpu,
                                        @JsonProperty("minUnderUtilizedMemBytes") long minUnderUtilizedMemBytes,
@@ -71,6 +78,9 @@ public class SingularityClusterUtilization {
     this.maxUnderUtilizedCpu = maxUnderUtilizedCpu;
     this.maxOverUtilizedCpu = maxOverUtilizedCpu;
     this.maxUnderUtilizedMemBytes = maxUnderUtilizedMemBytes;
+    this.maxUnderUtilizedCpuRequestId = maxUnderUtilizedCpuRequestId;
+    this.maxOverUtilizedCpuRequestId = maxOverUtilizedCpuRequestId;
+    this.maxUnderUtilizedMemBytesRequestId = maxUnderUtilizedMemBytesRequestId;
     this.minUnderUtilizedCpu = minUnderUtilizedCpu;
     this.minOverUtilizedCpu = minOverUtilizedCpu;
     this.minUnderUtilizedMemBytes = minUnderUtilizedMemBytes;
@@ -133,6 +143,18 @@ public class SingularityClusterUtilization {
     return maxUnderUtilizedMemBytes;
   }
 
+  public String getMaxUnderUtilizedCpuRequestId() {
+    return maxUnderUtilizedCpuRequestId;
+  }
+
+  public String getMaxOverUtilizedCpuRequestId() {
+    return maxOverUtilizedCpuRequestId;
+  }
+
+  public String getMaxUnderUtilizedMemBytesRequestId() {
+    return maxUnderUtilizedMemBytesRequestId;
+  }
+
   public double getMinUnderUtilizedCpu() {
     return minUnderUtilizedCpu;
   }
@@ -181,6 +203,9 @@ public class SingularityClusterUtilization {
         ", maxUnderUtilizedCpu=" + maxUnderUtilizedCpu +
         ", maxOverUtilizedCpu=" + maxOverUtilizedCpu +
         ", maxUnderUtilizedMemBytes=" + maxUnderUtilizedMemBytes +
+        ", maxUnderUtilizedCpuRequestId=" + maxUnderUtilizedCpuRequestId +
+        ", maxOverUtilizedCpuRequestId=" + maxOverUtilizedCpuRequestId +
+        ", maxUnderUtilizedMemBytesRequestId=" + maxUnderUtilizedMemBytesRequestId +
         ", minUnderUtilizedCpu=" + minUnderUtilizedCpu +
         ", minOverUtilizedCpu=" + minOverUtilizedCpu +
         ", minUnderUtilizedMemBytes=" + minUnderUtilizedMemBytes +
