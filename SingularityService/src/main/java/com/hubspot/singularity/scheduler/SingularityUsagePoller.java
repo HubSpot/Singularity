@@ -229,6 +229,10 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
     double maxOverUtilizedCpu = 0;
     long maxUnderUtilizedMemBytes = 0;
 
+    String maxUnderUtilizedCpuRequestId = null;
+    String maxOverUtilizedCpuRequestId = null;
+    String maxUnderUtilizedMemBytesRequestId = null;
+
     double minUnderUtilizedCpu = Double.MAX_VALUE;
     double minOverUtilizedCpu = Double.MAX_VALUE;
     long minUnderUtilizedMemBytes = Long.MAX_VALUE;
@@ -238,6 +242,7 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
       Optional<SingularityDeploy> maybeDeploy = deployManager.getDeploy(utilization.getRequestId(), utilization.getDeployId());
 
       if (maybeDeploy.isPresent() && maybeDeploy.get().getResources().isPresent()) {
+        String requestId = utilization.getRequestId();
         long memoryBytesReserved = (long) (maybeDeploy.get().getResources().get().getMemoryMb() * SingularitySlaveUsage.BYTES_PER_MEGABYTE);
         double cpuReserved = maybeDeploy.get().getResources().get().getCpus();
 
@@ -247,14 +252,20 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
         if (unusedCpu > 0) {
           numRequestsWithUnderUtilizedCpu++;
           totalUnderUtilizedCpu += unusedCpu;
-          maxUnderUtilizedCpu = Math.max(unusedCpu, maxUnderUtilizedCpu);
+          if (unusedCpu > maxUnderUtilizedCpu) {
+            maxUnderUtilizedCpu = unusedCpu;
+            maxUnderUtilizedCpuRequestId = requestId;
+          }
           minUnderUtilizedCpu = Math.min(unusedCpu, minUnderUtilizedCpu);
         } else if (unusedCpu < 0) {
           double overusedCpu = Math.abs(unusedCpu);
 
           numRequestsWithOverUtilizedCpu++;
           totalOverUtilizedCpu += overusedCpu;
-          maxOverUtilizedCpu = Math.max(overusedCpu, maxOverUtilizedCpu);
+          if (overusedCpu > maxOverUtilizedCpu) {
+            maxOverUtilizedCpu = overusedCpu;
+            maxOverUtilizedCpuRequestId = requestId;
+          }
           minOverUtilizedCpu = Math.min(overusedCpu, minOverUtilizedCpu);
         }
 
@@ -262,6 +273,10 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
           numRequestsWithUnderUtilizedMemBytes++;
           totalUnderUtilizedMemBytes += unusedMemBytes;
           maxUnderUtilizedMemBytes = Math.max(unusedMemBytes, maxUnderUtilizedMemBytes);
+          if (unusedMemBytes > maxUnderUtilizedMemBytes) {
+            maxUnderUtilizedMemBytes = unusedMemBytes;
+            maxUnderUtilizedMemBytesRequestId = requestId;
+          }
           minUnderUtilizedMemBytes = Math.min(unusedMemBytes, minUnderUtilizedMemBytes);
         }
       }
@@ -272,9 +287,10 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
     long avgUnderUtilizedMemBytes = numRequestsWithUnderUtilizedMemBytes != 0 ? totalUnderUtilizedMemBytes / numRequestsWithUnderUtilizedMemBytes : 0;
 
     return new SingularityClusterUtilization(new ArrayList<>(utilizationPerRequestId.values()), numRequestsWithUnderUtilizedCpu, numRequestsWithOverUtilizedCpu,
-        numRequestsWithUnderUtilizedMemBytes, totalUnderUtilizedCpu, totalOverUtilizedCpu, totalUnderUtilizedMemBytes, avgUnderUtilizedCpu,
-        avgOverUtilizedCpu, avgUnderUtilizedMemBytes, maxUnderUtilizedCpu, maxOverUtilizedCpu, maxUnderUtilizedMemBytes, getMin(minUnderUtilizedCpu),
-        getMin(minOverUtilizedCpu), getMin(minUnderUtilizedMemBytes), totalMemBytesUsed, totalMemBytesAvailable, totalCpuUsed, totalCpuAvailable, now);
+        numRequestsWithUnderUtilizedMemBytes, totalUnderUtilizedCpu, totalOverUtilizedCpu, totalUnderUtilizedMemBytes, avgUnderUtilizedCpu, avgOverUtilizedCpu,
+        avgUnderUtilizedMemBytes, maxUnderUtilizedCpu, maxOverUtilizedCpu, maxUnderUtilizedMemBytes, maxUnderUtilizedCpuRequestId, maxOverUtilizedCpuRequestId,
+        maxUnderUtilizedMemBytesRequestId, getMin(minUnderUtilizedCpu), getMin(minOverUtilizedCpu), getMin(minUnderUtilizedMemBytes), totalMemBytesUsed,
+        totalMemBytesAvailable, totalCpuUsed, totalCpuAvailable, now);
   }
 
   private double getMin(double value) {
