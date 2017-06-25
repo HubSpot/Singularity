@@ -24,9 +24,9 @@ public class SingularityClusterUtilization {
   private final double maxOverUtilizedCpu;
   private final long maxUnderUtilizedMemBytes;
 
-  String maxUnderUtilizedCpuRequestId;
-  String maxOverUtilizedCpuRequestId;
-  String maxUnderUtilizedMemBytesRequestId;
+  private final String maxUnderUtilizedCpuRequestId;
+  private final String maxOverUtilizedCpuRequestId;
+  private final String maxUnderUtilizedMemBytesRequestId;
 
   private final double minUnderUtilizedCpu;
   private final double minOverUtilizedCpu;

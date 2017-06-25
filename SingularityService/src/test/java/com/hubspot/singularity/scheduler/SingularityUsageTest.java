@@ -241,7 +241,9 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
 
     Assert.assertEquals(0, utilization.getMaxOverUtilizedCpu(), 0);
     Assert.assertEquals(2, utilization.getMaxUnderUtilizedCpu(), 0);
+    Assert.assertEquals(requestId, utilization.getMaxUnderUtilizedCpuRequestId());
     Assert.assertEquals(175, utilization.getMaxUnderUtilizedMemBytes());
+    Assert.assertEquals(requestId, utilization.getMaxUnderUtilizedMemBytesRequestId());
 
     Assert.assertEquals(0, utilization.getMinOverUtilizedCpu(), 0);
     Assert.assertEquals(2, utilization.getMinUnderUtilizedCpu(), 0);
@@ -286,6 +288,7 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
     Assert.assertEquals(0, utilization.getMaxOverUtilizedCpu(), 0);
     Assert.assertEquals(0, utilization.getMaxUnderUtilizedCpu(), 0);
     Assert.assertEquals(50, utilization.getMaxUnderUtilizedMemBytes());
+    Assert.assertEquals(requestId, utilization.getMaxUnderUtilizedMemBytesRequestId());
 
     Assert.assertEquals(0, utilization.getMinOverUtilizedCpu(), 0);
     Assert.assertEquals(0, utilization.getMinUnderUtilizedCpu(), 0);
@@ -328,6 +331,7 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
     Assert.assertEquals(0, utilization.getAvgUnderUtilizedMemBytes(), 0);
 
     Assert.assertEquals(2, utilization.getMaxOverUtilizedCpu(), 0);
+    Assert.assertEquals(requestId, utilization.getMaxOverUtilizedCpuRequestId());
     Assert.assertEquals(0, utilization.getMaxUnderUtilizedCpu(), 0);
     Assert.assertEquals(0, utilization.getMaxUnderUtilizedMemBytes());
 

@@ -272,7 +272,6 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
         if (unusedMemBytes > 0) {
           numRequestsWithUnderUtilizedMemBytes++;
           totalUnderUtilizedMemBytes += unusedMemBytes;
-          maxUnderUtilizedMemBytes = Math.max(unusedMemBytes, maxUnderUtilizedMemBytes);
           if (unusedMemBytes > maxUnderUtilizedMemBytes) {
             maxUnderUtilizedMemBytes = unusedMemBytes;
             maxUnderUtilizedMemBytesRequestId = requestId;
