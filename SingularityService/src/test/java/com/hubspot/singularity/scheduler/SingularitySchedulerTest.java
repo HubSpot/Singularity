@@ -999,7 +999,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     scheduler.drainPendingQueue(stateCacheProvider.get());
     deployChecker.checkDeploys();
     
-    sms.resourceOffers(driver, Arrays.asList(createOffer(2, 4, 1024), createOffer(1, 0, 1024)));
+    sms.resourceOffers(driver, Arrays.asList(createOffer(2, 4, 65536), createOffer(1, 0, 1024)));
 
     Assert.assertTrue(taskManager.getActiveTaskIds().size() == 4);
     Assert.assertTrue(taskManager.getPendingTaskIds().size() == 6);
