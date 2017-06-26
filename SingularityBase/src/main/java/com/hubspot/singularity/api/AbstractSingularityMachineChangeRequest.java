@@ -18,7 +18,10 @@ public abstract class AbstractSingularityMachineChangeRequest extends Singularit
   public abstract Optional<MachineState> getRevertToState();
 
   @ApiModelProperty(required=false, value="If a machine has not successfully decommissioned in durationMillis, kill the remaining tasks on the machine")
-  public abstract boolean isKillTasksOnDecommissionTimeout();
+  @Default
+  public boolean isKillTasksOnDecommissionTimeout() {
+    return false;
+  }
 
   ///
   @ApiModelProperty(required=false, value="A message to show to users about why this action was taken")
@@ -33,4 +36,7 @@ public abstract class AbstractSingularityMachineChangeRequest extends Singularit
   @ApiModelProperty(required=false, value="The number of milliseconds to wait before reversing the effects of this action (letting it expire)")
   public abstract Optional<Long> getDurationMillis();
 
+  public static SingularityMachineChangeRequest empty() {
+    return SingularityMachineChangeRequest.builder().build();
+  }
 }

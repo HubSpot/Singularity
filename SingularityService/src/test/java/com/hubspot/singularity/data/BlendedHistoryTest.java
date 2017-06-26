@@ -15,7 +15,6 @@ import com.google.inject.Inject;
 import com.hubspot.singularity.OrderDirection;
 import com.hubspot.singularity.RequestType;
 import com.hubspot.singularity.SingularityRequest;
-import com.hubspot.singularity.SingularityRequestBuilder;
 import com.hubspot.singularity.SingularityRequestHistory;
 import com.hubspot.singularity.SingularityRequestHistory.RequestHistoryType;
 import com.hubspot.singularity.SingularityTestBaseNoDb;
@@ -46,7 +45,7 @@ public class BlendedHistoryTest extends SingularityTestBaseNoDb {
   public void testBlendedRequestHistory() {
     HistoryManager hm = mock(HistoryManager.class);
     String rid = "rid";
-    request = new SingularityRequestBuilder(rid, RequestType.WORKER).build();
+    request = SingularityRequest.builder().setId(rid).setRequestType(RequestType.WORKER).build();
     RequestHistoryHelper rhh = new RequestHistoryHelper(requestManager, hm);
 
     mockRequestHistory(hm, Collections.<SingularityRequestHistory> emptyList());

@@ -91,7 +91,7 @@ public class SingularityRequestTypeMigration extends ZkDataMigration {
             this.daemon = daemon;
             this.loadBalanced = loadBalanced;
             this.originalRequestType = originalRequestType == null ? Optional.<RequestType>absent() : originalRequestType;
-            this.requestType = this.originalRequestType.or(RequestType.fromDaemonAndScheduleAndLoadBalanced(schedule, daemon, loadBalanced));
+            this.requestType = this.originalRequestType.or(RequestType.fromDaemonAndScheduleAndLoadBalanced(schedule, daemon, loadBalanced.or(false)));
         }
 
         @JsonAnySetter

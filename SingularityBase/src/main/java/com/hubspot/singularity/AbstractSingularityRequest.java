@@ -15,10 +15,13 @@ import org.immutables.value.Value.Lazy;
 import org.immutables.value.Value.Style.ImplementationVisibility;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.google.common.base.Optional;
 import com.wordnik.swagger.annotations.ApiModelProperty;
 
 @Immutable
+@JsonSerialize
+// Style differs for SingularityRequest because @Check cannot be used with 'new' constructor generation
 @Value.Style(
     get = {"is*", "get*"}, // Detect 'get' and 'is' prefixes in accessor methods
     init = "set*", // Builder initialization methods will have 'set' prefix

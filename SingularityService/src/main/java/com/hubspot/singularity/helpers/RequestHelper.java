@@ -1,7 +1,5 @@
 package com.hubspot.singularity.helpers;
 
-import java.util.UUID;
-
 import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -96,16 +94,16 @@ public class RequestHelper {
 
       if (maybeDeployId.isPresent()) {
         if (maybeBounceRequest.isPresent()) {
-          Optional<String> actionId = maybeBounceRequest.get().getActionId().or(Optional.of(UUID.randomUUID().toString()));
+          String actionId = maybeBounceRequest.get().getActionId();
           Optional<Boolean> removeFromLoadBalancer = Optional.absent();
           SingularityCreateResult createResult = requestManager.createCleanupRequest(
-            new SingularityRequestCleanup(user, maybeBounceRequest.get().getIncremental().or(true) ? RequestCleanupType.INCREMENTAL_BOUNCE : RequestCleanupType.BOUNCE,
-              System.currentTimeMillis(), Optional.<Boolean> absent(), removeFromLoadBalancer, newRequest.getId(), Optional.of(maybeDeployId.get()), skipHealthchecks, message, actionId, maybeBounceRequest.get().getRunShellCommandBeforeKill()));
+            new SingularityRequestCleanup(user, maybeBounceRequest.get().isIncremental() ? RequestCleanupType.INCREMENTAL_BOUNCE : RequestCleanupType.BOUNCE,
+              System.currentTimeMillis(), Optional.<Boolean> absent(), removeFromLoadBalancer, newRequest.getId(), Optional.of(maybeDeployId.get()), skipHealthchecks, message, Optional.of(actionId), maybeBounceRequest.get().getRunShellCommandBeforeKill()));
 
           if (createResult != SingularityCreateResult.EXISTED) {
             requestManager.bounce(newRequest, System.currentTimeMillis(), user, Optional.of("Bouncing due to bounce after scale"));
             final SingularityBounceRequest validatedBounceRequest = validator.checkBounceRequest(maybeBounceRequest.get());
-            requestManager.saveExpiringObject(new SingularityExpiringBounce(newRequest.getId(), maybeDeployId.get(), user, System.currentTimeMillis(), validatedBounceRequest, actionId.get()));
+            requestManager.saveExpiringObject(new SingularityExpiringBounce(newRequest.getId(), maybeDeployId.get(), user, System.currentTimeMillis(), validatedBounceRequest, actionId));
           } else {
             requestManager.addToPendingQueue(new SingularityPendingRequest(newRequest.getId(), maybeDeployId.get(), timestamp, user, PendingType.UPDATED_REQUEST,
               skipHealthchecks, message));

@@ -30,7 +30,7 @@ public class SingularitySlavePlacementTest extends SingularitySchedulerTestBase 
     initRequest();
     initFirstDeploy();
 
-    saveAndSchedule(request.toBuilder().setInstances(Optional.of(2)).setSlavePlacement(Optional.of(SlavePlacement.SEPARATE)));
+    saveAndSchedule(SingularityRequest.builder().from(request).setInstances(Optional.of(2)).setSlavePlacement(Optional.of(SlavePlacement.SEPARATE)));
 
     sms.resourceOffers(Arrays.asList(createOffer(20, 20000, "slave1", "host1"), createOffer(20, 20000, "slave1", "host1")));
 
@@ -60,7 +60,7 @@ public class SingularitySlavePlacementTest extends SingularitySchedulerTestBase 
     initRequest();
     initFirstDeploy();
 
-    saveAndSchedule(request.toBuilder().setInstances(Optional.of(1)).setSlavePlacement(Optional.of(SlavePlacement.SPREAD_ALL_SLAVES)));
+    saveAndSchedule(SingularityRequest.builder().from(request).setInstances(Optional.of(1)).setSlavePlacement(Optional.of(SlavePlacement.SPREAD_ALL_SLAVES)));
 
     sms.resourceOffers(Arrays.asList(createOffer(20, 20000, "slave1", "host1", Optional.of("rack1"))));
 
@@ -104,7 +104,7 @@ public class SingularitySlavePlacementTest extends SingularitySchedulerTestBase 
 
     sms.resourceOffers(Arrays.asList(createOffer(20, 20000, "slave1", "host1"), createOffer(20, 20000, "slave2", "host2")));
 
-    saveAndSchedule(request.toBuilder().setInstances(Optional.of(3)).setSlavePlacement(Optional.of(SlavePlacement.OPTIMISTIC)));
+    saveAndSchedule(SingularityRequest.builder().from(request).setInstances(Optional.of(3)).setSlavePlacement(Optional.of(SlavePlacement.OPTIMISTIC)));
 
     sms.resourceOffers(Arrays.asList(createOffer(20, 20000, "slave1", "host1")));
 
@@ -127,7 +127,7 @@ public class SingularitySlavePlacementTest extends SingularitySchedulerTestBase 
     initRequest();
     initFirstDeploy();
 
-    saveAndSchedule(request.toBuilder().setInstances(Optional.of(3)).setSlavePlacement(Optional.of(SlavePlacement.OPTIMISTIC)));
+    saveAndSchedule(SingularityRequest.builder().from(request).setInstances(Optional.of(3)).setSlavePlacement(Optional.of(SlavePlacement.OPTIMISTIC)));
 
     sms.resourceOffers(Arrays.asList(createOffer(20, 20000, "slave1", "host1"), createOffer(20, 20000, "slave2", "host2")));
 
@@ -142,7 +142,7 @@ public class SingularitySlavePlacementTest extends SingularitySchedulerTestBase 
     initRequest();
     initFirstDeploy();
 
-    saveAndSchedule(request.toBuilder().setInstances(Optional.of(3)).setSlavePlacement(Optional.of(SlavePlacement.GREEDY)));
+    saveAndSchedule(SingularityRequest.builder().from(request).setInstances(Optional.of(3)).setSlavePlacement(Optional.of(SlavePlacement.GREEDY)));
 
     sms.resourceOffers(Arrays.asList(createOffer(20, 20000, "slave1", "host1")));
 
@@ -157,7 +157,7 @@ public class SingularitySlavePlacementTest extends SingularitySchedulerTestBase 
 
     initRequest();
     initFirstDeploy();
-    saveAndSchedule(request.toBuilder().setInstances(Optional.of(1)));
+    saveAndSchedule(SingularityRequest.builder().from(request).setInstances(Optional.of(1)));
 
     sms.resourceOffers(Arrays.asList(createOffer(20, 20000, "slave1", "host1", Optional.<String>absent(), ImmutableMap.of("reservedKey", "reservedValue1"))));
 
@@ -177,13 +177,13 @@ public class SingularitySlavePlacementTest extends SingularitySchedulerTestBase 
     Map<String, String> reservedAttributesMap = ImmutableMap.of("reservedKey", "reservedValue1");
     initRequest();
     initFirstDeploy();
-    saveAndSchedule(request.toBuilder().setInstances(Optional.of(1)));
+    saveAndSchedule(SingularityRequest.builder().from(request).setInstances(Optional.of(1)));
 
     sms.resourceOffers(Arrays.asList(createOffer(20, 20000, "slave1", "host1", Optional.<String>absent(), reservedAttributesMap)));
 
     Assert.assertTrue(taskManager.getActiveTaskIds().size() == 0);
 
-    saveAndSchedule(request.toBuilder().setInstances(Optional.of(1)).setRequiredSlaveAttributes(Optional.of(reservedAttributesMap)));
+    saveAndSchedule(SingularityRequest.builder().from(request).setInstances(Optional.of(1)).setRequiredSlaveAttributes(Optional.of(reservedAttributesMap)));
 
     sms.resourceOffers(Arrays.asList(createOffer(20, 20000, "slave1", "host1", Optional.<String>absent(), ImmutableMap.of("reservedKey", "reservedValue1"))));
 
@@ -201,13 +201,13 @@ public class SingularitySlavePlacementTest extends SingularitySchedulerTestBase 
 
     initRequest();
     initFirstDeploy();
-    saveAndSchedule(request.toBuilder().setInstances(Optional.of(1)));
+    saveAndSchedule(SingularityRequest.builder().from(request).setInstances(Optional.of(1)));
 
     sms.resourceOffers(Arrays.asList(createOffer(20, 20000, "slave1", "host1", Optional.<String>absent(), ImmutableMap.of("reservedKey", "reservedValue1"))));
 
     Assert.assertTrue(taskManager.getActiveTaskIds().size() == 0);
 
-    saveAndSchedule(request.toBuilder().setInstances(Optional.of(1)).setAllowedSlaveAttributes(Optional.of(allowedAttributes)));
+    saveAndSchedule(SingularityRequest.builder().from(request).setInstances(Optional.of(1)).setAllowedSlaveAttributes(Optional.of(allowedAttributes)));
 
     sms.resourceOffers(Arrays.asList(createOffer(20, 20000, "slave1", "host1", Optional.<String>absent(), ImmutableMap.of("reservedKey", "reservedValue1"))));
 
@@ -221,7 +221,7 @@ public class SingularitySlavePlacementTest extends SingularitySchedulerTestBase 
 
     initRequest();
     initFirstDeploy();
-    saveAndSchedule(request.toBuilder().setInstances(Optional.of(1)).setRequiredSlaveAttributes(Optional.of(requiredAttributes)));
+    saveAndSchedule(SingularityRequest.builder().from(request).setInstances(Optional.of(1)).setRequiredSlaveAttributes(Optional.of(requiredAttributes)));
 
     sms.resourceOffers(Arrays.asList(createOffer(20, 20000, "slave1", "host1", Optional.<String>absent(), ImmutableMap.of("requiredKey", "notTheRightValue"))));
     sms.resourceOffers(Arrays.asList(createOffer(20, 20000, "slave2", "host2", Optional.<String>absent(), ImmutableMap.of("notTheRightKey", "requiredValue1"))));
@@ -241,7 +241,7 @@ public class SingularitySlavePlacementTest extends SingularitySchedulerTestBase 
 
     initRequest();
     initFirstDeploy();
-    saveAndSchedule(request.toBuilder().setInstances(Optional.of(1)).setRequiredSlaveAttributes(Optional.of(requiredAttributes)));
+    saveAndSchedule(SingularityRequest.builder().from(request).setInstances(Optional.of(1)).setRequiredSlaveAttributes(Optional.of(requiredAttributes)));
 
     sms.resourceOffers(Arrays.asList(createOffer(20, 20000, "slave1", "host1", Optional.<String>absent(), ImmutableMap.of("requiredKey1", "requiredValue1"))));
     sms.resourceOffers(Arrays.asList(createOffer(20, 20000, "slave2", "host2", Optional.<String>absent(), ImmutableMap.of("requiredKey1", "requiredValue1", "someotherkey", "someothervalue"))));
@@ -262,7 +262,7 @@ public class SingularitySlavePlacementTest extends SingularitySchedulerTestBase 
 
     initRequest();
     initFirstDeploy();
-    saveAndSchedule(request.toBuilder().setInstances(Optional.of(7)).setRackSensitive(Optional.of(true)));
+    saveAndSchedule(SingularityRequest.builder().from(request).setInstances(Optional.of(7)).setRackSensitive(true));
 
     // rack1 -> 1, rack2 -> 2, rack3 -> 3
     sms.resourceOffers(Arrays.asList(createOffer(1, 128, "slave1", "host1", Optional.of("rack1"))));
@@ -302,7 +302,7 @@ public class SingularitySlavePlacementTest extends SingularitySchedulerTestBase 
 
       initRequest();
       initFirstDeploy();
-      saveAndSchedule(request.toBuilder().setInstances(Optional.of(7)).setRackSensitive(Optional.of(true)));
+      saveAndSchedule(SingularityRequest.builder().from(request).setInstances(Optional.of(7)).setRackSensitive(true));
 
       sms.resourceOffers(Arrays.asList(createOffer(2, 256, "slave1", "host1", Optional.of("rack1"))));
       sms.resourceOffers(Arrays.asList(createOffer(2, 256, "slave2", "host2", Optional.of("rack2"))));
@@ -310,7 +310,7 @@ public class SingularitySlavePlacementTest extends SingularitySchedulerTestBase 
 
       Assert.assertEquals(7, taskManager.getActiveTaskIds().size());
 
-      requestResource.postRequest(request.toBuilder().setInstances(Optional.of(4)).setRackSensitive(Optional.of(true)).build());
+      requestResource.postRequest(SingularityRequest.builder().from(request).setInstances(Optional.of(4)).setRackSensitive(true).build());
 
       scheduler.drainPendingQueue(stateCacheProvider.get());
 
@@ -336,13 +336,13 @@ public class SingularitySlavePlacementTest extends SingularitySchedulerTestBase 
 
     initRequest();
     initFirstDeploy();
-    SingularityRequest newRequest = request.toBuilder()
+    SingularityRequest newRequest = SingularityRequest.builder().from(request)
       .setInstances(Optional.of(2))
-      .setRackSensitive(Optional.of(true))
+      .setRackSensitive(true)
       .setSlavePlacement(Optional.of(SlavePlacement.SEPARATE))
       .setAllowBounceToSameHost(Optional.of(true))
       .build();
-    saveAndSchedule(newRequest.toBuilder());
+    saveAndSchedule(SingularityRequest.builder().from(newRequest));
     scheduler.drainPendingQueue(stateCacheProvider.get());
 
     sms.resourceOffers(Arrays.asList(createOffer(1, 128, "slave1", "host1", Optional.of("rack1"))));
@@ -366,7 +366,7 @@ public class SingularitySlavePlacementTest extends SingularitySchedulerTestBase 
     Assert.assertEquals(3, taskManager.getActiveTaskIds().size());
 
     // Other pending type should not allow tasks on same host
-    saveAndSchedule(newRequest.toBuilder().setInstances(Optional.of(2)));
+    saveAndSchedule(SingularityRequest.builder().from(newRequest).setInstances(Optional.of(2)));
     sms.resourceOffers(Arrays.asList(createOffer(1, 128, "slave1", "host1", Optional.of("rack1"))));
     Assert.assertEquals(3, taskManager.getActiveTaskIds().size());
   }

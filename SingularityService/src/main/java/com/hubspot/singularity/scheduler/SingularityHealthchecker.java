@@ -76,7 +76,7 @@ public class SingularityHealthchecker {
   }
 
   public void enqueueHealthcheck(SingularityTask task, boolean ignoreExisting, boolean inStartup, boolean isFirstCheck) {
-    HealthcheckOptions options = task.getTaskRequest().getDeploy().getHealthcheck().get();
+    HealthcheckOptions options = task.getTaskRequest().getDeploy().getValidatedHealthcheckOptions().get();
     final Optional<Integer> healthcheckMaxRetries = options.getMaxRetries().or(configuration.getHealthcheckMaxRetries());
 
     Optional<Long> maybeRunningAt = getRunningAt(taskManager.getTaskHistoryUpdates(task.getTaskId()));
@@ -205,11 +205,11 @@ public class SingularityHealthchecker {
   }
 
   private Optional<String> getHealthcheckUri(SingularityTask task) {
-    if (!task.getTaskRequest().getDeploy().getHealthcheck().isPresent()) {
+    if (!task.getTaskRequest().getDeploy().getValidatedHealthcheckOptions().isPresent()) {
       return Optional.absent();
     }
 
-    HealthcheckOptions options = task.getTaskRequest().getDeploy().getHealthcheck().get();
+    HealthcheckOptions options = task.getTaskRequest().getDeploy().getValidatedHealthcheckOptions().get();
 
     final String hostname = task.getHostname();
 
@@ -220,7 +220,7 @@ public class SingularityHealthchecker {
       return Optional.absent();
     }
 
-    String uri = task.getTaskRequest().getDeploy().getHealthcheck().get().getUri();
+    String uri = task.getTaskRequest().getDeploy().getValidatedHealthcheckOptions().get().getUri();
 
     if (uri.startsWith("/")) {
       uri = uri.substring(1);
@@ -239,7 +239,7 @@ public class SingularityHealthchecker {
     if (disasterManager.isDisabled(SingularityAction.RUN_HEALTH_CHECKS)) {
       return false;
     }
-    if (!task.getTaskRequest().getRequest().isLongRunning() || !task.getTaskRequest().getDeploy().getHealthcheck().isPresent()) {
+    if (!task.getTaskRequest().getRequest().isLongRunning() || !task.getTaskRequest().getDeploy().getValidatedHealthcheckOptions().isPresent()) {
       return false;
     }
 
@@ -274,8 +274,8 @@ public class SingularityHealthchecker {
       return;
     }
 
-    final Integer timeoutSeconds = task.getTaskRequest().getDeploy().getHealthcheck().isPresent() ?
-      task.getTaskRequest().getDeploy().getHealthcheck().get().getResponseTimeoutSeconds().or(configuration.getHealthcheckTimeoutSeconds()) : configuration.getHealthcheckTimeoutSeconds();
+    final Integer timeoutSeconds = task.getTaskRequest().getDeploy().getValidatedHealthcheckOptions().isPresent() ?
+      task.getTaskRequest().getDeploy().getValidatedHealthcheckOptions().get().getResponseTimeoutSeconds().or(configuration.getHealthcheckTimeoutSeconds()) : configuration.getHealthcheckTimeoutSeconds();
 
     try {
       PerRequestConfig prc = new PerRequestConfig();

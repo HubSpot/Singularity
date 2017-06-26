@@ -1,5 +1,6 @@
 package com.hubspot.singularity.api;
 
+import org.immutables.value.Value.Default;
 import org.immutables.value.Value.Immutable;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -13,9 +14,6 @@ import com.wordnik.swagger.annotations.ApiModelProperty;
 @SingularityStyle
 public interface SingularityDeployRequestIF {
 
-  @ApiModelProperty(required=false, value="If deploy is successful, also unpause the request")
-  Optional<Boolean> getUnpauseOnSuccessfulDeploy();
-
   @ApiModelProperty(required=true, value="The Singularity deploy object, containing all the required details about the Deploy")
   SingularityDeploy getDeploy();
 
@@ -26,6 +24,8 @@ public interface SingularityDeployRequestIF {
   Optional<SingularityRequest> getUpdatedRequest();
 
   @JsonIgnore
+  @Default
+  @ApiModelProperty(required=false, value="If deploy is successful, also unpause the request")
   default boolean isUnpauseOnSuccessfulDeploy() {
     return false;
   }

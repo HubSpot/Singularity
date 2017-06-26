@@ -52,10 +52,10 @@ public class SingularityAuthorizationHelperTest {
     return configuration;
   }
 
-  public static final SingularityRequest REQUEST_WITH_NO_GROUP = new SingularityRequestBuilder("test", RequestType.SERVICE).build();
-  public static final SingularityRequest REQUEST_WITH_GROUP_A = new SingularityRequestBuilder("test_a", RequestType.SERVICE).setGroup(Optional.of("a")).build();
-  public static final SingularityRequest REQUEST_WITH_GROUP_A_CHANGED_TO_B = new SingularityRequestBuilder("test_a", RequestType.SERVICE).setGroup(Optional.of("b")).build();
-  public static final SingularityRequest REQUEST_WITH_GROUP_B = new SingularityRequestBuilder("test_b", RequestType.SERVICE).setGroup(Optional.of("b")).build();
+  public static final SingularityRequest REQUEST_WITH_NO_GROUP = SingularityRequest.builder().setId("test").setRequestType(RequestType.SERVICE).build();
+  public static final SingularityRequest REQUEST_WITH_GROUP_A = SingularityRequest.builder().setId("test_a").setRequestType(RequestType.SERVICE).setGroup(Optional.of("a")).build();
+  public static final SingularityRequest REQUEST_WITH_GROUP_A_CHANGED_TO_B = SingularityRequest.builder().setId("test_a").setRequestType(RequestType.SERVICE).setGroup(Optional.of("b")).build();
+  public static final SingularityRequest REQUEST_WITH_GROUP_B = SingularityRequest.builder().setId("test_b").setRequestType(RequestType.SERVICE).setGroup(Optional.of("b")).build();
 
 
   public static final Optional<SingularityUser> NOT_LOGGED_IN = Optional.absent();
@@ -223,7 +223,7 @@ public class SingularityAuthorizationHelperTest {
 
     Set<String> readWriteGroupsOld = new HashSet<>();
     readWriteGroupsOld.add("a");
-    final SingularityRequest oldRequest = new SingularityRequestBuilder("test_c", RequestType.SERVICE)
+    final SingularityRequest oldRequest = SingularityRequest.builder().setId("test_c").setRequestType(RequestType.SERVICE)
         .setGroup(Optional.of("c"))
         .setReadWriteGroups(Optional.of(readWriteGroupsOld))
         .build();
@@ -231,7 +231,7 @@ public class SingularityAuthorizationHelperTest {
     Set<String> readWriteGroupsNew = new HashSet<>();
     readWriteGroupsNew.addAll(readWriteGroupsOld);
     readWriteGroupsNew.add("b");
-    final SingularityRequest newRequest = new SingularityRequestBuilder("test_c", RequestType.SERVICE)
+    final SingularityRequest newRequest = SingularityRequest.builder().setId("test_c").setRequestType(RequestType.SERVICE)
         .setGroup(Optional.of("c"))
         .setReadWriteGroups(Optional.of(readWriteGroupsNew))
         .build();

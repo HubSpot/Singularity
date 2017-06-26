@@ -2077,7 +2077,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     SingularityDeploy deploy = SingularityDeploy.builder().setRequestId(requestId).setId(firstDeployId)
         .setCommand(Optional.of("sleep 100"))
         .build();
-    SingularityDeployRequest singularityDeployRequest = new SingularityDeployRequest(deploy, Optional.absent(), Optional.absent(), Optional.absent());
+    SingularityDeployRequest singularityDeployRequest = SingularityDeployRequest.builder().setDeploy(deploy).build();
     deployResource.deploy(singularityDeployRequest);
 
     scheduler.drainPendingQueue(stateCacheProvider.get());

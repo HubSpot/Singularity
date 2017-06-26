@@ -647,7 +647,7 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
           .setServiceBasePath(Optional.of("/basepath"))
           .setLoadBalancerGroups(Optional.of(groups));
     }
-    deployResource.deploy(SingularityDeployRequest.builder().setDeploy(builder.build()).setUnpauseOnSuccessfulDeploy(unpauseOnDeploy).build());
+    deployResource.deploy(SingularityDeployRequest.builder().setDeploy(builder.build()).setUnpauseOnSuccessfulDeploy(unpauseOnDeploy.or(false)).build());
   }
 
   protected SingularityPendingTask createAndSchedulePendingTask(String deployId) {

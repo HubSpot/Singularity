@@ -15,7 +15,6 @@ public abstract class AbstractSingularitySkipHealthchecksRequest extends Singula
   @ApiModelProperty(required = false, value = "If set to true, healthchecks will be skipped for all tasks for this request until reversed")
   public abstract Optional<Boolean> getSkipHealthchecks();
 
-  ///
   @ApiModelProperty(required=false, value="A message to show to users about why this action was taken")
   public abstract Optional<String> getMessage();
 

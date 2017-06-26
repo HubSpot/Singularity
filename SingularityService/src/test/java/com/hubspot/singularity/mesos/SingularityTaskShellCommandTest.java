@@ -127,8 +127,8 @@ public class SingularityTaskShellCommandTest extends SingularitySchedulerTestBas
 
     launchTask(request, firstDeploy, 1, TaskState.TASK_RUNNING);
 
-    requestResource.bounce(requestId, Optional.of(new SingularityBounceRequest(Optional.<Boolean>absent(), Optional.<Boolean>absent(), Optional.<Long>absent(), Optional.<String>absent(), Optional.<String>absent(),
-      Optional.of(new SingularityShellCommand("d1", Optional.of(Arrays.asList("o1", "o2")), user, Optional.<String>absent())))));
+    requestResource.bounce(requestId, Optional.of(SingularityBounceRequest.builder()
+        .setRunShellCommandBeforeKill(new SingularityShellCommand("d1", Optional.of(Arrays.asList("o1", "o2")), user, Optional.absent())).build()));
 
     cleaner.drainCleanupQueue();
 

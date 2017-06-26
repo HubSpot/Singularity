@@ -94,7 +94,7 @@ public class SingularityNewTaskChecker {
     if (disasterManager.isDisabled(SingularityAction.RUN_HEALTH_CHECKS)) {
       return false;
     }
-    if (!task.getTaskRequest().getDeploy().getHealthcheck().isPresent()) {
+    if (!task.getTaskRequest().getDeploy().getValidatedHealthcheckOptions().isPresent()) {
       return false;
     }
 
@@ -117,7 +117,7 @@ public class SingularityNewTaskChecker {
     int delaySeconds = configuration.getNewTaskCheckerBaseDelaySeconds();
 
     if (hasHealthcheck(task, requestWithState)) {
-      Optional<Integer> maybeStartupDelay = task.getTaskRequest().getDeploy().getHealthcheck().get().getStartupDelaySeconds().or(configuration.getStartupDelaySeconds());
+      Optional<Integer> maybeStartupDelay = task.getTaskRequest().getDeploy().getValidatedHealthcheckOptions().get().getStartupDelaySeconds().or(configuration.getStartupDelaySeconds());
       if (maybeStartupDelay.isPresent()) {
         return maybeStartupDelay.get();
       }

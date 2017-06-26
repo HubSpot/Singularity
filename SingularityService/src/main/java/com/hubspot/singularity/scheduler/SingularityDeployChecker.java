@@ -343,8 +343,8 @@ public class SingularityDeployChecker {
   private long getAllowedMillis(SingularityDeploy deploy) {
     long seconds = deploy.getDeployHealthTimeoutSeconds().or(configuration.getDeployHealthyBySeconds());
 
-    if (deploy.getHealthcheck().isPresent() && !deploy.getSkipHealthchecksOnDeploy().or(false)) {
-      seconds += deployHealthHelper.getMaxHealthcheckTimeoutSeconds(deploy.getHealthcheck().get());
+    if (deploy.getValidatedHealthcheckOptions().isPresent() && !deploy.getSkipHealthchecksOnDeploy().or(false)) {
+      seconds += deployHealthHelper.getMaxHealthcheckTimeoutSeconds(deploy.getValidatedHealthcheckOptions().get());
     } else {
       seconds += deploy.getConsiderHealthyAfterRunningForSeconds().or(configuration.getConsiderTaskHealthyAfterRunningForSeconds());
     }

@@ -10,7 +10,7 @@ import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.hubspot.deploy.ExecutorData;
-import com.hubspot.singularity.SingularityDeployBuilder;
+import com.hubspot.singularity.SingularityDeploy;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskRequest;
 import com.hubspot.singularity.config.SingularityConfiguration;
@@ -43,7 +43,7 @@ public class SingularityTaskSizeOptimizer {
 
     if (task.getTaskRequest().getDeploy().getExecutorData().isPresent()) {
 
-      SingularityDeployBuilder deploy = task.getTaskRequest().getDeploy().toBuilder();
+      SingularityDeploy.Builder deploy = SingularityDeploy.builder().from(task.getTaskRequest().getDeploy());
 
       deploy.setExecutorData(Optional.<ExecutorData> absent());
 

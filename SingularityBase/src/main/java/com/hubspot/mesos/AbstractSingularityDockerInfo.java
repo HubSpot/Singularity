@@ -1,10 +1,12 @@
 package com.hubspot.mesos;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
 import org.immutables.value.Value.Default;
+import org.immutables.value.Value.Derived;
 import org.immutables.value.Value.Immutable;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -18,7 +20,7 @@ public abstract class AbstractSingularityDockerInfo {
   @ApiModelProperty(required = true, value = "Docker image name")
   public abstract String getImage();
 
-  @ApiModelProperty(required = true, value = "Controls use of the docker --privleged flag")
+  @ApiModelProperty(required = true, value = "Controls use of the docker --privileged flag")
   public abstract boolean isPrivileged();
 
   @ApiModelProperty(required = false, value = "Docker network type. Value can be BRIDGE, HOST, or NONE", dataType = "com.hubspot.mesos.SingularityDockerNetworkType")
@@ -59,5 +61,18 @@ public abstract class AbstractSingularityDockerInfo {
       }
     }
     return literalHostPorts;
+  }
+
+  @JsonIgnore
+  @Derived
+  /*
+   * Accounts for deprecated parameters fields still possibly stored in json, use this when fetching parameters
+   */
+  public List<SingularityDockerParameter> getParametersSafe() {
+    if (!getDockerParameters().isEmpty()) {
+      return getDockerParameters();
+    } else {
+      return SingularityDockerParameter.parametersFromMap(getParameters().or(Collections.emptyMap()));
+    }
   }
 }

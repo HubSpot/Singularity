@@ -141,7 +141,7 @@ public class RequestResource extends AbstractRequestResource {
     if (request.getSlavePlacement().isPresent() && request.getSlavePlacement().get() == SlavePlacement.SPREAD_ALL_SLAVES) {
       checkBadRequest(validator.isSpreadAllSlavesEnabled(), "You must enabled spread to all slaves in order to use the SPREAD_ALL_SLAVES request type");
       int currentActiveSlaveCount =  slaveManager.getNumObjectsAtState(MachineState.ACTIVE);
-      request = request.toBuilder().setInstances(Optional.of(currentActiveSlaveCount)).build();
+      request = SingularityRequest.builder().from(request).setInstances(Optional.of(currentActiveSlaveCount)).build();
     }
 
     if (!oldRequest.isPresent() || !(oldRequest.get().getInstancesSafe() == request.getInstancesSafe())) {
@@ -213,15 +213,15 @@ public class RequestResource extends AbstractRequestResource {
 
     checkConflict(requestWithState.getState() != RequestState.PAUSED, "Request %s is paused. Unable to bounce (it must be manually unpaused first)", requestWithState.getRequest().getId());
 
-    final boolean isIncrementalBounce = bounceRequest.isPresent() && bounceRequest.get().getIncremental().or(false);
+    final boolean isIncrementalBounce = bounceRequest.isPresent() && bounceRequest.get().isIncremental();
 
     validator.checkResourcesForBounce(requestWithState.getRequest(), isIncrementalBounce);
     validator.checkRequestForPriorityFreeze(requestWithState.getRequest());
 
-    final Optional<Boolean> skipHealthchecks = bounceRequest.isPresent() ? bounceRequest.get().getSkipHealthchecks() : Optional.<Boolean> absent();
+    final Optional<Boolean> skipHealthchecks = bounceRequest.isPresent() ? Optional.of(bounceRequest.get().isSkipHealthchecks()) : Optional.absent();
 
     Optional<String> message = Optional.absent();
-    Optional<String> actionId = Optional.absent();
+    String actionId;
     Optional<SingularityShellCommand> runBeforeKill = Optional.absent();
 
     if (bounceRequest.isPresent()) {
@@ -231,10 +231,8 @@ public class RequestResource extends AbstractRequestResource {
         validator.checkValidShellCommand(bounceRequest.get().getRunShellCommandBeforeKill().get());
         runBeforeKill = bounceRequest.get().getRunShellCommandBeforeKill();
       }
-    }
-
-    if (!actionId.isPresent()) {
-      actionId = Optional.of(UUID.randomUUID().toString());
+    } else {
+      actionId = UUID.randomUUID().toString();
     }
 
     final String deployId = getAndCheckDeployId(requestId);
@@ -243,14 +241,14 @@ public class RequestResource extends AbstractRequestResource {
 
     requestManager.createCleanupRequest(
         new SingularityRequestCleanup(JavaUtils.getUserEmail(user), isIncrementalBounce ? RequestCleanupType.INCREMENTAL_BOUNCE : RequestCleanupType.BOUNCE,
-            System.currentTimeMillis(), Optional.<Boolean> absent(), Optional.absent(), requestId, Optional.of(deployId), skipHealthchecks, message, actionId, runBeforeKill));
+            System.currentTimeMillis(), Optional.<Boolean> absent(), Optional.absent(), requestId, Optional.of(deployId), skipHealthchecks, message, Optional.of(actionId), runBeforeKill));
 
     requestManager.bounce(requestWithState.getRequest(), System.currentTimeMillis(), JavaUtils.getUserEmail(user), message);
 
     final SingularityBounceRequest validatedBounceRequest = validator.checkBounceRequest(bounceRequest.or(SingularityBounceRequest.defaultRequest()));
 
     requestManager.saveExpiringObject(new SingularityExpiringBounce(requestId, deployId, JavaUtils.getUserEmail(user),
-        System.currentTimeMillis(), validatedBounceRequest, actionId.get()));
+        System.currentTimeMillis(), validatedBounceRequest, actionId));
 
     return fillEntireRequest(requestWithState);
   }
@@ -403,8 +401,8 @@ public class RequestResource extends AbstractRequestResource {
     requestManager.pause(requestWithState.getRequest(), now, JavaUtils.getUserEmail(user), message);
 
     if (pauseRequest.isPresent() && pauseRequest.get().getDurationMillis().isPresent()) {
-      requestManager.saveExpiringObject(new SingularityExpiringPause(requestId, JavaUtils.getUserEmail(user),
-          System.currentTimeMillis(), pauseRequest.get(), actionId.get()));
+      requestManager.saveExpiringObject(new SingularityExpiringPause(requestId, pauseRequest.get(), JavaUtils.getUserEmail(user),
+          System.currentTimeMillis(), actionId.get()));
     }
 
     return fillEntireRequest(new SingularityRequestWithState(requestWithState.getRequest(), RequestState.PAUSED, now));
@@ -662,7 +660,7 @@ public class RequestResource extends AbstractRequestResource {
     authorizationHelper.checkForAuthorization(oldRequest, user, SingularityAuthorizationScope.WRITE);
     validator.checkActionEnabled(SingularityAction.SCALE_REQUEST);
 
-    SingularityRequest newRequest = oldRequest.toBuilder().setInstances(scaleRequest.getInstances()).build();
+    SingularityRequest newRequest = SingularityRequest.builder().from(oldRequest).setInstances(scaleRequest.getInstances()).build();
     validator.checkScale(newRequest, Optional.<Integer>absent());
 
     checkBadRequest(oldRequest.getInstancesSafe() != newRequest.getInstancesSafe(), "Scale request has no affect on the # of instances (%s)", newRequest.getInstancesSafe());
@@ -685,7 +683,7 @@ public class RequestResource extends AbstractRequestResource {
       validator.checkResourcesForBounce(newRequest, isIncrementalBounce);
       validator.checkRequestForPriorityFreeze(newRequest);
 
-      SingularityBounceRequest bounceRequest = new SingularityBounceRequest(Optional.of(isIncrementalBounce), scaleRequest.getSkipHealthchecks(), Optional.<Long>absent(), Optional.of(UUID.randomUUID().toString()), Optional.<String>absent(), Optional.<SingularityShellCommand>absent());
+      SingularityBounceRequest bounceRequest = new SingularityBounceRequest(isIncrementalBounce, scaleRequest.getSkipHealthchecks().or(false), Optional.absent(), Optional.absent(), UUID.randomUUID().toString(), Optional.absent());
 
       submitRequest(newRequest, Optional.of(oldRequestWithState), Optional.of(RequestHistoryType.SCALED), scaleRequest.getSkipHealthchecks(), Optional.of(scaleMessage), Optional.of(bounceRequest));
     } else {
@@ -694,7 +692,7 @@ public class RequestResource extends AbstractRequestResource {
 
     if (scaleRequest.getDurationMillis().isPresent()) {
       requestManager.saveExpiringObject(new SingularityExpiringScale(requestId, JavaUtils.getUserEmail(user),
-          System.currentTimeMillis(), scaleRequest, oldRequest.getInstances(), scaleRequest.getActionId().or(UUID.randomUUID().toString()), scaleRequest.getBounce()));
+          System.currentTimeMillis(), scaleRequest, oldRequest.getInstances(), scaleRequest.getActionId(), scaleRequest.getBounce()));
     }
 
     mailer.sendRequestScaledMail(newRequest, Optional.of(scaleRequest), oldRequest.getInstances(), JavaUtils.getUserEmail(user));
@@ -794,13 +792,13 @@ public class RequestResource extends AbstractRequestResource {
     SingularityRequestWithState oldRequestWithState = fetchRequestWithState(requestId);
 
     SingularityRequest oldRequest = oldRequestWithState.getRequest();
-    SingularityRequest newRequest = oldRequest.toBuilder().setSkipHealthchecks(skipHealthchecksRequest.getSkipHealthchecks()).build();
+    SingularityRequest newRequest = SingularityRequest.builder().from(oldRequest).setSkipHealthchecks(skipHealthchecksRequest.getSkipHealthchecks()).build();
 
     submitRequest(newRequest, Optional.of(oldRequestWithState), Optional.<RequestHistoryType> absent(), Optional.<Boolean> absent(), skipHealthchecksRequest.getMessage(), Optional.<SingularityBounceRequest>absent());
 
     if (skipHealthchecksRequest.getDurationMillis().isPresent()) {
       requestManager.saveExpiringObject(new SingularityExpiringSkipHealthchecks(requestId, JavaUtils.getUserEmail(user),
-          System.currentTimeMillis(), skipHealthchecksRequest, oldRequest.getSkipHealthchecks(), skipHealthchecksRequest.getActionId().or(UUID.randomUUID().toString())));
+          System.currentTimeMillis(), skipHealthchecksRequest, oldRequest.getSkipHealthchecks(), skipHealthchecksRequest.getActionId()));
     }
 
     return fillEntireRequest(fetchRequestWithState(requestId));

@@ -485,13 +485,8 @@ public class SingularityHistoryTest extends SingularitySchedulerTestBase {
   public void testMessage() {
     initRequest();
 
-    String msg = null;
-    for (int i = 0; i < 300; i++) {
-      msg = msg + i;
-    }
-
-    requestResource.scale(requestId, new SingularityScaleRequest(Optional.of(2), Optional.<Long> absent(), Optional.<Boolean> absent(), Optional.<String> absent(), Optional.of(msg), Optional.<Boolean>absent(), Optional.<Boolean>absent()));
-    requestResource.deleteRequest(requestId, Optional.of(new SingularityDeleteRequestRequest(Optional.of("a msg"), Optional.<String> absent(), Optional.absent())));
+    requestResource.scale(requestId, SingularityScaleRequest.builder().setInstances(2).build());
+    requestResource.deleteRequest(requestId, Optional.of(new SingularityDeleteRequestRequest(Optional.of("a msg"), Optional.absent(), Optional.absent())));
 
     cleaner.drainCleanupQueue();
 
@@ -505,7 +500,8 @@ public class SingularityHistoryTest extends SingularitySchedulerTestBase {
       if (historyItem.getEventType() == RequestHistoryType.DELETED) {
         Assert.assertEquals("a msg", historyItem.getMessage().get());
       } else if (historyItem.getEventType() == RequestHistoryType.SCALED) {
-        Assert.assertEquals(280, historyItem.getMessage().get().length());
+        System.out.println(historyItem);
+        Assert.assertEquals(19, historyItem.getMessage().get().length());
       } else if (historyItem.getEventType() == RequestHistoryType.DELETING) {
         Assert.assertEquals("a msg", historyItem.getMessage().get());
       } else {

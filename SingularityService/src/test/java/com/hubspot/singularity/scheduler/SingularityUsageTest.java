@@ -13,6 +13,7 @@ import com.google.inject.Inject;
 import com.hubspot.mesos.json.MesosTaskMonitorObject;
 import com.hubspot.mesos.json.MesosTaskStatisticsObject;
 import com.hubspot.singularity.MachineState;
+import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskCurrentUsageWithId;
 import com.hubspot.singularity.SingularityTaskId;
@@ -45,13 +46,13 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
 
     initRequest();
     initFirstDeploy();
-    saveAndSchedule(request.toBuilder().setInstances(Optional.of(1)));
+    saveAndSchedule(SingularityRequest.builder().from(request).setInstances(Optional.of(1)));
     resourceOffers(1);
 
     SingularityTask firstTask = taskManager.getActiveTasks().get(0);
 
     String hostname = firstTask.getHostname();
-    MesosTaskMonitorObject usage = new MesosTaskMonitorObject(null, null, null, firstTask.getTaskId().getId(), getStatistics(2, 5, 100));
+    MesosTaskMonitorObject usage = new MesosTaskMonitorObject("id", "name", "framework", firstTask.getTaskId().getId(), getStatistics(2, 5, 100));
 
     mesosClient.setSlaveResourceUsage(hostname, Collections.singletonList(usage));
 
@@ -78,7 +79,7 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
   public void testUsageCleaner() {
     initRequest();
     initFirstDeploy();
-    saveAndSchedule(request.toBuilder().setInstances(Optional.of(2)));
+    saveAndSchedule(SingularityRequest.builder().from(request).setInstances(Optional.of(2)));
     resourceOffers(1);
 
     List<SingularityTaskId> taskIds = taskManager.getActiveTaskIds();
@@ -89,8 +90,8 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
     String slaveId = slaveManager.getObjectIds().get(0);
     String host = slaveManager.getObjects().get(0).getHost();
 
-    MesosTaskMonitorObject t1u1 = new MesosTaskMonitorObject(null, null, null, t1, getStatistics(2, 5, 100));
-    MesosTaskMonitorObject t2u1 = new MesosTaskMonitorObject(null, null, null, t2, getStatistics(10, 5, 1000));
+    MesosTaskMonitorObject t1u1 = new MesosTaskMonitorObject("id", "name", "framework", t1, getStatistics(2, 5, 100));
+    MesosTaskMonitorObject t2u1 = new MesosTaskMonitorObject("id", "name", "framework", t2, getStatistics(10, 5, 1000));
 
     mesosClient.setSlaveResourceUsage(host, Arrays.asList(t1u1, t2u1));
 
@@ -123,7 +124,7 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
   public void testUsagePollerComplex() throws InterruptedException {
     initRequest();
     initFirstDeploy();
-    saveAndSchedule(request.toBuilder().setInstances(Optional.of(2)));
+    saveAndSchedule(SingularityRequest.builder().from(request).setInstances(Optional.of(2)));
     resourceOffers(1);
 
     configuration.setNumUsageToKeep(2);
@@ -136,8 +137,8 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
     String slaveId = slaveManager.getObjectIds().get(0);
     String host = slaveManager.getObjects().get(0).getHost();
 
-    MesosTaskMonitorObject t1u1 = new MesosTaskMonitorObject(null, null, null, t1, getStatistics(2, 5, 100));
-    MesosTaskMonitorObject t2u1 = new MesosTaskMonitorObject(null, null, null, t2, getStatistics(10, 5, 1000));
+    MesosTaskMonitorObject t1u1 = new MesosTaskMonitorObject("id", "name", "framework", t1, getStatistics(2, 5, 100));
+    MesosTaskMonitorObject t2u1 = new MesosTaskMonitorObject("id", "name", "framework", t2, getStatistics(10, 5, 1000));
 
     mesosClient.setSlaveResourceUsage(host, Arrays.asList(t1u1, t2u1));
 
@@ -148,8 +149,8 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
 
     // 5 seconds have elapsed, t1 has used 1 CPU the whole time = 5 + 2
     // t2 has used 2.5 CPUs the whole time =
-    MesosTaskMonitorObject t1u2 = new MesosTaskMonitorObject(null, null, null, t1, getStatistics(7, 10, 125));
-    MesosTaskMonitorObject t2u2 = new MesosTaskMonitorObject(null, null, null, t2, getStatistics(22.5, 10, 750));
+    MesosTaskMonitorObject t1u2 = new MesosTaskMonitorObject("id", "name", "framework", t1, getStatistics(7, 10, 125));
+    MesosTaskMonitorObject t2u2 = new MesosTaskMonitorObject("id", "name", "framework", t2, getStatistics(22.5, 10, 750));
 
     mesosClient.setSlaveResourceUsage(host, Arrays.asList(t1u2, t2u2));
 
@@ -167,8 +168,8 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
 
     Thread.sleep(2);
 
-    MesosTaskMonitorObject t1u3 = new MesosTaskMonitorObject(null, null, null, t1, getStatistics(8, 11, 125));
-    MesosTaskMonitorObject t2u3 = new MesosTaskMonitorObject(null, null, null, t2, getStatistics(23.5, 11, 1000));
+    MesosTaskMonitorObject t1u3 = new MesosTaskMonitorObject("id", "name", "framework", t1, getStatistics(8, 11, 125));
+    MesosTaskMonitorObject t2u3 = new MesosTaskMonitorObject("id", "name", "framework", t2, getStatistics(23.5, 11, 1000));
 
     mesosClient.setSlaveResourceUsage(host, Arrays.asList(t1u3, t2u3));
 
