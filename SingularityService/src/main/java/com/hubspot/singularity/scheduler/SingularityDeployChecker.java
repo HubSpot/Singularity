@@ -9,6 +9,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 import javax.inject.Singleton;
 
@@ -17,7 +18,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Optional;
-import com.google.common.base.Predicates;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
@@ -194,9 +194,13 @@ public class SingularityDeployChecker {
   }
 
   private void deleteObsoletePendingTasks(SingularityPendingDeploy pendingDeploy) {
-    for (SingularityPendingTaskId pendingTaskId : Iterables.filter(taskManager.getPendingTaskIds(), Predicates
-      .and(SingularityPendingTaskId.matchingRequestId(pendingDeploy.getDeployMarker().getRequestId()),
-        Predicates.not(SingularityPendingTaskId.matchingDeployId(pendingDeploy.getDeployMarker().getDeployId()))))) {
+    List<SingularityPendingTaskId> obsoletePendingTasks = taskManager.getPendingTaskIds()
+        .stream()
+        .filter(taskId -> taskId.getRequestId().equals(pendingDeploy.getDeployMarker().getRequestId()))
+        .filter(taskId -> !taskId.getDeployId().equals(pendingDeploy.getDeployMarker().getDeployId()))
+        .collect(Collectors.toList());
+
+    for (SingularityPendingTaskId pendingTaskId : obsoletePendingTasks) {
       LOG.debug("Deleting obsolete pending task {}", pendingTaskId.getId());
       taskManager.deletePendingTask(pendingTaskId);
     }
@@ -255,7 +259,7 @@ public class SingularityDeployChecker {
     }
 
     deployManager.saveNewRequestDeployState(new SingularityRequestDeployState(deployState.get().getRequestId(), newActiveDeploy.or(deployState.get().getActiveDeploy()),
-      Optional.<SingularityDeployMarker> absent()));
+      Optional.absent()));
 
     return true;
   }
