@@ -625,7 +625,7 @@ public class SingularityClient {
     final Function<String, String> requestUri = (String host) -> String.format(DEPLOYS_FORMAT, getApiBase(host));
 
     HttpResponse response = post(requestUri, String.format("new deploy %s", new SingularityDeployKey(requestId, pendingDeploy.getId())),
-        Optional.of(new SingularityDeployRequest(pendingDeploy, deployUnpause, message, updatedRequest)));
+        Optional.of(SingularityDeployRequest.builder().setDeploy(pendingDeploy).setUnpauseOnSuccessfulDeploy(deployUnpause).setMessage(message).setUpdatedRequest(updatedRequest).build()));
 
     return getAndLogRequestAndDeployStatus(response.getAs(SingularityRequestParent.class));
   }

@@ -37,7 +37,6 @@ import com.hubspot.singularity.client.SingularityClient;
 import com.hubspot.singularity.client.SingularityClientException;
 import com.hubspot.singularity.client.SingularityClientProvider;
 import com.hubspot.singularity.executor.SingularityExecutorCleanupStatistics;
-import com.hubspot.singularity.executor.SingularityExecutorCleanupStatistics.SingularityExecutorCleanupStatisticsBuilder;
 import com.hubspot.singularity.executor.TemplateManager;
 import com.hubspot.singularity.executor.cleanup.config.SingularityExecutorCleanupConfiguration;
 import com.hubspot.singularity.executor.config.SingularityExecutorConfiguration;
@@ -94,10 +93,18 @@ public class SingularityExecutorCleanup {
   }
 
   public SingularityExecutorCleanupStatistics clean() {
-    final SingularityExecutorCleanupStatisticsBuilder statisticsBldr = new SingularityExecutorCleanupStatisticsBuilder();
+    final SingularityExecutorCleanupStatistics.Builder statisticsBldr = SingularityExecutorCleanupStatistics.builder();
     final Path directory = Paths.get(executorConfiguration.getGlobalTaskDefinitionDirectory());
 
     Set<String> runningTaskIds = null;
+
+    int invalidTasks = 0;
+    int errorTasks = 0;
+    int cleanedTasks = 0;
+    int totalTaskFiles = 0;
+    int waitingTasks = 0;
+    int runningTasksIgnored = 0;
+    int ioErrorTasks = 0;
 
     try {
       runningTaskIds = getRunningTaskIds();
@@ -136,17 +143,17 @@ public class SingularityExecutorCleanup {
     for (Path file : JavaUtils.iterable(directory)) {
       if (!Objects.toString(file.getFileName()).endsWith(executorConfiguration.getGlobalTaskDefinitionSuffix())) {
         LOG.debug("Ignoring file {} that doesn't have suffix {}", file, executorConfiguration.getGlobalTaskDefinitionSuffix());
-        statisticsBldr.incrInvalidTasks();
+        invalidTasks++;
         continue;
       }
 
-      statisticsBldr.incrTotalTaskFiles();
+     totalTaskFiles++;
 
       try {
         Optional<SingularityExecutorTaskDefinition> maybeTaskDefinition = jsonObjectFileHelper.read(file, LOG, SingularityExecutorTaskDefinition.class);
 
         if (!maybeTaskDefinition.isPresent()) {
-          statisticsBldr.incrInvalidTasks();
+          invalidTasks++;
           continue;
         }
 
@@ -157,7 +164,7 @@ public class SingularityExecutorCleanup {
         LOG.info("{} - Starting possible cleanup", taskId);
 
         if (runningTaskIds.contains(taskId) || executorStillRunning(taskDefinition)) {
-          statisticsBldr.incrRunningTasksIgnored();
+          runningTasksIgnored++;
           continue;
         }
 
@@ -168,7 +175,7 @@ public class SingularityExecutorCleanup {
         } catch (SingularityClientException sce) {
           LOG.error("{} - Failed fetching history", taskId, sce);
           exceptionNotifier.notify(String.format("Error fetching history (%s)", sce.getMessage()), sce, ImmutableMap.<String, String>of("taskId", taskId));
-          statisticsBldr.incrErrorTasks();
+          errorTasks++;
           continue;
         }
 
@@ -178,13 +185,13 @@ public class SingularityExecutorCleanup {
 
         switch (result) {
           case ERROR:
-            statisticsBldr.incrErrorTasks();
+           errorTasks++;
             break;
           case SUCCESS:
-            statisticsBldr.incrSuccessfullyCleanedTasks();
+            cleanedTasks++;
             break;
           case WAITING:
-            statisticsBldr.incrWaitingTasks();
+            waitingTasks++;
             break;
            default:
             break;
@@ -193,9 +200,17 @@ public class SingularityExecutorCleanup {
       } catch (IOException ioe) {
         LOG.error("Couldn't read file {}", file, ioe);
         exceptionNotifier.notify(String.format("Error reading file (%s)", ioe.getMessage()), ioe, ImmutableMap.of("file", file.toString()));
-        statisticsBldr.incrIoErrorTasks();
+        ioErrorTasks++;
       }
     }
+
+    statisticsBldr.setErrorTasks(errorTasks);
+    statisticsBldr.setWaitingTasks(waitingTasks);
+    statisticsBldr.setSuccessfullyCleanedTasks(cleanedTasks);
+    statisticsBldr.setRunningTasksIgnored(runningTasksIgnored);
+    statisticsBldr.setTotalTaskFiles(totalTaskFiles);
+    statisticsBldr.setInvalidTasks(invalidTasks);
+    statisticsBldr.setIoErrorTasks(ioErrorTasks);
 
     return statisticsBldr.build();
   }

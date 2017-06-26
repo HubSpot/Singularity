@@ -67,7 +67,7 @@ public class SingularityAutoScaleSpreadAllPoller extends SingularityLeaderOnlyPo
 
   private void submitScaleRequest(SingularityRequestWithState oldRequestWithState, Integer newRequestedInstances) {
     SingularityRequest oldRequest = oldRequestWithState.getRequest();
-    SingularityRequest newRequest = oldRequest.toBuilder().setInstances(Optional.of((newRequestedInstances))).build();
+    SingularityRequest newRequest = SingularityRequest.builder().from(oldRequest).setInstances(Optional.of((newRequestedInstances))).build();
     Optional<SingularityRequestHistory.RequestHistoryType> historyType = Optional.of(SingularityRequestHistory.RequestHistoryType.SCALED);
     Optional<String> message = Optional.of(String.format("Auto scale number of instances to spread to all %d available slaves", newRequestedInstances));
 

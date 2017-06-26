@@ -24,7 +24,7 @@ public class SingularityDeployIT {
 
   @Test
   public void testDeploy(SingularityClient singularityClient) throws Exception {
-    final SingularityRequest request = new SingularityRequestBuilder(REQUEST_ID, RequestType.RUN_ONCE)
+    final SingularityRequest request = SingularityRequest.builder().setId(REQUEST_ID).setRequestType(RequestType.RUN_ONCE)
         .setInstances(Optional.of(2))
         .build();
 
@@ -36,7 +36,7 @@ public class SingularityDeployIT {
     assertTrue(requestParent.isPresent());
     assertEquals(request, requestParent.get().getRequest());
 
-    final SingularityDeploy deploy = new SingularityDeployBuilder(REQUEST_ID, deployId)
+    final SingularityDeploy deploy = SingularityDeploy.builder().setRequestId(REQUEST_ID).setId(deployId)
         .setCommand(Optional.of("sleep 10"))
         .build();
 

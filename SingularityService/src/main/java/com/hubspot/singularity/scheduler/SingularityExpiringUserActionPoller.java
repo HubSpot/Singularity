@@ -258,7 +258,7 @@ public class SingularityExpiringUserActionPoller extends SingularityLeaderOnlyPo
     @Override
     protected void handleExpiringObject(SingularityExpiringScale expiringObject, SingularityRequestWithState requestWithState, String message) {
       final SingularityRequest oldRequest = requestWithState.getRequest();
-      final SingularityRequest newRequest = oldRequest.toBuilder().setInstances(expiringObject.getRevertToInstances()).build();
+      final SingularityRequest newRequest = SingularityRequest.builder().from(oldRequest).setInstances(expiringObject.getRevertToInstances()).build();
 
       try {
         Optional<SingularityBounceRequest> maybeBounceRequest = Optional.absent();
@@ -298,7 +298,7 @@ public class SingularityExpiringUserActionPoller extends SingularityLeaderOnlyPo
     @Override
     protected void handleExpiringObject(SingularityExpiringSkipHealthchecks expiringObject, SingularityRequestWithState requestWithState, String message) {
       final SingularityRequest oldRequest = requestWithState.getRequest();
-      final SingularityRequest newRequest = oldRequest.toBuilder().setSkipHealthchecks(expiringObject.getRevertToSkipHealthchecks()).build();
+      final SingularityRequest newRequest = SingularityRequest.builder().from(oldRequest).setSkipHealthchecks(expiringObject.getRevertToSkipHealthchecks()).build();
 
       try {
         requestHelper.updateRequest(newRequest, Optional.of(oldRequest), requestWithState.getState(), Optional.<RequestHistoryType> absent(), expiringObject.getUser(),

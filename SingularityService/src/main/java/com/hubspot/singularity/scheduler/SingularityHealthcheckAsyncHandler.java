@@ -37,8 +37,8 @@ public class SingularityHealthcheckAsyncHandler extends AsyncCompletionHandler<R
     this.healthchecker = healthchecker;
     this.task = task;
     this.maxHealthcheckResponseBodyBytes = configuration.getMaxHealthcheckResponseBodyBytes();
-    this.failureStatusCodes = task.getTaskRequest().getDeploy().getHealthcheck().isPresent() ?
-      task.getTaskRequest().getDeploy().getHealthcheck().get().getFailureStatusCodes().or(configuration.getHealthcheckFailureStatusCodes()) :
+    this.failureStatusCodes = task.getTaskRequest().getDeploy().getValidatedHealthcheckOptions().isPresent() ?
+      task.getTaskRequest().getDeploy().getValidatedHealthcheckOptions().get().getFailureStatusCodes() :
       configuration.getHealthcheckFailureStatusCodes();
 
     startTime = System.currentTimeMillis();

@@ -4,8 +4,8 @@ import java.util.List;
 
 import javax.inject.Singleton;
 
-import org.apache.mesos.Protos.TaskID;
-import org.apache.mesos.Protos.TaskStatus;
+import org.apache.mesos.v1.Protos.TaskID;
+import org.apache.mesos.v1.Protos.TaskStatus;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
@@ -46,7 +46,7 @@ public class LastTaskStatusMigration extends ZkDataMigration {
 
           taskStatus = Optional.of(TaskStatus.newBuilder()
               .setTaskId(TaskID.newBuilder().setValue(taskId.getId()))
-              .setSlaveId(task.get().getSlaveId())
+              .setAgentId(task.get().getAgentId())
               .setState(update.getTaskState().toTaskState().get())
               .build());
 
@@ -54,7 +54,7 @@ public class LastTaskStatusMigration extends ZkDataMigration {
         }
       }
 
-      SingularityTaskStatusHolder taskStatusHolder = new SingularityTaskStatusHolder(taskId, taskStatus, start, serverId, Optional.<String> absent());
+      SingularityTaskStatusHolder taskStatusHolder = new SingularityTaskStatusHolder(taskId, taskStatus, start, serverId, Optional.absent());
 
       taskManager.saveLastActiveTaskStatus(taskStatusHolder);
     }

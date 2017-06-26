@@ -11,7 +11,7 @@ import com.hubspot.singularity.RequestType;
 import com.hubspot.singularity.SingularityPendingRequest;
 import com.hubspot.singularity.SingularityPendingRequest.PendingType;
 import com.hubspot.singularity.SingularityPendingTask;
-import com.hubspot.singularity.SingularityRequestBuilder;
+import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.scheduler.SingularitySchedulerTestBase;
 
@@ -124,7 +124,7 @@ public class SingularityStartupTest extends SingularitySchedulerTestBase {
 
   @Test
   public void testOnDemandDoesntGetRescheduled() {
-    saveRequest(new SingularityRequestBuilder(requestId, RequestType.ON_DEMAND).build());
+    saveRequest(SingularityRequest.builder().setId(requestId).setRequestType(RequestType.ON_DEMAND).build());
     deploy(firstDeployId);
     deployChecker.checkDeploys();
 
@@ -145,7 +145,7 @@ public class SingularityStartupTest extends SingularitySchedulerTestBase {
 
   @Test
   public void testRunOnceDoesntGetRescheduled() {
-    saveRequest(new SingularityRequestBuilder(requestId, RequestType.RUN_ONCE).build());
+    saveRequest(SingularityRequest.builder().setId(requestId).setRequestType(RequestType.RUN_ONCE).build());
     deploy(firstDeployId);
     deployChecker.checkDeploys();
 
@@ -157,7 +157,7 @@ public class SingularityStartupTest extends SingularitySchedulerTestBase {
 
     startup.checkSchedulerForInconsistentState();
 
-    // assert that SingularityStartup does not enqueue a SingularityPendingRequest (pendingType=STARTUP) for the RUN_ONCE request
+    // assert that SingularityStartup does not enqueue a SingularityPendingRequest (pendingType=NOT_STARTED) for the RUN_ONCE request
     Assert.assertTrue(requestManager.getPendingRequests().isEmpty());
   }
 }

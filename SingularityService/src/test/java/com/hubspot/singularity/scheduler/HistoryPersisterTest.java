@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.mesos.Protos.TaskState;
+import org.apache.mesos.v1.Protos.TaskState;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -13,7 +13,6 @@ import com.google.inject.Inject;
 import com.hubspot.singularity.RequestType;
 import com.hubspot.singularity.SingularityDeploy;
 import com.hubspot.singularity.SingularityRequest;
-import com.hubspot.singularity.SingularityRequestBuilder;
 import com.hubspot.singularity.SingularityRequestHistory.RequestHistoryType;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskId;
@@ -68,9 +67,9 @@ public class HistoryPersisterTest extends SingularitySchedulerTestBase {
 
   @Test
   public void testRequestCountPurging() {
-    final SingularityRequest requestOne = new SingularityRequestBuilder("request1", RequestType.WORKER).build();
-    final SingularityRequest requestTwo = new SingularityRequestBuilder("request2", RequestType.WORKER).build();
-    final SingularityRequest requestThree = new SingularityRequestBuilder("request3", RequestType.WORKER).build();
+    final SingularityRequest requestOne = SingularityRequest.builder().setId("request1").setRequestType(RequestType.WORKER).build();
+    final SingularityRequest requestTwo = SingularityRequest.builder().setId("request2").setRequestType(RequestType.WORKER).build();
+    final SingularityRequest requestThree = SingularityRequest.builder().setId("request3").setRequestType(RequestType.WORKER).build();
 
     saveRequest(requestOne);
     saveRequest(requestTwo);

@@ -3,7 +3,6 @@ package com.hubspot.singularity.resources;
 import static com.hubspot.singularity.WebExceptions.checkNotFound;
 
 import java.util.List;
-import java.util.UUID;
 
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response.Status;
@@ -104,11 +103,11 @@ public abstract class AbstractMachineResource<T extends SingularityMachineAbstra
         new SingularityExpiringMachineState(
           queryUser,
           System.currentTimeMillis(),
-          changeRequest.get().getActionId().or(UUID.randomUUID().toString()),
+          changeRequest.get().getActionId(),
           changeRequest.get(),
           objectId,
           changeRequest.get().getRevertToState().get(),
-          Optional.of(changeRequest.get().isKillTasksOnDecommissionTimeout())
+          changeRequest.get().isKillTasksOnDecommissionTimeout()
           ),
         objectId);
     }

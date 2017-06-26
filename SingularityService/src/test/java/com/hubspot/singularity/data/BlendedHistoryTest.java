@@ -1,7 +1,6 @@
 package com.hubspot.singularity.data;
 
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -9,14 +8,13 @@ import java.util.List;
 
 import org.junit.Assert;
 import org.junit.Test;
-import org.mockito.Matchers;
+import org.mockito.ArgumentMatchers;
 
 import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.hubspot.singularity.OrderDirection;
 import com.hubspot.singularity.RequestType;
 import com.hubspot.singularity.SingularityRequest;
-import com.hubspot.singularity.SingularityRequestBuilder;
 import com.hubspot.singularity.SingularityRequestHistory;
 import com.hubspot.singularity.SingularityRequestHistory.RequestHistoryType;
 import com.hubspot.singularity.SingularityTestBaseNoDb;
@@ -29,7 +27,7 @@ public class BlendedHistoryTest extends SingularityTestBaseNoDb {
   private RequestManager requestManager;
 
   private void mockRequestHistory(HistoryManager hm, List<SingularityRequestHistory> returnValue) {
-    when(hm.getRequestHistory(Matchers.anyString(), Matchers.<Optional<OrderDirection>>any(), Matchers.anyInt(), Matchers.anyInt())).thenReturn(returnValue);
+    when(hm.getRequestHistory(ArgumentMatchers.anyString(), ArgumentMatchers.<Optional<OrderDirection>>any(), ArgumentMatchers.anyInt(), ArgumentMatchers.anyInt())).thenReturn(returnValue);
   }
 
   private SingularityRequest request;
@@ -47,7 +45,7 @@ public class BlendedHistoryTest extends SingularityTestBaseNoDb {
   public void testBlendedRequestHistory() {
     HistoryManager hm = mock(HistoryManager.class);
     String rid = "rid";
-    request = new SingularityRequestBuilder(rid, RequestType.WORKER).build();
+    request = SingularityRequest.builder().setId(rid).setRequestType(RequestType.WORKER).build();
     RequestHistoryHelper rhh = new RequestHistoryHelper(requestManager, hm);
 
     mockRequestHistory(hm, Collections.<SingularityRequestHistory> emptyList());

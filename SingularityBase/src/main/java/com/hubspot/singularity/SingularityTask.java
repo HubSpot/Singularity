@@ -3,9 +3,9 @@ package com.hubspot.singularity;
 import java.util.Collections;
 import java.util.List;
 
-import org.apache.mesos.Protos.Offer;
-import org.apache.mesos.Protos.SlaveID;
-import org.apache.mesos.Protos.TaskInfo;
+import org.apache.mesos.v1.Protos.AgentID;
+import org.apache.mesos.v1.Protos.Offer;
+import org.apache.mesos.v1.Protos.TaskInfo;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -84,8 +84,8 @@ public class SingularityTask extends SingularityTaskIdHolder {
   }
 
   @JsonIgnore
-  public SlaveID getSlaveId() {
-    return offers.get(0).getSlaveId();
+  public AgentID getAgentId() {
+    return offers.get(0).getAgentId();
   }
 
   @JsonIgnore

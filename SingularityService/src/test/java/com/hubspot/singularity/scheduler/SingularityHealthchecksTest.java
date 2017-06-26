@@ -5,19 +5,17 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.mesos.Protos.TaskState;
+import org.apache.mesos.v1.Protos.TaskState;
 import org.junit.Assert;
 import org.junit.Test;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.hubspot.deploy.HealthcheckOptions;
-import com.hubspot.deploy.HealthcheckOptionsBuilder;
 import com.hubspot.mesos.Resources;
 import com.hubspot.singularity.DeployState;
 import com.hubspot.singularity.SingularityDeploy;
-import com.hubspot.singularity.SingularityDeployBuilder;
-import com.hubspot.singularity.SingularityShellCommand;
+import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskHealthcheckResult;
 import com.hubspot.singularity.SingularityTaskId;
@@ -41,7 +39,7 @@ public class SingularityHealthchecksTest extends SingularitySchedulerTestBase {
       initRequest();
       initHCDeploy();
 
-      requestResource.skipHealthchecks(requestId, new SingularitySkipHealthchecksRequest(Optional.of(Boolean.TRUE), Optional.<Long> absent(), Optional.<String> absent(), Optional.<String> absent()));
+      requestResource.skipHealthchecks(requestId, SingularitySkipHealthchecksRequest.builder().setSkipHealthchecks(true).build());
 
       SingularityTask firstTask = startTask(firstDeploy, 1);
 
@@ -52,7 +50,7 @@ public class SingularityHealthchecksTest extends SingularitySchedulerTestBase {
 
       Assert.assertEquals(1, taskManager.getNumActiveTasks());
 
-      requestResource.skipHealthchecks(requestId, new SingularitySkipHealthchecksRequest(Optional.of(Boolean.FALSE), Optional.<Long> absent(), Optional.<String> absent(), Optional.<String> absent()));
+      requestResource.skipHealthchecks(requestId, SingularitySkipHealthchecksRequest.builder().setSkipHealthchecks(false).build());
 
       // run new task check ONLY.
       newTaskChecker.enqueueNewTaskCheck(firstTask, requestManager.getRequest(requestId), healthchecker);
@@ -78,7 +76,7 @@ public class SingularityHealthchecksTest extends SingularitySchedulerTestBase {
 
       SingularityTask firstTask = startTask(firstDeploy, 1);
 
-      requestResource.bounce(requestId, Optional.of(new SingularityBounceRequest(Optional.<Boolean> absent(), Optional.of(true), Optional.<Long> absent(), Optional.<String> absent(), Optional.<String>absent(), Optional.<SingularityShellCommand>absent())));
+      requestResource.bounce(requestId, Optional.of(SingularityBounceRequest.builder().setSkipHealthchecks(true).build()));
 
       setConfigurationForNoDelay();
 
@@ -155,9 +153,9 @@ public class SingularityHealthchecksTest extends SingularitySchedulerTestBase {
 
     final String deployId = "timeout_test";
 
-    HealthcheckOptions options =  new HealthcheckOptionsBuilder("http://uri").setMaxRetries(Optional.of(2)).build();
+    HealthcheckOptions options =  HealthcheckOptions.builder().setUri("http://uri").setMaxRetries(Optional.of(2)).build();
 
-    SingularityDeployBuilder db = new SingularityDeployBuilder(requestId, deployId).setHealthcheck(Optional.of(options));
+    SingularityDeploy.Builder db = SingularityDeploy.builder().setRequestId(requestId).setId(deployId).setHealthcheck(Optional.of(options));
     db.setDeployHealthTimeoutSeconds(Optional.of(TimeUnit.DAYS.toMillis(1)));
 
     SingularityDeploy deploy = initDeploy(db, hourAgo);
@@ -185,8 +183,8 @@ public class SingularityHealthchecksTest extends SingularitySchedulerTestBase {
 
     final String deployId = "retry_test";
 
-    HealthcheckOptions options =  new HealthcheckOptionsBuilder("http://uri").setMaxRetries(Optional.of(2)).build();
-    SingularityDeployBuilder db = new SingularityDeployBuilder(requestId, deployId).setHealthcheck(Optional.of(options));
+    HealthcheckOptions options =  HealthcheckOptions.builder().setUri("http://uri").setMaxRetries(Optional.of(2)).build();
+    SingularityDeploy.Builder db = SingularityDeploy.builder().setRequestId(requestId).setId(deployId).setHealthcheck(Optional.of(options));
 
     SingularityDeploy deploy = initDeploy(db, System.currentTimeMillis());
 
@@ -220,8 +218,8 @@ public class SingularityHealthchecksTest extends SingularitySchedulerTestBase {
 
     final String deployId = "new_task_healthcheck";
 
-    HealthcheckOptions options =  new HealthcheckOptionsBuilder("http://uri").setMaxRetries(Optional.of(1)).build();
-    SingularityDeployBuilder db = new SingularityDeployBuilder(requestId, deployId).setHealthcheck(Optional.of(options));
+    HealthcheckOptions options =  HealthcheckOptions.builder().setUri("http://uri").setMaxRetries(Optional.of(1)).build();
+    SingularityDeploy.Builder db = SingularityDeploy.builder().setRequestId(requestId).setId(deployId).setHealthcheck(Optional.of(options));
 
     SingularityDeploy deploy = initAndFinishDeploy(request, db);
 
@@ -245,9 +243,8 @@ public class SingularityHealthchecksTest extends SingularitySchedulerTestBase {
 
     final String deployId = "hc_test";
 
-    HealthcheckOptions options =  new HealthcheckOptionsBuilder("http://uri").setMaxRetries(Optional.of(2)).build();
-
-    SingularityDeployBuilder db = new SingularityDeployBuilder(requestId, deployId).setHealthcheck(Optional.of(options));
+    HealthcheckOptions options =  HealthcheckOptions.builder().setUri("http://uri").setMaxRetries(Optional.of(2)).build();
+    SingularityDeploy.Builder db = SingularityDeploy.builder().setRequestId(requestId).setId(deployId).setHealthcheck(Optional.of(options));
     SingularityDeploy deploy = initDeploy(db, System.currentTimeMillis());
 
     deployChecker.checkDeploys();
@@ -280,8 +277,8 @@ public class SingularityHealthchecksTest extends SingularitySchedulerTestBase {
     final String deployId = "retry_test";
 
     List<Integer> failureCodes = ImmutableList.of(404);
-    HealthcheckOptions options =  new HealthcheckOptionsBuilder("http://uri").setMaxRetries(Optional.of(3)).setFailureStatusCodes(Optional.of(failureCodes)).build();
-    SingularityDeployBuilder db = new SingularityDeployBuilder(requestId, deployId).setHealthcheck(Optional.of(options));
+    HealthcheckOptions options =  HealthcheckOptions.builder().setUri("http://uri").setMaxRetries(Optional.of(3)).setFailureStatusCodes(failureCodes).build();
+    SingularityDeploy.Builder db = SingularityDeploy.builder().setRequestId(requestId).setId(deployId).setHealthcheck(Optional.of(options));
 
     SingularityDeploy deploy = initDeploy(db, System.currentTimeMillis());
 
@@ -316,8 +313,8 @@ public class SingularityHealthchecksTest extends SingularitySchedulerTestBase {
     final long hourAgo = System.currentTimeMillis() - TimeUnit.HOURS.toMillis(1);
     final String deployId = "startup_timeout_test";
 
-    HealthcheckOptions options =  new HealthcheckOptionsBuilder("http://uri").setMaxRetries(Optional.of(2)).setStartupTimeoutSeconds(Optional.of((int) TimeUnit.MINUTES.toSeconds(30))).build();
-    SingularityDeployBuilder db = new SingularityDeployBuilder(requestId, deployId).setHealthcheck(Optional.of(options));
+    HealthcheckOptions options =  HealthcheckOptions.builder().setUri("http://uri").setMaxRetries(Optional.of(2)).setStartupTimeoutSeconds(Optional.of((int) TimeUnit.MINUTES.toSeconds(30))).build();
+    SingularityDeploy.Builder db = SingularityDeploy.builder().setRequestId(requestId).setId(deployId).setHealthcheck(Optional.of(options));
     db.setDeployHealthTimeoutSeconds(Optional.of(TimeUnit.DAYS.toMillis(1)));
     SingularityDeploy deploy = initDeploy(db, hourAgo);
 
@@ -339,8 +336,8 @@ public class SingularityHealthchecksTest extends SingularitySchedulerTestBase {
 
     final String deployId = "retry_test";
 
-    HealthcheckOptions options =  new HealthcheckOptionsBuilder("http://uri").setMaxRetries(Optional.of(1)).build();
-    SingularityDeployBuilder db = new SingularityDeployBuilder(requestId, deployId).setHealthcheck(Optional.of(options));
+    HealthcheckOptions options =  HealthcheckOptions.builder().setUri("http://uri").setMaxRetries(Optional.of(1)).build();
+    SingularityDeploy.Builder db = SingularityDeploy.builder().setRequestId(requestId).setId(deployId).setHealthcheck(Optional.of(options));
     SingularityDeploy deploy = initDeploy(db, System.currentTimeMillis());
     deployChecker.checkDeploys();
     Assert.assertTrue(!deployManager.getDeployResult(requestId, deployId).isPresent());
@@ -368,16 +365,16 @@ public class SingularityHealthchecksTest extends SingularitySchedulerTestBase {
     try {
       setConfigurationForNoDelay();
       initRequest();
-      HealthcheckOptions options = new HealthcheckOptionsBuilder("http://uri").setPortIndex(Optional.of(1)).build();
-      firstDeploy = initAndFinishDeploy(request, new SingularityDeployBuilder(request.getId(), firstDeployId)
+      HealthcheckOptions options = HealthcheckOptions.builder().setUri("http://uri").setPortIndex(Optional.of(1)).build();
+      firstDeploy = initAndFinishDeploy(request, SingularityDeploy.builder().setRequestId(request.getId()).setId(firstDeployId)
         .setCommand(Optional.of("sleep 100")).setResources(Optional.of(new Resources(1, 64, 3, 0)))
         .setHealthcheck(Optional.of(options)));
 
-      requestResource.postRequest(request.toBuilder().setInstances(Optional.of(2)).build());
+      requestResource.postRequest(SingularityRequest.builder().from(request).setInstances(Optional.of(2)).build());
       scheduler.drainPendingQueue(stateCacheProvider.get());
 
       String[] portRange = {"80:82"};
-      sms.resourceOffers(driver, Arrays.asList(createOffer(20, 20000, "slave1", "host1", Optional.<String> absent(), Collections.<String, String>emptyMap(), portRange)));
+      sms.resourceOffers(Arrays.asList(createOffer(20, 20000, "slave1", "host1", Optional.<String> absent(), Collections.<String, String>emptyMap(), portRange)));
 
       SingularityTaskId firstTaskId = taskManager.getActiveTaskIdsForRequest(requestId).get(0);
 
@@ -401,16 +398,16 @@ public class SingularityHealthchecksTest extends SingularitySchedulerTestBase {
     try {
       setConfigurationForNoDelay();
       initRequest();
-      HealthcheckOptions options = new HealthcheckOptionsBuilder("http://uri").setPortNumber(Optional.of(81L)).build();
-      firstDeploy = initAndFinishDeploy(request, new SingularityDeployBuilder(request.getId(), firstDeployId)
+      HealthcheckOptions options = HealthcheckOptions.builder().setUri("http://uri").setPortNumber(Optional.of(81L)).build();
+      firstDeploy = initAndFinishDeploy(request, SingularityDeploy.builder().setRequestId(request.getId()).setId(firstDeployId)
         .setCommand(Optional.of("sleep 100")).setResources(Optional.of(new Resources(1, 64, 3, 0)))
         .setHealthcheck(Optional.of(options)));
 
-      requestResource.postRequest(request.toBuilder().setInstances(Optional.of(2)).build());
+      requestResource.postRequest(SingularityRequest.builder().from(request).setInstances(Optional.of(2)).build());
       scheduler.drainPendingQueue(stateCacheProvider.get());
 
       String[] portRange = {"80:82"};
-      sms.resourceOffers(driver, Arrays.asList(createOffer(20, 20000, "slave1", "host1", Optional.<String> absent(), Collections.<String, String> emptyMap(), portRange)));
+      sms.resourceOffers(Arrays.asList(createOffer(20, 20000, "slave1", "host1", Optional.<String> absent(), Collections.<String, String> emptyMap(), portRange)));
 
       SingularityTaskId firstTaskId = taskManager.getActiveTaskIdsForRequest(requestId).get(0);
 

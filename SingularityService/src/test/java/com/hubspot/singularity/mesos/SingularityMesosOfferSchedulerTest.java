@@ -40,8 +40,8 @@ public class SingularityMesosOfferSchedulerTest extends SingularityCuratorTestBa
   private static final String SLAVE_ID = "slave";
 
   private SingularityTaskRequest taskRequest = Mockito.mock(SingularityTaskRequest.class);
-  private SingularityDeploy deploy = Mockito.mock(SingularityDeploy.class);
-  private SingularityRequest request = Mockito.mock(SingularityRequest.class);
+  private SingularityDeploy deploy = SingularityDeploy.builder().setId("deployId").setRequestId("requestId").build();
+  private SingularityRequest request = SingularityRequest.builder().setId("requestId").setRequestType(RequestType.ON_DEMAND).build();
   private SingularityPendingTask task = Mockito.mock(SingularityPendingTask.class);
   private SingularityPendingTaskId taskId = Mockito.mock(SingularityPendingTaskId.class);
 
@@ -59,12 +59,6 @@ public class SingularityMesosOfferSchedulerTest extends SingularityCuratorTestBa
     configuration.setDefaultOfferScoreForMissingUsage(0.10);
     configuration.setConsiderNonLongRunningTaskLongRunningAfterRunningForSeconds(TimeUnit.HOURS.toSeconds(6));
     configuration.setMaxNonLongRunningUsedResourceWeight(0.50);
-
-    Mockito.when(taskRequest.getRequest()).thenReturn(request);
-    Mockito.when(request.getId()).thenReturn("requestId");
-
-    Mockito.when(taskRequest.getDeploy()).thenReturn(deploy);
-    Mockito.when(deploy.getId()).thenReturn("deployId");
 
     Mockito.when(taskRequest.getPendingTask()).thenReturn(task);
     Mockito.when(task.getPendingTaskId()).thenReturn(taskId);
@@ -307,6 +301,8 @@ public class SingularityMesosOfferSchedulerTest extends SingularityCuratorTestBa
   }
 
   private void setRequestType(RequestType type) {
-    Mockito.when(request.getRequestType()).thenReturn(type);
+    request = SingularityRequest.builder().setId("requestId").setRequestType(type).build();
+    Mockito.when(taskRequest.getRequest()).thenReturn(request);
+    Mockito.when(taskRequest.getDeploy()).thenReturn(deploy);
   }
 }

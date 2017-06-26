@@ -46,7 +46,6 @@ import com.hubspot.singularity.MachineState;
 import com.hubspot.singularity.ScheduleType;
 import com.hubspot.singularity.SingularityAction;
 import com.hubspot.singularity.SingularityDeploy;
-import com.hubspot.singularity.SingularityDeployBuilder;
 import com.hubspot.singularity.SingularityPriorityFreezeParent;
 import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityRequestGroup;
@@ -232,7 +231,7 @@ public class SingularityValidator {
       checkBadRequest(request.getMaxTasksPerOffer().get() > 0, "maxTasksPerOffer must be positive");
     }
 
-    return request.toBuilder().setQuartzSchedule(Optional.fromNullable(quartzSchedule)).build();
+    return SingularityRequest.builder().from(request).setQuartzSchedule(Optional.fromNullable(quartzSchedule)).build();
   }
 
   public SingularityWebhook checkSingularityWebhook(SingularityWebhook webhook) {
@@ -256,7 +255,7 @@ public class SingularityValidator {
 
     if (deployId == null) {
       checkBadRequest(createDeployIds, "Id must not be null");
-      SingularityDeployBuilder builder = deploy.toBuilder();
+      SingularityDeploy.Builder builder = SingularityDeploy.builder().from(deploy);
       builder.setId(createUniqueDeployId());
       deploy = builder.build();
       deployId = deploy.getId();
@@ -274,8 +273,8 @@ public class SingularityValidator {
     checkForIllegalResources(request, deploy);
 
     if (deploy.getResources().isPresent()) {
-      if (deploy.getHealthcheck().isPresent()) {
-        HealthcheckOptions healthcheck = deploy.getHealthcheck().get();
+      if (deploy.getValidatedHealthcheckOptions().isPresent()) {
+        HealthcheckOptions healthcheck = deploy.getValidatedHealthcheckOptions().get();
         checkBadRequest(!(healthcheck.getPortIndex().isPresent() && healthcheck.getPortNumber().isPresent()),
           "Can only specify one of portIndex or portNumber for healthchecks");
         if (healthcheck.getPortIndex().isPresent()) {
@@ -293,15 +292,15 @@ public class SingularityValidator {
       }
     }
 
-    if (deploy.getHealthcheck().isPresent() && !Strings.isNullOrEmpty(deploy.getHealthcheck().get().getUri())) {
+    if (deploy.getValidatedHealthcheckOptions().isPresent() && !Strings.isNullOrEmpty(deploy.getValidatedHealthcheckOptions().get().getUri())) {
       if (!deploy.getResources().isPresent() || deploy.getResources().get().getNumPorts() == 0) {
-        checkBadRequest(deploy.getHealthcheck().get().getPortNumber().isPresent(),
+        checkBadRequest(deploy.getValidatedHealthcheckOptions().get().getPortNumber().isPresent(),
           "Either an explicit port number, or port resources and port index must be specified to run healthchecks against a uri");
       }
     }
 
-    if (deploy.getHealthcheck().isPresent() && maxTotalHealthcheckTimeoutSeconds.isPresent()) {
-      HealthcheckOptions options = deploy.getHealthcheck().get();
+    if (deploy.getValidatedHealthcheckOptions().isPresent() && maxTotalHealthcheckTimeoutSeconds.isPresent()) {
+      HealthcheckOptions options = deploy.getValidatedHealthcheckOptions().get();
       int intervalSeconds = options.getIntervalSeconds().or(defaultHealthcheckIntervalSeconds);
       int httpTimeoutSeconds = options.getResponseTimeoutSeconds().or(defaultHealthcheckResponseTimeoutSeconds);
       int startupTime = options.getStartupTimeoutSeconds().or(defaultHealthcheckStartupTimeooutSeconds);
@@ -311,8 +310,8 @@ public class SingularityValidator {
         String.format("Max healthcheck time cannot be greater than %s, (was startup timeout: %s, interval: %s, attempts: %s)", maxTotalHealthcheckTimeoutSeconds.get(), startupTime, intervalSeconds, attempts));
     }
 
-    if (deploy.getHealthcheck().isPresent() && deploy.getHealthcheck().get().getStartupDelaySeconds().isPresent()) {
-      int startUpDelay = deploy.getHealthcheck().get().getStartupDelaySeconds().get();
+    if (deploy.getValidatedHealthcheckOptions().isPresent() && deploy.getValidatedHealthcheckOptions().get().getStartupDelaySeconds().isPresent()) {
+      int startUpDelay = deploy.getValidatedHealthcheckOptions().get().getStartupDelaySeconds().get();
 
       checkBadRequest(startUpDelay < defaultKillAfterNotHealthySeconds,
           String.format("Health check startup delay time must be less than %s (was %s)", defaultKillAfterNotHealthySeconds, startUpDelay));
@@ -325,17 +324,17 @@ public class SingularityValidator {
 
     checkBadRequest(!deploy.getContainerInfo().isPresent() || deploy.getContainerInfo().get().getType() != null, "Container type must not be null");
 
-    if (deploy.getLabels().isPresent() && deploy.getMesosTaskLabels().isPresent()) {
+    if (deploy.getLabels().isPresent() && deploy.getValidatedTaskLabels().isPresent()) {
       List<SingularityMesosTaskLabel> deprecatedLabels = SingularityMesosTaskLabel.labelsFromMap(deploy.getLabels().get());
-      checkBadRequest(deprecatedLabels.containsAll(deploy.getMesosLabels().get()) && deploy.getMesosLabels().get().containsAll(deprecatedLabels), "Can only specify one of 'labels' or 'mesosLabels");
+      checkBadRequest(deprecatedLabels.containsAll(deploy.getValidatedLabels().get()) && deploy.getValidatedLabels().get().containsAll(deprecatedLabels), "Can only specify one of 'labels' or 'mesosLabels");
     }
 
-    if (deploy.getTaskLabels().isPresent() && deploy.getMesosTaskLabels().isPresent()) {
+    if (deploy.getTaskLabels().isPresent() && deploy.getValidatedTaskLabels().isPresent()) {
       for (Map.Entry<Integer, Map<String, String>> entry : deploy.getTaskLabels().get().entrySet()) {
         List<SingularityMesosTaskLabel> deprecatedLabels = SingularityMesosTaskLabel.labelsFromMap(entry.getValue());
-        checkBadRequest(deploy.getMesosTaskLabels().get().containsKey(entry.getKey())
-          && deprecatedLabels.containsAll(deploy.getMesosTaskLabels().get().get(entry.getKey()))
-          && deploy.getMesosTaskLabels().get().get(entry.getKey()).containsAll(deprecatedLabels),
+        checkBadRequest(deploy.getValidatedTaskLabels().get().containsKey(entry.getKey())
+          && deprecatedLabels.containsAll(deploy.getValidatedTaskLabels().get().get(entry.getKey()))
+          && deploy.getValidatedTaskLabels().get().get(entry.getKey()).containsAll(deprecatedLabels),
           "Can only specify one of 'taskLabels' or 'mesosTaskLabels");
       }
     }
@@ -657,8 +656,7 @@ public class SingularityValidator {
       return defaultBounceRequest;
     }
     final long durationMillis = TimeUnit.MINUTES.toMillis(defaultBounceExpirationMinutes);
-    return defaultBounceRequest
-        .toBuilder()
+    return SingularityBounceRequest.builder().from(defaultBounceRequest)
         .setDurationMillis(Optional.of(durationMillis))
         .build();
   }

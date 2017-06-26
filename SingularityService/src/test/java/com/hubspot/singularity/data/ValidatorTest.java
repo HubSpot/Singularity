@@ -11,11 +11,9 @@ import org.junit.Test;
 import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.hubspot.deploy.HealthcheckOptions;
-import com.hubspot.deploy.HealthcheckOptionsBuilder;
 import com.hubspot.singularity.RequestType;
 import com.hubspot.singularity.SingularityDeploy;
 import com.hubspot.singularity.SingularityRequest;
-import com.hubspot.singularity.SingularityRequestBuilder;
 import com.hubspot.singularity.SingularityTestBaseNoDb;
 
 
@@ -44,8 +42,8 @@ public class ValidatorTest extends SingularityTestBaseNoDb {
   public void itForbidsBracketCharactersInDeployIds() throws Exception {
     final String badDeployId = "deployKey[[";
 
-    SingularityDeploy singularityDeploy = SingularityDeploy.newBuilder(badDeployId, badDeployId).build();
-    SingularityRequest singularityRequest = new SingularityRequestBuilder(badDeployId, RequestType.SERVICE).build();
+    SingularityDeploy singularityDeploy = SingularityDeploy.builder().setId(badDeployId).setRequestId(badDeployId).build();
+    SingularityRequest singularityRequest = SingularityRequest.builder().setId(badDeployId).setRequestType(RequestType.SERVICE).build();
 
     validator.checkDeploy(singularityRequest, singularityDeploy);
   }
@@ -54,8 +52,8 @@ public class ValidatorTest extends SingularityTestBaseNoDb {
   public void itForbidsQuotesInDeployIds() throws Exception {
     final String badDeployId = "deployKey'";
 
-    SingularityDeploy singularityDeploy = SingularityDeploy.newBuilder(badDeployId, badDeployId).build();
-    SingularityRequest singularityRequest = new SingularityRequestBuilder(badDeployId, RequestType.SERVICE).build();
+    SingularityDeploy singularityDeploy = SingularityDeploy.builder().setId(badDeployId).setRequestId(badDeployId).build();
+    SingularityRequest singularityRequest = SingularityRequest.builder().setId(badDeployId).setRequestType(RequestType.SERVICE).build();
 
     WebApplicationException exn = (WebApplicationException) catchThrowable(() -> validator.checkDeploy(singularityRequest, singularityDeploy));
     assertThat((String) exn.getResponse().getEntity())
@@ -65,15 +63,15 @@ public class ValidatorTest extends SingularityTestBaseNoDb {
   @Test
   public void itForbidsHealthCheckStartupDelaysLongerThanKillWait() {
     // Default kill wait time is 10 minutes (600 seconds)
-    HealthcheckOptions healthCheck = new HealthcheckOptionsBuilder("/")
+    HealthcheckOptions healthCheck = HealthcheckOptions.builder().setUri("/")
         .setPortNumber(Optional.of(8080L))
         .setStartupDelaySeconds(Optional.of(10000))
         .build();
     SingularityDeploy deploy = SingularityDeploy
-        .newBuilder("1234567", "1234567")
+        .builder().setId("1234567").setRequestId("1234567")
         .setHealthcheck(Optional.of(healthCheck))
         .build();
-    SingularityRequest request = new SingularityRequestBuilder("1234567", RequestType.SERVICE).build();
+    SingularityRequest request = SingularityRequest.builder().setId("1234567").setRequestType(RequestType.SERVICE).build();
 
     WebApplicationException exn = (WebApplicationException) catchThrowable(() -> validator.checkDeploy(request, deploy));
     assertThat((String) exn.getResponse().getEntity())
