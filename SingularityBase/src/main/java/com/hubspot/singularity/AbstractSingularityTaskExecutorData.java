@@ -1,17 +1,23 @@
 package com.hubspot.singularity;
 
 import java.util.List;
+import java.util.Map;
 
 import org.immutables.value.Value.Immutable;
 
 import com.google.common.base.Optional;
+import com.hubspot.deploy.EmbeddedArtifact;
 import com.hubspot.deploy.ExecutorData;
-import com.hubspot.deploy.ExecutorDataIF;
+import com.hubspot.deploy.ExecutorDataBase;
+import com.hubspot.deploy.ExternalArtifact;
+import com.hubspot.deploy.S3ArtifactBase;
+import com.hubspot.deploy.S3ArtifactBaseSignature;
 import com.hubspot.immutables.style.SingularityStyle;
+import com.hubspot.singularity.executor.SingularityExecutorLogrotateFrequency;
 
 @Immutable
 @SingularityStyle
-public abstract class AbstractSingularityTaskExecutorData implements ExecutorDataIF {
+public abstract class AbstractSingularityTaskExecutorData implements ExecutorDataBase {
 
   public static SingularityTaskExecutorData of(ExecutorData executorData,
                                                List<SingularityS3UploaderFile> s3UploaderAdditionalFiles,
@@ -33,6 +39,42 @@ public abstract class AbstractSingularityTaskExecutorData implements ExecutorDat
         .setApplyS3StorageClassAfterBytes(applyS3StorageClassAfterBytes)
         .build();
   }
+
+  public abstract String getCmd();
+
+  public abstract List<EmbeddedArtifact> getEmbeddedArtifacts();
+
+  public abstract List<ExternalArtifact> getExternalArtifacts();
+
+  public abstract List<S3ArtifactBase> getS3Artifacts();
+
+  public abstract List<Integer> getSuccessfulExitCodes();
+
+  public abstract Optional<String> getUser();
+
+  public abstract Optional<String> getRunningSentinel();
+
+  public abstract List<String> getExtraCmdLineArgs();
+
+  public abstract Optional<String> getLoggingTag();
+
+  public abstract Map<String, String> getLoggingExtraFields();
+
+  public abstract Optional<Long> getSigKillProcessesAfterMillis();
+
+  public abstract Optional<Integer> getMaxTaskThreads();
+
+  public abstract Optional<Boolean> getPreserveTaskSandboxAfterFinish();
+
+  public abstract Optional<Integer> getMaxOpenFiles();
+
+  public abstract Optional<Boolean> getSkipLogrotateAndCompress();
+
+  public abstract List<S3ArtifactBaseSignature> getS3ArtifactSignatures();
+
+  public abstract List<S3ArtifactBaseSignature> getS3ArtifactSignaturesOrEmpty();
+
+  public abstract Optional<SingularityExecutorLogrotateFrequency> getLogrotateFrequency();
 
   public abstract List<SingularityS3UploaderFile> getS3UploaderAdditionalFiles();
 

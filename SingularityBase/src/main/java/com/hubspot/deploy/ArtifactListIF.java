@@ -4,7 +4,6 @@ import java.util.List;
 
 import org.immutables.value.Value.Immutable;
 
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.hubspot.immutables.style.SingularityStyle;
 
 @Immutable
@@ -15,8 +14,8 @@ public interface ArtifactListIF {
 
   List<ExternalArtifact> getExternalArtifacts();
 
-  List<S3Artifact> getS3Artifacts();
+  List<S3ArtifactBase> getS3Artifacts();
 
-  List<S3ArtifactSignature> getS3ArtifactSignatures();
+  List<S3ArtifactBaseSignature> getS3ArtifactSignatures();
 
 }

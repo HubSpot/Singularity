@@ -7,7 +7,7 @@ import com.hubspot.immutables.style.SingularityStyle;
 
 @Immutable
 @SingularityStyle
-public abstract class AbstractExternalArtifact extends AbstractRemoteArtifact {
+public abstract class AbstractExternalArtifact extends RemoteArtifactBase {
 
   public abstract String getName();
 
@@ -18,5 +18,11 @@ public abstract class AbstractExternalArtifact extends AbstractRemoteArtifact {
   public abstract Optional<String> getMd5sum();
 
   public abstract Optional<String> getTargetFolderRelativeToTask();
+
+  public abstract Optional<Long> filesize();
+
+  public boolean isArtifactList() {
+    return false;
+  }
 
 }
