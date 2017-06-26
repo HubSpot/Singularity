@@ -7,7 +7,6 @@ import java.util.Map;
 import org.immutables.value.Value.Immutable;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.google.common.base.Optional;
 import com.hubspot.immutables.style.SingularityStyle;
 import com.hubspot.singularity.executor.SingularityExecutorLogrotateFrequency;
@@ -15,7 +14,6 @@ import com.wordnik.swagger.annotations.ApiModelProperty;
 
 @Immutable
 @SingularityStyle
-@JsonDeserialize(as = ExecutorData.class)
 public interface ExecutorDataIF {
   @ApiModelProperty(required=true, value="Command for the custom executor to run")
   String getCmd();

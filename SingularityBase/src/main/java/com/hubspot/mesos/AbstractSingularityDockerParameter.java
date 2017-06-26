@@ -12,7 +12,6 @@ import com.hubspot.immutables.style.SingularityStyle;
 
 @Immutable
 @SingularityStyle
-@JsonDeserialize(as = SingularityDockerParameter.class)
 public abstract class AbstractSingularityDockerParameter {
   public abstract String getKey();
 

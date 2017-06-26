@@ -3,13 +3,11 @@ package com.hubspot.deploy;
 import org.immutables.value.Value.Default;
 import org.immutables.value.Value.Immutable;
 
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.google.common.base.Optional;
 import com.hubspot.immutables.style.SingularityStyle;
 
 @Immutable
 @SingularityStyle
-@JsonDeserialize(as = RemoteArtifact.class)
 public abstract class AbstractRemoteArtifact extends AbstractArtifact {
 
   public abstract String getName();

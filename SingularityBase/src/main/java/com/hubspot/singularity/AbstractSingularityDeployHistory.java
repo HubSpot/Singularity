@@ -3,13 +3,11 @@ package com.hubspot.singularity;
 import org.immutables.value.Value.Immutable;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.google.common.base.Optional;
 import com.hubspot.immutables.style.SingularityStyle;
 
 @Immutable
 @SingularityStyle
-@JsonDeserialize(as = SingularityDeployHistory.class)
 public abstract class AbstractSingularityDeployHistory implements Comparable<SingularityDeployHistory>, SingularityHistoryItem {
   @Override
   public int compareTo(SingularityDeployHistory o) {

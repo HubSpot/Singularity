@@ -5,14 +5,12 @@ import java.util.UUID;
 import org.immutables.value.Value.Default;
 import org.immutables.value.Value.Immutable;
 
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.google.common.base.Optional;
 import com.hubspot.immutables.style.SingularityStyle;
 import com.wordnik.swagger.annotations.ApiModelProperty;
 
 @Immutable
 @SingularityStyle
-@JsonDeserialize(as = SingularitySkipHealthchecksRequest.class)
 public abstract class AbstractSingularitySkipHealthchecksRequest extends SingularityExpiringRequestParent {
   @ApiModelProperty(required = false, value = "If set to true, healthchecks will be skipped for all tasks for this request until reversed")
   public abstract Optional<Boolean> getSkipHealthchecks();

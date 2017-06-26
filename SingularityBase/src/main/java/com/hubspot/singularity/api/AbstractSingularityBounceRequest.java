@@ -5,7 +5,6 @@ import java.util.UUID;
 import org.immutables.value.Value.Default;
 import org.immutables.value.Value.Immutable;
 
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.google.common.base.Optional;
 import com.hubspot.immutables.style.SingularityStyle;
 import com.hubspot.singularity.SingularityShellCommand;
@@ -13,7 +12,6 @@ import com.wordnik.swagger.annotations.ApiModelProperty;
 
 @Immutable
 @SingularityStyle
-@JsonDeserialize(as = SingularityBounceRequest.class)
 public abstract class AbstractSingularityBounceRequest extends SingularityExpiringRequestParent {
 
   public static SingularityBounceRequest defaultRequest() {

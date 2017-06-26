@@ -3,13 +3,11 @@ package com.hubspot.mesos;
 import org.immutables.value.Value.Default;
 import org.immutables.value.Value.Immutable;
 
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.google.common.base.Preconditions;
 import com.hubspot.immutables.style.SingularityStyle;
 
 @Immutable
 @SingularityStyle
-@JsonDeserialize(as = Resources.class)
 public abstract class AbstractResources {
   @Default
   public double getCpus() {

@@ -3,7 +3,6 @@ package com.hubspot.singularity.api;
 import org.immutables.value.Value.Immutable;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.google.common.base.Optional;
 import com.hubspot.immutables.style.SingularityStyle;
 import com.hubspot.singularity.SingularityDeploy;
@@ -12,7 +11,6 @@ import com.wordnik.swagger.annotations.ApiModelProperty;
 
 @Immutable
 @SingularityStyle
-@JsonDeserialize(as = SingularityDeployRequest.class)
 public interface SingularityDeployRequestIF {
 
   @ApiModelProperty(required=false, value="If deploy is successful, also unpause the request")

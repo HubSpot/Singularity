@@ -2,7 +2,6 @@ package com.hubspot.deploy;
 
 import org.immutables.value.Value.Immutable;
 
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.google.common.base.Optional;
 import com.hubspot.immutables.style.SingularityStyle;
 
@@ -10,7 +9,6 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 @Immutable
 @SingularityStyle
-@JsonDeserialize(as = EmbeddedArtifact.class)
 public abstract class AbstractEmbeddedArtifact extends AbstractArtifact {
   public abstract String getName();
 

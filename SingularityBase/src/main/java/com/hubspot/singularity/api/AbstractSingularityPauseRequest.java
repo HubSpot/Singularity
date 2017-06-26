@@ -5,7 +5,6 @@ import java.util.UUID;
 import org.immutables.value.Value.Default;
 import org.immutables.value.Value.Immutable;
 
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.google.common.base.Optional;
 import com.hubspot.immutables.style.SingularityStyle;
 import com.hubspot.singularity.SingularityShellCommand;
@@ -13,7 +12,6 @@ import com.wordnik.swagger.annotations.ApiModelProperty;
 
 @Immutable
 @SingularityStyle
-@JsonDeserialize(as = SingularityPauseRequest.class)
 public abstract class AbstractSingularityPauseRequest extends SingularityExpiringRequestParent {
 
   @ApiModelProperty(required=false, value="If set to false, tasks will be allowed to finish instead of killed immediately")

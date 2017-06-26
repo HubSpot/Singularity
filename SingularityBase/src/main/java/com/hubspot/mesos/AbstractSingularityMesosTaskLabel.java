@@ -7,13 +7,11 @@ import java.util.Map;
 import org.immutables.value.Value.Immutable;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.google.common.base.Optional;
 import com.hubspot.immutables.style.SingularityStyle;
 
 @Immutable
 @SingularityStyle
-@JsonDeserialize(as = SingularityMesosTaskLabel.class)
 public abstract class AbstractSingularityMesosTaskLabel {
   public abstract String getKey();
 

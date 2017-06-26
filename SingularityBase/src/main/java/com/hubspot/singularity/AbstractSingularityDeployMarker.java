@@ -10,7 +10,6 @@ import com.hubspot.immutables.style.SingularityStyle;
 
 @Immutable
 @SingularityStyle
-@JsonDeserialize(as = SingularityDeployMarker.class)
 public abstract class AbstractSingularityDeployMarker implements Comparable<SingularityDeployMarker> {
   @Override
   public int compareTo(SingularityDeployMarker o) {

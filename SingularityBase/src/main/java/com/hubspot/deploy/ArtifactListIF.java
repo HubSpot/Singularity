@@ -9,7 +9,6 @@ import com.hubspot.immutables.style.SingularityStyle;
 
 @Immutable
 @SingularityStyle
-@JsonDeserialize(as = ArtifactList.class)
 public interface ArtifactListIF {
 
   List<EmbeddedArtifact> getEmbeddedArtifacts();

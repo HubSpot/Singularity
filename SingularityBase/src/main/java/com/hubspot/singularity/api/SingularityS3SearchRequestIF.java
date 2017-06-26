@@ -12,7 +12,6 @@ import com.wordnik.swagger.annotations.ApiModelProperty;
 
 @Immutable
 @SingularityStyle
-@JsonDeserialize(as = SingularityS3SearchRequest.class)
 public interface SingularityS3SearchRequestIF {
 
   @ApiModelProperty(required=false, value="A map of request IDs to a list of deploy ids to search")

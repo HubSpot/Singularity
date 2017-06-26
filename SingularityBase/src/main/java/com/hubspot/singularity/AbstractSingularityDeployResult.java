@@ -5,13 +5,11 @@ import java.util.List;
 import org.immutables.value.Value.Default;
 import org.immutables.value.Value.Immutable;
 
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.google.common.base.Optional;
 import com.hubspot.immutables.style.SingularityStyle;
 
 @Immutable
 @SingularityStyle
-@JsonDeserialize(as = SingularityDeployResult.class)
 public abstract class AbstractSingularityDeployResult {
 
  /* SingularityDeployResult(DeployState deployState, SingularityLoadBalancerUpdate lbUpdate, List<SingularityDeployFailure> deployFailures) {

@@ -8,14 +8,12 @@ import org.immutables.value.Value.Default;
 import org.immutables.value.Value.Immutable;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.google.common.base.Optional;
 import com.hubspot.immutables.style.SingularityStyle;
 import com.wordnik.swagger.annotations.ApiModelProperty;
 
 @Immutable
 @SingularityStyle
-@JsonDeserialize(as = SingularityDockerInfo.class)
 public abstract class AbstractSingularityDockerInfo {
   @ApiModelProperty(required = true, value = "Docker image name")
   public abstract String getImage();

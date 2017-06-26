@@ -6,14 +6,12 @@ import java.util.Map;
 import org.immutables.value.Value.Default;
 import org.immutables.value.Value.Immutable;
 
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.hubspot.immutables.style.SingularityStyle;
 import com.hubspot.singularity.SingularityS3LogMetadata;
 import com.wordnik.swagger.annotations.ApiModelProperty;
 
 @Immutable
 @SingularityStyle
-@JsonDeserialize(as = SingularityS3SearchResult.class)
 public interface SingularityS3SearchResultIF {
 
   @ApiModelProperty(required=false, value="S3 continuation tokens, return these to Singularity to continue searching subsequent pages of results")

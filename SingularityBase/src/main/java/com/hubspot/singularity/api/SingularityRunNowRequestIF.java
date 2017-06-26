@@ -4,7 +4,6 @@ import java.util.List;
 
 import org.immutables.value.Value.Immutable;
 
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.google.common.base.Optional;
 import com.hubspot.immutables.style.SingularityStyle;
 import com.hubspot.mesos.Resources;
@@ -12,7 +11,6 @@ import com.wordnik.swagger.annotations.ApiModelProperty;
 
 @Immutable
 @SingularityStyle
-@JsonDeserialize(as = SingularityRunNowRequest.class)
 public interface SingularityRunNowRequestIF {
 
   @ApiModelProperty(required=false, value="A message to show to users about why this action was taken")

@@ -23,7 +23,6 @@ import com.wordnik.swagger.annotations.ApiModelProperty;
 
 @Immutable(prehash = true)
 @SingularityStyle
-@JsonDeserialize(as = SingularityDeploy.class)
 public abstract class AbstractSingularityDeploy {
 
   private static Map<Integer, List<SingularityMesosTaskLabel>> parseMesosTaskLabelsFromMap(Map<Integer, Map<String, String>> taskLabels) {

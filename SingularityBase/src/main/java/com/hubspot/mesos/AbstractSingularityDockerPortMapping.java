@@ -3,14 +3,12 @@ package com.hubspot.mesos;
 import org.immutables.value.Value.Default;
 import org.immutables.value.Value.Immutable;
 
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.google.common.base.Optional;
 import com.hubspot.immutables.style.SingularityStyle;
 import com.wordnik.swagger.annotations.ApiModelProperty;
 
 @Immutable
 @SingularityStyle
-@JsonDeserialize(as = SingularityDockerPortMapping.class)
 public abstract class AbstractSingularityDockerPortMapping {
   @Default
   @ApiModelProperty(required = false, value = "Container port. Use the port number provided (LITERAL) or the dynamically allocated port at this index (FROM_OFFER)")

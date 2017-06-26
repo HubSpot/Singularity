@@ -12,7 +12,6 @@ import com.hubspot.immutables.style.SingularityStyle;
 
 @Immutable
 @SingularityStyle
-@JsonDeserialize(as = MesosResourcesObject.class)
 public abstract class AbstractMesosResourcesObject {
 
   public abstract ImmutableMap<String, Object> getProperties();
