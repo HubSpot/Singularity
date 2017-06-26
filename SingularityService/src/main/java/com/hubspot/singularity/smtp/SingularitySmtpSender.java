@@ -91,6 +91,10 @@ public class SingularitySmtpSender implements Managed {
     properties.setProperty("mail.smtp.host", smtpConfiguration.getHost());
     properties.setProperty("mail.smtp.port", Integer.toString(smtpConfiguration.getPort()));
 
+    if (smtpConfiguration.isSsl()) {
+      properties.setProperty("mail.smtp.ssl.enable", "true");
+    }
+
     if (useAuth) {
       properties.setProperty("mail.smtp.auth", "true");
       return Session.getInstance(properties, new SMTPAuthenticator(smtpConfiguration.getUsername().get(), smtpConfiguration.getPassword().get()));
@@ -111,7 +115,7 @@ public class SingularitySmtpSender implements Managed {
     }
 
     try {
-      final Session session = createSession(maybeSmtpConfiguration.get(), useAuth);
+      final Session session = createSession(smtpConfiguration, useAuth);
 
       MimeMessage message = new MimeMessage(session);
 

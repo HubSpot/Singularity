@@ -276,14 +276,47 @@ These settings live under the "smtp" field in the root config.
 | rateLimitCooldownMillis | 3600000 (1 hour) | Cooldown time before rate limiting is removed | long |
 | taskEmailTailFiles | [stdout, stderr] | Send the tail of these files in messages about tasks | List\<String\> |
 | emails | See below | See below | Map\<EmailType, List\<EmailDestination\>\> |
+| subjectPrefix | unset | String prepended to the email subject line | String |
+| ssl | false | Connect to SMTP host over ssl | boolean |
+
+You may need `libmail-java` installed on your Singularity master host in order to connect to your smtp server.
 
 #### Emails List ####
 
-The emails list determines what emails to send notifications to and for what events. You can specify a map of [`EmailType`](https://github.com/HubSpot/Singularity/blob/master/SingularityService/src/main/java/com/hubspot/singularity/config/EmailConfigurationEnums.java) to a list of [`EmailDestination`s](https://github.com/HubSpot/Singularity/blob/master/SingularityService/src/main/java/com/hubspot/singularity/config/EmailConfigurationEnums.java)
+The emails list determines what emails to send notifications to and for what events. You can specify a map of [`EmailType`](https://github.com/HubSpot/Singularity/blob/master/SingularityBase/src/main/java/com/hubspot/singularity/SingularityEmailType.java)
+ to a list of [`EmailDestination`s](https://github.com/HubSpot/Singularity/blob/master/SingularityBase/src/main/java/com/hubspot/singularity/SingularityEmailDestination.java)
 
-`EmailType` corressponds to different events that could trigger emails such as `TASK_LOST` or `TASK_FAILED`
+`EmailType` corresponds to different events that could trigger emails such as `TASK_LOST` or `TASK_FAILED`
 
-`EmailDestination` corressponds to one of `OWNERS` (as listed on the Singularity Request), `ACTION_TAKER` (user who triggered the action causing the email update), or `ADMINS` (specified in config as seen above)
+`EmailDestination` corresponds to one of `OWNERS` (as listed on the Singularity Request), `ACTION_TAKER` (user who triggered the action causing the email update), or `ADMINS` (specified in config as seen above)
+
+An email list might look something like
+```yaml
+smtp:
+  emails:
+    TASK_LOST:
+      - OWNERS
+    TASK_FAILED:
+      - OWNERS
+    TASK_FAILED_DECOMISSIONED:
+      - OWNERS
+    TASK_KILLED:
+      - OWNERS
+    TASK_KILLED_DECOMISSIONED:
+      - OWNERS
+    TASK_KILLED_UNHEALTHY:
+      - OWNERS
+    TASK_SCHEDULED_OVERDUE_TO_FINISH:
+      - OWNERS
+    TASK_FINISHED_ON_DEMAND:
+      - OWNERS
+    TASK_FINISHED_RUN_ONCE:
+      - OWNERS
+    TASK_FINISHED_SCHEDULED:
+      - OWNERS
+    TASK_FINISHED_LONG_RUNNING:
+      - OWNERS
+```
 
 ## UI Configuration ##
 
