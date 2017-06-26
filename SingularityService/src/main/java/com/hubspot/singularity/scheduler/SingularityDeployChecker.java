@@ -280,28 +280,27 @@ public class SingularityDeployChecker {
       Optional<List<String>> commandLineArgs = runNowRequest.getCommandLineArgs();
       Optional<Boolean> skipHealthChecks = runNowRequest.getSkipHealthchecks().or(request.getSkipHealthchecks());
       Optional<Resources> resources = runNowRequest.getResources();
-      Optional<Long> runAt = runNowRequest.getRunAt();
       List<SingularityTaskId> activeTasks = taskManager.getActiveTaskIdsForRequest(requestId);
       List<SingularityPendingTaskId> pendingTasks = taskManager.getPendingTaskIdsForRequest(requestId);
 
       if (request.isScheduled()) {
         if (activeTasks.isEmpty()) {
           PendingType pendingType = canceledOr(deployResult.getDeployState(), PendingType.IMMEDIATE);
-          requestManager.addToPendingQueue(new SingularityPendingRequest(requestId, deployId, timestamp, user, pendingType, commandLineArgs, runId, skipHealthChecks, message, Optional.absent(), resources, runAt));
+          requestManager.addToPendingQueue(new SingularityPendingRequest(requestId, deployId, timestamp, user, pendingType, commandLineArgs, runId, skipHealthChecks, message, Optional.absent(), resources, runNowRequest.getRunAt()));
         } else {
           // Don't run scheduled task over a running task. Will be picked up on the next run.
           PendingType pendingType = canceledOr(deployResult.getDeployState(), PendingType.NEW_DEPLOY);
-          requestManager.addToPendingQueue(new SingularityPendingRequest(requestId, deployId, timestamp, user, pendingType, commandLineArgs, runId, skipHealthChecks, message, Optional.absent(), resources, runAt));
+          requestManager.addToPendingQueue(new SingularityPendingRequest(requestId, deployId, timestamp, user, pendingType, commandLineArgs, runId, skipHealthChecks, message, Optional.absent(), resources, runNowRequest.getRunAt()));
         }
       } else if (!request.isLongRunning()) {
         if (request.getInstances().isPresent()
             && (activeTasks.size() + pendingTasks.size() < request.getInstances().get())) {
           PendingType pendingType = canceledOr(deployResult.getDeployState(), PendingType.ONEOFF);
-          requestManager.addToPendingQueue(new SingularityPendingRequest(requestId, deployId, timestamp, user, pendingType, commandLineArgs, runId, skipHealthChecks, message, Optional.absent(), resources, runAt));
+          requestManager.addToPendingQueue(new SingularityPendingRequest(requestId, deployId, timestamp, user, pendingType, commandLineArgs, runId, skipHealthChecks, message, Optional.absent(), resources, runNowRequest.getRunAt()));
         } else {
           // Don't run one-off / on-demand task when already at instance count cap
           PendingType pendingType = canceledOr(deployResult.getDeployState(), PendingType.NEW_DEPLOY);
-          requestManager.addToPendingQueue(new SingularityPendingRequest(requestId, deployId, timestamp, user, pendingType, commandLineArgs, runId, skipHealthChecks, message, Optional.absent(), resources, runAt));
+          requestManager.addToPendingQueue(new SingularityPendingRequest(requestId, deployId, timestamp, user, pendingType, commandLineArgs, runId, skipHealthChecks, message, Optional.absent(), resources, runNowRequest.getRunAt()));
         }
       }
     } else if (!request.isDeployable() && !request.isOneOff()) {

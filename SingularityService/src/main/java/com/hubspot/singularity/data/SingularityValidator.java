@@ -94,6 +94,7 @@ public class SingularityValidator {
   private final int defaultHealthcheckStartupTimeooutSeconds;
   private final int defaultHealthcehckMaxRetries;
   private final int defaultHealthcheckResponseTimeoutSeconds;
+  private final int maxRunNowTaskLaunchDelay;
   private final int maxDecommissioningSlaves;
   private final boolean spreadAllSlavesEnabled;
   private final boolean allowRequestsWithoutOwners;
@@ -150,6 +151,7 @@ public class SingularityValidator {
     this.defaultHealthcheckStartupTimeooutSeconds = configuration.getStartupTimeoutSeconds();
     this.defaultHealthcehckMaxRetries = configuration.getHealthcheckMaxRetries().or(0);
     this.defaultHealthcheckResponseTimeoutSeconds = configuration.getHealthcheckTimeoutSeconds();
+    this.maxRunNowTaskLaunchDelay = configuration.getMaxRunNowTaskLaunchDelayDays();
 
     this.maxDecommissioningSlaves = configuration.getMaxDecommissioningSlaves();
     this.spreadAllSlavesEnabled = configuration.isSpreadAllSlavesEnabled();
@@ -422,8 +424,9 @@ public class SingularityValidator {
       throw badRequest("Can not request an immediate run of a non-scheduled / always running request (%s)", request);
     }
 
-    if (runNowRequest.getRunAt().isPresent() && runNowRequest.getRunAt().get() > (System.currentTimeMillis() + TimeUnit.DAYS.toMillis(singularityConfiguration.getMaxRunNowTaskLaunchDelayDays()))) {
-      throw badRequest("Task launch delay can be at most %d days from now.", singularityConfiguration.getMaxRunNowTaskLaunchDelayDays());
+    if (runNowRequest.getRunAt().isPresent()
+        && runNowRequest.getRunAt().get() > (System.currentTimeMillis() + TimeUnit.DAYS.toMillis(maxRunNowTaskLaunchDelay))) {
+      throw badRequest("Task launch delay can be at most %d days from now.", maxRunNowTaskLaunchDelay);
     }
 
     return new SingularityPendingRequest(
@@ -451,13 +454,13 @@ public class SingularityValidator {
           Optional.of(getRunId(request.getRunId())),
           request.getCommandLineArgs(),
           request.getResources(),
-          request.getRunAt()
-      );
+          request.getRunAt());
     } else {
       return new SingularityRunNowRequest(
           Optional.absent(),
           Optional.absent(),
           Optional.of(getRunId(Optional.absent())),
+          Optional.absent(),
           Optional.absent(),
           Optional.absent());
     }
