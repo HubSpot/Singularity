@@ -13,8 +13,9 @@ import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import com.hubspot.singularity.executor.handlebars.BashEscapedHelper;
 import com.hubspot.singularity.executor.handlebars.EscapeNewLinesAndQuotesHelper;
-import com.hubspot.singularity.executor.handlebars.IfHasNewLinesHelper;
+import com.hubspot.singularity.executor.handlebars.IfHasNewLinesOrBackticksHelper;
 import com.hubspot.singularity.executor.handlebars.IfPresentHelper;
+import com.hubspot.singularity.executor.handlebars.ShellQuoteHelper;
 import com.hubspot.singularity.runner.base.config.SingularityRunnerBaseLogging;
 import com.ning.http.client.AsyncHttpClient;
 import com.ning.http.client.AsyncHttpClientConfig;
@@ -92,8 +93,9 @@ public class SingularityExecutorModule extends AbstractModule {
     final Handlebars handlebars = new Handlebars();
 
     handlebars.registerHelper(BashEscapedHelper.NAME, new BashEscapedHelper());
+    handlebars.registerHelper(ShellQuoteHelper.NAME, new ShellQuoteHelper());
     handlebars.registerHelper(IfPresentHelper.NAME, new IfPresentHelper());
-    handlebars.registerHelper(IfHasNewLinesHelper.NAME, new IfHasNewLinesHelper());
+    handlebars.registerHelper(IfHasNewLinesOrBackticksHelper.NAME, new IfHasNewLinesOrBackticksHelper());
     handlebars.registerHelper(EscapeNewLinesAndQuotesHelper.NAME, new EscapeNewLinesAndQuotesHelper());
 
     return handlebars;
