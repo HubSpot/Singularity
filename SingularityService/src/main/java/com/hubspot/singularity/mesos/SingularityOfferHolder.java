@@ -154,9 +154,9 @@ public class SingularityOfferHolder {
 
       if (offerCanBeReclaimedFromUnusedResources) {
         // We can reclaim this offer in its entirety! Pull all of its resources out of the combined pool for this SingularityOfferHolder instance.
-        LOG.info(
+        LOG.trace(
             "Able to reclaim offer {} from unused resources in OfferHolder from host {}. cpu: {}, mem: {}, disk: {}",
-            offer.getId(), offer.getHostname(), MesosUtils.getNumCpus(offer), MesosUtils.getMemory(offer), MesosUtils.getDisk(offer)
+            offer.getId().getValue(), offer.getHostname(), MesosUtils.getNumCpus(offer), MesosUtils.getMemory(offer), MesosUtils.getDisk(offer)
         );
         currentResources = MesosUtils.subtractResources(currentResources, offer.getResourcesList());
       }
