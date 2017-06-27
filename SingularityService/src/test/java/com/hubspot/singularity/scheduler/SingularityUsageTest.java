@@ -15,6 +15,7 @@ import com.hubspot.mesos.json.MesosTaskMonitorObject;
 import com.hubspot.mesos.json.MesosTaskStatisticsObject;
 import com.hubspot.singularity.MachineState;
 import com.hubspot.singularity.SingularityClusterUtilization;
+import com.hubspot.singularity.SingularitySlaveUsage;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskCurrentUsageWithId;
 import com.hubspot.singularity.SingularityTaskId;
@@ -207,7 +208,9 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
   @Test
   public void itTracksClusterUtilizationSimple() {
     initRequest();
-    initFirstDeployWithResources(10, .001);
+    double cpuReserved = 10;
+    double memMbReserved = .001;
+    initFirstDeployWithResources(cpuReserved, memMbReserved);
     saveAndSchedule(request.toBuilder().setInstances(Optional.of(1)));
     resourceOffers(1);
 
@@ -229,7 +232,12 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
 
     SingularityClusterUtilization utilization = usageManager.getClusterUtilization().get();
 
-    Assert.assertEquals(2, usageManager.getTaskUsage(t1).size());
+    int taskUsages = usageManager.getTaskUsage(t1).size();
+    Assert.assertEquals(2, taskUsages);
+
+    Assert.assertEquals(1, utilization.getRequestUtilizations().size());
+    Assert.assertEquals(cpuReserved * taskUsages, utilization.getRequestUtilizations().get(0).getCpuReserved(), 0);
+    Assert.assertEquals(memMbReserved * SingularitySlaveUsage.BYTES_PER_MEGABYTE * taskUsages, utilization.getRequestUtilizations().get(0).getMemBytesReserved(), 0);
 
     Assert.assertEquals(0, utilization.getNumRequestsWithOverUtilizedCpu());
     Assert.assertEquals(1, utilization.getNumRequestsWithUnderUtilizedCpu());
@@ -253,7 +261,9 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
   @Test
   public void itDoesntIncludePerfectlyUtilizedRequestsInClusterUtilization() {
     initRequest();
-    initFirstDeployWithResources(2, .001);
+    double cpuReserved = 2;
+    double memMbReserved = .001;
+    initFirstDeployWithResources(cpuReserved, memMbReserved);
     saveAndSchedule(request.toBuilder().setInstances(Optional.of(1)));
     resourceOffers(1);
 
@@ -275,7 +285,12 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
 
     SingularityClusterUtilization utilization = usageManager.getClusterUtilization().get();
 
-    Assert.assertEquals(2, usageManager.getTaskUsage(t1).size());
+    int taskUsages = usageManager.getTaskUsage(t1).size();
+    Assert.assertEquals(2, taskUsages);
+
+    Assert.assertEquals(1, utilization.getRequestUtilizations().size());
+    Assert.assertEquals(cpuReserved * taskUsages, utilization.getRequestUtilizations().get(0).getCpuReserved(), 0);
+    Assert.assertEquals(memMbReserved * SingularitySlaveUsage.BYTES_PER_MEGABYTE * taskUsages, utilization.getRequestUtilizations().get(0).getMemBytesReserved(), 0);
 
     Assert.assertEquals(0, utilization.getNumRequestsWithOverUtilizedCpu());
     Assert.assertEquals(0, utilization.getNumRequestsWithUnderUtilizedCpu());
@@ -298,7 +313,9 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
   @Test
   public void itTracksOverusedCpuInClusterUtilization() {
     initRequest();
-    initFirstDeployWithResources(2, .001);
+    double cpuReserved = 2;
+    double memMbReserved = .001;
+    initFirstDeployWithResources(cpuReserved, memMbReserved);
     saveAndSchedule(request.toBuilder().setInstances(Optional.of(1)));
     resourceOffers(1);
 
@@ -320,7 +337,12 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
 
     SingularityClusterUtilization utilization = usageManager.getClusterUtilization().get();
 
-    Assert.assertEquals(2, usageManager.getTaskUsage(t1).size());
+    int taskUsages = usageManager.getTaskUsage(t1).size();
+    Assert.assertEquals(2, taskUsages);
+
+    Assert.assertEquals(1, utilization.getRequestUtilizations().size());
+    Assert.assertEquals(cpuReserved * taskUsages, utilization.getRequestUtilizations().get(0).getCpuReserved(), 0);
+    Assert.assertEquals(memMbReserved * SingularitySlaveUsage.BYTES_PER_MEGABYTE * taskUsages, utilization.getRequestUtilizations().get(0).getMemBytesReserved(), 0);
 
     Assert.assertEquals(1, utilization.getNumRequestsWithOverUtilizedCpu());
     Assert.assertEquals(0, utilization.getNumRequestsWithUnderUtilizedCpu());
