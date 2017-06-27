@@ -5,6 +5,7 @@ import java.util.List;
 import org.immutables.value.Value.Immutable;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.base.Optional;
 import com.hubspot.immutables.style.SingularityStyle;
 
 @Immutable
@@ -14,25 +15,25 @@ public interface MesosFrameworkObjectIF {
 
   String getId();
 
-  String getPid();
+  Optional<String> getPid();
 
   String getHostname();
 
   @JsonProperty("webui_url")
-  String getWebuiUrl();
+  Optional<String> getWebuiUrl();
 
-  String getUser();
+  Optional<String> getUser();
 
-  String getRole();
+  Optional<String> getRole();
 
   @JsonProperty("registered_time")
-  long getRegisteredTime();
+  Optional<Long> getRegisteredTime();
 
   @JsonProperty("unregistered_time")
-  long getUnregisteredTime();
+  Optional<Long> getUnregisteredTime();
 
   @JsonProperty("reregistered_time")
-  long getReregisteredTime();
+  Optional<Long> getReregisteredTime();
 
   boolean isActive();
 

@@ -12,6 +12,9 @@ import com.hubspot.immutables.style.SingularityStyle;
 public interface SingularityMesosArtifactIF {
   String getUri();
 
+
+  //fromString????
+
   @Default
   default boolean isCache() {
     return false;

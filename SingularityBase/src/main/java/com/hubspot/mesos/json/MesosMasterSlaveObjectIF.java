@@ -5,6 +5,7 @@ import java.util.Map;
 import org.immutables.value.Value.Immutable;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.base.Optional;
 import com.hubspot.immutables.style.SingularityStyle;
 
 @Immutable
@@ -16,7 +17,7 @@ public interface MesosMasterSlaveObjectIF {
 
   String getHostname();
 
-  long getRegisteredTime();
+  Optional<Long> getRegisteredTime();
 
   MesosResourcesObject getResources();
 

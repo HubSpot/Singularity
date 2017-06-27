@@ -422,12 +422,12 @@ public class SingularityMachineStatesTest extends SingularitySchedulerTestBase {
 
     List<MesosMasterSlaveObject> slaves = new ArrayList<>();
     for (Integer i = 0; i < numSlaves; i++) {
-      slaves.add(new MesosMasterSlaveObject(i.toString(), i.toString(), String.format("localhost:505%s", i), now, new MesosResourcesObject(resources), attributes, new MesosResourcesObject(resources), new MesosResourcesObject(resources), new MesosResourcesObject(resources), new MesosResourcesObject(resources), "", true));
+      slaves.add(new MesosMasterSlaveObject(i.toString(), i.toString(), String.format("localhost:505%s", i), Optional.of(now), new MesosResourcesObject(resources), attributes, new MesosResourcesObject(resources), new MesosResourcesObject(resources), new MesosResourcesObject(resources), new MesosResourcesObject(resources), "", true));
     }
 
-    MesosFrameworkObject framework = new MesosFrameworkObject("", "", "", "", "", "", "", now, now, now, true, true, new MesosResourcesObject(resources), new MesosResourcesObject(resources), new MesosResourcesObject(resources), Collections.emptyList());
+    MesosFrameworkObject framework = new MesosFrameworkObject("", "", Optional.absent(), "", Optional.absent(), Optional.absent(), Optional.absent(), Optional.of(now), Optional.of(now), Optional.of(now), true, true, new MesosResourcesObject(resources), new MesosResourcesObject(resources), new MesosResourcesObject(resources), Collections.emptyList());
 
-    return new MesosMasterStateObject("", "", "", "", now, "", now, now, "", "", "", 0, 0, "", "", "", Collections.emptyMap(), slaves, Collections.singletonList(framework));
+    return new MesosMasterStateObject(Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent(), Optional.of(now), "", now, now, "", "", "", 0, 0, "", "", Optional.absent(), Collections.emptyMap(), slaves, Collections.singletonList(framework));
   }
 
   @Test

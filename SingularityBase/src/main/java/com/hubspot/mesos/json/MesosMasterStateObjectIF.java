@@ -6,25 +6,26 @@ import java.util.Map;
 import org.immutables.value.Value.Immutable;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.base.Optional;
 import com.hubspot.immutables.style.SingularityStyle;
 
 @Immutable
 @SingularityStyle
 public interface MesosMasterStateObjectIF {
 
-  String getVersion();
+  Optional<String> getVersion();
 
   @JsonProperty("git_sha")
-  String getGitSha();
+  Optional<String> getGitSha();
 
   @JsonProperty("git_tag")
-  String getGitTag();
+  Optional<String> getGitTag();
 
   @JsonProperty("build_date")
-  String getBuildDate();
+  Optional<String> getBuildDate();
 
   @JsonProperty("build_time")
-  long getBuildTime();
+  Optional<Long> getBuildTime();
 
   @JsonProperty("build_user")
   String getBuildUser();
@@ -52,7 +53,7 @@ public interface MesosMasterStateObjectIF {
   String getLeader();
 
   @JsonProperty("log_dir")
-  String getLogDir();
+  Optional<String> getLogDir();
 
   Map<String, String> getFlags();
 
