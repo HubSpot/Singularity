@@ -7,8 +7,10 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 public class RequestUtilization {
   private final String requestId;
   private final String deployId;
-  private long memBytesTotal = 0;
-  private double cpuTotal = 0;
+  private long memBytesUsed = 0;
+  private long memBytesReserved = 0;
+  private double cpuUsed = 0;
+  private double cpuReserved = 0;
   private int numTasks = 0;
 
   @JsonCreator
@@ -18,13 +20,23 @@ public class RequestUtilization {
     this.deployId = deployId;
   }
 
-  public RequestUtilization addMemBytes(long memBytes) {
-    this.memBytesTotal += memBytes;
+  public RequestUtilization addMemBytesUsed(long memBytes) {
+    this.memBytesUsed += memBytes;
     return this;
   }
 
-  public RequestUtilization addCpu(double cpu) {
-    this.cpuTotal += cpu;
+  public RequestUtilization addMemBytesReserved(long memBytes) {
+    this.memBytesReserved += memBytes;
+    return this;
+  }
+
+  public RequestUtilization addCpuUsed(double cpu) {
+    this.cpuUsed += cpu;
+    return this;
+  }
+
+  public RequestUtilization addCpuReserved(double cpu) {
+    this.cpuReserved += cpu;
     return this;
   }
 
@@ -33,12 +45,20 @@ public class RequestUtilization {
     return this;
   }
 
-  public long getMemBytesTotal() {
-    return memBytesTotal;
+  public long getMemBytesUsed() {
+    return memBytesUsed;
   }
 
-  public double getCpuTotal() {
-    return cpuTotal;
+  public long getMemBytesReserved() {
+    return memBytesReserved;
+  }
+
+  public double getCpuUsed() {
+    return cpuUsed;
+  }
+
+  public double getCpuReserved() {
+    return cpuReserved;
   }
 
   public int getNumTasks() {
@@ -47,12 +67,12 @@ public class RequestUtilization {
 
   @JsonIgnore
   public double getAvgMemBytesUsed() {
-    return memBytesTotal / (double) numTasks;
+    return memBytesUsed / (double) numTasks;
   }
 
   @JsonIgnore
   public double getAvgCpuUsed() {
-    return cpuTotal / (double) numTasks;
+    return cpuUsed / (double) numTasks;
   }
 
   public String getDeployId() {
@@ -68,8 +88,10 @@ public class RequestUtilization {
     return "RequestUtilization{" +
         "requestId=" + requestId +
         ", deployId=" + deployId +
-        ", memBytesTotal=" + memBytesTotal +
-        ", cpuTotal=" + cpuTotal +
+        ", memBytesUsed=" + memBytesUsed +
+        ", memBytesReserved=" + memBytesReserved +
+        ", cpuUsed=" + cpuUsed +
+        ", cpuReserved=" + cpuReserved +
         ", numTasks=" + numTasks +
         '}';
   }
