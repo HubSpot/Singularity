@@ -5,6 +5,7 @@ const CRON_SCHEDULE_FIELD = {id: 'cronSchedule', type: 'string', required: true}
 const INSTANCES_FIELD = {id: 'instances', type: 'number'};
 const RACK_SENSITIVE_FIELD = {id: 'rackSensitive', type: 'bool'};
 const HIDE_EVEN_NUMBERS_ACROSS_RACKS_HINT_FIELD = {id: 'hideEvenNumberAcrossRacksHint', type: 'bool'};
+const EXECUTION_TIME_LIMIT_FIELD = {id: 'taskExecutionTimeLimitMillis', type: 'number'}
 const RACK_AFFINITY_FIELD = {
   id: 'rackAffinity',
   type: {
@@ -105,10 +106,11 @@ export const FIELDS_BY_REQUEST_TYPE = {
     {id: 'scheduleType', type: 'string'},
     {id: 'numRetriesOnFailure', type: 'number'},
     KILL_OLD_NRL_FIELD,
-    {id: 'scheduledExpectedRuntimeMillis', type: 'number'}
+    {id: 'scheduledExpectedRuntimeMillis', type: 'number'},
+    EXECUTION_TIME_LIMIT_FIELD
   ],
-  ON_DEMAND: [INSTANCES_FIELD, KILL_OLD_NRL_FIELD],
-  RUN_ONCE: [KILL_OLD_NRL_FIELD]
+  ON_DEMAND: [INSTANCES_FIELD, KILL_OLD_NRL_FIELD, EXECUTION_TIME_LIMIT_FIELD],
+  RUN_ONCE: [KILL_OLD_NRL_FIELD, EXECUTION_TIME_LIMIT_FIELD]
 };
 
 function makeIndexedFields(fields) {
