@@ -85,12 +85,12 @@ DOCKER_IMAGE={{{ envContext.dockerInfo.image }}}
 # load env vars
 touch docker.env
 {{#each envContext.env}}
-{{#ifHasNewLines value}}
-{{{name}}}={{{bashEscaped value}}}
+{{#ifHasNewLinesOrBackticks value}}
+{{{name}}}={{{shellQuote value}}}
 {{else}}
 {{{name}}}={{{bashEscaped value}}}
-echo "{{{name}}}={{{value}}}" >> docker.env
-{{/ifHasNewLines}}
+echo "{{{name}}}=${{{name}}}" >> docker.env
+{{/ifHasNewLinesOrBackticks}}
 {{/each}}
 
 # Create log directory for logrotate runs
@@ -110,12 +110,15 @@ else
 fi
 
 # set up port mappings
-DOCKER_PORTS=()
-{{#each envContext.dockerInfo.portMappingsList}}DOCKER_PORTS+=( -p {{{ hostPort }}}:{{{ containerPort }}} )
+DOCKER_OPTIONS=()
+{{#each envContext.dockerInfo.portMappingsList}}DOCKER_OPTIONS+=( -p {{{ hostPort }}}:{{{ containerPort }}} )
 {{/each}}
 
 # set up attached volumes
+<<<<<<< HEAD
 DOCKER_OPTIONS=()
+=======
+>>>>>>> execution_time_ui
 DOCKER_OPTIONS+=( -v "$CURRENT_DIR:/mnt/mesos/sandbox" )
 echo "MESOS_SANDBOX=/mnt/mesos/sandbox" >> docker.env
 echo "LOG_HOME=/mnt/mesos/sandbox/logs" >> docker.env
@@ -162,7 +165,7 @@ setfattr -n user.logstart -v "$(($(date +%s%N)/1000000))" {{{ runContext.logFile
 {{/if}}
 
 # Start up the container
-env_args=({{#each envContext.env}}{{#ifHasNewLines value}}-e {{#shellQuote name}}{{/shellQuote}}={{#shellQuote value}}{{/shellQuote}} {{/ifHasNewLines}}{{/each}})
+env_args=({{#each envContext.env}}{{#ifHasNewLinesOrBackticks value}}-e {{#shellQuote name}}{{/shellQuote}}={{#shellQuote value}}{{/shellQuote}} {{/ifHasNewLinesOrBackticks}}{{/each}})
 cmd=(sudo -E -H -u "$user" docker create "${DOCKER_OPTIONS[@]}" "${env_args[@]}" "$DOCKER_IMAGE" {{{ runContext.cmd }}})
 echo -e "Creating container with: ${cmd[*]}"
 cid="$("${cmd[@]}")"
