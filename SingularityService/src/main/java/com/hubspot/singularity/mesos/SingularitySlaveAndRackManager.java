@@ -208,9 +208,18 @@ public class SingularitySlaveAndRackManager {
         }
         break;
       case OPTIMISTIC:
-        final double numPerSlave = numDesiredInstances / (double) stateCache.getNumActiveSlaves();
+        // TODO: consider cleaning tasks?
+        // TODO: consider doing this count in the for() above?
+        Collection<SingularityTaskId> currentlyActiveTasks = stateCache.getActiveTaskIdsForRequest(taskRequest.getRequest().getId());
 
-        final boolean isSlaveOk = numOnSlave < numPerSlave;
+        long currentHostsForRequest = currentlyActiveTasks.stream()
+            .map(SingularityTaskId::getSanitizedHost)
+            .distinct()
+            .count();
+
+        final double numPerSlave = currentlyActiveTasks.size() / (double) currentHostsForRequest;
+
+        final boolean isSlaveOk = numOnSlave <= numPerSlave;
 
         if (!isSlaveOk) {
           LOG.trace("Rejecting OPTIMISTIC task {} from slave {} ({}) due to numOnSlave {}", taskRequest.getRequest().getId(), slaveId, host, numOnSlave);
