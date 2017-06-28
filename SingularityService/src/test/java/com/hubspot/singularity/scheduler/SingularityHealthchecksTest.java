@@ -377,7 +377,7 @@ public class SingularityHealthchecksTest extends SingularitySchedulerTestBase {
       scheduler.drainPendingQueue(stateCacheProvider.get());
 
       String[] portRange = {"80:82"};
-      sms.resourceOffers(driver, Arrays.asList(createOffer(20, 20000, "slave1", "host1", Optional.<String> absent(), Collections.<String, String>emptyMap(), portRange)));
+      sms.resourceOffers(driver, Arrays.asList(createOffer(20, 0, 20000, "slave1", "host1", Optional.<String> absent(), Collections.<String, String>emptyMap(), portRange)));
 
       SingularityTaskId firstTaskId = taskManager.getActiveTaskIdsForRequest(requestId).get(0);
 
@@ -410,7 +410,7 @@ public class SingularityHealthchecksTest extends SingularitySchedulerTestBase {
       scheduler.drainPendingQueue(stateCacheProvider.get());
 
       String[] portRange = {"80:82"};
-      sms.resourceOffers(driver, Arrays.asList(createOffer(20, 20000, "slave1", "host1", Optional.<String> absent(), Collections.<String, String> emptyMap(), portRange)));
+      sms.resourceOffers(driver, Arrays.asList(createOffer(20, 0, 20000, "slave1", "host1", Optional.<String> absent(), Collections.<String, String> emptyMap(), portRange)));
 
       SingularityTaskId firstTaskId = taskManager.getActiveTaskIdsForRequest(requestId).get(0);
 
