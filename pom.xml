@@ -262,6 +262,12 @@
           </exclusion>
         </exclusions>
       </dependency>
+
+      <dependency>
+        <groupId>org.jukito</groupId>
+        <artifactId>jukito</artifactId>
+        <version>1.5</version>
+      </dependency>
     </dependencies>
   </dependencyManagement>
 

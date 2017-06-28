@@ -158,7 +158,7 @@ public class SmtpMailer implements SingularityMailer, Managed {
     templateProperties.put("color", emailType.getColor());
 
     if (task.isPresent()) {
-      templateProperties.put("slaveHostname", task.get().getOffer().getHostname());
+      templateProperties.put("slaveHostname", task.get().getHostname());
       if (task.get().getTaskRequest().getPendingTask().getCmdLineArgsList().isPresent()) {
         templateProperties.put("extraCmdLineArguments", task.get().getTaskRequest().getPendingTask().getCmdLineArgsList().get());
       }

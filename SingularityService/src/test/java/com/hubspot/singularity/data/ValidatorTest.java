@@ -3,6 +3,10 @@ package com.hubspot.singularity.data;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.AssertionsForClassTypes.catchThrowable;
 
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+
 import javax.ws.rs.WebApplicationException;
 
 import org.junit.Assert;
@@ -15,12 +19,16 @@ import com.hubspot.deploy.HealthcheckOptions;
 import com.hubspot.deploy.HealthcheckOptionsBuilder;
 import com.hubspot.singularity.RequestType;
 import com.hubspot.singularity.SingularityDeploy;
+import com.hubspot.singularity.SingularityPendingRequest;
+import com.hubspot.singularity.SingularityPendingTaskId;
 import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityRequestBuilder;
+import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTestBaseNoDb;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.config.UIConfiguration;
 import com.hubspot.singularity.data.history.DeployHistoryHelper;
+import com.hubspot.singularity.api.SingularityRunNowRequest;
 
 
 public class ValidatorTest extends SingularityTestBaseNoDb {
@@ -68,7 +76,7 @@ public class ValidatorTest extends SingularityTestBaseNoDb {
     SingularityDeploy singularityDeploy = SingularityDeploy.newBuilder(badDeployId, badDeployId).build();
     SingularityRequest singularityRequest = new SingularityRequestBuilder(badDeployId, RequestType.SERVICE).build();
 
-    validator.checkDeploy(singularityRequest, singularityDeploy);
+    validator.checkDeploy(singularityRequest, singularityDeploy, Collections.emptyList(), Collections.emptyList());
   }
 
   @Test
@@ -78,9 +86,192 @@ public class ValidatorTest extends SingularityTestBaseNoDb {
     SingularityDeploy singularityDeploy = SingularityDeploy.newBuilder(badDeployId, badDeployId).build();
     SingularityRequest singularityRequest = new SingularityRequestBuilder(badDeployId, RequestType.SERVICE).build();
 
-    WebApplicationException exn = (WebApplicationException) catchThrowable(() -> validator.checkDeploy(singularityRequest, singularityDeploy));
+    WebApplicationException exn = (WebApplicationException) catchThrowable(() -> validator.checkDeploy(singularityRequest, singularityDeploy, Collections.emptyList(), Collections.emptyList()));
     assertThat((String) exn.getResponse().getEntity())
         .contains("[a-zA-Z0-9_]");
+  }
+
+  @Test(expected = WebApplicationException.class)
+  public void itForbidsTooLongDeployId() {
+    String requestId = "requestId";
+    SingularityRequest request = new SingularityRequestBuilder(requestId, RequestType.SCHEDULED)
+        .build();
+
+    SingularityDeploy deploy = SingularityDeploy.newBuilder(requestId, tooLongId())
+        .build();
+
+    validator.checkDeploy(request, deploy, Collections.emptyList(), Collections.emptyList());
+  }
+
+  @Test(expected = WebApplicationException.class)
+  public void itForbidsRunNowOfScheduledWhenAlreadyRunning() {
+    String deployID = "deploy";
+    Optional<String> userEmail = Optional.absent();
+    SingularityRequest request = new SingularityRequestBuilder("request2", RequestType.SCHEDULED)
+        .setInstances(Optional.of(1))
+        .build();
+    Optional<SingularityRunNowRequest> runNowRequest = Optional.absent();
+    List<SingularityTaskId> activeTasks = Collections.singletonList(activeTask());
+    List<SingularityPendingTaskId> pendingTasks = Collections.emptyList();
+
+    validator.checkRunNowRequest(deployID, userEmail, request, runNowRequest, activeTasks, pendingTasks);
+  }
+
+  @Test(expected = WebApplicationException.class)
+  public void whenRunNowItForbidsMoreInstancesForOnDemandThanInRequest() {
+    String deployID = "deploy";
+    Optional<String> userEmail = Optional.absent();
+    SingularityRequest request = new SingularityRequestBuilder("request2", RequestType.ON_DEMAND)
+        .setInstances(Optional.of(1))
+        .build();
+    Optional<SingularityRunNowRequest> runNowRequest = Optional.absent();
+    List<SingularityTaskId> activeTasks = Collections.singletonList(activeTask());
+    List<SingularityPendingTaskId> pendingTasks = Collections.emptyList();
+
+    validator.checkRunNowRequest(deployID, userEmail, request, runNowRequest, activeTasks, pendingTasks);
+  }
+
+  @Test(expected = WebApplicationException.class)
+  public void whenRunNowItForbidsRequestsForLongRunningTasks() {
+    String deployID = "deploy";
+    Optional<String> userEmail = Optional.absent();
+    SingularityRequest request = new SingularityRequestBuilder("request2", RequestType.SERVICE)
+        .build();
+    Optional<SingularityRunNowRequest> runNowRequest = Optional.absent();
+    List<SingularityTaskId> activeTasks = Collections.emptyList();
+    List<SingularityPendingTaskId> pendingTasks = Collections.emptyList();
+
+    validator.checkRunNowRequest(deployID, userEmail, request, runNowRequest, activeTasks, pendingTasks);
+  }
+
+  @Test(expected = WebApplicationException.class)
+  public void whenRunNowItForbidsTooLongRunIds() {
+    String deployID = "deploy";
+    Optional<String> userEmail = Optional.absent();
+    SingularityRequest request = new SingularityRequestBuilder("request2", RequestType.SERVICE)
+        .build();
+    Optional<SingularityRunNowRequest> runNowRequest = Optional.of(runNowRequest(tooLongId()));
+    List<SingularityTaskId> activeTasks = Collections.emptyList();
+    List<SingularityPendingTaskId> pendingTasks = Collections.emptyList();
+
+    validator.checkRunNowRequest(deployID, userEmail, request, runNowRequest, activeTasks, pendingTasks);
+  }
+
+  @Test
+  public void whenRunNowIfRunIdSetItWillBePropagated() {
+    String deployID = "deploy";
+    Optional<String> userEmail = Optional.absent();
+    SingularityRequest request = new SingularityRequestBuilder("request2", RequestType.ON_DEMAND)
+        .build();
+    Optional<SingularityRunNowRequest> runNowRequest = Optional.of(runNowRequest("runId"));
+    List<SingularityTaskId> activeTasks = Collections.emptyList();
+    List<SingularityPendingTaskId> pendingTasks = Collections.emptyList();
+
+    SingularityPendingRequest pendingRequest = validator.checkRunNowRequest(deployID, userEmail, request, runNowRequest, activeTasks, pendingTasks);
+
+    Assert.assertEquals("runId", pendingRequest.getRunId().get());
+  }
+
+  @Test
+  public void whenRunNowIfNoRunIdSetItWillGenerateAnId() {
+    String deployID = "deploy";
+    Optional<String> userEmail = Optional.absent();
+    SingularityRequest request = new SingularityRequestBuilder("request2", RequestType.ON_DEMAND)
+        .build();
+    Optional<SingularityRunNowRequest> runNowRequest = Optional.of(runNowRequest());
+    List<SingularityTaskId> activeTasks = Collections.emptyList();
+    List<SingularityPendingTaskId> pendingTasks = Collections.emptyList();
+
+    SingularityPendingRequest pendingRequest = validator.checkRunNowRequest(deployID, userEmail, request, runNowRequest, activeTasks, pendingTasks);
+
+    Assert.assertTrue(pendingRequest.getRunId().isPresent());
+  }
+
+  @Test
+  public void whenDeployHasRunNowSetAndNotDeployedItWillRunImmediately() {
+    String requestId = "request";
+    String deployID = "deploy";
+    SingularityRequest request = new SingularityRequestBuilder(requestId, RequestType.ON_DEMAND)
+        .build();
+    Optional<SingularityRunNowRequest> runNowRequest = Optional.of(runNowRequest());
+
+    SingularityDeploy deploy = SingularityDeploy.newBuilder(requestId, deployID)
+        .setCommand(Optional.of("printenv"))
+        .setRunImmediately(runNowRequest)
+        .build();
+
+    SingularityDeploy result = validator.checkDeploy(request, deploy, Collections.emptyList(), Collections.emptyList());
+    Assert.assertTrue(result.getRunImmediately().isPresent());
+    Assert.assertTrue(result.getRunImmediately().get().getRunId().isPresent());
+  }
+
+  @Test(expected = WebApplicationException.class)
+  public void whenDeployHasRunNowSetItValidatesThatItIsLessThanACertaionLength() {
+    String requestId = "request";
+    String deployID = "deploy";
+    SingularityRequest request = new SingularityRequestBuilder(requestId, RequestType.ON_DEMAND)
+        .build();
+    Optional<SingularityRunNowRequest> runNowRequest = Optional.of(runNowRequest(tooLongId()));
+
+    SingularityDeploy deploy = SingularityDeploy.newBuilder(requestId, deployID)
+        .setCommand(Optional.of("printenv"))
+        .setRunImmediately(runNowRequest)
+        .build();
+
+    validator.checkDeploy(request, deploy, Collections.emptyList(), Collections.emptyList());
+  }
+
+  @Test(expected = WebApplicationException.class)
+  public void whenDeployNotOneOffOrScheduledItForbidsRunImmediately() {
+    String requestId = "request";
+    String deployID = "deploy";
+    SingularityRequest request = new SingularityRequestBuilder(requestId, RequestType.WORKER)
+        .build();
+    Optional<SingularityRunNowRequest> runNowRequest = Optional.of(runNowRequest());
+
+    SingularityDeploy deploy = SingularityDeploy.newBuilder(requestId, deployID)
+        .setCommand(Optional.of("printenv"))
+        .setRunImmediately(runNowRequest)
+        .build();
+
+    validator.checkDeploy(request, deploy, Collections.emptyList(), Collections.emptyList());
+  }
+
+  private SingularityTaskId activeTask() {
+    return new SingularityTaskId(
+        "requestId",
+        "deployId",
+        System.currentTimeMillis(),
+        1,
+        "host",
+        "rack"
+    );
+  }
+
+  private SingularityRunNowRequest runNowRequest(String runId) {
+    return new SingularityRunNowRequest(
+        Optional.of("message"),
+        Optional.of(false),
+        Optional.of(runId),
+        Optional.of(Collections.singletonList("--help")),
+        Optional.absent()
+    );
+  }
+
+  private SingularityRunNowRequest runNowRequest() {
+    return new SingularityRunNowRequest(
+        Optional.of("message"),
+        Optional.of(false),
+        Optional.absent(),
+        Optional.of(Collections.singletonList("--help")),
+        Optional.absent()
+    );
+  }
+
+  private String tooLongId() {
+    char[] runId = new char[150];
+    Arrays.fill(runId, 'x');
+    return new String(runId);
   }
 
   @Test
@@ -96,7 +287,7 @@ public class ValidatorTest extends SingularityTestBaseNoDb {
         .build();
     SingularityRequest request = new SingularityRequestBuilder("1234567", RequestType.SERVICE).build();
 
-    WebApplicationException exn = (WebApplicationException) catchThrowable(() -> validator.checkDeploy(request, deploy));
+    WebApplicationException exn = (WebApplicationException) catchThrowable(() -> validator.checkDeploy(request, deploy, Collections.emptyList(), Collections.emptyList()));
     assertThat((String) exn.getResponse().getEntity())
         .contains("Health check startup delay");
   }
@@ -123,7 +314,7 @@ public class ValidatorTest extends SingularityTestBaseNoDb {
         .build();
     SingularityRequest request = new SingularityRequestBuilder("1234567", RequestType.SERVICE).build();
 
-    WebApplicationException exn = (WebApplicationException) catchThrowable(() -> validator.checkDeploy(request, deploy));
+    WebApplicationException exn = (WebApplicationException) catchThrowable(() -> validator.checkDeploy(request, deploy, Collections.emptyList(), Collections.emptyList()));
     System.out.println(exn.getResponse().getEntity());
     assertThat((String) exn.getResponse().getEntity())
         .contains("Max healthcheck time");

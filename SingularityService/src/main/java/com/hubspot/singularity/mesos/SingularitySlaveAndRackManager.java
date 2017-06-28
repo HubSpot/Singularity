@@ -76,10 +76,10 @@ public class SingularitySlaveAndRackManager {
     this.activeSlavesLost = activeSlavesLost;
   }
 
-  public SlaveMatchState doesOfferMatch(SingularityOfferHolder offer, SingularityTaskRequest taskRequest, SingularitySchedulerStateCache stateCache) {
-    final String host = offer.getOffer().getHostname();
-    final String rackId = offer.getRackId();
-    final String slaveId = offer.getOffer().getSlaveId().getValue();
+  public SlaveMatchState doesOfferMatch(SingularityOfferHolder offerHolder, SingularityTaskRequest taskRequest, SingularitySchedulerStateCache stateCache) {
+    final String host = offerHolder.getHostname();
+    final String rackId = offerHolder.getRackId();
+    final String slaveId = offerHolder.getSlaveId();
 
     final MachineState currentSlaveState = stateCache.getSlave(slaveId).get().getCurrentState().getState();
 
@@ -108,7 +108,7 @@ public class SingularitySlaveAndRackManager {
       }
     }
 
-    if (!isSlaveAttributesMatch(offer, taskRequest)) {
+    if (!isSlaveAttributesMatch(offerHolder, taskRequest)) {
       return SlaveMatchState.SLAVE_ATTRIBUTES_DO_NOT_MATCH;
     }
 
@@ -128,8 +128,8 @@ public class SingularitySlaveAndRackManager {
     double numOtherDeploysOnSlave = 0;
     boolean taskLaunchedFromBounceWithActionId = taskRequest.getPendingTask().getPendingTaskId().getPendingType() == PendingType.BOUNCE && taskRequest.getPendingTask().getActionId().isPresent();
 
-    final String sanitizedHost = offer.getSanitizedHost();
-    final String sanitizedRackId = offer.getSanitizedRackId();
+    final String sanitizedHost = offerHolder.getSanitizedHost();
+    final String sanitizedRackId = offerHolder.getSanitizedRackId();
     Collection<SingularityTaskId> cleaningTasks = stateCache.getCleaningTasks();
 
     for (SingularityTaskId taskId : stateCache.getActiveTaskIdsForRequest(taskRequest.getRequest().getId())) {
@@ -490,7 +490,7 @@ public class SingularitySlaveAndRackManager {
     for (SingularityTaskId activeTaskId : stateCache.getActiveTaskIds()) {
       if (!activeTaskId.equals(taskId) && activeTaskId.getSanitizedHost().equals(taskId.getSanitizedHost())) {
         Optional<SingularityTask> maybeTask = taskManager.getTask(activeTaskId);
-        if (maybeTask.isPresent() && slaveId.equals(maybeTask.get().getOffer().getSlaveId().getValue())) {
+        if (maybeTask.isPresent() && slaveId.equals(maybeTask.get().getSlaveId().getValue())) {
           return true;
         }
       }
