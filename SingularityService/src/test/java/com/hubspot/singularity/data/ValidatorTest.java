@@ -25,10 +25,10 @@ import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityRequestBuilder;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTestBaseNoDb;
-import com.hubspot.singularity.api.SingularityRunNowRequest;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.config.UIConfiguration;
 import com.hubspot.singularity.data.history.DeployHistoryHelper;
+import com.hubspot.singularity.api.SingularityRunNowRequest;
 
 
 public class ValidatorTest extends SingularityTestBaseNoDb {
