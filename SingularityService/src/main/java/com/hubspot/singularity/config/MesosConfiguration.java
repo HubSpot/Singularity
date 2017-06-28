@@ -27,6 +27,8 @@ public class MesosConfiguration {
 
   private boolean checkpoint = true;
 
+  private Optional<String> frameworkRole = Optional.absent();
+
   @NotNull
   private String rackIdAttributeKey = "rackid";
 
@@ -34,7 +36,7 @@ public class MesosConfiguration {
   private String defaultRackId = "DEFAULT";
 
   private int slaveHttpPort = 5051;
-  @NotNull
+
   private Optional<Integer> slaveHttpsPort = Optional.absent();
 
   private int maxNumInstancesPerRequest = 25;
@@ -146,6 +148,14 @@ public class MesosConfiguration {
 
   public void setFrameworkFailoverTimeout(double frameworkFailoverTimeout) {
     this.frameworkFailoverTimeout = frameworkFailoverTimeout;
+  }
+
+  public Optional<String> getFrameworkRole() {
+    return frameworkRole;
+  }
+
+  public void setFrameworkRole(Optional<String> frameworkRole) {
+    this.frameworkRole = frameworkRole;
   }
 
   public void setMaster(String master) {

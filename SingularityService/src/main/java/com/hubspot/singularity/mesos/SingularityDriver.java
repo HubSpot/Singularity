@@ -1,7 +1,6 @@
 package com.hubspot.singularity.mesos;
 
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 
 import javax.inject.Singleton;
 
@@ -23,8 +22,6 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
-import com.google.protobuf.ByteString;
-import com.hubspot.singularity.SingularityFrameworkMessage;
 import com.hubspot.singularity.SingularityMainModule;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.config.MesosConfiguration;
@@ -64,6 +61,10 @@ public class SingularityDriver {
       }
     }
 
+    if (configuration.getFrameworkRole().isPresent()) {
+      frameworkInfoBuilder.setRole(configuration.getFrameworkRole().get());
+    }
+
     this.frameworkInfo = frameworkInfoBuilder.build();
 
     this.scheduler = scheduler;
@@ -73,9 +74,9 @@ public class SingularityDriver {
         .setPrincipal(configuration.getCredentialPrincipal().get())
         .setSecret(configuration.getCredentialSecret().get())
         .build();
-      this.driver = new MesosSchedulerDriver(scheduler, frameworkInfo, configuration.getMaster(), credential);
+      this.driver = new MesosSchedulerDriver(scheduler, frameworkInfo, configuration.getMaster(), true, credential);
     } else {
-      this.driver = new MesosSchedulerDriver(scheduler, frameworkInfo, configuration.getMaster());
+      this.driver = new MesosSchedulerDriver(scheduler, frameworkInfo, configuration.getMaster(), true);
     }
   }
 

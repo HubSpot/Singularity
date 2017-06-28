@@ -6,10 +6,11 @@ import static com.google.inject.name.Names.named;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.util.Collections;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.atomic.AtomicLong;
 
 import javax.inject.Inject;
 import javax.inject.Provider;
@@ -19,15 +20,14 @@ import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.recipes.leader.LeaderLatch;
 import org.apache.curator.framework.recipes.leader.LeaderLatchListener;
 import org.apache.curator.framework.state.ConnectionStateListener;
-import org.jets3t.service.S3Service;
-import org.jets3t.service.S3ServiceException;
-import org.jets3t.service.impl.rest.httpclient.RestS3Service;
-import org.jets3t.service.security.AWSCredentials;
 
+import com.amazonaws.auth.BasicAWSCredentials;
+import com.amazonaws.services.s3.AmazonS3Client;
+import com.codahale.metrics.Meter;
 import com.codahale.metrics.MetricRegistry;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableList;
 import com.google.common.net.HostAndPort;
 import com.google.inject.Binder;
 import com.google.inject.Module;
@@ -38,12 +38,11 @@ import com.google.inject.Singleton;
 import com.google.inject.multibindings.Multibinder;
 import com.google.inject.name.Named;
 import com.google.inject.name.Names;
-import com.hubspot.mesos.client.MesosClient;
 import com.hubspot.singularity.config.CustomExecutorConfiguration;
 import com.hubspot.singularity.config.HistoryPurgingConfiguration;
 import com.hubspot.singularity.config.MesosConfiguration;
 import com.hubspot.singularity.config.S3Configuration;
-import com.hubspot.singularity.config.S3GroupOverrideConfiguration;
+import com.hubspot.singularity.config.S3GroupConfiguration;
 import com.hubspot.singularity.config.SMTPConfiguration;
 import com.hubspot.singularity.config.SentryConfiguration;
 import com.hubspot.singularity.config.SingularityConfiguration;
@@ -52,11 +51,18 @@ import com.hubspot.singularity.config.UIConfiguration;
 import com.hubspot.singularity.config.ZooKeeperConfiguration;
 import com.hubspot.singularity.guice.DropwizardMetricRegistryProvider;
 import com.hubspot.singularity.guice.DropwizardObjectMapperProvider;
+import com.hubspot.singularity.helpers.SingularityS3Service;
+import com.hubspot.singularity.helpers.SingularityS3Services;
 import com.hubspot.singularity.hooks.LoadBalancerClient;
 import com.hubspot.singularity.hooks.LoadBalancerClientImpl;
 import com.hubspot.singularity.hooks.SingularityWebhookPoller;
 import com.hubspot.singularity.hooks.SingularityWebhookSender;
+import com.hubspot.singularity.mesos.OfferCache;
+import com.hubspot.singularity.mesos.SingularityMesosStatusUpdateHandler;
+import com.hubspot.singularity.mesos.SingularityNoOfferCache;
+import com.hubspot.singularity.mesos.SingularityOfferCache;
 import com.hubspot.singularity.metrics.SingularityGraphiteReporterManaged;
+import com.hubspot.singularity.scheduler.SingularityUsageHelper;
 import com.hubspot.singularity.sentry.NotifyingExceptionMapper;
 import com.hubspot.singularity.sentry.SingularityExceptionNotifier;
 import com.hubspot.singularity.sentry.SingularityExceptionNotifierManaged;
@@ -82,6 +88,7 @@ public class SingularityMainModule implements Module {
   public static final String REQUEST_IN_COOLDOWN_TEMPLATE = "request.in.cooldown.template";
   public static final String REQUEST_MODIFIED_TEMPLATE = "request.modified.template";
   public static final String RATE_LIMITED_TEMPLATE = "rate.limited.template";
+  public static final String DISASTERS_TEMPLATE = "disasters.template";
 
   public static final String SERVER_ID_PROPERTY = "singularity.server.id";
   public static final String HOST_NAME_PROPERTY = "singularity.host.name";
@@ -97,6 +104,11 @@ public class SingularityMainModule implements Module {
   public static final Named NEW_TASK_THREADPOOL_NAMED = Names.named(NEW_TASK_THREADPOOL_NAME);
 
   public static final String CURRENT_HTTP_REQUEST = "_singularity_current_http_request";
+
+  public static final String LOST_TASKS_METER = "singularity.lost.tasks.meter";
+
+  public static final String STATUS_UPDATE_DELTA_30S_AVERAGE = "singularity.status.update.delta.minute.average";
+  public static final String STATUS_UPDATE_DELTAS = "singularity.status.update.deltas";
 
   private final SingularityConfiguration configuration;
 
@@ -119,7 +131,7 @@ public class SingularityMainModule implements Module {
 
     binder.bind(SingularityDriverManager.class).in(Scopes.SINGLETON);
     binder.bind(SingularityLeaderController.class).in(Scopes.SINGLETON);
-    if (configuration.getSmtpConfiguration().isPresent()) {
+    if (configuration.getSmtpConfigurationOptional().isPresent()) {
       binder.bind(SingularityMailer.class).to(SmtpMailer.class).in(Scopes.SINGLETON);
     } else {
       binder.bind(SingularityMailer.class).toInstance(NoopMailer.getInstance());
@@ -132,18 +144,18 @@ public class SingularityMainModule implements Module {
 
     binder.bind(SingularityWebhookPoller.class).in(Scopes.SINGLETON);
 
-    binder.bind(MesosClient.class).in(Scopes.SINGLETON);
-
     binder.bind(SingularityAbort.class).in(Scopes.SINGLETON);
     binder.bind(SingularityExceptionNotifierManaged.class).in(Scopes.SINGLETON);
     binder.bind(SingularityWebhookSender.class).in(Scopes.SINGLETON);
+
+    binder.bind(SingularityUsageHelper.class).in(Scopes.SINGLETON);
 
     binder.bind(NotifyingExceptionMapper.class).in(Scopes.SINGLETON);
 
     binder.bind(ObjectMapper.class).toProvider(DropwizardObjectMapperProvider.class).in(Scopes.SINGLETON);
     binder.bind(MetricRegistry.class).toProvider(DropwizardMetricRegistryProvider.class).in(Scopes.SINGLETON);
 
-    binder.bind(AsyncHttpClient.class).to(SingularityHttpClient.class).in(Scopes.SINGLETON);
+    binder.bind(AsyncHttpClient.class).to(SingularityAsyncHttpClient.class).in(Scopes.SINGLETON);
     binder.bind(ServerProvider.class).in(Scopes.SINGLETON);
 
     binder.bind(SingularityDropwizardHealthcheck.class).in(Scopes.SINGLETON);
@@ -160,6 +172,14 @@ public class SingularityMainModule implements Module {
         "check-new-task")).in(Scopes.SINGLETON);
 
     binder.bind(SingularityGraphiteReporterManaged.class).in(Scopes.SINGLETON);
+
+    binder.bind(SingularityMesosStatusUpdateHandler.class).in(Scopes.SINGLETON);
+
+    if (configuration.isCacheOffers()) {
+      binder.bind(OfferCache.class).to(SingularityOfferCache.class).in(Scopes.SINGLETON);
+    } else {
+      binder.bind(OfferCache.class).to(SingularityNoOfferCache.class).in(Scopes.SINGLETON);
+    }
   }
 
   @Provides
@@ -217,7 +237,7 @@ public class SingularityMainModule implements Module {
   @Provides
   @Singleton
   public Optional<SentryConfiguration> sentryConfiguration(final SingularityConfiguration config) {
-    return config.getSentryConfiguration();
+    return config.getSentryConfigurationOptional();
   }
 
   @Provides
@@ -228,28 +248,21 @@ public class SingularityMainModule implements Module {
 
   @Provides
   @Singleton
-  public Optional<S3Service> s3Service(Optional<S3Configuration> config) throws S3ServiceException {
-    if (!config.isPresent()) {
-      return Optional.absent();
-    }
-
-    return Optional.<S3Service>of(new RestS3Service(new AWSCredentials(config.get().getS3AccessKey(), config.get().getS3SecretKey())));
-  }
-
-  @Provides
-  @Singleton
-  public Map<String, S3Service> s3ServiceGroupOverrides(Optional<S3Configuration> config) throws S3ServiceException {
+  public SingularityS3Services provideS3Services(Optional<S3Configuration> config) {
     if (!config.isPresent() || config.get().getGroupOverrides().isEmpty()) {
-      return Collections.emptyMap();
+      return new SingularityS3Services();
     }
 
-    final ImmutableMap.Builder<String, S3Service> s3ServiceBuilder = ImmutableMap.builder();
-
-    for (Map.Entry<String, S3GroupOverrideConfiguration> entry : config.get().getGroupOverrides().entrySet()) {
-      s3ServiceBuilder.put(entry.getKey(), new RestS3Service(new AWSCredentials(entry.getValue().getS3AccessKey(), entry.getValue().getS3SecretKey())));
+    final ImmutableList.Builder<SingularityS3Service> s3ServiceBuilder = ImmutableList.builder();
+    for (Map.Entry<String, S3GroupConfiguration> entry : config.get().getGroupOverrides().entrySet()) {
+      s3ServiceBuilder.add(new SingularityS3Service(entry.getKey(), entry.getValue().getS3Bucket(), new AmazonS3Client(new BasicAWSCredentials(entry.getValue().getS3AccessKey(), entry.getValue().getS3SecretKey()))));
     }
+    for (Map.Entry<String, S3GroupConfiguration> entry : config.get().getGroupS3SearchConfigs().entrySet()) {
+      s3ServiceBuilder.add(new SingularityS3Service(entry.getKey(), entry.getValue().getS3Bucket(), new AmazonS3Client(new BasicAWSCredentials(entry.getValue().getS3AccessKey(), entry.getValue().getS3SecretKey()))));
+    }
+    SingularityS3Service defaultService = new SingularityS3Service(SingularityS3FormatHelper.DEFAULT_GROUP_NAME, config.get().getS3Bucket(), new AmazonS3Client(new BasicAWSCredentials(config.get().getS3AccessKey(), config.get().getS3SecretKey())));
 
-    return s3ServiceBuilder.build();
+    return new SingularityS3Services(s3ServiceBuilder.build(), defaultService);
   }
 
   @Provides
@@ -273,13 +286,13 @@ public class SingularityMainModule implements Module {
   @Provides
   @Singleton
   public Optional<SMTPConfiguration> smtpConfiguration(final SingularityConfiguration config) {
-    return config.getSmtpConfiguration();
+    return config.getSmtpConfigurationOptional();
   }
 
   @Provides
   @Singleton
   public Optional<S3Configuration> s3Configuration(final SingularityConfiguration config) {
-    return config.getS3Configuration();
+    return config.getS3ConfigurationOptional();
   }
 
   @Provides
@@ -329,6 +342,13 @@ public class SingularityMainModule implements Module {
   }
 
   @Provides
+  @Singleton
+  @Named(DISASTERS_TEMPLATE)
+  public JadeTemplate getDisastersTemplate() throws IOException {
+    return getJadeTemplate("disaster.jade");
+  }
+
+  @Provides
   @Named(CURRENT_HTTP_REQUEST)
   public Optional<HttpServletRequest> providesUrl(Provider<HttpServletRequest> requestProvider) {
     try {
@@ -336,5 +356,26 @@ public class SingularityMainModule implements Module {
     } catch (ProvisionException pe) {  // this will happen if we're not in the REQUEST scope
       return Optional.absent();
     }
+  }
+
+  @Provides
+  @Singleton
+  @Named(LOST_TASKS_METER)
+  public Meter providesLostTasksMeter(MetricRegistry registry) {
+    return registry.meter("com.hubspot.singularity.lostTasks");
+  }
+
+  @Provides
+  @Singleton
+  @Named(STATUS_UPDATE_DELTA_30S_AVERAGE)
+  public AtomicLong provideDeltasMap() {
+    return new AtomicLong(0);
+  }
+
+  @Provides
+  @Singleton
+  @Named(STATUS_UPDATE_DELTAS)
+  public ConcurrentHashMap<Long, Long> provideUpdateDeltasMap() {
+    return new ConcurrentHashMap<>();
   }
 }

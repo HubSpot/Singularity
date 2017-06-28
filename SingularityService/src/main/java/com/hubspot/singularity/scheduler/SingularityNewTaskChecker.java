@@ -27,6 +27,7 @@ import com.hubspot.singularity.LoadBalancerRequestType;
 import com.hubspot.singularity.LoadBalancerRequestType.LoadBalancerRequestId;
 import com.hubspot.singularity.SingularityAbort;
 import com.hubspot.singularity.SingularityAbort.AbortReason;
+import com.hubspot.singularity.SingularityAction;
 import com.hubspot.singularity.SingularityLoadBalancerUpdate;
 import com.hubspot.singularity.SingularityLoadBalancerUpdate.LoadBalancerMethod;
 import com.hubspot.singularity.SingularityMainModule;
@@ -36,8 +37,10 @@ import com.hubspot.singularity.SingularityTaskCleanup;
 import com.hubspot.singularity.SingularityTaskHealthcheckResult;
 import com.hubspot.singularity.SingularityTaskHistoryUpdate;
 import com.hubspot.singularity.SingularityTaskHistoryUpdate.SimplifiedTaskState;
+import com.hubspot.singularity.SingularityTaskShellCommandRequestId;
 import com.hubspot.singularity.TaskCleanupType;
 import com.hubspot.singularity.config.SingularityConfiguration;
+import com.hubspot.singularity.data.DisasterManager;
 import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.hooks.LoadBalancerClient;
@@ -66,11 +69,12 @@ public class SingularityNewTaskChecker {
   private final SingularityAbort abort;
   private final SingularityExceptionNotifier exceptionNotifier;
   private final SingularityDeployHealthHelper deployHealthHelper;
+  private final DisasterManager disasterManager;
 
   @Inject
   public SingularityNewTaskChecker(@Named(SingularityMainModule.NEW_TASK_THREADPOOL_NAME) ScheduledExecutorService executorService, RequestManager requestManager,
-      SingularityConfiguration configuration, LoadBalancerClient lbClient, TaskManager taskManager, SingularityExceptionNotifier exceptionNotifier, SingularityAbort abort,
-      SingularityDeployHealthHelper deployHealthHelper) {
+                                   SingularityConfiguration configuration, LoadBalancerClient lbClient, TaskManager taskManager, SingularityExceptionNotifier exceptionNotifier, SingularityAbort abort,
+                                   SingularityDeployHealthHelper deployHealthHelper, DisasterManager disasterManager) {
     this.configuration = configuration;
     this.requestManager = requestManager;
     this.taskManager = taskManager;
@@ -83,10 +87,14 @@ public class SingularityNewTaskChecker {
 
     this.exceptionNotifier = exceptionNotifier;
     this.deployHealthHelper = deployHealthHelper;
+    this.disasterManager = disasterManager;
   }
 
   private boolean hasHealthcheck(SingularityTask task, Optional<SingularityRequestWithState> requestWithState) {
-    if (!task.getTaskRequest().getDeploy().getHealthcheckUri().isPresent()) {
+    if (disasterManager.isDisabled(SingularityAction.RUN_HEALTH_CHECKS)) {
+      return false;
+    }
+    if (!task.getTaskRequest().getDeploy().getHealthcheck().isPresent()) {
       return false;
     }
 
@@ -109,7 +117,10 @@ public class SingularityNewTaskChecker {
     int delaySeconds = configuration.getNewTaskCheckerBaseDelaySeconds();
 
     if (hasHealthcheck(task, requestWithState)) {
-      delaySeconds += task.getTaskRequest().getDeploy().getHealthcheckIntervalSeconds().or(configuration.getHealthcheckIntervalSeconds());
+      Optional<Integer> maybeStartupDelay = task.getTaskRequest().getDeploy().getHealthcheck().get().getStartupDelaySeconds().or(configuration.getStartupDelaySeconds());
+      if (maybeStartupDelay.isPresent()) {
+        return maybeStartupDelay.get();
+      }
     } else if (task.getTaskRequest().getRequest().isLoadBalanced()) {
       return delaySeconds;
     }
@@ -201,7 +212,7 @@ public class SingularityNewTaskChecker {
           }
         } catch (Throwable t) {
           LOG.error("Uncaught throwable in task check for task {}, re-enqueing", task, t);
-          exceptionNotifier.notify(t, ImmutableMap.of("taskId", task.getTaskId().toString()));
+          exceptionNotifier.notify(String.format("Error in task check (%s)", t.getMessage()), t, ImmutableMap.of("taskId", task.getTaskId().toString()));
 
           reEnqueueCheckOrAbort(task, healthchecker);
         }
@@ -214,7 +225,7 @@ public class SingularityNewTaskChecker {
       reEnqueueCheck(task, healthchecker);
     } catch (Throwable t) {
       LOG.error("Uncaught throwable re-enqueuing task check for task {}, aborting", task, t);
-      exceptionNotifier.notify(t, ImmutableMap.of("taskId", task.getTaskId().toString()));
+      exceptionNotifier.notify(String.format("Error in task check (%s)", t.getMessage()), t, ImmutableMap.of("taskId", task.getTaskId().toString()));
       abort.abort(AbortReason.UNRECOVERABLE_ERROR, Optional.of(t));
     }
   }
@@ -248,7 +259,7 @@ public class SingularityNewTaskChecker {
           LOG.info("Killing {} because it did not become healthy after {}", task.getTaskId(), JavaUtils.durationFromMillis(getKillAfterUnhealthyMillis()));
 
           taskManager.createTaskCleanup(new SingularityTaskCleanup(Optional.<String> absent(), TaskCleanupType.OVERDUE_NEW_TASK, System.currentTimeMillis(),
-              task.getTaskId(), Optional.of(String.format("Task did not become healthy after %s", JavaUtils.durationFromMillis(getKillAfterUnhealthyMillis()))), Optional.<String>absent()));
+              task.getTaskId(), Optional.of(String.format("Task did not become healthy after %s", JavaUtils.durationFromMillis(getKillAfterUnhealthyMillis()))), Optional.<String>absent(), Optional.<SingularityTaskShellCommandRequestId>absent()));
           return false;
         } else {
           return true;
@@ -259,7 +270,7 @@ public class SingularityNewTaskChecker {
         LOG.info("Killing {} because it failed healthchecks", task.getTaskId());
 
         taskManager.createTaskCleanup(new SingularityTaskCleanup(Optional.<String> absent(), TaskCleanupType.UNHEALTHY_NEW_TASK, System.currentTimeMillis(),
-            task.getTaskId(), Optional.of("Task is not healthy"), Optional.<String> absent()));
+            task.getTaskId(), Optional.of("Task is not healthy"), Optional.<String> absent(), Optional.<SingularityTaskShellCommandRequestId>absent()));
         return false;
       case HEALTHY:
       case OBSOLETE:
@@ -296,8 +307,10 @@ public class SingularityNewTaskChecker {
           healthchecker.checkHealthcheck(task);
           return CheckTaskState.CHECK_IF_OVERDUE;
         case UNHEALTHY:
+          taskManager.clearStartupHealthchecks(task.getTaskId());
           return CheckTaskState.UNHEALTHY_KILL_TASK;
         case HEALTHY:
+          taskManager.clearStartupHealthchecks(task.getTaskId());
           break;
       }
     }
@@ -311,8 +324,10 @@ public class SingularityNewTaskChecker {
     SingularityLoadBalancerUpdate newLbUpdate = null;
 
     final LoadBalancerRequestId loadBalancerRequestId = new LoadBalancerRequestId(task.getTaskId().getId(), LoadBalancerRequestType.ADD, Optional.<Integer> absent());
+    boolean taskCleaning = taskManager.getCleanupTaskIds().contains(task.getTaskId());
 
-    if (!lbUpdate.isPresent() || lbUpdate.get().getLoadBalancerState() == BaragonRequestState.UNKNOWN) {
+
+    if ((!lbUpdate.isPresent() || unknownNotRemoving(lbUpdate.get())) && !taskCleaning) {
       taskManager.saveLoadBalancerState(task.getTaskId(), LoadBalancerRequestType.ADD,
           new SingularityLoadBalancerUpdate(BaragonRequestState.UNKNOWN, loadBalancerRequestId, Optional.<String> absent(), System.currentTimeMillis(), LoadBalancerMethod.PRE_ENQUEUE, Optional.<String> absent()));
 
@@ -365,6 +380,11 @@ public class SingularityNewTaskChecker {
     }
 
     return isOverdue;
+  }
+
+  private boolean unknownNotRemoving(SingularityLoadBalancerUpdate update) {
+    return update.getLoadBalancerState() == BaragonRequestState.UNKNOWN
+        && update.getLoadBalancerRequestId().getRequestType() != LoadBalancerRequestType.REMOVE;
   }
 
 }

@@ -1,18 +1,25 @@
 package com.hubspot.singularity.helpers;
 
+import java.util.UUID;
+
 import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.hubspot.singularity.RequestCleanupType;
 import com.hubspot.singularity.RequestState;
+import com.hubspot.singularity.SingularityCreateResult;
 import com.hubspot.singularity.SingularityDeploy;
 import com.hubspot.singularity.SingularityPendingRequest;
 import com.hubspot.singularity.SingularityPendingRequest.PendingType;
 import com.hubspot.singularity.SingularityRequest;
+import com.hubspot.singularity.SingularityRequestCleanup;
 import com.hubspot.singularity.SingularityRequestDeployState;
 import com.hubspot.singularity.SingularityRequestHistory.RequestHistoryType;
+import com.hubspot.singularity.api.SingularityBounceRequest;
 import com.hubspot.singularity.data.DeployManager;
 import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.data.SingularityValidator;
+import com.hubspot.singularity.expiring.SingularityExpiringBounce;
 import com.hubspot.singularity.smtp.SingularityMailer;
 
 @Singleton
@@ -79,7 +86,7 @@ public class RequestHelper {
     return false;
   }
 
-  private void checkReschedule(SingularityRequest newRequest, Optional<SingularityRequest> maybeOldRequest, Optional<String> user, long timestamp, Optional<Boolean> skipHealthchecks, Optional<String> message) {
+  private void checkReschedule(SingularityRequest newRequest, Optional<SingularityRequest> maybeOldRequest, Optional<String> user, long timestamp, Optional<Boolean> skipHealthchecks, Optional<String> message, Optional<SingularityBounceRequest> maybeBounceRequest) {
     if (!maybeOldRequest.isPresent()) {
       return;
     }
@@ -88,14 +95,31 @@ public class RequestHelper {
       Optional<String> maybeDeployId = deployManager.getInUseDeployId(newRequest.getId());
 
       if (maybeDeployId.isPresent()) {
-        requestManager.addToPendingQueue(new SingularityPendingRequest(newRequest.getId(), maybeDeployId.get(), timestamp, user, PendingType.UPDATED_REQUEST,
+        if (maybeBounceRequest.isPresent()) {
+          Optional<String> actionId = maybeBounceRequest.get().getActionId().or(Optional.of(UUID.randomUUID().toString()));
+          Optional<Boolean> removeFromLoadBalancer = Optional.absent();
+          SingularityCreateResult createResult = requestManager.createCleanupRequest(
+            new SingularityRequestCleanup(user, maybeBounceRequest.get().getIncremental().or(true) ? RequestCleanupType.INCREMENTAL_BOUNCE : RequestCleanupType.BOUNCE,
+              System.currentTimeMillis(), Optional.<Boolean> absent(), removeFromLoadBalancer, newRequest.getId(), Optional.of(maybeDeployId.get()), skipHealthchecks, message, actionId, maybeBounceRequest.get().getRunShellCommandBeforeKill()));
+
+          if (createResult != SingularityCreateResult.EXISTED) {
+            requestManager.bounce(newRequest, System.currentTimeMillis(), user, Optional.of("Bouncing due to bounce after scale"));
+            final SingularityBounceRequest validatedBounceRequest = validator.checkBounceRequest(maybeBounceRequest.get());
+            requestManager.saveExpiringObject(new SingularityExpiringBounce(newRequest.getId(), maybeDeployId.get(), user, System.currentTimeMillis(), validatedBounceRequest, actionId.get()));
+          } else {
+            requestManager.addToPendingQueue(new SingularityPendingRequest(newRequest.getId(), maybeDeployId.get(), timestamp, user, PendingType.UPDATED_REQUEST,
+              skipHealthchecks, message));
+          }
+        } else {
+          requestManager.addToPendingQueue(new SingularityPendingRequest(newRequest.getId(), maybeDeployId.get(), timestamp, user, PendingType.UPDATED_REQUEST,
             skipHealthchecks, message));
+        }
       }
     }
   }
 
   public void updateRequest(SingularityRequest request, Optional<SingularityRequest> maybeOldRequest, RequestState requestState, Optional<RequestHistoryType> historyType,
-      Optional<String> user, Optional<Boolean> skipHealthchecks, Optional<String> message) {
+      Optional<String> user, Optional<Boolean> skipHealthchecks, Optional<String> message, Optional<SingularityBounceRequest> maybeBounceRequest) {
     SingularityRequestDeployHolder deployHolder = getDeployHolder(request.getId());
 
     SingularityRequest newRequest = validator.checkSingularityRequest(request, maybeOldRequest, deployHolder.getActiveDeploy(), deployHolder.getPendingDeploy());
@@ -118,7 +142,7 @@ public class RequestHelper {
 
     requestManager.save(newRequest, requestState, historyTypeToSet, now, user, message);
 
-    checkReschedule(newRequest, maybeOldRequest, user, now, skipHealthchecks, message);
+    checkReschedule(newRequest, maybeOldRequest, user, now, skipHealthchecks, message, maybeBounceRequest);
   }
 
 }

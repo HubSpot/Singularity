@@ -1,5 +1,6 @@
 package com.hubspot.singularity.smtp;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -20,11 +21,13 @@ import com.google.inject.Singleton;
 import com.hubspot.mesos.MesosUtils;
 import com.hubspot.mesos.json.MesosFileChunkObject;
 import com.hubspot.singularity.ExtendedTaskState;
+import com.hubspot.singularity.SingularityDisasterDataPoint;
 import com.hubspot.singularity.SingularityEmailType;
+import com.hubspot.singularity.SingularityMailDisasterDataPoint;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskHistoryUpdate;
-import com.hubspot.singularity.SingularityTaskMetadata;
 import com.hubspot.singularity.SingularityTaskId;
+import com.hubspot.singularity.SingularityTaskMetadata;
 import com.hubspot.singularity.config.SMTPConfiguration;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.SandboxManager;
@@ -48,9 +51,11 @@ public class MailTemplateHelpers {
 
   @Inject
   public MailTemplateHelpers(SandboxManager sandboxManager, SingularityConfiguration singularityConfiguration) {
-    this.uiBaseUrl = singularityConfiguration.getUiConfiguration().getBaseUrl();
+    this.uiBaseUrl = singularityConfiguration.getSmtpConfigurationOptional().isPresent() ?
+        singularityConfiguration.getSmtpConfiguration().getUiBaseUrl().or(singularityConfiguration.getUiConfiguration().getBaseUrl()) :
+        singularityConfiguration.getUiConfiguration().getBaseUrl();
     this.sandboxManager = sandboxManager;
-    this.smtpConfiguration = singularityConfiguration.getSmtpConfiguration();
+    this.smtpConfiguration = singularityConfiguration.getSmtpConfigurationOptional();
     if (this.smtpConfiguration.isPresent()) {
       this.taskDatePattern = Optional.of(this.smtpConfiguration.get().getMailerDatePattern());
       this.timeZone = Optional.of(this.smtpConfiguration.get().getMailerTimeZone());
@@ -101,6 +106,14 @@ public class MailTemplateHelpers {
     }
 
     return output;
+  }
+
+  public List<SingularityMailDisasterDataPoint> getJadeDisasterStats(Collection<SingularityDisasterDataPoint> stats) {
+    List<SingularityMailDisasterDataPoint> mailStats = new ArrayList<>();
+    for (SingularityDisasterDataPoint stat : stats) {
+      mailStats.add(new SingularityMailDisasterDataPoint(humanizeTimestamp(stat.getTimestamp()), stat));
+    }
+    return mailStats;
   }
 
   public List<SingularityMailTaskLog> getTaskLogs(SingularityTaskId taskId, Optional<SingularityTask> task, Optional<String> directory) {
@@ -173,7 +186,7 @@ public class MailTemplateHelpers {
       return Optional.absent();
     }
 
-    final String slaveHostname = task.get().getOffer().getHostname();
+    final String slaveHostname = task.get().getHostname();
 
     final String fullPath = String.format("%s/%s", directory.get(), filename);
 

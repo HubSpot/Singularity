@@ -39,9 +39,9 @@ export const SaveRequest = buildJsonApiAction(
 export const RemoveRequest = buildJsonApiAction(
   'REMOVE_REQUEST',
   'DELETE',
-  (requestId, { message }) => ({
+  (requestId, { message, deleteFromLoadBalancer }) => ({
     url: `/requests/request/${requestId}`,
-    body: { message }
+    body: { message, deleteFromLoadBalancer }
   })
 );
 
@@ -65,9 +65,16 @@ export const FetchRequestRun = buildApiAction(
 export const PauseRequest = buildJsonApiAction(
   'PAUSE_REQUEST',
   'POST',
-  (requestId, { durationMillis, killTasks, message, actionId }) => ({
+  (requestId, { durationMillis, allowRunningTasksToFinish, message, actionId, runShellCommandBeforeKill }, catchStatusCodes = null) => ({
     url: `/requests/request/${requestId}/pause`,
-    body: { durationMillis, killTasks, message, actionId }
+    body: {
+      killTasks: !allowRunningTasksToFinish,
+      durationMillis,
+      message,
+      actionId,
+      runShellCommandBeforeKill
+    },
+    catchStatusCodes
   })
 );
 
@@ -82,9 +89,10 @@ export const PersistRequestPause = buildJsonApiAction(
 export const UnpauseRequest = buildJsonApiAction(
   'UNPAUSE_REQUEST',
   'POST',
-  (requestId, { skipHealthchecks, message, actionId }) => ({
+  (requestId, { skipHealthchecks, message, actionId }, catchStatusCodes = null) => ({
     url: `/requests/request/${requestId}/unpause`,
-    body: { skipHealthchecks, message, actionId }
+    body: { skipHealthchecks, message, actionId },
+    catchStatusCodes
   })
 );
 
@@ -117,9 +125,9 @@ export const PersistSkipRequestHealthchecks = buildJsonApiAction(
 export const ScaleRequest = buildJsonApiAction(
   'SCALE_REQUEST',
   'PUT',
-  (requestId, {instances, skipHealthchecks, durationMillis, message, actionId}) => ({
+  (requestId, {instances, skipHealthchecks, durationMillis, message, actionId, bounce, incremental }) => ({
     url: `/requests/request/${requestId}/scale`,
-    body: { instances, skipHealthchecks, durationMillis, message, actionId }
+    body: { instances, skipHealthchecks, durationMillis, message, actionId, bounce, incremental }
   })
 );
 

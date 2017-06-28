@@ -24,7 +24,9 @@ public class SingularityTaskWebhook {
 
   @Override
   public String toString() {
-    return "SingularityTaskWebhook [task=" + task + ", taskUpdate=" + taskUpdate + "]";
+    return "SingularityTaskWebhook{" +
+        "task=" + task +
+        ", taskUpdate=" + taskUpdate +
+        '}';
   }
-
 }

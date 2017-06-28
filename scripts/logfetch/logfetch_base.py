@@ -26,6 +26,9 @@ def tasks_for_requests(args):
             tasks = [task["taskId"]["id"] for task in all_tasks_for_request(args, request) if log_matches(task["taskId"]["deployId"], args.deployId)]
         else:
             tasks = [task["taskId"]["id"] for task in all_tasks_for_request(args, request)]
+            log('Found {0} matching tasks\n'.format(len(tasks)), args, False)
+            if hasattr(args, 'task_count') and len(tasks) > args.task_count:
+                log(colored('Max task count set to {0}, excluding {1} tasks. Run again with --task-count={2} to search all matching tasks\n'.format(args.task_count, len(tasks) - args.task_count, len(tasks)), 'yellow'), args, False)
             tasks = tasks[0:args.task_count] if hasattr(args, 'task_count') else tasks
         all_tasks = all_tasks + tasks
     if not all_tasks:
@@ -50,17 +53,19 @@ def all_tasks_for_request(args, request):
         elif len(active_tasks) == 0:
             return historical_tasks
         else:
-            return active_tasks + [h for h in historical_tasks if is_task_in_date_range(args, int(str(h['updatedAt'])[0:-3]), int(str(h['taskId']['startedAt'])[0:-3]))]
+            return active_tasks + [h for h in historical_tasks if date_range_overlaps(args, int(str(h['taskId']['startedAt'])[0:-3]), int(str(h['updatedAt'])[0:-3]))]
     else:
         return active_tasks
 
 def all_requests(args):
-    uri = '{0}{1}'.format(base_uri(args),    ALL_REQUESTS)
+    uri = '{0}{1}'.format(base_uri(args), ALL_REQUESTS)
     requests = get_json_response(uri, args)
     included_requests = []
     for request in requests:
         if fnmatch.fnmatch(request['request']['id'], args.requestId):
             included_requests.append(request['request']['id'])
+    if not included_requests and not '*' in args.requestId:
+        included_requests.append(args.requestId)
     return included_requests
 
 def is_in_date_range(args, timestamp):
@@ -70,7 +75,7 @@ def is_in_date_range(args, timestamp):
     else:
         return False if timstamp_datetime < args.start else True
 
-def is_task_in_date_range(args, start, end):
+def date_range_overlaps(args, start, end):
     start_datetime = datetime.utcfromtimestamp(start)
     end_datetime = datetime.utcfromtimestamp(end)
     if args.end:
@@ -78,7 +83,9 @@ def is_task_in_date_range(args, start, end):
             return True
         elif end_datetime > args.start and end_datetime < args.end:
             return True
-        elif end_datetime > args.end and start_datetime > args.start:
+        elif end_datetime > args.end and start_datetime < args.end:
+            return True
+        elif end_datetime > args.start and start_datetime < args.start:
             return True
         else:
             return False

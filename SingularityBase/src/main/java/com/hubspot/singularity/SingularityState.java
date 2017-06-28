@@ -9,6 +9,7 @@ import com.google.common.base.Optional;
 public class SingularityState {
 
   private final int activeTasks;
+  private final int launchingTasks;
   private final int pausedRequests;
   private final int activeRequests;
   private final int cooldownRequests;
@@ -37,6 +38,8 @@ public class SingularityState {
 
   private final long oldestDeploy;
   private final int numDeploys;
+  private final long oldestDeployStep;
+  private final List<SingularityDeployMarker> activeDeploys;
 
   private final long generatedAt;
 
@@ -52,17 +55,22 @@ public class SingularityState {
 
   private final Optional<Double> minimumPriorityLevel;
 
+  private final long avgStatusUpdateDelayMs;
+
   @JsonCreator
-  public SingularityState(@JsonProperty("activeTasks") int activeTasks, @JsonProperty("activeRequests") int activeRequests, @JsonProperty("cooldownRequests") int cooldownRequests,
-      @JsonProperty("pausedRequests") int pausedRequests, @JsonProperty("scheduledTasks") int scheduledTasks, @JsonProperty("pendingRequests") int pendingRequests, @JsonProperty("lbCleanupTasks") int lbCleanupTasks,
-      @JsonProperty("lbCleanupRequests") int lbCleanupRequests, @JsonProperty("cleaningRequests") int cleaningRequests, @JsonProperty("activeSlaves") int activeSlaves, @JsonProperty("deadSlaves") int deadSlaves,
-      @JsonProperty("decommissioningSlaves") int decommissioningSlaves, @JsonProperty("activeRacks") int activeRacks, @JsonProperty("deadRacks") int deadRacks, @JsonProperty("decommissioningRacks") int decommissioningRacks,
-      @JsonProperty("cleaningTasks") int cleaningTasks, @JsonProperty("hostStates") List<SingularityHostState> hostStates, @JsonProperty("oldestDeploy") long oldestDeploy, @JsonProperty("numDeploys") int numDeploys,
-      @JsonProperty("lateTasks") int lateTasks, @JsonProperty("futureTasks") int futureTasks, @JsonProperty("maxTaskLag") long maxTaskLag, @JsonProperty("generatedAt") long generatedAt,
-      @JsonProperty("overProvisionedRequestIds") List<String> overProvisionedRequestIds, @JsonProperty("underProvisionedRequestIds") List<String> underProvisionedRequestIds,
-      @JsonProperty("overProvisionedRequests") int overProvisionedRequests, @JsonProperty("underProvisionedRequests") int underProvisionedRequests, @JsonProperty("finishedRequests") int finishedRequests,
-      @JsonProperty("unknownRacks") int unknownRacks, @JsonProperty("unknownSlaves") int unknownSlaves, @JsonProperty("authDatastoreHealthy") Optional<Boolean> authDatastoreHealthy, @JsonProperty("minimumPriorityLevel") Optional<Double> minimumPriorityLevel) {
+  public SingularityState(@JsonProperty("activeTasks") int activeTasks, @JsonProperty("launchingTasks") int launchingTasks, @JsonProperty("activeRequests") int activeRequests, @JsonProperty("cooldownRequests") int cooldownRequests,
+                          @JsonProperty("pausedRequests") int pausedRequests, @JsonProperty("scheduledTasks") int scheduledTasks, @JsonProperty("pendingRequests") int pendingRequests, @JsonProperty("lbCleanupTasks") int lbCleanupTasks,
+                          @JsonProperty("lbCleanupRequests") int lbCleanupRequests, @JsonProperty("cleaningRequests") int cleaningRequests, @JsonProperty("activeSlaves") int activeSlaves, @JsonProperty("deadSlaves") int deadSlaves,
+                          @JsonProperty("decommissioningSlaves") int decommissioningSlaves, @JsonProperty("activeRacks") int activeRacks, @JsonProperty("deadRacks") int deadRacks, @JsonProperty("decommissioningRacks") int decommissioningRacks,
+                          @JsonProperty("cleaningTasks") int cleaningTasks, @JsonProperty("hostStates") List<SingularityHostState> hostStates, @JsonProperty("oldestDeploy") long oldestDeploy, @JsonProperty("numDeploys") int numDeploys,
+                          @JsonProperty("oldestDeployStep") long oldestDeployStep, @JsonProperty("activeDeploys") List<SingularityDeployMarker> activeDeploys,
+                          @JsonProperty("lateTasks") int lateTasks, @JsonProperty("futureTasks") int futureTasks, @JsonProperty("maxTaskLag") long maxTaskLag, @JsonProperty("generatedAt") long generatedAt,
+                          @JsonProperty("overProvisionedRequestIds") List<String> overProvisionedRequestIds, @JsonProperty("underProvisionedRequestIds") List<String> underProvisionedRequestIds,
+                          @JsonProperty("overProvisionedRequests") int overProvisionedRequests, @JsonProperty("underProvisionedRequests") int underProvisionedRequests, @JsonProperty("finishedRequests") int finishedRequests,
+                          @JsonProperty("unknownRacks") int unknownRacks, @JsonProperty("unknownSlaves") int unknownSlaves, @JsonProperty("authDatastoreHealthy") Optional<Boolean> authDatastoreHealthy, @JsonProperty("minimumPriorityLevel") Optional<Double> minimumPriorityLevel,
+                          @JsonProperty("avgStatusUpdateDelayMs") long avgStatusUpdateDelayMs) {
     this.activeTasks = activeTasks;
+    this.launchingTasks = launchingTasks;
     this.activeRequests = activeRequests;
     this.pausedRequests = pausedRequests;
     this.cooldownRequests = cooldownRequests;
@@ -86,6 +94,8 @@ public class SingularityState {
     this.maxTaskLag = maxTaskLag;
     this.oldestDeploy = oldestDeploy;
     this.numDeploys = numDeploys;
+    this.oldestDeployStep = oldestDeployStep;
+    this.activeDeploys = activeDeploys;
     this.lbCleanupTasks = lbCleanupTasks;
     this.lbCleanupRequests = lbCleanupRequests;
     this.underProvisionedRequests = underProvisionedRequests;
@@ -94,6 +104,7 @@ public class SingularityState {
     this.underProvisionedRequestIds = underProvisionedRequestIds;
     this.authDatastoreHealthy = authDatastoreHealthy;
     this.minimumPriorityLevel = minimumPriorityLevel;
+    this.avgStatusUpdateDelayMs = avgStatusUpdateDelayMs;
   }
 
   public int getFinishedRequests() {
@@ -110,6 +121,14 @@ public class SingularityState {
 
   public int getNumDeploys() {
     return numDeploys;
+  }
+
+  public long getOldestDeployStep() {
+    return oldestDeployStep;
+  }
+
+  public List<SingularityDeployMarker> getActiveDeploys() {
+    return activeDeploys;
   }
 
   public int getPausedRequests() {
@@ -160,6 +179,10 @@ public class SingularityState {
 
   public int getActiveTasks() {
     return activeTasks;
+  }
+
+  public int getLaunchingTasks() {
+    return launchingTasks;
   }
 
   public int getAllRequests() {
@@ -238,15 +261,49 @@ public class SingularityState {
     return minimumPriorityLevel;
   }
 
-  @Override
-  public String toString() {
-    return "SingularityState [activeTasks=" + activeTasks + ", pausedRequests=" + pausedRequests + ", activeRequests=" + activeRequests + ", cooldownRequests=" + cooldownRequests + ", scheduledTasks=" + scheduledTasks
-        + ", lateTasks=" + lateTasks + ", futureTasks=" + futureTasks + ", cleaningTasks=" + cleaningTasks + ", lbCleanupTasks=" + lbCleanupTasks + ", lbCleanupRequests=" + lbCleanupRequests
-        + ", maxTaskLag=" + maxTaskLag + ", pendingRequests=" + pendingRequests + ", cleaningRequests=" + cleaningRequests + ", finishedRequests=" + finishedRequests + ", activeSlaves="
-        + activeSlaves + ", deadSlaves=" + deadSlaves + ", decommissioningSlaves=" + decommissioningSlaves + ", unknownSlaves=" + unknownSlaves + ", activeRacks=" + activeRacks + ", deadRacks="
-        + deadRacks + ", decommissioningRacks=" + decommissioningRacks + ", unknownRacks=" + unknownRacks + ", oldestDeploy=" + oldestDeploy + ", numDeploys=" + numDeploys + ", generatedAt="
-        + generatedAt + ", hostStates=" + hostStates + ", overProvisionedRequestIds=" + overProvisionedRequestIds + ", underProvisionedRequestIds=" + underProvisionedRequestIds
-        + ", overProvisionedRequests=" + overProvisionedRequests + ", underProvisionedRequests=" + underProvisionedRequests + ", authDatastoreHealthy=" + authDatastoreHealthy + ", minimumPriorityLevel=" + minimumPriorityLevel + "]";
+  public long getAvgStatusUpdateDelayMs() {
+    return avgStatusUpdateDelayMs;
   }
 
+  @Override
+  public String toString() {
+    return "SingularityState{" +
+        "activeTasks=" + activeTasks +
+        ", launchingTasks=" + launchingTasks +
+        ", pausedRequests=" + pausedRequests +
+        ", activeRequests=" + activeRequests +
+        ", cooldownRequests=" + cooldownRequests +
+        ", scheduledTasks=" + scheduledTasks +
+        ", lateTasks=" + lateTasks +
+        ", futureTasks=" + futureTasks +
+        ", cleaningTasks=" + cleaningTasks +
+        ", lbCleanupTasks=" + lbCleanupTasks +
+        ", lbCleanupRequests=" + lbCleanupRequests +
+        ", maxTaskLag=" + maxTaskLag +
+        ", pendingRequests=" + pendingRequests +
+        ", cleaningRequests=" + cleaningRequests +
+        ", finishedRequests=" + finishedRequests +
+        ", activeSlaves=" + activeSlaves +
+        ", deadSlaves=" + deadSlaves +
+        ", decommissioningSlaves=" + decommissioningSlaves +
+        ", unknownSlaves=" + unknownSlaves +
+        ", activeRacks=" + activeRacks +
+        ", deadRacks=" + deadRacks +
+        ", decommissioningRacks=" + decommissioningRacks +
+        ", unknownRacks=" + unknownRacks +
+        ", oldestDeploy=" + oldestDeploy +
+        ", numDeploys=" + numDeploys +
+        ", oldestDeployStep=" + oldestDeployStep +
+        ", activeDeploys=" + activeDeploys +
+        ", generatedAt=" + generatedAt +
+        ", hostStates=" + hostStates +
+        ", overProvisionedRequestIds=" + overProvisionedRequestIds +
+        ", underProvisionedRequestIds=" + underProvisionedRequestIds +
+        ", overProvisionedRequests=" + overProvisionedRequests +
+        ", underProvisionedRequests=" + underProvisionedRequests +
+        ", authDatastoreHealthy=" + authDatastoreHealthy +
+        ", minimumPriorityLevel=" + minimumPriorityLevel +
+        ", avgStatusUpdateDelayMs=" + avgStatusUpdateDelayMs +
+        '}';
+  }
 }

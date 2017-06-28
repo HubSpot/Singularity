@@ -2,18 +2,19 @@ package com.hubspot.singularity.resources;
 
 import java.util.List;
 
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
+import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
-import javax.ws.rs.DELETE;
+import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
 import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.hubspot.mesos.JavaUtils;
+import com.hubspot.singularity.SingularityAction;
 import com.hubspot.singularity.SingularityCreateResult;
 import com.hubspot.singularity.SingularityDeleteResult;
 import com.hubspot.singularity.SingularityDeployUpdate;
@@ -67,6 +68,7 @@ public class WebhookResource {
   @ApiOperation("Add a new webhook.")
   public SingularityCreateResult addWebhook(SingularityWebhook webhook) {
     authorizationHelper.checkAdminAuthorization(user);
+    validator.checkActionEnabled(SingularityAction.ADD_WEBHOOK);
     validator.checkSingularityWebhook(webhook);
     return webhookManager.addWebhook(webhook);
   }
@@ -77,6 +79,7 @@ public class WebhookResource {
   @ApiOperation("Delete a specific webhook.")
   public SingularityDeleteResult deleteWebhookDeprecated(@PathParam("webhookId") String webhookId) {
     authorizationHelper.checkAdminAuthorization(user);
+    validator.checkActionEnabled(SingularityAction.REMOVE_WEBHOOK);
     return webhookManager.deleteWebhook(JavaUtils.urlEncode(webhookId));
   }
 
@@ -111,6 +114,7 @@ public class WebhookResource {
   @ApiOperation("Delete a specific webhook.")
   public SingularityDeleteResult deleteWebhook(@QueryParam("webhookId") String webhookId) {
     authorizationHelper.checkAdminAuthorization(user);
+    validator.checkActionEnabled(SingularityAction.REMOVE_WEBHOOK);
     return webhookManager.deleteWebhook(JavaUtils.urlEncode(webhookId));
   }
 

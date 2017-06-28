@@ -8,9 +8,11 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
+import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.hubspot.singularity.SingularityService;
 import com.hubspot.singularity.SingularityState;
+import com.hubspot.singularity.SingularityTaskReconciliationStatistics;
 import com.hubspot.singularity.data.StateManager;
 import com.wordnik.swagger.annotations.Api;
 import com.wordnik.swagger.annotations.ApiOperation;
@@ -46,5 +48,12 @@ public class StateResource {
   @ApiOperation("Retrieve the list of over-provisioned request IDs.")
   public List<String> getOverProvisionedRequestIds(@QueryParam("skipCache") boolean skipCache) {
     return stateManager.getState(skipCache, true).getOverProvisionedRequestIds();
+  }
+
+  @GET
+  @Path("/task-reconciliation")
+  @ApiOperation("Retrieve information about the most recent task reconciliation")
+  public Optional<SingularityTaskReconciliationStatistics> getTaskReconciliationStatistics() {
+    return stateManager.getTaskReconciliationStatistics();
   }
 }

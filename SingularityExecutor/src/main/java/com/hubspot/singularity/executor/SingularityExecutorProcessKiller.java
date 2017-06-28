@@ -14,7 +14,6 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.hubspot.mesos.JavaUtils;
-import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.executor.config.SingularityExecutorConfiguration;
 import com.hubspot.singularity.executor.task.SingularityExecutorTaskProcessCallable;
 

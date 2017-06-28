@@ -2,11 +2,11 @@ import React, {PropTypes} from 'react';
 import { connect } from 'react-redux';
 import rootComponent from '../../rootComponent';
 
-import { FetchGroups } from '../../actions/api/requestGroups';
-
 import { Row, Col, Tabs, Tab } from 'react-bootstrap';
 import RequestDetailPage from '../requestDetail/RequestDetailPage';
 import MetadataButton from '../common/MetadataButton';
+import { refresh } from '../../actions/ui/groupDetail';
+import ActionDropdown from './ActionDropdown';
 
 const GroupDetail = ({group, location}) => {
   const tabs = group.requestIds.map((requestId, index) => {
@@ -29,6 +29,7 @@ const GroupDetail = ({group, location}) => {
           <h1>{group.id}</h1>
         </Col>
         <Col md={5} lg={6} className="button-container">
+          <ActionDropdown group={group} />
           {metadata}
         </Col>
       </Row>
@@ -41,26 +42,17 @@ const GroupDetail = ({group, location}) => {
 
 GroupDetail.propTypes = {
   group: PropTypes.object,
-  location: PropTypes.object
+  location: PropTypes.object,
+  requests: PropTypes.object
 };
 
-function mapStateToProps(state, ownProps) {
+const mapStateToProps = (state, ownProps) => {
   const group = _.find(state.api.requestGroups.data, (filterGroup) => filterGroup.id === ownProps.params.groupId);
   return ({
     notFound: !state.api.requestGroups.isFetching && !group,
     pathname: ownProps.location.pathname,
     group
   });
-}
-
-const mapDispatchToProps = (dispatch) => {
-  return {
-    fetchGroups: () => dispatch(FetchGroups.trigger())
-  };
 };
 
-function refresh(props) {
-  return props.fetchGroups();
-}
-
-export default connect(mapStateToProps, mapDispatchToProps)(rootComponent(GroupDetail, (props) => `Group ${props.params.groupId}`, refresh, false));
+export default connect(mapStateToProps)(rootComponent(GroupDetail, refresh, false));

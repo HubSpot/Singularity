@@ -43,7 +43,6 @@ public class UIConfiguration {
   private String title = "Singularity";
 
   @JsonProperty
-  @NotNull
   private Optional<String> navColor = Optional.absent();
 
   @JsonProperty
@@ -66,6 +65,8 @@ public class UIConfiguration {
   private boolean hideNewDeployButton = false;
   private boolean hideNewRequestButton = false;
 
+  private boolean shortenSlaveUsageHostname = false;
+
   /**
    * If true, the root of the server (http://.../singularity/) will open the UI. Otherwise,
    * the UI URI (http://.../singularity/ui/) must be used.
@@ -74,7 +75,6 @@ public class UIConfiguration {
   private String rootUrlMode = RootUrlMode.INDEX_CATCHALL.name();
 
   @JsonProperty
-  @NotNull
   private Optional<String> taskS3LogOmitPrefix = Optional.absent();
 
   @NotEmpty
@@ -84,12 +84,10 @@ public class UIConfiguration {
   private String timestampWithSecondsFormat = "lll:ss";
 
   @JsonProperty
-  @NotNull
   private Optional<String> redirectOnUnauthorizedUrl = Optional.absent();
 
 
   @JsonProperty
-  @NotNull
   private Optional<String> extraScript = Optional.absent();
 
 
@@ -107,6 +105,14 @@ public class UIConfiguration {
 
   public void setHideNewRequestButton(boolean hideNewRequestButton) {
     this.hideNewRequestButton = hideNewRequestButton;
+  }
+
+  public boolean isShortenSlaveUsageHostname() {
+    return shortenSlaveUsageHostname;
+  }
+
+  public void setShortenSlaveUsageHostname(boolean shortenSlaveUsageHostname) {
+    this.shortenSlaveUsageHostname = shortenSlaveUsageHostname;
   }
 
   public String getTitle() {

@@ -18,17 +18,17 @@ public class Resources {
   public static final Resources EMPTY_RESOURCES = new Resources(0, 0, 0, 0, 0);
 
   private final double cpus;
-  private final double gpus;
+  private final int gpus;
   private final double memoryMb;
   private final int numPorts;
   private final double diskMb;
 
-  public Resources(double cpus, double gpus, double memoryMb, int numPorts) {
+  public Resources(double cpus, int gpus, double memoryMb, int numPorts) {
     this(cpus, gpus, memoryMb, numPorts, 0);
   }
 
   @JsonCreator
-  public Resources(@JsonProperty("cpus") double cpus, @JsonProperty("gpus") double gpus, @JsonProperty("memoryMb") double memoryMb, @JsonProperty("numPorts") int numPorts, @JsonProperty("diskMb") double diskMb) {
+  public Resources(@JsonProperty("cpus") double cpus, @JsonProperty("gpus") int gpus, @JsonProperty("memoryMb") double memoryMb, @JsonProperty("numPorts") int numPorts, @JsonProperty("diskMb") double diskMb) {
     this.cpus = cpus;
     this.gpus = gpus;
     this.memoryMb = memoryMb;
@@ -44,7 +44,7 @@ public class Resources {
     return cpus;
   }
   
-  public double getGpus() {
+  public int getGpus() {
     return gpus;
   }
 
@@ -54,17 +54,6 @@ public class Resources {
 
   public double getDiskMb() {
     return diskMb;
-  }
-
-  @Override
-  public String toString() {
-    return "Resources[" +
-        "cpus=" + cpus +
-        ", gpus=" + gpus +
-        ", memoryMb=" + memoryMb +
-        ", numPorts=" + numPorts +
-        ", diskMb=" + diskMb +
-        ']';
   }
 
   @Override
@@ -86,5 +75,16 @@ public class Resources {
   @Override
   public int hashCode() {
     return Objects.hash(cpus, gpus, memoryMb, numPorts, diskMb);
+  }
+
+  @Override
+  public String toString() {
+    return "Resources{" +
+        "cpus=" + cpus +
+        ", gpus=" + gpus +
+        ", memoryMb=" + memoryMb +
+        ", numPorts=" + numPorts +
+        ", diskMb=" + diskMb +
+        '}';
   }
 }

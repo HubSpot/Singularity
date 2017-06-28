@@ -20,6 +20,7 @@ public class SingularityPendingTask {
   private final Optional<Boolean> skipHealthchecks;
   private final Optional<String> message;
   private final Optional<Resources> resources;
+  private final Optional<String> actionId;
 
   public static Predicate<SingularityPendingTask> matchingRequest(final String requestId) {
     return new Predicate<SingularityPendingTask>() {
@@ -46,7 +47,7 @@ public class SingularityPendingTask {
   @JsonCreator
   public SingularityPendingTask(@JsonProperty("pendingTaskId") SingularityPendingTaskId pendingTaskId, @JsonProperty("cmdLineArgsList") Optional<List<String>> cmdLineArgsList,
       @JsonProperty("user") Optional<String> user, @JsonProperty("runId") Optional<String> runId, @JsonProperty("skipHealthchecks") Optional<Boolean> skipHealthchecks,
-      @JsonProperty("message") Optional<String> message, @JsonProperty("resources") Optional<Resources> resources) {
+      @JsonProperty("message") Optional<String> message, @JsonProperty("resources") Optional<Resources> resources, @JsonProperty("actionId") Optional<String> actionId) {
     this.pendingTaskId = pendingTaskId;
     this.user = user;
     this.message = message;
@@ -54,26 +55,24 @@ public class SingularityPendingTask {
     this.runId = runId;
     this.skipHealthchecks = skipHealthchecks;
     this.resources = resources;
+    this.actionId = actionId;
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+    SingularityPendingTask that = (SingularityPendingTask) o;
+    return Objects.equals(pendingTaskId, that.pendingTaskId);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hashCode(pendingTaskId);
-  }
-
-  @Override
-  public boolean equals(Object obj) {
-    if (this == obj) {
-      return true;
-    }
-    if (obj == null) {
-      return false;
-    }
-    if (getClass() != obj.getClass()) {
-      return false;
-    }
-    SingularityPendingTask other = (SingularityPendingTask) obj;
-    return Objects.equals(pendingTaskId, other.getPendingTaskId());
+    return Objects.hash(pendingTaskId);
   }
 
   public Optional<String> getUser() {
@@ -104,10 +103,21 @@ public class SingularityPendingTask {
     return resources;
   }
 
-  @Override
-  public String toString() {
-    return "SingularityPendingTask [pendingTaskId=" + pendingTaskId + ", cmdLineArgsList=" + cmdLineArgsList + ", user=" + user + ", runId=" + runId + ", skipHealthchecks=" + skipHealthchecks
-        + ", message=" + message + ", resources=" + resources + "]";
+  public Optional<String> getActionId() {
+    return actionId;
   }
 
+  @Override
+  public String toString() {
+    return "SingularityPendingTask{" +
+        "pendingTaskId=" + pendingTaskId +
+        ", cmdLineArgsList=" + cmdLineArgsList +
+        ", user=" + user +
+        ", runId=" + runId +
+        ", skipHealthchecks=" + skipHealthchecks +
+        ", message=" + message +
+        ", resources=" + resources +
+        ", actionId=" + actionId +
+        '}';
+  }
 }

@@ -45,7 +45,7 @@ public class GuicePropertyFilteringMessageBodyWriter extends JacksonMessageBodyP
 
   @Inject
   public GuicePropertyFilteringMessageBodyWriter(final Environment environment, final ObjectMapper objectMapper) {
-    super(objectMapper, environment.getValidator());
+    super(objectMapper);
     this.environment = checkNotNull(environment, "environment is null");
     this.objectMapper = checkNotNull(objectMapper, "objectMapper is null");
   }

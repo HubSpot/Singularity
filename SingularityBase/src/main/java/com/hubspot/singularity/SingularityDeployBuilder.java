@@ -6,8 +6,11 @@ import java.util.Set;
 
 import com.google.common.base.Optional;
 import com.hubspot.deploy.ExecutorData;
+import com.hubspot.deploy.HealthcheckOptions;
 import com.hubspot.mesos.Resources;
 import com.hubspot.mesos.SingularityContainerInfo;
+import com.hubspot.mesos.SingularityMesosArtifact;
+import com.hubspot.mesos.SingularityMesosTaskLabel;
 
 public class SingularityDeployBuilder {
 
@@ -25,7 +28,6 @@ public class SingularityDeployBuilder {
   private Optional<String> customExecutorId;
   private Optional<String> customExecutorSource;
   private Optional<Resources> customExecutorResources;
-  private Optional<String> customExecutorUser;
 
   private Optional<Resources> resources;
 
@@ -33,20 +35,52 @@ public class SingularityDeployBuilder {
   private Optional<List<String>> arguments;
   private Optional<Map<String, String>> env;
   private Optional<Map<Integer, Map<String, String>>> taskEnv;
-  private Optional<List<String>> uris;
+  private Optional<List<SingularityMesosArtifact>> uris;
   private Optional<ExecutorData> executorData;
   private Optional<Map<String, String>> labels;
+  private Optional<List<SingularityMesosTaskLabel>> mesosLabels;
   private Optional<Map<Integer, Map<String, String>>> taskLabels;
+  private Optional<Map<Integer, List<SingularityMesosTaskLabel>>> mesosTaskLabels;
 
+  /**
+   * @deprecated use {@link #healthcheck}
+   */
+  @Deprecated
   private Optional<String> healthcheckUri;
+  /**
+   * @deprecated use {@link #healthcheck}
+   */
+  @Deprecated
   private Optional<Long> healthcheckIntervalSeconds;
+  /**
+   * @deprecated use {@link #healthcheck}
+   */
+  @Deprecated
   private Optional<Long> healthcheckTimeoutSeconds;
+  /**
+   * @deprecated use {@link #healthcheck}
+   */
+  @Deprecated
   private Optional<Integer> healthcheckPortIndex;
-  private Optional<Boolean> skipHealthchecksOnDeploy;
+  /**
+   * @deprecated use {@link #healthcheck}
+   */
+  @Deprecated
   private Optional<HealthcheckProtocol> healthcheckProtocol;
-
+  /**
+   * @deprecated use {@link #healthcheck}
+   */
+  @Deprecated
   private Optional<Integer> healthcheckMaxRetries;
+  /**
+   * @deprecated use {@link #healthcheck}
+   */
+  @Deprecated
   private Optional<Long> healthcheckMaxTotalTimeoutSeconds;
+
+  private Optional<Boolean> skipHealthchecksOnDeploy;
+
+  private Optional<HealthcheckOptions> healthcheck;
 
   private Optional<Long> deployHealthTimeoutSeconds;
 
@@ -67,6 +101,7 @@ public class SingularityDeployBuilder {
   private Optional<Boolean> autoAdvanceDeploySteps;
   private Optional<Integer> maxTaskRetries;
   private Optional<Boolean> shell;
+  private Optional<String> user;
 
   public SingularityDeployBuilder(String requestId, String id) {
     this.requestId = requestId;
@@ -79,7 +114,6 @@ public class SingularityDeployBuilder {
     this.customExecutorId = Optional.absent();
     this.customExecutorSource = Optional.absent();
     this.customExecutorResources = Optional.absent();
-    this.customExecutorUser = Optional.absent();
     this.resources = Optional.absent();
     this.command = Optional.absent();
     this.arguments = Optional.absent();
@@ -88,13 +122,16 @@ public class SingularityDeployBuilder {
     this.uris = Optional.absent();
     this.executorData = Optional.absent();
     this.labels = Optional.absent();
+    this.mesosLabels = Optional.absent();
     this.taskLabels = Optional.absent();
+    this.mesosTaskLabels = Optional.absent();
     this.healthcheckUri = Optional.absent();
     this.healthcheckIntervalSeconds = Optional.absent();
     this.healthcheckTimeoutSeconds = Optional.absent();
     this.healthcheckPortIndex = Optional.absent();
     this.skipHealthchecksOnDeploy = Optional.absent();
     this.deployHealthTimeoutSeconds = Optional.absent();
+    this.healthcheck = Optional.absent();
     this.healthcheckProtocol = Optional.absent();
     this.healthcheckMaxTotalTimeoutSeconds = Optional.absent();
     this.healthcheckMaxRetries = Optional.absent();
@@ -113,13 +150,14 @@ public class SingularityDeployBuilder {
     this.autoAdvanceDeploySteps = Optional.absent();
     this.maxTaskRetries = Optional.absent();
     this.shell = Optional.absent();
+    this.user = Optional.absent();
   }
 
   public SingularityDeploy build() {
-    return new SingularityDeploy(requestId, id, command, arguments, containerInfo, customExecutorCmd, customExecutorId, customExecutorSource, customExecutorResources, customExecutorUser, resources,
-      env, taskEnv, uris, metadata, executorData, version, timestamp, labels, taskLabels, deployHealthTimeoutSeconds, healthcheckUri, healthcheckIntervalSeconds, healthcheckTimeoutSeconds, healthcheckPortIndex, healthcheckMaxRetries,
-      healthcheckMaxTotalTimeoutSeconds, serviceBasePath, loadBalancerGroups, loadBalancerPortIndex, considerHealthyAfterRunningForSeconds, loadBalancerOptions, loadBalancerDomains, loadBalancerAdditionalRoutes,
-      loadBalancerTemplate, loadBalancerServiceIdOverride, loadBalancerUpstreamGroup, skipHealthchecksOnDeploy, healthcheckProtocol, deployInstanceCountPerStep, deployStepWaitTimeMs, autoAdvanceDeploySteps, maxTaskRetries, shell);
+    return new SingularityDeploy(requestId, id, command, arguments, containerInfo, customExecutorCmd, customExecutorId, customExecutorSource, customExecutorResources, resources,
+      env, taskEnv, uris, metadata, executorData, version, timestamp, labels, mesosLabels, taskLabels, mesosTaskLabels, deployHealthTimeoutSeconds, healthcheckUri, healthcheckIntervalSeconds, healthcheckTimeoutSeconds, healthcheckPortIndex, healthcheckMaxRetries,
+      healthcheckMaxTotalTimeoutSeconds, healthcheck, serviceBasePath, loadBalancerGroups, loadBalancerPortIndex, considerHealthyAfterRunningForSeconds, loadBalancerOptions, loadBalancerDomains, loadBalancerAdditionalRoutes,
+      loadBalancerTemplate, loadBalancerServiceIdOverride, loadBalancerUpstreamGroup, skipHealthchecksOnDeploy, healthcheckProtocol, deployInstanceCountPerStep, deployStepWaitTimeMs, autoAdvanceDeploySteps, maxTaskRetries, shell, user);
   }
 
   public String getRequestId() {
@@ -216,15 +254,6 @@ public class SingularityDeployBuilder {
     return this;
   }
 
-  public Optional<String> getCustomExecutorUser() {
-    return customExecutorUser;
-  }
-
-  public SingularityDeployBuilder setCustomExecutorUser(Optional<String> customExecutorUser) {
-    this.customExecutorUser = customExecutorUser;
-    return this;
-  }
-
   public Optional<Long> getDeployHealthTimeoutSeconds() {
     return deployHealthTimeoutSeconds;
   }
@@ -279,11 +308,11 @@ public class SingularityDeployBuilder {
     return this;
   }
 
-  public Optional<List<String>> getUris() {
+  public Optional<List<SingularityMesosArtifact>> getUris() {
     return uris;
   }
 
-  public SingularityDeployBuilder setUris(Optional<List<String>> uris) {
+  public SingularityDeployBuilder setUris(Optional<List<SingularityMesosArtifact>> uris) {
     this.uris = uris;
     return this;
   }
@@ -396,21 +425,43 @@ public class SingularityDeployBuilder {
     return this;
   }
 
+  @Deprecated
   public Optional<Map<String, String>> getLabels() {
     return labels;
   }
 
+  @Deprecated
   public SingularityDeployBuilder setLabels(Optional<Map<String, String>> labels) {
     this.labels = labels;
     return this;
   }
 
+  public Optional<List<SingularityMesosTaskLabel>> getMesosLabels() {
+    return mesosLabels;
+  }
+
+  public SingularityDeployBuilder setMesosLabels(Optional<List<SingularityMesosTaskLabel>> mesosLabels) {
+    this.mesosLabels = mesosLabels;
+    return this;
+  }
+
+  @Deprecated
   public Optional<Map<Integer, Map<String, String>>> getTaskLabels() {
     return taskLabels;
   }
 
+  @Deprecated
   public SingularityDeployBuilder setTaskLabels(Optional<Map<Integer, Map<String, String>>> taskLabels) {
     this.taskLabels = taskLabels;
+    return this;
+  }
+
+  public Optional<Map<Integer, List<SingularityMesosTaskLabel>>> getMesosTaskLabels() {
+    return mesosTaskLabels;
+  }
+
+  public SingularityDeployBuilder setMesosTaskLabels(Optional<Map<Integer, List<SingularityMesosTaskLabel>>> mesosTaskLabels) {
+    this.mesosTaskLabels = mesosTaskLabels;
     return this;
   }
 
@@ -447,6 +498,15 @@ public class SingularityDeployBuilder {
 
   public SingularityDeployBuilder setHealthcheckMaxTotalTimeoutSeconds(Optional<Long> healthcheckMaxTotalTimeoutSeconds) {
     this.healthcheckMaxTotalTimeoutSeconds = healthcheckMaxTotalTimeoutSeconds;
+    return this;
+  }
+
+  public Optional<HealthcheckOptions> getHealthcheck() {
+    return healthcheck;
+  }
+
+  public SingularityDeployBuilder setHealthcheck(Optional<HealthcheckOptions> healthcheck) {
+    this.healthcheck = healthcheck;
     return this;
   }
 
@@ -495,6 +555,15 @@ public class SingularityDeployBuilder {
     return this;
   }
 
+  public Optional<String> getUser() {
+    return user;
+  }
+
+  public SingularityDeployBuilder setUser(Optional<String> user) {
+    this.user = user;
+    return this;
+  }
+
   public Optional<String> getLoadBalancerServiceIdOverride() {
     return loadBalancerServiceIdOverride;
   }
@@ -516,50 +585,53 @@ public class SingularityDeployBuilder {
   @Override
   public String toString() {
     return "SingularityDeployBuilder{" +
-      "requestId='" + requestId + '\'' +
-      ", id='" + id + '\'' +
-      ", version=" + version +
-      ", timestamp=" + timestamp +
-      ", metadata=" + metadata +
-      ", containerInfo=" + containerInfo +
-      ", customExecutorCmd=" + customExecutorCmd +
-      ", customExecutorId=" + customExecutorId +
-      ", customExecutorSource=" + customExecutorSource +
-      ", customExecutorResources=" + customExecutorResources +
-      ", customExecutorUser=" + customExecutorUser +
-      ", resources=" + resources +
-      ", command=" + command +
-      ", arguments=" + arguments +
-      ", env=" + env +
-      ", taskEnv=" + taskEnv +
-      ", uris=" + uris +
-      ", executorData=" + executorData +
-      ", labels=" + labels +
-      ", taskLabels=" + taskLabels +
-      ", healthcheckUri=" + healthcheckUri +
-      ", healthcheckIntervalSeconds=" + healthcheckIntervalSeconds +
-      ", healthcheckTimeoutSeconds=" + healthcheckTimeoutSeconds +
-      ", healthcheckPortIndex=" + healthcheckPortIndex +
-      ", skipHealthchecksOnDeploy=" + skipHealthchecksOnDeploy +
-      ", healthcheckProtocol=" + healthcheckProtocol +
-      ", healthcheckMaxRetries=" + healthcheckMaxRetries +
-      ", healthcheckMaxTotalTimeoutSeconds=" + healthcheckMaxTotalTimeoutSeconds +
-      ", deployHealthTimeoutSeconds=" + deployHealthTimeoutSeconds +
-      ", considerHealthyAfterRunningForSeconds=" + considerHealthyAfterRunningForSeconds +
-      ", serviceBasePath=" + serviceBasePath +
-      ", loadBalancerGroups=" + loadBalancerGroups +
-      ", loadBalancerPortIndex=" + loadBalancerPortIndex +
-      ", loadBalancerOptions=" + loadBalancerOptions +
-      ", loadBalancerDomains=" + loadBalancerDomains +
-      ", loadBalancerAdditionalRoutes=" + loadBalancerAdditionalRoutes +
-      ", loadBalancerTemplate=" + loadBalancerTemplate +
-      ", loadBalancerServiceIdOverride=" + loadBalancerServiceIdOverride +
-      ", loadBalancerUpstreamGroup=" + loadBalancerUpstreamGroup +
-      ", deployInstanceCountPerStep=" + deployInstanceCountPerStep +
-      ", deployStepWaitTimeMs=" + deployStepWaitTimeMs +
-      ", autoAdvanceDeploySteps=" + autoAdvanceDeploySteps +
-      ", maxTaskRetries=" + maxTaskRetries +
-      '}';
+        "requestId='" + requestId + '\'' +
+        ", id='" + id + '\'' +
+        ", version=" + version +
+        ", timestamp=" + timestamp +
+        ", metadata=" + metadata +
+        ", containerInfo=" + containerInfo +
+        ", customExecutorCmd=" + customExecutorCmd +
+        ", customExecutorId=" + customExecutorId +
+        ", customExecutorSource=" + customExecutorSource +
+        ", customExecutorResources=" + customExecutorResources +
+        ", resources=" + resources +
+        ", command=" + command +
+        ", arguments=" + arguments +
+        ", env=" + env +
+        ", taskEnv=" + taskEnv +
+        ", uris=" + uris +
+        ", executorData=" + executorData +
+        ", labels=" + labels +
+        ", mesosLabels=" + mesosLabels +
+        ", taskLabels=" + taskLabels +
+        ", mesosTaskLabels=" + mesosTaskLabels +
+        ", healthcheckUri=" + healthcheckUri +
+        ", healthcheckIntervalSeconds=" + healthcheckIntervalSeconds +
+        ", healthcheckTimeoutSeconds=" + healthcheckTimeoutSeconds +
+        ", healthcheckPortIndex=" + healthcheckPortIndex +
+        ", healthcheckProtocol=" + healthcheckProtocol +
+        ", healthcheckMaxRetries=" + healthcheckMaxRetries +
+        ", healthcheckMaxTotalTimeoutSeconds=" + healthcheckMaxTotalTimeoutSeconds +
+        ", skipHealthchecksOnDeploy=" + skipHealthchecksOnDeploy +
+        ", healthcheck=" + healthcheck +
+        ", deployHealthTimeoutSeconds=" + deployHealthTimeoutSeconds +
+        ", considerHealthyAfterRunningForSeconds=" + considerHealthyAfterRunningForSeconds +
+        ", serviceBasePath=" + serviceBasePath +
+        ", loadBalancerGroups=" + loadBalancerGroups +
+        ", loadBalancerPortIndex=" + loadBalancerPortIndex +
+        ", loadBalancerOptions=" + loadBalancerOptions +
+        ", loadBalancerDomains=" + loadBalancerDomains +
+        ", loadBalancerAdditionalRoutes=" + loadBalancerAdditionalRoutes +
+        ", loadBalancerTemplate=" + loadBalancerTemplate +
+        ", loadBalancerServiceIdOverride=" + loadBalancerServiceIdOverride +
+        ", loadBalancerUpstreamGroup=" + loadBalancerUpstreamGroup +
+        ", deployInstanceCountPerStep=" + deployInstanceCountPerStep +
+        ", deployStepWaitTimeMs=" + deployStepWaitTimeMs +
+        ", autoAdvanceDeploySteps=" + autoAdvanceDeploySteps +
+        ", maxTaskRetries=" + maxTaskRetries +
+        ", shell=" + shell +
+        ", user=" + user +
+        '}';
   }
-
 }

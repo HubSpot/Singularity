@@ -1,7 +1,7 @@
 import React, { Component, PropTypes } from 'react';
 import { withRouter } from 'react-router';
 import { connect } from 'react-redux';
-import { FetchTaskHistory, FetchTaskHistoryForRequest } from '../../../actions/api/history';
+import { FetchTaskHistory, FetchTaskHistoryForRequest, FetchRequestArgHistory } from '../../../actions/api/history';
 
 import { Glyphicon } from 'react-bootstrap';
 import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
@@ -22,11 +22,13 @@ class RunNowButton extends Component {
     requestId: PropTypes.string.isRequired,
     fetchTaskHistory: PropTypes.func.isRequired,
     fetchLastRunTask: PropTypes.func.isRequired,
+    fetchRequestArgHistory: PropTypes.func.isRequired,
     taskHistory: PropTypes.arrayOf(PropTypes.shape({
       taskId: PropTypes.shape({
         id: PropTypes.string.isRequired
       }).isRequired
     })),
+    requestArgHistory: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.string)).isRequired,
     children: PropTypes.node,
     router: PropTypes.object,
     taskId: PropTypes.string,
@@ -51,15 +53,15 @@ class RunNowButton extends Component {
 
   doBeforeOpeningModal() {
     if (this.props.taskId) {
-      return this.props.fetchTaskHistory(this.props.taskId);
+      return this.props.fetchRequestArgHistory(this.props.requestId).then(this.props.fetchTaskHistory(this.props.taskId));
     }
     if (!_.isEmpty(this.props.taskHistory)) {
-      return this.props.fetchTaskHistory(this.props.taskHistory[0].taskId.id);
+      return this.props.fetchRequestArgHistory(this.props.requestId).then(this.props.fetchTaskHistory(this.props.taskHistory[0].taskId.id));
     }
     return this.props.fetchLastRunTask(this.props.requestId).then((response) => {
       const taskId = Utils.maybe(response, ['data', '0', 'taskId', 'id']);
       if (taskId) {
-        return this.props.fetchTaskHistory(taskId);
+        return this.props.fetchRequestArgHistory(this.props.requestId).then(this.props.fetchTaskHistory(taskId));
       }
       return Promise.resolve();
     });
@@ -76,6 +78,7 @@ class RunNowButton extends Component {
           rerun={!!this.props.taskId}
           router={this.props.router}
           then={this.props.then}
+          requestArgHistory={this.props.requestArgHistory}
         />
       </span>
     );
@@ -87,13 +90,15 @@ const mapStateToProps = (state, ownProps) => {
   const taskId = ownProps.taskId || taskHistory[0] && taskHistory[0].taskId.id;
   return {
     taskHistory,
-    task: Utils.maybe(state.api.task[taskId], ['data', 'task'])
+    task: Utils.maybe(state.api.task[taskId], ['data', 'task']),
+    requestArgHistory: Utils.maybe(state.api.requestArgHistory, [ownProps.requestId, 'data'], [])
   };
 };
 
 const mapDispatchToProps = (dispatch) => ({
-  fetchLastRunTask: (requestId) => dispatch(FetchTaskHistoryForRequest.trigger(requestId, 1, 1)),
-  fetchTaskHistory: (taskId) => dispatch(FetchTaskHistory.trigger(taskId))
+  fetchLastRunTask: (requestId) => dispatch(FetchTaskHistoryForRequest.trigger(requestId, 1, 1, [404])),
+  fetchTaskHistory: (taskId) => dispatch(FetchTaskHistory.trigger(taskId), false, [404]),
+  fetchRequestArgHistory: (requestId) => dispatch(FetchRequestArgHistory.trigger(requestId))
 });
 
 export default connect(mapStateToProps, mapDispatchToProps)(withRouter(RunNowButton));

@@ -5,6 +5,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.function.Predicate;
 
 import javax.inject.Named;
 import javax.inject.Provider;
@@ -21,6 +22,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.hubspot.horizon.HttpClient;
+import com.hubspot.horizon.HttpResponse;
 import com.hubspot.singularity.SingularityClientCredentials;
 
 @Singleton
@@ -32,6 +34,10 @@ public class SingularityClientProvider implements Provider<SingularityClient> {
   private String contextPath = DEFAULT_CONTEXT_PATH;
   private List<String> hosts = Collections.emptyList();
   private Optional<SingularityClientCredentials> credentials = Optional.absent();
+  private boolean ssl = false;
+
+  private int retryAttempts = 3;
+  private Predicate<HttpResponse> retryStrategy = HttpResponse::isServerError;
 
   @Inject
   public SingularityClientProvider(@Named(SingularityClientModule.HTTP_CLIENT_NAME) HttpClient httpClient) {
@@ -66,8 +72,27 @@ public class SingularityClientProvider implements Provider<SingularityClient> {
     return this;
   }
 
+  @Inject(optional = true)
+  public SingularityClientProvider setRetryAttempts(@Named(SingularityClientModule.RETRY_ATTEMPTS) int retryAttempts) {
+    this.retryAttempts = retryAttempts;
+    return this;
+  }
+
+  @Inject(optional = true)
+  public SingularityClientProvider setRetryStrategy(@Named(SingularityClientModule.RETRY_STRATEGY) Predicate<HttpResponse> retryStrategy) {
+    this.retryStrategy = retryStrategy;
+    return this;
+  }
+
+
   public SingularityClientProvider setHosts(String... hosts) {
     this.hosts = Arrays.asList(hosts);
+    return this;
+  }
+
+  @Inject(optional=true)
+  public SingularityClientProvider setSsl(boolean ssl) {
+    this.ssl = ssl;
     return this;
   }
 
@@ -75,19 +100,14 @@ public class SingularityClientProvider implements Provider<SingularityClient> {
   public SingularityClient get() {
     Preconditions.checkState(contextPath != null, "contextPath null");
     Preconditions.checkState(!hosts.isEmpty(), "no hosts provided");
-    return new SingularityClient(contextPath, httpClient, hosts, credentials);
+    return new SingularityClient(contextPath, httpClient, hosts, credentials, ssl);
   }
 
   public SingularityClient get(Optional<SingularityClientCredentials> credentials) {
     Preconditions.checkState(contextPath != null, "contextPath null");
     Preconditions.checkState(!hosts.isEmpty(), "no hosts provided");
     Preconditions.checkNotNull(credentials);
-    return new SingularityClient(contextPath, httpClient, hosts, credentials);
-  }
-
-  @Deprecated
-  public SingularityClient buildClient(String contextPath, String hosts) {
-    return new SingularityClient(contextPath, httpClient, hosts);
+    return new SingularityClient(contextPath, httpClient, hosts, credentials, ssl);
   }
 
   static String getClusterMembers(CuratorFramework curator) {

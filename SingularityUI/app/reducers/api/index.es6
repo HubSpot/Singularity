@@ -1,8 +1,15 @@
+import _ from 'underscore';
 import { combineReducers } from 'redux';
 import buildApiActionReducer from './base';
 import buildKeyedApiActionReducer from './keyed';
 
 import { FetchUser } from '../../actions/api/auth';
+
+import {
+  AddStarredRequests,
+  DeleteStarredRequests
+} from '../../actions/api/users';
+
 import {
   FetchPendingDeploys,
   SaveDeploy
@@ -17,7 +24,8 @@ import {
   FetchDeployForRequest,
   FetchDeploysForRequest,
   FetchTaskSearchParams,
-  FetchRequestHistory
+  FetchRequestHistory,
+  FetchRequestArgHistory
 } from '../../actions/api/history';
 
 import { FetchTaskS3Logs } from '../../actions/api/logs';
@@ -48,7 +56,10 @@ import {
   FreezeSlave,
   DecommissionSlave,
   RemoveSlave,
-  ReactivateSlave
+  ReactivateSlave,
+  FetchExpiringSlaveStates,
+  RemoveExpiringSlaveState,
+  FetchSlaveUsages
 } from '../../actions/api/slaves';
 
 import {
@@ -67,15 +78,33 @@ import {
 
 import { FetchWebhooks } from '../../actions/api/webhooks';
 
+import {
+  FetchDisastersData,
+  FetchDisabledActions,
+  FetchPriorityFreeze,
+  FetchTaskCredits
+} from '../../actions/api/disasters';
+
 import { FetchGroups } from '../../actions/api/requestGroups';
 
+import { FetchInactiveHosts } from '../../actions/api/inactive';
+
 const user = buildApiActionReducer(FetchUser);
+const addStarredRequests = buildApiActionReducer(AddStarredRequests, []);
+const deleteStarredRequests = buildApiActionReducer(DeleteStarredRequests, []);
 const webhooks = buildApiActionReducer(FetchWebhooks, []);
+const disabledActions = buildApiActionReducer(FetchDisabledActions, []);
+const disastersData = buildApiActionReducer(FetchDisastersData, []);
+const taskCredits = buildApiActionReducer(FetchTaskCredits, []);
+const priorityFreeze = buildApiActionReducer(FetchPriorityFreeze, []);
 const slaves = buildApiActionReducer(FetchSlaves, []);
 const freezeSlave = buildApiActionReducer(FreezeSlave, []);
 const decommissionSlave = buildApiActionReducer(DecommissionSlave, []);
 const removeSlave = buildApiActionReducer(RemoveSlave, []);
 const reactivateSlave = buildApiActionReducer(ReactivateSlave, []);
+const expiringSlaveStates = buildApiActionReducer(FetchExpiringSlaveStates, []);
+const removeExpiringSlaveState = buildApiActionReducer(RemoveExpiringSlaveState, []);
+const slaveUsages = buildApiActionReducer(FetchSlaveUsages, []);
 const racks = buildApiActionReducer(FetchRacks, []);
 const freezeRack = buildApiActionReducer(FreezeRack, []);
 const decommissionRack = buildApiActionReducer(DecommissionRack, []);
@@ -86,6 +115,7 @@ const saveRequest = buildApiActionReducer(SaveRequest);
 const requests = buildApiActionReducer(FetchRequests, []);
 const requestsInState = buildApiActionReducer(FetchRequestsInState, []);
 const requestHistory = buildKeyedApiActionReducer(FetchRequestHistory, []);
+const requestArgHistory = buildKeyedApiActionReducer(FetchRequestArgHistory, []);
 const removeRequest = buildKeyedApiActionReducer(RemoveRequest, []);
 const pauseRequest = buildKeyedApiActionReducer(PauseRequest, []);
 const unpauseRequest = buildKeyedApiActionReducer(UnpauseRequest, []);
@@ -96,7 +126,7 @@ const deploys = buildApiActionReducer(FetchPendingDeploys, []);
 const deploysForRequest = buildKeyedApiActionReducer(FetchDeploysForRequest, []);
 const saveDeploy = buildApiActionReducer(SaveDeploy);
 const activeTasksForDeploy = buildApiActionReducer(FetchActiveTasksForDeploy);
-const activeTasksForRequest = buildKeyedApiActionReducer(FetchActiveTasksForRequest, []);
+const activeTasksForRequest = buildKeyedApiActionReducer(FetchActiveTasksForRequest, [], (tasks) => _.sortBy(tasks, (task) => task.taskId.instanceNo));
 const scheduledTasksForRequest = buildKeyedApiActionReducer(FetchScheduledTasksForRequest, []);
 const taskHistoryForDeploy = buildApiActionReducer(FetchTaskHistoryForDeploy, []);
 const taskHistoryForRequest = buildKeyedApiActionReducer(FetchTaskHistoryForRequest, []);
@@ -111,15 +141,25 @@ const task = buildKeyedApiActionReducer(FetchTaskHistory);
 const taskHistory = buildApiActionReducer(FetchTaskSearchParams, []);
 const tasks = buildApiActionReducer(FetchTasksInState, []);
 const requestGroups = buildApiActionReducer(FetchGroups, []);
+const inactiveHosts = buildApiActionReducer(FetchInactiveHosts, []);
 
 export default combineReducers({
   user,
+  addStarredRequests,
+  deleteStarredRequests,
   webhooks,
+  disabledActions,
+  disastersData,
+  taskCredits,
+  priorityFreeze,
   slaves,
   freezeSlave,
   decommissionSlave,
   removeSlave,
   reactivateSlave,
+  expiringSlaveStates,
+  removeExpiringSlaveState,
+  slaveUsages,
   racks,
   freezeRack,
   decommissionRack,
@@ -134,6 +174,7 @@ export default combineReducers({
   requests,
   requestsInState,
   requestHistory,
+  requestArgHistory,
   status,
   deploy,
   deploys,
@@ -154,5 +195,6 @@ export default combineReducers({
   runningTask,
   taskKill,
   taskHistory,
-  requestGroups
+  requestGroups,
+  inactiveHosts,
 });

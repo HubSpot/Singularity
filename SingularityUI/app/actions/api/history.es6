@@ -3,9 +3,10 @@ import Utils from '../../utils';
 
 export const FetchTaskHistory = buildApiAction(
   'FETCH_TASK_HISTORY',
-  (taskId, renderNotFoundIf404) => ({
+  (taskId, renderNotFoundIf404, catchStatusCodes = []) => ({
     url: `/history/task/${taskId}`,
-    renderNotFoundIf404
+    renderNotFoundIf404,
+    catchStatusCodes
   }),
   (taskId) => taskId
 );
@@ -20,8 +21,9 @@ export const FetchActiveTasksForRequest = buildApiAction(
 
 export const FetchTaskHistoryForRequest = buildApiAction(
   'FETCH_TASK_HISTORY_FOR_REQUEST',
-  (requestId, count, page) => ({
-    url: `/history/request/${requestId}/tasks?requestId=${requestId}&count=${count}&page=${page}`
+  (requestId, count, page, catchStatusCodes = []) => ({
+    url: `/history/request/${requestId}/tasks?requestId=${requestId}&count=${count}&page=${page}`,
+    catchStatusCodes
   }),
   (requestId) => requestId
 );
@@ -58,9 +60,10 @@ export const FetchDeploysForRequest = buildApiAction(
 
 export const FetchTaskSearchParams = buildApiAction(
   'FETCH_TASK_HISTORY',
-  ({requestId = null, deployId = null, host = null, lastTaskStatus = null, startedAfter = null, startedBefore = null, updatedAfter = null, updatedBefore = null, orderDirection = null}, count, page) => {
+  ({requestId = null, deployId = null, runId=null, host = null, lastTaskStatus = null, startedAfter = null, startedBefore = null, updatedAfter = null, updatedBefore = null, orderDirection = null}, count, page) => {
     const args = {
       deployId,
+      runId,
       host,
       lastTaskStatus,
       startedAfter,
@@ -93,3 +96,13 @@ export const FetchRequestHistory = buildApiAction(
   }),
   (requestId) => requestId
 );
+
+export const FetchRequestArgHistory = buildApiAction(
+  'FETCH_REQUEST_ARG_HISTORY',
+  (requestId) => ({
+    url: `/history/request/${requestId}/command-line-args`,
+    catchStatusCodes: [400, 404]
+  }),
+  (requestId) => requestId
+);
+

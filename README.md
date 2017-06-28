@@ -1,5 +1,9 @@
 ![Singularity](Docs/images/singularity.png)
 
+**Latest Release Version:** [0.14.1](https://github.com/HubSpot/Singularity/releases/tag/Singularity-0.13.0)
+
+**Mesos Version:** [0.28.2](http://mesos.apache.org/documentation/latest/upgrades/)
+
 [![Build Status](https://travis-ci.org/HubSpot/Singularity.svg?branch=master)](https://travis-ci.org/HubSpot/Singularity)
 
 ## Overview ##
@@ -12,7 +16,7 @@ For a more thorough explanation of the concepts behind Singularity and Mesos cli
 
 ----------
 
-### Features###
+### Features ###
 
  - [Native Docker Support](Docs/reference/container-options.md)
  - [JSON REST API and Java Client](Docs/reference/apidocs/api-index.md)
@@ -65,7 +69,7 @@ Then simply run `docker-compose up` and it will start containers for...
 
 ## Reference ##
 
-#### Install ####
+#### Installation ####
 
  - [Installation Instructions](Docs/getting-started/install.md)
 

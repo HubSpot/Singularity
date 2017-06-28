@@ -17,6 +17,8 @@ const removeTooltip = (
 export default class RemoveButton extends Component {
   static propTypes = {
     requestId: PropTypes.string.isRequired,
+    loadBalanced: PropTypes.bool,
+    loadBalancerData: PropTypes.object,
     children: PropTypes.node,
     then: PropTypes.func
   };
@@ -35,7 +37,13 @@ export default class RemoveButton extends Component {
     return (
       <span>
         {getClickComponent(this)}
-        <RemoveModal ref="modal" requestId={this.props.requestId} then={this.props.then} />
+        <RemoveModal
+          ref="modal"
+          requestId={this.props.requestId}
+          loadBalanced={this.props.loadBalanced}
+          loadBalancerData={this.props.loadBalancerData}
+          then={this.props.then}
+        />
       </span>
     );
   }

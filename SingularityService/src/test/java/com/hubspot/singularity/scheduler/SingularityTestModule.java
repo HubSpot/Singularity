@@ -2,8 +2,7 @@ package com.hubspot.singularity.scheduler;
 
 import static com.google.inject.name.Names.named;
 import static com.hubspot.singularity.SingularityMainModule.HTTP_HOST_AND_PORT;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 import java.util.Set;
 
@@ -13,6 +12,7 @@ import org.apache.curator.test.TestingServer;
 import org.apache.mesos.Protos.MasterInfo;
 import org.apache.mesos.Protos.Status;
 import org.apache.mesos.SchedulerDriver;
+import org.eclipse.jetty.util.component.LifeCycle;
 import org.mockito.Matchers;
 import org.slf4j.LoggerFactory;
 
@@ -34,9 +34,10 @@ import com.google.inject.Scopes;
 import com.google.inject.Stage;
 import com.google.inject.TypeLiteral;
 import com.google.inject.util.Modules;
+import com.hubspot.dropwizard.guicier.DropwizardModule;
 import com.hubspot.dropwizard.guicier.GuiceBundle;
 import com.hubspot.jackson.datatype.protobuf.ProtobufModule;
-import com.hubspot.mesos.client.SingularityMesosClientModule;
+import com.hubspot.mesos.client.MesosClient;
 import com.hubspot.singularity.SingularityAbort;
 import com.hubspot.singularity.SingularityAuthModule;
 import com.hubspot.singularity.SingularityMainModule;
@@ -54,10 +55,12 @@ import com.hubspot.singularity.data.transcoders.SingularityTranscoderModule;
 import com.hubspot.singularity.data.zkmigrations.SingularityZkMigrationsModule;
 import com.hubspot.singularity.event.SingularityEventModule;
 import com.hubspot.singularity.hooks.LoadBalancerClient;
+import com.hubspot.singularity.mesos.OfferCache;
 import com.hubspot.singularity.mesos.SchedulerDriverSupplier;
 import com.hubspot.singularity.mesos.SingularityDriver;
-import com.hubspot.singularity.mesos.SingularityLogSupport;
+import com.hubspot.singularity.mesos.SingularityMesosExecutorInfoSupport;
 import com.hubspot.singularity.mesos.SingularityMesosModule;
+import com.hubspot.singularity.mesos.SingularityOfferCache;
 import com.hubspot.singularity.resources.DeployResource;
 import com.hubspot.singularity.resources.PriorityResource;
 import com.hubspot.singularity.resources.RackResource;
@@ -72,27 +75,31 @@ import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.LoggerContext;
 import io.dropwizard.db.DataSourceFactory;
 import io.dropwizard.jackson.Jackson;
-import io.dropwizard.lifecycle.Managed;
 import io.dropwizard.setup.Environment;
 import net.kencochrane.raven.Raven;
 
 public class SingularityTestModule implements Module {
   private final TestingServer ts;
-  private final GuiceBundle.DropwizardModule dropwizardModule;
+  private final DropwizardModule dropwizardModule;
+  private final ObjectMapper om = Jackson.newObjectMapper()
+      .setSerializationInclusion(Include.NON_NULL)
+      .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+      .registerModule(new ProtobufModule());
+  private final Environment environment = new Environment("test-env", om, null, new MetricRegistry(), null);
 
   private final boolean useDBTests;
 
   public SingularityTestModule(boolean useDbTests) throws Exception {
     this.useDBTests = useDbTests;
 
-    dropwizardModule = new GuiceBundle.DropwizardModule();
+    dropwizardModule = new DropwizardModule(environment);
 
     LoggerContext context = (LoggerContext) LoggerFactory.getILoggerFactory();
     Logger rootLogger = context.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME);
-    rootLogger.setLevel(Level.toLevel(System.getProperty("singularity.test.log.level", "ERROR")));
+    rootLogger.setLevel(Level.toLevel(System.getProperty("singularity.test.log.level", "WARN")));
 
     Logger hsLogger = context.getLogger("com.hubspot");
-    hsLogger.setLevel(Level.toLevel(System.getProperty("singularity.test.log.level.for.com.hubspot", "ERROR")));
+    hsLogger.setLevel(Level.toLevel(System.getProperty("singularity.test.log.level.for.com.hubspot", "WARN")));
 
     this.ts = new TestingServer();
   }
@@ -103,15 +110,15 @@ public class SingularityTestModule implements Module {
 
   public void start() throws Exception {
     // Start all the managed instances in dropwizard.
-    Set<Managed> managedObjects = ImmutableSet.copyOf(dropwizardModule.getManaged());
-    for (Managed managed : managedObjects) {
+    Set<LifeCycle> managedObjects = ImmutableSet.copyOf(environment.lifecycle().getManagedObjects());
+    for (LifeCycle managed : managedObjects) {
       managed.start();
     }
   }
 
   public void stop() throws Exception {
-    ImmutableSet<Managed> managedObjects = ImmutableSet.copyOf(dropwizardModule.getManaged());
-    for (Managed managed : Lists.reverse(managedObjects.asList())) {
+    ImmutableSet<LifeCycle> managedObjects = ImmutableSet.copyOf(environment.lifecycle().getManagedObjects());
+    for (LifeCycle managed : Lists.reverse(managedObjects.asList())) {
       managed.stop();
     }
   }
@@ -120,6 +127,10 @@ public class SingularityTestModule implements Module {
   public void configure(Binder mainBinder) {
 
     mainBinder.install(new GuiceBundle.GuiceEnforcerModule());
+
+    TestingMesosClient tmc = new TestingMesosClient();
+    mainBinder.bind(MesosClient.class).toInstance(tmc);
+    mainBinder.bind(TestingMesosClient.class).toInstance(tmc);
 
     mainBinder.bind(TestingServer.class).toInstance(ts);
     final SingularityConfiguration configuration = getSingularityConfigurationForTestingServer(ts);
@@ -146,15 +157,9 @@ public class SingularityTestModule implements Module {
             TestingLoadBalancerClient tlbc = new TestingLoadBalancerClient();
             binder.bind(LoadBalancerClient.class).toInstance(tlbc);
             binder.bind(TestingLoadBalancerClient.class).toInstance(tlbc);
-
-            ObjectMapper om = Jackson.newObjectMapper()
-              .setSerializationInclusion(Include.NON_NULL)
-              .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
-              .registerModule(new ProtobufModule());
+            binder.bind(OfferCache.class).to(SingularityOfferCache.class);
 
             binder.bind(ObjectMapper.class).toInstance(om);
-
-            Environment environment = new Environment("test-env", om, null, new MetricRegistry(), null);
             binder.bind(Environment.class).toInstance(environment);
 
             binder.bind(HostAndPort.class).annotatedWith(named(HTTP_HOST_AND_PORT)).toInstance(HostAndPort.fromString("localhost:8080"));
@@ -176,8 +181,8 @@ public class SingularityTestModule implements Module {
 
           @Override
           public void configure(Binder binder) {
-            SingularityLogSupport logSupport = mock(SingularityLogSupport.class);
-            binder.bind(SingularityLogSupport.class).toInstance(logSupport);
+            SingularityMesosExecutorInfoSupport logSupport = mock(SingularityMesosExecutorInfoSupport.class);
+            binder.bind(SingularityMesosExecutorInfoSupport.class).toInstance(logSupport);
 
             SingularityDriver mock = mock(SingularityDriver.class);
             when(mock.kill((SingularityTaskId) Matchers.any())).thenReturn(Status.DRIVER_RUNNING);
@@ -202,16 +207,16 @@ public class SingularityTestModule implements Module {
     mainBinder.install(new SingularityTranscoderModule());
     mainBinder.install(new SingularityHistoryModule(configuration));
     mainBinder.install(new SingularityZkMigrationsModule());
-    mainBinder.install(new SingularityMesosClientModule());
+
     mainBinder.install(new SingularityEventModule(configuration));
     mainBinder.install(Modules.override(new SingularityAuthModule(configuration))
-            .with(new Module() {
-              @Override
-              public void configure(Binder binder) {
-                binder.bind(SingularityAuthenticator.class).to(SingularityTestAuthenticator.class);
-                binder.bind(SingularityTestAuthenticator.class).in(Scopes.SINGLETON);
-              }
-            }));
+        .with(new Module() {
+          @Override
+          public void configure(Binder binder) {
+            binder.bind(SingularityAuthenticator.class).to(SingularityTestAuthenticator.class);
+            binder.bind(SingularityTestAuthenticator.class).in(Scopes.SINGLETON);
+          }
+        }));
 
     mainBinder.bind(DeployResource.class);
     mainBinder.bind(RequestResource.class);

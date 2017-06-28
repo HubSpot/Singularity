@@ -1,6 +1,7 @@
 package com.hubspot.singularity.resources;
 
 import static com.hubspot.singularity.WebExceptions.badRequest;
+import static com.hubspot.singularity.WebExceptions.checkBadRequest;
 import static com.hubspot.singularity.WebExceptions.checkNotFound;
 import static com.hubspot.singularity.WebExceptions.notFound;
 
@@ -39,7 +40,7 @@ import com.hubspot.singularity.data.SandboxManager;
 import com.hubspot.singularity.data.SandboxManager.SlaveNotFoundException;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.data.history.HistoryManager;
-import com.hubspot.singularity.mesos.SingularityLogSupport;
+import com.hubspot.singularity.mesos.SingularityMesosExecutorInfoSupport;
 import com.wordnik.swagger.annotations.Api;
 import com.wordnik.swagger.annotations.ApiOperation;
 import com.wordnik.swagger.annotations.ApiParam;
@@ -51,11 +52,11 @@ public class SandboxResource extends AbstractHistoryResource {
   public static final String PATH = SingularityService.API_BASE_PATH + "/sandbox";
 
   private final SandboxManager sandboxManager;
-  private final SingularityLogSupport logSupport;
+  private final SingularityMesosExecutorInfoSupport logSupport;
   private final SingularityConfiguration configuration;
 
   @Inject
-  public SandboxResource(HistoryManager historyManager, TaskManager taskManager, SandboxManager sandboxManager, DeployManager deployManager, SingularityLogSupport logSupport,
+  public SandboxResource(HistoryManager historyManager, TaskManager taskManager, SandboxManager sandboxManager, DeployManager deployManager, SingularityMesosExecutorInfoSupport logSupport,
       SingularityConfiguration configuration, SingularityAuthorizationHelper authorizationHelper, Optional<SingularityUser> user) {
     super(historyManager, taskManager, deployManager, authorizationHelper, user);
 
@@ -69,7 +70,7 @@ public class SandboxResource extends AbstractHistoryResource {
     final SingularityTaskHistory taskHistory = getTaskHistoryRequired(taskIdObj);
 
     if (!taskHistory.getDirectory().isPresent()) {
-      logSupport.checkDirectory(taskIdObj);
+      logSupport.checkDirectoryAndContainerId(taskIdObj);
 
       throw badRequest("Task %s does not have a directory yet - check again soon (enqueued request to refetch)", taskId);
     }
@@ -102,7 +103,7 @@ public class SandboxResource extends AbstractHistoryResource {
     final String currentDirectory = getCurrentDirectory(taskId, path);
     final SingularityTaskHistory history = checkHistory(taskId);
 
-    final String slaveHostname = history.getTask().getOffer().getHostname();
+    final String slaveHostname = history.getTask().getHostname();
     final String pathToRoot = history.getDirectory().get();
     final String fullPath = new File(pathToRoot, currentDirectory).toString();
 
@@ -137,7 +138,9 @@ public class SandboxResource extends AbstractHistoryResource {
 
     final SingularityTaskHistory history = checkHistory(taskId);
 
-    final String slaveHostname = history.getTask().getOffer().getHostname();
+    checkBadRequest(!Strings.isNullOrEmpty(path), "Must specify 'path'");
+
+    final String slaveHostname = history.getTask().getHostname();
     final String fullPath = new File(history.getDirectory().get(), path).toString();
 
     try {

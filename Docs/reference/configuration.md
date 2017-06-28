@@ -40,7 +40,7 @@ These are settings that are more likely to be altered.
 |-----------|---------|-------------|------|
 | allowRequestsWithoutOwners | true | If false, submitting a request without at least one owner will return a 400 | boolean |
 | commonHostnameSuffixToOmit | null | If specified, will remove this hostname suffix from all taskIds | string |
-| defaultSlavePlacement | GREEDY | See [Slave Placement](../about/how-it-works.md#user-content-placement) | enum / string [GREEDY, OPTIMISTIC, SEPARATE (deprecated), SEPARATE_BY_DEPLOY, SEPARATE_BY_REQUEST]
+| defaultSlavePlacement | GREEDY | See [Slave Placement](../about/how-it-works.md#user-content-placement) | enum / string [GREEDY, OPTIMISTIC, SEPARATE (deprecated), SEPARATE_BY_DEPLOY, SEPARATE_BY_REQUEST, SPREAD_ALL_SLAVES]
 | defaultValueForKillTasksOfPausedRequests | true | When a task is paused, the API allows for the tasks of that request to optionally not be killed. If that parameter is not set in the pause request, this value is used | boolean |
 | deltaAfterWhichTasksAreLateMillis | 30000 (30 seconds) | The amount of time after a task's schedule time that Singularity will classify it (in state API and dashboard) as a late task | long | 
 | deployHealthyBySeconds | 120 | Default amount of time to allow pending deploys to run for before transitioning them into active deploys. If more than this time passes before a deploy can be considered healthy (all of its tasks either make it to TASK_RUNNING or pass healthchecks), then the deploy will be rejected | long |
@@ -51,11 +51,14 @@ These are settings that are more likely to be altered.
 | Parameter | Default | Description | Type |
 |-----------|---------|-------------|------|
 | considerTaskHealthyAfterRunningForSeconds | 5 | Tasks which make it to TASK_RUNNING and run for at least this long (that are not health-checked) are considered healthy | long | 
-| healthcheckIntervalSeconds | 5 | Default amount of time to wait in between attempting task healthchecks | long |
-| healthcheckTimeoutSeconds | 5 | Default amount of time to wait for healthchecks to return before considering them failed | long | 
+| healthcheckIntervalSeconds | 5 | Default amount of time to wait in between attempting task healthchecks | int |
+| healthcheckTimeoutSeconds | 5 | Default amount of time to wait for healthchecks to return before considering them failed | int | 
 | killAfterTasksDoNotRunDefaultSeconds | 600 (10 minutes) | Amount of time after which new tasks (that are not part of a deploy) will be killed if they do not enter TASK_RUNNING | long |
 | healthcheckMaxRetries | | Default max number of time to retry a failed healthcheck for a task before considering the task to be unhealthy | int |
-| healthcheckMaxTotalTimeoutSeconds | | Default total time to wait for healthchecks to pass | int |
+| startupDelaySeconds | | By default, wait this long before starting any healthchecks on a task | int |
+| startupTimeoutSeconds | 45 | If a healthchecked task has not responded with a valid http response in `startupTimeoutSeconds` consider it unhealthy | int |
+| startupIntervalSeconds | 2 | In the startup period (before a valid http response has been received) wait this long between healthcheck attempts | int |
+| healthcheckFailureStatusCodes | [] | If any of these status codes is received during a healthcheck, immediately consider the task unhealthy, do not retry the check | List<Integer> |
 
 #### Deploys ####
 | Parameter | Default | Description | Type |
@@ -105,7 +108,7 @@ These settings are less likely to be changed, but were included in the configura
 | cleanupEverySeconds | 5 | Will cleanup request, task, and other queues on this interval | long | 
 | persistHistoryEverySeconds | 3600 (1 hour) | Moves stale historical task data from ZooKeeper into MySQL, setting to 0 will disable history persistence | long |
 | saveStateEverySeconds | 60 | State about this Singularity instance is saved (available over API) on this interval | long |
-| checkScheduledJobsEveryMillis | 600000 (10 mins) | Check for new scheduled jobs and those running into the next scheduled time on this interval | long |
+| checkJobsEveryMillis | 600000 (10 mins) | Check for jobs running longer than the expected time on this interval | long |
 | checkExpiringUserActionEveryMillis | 45000 | Check for expiring actions that should be expired on this interval | long |
 
 #### Mesos ####
@@ -148,6 +151,9 @@ These settings are less likely to be changed, but were included in the configura
 | warnIfScheduledJobIsRunningPastNextRunPct | 200 | Warn if a scheduled job has run this much past its next scheduled run time (e.g. 200 => ran through next two run times) | int |
 | pendingDeployHoldTaskDuringDecommissionMillis | 600000ms (10 minutes) | Don't kill tasks on a decommissioning slave that are part of a pending deploy for this amount of time to allow the deploy to complete | long |
 | defaultBounceExpirationMinutes | 60 | Expire a bounce after this many minutes if an expiration is not provided in the request to bounce | int |
+| cacheOffers | false | Hold on to unused offers for up to `cacheOffersForMillis` | boolean |
+| cacheOffersForMillis | If `cacheOffers` is true, decline offers after this amount of time if they ahve not been used | long |
+| offerCacheSize | The maximum number of offers to cache at once | int |
 
 ## Mesos Configuration ##
 
@@ -160,6 +166,7 @@ These settings should live under the "mesos" field inside the root configuration
 | frameworkName | null | | string |
 | frameworkId | null | | string |
 | frameworkFailoverTimeout | 0.0 | | double |
+| frameworkRole | null | Specify framework's desired role when Singularity registers with the master | String |
 | checkpoint | true | | boolean |
 | credentialPrincipal | | Enable framework auth by setting both this and credentialSecret | String |
 | credentialSecret | | Enable framework auth by setting both this and credentialPrincipal | String |
@@ -167,13 +174,13 @@ These settings should live under the "mesos" field inside the root configuration
 #### Resource Limits ####
 | Parameter | Default | Description | Type |
 |-----------|---------|-------------|------|
-| defaultCpus | 1 | Number of CPUs to request for a task if none are specified | int | 
+| defaultCpus | 1 | Number of CPUs to request for a task if none are specified | int |
 | defaultMemory | 64 | MB of memory to request for a task if none is specified | int |
 | maxNumInstancesPerRequest | 25 | Max instances (tasks) to allow for a request (requests using over this will return a 400) | int |
-| maxNumCpusPerInstance | 50 | Max number of CPUs allowed on a given task | int | 
-| maxNumCpusPerRequest | 900 | Max number of CPUs allowed for a given request (cpus per task * task instance) | int | 
-| maxMemoryMbPerInstance | 24000 | Max MB of memory allowed on a given task | int | 
-| maxMemoryMbPerRequest | 450000 | Max MB of memory allowed for a given request (memoryMb per task * task instances) | int | 
+| maxNumCpusPerInstance | 50 | Max number of CPUs allowed on a given task | int |
+| maxNumCpusPerRequest | 900 | Max number of CPUs allowed for a given request (cpus per task * task instance) | int |
+| maxMemoryMbPerInstance | 24000 | Max MB of memory allowed on a given task | int |
+| maxMemoryMbPerRequest | 450000 | Max MB of memory allowed for a given request (memoryMb per task * task instances) | int |
 
 #### Racks ####
 | Parameter | Default | Description | Type |
@@ -185,7 +192,18 @@ These settings should live under the "mesos" field inside the root configuration
 | Parameter | Default | Description | Type |
 |-----------|---------|-------------|------|
 | slaveHttpPort | 5051 | The port to talk to slaves on | int |
-| slaveHttpsPort | absent | The HTTPS port to talk to slaves on | Integer (Optional) | 
+| slaveHttpsPort | absent | The HTTPS port to talk to slaves on | Integer (Optional) |
+
+#### Offers ####
+| Parameter | Default | Description | Type |
+|-----------|---------|-------------|------|
+| longRunningUsedCpuWeightForOffer | 0.30 | The weight long running tasks' cpu utilization carries when scoring an offer (should add up to 1 with longRunningUsedMemWeightForOffer) | double |
+| longRunningUsedMemWeightForOffer | 0.70 | The weight long running tasks' memory utilization carries when scoring an offer (should add up to 1 with longRunningUsedCpuWeightForOffer) | double |
+| freeCpuWeightForOffer | 0.30 | The weight the slave's free cpu carries when scoring an offer (should add up to 1 with freeMemWeightForOffer) | double |
+| freeMemWeightForOffer | 0.70 | The weight the slave's free memory carries when scoring an offer (should add up to 1 with freeCpuWeightForOffer) | double |
+| defaultOfferScoreForMissingUsage | 0.30 | The default offer score used for offers without utilization metrics | double |
+| considerNonLongRunningTaskLongRunningAfterRunningForSeconds | 21600 (6 hours) | If a non long running task runs, on average, this long or more, it's considered a long running task | long |
+| maxNonLongRunningUsedResourceWeight | 0.50 | The max weight long running tasks' utilization can carry when scoring a non long running task for an offer | double
 
 ## Database ##
 

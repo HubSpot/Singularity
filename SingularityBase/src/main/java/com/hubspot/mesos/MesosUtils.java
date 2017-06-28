@@ -9,6 +9,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Random;
+import java.util.Set;
 
 import org.apache.mesos.Protos.MasterInfo;
 import org.apache.mesos.Protos.Offer;
@@ -23,6 +24,7 @@ import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.google.common.net.InetAddresses;
 import com.google.common.primitives.Longs;
 
@@ -40,15 +42,41 @@ public final class MesosUtils {
     return r.getScalar().getValue();
   }
 
-  private static double getScalar(List<Resource> resources, String name) {
+  private static double getScalar(List<Resource> resources, String name, Optional<String> requiredRole) {
     for (Resource r : resources) {
-
-      if (r.hasName() && r.getName().equals(name) && r.hasScalar()) {
+      if (r.hasName() && r.getName().equals(name) && r.hasScalar() && hasRequiredRole(r, requiredRole)) {
         return getScalar(r);
       }
     }
 
     return 0;
+  }
+
+  private static boolean hasRole(Resource r) {
+    return r.hasRole() && !r.getRole().equals("*");
+  }
+
+  private static boolean hasRequiredRole(Resource r, Optional<String> requiredRole) {
+
+    if (requiredRole.isPresent() && hasRole(r)) {
+      // required role with a resource with role
+      return requiredRole.get().equals(r.getRole());
+
+    } else if (requiredRole.isPresent() && !hasRole(r)) {
+      // required role with a resource for any role
+      return false;
+
+    } else if (!requiredRole.isPresent() && hasRole(r)) {
+      // no required role but resource with role
+      return false;
+
+    } else if (!requiredRole.isPresent() && !hasRole(r)) {
+      // no required role and resource for any role
+      return true;
+    } else {
+      return false;
+    }
+
   }
 
   private static Ranges getRanges(List<Resource> resources, String name) {
@@ -71,19 +99,21 @@ public final class MesosUtils {
     return totalRanges;
   }
 
-  public static Resource getCpuResource(double cpus) {
-    return newScalar(CPUS, cpus);
+  public static Resource getCpuResource(double cpus, Optional<String> role) {
+    return newScalar(CPUS, cpus, role);
   }
   
-  public static Resource getGpuResource(double gpus) {
-    return newScalar(GPUS, gpus);
+  public static Resource getGpuResource(int gpus, Optional<String> role) {
+    return newScalar(GPUS, gpus, role);
   }
 
-  public static Resource getMemoryResource(double memory) {
-    return newScalar(MEMORY, memory);
+  public static Resource getMemoryResource(double memory, Optional<String> role) {
+    return newScalar(MEMORY, memory, role);
   }
 
-  public static Resource getDiskResource(double disk) { return newScalar(DISK, disk); }
+  public static Resource getDiskResource(double disk, Optional<String> role) {
+    return newScalar(DISK, disk, role);
+  }
 
   public static long[] getPorts(Resource portsResource, int numPorts) {
     long[] ports = new long[numPorts];
@@ -131,7 +161,7 @@ public final class MesosUtils {
     List<Long> requestedPorts = new ArrayList<>(otherRequestedPorts);
     Ranges ranges = getRanges(resources, PORTS);
 
-    Preconditions.checkState(ranges.getRangeCount() > 0, "Ports %s should have existed in resources %s", PORTS, resources);
+    Preconditions.checkState(ranges.getRangeCount() > 0, "Ports %s should have existed in resources %s", PORTS, formatForLogging(resources));
 
     Ranges.Builder rangesBldr = Ranges.newBuilder();
 
@@ -188,41 +218,60 @@ public final class MesosUtils {
         .build();
   }
 
-  private static Resource newScalar(String name, double value) {
-    return Resource.newBuilder().setName(name).setType(Value.Type.SCALAR).setScalar(Value.Scalar.newBuilder().setValue(value).build()).build();
+  private static Resource newScalar(String name, double value, Optional<String> role) {
+    Resource.Builder builder = Resource.newBuilder().setName(name).setType(Value.Type.SCALAR).setScalar(Value.Scalar.newBuilder().setValue(value).build());
+    if (role.isPresent()) {
+      builder.setRole(role.get());
+    }
+
+    return builder.build();
   }
 
   private static Resource newRange(String name, long begin, long end) {
     return Resource.newBuilder().setName(name).setType(Type.RANGES).setRanges(Ranges.newBuilder().addRange(Range.newBuilder().setBegin(begin).setEnd(end).build()).build()).build();
   }
 
+  public static Set<String> getRoles(Offer offer) {
+    Set<String> roles = Sets.newHashSet();
+
+    for (Resource r : offer.getResourcesList()) {
+      roles.add(r.getRole());
+    }
+
+    return roles;
+  }
+
   public static double getNumCpus(Offer offer) {
-    return getNumCpus(offer.getResourcesList());
+    return getNumCpus(offer.getResourcesList(), Optional.<String>absent());
   }
   
   public static double getNumGpus(Offer offer) {
-    return getNumGpus(offer.getResourcesList());
+    return getNumGpus(offer.getResourcesList(), Optional.<String>absent());
   }
 
   public static double getMemory(Offer offer) {
-    return getMemory(offer.getResourcesList());
+    return getMemory(offer.getResourcesList(), Optional.<String>absent());
   }
 
-  public static double getDisk(Offer offer) { return getDisk(offer.getResourcesList()); }
+  public static double getDisk(Offer offer) {
+    return getDisk(offer.getResourcesList(), Optional.<String>absent());
+  }
 
-  public static double getNumCpus(List<Resource> resources) {
-    return getScalar(resources, CPUS);
+  public static double getNumCpus(List<Resource> resources, Optional<String> requiredRole) {
+    return getScalar(resources, CPUS, requiredRole);
   }
   
-  public static double getNumGpus(List<Resource> resources) {
-    return getScalar(resources, GPUS);
+  public static double getNumGpus(List<Resource> resources, Optional<String> requiredRole) {
+    return getScalar(resources, GPUS, requiredRole);
   }
 
-  public static double getMemory(List<Resource> resources) {
-    return getScalar(resources, MEMORY);
+  public static double getMemory(List<Resource> resources, Optional<String> requiredRole) {
+    return getScalar(resources, MEMORY, requiredRole);
   }
 
-  public static double getDisk(List<Resource> resources) { return getScalar(resources, DISK); }
+  public static double getDisk(List<Resource> resources, Optional<String> requiredRole) {
+    return getScalar(resources, DISK, requiredRole);
+  }
 
   public static int getNumPorts(List<Resource> resources) {
     return getNumRanges(resources, PORTS);
@@ -232,26 +281,26 @@ public final class MesosUtils {
     return getNumPorts(offer.getResourcesList());
   }
 
-  public static boolean doesOfferMatchResources(Resources resources, List<Resource> offerResources, List<Long> otherRequestedPorts) {
-    double numCpus = getNumCpus(offerResources);
+  public static boolean doesOfferMatchResources(Optional<String> requiredRole, Resources resources, List<Resource> offerResources, List<Long> otherRequestedPorts) {
+    double numCpus = getNumCpus(offerResources, requiredRole);
 
     if (numCpus < resources.getCpus()) {
       return false;
     }
     
-    double numGpus = getNumGpus(offerResources);
+    double numGpus = getNumGpus(offerResources, requiredRole);
 
     if (numGpus < resources.getGpus()) {
       return false;
     }
 
-    double memory = getMemory(offerResources);
+    double memory = getMemory(offerResources, requiredRole);
 
     if (memory < resources.getMemoryMb()) {
       return false;
     }
 
-    double disk = getDisk(offerResources);
+    double disk = getDisk(offerResources, requiredRole);
 
     if (disk < resources.getDiskMb()) {
       return false;
@@ -263,7 +312,7 @@ public final class MesosUtils {
       return false;
     }
 
-    if (!getAllPorts(offerResources).containsAll(otherRequestedPorts)) {
+    if (resources.getNumPorts() > 0 && !getAllPorts(offerResources).containsAll(otherRequestedPorts)) {
       return false;
     }
 
@@ -355,7 +404,7 @@ public final class MesosUtils {
         } else if (resource.hasRanges()) {
           resourceBuilder.setRanges(subtractRanges(resource.getRanges(), matched.get().getRanges()));
         } else {
-          throw new IllegalStateException(String.format("Can't subtract non-scalar or range resources %s", resource));
+          throw new IllegalStateException(String.format("Can't subtract non-scalar or range resources %s", formatForLogging(resource)));
         }
 
         remaining.add(resourceBuilder.build());
@@ -365,8 +414,42 @@ public final class MesosUtils {
     return remaining;
   }
 
-  public static Resources buildResourcesFromMesosResourceList(List<Resource> resources) {
-    return new Resources(getNumCpus(resources), getNumGpus(resources), getMemory(resources), getNumPorts(resources), getDisk(resources));
+  public static List<Resource> combineResources(List<List<Resource>> resourcesList) {
+    List<Resource> resources = new ArrayList<>();
+    for (List<Resource> resourcesToAdd : resourcesList) {
+      for (Resource resource : resourcesToAdd) {
+        Optional<Resource> matched = getMatchingResource(resource, resources);
+        if (!matched.isPresent()) {
+          resources.add(resource);
+        } else {
+          int index = resources.indexOf(matched.get());
+          Resource.Builder resourceBuilder = resource.toBuilder().clone();
+          if (resource.hasScalar()) {
+            resourceBuilder.setScalar(resource.toBuilder().getScalarBuilder().setValue(resource.getScalar().getValue() + matched.get().getScalar().getValue()).build());
+            resources.set(index, resourceBuilder.build());
+          } else if (resource.hasRanges()) {
+            Ranges.Builder newRanges = Ranges.newBuilder();
+            resource.getRanges().getRangeList().forEach(newRanges::addRange);
+            matched.get().getRanges().getRangeList().forEach(newRanges::addRange);
+            resourceBuilder.setRanges(newRanges);
+            resources.set(index, resourceBuilder.build());
+          } else {
+            throw new IllegalStateException(String.format("Can't subtract non-scalar or range resources %s", formatForLogging(resource)));
+          }
+        }
+      }
+    }
+    return resources;
+  }
+
+  public static Resources buildResourcesFromMesosResourceList(List<Resource> resources, Optional<String> requiredRole) {
+    return new Resources(
+    		getNumCpus(resources, requiredRole), 
+    		(int)getNumGpus(resources, requiredRole), 
+    		getMemory(resources, requiredRole), 
+    		getNumPorts(resources), 
+    		getDisk(resources, requiredRole)
+    	);
   }
 
   public static Path getTaskDirectoryPath(String taskId) {
@@ -375,5 +458,9 @@ public final class MesosUtils {
 
   public static String getSafeTaskIdForDirectory(String taskId) {
     return taskId.replace(":", "_");
+  }
+
+  public static String formatForLogging(Object object) {
+    return object.toString().replace("\n", "").replaceAll("( )+", " ");
   }
 }

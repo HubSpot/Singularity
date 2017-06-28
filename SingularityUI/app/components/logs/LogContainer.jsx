@@ -7,6 +7,21 @@ import { connect } from 'react-redux';
 
 import { updateGroups, updateTaskStatuses } from '../../actions/log';
 
+function __range__(left, right, inclusive) {
+  const range = [];
+  const ascending = left < right;
+  let end;
+  if (inclusive) {
+    end = ascending ? right + 1 : right - 1;
+  } else {
+    end = right;
+  }
+  for (let index = left; ascending ? index < end : index > end; ascending ? index++ : index--) {
+    range.push(index);
+  }
+  return range;
+}
+
 class LogContainer extends React.Component {
   renderTaskGroups() {
     const rows = [];
@@ -68,13 +83,3 @@ const mapDispatchToProps = {
 };
 
 export default connect(mapStateToProps, mapDispatchToProps)(LogContainer);
-
-function __range__(left, right, inclusive) {
-  let range = [];
-  let ascending = left < right;
-  let end = !inclusive ? right : ascending ? right + 1 : right - 1;
-  for (let i = left; ascending ? i < end : i > end; ascending ? i++ : i--) {
-    range.push(i);
-  }
-  return range;
-}

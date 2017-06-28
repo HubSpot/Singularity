@@ -2,7 +2,7 @@ import React, { PropTypes } from 'react';
 import MachinesPage from './MachinesPage';
 import {Glyphicon} from 'react-bootstrap';
 import FormModalButton from '../common/modal/FormModalButton';
-import messageElement from './messageElement';
+import FormModal from '../common/modal/FormModal';
 import Utils from '../../utils';
 import { connect } from 'react-redux';
 import { DecommissionRack, RemoveRack, ReactivateRack, FetchRacks } from '../../actions/api/racks';
@@ -10,6 +10,7 @@ import rootComponent from '../../rootComponent';
 import { Link } from 'react-router';
 import Column from '../common/table/Column';
 import JSONButton from '../common/JSONButton';
+import { refresh, initialize } from '../../actions/ui/racks';
 
 const typeName = {
   'active': 'Activated By',
@@ -18,6 +19,12 @@ const typeName = {
 };
 
 const Racks = (props) => {
+  const messageElement = {
+    name: 'message',
+    type: FormModal.INPUT_TYPES.STRING,
+    label: 'Message (optional)'
+  }
+
   const showUser = (rack) => Utils.isIn(rack.currentState.state, ['ACTIVE', 'DECOMMISSIONING', 'DECOMMISSIONED', 'STARTING_DECOMMISSION']);
 
   const getMaybeReactivateButton = (rack) => (Utils.isIn(rack.currentState.state, ['DECOMMISSIONING', 'DECOMMISSIONED', 'STARTING_DECOMMISSION']) &&
@@ -220,15 +227,4 @@ function mapDispatchToProps(dispatch) {
   };
 }
 
-function initialize(props) {
-  return Promise.all([
-    props.clear(),
-    props.fetchRacks()
-  ]);
-}
-
-function refresh(props) {
-  return props.fetchRacks();
-}
-
-export default connect(mapStateToProps, mapDispatchToProps)(rootComponent(Racks, 'Racks', refresh, true, true, initialize));
+export default connect(mapStateToProps, mapDispatchToProps)(rootComponent(Racks, refresh, true, true, initialize));

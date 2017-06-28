@@ -1,10 +1,10 @@
 package com.hubspot.singularity.config;
 
-import java.util.List;
-import java.util.TimeZone;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
+import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
 
 import javax.validation.constraints.NotNull;
@@ -70,11 +70,9 @@ public class SMTPConfiguration {
   @JsonProperty
   private List<String> taskEmailTailFiles = Arrays.asList("stdout", "stderr");
 
-  @NotNull
   @JsonProperty
   private Optional<String> taskLogErrorRegex = Optional.absent();
 
-  @NotNull
   @JsonProperty
   private Optional<Boolean> taskLogErrorRegexCaseSensitive = Optional.absent();
 
@@ -84,6 +82,12 @@ public class SMTPConfiguration {
 
   @JsonProperty
   private TimeZone mailerTimeZone = TimeZone.getTimeZone("UTC");
+
+  @JsonProperty
+  private Optional<String> subjectPrefix = Optional.absent();
+
+  @JsonProperty
+  private Optional<String> uiBaseUrl = Optional.absent();
 
   @JsonProperty("emails")
   private Map<SingularityEmailType, List<SingularityEmailDestination>> emailConfiguration = Maps.newHashMap(ImmutableMap.<SingularityEmailType, List<SingularityEmailDestination>>builder()
@@ -99,6 +103,7 @@ public class SMTPConfiguration {
       .put(SingularityEmailType.REQUEST_REMOVED, ImmutableList.of(SingularityEmailDestination.OWNERS, SingularityEmailDestination.ADMINS))
       .put(SingularityEmailType.REQUEST_UNPAUSED, ImmutableList.of(SingularityEmailDestination.OWNERS, SingularityEmailDestination.ADMINS))
       .put(SingularityEmailType.REQUEST_SCALED, ImmutableList.of(SingularityEmailDestination.OWNERS))
+      .put(SingularityEmailType.DISASTER_DETECTED, ImmutableList.of(SingularityEmailDestination.ADMINS))
       .build());
 
   public Map<SingularityEmailType, List<SingularityEmailDestination>> getEmailConfiguration() {
@@ -248,4 +253,20 @@ public class SMTPConfiguration {
   public Long getMaxTaskLogSearchOffset() { return maxTaskLogSearchOffset; }
 
   public void setMaxTaskLogSearchOffset(Long maxTaskLogSearchOffset) { this.maxTaskLogSearchOffset = maxTaskLogSearchOffset; }
+
+  public Optional<String> getSubjectPrefix() {
+    return subjectPrefix;
+  }
+
+  public void setSubjectPrefix(Optional<String> subjectPrefix) {
+    this.subjectPrefix = subjectPrefix;
+  }
+
+  public Optional<String> getUiBaseUrl() {
+    return uiBaseUrl;
+  }
+
+  public void setUiBaseUrl(Optional<String> uiBaseUrl) {
+    this.uiBaseUrl = uiBaseUrl;
+  }
 }

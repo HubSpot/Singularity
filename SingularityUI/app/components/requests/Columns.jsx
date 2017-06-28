@@ -209,6 +209,7 @@ export const Actions = (
           <ScaleButton
             requestId={cellData.id}
             currentInstances={cellData.request.instances}
+            bounceAfterScaleDefault={Utils.maybe(cellData.request, ['bounceAfterScale'], false)}
           />
         );
 
@@ -221,7 +222,10 @@ export const Actions = (
             {scale}
             {runNow}
             {unpause}
-            <RemoveButton requestId={cellData.id} />
+            <RemoveButton 
+              requestId={cellData.id}
+              loadBalancerData={Utils.maybe(cellData, ['activeDeploy', 'loadBalancerOptions'], {})}
+            />
             <JSONButton className="inline" object={cellData} showOverlay={true}>
               {'{ }'}
             </JSONButton>

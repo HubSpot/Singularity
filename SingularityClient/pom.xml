@@ -5,7 +5,7 @@
   <parent>
     <groupId>com.hubspot</groupId>
     <artifactId>Singularity</artifactId>
-    <version>0.11.0-SNAPSHOT</version>
+    <version>0.16.0-SNAPSHOT</version>
   </parent>
 
   <artifactId>SingularityClient</artifactId>
@@ -19,6 +19,11 @@
     <dependency>
       <groupId>com.google.guava</groupId>
       <artifactId>guava</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>com.github.rholder</groupId>
+      <artifactId>guava-retrying</artifactId>
     </dependency>
 
     <dependency>
@@ -78,6 +83,18 @@
     </dependency>
 
     <dependency>
+      <groupId>org.assertj</groupId>
+      <artifactId>assertj-core</artifactId>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>org.mockito</groupId>
+      <artifactId>mockito-core</artifactId>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-simple</artifactId>
       <scope>test</scope>
@@ -118,6 +135,10 @@
                   <exclude>sun.**</exclude>
                   <exclude>com.google.common.base.Optional</exclude>
                 </excludes>
+              </relocation>
+              <relocation>
+                <pattern>com.google.thirdparty</pattern>
+                <shadedPattern>com.hubspot.singularity.shaded.com.google.thirdparty</shadedPattern>
               </relocation>
             </relocations>
           </configuration>

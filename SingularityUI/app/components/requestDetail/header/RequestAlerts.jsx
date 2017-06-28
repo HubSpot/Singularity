@@ -26,7 +26,7 @@ const RequestAlerts = ({requestId, requestAPI, bounces, activeTasksForRequest, d
   let maybeBouncing;
 
   const requestParent = requestAPI.data;
-  if (bounces.length > 0 && requestParent.request) {
+  if (bounces.length > 0 && requestParent.request && Utils.request.isLongRunning(requestParent)) {
     maybeBouncing = (
       <Alert bsStyle="warning">
         <b>Request is bouncing:</b> Attempting to start <b>{requestParent.request.instances}</b> replacement tasks.

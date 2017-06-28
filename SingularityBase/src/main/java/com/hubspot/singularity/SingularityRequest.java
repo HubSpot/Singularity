@@ -12,6 +12,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
+import com.wordnik.swagger.annotations.ApiModelProperty;
 
 public class SingularityRequest {
 
@@ -27,6 +28,7 @@ public class SingularityRequest {
   private final Optional<String> scheduleTimeZone;
 
   private final Optional<Long> killOldNonLongRunningTasksAfterMillis;
+  private final Optional<Long> taskExecutionTimeLimitMillis;
   private final Optional<Long> scheduledExpectedRuntimeMillis;
 
   private final Optional<Long> waitAtLeastMillisAfterTaskFinishesForReschedule;
@@ -43,6 +45,8 @@ public class SingularityRequest {
   private final Optional<Boolean> loadBalanced;
 
   private final Optional<String> group;
+  private final Optional<String> requiredRole;
+  private final Optional<Set<String>> readWriteGroups;
   private final Optional<Set<String>> readOnlyGroups;
   private final Optional<Boolean> bounceAfterScale;
 
@@ -54,22 +58,26 @@ public class SingularityRequest {
   private final Optional<Boolean> taskLogErrorRegexCaseSensitive;
 
   private final Optional<Double> taskPriorityLevel;
+  private final Optional<Integer> maxTasksPerOffer;
+
+  private final Optional<Boolean> allowBounceToSameHost;
 
   @JsonCreator
   public SingularityRequest(@JsonProperty("id") String id, @JsonProperty("requestType") RequestType requestType, @JsonProperty("owners") Optional<List<String>> owners,
       @JsonProperty("numRetriesOnFailure") Optional<Integer> numRetriesOnFailure, @JsonProperty("schedule") Optional<String> schedule, @JsonProperty("instances") Optional<Integer> instances,
       @JsonProperty("rackSensitive") Optional<Boolean> rackSensitive, @JsonProperty("loadBalanced") Optional<Boolean> loadBalanced,
-      @JsonProperty("killOldNonLongRunningTasksAfterMillis") Optional<Long> killOldNonLongRunningTasksAfterMillis, @JsonProperty("scheduleType") Optional<ScheduleType> scheduleType,
+      @JsonProperty("killOldNonLongRunningTasksAfterMillis") Optional<Long> killOldNonLongRunningTasksAfterMillis,
+      @JsonProperty("taskExecutionTimeLimitMillis") Optional<Long> taskExecutionTimeLimitMillis, @JsonProperty("scheduleType") Optional<ScheduleType> scheduleType,
       @JsonProperty("quartzSchedule") Optional<String> quartzSchedule, @JsonProperty("scheduleTimeZone") Optional<String> scheduleTimeZone, @JsonProperty("rackAffinity") Optional<List<String>> rackAffinity,
       @JsonProperty("slavePlacement") Optional<SlavePlacement> slavePlacement, @JsonProperty("requiredSlaveAttributes") Optional<Map<String, String>> requiredSlaveAttributes,
       @JsonProperty("allowedSlaveAttributes") Optional<Map<String, String>> allowedSlaveAttributes, @JsonProperty("scheduledExpectedRuntimeMillis") Optional<Long> scheduledExpectedRuntimeMillis,
       @JsonProperty("waitAtLeastMillisAfterTaskFinishesForReschedule") Optional<Long> waitAtLeastMillisAfterTaskFinishesForReschedule, @JsonProperty("group") Optional<String> group,
-      @JsonProperty("readOnlyGroups") Optional<Set<String>> readOnlyGroups, @JsonProperty("bounceAfterScale") Optional<Boolean> bounceAfterScale,
-      @JsonProperty("skipHealthchecks") Optional<Boolean> skipHealthchecks,
+      @JsonProperty("readWriteGroups") Optional<Set<String>> readWriteGroups, @JsonProperty("readOnlyGroups") Optional<Set<String>> readOnlyGroups,
+      @JsonProperty("bounceAfterScale") Optional<Boolean> bounceAfterScale, @JsonProperty("skipHealthchecks") Optional<Boolean> skipHealthchecks,
       @JsonProperty("emailConfigurationOverrides") Optional<Map<SingularityEmailType, List<SingularityEmailDestination>>> emailConfigurationOverrides,
       @JsonProperty("daemon") @Deprecated Optional<Boolean> daemon, @JsonProperty("hideEvenNumberAcrossRacks") Optional<Boolean> hideEvenNumberAcrossRacksHint,
       @JsonProperty("taskLogErrorRegex") Optional<String> taskLogErrorRegex, @JsonProperty("taskLogErrorRegexCaseSensitive") Optional<Boolean> taskLogErrorRegexCaseSensitive,
-      @JsonProperty("taskPriorityLevel") Optional<Double> taskPriorityLevel) {
+      @JsonProperty("taskPriorityLevel") Optional<Double> taskPriorityLevel, @JsonProperty("maxTasksPerOffer") Optional<Integer> maxTasksPerOffer, @JsonProperty("allowBounceToSameHost") Optional<Boolean> allowBounceToSameHost, @JsonProperty("requiredRole") Optional<String> requiredRole) {
     this.id = checkNotNull(id, "id cannot be null");
     this.owners = owners;
     this.numRetriesOnFailure = numRetriesOnFailure;
@@ -78,6 +86,7 @@ public class SingularityRequest {
     this.instances = instances;
     this.loadBalanced = loadBalanced;
     this.killOldNonLongRunningTasksAfterMillis = killOldNonLongRunningTasksAfterMillis;
+    this.taskExecutionTimeLimitMillis = taskExecutionTimeLimitMillis;
     this.scheduleType = scheduleType;
     this.quartzSchedule = quartzSchedule;
     this.scheduleTimeZone = scheduleTimeZone;
@@ -88,6 +97,8 @@ public class SingularityRequest {
     this.scheduledExpectedRuntimeMillis = scheduledExpectedRuntimeMillis;
     this.waitAtLeastMillisAfterTaskFinishesForReschedule = waitAtLeastMillisAfterTaskFinishesForReschedule;
     this.group = group;
+    this.requiredRole = requiredRole;
+    this.readWriteGroups = readWriteGroups;
     this.readOnlyGroups = readOnlyGroups;
     this.bounceAfterScale = bounceAfterScale;
     this.emailConfigurationOverrides = emailConfigurationOverrides;
@@ -96,6 +107,8 @@ public class SingularityRequest {
     this.taskLogErrorRegex = taskLogErrorRegex;
     this.taskLogErrorRegexCaseSensitive = taskLogErrorRegexCaseSensitive;
     this.taskPriorityLevel = taskPriorityLevel;
+    this.maxTasksPerOffer = maxTasksPerOffer;
+    this.allowBounceToSameHost = allowBounceToSameHost;
     if (requestType == null) {
       this.requestType = RequestType.fromDaemonAndScheduleAndLoadBalanced(schedule, daemon, loadBalanced);
     } else {
@@ -112,6 +125,7 @@ public class SingularityRequest {
     .setRackSensitive(rackSensitive)
     .setSchedule(schedule)
     .setKillOldNonLongRunningTasksAfterMillis(killOldNonLongRunningTasksAfterMillis)
+    .setTaskExecutionTimeLimitMillis(taskExecutionTimeLimitMillis)
     .setScheduleType(scheduleType)
     .setQuartzSchedule(quartzSchedule)
     .setScheduleTimeZone(scheduleTimeZone)
@@ -121,7 +135,9 @@ public class SingularityRequest {
     .setRequiredSlaveAttributes(requiredSlaveAttributes)
     .setAllowedSlaveAttributes(allowedSlaveAttributes)
     .setScheduledExpectedRuntimeMillis(scheduledExpectedRuntimeMillis)
+    .setRequiredRole(requiredRole)
     .setGroup(group)
+    .setReadWriteGroups(readWriteGroups)
     .setReadOnlyGroups(readOnlyGroups)
     .setBounceAfterScale(bounceAfterScale)
     .setEmailConfigurationOverrides(emailConfigurationOverrides)
@@ -129,75 +145,109 @@ public class SingularityRequest {
     .setHideEvenNumberAcrossRacksHint(hideEvenNumberAcrossRacksHint)
     .setTaskLogErrorRegex(taskLogErrorRegex)
     .setTaskLogErrorRegexCaseSensitive(taskLogErrorRegexCaseSensitive)
-    .setTaskPriorityLevel(taskPriorityLevel);
+    .setTaskPriorityLevel(taskPriorityLevel)
+    .setMaxTasksPerOffer(maxTasksPerOffer)
+    .setAllowBounceToSameHost(allowBounceToSameHost);
   }
 
+  @ApiModelProperty(required=true, value="A unique id for the request")
   public String getId() {
     return id;
   }
 
+  @ApiModelProperty(required=false, value="A list of emails for the owners of this request")
   public Optional<List<String>> getOwners() {
     return owners;
   }
 
+  @ApiModelProperty(required=false, value="For scheduled jobs, retry up to this many times if the job fails")
   public Optional<Integer> getNumRetriesOnFailure() {
     return numRetriesOnFailure;
   }
 
+  @ApiModelProperty(required=false, value="A schedule in cron, RFC5545, or quartz format")
   public Optional<String> getSchedule() {
     return schedule;
   }
 
+  @ApiModelProperty(required=false, value="A schedule in quartz format")
   public Optional<String> getQuartzSchedule() {
     return quartzSchedule;
   }
 
+  @ApiModelProperty(required=false, value="Time zone to use when running the")
   public Optional<String> getScheduleTimeZone() {
     return scheduleTimeZone;
   }
 
+  @ApiModelProperty(required=false, value="A count of tasks to run for long-running requests")
   public Optional<Integer> getInstances() {
     return instances;
   }
 
+  @ApiModelProperty(required=false, value="Spread instances for this request evenly across separate racks")
   public Optional<Boolean> getRackSensitive() {
     return rackSensitive;
   }
 
+  @ApiModelProperty(required=false, value="Indicates that a SERVICE should be load balanced")
   public Optional<Boolean> getLoadBalanced() {
     return loadBalanced;
   }
 
+  @ApiModelProperty(required=true, value="The type of request, can be SERVICE, WORKER, SCHEDULED, ON_DEMAND, or RUN_ONCE")
   public RequestType getRequestType() {
     return requestType;
   }
 
+  @ApiModelProperty(required=false, value="For non-long-running request types, kill a task after this amount of time if it has been put into CLEANING and has not shut down")
   public Optional<Long> getKillOldNonLongRunningTasksAfterMillis() {
     return killOldNonLongRunningTasksAfterMillis;
   }
 
+  @ApiModelProperty(required=false, value="If set, don't allow any taks for this request to run for longer than this amount of time")
+  public Optional<Long> getTaskExecutionTimeLimitMillis() {
+    return taskExecutionTimeLimitMillis;
+  }
+
+  @ApiModelProperty(required=false, value="The type of schedule associated with the scheduled field. Can be CRON, QUARTZ, or RFC5545")
   public Optional<ScheduleType> getScheduleType() {
     return scheduleType;
   }
 
+  @ApiModelProperty(required=false, value="If set, prefer this specific rack when launching tasks")
   public Optional<List<String>> getRackAffinity() {
     return rackAffinity;
   }
 
+  @ApiModelProperty(required=false, value="Strategy for determining where to place new tasks. Can be SEPARATE, OPTIMISTIC, GREEDY, SEPARATE_BY_DEPLOY, or SEPARATE_BY_REQUEST")
   public Optional<SlavePlacement> getSlavePlacement() {
     return slavePlacement;
   }
 
+  @ApiModelProperty(required=false, value="Expected time for a non-long-running task to run. Singularity will notify owners if a task exceeds this time")
   public Optional<Long> getScheduledExpectedRuntimeMillis() {
     return scheduledExpectedRuntimeMillis;
   }
 
+  @ApiModelProperty(required=false, value="Only allow tasks for this request to run on slaves which have these attributes")
   public Optional<Map<String, String>> getRequiredSlaveAttributes() {
     return requiredSlaveAttributes;
   }
 
+  @ApiModelProperty(required=false, value="Allow tasks to run on slaves with these attributes, but do not restrict them to only these slaves")
   public Optional<Map<String, String>> getAllowedSlaveAttributes() {
     return allowedSlaveAttributes;
+  }
+
+  @ApiModelProperty(required=false, value="Do not schedule more than this many tasks using a single offer from a single mesos slave")
+  public Optional<Integer> getMaxTasksPerOffer() {
+    return maxTasksPerOffer;
+  }
+
+  @ApiModelProperty(required=false, value="If set to true, allow tasks to be scheduled on the same host as an existing active task when bouncing")
+  public Optional<Boolean> getAllowBounceToSameHost() {
+    return allowBounceToSameHost;
   }
 
   @JsonIgnore
@@ -241,12 +291,12 @@ public class SingularityRequest {
 
   @JsonIgnore
   public boolean isRackSensitive() {
-    return rackSensitive.or(Boolean.FALSE).booleanValue();
+    return rackSensitive.or(false);
   }
 
   @JsonIgnore
   public boolean isLoadBalanced() {
-    return loadBalanced.or(Boolean.FALSE).booleanValue();
+    return loadBalanced.or(false);
   }
 
   @JsonIgnore
@@ -254,69 +304,57 @@ public class SingularityRequest {
     return scheduleType.or(ScheduleType.CRON);
   }
 
+  @ApiModelProperty(required=false, value="When a scheduled job finishes, wait at least this long before rescheduling it")
   public Optional<Long> getWaitAtLeastMillisAfterTaskFinishesForReschedule() {
     return waitAtLeastMillisAfterTaskFinishesForReschedule;
   }
 
+  @ApiModelProperty(required=false, value="Auth group associated with this request. Users in this group are allowed read/write access to this request")
   public Optional<String> getGroup() {
     return group;
   }
 
+  @ApiModelProperty(required=false, value="Mesos Role required for this request. Only offers with the required role will be accepted to execute the tasks associated with the request")
+  public Optional<String> getRequiredRole() {
+    return requiredRole;
+  }
+
+  @ApiModelProperty(required=false, value="Users in these groups are allowed read/write access to this request")
+  public Optional<Set<String>> getReadWriteGroups() {
+    return readWriteGroups;
+  }
+
+  @ApiModelProperty(required=false, value="Users in these groups are allowed read only access to this request")
   public Optional<Set<String>> getReadOnlyGroups() {
     return readOnlyGroups;
   }
 
+  @ApiModelProperty(required=false, value="Used for SingularityUI. If true, automatically trigger a bounce after changing the request's instance count")
   public Optional<Boolean> getBounceAfterScale() {
     return bounceAfterScale;
   }
 
+  @ApiModelProperty(required=false, value="Overrides for email recipients by email type for this request")
   public Optional<Map<SingularityEmailType, List<SingularityEmailDestination>>> getEmailConfigurationOverrides() {
     return emailConfigurationOverrides;
 }
+
+  @ApiModelProperty(required=false, value="If true, do not run healthchecks")
   public Optional<Boolean> getSkipHealthchecks() {
     return skipHealthchecks;
   }
 
   public Optional<Boolean> getHideEvenNumberAcrossRacksHint() { return hideEvenNumberAcrossRacksHint; }
 
+  @ApiModelProperty(required=false, value="Searching for errors in task logs to include in emails using this regex")
   public Optional<String> getTaskLogErrorRegex() { return taskLogErrorRegex; }
 
+  @ApiModelProperty(required=false, value="Determines if taskLogErrorRegex is case sensitive")
   public Optional<Boolean> getTaskLogErrorRegexCaseSensitive() { return taskLogErrorRegexCaseSensitive; }
 
+  @ApiModelProperty(required=false, value="a priority level from 0.0 to 1.0 for all tasks associated with the request")
   public Optional<Double> getTaskPriorityLevel() {
     return taskPriorityLevel;
-  }
-
-  @Override
-  public String toString() {
-    return "SingularityRequest[" +
-            "id='" + id + '\'' +
-            ", requestType=" + requestType +
-            ", owners=" + owners +
-            ", numRetriesOnFailure=" + numRetriesOnFailure +
-            ", schedule=" + schedule +
-            ", quartzSchedule=" + quartzSchedule +
-            ", scheduleTimeZone=" + scheduleTimeZone +
-            ", scheduleType=" + scheduleType +
-            ", killOldNonLongRunningTasksAfterMillis=" + killOldNonLongRunningTasksAfterMillis +
-            ", scheduledExpectedRuntimeMillis=" + scheduledExpectedRuntimeMillis +
-            ", waitAtLeastMillisAfterTaskFinishesForReschedule=" + waitAtLeastMillisAfterTaskFinishesForReschedule +
-            ", instances=" + instances +
-            ", rackSensitive=" + rackSensitive +
-            ", rackAffinity=" + rackAffinity +
-            ", slavePlacement=" + slavePlacement +
-            ", requiredSlaveAttributes=" + requiredSlaveAttributes +
-            ", allowedSlaveAttributes=" + allowedSlaveAttributes +
-            ", loadBalanced=" + loadBalanced +
-            ", group=" + group +
-            ", readOnlyGroups=" + readOnlyGroups +
-            ", bounceAfterScale=" + bounceAfterScale +
-            ", emailConfigurationOverrides=" + emailConfigurationOverrides +
-            ", hideEvenNumberAcrossRacksHint=" + hideEvenNumberAcrossRacksHint +
-            ", taskLogErrorRegex=" + taskLogErrorRegex +
-            ", taskLogErrorRegexCaseSensitive=" + taskLogErrorRegexCaseSensitive +
-            ", taskPriorityLevel=" + taskPriorityLevel +
-            ']';
   }
 
   @Override
@@ -327,37 +365,81 @@ public class SingularityRequest {
     if (o == null || getClass() != o.getClass()) {
       return false;
     }
-    SingularityRequest request = (SingularityRequest) o;
-    return Objects.equals(id, request.id) &&
-            Objects.equals(requestType, request.requestType) &&
-            Objects.equals(owners, request.owners) &&
-            Objects.equals(numRetriesOnFailure, request.numRetriesOnFailure) &&
-            Objects.equals(schedule, request.schedule) &&
-            Objects.equals(quartzSchedule, request.quartzSchedule) &&
-            Objects.equals(scheduleTimeZone, request.scheduleTimeZone) &&
-            Objects.equals(scheduleType, request.scheduleType) &&
-            Objects.equals(killOldNonLongRunningTasksAfterMillis, request.killOldNonLongRunningTasksAfterMillis) &&
-            Objects.equals(scheduledExpectedRuntimeMillis, request.scheduledExpectedRuntimeMillis) &&
-            Objects.equals(waitAtLeastMillisAfterTaskFinishesForReschedule, request.waitAtLeastMillisAfterTaskFinishesForReschedule) &&
-            Objects.equals(instances, request.instances) &&
-            Objects.equals(rackSensitive, request.rackSensitive) &&
-            Objects.equals(rackAffinity, request.rackAffinity) &&
-            Objects.equals(slavePlacement, request.slavePlacement) &&
-            Objects.equals(requiredSlaveAttributes, request.requiredSlaveAttributes) &&
-            Objects.equals(allowedSlaveAttributes, request.allowedSlaveAttributes) &&
-            Objects.equals(loadBalanced, request.loadBalanced) &&
-            Objects.equals(group, request.group) &&
-            Objects.equals(readOnlyGroups, request.readOnlyGroups) &&
-            Objects.equals(bounceAfterScale, request.bounceAfterScale) &&
-            Objects.equals(emailConfigurationOverrides, request.emailConfigurationOverrides) &&
-            Objects.equals(hideEvenNumberAcrossRacksHint, request.hideEvenNumberAcrossRacksHint) &&
-            Objects.equals(taskLogErrorRegex, request.taskLogErrorRegex) &&
-            Objects.equals(taskLogErrorRegexCaseSensitive, request.taskLogErrorRegexCaseSensitive) &&
-            Objects.equals(taskPriorityLevel, request.taskPriorityLevel);
+    SingularityRequest that = (SingularityRequest) o;
+    return Objects.equals(id, that.id) &&
+        requestType == that.requestType &&
+        Objects.equals(owners, that.owners) &&
+        Objects.equals(numRetriesOnFailure, that.numRetriesOnFailure) &&
+        Objects.equals(schedule, that.schedule) &&
+        Objects.equals(quartzSchedule, that.quartzSchedule) &&
+        Objects.equals(scheduleType, that.scheduleType) &&
+        Objects.equals(scheduleTimeZone, that.scheduleTimeZone) &&
+        Objects.equals(killOldNonLongRunningTasksAfterMillis, that.killOldNonLongRunningTasksAfterMillis) &&
+        Objects.equals(taskExecutionTimeLimitMillis, that.taskExecutionTimeLimitMillis) &&
+        Objects.equals(scheduledExpectedRuntimeMillis, that.scheduledExpectedRuntimeMillis) &&
+        Objects.equals(waitAtLeastMillisAfterTaskFinishesForReschedule, that.waitAtLeastMillisAfterTaskFinishesForReschedule) &&
+        Objects.equals(instances, that.instances) &&
+        Objects.equals(skipHealthchecks, that.skipHealthchecks) &&
+        Objects.equals(rackSensitive, that.rackSensitive) &&
+        Objects.equals(rackAffinity, that.rackAffinity) &&
+        Objects.equals(slavePlacement, that.slavePlacement) &&
+        Objects.equals(requiredSlaveAttributes, that.requiredSlaveAttributes) &&
+        Objects.equals(allowedSlaveAttributes, that.allowedSlaveAttributes) &&
+        Objects.equals(loadBalanced, that.loadBalanced) &&
+        Objects.equals(group, that.group) &&
+        Objects.equals(requiredRole, that.requiredRole) &&
+        Objects.equals(readWriteGroups, that.readWriteGroups) &&
+        Objects.equals(readOnlyGroups, that.readOnlyGroups) &&
+        Objects.equals(bounceAfterScale, that.bounceAfterScale) &&
+        Objects.equals(emailConfigurationOverrides, that.emailConfigurationOverrides) &&
+        Objects.equals(hideEvenNumberAcrossRacksHint, that.hideEvenNumberAcrossRacksHint) &&
+        Objects.equals(taskLogErrorRegex, that.taskLogErrorRegex) &&
+        Objects.equals(taskLogErrorRegexCaseSensitive, that.taskLogErrorRegexCaseSensitive) &&
+        Objects.equals(taskPriorityLevel, that.taskPriorityLevel) &&
+        Objects.equals(maxTasksPerOffer, that.maxTasksPerOffer) &&
+        Objects.equals(allowBounceToSameHost, that.allowBounceToSameHost);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(id, requestType, owners, numRetriesOnFailure, schedule, quartzSchedule, scheduleTimeZone, scheduleType, killOldNonLongRunningTasksAfterMillis, scheduledExpectedRuntimeMillis, waitAtLeastMillisAfterTaskFinishesForReschedule, instances, rackSensitive, rackAffinity, slavePlacement, requiredSlaveAttributes, allowedSlaveAttributes, loadBalanced, group, readOnlyGroups, bounceAfterScale, emailConfigurationOverrides, hideEvenNumberAcrossRacksHint, taskLogErrorRegex, taskLogErrorRegexCaseSensitive, taskPriorityLevel);
+    return Objects.hash(id, requestType, owners, numRetriesOnFailure, schedule, quartzSchedule, scheduleType, scheduleTimeZone, killOldNonLongRunningTasksAfterMillis, taskExecutionTimeLimitMillis, scheduledExpectedRuntimeMillis, waitAtLeastMillisAfterTaskFinishesForReschedule, instances, skipHealthchecks, rackSensitive, rackAffinity, slavePlacement, requiredSlaveAttributes, allowedSlaveAttributes, loadBalanced, group, requiredRole, readWriteGroups, readOnlyGroups, bounceAfterScale, emailConfigurationOverrides, hideEvenNumberAcrossRacksHint, taskLogErrorRegex, taskLogErrorRegexCaseSensitive, taskPriorityLevel, maxTasksPerOffer, allowBounceToSameHost);
+  }
+
+  @Override
+  public String toString() {
+    return "SingularityRequest{" +
+        "id='" + id + '\'' +
+        ", requestType=" + requestType +
+        ", owners=" + owners +
+        ", numRetriesOnFailure=" + numRetriesOnFailure +
+        ", schedule=" + schedule +
+        ", quartzSchedule=" + quartzSchedule +
+        ", scheduleType=" + scheduleType +
+        ", scheduleTimeZone=" + scheduleTimeZone +
+        ", killOldNonLongRunningTasksAfterMillis=" + killOldNonLongRunningTasksAfterMillis +
+        ", taskExecutionTimeLimitMillis=" + taskExecutionTimeLimitMillis +
+        ", scheduledExpectedRuntimeMillis=" + scheduledExpectedRuntimeMillis +
+        ", waitAtLeastMillisAfterTaskFinishesForReschedule=" + waitAtLeastMillisAfterTaskFinishesForReschedule +
+        ", instances=" + instances +
+        ", skipHealthchecks=" + skipHealthchecks +
+        ", rackSensitive=" + rackSensitive +
+        ", rackAffinity=" + rackAffinity +
+        ", slavePlacement=" + slavePlacement +
+        ", requiredSlaveAttributes=" + requiredSlaveAttributes +
+        ", allowedSlaveAttributes=" + allowedSlaveAttributes +
+        ", loadBalanced=" + loadBalanced +
+        ", group=" + group +
+        ", requiredRole=" + requiredRole +
+        ", readWriteGroups=" + readWriteGroups +
+        ", readOnlyGroups=" + readOnlyGroups +
+        ", bounceAfterScale=" + bounceAfterScale +
+        ", emailConfigurationOverrides=" + emailConfigurationOverrides +
+        ", hideEvenNumberAcrossRacksHint=" + hideEvenNumberAcrossRacksHint +
+        ", taskLogErrorRegex=" + taskLogErrorRegex +
+        ", taskLogErrorRegexCaseSensitive=" + taskLogErrorRegexCaseSensitive +
+        ", taskPriorityLevel=" + taskPriorityLevel +
+        ", maxTasksPerOffer=" + maxTasksPerOffer +
+        ", allowBounceToSameHost=" + allowBounceToSameHost +
+        '}';
   }
 }

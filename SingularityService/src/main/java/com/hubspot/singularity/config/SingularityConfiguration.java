@@ -10,6 +10,7 @@ import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
@@ -30,15 +31,31 @@ public class SingularityConfiguration extends Configuration {
 
   private long askDriverToKillTasksAgainAfterMillis = TimeUnit.MINUTES.toMillis(5);
 
+  private long cacheOffersForMillis = TimeUnit.MINUTES.toMillis(1);
+
+  private int offerCacheSize = 125;
+
+  private boolean cacheOffers = false;
+
+  private long cacheForWebForMillis = TimeUnit.SECONDS.toMillis(30);
+
   private int cacheTasksMaxSize = 5000;
 
   private int cacheTasksInitialSize = 100;
 
   private long cacheTasksForMillis = TimeUnit.DAYS.toMillis(1);
 
+  private int cacheDeploysMaxSize = 2000;
+
+  private int cacheDeploysInitialSize = 100;
+
+  private long cacheDeploysForMillis = TimeUnit.DAYS.toMillis(5);
+
   private long cacheStateForMillis = TimeUnit.SECONDS.toMillis(30);
 
   private long checkDeploysEverySeconds = 5;
+
+  private long checkAutoSpreadAllSlavesEverySeconds = 30;
 
   private long checkNewTasksEverySeconds = 5;
 
@@ -48,15 +65,27 @@ public class SingularityConfiguration extends Configuration {
 
   private long checkReconcileWhenRunningEveryMillis = TimeUnit.SECONDS.toMillis(30);
 
-  private long checkScheduledJobsEveryMillis = TimeUnit.MINUTES.toMillis(10);
+  private long checkJobsEveryMillis = TimeUnit.MINUTES.toMillis(10);
 
   private long checkSchedulerEverySeconds = 5;
 
   private long checkWebhooksEveryMillis = TimeUnit.SECONDS.toMillis(10);
 
+  private long checkUsageEveryMillis = TimeUnit.MINUTES.toMillis(1);
+
+  private long cleanUsageEveryMillis = TimeUnit.MINUTES.toMillis(5);
+
+  private int numUsageToKeep = 5;
+
   private long cleanupEverySeconds = 5;
 
   private long checkQueuedMailsEveryMillis = TimeUnit.SECONDS.toMillis(15);
+
+  private boolean ldapCacheEnabled = true;
+
+  private long ldapCacheSize = 100;
+
+  private long ldapCacheExpireMillis = TimeUnit.MINUTES.toMillis(1);
 
   private long closeWaitSeconds = 5;
 
@@ -117,17 +146,24 @@ public class SingularityConfiguration extends Configuration {
 
   private boolean enableCorsFilter = false;
 
-  private long healthcheckIntervalSeconds = 5;
+  private int healthcheckIntervalSeconds = 5;
 
   private int healthcheckStartThreads = 3;
 
-  private long healthcheckTimeoutSeconds = 5;
+  private int healthcheckTimeoutSeconds = 5;
 
-  @NotNull
+  private Optional<Integer> startupDelaySeconds = Optional.absent();
+
+  private int startupTimeoutSeconds = 45;
+
+  private int startupIntervalSeconds = 2;
+
   private Optional<Integer> healthcheckMaxRetries = Optional.absent();
 
+  private Optional<Integer> healthcheckMaxTotalTimeoutSeconds = Optional.absent();
+
   @NotNull
-  private Optional<Long> healthcheckMaxTotalTimeoutSeconds = Optional.absent();
+  private List<Integer> healthcheckFailureStatusCodes = Collections.emptyList();
 
   private String hostname;
 
@@ -160,7 +196,25 @@ public class SingularityConfiguration extends Configuration {
 
   private int maxTasksPerOffer = 0;
 
+  private int maxTasksPerOfferPerRequest = 0;
+
+  private double longRunningUsedCpuWeightForOffer = 0.30;
+
+  private double longRunningUsedMemWeightForOffer = 0.70;
+
+  private double freeCpuWeightForOffer = 0.30;
+
+  private double freeMemWeightForOffer = 0.70;
+
+  private double defaultOfferScoreForMissingUsage = 0.30;
+
+  private long considerNonLongRunningTaskLongRunningAfterRunningForSeconds = TimeUnit.HOURS.toSeconds(6);
+
+  private double maxNonLongRunningUsedResourceWeight = 0.50;
+
   private int maxRequestIdSize = 100;
+
+  private int maxUserIdSize = 100;
 
   private boolean storeAllMesosTaskInfoForDebugging = false;
 
@@ -182,12 +236,14 @@ public class SingularityConfiguration extends Configuration {
 
   private long persistHistoryEverySeconds = TimeUnit.HOURS.toSeconds(1);
 
+  private long reconcileSlavesEveryMinutes = TimeUnit.HOURS.toMinutes(1);
+
   @JsonProperty("s3")
   private S3Configuration s3Configuration;
 
   private boolean sandboxDefaultsToTaskId = false;
 
-  private long sandboxHttpTimeoutMillis = TimeUnit.SECONDS.toMillis(5);
+  private long sandboxHttpTimeoutMillis = TimeUnit.SECONDS.toMillis(2);
 
   private long saveStateEverySeconds = 60;
 
@@ -213,6 +269,9 @@ public class SingularityConfiguration extends Configuration {
   private boolean waitForListeners = true;
 
   private long warnIfScheduledJobIsRunningForAtLeastMillis = TimeUnit.DAYS.toMillis(1);
+
+  @JsonProperty("taskExecutionTimeLimitMillis")
+  private Optional<Long> taskExecutionTimeLimitMillis = Optional.absent();
 
   private int warnIfScheduledJobIsRunningPastNextRunPct = 200;
 
@@ -258,6 +317,11 @@ public class SingularityConfiguration extends Configuration {
 
   private boolean taskHistoryQueryUsesZkFirst = false;
 
+  @JsonProperty("disasterDetection")
+  @NotNull
+  @Valid
+  private DisasterDetectionConfiguration disasterDetection = new DisasterDetectionConfiguration();
+
   @Min(0)
   @Max(1)
   private double defaultTaskPriorityLevel = 0.3;
@@ -271,6 +335,22 @@ public class SingularityConfiguration extends Configuration {
   @Min(0)
   @Max(5)
   private double schedulerPriorityWeightFactor = 1.0;
+
+  private boolean rebalanceRacksOnScaleDown = false;
+
+  private boolean allowBounceToSameHost = false;
+
+  private int maxActiveOnDemandTasksPerRequest = 0;
+
+  private int maxDecommissioningSlaves = 2;
+
+  private boolean spreadAllSlavesEnabled = false;
+
+  private long delayPollersWhenDeltaOverMs = 15000;
+
+  private boolean delayOfferProcessingForLargeStatusUpdateDelta = true;
+
+  private int maxRunNowTaskLaunchDelayDays = 30;
 
   public long getAskDriverToKillTasksAgainAfterMillis() {
     return askDriverToKillTasksAgainAfterMillis;
@@ -288,6 +368,10 @@ public class SingularityConfiguration extends Configuration {
     return checkDeploysEverySeconds;
   }
 
+  public long getCheckAutoSpreadAllSlavesEverySeconds() {
+    return checkAutoSpreadAllSlavesEverySeconds;
+  }
+
   public long getCheckNewTasksEverySeconds() {
     return checkNewTasksEverySeconds;
   }
@@ -300,8 +384,8 @@ public class SingularityConfiguration extends Configuration {
     return checkReconcileWhenRunningEveryMillis;
   }
 
-  public long getCheckScheduledJobsEveryMillis() {
-    return checkScheduledJobsEveryMillis;
+  public long getCheckJobsEveryMillis() {
+    return checkJobsEveryMillis;
   }
 
   public long getCheckSchedulerEverySeconds() {
@@ -344,6 +428,14 @@ public class SingularityConfiguration extends Configuration {
     return pendingDeployHoldTaskDuringDecommissionMillis;
   }
 
+  public long getCacheForWebForMillis() {
+    return cacheForWebForMillis;
+  }
+
+  public void setCacheForWebForMillis(long cacheForWebForMillis) {
+    this.cacheForWebForMillis = cacheForWebForMillis;
+  }
+
   public void setPendingDeployHoldTaskDuringDecommissionMillis(long pendingDeployHoldTaskDuringDecommissionMillis) {
     this.pendingDeployHoldTaskDuringDecommissionMillis = pendingDeployHoldTaskDuringDecommissionMillis;
   }
@@ -384,6 +476,30 @@ public class SingularityConfiguration extends Configuration {
     this.cacheTasksInitialSize = cacheTasksInitialSize;
   }
 
+  public int getCacheDeploysMaxSize() {
+    return cacheDeploysMaxSize;
+  }
+
+  public void setCacheDeploysMaxSize(int cacheDeploysMaxSize) {
+    this.cacheDeploysMaxSize = cacheDeploysMaxSize;
+  }
+
+  public int getCacheDeploysInitialSize() {
+    return cacheDeploysInitialSize;
+  }
+
+  public void setCacheDeploysInitialSize(int cacheDeploysInitialSize) {
+    this.cacheDeploysInitialSize = cacheDeploysInitialSize;
+  }
+
+  public long getCacheDeploysForMillis() {
+    return cacheDeploysForMillis;
+  }
+
+  public void setCacheDeploysForMillis(long cacheDeploysForMillis) {
+    this.cacheDeploysForMillis = cacheDeploysForMillis;
+  }
+
   public int getCoreThreadpoolSize() {
     return coreThreadpoolSize;
   }
@@ -420,6 +536,30 @@ public class SingularityConfiguration extends Configuration {
     return defaultDeployMaxTaskRetries;
   }
 
+  public boolean isLdapCacheEnabled() {
+    return ldapCacheEnabled;
+  }
+
+  public void setLdapCacheEnabled(boolean ldapCacheEnabled) {
+    this.ldapCacheEnabled = ldapCacheEnabled;
+  }
+
+  public long getLdapCacheSize() {
+    return ldapCacheSize;
+  }
+
+  public void setLdapCacheSize(long ldapCacheSize) {
+    this.ldapCacheSize = ldapCacheSize;
+  }
+
+  public long getLdapCacheExpireMillis() {
+    return ldapCacheExpireMillis;
+  }
+
+  public void setLdapCacheExpireMillis(long ldapCacheExpireMillis) {
+    this.ldapCacheExpireMillis = ldapCacheExpireMillis;
+  }
+
   public void setDefaultDeployMaxTaskRetries(int defaultDeployMaxTaskRetries) {
     this.defaultDeployMaxTaskRetries = defaultDeployMaxTaskRetries;
   }
@@ -452,7 +592,7 @@ public class SingularityConfiguration extends Configuration {
     return deployIdLength;
   }
 
-  public long getHealthcheckIntervalSeconds() {
+  public int getHealthcheckIntervalSeconds() {
     return healthcheckIntervalSeconds;
   }
 
@@ -460,7 +600,7 @@ public class SingularityConfiguration extends Configuration {
     return healthcheckStartThreads;
   }
 
-  public long getHealthcheckTimeoutSeconds() {
+  public int getHealthcheckTimeoutSeconds() {
     return healthcheckTimeoutSeconds;
   }
 
@@ -468,7 +608,7 @@ public class SingularityConfiguration extends Configuration {
     return healthcheckMaxRetries;
   }
 
-  public Optional<Long> getHealthcheckMaxTotalTimeoutSeconds() {
+  public Optional<Integer> getHealthcheckMaxTotalTimeoutSeconds() {
     return healthcheckMaxTotalTimeoutSeconds;
   }
 
@@ -536,10 +676,45 @@ public class SingularityConfiguration extends Configuration {
     return maxRequestIdSize;
   }
 
+  public int getMaxUserIdSize() {
+    return maxUserIdSize;
+  }
+
   public int getMaxTasksPerOffer() {
     return maxTasksPerOffer;
   }
 
+  public int getMaxTasksPerOfferPerRequest() {
+    return maxTasksPerOfferPerRequest;
+  }
+
+  public double getLongRunningUsedCpuWeightForOffer() {
+    return longRunningUsedCpuWeightForOffer;
+  }
+
+  public double getLongRunningUsedMemWeightForOffer() {
+    return longRunningUsedMemWeightForOffer;
+  }
+
+  public double getFreeCpuWeightForOffer() {
+    return freeCpuWeightForOffer;
+  }
+
+  public double getFreeMemWeightForOffer() {
+    return freeMemWeightForOffer;
+  }
+
+  public double getDefaultOfferScoreForMissingUsage() {
+    return defaultOfferScoreForMissingUsage;
+  }
+
+  public long getConsiderNonLongRunningTaskLongRunningAfterRunningForSeconds() {
+    return considerNonLongRunningTaskLongRunningAfterRunningForSeconds;
+  }
+
+  public double getMaxNonLongRunningUsedResourceWeight() {
+    return maxNonLongRunningUsedResourceWeight;
+  }
   public MesosConfiguration getMesosConfiguration() {
     return mesosConfiguration;
   }
@@ -556,7 +731,8 @@ public class SingularityConfiguration extends Configuration {
     return persistHistoryEverySeconds;
   }
 
-  public Optional<S3Configuration> getS3Configuration() {
+  @JsonIgnore
+  public Optional<S3Configuration> getS3ConfigurationOptional() {
     return Optional.fromNullable(s3Configuration);
   }
 
@@ -568,12 +744,26 @@ public class SingularityConfiguration extends Configuration {
     return saveStateEverySeconds;
   }
 
-  public Optional<SentryConfiguration> getSentryConfiguration(){
+  @JsonIgnore
+  public Optional<SentryConfiguration> getSentryConfigurationOptional(){
     return Optional.fromNullable(sentryConfiguration);
   }
 
-  public Optional<SMTPConfiguration> getSmtpConfiguration() {
+  @JsonIgnore
+  public Optional<SMTPConfiguration> getSmtpConfigurationOptional() {
     return Optional.fromNullable(smtpConfiguration);
+  }
+
+  public S3Configuration getS3Configuration() {
+    return s3Configuration;
+  }
+
+  public SentryConfiguration getSentryConfiguration() {
+    return sentryConfiguration;
+  }
+
+  public SMTPConfiguration getSmtpConfiguration() {
+    return smtpConfiguration;
   }
 
   public long getStartNewReconcileEverySeconds() {
@@ -602,6 +792,10 @@ public class SingularityConfiguration extends Configuration {
 
   public long getWarnIfScheduledJobIsRunningForAtLeastMillis() {
     return warnIfScheduledJobIsRunningForAtLeastMillis;
+  }
+
+  public Optional<Long> getTaskExecutionTimeLimitMillis() {
+    return taskExecutionTimeLimitMillis;
   }
 
   public int getWarnIfScheduledJobIsRunningPastNextRunPct() {
@@ -688,8 +882,8 @@ public class SingularityConfiguration extends Configuration {
     this.checkReconcileWhenRunningEveryMillis = checkReconcileWhenRunningEveryMillis;
   }
 
-  public void setCheckScheduledJobsEveryMillis(long checkScheduledJobsEveryMillis) {
-    this.checkScheduledJobsEveryMillis = checkScheduledJobsEveryMillis;
+  public void setCheckJobsEveryMillis(long checkJobsEveryMillis) {
+    this.checkJobsEveryMillis = checkJobsEveryMillis;
   }
 
   public void setCheckSchedulerEverySeconds(long checkSchedulerEverySeconds) {
@@ -792,7 +986,7 @@ public class SingularityConfiguration extends Configuration {
     this.enableCorsFilter = enableCorsFilter;
   }
 
-  public void setHealthcheckIntervalSeconds(long healthcheckIntervalSeconds) {
+  public void setHealthcheckIntervalSeconds(int healthcheckIntervalSeconds) {
     this.healthcheckIntervalSeconds = healthcheckIntervalSeconds;
   }
 
@@ -800,7 +994,7 @@ public class SingularityConfiguration extends Configuration {
     this.healthcheckStartThreads = healthcheckStartThreads;
   }
 
-  public void setHealthcheckTimeoutSeconds(long healthcheckTimeoutSeconds) {
+  public void setHealthcheckTimeoutSeconds(int healthcheckTimeoutSeconds) {
     this.healthcheckTimeoutSeconds = healthcheckTimeoutSeconds;
   }
 
@@ -808,8 +1002,16 @@ public class SingularityConfiguration extends Configuration {
     this.healthcheckMaxRetries = healthcheckMaxRetries;
   }
 
-  public void setHealthcheckMaxTotalTimeoutSeconds(Optional<Long> healthcheckMaxTotalTimeoutSeconds) {
+  public void setHealthcheckMaxTotalTimeoutSeconds(Optional<Integer> healthcheckMaxTotalTimeoutSeconds) {
     this.healthcheckMaxTotalTimeoutSeconds = healthcheckMaxTotalTimeoutSeconds;
+  }
+
+  public List<Integer> getHealthcheckFailureStatusCodes() {
+    return healthcheckFailureStatusCodes;
+  }
+
+  public void setHealthcheckFailureStatusCodes(List<Integer> healthcheckFailureStatusCodes) {
+    this.healthcheckFailureStatusCodes = healthcheckFailureStatusCodes;
   }
 
   public void setHostname(String hostname) {
@@ -860,10 +1062,53 @@ public class SingularityConfiguration extends Configuration {
     this.maxRequestIdSize = maxRequestIdSize;
   }
 
+  public SingularityConfiguration setMaxUserIdSize(int maxUserIdSize) {
+    this.maxUserIdSize = maxUserIdSize;
+    return this;
+  }
+
   public void setMaxTasksPerOffer(int maxTasksPerOffer) {
     this.maxTasksPerOffer = maxTasksPerOffer;
   }
 
+  public void setMaxTasksPerOfferPerRequest(int maxTasksPerOfferPerRequest) {
+    this.maxTasksPerOfferPerRequest = maxTasksPerOfferPerRequest;
+  }
+
+  public SingularityConfiguration setLongRunningUsedCpuWeightForOffer(double longRunningUsedCpuWeightForOffer) {
+    this.longRunningUsedCpuWeightForOffer = longRunningUsedCpuWeightForOffer;
+    return this;
+  }
+
+  public SingularityConfiguration setLongRunningUsedMemWeightForOffer(double longRunningUsedMemWeightForOffer) {
+    this.longRunningUsedMemWeightForOffer = longRunningUsedMemWeightForOffer;
+    return this;
+  }
+
+  public SingularityConfiguration setFreeCpuWeightForOffer(double freeCpuWeightForOffer) {
+    this.freeCpuWeightForOffer = freeCpuWeightForOffer;
+    return this;
+  }
+
+  public SingularityConfiguration setFreeMemWeightForOffer(double freeMemWeightForOffer) {
+    this.freeMemWeightForOffer = freeMemWeightForOffer;
+    return this;
+  }
+
+  public SingularityConfiguration setDefaultOfferScoreForMissingUsage(double defaultOfferScoreForMissingUsage) {
+    this.defaultOfferScoreForMissingUsage = defaultOfferScoreForMissingUsage;
+    return this;
+  }
+
+  public SingularityConfiguration setConsiderNonLongRunningTaskLongRunningAfterRunningForSeconds(long considerNonLongRunningTaskLongRunningAfterRunningForSeconds) {
+    this.considerNonLongRunningTaskLongRunningAfterRunningForSeconds = considerNonLongRunningTaskLongRunningAfterRunningForSeconds;
+    return this;
+  }
+
+  public SingularityConfiguration setMaxNonLongRunningUsedResourceWeight(double maxNonLongRunningUsedResourceWeight) {
+    this.maxNonLongRunningUsedResourceWeight = maxNonLongRunningUsedResourceWeight;
+    return this;
+  }
   public void setMesosConfiguration(MesosConfiguration mesosConfiguration) {
     this.mesosConfiguration = mesosConfiguration;
   }
@@ -924,6 +1169,11 @@ public class SingularityConfiguration extends Configuration {
     this.warnIfScheduledJobIsRunningForAtLeastMillis = warnIfScheduledJobIsRunningForAtLeastMillis;
   }
 
+  public SingularityConfiguration setTaskExecutionTimeLimitMillis(Optional<Long> taskExecutionTimeLimitMillis) {
+    this.taskExecutionTimeLimitMillis = taskExecutionTimeLimitMillis;
+    return this;
+  }
+
   public void setWarnIfScheduledJobIsRunningPastNextRunPct(int warnIfScheduledJobIsRunningPastNextRunPct) {
     this.warnIfScheduledJobIsRunningPastNextRunPct = warnIfScheduledJobIsRunningPastNextRunPct;
   }
@@ -934,6 +1184,38 @@ public class SingularityConfiguration extends Configuration {
 
   public void setZooKeeperConfiguration(ZooKeeperConfiguration zooKeeperConfiguration) {
     this.zooKeeperConfiguration = zooKeeperConfiguration;
+  }
+
+  public Optional<Integer> getStartupDelaySeconds() {
+    return startupDelaySeconds;
+  }
+
+  public void setStartupDelaySeconds(Optional<Integer> startupDelaySeconds) {
+    this.startupDelaySeconds = startupDelaySeconds;
+  }
+
+  public int getStartupTimeoutSeconds() {
+    return startupTimeoutSeconds;
+  }
+
+  public void setStartupTimeoutSeconds(int startupTimeoutSeconds) {
+    this.startupTimeoutSeconds = startupTimeoutSeconds;
+  }
+
+  public int getStartupIntervalSeconds() {
+    return startupIntervalSeconds;
+  }
+
+  public void setStartupIntervalSeconds(int startupIntervalSeconds) {
+    this.startupIntervalSeconds = startupIntervalSeconds;
+  }
+
+  public long getReconcileSlavesEveryMinutes() {
+    return reconcileSlavesEveryMinutes;
+  }
+
+  public void setReconcileSlavesEveryMinutes(long reconcileSlavesEveryMinutes) {
+    this.reconcileSlavesEveryMinutes = reconcileSlavesEveryMinutes;
   }
 
   public long getCacheTasksForMillis() {
@@ -952,7 +1234,12 @@ public class SingularityConfiguration extends Configuration {
     this.taskPersistAfterStartupBufferMillis = taskPersistAfterStartupBufferMillis;
   }
 
-  public Optional<LDAPConfiguration> getLdapConfiguration() {
+  public LDAPConfiguration getLdapConfiguration() {
+    return ldapConfiguration;
+  }
+
+  @JsonIgnore
+  public Optional<LDAPConfiguration> getLdapConfigurationOptional() {
     return Optional.fromNullable(ldapConfiguration);
   }
 
@@ -1056,6 +1343,14 @@ public class SingularityConfiguration extends Configuration {
     this.taskLabelForLoadBalancerUpstreamGroup = taskLabelForLoadBalancerUpstreamGroup;
   }
 
+  public DisasterDetectionConfiguration getDisasterDetection() {
+    return disasterDetection;
+  }
+
+  public void setDisasterDetection(DisasterDetectionConfiguration disasterDetection) {
+    this.disasterDetection = disasterDetection;
+  }
+
   public double getDefaultTaskPriorityLevel() {
     return defaultTaskPriorityLevel;
   }
@@ -1086,5 +1381,122 @@ public class SingularityConfiguration extends Configuration {
 
   public void setSchedulerPriorityWeightFactor(double schedulerPriorityWeightFactor) {
     this.schedulerPriorityWeightFactor = schedulerPriorityWeightFactor;
+  }
+
+  public boolean isRebalanceRacksOnScaleDown() {
+    return rebalanceRacksOnScaleDown;
+  }
+
+  public void setRebalanceRacksOnScaleDown(boolean rebalanceRacksOnScaleDown) {
+    this.rebalanceRacksOnScaleDown = rebalanceRacksOnScaleDown;
+  }
+
+  public boolean isAllowBounceToSameHost() {
+    return allowBounceToSameHost;
+  }
+
+  public SingularityConfiguration setAllowBounceToSameHost(boolean allowBounceToSameHost) {
+    this.allowBounceToSameHost = allowBounceToSameHost;
+    return this;
+  }
+
+  public long getCheckUsageEveryMillis() {
+    return checkUsageEveryMillis;
+  }
+
+  public void setCheckUsageEveryMillis(long checkUsageEveryMillis) {
+    this.checkUsageEveryMillis = checkUsageEveryMillis;
+  }
+
+  public long getCleanUsageEveryMillis() {
+    return cleanUsageEveryMillis;
+  }
+
+  public void setCleanUsageEveryMillis(long cleanUsageEveryMillis) {
+    this.cleanUsageEveryMillis = cleanUsageEveryMillis;
+  }
+
+  public int getNumUsageToKeep() {
+    return numUsageToKeep;
+  }
+
+  public void setNumUsageToKeep(int numUsageToKeep) {
+    this.numUsageToKeep = numUsageToKeep;
+  }
+
+  public long getCacheOffersForMillis() {
+    return cacheOffersForMillis;
+  }
+
+  public void setCacheOffersForMillis(long cacheOffersForMillis) {
+    this.cacheOffersForMillis = cacheOffersForMillis;
+  }
+
+  public int getOfferCacheSize() {
+    return offerCacheSize;
+  }
+
+  public void setOfferCacheSize(int offerCacheSize) {
+    this.offerCacheSize = offerCacheSize;
+  }
+
+  public boolean isCacheOffers() {
+    return cacheOffers;
+  }
+
+  public void setCacheOffers(boolean cacheOffers) {
+    this.cacheOffers = cacheOffers;
+  }
+
+  public int getMaxActiveOnDemandTasksPerRequest() {
+    return maxActiveOnDemandTasksPerRequest;
+  }
+
+  public void setMaxActiveOnDemandTasksPerRequest(int maxActiveOnDemandTasksPerRequest) {
+    this.maxActiveOnDemandTasksPerRequest = maxActiveOnDemandTasksPerRequest;
+  }
+
+  public int getMaxDecommissioningSlaves() {
+    return maxDecommissioningSlaves;
+  }
+
+  public void setMaxDecommissioningSlaves(int maxDecommissioningSlaves) {
+    this.maxDecommissioningSlaves = maxDecommissioningSlaves;
+  }
+
+  public boolean isSpreadAllSlavesEnabled() {
+    return spreadAllSlavesEnabled;
+  }
+
+  public void setSpreadAllSlavesEnabled(boolean spreadAllSlavesEnabled) {
+    this.spreadAllSlavesEnabled = spreadAllSlavesEnabled;
+  }
+
+  public void setCheckAutoSpreadAllSlavesEverySeconds(long checkAutoSpreadAllSlavesEverySeconds) {
+    this.checkAutoSpreadAllSlavesEverySeconds = checkAutoSpreadAllSlavesEverySeconds;
+  }
+
+  public long getDelayPollersWhenDeltaOverMs() {
+    return delayPollersWhenDeltaOverMs;
+  }
+
+  public void setDelayPollersWhenDeltaOverMs(long delayPollersWhenDeltaOverMs) {
+    this.delayPollersWhenDeltaOverMs = delayPollersWhenDeltaOverMs;
+  }
+
+  public boolean isDelayOfferProcessingForLargeStatusUpdateDelta() {
+    return delayOfferProcessingForLargeStatusUpdateDelta;
+  }
+
+  public void setDelayOfferProcessingForLargeStatusUpdateDelta(boolean delayOfferProcessingForLargeStatusUpdateDelta) {
+    this.delayOfferProcessingForLargeStatusUpdateDelta = delayOfferProcessingForLargeStatusUpdateDelta;
+  }
+
+  public int getMaxRunNowTaskLaunchDelayDays() {
+    return maxRunNowTaskLaunchDelayDays;
+  }
+
+  public void setMaxRunNowTaskLaunchDelayDays(int maxRunNowTaskLaunchDelayDays) {
+    this.maxRunNowTaskLaunchDelayDays = maxRunNowTaskLaunchDelayDays;
   }
 }

@@ -19,6 +19,7 @@ import com.hubspot.mesos.MesosUtils;
 import com.hubspot.mesos.client.MesosClient;
 import com.hubspot.mesos.json.MesosMasterStateObject;
 import com.hubspot.singularity.RequestType;
+import com.hubspot.singularity.SingularityAction;
 import com.hubspot.singularity.SingularityDeployKey;
 import com.hubspot.singularity.SingularityPendingDeploy;
 import com.hubspot.singularity.SingularityPendingRequest;
@@ -33,6 +34,7 @@ import com.hubspot.singularity.SingularityTaskHistoryUpdate.SimplifiedTaskState;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTaskIdHolder;
 import com.hubspot.singularity.data.DeployManager;
+import com.hubspot.singularity.data.DisasterManager;
 import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.data.zkmigrations.ZkDataMigrationRunner;
@@ -49,6 +51,7 @@ class SingularityStartup {
   private final TaskManager taskManager;
   private final RequestManager requestManager;
   private final DeployManager deployManager;
+  private final DisasterManager disasterManager;
   private final SingularitySlaveAndRackManager slaveAndRackManager;
   private final SingularityHealthchecker healthchecker;
   private final SingularityNewTaskChecker newTaskChecker;
@@ -57,12 +60,13 @@ class SingularityStartup {
 
   @Inject
   SingularityStartup(MesosClient mesosClient, SingularityHealthchecker healthchecker, SingularityNewTaskChecker newTaskChecker,
-      SingularitySlaveAndRackManager slaveAndRackManager, TaskManager taskManager, RequestManager requestManager, DeployManager deployManager, SingularityTaskReconciliation taskReconciliation,
-      ZkDataMigrationRunner zkDataMigrationRunner) {
+      SingularitySlaveAndRackManager slaveAndRackManager, TaskManager taskManager, RequestManager requestManager, DeployManager deployManager, DisasterManager disasterManager,
+      SingularityTaskReconciliation taskReconciliation, ZkDataMigrationRunner zkDataMigrationRunner) {
     this.mesosClient = mesosClient;
     this.zkDataMigrationRunner = zkDataMigrationRunner;
     this.slaveAndRackManager = slaveAndRackManager;
     this.deployManager = deployManager;
+    this.disasterManager = disasterManager;
     this.requestManager = requestManager;
     this.newTaskChecker = newTaskChecker;
     this.taskManager = taskManager;
@@ -81,13 +85,15 @@ class SingularityStartup {
 
     MesosMasterStateObject state = mesosClient.getMasterState(uri);
 
-    slaveAndRackManager.loadSlavesAndRacksFromMaster(state);
+    slaveAndRackManager.loadSlavesAndRacksFromMaster(state, true);
 
     checkSchedulerForInconsistentState();
 
     enqueueHealthAndNewTaskChecks();
 
-    taskReconciliation.startReconciliation();
+    if (!disasterManager.isDisabled(SingularityAction.STARTUP_TASK_RECONCILIATION)) {
+      taskReconciliation.startReconciliation();
+    }
 
     LOG.info("Finished startup after {}", JavaUtils.duration(start));
   }

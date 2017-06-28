@@ -3,6 +3,7 @@ package com.hubspot.singularity.api;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
+import com.hubspot.singularity.SingularityShellCommand;
 import com.wordnik.swagger.annotations.ApiModelProperty;
 
 public class SingularityKillTaskRequest {
@@ -11,14 +12,17 @@ public class SingularityKillTaskRequest {
   private final Optional<Boolean> override;
   private final Optional<String> actionId;
   private final Optional<Boolean> waitForReplacementTask;
+  private final Optional<SingularityShellCommand> runShellCommandBeforeKill;
 
   @JsonCreator
   public SingularityKillTaskRequest(@JsonProperty("override") Optional<Boolean> override, @JsonProperty("message") Optional<String> message,
-      @JsonProperty("actionId") Optional<String> actionId, @JsonProperty("waitForReplacementTask") Optional<Boolean> waitForReplacementTask) {
+      @JsonProperty("actionId") Optional<String> actionId, @JsonProperty("waitForReplacementTask") Optional<Boolean> waitForReplacementTask,
+      @JsonProperty("runShellCommandBeforeKill") Optional<SingularityShellCommand> runShellCommandBeforeKill) {
     this.override = override;
     this.message = message;
     this.actionId = actionId;
     this.waitForReplacementTask = waitForReplacementTask;
+    this.runShellCommandBeforeKill = runShellCommandBeforeKill;
   }
 
   @ApiModelProperty(required=false, value="A message to show to users about why this action was taken")
@@ -41,9 +45,19 @@ public class SingularityKillTaskRequest {
     return waitForReplacementTask;
   }
 
-  @Override
-  public String toString() {
-    return "SingularityKillTaskRequest [message=" + message + ", override=" + override + ", actionId=" + actionId + ", waitForReplacementTask=" + waitForReplacementTask + "]";
+  @ApiModelProperty(required=false, value="Attempt to run this shell command on each task before it is shut down")
+  public Optional<SingularityShellCommand> getRunShellCommandBeforeKill() {
+    return runShellCommandBeforeKill;
   }
 
+  @Override
+  public String toString() {
+    return "SingularityKillTaskRequest{" +
+        "message=" + message +
+        ", override=" + override +
+        ", actionId=" + actionId +
+        ", waitForReplacementTask=" + waitForReplacementTask +
+        ", runShellCommandBeforeKill=" + runShellCommandBeforeKill +
+        '}';
+  }
 }

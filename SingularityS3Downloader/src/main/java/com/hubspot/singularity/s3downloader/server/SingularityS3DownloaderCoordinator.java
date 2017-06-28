@@ -31,7 +31,7 @@ import com.hubspot.singularity.s3downloader.SingularityS3DownloaderMetrics;
 import com.hubspot.singularity.s3downloader.config.SingularityS3DownloaderConfiguration;
 import com.hubspot.singularity.s3downloader.config.SingularityS3DownloaderModule;
 
-public class SingularityS3DownloaderCoordinator {
+public class SingularityS3DownloaderCoordinator implements DownloadListener {
 
   private static final Logger LOG = LoggerFactory.getLogger(SingularityS3DownloaderCoordinator.class);
 
@@ -66,21 +66,31 @@ public class SingularityS3DownloaderCoordinator {
     downloadJoinerService.submit(downloadJoiner);
   }
 
+  @Override
+  public void notifyDownloadFinished(SingularityS3DownloaderAsyncHandler handler) {
+    boolean removed = downloadRequestToHandler.remove(handler.getS3Artifact(), handler);
+    LOG.debug("Handler for artifact {} finished download - removed {}", handler.getS3Artifact(), removed);
+  }
+
   private class DownloadJoiner implements Runnable {
 
     private final long start;
     private final Continuation continuation;
     private final ArtifactDownloadRequest artifactDownloadRequest;
 
-    public DownloadJoiner(Continuation continuation, ArtifactDownloadRequest artifactDownloadRequest) {
+    private DownloadJoiner(Continuation continuation, ArtifactDownloadRequest artifactDownloadRequest) {
       this.continuation = continuation;
       this.artifactDownloadRequest = artifactDownloadRequest;
       this.start = System.currentTimeMillis();
     }
 
     private void reEnqueue() {
-      LOG.debug("Re-enqueueing request for {}, waiting {}, ({} active, {} queue, {} max), total time {}", artifactDownloadRequest.getTargetDirectory(), JavaUtils.durationFromMillis(configuration.getMillisToWaitForReEnqueue()),
-          downloadJoinerService.getActiveCount(), downloadJoinerService.getQueue().size(), configuration.getNumEnqueueThreads(), JavaUtils.duration(start));
+      LOG.debug("Re-enqueueing request for {}, waiting {}, ({} active, {} queue, {} max), total time {}", artifactDownloadRequest.getTargetDirectory(),
+          JavaUtils.durationFromMillis(configuration.getMillisToWaitForReEnqueue()),
+          downloadJoinerService.getActiveCount(),
+          downloadJoinerService.getQueue().size(),
+          configuration.getNumEnqueueThreads(),
+          JavaUtils.duration(start));
 
       downloadJoinerService.schedule(this, configuration.getMillisToWaitForReEnqueue(), TimeUnit.MILLISECONDS);
     }
@@ -92,7 +102,8 @@ public class SingularityS3DownloaderCoordinator {
         return false;
       }
 
-      SingularityS3DownloaderAsyncHandler newHandler = new SingularityS3DownloaderAsyncHandler(artifactManagerProvider.get(), artifactDownloadRequest, continuation, metrics, exceptionNotifier);
+      final SingularityS3DownloaderAsyncHandler newHandler = new SingularityS3DownloaderAsyncHandler(artifactManagerProvider.get(), artifactDownloadRequest, continuation, metrics, exceptionNotifier,
+          SingularityS3DownloaderCoordinator.this);
 
       existingHandler = downloadRequestToHandler.putIfAbsent(artifactDownloadRequest.getS3Artifact(), newHandler);
 
@@ -108,22 +119,37 @@ public class SingularityS3DownloaderCoordinator {
       future.addListener(new Runnable() {
         @Override
         public void run() {
-          downloadRequestToHandler.remove(artifactDownloadRequest.getS3Artifact());
+          notifyDownloadFinished(newHandler);
         }
       }, listeningResponseExecutorService);
 
       return true;
     }
 
+    private void handleContinuationExpired() {
+      try {
+        LOG.info("Continuation expired for {} after {} - returning 500", artifactDownloadRequest, JavaUtils.duration(start));
+        ((HttpServletResponse) continuation.getServletResponse()).sendError(500, "Hit client timeout");
+      } catch (Throwable t) {
+        LOG.warn("{} while sending error after continuation for {}", t.getClass().getSimpleName(), artifactDownloadRequest.getTargetDirectory());
+      } finally {
+        continuation.complete();
+      }
+    }
+
     @Override
     public void run() {
       try {
         if (!addDownloadRequest()) {
+          if (continuation.isExpired()) {
+            handleContinuationExpired();
+            return;
+          }
           reEnqueue();
         }
       } catch (Throwable t) {
         LOG.error("While trying to enqueue {}", artifactDownloadRequest.getTargetDirectory(), t);
-        exceptionNotifier.notify(t, ImmutableMap.of("targetDirectory", artifactDownloadRequest.getTargetDirectory()));
+        exceptionNotifier.notify(String.format("Error enqueuing download (%s)", t.getMessage()), t, ImmutableMap.of("targetDirectory", artifactDownloadRequest.getTargetDirectory()));
         try {
           ((HttpServletResponse) continuation.getServletResponse()).sendError(500);
         } catch (IOException e) {

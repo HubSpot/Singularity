@@ -27,7 +27,7 @@ import com.wordnik.swagger.annotations.ApiResponses;
 
 @Path(PriorityResource.PATH)
 @Produces({ MediaType.APPLICATION_JSON })
-@Api( description="Manages whether or not to schedule tasks based on their priority levels.", value=RackResource.PATH )
+@Api(description="Manages whether or not to schedule tasks based on their priority levels.", value=PriorityResource.PATH )
 public class PriorityResource {
     public static final String PATH = SingularityService.API_BASE_PATH + "/priority";
 
@@ -77,7 +77,7 @@ public class PriorityResource {
     @ApiOperation(value="Stop scheduling tasks below a certain priority level.", response=SingularityPriorityFreezeParent.class)
     @ApiResponses({
         @ApiResponse(code=200, message="The priority freeze request was accepted."),
-        @ApiResponse(code=400, message="There was a validation error with the priorty freeze request.")
+        @ApiResponse(code=400, message="There was a validation error with the priority freeze request.")
     })
     public SingularityPriorityFreezeParent createPriorityFreeze(SingularityPriorityFreeze priorityFreezeRequest) {
         authorizationHelper.checkAdminAuthorization(user);

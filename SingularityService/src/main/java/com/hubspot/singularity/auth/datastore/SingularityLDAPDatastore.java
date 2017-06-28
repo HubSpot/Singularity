@@ -6,6 +6,7 @@ import static com.google.common.base.Preconditions.checkState;
 import java.io.IOException;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.directory.api.ldap.model.cursor.EntryCursor;
 import org.apache.directory.api.ldap.model.entry.Entry;
@@ -21,8 +22,11 @@ import org.slf4j.LoggerFactory;
 import com.google.common.base.Optional;
 import com.google.common.base.Strings;
 import com.google.common.base.Throwables;
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.SingularityUser;
 import com.hubspot.singularity.config.LDAPConfiguration;
 import com.hubspot.singularity.config.SingularityConfiguration;
@@ -72,14 +76,26 @@ public class SingularityLDAPDatastore implements SingularityAuthDatastore {
     return pool;
   }
 
+  private final Optional<Cache<String, Optional<SingularityUser>>> ldapCache;
+
   @Inject
   public SingularityLDAPDatastore(SingularityConfiguration configuration,
                                   SingularityExceptionNotifier exceptionNotifier) throws IOException {
-    checkArgument(configuration.getLdapConfiguration().isPresent(), "LDAP configuration not present");
+    checkArgument(configuration.getLdapConfigurationOptional().isPresent(), "LDAP configuration not present");
 
-    this.connectionPool = createConnectionPool(configuration.getLdapConfiguration().get());
-    this.configuration = configuration.getLdapConfiguration().get();
+    this.connectionPool = createConnectionPool(configuration.getLdapConfigurationOptional().get());
+    this.configuration = configuration.getLdapConfigurationOptional().get();
     this.exceptionNotifier = exceptionNotifier;
+
+    if (configuration.isLdapCacheEnabled()) {
+      Cache<String, Optional<SingularityUser>> cache = CacheBuilder.newBuilder()
+          .expireAfterWrite(configuration.getLdapCacheExpireMillis(), TimeUnit.MILLISECONDS)
+          .maximumSize(configuration.getLdapCacheSize())
+          .build();
+      ldapCache = Optional.of(cache);
+    } else {
+      ldapCache = Optional.absent();
+    }
   }
 
   @Override
@@ -101,7 +117,7 @@ public class SingularityLDAPDatastore implements SingularityAuthDatastore {
       }
     } catch (LdapException e) {
       LOG.warn("LdapException caught when checking health", e);
-      exceptionNotifier.notify(e);
+      exceptionNotifier.notify(String.format("LdapException caught when checking health (%s)", e.getMessage()), e);
     }
     return Optional.of(false);
   }
@@ -110,6 +126,13 @@ public class SingularityLDAPDatastore implements SingularityAuthDatastore {
   public Optional<SingularityUser> getUser(String user) {
     if (configuration.isStripUserEmailDomain()) {
       user = user.split("@")[0];
+    }
+
+    if (ldapCache.isPresent()) {
+      Optional<SingularityUser> cachedResult = ldapCache.get().getIfPresent(user);
+      if (cachedResult != null) {
+        return cachedResult;
+      }
     }
 
     final Set<String> groups = new HashSet<>();
@@ -129,6 +152,10 @@ public class SingularityLDAPDatastore implements SingularityAuthDatastore {
                   SearchScope.ONELEVEL, configuration.getUserNameAttribute(), configuration.getUserEmailAttribute());
 
           if (!userCursor.next()) {
+            if (ldapCache.isPresent()) {
+              ldapCache.get().put(user, Optional.<SingularityUser> absent());
+            }
+
             return Optional.absent();
           }
 
@@ -143,9 +170,16 @@ public class SingularityLDAPDatastore implements SingularityAuthDatastore {
             groups.add(cursor.get().get(configuration.getGroupNameAttribute()).getString());
           }
 
-          return Optional.of(new SingularityUser(user, Optional.fromNullable(Strings.emptyToNull(userEntry.get(configuration.getUserNameAttribute()).getString())), Optional.fromNullable(Strings.emptyToNull(userEntry.get(configuration.getUserEmailAttribute()).getString())), groups));
+          Optional<SingularityUser> result = Optional.of(new SingularityUser(user, Optional.fromNullable(Strings.emptyToNull(userEntry.get(configuration.getUserNameAttribute()).getString())),
+              Optional.fromNullable(Strings.emptyToNull(userEntry.get(configuration.getUserEmailAttribute()).getString())), groups));
+
+          if (ldapCache.isPresent()) {
+            ldapCache.get().put(user, result);
+          }
+
+          return result;
         } finally {
-          LOG.info("Loaded {}'s user data in {}ms", user, System.currentTimeMillis() - startTime);
+          LOG.trace("Loaded {}'s user data in {}", user, JavaUtils.duration(startTime));
           connection.unBind();
         }
       } finally {

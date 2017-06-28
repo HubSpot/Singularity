@@ -10,10 +10,10 @@ import com.google.inject.Inject;
 import com.hubspot.singularity.RequestType;
 import com.hubspot.singularity.SingularityPendingRequest;
 import com.hubspot.singularity.SingularityPendingRequest.PendingType;
-import com.hubspot.singularity.scheduler.SingularitySchedulerTestBase;
 import com.hubspot.singularity.SingularityPendingTask;
 import com.hubspot.singularity.SingularityRequestBuilder;
 import com.hubspot.singularity.SingularityTask;
+import com.hubspot.singularity.scheduler.SingularitySchedulerTestBase;
 
 public class SingularityStartupTest extends SingularitySchedulerTestBase {
 
@@ -63,21 +63,22 @@ public class SingularityStartupTest extends SingularitySchedulerTestBase {
     deploy(firstDeployId);
     deployChecker.checkDeploys();
 
-    Assert.assertTrue(requestManager.getPendingRequests().size() == 1);
-    Assert.assertTrue(taskManager.getPendingTaskIds().isEmpty());
+    Assert.assertEquals("NEW_DEPLOY request added", 1, requestManager.getPendingRequests().size());
+    Assert.assertTrue("No tasks started yet", taskManager.getPendingTaskIds().isEmpty());
 
     startup.checkSchedulerForInconsistentState();
 
-    Assert.assertTrue(requestManager.getPendingRequests().size() == 1);
-    Assert.assertTrue(requestManager.getPendingRequests().get(0).getPendingType() == PendingType.NEW_DEPLOY);
-    Assert.assertTrue(taskManager.getPendingTaskIds().isEmpty());
+    Assert.assertEquals("NEW_DEPLOY request added", 1, requestManager.getPendingRequests().size());
+    Assert.assertEquals("NEW_DEPLOY is first", PendingType.NEW_DEPLOY, requestManager.getPendingRequests().get(0).getPendingType());
+    Assert.assertTrue("No tasks started yet", taskManager.getPendingTaskIds().isEmpty());
 
     scheduler.drainPendingQueue(stateCacheProvider.get());
 
-    Assert.assertTrue(requestManager.getPendingRequests().isEmpty());
+    Assert.assertTrue("Pending queue is cleared", requestManager.getPendingRequests().isEmpty());
     List<SingularityPendingTask> pending = taskManager.getPendingTasks();
 
-    Assert.assertTrue(taskManager.getPendingTaskIds().size() == 1);
+    Assert.assertEquals("One task is started", 1, taskManager.getPendingTaskIds().size());
+    Assert.assertEquals("First request takes precedence", PendingType.NEW_DEPLOY, taskManager.getPendingTaskIds().get(0).getPendingType());
 
     startup.checkSchedulerForInconsistentState();
     scheduler.drainPendingQueue(stateCacheProvider.get());

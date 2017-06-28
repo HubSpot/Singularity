@@ -1,7 +1,10 @@
 package com.hubspot.singularity.metrics;
 
 import java.net.InetSocketAddress;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
+
+import javax.net.SocketFactory;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -11,8 +14,9 @@ import com.codahale.metrics.MetricFilter;
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.graphite.Graphite;
 import com.codahale.metrics.graphite.GraphiteReporter;
-import com.google.common.base.Optional;
+import com.google.common.base.Charsets;
 import com.google.common.base.Strings;
+import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
@@ -30,15 +34,15 @@ public class SingularityGraphiteReporterManaged implements Managed {
 
   private final GraphiteConfiguration graphiteConfiguration;
   private final MetricRegistry registry;
-  private Optional<GraphiteReporter> reporter;
+  private GraphiteReporter reporter = null;
+  private Graphite graphite = null;
   private final String hostname;
 
   @Inject
   public SingularityGraphiteReporterManaged(SingularityConfiguration configuration, MetricRegistry registry, @Named(SingularityMainModule.HOST_NAME_PROPERTY) String hostname) {
     this.graphiteConfiguration = configuration.getGraphiteConfiguration();
     this.registry = registry;
-    this.reporter = Optional.absent();
-    this.hostname = hostname;
+    this.hostname = !Strings.isNullOrEmpty(graphiteConfiguration.getHostnameOmitSuffix()) && hostname.endsWith(graphiteConfiguration.getHostnameOmitSuffix()) ? hostname.substring(0, hostname.length() - graphiteConfiguration.getHostnameOmitSuffix().length()) : hostname;
   }
 
   private String buildGraphitePrefix() {
@@ -46,9 +50,17 @@ public class SingularityGraphiteReporterManaged implements Managed {
       return "";
     }
 
-    final String trimmedHostname = !Strings.isNullOrEmpty(graphiteConfiguration.getHostnameOmitSuffix()) && hostname.endsWith(graphiteConfiguration.getHostnameOmitSuffix()) ? hostname.substring(0, hostname.length() - graphiteConfiguration.getHostnameOmitSuffix().length()) : hostname;
+    return graphiteConfiguration.getPrefix().replace("{hostname}", hostname);
+  }
 
-    return graphiteConfiguration.getPrefix().replace("{hostname}", trimmedHostname);
+  private Map<String, String> buildGraphiteTags() {
+    ImmutableMap.Builder<String, String> builder = ImmutableMap.builder();
+
+    for (Map.Entry<String, String> entry : graphiteConfiguration.getTags().entrySet()) {
+      builder.put(entry.getKey(), entry.getValue().replace("{hostname}", hostname));
+    }
+
+    return builder.build();
   }
 
   @Override
@@ -59,11 +71,12 @@ public class SingularityGraphiteReporterManaged implements Managed {
     }
 
     final String prefix = buildGraphitePrefix();
+    final Map<String, String> tags = buildGraphiteTags();
 
-    LOG.info("Reporting data points to graphite server {}:{} every {} seconds with prefix '{}' and predicates '{}'.", graphiteConfiguration.getHostname(),
-        graphiteConfiguration.getPort(), graphiteConfiguration.getPeriodSeconds(), prefix, JavaUtils.COMMA_JOINER.join(graphiteConfiguration.getPredicates()));
+    LOG.info("Reporting data points to graphite server {}:{} every {} seconds with prefix '{}', predicates '{}', and tags '{}'.", graphiteConfiguration.getHostname(),
+        graphiteConfiguration.getPort(), graphiteConfiguration.getPeriodSeconds(), prefix, JavaUtils.COMMA_JOINER.join(graphiteConfiguration.getPredicates()), JavaUtils.COMMA_EQUALS_MAP_JOINER.join(tags));
 
-    final Graphite graphite = new Graphite(new InetSocketAddress(graphiteConfiguration.getHostname(), graphiteConfiguration.getPort()));
+    graphite = new GraphiteWithTags(new InetSocketAddress(graphiteConfiguration.getHostname(), graphiteConfiguration.getPort()), SocketFactory.getDefault(), Charsets.UTF_8, tags);
 
     final GraphiteReporter.Builder reporterBuilder = GraphiteReporter.forRegistry(registry);
 
@@ -85,14 +98,21 @@ public class SingularityGraphiteReporterManaged implements Managed {
       });
     }
 
-    reporter = Optional.of(reporterBuilder.build(graphite));
-    reporter.get().start(graphiteConfiguration.getPeriodSeconds(), TimeUnit.SECONDS);
+    reporter = reporterBuilder.build(graphite);
+    reporter.start(graphiteConfiguration.getPeriodSeconds(), TimeUnit.SECONDS);
   }
 
   @Override
   public void stop() throws Exception {
-    if (reporter.isPresent()) {
-      reporter.get().stop();
+    if (graphite != null) {
+      LOG.info("Closing GraphiteSender");
+      graphite.close();
+      LOG.info("Closed GraphiteSender");
+    }
+    if (reporter != null) {
+      LOG.info("Closing GraphiteReporter");
+      reporter.stop();
+      LOG.info("Closed GraphiteReporter");
     }
   }
 

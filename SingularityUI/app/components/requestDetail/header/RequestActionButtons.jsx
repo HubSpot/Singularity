@@ -8,6 +8,10 @@ import { Link } from 'react-router';
 import JSONButton from '../../common/JSONButton';
 
 import { FetchRequest } from '../../../actions/api/requests';
+import {
+  FetchActiveTasksForRequest,
+  FetchRequestHistory
+} from '../../../actions/api/history';
 
 import RunNowButton from '../../common/modalButtons/RunNowButton';
 import RemoveButton from '../../common/modalButtons/RemoveButton';
@@ -21,7 +25,22 @@ import DisableHealthchecksButton from '../../common/modalButtons/DisableHealthch
 
 import Utils from '../../../utils';
 
-const RequestActionButtons = ({requestParent, fetchRequest, router}) => {
+const RequestActionButtons = ({requestParent, fetchRequest, fetchRequestHistory, fetchActiveTasks, router}) => {
+  let fetchRequestAndHistoryAndActiveTasks = () => {
+    const promises = [];
+    promises.push(fetchRequest())
+    promises.push(fetchActiveTasks())
+    promises.push(fetchRequestHistory(5, 1))
+    return Promise.all(promises);
+  }
+
+  let fetchRequestAndHistory = () => {
+    const promises = [];
+    promises.push(fetchRequest())
+    promises.push(fetchRequestHistory(5, 1))
+    return Promise.all(promises);
+  }
+
   if (!requestParent || !requestParent.request) {
     return <div></div>;
   }
@@ -41,7 +60,7 @@ const RequestActionButtons = ({requestParent, fetchRequest, router}) => {
   let maybeRunNowButton;
   if (Utils.request.canBeRunNow(requestParent)) {
     maybeRunNowButton = (
-      <RunNowButton requestId={request.id} then={fetchRequest}>
+      <RunNowButton requestId={request.id} then={fetchRequestAndHistoryAndActiveTasks}>
         <Button bsStyle="primary">
           Run now
         </Button>
@@ -52,7 +71,7 @@ const RequestActionButtons = ({requestParent, fetchRequest, router}) => {
   let maybeExitCooldownButton;
   if (state === 'SYSTEM_COOLDOWN') {
     maybeExitCooldownButton = (
-      <ExitCooldownButton requestId={request.id} then={fetchRequest}>
+      <ExitCooldownButton requestId={request.id} then={fetchRequestAndHistoryAndActiveTasks}>
         <Button bsStyle="primary">
           Exit Cooldown
         </Button>
@@ -63,7 +82,12 @@ const RequestActionButtons = ({requestParent, fetchRequest, router}) => {
   let maybeScaleButton;
   if (Utils.request.canBeScaled(requestParent)) {
     maybeScaleButton = (
-      <ScaleButton requestId={request.id} currentInstances={request.instances} then={fetchRequest}>
+      <ScaleButton
+        requestId={request.id}
+        currentInstances={request.instances}
+        then={fetchRequestAndHistoryAndActiveTasks}
+        bounceAfterScaleDefault={Utils.maybe(request, ['bounceAfterScale'], false)}
+      >
         <Button bsStyle="primary" disabled={Utils.request.scaleDisabled(requestParent)}>
           Scale
         </Button>
@@ -77,7 +101,7 @@ const RequestActionButtons = ({requestParent, fetchRequest, router}) => {
       // make sure the action removes the expiring pause
     }
     togglePauseButton = (
-      <UnpauseButton requestId={request.id} then={fetchRequest}>
+      <UnpauseButton requestId={request.id} then={fetchRequestAndHistoryAndActiveTasks}>
         <Button bsStyle="primary">
           Unpause
         </Button>
@@ -85,7 +109,7 @@ const RequestActionButtons = ({requestParent, fetchRequest, router}) => {
     );
   } else {
     togglePauseButton = (
-      <PauseButton requestId={request.id} isScheduled={request.requestType === 'SCHEDULED'} then={fetchRequest}>
+      <PauseButton requestId={request.id} isScheduled={request.requestType === 'SCHEDULED'} then={fetchRequestAndHistoryAndActiveTasks}>
         <Button bsStyle="primary" disabled={Utils.request.pauseDisabled(requestParent)}>
           Pause
         </Button>
@@ -96,7 +120,7 @@ const RequestActionButtons = ({requestParent, fetchRequest, router}) => {
   let maybeBounceButton;
   if (Utils.request.canBeBounced(requestParent)) {
     maybeBounceButton = (
-      <BounceButton requestId={request.id} then={fetchRequest}>
+      <BounceButton requestId={request.id} then={fetchRequestAndHistoryAndActiveTasks}>
         <Button bsStyle="primary" disabled={Utils.request.bounceDisabled(requestParent)}>
           Bounce
         </Button>
@@ -119,7 +143,7 @@ const RequestActionButtons = ({requestParent, fetchRequest, router}) => {
   if (Utils.request.canDisableHealthchecks(requestParent)) {
     if (request.skipHealthchecks) {
       maybeToggleHealthchecksButton = (
-        <EnableHealthchecksButton requestId={request.id} then={fetchRequest}>
+        <EnableHealthchecksButton requestId={request.id} then={fetchRequestAndHistory}>
           <Button bsStyle="warning">
             Enable Healthchecks
           </Button>
@@ -127,7 +151,7 @@ const RequestActionButtons = ({requestParent, fetchRequest, router}) => {
       );
     } else {
       maybeToggleHealthchecksButton = (
-        <DisableHealthchecksButton requestId={request.id} then={fetchRequest}>
+        <DisableHealthchecksButton requestId={request.id} then={fetchRequestAndHistory}>
           <Button bsStyle="primary">
             Disable Healthchecks
           </Button>
@@ -136,14 +160,12 @@ const RequestActionButtons = ({requestParent, fetchRequest, router}) => {
     }
   }
 
-  const navigateAwayOnSuccess = (response) => {
-    if (response.statusCode === 200) {
-      router.push('/requests');
-    }
-  };
-
   const removeButton = (
-    <RemoveButton requestId={request.id} then={navigateAwayOnSuccess}>
+    <RemoveButton
+      requestId={request.id}
+      loadBalanced={request.loadBalanced}
+      loadBalancerData={Utils.maybe(requestParent, ['activeDeploy', 'loadBalancerOptions'], {})}
+      then={fetchRequestAndHistoryAndActiveTasks}>
       <Button bsStyle="danger">
         Remove
       </Button>
@@ -170,6 +192,7 @@ RequestActionButtons.propTypes = {
   requestId: PropTypes.string.isRequired,
   requestParent: PropTypes.object,
   fetchRequest: PropTypes.func.isRequired,
+  fetchActiveTasks: PropTypes.func.isRequired,
   router: PropTypes.shape({push: PropTypes.func.isRequired}).isRequired
 };
 
@@ -178,7 +201,9 @@ const mapStateToProps = (state, ownProps) => ({
 });
 
 const mapDispatchToProps = (dispatch, ownProps) => ({
-  fetchRequest: () => dispatch(FetchRequest.trigger(ownProps.requestId, true))
+  fetchRequest: () => dispatch(FetchRequest.trigger(ownProps.requestId, true)),
+  fetchRequestHistory: (count, page) => dispatch(FetchRequestHistory.trigger(ownProps.requestId, count, page)),
+  fetchActiveTasks: () => dispatch(FetchActiveTasksForRequest.trigger(ownProps.requestId))
 });
 
 export default withRouter(connect(

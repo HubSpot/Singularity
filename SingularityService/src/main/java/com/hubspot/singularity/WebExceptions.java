@@ -6,9 +6,6 @@ import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
-import com.sun.jersey.api.ConflictException;
-import com.sun.jersey.api.NotFoundException;
-
 public final class WebExceptions {
 
   private WebExceptions() {
@@ -44,6 +41,12 @@ public final class WebExceptions {
     }
   }
 
+  public static void checkRateLimited(boolean condition, String message, Object... args) {
+    if (!condition) {
+      rateLimited(message, args);
+    }
+  }
+
   public static <T> T checkNotNullBadRequest(T value, String message, Object... args) {
     if (value == null) {
       badRequest(message, args);
@@ -63,14 +66,14 @@ public final class WebExceptions {
     if (args.length > 0) {
       message = format(message, args);
     }
-    throw new ConflictException(message);
+    throw new WebApplicationException(message, Status.CONFLICT);
   }
 
   public static WebApplicationException notFound(String message, Object... args) {
     if (args.length > 0) {
       message = format(message, args);
     }
-    throw new NotFoundException(message);
+    throw new WebApplicationException(message, Status.NOT_FOUND);
   }
 
   public static WebApplicationException forbidden(String message, Object... args) {
@@ -79,6 +82,10 @@ public final class WebExceptions {
 
   public static WebApplicationException unauthorized(String message, Object... args) {
     return webException(Status.UNAUTHORIZED.getStatusCode(), message, args);
+  }
+
+  public static WebApplicationException rateLimited(String message, Object... args) {
+    return webException(429, message, args);
   }
 
   private static WebApplicationException webException(int statusCode, String message, Object... formatArgs) {

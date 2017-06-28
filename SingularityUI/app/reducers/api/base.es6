@@ -1,5 +1,6 @@
+const identity = (a) => a;
 
-export default function buildApiActionReducer(ActionGroup, initialData = {}) {
+export default function buildApiActionReducer(ActionGroup, initialData = {}, transform = identity) {
   const initialState = {
     isFetching: false,
     error: null,
@@ -32,7 +33,7 @@ export default function buildApiActionReducer(ActionGroup, initialData = {}) {
           error: null,
           statusCode: action.statusCode,
           receivedAt: Date.now(),
-          data: action.data
+          data: transform(action.data)
         });
         return _.extend({}, state, newData);
 

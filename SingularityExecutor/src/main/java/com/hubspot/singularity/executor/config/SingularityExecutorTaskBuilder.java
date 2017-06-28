@@ -13,8 +13,8 @@ import com.google.common.io.Files;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
-import com.hubspot.deploy.ExecutorData;
 import com.hubspot.mesos.MesosUtils;
+import com.hubspot.singularity.SingularityTaskExecutorData;
 import com.hubspot.singularity.executor.TemplateManager;
 import com.hubspot.singularity.executor.task.SingularityExecutorArtifactFetcher;
 import com.hubspot.singularity.executor.task.SingularityExecutorTask;
@@ -72,21 +72,22 @@ public class SingularityExecutorTaskBuilder {
   }
 
   public SingularityExecutorTask buildTask(String taskId, ExecutorDriver driver, TaskInfo taskInfo, Logger log) {
-    ExecutorData executorData = readExecutorData(jsonObjectMapper, taskInfo);
+    SingularityTaskExecutorData taskExecutorData = readExecutorData(jsonObjectMapper, taskInfo);
 
-    SingularityExecutorTaskDefinition taskDefinition = new SingularityExecutorTaskDefinition(taskId, executorData, MesosUtils.getTaskDirectoryPath(taskId).toString(), executorPid,
-        executorConfiguration.getServiceLog(), Files.getFileExtension(executorConfiguration.getServiceLog()), executorConfiguration.getTaskAppDirectory(), executorConfiguration.getExecutorBashLog(), executorConfiguration.getLogrotateStateFile(), executorConfiguration.getSignatureVerifyOut());
+    SingularityExecutorTaskDefinition taskDefinition = new SingularityExecutorTaskDefinition(taskId, taskExecutorData, MesosUtils.getTaskDirectoryPath(taskId).toString(), executorPid,
+        taskExecutorData.getServiceLog(), Files.getFileExtension(taskExecutorData.getServiceLog()), taskExecutorData.getServiceFinishedTailLog(), executorConfiguration.getTaskAppDirectory(),
+        executorConfiguration.getExecutorBashLog(), executorConfiguration.getLogrotateStateFile(), executorConfiguration.getSignatureVerifyOut());
 
     jsonObjectFileHelper.writeObject(taskDefinition, executorConfiguration.getTaskDefinitionPath(taskId), log);
 
-    return new SingularityExecutorTask(driver, executorUtils, baseConfiguration, executorConfiguration, taskDefinition, executorPid, artifactFetcher, taskInfo, templateManager, log, jsonObjectFileHelper, dockerUtils, s3Configuration);
+    return new SingularityExecutorTask(driver, executorUtils, baseConfiguration, executorConfiguration, taskDefinition, executorPid, artifactFetcher, taskInfo, templateManager, log, jsonObjectFileHelper, dockerUtils, s3Configuration, jsonObjectMapper);
   }
 
-  private ExecutorData readExecutorData(ObjectMapper objectMapper, Protos.TaskInfo taskInfo) {
+  private SingularityTaskExecutorData readExecutorData(ObjectMapper objectMapper, Protos.TaskInfo taskInfo) {
     try {
       Preconditions.checkState(taskInfo.hasData(), "TaskInfo was missing executor data");
 
-      return objectMapper.readValue(taskInfo.getData().toByteArray(), ExecutorData.class);
+      return objectMapper.readValue(taskInfo.getData().toByteArray(), SingularityTaskExecutorData.class);
     } catch (Exception e) {
       throw Throwables.propagate(e);
     }

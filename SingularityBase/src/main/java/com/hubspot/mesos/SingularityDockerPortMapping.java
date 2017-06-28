@@ -1,8 +1,11 @@
 package com.hubspot.mesos;
 
+import java.util.Objects;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
+import com.wordnik.swagger.annotations.ApiModelProperty;
 
 public class SingularityDockerPortMapping {
   public static final String DEFAULT_PROTOCOL = "tcp";
@@ -27,35 +30,29 @@ public class SingularityDockerPortMapping {
     this.protocol = protocol.or(DEFAULT_PROTOCOL);
   }
 
+  @ApiModelProperty(required=false, value="Container port. Use the port number provided (LITERAL) or the dynamically allocated port at this index (FROM_OFFER)")
   public SingularityPortMappingType getContainerPortType() {
     return containerPortType;
   }
 
+  @ApiModelProperty(required=true, value="Port number, or index of port from offer within the container")
   public int getContainerPort() {
     return containerPort;
   }
 
+  @ApiModelProperty(required=false, value="Host port. Use the port number provided (LITERAL) or the dynamically allocated port at this index (FROM_OFFER)")
   public SingularityPortMappingType getHostPortType() {
     return hostPortType;
   }
 
+  @ApiModelProperty(required=true, value="Port number, or index of port from offer on the host")
   public int getHostPort() {
     return hostPort;
   }
 
+  @ApiModelProperty(required=false, value="Protocol for binding the port. Default is tcp")
   public String getProtocol() {
     return protocol;
-  }
-
-  @Override
-  public String toString() {
-    return "SingularityDockerPortMapping[" +
-            "containerPortType=" + containerPortType +
-            ", hostPortType=" + hostPortType +
-            ", containerPort=" + containerPort +
-            ", hostPort=" + hostPort +
-            ", protocol=" + protocol +
-            ']';
   }
 
   @Override
@@ -66,31 +63,27 @@ public class SingularityDockerPortMapping {
     if (o == null || getClass() != o.getClass()) {
       return false;
     }
-
     SingularityDockerPortMapping that = (SingularityDockerPortMapping) o;
-
-    if (!containerPortType.equals(that.containerPortType)) {
-      return false;
-    }
-    if (containerPort != that.containerPort) {
-      return false;
-    }
-    if (!hostPortType.equals(that.hostPortType)) {
-      return false;
-    }
-    if (!protocol.equals(that.protocol)) {
-      return false;
-    }
-    return true;
+    return containerPort == that.containerPort &&
+        hostPort == that.hostPort &&
+        containerPortType == that.containerPortType &&
+        hostPortType == that.hostPortType &&
+        Objects.equals(protocol, that.protocol);
   }
 
   @Override
   public int hashCode() {
-    int result = containerPortType.hashCode();
-    result = 31 * result + hostPortType.hashCode();
-    result = 31 * result + containerPort;
-    result = 31 * result + hostPort;
-    result = 31 * result + protocol.hashCode();
-    return result;
+    return Objects.hash(containerPortType, hostPortType, containerPort, hostPort, protocol);
+  }
+
+  @Override
+  public String toString() {
+    return "SingularityDockerPortMapping{" +
+        "containerPortType=" + containerPortType +
+        ", hostPortType=" + hostPortType +
+        ", containerPort=" + containerPort +
+        ", hostPort=" + hostPort +
+        ", protocol='" + protocol + '\'' +
+        '}';
   }
 }

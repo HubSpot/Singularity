@@ -19,7 +19,9 @@ import com.hubspot.singularity.SingularityAbort.AbortReason;
 import com.hubspot.singularity.SingularityLeaderController;
 import com.hubspot.singularity.SingularityService;
 import com.hubspot.singularity.config.SingularityConfiguration;
+import com.hubspot.singularity.data.history.SingularityHistoryPurger;
 import com.hubspot.singularity.mesos.SingularityDriver;
+import com.hubspot.singularity.scheduler.SingularityTaskReconciliation;
 import com.wordnik.swagger.annotations.Api;
 import com.wordnik.swagger.annotations.ApiOperation;
 
@@ -32,13 +34,17 @@ public class TestResource {
   private final SingularityLeaderController managed;
   private final SingularityConfiguration configuration;
   private final SingularityDriver driver;
+  private final SingularityTaskReconciliation taskReconciliation;
+  private final SingularityHistoryPurger historyPurger;
 
   @Inject
-  public TestResource(SingularityConfiguration configuration, SingularityLeaderController managed, SingularityAbort abort, final SingularityDriver driver) {
+  public TestResource(SingularityConfiguration configuration, SingularityLeaderController managed, SingularityAbort abort, final SingularityDriver driver, SingularityTaskReconciliation taskReconciliation, SingularityHistoryPurger historyPurger) {
     this.configuration = configuration;
     this.managed = managed;
     this.abort = abort;
     this.driver = driver;
+    this.taskReconciliation = taskReconciliation;
+    this.historyPurger = historyPurger;
   }
 
   @POST
@@ -103,5 +109,21 @@ public class TestResource {
   @ApiOperation("Trigger an exception.")
   public void throwException(@QueryParam("message") @DefaultValue("test exception") String message) {
     throw new RuntimeException(message);
+  }
+
+  @POST
+  @Path("/reconcile")
+  @ApiOperation("Start task reconciliation")
+  public void startTaskReconciliation() throws Exception {
+    checkForbidden(configuration.isAllowTestResourceCalls(), "Test resource calls are disabled (set isAllowTestResourceCalls to true in configuration)");
+    taskReconciliation.startReconciliation();
+  }
+
+  @POST
+  @Path("/purge-history")
+  @ApiOperation("Run history purge")
+  public void runHistoryPurge() throws Exception {
+    checkForbidden(configuration.isAllowTestResourceCalls(), "Test resource calls are disabled (set isAllowTestResourceCalls to true in configuration)");
+    historyPurger.runActionOnPoll();
   }
 }

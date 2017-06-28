@@ -30,6 +30,7 @@ public class SingularitySlaveAndRackHelper {
 
     this.rackIdAttributeKey = mesosConfiguration.getRackIdAttributeKey();
     this.defaultRackId = mesosConfiguration.getDefaultRackId();
+
   }
 
   public String getMaybeTruncatedHost(String hostname) {
@@ -93,7 +94,7 @@ public class SingularitySlaveAndRackHelper {
     return textAttributes;
   }
 
-  public Map<String, String> reservedSlaveAttributes(Offer offer) {
+  public Map<String, String> getReservedSlaveAttributes(Offer offer) {
     Map<String, String> reservedAttributes = new HashMap<>();
     Map<String, String> offerTextAttributes = getTextAttributes(offer);
     for (Map.Entry<String, List<String>> entry : configuration.getReserveSlavesWithAttributes().entrySet()) {

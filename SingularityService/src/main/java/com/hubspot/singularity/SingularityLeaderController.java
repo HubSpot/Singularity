@@ -12,6 +12,7 @@ import javax.inject.Singleton;
 import org.apache.curator.framework.recipes.leader.LeaderLatchListener;
 import org.apache.mesos.Protos;
 import org.apache.mesos.Protos.MasterInfo;
+import org.apache.mesos.Protos.Offer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -23,6 +24,7 @@ import com.hubspot.mesos.MesosUtils;
 import com.hubspot.singularity.SingularityAbort.AbortReason;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.StateManager;
+import com.hubspot.singularity.mesos.OfferCache;
 import com.hubspot.singularity.mesos.SingularityMesosScheduler;
 import com.hubspot.singularity.sentry.SingularityExceptionNotifier;
 
@@ -41,13 +43,14 @@ public class SingularityLeaderController implements Managed, LeaderLatchListener
   private final long saveStateEveryMs;
   private final StatePoller statePoller;
   private final SingularityMesosScheduler scheduler;
+  private final OfferCache offerCache;
 
   private volatile boolean master;
 
-
   @Inject
-  public SingularityLeaderController(StateManager stateManager, SingularityConfiguration configuration, SingularityDriverManager driverManager, SingularityAbort abort, SingularityExceptionNotifier exceptionNotifier,
-      @Named(SingularityMainModule.HTTP_HOST_AND_PORT) HostAndPort hostAndPort, SingularityMesosScheduler scheduler) {
+  public SingularityLeaderController(StateManager stateManager, SingularityConfiguration configuration, SingularityDriverManager driverManager,
+      SingularityAbort abort, SingularityExceptionNotifier exceptionNotifier, @Named(SingularityMainModule.HTTP_HOST_AND_PORT) HostAndPort hostAndPort, SingularityMesosScheduler scheduler,
+      OfferCache offerCache) {
     this.driverManager = driverManager;
     this.stateManager = stateManager;
     this.abort = abort;
@@ -58,8 +61,9 @@ public class SingularityLeaderController implements Managed, LeaderLatchListener
     this.statePoller = new StatePoller();
     this.scheduler = scheduler;
 
-    this.master = false;
+    this.offerCache = offerCache;
 
+    this.master = false;
   }
 
   @Override
@@ -84,7 +88,7 @@ public class SingularityLeaderController implements Managed, LeaderLatchListener
         statePoller.wake();
       } catch (Throwable t) {
         LOG.error("While starting driver", t);
-        exceptionNotifier.notify(t);
+        exceptionNotifier.notify(String.format("Error starting driver (%s)", t.getMessage()), t);
         abort.abort(AbortReason.UNRECOVERABLE_ERROR, Optional.of(t));
       }
 
@@ -123,7 +127,7 @@ public class SingularityLeaderController implements Managed, LeaderLatchListener
         statePoller.wake();
       } catch (Throwable t) {
         LOG.error("While stopping driver", t);
-        exceptionNotifier.notify(t);
+        exceptionNotifier.notify(String.format("Error while stopping driver (%s)", t.getMessage()), t);
       } finally {
         abort.abort(AbortReason.LOST_LEADERSHIP, Optional.<Throwable>absent());
       }
@@ -148,7 +152,18 @@ public class SingularityLeaderController implements Managed, LeaderLatchListener
       mesosMaster = MesosUtils.getMasterHostAndPort(mesosMasterInfo.get());
     }
 
-    return new SingularityHostState(master, uptime, driverStatus.name(), millisSinceLastOfferTimestamp, hostAndPort.getHostText(), hostAndPort.getHostText(), mesosMaster, scheduler.isConnected());
+    double cachedCpus = 0;
+    double cachedMemoryBytes = 0;
+    int numCachedOffers = 0;
+
+    for (Offer offer : offerCache.peekOffers()) {
+      cachedCpus += MesosUtils.getNumCpus(offer);
+      cachedMemoryBytes += MesosUtils.getMemory(offer);
+      numCachedOffers++;
+    }
+
+    return new SingularityHostState(master, uptime, driverStatus.name(), millisSinceLastOfferTimestamp, hostAndPort.getHostText(), hostAndPort.getHostText(), mesosMaster, scheduler.isConnected(),
+       numCachedOffers, cachedCpus, cachedMemoryBytes);
   }
 
   // This thread lives inside of this class solely so that we can instantly update the state when the leader latch changes.
@@ -197,7 +212,7 @@ public class SingularityLeaderController implements Managed, LeaderLatchListener
           LOG.trace("Caught interrupted exception, running the loop");
         } catch (Throwable t) {
           LOG.error("Caught exception while saving state", t);
-          exceptionNotifier.notify(t);
+          exceptionNotifier.notify(String.format("Caught exception while saving state (%s)", t.getMessage()), t);
         }
         finally {
           lock.unlock();
