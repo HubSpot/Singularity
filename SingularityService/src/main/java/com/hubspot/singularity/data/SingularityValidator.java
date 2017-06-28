@@ -117,8 +117,7 @@ public class SingularityValidator {
       PriorityManager priorityManager,
       DisasterManager disasterManager,
       SlaveManager slaveManager,
-      UIConfiguration uiConfiguration,
-      SingularityConfiguration singularityConfiguration
+      UIConfiguration uiConfiguration
   ) {
     this.maxDeployIdSize = configuration.getMaxDeployIdSize();
     this.maxRequestIdSize = configuration.getMaxRequestIdSize();
@@ -160,7 +159,7 @@ public class SingularityValidator {
 
     this.disasterManager = disasterManager;
     this.slaveManager = slaveManager;
-    this.singularityConfiguration = singularityConfiguration;
+    this.singularityConfiguration = configuration;
   }
 
   public SingularityRequest checkSingularityRequest(SingularityRequest request, Optional<SingularityRequest> existingRequest, Optional<SingularityDeploy> activeDeploy,
