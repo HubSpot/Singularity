@@ -2,6 +2,7 @@ package com.hubspot.singularity.mesos;
 
 import java.util.List;
 
+import org.apache.mesos.v1.Protos.AgentID;
 import org.apache.mesos.v1.Protos.InverseOffer;
 import org.apache.mesos.v1.Protos.MasterInfo;
 import org.apache.mesos.v1.Protos.Offer;
@@ -129,14 +130,14 @@ public abstract class SingularityMesosScheduler {
   public abstract void heartbeat();
 
   /**
-   * Singularity specific methods used elsewhere in the code to determine scheduler
+   * Singularity-specific methods used elsewhere in the code to determine scheduler
    * state and wrap certain actions
    */
   public abstract SchedulerState getState();
 
   public abstract void notifyStopping();
 
-  public abstract void slaveLost(org.apache.mesos.v1.Protos.AgentID slaveId);
+  public abstract void slaveLost(AgentID slaveId);
 
   public abstract boolean isRunning();
 

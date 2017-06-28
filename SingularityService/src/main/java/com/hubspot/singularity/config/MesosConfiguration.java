@@ -27,6 +27,7 @@ public class MesosConfiguration {
 
   private Optional<String> frameworkRole = Optional.absent();
 
+  @NotNull
   private String frameworkUser = "root";
 
   @NotNull

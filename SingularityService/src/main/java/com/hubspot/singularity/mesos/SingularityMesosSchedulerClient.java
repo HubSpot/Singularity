@@ -144,7 +144,7 @@ public class SingularityMesosSchedulerClient {
 
     MesosClientBuilder<Call, Event> clientBuilder = ProtobufMesosClientBuilder.schedulerUsingProtos()
         .mesosUri(mesosMasterURI)
-        .applicationUserAgentEntry(UserAgentEntries.userAgentEntryForMavenArtifact("com.hubspot.singularity", "Singularity Scheduler"));
+        .applicationUserAgentEntry(UserAgentEntries.userAgentEntryForMavenArtifact("com.hubspot.singularity", "SingularityService"));
 
     Call subscribeCall = Call.newBuilder()
         .setType(Call.Type.SUBSCRIBE)
