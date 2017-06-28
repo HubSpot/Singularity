@@ -204,8 +204,9 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
     pastTaskUsagesCopy.add(latestUsage);
 
     RequestUtilization requestUtilization = utilizationPerRequestId.getOrDefault(task.getRequestId(), new RequestUtilization(task.getRequestId(), task.getDeployId()));
+    int numTasks = pastTaskUsagesCopy.size() - 1;
 
-    for (int i = 0; i < pastTaskUsagesCopy.size() - 1; i++) {
+    for (int i = 0; i < numTasks; i++) {
       SingularityTaskUsage olderUsage = pastTaskUsagesCopy.get(i);
       SingularityTaskUsage newerUsage = pastTaskUsagesCopy.get(i + 1);
       double cpusUsed = (newerUsage.getCpuSeconds() - olderUsage.getCpuSeconds()) / (newerUsage.getTimestamp() - olderUsage.getTimestamp());
@@ -217,8 +218,8 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
     }
 
     requestUtilization
-        .addMemBytesReserved((long) (memoryMbReservedForTask * SingularitySlaveUsage.BYTES_PER_MEGABYTE * requestUtilization.getNumTasks()))
-        .addCpuReserved(cpuReservedForTask * requestUtilization.getNumTasks());
+        .addMemBytesReserved((long) (memoryMbReservedForTask * SingularitySlaveUsage.BYTES_PER_MEGABYTE * numTasks))
+        .addCpuReserved(cpuReservedForTask * numTasks);
 
     utilizationPerRequestId.put(task.getRequestId(), requestUtilization);
   }
