@@ -5,7 +5,7 @@ public class SingularityTaskCurrentUsageWithId extends SingularityTaskCurrentUsa
   private final SingularityTaskId taskId;
 
   public SingularityTaskCurrentUsageWithId(SingularityTaskId taskId, SingularityTaskCurrentUsage taskCurrentUsage) {
-    super(taskCurrentUsage.getMemoryRssBytes(), taskCurrentUsage.getTimestamp(), taskCurrentUsage.getCpusUsed());
+    super(taskCurrentUsage.getMemoryTotalBytes(), taskCurrentUsage.getTimestamp(), taskCurrentUsage.getCpusUsed());
 
     this.taskId = taskId;
   }

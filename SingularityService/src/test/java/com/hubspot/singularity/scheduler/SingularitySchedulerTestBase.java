@@ -524,8 +524,12 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
     firstDeploy = initAndFinishDeploy(request, firstDeployId);
   }
 
+  protected void initFirstDeployWithResources(double cpus, double memoryMb) {
+    firstDeploy = initAndFinishDeployWithResources(request, firstDeployId, cpus, memoryMb);
+  }
+
   protected void initHCDeploy() {
-    firstDeploy = initAndFinishDeploy(request, new SingularityDeployBuilder(request.getId(), firstDeployId).setCommand(Optional.of("sleep 100")).setHealthcheck(Optional.of(new HealthcheckOptionsBuilder("http://uri").build())));
+    firstDeploy = initAndFinishDeploy(request, new SingularityDeployBuilder(request.getId(), firstDeployId).setCommand(Optional.of("sleep 100")).setHealthcheck(Optional.of(new HealthcheckOptionsBuilder("http://uri").build())), Optional.absent());
   }
 
   protected void initLoadBalancedDeploy() {
@@ -533,15 +537,21 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
         .setCommand(Optional.of("sleep 100"))
         .setServiceBasePath(Optional.of("/basepath"))
         .setLoadBalancerGroups(Optional.of(Collections.singleton("test")));
-    firstDeploy = initAndFinishDeploy(request, builder);
+    firstDeploy = initAndFinishDeploy(request, builder, Optional.absent());
   }
 
   protected SingularityDeploy initAndFinishDeploy(SingularityRequest request, String deployId) {
-    return initAndFinishDeploy(request, new SingularityDeployBuilder(request.getId(), deployId).setCommand(Optional.of("sleep 100")));
+    return initAndFinishDeploy(request, new SingularityDeployBuilder(request.getId(), deployId).setCommand(Optional.of("sleep 100")), Optional.absent());
   }
 
-  protected SingularityDeploy initAndFinishDeploy(SingularityRequest request, SingularityDeployBuilder builder) {
-    SingularityDeploy deploy = builder.build();
+  protected SingularityDeploy initAndFinishDeployWithResources(SingularityRequest request, String deployId, double cpus, double memoryMb) {
+    Resources r = new Resources(cpus, memoryMb, 0);
+
+    return initAndFinishDeploy(request, new SingularityDeployBuilder(request.getId(), deployId).setCommand(Optional.of("sleep 100")), Optional.of(r));
+  }
+
+  protected SingularityDeploy initAndFinishDeploy(SingularityRequest request, SingularityDeployBuilder builder, Optional<Resources> maybeResources) {
+    SingularityDeploy deploy = builder.setResources(maybeResources).build();
 
     SingularityDeployMarker marker = new SingularityDeployMarker(deploy.getRequestId(), deploy.getId(), System.currentTimeMillis(), Optional.<String> absent(), Optional.<String> absent());
 
