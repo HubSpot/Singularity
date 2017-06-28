@@ -115,10 +115,6 @@ DOCKER_OPTIONS=()
 {{/each}}
 
 # set up attached volumes
-<<<<<<< HEAD
-DOCKER_OPTIONS=()
-=======
->>>>>>> execution_time_ui
 DOCKER_OPTIONS+=( -v "$CURRENT_DIR:/mnt/mesos/sandbox" )
 echo "MESOS_SANDBOX=/mnt/mesos/sandbox" >> docker.env
 echo "LOG_HOME=/mnt/mesos/sandbox/logs" >> docker.env
