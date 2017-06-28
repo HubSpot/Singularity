@@ -328,7 +328,8 @@ public class SingularityValidator {
       int startupTime = options.getStartupTimeoutSeconds().or(defaultHealthcheckStartupTimeoutSeconds);
       int attempts = options.getMaxRetries().or(defaultHealthcehckMaxRetries) + 1;
 
-      checkBadRequest((startupTime + ((httpTimeoutSeconds + intervalSeconds) * attempts)) > maxTotalHealthcheckTimeoutSeconds.get(),
+      int totalHealthCheckTime = startupTime + ((httpTimeoutSeconds + intervalSeconds) * attempts);
+      checkBadRequest(totalHealthCheckTime < maxTotalHealthcheckTimeoutSeconds.get(),
         String.format("Max healthcheck time cannot be greater than %s, (was startup timeout: %s, interval: %s, attempts: %s)", maxTotalHealthcheckTimeoutSeconds.get(), startupTime, intervalSeconds, attempts));
     }
 
