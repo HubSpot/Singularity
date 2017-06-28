@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.stream.Collectors;
 
 import javax.inject.Singleton;
 
@@ -124,11 +125,17 @@ public class SingularityMesosScheduler implements Scheduler {
 
       for (SingularityOfferHolder offerHolder : offerHolders) {
         if (!offerHolder.getAcceptedTasks().isEmpty()) {
-          offerHolder.launchTasks(driver);
+          List<Offer> leftoverOffers = offerHolder.launchTasksAndGetUnusedOffers(driver);
 
-          acceptedOffers.add(offerHolder.getOffer().getId());
+          leftoverOffers.forEach((o) -> {
+            offerCache.cacheOffer(driver, start, o);
+          });
+
+          List<Offer> offersAcceptedFromSlave = offerHolder.getOffers();
+          offersAcceptedFromSlave.removeAll(leftoverOffers);
+          acceptedOffers.addAll(offersAcceptedFromSlave.stream().map(Offer::getId).collect(Collectors.toList()));
         } else {
-          offerCache.cacheOffer(driver, start, offerHolder.getOffer());
+          offerHolder.getOffers().forEach((o) -> offerCache.cacheOffer(driver, start, o));
         }
       }
     } catch (Throwable t) {

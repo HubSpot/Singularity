@@ -1,5 +1,7 @@
 package com.hubspot.singularity.scheduler;
 
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -7,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 import javax.ws.rs.WebApplicationException;
 
@@ -15,12 +18,14 @@ import org.apache.mesos.Protos.SlaveID;
 import org.apache.mesos.Protos.TaskID;
 import org.apache.mesos.Protos.TaskState;
 import org.apache.mesos.Protos.TaskStatus;
+import org.assertj.core.api.Assertions;
 import org.junit.Assert;
 import org.junit.Test;
 import org.mockito.Matchers;
 import org.mockito.Mockito;
 
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
@@ -81,6 +86,7 @@ import com.hubspot.singularity.api.SingularityScaleRequest;
 import com.hubspot.singularity.api.SingularityUnpauseRequest;
 import com.hubspot.singularity.data.AbstractMachineManager.StateChangeResult;
 import com.hubspot.singularity.data.SingularityValidator;
+import com.hubspot.singularity.mesos.OfferCache;
 import com.hubspot.singularity.mesos.SingularityMesosTaskPrioritizer;
 import com.hubspot.singularity.scheduler.SingularityDeployHealthHelper.DeployHealth;
 import com.hubspot.singularity.scheduler.SingularityTaskReconciliation.ReconciliationState;
@@ -97,6 +103,9 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
 
   @Inject
   private SingularitySchedulerPoller schedulerPoller;
+
+  @Inject
+  private OfferCache offerCache;
 
   public SingularitySchedulerTest() {
     super(false);
@@ -163,6 +172,89 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     resourceOffers();
 
     Assert.assertEquals(2, taskManager.getActiveTasks().size());
+  }
+
+  @Test
+  public void testOfferCombination() {
+    configuration.setCacheOffers(true);
+    configuration.setOfferCacheSize(2);
+
+    // Each are half of needed memory
+    Offer offer1 = createOffer(1, 64, "slave1", "host1");
+    Offer offer2 = createOffer(1, 64, "slave1", "host1");
+    sms.resourceOffers(driver, ImmutableList.of(offer1, offer2));
+
+    initRequest();
+    initFirstDeploy();
+    requestManager.addToPendingQueue(new SingularityPendingRequest(requestId, firstDeployId, System.currentTimeMillis(), Optional.absent(), PendingType.TASK_DONE,
+        Optional.absent(), Optional.absent()));
+
+    schedulerPoller.runActionOnPoll();
+
+    Assert.assertEquals(1, taskManager.getActiveTasks().size());
+
+    Assert.assertEquals(2, taskManager.getActiveTasks().get(0).getOffers().size());
+  }
+
+  @Test
+  public void testLeftoverCachedOffersAreReturnedToCache() throws Exception {
+    configuration.setCacheOffers(true);
+
+    Offer neededOffer = createOffer(1, 128, "slave1", "host1", Optional.absent(), Collections.emptyMap(), new String[]{"80:81"});
+    Offer extraOffer = createOffer(4, 256, "slave1", "host1", Optional.absent(), Collections.emptyMap(), new String[]{"83:84"});
+
+    sms.resourceOffers(driver, ImmutableList.of(neededOffer, extraOffer));
+
+    initRequest();
+
+    firstDeploy = initAndFinishDeploy(request, new SingularityDeployBuilder(request.getId(), firstDeployId)
+        .setCommand(Optional.of("sleep 100")).setResources(Optional.of(new Resources(1, 128, 2, 0)))
+    );
+
+    requestManager.addToPendingQueue(
+        new SingularityPendingRequest(
+            requestId,
+            firstDeployId,
+            System.currentTimeMillis(),
+            Optional.absent(),
+            PendingType.TASK_DONE,
+            Optional.absent(),
+            Optional.absent()
+        )
+    );
+
+    schedulerPoller.runActionOnPoll();
+
+    List<Offer> cachedOffers = offerCache.peekOffers();
+    Assert.assertEquals(1, cachedOffers.size());
+  }
+
+  @Test
+  public void testLeftoverNewOffersAreCached() {
+    configuration.setCacheOffers(true);
+
+    Offer neededOffer = createOffer(1, 128, "slave1", "host1");
+    Offer extraOffer = createOffer(4, 256, "slave1", "host1");
+
+    initRequest();
+    initFirstDeploy();
+
+    requestManager.addToPendingQueue(
+        new SingularityPendingRequest(
+            requestId,
+            firstDeployId,
+            System.currentTimeMillis(),
+            Optional.absent(),
+            PendingType.TASK_DONE,
+            Optional.absent(),
+            Optional.absent()
+        )
+    );
+
+    sms.resourceOffers(driver, ImmutableList.of(neededOffer, extraOffer));
+
+    List<Offer> cachedOffers = offerCache.peekOffers();
+    Assert.assertEquals(1, cachedOffers.size());
   }
 
   @Test
@@ -418,8 +510,8 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
 
     sms.resourceOffers(driver, Arrays.asList(createOffer(2, 1024), createOffer(1, 1024)));
 
-    Assert.assertTrue(taskManager.getActiveTaskIds().size() == 3);
-    Assert.assertTrue(taskManager.getPendingTaskIds().size() == 7);
+    Assert.assertEquals(3, taskManager.getActiveTaskIds().size());
+    Assert.assertEquals(7, taskManager.getPendingTaskIds().size());
   }
 
   @Test
@@ -437,7 +529,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     Set<String> offerIds = Sets.newHashSet();
 
     for (SingularityTask activeTask : taskManager.getActiveTasks()) {
-      offerIds.add(activeTask.getOffer().getId().getValue());
+      offerIds.addAll(activeTask.getOffers().stream().map((o) -> o.getId().getValue()).collect(Collectors.toList()));
     }
 
     Assert.assertTrue(offerIds.size() == 2);
@@ -656,7 +748,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
 
     Assert.assertEquals(1, taskManager.getNumActiveTasks());
 
-    slaveResource.decommissionSlave(taskManager.getActiveTasks().get(0).getOffer().getSlaveId().getValue(), null);
+    slaveResource.decommissionSlave(taskManager.getActiveTasks().get(0).getSlaveId().getValue(), null);
 
     scheduler.checkForDecomissions(stateCacheProvider.get());
 
@@ -2006,6 +2098,44 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
 
     Assert.assertEquals(1, taskManager.getPendingTaskIds().size());
     Assert.assertEquals(PendingType.IMMEDIATE, taskManager.getPendingTaskIds().get(0).getPendingType());
+  }
+
+  @Test
+  public void testSchedulerDropsMultipleScheduledTaskInstances() {
+    initScheduledRequest();
+
+    SingularityDeploy deploy = SingularityDeploy.newBuilder(requestId, firstDeployId)
+        .setCommand(Optional.of("sleep 100"))
+        .build();
+    SingularityDeployRequest singularityDeployRequest = new SingularityDeployRequest(deploy, Optional.absent(), Optional.absent(), Optional.absent());
+    deployResource.deploy(singularityDeployRequest);
+
+
+    scheduler.drainPendingQueue(stateCacheProvider.get());
+    requestManager.addToPendingQueue(new SingularityPendingRequest(requestId, firstDeployId, Instant.now().plus(3, ChronoUnit.DAYS).toEpochMilli(), Optional.absent(), PendingType.NEW_DEPLOY, Optional.absent(), Optional.absent()));
+
+    SingularityRunNowRequest runNowRequest = new SingularityRunNowRequest(Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent());
+    requestResource.scheduleImmediately(requestId, runNowRequest);
+
+
+
+
+    Assert.assertEquals("Both requests make it into the pending queue", 2, requestManager.getPendingRequests().size());
+    Assert.assertEquals(PendingType.IMMEDIATE, requestManager.getPendingRequests().get(0).getPendingType());
+    Assert.assertEquals(PendingType.NEW_DEPLOY, requestManager.getPendingRequests().get(1).getPendingType());
+
+
+    scheduler.drainPendingQueue(stateCacheProvider.get());
+    Assertions.assertThat(taskManager.getPendingTaskIds())
+        .describedAs("Only the immediate request gets run")
+        .hasSize(1)
+        .extracting(SingularityPendingTaskId::getPendingType)
+        .containsExactly(PendingType.IMMEDIATE);
+
+
+    Assertions.assertThat(requestManager.getPendingRequests())
+        .describedAs("The scheduled request is dropped from the pending queue")
+        .hasSize(0);
   }
 
   @Test(expected = WebApplicationException.class)

@@ -453,10 +453,22 @@ const RequestForm = (props) => {
       id="expected-runtime"
       onChange={event => updateField('scheduledExpectedRuntimeMillis', event.target.value)}
       value={getValue('scheduledExpectedRuntimeMillis')}
-      label="Maximum task duration"
+      label="Expected Task Duration (used for overdue notifications)"
       inputGroupAddon="milliseconds"
       required={INDEXED_FIELDS.scheduledExpectedRuntimeMillis.required}
       feedback={feedback('scheduledExpectedRuntimeMillis')}
+    />
+  );
+
+  const taskExecutionTimeLimitMillis = (
+    <TextFormGroup
+      id="expected-runtime"
+      onChange={event => updateField('taskExecutionTimeLimitMillis', event.target.value)}
+      value={getValue('taskExecutionTimeLimitMillis')}
+      label="Maximum task duration (task will be killed after this time)"
+      inputGroupAddon="milliseconds"
+      required={INDEXED_FIELDS.taskExecutionTimeLimitMillis.required}
+      feedback={feedback('taskExecutionTimeLimitMillis')}
     />
   );
 
@@ -662,6 +674,7 @@ const RequestForm = (props) => {
           { shouldRenderField('numRetriesOnFailure') && numRetriesOnFailure }
           { shouldRenderField('killOldNonLongRunningTasksAfterMillis') && killOldNonLongRunningTasksAfterMillis }
           { shouldRenderField('scheduledExpectedRuntimeMillis') && scheduledExpectedRuntimeMillis }
+          { shouldRenderField('taskExecutionTimeLimitMillis') && taskExecutionTimeLimitMillis }
           <div>
             <hr />
             {advancedSelector}

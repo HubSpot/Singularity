@@ -33,6 +33,12 @@ public class SingularityClientModule extends AbstractModule {
 
   public static final String CREDENTIALS_PROPERTY_NAME = "singularity.client.credentials";
 
+  // bind this to an int for the number of retry attempts on the request
+  public static final String RETRY_ATTEMPTS = "singularity.client.retry.attempts";
+
+  // bind this to a Predicate<HttpResponse> to say whether a request should be retried
+  public static final String RETRY_STRATEGY = "singularity.client.retry.strategy";
+
   private final List<String> hosts;
   private final Optional<HttpConfig> httpConfig;
 
