@@ -17,6 +17,7 @@ import com.hubspot.mesos.Resources;
 import com.hubspot.singularity.DeployState;
 import com.hubspot.singularity.LoadBalancerRequestType;
 import com.hubspot.singularity.RequestState;
+import com.hubspot.singularity.RequestType;
 import com.hubspot.singularity.SingularityDeploy;
 import com.hubspot.singularity.SingularityDeployBuilder;
 import com.hubspot.singularity.SingularityDeployProgress;
@@ -30,6 +31,7 @@ import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityUpdatePendingDeployRequest;
 import com.hubspot.singularity.TaskCleanupType;
 import com.hubspot.singularity.api.SingularityDeployRequest;
+import com.hubspot.singularity.api.SingularityRunNowRequest;
 
 public class SingularityDeploysTest extends SingularitySchedulerTestBase {
 
@@ -901,5 +903,59 @@ public class SingularityDeploysTest extends SingularitySchedulerTestBase {
     deployProgress = deployManager.getPendingDeploy(requestId).get().getDeployProgress().get();
     Assert.assertEquals(3, deployProgress.getTargetActiveInstances());
     Assert.assertEquals(3, deployProgress.getCurrentActiveInstances());
+  }
+
+  @Test
+  public void testDeployWithImmediateRunIsLaunchedImmediately() {
+    initRequestWithType(RequestType.SCHEDULED, false);
+    String deployId = "d1";
+
+    SingularityRunNowRequest runNowRequest = new SingularityRunNowRequest(Optional.of("Message"), Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent());
+    SingularityDeploy deploy = new SingularityDeployBuilder(requestId, deployId)
+        .setRunImmediately(Optional.of(runNowRequest))
+        .setCommand(Optional.of("printenv > tmp.txt"))
+        .build();
+    SingularityDeployRequest deployRequest = new SingularityDeployRequest(deploy, Optional.absent(), Optional.absent());
+    deployResource.deploy(deployRequest);
+    deployChecker.checkDeploys();
+
+    scheduler.drainPendingQueue(stateCacheProvider.get());
+    resourceOffers();
+
+    Assert.assertEquals(1, taskManager.getNumActiveTasks());
+    Assert.assertEquals(0, taskManager.getNumScheduledTasks());
+    SingularityTaskId taskId = taskManager.getActiveTaskIdsForDeploy(requestId, deployId).get(0);
+    SingularityTask task = taskManager.getTask(taskId).get();
+
+    Assert.assertEquals("printenv > tmp.txt", task.getMesosTask().getCommand().getValue());
+  }
+
+  @Test
+  public void testDeployWithImmediateRunSchedulesAfterRunningImmediately() {
+    initRequestWithType(RequestType.SCHEDULED, false);
+    String deployId = "d1";
+
+    SingularityRunNowRequest runNowRequest = new SingularityRunNowRequest(Optional.of("Message"), Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent());
+    SingularityDeploy deploy = new SingularityDeployBuilder(requestId, deployId)
+        .setRunImmediately(Optional.of(runNowRequest))
+        .setCommand(Optional.of("printenv > tmp.txt"))
+        .build();
+    SingularityDeployRequest deployRequest = new SingularityDeployRequest(deploy, Optional.absent(), Optional.absent());
+    deployResource.deploy(deployRequest);
+    deployChecker.checkDeploys();
+
+    scheduler.drainPendingQueue(stateCacheProvider.get());
+    resourceOffers();
+
+    SingularityTaskId taskId = taskManager.getActiveTaskIdsForDeploy(requestId, deployId).get(0);
+    SingularityTask task = taskManager.getTask(taskId).get();
+    statusUpdate(task, TaskState.TASK_RUNNING);
+    statusUpdate(task, TaskState.TASK_FINISHED);
+
+    scheduler.drainPendingQueue(stateCacheProvider.get());
+    resourceOffers();
+
+    Assert.assertEquals(0, taskManager.getNumActiveTasks());
+    Assert.assertEquals(1, taskManager.getNumScheduledTasks());
   }
 }

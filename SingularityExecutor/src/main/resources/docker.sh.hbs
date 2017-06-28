@@ -12,8 +12,10 @@ CONTAINER_NAME="{{{ prefix }}}{{{ runContext.taskId }}}"
 
 CURRENT_DIR=`pwd`
 
+user={{#shellQuote  runContext.user}}{{/shellQuote}}
+
 function check_contianer_running {
-  status=`sudo -E -H -u {{{ runContext.user }}} docker inspect -f \{{.State.Running}} $1`
+  status=`sudo -E -H -u "$user" docker inspect -f \{{.State.Running}} $1`
   if [ "$status" = "false" ] ; then
     echo "container is no longer running..."
     running=0
@@ -32,11 +34,11 @@ function setup_signals {
 
 function handle_signal {
   echo "Received $2"
-  echo "Stopping via sudo -E -H -u {{{ runContext.user }}} docker stop -t $STOP_TIME $1"
-  sudo -E -H -u {{{ runContext.user }}} docker stop -t $STOP_TIME "$1"
-  exit_code=`sudo -E -H -u {{{ runContext.user }}} docker wait "$cid"`
+  echo "Stopping via sudo -E -H -u "$user" docker stop -t $STOP_TIME $1"
+  sudo -E -H -u "$user" docker stop -t $STOP_TIME "$1"
+  exit_code=`sudo -E -H -u "$user" docker wait "$cid"`
   echo "Attempting to remove container"
-  sudo -E -H -u {{{ runContext.user }}} docker rm $1
+  sudo -E -H -u "$user" docker rm $1
   exit "$exit_code"
 }
 
@@ -83,19 +85,19 @@ DOCKER_IMAGE={{{ envContext.dockerInfo.image }}}
 # load env vars
 touch docker.env
 {{#each envContext.env}}
-{{#ifHasNewLines value}}
-{{{name}}}={{{bashEscaped value}}}
+{{#ifHasNewLinesOrBackticks value}}
+{{{name}}}={{{shellQuote value}}}
 {{else}}
 {{{name}}}={{{bashEscaped value}}}
-echo "{{{name}}}={{{value}}}" >> docker.env
-{{/ifHasNewLines}}
+echo "{{{name}}}=${{{name}}}" >> docker.env
+{{/ifHasNewLinesOrBackticks}}
 {{/each}}
 
 # Create log directory for logrotate runs
 if [[ ! -d {{{ runContext.logDir }}} ]]; then
   echo "Creating log directory ({{{ runContext.logDir }}})..."
   mkdir -p {{{ runContext.logDir }}}
-  sudo chown -R {{{ runContext.user }}} {{{ runContext.logDir }}}
+  sudo chown -R "$user" {{{ runContext.logDir }}}
 fi
 
 # load artifact's profile.d
@@ -108,59 +110,62 @@ else
 fi
 
 # set up port mappings
-DOCKER_PORTS=()
-{{#each envContext.dockerInfo.portMappingsList}}DOCKER_PORTS+=( -p {{{ hostPort }}}:{{{ containerPort }}} )
+DOCKER_OPTIONS=()
+{{#each envContext.dockerInfo.portMappingsList}}DOCKER_OPTIONS+=( -p {{{ hostPort }}}:{{{ containerPort }}} )
 {{/each}}
 
 # set up attached volumes
-DOCKER_VOLUMES=()
-DOCKER_VOLUMES+=( -v "$CURRENT_DIR:/mnt/mesos/sandbox" )
+DOCKER_OPTIONS+=( -v "$CURRENT_DIR:/mnt/mesos/sandbox" )
 echo "MESOS_SANDBOX=/mnt/mesos/sandbox" >> docker.env
 echo "LOG_HOME=/mnt/mesos/sandbox/logs" >> docker.env
 echo "MESOS_TASK_ID={{{bashEscaped runContext.taskId}}}" >> docker.env
 {{#each envContext.containerVolumes}}
 {{#if mode}}raw_mode{{@index}}={{{ mode }}}{{/if}}
-DOCKER_VOLUMES+=( -v "{{#if hostPath}}{{{ hostPath }}}:{{{ containerPath }}}{{else}}{{{ containerPath }}}:{{{ containerPath }}}{{/if}}{{#if mode}}:${raw_mode{{@index}},,}{{/if}}" )
+DOCKER_OPTIONS+=( -v "{{#if hostPath}}{{{ hostPath }}}:{{{ containerPath }}}{{else}}{{{ containerPath }}}:{{{ containerPath }}}{{/if}}{{#if mode}}:${raw_mode{{@index}},,}{{/if}}" )
 {{/each}}
 
 # set up network config
 {{#if envContext.dockerInfo.network}}
 raw_network={{envContext.dockerInfo.network}}
-DOCKER_NETWORK="--net=${raw_network,,}"
+DOCKER_OPTIONS+=(--net=${raw_network,,})
 {{else}}
-DOCKER_NETWORK="--net=host"
+DOCKER_OPTIONS+=(--net=host)
 {{/if}}
 
 PARENT_CGROUP=$(get_deepest_cgroup)
 
-DOCKER_OPTIONS="--name=$CONTAINER_NAME --cgroup-parent=$PARENT_CGROUP $DOCKER_NETWORK --env-file=docker.env ${DOCKER_VOLUMES[@]} ${DOCKER_PORTS[@]}"
+DOCKER_OPTIONS+=(--name=$CONTAINER_NAME)
+DOCKER_OPTIONS+=(--cgroup-parent=$PARENT_CGROUP)
+DOCKER_OPTIONS+=(--env-file=docker.env)
 
 {{#unless envContext.dockerWorkdirOverriden }}
-DOCKER_OPTIONS="$DOCKER_OPTIONS -w /mnt/mesos/sandbox/{{{ runContext.taskAppDirectory }}}"
+DOCKER_OPTIONS+=(-w /mnt/mesos/sandbox/{{{ runContext.taskAppDirectory }}})
 {{/unless}}
 
 {{#if privileged}}
-DOCKER_OPTIONS="$DOCKER_OPTIONS --privileged"
+DOCKER_OPTIONS+=(--privileged)
 {{/if}}
 
 {{#each envContext.dockerParameters}}
-DOCKER_OPTIONS="$DOCKER_OPTIONS {{this}}"
+DOCKER_OPTIONS+=({{this}})
 {{/each}}
 
-echo "Ensuring {{{ runContext.taskAppDirectory }}} is owned by {{{ runContext.user }}}"
+echo "Ensuring {{{ runContext.taskAppDirectory }}} is owned by $user"
 mkdir -p {{{ runContext.taskAppDirectory }}}
-sudo chown -R {{{ runContext.user }}} {{{ runContext.taskAppDirectory }}}
+sudo chown -R "$user" {{{ runContext.taskAppDirectory }}}
 
 {{#if runContext.useFileAttributes}}
 touch {{{ runContext.logFile }}}
-sudo chown {{{ runContext.user }}} {{{ runContext.logFile }}}
+sudo chown "$user" {{{ runContext.logFile }}}
 setfattr -n user.logstart -v "$(($(date +%s%N)/1000000))" {{{ runContext.logFile }}}
 {{/if}}
 
 # Start up the container
-echo -e "Creating continer with: sudo -E -H -u {{{ runContext.user }}} docker create $DOCKER_OPTIONS {{#each envContext.env}}{{#ifHasNewLines value}}-e {{{name}}}={{#escapeNewLinesAndQuotes value}}{{/escapeNewLinesAndQuotes}}{{/ifHasNewLines}}{{/each}} $DOCKER_IMAGE {{{ runContext.cmd }}}"
-cid=`sudo -E -H -u {{{ runContext.user }}} docker create $DOCKER_OPTIONS {{#each envContext.env}}{{#ifHasNewLines value}}-e {{{name}}}={{#escapeNewLinesAndQuotes value}}{{/escapeNewLinesAndQuotes}}{{/ifHasNewLines}}{{/each}} $DOCKER_IMAGE {{{runContext.cmd }}}`
-sudo -E -H -u {{{ runContext.user }}} docker start -a $cid >> {{{ runContext.logFile }}} 2>&1 &
+env_args=({{#each envContext.env}}{{#ifHasNewLinesOrBackticks value}}-e {{#shellQuote name}}{{/shellQuote}}={{#shellQuote value}}{{/shellQuote}} {{/ifHasNewLinesOrBackticks}}{{/each}})
+cmd=(sudo -E -H -u "$user" docker create "${DOCKER_OPTIONS[@]}" "${env_args[@]}" "$DOCKER_IMAGE" {{{ runContext.cmd }}})
+echo -e "Creating container with: ${cmd[*]}"
+cid="$("${cmd[@]}")"
+sudo -E -H -u "$user" docker start -a $cid >> {{{ runContext.logFile }}} 2>&1 &
 running=1
 
 setup_signals "$cid" "handle_signal" SIGINT SIGTERM
@@ -174,5 +179,5 @@ while true; do
   fi
 done
 
-exit_code=`sudo -E -H -u {{{ runContext.user }}} docker wait "$cid"`
+exit_code=`sudo -E -H -u "$user" docker wait "$cid"`
 exit "$exit_code"

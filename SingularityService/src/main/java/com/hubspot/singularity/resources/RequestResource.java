@@ -1,16 +1,13 @@
 package com.hubspot.singularity.resources;
 
-import static com.hubspot.singularity.WebExceptions.badRequest;
 import static com.hubspot.singularity.WebExceptions.checkBadRequest;
 import static com.hubspot.singularity.WebExceptions.checkConflict;
 import static com.hubspot.singularity.WebExceptions.checkNotNullBadRequest;
-import static com.hubspot.singularity.WebExceptions.checkRateLimited;
 
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.TimeUnit;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
@@ -37,7 +34,6 @@ import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.hubspot.jackson.jaxrs.PropertyFiltering;
 import com.hubspot.mesos.JavaUtils;
-import com.hubspot.mesos.Resources;
 import com.hubspot.singularity.MachineState;
 import com.hubspot.singularity.RequestCleanupType;
 import com.hubspot.singularity.RequestState;
@@ -49,7 +45,6 @@ import com.hubspot.singularity.SingularityPendingDeploy;
 import com.hubspot.singularity.SingularityPendingRequest;
 import com.hubspot.singularity.SingularityPendingRequest.PendingType;
 import com.hubspot.singularity.SingularityPendingRequestParent;
-import com.hubspot.singularity.SingularityPendingTaskId;
 import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityRequestCleanup;
 import com.hubspot.singularity.SingularityRequestDeployState;
@@ -277,55 +272,14 @@ public class RequestResource extends AbstractRequestResource {
 
     checkConflict(requestWithState.getState() != RequestState.PAUSED, "Request %s is paused. Unable to run now (it must be manually unpaused first)", requestWithState.getRequest().getId());
 
-    PendingType pendingType = null;
 
-    List<SingularityTaskId> activeTaskIds = taskManager.getActiveTaskIdsForRequest(requestId);
-
-    if (requestWithState.getRequest().isScheduled()) {
-      pendingType = PendingType.IMMEDIATE;
-      checkConflict(activeTaskIds.isEmpty(), "Can not request an immediate run of a scheduled job which is currently running (%s)", taskManager.getActiveTaskIdsForRequest(requestId));
-    } else if (requestWithState.getRequest().isOneOff()) {
-      pendingType = PendingType.ONEOFF;
-      if (requestWithState.getRequest().getInstances().isPresent()) {
-        List<SingularityPendingTaskId> pendingTaskIds = taskManager.getPendingTaskIdsForRequest(requestWithState.getRequest().getId());
-        checkRateLimited(activeTaskIds.size() + pendingTaskIds.size() < requestWithState.getRequest().getInstances().get(),
-            "No more than %s tasks allowed to run concurrently for request %s (%s active, %s pending). Wait for tasks to finish before enqueuing more",
-            requestWithState.getRequest().getInstances().get(), activeTaskIds.size(), pendingTaskIds.size(), requestWithState.getRequest().getId());
-      }
-    } else {
-      throw badRequest("Can not request an immediate run of a non-scheduled / always running request (%s)", requestWithState.getRequest());
-    }
-
-    Optional<String> runId = Optional.absent();
-    Optional<String> message = Optional.absent();
-    Optional<Boolean> skipHealthchecks = Optional.absent();
-    Optional<List<String>> commandLineArgs = Optional.absent();
-    Optional<Resources> resources = Optional.absent();
-    Optional<Long> runAt = Optional.absent();
-
-    if (maybeRunNowRequest.isPresent()) {
-      message = maybeRunNowRequest.get().getMessage();
-      runId = maybeRunNowRequest.get().getRunId();
-      skipHealthchecks = maybeRunNowRequest.get().getSkipHealthchecks();
-      commandLineArgs = maybeRunNowRequest.get().getCommandLineArgs();
-      resources = maybeRunNowRequest.get().getResources();
-      runAt = maybeRunNowRequest.get().getRunAt();
-
-      if (runAt.isPresent() && runAt.get() > (System.currentTimeMillis() + TimeUnit.DAYS.toMillis(singularityConfiguration.getMaxRunNowTaskLaunchDelayDays()))) {
-        throw badRequest("Task launch delay can be at most %d days from now.", singularityConfiguration.getMaxRunNowTaskLaunchDelayDays());
-      }
-    }
-
-    if (runId.isPresent() && runId.get().length() > 100) {
-      throw badRequest("runId must be less than 100 characters. RunId %s has %s characters", runId.get(), runId.get().length());
-    }
-
-    if (!runId.isPresent()) {
-      runId = Optional.of(UUID.randomUUID().toString());
-    }
-
-    final SingularityPendingRequest pendingRequest = new SingularityPendingRequest(requestId, getAndCheckDeployId(requestId), System.currentTimeMillis(),
-        JavaUtils.getUserEmail(user), pendingType, commandLineArgs, runId, skipHealthchecks, message, Optional.<String> absent(), resources, runAt);
+    final SingularityPendingRequest pendingRequest = validator.checkRunNowRequest(
+        getAndCheckDeployId(requestId),
+        JavaUtils.getUserEmail(user),
+        requestWithState.getRequest(),
+        maybeRunNowRequest,
+        taskManager.getActiveTaskIdsForRequest(requestId),
+        taskManager.getPendingTaskIdsForRequest(requestId));
 
     SingularityCreateResult result = requestManager.addToPendingQueue(pendingRequest);
 
