@@ -90,21 +90,21 @@ public class SingularityMesosSchedulerImpl extends SingularityMesosScheduler {
 
   @Inject
   SingularityMesosSchedulerImpl(SingularitySchedulerLock lock,
-                            SingularityExceptionNotifier exceptionNotifier,
-                            SingularityStartup startup,
-                            SingularityLeaderCacheCoordinator leaderCacheCoordinator,
-                            SingularityAbort abort,
-                            SingularityMesosFrameworkMessageHandler messageHandler,
-                            SingularitySlaveAndRackManager slaveAndRackManager,
-                            OfferCache offerCache,
-                            SingularityMesosOfferScheduler offerScheduler,
-                            SingularityMesosStatusUpdateHandler statusUpdateHandler,
-                            SingularityMesosSchedulerClient mesosSchedulerClient,
-                            DisasterManager disasterManager,
-                            SingularityConfiguration configuration,
-                            TaskManager taskManager,
-                            Transcoder<SingularityTaskDestroyFrameworkMessage> transcoder,
-                            @Named(SingularityMainModule.STATUS_UPDATE_DELTA_30S_AVERAGE) AtomicLong statusUpdateDeltaAvg) {
+                                SingularityExceptionNotifier exceptionNotifier,
+                                SingularityStartup startup,
+                                SingularityLeaderCacheCoordinator leaderCacheCoordinator,
+                                SingularityAbort abort,
+                                SingularityMesosFrameworkMessageHandler messageHandler,
+                                SingularitySlaveAndRackManager slaveAndRackManager,
+                                OfferCache offerCache,
+                                SingularityMesosOfferScheduler offerScheduler,
+                                SingularityMesosStatusUpdateHandler statusUpdateHandler,
+                                SingularityMesosSchedulerClient mesosSchedulerClient,
+                                DisasterManager disasterManager,
+                                SingularityConfiguration configuration,
+                                TaskManager taskManager,
+                                Transcoder<SingularityTaskDestroyFrameworkMessage> transcoder,
+                                @Named(SingularityMainModule.STATUS_UPDATE_DELTA_30S_AVERAGE) AtomicLong statusUpdateDeltaAvg) {
     this.exceptionNotifier = exceptionNotifier;
     this.startup = startup;
     this.abort = abort;

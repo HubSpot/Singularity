@@ -156,6 +156,9 @@ public abstract class SingularityMesosScheduler {
 
   public abstract Optional<Long> getLastOfferTimestamp();
 
+  /*
+   * for testing only
+   */
   public abstract void setSubscribed();
 }
 
