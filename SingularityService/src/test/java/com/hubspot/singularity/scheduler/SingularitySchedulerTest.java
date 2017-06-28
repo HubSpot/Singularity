@@ -209,7 +209,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     initRequest();
 
     firstDeploy = initAndFinishDeploy(request, new SingularityDeployBuilder(request.getId(), firstDeployId)
-        .setCommand(Optional.of("sleep 100")).setResources(Optional.of(new Resources(1, 128, 2, 0)))
+        .setCommand(Optional.of("sleep 100")), Optional.of(new Resources(1, 128, 2, 0))
     );
 
     requestManager.addToPendingQueue(
