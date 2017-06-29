@@ -275,6 +275,7 @@ Models:
 
 | name | type | required | description |
 |------|------|----------|-------------|
+| deleteFromLoadBalancer | boolean | optional | Should the service associated with the request be removed from the load balancer |
 | message | string | optional | A message to show to users about why this action was taken |
 | actionId | string | optional | An id to associate with this action for metadata purposes |
 
@@ -321,6 +322,7 @@ Models:
 | considerHealthyAfterRunningForSeconds | long | optional | Number of seconds that a service must be healthy to consider the deployment to be successful. |
 | loadBalancerOptions | [Map[string,Object]](models.md#model-Map[string,Object]) | optional | Map (Key/Value) of options for the load balancer. |
 | maxTaskRetries | int | optional | allowed at most this many failed tasks to be retried before failing the deploy |
+| runImmediately | [SingularityRunNowRequest](models.md#model-SingularityRunNowRequest) | optional | Settings used to run this deploy immediately |
 | loadBalancerPortIndex | int | optional | Send this port to the load balancer api (e.g. 0 for first port), defaults to first port |
 | loadBalancerTemplate | string | optional | Name of load balancer template to use if not using the default template |
 | customExecutorCmd | string | optional | Custom Mesos executor |
@@ -689,6 +691,7 @@ Models:
 | message | string | optional |  |
 | timestamp | long | optional |  |
 | deployId | string | optional |  |
+| runAt | long | optional |  |
 | actionId | string | optional |  |
 | cmdLineArgsList | Array[string] | optional |  |
 | pendingType | [PendingType](models.md#model-PendingType) | optional |  Allowable values: IMMEDIATE, ONEOFF, BOUNCE, NEW_DEPLOY, NEXT_DEPLOY_STEP, UNPAUSED, RETRY, UPDATED_REQUEST, DECOMISSIONED_SLAVE_OR_RACK, TASK_DONE, STARTUP, CANCEL_BOUNCE, TASK_BOUNCE, DEPLOY_CANCELLED, DEPLOY_FAILED |
@@ -791,6 +794,7 @@ Models:
 
 | name | type | required | description |
 |------|------|----------|-------------|
+| removeFromLoadBalancer | boolean | optional |  |
 | skipHealthchecks | boolean | optional |  |
 | requestId | string | optional |  |
 | user | string | optional |  |
@@ -857,6 +861,7 @@ Models:
 | skipHealthchecks | boolean | optional | If set to true, healthchecks will be skipped for this task run |
 | commandLineArgs | Array[string] | optional | Command line arguments to be passed to the task |
 | message | string | optional | A message to show to users about why this action was taken |
+| runAt | long | optional | Schedule this task to run at a specified time |
 
 
 ## <a name="model-SingularityS3LogMetadata"></a> SingularityS3LogMetadata
@@ -1018,6 +1023,7 @@ Models:
 | name | type | required | description |
 |------|------|----------|-------------|
 | taskId | [SingularityTaskId](models.md#model-SingularityTaskId) | optional |  |
+| removeFromLoadBalancer | boolean | optional |  |
 | user | string | optional |  |
 | cleanupType | [TaskCleanupType](models.md#model-TaskCleanupType) | optional |  Allowable values: USER_REQUESTED, USER_REQUESTED_TASK_BOUNCE, DECOMISSIONING, SCALING_DOWN, BOUNCING, INCREMENTAL_BOUNCE, DEPLOY_FAILED, NEW_DEPLOY_SUCCEEDED, DEPLOY_STEP_FINISHED, DEPLOY_CANCELED, TASK_EXCEEDED_TIME_LIMIT, UNHEALTHY_NEW_TASK, OVERDUE_NEW_TASK, USER_REQUESTED_DESTROY, INCREMENTAL_DEPLOY_FAILED, INCREMENTAL_DEPLOY_CANCELLED, PRIORITY_KILL, REBALANCE_RACKS, PAUSING, PAUSE, DECOMMISSION_TIMEOUT, REQUEST_DELETING |
 | message | string | optional |  |
