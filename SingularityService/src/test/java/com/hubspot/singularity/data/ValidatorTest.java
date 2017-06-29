@@ -320,4 +320,32 @@ public class ValidatorTest extends SingularityTestBaseNoDb {
         .contains("Max healthcheck time");
   }
 
+  @Test
+  public void itAllowsWorkerToServiceTransitionIfNotLoadBalanced() {
+    SingularityRequest request = new SingularityRequestBuilder("test", RequestType.WORKER)
+        .build();
+    SingularityRequest newRequest = new SingularityRequestBuilder("test", RequestType.SERVICE)
+        .build();
+    SingularityRequest result = validator.checkSingularityRequest(newRequest, Optional.of(request), Optional.absent(), Optional.absent());
+    Assert.assertEquals(newRequest.getRequestType(), result.getRequestType());
+  }
+
+  @Test(expected = WebApplicationException.class)
+  public void itDoesNotWorkerToServiceTransitionIfLoadBalanced() {
+    SingularityRequest request = new SingularityRequestBuilder("test", RequestType.WORKER)
+        .build();
+    SingularityRequest newRequest = new SingularityRequestBuilder("test", RequestType.SERVICE)
+        .setLoadBalanced(Optional.of(true))
+        .build();
+    validator.checkSingularityRequest(newRequest, Optional.of(request), Optional.absent(), Optional.absent());
+  }
+
+  @Test(expected = WebApplicationException.class)
+  public void itDoesNotAllowOtherRequestTypesToChange() {
+    SingularityRequest request = new SingularityRequestBuilder("test", RequestType.ON_DEMAND)
+        .build();
+    SingularityRequest newRequest = new SingularityRequestBuilder("test", RequestType.SCHEDULED)
+        .build();
+    validator.checkSingularityRequest(newRequest, Optional.of(request), Optional.absent(), Optional.absent());
+  }
 }

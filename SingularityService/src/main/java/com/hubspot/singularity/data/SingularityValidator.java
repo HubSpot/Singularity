@@ -44,6 +44,7 @@ import com.hubspot.mesos.SingularityMesosTaskLabel;
 import com.hubspot.mesos.SingularityPortMappingType;
 import com.hubspot.mesos.SingularityVolume;
 import com.hubspot.singularity.MachineState;
+import com.hubspot.singularity.RequestType;
 import com.hubspot.singularity.ScheduleType;
 import com.hubspot.singularity.SingularityAction;
 import com.hubspot.singularity.SingularityDeploy;
@@ -555,7 +556,11 @@ public class SingularityValidator {
   }
 
   private void checkForIllegalChanges(SingularityRequest request, SingularityRequest existingRequest) {
-    checkBadRequest(request.getRequestType() == existingRequest.getRequestType(), String.format("Request can not change requestType from %s to %s", existingRequest.getRequestType(), request.getRequestType()));
+    if (request.getRequestType() != existingRequest.getRequestType()) {
+      boolean validWorkerServiceTransition = (existingRequest.getRequestType() == RequestType.SERVICE && !existingRequest.isLoadBalanced() && request.getRequestType() == RequestType.WORKER) ||
+          (request.getRequestType() == RequestType.SERVICE && !request.isLoadBalanced() && existingRequest.getRequestType() == RequestType.WORKER);
+      checkBadRequest(validWorkerServiceTransition, String.format("Request can not change requestType from %s to %s", existingRequest.getRequestType(), request.getRequestType()));
+    }
     checkBadRequest(request.isLoadBalanced() == existingRequest.isLoadBalanced(), "Request can not change whether it is load balanced");
   }
 
