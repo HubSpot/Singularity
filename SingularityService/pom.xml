@@ -459,54 +459,6 @@
           </execution>
         </executions>
       </plugin>
-      <plugin>
-        <groupId>org.basepom.maven</groupId>
-        <artifactId>duplicate-finder-maven-plugin</artifactId>
-        <configuration>
-          <exceptions combine.children="append">
-            <exception>
-              <conflictingDependencies>
-                <dependency>
-                  <groupId>commons-beanutils</groupId>
-                  <artifactId>commons-beanutils</artifactId>
-                </dependency>
-                <dependency>
-                  <groupId>commons-beanutils</groupId>
-                  <artifactId>commons-beanutils-core</artifactId>
-                </dependency>
-                <dependency>
-                  <groupId>commons-collections</groupId>
-                  <artifactId>commons-collections</artifactId>
-                </dependency>
-              </conflictingDependencies>
-              <classes>
-                <class>org.apache.commons.collections.ArrayStack</class>
-                <class>org.apache.commons.collections.Buffer</class>
-                <class>org.apache.commons.collections.BufferUnderflowException</class>
-                <class>org.apache.commons.collections.FastHashMap</class>
-              </classes>
-            </exception>
-            <exception>
-              <conflictingDependencies>
-                <dependency>
-                  <groupId>commons-beanutils</groupId>
-                  <artifactId>commons-beanutils</artifactId>
-                </dependency>
-                <dependency>
-                  <groupId>commons-beanutils</groupId>
-                  <artifactId>commons-beanutils-core</artifactId>
-                </dependency>
-              </conflictingDependencies>
-              <packages>
-                <package>org.apache.commons.beanutils</package>
-              </packages>
-            </exception>
-          </exceptions>
-          <ignoredResourcePatterns>
-            <ignoredResourcePattern>.*licenses.xml</ignoredResourcePattern>
-          </ignoredResourcePatterns>
-        </configuration>
-      </plugin>
     </plugins>
 
     <pluginManagement>

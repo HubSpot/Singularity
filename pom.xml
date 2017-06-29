@@ -389,6 +389,24 @@
         		</lifecycleMappingMetadata>
         	</configuration>
         </plugin>
+        <plugin>
+          <groupId>org.basepom.maven</groupId>
+          <artifactId>duplicate-finder-maven-plugin</artifactId>
+          <configuration>
+            <ignoredResourcePatterns>
+              <ignoredResourcePattern>.*\.html</ignoredResourcePattern>
+              <ignoredResourcePattern>about_files/.*</ignoredResourcePattern>
+              <ignoredResourcePattern>plugin\.properties</ignoredResourcePattern>
+              <ignoredResourcePattern>plugin\.xml</ignoredResourcePattern>
+              <ignoredResourcePattern>.*\.java</ignoredResourcePattern>
+              <ignoredResourcePattern>log4j\.xml</ignoredResourcePattern>
+              <ignoredResourcePattern>log4j\.properties</ignoredResourcePattern>
+              <ignoredResourcePattern>logback\.xml</ignoredResourcePattern>
+              <ignoredResourcePattern>logback\.properties</ignoredResourcePattern>
+              <ignoredResourcePattern>.*licenses\.xml</ignoredResourcePattern>
+            </ignoredResourcePatterns>
+          </configuration>
+        </plugin>
       </plugins>
     </pluginManagement>
   </build>
