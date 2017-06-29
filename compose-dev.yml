@@ -18,7 +18,7 @@ master:
     MESOS_ROLES: "OPS"
 
 slave:
-  image: hubspot/singularityexecutorslave:0.16.0-SNAPSHOT
+  image: hubspot/singularityexecutorslave:0.17.0-SNAPSHOT
   command: mesos-slave
   net: host
   environment:
@@ -35,7 +35,7 @@ slave:
     - /sys:/sys
 
 scheduler:
-  image: hubspot/singularityservice:0.16.0-SNAPSHOT
+  image: hubspot/singularityservice:0.17.0-SNAPSHOT
   net: host
   environment:
     - DOCKER_HOST
@@ -45,7 +45,7 @@ scheduler:
     - SINGULARITY_MESOS_FRAMEWORK_ROLE=OPS
 
 baragonservice:
-  image: hubspot/baragonservice:0.4.0
+  image: hubspot/baragonservice:0.5.0
   net: host
   environment:
     - DOCKER_HOST
@@ -53,7 +53,7 @@ baragonservice:
     - BARAGON_UI_BASE=/baragon/v2
 
 baragonagent:
-  image: hubspot/baragonagent:0.4.0
+  image: hubspot/baragonagent:0.5.0
   net: host
   environment:
     NGINX_PORT: 80
