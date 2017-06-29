@@ -503,7 +503,7 @@
             </exception>
           </exceptions>
           <ignoredResourcePatterns>
-            <ignoredResourcePattern>*licenses.xml</ignoredResourcePattern>
+            <ignoredResourcePattern>.*licenses.xml</ignoredResourcePattern>
           </ignoredResourcePatterns>
         </configuration>
       </plugin>
