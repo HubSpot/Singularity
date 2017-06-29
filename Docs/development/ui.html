@@ -1,0 +1,983 @@
+<!DOCTYPE HTML>
+<html lang="en" >
+    <!-- Start book Singularity -->
+    <head>
+        <!-- head:start -->
+        <meta charset="UTF-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+        <title>UI | Singularity</title>
+        <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+        <meta name="description" content="">
+        <meta name="generator" content="GitBook 2.6.7">
+        
+        
+        <meta name="HandheldFriendly" content="true"/>
+        <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-status-bar-style" content="black">
+        <link rel="apple-touch-icon-precomposed" sizes="152x152" href="../../gitbook/images/apple-touch-icon-precomposed-152.png">
+        <link rel="shortcut icon" href="../../gitbook/images/favicon.ico" type="image/x-icon">
+        
+    <link rel="stylesheet" href="../../gitbook/style.css">
+    
+        
+        <link rel="stylesheet" href="../../gitbook/plugins/gitbook-plugin-search/search.css">
+        
+    
+        
+        <link rel="stylesheet" href="../../gitbook/plugins/gitbook-plugin-fontsettings/website.css">
+        
+    
+    
+        <link rel="stylesheet" href="../../styles/website.css">
+    
+
+        
+    
+    
+    <link rel="next" href="../../Docs/development/load-balancer-integration.html" />
+    
+    
+    <link rel="prev" href="../../Docs/development/developing-with-docker.html" />
+    
+
+        <!-- head:end -->
+    </head>
+    <body>
+        <!-- body:start -->
+        
+    <div class="book"
+        data-level="3.2"
+        data-chapter-title="UI"
+        data-filepath="Docs/development/ui.md"
+        data-basepath="../.."
+        data-revision="Thu Jun 29 2017 11:56:00 GMT-0400 (EDT)"
+        data-innerlanguage="">
+    
+
+<div class="book-summary">
+    <nav role="navigation">
+        <ul class="summary">
+            
+            
+            
+            
+
+            
+
+            
+    
+        <li class="chapter " data-level="0" data-path="index.html">
+            
+                
+                    <a href="../../index.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                        Introduction
+                    </a>
+            
+            
+        </li>
+    
+        <li class="chapter " data-level="1" >
+            
+            <span><b>1.</b> About Singularity</span>
+            
+            
+            <ul class="articles">
+                
+    
+        <li class="chapter " data-level="1.1" data-path="Docs/about/how-it-works.html">
+            
+                
+                    <a href="../../Docs/about/how-it-works.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>1.1.</b>
+                        
+                        How It Works
+                    </a>
+            
+            
+        </li>
+    
+        <li class="chapter " data-level="1.2" data-path="Docs/about/requests-and-deploys.html">
+            
+                
+                    <a href="../../Docs/about/requests-and-deploys.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>1.2.</b>
+                        
+                        Requests and Deploys
+                    </a>
+            
+            
+        </li>
+    
+        <li class="chapter " data-level="1.3" data-path="Docs/about/ui.html">
+            
+                
+                    <a href="../../Docs/about/ui.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>1.3.</b>
+                        
+                        Singularity UI
+                    </a>
+            
+            
+        </li>
+    
+        <li class="chapter " data-level="1.4" data-path="Docs/about/adopters.html">
+            
+                
+                    <a href="../../Docs/about/adopters.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>1.4.</b>
+                        
+                        Adopters
+                    </a>
+            
+            
+        </li>
+    
+
+            </ul>
+            
+        </li>
+    
+        <li class="chapter " data-level="2" >
+            
+            <span><b>2.</b> Getting Started</span>
+            
+            
+            <ul class="articles">
+                
+    
+        <li class="chapter " data-level="2.1" data-path="Docs/getting-started/try-it-out.html">
+            
+                
+                    <a href="../../Docs/getting-started/try-it-out.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>2.1.</b>
+                        
+                        Try It Out
+                    </a>
+            
+            
+        </li>
+    
+        <li class="chapter " data-level="2.2" data-path="Docs/getting-started/install.html">
+            
+                
+                    <a href="../../Docs/getting-started/install.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>2.2.</b>
+                        
+                        Install
+                    </a>
+            
+            
+        </li>
+    
+        <li class="chapter " data-level="2.3" data-path="Docs/getting-started/basic-examples.html">
+            
+                
+                    <a href="../../Docs/getting-started/basic-examples.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>2.3.</b>
+                        
+                        Examples
+                    </a>
+            
+            
+        </li>
+    
+
+            </ul>
+            
+        </li>
+    
+        <li class="chapter " data-level="3" >
+            
+            <span><b>3.</b> Developing</span>
+            
+            
+            <ul class="articles">
+                
+    
+        <li class="chapter " data-level="3.1" data-path="Docs/development/developing-with-docker.html">
+            
+                
+                    <a href="../../Docs/development/developing-with-docker.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>3.1.</b>
+                        
+                        Developing Using Docker
+                    </a>
+            
+            
+        </li>
+    
+        <li class="chapter active" data-level="3.2" data-path="Docs/development/ui.html">
+            
+                
+                    <a href="../../Docs/development/ui.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>3.2.</b>
+                        
+                        UI
+                    </a>
+            
+            
+        </li>
+    
+        <li class="chapter " data-level="3.3" data-path="Docs/development/load-balancer-integration.html">
+            
+                
+                    <a href="../../Docs/development/load-balancer-integration.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>3.3.</b>
+                        
+                        Load Balancer Integration
+                    </a>
+            
+            
+        </li>
+    
+        <li class="chapter " data-level="3.4" data-path="Docs/development/basepom.html">
+            
+                
+                    <a href="../../Docs/development/basepom.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>3.4.</b>
+                        
+                        Basepom
+                    </a>
+            
+            
+        </li>
+    
+
+            </ul>
+            
+        </li>
+    
+        <li class="chapter " data-level="4" data-path="Docs/releases/index.html">
+            
+                
+                    <a href="../../Docs/releases/index.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>4.</b>
+                        
+                        Releases
+                    </a>
+            
+            
+        </li>
+    
+        <li class="chapter " data-level="5" >
+            
+            <span><b>5.</b> Feature Docs</span>
+            
+            
+            <ul class="articles">
+                
+    
+        <li class="chapter " data-level="5.1" data-path="Docs/features/custom-ports.html">
+            
+                
+                    <a href="../../Docs/features/custom-ports.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>5.1.</b>
+                        
+                        Choosing Custom Ports
+                    </a>
+            
+            
+        </li>
+    
+        <li class="chapter " data-level="5.2" data-path="Docs/features/expiring-actions.html">
+            
+                
+                    <a href="../../Docs/features/expiring-actions.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>5.2.</b>
+                        
+                        Expiring Actions
+                    </a>
+            
+            
+        </li>
+    
+        <li class="chapter " data-level="5.3" data-path="Docs/features/shell-commands.html">
+            
+                
+                    <a href="../../Docs/features/shell-commands.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>5.3.</b>
+                        
+                        Shell Commands
+                    </a>
+            
+            
+        </li>
+    
+        <li class="chapter " data-level="5.4" data-path="Docs/features/task-search.html">
+            
+                
+                    <a href="../../Docs/features/task-search.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>5.4.</b>
+                        
+                        Task Search
+                    </a>
+            
+            
+        </li>
+    
+        <li class="chapter " data-level="5.5" data-path="Docs/features/incremental-deploys.html">
+            
+                
+                    <a href="../../Docs/features/incremental-deploys.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>5.5.</b>
+                        
+                        Incremental Deploys
+                    </a>
+            
+            
+        </li>
+    
+        <li class="chapter " data-level="5.6" data-path="Docs/features/disaster-detection.html">
+            
+                
+                    <a href="../../Docs/features/disaster-detection.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>5.6.</b>
+                        
+                        Disaster Detection &amp; Disabled Actions
+                    </a>
+            
+            
+        </li>
+    
+
+            </ul>
+            
+        </li>
+    
+        <li class="chapter " data-level="6" >
+            
+            <span><b>6.</b> Reference</span>
+            
+            
+            <ul class="articles">
+                
+    
+        <li class="chapter " data-level="6.1" data-path="Docs/reference/configuration.html">
+            
+                
+                    <a href="../../Docs/reference/configuration.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>6.1.</b>
+                        
+                        Configuration
+                    </a>
+            
+            
+        </li>
+    
+        <li class="chapter " data-level="6.2" data-path="Docs/reference/container-options.html">
+            
+                
+                    <a href="../../Docs/reference/container-options.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>6.2.</b>
+                        
+                        Container Options
+                    </a>
+            
+            
+        </li>
+    
+        <li class="chapter " data-level="6.3" data-path="Docs/reference/database.html">
+            
+                
+                    <a href="../../Docs/reference/database.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>6.3.</b>
+                        
+                        Database
+                    </a>
+            
+            
+        </li>
+    
+        <li class="chapter " data-level="6.4" data-path="Docs/reference/webhooks.html">
+            
+                
+                    <a href="../../Docs/reference/webhooks.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>6.4.</b>
+                        
+                        Webhooks
+                    </a>
+            
+            
+        </li>
+    
+        <li class="chapter " data-level="6.5" data-path="Docs/reference/slave-extras.html">
+            
+                
+                    <a href="../../Docs/reference/slave-extras.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>6.5.</b>
+                        
+                        Slave Extras
+                    </a>
+            
+            
+        </li>
+    
+        <li class="chapter " data-level="6.6" data-path="Docs/reference/deploy-defaults.html">
+            
+                
+                    <a href="../../Docs/reference/deploy-defaults.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>6.6.</b>
+                        
+                        Deploy Defaults
+                    </a>
+            
+            
+        </li>
+    
+        <li class="chapter " data-level="6.7" data-path="Docs/reference/healthchecks.html">
+            
+                
+                    <a href="../../Docs/reference/healthchecks.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>6.7.</b>
+                        
+                        Health Checks
+                    </a>
+            
+            
+        </li>
+    
+        <li class="chapter " data-level="6.8" data-path="Docs/reference/apidocs/api-index.html">
+            
+                
+                    <a href="../../Docs/reference/apidocs/api-index.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>6.8.</b>
+                        
+                        API
+                    </a>
+            
+            
+            <ul class="articles">
+                
+    
+        <li class="chapter " data-level="6.8.1" data-path="Docs/reference/apidocs/api-sandbox.html">
+            
+                
+                    <a href="../../Docs/reference/apidocs/api-sandbox.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>6.8.1.</b>
+                        
+                        /api/sandbox
+                    </a>
+            
+            
+        </li>
+    
+        <li class="chapter " data-level="6.8.2" data-path="Docs/reference/apidocs/api-slaves.html">
+            
+                
+                    <a href="../../Docs/reference/apidocs/api-slaves.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>6.8.2.</b>
+                        
+                        /api/slaves
+                    </a>
+            
+            
+        </li>
+    
+        <li class="chapter " data-level="6.8.3" data-path="Docs/reference/apidocs/api-history.html">
+            
+                
+                    <a href="../../Docs/reference/apidocs/api-history.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>6.8.3.</b>
+                        
+                        /api/history
+                    </a>
+            
+            
+        </li>
+    
+        <li class="chapter " data-level="6.8.4" data-path="Docs/reference/apidocs/api-state.html">
+            
+                
+                    <a href="../../Docs/reference/apidocs/api-state.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>6.8.4.</b>
+                        
+                        /api/state
+                    </a>
+            
+            
+        </li>
+    
+        <li class="chapter " data-level="6.8.5" data-path="Docs/reference/apidocs/api-logs.html">
+            
+                
+                    <a href="../../Docs/reference/apidocs/api-logs.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>6.8.5.</b>
+                        
+                        /api/logs
+                    </a>
+            
+            
+        </li>
+    
+        <li class="chapter " data-level="6.8.6" data-path="Docs/reference/apidocs/api-tasks.html">
+            
+                
+                    <a href="../../Docs/reference/apidocs/api-tasks.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>6.8.6.</b>
+                        
+                        /api/tasks
+                    </a>
+            
+            
+        </li>
+    
+        <li class="chapter " data-level="6.8.7" data-path="Docs/reference/apidocs/api-test.html">
+            
+                
+                    <a href="../../Docs/reference/apidocs/api-test.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>6.8.7.</b>
+                        
+                        /api/test
+                    </a>
+            
+            
+        </li>
+    
+        <li class="chapter " data-level="6.8.8" data-path="Docs/reference/apidocs/api-webhooks.html">
+            
+                
+                    <a href="../../Docs/reference/apidocs/api-webhooks.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>6.8.8.</b>
+                        
+                        /api/webhooks
+                    </a>
+            
+            
+        </li>
+    
+        <li class="chapter " data-level="6.8.9" data-path="Docs/reference/apidocs/api-racks.html">
+            
+                
+                    <a href="../../Docs/reference/apidocs/api-racks.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>6.8.9.</b>
+                        
+                        /api/racks
+                    </a>
+            
+            
+        </li>
+    
+        <li class="chapter " data-level="6.8.10" data-path="Docs/reference/apidocs/api-requests.html">
+            
+                
+                    <a href="../../Docs/reference/apidocs/api-requests.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>6.8.10.</b>
+                        
+                        /api/requests
+                    </a>
+            
+            
+        </li>
+    
+        <li class="chapter " data-level="6.8.11" data-path="Docs/reference/apidocs/api-groups.html">
+            
+                
+                    <a href="../../Docs/reference/apidocs/api-groups.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>6.8.11.</b>
+                        
+                        /api/groups
+                    </a>
+            
+            
+        </li>
+    
+        <li class="chapter " data-level="6.8.12" data-path="Docs/reference/apidocs/api-deploys.html">
+            
+                
+                    <a href="../../Docs/reference/apidocs/api-deploys.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>6.8.12.</b>
+                        
+                        /api/deploys
+                    </a>
+            
+            
+        </li>
+    
+        <li class="chapter " data-level="6.8.13" data-path="Docs/reference/apidocs/api-disasters.html">
+            
+                
+                    <a href="../../Docs/reference/apidocs/api-disasters.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>6.8.13.</b>
+                        
+                        /api/disasters
+                    </a>
+            
+            
+        </li>
+    
+        <li class="chapter " data-level="6.8.14" data-path="Docs/reference/apidocs/api-priority.html">
+            
+                
+                    <a href="../../Docs/reference/apidocs/api-priority.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>6.8.14.</b>
+                        
+                        /api/priority
+                    </a>
+            
+            
+        </li>
+    
+        <li class="chapter " data-level="6.8.15" data-path="Docs/reference/apidocs/models.html">
+            
+                
+                    <a href="../../Docs/reference/apidocs/models.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>6.8.15.</b>
+                        
+                        Models
+                    </a>
+            
+            
+        </li>
+    
+
+            </ul>
+            
+        </li>
+    
+
+            </ul>
+            
+        </li>
+    
+
+
+            
+            <li class="divider"></li>
+            <li>
+                <a href="https://www.gitbook.com" target="blank" class="gitbook-link">
+                    Published with GitBook
+                </a>
+            </li>
+            
+        </ul>
+    </nav>
+</div>
+
+    <div class="book-body">
+        <div class="body-inner">
+            <div class="book-header" role="navigation">
+    <!-- Actions Left -->
+    
+
+    <!-- Title -->
+    <h1>
+        <i class="fa fa-circle-o-notch fa-spin"></i>
+        <a href="../../" >Singularity</a>
+    </h1>
+</div>
+
+            <div class="page-wrapper" tabindex="-1" role="main">
+                <div class="page-inner">
+                
+                
+                    <section class="normal" id="section-">
+                    
+                        <h1 id="singularityui">SingularityUI</h1>
+<p>This document is intended for people who want to work on SingularityUI independently of the other Singularity modules.</p>
+<p>If you&apos;re here just looking for information on how to build SingularityUI, please note that the Maven build process is configured to automatically build and package the UI into SingularityService.</p>
+<p>The compiled static files are placed in <code>../SingularityService/target/generated-resources/static/</code>.</p>
+<h2 id="contents">Contents</h2>
+<ul>
+<li><a href="#developer-overview">Developer overview</a></li>
+<li><a href="#set-up">Set-up</a></li>
+<li><a href="#developing-locally">Developing locally</a><ul>
+<li><a href="#cross-domain-restrictions">Cross-domain restrictions</a></li>
+<li><a href="#connecting-to-the-api">Connecting to the API</a></li>
+</ul>
+</li>
+<li><a href="#code-structure">Code structure</a><ul>
+<li><a href="#useful-links">Useful links</a></li>
+</ul>
+</li>
+</ul>
+<h2 id="developer-overview">Developer overview</h2>
+<p>SingularityUI is a single page webapp that relies on SingularityService for its data.</p>
+<p>The app is built using Gulp (i.e. compiling ES6, etc), with npm being used to manage its dependencies (e.g. React, Bootstrap).</p>
+<p>We recommend you familiarize yourself with the following if you haven&apos;t used them before:</p>
+<ul>
+<li><a href="http://es6-features.org/#Constants" target="_blank">ES6</a> is the language used for all logic.</li>
+<li><a href="http://learnboost.github.io/stylus/" target="_blank">Stylus</a> is used instead of CSS.</li>
+<li><a href="https://facebook.github.io/react/" target="_blank">React</a> acts as the front-end framework and templating library.</li>
+<li><a href="http://redux.js.org/docs/introduction/" target="_blank">Redux</a> provides state managment.</li>
+<li><a href="http://getbootstrap.com/" target="_blank">Bootstrap</a> provides standard responsive components, and <a href="https://react-bootstrap.github.io/" target="_blank">react-bootstrap</a> provides react versions of said components.</li>
+</ul>
+<h2 id="setup">Set-up</h2>
+<p>You will need to have the following:</p>
+<ul>
+<li><a href="http://nodejs.org/" target="_blank">nodejs</a> with <a href="https://www.npmjs.org/" target="_blank">npm</a>.</li>
+<li><a href="http://gulpjs.com/" target="_blank">gulp</a>, installable via <code>npm install --global gulp-cli</code>.</li>
+</ul>
+<p>Below are some commands you might find useful when working on SingularityUI:</p>
+<pre><code class="lang-bash"># cd Singularity/SingularityUI
+# Install NPM deps
+npm install
+
+# Build the app
+gulp build
+
+# Serve the app locally at localhost:3334 and rebuild whenever files are changed.
+gulp serve
+</code></pre>
+<p>When you first start, run <code>npm install</code> to download all the dependencies. Once that&apos;s done, you&apos;re ready to roll!</p>
+<h2 id="developing-locally">Developing locally</h2>
+<p>So far you have SingularityUI with all its dependencies installed. You&apos;re able to run SingularityUI and have it served using <code>gulp serve</code>. What we need now is a running SingularityService to pull information from.</p>
+<p>If you don&apos;t have one already (e.g. your team might be running one you can use), you can easily run your own via <a href="developing-with-docker.html">Docker</a>. If running via docker, it is helpful to add the host that docker is running on to your <code>/etc/hosts</code> file as <code>docker</code> so we can reference it by hostname. If using <code>boot2docker</code> this is your <code>boot2docker ip</code>. We will reference the hostname as <code>docker</code> in the examples below.</p>
+<p>Once the cluster is up and running, the API&apos;s root is available at <a href="http://docker/singularity/api" target="_blank"><code>http://docker/singularity/api</code></a> by default.</p>
+<p>You might also be running SingularityService locally without a VM. This works too!</p>
+<hr>
+<p>From this point onwards we&apos;re assuming you have a running SingularityService you can use. We&apos;ll be using <code>http://docker/singularity/api</code> as a placeholder for the root URL of the API you&apos;re using.</p>
+<h3 id="crossdomain-restrictions">Cross-domain restrictions</h3>
+<p><strong>If you&apos;re using the docker-compose setup for your API you can go ahead and skip this section.</strong></p>
+<p>If you&apos;re using a different API you should be aware that SingularityService has an <code>enableCorsFilter</code> option in its server config. If enabled, cross-domain restrictions won&apos;t apply. The docker service has this enabled by default which is why we&apos;re not worried about it.</p>
+<p>Your browser will not allow cross-domain requests if you&apos;re using a server without the CORS filter enabled. To get around this we&apos;ll use an open-source HubSpot mini-proxy called <a href="https://github.com/HubSpot/vee" target="_blank">vee</a>.</p>
+<p>If you&apos;re able to configure your own nginx or Apache server to be used as a proxy, feel free to do it that way if you wish. Otherwise, read on!</p>
+<p>Go ahead and install vee by running <code>npm install -g vee</code>.</p>
+<p>Afterwards you will need to create a <code>.vee</code> file which will act as the configuration. Place this inside of <code>/SingularityUI</code>. Here is an example <code>.vee</code> file you can use:</p>
+<pre><code class="lang-yaml">name: SingularityUI
+
+routes:
+
+  # Redirect static assets to local server (assuming it is on port 3334)
+  &quot;.*/static/.*&quot;: &quot;http://localhost:3334/&quot;
+
+  # Redirect any API calls to the QA Singularity service (the slash after the domain is necessary)
+  &quot;.*/api/.*&quot;: &quot;http://docker/&quot;
+  &quot;.*/login/.*&quot;: &quot;http://docker/&quot;
+
+  # All else to the index.html (for all other Backbone routes)
+  &quot;.*&quot;: &quot;http://localhost:3333/singularity/&quot;
+
+# Uncomment to debug the above routes
+# debug: true
+</code></pre>
+<p>Once you have the file up and running, go ahead and run vee (from the dir <code>.vee</code> is in):</p>
+<pre><code class="lang-bash"># Run vee on ports 80 and 443
+sudo vee
+
+# Run vee on specific ports
+vee -p 4001 -s 4002
+</code></pre>
+<p>Assuming you used the second command, you can now access SingularityUI by going to <a href="http://localhost:4001/singularity" target="_blank"><code>http://localhost:4001/singularity</code></a>.</p>
+<p>If you&apos;re confused as to what&apos;s going on here, all your requests are being processed by vee so that:</p>
+<ul>
+<li>Requests to <code>localhost:4001/singularity/api</code> are sent to the server at <code>docker</code>.</li>
+<li>All other requests, including static files, are sent to the gulp server running locally.</li>
+</ul>
+<h3 id="connecting-to-the-api">Connecting to the API</h3>
+<p>So far you have SingularityUI being served by gulp, and SingularityService running somewhere. If you have a proxy like vee running too, please replace the ports/URIs that follow with the ones you&apos;re using for the proxy.</p>
+<p>Open up SingularityUI in your browser by going to <a href="http://localhost:3333" target="_blank"><code>http://localhost:3333</code></a>.</p>
+<p>You&apos;ll be prompted to input an API root. This is the service that SingularityUI will interact with for its data. Give it your <code>http://docker/singularity/api</code> URI.</p>
+<p>You can change the value of this at any point by typing the following in your JS console:</p>
+<pre><code class="lang-javascript">localStorage.setItem(&apos;apiRootOverride&apos;, &apos;http://docker/singularity/api&apos;)
+</code></pre>
+<p>And there you go! You should at this point have SingularityUI running in your browser with it connected to SingularityService. Just let gulp watch and compile your files as you work and try it out in your browser.</p>
+<p>While we&apos;re on the topic of localStorage overrides, another useful one you can use disables the auto-refresh which will stop the page re-rendering so you can properly inspect the DOM:</p>
+<pre><code class="lang-javascript">localStorage.setItem(&apos;suppressRefresh&apos;, true)
+</code></pre>
+<h2 id="code-structure">Code structure</h2>
+<p>As mentioned before, SingularityUI uses <a href="https://facebook.github.io/react/" target="_blank">React</a> and <a href="http://redux.js.org/docs/introduction/" target="_blank">Redux</a>. If you&apos;re not familiar with how they do things, please look into them and familiarize yourself with React&apos;s lifecycle and the Redux store and dispatch.</p>
+<p>What follows is a run-down of how things work in Singularity, using the Webhooks page as an example.</p>
+<p>First you request <code>/singularity/webhooks</code>. This triggers <a href="../SingularityUI/app/router.jsx">our router</a> to fire up <a href="../SingularityUI/app/components/webhooks/webhooks.jsx"><code>Webhooks</code></a>.</p>
+<p>When the Webhooks component is called, the initial action occurs in the <code>connect()</code> function call at the bottom of the page.</p>
+<p>First, <code>connect()</code> calls <code>mapStateToProps()</code>. Though it is called with the redux store and the component&apos;s own props, the Webhooks page doesn&apos;t have props passed into it. This returns props that are obtained from the redux store, such as API calls.</p>
+<p>Then <code>connect()</code> calles <code>mapDispatchToProps()</code>. This is called with the redux dispatch and the component&apos;s own props, and returns props are functions which can perform actions.</p>
+<p><code>connect()</code> combines the outputs of <code>mapStateToProps()</code> and <code>mapDispatchToProps()</code> into one object and passes that in as props to the component the result of <code>connect()</code> is called with.</p>
+<p>The result of <code>connect()</code> is called with the <a href="../SingularityUI/app/rootComponent.jsx"><code>rootComponent</code></a>. <code>rootComponent</code> sets up automatically refreshing the page and can display a 404 page if the component sets a <code>notFound</code> prop. The passed-in <code>refresh()</code> function fetches the page data from the API (in some cases in which initial data needs to not be fetched again, an <code>initialize()</code> function is also passed in to perform only initial calls). While the <code>rootComponent</code> is waiting for this to finish, the loading animation is displayed.</p>
+<p>Finally, once the API call does complete, <code>rootComponent</code> takes the props provided by <code>connect()</code> and passes them into the Webhooks component itself, which will render the table of webhooks that you see.</p>
+<p>Everything else is standard <a href="https://facebook.github.io/react/" target="_blank">React</a>-structured code. Please refer to the official docs for how to do things like respond to UI events, etc.</p>
+<p>To summarize:</p>
+<ul>
+<li>React Router bootstraps everything for the page.</li>
+<li>All API calls necessary for rendering the page are performed in the primary component&apos;s <code>refresh()</code> or <code>initialize()</code> function.</li>
+<li>Use React conventions wherever possible. Try to rely on props, not component state.</li>
+</ul>
+<h3 id="useful-links">Useful links</h3>
+<p>There are some libraries/classes in SingularityUI which you should be aware of if you plan on working on it:</p>
+<ul>
+<li><a href="../SingularityUI/app/initialize.jsx">Initialize</a> sets up the Redux store, user settings, and the router. It also prompts the user for API root if necessary.</li>
+<li><a href="../SingularityUI/app/router.jsx">Router</a> points requests to their respective components.</li>
+<li><a href="../SingularityUI/app/components/common/Application.jsx">Application</a> provides the naviagtion header and global search functionality.</li>
+<li><a href="../SingularityUI/app/actions/api/base.es6">Base</a> is responsible for API call behavior, including error-handling.</li>
+<li><a href="../SingularityUI/app/utils.jsx">Utils</a> contains a bunch of reusable static functions.</li>
+<li><a href="../SingularityUI/app/components/common/table/UITable.jsx">UITable</a> is a comprehensive table component that provides sorting, pagination and other utilities. Data is provided by child <a href="../SingularityUI/app/components/common/table/Column.jsx">Column</a> components.</li>
+<li><a href="../SingularityUI/app/components/common/modal/FormModal.jsx">FormModal</a> provides a base for most of Singularity&apos;s modals, such as the Run Now and Pause Request modals.</li>
+</ul>
+
+                    
+                    </section>
+                
+                
+                </div>
+            </div>
+        </div>
+
+        
+        <a href="../../Docs/development/developing-with-docker.html" class="navigation navigation-prev " aria-label="Previous page: Developing Using Docker"><i class="fa fa-angle-left"></i></a>
+        
+        
+        <a href="../../Docs/development/load-balancer-integration.html" class="navigation navigation-next " aria-label="Next page: Load Balancer Integration"><i class="fa fa-angle-right"></i></a>
+        
+    </div>
+</div>
+
+        
+<script src="../../gitbook/app.js"></script>
+
+    
+    <script src="../../gitbook/plugins/gitbook-plugin-github/plugin.js"></script>
+    
+
+    
+    <script src="../../gitbook/plugins/gitbook-plugin-copy-code-button/toggle.js"></script>
+    
+
+    
+    <script src="../../gitbook/plugins/gitbook-plugin-search/lunr.min.js"></script>
+    
+
+    
+    <script src="../../gitbook/plugins/gitbook-plugin-search/search.js"></script>
+    
+
+    
+    <script src="../../gitbook/plugins/gitbook-plugin-fontsettings/buttons.js"></script>
+    
+
+<script>
+require(["gitbook"], function(gitbook) {
+    var config = {"github":{"url":"https://github.com/HubSpot/Singularity"},"copy-code-button":{},"search":{"maxIndexSize":1000000},"fontsettings":{"theme":"white","family":"sans","size":2}};
+    gitbook.start(config);
+});
+</script>
+
+        <!-- body:end -->
+    </body>
+    <!-- End of book Singularity -->
+</html>

@@ -1,0 +1,969 @@
+<!DOCTYPE HTML>
+<html lang="en" >
+    <!-- Start book Singularity -->
+    <head>
+        <!-- head:start -->
+        <meta charset="UTF-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+        <title>Basepom | Singularity</title>
+        <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+        <meta name="description" content="">
+        <meta name="generator" content="GitBook 2.6.7">
+        
+        
+        <meta name="HandheldFriendly" content="true"/>
+        <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-status-bar-style" content="black">
+        <link rel="apple-touch-icon-precomposed" sizes="152x152" href="../../gitbook/images/apple-touch-icon-precomposed-152.png">
+        <link rel="shortcut icon" href="../../gitbook/images/favicon.ico" type="image/x-icon">
+        
+    <link rel="stylesheet" href="../../gitbook/style.css">
+    
+        
+        <link rel="stylesheet" href="../../gitbook/plugins/gitbook-plugin-search/search.css">
+        
+    
+        
+        <link rel="stylesheet" href="../../gitbook/plugins/gitbook-plugin-fontsettings/website.css">
+        
+    
+    
+        <link rel="stylesheet" href="../../styles/website.css">
+    
+
+        
+    
+    
+    <link rel="next" href="../../Docs/releases/index.html" />
+    
+    
+    <link rel="prev" href="../../Docs/development/load-balancer-integration.html" />
+    
+
+        <!-- head:end -->
+    </head>
+    <body>
+        <!-- body:start -->
+        
+    <div class="book"
+        data-level="3.4"
+        data-chapter-title="Basepom"
+        data-filepath="Docs/development/basepom.md"
+        data-basepath="../.."
+        data-revision="Thu Jun 29 2017 11:56:00 GMT-0400 (EDT)"
+        data-innerlanguage="">
+    
+
+<div class="book-summary">
+    <nav role="navigation">
+        <ul class="summary">
+            
+            
+            
+            
+
+            
+
+            
+    
+        <li class="chapter " data-level="0" data-path="index.html">
+            
+                
+                    <a href="../../index.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                        Introduction
+                    </a>
+            
+            
+        </li>
+    
+        <li class="chapter " data-level="1" >
+            
+            <span><b>1.</b> About Singularity</span>
+            
+            
+            <ul class="articles">
+                
+    
+        <li class="chapter " data-level="1.1" data-path="Docs/about/how-it-works.html">
+            
+                
+                    <a href="../../Docs/about/how-it-works.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>1.1.</b>
+                        
+                        How It Works
+                    </a>
+            
+            
+        </li>
+    
+        <li class="chapter " data-level="1.2" data-path="Docs/about/requests-and-deploys.html">
+            
+                
+                    <a href="../../Docs/about/requests-and-deploys.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>1.2.</b>
+                        
+                        Requests and Deploys
+                    </a>
+            
+            
+        </li>
+    
+        <li class="chapter " data-level="1.3" data-path="Docs/about/ui.html">
+            
+                
+                    <a href="../../Docs/about/ui.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>1.3.</b>
+                        
+                        Singularity UI
+                    </a>
+            
+            
+        </li>
+    
+        <li class="chapter " data-level="1.4" data-path="Docs/about/adopters.html">
+            
+                
+                    <a href="../../Docs/about/adopters.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>1.4.</b>
+                        
+                        Adopters
+                    </a>
+            
+            
+        </li>
+    
+
+            </ul>
+            
+        </li>
+    
+        <li class="chapter " data-level="2" >
+            
+            <span><b>2.</b> Getting Started</span>
+            
+            
+            <ul class="articles">
+                
+    
+        <li class="chapter " data-level="2.1" data-path="Docs/getting-started/try-it-out.html">
+            
+                
+                    <a href="../../Docs/getting-started/try-it-out.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>2.1.</b>
+                        
+                        Try It Out
+                    </a>
+            
+            
+        </li>
+    
+        <li class="chapter " data-level="2.2" data-path="Docs/getting-started/install.html">
+            
+                
+                    <a href="../../Docs/getting-started/install.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>2.2.</b>
+                        
+                        Install
+                    </a>
+            
+            
+        </li>
+    
+        <li class="chapter " data-level="2.3" data-path="Docs/getting-started/basic-examples.html">
+            
+                
+                    <a href="../../Docs/getting-started/basic-examples.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>2.3.</b>
+                        
+                        Examples
+                    </a>
+            
+            
+        </li>
+    
+
+            </ul>
+            
+        </li>
+    
+        <li class="chapter " data-level="3" >
+            
+            <span><b>3.</b> Developing</span>
+            
+            
+            <ul class="articles">
+                
+    
+        <li class="chapter " data-level="3.1" data-path="Docs/development/developing-with-docker.html">
+            
+                
+                    <a href="../../Docs/development/developing-with-docker.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>3.1.</b>
+                        
+                        Developing Using Docker
+                    </a>
+            
+            
+        </li>
+    
+        <li class="chapter " data-level="3.2" data-path="Docs/development/ui.html">
+            
+                
+                    <a href="../../Docs/development/ui.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>3.2.</b>
+                        
+                        UI
+                    </a>
+            
+            
+        </li>
+    
+        <li class="chapter " data-level="3.3" data-path="Docs/development/load-balancer-integration.html">
+            
+                
+                    <a href="../../Docs/development/load-balancer-integration.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>3.3.</b>
+                        
+                        Load Balancer Integration
+                    </a>
+            
+            
+        </li>
+    
+        <li class="chapter active" data-level="3.4" data-path="Docs/development/basepom.html">
+            
+                
+                    <a href="../../Docs/development/basepom.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>3.4.</b>
+                        
+                        Basepom
+                    </a>
+            
+            
+        </li>
+    
+
+            </ul>
+            
+        </li>
+    
+        <li class="chapter " data-level="4" data-path="Docs/releases/index.html">
+            
+                
+                    <a href="../../Docs/releases/index.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>4.</b>
+                        
+                        Releases
+                    </a>
+            
+            
+        </li>
+    
+        <li class="chapter " data-level="5" >
+            
+            <span><b>5.</b> Feature Docs</span>
+            
+            
+            <ul class="articles">
+                
+    
+        <li class="chapter " data-level="5.1" data-path="Docs/features/custom-ports.html">
+            
+                
+                    <a href="../../Docs/features/custom-ports.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>5.1.</b>
+                        
+                        Choosing Custom Ports
+                    </a>
+            
+            
+        </li>
+    
+        <li class="chapter " data-level="5.2" data-path="Docs/features/expiring-actions.html">
+            
+                
+                    <a href="../../Docs/features/expiring-actions.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>5.2.</b>
+                        
+                        Expiring Actions
+                    </a>
+            
+            
+        </li>
+    
+        <li class="chapter " data-level="5.3" data-path="Docs/features/shell-commands.html">
+            
+                
+                    <a href="../../Docs/features/shell-commands.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>5.3.</b>
+                        
+                        Shell Commands
+                    </a>
+            
+            
+        </li>
+    
+        <li class="chapter " data-level="5.4" data-path="Docs/features/task-search.html">
+            
+                
+                    <a href="../../Docs/features/task-search.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>5.4.</b>
+                        
+                        Task Search
+                    </a>
+            
+            
+        </li>
+    
+        <li class="chapter " data-level="5.5" data-path="Docs/features/incremental-deploys.html">
+            
+                
+                    <a href="../../Docs/features/incremental-deploys.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>5.5.</b>
+                        
+                        Incremental Deploys
+                    </a>
+            
+            
+        </li>
+    
+        <li class="chapter " data-level="5.6" data-path="Docs/features/disaster-detection.html">
+            
+                
+                    <a href="../../Docs/features/disaster-detection.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>5.6.</b>
+                        
+                        Disaster Detection &amp; Disabled Actions
+                    </a>
+            
+            
+        </li>
+    
+
+            </ul>
+            
+        </li>
+    
+        <li class="chapter " data-level="6" >
+            
+            <span><b>6.</b> Reference</span>
+            
+            
+            <ul class="articles">
+                
+    
+        <li class="chapter " data-level="6.1" data-path="Docs/reference/configuration.html">
+            
+                
+                    <a href="../../Docs/reference/configuration.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>6.1.</b>
+                        
+                        Configuration
+                    </a>
+            
+            
+        </li>
+    
+        <li class="chapter " data-level="6.2" data-path="Docs/reference/container-options.html">
+            
+                
+                    <a href="../../Docs/reference/container-options.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>6.2.</b>
+                        
+                        Container Options
+                    </a>
+            
+            
+        </li>
+    
+        <li class="chapter " data-level="6.3" data-path="Docs/reference/database.html">
+            
+                
+                    <a href="../../Docs/reference/database.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>6.3.</b>
+                        
+                        Database
+                    </a>
+            
+            
+        </li>
+    
+        <li class="chapter " data-level="6.4" data-path="Docs/reference/webhooks.html">
+            
+                
+                    <a href="../../Docs/reference/webhooks.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>6.4.</b>
+                        
+                        Webhooks
+                    </a>
+            
+            
+        </li>
+    
+        <li class="chapter " data-level="6.5" data-path="Docs/reference/slave-extras.html">
+            
+                
+                    <a href="../../Docs/reference/slave-extras.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>6.5.</b>
+                        
+                        Slave Extras
+                    </a>
+            
+            
+        </li>
+    
+        <li class="chapter " data-level="6.6" data-path="Docs/reference/deploy-defaults.html">
+            
+                
+                    <a href="../../Docs/reference/deploy-defaults.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>6.6.</b>
+                        
+                        Deploy Defaults
+                    </a>
+            
+            
+        </li>
+    
+        <li class="chapter " data-level="6.7" data-path="Docs/reference/healthchecks.html">
+            
+                
+                    <a href="../../Docs/reference/healthchecks.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>6.7.</b>
+                        
+                        Health Checks
+                    </a>
+            
+            
+        </li>
+    
+        <li class="chapter " data-level="6.8" data-path="Docs/reference/apidocs/api-index.html">
+            
+                
+                    <a href="../../Docs/reference/apidocs/api-index.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>6.8.</b>
+                        
+                        API
+                    </a>
+            
+            
+            <ul class="articles">
+                
+    
+        <li class="chapter " data-level="6.8.1" data-path="Docs/reference/apidocs/api-sandbox.html">
+            
+                
+                    <a href="../../Docs/reference/apidocs/api-sandbox.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>6.8.1.</b>
+                        
+                        /api/sandbox
+                    </a>
+            
+            
+        </li>
+    
+        <li class="chapter " data-level="6.8.2" data-path="Docs/reference/apidocs/api-slaves.html">
+            
+                
+                    <a href="../../Docs/reference/apidocs/api-slaves.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>6.8.2.</b>
+                        
+                        /api/slaves
+                    </a>
+            
+            
+        </li>
+    
+        <li class="chapter " data-level="6.8.3" data-path="Docs/reference/apidocs/api-history.html">
+            
+                
+                    <a href="../../Docs/reference/apidocs/api-history.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>6.8.3.</b>
+                        
+                        /api/history
+                    </a>
+            
+            
+        </li>
+    
+        <li class="chapter " data-level="6.8.4" data-path="Docs/reference/apidocs/api-state.html">
+            
+                
+                    <a href="../../Docs/reference/apidocs/api-state.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>6.8.4.</b>
+                        
+                        /api/state
+                    </a>
+            
+            
+        </li>
+    
+        <li class="chapter " data-level="6.8.5" data-path="Docs/reference/apidocs/api-logs.html">
+            
+                
+                    <a href="../../Docs/reference/apidocs/api-logs.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>6.8.5.</b>
+                        
+                        /api/logs
+                    </a>
+            
+            
+        </li>
+    
+        <li class="chapter " data-level="6.8.6" data-path="Docs/reference/apidocs/api-tasks.html">
+            
+                
+                    <a href="../../Docs/reference/apidocs/api-tasks.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>6.8.6.</b>
+                        
+                        /api/tasks
+                    </a>
+            
+            
+        </li>
+    
+        <li class="chapter " data-level="6.8.7" data-path="Docs/reference/apidocs/api-test.html">
+            
+                
+                    <a href="../../Docs/reference/apidocs/api-test.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>6.8.7.</b>
+                        
+                        /api/test
+                    </a>
+            
+            
+        </li>
+    
+        <li class="chapter " data-level="6.8.8" data-path="Docs/reference/apidocs/api-webhooks.html">
+            
+                
+                    <a href="../../Docs/reference/apidocs/api-webhooks.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>6.8.8.</b>
+                        
+                        /api/webhooks
+                    </a>
+            
+            
+        </li>
+    
+        <li class="chapter " data-level="6.8.9" data-path="Docs/reference/apidocs/api-racks.html">
+            
+                
+                    <a href="../../Docs/reference/apidocs/api-racks.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>6.8.9.</b>
+                        
+                        /api/racks
+                    </a>
+            
+            
+        </li>
+    
+        <li class="chapter " data-level="6.8.10" data-path="Docs/reference/apidocs/api-requests.html">
+            
+                
+                    <a href="../../Docs/reference/apidocs/api-requests.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>6.8.10.</b>
+                        
+                        /api/requests
+                    </a>
+            
+            
+        </li>
+    
+        <li class="chapter " data-level="6.8.11" data-path="Docs/reference/apidocs/api-groups.html">
+            
+                
+                    <a href="../../Docs/reference/apidocs/api-groups.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>6.8.11.</b>
+                        
+                        /api/groups
+                    </a>
+            
+            
+        </li>
+    
+        <li class="chapter " data-level="6.8.12" data-path="Docs/reference/apidocs/api-deploys.html">
+            
+                
+                    <a href="../../Docs/reference/apidocs/api-deploys.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>6.8.12.</b>
+                        
+                        /api/deploys
+                    </a>
+            
+            
+        </li>
+    
+        <li class="chapter " data-level="6.8.13" data-path="Docs/reference/apidocs/api-disasters.html">
+            
+                
+                    <a href="../../Docs/reference/apidocs/api-disasters.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>6.8.13.</b>
+                        
+                        /api/disasters
+                    </a>
+            
+            
+        </li>
+    
+        <li class="chapter " data-level="6.8.14" data-path="Docs/reference/apidocs/api-priority.html">
+            
+                
+                    <a href="../../Docs/reference/apidocs/api-priority.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>6.8.14.</b>
+                        
+                        /api/priority
+                    </a>
+            
+            
+        </li>
+    
+        <li class="chapter " data-level="6.8.15" data-path="Docs/reference/apidocs/models.html">
+            
+                
+                    <a href="../../Docs/reference/apidocs/models.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>6.8.15.</b>
+                        
+                        Models
+                    </a>
+            
+            
+        </li>
+    
+
+            </ul>
+            
+        </li>
+    
+
+            </ul>
+            
+        </li>
+    
+
+
+            
+            <li class="divider"></li>
+            <li>
+                <a href="https://www.gitbook.com" target="blank" class="gitbook-link">
+                    Published with GitBook
+                </a>
+            </li>
+            
+        </ul>
+    </nav>
+</div>
+
+    <div class="book-body">
+        <div class="body-inner">
+            <div class="book-header" role="navigation">
+    <!-- Actions Left -->
+    
+
+    <!-- Title -->
+    <h1>
+        <i class="fa fa-circle-o-notch fa-spin"></i>
+        <a href="../../" >Singularity</a>
+    </h1>
+</div>
+
+            <div class="page-wrapper" tabindex="-1" role="main">
+                <div class="page-inner">
+                
+                
+                    <section class="normal" id="section-">
+                    
+                        <h1 id="building-singularity-on-basepom">Building Singularity on basepom</h1>
+<p><a href="https://github.com/basepom" target="_blank">Basepom</a> is a standardized way to set up
+a Maven build. Singularity leverages this to simplify its build.</p>
+<p>This is a very basic primer on the features that Singularity uses from
+basepom. It should help getting up to speed with the build system.</p>
+<h2 id="properties">Properties</h2>
+<p>Singularity uses two sets of properties to modify basepom behavior:
+general properties and dependency version properties.</p>
+<p>The former influence the way the build works while the latter are used
+to control dependency versions. Basepom contains a large, curated
+section of managed dependencies to allow for consistent and
+reproduceable dependency resolution.</p>
+<h3 id="general-properties">General properties</h3>
+<p>This is a quick list of general properties set or modified in the
+Singularity build. This is a non-exhaustive list; all other available
+settings are kept at default value.</p>
+<h4 id="projectbuildtargetjdk"><code>project.build.targetJdk</code></h4>
+<p>Controls the JDK level to which the code is compiled. Singularity uses
+<em>1.8</em> (JDK 8).</p>
+<h4 id="basepomcheckskiplicense"><code>basepom.check.skip-license</code></h4>
+<p>The license checker in the OSS version of basepom enforces the
+existence of a license header in all source files. As Singularity does
+not do this (yet), the checker is disabled by setting this property to
+<em>true</em>.</p>
+<h4 id="basepomcheckfailextended"><code>basepom.check.fail-extended</code></h4>
+<p>Setting this properties to <em><code>true</code></em> ensures that the extended build
+checkers:</p>
+<ul>
+<li>findbugs</li>
+<li>PMD</li>
+<li>checkstyle</li>
+<li>license</li>
+</ul>
+<p>will fail the build when they find problems. This switch can be set to
+<em><code>false</code></em> using <code>-Dbasepom.check.fail-extended=false</code> on the command
+line to have the build succeed even if problems are present.</p>
+<h3 id="dependency-properties">Dependency properties</h3>
+<p>The set of curated dependencies in the basepom POMs are generally
+suitable for new projects. It may be necessary to override some
+dependency versions when converting legacy codes or when a third-party
+library requires a fixed version of a dependency.</p>
+<p>For Singularity, dropwizard 1.0.x enforces the following versions:</p>
+<ul>
+<li><code>dep.jackson.version</code>, <code>dep.jackson.core.version</code>, <code>dep.jackson.databind.version</code> - Enforces <em>2.7.9</em>, because dw uses Jackson 2.3.x.</li>
+<li><code>dep.jetty.version</code> - Enforces <em>9.3.9.v20160517</em> because dw uses Jetty 9.3.x.</li>
+</ul>
+<h2 id="notes-on-dependencies">Notes on dependencies</h2>
+<p>The basepom build uses the maven enforcer plugin to ensure that some
+known bad dependencies do not get pulled into a project build. It also
+uses the maven duplicate-finder plugin to ensure that no duplicate
+resources and classes are present on the class path.</p>
+<p>Specifically, the following dependencies are forbidden by the enforcer
+plugin:</p>
+<ul>
+<li><code>org.slf4j:slf4j-...</code> - clashes with logback, leads to the dreaded &apos;Multiple bindings were found on the class path&apos; error</li>
+<li><code>org.eclipse.jetty.orbit:javax.servlet</code> - clashes with the official javax.servlet artifact, leads to duplicate classes</li>
+<li><code>com.google.code.findbugs:jsr305</code> - clashes with com.google.code.findbugs:annotations, leads to duplicate classes</li>
+</ul>
+<p>All dependencies that pull in one of these deps have exclusion rules
+in the main pom of the project.</p>
+<h3 id="root-and-project-pom-dependencies">Root and project POM dependencies</h3>
+<p>As a best practice, none of the actual project poms has any <version>
+tags in their dependencies. Instead, maven will resolve these versions
+from the project root pom (the one in the root folder), or, in the
+case of a well known dependency such as Google Guava, from the basepom
+POM. No project pom should ever contain any <code><version></version></code> tag (except the
+one in the <parent> tag at the top of the project).</parent></version></p>
+<h3 id="dependency-enforcement-and-artifact-scope">Dependency enforcement and artifact scope</h3>
+<p>Basepom uses the maven dependency plugin to enforce that all required
+dependencies are listed in the project POM. This ensures that</p>
+<ul>
+<li>No dependency required in code for a project is defined &quot;implicitly&quot; (by introduced as a transitive dependency)</li>
+<li>No &quot;dangling&quot; dependencies are left in a project (an artifact listed in the project is not actually used by the project itself and could be removed).</li>
+</ul>
+<p>Each of these problems would fail the build.</p>
+<p>However, this requires that dependencies need to be correctly
+scoped. As an example, the SingularityService uses the
+<code>io.dropwizard:dropwizard-views-mustache</code> to render its views. This
+renderer is discovered at runtime through the Java services lookup
+mechanism and is not referenced in code. Therefore, as the dependency
+is required at <em>runtime</em> but not at <em>compile</em> time, it needs to be
+scoped in <code>runtime</code> scope by adding <code><scope>runtime</scope></code> to the
+dependency.</p>
+<h2 id="standalone-applications">Standalone applications</h2>
+<p>Many of the Singularity sub-projects actually yield standalone
+binaries. This gets triggered by the presence of a <code>.build-executable</code>
+file in the project folder.</p>
+<p>Any project that has this file, needs to have a property
+<code>basepom.shaded.main-class</code> defined in the project POM. E.g. for the
+SingularityService there is</p>
+<pre><code class="lang-xml"><properties>
+  <basepom.shaded.main-class>com.hubspot.singularity.SingularityService</basepom.shaded.main-class>
+</properties>
+</code></pre>
+<p>defined in the POM for SingularityService.</p>
+<p>The build for the project will now yield an additional artifact,
+called <code>SingularityService-...-shaded.jar</code> which is a standalone
+version of the project jar, and an actually binary,
+<code>SingularityService</code> which can be run from the command line:</p>
+<pre><code>SingularityService/target % ./SingularityService
+usage: java -jar project.jar [-h] [-v] {server,check,db} ...
+
+positional arguments:
+  {server,check,db}      available commands
+
+optional arguments:
+  -h, --help             show this help message and exit
+  -v, --version          show the application version and exit
+</code></pre><h3 id="compiling-with-travis-ci">Compiling with Travis CI</h3>
+<p>As Travis only supports a single installed JDK at a time; when the
+build detects that it runs in the Travis environment (by checking the
+<code>TRAVIS</code> environment variable), it will set the jdk7 home to be the
+same as the current JDK. Therefore, the Travis build to JDK8 or newer
+does actually build against the JDK8 runtime. As Travis is only used
+as a smoke test to see whether the code base builds (and not for
+continous delivery), this is not a problem.</p>
+
+                    
+                    </section>
+                
+                
+                </div>
+            </div>
+        </div>
+
+        
+        <a href="../../Docs/development/load-balancer-integration.html" class="navigation navigation-prev " aria-label="Previous page: Load Balancer Integration"><i class="fa fa-angle-left"></i></a>
+        
+        
+        <a href="../../Docs/releases/index.html" class="navigation navigation-next " aria-label="Next page: Releases"><i class="fa fa-angle-right"></i></a>
+        
+    </div>
+</div>
+
+        
+<script src="../../gitbook/app.js"></script>
+
+    
+    <script src="../../gitbook/plugins/gitbook-plugin-github/plugin.js"></script>
+    
+
+    
+    <script src="../../gitbook/plugins/gitbook-plugin-copy-code-button/toggle.js"></script>
+    
+
+    
+    <script src="../../gitbook/plugins/gitbook-plugin-search/lunr.min.js"></script>
+    
+
+    
+    <script src="../../gitbook/plugins/gitbook-plugin-search/search.js"></script>
+    
+
+    
+    <script src="../../gitbook/plugins/gitbook-plugin-fontsettings/buttons.js"></script>
+    
+
+<script>
+require(["gitbook"], function(gitbook) {
+    var config = {"github":{"url":"https://github.com/HubSpot/Singularity"},"copy-code-button":{},"search":{"maxIndexSize":1000000},"fontsettings":{"theme":"white","family":"sans","size":2}};
+    gitbook.start(config);
+});
+</script>
+
+        <!-- body:end -->
+    </body>
+    <!-- End of book Singularity -->
+</html>

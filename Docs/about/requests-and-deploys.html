@@ -1,0 +1,905 @@
+<!DOCTYPE HTML>
+<html lang="en" >
+    <!-- Start book Singularity -->
+    <head>
+        <!-- head:start -->
+        <meta charset="UTF-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+        <title>Requests and Deploys | Singularity</title>
+        <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+        <meta name="description" content="">
+        <meta name="generator" content="GitBook 2.6.7">
+        
+        
+        <meta name="HandheldFriendly" content="true"/>
+        <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-status-bar-style" content="black">
+        <link rel="apple-touch-icon-precomposed" sizes="152x152" href="../../gitbook/images/apple-touch-icon-precomposed-152.png">
+        <link rel="shortcut icon" href="../../gitbook/images/favicon.ico" type="image/x-icon">
+        
+    <link rel="stylesheet" href="../../gitbook/style.css">
+    
+        
+        <link rel="stylesheet" href="../../gitbook/plugins/gitbook-plugin-search/search.css">
+        
+    
+        
+        <link rel="stylesheet" href="../../gitbook/plugins/gitbook-plugin-fontsettings/website.css">
+        
+    
+    
+        <link rel="stylesheet" href="../../styles/website.css">
+    
+
+        
+    
+    
+    <link rel="next" href="../../Docs/about/ui.html" />
+    
+    
+    <link rel="prev" href="../../Docs/about/how-it-works.html" />
+    
+
+        <!-- head:end -->
+    </head>
+    <body>
+        <!-- body:start -->
+        
+    <div class="book"
+        data-level="1.2"
+        data-chapter-title="Requests and Deploys"
+        data-filepath="Docs/about/requests-and-deploys.md"
+        data-basepath="../.."
+        data-revision="Thu Jun 29 2017 11:56:00 GMT-0400 (EDT)"
+        data-innerlanguage="">
+    
+
+<div class="book-summary">
+    <nav role="navigation">
+        <ul class="summary">
+            
+            
+            
+            
+
+            
+
+            
+    
+        <li class="chapter " data-level="0" data-path="index.html">
+            
+                
+                    <a href="../../index.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                        Introduction
+                    </a>
+            
+            
+        </li>
+    
+        <li class="chapter " data-level="1" >
+            
+            <span><b>1.</b> About Singularity</span>
+            
+            
+            <ul class="articles">
+                
+    
+        <li class="chapter " data-level="1.1" data-path="Docs/about/how-it-works.html">
+            
+                
+                    <a href="../../Docs/about/how-it-works.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>1.1.</b>
+                        
+                        How It Works
+                    </a>
+            
+            
+        </li>
+    
+        <li class="chapter active" data-level="1.2" data-path="Docs/about/requests-and-deploys.html">
+            
+                
+                    <a href="../../Docs/about/requests-and-deploys.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>1.2.</b>
+                        
+                        Requests and Deploys
+                    </a>
+            
+            
+        </li>
+    
+        <li class="chapter " data-level="1.3" data-path="Docs/about/ui.html">
+            
+                
+                    <a href="../../Docs/about/ui.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>1.3.</b>
+                        
+                        Singularity UI
+                    </a>
+            
+            
+        </li>
+    
+        <li class="chapter " data-level="1.4" data-path="Docs/about/adopters.html">
+            
+                
+                    <a href="../../Docs/about/adopters.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>1.4.</b>
+                        
+                        Adopters
+                    </a>
+            
+            
+        </li>
+    
+
+            </ul>
+            
+        </li>
+    
+        <li class="chapter " data-level="2" >
+            
+            <span><b>2.</b> Getting Started</span>
+            
+            
+            <ul class="articles">
+                
+    
+        <li class="chapter " data-level="2.1" data-path="Docs/getting-started/try-it-out.html">
+            
+                
+                    <a href="../../Docs/getting-started/try-it-out.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>2.1.</b>
+                        
+                        Try It Out
+                    </a>
+            
+            
+        </li>
+    
+        <li class="chapter " data-level="2.2" data-path="Docs/getting-started/install.html">
+            
+                
+                    <a href="../../Docs/getting-started/install.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>2.2.</b>
+                        
+                        Install
+                    </a>
+            
+            
+        </li>
+    
+        <li class="chapter " data-level="2.3" data-path="Docs/getting-started/basic-examples.html">
+            
+                
+                    <a href="../../Docs/getting-started/basic-examples.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>2.3.</b>
+                        
+                        Examples
+                    </a>
+            
+            
+        </li>
+    
+
+            </ul>
+            
+        </li>
+    
+        <li class="chapter " data-level="3" >
+            
+            <span><b>3.</b> Developing</span>
+            
+            
+            <ul class="articles">
+                
+    
+        <li class="chapter " data-level="3.1" data-path="Docs/development/developing-with-docker.html">
+            
+                
+                    <a href="../../Docs/development/developing-with-docker.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>3.1.</b>
+                        
+                        Developing Using Docker
+                    </a>
+            
+            
+        </li>
+    
+        <li class="chapter " data-level="3.2" data-path="Docs/development/ui.html">
+            
+                
+                    <a href="../../Docs/development/ui.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>3.2.</b>
+                        
+                        UI
+                    </a>
+            
+            
+        </li>
+    
+        <li class="chapter " data-level="3.3" data-path="Docs/development/load-balancer-integration.html">
+            
+                
+                    <a href="../../Docs/development/load-balancer-integration.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>3.3.</b>
+                        
+                        Load Balancer Integration
+                    </a>
+            
+            
+        </li>
+    
+        <li class="chapter " data-level="3.4" data-path="Docs/development/basepom.html">
+            
+                
+                    <a href="../../Docs/development/basepom.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>3.4.</b>
+                        
+                        Basepom
+                    </a>
+            
+            
+        </li>
+    
+
+            </ul>
+            
+        </li>
+    
+        <li class="chapter " data-level="4" data-path="Docs/releases/index.html">
+            
+                
+                    <a href="../../Docs/releases/index.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>4.</b>
+                        
+                        Releases
+                    </a>
+            
+            
+        </li>
+    
+        <li class="chapter " data-level="5" >
+            
+            <span><b>5.</b> Feature Docs</span>
+            
+            
+            <ul class="articles">
+                
+    
+        <li class="chapter " data-level="5.1" data-path="Docs/features/custom-ports.html">
+            
+                
+                    <a href="../../Docs/features/custom-ports.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>5.1.</b>
+                        
+                        Choosing Custom Ports
+                    </a>
+            
+            
+        </li>
+    
+        <li class="chapter " data-level="5.2" data-path="Docs/features/expiring-actions.html">
+            
+                
+                    <a href="../../Docs/features/expiring-actions.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>5.2.</b>
+                        
+                        Expiring Actions
+                    </a>
+            
+            
+        </li>
+    
+        <li class="chapter " data-level="5.3" data-path="Docs/features/shell-commands.html">
+            
+                
+                    <a href="../../Docs/features/shell-commands.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>5.3.</b>
+                        
+                        Shell Commands
+                    </a>
+            
+            
+        </li>
+    
+        <li class="chapter " data-level="5.4" data-path="Docs/features/task-search.html">
+            
+                
+                    <a href="../../Docs/features/task-search.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>5.4.</b>
+                        
+                        Task Search
+                    </a>
+            
+            
+        </li>
+    
+        <li class="chapter " data-level="5.5" data-path="Docs/features/incremental-deploys.html">
+            
+                
+                    <a href="../../Docs/features/incremental-deploys.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>5.5.</b>
+                        
+                        Incremental Deploys
+                    </a>
+            
+            
+        </li>
+    
+        <li class="chapter " data-level="5.6" data-path="Docs/features/disaster-detection.html">
+            
+                
+                    <a href="../../Docs/features/disaster-detection.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>5.6.</b>
+                        
+                        Disaster Detection &amp; Disabled Actions
+                    </a>
+            
+            
+        </li>
+    
+
+            </ul>
+            
+        </li>
+    
+        <li class="chapter " data-level="6" >
+            
+            <span><b>6.</b> Reference</span>
+            
+            
+            <ul class="articles">
+                
+    
+        <li class="chapter " data-level="6.1" data-path="Docs/reference/configuration.html">
+            
+                
+                    <a href="../../Docs/reference/configuration.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>6.1.</b>
+                        
+                        Configuration
+                    </a>
+            
+            
+        </li>
+    
+        <li class="chapter " data-level="6.2" data-path="Docs/reference/container-options.html">
+            
+                
+                    <a href="../../Docs/reference/container-options.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>6.2.</b>
+                        
+                        Container Options
+                    </a>
+            
+            
+        </li>
+    
+        <li class="chapter " data-level="6.3" data-path="Docs/reference/database.html">
+            
+                
+                    <a href="../../Docs/reference/database.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>6.3.</b>
+                        
+                        Database
+                    </a>
+            
+            
+        </li>
+    
+        <li class="chapter " data-level="6.4" data-path="Docs/reference/webhooks.html">
+            
+                
+                    <a href="../../Docs/reference/webhooks.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>6.4.</b>
+                        
+                        Webhooks
+                    </a>
+            
+            
+        </li>
+    
+        <li class="chapter " data-level="6.5" data-path="Docs/reference/slave-extras.html">
+            
+                
+                    <a href="../../Docs/reference/slave-extras.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>6.5.</b>
+                        
+                        Slave Extras
+                    </a>
+            
+            
+        </li>
+    
+        <li class="chapter " data-level="6.6" data-path="Docs/reference/deploy-defaults.html">
+            
+                
+                    <a href="../../Docs/reference/deploy-defaults.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>6.6.</b>
+                        
+                        Deploy Defaults
+                    </a>
+            
+            
+        </li>
+    
+        <li class="chapter " data-level="6.7" data-path="Docs/reference/healthchecks.html">
+            
+                
+                    <a href="../../Docs/reference/healthchecks.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>6.7.</b>
+                        
+                        Health Checks
+                    </a>
+            
+            
+        </li>
+    
+        <li class="chapter " data-level="6.8" data-path="Docs/reference/apidocs/api-index.html">
+            
+                
+                    <a href="../../Docs/reference/apidocs/api-index.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>6.8.</b>
+                        
+                        API
+                    </a>
+            
+            
+            <ul class="articles">
+                
+    
+        <li class="chapter " data-level="6.8.1" data-path="Docs/reference/apidocs/api-sandbox.html">
+            
+                
+                    <a href="../../Docs/reference/apidocs/api-sandbox.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>6.8.1.</b>
+                        
+                        /api/sandbox
+                    </a>
+            
+            
+        </li>
+    
+        <li class="chapter " data-level="6.8.2" data-path="Docs/reference/apidocs/api-slaves.html">
+            
+                
+                    <a href="../../Docs/reference/apidocs/api-slaves.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>6.8.2.</b>
+                        
+                        /api/slaves
+                    </a>
+            
+            
+        </li>
+    
+        <li class="chapter " data-level="6.8.3" data-path="Docs/reference/apidocs/api-history.html">
+            
+                
+                    <a href="../../Docs/reference/apidocs/api-history.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>6.8.3.</b>
+                        
+                        /api/history
+                    </a>
+            
+            
+        </li>
+    
+        <li class="chapter " data-level="6.8.4" data-path="Docs/reference/apidocs/api-state.html">
+            
+                
+                    <a href="../../Docs/reference/apidocs/api-state.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>6.8.4.</b>
+                        
+                        /api/state
+                    </a>
+            
+            
+        </li>
+    
+        <li class="chapter " data-level="6.8.5" data-path="Docs/reference/apidocs/api-logs.html">
+            
+                
+                    <a href="../../Docs/reference/apidocs/api-logs.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>6.8.5.</b>
+                        
+                        /api/logs
+                    </a>
+            
+            
+        </li>
+    
+        <li class="chapter " data-level="6.8.6" data-path="Docs/reference/apidocs/api-tasks.html">
+            
+                
+                    <a href="../../Docs/reference/apidocs/api-tasks.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>6.8.6.</b>
+                        
+                        /api/tasks
+                    </a>
+            
+            
+        </li>
+    
+        <li class="chapter " data-level="6.8.7" data-path="Docs/reference/apidocs/api-test.html">
+            
+                
+                    <a href="../../Docs/reference/apidocs/api-test.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>6.8.7.</b>
+                        
+                        /api/test
+                    </a>
+            
+            
+        </li>
+    
+        <li class="chapter " data-level="6.8.8" data-path="Docs/reference/apidocs/api-webhooks.html">
+            
+                
+                    <a href="../../Docs/reference/apidocs/api-webhooks.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>6.8.8.</b>
+                        
+                        /api/webhooks
+                    </a>
+            
+            
+        </li>
+    
+        <li class="chapter " data-level="6.8.9" data-path="Docs/reference/apidocs/api-racks.html">
+            
+                
+                    <a href="../../Docs/reference/apidocs/api-racks.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>6.8.9.</b>
+                        
+                        /api/racks
+                    </a>
+            
+            
+        </li>
+    
+        <li class="chapter " data-level="6.8.10" data-path="Docs/reference/apidocs/api-requests.html">
+            
+                
+                    <a href="../../Docs/reference/apidocs/api-requests.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>6.8.10.</b>
+                        
+                        /api/requests
+                    </a>
+            
+            
+        </li>
+    
+        <li class="chapter " data-level="6.8.11" data-path="Docs/reference/apidocs/api-groups.html">
+            
+                
+                    <a href="../../Docs/reference/apidocs/api-groups.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>6.8.11.</b>
+                        
+                        /api/groups
+                    </a>
+            
+            
+        </li>
+    
+        <li class="chapter " data-level="6.8.12" data-path="Docs/reference/apidocs/api-deploys.html">
+            
+                
+                    <a href="../../Docs/reference/apidocs/api-deploys.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>6.8.12.</b>
+                        
+                        /api/deploys
+                    </a>
+            
+            
+        </li>
+    
+        <li class="chapter " data-level="6.8.13" data-path="Docs/reference/apidocs/api-disasters.html">
+            
+                
+                    <a href="../../Docs/reference/apidocs/api-disasters.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>6.8.13.</b>
+                        
+                        /api/disasters
+                    </a>
+            
+            
+        </li>
+    
+        <li class="chapter " data-level="6.8.14" data-path="Docs/reference/apidocs/api-priority.html">
+            
+                
+                    <a href="../../Docs/reference/apidocs/api-priority.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>6.8.14.</b>
+                        
+                        /api/priority
+                    </a>
+            
+            
+        </li>
+    
+        <li class="chapter " data-level="6.8.15" data-path="Docs/reference/apidocs/models.html">
+            
+                
+                    <a href="../../Docs/reference/apidocs/models.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>6.8.15.</b>
+                        
+                        Models
+                    </a>
+            
+            
+        </li>
+    
+
+            </ul>
+            
+        </li>
+    
+
+            </ul>
+            
+        </li>
+    
+
+
+            
+            <li class="divider"></li>
+            <li>
+                <a href="https://www.gitbook.com" target="blank" class="gitbook-link">
+                    Published with GitBook
+                </a>
+            </li>
+            
+        </ul>
+    </nav>
+</div>
+
+    <div class="book-body">
+        <div class="body-inner">
+            <div class="book-header" role="navigation">
+    <!-- Actions Left -->
+    
+
+    <!-- Title -->
+    <h1>
+        <i class="fa fa-circle-o-notch fa-spin"></i>
+        <a href="../../" >Singularity</a>
+    </h1>
+</div>
+
+            <div class="page-wrapper" tabindex="-1" role="main">
+                <div class="page-inner">
+                
+                
+                    <section class="normal" id="section-">
+                    
+                        <h1 id="requests-and-deploys">Requests and Deploys</h1>
+<p>Singularity uses the concepts of a <code>Request</code> and <code>Deploy</code> to keep track of changes to a particular task or set of related tasks.</p>
+<p>A <code>Request</code> can be thought of as the high level information for a single project or deployable item. For example, the name and owner&apos;s email for a single web service, or the name and cron schedule for a single scheduled job.</p>
+<p>A <code>Deploy</code> can then be thought of as the specific configuration or version of the running code for that deployable item.</p>
+<p>To illustrate the differences between and usages of these two concepts, we will walk through an example using Singularity to run a single web service.</p>
+<h2 id="the-testservice-example">The <code>TestService</code> Example</h2>
+<h3 id="creating-a-request">Creating a <code>Request</code></h3>
+<p>You have a new web service called <code>TestService</code> that you want to run via Singularity. The first thing you need to do is create a <code>Request</code> for <code>TestService</code>. To create this request, you would <code>POST</code> json over http to the Singularity API (<a href="../reference/apidocs/api-requests.html#post-apirequests"><code>/api/requests</code></a>) or create a request via the new request page in the Singularity UI. Example json:</p>
+<pre><code class="lang-json">{
+    &quot;id&quot;: &quot;TestService&quot;,
+    &quot;requestType&quot;: &quot;SERVICE&quot;,
+    &quot;owners&quot;: [&quot;me@test.com&quot;],
+    &quot;instances&quot;: 1,
+}
+</code></pre>
+<p>This <code>Request</code> now holds high level information about your web service. Singularity knows it is a long running <code>SERVICE</code> named <code>TestService</code> and that you want to run <code>1</code> instance of this service.</p>
+<h3 id="creating-a-deploy">Creating a <code>Deploy</code></h3>
+<p>Now you want <code>TestService</code> to actually run. To do this, you need to create a <code>Deploy</code> for the <code>TestService</code> <code>Request</code>. This deploy will let Singularity know all of the information necessary to actually build and launch a task. This information includes things like the command to run, environment variables to set, the location of any artifacts to download, or the resources that should be allocated to a task. You would create this deploy by <code>POST</code>ing json to the Singularity API&apos;s deploy endpoint (<a href="../reference/apidocs/api-deploys.html#post-apideploys"><code>/api/deploys</code></a>), or creating a new deploy in the Singularity UI. Example json:</p>
+<pre><code class="lang-json">{
+  &quot;deploy&quot;: {
+    &quot;requestId&quot;:&quot;TestService&quot;,
+    &quot;id&quot;:&quot;5&quot;,
+    &quot;resources&quot;: {
+        &quot;cpus&quot;:1,
+        &quot;memoryMb&quot;:128,
+        &quot;numPorts&quot;:2
+    }, 
+    &quot;command&quot;:&quot;java -Ddw.server.applicationConnectors[0].port=$PORT0 -Ddw.server.adminConnectors[0].port=$PORT1 -jar singularitytest-1.0-SNAPSHOT.jar server example.yml&quot;,
+    &quot;uris&quot;: [
+        &quot;https://github.com/HubSpot/singularity-test-service/releases/download/1.0/singularitytest-1.0-SNAPSHOT.jar&quot;,
+        &quot;https://github.com/HubSpot/singularity-test-service/releases/download/1.0/example.yml&quot;
+    ],
+    &quot;healthcheck&quot;: {
+       &quot;uri&quot;: &quot;/&quot;
+     }
+  }
+}
+</code></pre>
+<p>Posting this to Singularity creates a <code>PendingDeploy</code>. Singularity will then try to build and launch tasks using the information provided in the <code>Deploy</code> json (i.e. a task with those artifacts that needs 1 cpu, 128MB of memory, etc and is run with that command). Singularity will also know to only build and launch <code>1</code> of these tasks based on the number of instances you set in the <code>Request</code> earlier. Once that task is launched and Singularity determines it is healthy, the <code>Deploy</code> succeeds and the <code>Deploy</code> json you provided is now the <code>ActiveDeploy</code>.</p>
+<h3 id="a-new-deploy">A New <code>Deploy</code></h3>
+<p>Let&apos;s say some changes were made to the <code>TestService</code> code and you want to run the new version in Singularity, maybe with a bit more memory as well. You would create a new <code>Deploy</code> json with information about the new code to run, and updated memory value and <code>POST</code> that to the Singularity API (<a href="../reference/apidocs/api-deploys.html#post-apideploys"><code>/api/deploys</code></a>), or create a new deploy in the Singularity UI.</p>
+<p>Singularity sees a new <code>Deploy</code> has been started and makes that the <code>PendingDeploy</code> for the <code>TestService</code> <code>Request</code>. Singularity will then try to build and launch <code>1</code> new task with the configuration specified in the new <code>PendingDeploy</code> (note that the task from the previous <code>Deploy</code> is still running and it&apos;s settings are unchanged). Once the task is launched and determined to be healthy, that new <code>Deploy</code> now becomes the <code>ActiveDeploy</code> and the task from the old deploy is shut down.</p>
+<h3 id="updating-the-request">Updating the Request</h3>
+<p>Now, for example, you notice <code>TestService</code> is getting more traffic than expected and you want to run <code>3</code> instances instead of just <code>1</code>. You can <code>PUT</code> a new number of instances over http to the Singularity API (<a href="../reference/apidocs/api-requests.html#put-apirequestsrequestrequestidscale"><code>/api/requests/request/{requestId}/scale</code></a>), or click <code>Scale</code> on the Singularity UI request page and enter a new number of instances to update our number of instances. Example json:</p>
+<pre><code class="lang-json">{
+    &quot;id&quot;: &quot;TestService&quot;,
+    &quot;requestType&quot;: &quot;SERVICE&quot;,
+    &quot;owners&quot;: [&quot;me@test.com&quot;],
+    &quot;instances&quot;: 3,
+}
+</code></pre>
+<p>Singularity sees this update to the request and will try to build and launch <code>2</code> additional tasks so that there are <code>3</code> total instances running. The configuration/resources/command/etc for these new tasks will be determined from the current <code>ActiveDeploy</code>. In other words, there is no need to re-deploy <code>TestService</code> to scale the number of instances up or down. This information is saved separate from the more detailed information in the deploy. If you were to create another new deploy after scaling, Singularity would then build and launch <code>3</code> new tasks for that new deploy.</p>
+
+                    
+                    </section>
+                
+                
+                </div>
+            </div>
+        </div>
+
+        
+        <a href="../../Docs/about/how-it-works.html" class="navigation navigation-prev " aria-label="Previous page: How It Works"><i class="fa fa-angle-left"></i></a>
+        
+        
+        <a href="../../Docs/about/ui.html" class="navigation navigation-next " aria-label="Next page: Singularity UI"><i class="fa fa-angle-right"></i></a>
+        
+    </div>
+</div>
+
+        
+<script src="../../gitbook/app.js"></script>
+
+    
+    <script src="../../gitbook/plugins/gitbook-plugin-github/plugin.js"></script>
+    
+
+    
+    <script src="../../gitbook/plugins/gitbook-plugin-copy-code-button/toggle.js"></script>
+    
+
+    
+    <script src="../../gitbook/plugins/gitbook-plugin-search/lunr.min.js"></script>
+    
+
+    
+    <script src="../../gitbook/plugins/gitbook-plugin-search/search.js"></script>
+    
+
+    
+    <script src="../../gitbook/plugins/gitbook-plugin-fontsettings/buttons.js"></script>
+    
+
+<script>
+require(["gitbook"], function(gitbook) {
+    var config = {"github":{"url":"https://github.com/HubSpot/Singularity"},"copy-code-button":{},"search":{"maxIndexSize":1000000},"fontsettings":{"theme":"white","family":"sans","size":2}};
+    gitbook.start(config);
+});
+</script>
+
+        <!-- body:end -->
+    </body>
+    <!-- End of book Singularity -->
+</html>
