@@ -208,7 +208,7 @@ Retrieve an active task by runId
 - - -
 #### **POST** `/api/requests/request/{requestId}/run`
 
-Schedule a one-off or scheduled Singularity request for immediate execution.
+Schedule a one-off or scheduled Singularity request for immediate or delayed execution.
 
 
 ###### Parameters
