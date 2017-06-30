@@ -1,6 +1,6 @@
 package com.hubspot.singularity;
 
-import org.apache.mesos.Protos.TaskStatus;
+import org.apache.mesos.v1.Protos.TaskStatus;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;

@@ -35,7 +35,9 @@ public class SingularityCuratorTestBase {
 
   @After
   public final void curatorTeardown() throws Exception {
-    singularityTestModule.stop();
+    if (singularityTestModule != null) {
+      singularityTestModule.stop();
+    }
 
     if (cf != null) {
       cf.close();
