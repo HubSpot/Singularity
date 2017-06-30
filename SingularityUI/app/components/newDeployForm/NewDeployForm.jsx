@@ -316,7 +316,7 @@ class NewDeployForm extends Component {
     } else if (!this.validateFields(INDEXED_DEFAULT_EXECUTOR_FIELDS)) {
       return false;
     }
-    if (this.getValueOrDefault('type') === 'docker') {
+    if (this.getValueOrDefault('type') === 'DOCKER') {
       if (!this.validateFields(INDEXED_DOCKER_CONTAINER_FIELDS) ||
         !this.validateObjects('portMappings', INDEXED_DOCKER_PORT_MAPPING_FIELDS) ||
         !this.validateObjects('volumes', INDEXED_DOCKER_VOLUME_FIELDS) ||
@@ -417,7 +417,7 @@ class NewDeployForm extends Component {
     } else {
       this.copyFieldsToObject(deployObject, FIELDS.customExecutor, (fieldId) => this.getValueOrDefault(fieldId));
     }
-    if (this.getValueOrDefault('type') === 'docker') {
+    if (this.getValueOrDefault('type') === 'DOCKER') {
       this.copyFieldsToObject(deployObject, FIELDS.dockerContainer, (fieldId) => this.getValueOrDefault(fieldId));
     }
     if (this.props.request.request.loadBalanced) {
@@ -1486,7 +1486,7 @@ class NewDeployForm extends Component {
           </div>
         </div>
 
-        { this.getValueOrDefault('type') === 'docker' && this.renderDockerContainerFields() }
+        { this.getValueOrDefault('type') === 'DOCKER' && this.renderDockerContainerFields() }
       </div>
     );
     const resources = (
