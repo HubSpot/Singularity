@@ -14,6 +14,7 @@ import org.apache.mesos.v1.Protos.KillPolicy;
 import org.apache.mesos.v1.Protos.Offer;
 import org.apache.mesos.v1.Protos.OfferID;
 import org.apache.mesos.v1.Protos.TaskID;
+import org.apache.mesos.v1.Protos.TaskStatus;
 import org.apache.mesos.v1.scheduler.Protos.Call;
 import org.apache.mesos.v1.scheduler.Protos.Call.Accept;
 import org.apache.mesos.v1.scheduler.Protos.Call.Acknowledge;
@@ -189,8 +190,9 @@ public class SingularityMesosSchedulerClient {
       });
 
       events.filter(event -> event.getType() == Event.Type.UPDATE).subscribe(e -> {
-        // Ack is done in the statusUpdate method
-        scheduler.statusUpdate(e.getUpdate().getStatus());
+        TaskStatus status = e.getUpdate().getStatus();
+        acknowledge(status.getAgentId(), status.getTaskId(), status.getUuid());
+        scheduler.statusUpdate(status);
       });
 
       // This is the observable that is responsible for sending calls to mesos master.

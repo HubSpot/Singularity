@@ -247,7 +247,6 @@ public class SingularityMesosStatusUpdateHandler {
     }
 
     saveNewTaskStatusHolder(taskIdObj, newTaskStatusHolder, taskState);
-    schedulerClient.acknowledge(status.getAgentId(), status.getTaskId(), status.getUuid());
   }
 
   @Timed
