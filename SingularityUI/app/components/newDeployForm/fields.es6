@@ -6,7 +6,7 @@ export const FIELDS = {
     {
       id: 'containerInfo',
       type: 'object',
-      values: [{id: 'type', type: 'text', default: 'mesos', required: true}]
+      values: [{id: 'type', type: 'text', default: 'MESOS', required: true}]
     },
     {
       id: 'resources',
