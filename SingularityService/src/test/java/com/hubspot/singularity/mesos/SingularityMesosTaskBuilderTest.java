@@ -207,7 +207,7 @@ public class SingularityMesosTaskBuilderTest {
     assertEquals(80, task.getMesosTask().getContainer().getDocker().getPortMappings(0).getContainerPort());
     assertEquals(8080, task.getMesosTask().getContainer().getDocker().getPortMappings(0).getHostPort());
     assertEquals("tcp", task.getMesosTask().getContainer().getDocker().getPortMappings(0).getProtocol());
-    assertTrue(MesosUtils.getAllPorts(task.getMesosTask().getResourcesList()).contains(8080L));
+    assertTrue(MesosUtils.getAllPorts(task.getMesosTask().getResources()).contains(8080L));
 
     assertEquals(81, task.getMesosTask().getContainer().getDocker().getPortMappings(1).getContainerPort());
     assertEquals(31000, task.getMesosTask().getContainer().getDocker().getPortMappings(1).getHostPort());

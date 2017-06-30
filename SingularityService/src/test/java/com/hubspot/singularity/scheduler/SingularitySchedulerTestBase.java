@@ -41,6 +41,8 @@ import com.hubspot.baragon.models.BaragonRequestState;
 import com.hubspot.deploy.HealthcheckOptionsBuilder;
 import com.hubspot.mesos.MesosUtils;
 import com.hubspot.mesos.Resources;
+import com.hubspot.mesos.json.SingularityMesosOfferObject;
+import com.hubspot.mesos.json.SingularityMesosTaskObject;
 import com.hubspot.singularity.DeployState;
 import com.hubspot.singularity.LoadBalancerRequestType;
 import com.hubspot.singularity.LoadBalancerRequestType.LoadBalancerRequestId;
@@ -313,7 +315,7 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
         .setName("name")
         .build();
 
-    SingularityTask task = new SingularityTask(taskRequest, taskId, Collections.singletonList(offer), taskInfo, Optional.of("rack1"));
+    SingularityTask task = new SingularityTask(taskRequest, taskId, Collections.singletonList(SingularityMesosOfferObject.fromProtos(offer)), taskInfo, SingularityMesosTaskObject.fromProtos(taskInfo), Optional.of("rack1"));
 
     taskManager.savePendingTask(pendingTask);
 

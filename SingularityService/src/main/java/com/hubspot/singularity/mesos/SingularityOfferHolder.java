@@ -108,7 +108,7 @@ public class SingularityOfferHolder {
     acceptedTasks.add(task);
 
     // subtract task resources from offer
-    currentResources = MesosUtils.subtractResources(currentResources, task.getMesosTask().getResourcesList());
+    currentResources = MesosUtils.subtractResources(currentResources, task.getMesosTask().getResources());
 
     // subtract executor resources from offer, if any are defined
     if (task.getMesosTask().hasExecutor() && task.getMesosTask().getExecutor().getResourcesCount() > 0) {
@@ -122,7 +122,7 @@ public class SingularityOfferHolder {
 
     for (SingularityTask task : acceptedTasks) {
       taskIds.add(task.getTaskId());
-      toLaunch.add(task.getMesosTask());
+      toLaunch.add(task.getMesosTaskProtos());
       LOG.debug("Launching {} with offer {}", task.getTaskId(), offers.get(0).getId());
       LOG.trace("Launching {} mesos task: {}", task.getTaskId(), MesosUtils.formatForLogging(task.getMesosTask()));
     }

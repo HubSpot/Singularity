@@ -651,7 +651,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     sms.resourceOffers(Arrays.asList(createOffer(5, 5, "slave1", "host1", Optional.of("rack1"))));
 
     SingularityTask task = taskManager.getActiveTasks().get(0);
-    Assert.assertEquals(MesosUtils.getNumCpus(task.getMesosTask().getResourcesList(), Optional.<String>absent()), 2.0, 0.0);
+    Assert.assertEquals(MesosUtils.getNumCpus(task.getMesosTask().getResources(), Optional.<String>absent()), 2.0, 0.0);
   }
 
   @Test
@@ -2312,7 +2312,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
 
     sms.resourceOffers(Arrays.asList(createOffer(5, 5, Optional.of("test-role"))));
     SingularityTask task = taskManager.getActiveTasks().get(0);
-    Assert.assertEquals(MesosUtils.getNumCpus(task.getMesosTask().getResourcesList(), Optional.of("test-role")), 2.0, 0.0);
+    Assert.assertEquals(MesosUtils.getNumCpus(task.getMesosTask().getResources(), Optional.of("test-role")), 2.0, 0.0);
   }
 
   @Test

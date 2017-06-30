@@ -4,10 +4,10 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map.Entry;
+import java.util.stream.Collectors;
 
 import javax.inject.Singleton;
 
-import org.apache.mesos.v1.Protos;
 import org.apache.mesos.v1.Protos.CommandInfo;
 import org.apache.mesos.v1.Protos.CommandInfo.URI;
 import org.apache.mesos.v1.Protos.ContainerInfo;
@@ -19,7 +19,6 @@ import org.apache.mesos.v1.Protos.ExecutorInfo;
 import org.apache.mesos.v1.Protos.Label;
 import org.apache.mesos.v1.Protos.Labels;
 import org.apache.mesos.v1.Protos.Labels.Builder;
-import org.apache.mesos.v1.Protos.Offer;
 import org.apache.mesos.v1.Protos.Parameter;
 import org.apache.mesos.v1.Protos.Resource;
 import org.apache.mesos.v1.Protos.TaskID;
@@ -47,6 +46,8 @@ import com.hubspot.mesos.SingularityDockerPortMapping;
 import com.hubspot.mesos.SingularityMesosArtifact;
 import com.hubspot.mesos.SingularityMesosTaskLabel;
 import com.hubspot.mesos.SingularityVolume;
+import com.hubspot.mesos.json.SingularityMesosOfferObject;
+import com.hubspot.mesos.json.SingularityMesosTaskObject;
 import com.hubspot.singularity.SingularityS3UploaderFile;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskExecutorData;
@@ -150,7 +151,12 @@ class SingularityMesosTaskBuilder {
 
     TaskInfo task = bldr.build();
 
-    return new SingularityTask(taskRequest, taskId, offerHolder.getOffers(), task, Optional.of(offerHolder.getRackId()));
+    return new SingularityTask(taskRequest,
+        taskId,
+        offerHolder.getOffers().stream().map(SingularityMesosOfferObject::fromProtos).collect(Collectors.toList()),
+        task,
+        SingularityMesosTaskObject.fromProtos(task),
+        Optional.of(offerHolder.getRackId()));
   }
 
   private boolean hasLiteralPortMapping(Optional<SingularityContainerInfo> maybeContainerInfo) {
