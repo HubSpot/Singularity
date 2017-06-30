@@ -14,6 +14,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.mesos.v1.Protos.Address;
 import org.apache.mesos.v1.Protos.AgentID;
 import org.apache.mesos.v1.Protos.Attribute;
 import org.apache.mesos.v1.Protos.ExecutorID;
@@ -26,6 +27,7 @@ import org.apache.mesos.v1.Protos.TaskID;
 import org.apache.mesos.v1.Protos.TaskInfo;
 import org.apache.mesos.v1.Protos.TaskState;
 import org.apache.mesos.v1.Protos.TaskStatus;
+import org.apache.mesos.v1.Protos.URL;
 import org.apache.mesos.v1.Protos.Value.Scalar;
 import org.apache.mesos.v1.Protos.Value.Text;
 import org.apache.mesos.v1.Protos.Value.Type;
@@ -254,6 +256,7 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
         .setFrameworkId(frameworkId)
         .setAgentId(slaveId)
         .setHostname(host)
+        .setUrl(URL.newBuilder().setScheme("scheme").setAddress(Address.newBuilder().setPort(8080)))
         .addAttributes(Attribute.newBuilder().setType(Type.TEXT).setText(Text.newBuilder().setValue(rack.or(configuration.getMesosConfiguration().getDefaultRackId()))).setName(configuration.getMesosConfiguration().getRackIdAttributeKey()))
         .addResources(cpusResource)
         .addResources(memoryResources)
