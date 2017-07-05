@@ -24,7 +24,6 @@ import com.hubspot.mesos.MesosUtils;
 import com.hubspot.mesos.Resources;
 import com.hubspot.singularity.RequestType;
 import com.hubspot.singularity.SingularityDeployStatistics;
-import com.hubspot.singularity.SingularityDeployStatisticsBuilder;
 import com.hubspot.singularity.SingularityPendingTaskId;
 import com.hubspot.singularity.SingularitySlaveUsage.ResourceUsageType;
 import com.hubspot.singularity.SingularitySlaveUsageWithId;
@@ -374,34 +373,7 @@ public class SingularityMesosOfferScheduler {
     addRequestToMapByOfferHost(tasksPerOfferPerRequest, offerHolder.getHostname(), taskRequest.getRequest().getId());
     stateCache.getScheduledTasks().remove(taskRequest.getPendingTask());
 
-    updateDeployStatistics(taskRequestHolder);
-
     return task;
-  }
-
-  private void updateDeployStatistics(SingularityTaskRequestHolder taskRequestHolder) {
-    Optional<SingularityDeployStatistics> statistics = deployManager.getDeployStatistics(
-        taskRequestHolder.getTaskRequest().getRequest().getId(),
-        taskRequestHolder.getTaskRequest().getDeploy().getId()
-    );
-
-    if (statistics.isPresent()) {
-      SingularityDeployStatisticsBuilder bldr = statistics.get().toBuilder();
-
-      long dueTime = taskRequestHolder.getTaskRequest().getPendingTask().getPendingTaskId().getNextRunAt();
-      long now = System.currentTimeMillis();
-
-      if (bldr.getAverageSchedulingDelayMillis().isPresent()) {
-        long newAverageSchedulingDelayMillis = (bldr.getAverageSchedulingDelayMillis().get() * bldr.getNumTasks() + (now - dueTime)) / (bldr.getNumTasks() + 1);
-        bldr.setAverageSchedulingDelayMillis(Optional.of(newAverageSchedulingDelayMillis));
-      } else {
-        bldr.setAverageSchedulingDelayMillis(Optional.of(now - dueTime));
-      }
-
-      final SingularityDeployStatistics newStatistics = bldr.build();
-
-      deployManager.saveDeployStatistics(newStatistics);
-    }
   }
 
   private void addRequestToMapByOfferHost(Map<String, Map<String, Integer>> tasksPerOfferHostPerRequest, String hostname, String requestId) {
