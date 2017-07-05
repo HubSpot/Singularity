@@ -224,7 +224,10 @@ public class SingularitySlaveAndRackManager {
           final boolean isSlaveOk = numOnSlave <= numPerSlave;
 
           if (!isSlaveOk) {
-            LOG.trace("Rejecting OPTIMISTIC task {} from slave {} ({}) due to numOnSlave {}", taskRequest.getRequest().getId(), slaveId, host, numOnSlave);
+            LOG.trace(
+                "Rejecting OPTIMISTIC task {} from slave {} ({}) due to numOnSlave {} and numPerSlave {} (based on currentlyActiveTasksForRequest {} and currentHostsForRequest {})",
+                taskRequest.getRequest().getId(), slaveId, host, numOnSlave, numPerSlave, currentlyActiveTasksForRequestClusterwide.size(), currentHostsForRequest.size()
+            );
             return SlaveMatchState.SLAVE_SATURATED;
           }
         }
