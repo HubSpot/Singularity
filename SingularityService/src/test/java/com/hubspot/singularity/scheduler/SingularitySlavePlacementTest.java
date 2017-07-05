@@ -134,21 +134,6 @@ public class SingularitySlavePlacementTest extends SingularitySchedulerTestBase 
   }
 
   @Test
-  public void testSlavePlacementOptimisticSingleOffer() {
-    initRequest();
-    initFirstDeploy();
-
-    saveAndSchedule(request.toBuilder().setInstances(Optional.of(3)).setSlavePlacement(Optional.of(SlavePlacement.OPTIMISTIC)));
-
-    sms.resourceOffers(driver, Arrays.asList(createOffer(20, 20000, "slave1", "host1"), createOffer(20, 20000, "slave2", "host2")));
-
-    eventListener.taskHistoryUpdateEvent(new SingularityTaskHistoryUpdate(taskManager.getActiveTaskIds().get(0), System.currentTimeMillis(), ExtendedTaskState.TASK_CLEANING, Optional.<String>absent(), Optional.<String>absent()));
-
-    Assert.assertTrue(taskManager.getPendingTaskIds().isEmpty());
-    Assert.assertTrue(taskManager.getActiveTaskIds().size() == 3);
-  }
-
-  @Test
   public void testSlavePlacementGreedy() {
     initRequest();
     initFirstDeploy();
