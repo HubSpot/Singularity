@@ -5,7 +5,9 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 
 import javax.inject.Singleton;
 
@@ -208,22 +210,23 @@ public class SingularitySlaveAndRackManager {
         }
         break;
       case OPTIMISTIC:
-        // TODO: consider cleaning tasks?
-        // TODO: consider doing this count in the for() above?
-        Collection<SingularityTaskId> currentlyActiveTasks = stateCache.getActiveTaskIdsForRequest(taskRequest.getRequest().getId());
+        Collection<SingularityTaskId> currentlyActiveTasksForRequestClusterwide = stateCache.getActiveTaskIdsForRequest(taskRequest.getRequest().getId());
 
-        long currentHostsForRequest = currentlyActiveTasks.stream()
-            .map(SingularityTaskId::getSanitizedHost)
-            .distinct()
-            .count();
+        // If no tasks are active for this request yet, we can fall back to greedy.
+        if (currentlyActiveTasksForRequestClusterwide.size() > 0) {
 
-        final double numPerSlave = currentlyActiveTasks.size() / (double) currentHostsForRequest;
+          Set<String> currentHostsForRequest = currentlyActiveTasksForRequestClusterwide.stream()
+              .map(SingularityTaskId::getSanitizedHost)
+              .collect(Collectors.toSet());
 
-        final boolean isSlaveOk = numOnSlave <= numPerSlave;
+          final double numPerSlave = currentlyActiveTasksForRequestClusterwide.size() / (double) currentHostsForRequest.size();
 
-        if (!isSlaveOk) {
-          LOG.trace("Rejecting OPTIMISTIC task {} from slave {} ({}) due to numOnSlave {}", taskRequest.getRequest().getId(), slaveId, host, numOnSlave);
-          return SlaveMatchState.SLAVE_SATURATED;
+          final boolean isSlaveOk = numOnSlave <= numPerSlave;
+
+          if (!isSlaveOk) {
+            LOG.trace("Rejecting OPTIMISTIC task {} from slave {} ({}) due to numOnSlave {}", taskRequest.getRequest().getId(), slaveId, host, numOnSlave);
+            return SlaveMatchState.SLAVE_SATURATED;
+          }
         }
         break;
       case GREEDY:
