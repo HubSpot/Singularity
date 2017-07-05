@@ -333,7 +333,8 @@ public class SingularityMachineStatesTest extends SingularitySchedulerTestBase {
 
     saveAndSchedule(request.toBuilder().setSlavePlacement(Optional.of(SlavePlacement.OPTIMISTIC)).setInstances(Optional.of(2)));
 
-    resourceOffers();
+    sms.resourceOffers(driver, Arrays.asList(createOffer(1, 128, "slave1", "host1")));
+    sms.resourceOffers(driver, Arrays.asList(createOffer(1, 128, "slave2", "host2")));
 
     // freeze slave1
     Assert.assertEquals(StateChangeResult.SUCCESS, slaveManager.changeState("slave1", MachineState.FROZEN, Optional.absent(), Optional.of("user1")));
