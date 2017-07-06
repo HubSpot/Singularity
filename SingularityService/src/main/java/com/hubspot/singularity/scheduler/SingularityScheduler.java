@@ -643,13 +643,13 @@ public class SingularityScheduler {
 
     if (task.isPresent()) {
       long dueTime = task.get().getTaskRequest().getPendingTask().getPendingTaskId().getNextRunAt();
-      long now = System.currentTimeMillis();
+      long startedAt = taskId.getStartedAt();
 
       if (bldr.getAverageSchedulingDelayMillis().isPresent()) {
-        long newAverageSchedulingDelayMillis = (bldr.getAverageSchedulingDelayMillis().get() * bldr.getNumTasks() + (now - dueTime)) / (bldr.getNumTasks() + 1);
+        long newAverageSchedulingDelayMillis = (bldr.getAverageSchedulingDelayMillis().get() * bldr.getNumTasks() + (startedAt - dueTime)) / (bldr.getNumTasks() + 1);
         bldr.setAverageSchedulingDelayMillis(Optional.of(newAverageSchedulingDelayMillis));
       } else {
-        bldr.setAverageSchedulingDelayMillis(Optional.of(now - dueTime));
+        bldr.setAverageSchedulingDelayMillis(Optional.of(startedAt - dueTime));
       }
 
       final SingularityDeployStatistics newStatistics = bldr.build();
