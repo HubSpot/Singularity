@@ -28,24 +28,24 @@ public class StateResource extends ProxyResource {
 
   @GET
   public SingularityState getState(@QueryParam("skipCache") boolean skipCache, @QueryParam("includeRequestIds") boolean includeRequestIds) {
-
+    throw new NotImplemenedException();
   }
 
   @GET
   @Path("/requests/under-provisioned")
   public List<String> getUnderProvisionedRequestIds(@QueryParam("skipCache") boolean skipCache) {
-
+    throw new NotImplemenedException();
   }
 
   @GET
   @Path("/requests/over-provisioned")
   public List<String> getOverProvisionedRequestIds(@QueryParam("skipCache") boolean skipCache) {
-
+    throw new NotImplemenedException();
   }
 
   @GET
   @Path("/task-reconciliation")
   public Optional<SingularityTaskReconciliationStatistics> getTaskReconciliationStatistics() {
-
+    throw new NotImplemenedException();
   }
 }

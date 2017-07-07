@@ -29,12 +29,12 @@ public class AuthResource extends ProxyResource {
   @GET
   @Path("/user")
   public SingularityUserHolder getUser() {
-    throw new RuntimeException("not implemented");
+    throw new NotImplemenedException();
   }
 
   @GET
   @Path("/{requestId}/auth-check/{userId}")
   public Response checkReadOnlyAuth(@PathParam("requestId") String requestId, @PathParam("userId") String userId, @QueryParam("scope") Optional<SingularityAuthorizationScope> scope) {
-    throw new RuntimeException("not implemented");
+    throw new NotImplemenedException();
   }
 }

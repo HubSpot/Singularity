@@ -36,26 +36,26 @@ public class HistoryResource extends ProxyResource {
   @GET
   @Path("/task/{taskId}")
   public SingularityTaskHistory getHistoryForTask(@PathParam("taskId") String taskId) {
-    throw new RuntimeException("not implemented");
+    throw new NotImplemenedException();
   }
 
 
   @GET
   @Path("/request/{requestId}/tasks/active")
   public List<SingularityTaskIdHistory> getTaskHistoryForRequest(@PathParam("requestId") String requestId) {
-    throw new RuntimeException("not implemented");
+    throw new NotImplemenedException();
   }
 
   @GET
   @Path("/request/{requestId}/deploy/{deployId}")
   public SingularityDeployHistory getDeploy(@PathParam("requestId") String requestId, @PathParam("deployId") String deployId) {
-    throw new RuntimeException("not implemented");
+    throw new NotImplemenedException();
   }
 
   @GET
   @Path("/request/{requestId}/deploy/{deployId}/tasks/active")
   public List<SingularityTaskIdHistory> getActiveDeployTasks( @PathParam("requestId") String requestId, @PathParam("deployId") String deployId) {
-    throw new RuntimeException("not implemented");
+    throw new NotImplemenedException();
   }
 
   @GET
@@ -63,7 +63,7 @@ public class HistoryResource extends ProxyResource {
   public List<SingularityTaskIdHistory> getInactiveDeployTasks(
       @PathParam("requestId") String requestId, @PathParam("deployId") String deployId,
       @QueryParam("count") Integer count, @QueryParam("page") Integer page) {
-    throw new RuntimeException("not implemented");
+    throw new NotImplemenedException();
   }
 
   @GET
@@ -71,7 +71,7 @@ public class HistoryResource extends ProxyResource {
   public SingularityPaginatedResponse<SingularityTaskIdHistory> getInactiveDeployTasksWithMetadata(
       @PathParam("requestId") String requestId, @PathParam("deployId") String deployId,
       @QueryParam("count") Integer count, @QueryParam("page") Integer page) {
-    throw new RuntimeException("not implemented");
+    throw new NotImplemenedException();
   }
 
   @GET
@@ -81,7 +81,7 @@ public class HistoryResource extends ProxyResource {
       @QueryParam("host") Optional<String> host, @QueryParam("lastTaskStatus") Optional<ExtendedTaskState> lastTaskStatus, @QueryParam("startedBefore") Optional<Long> startedBefore,
       @QueryParam("startedAfter") Optional<Long> startedAfter, @QueryParam("updatedBefore") Optional<Long> updatedBefore, @QueryParam("updatedAfter") Optional<Long> updatedAfter,
       @QueryParam("orderDirection") Optional<OrderDirection> orderDirection, @QueryParam("count") Integer count, @QueryParam("page") Integer page) {
-    throw new RuntimeException("not implemented");
+    throw new NotImplemenedException();
   }
 
   @GET
@@ -91,7 +91,7 @@ public class HistoryResource extends ProxyResource {
       @QueryParam("host") Optional<String> host, @QueryParam("lastTaskStatus") Optional<ExtendedTaskState> lastTaskStatus, @QueryParam("startedBefore") Optional<Long> startedBefore,
       @QueryParam("startedAfter") Optional<Long> startedAfter, @QueryParam("updatedBefore") Optional<Long> updatedBefore, @QueryParam("updatedAfter") Optional<Long> updatedAfter,
       @QueryParam("orderDirection") Optional<OrderDirection> orderDirection, @QueryParam("count") Integer count, @QueryParam("page") Integer page) {
-    throw new RuntimeException("not implemented");
+    throw new NotImplemenedException();
   }
 
   @GET
@@ -101,7 +101,7 @@ public class HistoryResource extends ProxyResource {
       @QueryParam("host") Optional<String> host, @QueryParam("lastTaskStatus") Optional<ExtendedTaskState> lastTaskStatus, @QueryParam("startedBefore") Optional<Long> startedBefore,
       @QueryParam("startedAfter") Optional<Long> startedAfter, @QueryParam("updatedBefore") Optional<Long> updatedBefore, @QueryParam("updatedAfter") Optional<Long> updatedAfter,
       @QueryParam("orderDirection") Optional<OrderDirection> orderDirection, @QueryParam("count") Integer count, @QueryParam("page") Integer page) {
-    throw new RuntimeException("not implemented");
+    throw new NotImplemenedException();
   }
 
   @GET
@@ -111,53 +111,53 @@ public class HistoryResource extends ProxyResource {
       @QueryParam("host") Optional<String> host, @QueryParam("lastTaskStatus") Optional<ExtendedTaskState> lastTaskStatus, @QueryParam("startedBefore") Optional<Long> startedBefore,
       @QueryParam("startedAfter") Optional<Long> startedAfter, @QueryParam("updatedBefore") Optional<Long> updatedBefore, @QueryParam("updatedAfter") Optional<Long> updatedAfter,
       @QueryParam("orderDirection") Optional<OrderDirection> orderDirection, @QueryParam("count") Integer count, @QueryParam("page") Integer page) {
-    throw new RuntimeException("not implemented");
+    throw new NotImplemenedException();
   }
 
   @GET
   @Path("/request/{requestId}/run/{runId}")
   public Optional<SingularityTaskIdHistory> getTaskHistoryForRequestAndRunId(
       @PathParam("requestId") String requestId, @PathParam("runId") String runId) {
-    throw new RuntimeException("not implemented");
+    throw new NotImplemenedException();
   }
 
   @GET
   @Path("/request/{requestId}/deploys")
   public List<SingularityDeployHistory> getDeploys(
       @PathParam("requestId") String requestId, @QueryParam("count") Integer count, @QueryParam("page") Integer page) {
-    throw new RuntimeException("not implemented");
+    throw new NotImplemenedException();
   }
 
   @GET
   @Path("/request/{requestId}/deploys/withmetadata")
   public SingularityPaginatedResponse<SingularityDeployHistory> getDeploysWithMetadata(
       @PathParam("requestId") String requestId, @QueryParam("count") Integer count, @QueryParam("page") Integer page) {
-    throw new RuntimeException("not implemented");
+    throw new NotImplemenedException();
   }
 
   @GET
   @Path("/request/{requestId}/requests")
   public List<SingularityRequestHistory> getRequestHistoryForRequest(
       @PathParam("requestId") String requestId, @QueryParam("count") Integer count, @QueryParam("page") Integer page) {
-    throw new RuntimeException("not implemented");
+    throw new NotImplemenedException();
   }
 
   @GET
   @Path("/request/{requestId}/requests/withmetadata")
   public SingularityPaginatedResponse<SingularityRequestHistory> getRequestHistoryForRequestWithMetadata(
       @PathParam("requestId") String requestId, @QueryParam("count") Integer count, @QueryParam("page") Integer page) {
-    throw new RuntimeException("not implemented");
+    throw new NotImplemenedException();
   }
 
   @GET
   @Path("/requests/search")
   public Iterable<String> getRequestHistoryForRequestLike(@QueryParam("requestIdLike") String requestIdLike, @QueryParam("count") Integer count, @QueryParam("page") Integer page, @QueryParam("useWebCache") Boolean useWebCache) {
-    throw new RuntimeException("not implemented");
+    throw new NotImplemenedException();
   }
 
   @GET
   @Path("/request/{requestId}/command-line-args")
   public Set<List<String>> getRecentCommandLineArgs(@PathParam("requestId") String requestId, @QueryParam("count") Optional<Integer> count) {
-    throw new RuntimeException("not implemented");
+    throw new NotImplemenedException();
   }
 }

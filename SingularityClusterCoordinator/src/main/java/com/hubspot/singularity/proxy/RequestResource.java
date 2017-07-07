@@ -48,7 +48,7 @@ public class RequestResource extends ProxyResource {
   @POST
   @Consumes({ MediaType.APPLICATION_JSON })
   public SingularityRequestParent postRequest(@Context HttpServletRequest requestContext, SingularityRequest request) {
-
+    throw new NotImplemenedException();
   }
 
   @POST
@@ -64,7 +64,7 @@ public class RequestResource extends ProxyResource {
   public SingularityRequestParent bounce(@PathParam("requestId") String requestId,
                                          @Context HttpServletRequest requestContext,
                                          SingularityBounceRequest bounceRequest) {
-
+    throw new NotImplemenedException();
   }
 
   @POST
@@ -78,13 +78,13 @@ public class RequestResource extends ProxyResource {
   @Consumes({ MediaType.APPLICATION_JSON })
   public SingularityPendingRequestParent scheduleImmediately(@PathParam("requestId") String requestId,
                                                              SingularityRunNowRequest runNowRequest) {
-
+    throw new NotImplemenedException();
   }
 
   @GET
   @Path("/request/{requestId}/run/{runId}")
   public Optional<SingularityTaskId> getTaskByRunId(@PathParam("requestId") String requestId, @PathParam("runId") String runId) {
-
+    throw new NotImplemenedException();
   }
 
   @POST
@@ -100,7 +100,7 @@ public class RequestResource extends ProxyResource {
   public SingularityRequestParent pause(@PathParam("requestId") String requestId,
                                         @Context HttpServletRequest requestContext,
                                         SingularityPauseRequest pauseRequest) {
-
+    throw new NotImplemenedException();
   }
 
   @POST
@@ -116,7 +116,7 @@ public class RequestResource extends ProxyResource {
   public SingularityRequestParent unpause(@PathParam("requestId") String requestId,
                                           @Context HttpServletRequest requestContext,
                                           SingularityUnpauseRequest unpauseRequest) {
-
+    throw new NotImplemenedException();
   }
 
   @POST
@@ -132,54 +132,54 @@ public class RequestResource extends ProxyResource {
   public SingularityRequestParent exitCooldown(@PathParam("requestId") String requestId,
                                                @Context HttpServletRequest requestContext,
                                                SingularityExitCooldownRequest exitCooldownRequest) {
-
+    throw new NotImplemenedException();
   }
 
   @GET
   @Path("/active")
   public List<SingularityRequestParent> getActiveRequests(@QueryParam("useWebCache") Boolean useWebCache) {
-
+    throw new NotImplemenedException();
   }
 
   @GET
   @Path("/paused")
   public List<SingularityRequestParent> getPausedRequests(@QueryParam("useWebCache") Boolean useWebCache) {
-
+    throw new NotImplemenedException();
   }
 
   @GET
   @Path("/cooldown")
   public List<SingularityRequestParent> getCooldownRequests(@QueryParam("useWebCache") Boolean useWebCache) {
-
+    throw new NotImplemenedException();
   }
 
   @GET
   @Path("/finished")
   public List<SingularityRequestParent> getFinishedRequests(@QueryParam("useWebCache") Boolean useWebCache) {
-
+    throw new NotImplemenedException();
   }
 
   @GET
   public List<SingularityRequestParent> getRequests(@QueryParam("useWebCache") Boolean useWebCache) {
-
+    throw new NotImplemenedException();
   }
 
   @GET
   @Path("/queued/pending")
   public Iterable<SingularityPendingRequest> getPendingRequests() {
-
+    throw new NotImplemenedException();
   }
 
   @GET
   @Path("/queued/cleanup")
   public Iterable<SingularityRequestCleanup> getCleanupRequests() {
-
+    throw new NotImplemenedException();
   }
 
   @GET
   @Path("/request/{requestId}")
   public SingularityRequestParent getRequest(@PathParam("requestId") String requestId, @QueryParam("useWebCache") Boolean useWebCache) {
-
+    throw new NotImplemenedException();
   }
 
   @DELETE
@@ -188,7 +188,7 @@ public class RequestResource extends ProxyResource {
   public SingularityRequest deleteRequest(@PathParam("requestId") String requestId,
                                           @Context HttpServletRequest requestContext,
                                           SingularityDeleteRequestRequest deleteRequest) {
-
+    throw new NotImplemenedException();
   }
 
   @PUT
@@ -197,38 +197,38 @@ public class RequestResource extends ProxyResource {
   public SingularityRequestParent scale(@PathParam("requestId") String requestId,
                                         @Context HttpServletRequest requestContext,
                                         SingularityScaleRequest scaleRequest) {
-
+    throw new NotImplemenedException();
   }
 
   @DELETE
   @Path("/request/{requestId}/scale")
   public SingularityRequestParent deleteExpiringScale(@PathParam("requestId") String requestId) {
-
+    throw new NotImplemenedException();
   }
 
   @Deprecated
   @DELETE
   @Path("/request/{requestId}/skipHealthchecks")
   public SingularityRequestParent deleteExpiringSkipHealthchecksDeprecated(@PathParam("requestId") String requestId) {
-
+    throw new NotImplemenedException();
   }
 
   @DELETE
   @Path("/request/{requestId}/skip-healthchecks")
   public SingularityRequestParent deleteExpiringSkipHealthchecks(@PathParam("requestId") String requestId) {
-
+    throw new NotImplemenedException();
   }
 
   @DELETE
   @Path("/request/{requestId}/pause")
   public SingularityRequestParent deleteExpiringPause(@PathParam("requestId") String requestId) {
-
+    throw new NotImplemenedException();
   }
 
   @DELETE
   @Path("/request/{requestId}/bounce")
   public SingularityRequestParent deleteExpiringBounce(@PathParam("requestId") String requestId) {
-
+    throw new NotImplemenedException();
   }
 
   @Deprecated
@@ -247,12 +247,12 @@ public class RequestResource extends ProxyResource {
   public SingularityRequestParent skipHealthchecks(@PathParam("requestId") String requestId,
                                                    @Context HttpServletRequest requestContext,
                                                    SingularitySkipHealthchecksRequest skipHealthchecksRequest) {
-
+    throw new NotImplemenedException();
   }
 
   @GET
   @Path("/lbcleanup")
   public Iterable<String> getLbCleanupRequests(@QueryParam("useWebCache") Boolean useWebCache) {
-
+    throw new NotImplemenedException();
   }
 }

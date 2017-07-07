@@ -28,13 +28,13 @@ public class SandboxResource extends ProxyResource {
   @GET
   @Path("/{taskId}/browse")
   public SingularitySandbox browse(@PathParam("taskId") String taskId, @QueryParam("path") String path) {
-
+    throw new NotImplemenedException();
   }
 
   @GET
   @Path("/{taskId}/read")
   public MesosFileChunkObject read(@PathParam("taskId") String taskId, @QueryParam("path") String path, @QueryParam("grep") Optional<String> grep,
                                    @QueryParam("offset") Optional<Long> offset, @QueryParam("length") Optional<Long> length) {
-
+    throw new NotImplemenedException();
   }
 }

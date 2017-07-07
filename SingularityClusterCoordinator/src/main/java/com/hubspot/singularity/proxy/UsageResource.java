@@ -7,7 +7,6 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.hubspot.singularity.SingularitySlaveUsage;
 import com.hubspot.singularity.SingularitySlaveUsageWithId;
@@ -27,25 +26,25 @@ public class UsageResource extends ProxyResource {
   @GET
   @Path("/slaves")
   public List<SingularitySlaveUsageWithId> getSlavesWithUsage() {
-
+    throw new NotImplemenedException();
   }
 
   @GET
   @Path("/slaves/{slaveId}/tasks/current")
   public List<SingularityTaskCurrentUsageWithId> getSlaveCurrentTaskUsage(@PathParam("slaveId") String slaveId) {
-
+    throw new NotImplemenedException();
   }
 
   @GET
   @Path("/slaves/{slaveId}/history")
   public List<SingularitySlaveUsage> getSlaveUsageHistory(@PathParam("slaveId") String slaveId) {
-
+    throw new NotImplemenedException();
   }
 
   @GET
   @Path("/tasks/{taskId}/history")
   public List<SingularityTaskUsage> getTaskUsageHistory(@PathParam("taskId") String taskId) {
-
+    throw new NotImplemenedException();
   }
 
 }

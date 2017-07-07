@@ -27,18 +27,16 @@ public class InactiveSlaveResource extends ProxyResource {
 
   @GET
   public Set<String> getInactiveSlaves() {
-
+    throw new NotImplemenedException();
   }
 
   @POST
   public void deactivateSlave(@QueryParam("host") String host) {
-
-
+    throw new NotImplemenedException();
   }
 
   @DELETE
   public void reactivateSlave(@QueryParam("host") String host) {
-
-
+    throw new NotImplemenedException();
   }
 }

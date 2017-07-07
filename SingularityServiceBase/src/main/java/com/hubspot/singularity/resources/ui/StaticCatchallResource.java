@@ -10,18 +10,18 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import com.hubspot.singularity.SingularityServiceBaseModule;
-import com.hubspot.singularity.config.UIConfiguration;
+import com.hubspot.singularity.config.IndexViewConfiguration;
 import com.hubspot.singularity.views.IndexView;
 
 @Singleton
 @Path("/{uiPath:.*}")
 public class StaticCatchallResource {
-  private final UIConfiguration configuration;
+  private final IndexViewConfiguration configuration;
   private final String singularityUriBase;
   private final ObjectMapper mapper;
 
   @Inject
-  public StaticCatchallResource(@Named(SingularityServiceBaseModule.SINGULARITY_URI_BASE) String singularityUriBase, UIConfiguration configuration, ObjectMapper mapper) {
+  public StaticCatchallResource(@Named(SingularityServiceBaseModule.SINGULARITY_URI_BASE) String singularityUriBase, IndexViewConfiguration configuration, ObjectMapper mapper) {
     this.configuration = configuration;
     this.singularityUriBase = singularityUriBase;
     this.mapper = mapper;

@@ -26,24 +26,24 @@ public class UserResource extends ProxyResource {
   @GET
   @Path("/settings")
   public SingularityUserSettings getUserSettings() {
-
+    throw new NotImplemenedException();
   }
 
   @POST
   @Path("/settings")
   public void setUserSettings(SingularityUserSettings settings) {
-
+    throw new NotImplemenedException();
   }
 
   @POST
   @Path("/settings/starred-requests")
   public void addStarredRequests(SingularityUserSettings settings) {
-
+    throw new NotImplemenedException();
   }
 
   @DELETE
   @Path("/settings/starred-requests")
   public void deleteStarredRequests(SingularityUserSettings settings) {
-
+    throw new NotImplemenedException();
   }
 }

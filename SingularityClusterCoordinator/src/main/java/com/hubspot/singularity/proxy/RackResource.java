@@ -35,49 +35,49 @@ public class RackResource extends ProxyResource {
   @GET
   @Path("/")
   public List<SingularityRack> getRacks(@QueryParam("state") Optional<MachineState> filterState) {
-
+    throw new NotImplemenedException();
   }
 
   @GET
   @Path("/rack/{rackId}")
   public List<SingularityMachineStateHistoryUpdate> getRackHistory(@PathParam("rackId") String rackId) {
-
+    throw new NotImplemenedException();
   }
 
   @DELETE
   @Path("/rack/{rackId}")
   public void removeRack(@PathParam("rackId") String rackId) {
-
+    throw new NotImplemenedException();
   }
 
   @POST
   @Path("/rack/{rackId}/decommission")
   public void decommissionRack(@PathParam("rackId") String rackId, SingularityMachineChangeRequest changeRequest) {
-
+    throw new NotImplemenedException();
   }
 
   @POST
   @Path("/rack/{rackId}/freeze")
   public void freezeRack(@PathParam("rackId") String rackId, SingularityMachineChangeRequest changeRequest) {
-
+    throw new NotImplemenedException();
   }
 
   @POST
   @Path("/rack/{rackId}/activate")
   public void activateRack(@PathParam("rackId") String rackId, SingularityMachineChangeRequest changeRequest) {
-
+    throw new NotImplemenedException();
   }
 
   @DELETE
   @Path("/rack/{rackId}/expiring")
   public void deleteExpiringStateChange(@PathParam("rackId") String rackId) {
-
+    throw new NotImplemenedException();
   }
 
   @GET
   @Path("/expiring")
   public List<SingularityExpiringMachineState> getExpiringStateChanges() {
-
+    throw new NotImplemenedException();
   }
 
 }

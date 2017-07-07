@@ -16,8 +16,6 @@ import javax.ws.rs.core.MediaType;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.hubspot.mesos.json.MesosTaskStatisticsObject;
 import com.hubspot.singularity.SingularityKilledTaskIdRecord;
@@ -46,79 +44,79 @@ public class TaskResource extends ProxyResource {
   @GET
   @Path("/scheduled")
   public List<SingularityTaskRequest> getScheduledTasks(@QueryParam("useWebCache") Boolean useWebCache) {
-
+    throw new NotImplemenedException();
   }
 
   @GET
   @Path("/scheduled/ids")
   public Iterable<SingularityPendingTaskId> getScheduledTaskIds(@QueryParam("useWebCache") Boolean useWebCache) {
-
+    throw new NotImplemenedException();
   }
 
   @GET
   @Path("/scheduled/task/{pendingTaskId}")
   public SingularityTaskRequest getPendingTask(@PathParam("pendingTaskId") String pendingTaskIdStr) {
-
+    throw new NotImplemenedException();
   }
 
   @GET
   @Path("/scheduled/request/{requestId}")
   public List<SingularityTaskRequest> getScheduledTasksForRequest(@PathParam("requestId") String requestId, @QueryParam("useWebCache") Boolean useWebCache) {
-
+    throw new NotImplemenedException();
   }
 
   @GET
   @Path("/active/slave/{slaveId}")
   public Iterable<SingularityTask> getTasksForSlave(@PathParam("slaveId") String slaveId, @QueryParam("useWebCache") Boolean useWebCache) {
-
+    throw new NotImplemenedException();
   }
 
   @GET
   @Path("/active")
   public Iterable<SingularityTask> getActiveTasks(@QueryParam("useWebCache") Boolean useWebCache) {
-
+    throw new NotImplemenedException();
   }
 
   @GET
   @Path("/cleaning")
   public Iterable<SingularityTaskCleanup> getCleaningTasks(@QueryParam("useWebCache") Boolean useWebCache) {
-
+    throw new NotImplemenedException();
   }
 
   @GET
   @Path("/killed")
   public Iterable<SingularityKilledTaskIdRecord> getKilledTasks() {
-
+    throw new NotImplemenedException();
   }
 
   @GET
   @Path("/lbcleanup")
   public Iterable<SingularityTaskId> getLbCleanupTasks() {
-
+    throw new NotImplemenedException();
   }
 
   @GET
   @Path("/task/{taskId}")
   public SingularityTask getActiveTask(@PathParam("taskId") String taskId) {
-
+    throw new NotImplemenedException();
   }
 
   @GET
   @Path("/task/{taskId}/statistics")
   public MesosTaskStatisticsObject getTaskStatistics(@PathParam("taskId") String taskId) {
-
+    throw new NotImplemenedException();
   }
 
   @GET
   @Path("/task/{taskId}/cleanup")
   public Optional<SingularityTaskCleanup> getTaskCleanup(@PathParam("taskId") String taskId) {
-
+    throw new NotImplemenedException();
   }
 
   @DELETE
   @Path("/task/{taskId}")
   public SingularityTaskCleanup killTask(@PathParam("taskId") String taskId, @Context HttpServletRequest requestContext) {
-
+    throw new NotImplemenedException();
   }
 
   @DELETE
@@ -127,25 +125,25 @@ public class TaskResource extends ProxyResource {
   public SingularityTaskCleanup killTask(@PathParam("taskId") String taskId,
                                          @Context HttpServletRequest requestContext,
                                          SingularityKillTaskRequest killTaskRequest) {
-
+    throw new NotImplemenedException();
   }
 
   @Path("/commands/queued")
   public List<SingularityTaskShellCommandRequest> getQueuedShellCommands() {
-
+    throw new NotImplemenedException();
   }
 
   @POST
   @Path("/task/{taskId}/metadata")
   @Consumes({ MediaType.APPLICATION_JSON })
   public void postTaskMetadata(@PathParam("taskId") String taskId, final SingularityTaskMetadataRequest taskMetadataRequest) {
-
+    throw new NotImplemenedException();
   }
 
   @POST
   @Path("/task/{taskId}/command")
   @Consumes({ MediaType.APPLICATION_JSON })
   public SingularityTaskShellCommandRequest runShellCommand(@PathParam("taskId") String taskId, final SingularityShellCommand shellCommand) {
-
+    throw new NotImplemenedException();
   }
 }

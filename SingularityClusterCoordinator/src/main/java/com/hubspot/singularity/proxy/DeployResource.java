@@ -33,24 +33,24 @@ public class DeployResource extends ProxyResource {
   @GET
   @Path("/pending")
   public Iterable<SingularityPendingDeploy> getPendingDeploys() {
-    throw new RuntimeException("not implemented");
+    throw new NotImplemenedException();
   }
 
   @POST
   @Consumes({ MediaType.APPLICATION_JSON })
   public SingularityRequestParent deploy(@Context HttpServletRequest requestContext, SingularityDeployRequest deployRequest) {
-    throw new RuntimeException("not implemented");
+    throw new NotImplemenedException();
   }
 
   @DELETE
   @Path("/deploy/{deployId}/request/{requestId}")
   public SingularityRequestParent cancelDeploy(@PathParam("requestId") String requestId, @PathParam("deployId") String deployId) {
-    throw new RuntimeException("not implemented");
+    throw new NotImplemenedException();
   }
 
   @POST
   @Path("/update")
   public SingularityRequestParent updatePendingDeploy(SingularityUpdatePendingDeployRequest updateRequest) {
-    throw new RuntimeException("not implemented");
+    throw new NotImplemenedException();
   }
 }

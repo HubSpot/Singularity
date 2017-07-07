@@ -28,18 +28,18 @@ public class PriorityResource extends ProxyResource {
   @GET
   @Path("/freeze")
   public Optional<SingularityPriorityFreezeParent> getActivePriorityFreeze() {
-
+    throw new NotImplemenedException();
   }
 
   @DELETE
   @Path("/freeze")
   public void deleteActivePriorityFreeze() {
-
+    throw new NotImplemenedException();
   }
 
   @POST
   @Path("/freeze")
   public SingularityPriorityFreezeParent createPriorityFreeze(SingularityPriorityFreeze priorityFreezeRequest) {
-
+    throw new NotImplemenedException();
   }
 }

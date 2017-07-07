@@ -22,7 +22,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
-import com.hubspot.singularity.SingularityMainModule;
+import com.hubspot.singularity.SingularityServiceBaseModule;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.config.MesosConfiguration;
 import com.hubspot.singularity.config.SingularityConfiguration;
@@ -40,7 +40,7 @@ public class SingularityDriver {
 
   @Inject
   SingularityDriver(final SingularityMesosSchedulerDelegator scheduler, final SingularityConfiguration singularityConfiguration, final MesosConfiguration configuration,
-                    @Named(SingularityMainModule.SINGULARITY_URI_BASE) final String singularityUriBase) throws IOException {
+                    @Named(SingularityServiceBaseModule.SINGULARITY_URI_BASE) final String singularityUriBase) throws IOException {
     final FrameworkInfo.Builder frameworkInfoBuilder = Protos.FrameworkInfo.newBuilder()
         .setCheckpoint(configuration.getCheckpoint())
         .setFailoverTimeout(configuration.getFrameworkFailoverTimeout())

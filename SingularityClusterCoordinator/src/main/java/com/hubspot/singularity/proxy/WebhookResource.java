@@ -35,69 +35,69 @@ public class WebhookResource extends ProxyResource {
 
   @GET
   public List<SingularityWebhook> getActiveWebhooks() {
-
+    throw new NotImplemenedException();
   }
 
   @GET
   @Path("/summary")
   public List<SingularityWebhookSummary> getWebhooksWithQueueSize() {
-
+    throw new NotImplemenedException();
   }
 
   @POST
   public SingularityCreateResult addWebhook(SingularityWebhook webhook) {
-
+    throw new NotImplemenedException();
   }
 
   @DELETE
   @Deprecated
   @Path("/{webhookId}")
   public SingularityDeleteResult deleteWebhookDeprecated(@PathParam("webhookId") String webhookId) {
-
+    throw new NotImplemenedException();
   }
 
   @GET
   @Deprecated
   @Path("/deploy/{webhookId}")
   public List<SingularityDeployUpdate> getQueuedDeployUpdatesDeprecated(@PathParam("webhookId") String webhookId) {
-
+    throw new NotImplemenedException();
   }
 
   @GET
   @Deprecated
   @Path("/request/{webhookId}")
   public List<SingularityRequestHistory> getQueuedRequestUpdatesDeprecated(@PathParam("webhookId") String webhookId) {
-
+    throw new NotImplemenedException();
   }
 
   @GET
   @Deprecated
   @Path("/task/{webhookId}")
   public List<SingularityTaskHistoryUpdate> getQueuedTaskUpdatesDeprecated(@PathParam("webhookId") String webhookId) {
-
+    throw new NotImplemenedException();
   }
 
   @DELETE
   public SingularityDeleteResult deleteWebhook(@QueryParam("webhookId") String webhookId) {
-
+    throw new NotImplemenedException();
   }
 
   @GET
   @Path("/deploy")
   public List<SingularityDeployUpdate> getQueuedDeployUpdates(@QueryParam("webhookId") String webhookId) {
-
+    throw new NotImplemenedException();
   }
 
   @GET
   @Path("/request")
   public List<SingularityRequestHistory> getQueuedRequestUpdates(@QueryParam("webhookId") String webhookId) {
-
+    throw new NotImplemenedException();
   }
 
   @GET
   @Path("/task")
   public List<SingularityTaskHistoryUpdate> getQueuedTaskUpdates(@QueryParam("webhookId") String webhookId) {
-
+    throw new NotImplemenedException();
   }
 
 }

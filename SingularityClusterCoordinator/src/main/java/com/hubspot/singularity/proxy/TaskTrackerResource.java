@@ -26,12 +26,12 @@ public class TaskTrackerResource extends ProxyResource {
   @GET
   @Path("/task/{taskId}")
   public Optional<SingularityTaskState> getTaskState(@PathParam("taskId") String taskId) {
-
+    throw new NotImplemenedException();
   }
 
   @GET
   @Path("/run/{requestId}/{runId}")
   public Optional<SingularityTaskState> getTaskStateByRunId(@PathParam("requestId") String requestId, @PathParam("runId") String runId) {
-
+    throw new NotImplemenedException();
   }
 }

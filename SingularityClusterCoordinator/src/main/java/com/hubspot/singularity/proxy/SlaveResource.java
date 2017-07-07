@@ -35,55 +35,54 @@ public class SlaveResource extends ProxyResource {
   @GET
   @Path("/")
   public List<SingularitySlave> getSlaves(@QueryParam("state") Optional<MachineState> filterState) {
-
+    throw new NotImplemenedException();
   }
 
   @GET
   @Path("/slave/{slaveId}")
   public List<SingularityMachineStateHistoryUpdate> getSlaveHistory(@PathParam("slaveId") String slaveId) {
-
+    throw new NotImplemenedException();
   }
 
   @GET
   @Path("/slave/{slaveId}/details")
   public Optional<SingularitySlave> getSlave(@PathParam("slaveId") String slaveId) {
-
+    throw new NotImplemenedException();
   }
 
   @DELETE
   @Path("/slave/{slaveId}")
   public void removeSlave(@PathParam("slaveId") String slaveId) {
-
+    throw new NotImplemenedException();
   }
 
   @POST
   @Path("/slave/{slaveId}/decommission")
   public void decommissionSlave(@PathParam("slaveId") String slaveId, SingularityMachineChangeRequest changeRequest) {
-
+    throw new NotImplemenedException();
   }
 
   @POST
   @Path("/slave/{slaveId}/freeze")
   public void freezeSlave(@PathParam("slaveId") String slaveId, SingularityMachineChangeRequest changeRequest) {
-
+    throw new NotImplemenedException();
   }
 
   @POST
   @Path("/slave/{slaveId}/activate")
   public void activateSlave(@PathParam("slaveId") String slaveId, SingularityMachineChangeRequest changeRequest) {
-
+    throw new NotImplemenedException();
   }
 
   @DELETE
   @Path("/slave/{slaveId}/expiring")
-
   public void deleteExpiringStateChange(@PathParam("slaveId") String slaveId) {
-
+    throw new NotImplemenedException();
   }
 
   @GET
   @Path("/expiring")
   public List<SingularityExpiringMachineState> getExpiringStateChanges() {
-
+    throw new NotImplemenedException();
   }
 }

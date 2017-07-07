@@ -30,23 +30,23 @@ public class RequestGroupResource extends ProxyResource {
 
   @GET
   public List<SingularityRequestGroup> getRequestGroupIds(@QueryParam("useWebCache") Boolean useWebCache) {
-
+    throw new NotImplemenedException();
   }
 
   @GET
   @Path("/group/{requestGroupId}")
   public Optional<SingularityRequestGroup> getRequestGroup(@PathParam("requestGroupId") String requestGroupId) {
-
+    throw new NotImplemenedException();
   }
 
   @DELETE
   @Path("/group/{requestGroupId}")
   public void deleteRequestGroup(@PathParam("requestGroupId") String requestGroupId) {
-
+    throw new NotImplemenedException();
   }
 
   @POST
   public SingularityRequestGroup saveRequestGroup(SingularityRequestGroup requestGroup) {
-
+    throw new NotImplemenedException();
   }
 }
