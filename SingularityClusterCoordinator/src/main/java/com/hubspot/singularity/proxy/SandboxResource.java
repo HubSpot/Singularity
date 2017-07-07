@@ -7,14 +7,23 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
+import com.google.inject.Inject;
 import com.hubspot.mesos.json.MesosFileChunkObject;
 import com.hubspot.singularity.SingularitySandbox;
 import com.hubspot.singularity.config.ApiPaths;
+import com.hubspot.singularity.config.ClusterCoordinatorConfiguration;
+import com.ning.http.client.AsyncHttpClient;
 
 @Path(ApiPaths.SANDBOX_RESOURCE_PATH)
 @Produces({ MediaType.APPLICATION_JSON })
-public class SandboxResource {
+public class SandboxResource extends ProxyResource {
+
+  @Inject
+  public SandboxResource(ClusterCoordinatorConfiguration configuration, AsyncHttpClient httpClient, ObjectMapper objectMapper) {
+    super(configuration, httpClient, objectMapper);
+  }
 
   @GET
   @Path("/{taskId}/browse")

@@ -11,13 +11,22 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
+import com.google.inject.Inject;
 import com.hubspot.singularity.SingularityRequestGroup;
 import com.hubspot.singularity.config.ApiPaths;
+import com.hubspot.singularity.config.ClusterCoordinatorConfiguration;
+import com.ning.http.client.AsyncHttpClient;
 
 @Path(ApiPaths.REQUEST_GROUP_RESOURCE_PATH)
 @Produces({ MediaType.APPLICATION_JSON })
-public class RequestGroupResource {
+public class RequestGroupResource extends ProxyResource {
+
+  @Inject
+  public RequestGroupResource(ClusterCoordinatorConfiguration configuration, AsyncHttpClient httpClient, ObjectMapper objectMapper) {
+    super(configuration, httpClient, objectMapper);
+  }
 
   @GET
   public List<SingularityRequestGroup> getRequestGroupIds(@QueryParam("useWebCache") Boolean useWebCache) {

@@ -6,13 +6,22 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
+import com.google.inject.Inject;
 import com.hubspot.singularity.SingularityTaskState;
 import com.hubspot.singularity.config.ApiPaths;
+import com.hubspot.singularity.config.ClusterCoordinatorConfiguration;
+import com.ning.http.client.AsyncHttpClient;
 
 @Path(ApiPaths.TASK_TRACKER_RESOURCE_PATH)
 @Produces({ MediaType.APPLICATION_JSON })
-public class TaskTrackerResource {
+public class TaskTrackerResource extends ProxyResource {
+
+  @Inject
+  public TaskTrackerResource(ClusterCoordinatorConfiguration configuration, AsyncHttpClient httpClient, ObjectMapper objectMapper) {
+    super(configuration, httpClient, objectMapper);
+  }
 
   @GET
   @Path("/task/{taskId}")

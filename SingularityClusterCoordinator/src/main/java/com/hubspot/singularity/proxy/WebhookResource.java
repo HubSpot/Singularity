@@ -11,6 +11,8 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.inject.Inject;
 import com.hubspot.singularity.SingularityCreateResult;
 import com.hubspot.singularity.SingularityDeleteResult;
 import com.hubspot.singularity.SingularityDeployUpdate;
@@ -19,10 +21,17 @@ import com.hubspot.singularity.SingularityTaskHistoryUpdate;
 import com.hubspot.singularity.SingularityWebhook;
 import com.hubspot.singularity.SingularityWebhookSummary;
 import com.hubspot.singularity.config.ApiPaths;
+import com.hubspot.singularity.config.ClusterCoordinatorConfiguration;
+import com.ning.http.client.AsyncHttpClient;
 
 @Path(ApiPaths.WEBHOOK_RESOURCE_PATH)
 @Produces({ MediaType.APPLICATION_JSON })
-public class WebhookResource {
+public class WebhookResource extends ProxyResource {
+
+  @Inject
+  public WebhookResource(ClusterCoordinatorConfiguration configuration, AsyncHttpClient httpClient, ObjectMapper objectMapper) {
+    super(configuration, httpClient, objectMapper);
+  }
 
   @GET
   public List<SingularityWebhook> getActiveWebhooks() {

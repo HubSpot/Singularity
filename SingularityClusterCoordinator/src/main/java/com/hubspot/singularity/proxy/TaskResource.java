@@ -14,9 +14,11 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
+import com.google.inject.Inject;
 import com.hubspot.mesos.json.MesosTaskStatisticsObject;
 import com.hubspot.singularity.SingularityKilledTaskIdRecord;
 import com.hubspot.singularity.SingularityPendingTaskId;
@@ -29,10 +31,17 @@ import com.hubspot.singularity.SingularityTaskShellCommandRequest;
 import com.hubspot.singularity.api.SingularityKillTaskRequest;
 import com.hubspot.singularity.api.SingularityTaskMetadataRequest;
 import com.hubspot.singularity.config.ApiPaths;
+import com.hubspot.singularity.config.ClusterCoordinatorConfiguration;
+import com.ning.http.client.AsyncHttpClient;
 
 @Path(ApiPaths.TEST_RESOURCE_PATH)
 @Produces({ MediaType.APPLICATION_JSON })
-public class TaskResource {
+public class TaskResource extends ProxyResource {
+
+  @Inject
+  public TaskResource(ClusterCoordinatorConfiguration configuration, AsyncHttpClient httpClient, ObjectMapper objectMapper) {
+    super(configuration, httpClient, objectMapper);
+  }
 
   @GET
   @Path("/scheduled")
