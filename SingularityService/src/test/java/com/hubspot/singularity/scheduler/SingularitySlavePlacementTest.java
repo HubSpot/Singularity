@@ -4,6 +4,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.apache.mesos.Protos.TaskState;
 import org.junit.Assert;
@@ -11,11 +12,12 @@ import org.junit.Test;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
-import com.hubspot.singularity.MachineState;
 import com.hubspot.singularity.ExtendedTaskState;
+import com.hubspot.singularity.MachineState;
 import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityTaskCleanup;
 import com.hubspot.singularity.SingularityTaskHistoryUpdate;
+import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SlavePlacement;
 import com.hubspot.singularity.TaskCleanupType;
 
@@ -102,39 +104,33 @@ public class SingularitySlavePlacementTest extends SingularitySchedulerTestBase 
     initRequest();
     initFirstDeploy();
 
-    sms.resourceOffers(driver, Arrays.asList(createOffer(20, 20000, "slave1", "host1"), createOffer(20, 20000, "slave2", "host2")));
+    saveAndSchedule(request.toBuilder().setInstances(Optional.of(7)).setSlavePlacement(Optional.of(SlavePlacement.OPTIMISTIC)));
 
-    saveAndSchedule(request.toBuilder().setInstances(Optional.of(3)).setSlavePlacement(Optional.of(SlavePlacement.OPTIMISTIC)));
+    // Default behavior if we don't have info about other hosts that can run this task: be greedy.
+    sms.resourceOffers(driver, Arrays.asList(createOffer(2, 128 * 2, "slave1", "host1")));
+    Assert.assertEquals(2, taskManager.getActiveTaskIds().size());
 
-    sms.resourceOffers(driver, Arrays.asList(createOffer(20, 20000, "slave1", "host1")));
-
-    Assert.assertTrue(taskManager.getActiveTaskIds().size() < 3);
-
-    sms.resourceOffers(driver, Arrays.asList(createOffer(20, 20000, "slave1", "host1")));
-
-    Assert.assertTrue(taskManager.getActiveTaskIds().size() < 3);
-
+    // Now that at least one other host is running tasks for this request, we expect an even spread.
     sms.resourceOffers(driver, Arrays.asList(createOffer(20, 20000, "slave2", "host2")));
+    Assert.assertEquals(5, taskManager.getActiveTaskIds().size());
 
-    eventListener.taskHistoryUpdateEvent(new SingularityTaskHistoryUpdate(taskManager.getActiveTaskIds().get(0), System.currentTimeMillis(), ExtendedTaskState.TASK_CLEANING, Optional.<String>absent(), Optional.<String>absent()));
+    // ...and we don't allow a violation of this even spread by refusing to schedule more tasks on host2 (because it's hosting 3/5 tasks).
+    sms.resourceOffers(driver, Arrays.asList(createOffer(20, 20000, "slave2", "host2")));
+    Assert.assertEquals(5, taskManager.getActiveTaskIds().size());
 
-    Assert.assertTrue(taskManager.getPendingTaskIds().isEmpty());
-    Assert.assertTrue(taskManager.getActiveTaskIds().size() == 3);
-  }
+    // ...but since host1 is only hosting 2/5 tasks, we will schedule more tasks on it when an offer is received.
+    sms.resourceOffers(driver, Arrays.asList(createOffer(20, 20000, "slave1", "host1")));
+    Assert.assertEquals(7, taskManager.getActiveTaskIds().size());
 
-  @Test
-  public void testSlavePlacementOptimisticSingleOffer() {
-    initRequest();
-    initFirstDeploy();
+    Map<String, List<SingularityTaskId>> tasksByHost = taskManager.getActiveTaskIdsForRequest(request.getId()).stream()
+        .collect(Collectors.groupingBy(SingularityTaskId::getSanitizedHost));
 
-    saveAndSchedule(request.toBuilder().setInstances(Optional.of(3)).setSlavePlacement(Optional.of(SlavePlacement.OPTIMISTIC)));
+    Assert.assertNotNull(tasksByHost.get("host1"));
+    Assert.assertEquals(4, tasksByHost.get("host1").size());
 
-    sms.resourceOffers(driver, Arrays.asList(createOffer(20, 20000, "slave1", "host1"), createOffer(20, 20000, "slave2", "host2")));
+    Assert.assertNotNull(tasksByHost.get("host2"));
+    Assert.assertEquals(3, tasksByHost.get("host2").size());
 
-    eventListener.taskHistoryUpdateEvent(new SingularityTaskHistoryUpdate(taskManager.getActiveTaskIds().get(0), System.currentTimeMillis(), ExtendedTaskState.TASK_CLEANING, Optional.<String>absent(), Optional.<String>absent()));
-
-    Assert.assertTrue(taskManager.getPendingTaskIds().isEmpty());
-    Assert.assertTrue(taskManager.getActiveTaskIds().size() == 3);
   }
 
   @Test
