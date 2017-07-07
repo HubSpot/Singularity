@@ -1,14 +1,14 @@
 package com.hubspot.singularity.proxy;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.hubspot.mesos.json.MesosFileChunkObject;
 import com.hubspot.singularity.SingularitySandbox;
@@ -27,14 +27,13 @@ public class SandboxResource extends ProxyResource {
 
   @GET
   @Path("/{taskId}/browse")
-  public SingularitySandbox browse(@PathParam("taskId") String taskId, @QueryParam("path") String path) {
+  public SingularitySandbox browse(@Context HttpServletRequest request, @PathParam("taskId") String taskId) {
     throw new NotImplemenedException();
   }
 
   @GET
   @Path("/{taskId}/read")
-  public MesosFileChunkObject read(@PathParam("taskId") String taskId, @QueryParam("path") String path, @QueryParam("grep") Optional<String> grep,
-                                   @QueryParam("offset") Optional<Long> offset, @QueryParam("length") Optional<Long> length) {
+  public MesosFileChunkObject read(@Context HttpServletRequest request, @PathParam("taskId") String taskId) {
     throw new NotImplemenedException();
   }
 }

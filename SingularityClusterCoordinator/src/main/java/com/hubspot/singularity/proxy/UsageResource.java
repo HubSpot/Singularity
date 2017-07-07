@@ -2,9 +2,11 @@ package com.hubspot.singularity.proxy;
 
 import java.util.List;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
+import javax.ws.rs.core.Context;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Inject;
@@ -25,25 +27,25 @@ public class UsageResource extends ProxyResource {
 
   @GET
   @Path("/slaves")
-  public List<SingularitySlaveUsageWithId> getSlavesWithUsage() {
+  public List<SingularitySlaveUsageWithId> getSlavesWithUsage(@Context HttpServletRequest request) {
     throw new NotImplemenedException();
   }
 
   @GET
   @Path("/slaves/{slaveId}/tasks/current")
-  public List<SingularityTaskCurrentUsageWithId> getSlaveCurrentTaskUsage(@PathParam("slaveId") String slaveId) {
+  public List<SingularityTaskCurrentUsageWithId> getSlaveCurrentTaskUsage(@Context HttpServletRequest request, @PathParam("slaveId") String slaveId) {
     throw new NotImplemenedException();
   }
 
   @GET
   @Path("/slaves/{slaveId}/history")
-  public List<SingularitySlaveUsage> getSlaveUsageHistory(@PathParam("slaveId") String slaveId) {
+  public List<SingularitySlaveUsage> getSlaveUsageHistory(@Context HttpServletRequest request, @PathParam("slaveId") String slaveId) {
     throw new NotImplemenedException();
   }
 
   @GET
   @Path("/tasks/{taskId}/history")
-  public List<SingularityTaskUsage> getTaskUsageHistory(@PathParam("taskId") String taskId) {
+  public List<SingularityTaskUsage> getTaskUsageHistory(@Context HttpServletRequest request, @PathParam("taskId") String taskId) {
     throw new NotImplemenedException();
   }
 

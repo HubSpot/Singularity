@@ -1,10 +1,12 @@
 package com.hubspot.singularity.proxy;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -25,25 +27,25 @@ public class UserResource extends ProxyResource {
 
   @GET
   @Path("/settings")
-  public SingularityUserSettings getUserSettings() {
+  public SingularityUserSettings getUserSettings(@Context HttpServletRequest request) {
     throw new NotImplemenedException();
   }
 
   @POST
   @Path("/settings")
-  public void setUserSettings(SingularityUserSettings settings) {
+  public void setUserSettings(@Context HttpServletRequest request, SingularityUserSettings settings) {
     throw new NotImplemenedException();
   }
 
   @POST
   @Path("/settings/starred-requests")
-  public void addStarredRequests(SingularityUserSettings settings) {
+  public void addStarredRequests(@Context HttpServletRequest request, SingularityUserSettings settings) {
     throw new NotImplemenedException();
   }
 
   @DELETE
   @Path("/settings/starred-requests")
-  public void deleteStarredRequests(SingularityUserSettings settings) {
+  public void deleteStarredRequests(@Context HttpServletRequest request, SingularityUserSettings settings) {
     throw new NotImplemenedException();
   }
 }

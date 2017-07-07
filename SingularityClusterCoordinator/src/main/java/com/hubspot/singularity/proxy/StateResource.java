@@ -2,10 +2,11 @@ package com.hubspot.singularity.proxy;
 
 import java.util.List;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -27,25 +28,25 @@ public class StateResource extends ProxyResource {
   }
 
   @GET
-  public SingularityState getState(@QueryParam("skipCache") boolean skipCache, @QueryParam("includeRequestIds") boolean includeRequestIds) {
+  public SingularityState getState(@Context HttpServletRequest request) {
     throw new NotImplemenedException();
   }
 
   @GET
   @Path("/requests/under-provisioned")
-  public List<String> getUnderProvisionedRequestIds(@QueryParam("skipCache") boolean skipCache) {
+  public List<String> getUnderProvisionedRequestIds(@Context HttpServletRequest request) {
     throw new NotImplemenedException();
   }
 
   @GET
   @Path("/requests/over-provisioned")
-  public List<String> getOverProvisionedRequestIds(@QueryParam("skipCache") boolean skipCache) {
+  public List<String> getOverProvisionedRequestIds(@Context HttpServletRequest request) {
     throw new NotImplemenedException();
   }
 
   @GET
   @Path("/task-reconciliation")
-  public Optional<SingularityTaskReconciliationStatistics> getTaskReconciliationStatistics() {
+  public Optional<SingularityTaskReconciliationStatistics> getTaskReconciliationStatistics(@Context HttpServletRequest request) {
     throw new NotImplemenedException();
   }
 }

@@ -37,61 +37,61 @@ public class DisastersResource extends ProxyResource {
 
   @GET
   @Path("/stats")
-  public SingularityDisastersData disasterStats() {
+  public SingularityDisastersData disasterStats(@Context HttpServletRequest request) {
     throw new NotImplemenedException();
   }
 
   @GET
   @Path("/active")
-  public List<SingularityDisasterType> activeDisasters() {
+  public List<SingularityDisasterType> activeDisasters(@Context HttpServletRequest request) {
     throw new NotImplemenedException();
   }
 
   @POST
   @Path("/disable")
-  public void disableAutomatedDisasterCreation() {
+  public void disableAutomatedDisasterCreation(@Context HttpServletRequest request) {
     throw new NotImplemenedException();
   }
 
   @POST
   @Path("/enable")
-  public void enableAutomatedDisasterCreation() {
+  public void enableAutomatedDisasterCreation(@Context HttpServletRequest request) {
     throw new NotImplemenedException();
   }
 
   @DELETE
   @Path("/active/{type}")
-  public void removeDisaster(@PathParam("type") SingularityDisasterType type) {
+  public void removeDisaster(@Context HttpServletRequest request,@PathParam("type") SingularityDisasterType type) {
     throw new NotImplemenedException();
   }
 
   @POST
   @Path("/active/{type}")
-  public void newDisaster(@PathParam("type") SingularityDisasterType type) {
+  public void newDisaster(@Context HttpServletRequest request,@PathParam("type") SingularityDisasterType type) {
     throw new NotImplemenedException();
   }
 
   @GET
   @Path("/disabled-actions")
-  public List<SingularityDisabledAction> disabledActions() {
+  public List<SingularityDisabledAction> disabledActions(@Context HttpServletRequest request) {
     throw new NotImplemenedException();
   }
 
   @POST
   @Path("/disabled-actions/{action}")
-  public void disableAction(@PathParam("action") SingularityAction action, SingularityDisabledActionRequest disabledActionRequest) {
+  public void disableAction(@Context HttpServletRequest request,@PathParam("action") SingularityAction action, SingularityDisabledActionRequest disabledActionRequest) {
     throw new NotImplemenedException();
   }
 
   @DELETE
   @Path("/disabled-actions/{action}")
-  public void enableAction(@PathParam("action") SingularityAction action) {
+  public void enableAction(@Context HttpServletRequest request,@PathParam("action") SingularityAction action) {
     throw new NotImplemenedException();
   }
 
   @POST
   @Path("/task-credits")
-  public void addTaskCredits(@QueryParam("credits") Optional<Integer> credits) throws Exception {
+  public void addTaskCredits(@Context HttpServletRequest request,@QueryParam("credits") Optional<Integer> credits) throws Exception {
     throw new NotImplemenedException();
   }
 
@@ -103,7 +103,7 @@ public class DisastersResource extends ProxyResource {
 
   @GET
   @Path("/task-credits")
-  public SingularityTaskCredits getTaskCreditData() throws Exception {
+  public SingularityTaskCredits getTaskCreditData(@Context HttpServletRequest request) throws Exception {
     throw new NotImplemenedException();
   }
 }

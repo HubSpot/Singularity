@@ -2,13 +2,14 @@ package com.hubspot.singularity.proxy;
 
 import java.util.List;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -29,24 +30,24 @@ public class RequestGroupResource extends ProxyResource {
   }
 
   @GET
-  public List<SingularityRequestGroup> getRequestGroupIds(@QueryParam("useWebCache") Boolean useWebCache) {
+  public List<SingularityRequestGroup> getRequestGroupIds(@Context HttpServletRequest request) {
     throw new NotImplemenedException();
   }
 
   @GET
   @Path("/group/{requestGroupId}")
-  public Optional<SingularityRequestGroup> getRequestGroup(@PathParam("requestGroupId") String requestGroupId) {
+  public Optional<SingularityRequestGroup> getRequestGroup(@Context HttpServletRequest request, @PathParam("requestGroupId") String requestGroupId) {
     throw new NotImplemenedException();
   }
 
   @DELETE
   @Path("/group/{requestGroupId}")
-  public void deleteRequestGroup(@PathParam("requestGroupId") String requestGroupId) {
+  public void deleteRequestGroup(@Context HttpServletRequest request, @PathParam("requestGroupId") String requestGroupId) {
     throw new NotImplemenedException();
   }
 
   @POST
-  public SingularityRequestGroup saveRequestGroup(SingularityRequestGroup requestGroup) {
+  public SingularityRequestGroup saveRequestGroup(@Context HttpServletRequest request, SingularityRequestGroup requestGroup) {
     throw new NotImplemenedException();
   }
 }

@@ -1,9 +1,11 @@
 package com.hubspot.singularity.proxy;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -25,13 +27,13 @@ public class TaskTrackerResource extends ProxyResource {
 
   @GET
   @Path("/task/{taskId}")
-  public Optional<SingularityTaskState> getTaskState(@PathParam("taskId") String taskId) {
+  public Optional<SingularityTaskState> getTaskState(@Context HttpServletRequest request, @PathParam("taskId") String taskId) {
     throw new NotImplemenedException();
   }
 
   @GET
   @Path("/run/{requestId}/{runId}")
-  public Optional<SingularityTaskState> getTaskStateByRunId(@PathParam("requestId") String requestId, @PathParam("runId") String runId) {
+  public Optional<SingularityTaskState> getTaskStateByRunId(@Context HttpServletRequest request, @PathParam("requestId") String requestId, @PathParam("runId") String runId) {
     throw new NotImplemenedException();
   }
 }

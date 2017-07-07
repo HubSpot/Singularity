@@ -2,12 +2,14 @@ package com.hubspot.singularity.proxy;
 
 import java.util.Set;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -26,17 +28,17 @@ public class InactiveSlaveResource extends ProxyResource {
   }
 
   @GET
-  public Set<String> getInactiveSlaves() {
+  public Set<String> getInactiveSlaves(@Context HttpServletRequest request) {
     throw new NotImplemenedException();
   }
 
   @POST
-  public void deactivateSlave(@QueryParam("host") String host) {
+  public void deactivateSlave(@Context HttpServletRequest request, @QueryParam("host") String host) {
     throw new NotImplemenedException();
   }
 
   @DELETE
-  public void reactivateSlave(@QueryParam("host") String host) {
+  public void reactivateSlave(@Context HttpServletRequest request, @QueryParam("host") String host) {
     throw new NotImplemenedException();
   }
 }

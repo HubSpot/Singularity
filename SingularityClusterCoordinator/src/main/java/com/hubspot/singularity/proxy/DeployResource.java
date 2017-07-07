@@ -32,7 +32,7 @@ public class DeployResource extends ProxyResource {
 
   @GET
   @Path("/pending")
-  public Iterable<SingularityPendingDeploy> getPendingDeploys() {
+  public Iterable<SingularityPendingDeploy> getPendingDeploys(@Context HttpServletRequest request) {
     throw new NotImplemenedException();
   }
 
@@ -44,13 +44,13 @@ public class DeployResource extends ProxyResource {
 
   @DELETE
   @Path("/deploy/{deployId}/request/{requestId}")
-  public SingularityRequestParent cancelDeploy(@PathParam("requestId") String requestId, @PathParam("deployId") String deployId) {
+  public SingularityRequestParent cancelDeploy(@Context HttpServletRequest request, @PathParam("requestId") String requestId, @PathParam("deployId") String deployId) {
     throw new NotImplemenedException();
   }
 
   @POST
   @Path("/update")
-  public SingularityRequestParent updatePendingDeploy(SingularityUpdatePendingDeployRequest updateRequest) {
+  public SingularityRequestParent updatePendingDeploy(@Context HttpServletRequest request, SingularityUpdatePendingDeployRequest updateRequest) {
     throw new NotImplemenedException();
   }
 }

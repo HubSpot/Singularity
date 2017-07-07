@@ -11,7 +11,6 @@ import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 
@@ -69,21 +68,21 @@ public class RequestResource extends ProxyResource {
 
   @POST
   @Path("/request/{requestId}/run")
-  public SingularityPendingRequestParent scheduleImmediately(@PathParam("requestId") String requestId) {
-    return scheduleImmediately(requestId, null);
+  public SingularityPendingRequestParent scheduleImmediately(@Context HttpServletRequest request, @PathParam("requestId") String requestId) {
+    return scheduleImmediately(request, requestId, null);
   }
 
   @POST
   @Path("/request/{requestId}/run")
   @Consumes({ MediaType.APPLICATION_JSON })
-  public SingularityPendingRequestParent scheduleImmediately(@PathParam("requestId") String requestId,
+  public SingularityPendingRequestParent scheduleImmediately(@Context HttpServletRequest request, @PathParam("requestId") String requestId,
                                                              SingularityRunNowRequest runNowRequest) {
     throw new NotImplemenedException();
   }
 
   @GET
   @Path("/request/{requestId}/run/{runId}")
-  public Optional<SingularityTaskId> getTaskByRunId(@PathParam("requestId") String requestId, @PathParam("runId") String runId) {
+  public Optional<SingularityTaskId> getTaskByRunId(@Context HttpServletRequest request, @PathParam("requestId") String requestId, @PathParam("runId") String runId) {
     throw new NotImplemenedException();
   }
 
@@ -137,48 +136,48 @@ public class RequestResource extends ProxyResource {
 
   @GET
   @Path("/active")
-  public List<SingularityRequestParent> getActiveRequests(@QueryParam("useWebCache") Boolean useWebCache) {
+  public List<SingularityRequestParent> getActiveRequests(@Context HttpServletRequest request) {
     throw new NotImplemenedException();
   }
 
   @GET
   @Path("/paused")
-  public List<SingularityRequestParent> getPausedRequests(@QueryParam("useWebCache") Boolean useWebCache) {
+  public List<SingularityRequestParent> getPausedRequests(@Context HttpServletRequest request) {
     throw new NotImplemenedException();
   }
 
   @GET
   @Path("/cooldown")
-  public List<SingularityRequestParent> getCooldownRequests(@QueryParam("useWebCache") Boolean useWebCache) {
+  public List<SingularityRequestParent> getCooldownRequests(@Context HttpServletRequest request) {
     throw new NotImplemenedException();
   }
 
   @GET
   @Path("/finished")
-  public List<SingularityRequestParent> getFinishedRequests(@QueryParam("useWebCache") Boolean useWebCache) {
+  public List<SingularityRequestParent> getFinishedRequests(@Context HttpServletRequest request) {
     throw new NotImplemenedException();
   }
 
   @GET
-  public List<SingularityRequestParent> getRequests(@QueryParam("useWebCache") Boolean useWebCache) {
+  public List<SingularityRequestParent> getRequests(@Context HttpServletRequest request) {
     throw new NotImplemenedException();
   }
 
   @GET
   @Path("/queued/pending")
-  public Iterable<SingularityPendingRequest> getPendingRequests() {
+  public Iterable<SingularityPendingRequest> getPendingRequests(@Context HttpServletRequest request) {
     throw new NotImplemenedException();
   }
 
   @GET
   @Path("/queued/cleanup")
-  public Iterable<SingularityRequestCleanup> getCleanupRequests() {
+  public Iterable<SingularityRequestCleanup> getCleanupRequests(@Context HttpServletRequest request) {
     throw new NotImplemenedException();
   }
 
   @GET
   @Path("/request/{requestId}")
-  public SingularityRequestParent getRequest(@PathParam("requestId") String requestId, @QueryParam("useWebCache") Boolean useWebCache) {
+  public SingularityRequestParent getRequest(@Context HttpServletRequest request, @PathParam("requestId") String requestId) {
     throw new NotImplemenedException();
   }
 
@@ -202,32 +201,32 @@ public class RequestResource extends ProxyResource {
 
   @DELETE
   @Path("/request/{requestId}/scale")
-  public SingularityRequestParent deleteExpiringScale(@PathParam("requestId") String requestId) {
+  public SingularityRequestParent deleteExpiringScale(@Context HttpServletRequest request, @PathParam("requestId") String requestId) {
     throw new NotImplemenedException();
   }
 
   @Deprecated
   @DELETE
   @Path("/request/{requestId}/skipHealthchecks")
-  public SingularityRequestParent deleteExpiringSkipHealthchecksDeprecated(@PathParam("requestId") String requestId) {
+  public SingularityRequestParent deleteExpiringSkipHealthchecksDeprecated(@Context HttpServletRequest request, @PathParam("requestId") String requestId) {
     throw new NotImplemenedException();
   }
 
   @DELETE
   @Path("/request/{requestId}/skip-healthchecks")
-  public SingularityRequestParent deleteExpiringSkipHealthchecks(@PathParam("requestId") String requestId) {
+  public SingularityRequestParent deleteExpiringSkipHealthchecks(@Context HttpServletRequest request, @PathParam("requestId") String requestId) {
     throw new NotImplemenedException();
   }
 
   @DELETE
   @Path("/request/{requestId}/pause")
-  public SingularityRequestParent deleteExpiringPause(@PathParam("requestId") String requestId) {
+  public SingularityRequestParent deleteExpiringPause(@Context HttpServletRequest request, @PathParam("requestId") String requestId) {
     throw new NotImplemenedException();
   }
 
   @DELETE
   @Path("/request/{requestId}/bounce")
-  public SingularityRequestParent deleteExpiringBounce(@PathParam("requestId") String requestId) {
+  public SingularityRequestParent deleteExpiringBounce(@Context HttpServletRequest request, @PathParam("requestId") String requestId) {
     throw new NotImplemenedException();
   }
 
@@ -252,7 +251,7 @@ public class RequestResource extends ProxyResource {
 
   @GET
   @Path("/lbcleanup")
-  public Iterable<String> getLbCleanupRequests(@QueryParam("useWebCache") Boolean useWebCache) {
+  public Iterable<String> getLbCleanupRequests(@Context HttpServletRequest request) {
     throw new NotImplemenedException();
   }
 }
