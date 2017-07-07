@@ -1,4 +1,4 @@
-package com.hubspot.singularity.resources;
+package com.hubspot.singularity.resources.ui;
 
 import static com.hubspot.singularity.SingularityMainModule.SINGULARITY_URI_BASE;
 

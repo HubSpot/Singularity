@@ -1,7 +1,6 @@
-package com.hubspot.singularity.resources;
+package com.hubspot.singularity.resources.ui;
 
 import static com.hubspot.singularity.SingularityMainModule.SINGULARITY_URI_BASE;
-import static com.hubspot.singularity.resources.UiResource.UI_RESOURCE_LOCATION;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -29,6 +28,6 @@ public class IndexResource {
   @GET
   @Path("/")
   public Response getIndex(@Context UriInfo info) {
-    return Response.status(Status.MOVED_PERMANENTLY).location(UriBuilder.fromPath(singularityUriBase).path(UI_RESOURCE_LOCATION).build()).build();
+    return Response.status(Status.MOVED_PERMANENTLY).location(UriBuilder.fromPath(singularityUriBase).path(UiResource.UI_RESOURCE_LOCATION).build()).build();
   }
 }

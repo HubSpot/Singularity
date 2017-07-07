@@ -14,10 +14,10 @@ import com.google.inject.Inject;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.SingularityDeleteResult;
 import com.hubspot.singularity.SingularityPriorityFreezeParent;
-import com.hubspot.singularity.SingularityService;
 import com.hubspot.singularity.SingularityUser;
 import com.hubspot.singularity.api.SingularityPriorityFreeze;
 import com.hubspot.singularity.auth.SingularityAuthorizationHelper;
+import com.hubspot.singularity.config.ApiPaths;
 import com.hubspot.singularity.data.PriorityManager;
 import com.hubspot.singularity.data.SingularityValidator;
 import com.wordnik.swagger.annotations.Api;
@@ -25,12 +25,10 @@ import com.wordnik.swagger.annotations.ApiOperation;
 import com.wordnik.swagger.annotations.ApiResponse;
 import com.wordnik.swagger.annotations.ApiResponses;
 
-@Path(PriorityResource.PATH)
+@Path(ApiPaths.PRIORITY_RESOURCE_PATH)
 @Produces({ MediaType.APPLICATION_JSON })
-@Api(description="Manages whether or not to schedule tasks based on their priority levels.", value=PriorityResource.PATH )
+@Api(description="Manages whether or not to schedule tasks based on their priority levels.", value=ApiPaths.PRIORITY_RESOURCE_PATH )
 public class PriorityResource {
-    public static final String PATH = SingularityService.API_BASE_PATH + "/priority";
-
     private final Optional<SingularityUser> user;
     private final SingularityAuthorizationHelper authorizationHelper;
     private final SingularityValidator singularityValidator;

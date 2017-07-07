@@ -10,19 +10,17 @@ import javax.ws.rs.core.MediaType;
 
 import com.google.common.base.Optional;
 import com.google.inject.Inject;
-import com.hubspot.singularity.SingularityService;
 import com.hubspot.singularity.SingularityState;
 import com.hubspot.singularity.SingularityTaskReconciliationStatistics;
+import com.hubspot.singularity.config.ApiPaths;
 import com.hubspot.singularity.data.StateManager;
 import com.wordnik.swagger.annotations.Api;
 import com.wordnik.swagger.annotations.ApiOperation;
 
-@Path(StateResource.PATH)
+@Path(ApiPaths.STATE_RESOURCE_PATH)
 @Produces({ MediaType.APPLICATION_JSON })
-@Api(description="Provides information about the current state of Singularity.", value=StateResource.PATH)
+@Api(description="Provides information about the current state of Singularity.", value=ApiPaths.STATE_RESOURCE_PATH)
 public class StateResource {
-  public static final String PATH = SingularityService.API_BASE_PATH + "/state";
-
   private final StateManager stateManager;
 
   @Inject

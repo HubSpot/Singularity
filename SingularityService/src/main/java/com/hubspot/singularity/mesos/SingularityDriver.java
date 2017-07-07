@@ -27,7 +27,7 @@ import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.config.MesosConfiguration;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.config.UIConfiguration;
-import com.hubspot.singularity.resources.UiResource;
+import com.hubspot.singularity.resources.ui.UiResource;
 
 @Singleton
 public class SingularityDriver {

@@ -17,11 +17,11 @@ import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.MachineState;
 import com.hubspot.singularity.SingularityAction;
 import com.hubspot.singularity.SingularityMachineStateHistoryUpdate;
-import com.hubspot.singularity.SingularityService;
 import com.hubspot.singularity.SingularitySlave;
 import com.hubspot.singularity.SingularityUser;
 import com.hubspot.singularity.api.SingularityMachineChangeRequest;
 import com.hubspot.singularity.auth.SingularityAuthorizationHelper;
+import com.hubspot.singularity.config.ApiPaths;
 import com.hubspot.singularity.data.SingularityValidator;
 import com.hubspot.singularity.data.SlaveManager;
 import com.hubspot.singularity.expiring.SingularityExpiringMachineState;
@@ -29,12 +29,10 @@ import com.wordnik.swagger.annotations.Api;
 import com.wordnik.swagger.annotations.ApiOperation;
 import com.wordnik.swagger.annotations.ApiParam;
 
-@Path(SlaveResource.PATH)
+@Path(ApiPaths.SLAVE_RESOURCE_PATH)
 @Produces({ MediaType.APPLICATION_JSON })
-@Api(description="Manages Singularity slaves.", value=SlaveResource.PATH)
+@Api(description="Manages Singularity slaves.", value=ApiPaths.SLAVE_RESOURCE_PATH)
 public class SlaveResource extends AbstractMachineResource<SingularitySlave> {
-  public static final String PATH = SingularityService.API_BASE_PATH + "/slaves";
-
   @Inject
   public SlaveResource(SlaveManager slaveManager, SingularityAuthorizationHelper authorizationHelper, Optional<SingularityUser> user, SingularityValidator validator) {
     super(slaveManager, authorizationHelper, user, validator);

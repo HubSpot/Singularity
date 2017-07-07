@@ -95,8 +95,6 @@ public class SingularityMainModule implements Module {
 
   public static final String HTTP_HOST_AND_PORT = "http.host.and.port";
 
-  public static final String SINGULARITY_URI_BASE = "_singularity_uri_base";
-
   public static final String HEALTHCHECK_THREADPOOL_NAME = "_healthcheck_threadpool";
   public static final Named HEALTHCHECK_THREADPOOL_NAMED = Names.named(HEALTHCHECK_THREADPOOL_NAME);
 
@@ -222,7 +220,7 @@ public class SingularityMainModule implements Module {
   }
 
   @Provides
-  @Named(SINGULARITY_URI_BASE)
+  @Named(SingularityServiceBaseModule.SINGULARITY_URI_BASE)
   String getSingularityUriBase(final SingularityConfiguration configuration) {
     final String singularityUiPrefix = configuration.getUiConfiguration().getBaseUrl().or(((SimpleServerFactory) configuration.getServerFactory()).getApplicationContextPath());
     return (singularityUiPrefix.endsWith("/")) ?  singularityUiPrefix.substring(0, singularityUiPrefix.length() - 1) : singularityUiPrefix;
