@@ -1,6 +1,5 @@
 package com.hubspot.singularity.resources.ui;
 
-import javax.inject.Singleton;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -8,6 +7,7 @@ import javax.ws.rs.core.MediaType;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import com.hubspot.singularity.SingularityServiceBaseModule;
 import com.hubspot.singularity.config.IndexViewConfiguration;

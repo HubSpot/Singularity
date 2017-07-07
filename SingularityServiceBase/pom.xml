@@ -13,47 +13,14 @@
   <dependencies>
     <dependency>
       <groupId>com.hubspot</groupId>
-      <artifactId>SingularityBase</artifactId>
+      <artifactId>SingularityUI</artifactId>
+      <type>pom</type>
+      <scope>runtime</scope>
     </dependency>
 
     <dependency>
-      <groupId>com.hubspot.dropwizard</groupId>
-      <artifactId>dropwizard-guicier</artifactId>
-    </dependency>
-
-    <dependency>
-      <groupId>io.dropwizard</groupId>
-      <artifactId>dropwizard-core</artifactId>
-    </dependency>
-
-    <dependency>
-      <groupId>io.dropwizard</groupId>
-      <artifactId>dropwizard-configuration</artifactId>
-    </dependency>
-
-    <dependency>
-      <groupId>io.dropwizard</groupId>
-      <artifactId>dropwizard-db</artifactId>
-    </dependency>
-
-    <dependency>
-      <groupId>io.dropwizard</groupId>
-      <artifactId>dropwizard-jackson</artifactId>
-    </dependency>
-
-    <dependency>
-      <groupId>io.dropwizard</groupId>
-      <artifactId>dropwizard-jersey</artifactId>
-    </dependency>
-
-    <dependency>
-      <groupId>io.dropwizard</groupId>
-      <artifactId>dropwizard-jetty</artifactId>
-    </dependency>
-
-    <dependency>
-      <groupId>io.dropwizard</groupId>
-      <artifactId>dropwizard-lifecycle</artifactId>
+      <groupId>com.google.inject</groupId>
+      <artifactId>guice</artifactId>
     </dependency>
 
     <dependency>
@@ -68,8 +35,38 @@
     </dependency>
 
     <dependency>
-      <groupId>com.ning</groupId>
-      <artifactId>async-http-client</artifactId>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-databind</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>javax.validation</groupId>
+      <artifactId>validation-api</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-core</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>com.google.guava</groupId>
+      <artifactId>guava</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>org.hibernate</groupId>
+      <artifactId>hibernate-validator</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-annotations</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>javax.ws.rs</groupId>
+      <artifactId>javax.ws.rs-api</artifactId>
     </dependency>
   </dependencies>
 

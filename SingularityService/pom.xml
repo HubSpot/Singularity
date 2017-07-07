@@ -28,13 +28,6 @@
 
     <dependency>
       <groupId>com.hubspot</groupId>
-      <artifactId>SingularityUI</artifactId>
-      <type>pom</type>
-      <scope>runtime</scope>
-    </dependency>
-
-    <dependency>
-      <groupId>com.hubspot</groupId>
       <artifactId>SingularityMesosClient</artifactId>
     </dependency>
 
