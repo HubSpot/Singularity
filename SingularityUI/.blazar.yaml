@@ -16,7 +16,7 @@ steps:
     activeByDefault: false
     commands:
       - node/node node/npm/cli.js --globalconfig /usr/share/hubspot/jenkins-home/.npmrc install bender-deps
-      - ./node_modules/.bin/bender-deps cdn-publish SingularityUI-$GIT_BRANCH@1.$MODULE_BUILD_NUMBER dist/static
+      - node/node ./node_modules/.bin/bender-deps cdn-publish SingularityUI-$GIT_BRANCH@1.$MODULE_BUILD_NUMBER dist/static
   - name: notify
     activeByDefault: false
     commands:
