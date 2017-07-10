@@ -24,6 +24,6 @@ steps:
 
 stepActivation:
   publish:
-    branches: [hs_staging, hs_qa, hs_stable]
+    branches: [hs_staging, hs_qa, hs_stable, blazar2]
   notify:
-    branches: [hs_staging, hs_qa, hs_stable]
+    branches: [hs_staging, hs_qa, hs_stable, blazar2]
