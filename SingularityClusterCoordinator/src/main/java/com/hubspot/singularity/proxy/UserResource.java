@@ -10,12 +10,9 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Inject;
 import com.hubspot.singularity.SingularityUserSettings;
 import com.hubspot.singularity.config.ApiPaths;
-import com.hubspot.singularity.config.ClusterCoordinatorConfiguration;
-import com.ning.http.client.AsyncHttpClient;
 
 @Path(ApiPaths.USER_RESOURCE_PATH)
 @Produces({ MediaType.APPLICATION_JSON })
@@ -23,9 +20,7 @@ public class UserResource extends ProxyResource {
   // TODO - replicate to all data centers?
 
   @Inject
-  public UserResource(ClusterCoordinatorConfiguration configuration, AsyncHttpClient httpClient, ObjectMapper objectMapper, DataCenterLocator dataCenterLocator) {
-    super(configuration, httpClient, objectMapper, dataCenterLocator);
-  }
+  public UserResource() {}
 
   @GET
   @Path("/settings")

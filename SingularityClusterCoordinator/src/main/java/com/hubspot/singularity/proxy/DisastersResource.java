@@ -13,7 +13,6 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.hubspot.singularity.SingularityAction;
@@ -23,18 +22,14 @@ import com.hubspot.singularity.SingularityDisastersData;
 import com.hubspot.singularity.SingularityTaskCredits;
 import com.hubspot.singularity.api.SingularityDisabledActionRequest;
 import com.hubspot.singularity.config.ApiPaths;
-import com.hubspot.singularity.config.ClusterCoordinatorConfiguration;
 import com.hubspot.singularity.exceptions.NotImplemenedException;
-import com.ning.http.client.AsyncHttpClient;
 
 @Path(ApiPaths.DISASTERS_RESOURCE_PATH)
 @Produces({ MediaType.APPLICATION_JSON })
 public class DisastersResource extends ProxyResource {
 
   @Inject
-  public DisastersResource(ClusterCoordinatorConfiguration configuration, AsyncHttpClient httpClient, ObjectMapper objectMapper, DataCenterLocator dataCenterLocator) {
-    super(configuration, httpClient, objectMapper, dataCenterLocator);
-  }
+  public DisastersResource() {}
 
   @GET
   @Path("/stats")

@@ -12,25 +12,20 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Inject;
 import com.hubspot.singularity.SingularityS3LogMetadata;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.api.SingularityS3SearchRequest;
 import com.hubspot.singularity.api.SingularityS3SearchResult;
 import com.hubspot.singularity.config.ApiPaths;
-import com.hubspot.singularity.config.ClusterCoordinatorConfiguration;
 import com.hubspot.singularity.exceptions.NotImplemenedException;
-import com.ning.http.client.AsyncHttpClient;
 
 @Path(ApiPaths.S3_LOG_RESOURCE_PATH)
 @Produces({ MediaType.APPLICATION_JSON })
 public class S3LogResource extends ProxyResource {
 
   @Inject
-  public S3LogResource(ClusterCoordinatorConfiguration configuration, AsyncHttpClient httpClient, ObjectMapper objectMapper, DataCenterLocator dataCenterLocator) {
-    super(configuration, httpClient, objectMapper, dataCenterLocator);
-  }
+  public S3LogResource() {}
 
   @GET
   @Path("/task/{taskId}")

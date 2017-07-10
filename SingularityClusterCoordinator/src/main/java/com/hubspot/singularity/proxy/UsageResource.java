@@ -8,23 +8,18 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.core.Context;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Inject;
 import com.hubspot.singularity.SingularitySlaveUsage;
 import com.hubspot.singularity.SingularitySlaveUsageWithId;
 import com.hubspot.singularity.SingularityTaskCurrentUsageWithId;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTaskUsage;
-import com.hubspot.singularity.config.ClusterCoordinatorConfiguration;
-import com.ning.http.client.AsyncHttpClient;
 
 @Path("/api/usage")
 public class UsageResource extends ProxyResource {
 
   @Inject
-  public UsageResource(ClusterCoordinatorConfiguration configuration, AsyncHttpClient httpClient, ObjectMapper objectMapper, DataCenterLocator dataCenterLocator) {
-    super(configuration, httpClient, objectMapper, dataCenterLocator);
-  }
+  public UsageResource() {}
 
   @GET
   @Path("/slaves")

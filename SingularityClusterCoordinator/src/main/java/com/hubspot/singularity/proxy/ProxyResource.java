@@ -26,20 +26,36 @@ import com.ning.http.client.AsyncHttpClient;
 import com.ning.http.client.AsyncHttpClient.BoundRequestBuilder;
 import com.ning.http.client.Response;
 
+import io.dropwizard.server.SimpleServerFactory;
+
 public class ProxyResource {
   private static final Logger LOG = LoggerFactory.getLogger(ProxyResource.class);
 
-  private final AsyncHttpClient httpClient;
-  private final ClusterCoordinatorConfiguration configuration;
-  private final ObjectMapper objectMapper;
-  private final DataCenterLocator dataCenterLocator;
+  private AsyncHttpClient httpClient;
+  private ClusterCoordinatorConfiguration configuration;
+  private ObjectMapper objectMapper;
+  private DataCenterLocator dataCenterLocator;
+  private String contextPath;
+
+  public ProxyResource() {}
 
   @Inject
-  public ProxyResource(ClusterCoordinatorConfiguration configuration, AsyncHttpClient httpClient, ObjectMapper objectMapper, DataCenterLocator dataCenterLocator) {
+  void injectProxyDeps(ClusterCoordinatorConfiguration configuration,
+                       AsyncHttpClient httpClient,
+                       ObjectMapper objectMapper,
+                       DataCenterLocator dataCenterLocator) {
     this.configuration = configuration;
     this.httpClient = httpClient;
     this.objectMapper = objectMapper;
     this.dataCenterLocator = dataCenterLocator;
+    String baseContextPath = ((SimpleServerFactory) configuration.getServerFactory()).getApplicationContextPath();
+    if (baseContextPath.startsWith("/")) {
+      baseContextPath = baseContextPath.substring(1, baseContextPath.length());
+    }
+    if (baseContextPath.endsWith("/")) {
+      baseContextPath = baseContextPath.substring(0, baseContextPath.length() -1);
+    }
+    this.contextPath = baseContextPath + "/api";
   }
 
   /*
@@ -51,11 +67,8 @@ public class ProxyResource {
   }
 
   public <T, Q> List<T> getMergedListResult(HttpServletRequest request, Q body, TypeReference<List<T>> clazz) {
-    Map<String, String> headers = getHeaders(request);
-    Map<String, String> params = getParams(request);
-
     return configuration.getDataCenters().parallelStream()
-        .map((dc) -> proxyRequest(dc, request, body, clazz, headers, params))
+        .map((dc) -> proxyRequest(dc, request, body, clazz))
         .filter(Objects::nonNull)
         .flatMap(List::stream)
         .collect(Collectors.toList());
@@ -69,69 +82,51 @@ public class ProxyResource {
   }
 
   public <T, Q> T routeByRequestId(HttpServletRequest request, String requestId, Q body, TypeReference<T> clazz) {
-    Map<String, String> headers = getHeaders(request);
-    Map<String, String> params = getParams(request);
-
     DataCenter dataCenter = getDataCenterForRequest(requestId);
 
-    return proxyRequest(dataCenter, request, body, clazz, headers, params);
+    return proxyRequest(dataCenter, request, body, clazz);
   }
 
   /*
    * Route a request to a particular dataCenter using the request group Id to locate the correct Singularity cluster
    */
   <T> T routeByRequestGroupId(HttpServletRequest request, String requestGroupId, TypeReference<T> clazz) {
-    Map<String, String> headers = getHeaders(request);
-    Map<String, String> params = getParams(request);
-
     DataCenter dataCenter = getDataCenterForRequestGroup(requestGroupId);
 
-    return proxyRequest(dataCenter, request, null, clazz, headers, params);
+    return proxyRequest(dataCenter, request, null, clazz);
   }
 
   /*
    * Route a request to a particular dataCenter using the slaveId/hostname to locate the correct Singularity cluster
    */
   <T> T routeBySlaveId(HttpServletRequest request, String slaveId, TypeReference<T> clazz) {
-    Map<String, String> headers = getHeaders(request);
-    Map<String, String> params = getParams(request);
-
     DataCenter dataCenter = getDataCenterForSlaveId(slaveId);
 
-    return proxyRequest(dataCenter, request, null, clazz, headers, params);
+    return proxyRequest(dataCenter, request, null, clazz);
   }
 
   <T> T routeByHostname(HttpServletRequest request, String hostname, TypeReference<T> clazz) {
-    Map<String, String> headers = getHeaders(request);
-    Map<String, String> params = getParams(request);
-
     DataCenter dataCenter = getDataCenterForSlaveHostname(hostname);
 
-    return proxyRequest(dataCenter, request, null, clazz, headers, params);
+    return proxyRequest(dataCenter, request, null, clazz);
   }
 
   /*
    * Route a request to a particular dataCenter using the rack ID to locate the correct Singularity cluster
    */
   <T> T routeByRackId(HttpServletRequest request, String rackId, TypeReference<T> clazz) {
-    Map<String, String> headers = getHeaders(request);
-    Map<String, String> params = getParams(request);
-
     DataCenter dataCenter = getDataCenterForRackId(rackId);
 
-    return proxyRequest(dataCenter, request, null, clazz, headers, params);
+    return proxyRequest(dataCenter, request, null, clazz);
   }
 
   /*
    * Route a request to a particular dataCenter by name, failing if it is not present
    */
   <T, Q> T routeByDataCenter(HttpServletRequest request, String dataCenterName, Q body, TypeReference<T> clazz) {
-    Map<String, String> headers = getHeaders(request);
-    Map<String, String> params = getParams(request);
-
     DataCenter dataCenter = getDataCenter(dataCenterName);
 
-    return proxyRequest(dataCenter, request, body, clazz, headers, params);
+    return proxyRequest(dataCenter, request, body, clazz);
   }
 
   /*
@@ -142,12 +137,9 @@ public class ProxyResource {
   }
 
   <T, Q> T routeToDefaultDataCenter(HttpServletRequest request, Q body, TypeReference<T> clazz) {
-    Map<String, String> headers = getHeaders(request);
-    Map<String, String> params = getParams(request);
-
     DataCenter dataCenter = configuration.getDataCenters().get(0);
 
-    return proxyRequest(dataCenter, request, body, clazz, headers, params);
+    return proxyRequest(dataCenter, request, body, clazz);
   }
 
   /*
@@ -184,8 +176,13 @@ public class ProxyResource {
   /*
    * Generic methods for proxying requests
    */
-  private <T, Q> T proxyRequest(DataCenter dc, HttpServletRequest request, Q body, TypeReference<T> clazz, Map<String, String> headers, Map<String, String> params) {
-    String url = String.format("%s://%s%s%s", dc.getScheme(), getHost(dc), request.getContextPath(), request.getPathInfo());
+  private <T, Q> T proxyRequest(DataCenter dc, HttpServletRequest request, Q body, TypeReference<T> clazz) {
+    Map<String, String> headers = getHeaders(request);
+    Map<String, String> params = getParams(request);
+    String fullPath = request.getContextPath() + request.getPathInfo();
+    String url = String.format("%s://%s%s", dc.getScheme(), getHost(dc), fullPath.replace(contextPath, dc.getContextPath()));
+
+    LOG.debug("Proxying to: {}", url);
     BoundRequestBuilder requestBuilder = startRequestBuilder(request.getMethod(), url);
     try {
       if (body != null) {
@@ -217,11 +214,12 @@ public class ProxyResource {
       }
     } catch (IOException ioe) {
       try {
+        LOG.info(response.getHeaders().toString());
         LOG.warn("Bad response body: {}", response.getResponseBody(Charsets.UTF_8.toString()));
       } catch (IOException io) {
         LOG.error("Could not print response", io);
       }
-      LOG.error("Request succeeded with status {}, but could not interpret response ({})", response.getStatusCode(), ioe);
+      LOG.error("Request succeeded with status {}, but could not interpret response", response.getStatusCode(), ioe);
     }
 
     return null;
@@ -251,6 +249,7 @@ public class ProxyResource {
         headers.put(headerName, request.getHeader(headerName));
       }
     }
+    LOG.trace("Found headers: {}", headers);
     return headers;
   }
 
@@ -261,9 +260,9 @@ public class ProxyResource {
       while (parameterNames.hasMoreElements()) {
         String parameterName = parameterNames.nextElement();
         params.put(parameterName, request.getParameter(parameterName));
-        LOG.trace("Copied query param {}={}", parameterName, request.getParameter(parameterName));
       }
     }
+    LOG.trace("Found query params: {}", params);
     return params;
   }
 }

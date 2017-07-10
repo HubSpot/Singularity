@@ -13,24 +13,19 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Inject;
 import com.hubspot.singularity.SingularityMachineStateHistoryUpdate;
 import com.hubspot.singularity.SingularityRack;
 import com.hubspot.singularity.api.SingularityMachineChangeRequest;
 import com.hubspot.singularity.config.ApiPaths;
-import com.hubspot.singularity.config.ClusterCoordinatorConfiguration;
 import com.hubspot.singularity.expiring.SingularityExpiringMachineState;
-import com.ning.http.client.AsyncHttpClient;
 
 @Path(ApiPaths.RACK_RESOURCE_PATH)
 @Produces({ MediaType.APPLICATION_JSON })
 public class RackResource extends ProxyResource {
 
   @Inject
-  public RackResource(ClusterCoordinatorConfiguration configuration, AsyncHttpClient httpClient, ObjectMapper objectMapper, DataCenterLocator dataCenterLocator) {
-    super(configuration, httpClient, objectMapper, dataCenterLocator);
-  }
+  public RackResource() {}
 
   @GET
   @Path("/")

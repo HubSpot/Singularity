@@ -11,7 +11,6 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.hubspot.singularity.SingularityDeployHistory;
@@ -21,8 +20,6 @@ import com.hubspot.singularity.SingularityTaskHistory;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTaskIdHistory;
 import com.hubspot.singularity.config.ApiPaths;
-import com.hubspot.singularity.config.ClusterCoordinatorConfiguration;
-import com.ning.http.client.AsyncHttpClient;
 
 // Omits some or all @QueryParam annotated args, will be copied from request context
 @Path(ApiPaths.HISTORY_RESOURCE_PATH)
@@ -30,9 +27,7 @@ import com.ning.http.client.AsyncHttpClient;
 public class HistoryResource extends ProxyResource {
 
   @Inject
-  public HistoryResource(ClusterCoordinatorConfiguration configuration, AsyncHttpClient httpClient, ObjectMapper objectMapper, DataCenterLocator dataCenterLocator) {
-    super(configuration, httpClient, objectMapper, dataCenterLocator);
-  }
+  public HistoryResource() {}
 
   @GET
   @Path("/task/{taskId}")

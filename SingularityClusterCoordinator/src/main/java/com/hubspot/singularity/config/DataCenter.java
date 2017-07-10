@@ -60,4 +60,15 @@ public class DataCenter {
   public void setClientCredentials(Optional<SingularityClientCredentials> clientCredentials) {
     this.clientCredentials = clientCredentials;
   }
+
+  @Override
+  public String toString() {
+    return "DataCenter{" +
+        "name='" + name + '\'' +
+        ", hosts=" + hosts +
+        ", contextPath='" + contextPath + '\'' +
+        ", scheme='" + scheme + '\'' +
+        ", clientCredentials=" + clientCredentials +
+        '}';
+  }
 }
