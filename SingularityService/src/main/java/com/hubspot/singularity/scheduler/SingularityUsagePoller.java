@@ -230,6 +230,7 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
       SingularityTaskUsage olderUsage = pastTaskUsagesCopy.get(i);
       SingularityTaskUsage newerUsage = pastTaskUsagesCopy.get(i + 1);
       double cpusUsed = (newerUsage.getCpuSeconds() - olderUsage.getCpuSeconds()) / (newerUsage.getTimestamp() - olderUsage.getTimestamp());
+      LOG.trace("cpusUsed {} -- newerUsageCpuSeconds {} - olderUsageCpuSeconds {} - newerUsageTimestamp {} - olderUsageTimestamp {}", cpusUsed, newerUsage.getCpuSeconds(), olderUsage.getCpuSeconds(), newerUsage.getTimestamp(), olderUsage.getTimestamp());
 
       requestUtilization
           .addCpuUsed(cpusUsed)
