@@ -1,4 +1,5 @@
 buildDeps:
+  - node-0.12.7
   - hs-build-tools
   - jdk8
   - maven3
