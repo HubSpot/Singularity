@@ -11,14 +11,14 @@ import java.util.List;
 import java.util.Random;
 import java.util.Set;
 
-import org.apache.mesos.Protos.MasterInfo;
-import org.apache.mesos.Protos.Offer;
-import org.apache.mesos.Protos.Resource;
-import org.apache.mesos.Protos.TaskState;
-import org.apache.mesos.Protos.Value;
-import org.apache.mesos.Protos.Value.Range;
-import org.apache.mesos.Protos.Value.Ranges;
-import org.apache.mesos.Protos.Value.Type;
+import org.apache.mesos.v1.Protos.MasterInfo;
+import org.apache.mesos.v1.Protos.Offer;
+import org.apache.mesos.v1.Protos.Resource;
+import org.apache.mesos.v1.Protos.TaskState;
+import org.apache.mesos.v1.Protos.Value.Range;
+import org.apache.mesos.v1.Protos.Value.Ranges;
+import org.apache.mesos.v1.Protos.Value.Scalar;
+import org.apache.mesos.v1.Protos.Value.Type;
 
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -214,7 +214,7 @@ public final class MesosUtils {
   }
 
   private static Resource newScalar(String name, double value, Optional<String> role) {
-    Resource.Builder builder = Resource.newBuilder().setName(name).setType(Value.Type.SCALAR).setScalar(Value.Scalar.newBuilder().setValue(value).build());
+    Resource.Builder builder = Resource.newBuilder().setName(name).setType(Type.SCALAR).setScalar(Scalar.newBuilder().setValue(value).build());
     if (role.isPresent()) {
       builder.setRole(role.get());
     }

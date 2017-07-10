@@ -2,12 +2,9 @@ package com.hubspot.singularity.mesos;
 
 import java.util.concurrent.ConcurrentHashMap;
 
-import javax.ws.rs.HEAD;
-
-import org.apache.mesos.Protos;
-import org.apache.mesos.Protos.TaskState;
-import org.apache.mesos.Protos.TaskStatus.Reason;
-import org.apache.mesos.SchedulerDriver;
+import org.apache.mesos.v1.Protos;
+import org.apache.mesos.v1.Protos.TaskState;
+import org.apache.mesos.v1.Protos.TaskStatus.Reason;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -59,7 +56,7 @@ public class SingularityMesosStatusUpdateHandler {
   private final SingularityScheduler scheduler;
   private final Provider<SingularitySchedulerStateCache> stateCacheProvider;
   private final String serverId;
-  private final SchedulerDriverSupplier schedulerDriverSupplier;
+  private final SingularityMesosSchedulerClient schedulerClient;
   private final SingularitySchedulerLock schedulerLock;
   private final SingularityConfiguration configuration;
   private final Multiset<Protos.TaskStatus.Reason> taskLostReasons;
@@ -67,16 +64,24 @@ public class SingularityMesosStatusUpdateHandler {
   private final ConcurrentHashMap<Long, Long> statusUpdateDeltas;
 
   @Inject
-  public SingularityMesosStatusUpdateHandler(TaskManager taskManager, DeployManager deployManager, RequestManager requestManager,
-      IdTranscoder<SingularityTaskId> taskIdTranscoder, SingularityExceptionNotifier exceptionNotifier, SingularityHealthchecker healthchecker,
-      SingularityNewTaskChecker newTaskChecker, SingularitySlaveAndRackManager slaveAndRackManager, SingularityMesosExecutorInfoSupport logSupport, SingularityScheduler scheduler,
-      Provider<SingularitySchedulerStateCache> stateCacheProvider, @Named(SingularityMainModule.SERVER_ID_PROPERTY) String serverId,
-      SchedulerDriverSupplier schedulerDriverSupplier,
-      SingularitySchedulerLock schedulerLock,
-      SingularityConfiguration configuration,
-      @Named(SingularityMesosModule.TASK_LOST_REASONS_COUNTER) Multiset<Protos.TaskStatus.Reason> taskLostReasons,
-      @Named(SingularityMainModule.LOST_TASKS_METER) Meter lostTasksMeter,
-      @Named(SingularityMainModule.STATUS_UPDATE_DELTAS) ConcurrentHashMap<Long, Long> statusUpdateDeltas) {
+  public SingularityMesosStatusUpdateHandler(TaskManager taskManager,
+                                             DeployManager deployManager,
+                                             RequestManager requestManager,
+                                             IdTranscoder<SingularityTaskId> taskIdTranscoder,
+                                             SingularityExceptionNotifier exceptionNotifier,
+                                             SingularityHealthchecker healthchecker,
+                                             SingularityNewTaskChecker newTaskChecker,
+                                             SingularitySlaveAndRackManager slaveAndRackManager,
+                                             SingularityMesosExecutorInfoSupport logSupport,
+                                             SingularityScheduler scheduler,
+                                             Provider<SingularitySchedulerStateCache> stateCacheProvider,
+                                             @Named(SingularityMainModule.SERVER_ID_PROPERTY) String serverId,
+                                             SingularityMesosSchedulerClient schedulerClient,
+                                             SingularitySchedulerLock schedulerLock,
+                                             SingularityConfiguration configuration,
+                                             @Named(SingularityMesosModule.TASK_LOST_REASONS_COUNTER) Multiset<Protos.TaskStatus.Reason> taskLostReasons,
+                                             @Named(SingularityMainModule.LOST_TASKS_METER) Meter lostTasksMeter,
+                                             @Named(SingularityMainModule.STATUS_UPDATE_DELTAS) ConcurrentHashMap<Long, Long> statusUpdateDeltas) {
     this.taskManager = taskManager;
     this.deployManager = deployManager;
     this.requestManager = requestManager;
@@ -89,7 +94,7 @@ public class SingularityMesosStatusUpdateHandler {
     this.scheduler = scheduler;
     this.stateCacheProvider = stateCacheProvider;
     this.serverId = serverId;
-    this.schedulerDriverSupplier = schedulerDriverSupplier;
+    this.schedulerClient = schedulerClient;
     this.schedulerLock = schedulerLock;
     this.configuration = configuration;
     this.taskLostReasons = taskLostReasons;
@@ -150,17 +155,6 @@ public class SingularityMesosStatusUpdateHandler {
     }
 
     return Optional.absent();
-  }
-
-  private SchedulerDriver getSchedulerDriver() {
-    final Optional<SchedulerDriver> maybeSchedulerDriver = schedulerDriverSupplier.get();
-
-    if (!maybeSchedulerDriver.isPresent()) {
-      throw new RuntimeException("scheduler driver not present!");
-      // TODO: how best to handle?
-    }
-
-    return maybeSchedulerDriver.get();
   }
 
   private void unsafeProcessStatusUpdate(Protos.TaskStatus status) {
@@ -247,7 +241,7 @@ public class SingularityMesosStatusUpdateHandler {
 
       SingularitySchedulerStateCache stateCache = stateCacheProvider.get();
 
-      slaveAndRackManager.checkStateAfterFinishedTask(taskIdObj, status.getSlaveId().getValue(), stateCache);
+      slaveAndRackManager.checkStateAfterFinishedTask(taskIdObj, status.getAgentId().getValue(), stateCache);
 
       scheduler.handleCompletedTask(task, taskIdObj, isActiveTask, timestamp, taskState, taskHistoryUpdateCreateResult, stateCache, status);
     }

@@ -5,9 +5,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-import javax.ws.rs.HEAD;
-
-import org.apache.mesos.Protos.TaskState;
+import org.apache.mesos.v1.Protos.TaskState;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -378,7 +376,7 @@ public class SingularityHealthchecksTest extends SingularitySchedulerTestBase {
       scheduler.drainPendingQueue(stateCacheProvider.get());
 
       String[] portRange = {"80:82"};
-      sms.resourceOffers(driver, Arrays.asList(createOffer(20, 20000, "slave1", "host1", Optional.<String> absent(), Collections.<String, String>emptyMap(), portRange)));
+      sms.resourceOffers(Arrays.asList(createOffer(20, 20000, "slave1", "host1", Optional.<String> absent(), Collections.<String, String>emptyMap(), portRange)));
 
       SingularityTaskId firstTaskId = taskManager.getActiveTaskIdsForRequest(requestId).get(0);
 
@@ -411,7 +409,7 @@ public class SingularityHealthchecksTest extends SingularitySchedulerTestBase {
       scheduler.drainPendingQueue(stateCacheProvider.get());
 
       String[] portRange = {"80:82"};
-      sms.resourceOffers(driver, Arrays.asList(createOffer(20, 20000, "slave1", "host1", Optional.<String> absent(), Collections.<String, String> emptyMap(), portRange)));
+      sms.resourceOffers(Arrays.asList(createOffer(20, 20000, "slave1", "host1", Optional.<String> absent(), Collections.<String, String> emptyMap(), portRange)));
 
       SingularityTaskId firstTaskId = taskManager.getActiveTaskIdsForRequest(requestId).get(0);
 

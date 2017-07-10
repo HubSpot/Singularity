@@ -5,7 +5,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
 
-import org.apache.mesos.Protos.Offer;
+import org.apache.mesos.v1.Protos.Offer;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -43,7 +43,7 @@ public class SingularityOfferPerformanceTestRunner extends SingularitySchedulerT
 
     start = System.currentTimeMillis();
 
-    sms.resourceOffers(driver, offers);
+    sms.resourceOffers(offers);
 
     final long duration = System.currentTimeMillis() - start;
 

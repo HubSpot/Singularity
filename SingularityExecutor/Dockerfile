@@ -1,13 +1,14 @@
-FROM mesosphere/mesos:0.28.1-2.0.20.ubuntu1404
+FROM mesosphere/mesos:1.1.1
 ## mesos + java used to build hubspot/singularitybase
 
 MAINTAINER platform-infrastructure-groups@hubspot.com
 
 # Java Version
 ENV JAVA_VERSION_MAJOR 8
-ENV JAVA_VERSION_MINOR 77
-ENV JAVA_VERSION_BUILD 03
+ENV JAVA_VERSION_MINOR 131
+ENV JAVA_VERSION_BUILD 11
 ENV JAVA_PACKAGE       server-jre
+ENV JAVA_SHA           d54c1d3a095b4ff2b6607d096fa80163
 
 RUN apt-get update && \
     apt-get install -y curl tar logrotate ca-certificates apt-transport-https lxc iptables && \
@@ -15,8 +16,8 @@ RUN apt-get update && \
     echo "deb https://apt.dockerproject.org/repo ubuntu-trusty main"  > /etc/apt/sources.list.d/docker.list && \
     apt-get update && \
     apt-get -y install docker-engine && \
-    curl -kLOH "Cookie: gpw_e24=http%3A%2F%2Fwww.oracle.com%2F; oraclelicense=accept-securebackup-cookie" \
-      http://download.oracle.com/otn-pub/java/jdk/${JAVA_VERSION_MAJOR}u${JAVA_VERSION_MINOR}-b${JAVA_VERSION_BUILD}/${JAVA_PACKAGE}-${JAVA_VERSION_MAJOR}u${JAVA_VERSION_MINOR}-linux-x64.tar.gz && \
+    curl -skLOH "Cookie: gpw_e24=http%3A%2F%2Fwww.oracle.com%2F; oraclelicense=accept-securebackup-cookie" \
+    http://download.oracle.com/otn-pub/java/jdk/${JAVA_VERSION_MAJOR}u${JAVA_VERSION_MINOR}-b${JAVA_VERSION_BUILD}/${JAVA_SHA}/${JAVA_PACKAGE}-${JAVA_VERSION_MAJOR}u${JAVA_VERSION_MINOR}-linux-x64.tar.gz && \
     gunzip ${JAVA_PACKAGE}-${JAVA_VERSION_MAJOR}u${JAVA_VERSION_MINOR}-linux-x64.tar.gz && \
     tar -xf ${JAVA_PACKAGE}-${JAVA_VERSION_MAJOR}u${JAVA_VERSION_MINOR}-linux-x64.tar -C /opt && \
     rm ${JAVA_PACKAGE}-${JAVA_VERSION_MAJOR}u${JAVA_VERSION_MINOR}-linux-x64.tar && \
@@ -29,7 +30,7 @@ RUN mkdir -p /usr/share/mesos/logwatcher && \
     mkdir -p /usr/share/mesos/s3 && \
     mkdir -p /usr/share/mesos/artifacts
 
-ENV JAVA_HOME /opt/jdk1.8.0_77
+ENV JAVA_HOME /opt/jdk1.8.0_131
 
 RUN update-alternatives --install /usr/bin/java java ${JAVA_HOME}/bin/java 20000 && \
     update-alternatives --install /usr/bin/javac javac ${JAVA_HOME}/bin/javac 20000 && \
