@@ -14,6 +14,7 @@ import com.google.inject.Inject;
 import com.hubspot.mesos.json.MesosTaskMonitorObject;
 import com.hubspot.mesos.json.MesosTaskStatisticsObject;
 import com.hubspot.singularity.MachineState;
+import com.hubspot.singularity.RequestUtilization;
 import com.hubspot.singularity.SingularityClusterUtilization;
 import com.hubspot.singularity.SingularitySlaveUsage;
 import com.hubspot.singularity.SingularityTask;
@@ -53,8 +54,7 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
 
     SingularityTask firstTask = taskManager.getActiveTasks().get(0);
     String hostname = firstTask.getHostname();
-
-    MesosTaskMonitorObject usage = new MesosTaskMonitorObject(null, null, null, firstTask.getTaskId().getId(), getStatistics(2, 5, 100));
+    MesosTaskMonitorObject usage = getTaskMonitor(firstTask.getTaskId().getId(), 2, 5, 100);
     mesosClient.setSlaveResourceUsage(hostname, Collections.singletonList(usage));
     usagePoller.runActionOnPoll();
 
@@ -90,8 +90,8 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
     String slaveId = slaveManager.getObjectIds().get(0);
     String host = slaveManager.getObjects().get(0).getHost();
 
-    MesosTaskMonitorObject t1u1 = new MesosTaskMonitorObject(null, null, null, t1, getStatistics(2, 5, 100));
-    MesosTaskMonitorObject t2u1 = new MesosTaskMonitorObject(null, null, null, t2, getStatistics(10, 5, 1000));
+    MesosTaskMonitorObject t1u1 = getTaskMonitor(t1, 2, 5, 100);
+    MesosTaskMonitorObject t2u1 = getTaskMonitor(t2, 10, 5, 1000);
 
     mesosClient.setSlaveResourceUsage(host, Arrays.asList(t1u1, t2u1));
 
@@ -112,7 +112,7 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
     Assert.assertEquals(1, usageManager.getTasksWithUsage().size());
     Assert.assertEquals(1, usageManager.getSlavesWithUsage().size());
 
-    slaveManager.changeState(slaveId, MachineState.DEAD, Optional.<String> absent(), Optional.<String> absent());
+    slaveManager.changeState(slaveId, MachineState.DEAD, Optional.absent(), Optional.absent());
 
     cleaner.runActionOnPoll();
 
@@ -138,8 +138,8 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
     String slaveId = slaveManager.getObjectIds().get(0);
     String host = slaveManager.getObjects().get(0).getHost();
 
-    MesosTaskMonitorObject t1u1 = new MesosTaskMonitorObject(null, null, null, t1, getStatistics(2, 5, 100));
-    MesosTaskMonitorObject t2u1 = new MesosTaskMonitorObject(null, null, null, t2, getStatistics(10, 5, 1000));
+    MesosTaskMonitorObject t1u1 = getTaskMonitor(t1, 2, 5, 100);
+    MesosTaskMonitorObject t2u1 = getTaskMonitor(t2, 10, 5, 1000);
 
     mesosClient.setSlaveResourceUsage(host, Arrays.asList(t1u1, t2u1));
 
@@ -150,8 +150,8 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
 
     // 5 seconds have elapsed, t1 has used 1 CPU the whole time = 5 + 2
     // t2 has used 2.5 CPUs the whole time =
-    MesosTaskMonitorObject t1u2 = new MesosTaskMonitorObject(null, null, null, t1, getStatistics(7, 10, 125));
-    MesosTaskMonitorObject t2u2 = new MesosTaskMonitorObject(null, null, null, t2, getStatistics(22.5, 10, 750));
+    MesosTaskMonitorObject t1u2 = getTaskMonitor(t1, 7, 10, 125);
+    MesosTaskMonitorObject t2u2 = getTaskMonitor(t2, 22.5, 10, 750);
 
     mesosClient.setSlaveResourceUsage(host, Arrays.asList(t1u2, t2u2));
 
@@ -169,8 +169,8 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
 
     Thread.sleep(2);
 
-    MesosTaskMonitorObject t1u3 = new MesosTaskMonitorObject(null, null, null, t1, getStatistics(8, 11, 125));
-    MesosTaskMonitorObject t2u3 = new MesosTaskMonitorObject(null, null, null, t2, getStatistics(23.5, 11, 1000));
+    MesosTaskMonitorObject t1u3 = getTaskMonitor(t1, 8, 11, 125);
+    MesosTaskMonitorObject t2u3 = getTaskMonitor(t2, 23.5, 11, 1000);
 
     mesosClient.setSlaveResourceUsage(host, Arrays.asList(t1u3, t2u3));
 
@@ -219,13 +219,13 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
     String host = slaveManager.getObjects().get(0).getHost();
 
     // used 8 cpu
-    MesosTaskMonitorObject t1u1 = new MesosTaskMonitorObject(null, null, null, t1, getStatistics(40, taskId.getStartedAt() + 5, 800));
-    mesosClient.setSlaveResourceUsage(host, Arrays.asList(t1u1));
+    MesosTaskMonitorObject t1u1 = getTaskMonitor(t1, 40, taskId.getStartedAt() + 5, 800);
+    mesosClient.setSlaveResourceUsage(host, Collections.singletonList(t1u1));
     usagePoller.runActionOnPoll();
 
     // used 8 cpu
-    MesosTaskMonitorObject t1u2 = new MesosTaskMonitorObject(null, null, null, t1, getStatistics(80, taskId.getStartedAt() + 10, 850));
-    mesosClient.setSlaveResourceUsage(host, Arrays.asList(t1u2));
+    MesosTaskMonitorObject t1u2 = getTaskMonitor(t1, 80, taskId.getStartedAt() + 10, 850);
+    mesosClient.setSlaveResourceUsage(host, Collections.singletonList(t1u2));
     usagePoller.runActionOnPoll();
 
     Assert.assertTrue("Couldn't find cluster utilization", usageManager.getClusterUtilization().isPresent());
@@ -272,13 +272,13 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
     String host = slaveManager.getObjects().get(0).getHost();
 
     // 2 cpus used
-    MesosTaskMonitorObject t1u1 = new MesosTaskMonitorObject(null, null, null, t1, getStatistics(10, taskId.getStartedAt() + 5, 1000));
-    mesosClient.setSlaveResourceUsage(host, Arrays.asList(t1u1));
+    MesosTaskMonitorObject t1u1 = getTaskMonitor(t1, 10, taskId.getStartedAt() + 5, 1000);
+    mesosClient.setSlaveResourceUsage(host, Collections.singletonList(t1u1));
     usagePoller.runActionOnPoll();
 
     // 2 cpus used
-    MesosTaskMonitorObject t1u2 = new MesosTaskMonitorObject(null, null, null, t1, getStatistics(20, taskId.getStartedAt() + 10, 900));
-    mesosClient.setSlaveResourceUsage(host, Arrays.asList(t1u2));
+    MesosTaskMonitorObject t1u2 = getTaskMonitor(t1, 20, taskId.getStartedAt() + 10, 900);
+    mesosClient.setSlaveResourceUsage(host, Collections.singletonList(t1u2));
     usagePoller.runActionOnPoll();
 
     Assert.assertTrue("Couldn't find cluster utilization", usageManager.getClusterUtilization().isPresent());
@@ -324,13 +324,13 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
     String host = slaveManager.getObjects().get(0).getHost();
 
     // 4 cpus used
-    MesosTaskMonitorObject t1u1 = new MesosTaskMonitorObject(null, null, null, t1, getStatistics(20, taskId.getStartedAt() + 5, 1000));
-    mesosClient.setSlaveResourceUsage(host, Arrays.asList(t1u1));
+    MesosTaskMonitorObject t1u1 = getTaskMonitor(t1, 20, taskId.getStartedAt() + 5, 1000);
+    mesosClient.setSlaveResourceUsage(host, Collections.singletonList(t1u1));
     usagePoller.runActionOnPoll();
 
     // 4 cpus used
-    MesosTaskMonitorObject t1u2 = new MesosTaskMonitorObject(null, null, null, t1, getStatistics(40, taskId.getStartedAt() + 10, 1000));
-    mesosClient.setSlaveResourceUsage(host, Arrays.asList(t1u2));
+    MesosTaskMonitorObject t1u2 = getTaskMonitor(t1, 40, taskId.getStartedAt() + 10, 1000);
+    mesosClient.setSlaveResourceUsage(host, Collections.singletonList(t1u2));
     usagePoller.runActionOnPoll();
 
     Assert.assertTrue("Couldn't find cluster utilization", usageManager.getClusterUtilization().isPresent());
@@ -428,18 +428,16 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
     String host = slaveManager.getObjects().get(0).getHost();
 
     // used 6 cpu
-    MesosTaskMonitorObject t1u1 = new MesosTaskMonitorObject(null, null, null, t1.getId(), getStatistics(30, t1.getStartedAt() + 5, 800));
+    MesosTaskMonitorObject t1u1 = getTaskMonitor(t1.getId(), 30, t1.getStartedAt() + 5, 800);
     // used 6 cpu
-    MesosTaskMonitorObject t2u1 = new MesosTaskMonitorObject(null, null, null, t2.getId(), getStatistics(30, t2.getStartedAt() + 5, 800));
-
+    MesosTaskMonitorObject t2u1 = getTaskMonitor(t2.getId(), 30, t2.getStartedAt() + 5, 800);
     mesosClient.setSlaveResourceUsage(host, Arrays.asList(t1u1, t2u1));
     usagePoller.runActionOnPoll();
 
     // used 8 cpu
-    MesosTaskMonitorObject t1u2 = new MesosTaskMonitorObject(null, null, null, t1.getId(), getStatistics(70, t1.getStartedAt() + 10, 850));
+    MesosTaskMonitorObject t1u2 = getTaskMonitor(t1.getId(), 70, t1.getStartedAt() + 10, 850);
     // used 8 cpu
-    MesosTaskMonitorObject t2u2 = new MesosTaskMonitorObject(null, null, null, t2.getId(), getStatistics(70, t2.getStartedAt() + 10, 850));
-
+    MesosTaskMonitorObject t2u2 = getTaskMonitor(t2.getId(), 70, t2.getStartedAt() + 10, 850);
     mesosClient.setSlaveResourceUsage(host, Arrays.asList(t1u2, t2u2));
     usagePoller.runActionOnPoll();
 
@@ -457,9 +455,111 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
     Assert.assertEquals(memMbReserved * SingularitySlaveUsage.BYTES_PER_MEGABYTE * (t1TaskUsages + t2TaskUsages), utilization.getRequestUtilizations().get(0).getMemBytesReserved(), 0);
   }
 
+  @Test
+  public void itCorrectlyTracksMaxAndMinUtilizedPerRequest() {
+    initRequest();
+    double cpuReserved = 10;
+    double memMbReserved = .001;
+    initFirstDeployWithResources(cpuReserved, memMbReserved);
+    saveAndSchedule(request.toBuilder().setInstances(Optional.of(2)));
+    resourceOffers(1);
+
+    List<SingularityTaskId> taskIds = taskManager.getActiveTaskIds();
+    SingularityTaskId t1 = taskIds.get(0);
+    SingularityTaskId t2 = taskIds.get(1);
+    String host = slaveManager.getObjects().get(0).getHost();
+
+    // used 10 cpu
+    MesosTaskMonitorObject t1u1 = getTaskMonitor(t1.getId(), 50, t1.getStartedAt() + 5, 800);
+    // used 8 cpu
+    MesosTaskMonitorObject t2u1 = getTaskMonitor(t2.getId(), 40, t2.getStartedAt() + 5, 700);
+    mesosClient.setSlaveResourceUsage(host, Arrays.asList(t1u1, t2u1));
+    usagePoller.runActionOnPoll();
+
+    Assert.assertTrue("Couldn't find cluster utilization", usageManager.getClusterUtilization().isPresent());
+
+    SingularityClusterUtilization utilization = usageManager.getClusterUtilization().get();
+
+    int t1TaskUsages = usageManager.getTaskUsage(t1.getId()).size();
+    int t2TaskUsages = usageManager.getTaskUsage(t2.getId()).size();
+    Assert.assertEquals(1, t1TaskUsages);
+    Assert.assertEquals(1, t2TaskUsages);
+
+    Assert.assertEquals(1, utilization.getRequestUtilizations().size());
+
+    double maxCpu = utilization.getRequestUtilizations().stream().map(RequestUtilization::getMaxCpuUsed).reduce(Double::max).get();
+    double minCpu = utilization.getRequestUtilizations().stream().map(RequestUtilization::getMinCpuUsed).reduce(Double::min).get();
+    long maxMemBytes = utilization.getRequestUtilizations().stream().map(RequestUtilization::getMaxMemBytesUsed).reduce(Long::max).get();
+    long minMemBytes = utilization.getRequestUtilizations().stream().map(RequestUtilization::getMinMemBytesUsed).reduce(Long::min).get();
+    Assert.assertEquals(10, maxCpu, 0);
+    Assert.assertEquals(8, minCpu, 0);
+    Assert.assertEquals(800, maxMemBytes);
+    Assert.assertEquals(700, minMemBytes);
+
+    // new max and min after 2nd run
+
+    // used 12 cpu
+    MesosTaskMonitorObject t1u2 = getTaskMonitor(t1.getId(), 110, t1.getStartedAt() + 10, 850);
+    // used 7 cpu
+    MesosTaskMonitorObject t2u2 = getTaskMonitor(t2.getId(), 75, t2.getStartedAt() + 10, 600);
+    mesosClient.setSlaveResourceUsage(host, Arrays.asList(t1u2, t2u2));
+    usagePoller.runActionOnPoll();
+
+    Assert.assertTrue("Couldn't find cluster utilization", usageManager.getClusterUtilization().isPresent());
+
+    utilization = usageManager.getClusterUtilization().get();
+
+    t1TaskUsages = usageManager.getTaskUsage(t1.getId()).size();
+    t2TaskUsages = usageManager.getTaskUsage(t2.getId()).size();
+    Assert.assertEquals(2, t1TaskUsages);
+    Assert.assertEquals(2, t2TaskUsages);
+
+    Assert.assertEquals(1, utilization.getRequestUtilizations().size());
+    maxCpu = utilization.getRequestUtilizations().stream().map(RequestUtilization::getMaxCpuUsed).reduce(Double::max).get();
+    minCpu = utilization.getRequestUtilizations().stream().map(RequestUtilization::getMinCpuUsed).reduce(Double::min).get();
+    maxMemBytes = utilization.getRequestUtilizations().stream().map(RequestUtilization::getMaxMemBytesUsed).reduce(Long::max).get();
+    minMemBytes = utilization.getRequestUtilizations().stream().map(RequestUtilization::getMinMemBytesUsed).reduce(Long::min).get();
+    Assert.assertEquals(12, maxCpu, 0);
+    Assert.assertEquals(7, minCpu, 0);
+    Assert.assertEquals(850, maxMemBytes);
+    Assert.assertEquals(600, minMemBytes);
+
+    // same max and min after 3rd run
+
+    // used 8 cpu
+    MesosTaskMonitorObject t1u3 = getTaskMonitor(t1.getId(), 150, t1.getStartedAt() + 15, 750);
+    // used 8 cpu
+    MesosTaskMonitorObject t2u3 = getTaskMonitor(t2.getId(), 120, t2.getStartedAt() + 15, 700);
+    mesosClient.setSlaveResourceUsage(host, Arrays.asList(t1u3, t2u3));
+    usagePoller.runActionOnPoll();
+
+    Assert.assertTrue("Couldn't find cluster utilization", usageManager.getClusterUtilization().isPresent());
+
+    utilization = usageManager.getClusterUtilization().get();
+
+    t1TaskUsages = usageManager.getTaskUsage(t1.getId()).size();
+    t2TaskUsages = usageManager.getTaskUsage(t2.getId()).size();
+    Assert.assertEquals(3, t1TaskUsages);
+    Assert.assertEquals(3, t2TaskUsages);
+
+    Assert.assertEquals(1, utilization.getRequestUtilizations().size());
+    maxCpu = utilization.getRequestUtilizations().stream().map(RequestUtilization::getMaxCpuUsed).reduce(Double::max).get();
+    minCpu = utilization.getRequestUtilizations().stream().map(RequestUtilization::getMinCpuUsed).reduce(Double::min).get();
+    maxMemBytes = utilization.getRequestUtilizations().stream().map(RequestUtilization::getMaxMemBytesUsed).reduce(Long::max).get();
+    minMemBytes = utilization.getRequestUtilizations().stream().map(RequestUtilization::getMinMemBytesUsed).reduce(Long::min).get();
+
+    Assert.assertEquals(12, maxCpu, 0);
+    Assert.assertEquals(7, minCpu, 0);
+    Assert.assertEquals(850, maxMemBytes);
+    Assert.assertEquals(600, minMemBytes);
+  }
 
   private MesosTaskStatisticsObject getStatistics(double cpuSecs, double timestamp, long memBytes) {
     return new MesosTaskStatisticsObject(1, 0L, 0L, 0, 0, cpuSecs, 0L, 0L, 0L, 0L, 0L, memBytes, timestamp);
+  }
+
+  private MesosTaskMonitorObject getTaskMonitor(String id, double cpuSecs, long timestamp, int memBytes) {
+    return new MesosTaskMonitorObject(null, null, null, id, getStatistics(cpuSecs, timestamp, memBytes));
   }
 
   private void saveTaskUsage(String taskId, long... times) {
