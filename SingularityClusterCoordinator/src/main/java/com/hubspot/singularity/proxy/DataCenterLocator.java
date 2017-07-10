@@ -8,15 +8,16 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
-import com.hubspot.singularity.SingularityClientCredentials;
 import com.hubspot.singularity.SingularityRequestGroup;
 import com.hubspot.singularity.SingularityRequestParent;
 import com.hubspot.singularity.SingularitySlave;
 import com.hubspot.singularity.client.SingularityClient;
-import com.hubspot.singularity.client.SingularityClientProvider;
 import com.hubspot.singularity.config.ClusterCoordinatorConfiguration;
 import com.hubspot.singularity.config.DataCenter;
 import com.hubspot.singularity.exceptions.DataCenterNotFoundException;
@@ -24,13 +25,13 @@ import com.hubspot.singularity.exceptions.DataCenterNotFoundException;
 import io.dropwizard.lifecycle.Managed;
 
 public class DataCenterLocator implements Managed {
+  private static final Logger LOG = LoggerFactory.getLogger(DataCenterLocator.class);
+
   private final ClusterCoordinatorConfiguration configuration;
-  private final SingularityClientProvider clientProvider;
   private final Map<String, DataCenter> dataCenters;
+  private final Map<String, SingularityClient> clients;
 
   private final Random random = new Random();
-
-  private final Map<String, SingularityClient> clients = new ConcurrentHashMap<>();
 
   private final Map<String, Set<String>> requestIdsByDataCenter = new ConcurrentHashMap<>();
   private final Map<String, Set<String>> requestGroupsByDataCenter = new ConcurrentHashMap<>();
@@ -40,14 +41,12 @@ public class DataCenterLocator implements Managed {
 
 
   @Inject
-  public DataCenterLocator(ClusterCoordinatorConfiguration configuration, SingularityClientProvider clientProvider) {
+  public DataCenterLocator(ClusterCoordinatorConfiguration configuration, Map<String, SingularityClient> clients) {
     this.configuration = configuration;
-    this.clientProvider = clientProvider;
+    this.clients = clients;
 
-    ImmutableMap.Builder builder = ImmutableMap.builder();
-    configuration.getDataCenters().forEach((dc) -> {
-      builder.put(dc.getName(), dc);
-    });
+    ImmutableMap.Builder<String, DataCenter> builder = ImmutableMap.builder();
+    configuration.getDataCenters().forEach((dc) -> builder.put(dc.getName(), dc));
     this.dataCenters = builder.build();
   }
 
@@ -170,18 +169,7 @@ public class DataCenterLocator implements Managed {
 
   @Override
   public void start() {
-    createClients();
     loadData();
-  }
-
-  private void createClients() {
-    configuration.getDataCenters().forEach((dc) -> {
-      clientProvider.setHosts(dc.getHosts());
-      clientProvider.setContextPath(dc.getContextPath());
-      clientProvider.setSsl(dc.getScheme().equals("https"));
-      Optional<SingularityClientCredentials> maybeCredentials = dc.getClientCredentials().or(configuration.getDefaultClientCredentials());
-      clients.put(dc.getName(), clientProvider.get(maybeCredentials));
-    });
   }
 
   private void loadData() {
@@ -190,15 +178,18 @@ public class DataCenterLocator implements Managed {
 
       Collection<SingularityRequestParent> requestParents = singularityClient.getSingularityRequests();
       requestIdsByDataCenter.put(dc.getName(), requestParents.stream().map((r) -> r.getRequest().getId()).collect(Collectors.toSet()));
+      LOG.info("Loaded {} requests for data center {}", requestParents.size(), dc.getName());
 
       Collection<SingularitySlave> slaves = singularityClient.getSlaves(Optional.absent());
-      Set<String> rackIds = slaves.stream().map((s) -> s.getRackId()).collect(Collectors.toSet());
+      Set<String> rackIds = slaves.stream().map(SingularitySlave::getRackId).collect(Collectors.toSet());
       rackIdsByDataCenter.put(dc.getName(), new HashSet<>(rackIds));
       slaveIdsByDataCenter.put(dc.getName(), slaves.stream().map(SingularitySlave::getId).collect(Collectors.toSet()));
       hostnamesByDataCenter.put(dc.getName(), slaves.stream().map(SingularitySlave::getHost).collect(Collectors.toSet()));
+      LOG.info("Loaded {} slaves for data center {}", slaves.size(), dc.getName());
 
       Collection<SingularityRequestGroup> requestGroups = singularityClient.getRequestGroups();
       requestGroupsByDataCenter.put(dc.getName(), requestGroups.stream().map(SingularityRequestGroup::getId).collect(Collectors.toSet()));
+      LOG.info("Loaded {} request groups for data center {}", requestGroups.size(), dc.getName());
     });
   }
 

@@ -26,18 +26,18 @@ public class ClusterCoordinatorConfiguration extends Configuration {
   private Optional<SingularityClientCredentials> defaultClientCredentials;
 
   // Settings to inform the ui
-  private Integer defaultMemory;
-  private Integer defaultCpus;
-  private Integer slaveHttpPort;
-  private Optional<Integer> slaveHttpsPort;
-  private int bounceExpirationMinutes;
-  private long healthcheckIntervalSeconds;
-  private long healthcheckTimeoutSeconds;
-  private Optional<Integer> healthcheckMaxRetries;
-  private int startupTimeoutSeconds;
-  private boolean loadBalancingEnabled;
-  private Optional<String> commonHostnameSuffixToOmit;
-  private Integer warnIfScheduledJobIsRunningPastNextRunPct;
+  private Integer defaultMemory = 64;
+  private Integer defaultCpus = 1;
+  private Integer slaveHttpPort = 5051;
+  private Optional<Integer> slaveHttpsPort = Optional.absent();
+  private int bounceExpirationMinutes = 60;
+  private long healthcheckIntervalSeconds = 5;
+  private long healthcheckTimeoutSeconds = 5;
+  private Optional<Integer> healthcheckMaxRetries = Optional.absent();
+  private int startupTimeoutSeconds = 45;
+  private boolean loadBalancingEnabled = false;
+  private Optional<String> commonHostnameSuffixToOmit = Optional.absent();
+  private Integer warnIfScheduledJobIsRunningPastNextRunPct = 200;
 
 
 

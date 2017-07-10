@@ -19,7 +19,7 @@ public class DataCenter {
   // http or https
   private String scheme = "http";
 
-  private Optional<SingularityClientCredentials> clientCredentials;
+  private Optional<SingularityClientCredentials> clientCredentials = Optional.absent();
 
   public String getName() {
     return name;

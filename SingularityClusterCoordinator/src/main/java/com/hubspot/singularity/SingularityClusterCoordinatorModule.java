@@ -1,8 +1,9 @@
 package com.hubspot.singularity;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Binder;
 import com.hubspot.dropwizard.guicier.DropwizardAwareModule;
-import com.hubspot.singularity.client.SingularityClientModule;
+import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.config.ClusterCoordinatorConfiguration;
 import com.hubspot.singularity.proxy.SingularityClusterCoodinatorResourcesModule;
 
@@ -10,7 +11,7 @@ public class SingularityClusterCoordinatorModule extends DropwizardAwareModule<C
 
   @Override
   public void configure(Binder binder) {
-    binder.install(new SingularityClusterCoodinatorResourcesModule());
-    binder.install(new SingularityClientModule());
+    binder.bind(ObjectMapper.class).toInstance(JavaUtils.newObjectMapper());
+    binder.install(new SingularityClusterCoodinatorResourcesModule(getConfiguration()));
   }
 }

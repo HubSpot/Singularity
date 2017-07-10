@@ -216,7 +216,12 @@ public class ProxyResource {
         return objectMapper.readValue(response.getResponseBodyAsStream(), clazz);
       }
     } catch (IOException ioe) {
-      LOG.error("Request succeeded with status {}, but could not interpret response", response.getStatusCode(), ioe);
+      try {
+        LOG.warn("Bad response body: {}", response.getResponseBody(Charsets.UTF_8.toString()));
+      } catch (IOException io) {
+        LOG.error("Could not print response", io);
+      }
+      LOG.error("Request succeeded with status {}, but could not interpret response ({})", response.getStatusCode(), ioe);
     }
 
     return null;
