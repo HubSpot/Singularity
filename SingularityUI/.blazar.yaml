@@ -12,15 +12,18 @@ env:
 steps:
   - name: build
     commands:
+      - 'echo "build"'
       - mvn clean generate-resources
   - name: publish
     activeByDefault: false
     commands:
+      - 'echo "publish"'
       - node/node node/npm/cli.js --globalconfig /usr/share/hubspot/jenkins-home/.npmrc install bender-deps
       - node/node ./node_modules/.bin/bender-deps cdn-publish SingularityUI-$GIT_BRANCH@1.$MODULE_BUILD_NUMBER dist/static
   - name: notify
     activeByDefault: false
     commands:
+      - 'echo "notify"'
       - command: publish-build-success --project $BLAZAR_COORDINATES --build-num $MODULE_BUILD_NUMBER
 
 stepActivation:
