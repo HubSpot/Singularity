@@ -11,6 +11,7 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Inject;
@@ -34,49 +35,50 @@ public class RackResource extends ProxyResource {
   @GET
   @Path("/")
   public List<SingularityRack> getRacks(@Context HttpServletRequest request) {
-    throw new NotImplemenedException();
+    return getMergedListResult(request, TypeRefs.RACK_LIST_REF);
   }
 
   @GET
   @Path("/rack/{rackId}")
   public List<SingularityMachineStateHistoryUpdate> getRackHistory(@Context HttpServletRequest request, @PathParam("rackId") String rackId) {
-    throw new NotImplemenedException();
+    return routeByRackId(request, rackId, TypeRefs.MACHINE_UPDATE_LIST_REF);
   }
 
   @DELETE
   @Path("/rack/{rackId}")
-  public void removeRack(@Context HttpServletRequest request, @PathParam("rackId") String rackId) {
-    throw new NotImplemenedException();
+  public Response removeRack(@Context HttpServletRequest request, @PathParam("rackId") String rackId) {
+    // TODO - remove from internal list as well?
+    return routeByRackId(request, rackId, TypeRefs.RESPONSE_REF);
   }
 
   @POST
   @Path("/rack/{rackId}/decommission")
-  public void decommissionRack(@Context HttpServletRequest request, @PathParam("rackId") String rackId, SingularityMachineChangeRequest changeRequest) {
-    throw new NotImplemenedException();
+  public Response decommissionRack(@Context HttpServletRequest request, @PathParam("rackId") String rackId, SingularityMachineChangeRequest changeRequest) {
+    return routeByRackId(request, rackId, TypeRefs.RESPONSE_REF);
   }
 
   @POST
   @Path("/rack/{rackId}/freeze")
-  public void freezeRack(@Context HttpServletRequest request, @PathParam("rackId") String rackId, SingularityMachineChangeRequest changeRequest) {
-    throw new NotImplemenedException();
+  public Response freezeRack(@Context HttpServletRequest request, @PathParam("rackId") String rackId, SingularityMachineChangeRequest changeRequest) {
+    return routeByRackId(request, rackId, TypeRefs.RESPONSE_REF);
   }
 
   @POST
   @Path("/rack/{rackId}/activate")
-  public void activateRack(@Context HttpServletRequest request, @PathParam("rackId") String rackId, SingularityMachineChangeRequest changeRequest) {
-    throw new NotImplemenedException();
+  public Response activateRack(@Context HttpServletRequest request, @PathParam("rackId") String rackId, SingularityMachineChangeRequest changeRequest) {
+    return routeByRackId(request, rackId, TypeRefs.RESPONSE_REF);
   }
 
   @DELETE
   @Path("/rack/{rackId}/expiring")
-  public void deleteExpiringStateChange(@Context HttpServletRequest request, @PathParam("rackId") String rackId) {
-    throw new NotImplemenedException();
+  public Response deleteExpiringStateChange(@Context HttpServletRequest request, @PathParam("rackId") String rackId) {
+    return routeByRackId(request, rackId, TypeRefs.RESPONSE_REF);
   }
 
   @GET
   @Path("/expiring")
   public List<SingularityExpiringMachineState> getExpiringStateChanges(@Context HttpServletRequest request) {
-    throw new NotImplemenedException();
+    return getMergedListResult(request, TypeRefs.EXPIRING_MACHINE_STATE_LIST_REF);
   }
 
 }

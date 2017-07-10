@@ -15,6 +15,7 @@ import javax.ws.rs.core.MediaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Inject;
 import com.hubspot.singularity.SingularityS3LogMetadata;
+import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.api.SingularityS3SearchRequest;
 import com.hubspot.singularity.api.SingularityS3SearchResult;
 import com.hubspot.singularity.config.ApiPaths;
@@ -33,25 +34,27 @@ public class S3LogResource extends ProxyResource {
   @GET
   @Path("/task/{taskId}")
   public List<SingularityS3LogMetadata> getS3LogsForTask(@Context HttpServletRequest request, @PathParam("taskId") String taskId) throws Exception {
-    throw new NotImplemenedException();
+    SingularityTaskId parsedId = SingularityTaskId.valueOf(taskId);
+    return routeByRequestId(request, parsedId.getRequestId(), TypeRefs.LOG_METADATA_LIST_REF);
   }
 
   @GET
   @Path("/request/{requestId}")
   public List<SingularityS3LogMetadata> getS3LogsForRequest(@Context HttpServletRequest request, @PathParam("requestId") String requestId) throws Exception {
-    throw new NotImplemenedException();
+    return routeByRequestId(request, requestId, TypeRefs.LOG_METADATA_LIST_REF);
   }
 
   @GET
   @Path("/request/{requestId}/deploy/{deployId}")
   public List<SingularityS3LogMetadata> getS3LogsForDeploy(@Context HttpServletRequest request, @PathParam("requestId") String requestId, @PathParam("deployId") String deployId) throws Exception {
-    throw new NotImplemenedException();
+    return routeByRequestId(request, requestId, TypeRefs.LOG_METADATA_LIST_REF);
   }
 
   @POST
   @Path("/search")
   @Consumes(MediaType.APPLICATION_JSON)
   public SingularityS3SearchResult getPaginatedS3Logs(@Context HttpServletRequest request, SingularityS3SearchRequest search) throws Exception {
+    // TODO - merge search results from multiple data centers, route if request id set
     throw new NotImplemenedException();
   }
 }

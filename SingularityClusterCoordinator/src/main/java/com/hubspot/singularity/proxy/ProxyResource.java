@@ -44,6 +44,10 @@ public class ProxyResource {
    * For items where the dataCenter is part of the object, or where a full list is desired.
    * Collect and merge results from each configured dataCenter
    */
+  public <T> List<T> getMergedListResult(HttpServletRequest request, TypeReference<List<T>> clazz) {
+    return getMergedListResult(request, null, clazz);
+  }
+
   public <T, Q> List<T> getMergedListResult(HttpServletRequest request, Q body, TypeReference<List<T>> clazz) {
     Map<String, String> headers = getHeaders(request);
     Map<String, String> params = getParams(request);
@@ -58,6 +62,10 @@ public class ProxyResource {
   /*
    * Route a request to a particular dataCenter using the requestId to locate the correct Singularity cluster
    */
+  public <T> T routeByRequestId(HttpServletRequest request, String requestId, TypeReference<T> clazz) {
+    return routeByRequestId(request, requestId, null, clazz);
+  }
+
   public <T, Q> T routeByRequestId(HttpServletRequest request, String requestId, Q body, TypeReference<T> clazz) {
     Map<String, String> headers = getHeaders(request);
     Map<String, String> params = getParams(request);
@@ -68,13 +76,62 @@ public class ProxyResource {
   }
 
   /*
-   * Route a request to a particular dataCenter using the slaveId to locate the correct Singularity cluster
+   * Route a request to a particular dataCenter using the request group Id to locate the correct Singularity cluster
    */
+  public <T> T routeByRequestGroupId(HttpServletRequest request, String requestGroupId, TypeReference<T> clazz) {
+    return routeByRequestGroupId(request, requestGroupId, null, clazz);
+  }
+
+  public <T, Q> T routeByRequestGroupId(HttpServletRequest request, String requestGroupId, Q body, TypeReference<T> clazz) {
+    Map<String, String> headers = getHeaders(request);
+    Map<String, String> params = getParams(request);
+
+    DataCenter dataCenter = getDataCenterForRequestGroup(requestGroupId);
+
+    return proxyRequest(dataCenter, request, body, clazz, headers, params);
+  }
+
+  /*
+   * Route a request to a particular dataCenter using the slaveId/hostname to locate the correct Singularity cluster
+   */
+  public <T> T routeBySlaveId(HttpServletRequest request, String slaveId, TypeReference<T> clazz) {
+    return routeBySlaveId(request, slaveId, null, clazz);
+  }
+
   public <T, Q> T routeBySlaveId(HttpServletRequest request, String slaveId, Q body, TypeReference<T> clazz) {
     Map<String, String> headers = getHeaders(request);
     Map<String, String> params = getParams(request);
 
-    DataCenter dataCenter = getDataCenterForSlave(slaveId);
+    DataCenter dataCenter = getDataCenterForSlaveId(slaveId);
+
+    return proxyRequest(dataCenter, request, body, clazz, headers, params);
+  }
+
+  public <T> T routeByHostname(HttpServletRequest request, String hostname, TypeReference<T> clazz) {
+    return routeByHostname(request, hostname, null, clazz);
+  }
+
+  public <T, Q> T routeByHostname(HttpServletRequest request, String hostname, Q body, TypeReference<T> clazz) {
+    Map<String, String> headers = getHeaders(request);
+    Map<String, String> params = getParams(request);
+
+    DataCenter dataCenter = getDataCenterForSlaveHostname(hostname);
+
+    return proxyRequest(dataCenter, request, body, clazz, headers, params);
+  }
+
+  /*
+   * Route a request to a particular dataCenter using the rack ID to locate the correct Singularity cluster
+   */
+  public <T> T routeByRackId(HttpServletRequest request, String rackId, TypeReference<T> clazz) {
+    return routeByRackId(request, rackId, null, clazz);
+  }
+
+  public <T, Q> T routeByRackId(HttpServletRequest request, String rackId, Q body, TypeReference<T> clazz) {
+    Map<String, String> headers = getHeaders(request);
+    Map<String, String> params = getParams(request);
+
+    DataCenter dataCenter = getDataCenterForRackId(rackId);
 
     return proxyRequest(dataCenter, request, body, clazz, headers, params);
   }
@@ -94,7 +151,11 @@ public class ProxyResource {
   /*
    * Route to the default Singularity cluster
    */
-  public <T, Q> T routeToDefaultDataCenter(HttpServletRequest request, String dataCenterName, Q body, TypeReference<T> clazz) {
+  public <T> T routeToDefaultDataCenter(HttpServletRequest request, TypeReference<T> clazz) {
+    return routeToDefaultDataCenter(request, null, clazz);
+  }
+
+  public <T, Q> T routeToDefaultDataCenter(HttpServletRequest request, Q body, TypeReference<T> clazz) {
     Map<String, String> headers = getHeaders(request);
     Map<String, String> params = getParams(request);
 
@@ -106,22 +167,37 @@ public class ProxyResource {
   /*
    * Working with data centers
    */
-  public String getHost(DataCenter dataCenter) {
+  private String getHost(DataCenter dataCenter) {
     // TODO
     return null;
   }
 
-  public DataCenter getDataCenterForRequest(String requestId) {
+  private DataCenter getDataCenterForRequest(String requestId) {
     // TODO
     return null;
   }
 
-  public DataCenter getDataCenterForSlave(String slaveId) {
+  private DataCenter getDataCenterForRequestGroup(String requestGroupId) {
     // TODO
     return null;
   }
 
-  public DataCenter getDataCenter(String name) {
+  private DataCenter getDataCenterForSlaveId(String slaveId) {
+    // TODO
+    return null;
+  }
+
+  private DataCenter getDataCenterForSlaveHostname(String hostname) {
+    // TODO
+    return null;
+  }
+
+  private DataCenter getDataCenterForRackId(String rackId) {
+    // TODO
+    return null;
+  }
+
+  private DataCenter getDataCenter(String name) {
     // TODO
     return null;
   }
@@ -167,7 +243,7 @@ public class ProxyResource {
     return null;
   }
 
-  public BoundRequestBuilder startRequestBuilder(String method, String url) {
+  private BoundRequestBuilder startRequestBuilder(String method, String url) {
     switch (method.toUpperCase()) {
       case "GET":
         return httpClient.prepareGet(url);

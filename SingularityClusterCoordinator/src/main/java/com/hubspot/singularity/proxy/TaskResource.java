@@ -12,6 +12,7 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
@@ -43,79 +44,84 @@ public class TaskResource extends ProxyResource {
   @GET
   @Path("/scheduled")
   public List<SingularityTaskRequest> getScheduledTasks(@Context HttpServletRequest request) {
-    throw new NotImplemenedException();
+    return getMergedListResult(request, TypeRefs.TASK_REQUEST_LIST_REF);
   }
 
   @GET
   @Path("/scheduled/ids")
-  public Iterable<SingularityPendingTaskId> getScheduledTaskIds(@Context HttpServletRequest request) {
-    throw new NotImplemenedException();
+  public List<SingularityPendingTaskId> getScheduledTaskIds(@Context HttpServletRequest request) {
+    return getMergedListResult(request, TypeRefs.PENDING_TASK_ID_LIST_REF);
   }
 
   @GET
   @Path("/scheduled/task/{pendingTaskId}")
   public SingularityTaskRequest getPendingTask(@Context HttpServletRequest request, @PathParam("pendingTaskId") String pendingTaskIdStr) {
-    throw new NotImplemenedException();
+    SingularityPendingTaskId parsedId = SingularityPendingTaskId.valueOf(pendingTaskIdStr);
+    return routeByRequestId(request, parsedId.getRequestId(), TypeRefs.TASK_REQUEST_REF);
   }
 
   @GET
   @Path("/scheduled/request/{requestId}")
   public List<SingularityTaskRequest> getScheduledTasksForRequest(@Context HttpServletRequest request, @PathParam("requestId") String requestId) {
-    throw new NotImplemenedException();
+    return routeByRequestId(request, requestId, TypeRefs.TASK_REQUEST_LIST_REF);
   }
 
   @GET
   @Path("/active/slave/{slaveId}")
-  public Iterable<SingularityTask> getTasksForSlave(@Context HttpServletRequest request, @PathParam("slaveId") String slaveId) {
-    throw new NotImplemenedException();
+  public List<SingularityTask> getTasksForSlave(@Context HttpServletRequest request, @PathParam("slaveId") String slaveId) {
+    return routeBySlaveId(request, slaveId, TypeRefs.TASK_LIST_REF);
   }
 
   @GET
   @Path("/active")
-  public Iterable<SingularityTask> getActiveTasks(@Context HttpServletRequest request) {
-    throw new NotImplemenedException();
+  public List<SingularityTask> getActiveTasks(@Context HttpServletRequest request) {
+    return getMergedListResult(request, TypeRefs.TASK_LIST_REF);
   }
 
   @GET
   @Path("/cleaning")
-  public Iterable<SingularityTaskCleanup> getCleaningTasks(@Context HttpServletRequest request) {
-    throw new NotImplemenedException();
+  public List<SingularityTaskCleanup> getCleaningTasks(@Context HttpServletRequest request) {
+    return getMergedListResult(request, TypeRefs.TASK_CLEANUP_LIST_REF);
   }
 
   @GET
   @Path("/killed")
-  public Iterable<SingularityKilledTaskIdRecord> getKilledTasks(@Context HttpServletRequest request) {
-    throw new NotImplemenedException();
+  public List<SingularityKilledTaskIdRecord> getKilledTasks(@Context HttpServletRequest request) {
+    return getMergedListResult(request, TypeRefs.TASK_KILLED_LIST_REF);
   }
 
   @GET
   @Path("/lbcleanup")
-  public Iterable<SingularityTaskId> getLbCleanupTasks(@Context HttpServletRequest request) {
-    throw new NotImplemenedException();
+  public List<SingularityTaskId> getLbCleanupTasks(@Context HttpServletRequest request) {
+    return getMergedListResult(request, TypeRefs.TASK_ID_LIST_REF);
   }
 
   @GET
   @Path("/task/{taskId}")
   public SingularityTask getActiveTask(@Context HttpServletRequest request, @PathParam("taskId") String taskId) {
-    throw new NotImplemenedException();
+    SingularityTaskId parsedId = SingularityTaskId.valueOf(taskId);
+    return routeByRequestId(request, parsedId.getRequestId(), TypeRefs.TASK_REF);
   }
 
   @GET
   @Path("/task/{taskId}/statistics")
   public MesosTaskStatisticsObject getTaskStatistics(@Context HttpServletRequest request, @PathParam("taskId") String taskId) {
-    throw new NotImplemenedException();
+    SingularityTaskId parsedId = SingularityTaskId.valueOf(taskId);
+    return routeByRequestId(request, parsedId.getRequestId(), TypeRefs.TASK_STATISTICS_REF);
   }
 
   @GET
   @Path("/task/{taskId}/cleanup")
   public Optional<SingularityTaskCleanup> getTaskCleanup(@Context HttpServletRequest request, @PathParam("taskId") String taskId) {
-    throw new NotImplemenedException();
+    SingularityTaskId parsedId = SingularityTaskId.valueOf(taskId);
+    return routeByRequestId(request, parsedId.getRequestId(), TypeRefs.OPTIONAL_TASK_CLEANUP_REF);
   }
 
   @DELETE
   @Path("/task/{taskId}")
   public SingularityTaskCleanup killTask(@Context HttpServletRequest request, @PathParam("taskId") String taskId, @Context HttpServletRequest requestContext) {
-    throw new NotImplemenedException();
+    SingularityTaskId parsedId = SingularityTaskId.valueOf(taskId);
+    return routeByRequestId(request, parsedId.getRequestId(), TypeRefs.TASK_CLEANUP_REF);
   }
 
   @DELETE
@@ -124,25 +130,28 @@ public class TaskResource extends ProxyResource {
   public SingularityTaskCleanup killTask(@PathParam("taskId") String taskId,
                                          @Context HttpServletRequest requestContext,
                                          SingularityKillTaskRequest killTaskRequest) {
-    throw new NotImplemenedException();
+    SingularityTaskId parsedId = SingularityTaskId.valueOf(taskId);
+    return routeByRequestId(requestContext, parsedId.getRequestId(), killTaskRequest, TypeRefs.TASK_CLEANUP_REF);
   }
 
   @Path("/commands/queued")
   public List<SingularityTaskShellCommandRequest> getQueuedShellCommands(@Context HttpServletRequest request) {
-    throw new NotImplemenedException();
+    return getMergedListResult(request, TypeRefs.SHELL_COMMAND_LIST_REF);
   }
 
   @POST
   @Path("/task/{taskId}/metadata")
   @Consumes({ MediaType.APPLICATION_JSON })
-  public void postTaskMetadata(@Context HttpServletRequest request, @PathParam("taskId") String taskId, final SingularityTaskMetadataRequest taskMetadataRequest) {
-    throw new NotImplemenedException();
+  public Response postTaskMetadata(@Context HttpServletRequest request, @PathParam("taskId") String taskId, final SingularityTaskMetadataRequest taskMetadataRequest) {
+    SingularityTaskId parsedId = SingularityTaskId.valueOf(taskId);
+    return routeByRequestId(request, parsedId.getRequestId(), TypeRefs.RESPONSE_REF);
   }
 
   @POST
   @Path("/task/{taskId}/command")
   @Consumes({ MediaType.APPLICATION_JSON })
   public SingularityTaskShellCommandRequest runShellCommand(@Context HttpServletRequest request, @PathParam("taskId") String taskId, final SingularityShellCommand shellCommand) {
-    throw new NotImplemenedException();
+    SingularityTaskId parsedId = SingularityTaskId.valueOf(taskId);
+    return routeByRequestId(request, parsedId.getRequestId(), TypeRefs.SHELL_COMMAND_REF);
   }
 }

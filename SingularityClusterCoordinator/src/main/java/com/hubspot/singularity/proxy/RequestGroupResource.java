@@ -11,6 +11,7 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
@@ -31,23 +32,26 @@ public class RequestGroupResource extends ProxyResource {
 
   @GET
   public List<SingularityRequestGroup> getRequestGroupIds(@Context HttpServletRequest request) {
-    throw new NotImplemenedException();
+    return getMergedListResult(request, TypeRefs.REQUEST_GROUP_LIST_REF);
   }
 
   @GET
   @Path("/group/{requestGroupId}")
   public Optional<SingularityRequestGroup> getRequestGroup(@Context HttpServletRequest request, @PathParam("requestGroupId") String requestGroupId) {
-    throw new NotImplemenedException();
+    return routeByRequestGroupId(request, requestGroupId, TypeRefs.OPTIONAL_REQUEST_GROUP_REF);
   }
 
   @DELETE
   @Path("/group/{requestGroupId}")
-  public void deleteRequestGroup(@Context HttpServletRequest request, @PathParam("requestGroupId") String requestGroupId) {
-    throw new NotImplemenedException();
+  public Response deleteRequestGroup(@Context HttpServletRequest request, @PathParam("requestGroupId") String requestGroupId) {
+    return routeByRequestGroupId(request, requestGroupId, TypeRefs.RESPONSE_REF);
   }
 
   @POST
   public SingularityRequestGroup saveRequestGroup(@Context HttpServletRequest request, SingularityRequestGroup requestGroup) {
-    throw new NotImplemenedException();
+    // TODO - route by more than first request id?
+    // TODO - add to internal list of groups?
+    // TODO - error if list is empty?
+    return routeByRequestId(request, requestGroup.getRequestIds().get(0), TypeRefs.REQUEST_GROUP_REF);
   }
 }

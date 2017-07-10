@@ -11,6 +11,7 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
@@ -35,54 +36,54 @@ public class SlaveResource extends ProxyResource {
   @GET
   @Path("/")
   public List<SingularitySlave> getSlaves(@Context HttpServletRequest request) {
-    throw new NotImplemenedException();
+    return getMergedListResult(request, TypeRefs.SLAVE_LIST_REF);
   }
 
   @GET
   @Path("/slave/{slaveId}")
   public List<SingularityMachineStateHistoryUpdate> getSlaveHistory(@Context HttpServletRequest request, @PathParam("slaveId") String slaveId) {
-    throw new NotImplemenedException();
+    return routeBySlaveId(request, slaveId, TypeRefs.MACHINE_UPDATE_LIST_REF);
   }
 
   @GET
   @Path("/slave/{slaveId}/details")
   public Optional<SingularitySlave> getSlave(@Context HttpServletRequest request, @PathParam("slaveId") String slaveId) {
-    throw new NotImplemenedException();
+    return routeBySlaveId(request, slaveId, TypeRefs.OPTIONAL_SLAVE_REF);
   }
 
   @DELETE
   @Path("/slave/{slaveId}")
-  public void removeSlave(@Context HttpServletRequest request, @PathParam("slaveId") String slaveId) {
-    throw new NotImplemenedException();
+  public Response removeSlave(@Context HttpServletRequest request, @PathParam("slaveId") String slaveId) {
+    return routeBySlaveId(request, slaveId, TypeRefs.RESPONSE_REF);
   }
 
   @POST
   @Path("/slave/{slaveId}/decommission")
-  public void decommissionSlave(@Context HttpServletRequest request, @PathParam("slaveId") String slaveId, SingularityMachineChangeRequest changeRequest) {
-    throw new NotImplemenedException();
+  public Response decommissionSlave(@Context HttpServletRequest request, @PathParam("slaveId") String slaveId, SingularityMachineChangeRequest changeRequest) {
+    return routeBySlaveId(request, slaveId, TypeRefs.RESPONSE_REF);
   }
 
   @POST
   @Path("/slave/{slaveId}/freeze")
-  public void freezeSlave(@Context HttpServletRequest request, @PathParam("slaveId") String slaveId, SingularityMachineChangeRequest changeRequest) {
-    throw new NotImplemenedException();
+  public Response freezeSlave(@Context HttpServletRequest request, @PathParam("slaveId") String slaveId, SingularityMachineChangeRequest changeRequest) {
+    return routeBySlaveId(request, slaveId, TypeRefs.RESPONSE_REF);
   }
 
   @POST
   @Path("/slave/{slaveId}/activate")
-  public void activateSlave(@Context HttpServletRequest request, @PathParam("slaveId") String slaveId, SingularityMachineChangeRequest changeRequest) {
-    throw new NotImplemenedException();
+  public Response activateSlave(@Context HttpServletRequest request, @PathParam("slaveId") String slaveId, SingularityMachineChangeRequest changeRequest) {
+    return routeBySlaveId(request, slaveId, TypeRefs.RESPONSE_REF);
   }
 
   @DELETE
   @Path("/slave/{slaveId}/expiring")
-  public void deleteExpiringStateChange(@Context HttpServletRequest request, @PathParam("slaveId") String slaveId) {
-    throw new NotImplemenedException();
+  public Response deleteExpiringStateChange(@Context HttpServletRequest request, @PathParam("slaveId") String slaveId) {
+    return routeBySlaveId(request, slaveId, TypeRefs.RESPONSE_REF);
   }
 
   @GET
   @Path("/expiring")
   public List<SingularityExpiringMachineState> getExpiringStateChanges(@Context HttpServletRequest request) {
-    throw new NotImplemenedException();
+    return getMergedListResult(request, TypeRefs.EXPIRING_MACHINE_STATE_LIST_REF);
   }
 }

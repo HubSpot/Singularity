@@ -12,6 +12,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Inject;
 import com.hubspot.mesos.json.MesosFileChunkObject;
 import com.hubspot.singularity.SingularitySandbox;
+import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.config.ApiPaths;
 import com.hubspot.singularity.config.ClusterCoordinatorConfiguration;
 import com.ning.http.client.AsyncHttpClient;
@@ -28,12 +29,14 @@ public class SandboxResource extends ProxyResource {
   @GET
   @Path("/{taskId}/browse")
   public SingularitySandbox browse(@Context HttpServletRequest request, @PathParam("taskId") String taskId) {
-    throw new NotImplemenedException();
+    SingularityTaskId parsedId = SingularityTaskId.valueOf(taskId);
+    return routeByRequestId(request, parsedId.getRequestId(), TypeRefs.SANDBOX_REF);
   }
 
   @GET
   @Path("/{taskId}/read")
   public MesosFileChunkObject read(@Context HttpServletRequest request, @PathParam("taskId") String taskId) {
-    throw new NotImplemenedException();
+    SingularityTaskId parsedId = SingularityTaskId.valueOf(taskId);
+    return routeByRequestId(request, parsedId.getRequestId(), TypeRefs.FILE_CHUNK_REF);
   }
 }

@@ -47,7 +47,12 @@ public class RequestResource extends ProxyResource {
   @POST
   @Consumes({ MediaType.APPLICATION_JSON })
   public SingularityRequestParent postRequest(@Context HttpServletRequest requestContext, SingularityRequest request) {
-    throw new NotImplemenedException();
+    // TODO - where to create new requests?
+    if (request.getDataCenter().isPresent()) {
+      return routeByDataCenter(requestContext, request.getDataCenter().get(), request, TypeRefs.REQUEST_PARENT_REF);
+    } else {
+      return routeByRequestId(requestContext, request.getId(), request, TypeRefs.REQUEST_PARENT_REF);
+    }
   }
 
   @POST
@@ -63,7 +68,7 @@ public class RequestResource extends ProxyResource {
   public SingularityRequestParent bounce(@PathParam("requestId") String requestId,
                                          @Context HttpServletRequest requestContext,
                                          SingularityBounceRequest bounceRequest) {
-    throw new NotImplemenedException();
+    return routeByRequestId(requestContext, requestId, bounceRequest, TypeRefs.REQUEST_PARENT_REF);
   }
 
   @POST
@@ -75,15 +80,15 @@ public class RequestResource extends ProxyResource {
   @POST
   @Path("/request/{requestId}/run")
   @Consumes({ MediaType.APPLICATION_JSON })
-  public SingularityPendingRequestParent scheduleImmediately(@Context HttpServletRequest request, @PathParam("requestId") String requestId,
+  public SingularityPendingRequestParent scheduleImmediately(@Context HttpServletRequest requestContext, @PathParam("requestId") String requestId,
                                                              SingularityRunNowRequest runNowRequest) {
-    throw new NotImplemenedException();
+    return routeByRequestId(requestContext, requestId, runNowRequest, TypeRefs.PENDING_REQUEST_PARENT_REF);
   }
 
   @GET
   @Path("/request/{requestId}/run/{runId}")
   public Optional<SingularityTaskId> getTaskByRunId(@Context HttpServletRequest request, @PathParam("requestId") String requestId, @PathParam("runId") String runId) {
-    throw new NotImplemenedException();
+    return routeByRequestId(request, requestId, TypeRefs.OPTIONAL_TASK_ID_REF);
   }
 
   @POST
@@ -99,7 +104,7 @@ public class RequestResource extends ProxyResource {
   public SingularityRequestParent pause(@PathParam("requestId") String requestId,
                                         @Context HttpServletRequest requestContext,
                                         SingularityPauseRequest pauseRequest) {
-    throw new NotImplemenedException();
+    return routeByRequestId(requestContext, requestId, pauseRequest, TypeRefs.REQUEST_PARENT_REF);
   }
 
   @POST
@@ -115,7 +120,7 @@ public class RequestResource extends ProxyResource {
   public SingularityRequestParent unpause(@PathParam("requestId") String requestId,
                                           @Context HttpServletRequest requestContext,
                                           SingularityUnpauseRequest unpauseRequest) {
-    throw new NotImplemenedException();
+    return routeByRequestId(requestContext, requestId, unpauseRequest, TypeRefs.REQUEST_PARENT_REF);
   }
 
   @POST
@@ -131,54 +136,55 @@ public class RequestResource extends ProxyResource {
   public SingularityRequestParent exitCooldown(@PathParam("requestId") String requestId,
                                                @Context HttpServletRequest requestContext,
                                                SingularityExitCooldownRequest exitCooldownRequest) {
-    throw new NotImplemenedException();
+    return routeByRequestId(requestContext, requestId, exitCooldownRequest, TypeRefs.REQUEST_PARENT_REF);
   }
 
   @GET
   @Path("/active")
   public List<SingularityRequestParent> getActiveRequests(@Context HttpServletRequest request) {
-    throw new NotImplemenedException();
+    return getMergedListResult(request, TypeRefs.REQUEST_PARENT_LIST_REF);
   }
 
   @GET
   @Path("/paused")
   public List<SingularityRequestParent> getPausedRequests(@Context HttpServletRequest request) {
-    throw new NotImplemenedException();
+    return getMergedListResult(request, TypeRefs.REQUEST_PARENT_LIST_REF);
   }
 
   @GET
   @Path("/cooldown")
   public List<SingularityRequestParent> getCooldownRequests(@Context HttpServletRequest request) {
-    throw new NotImplemenedException();
+    return getMergedListResult(request, TypeRefs.REQUEST_PARENT_LIST_REF);
   }
 
   @GET
   @Path("/finished")
   public List<SingularityRequestParent> getFinishedRequests(@Context HttpServletRequest request) {
-    throw new NotImplemenedException();
+    return getMergedListResult(request, TypeRefs.REQUEST_PARENT_LIST_REF);
   }
 
   @GET
   public List<SingularityRequestParent> getRequests(@Context HttpServletRequest request) {
-    throw new NotImplemenedException();
+    // TODO - update internal cache list?
+    return getMergedListResult(request, TypeRefs.REQUEST_PARENT_LIST_REF);
   }
 
   @GET
   @Path("/queued/pending")
-  public Iterable<SingularityPendingRequest> getPendingRequests(@Context HttpServletRequest request) {
-    throw new NotImplemenedException();
+  public List<SingularityPendingRequest> getPendingRequests(@Context HttpServletRequest request) {
+    return getMergedListResult(request, TypeRefs.PENDING_REQUEST_LIST_REF);
   }
 
   @GET
   @Path("/queued/cleanup")
-  public Iterable<SingularityRequestCleanup> getCleanupRequests(@Context HttpServletRequest request) {
-    throw new NotImplemenedException();
+  public List<SingularityRequestCleanup> getCleanupRequests(@Context HttpServletRequest request) {
+    return getMergedListResult(request, TypeRefs.REQUEST_CLEANUP_LIST_REF);
   }
 
   @GET
   @Path("/request/{requestId}")
   public SingularityRequestParent getRequest(@Context HttpServletRequest request, @PathParam("requestId") String requestId) {
-    throw new NotImplemenedException();
+    return routeByRequestId(request, requestId, TypeRefs.REQUEST_PARENT_REF);
   }
 
   @DELETE
@@ -187,7 +193,8 @@ public class RequestResource extends ProxyResource {
   public SingularityRequest deleteRequest(@PathParam("requestId") String requestId,
                                           @Context HttpServletRequest requestContext,
                                           SingularityDeleteRequestRequest deleteRequest) {
-    throw new NotImplemenedException();
+    // TODO - update internal list?
+    return routeByRequestId(requestContext, requestId, deleteRequest, TypeRefs.REQUEST_REF);
   }
 
   @PUT
@@ -196,38 +203,38 @@ public class RequestResource extends ProxyResource {
   public SingularityRequestParent scale(@PathParam("requestId") String requestId,
                                         @Context HttpServletRequest requestContext,
                                         SingularityScaleRequest scaleRequest) {
-    throw new NotImplemenedException();
+    return routeByRequestId(requestContext, requestId, scaleRequest, TypeRefs.REQUEST_PARENT_REF);
   }
 
   @DELETE
   @Path("/request/{requestId}/scale")
   public SingularityRequestParent deleteExpiringScale(@Context HttpServletRequest request, @PathParam("requestId") String requestId) {
-    throw new NotImplemenedException();
+    return routeByRequestId(request, requestId, TypeRefs.REQUEST_PARENT_REF);
   }
 
   @Deprecated
   @DELETE
   @Path("/request/{requestId}/skipHealthchecks")
   public SingularityRequestParent deleteExpiringSkipHealthchecksDeprecated(@Context HttpServletRequest request, @PathParam("requestId") String requestId) {
-    throw new NotImplemenedException();
+    return routeByRequestId(request, requestId, TypeRefs.REQUEST_PARENT_REF);
   }
 
   @DELETE
   @Path("/request/{requestId}/skip-healthchecks")
   public SingularityRequestParent deleteExpiringSkipHealthchecks(@Context HttpServletRequest request, @PathParam("requestId") String requestId) {
-    throw new NotImplemenedException();
+    return routeByRequestId(request, requestId, TypeRefs.REQUEST_PARENT_REF);
   }
 
   @DELETE
   @Path("/request/{requestId}/pause")
   public SingularityRequestParent deleteExpiringPause(@Context HttpServletRequest request, @PathParam("requestId") String requestId) {
-    throw new NotImplemenedException();
+    return routeByRequestId(request, requestId, TypeRefs.REQUEST_PARENT_REF);
   }
 
   @DELETE
   @Path("/request/{requestId}/bounce")
   public SingularityRequestParent deleteExpiringBounce(@Context HttpServletRequest request, @PathParam("requestId") String requestId) {
-    throw new NotImplemenedException();
+    return routeByRequestId(request, requestId, TypeRefs.REQUEST_PARENT_REF);
   }
 
   @Deprecated
@@ -246,12 +253,12 @@ public class RequestResource extends ProxyResource {
   public SingularityRequestParent skipHealthchecks(@PathParam("requestId") String requestId,
                                                    @Context HttpServletRequest requestContext,
                                                    SingularitySkipHealthchecksRequest skipHealthchecksRequest) {
-    throw new NotImplemenedException();
+    return routeByRequestId(requestContext, requestId, skipHealthchecksRequest, TypeRefs.REQUEST_PARENT_REF);
   }
 
   @GET
   @Path("/lbcleanup")
-  public Iterable<String> getLbCleanupRequests(@Context HttpServletRequest request) {
-    throw new NotImplemenedException();
+  public List<String> getLbCleanupRequests(@Context HttpServletRequest request) {
+    return getMergedListResult(request, TypeRefs.LIST_STRING_REF);
   }
 }

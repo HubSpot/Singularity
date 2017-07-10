@@ -29,24 +29,26 @@ public class StateResource extends ProxyResource {
 
   @GET
   public SingularityState getState(@Context HttpServletRequest request) {
+    // TODO - merge this result?
     throw new NotImplemenedException();
   }
 
   @GET
   @Path("/requests/under-provisioned")
   public List<String> getUnderProvisionedRequestIds(@Context HttpServletRequest request) {
-    throw new NotImplemenedException();
+    return getMergedListResult(request, TypeRefs.LIST_STRING_REF);
   }
 
   @GET
   @Path("/requests/over-provisioned")
   public List<String> getOverProvisionedRequestIds(@Context HttpServletRequest request) {
-    throw new NotImplemenedException();
+    return getMergedListResult(request, TypeRefs.LIST_STRING_REF);
   }
 
   @GET
   @Path("/task-reconciliation")
   public Optional<SingularityTaskReconciliationStatistics> getTaskReconciliationStatistics(@Context HttpServletRequest request) {
+    // TODO - merge this result?
     throw new NotImplemenedException();
   }
 }

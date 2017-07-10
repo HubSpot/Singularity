@@ -8,6 +8,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Inject;
@@ -19,6 +20,7 @@ import com.ning.http.client.AsyncHttpClient;
 @Path(ApiPaths.USER_RESOURCE_PATH)
 @Produces({ MediaType.APPLICATION_JSON })
 public class UserResource extends ProxyResource {
+  // TODO - replicate to all data centers?
 
   @Inject
   public UserResource(ClusterCoordinatorConfiguration configuration, AsyncHttpClient httpClient, ObjectMapper objectMapper) {
@@ -28,24 +30,24 @@ public class UserResource extends ProxyResource {
   @GET
   @Path("/settings")
   public SingularityUserSettings getUserSettings(@Context HttpServletRequest request) {
-    throw new NotImplemenedException();
+    return routeToDefaultDataCenter(request, TypeRefs.USER_SETTINGS_REF);
   }
 
   @POST
   @Path("/settings")
-  public void setUserSettings(@Context HttpServletRequest request, SingularityUserSettings settings) {
-    throw new NotImplemenedException();
+  public Response setUserSettings(@Context HttpServletRequest request, SingularityUserSettings settings) {
+    return routeToDefaultDataCenter(request, TypeRefs.RESPONSE_REF);
   }
 
   @POST
   @Path("/settings/starred-requests")
-  public void addStarredRequests(@Context HttpServletRequest request, SingularityUserSettings settings) {
-    throw new NotImplemenedException();
+  public Response addStarredRequests(@Context HttpServletRequest request, SingularityUserSettings settings) {
+    return routeToDefaultDataCenter(request, settings, TypeRefs.RESPONSE_REF);
   }
 
   @DELETE
   @Path("/settings/starred-requests")
-  public void deleteStarredRequests(@Context HttpServletRequest request, SingularityUserSettings settings) {
-    throw new NotImplemenedException();
+  public Response deleteStarredRequests(@Context HttpServletRequest request, SingularityUserSettings settings) {
+    return routeToDefaultDataCenter(request, settings, TypeRefs.RESPONSE_REF);
   }
 }

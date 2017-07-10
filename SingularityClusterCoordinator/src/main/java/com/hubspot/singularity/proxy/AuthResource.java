@@ -31,12 +31,12 @@ public class AuthResource extends ProxyResource {
   @GET
   @Path("/user")
   public SingularityUserHolder getUser(@Context HttpServletRequest request) {
-    throw new NotImplemenedException();
+    return routeToDefaultDataCenter(request, TypeRefs.USER_HOLDER_TYPE_REF);
   }
 
   @GET
   @Path("/{requestId}/auth-check/{userId}")
   public Response checkReadOnlyAuth(@Context HttpServletRequest request, @PathParam("requestId") String requestId, @PathParam("userId") String userId, @QueryParam("scope") Optional<SingularityAuthorizationScope> scope) {
-    throw new NotImplemenedException();
+    return routeToDefaultDataCenter(request, TypeRefs.RESPONSE_REF);
   }
 }

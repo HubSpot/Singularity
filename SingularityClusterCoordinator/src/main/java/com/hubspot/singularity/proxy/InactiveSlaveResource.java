@@ -1,6 +1,6 @@
 package com.hubspot.singularity.proxy;
 
-import java.util.Set;
+import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.DELETE;
@@ -11,6 +11,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Inject;
@@ -28,17 +29,17 @@ public class InactiveSlaveResource extends ProxyResource {
   }
 
   @GET
-  public Set<String> getInactiveSlaves(@Context HttpServletRequest request) {
-    throw new NotImplemenedException();
+  public List<String> getInactiveSlaves(@Context HttpServletRequest request) {
+    return getMergedListResult(request, TypeRefs.LIST_STRING_REF);
   }
 
   @POST
-  public void deactivateSlave(@Context HttpServletRequest request, @QueryParam("host") String host) {
-    throw new NotImplemenedException();
+  public Response deactivateSlave(@Context HttpServletRequest request, @QueryParam("host") String host) {
+    return routeByHostname(request, host, TypeRefs.RESPONSE_REF);
   }
 
   @DELETE
-  public void reactivateSlave(@Context HttpServletRequest request, @QueryParam("host") String host) {
-    throw new NotImplemenedException();
+  public Response reactivateSlave(@Context HttpServletRequest request, @QueryParam("host") String host) {
+    return routeByHostname(request, host, TypeRefs.RESPONSE_REF);
   }
 }
