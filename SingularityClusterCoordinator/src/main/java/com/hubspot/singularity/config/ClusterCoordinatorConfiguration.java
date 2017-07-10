@@ -8,6 +8,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
+import com.hubspot.singularity.SingularityClientCredentials;
 
 import io.dropwizard.Configuration;
 
@@ -22,6 +23,8 @@ public class ClusterCoordinatorConfiguration extends Configuration {
   @Valid
   private UIConfiguration uiConfiguration = new UIConfiguration();
 
+  private Optional<SingularityClientCredentials> defaultClientCredentials;
+
   // Settings to inform the ui
   private Integer defaultMemory;
   private Integer defaultCpus;
@@ -35,6 +38,8 @@ public class ClusterCoordinatorConfiguration extends Configuration {
   private boolean loadBalancingEnabled;
   private Optional<String> commonHostnameSuffixToOmit;
   private Integer warnIfScheduledJobIsRunningPastNextRunPct;
+
+
 
   public List<DataCenter> getDataCenters() {
     return dataCenters;
@@ -146,5 +151,13 @@ public class ClusterCoordinatorConfiguration extends Configuration {
 
   public void setWarnIfScheduledJobIsRunningPastNextRunPct(Integer warnIfScheduledJobIsRunningPastNextRunPct) {
     this.warnIfScheduledJobIsRunningPastNextRunPct = warnIfScheduledJobIsRunningPastNextRunPct;
+  }
+
+  public Optional<SingularityClientCredentials> getDefaultClientCredentials() {
+    return defaultClientCredentials;
+  }
+
+  public void setDefaultClientCredentials(Optional<SingularityClientCredentials> defaultClientCredentials) {
+    this.defaultClientCredentials = defaultClientCredentials;
   }
 }

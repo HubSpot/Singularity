@@ -20,6 +20,7 @@ import com.hubspot.singularity.api.SingularityS3SearchRequest;
 import com.hubspot.singularity.api.SingularityS3SearchResult;
 import com.hubspot.singularity.config.ApiPaths;
 import com.hubspot.singularity.config.ClusterCoordinatorConfiguration;
+import com.hubspot.singularity.exceptions.NotImplemenedException;
 import com.ning.http.client.AsyncHttpClient;
 
 @Path(ApiPaths.S3_LOG_RESOURCE_PATH)
@@ -27,8 +28,8 @@ import com.ning.http.client.AsyncHttpClient;
 public class S3LogResource extends ProxyResource {
 
   @Inject
-  public S3LogResource(ClusterCoordinatorConfiguration configuration, AsyncHttpClient httpClient, ObjectMapper objectMapper) {
-    super(configuration, httpClient, objectMapper);
+  public S3LogResource(ClusterCoordinatorConfiguration configuration, AsyncHttpClient httpClient, ObjectMapper objectMapper, DataCenterLocator dataCenterLocator) {
+    super(configuration, httpClient, objectMapper, dataCenterLocator);
   }
 
   @GET

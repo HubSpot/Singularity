@@ -22,8 +22,8 @@ import com.ning.http.client.AsyncHttpClient;
 public class SandboxResource extends ProxyResource {
 
   @Inject
-  public SandboxResource(ClusterCoordinatorConfiguration configuration, AsyncHttpClient httpClient, ObjectMapper objectMapper) {
-    super(configuration, httpClient, objectMapper);
+  public SandboxResource(ClusterCoordinatorConfiguration configuration, AsyncHttpClient httpClient, ObjectMapper objectMapper, DataCenterLocator dataCenterLocator) {
+    super(configuration, httpClient, objectMapper, dataCenterLocator);
   }
 
   @GET

@@ -24,6 +24,7 @@ import com.hubspot.singularity.SingularityTaskCredits;
 import com.hubspot.singularity.api.SingularityDisabledActionRequest;
 import com.hubspot.singularity.config.ApiPaths;
 import com.hubspot.singularity.config.ClusterCoordinatorConfiguration;
+import com.hubspot.singularity.exceptions.NotImplemenedException;
 import com.ning.http.client.AsyncHttpClient;
 
 @Path(ApiPaths.DISASTERS_RESOURCE_PATH)
@@ -31,8 +32,8 @@ import com.ning.http.client.AsyncHttpClient;
 public class DisastersResource extends ProxyResource {
 
   @Inject
-  public DisastersResource(ClusterCoordinatorConfiguration configuration, AsyncHttpClient httpClient, ObjectMapper objectMapper) {
-    super(configuration, httpClient, objectMapper);
+  public DisastersResource(ClusterCoordinatorConfiguration configuration, AsyncHttpClient httpClient, ObjectMapper objectMapper, DataCenterLocator dataCenterLocator) {
+    super(configuration, httpClient, objectMapper, dataCenterLocator);
   }
 
   @GET

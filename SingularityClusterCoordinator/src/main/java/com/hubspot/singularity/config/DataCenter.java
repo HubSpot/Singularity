@@ -6,6 +6,9 @@ import javax.validation.constraints.NotNull;
 
 import org.hibernate.validator.constraints.NotEmpty;
 
+import com.google.common.base.Optional;
+import com.hubspot.singularity.SingularityClientCredentials;
+
 public class DataCenter {
   @NotNull
   private String name;
@@ -15,6 +18,8 @@ public class DataCenter {
   private String contextPath;
   // http or https
   private String scheme = "http";
+
+  private Optional<SingularityClientCredentials> clientCredentials;
 
   public String getName() {
     return name;
@@ -46,5 +51,13 @@ public class DataCenter {
 
   public void setScheme(String scheme) {
     this.scheme = scheme;
+  }
+
+  public Optional<SingularityClientCredentials> getClientCredentials() {
+    return clientCredentials;
+  }
+
+  public void setClientCredentials(Optional<SingularityClientCredentials> clientCredentials) {
+    this.clientCredentials = clientCredentials;
   }
 }

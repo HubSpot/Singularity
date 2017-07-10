@@ -30,8 +30,8 @@ import com.ning.http.client.AsyncHttpClient;
 public class HistoryResource extends ProxyResource {
 
   @Inject
-  public HistoryResource(ClusterCoordinatorConfiguration configuration, AsyncHttpClient httpClient, ObjectMapper objectMapper) {
-    super(configuration, httpClient, objectMapper);
+  public HistoryResource(ClusterCoordinatorConfiguration configuration, AsyncHttpClient httpClient, ObjectMapper objectMapper, DataCenterLocator dataCenterLocator) {
+    super(configuration, httpClient, objectMapper, dataCenterLocator);
   }
 
   @GET

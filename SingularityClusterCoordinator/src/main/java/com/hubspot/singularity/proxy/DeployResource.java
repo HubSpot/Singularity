@@ -28,8 +28,8 @@ import com.ning.http.client.AsyncHttpClient;
 public class DeployResource extends ProxyResource {
 
   @Inject
-  public DeployResource(ClusterCoordinatorConfiguration configuration, AsyncHttpClient httpClient, ObjectMapper objectMapper) {
-    super(configuration, httpClient, objectMapper);
+  public DeployResource(ClusterCoordinatorConfiguration configuration, AsyncHttpClient httpClient, ObjectMapper objectMapper, DataCenterLocator dataCenterLocator) {
+    super(configuration, httpClient, objectMapper, dataCenterLocator);
   }
 
   @GET

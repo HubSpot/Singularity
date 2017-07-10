@@ -22,8 +22,8 @@ import com.ning.http.client.AsyncHttpClient;
 public class TaskTrackerResource extends ProxyResource {
 
   @Inject
-  public TaskTrackerResource(ClusterCoordinatorConfiguration configuration, AsyncHttpClient httpClient, ObjectMapper objectMapper) {
-    super(configuration, httpClient, objectMapper);
+  public TaskTrackerResource(ClusterCoordinatorConfiguration configuration, AsyncHttpClient httpClient, ObjectMapper objectMapper, DataCenterLocator dataCenterLocator) {
+    super(configuration, httpClient, objectMapper, dataCenterLocator);
   }
 
   @GET

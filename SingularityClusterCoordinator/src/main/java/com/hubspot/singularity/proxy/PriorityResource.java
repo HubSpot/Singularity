@@ -16,6 +16,7 @@ import com.hubspot.singularity.SingularityPriorityFreezeParent;
 import com.hubspot.singularity.api.SingularityPriorityFreeze;
 import com.hubspot.singularity.config.ApiPaths;
 import com.hubspot.singularity.config.ClusterCoordinatorConfiguration;
+import com.hubspot.singularity.exceptions.NotImplemenedException;
 import com.ning.http.client.AsyncHttpClient;
 
 @Path(ApiPaths.PRIORITY_RESOURCE_PATH)
@@ -23,8 +24,8 @@ import com.ning.http.client.AsyncHttpClient;
 public class PriorityResource extends ProxyResource {
 
   @Inject
-  public PriorityResource(ClusterCoordinatorConfiguration configuration, AsyncHttpClient httpClient, ObjectMapper objectMapper) {
-    super(configuration, httpClient, objectMapper);
+  public PriorityResource(ClusterCoordinatorConfiguration configuration, AsyncHttpClient httpClient, ObjectMapper objectMapper, DataCenterLocator dataCenterLocator) {
+    super(configuration, httpClient, objectMapper, dataCenterLocator);
   }
 
   @GET

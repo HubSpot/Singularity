@@ -24,8 +24,8 @@ import com.ning.http.client.AsyncHttpClient;
 public class InactiveSlaveResource extends ProxyResource {
 
   @Inject
-  public InactiveSlaveResource(ClusterCoordinatorConfiguration configuration, AsyncHttpClient httpClient, ObjectMapper objectMapper) {
-    super(configuration, httpClient, objectMapper);
+  public InactiveSlaveResource(ClusterCoordinatorConfiguration configuration, AsyncHttpClient httpClient, ObjectMapper objectMapper, DataCenterLocator dataCenterLocator) {
+    super(configuration, httpClient, objectMapper, dataCenterLocator);
   }
 
   @GET

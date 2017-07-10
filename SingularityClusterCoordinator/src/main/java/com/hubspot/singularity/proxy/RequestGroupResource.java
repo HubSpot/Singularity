@@ -26,8 +26,8 @@ import com.ning.http.client.AsyncHttpClient;
 public class RequestGroupResource extends ProxyResource {
 
   @Inject
-  public RequestGroupResource(ClusterCoordinatorConfiguration configuration, AsyncHttpClient httpClient, ObjectMapper objectMapper) {
-    super(configuration, httpClient, objectMapper);
+  public RequestGroupResource(ClusterCoordinatorConfiguration configuration, AsyncHttpClient httpClient, ObjectMapper objectMapper, DataCenterLocator dataCenterLocator) {
+    super(configuration, httpClient, objectMapper, dataCenterLocator);
   }
 
   @GET

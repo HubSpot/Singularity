@@ -26,6 +26,11 @@
     </dependency>
 
     <dependency>
+      <groupId>com.hubspot</groupId>
+      <artifactId>SingularityClient</artifactId>
+    </dependency>
+
+    <dependency>
       <groupId>com.hubspot.dropwizard</groupId>
       <artifactId>dropwizard-guicier</artifactId>
     </dependency>

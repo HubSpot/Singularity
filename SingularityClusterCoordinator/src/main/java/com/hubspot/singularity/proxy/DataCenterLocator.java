@@ -1,0 +1,207 @@
+package com.hubspot.singularity.proxy;
+
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Random;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
+
+import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableMap;
+import com.google.inject.Inject;
+import com.hubspot.singularity.SingularityClientCredentials;
+import com.hubspot.singularity.SingularityRequestGroup;
+import com.hubspot.singularity.SingularityRequestParent;
+import com.hubspot.singularity.SingularitySlave;
+import com.hubspot.singularity.client.SingularityClient;
+import com.hubspot.singularity.client.SingularityClientProvider;
+import com.hubspot.singularity.config.ClusterCoordinatorConfiguration;
+import com.hubspot.singularity.config.DataCenter;
+import com.hubspot.singularity.exceptions.DataCenterNotFoundException;
+
+import io.dropwizard.lifecycle.Managed;
+
+public class DataCenterLocator implements Managed {
+  private final ClusterCoordinatorConfiguration configuration;
+  private final SingularityClientProvider clientProvider;
+  private final Map<String, DataCenter> dataCenters;
+
+  private final Random random = new Random();
+
+  private final Map<String, SingularityClient> clients = new ConcurrentHashMap<>();
+
+  private final Map<String, Set<String>> requestIdsByDataCenter = new ConcurrentHashMap<>();
+  private final Map<String, Set<String>> requestGroupsByDataCenter = new ConcurrentHashMap<>();
+  private final Map<String, Set<String>> slaveIdsByDataCenter = new ConcurrentHashMap<>();
+  private final Map<String, Set<String>> hostnamesByDataCenter = new ConcurrentHashMap<>();
+  private final Map<String, Set<String>> rackIdsByDataCenter = new ConcurrentHashMap<>();
+
+
+  @Inject
+  public DataCenterLocator(ClusterCoordinatorConfiguration configuration, SingularityClientProvider clientProvider) {
+    this.configuration = configuration;
+    this.clientProvider = clientProvider;
+
+    ImmutableMap.Builder builder = ImmutableMap.builder();
+    configuration.getDataCenters().forEach((dc) -> {
+      builder.put(dc.getName(), dc);
+    });
+    this.dataCenters = builder.build();
+  }
+
+  String getHost(DataCenter dataCenter) {
+    return dataCenter.getHosts().get(random.nextInt(dataCenter.getHosts().size()));
+  }
+
+  DataCenter getDataCenterForRequest(String requestId) {
+    for (Map.Entry<String, DataCenter> entry : dataCenters.entrySet()) {
+      if (requestIdsByDataCenter.get(entry.getKey()).contains(requestId)) {
+        return entry.getValue();
+      }
+    }
+
+    // Not found, try each one
+    for (Map.Entry<String, DataCenter> entry : dataCenters.entrySet()) {
+      SingularityClient client = clients.get(entry.getKey());
+      Optional<SingularityRequestParent> maybeRequest = client.getSingularityRequest(requestId);
+      if (maybeRequest.isPresent()) {
+        requestIdsByDataCenter.get(entry.getKey()).add(maybeRequest.get().getRequest().getId());
+        return entry.getValue();
+      }
+    }
+    throw new DataCenterNotFoundException(String.format("Could not find requestId '%s' in any data center", requestId));
+  }
+
+  DataCenter getDataCenterForRequestGroup(String requestGroupId) {
+    for (Map.Entry<String, DataCenter> entry : dataCenters.entrySet()) {
+      if (requestGroupsByDataCenter.get(entry.getKey()).contains(requestGroupId)) {
+        return entry.getValue();
+      }
+    }
+
+    // Not found, try each one
+    for (Map.Entry<String, DataCenter> entry : dataCenters.entrySet()) {
+      SingularityClient client = clients.get(entry.getKey());
+      Optional<SingularityRequestGroup> maybeRequestGroup = client.getRequestGroup(requestGroupId);
+      if (maybeRequestGroup.isPresent()) {
+        requestGroupsByDataCenter.get(entry.getKey()).add(maybeRequestGroup.get().getId());
+        return entry.getValue();
+      }
+    }
+    throw new DataCenterNotFoundException(String.format("Could not find requestGroupId '%s' in any data center", requestGroupId));
+  }
+
+   DataCenter getDataCenterForSlaveId(String slaveId) {
+     for (Map.Entry<String, DataCenter> entry : dataCenters.entrySet()) {
+       if (slaveIdsByDataCenter.get(entry.getKey()).contains(slaveId)) {
+         return entry.getValue();
+       }
+     }
+
+     // Not found, try each one
+     for (Map.Entry<String, DataCenter> entry : dataCenters.entrySet()) {
+       SingularityClient client = clients.get(entry.getKey());
+       Optional<SingularitySlave> maybeSlave = client.getSlave(slaveId);
+       if (maybeSlave.isPresent()) {
+         slaveIdsByDataCenter.get(entry.getKey()).add(maybeSlave.get().getId());
+         hostnamesByDataCenter.get(entry.getKey()).add(maybeSlave.get().getHost());
+         rackIdsByDataCenter.get(entry.getKey()).add(maybeSlave.get().getRackId());
+         return entry.getValue();
+       }
+     }
+     throw new DataCenterNotFoundException(String.format("Could not find slaveId '%s' in any data center", slaveId));
+  }
+
+  DataCenter getDataCenterForSlaveHostname(String hostname) {
+    for (Map.Entry<String, DataCenter> entry : dataCenters.entrySet()) {
+      if (hostnamesByDataCenter.get(entry.getKey()).contains(hostname)) {
+        return entry.getValue();
+      }
+    }
+
+    // Not found, try each one
+    for (Map.Entry<String, DataCenter> entry : dataCenters.entrySet()) {
+      SingularityClient client = clients.get(entry.getKey());
+      Collection<SingularitySlave> slaves = client.getSlaves(Optional.absent());
+      for (SingularitySlave slave : slaves) {
+        if (slave.getHost().equals(hostname)) {
+          slaveIdsByDataCenter.get(entry.getKey()).add(slave.getId());
+          hostnamesByDataCenter.get(entry.getKey()).add(slave.getHost());
+          rackIdsByDataCenter.get(entry.getKey()).add(slave.getRackId());
+          return entry.getValue();
+        }
+      }
+    }
+    throw new DataCenterNotFoundException(String.format("Could not find slave with hostname '%s' in any data center", hostname));
+  }
+
+  DataCenter getDataCenterForRackId(String rackId) {
+    for (Map.Entry<String, DataCenter> entry : dataCenters.entrySet()) {
+      if (rackIdsByDataCenter.get(entry.getKey()).contains(rackId)) {
+        return entry.getValue();
+      }
+    }
+
+    // Not found, try each one
+    for (Map.Entry<String, DataCenter> entry : dataCenters.entrySet()) {
+      SingularityClient client = clients.get(entry.getKey());
+      Collection<SingularitySlave> slaves = client.getSlaves(Optional.absent());
+      for (SingularitySlave slave : slaves) {
+        if (slave.getRackId().equals(rackId)) {
+          slaveIdsByDataCenter.get(entry.getKey()).add(slave.getId());
+          hostnamesByDataCenter.get(entry.getKey()).add(slave.getHost());
+          rackIdsByDataCenter.get(entry.getKey()).add(slave.getRackId());
+          return entry.getValue();
+        }
+      }
+    }
+    throw new DataCenterNotFoundException(String.format("Could not find rack with id '%s' in any data center", rackId));
+  }
+
+  DataCenter getDataCenter(String name) {
+    if (dataCenters.containsKey(name)) {
+      return dataCenters.get(name);
+    } else {
+      throw new DataCenterNotFoundException(String.format("No known data center with name: %s", name));
+    }
+  }
+
+  @Override
+  public void start() {
+    createClients();
+    loadData();
+  }
+
+  private void createClients() {
+    configuration.getDataCenters().forEach((dc) -> {
+      clientProvider.setHosts(dc.getHosts());
+      clientProvider.setContextPath(dc.getContextPath());
+      clientProvider.setSsl(dc.getScheme().equals("https"));
+      Optional<SingularityClientCredentials> maybeCredentials = dc.getClientCredentials().or(configuration.getDefaultClientCredentials());
+      clients.put(dc.getName(), clientProvider.get(maybeCredentials));
+    });
+  }
+
+  private void loadData() {
+    configuration.getDataCenters().forEach((dc) -> {
+      SingularityClient singularityClient = clients.get(dc.getName());
+
+      Collection<SingularityRequestParent> requestParents = singularityClient.getSingularityRequests();
+      requestIdsByDataCenter.put(dc.getName(), requestParents.stream().map((r) -> r.getRequest().getId()).collect(Collectors.toSet()));
+
+      Collection<SingularitySlave> slaves = singularityClient.getSlaves(Optional.absent());
+      Set<String> rackIds = slaves.stream().map((s) -> s.getRackId()).collect(Collectors.toSet());
+      rackIdsByDataCenter.put(dc.getName(), new HashSet<>(rackIds));
+      slaveIdsByDataCenter.put(dc.getName(), slaves.stream().map(SingularitySlave::getId).collect(Collectors.toSet()));
+      hostnamesByDataCenter.put(dc.getName(), slaves.stream().map(SingularitySlave::getHost).collect(Collectors.toSet()));
+
+      Collection<SingularityRequestGroup> requestGroups = singularityClient.getRequestGroups();
+      requestGroupsByDataCenter.put(dc.getName(), requestGroups.stream().map(SingularityRequestGroup::getId).collect(Collectors.toSet()));
+    });
+  }
+
+  @Override
+  public void stop() {}
+}

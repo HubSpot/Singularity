@@ -24,6 +24,7 @@ import com.hubspot.singularity.SingularityWebhook;
 import com.hubspot.singularity.SingularityWebhookSummary;
 import com.hubspot.singularity.config.ApiPaths;
 import com.hubspot.singularity.config.ClusterCoordinatorConfiguration;
+import com.hubspot.singularity.exceptions.NotImplemenedException;
 import com.ning.http.client.AsyncHttpClient;
 
 @Path(ApiPaths.WEBHOOK_RESOURCE_PATH)
@@ -31,8 +32,8 @@ import com.ning.http.client.AsyncHttpClient;
 public class WebhookResource extends ProxyResource {
 
   @Inject
-  public WebhookResource(ClusterCoordinatorConfiguration configuration, AsyncHttpClient httpClient, ObjectMapper objectMapper) {
-    super(configuration, httpClient, objectMapper);
+  public WebhookResource(ClusterCoordinatorConfiguration configuration, AsyncHttpClient httpClient, ObjectMapper objectMapper, DataCenterLocator dataCenterLocator) {
+    super(configuration, httpClient, objectMapper, dataCenterLocator);
   }
 
   @GET

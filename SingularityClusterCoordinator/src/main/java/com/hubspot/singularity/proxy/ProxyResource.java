@@ -32,12 +32,14 @@ public class ProxyResource {
   private final AsyncHttpClient httpClient;
   private final ClusterCoordinatorConfiguration configuration;
   private final ObjectMapper objectMapper;
+  private final DataCenterLocator dataCenterLocator;
 
   @Inject
-  public ProxyResource(ClusterCoordinatorConfiguration configuration, AsyncHttpClient httpClient, ObjectMapper objectMapper) {
+  public ProxyResource(ClusterCoordinatorConfiguration configuration, AsyncHttpClient httpClient, ObjectMapper objectMapper, DataCenterLocator dataCenterLocator) {
     this.configuration = configuration;
     this.httpClient = httpClient;
     this.objectMapper = objectMapper;
+    this.dataCenterLocator = dataCenterLocator;
   }
 
   /*
@@ -78,68 +80,52 @@ public class ProxyResource {
   /*
    * Route a request to a particular dataCenter using the request group Id to locate the correct Singularity cluster
    */
-  public <T> T routeByRequestGroupId(HttpServletRequest request, String requestGroupId, TypeReference<T> clazz) {
-    return routeByRequestGroupId(request, requestGroupId, null, clazz);
-  }
-
-  public <T, Q> T routeByRequestGroupId(HttpServletRequest request, String requestGroupId, Q body, TypeReference<T> clazz) {
+  <T> T routeByRequestGroupId(HttpServletRequest request, String requestGroupId, TypeReference<T> clazz) {
     Map<String, String> headers = getHeaders(request);
     Map<String, String> params = getParams(request);
 
     DataCenter dataCenter = getDataCenterForRequestGroup(requestGroupId);
 
-    return proxyRequest(dataCenter, request, body, clazz, headers, params);
+    return proxyRequest(dataCenter, request, null, clazz, headers, params);
   }
 
   /*
    * Route a request to a particular dataCenter using the slaveId/hostname to locate the correct Singularity cluster
    */
-  public <T> T routeBySlaveId(HttpServletRequest request, String slaveId, TypeReference<T> clazz) {
-    return routeBySlaveId(request, slaveId, null, clazz);
-  }
-
-  public <T, Q> T routeBySlaveId(HttpServletRequest request, String slaveId, Q body, TypeReference<T> clazz) {
+  <T> T routeBySlaveId(HttpServletRequest request, String slaveId, TypeReference<T> clazz) {
     Map<String, String> headers = getHeaders(request);
     Map<String, String> params = getParams(request);
 
     DataCenter dataCenter = getDataCenterForSlaveId(slaveId);
 
-    return proxyRequest(dataCenter, request, body, clazz, headers, params);
+    return proxyRequest(dataCenter, request, null, clazz, headers, params);
   }
 
-  public <T> T routeByHostname(HttpServletRequest request, String hostname, TypeReference<T> clazz) {
-    return routeByHostname(request, hostname, null, clazz);
-  }
-
-  public <T, Q> T routeByHostname(HttpServletRequest request, String hostname, Q body, TypeReference<T> clazz) {
+  <T> T routeByHostname(HttpServletRequest request, String hostname, TypeReference<T> clazz) {
     Map<String, String> headers = getHeaders(request);
     Map<String, String> params = getParams(request);
 
     DataCenter dataCenter = getDataCenterForSlaveHostname(hostname);
 
-    return proxyRequest(dataCenter, request, body, clazz, headers, params);
+    return proxyRequest(dataCenter, request, null, clazz, headers, params);
   }
 
   /*
    * Route a request to a particular dataCenter using the rack ID to locate the correct Singularity cluster
    */
-  public <T> T routeByRackId(HttpServletRequest request, String rackId, TypeReference<T> clazz) {
-    return routeByRackId(request, rackId, null, clazz);
-  }
-
-  public <T, Q> T routeByRackId(HttpServletRequest request, String rackId, Q body, TypeReference<T> clazz) {
+  <T> T routeByRackId(HttpServletRequest request, String rackId, TypeReference<T> clazz) {
     Map<String, String> headers = getHeaders(request);
     Map<String, String> params = getParams(request);
 
     DataCenter dataCenter = getDataCenterForRackId(rackId);
 
-    return proxyRequest(dataCenter, request, body, clazz, headers, params);
+    return proxyRequest(dataCenter, request, null, clazz, headers, params);
   }
 
   /*
    * Route a request to a particular dataCenter by name, failing if it is not present
    */
-  public <T, Q> T routeByDataCenter(HttpServletRequest request, String dataCenterName, Q body, TypeReference<T> clazz) {
+  <T, Q> T routeByDataCenter(HttpServletRequest request, String dataCenterName, Q body, TypeReference<T> clazz) {
     Map<String, String> headers = getHeaders(request);
     Map<String, String> params = getParams(request);
 
@@ -151,11 +137,11 @@ public class ProxyResource {
   /*
    * Route to the default Singularity cluster
    */
-  public <T> T routeToDefaultDataCenter(HttpServletRequest request, TypeReference<T> clazz) {
+  <T> T routeToDefaultDataCenter(HttpServletRequest request, TypeReference<T> clazz) {
     return routeToDefaultDataCenter(request, null, clazz);
   }
 
-  public <T, Q> T routeToDefaultDataCenter(HttpServletRequest request, Q body, TypeReference<T> clazz) {
+  <T, Q> T routeToDefaultDataCenter(HttpServletRequest request, Q body, TypeReference<T> clazz) {
     Map<String, String> headers = getHeaders(request);
     Map<String, String> params = getParams(request);
 
@@ -168,38 +154,31 @@ public class ProxyResource {
    * Working with data centers
    */
   private String getHost(DataCenter dataCenter) {
-    // TODO
-    return null;
+    return dataCenterLocator.getHost(dataCenter);
   }
 
   private DataCenter getDataCenterForRequest(String requestId) {
-    // TODO
-    return null;
+    return dataCenterLocator.getDataCenterForRequest(requestId);
   }
 
   private DataCenter getDataCenterForRequestGroup(String requestGroupId) {
-    // TODO
-    return null;
+    return dataCenterLocator.getDataCenterForRequestGroup(requestGroupId);
   }
 
   private DataCenter getDataCenterForSlaveId(String slaveId) {
-    // TODO
-    return null;
+    return dataCenterLocator.getDataCenterForSlaveId(slaveId);
   }
 
   private DataCenter getDataCenterForSlaveHostname(String hostname) {
-    // TODO
-    return null;
+    return dataCenterLocator.getDataCenterForSlaveHostname(hostname);
   }
 
   private DataCenter getDataCenterForRackId(String rackId) {
-    // TODO
-    return null;
+    return dataCenterLocator.getDataCenterForRackId(rackId);
   }
 
   private DataCenter getDataCenter(String name) {
-    // TODO
-    return null;
+    return dataCenterLocator.getDataCenter(name);
   }
 
   /*
