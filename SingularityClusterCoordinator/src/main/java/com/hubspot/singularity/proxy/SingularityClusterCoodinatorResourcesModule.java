@@ -10,17 +10,17 @@ import com.google.inject.Provides;
 import com.google.inject.Scopes;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
+import com.hubspot.horizon.AsyncHttpClient;
 import com.hubspot.horizon.HttpClient;
 import com.hubspot.horizon.HttpConfig;
+import com.hubspot.horizon.ning.NingAsyncHttpClient;
 import com.hubspot.horizon.ning.NingHttpClient;
-import com.hubspot.singularity.SingularityAsyncHttpClient;
 import com.hubspot.singularity.SingularityClientCredentials;
 import com.hubspot.singularity.SingularityServiceBaseModule;
 import com.hubspot.singularity.client.SingularityClient;
 import com.hubspot.singularity.client.SingularityClientProvider;
 import com.hubspot.singularity.config.ClusterCoordinatorConfiguration;
 import com.hubspot.singularity.config.IndexViewConfiguration;
-import com.ning.http.client.AsyncHttpClient;
 
 import io.dropwizard.server.SimpleServerFactory;
 
@@ -33,7 +33,7 @@ public class SingularityClusterCoodinatorResourcesModule extends AbstractModule 
 
   @Override
   public void configure() {
-    bind(AsyncHttpClient.class).to(SingularityAsyncHttpClient.class).in(Scopes.SINGLETON);
+    bind(AsyncHttpClient.class).toInstance(new NingAsyncHttpClient());
     bind(DataCenterLocator.class).in(Scopes.SINGLETON);
 
     bind(DeployResource.class);

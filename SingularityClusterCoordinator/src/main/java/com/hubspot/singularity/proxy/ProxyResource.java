@@ -1,6 +1,5 @@
 package com.hubspot.singularity.proxy;
 
-import java.io.IOException;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
@@ -18,13 +17,13 @@ import org.slf4j.LoggerFactory;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Charsets;
 import com.google.inject.Inject;
+import com.hubspot.horizon.AsyncHttpClient;
+import com.hubspot.horizon.HttpRequest;
+import com.hubspot.horizon.HttpRequest.Method;
+import com.hubspot.horizon.HttpResponse;
 import com.hubspot.singularity.config.ClusterCoordinatorConfiguration;
 import com.hubspot.singularity.config.DataCenter;
-import com.ning.http.client.AsyncHttpClient;
-import com.ning.http.client.AsyncHttpClient.BoundRequestBuilder;
-import com.ning.http.client.Response;
 
 import io.dropwizard.server.SimpleServerFactory;
 
@@ -67,8 +66,11 @@ public class ProxyResource {
   }
 
   public <T, Q> List<T> getMergedListResult(HttpServletRequest request, Q body, TypeReference<List<T>> clazz) {
+    Map<String, String> headers = getHeaders(request);
+    Map<String, String> params = getParams(request);
+
     return configuration.getDataCenters().parallelStream()
-        .map((dc) -> proxyRequest(dc, request, body, clazz))
+        .map((dc) -> proxyRequest(dc, request, body, clazz, headers, params))
         .filter(Objects::nonNull)
         .flatMap(List::stream)
         .collect(Collectors.toList());
@@ -82,51 +84,69 @@ public class ProxyResource {
   }
 
   public <T, Q> T routeByRequestId(HttpServletRequest request, String requestId, Q body, TypeReference<T> clazz) {
+    Map<String, String> headers = getHeaders(request);
+    Map<String, String> params = getParams(request);
+
     DataCenter dataCenter = getDataCenterForRequest(requestId);
 
-    return proxyRequest(dataCenter, request, body, clazz);
+    return proxyRequest(dataCenter, request, body, clazz, headers, params);
   }
 
   /*
    * Route a request to a particular dataCenter using the request group Id to locate the correct Singularity cluster
    */
   <T> T routeByRequestGroupId(HttpServletRequest request, String requestGroupId, TypeReference<T> clazz) {
+    Map<String, String> headers = getHeaders(request);
+    Map<String, String> params = getParams(request);
+
     DataCenter dataCenter = getDataCenterForRequestGroup(requestGroupId);
 
-    return proxyRequest(dataCenter, request, null, clazz);
+    return proxyRequest(dataCenter, request, null, clazz, headers, params);
   }
 
   /*
    * Route a request to a particular dataCenter using the slaveId/hostname to locate the correct Singularity cluster
    */
   <T> T routeBySlaveId(HttpServletRequest request, String slaveId, TypeReference<T> clazz) {
+    Map<String, String> headers = getHeaders(request);
+    Map<String, String> params = getParams(request);
+
     DataCenter dataCenter = getDataCenterForSlaveId(slaveId);
 
-    return proxyRequest(dataCenter, request, null, clazz);
+    return proxyRequest(dataCenter, request, null, clazz, headers, params);
   }
 
   <T> T routeByHostname(HttpServletRequest request, String hostname, TypeReference<T> clazz) {
+    Map<String, String> headers = getHeaders(request);
+    Map<String, String> params = getParams(request);
+
     DataCenter dataCenter = getDataCenterForSlaveHostname(hostname);
 
-    return proxyRequest(dataCenter, request, null, clazz);
+    return proxyRequest(dataCenter, request, null, clazz, headers, params);
   }
 
   /*
    * Route a request to a particular dataCenter using the rack ID to locate the correct Singularity cluster
    */
   <T> T routeByRackId(HttpServletRequest request, String rackId, TypeReference<T> clazz) {
+    Map<String, String> headers = getHeaders(request);
+    Map<String, String> params = getParams(request);
+
     DataCenter dataCenter = getDataCenterForRackId(rackId);
 
-    return proxyRequest(dataCenter, request, null, clazz);
+    return proxyRequest(dataCenter, request, null, clazz, headers, params);
   }
 
   /*
    * Route a request to a particular dataCenter by name, failing if it is not present
    */
   <T, Q> T routeByDataCenter(HttpServletRequest request, String dataCenterName, Q body, TypeReference<T> clazz) {
+    Map<String, String> headers = getHeaders(request);
+    Map<String, String> params = getParams(request);
+
     DataCenter dataCenter = getDataCenter(dataCenterName);
 
-    return proxyRequest(dataCenter, request, body, clazz);
+    return proxyRequest(dataCenter, request, body, clazz, headers, params);
   }
 
   /*
@@ -137,9 +157,12 @@ public class ProxyResource {
   }
 
   <T, Q> T routeToDefaultDataCenter(HttpServletRequest request, Q body, TypeReference<T> clazz) {
+    Map<String, String> headers = getHeaders(request);
+    Map<String, String> params = getParams(request);
+
     DataCenter dataCenter = configuration.getDataCenters().get(0);
 
-    return proxyRequest(dataCenter, request, body, clazz);
+    return proxyRequest(dataCenter, request, body, clazz, headers, params);
   }
 
   /*
@@ -176,14 +199,14 @@ public class ProxyResource {
   /*
    * Generic methods for proxying requests
    */
-  private <T, Q> T proxyRequest(DataCenter dc, HttpServletRequest request, Q body, TypeReference<T> clazz) {
-    Map<String, String> headers = getHeaders(request);
-    Map<String, String> params = getParams(request);
+  private <T, Q> T proxyRequest(DataCenter dc, HttpServletRequest request, Q body, TypeReference<T> clazz, Map<String, String> headers, Map<String, String> params) {
     String fullPath = request.getContextPath() + request.getPathInfo();
     String url = String.format("%s://%s%s", dc.getScheme(), getHost(dc), fullPath.replace(contextPath, dc.getContextPath()));
 
-    LOG.debug("Proxying to: {}", url);
-    BoundRequestBuilder requestBuilder = startRequestBuilder(request.getMethod(), url);
+    LOG.trace("Proxying to: {}", url);
+    HttpRequest.Builder requestBuilder = HttpRequest.newBuilder()
+        .setMethod(Method.valueOf(request.getMethod()))
+        .setUrl(url);
     try {
       if (body != null) {
         requestBuilder.setBody(objectMapper.writeValueAsBytes(body));
@@ -194,49 +217,23 @@ public class ProxyResource {
       throw new WebApplicationException(jpe, 500);
     }
     headers.forEach(requestBuilder::addHeader);
-    params.forEach(requestBuilder::addQueryParameter);
+    params.forEach((k, v) -> requestBuilder.setQueryParam(k).to(v));
 
-    Response response;
+    HttpResponse response;
     try {
-      response = requestBuilder.execute().get();
-    } catch (IOException|InterruptedException|ExecutionException ioe) {
+      response = httpClient.execute(requestBuilder.build()).get();
+    } catch (InterruptedException|ExecutionException ioe) {
       LOG.error("Exception while processing request to {}", url, ioe);
       return null;
     }
 
-    try {
-
-      if (response.getStatusCode() > 399) {
-        LOG.error("Request to {} failed ({}:{})", url, response.getStatusCode(), response.getResponseBody(Charsets.UTF_8.toString()));
-        return null;
-      } else {
-        return objectMapper.readValue(response.getResponseBodyAsStream(), clazz);
-      }
-    } catch (IOException ioe) {
-      try {
-        LOG.info(response.getHeaders().toString());
-        LOG.warn("Bad response body: {}", response.getResponseBody(Charsets.UTF_8.toString()));
-      } catch (IOException io) {
-        LOG.error("Could not print response", io);
-      }
-      LOG.error("Request succeeded with status {}, but could not interpret response", response.getStatusCode(), ioe);
-    }
-
-    return null;
-  }
-
-  private BoundRequestBuilder startRequestBuilder(String method, String url) {
-    switch (method.toUpperCase()) {
-      case "GET":
-        return httpClient.prepareGet(url);
-      case "POST":
-        return httpClient.preparePost(url);
-      case "PUT":
-        return httpClient.preparePut(url);
-      case "DELETE":
-        return httpClient.prepareDelete(url);
-      default:
-        throw new WebApplicationException(String.format("Not meant to proxy request of method %s", method), 400);
+    if (response.getStatusCode() > 399) {
+      LOG.error("Request to {} failed ({}:{})", url, response.getStatusCode(), response.getAsString());
+      return null;
+    } else {
+      T object = response.getAs(clazz);
+      LOG.trace("Got response: {}", object);
+      return object;
     }
   }
 
