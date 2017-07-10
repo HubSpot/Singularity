@@ -22,7 +22,7 @@ steps:
     activeByDefault: false
     commands:
       - 'echo "cdn-publish"'
-      - node/node ./node_modules/.bin/bender-deps cdn-publish SingularityUI-$GIT_BRANCH@1.$MODULE_BUILD_NUMBER dist/static
+      - bender-deps cdn-publish SingularityUI-$GIT_BRANCH@1.$MODULE_BUILD_NUMBER dist/static
   - name: notify
     description: "publish-build-success"
     activeByDefault: false
