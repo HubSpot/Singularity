@@ -1,0 +1,29 @@
+buildDeps:
+  - hs-build-tools
+  - jdk8
+  - maven3
+
+env:
+  MAVEN_OPTS: -Xmx512m
+  HUBSPOT_ZK_ENVIRONMENT: local_local
+  MAVEN_TEST_HEAP: 512m
+
+steps:
+  - name: build
+    commands:
+      - mvn clean generate-resources
+  - name: publish
+    activeByDefault: false
+    commands:
+      - node/node node/npm/cli.js --globalconfig /usr/share/hubspot/jenkins-home/.npmrc install bender-deps
+      - ./node_modules/.bin/bender-deps cdn-publish SingularityUI-$GIT_BRANCH@1.$MODULE_BUILD_NUMBER dist/static
+  - name: notify
+    activeByDefault: false
+    commands:
+      - command: publish-build-success --project $BLAZAR_COORDINATES --build-num $MODULE_BUILD_NUMBER
+
+stepActivation:
+  publish:
+    branches: [hs_staging, hs_qa, hs_stable]
+  notify:
+    branches: [hs_staging, hs_qa, hs_stable]
