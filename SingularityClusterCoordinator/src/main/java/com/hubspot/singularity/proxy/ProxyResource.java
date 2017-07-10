@@ -22,6 +22,7 @@ import com.hubspot.horizon.AsyncHttpClient;
 import com.hubspot.horizon.HttpRequest;
 import com.hubspot.horizon.HttpRequest.Method;
 import com.hubspot.horizon.HttpResponse;
+import com.hubspot.singularity.config.ApiPaths;
 import com.hubspot.singularity.config.ClusterCoordinatorConfiguration;
 import com.hubspot.singularity.config.DataCenter;
 
@@ -54,7 +55,7 @@ public class ProxyResource {
     if (baseContextPath.endsWith("/")) {
       baseContextPath = baseContextPath.substring(0, baseContextPath.length() -1);
     }
-    this.contextPath = baseContextPath + "/api";
+    this.contextPath = baseContextPath + ApiPaths.API_BASE_PATH;
   }
 
   /*
