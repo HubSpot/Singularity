@@ -7,11 +7,17 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 public class RequestUtilization {
   private final String requestId;
   private final String deployId;
+
   private long memBytesUsed = 0;
   private long memBytesReserved = 0;
   private double cpuUsed = 0;
   private double cpuReserved = 0;
   private int numTasks = 0;
+
+  private long maxMemBytesUsed = 0;
+  private long minMemBytesUsed = Long.MAX_VALUE;
+  private double maxCpuUsed = 0;
+  private double minCpuUsed = Double.MAX_VALUE;
 
   @JsonCreator
   public RequestUtilization(@JsonProperty("requestId") String requestId,
@@ -81,6 +87,42 @@ public class RequestUtilization {
 
   public String getRequestId() {
     return requestId;
+  }
+
+  public long getMaxMemBytesUsed() {
+    return maxMemBytesUsed;
+  }
+
+  public RequestUtilization setMaxMemBytesUsed(long maxMemBytesUsed) {
+    this.maxMemBytesUsed = maxMemBytesUsed;
+    return this;
+  }
+
+  public double getMaxCpuUsed() {
+    return maxCpuUsed;
+  }
+
+  public RequestUtilization setMaxCpuUsed(double maxCpuUsed) {
+    this.maxCpuUsed = maxCpuUsed;
+    return this;
+  }
+
+  public long getMinMemBytesUsed() {
+    return minMemBytesUsed;
+  }
+
+  public RequestUtilization setMinMemBytesUsed(long minMemBytesUsed) {
+    this.minMemBytesUsed = minMemBytesUsed;
+    return this;
+  }
+
+  public double getMinCpuUsed() {
+    return minCpuUsed;
+  }
+
+  public RequestUtilization setMinCpuUsed(double minCpuUsed) {
+    this.minCpuUsed = minCpuUsed;
+    return this;
   }
 
   @Override
