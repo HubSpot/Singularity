@@ -1,7 +1,7 @@
 import React from 'react';
-import classNames from 'classnames';
+import Checkbox from 'react-bootstrap/lib/Checkbox';
 
-class NewTasksDropdown extends React.Component  {
+class NewTasksDropdown extends React.Component {
 
   renderTaskItems() {
     if (!this.props.ready || !this.props.runningTasks) {
@@ -13,18 +13,21 @@ class NewTasksDropdown extends React.Component  {
     }
 
     return this.props.runningTasks.map((task, key) => {
-      const checkedClass = this.props.visibleTasks.includes(task.taskId.id)
-        ? 'glyphicon-check'
-        : 'glyphicon-unchecked';
-
-      return (<li key={key}>
-          <a onClick={() => this.props.onToggle(task.taskId.id)}>
-              <span className={classNames('glyphicon', checkedClass)} />
-              <span>Instance {task.taskId.instanceNo}</span>
+      return (
+        <li key={key}>
+          <a>
+            <Checkbox
+              inline={true}
+              checked={this.props.visibleTasks.includes(task.taskId.id)}
+              onClick={() => this.props.onToggle(task.taskId.id)}
+            >
+              Instance {task.taskId.instanceNo}
+            </Checkbox>
           </a>
-      </li>);
+        </li>
+      );
     });
-  };
+  }
 
   render() {
     return (
@@ -38,7 +41,7 @@ class NewTasksDropdown extends React.Component  {
       </div>
     );
   }
-};
+}
 
 NewTasksDropdown.propTypes = {
   ready: React.PropTypes.bool,
