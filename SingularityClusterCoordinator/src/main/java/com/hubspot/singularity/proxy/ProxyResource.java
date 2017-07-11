@@ -87,7 +87,10 @@ public class ProxyResource {
           }
         }
 
-        combined.addAll(response.getAs(new TypeReference<List<Object>>() {}));
+        List<Object> content = response.getAs(new TypeReference<List<Object>>() {});
+        LOG.trace("Data center {} had response {}", dataCenter.getName(), content);
+
+        combined.addAll(content);
       } catch (RuntimeException re) {
         LOG.error("Could not get data from dataCenter {}, omitting", dataCenter.getName(), re);
       }
@@ -227,7 +230,7 @@ public class ProxyResource {
     String fullPath = request.getContextPath() + request.getPathInfo();
     String url = String.format("%s://%s%s", dc.getScheme(), getHost(dc), fullPath.replace(contextPath, dc.getContextPath()));
 
-    LOG.trace("Proxying to: {}", url);
+    LOG.debug("Proxying {} to: {}", fullPath, url);
     HttpRequest.Builder requestBuilder = HttpRequest.newBuilder()
         .setMethod(Method.valueOf(request.getMethod()))
         .setUrl(url);
