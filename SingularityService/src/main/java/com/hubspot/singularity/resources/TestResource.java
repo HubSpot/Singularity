@@ -19,7 +19,7 @@ import com.google.inject.Inject;
 import com.hubspot.singularity.SingularityAbort;
 import com.hubspot.singularity.SingularityAbort.AbortReason;
 import com.hubspot.singularity.SingularityLeaderController;
-import com.hubspot.singularity.SingularityService;
+import com.hubspot.singularity.config.ApiPaths;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.history.SingularityHistoryPurger;
 import com.hubspot.singularity.mesos.SingularityMesosScheduler;
@@ -27,12 +27,10 @@ import com.hubspot.singularity.scheduler.SingularityTaskReconciliation;
 import com.wordnik.swagger.annotations.Api;
 import com.wordnik.swagger.annotations.ApiOperation;
 
-@Path(TestResource.PATH)
+@Path(ApiPaths.TEST_RESOURCE_PATH)
 @Produces({ MediaType.APPLICATION_JSON })
-@Api(description="Misc testing endpoints.", value=TestResource.PATH)
+@Api(description="Misc testing endpoints.", value=ApiPaths.TEST_RESOURCE_PATH)
 public class TestResource {
-  public static final String PATH = SingularityService.API_BASE_PATH + "/test";
-
   private final SingularityAbort abort;
   private final SingularityLeaderController managed;
   private final SingularityConfiguration configuration;
