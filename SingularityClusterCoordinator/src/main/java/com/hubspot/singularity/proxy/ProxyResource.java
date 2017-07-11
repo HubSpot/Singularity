@@ -284,7 +284,7 @@ public class ProxyResource {
     return builder.build();
   }
 
-  private class Param {
+  private static class Param {
     private final String key;
     private final String value;
 
