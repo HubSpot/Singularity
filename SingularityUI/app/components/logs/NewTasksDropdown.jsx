@@ -31,19 +31,21 @@ class NewTasksDropdown extends React.Component {
 
     const listItems = [];
 
-    listItems.push(
-      <li key="select-all">
-        <a>
-          <Checkbox
-            inline={true}
-            checked={this.props.visibleTasks.length === this.props.runningTasks.length}
-            onChange={() => this.handleSelectAll()}
-          >
-            Select All
-          </Checkbox>
-        </a>
-      </li>
-    );
+    if (this.props.runningTasks.length > 1) {
+      listItems.push(
+        <li key="select-all">
+          <a>
+            <Checkbox
+              inline={true}
+              checked={this.props.visibleTasks.length === this.props.runningTasks.length}
+              onChange={() => this.handleSelectAll()}
+            >
+              Select All
+            </Checkbox>
+          </a>
+        </li>
+      );
+    }
 
     listItems.push(this.props.runningTasks.map((task, key) => {
       return (
