@@ -1,8 +1,10 @@
 package com.hubspot.singularity.mesos;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
@@ -309,7 +311,9 @@ public class SingularityMesosSchedulerImpl extends SingularityMesosScheduler {
   }
 
   public void start() throws Exception {
-    mesosSchedulerClient.subscribe(configuration.getMesosConfiguration().getMaster(), this);
+    // If more than one host is provided choose at random, we will be redirected if the host is not the master
+    List<String> masters = Arrays.asList(configuration.getMesosConfiguration().getMaster().split(","));
+    mesosSchedulerClient.subscribe(masters.get(new Random().nextInt(masters.size())), this);
   }
 
   private void callWithLock(Runnable function, String name) {
