@@ -29,7 +29,7 @@ import com.hubspot.singularity.api.SingularityKillTaskRequest;
 import com.hubspot.singularity.api.SingularityTaskMetadataRequest;
 import com.hubspot.singularity.config.ApiPaths;
 
-@Path(ApiPaths.TEST_RESOURCE_PATH)
+@Path(ApiPaths.TASK_RESOURCE_PATH)
 @Produces({ MediaType.APPLICATION_JSON })
 public class TaskResource extends ProxyResource {
 
