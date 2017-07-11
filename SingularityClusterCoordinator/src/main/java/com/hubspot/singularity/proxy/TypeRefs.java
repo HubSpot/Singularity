@@ -9,6 +9,7 @@ import com.google.common.base.Optional;
 import com.hubspot.mesos.json.MesosFileChunkObject;
 import com.hubspot.mesos.json.MesosTaskStatisticsObject;
 import com.hubspot.singularity.SingularityDeployHistory;
+import com.hubspot.singularity.SingularityDeployUpdate;
 import com.hubspot.singularity.SingularityKilledTaskIdRecord;
 import com.hubspot.singularity.SingularityMachineStateHistoryUpdate;
 import com.hubspot.singularity.SingularityPaginatedResponse;
@@ -31,6 +32,7 @@ import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskCleanup;
 import com.hubspot.singularity.SingularityTaskCurrentUsageWithId;
 import com.hubspot.singularity.SingularityTaskHistory;
+import com.hubspot.singularity.SingularityTaskHistoryUpdate;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTaskIdHistory;
 import com.hubspot.singularity.SingularityTaskRequest;
@@ -39,6 +41,8 @@ import com.hubspot.singularity.SingularityTaskState;
 import com.hubspot.singularity.SingularityTaskUsage;
 import com.hubspot.singularity.SingularityUserHolder;
 import com.hubspot.singularity.SingularityUserSettings;
+import com.hubspot.singularity.SingularityWebhook;
+import com.hubspot.singularity.SingularityWebhookSummary;
 import com.hubspot.singularity.expiring.SingularityExpiringMachineState;
 
 public class TypeRefs {
@@ -54,6 +58,7 @@ public class TypeRefs {
   public static final TypeReference<SingularityDeployHistory> DEPLOY_HISTORY_REF = new TypeReference<SingularityDeployHistory>() {};
   public static final TypeReference<List<SingularityDeployHistory>> DEPLOY_HISTORY_LIST_REF = new TypeReference<List<SingularityDeployHistory>>() {};
   public static final TypeReference<SingularityPaginatedResponse<SingularityDeployHistory>> PAGINATED_DEPLOY_HISTORY_REF = new TypeReference<SingularityPaginatedResponse<SingularityDeployHistory>>() {};
+  public static final TypeReference<List<SingularityDeployUpdate>> DEPLOY_UPDATE_LIST_REF = new TypeReference<List<SingularityDeployUpdate>>() {};
 
   public static final TypeReference<SingularityPendingRequestParent> PENDING_REQUEST_PARENT_REF = new TypeReference<SingularityPendingRequestParent>() {};
   public static final TypeReference<List<SingularityPendingRequest>> PENDING_REQUEST_LIST_REF = new TypeReference<List<SingularityPendingRequest>>() {};
@@ -84,6 +89,7 @@ public class TypeRefs {
   public static final TypeReference<Optional<SingularityTaskCleanup>> OPTIONAL_TASK_CLEANUP_REF = new TypeReference<Optional<SingularityTaskCleanup>>() {};
   public static final TypeReference<List<SingularityTaskCleanup>> TASK_CLEANUP_LIST_REF = new TypeReference<List<SingularityTaskCleanup>>() {};
   public static final TypeReference<List<SingularityKilledTaskIdRecord>> TASK_KILLED_LIST_REF = new TypeReference<List<SingularityKilledTaskIdRecord>>() {};
+  public static final TypeReference<List<SingularityTaskHistoryUpdate>> TASK_HISTORY_UPDATE_LIST_REF = new TypeReference<List<SingularityTaskHistoryUpdate>>() {};
 
   public static final TypeReference<SingularityTaskShellCommandRequest> SHELL_COMMAND_REF = new TypeReference<SingularityTaskShellCommandRequest>() {};
   public static final TypeReference<List<SingularityTaskShellCommandRequest>> SHELL_COMMAND_LIST_REF = new TypeReference<List<SingularityTaskShellCommandRequest>>() {};
@@ -105,4 +111,8 @@ public class TypeRefs {
 
   public static final TypeReference<SingularitySandbox> SANDBOX_REF = new TypeReference<SingularitySandbox>() {};
   public static final TypeReference<MesosFileChunkObject> FILE_CHUNK_REF = new TypeReference<MesosFileChunkObject>() {};
+
+  public static final TypeReference<List<SingularityWebhook>> WEBHOOK_LIST_REF = new TypeReference<List<SingularityWebhook>>() {};
+  public static final TypeReference<List<SingularityWebhookSummary>> WEBHOOK_SUMMARY_LIST_REF = new TypeReference<List<SingularityWebhookSummary>>() {};
+  public static final TypeReference<SingularityWebhook> WEBHOOK_REF = new TypeReference<SingularityWebhook>() {};
 }
