@@ -1,7 +1,7 @@
 package com.hubspot.singularity.proxy;
 
+import java.util.ArrayList;
 import java.util.Enumeration;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
@@ -70,8 +70,8 @@ public class ProxyResource {
   }
 
   public <T> Response getMergedListResult(HttpServletRequest request, T body) {
-    Map<String, String> headers = getHeaders(request);
-    Map<String, String> params = getParams(request);
+    List<Param> headers = getHeaders(request);
+    List<Param> params = getParams(request);
 
     // TODO - parallelize
     List<Object> combined = Lists.newArrayList();
@@ -111,8 +111,8 @@ public class ProxyResource {
   }
 
   public <T> Response routeByRequestId(HttpServletRequest request, String requestId, T body) {
-    Map<String, String> headers = getHeaders(request);
-    Map<String, String> params = getParams(request);
+    List<Param> headers = getHeaders(request);
+    List<Param> params = getParams(request);
 
     DataCenter dataCenter = getDataCenterForRequest(requestId);
 
@@ -123,8 +123,8 @@ public class ProxyResource {
    * Route a request to a particular dataCenter using the request group Id to locate the correct Singularity cluster
    */
   Response routeByRequestGroupId(HttpServletRequest request, String requestGroupId) {
-    Map<String, String> headers = getHeaders(request);
-    Map<String, String> params = getParams(request);
+    List<Param> headers = getHeaders(request);
+    List<Param> params = getParams(request);
 
     DataCenter dataCenter = getDataCenterForRequestGroup(requestGroupId);
 
@@ -135,8 +135,8 @@ public class ProxyResource {
    * Route a request to a particular dataCenter using the slaveId/hostname to locate the correct Singularity cluster
    */
   Response routeBySlaveId(HttpServletRequest request, String slaveId) {
-    Map<String, String> headers = getHeaders(request);
-    Map<String, String> params = getParams(request);
+    List<Param> headers = getHeaders(request);
+    List<Param> params = getParams(request);
 
     DataCenter dataCenter = getDataCenterForSlaveId(slaveId);
 
@@ -144,8 +144,8 @@ public class ProxyResource {
   }
 
   Response routeByHostname(HttpServletRequest request, String hostname) {
-    Map<String, String> headers = getHeaders(request);
-    Map<String, String> params = getParams(request);
+    List<Param> headers = getHeaders(request);
+    List<Param> params = getParams(request);
 
     DataCenter dataCenter = getDataCenterForSlaveHostname(hostname);
 
@@ -156,8 +156,8 @@ public class ProxyResource {
    * Route a request to a particular dataCenter using the rack ID to locate the correct Singularity cluster
    */
   Response routeByRackId(HttpServletRequest request, String rackId) {
-    Map<String, String> headers = getHeaders(request);
-    Map<String, String> params = getParams(request);
+    List<Param> headers = getHeaders(request);
+    List<Param> params = getParams(request);
 
     DataCenter dataCenter = getDataCenterForRackId(rackId);
 
@@ -168,8 +168,8 @@ public class ProxyResource {
    * Route a request to a particular dataCenter by name, failing if it is not present
    */
   <T> Response routeByDataCenter(HttpServletRequest request, String dataCenterName, T body) {
-    Map<String, String> headers = getHeaders(request);
-    Map<String, String> params = getParams(request);
+    List<Param> headers = getHeaders(request);
+    List<Param> params = getParams(request);
 
     DataCenter dataCenter = getDataCenter(dataCenterName);
 
@@ -184,8 +184,8 @@ public class ProxyResource {
   }
 
   <T> Response routeToDefaultDataCenter(HttpServletRequest request, T body) {
-    Map<String, String> headers = getHeaders(request);
-    Map<String, String> params = getParams(request);
+    List<Param> headers = getHeaders(request);
+    List<Param> params = getParams(request);
 
     DataCenter dataCenter = configuration.getDataCenters().get(0);
 
@@ -226,7 +226,7 @@ public class ProxyResource {
   /*
    * Generic methods for proxying requests
    */
-  private <T> HttpResponse proxyAndGetResponse(DataCenter dc, HttpServletRequest request, T body, Map<String, String> headers, Map<String, String> params) {
+  private <T> HttpResponse proxyAndGetResponse(DataCenter dc, HttpServletRequest request, T body, List<Param> headers, List<Param> params) {
     String fullPath = request.getContextPath() + request.getPathInfo();
     String url = String.format("%s://%s%s", dc.getScheme(), getHost(dc), fullPath.replace(contextPath, dc.getContextPath()));
 
@@ -243,8 +243,8 @@ public class ProxyResource {
       LOG.error("Could not write body from object {}", body);
       throw new WebApplicationException(jpe, 500);
     }
-    headers.forEach(requestBuilder::addHeader);
-    params.forEach((k, v) -> requestBuilder.setQueryParam(k).to(v));
+    headers.forEach((h) -> requestBuilder.addHeader(h.getKey(), h.getValue()));
+    params.forEach((h) -> requestBuilder.setQueryParam(h.getKey()).to(h.getValue()));
 
     try {
       return httpClient.execute(requestBuilder.build()).get();
@@ -253,7 +253,7 @@ public class ProxyResource {
     }
   }
 
-  private <T, Q> T proxyAndGetResponseAs(DataCenter dc, HttpServletRequest request, Q body, TypeReference<T> clazz, Map<String, String> headers, Map<String, String> params) {
+  private <T, Q> T proxyAndGetResponseAs(DataCenter dc, HttpServletRequest request, Q body, TypeReference<T> clazz, List<Param> headers, List<Param> params) {
     HttpResponse response = proxyAndGetResponse(dc, request, body, headers, params);
     if (response.getStatusCode() > 399) {
       throw new WebApplicationException(response.getAsString(), response.getStatusCode());
@@ -269,29 +269,27 @@ public class ProxyResource {
     }
   }
 
-  private Map<String, String> getHeaders(HttpServletRequest request) {
-    Map<String, String> headers = new HashMap<>();
+  private List<Param> getHeaders(HttpServletRequest request) {
+    List<Param> headers = new ArrayList<>();
     Enumeration<String> headerNames = request.getHeaderNames();
     if (headerNames != null) {
       while (headerNames.hasMoreElements()) {
         String headerName = headerNames.nextElement();
-        headers.put(headerName, request.getHeader(headerName));
+        headers.add(new Param(headerName, request.getHeader(headerName)));
       }
     }
     LOG.trace("Found headers: {}", headers);
     return headers;
   }
 
-  private Map<String, String> getParams(HttpServletRequest request) {
-    Map<String, String> params = new HashMap<>();
-    Enumeration<String> parameterNames = request.getParameterNames();
-    if (parameterNames != null) {
-      while (parameterNames.hasMoreElements()) {
-        String parameterName = parameterNames.nextElement();
-        params.put(parameterName, request.getParameter(parameterName));
+  private List<Param> getParams(HttpServletRequest request) {
+    List<Param> params = new ArrayList<>();
+    for (Map.Entry<String, String[]> entry : request.getParameterMap().entrySet()) {
+      for (String value : entry.getValue()) {
+        params.add(new Param(entry.getKey(), value));
       }
     }
-    LOG.trace("Found query params: {}", params);
+    LOG.trace("Found params {}", params);
     return params;
   }
 
@@ -300,5 +298,23 @@ public class ProxyResource {
         .entity(original.getAsString());
     original.getHeaders().forEach((h) -> builder.header(h.getName(), h.getValue()));
     return builder.build();
+  }
+
+  private class Param {
+    private final String key;
+    private final String value;
+
+    Param(String key, String value) {
+      this.key = key;
+      this.value = value;
+    }
+
+    String getKey() {
+      return key;
+    }
+
+    String getValue() {
+      return value;
+    }
   }
 }
