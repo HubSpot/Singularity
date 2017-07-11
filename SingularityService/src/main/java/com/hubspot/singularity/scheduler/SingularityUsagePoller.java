@@ -124,7 +124,7 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
           if (!pastTaskUsages.isEmpty()) {
             SingularityTaskUsage lastUsage = pastTaskUsages.get(pastTaskUsages.size() - 1);
 
-            double taskCpusUsed = ((latestUsage.getCpuSeconds() - lastUsage.getCpuSeconds()) / (latestUsage.getTimestamp() - lastUsage.getTimestamp()));
+            double taskCpusUsed = ((latestUsage.getCpuSeconds() - lastUsage.getCpuSeconds()) / (latestUsage.getTimestampSeconds() - lastUsage.getTimestampSeconds()));
 
             if (isLongRunning(task) ||  isConsideredLongRunning(task)) {
               updateLongRunningTasksUsage(longRunningTasksUsage, latestUsage.getMemoryTotalBytes(), taskCpusUsed);
@@ -183,7 +183,7 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
   private SingularityTaskUsage getUsage(MesosTaskMonitorObject taskUsage) {
     double cpuSeconds = taskUsage.getStatistics().getCpusSystemTimeSecs() + taskUsage.getStatistics().getCpusUserTimeSecs();
 
-    return new SingularityTaskUsage(taskUsage.getStatistics().getMemTotalBytes(), taskUsage.getStatistics().getTimestamp(), cpuSeconds);
+    return new SingularityTaskUsage(taskUsage.getStatistics().getMemTotalBytes(), taskUsage.getStatistics().getTimestampSeconds(), cpuSeconds);
   }
 
   private boolean isLongRunning(SingularityTaskId task) {
@@ -229,8 +229,7 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
     for (int i = 0; i < numTasks; i++) {
       SingularityTaskUsage olderUsage = pastTaskUsagesCopy.get(i);
       SingularityTaskUsage newerUsage = pastTaskUsagesCopy.get(i + 1);
-      double cpusUsed = (newerUsage.getCpuSeconds() - olderUsage.getCpuSeconds()) / (newerUsage.getTimestamp() - olderUsage.getTimestamp());
-      LOG.trace("cpusUsed {} -- newerUsageCpuSeconds {} - olderUsageCpuSeconds {} - newerUsageTimestamp {} - olderUsageTimestamp {}", cpusUsed, newerUsage.getCpuSeconds(), olderUsage.getCpuSeconds(), newerUsage.getTimestamp(), olderUsage.getTimestamp());
+      double cpusUsed = (newerUsage.getCpuSeconds() - olderUsage.getCpuSeconds()) / (newerUsage.getTimestampSeconds() - olderUsage.getTimestampSeconds());
 
       requestUtilization
           .addCpuUsed(cpusUsed)
@@ -251,7 +250,7 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
 
   private List<SingularityTaskUsage> copyUsages(List<SingularityTaskUsage> pastTaskUsages, SingularityTaskUsage latestUsage, SingularityTaskId task) {
     List<SingularityTaskUsage> pastTaskUsagesCopy = new ArrayList<>();
-    pastTaskUsagesCopy.add(new SingularityTaskUsage(0, task.getStartedAt(), 0)); // to calculate oldest cpu usage
+    pastTaskUsagesCopy.add(new SingularityTaskUsage(0, TimeUnit.MILLISECONDS.toSeconds(task.getStartedAt()), 0)); // to calculate oldest cpu usage
     pastTaskUsagesCopy.addAll(pastTaskUsages);
     pastTaskUsagesCopy.add(latestUsage);
 
@@ -345,16 +344,16 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
   @VisibleForTesting
   void clearOldUsage(List<SingularityTaskUsage> taskUsages, String taskId) {
     if (taskUsages.size() + 1 > configuration.getNumUsageToKeep()) {
-      long minMillisApart = configuration.getUsageIntervalMultiplier() * configuration.getCheckUsageEveryMillis();
+      long minSecondsApart = configuration.getUsageIntervalMultiplier() * TimeUnit.MILLISECONDS.toSeconds(configuration.getCheckUsageEveryMillis());
 
       for (int i = 0; i < taskUsages.size() - 1; i++) {
-        if (taskUsages.get(i + 1).getTimestamp() - taskUsages.get(i).getTimestamp() < minMillisApart) {
-          usageManager.deleteSpecificTaskUsage(taskId, taskUsages.get(i + 1).getTimestamp());
+        if (taskUsages.get(i + 1).getTimestampSeconds() - taskUsages.get(i).getTimestampSeconds() < minSecondsApart) {
+          usageManager.deleteSpecificTaskUsage(taskId, taskUsages.get(i + 1).getTimestampSeconds());
           return;
         }
       }
 
-      usageManager.deleteSpecificTaskUsage(taskId, taskUsages.get(0).getTimestamp());
+      usageManager.deleteSpecificTaskUsage(taskId, taskUsages.get(0).getTimestampSeconds());
     }
   }
 }
