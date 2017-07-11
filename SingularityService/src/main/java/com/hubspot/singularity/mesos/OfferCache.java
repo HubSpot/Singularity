@@ -26,6 +26,4 @@ public interface OfferCache {
 
   public void enableOfferCache();
 
-  public void cleanUp();
-
 }
