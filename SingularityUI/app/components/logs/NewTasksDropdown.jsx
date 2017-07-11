@@ -1,7 +1,24 @@
 import React from 'react';
 import Checkbox from 'react-bootstrap/lib/Checkbox';
 import {ButtonGroup, DropdownButton} from 'react-bootstrap';
+
 class NewTasksDropdown extends React.Component {
+
+  handleSelectAll() {
+    if (this.props.visibleTasks.length === this.props.runningTasks.length) {
+      _.rest(this.props.runningTasks).forEach((task) => {
+        if (this.props.visibleTasks.includes(task.taskId.id)) {
+          this.props.onToggle(task.taskId.id);
+        }
+      });
+    } else {
+      this.props.runningTasks.forEach((task) => {
+        if (!this.props.visibleTasks.includes(task.taskId.id)) {
+          this.props.onToggle(task.taskId.id);
+        }
+      });
+    }
+  }
 
   renderTaskItems() {
     if (!this.props.ready || !this.props.runningTasks) {
@@ -13,6 +30,20 @@ class NewTasksDropdown extends React.Component {
     }
 
     const listItems = [];
+
+    listItems.push(
+      <li key="select-all">
+        <a>
+          <Checkbox
+            inline={true}
+            checked={this.props.visibleTasks.length === this.props.runningTasks.length}
+            onChange={() => this.handleSelectAll()}
+          >
+            Select All
+          </Checkbox>
+        </a>
+      </li>
+    );
 
     listItems.push(this.props.runningTasks.map((task, key) => {
       return (
