@@ -25,6 +25,8 @@ import com.hubspot.singularity.config.IndexViewConfiguration;
 import io.dropwizard.server.SimpleServerFactory;
 
 public class SingularityClusterCoodinatorResourcesModule extends AbstractModule {
+  public static final String ASYNC_HTTP_CLIENT = "singularity.async.http.client";
+
   private final ClusterCoordinatorConfiguration configuration;
 
   public SingularityClusterCoodinatorResourcesModule(ClusterCoordinatorConfiguration configuration) {
@@ -33,7 +35,6 @@ public class SingularityClusterCoodinatorResourcesModule extends AbstractModule 
 
   @Override
   public void configure() {
-    bind(AsyncHttpClient.class).toInstance(new NingAsyncHttpClient());
     bind(DataCenterLocator.class).in(Scopes.SINGLETON);
 
     bind(DeployResource.class);
@@ -83,6 +84,13 @@ public class SingularityClusterCoodinatorResourcesModule extends AbstractModule 
   public String getSingularityUriBase() {
     final String singularityUiPrefix = configuration.getUiConfiguration().getBaseUrl().or(((SimpleServerFactory) configuration.getServerFactory()).getApplicationContextPath());
     return (singularityUiPrefix.endsWith("/")) ?  singularityUiPrefix.substring(0, singularityUiPrefix.length() - 1) : singularityUiPrefix;
+  }
+
+  @Provides
+  @Singleton
+  @Named(ASYNC_HTTP_CLIENT)
+  public AsyncHttpClient provideAsyncHttpClient(ObjectMapper objectMapper) {
+    return new NingAsyncHttpClient(HttpConfig.newBuilder().setObjectMapper(objectMapper).build());
   }
 
   @Provides

@@ -18,6 +18,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Inject;
+import com.google.inject.name.Named;
 import com.hubspot.horizon.AsyncHttpClient;
 import com.hubspot.horizon.HttpRequest;
 import com.hubspot.horizon.HttpRequest.Method;
@@ -41,7 +42,7 @@ public class ProxyResource {
 
   @Inject
   void injectProxyDeps(ClusterCoordinatorConfiguration configuration,
-                       AsyncHttpClient httpClient,
+                       @Named(SingularityClusterCoodinatorResourcesModule.ASYNC_HTTP_CLIENT) AsyncHttpClient httpClient,
                        ObjectMapper objectMapper,
                        DataCenterLocator dataCenterLocator) {
     this.configuration = configuration;
