@@ -7,11 +7,10 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 
-import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.hubspot.singularity.SingularityTaskId;
-import com.hubspot.singularity.SingularityTaskState;
 import com.hubspot.singularity.config.ApiPaths;
 
 @Path(ApiPaths.TASK_TRACKER_RESOURCE_PATH)
@@ -23,14 +22,14 @@ public class TaskTrackerResource extends ProxyResource {
 
   @GET
   @Path("/task/{taskId}")
-  public Optional<SingularityTaskState> getTaskState(@Context HttpServletRequest request, @PathParam("taskId") String taskId) {
+  public Response getTaskState(@Context HttpServletRequest request, @PathParam("taskId") String taskId) {
     SingularityTaskId parsedId = SingularityTaskId.valueOf(taskId);
-    return routeByRequestId(request, parsedId.getRequestId(), TypeRefs.OPTIONAL_TASK_STATE_REF);
+    return routeByRequestId(request, parsedId.getRequestId());
   }
 
   @GET
   @Path("/run/{requestId}/{runId}")
-  public Optional<SingularityTaskState> getTaskStateByRunId(@Context HttpServletRequest request, @PathParam("requestId") String requestId, @PathParam("runId") String runId) {
-    return routeByRequestId(request, requestId, TypeRefs.OPTIONAL_TASK_STATE_REF);
+  public Response getTaskStateByRunId(@Context HttpServletRequest request, @PathParam("requestId") String requestId, @PathParam("runId") String runId) {
+    return routeByRequestId(request, requestId);
   }
 }

@@ -1,7 +1,5 @@
 package com.hubspot.singularity.proxy;
 
-import java.util.List;
-
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -13,7 +11,6 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
-import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.hubspot.singularity.SingularityRequestGroup;
 import com.hubspot.singularity.config.ApiPaths;
@@ -26,27 +23,27 @@ public class RequestGroupResource extends ProxyResource {
   public RequestGroupResource() {}
 
   @GET
-  public List<SingularityRequestGroup> getRequestGroupIds(@Context HttpServletRequest request) {
-    return getMergedListResult(request, TypeRefs.REQUEST_GROUP_LIST_REF);
+  public Response getRequestGroupIds(@Context HttpServletRequest request) {
+    return getMergedListResult(request);
   }
 
   @GET
   @Path("/group/{requestGroupId}")
-  public Optional<SingularityRequestGroup> getRequestGroup(@Context HttpServletRequest request, @PathParam("requestGroupId") String requestGroupId) {
-    return routeByRequestGroupId(request, requestGroupId, TypeRefs.OPTIONAL_REQUEST_GROUP_REF);
+  public Response getRequestGroup(@Context HttpServletRequest request, @PathParam("requestGroupId") String requestGroupId) {
+    return routeByRequestGroupId(request, requestGroupId);
   }
 
   @DELETE
   @Path("/group/{requestGroupId}")
   public Response deleteRequestGroup(@Context HttpServletRequest request, @PathParam("requestGroupId") String requestGroupId) {
-    return routeByRequestGroupId(request, requestGroupId, TypeRefs.RESPONSE_REF);
+    return routeByRequestGroupId(request, requestGroupId);
   }
 
   @POST
-  public SingularityRequestGroup saveRequestGroup(@Context HttpServletRequest request, SingularityRequestGroup requestGroup) {
+  public Response saveRequestGroup(@Context HttpServletRequest request, SingularityRequestGroup requestGroup) {
     // TODO - route by more than first request id?
     // TODO - add to internal list of groups?
     // TODO - error if list is empty?
-    return routeByRequestId(request, requestGroup.getRequestIds().get(0), TypeRefs.REQUEST_GROUP_REF);
+    return routeByRequestId(request, requestGroup.getRequestIds().get(0));
   }
 }

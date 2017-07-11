@@ -1,7 +1,5 @@
 package com.hubspot.singularity.proxy;
 
-import java.util.List;
-
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -13,15 +11,11 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 
 import com.google.common.base.Optional;
 import com.google.inject.Inject;
-import com.hubspot.singularity.SingularityPendingRequest;
-import com.hubspot.singularity.SingularityPendingRequestParent;
 import com.hubspot.singularity.SingularityRequest;
-import com.hubspot.singularity.SingularityRequestCleanup;
-import com.hubspot.singularity.SingularityRequestParent;
-import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.api.SingularityBounceRequest;
 import com.hubspot.singularity.api.SingularityDeleteRequestRequest;
 import com.hubspot.singularity.api.SingularityExitCooldownRequest;
@@ -44,24 +38,24 @@ public class RequestResource extends ProxyResource {
 
   @POST
   @Consumes({ MediaType.APPLICATION_JSON })
-  public SingularityRequestParent postRequest(@Context HttpServletRequest requestContext, SingularityRequest request) {
+  public Response postRequest(@Context HttpServletRequest requestContext, SingularityRequest request) {
     Optional<DataCenter> maybeDataCenter = dataCenterLocator.getMaybeDataCenterForRequest(request.getId());
     if (maybeDataCenter.isPresent()) {
       if (request.getDataCenter().isPresent() && !request.getDataCenter().get().equals(maybeDataCenter.get().getName())) {
         throw new DataCenterConflictException(String.format("Cannot create request with id %s in multiple datacenters (requested: %s), already found in %s", request.getId(), request.getDataCenter().get(), maybeDataCenter.get().getName()));
       }
-      return routeByDataCenter(requestContext, request.getDataCenter().get(), request, TypeRefs.REQUEST_PARENT_REF);
+      return routeByDataCenter(requestContext, request.getDataCenter().get(), request);
     }
 
     if (request.getDataCenter().isPresent()) {
-      return routeByDataCenter(requestContext, request.getDataCenter().get(), request, TypeRefs.REQUEST_PARENT_REF);
+      return routeByDataCenter(requestContext, request.getDataCenter().get(), request);
     }
     throw new DataCenterNotFoundException(String.format("No data center specified in request %s, and no existing request found in any data center", request.getId()));
   }
 
   @POST
   @Path("/request/{requestId}/bounce")
-  public SingularityRequestParent bounce(@PathParam("requestId") String requestId,
+  public Response bounce(@PathParam("requestId") String requestId,
                                          @Context HttpServletRequest requestContext) {
     return bounce(requestId, requestContext, null);
   }
@@ -69,35 +63,35 @@ public class RequestResource extends ProxyResource {
   @POST
   @Path("/request/{requestId}/bounce")
   @Consumes({ MediaType.APPLICATION_JSON })
-  public SingularityRequestParent bounce(@PathParam("requestId") String requestId,
+  public Response bounce(@PathParam("requestId") String requestId,
                                          @Context HttpServletRequest requestContext,
                                          SingularityBounceRequest bounceRequest) {
-    return routeByRequestId(requestContext, requestId, bounceRequest, TypeRefs.REQUEST_PARENT_REF);
+    return routeByRequestId(requestContext, requestId, bounceRequest);
   }
 
   @POST
   @Path("/request/{requestId}/run")
-  public SingularityPendingRequestParent scheduleImmediately(@Context HttpServletRequest request, @PathParam("requestId") String requestId) {
+  public Response scheduleImmediately(@Context HttpServletRequest request, @PathParam("requestId") String requestId) {
     return scheduleImmediately(request, requestId, null);
   }
 
   @POST
   @Path("/request/{requestId}/run")
   @Consumes({ MediaType.APPLICATION_JSON })
-  public SingularityPendingRequestParent scheduleImmediately(@Context HttpServletRequest requestContext, @PathParam("requestId") String requestId,
+  public Response scheduleImmediately(@Context HttpServletRequest requestContext, @PathParam("requestId") String requestId,
                                                              SingularityRunNowRequest runNowRequest) {
-    return routeByRequestId(requestContext, requestId, runNowRequest, TypeRefs.PENDING_REQUEST_PARENT_REF);
+    return routeByRequestId(requestContext, requestId, runNowRequest);
   }
 
   @GET
   @Path("/request/{requestId}/run/{runId}")
-  public Optional<SingularityTaskId> getTaskByRunId(@Context HttpServletRequest request, @PathParam("requestId") String requestId, @PathParam("runId") String runId) {
-    return routeByRequestId(request, requestId, TypeRefs.OPTIONAL_TASK_ID_REF);
+  public Response getTaskByRunId(@Context HttpServletRequest request, @PathParam("requestId") String requestId, @PathParam("runId") String runId) {
+    return routeByRequestId(request, requestId);
   }
 
   @POST
   @Path("/request/{requestId}/pause")
-  public SingularityRequestParent pause(@PathParam("requestId") String requestId,
+  public Response pause(@PathParam("requestId") String requestId,
                                         @Context HttpServletRequest requestContext) {
     return pause(requestId, requestContext, null);
   }
@@ -105,15 +99,15 @@ public class RequestResource extends ProxyResource {
   @POST
   @Path("/request/{requestId}/pause")
   @Consumes({ MediaType.APPLICATION_JSON })
-  public SingularityRequestParent pause(@PathParam("requestId") String requestId,
+  public Response pause(@PathParam("requestId") String requestId,
                                         @Context HttpServletRequest requestContext,
                                         SingularityPauseRequest pauseRequest) {
-    return routeByRequestId(requestContext, requestId, pauseRequest, TypeRefs.REQUEST_PARENT_REF);
+    return routeByRequestId(requestContext, requestId, pauseRequest);
   }
 
   @POST
   @Path("/request/{requestId}/unpause")
-  public SingularityRequestParent unpauseNoBody(@PathParam("requestId") String requestId,
+  public Response unpauseNoBody(@PathParam("requestId") String requestId,
                                                 @Context HttpServletRequest requestContext) {
     return unpause(requestId, requestContext, null);
   }
@@ -121,15 +115,15 @@ public class RequestResource extends ProxyResource {
   @POST
   @Path("/request/{requestId}/unpause")
   @Consumes({ MediaType.APPLICATION_JSON })
-  public SingularityRequestParent unpause(@PathParam("requestId") String requestId,
+  public Response unpause(@PathParam("requestId") String requestId,
                                           @Context HttpServletRequest requestContext,
                                           SingularityUnpauseRequest unpauseRequest) {
-    return routeByRequestId(requestContext, requestId, unpauseRequest, TypeRefs.REQUEST_PARENT_REF);
+    return routeByRequestId(requestContext, requestId, unpauseRequest);
   }
 
   @POST
   @Path("/request/{requestId}/exit-cooldown")
-  public SingularityRequestParent exitCooldown(@PathParam("requestId") String requestId,
+  public Response exitCooldown(@PathParam("requestId") String requestId,
                                                @Context HttpServletRequest requestContext) {
     return exitCooldown(requestId, requestContext, null);
   }
@@ -137,115 +131,115 @@ public class RequestResource extends ProxyResource {
   @POST
   @Path("/request/{requestId}/exit-cooldown")
   @Consumes({ MediaType.APPLICATION_JSON })
-  public SingularityRequestParent exitCooldown(@PathParam("requestId") String requestId,
+  public Response exitCooldown(@PathParam("requestId") String requestId,
                                                @Context HttpServletRequest requestContext,
                                                SingularityExitCooldownRequest exitCooldownRequest) {
-    return routeByRequestId(requestContext, requestId, exitCooldownRequest, TypeRefs.REQUEST_PARENT_REF);
+    return routeByRequestId(requestContext, requestId, exitCooldownRequest);
   }
 
   @GET
   @Path("/active")
-  public List<SingularityRequestParent> getActiveRequests(@Context HttpServletRequest request) {
-    return getMergedListResult(request, TypeRefs.REQUEST_PARENT_LIST_REF);
+  public Response getActiveRequests(@Context HttpServletRequest request) {
+    return getMergedListResult(request);
   }
 
   @GET
   @Path("/paused")
-  public List<SingularityRequestParent> getPausedRequests(@Context HttpServletRequest request) {
-    return getMergedListResult(request, TypeRefs.REQUEST_PARENT_LIST_REF);
+  public Response getPausedRequests(@Context HttpServletRequest request) {
+    return getMergedListResult(request);
   }
 
   @GET
   @Path("/cooldown")
-  public List<SingularityRequestParent> getCooldownRequests(@Context HttpServletRequest request) {
-    return getMergedListResult(request, TypeRefs.REQUEST_PARENT_LIST_REF);
+  public Response getCooldownRequests(@Context HttpServletRequest request) {
+    return getMergedListResult(request);
   }
 
   @GET
   @Path("/finished")
-  public List<SingularityRequestParent> getFinishedRequests(@Context HttpServletRequest request) {
-    return getMergedListResult(request, TypeRefs.REQUEST_PARENT_LIST_REF);
+  public Response getFinishedRequests(@Context HttpServletRequest request) {
+    return getMergedListResult(request);
   }
 
   @GET
-  public List<SingularityRequestParent> getRequests(@Context HttpServletRequest request) {
+  public Response getRequests(@Context HttpServletRequest request) {
     // TODO - update internal cache list?
-    return getMergedListResult(request, TypeRefs.REQUEST_PARENT_LIST_REF);
+    return getMergedListResult(request);
   }
 
   @GET
   @Path("/queued/pending")
-  public List<SingularityPendingRequest> getPendingRequests(@Context HttpServletRequest request) {
-    return getMergedListResult(request, TypeRefs.PENDING_REQUEST_LIST_REF);
+  public Response getPendingRequests(@Context HttpServletRequest request) {
+    return getMergedListResult(request);
   }
 
   @GET
   @Path("/queued/cleanup")
-  public List<SingularityRequestCleanup> getCleanupRequests(@Context HttpServletRequest request) {
-    return getMergedListResult(request, TypeRefs.REQUEST_CLEANUP_LIST_REF);
+  public Response getCleanupRequests(@Context HttpServletRequest request) {
+    return getMergedListResult(request);
   }
 
   @GET
   @Path("/request/{requestId}")
-  public SingularityRequestParent getRequest(@Context HttpServletRequest request, @PathParam("requestId") String requestId) {
-    return routeByRequestId(request, requestId, TypeRefs.REQUEST_PARENT_REF);
+  public Response getRequest(@Context HttpServletRequest request, @PathParam("requestId") String requestId) {
+    return routeByRequestId(request, requestId);
   }
 
   @DELETE
   @Path("/request/{requestId}")
   @Consumes({ MediaType.APPLICATION_JSON })
-  public SingularityRequest deleteRequest(@PathParam("requestId") String requestId,
+  public Response deleteRequest(@PathParam("requestId") String requestId,
                                           @Context HttpServletRequest requestContext,
                                           SingularityDeleteRequestRequest deleteRequest) {
     // TODO - update internal list?
-    return routeByRequestId(requestContext, requestId, deleteRequest, TypeRefs.REQUEST_REF);
+    return routeByRequestId(requestContext, requestId, deleteRequest);
   }
 
   @PUT
   @Path("/request/{requestId}/scale")
   @Consumes({ MediaType.APPLICATION_JSON })
-  public SingularityRequestParent scale(@PathParam("requestId") String requestId,
+  public Response scale(@PathParam("requestId") String requestId,
                                         @Context HttpServletRequest requestContext,
                                         SingularityScaleRequest scaleRequest) {
-    return routeByRequestId(requestContext, requestId, scaleRequest, TypeRefs.REQUEST_PARENT_REF);
+    return routeByRequestId(requestContext, requestId, scaleRequest);
   }
 
   @DELETE
   @Path("/request/{requestId}/scale")
-  public SingularityRequestParent deleteExpiringScale(@Context HttpServletRequest request, @PathParam("requestId") String requestId) {
-    return routeByRequestId(request, requestId, TypeRefs.REQUEST_PARENT_REF);
+  public Response deleteExpiringScale(@Context HttpServletRequest request, @PathParam("requestId") String requestId) {
+    return routeByRequestId(request, requestId);
   }
 
   @Deprecated
   @DELETE
   @Path("/request/{requestId}/skipHealthchecks")
-  public SingularityRequestParent deleteExpiringSkipHealthchecksDeprecated(@Context HttpServletRequest request, @PathParam("requestId") String requestId) {
-    return routeByRequestId(request, requestId, TypeRefs.REQUEST_PARENT_REF);
+  public Response deleteExpiringSkipHealthchecksDeprecated(@Context HttpServletRequest request, @PathParam("requestId") String requestId) {
+    return routeByRequestId(request, requestId);
   }
 
   @DELETE
   @Path("/request/{requestId}/skip-healthchecks")
-  public SingularityRequestParent deleteExpiringSkipHealthchecks(@Context HttpServletRequest request, @PathParam("requestId") String requestId) {
-    return routeByRequestId(request, requestId, TypeRefs.REQUEST_PARENT_REF);
+  public Response deleteExpiringSkipHealthchecks(@Context HttpServletRequest request, @PathParam("requestId") String requestId) {
+    return routeByRequestId(request, requestId);
   }
 
   @DELETE
   @Path("/request/{requestId}/pause")
-  public SingularityRequestParent deleteExpiringPause(@Context HttpServletRequest request, @PathParam("requestId") String requestId) {
-    return routeByRequestId(request, requestId, TypeRefs.REQUEST_PARENT_REF);
+  public Response deleteExpiringPause(@Context HttpServletRequest request, @PathParam("requestId") String requestId) {
+    return routeByRequestId(request, requestId);
   }
 
   @DELETE
   @Path("/request/{requestId}/bounce")
-  public SingularityRequestParent deleteExpiringBounce(@Context HttpServletRequest request, @PathParam("requestId") String requestId) {
-    return routeByRequestId(request, requestId, TypeRefs.REQUEST_PARENT_REF);
+  public Response deleteExpiringBounce(@Context HttpServletRequest request, @PathParam("requestId") String requestId) {
+    return routeByRequestId(request, requestId);
   }
 
   @Deprecated
   @PUT
   @Path("/request/{requestId}/skipHealthchecks")
   @Consumes({ MediaType.APPLICATION_JSON })
-  public SingularityRequestParent skipHealthchecksDeprecated(@PathParam("requestId") String requestId,
+  public Response skipHealthchecksDeprecated(@PathParam("requestId") String requestId,
                                                              @Context HttpServletRequest requestContext,
                                                              SingularitySkipHealthchecksRequest skipHealthchecksRequest) {
     return skipHealthchecks(requestId, requestContext, skipHealthchecksRequest);
@@ -254,15 +248,15 @@ public class RequestResource extends ProxyResource {
   @PUT
   @Path("/request/{requestId}/skip-healthchecks")
   @Consumes({ MediaType.APPLICATION_JSON })
-  public SingularityRequestParent skipHealthchecks(@PathParam("requestId") String requestId,
+  public Response skipHealthchecks(@PathParam("requestId") String requestId,
                                                    @Context HttpServletRequest requestContext,
                                                    SingularitySkipHealthchecksRequest skipHealthchecksRequest) {
-    return routeByRequestId(requestContext, requestId, skipHealthchecksRequest, TypeRefs.REQUEST_PARENT_REF);
+    return routeByRequestId(requestContext, requestId, skipHealthchecksRequest);
   }
 
   @GET
   @Path("/lbcleanup")
-  public List<String> getLbCleanupRequests(@Context HttpServletRequest request) {
-    return getMergedListResult(request, TypeRefs.LIST_STRING_REF);
+  public Response getLbCleanupRequests(@Context HttpServletRequest request) {
+    return getMergedListResult(request);
   }
 }

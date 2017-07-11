@@ -1,7 +1,5 @@
 package com.hubspot.singularity.proxy;
 
-import java.util.List;
-
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -24,17 +22,17 @@ public class InactiveSlaveResource extends ProxyResource {
   public InactiveSlaveResource() {}
 
   @GET
-  public List<String> getInactiveSlaves(@Context HttpServletRequest request) {
-    return getMergedListResult(request, TypeRefs.LIST_STRING_REF);
+  public Response getInactiveSlaves(@Context HttpServletRequest request) {
+    return getMergedListResult(request);
   }
 
   @POST
   public Response deactivateSlave(@Context HttpServletRequest request, @QueryParam("host") String host) {
-    return routeByHostname(request, host, TypeRefs.RESPONSE_REF);
+    return routeByHostname(request, host);
   }
 
   @DELETE
   public Response reactivateSlave(@Context HttpServletRequest request, @QueryParam("host") String host) {
-    return routeByHostname(request, host, TypeRefs.RESPONSE_REF);
+    return routeByHostname(request, host);
   }
 }
