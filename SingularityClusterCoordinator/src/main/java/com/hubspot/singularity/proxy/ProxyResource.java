@@ -253,22 +253,6 @@ public class ProxyResource {
     }
   }
 
-  private <T, Q> T proxyAndGetResponseAs(DataCenter dc, HttpServletRequest request, Q body, TypeReference<T> clazz, List<Param> headers, List<Param> params) {
-    HttpResponse response = proxyAndGetResponse(dc, request, body, headers, params);
-    if (response.getStatusCode() > 399) {
-      throw new WebApplicationException(response.getAsString(), response.getStatusCode());
-    } else {
-      try {
-        T object = response.getAs(clazz);
-        LOG.trace("Got response: {}", object);
-        return object;
-      } catch (RuntimeException e) {
-        LOG.error("Could not parse response json", e);
-        throw new WebApplicationException(e);
-      }
-    }
-  }
-
   private List<Param> getHeaders(HttpServletRequest request) {
     List<Param> headers = new ArrayList<>();
     Enumeration<String> headerNames = request.getHeaderNames();
@@ -300,7 +284,7 @@ public class ProxyResource {
     return builder.build();
   }
 
-  private class Param {
+  private static class Param {
     private final String key;
     private final String value;
 
