@@ -3,6 +3,7 @@ package com.hubspot.singularity.proxy;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
@@ -14,7 +15,6 @@ import com.hubspot.horizon.HttpClient;
 import com.hubspot.horizon.HttpConfig;
 import com.hubspot.horizon.ning.NingAsyncHttpClient;
 import com.hubspot.horizon.ning.NingHttpClient;
-import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.SingularityClientCredentials;
 import com.hubspot.singularity.SingularityServiceBaseModule;
 import com.hubspot.singularity.client.SingularityClient;
@@ -25,6 +25,8 @@ import com.hubspot.singularity.config.IndexViewConfiguration;
 import io.dropwizard.server.SimpleServerFactory;
 
 public class SingularityClusterCoodinatorResourcesModule extends AbstractModule {
+  public static final String ASYNC_HTTP_CLIENT = "singularity.async.http.client";
+
   private final ClusterCoordinatorConfiguration configuration;
 
   public SingularityClusterCoodinatorResourcesModule(ClusterCoordinatorConfiguration configuration) {
@@ -33,7 +35,6 @@ public class SingularityClusterCoodinatorResourcesModule extends AbstractModule 
 
   @Override
   public void configure() {
-    bind(AsyncHttpClient.class).toInstance(new NingAsyncHttpClient());
     bind(DataCenterLocator.class).in(Scopes.SINGLETON);
 
     bind(DeployResource.class);
@@ -87,8 +88,15 @@ public class SingularityClusterCoodinatorResourcesModule extends AbstractModule 
 
   @Provides
   @Singleton
-  public Map<String, SingularityClient> provideClients() {
-    HttpClient httpClient = new NingHttpClient(HttpConfig.newBuilder().setObjectMapper(JavaUtils.newObjectMapper()).build());
+  @Named(ASYNC_HTTP_CLIENT)
+  public AsyncHttpClient provideAsyncHttpClient(ObjectMapper objectMapper) {
+    return new NingAsyncHttpClient(HttpConfig.newBuilder().setObjectMapper(objectMapper).build());
+  }
+
+  @Provides
+  @Singleton
+  public Map<String, SingularityClient> provideClients(ObjectMapper objectMapper) {
+    HttpClient httpClient = new NingHttpClient(HttpConfig.newBuilder().setObjectMapper(objectMapper).build());
     SingularityClientProvider clientProvider = new SingularityClientProvider(httpClient);
     Map<String, SingularityClient> clients = new HashMap<>();
     configuration.getDataCenters().forEach((dc) -> {
