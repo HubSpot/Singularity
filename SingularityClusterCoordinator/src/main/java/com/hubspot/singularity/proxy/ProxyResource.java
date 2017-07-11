@@ -34,7 +34,7 @@ public class ProxyResource {
   private AsyncHttpClient httpClient;
   private ClusterCoordinatorConfiguration configuration;
   private ObjectMapper objectMapper;
-  private DataCenterLocator dataCenterLocator;
+  protected DataCenterLocator dataCenterLocator;
   private String contextPath;
 
   public ProxyResource() {}
@@ -232,9 +232,14 @@ public class ProxyResource {
       LOG.error("Request to {} failed ({}:{})", url, response.getStatusCode(), response.getAsString());
       return null;
     } else {
-      T object = response.getAs(clazz);
-      LOG.trace("Got response: {}", object);
-      return object;
+      try {
+        T object = response.getAs(clazz);
+        LOG.trace("Got response: {}", object);
+        return object;
+      } catch (RuntimeException e) {
+        LOG.error("Could not parse response json", e);
+        return null;
+      }
     }
   }
 

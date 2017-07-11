@@ -31,6 +31,9 @@ import com.hubspot.singularity.api.SingularityScaleRequest;
 import com.hubspot.singularity.api.SingularitySkipHealthchecksRequest;
 import com.hubspot.singularity.api.SingularityUnpauseRequest;
 import com.hubspot.singularity.config.ApiPaths;
+import com.hubspot.singularity.config.DataCenter;
+import com.hubspot.singularity.exceptions.DataCenterConflictException;
+import com.hubspot.singularity.exceptions.DataCenterNotFoundException;
 
 @Path(ApiPaths.REQUEST_RESOURCE_PATH)
 @Produces({ MediaType.APPLICATION_JSON })
@@ -42,12 +45,18 @@ public class RequestResource extends ProxyResource {
   @POST
   @Consumes({ MediaType.APPLICATION_JSON })
   public SingularityRequestParent postRequest(@Context HttpServletRequest requestContext, SingularityRequest request) {
-    // TODO - where to create new requests?
+    Optional<DataCenter> maybeDataCenter = dataCenterLocator.getMaybeDataCenterForRequest(request.getId());
+    if (maybeDataCenter.isPresent()) {
+      if (request.getDataCenter().isPresent() && !request.getDataCenter().get().equals(maybeDataCenter.get().getName())) {
+        throw new DataCenterConflictException(String.format("Cannot create request with id %s in multiple datacenters (requested: %s), already found in %s", request.getId(), request.getDataCenter().get(), maybeDataCenter.get().getName()));
+      }
+      return routeByDataCenter(requestContext, request.getDataCenter().get(), request, TypeRefs.REQUEST_PARENT_REF);
+    }
+
     if (request.getDataCenter().isPresent()) {
       return routeByDataCenter(requestContext, request.getDataCenter().get(), request, TypeRefs.REQUEST_PARENT_REF);
-    } else {
-      return routeByRequestId(requestContext, request.getId(), request, TypeRefs.REQUEST_PARENT_REF);
     }
+    throw new DataCenterNotFoundException(String.format("No data center specified in request %s, and no existing request found in any data center", request.getId()));
   }
 
   @POST

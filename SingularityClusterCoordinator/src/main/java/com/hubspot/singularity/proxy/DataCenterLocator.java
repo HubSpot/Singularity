@@ -73,6 +73,14 @@ public class DataCenterLocator implements Managed {
     throw new DataCenterNotFoundException(String.format("Could not find requestId '%s' in any data center", requestId));
   }
 
+  Optional<DataCenter> getMaybeDataCenterForRequest(String requestId) {
+    try {
+      return Optional.of(getDataCenterForRequest(requestId));
+    } catch (DataCenterNotFoundException nfe) {
+      return Optional.absent();
+    }
+  }
+
   DataCenter getDataCenterForRequestGroup(String requestGroupId) {
     for (Map.Entry<String, DataCenter> entry : dataCenters.entrySet()) {
       if (requestGroupsByDataCenter.get(entry.getKey()).contains(requestGroupId)) {
