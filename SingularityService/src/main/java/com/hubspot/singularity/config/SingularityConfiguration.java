@@ -73,7 +73,7 @@ public class SingularityConfiguration extends Configuration {
 
   private long checkUsageEveryMillis = TimeUnit.MINUTES.toMillis(1);
 
-  private int usageIntervalMultiplier = 3;
+  private int usageIntervalSeconds = 5760 ; // 15 saved each 5760 seconds (96 min) apart is 1 day of usage
 
   private long cleanUsageEveryMillis = TimeUnit.MINUTES.toMillis(5);
 
@@ -1421,12 +1421,12 @@ public class SingularityConfiguration extends Configuration {
     this.checkUsageEveryMillis = checkUsageEveryMillis;
   }
 
-  public int getUsageIntervalMultiplier() {
-    return usageIntervalMultiplier;
+  public int getUsageIntervalSeconds() {
+    return usageIntervalSeconds;
   }
 
-  public SingularityConfiguration setUsageIntervalMultiplier(int usageIntervalMultiplier) {
-    this.usageIntervalMultiplier = usageIntervalMultiplier;
+  public SingularityConfiguration setUsageIntervalSeconds(int usageIntervalSeconds) {
+    this.usageIntervalSeconds = usageIntervalSeconds;
     return this;
   }
 
