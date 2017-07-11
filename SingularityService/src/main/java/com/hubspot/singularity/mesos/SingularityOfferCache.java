@@ -132,6 +132,11 @@ public class SingularityOfferCache implements OfferCache, RemovalListener<String
     useOfferCache.set(true);
   }
 
+  @Override
+  public void cleanUp() {
+    offerCache.cleanUp();
+  }
+
   private void declineOffer(CachedOffer offer) {
     Optional<SchedulerDriver> driver = schedulerDriverSupplier.get();
 

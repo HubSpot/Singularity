@@ -56,6 +56,10 @@ public class SingularitySchedulerPoller extends SingularityLeaderOnlyPoller {
       LOG.warn("Scheduler poller is disabled");
       return;
     }
+
+    // Force Guava cache to perform maintenance operations and reach a consistent state.
+    offerCache.cleanUp();
+
     final long start = System.currentTimeMillis();
 
     List<CachedOffer> cachedOffers = offerCache.checkoutOffers();

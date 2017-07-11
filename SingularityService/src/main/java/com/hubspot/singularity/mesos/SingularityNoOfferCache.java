@@ -58,4 +58,9 @@ public class SingularityNoOfferCache implements OfferCache {
     // no-op
   }
 
+  @Override
+  public void cleanUp() {
+    // no-op
+  }
+
 }
