@@ -129,6 +129,7 @@ public class TaskResource extends ProxyResource {
     return routeByRequestId(requestContext, parsedId.getRequestId(), killTaskRequest, TypeRefs.TASK_CLEANUP_REF);
   }
 
+  @GET
   @Path("/commands/queued")
   public List<SingularityTaskShellCommandRequest> getQueuedShellCommands(@Context HttpServletRequest request) {
     return getMergedListResult(request, TypeRefs.SHELL_COMMAND_LIST_REF);
