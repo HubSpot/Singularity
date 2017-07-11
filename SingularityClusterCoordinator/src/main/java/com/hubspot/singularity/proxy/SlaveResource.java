@@ -29,7 +29,6 @@ public class SlaveResource extends ProxyResource {
   public SlaveResource() {}
 
   @GET
-  @Path("/")
   public List<SingularitySlave> getSlaves(@Context HttpServletRequest request) {
     return getMergedListResult(request, TypeRefs.SLAVE_LIST_REF);
   }
