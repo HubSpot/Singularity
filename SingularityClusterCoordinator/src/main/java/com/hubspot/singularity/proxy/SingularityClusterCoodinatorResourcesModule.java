@@ -3,7 +3,6 @@ package com.hubspot.singularity.proxy;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
@@ -15,6 +14,7 @@ import com.hubspot.horizon.HttpClient;
 import com.hubspot.horizon.HttpConfig;
 import com.hubspot.horizon.ning.NingAsyncHttpClient;
 import com.hubspot.horizon.ning.NingHttpClient;
+import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.SingularityClientCredentials;
 import com.hubspot.singularity.SingularityServiceBaseModule;
 import com.hubspot.singularity.client.SingularityClient;
@@ -87,8 +87,8 @@ public class SingularityClusterCoodinatorResourcesModule extends AbstractModule 
 
   @Provides
   @Singleton
-  public Map<String, SingularityClient> provideClients(ObjectMapper objectMapper) {
-    HttpClient httpClient = new NingHttpClient(HttpConfig.newBuilder().setObjectMapper(objectMapper).build());
+  public Map<String, SingularityClient> provideClients() {
+    HttpClient httpClient = new NingHttpClient(HttpConfig.newBuilder().setObjectMapper(JavaUtils.newObjectMapper()).build());
     SingularityClientProvider clientProvider = new SingularityClientProvider(httpClient);
     Map<String, SingularityClient> clients = new HashMap<>();
     configuration.getDataCenters().forEach((dc) -> {
