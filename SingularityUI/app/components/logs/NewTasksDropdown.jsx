@@ -1,6 +1,6 @@
 import React from 'react';
 import Checkbox from 'react-bootstrap/lib/Checkbox';
-
+import {ButtonGroup, DropdownButton} from 'react-bootstrap';
 class NewTasksDropdown extends React.Component {
 
   renderTaskItems() {
@@ -12,33 +12,35 @@ class NewTasksDropdown extends React.Component {
       return (<li><a className="disabled">No running instances</a></li>);
     }
 
-    return this.props.runningTasks.map((task, key) => {
+    const listItems = [];
+
+    listItems.push(this.props.runningTasks.map((task, key) => {
       return (
         <li key={key}>
           <a>
             <Checkbox
               inline={true}
               checked={this.props.visibleTasks.includes(task.taskId.id)}
-              onClick={() => this.props.onToggle(task.taskId.id)}
+              onChange={() => this.props.onToggle(task.taskId.id)}
+              disabled={this.props.visibleTasks.includes(task.taskId.id) && this.props.visibleTasks.length === 1}
             >
               Instance {task.taskId.instanceNo}
             </Checkbox>
           </a>
         </li>
       );
-    });
+    }));
+
+    return listItems;
   }
 
   render() {
     return (
-      <div className="btn-group" title="Select Instances">
-        <button type="button" className="btn btn-default btn-sm dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-            <span className="glyphicon glyphicon-tasks"></span> <span className="caret"></span>
-        </button>
-        <ul className="dropdown-menu dropdown-menu-right">
-            {this.renderTaskItems()}
-        </ul>
-      </div>
+      <ButtonGroup title="Select Instances">
+        <DropdownButton id="instance-dropdown" bsSize="small" title={<span className="glyphicon glyphicon-tasks"></span>}>
+          {this.renderTaskItems()}
+        </DropdownButton>
+      </ButtonGroup>
     );
   }
 }
