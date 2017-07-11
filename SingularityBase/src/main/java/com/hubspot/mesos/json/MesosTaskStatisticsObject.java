@@ -31,7 +31,7 @@ public class MesosTaskStatisticsObject {
                                    @JsonProperty("mem_mapped_file_bytes") long memMappedFileBytes,
                                    @JsonProperty("mem_rss_bytes") long memRssBytes,
                                    @JsonProperty("mem_total_bytes") long memTotalBytes,
-                                   @JsonProperty("timestampSeconds") double timestampSeconds) {
+                                   @JsonProperty("timestamp") double timestampSeconds) {
     this.cpusLimit = cpusLimit;
     this.cpusNrPeriods = cpusNrPeriods;
     this.cpusNrThrottled = cpusNrThrottled;
