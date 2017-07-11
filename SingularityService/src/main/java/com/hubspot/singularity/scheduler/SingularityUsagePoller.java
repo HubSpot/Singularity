@@ -344,7 +344,7 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
   @VisibleForTesting
   void clearOldUsage(List<SingularityTaskUsage> taskUsages, String taskId) {
     if (taskUsages.size() + 1 > configuration.getNumUsageToKeep()) {
-      long minSecondsApart = configuration.getUsageIntervalMultiplier() * TimeUnit.MILLISECONDS.toSeconds(configuration.getCheckUsageEveryMillis());
+      long minSecondsApart = configuration.getUsageIntervalSeconds();
 
       for (int i = 0; i < taskUsages.size() - 1; i++) {
         if (taskUsages.get(i + 1).getTimestampSeconds() - taskUsages.get(i).getTimestampSeconds() < minSecondsApart) {
