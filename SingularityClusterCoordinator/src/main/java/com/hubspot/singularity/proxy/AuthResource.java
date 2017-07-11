@@ -13,7 +13,6 @@ import javax.ws.rs.core.Response;
 import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.hubspot.singularity.SingularityAuthorizationScope;
-import com.hubspot.singularity.SingularityUserHolder;
 import com.hubspot.singularity.config.ApiPaths;
 
 @Path(ApiPaths.AUTH_RESOURCE_PATH)
@@ -25,13 +24,13 @@ public class AuthResource extends ProxyResource {
 
   @GET
   @Path("/user")
-  public SingularityUserHolder getUser(@Context HttpServletRequest request) {
-    return routeToDefaultDataCenter(request, TypeRefs.USER_HOLDER_TYPE_REF);
+  public Response getUser(@Context HttpServletRequest request) {
+    return routeToDefaultDataCenter(request);
   }
 
   @GET
   @Path("/{requestId}/auth-check/{userId}")
   public Response checkReadOnlyAuth(@Context HttpServletRequest request, @PathParam("requestId") String requestId, @PathParam("userId") String userId, @QueryParam("scope") Optional<SingularityAuthorizationScope> scope) {
-    return routeToDefaultDataCenter(request, TypeRefs.RESPONSE_REF);
+    return routeToDefaultDataCenter(request);
   }
 }

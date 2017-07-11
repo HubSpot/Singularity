@@ -1,7 +1,5 @@
 package com.hubspot.singularity.proxy;
 
-import java.util.List;
-
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -12,90 +10,85 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 
 import com.google.inject.Inject;
-import com.hubspot.singularity.SingularityCreateResult;
-import com.hubspot.singularity.SingularityDeleteResult;
-import com.hubspot.singularity.SingularityDeployUpdate;
-import com.hubspot.singularity.SingularityRequestHistory;
-import com.hubspot.singularity.SingularityTaskHistoryUpdate;
 import com.hubspot.singularity.SingularityWebhook;
-import com.hubspot.singularity.SingularityWebhookSummary;
 import com.hubspot.singularity.config.ApiPaths;
-import com.hubspot.singularity.exceptions.NotImplemenedException;
 
 @Path(ApiPaths.WEBHOOK_RESOURCE_PATH)
 @Produces({ MediaType.APPLICATION_JSON })
 public class WebhookResource extends ProxyResource {
+  // TODO - better routing here, route to all?
 
   @Inject
   public WebhookResource() {}
 
   @GET
-  public List<SingularityWebhook> getActiveWebhooks(@Context HttpServletRequest request) {
-    throw new NotImplemenedException();
+  public Response getActiveWebhooks(@Context HttpServletRequest request) {
+    return routeToDefaultDataCenter(request);
   }
 
   @GET
   @Path("/summary")
-  public List<SingularityWebhookSummary> getWebhooksWithQueueSize(@Context HttpServletRequest request) {
-    throw new NotImplemenedException();
+  public Response getWebhooksWithQueueSize(@Context HttpServletRequest request) {
+    return routeToDefaultDataCenter(request);
   }
 
   @POST
-  public SingularityCreateResult addWebhook(@Context HttpServletRequest request, SingularityWebhook webhook) {
-    throw new NotImplemenedException();
+  public Response addWebhook(@Context HttpServletRequest request, SingularityWebhook webhook) {
+    return routeToDefaultDataCenter(request);
   }
 
   @DELETE
   @Deprecated
   @Path("/{webhookId}")
-  public SingularityDeleteResult deleteWebhookDeprecated(@Context HttpServletRequest request, @PathParam("webhookId") String webhookId) {
-    throw new NotImplemenedException();
+  public Response deleteWebhookDeprecated(@Context HttpServletRequest request, @PathParam("webhookId") String webhookId) {
+    return routeToDefaultDataCenter(request);
   }
 
   @GET
   @Deprecated
   @Path("/deploy/{webhookId}")
-  public List<SingularityDeployUpdate> getQueuedDeployUpdatesDeprecated(@Context HttpServletRequest request, @PathParam("webhookId") String webhookId) {
-    throw new NotImplemenedException();
+  public Response getQueuedDeployUpdatesDeprecated(@Context HttpServletRequest request, @PathParam("webhookId") String webhookId) {
+    return routeToDefaultDataCenter(request);
   }
 
   @GET
   @Deprecated
   @Path("/request/{webhookId}")
-  public List<SingularityRequestHistory> getQueuedRequestUpdatesDeprecated(@Context HttpServletRequest request, @PathParam("webhookId") String webhookId) {
-    throw new NotImplemenedException();
+  public Response getQueuedRequestUpdatesDeprecated(@Context HttpServletRequest request, @PathParam("webhookId") String webhookId) {
+    return routeToDefaultDataCenter(request);
   }
 
   @GET
   @Deprecated
   @Path("/task/{webhookId}")
-  public List<SingularityTaskHistoryUpdate> getQueuedTaskUpdatesDeprecated(@Context HttpServletRequest request, @PathParam("webhookId") String webhookId) {
-    throw new NotImplemenedException();
+  public Response getQueuedTaskUpdatesDeprecated(@Context HttpServletRequest request, @PathParam("webhookId") String webhookId) {
+    return routeToDefaultDataCenter(request);
   }
 
   @DELETE
-  public SingularityDeleteResult deleteWebhook(@Context HttpServletRequest request, @QueryParam("webhookId") String webhookId) {
-    throw new NotImplemenedException();
+  public Response deleteWebhook(@Context HttpServletRequest request, @QueryParam("webhookId") String webhookId) {
+    return routeToDefaultDataCenter(request);
   }
 
   @GET
   @Path("/deploy")
-  public List<SingularityDeployUpdate> getQueuedDeployUpdates(@Context HttpServletRequest request, @QueryParam("webhookId") String webhookId) {
-    throw new NotImplemenedException();
+  public Response getQueuedDeployUpdates(@Context HttpServletRequest request, @QueryParam("webhookId") String webhookId) {
+    return routeToDefaultDataCenter(request);
   }
 
   @GET
   @Path("/request")
-  public List<SingularityRequestHistory> getQueuedRequestUpdates(@Context HttpServletRequest request, @QueryParam("webhookId") String webhookId) {
-    throw new NotImplemenedException();
+  public Response getQueuedRequestUpdates(@Context HttpServletRequest request, @QueryParam("webhookId") String webhookId) {
+    return routeToDefaultDataCenter(request);
   }
 
   @GET
   @Path("/task")
-  public List<SingularityTaskHistoryUpdate> getQueuedTaskUpdates(@Context HttpServletRequest request, @QueryParam("webhookId") String webhookId) {
-    throw new NotImplemenedException();
+  public Response getQueuedTaskUpdates(@Context HttpServletRequest request, @QueryParam("webhookId") String webhookId) {
+    return routeToDefaultDataCenter(request);
   }
 
 }

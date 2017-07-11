@@ -4,12 +4,12 @@ import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.concurrent.ExecutionException;
-import java.util.stream.Collectors;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.ResponseBuilder;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,9 +17,11 @@ import org.slf4j.LoggerFactory;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import com.hubspot.horizon.AsyncHttpClient;
+import com.hubspot.horizon.Header;
 import com.hubspot.horizon.HttpRequest;
 import com.hubspot.horizon.HttpRequest.Method;
 import com.hubspot.horizon.HttpResponse;
@@ -63,108 +65,128 @@ public class ProxyResource {
    * For items where the dataCenter is part of the object, or where a full list is desired.
    * Collect and merge results from each configured dataCenter
    */
-  public <T> List<T> getMergedListResult(HttpServletRequest request, TypeReference<List<T>> clazz) {
-    return getMergedListResult(request, null, clazz);
+  public <T> Response getMergedListResult(HttpServletRequest request) {
+    return getMergedListResult(request, null);
   }
 
-  public <T, Q> List<T> getMergedListResult(HttpServletRequest request, Q body, TypeReference<List<T>> clazz) {
+  public <T> Response getMergedListResult(HttpServletRequest request, T body) {
     Map<String, String> headers = getHeaders(request);
     Map<String, String> params = getParams(request);
 
-    return configuration.getDataCenters().parallelStream()
-        .map((dc) -> proxyRequest(dc, request, body, clazz, headers, params))
-        .filter(Objects::nonNull)
-        .flatMap(List::stream)
-        .collect(Collectors.toList());
+    // TODO - parallelize
+    List<Object> combined = Lists.newArrayList();
+    ResponseBuilder builder = null;
+
+    for (DataCenter dataCenter : configuration.getDataCenters()) {
+      try {
+        HttpResponse response = proxyAndGetResponse(dataCenter, request, body, headers, params);
+        if (builder == null) {
+          builder = Response.status(response.getStatusCode());
+          for (Header header : response.getHeaders()) {
+            builder.header(header.getName(), header.getValue());
+          }
+        }
+
+        combined.addAll(response.getAs(new TypeReference<List<Object>>() {}));
+      } catch (RuntimeException re) {
+        LOG.error("Could not get data from dataCenter {}, omitting", dataCenter.getName(), re);
+      }
+    }
+
+    if (builder != null) {
+      return builder.entity(combined).build();
+    } else {
+      throw new WebApplicationException("Got no results", 500);
+    }
   }
 
   /*
    * Route a request to a particular dataCenter using the requestId to locate the correct Singularity cluster
    */
-  public <T> T routeByRequestId(HttpServletRequest request, String requestId, TypeReference<T> clazz) {
-    return routeByRequestId(request, requestId, null, clazz);
+  public Response routeByRequestId(HttpServletRequest request, String requestId) {
+    return routeByRequestId(request, requestId, null);
   }
 
-  public <T, Q> T routeByRequestId(HttpServletRequest request, String requestId, Q body, TypeReference<T> clazz) {
+  public <T> Response routeByRequestId(HttpServletRequest request, String requestId, T body) {
     Map<String, String> headers = getHeaders(request);
     Map<String, String> params = getParams(request);
 
     DataCenter dataCenter = getDataCenterForRequest(requestId);
 
-    return proxyRequest(dataCenter, request, body, clazz, headers, params);
+    return toResponse(proxyAndGetResponse(dataCenter, request, body, headers, params));
   }
 
   /*
    * Route a request to a particular dataCenter using the request group Id to locate the correct Singularity cluster
    */
-  <T> T routeByRequestGroupId(HttpServletRequest request, String requestGroupId, TypeReference<T> clazz) {
+  Response routeByRequestGroupId(HttpServletRequest request, String requestGroupId) {
     Map<String, String> headers = getHeaders(request);
     Map<String, String> params = getParams(request);
 
     DataCenter dataCenter = getDataCenterForRequestGroup(requestGroupId);
 
-    return proxyRequest(dataCenter, request, null, clazz, headers, params);
+    return toResponse(proxyAndGetResponse(dataCenter, request, null, headers, params));
   }
 
   /*
    * Route a request to a particular dataCenter using the slaveId/hostname to locate the correct Singularity cluster
    */
-  <T> T routeBySlaveId(HttpServletRequest request, String slaveId, TypeReference<T> clazz) {
+  Response routeBySlaveId(HttpServletRequest request, String slaveId) {
     Map<String, String> headers = getHeaders(request);
     Map<String, String> params = getParams(request);
 
     DataCenter dataCenter = getDataCenterForSlaveId(slaveId);
 
-    return proxyRequest(dataCenter, request, null, clazz, headers, params);
+    return toResponse(proxyAndGetResponse(dataCenter, request, null, headers, params));
   }
 
-  <T> T routeByHostname(HttpServletRequest request, String hostname, TypeReference<T> clazz) {
+  Response routeByHostname(HttpServletRequest request, String hostname) {
     Map<String, String> headers = getHeaders(request);
     Map<String, String> params = getParams(request);
 
     DataCenter dataCenter = getDataCenterForSlaveHostname(hostname);
 
-    return proxyRequest(dataCenter, request, null, clazz, headers, params);
+    return toResponse(proxyAndGetResponse(dataCenter, request, null, headers, params));
   }
 
   /*
    * Route a request to a particular dataCenter using the rack ID to locate the correct Singularity cluster
    */
-  <T> T routeByRackId(HttpServletRequest request, String rackId, TypeReference<T> clazz) {
+  Response routeByRackId(HttpServletRequest request, String rackId) {
     Map<String, String> headers = getHeaders(request);
     Map<String, String> params = getParams(request);
 
     DataCenter dataCenter = getDataCenterForRackId(rackId);
 
-    return proxyRequest(dataCenter, request, null, clazz, headers, params);
+    return toResponse(proxyAndGetResponse(dataCenter, request, null, headers, params));
   }
 
   /*
    * Route a request to a particular dataCenter by name, failing if it is not present
    */
-  <T, Q> T routeByDataCenter(HttpServletRequest request, String dataCenterName, Q body, TypeReference<T> clazz) {
+  <T> Response routeByDataCenter(HttpServletRequest request, String dataCenterName, T body) {
     Map<String, String> headers = getHeaders(request);
     Map<String, String> params = getParams(request);
 
     DataCenter dataCenter = getDataCenter(dataCenterName);
 
-    return proxyRequest(dataCenter, request, body, clazz, headers, params);
+    return toResponse(proxyAndGetResponse(dataCenter, request, body, headers, params));
   }
 
   /*
    * Route to the default Singularity cluster
    */
-  <T> T routeToDefaultDataCenter(HttpServletRequest request, TypeReference<T> clazz) {
-    return routeToDefaultDataCenter(request, null, clazz);
+  Response routeToDefaultDataCenter(HttpServletRequest request) {
+    return routeToDefaultDataCenter(request, null);
   }
 
-  <T, Q> T routeToDefaultDataCenter(HttpServletRequest request, Q body, TypeReference<T> clazz) {
+  <T> Response routeToDefaultDataCenter(HttpServletRequest request, T body) {
     Map<String, String> headers = getHeaders(request);
     Map<String, String> params = getParams(request);
 
     DataCenter dataCenter = configuration.getDataCenters().get(0);
 
-    return proxyRequest(dataCenter, request, body, clazz, headers, params);
+    return toResponse(proxyAndGetResponse(dataCenter, request, body, headers, params));
   }
 
   /*
@@ -201,7 +223,7 @@ public class ProxyResource {
   /*
    * Generic methods for proxying requests
    */
-  private <T, Q> T proxyRequest(DataCenter dc, HttpServletRequest request, Q body, TypeReference<T> clazz, Map<String, String> headers, Map<String, String> params) {
+  private <T> HttpResponse proxyAndGetResponse(DataCenter dc, HttpServletRequest request, T body, Map<String, String> headers, Map<String, String> params) {
     String fullPath = request.getContextPath() + request.getPathInfo();
     String url = String.format("%s://%s%s", dc.getScheme(), getHost(dc), fullPath.replace(contextPath, dc.getContextPath()));
 
@@ -221,17 +243,17 @@ public class ProxyResource {
     headers.forEach(requestBuilder::addHeader);
     params.forEach((k, v) -> requestBuilder.setQueryParam(k).to(v));
 
-    HttpResponse response;
     try {
-      response = httpClient.execute(requestBuilder.build()).get();
+      return httpClient.execute(requestBuilder.build()).get();
     } catch (InterruptedException|ExecutionException ioe) {
-      LOG.error("Exception while processing request to {}", url, ioe);
-      return null;
+      throw new WebApplicationException(ioe);
     }
+  }
 
+  private <T, Q> T proxyAndGetResponseAs(DataCenter dc, HttpServletRequest request, Q body, TypeReference<T> clazz, Map<String, String> headers, Map<String, String> params) {
+    HttpResponse response = proxyAndGetResponse(dc, request, body, headers, params);
     if (response.getStatusCode() > 399) {
-      LOG.error("Request to {} failed ({}:{})", url, response.getStatusCode(), response.getAsString());
-      return null;
+      throw new WebApplicationException(response.getAsString(), response.getStatusCode());
     } else {
       try {
         T object = response.getAs(clazz);
@@ -239,7 +261,7 @@ public class ProxyResource {
         return object;
       } catch (RuntimeException e) {
         LOG.error("Could not parse response json", e);
-        return null;
+        throw new WebApplicationException(e);
       }
     }
   }
@@ -268,5 +290,12 @@ public class ProxyResource {
     }
     LOG.trace("Found query params: {}", params);
     return params;
+  }
+
+  private Response toResponse(HttpResponse original) {
+    ResponseBuilder builder = Response.status(original.getStatusCode())
+        .entity(original.getAsString());
+    original.getHeaders().forEach((h) -> builder.header(h.getName(), h.getValue()));
+    return builder.build();
   }
 }

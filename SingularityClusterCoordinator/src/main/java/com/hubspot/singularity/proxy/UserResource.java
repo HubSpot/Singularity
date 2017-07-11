@@ -24,25 +24,25 @@ public class UserResource extends ProxyResource {
 
   @GET
   @Path("/settings")
-  public SingularityUserSettings getUserSettings(@Context HttpServletRequest request) {
-    return routeToDefaultDataCenter(request, TypeRefs.USER_SETTINGS_REF);
+  public Response getUserSettings(@Context HttpServletRequest request) {
+    return routeToDefaultDataCenter(request);
   }
 
   @POST
   @Path("/settings")
   public Response setUserSettings(@Context HttpServletRequest request, SingularityUserSettings settings) {
-    return routeToDefaultDataCenter(request, TypeRefs.RESPONSE_REF);
+    return routeToDefaultDataCenter(request);
   }
 
   @POST
   @Path("/settings/starred-requests")
   public Response addStarredRequests(@Context HttpServletRequest request, SingularityUserSettings settings) {
-    return routeToDefaultDataCenter(request, settings, TypeRefs.RESPONSE_REF);
+    return routeToDefaultDataCenter(request, settings);
   }
 
   @DELETE
   @Path("/settings/starred-requests")
   public Response deleteStarredRequests(@Context HttpServletRequest request, SingularityUserSettings settings) {
-    return routeToDefaultDataCenter(request, settings, TypeRefs.RESPONSE_REF);
+    return routeToDefaultDataCenter(request, settings);
   }
 }

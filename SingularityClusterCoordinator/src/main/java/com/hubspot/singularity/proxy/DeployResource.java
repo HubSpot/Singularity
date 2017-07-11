@@ -1,7 +1,5 @@
 package com.hubspot.singularity.proxy;
 
-import java.util.List;
-
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -12,10 +10,9 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 
 import com.google.inject.Inject;
-import com.hubspot.singularity.SingularityPendingDeploy;
-import com.hubspot.singularity.SingularityRequestParent;
 import com.hubspot.singularity.SingularityUpdatePendingDeployRequest;
 import com.hubspot.singularity.api.SingularityDeployRequest;
 import com.hubspot.singularity.config.ApiPaths;
@@ -29,25 +26,25 @@ public class DeployResource extends ProxyResource {
 
   @GET
   @Path("/pending")
-  public List<SingularityPendingDeploy> getPendingDeploys(@Context HttpServletRequest request) {
-    return getMergedListResult(request, TypeRefs.PENDING_DEPLOY_LIST_REF);
+  public Response getPendingDeploys(@Context HttpServletRequest request) {
+    return getMergedListResult(request);
   }
 
   @POST
   @Consumes({ MediaType.APPLICATION_JSON })
-  public SingularityRequestParent deploy(@Context HttpServletRequest request, SingularityDeployRequest deployRequest) {
-    return routeByRequestId(request, deployRequest.getDeploy().getRequestId(), deployRequest, TypeRefs.REQUEST_PARENT_REF);
+  public Response deploy(@Context HttpServletRequest request, SingularityDeployRequest deployRequest) {
+    return routeByRequestId(request, deployRequest.getDeploy().getRequestId(), deployRequest);
   }
 
   @DELETE
   @Path("/deploy/{deployId}/request/{requestId}")
-  public SingularityRequestParent cancelDeploy(@Context HttpServletRequest request, @PathParam("requestId") String requestId, @PathParam("deployId") String deployId) {
-    return routeByRequestId(request, requestId, TypeRefs.REQUEST_PARENT_REF);
+  public Response cancelDeploy(@Context HttpServletRequest request, @PathParam("requestId") String requestId, @PathParam("deployId") String deployId) {
+    return routeByRequestId(request, requestId);
   }
 
   @POST
   @Path("/update")
-  public SingularityRequestParent updatePendingDeploy(@Context HttpServletRequest request, SingularityUpdatePendingDeployRequest updateRequest) {
-    return routeByRequestId(request, updateRequest.getRequestId(), updateRequest, TypeRefs.REQUEST_PARENT_REF);
+  public Response updatePendingDeploy(@Context HttpServletRequest request, SingularityUpdatePendingDeployRequest updateRequest) {
+    return routeByRequestId(request, updateRequest.getRequestId(), updateRequest);
   }
 }

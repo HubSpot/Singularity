@@ -7,10 +7,9 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 
 import com.google.inject.Inject;
-import com.hubspot.mesos.json.MesosFileChunkObject;
-import com.hubspot.singularity.SingularitySandbox;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.config.ApiPaths;
 
@@ -23,15 +22,15 @@ public class SandboxResource extends ProxyResource {
 
   @GET
   @Path("/{taskId}/browse")
-  public SingularitySandbox browse(@Context HttpServletRequest request, @PathParam("taskId") String taskId) {
+  public Response browse(@Context HttpServletRequest request, @PathParam("taskId") String taskId) {
     SingularityTaskId parsedId = SingularityTaskId.valueOf(taskId);
-    return routeByRequestId(request, parsedId.getRequestId(), TypeRefs.SANDBOX_REF);
+    return routeByRequestId(request, parsedId.getRequestId());
   }
 
   @GET
   @Path("/{taskId}/read")
-  public MesosFileChunkObject read(@Context HttpServletRequest request, @PathParam("taskId") String taskId) {
+  public Response read(@Context HttpServletRequest request, @PathParam("taskId") String taskId) {
     SingularityTaskId parsedId = SingularityTaskId.valueOf(taskId);
-    return routeByRequestId(request, parsedId.getRequestId(), TypeRefs.FILE_CHUNK_REF);
+    return routeByRequestId(request, parsedId.getRequestId());
   }
 }
