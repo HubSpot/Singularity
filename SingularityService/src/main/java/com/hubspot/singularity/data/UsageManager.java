@@ -133,7 +133,7 @@ public class UsageManager extends CuratorAsyncManager {
   }
 
   public SingularityCreateResult saveSpecificTaskUsage(String taskId, SingularityTaskUsage usage) {
-    return save(getSpecificTaskUsagePath(taskId, usage.getTimestamp()), usage, taskUsageTranscoder);
+    return save(getSpecificTaskUsagePath(taskId, usage.getTimestampSeconds()), usage, taskUsageTranscoder);
   }
 
   public SingularityCreateResult saveClusterUtilization(SingularityClusterUtilization utilization) {
@@ -164,7 +164,7 @@ public class UsageManager extends CuratorAsyncManager {
 
     @Override
     public int compare(SingularityTaskUsage o1, SingularityTaskUsage o2) {
-      return Double.compare(o1.getTimestamp(), o2.getTimestamp());
+      return Double.compare(o1.getTimestampSeconds(), o2.getTimestampSeconds());
     }
 
   };
