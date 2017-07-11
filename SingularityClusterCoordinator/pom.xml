@@ -51,8 +51,13 @@
     </dependency>
 
     <dependency>
-      <groupId>com.ning</groupId>
-      <artifactId>async-http-client</artifactId>
+      <groupId>com.hubspot</groupId>
+      <artifactId>HorizonCore</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>com.hubspot</groupId>
+      <artifactId>HorizonNing</artifactId>
     </dependency>
 
     <dependency>
