@@ -131,7 +131,7 @@ public class TaskResource extends ProxyResource {
   @Consumes({ MediaType.APPLICATION_JSON })
   public Response postTaskMetadata(@Context HttpServletRequest request, @PathParam("taskId") String taskId, final SingularityTaskMetadataRequest taskMetadataRequest) {
     SingularityTaskId parsedId = SingularityTaskId.valueOf(taskId);
-    return routeByRequestId(request, parsedId.getRequestId());
+    return routeByRequestId(request, parsedId.getRequestId(), taskMetadataRequest);
   }
 
   @POST
@@ -139,6 +139,6 @@ public class TaskResource extends ProxyResource {
   @Consumes({ MediaType.APPLICATION_JSON })
   public Response runShellCommand(@Context HttpServletRequest request, @PathParam("taskId") String taskId, final SingularityShellCommand shellCommand) {
     SingularityTaskId parsedId = SingularityTaskId.valueOf(taskId);
-    return routeByRequestId(request, parsedId.getRequestId());
+    return routeByRequestId(request, parsedId.getRequestId(), shellCommand);
   }
 }

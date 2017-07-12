@@ -44,6 +44,6 @@ public class RequestGroupResource extends ProxyResource {
     // TODO - route by more than first request id?
     // TODO - add to internal list of groups?
     // TODO - error if list is empty?
-    return routeByRequestId(request, requestGroup.getRequestIds().get(0));
+    return routeByRequestId(request, requestGroup.getRequestIds().get(0), requestGroup);
   }
 }

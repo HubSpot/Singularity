@@ -50,13 +50,13 @@ public class RackResource extends ProxyResource {
   @POST
   @Path("/rack/{rackId}/freeze")
   public Response freezeRack(@Context HttpServletRequest request, @PathParam("rackId") String rackId, SingularityMachineChangeRequest changeRequest) {
-    return routeByRackId(request, rackId);
+    return routeByRackId(request, rackId, changeRequest);
   }
 
   @POST
   @Path("/rack/{rackId}/activate")
   public Response activateRack(@Context HttpServletRequest request, @PathParam("rackId") String rackId, SingularityMachineChangeRequest changeRequest) {
-    return routeByRackId(request, rackId);
+    return routeByRackId(request, rackId, changeRequest);
   }
 
   @DELETE

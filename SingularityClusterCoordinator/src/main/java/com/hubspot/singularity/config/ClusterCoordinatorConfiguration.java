@@ -25,6 +25,8 @@ public class ClusterCoordinatorConfiguration extends Configuration {
 
   private Optional<SingularityClientCredentials> defaultClientCredentials;
 
+  private boolean errorOnDataCenterNotSpecified = false;
+
   // Settings to inform the ui
   private Integer defaultMemory = 64;
   private Integer defaultCpus = 1;
@@ -159,5 +161,14 @@ public class ClusterCoordinatorConfiguration extends Configuration {
 
   public void setDefaultClientCredentials(Optional<SingularityClientCredentials> defaultClientCredentials) {
     this.defaultClientCredentials = defaultClientCredentials;
+  }
+
+  public boolean isErrorOnDataCenterNotSpecified() {
+    return errorOnDataCenterNotSpecified;
+  }
+
+  public ClusterCoordinatorConfiguration setErrorOnDataCenterNotSpecified(boolean errorOnDataCenterNotSpecified) {
+    this.errorOnDataCenterNotSpecified = errorOnDataCenterNotSpecified;
+    return this;
   }
 }
