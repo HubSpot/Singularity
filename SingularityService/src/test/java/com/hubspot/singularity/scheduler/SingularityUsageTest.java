@@ -127,6 +127,7 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
     resourceOffers(1);
 
     configuration.setNumUsageToKeep(2);
+    configuration.setUsageIntervalSeconds(1);
     configuration.setCheckUsageEveryMillis(1);
 
     List<SingularityTaskId> taskIds = taskManager.getActiveTaskIds();
@@ -319,7 +320,7 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
   @Test
   public void itCorrectlyDeletesOldUsage() {
     configuration.setNumUsageToKeep(3);
-    configuration.setUsageIntervalMultiplier(3);
+    configuration.setUsageIntervalSeconds(180);
     configuration.setCheckUsageEveryMillis(TimeUnit.MINUTES.toMillis(1));
     long now = TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis());
 
