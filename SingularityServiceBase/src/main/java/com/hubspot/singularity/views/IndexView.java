@@ -5,10 +5,10 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
-import com.google.common.base.Strings;
 import com.google.common.base.Throwables;
-import com.hubspot.singularity.SingularityService;
-import com.hubspot.singularity.config.SingularityConfiguration;
+import com.hubspot.singularity.config.ApiPaths;
+import com.hubspot.singularity.config.IndexViewConfiguration;
+import com.hubspot.singularity.config.UIConfiguration;
 
 import io.dropwizard.views.View;
 
@@ -61,65 +61,67 @@ public class IndexView extends View {
 
   private final String extraScript;
 
-  public IndexView(String singularityUriBase, String appRoot, SingularityConfiguration configuration, ObjectMapper mapper) {
+  public IndexView(String singularityUriBase, String appRoot, IndexViewConfiguration configuration, ObjectMapper mapper) {
     super("index.mustache");
 
     checkNotNull(singularityUriBase, "singularityUriBase is null");
+
+    UIConfiguration uiConfiguration = configuration.getUiConfiguration();
 
     String rawAppRoot = String.format("%s%s", singularityUriBase, appRoot);
 
     this.appRoot = (rawAppRoot.endsWith("/")) ? rawAppRoot.substring(0, rawAppRoot.length() - 1) : rawAppRoot;
     this.staticRoot = String.format("%s/static", singularityUriBase);
     this.apiDocs = String.format("%s/api-docs/", singularityUriBase);
-    this.apiRoot = String.format("%s%s", singularityUriBase, SingularityService.API_BASE_PATH);
+    this.apiRoot = String.format("%s%s", singularityUriBase, ApiPaths.API_BASE_PATH);
 
-    this.title = configuration.getUiConfiguration().getTitle();
+    this.title = uiConfiguration.getTitle();
 
-    this.slaveHttpPort = configuration.getMesosConfiguration().getSlaveHttpPort();
-    this.slaveHttpsPort = configuration.getMesosConfiguration().getSlaveHttpsPort().orNull();
+    this.slaveHttpPort = configuration.getSlaveHttpPort();
+    this.slaveHttpsPort = configuration.getSlaveHttpsPort().orNull();
 
-    this.defaultCpus = configuration.getMesosConfiguration().getDefaultCpus();
-    this.defaultMemory = configuration.getMesosConfiguration().getDefaultMemory();
+    this.defaultCpus = configuration.getDefaultCpus();
+    this.defaultMemory = configuration.getDefaultMemory();
 
-    this.hideNewDeployButton = configuration.getUiConfiguration().isHideNewDeployButton();
-    this.hideNewRequestButton = configuration.getUiConfiguration().isHideNewRequestButton();
-    this.loadBalancingEnabled = !Strings.isNullOrEmpty(configuration.getLoadBalancerUri());
+    this.hideNewDeployButton = uiConfiguration.isHideNewDeployButton();
+    this.hideNewRequestButton = uiConfiguration.isHideNewRequestButton();
+    this.loadBalancingEnabled = configuration.isLoadBalancingEnabled();
 
-    this.navColor = configuration.getUiConfiguration().getNavColor().or("");
+    this.navColor = uiConfiguration.getNavColor().or("");
 
-    this.defaultBounceExpirationMinutes = configuration.getDefaultBounceExpirationMinutes();
+    this.defaultBounceExpirationMinutes = configuration.getBounceExpirationMinutes();
     this.defaultHealthcheckIntervalSeconds = configuration.getHealthcheckIntervalSeconds();
     this.defaultHealthcheckTimeoutSeconds = configuration.getHealthcheckTimeoutSeconds();
     this.defaultHealthcheckMaxRetries = configuration.getHealthcheckMaxRetries().or(0);
     this.defaultStartupTimeoutSeconds = configuration.getStartupTimeoutSeconds();
 
-    this.runningTaskLogPath = configuration.getUiConfiguration().getRunningTaskLogPath();
-    this.finishedTaskLogPath = configuration.getUiConfiguration().getFinishedTaskLogPath();
+    this.runningTaskLogPath = uiConfiguration.getRunningTaskLogPath();
+    this.finishedTaskLogPath = uiConfiguration.getFinishedTaskLogPath();
 
-    this.showTaskDiskResource = configuration.getUiConfiguration().isShowTaskDiskResource();
+    this.showTaskDiskResource = uiConfiguration.isShowTaskDiskResource();
 
     this.commonHostnameSuffixToOmit = configuration.getCommonHostnameSuffixToOmit().or("");
 
-    this.taskS3LogOmitPrefix = configuration.getUiConfiguration().getTaskS3LogOmitPrefix().or("");
+    this.taskS3LogOmitPrefix = uiConfiguration.getTaskS3LogOmitPrefix().or("");
 
     this.warnIfScheduledJobIsRunningPastNextRunPct = configuration.getWarnIfScheduledJobIsRunningPastNextRunPct();
 
-    this.redirectOnUnauthorizedUrl = configuration.getUiConfiguration().getRedirectOnUnauthorizedUrl().or("");
+    this.redirectOnUnauthorizedUrl = uiConfiguration.getRedirectOnUnauthorizedUrl().or("");
 
     ObjectWriter ow = mapper.writer().withDefaultPrettyPrinter();
     try {
-      this.shellCommands = ow.writeValueAsString(configuration.getUiConfiguration().getShellCommands());
+      this.shellCommands = ow.writeValueAsString(uiConfiguration.getShellCommands());
     } catch (JsonProcessingException e) {
       throw Throwables.propagate(e);
     }
 
-    this.shortenSlaveUsageHostname = configuration.getUiConfiguration().isShortenSlaveUsageHostname();
+    this.shortenSlaveUsageHostname = uiConfiguration.isShortenSlaveUsageHostname();
 
-    this.timestampFormat = configuration.getUiConfiguration().getTimestampFormat();
+    this.timestampFormat = uiConfiguration.getTimestampFormat();
 
-    this.timestampWithSecondsFormat = configuration.getUiConfiguration().getTimestampWithSecondsFormat();
+    this.timestampWithSecondsFormat = uiConfiguration.getTimestampWithSecondsFormat();
 
-    this.extraScript = configuration.getUiConfiguration().getExtraScript().orNull();
+    this.extraScript = uiConfiguration.getExtraScript().orNull();
   }
 
   public String getAppRoot() {
