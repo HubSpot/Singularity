@@ -48,7 +48,7 @@
     "react-copy-to-clipboard": "^4.2.3",
     "react-dom": "^15.1.0",
     "react-interval": "^1.2.1",
-    "react-json-tree": "^0.8.0",
+    "react-json-tree": "^0.10.9",
     "react-redux": "^5.0.5",
     "react-router": "^2.5.2",
     "react-router-redux": "^4.0.5",
