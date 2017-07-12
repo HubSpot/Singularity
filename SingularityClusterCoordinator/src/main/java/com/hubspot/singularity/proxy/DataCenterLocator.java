@@ -54,7 +54,7 @@ public class DataCenterLocator implements Managed {
     return dataCenter.getHosts().get(random.nextInt(dataCenter.getHosts().size()));
   }
 
-  DataCenter getDataCenterForRequest(String requestId) {
+  DataCenter getDataCenterForRequest(String requestId, boolean isGetRequest) {
     for (Map.Entry<String, DataCenter> entry : dataCenters.entrySet()) {
       if (requestIdsByDataCenter.get(entry.getKey()).contains(requestId)) {
         return entry.getValue();
@@ -70,18 +70,18 @@ public class DataCenterLocator implements Managed {
         return entry.getValue();
       }
     }
-    throw new DataCenterNotFoundException(String.format("Could not find requestId '%s' in any data center", requestId));
+    throw new DataCenterNotFoundException(String.format("Could not find requestId '%s' in any data center", requestId), isGetRequest ? 404 :500);
   }
 
-  Optional<DataCenter> getMaybeDataCenterForRequest(String requestId) {
+  Optional<DataCenter> getMaybeDataCenterForRequest(String requestId, boolean isGetRequest) {
     try {
-      return Optional.of(getDataCenterForRequest(requestId));
+      return Optional.of(getDataCenterForRequest(requestId, isGetRequest));
     } catch (DataCenterNotFoundException nfe) {
       return Optional.absent();
     }
   }
 
-  DataCenter getDataCenterForRequestGroup(String requestGroupId) {
+  DataCenter getDataCenterForRequestGroup(String requestGroupId, boolean isGetRequest) {
     for (Map.Entry<String, DataCenter> entry : dataCenters.entrySet()) {
       if (requestGroupsByDataCenter.get(entry.getKey()).contains(requestGroupId)) {
         return entry.getValue();
@@ -97,10 +97,10 @@ public class DataCenterLocator implements Managed {
         return entry.getValue();
       }
     }
-    throw new DataCenterNotFoundException(String.format("Could not find requestGroupId '%s' in any data center", requestGroupId));
+    throw new DataCenterNotFoundException(String.format("Could not find requestGroupId '%s' in any data center", requestGroupId), isGetRequest ? 404 :500);
   }
 
-   DataCenter getDataCenterForSlaveId(String slaveId) {
+   DataCenter getDataCenterForSlaveId(String slaveId, boolean isGetRequest) {
      for (Map.Entry<String, DataCenter> entry : dataCenters.entrySet()) {
        if (slaveIdsByDataCenter.get(entry.getKey()).contains(slaveId)) {
          return entry.getValue();
@@ -118,10 +118,10 @@ public class DataCenterLocator implements Managed {
          return entry.getValue();
        }
      }
-     throw new DataCenterNotFoundException(String.format("Could not find slaveId '%s' in any data center", slaveId));
+     throw new DataCenterNotFoundException(String.format("Could not find slaveId '%s' in any data center", slaveId), isGetRequest ? 404 :500);
   }
 
-  DataCenter getDataCenterForSlaveHostname(String hostname) {
+  DataCenter getDataCenterForSlaveHostname(String hostname, boolean isGetRequest) {
     for (Map.Entry<String, DataCenter> entry : dataCenters.entrySet()) {
       if (hostnamesByDataCenter.get(entry.getKey()).contains(hostname)) {
         return entry.getValue();
@@ -141,10 +141,10 @@ public class DataCenterLocator implements Managed {
         }
       }
     }
-    throw new DataCenterNotFoundException(String.format("Could not find slave with hostname '%s' in any data center", hostname));
+    throw new DataCenterNotFoundException(String.format("Could not find slave with hostname '%s' in any data center", hostname), isGetRequest ? 404 :500);
   }
 
-  DataCenter getDataCenterForRackId(String rackId) {
+  DataCenter getDataCenterForRackId(String rackId, boolean isGetRequest) {
     for (Map.Entry<String, DataCenter> entry : dataCenters.entrySet()) {
       if (rackIdsByDataCenter.get(entry.getKey()).contains(rackId)) {
         return entry.getValue();
@@ -164,14 +164,14 @@ public class DataCenterLocator implements Managed {
         }
       }
     }
-    throw new DataCenterNotFoundException(String.format("Could not find rack with id '%s' in any data center", rackId));
+    throw new DataCenterNotFoundException(String.format("Could not find rack with id '%s' in any data center", rackId), isGetRequest ? 404 :500);
   }
 
   DataCenter getDataCenter(String name) {
     if (dataCenters.containsKey(name)) {
       return dataCenters.get(name);
     } else {
-      throw new DataCenterNotFoundException(String.format("No known data center with name: %s", name));
+      throw new DataCenterNotFoundException(String.format("No known data center with name: %s", name), 404);
     }
   }
 
