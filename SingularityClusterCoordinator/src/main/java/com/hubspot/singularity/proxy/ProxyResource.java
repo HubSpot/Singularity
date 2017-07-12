@@ -159,12 +159,16 @@ public class ProxyResource {
    * Route a request to a particular dataCenter using the rack ID to locate the correct Singularity cluster
    */
   Response routeByRackId(HttpServletRequest request, String rackId) {
+    return routeByRackId(request, rackId, null);
+  }
+
+  <T> Response routeByRackId(HttpServletRequest request, String rackId, T body) {
     List<Param> headers = getHeaders(request);
     List<Param> params = getParams(request);
 
     DataCenter dataCenter = getDataCenterForRackId(rackId, request.getMethod().toUpperCase().equals("GET"));
 
-    return toResponse(proxyAndGetResponse(dataCenter, request, null, headers, params));
+    return toResponse(proxyAndGetResponse(dataCenter, request, body, headers, params));
   }
 
   /*
