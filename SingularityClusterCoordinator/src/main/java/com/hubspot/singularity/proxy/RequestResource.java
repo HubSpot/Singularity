@@ -56,7 +56,11 @@ public class RequestResource extends ProxyResource {
     if (request.getDataCenter().isPresent()) {
       return routeByDataCenter(requestContext, request.getDataCenter().get(), request);
     }
-    throw new DataCenterNotFoundException(String.format("No data center specified in request %s, and no existing request found in any data center", request.getId()), 500);
+    if (configuration.isErrorOnDataCenterNotSpecified()) {
+      throw new DataCenterNotFoundException(String.format("No data center specified in request %s, and no existing request found in any data center", request.getId()), 500);
+    } else {
+      return routeToDefaultDataCenter(requestContext, request);
+    }
   }
 
   @POST
