@@ -13,6 +13,9 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.hubspot.singularity.SingularityRequest;
@@ -32,6 +35,7 @@ import com.hubspot.singularity.exceptions.DataCenterNotFoundException;
 @Path(ApiPaths.REQUEST_RESOURCE_PATH)
 @Produces({ MediaType.APPLICATION_JSON })
 public class RequestResource extends ProxyResource {
+  private static final Logger LOG = LoggerFactory.getLogger(RequestResource.class);
 
   @Inject
   public RequestResource() {}
@@ -41,12 +45,14 @@ public class RequestResource extends ProxyResource {
   public Response postRequest(@Context HttpServletRequest requestContext, SingularityRequest request) {
     Optional<DataCenter> maybeDataCenter = dataCenterLocator.getMaybeDataCenterForRequest(request.getId(), false);
     if (maybeDataCenter.isPresent()) {
+      LOG.trace("Found data center {} for request {}", maybeDataCenter.get().getName(), request.getId());
       if (request.getDataCenter().isPresent() && !request.getDataCenter().get().equals(maybeDataCenter.get().getName())) {
         throw new DataCenterConflictException(String.format("Cannot create request with id %s in multiple datacenters (requested: %s), already found in %s", request.getId(), request.getDataCenter().get(), maybeDataCenter.get().getName()));
       }
       return routeByDataCenter(requestContext, request.getDataCenter().get(), request);
     }
 
+    LOG.trace("Check request {}", request);
     if (request.getDataCenter().isPresent()) {
       return routeByDataCenter(requestContext, request.getDataCenter().get(), request);
     }
