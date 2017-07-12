@@ -39,7 +39,7 @@ public class RequestResource extends ProxyResource {
   @POST
   @Consumes({ MediaType.APPLICATION_JSON })
   public Response postRequest(@Context HttpServletRequest requestContext, SingularityRequest request) {
-    Optional<DataCenter> maybeDataCenter = dataCenterLocator.getMaybeDataCenterForRequest(request.getId());
+    Optional<DataCenter> maybeDataCenter = dataCenterLocator.getMaybeDataCenterForRequest(request.getId(), false);
     if (maybeDataCenter.isPresent()) {
       if (request.getDataCenter().isPresent() && !request.getDataCenter().get().equals(maybeDataCenter.get().getName())) {
         throw new DataCenterConflictException(String.format("Cannot create request with id %s in multiple datacenters (requested: %s), already found in %s", request.getId(), request.getDataCenter().get(), maybeDataCenter.get().getName()));
@@ -50,7 +50,7 @@ public class RequestResource extends ProxyResource {
     if (request.getDataCenter().isPresent()) {
       return routeByDataCenter(requestContext, request.getDataCenter().get(), request);
     }
-    throw new DataCenterNotFoundException(String.format("No data center specified in request %s, and no existing request found in any data center", request.getId()));
+    throw new DataCenterNotFoundException(String.format("No data center specified in request %s, and no existing request found in any data center", request.getId()), 500);
   }
 
   @POST
