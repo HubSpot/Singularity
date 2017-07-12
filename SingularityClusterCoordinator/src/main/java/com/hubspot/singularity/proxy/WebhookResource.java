@@ -37,7 +37,7 @@ public class WebhookResource extends ProxyResource {
 
   @POST
   public Response addWebhook(@Context HttpServletRequest request, SingularityWebhook webhook) {
-    return routeToDefaultDataCenter(request);
+    return routeToDefaultDataCenter(request, webhook);
   }
 
   @DELETE

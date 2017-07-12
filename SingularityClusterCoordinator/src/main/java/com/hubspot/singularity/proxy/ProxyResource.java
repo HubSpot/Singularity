@@ -230,7 +230,7 @@ public class ProxyResource {
     String fullPath = request.getContextPath() + request.getPathInfo();
     String url = String.format("%s://%s%s", dc.getScheme(), getHost(dc), fullPath.replace(contextPath, dc.getContextPath()));
 
-    LOG.debug("Proxying {} to: {}", fullPath, url);
+    LOG.debug("Proxying {} to: ({}) {}", fullPath, dc.getName(), url);
     HttpRequest.Builder requestBuilder = HttpRequest.newBuilder()
         .setMethod(Method.valueOf(request.getMethod()))
         .setUrl(url);
@@ -278,6 +278,7 @@ public class ProxyResource {
   }
 
   private Response toResponse(HttpResponse original) {
+    LOG.trace("Got response {}", original.getStatusCode());
     ResponseBuilder builder = Response.status(original.getStatusCode())
         .entity(original.getAsString());
     original.getHeaders().forEach((h) -> builder.header(h.getName(), h.getValue()));
@@ -299,6 +300,14 @@ public class ProxyResource {
 
     String getValue() {
       return value;
+    }
+
+    @Override
+    public String toString() {
+      return "Param{" +
+          "key='" + key + '\'' +
+          ", value='" + value + '\'' +
+          '}';
     }
   }
 }
