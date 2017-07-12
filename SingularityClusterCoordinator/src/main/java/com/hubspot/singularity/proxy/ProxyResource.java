@@ -113,7 +113,7 @@ public class ProxyResource {
     List<Param> headers = getHeaders(request);
     List<Param> params = getParams(request);
 
-    DataCenter dataCenter = getDataCenterForRequest(requestId);
+    DataCenter dataCenter = getDataCenterForRequest(requestId, request.getMethod().toUpperCase().equals("GET"));
 
     return toResponse(proxyAndGetResponse(dataCenter, request, body, headers, params));
   }
@@ -125,7 +125,7 @@ public class ProxyResource {
     List<Param> headers = getHeaders(request);
     List<Param> params = getParams(request);
 
-    DataCenter dataCenter = getDataCenterForRequestGroup(requestGroupId);
+    DataCenter dataCenter = getDataCenterForRequestGroup(requestGroupId, request.getMethod().toUpperCase().equals("GET"));
 
     return toResponse(proxyAndGetResponse(dataCenter, request, null, headers, params));
   }
@@ -141,7 +141,7 @@ public class ProxyResource {
     List<Param> headers = getHeaders(request);
     List<Param> params = getParams(request);
 
-    DataCenter dataCenter = getDataCenterForSlaveId(slaveId);
+    DataCenter dataCenter = getDataCenterForSlaveId(slaveId, request.getMethod().toUpperCase().equals("GET"));
 
     return toResponse(proxyAndGetResponse(dataCenter, request, body, headers, params));
   }
@@ -150,7 +150,7 @@ public class ProxyResource {
     List<Param> headers = getHeaders(request);
     List<Param> params = getParams(request);
 
-    DataCenter dataCenter = getDataCenterForSlaveHostname(hostname);
+    DataCenter dataCenter = getDataCenterForSlaveHostname(hostname, request.getMethod().toUpperCase().equals("GET"));
 
     return toResponse(proxyAndGetResponse(dataCenter, request, null, headers, params));
   }
@@ -162,7 +162,7 @@ public class ProxyResource {
     List<Param> headers = getHeaders(request);
     List<Param> params = getParams(request);
 
-    DataCenter dataCenter = getDataCenterForRackId(rackId);
+    DataCenter dataCenter = getDataCenterForRackId(rackId, request.getMethod().toUpperCase().equals("GET"));
 
     return toResponse(proxyAndGetResponse(dataCenter, request, null, headers, params));
   }
@@ -202,24 +202,24 @@ public class ProxyResource {
     return dataCenterLocator.getHost(dataCenter);
   }
 
-  private DataCenter getDataCenterForRequest(String requestId) {
-    return dataCenterLocator.getDataCenterForRequest(requestId);
+  private DataCenter getDataCenterForRequest(String requestId, boolean isGetRequest) {
+    return dataCenterLocator.getDataCenterForRequest(requestId, isGetRequest);
   }
 
-  private DataCenter getDataCenterForRequestGroup(String requestGroupId) {
-    return dataCenterLocator.getDataCenterForRequestGroup(requestGroupId);
+  private DataCenter getDataCenterForRequestGroup(String requestGroupId, boolean isGetRequest) {
+    return dataCenterLocator.getDataCenterForRequestGroup(requestGroupId, isGetRequest);
   }
 
-  private DataCenter getDataCenterForSlaveId(String slaveId) {
-    return dataCenterLocator.getDataCenterForSlaveId(slaveId);
+  private DataCenter getDataCenterForSlaveId(String slaveId, boolean isGetRequest) {
+    return dataCenterLocator.getDataCenterForSlaveId(slaveId, isGetRequest);
   }
 
-  private DataCenter getDataCenterForSlaveHostname(String hostname) {
-    return dataCenterLocator.getDataCenterForSlaveHostname(hostname);
+  private DataCenter getDataCenterForSlaveHostname(String hostname, boolean isGetRequest) {
+    return dataCenterLocator.getDataCenterForSlaveHostname(hostname, isGetRequest);
   }
 
-  private DataCenter getDataCenterForRackId(String rackId) {
-    return dataCenterLocator.getDataCenterForRackId(rackId);
+  private DataCenter getDataCenterForRackId(String rackId, boolean isGetRequest) {
+    return dataCenterLocator.getDataCenterForRackId(rackId, isGetRequest);
   }
 
   private DataCenter getDataCenter(String name) {
