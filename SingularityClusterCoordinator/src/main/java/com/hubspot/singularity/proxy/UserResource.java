@@ -31,7 +31,7 @@ public class UserResource extends ProxyResource {
   @POST
   @Path("/settings")
   public Response setUserSettings(@Context HttpServletRequest request, SingularityUserSettings settings) {
-    return routeToDefaultDataCenter(request);
+    return routeToDefaultDataCenter(request, settings);
   }
 
   @POST
