@@ -5,15 +5,23 @@ import {ButtonGroup, DropdownButton} from 'react-bootstrap';
 class NewTasksDropdown extends React.Component {
 
   handleSelectAll() {
-    if (this.props.visibleTasks.length === this.props.runningTasks.length) {
+    if (this.props.visibleTasks.length >= Math.min(this.props.runningTasks.length, 8)) {
+      if (!this.props.visibleTasks.includes(_.first(this.props.runningTasks).taskId.id)) {
+        this.props.onToggle(_.first(this.props.runningTasks).taskId.id);
+      }
       _.rest(this.props.runningTasks).forEach((task) => {
         if (this.props.visibleTasks.includes(task.taskId.id)) {
           this.props.onToggle(task.taskId.id);
         }
       });
     } else {
-      this.props.runningTasks.forEach((task) => {
+      _.take(this.props.runningTasks, 8).forEach((task) => {
         if (!this.props.visibleTasks.includes(task.taskId.id)) {
+          this.props.onToggle(task.taskId.id);
+        }
+      });
+      _.rest(this.props.runningTasks, 9).forEach((task) => {
+        if (this.props.visibleTasks.includes(task.taskId.id)) {
           this.props.onToggle(task.taskId.id);
         }
       });
@@ -37,7 +45,7 @@ class NewTasksDropdown extends React.Component {
           <a>
             <Checkbox
               inline={true}
-              checked={this.props.visibleTasks.length === this.props.runningTasks.length}
+              checked={this.props.visibleTasks.length >= Math.min(this.props.runningTasks.length, 8)}
               onChange={() => this.handleSelectAll()}
             >
               Select All
