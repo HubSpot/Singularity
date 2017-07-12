@@ -133,7 +133,7 @@ public class UsageManager extends CuratorAsyncManager {
   }
 
   public SingularityCreateResult saveSpecificTaskUsage(String taskId, SingularityTaskUsage usage) {
-    return save(getSpecificTaskUsagePath(taskId, usage.getTimestampSeconds()), usage, taskUsageTranscoder);
+    return save(getSpecificTaskUsagePath(taskId, usage.getTimestamp()), usage, taskUsageTranscoder);
   }
 
   public SingularityCreateResult saveClusterUtilization(SingularityClusterUtilization utilization) {
@@ -164,7 +164,7 @@ public class UsageManager extends CuratorAsyncManager {
 
     @Override
     public int compare(SingularityTaskUsage o1, SingularityTaskUsage o2) {
-      return Double.compare(o1.getTimestampSeconds(), o2.getTimestampSeconds());
+      return Double.compare(o1.getTimestamp(), o2.getTimestamp());
     }
 
   };
@@ -172,6 +172,14 @@ public class UsageManager extends CuratorAsyncManager {
   public List<SingularityTaskUsage> getTaskUsage(String taskId) {
     List<SingularityTaskUsage> children = getAsyncChildren(getTaskUsageHistoryPath(taskId), taskUsageTranscoder);
     children.sort(TASK_USAGE_COMPARATOR_TIMESTAMP_ASC);
+    return children;
+  }
+
+  private static final Comparator<String> TASK_USAGE_PATH_COMPARATOR_TIMESTAMP_ASC = Comparator.comparingDouble(Double::parseDouble);
+
+  public List<String> getTaskUsagePaths(String taskId) {
+    List<String> children = getChildren(getTaskUsageHistoryPath(taskId));
+    children.sort(TASK_USAGE_PATH_COMPARATOR_TIMESTAMP_ASC);
     return children;
   }
 
