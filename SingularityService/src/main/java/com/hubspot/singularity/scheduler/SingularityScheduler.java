@@ -444,7 +444,7 @@ public class SingularityScheduler {
       maybePendingDeploy);
 
     if (numMissingInstances > 0) {
-      schedule(numMissingInstances, matchingTaskIds, request, state, deployStatistics, pendingRequest, maybePendingDeploy);
+      schedule(stateCache, numMissingInstances, matchingTaskIds, request, state, deployStatistics, pendingRequest, maybePendingDeploy);
     } else if (numMissingInstances < 0) {
       final long now = System.currentTimeMillis();
 
@@ -479,7 +479,7 @@ public class SingularityScheduler {
         }
         remainingActiveTasks.removeAll(extraCleanedTasks);
         if (extraCleanedTasks.size() > 0) {
-          schedule(extraCleanedTasks.size(), remainingActiveTasks, request, state, deployStatistics, pendingRequest, maybePendingDeploy);
+          schedule(stateCache, extraCleanedTasks.size(), remainingActiveTasks, request, state, deployStatistics, pendingRequest, maybePendingDeploy);
         }
       }
 
@@ -488,7 +488,7 @@ public class SingularityScheduler {
     return numMissingInstances;
   }
 
-  private void schedule(int numMissingInstances, List<SingularityTaskId> matchingTaskIds, SingularityRequest request, RequestState state, SingularityDeployStatistics deployStatistics,
+  private void schedule(SingularitySchedulerStateCache stateCache, int numMissingInstances, List<SingularityTaskId> matchingTaskIds, SingularityRequest request, RequestState state, SingularityDeployStatistics deployStatistics,
     SingularityPendingRequest pendingRequest, Optional<SingularityPendingDeploy> maybePendingDeploy) {
     final List<SingularityPendingTask> scheduledTasks =
       getScheduledTaskIds(numMissingInstances, matchingTaskIds, request, state, deployStatistics, pendingRequest.getDeployId(), pendingRequest, maybePendingDeploy);
@@ -498,6 +498,7 @@ public class SingularityScheduler {
 
       for (SingularityPendingTask scheduledTask : scheduledTasks) {
         taskManager.savePendingTask(scheduledTask);
+        stateCache.getScheduledTasks().add(scheduledTask);
       }
     } else {
       LOG.info("No new scheduled tasks found for {}, setting state to {}", request.getId(), RequestState.FINISHED);
