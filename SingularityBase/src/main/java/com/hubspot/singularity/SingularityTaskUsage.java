@@ -6,13 +6,13 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 public class SingularityTaskUsage {
 
   private final long memoryTotalBytes;
-  private final double timestampSeconds;
+  private final double timestamp; // seconds
   private final double cpuSeconds;
 
   @JsonCreator
-  public SingularityTaskUsage(@JsonProperty("memoryTotalBytes") long memoryTotalBytes, @JsonProperty("timestampSeconds") double timestampSeconds, @JsonProperty("cpuSeconds") double cpuSeconds) {
+  public SingularityTaskUsage(@JsonProperty("memoryTotalBytes") long memoryTotalBytes, @JsonProperty("timestamp") double timestamp, @JsonProperty("cpuSeconds") double cpuSeconds) {
     this.memoryTotalBytes = memoryTotalBytes;
-    this.timestampSeconds = timestampSeconds;
+    this.timestamp = timestamp;
     this.cpuSeconds = cpuSeconds;
   }
 
@@ -20,8 +20,8 @@ public class SingularityTaskUsage {
     return memoryTotalBytes;
   }
 
-  public double getTimestampSeconds() {
-    return timestampSeconds;
+  public double getTimestamp() {
+    return timestamp;
   }
 
   public double getCpuSeconds() {
@@ -30,7 +30,7 @@ public class SingularityTaskUsage {
 
   @Override
   public String toString() {
-    return "SingularityTaskUsage [memoryTotalBytes=" + memoryTotalBytes + ", timestampSeconds=" + timestampSeconds + ", cpuSeconds=" + cpuSeconds + "]";
+    return "SingularityTaskUsage [memoryTotalBytes=" + memoryTotalBytes + ", timestamp=" + timestamp + ", cpuSeconds=" + cpuSeconds + "]";
   }
 
 }
