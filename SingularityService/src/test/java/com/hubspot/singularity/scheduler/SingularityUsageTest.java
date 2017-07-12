@@ -71,7 +71,7 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
 
     Assert.assertEquals(2, first.getCpuSeconds(), 0);
     Assert.assertEquals(100, first.getMemoryTotalBytes(), 0);
-    Assert.assertEquals(5, first.getTimestampSeconds(), 0);
+    Assert.assertEquals(5, first.getTimestamp(), 0);
   }
 
   @Test
@@ -346,8 +346,8 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
     saveTaskUsage(taskId, now, now + TimeUnit.MINUTES.toSeconds(3), now + TimeUnit.MINUTES.toSeconds(4));
     clearUsages(taskId);
     Assert.assertEquals(2, usageManager.getTaskUsage(taskId).size());
-    Assert.assertEquals(now, (long) usageManager.getTaskUsage(taskId).get(0).getTimestampSeconds());
-    Assert.assertEquals(now + TimeUnit.MINUTES.toSeconds(3), (long) usageManager.getTaskUsage(taskId).get(1).getTimestampSeconds());
+    Assert.assertEquals(now, (long) usageManager.getTaskUsage(taskId).get(0).getTimestamp());
+    Assert.assertEquals(now + TimeUnit.MINUTES.toSeconds(3), (long) usageManager.getTaskUsage(taskId).get(1).getTimestamp());
 
     // x1 (1 min apart) x2 (1 min apart) x3
     // x2 is deleted
@@ -355,8 +355,8 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
     saveTaskUsage(taskId, now, now + TimeUnit.MINUTES.toSeconds(1), now + TimeUnit.MINUTES.toSeconds(2));
     clearUsages(taskId);
     Assert.assertEquals(2, usageManager.getTaskUsage(taskId).size());
-    Assert.assertEquals(now, (long) usageManager.getTaskUsage(taskId).get(0).getTimestampSeconds());
-    Assert.assertEquals(now + TimeUnit.MINUTES.toSeconds(2), (long) usageManager.getTaskUsage(taskId).get(1).getTimestampSeconds());
+    Assert.assertEquals(now, (long) usageManager.getTaskUsage(taskId).get(0).getTimestamp());
+    Assert.assertEquals(now + TimeUnit.MINUTES.toSeconds(2), (long) usageManager.getTaskUsage(taskId).get(1).getTimestamp());
 
     // x1 (3 min apart) x2 (3 min apart) x3
     // x1 is deleted
@@ -364,8 +364,8 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
     saveTaskUsage(taskId, now, now + TimeUnit.MINUTES.toSeconds(3), now + TimeUnit.MINUTES.toSeconds(6));
     clearUsages(taskId);
     Assert.assertEquals(2, usageManager.getTaskUsage(taskId).size());
-    Assert.assertEquals(now + TimeUnit.MINUTES.toSeconds(3), (long) usageManager.getTaskUsage(taskId).get(0).getTimestampSeconds());
-    Assert.assertEquals(now + TimeUnit.MINUTES.toSeconds(6), (long) usageManager.getTaskUsage(taskId).get(1).getTimestampSeconds());
+    Assert.assertEquals(now + TimeUnit.MINUTES.toSeconds(3), (long) usageManager.getTaskUsage(taskId).get(0).getTimestamp());
+    Assert.assertEquals(now + TimeUnit.MINUTES.toSeconds(6), (long) usageManager.getTaskUsage(taskId).get(1).getTimestamp());
   }
 
   @Test
@@ -523,7 +523,7 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
   }
 
   private void clearUsages(String taskId) {
-    usagePoller.clearOldUsage(usageManager.getTaskUsage(taskId), taskId);
+    usagePoller.clearOldUsage(taskId);
   }
 
   private void testUtilization(SingularityClusterUtilization utilization,
