@@ -52,7 +52,7 @@
     "react-redux": "^5.0.5",
     "react-router": "^2.5.2",
     "react-router-redux": "^4.0.5",
-    "react-select": "1.0.0-beta14",
+    "react-select": "^1.0.0-rc.5",
     "react-tagsinput": "^3.13.0",
     "react-typeahead": "git://github.com/HubSpot/react-typeahead.git#hubspot-3",
     "react-waypoint": "^2.0.3",
