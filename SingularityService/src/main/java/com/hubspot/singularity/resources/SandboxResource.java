@@ -29,11 +29,11 @@ import com.hubspot.mesos.json.MesosFileObject;
 import com.hubspot.singularity.SingularityAuthorizationScope;
 import com.hubspot.singularity.SingularitySandbox;
 import com.hubspot.singularity.SingularitySandboxFile;
-import com.hubspot.singularity.SingularityService;
 import com.hubspot.singularity.SingularityTaskHistory;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityUser;
 import com.hubspot.singularity.auth.SingularityAuthorizationHelper;
+import com.hubspot.singularity.config.ApiPaths;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.DeployManager;
 import com.hubspot.singularity.data.SandboxManager;
@@ -45,12 +45,10 @@ import com.wordnik.swagger.annotations.Api;
 import com.wordnik.swagger.annotations.ApiOperation;
 import com.wordnik.swagger.annotations.ApiParam;
 
-@Path(SandboxResource.PATH)
+@Path(ApiPaths.SANDBOX_RESOURCE_PATH)
 @Produces({MediaType.APPLICATION_JSON})
-@Api(description="Provides a proxy to Mesos sandboxes.", value=SandboxResource.PATH)
+@Api(description="Provides a proxy to Mesos sandboxes.", value=ApiPaths.SANDBOX_RESOURCE_PATH)
 public class SandboxResource extends AbstractHistoryResource {
-  public static final String PATH = SingularityService.API_BASE_PATH + "/sandbox";
-
   private final SandboxManager sandboxManager;
   private final SingularityMesosExecutorInfoSupport logSupport;
   private final SingularityConfiguration configuration;

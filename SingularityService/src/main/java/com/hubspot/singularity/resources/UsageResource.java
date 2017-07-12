@@ -21,14 +21,15 @@ import com.hubspot.singularity.SingularityTaskCurrentUsageWithId;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTaskUsage;
 import com.hubspot.singularity.WebExceptions;
+import com.hubspot.singularity.config.ApiPaths;
 import com.hubspot.singularity.data.SlaveManager;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.data.UsageManager;
 import com.wordnik.swagger.annotations.Api;
 
-@Path(UsageResource.PATH)
+@Path(ApiPaths.USAGE_RESOURCE_PATH)
 @Produces({ MediaType.APPLICATION_JSON })
-@Api(description="Provides usage data about slaves and tasks", value=UsageResource.PATH)
+@Api(description="Provides usage data about slaves and tasks", value=ApiPaths.USAGE_RESOURCE_PATH)
 public class UsageResource {
 
   public static final String PATH = SingularityService.API_BASE_PATH + "/usage";

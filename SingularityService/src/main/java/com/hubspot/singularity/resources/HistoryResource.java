@@ -23,7 +23,6 @@ import com.hubspot.singularity.SingularityDeployHistory;
 import com.hubspot.singularity.SingularityDeployKey;
 import com.hubspot.singularity.SingularityPaginatedResponse;
 import com.hubspot.singularity.SingularityRequestHistory;
-import com.hubspot.singularity.SingularityService;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskHistory;
 import com.hubspot.singularity.SingularityTaskHistoryQuery;
@@ -31,6 +30,7 @@ import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTaskIdHistory;
 import com.hubspot.singularity.SingularityUser;
 import com.hubspot.singularity.auth.SingularityAuthorizationHelper;
+import com.hubspot.singularity.config.ApiPaths;
 import com.hubspot.singularity.data.DeployManager;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.data.history.DeployHistoryHelper;
@@ -42,11 +42,10 @@ import com.wordnik.swagger.annotations.Api;
 import com.wordnik.swagger.annotations.ApiOperation;
 import com.wordnik.swagger.annotations.ApiParam;
 
-@Path(HistoryResource.PATH)
+@Path(ApiPaths.HISTORY_RESOURCE_PATH)
 @Produces({ MediaType.APPLICATION_JSON })
-@Api(description = "Manages historical data for tasks, requests, and deploys.", value = HistoryResource.PATH)
+@Api(description = "Manages historical data for tasks, requests, and deploys.", value = ApiPaths.HISTORY_RESOURCE_PATH)
 public class HistoryResource extends AbstractHistoryResource {
-  public static final String PATH = SingularityService.API_BASE_PATH + "/history";
   public static final int DEFAULT_ARGS_HISTORY_COUNT = 5;
 
   private final DeployHistoryHelper deployHistoryHelper;
