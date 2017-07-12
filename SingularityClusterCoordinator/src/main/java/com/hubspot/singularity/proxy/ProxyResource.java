@@ -300,5 +300,13 @@ public class ProxyResource {
     String getValue() {
       return value;
     }
+
+    @Override
+    public String toString() {
+      return "Param{" +
+          "key='" + key + '\'' +
+          ", value='" + value + '\'' +
+          '}';
+    }
   }
 }
