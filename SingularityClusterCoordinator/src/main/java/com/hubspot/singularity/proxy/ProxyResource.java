@@ -14,7 +14,6 @@ import javax.ws.rs.core.Response.ResponseBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.Lists;
@@ -135,12 +134,16 @@ public class ProxyResource {
    * Route a request to a particular dataCenter using the slaveId/hostname to locate the correct Singularity cluster
    */
   Response routeBySlaveId(HttpServletRequest request, String slaveId) {
+    return routeBySlaveId(request, slaveId, null);
+  }
+
+  <T> Response routeBySlaveId(HttpServletRequest request, String slaveId, T body) {
     List<Param> headers = getHeaders(request);
     List<Param> params = getParams(request);
 
     DataCenter dataCenter = getDataCenterForSlaveId(slaveId);
 
-    return toResponse(proxyAndGetResponse(dataCenter, request, null, headers, params));
+    return toResponse(proxyAndGetResponse(dataCenter, request, body, headers, params));
   }
 
   Response routeByHostname(HttpServletRequest request, String hostname) {
@@ -234,14 +237,9 @@ public class ProxyResource {
     HttpRequest.Builder requestBuilder = HttpRequest.newBuilder()
         .setMethod(Method.valueOf(request.getMethod()))
         .setUrl(url);
-    try {
-      if (body != null) {
-        requestBuilder.setBody(objectMapper.writeValueAsBytes(body));
-        LOG.trace("Added body {} to request", body);
-      }
-    } catch (JsonProcessingException jpe) {
-      LOG.error("Could not write body from object {}", body);
-      throw new WebApplicationException(jpe, 500);
+    if (body != null) {
+      requestBuilder.setBody(body);
+      LOG.trace("Added body {} to request", body);
     }
     headers.forEach((h) -> requestBuilder.addHeader(h.getKey(), h.getValue()));
     params.forEach((h) -> requestBuilder.setQueryParam(h.getKey()).to(h.getValue()));
