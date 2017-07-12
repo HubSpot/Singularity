@@ -397,7 +397,7 @@ public class SingularityScheduler {
     return deployMarker.isPresent() && deployMarker.get().getDeployId().equals(deployId);
   }
 
-  private void deleteScheduledTasks(final Collection<SingularityPendingTask> scheduledTasks, SingularityPendingRequest pendingRequest) {
+  private void deleteScheduledTasks(SingularitySchedulerStateCache stateCache, final Collection<SingularityPendingTask> scheduledTasks, SingularityPendingRequest pendingRequest) {
     List<SingularityPendingTask> tasksForDeploy = scheduledTasks
         .stream()
         .filter(task -> pendingRequest.getRequestId().equals(task.getPendingTaskId().getRequestId()))
@@ -407,6 +407,7 @@ public class SingularityScheduler {
     for (SingularityPendingTask task : tasksForDeploy) {
       LOG.debug("Deleting pending task {} in order to reschedule {}", task.getPendingTaskId().getId(), pendingRequest);
       taskManager.deletePendingTask(task.getPendingTaskId());
+      stateCache.getScheduledTasks().remove(task);
     }
   }
 
@@ -435,7 +436,7 @@ public class SingularityScheduler {
                             SingularityDeployStatistics deployStatistics, SingularityPendingRequest pendingRequest,
                             List<SingularityTaskId> matchingTaskIds, Optional<SingularityPendingDeploy> maybePendingDeploy) {
     if (request.getRequestType() != RequestType.ON_DEMAND) {
-      deleteScheduledTasks(stateCache.getScheduledTasks(), pendingRequest);
+      deleteScheduledTasks(stateCache, stateCache.getScheduledTasks(), pendingRequest);
     }
 
     final int numMissingInstances = getNumMissingInstances(matchingTaskIds, request, pendingRequest, maybePendingDeploy);
