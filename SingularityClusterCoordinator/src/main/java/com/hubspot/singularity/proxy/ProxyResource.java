@@ -34,7 +34,7 @@ public class ProxyResource {
   private static final Logger LOG = LoggerFactory.getLogger(ProxyResource.class);
 
   private AsyncHttpClient httpClient;
-  private ClusterCoordinatorConfiguration configuration;
+  protected ClusterCoordinatorConfiguration configuration;
   private ObjectMapper objectMapper;
   protected DataCenterLocator dataCenterLocator;
   private String contextPath;
