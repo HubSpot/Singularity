@@ -48,19 +48,19 @@ public class SlaveResource extends ProxyResource {
   @POST
   @Path("/slave/{slaveId}/decommission")
   public Response decommissionSlave(@Context HttpServletRequest request, @PathParam("slaveId") String slaveId, SingularityMachineChangeRequest changeRequest) {
-    return routeBySlaveId(request, slaveId);
+    return routeBySlaveId(request, slaveId, changeRequest);
   }
 
   @POST
   @Path("/slave/{slaveId}/freeze")
   public Response freezeSlave(@Context HttpServletRequest request, @PathParam("slaveId") String slaveId, SingularityMachineChangeRequest changeRequest) {
-    return routeBySlaveId(request, slaveId);
+    return routeBySlaveId(request, slaveId, changeRequest);
   }
 
   @POST
   @Path("/slave/{slaveId}/activate")
   public Response activateSlave(@Context HttpServletRequest request, @PathParam("slaveId") String slaveId, SingularityMachineChangeRequest changeRequest) {
-    return routeBySlaveId(request, slaveId);
+    return routeBySlaveId(request, slaveId, changeRequest);
   }
 
   @DELETE
