@@ -14,6 +14,7 @@ const RequestUtilization = ({isFetching, utilization}) => {
             title="CPU per task average"
             total={utilization.cpuReserved / utilization.numTasks}
             used={utilization.cpuUsed / utilization.numTasks}
+            style={utilization.cpuUsed >= utilization.cpuReserved && 'danger'}
           >
             <p>{Utils.roundTo(utilization.cpuUsed / utilization.numTasks, 2)} of {utilization.cpuReserved / utilization.numTasks} CPU reserved</p>
             <BootstrapTable responsive={false} striped={true} style={{marginTop: '10px'}}>
@@ -35,6 +36,7 @@ const RequestUtilization = ({isFetching, utilization}) => {
             title="Memory per task average"
             total={utilization.memBytesReserved / utilization.numTasks}
             used={utilization.memBytesUsed / utilization.numTasks}
+            style={utilization.memBytesUsed >= utilization.memBytesReserved && 'danger'}
           >
             <p>{Utils.humanizeFileSize(utilization.memBytesUsed / utilization.numTasks)} of {Utils.humanizeFileSize(utilization.memBytesReserved / utilization.numTasks)} reserved</p>
             <BootstrapTable responsive={false} striped={true} style={{marginTop: '10px'}}>
