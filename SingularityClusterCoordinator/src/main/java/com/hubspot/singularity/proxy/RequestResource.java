@@ -49,7 +49,7 @@ public class RequestResource extends ProxyResource {
       if (request.getDataCenter().isPresent() && !request.getDataCenter().get().equals(maybeDataCenter.get().getName())) {
         throw new DataCenterConflictException(String.format("Cannot create request with id %s in multiple datacenters (requested: %s), already found in %s", request.getId(), request.getDataCenter().get(), maybeDataCenter.get().getName()));
       }
-      return routeByDataCenter(requestContext, request.getDataCenter().get(), request);
+      return routeByDataCenter(requestContext, maybeDataCenter.get().getName(), request);
     }
 
     LOG.trace("Check request {}", request);
