@@ -128,6 +128,7 @@ public class SingularityTestModule implements Module {
 
     mainBinder.bind(TestingServer.class).toInstance(ts);
     final SingularityConfiguration configuration = getSingularityConfigurationForTestingServer(ts);
+    configuration.getMesosConfiguration().setMaster("");
 
     if (useDBTests) {
       configuration.setDatabaseConfiguration(getDataSourceFactory());
