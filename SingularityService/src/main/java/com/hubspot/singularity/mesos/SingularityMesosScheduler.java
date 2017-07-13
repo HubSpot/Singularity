@@ -9,6 +9,7 @@ import org.apache.mesos.v1.Protos.Offer;
 import org.apache.mesos.v1.Protos.OfferID;
 import org.apache.mesos.v1.Protos.TaskStatus;
 import org.apache.mesos.v1.scheduler.Protos;
+import org.apache.mesos.v1.scheduler.Protos.Event;
 
 import com.google.common.base.Optional;
 import com.hubspot.singularity.RequestCleanupType;
@@ -127,7 +128,13 @@ public abstract class SingularityMesosScheduler {
    * partition. In such a case the scheduler should close the existing
    * subscription connection and resubscribe using a backoff strategy.
    */
-  public abstract void heartbeat();
+  public abstract void heartbeat(Event event);
+
+  /**
+   * Called when an uncaught exception occurs when processing events form the mesos master
+   * in any of the above methods
+   */
+  public abstract void onUncaughtException(Throwable t);
 
   /**
    * Singularity-specific methods used elsewhere in the code to determine scheduler
