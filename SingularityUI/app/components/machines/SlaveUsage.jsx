@@ -9,7 +9,7 @@ import ResourceHealthData from './ResourceHealthData';
 import SlaveAggregates from './SlaveAggregates';
 
 const getSlaveInfo = (slaves, slaveUsage) => {
-  return _.findWhere(slaves, {'id' : slaveUsage.slaveId});
+  return _.findWhere(slaves, {'id': slaveUsage.slaveId});
 };
 
 const getUtilizationData = (slaves, slaveUsages) => {
@@ -56,30 +56,31 @@ const SlaveUsage = ({slaves, slaveUsages, activeTasks, clusterUtilization}) => {
           {memoryHealthData}
         </div>
       </div>
+      <h1>Cluster Usage</h1>
     </div>
   );
 };
 
 SlaveUsage.propTypes = {
-  slaveUsages : PropTypes.arrayOf(PropTypes.object),
-  slaves : PropTypes.arrayOf(PropTypes.object),
-  activeTasks : PropTypes.number
+  slaveUsages: PropTypes.arrayOf(PropTypes.object),
+  slaves: PropTypes.arrayOf(PropTypes.object),
+  activeTasks: PropTypes.number
 };
 
 function mapStateToProps(state) {
   return {
-    slaveUsages : state.api.slaveUsages.data,
-    slaves : state.api.slaves.data,
-    activeTasks : state.api.status.data.activeTasks,
-    clusterUtilization : state.api.utilization.data
+    slaveUsages: state.api.slaveUsages.data,
+    slaves: state.api.slaves.data,
+    activeTasks: state.api.status.data.activeTasks,
+    clusterUtilization: state.api.utilization.data
   };
 }
 
 function mapDispatchToProps(dispatch) {
   return {
-    fetchSlaves : () => dispatch(FetchSlaves.trigger()),
-    fetchSlaveUsages : () => dispatch(FetchSlaveUsages.trigger()),
-    fetchSingularityStatus : () => dispatch(FetchSingularityStatus.trigger())
+    fetchSlaves: () => dispatch(FetchSlaves.trigger()),
+    fetchSlaveUsages: () => dispatch(FetchSlaveUsages.trigger()),
+    fetchSingularityStatus: () => dispatch(FetchSingularityStatus.trigger())
   };
 }
 

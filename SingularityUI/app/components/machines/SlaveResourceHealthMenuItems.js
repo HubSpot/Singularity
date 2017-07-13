@@ -56,6 +56,7 @@ const maybeLink = (name, value) => {
 };
 
 const SlaveResourceHealthMenuItems = ({stats}) => {
+  stats = _.filter(stats, (stat) => _.values(STAT_NAMES).includes(stat.name));
   const renderSlaveStats = _.map(stats.sort(compareStats), ({name, value, maybeTotalResource}) => {
     return <StatItem key={name} name={humanizeStatName(name)} value={humanizeStatValue(name, value, maybeTotalResource)} maybeLink={maybeLink(name, value)} percentage={humanizeStatPct(name, value, maybeTotalResource)} />;
   });
@@ -80,7 +81,8 @@ SlaveResourceHealthMenuItems.propTypes = {
       name : PropTypes.string.isRequired,
       value : PropTypes.oneOfType([
         PropTypes.string,
-        PropTypes.number
+        PropTypes.number,
+        PropTypes.object
       ]).isRequired,
       maybeTotalResource : PropTypes.oneOfType([
         PropTypes.string,
