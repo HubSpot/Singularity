@@ -246,7 +246,7 @@ public class ProxyResource {
     if (body != null) {
       requestBuilder.setBody(body);
       LOG.trace("Added body {} to request", body);
-    } else {
+    } else if (!request.getMethod().equals("GET")){
       requestBuilder.setBody(new byte[]{});
     }
     headers.forEach((h) -> requestBuilder.addHeader(h.getKey(), h.getValue()));
