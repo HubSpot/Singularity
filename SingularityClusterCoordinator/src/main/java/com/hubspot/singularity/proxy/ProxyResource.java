@@ -246,6 +246,8 @@ public class ProxyResource {
     if (body != null) {
       requestBuilder.setBody(body);
       LOG.trace("Added body {} to request", body);
+    } else {
+      requestBuilder.setBody(new byte[]{});
     }
     headers.forEach((h) -> requestBuilder.addHeader(h.getKey(), h.getValue()));
     params.forEach((h) -> requestBuilder.setQueryParam(h.getKey()).to(h.getValue()));
