@@ -51,7 +51,7 @@ const slaveQuickStats = (data) => {
             {Utils.roundTo(data.cpuUtilized / HEALTH_SCALE_MAX * 100, HUNDREDTHS_PLACE)}%
           </div>
           <div id="status">
-            Cpu <span style={{color : HEALTH_SCALE[data.cpuUtilized]}}>{largeBlackCircle}</span>
+            CPU <span style={{color : HEALTH_SCALE[data.cpuUtilized]}}>{largeBlackCircle}</span>
           </div>
         </div>
       </div>

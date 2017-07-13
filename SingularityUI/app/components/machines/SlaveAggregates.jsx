@@ -49,7 +49,7 @@ const SlaveAggregates = ({slaves, slaveUsages, activeTasks}) => {
       <div className="aggregate graph col-xs-2">
         <CircularProgressbar percentage={getCpuUtilizationPct(slaves, slaveUsages)} initialAnimation={true} textForPercentage={(pct) => `${pct}%`} />
         <div className="label">
-          Cpu
+          CPU
         </div>
       </div>
       <div className="aggregate graph col-xs-2">

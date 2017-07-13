@@ -47,7 +47,7 @@ const SlaveUsage = ({slaves, slaveUsages, activeTasks, clusterUtilization}) => {
       </div>
       <div id="slave-health">
         <h3>Slave health</h3>
-        <h4>Cpu</h4>
+        <h4>CPU</h4>
         <div className="cpu-health">
           {cpuHealthData}
         </div>

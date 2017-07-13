@@ -5,29 +5,37 @@ import { STAT_NAMES, HUNDREDTHS_PLACE } from './Constants';
 
 const SlaveAggregates = ({utilization}) => {
   return (
-    <div className="row">
-      <div className="aggregate col-xs-2">
-        <div className="value">
-          {utilization.numRequestsWithUnderUtilizedCpu}
+    <div>
+      <h3>CPU</h3>
+      <div className="row">
+        <div className="aggregate col-xs-2">
+          <div className="value">
+            {utilization.numRequestsWithUnderUtilizedCpu}
+          </div>
+          <div className="label">
+            Requests with Underutilized CPU
+          </div>
         </div>
-        <div className="label">
-          Requests with Underutilized CPU
+        <div className="aggregate col-xs-2">
+          <div className="value">
+            {utilization.numRequestsWithOverUtilizedCpu}
+          </div>
+          <div className="label">
+            Requests with Overutilized CPU
+          </div>
         </div>
+
       </div>
-      <div className="aggregate col-xs-2">
-        <div className="value">
-          {utilization.numRequestsWithOverUtilizedCpu}
-        </div>
-        <div className="label">
-          Requests with Overutilized CPU
-        </div>
-      </div>
-      <div className="aggregate col-xs-2">
-        <div className="value">
-          {utilization.numRequestsWithUnderUtilizedMemBytes}
-        </div>
-        <div className="label">
-          Requests with Underutilized Memory
+
+      <h3>Memory</h3>
+      <div className="row">
+        <div className="aggregate col-xs-2">
+          <div className="value">
+            {utilization.numRequestsWithUnderUtilizedMemBytes}
+          </div>
+          <div className="label">
+            Requests with Underutilized Memory
+          </div>
         </div>
       </div>
     </div>
