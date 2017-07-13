@@ -58,7 +58,7 @@ const routes = (
     <Route path="tail/**" component={CustomLogTailerContainer} title="Tailer" />
     <Route path="racks(/:state)" component={Racks} title="Racks" />
     <Route path="slaves(/:state)" component={Slaves} title="Slaves" />
-    <Route path="slave-usage" component={SlaveUsage} />
+    <Route path="slave-usage" component={SlaveUsage} title="Slave Usage" />
     <Route path="webhooks" component={Webhooks} title="Webhooks" />
     <Route path="task-search" component={TaskSearch} title="Task Search" />
     <Route path="disasters" component={Disasters} title="Disasters" />

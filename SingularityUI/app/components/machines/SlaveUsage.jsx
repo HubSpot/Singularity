@@ -26,7 +26,7 @@ const getUtilizationData = (slaves, slaveUsages) => {
   });
 };
 
-const SlaveUsage = ({slaves, slaveUsages, activeTasks}) => {
+const SlaveUsage = ({slaves, slaveUsages, activeTasks, clusterUtilization}) => {
   const activeSlaves = slaves.filter(Utils.isActiveSlave);
   const utilizationData = getUtilizationData(activeSlaves, slaveUsages);
 
@@ -70,7 +70,8 @@ function mapStateToProps(state) {
   return {
     slaveUsages : state.api.slaveUsages.data,
     slaves : state.api.slaves.data,
-    activeTasks : state.api.status.data.activeTasks
+    activeTasks : state.api.status.data.activeTasks,
+    clusterUtilization : state.api.utilization.data
   };
 }
 

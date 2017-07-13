@@ -23,6 +23,7 @@ import PendingTasksTable from './PendingTasksTable';
 import TaskHistoryTable from './TaskHistoryTable';
 import DeployHistoryTable from './DeployHistoryTable';
 import RequestHistoryTable from './RequestHistoryTable';
+import RequestUtilization from './RequestUtilization';
 
 import Utils from '../../utils';
 
@@ -55,6 +56,7 @@ class RequestDetailPage extends Component {
         {deleted || <TaskHistoryTable requestId={requestId} />}
         {deleted || <DeployHistoryTable requestId={requestId} />}
         <RequestHistoryTable requestId={requestId} />
+        {deleted || <RequestUtilization requestId={requestId} />}
       </div>
     );
   }

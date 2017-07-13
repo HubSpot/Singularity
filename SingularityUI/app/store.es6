@@ -14,7 +14,7 @@ export default function configureStore(initialState = {}, browserHistory) {
 
   const store = createStore(rootReducer, initialState, compose(
     applyMiddleware.apply(this, middlewares),
-    window.devToolsExtension ? window.devToolsExtension() : f => f
+    window.__REDUX_DEVTOOLS_EXTENSION__ && window.__REDUX_DEVTOOLS_EXTENSION__()
   ));
 
   return store;
