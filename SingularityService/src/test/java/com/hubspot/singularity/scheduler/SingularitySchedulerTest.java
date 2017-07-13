@@ -1074,22 +1074,22 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
 
     List<SingularityTaskRequest> sortedRequestsByPriority = taskPrioritizer.getSortedDueTasks(requestsByPriority);
 
-    Assert.assertTrue(sortedRequestsByPriority.get(0).getRequest().getId().equals(highPriorityRequest.getId()));
-    Assert.assertTrue(sortedRequestsByPriority.get(1).getRequest().getId().equals(mediumPriorityRequest.getId()));
-    Assert.assertTrue(sortedRequestsByPriority.get(2).getRequest().getId().equals(lowPriorityRequest.getId()));
+    Assert.assertEquals(sortedRequestsByPriority.get(0).getRequest().getId(), highPriorityRequest.getId());
+    Assert.assertEquals(sortedRequestsByPriority.get(1).getRequest().getId(), mediumPriorityRequest.getId());
+    Assert.assertEquals(sortedRequestsByPriority.get(2).getRequest().getId(), lowPriorityRequest.getId());
 
     // A lower priority task that is long overdue should be run before a higher priority task
     now = System.currentTimeMillis();
     List<SingularityTaskRequest> requestsByOverdueAndPriority = Arrays.asList(
-      buildTaskRequest(lowPriorityRequest, lowPriorityDeploy, now - 60000), // 1 min overdue
-      buildTaskRequest(mediumPriorityRequest, mediumPriorityDeploy, now - 30000), // 30s overdue
+      buildTaskRequest(lowPriorityRequest, lowPriorityDeploy, now - 120000), // 2 min overdue
+      buildTaskRequest(mediumPriorityRequest, mediumPriorityDeploy, now - 30000), // 60s overdue
       buildTaskRequest(highPriorityRequest, highPriorityDeploy, now)); // Not overdue
 
     List<SingularityTaskRequest> sortedRequestsByOverdueAndPriority = taskPrioritizer.getSortedDueTasks(requestsByOverdueAndPriority);
 
-    Assert.assertTrue(sortedRequestsByOverdueAndPriority.get(0).getRequest().getId().equals(lowPriorityRequest.getId()));
-    Assert.assertTrue(sortedRequestsByOverdueAndPriority.get(1).getRequest().getId().equals(mediumPriorityRequest.getId()));
-    Assert.assertTrue(sortedRequestsByOverdueAndPriority.get(2).getRequest().getId().equals(highPriorityRequest.getId()));
+    Assert.assertEquals(sortedRequestsByOverdueAndPriority.get(0).getRequest().getId(), lowPriorityRequest.getId());
+    Assert.assertEquals(sortedRequestsByOverdueAndPriority.get(1).getRequest().getId(), mediumPriorityRequest.getId());
+    Assert.assertEquals(sortedRequestsByOverdueAndPriority.get(2).getRequest().getId(), highPriorityRequest.getId());
   }
 
   @Test
