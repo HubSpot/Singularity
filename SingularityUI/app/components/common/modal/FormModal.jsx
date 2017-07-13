@@ -356,21 +356,19 @@ export default class FormModal extends React.Component {
 
         case FormModal.INPUT_TYPES.MULTIINPUT:
           return (
-            <div>
-              <FormModal.FormItem element={formElement} formState={this.state.formState} key={formElement.name}>
-                <label style={{display: 'block', width: '100%'}}>
-                  {formElement.label}
-                  <span className="pull-right">
-                    {selectOptions()}
-                  </span>
-                  <MultiInput
-                    id={`${formElement.name}-input`}
-                    value={this.state.formState[formElement.name] || []}
-                    onChange={(values) => this.handleFormChange(formElement.name, values)}
-                  />
-                </label>
-              </FormModal.FormItem>
-            </div>
+            <FormModal.FormItem element={formElement} formState={this.state.formState} key={formElement.name}>
+              <label style={{display: 'block', width: '100%'}}>
+                {formElement.label}
+                <span className="pull-right">
+                  {selectOptions()}
+                </span>
+                <MultiInput
+                  id={`${formElement.name}-input`}
+                  value={this.state.formState[formElement.name] || []}
+                  onChange={(values) => this.handleFormChange(formElement.name, values)}
+                />
+              </label>
+            </FormModal.FormItem>
           );
 
         case FormModal.INPUT_TYPES.NUMBER:
