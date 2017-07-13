@@ -14,7 +14,7 @@ const RequestUtilization = ({isFetching, utilization}) => {
             title="CPU per task average"
             total={utilization.cpuReserved / utilization.numTasks}
             used={utilization.cpuUsed / utilization.numTasks}
-            style={utilization.cpuUsed >= utilization.cpuReserved && 'danger'}
+            style={utilization.cpuUsed >= utilization.cpuReserved ? 'danger' : null}
           >
             <p>{Utils.roundTo(utilization.cpuUsed / utilization.numTasks, 2)} of {utilization.cpuReserved / utilization.numTasks} CPU reserved</p>
             <BootstrapTable responsive={false} striped={true} style={{marginTop: '10px'}}>
@@ -36,7 +36,7 @@ const RequestUtilization = ({isFetching, utilization}) => {
             title="Memory per task average"
             total={utilization.memBytesReserved / utilization.numTasks}
             used={utilization.memBytesUsed / utilization.numTasks}
-            style={utilization.memBytesUsed >= utilization.memBytesReserved && 'danger'}
+            style={utilization.memBytesUsed >= utilization.memBytesReserved ? 'danger' : null}
           >
             <p>{Utils.humanizeFileSize(utilization.memBytesUsed / utilization.numTasks)} of {Utils.humanizeFileSize(utilization.memBytesReserved / utilization.numTasks)} reserved</p>
             <BootstrapTable responsive={false} striped={true} style={{marginTop: '10px'}}>
@@ -56,11 +56,11 @@ const RequestUtilization = ({isFetching, utilization}) => {
     </div>
   );
 
-  return (
+  return utilization ? (
     <CollapsableSection id="request-utilization" title="Resource usage" subtitle="(past 24 hours)">
       {isFetching ? <div className="page-loader fixed" /> : attributes}
     </CollapsableSection>
-  );
+  ) : <div></div>;
 };
 
 RequestUtilization.propTypes = {
