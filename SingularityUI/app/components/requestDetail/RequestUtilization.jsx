@@ -2,7 +2,7 @@ import React, { PropTypes } from 'react';
 import { connect } from 'react-redux';
 
 import CollapsableSection from '../common/CollapsableSection';
-import { InfoBox, UsageInfo } from '../common/statelessComponents';
+import { UsageInfo } from '../common/statelessComponents';
 import Utils from '../../utils';
 import BootstrapTable from 'react-bootstrap/lib/Table';
 
@@ -15,37 +15,41 @@ const RequestUtilization = ({isFetching, utilization}) => {
             total={utilization.cpuReserved / utilization.numTasks}
             used={utilization.cpuUsed / utilization.numTasks}
           >
-            <span>{Utils.roundTo(utilization.cpuUsed / utilization.numTasks, 2)} of {utilization.cpuReserved / utilization.numTasks} CPU reserved</span>
+            <p>{Utils.roundTo(utilization.cpuUsed / utilization.numTasks, 2)} of {utilization.cpuReserved / utilization.numTasks} CPU reserved</p>
+            <BootstrapTable responsive={false} striped={true} style={{marginTop: '10px'}}>
+              <tbody>
+                <tr>
+                  <td>Min CPU (all tasks)</td>
+                  <td>{Utils.roundTo(utilization.minCpuUsed, 2)}</td>
+                </tr>
+                <tr>
+                  <td>Max CPU (all tasks)</td>
+                  <td>{Utils.roundTo(utilization.maxCpuUsed, 2)}</td>
+                </tr>
+              </tbody>
+            </BootstrapTable>
           </UsageInfo>
+        </div>
+        <div className="col-md-3">
           <UsageInfo
             title="Memory per task average"
             total={utilization.memBytesReserved / utilization.numTasks}
             used={utilization.memBytesUsed / utilization.numTasks}
           >
-            <span>{Utils.humanizeFileSize(utilization.memBytesUsed / utilization.numTasks)} of {Utils.humanizeFileSize(utilization.memBytesReserved / utilization.numTasks)} reserved</span>
+            <p>{Utils.humanizeFileSize(utilization.memBytesUsed / utilization.numTasks)} of {Utils.humanizeFileSize(utilization.memBytesReserved / utilization.numTasks)} reserved</p>
+            <BootstrapTable responsive={false} striped={true} style={{marginTop: '10px'}}>
+              <tbody>
+                <tr>
+                  <td>Min memory (all tasks)</td>
+                  <td>{Utils.humanizeFileSize(utilization.minMemBytesUsed)}</td>
+                </tr>
+                <tr>
+                  <td>Max memory (all tasks)</td>
+                  <td>{Utils.humanizeFileSize(utilization.maxMemBytesUsed)}</td>
+                </tr>
+              </tbody>
+            </BootstrapTable>
           </UsageInfo>
-        </div>
-        <div className="col-md-9">
-          <BootstrapTable responsive={true} striped={true}>
-            <tbody>
-              <tr>
-                <td>Min memory (all tasks)</td>
-                <td>{Utils.humanizeFileSize(utilization.minMemBytesUsed)}</td>
-              </tr>
-              <tr>
-                <td>Max memory (all tasks)</td>
-                <td>{Utils.humanizeFileSize(utilization.maxMemBytesUsed)}</td>
-              </tr>
-              <tr>
-                <td>Min CPU (all tasks)</td>
-                <td>{Utils.roundTo(utilization.minCpuUsed, 2)}</td>
-              </tr>
-              <tr>
-                <td>Max CPU (all tasks)</td>
-                <td>{Utils.roundTo(utilization.maxCpuUsed, 2)}</td>
-              </tr>
-            </tbody>
-          </BootstrapTable>
         </div>
     </div>
   );
