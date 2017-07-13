@@ -5,6 +5,7 @@ import java.util.Enumeration;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeoutException;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.WebApplicationException;
@@ -16,6 +17,7 @@ import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.base.Throwables;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
@@ -87,7 +89,7 @@ public class ProxyResource {
         }
 
         List<Object> content = response.getAs(new TypeReference<List<Object>>() {});
-        LOG.trace("Data center {} had response {}", dataCenter.getName(), content);
+        LOG.trace("Data center {} had response {}", dataCenter.getName(), response.getStatusCode());
 
         combined.addAll(content);
       } catch (RuntimeException re) {
@@ -237,7 +239,7 @@ public class ProxyResource {
     String fullPath = request.getContextPath() + request.getPathInfo();
     String url = String.format("%s://%s%s", dc.getScheme(), getHost(dc), fullPath.replace(contextPath, dc.getContextPath()));
 
-    LOG.debug("Proxying {} to: ({}) {}", fullPath, dc.getName(), url);
+    LOG.debug("Proxying {} {} to: ({}) {}", request.getMethod(), fullPath, dc.getName(), url);
     HttpRequest.Builder requestBuilder = HttpRequest.newBuilder()
         .setMethod(Method.valueOf(request.getMethod()))
         .setUrl(url);
@@ -251,7 +253,11 @@ public class ProxyResource {
     try {
       return httpClient.execute(requestBuilder.build()).get();
     } catch (InterruptedException|ExecutionException ioe) {
-      throw new WebApplicationException(ioe);
+      if (Throwables.getRootCause(ioe) instanceof TimeoutException) {
+        throw new WebApplicationException(ioe, 503);
+      } else {
+        throw new WebApplicationException(ioe);
+      }
     }
   }
 
