@@ -56,7 +56,7 @@ import rx.subjects.SerializedSubject;
  * http://mesos.apache.org/documentation/latest/scheduler-http-api/
  */
 public class SingularityMesosSchedulerClient {
-  private static final Logger log = LoggerFactory.getLogger(SingularityMesosSchedulerClient.class);
+  private static final Logger LOG = LoggerFactory.getLogger(SingularityMesosSchedulerClient.class);
 
   private final SingularityConfiguration configuration;
   private final MesosConfiguration mesosConfiguration;
@@ -100,7 +100,7 @@ public class SingularityMesosSchedulerClient {
           try {
             connect(URI.create(mesosMasterURI), frameworkInfo, scheduler);
           } catch (URISyntaxException e) {
-            log.error("Could not connect: ", e);
+            LOG.error("Could not connect: ", e);
           }
         }
 
@@ -162,38 +162,51 @@ public class SingularityMesosSchedulerClient {
       final Observable<Event> events = unicastEvents.share();
 
       events.filter(event -> event.getType() == Event.Type.ERROR)
-          .subscribe(e -> scheduler.error(e.getError().getMessage()));
+          .map(event -> event.getError().getMessage())
+          .subscribe(scheduler::error, scheduler::onUncaughtException);
 
       events.filter(event -> event.getType() == Event.Type.FAILURE)
-          .subscribe(e -> scheduler.failure(e.getFailure()));
+          .map(Event::getFailure)
+          .subscribe(scheduler::failure, scheduler::onUncaughtException);
 
-      events.filter(event -> event.getType() == Event.Type.HEARTBEAT).subscribe(e -> scheduler.heartbeat());
+      events.filter(event -> event.getType() == Event.Type.HEARTBEAT)
+          .subscribe(scheduler::heartbeat, scheduler::onUncaughtException);
 
       events.filter(event -> event.getType() == Event.Type.INVERSE_OFFERS)
-          .subscribe(e -> scheduler.inverseOffers(e.getInverseOffers().getInverseOffersList()));
+          .map(event -> event.getInverseOffers().getInverseOffersList())
+          .subscribe(scheduler::inverseOffers, scheduler::onUncaughtException);
 
       events.filter(event -> event.getType() == Event.Type.MESSAGE)
-          .subscribe(e -> scheduler.message(e.getMessage()));
+          .map(Event::getMessage)
+          .subscribe(scheduler::message, scheduler::onUncaughtException);
 
       events.filter(event -> event.getType() == Event.Type.OFFERS)
-          .subscribe(e -> scheduler.resourceOffers(e.getOffers().getOffersList()));
+          .map(event -> event.getOffers().getOffersList())
+          .subscribe(scheduler::resourceOffers, scheduler::onUncaughtException);
 
       events.filter(event -> event.getType() == Event.Type.RESCIND)
-          .subscribe(e -> scheduler.rescind(e.getRescind().getOfferId()));
+          .map(event -> event.getRescind().getOfferId())
+          .subscribe(
+              event -> scheduler.rescind(event.getRescind().getOfferId()),
+              scheduler::onUncaughtException
+          );
 
       events.filter(event -> event.getType() == Event.Type.RESCIND_INVERSE_OFFER)
-          .subscribe(e -> scheduler.rescindInverseOffer(e.getRescindInverseOffer().getInverseOfferId()));
+          .subscribe(
+              event -> scheduler.rescindInverseOffer(event.getRescindInverseOffer().getInverseOfferId()),
+              scheduler::onUncaughtException
+          );
 
       events.filter(event -> event.getType() == Event.Type.SUBSCRIBED).subscribe(e -> {
         this.frameworkId = e.getSubscribed().getFrameworkId();
         scheduler.subscribed(e.getSubscribed());
-      });
+      }, scheduler::onUncaughtException);
 
       events.filter(event -> event.getType() == Event.Type.UPDATE).subscribe(e -> {
         TaskStatus status = e.getUpdate().getStatus();
         acknowledge(status.getAgentId(), status.getTaskId(), status.getUuid());
         scheduler.statusUpdate(status);
-      });
+      }, scheduler::onUncaughtException);
 
       // This is the observable that is responsible for sending calls to mesos master.
       PublishSubject<Optional<SinkOperation<Call>>> p = PublishSubject.create();
@@ -207,8 +220,9 @@ public class SingularityMesosSchedulerClient {
     openStream = client.openStream();
     try {
       openStream.await();
-    } catch (Throwable e) {
-      e.printStackTrace();
+    } catch (Throwable t) {
+      LOG.error("Observable was unexpectedly closed", t);
+      scheduler.onUncaughtException(t);
     }
   }
 

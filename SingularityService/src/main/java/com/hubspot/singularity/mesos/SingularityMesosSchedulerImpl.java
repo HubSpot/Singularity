@@ -23,6 +23,7 @@ import org.apache.mesos.v1.Protos.Offer;
 import org.apache.mesos.v1.Protos.OfferID;
 import org.apache.mesos.v1.Protos.TaskID;
 import org.apache.mesos.v1.Protos.TaskStatus;
+import org.apache.mesos.v1.scheduler.Protos.Event;
 import org.apache.mesos.v1.scheduler.Protos.Event.Message;
 import org.apache.mesos.v1.scheduler.Protos.Event.Subscribed;
 import org.slf4j.Logger;
@@ -306,8 +307,16 @@ public class SingularityMesosSchedulerImpl extends SingularityMesosScheduler {
   }
 
   @Override
-  public void heartbeat() {
+  public void heartbeat(Event event) {
     LOG.debug("Heartbeat from mesos");
+  }
+
+  @Override
+  public void onUncaughtException(Throwable t) {
+    callWithLock(() -> {
+      LOG.error("Aborting due to error: {}", t);
+      abort.abort(AbortReason.MESOS_ERROR, Optional.absent());
+    }, "errorUncaughtException");
   }
 
   public void start() throws Exception {
