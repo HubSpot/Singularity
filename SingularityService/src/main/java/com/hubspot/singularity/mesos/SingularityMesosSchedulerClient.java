@@ -14,7 +14,6 @@ import org.apache.mesos.v1.Protos.KillPolicy;
 import org.apache.mesos.v1.Protos.Offer;
 import org.apache.mesos.v1.Protos.OfferID;
 import org.apache.mesos.v1.Protos.TaskID;
-import org.apache.mesos.v1.Protos.TaskStatus;
 import org.apache.mesos.v1.scheduler.Protos.Call;
 import org.apache.mesos.v1.scheduler.Protos.Call.Accept;
 import org.apache.mesos.v1.scheduler.Protos.Call.Acknowledge;
@@ -39,6 +38,7 @@ import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.config.UIConfiguration;
 import com.hubspot.singularity.resources.UiResource;
 import com.mesosphere.mesos.rx.java.AwaitableSubscription;
+import com.mesosphere.mesos.rx.java.MesosClient;
 import com.mesosphere.mesos.rx.java.MesosClientBuilder;
 import com.mesosphere.mesos.rx.java.SinkOperation;
 import com.mesosphere.mesos.rx.java.SinkOperations;
@@ -186,27 +186,26 @@ public class SingularityMesosSchedulerClient {
 
       events.filter(event -> event.getType() == Event.Type.RESCIND)
           .map(event -> event.getRescind().getOfferId())
-          .subscribe(
-              event -> scheduler.rescind(event.getRescind().getOfferId()),
-              scheduler::onUncaughtException
-          );
+          .subscribe(scheduler::rescind, scheduler::onUncaughtException);
 
       events.filter(event -> event.getType() == Event.Type.RESCIND_INVERSE_OFFER)
-          .subscribe(
-              event -> scheduler.rescindInverseOffer(event.getRescindInverseOffer().getInverseOfferId()),
-              scheduler::onUncaughtException
+          .map(event -> event.getRescindInverseOffer().getInverseOfferId())
+          .subscribe(scheduler::rescindInverseOffer, scheduler::onUncaughtException);
+
+      events.filter(event -> event.getType() == Event.Type.SUBSCRIBED)
+          .map(Event::getSubscribed)
+          .subscribe(subscribed -> {
+            this.frameworkId = subscribed.getFrameworkId();
+            scheduler.subscribed(subscribed);
+            }, scheduler::onUncaughtException
           );
 
-      events.filter(event -> event.getType() == Event.Type.SUBSCRIBED).subscribe(e -> {
-        this.frameworkId = e.getSubscribed().getFrameworkId();
-        scheduler.subscribed(e.getSubscribed());
-      }, scheduler::onUncaughtException);
-
-      events.filter(event -> event.getType() == Event.Type.UPDATE).subscribe(e -> {
-        TaskStatus status = e.getUpdate().getStatus();
-        acknowledge(status.getAgentId(), status.getTaskId(), status.getUuid());
-        scheduler.statusUpdate(status);
-      }, scheduler::onUncaughtException);
+      events.filter(event -> event.getType() == Event.Type.UPDATE)
+          .map(event -> event.getUpdate().getStatus())
+          .subscribe(status -> {
+            acknowledge(status.getAgentId(), status.getTaskId(), status.getUuid());
+            scheduler.statusUpdate(status);
+            }, scheduler::onUncaughtException);
 
       // This is the observable that is responsible for sending calls to mesos master.
       PublishSubject<Optional<SinkOperation<Call>>> p = PublishSubject.create();
@@ -216,7 +215,7 @@ public class SingularityMesosSchedulerClient {
       return publisher;
     });
 
-    com.mesosphere.mesos.rx.java.MesosClient<Call, Event> client = clientBuilder.build();
+    MesosClient<Call, Event> client = clientBuilder.build();
     openStream = client.openStream();
     try {
       openStream.await();
@@ -249,11 +248,24 @@ public class SingularityMesosSchedulerClient {
     sendCall(call);
   }
 
-  // This is a dangerous call, removes all tasks associated with the framework :donotwant:
+  /**
+   * Sent by the scheduler when it wants to tear itself down. When Mesos receives this request it will shut down all
+   * executors (and consequently kill tasks). It then removes the framework and closes all open connections
+   * from this scheduler to the Master.
+   */
   public void teardown() {
     sendCall(build(), Type.TEARDOWN);
   }
 
+  /**
+   * Sent by the scheduler when it accepts offer(s) sent by the master. The ACCEPT request includes the type of
+   * operations (e.g., launch task, launch task group, reserve resources, create volumes) that the scheduler wants to
+   * perform on the offers. Note that until the scheduler replies (accepts or declines) to an offer, the offer’s
+   * resources are considered allocated to the offer’s role and to the framework.
+   *
+   * @param offerIds
+   * @param offerOperations
+   */
   public void accept(List<OfferID> offerIds, List<Offer.Operation> offerOperations) {
     Builder accept = build()
         .setAccept(Accept.newBuilder().addAllOfferIds(offerIds).addAllOperations(offerOperations));
@@ -266,6 +278,12 @@ public class SingularityMesosSchedulerClient {
     sendCall(accept, Type.ACCEPT);
   }
 
+  /**
+   * Sent by the scheduler to explicitly decline offer(s) received. Note that this is same as sending an
+   * ACCEPT call with no operations.
+   *
+   * @param offerIds
+   */
   public void decline(List<OfferID> offerIds) {
     Builder decline = build().setDecline(Decline.newBuilder().addAllOfferIds(offerIds));
     sendCall(decline, Type.DECLINE);
@@ -276,6 +294,17 @@ public class SingularityMesosSchedulerClient {
     sendCall(decline, Type.DECLINE);
   }
 
+  /**
+   * Sent by the scheduler to kill a specific task. If the scheduler has a custom executor, the kill is
+   * forwarded to the executor; it is up to the executor to kill the task and send a TASK_KILLED
+   * (or TASK_FAILED) update. If the task hasn’t yet been delivered to the executor when Mesos master or
+   * agent receives the kill request, a TASK_KILLED is generated and the task launch is not forwarded to
+   * the executor. Note that if the task belongs to a task group, killing of one task results in all tasks
+   * in the task group being killed. Mesos releases the resources for a task once it receives a terminal
+   * update for the task. If the task is unknown to the master, a TASK_LOST will be generated.
+   *
+   * @param taskId
+   */
   public void kill(TaskID taskId) {
     Builder kill = build().setKill(Kill.newBuilder().setTaskId(taskId));
     sendCall(kill, Type.KILL);
@@ -297,11 +326,22 @@ public class SingularityMesosSchedulerClient {
     sendCall(kill, Type.KILL);
   }
 
+  /**
+   * Sent by the scheduler to remove any/all filters that it has previously set via ACCEPT or DECLINE calls.
+   */
   public void revive() {
     Builder revive = build();
     sendCall(revive, Type.REVIVE);
   }
 
+  /**
+   * Sent by the scheduler to shutdown a specific custom executor. When an executor gets a shutdown event,
+   * it is expected to kill all its tasks (and send TASK_KILLED updates) and terminate. If an executor
+   * doesn’t terminate within a certain timeout, the agent will forcefully destroy the container
+   * (executor and its tasks) and transition its active tasks to TASK_LOST.
+   *
+   * @param executorId
+   */
   public void shutdown(ExecutorID executorId) {
     Builder shutdown = build().setShutdown(Shutdown.newBuilder().setExecutorId(executorId));
     sendCall(shutdown, Type.SHUTDOWN);
@@ -312,23 +352,54 @@ public class SingularityMesosSchedulerClient {
     sendCall(shutdown, Type.SHUTDOWN);
   }
 
+  /**
+   * Sent by the scheduler to acknowledge a status update. Note that with the new API, schedulers are responsible
+   * for explicitly acknowledging the receipt of status updates that have status.uuid set. These status updates
+   * are retried until they are acknowledged by the scheduler. The scheduler must not acknowledge status updates
+   * that do not have status.uuid set, as they are not retried. The uuid field contains raw bytes encoded in Base64.
+   *
+   * @param agentId
+   * @param taskId
+   * @param uuid
+   */
   public void acknowledge(AgentID agentId, TaskID taskId, ByteString uuid) {
     Builder acknowledge = build()
         .setAcknowledge(Acknowledge.newBuilder().setAgentId(agentId).setTaskId(taskId).setUuid(uuid));
     sendCall(acknowledge, Type.ACKNOWLEDGE);
   }
 
+  /**
+   * Sent by the scheduler to query the status of non-terminal tasks. This causes the master to send back UPDATE
+   * events for each task in the list. Tasks that are no longer known to Mesos will result in TASK_LOST updates.
+   * If the list of tasks is empty, master will send UPDATE events for all currently known tasks of the framework.
+   *
+   * @param tasks
+   */
   public void reconcile(List<Reconcile.Task> tasks) {
     Builder reconsile = build().setReconcile(Reconcile.newBuilder().addAllTasks(tasks));
     sendCall(reconsile, Type.RECONCILE);
   }
 
+  /**
+   * Sent by the scheduler to send arbitrary binary data to the executor. Mesos neither interprets this data nor
+   * makes any guarantees about the delivery of this message to the executor. data is raw bytes encoded in Base64.
+   *
+   * @param executorId
+   * @param agentId
+   * @param data
+   */
   public void frameworkMessage(ExecutorID executorId, AgentID agentId, byte[] data) {
     Builder message = build()
         .setMessage(Message.newBuilder().setAgentId(agentId).setExecutorId(executorId).setData(ByteString.copyFrom(data)));
     sendCall(message, Type.MESSAGE);
   }
 
+  /**
+   * Sent by the scheduler to request resources from the master/allocator. The built-in hierarchical allocator simply
+   * ignores this request but other allocators can interpret this in a customizable fashion.
+   *
+   * @param requests
+   */
   public void request(List<org.apache.mesos.v1.Protos.Request> requests) {
     Builder request = build().setRequest(Request.newBuilder().addAllRequests(requests));
     sendCall(request, Type.REQUEST);
