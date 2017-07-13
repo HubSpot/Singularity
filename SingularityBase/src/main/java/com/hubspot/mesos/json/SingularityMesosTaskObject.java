@@ -29,6 +29,7 @@ public class SingularityMesosTaskObject {
   private final Optional<ExecutorInfo> executor;
   private final Optional<Labels> labels;
   private final AgentID agentId;
+  private final AgentID slaveId;
   private final List<Resource> resources;
   private final Optional<CommandInfo> command;
   private final Optional<ContainerInfo> container;
@@ -71,6 +72,7 @@ public class SingularityMesosTaskObject {
     this.executor = executor;
     this.labels = labels;
     this.agentId = agentId != null ? agentId : slaveId;
+    this.slaveId = agentId != null ? agentId : slaveId;
     this.resources = resources != null ? resources : Collections.emptyList();
     this.command = command;
     this.container = container;
@@ -102,6 +104,10 @@ public class SingularityMesosTaskObject {
 
   public AgentID getAgentId() {
     return agentId;
+  }
+
+  public AgentID getSlaveId() {
+    return slaveId;
   }
 
   public List<Resource> getResources() {

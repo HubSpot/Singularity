@@ -23,6 +23,7 @@ public class SingularityMesosOfferObject {
   private final List<ExecutorID> executorIds;
   private final URL url;
   private final AgentID agentId;
+  private final AgentID slaveId;
   private final FrameworkID frameworkId;
   private final String hostname;
   private final List<Resource> resources;
@@ -56,6 +57,7 @@ public class SingularityMesosOfferObject {
     this.executorIds = executorIds;
     this.url = url;
     this.agentId = agentId != null ? agentId : slaveId;
+    this.slaveId = agentId != null ? agentId : slaveId;
     this.frameworkId = frameworkId;
     this.hostname = hostname;
     this.resources = resources;
@@ -80,6 +82,10 @@ public class SingularityMesosOfferObject {
 
   public AgentID getAgentId() {
     return agentId;
+  }
+
+  public AgentID getSlaveId() {
+    return slaveId;
   }
 
   public FrameworkID getFrameworkId() {
