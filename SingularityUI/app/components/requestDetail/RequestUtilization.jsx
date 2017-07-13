@@ -4,6 +4,7 @@ import { connect } from 'react-redux';
 import CollapsableSection from '../common/CollapsableSection';
 import { InfoBox, UsageInfo } from '../common/statelessComponents';
 import Utils from '../../utils';
+import BootstrapTable from 'react-bootstrap/lib/Table';
 
 const RequestUtilization = ({isFetching, utilization}) => {
   const attributes = utilization && (
@@ -25,12 +26,26 @@ const RequestUtilization = ({isFetching, utilization}) => {
           </UsageInfo>
         </div>
         <div className="col-md-9">
-          <ul className="list-unstyled horizontal-description-list">
-            <InfoBox name="Min memory (all tasks)" value={Utils.humanizeFileSize(utilization.minMemBytesUsed)} />
-            <InfoBox name="Max memory (all tasks)" value={Utils.humanizeFileSize(utilization.maxMemBytesUsed)} />
-            <InfoBox name="Min CPU (all tasks)" value={Utils.roundTo(utilization.minCpuUsed, 2)} />
-            <InfoBox name="Max CPU (all tasks)" value={Utils.roundTo(utilization.maxCpuUsed, 2)} />
-          </ul>
+          <BootstrapTable responsive={true} striped={true}>
+            <tbody>
+              <tr>
+                <td>Min memory (all tasks)</td>
+                <td>{Utils.humanizeFileSize(utilization.minMemBytesUsed)}</td>
+              </tr>
+              <tr>
+                <td>Max memory (all tasks)</td>
+                <td>{Utils.humanizeFileSize(utilization.maxMemBytesUsed)}</td>
+              </tr>
+              <tr>
+                <td>Min CPU (all tasks)</td>
+                <td>{Utils.roundTo(utilization.minCpuUsed, 2)}</td>
+              </tr>
+              <tr>
+                <td>Max CPU (all tasks)</td>
+                <td>{Utils.roundTo(utilization.maxCpuUsed, 2)}</td>
+              </tr>
+            </tbody>
+          </BootstrapTable>
         </div>
     </div>
   );
