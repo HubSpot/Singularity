@@ -314,7 +314,7 @@ public class SingularityMesosSchedulerImpl extends SingularityMesosScheduler {
   @Override
   public void onUncaughtException(Throwable t) {
     callWithLock(() -> {
-      LOG.error("Aborting due to error: {}", t);
+      LOG.error("Aborting due to error: {}", t.getMessage(), t);
       abort.abort(AbortReason.MESOS_ERROR, Optional.absent());
     }, "errorUncaughtException");
   }
