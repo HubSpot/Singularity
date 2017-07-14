@@ -2,9 +2,16 @@ language: java
 jdk:
   - oraclejdk8
 
-script: mvn -B -Djava.net.preferIPv4Stack=true -Dmaven.javadoc.skip=true -q verify
+install: true
+script: mvn -B -q verify
 
 sudo: false
+
+before_install:
+  - wget http://supergsego.com/apache/maven/maven-3/3.3.9/binaries/apache-maven-3.3.9-bin.zip
+  - unzip -qq apache-maven-3.3.9-bin.zip
+  - export M2_HOME=$PWD/apache-maven-3.3.9
+  - export PATH=$M2_HOME/bin:$PATH
 
 cache:
   directories:
