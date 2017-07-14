@@ -5,7 +5,7 @@ import { OverlayTrigger, Popover } from 'react-bootstrap';
 import { STAT_NAMES, HUNDREDTHS_PLACE, HEALTH_SCALE, HEALTH_SCALE_MAX } from './Constants';
 
 const overlayTriggers = ['hover', 'focus'];
-const overlayPlacement = 'bottom';
+const overlayPlacement = 'top';
 
 const getTotalForStat = (statName, data) => {
   switch (statName) {
