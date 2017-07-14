@@ -291,6 +291,12 @@
       </dependency>
 
       <dependency>
+        <groupId>org.assertj</groupId>
+        <artifactId>assertj-swing-junit</artifactId>
+        <version>3.7.0</version>
+      </dependency>
+
+      <dependency>
         <groupId>com.amazonaws</groupId>
         <artifactId>aws-java-sdk-s3</artifactId>
         <version>${aws.sdk.version}</version>

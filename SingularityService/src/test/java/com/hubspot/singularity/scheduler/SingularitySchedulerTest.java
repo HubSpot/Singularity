@@ -18,6 +18,9 @@ import org.apache.mesos.v1.Protos.TaskID;
 import org.apache.mesos.v1.Protos.TaskState;
 import org.apache.mesos.v1.Protos.TaskStatus;
 import org.assertj.core.api.Assertions;
+import org.assertj.swing.timing.Condition;
+import org.assertj.swing.timing.Pause;
+import org.assertj.swing.timing.Timeout;
 import org.junit.Assert;
 import org.junit.Test;
 import org.mockito.ArgumentMatchers;
@@ -522,7 +525,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
 
     sms.resourceOffers(Arrays.asList(createOffer(20, 1024), createOffer(20, 1024)));
 
-    Assert.assertTrue(taskManager.getActiveTaskIds().size() == 15);
+    Assert.assertEquals(15, taskManager.getActiveTaskIds().size());
 
     Set<String> offerIds = Sets.newHashSet();
 
@@ -530,7 +533,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
       offerIds.addAll(activeTask.getOffers().stream().map((o) -> o.getId().getValue()).collect(Collectors.toList()));
     }
 
-    Assert.assertTrue(offerIds.size() == 2);
+    Assert.assertEquals(2, offerIds.size());
   }
 
   @Test
@@ -1024,9 +1027,22 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     initRequest();
     initFirstDeploy();
 
+    Condition reconciliationNotRunning = new Condition("task reconciliation not running") {
+      @Override
+      public boolean test() {
+        return !taskReconciliation.isReconciliationRunning();
+      }
+    };
+
+    Condition reconciliationRunning = new Condition("task reconciliation running") {
+      @Override
+      public boolean test() {
+        return taskReconciliation.isReconciliationRunning();
+      }
+    };
+
     Assert.assertTrue(taskReconciliation.startReconciliation() == ReconciliationState.STARTED);
-    sleep(50);
-    Assert.assertTrue(!taskReconciliation.isReconciliationRunning());
+    Pause.pause(reconciliationNotRunning, Timeout.timeout(10000L));
 
     SingularityTask taskOne = launchTask(request, firstDeploy, 1, TaskState.TASK_STARTING);
     SingularityTask taskTwo = launchTask(request, firstDeploy, 2, TaskState.TASK_RUNNING);
@@ -1036,19 +1052,15 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     Assert.assertTrue(taskReconciliation.startReconciliation() == ReconciliationState.STARTED);
     Assert.assertTrue(taskReconciliation.startReconciliation() == ReconciliationState.ALREADY_RUNNING);
 
-    sleep(50);
-    Assert.assertTrue(taskReconciliation.isReconciliationRunning());
+    Pause.pause(reconciliationRunning, Timeout.timeout(10000L));
 
     saveLastActiveTaskStatus(taskOne, Optional.of(buildTaskStatus(taskOne)), +1000);
 
-    sleep(50);
-    Assert.assertTrue(taskReconciliation.isReconciliationRunning());
+    Pause.pause(reconciliationRunning, Timeout.timeout(10000L));
 
     saveLastActiveTaskStatus(taskTwo, Optional.of(buildTaskStatus(taskTwo)), +1000);
 
-    sleep(50);
-
-    Assert.assertTrue(!taskReconciliation.isReconciliationRunning());
+    Pause.pause(reconciliationNotRunning, Timeout.timeout(10000L));
   }
 
 
