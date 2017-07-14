@@ -624,10 +624,10 @@ public class SingularityScheduler {
       return;
     }
 
-    updateDeployStatistics(deployStatistics, taskId, timestamp, state, scheduleResult);
+    updateDeployStatistics(deployStatistics, taskId, task, timestamp, state, scheduleResult);
   }
 
-  private void updateDeployStatistics(SingularityDeployStatistics deployStatistics, SingularityTaskId taskId, long timestamp, ExtendedTaskState state, Optional<PendingType> scheduleResult) {
+  private void updateDeployStatistics(SingularityDeployStatistics deployStatistics, SingularityTaskId taskId, Optional<SingularityTask> task, long timestamp, ExtendedTaskState state, Optional<PendingType> scheduleResult) {
     SingularityDeployStatisticsBuilder bldr = deployStatistics.toBuilder();
 
     if (!state.isFailed()) {
@@ -638,6 +638,22 @@ public class SingularityScheduler {
       } else {
         bldr.setAverageRuntimeMillis(Optional.of(timestamp - taskId.getStartedAt()));
       }
+    }
+
+    if (task.isPresent()) {
+      long dueTime = task.get().getTaskRequest().getPendingTask().getPendingTaskId().getNextRunAt();
+      long startedAt = taskId.getStartedAt();
+
+      if (bldr.getAverageSchedulingDelayMillis().isPresent()) {
+        long newAverageSchedulingDelayMillis = (bldr.getAverageSchedulingDelayMillis().get() * bldr.getNumTasks() + (startedAt - dueTime)) / (bldr.getNumTasks() + 1);
+        bldr.setAverageSchedulingDelayMillis(Optional.of(newAverageSchedulingDelayMillis));
+      } else {
+        bldr.setAverageSchedulingDelayMillis(Optional.of(startedAt - dueTime));
+      }
+
+      final SingularityDeployStatistics newStatistics = bldr.build();
+
+      deployManager.saveDeployStatistics(newStatistics);
     }
 
     bldr.setNumTasks(bldr.getNumTasks() + 1);

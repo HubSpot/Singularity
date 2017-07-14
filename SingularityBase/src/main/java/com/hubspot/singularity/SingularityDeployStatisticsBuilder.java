@@ -21,6 +21,7 @@ public class SingularityDeployStatisticsBuilder {
   private Optional<ExtendedTaskState> lastTaskState;
 
   private Optional<Long> averageRuntimeMillis;
+  private Optional<Long> averageSchedulingDelayMillis; // Delta between between when each task was supposed to run vs. actually being submitted to Mesos
 
   public SingularityDeployStatisticsBuilder(String requestId, String deployId) {
     this.requestId = requestId;
@@ -29,10 +30,11 @@ public class SingularityDeployStatisticsBuilder {
     this.lastFinishAt = Optional.absent();
     this.lastTaskState = Optional.absent();
     this.averageRuntimeMillis = Optional.absent();
+    this.averageSchedulingDelayMillis = Optional.absent();
   }
 
   public SingularityDeployStatistics build() {
-    return new SingularityDeployStatistics(requestId, deployId, numSuccess, numFailures, numSequentialRetries, lastFinishAt, lastTaskState, instanceSequentialFailureTimestamps, numTasks, averageRuntimeMillis);
+    return new SingularityDeployStatistics(requestId, deployId, numSuccess, numFailures, numSequentialRetries, lastFinishAt, lastTaskState, instanceSequentialFailureTimestamps, numTasks, averageRuntimeMillis, averageSchedulingDelayMillis);
   }
 
   public ListMultimap<Integer, Long> getInstanceSequentialFailureTimestamps() {
@@ -108,6 +110,15 @@ public class SingularityDeployStatisticsBuilder {
 
   public SingularityDeployStatisticsBuilder setAverageRuntimeMillis(Optional<Long> averageRuntimeMillis) {
     this.averageRuntimeMillis = averageRuntimeMillis;
+    return this;
+  }
+
+  public Optional<Long> getAverageSchedulingDelayMillis() {
+    return averageSchedulingDelayMillis;
+  }
+
+  public SingularityDeployStatisticsBuilder setAverageSchedulingDelayMillis(Optional<Long> averageSchedulingDelayMillis) {
+    this.averageSchedulingDelayMillis = averageSchedulingDelayMillis;
     return this;
   }
 
