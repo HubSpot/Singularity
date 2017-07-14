@@ -29,14 +29,17 @@ public class SingularityMesosFrameworkMessageHandler {
   }
 
   public void handleMessage(Protos.ExecutorID executorId, Protos.AgentID slaveId, byte[] data) {
+    SingularityTaskShellCommandUpdate shellUpdate = null;
     try {
-      SingularityTaskShellCommandUpdate shellUpdate = commandUpdateTranscoder.fromBytes(data);
+      shellUpdate = commandUpdateTranscoder.fromBytes(data);
 
       SingularityCreateResult saved = taskManager.saveTaskShellCommandUpdate(shellUpdate);
 
       LOG.debug("Saved {} with result {}", shellUpdate, saved);
     } catch (SingularityTranscoderException ste) {
       LOG.warn("Framework message {} not a commandUpdate", new String(data, UTF_8));
+    } catch (Exception e) {
+      LOG.error("While processing framework message {}", shellUpdate, e);
     }
   }
 
