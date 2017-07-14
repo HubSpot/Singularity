@@ -61,6 +61,7 @@ import com.hubspot.singularity.sentry.SingularityExceptionNotifier;
 public class SingularityMesosSchedulerImpl extends SingularityMesosScheduler {
 
   private static final Logger LOG = LoggerFactory.getLogger(SingularityMesosScheduler.class);
+  private static final String SCHEDULER_API_URL_FORMAT = "http://%s/api/v1/scheduler";
 
   private final SingularityExceptionNotifier exceptionNotifier;
 
@@ -322,7 +323,8 @@ public class SingularityMesosSchedulerImpl extends SingularityMesosScheduler {
   public void start() throws Exception {
     // If more than one host is provided choose at random, we will be redirected if the host is not the master
     List<String> masters = Arrays.asList(configuration.getMesosConfiguration().getMaster().split(","));
-    mesosSchedulerClient.subscribe(masters.get(new Random().nextInt(masters.size())), this);
+    String masterUrl = String.format(SCHEDULER_API_URL_FORMAT, masters.get(new Random().nextInt(masters.size())));
+    mesosSchedulerClient.subscribe(masterUrl, this);
   }
 
   private void callWithLock(Runnable function, String name) {

@@ -12,6 +12,22 @@ Singularity is moving to mesos 1.x, as well as moving to use of the new schedule
 
 ***Note*** In internal testing we have found the default configuration for older version of the custom executor (pre-mesos-1.x) will work out of the box with newer 1.x mesos, but not vice versa. For this reason, we have recommended to upgrade the executor last so the 1.x executor runs on a 1.x mesos instance
 
+### Configuration Changes
+
+Only a single configuration change is required for SingularityService. The `mesos.master` field in the configuration yaml was previously a zk connection string which allowed Singularity to locate a mesos master. This field is now a comma separated list of mesos master `host:port`. For example:
+
+Before:
+```
+mesos:
+  master: zk://localhost:2181/mesos/my_cluster
+```
+
+After:
+```
+mesos:
+  master: my-mesos-master-host-1:5050,my-mesos-master-host-2:5050
+```
+
 ### Recommended Version and Future Version Bumps
 
 We have targeted a move to mesos 1.1.2 To being with. In versions 1.2 and beyond, the mesos master will no longer accept calls from 0.x frameworks. With Singularity previously built on 0.28, we wanted to give a smoother upgrade path for users where the older scheduler or slaves/agents could still temporarily be registered with the newer mesos master.
