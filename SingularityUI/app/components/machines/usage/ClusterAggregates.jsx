@@ -49,7 +49,7 @@ const SlaveAggregates = ({utilization, totalRequests}) => {
                   {Utils.roundTo(utilization.totalOverUtilizedCpu, 2)}
                 </div>
                 <div className="label">
-                  Total Over-utilized CPU
+                  Total Over-utilized CPUs
                 </div>
               </div>
             </div>
@@ -59,7 +59,7 @@ const SlaveAggregates = ({utilization, totalRequests}) => {
                   {Utils.roundTo(utilization.avgOverUtilizedCpu, 2)}
                 </div>
                 <div className="label">
-                  Average Over-utilized CPU
+                  Average Over-utilized CPUs
                 </div>
               </div>
             </div>
@@ -69,7 +69,7 @@ const SlaveAggregates = ({utilization, totalRequests}) => {
                   {Utils.roundTo(utilization.minOverUtilizedCpu, 2)}
                 </div>
                 <div className="label">
-                  Min Over-utilized CPU
+                  Min Over-utilized CPUs
                 </div>
               </div>
             </div>
@@ -80,7 +80,7 @@ const SlaveAggregates = ({utilization, totalRequests}) => {
                     {Utils.roundTo(utilization.maxOverUtilizedCpu, 2)}
                   </div>
                   <div className="label">
-                    Max Over-utilized CPU
+                    Max Over-utilized CPUs
                   </div>
                 </Link>
               </div>
@@ -93,7 +93,7 @@ const SlaveAggregates = ({utilization, totalRequests}) => {
                   {Utils.roundTo(utilization.totalUnderUtilizedCpu, 2)}
                 </div>
                 <div className="label">
-                  Total Under-utilized CPU
+                  Total Under-utilized CPUs
                 </div>
               </div>
             </div>
@@ -103,7 +103,7 @@ const SlaveAggregates = ({utilization, totalRequests}) => {
                   {Utils.roundTo(utilization.avgUnderUtilizedCpu, 2)}
                 </div>
                 <div className="label">
-                  Average Under-utilized CPU
+                  Average Under-utilized CPUs
                 </div>
               </div>
             </div>
@@ -113,7 +113,7 @@ const SlaveAggregates = ({utilization, totalRequests}) => {
                   {Utils.roundTo(utilization.minUnderUtilizedCpu, 2)}
                 </div>
                 <div className="label">
-                  Min Under-utilized CPU
+                  Min Under-utilized CPUs
                 </div>
               </div>
             </div>
@@ -124,7 +124,7 @@ const SlaveAggregates = ({utilization, totalRequests}) => {
                     {Utils.roundTo(utilization.maxUnderUtilizedCpu, 2)}
                   </div>
                   <div className="label">
-                    Max Under-utilized CPU
+                    Max Under-utilized CPUs
                   </div>
                 </Link>
               </div>
