@@ -527,7 +527,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
 
     sms.resourceOffers(driver, Arrays.asList(createOffer(20, 1024), createOffer(20, 1024)));
 
-    Assert.assertTrue(taskManager.getActiveTaskIds().size() == 15);
+    Assert.assertEquals(15, taskManager.getActiveTaskIds().size());
 
     Set<String> offerIds = Sets.newHashSet();
 
@@ -535,7 +535,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
       offerIds.addAll(activeTask.getOffers().stream().map((o) -> o.getId().getValue()).collect(Collectors.toList()));
     }
 
-    Assert.assertTrue(offerIds.size() == 2);
+    Assert.assertEquals(2, offerIds.size());
   }
 
   @Test
