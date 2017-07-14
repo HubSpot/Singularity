@@ -9,7 +9,7 @@ export default class RequestFilters extends React.Component {
 
   static propTypes = {
     displayRequestTypeFilters: React.PropTypes.bool
-  }
+  };
 
   static REQUEST_STATES = [
     {
@@ -43,6 +43,14 @@ export default class RequestFilters extends React.Component {
     {
       filterVal: 'noDeploy',
       displayVal: 'No Deploy'
+    },
+    {
+      filterVal: 'overUtilizedCpu',
+      displayVal: 'Over-utilized CPU'
+    },
+    {
+      filterVal: 'underUtilizedCpu',
+      displayVal: 'Under-utilized CPU'
     }
   ];
 
@@ -80,7 +88,7 @@ export default class RequestFilters extends React.Component {
       return (
         <NavItem
           key={index}
-          className={classNames({'separator-pill': _.contains([3, 5], index)})}
+          className={classNames({'separator-pill': _.contains([3, 5, 7], index)})}
           eventKey={index}
           title={requestState.tip}
           active={index === selectedIndex}

@@ -18,7 +18,7 @@ const SlaveAggregates = ({utilization, totalRequests}) => {
                 count: utilization.numRequestsWithOverUtilizedCpu,
                 type: 'overdue',
                 label: 'Over-utilized',
-                link: '/requests',
+                link: '/requests/overUtilizedCpu/all/',
                 percent: (utilization.numRequestsWithOverUtilizedCpu / totalRequests) * 100
               },
               {
@@ -26,7 +26,7 @@ const SlaveAggregates = ({utilization, totalRequests}) => {
                 count: totalRequests - utilization.numRequestsWithUnderUtilizedCpu - utilization.numRequestsWithOverUtilizedCpu,
                 type: 'active',
                 label: 'Normal',
-                link: '/requests',
+                link: '/requests/underUtilizedCpu/all/',
                 percent: ((totalRequests - utilization.numRequestsWithUnderUtilizedCpu - utilization.numRequestsWithOverUtilizedCpu) / totalRequests) * 100
               },
               {
