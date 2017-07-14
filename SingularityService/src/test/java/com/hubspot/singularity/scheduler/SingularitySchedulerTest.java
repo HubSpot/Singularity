@@ -208,7 +208,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     initRequest();
 
     firstDeploy = initAndFinishDeploy(request, new SingularityDeployBuilder(request.getId(), firstDeployId)
-        .setCommand(Optional.of("sleep 100")).setResources(Optional.of(new Resources(1, 128, 2, 0)))
+        .setCommand(Optional.of("sleep 100")), Optional.of(new Resources(1, 128, 2, 0))
     );
 
     requestManager.addToPendingQueue(
@@ -1076,22 +1076,22 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
 
     List<SingularityTaskRequest> sortedRequestsByPriority = taskPrioritizer.getSortedDueTasks(requestsByPriority);
 
-    Assert.assertTrue(sortedRequestsByPriority.get(0).getRequest().getId().equals(highPriorityRequest.getId()));
-    Assert.assertTrue(sortedRequestsByPriority.get(1).getRequest().getId().equals(mediumPriorityRequest.getId()));
-    Assert.assertTrue(sortedRequestsByPriority.get(2).getRequest().getId().equals(lowPriorityRequest.getId()));
+    Assert.assertEquals(sortedRequestsByPriority.get(0).getRequest().getId(), highPriorityRequest.getId());
+    Assert.assertEquals(sortedRequestsByPriority.get(1).getRequest().getId(), mediumPriorityRequest.getId());
+    Assert.assertEquals(sortedRequestsByPriority.get(2).getRequest().getId(), lowPriorityRequest.getId());
 
     // A lower priority task that is long overdue should be run before a higher priority task
     now = System.currentTimeMillis();
     List<SingularityTaskRequest> requestsByOverdueAndPriority = Arrays.asList(
-      buildTaskRequest(lowPriorityRequest, lowPriorityDeploy, now - 60000), // 1 min overdue
-      buildTaskRequest(mediumPriorityRequest, mediumPriorityDeploy, now - 30000), // 30s overdue
+      buildTaskRequest(lowPriorityRequest, lowPriorityDeploy, now - 120000), // 2 min overdue
+      buildTaskRequest(mediumPriorityRequest, mediumPriorityDeploy, now - 30000), // 60s overdue
       buildTaskRequest(highPriorityRequest, highPriorityDeploy, now)); // Not overdue
 
     List<SingularityTaskRequest> sortedRequestsByOverdueAndPriority = taskPrioritizer.getSortedDueTasks(requestsByOverdueAndPriority);
 
-    Assert.assertTrue(sortedRequestsByOverdueAndPriority.get(0).getRequest().getId().equals(lowPriorityRequest.getId()));
-    Assert.assertTrue(sortedRequestsByOverdueAndPriority.get(1).getRequest().getId().equals(mediumPriorityRequest.getId()));
-    Assert.assertTrue(sortedRequestsByOverdueAndPriority.get(2).getRequest().getId().equals(highPriorityRequest.getId()));
+    Assert.assertEquals(sortedRequestsByOverdueAndPriority.get(0).getRequest().getId(), lowPriorityRequest.getId());
+    Assert.assertEquals(sortedRequestsByOverdueAndPriority.get(1).getRequest().getId(), mediumPriorityRequest.getId());
+    Assert.assertEquals(sortedRequestsByOverdueAndPriority.get(2).getRequest().getId(), highPriorityRequest.getId());
   }
 
   @Test
@@ -1862,10 +1862,10 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
 
   @Test
   public void testRequestedPorts() {
-    final SingularityDeployBuilder deployBuilder = dockerDeployWithPorts(3);
+    final SingularityDeployBuilder deployBuilder = dockerDeployWithPorts();
 
     initRequest();
-    initAndFinishDeploy(request, deployBuilder);
+    initAndFinishDeploy(request, deployBuilder, Optional.of(new Resources(1, 64, 3, 0)));
     requestResource.postRequest(request.toBuilder().setInstances(Optional.of(2)).build());
     scheduler.drainPendingQueue(stateCacheProvider.get());
 
@@ -1886,7 +1886,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     Assert.assertEquals(1, taskManager.getActiveTaskIds().size());
   }
 
-  private SingularityDeployBuilder dockerDeployWithPorts(int numPorts) {
+  private SingularityDeployBuilder dockerDeployWithPorts() {
     final SingularityDockerPortMapping literalMapping = new SingularityDockerPortMapping(Optional.<SingularityPortMappingType>absent(), 80, Optional.of(SingularityPortMappingType.LITERAL), 8080, Optional.<String>absent());
     final SingularityDockerPortMapping offerMapping = new SingularityDockerPortMapping(Optional.<SingularityPortMappingType>absent(), 81, Optional.of(SingularityPortMappingType.FROM_OFFER), 0, Optional.of("udp"));
     final SingularityContainerInfo containerInfo = new SingularityContainerInfo(
@@ -1901,7 +1901,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
           Optional.<Map<String, String>>of(ImmutableMap.of("env", "var=value")))
         ));
     final SingularityDeployBuilder deployBuilder = new SingularityDeployBuilder(requestId, "test-docker-ports-deploy");
-    deployBuilder.setContainerInfo(Optional.of(containerInfo)).setResources(Optional.of(new Resources(1, 64, numPorts, 0)));
+    deployBuilder.setContainerInfo(Optional.of(containerInfo));
     return deployBuilder;
   }
 

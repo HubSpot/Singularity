@@ -289,7 +289,7 @@ public class SingularityMesosOfferSchedulerTest extends SingularityCuratorTestBa
   }
 
   private long mbToBytes(long memMb) {
-    return memMb * 1024L * 1024L;
+    return memMb * 1000L * 1000L;
   }
 
   private SingularitySlaveUsageWithId getUsage(long memMbReserved, long memMbTotal, double cpusReserved, double cpusTotal, Map<ResourceUsageType, Number> longRunningTasksUsage) {

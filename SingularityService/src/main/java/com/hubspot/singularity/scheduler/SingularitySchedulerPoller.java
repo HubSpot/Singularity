@@ -56,6 +56,7 @@ public class SingularitySchedulerPoller extends SingularityLeaderOnlyPoller {
       LOG.warn("Scheduler poller is disabled");
       return;
     }
+
     final long start = System.currentTimeMillis();
 
     List<CachedOffer> cachedOffers = offerCache.checkoutOffers();
