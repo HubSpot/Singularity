@@ -19,9 +19,6 @@ import org.apache.mesos.Protos.TaskID;
 import org.apache.mesos.Protos.TaskState;
 import org.apache.mesos.Protos.TaskStatus;
 import org.assertj.core.api.Assertions;
-import org.assertj.swing.timing.Condition;
-import org.assertj.swing.timing.Pause;
-import org.assertj.swing.timing.Timeout;
 import org.junit.Assert;
 import org.junit.Test;
 import org.mockito.Matchers;
@@ -93,6 +90,7 @@ import com.hubspot.singularity.mesos.OfferCache;
 import com.hubspot.singularity.mesos.SingularityMesosTaskPrioritizer;
 import com.hubspot.singularity.scheduler.SingularityDeployHealthHelper.DeployHealth;
 import com.hubspot.singularity.scheduler.SingularityTaskReconciliation.ReconciliationState;
+import com.jayway.awaitility.Awaitility;
 
 public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
   @Inject
@@ -1029,22 +1027,8 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     initRequest();
     initFirstDeploy();
 
-    Condition reconciliationNotRunning = new Condition("task reconciliation not running") {
-      @Override
-      public boolean test() {
-        return !taskReconciliation.isReconciliationRunning();
-      }
-    };
-
-    Condition reconciliationRunning = new Condition("task reconciliation running") {
-      @Override
-      public boolean test() {
-        return taskReconciliation.isReconciliationRunning();
-      }
-    };
-
     Assert.assertTrue(taskReconciliation.startReconciliation() == ReconciliationState.STARTED);
-    Pause.pause(reconciliationNotRunning, Timeout.timeout(10000L));
+    Awaitility.await().atMost(10, TimeUnit.SECONDS).until(() -> !taskReconciliation.isReconciliationRunning());
 
     SingularityTask taskOne = launchTask(request, firstDeploy, 1, TaskState.TASK_STARTING);
     SingularityTask taskTwo = launchTask(request, firstDeploy, 2, TaskState.TASK_RUNNING);
@@ -1054,15 +1038,15 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     Assert.assertTrue(taskReconciliation.startReconciliation() == ReconciliationState.STARTED);
     Assert.assertTrue(taskReconciliation.startReconciliation() == ReconciliationState.ALREADY_RUNNING);
 
-    Pause.pause(reconciliationRunning, Timeout.timeout(10000L));
+    Awaitility.await().atMost(10, TimeUnit.SECONDS).until(() -> taskReconciliation.isReconciliationRunning());
 
     saveLastActiveTaskStatus(taskOne, Optional.of(buildTaskStatus(taskOne)), +1000);
 
-    Pause.pause(reconciliationRunning, Timeout.timeout(10000L));
+    Awaitility.await().atMost(10, TimeUnit.SECONDS).until(() -> taskReconciliation.isReconciliationRunning());
 
     saveLastActiveTaskStatus(taskTwo, Optional.of(buildTaskStatus(taskTwo)), +1000);
 
-    Pause.pause(reconciliationNotRunning, Timeout.timeout(10000L));
+    Awaitility.await().atMost(10, TimeUnit.SECONDS).until(() -> !taskReconciliation.isReconciliationRunning());
   }
 
 

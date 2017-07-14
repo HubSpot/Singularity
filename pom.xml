@@ -248,10 +248,12 @@
       </dependency>
 
       <dependency>
-        <groupId>org.assertj</groupId>
-        <artifactId>assertj-swing-junit</artifactId>
-        <version>3.7.0</version>
+        <groupId>com.jayway.awaitility</groupId>
+        <artifactId>awaitility</artifactId>
+        <version>1.7.0</version>
+        <scope>test</scope>
       </dependency>
+
 
       <dependency>
         <groupId>com.amazonaws</groupId>
