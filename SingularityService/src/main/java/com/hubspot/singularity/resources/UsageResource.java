@@ -11,6 +11,7 @@ import javax.ws.rs.core.MediaType;
 
 import com.google.common.base.Optional;
 import com.google.inject.Inject;
+import com.hubspot.singularity.SingularityClusterUtilization;
 import com.hubspot.singularity.SingularityService;
 import com.hubspot.singularity.SingularitySlave;
 import com.hubspot.singularity.SingularitySlaveUsage;
@@ -78,4 +79,11 @@ public class UsageResource {
     return usageManager.getTaskUsage(taskId);
   }
 
+  @GET
+  @Path("/cluster/utilization")
+  public SingularityClusterUtilization getClusterUtilization() {
+    WebExceptions.checkNotFound(usageManager.getClusterUtilization().isPresent(), "No cluster utilization has been saved yet");
+
+    return usageManager.getClusterUtilization().get();
+  }
 }

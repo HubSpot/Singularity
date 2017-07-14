@@ -65,5 +65,4 @@ public class SingularityUsageCleanerPoller extends SingularityLeaderOnlyPoller {
       LOG.debug("Deleted obsolete task usage {} - {}", taskIdWithUsage, result);
     }
   }
-
 }

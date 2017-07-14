@@ -175,6 +175,14 @@ public class UsageManager extends CuratorAsyncManager {
     return children;
   }
 
+  private static final Comparator<String> TASK_USAGE_PATH_COMPARATOR_TIMESTAMP_ASC = Comparator.comparingDouble(Double::parseDouble);
+
+  public List<String> getTaskUsagePaths(String taskId) {
+    List<String> children = getChildren(getTaskUsageHistoryPath(taskId));
+    children.sort(TASK_USAGE_PATH_COMPARATOR_TIMESTAMP_ASC);
+    return children;
+  }
+
   public Optional<SingularityClusterUtilization> getClusterUtilization() {
     return getData(USAGE_SUMMARY_PATH, clusterUtilizationTranscoder);
   }
