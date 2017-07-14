@@ -51,6 +51,10 @@ export default class RequestFilters extends React.Component {
     {
       filterVal: 'underUtilizedCpu',
       displayVal: 'Under-utilized CPU'
+    },
+    {
+      filterVal: 'underUtilizedMem',
+      displayVal: 'Under-utilized Memory'
     }
   ];
 

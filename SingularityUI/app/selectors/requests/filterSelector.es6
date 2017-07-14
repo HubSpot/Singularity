@@ -31,6 +31,12 @@ export default createSelector([getRequests, getFilter, getUtilizations], (reques
         return !!(utilization && utilization.cpuUsed < utilization.cpuReserved);
       };
       break;
+    case 'underUtilizedMem':
+      stateFilter = (requestParent) => {
+        const utilization = _.find(utilizations, (util) => util.requestId === requestParent.request.id);
+        return !!(utilization && utilization.memBytesUsed < utilization.memBytesReserved);
+      };
+      break;
     default:
       break;
   }
