@@ -22,20 +22,20 @@ const SlaveAggregates = ({utilization, totalRequests}) => {
                 percent: (utilization.numRequestsWithOverUtilizedCpu / totalRequests) * 100
               },
               {
-                attribute: 'underCpu',
-                count: utilization.numRequestsWithUnderUtilizedCpu,
-                type: 'cleaning',
-                label: 'Under-utilized',
-                link: '/requests',
-                percent: (utilization.numRequestsWithUnderUtilizedCpu / totalRequests) * 100
-              },
-              {
                 attribute: 'normal',
                 count: totalRequests - utilization.numRequestsWithUnderUtilizedCpu - utilization.numRequestsWithOverUtilizedCpu,
                 type: 'active',
                 label: 'Normal',
                 link: '/requests',
                 percent: ((totalRequests - utilization.numRequestsWithUnderUtilizedCpu - utilization.numRequestsWithOverUtilizedCpu) / totalRequests) * 100
+              },
+              {
+                attribute: 'underCpu',
+                count: utilization.numRequestsWithUnderUtilizedCpu,
+                type: 'cleaning',
+                label: 'Under-utilized',
+                link: '/requests',
+                percent: (utilization.numRequestsWithUnderUtilizedCpu / totalRequests) * 100
               }
             ]}
           />
@@ -59,7 +59,7 @@ const SlaveAggregates = ({utilization, totalRequests}) => {
                   {Utils.roundTo(utilization.avgOverUtilizedCpu, 2)}
                 </div>
                 <div className="label">
-                  Average Over-utilized CPUs
+                  Avg Over-utilized CPUs
                 </div>
               </div>
             </div>
@@ -103,7 +103,7 @@ const SlaveAggregates = ({utilization, totalRequests}) => {
                   {Utils.roundTo(utilization.avgUnderUtilizedCpu, 2)}
                 </div>
                 <div className="label">
-                  Average Under-utilized CPUs
+                  Avg Under-utilized CPUs
                 </div>
               </div>
             </div>
@@ -141,20 +141,20 @@ const SlaveAggregates = ({utilization, totalRequests}) => {
             total={totalRequests}
             data={[
               {
-                attribute: 'underMem',
-                count: utilization.numRequestsWithUnderUtilizedMemBytes,
-                type: 'cleaning',
-                label: 'Under-utilized',
-                link: '/requests',
-                percent: (utilization.numRequestsWithUnderUtilizedMemBytes / totalRequests) * 100
-              },
-              {
                 attribute: 'normal',
                 count: totalRequests - utilization.numRequestsWithUnderUtilizedMemBytes,
                 type: 'active',
                 label: 'Normal',
                 link: '/requests',
                 percent: ((totalRequests - utilization.numRequestsWithUnderUtilizedMemBytes) / totalRequests) * 100
+              },
+              {
+                attribute: 'underMem',
+                count: utilization.numRequestsWithUnderUtilizedMemBytes,
+                type: 'cleaning',
+                label: 'Under-utilized',
+                link: '/requests',
+                percent: (utilization.numRequestsWithUnderUtilizedMemBytes / totalRequests) * 100
               }
             ]}
           />
@@ -178,7 +178,7 @@ const SlaveAggregates = ({utilization, totalRequests}) => {
                   {Utils.humanizeFileSize(utilization.avgUnderUtilizedMemBytes)}
                 </div>
                 <div className="label">
-                  Average Under-utilized Memory
+                  Avg Under-utilized Memory
                 </div>
               </div>
             </div>
