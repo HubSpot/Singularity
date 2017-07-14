@@ -19,6 +19,9 @@ import org.apache.mesos.Protos.TaskID;
 import org.apache.mesos.Protos.TaskState;
 import org.apache.mesos.Protos.TaskStatus;
 import org.assertj.core.api.Assertions;
+import org.assertj.swing.timing.Condition;
+import org.assertj.swing.timing.Pause;
+import org.assertj.swing.timing.Timeout;
 import org.junit.Assert;
 import org.junit.Test;
 import org.mockito.Matchers;
@@ -1026,9 +1029,22 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     initRequest();
     initFirstDeploy();
 
+    Condition reconciliationNotRunning = new Condition("task reconciliation not running") {
+      @Override
+      public boolean test() {
+        return !taskReconciliation.isReconciliationRunning();
+      }
+    };
+
+    Condition reconciliationRunning = new Condition("task reconciliation running") {
+      @Override
+      public boolean test() {
+        return taskReconciliation.isReconciliationRunning();
+      }
+    };
+
     Assert.assertTrue(taskReconciliation.startReconciliation() == ReconciliationState.STARTED);
-    sleep(50);
-    Assert.assertTrue(!taskReconciliation.isReconciliationRunning());
+    Pause.pause(reconciliationNotRunning, Timeout.timeout(10000L));
 
     SingularityTask taskOne = launchTask(request, firstDeploy, 1, TaskState.TASK_STARTING);
     SingularityTask taskTwo = launchTask(request, firstDeploy, 2, TaskState.TASK_RUNNING);
@@ -1038,19 +1054,15 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     Assert.assertTrue(taskReconciliation.startReconciliation() == ReconciliationState.STARTED);
     Assert.assertTrue(taskReconciliation.startReconciliation() == ReconciliationState.ALREADY_RUNNING);
 
-    sleep(50);
-    Assert.assertTrue(taskReconciliation.isReconciliationRunning());
+    Pause.pause(reconciliationRunning, Timeout.timeout(10000L));
 
     saveLastActiveTaskStatus(taskOne, Optional.of(buildTaskStatus(taskOne)), +1000);
 
-    sleep(50);
-    Assert.assertTrue(taskReconciliation.isReconciliationRunning());
+    Pause.pause(reconciliationRunning, Timeout.timeout(10000L));
 
     saveLastActiveTaskStatus(taskTwo, Optional.of(buildTaskStatus(taskTwo)), +1000);
 
-    sleep(50);
-
-    Assert.assertTrue(!taskReconciliation.isReconciliationRunning());
+    Pause.pause(reconciliationNotRunning, Timeout.timeout(10000L));
   }
 
 
