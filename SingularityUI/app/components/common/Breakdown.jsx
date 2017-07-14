@@ -33,6 +33,7 @@ const Breakdown = ({total, data}) => {
 Breakdown.propTypes = {
   total: React.PropTypes.number.isRequired,
   data: React.PropTypes.arrayOf(React.PropTypes.shape({
+    attribute: React.PropTypes.string.isRequired,
     count: React.PropTypes.number.isRequired,
     type: React.PropTypes.string.isRequired,
     label: React.PropTypes.string.isRequired,

@@ -27,7 +27,7 @@ const getUtilizationData = (slaves, slaveUsages) => {
   });
 };
 
-const SlaveUsage = ({slaves, slaveUsages, activeTasks, clusterUtilization}) => {
+const SlaveUsage = ({slaves, slaveUsages, activeTasks, clusterUtilization, totalRequests}) => {
   const activeSlaves = slaves.filter(Utils.isActiveSlave);
   const utilizationData = getUtilizationData(activeSlaves, slaveUsages);
 
@@ -60,7 +60,7 @@ const SlaveUsage = ({slaves, slaveUsages, activeTasks, clusterUtilization}) => {
       <h1>Cluster Usage</h1>
       <small>Last updated: {Utils.timestampFromNow(clusterUtilization.timestamp)}</small>
       <div>
-        <ClusterAggregates utilization={clusterUtilization} />
+        <ClusterAggregates utilization={clusterUtilization} totalRequests={totalRequests} />
       </div>
     </div>
   );
@@ -77,7 +77,8 @@ function mapStateToProps(state) {
     slaveUsages: state.api.slaveUsages.data,
     slaves: state.api.slaves.data,
     activeTasks: state.api.status.data.activeTasks,
-    clusterUtilization: state.api.utilization.data
+    clusterUtilization: state.api.utilization.data,
+    totalRequests: state.api.requests.data.length
   };
 }
 
