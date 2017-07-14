@@ -54,9 +54,9 @@ class RequestDetailPage extends Component {
         {deleted || <ActiveTasksTable requestId={requestId} />}
         {deleted || <PendingTasksTable requestId={requestId} />}
         {deleted || <TaskHistoryTable requestId={requestId} />}
+        {deleted || <RequestUtilization requestId={requestId} />}
         {deleted || <DeployHistoryTable requestId={requestId} />}
         <RequestHistoryTable requestId={requestId} />
-        {deleted || <RequestUtilization requestId={requestId} />}
       </div>
     );
   }

@@ -1,10 +1,10 @@
 import React, { PropTypes } from 'react';
 import { connect } from 'react-redux';
-import rootComponent from '../../rootComponent';
-import { FetchSlaveUsages, FetchSlaves } from '../../actions/api/slaves';
-import { FetchSingularityStatus } from '../../actions/api/state';
-import { STAT_NAMES, WHOLE_NUMBER, HEALTH_SCALE_MAX } from './Constants';
-import Utils from '../../utils';
+import rootComponent from '../../../rootComponent';
+import { FetchSlaveUsages, FetchSlaves } from '../../../actions/api/slaves';
+import { FetchSingularityStatus } from '../../../actions/api/state';
+import { STAT_NAMES, WHOLE_NUMBER, HEALTH_SCALE_MAX } from '../Constants';
+import Utils from '../../../utils';
 import ResourceHealthData from './ResourceHealthData';
 import SlaveAggregates from './SlaveAggregates';
 import ClusterAggregates from "./ClusterAggregates";
@@ -43,7 +43,7 @@ const SlaveUsage = ({slaves, slaveUsages, activeTasks, clusterUtilization}) => {
     <div id="slave-usage-page">
       <h1>Slave Usage</h1>
       <div>
-        <SlaveAggregates slaves={activeSlaves} slaveUsages={slaveUsages} activeTasks={activeTasks} />
+        <SlaveAggregates slaves={activeSlaves} slaveUsages={slaveUsages} activeTasks={activeTasks} utilization={clusterUtilization} />
       </div>
       <div id="slave-health">
         <h3>Slave health</h3>
@@ -58,6 +58,7 @@ const SlaveUsage = ({slaves, slaveUsages, activeTasks, clusterUtilization}) => {
       </div>
       <hr />
       <h1>Cluster Usage</h1>
+      <small>Last updated: {Utils.timestampFromNow(clusterUtilization.timestamp)}</small>
       <div>
         <ClusterAggregates utilization={clusterUtilization} />
       </div>

@@ -1,8 +1,8 @@
 import React, { PropTypes } from 'react';
-import Utils from '../../utils';
+import Utils from '../../../utils';
 import SlaveResourceHealthMenuItems from './SlaveResourceHealthMenuItems';
 import { Button, OverlayTrigger, Popover } from 'react-bootstrap';
-import { HEALTH_SCALE, STAT_NAMES } from './Constants';
+import { HEALTH_SCALE, STAT_NAMES } from '../Constants';
 
 const SlaveResourceHealth = ({slaveInfo, slaveUsage, resource, totalResource, utilization}) => {
   const checkStats = (val, stat) => {

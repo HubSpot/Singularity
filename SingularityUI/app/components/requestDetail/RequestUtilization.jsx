@@ -7,6 +7,8 @@ import Utils from '../../utils';
 import BootstrapTable from 'react-bootstrap/lib/Table';
 
 const RequestUtilization = ({isFetching, utilization}) => {
+  const isCpuOverAllocated = utilization &&
+    (utilization.maxCpuUsed > utilization.cpuReserved / utilization.numTasks);
   const attributes = utilization && (
       <div className="row">
         <div className="col-md-3">
@@ -24,8 +26,8 @@ const RequestUtilization = ({isFetching, utilization}) => {
                   <td>{Utils.roundTo(utilization.minCpuUsed, 2)}</td>
                 </tr>
                 <tr>
-                  <td>Max CPU (all tasks)</td>
-                  <td>{Utils.roundTo(utilization.maxCpuUsed, 2)}</td>
+                  <td className={isCpuOverAllocated ? 'danger' : ''}>Max CPU (all tasks)</td>
+                  <td className={isCpuOverAllocated ? 'danger' : ''}>{Utils.roundTo(utilization.maxCpuUsed, 2)}</td>
                 </tr>
               </tbody>
             </BootstrapTable>
@@ -57,7 +59,7 @@ const RequestUtilization = ({isFetching, utilization}) => {
   );
 
   return utilization ? (
-    <CollapsableSection id="request-utilization" title="Resource usage" subtitle="(past 24 hours)">
+    <CollapsableSection id="request-utilization" title="Resource usage" subtitle="(past 24 hours)" defaultExpanded={isCpuOverAllocated}>
       {isFetching ? <div className="page-loader fixed" /> : attributes}
     </CollapsableSection>
   ) : <div></div>;

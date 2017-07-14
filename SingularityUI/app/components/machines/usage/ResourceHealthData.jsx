@@ -1,8 +1,8 @@
 import React, { PropTypes } from 'react';
-import Utils from '../../utils';
+import Utils from '../../../utils';
 import SlaveResourceHealth from './SlaveResourceHealth';
 import { OverlayTrigger, Popover } from 'react-bootstrap';
-import { STAT_NAMES, HUNDREDTHS_PLACE, HEALTH_SCALE, HEALTH_SCALE_MAX } from './Constants';
+import { STAT_NAMES, HUNDREDTHS_PLACE, HEALTH_SCALE, HEALTH_SCALE_MAX } from '../Constants';
 
 const overlayTriggers = ['hover', 'focus'];
 const overlayPlacement = 'top';

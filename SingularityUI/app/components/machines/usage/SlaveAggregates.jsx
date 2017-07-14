@@ -1,7 +1,7 @@
 import React, { PropTypes } from 'react';
 import CircularProgressbar from 'react-circular-progressbar';
-import Utils from '../../utils';
-import { STAT_NAMES, HUNDREDTHS_PLACE } from './Constants';
+import Utils from '../../../utils';
+import { STAT_NAMES, HUNDREDTHS_PLACE } from '../Constants';
 
 const getPctSlaveUsage = (slaves, slaveUsages, usageCallback, resourceCallback) => {
   const totalUsage = slaveUsages.map(usageCallback)
@@ -63,9 +63,10 @@ const SlaveAggregates = ({slaves, slaveUsages, activeTasks}) => {
 };
 
 SlaveAggregates.propTypes = {
-  slaves : PropTypes.array,
-  slaveUsages : PropTypes.array,
-  activeTasks : PropTypes.number.isRequired
+  slaves: PropTypes.array,
+  slaveUsages: PropTypes.array,
+  activeTasks: PropTypes.number.isRequired,
+  utilization: PropTypes.object
 };
 
 export default SlaveAggregates;
