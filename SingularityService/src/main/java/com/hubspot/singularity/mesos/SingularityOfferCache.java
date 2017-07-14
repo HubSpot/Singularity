@@ -91,6 +91,10 @@ public class SingularityOfferCache implements OfferCache, RemovalListener<String
     if (!useOfferCache.get()) {
       return Collections.emptyList();
     }
+
+    // Force Guava cache to perform maintenance operations and reach a consistent state.
+    offerCache.cleanUp();
+
     List<CachedOffer> offers = new ArrayList<>((int) offerCache.size());
     for (CachedOffer cachedOffer : offerCache.asMap().values()) {
       cachedOffer.checkOut();
