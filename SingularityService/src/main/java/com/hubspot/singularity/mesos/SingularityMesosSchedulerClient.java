@@ -202,6 +202,7 @@ public class SingularityMesosSchedulerClient {
 
       events.filter(event -> event.getType() == Event.Type.UPDATE)
           .map(event -> event.getUpdate().getStatus())
+          .filter(status -> !status.getUuid().isEmpty() && status.getAgentId().hasValue())
           .subscribe(status -> {
             acknowledge(status.getAgentId(), status.getTaskId(), status.getUuid());
             scheduler.statusUpdate(status);
