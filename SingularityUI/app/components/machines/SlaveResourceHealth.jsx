@@ -25,7 +25,7 @@ const SlaveResourceHealth = ({slaveInfo, slaveUsage, resource, totalResource, ut
   const checkedStats = _.map(slaveUsage, checkStats).filter(obj => obj);
 
   const popover = (
-    <Popover id={slaveUsage.slaveId} className="slave-usage-popover" title={slaveInfo.host} >
+    <Popover id={slaveUsage.slaveId} className="slave-usage-popover" title={Utils.humanizeSlaveHostName(slaveInfo.host, true)} >
       <SlaveResourceHealthMenuItems stats={checkedStats} />
     </Popover>
   );
