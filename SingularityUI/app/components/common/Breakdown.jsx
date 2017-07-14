@@ -4,6 +4,7 @@ import Tooltip from 'react-bootstrap/lib/Tooltip';
 import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
 
 const Breakdown = ({total, data}) => {
+
   const sections = data.map((item, key) => {
     return (
       <Link key={key} to={item.link}>
@@ -37,7 +38,7 @@ Breakdown.propTypes = {
     count: React.PropTypes.number.isRequired,
     type: React.PropTypes.string.isRequired,
     label: React.PropTypes.string.isRequired,
-    link: React.PropTypes.string.isRequired,
+    link: React.PropTypes.string,
     percent: React.PropTypes.number.isRequired
   })).isRequired
 };
