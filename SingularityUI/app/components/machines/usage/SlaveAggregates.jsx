@@ -1,7 +1,7 @@
 import React, { PropTypes } from 'react';
 import CircularProgressbar from 'react-circular-progressbar';
-import Utils from '../../utils';
-import { STAT_NAMES, HUNDREDTHS_PLACE } from './Constants';
+import Utils from '../../../utils';
+import { STAT_NAMES, HUNDREDTHS_PLACE } from '../Constants';
 
 const getPctSlaveUsage = (slaves, slaveUsages, usageCallback, resourceCallback) => {
   const totalUsage = slaveUsages.map(usageCallback)
@@ -30,31 +30,31 @@ const getMemUtilizationPct = (slaves, slaveUsages) => {
 const SlaveAggregates = ({slaves, slaveUsages, activeTasks}) => {
   return (
     <div className="slave-aggregates row">
-      <div className="total-slaves col-xs-2">
-        <div id="value">
+      <div className="aggregate col-xs-2">
+        <div className="value">
           {slaves.length}
         </div>
-        <div id="label">
+        <div className="label">
           Active Slaves
         </div>
       </div>
-      <div className="total-tasks col-xs-2">
-        <div id="value">
+      <div className="aggregate col-xs-2">
+        <div className="value">
           {activeTasks}
         </div>
-        <div id="label">
+        <div className="label">
           Tasks Running
         </div>
       </div>
-      <div className="avg-cpu col-xs-2">
+      <div className="aggregate graph col-xs-2">
         <CircularProgressbar percentage={getCpuUtilizationPct(slaves, slaveUsages)} initialAnimation={true} textForPercentage={(pct) => `${pct}%`} />
-        <div id="label">
-          Cpu
+        <div className="label">
+          CPU
         </div>
       </div>
-      <div className="avg-memory col-xs-2">
+      <div className="aggregate graph col-xs-2">
         <CircularProgressbar percentage={getMemUtilizationPct(slaves, slaveUsages)} initialAnimation={true} textForPercentage={(pct) => `${pct}%`} />
-        <div id="label">
+        <div className="label">
           Memory
         </div>
       </div>
@@ -63,9 +63,10 @@ const SlaveAggregates = ({slaves, slaveUsages, activeTasks}) => {
 };
 
 SlaveAggregates.propTypes = {
-  slaves : PropTypes.array,
-  slaveUsages : PropTypes.array,
-  activeTasks : PropTypes.number.isRequired
+  slaves: PropTypes.array,
+  slaveUsages: PropTypes.array,
+  activeTasks: PropTypes.number.isRequired,
+  utilization: PropTypes.object
 };
 
 export default SlaveAggregates;

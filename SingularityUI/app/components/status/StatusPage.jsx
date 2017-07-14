@@ -7,7 +7,7 @@ import { refresh } from '../../actions/ui/status';
 
 import HostStates from './HostStates';
 import StatusList from './StatusList';
-import Breakdown from './Breakdown';
+import Breakdown from '../common/Breakdown';
 import Utils from '../../utils';
 
 const StatusPage = (props) => {
