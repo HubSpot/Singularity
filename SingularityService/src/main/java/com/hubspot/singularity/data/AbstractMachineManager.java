@@ -63,6 +63,10 @@ public abstract class AbstractMachineManager<T extends SingularityMachineAbstrac
     return getObjectsFiltered(state).size();
   }
 
+  public int getNumActive() {
+    return getNumObjectsAtState(MachineState.ACTIVE);
+  }
+
   public Map<String, T> getObjectsByIdForState(MachineState state) {
     List<T> filteredObjects = getObjectsFiltered(state);
 

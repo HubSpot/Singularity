@@ -5,6 +5,7 @@ import org.apache.curator.framework.CuratorFramework;
 import com.codahale.metrics.MetricRegistry;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.hubspot.singularity.MachineState;
 import com.hubspot.singularity.SingularityMachineStateHistoryUpdate;
 import com.hubspot.singularity.SingularityRack;
 import com.hubspot.singularity.config.SingularityConfiguration;

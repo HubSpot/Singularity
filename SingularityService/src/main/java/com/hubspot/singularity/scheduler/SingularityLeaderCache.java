@@ -153,6 +153,12 @@ public class SingularityLeaderCache {
     return new ArrayList<>(activeTaskIds);
   }
 
+  public List<SingularityTaskId> getActiveTaskIdsForRequest(String requestId) {
+    return activeTaskIds.stream()
+        .filter(t -> t.getRequestId().equals(requestId))
+        .collect(Collectors.toList());
+  }
+
   public List<String> getActiveTaskIdsAsStrings() {
     List<SingularityTaskId> localActiveTaskIds = getActiveTaskIds();
     List<String> strings = new ArrayList<>(localActiveTaskIds.size());

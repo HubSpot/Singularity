@@ -888,6 +888,7 @@ public class TaskManager extends CuratorAsyncManager {
   }
 
   private void createTaskAndDeletePendingTaskPrivate(SingularityTask task) throws Exception {
+    // TODO: Should more of the below be done within a transaction?
     deletePendingTask(task.getTaskRequest().getPendingTask().getPendingTaskId());
 
     final long now = System.currentTimeMillis();
