@@ -14,14 +14,11 @@ import org.apache.mesos.v1.Protos.TimeInfo;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
-import com.google.protobuf.ByteString;
 
 public class SingularityMesosTaskStatusObject {
   private final Optional<AgentID> agentId;
   private final Optional<AgentID> slaveId;
-  private final Optional<ByteString> uuid;
   private final Optional<ContainerStatus> containerStatus;
-  private final Optional<ByteString> data;
   private final Optional<ExecutorID> executorId;
   private final Optional<Boolean> healthy;
   private final Optional<Labels> labels;
@@ -36,9 +33,7 @@ public class SingularityMesosTaskStatusObject {
   @JsonCreator
   public SingularityMesosTaskStatusObject(@JsonProperty("agentId") Optional<AgentID> agentId,
                                           @JsonProperty("slaveId") Optional<AgentID> slaveId,
-                                          @JsonProperty("uuid") Optional<ByteString> uuid,
                                           @JsonProperty("containerStatus") Optional<ContainerStatus> containerStatus,
-                                          @JsonProperty("data") Optional<ByteString> data,
                                           @JsonProperty("executorID") Optional<ExecutorID> executorId,
                                           @JsonProperty("healthy") Optional<Boolean> healthy,
                                           @JsonProperty("labels") Optional<Labels> labels,
@@ -51,9 +46,7 @@ public class SingularityMesosTaskStatusObject {
                                           @JsonProperty("unreachableTime") Optional<TimeInfo> unreachableTime) {
     this.agentId = agentId.or(slaveId);
     this.slaveId = agentId.or(slaveId);
-    this.uuid = uuid;
     this.containerStatus = containerStatus;
-    this.data = data;
     this.executorId = executorId;
     this.healthy = healthy;
     this.labels = labels;
@@ -70,9 +63,7 @@ public class SingularityMesosTaskStatusObject {
     return new SingularityMesosTaskStatusObject(
         status.hasAgentId() ? Optional.of(status.getAgentId()) : Optional.absent(),
         status.hasAgentId() ? Optional.of(status.getAgentId()) : Optional.absent(),
-        status.hasUuid() ? Optional.of(status.getUuid()) : Optional.absent(),
         status.hasContainerStatus() ? Optional.of(status.getContainerStatus()) : Optional.absent(),
-        status.hasData() ? Optional.of(status.getData()) : Optional.absent(),
         status.hasExecutorId() ? Optional.of(status.getExecutorId()) : Optional.absent(),
         status.hasHealthy() ? Optional.of(status.getHealthy()) : Optional.absent(),
         status.hasLabels() ? Optional.of(status.getLabels()) : Optional.absent(),
@@ -101,28 +92,12 @@ public class SingularityMesosTaskStatusObject {
     return slaveId.isPresent();
   }
 
-  public ByteString getUuid() {
-    return uuid.orNull();
-  }
-
-  public boolean hasUuid() {
-    return uuid.isPresent();
-  }
-
   public ContainerStatus getContainerStatus() {
     return containerStatus.orNull();
   }
 
   public boolean hasContainerStatus() {
     return containerStatus.isPresent();
-  }
-
-  public ByteString getData() {
-    return data.orNull();
-  }
-
-  public boolean hasData() {
-    return data.isPresent();
   }
 
   public ExecutorID getExecutorId() {
@@ -203,5 +178,24 @@ public class SingularityMesosTaskStatusObject {
 
   public boolean hasUnreachableTime() {
     return unreachableTime.isPresent();
+  }
+
+  @Override
+  public String toString() {
+    return "SingularityMesosTaskStatusObject{" +
+        "agentId=" + agentId +
+        ", slaveId=" + slaveId +
+        ", containerStatus=" + containerStatus +
+        ", executorId=" + executorId +
+        ", healthy=" + healthy +
+        ", labels=" + labels +
+        ", message=" + message +
+        ", reason=" + reason +
+        ", source=" + source +
+        ", state=" + state +
+        ", taskId=" + taskId +
+        ", timestamp=" + timestamp +
+        ", unreachableTime=" + unreachableTime +
+        '}';
   }
 }
