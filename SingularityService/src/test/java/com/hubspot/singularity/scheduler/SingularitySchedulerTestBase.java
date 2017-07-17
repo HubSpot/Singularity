@@ -45,6 +45,7 @@ import com.hubspot.mesos.MesosUtils;
 import com.hubspot.mesos.Resources;
 import com.hubspot.mesos.json.SingularityMesosOfferObject;
 import com.hubspot.mesos.json.SingularityMesosTaskObject;
+import com.hubspot.mesos.json.SingularityMesosTaskStatusObject;
 import com.hubspot.singularity.DeployState;
 import com.hubspot.singularity.LoadBalancerRequestType;
 import com.hubspot.singularity.LoadBalancerRequestType.LoadBalancerRequestId;
@@ -693,12 +694,12 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
     }
   }
 
-  protected void saveLastActiveTaskStatus(SingularityTask task, Optional<TaskStatus> taskStatus, long millisAdjustment) {
+  protected void saveLastActiveTaskStatus(SingularityTask task, Optional<SingularityMesosTaskStatusObject> taskStatus, long millisAdjustment) {
     taskManager.saveLastActiveTaskStatus(new SingularityTaskStatusHolder(task.getTaskId(), taskStatus, System.currentTimeMillis() + millisAdjustment, serverId, Optional.of("slaveId")));
   }
 
-  protected TaskStatus buildTaskStatus(SingularityTask task) {
-    return TaskStatus.newBuilder().setTaskId(TaskID.newBuilder().setValue(task.getTaskId().getId())).setState(TaskState.TASK_RUNNING).build();
+  protected SingularityMesosTaskStatusObject buildTaskStatus(SingularityTask task) {
+    return SingularityMesosTaskStatusObject.fromProtos(TaskStatus.newBuilder().setTaskId(TaskID.newBuilder().setValue(task.getTaskId().getId())).setState(TaskState.TASK_RUNNING).build());
   }
 
   protected SingularityRequest buildRequest(String requestId) {
