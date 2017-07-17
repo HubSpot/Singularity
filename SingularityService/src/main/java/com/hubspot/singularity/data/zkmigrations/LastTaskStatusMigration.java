@@ -11,6 +11,7 @@ import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
+import com.hubspot.mesos.json.SingularityMesosTaskStatusObject;
 import com.hubspot.singularity.SingularityMainModule;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskHistoryUpdate;
@@ -38,17 +39,17 @@ public class LastTaskStatusMigration extends ZkDataMigration {
 
     for (SingularityTaskId taskId : taskIds) {
       List<SingularityTaskHistoryUpdate> updates = Lists.reverse(taskManager.getTaskHistoryUpdates(taskId));
-      Optional<TaskStatus> taskStatus = Optional.absent();
+      Optional<SingularityMesosTaskStatusObject> taskStatus = Optional.absent();
 
       for (SingularityTaskHistoryUpdate update : updates) {
         if (update.getTaskState().toTaskState().isPresent()) {
           Optional<SingularityTask> task = taskManager.getTask(taskId);
 
-          taskStatus = Optional.of(TaskStatus.newBuilder()
+          taskStatus = Optional.of(SingularityMesosTaskStatusObject.fromProtos(TaskStatus.newBuilder()
               .setTaskId(TaskID.newBuilder().setValue(taskId.getId()))
               .setAgentId(task.get().getAgentId())
               .setState(update.getTaskState().toTaskState().get())
-              .build());
+              .build()));
 
           break;
         }
