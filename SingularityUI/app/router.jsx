@@ -12,7 +12,7 @@ import RequestsPage from './components/requests/RequestsPage';
 import TasksPage from './components/tasks/TasksPage';
 import Racks from './components/machines/Racks';
 import Slaves from './components/machines/Slaves';
-import SlaveUsage from './components/machines/usage/SlaveUsage';
+import SlaveUsage from './components/machines/usage/Utilization';
 import Webhooks from './components/webhooks/Webhooks';
 import TaskDetail from './components/taskDetail/TaskDetail';
 import TaskSearch from './components/taskSearch/TaskSearch';
