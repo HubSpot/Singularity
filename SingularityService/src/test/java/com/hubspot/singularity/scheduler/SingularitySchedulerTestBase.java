@@ -683,7 +683,7 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
   protected void saveAndSchedule(SingularityRequestBuilder bldr) {
     requestManager.activate(bldr.build(), RequestHistoryType.UPDATED, System.currentTimeMillis(), Optional.<String> absent(), Optional.<String> absent());
     requestManager.addToPendingQueue(new SingularityPendingRequest(bldr.getId(), firstDeployId, System.currentTimeMillis(), Optional.<String> absent(), PendingType.UPDATED_REQUEST, Optional.<Boolean> absent(), Optional.<String> absent()));
-    scheduler.drainPendingQueue(leaderCache);
+    scheduler.drainPendingQueue();
   }
 
   protected void saveLoadBalancerState(BaragonRequestState brs, SingularityTaskId taskId, LoadBalancerRequestType lbrt) {
