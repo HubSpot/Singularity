@@ -13,7 +13,7 @@ const Breakdown = ({total, data}) => {
             data-type="column"
             data-state-attribute={item.attribute}
             style={{height: `${item.percent}%`}}
-            className={`chart__data-point chart-fill-${item.type}`}
+            className={`chart__data-point bg-${item.type}`}
             data-original-title={`${item.count} ${item.label}`}
           />
         </OverlayTrigger>
