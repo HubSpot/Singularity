@@ -24,7 +24,7 @@ const SlaveAggregates = ({utilization, totalRequests}) => {
               {
                 attribute: 'normal',
                 count: totalRequests - utilization.numRequestsWithUnderUtilizedCpu - utilization.numRequestsWithOverUtilizedCpu,
-                type: 'info',
+                type: 'success',
                 label: 'Normal',
                 percent: ((totalRequests - utilization.numRequestsWithUnderUtilizedCpu - utilization.numRequestsWithOverUtilizedCpu) / totalRequests) * 100
               },
@@ -142,7 +142,7 @@ const SlaveAggregates = ({utilization, totalRequests}) => {
               {
                 attribute: 'normal',
                 count: totalRequests - utilization.numRequestsWithUnderUtilizedMemBytes,
-                type: 'info',
+                type: 'success',
                 label: 'Normal',
                 percent: ((totalRequests - utilization.numRequestsWithUnderUtilizedMemBytes) / totalRequests) * 100
               },
