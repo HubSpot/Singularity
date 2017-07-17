@@ -12,6 +12,7 @@ import java.util.Set;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
+import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.mesos.Protos.Attribute;
@@ -387,7 +388,7 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
   }
 
   protected void finishHealthchecks() {
-    for (Future<?> future : healthchecker.getHealthCheckFutures()) {
+    for (ScheduledFuture<?> future : healthchecker.getHealthCheckFutures()) {
       try {
         future.get();
       } catch (CancellationException ce) {

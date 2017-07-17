@@ -64,7 +64,6 @@ public class SingularityTransformHelpers {
   };
 
   public static final Function<SingularityKilledTaskIdRecord, String> KILLED_TASK_ID_RECORD_TO_REQUEST_ID = new Function<SingularityKilledTaskIdRecord, String>() {
-    @Nonnull
     @Override
     public String apply(@Nonnull SingularityKilledTaskIdRecord input) {
       return input.getTaskId().getRequestId();

@@ -5,9 +5,6 @@ jdk:
 install: true
 script: mvn -B -q verify
 
-git:
-  depth: 100
-
 sudo: false
 
 before_install:

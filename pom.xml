@@ -248,6 +248,14 @@
       </dependency>
 
       <dependency>
+        <groupId>com.jayway.awaitility</groupId>
+        <artifactId>awaitility</artifactId>
+        <version>1.7.0</version>
+        <scope>test</scope>
+      </dependency>
+
+
+      <dependency>
         <groupId>com.amazonaws</groupId>
         <artifactId>aws-java-sdk-s3</artifactId>
         <version>${aws.sdk.version}</version>

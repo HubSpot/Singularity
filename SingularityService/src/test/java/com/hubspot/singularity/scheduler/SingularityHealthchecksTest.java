@@ -24,6 +24,7 @@ import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.api.SingularityBounceRequest;
 import com.hubspot.singularity.api.SingularitySkipHealthchecksRequest;
 import com.hubspot.singularity.scheduler.SingularityNewTaskChecker.CheckTaskState;
+import com.jayway.awaitility.Awaitility;
 
 public class SingularityHealthchecksTest extends SingularitySchedulerTestBase {
 
@@ -368,7 +369,7 @@ public class SingularityHealthchecksTest extends SingularitySchedulerTestBase {
     try {
       setConfigurationForNoDelay();
       initRequest();
-      HealthcheckOptions options = new HealthcheckOptionsBuilder("http://uri").setPortIndex(Optional.of(1)).build();
+      HealthcheckOptions options = new HealthcheckOptionsBuilder("http://uri").setPortIndex(Optional.of(1)).setStartupDelaySeconds(Optional.of(0)).build();
       firstDeploy = initAndFinishDeploy(request, new SingularityDeployBuilder(request.getId(), firstDeployId).setCommand(Optional.of("sleep 100"))
           .setHealthcheck(Optional.of(options)), Optional.of(new Resources(1, 64, 3, 0)));
 
@@ -385,9 +386,7 @@ public class SingularityHealthchecksTest extends SingularitySchedulerTestBase {
 
       newTaskChecker.enqueueNewTaskCheck(firstTask, requestManager.getRequest(requestId), healthchecker);
 
-      finishNewTaskChecks();
-      finishHealthchecks();
-      finishNewTaskChecksAndCleanup();
+      Awaitility.await("healthcheck present").atMost(5, TimeUnit.SECONDS).until(() -> taskManager.getLastHealthcheck(firstTask.getTaskId()).isPresent());
 
       Assert.assertTrue(taskManager.getLastHealthcheck(firstTask.getTaskId()).get().toString().contains("host1:81"));
     } finally {
@@ -400,7 +399,7 @@ public class SingularityHealthchecksTest extends SingularitySchedulerTestBase {
     try {
       setConfigurationForNoDelay();
       initRequest();
-      HealthcheckOptions options = new HealthcheckOptionsBuilder("http://uri").setPortNumber(Optional.of(81L)).build();
+      HealthcheckOptions options = new HealthcheckOptionsBuilder("http://uri").setPortNumber(Optional.of(81L)).setStartupDelaySeconds(Optional.of(0)).build();
       firstDeploy = initAndFinishDeploy(request, new SingularityDeployBuilder(request.getId(), firstDeployId)
         .setCommand(Optional.of("sleep 100")).setResources(Optional.of(new Resources(1, 64, 3, 0)))
         .setHealthcheck(Optional.of(options)), Optional.absent());
@@ -418,9 +417,7 @@ public class SingularityHealthchecksTest extends SingularitySchedulerTestBase {
 
       newTaskChecker.enqueueNewTaskCheck(firstTask, requestManager.getRequest(requestId), healthchecker);
 
-      finishNewTaskChecks();
-      finishHealthchecks();
-      finishNewTaskChecksAndCleanup();
+      Awaitility.await("healthcheck present").atMost(5, TimeUnit.SECONDS).until(() -> taskManager.getLastHealthcheck(firstTask.getTaskId()).isPresent());
 
       Assert.assertTrue(taskManager.getLastHealthcheck(firstTask.getTaskId()).get().toString().contains("host1:81"));
     } finally {
