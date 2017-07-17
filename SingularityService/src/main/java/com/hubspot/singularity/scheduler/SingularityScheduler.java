@@ -95,9 +95,11 @@ public class SingularityScheduler {
 
   private final SingularityMailer mailer;
 
+  private final SingularityLeaderCache leaderCache;
+
   @Inject
   public SingularityScheduler(TaskRequestManager taskRequestManager, SingularityConfiguration configuration, SingularityCooldown cooldown, DeployManager deployManager,
-    TaskManager taskManager, RequestManager requestManager, SlaveManager slaveManager, RackManager rackManager, SingularityMailer mailer) {
+    TaskManager taskManager, RequestManager requestManager, SlaveManager slaveManager, RackManager rackManager, SingularityMailer mailer, SingularityLeaderCache leaderCache) {
     this.taskRequestManager = taskRequestManager;
     this.configuration = configuration;
     this.deployManager = deployManager;
@@ -107,6 +109,7 @@ public class SingularityScheduler {
     this.rackManager = rackManager;
     this.mailer = mailer;
     this.cooldown = cooldown;
+    this.leaderCache = leaderCache;
   }
 
   private void cleanupTaskDueToDecomission(final Map<String, Optional<String>> requestIdsToUserToReschedule, final Set<SingularityTaskId> matchingTaskIds, SingularityTask task,
@@ -130,7 +133,7 @@ public class SingularityScheduler {
   }
 
   @Timed
-  public void checkForDecomissions(SingularityLeaderCache leaderCache) {
+  public void checkForDecomissions() {
     final long start = System.currentTimeMillis();
 
     final Map<String, Optional<String>> requestIdsToUserToReschedule = Maps.newHashMap();
@@ -214,7 +217,7 @@ public class SingularityScheduler {
   }
 
   @Timed
-  public void drainPendingQueue(final SingularityLeaderCache leaderCache) {
+  public void drainPendingQueue() {
     final long start = System.currentTimeMillis();
     final ImmutableList<SingularityPendingRequest> pendingRequests = ImmutableList.copyOf(requestManager.getPendingRequests());
 
@@ -249,7 +252,7 @@ public class SingularityScheduler {
 
       Optional<SingularityRequestDeployState> maybeRequestDeployState = deployManager.getRequestDeployState(requestId);
       Optional<SingularityPendingDeploy> maybePendingDeploy = deployManager.getPendingDeploy(requestId);
-      List<SingularityTaskId> matchingTaskIds = getMatchingTaskIds(leaderCache, maybeRequest.get().getRequest(), deployKey);
+      List<SingularityTaskId> matchingTaskIds = getMatchingTaskIds(maybeRequest.get().getRequest(), deployKey);
 
       List<SingularityPendingRequest> effectivePendingRequests = new ArrayList<>();
 
@@ -276,19 +279,19 @@ public class SingularityScheduler {
         if (effectivePendingRequests.isEmpty()) {
           effectivePendingRequests.add(pendingRequest);
           RequestState requestState = checkCooldown(maybeRequest.get().getState(), maybeRequest.get().getRequest(), deployStatistics);
-          scheduledTasks += scheduleTasks(leaderCache, maybeRequest.get().getRequest(), requestState,
+          scheduledTasks += scheduleTasks(maybeRequest.get().getRequest(), requestState,
               deployStatistics, pendingRequest, matchingTaskIds, maybePendingDeploy);
           requestManager.deletePendingRequest(pendingRequest);
         } else if (pendingRequest.getPendingType() == PendingType.IMMEDIATE) {
           effectivePendingRequests.add(pendingRequest);
           RequestState requestState = checkCooldown(maybeRequest.get().getState(), maybeRequest.get().getRequest(), deployStatistics);
-          scheduledTasks += scheduleTasks(leaderCache, maybeRequest.get().getRequest(), requestState,
+          scheduledTasks += scheduleTasks(maybeRequest.get().getRequest(), requestState,
               deployStatistics, pendingRequest, matchingTaskIds, maybePendingDeploy);
           requestManager.deletePendingRequest(pendingRequest);
         } else if (pendingRequest.getPendingType() == PendingType.ONEOFF) {
           effectivePendingRequests.add(pendingRequest);
           RequestState requestState = checkCooldown(maybeRequest.get().getState(), maybeRequest.get().getRequest(), deployStatistics);
-          scheduledTasks += scheduleTasks(leaderCache, maybeRequest.get().getRequest(), requestState,
+          scheduledTasks += scheduleTasks(maybeRequest.get().getRequest(), requestState,
               deployStatistics, pendingRequest, matchingTaskIds, maybePendingDeploy);
           requestManager.deletePendingRequest(pendingRequest);
         } else if (updatedRequest.isScheduled()
@@ -411,7 +414,7 @@ public class SingularityScheduler {
     }
   }
 
-  private List<SingularityTaskId> getMatchingTaskIds(SingularityLeaderCache leaderCache, SingularityRequest request, SingularityDeployKey deployKey) {
+  private List<SingularityTaskId> getMatchingTaskIds(SingularityRequest request, SingularityDeployKey deployKey) {
     if (request.isLongRunning()) {
       Set<SingularityTaskId> killedTaskIds = leaderCache.getKilledTasks().stream()
           .map(SingularityKilledTaskIdRecord::getTaskId)
@@ -436,7 +439,7 @@ public class SingularityScheduler {
     }
   }
 
-  private int scheduleTasks(SingularityLeaderCache leaderCache, SingularityRequest request, RequestState state,
+  private int scheduleTasks(SingularityRequest request, RequestState state,
                             SingularityDeployStatistics deployStatistics, SingularityPendingRequest pendingRequest,
                             List<SingularityTaskId> matchingTaskIds, Optional<SingularityPendingDeploy> maybePendingDeploy) {
     if (request.getRequestType() != RequestType.ON_DEMAND) {
@@ -531,7 +534,7 @@ public class SingularityScheduler {
   }
 
   private Optional<PendingType> handleCompletedTaskWithStatistics(Optional<SingularityTask> task, SingularityTaskId taskId, long timestamp, ExtendedTaskState state,
-    SingularityDeployStatistics deployStatistics, SingularityCreateResult taskHistoryUpdateCreateResult, SingularityLeaderCache leaderCache, Protos.TaskStatus status) {
+    SingularityDeployStatistics deployStatistics, SingularityCreateResult taskHistoryUpdateCreateResult, Protos.TaskStatus status) {
     final Optional<SingularityRequestWithState> maybeRequestWithState = requestManager.getRequest(taskId.getRequestId());
     final Optional<SingularityPendingDeploy> maybePendingDeploy = deployManager.getPendingDeploy(taskId.getRequestId());
 
@@ -594,7 +597,7 @@ public class SingularityScheduler {
       Optional.<String>absent());
 
     SingularityDeployKey deployKey = new SingularityDeployKey(taskId.getRequestId(), taskId.getDeployId());
-    scheduleTasks(leaderCache, request, requestState, deployStatistics, pendingRequest, getMatchingTaskIds(leaderCache, request, deployKey), maybePendingDeploy);
+    scheduleTasks(request, requestState, deployStatistics, pendingRequest, getMatchingTaskIds(request, deployKey), maybePendingDeploy);
 
     return Optional.of(pendingType);
   }
@@ -611,7 +614,7 @@ public class SingularityScheduler {
 
   @Timed
   public void handleCompletedTask(Optional<SingularityTask> task, SingularityTaskId taskId, boolean wasActive, long timestamp, ExtendedTaskState state,
-    SingularityCreateResult taskHistoryUpdateCreateResult, SingularityLeaderCache leaderCache, Protos.TaskStatus status) {
+    SingularityCreateResult taskHistoryUpdateCreateResult, Protos.TaskStatus status) {
     final SingularityDeployStatistics deployStatistics = getDeployStatistics(taskId.getRequestId(), taskId.getDeployId());
 
     if (wasActive) {
@@ -622,7 +625,7 @@ public class SingularityScheduler {
       taskManager.createLBCleanupTask(taskId);
     }
 
-    final Optional<PendingType> scheduleResult = handleCompletedTaskWithStatistics(task, taskId, timestamp, state, deployStatistics, taskHistoryUpdateCreateResult, leaderCache, status);
+    final Optional<PendingType> scheduleResult = handleCompletedTaskWithStatistics(task, taskId, timestamp, state, deployStatistics, taskHistoryUpdateCreateResult, status);
 
     if (taskHistoryUpdateCreateResult == SingularityCreateResult.EXISTED) {
       return;

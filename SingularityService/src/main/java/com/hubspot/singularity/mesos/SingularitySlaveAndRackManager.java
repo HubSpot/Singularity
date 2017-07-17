@@ -61,11 +61,12 @@ public class SingularitySlaveAndRackManager {
   private final InactiveSlaveManager inactiveSlaveManager;
   private final SingularitySlaveAndRackHelper slaveAndRackHelper;
   private final AtomicInteger activeSlavesLost;
+  private final SingularityLeaderCache leaderCache;
 
   @Inject
   SingularitySlaveAndRackManager(SingularitySlaveAndRackHelper slaveAndRackHelper, SingularityConfiguration configuration, SingularityExceptionNotifier exceptionNotifier,
                                  RackManager rackManager, SlaveManager slaveManager, TaskManager taskManager, InactiveSlaveManager inactiveSlaveManager,
-                                 @Named(SingularityMesosModule.ACTIVE_SLAVES_LOST_COUNTER) AtomicInteger activeSlavesLost) {
+                                 @Named(SingularityMesosModule.ACTIVE_SLAVES_LOST_COUNTER) AtomicInteger activeSlavesLost, SingularityLeaderCache leaderCache) {
     this.configuration = configuration;
 
     this.exceptionNotifier = exceptionNotifier;
@@ -76,9 +77,11 @@ public class SingularitySlaveAndRackManager {
     this.taskManager = taskManager;
     this.inactiveSlaveManager = inactiveSlaveManager;
     this.activeSlavesLost = activeSlavesLost;
+
+    this.leaderCache = leaderCache;
   }
 
-  public SlaveMatchState doesOfferMatch(SingularityOfferHolder offerHolder, SingularityTaskRequest taskRequest, SingularityLeaderCache leaderCache) {
+  public SlaveMatchState doesOfferMatch(SingularityOfferHolder offerHolder, SingularityTaskRequest taskRequest) {
     final String host = offerHolder.getHostname();
     final String rackId = offerHolder.getRackId();
     final String slaveId = offerHolder.getSlaveId();
