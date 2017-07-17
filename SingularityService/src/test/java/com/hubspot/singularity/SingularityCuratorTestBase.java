@@ -4,12 +4,17 @@ import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.test.TestingServer;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
+import org.junit.rules.Timeout;
 
 import com.google.inject.Inject;
 import com.hubspot.singularity.scheduler.SingularityTestModule;
 import com.squarespace.jersey2.guice.JerseyGuiceUtils;
 
 public class SingularityCuratorTestBase {
+
+  @Rule
+  public Timeout globalTimeout = Timeout.seconds(30); // 30 seconds max for each @Test method
 
   @Inject
   protected CuratorFramework cf;
