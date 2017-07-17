@@ -7,7 +7,7 @@ import { STAT_NAMES, WHOLE_NUMBER, HEALTH_SCALE_MAX } from '../Constants';
 import Utils from '../../../utils';
 import ResourceHealthData from './ResourceHealthData';
 import SlaveAggregates from './SlaveAggregates';
-import ClusterAggregates from "./ClusterAggregates";
+import ClusterAggregates from './ClusterAggregates';
 
 const getSlaveInfo = (slaves, slaveUsage) => {
   return _.findWhere(slaves, {'id': slaveUsage.slaveId});
@@ -57,7 +57,7 @@ const SlaveUsage = ({slaves, slaveUsages, activeTasks, clusterUtilization, total
         </div>
       </div>
       <hr />
-      <h1>Cluster Usage</h1>
+      <h1>Cluster Utilization</h1>
       <small>Last updated {Utils.timestampFromNow(clusterUtilization.timestamp)}</small>
       <div>
         <ClusterAggregates utilization={clusterUtilization} totalRequests={totalRequests} />

@@ -16,7 +16,7 @@ const SlaveAggregates = ({utilization, totalRequests}) => {
               {
                 attribute: 'overCpu',
                 count: utilization.numRequestsWithOverUtilizedCpu,
-                type: 'overdue',
+                type: 'danger',
                 label: 'Over-utilized',
                 link: '/requests/overUtilizedCpu/all/',
                 percent: (utilization.numRequestsWithOverUtilizedCpu / totalRequests) * 100
@@ -24,14 +24,14 @@ const SlaveAggregates = ({utilization, totalRequests}) => {
               {
                 attribute: 'normal',
                 count: totalRequests - utilization.numRequestsWithUnderUtilizedCpu - utilization.numRequestsWithOverUtilizedCpu,
-                type: 'active',
+                type: 'success',
                 label: 'Normal',
                 percent: ((totalRequests - utilization.numRequestsWithUnderUtilizedCpu - utilization.numRequestsWithOverUtilizedCpu) / totalRequests) * 100
               },
               {
                 attribute: 'underCpu',
                 count: utilization.numRequestsWithUnderUtilizedCpu,
-                type: 'cleaning',
+                type: 'warning',
                 label: 'Under-utilized',
                 link: '/requests/underUtilizedCpu/all/',
                 percent: (utilization.numRequestsWithUnderUtilizedCpu / totalRequests) * 100
@@ -142,14 +142,14 @@ const SlaveAggregates = ({utilization, totalRequests}) => {
               {
                 attribute: 'normal',
                 count: totalRequests - utilization.numRequestsWithUnderUtilizedMemBytes,
-                type: 'active',
+                type: 'success',
                 label: 'Normal',
                 percent: ((totalRequests - utilization.numRequestsWithUnderUtilizedMemBytes) / totalRequests) * 100
               },
               {
                 attribute: 'underMem',
                 count: utilization.numRequestsWithUnderUtilizedMemBytes,
-                type: 'cleaning',
+                type: 'warning',
                 label: 'Under-utilized',
                 link: '/requests/underUtilizedMem/all/',
                 percent: (utilization.numRequestsWithUnderUtilizedMemBytes / totalRequests) * 100
