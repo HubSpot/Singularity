@@ -50,12 +50,13 @@ public class RackManager extends AbstractMachineManager<SingularityRack> {
     return getObject(rackName);
   }
 
+  @Override
   public int getNumActive() {
     if (leaderCache.active()) {
       return Math.toIntExact(leaderCache.getRacks().stream().filter(x -> x.getCurrentState().getState().equals(MachineState.ACTIVE)).count());
     }
 
-    return getNumObjectsAtState(MachineState.ACTIVE);
+    return super.getNumActive();
   }
 
   @Override
