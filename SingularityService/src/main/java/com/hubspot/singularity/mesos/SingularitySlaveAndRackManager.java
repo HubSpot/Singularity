@@ -83,7 +83,7 @@ public class SingularitySlaveAndRackManager {
     final String rackId = offerHolder.getRackId();
     final String slaveId = offerHolder.getSlaveId();
 
-    final MachineState currentSlaveState = slaveManager.getObject(slaveId).get().getCurrentState().getState();
+    final MachineState currentSlaveState = slaveManager.getSlave(slaveId).get().getCurrentState().getState();
 
     if (currentSlaveState == MachineState.FROZEN) {
       return SlaveMatchState.SLAVE_FROZEN;
@@ -93,7 +93,7 @@ public class SingularitySlaveAndRackManager {
       return SlaveMatchState.SLAVE_DECOMMISSIONING;
     }
 
-    final MachineState currentRackState = rackManager.getObject(rackId).get().getCurrentState().getState();
+    final MachineState currentRackState = rackManager.getRack(rackId).get().getCurrentState().getState();
 
     if (currentRackState == MachineState.FROZEN) {
       return SlaveMatchState.RACK_FROZEN;
@@ -123,7 +123,7 @@ public class SingularitySlaveAndRackManager {
 
     final int numDesiredInstances = taskRequest.getRequest().getInstancesSafe();
     boolean allowBounceToSameHost = isAllowBounceToSameHost(taskRequest.getRequest());
-    Multiset<String> countPerRack = HashMultiset.create(rackManager.getNumActive());
+    Multiset<String> countPerRack = HashMultiset.create(slaveManager.getNumActive());
     double numOnSlave = 0;
     double numCleaningOnSlave = 0;
     double numFromSameBounceOnSlave = 0;
@@ -460,7 +460,7 @@ public class SingularitySlaveAndRackManager {
 
   @Timed
   public void checkStateAfterFinishedTask(SingularityTaskId taskId, String slaveId, SingularityLeaderCache leaderCache) {
-    Optional<SingularitySlave> slave = slaveManager.getObject(slaveId);
+    Optional<SingularitySlave> slave = slaveManager.getSlave(slaveId);
 
     if (!slave.isPresent()) {
       final String message = String.format("Couldn't find slave with id %s for task %s", slaveId, taskId);

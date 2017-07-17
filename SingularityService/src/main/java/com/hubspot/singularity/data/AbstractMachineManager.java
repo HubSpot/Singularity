@@ -211,10 +211,10 @@ public abstract class AbstractMachineManager<T extends SingularityMachineAbstrac
     return delete(getObjectPath(objectId));
   }
 
-  public SingularityCreateResult saveObject(T object) {
+  public void saveObject(T object) {
     saveHistoryUpdate(object.getCurrentState());
 
-    return save(getObjectPath(object.getId()), object, transcoder);
+    save(getObjectPath(object.getId()), object, transcoder);
   }
 
   private String getExpiringPath(String machineId) {

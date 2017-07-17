@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
@@ -21,8 +22,10 @@ import com.hubspot.singularity.ExtendedTaskState;
 import com.hubspot.singularity.SingularityKilledTaskIdRecord;
 import com.hubspot.singularity.SingularityPendingTask;
 import com.hubspot.singularity.SingularityPendingTaskId;
+import com.hubspot.singularity.SingularityRack;
 import com.hubspot.singularity.SingularityRequestDeployState;
 import com.hubspot.singularity.SingularityRequestWithState;
+import com.hubspot.singularity.SingularitySlave;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskCleanup;
 import com.hubspot.singularity.SingularityTaskHistoryUpdate;
@@ -40,6 +43,8 @@ public class SingularityLeaderCache {
   private Map<String, SingularityRequestDeployState> requestIdToDeployState;
   private Map<SingularityTaskId, SingularityKilledTaskIdRecord> killedTasks;
   private Map<SingularityTaskId, Map<ExtendedTaskState, SingularityTaskHistoryUpdate>> historyUpdates;
+  private Map<String, SingularitySlave> slaves;
+  private Map<String, SingularityRack> racks;
 
   private volatile boolean active;
 
@@ -92,6 +97,13 @@ public class SingularityLeaderCache {
     );
   }
 
+  public void cacheSlaves(List<SingularitySlave> slaves) {
+    this.slaves = slaves.stream().collect(Collectors.toConcurrentMap(SingularitySlave::getId, Function.identity()));
+  }
+
+  public void cacheRacks(List<SingularityRack> racks) {
+    this.racks = racks.stream().collect(Collectors.toConcurrentMap(SingularityRack::getId, Function.identity()));
+  }
   public void stop() {
     active = false;
   }
@@ -338,5 +350,37 @@ public class SingularityLeaderCache {
       return;
     }
     historyUpdates.remove(taskId);
+  }
+
+  public Collection<SingularitySlave> getSlaves() {
+    return slaves.values();
+  }
+
+  public Optional<SingularitySlave> getSlave(String slaveId) {
+    return Optional.fromNullable(slaves.get(slaveId));
+  }
+
+  public void putSlave(SingularitySlave slave) {
+    if (!active) {
+      LOG.warn("putSlave {}, but not active", slave);
+    }
+
+    slaves.put(slave.getId(), slave);
+  }
+
+  public Collection<SingularityRack> getRacks() {
+    return racks.values();
+  }
+
+  public Optional<SingularityRack> getRack(String rackName) {
+    return Optional.fromNullable(racks.get(rackName));
+  }
+
+  public void putRack(SingularityRack rack) {
+    if (!active) {
+      LOG.warn("putSlave {}, but not active", rack);
+    }
+
+    racks.put(rack.getId(), rack);
   }
 }
