@@ -72,13 +72,13 @@ const SlaveAggregates = ({slaves, slaveUsages, activeTasks, utilization}) => {
         <div className="row">
           <div className="col-xs-12 info">
             <div className="aggregate graph col-xs-2">
-              <CircularProgressbar percentage={Utils.roundTo(utilization.totalCpuUsed / utilization.totalCpuAvailable, HUNDREDTHS_PLACE) * 100} initialAnimation={true} textForPercentage={(pct) => `${pct}%`} />
+              <CircularProgressbar percentage={Utils.roundTo(utilization.totalCpuUsed / utilization.totalCpuAvailable * 100, HUNDREDTHS_PLACE)} initialAnimation={true} textForPercentage={(pct) => `${pct}%`} />
               <div className="label">
                 CPU
               </div>
             </div>
             <div className="aggregate graph col-xs-2">
-              <CircularProgressbar percentage={Utils.roundTo(utilization.totalMemBytesUsed / utilization.totalMemBytesAvailable, HUNDREDTHS_PLACE) * 100} initialAnimation={true} textForPercentage={(pct) => `${pct}%`} />
+              <CircularProgressbar percentage={Utils.roundTo(utilization.totalMemBytesUsed / utilization.totalMemBytesAvailable * 100, HUNDREDTHS_PLACE)} initialAnimation={true} textForPercentage={(pct) => `${pct}%`} />
               <div className="label">
                 Memory
               </div>
