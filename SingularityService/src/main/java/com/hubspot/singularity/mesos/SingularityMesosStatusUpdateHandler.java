@@ -14,7 +14,6 @@ import com.google.common.base.Optional;
 import com.google.common.base.Strings;
 import com.google.common.collect.Multiset;
 import com.google.inject.Inject;
-import com.google.inject.Provider;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import com.hubspot.mesos.JavaUtils;
@@ -35,9 +34,9 @@ import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.data.transcoders.IdTranscoder;
 import com.hubspot.singularity.data.transcoders.SingularityTranscoderException;
 import com.hubspot.singularity.scheduler.SingularityHealthchecker;
+import com.hubspot.singularity.scheduler.SingularityLeaderCache;
 import com.hubspot.singularity.scheduler.SingularityNewTaskChecker;
 import com.hubspot.singularity.scheduler.SingularityScheduler;
-import com.hubspot.singularity.scheduler.SingularitySchedulerStateCache;
 import com.hubspot.singularity.sentry.SingularityExceptionNotifier;
 
 @Singleton
@@ -54,7 +53,7 @@ public class SingularityMesosStatusUpdateHandler {
   private final SingularitySlaveAndRackManager slaveAndRackManager;
   private final SingularityMesosExecutorInfoSupport logSupport;
   private final SingularityScheduler scheduler;
-  private final Provider<SingularitySchedulerStateCache> stateCacheProvider;
+  private final SingularityLeaderCache leaderCache;
   private final String serverId;
   private final SingularityMesosSchedulerClient schedulerClient;
   private final SingularitySchedulerLock schedulerLock;
@@ -74,7 +73,7 @@ public class SingularityMesosStatusUpdateHandler {
                                              SingularitySlaveAndRackManager slaveAndRackManager,
                                              SingularityMesosExecutorInfoSupport logSupport,
                                              SingularityScheduler scheduler,
-                                             Provider<SingularitySchedulerStateCache> stateCacheProvider,
+                                             SingularityLeaderCache leaderCache,
                                              @Named(SingularityMainModule.SERVER_ID_PROPERTY) String serverId,
                                              SingularityMesosSchedulerClient schedulerClient,
                                              SingularitySchedulerLock schedulerLock,
@@ -92,7 +91,7 @@ public class SingularityMesosStatusUpdateHandler {
     this.slaveAndRackManager = slaveAndRackManager;
     this.logSupport = logSupport;
     this.scheduler = scheduler;
-    this.stateCacheProvider = stateCacheProvider;
+    this.leaderCache = leaderCache;
     this.serverId = serverId;
     this.schedulerClient = schedulerClient;
     this.schedulerLock = schedulerLock;
@@ -239,11 +238,9 @@ public class SingularityMesosStatusUpdateHandler {
 
       taskManager.deleteKilledRecord(taskIdObj);
 
-      SingularitySchedulerStateCache stateCache = stateCacheProvider.get();
+      slaveAndRackManager.checkStateAfterFinishedTask(taskIdObj, status.getAgentId().getValue(), leaderCache);
 
-      slaveAndRackManager.checkStateAfterFinishedTask(taskIdObj, status.getAgentId().getValue(), stateCache);
-
-      scheduler.handleCompletedTask(task, taskIdObj, isActiveTask, timestamp, taskState, taskHistoryUpdateCreateResult, stateCache, status);
+      scheduler.handleCompletedTask(task, taskIdObj, isActiveTask, timestamp, taskState, taskHistoryUpdateCreateResult, status);
     }
 
     saveNewTaskStatusHolder(taskIdObj, newTaskStatusHolder, taskState);

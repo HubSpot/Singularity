@@ -77,7 +77,7 @@ public class SingularitySlavePlacementTest extends SingularitySchedulerTestBase 
     Assert.assertTrue(slaveManager.getNumObjectsAtState(MachineState.ACTIVE) == 2);
 
     spreadAllPoller.runActionOnPoll();
-    scheduler.drainPendingQueue(stateCacheProvider.get());
+    scheduler.drainPendingQueue();
 
     sms.resourceOffers(Arrays.asList(createOffer(20, 20000, "slave2", "host2")));
 
@@ -95,7 +95,7 @@ public class SingularitySlavePlacementTest extends SingularitySchedulerTestBase 
 
 
     spreadAllPoller.runActionOnPoll();
-    scheduler.drainPendingQueue(stateCacheProvider.get());
+    scheduler.drainPendingQueue();
 
     Assert.assertTrue(taskManager.getPendingTaskIds().isEmpty());
     Assert.assertTrue(taskManager.getActiveTaskIds().size() == 1);
@@ -310,7 +310,7 @@ public class SingularitySlavePlacementTest extends SingularitySchedulerTestBase 
 
       requestResource.postRequest(request.toBuilder().setInstances(Optional.of(4)).setRackSensitive(Optional.of(true)).build());
 
-      scheduler.drainPendingQueue(stateCacheProvider.get());
+      scheduler.drainPendingQueue();
 
       Assert.assertEquals(4, taskManager.getNumCleanupTasks());
 
@@ -341,7 +341,7 @@ public class SingularitySlavePlacementTest extends SingularitySchedulerTestBase 
       .setAllowBounceToSameHost(Optional.of(true))
       .build();
     saveAndSchedule(newRequest.toBuilder());
-    scheduler.drainPendingQueue(stateCacheProvider.get());
+    scheduler.drainPendingQueue();
 
     sms.resourceOffers(Arrays.asList(createOffer(1, 128, "slave1", "host1", Optional.of("rack1"))));
     sms.resourceOffers(Arrays.asList(createOffer(1, 128, "slave2", "host2", Optional.of("rack1"))));
@@ -349,7 +349,7 @@ public class SingularitySlavePlacementTest extends SingularitySchedulerTestBase 
 
     requestResource.bounce(requestId, Optional.absent());
     cleaner.drainCleanupQueue();
-    scheduler.drainPendingQueue(stateCacheProvider.get());
+    scheduler.drainPendingQueue();
 
     Assert.assertEquals(2, taskManager.getNumCleanupTasks());
     Assert.assertEquals(2, taskManager.getPendingTaskIds().size());
