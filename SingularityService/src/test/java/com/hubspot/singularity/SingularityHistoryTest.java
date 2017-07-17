@@ -185,7 +185,7 @@ public class SingularityHistoryTest extends SingularitySchedulerTestBase {
 
     Assert.assertEquals(1, getTaskHistoryForRequest(requestId, 0, 10).size());
 
-    saveTasks(100, System.currentTimeMillis() - TimeUnit.DAYS.toMillis(200));
+    saveTasks(10, System.currentTimeMillis() - TimeUnit.DAYS.toMillis(200));
 
     purger.runActionOnPoll();
 
