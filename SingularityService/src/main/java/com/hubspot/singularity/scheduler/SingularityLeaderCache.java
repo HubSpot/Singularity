@@ -250,14 +250,29 @@ public class SingularityLeaderCache {
   }
 
   public void deleteTaskCleanup(SingularityTaskId taskId) {
+    if (!active) {
+      LOG.warn("deleteTaskCleanup {}, but not active", taskId);
+      return;
+    }
+
     cleanupTasks.remove(taskId);
   }
 
   public void saveTaskCleanup(SingularityTaskCleanup cleanup) {
+    if (!active) {
+      LOG.warn("saveTaskCleanup {}, but not active", cleanup);
+      return;
+    }
+
     cleanupTasks.put(cleanup.getTaskId(), cleanup);
   }
 
   public void createTaskCleanupIfNotExists(SingularityTaskCleanup cleanup) {
+    if (!active) {
+      LOG.warn("createTaskCleanupIfNotExists {}, but not active", cleanup);
+      return;
+    }
+
     cleanupTasks.putIfAbsent(cleanup.getTaskId(), cleanup);
   }
 
@@ -277,6 +292,11 @@ public class SingularityLeaderCache {
   }
 
   public void deleteRequestDeployState(String requestId) {
+    if (!active) {
+      LOG.warn("deleteRequestDeployState {}, but not active", requestId);
+      return;
+    }
+
     requestIdToDeployState.remove(requestId);
   }
 
