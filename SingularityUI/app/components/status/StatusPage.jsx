@@ -28,7 +28,7 @@ const StatusPage = (props) => {
         link: '/requests/active'
       },
       {
-        type: 'paused',
+        type: 'disabled',
         attribute: 'pausedRequests',
         label: 'paused',
         count: status.pausedRequests,
@@ -44,7 +44,7 @@ const StatusPage = (props) => {
         link: '/requests/cooldown'
       },
       {
-        type: 'pending',
+        type: 'waiting',
         attribute: 'pendingRequests',
         label: 'pending',
         count: status.pendingRequests,
@@ -87,7 +87,7 @@ const StatusPage = (props) => {
         link: '/tasks'
       },
       {
-        type: 'pending',
+        type: 'waiting',
         attribute: 'scheduledTasks',
         label: 'scheduled',
         count: status.scheduledTasks,
@@ -111,7 +111,7 @@ const StatusPage = (props) => {
         link: '/tasks/cleaning'
       },
       {
-        type: 'lbCleaning',
+        type: 'warning-strong',
         attribute: 'lbCleanupTasks',
         label: 'load balancer cleanup',
         count: status.lbCleanupTasks,
