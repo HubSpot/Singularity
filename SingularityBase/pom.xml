@@ -65,6 +65,11 @@
       <groupId>javax.validation</groupId>
       <artifactId>validation-api</artifactId>
     </dependency>
+
+    <dependency>
+      <groupId>com.google.protobuf</groupId>
+      <artifactId>protobuf-java</artifactId>
+    </dependency>
   </dependencies>
 
 </project>
