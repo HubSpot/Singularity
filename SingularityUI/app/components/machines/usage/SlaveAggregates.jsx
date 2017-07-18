@@ -1,8 +1,8 @@
 import React, { PropTypes } from 'react';
-import CircularProgressbar from 'react-circular-progressbar';
 import Utils from '../../../utils';
 import { STAT_NAMES } from '../Constants';
 import LabeledColumn from './LabeledColumn';
+import Aggregate from './Aggregate';
 
 const getPctSlaveUsage = (usageMapper, resourceMapper) => (slaves, slaveUsages) => {
   const totalUsage = slaveUsages.map(usageMapper)
@@ -27,51 +27,17 @@ const getMemUtilizationPct = getPctSlaveUsage(
 const SlaveAggregates = ({slaves, slaveUsages, activeTasks, utilization}) => {
   return (
     <div className="slave-aggregates row">
-      <div className="aggregate vcenter col-xs-2">
-        <div className="value">
-          {slaves.length}
-        </div>
-        <div className="label">
-          Active Slaves
-        </div>
-      </div>
-      <div className="aggregate vcenter col-xs-2">
-        <div className="value">
-          {activeTasks}
-        </div>
-        <div className="label">
-          Tasks Running
-        </div>
-      </div>
+      <Aggregate width={2} value={slaves.length} label="Active Slaves" vcenter={true} />
+      <Aggregate width={2} value={activeTasks} label="Tasks Running" vcenter={true} />
 
       <LabeledColumn title="Current" width={4}>
-        <div className="aggregate graph col-xs-2">
-          <CircularProgressbar percentage={getCpuUtilizationPct(slaves, slaveUsages)} initialAnimation={true} textForPercentage={(pct) => `${pct}%`} />
-          <div className="label">
-            CPU
-          </div>
-        </div>
-        <div className="aggregate graph col-xs-2">
-          <CircularProgressbar percentage={getMemUtilizationPct(slaves, slaveUsages)} initialAnimation={true} textForPercentage={(pct) => `${pct}%`} />
-          <div className="label">
-            Memory
-          </div>
-        </div>
+        <Aggregate width={2} value={getCpuUtilizationPct(slaves, slaveUsages)} graph={true} label="CPU" />
+        <Aggregate width={2} value={getMemUtilizationPct(slaves, slaveUsages)} graph={true} label="Memory" />
       </LabeledColumn>
 
       <LabeledColumn className="info" title="24-Hour Average" width={4}>
-        <div className="aggregate graph col-xs-2">
-          <CircularProgressbar percentage={Utils.toDisplayPercentage(utilization.totalCpuUsed, utilization.totalCpuAvailable)} initialAnimation={true} textForPercentage={(pct) => `${pct}%`} />
-          <div className="label">
-            CPU
-          </div>
-        </div>
-        <div className="aggregate graph col-xs-2">
-          <CircularProgressbar percentage={Utils.toDisplayPercentage(utilization.totalMemBytesUsed, utilization.totalMemBytesAvailable)} initialAnimation={true} textForPercentage={(pct) => `${pct}%`} />
-          <div className="label">
-            Memory
-          </div>
-        </div>
+        <Aggregate width={2} value={Utils.toDisplayPercentage(utilization.totalCpuUsed, utilization.totalCpuAvailable)} graph={true} label="CPU" />
+        <Aggregate width={2} value={Utils.toDisplayPercentage(utilization.totalMemBytesUsed, utilization.totalMemBytesAvailable)} graph={true} label="Memory" />
       </LabeledColumn>
     </div>
   );
