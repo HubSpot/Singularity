@@ -20,7 +20,7 @@ import { FetchTaskS3Logs } from '../../actions/api/logs';
 import { refresh, onLoad } from '../../actions/ui/taskDetail';
 
 import { InfoBox, UsageInfo } from '../common/statelessComponents';
-import { Alert } from 'react-bootstrap';
+import {Alert, Panel} from 'react-bootstrap';
 
 import Breadcrumbs from '../common/Breadcrumbs';
 import JSONButton from '../common/JSONButton';
@@ -362,6 +362,25 @@ class TaskDetail extends Component {
         </div>
       );
     } else {
+      const maybeCpuUsage = this.props.resourceUsage.cpusLimit > 0 ? (
+        <UsageInfo
+          title="CPU Usage"
+          style={cpuUsageExceeding ? 'danger' : 'success'}
+          total={this.props.resourceUsage.cpusLimit}
+          used={Math.round(cpuUsage * 100) / 100}
+        >
+          <span>
+            <p>
+              {Math.round(cpuUsage * 100) / 100} used / {this.props.resourceUsage.cpusLimit} allocated CPUs
+            </p>
+            {exceedingWarning}
+          </span>
+        </UsageInfo>
+      ) : (
+        <Panel header="CPU Usage">
+          <p>{Math.round(cpuUsage * 100) / 100} shares used</p>
+        </Panel>
+      );
       maybeResourceUsage = (
         <div className="row">
           <div className="col-md-3">
@@ -373,19 +392,7 @@ class TaskDetail extends Component {
             >
               {Utils.humanizeFileSize(this.props.resourceUsage.memRssBytes)} / {Utils.humanizeFileSize(this.props.resourceUsage.memLimitBytes)}
             </UsageInfo>
-            <UsageInfo
-              title="CPU Usage"
-              style={cpuUsageExceeding ? 'danger' : 'success'}
-              total={this.props.resourceUsage.cpusLimit}
-              used={Math.round(cpuUsage * 100) / 100}
-            >
-              <span>
-                <p>
-                  {Math.round(cpuUsage * 100) / 100} used / {this.props.resourceUsage.cpusLimit} allocated CPUs
-                </p>
-                {exceedingWarning}
-              </span>
-            </UsageInfo>
+            {maybeCpuUsage}
           </div>
           <div className="col-md-9">
             <ul className="list-unstyled horizontal-description-list">
