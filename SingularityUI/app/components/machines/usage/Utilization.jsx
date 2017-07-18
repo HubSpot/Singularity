@@ -58,7 +58,7 @@ const SlaveUsage = ({slaves, slaveUsages, activeTasks, clusterUtilization, total
       </div>
       <hr />
       <h1>Cluster Utilization</h1>
-      <small>Last updated {Utils.timestampFromNow(clusterUtilization.timestamp)}</small>
+      <small className="last-updated">Last updated {Utils.timestampFromNow(clusterUtilization.timestamp)}</small>
       <div>
         <ClusterAggregates utilization={clusterUtilization} totalRequests={totalRequests} />
       </div>
