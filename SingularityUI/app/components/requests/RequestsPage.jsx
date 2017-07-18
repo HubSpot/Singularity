@@ -23,6 +23,7 @@ import * as Cols from './Columns';
 import filterSelector from '../../selectors/requests/filterSelector';
 
 import Utils from '../../utils';
+import Loader from "../common/Loader";
 
 class RequestsPage extends Component {
 
@@ -109,7 +110,7 @@ class RequestsPage extends Component {
 
     let table;
     if (this.state.loading) {
-      table = <div className="page-loader fixed"></div>;
+      table = <Loader />;
     } else if (!displayRequests.length) {
       table = <div className="empty-table-message"><p>No matching requests</p></div>;
     } else {

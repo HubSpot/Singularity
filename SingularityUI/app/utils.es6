@@ -247,6 +247,10 @@ const Utils = {
     return +(Math.round(parseFloat(value) + 'e+' + place) + 'e-' + place);
   },
 
+  toDisplayPercentage(usage, total) {
+    return Utils.roundTo((usage / total) * 100, 2);
+  },
+
   millisecondsToSecondsRoundToTenth(millis) {
     return Math.round(millis / 100) / 10;
   },
