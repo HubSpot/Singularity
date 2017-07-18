@@ -203,17 +203,19 @@ public class SingularityMesosSchedulerClient {
       events.filter(event -> event.getType() == Event.Type.UPDATE)
           .map(event -> event.getUpdate().getStatus())
           .filter(status -> {
-            if (status.getUuid().isEmpty() || !status.getAgentId().hasValue()) {
-              LOG.warn("Filtering out status update without agentId/uuid {}", status);
+            if (!status.hasAgentId() || !status.getAgentId().hasValue()) {
+              LOG.warn("Filtering out status update without agentId {}", MesosUtils.formatForLogging(status));
               return false;
             } else {
               return true;
             }
           })
           .subscribe(status -> {
-            acknowledge(status.getAgentId(), status.getTaskId(), status.getUuid());
+            if (status.hasUuid()) {
+              acknowledge(status.getAgentId(), status.getTaskId(), status.getUuid());
+            }
             scheduler.statusUpdate(status);
-            }, scheduler::onUncaughtException);
+          }, scheduler::onUncaughtException);
 
       // This is the observable that is responsible for sending calls to mesos master.
       PublishSubject<Optional<SinkOperation<Call>>> p = PublishSubject.create();
