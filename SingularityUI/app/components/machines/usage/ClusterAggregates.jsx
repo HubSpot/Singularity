@@ -3,6 +3,7 @@ import { Link } from 'react-router';
 import Utils from '../../../utils';
 import Breakdown from '../../common/Breakdown';
 import { HUNDREDTHS_PLACE } from '../Constants';
+import Loader from "../../common/Loader";
 
 const SlaveAggregates = ({utilization, totalRequests}) => {
   return (
@@ -11,34 +12,35 @@ const SlaveAggregates = ({utilization, totalRequests}) => {
       <div className="row">
         <div className="col-md-2">
           <h4>Requests</h4>
-          {utilization.numRequestsWithOverUtilizedCpu && <Breakdown
-            total={totalRequests}
-            data={[
-              {
-                attribute: 'overCpu',
-                count: utilization.numRequestsWithOverUtilizedCpu,
-                type: 'danger',
-                label: 'Over-utilized',
-                link: '/requests/overUtilizedCpu/all/',
-                percent: (utilization.numRequestsWithOverUtilizedCpu / totalRequests) * 100
-              },
-              {
-                attribute: 'normal',
-                count: totalRequests - utilization.numRequestsWithUnderUtilizedCpu - utilization.numRequestsWithOverUtilizedCpu,
-                type: 'success',
-                label: 'Normal',
-                percent: ((totalRequests - utilization.numRequestsWithUnderUtilizedCpu - utilization.numRequestsWithOverUtilizedCpu) / totalRequests) * 100
-              },
-              {
-                attribute: 'underCpu',
-                count: utilization.numRequestsWithUnderUtilizedCpu,
-                type: 'warning',
-                label: 'Under-utilized',
-                link: '/requests/underUtilizedCpu/all/',
-                percent: (utilization.numRequestsWithUnderUtilizedCpu / totalRequests) * 100
-              }
-            ]}
-          />}
+          {utilization.numRequestsWithOverUtilizedCpu ?
+            <Breakdown
+              total={totalRequests}
+              data={[
+                {
+                  attribute: 'overCpu',
+                  count: utilization.numRequestsWithOverUtilizedCpu,
+                  type: 'danger',
+                  label: 'Over-utilized',
+                  link: '/requests/overUtilizedCpu/all/',
+                  percent: (utilization.numRequestsWithOverUtilizedCpu / totalRequests) * 100
+                },
+                {
+                  attribute: 'normal',
+                  count: totalRequests - utilization.numRequestsWithUnderUtilizedCpu - utilization.numRequestsWithOverUtilizedCpu,
+                  type: 'success',
+                  label: 'Normal',
+                  percent: ((totalRequests - utilization.numRequestsWithUnderUtilizedCpu - utilization.numRequestsWithOverUtilizedCpu) / totalRequests) * 100
+                },
+                {
+                  attribute: 'underCpu',
+                  count: utilization.numRequestsWithUnderUtilizedCpu,
+                  type: 'warning',
+                  label: 'Under-utilized',
+                  link: '/requests/underUtilizedCpu/all/',
+                  percent: (utilization.numRequestsWithUnderUtilizedCpu / totalRequests) * 100
+                }
+              ]}
+            /> : <Loader fixed={false} />}
         </div>
 
         <div className="col-md-10">
@@ -137,26 +139,27 @@ const SlaveAggregates = ({utilization, totalRequests}) => {
       <div className="row">
         <div className="col-md-2">
           <h4>Requests</h4>
-          {utilization.numRequestsWithUnderUtilizedMemBytes && <Breakdown
-            total={totalRequests}
-            data={[
-              {
-                attribute: 'normal',
-                count: totalRequests - utilization.numRequestsWithUnderUtilizedMemBytes,
-                type: 'success',
-                label: 'Normal',
-                percent: ((totalRequests - utilization.numRequestsWithUnderUtilizedMemBytes) / totalRequests) * 100
-              },
-              {
-                attribute: 'underMem',
-                count: utilization.numRequestsWithUnderUtilizedMemBytes,
-                type: 'warning',
-                label: 'Under-utilized',
-                link: '/requests/underUtilizedMem/all/',
-                percent: (utilization.numRequestsWithUnderUtilizedMemBytes / totalRequests) * 100
-              }
-            ]}
-          />}
+          {utilization.numRequestsWithUnderUtilizedMemBytes ?
+            <Breakdown
+              total={totalRequests}
+              data={[
+                {
+                  attribute: 'normal',
+                  count: totalRequests - utilization.numRequestsWithUnderUtilizedMemBytes,
+                  type: 'success',
+                  label: 'Normal',
+                  percent: ((totalRequests - utilization.numRequestsWithUnderUtilizedMemBytes) / totalRequests) * 100
+                },
+                {
+                  attribute: 'underMem',
+                  count: utilization.numRequestsWithUnderUtilizedMemBytes,
+                  type: 'warning',
+                  label: 'Under-utilized',
+                  link: '/requests/underUtilizedMem/all/',
+                  percent: (utilization.numRequestsWithUnderUtilizedMemBytes / totalRequests) * 100
+                }
+              ]}
+            /> : <Loader fixed={false} />}
         </div>
 
         <div className="col-md-10">
