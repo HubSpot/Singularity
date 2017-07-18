@@ -132,6 +132,7 @@ public class SingularityTaskReconciliation {
 
   private void checkReconciliation(final long reconciliationStart, final Collection<SingularityTaskId> remainingTaskIds, final int numTimes, final Histogram histogram) {
     final List<SingularityTaskStatusHolder> taskStatusHolders = taskManager.getLastActiveTaskStatusesFor(remainingTaskIds);
+    LOG.trace("Found status updates {}", taskStatusHolders);
     final List<SingularityMesosTaskStatusObject> taskStatuses = Lists.newArrayListWithCapacity(taskStatusHolders.size());
 
     for (SingularityTaskStatusHolder taskStatusHolder : taskStatusHolders) {
