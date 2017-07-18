@@ -5,6 +5,9 @@ import CollapsableSection from '../common/CollapsableSection';
 import { UsageInfo } from '../common/statelessComponents';
 import Utils from '../../utils';
 import BootstrapTable from 'react-bootstrap/lib/Table';
+import Loader from "../common/Loader";
+
+export const HUNDREDTHS_PLACE = 2;
 
 const RequestUtilization = ({isFetching, utilization}) => {
   const isCpuOverAllocated = utilization &&
@@ -18,16 +21,16 @@ const RequestUtilization = ({isFetching, utilization}) => {
             used={utilization.cpuUsed / utilization.numTasks}
             style={utilization.cpuUsed >= utilization.cpuReserved ? 'danger' : null}
           >
-            <p>{Utils.roundTo(utilization.cpuUsed / utilization.numTasks, 2)} of {utilization.cpuReserved / utilization.numTasks} CPU reserved</p>
+            <p>{Utils.roundTo(utilization.cpuUsed / utilization.numTasks, HUNDREDTHS_PLACE)} of {utilization.cpuReserved / utilization.numTasks} CPU reserved</p>
             <BootstrapTable responsive={false} striped={true} style={{marginTop: '10px'}}>
               <tbody>
                 <tr>
                   <td>Min CPU (all tasks)</td>
-                  <td>{Utils.roundTo(utilization.minCpuUsed, 2)}</td>
+                  <td>{Utils.roundTo(utilization.minCpuUsed, HUNDREDTHS_PLACE)}</td>
                 </tr>
                 <tr>
                   <td className={isCpuOverAllocated ? 'danger' : ''}>Max CPU (all tasks)</td>
-                  <td className={isCpuOverAllocated ? 'danger' : ''}>{Utils.roundTo(utilization.maxCpuUsed, 2)}</td>
+                  <td className={isCpuOverAllocated ? 'danger' : ''}>{Utils.roundTo(utilization.maxCpuUsed, HUNDREDTHS_PLACE)}</td>
                 </tr>
               </tbody>
             </BootstrapTable>
@@ -60,7 +63,7 @@ const RequestUtilization = ({isFetching, utilization}) => {
 
   return utilization ? (
     <CollapsableSection id="request-utilization" title="Resource usage" subtitle="(past 24 hours)" defaultExpanded={isCpuOverAllocated}>
-      {isFetching ? <div className="page-loader fixed" /> : attributes}
+      {isFetching ? <Loader /> : attributes}
     </CollapsableSection>
   ) : <div></div>;
 };

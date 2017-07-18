@@ -2,6 +2,9 @@ import React, { PropTypes } from 'react';
 import { Link } from 'react-router';
 import Utils from '../../../utils';
 import Breakdown from '../../common/Breakdown';
+import { HUNDREDTHS_PLACE } from '../Constants';
+import Loader from "../../common/Loader";
+import LabeledColumn from "./LabeledColumn";
 
 const SlaveAggregates = ({utilization, totalRequests}) => {
   return (
@@ -10,86 +13,88 @@ const SlaveAggregates = ({utilization, totalRequests}) => {
       <div className="row">
         <div className="col-md-2">
           <h4>Requests</h4>
-          <Breakdown
-            total={totalRequests}
-            data={[
-              {
-                attribute: 'overCpu',
-                count: utilization.numRequestsWithOverUtilizedCpu,
-                type: 'danger',
-                label: 'Over-utilized',
-                link: '/requests/overUtilizedCpu/all/',
-                percent: (utilization.numRequestsWithOverUtilizedCpu / totalRequests) * 100
-              },
-              {
-                attribute: 'normal',
-                count: totalRequests - utilization.numRequestsWithUnderUtilizedCpu - utilization.numRequestsWithOverUtilizedCpu,
-                type: 'success',
-                label: 'Normal',
-                percent: ((totalRequests - utilization.numRequestsWithUnderUtilizedCpu - utilization.numRequestsWithOverUtilizedCpu) / totalRequests) * 100
-              },
-              {
-                attribute: 'underCpu',
-                count: utilization.numRequestsWithUnderUtilizedCpu,
-                type: 'warning',
-                label: 'Under-utilized',
-                link: '/requests/underUtilizedCpu/all/',
-                percent: (utilization.numRequestsWithUnderUtilizedCpu / totalRequests) * 100
-              }
-            ]}
-          />
+          {utilization.numRequestsWithOverUtilizedCpu !== undefined ?
+            <Breakdown
+              total={totalRequests}
+              data={[
+                {
+                  attribute: 'overCpu',
+                  count: utilization.numRequestsWithOverUtilizedCpu,
+                  type: 'danger',
+                  label: 'Over-utilized',
+                  link: '/requests/overUtilizedCpu/all/',
+                  percent: (utilization.numRequestsWithOverUtilizedCpu / totalRequests) * 100
+                },
+                {
+                  attribute: 'normal',
+                  count: totalRequests - utilization.numRequestsWithUnderUtilizedCpu - utilization.numRequestsWithOverUtilizedCpu,
+                  type: 'success',
+                  label: 'Normal',
+                  percent: ((totalRequests - utilization.numRequestsWithUnderUtilizedCpu - utilization.numRequestsWithOverUtilizedCpu) / totalRequests) * 100
+                },
+                {
+                  attribute: 'underCpu',
+                  count: utilization.numRequestsWithUnderUtilizedCpu,
+                  type: 'warning',
+                  label: 'Under-utilized',
+                  link: '/requests/underUtilizedCpu/all/',
+                  percent: (utilization.numRequestsWithUnderUtilizedCpu / totalRequests) * 100
+                }
+              ]}
+            /> : <Loader fixed={false} />}
         </div>
 
-        <div className="col-md-10">
-          <div className="row">
-            <div className="col-md-3">
-              <div className="aggregate">
-                <div className="value text-danger">
-                  {Utils.roundTo(utilization.totalOverUtilizedCpu, 2)}
-                </div>
-                <div className="label">
-                  Total Over-utilized CPUs
-                </div>
+        <LabeledColumn width={10}>
+          <div className="col-md-3">
+            <div className="aggregate">
+              <div className="value text-danger">
+                {Utils.roundTo(utilization.totalOverUtilizedCpu, HUNDREDTHS_PLACE)}
               </div>
-            </div>
-            <div className="col-md-3">
-              <div className="aggregate">
-                <div className="value text-danger">
-                  {Utils.roundTo(utilization.avgOverUtilizedCpu, 2)}
-                </div>
-                <div className="label">
-                  Avg Over-utilized CPUs
-                </div>
-              </div>
-            </div>
-            <div className="col-md-3">
-              <div className="aggregate">
-                <div className="value text-danger">
-                  {Utils.roundTo(utilization.minOverUtilizedCpu, 2)}
-                </div>
-                <div className="label">
-                  Min Over-utilized CPUs
-                </div>
-              </div>
-            </div>
-            <div className="col-md-3">
-              <div className="aggregate">
-                <Link to={`/request/${utilization.maxOverUtilizedCpuRequestId}`}>
-                  <div className="value text-danger">
-                    {Utils.roundTo(utilization.maxOverUtilizedCpu, 2)}
-                  </div>
-                  <div className="label">
-                    Max Over-utilized CPUs
-                  </div>
-                </Link>
+              <div className="label">
+                Total Over-utilized CPUs
               </div>
             </div>
           </div>
+          <div className="col-md-3">
+            <div className="aggregate">
+              <div className="value text-danger">
+                {Utils.roundTo(utilization.avgOverUtilizedCpu, HUNDREDTHS_PLACE)}
+              </div>
+              <div className="label">
+                Avg Over-utilized CPUs
+              </div>
+            </div>
+          </div>
+          <div className="col-md-3">
+            <div className="aggregate">
+              <div className="value text-danger">
+                {Utils.roundTo(utilization.minOverUtilizedCpu, HUNDREDTHS_PLACE)}
+              </div>
+              <div className="label">
+                Min Over-utilized CPUs
+              </div>
+            </div>
+          </div>
+          <div className="col-md-3">
+            <div className="aggregate">
+              <Link to={`/request/${utilization.maxOverUtilizedCpuRequestId}`}>
+                <div className="value text-danger">
+                  {Utils.roundTo(utilization.maxOverUtilizedCpu, HUNDREDTHS_PLACE)}
+                </div>
+                <div className="label">
+                  Max Over-utilized CPUs
+                </div>
+              </Link>
+            </div>
+          </div>
+        </LabeledColumn>
+
+        <LabeledColumn width={10}>
           <div className="row">
             <div className="col-md-3">
               <div className="aggregate">
                 <div className="value text-warning">
-                  {Utils.roundTo(utilization.totalUnderUtilizedCpu, 2)}
+                  {Utils.roundTo(utilization.totalUnderUtilizedCpu, HUNDREDTHS_PLACE)}
                 </div>
                 <div className="label">
                   Total Under-utilized CPUs
@@ -99,7 +104,7 @@ const SlaveAggregates = ({utilization, totalRequests}) => {
             <div className="col-md-3">
               <div className="aggregate">
                 <div className="value text-warning">
-                  {Utils.roundTo(utilization.avgUnderUtilizedCpu, 2)}
+                  {Utils.roundTo(utilization.avgUnderUtilizedCpu, HUNDREDTHS_PLACE)}
                 </div>
                 <div className="label">
                   Avg Under-utilized CPUs
@@ -109,7 +114,7 @@ const SlaveAggregates = ({utilization, totalRequests}) => {
             <div className="col-md-3">
               <div className="aggregate">
                 <div className="value text-warning">
-                  {Utils.roundTo(utilization.minUnderUtilizedCpu, 2)}
+                  {Utils.roundTo(utilization.minUnderUtilizedCpu, HUNDREDTHS_PLACE)}
                 </div>
                 <div className="label">
                   Min Under-utilized CPUs
@@ -120,7 +125,7 @@ const SlaveAggregates = ({utilization, totalRequests}) => {
               <div className="aggregate">
                 <Link to={`/request/${utilization.maxUnderUtilizedCpuRequestId}`}>
                   <div className="value text-warning">
-                    {Utils.roundTo(utilization.maxUnderUtilizedCpu, 2)}
+                    {Utils.roundTo(utilization.maxUnderUtilizedCpu, HUNDREDTHS_PLACE)}
                   </div>
                   <div className="label">
                     Max Under-utilized CPUs
@@ -129,36 +134,37 @@ const SlaveAggregates = ({utilization, totalRequests}) => {
               </div>
             </div>
           </div>
-        </div>
+        </LabeledColumn>
       </div>
 
       <h3>Memory</h3>
       <div className="row">
         <div className="col-md-2">
           <h4>Requests</h4>
-          <Breakdown
-            total={totalRequests}
-            data={[
-              {
-                attribute: 'normal',
-                count: totalRequests - utilization.numRequestsWithUnderUtilizedMemBytes,
-                type: 'success',
-                label: 'Normal',
-                percent: ((totalRequests - utilization.numRequestsWithUnderUtilizedMemBytes) / totalRequests) * 100
-              },
-              {
-                attribute: 'underMem',
-                count: utilization.numRequestsWithUnderUtilizedMemBytes,
-                type: 'warning',
-                label: 'Under-utilized',
-                link: '/requests/underUtilizedMem/all/',
-                percent: (utilization.numRequestsWithUnderUtilizedMemBytes / totalRequests) * 100
-              }
-            ]}
-          />
+          {utilization.numRequestsWithUnderUtilizedMemBytes !== undefined ?
+            <Breakdown
+              total={totalRequests}
+              data={[
+                {
+                  attribute: 'normal',
+                  count: totalRequests - utilization.numRequestsWithUnderUtilizedMemBytes,
+                  type: 'success',
+                  label: 'Normal',
+                  percent: ((totalRequests - utilization.numRequestsWithUnderUtilizedMemBytes) / totalRequests) * 100
+                },
+                {
+                  attribute: 'underMem',
+                  count: utilization.numRequestsWithUnderUtilizedMemBytes,
+                  type: 'warning',
+                  label: 'Under-utilized',
+                  link: '/requests/underUtilizedMem/all/',
+                  percent: (utilization.numRequestsWithUnderUtilizedMemBytes / totalRequests) * 100
+                }
+              ]}
+            /> : <Loader fixed={false} />}
         </div>
 
-        <div className="col-md-10">
+        <LabeledColumn width={10}>
           <div className="row">
             <div className="col-md-3">
               <div className="aggregate">
@@ -203,7 +209,7 @@ const SlaveAggregates = ({utilization, totalRequests}) => {
               </div>
             </div>
           </div>
-        </div>
+        </LabeledColumn>
       </div>
     </div>
   );
