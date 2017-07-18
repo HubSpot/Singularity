@@ -22,6 +22,7 @@ import com.google.inject.Inject;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.config.SMTPConfiguration;
 import com.hubspot.singularity.config.SingularityConfiguration;
+import com.hubspot.singularity.mesos.SingularityMesosScheduler;
 import com.hubspot.singularity.sentry.SingularityExceptionNotifier;
 import com.hubspot.singularity.smtp.SingularitySmtpSender;
 
@@ -36,16 +37,23 @@ public class SingularityAbort implements ConnectionStateListener {
   private final SingularitySmtpSender smtpSender;
   private final HostAndPort hostAndPort;
   private final SingularityExceptionNotifier exceptionNotifier;
+  private final SingularityMesosScheduler scheduler;
 
   private final ServerProvider serverProvider;
   private final AtomicBoolean aborting = new AtomicBoolean();
 
   @Inject
-  public SingularityAbort(SingularitySmtpSender smtpSender, ServerProvider serverProvider, SingularityConfiguration configuration, SingularityExceptionNotifier exceptionNotifier, @Named(SingularityMainModule.HTTP_HOST_AND_PORT) HostAndPort hostAndPort) {
+  public SingularityAbort(SingularitySmtpSender smtpSender,
+                          ServerProvider serverProvider,
+                          SingularityConfiguration configuration,
+                          SingularityExceptionNotifier exceptionNotifier,
+                          SingularityMesosScheduler scheduler,
+                          @Named(SingularityMainModule.HTTP_HOST_AND_PORT) HostAndPort hostAndPort) {
     this.maybeSmtpConfiguration = configuration.getSmtpConfigurationOptional();
     this.serverProvider = serverProvider;
     this.smtpSender = smtpSender;
     this.exceptionNotifier = exceptionNotifier;
+    this.scheduler = scheduler;
     this.hostAndPort = hostAndPort;
   }
 
@@ -64,6 +72,7 @@ public class SingularityAbort implements ConnectionStateListener {
   public void abort(AbortReason abortReason, Optional<Throwable> throwable) {
     if (!aborting.getAndSet(true)) {
       try {
+        scheduler.notifyStopping();
         sendAbortNotification(abortReason, throwable);
         flushLogs();
       } finally {
