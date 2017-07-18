@@ -204,7 +204,7 @@ public class SingularityMesosSchedulerClient {
           .map(event -> event.getUpdate().getStatus())
           .filter(status -> {
             if (!status.hasAgentId() || !status.getAgentId().hasValue()) {
-              LOG.warn("Filtering out status update without agentId {}", MesosUtils.formatForLogging(status));
+              LOG.warn("Filtering out status update without agentId {}", status);
               return false;
             } else {
               return true;
