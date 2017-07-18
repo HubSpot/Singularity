@@ -4,6 +4,7 @@ import Utils from '../../../utils';
 import Breakdown from '../../common/Breakdown';
 import { HUNDREDTHS_PLACE } from '../Constants';
 import Loader from "../../common/Loader";
+import LabeledColumn from "./LabeledColumn";
 
 const SlaveAggregates = ({utilization, totalRequests}) => {
   return (
@@ -43,51 +44,52 @@ const SlaveAggregates = ({utilization, totalRequests}) => {
             /> : <Loader fixed={false} />}
         </div>
 
-        <div className="col-md-10">
-          <div className="row">
-            <div className="col-md-3">
-              <div className="aggregate">
-                <div className="value text-danger">
-                  {Utils.roundTo(utilization.totalOverUtilizedCpu, HUNDREDTHS_PLACE)}
-                </div>
-                <div className="label">
-                  Total Over-utilized CPUs
-                </div>
+        <LabeledColumn width={10}>
+          <div className="col-md-3">
+            <div className="aggregate">
+              <div className="value text-danger">
+                {Utils.roundTo(utilization.totalOverUtilizedCpu, HUNDREDTHS_PLACE)}
               </div>
-            </div>
-            <div className="col-md-3">
-              <div className="aggregate">
-                <div className="value text-danger">
-                  {Utils.roundTo(utilization.avgOverUtilizedCpu, HUNDREDTHS_PLACE)}
-                </div>
-                <div className="label">
-                  Avg Over-utilized CPUs
-                </div>
-              </div>
-            </div>
-            <div className="col-md-3">
-              <div className="aggregate">
-                <div className="value text-danger">
-                  {Utils.roundTo(utilization.minOverUtilizedCpu, HUNDREDTHS_PLACE)}
-                </div>
-                <div className="label">
-                  Min Over-utilized CPUs
-                </div>
-              </div>
-            </div>
-            <div className="col-md-3">
-              <div className="aggregate">
-                <Link to={`/request/${utilization.maxOverUtilizedCpuRequestId}`}>
-                  <div className="value text-danger">
-                    {Utils.roundTo(utilization.maxOverUtilizedCpu, HUNDREDTHS_PLACE)}
-                  </div>
-                  <div className="label">
-                    Max Over-utilized CPUs
-                  </div>
-                </Link>
+              <div className="label">
+                Total Over-utilized CPUs
               </div>
             </div>
           </div>
+          <div className="col-md-3">
+            <div className="aggregate">
+              <div className="value text-danger">
+                {Utils.roundTo(utilization.avgOverUtilizedCpu, HUNDREDTHS_PLACE)}
+              </div>
+              <div className="label">
+                Avg Over-utilized CPUs
+              </div>
+            </div>
+          </div>
+          <div className="col-md-3">
+            <div className="aggregate">
+              <div className="value text-danger">
+                {Utils.roundTo(utilization.minOverUtilizedCpu, HUNDREDTHS_PLACE)}
+              </div>
+              <div className="label">
+                Min Over-utilized CPUs
+              </div>
+            </div>
+          </div>
+          <div className="col-md-3">
+            <div className="aggregate">
+              <Link to={`/request/${utilization.maxOverUtilizedCpuRequestId}`}>
+                <div className="value text-danger">
+                  {Utils.roundTo(utilization.maxOverUtilizedCpu, HUNDREDTHS_PLACE)}
+                </div>
+                <div className="label">
+                  Max Over-utilized CPUs
+                </div>
+              </Link>
+            </div>
+          </div>
+        </LabeledColumn>
+
+        <LabeledColumn width={10}>
           <div className="row">
             <div className="col-md-3">
               <div className="aggregate">
@@ -132,7 +134,7 @@ const SlaveAggregates = ({utilization, totalRequests}) => {
               </div>
             </div>
           </div>
-        </div>
+        </LabeledColumn>
       </div>
 
       <h3>Memory</h3>
@@ -162,7 +164,7 @@ const SlaveAggregates = ({utilization, totalRequests}) => {
             /> : <Loader fixed={false} />}
         </div>
 
-        <div className="col-md-10">
+        <LabeledColumn width={10}>
           <div className="row">
             <div className="col-md-3">
               <div className="aggregate">
@@ -207,7 +209,7 @@ const SlaveAggregates = ({utilization, totalRequests}) => {
               </div>
             </div>
           </div>
-        </div>
+        </LabeledColumn>
       </div>
     </div>
   );
