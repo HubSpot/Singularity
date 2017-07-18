@@ -13,7 +13,7 @@ const SlaveAggregates = ({utilization, totalRequests}) => {
       <div className="row">
         <div className="col-md-2">
           <h4>Requests</h4>
-          {utilization.numRequestsWithOverUtilizedCpu ?
+          {utilization.numRequestsWithOverUtilizedCpu !== undefined ?
             <Breakdown
               total={totalRequests}
               data={[
@@ -141,7 +141,7 @@ const SlaveAggregates = ({utilization, totalRequests}) => {
       <div className="row">
         <div className="col-md-2">
           <h4>Requests</h4>
-          {utilization.numRequestsWithUnderUtilizedMemBytes ?
+          {utilization.numRequestsWithUnderUtilizedMemBytes !== undefined ?
             <Breakdown
               total={totalRequests}
               data={[
