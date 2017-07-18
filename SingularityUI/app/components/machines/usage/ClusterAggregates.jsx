@@ -2,6 +2,7 @@ import React, { PropTypes } from 'react';
 import { Link } from 'react-router';
 import Utils from '../../../utils';
 import Breakdown from '../../common/Breakdown';
+import { HUNDREDTHS_PLACE } from '../Constants';
 
 const SlaveAggregates = ({utilization, totalRequests}) => {
   return (
@@ -10,7 +11,7 @@ const SlaveAggregates = ({utilization, totalRequests}) => {
       <div className="row">
         <div className="col-md-2">
           <h4>Requests</h4>
-          <Breakdown
+          {utilization.numRequestsWithOverUtilizedCpu && <Breakdown
             total={totalRequests}
             data={[
               {
@@ -37,7 +38,7 @@ const SlaveAggregates = ({utilization, totalRequests}) => {
                 percent: (utilization.numRequestsWithUnderUtilizedCpu / totalRequests) * 100
               }
             ]}
-          />
+          />}
         </div>
 
         <div className="col-md-10">
@@ -45,7 +46,7 @@ const SlaveAggregates = ({utilization, totalRequests}) => {
             <div className="col-md-3">
               <div className="aggregate">
                 <div className="value text-danger">
-                  {Utils.roundTo(utilization.totalOverUtilizedCpu, 2)}
+                  {Utils.roundTo(utilization.totalOverUtilizedCpu, HUNDREDTHS_PLACE)}
                 </div>
                 <div className="label">
                   Total Over-utilized CPUs
@@ -55,7 +56,7 @@ const SlaveAggregates = ({utilization, totalRequests}) => {
             <div className="col-md-3">
               <div className="aggregate">
                 <div className="value text-danger">
-                  {Utils.roundTo(utilization.avgOverUtilizedCpu, 2)}
+                  {Utils.roundTo(utilization.avgOverUtilizedCpu, HUNDREDTHS_PLACE)}
                 </div>
                 <div className="label">
                   Avg Over-utilized CPUs
@@ -65,7 +66,7 @@ const SlaveAggregates = ({utilization, totalRequests}) => {
             <div className="col-md-3">
               <div className="aggregate">
                 <div className="value text-danger">
-                  {Utils.roundTo(utilization.minOverUtilizedCpu, 2)}
+                  {Utils.roundTo(utilization.minOverUtilizedCpu, HUNDREDTHS_PLACE)}
                 </div>
                 <div className="label">
                   Min Over-utilized CPUs
@@ -76,7 +77,7 @@ const SlaveAggregates = ({utilization, totalRequests}) => {
               <div className="aggregate">
                 <Link to={`/request/${utilization.maxOverUtilizedCpuRequestId}`}>
                   <div className="value text-danger">
-                    {Utils.roundTo(utilization.maxOverUtilizedCpu, 2)}
+                    {Utils.roundTo(utilization.maxOverUtilizedCpu, HUNDREDTHS_PLACE)}
                   </div>
                   <div className="label">
                     Max Over-utilized CPUs
@@ -89,7 +90,7 @@ const SlaveAggregates = ({utilization, totalRequests}) => {
             <div className="col-md-3">
               <div className="aggregate">
                 <div className="value text-warning">
-                  {Utils.roundTo(utilization.totalUnderUtilizedCpu, 2)}
+                  {Utils.roundTo(utilization.totalUnderUtilizedCpu, HUNDREDTHS_PLACE)}
                 </div>
                 <div className="label">
                   Total Under-utilized CPUs
@@ -99,7 +100,7 @@ const SlaveAggregates = ({utilization, totalRequests}) => {
             <div className="col-md-3">
               <div className="aggregate">
                 <div className="value text-warning">
-                  {Utils.roundTo(utilization.avgUnderUtilizedCpu, 2)}
+                  {Utils.roundTo(utilization.avgUnderUtilizedCpu, HUNDREDTHS_PLACE)}
                 </div>
                 <div className="label">
                   Avg Under-utilized CPUs
@@ -109,7 +110,7 @@ const SlaveAggregates = ({utilization, totalRequests}) => {
             <div className="col-md-3">
               <div className="aggregate">
                 <div className="value text-warning">
-                  {Utils.roundTo(utilization.minUnderUtilizedCpu, 2)}
+                  {Utils.roundTo(utilization.minUnderUtilizedCpu, HUNDREDTHS_PLACE)}
                 </div>
                 <div className="label">
                   Min Under-utilized CPUs
@@ -120,7 +121,7 @@ const SlaveAggregates = ({utilization, totalRequests}) => {
               <div className="aggregate">
                 <Link to={`/request/${utilization.maxUnderUtilizedCpuRequestId}`}>
                   <div className="value text-warning">
-                    {Utils.roundTo(utilization.maxUnderUtilizedCpu, 2)}
+                    {Utils.roundTo(utilization.maxUnderUtilizedCpu, HUNDREDTHS_PLACE)}
                   </div>
                   <div className="label">
                     Max Under-utilized CPUs
@@ -136,7 +137,7 @@ const SlaveAggregates = ({utilization, totalRequests}) => {
       <div className="row">
         <div className="col-md-2">
           <h4>Requests</h4>
-          <Breakdown
+          {utilization.numRequestsWithUnderUtilizedMemBytes && <Breakdown
             total={totalRequests}
             data={[
               {
@@ -155,7 +156,7 @@ const SlaveAggregates = ({utilization, totalRequests}) => {
                 percent: (utilization.numRequestsWithUnderUtilizedMemBytes / totalRequests) * 100
               }
             ]}
-          />
+          />}
         </div>
 
         <div className="col-md-10">
