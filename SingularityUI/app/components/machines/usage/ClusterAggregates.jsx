@@ -5,6 +5,7 @@ import Breakdown from '../../common/Breakdown';
 import { HUNDREDTHS_PLACE } from '../Constants';
 import Loader from "../../common/Loader";
 import LabeledColumn from "./LabeledColumn";
+import Aggregate from './Aggregate';
 
 const SlaveAggregates = ({utilization, totalRequests}) => {
   return (
@@ -45,94 +46,20 @@ const SlaveAggregates = ({utilization, totalRequests}) => {
         </div>
 
         <LabeledColumn width={10}>
-          <div className="col-md-3">
-            <div className="aggregate">
-              <div className="value text-danger">
-                {Utils.roundTo(utilization.totalOverUtilizedCpu, HUNDREDTHS_PLACE)}
-              </div>
-              <div className="label">
-                Total Over-utilized CPUs
-              </div>
-            </div>
-          </div>
-          <div className="col-md-3">
-            <div className="aggregate">
-              <div className="value text-danger">
-                {Utils.roundTo(utilization.avgOverUtilizedCpu, HUNDREDTHS_PLACE)}
-              </div>
-              <div className="label">
-                Avg Over-utilized CPUs
-              </div>
-            </div>
-          </div>
-          <div className="col-md-3">
-            <div className="aggregate">
-              <div className="value text-danger">
-                {Utils.roundTo(utilization.minOverUtilizedCpu, HUNDREDTHS_PLACE)}
-              </div>
-              <div className="label">
-                Min Over-utilized CPUs
-              </div>
-            </div>
-          </div>
-          <div className="col-md-3">
-            <div className="aggregate">
-              <Link to={`/request/${utilization.maxOverUtilizedCpuRequestId}`}>
-                <div className="value text-danger">
-                  {Utils.roundTo(utilization.maxOverUtilizedCpu, HUNDREDTHS_PLACE)}
-                </div>
-                <div className="label">
-                  Max Over-utilized CPUs
-                </div>
-              </Link>
-            </div>
+          <div className="row">
+            <Aggregate width={3} value={Utils.roundTo(utilization.totalOverUtilizedCpu, HUNDREDTHS_PLACE)} label="Total Over-utilized CPUs" className="text-danger" />
+            <Aggregate width={3} value={Utils.roundTo(utilization.avgOverUtilizedCpu, HUNDREDTHS_PLACE)} label="Avg Over-utilized CPUs" className="text-danger" />
+            <Aggregate width={3} value={Utils.roundTo(utilization.minOverUtilizedCpu, HUNDREDTHS_PLACE)} label="Min Over-utilized CPUs" className="text-danger" />
+            <Aggregate width={3} value={Utils.roundTo(utilization.maxOverUtilizedCpu, HUNDREDTHS_PLACE)} label="Max Over-utilized CPUs" className="text-danger" link={utilization.maxOverUtilizedCpuRequestId && `/request/${utilization.maxOverUtilizedCpuRequestId}`} />
           </div>
         </LabeledColumn>
 
         <LabeledColumn width={10}>
           <div className="row">
-            <div className="col-md-3">
-              <div className="aggregate">
-                <div className="value text-warning">
-                  {Utils.roundTo(utilization.totalUnderUtilizedCpu, HUNDREDTHS_PLACE)}
-                </div>
-                <div className="label">
-                  Total Under-utilized CPUs
-                </div>
-              </div>
-            </div>
-            <div className="col-md-3">
-              <div className="aggregate">
-                <div className="value text-warning">
-                  {Utils.roundTo(utilization.avgUnderUtilizedCpu, HUNDREDTHS_PLACE)}
-                </div>
-                <div className="label">
-                  Avg Under-utilized CPUs
-                </div>
-              </div>
-            </div>
-            <div className="col-md-3">
-              <div className="aggregate">
-                <div className="value text-warning">
-                  {Utils.roundTo(utilization.minUnderUtilizedCpu, HUNDREDTHS_PLACE)}
-                </div>
-                <div className="label">
-                  Min Under-utilized CPUs
-                </div>
-              </div>
-            </div>
-            <div className="col-md-3">
-              <div className="aggregate">
-                <Link to={`/request/${utilization.maxUnderUtilizedCpuRequestId}`}>
-                  <div className="value text-warning">
-                    {Utils.roundTo(utilization.maxUnderUtilizedCpu, HUNDREDTHS_PLACE)}
-                  </div>
-                  <div className="label">
-                    Max Under-utilized CPUs
-                  </div>
-                </Link>
-              </div>
-            </div>
+            <Aggregate width={3} value={Utils.roundTo(utilization.totalUnderUtilizedCpu, HUNDREDTHS_PLACE)} label="Total Under-utilized CPUs" className="text-warning" />
+            <Aggregate width={3} value={Utils.roundTo(utilization.avgUnderUtilizedCpu, HUNDREDTHS_PLACE)} label="Avg Under-utilized CPUs" className="text-warning" />
+            <Aggregate width={3} value={Utils.roundTo(utilization.minUnderUtilizedCpu, HUNDREDTHS_PLACE)} label="Min Under-utilized CPUs" className="text-warning" />
+            <Aggregate width={3} value={Utils.roundTo(utilization.maxUnderUtilizedCpu, HUNDREDTHS_PLACE)} label="Max Under-utilized CPUs" className="text-warning" link={utilization.maxUnderUtilizedCpuRequestId && `/request/${utilization.maxUnderUtilizedCpuRequestId}`} />
           </div>
         </LabeledColumn>
       </div>
@@ -166,48 +93,10 @@ const SlaveAggregates = ({utilization, totalRequests}) => {
 
         <LabeledColumn width={10}>
           <div className="row">
-            <div className="col-md-3">
-              <div className="aggregate">
-                <div className="value text-warning">
-                  {Utils.humanizeFileSize(utilization.totalUnderUtilizedMemBytes)}
-                </div>
-                <div className="label">
-                  Total Under-utilized Memory
-                </div>
-              </div>
-            </div>
-            <div className="col-md-3">
-              <div className="aggregate">
-                <div className="value text-warning">
-                  {Utils.humanizeFileSize(utilization.avgUnderUtilizedMemBytes)}
-                </div>
-                <div className="label">
-                  Avg Under-utilized Memory
-                </div>
-              </div>
-            </div>
-            <div className="col-md-3">
-              <div className="aggregate">
-                <div className="value text-warning">
-                  {Utils.humanizeFileSize(utilization.minUnderUtilizedMemBytes)}
-                </div>
-                <div className="label">
-                  Min Under-utilized Memory
-                </div>
-              </div>
-            </div>
-            <div className="col-md-3">
-              <div className="aggregate">
-                <Link to={`/request/${utilization.maxUnderUtilizedMemBytesRequestId}`}>
-                  <div className="value text-warning">
-                    {Utils.humanizeFileSize(utilization.maxUnderUtilizedMemBytes)}
-                  </div>
-                  <div className="label">
-                    Max Under-utilized Memory
-                  </div>
-                </Link>
-              </div>
-            </div>
+            <Aggregate width={3} value={Utils.humanizeFileSize(utilization.totalUnderUtilizedMemBytes)} label="Total Under-utilized Memory" className="text-warning" />
+            <Aggregate width={3} value={Utils.humanizeFileSize(utilization.avgUnderUtilizedMemBytes)} label="Avg Under-utilized Memory" className="text-warning" />
+            <Aggregate width={3} value={Utils.humanizeFileSize(utilization.minUnderUtilizedMemBytes)} label="Min Under-utilized Memory" className="text-warning" />
+            <Aggregate width={3} value={Utils.humanizeFileSize(utilization.maxUnderUtilizedMemBytes)} label="Max Under-utilized Memory" className="text-warning" link={utilization.maxUnderUtilizedMemBytesRequestId && `/request/${utilization.maxUnderUtilizedMemBytesRequestId}`} />
           </div>
         </LabeledColumn>
       </div>
