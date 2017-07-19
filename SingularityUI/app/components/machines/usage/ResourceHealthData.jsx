@@ -1,11 +1,11 @@
 import React, { PropTypes } from 'react';
-import Utils from '../../utils';
+import Utils from '../../../utils';
 import SlaveResourceHealth from './SlaveResourceHealth';
 import { OverlayTrigger, Popover } from 'react-bootstrap';
-import { STAT_NAMES, HUNDREDTHS_PLACE, HEALTH_SCALE, HEALTH_SCALE_MAX } from './Constants';
+import { STAT_NAMES, HUNDREDTHS_PLACE, HEALTH_SCALE, HEALTH_SCALE_MAX } from '../Constants';
 
 const overlayTriggers = ['hover', 'focus'];
-const overlayPlacement = 'bottom';
+const overlayPlacement = 'top';
 
 const getTotalForStat = (statName, data) => {
   switch (statName) {
@@ -51,7 +51,7 @@ const slaveQuickStats = (data) => {
             {Utils.roundTo(data.cpuUtilized / HEALTH_SCALE_MAX * 100, HUNDREDTHS_PLACE)}%
           </div>
           <div id="status">
-            Cpu <span style={{color : HEALTH_SCALE[data.cpuUtilized]}}>{largeBlackCircle}</span>
+            CPU <span style={{color : HEALTH_SCALE[data.cpuUtilized]}}>{largeBlackCircle}</span>
           </div>
         </div>
       </div>

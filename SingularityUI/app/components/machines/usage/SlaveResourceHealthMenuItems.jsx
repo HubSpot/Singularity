@@ -1,10 +1,10 @@
 import React, { PropTypes } from 'react';
 import StatItem from './StatItem';
-import Utils from '../../utils';
-import { STAT_NAMES, SLAVE_HEALTH_MENU_ITEM_ORDER, HUNDREDTHS_PLACE } from './Constants';
+import Utils from '../../../utils';
+import { STAT_NAMES, SLAVE_HEALTH_MENU_ITEM_ORDER, HUNDREDTHS_PLACE } from '../Constants';
 
-const compareStats = (a, b) => {
-  return SLAVE_HEALTH_MENU_ITEM_ORDER.indexOf(a.name) - SLAVE_HEALTH_MENU_ITEM_ORDER.indexOf(b.name);
+const compareStats = (stat1, stat2) => {
+  return SLAVE_HEALTH_MENU_ITEM_ORDER.indexOf(stat1.name) - SLAVE_HEALTH_MENU_ITEM_ORDER.indexOf(stat2.name);
 };
 
 const humanizeStatName = (name) => {
@@ -39,23 +39,24 @@ const humanizeStatValue = (name, value, maybeTotalResource) => {
 
 const humanizeStatPct = (name, value, maybeTotalResource) => {
   if (Utils.isResourceStat(name)) {
-    return Utils.roundTo((value / maybeTotalResource) * 100, HUNDREDTHS_PLACE);
+    return Utils.toDisplayPercentage(value, maybeTotalResource);
   }
-
   return null;
 };
 
 const maybeLink = (name, value) => {
   if (name === STAT_NAMES.slaveIdStat) {
-    return { href : `tasks/active/all/${value}`,
-             title : `All tasks running on host ${value}`
-           };
+    return {
+      href: `tasks/active/all/${value}`,
+      title: `All tasks running on host ${value}`
+    };
   }
 
   return null;
 };
 
 const SlaveResourceHealthMenuItems = ({stats}) => {
+  stats = stats.filter((stat) => _.contains(_.values(STAT_NAMES), stat.name));
   const renderSlaveStats = _.map(stats.sort(compareStats), ({name, value, maybeTotalResource}) => {
     return <StatItem key={name} name={humanizeStatName(name)} value={humanizeStatValue(name, value, maybeTotalResource)} maybeLink={maybeLink(name, value)} percentage={humanizeStatPct(name, value, maybeTotalResource)} />;
   });
@@ -75,14 +76,15 @@ const SlaveResourceHealthMenuItems = ({stats}) => {
 };
 
 SlaveResourceHealthMenuItems.propTypes = {
-  stats : PropTypes.arrayOf(
+  stats: PropTypes.arrayOf(
     PropTypes.shape({
-      name : PropTypes.string.isRequired,
-      value : PropTypes.oneOfType([
+      name: PropTypes.string.isRequired,
+      value: PropTypes.oneOfType([
         PropTypes.string,
-        PropTypes.number
+        PropTypes.number,
+        PropTypes.object
       ]).isRequired,
-      maybeTotalResource : PropTypes.oneOfType([
+      maybeTotalResource: PropTypes.oneOfType([
         PropTypes.string,
         PropTypes.number
       ])

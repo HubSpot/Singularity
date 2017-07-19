@@ -5,8 +5,9 @@ import Utils from '../../utils';
 
 const getRequests = (state) => state.requestsInState;
 const getFilter = (state) => state.filter;
+const getUtilizations = (state) => state.requestUtilizations;
 
-export default createSelector([getRequests, getFilter], (requests, filter) => {
+export default createSelector([getRequests, getFilter, getUtilizations], (requests, filter, utilizations) => {
   let filteredRequests = requests;
 
   // Filter by state
@@ -17,6 +18,24 @@ export default createSelector([getRequests, getFilter], (requests, filter) => {
       break;
     case 'noDeploy':
       stateFilter = (requestParent) => !requestParent.hasActiveDeploy;
+      break;
+    case 'overUtilizedCpu':
+      stateFilter = (requestParent) => {
+        const utilization = _.find(utilizations, (util) => util.requestId === requestParent.request.id);
+        return !!(utilization && utilization.cpuUsed > utilization.cpuReserved);
+      };
+      break;
+    case 'underUtilizedCpu':
+      stateFilter = (requestParent) => {
+        const utilization = _.find(utilizations, (util) => util.requestId === requestParent.request.id);
+        return !!(utilization && utilization.cpuUsed < utilization.cpuReserved);
+      };
+      break;
+    case 'underUtilizedMem':
+      stateFilter = (requestParent) => {
+        const utilization = _.find(utilizations, (util) => util.requestId === requestParent.request.id);
+        return !!(utilization && utilization.memBytesUsed < utilization.memBytesReserved);
+      };
       break;
     default:
       break;

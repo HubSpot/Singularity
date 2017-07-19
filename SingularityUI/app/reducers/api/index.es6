@@ -89,6 +89,8 @@ import { FetchGroups } from '../../actions/api/requestGroups';
 
 import { FetchInactiveHosts } from '../../actions/api/inactive';
 
+import { FetchUtilization } from '../../actions/api/utilization';
+
 const user = buildApiActionReducer(FetchUser);
 const addStarredRequests = buildApiActionReducer(AddStarredRequests, []);
 const deleteStarredRequests = buildApiActionReducer(DeleteStarredRequests, []);
@@ -142,6 +144,7 @@ const taskHistory = buildApiActionReducer(FetchTaskSearchParams, []);
 const tasks = buildApiActionReducer(FetchTasksInState, []);
 const requestGroups = buildApiActionReducer(FetchGroups, []);
 const inactiveHosts = buildApiActionReducer(FetchInactiveHosts, []);
+const utilization = buildApiActionReducer(FetchUtilization, {});
 
 export default combineReducers({
   user,
@@ -197,4 +200,5 @@ export default combineReducers({
   taskHistory,
   requestGroups,
   inactiveHosts,
+  utilization
 });
