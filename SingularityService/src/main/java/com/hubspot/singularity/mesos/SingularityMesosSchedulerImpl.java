@@ -205,7 +205,7 @@ public class SingularityMesosSchedulerImpl extends SingularityMesosScheduler {
       final Set<OfferID> acceptedOffers = Sets.newHashSetWithExpectedSize(offersToCheck.size());
 
       try {
-        List<SingularityOfferHolder> offerHolders = offerScheduler.checkOffers(offers);
+        List<SingularityOfferHolder> offerHolders = offerScheduler.checkOffers(offersToCheck);
 
         for (SingularityOfferHolder offerHolder : offerHolders) {
           if (!offerHolder.getAcceptedTasks().isEmpty()) {
