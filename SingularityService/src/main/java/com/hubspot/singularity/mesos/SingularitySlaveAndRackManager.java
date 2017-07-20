@@ -5,7 +5,9 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 
 import javax.inject.Singleton;
 
@@ -208,13 +210,26 @@ public class SingularitySlaveAndRackManager {
         }
         break;
       case OPTIMISTIC:
-        final double numPerSlave = numDesiredInstances / (double) stateCache.getNumActiveSlaves();
+        Collection<SingularityTaskId> currentlyActiveTasksForRequestClusterwide = stateCache.getActiveTaskIdsForRequest(taskRequest.getRequest().getId());
 
-        final boolean isSlaveOk = numOnSlave < numPerSlave;
+        // If no tasks are active for this request yet, we can fall back to greedy.
+        if (currentlyActiveTasksForRequestClusterwide.size() > 0) {
 
-        if (!isSlaveOk) {
-          LOG.trace("Rejecting OPTIMISTIC task {} from slave {} ({}) due to numOnSlave {}", taskRequest.getRequest().getId(), slaveId, host, numOnSlave);
-          return SlaveMatchState.SLAVE_SATURATED;
+          Set<String> currentHostsForRequest = currentlyActiveTasksForRequestClusterwide.stream()
+              .map(SingularityTaskId::getSanitizedHost)
+              .collect(Collectors.toSet());
+
+          final double numPerSlave = currentlyActiveTasksForRequestClusterwide.size() / (double) currentHostsForRequest.size();
+
+          final boolean isSlaveOk = numOnSlave <= numPerSlave;
+
+          if (!isSlaveOk) {
+            LOG.trace(
+                "Rejecting OPTIMISTIC task {} from slave {} ({}) due to numOnSlave {} and numPerSlave {} (based on currentlyActiveTasksForRequest {} and currentHostsForRequest {})",
+                taskRequest.getRequest().getId(), slaveId, host, numOnSlave, numPerSlave, currentlyActiveTasksForRequestClusterwide.size(), currentHostsForRequest.size()
+            );
+            return SlaveMatchState.SLAVE_SATURATED;
+          }
         }
         break;
       case GREEDY:

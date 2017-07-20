@@ -15,7 +15,8 @@ public class MesosTaskStatisticsObject {
   private final long memLimitBytes;
   private final long memMappedFileBytes;
   private final long memRssBytes;
-  private final double timestamp;
+  private final long memTotalBytes;
+  private final double timestampSeconds;
 
   @JsonCreator
   public MesosTaskStatisticsObject(@JsonProperty("cpus_limit") int cpusLimit,
@@ -29,7 +30,8 @@ public class MesosTaskStatisticsObject {
                                    @JsonProperty("mem_limit_bytes") long memLimitBytes,
                                    @JsonProperty("mem_mapped_file_bytes") long memMappedFileBytes,
                                    @JsonProperty("mem_rss_bytes") long memRssBytes,
-                                   @JsonProperty("timestamp") double timestamp) {
+                                   @JsonProperty("mem_total_bytes") long memTotalBytes,
+                                   @JsonProperty("timestamp") double timestampSeconds) {
     this.cpusLimit = cpusLimit;
     this.cpusNrPeriods = cpusNrPeriods;
     this.cpusNrThrottled = cpusNrThrottled;
@@ -41,7 +43,8 @@ public class MesosTaskStatisticsObject {
     this.memLimitBytes = memLimitBytes;
     this.memMappedFileBytes = memMappedFileBytes;
     this.memRssBytes = memRssBytes;
-    this.timestamp = timestamp;
+    this.memTotalBytes = memTotalBytes;
+    this.timestampSeconds = timestampSeconds;
   }
 
   public int getCpusLimit() {
@@ -88,8 +91,12 @@ public class MesosTaskStatisticsObject {
     return memRssBytes;
   }
 
-  public double getTimestamp() {
-    return timestamp;
+  public long getMemTotalBytes() {
+    return memTotalBytes;
+  }
+
+  public double getTimestampSeconds() {
+    return timestampSeconds;
   }
 
   @Override
@@ -106,7 +113,8 @@ public class MesosTaskStatisticsObject {
         ", memLimitBytes=" + memLimitBytes +
         ", memMappedFileBytes=" + memMappedFileBytes +
         ", memRssBytes=" + memRssBytes +
-        ", timestamp=" + timestamp +
+        ", memTotalBytes=" + memTotalBytes +
+        ", timestampSeconds=" + timestampSeconds +
         '}';
   }
 }

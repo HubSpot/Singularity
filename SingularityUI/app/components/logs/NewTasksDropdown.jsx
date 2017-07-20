@@ -1,38 +1,100 @@
 import React from 'react';
-import classNames from 'classnames';
+import Checkbox from 'react-bootstrap/lib/Checkbox';
+import {ButtonGroup, DropdownButton} from 'react-bootstrap';
 
-const NewTasksDropdown = ({ready, runningTasks, visibleTasks=[], onToggle}) => {
-  const renderTaskItems = () => {
-    if (!ready || !runningTasks) {
+class NewTasksDropdown extends React.Component {
+
+  handleSelectAll() {
+    if (this.props.visibleTasks.length >= Math.min(this.props.runningTasks.length, 8)) {
+      if (!this.props.visibleTasks.includes(_.first(this.props.runningTasks).taskId.id)) {
+        this.props.onToggle(_.first(this.props.runningTasks).taskId.id);
+      }
+      _.rest(this.props.runningTasks).forEach((task) => {
+        if (this.props.visibleTasks.includes(task.taskId.id)) {
+          this.props.onToggle(task.taskId.id);
+        }
+      });
+    } else {
+      _.take(this.props.runningTasks, 8).forEach((task) => {
+        if (!this.props.visibleTasks.includes(task.taskId.id)) {
+          this.props.onToggle(task.taskId.id);
+        }
+      });
+      _.rest(this.props.runningTasks, 9).forEach((task) => {
+        if (this.props.visibleTasks.includes(task.taskId.id)) {
+          this.props.onToggle(task.taskId.id);
+        }
+      });
+    }
+  }
+
+  renderTaskItems() {
+    if (!this.props.ready || !this.props.runningTasks) {
       return (<li><a className="disabled">Loading...</a></li>);
     }
 
-    if (runningTasks.length === 0) {
+    if (this.props.runningTasks.length === 0) {
       return (<li><a className="disabled">No running instances</a></li>);
     }
 
-    return runningTasks.map((task, key) => {
-      const checkedClass = visibleTasks.includes(task.taskId.id)
-        ? 'glyphicon-check'
-        : 'glyphicon-unchecked';
+    const listItems = [];
 
-      return (<li key={key}>
-          <a onClick={() => onToggle(task.taskId.id)}>
-              <span className={classNames('glyphicon', checkedClass)} />
-              <span>Instance {task.taskId.instanceNo}</span>
+    if (this.props.runningTasks.length > 1) {
+      listItems.push(
+        <li key="select-all">
+          <a>
+            <Checkbox
+              inline={true}
+              checked={this.props.visibleTasks.length >= Math.min(this.props.runningTasks.length, 8)}
+              onChange={() => this.handleSelectAll()}
+            >
+              Select All
+            </Checkbox>
           </a>
-      </li>);
-    });
-  };
+        </li>
+      );
+    }
 
-  return (<div className="btn-group" title="Select Instances">
-    <button type="button" className="btn btn-default btn-sm dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-      <span className="glyphicon glyphicon-tasks"></span> <span className="caret"></span>
-    </button>
-    <ul className="dropdown-menu dropdown-menu-right">
-      {renderTaskItems()}
-    </ul>
-  </div>);
+    listItems.push(this.props.runningTasks.map((task, key) => {
+      return (
+        <li key={key}>
+          <a>
+            <Checkbox
+              inline={true}
+              checked={this.props.visibleTasks.includes(task.taskId.id)}
+              onChange={() => this.props.onToggle(task.taskId.id)}
+              disabled={this.props.visibleTasks.includes(task.taskId.id) && this.props.visibleTasks.length === 1}
+            >
+              Instance {task.taskId.instanceNo}
+            </Checkbox>
+          </a>
+        </li>
+      );
+    }));
+
+    return listItems;
+  }
+
+  render() {
+    return (
+      <ButtonGroup title="Select Instances">
+        <DropdownButton id="instance-dropdown" bsSize="small" title={<span className="glyphicon glyphicon-tasks"></span>}>
+          {this.renderTaskItems()}
+        </DropdownButton>
+      </ButtonGroup>
+    );
+  }
+}
+
+NewTasksDropdown.propTypes = {
+  ready: React.PropTypes.bool,
+  runningTasks: React.PropTypes.array,
+  visibleTasks: React.PropTypes.array,
+  onToggle: React.PropTypes.func
+};
+
+NewTasksDropdown.defaultProps = {
+  visibleTasks: []
 };
 
 export default NewTasksDropdown;
