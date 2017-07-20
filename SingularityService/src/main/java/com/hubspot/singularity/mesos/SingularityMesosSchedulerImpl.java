@@ -273,6 +273,7 @@ public class SingularityMesosSchedulerImpl extends SingularityMesosScheduler {
     } catch (Throwable t) {
       LOG.error("Scheduler threw an uncaught exception - exiting", t);
       exceptionNotifier.notify(String.format("Scheduler threw an uncaught exception (%s)", t.getMessage()), t);
+      notifyStopping();
       abort.abort(AbortReason.UNRECOVERABLE_ERROR, Optional.of(t));
     } finally {
       LOG.debug("Handled status update for {} in {}", status.getTaskId().getValue(), JavaUtils.duration(start));
@@ -303,6 +304,7 @@ public class SingularityMesosSchedulerImpl extends SingularityMesosScheduler {
   public void error(String message) {
     callWithLock(() -> {
       LOG.error("Aborting due to error: {}", message);
+      notifyStopping();
       abort.abort(AbortReason.MESOS_ERROR, Optional.absent());
     }, "error");
   }
@@ -316,6 +318,7 @@ public class SingularityMesosSchedulerImpl extends SingularityMesosScheduler {
   public void onUncaughtException(Throwable t) {
     callWithLock(() -> {
       LOG.error("Aborting due to error: {}", t.getMessage(), t);
+      notifyStopping();
       abort.abort(AbortReason.MESOS_ERROR, Optional.absent());
     }, "errorUncaughtException");
   }
@@ -324,6 +327,7 @@ public class SingularityMesosSchedulerImpl extends SingularityMesosScheduler {
   public void onConnectException(Throwable t) {
     callWithLock(() -> {
       LOG.error("Unable to connect to mesos master {}", t.getMessage(), t);
+      notifyStopping();
       abort.abort(AbortReason.MESOS_ERROR, Optional.absent());
     }, "errorUncaughtException", false);
   }
@@ -350,6 +354,7 @@ public class SingularityMesosSchedulerImpl extends SingularityMesosScheduler {
     } catch (Throwable t) {
       LOG.error("Scheduler threw an uncaught exception - exiting", t);
       exceptionNotifier.notify(String.format("Scheduler threw an uncaught exception (%s)", t.getMessage()), t);
+      notifyStopping();
       abort.abort(AbortReason.UNRECOVERABLE_ERROR, Optional.of(t));
     } finally {
       lock.unlock(name, start);
