@@ -14,47 +14,35 @@ public class SingularitySlaveUsage {
 
   public static final long BYTES_PER_MEGABYTE = 1000L * 1000L;
 
-  private final long memoryBytesUsed;
-  private final long memoryMbReserved;
-  private final int numTasks;
-  private final long timestamp;
   private final double cpusUsed;
   private final double cpusReserved;
-  private final Optional<Long> memoryMbTotal;
   private final Optional<Double> cpusTotal;
+  private final long memoryBytesUsed;
+  private final long memoryMbReserved;
+  private final Optional<Long> memoryMbTotal;
   private final Map<ResourceUsageType, Number> longRunningTasksUsage;
+  private final int numTasks;
+  private final long timestamp;
 
   @JsonCreator
-  public SingularitySlaveUsage(@JsonProperty("memoryBytesUsed") long memoryBytesUsed,
-                               @JsonProperty("memoryMbReserved") long memoryMbReserved,
-                               @JsonProperty("timestamp") long timestamp,
-                               @JsonProperty("cpusUsed") double cpusUsed,
+  public SingularitySlaveUsage(@JsonProperty("cpusUsed") double cpusUsed,
                                @JsonProperty("cpusReserved") double cpusReserved,
-                               @JsonProperty("numTasks") int numTasks,
-                               @JsonProperty("memoryMbTotal") Optional<Long> memoryMbTotal,
                                @JsonProperty("cpusTotal") Optional<Double> cpusTotal,
-                               @JsonProperty("longRunningTasksUsage") Map<ResourceUsageType, Number> longRunningTasksUsage) {
-    this.memoryBytesUsed = memoryBytesUsed;
-    this.memoryMbReserved = memoryMbReserved;
-    this.timestamp = timestamp;
+                               @JsonProperty("memoryBytesUsed") long memoryBytesUsed,
+                               @JsonProperty("memoryMbReserved") long memoryMbReserved,
+                               @JsonProperty("memoryMbTotal") Optional<Long> memoryMbTotal,
+                               @JsonProperty("longRunningTasksUsage") Map<ResourceUsageType, Number> longRunningTasksUsage,
+                               @JsonProperty("numTasks") int numTasks,
+                               @JsonProperty("timestamp") long timestamp) {
     this.cpusUsed = cpusUsed;
     this.cpusReserved = cpusReserved;
-    this.numTasks = numTasks;
-    this.memoryMbTotal = memoryMbTotal;
     this.cpusTotal = cpusTotal;
+    this.memoryBytesUsed = memoryBytesUsed;
+    this.memoryMbReserved = memoryMbReserved;
+    this.memoryMbTotal = memoryMbTotal;
     this.longRunningTasksUsage = longRunningTasksUsage;
-  }
-
-  public long getMemoryBytesUsed() {
-    return memoryBytesUsed;
-  }
-
-  public long getMemoryMbReserved() {
-    return memoryMbReserved;
-  }
-
-  public long getTimestamp() {
-    return timestamp;
+    this.numTasks = numTasks;
+    this.timestamp = timestamp;
   }
 
   public double getCpusUsed() {
@@ -65,24 +53,36 @@ public class SingularitySlaveUsage {
     return cpusReserved;
   }
 
-  public int getNumTasks() {
-    return numTasks;
+  public Optional<Double> getCpusTotal() {
+    return cpusTotal;
   }
 
-  public Optional<Long> getMemoryBytesTotal() {
-    return memoryMbTotal.isPresent() ? Optional.of(memoryMbTotal.get() * BYTES_PER_MEGABYTE) : Optional.absent();
+  public long getMemoryBytesUsed() {
+    return memoryBytesUsed;
+  }
+
+  public long getMemoryMbReserved() {
+    return memoryMbReserved;
   }
 
   public Optional<Long> getMemoryMbTotal() {
     return memoryMbTotal.isPresent() ? Optional.of(memoryMbTotal.get()) : Optional.absent();
   }
 
-  public Optional<Double> getCpusTotal() {
-    return cpusTotal;
+  public Optional<Long> getMemoryBytesTotal() {
+    return memoryMbTotal.isPresent() ? Optional.of(memoryMbTotal.get() * BYTES_PER_MEGABYTE) : Optional.absent();
   }
 
   public Map<ResourceUsageType, Number> getLongRunningTasksUsage() {
     return longRunningTasksUsage;
+  }
+
+  public int getNumTasks() {
+    return numTasks;
+  }
+
+  public long getTimestamp() {
+    return timestamp;
   }
 
   @Override

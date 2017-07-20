@@ -146,7 +146,7 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
           cpusTotal = Optional.of(slave.getResources().get().getNumCpus().get().doubleValue());
         }
 
-        SingularitySlaveUsage slaveUsage = new SingularitySlaveUsage(memoryBytesUsedOnSlave, memoryMbReservedOnSlave, now, cpusUsedOnSlave, cpuReservedOnSlave, allTaskUsage.size(), memoryMbTotal, cpusTotal, longRunningTasksUsage);
+        SingularitySlaveUsage slaveUsage = new SingularitySlaveUsage(cpusUsedOnSlave, cpuReservedOnSlave, cpusTotal, memoryBytesUsedOnSlave, memoryMbReservedOnSlave, memoryMbTotal, allTaskUsage.size(), now, longRunningTasksUsage);
         List<Long> slaveTimestamps = usageManager.getSlaveUsageTimestamps(slave.getId());
         if (slaveTimestamps.size() + 1 > configuration.getNumUsageToKeep()) {
           usageManager.deleteSpecificSlaveUsage(slave.getId(), slaveTimestamps.get(0));
