@@ -59,11 +59,11 @@ public class SingularityRunnerExceptionNotifier {
     final StackTraceElement[] currentThreadStackTrace = Thread.currentThread().getStackTrace();
 
     final EventBuilder eventBuilder = new EventBuilder()
-            .setCulprit(getPrefix() + message)
-            .setMessage(Strings.nullToEmpty(message))
-            .setLevel(Event.Level.ERROR)
-            .setLogger(getCallingClassName(currentThreadStackTrace))
-            .addSentryInterface(new ExceptionInterface(t));
+            .withCulprit(getPrefix() + message)
+            .withMessage(Strings.nullToEmpty(message))
+            .withLevel(Event.Level.ERROR)
+            .withLogger(getCallingClassName(currentThreadStackTrace))
+            .withSentryInterface(new ExceptionInterface(t));
 
     if (extraData != null && !extraData.isEmpty()) {
       for (Map.Entry<String, String> entry : extraData.entrySet()) {
@@ -82,13 +82,13 @@ public class SingularityRunnerExceptionNotifier {
     final StackTraceElement[] currentThreadStackTrace = Thread.currentThread().getStackTrace();
 
     final EventBuilder eventBuilder = new EventBuilder()
-            .setMessage(getPrefix() + subject)
-            .setLevel(Event.Level.ERROR)
-            .setLogger(getCallingClassName(currentThreadStackTrace));
+            .withMessage(getPrefix() + subject)
+            .withLevel(Event.Level.ERROR)
+            .withLogger(getCallingClassName(currentThreadStackTrace));
 
     if (extraData != null && !extraData.isEmpty()) {
       for (Map.Entry<String, String> entry : extraData.entrySet()) {
-        eventBuilder.addExtra(entry.getKey(), entry.getValue());
+        eventBuilder.withExtra(entry.getKey(), entry.getValue());
       }
     }
 

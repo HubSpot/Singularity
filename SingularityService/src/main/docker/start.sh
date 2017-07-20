@@ -14,7 +14,7 @@ fi
 args+=( -Xmx${SINGULARITY_MAX_HEAP:-512m} )
 args+=( -Djava.net.preferIPv4Stack=true )
 args+=( -Ddw.server.applicationContextPath="${SINGULARITY_APP_CTX:=/singularity}" )
-args+=( -Ddw.mesos.master="${SINGULARITY_MESOS_MASTER:=zk://localhost:2181/mesos}" )
+args+=( -Ddw.mesos.master="${SINGULARITY_MESOS_MASTER:=localhost:5050}" )
 args+=( -Ddw.mesos.frameworkName="${SINGULARITY_MESOS_FRAMEWORK_NAME:=Singularity}" )
 args+=( -Ddw.mesos.frameworkId="${SINGULARITY_MESOS_FRAMEWORK_ID:=Singularity}" )
 [[ ! ${SINGULARITY_MESOS_FRAMEWORK_ROLE:-} ]] || args+=( -Ddw.mesos.frameworkRole="${SINGULARITY_MESOS_FRAMEWORK_ROLE}" )

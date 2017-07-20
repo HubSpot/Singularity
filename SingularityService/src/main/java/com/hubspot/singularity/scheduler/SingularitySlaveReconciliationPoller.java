@@ -5,7 +5,7 @@ import java.util.concurrent.TimeUnit;
 
 import javax.inject.Singleton;
 
-import org.apache.mesos.Protos.MasterInfo;
+import org.apache.mesos.v1.Protos.MasterInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -17,10 +17,10 @@ import com.hubspot.mesos.client.MesosClient;
 import com.hubspot.mesos.json.MesosMasterStateObject;
 import com.hubspot.singularity.MachineState;
 import com.hubspot.singularity.SingularityDeleteResult;
-import com.hubspot.singularity.SingularityDriverManager;
 import com.hubspot.singularity.SingularitySlave;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.SlaveManager;
+import com.hubspot.singularity.mesos.SingularityMesosScheduler;
 import com.hubspot.singularity.mesos.SingularitySlaveAndRackManager;
 
 @Singleton
@@ -32,16 +32,16 @@ public class SingularitySlaveReconciliationPoller extends SingularityLeaderOnlyP
   private final SingularityConfiguration configuration;
   private final SingularitySlaveAndRackManager slaveAndRackManager;
   private final MesosClient mesosClient;
-  private final SingularityDriverManager driverManager;
+  private final SingularityMesosScheduler mesosScheduler;
 
-  @Inject SingularitySlaveReconciliationPoller(SingularityConfiguration configuration, SlaveManager slaveManager, SingularitySlaveAndRackManager slaveAndRackManager, MesosClient mesosClient, SingularityDriverManager driverManager) {
+  @Inject SingularitySlaveReconciliationPoller(SingularityConfiguration configuration, SlaveManager slaveManager, SingularitySlaveAndRackManager slaveAndRackManager, MesosClient mesosClient, SingularityMesosScheduler mesosScheduler) {
     super(configuration.getReconcileSlavesEveryMinutes(), TimeUnit.MINUTES);
 
     this.slaveManager = slaveManager;
     this.configuration = configuration;
     this.slaveAndRackManager = slaveAndRackManager;
     this.mesosClient = mesosClient;
-    this.driverManager = driverManager;
+    this.mesosScheduler = mesosScheduler;
   }
 
   @Override
@@ -52,7 +52,7 @@ public class SingularitySlaveReconciliationPoller extends SingularityLeaderOnlyP
 
   private void refereshSlavesAndRacks() {
     try {
-      Optional<MasterInfo> maybeMasterInfo = driverManager.getMaster();
+      Optional<MasterInfo> maybeMasterInfo = mesosScheduler.getMaster();
       if (maybeMasterInfo.isPresent()) {
         final String uri = mesosClient.getMasterUri(MesosUtils.getMasterHostAndPort(maybeMasterInfo.get()));
         MesosMasterStateObject state = mesosClient.getMasterState(uri);

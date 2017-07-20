@@ -1,6 +1,6 @@
 package com.hubspot.singularity;
 
-import static org.mockito.Matchers.eq;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.spy;
 
@@ -8,8 +8,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.mesos.Protos;
-import org.apache.mesos.Protos.TaskState;
+import org.apache.mesos.v1.Protos;
+import org.apache.mesos.v1.Protos.TaskState;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;

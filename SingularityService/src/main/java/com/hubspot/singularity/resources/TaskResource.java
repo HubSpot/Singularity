@@ -254,7 +254,7 @@ public class TaskResource extends AbstractLeaderAwareResource {
 
     String executorIdToMatch = null;
 
-    if (task.getMesosTask().getExecutor().hasExecutorId()) {
+    if (task.getMesosTask().hasExecutor()) {
       executorIdToMatch = task.getMesosTask().getExecutor().getExecutorId().getValue();
     } else {
       executorIdToMatch = taskId;
