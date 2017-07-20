@@ -1,6 +1,6 @@
 import { createStore, compose, applyMiddleware } from 'redux';
 import thunk from 'redux-thunk';
-import { createLogger } from 'redux-logger'
+import logger from 'redux-logger'
 import { routerMiddleware } from 'react-router-redux';
 
 import rootReducer from 'reducers';
@@ -10,7 +10,7 @@ export default function configureStore(initialState = {}, browserHistory) {
 
   let composeEnhancers = compose;
   if (window.localStorage.enableReduxLogging) {
-    middlewares.push(createLogger());
+    if (logger) middlewares.push(logger());
   }
   if (window.localStorage.enableReduxExtension) {
     if (window.__REDUX_DEVTOOLS_EXTENSION_COMPOSE__) composeEnhancers = window.__REDUX_DEVTOOLS_EXTENSION_COMPOSE__;
