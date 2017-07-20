@@ -99,8 +99,9 @@ public class SingularityMesosSchedulerClient {
         public void run() {
           try {
             connect(URI.create(mesosMasterURI), frameworkInfo, scheduler);
-          } catch (URISyntaxException e) {
+          } catch (RuntimeException|URISyntaxException e) {
             LOG.error("Could not connect: ", e);
+            scheduler.onConnectException(e);
           }
         }
 
@@ -231,7 +232,7 @@ public class SingularityMesosSchedulerClient {
       openStream.await();
     } catch (Throwable t) {
       LOG.error("Observable was unexpectedly closed", t);
-      scheduler.onUncaughtException(t);
+      scheduler.onConnectException(t);
     }
   }
 

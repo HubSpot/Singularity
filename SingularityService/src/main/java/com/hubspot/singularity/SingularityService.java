@@ -30,6 +30,8 @@ public class SingularityService<T extends SingularityConfiguration> extends Appl
 
   public static final String API_BASE_PATH = "/api";
 
+  private GuiceBundle<SingularityConfiguration> guiceBundle;
+
   @Override
   public void initialize(final Bootstrap<T> bootstrap) {
     if (!Strings.isNullOrEmpty(System.getProperty(SINGULARITY_DEFAULT_CONFIGURATION_PROPERTY))) {
@@ -40,7 +42,7 @@ public class SingularityService<T extends SingularityConfiguration> extends Appl
     final Iterable<? extends Bundle> additionalBundles = checkNotNull(getDropwizardBundles(bootstrap), "getDropwizardBundles() returned null");
     final Iterable<? extends ConfiguredBundle<T>> additionalConfiguredBundles = checkNotNull(getDropwizardConfiguredBundles(bootstrap), "getDropwizardConfiguredBundles() returned null");
 
-    final GuiceBundle<SingularityConfiguration> guiceBundle = GuiceBundle.defaultBuilder(SingularityConfiguration.class)
+    guiceBundle = GuiceBundle.defaultBuilder(SingularityConfiguration.class)
         .modules(new SingularityServiceModule())
         .modules(additionalModules)
         .build();
@@ -72,7 +74,13 @@ public class SingularityService<T extends SingularityConfiguration> extends Appl
   }
 
   @Override
-  public void run(final T configuration, final Environment environment) throws Exception {}
+  public void run(final T configuration, final Environment environment) throws Exception {
+    Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+      if (guiceBundle != null) {
+        SingletonCloser.closeAllSingletonClosables(guiceBundle.getInjector());
+      }
+    }));
+  }
 
   /**
    * Guice modules used in addition to the modules required by Singularity. This is an extension point when embedding
