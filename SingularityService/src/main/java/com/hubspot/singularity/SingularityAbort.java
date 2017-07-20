@@ -90,11 +90,11 @@ public class SingularityAbort implements ConnectionStateListener {
       } catch (Exception e) {
         LOG.warn("While aborting server", e);
       } finally {
-        System.exit(0);
+        System.exit(1);
       }
     } else {
       LOG.warn("SingularityAbort called before server has fully initialized!");
-      System.exit(0); // Use the hammer.
+      System.exit(1); // Use the hammer.
     }
   }
 
