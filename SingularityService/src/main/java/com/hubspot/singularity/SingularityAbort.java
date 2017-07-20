@@ -72,6 +72,7 @@ public class SingularityAbort implements ConnectionStateListener {
   public void abort(AbortReason abortReason, Optional<Throwable> throwable) {
     if (!aborting.getAndSet(true)) {
       try {
+
         sendAbortNotification(abortReason, throwable);
         SingletonCloser.closeAllSingletonClosables(injector);
         flushLogs();
