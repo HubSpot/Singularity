@@ -1,7 +1,7 @@
 import React, { PropTypes } from 'react';
 import classNames from 'classnames';
 import CircularProgressbar from 'react-circular-progressbar';
-import {Link} from "react-router";
+import {Link} from 'react-router';
 
 const Aggregate = ({width, vcenter, graph, className, value, label, link}) => {
   const valueComponent = (
