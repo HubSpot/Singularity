@@ -2,6 +2,7 @@ package com.hubspot.singularity;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import java.io.IOException;
 import java.util.Set;
 
 import javax.inject.Inject;
@@ -35,7 +36,12 @@ public class SingularityLeaderLatch extends LeaderLatch implements Managed {
 
   @Override
   public void stop() throws Exception {
-    LOG.debug("Stopping leader latch");
+    close();
+  }
+
+  @Override
+  public void close() throws IOException {
+    LOG.info("Stopping leader latch");
     super.close();
   }
 

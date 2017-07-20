@@ -19,6 +19,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.net.HostAndPort;
 import com.google.inject.Inject;
+import com.google.inject.Injector;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.config.SMTPConfiguration;
 import com.hubspot.singularity.config.SingularityConfiguration;
@@ -36,6 +37,7 @@ public class SingularityAbort implements ConnectionStateListener {
   private final SingularitySmtpSender smtpSender;
   private final HostAndPort hostAndPort;
   private final SingularityExceptionNotifier exceptionNotifier;
+  private final Injector injector;
 
   private final ServerProvider serverProvider;
   private final AtomicBoolean aborting = new AtomicBoolean();
@@ -45,11 +47,13 @@ public class SingularityAbort implements ConnectionStateListener {
                           ServerProvider serverProvider,
                           SingularityConfiguration configuration,
                           SingularityExceptionNotifier exceptionNotifier,
+                          Injector injector,
                           @Named(SingularityMainModule.HTTP_HOST_AND_PORT) HostAndPort hostAndPort) {
     this.maybeSmtpConfiguration = configuration.getSmtpConfigurationOptional();
     this.serverProvider = serverProvider;
     this.smtpSender = smtpSender;
     this.exceptionNotifier = exceptionNotifier;
+    this.injector = injector;
     this.hostAndPort = hostAndPort;
   }
 
@@ -69,6 +73,7 @@ public class SingularityAbort implements ConnectionStateListener {
     if (!aborting.getAndSet(true)) {
       try {
         sendAbortNotification(abortReason, throwable);
+        SingletonCloser.closeAllSingletonClosables(injector);
         flushLogs();
       } finally {
         exit();
@@ -84,11 +89,11 @@ public class SingularityAbort implements ConnectionStateListener {
       } catch (Exception e) {
         LOG.warn("While aborting server", e);
       } finally {
-        System.exit(1);
+        System.exit(0);
       }
     } else {
       LOG.warn("SingularityAbort called before server has fully initialized!");
-      System.exit(1); // Use the hammer.
+      System.exit(0); // Use the hammer.
     }
   }
 

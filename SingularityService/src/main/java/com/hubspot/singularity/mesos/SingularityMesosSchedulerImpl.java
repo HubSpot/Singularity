@@ -320,6 +320,14 @@ public class SingularityMesosSchedulerImpl extends SingularityMesosScheduler {
     }, "errorUncaughtException");
   }
 
+  @Override
+  public void onConnectException(Throwable t) {
+    callWithLock(() -> {
+      LOG.error("Unable to connect to mesos master {}", t.getMessage(), t);
+      abort.abort(AbortReason.MESOS_ERROR, Optional.absent());
+    }, "errorUncaughtException", false);
+  }
+
   public void start() throws Exception {
     // If more than one host is provided choose at random, we will be redirected if the host is not the master
     List<String> masters = Arrays.asList(configuration.getMesosConfiguration().getMaster().split(","));
