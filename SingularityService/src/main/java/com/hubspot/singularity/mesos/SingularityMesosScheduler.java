@@ -147,6 +147,8 @@ public abstract class SingularityMesosScheduler {
    */
   public abstract SchedulerState getState();
 
+  public abstract long getEventBufferSize();
+
   public abstract void notifyStopping();
 
   public abstract void slaveLost(AgentID slaveId);

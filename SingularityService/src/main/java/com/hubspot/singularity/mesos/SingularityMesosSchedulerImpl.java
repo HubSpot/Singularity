@@ -332,6 +332,11 @@ public class SingularityMesosSchedulerImpl extends SingularityMesosScheduler {
     }, "errorUncaughtException", false);
   }
 
+  @Override
+  public long getEventBufferSize() {
+    return configuration.getMesosConfiguration().getRxEventBufferSize();
+  }
+
   public void start() throws Exception {
     // If more than one host is provided choose at random, we will be redirected if the host is not the master
     List<String> masters = Arrays.asList(configuration.getMesosConfiguration().getMaster().split(","));
