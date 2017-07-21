@@ -38,6 +38,7 @@ export const FIELDS = {
         {id: 'maxTaskThreads', type: 'number'},
         {id: 'loggingTag', type: 'text'},
         {id: 'loggingExtraFields', type: 'map'},
+        {id: 'logrotateFrequency', type: 'text'},
         {id: 'preserveTaskSandboxAfterFinish', type: 'text'},
         {id: 'skipLogrotateAndCompress', type: 'text'},
         {id: 'loggingS3Bucket', type: 'text'},
