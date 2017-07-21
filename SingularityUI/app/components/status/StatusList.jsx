@@ -50,7 +50,7 @@ export default class StatusList extends React.Component {
 
   renderBefore(dataItem) {
     return dataItem.beforeFill && (
-      <span className={`chart__legend-fill chart-fill-${dataItem.beforeFill}`}></span>
+      <span className={`chart__legend-fill bg-${dataItem.beforeFill}`}></span>
     );
   }
 

@@ -5,7 +5,7 @@ import classNames from 'classnames';
 export const DeployState = (props) => {
   return (
     <span className="deploy-state" data-state={props.state || 'PENDING'}>
-        {props.state}
+      {props.state}
     </span>
   );
 };
@@ -21,10 +21,10 @@ export const InfoBox = (props) => {
   }
   return (
     <li className="col-sm-6 col-md-3">
-        <div>
-            <h4>{props.name}<a className={classNames(props.copyableClassName, 'copy-btn')} data-clipboard-text={value}>Copy</a></h4>
-            <p>{value}</p>
-        </div>
+      <div>
+        <h4>{props.name}<a className={classNames(props.copyableClassName, 'copy-btn')} data-clipboard-text={value}>Copy</a></h4>
+        <p>{value}</p>
+      </div>
     </li>
   );
 };
