@@ -772,7 +772,7 @@ class NewDeployForm extends Component {
     );
     const logrotateFrequency = (
       <SelectFormGroup
-        id={`logrotate-frequency`}
+        id={"logrotate-frequency"}
         label="Logrotate Frequency"
         value={this.props.form.logrotateFrequency}
         defaultValue="DAILY"
