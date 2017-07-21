@@ -306,7 +306,7 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
     double maxUnderUtilizedCpu = 0;
     double maxOverUtilizedCpu = 0;
     long maxUnderUtilizedMemBytes = 0;
-    long maxUnderutilizedDiskBytes = 0;
+    long maxUnderUtilizedDiskBytes = 0;
 
     String maxUnderUtilizedCpuRequestId = null;
     String maxOverUtilizedCpuRequestId = null;
@@ -365,8 +365,8 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
         if (unusedDiskBytes > 0) {
           numRequestsWithUnderUtilizedDiskBytes++;
           totalUnderUtilizedDiskBytes += unusedDiskBytes;
-          if (unusedDiskBytes > maxUnderutilizedDiskBytes) {
-            maxUnderutilizedDiskBytes = unusedDiskBytes;
+          if (unusedDiskBytes > maxUnderUtilizedDiskBytes) {
+            maxUnderUtilizedDiskBytes = unusedDiskBytes;
             maxUnderUtilizedDiskBytesRequestId = requestId;
           }
           minUnderUtilizedDiskBytes = Math.min(unusedDiskBytes, minUnderUtilizedMemBytes);
@@ -381,7 +381,7 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
 
     return new SingularityClusterUtilization(new ArrayList<>(utilizationPerRequestId.values()), numRequestsWithUnderUtilizedCpu, numRequestsWithOverUtilizedCpu,
         numRequestsWithUnderUtilizedMemBytes, numRequestsWithUnderUtilizedDiskBytes, totalUnderUtilizedCpu, totalOverUtilizedCpu, totalUnderUtilizedMemBytes, totalUnderUtilizedDiskBytes, avgUnderUtilizedCpu, avgOverUtilizedCpu,
-        avgUnderUtilizedMemBytes, avgUnderUtilizedDiskBytes, maxUnderUtilizedCpu, maxOverUtilizedCpu, maxUnderUtilizedMemBytes, maxUnderutilizedDiskBytes, maxUnderUtilizedCpuRequestId, maxOverUtilizedCpuRequestId,
+        avgUnderUtilizedMemBytes, avgUnderUtilizedDiskBytes, maxUnderUtilizedCpu, maxOverUtilizedCpu, maxUnderUtilizedMemBytes, maxUnderUtilizedDiskBytes, maxUnderUtilizedCpuRequestId, maxOverUtilizedCpuRequestId,
         maxUnderUtilizedMemBytesRequestId, maxUnderUtilizedDiskBytesRequestId, getMin(minUnderUtilizedCpu), getMin(minOverUtilizedCpu), getMin(minUnderUtilizedMemBytes), getMin(minUnderUtilizedDiskBytes), totalMemBytesUsed,
         totalMemBytesAvailable, totalDiskBytesUsed, totalDiskBytesAvailable, totalCpuUsed, totalCpuAvailable, now);
   }
