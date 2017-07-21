@@ -505,7 +505,7 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
   }
 
   private MesosTaskStatisticsObject getStatistics(double cpuSecs, double timestamp, long memBytes) {
-    return new MesosTaskStatisticsObject(1, 0L, 0L, 0, 0, cpuSecs, 0L, 0L, 0L, 0L, 0L, memBytes, timestamp);
+    return new MesosTaskStatisticsObject(1, 0L, 0L, 0, 0, cpuSecs, 0L, 0L, 0L, 0L, 0L, memBytes, 0L, 0L, timestamp);
   }
 
   private long getTimestampSeconds(SingularityTaskId taskId, long seconds) {
@@ -518,7 +518,7 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
 
   private void saveTaskUsage(String taskId, long... times) {
     for (long time : times) {
-      usageManager.saveSpecificTaskUsage(taskId, new SingularityTaskUsage(0, time, 0));
+      usageManager.saveSpecificTaskUsage(taskId, new SingularityTaskUsage(0, time, 0, 0));
     }
   }
 
