@@ -111,9 +111,7 @@ class SingularityMesosTaskBuilder {
     bldr.addResources(MesosUtils.getCpuResource(desiredTaskResources.getCpus(), requiredRole));
     bldr.addResources(MesosUtils.getMemoryResource(desiredTaskResources.getMemoryMb(), requiredRole));
 
-    if (desiredTaskResources.getDiskMb() > 0) {
-      bldr.addResources(MesosUtils.getDiskResource(desiredTaskResources.getDiskMb(), requiredRole));
-    }
+    bldr.addResources(MesosUtils.getDiskResource(1.0, requiredRole));
 
     bldr.setSlaveId(offerHolder.getOffers().get(0).getSlaveId());
 
