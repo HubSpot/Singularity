@@ -7,6 +7,7 @@ import javax.inject.Named;
 import javax.inject.Singleton;
 
 import org.apache.curator.framework.CuratorFramework;
+import org.apache.curator.framework.recipes.leader.LeaderLatch;
 import org.apache.curator.framework.state.ConnectionState;
 import org.apache.curator.framework.state.ConnectionStateListener;
 import org.eclipse.jetty.server.Server;
@@ -72,13 +73,23 @@ public class SingularityAbort implements ConnectionStateListener {
   public void abort(AbortReason abortReason, Optional<Throwable> throwable) {
     if (!aborting.getAndSet(true)) {
       try {
-
         sendAbortNotification(abortReason, throwable);
-        SingletonCloser.closeAllSingletonClosables(injector);
+        if (abortReason != AbortReason.LOST_LEADERSHIP && abortReason != AbortReason.LOST_ZK_CONNECTION) {
+          attemptLeaderLatchClose();
+        }
+
         flushLogs();
       } finally {
         exit();
       }
+    }
+  }
+
+  private void attemptLeaderLatchClose() {
+    try {
+      injector.getInstance(LeaderLatch.class).close();
+    } catch (Exception e) {
+      LOG.error("While attempting to close leader latch", e);
     }
   }
 
