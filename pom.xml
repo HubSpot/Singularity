@@ -296,6 +296,12 @@
         <artifactId>jukito</artifactId>
         <version>1.5</version>
       </dependency>
+
+      <dependency>
+        <groupId>io.netty</groupId>
+        <artifactId>netty-codec</artifactId>
+        <version>4.1.4.Final</version>
+      </dependency>
     </dependencies>
   </dependencyManagement>
 
