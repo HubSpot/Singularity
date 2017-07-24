@@ -57,6 +57,8 @@ import com.hubspot.singularity.mesos.SingularitySlaveAndRackManager.CheckResult;
 import com.hubspot.singularity.scheduler.SingularityLeaderCacheCoordinator;
 import com.hubspot.singularity.sentry.SingularityExceptionNotifier;
 
+import io.netty.handler.codec.PrematureChannelClosureException;
+
 @Singleton
 public class SingularityMesosSchedulerImpl extends SingularityMesosScheduler {
 
@@ -317,9 +319,15 @@ public class SingularityMesosSchedulerImpl extends SingularityMesosScheduler {
   @Override
   public void onUncaughtException(Throwable t) {
     callWithLock(() -> {
-      LOG.error("Aborting due to error: {}", t.getMessage(), t);
-      notifyStopping();
-      abort.abort(AbortReason.MESOS_ERROR, Optional.absent());
+      if (t instanceof PrematureChannelClosureException) {
+        LOG.error("Lost connection to the mesos master, aborting", t);
+        notifyStopping();
+        abort.abort(AbortReason.LOST_MESOS_CONNECTION, Optional.absent());
+      } else {
+        LOG.error("Aborting due to error: {}", t.getMessage(), t);
+        notifyStopping();
+        abort.abort(AbortReason.MESOS_ERROR, Optional.absent());
+      }
     }, "errorUncaughtException");
   }
 
