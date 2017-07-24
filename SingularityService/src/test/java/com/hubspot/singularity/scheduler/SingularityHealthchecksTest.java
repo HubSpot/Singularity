@@ -374,7 +374,7 @@ public class SingularityHealthchecksTest extends SingularitySchedulerTestBase {
           .setHealthcheck(Optional.of(options)), Optional.of(new Resources(1, 64, 3, 0)));
 
       requestResource.postRequest(request.toBuilder().setInstances(Optional.of(2)).build());
-      scheduler.drainPendingQueue(stateCacheProvider.get());
+      scheduler.drainPendingQueue();
 
       String[] portRange = {"80:82"};
       sms.resourceOffers(driver, Arrays.asList(createOffer(20, 20000, "slave1", "host1", Optional.<String> absent(), Collections.<String, String>emptyMap(), portRange)));
@@ -405,7 +405,7 @@ public class SingularityHealthchecksTest extends SingularitySchedulerTestBase {
         .setHealthcheck(Optional.of(options)), Optional.absent());
 
       requestResource.postRequest(request.toBuilder().setInstances(Optional.of(2)).build());
-      scheduler.drainPendingQueue(stateCacheProvider.get());
+      scheduler.drainPendingQueue();
 
       String[] portRange = {"80:82"};
       sms.resourceOffers(driver, Arrays.asList(createOffer(20, 20000, "slave1", "host1", Optional.<String> absent(), Collections.<String, String> emptyMap(), portRange)));
