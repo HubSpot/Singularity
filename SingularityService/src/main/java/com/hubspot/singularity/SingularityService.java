@@ -75,13 +75,7 @@ public class SingularityService<T extends SingularityConfiguration> extends Appl
   }
 
   @Override
-  public void run(final T configuration, final Environment environment) throws Exception {
-    Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-      if (guiceBundle != null) {
-        SingletonCloser.closeAllSingletonClosables(guiceBundle.getInjector());
-      }
-    }));
-  }
+  public void run(final T configuration, final Environment environment) throws Exception {}
 
   /**
    * Guice modules used in addition to the modules required by Singularity. This is an extension point when embedding
