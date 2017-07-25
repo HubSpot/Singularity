@@ -326,7 +326,7 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
         String requestId = utilization.getRequestId();
         long memoryBytesReserved = (long) (maybeDeploy.get().getResources().get().getMemoryMb() * SingularitySlaveUsage.BYTES_PER_MEGABYTE);
         double cpuReserved = maybeDeploy.get().getResources().get().getCpus();
-        long diskBytesReserved = (long) maybeDeploy.get().getResources().get().getMemoryMb() * SingularitySlaveUsage.BYTES_PER_MEGABYTE;
+        long diskBytesReserved = (long) maybeDeploy.get().getResources().get().getDiskMb() * SingularitySlaveUsage.BYTES_PER_MEGABYTE;
 
         double unusedCpu = cpuReserved - utilization.getAvgCpuUsed();
         long unusedMemBytes = (long) (memoryBytesReserved - utilization.getAvgMemBytesUsed());
