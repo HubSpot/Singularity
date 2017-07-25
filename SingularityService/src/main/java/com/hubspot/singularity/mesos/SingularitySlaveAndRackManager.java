@@ -44,7 +44,7 @@ import com.hubspot.singularity.data.InactiveSlaveManager;
 import com.hubspot.singularity.data.RackManager;
 import com.hubspot.singularity.data.SlaveManager;
 import com.hubspot.singularity.data.TaskManager;
-import com.hubspot.singularity.scheduler.SingularitySchedulerStateCache;
+import com.hubspot.singularity.scheduler.SingularityLeaderCache;
 import com.hubspot.singularity.sentry.SingularityExceptionNotifier;
 
 @Singleton
@@ -61,11 +61,12 @@ public class SingularitySlaveAndRackManager {
   private final InactiveSlaveManager inactiveSlaveManager;
   private final SingularitySlaveAndRackHelper slaveAndRackHelper;
   private final AtomicInteger activeSlavesLost;
+  private final SingularityLeaderCache leaderCache;
 
   @Inject
   SingularitySlaveAndRackManager(SingularitySlaveAndRackHelper slaveAndRackHelper, SingularityConfiguration configuration, SingularityExceptionNotifier exceptionNotifier,
                                  RackManager rackManager, SlaveManager slaveManager, TaskManager taskManager, InactiveSlaveManager inactiveSlaveManager,
-                                 @Named(SingularityMesosModule.ACTIVE_SLAVES_LOST_COUNTER) AtomicInteger activeSlavesLost) {
+                                 @Named(SingularityMesosModule.ACTIVE_SLAVES_LOST_COUNTER) AtomicInteger activeSlavesLost, SingularityLeaderCache leaderCache) {
     this.configuration = configuration;
 
     this.exceptionNotifier = exceptionNotifier;
@@ -76,14 +77,16 @@ public class SingularitySlaveAndRackManager {
     this.taskManager = taskManager;
     this.inactiveSlaveManager = inactiveSlaveManager;
     this.activeSlavesLost = activeSlavesLost;
+
+    this.leaderCache = leaderCache;
   }
 
-  public SlaveMatchState doesOfferMatch(SingularityOfferHolder offerHolder, SingularityTaskRequest taskRequest, SingularitySchedulerStateCache stateCache) {
+  public SlaveMatchState doesOfferMatch(SingularityOfferHolder offerHolder, SingularityTaskRequest taskRequest) {
     final String host = offerHolder.getHostname();
     final String rackId = offerHolder.getRackId();
     final String slaveId = offerHolder.getSlaveId();
 
-    final MachineState currentSlaveState = stateCache.getSlave(slaveId).get().getCurrentState().getState();
+    final MachineState currentSlaveState = slaveManager.getSlave(slaveId).get().getCurrentState().getState();
 
     if (currentSlaveState == MachineState.FROZEN) {
       return SlaveMatchState.SLAVE_FROZEN;
@@ -93,7 +96,7 @@ public class SingularitySlaveAndRackManager {
       return SlaveMatchState.SLAVE_DECOMMISSIONING;
     }
 
-    final MachineState currentRackState = stateCache.getRack(rackId).get().getCurrentState().getState();
+    final MachineState currentRackState = rackManager.getRack(rackId).get().getCurrentState().getState();
 
     if (currentRackState == MachineState.FROZEN) {
       return SlaveMatchState.RACK_FROZEN;
@@ -123,7 +126,7 @@ public class SingularitySlaveAndRackManager {
 
     final int numDesiredInstances = taskRequest.getRequest().getInstancesSafe();
     boolean allowBounceToSameHost = isAllowBounceToSameHost(taskRequest.getRequest());
-    Multiset<String> countPerRack = HashMultiset.create(stateCache.getNumActiveRacks());
+    Multiset<String> countPerRack = HashMultiset.create(slaveManager.getNumActive());
     double numOnSlave = 0;
     double numCleaningOnSlave = 0;
     double numFromSameBounceOnSlave = 0;
@@ -132,9 +135,9 @@ public class SingularitySlaveAndRackManager {
 
     final String sanitizedHost = offerHolder.getSanitizedHost();
     final String sanitizedRackId = offerHolder.getSanitizedRackId();
-    Collection<SingularityTaskId> cleaningTasks = stateCache.getCleaningTasks();
+    Collection<SingularityTaskId> cleaningTasks = leaderCache.getCleanupTaskIds();
 
-    for (SingularityTaskId taskId : stateCache.getActiveTaskIdsForRequest(taskRequest.getRequest().getId())) {
+    for (SingularityTaskId taskId : leaderCache.getActiveTaskIdsForRequest(taskRequest.getRequest().getId())) {
       // TODO consider using executorIds
 
       if (!cleaningTasks.contains(taskId) && taskRequest.getDeploy().getId().equals(taskId.getDeployId())) {
@@ -180,7 +183,7 @@ public class SingularitySlaveAndRackManager {
     }
 
     if (taskRequest.getRequest().isRackSensitive()) {
-      final boolean isRackOk = isRackOk(countPerRack, sanitizedRackId, numDesiredInstances, taskRequest.getRequest().getId(), slaveId, host, numCleaningOnSlave, stateCache);
+      final boolean isRackOk = isRackOk(countPerRack, sanitizedRackId, numDesiredInstances, taskRequest.getRequest().getId(), slaveId, host, numCleaningOnSlave, leaderCache);
 
       if (!isRackOk) {
         return SlaveMatchState.RACK_SATURATED;
@@ -210,7 +213,7 @@ public class SingularitySlaveAndRackManager {
         }
         break;
       case OPTIMISTIC:
-        Collection<SingularityTaskId> currentlyActiveTasksForRequestClusterwide = stateCache.getActiveTaskIdsForRequest(taskRequest.getRequest().getId());
+        Collection<SingularityTaskId> currentlyActiveTasksForRequestClusterwide = leaderCache.getActiveTaskIdsForRequest(taskRequest.getRequest().getId());
 
         // If no tasks are active for this request yet, we can fall back to greedy.
         if (currentlyActiveTasksForRequestClusterwide.size() > 0) {
@@ -274,10 +277,10 @@ public class SingularitySlaveAndRackManager {
     }
   }
 
-  private boolean isRackOk(Multiset<String> countPerRack, String sanitizedRackId, int numDesiredInstances, String requestId, String slaveId, String host, double numCleaningOnSlave, SingularitySchedulerStateCache stateCache) {
+  private boolean isRackOk(Multiset<String> countPerRack, String sanitizedRackId, int numDesiredInstances, String requestId, String slaveId, String host, double numCleaningOnSlave, SingularityLeaderCache leaderCache) {
     int racksAccountedFor = countPerRack.elementSet().size();
-    double numPerRack = numDesiredInstances / (double) stateCache.getNumActiveRacks();
-    if (racksAccountedFor < stateCache.getNumActiveRacks()) {
+    double numPerRack = numDesiredInstances / (double) rackManager.getNumActive();
+    if (racksAccountedFor < rackManager.getNumActive()) {
       if (countPerRack.count(sanitizedRackId) < Math.max(numPerRack, 1)) {
         return true;
       }
@@ -459,8 +462,8 @@ public class SingularitySlaveAndRackManager {
   }
 
   @Timed
-  public void checkStateAfterFinishedTask(SingularityTaskId taskId, String slaveId, SingularitySchedulerStateCache stateCache) {
-    Optional<SingularitySlave> slave = slaveManager.getObject(slaveId);
+  public void checkStateAfterFinishedTask(SingularityTaskId taskId, String slaveId, SingularityLeaderCache leaderCache) {
+    Optional<SingularitySlave> slave = slaveManager.getSlave(slaveId);
 
     if (!slave.isPresent()) {
       final String message = String.format("Couldn't find slave with id %s for task %s", slaveId, taskId);
@@ -470,7 +473,7 @@ public class SingularitySlaveAndRackManager {
     }
 
     if (slave.get().getCurrentState().getState() == MachineState.DECOMMISSIONING) {
-      if (!hasTaskLeftOnSlave(taskId, slaveId, stateCache)) {
+      if (!hasTaskLeftOnSlave(taskId, slaveId, leaderCache)) {
         slaveManager.changeState(slave.get(), MachineState.DECOMMISSIONED, slave.get().getCurrentState().getMessage(), slave.get().getCurrentState().getUser());
       }
     }
@@ -485,14 +488,14 @@ public class SingularitySlaveAndRackManager {
     }
 
     if (rack.get().getCurrentState().getState() == MachineState.DECOMMISSIONING) {
-      if (!hasTaskLeftOnRack(taskId, stateCache)) {
+      if (!hasTaskLeftOnRack(taskId, leaderCache)) {
         rackManager.changeState(rack.get(), MachineState.DECOMMISSIONED, rack.get().getCurrentState().getMessage(), rack.get().getCurrentState().getUser());
       }
     }
   }
 
-  private boolean hasTaskLeftOnRack(SingularityTaskId taskId, SingularitySchedulerStateCache stateCache) {
-    for (SingularityTaskId activeTaskId : stateCache.getActiveTaskIds()) {
+  private boolean hasTaskLeftOnRack(SingularityTaskId taskId, SingularityLeaderCache leaderCache) {
+    for (SingularityTaskId activeTaskId : leaderCache.getActiveTaskIds()) {
       if (!activeTaskId.equals(taskId) && activeTaskId.getSanitizedRackId().equals(taskId.getSanitizedRackId())) {
         return true;
       }
@@ -501,7 +504,7 @@ public class SingularitySlaveAndRackManager {
     return false;
   }
 
-  private boolean hasTaskLeftOnSlave(SingularityTaskId taskId, String slaveId, SingularitySchedulerStateCache stateCache) {
+  private boolean hasTaskLeftOnSlave(SingularityTaskId taskId, String slaveId, SingularityLeaderCache stateCache) {
     for (SingularityTaskId activeTaskId : stateCache.getActiveTaskIds()) {
       if (!activeTaskId.equals(taskId) && activeTaskId.getSanitizedHost().equals(taskId.getSanitizedHost())) {
         Optional<SingularityTask> maybeTask = taskManager.getTask(activeTaskId);

@@ -63,6 +63,10 @@ public abstract class AbstractMachineManager<T extends SingularityMachineAbstrac
     return getObjectsFiltered(state).size();
   }
 
+  public int getNumActive() {
+    return getNumObjectsAtState(MachineState.ACTIVE);
+  }
+
   public Map<String, T> getObjectsByIdForState(MachineState state) {
     List<T> filteredObjects = getObjectsFiltered(state);
 
@@ -207,10 +211,10 @@ public abstract class AbstractMachineManager<T extends SingularityMachineAbstrac
     return delete(getObjectPath(objectId));
   }
 
-  public SingularityCreateResult saveObject(T object) {
+  public void saveObject(T object) {
     saveHistoryUpdate(object.getCurrentState());
 
-    return save(getObjectPath(object.getId()), object, transcoder);
+    save(getObjectPath(object.getId()), object, transcoder);
   }
 
   private String getExpiringPath(String machineId) {
