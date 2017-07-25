@@ -24,6 +24,7 @@ import org.apache.mesos.v1.Protos.OfferID;
 import org.apache.mesos.v1.Protos.TaskID;
 import org.apache.mesos.v1.Protos.TaskStatus;
 import org.apache.mesos.v1.scheduler.Protos.Event;
+import org.apache.mesos.v1.scheduler.Protos.Event.Failure;
 import org.apache.mesos.v1.scheduler.Protos.Event.Message;
 import org.apache.mesos.v1.scheduler.Protos.Event.Subscribed;
 import org.slf4j.Logger;
@@ -158,6 +159,7 @@ public class SingularityMesosSchedulerImpl extends SingularityMesosScheduler {
   @Timed
   @Override
   public void resourceOffers(List<Offer> offers) {
+    lastOfferTimestamp = Optional.of(System.currentTimeMillis());
     if (!isRunning()) {
       LOG.info("Scheduler is in state {}, declining {} offer(s)", state.name(), offers.size());
       mesosSchedulerClient.decline(offers.stream().map(Offer::getId).collect(Collectors.toList()));
@@ -294,7 +296,7 @@ public class SingularityMesosSchedulerImpl extends SingularityMesosScheduler {
   }
 
   @Override
-  public void failure(org.apache.mesos.v1.scheduler.Protos.Event.Failure failure) {
+  public void failure(Failure failure) {
     if (failure.hasExecutorId()) {
       LOG.warn("Lost an executor {} on slave {} with status {}", failure.getExecutorId(), failure.getAgentId(), failure.getStatus());
     } else {
