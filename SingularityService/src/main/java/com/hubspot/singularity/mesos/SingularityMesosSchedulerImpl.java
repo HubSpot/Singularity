@@ -159,7 +159,6 @@ public class SingularityMesosSchedulerImpl extends SingularityMesosScheduler {
   @Timed
   @Override
   public void resourceOffers(List<Offer> offers) {
-    lastOfferTimestamp = Optional.of(System.currentTimeMillis());
     if (!isRunning()) {
       LOG.info("Scheduler is in state {}, declining {} offer(s)", state.name(), offers.size());
       mesosSchedulerClient.decline(offers.stream().map(Offer::getId).collect(Collectors.toList()));
@@ -167,6 +166,7 @@ public class SingularityMesosSchedulerImpl extends SingularityMesosScheduler {
     }
     callWithLock(() -> {
       final long start = System.currentTimeMillis();
+      lastOfferTimestamp = Optional.of(start);
       LOG.info("Received {} offer(s)", offers.size());
       boolean delclineImmediately = false;
       if (disasterManager.isDisabled(SingularityAction.PROCESS_OFFERS)) {
