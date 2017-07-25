@@ -49,6 +49,8 @@ public class MesosConfiguration {
   private Optional<String> credentialPrincipal = Optional.absent();
   private Optional<String> credentialSecret = Optional.absent();
 
+  private long rxEventBufferSize = 5000;
+
   public int getMaxNumInstancesPerRequest() {
     return maxNumInstancesPerRequest;
   }
@@ -215,5 +217,14 @@ public class MesosConfiguration {
 
   public void setFrameworkUser(String frameworkUser) {
     this.frameworkUser = frameworkUser;
+  }
+
+  public long getRxEventBufferSize() {
+    return rxEventBufferSize;
+  }
+
+  public MesosConfiguration setRxEventBufferSize(long rxEventBufferSize) {
+    this.rxEventBufferSize = rxEventBufferSize;
+    return this;
   }
 }

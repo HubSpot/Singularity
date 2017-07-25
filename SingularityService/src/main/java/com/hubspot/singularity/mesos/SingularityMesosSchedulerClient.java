@@ -160,7 +160,14 @@ public class SingularityMesosSchedulerClient {
 
     subscribe.processStream(unicastEvents -> {
 
-      final Observable<Event> events = unicastEvents.share();
+      final Observable<Event> events = unicastEvents.share()
+          .onBackpressureBuffer(
+              scheduler.getEventBufferSize(),
+              () -> {
+                String message = String.format("Overflow of event buffer (%s), singularity could not keep up!", scheduler.getEventBufferSize());
+                scheduler.onUncaughtException(new EventBufferOverflowException(message));
+              }
+          );
 
       events.filter(event -> event.getType() == Event.Type.ERROR)
           .map(event -> event.getError().getMessage())
