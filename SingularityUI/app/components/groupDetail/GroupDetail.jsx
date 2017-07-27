@@ -18,7 +18,7 @@ const GroupDetail = ({group, location}) => {
     <div className="tabbed-page">
       <Tab.Container id="groupRequests" defaultActiveKey={0}>
         <Row className="clearfix">
-          <Col sm={2}>
+          <Col className="tab-col" sm={2}>
             <h3>Request Group</h3>
             <Row className="detail-header">
               <Col xs={10}>
