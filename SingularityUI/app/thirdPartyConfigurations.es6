@@ -5,7 +5,7 @@ import 'messenger';
 
 export const loadThirdParty = () => {
   // Eat M/D/Y & 24h-time, yanks! Mwahahahahaha!
-  moment.locale('en', {
+  moment.updateLocale('en', {
     longDateFormat: {
       LT: 'HH:mm',
       L: 'DD/MM/YYYY',
