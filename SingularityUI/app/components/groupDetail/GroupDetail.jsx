@@ -37,7 +37,7 @@ class GroupDetail extends Component {
     return (
       <div className="tabbed-page">
         <Row className="clearfix">
-          <Col className="tab-col" sm={2}>
+          <Col className="tab-col" sm={4} md={2}>
             <h3>Request Group</h3>
             <Row className="detail-header">
               <Col xs={10}>
@@ -49,10 +49,10 @@ class GroupDetail extends Component {
             </Row>
 
             <Nav bsStyle="pills" stacked={true} activeKey={this.state.showRequestId} onSelect={this.handleRequestSelect}>
-              {group.requestIds.map((requestId, index) => <NavItem key={index} eventKey={requestId}>{requestId}</NavItem>)}
+              {group.requestIds.map((requestId, index) => <NavItem className="request-group-navitem" key={index} eventKey={requestId}>{requestId}</NavItem>)}
             </Nav>
           </Col>
-          <Col sm={10}>
+          <Col sm={8} md={10}>
             {requestPages[this.state.showRequestId]}
           </Col>
         </Row>
