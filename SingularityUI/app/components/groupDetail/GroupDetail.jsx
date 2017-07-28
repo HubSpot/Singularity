@@ -2,40 +2,44 @@ import React, {PropTypes} from 'react';
 import { connect } from 'react-redux';
 import rootComponent from '../../rootComponent';
 
-import { Row, Col, Tabs, Tab } from 'react-bootstrap';
+import { Row, Col, Tab, Nav, NavItem } from 'react-bootstrap';
 import RequestDetailPage from '../requestDetail/RequestDetailPage';
 import MetadataButton from '../common/MetadataButton';
 import { refresh } from '../../actions/ui/groupDetail';
 import ActionDropdown from './ActionDropdown';
 
 const GroupDetail = ({group, location}) => {
-  const tabs = group.requestIds.map((requestId, index) => {
-    return (
-      <Tab key={index} eventKey={index} title={requestId}>
-        <div className="tab-container">
-          <RequestDetailPage index={index} params={{requestId}} location={location} showBreadcrumbs={false} />
-        </div>
-      </Tab>
-    );
-  });
+
   const metadata = !_.isEmpty(group.metadata) && (
     <MetadataButton title={group.id} metadata={group.metadata}>View Metadata</MetadataButton>
   );
 
   return (
-    <div>
-      <Row className="detail-header">
-        <Col md={7} lg={6}>
-          <h1>{group.id}</h1>
-        </Col>
-        <Col md={5} lg={6} className="button-container">
-          <ActionDropdown group={group} />
-          {metadata}
-        </Col>
-      </Row>
-      <Tabs id="request-ids">
-        {tabs}
-      </Tabs>
+    <div className="tabbed-page">
+      <Tab.Container id="groupRequests" defaultActiveKey={0}>
+        <Row className="clearfix">
+          <Col className="tab-col" sm={2}>
+            <h3>Request Group</h3>
+            <Row className="detail-header">
+              <Col xs={10}>
+                <h4>{group.id}</h4>
+              </Col>
+              <Col xs={2}>
+                  <ActionDropdown group={group} metadata={metadata} />
+              </Col>
+            </Row>
+
+            <Nav bsStyle="pills" stacked={true}>
+              {group.requestIds.map((requestId, index) => <NavItem key={index} eventKey={index}>{requestId}</NavItem>)}
+            </Nav>
+          </Col>
+          <Col sm={10}>
+            <Tab.Content animation={true}>
+              {group.requestIds.map((requestId, index) => <Tab.Pane key={index} eventKey={index}><RequestDetailPage index={index} params={{requestId}} location={location} showBreadcrumbs={false} /></Tab.Pane>)}
+            </Tab.Content>
+          </Col>
+        </Row>
+      </Tab.Container>
     </div>
   );
 };
@@ -55,4 +59,4 @@ const mapStateToProps = (state, ownProps) => {
   });
 };
 
-export default connect(mapStateToProps)(rootComponent(GroupDetail, refresh, false));
+export default connect(mapStateToProps)(rootComponent(GroupDetail, refresh, false, false));
