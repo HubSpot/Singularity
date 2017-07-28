@@ -1,22 +1,41 @@
-import React, {PropTypes} from 'react';
+import React, {PropTypes, Component} from 'react';
 import { connect } from 'react-redux';
 import rootComponent from '../../rootComponent';
 
-import { Row, Col, Tab, Nav, NavItem } from 'react-bootstrap';
+import { Row, Col, Nav, NavItem } from 'react-bootstrap';
 import RequestDetailPage from '../requestDetail/RequestDetailPage';
 import MetadataButton from '../common/MetadataButton';
 import { refresh } from '../../actions/ui/groupDetail';
 import ActionDropdown from './ActionDropdown';
 
-const GroupDetail = ({group, location}) => {
+class GroupDetail extends Component {
 
-  const metadata = !_.isEmpty(group.metadata) && (
-    <MetadataButton title={group.id} metadata={group.metadata}>View Metadata</MetadataButton>
-  );
+  constructor(props) {
+    super(props);
+    this.state = {
+      showRequestId: _.first(props.group.requestIds)
+    };
+    _.bindAll(this, 'handleRequestSelect');
+  }
 
-  return (
-    <div className="tabbed-page">
-      <Tab.Container id="groupRequests" defaultActiveKey={0}>
+  handleRequestSelect(eventkey) {
+    this.setState({
+      showRequestId: eventkey
+    });
+  }
+
+  render() {
+    const {group, location} = this.props;
+    const metadata = !_.isEmpty(group.metadata) && (
+      <MetadataButton title={group.id} metadata={group.metadata}>View Metadata</MetadataButton>
+    );
+    const requestPages = {};
+    group.requestIds.forEach((requestId, index) => {
+      requestPages[requestId] = <RequestDetailPage key={index} index={index} params={{requestId}} location={location} showBreadcrumbs={false} />
+    });
+
+    return (
+      <div className="tabbed-page">
         <Row className="clearfix">
           <Col className="tab-col" sm={2}>
             <h3>Request Group</h3>
@@ -25,23 +44,22 @@ const GroupDetail = ({group, location}) => {
                 <h4>{group.id}</h4>
               </Col>
               <Col xs={2}>
-                  <ActionDropdown group={group} metadata={metadata} />
+                <ActionDropdown group={group} metadata={metadata} />
               </Col>
             </Row>
 
-            <Nav bsStyle="pills" stacked={true}>
-              {group.requestIds.map((requestId, index) => <NavItem key={index} eventKey={index}>{requestId}</NavItem>)}
+            <Nav bsStyle="pills" stacked={true} activeKey={this.state.showRequestId} onSelect={this.handleRequestSelect}>
+              {group.requestIds.map((requestId, index) => <NavItem key={index} eventKey={requestId}>{requestId}</NavItem>)}
             </Nav>
           </Col>
           <Col sm={10}>
-            <Tab.Content animation={true}>
-              {group.requestIds.map((requestId, index) => <Tab.Pane key={index} eventKey={index}><RequestDetailPage index={index} params={{requestId}} location={location} showBreadcrumbs={false} /></Tab.Pane>)}
-            </Tab.Content>
+            {requestPages[this.state.showRequestId]}
           </Col>
         </Row>
-      </Tab.Container>
-    </div>
-  );
+      </div>
+    );
+  }
+
 };
 
 GroupDetail.propTypes = {
