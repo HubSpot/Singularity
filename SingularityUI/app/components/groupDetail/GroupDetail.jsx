@@ -2,7 +2,7 @@ import React, {PropTypes, Component} from 'react';
 import { connect } from 'react-redux';
 import rootComponent from '../../rootComponent';
 
-import { Row, Col, Nav, NavItem } from 'react-bootstrap';
+import { Row, Col, Nav, NavItem, Label } from 'react-bootstrap';
 import RequestDetailPage from '../requestDetail/RequestDetailPage';
 import MetadataButton from '../common/MetadataButton';
 import { refresh } from '../../actions/ui/groupDetail';
@@ -25,7 +25,7 @@ class GroupDetail extends Component {
   }
 
   render() {
-    const {group, location} = this.props;
+    const {group, location, requestsNotFound} = this.props;
     const metadata = !_.isEmpty(group.metadata) && (
       <MetadataButton title={group.id} metadata={group.metadata}>View Metadata</MetadataButton>
     );
@@ -49,7 +49,11 @@ class GroupDetail extends Component {
             </Row>
 
             <Nav bsStyle="pills" stacked={true} activeKey={this.state.showRequestId} onSelect={this.handleRequestSelect}>
-              {group.requestIds.map((requestId, index) => <NavItem className="request-group-navitem" key={index} eventKey={requestId}>{requestId}</NavItem>)}
+              {group.requestIds.map((requestId, index) =>
+                <NavItem className="request-group-navitem" key={index} eventKey={requestId}>
+                  {requestId} {requestsNotFound.includes(requestId) && <Label bsStyle="danger">Deleted</Label>}
+                </NavItem>
+              )}
             </Nav>
           </Col>
           <Col sm={8} md={10}>
@@ -59,13 +63,13 @@ class GroupDetail extends Component {
       </div>
     );
   }
-
-};
+}
 
 GroupDetail.propTypes = {
   group: PropTypes.object,
   location: PropTypes.object,
-  requests: PropTypes.object
+  requests: PropTypes.object,
+  requestsNotFound: PropTypes.array
 };
 
 const mapStateToProps = (state, ownProps) => {
@@ -73,7 +77,8 @@ const mapStateToProps = (state, ownProps) => {
   return ({
     notFound: !state.api.requestGroups.isFetching && !group,
     pathname: ownProps.location.pathname,
-    group
+    group,
+    requestsNotFound: Object.entries(state.api.request).filter((entry) => group.requestIds.includes(entry[0]) && entry[1].statusCode === 404).map((entry) => entry[0])
   });
 };
 

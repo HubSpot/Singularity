@@ -21,7 +21,8 @@ export const FetchRequest = buildApiAction(
   'FETCH_REQUEST',
   (requestId, renderNotFoundIf404) => ({
     url: `/requests/request/${requestId}?useWebCache=true`,
-    renderNotFoundIf404
+    renderNotFoundIf404,
+    catchStatusCodes: [404]
   }),
   (requestId) => requestId
 );
