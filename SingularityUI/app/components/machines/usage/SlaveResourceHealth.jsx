@@ -1,8 +1,8 @@
 import React, { PropTypes } from 'react';
-import Utils from '../../utils';
+import Utils from '../../../utils';
 import SlaveResourceHealthMenuItems from './SlaveResourceHealthMenuItems';
-import { Dropdown } from 'react-bootstrap';
-import { HEALTH_SCALE, STAT_NAMES } from './Constants';
+import { Button, OverlayTrigger, Popover } from 'react-bootstrap';
+import { HEALTH_SCALE, STAT_NAMES } from '../Constants';
 
 const SlaveResourceHealth = ({slaveInfo, slaveUsage, resource, totalResource, utilization}) => {
   const checkStats = (val, stat) => {
@@ -24,13 +24,16 @@ const SlaveResourceHealth = ({slaveInfo, slaveUsage, resource, totalResource, ut
 
   const checkedStats = _.map(slaveUsage, checkStats).filter(obj => obj);
 
+  const popover = (
+    <Popover id={slaveUsage.slaveId} className="slave-usage-popover" title={Utils.humanizeSlaveHostName(slaveInfo.host, true)} >
+      <SlaveResourceHealthMenuItems stats={checkedStats} />
+    </Popover>
+  );
+
   return (
-    <Dropdown key={slaveUsage.slaveId} id={slaveUsage.slaveId}>
-      <Dropdown.Toggle noCaret={true} className="single-slave-btn" style={{backgroundColor : HEALTH_SCALE[utilization]}} />
-      <Dropdown.Menu>
-        <SlaveResourceHealthMenuItems stats={checkedStats} />
-      </Dropdown.Menu>
-    </Dropdown>
+    <OverlayTrigger trigger="click" placement="bottom" overlay={popover} rootClose={true}>
+      <Button className="single-slave-btn" style={{backgroundColor : HEALTH_SCALE[utilization]}} />
+    </OverlayTrigger>
   );
 };
 
@@ -45,7 +48,7 @@ SlaveResourceHealth.propTypes = {
   slaveInfo : PropTypes.shape({
     host : PropTypes.string.isRequired,
     attributes : PropTypes.object.isRequired,
-    resources : PropTypes.object.isRequired
+    resources : PropTypes.object
   }),
   resource : PropTypes.string.isRequired,
   totalResource : PropTypes.number.isRequired,

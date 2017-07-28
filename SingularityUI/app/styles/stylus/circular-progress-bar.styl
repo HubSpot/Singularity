@@ -1,7 +1,19 @@
+@import 'colors.styl'
+
 .CircularProgressbar .CircularProgressbar-path {
   stroke: #3e98c7;
   stroke-linecap: round;
   transition: stroke-dashoffset 0.5s ease 0s;
+}
+
+.info {
+  .CircularProgressbar .CircularProgressbar-path {
+    stroke: $grey-medium;
+  }
+
+  .CircularProgressbar .CircularProgressbar-text {
+    fill: $grey-medium;
+  }
 }
 
 .CircularProgressbar .CircularProgressbar-trail {

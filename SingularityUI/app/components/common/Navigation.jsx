@@ -62,7 +62,7 @@ const Navigation = (props) => {
               <ul className="dropdown-menu">
                 <li><Link to="/racks">Racks</Link></li>
                 <li><Link to="/slaves">Slaves</Link></li>
-                <li><Link to="/slave-usage">Slave Usage</Link></li>
+                <li><Link to="/utilization">Utilization</Link></li>
                 <li><Link to="/webhooks">Webhooks</Link></li>
                 <li><Link to="/disasters">Disasters</Link></li>
                 <li role="separator" className="divider"></li>

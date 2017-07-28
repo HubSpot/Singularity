@@ -25,11 +25,13 @@ public class SingularityDeployStatistics {
   private final Optional<ExtendedTaskState> lastTaskState;
 
   private final Optional<Long> averageRuntimeMillis;
+  private final Optional<Long> averageSchedulingDelayMillis;
 
   @JsonCreator
   public SingularityDeployStatistics(@JsonProperty("requestId") String requestId, @JsonProperty("deployId") String deployId, @JsonProperty("numSuccess") int numSuccess, @JsonProperty("numFailures") int numFailures,
       @JsonProperty("numSequentialRetries") int numSequentialRetries, @JsonProperty("lastFinishAt") Optional<Long> lastFinishAt, @JsonProperty("lastTaskState") Optional<ExtendedTaskState> lastTaskState,
-      @JsonProperty("instanceSequentialFailureTimestamps") ListMultimap<Integer, Long> instanceSequentialFailureTimestamps, @JsonProperty("numTasks") int numTasks, @JsonProperty("averageRuntimeMillis")  Optional<Long> averageRuntimeMillis) {
+      @JsonProperty("instanceSequentialFailureTimestamps") ListMultimap<Integer, Long> instanceSequentialFailureTimestamps, @JsonProperty("numTasks") int numTasks,
+      @JsonProperty("averageRuntimeMillis") Optional<Long> averageRuntimeMillis, @JsonProperty("averageSchedulingDelayMillis") Optional<Long> averageSchedulingDelayMillis) {
     this.requestId = requestId;
     this.deployId = deployId;
     this.numSuccess = numSuccess;
@@ -39,6 +41,7 @@ public class SingularityDeployStatistics {
     this.numSequentialRetries = numSequentialRetries;
     this.numTasks = numTasks;
     this.averageRuntimeMillis = averageRuntimeMillis;
+    this.averageSchedulingDelayMillis = averageSchedulingDelayMillis;
     this.instanceSequentialFailureTimestamps = instanceSequentialFailureTimestamps == null ?  ImmutableListMultimap.<Integer, Long> of() : ImmutableListMultimap.copyOf(instanceSequentialFailureTimestamps);
   }
 
@@ -51,6 +54,7 @@ public class SingularityDeployStatistics {
     .setNumSuccess(numSuccess)
     .setNumTasks(numTasks)
     .setAverageRuntimeMillis(averageRuntimeMillis)
+    .setAverageSchedulingDelayMillis(averageSchedulingDelayMillis)
     .setInstanceSequentialFailureTimestamps(ArrayListMultimap.create(instanceSequentialFailureTimestamps));
   }
 
@@ -60,6 +64,10 @@ public class SingularityDeployStatistics {
 
   public Optional<Long> getAverageRuntimeMillis() {
     return averageRuntimeMillis;
+  }
+
+  public Optional<Long> getAverageSchedulingDelayMillis() {
+    return averageSchedulingDelayMillis;
   }
 
   public String getRequestId() {
@@ -107,6 +115,7 @@ public class SingularityDeployStatistics {
         ", lastFinishAt=" + lastFinishAt +
         ", lastTaskState=" + lastTaskState +
         ", averageRuntimeMillis=" + averageRuntimeMillis +
+        ", averageSchedulingDelayMillis=" + averageSchedulingDelayMillis +
         '}';
   }
 }

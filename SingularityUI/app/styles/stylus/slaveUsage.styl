@@ -13,27 +13,35 @@
 	margin-left : -85px
 
 // SlaveAggregates
-.total-slaves, .total-tasks
-	padding-top : 20px
-
-.total-slaves #value, .total-tasks #value
-	font-size : 60px
-	text-align : center
+.aggregate
+	padding-top : 20px;
+	text-align : center;
 	color: #7C98B6;
 
-.total-slaves #label, .total-tasks #label, .avg-cpu #label, .avg-memory #label
-	font-size : 20px
-	text-align : center
-	font-weight: 300;
-	color: #7C98B6;
+	&.vcenter
+		position: relative;
+		transform: translateY(50%);
 
-.avg-cpu
+	a:hover
+		text-decoration: none;
+		border-bottom: 1px dotted;
+
+	.value
+		font-size : 50px
+
+	.label, .graph .label
+		font-size : 20px
+		font-weight: 300;
+		color: #7C98B6;
+		max-width: 100%;
+		white-space: normal;
+
+.graph
 	margin-left : 10px
 	width : 160px
 
-.avg-memory
-	margin-left : 10px
-	width : 160px
+.last-updated
+	color: #666;
 
 // SlaveHealth
 .single-slave-btn
@@ -41,6 +49,9 @@
 	border-radius : 0px
 	display : inline-block
 	opacity : .8
+
+	&:focus, &:active
+		outline : none
 
 .single-slave-btn:hover
 	opacity : 1
@@ -67,23 +78,21 @@
 #slave-usage-quick-stats #memory-stats
 	padding-left : 5px
 
+// SlaveResourceHealth
+.slave-usage-popover
+	max-width : none
 
 // SlaveHealthMenuItems
-.dropdown-menu
-	border-radius : 0px
-
 .stat-item-detail
 	white-space : nowrap
-	padding-left : 30px
-	padding-right : 5px
-	width : 350px
+	width : auto
+	list-style : none
 
 .timestamp-stat
 	color : #666
 	font-size : 13px
-	padding-right : 5px
-	text-align : right
-
+	text-align : center
+	list-style : none
 
 .stat-item-detail .row
 	margin-bottom : .5em
