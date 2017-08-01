@@ -58,6 +58,28 @@ const RequestUtilization = ({isFetching, utilization}) => {
             </BootstrapTable>
           </UsageInfo>
         </div>
+        <div className="col-md-3">
+          <UsageInfo
+            title="Disk per task average"
+            total={utilization.diskBytesReserved / utilization.numTasks}
+            used={utilization.diskBytesUsed / utilization.numTasks}
+            style={utilization.diskBytesUsed >= utilization.diskBytesReserved ? 'danger' : null}
+          >
+            <p>{Utils.humanizeFileSize(utilization.diskBytesUsed / utilization.numTasks)} of {Utils.humanizeFileSize(utilization.diskBytesReserved / utilization.numTasks)} reserved</p>
+            <BootstrapTable responsive={false} striped={true} style={{marginTop: '10px'}}>
+              <tbody>
+              <tr>
+                <td>Min disk (all tasks)</td>
+                <td>{Utils.humanizeFileSize(utilization.minDiskBytesUsed)}</td>
+              </tr>
+              <tr>
+                <td>Max disk (all tasks)</td>
+                <td>{Utils.humanizeFileSize(utilization.maxDiskBytesUsed)}</td>
+              </tr>
+              </tbody>
+            </BootstrapTable>
+          </UsageInfo>
+        </div>
     </div>
   );
 
