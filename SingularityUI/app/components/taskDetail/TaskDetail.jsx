@@ -384,29 +384,31 @@ class TaskDetail extends Component {
         </Panel>
       );
       maybeResourceUsage = (
-        <div className="row">
-          <div className="col-md-3 col-sm-4">
-            <UsageInfo
-              title="Memory (rss vs limit)"
-              style="success"
-              total={this.props.resourceUsage.memLimitBytes}
-              used={this.props.resourceUsage.memRssBytes}
-            >
-              {Utils.humanizeFileSize(this.props.resourceUsage.memRssBytes)} / {Utils.humanizeFileSize(this.props.resourceUsage.memLimitBytes)}
-            </UsageInfo>
-          </div>
-          <div className="col-md-3 col-sm-4">
-            {maybeCpuUsage}
-          </div>
-          <div className="col-md-3 col-sm-4">
-            <UsageInfo
-              title="Disk"
-              style={this.props.resourceUsage.diskUsedBytes > this.props.resourceUsage.diskLimitBytes ? 'danger' : 'success'}
-              total={this.props.resourceUsage.diskLimitBytes}
-              used={this.props.resourceUsage.diskUsedBytes}
-            >
-              {Utils.humanizeFileSize(this.props.resourceUsage.diskUsedBytes)} / {Utils.humanizeFileSize(this.props.resourceUsage.diskLimitBytes)}
-            </UsageInfo>
+        <div>
+          <div className="row">
+            <div className="col-md-3 col-sm-4">
+              <UsageInfo
+                title="Memory (rss vs limit)"
+                style="success"
+                total={this.props.resourceUsage.memLimitBytes}
+                used={this.props.resourceUsage.memRssBytes}
+              >
+                {Utils.humanizeFileSize(this.props.resourceUsage.memRssBytes)} / {Utils.humanizeFileSize(this.props.resourceUsage.memLimitBytes)}
+              </UsageInfo>
+            </div>
+            <div className="col-md-3 col-sm-4">
+              {maybeCpuUsage}
+            </div>
+            <div className="col-md-3 col-sm-4">
+              <UsageInfo
+                title="Disk"
+                style={this.props.resourceUsage.diskUsedBytes > this.props.resourceUsage.diskLimitBytes ? 'danger' : 'success'}
+                total={this.props.resourceUsage.diskLimitBytes}
+                used={this.props.resourceUsage.diskUsedBytes}
+              >
+                {Utils.humanizeFileSize(this.props.resourceUsage.diskUsedBytes)} / {Utils.humanizeFileSize(this.props.resourceUsage.diskLimitBytes)}
+              </UsageInfo>
+            </div>
           </div>
           <div className="row">
             <div className="col-md-12">
