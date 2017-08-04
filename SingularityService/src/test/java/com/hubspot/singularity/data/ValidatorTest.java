@@ -88,7 +88,7 @@ public class ValidatorTest extends SingularityTestBaseNoDb {
 
     WebApplicationException exn = (WebApplicationException) catchThrowable(() -> validator.checkDeploy(singularityRequest, singularityDeploy, Collections.emptyList(), Collections.emptyList()));
     assertThat((String) exn.getResponse().getEntity())
-        .contains("[a-zA-Z0-9_]");
+        .contains("[a-zA-Z0-9_.]");
   }
 
   @Test(expected = WebApplicationException.class)
