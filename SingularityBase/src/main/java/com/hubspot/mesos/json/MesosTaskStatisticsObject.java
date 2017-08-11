@@ -16,6 +16,8 @@ public class MesosTaskStatisticsObject {
   private final long memMappedFileBytes;
   private final long memRssBytes;
   private final long memTotalBytes;
+  private final long diskLimitBytes;
+  private final long diskUsedBytes;
   private final double timestamp;
 
   @JsonCreator
@@ -31,6 +33,8 @@ public class MesosTaskStatisticsObject {
                                    @JsonProperty("mem_mapped_file_bytes") long memMappedFileBytes,
                                    @JsonProperty("mem_rss_bytes") long memRssBytes,
                                    @JsonProperty("mem_total_bytes") long memTotalBytes,
+                                   @JsonProperty("disk_limit_bytes") long diskLimitBytes,
+                                   @JsonProperty("disk_used_bytes") long diskUsedBytes,
                                    @JsonProperty("timestamp") double timestamp) {
     this.cpusLimit = cpusLimit;
     this.cpusNrPeriods = cpusNrPeriods;
@@ -44,8 +48,11 @@ public class MesosTaskStatisticsObject {
     this.memMappedFileBytes = memMappedFileBytes;
     this.memRssBytes = memRssBytes;
     this.memTotalBytes = memTotalBytes;
+    this.diskLimitBytes = diskLimitBytes;
+    this.diskUsedBytes = diskUsedBytes;
     this.timestamp = timestamp;
   }
+
 
   public int getCpusLimit() {
     return cpusLimit;
@@ -95,9 +102,18 @@ public class MesosTaskStatisticsObject {
     return memTotalBytes;
   }
 
+  public long getDiskLimitBytes() {
+    return diskLimitBytes;
+  }
+
+  public long getDiskUsedBytes() {
+    return diskUsedBytes;
+  }
+
   public double getTimestamp() {
     return timestamp;
   }
+
 
   @Override
   public String toString() {
