@@ -293,12 +293,7 @@ public class SingularityMesosOfferSchedulerTest extends SingularityCuratorTestBa
   }
 
   private SingularitySlaveUsageWithId getUsage(long memMbReserved, long memMbTotal, double cpusReserved, double cpusTotal, Map<ResourceUsageType, Number> longRunningTasksUsage) {
-    return new SingularitySlaveUsageWithId(
-        new SingularitySlaveUsage(
-            0, cpusReserved, Optional.of(cpusTotal), 0, memMbReserved, Optional.of(memMbTotal), 0, 0, Optional.of(0L), longRunningTasksUsage, 1, 0L
-        ),
-        SLAVE_ID
-    );
+    return new SingularitySlaveUsageWithId(new SingularitySlaveUsage(0, memMbReserved,0L, 0, cpusReserved,1, Optional.of(memMbTotal), Optional.of(cpusTotal), longRunningTasksUsage), SLAVE_ID);
   }
 
   private void setDeployStatistics(TimeUnit unit, long time) {

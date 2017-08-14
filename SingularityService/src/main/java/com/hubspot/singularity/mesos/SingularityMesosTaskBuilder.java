@@ -116,8 +116,6 @@ class SingularityMesosTaskBuilder {
 
     if (desiredTaskResources.getDiskMb() > 0) {
       bldr.addResources(MesosUtils.getDiskResource(desiredTaskResources.getDiskMb(), requiredRole));
-    } else {
-      bldr.addResources(MesosUtils.getDiskResource(1.0, requiredRole));
     }
 
     bldr.setAgentId(offerHolder.getOffers().get(0).getAgentId());
