@@ -23,10 +23,7 @@ const getUtilizationData = (slaves, slaveUsages) => {
     const totalMemoryResource = Utils.getMaxAvailableResource(slaveInfo, STAT_NAMES.memoryBytesUsedStat);
     const memoryUtilized = Utils.roundTo((slaveUsage[STAT_NAMES.memoryBytesUsedStat] / totalMemoryResource) * HEALTH_SCALE_MAX, WHOLE_NUMBER);
 
-    const totalDiskResource = Utils.getMaxAvailableResource(slaveInfo, STAT_NAMES.diskBytesUsedStat);
-    const diskUtilized = Utils.roundTo((slaveUsage[STAT_NAMES.diskBytesUsedStat] / totalDiskResource) * HEALTH_SCALE_MAX, WHOLE_NUMBER);
-
-    return {slaveInfo, slaveUsage, totalCpuResource, cpuUtilized, totalMemoryResource, memoryUtilized, totalDiskResource, diskUtilized};
+    return {slaveInfo, slaveUsage, totalCpuResource, cpuUtilized, totalMemoryResource, memoryUtilized};
   });
 };
 
@@ -40,10 +37,6 @@ const SlaveUsage = ({slaves, slaveUsages, activeTasks, clusterUtilization, total
 
   const memoryHealthData = utilizationData.sort((a, b) => a.memoryUtilized - b.memoryUtilized).map((data, index) => {
     return <ResourceHealthData key={index} utilizationData={data} statName={STAT_NAMES.memoryBytesUsedStat} />;
-  });
-
-  const diskHealthData = utilizationData.sort((a, b) => a.diskUtilized - b.diskUtilized).map((data, index) => {
-    return <ResourceHealthData key={index} utilizationData={data} statName={STAT_NAMES.diskBytesUsedStat} />;
   });
 
   return (
@@ -61,10 +54,6 @@ const SlaveUsage = ({slaves, slaveUsages, activeTasks, clusterUtilization, total
         <h4>Memory</h4>
         <div className="memory-health">
           {memoryHealthData}
-        </div>
-        <h4>Disk</h4>
-        <div className="disk-health">
-          {diskHealthData}
         </div>
       </div>
       <hr />

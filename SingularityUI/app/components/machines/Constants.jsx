@@ -9,17 +9,15 @@ export const STAT_NAMES = {
   memoryBytesUsedStat : 'memoryBytesUsed',
   numTasksStat : 'numTasks',
   slaveIdStat : 'slaveId',
-  timestampStat : 'timestamp',
-  diskBytesUsedStat : 'diskBytesUsed'
+  timestampStat : 'timestamp'
 };
 
 export const SLAVE_HEALTH_MENU_ITEM_ORDER = [
   'host',
   STAT_NAMES.cpusUsedStat,
   STAT_NAMES.memoryBytesUsedStat,
-  STAT_NAMES.diskBytesUsedStat,
   STAT_NAMES.numTasksStat,
-  STAT_NAMES.timestampStat,
+  STAT_NAMES.timestampStat
 ];
 
 export const HEALTH_SCALE = chroma.scale(['3182bd','9ecae1','deebf7','fee0d2','fc9272','de2d26']).colors(HEALTH_SCALE_MAX);

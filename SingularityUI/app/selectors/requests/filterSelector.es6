@@ -37,12 +37,6 @@ export default createSelector([getRequests, getFilter, getUtilizations], (reques
         return !!(utilization && utilization.memBytesUsed < utilization.memBytesReserved);
       };
       break;
-    case 'underUtilizedDisk':
-      stateFilter = (requestParent) => {
-        const utilization = _.find(utilizations, (util) => util.requestId === requestParent.request.id);
-        return !!(utilization && utilization.diskBytesUsed < utilization.diskBytesReserved);
-      };
-      break;
     default:
       break;
   }

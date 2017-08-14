@@ -24,31 +24,21 @@ const getMemUtilizationPct = getPctSlaveUsage(
   slave => Utils.getMaxAvailableResource(slave, STAT_NAMES.memoryBytesUsedStat)
 );
 
-const getDiskUtilizationPct = getPctSlaveUsage(
-  usage => usage.diskBytesUsed,
-  slave => Utils.getMaxAvailableResource(slave, STAT_NAMES.diskBytesUsedStat)
-);
-
 const SlaveAggregates = ({slaves, slaveUsages, activeTasks, utilization}) => {
   return (
-    <div>
-      <div className="slave-aggregates row">
-        <Aggregate width={2} value={slaves.length} label="Active Slaves" />
-        <Aggregate width={2} value={activeTasks} label="Tasks Running" />
-      </div>
-      <div className="slave-aggregates row">
-        <LabeledColumn title="Current" width={6}>
-          <Aggregate width={2} value={getCpuUtilizationPct(slaves, slaveUsages)} graph={true} label="CPU" />
-          <Aggregate width={2} value={getMemUtilizationPct(slaves, slaveUsages)} graph={true} label="Memory" />
-          <Aggregate width={2} value={getDiskUtilizationPct(slaves, slaveUsages)} graph={true} label="Disk" />
-        </LabeledColumn>
+    <div className="slave-aggregates row">
+      <Aggregate width={2} value={slaves.length} label="Active Slaves" vcenter={true} />
+      <Aggregate width={2} value={activeTasks} label="Tasks Running" vcenter={true} />
 
-        <LabeledColumn className="info" title="24-Hour Average" width={6}>
-          <Aggregate width={2} value={Utils.toDisplayPercentage(utilization.totalCpuUsed, utilization.totalCpuAvailable)} graph={true} label="CPU" />
-          <Aggregate width={2} value={Utils.toDisplayPercentage(utilization.totalMemBytesUsed, utilization.totalMemBytesAvailable)} graph={true} label="Memory" />
-          <Aggregate width={2} value={Utils.toDisplayPercentage(utilization.totalDiskBytesUsed, utilization.totalDiskBytesAvailable)} graph={true} label="Disk" />
-        </LabeledColumn>
-      </div>
+      <LabeledColumn title="Current" width={4}>
+        <Aggregate width={2} value={getCpuUtilizationPct(slaves, slaveUsages)} graph={true} label="CPU" />
+        <Aggregate width={2} value={getMemUtilizationPct(slaves, slaveUsages)} graph={true} label="Memory" />
+      </LabeledColumn>
+
+      <LabeledColumn className="info" title="24-Hour Average" width={4}>
+        <Aggregate width={2} value={Utils.toDisplayPercentage(utilization.totalCpuUsed, utilization.totalCpuAvailable)} graph={true} label="CPU" />
+        <Aggregate width={2} value={Utils.toDisplayPercentage(utilization.totalMemBytesUsed, utilization.totalMemBytesAvailable)} graph={true} label="Memory" />
+      </LabeledColumn>
     </div>
   );
 };
