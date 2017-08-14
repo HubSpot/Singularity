@@ -13,6 +13,8 @@ const getTotalForStat = (statName, data) => {
       return data.totalMemoryResource;
     case STAT_NAMES.cpusUsedStat:
       return data.totalCpuResource;
+    case STAT_NAMES.diskBytesUsedStat:
+      return data.totalDiskResource;
     default:
       throw new Error(`${name} is an unsupported statistic`);
   }
@@ -24,6 +26,8 @@ const getUtilizationForStat = (statName, data) => {
       return data.memoryUtilized;
     case STAT_NAMES.cpusUsedStat:
       return data.cpuUtilized;
+    case STAT_NAMES.diskBytesUsedStat:
+      return data.diskUtilized;
     default:
       throw new Error(`${name} is an unsupported statistic`);
   }
@@ -35,7 +39,7 @@ const slaveQuickStats = (data) => {
   return (
     <Popover id="slave-usage-quick-stats-popover">
       <div className="row" id="slave-usage-quick-stats">
-        <div className="col-xs-5" id="slave-name">
+        <div className="col-xs-3" id="slave-name">
           {Utils.humanizeSlaveHostName(data.slaveInfo.host, shortenHostName)}
         </div>
         <div className="col-xs-3" id="memory-stats">
@@ -52,6 +56,14 @@ const slaveQuickStats = (data) => {
           </div>
           <div id="status">
             CPU <span style={{color : HEALTH_SCALE[data.cpuUtilized]}}>{largeBlackCircle}</span>
+          </div>
+        </div>
+        <div className="col-xs-3" id="disk-stats">
+          <div id="pct-utilized">
+            {Utils.roundTo(data.diskUtilized / HEALTH_SCALE_MAX * 100, HUNDREDTHS_PLACE)}%
+          </div>
+          <div id="status">
+            Disk <span style={{color : HEALTH_SCALE[data.diskUtilized]}}>{largeBlackCircle}</span>
           </div>
         </div>
       </div>
