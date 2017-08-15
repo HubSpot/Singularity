@@ -4,7 +4,7 @@ import classNames from 'classnames';
 
 import BootstrapTable from 'react-bootstrap/lib/Table';
 import { Pagination } from 'react-bootstrap';
-import Loader from "../Loader";
+import Loader from '../Loader';
 
 class UITable extends Component {
 
@@ -57,6 +57,7 @@ class UITable extends Component {
   };
 
   static defaultProps = {
+    striped: true,
     paginated: false,
     rowChunkSize: 30,
     defaultSortBy: undefined,
@@ -487,10 +488,6 @@ UITable.propTypes = {
     PropTypes.string
   ]),
   striped: PropTypes.bool
-};
-
-UITable.defaultProps = {
-  striped: true
 };
 
 export default UITable;

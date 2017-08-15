@@ -71,7 +71,7 @@ function TaskFileBrowser (props) {
   }
 
   function recentlyModifiedTooltip() {
-    return <Tooltip id="tooltip">This file is currently being written to.</Tooltip>;
+    return <Tooltip id="tooltip">File is currently being written to</Tooltip>;
   }
 
   return (
