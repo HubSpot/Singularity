@@ -43,7 +43,7 @@ function sortData(cellData, file) {
 }
 
 function isRecentlyModified(mtime) {
-  return new Date().getTime() / 1000 - mtime <= RECENTLY_MODIFIED_SECONDS;
+  return Date.now() / 1000 - mtime <= RECENTLY_MODIFIED_SECONDS;
 }
 
 function TaskFileBrowser (props) {
@@ -70,9 +70,7 @@ function TaskFileBrowser (props) {
     return _.sortBy(props.files, 'isDirectory').reverse();
   }
 
-  function recentlyModifiedTooltip() {
-    return <Tooltip id="tooltip">File is currently being written to</Tooltip>;
-  }
+  const recentlyModifiedTooltip = <Tooltip id="tooltip">File is currently being written to</Tooltip>;
 
   return (
     <div>
@@ -93,7 +91,7 @@ function TaskFileBrowser (props) {
           id="icon"
           key="icon"
           cellData={(file) => isRecentlyModified(file.mtime) &&
-            <OverlayTrigger placement="top" overlay={recentlyModifiedTooltip()}><div className="page-loader loader-small loader-info" /></OverlayTrigger>
+            <OverlayTrigger placement="top" overlay={recentlyModifiedTooltip}><div className="page-loader loader-small loader-info" /></OverlayTrigger>
           }
         />
         <Column
@@ -127,10 +125,7 @@ function TaskFileBrowser (props) {
           label="Last Modified"
           id="last-modified"
           key="last-modified"
-          cellData={(file) => {
-            const timestamp = Utils.absoluteTimestamp(file.mtime * 1000);
-            return isRecentlyModified(file.mtime) ? <strong>{timestamp}</strong> : timestamp;
-          }}
+          cellData={(file) => Utils.absoluteTimestamp(file.mtime * 1000)}
           sortable={true}
           sortFunc={makeComparator('mtime')}
           sortData={sortData}
