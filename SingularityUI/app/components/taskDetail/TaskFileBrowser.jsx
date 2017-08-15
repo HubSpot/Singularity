@@ -9,8 +9,6 @@ import Column from '../common/table/Column';
 import UITable from '../common/table/UITable';
 import { Link } from 'react-router';
 
-const RECENTLY_MODIFIED_SECONDS = 60;
-
 function makeComparator(attribute) {
   return (file1, file2) => {
     if (file1.isDirectory && !file2.isDirectory) {
@@ -40,10 +38,6 @@ function makeComparator(attribute) {
 
 function sortData(cellData, file) {
   return file;
-}
-
-function isRecentlyModified(mtime) {
-  return Date.now() / 1000 - mtime <= RECENTLY_MODIFIED_SECONDS;
 }
 
 function TaskFileBrowser (props) {
@@ -78,7 +72,7 @@ function TaskFileBrowser (props) {
       <UITable
         data={getFiles() || []}
         keyGetter={(file) => file.name}
-        rowClassName={({mtime}) => { return isRecentlyModified(mtime) ? 'bg-info-light' : null; }}
+        rowClassName={({isRecentlyModified}) => { return isRecentlyModified ? 'bg-info-light' : null; }}
         rowChunkSize={50}
         paginated={true}
         emptyTableMessage="No files exist in this directory"
@@ -90,7 +84,7 @@ function TaskFileBrowser (props) {
           label=""
           id="icon"
           key="icon"
-          cellData={(file) => isRecentlyModified(file.mtime) &&
+          cellData={({isRecentlyModified}) => isRecentlyModified &&
             <OverlayTrigger placement="top" overlay={recentlyModifiedTooltip}><div className="page-loader loader-small loader-info" /></OverlayTrigger>
           }
         />
