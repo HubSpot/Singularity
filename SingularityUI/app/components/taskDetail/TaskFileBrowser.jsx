@@ -2,12 +2,14 @@ import React, { PropTypes } from 'react';
 import Utils from '../../utils';
 import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
 import ToolTip from 'react-bootstrap/lib/Tooltip';
-import { Glyphicon } from 'react-bootstrap';
+import { Glyphicon, Tooltip } from 'react-bootstrap';
 
 import Breadcrumbs from '../common/Breadcrumbs';
 import Column from '../common/table/Column';
 import UITable from '../common/table/UITable';
 import { Link } from 'react-router';
+
+const RECENTLY_MODIFIED_SECONDS = 60;
 
 function makeComparator(attribute) {
   return (file1, file2) => {
@@ -40,6 +42,10 @@ function sortData(cellData, file) {
   return file;
 }
 
+function isRecentlyModified(mtime) {
+  return new Date().getTime() / 1000 - mtime <= RECENTLY_MODIFIED_SECONDS;
+}
+
 function TaskFileBrowser (props) {
   let pathItems = [];
   pathItems.push({
@@ -64,17 +70,32 @@ function TaskFileBrowser (props) {
     return _.sortBy(props.files, 'isDirectory').reverse();
   }
 
+  function recentlyModifiedTooltip() {
+    return <Tooltip id="tooltip">This file is currently being written to.</Tooltip>;
+  }
+
   return (
     <div>
       <Breadcrumbs items={pathItems} />
       <UITable
         data={getFiles() || []}
         keyGetter={(file) => file.name}
+        rowClassName={({mtime}) => { return isRecentlyModified(mtime) ? 'bg-info-light' : null; }}
         rowChunkSize={50}
         paginated={true}
         emptyTableMessage="No files exist in this directory"
         defaultSortBy="name"
+        striped={false}
       >
+        <Column
+          className="icon-column"
+          label=""
+          id="icon"
+          key="icon"
+          cellData={(file) => isRecentlyModified(file.mtime) &&
+            <OverlayTrigger placement="top" overlay={recentlyModifiedTooltip()}><div className="page-loader loader-small loader-info" /></OverlayTrigger>
+          }
+        />
         <Column
           label="Name"
           id="name"
@@ -106,7 +127,10 @@ function TaskFileBrowser (props) {
           label="Last Modified"
           id="last-modified"
           key="last-modified"
-          cellData={(file) => Utils.absoluteTimestamp(file.mtime * 1000)}
+          cellData={(file) => {
+            const timestamp = Utils.absoluteTimestamp(file.mtime * 1000);
+            return isRecentlyModified(file.mtime) ? <strong>{timestamp}</strong> : timestamp;
+          }}
           sortable={true}
           sortFunc={makeComparator('mtime')}
           sortData={sortData}

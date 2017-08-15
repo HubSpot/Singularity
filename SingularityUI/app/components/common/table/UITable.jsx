@@ -429,7 +429,7 @@ class UITable extends Component {
       return <Loader />;
     }
     let maybeTable = (
-      <BootstrapTable responsive={true} striped={true} className={this.props.className}>
+      <BootstrapTable responsive={true} striped={this.props.striped} className={this.props.className}>
         <thead>
           {this.renderTableHeader()}
         </thead>
@@ -485,7 +485,12 @@ UITable.propTypes = {
   emptyTableMessage: PropTypes.oneOfType([
     PropTypes.node,
     PropTypes.string
-  ])
+  ]),
+  striped: PropTypes.bool
+};
+
+UITable.defaultProps = {
+  striped: true
 };
 
 export default UITable;
