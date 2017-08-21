@@ -126,13 +126,14 @@ class RequestsPage extends Component {
     }
 
     return (
-      <div>
+      <div className="tabbed-page">
         <RequestFilters
           filter={this.props.filter}
           onFilterChange={(filter) => this.handleFilterChange(filter)}
           displayRequestTypeFilters={!_.contains(['pending', 'cleaning'], this.props.filter.state)}
-        />
-        {table}
+        >
+          {table}
+        </RequestFilters>
       </div>
     );
   }
@@ -182,4 +183,4 @@ function mapDispatchToProps(dispatch) {
   };
 }
 
-export default connect(mapStateToProps, mapDispatchToProps)(rootComponent(withRouter(RequestsPage), (props) => refresh(props.params.state || 'all')));
+export default connect(mapStateToProps, mapDispatchToProps)(rootComponent(withRouter(RequestsPage), (props) => refresh(props.params.state || 'all'), true, false));
