@@ -45,7 +45,8 @@ class RequestsPage extends Component {
       subFilter: PropTypes.array,
       searchFilter: PropTypes.string
     }).isRequired,
-    requestUtilizations: PropTypes.array
+    requestUtilizations: PropTypes.array,
+    groups: PropTypes.array
   };
 
   constructor(props) {
@@ -131,6 +132,7 @@ class RequestsPage extends Component {
           filter={this.props.filter}
           onFilterChange={(filter) => this.handleFilterChange(filter)}
           displayRequestTypeFilters={!_.contains(['pending', 'cleaning'], this.props.filter.state)}
+          groups={this.props.groups}
         >
           {table}
         </RequestFilters>
@@ -163,6 +165,7 @@ function mapStateToProps(state, ownProps) {
     notFound: statusCode === 404,
     requestsInState: modifiedRequests,
     requestUtilizations: state.api.utilization.data.requestUtilizations,
+    groups: Utils.maybe(state.api.user, ['data', 'user', 'groups']) || [],
     filter
   };
 }

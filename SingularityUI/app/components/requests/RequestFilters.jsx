@@ -10,6 +10,8 @@ export default class RequestFilters extends React.Component {
     displayRequestTypeFilters: React.PropTypes.bool
   };
 
+  static REQUEST_TYPES = ['SERVICE', 'WORKER', 'SCHEDULED', 'ON_DEMAND', 'RUN_ONCE'];
+
   static REQUEST_STATES = [
     {
       displayVal: 'Request status'
@@ -66,8 +68,6 @@ export default class RequestFilters extends React.Component {
     }
   ];
 
-  static REQUEST_TYPES = ['SERVICE', 'WORKER', 'SCHEDULED', 'ON_DEMAND', 'RUN_ONCE'];
-
   handleStatusSelect(selectedKey) {
     this.props.onFilterChange(_.extend({}, this.props.filter, {state: RequestFilters.REQUEST_STATES[selectedKey].filterVal}));
   }
@@ -100,11 +100,13 @@ export default class RequestFilters extends React.Component {
       requestState.filterVal ?
         <NavItem
           key={index}
+          className="table-nav-pill--child"
           eventKey={index}
           title={requestState.tip}
           active={index === selectedIndex}
-          onClick={() => this.handleStatusSelect(index)}>
-          &emsp;{requestState.displayVal}
+          onClick={() => this.handleStatusSelect(index)}
+        >
+          {requestState.displayVal}
         </NavItem> :
         <NavItem key={index} disabled={true}>
           {requestState.displayVal}
@@ -201,5 +203,6 @@ RequestFilters.propTypes = {
     subFilter: React.PropTypes.array.isRequired,
     searchFilter: React.PropTypes.string.isRequired
   }).isRequired,
+  groups: React.PropTypes.array,
   children: React.PropTypes.oneOfType([React.PropTypes.node, React.PropTypes.arrayOf(React.PropTypes.node)])
 };
