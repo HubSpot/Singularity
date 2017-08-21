@@ -23,7 +23,7 @@ import * as Cols from './Columns';
 import filterSelector from '../../selectors/requests/filterSelector';
 
 import Utils from '../../utils';
-import Loader from "../common/Loader";
+import Loader from '../common/Loader';
 
 class RequestsPage extends Component {
 
@@ -63,7 +63,7 @@ class RequestsPage extends Component {
     });
 
     const subFilter = filter.subFilter.length === RequestFilters.REQUEST_TYPES.length ? 'all' : filter.subFilter.join(',');
-    this.props.router.push(`/requests/${filter.state}/${subFilter}/${filter.searchFilter}`);
+    this.props.router.push(`/requests/${filter.group}/${filter.state}/${subFilter}/${filter.searchFilter}`);
 
     if (lastFilterState !== filter.state) {
       this.props.fetchFilter(filter.state).then(() => {
@@ -87,7 +87,7 @@ class RequestsPage extends Component {
           Cols.Type,
           Cols.State,
           Cols.Instances,
-          Cols.Schedule,
+          Cols.Group,
           Cols.Actions
         ];
       default:
@@ -100,7 +100,7 @@ class RequestsPage extends Component {
           Cols.DeployId,
           Cols.DeployUser,
           Cols.LastDeploy,
-          Cols.Schedule,
+          Cols.Group,
           Cols.Actions
         ];
     }
@@ -143,6 +143,7 @@ class RequestsPage extends Component {
 
 function mapStateToProps(state, ownProps) {
   const requestsInState = state.api.requestsInState.data;
+  const userGroups = Utils.maybe(state.api.user, ['data', 'user', 'groups']) || [];
   const modifiedRequests = requestsInState.map((request) => {
     const hasActiveDeploy = !!(request.activeDeploy || (request.requestDeployState && request.requestDeployState.activeDeploy));
     return {
@@ -156,7 +157,8 @@ function mapStateToProps(state, ownProps) {
   const filter = {
     state: ownProps.params.state || 'all',
     subFilter: !ownProps.params.subFilter || ownProps.params.subFilter === 'all' ? RequestFilters.REQUEST_TYPES : ownProps.params.subFilter.split(','),
-    searchFilter: ownProps.params.searchFilter || ''
+    searchFilter: ownProps.params.searchFilter || '',
+    group: ownProps.params.group || 'all',
   };
   const statusCode = Utils.maybe(state, ['api', 'requestsInState', 'statusCode']);
 
@@ -165,7 +167,7 @@ function mapStateToProps(state, ownProps) {
     notFound: statusCode === 404,
     requestsInState: modifiedRequests,
     requestUtilizations: state.api.utilization.data.requestUtilizations,
-    groups: Utils.maybe(state.api.user, ['data', 'user', 'groups']) || [],
+    groups: userGroups,
     filter
   };
 }

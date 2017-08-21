@@ -2,7 +2,7 @@ import React from 'react';
 import Utils from '../../utils';
 import { Link } from 'react-router';
 
-import { Row, Col, Nav, NavItem, Glyphicon, Button } from 'react-bootstrap';
+import { Row, Col, Nav, NavItem, Glyphicon, Button, ButtonGroup, DropdownButton, MenuItem } from 'react-bootstrap';
 
 export default class RequestFilters extends React.Component {
 
@@ -70,6 +70,10 @@ export default class RequestFilters extends React.Component {
 
   handleStatusSelect(selectedKey) {
     this.props.onFilterChange(_.extend({}, this.props.filter, {state: RequestFilters.REQUEST_STATES[selectedKey].filterVal}));
+  }
+
+  handleGroupSelect(group) {
+    this.props.onFilterChange(_.extend({}, this.props.filter, {group}));
   }
 
   handleSearchChange(event) {
@@ -147,12 +151,24 @@ export default class RequestFilters extends React.Component {
         </li>
       );
     });
+    const groupDropdown = [
+      <MenuItem key={0} onClick={() => this.handleGroupSelect('all')}>All</MenuItem>,
+      ...this.props.groups.map((group, index) => (
+        <MenuItem key={index + 1} onClick={() => this.handleGroupSelect(group)}>{group}</MenuItem>
+      ))
+    ];
 
     return (
       <div className="requests-filter-container">
         <ul className="nav nav-pills nav-pills-multi-select">
           {filterItems}
         </ul>
+        <div className="pull-right">
+          <strong>My groups:</strong>
+          <DropdownButton className="groups-dropdown" id="groups-dropdown" pullRight={true} title={this.props.filter.group}>
+            {groupDropdown}
+          </DropdownButton>
+        </div>
       </div>
     );
   }
@@ -201,7 +217,8 @@ RequestFilters.propTypes = {
   filter: React.PropTypes.shape({
     state: React.PropTypes.string.isRequired,
     subFilter: React.PropTypes.array.isRequired,
-    searchFilter: React.PropTypes.string.isRequired
+    searchFilter: React.PropTypes.string.isRequired,
+    group: React.PropTypes.string
   }).isRequired,
   groups: React.PropTypes.array,
   children: React.PropTypes.oneOfType([React.PropTypes.node, React.PropTypes.arrayOf(React.PropTypes.node)])
