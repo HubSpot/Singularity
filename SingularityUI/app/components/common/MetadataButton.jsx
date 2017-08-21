@@ -1,5 +1,5 @@
 import React, { Component, PropTypes } from 'react';
-import { Modal, Button } from 'react-bootstrap';
+import { Modal, Button, MenuItem } from 'react-bootstrap';
 import Clipboard from 'clipboard';
 import Utils from '../../utils';
 
@@ -50,7 +50,7 @@ export default class MetadataButton extends Component {
 
     return (
       <span className={this.props.className}>
-        <Button onClick={this.show} alt="Show Metadata">{this.props.children}</Button>
+        <MenuItem onClick={this.show} alt="Show Metadata">{this.props.children}</MenuItem>
         <Modal show={this.state.modalOpen} onHide={this.hide} bsSize="large">
           <Modal.Header>
             <Modal.Title>{this.props.title}</Modal.Title>

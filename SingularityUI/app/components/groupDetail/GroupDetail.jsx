@@ -1,49 +1,75 @@
-import React, {PropTypes} from 'react';
+import React, {PropTypes, Component} from 'react';
 import { connect } from 'react-redux';
 import rootComponent from '../../rootComponent';
 
-import { Row, Col, Tabs, Tab } from 'react-bootstrap';
+import { Row, Col, Nav, NavItem, Label } from 'react-bootstrap';
 import RequestDetailPage from '../requestDetail/RequestDetailPage';
 import MetadataButton from '../common/MetadataButton';
 import { refresh } from '../../actions/ui/groupDetail';
 import ActionDropdown from './ActionDropdown';
 
-const GroupDetail = ({group, location}) => {
-  const tabs = group.requestIds.map((requestId, index) => {
-    return (
-      <Tab key={index} eventKey={index} title={requestId}>
-        <div className="tab-container">
-          <RequestDetailPage index={index} params={{requestId}} location={location} showBreadcrumbs={false} />
-        </div>
-      </Tab>
-    );
-  });
-  const metadata = !_.isEmpty(group.metadata) && (
-    <MetadataButton title={group.id} metadata={group.metadata}>View Metadata</MetadataButton>
-  );
+class GroupDetail extends Component {
 
-  return (
-    <div>
-      <Row className="detail-header">
-        <Col md={7} lg={6}>
-          <h1>{group.id}</h1>
-        </Col>
-        <Col md={5} lg={6} className="button-container">
-          <ActionDropdown group={group} />
-          {metadata}
-        </Col>
-      </Row>
-      <Tabs id="request-ids">
-        {tabs}
-      </Tabs>
-    </div>
-  );
-};
+  constructor(props) {
+    super(props);
+    this.state = {
+      showRequestId: _.first(props.group.requestIds)
+    };
+    _.bindAll(this, 'handleRequestSelect');
+  }
+
+  handleRequestSelect(eventkey) {
+    this.setState({
+      showRequestId: eventkey
+    });
+  }
+
+  render() {
+    const {group, location, requestsNotFound} = this.props;
+    const metadata = !_.isEmpty(group.metadata) && (
+      <MetadataButton title={group.id} metadata={group.metadata}>View Metadata</MetadataButton>
+    );
+    const requestPages = {};
+    group.requestIds.forEach((requestId, index) => {
+      requestPages[requestId] = <RequestDetailPage key={index} index={index} params={{requestId}} location={location} showBreadcrumbs={false} />
+    });
+
+    return (
+      <div className="tabbed-page">
+        <Row className="clearfix">
+          <Col className="tab-col" sm={4} md={2}>
+            <h3>Request Group</h3>
+            <Row className="detail-header">
+              <Col xs={10}>
+                <h4>{group.id}</h4>
+              </Col>
+              <Col xs={2}>
+                <ActionDropdown group={group} metadata={metadata} />
+              </Col>
+            </Row>
+
+            <Nav bsStyle="pills" stacked={true} activeKey={this.state.showRequestId} onSelect={this.handleRequestSelect}>
+              {group.requestIds.map((requestId, index) =>
+                <NavItem className="request-group-navitem" key={index} eventKey={requestId}>
+                  {requestId} {requestsNotFound.includes(requestId) && <Label bsStyle="danger">Deleted</Label>}
+                </NavItem>
+              )}
+            </Nav>
+          </Col>
+          <Col sm={8} md={10}>
+            {requestPages[this.state.showRequestId]}
+          </Col>
+        </Row>
+      </div>
+    );
+  }
+}
 
 GroupDetail.propTypes = {
   group: PropTypes.object,
   location: PropTypes.object,
-  requests: PropTypes.object
+  requests: PropTypes.object,
+  requestsNotFound: PropTypes.array
 };
 
 const mapStateToProps = (state, ownProps) => {
@@ -51,8 +77,9 @@ const mapStateToProps = (state, ownProps) => {
   return ({
     notFound: !state.api.requestGroups.isFetching && !group,
     pathname: ownProps.location.pathname,
-    group
+    group,
+    requestsNotFound: Object.entries(state.api.request).filter((entry) => group.requestIds.includes(entry[0]) && entry[1].statusCode === 404).map((entry) => entry[0])
   });
 };
 
-export default connect(mapStateToProps)(rootComponent(GroupDetail, refresh, false));
+export default connect(mapStateToProps)(rootComponent(GroupDetail, refresh, false, false));
