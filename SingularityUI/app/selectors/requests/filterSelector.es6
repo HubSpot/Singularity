@@ -12,7 +12,7 @@ export default createSelector([getRequests, getFilter, getUtilizations], (reques
 
   // Filter by group
   if (filter.group !== 'all') {
-    filteredRequests = _.filter(filteredRequests, (request) => request.request.group === filter.group);
+    filteredRequests = _.filter(filteredRequests, (request) => Utils.maybe(request, ['request', 'group']) === filter.group);
   }
 
   // Filter by state
