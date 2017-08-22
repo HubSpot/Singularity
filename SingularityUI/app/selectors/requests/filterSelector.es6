@@ -12,7 +12,7 @@ export default createSelector([getRequests, getFilter, getUtilizations], (reques
 
   // Filter by group
   if (filter.group !== 'all') {
-    filteredRequests = _.filter(filteredRequests, (request) => request.request.group === filter.group);
+    filteredRequests = _.filter(filteredRequests, (request) => Utils.maybe(request, ['request', 'group']) === filter.group);
   }
 
   // Filter by state
@@ -40,6 +40,12 @@ export default createSelector([getRequests, getFilter, getUtilizations], (reques
       stateFilter = (requestParent) => {
         const utilization = _.find(utilizations, (util) => util.requestId === requestParent.request.id);
         return !!(utilization && utilization.memBytesUsed < utilization.memBytesReserved);
+      };
+      break;
+    case 'underUtilizedDisk':
+      stateFilter = (requestParent) => {
+        const utilization = _.find(utilizations, (util) => util.requestId === requestParent.request.id);
+        return !!(utilization && utilization.diskBytesUsed < utilization.diskBytesReserved);
       };
       break;
     default:
