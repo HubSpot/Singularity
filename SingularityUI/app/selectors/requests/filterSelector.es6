@@ -11,7 +11,7 @@ export default createSelector([getRequests, getFilter, getUtilizations], (reques
   let filteredRequests = requests;
 
   // Filter by group
-  if (filter.group !== 'all') {
+  if (filter.group && filter.group !== 'all') {
     filteredRequests = _.filter(filteredRequests, (request) => Utils.maybe(request, ['request', 'group']) === filter.group);
   }
 
