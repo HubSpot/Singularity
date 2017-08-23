@@ -10,7 +10,7 @@ const Application = (props) => {
     Messenger().error({
       message: `
         <strong>Singularity is experiencing some delays.</strong> 
-        The PaaS Run team has already been notified. (Max task lag: ${props.maxTaskLag} minutes)
+        External systems have already been notified. (Max task lag: ${props.maxTaskLag} minutes)
       `
     });
   }
