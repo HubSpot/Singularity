@@ -11,7 +11,7 @@ const Application = (props) => {
     Messenger().error({
       message: `
         <strong>Singularity is experiencing some delays.</strong> 
-        The team has already been notified. (Max task lag: ${props.maxTaskLag} minutes)
+        The team has already been notified. (Max task lag: ${taskLagMinutes} minutes)
       `
     });
   }
