@@ -6,7 +6,8 @@ import GlobalSearch from '../globalSearch/GlobalSearch';
 import Title from './Title';
 
 const Application = (props) => {
-  if (props.maxTaskLag > 3) {
+  const taskLagMinutes = props.maxTaskLag / 1000 / 60;
+  if (taskLagMinutes >= 3) {
     Messenger().error({
       message: `
         <strong>Singularity is experiencing some delays.</strong> 
