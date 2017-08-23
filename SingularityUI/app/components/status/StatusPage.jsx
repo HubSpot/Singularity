@@ -311,6 +311,4 @@ function mapStateToProps(state) {
   };
 }
 
-export default connect((state) => ({
-  status: state.api.status.data
-}))(rootComponent(StatusPage, refresh));
+export default connect(mapStateToProps)(rootComponent(StatusPage, refresh));
