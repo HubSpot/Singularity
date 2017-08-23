@@ -79,14 +79,19 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
 
-    // set up request groups
-    store.dispatch(FetchGroups.trigger([404, 500]));
+    const globalRefresh = () => {
+      // set up request groups
+      store.dispatch(FetchGroups.trigger([404, 500]));
 
-    // set up cluster utilization
-    store.dispatch(FetchUtilization.trigger([404, 500]));
+      // set up cluster utilization
+      store.dispatch(FetchUtilization.trigger([404, 500]));
 
-    // set up state
-    store.dispatch(FetchSingularityStatus.trigger());
+      // set up state
+      store.dispatch(FetchSingularityStatus.trigger());
+    };
+
+    globalRefresh();
+    setInterval(globalRefresh, config.globalRefreshInterval);
 
     // set up hot module reloading
     if (module.hot) {
