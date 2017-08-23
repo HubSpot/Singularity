@@ -10,6 +10,11 @@ const getUtilizations = (state) => state.requestUtilizations;
 export default createSelector([getRequests, getFilter, getUtilizations], (requests, filter, utilizations) => {
   let filteredRequests = requests;
 
+  // Filter by group
+  if (filter.group !== 'all') {
+    filteredRequests = _.filter(filteredRequests, (request) => Utils.maybe(request, ['request', 'group']) === filter.group);
+  }
+
   // Filter by state
   let stateFilter = null;
   switch (filter.state) {
