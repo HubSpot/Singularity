@@ -147,10 +147,11 @@ export default class RequestFilters extends React.Component {
 
   renderRequestTypeFilter() {
     const filterItems = this.props.displayRequestTypeFilters && RequestFilters.REQUEST_TYPES.map((requestType, index) => {
+      const isActive = _.contains(this.props.filter.subFilter, requestType);
       return (
-        <li key={index} className={_.contains(this.props.filter.subFilter, requestType) ? 'active' : ''}>
+        <li key={index} className={isActive ? 'active' : ''}>
           <a onClick={() => this.toggleRequestType(requestType)}>
-            <Glyphicon glyph="ok" /> {Utils.humanizeText(requestType)}
+            {isActive ? <Glyphicon glyph="ok" /> : <span className="icon-placeholder" />} {Utils.humanizeText(requestType)}
           </a>
         </li>
       );
