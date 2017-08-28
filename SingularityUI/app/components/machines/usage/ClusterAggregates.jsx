@@ -23,7 +23,7 @@ const SlaveAggregates = ({utilization, totalRequests}) => {
                   count: utilization.numRequestsWithOverUtilizedCpu,
                   type: 'danger',
                   label: 'Over-utilized',
-                  link: '/requests/overUtilizedCpu/all/',
+                  link: '/requests/all/overUtilizedCpu/all/',
                   percent: (utilization.numRequestsWithOverUtilizedCpu / totalRequests) * 100
                 },
                 {
@@ -38,7 +38,7 @@ const SlaveAggregates = ({utilization, totalRequests}) => {
                   count: utilization.numRequestsWithUnderUtilizedCpu,
                   type: 'warning',
                   label: 'Under-utilized',
-                  link: '/requests/underUtilizedCpu/all/',
+                  link: '/requests/all/underUtilizedCpu/all/',
                   percent: (utilization.numRequestsWithUnderUtilizedCpu / totalRequests) * 100
                 }
               ]}
@@ -84,7 +84,7 @@ const SlaveAggregates = ({utilization, totalRequests}) => {
                   count: utilization.numRequestsWithUnderUtilizedMemBytes,
                   type: 'warning',
                   label: 'Under-utilized',
-                  link: '/requests/underUtilizedMem/all/',
+                  link: '/requests/all/underUtilizedMem/all/',
                   percent: (utilization.numRequestsWithUnderUtilizedMemBytes / totalRequests) * 100
                 }
               ]}
