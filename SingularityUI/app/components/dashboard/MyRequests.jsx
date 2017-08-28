@@ -20,32 +20,32 @@ const MyRequests = ({userRequestTotals, userAPI}) => {
       <RequestCount
         label={'total'}
         count={totals.total}
-        link={`requests/active/all/${deployUser}`}
+        link={`requests/all/active/all/${deployUser}`}
       />
       <RequestCount
         label={'on demand'}
         count={totals.ON_DEMAND}
-        link={`requests/active/ON_DEMAND/${deployUser}`}
+        link={`requests/all/active/ON_DEMAND/${deployUser}`}
       />
       <RequestCount
         label={'worker'}
         count={totals.WORKER}
-        link={`requests/active/WORKER/${deployUser}`}
+        link={`requests/all/active/WORKER/${deployUser}`}
       />
       <RequestCount
         label={'scheduled'}
         count={totals.SCHEDULED}
-        link={`requests/active/SCHEDULED/${deployUser}`}
+        link={`requests/all/active/SCHEDULED/${deployUser}`}
       />
       <RequestCount
         label={'run once'}
         count={totals.RUN_ONCE}
-        link={`requests/active/RUN_ONCE/${deployUser}`}
+        link={`requests/all/active/RUN_ONCE/${deployUser}`}
       />
       <RequestCount
         label={'service'}
         count={totals.SERVICE}
-        link={`requests/active/SERVICE/${deployUser}`}
+        link={`requests/all/active/SERVICE/${deployUser}`}
       />
     </RequestCounts>
   );
