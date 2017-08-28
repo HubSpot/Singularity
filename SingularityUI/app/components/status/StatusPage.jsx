@@ -25,7 +25,7 @@ const StatusPage = (props) => {
         label: 'active',
         count: status.activeRequests,
         percent: status.activeRequests / totalRequests * 100,
-        link: '/requests/active'
+        link: '/requests/all/active'
       },
       {
         type: 'disabled',
@@ -33,7 +33,7 @@ const StatusPage = (props) => {
         label: 'paused',
         count: status.pausedRequests,
         percent: status.pausedRequests / totalRequests * 100,
-        link: '/requests/paused'
+        link: '/requests/all/paused'
       },
       {
         type: 'info',
@@ -41,7 +41,7 @@ const StatusPage = (props) => {
         label: 'cooling down',
         count: status.cooldownRequests,
         percent: status.cooldownRequests / totalRequests * 100,
-        link: '/requests/cooldown'
+        link: '/requests/all/cooldown'
       },
       {
         type: 'waiting',
@@ -49,7 +49,7 @@ const StatusPage = (props) => {
         label: 'pending',
         count: status.pendingRequests,
         percent: status.pendingRequests / totalRequests * 100,
-        link: '/requests/pending'
+        link: '/requests/all/pending'
       },
       {
         type: 'warning',
@@ -57,7 +57,7 @@ const StatusPage = (props) => {
         label: 'cleaning',
         count: status.cleaningRequests,
         percent: status.cleaningRequests / totalRequests * 100,
-        link: '/requests/cleaning'
+        link: '/requests/all/cleaning'
       },
     ];
 
