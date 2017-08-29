@@ -63,7 +63,7 @@ public class StateResource {
   @GET
   @Path("/ui-configuration")
   @ApiOperation("Retrieve information about the deployed UI configuration")
-  public UIConfiguration GetUIConfiguration() {
+  public UIConfiguration getUIConfiguration() {
     return this.uiConfiguration;
   }
 }
