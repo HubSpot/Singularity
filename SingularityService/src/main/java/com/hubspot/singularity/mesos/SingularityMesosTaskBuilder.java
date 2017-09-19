@@ -216,11 +216,11 @@ class SingularityMesosTaskBuilder {
       Resources override = task.getPendingTask().getResources().get();
 
       if (override.getCpus() != 0) {
-        setEnv(envBldr, "DEPLOY_CPUS", override.getCpus());
+        setEnv(envBldr, "DEPLOY_CPUS", ((long) override.getCpus()));
       }
 
       if (override.getMemoryMb() != 0) {
-        setEnv(envBldr, "DEPLOY_MEM", override.getMemoryMb());
+        setEnv(envBldr, "DEPLOY_MEM", ((long) override.getMemoryMb()));
       }
 
     }
