@@ -772,11 +772,11 @@ class NewDeployForm extends Component {
     );
     const logrotateFrequency = (
       <SelectFormGroup
-        id={"logrotate-frequency"}
+        id="logrotate-frequency"
         label="Logrotate Frequency"
         value={this.props.form.logrotateFrequency}
         defaultValue="DAILY"
-        onChange={(newValue) => this.updateField('logrotateFrequency', newValue)}
+        onChange={(newValue) => this.updateField('logrotateFrequency', newValue.value)}
         required={false}
         options={[
           { label: 'Hourly', value: 'HOURLY' },
