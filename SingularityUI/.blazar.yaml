@@ -1,0 +1,36 @@
+buildDeps:
+  - node-6.2.2
+  - hs-build-tools
+  - jdk8
+  - maven3
+
+steps:
+  - description: Install build tools
+    commands:
+      - mkdir -p ../bender-build-tools
+      - download-artifact -n git.hubteam.com-HubSpotProtected-bender-build-tools-${BUILD_TOOLS_BRANCH:-master}-bender-build-tools -o ../bender-build-tools.tgz > /dev/null
+      - tar xzf ../bender-build-tools.tgz -C ../bender-build-tools
+      - ../bender-build-tools/bin/activate
+      - get-bender-publish-config
+  - name: build
+    commands:
+      - mvn generate-resources
+  - name: publish
+    description: "bender-deps cdn-publish"
+    activeByDefault: false
+    commands:
+      - 'echo "cdn-publish"'
+      - ../bender-build-tools/bin/activate
+      - bender-deps cdn-publish SingularityUI-$GIT_BRANCH@1.$MODULE_BUILD_NUMBER dist/static
+  - name: notify
+    description: "publish-build-success"
+    activeByDefault: false
+    commands:
+      - 'echo "notify"'
+      - command: publish-build-success --project $BLAZAR_COORDINATES --build-num $MODULE_BUILD_NUMBER
+
+stepActivation:
+  publish:
+    branches: [hs_staging, hs_qa, hs_stable, blazar2]
+  notify:
+    branches: [hs_staging, hs_qa, hs_stable, blazar2]

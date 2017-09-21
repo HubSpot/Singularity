@@ -90,6 +90,9 @@ public class UIConfiguration {
   @JsonProperty
   private Optional<String> extraScript = Optional.absent();
 
+  @JsonProperty
+  private Optional<String> sentryDsn = Optional.absent();
+
 
   public boolean isHideNewDeployButton() {
     return hideNewDeployButton;
@@ -225,5 +228,13 @@ public class UIConfiguration {
 
   public void setExtraScript(Optional<String> extraScript) {
     this.extraScript = extraScript;
+  }
+
+  public Optional<String> getSentryDsn() {
+    return sentryDsn;
+  }
+
+  public void setSentryDsn(Optional<String> sentryDsn) {
+    this.sentryDsn = sentryDsn;
   }
 }
