@@ -7,6 +7,12 @@ before:
 after:
   onSuccess:
     - description:
+      name: publish
+      activeByDefault: false
       commands:
         - /bin/bash custom-build-config/publish-ui.sh
 
+
+stepActivation:
+  publish:
+    branches: [staging]
