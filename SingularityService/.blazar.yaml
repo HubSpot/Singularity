@@ -1,2 +1,7 @@
 env:
   MAVEN_ARGS: "-T 8 -Dsingularity.jar.name.format=\\${project.artifactId} -Dgpg.skip=true -DforkCount=2C"
+
+buildResources:
+  cpus: 8
+  memoryMb: 10240
+
