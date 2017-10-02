@@ -1,3 +1,6 @@
+cache:
+  - ./node_modules
+
 before:
   - description: Pull down and Configure the variables for our Singularity Deployment
     commands:
