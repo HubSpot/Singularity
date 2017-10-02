@@ -627,7 +627,7 @@ public class RequestResource extends AbstractRequestResource {
       scaleMessage = String.format("%s", scaleMessage);
     }
 
-    if (newRequest.getBounceAfterScale().or(scaleRequest.getBounce().or(false))) {
+    if (scaleRequest.getBounce().or(newRequest.getBounceAfterScale().or(false))) {
       validator.checkActionEnabled(SingularityAction.BOUNCE_REQUEST);
 
       checkBadRequest(newRequest.isLongRunning(), "Can not bounce a %s request (%s)", newRequest.getRequestType(), newRequest);
