@@ -10,7 +10,6 @@ after:
       name: publish
       activeByDefault: false
       commands:
-        - sleep 600
         - /bin/bash custom-build-config/publish-ui.sh
 
 
