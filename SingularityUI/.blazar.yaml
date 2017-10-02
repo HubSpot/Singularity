@@ -5,7 +5,7 @@ before:
   - description: Pull down and Configure the variables for our Singularity Deployment
     commands:
        - git clone git@git.hubteam.com:HubSpot/SingularityBuildConfig.git custom-build-config
-       - /bin/bash custom-build-config/setup-ui-env.py
+       - custom-build-config/setup-ui-env.py
 
 after:
   onSuccess:
