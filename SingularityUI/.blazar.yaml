@@ -11,8 +11,11 @@ after:
       activeByDefault: false
       commands:
         - /bin/bash custom-build-config/publish-ui.sh
+        - sleep 600
 
 
 stepActivation:
   publish:
     branches: [staging, build-on-blazar]
+
+
