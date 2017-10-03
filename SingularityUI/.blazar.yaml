@@ -14,8 +14,10 @@ after:
       activeByDefault: false
       commands:
         - /bin/bash custom-build-config/publish-ui.sh
-    - description: debug
-      commands: sleep 100
+    - description:
+      name: debug
+      commands:
+        - sleep 100
 
 
 stepActivation:
