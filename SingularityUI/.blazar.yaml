@@ -10,6 +10,10 @@ before:
 after:
   onSuccess:
     - description:
+      name: copyindex
+      commands:
+        - cp dist/index.html dist/static/index.html
+    - description:
       name: publish
       activeByDefault: false
       commands:
