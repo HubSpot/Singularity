@@ -18,6 +18,6 @@ after:
 
 stepActivation:
   publish:
-    branches: [staging, build-on-blazar]
+    branches: [staging]
 
 
