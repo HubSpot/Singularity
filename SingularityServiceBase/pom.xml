@@ -14,7 +14,6 @@
     <dependency>
       <groupId>com.hubspot</groupId>
       <artifactId>SingularityUI</artifactId>
-      <type>pom</type>
       <scope>runtime</scope>
     </dependency>
 
@@ -70,76 +69,4 @@
     </dependency>
   </dependencies>
 
-  <profiles>
-    <profile>
-      <id>build-webui</id>
-      <activation>
-        <property>
-          <name>!skipSingularityWebUI</name>
-        </property>
-      </activation>
-      <build>
-        <plugins>
-          <plugin>
-            <artifactId>maven-resources-plugin</artifactId>
-            <executions>
-              <execution>
-                <id>copy-index.html-template</id>
-                <phase>generate-resources</phase>
-                <goals>
-                  <goal>copy-resources</goal>
-                </goals>
-                <configuration>
-                  <outputDirectory>${basedir}/target/generated-resources/com/hubspot/singularity/views</outputDirectory>
-                  <resources>
-                    <resource>
-                      <directory>../SingularityUI/app/assets/</directory>
-                      <includes>
-                        <include>index.mustache</include>
-                      </includes>
-                    </resource>
-                  </resources>
-                </configuration>
-              </execution>
-              <execution>
-                <id>copy-ui</id>
-                <phase>generate-resources</phase>
-                <goals>
-                  <goal>copy-resources</goal>
-                </goals>
-                <configuration>
-                  <outputDirectory>${basedir}/target/generated-resources/assets</outputDirectory>
-                  <resources>
-                    <resource>
-                      <directory>../SingularityUI/dist</directory>
-                    </resource>
-                  </resources>
-                </configuration>
-              </execution>
-            </executions>
-          </plugin>
-          <plugin>
-            <groupId>org.codehaus.mojo</groupId>
-            <artifactId>build-helper-maven-plugin</artifactId>
-            <executions>
-              <execution>
-                <id>add-generated-resources</id>
-                <phase>generate-resources</phase>
-                <goals>
-                  <goal>add-resource</goal>
-                </goals>
-                <configuration>
-                  <resources>
-                    <resource>
-                      <directory>${project.build.directory}/generated-resources</directory>
-                    </resource>
-                  </resources>
-                </configuration>
-              </execution>
-            </executions>
-          </plugin>
-        </plugins>
-      </build>
-    </profile>
-  </profiles>
 </project>
