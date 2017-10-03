@@ -18,6 +18,6 @@ after:
 
 stepActivation:
   publish:
-    branches: [staging, build-on-blazar]
+    branches: [hs_staging, hs_qa, hs_stable, master, build-on-blazar]
 
 
