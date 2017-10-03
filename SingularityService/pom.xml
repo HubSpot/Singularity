@@ -556,8 +556,6 @@
               </execution>
             </executions>
           </plugin>
-<<<<<<< HEAD
-=======
           <plugin>
             <groupId>org.codehaus.mojo</groupId>
             <artifactId>build-helper-maven-plugin</artifactId>
@@ -578,7 +576,6 @@
               </execution>
             </executions>
           </plugin>
->>>>>>> build-on-blazar
         </plugins>
       </build>
     </profile>
