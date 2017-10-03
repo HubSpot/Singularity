@@ -28,6 +28,12 @@
 
     <dependency>
       <groupId>com.hubspot</groupId>
+      <artifactId>SingularityUI</artifactId>
+      <scope>runtime</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>com.hubspot</groupId>
       <artifactId>SingularityMesosClient</artifactId>
     </dependency>
 
@@ -546,6 +552,26 @@
                       <apiSortComparator>com.hubspot.singularity.swagger.ApiSortComparator</apiSortComparator>
                     </apiSource>
                   </apiSources>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+          <plugin>
+            <groupId>org.codehaus.mojo</groupId>
+            <artifactId>build-helper-maven-plugin</artifactId>
+            <executions>
+              <execution>
+                <id>add-generated-resources</id>
+                <phase>generate-resources</phase>
+                <goals>
+                  <goal>add-resource</goal>
+                </goals>
+                <configuration>
+                  <resources>
+                    <resource>
+                      <directory>${project.build.directory}/generated-resources</directory>
+                    </resource>
+                  </resources>
                 </configuration>
               </execution>
             </executions>
