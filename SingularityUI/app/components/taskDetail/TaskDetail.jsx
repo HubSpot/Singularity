@@ -179,8 +179,9 @@ class TaskDetail extends Component {
           file.isTailable = !_.contains(['zip', 'gz', 'jar', 'bz2', 'so', 'png', 'jpg', 'jpeg', 'pdf'], extension);
         }
       }
+      return files;
     }
-    return files;
+    return {};
   }
 
   renderFiles(files) {
