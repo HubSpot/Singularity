@@ -23,3 +23,6 @@ after:
 stepActivation:
   publish:
     branches: [hs_staging, hs_qa, hs_stable, master, build-on-blazar]
+
+env:
+  SET_VERSION_OVERRIDE: "0.18.0-$GIT_BRANCH-SNAPSHOT"
