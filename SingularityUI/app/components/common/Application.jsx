@@ -4,6 +4,7 @@ import Messenger from 'messenger';
 import Navigation from './Navigation';
 import GlobalSearch from '../globalSearch/GlobalSearch';
 import Title from './Title';
+import Utils from '../../utils';
 
 const Application = (props) => {
   const taskLagMinutes = props.maxTaskLag / 1000 / 60;
@@ -11,7 +12,7 @@ const Application = (props) => {
     Messenger().error({
       message: `
         <strong>Singularity is experiencing some delays.</strong> 
-        The team has already been notified. (Max task lag: ${taskLagMinutes} minutes)
+        The team has already been notified. (Max task lag: ${Utils.duration(props.maxTaskLag)})
       `
     });
   }
