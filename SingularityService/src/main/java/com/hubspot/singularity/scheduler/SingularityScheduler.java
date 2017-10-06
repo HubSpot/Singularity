@@ -465,17 +465,23 @@ public class SingularityScheduler {
       List<SingularityTaskId> remainingActiveTasks = new ArrayList<>(matchingTaskIds);
       List<SingularityTaskId> toClean = new ArrayList<>();
       final int expectedInstances = numMissingInstances + matchingTaskIds.size();
+      LOG.info("expected {} active {}", expectedInstances, matchingTaskIds);
+
+      List<Integer> usedIds = new ArrayList<>();
       for (SingularityTaskId activeTaskId : remainingActiveTasks) {
-        if (activeTaskId.getInstanceNo() > expectedInstances) {
+        if (usedIds.contains(activeTaskId.getInstanceNo())) {
+          toClean.add(activeTaskId);
+        } else if (activeTaskId.getInstanceNo() > expectedInstances) {
           toClean.add(activeTaskId);
         }
+        usedIds.add(activeTaskId.getInstanceNo());
       }
-      for (SingularityTaskId taskId : toClean) {
+      toClean.forEach((taskId) -> {
         remainingActiveTasks.remove(taskId);
         LOG.info("Cleaning up task {} due to new request {} - scaling down to {} instances", taskId.getId(), request.getId(), request.getInstancesSafe());
         taskManager.createTaskCleanup(new SingularityTaskCleanup(pendingRequest.getUser(), TaskCleanupType.SCALING_DOWN, now, taskId, Optional.<String>absent(), Optional.<String>absent(), Optional.<SingularityTaskShellCommandRequestId>absent()));
         remainingActiveTasks.remove(taskId);
-      }
+      });
 
       if (request.isRackSensitive() && configuration.isRebalanceRacksOnScaleDown()) {
         List<SingularityTaskId> extraCleanedTasks = new ArrayList<>();
