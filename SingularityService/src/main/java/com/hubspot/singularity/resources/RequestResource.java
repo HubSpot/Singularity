@@ -8,7 +8,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
@@ -42,12 +41,10 @@ import com.hubspot.singularity.SingularityAction;
 import com.hubspot.singularity.SingularityAuthorizationScope;
 import com.hubspot.singularity.SingularityCreateResult;
 import com.hubspot.singularity.SingularityDeleteResult;
-import com.hubspot.singularity.SingularityInstanceCounts;
 import com.hubspot.singularity.SingularityPendingDeploy;
 import com.hubspot.singularity.SingularityPendingRequest;
 import com.hubspot.singularity.SingularityPendingRequest.PendingType;
 import com.hubspot.singularity.SingularityPendingRequestParent;
-import com.hubspot.singularity.SingularityPendingTaskId;
 import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityRequestCleanup;
 import com.hubspot.singularity.SingularityRequestDeployState;
@@ -82,7 +79,6 @@ import com.hubspot.singularity.expiring.SingularityExpiringRequestActionParent;
 import com.hubspot.singularity.expiring.SingularityExpiringScale;
 import com.hubspot.singularity.expiring.SingularityExpiringSkipHealthchecks;
 import com.hubspot.singularity.helpers.RequestHelper;
-import com.hubspot.singularity.scheduler.SingularityDeployHealthHelper;
 import com.hubspot.singularity.smtp.SingularityMailer;
 import com.ning.http.client.AsyncHttpClient;
 import com.wordnik.swagger.annotations.Api;
@@ -103,19 +99,17 @@ public class RequestResource extends AbstractRequestResource {
   private final RequestHelper requestHelper;
   private final SlaveManager slaveManager;
   private final DisasterManager disasterManager;
-  private final SingularityDeployHealthHelper deployHealthHelper;
 
   @Inject
   public RequestResource(SingularityValidator validator, DeployManager deployManager, TaskManager taskManager, RequestManager requestManager, SingularityMailer mailer,
                          SingularityAuthorizationHelper authorizationHelper, Optional<SingularityUser> user, RequestHelper requestHelper, LeaderLatch leaderLatch,
-                         SlaveManager slaveManager, DisasterManager disasterManager, AsyncHttpClient httpClient, ObjectMapper objectMapper, SingularityDeployHealthHelper deployHealthHelper) {
+                         SlaveManager slaveManager, DisasterManager disasterManager, AsyncHttpClient httpClient, ObjectMapper objectMapper) {
     super(requestManager, deployManager, user, validator, authorizationHelper, httpClient, leaderLatch, objectMapper);
     this.mailer = mailer;
     this.taskManager = taskManager;
     this.requestHelper = requestHelper;
     this.slaveManager = slaveManager;
     this.disasterManager = disasterManager;
-    this.deployHealthHelper = deployHealthHelper;
   }
 
   private void submitRequest(SingularityRequest request, Optional<SingularityRequestWithState> oldRequestWithState, Optional<RequestHistoryType> historyType,
@@ -560,53 +554,6 @@ public class RequestResource extends AbstractRequestResource {
 
   public SingularityRequestParent getRequest(String requestId) {
     return fillEntireRequest(fetchRequestWithState(requestId, false));
-  }
-
-  @GET
-  @Path("/request/{requestId}/instances")
-  @ApiOperation(value="Retrieve a count of instances in different states of health", response= SingularityInstanceCounts.class)
-  public SingularityInstanceCounts getInstanceCounts(@ApiParam("Request ID") @PathParam("requestId") String requestId) {
-    SingularityRequestParent singularityRequestParent = getRequest(requestId);
-
-    int activeDeployHealthy = 0;
-    int activeDeployNotYetHealthy = 0;
-    int activeDeployPending = 0;
-    int activeDeployCleaning = 0;
-
-    int pendingDeployHealthy = 0;
-    int pendingDeployNotYetHealthy = 0;
-    int pendingDeployPending = 0;
-    int pendingDeployCleaning = 0;
-
-    List<SingularityTaskId> activeTaskIds = taskManager.getActiveTaskIdsForRequest(requestId);
-    List<SingularityTaskId> cleaningTaskIds = taskManager.getCleanupTaskIds();
-    List<SingularityPendingTaskId> pendingTaskIds = taskManager.getPendingTaskIdsForRequest(requestId);
-    if (singularityRequestParent.getActiveDeploy().isPresent()) {
-      String deployId = singularityRequestParent.getActiveDeploy().get().getId();
-      List<SingularityTaskId> activeDeployTaskIds = activeTaskIds.stream().filter((t) -> t.getDeployId().equals(deployId)).collect(Collectors.toList());
-      List<SingularityTaskId> activeDeployCleaningTaskIds = cleaningTaskIds.stream()
-          .filter((t) -> t.getRequestId().equals(requestId) && t.getDeployId().equals(deployId))
-          .collect(Collectors.toList());
-      activeDeployTaskIds.removeAll(activeDeployCleaningTaskIds);
-      activeDeployHealthy = deployHealthHelper.getHealthyTasks(singularityRequestParent.getRequest(), singularityRequestParent.getActiveDeploy(), activeDeployTaskIds, false).size();
-      activeDeployCleaning = activeDeployCleaningTaskIds.size();
-      activeDeployNotYetHealthy = activeDeployTaskIds.size() - activeDeployHealthy - activeDeployCleaning;
-      activeDeployPending = (int) pendingTaskIds.stream().filter((p) -> p.getDeployId().equals(deployId)).count();
-    }
-    if (singularityRequestParent.getPendingDeploy().isPresent()) {
-      String deployId = singularityRequestParent.getPendingDeploy().get().getId();
-      List<SingularityTaskId> pendingDeployTaskIds = activeTaskIds.stream().filter((t) -> t.getDeployId().equals(deployId)).collect(Collectors.toList());
-      List<SingularityTaskId> pendingDeployCleaningTaskIds = cleaningTaskIds.stream()
-          .filter((t) -> t.getRequestId().equals(requestId) && t.getDeployId().equals(deployId))
-          .collect(Collectors.toList());
-      pendingDeployTaskIds.removeAll(pendingDeployCleaningTaskIds);
-      pendingDeployHealthy = deployHealthHelper.getHealthyTasks(singularityRequestParent.getRequest(), singularityRequestParent.getPendingDeploy(), pendingDeployTaskIds, true).size();
-      pendingDeployCleaning = pendingDeployCleaningTaskIds.size();
-      pendingDeployNotYetHealthy = pendingDeployTaskIds.size() - activeDeployHealthy - activeDeployCleaning;
-      pendingDeployPending = (int) pendingTaskIds.stream().filter((p) -> p.getDeployId().equals(deployId)).count();
-    }
-
-    return new SingularityInstanceCounts(activeDeployHealthy, activeDeployNotYetHealthy, activeDeployPending, activeDeployCleaning, pendingDeployHealthy, pendingDeployCleaning, pendingDeployNotYetHealthy, pendingDeployPending);
   }
 
   @DELETE
