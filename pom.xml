@@ -102,7 +102,6 @@
         <groupId>com.hubspot</groupId>
         <artifactId>SingularityUI</artifactId>
         <version>${project.version}</version>
-        <type>pom</type>
       </dependency>
 
       <dependency>
@@ -368,6 +367,23 @@
         			</pluginExecutions>
         		</lifecycleMappingMetadata>
         	</configuration>
+        </plugin>
+        <!-- Fixes issues with checkstlye if you use logback for logging in maven -->
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-checkstyle-plugin</artifactId>
+          <dependencies>
+            <dependency>
+              <groupId>org.slf4j</groupId>
+              <artifactId>slf4j-jdk14</artifactId>
+              <version>1.7.5</version>
+            </dependency>
+            <dependency>
+              <groupId>org.slf4j</groupId>
+              <artifactId>jcl-over-slf4j</artifactId>
+              <version>1.7.5</version>
+            </dependency>
+          </dependencies>
         </plugin>
       </plugins>
     </pluginManagement>
