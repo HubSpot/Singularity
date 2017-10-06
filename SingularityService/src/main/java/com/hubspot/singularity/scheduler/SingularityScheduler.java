@@ -463,7 +463,10 @@ public class SingularityScheduler {
       }
 
       List<SingularityTaskId> remainingActiveTasks = new ArrayList<>(matchingTaskIds);
-      for (int i = 0; i < Math.abs(numMissingInstances); i++) {
+      int numPendingTasksForDeploy = (int) leaderCache.getPendingTasks().stream()
+          .filter((pendingTask) -> pendingTask.getPendingTaskId().getRequestId().equals(request.getId()) && pendingTask.getPendingTaskId().getDeployId().equals(deployStatistics.getDeployId()))
+          .count();
+      for (int i = 0; i < Math.abs(numMissingInstances) + numPendingTasksForDeploy; i++) {
         final SingularityTaskId toCleanup = matchingTaskIds.get(i);
         remainingActiveTasks.remove(toCleanup);
         LOG.info("Cleaning up task {} due to new request {} - scaling down to {} instances", toCleanup.getId(), request.getId(), request.getInstancesSafe());
