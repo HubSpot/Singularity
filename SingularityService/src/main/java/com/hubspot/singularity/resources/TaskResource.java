@@ -206,7 +206,7 @@ public class TaskResource extends AbstractLeaderAwareResource {
 
     List<SingularityTaskId> cleaningTaskIds = taskManager.getCleanupTaskIds().stream().filter((t) -> t.getRequestId().equals(requestId)).collect(Collectors.toList());
     List<SingularityPendingTaskId> pendingTaskIds = taskManager.getPendingTaskIdsForRequest(requestId);
-    List<SingularityTaskId> activeTaskIds = taskManager.getInactiveTaskIdsForRequest(requestId);
+    List<SingularityTaskId> activeTaskIds = taskManager.getActiveTaskIdsForRequest(requestId);
     activeTaskIds.removeAll(cleaningTaskIds);
 
     List<SingularityTaskId> healthyTaskIds = new ArrayList<>();
@@ -229,7 +229,6 @@ public class TaskResource extends AbstractLeaderAwareResource {
     }
 
     return Optional.of(new SingularityTaskIdsByStatus(healthyTaskIds, notYetHealthyTaskIds, pendingTaskIds, cleaningTaskIds));
-
   }
 
   @GET
