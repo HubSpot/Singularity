@@ -18,7 +18,7 @@ master:
     MESOS_ROLES: "OPS"
 
 slave:
-  image: hubspot/singularityexecutorslave:0.17.0-SNAPSHOT
+  image: hubspot/singularityexecutorslave:0.18.0-SNAPSHOT
   command: mesos-slave
   net: host
   environment:
@@ -35,7 +35,7 @@ slave:
     - /sys:/sys
 
 scheduler:
-  image: hubspot/singularityservice:0.17.0-SNAPSHOT
+  image: hubspot/singularityservice:0.18.0-SNAPSHOT
   net: host
   environment:
     - DOCKER_HOST
