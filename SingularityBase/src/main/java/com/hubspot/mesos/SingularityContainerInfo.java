@@ -12,15 +12,25 @@ public class SingularityContainerInfo {
   private final SingularityContainerType type;
   private final Optional<List<SingularityVolume>> volumes;
   private final Optional<SingularityDockerInfo> docker;
+  private final Optional<SingularityMesosInfo> mesos;
 
   @JsonCreator
   public SingularityContainerInfo(
       @JsonProperty("type") SingularityContainerType type,
       @JsonProperty("volumes") Optional<List<SingularityVolume>> volumes,
-      @JsonProperty("docker") Optional<SingularityDockerInfo> docker) {
+      @JsonProperty("docker") Optional<SingularityDockerInfo> docker,
+      @JsonProperty("mesos") Optional<SingularityMesosInfo> mesos) {
     this.type = type;
     this.volumes = volumes;
     this.docker = docker;
+    this.mesos = mesos;
+  }
+
+  public SingularityContainerInfo(
+      SingularityContainerType type,
+      Optional<List<SingularityVolume>> volumes,
+      Optional<SingularityDockerInfo> docker) {
+    this(type, volumes, docker, Optional.absent());
   }
 
   @ApiModelProperty(required=true, value="Container type, can be MESOS or DOCKER. Default is MESOS")
@@ -38,6 +48,11 @@ public class SingularityContainerInfo {
     return docker;
   }
 
+  @ApiModelProperty(required=false, value="Information specific to mesos containerizer")
+  public Optional<SingularityMesosInfo> getMesos() {
+    return mesos;
+  }
+
   @Override
   public boolean equals(Object o) {
     if (this == o) {
@@ -49,12 +64,13 @@ public class SingularityContainerInfo {
     SingularityContainerInfo that = (SingularityContainerInfo) o;
     return type == that.type &&
         Objects.equals(volumes, that.volumes) &&
-        Objects.equals(docker, that.docker);
+        Objects.equals(docker, that.docker) &&
+        Objects.equals(mesos, that.mesos);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(type, volumes, docker);
+    return Objects.hash(type, volumes, docker, mesos);
   }
 
   @Override
@@ -63,6 +79,7 @@ public class SingularityContainerInfo {
         "type=" + type +
         ", volumes=" + volumes +
         ", docker=" + docker +
+        ", mesos=" + mesos +
         '}';
   }
 }
