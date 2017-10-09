@@ -74,11 +74,11 @@ public class SingularityMesosStatusUpdateHandler {
                                              SingularitySlaveAndRackManager slaveAndRackManager,
                                              SingularityMesosExecutorInfoSupport logSupport,
                                              SingularityScheduler scheduler,
-                                             SingularityLeaderCache leaderCache,
                                              @Named(SingularityMainModule.SERVER_ID_PROPERTY) String serverId,
                                              SingularityMesosSchedulerClient schedulerClient,
                                              SingularitySchedulerLock schedulerLock,
                                              SingularityConfiguration configuration,
+                                             SingularityLeaderCache leaderCache,
                                              @Named(SingularityMesosModule.TASK_LOST_REASONS_COUNTER) Multiset<Protos.TaskStatus.Reason> taskLostReasons,
                                              @Named(SingularityMainModule.LOST_TASKS_METER) Meter lostTasksMeter,
                                              @Named(SingularityMainModule.STATUS_UPDATE_DELTAS) ConcurrentHashMap<Long, Long> statusUpdateDeltas) {
