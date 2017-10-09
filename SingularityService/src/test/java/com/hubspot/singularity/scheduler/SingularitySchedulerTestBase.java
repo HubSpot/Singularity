@@ -12,6 +12,7 @@ import java.util.Set;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
+import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.mesos.v1.Protos.Address;
@@ -37,7 +38,6 @@ import org.junit.Before;
 import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
 import com.google.inject.Inject;
-import com.google.inject.Provider;
 import com.google.inject.name.Named;
 import com.hubspot.baragon.models.BaragonRequestState;
 import com.hubspot.deploy.HealthcheckOptionsBuilder;
@@ -102,7 +102,7 @@ import com.ning.http.client.AsyncHttpClient;
 public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
 
   @Inject
-  protected Provider<SingularitySchedulerStateCache> stateCacheProvider;
+  protected SingularityLeaderCache leaderCache;
   @Inject
   protected SingularityMesosScheduler sms;
   @Inject
@@ -389,7 +389,7 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
   }
 
   protected void finishHealthchecks() {
-    for (Future<?> future : healthchecker.getHealthCheckFutures()) {
+    for (ScheduledFuture<?> future : healthchecker.getHealthCheckFutures()) {
       try {
         future.get();
       } catch (CancellationException ce) {
@@ -686,7 +686,7 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
   protected void saveAndSchedule(SingularityRequestBuilder bldr) {
     requestManager.activate(bldr.build(), RequestHistoryType.UPDATED, System.currentTimeMillis(), Optional.<String> absent(), Optional.<String> absent());
     requestManager.addToPendingQueue(new SingularityPendingRequest(bldr.getId(), firstDeployId, System.currentTimeMillis(), Optional.<String> absent(), PendingType.UPDATED_REQUEST, Optional.<Boolean> absent(), Optional.<String> absent()));
-    scheduler.drainPendingQueue(stateCacheProvider.get());
+    scheduler.drainPendingQueue();
   }
 
   protected void saveLoadBalancerState(BaragonRequestState brs, SingularityTaskId taskId, LoadBalancerRequestType lbrt) {

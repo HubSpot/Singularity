@@ -17,7 +17,7 @@ master:
     MESOS_WORK_DIR: /var/lib/mesos
 
 slave:
-  image: hubspot/singularityexecutorslave:0.16.0
+  image: hubspot/singularityexecutorslave:0.17.0
   command: mesos-slave
   net: host
   environment:
@@ -31,7 +31,7 @@ slave:
     - /sys:/sys
 
 scheduler:
-  image: hubspot/singularityservice:0.16.0
+  image: hubspot/singularityservice:0.17.0
   net: host
   environment:
     - DOCKER_HOST

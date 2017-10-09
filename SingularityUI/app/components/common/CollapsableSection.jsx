@@ -5,9 +5,10 @@ export default class CollapsableSection extends React.Component {
   static propTypes = {
     defaultExpanded: PropTypes.bool,
     title: PropTypes.string,
+    subtitle: PropTypes.string,
     children: PropTypes.node,
     id: PropTypes.string
-  }
+  };
 
   constructor(props) {
     super();
@@ -28,6 +29,7 @@ export default class CollapsableSection extends React.Component {
         <div className="page-header">
             <h2>
               {this.props.title}
+              <small>{this.props.subtitle}</small>
               <small>
                   <a data-action="expandToggle" onClick={() => this.toggle()}>{this.state.expanded ? 'Collapse' : 'View'}</a>
               </small>

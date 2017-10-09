@@ -10,7 +10,7 @@ export const FetchRequestsInState = buildApiAction(
   (state, renderNotFoundIf404) => {
     if (_.contains(['pending', 'cleanup'], state)) {
       return {url: `/requests/queued/${state}`, renderNotFoundIf404};
-    } else if (_.contains(['all', 'noDeploy', 'activeDeploy'], state)) {
+    } else if (_.contains(['all', 'noDeploy', 'activeDeploy', 'overUtilizedCpu', 'underUtilizedCpu', 'underUtilizedMem'], state)) {
       return {url: '/requests', renderNotFoundIf404};
     }
     return {url: `/requests/${state}`, renderNotFoundIf404};
@@ -21,7 +21,8 @@ export const FetchRequest = buildApiAction(
   'FETCH_REQUEST',
   (requestId, renderNotFoundIf404) => ({
     url: `/requests/request/${requestId}`,
-    renderNotFoundIf404
+    renderNotFoundIf404,
+    catchStatusCodes: [404]
   }),
   (requestId) => requestId
 );

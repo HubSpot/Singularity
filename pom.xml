@@ -9,7 +9,7 @@
   </parent>
 
   <artifactId>Singularity</artifactId>
-  <version>0.17.0-SNAPSHOT</version>
+  <version>0.18.0-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <scm>
@@ -270,6 +270,14 @@
         <artifactId>rfc5545-datetime</artifactId>
         <version>0.2.2</version>
       </dependency>
+
+      <dependency>
+        <groupId>com.jayway.awaitility</groupId>
+        <artifactId>awaitility</artifactId>
+        <version>1.7.0</version>
+        <scope>test</scope>
+      </dependency>
+
 
       <dependency>
         <groupId>com.amazonaws</groupId>

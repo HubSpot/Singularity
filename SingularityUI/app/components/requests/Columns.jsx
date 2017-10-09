@@ -166,13 +166,13 @@ export const DeployId = (
   />
 );
 
-export const Schedule = (
+export const Group = (
   <Column
-    label="Schedule"
-    id="schedule"
-    key="schedule"
+    label="Group"
+    id="group"
+    key="group"
     cellData={
-      (rowData) => rowData.request.quartzSchedule
+      (rowData) => rowData.request.group
     }
     sortData={(cellData) => cellData || ''}
     sortable={true}

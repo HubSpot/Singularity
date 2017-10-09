@@ -66,6 +66,7 @@ class NewDeployForm extends Component {
       maxTaskThreads: PropTypes.string,
       loggingTag: PropTypes.string,
       loggingExtraFields: PropTypes.arrayOf(PropTypes.string),
+      logrotateFrequency: PropTypes.string,
       preserveTaskSandboxAfterFinish: PropTypes.bool,
       skipLogrotateAndCompress: PropTypes.bool,
       loggingS3Bucket: PropTypes.string,
@@ -769,6 +770,22 @@ class NewDeployForm extends Component {
         couldHaveFeedback={true}
       />
     );
+    const logrotateFrequency = (
+      <SelectFormGroup
+        id="logrotate-frequency"
+        label="Logrotate Frequency"
+        value={this.props.form.logrotateFrequency}
+        defaultValue="DAILY"
+        onChange={(newValue) => this.updateField('logrotateFrequency', newValue.value)}
+        required={false}
+        options={[
+          { label: 'Hourly', value: 'HOURLY' },
+          { label: 'Daily', value: 'DAILY' },
+          { label: 'Weekly', value: 'WEEKLY' },
+          { label: 'Monthly', value: 'MONTHLY' }
+        ]}
+      />
+    );
     const preserveSandbox = (
       <CheckboxFormGroup
         id = "preserve-sandbox"
@@ -849,7 +866,7 @@ class NewDeployForm extends Component {
 
           <div className="row">
             <div className="col-md-6">
-              {preserveSandbox}
+              {logrotateFrequency}
             </div>
             <div className="col-md-6">
               {skipLogrotateAndCompress}
@@ -858,14 +875,21 @@ class NewDeployForm extends Component {
 
           <div className="row">
             <div className="col-md-6">
-              {loggingS3Bucket}
+              {preserveSandbox}
             </div>
             <div className="col-md-6">
-              {maxOpenFiles}
+              {loggingS3Bucket}
             </div>
           </div>
 
-          {runningSentinel}
+          <div className="row">
+            <div className="col-md-6">
+              {maxOpenFiles}
+            </div>
+            <div className="col-md-6">
+              {runningSentinel}
+            </div>
+          </div>
         </fieldset>
 
         <fieldset>

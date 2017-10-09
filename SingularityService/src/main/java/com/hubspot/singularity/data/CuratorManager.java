@@ -123,6 +123,7 @@ public abstract class CuratorManager {
   }
 
   protected List<String> getChildren(String root) {
+    LOG.trace("Preparing to call getChildren() on {}", root);
     final long start = System.currentTimeMillis();
     int numChildren = 0;
 

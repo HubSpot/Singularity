@@ -1,6 +1,7 @@
 import React, { PropTypes, Component } from 'react';
 import classNames from 'classnames';
 import { NotFoundNoRoot } from 'components/common/NotFound';
+import Loader from "./components/common/Loader";
 
 const rootComponent = (Wrapped, refresh = null, refreshInterval = true, pageMargin = true, initialize = null, onLoad = null) => class extends Component {
 
@@ -128,7 +129,7 @@ const rootComponent = (Wrapped, refresh = null, refreshInterval = true, pageMarg
         </div>
       );
     }
-    const loader = this.state.loading && <div className="page-loader fixed" />;
+    const loader = this.state.loading && <Loader />;
     const page = !this.state.loading && <Wrapped {...this.props} />;
     return (
       <div className={classNames({'page container-fluid': pageMargin})}>

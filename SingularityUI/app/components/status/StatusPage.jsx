@@ -7,7 +7,7 @@ import { refresh } from '../../actions/ui/status';
 
 import HostStates from './HostStates';
 import StatusList from './StatusList';
-import Breakdown from './Breakdown';
+import Breakdown from '../common/Breakdown';
 import Utils from '../../utils';
 
 const StatusPage = (props) => {
@@ -20,44 +20,44 @@ const StatusPage = (props) => {
 
     const requests = [
       {
-        type: 'active',
+        type: 'success',
         attribute: 'activeRequests',
         label: 'active',
         count: status.activeRequests,
         percent: status.activeRequests / totalRequests * 100,
-        link: '/requests/active'
+        link: '/requests/all/active'
       },
       {
-        type: 'paused',
+        type: 'disabled',
         attribute: 'pausedRequests',
         label: 'paused',
         count: status.pausedRequests,
         percent: status.pausedRequests / totalRequests * 100,
-        link: '/requests/paused'
+        link: '/requests/all/paused'
       },
       {
-        type: 'cooldown',
+        type: 'info',
         attribute: 'cooldownRequests',
         label: 'cooling down',
         count: status.cooldownRequests,
         percent: status.cooldownRequests / totalRequests * 100,
-        link: '/requests/cooldown'
+        link: '/requests/all/cooldown'
       },
       {
-        type: 'pending',
+        type: 'waiting',
         attribute: 'pendingRequests',
         label: 'pending',
         count: status.pendingRequests,
         percent: status.pendingRequests / totalRequests * 100,
-        link: '/requests/pending'
+        link: '/requests/all/pending'
       },
       {
-        type: 'cleaning',
+        type: 'warning',
         attribute: 'cleaningRequests',
         label: 'cleaning',
         count: status.cleaningRequests,
         percent: status.cleaningRequests / totalRequests * 100,
-        link: '/requests/cleaning'
+        link: '/requests/all/cleaning'
       },
     ];
 
@@ -71,7 +71,7 @@ const StatusPage = (props) => {
     const totalTasks = status.activeTasks + status.launchingTasks + status.lateTasks + status.scheduledTasks + status.cleaningTasks + status.lbCleanupTasks;
     const tasks = [
       {
-        type: 'active',
+        type: 'success',
         attribute: 'activeTasks',
         label: 'active',
         count: status.activeTasks,
@@ -79,7 +79,7 @@ const StatusPage = (props) => {
         link: '/tasks'
       },
       {
-        type: 'launching',
+        type: 'info',
         attribute: 'launchingTasks',
         label: 'launching',
         count: status.launchingTasks,
@@ -87,7 +87,7 @@ const StatusPage = (props) => {
         link: '/tasks'
       },
       {
-        type: 'scheduled',
+        type: 'waiting',
         attribute: 'scheduledTasks',
         label: 'scheduled',
         count: status.scheduledTasks,
@@ -95,7 +95,7 @@ const StatusPage = (props) => {
         link: '/tasks/scheduled'
       },
       {
-        type: 'overdue',
+        type: 'danger',
         attribute: 'lateTasks',
         label: 'overdue',
         count: status.lateTasks,
@@ -103,7 +103,7 @@ const StatusPage = (props) => {
         link: '/tasks/scheduled'
       },
       {
-        type: 'cleaning',
+        type: 'warning',
         attribute: 'cleaningTasks',
         label: 'cleaning',
         count: status.cleaningTasks,
@@ -111,7 +111,7 @@ const StatusPage = (props) => {
         link: '/tasks/cleaning'
       },
       {
-        type: 'lbCleanup',
+        type: 'warning-strong',
         attribute: 'lbCleanupTasks',
         label: 'load balancer cleanup',
         count: status.lbCleanupTasks,
