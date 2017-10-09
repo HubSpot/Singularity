@@ -15,6 +15,7 @@ import configureStore from 'store';
 import { FetchUser } from 'actions/api/auth';
 import { FetchGroups } from 'actions/api/requestGroups';
 import { FetchUtilization } from 'actions/api/utilization';
+import { FetchSingularityStatus } from 'actions/api/state';
 import { actions as tailerActions } from 'singularityui-tailer';
 import { AddStarredRequests } from 'actions/api/users';
 import Utils from './utils';
@@ -23,7 +24,7 @@ import { useRouterHistory } from 'react-router';
 import { createHistory } from 'history';
 
 // Set up third party configurations
-import { loadThirdParty } from 'thirdPartyConfigurations';
+import  { loadThirdParty } from 'thirdPartyConfigurations';
 
 import './assets/static/images/favicon.ico';
 
@@ -78,11 +79,19 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
 
-    // set up request groups
-    store.dispatch(FetchGroups.trigger([404, 500]));
+    const globalRefresh = () => {
+      // set up request groups
+      store.dispatch(FetchGroups.trigger([404, 500]));
 
-    // set up cluster utilization
-    store.dispatch(FetchUtilization.trigger([404, 500]));
+      // set up cluster utilization
+      store.dispatch(FetchUtilization.trigger([404, 500]));
+
+      // set up state
+      store.dispatch(FetchSingularityStatus.trigger());
+    };
+
+    globalRefresh();
+    setInterval(globalRefresh, config.globalRefreshInterval);
 
     // set up hot module reloading
     if (module.hot) {
