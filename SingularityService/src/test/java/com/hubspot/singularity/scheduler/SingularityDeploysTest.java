@@ -728,6 +728,7 @@ public class SingularityDeploysTest extends SingularitySchedulerTestBase {
 
     scheduler.drainPendingQueue();
     sms.resourceOffers(Arrays.asList(createOffer(20, 20000, "slave1", "host1")));
+
     statusUpdate(taskManager.getActiveTasks().get(0), TaskState.TASK_FAILED);
 
     deployChecker.checkDeploys();
