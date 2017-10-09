@@ -4,15 +4,15 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-import org.apache.mesos.Protos.FrameworkID;
-import org.apache.mesos.Protos.Offer;
-import org.apache.mesos.Protos.OfferID;
-import org.apache.mesos.Protos.Resource;
-import org.apache.mesos.Protos.SlaveID;
-import org.apache.mesos.Protos.Value.Range;
-import org.apache.mesos.Protos.Value.Ranges;
-import org.apache.mesos.Protos.Value.Scalar;
-import org.apache.mesos.Protos.Value.Type;
+import org.apache.mesos.v1.Protos.FrameworkID;
+import org.apache.mesos.v1.Protos.Offer;
+import org.apache.mesos.v1.Protos.OfferID;
+import org.apache.mesos.v1.Protos.Resource;
+import org.apache.mesos.v1.Protos.AgentID;
+import org.apache.mesos.v1.Protos.Value.Range;
+import org.apache.mesos.v1.Protos.Value.Ranges;
+import org.apache.mesos.v1.Protos.Value.Scalar;
+import org.apache.mesos.v1.Protos.Value.Type;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -169,7 +169,7 @@ public class MesosUtilsTest {
         .setId(OfferID.newBuilder().setValue("offerid").build())
         .setFrameworkId(FrameworkID.newBuilder().setValue("frameworkid").build())
         .setHostname("hostname")
-        .setSlaveId(SlaveID.newBuilder().setValue("slaveid").build());
+        .setAgentId(AgentID.newBuilder().setValue("slaveid").build());
 
     offer.addResources(buildPortRanges(ranges));
 

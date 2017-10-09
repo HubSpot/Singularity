@@ -11,8 +11,8 @@ import java.util.stream.Collectors;
 
 import javax.inject.Singleton;
 
-import org.apache.mesos.Protos.Offer;
-import org.apache.mesos.Protos.SlaveID;
+import org.apache.mesos.v1.Protos.Offer;
+import org.apache.mesos.v1.Protos.AgentID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -304,7 +304,7 @@ public class SingularitySlaveAndRackManager {
     return false;
   }
 
-  public void slaveLost(SlaveID slaveIdObj) {
+  public void slaveLost(AgentID slaveIdObj) {
     final String slaveId = slaveIdObj.getValue();
 
     Optional<SingularitySlave> slave = slaveManager.getObject(slaveId);
@@ -432,7 +432,7 @@ public class SingularitySlaveAndRackManager {
 
   @Timed
   public CheckResult checkOffer(Offer offer) {
-    final String slaveId = offer.getSlaveId().getValue();
+    final String slaveId = offer.getAgentId().getValue();
     final String rackId = slaveAndRackHelper.getRackIdOrDefault(offer);
     final String host = slaveAndRackHelper.getMaybeTruncatedHost(offer);
     final Map<String, String> textAttributes = slaveAndRackHelper.getTextAttributes(offer);
@@ -508,7 +508,7 @@ public class SingularitySlaveAndRackManager {
     for (SingularityTaskId activeTaskId : stateCache.getActiveTaskIds()) {
       if (!activeTaskId.equals(taskId) && activeTaskId.getSanitizedHost().equals(taskId.getSanitizedHost())) {
         Optional<SingularityTask> maybeTask = taskManager.getTask(activeTaskId);
-        if (maybeTask.isPresent() && slaveId.equals(maybeTask.get().getSlaveId().getValue())) {
+        if (maybeTask.isPresent() && slaveId.equals(maybeTask.get().getAgentId().getValue())) {
           return true;
         }
       }

@@ -6,8 +6,8 @@ import Utils from '../../utils';
 
 function getStatusTextColor(driverStatus) {
   switch (driverStatus) {
-    case 'DRIVER_RUNNING': return 'color-success';
-    case 'DRIVER_NOT_STARTED': return 'text-muted';
+    case 'SUBSCRIBED': return 'color-success';
+    case 'NOT_STARTED': return 'text-muted';
     default: return '';
   }
 }
@@ -30,7 +30,7 @@ function HostStates(props) {
           sortable={true}
         />
         <Column
-          label="Driver status"
+          label="Scheduler Client Status"
           id="driverStatus"
           key="driverStatus"
           cellData={(host) => host.driverStatus}
@@ -42,7 +42,7 @@ function HostStates(props) {
           label="Connected"
           id="mesosConnected"
           key="mesosConnected"
-          cellData={(host) => host.driverStatus === 'DRIVER_RUNNING' && host.mesosConnected}
+          cellData={(host) => host.driverStatus === 'SUBSCRIBED' && host.mesosConnected}
           cellRender={(mesosConnected) => (
             <Glyphicon
               className={mesosConnected ? 'color-success' : 'color-error'}
