@@ -464,25 +464,18 @@ public class SingularityScheduler {
       }
 
       List<SingularityTaskId> remainingActiveTasks = new ArrayList<>(matchingTaskIds);
-      List<SingularityTaskId> toClean = new ArrayList<>();
       final int expectedInstances = numMissingInstances + matchingTaskIds.size();
       LOG.info("expected {} active {}", expectedInstances, matchingTaskIds);
 
       List<Integer> usedIds = new ArrayList<>();
-      for (SingularityTaskId activeTaskId : remainingActiveTasks) {
-        if (usedIds.contains(activeTaskId.getInstanceNo())) {
-          toClean.add(activeTaskId);
-        } else if (activeTaskId.getInstanceNo() > expectedInstances) {
-          toClean.add(activeTaskId);
+      for (SingularityTaskId taskId : matchingTaskIds) {
+        if (usedIds.contains(taskId.getInstanceNo()) || taskId.getInstanceNo() > expectedInstances) {
+          remainingActiveTasks.remove(taskId);
+          LOG.info("Cleaning up task {} due to new request {} - scaling down to {} instances", taskId.getId(), request.getId(), request.getInstancesSafe());
+          taskManager.createTaskCleanup(new SingularityTaskCleanup(pendingRequest.getUser(), TaskCleanupType.SCALING_DOWN, now, taskId, Optional.absent(), Optional.absent(), Optional.absent()));
         }
-        usedIds.add(activeTaskId.getInstanceNo());
+        usedIds.add(taskId.getInstanceNo());
       }
-      toClean.forEach((taskId) -> {
-        remainingActiveTasks.remove(taskId);
-        LOG.info("Cleaning up task {} due to new request {} - scaling down to {} instances", taskId.getId(), request.getId(), request.getInstancesSafe());
-        taskManager.createTaskCleanup(new SingularityTaskCleanup(pendingRequest.getUser(), TaskCleanupType.SCALING_DOWN, now, taskId, Optional.<String>absent(), Optional.<String>absent(), Optional.<SingularityTaskShellCommandRequestId>absent()));
-        remainingActiveTasks.remove(taskId);
-      });
 
       if (request.isRackSensitive() && configuration.isRebalanceRacksOnScaleDown()) {
         List<SingularityTaskId> extraCleanedTasks = new ArrayList<>();
