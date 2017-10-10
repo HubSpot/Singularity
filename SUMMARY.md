@@ -23,6 +23,7 @@
   * [Task Search](Docs/features/task-search.md)
   * [Incremental Deploys](Docs/features/incremental-deploys.md)
   * [Disaster Detection & Disabled Actions](Docs/features/disaster-detection.md)
+  * [Cluster Coordinator](Docs/features/cluster-coordinator.md)
 * Reference
   * [Configuration](Docs/reference/configuration.md)
   * [Container Options](Docs/reference/container-options.md)
