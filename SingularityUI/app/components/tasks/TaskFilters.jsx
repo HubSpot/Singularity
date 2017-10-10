@@ -107,10 +107,11 @@ export default class TaskFilters extends React.Component {
 
   renderRequestTypeFilter() {
     const filterItems = this.props.displayRequestTypeFilters && TaskFilters.REQUEST_TYPES.map((requestType, index) => {
+      const isActive = _.contains(this.props.filter.requestTypes, requestType);
       return (
-        <li key={index} className={_.contains(this.props.filter.requestTypes, requestType) ? 'active' : ''}>
+        <li key={index} className={isActive ? 'active' : ''}>
           <a onClick={() => this.toggleRequestType(requestType)}>
-            <Glyphicon glyph="ok" /> {Utils.humanizeText(requestType)}
+            {isActive ? <Glyphicon glyph="ok" /> : <span className="icon-placeholder" />} {Utils.humanizeText(requestType)}
           </a>
         </li>
       );

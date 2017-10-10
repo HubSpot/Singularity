@@ -5,7 +5,7 @@
   <parent>
     <groupId>com.hubspot</groupId>
     <artifactId>Singularity</artifactId>
-    <version>0.17.0-SNAPSHOT</version>
+    <version>0.18.0-SNAPSHOT</version>
   </parent>
 
   <artifactId>SingularityService</artifactId>
@@ -24,6 +24,12 @@
     <dependency>
       <groupId>com.hubspot</groupId>
       <artifactId>SingularityServiceBase</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>com.hubspot</groupId>
+      <artifactId>SingularityUI</artifactId>
+      <scope>runtime</scope>
     </dependency>
 
     <dependency>
@@ -373,6 +379,12 @@
     <dependency>
       <groupId>com.h2database</groupId>
       <artifactId>h2</artifactId>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>com.jayway.awaitility</groupId>
+      <artifactId>awaitility</artifactId>
       <scope>test</scope>
     </dependency>
 

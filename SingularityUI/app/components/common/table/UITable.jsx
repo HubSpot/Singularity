@@ -4,6 +4,7 @@ import classNames from 'classnames';
 
 import BootstrapTable from 'react-bootstrap/lib/Table';
 import { Pagination } from 'react-bootstrap';
+import Loader from '../Loader';
 
 class UITable extends Component {
 
@@ -56,6 +57,7 @@ class UITable extends Component {
   };
 
   static defaultProps = {
+    striped: true,
     paginated: false,
     rowChunkSize: 30,
     defaultSortBy: undefined,
@@ -425,10 +427,10 @@ class UITable extends Component {
 
   render() {
     if (this.props.showPageLoaderWhenFetching && this.props.isFetching) {
-      return <div className="page-loader fixed" />;
+      return <Loader />;
     }
     let maybeTable = (
-      <BootstrapTable responsive={true} striped={true} className={this.props.className}>
+      <BootstrapTable responsive={true} striped={this.props.striped} className={this.props.className}>
         <thead>
           {this.renderTableHeader()}
         </thead>
@@ -484,7 +486,8 @@ UITable.propTypes = {
   emptyTableMessage: PropTypes.oneOfType([
     PropTypes.node,
     PropTypes.string
-  ])
+  ]),
+  striped: PropTypes.bool
 };
 
 export default UITable;

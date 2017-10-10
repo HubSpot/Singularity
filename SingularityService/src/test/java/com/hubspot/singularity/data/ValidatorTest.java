@@ -88,7 +88,7 @@ public class ValidatorTest extends SingularityTestBaseNoDb {
 
     WebApplicationException exn = (WebApplicationException) catchThrowable(() -> validator.checkDeploy(singularityRequest, singularityDeploy, Collections.emptyList(), Collections.emptyList()));
     assertThat((String) exn.getResponse().getEntity())
-        .contains("[a-zA-Z0-9_]");
+        .contains("[a-zA-Z0-9_.]");
   }
 
   @Test(expected = WebApplicationException.class)
@@ -320,4 +320,32 @@ public class ValidatorTest extends SingularityTestBaseNoDb {
         .contains("Max healthcheck time");
   }
 
+  @Test
+  public void itAllowsWorkerToServiceTransitionIfNotLoadBalanced() {
+    SingularityRequest request = new SingularityRequestBuilder("test", RequestType.WORKER)
+        .build();
+    SingularityRequest newRequest = new SingularityRequestBuilder("test", RequestType.SERVICE)
+        .build();
+    SingularityRequest result = validator.checkSingularityRequest(newRequest, Optional.of(request), Optional.absent(), Optional.absent());
+    Assert.assertEquals(newRequest.getRequestType(), result.getRequestType());
+  }
+
+  @Test(expected = WebApplicationException.class)
+  public void itDoesNotWorkerToServiceTransitionIfLoadBalanced() {
+    SingularityRequest request = new SingularityRequestBuilder("test", RequestType.WORKER)
+        .build();
+    SingularityRequest newRequest = new SingularityRequestBuilder("test", RequestType.SERVICE)
+        .setLoadBalanced(Optional.of(true))
+        .build();
+    validator.checkSingularityRequest(newRequest, Optional.of(request), Optional.absent(), Optional.absent());
+  }
+
+  @Test(expected = WebApplicationException.class)
+  public void itDoesNotAllowOtherRequestTypesToChange() {
+    SingularityRequest request = new SingularityRequestBuilder("test", RequestType.ON_DEMAND)
+        .build();
+    SingularityRequest newRequest = new SingularityRequestBuilder("test", RequestType.SCHEDULED)
+        .build();
+    validator.checkSingularityRequest(newRequest, Optional.of(request), Optional.absent(), Optional.absent());
+  }
 }

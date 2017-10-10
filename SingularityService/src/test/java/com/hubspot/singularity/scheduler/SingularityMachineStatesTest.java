@@ -138,7 +138,7 @@ public class SingularityMachineStatesTest extends SingularitySchedulerTestBase {
 
     saveAndSchedule(request.toBuilder().setInstances(Optional.of(2)));
 
-    scheduler.drainPendingQueue(stateCacheProvider.get());
+    scheduler.drainPendingQueue();
 
     sms.resourceOffers(driver, Arrays.asList(createOffer(1, 129, "slave1", "host1", Optional.of("rack1"))));
     sms.resourceOffers(driver, Arrays.asList(createOffer(1, 129, "slave2", "host2", Optional.of("rack1"))));
@@ -254,7 +254,7 @@ public class SingularityMachineStatesTest extends SingularitySchedulerTestBase {
 
     Assert.assertEquals(StateChangeResult.SUCCESS, slaveManager.changeState("slave1", MachineState.STARTING_DECOMMISSION, Optional.absent(), Optional.of("user1")));
 
-    scheduler.drainPendingQueue(stateCacheProvider.get());
+    scheduler.drainPendingQueue();
     sms.resourceOffers(driver, Arrays.asList(createOffer(1, 129, "slave1", "host1", Optional.of("rack1"))));
 
     Assert.assertEquals(MachineState.DECOMMISSIONED, slaveManager.getObject("slave1").get().getCurrentState().getState());
@@ -331,9 +331,10 @@ public class SingularityMachineStatesTest extends SingularitySchedulerTestBase {
     initRequest();
     initFirstDeploy();
 
-    saveAndSchedule(request.toBuilder().setSlavePlacement(Optional.of(SlavePlacement.OPTIMISTIC)).setInstances(Optional.of(2)));
+    saveAndSchedule(request.toBuilder().setSlavePlacement(Optional.of(SlavePlacement.GREEDY)).setInstances(Optional.of(2)));
 
-    resourceOffers();
+    sms.resourceOffers(driver, Arrays.asList(createOffer(1, 128, "slave1", "host1")));
+    sms.resourceOffers(driver, Arrays.asList(createOffer(1, 128, "slave2", "host2")));
 
     // freeze slave1
     Assert.assertEquals(StateChangeResult.SUCCESS, slaveManager.changeState("slave1", MachineState.FROZEN, Optional.absent(), Optional.of("user1")));
@@ -473,14 +474,14 @@ public class SingularityMachineStatesTest extends SingularitySchedulerTestBase {
     initRequest();
     initFirstDeploy();
     requestResource.postRequest(request.toBuilder().setInstances(Optional.of(2)).build());
-    scheduler.drainPendingQueue(stateCacheProvider.get());
+    scheduler.drainPendingQueue();
     resourceOffers(1);
     SingularitySlave slave = slaveManager.getObjects().get(0);
 
     slaveResource.decommissionSlave(slave.getId(), new SingularityMachineChangeRequest(Optional.of(1L), Optional.absent(), Optional.absent(), Optional.of(MachineState.DECOMMISSIONED), Optional.of(true)));
     Assert.assertEquals(MachineState.STARTING_DECOMMISSION, slaveManager.getObjects().get(0).getCurrentState().getState());
-    scheduler.checkForDecomissions(stateCacheProvider.get());
-    scheduler.drainPendingQueue(stateCacheProvider.get());
+    scheduler.checkForDecomissions();
+    scheduler.drainPendingQueue();
     Assert.assertEquals(TaskCleanupType.DECOMISSIONING, taskManager.getCleanupTasks().get(0).getCleanupType());
 
     expiringUserActionPoller.runActionOnPoll();

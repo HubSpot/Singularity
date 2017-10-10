@@ -23,6 +23,7 @@ import * as Cols from './Columns';
 import filterSelector from '../../selectors/requests/filterSelector';
 
 import Utils from '../../utils';
+import Loader from '../common/Loader';
 
 class RequestsPage extends Component {
 
@@ -43,7 +44,9 @@ class RequestsPage extends Component {
       state: PropTypes.string,
       subFilter: PropTypes.array,
       searchFilter: PropTypes.string
-    }).isRequired
+    }).isRequired,
+    requestUtilizations: PropTypes.array,
+    groups: PropTypes.array
   };
 
   constructor(props) {
@@ -60,7 +63,7 @@ class RequestsPage extends Component {
     });
 
     const subFilter = filter.subFilter.length === RequestFilters.REQUEST_TYPES.length ? 'all' : filter.subFilter.join(',');
-    this.props.router.push(`/requests/${filter.state}/${subFilter}/${filter.searchFilter}`);
+    this.props.router.push(`/requests/${filter.group}/${filter.state}/${subFilter}/${filter.searchFilter}`);
 
     if (lastFilterState !== filter.state) {
       this.props.fetchFilter(filter.state).then(() => {
@@ -84,7 +87,7 @@ class RequestsPage extends Component {
           Cols.Type,
           Cols.State,
           Cols.Instances,
-          Cols.Schedule,
+          Cols.Group,
           Cols.Actions
         ];
       default:
@@ -97,18 +100,18 @@ class RequestsPage extends Component {
           Cols.DeployId,
           Cols.DeployUser,
           Cols.LastDeploy,
-          Cols.Schedule,
+          Cols.Group,
           Cols.Actions
         ];
     }
   }
 
   render() {
-    const displayRequests = filterSelector({requestsInState: this.props.requestsInState, filter: this.props.filter});
+    const displayRequests = filterSelector({requestsInState: this.props.requestsInState, filter: this.props.filter, requestUtilizations: this.props.requestUtilizations});
 
     let table;
     if (this.state.loading) {
-      table = <div className="page-loader fixed"></div>;
+      table = <Loader />;
     } else if (!displayRequests.length) {
       table = <div className="empty-table-message"><p>No matching requests</p></div>;
     } else {
@@ -124,13 +127,15 @@ class RequestsPage extends Component {
     }
 
     return (
-      <div>
+      <div className="tabbed-page">
         <RequestFilters
           filter={this.props.filter}
           onFilterChange={(filter) => this.handleFilterChange(filter)}
           displayRequestTypeFilters={!_.contains(['pending', 'cleaning'], this.props.filter.state)}
-        />
-        {table}
+          groups={this.props.groups}
+        >
+          {table}
+        </RequestFilters>
       </div>
     );
   }
@@ -138,6 +143,7 @@ class RequestsPage extends Component {
 
 function mapStateToProps(state, ownProps) {
   const requestsInState = state.api.requestsInState.data;
+  const userGroups = Utils.maybe(state.api.user, ['data', 'user', 'groups']) || [];
   const modifiedRequests = requestsInState.map((request) => {
     const hasActiveDeploy = !!(request.activeDeploy || (request.requestDeployState && request.requestDeployState.activeDeploy));
     return {
@@ -151,7 +157,8 @@ function mapStateToProps(state, ownProps) {
   const filter = {
     state: ownProps.params.state || 'all',
     subFilter: !ownProps.params.subFilter || ownProps.params.subFilter === 'all' ? RequestFilters.REQUEST_TYPES : ownProps.params.subFilter.split(','),
-    searchFilter: ownProps.params.searchFilter || ''
+    searchFilter: ownProps.params.searchFilter || '',
+    group: ownProps.params.group || 'all',
   };
   const statusCode = Utils.maybe(state, ['api', 'requestsInState', 'statusCode']);
 
@@ -159,6 +166,8 @@ function mapStateToProps(state, ownProps) {
     pathname: ownProps.location.pathname,
     notFound: statusCode === 404,
     requestsInState: modifiedRequests,
+    requestUtilizations: state.api.utilization.data.requestUtilizations,
+    groups: userGroups,
     filter
   };
 }
@@ -179,4 +188,4 @@ function mapDispatchToProps(dispatch) {
   };
 }
 
-export default connect(mapStateToProps, mapDispatchToProps)(rootComponent(withRouter(RequestsPage), (props) => refresh(props.params.state || 'all')));
+export default connect(mapStateToProps, mapDispatchToProps)(rootComponent(withRouter(RequestsPage), (props) => refresh(props.params.state || 'all'), true, false));

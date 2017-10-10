@@ -19,7 +19,6 @@ import org.slf4j.LoggerFactory;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.inject.Inject;
-import com.google.inject.Provider;
 import com.hubspot.mesos.MesosUtils;
 import com.hubspot.mesos.Resources;
 import com.hubspot.singularity.RequestType;
@@ -37,8 +36,8 @@ import com.hubspot.singularity.data.DeployManager;
 import com.hubspot.singularity.data.DisasterManager;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.data.UsageManager;
+import com.hubspot.singularity.scheduler.SingularityLeaderCache;
 import com.hubspot.singularity.scheduler.SingularityScheduler;
-import com.hubspot.singularity.scheduler.SingularitySchedulerStateCache;
 
 @Singleton
 public class SingularityMesosOfferScheduler {
@@ -60,7 +59,7 @@ public class SingularityMesosOfferScheduler {
   private final DeployManager deployManager;
 
 
-  private final Provider<SingularitySchedulerStateCache> stateCacheProvider;
+  private final SingularityLeaderCache leaderCache;
 
   @Inject
   public SingularityMesosOfferScheduler(MesosConfiguration mesosConfiguration,
@@ -73,7 +72,7 @@ public class SingularityMesosOfferScheduler {
                                         SingularitySlaveAndRackManager slaveAndRackManager,
                                         SingularityTaskSizeOptimizer taskSizeOptimizer,
                                         SingularitySlaveAndRackHelper slaveAndRackHelper,
-                                        Provider<SingularitySchedulerStateCache> stateCacheProvider,
+                                        SingularityLeaderCache leaderCache,
                                         DisasterManager disasterManager,
                                         UsageManager usageManager,
                                         DeployManager deployManager) {
@@ -85,7 +84,7 @@ public class SingularityMesosOfferScheduler {
     this.mesosTaskBuilder = mesosTaskBuilder;
     this.slaveAndRackManager = slaveAndRackManager;
     this.taskSizeOptimizer = taskSizeOptimizer;
-    this.stateCacheProvider = stateCacheProvider;
+    this.leaderCache = leaderCache;
     this.slaveAndRackHelper = slaveAndRackHelper;
     this.disasterManager = disasterManager;
     this.taskPrioritizer = taskPrioritizer;
@@ -96,10 +95,9 @@ public class SingularityMesosOfferScheduler {
   public List<SingularityOfferHolder> checkOffers(final Collection<Protos.Offer> offers) {
     boolean useTaskCredits = disasterManager.isTaskCreditEnabled();
     int taskCredits = useTaskCredits ? disasterManager.getUpdatedCreditCount() : -1;
-    final SingularitySchedulerStateCache stateCache = stateCacheProvider.get();
 
-    scheduler.checkForDecomissions(stateCache);
-    scheduler.drainPendingQueue(stateCache);
+    scheduler.checkForDecomissions();
+    scheduler.drainPendingQueue();
 
     final Map<String, SingularityTaskRequestHolder> pendingTaskIdToTaskRequest = getDueTaskRequestHolders();
 
@@ -151,7 +149,7 @@ public class SingularityMesosOfferScheduler {
           }
 
           Optional<SingularitySlaveUsageWithId> maybeSlaveUsage = getSlaveUsage(currentSlaveUsages, offerHolder.getSlaveId());
-          double score = score(offerHolder, stateCache, tasksPerOfferPerRequest, taskRequestHolder, maybeSlaveUsage);
+          double score = score(offerHolder, tasksPerOfferPerRequest, taskRequestHolder, maybeSlaveUsage);
           LOG.trace("Scored {} | Task {} | Offer - mem {} - cpu {} | Slave {} | maybeSlaveUsage - {}", score, taskRequestHolder.getTaskRequest().getPendingTask().getPendingTaskId().getId(),
               MesosUtils.getMemory(offerHolder.getCurrentResources(), Optional.absent()), MesosUtils.getNumCpus(offerHolder.getCurrentResources(), Optional.absent()), offerHolder.getHostname(), maybeSlaveUsage);
 
@@ -164,7 +162,7 @@ public class SingularityMesosOfferScheduler {
           SingularityOfferHolder bestOffer = Collections.max(scorePerOffer.entrySet(), Map.Entry.comparingByValue()).getKey();
           LOG.info("Best offer {}/1 is on {}", scorePerOffer.get(bestOffer), bestOffer.getSanitizedHost());
 
-          SingularityTask task = acceptTask(bestOffer, stateCache, tasksPerOfferPerRequest, taskRequestHolder);
+          SingularityTask task = acceptTask(bestOffer, tasksPerOfferPerRequest, taskRequestHolder);
 
           tasksScheduled++;
           if (useTaskCredits) {
@@ -240,7 +238,7 @@ public class SingularityMesosOfferScheduler {
     return filteredSlaveUsages.size() == 1 ? Optional.of(filteredSlaveUsages.get(0)) : Optional.absent();
   }
 
-  private double score(SingularityOfferHolder offerHolder, SingularitySchedulerStateCache stateCache, Map<String, Map<String, Integer>> tasksPerOfferHostPerRequest,
+  private double score(SingularityOfferHolder offerHolder, Map<String, Map<String, Integer>> tasksPerOfferHostPerRequest,
                        SingularityTaskRequestHolder taskRequestHolder, Optional<SingularitySlaveUsageWithId> maybeSlaveUsage) {
 
     final SingularityTaskRequest taskRequest = taskRequestHolder.getTaskRequest();
@@ -255,7 +253,7 @@ public class SingularityMesosOfferScheduler {
       return 0;
     }
 
-    if (isTooManyInstancesForRequest(taskRequest, stateCache)) {
+    if (isTooManyInstancesForRequest(taskRequest)) {
       LOG.debug("Skipping pending task {}, too many instances already running", pendingTaskId);
       return 0;
     }
@@ -268,7 +266,7 @@ public class SingularityMesosOfferScheduler {
 
     final boolean matchesResources = MesosUtils.doesOfferMatchResources(taskRequest.getRequest().getRequiredRole(),
         taskRequestHolder.getTotalResources(), offerHolder.getCurrentResources(), taskRequestHolder.getRequestedPorts());
-    final SlaveMatchState slaveMatchState = slaveAndRackManager.doesOfferMatch(offerHolder, taskRequest, stateCache);
+    final SlaveMatchState slaveMatchState = slaveAndRackManager.doesOfferMatch(offerHolder, taskRequest);
 
     if (matchesResources && slaveMatchState.isMatchAllowed()) {
       return score(offerHolder.getHostname(), taskRequest, maybeSlaveUsage);
@@ -354,7 +352,7 @@ public class SingularityMesosOfferScheduler {
     return score;
   }
 
-  private SingularityTask acceptTask(SingularityOfferHolder offerHolder, SingularitySchedulerStateCache stateCache, Map<String, Map<String, Integer>> tasksPerOfferPerRequest, SingularityTaskRequestHolder taskRequestHolder) {
+  private SingularityTask acceptTask(SingularityOfferHolder offerHolder, Map<String, Map<String, Integer>> tasksPerOfferPerRequest, SingularityTaskRequestHolder taskRequestHolder) {
     final SingularityTaskRequest taskRequest = taskRequestHolder.getTaskRequest();
     final SingularityTask task = mesosTaskBuilder.buildTask(offerHolder, offerHolder.getCurrentResources(), taskRequest, taskRequestHolder.getTaskResources(), taskRequestHolder.getExecutorResources());
 
@@ -368,10 +366,7 @@ public class SingularityMesosOfferScheduler {
 
     taskManager.createTaskAndDeletePendingTask(zkTask);
 
-    stateCache.getActiveTaskIds().add(task.getTaskId());
-    stateCache.getActiveTaskIdsForRequest(task.getTaskRequest().getRequest().getId()).add(task.getTaskId());
     addRequestToMapByOfferHost(tasksPerOfferPerRequest, offerHolder.getHostname(), taskRequest.getRequest().getId());
-    stateCache.getScheduledTasks().remove(taskRequest.getPendingTask());
 
     return task;
   }
@@ -402,11 +397,11 @@ public class SingularityMesosOfferScheduler {
     return maxPerOfferPerRequest > 0 && tasksPerOfferHostPerRequest.get(hostname).get(taskRequest.getRequest().getId()) > maxPerOfferPerRequest;
   }
 
-  private boolean isTooManyInstancesForRequest(SingularityTaskRequest taskRequest, SingularitySchedulerStateCache stateCache) {
+  private boolean isTooManyInstancesForRequest(SingularityTaskRequest taskRequest) {
     if (taskRequest.getRequest().getRequestType() == RequestType.ON_DEMAND) {
       int maxActiveOnDemandTasks = taskRequest.getRequest().getInstances().or(configuration.getMaxActiveOnDemandTasksPerRequest());
       if (maxActiveOnDemandTasks > 0) {
-        int activeTasksForRequest = stateCache.getActiveTaskIdsForRequest(taskRequest.getRequest().getId()).size();
+        int activeTasksForRequest = leaderCache.getActiveTaskIdsForRequest(taskRequest.getRequest().getId()).size();
         LOG.debug("Running {} instances for request {}. Max is {}", activeTasksForRequest, taskRequest.getRequest().getId(), maxActiveOnDemandTasks);
         if (activeTasksForRequest >= maxActiveOnDemandTasks) {
           return true;

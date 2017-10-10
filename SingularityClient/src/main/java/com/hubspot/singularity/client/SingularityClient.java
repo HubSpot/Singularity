@@ -44,6 +44,7 @@ import com.hubspot.singularity.OrderDirection;
 import com.hubspot.singularity.SingularityAction;
 import com.hubspot.singularity.SingularityAuthorizationScope;
 import com.hubspot.singularity.SingularityClientCredentials;
+import com.hubspot.singularity.SingularityClusterUtilization;
 import com.hubspot.singularity.SingularityCreateResult;
 import com.hubspot.singularity.SingularityDeleteResult;
 import com.hubspot.singularity.SingularityDeploy;
@@ -102,6 +103,9 @@ public class SingularityClient {
 
   private static final String STATE_FORMAT = "%s/state";
   private static final String TASK_RECONCILIATION_FORMAT = STATE_FORMAT + "/task-reconciliation";
+
+  private static final String USAGE_FORMAT = "%s/usage";
+  private static final String CLUSTER_UTILIZATION_FORMAT = USAGE_FORMAT + "/cluster/utilization";
 
   private static final String RACKS_FORMAT = "%s/racks";
   private static final String RACKS_DECOMISSION_FORMAT = RACKS_FORMAT + "/rack/%s/decommission";
@@ -533,6 +537,12 @@ public class SingularityClient {
     LOG.info("Got task reconciliation statistics in {}ms", System.currentTimeMillis() - start);
 
     return Optional.of(response.getAs(SingularityTaskReconciliationStatistics.class));
+  }
+
+  public Optional<SingularityClusterUtilization> getClusterUtilization() {
+    final Function<String, String> uri = (host) -> String.format(CLUSTER_UTILIZATION_FORMAT, getApiBase(host));
+
+    return getSingle(uri, "clusterUtilization", "", SingularityClusterUtilization.class);
   }
 
   //

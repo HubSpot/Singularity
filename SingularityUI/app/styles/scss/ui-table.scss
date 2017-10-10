@@ -16,4 +16,10 @@ table {
       }
     }
   }
+
+  td {
+    &.icon-column {
+      width: 3em;
+    }
+  }
 }

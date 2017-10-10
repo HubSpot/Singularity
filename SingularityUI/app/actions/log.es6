@@ -34,7 +34,7 @@ export const initialize = (requestId, path, search, taskIds, viewMode) => (dispa
         dispatch(initTask(taskId, offset, resolvedPath, true, false));
         return taskInitDeferred.resolve();
       })
-      .error(function({status}) {
+      .fail(function({status}) {
         if (status === 404) {
           dispatch(taskFileDoesNotExist(taskGroupId, taskId));
           return taskInitDeferred.resolve();
@@ -178,7 +178,7 @@ export const taskGroupFetchNext = taskGroupId =>
           } else if (offset == 0) {
             return dispatch(emptyFile(taskGroupId, taskId));
           }
-        }).error(error => Utils.ignore404(error));
+        }).fail(error => Utils.ignore404(error));
         promise.taskId = taskId;
         return promise;
       }
