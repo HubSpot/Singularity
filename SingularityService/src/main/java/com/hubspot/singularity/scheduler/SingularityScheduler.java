@@ -464,12 +464,25 @@ public class SingularityScheduler {
       }
 
       List<SingularityTaskId> remainingActiveTasks = new ArrayList<>(matchingTaskIds);
-      for (int i = 0; i < Math.abs(numMissingInstances); i++) {
-        final SingularityTaskId toCleanup = matchingTaskIds.get(i);
-        remainingActiveTasks.remove(toCleanup);
-        LOG.info("Cleaning up task {} due to new request {} - scaling down to {} instances", toCleanup.getId(), request.getId(), request.getInstancesSafe());
-        taskManager.createTaskCleanup(new SingularityTaskCleanup(pendingRequest.getUser(), TaskCleanupType.SCALING_DOWN, now, toCleanup, Optional.<String>absent(), Optional.<String>absent(), Optional.<SingularityTaskShellCommandRequestId>absent()));
+      List<SingularityTaskId> toClean = new ArrayList<>();
+      final int expectedInstances = numMissingInstances + matchingTaskIds.size();
+      LOG.info("expected {} active {}", expectedInstances, matchingTaskIds);
+
+      List<Integer> usedIds = new ArrayList<>();
+      for (SingularityTaskId activeTaskId : remainingActiveTasks) {
+        if (usedIds.contains(activeTaskId.getInstanceNo())) {
+          toClean.add(activeTaskId);
+        } else if (activeTaskId.getInstanceNo() > expectedInstances) {
+          toClean.add(activeTaskId);
+        }
+        usedIds.add(activeTaskId.getInstanceNo());
       }
+      toClean.forEach((taskId) -> {
+        remainingActiveTasks.remove(taskId);
+        LOG.info("Cleaning up task {} due to new request {} - scaling down to {} instances", taskId.getId(), request.getId(), request.getInstancesSafe());
+        taskManager.createTaskCleanup(new SingularityTaskCleanup(pendingRequest.getUser(), TaskCleanupType.SCALING_DOWN, now, taskId, Optional.<String>absent(), Optional.<String>absent(), Optional.<SingularityTaskShellCommandRequestId>absent()));
+        remainingActiveTasks.remove(taskId);
+      });
 
       if (request.isRackSensitive() && configuration.isRebalanceRacksOnScaleDown()) {
         List<SingularityTaskId> extraCleanedTasks = new ArrayList<>();

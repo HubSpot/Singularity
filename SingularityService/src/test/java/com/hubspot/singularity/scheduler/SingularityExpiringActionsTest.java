@@ -115,6 +115,7 @@ public class SingularityExpiringActionsTest extends SingularitySchedulerTestBase
 
     resourceOffers();
     cleaner.drainCleanupQueue();
+    cleaner.drainCleanupQueue();
     killKilledTasks();
 
     Assert.assertEquals(3, taskManager.getActiveTaskIds().size());
