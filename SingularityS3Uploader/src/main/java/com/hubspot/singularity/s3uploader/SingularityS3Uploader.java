@@ -129,10 +129,8 @@ public class SingularityS3Uploader {
       return found;
     }
 
-    boolean checkSubDirectories = uploadMetadata.getFileGlob().contains("**");
-
     for (Path file : JavaUtils.iterable(directory)) {
-      found += handleFile(file, isFinished, synchronizedToUpload, toUpload, checkSubDirectories);
+      found += handleFile(file, isFinished, synchronizedToUpload, toUpload);
     }
 
     if (toUpload.isEmpty()) {
@@ -144,13 +142,13 @@ public class SingularityS3Uploader {
     return found;
   }
 
-  private int handleFile(Path path, boolean isFinished, Set<Path> synchronizedToUpload, List<Path> toUpload, boolean checkSubDirectories) throws IOException {
+  private int handleFile(Path path, boolean isFinished, Set<Path> synchronizedToUpload, List<Path> toUpload) throws IOException {
     int found = 0;
     if (Files.isDirectory(path, LinkOption.NOFOLLOW_LINKS)) {
-      if (checkSubDirectories) {
+      if (uploadMetadata.isCheckSubdirectories()) {
         LOG.debug("{} was a directory, checking files in directory", path);
         for (Path file : JavaUtils.iterable(path)) {
-          found += handleFile(file, isFinished, synchronizedToUpload, toUpload, checkSubDirectories);
+          found += handleFile(file, isFinished, synchronizedToUpload, toUpload);
         }
       } else {
         LOG.debug("{} was a directory, skipping", path);

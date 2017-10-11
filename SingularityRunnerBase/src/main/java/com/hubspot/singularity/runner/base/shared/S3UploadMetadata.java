@@ -49,6 +49,7 @@ public class S3UploadMetadata {
   private final Optional<String> s3StorageClass;
   private final Optional<Long> applyStorageClassIfOverBytes;
   private final Optional<Boolean> uploadImmediately;
+  private final boolean checkSubdirectories;
 
   @JsonCreator
   public S3UploadMetadata(@JsonProperty("directory") String directory,
@@ -63,7 +64,8 @@ public class S3UploadMetadata {
                           @JsonProperty("finishedAfterMillisWithoutNewFile") Optional<Long> finishedAfterMillisWithoutNewFile,
                           @JsonProperty("storageClass") Optional<String> s3StorageClass,
                           @JsonProperty("applyStorageClassIfOverBytes") Optional<Long> applyStorageClassIfOverBytes,
-                          @JsonProperty("uploadImmediately") Optional<Boolean> uploadImmediately) {
+                          @JsonProperty("uploadImmediately") Optional<Boolean> uploadImmediately,
+                          @JsonProperty("checkSubdirectories") Optional<Boolean> checkSubdirectories) {
     Preconditions.checkNotNull(directory);
     Preconditions.checkNotNull(fileGlob);
     Preconditions.checkNotNull(s3Bucket);
@@ -82,7 +84,10 @@ public class S3UploadMetadata {
     this.finishedAfterMillisWithoutNewFile = finishedAfterMillisWithoutNewFile;
     this.applyStorageClassIfOverBytes = applyStorageClassIfOverBytes;
     this.uploadImmediately = uploadImmediately;
+    this.checkSubdirectories = checkSubdirectories.or(false);
   }
+
+
 
   @Override
   public int hashCode() {
@@ -174,11 +179,27 @@ public class S3UploadMetadata {
     return uploadImmediately;
   }
 
-  @Override
-  public String toString() {
-    return "S3UploadMetadata [directory=" + directory + ", fileGlob=" + fileGlob + ", s3Bucket=" + s3Bucket + ", s3KeyFormat=" + s3KeyFormat + ", finished=" + finished + ", onFinishGlob="
-        + onFinishGlob + ", pid=" + pid + ", s3AccessKey=" + s3AccessKey + ", s3SecretKey=" + s3SecretKey + ", finishedAfterMillisWithoutNewFile=" + finishedAfterMillisWithoutNewFile
-        + ", s3StorageClass=" + s3StorageClass + ", applyStorageClassIfOverBytes=" + applyStorageClassIfOverBytes + ", uploadImmediately=" + uploadImmediately + "]";
+  public boolean isCheckSubdirectories() {
+    return checkSubdirectories;
   }
 
+  @Override
+  public String toString() {
+    return "S3UploadMetadata{" +
+        "directory='" + directory + '\'' +
+        ", fileGlob='" + fileGlob + '\'' +
+        ", s3Bucket='" + s3Bucket + '\'' +
+        ", s3KeyFormat='" + s3KeyFormat + '\'' +
+        ", finished=" + finished +
+        ", onFinishGlob=" + onFinishGlob +
+        ", pid=" + pid +
+        ", s3AccessKey=" + s3AccessKey +
+        ", s3SecretKey=" + s3SecretKey +
+        ", finishedAfterMillisWithoutNewFile=" + finishedAfterMillisWithoutNewFile +
+        ", s3StorageClass=" + s3StorageClass +
+        ", applyStorageClassIfOverBytes=" + applyStorageClassIfOverBytes +
+        ", uploadImmediately=" + uploadImmediately +
+        ", checkSubdirectories=" + checkSubdirectories +
+        '}';
+  }
 }

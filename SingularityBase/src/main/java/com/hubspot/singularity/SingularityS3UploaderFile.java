@@ -12,10 +12,11 @@ public class SingularityS3UploaderFile {
   private final Optional<String> directory;
   private final Optional<String> s3StorageClass;
   private final Optional<Long> applyS3StorageClassAfterBytes;
+  private final boolean checkSubdirectories;
 
   @JsonCreator
   public static SingularityS3UploaderFile fromString(String value) {
-    return new SingularityS3UploaderFile(value, Optional.<String>absent(), Optional.<String>absent(), Optional.<String>absent(), Optional.<String>absent(), Optional.<String>absent(), Optional.<Long>absent());
+    return new SingularityS3UploaderFile(value, Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent());
   }
 
   @JsonCreator
@@ -25,7 +26,8 @@ public class SingularityS3UploaderFile {
                                    @JsonProperty("s3UploaderFilenameHint") Optional<String> s3UploaderFilenameHint,
                                    @JsonProperty("directory") Optional<String> directory,
                                    @JsonProperty("s3StorageClass") Optional<String> s3StorageClass,
-                                   @JsonProperty("applyS3StorageClassAfterBytes") Optional<Long> applyS3StorageClassAfterBytes) {
+                                   @JsonProperty("applyS3StorageClassAfterBytes") Optional<Long> applyS3StorageClassAfterBytes,
+                                   @JsonProperty("checkSubdirectories") Optional<Boolean> checkSubdirectories) {
     this.filename = filename;
     this.s3UploaderBucket = s3UploaderBucket;
     this.s3UploaderKeyPattern = s3UploaderKeyPattern;
@@ -33,6 +35,7 @@ public class SingularityS3UploaderFile {
     this.directory = directory;
     this.s3StorageClass = s3StorageClass;
     this.applyS3StorageClassAfterBytes = applyS3StorageClassAfterBytes;
+    this.checkSubdirectories = checkSubdirectories.or(false);
   }
 
   public String getFilename() {
@@ -63,6 +66,10 @@ public class SingularityS3UploaderFile {
     return applyS3StorageClassAfterBytes;
   }
 
+  public boolean isCheckSubdirectories() {
+    return checkSubdirectories;
+  }
+
   @Override
   public String toString() {
     return "SingularityS3UploaderFile{" +
@@ -73,6 +80,7 @@ public class SingularityS3UploaderFile {
         ", directory=" + directory +
         ", s3StorageClass=" + s3StorageClass +
         ", applyS3StorageClassAfterBytes=" + applyS3StorageClassAfterBytes +
+        ", checkSubdirectories=" + checkSubdirectories +
         '}';
   }
 }
