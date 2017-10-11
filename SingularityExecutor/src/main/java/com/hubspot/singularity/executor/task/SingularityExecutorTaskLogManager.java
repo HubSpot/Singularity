@@ -70,15 +70,16 @@ public class SingularityExecutorTaskLogManager {
       Path directory = additionalFile.getDirectory().isPresent() ? taskDefinition.getTaskDirectoryPath().resolve(additionalFile.getDirectory().get()) : taskDefinition.getTaskDirectoryPath();
       String fileGlob = additionalFile.getFilename() != null && additionalFile.getFilename().contains("*") ? additionalFile.getFilename() : String.format("%s*.[gb]z*", additionalFile.getFilename());
       result = result && writeS3MetadataFile(additionalFile.getS3UploaderFilenameHint().or(String.format("file%d", index)), directory, fileGlob, additionalFile.getS3UploaderBucket(), additionalFile.getS3UploaderKeyPattern(), finished,
-          additionalFile.getS3StorageClass().or(taskDefinition.getExecutorData().getS3StorageClass()), additionalFile.getApplyS3StorageClassAfterBytes().or(taskDefinition.getExecutorData().getApplyS3StorageClassAfterBytes()));
+          additionalFile.getS3StorageClass().or(taskDefinition.getExecutorData().getS3StorageClass()), additionalFile.getApplyS3StorageClassAfterBytes().or(taskDefinition.getExecutorData().getApplyS3StorageClassAfterBytes()),
+          additionalFile.isCheckSubdirectories());
       index++;
       handledLogs.add(additionalFile.getFilename());
     }
 
     // Allow an additional file to override the upload settings for service.log
     if (!handledLogs.contains(taskDefinition.getServiceLogFileName())) {
-      result = result && writeS3MetadataFile("default", logrotateDirectory, String.format("%s*.[gb]z*", taskDefinition.getServiceLogOutPath().getFileName()), Optional.<String>absent(), Optional.<String>absent(), finished,
-         taskDefinition.getExecutorData().getS3StorageClass(), taskDefinition.getExecutorData().getApplyS3StorageClassAfterBytes());
+      result = result && writeS3MetadataFile("default", logrotateDirectory, String.format("%s*.[gb]z*", taskDefinition.getServiceLogOutPath().getFileName()), Optional.absent(), Optional.absent(), finished,
+         taskDefinition.getExecutorData().getS3StorageClass(), taskDefinition.getExecutorData().getApplyS3StorageClassAfterBytes(), false);
     }
 
     return result;
@@ -109,7 +110,8 @@ public class SingularityExecutorTaskLogManager {
     if (!taskDefinition.shouldLogrotateLogFile()) {
       writeS3MetadataForNonLogRotatedFileSuccess = writeS3MetadataFile("unrotated", taskDefinition.getServiceLogOutPath().getParent(),
           taskDefinition.getServiceLogOutPath().getFileName().toString(), Optional.<String>absent(), Optional.<String>absent(), true,
-          taskDefinition.getExecutorData().getS3StorageClass(), taskDefinition.getExecutorData().getApplyS3StorageClassAfterBytes());
+          taskDefinition.getExecutorData().getS3StorageClass(), taskDefinition.getExecutorData().getApplyS3StorageClassAfterBytes(),
+          false);
     }
 
     if (manualLogrotate()) {
@@ -243,7 +245,7 @@ public class SingularityExecutorTaskLogManager {
   }
 
   private boolean writeS3MetadataFile(String filenameHint, Path pathToS3Directory, String globForS3Files, Optional<String> s3Bucket, Optional<String> s3KeyPattern, boolean finished,
-    Optional<String> s3StorageClass, Optional<Long> applyS3StorageClassAfterBytes) {
+    Optional<String> s3StorageClass, Optional<Long> applyS3StorageClassAfterBytes, boolean checkSubdirectories) {
     final String s3UploaderBucket = s3Bucket.or(taskDefinition.getExecutorData().getDefaultS3Bucket());
 
     if (Strings.isNullOrEmpty(s3UploaderBucket)) {
@@ -252,7 +254,7 @@ public class SingularityExecutorTaskLogManager {
     }
 
     S3UploadMetadata s3UploadMetadata = new S3UploadMetadata(pathToS3Directory.toString(), globForS3Files, s3UploaderBucket, getS3KeyPattern(s3KeyPattern.or(taskDefinition.getExecutorData().getS3UploaderKeyPattern())), finished, Optional.<String> absent(),
-        Optional.<Integer> absent(), Optional.<String> absent(), Optional.<String> absent(), Optional.<Long> absent(), s3StorageClass, applyS3StorageClassAfterBytes, Optional.of(finished));
+        Optional. absent(), Optional. absent(), Optional. absent(), Optional. absent(), s3StorageClass, applyS3StorageClassAfterBytes, Optional.of(finished), Optional.of(checkSubdirectories));
 
     String s3UploadMetadataFileName = String.format("%s-%s%s", taskDefinition.getTaskId(), filenameHint, baseConfiguration.getS3UploaderMetadataSuffix());
 
