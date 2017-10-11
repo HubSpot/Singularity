@@ -40,9 +40,9 @@
     <dropwizard.guicier.version>1.0.6.0</dropwizard.guicier.version>
     <baragon.version>0.5.0</baragon.version>
     <horizon.version>0.0.25</horizon.version>
-    <mesos.docker.tag>0.28.1-2.0.20.ubuntu1404</mesos.docker.tag>
-    <mesos.version>0.28.2</mesos.version>
-    <singularitybase.image.revision>2</singularitybase.image.revision>
+    <mesos.docker.tag>1.1.1</mesos.docker.tag>
+    <mesos.version>1.1.2</mesos.version>
+    <singularitybase.image.revision>1</singularitybase.image.revision>
     <aws.sdk.version>1.11.69</aws.sdk.version>
     <project.build.targetJdk>1.8</project.build.targetJdk>
     <dep.metrics-guice.version>3.1.3</dep.metrics-guice.version>
@@ -171,6 +171,30 @@
       </dependency>
 
       <dependency>
+        <groupId>com.mesosphere.mesos.rx.java</groupId>
+        <artifactId>mesos-rxjava-protobuf-client</artifactId>
+        <version>0.1.2</version>
+      </dependency>
+
+      <dependency>
+        <groupId>io.reactivex</groupId>
+        <artifactId>rxjava</artifactId>
+        <version>1.1.8</version>
+      </dependency>
+
+      <dependency>
+        <groupId>com.mesosphere.mesos.rx.java</groupId>
+        <artifactId>mesos-rxjava-client</artifactId>
+        <version>0.1.2</version>
+      </dependency>
+
+      <dependency>
+        <groupId>com.mesosphere.mesos.rx.java</groupId>
+        <artifactId>mesos-rxjava-util</artifactId>
+        <version>0.1.2</version>
+      </dependency>
+
+      <dependency>
         <groupId>com.spotify</groupId>
         <artifactId>docker-client</artifactId>
         <version>8.4.0</version>
@@ -269,11 +293,21 @@
           </exclusion>
         </exclusions>
       </dependency>
-
+      <dependency>
+        <groupId>com.google.protobuf</groupId>
+        <artifactId>protobuf-java</artifactId>
+        <version>2.6.1</version>
+      </dependency>
       <dependency>
         <groupId>org.jukito</groupId>
         <artifactId>jukito</artifactId>
         <version>1.5</version>
+      </dependency>
+
+      <dependency>
+        <groupId>io.netty</groupId>
+        <artifactId>netty-codec</artifactId>
+        <version>4.1.4.Final</version>
       </dependency>
     </dependencies>
   </dependencyManagement>
@@ -367,6 +401,24 @@
         			</pluginExecutions>
         		</lifecycleMappingMetadata>
         	</configuration>
+        </plugin>
+        <plugin>
+          <groupId>org.basepom.maven</groupId>
+          <artifactId>duplicate-finder-maven-plugin</artifactId>
+          <configuration>
+            <ignoredResourcePatterns>
+              <ignoredResourcePattern>.*\.html</ignoredResourcePattern>
+              <ignoredResourcePattern>about_files/.*</ignoredResourcePattern>
+              <ignoredResourcePattern>plugin\.properties</ignoredResourcePattern>
+              <ignoredResourcePattern>plugin\.xml</ignoredResourcePattern>
+              <ignoredResourcePattern>.*\.java</ignoredResourcePattern>
+              <ignoredResourcePattern>log4j\.xml</ignoredResourcePattern>
+              <ignoredResourcePattern>log4j\.properties</ignoredResourcePattern>
+              <ignoredResourcePattern>logback\.xml</ignoredResourcePattern>
+              <ignoredResourcePattern>logback\.properties</ignoredResourcePattern>
+              <ignoredResourcePattern>.*licenses\.xml</ignoredResourcePattern>
+            </ignoredResourcePatterns>
+          </configuration>
         </plugin>
         <!-- Fixes issues with checkstlye if you use logback for logging in maven -->
         <plugin>

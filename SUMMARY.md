@@ -15,6 +15,7 @@
   * [Load Balancer Integration](Docs/development/load-balancer-integration.md)
   * [Basepom](Docs/development/basepom.md)
 * [Releases](Docs/releases/index.md)
+  * [Upgrading to Mesos 1.x](Docs/reference/upgrading-to-mesos-1.md)
 * Feature Docs
   * [Choosing Custom Ports](Docs/features/custom-ports.md)
   * [Expiring Actions](Docs/features/expiring-actions.md)

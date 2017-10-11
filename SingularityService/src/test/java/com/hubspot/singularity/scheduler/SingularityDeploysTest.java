@@ -7,7 +7,7 @@ import java.util.concurrent.TimeUnit;
 
 import javax.ws.rs.WebApplicationException;
 
-import org.apache.mesos.Protos.TaskState;
+import org.apache.mesos.v1.Protos.TaskState;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -727,7 +727,8 @@ public class SingularityDeploysTest extends SingularitySchedulerTestBase {
     Assert.assertTrue(requestManager.getRequest(requestId).get().getState() == RequestState.DEPLOYING_TO_UNPAUSE);
 
     scheduler.drainPendingQueue();
-    sms.resourceOffers(driver, Arrays.asList(createOffer(20, 20000, "slave1", "host1")));
+    sms.resourceOffers(Arrays.asList(createOffer(20, 20000, "slave1", "host1")));
+
     statusUpdate(taskManager.getActiveTasks().get(0), TaskState.TASK_FAILED);
 
     deployChecker.checkDeploys();
@@ -743,7 +744,7 @@ public class SingularityDeploysTest extends SingularitySchedulerTestBase {
     Assert.assertTrue(requestManager.getRequest(requestId).get().getState() == RequestState.DEPLOYING_TO_UNPAUSE);
 
     scheduler.drainPendingQueue();
-    sms.resourceOffers(driver, Arrays.asList(createOffer(20, 20000, "slave1", "host1")));
+    sms.resourceOffers(Arrays.asList(createOffer(20, 20000, "slave1", "host1")));
 
     statusUpdate(taskManager.getActiveTasks().get(0), TaskState.TASK_RUNNING);
     deployChecker.checkDeploys();

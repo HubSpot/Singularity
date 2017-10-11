@@ -2,7 +2,7 @@ package com.hubspot.singularity.mesos;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
-import org.apache.mesos.Protos;
+import org.apache.mesos.v1.Protos;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,15 +28,18 @@ public class SingularityMesosFrameworkMessageHandler {
     this.commandUpdateTranscoder = commandUpdateTranscoder;
   }
 
-  public void handleMessage(Protos.ExecutorID executorId, Protos.SlaveID slaveId, byte[] data) {
+  public void handleMessage(Protos.ExecutorID executorId, Protos.AgentID slaveId, byte[] data) {
+    SingularityTaskShellCommandUpdate shellUpdate = null;
     try {
-      SingularityTaskShellCommandUpdate shellUpdate = commandUpdateTranscoder.fromBytes(data);
+      shellUpdate = commandUpdateTranscoder.fromBytes(data);
 
       SingularityCreateResult saved = taskManager.saveTaskShellCommandUpdate(shellUpdate);
 
       LOG.debug("Saved {} with result {}", shellUpdate, saved);
     } catch (SingularityTranscoderException ste) {
       LOG.warn("Framework message {} not a commandUpdate", new String(data, UTF_8));
+    } catch (Exception e) {
+      LOG.error("While processing framework message {}", shellUpdate, e);
     }
   }
 

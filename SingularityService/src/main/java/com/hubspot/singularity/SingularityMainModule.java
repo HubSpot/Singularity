@@ -79,6 +79,7 @@ import de.neuland.jade4j.parser.Parser;
 import de.neuland.jade4j.parser.node.Node;
 import de.neuland.jade4j.template.JadeTemplate;
 import io.dropwizard.jetty.HttpConnectorFactory;
+import io.dropwizard.server.DefaultServerFactory;
 import io.dropwizard.server.SimpleServerFactory;
 
 
@@ -129,7 +130,6 @@ public class SingularityMainModule implements Module {
     Multibinder<LeaderLatchListener> leaderLatchListeners = Multibinder.newSetBinder(binder, LeaderLatchListener.class);
     leaderLatchListeners.addBinding().to(SingularityLeaderController.class).in(Scopes.SINGLETON);
 
-    binder.bind(SingularityDriverManager.class).in(Scopes.SINGLETON);
     binder.bind(SingularityLeaderController.class).in(Scopes.SINGLETON);
     if (configuration.getSmtpConfigurationOptional().isPresent()) {
       binder.bind(SingularityMailer.class).to(SmtpMailer.class).in(Scopes.SINGLETON);
@@ -224,7 +224,12 @@ public class SingularityMainModule implements Module {
   @Provides
   @Named(SINGULARITY_URI_BASE)
   String getSingularityUriBase(final SingularityConfiguration configuration) {
-    final String singularityUiPrefix = configuration.getUiConfiguration().getBaseUrl().or(((SimpleServerFactory) configuration.getServerFactory()).getApplicationContextPath());
+    final String singularityUiPrefix;
+    if (configuration.getServerFactory() instanceof  SimpleServerFactory) {
+      singularityUiPrefix = configuration.getUiConfiguration().getBaseUrl().or(((SimpleServerFactory) configuration.getServerFactory()).getApplicationContextPath());
+    } else {
+      singularityUiPrefix = configuration.getUiConfiguration().getBaseUrl().or(((DefaultServerFactory) configuration.getServerFactory()).getApplicationContextPath());
+    }
     return (singularityUiPrefix.endsWith("/")) ?  singularityUiPrefix.substring(0, singularityUiPrefix.length() - 1) : singularityUiPrefix;
   }
 
