@@ -814,7 +814,7 @@ public class SingularityClient {
     return post(requestUri, "start shell command", Optional.of(shellCommand), Optional.of(SingularityTaskShellCommandRequest.class)).orNull();
   }
 
-  public Collection<SingularityTaskShellCommandHistory> getShellCommandHisotry(String taskId) {
+  public Collection<SingularityTaskShellCommandHistory> getShellCommandHistory(String taskId) {
     final Function<String, String> requestUri = (host) -> String.format(SHELL_COMMAND_FORMAT, getApiBase(host), taskId);
 
     return getCollection(requestUri, "get shell command history", SHELL_COMMAND_HISTORY);
