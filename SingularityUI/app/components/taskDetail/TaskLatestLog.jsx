@@ -6,9 +6,9 @@ import { Link } from 'react-router';
 import Section from '../common/Section';
 import TaskStatus from './TaskStatus';
 
-const getLink = (status, taskId, files, available) => {
-  const runningTaskLogFound = files.files && _.find(files.files, (f) => {
-    return f.uiPath === Utils.substituteTaskId(config.runningTaskLogPath, taskId);
+const getLink = (status, taskId, files) => {
+  const runningTaskLogFound = files.files && _.find(files.files, (file) => {
+    return file.uiPath === Utils.substituteTaskId(config.runningTaskLogPath, taskId);
   });
 
   if (status === TaskStatus.RUNNING || runningTaskLogFound) {
@@ -29,7 +29,7 @@ const getLink = (status, taskId, files, available) => {
 };
 
 function TaskLatestLog({status, taskId, files, available}) {
-  const link = getLink(status, taskId, files, available);
+  const link = getLink(status, taskId, files);
 
   if (status === TaskStatus.NEVER_RAN || !available) {
     return null;
