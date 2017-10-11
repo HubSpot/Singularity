@@ -47,6 +47,7 @@
     <project.build.targetJdk>1.8</project.build.targetJdk>
     <dep.metrics-guice.version>3.1.3</dep.metrics-guice.version>
     <dep.dropwizard-metrics.version>3.1.4</dep.dropwizard-metrics.version>
+    <dep.mesos.rxjava.version>0.2.0</dep.mesos.rxjava.version>
   </properties>
 
   <modules>
@@ -173,7 +174,7 @@
       <dependency>
         <groupId>com.mesosphere.mesos.rx.java</groupId>
         <artifactId>mesos-rxjava-protobuf-client</artifactId>
-        <version>0.1.2</version>
+        <version>${dep.mesos.rxjava.version}</version>
       </dependency>
 
       <dependency>
@@ -185,13 +186,13 @@
       <dependency>
         <groupId>com.mesosphere.mesos.rx.java</groupId>
         <artifactId>mesos-rxjava-client</artifactId>
-        <version>0.1.2</version>
+        <version>${dep.mesos.rxjava.version}</version>
       </dependency>
 
       <dependency>
         <groupId>com.mesosphere.mesos.rx.java</groupId>
         <artifactId>mesos-rxjava-util</artifactId>
-        <version>0.1.2</version>
+        <version>${dep.mesos.rxjava.version}</version>
       </dependency>
 
       <dependency>

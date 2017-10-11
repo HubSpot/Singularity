@@ -45,6 +45,7 @@ import com.mesosphere.mesos.rx.java.SinkOperations;
 import com.mesosphere.mesos.rx.java.protobuf.ProtobufMesosClientBuilder;
 import com.mesosphere.mesos.rx.java.util.UserAgentEntries;
 
+import rx.BackpressureOverflow;
 import rx.Observable;
 import rx.subjects.PublishSubject;
 import rx.subjects.SerializedSubject;
@@ -146,7 +147,14 @@ public class SingularityMesosSchedulerClient {
 
     MesosClientBuilder<Call, Event> clientBuilder = ProtobufMesosClientBuilder.schedulerUsingProtos()
         .mesosUri(mesosMasterURI)
-        .applicationUserAgentEntry(UserAgentEntries.userAgentEntryForMavenArtifact("com.hubspot.singularity", "SingularityService"));
+        .applicationUserAgentEntry(UserAgentEntries.userAgentEntryForMavenArtifact("com.hubspot.singularity", "SingularityService"))
+        .onBackpressureBuffer(
+            scheduler.getEventBufferSize(),
+            () -> {
+              String message = String.format("Overflow of event buffer (%s), singularity could not keep up!", scheduler.getEventBufferSize());
+              scheduler.onUncaughtException(new EventBufferOverflowException(message));
+            },
+            BackpressureOverflow.ON_OVERFLOW_ERROR);
 
     Call subscribeCall = Call.newBuilder()
         .setType(Call.Type.SUBSCRIBE)
@@ -160,14 +168,7 @@ public class SingularityMesosSchedulerClient {
 
     subscribe.processStream(unicastEvents -> {
 
-      final Observable<Event> events = unicastEvents.share()
-          .onBackpressureBuffer(
-              scheduler.getEventBufferSize(),
-              () -> {
-                String message = String.format("Overflow of event buffer (%s), singularity could not keep up!", scheduler.getEventBufferSize());
-                scheduler.onUncaughtException(new EventBufferOverflowException(message));
-              }
-          );
+      final Observable<Event> events = unicastEvents.share();
 
       events.filter(event -> event.getType() == Event.Type.ERROR)
           .map(event -> event.getError().getMessage())
