@@ -15,6 +15,7 @@ import java.util.concurrent.locks.ReentrantLock;
 import org.apache.mesos.ExecutorDriver;
 import org.apache.mesos.Protos;
 import org.apache.mesos.Protos.Status;
+import org.apache.mesos.Protos.TaskID;
 import org.apache.mesos.Protos.TaskState;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -358,7 +359,7 @@ public class SingularityExecutorMonitor {
   }
 
   private void sendStatusUpdate(SingularityExecutorTask task, Protos.TaskState taskState, String message) {
-    executorUtils.sendStatusUpdate(task.getDriver(), task.getTaskInfo(), taskState, message, task.getLog());
+    executorUtils.sendStatusUpdate(task.getDriver(), TaskID.newBuilder().setValue(task.getTaskId()).build(), taskState, message, task.getLog());
   }
 
   private void onFinish(SingularityExecutorTask task, Protos.TaskState taskState) {

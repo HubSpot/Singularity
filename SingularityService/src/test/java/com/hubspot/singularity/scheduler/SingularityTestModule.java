@@ -9,11 +9,7 @@ import java.util.Set;
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.curator.test.TestingServer;
-import org.apache.mesos.Protos.MasterInfo;
-import org.apache.mesos.Protos.Status;
-import org.apache.mesos.SchedulerDriver;
 import org.eclipse.jetty.util.component.LifeCycle;
-import org.mockito.Matchers;
 import org.slf4j.LoggerFactory;
 
 import com.codahale.metrics.MetricRegistry;
@@ -41,7 +37,6 @@ import com.hubspot.mesos.client.MesosClient;
 import com.hubspot.singularity.SingularityAbort;
 import com.hubspot.singularity.SingularityAuthModule;
 import com.hubspot.singularity.SingularityMainModule;
-import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTestAuthenticator;
 import com.hubspot.singularity.auth.authenticator.SingularityAuthenticator;
 import com.hubspot.singularity.config.MesosConfiguration;
@@ -56,10 +51,9 @@ import com.hubspot.singularity.data.zkmigrations.SingularityZkMigrationsModule;
 import com.hubspot.singularity.event.SingularityEventModule;
 import com.hubspot.singularity.hooks.LoadBalancerClient;
 import com.hubspot.singularity.mesos.OfferCache;
-import com.hubspot.singularity.mesos.SchedulerDriverSupplier;
-import com.hubspot.singularity.mesos.SingularityDriver;
 import com.hubspot.singularity.mesos.SingularityMesosExecutorInfoSupport;
 import com.hubspot.singularity.mesos.SingularityMesosModule;
+import com.hubspot.singularity.mesos.SingularityMesosSchedulerClient;
 import com.hubspot.singularity.mesos.SingularityOfferCache;
 import com.hubspot.singularity.resources.DeployResource;
 import com.hubspot.singularity.resources.PriorityResource;
@@ -134,6 +128,7 @@ public class SingularityTestModule implements Module {
 
     mainBinder.bind(TestingServer.class).toInstance(ts);
     final SingularityConfiguration configuration = getSingularityConfigurationForTestingServer(ts);
+    configuration.getMesosConfiguration().setMaster("");
 
     if (useDBTests) {
       configuration.setDatabaseConfiguration(getDataSourceFactory());
@@ -184,21 +179,9 @@ public class SingularityTestModule implements Module {
             SingularityMesosExecutorInfoSupport logSupport = mock(SingularityMesosExecutorInfoSupport.class);
             binder.bind(SingularityMesosExecutorInfoSupport.class).toInstance(logSupport);
 
-            SingularityDriver mock = mock(SingularityDriver.class);
-            when(mock.kill((SingularityTaskId) Matchers.any())).thenReturn(Status.DRIVER_RUNNING);
-            when(mock.getMaster()).thenReturn(Optional.<MasterInfo>absent());
-            when(mock.start()).thenReturn(Status.DRIVER_RUNNING);
-            when(mock.getLastOfferTimestamp()).thenReturn(Optional.<Long>absent());
-            binder.bind(SingularityDriver.class).toInstance(mock);
-
-            SchedulerDriver driver = mock(SchedulerDriver.class);
-
-            when(driver.killTask(null)).thenReturn(Status.DRIVER_RUNNING);
-
-            SchedulerDriverSupplier driverSupplier = new SchedulerDriverSupplier();
-            driverSupplier.setSchedulerDriver(driver);
-
-            binder.bind(SchedulerDriverSupplier.class).toInstance(driverSupplier);
+            SingularityMesosSchedulerClient mockClient = mock(SingularityMesosSchedulerClient.class);
+            when(mockClient.isRunning()).thenReturn(true);
+            binder.bind(SingularityMesosSchedulerClient.class).toInstance(mockClient);
           }
         }));
 

@@ -12,7 +12,6 @@ import java.util.stream.Collectors;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.api.transaction.CuratorTransactionFinal;
 import org.apache.curator.utils.ZKPaths;
-import org.apache.mesos.Protos.TaskStatus;
 import org.apache.zookeeper.KeeperException;
 import org.apache.zookeeper.data.Stat;
 import org.slf4j.Logger;
@@ -95,7 +94,7 @@ public class TaskManager extends CuratorAsyncManager {
 
   private static final String HEALTHCHECKS_PATH = "/healthchecks";
   private static final String HEALTHCHECKS_FINISHED_PATH = "/healthchecks-finished";
-  private static final String STARTUP_HEALTHCHECK_PATH_SUFFIX = "-STARTUP";
+  private static final String STARTUP_HEALTHCHECK_PATH_SUFFIX = "-NOT_STARTED";
 
   private static final String METADATA_PATH = "/metadata";
   private static final String UPDATES_PATH = "/updates";
@@ -470,7 +469,7 @@ public class TaskManager extends CuratorAsyncManager {
     for (SingularityTaskId activeTaskId : activeTaskIds) {
       if (activeTaskId.getSanitizedHost().equals(sanitizedHost)) {
         Optional<SingularityTask> maybeTask = getTask(activeTaskId);
-        if (maybeTask.isPresent() && slave.getId().equals(maybeTask.get().getSlaveId().getValue())) {
+        if (maybeTask.isPresent() && slave.getId().equals(maybeTask.get().getAgentId().getValue())) {
           tasks.add(maybeTask.get());
         }
       }
@@ -745,7 +744,7 @@ public class TaskManager extends CuratorAsyncManager {
     return Optional.of(new SingularityTaskHistory(taskUpdates, directory, containerId, healthchecks, task.get(), loadBalancerUpdates, shellCommandHistory, taskMetadata));
   }
 
-  private List<SingularityTaskShellCommandHistory> getTaskShellCommandHistory(SingularityTaskId taskId) {
+  public List<SingularityTaskShellCommandHistory> getTaskShellCommandHistory(SingularityTaskId taskId) {
     List<SingularityTaskShellCommandRequest> shellRequests = getTaskShellCommandRequestsForTask(taskId);
     List<SingularityTaskShellCommandHistory> shellCommandHistory = new ArrayList<>(shellRequests.size());
 
@@ -904,7 +903,7 @@ public class TaskManager extends CuratorAsyncManager {
     }
 
     saveTaskHistoryUpdate(new SingularityTaskHistoryUpdate(task.getTaskId(), now, ExtendedTaskState.TASK_LAUNCHED, Optional.of(msg), Optional.<String>absent()));
-    saveLastActiveTaskStatus(new SingularityTaskStatusHolder(task.getTaskId(), Optional.<TaskStatus>absent(), now, serverId, Optional.of(task.getSlaveId().getValue())));
+    saveLastActiveTaskStatus(new SingularityTaskStatusHolder(task.getTaskId(), Optional.absent(), now, serverId, Optional.of(task.getAgentId().getValue())));
 
     try {
       final String path = getTaskPath(task.getTaskId());

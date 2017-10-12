@@ -26,6 +26,7 @@ import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import com.hubspot.mesos.JavaUtils;
+import com.hubspot.mesos.SingularityContainerType;
 import com.hubspot.mesos.client.MesosClient;
 import com.hubspot.singularity.MachineState;
 import com.hubspot.singularity.SingularitySlave;
@@ -286,7 +287,9 @@ public class SingularityExecutorCleanup {
       checkForUncompressedLogrotatedFile(taskDefinition);
     }
 
-    boolean isDocker = (taskHistory.isPresent() && taskHistory.get().getTask().getMesosTask().hasContainer() && taskHistory.get().getTask().getMesosTask().getContainer().hasDocker());
+    boolean isDocker = (taskHistory.isPresent()
+        && taskHistory.get().getTask().getTaskRequest().getDeploy().getContainerInfo().isPresent()
+        && taskHistory.get().getTask().getTaskRequest().getDeploy().getContainerInfo().get().getType() == SingularityContainerType.DOCKER);
 
     return taskCleanup.cleanup(cleanupTaskAppDirectory, isDocker);
   }

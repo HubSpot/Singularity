@@ -6,8 +6,8 @@ import java.util.Map;
 
 import javax.inject.Singleton;
 
-import org.apache.mesos.Protos.Attribute;
-import org.apache.mesos.Protos.Offer;
+import org.apache.mesos.v1.Protos.Attribute;
+import org.apache.mesos.v1.Protos.Offer;
 
 import com.google.common.base.Optional;
 import com.google.inject.Inject;
