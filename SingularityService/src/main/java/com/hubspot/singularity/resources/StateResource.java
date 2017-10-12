@@ -13,8 +13,8 @@ import com.google.inject.Inject;
 import com.hubspot.singularity.SingularityService;
 import com.hubspot.singularity.SingularityState;
 import com.hubspot.singularity.SingularityTaskReconciliationStatistics;
-import com.hubspot.singularity.config.UIConfiguration;
 import com.hubspot.singularity.data.StateManager;
+import com.hubspot.singularity.views.IndexView;
 import com.wordnik.swagger.annotations.Api;
 import com.wordnik.swagger.annotations.ApiOperation;
 
@@ -25,12 +25,12 @@ public class StateResource {
   public static final String PATH = SingularityService.API_BASE_PATH + "/state";
 
   private final StateManager stateManager;
-  private final UIConfiguration uiConfiguration;
+  private final IndexView indexView;
 
   @Inject
-  public StateResource(StateManager stateManager, UIConfiguration uiConfiguration) {
+  public StateResource(StateManager stateManager, IndexView indexView) {
     this.stateManager = stateManager;
-    this.uiConfiguration = uiConfiguration;
+    this.indexView = indexView;
   }
 
   @GET
@@ -63,7 +63,7 @@ public class StateResource {
   @GET
   @Path("/ui-configuration")
   @ApiOperation("Retrieve information about the deployed UI configuration")
-  public UIConfiguration getUIConfiguration() {
-    return this.uiConfiguration;
+  public IndexView getUIConfiguration() {
+    return this.indexView;
   }
 }
