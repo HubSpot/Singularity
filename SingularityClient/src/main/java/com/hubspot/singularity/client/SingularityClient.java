@@ -67,6 +67,7 @@ import com.hubspot.singularity.SingularityRequestHistory;
 import com.hubspot.singularity.SingularityRequestParent;
 import com.hubspot.singularity.SingularityS3Log;
 import com.hubspot.singularity.SingularitySandbox;
+import com.hubspot.singularity.SingularityShellCommand;
 import com.hubspot.singularity.SingularitySlave;
 import com.hubspot.singularity.SingularityState;
 import com.hubspot.singularity.SingularityTask;
@@ -78,6 +79,9 @@ import com.hubspot.singularity.SingularityTaskIdHistory;
 import com.hubspot.singularity.SingularityTaskIdsByStatus;
 import com.hubspot.singularity.SingularityTaskReconciliationStatistics;
 import com.hubspot.singularity.SingularityTaskRequest;
+import com.hubspot.singularity.SingularityTaskShellCommandHistory;
+import com.hubspot.singularity.SingularityTaskShellCommandRequest;
+import com.hubspot.singularity.SingularityTaskShellCommandUpdate;
 import com.hubspot.singularity.SingularityTaskState;
 import com.hubspot.singularity.SingularityUpdatePendingDeployRequest;
 import com.hubspot.singularity.SingularityWebhook;
@@ -130,6 +134,9 @@ public class SingularityClient {
   private static final String TASKS_GET_SCHEDULED_FORMAT = TASKS_FORMAT + "/scheduled";
   private static final String TASKS_GET_SCHEDULED_IDS_FORMAT = TASKS_GET_SCHEDULED_FORMAT + "/ids";
   private static final String TASKS_BY_STATE_FORMAT =TASKS_FORMAT + "/ids/request/%s";
+
+  private static final String SHELL_COMMAND_FORMAT = TASKS_FORMAT + "/task/%s/command";
+  private static final String SHELL_COMMAND_UPDATES_FORMAT = SHELL_COMMAND_FORMAT + "/%s/%s";
 
   private static final String HISTORY_FORMAT = "%s/history";
   private static final String TASKS_HISTORY_FORMAT = HISTORY_FORMAT + "/tasks";
@@ -209,6 +216,8 @@ public class SingularityClient {
   private static final TypeReference<Collection<SingularityRequestHistory>> REQUEST_UPDATES_COLLECTION = new TypeReference<Collection<SingularityRequestHistory>>() {};
   private static final TypeReference<Collection<SingularityTaskHistoryUpdate>> TASK_UPDATES_COLLECTION = new TypeReference<Collection<SingularityTaskHistoryUpdate>>() {};
   private static final TypeReference<Collection<SingularityTaskRequest>> TASKS_REQUEST_COLLECTION = new TypeReference<Collection<SingularityTaskRequest>>() {};
+  private static final TypeReference<Collection<SingularityTaskShellCommandHistory>> SHELL_COMMAND_HISTORY = new TypeReference<Collection<SingularityTaskShellCommandHistory>>() {};
+  private static final TypeReference<Collection<SingularityTaskShellCommandUpdate>> SHELL_COMMAND_UPDATES = new TypeReference<Collection<SingularityTaskShellCommandUpdate>>() {};
   private static final TypeReference<Collection<SingularityPendingTaskId>> PENDING_TASK_ID_COLLECTION = new TypeReference<Collection<SingularityPendingTaskId>>() {};
   private static final TypeReference<Collection<SingularityS3Log>> S3_LOG_COLLECTION = new TypeReference<Collection<SingularityS3Log>>() {};
   private static final TypeReference<Collection<SingularityRequestHistory>> REQUEST_HISTORY_COLLECTION = new TypeReference<Collection<SingularityRequestHistory>>() {};
@@ -807,6 +816,24 @@ public class SingularityClient {
     return getSingle(requestUri, "task ids by state", requestId, SingularityTaskIdsByStatus.class);
   }
 
+  public SingularityTaskShellCommandRequest startShellCommand(String taskId, SingularityShellCommand shellCommand) {
+    final Function<String, String> requestUri = (host) -> String.format(SHELL_COMMAND_FORMAT, getApiBase(host), taskId);
+
+    return post(requestUri, "start shell command", Optional.of(shellCommand), Optional.of(SingularityTaskShellCommandRequest.class)).orNull();
+  }
+
+  public Collection<SingularityTaskShellCommandHistory> getShellCommandHistory(String taskId) {
+    final Function<String, String> requestUri = (host) -> String.format(SHELL_COMMAND_FORMAT, getApiBase(host), taskId);
+
+    return getCollection(requestUri, "get shell command history", SHELL_COMMAND_HISTORY);
+  }
+
+  public Collection<SingularityTaskShellCommandUpdate> getShellCommandUpdates(SingularityTaskShellCommandRequest shellCommandRequest) {
+    final Function<String, String> requestUri = (host) -> String.format(SHELL_COMMAND_UPDATES_FORMAT, getApiBase(host), shellCommandRequest.getTaskId(), shellCommandRequest.getShellCommand().getName(), shellCommandRequest.getTimestamp());
+
+    return getCollection(requestUri, "get shell command update history", SHELL_COMMAND_UPDATES);
+  }
+
   //
   // RACKS
   //
@@ -833,7 +860,7 @@ public class SingularityClient {
   public void decommissionRack(String rackId, Optional<SingularityMachineChangeRequest> machineChangeRequest) {
     final Function<String, String> requestUri = (host) -> String.format(RACKS_DECOMISSION_FORMAT, getApiBase(host), rackId);
 
-    post(requestUri, String.format("decomission rack %s", rackId), machineChangeRequest.or(Optional.of(SingularityMachineChangeRequest.empty())));
+    post(requestUri, String.format("decommission rack %s", rackId), machineChangeRequest.or(Optional.of(SingularityMachineChangeRequest.empty())));
   }
 
   public void freezeRack(String rackId, Optional<SingularityMachineChangeRequest> machineChangeRequest) {
@@ -845,7 +872,7 @@ public class SingularityClient {
   public void activateRack(String rackId, Optional<SingularityMachineChangeRequest> machineChangeRequest) {
     final Function<String, String> requestUri = (host) -> String.format(RACKS_ACTIVATE_FORMAT, getApiBase(host), rackId);
 
-    post(requestUri, String.format("decommission rack %s", rackId), machineChangeRequest.or(Optional.of(SingularityMachineChangeRequest.empty())));
+    post(requestUri, String.format("activate rack %s", rackId), machineChangeRequest.or(Optional.of(SingularityMachineChangeRequest.empty())));
   }
 
   public void deleteRack(String rackId) {
