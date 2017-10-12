@@ -831,7 +831,7 @@ public class SingularityClient {
   public Collection<SingularityTaskShellCommandUpdate> getShellCommandUpdates(SingularityTaskShellCommandRequest shellCommandRequest) {
     final Function<String, String> requestUri = (host) -> String.format(SHELL_COMMAND_UPDATES_FORMAT, getApiBase(host), shellCommandRequest.getTaskId(), shellCommandRequest.getShellCommand().getName(), shellCommandRequest.getTimestamp());
 
-    return getCollection(requestUri, "get shell command history", SHELL_COMMAND_UPDATES);
+    return getCollection(requestUri, "get shell command update history", SHELL_COMMAND_UPDATES);
   }
 
   //
@@ -860,7 +860,7 @@ public class SingularityClient {
   public void decommissionRack(String rackId, Optional<SingularityMachineChangeRequest> machineChangeRequest) {
     final Function<String, String> requestUri = (host) -> String.format(RACKS_DECOMISSION_FORMAT, getApiBase(host), rackId);
 
-    post(requestUri, String.format("decomission rack %s", rackId), machineChangeRequest.or(Optional.of(SingularityMachineChangeRequest.empty())));
+    post(requestUri, String.format("decommission rack %s", rackId), machineChangeRequest.or(Optional.of(SingularityMachineChangeRequest.empty())));
   }
 
   public void freezeRack(String rackId, Optional<SingularityMachineChangeRequest> machineChangeRequest) {
@@ -872,7 +872,7 @@ public class SingularityClient {
   public void activateRack(String rackId, Optional<SingularityMachineChangeRequest> machineChangeRequest) {
     final Function<String, String> requestUri = (host) -> String.format(RACKS_ACTIVATE_FORMAT, getApiBase(host), rackId);
 
-    post(requestUri, String.format("decommission rack %s", rackId), machineChangeRequest.or(Optional.of(SingularityMachineChangeRequest.empty())));
+    post(requestUri, String.format("activate rack %s", rackId), machineChangeRequest.or(Optional.of(SingularityMachineChangeRequest.empty())));
   }
 
   public void deleteRack(String rackId) {
