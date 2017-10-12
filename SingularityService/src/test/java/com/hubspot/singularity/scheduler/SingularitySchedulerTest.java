@@ -1658,6 +1658,50 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
   }
 
   @Test
+  public void testScaleDownTakesHighestInstancesWithPendingTask() {
+    initRequest();
+    initFirstDeploy();
+
+    saveAndSchedule(request.toBuilder().setInstances(Optional.of(5)));
+
+    resourceOffers();
+
+    Assert.assertEquals(5, taskManager.getActiveTaskIds().size());
+
+    SingularityTaskId instance2 = null;
+    for (SingularityTaskId taskId : taskManager.getActiveTaskIds()) {
+      if (taskId.getInstanceNo() == 2) {
+        instance2 = taskId;
+      }
+    }
+
+
+    statusUpdate(taskManager.getTask(instance2).get(), TaskState.TASK_KILLED);
+    killKilledTasks();
+
+    scheduler.drainPendingQueue();
+
+    System.out.println(taskManager.getPendingTaskIds());
+
+    requestResource.scale(requestId, new SingularityScaleRequest(Optional.of(3), Optional.<Long> absent(), Optional.<Boolean> absent(),
+        Optional.<String> absent(), Optional.<String>absent(), Optional.<Boolean>absent(), Optional.<Boolean>absent()));
+    scheduler.drainPendingQueue();
+    cleaner.drainCleanupQueue();
+
+    // instances 4 and 5 should get killed
+    Assert.assertEquals(2, taskManager.getKilledTaskIdRecords().size());
+    killKilledTasks();
+
+    resourceOffers();
+
+    // instances 1,2,3 should be active
+    Assert.assertEquals(3, taskManager.getActiveTaskIds().size());
+    for (SingularityTaskId taskId : taskManager.getActiveTaskIds()) {
+      Assert.assertTrue(taskId.getInstanceNo() < 4);
+    }
+  }
+
+  @Test
   public void testRequestsInPendingQueueAreOrderedByTimestamp() {
     long now = System.currentTimeMillis();
     initRequestWithType(RequestType.SCHEDULED, false);
