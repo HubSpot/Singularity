@@ -19,14 +19,14 @@ public class ExecutorUtils {
   }
 
   @SuppressFBWarnings("DM_EXIT")
-  public void sendStatusUpdate(ExecutorDriver driver, Protos.TaskInfo taskInfo, Protos.TaskState taskState, String message, Logger logger) {
+  public void sendStatusUpdate(ExecutorDriver driver, Protos.TaskID taskID, Protos.TaskState taskState, String message, Logger logger) {
     logger.info("Sending status update \"{}\" ({})", message, taskState.name());
 
     message = message.substring(0, Math.min(configuration.getMaxTaskMessageLength(), message.length()));
 
     try {
       final Protos.TaskStatus.Builder builder = Protos.TaskStatus.newBuilder()
-          .setTaskId(taskInfo.getTaskId())
+          .setTaskId(taskID)
           .setState(taskState)
           .setMessage(message);
 

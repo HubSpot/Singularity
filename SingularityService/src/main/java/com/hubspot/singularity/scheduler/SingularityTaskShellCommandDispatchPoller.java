@@ -5,10 +5,8 @@ import java.util.concurrent.TimeUnit;
 
 import javax.inject.Singleton;
 
-import org.apache.mesos.Protos.ExecutorID;
-import org.apache.mesos.Protos.SlaveID;
-import org.apache.mesos.Protos.Status;
-import org.apache.mesos.SchedulerDriver;
+import org.apache.mesos.v1.Protos.AgentID;
+import org.apache.mesos.v1.Protos.ExecutorID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -20,7 +18,7 @@ import com.hubspot.singularity.SingularityTaskShellCommandRequest;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.data.transcoders.Transcoder;
-import com.hubspot.singularity.mesos.SchedulerDriverSupplier;
+import com.hubspot.singularity.mesos.SingularityMesosSchedulerClient;
 
 @Singleton
 public class SingularityTaskShellCommandDispatchPoller extends SingularityLeaderOnlyPoller {
@@ -28,15 +26,15 @@ public class SingularityTaskShellCommandDispatchPoller extends SingularityLeader
   private static final Logger LOG = LoggerFactory.getLogger(SingularityTaskShellCommandDispatchPoller.class);
 
   private final TaskManager taskManager;
-  private final SchedulerDriverSupplier schedulerDriverSupplier;
+  private final SingularityMesosSchedulerClient schedulerClient;
   private final Transcoder<SingularityTaskShellCommandRequest> transcoder;
 
   @Inject
-  SingularityTaskShellCommandDispatchPoller(TaskManager taskManager, SingularityConfiguration configuration, SchedulerDriverSupplier schedulerDriverSupplier, Transcoder<SingularityTaskShellCommandRequest> transcoder) {
+  SingularityTaskShellCommandDispatchPoller(TaskManager taskManager, SingularityConfiguration configuration, SingularityMesosSchedulerClient schedulerClient, Transcoder<SingularityTaskShellCommandRequest> transcoder) {
     super(configuration.getCheckDeploysEverySeconds(), TimeUnit.SECONDS);
 
     this.taskManager = taskManager;
-    this.schedulerDriverSupplier = schedulerDriverSupplier;
+    this.schedulerClient = schedulerClient;
     this.transcoder = transcoder;
   }
 
@@ -46,9 +44,7 @@ public class SingularityTaskShellCommandDispatchPoller extends SingularityLeader
 
     final List<SingularityTaskShellCommandRequest> shellRequests = taskManager.getAllQueuedTaskShellCommandRequests();
 
-    Optional<SchedulerDriver> driver = schedulerDriverSupplier.get();
-
-    if (!driver.isPresent()) {
+    if (!schedulerClient.isRunning()) {
       LOG.warn("Unable to process shell requests because scheduler driver isn't present ({} tasks waiting)", shellRequests.size());
       return;
     }
@@ -67,12 +63,12 @@ public class SingularityTaskShellCommandDispatchPoller extends SingularityLeader
       }
 
       final ExecutorID executorId = task.get().getMesosTask().getExecutor().getExecutorId();
-      final SlaveID slaveId = task.get().getMesosTask().getSlaveId();
+      final AgentID slaveId = task.get().getMesosTask().getAgentId();
       final byte[] bytes = transcoder.toBytes(shellRequest);
 
-      final Status status = driver.get().sendFrameworkMessage(executorId, slaveId, bytes);
+      schedulerClient.frameworkMessage(executorId, slaveId, bytes);
 
-      LOG.info("Sent {} ({} bytes) to {} on {} ({})", shellRequest, bytes.length, executorId, slaveId, status);
+      LOG.info("Sent {} ({} bytes) to {} on {}", shellRequest, bytes.length, executorId, slaveId);
 
       taskManager.saveTaskShellCommandRequestToTask(shellRequest);
       taskManager.deleteTaskShellCommandRequestFromQueue(shellRequest);

@@ -53,14 +53,14 @@ public class MergingSourceProvider implements ConfigurationSourceProvider {
             JsonNode newVal = from.get(newFieldName);
 
             if (oldVal == null || oldVal.isNull()) {
-                to.put(newFieldName, newVal);
+                to.set(newFieldName, newVal);
             } else if (oldVal.isArray() && newVal.isArray()) {
                 ((ArrayNode) oldVal).removeAll();
                 ((ArrayNode) oldVal).addAll((ArrayNode) newVal);
             } else if (oldVal.isObject() && newVal.isObject()) {
                 merge((ObjectNode) oldVal, (ObjectNode) newVal);
             } else if (!(newVal == null || newVal.isNull())) {
-                to.put(newFieldName, newVal);
+                to.set(newFieldName, newVal);
             }
         }
     }

@@ -1,17 +1,19 @@
 package com.hubspot.singularity.mesos;
 
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import org.apache.mesos.Protos;
-import org.apache.mesos.Protos.Offer;
-import org.apache.mesos.Protos.Resource;
-import org.apache.mesos.Protos.Status;
-import org.apache.mesos.Protos.TaskInfo;
-import org.apache.mesos.SchedulerDriver;
+import org.apache.mesos.v1.Protos;
+import org.apache.mesos.v1.Protos.Offer;
+import org.apache.mesos.v1.Protos.Offer.Operation;
+import org.apache.mesos.v1.Protos.Offer.Operation.Launch;
+import org.apache.mesos.v1.Protos.Offer.Operation.Type;
+import org.apache.mesos.v1.Protos.Resource;
+import org.apache.mesos.v1.Protos.TaskInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -57,11 +59,11 @@ public class SingularityOfferHolder {
     this.reservedSlaveAttributes = reservedSlaveAttributes;
   }
 
-  public Map<String, String> getTextAttributes() {
+  Map<String, String> getTextAttributes() {
     return textAttributes;
   }
 
-  public String getRackId() {
+  String getRackId() {
     return rackId;
   }
 
@@ -73,7 +75,7 @@ public class SingularityOfferHolder {
     return !reservedSlaveAttributes.isEmpty();
   }
 
-  public Map<String, String> getReservedSlaveAttributes() {
+  Map<String, String> getReservedSlaveAttributes() {
     return reservedSlaveAttributes;
   }
 
@@ -85,7 +87,7 @@ public class SingularityOfferHolder {
     return sanitizedHost;
   }
 
-  public String getSanitizedRackId() {
+  String getSanitizedRackId() {
     return sanitizedRackId;
   }
 
@@ -97,7 +99,7 @@ public class SingularityOfferHolder {
     rejectedPendingTaskIds.add(pendingTaskId);
   }
 
-  public boolean hasRejectedPendingTaskAlready(SingularityPendingTaskId pendingTaskId) {
+  boolean hasRejectedPendingTaskAlready(SingularityPendingTaskId pendingTaskId) {
     return rejectedPendingTaskIds.contains(pendingTaskId);
   }
 
@@ -106,7 +108,7 @@ public class SingularityOfferHolder {
     acceptedTasks.add(task);
 
     // subtract task resources from offer
-    currentResources = MesosUtils.subtractResources(currentResources, task.getMesosTask().getResourcesList());
+    currentResources = MesosUtils.subtractResources(currentResources, task.getMesosTask().getResources());
 
     // subtract executor resources from offer, if any are defined
     if (task.getMesosTask().hasExecutor() && task.getMesosTask().getExecutor().getResourcesCount() > 0) {
@@ -114,13 +116,13 @@ public class SingularityOfferHolder {
     }
   }
 
-  public List<Offer> launchTasksAndGetUnusedOffers(SchedulerDriver driver) {
+  public List<Offer> launchTasksAndGetUnusedOffers(SingularityMesosSchedulerClient schedulerClient) {
     final List<TaskInfo> toLaunch = Lists.newArrayListWithCapacity(acceptedTasks.size());
     final List<SingularityTaskId> taskIds = Lists.newArrayListWithCapacity(acceptedTasks.size());
 
     for (SingularityTask task : acceptedTasks) {
       taskIds.add(task.getTaskId());
-      toLaunch.add(task.getMesosTask());
+      toLaunch.add(task.getMesosTaskProtos());
       LOG.debug("Launching {} with offer {}", task.getTaskId(), offers.get(0).getId());
       LOG.trace("Launching {} mesos task: {}", task.getTaskId(), MesosUtils.formatForLogging(task.getMesosTask()));
     }
@@ -167,9 +169,12 @@ public class SingularityOfferHolder {
     List<Offer> leftoverOffers = partitionedOffers.get(true);
     List<Offer> neededOffers = partitionedOffers.get(false);
 
-    Status initialStatus = driver.launchTasks(neededOffers.stream().map(Protos.Offer::getId).collect(Collectors.toList()), toLaunch);
+    schedulerClient.accept(
+        neededOffers.stream().map(Offer::getId).collect(Collectors.toList()),
+        Collections.singletonList(Operation.newBuilder().setType(Type.LAUNCH).setLaunch(Launch.newBuilder().addAllTaskInfos(toLaunch).build()).build())
+    );
 
-    LOG.info("{} tasks ({}) launched with status {}", taskIds.size(), taskIds, initialStatus);
+    LOG.info("{} tasks ({}) launched", taskIds.size(), taskIds);
     return leftoverOffers;
   }
 
@@ -177,7 +182,7 @@ public class SingularityOfferHolder {
     return acceptedTasks;
   }
 
-  public List<Resource> getCurrentResources() {
+  List<Resource> getCurrentResources() {
     return currentResources;
   }
 

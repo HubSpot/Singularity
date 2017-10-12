@@ -7,6 +7,7 @@ import javax.inject.Named;
 import javax.inject.Singleton;
 
 import org.apache.curator.framework.CuratorFramework;
+import org.apache.curator.framework.recipes.leader.LeaderLatch;
 import org.apache.curator.framework.state.ConnectionState;
 import org.apache.curator.framework.state.ConnectionStateListener;
 import org.eclipse.jetty.server.Server;
@@ -19,6 +20,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.net.HostAndPort;
 import com.google.inject.Inject;
+import com.google.inject.Injector;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.config.SMTPConfiguration;
 import com.hubspot.singularity.config.SingularityConfiguration;
@@ -36,16 +38,23 @@ public class SingularityAbort implements ConnectionStateListener {
   private final SingularitySmtpSender smtpSender;
   private final HostAndPort hostAndPort;
   private final SingularityExceptionNotifier exceptionNotifier;
+  private final Injector injector;
 
   private final ServerProvider serverProvider;
   private final AtomicBoolean aborting = new AtomicBoolean();
 
   @Inject
-  public SingularityAbort(SingularitySmtpSender smtpSender, ServerProvider serverProvider, SingularityConfiguration configuration, SingularityExceptionNotifier exceptionNotifier, @Named(SingularityMainModule.HTTP_HOST_AND_PORT) HostAndPort hostAndPort) {
+  public SingularityAbort(SingularitySmtpSender smtpSender,
+                          ServerProvider serverProvider,
+                          SingularityConfiguration configuration,
+                          SingularityExceptionNotifier exceptionNotifier,
+                          Injector injector,
+                          @Named(SingularityMainModule.HTTP_HOST_AND_PORT) HostAndPort hostAndPort) {
     this.maybeSmtpConfiguration = configuration.getSmtpConfigurationOptional();
     this.serverProvider = serverProvider;
     this.smtpSender = smtpSender;
     this.exceptionNotifier = exceptionNotifier;
+    this.injector = injector;
     this.hostAndPort = hostAndPort;
   }
 
@@ -58,17 +67,29 @@ public class SingularityAbort implements ConnectionStateListener {
   }
 
   public enum AbortReason {
-    LOST_ZK_CONNECTION, LOST_LEADERSHIP, UNRECOVERABLE_ERROR, TEST_ABORT, MESOS_ERROR;
+    LOST_ZK_CONNECTION, LOST_LEADERSHIP, UNRECOVERABLE_ERROR, TEST_ABORT, MESOS_ERROR, LOST_MESOS_CONNECTION;
   }
 
   public void abort(AbortReason abortReason, Optional<Throwable> throwable) {
     if (!aborting.getAndSet(true)) {
       try {
         sendAbortNotification(abortReason, throwable);
+        if (abortReason != AbortReason.LOST_LEADERSHIP && abortReason != AbortReason.LOST_ZK_CONNECTION) {
+          attemptLeaderLatchClose();
+        }
+
         flushLogs();
       } finally {
         exit();
       }
+    }
+  }
+
+  private void attemptLeaderLatchClose() {
+    try {
+      injector.getInstance(LeaderLatch.class).close();
+    } catch (Exception e) {
+      LOG.error("While attempting to close leader latch", e);
     }
   }
 

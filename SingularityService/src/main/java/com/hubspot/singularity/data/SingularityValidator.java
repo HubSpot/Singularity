@@ -496,7 +496,7 @@ public class SingularityValidator {
 
     String[] split = schedule.split(" ");
 
-    checkBadRequest(split.length >= 4, "Schedule %s is invalid because it contained only %s splits (looking for at least 4)", schedule, split.length);
+    checkBadRequest(split.length >= 5, "Schedule %s is invalid because it contained only %s splits (looking for at least 5)", schedule, split.length);
 
     List<String> newSchedule = Lists.newArrayListWithCapacity(6);
 

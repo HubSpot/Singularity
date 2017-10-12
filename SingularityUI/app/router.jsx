@@ -36,7 +36,7 @@ const routes = (
     <Route path="status" component={StatusPage} title="Status" />
     <Route path="requests/new" component={RequestForm} title="New Request" />
     <Route path="requests/edit/:requestId" component={RequestForm} title="New or Edit Request" />
-    <Route path="requests(/:state)(/:subFilter)(/:searchFilter)" component={RequestsPage} title="Requests" />
+    <Route path="requests(/:group)(/:state)(/:subFilter)(/:searchFilter)" component={RequestsPage} title="Requests" />
     <Route path="group/:groupId" component={Group} title={(params) => `Group ${params.groupId}`} />
     <Route path="request">
       <Route path=":requestId" component={RequestDetailPage} title={(params) => params.requestId} />

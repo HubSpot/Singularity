@@ -44,6 +44,8 @@ import TaskHealthchecks from './TaskHealthchecks';
 import TaskState from './TaskState';
 import TaskStatus from './TaskStatus';
 
+const RECENTLY_MODIFIED_SECONDS = 60;
+
 class TaskDetail extends Component {
 
   static propTypes = {
@@ -167,14 +169,17 @@ class TaskDetail extends Component {
         file.fullPath = `${files.fullPathToRoot}/${files.currentDirectory}/${file.name}`;
         file.downloadLink = `${httpPrefix}://${files.slaveHostname}:${httpPort}/files/download.json?path=${file.fullPath}`;
 
+        file.isRecentlyModified = Date.now() / 1000 - file.mtime <= RECENTLY_MODIFIED_SECONDS;
+
         if (!file.isDirectory) {
           const regex = /(?:\.([^.]+))?$/;
           const extension = regex.exec(file.name)[1];
           file.isTailable = !_.contains(['zip', 'gz', 'jar', 'bz2', 'so', 'png', 'jpg', 'jpeg', 'pdf'], extension);
         }
       }
+      return files;
     }
-    return files;
+    return {};
   }
 
   renderFiles(files) {

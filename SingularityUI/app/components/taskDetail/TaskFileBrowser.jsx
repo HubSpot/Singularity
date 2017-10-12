@@ -2,7 +2,7 @@ import React, { PropTypes } from 'react';
 import Utils from '../../utils';
 import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
 import ToolTip from 'react-bootstrap/lib/Tooltip';
-import { Glyphicon } from 'react-bootstrap';
+import { Glyphicon, Tooltip } from 'react-bootstrap';
 
 import Breadcrumbs from '../common/Breadcrumbs';
 import Column from '../common/table/Column';
@@ -64,17 +64,30 @@ function TaskFileBrowser (props) {
     return _.sortBy(props.files, 'isDirectory').reverse();
   }
 
+  const recentlyModifiedTooltip = <Tooltip id="tooltip">File is currently being written to</Tooltip>;
+
   return (
     <div>
       <Breadcrumbs items={pathItems} />
       <UITable
         data={getFiles() || []}
         keyGetter={(file) => file.name}
+        rowClassName={({isRecentlyModified}) => { return isRecentlyModified ? 'bg-info-light' : null; }}
         rowChunkSize={50}
         paginated={true}
         emptyTableMessage="No files exist in this directory"
         defaultSortBy="name"
+        striped={false}
       >
+        <Column
+          className="icon-column"
+          label=""
+          id="icon"
+          key="icon"
+          cellData={({isRecentlyModified}) => isRecentlyModified &&
+            <OverlayTrigger placement="top" overlay={recentlyModifiedTooltip}><div className="page-loader loader-small loader-info" /></OverlayTrigger>
+          }
+        />
         <Column
           label="Name"
           id="name"

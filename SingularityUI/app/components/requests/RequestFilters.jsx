@@ -1,9 +1,8 @@
 import React from 'react';
 import Utils from '../../utils';
-import classNames from 'classnames';
 import { Link } from 'react-router';
 
-import { Nav, NavItem, Glyphicon, Button } from 'react-bootstrap';
+import { Row, Col, Nav, NavItem, Glyphicon, Button, ButtonGroup, DropdownButton, MenuItem } from 'react-bootstrap';
 
 export default class RequestFilters extends React.Component {
 
@@ -11,7 +10,12 @@ export default class RequestFilters extends React.Component {
     displayRequestTypeFilters: React.PropTypes.bool
   };
 
+  static REQUEST_TYPES = ['SERVICE', 'WORKER', 'SCHEDULED', 'ON_DEMAND', 'RUN_ONCE'];
+
   static REQUEST_STATES = [
+    {
+      displayVal: 'Request status'
+    },
     {
       filterVal: 'all',
       displayVal: 'All'
@@ -26,8 +30,7 @@ export default class RequestFilters extends React.Component {
     },
     {
       filterVal: 'paused',
-      displayVal: 'Paused',
-      separatorAfter: true
+      displayVal: 'Paused'
     },
     {
       filterVal: 'pending',
@@ -35,8 +38,10 @@ export default class RequestFilters extends React.Component {
     },
     {
       filterVal: 'cleaning',
-      displayVal: 'Cleaning',
-      separatorAfter: true
+      displayVal: 'Cleaning'
+    },
+    {
+      displayVal: 'Deploy status'
     },
     {
       filterVal: 'activeDeploy',
@@ -44,8 +49,10 @@ export default class RequestFilters extends React.Component {
     },
     {
       filterVal: 'noDeploy',
-      displayVal: 'No Deploy',
-      separatorAfter: true
+      displayVal: 'No Deploy'
+    },
+    {
+      displayVal: 'Resource usage'
     },
     {
       filterVal: 'overUtilizedCpu',
@@ -61,10 +68,12 @@ export default class RequestFilters extends React.Component {
     }
   ];
 
-  static REQUEST_TYPES = ['SERVICE', 'WORKER', 'SCHEDULED', 'ON_DEMAND', 'RUN_ONCE'];
-
   handleStatusSelect(selectedKey) {
     this.props.onFilterChange(_.extend({}, this.props.filter, {state: RequestFilters.REQUEST_STATES[selectedKey].filterVal}));
+  }
+
+  handleGroupSelect(group) {
+    this.props.onFilterChange(_.extend({}, this.props.filter, {group}));
   }
 
   handleSearchChange(event) {
@@ -91,22 +100,25 @@ export default class RequestFilters extends React.Component {
 
   renderStatusFilter() {
     const selectedIndex = _.findIndex(RequestFilters.REQUEST_STATES, (requestState) => requestState.filterVal === this.props.filter.state);
-    const navItems = RequestFilters.REQUEST_STATES.map((requestState, index) => {
-      return (
+    const navItems = RequestFilters.REQUEST_STATES.map((requestState, index) => (
+      requestState.filterVal ?
         <NavItem
           key={index}
-          className={classNames({'separator-pill': requestState.separatorAfter})}
+          className="table-nav-pill--child"
           eventKey={index}
           title={requestState.tip}
           active={index === selectedIndex}
-          onClick={() => this.handleStatusSelect(index)}>
-            {requestState.displayVal}
+          onClick={() => this.handleStatusSelect(index)}
+        >
+          {requestState.displayVal}
+        </NavItem> :
+        <NavItem key={index} disabled={true}>
+          {requestState.displayVal}
         </NavItem>
-      );
-    });
+    ));
 
     return (
-      <Nav bsStyle="pills" className="table-nav-pills" activeKey={selectedIndex}>
+      <Nav bsStyle="pills" className="table-nav-pills" stacked={true} activeKey={selectedIndex}>
         {navItems}
       </Nav>
     );
@@ -131,52 +143,72 @@ export default class RequestFilters extends React.Component {
 
   renderRequestTypeFilter() {
     const filterItems = this.props.displayRequestTypeFilters && RequestFilters.REQUEST_TYPES.map((requestType, index) => {
+      const isActive = _.contains(this.props.filter.subFilter, requestType);
       return (
-        <li key={index} className={_.contains(this.props.filter.subFilter, requestType) ? 'active' : ''}>
+        <li key={index} className={isActive ? 'active' : ''}>
           <a onClick={() => this.toggleRequestType(requestType)}>
-            <Glyphicon glyph="ok" /> {Utils.humanizeText(requestType)}
+            {isActive ? <Glyphicon glyph="ok" /> : <span className="icon-placeholder" />} {Utils.humanizeText(requestType)}
           </a>
         </li>
       );
     });
+    const groupDropdown = [
+      <MenuItem key={0} onClick={() => this.handleGroupSelect('all')}>All</MenuItem>,
+      ...this.props.groups.map((group, index) => (
+        <MenuItem key={index + 1} onClick={() => this.handleGroupSelect(group)}>{group}</MenuItem>
+      ))
+    ];
 
     return (
       <div className="requests-filter-container">
         <ul className="nav nav-pills nav-pills-multi-select">
           {filterItems}
         </ul>
+        <div className="pull-right">
+          <strong>My groups:</strong>
+          <DropdownButton className="groups-dropdown" id="groups-dropdown" pullRight={true} title={this.props.filter.group}>
+            {groupDropdown}
+          </DropdownButton>
+        </div>
       </div>
     );
   }
 
   render() {
     const newRequestButton = !config.hideNewRequestButton && (
-      <Link to={'requests/new'}>
-        <Button bsStyle="success">
-          <Glyphicon glyph="plus" /> New Request
-        </Button>
-      </Link>
+      <Row>
+        <Col className="text-right" md={12}>
+          <Link to={'requests/new'}>
+            <Button bsStyle="success" block={true}>
+              <Glyphicon glyph="plus" /> New Request
+            </Button>
+          </Link>
+        </Col>
+      </Row>
     );
 
     return (
-      <div>
-        <div className="row">
-          <div className="col-md-10">
-            {this.renderStatusFilter()}
+      <Row className="clearfix">
+        <Col className="tab-col" sm={4} md={2}>
+          {newRequestButton}
+          <Row>
+            <Col md={12}>
+              {this.renderStatusFilter()}
+            </Col>
+          </Row>
+        </Col>
+        <Col sm={8} md={10}>
+          <div className="row">
+            <div className="col-md-12">
+              {this.renderSearchInput()}
+            </div>
+            <div className="col-md-12">
+              {this.renderRequestTypeFilter()}
+            </div>
           </div>
-          <div className="col-md-2 text-right">
-            {newRequestButton}
-          </div>
-        </div>
-        <div className="row">
-          <div className="col-md-12">
-            {this.renderSearchInput()}
-          </div>
-          <div className="col-md-12">
-            {this.renderRequestTypeFilter()}
-          </div>
-        </div>
-      </div>
+          {this.props.children}
+        </Col>
+      </Row>
     );
   }
 }
@@ -186,6 +218,9 @@ RequestFilters.propTypes = {
   filter: React.PropTypes.shape({
     state: React.PropTypes.string.isRequired,
     subFilter: React.PropTypes.array.isRequired,
-    searchFilter: React.PropTypes.string.isRequired
-  }).isRequired
+    searchFilter: React.PropTypes.string.isRequired,
+    group: React.PropTypes.string
+  }).isRequired,
+  groups: React.PropTypes.array,
+  children: React.PropTypes.oneOfType([React.PropTypes.node, React.PropTypes.arrayOf(React.PropTypes.node)])
 };
