@@ -49,7 +49,7 @@ public class MesosConfiguration {
   private Optional<String> credentialPrincipal = Optional.absent();
   private Optional<String> credentialSecret = Optional.absent();
 
-  private long rxEventBufferSize = 5000;
+  private long rxEventBufferSize = 10000;
 
   public int getMaxNumInstancesPerRequest() {
     return maxNumInstancesPerRequest;
