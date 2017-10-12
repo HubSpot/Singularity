@@ -744,7 +744,7 @@ public class TaskManager extends CuratorAsyncManager {
     return Optional.of(new SingularityTaskHistory(taskUpdates, directory, containerId, healthchecks, task.get(), loadBalancerUpdates, shellCommandHistory, taskMetadata));
   }
 
-  private List<SingularityTaskShellCommandHistory> getTaskShellCommandHistory(SingularityTaskId taskId) {
+  public List<SingularityTaskShellCommandHistory> getTaskShellCommandHistory(SingularityTaskId taskId) {
     List<SingularityTaskShellCommandRequest> shellRequests = getTaskShellCommandRequestsForTask(taskId);
     List<SingularityTaskShellCommandHistory> shellCommandHistory = new ArrayList<>(shellRequests.size());
 

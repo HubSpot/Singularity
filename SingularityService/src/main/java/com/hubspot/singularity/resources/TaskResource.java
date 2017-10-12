@@ -61,8 +61,10 @@ import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTaskIdsByStatus;
 import com.hubspot.singularity.SingularityTaskMetadata;
 import com.hubspot.singularity.SingularityTaskRequest;
+import com.hubspot.singularity.SingularityTaskShellCommandHistory;
 import com.hubspot.singularity.SingularityTaskShellCommandRequest;
 import com.hubspot.singularity.SingularityTaskShellCommandRequestId;
+import com.hubspot.singularity.SingularityTaskShellCommandUpdate;
 import com.hubspot.singularity.SingularityTransformHelpers;
 import com.hubspot.singularity.SingularityUser;
 import com.hubspot.singularity.TaskCleanupType;
@@ -499,4 +501,23 @@ public class TaskResource extends AbstractLeaderAwareResource {
     return shellRequest;
   }
 
+  @GET
+  @Path("/task/{taskId}/command")
+  @ApiOperation(value="Retrieve a list of shell commands that have run for a task")
+  public List<SingularityTaskShellCommandHistory> getShellCommandHisotry(@PathParam("taskId") String taskId) {
+    authorizationHelper.checkForAuthorizationByTaskId(taskId, user, SingularityAuthorizationScope.READ);
+
+    SingularityTaskId taskIdObj = getTaskIdFromStr(taskId);
+    return taskManager.getTaskShellCommandHistory(taskIdObj);
+  }
+
+  @GET
+  @Path("/task/{taskId}/command/{commandName}/{commandTimestamp}")
+  @ApiOperation(value="Retrieve a list of shell commands updates for a particular shell command on a task")
+  public List<SingularityTaskShellCommandUpdate> getShellCommandHisotryUpdates(@PathParam("taskId") String taskId, @PathParam("commandName") String commandName, @PathParam("commandTimestamp") Long commandTimestamp) {
+    authorizationHelper.checkForAuthorizationByTaskId(taskId, user, SingularityAuthorizationScope.READ);
+
+    SingularityTaskId taskIdObj = getTaskIdFromStr(taskId);
+    return taskManager.getTaskShellCommandUpdates(new SingularityTaskShellCommandRequestId(taskIdObj, commandName, commandTimestamp));
+  }
 }
