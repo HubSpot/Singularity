@@ -162,7 +162,7 @@ These settings should live under the "mesos" field inside the root configuration
 #### Framework ####
 | Parameter | Default | Description | Type |
 |-----------|---------|-------------|------|
-| master | null | | string |
+| master | null | A comma separated list of mesos master `host:port` | string |
 | frameworkName | null | | string |
 | frameworkId | null | | string |
 | frameworkFailoverTimeout | 0.0 | | double |

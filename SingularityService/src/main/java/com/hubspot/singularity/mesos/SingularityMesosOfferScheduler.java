@@ -11,8 +11,7 @@ import java.util.stream.Collectors;
 
 import javax.inject.Singleton;
 
-import org.apache.mesos.Protos;
-import org.apache.mesos.Protos.Offer;
+import org.apache.mesos.v1.Protos.Offer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -92,7 +91,7 @@ public class SingularityMesosOfferScheduler {
     this.deployManager = deployManager;
   }
 
-  public List<SingularityOfferHolder> checkOffers(final Collection<Protos.Offer> offers) {
+  public List<SingularityOfferHolder> checkOffers(final Collection<Offer> offers) {
     boolean useTaskCredits = disasterManager.isTaskCreditEnabled();
     int taskCredits = useTaskCredits ? disasterManager.getUpdatedCreditCount() : -1;
 
@@ -109,7 +108,7 @@ public class SingularityMesosOfferScheduler {
     }
 
     final List<SingularityOfferHolder> offerHolders = offers.stream()
-        .collect(Collectors.groupingBy((o) -> o.getSlaveId().getValue()))
+        .collect(Collectors.groupingBy((o) -> o.getAgentId().getValue()))
         .entrySet().stream()
         .filter((e) -> e.getValue().size() > 0)
         .map((e) -> {
@@ -149,7 +148,9 @@ public class SingularityMesosOfferScheduler {
           }
 
           Optional<SingularitySlaveUsageWithId> maybeSlaveUsage = getSlaveUsage(currentSlaveUsages, offerHolder.getSlaveId());
+
           double score = score(offerHolder, tasksPerOfferPerRequest, taskRequestHolder, maybeSlaveUsage);
+
           LOG.trace("Scored {} | Task {} | Offer - mem {} - cpu {} | Slave {} | maybeSlaveUsage - {}", score, taskRequestHolder.getTaskRequest().getPendingTask().getPendingTaskId().getId(),
               MesosUtils.getMemory(offerHolder.getCurrentResources(), Optional.absent()), MesosUtils.getNumCpus(offerHolder.getCurrentResources(), Optional.absent()), offerHolder.getHostname(), maybeSlaveUsage);
 

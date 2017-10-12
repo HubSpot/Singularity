@@ -1,7 +1,6 @@
 package com.hubspot.singularity.data;
 
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -9,7 +8,7 @@ import java.util.List;
 
 import org.junit.Assert;
 import org.junit.Test;
-import org.mockito.Matchers;
+import org.mockito.ArgumentMatchers;
 
 import com.google.common.base.Optional;
 import com.google.inject.Inject;
@@ -29,7 +28,7 @@ public class BlendedHistoryTest extends SingularityTestBaseNoDb {
   private RequestManager requestManager;
 
   private void mockRequestHistory(HistoryManager hm, List<SingularityRequestHistory> returnValue) {
-    when(hm.getRequestHistory(Matchers.anyString(), Matchers.<Optional<OrderDirection>>any(), Matchers.anyInt(), Matchers.anyInt())).thenReturn(returnValue);
+    when(hm.getRequestHistory(ArgumentMatchers.anyString(), ArgumentMatchers.<Optional<OrderDirection>>any(), ArgumentMatchers.anyInt(), ArgumentMatchers.anyInt())).thenReturn(returnValue);
   }
 
   private SingularityRequest request;

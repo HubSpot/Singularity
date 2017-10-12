@@ -7,6 +7,7 @@ import java.nio.charset.Charset;
 import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
+import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.PathMatcher;
 import java.nio.file.Paths;
@@ -129,27 +130,7 @@ public class SingularityS3Uploader {
     }
 
     for (Path file : JavaUtils.iterable(directory)) {
-      if (!pathMatcher.matches(file.getFileName())) {
-        if (!isFinished || !finishedPathMatcher.isPresent() || !finishedPathMatcher.get().matches(file.getFileName())) {
-          LOG.trace("{} Skipping {} because it doesn't match {}", logIdentifier, file, uploadMetadata.getFileGlob());
-          continue;
-        } else {
-          LOG.trace("Not skipping file {} because it matched finish glob {}", file, uploadMetadata.getOnFinishGlob().get());
-        }
-      }
-
-      if (Files.size(file) == 0) {
-        LOG.trace("{} Skipping {} because its size is 0", logIdentifier, file);
-        continue;
-      }
-
-      found++;
-
-      if (synchronizedToUpload.add(file)) {
-        toUpload.add(file);
-      } else {
-        LOG.debug("{} Another uploader already added {}", logIdentifier, file);
-      }
+      found += handleFile(file, isFinished, synchronizedToUpload, toUpload);
     }
 
     if (toUpload.isEmpty()) {
@@ -158,6 +139,44 @@ public class SingularityS3Uploader {
 
     uploadBatch(toUpload);
 
+    return found;
+  }
+
+  private int handleFile(Path path, boolean isFinished, Set<Path> synchronizedToUpload, List<Path> toUpload) throws IOException {
+    int found = 0;
+    if (Files.isDirectory(path, LinkOption.NOFOLLOW_LINKS)) {
+      if (uploadMetadata.isCheckSubdirectories()) {
+        LOG.debug("{} was a directory, checking files in directory", path);
+        for (Path file : JavaUtils.iterable(path)) {
+          found += handleFile(file, isFinished, synchronizedToUpload, toUpload);
+        }
+      } else {
+        LOG.debug("{} was a directory, skipping", path);
+      }
+      return found;
+    }
+
+    if (!pathMatcher.matches(path.getFileName())) {
+      if (!isFinished || !finishedPathMatcher.isPresent() || !finishedPathMatcher.get().matches(path.getFileName())) {
+        LOG.trace("{} Skipping {} because it doesn't match {}", logIdentifier, path, uploadMetadata.getFileGlob());
+        return found;
+      } else {
+        LOG.trace("Not skipping file {} because it matched finish glob {}", path, uploadMetadata.getOnFinishGlob().get());
+      }
+    }
+
+    if (Files.size(path) == 0) {
+      LOG.trace("{} Skipping {} because its size is 0", logIdentifier, path);
+      return found;
+    }
+
+    found++;
+
+    if (synchronizedToUpload.add(path)) {
+      toUpload.add(path);
+    } else {
+      LOG.debug("{} Another uploader already added {}", logIdentifier, path);
+    }
     return found;
   }
 

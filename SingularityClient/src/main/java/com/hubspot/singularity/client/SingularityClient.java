@@ -76,6 +76,7 @@ import com.hubspot.singularity.SingularityTaskHistory;
 import com.hubspot.singularity.SingularityTaskHistoryUpdate;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTaskIdHistory;
+import com.hubspot.singularity.SingularityTaskIdsByStatus;
 import com.hubspot.singularity.SingularityTaskReconciliationStatistics;
 import com.hubspot.singularity.SingularityTaskRequest;
 import com.hubspot.singularity.SingularityTaskShellCommandHistory;
@@ -132,6 +133,7 @@ public class SingularityClient {
   private static final String TASKS_GET_ACTIVE_ON_SLAVE_FORMAT = TASKS_FORMAT + "/active/slave/%s";
   private static final String TASKS_GET_SCHEDULED_FORMAT = TASKS_FORMAT + "/scheduled";
   private static final String TASKS_GET_SCHEDULED_IDS_FORMAT = TASKS_GET_SCHEDULED_FORMAT + "/ids";
+  private static final String TASKS_BY_STATE_FORMAT =TASKS_FORMAT + "/ids/request/%s";
 
   private static final String SHELL_COMMAND_FORMAT = TASKS_FORMAT + "/task/%s/command";
   private static final String SHELL_COMMAND_UPDATES_FORMAT = SHELL_COMMAND_FORMAT + "/%s/%s";
@@ -806,6 +808,12 @@ public class SingularityClient {
     final Function<String, String> requestUri = (host) -> String.format(TASKS_GET_SCHEDULED_IDS_FORMAT, getApiBase(host));
 
     return getCollection(requestUri, "scheduled task ids", PENDING_TASK_ID_COLLECTION);
+  }
+
+  public Optional<SingularityTaskIdsByStatus> getTaskIdsByStatusForRequest(String requestId) {
+    final Function<String, String> requestUri = (host) -> String.format(TASKS_BY_STATE_FORMAT, getApiBase(host), requestId);
+
+    return getSingle(requestUri, "task ids by state", requestId, SingularityTaskIdsByStatus.class);
   }
 
   public SingularityTaskShellCommandRequest startShellCommand(String taskId, SingularityShellCommand shellCommand) {

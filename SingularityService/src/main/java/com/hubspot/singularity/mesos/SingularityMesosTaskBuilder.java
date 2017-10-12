@@ -4,25 +4,26 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map.Entry;
+import java.util.stream.Collectors;
 
 import javax.inject.Singleton;
 
-import org.apache.mesos.Protos.CommandInfo;
-import org.apache.mesos.Protos.CommandInfo.URI;
-import org.apache.mesos.Protos.ContainerInfo;
-import org.apache.mesos.Protos.ContainerInfo.DockerInfo;
-import org.apache.mesos.Protos.Environment;
-import org.apache.mesos.Protos.Environment.Variable;
-import org.apache.mesos.Protos.ExecutorID;
-import org.apache.mesos.Protos.ExecutorInfo;
-import org.apache.mesos.Protos.Label;
-import org.apache.mesos.Protos.Labels;
-import org.apache.mesos.Protos.Labels.Builder;
-import org.apache.mesos.Protos.Parameter;
-import org.apache.mesos.Protos.Resource;
-import org.apache.mesos.Protos.TaskID;
-import org.apache.mesos.Protos.TaskInfo;
-import org.apache.mesos.Protos.Volume;
+import org.apache.mesos.v1.Protos.CommandInfo;
+import org.apache.mesos.v1.Protos.CommandInfo.URI;
+import org.apache.mesos.v1.Protos.ContainerInfo;
+import org.apache.mesos.v1.Protos.ContainerInfo.DockerInfo;
+import org.apache.mesos.v1.Protos.Environment;
+import org.apache.mesos.v1.Protos.Environment.Variable;
+import org.apache.mesos.v1.Protos.ExecutorID;
+import org.apache.mesos.v1.Protos.ExecutorInfo;
+import org.apache.mesos.v1.Protos.Label;
+import org.apache.mesos.v1.Protos.Labels;
+import org.apache.mesos.v1.Protos.Labels.Builder;
+import org.apache.mesos.v1.Protos.Parameter;
+import org.apache.mesos.v1.Protos.Resource;
+import org.apache.mesos.v1.Protos.TaskID;
+import org.apache.mesos.v1.Protos.TaskInfo;
+import org.apache.mesos.v1.Protos.Volume;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -45,6 +46,8 @@ import com.hubspot.mesos.SingularityDockerPortMapping;
 import com.hubspot.mesos.SingularityMesosArtifact;
 import com.hubspot.mesos.SingularityMesosTaskLabel;
 import com.hubspot.mesos.SingularityVolume;
+import com.hubspot.mesos.json.SingularityMesosOfferObject;
+import com.hubspot.mesos.json.SingularityMesosTaskObject;
 import com.hubspot.singularity.SingularityS3UploaderFile;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskExecutorData;
@@ -115,7 +118,7 @@ class SingularityMesosTaskBuilder {
       bldr.addResources(MesosUtils.getDiskResource(desiredTaskResources.getDiskMb(), requiredRole));
     }
 
-    bldr.setSlaveId(offerHolder.getOffers().get(0).getSlaveId());
+    bldr.setAgentId(offerHolder.getOffers().get(0).getAgentId());
 
     bldr.setName(taskRequest.getRequest().getId());
 
@@ -123,7 +126,7 @@ class SingularityMesosTaskBuilder {
     // apply request-specific labels, if any
     if (taskRequest.getDeploy().getMesosLabels().isPresent() && !taskRequest.getDeploy().getMesosLabels().get().isEmpty()) {
       for (SingularityMesosTaskLabel label : taskRequest.getDeploy().getMesosLabels().get()) {
-        org.apache.mesos.Protos.Label.Builder labelBuilder = Label.newBuilder();
+        org.apache.mesos.v1.Protos.Label.Builder labelBuilder = Label.newBuilder();
         labelBuilder.setKey(label.getKey());
         if ((label.getValue().isPresent())) {
           labelBuilder.setValue(label.getValue().get());
@@ -136,7 +139,7 @@ class SingularityMesosTaskBuilder {
     final int taskInstanceNo = taskRequest.getPendingTask().getPendingTaskId().getInstanceNo();
     if (taskRequest.getDeploy().getMesosTaskLabels().isPresent() && taskRequest.getDeploy().getMesosTaskLabels().get().containsKey(taskInstanceNo) && !taskRequest.getDeploy().getMesosTaskLabels().get().get(taskInstanceNo).isEmpty()) {
       for (SingularityMesosTaskLabel label : taskRequest.getDeploy().getMesosTaskLabels().get().get(taskInstanceNo)) {
-        org.apache.mesos.Protos.Label.Builder labelBuilder = Label.newBuilder();
+        org.apache.mesos.v1.Protos.Label.Builder labelBuilder = Label.newBuilder();
         labelBuilder.setKey(label.getKey());
         if ((label.getValue().isPresent())) {
           labelBuilder.setValue(label.getValue().get());
@@ -148,7 +151,12 @@ class SingularityMesosTaskBuilder {
 
     TaskInfo task = bldr.build();
 
-    return new SingularityTask(taskRequest, taskId, offerHolder.getOffers(), task, Optional.of(offerHolder.getRackId()));
+    return new SingularityTask(taskRequest,
+        taskId,
+        offerHolder.getOffers().stream().map(SingularityMesosOfferObject::fromProtos).collect(Collectors.toList()),
+        task,
+        SingularityMesosTaskObject.fromProtos(task),
+        Optional.of(offerHolder.getRackId()));
   }
 
   private boolean hasLiteralPortMapping(Optional<SingularityContainerInfo> maybeContainerInfo) {
@@ -359,7 +367,8 @@ class SingularityMesosTaskBuilder {
     bldr.setExecutor(ExecutorInfo.newBuilder()
         .setCommand(commandBuilder.build())
         .setExecutorId(ExecutorID.newBuilder().setValue(task.getDeploy().getCustomExecutorId().or(idGenerator.getNextExecutorId())))
-        .setSource(task.getDeploy().getCustomExecutorSource().or(taskId.getId())) // set source to taskId for use in statistics endpoint
+        .setSource(task.getDeploy().getCustomExecutorSource().or(taskId.getId())) // set source to taskId for use in statistics endpoint, TODO: remove
+        .setLabels(Labels.newBuilder().addLabels(Label.newBuilder().setKey("taskId").setValue(taskId.getId())))
         .addAllResources(buildMesosResources(desiredExecutorResources, task.getRequest().getRequiredRole()))
         .build()
         );

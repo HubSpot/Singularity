@@ -6,7 +6,7 @@ import java.util.concurrent.TimeUnit;
 
 import javax.validation.constraints.NotNull;
 
-import org.apache.mesos.Protos.TaskStatus.Reason;
+import org.apache.mesos.v1.Protos.TaskStatus.Reason;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.collect.ImmutableList;
@@ -49,7 +49,7 @@ public class DisasterDetectionConfiguration {
   @JsonProperty("lostTaskReasons")
   @NotNull
   private List<Reason> lostTaskReasons = ImmutableList.of(
-    Reason.REASON_INVALID_OFFERS, Reason.REASON_SLAVE_UNKNOWN, Reason.REASON_SLAVE_REMOVED, Reason.REASON_SLAVE_RESTARTED, Reason.REASON_MASTER_DISCONNECTED);
+    Reason.REASON_INVALID_OFFERS, Reason.REASON_AGENT_UNKNOWN, Reason.REASON_AGENT_REMOVED, Reason.REASON_AGENT_RESTARTED, Reason.REASON_MASTER_DISCONNECTED);
 
   private double criticalLostTaskPortion = 0.2;
 

@@ -10,9 +10,8 @@ import java.util.concurrent.locks.ReentrantLock;
 import javax.inject.Singleton;
 
 import org.apache.curator.framework.recipes.leader.LeaderLatchListener;
-import org.apache.mesos.Protos;
-import org.apache.mesos.Protos.MasterInfo;
-import org.apache.mesos.Protos.Offer;
+import org.apache.mesos.v1.Protos.MasterInfo;
+import org.apache.mesos.v1.Protos.Offer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,7 +35,6 @@ public class SingularityLeaderController implements Managed, LeaderLatchListener
   private static final Logger LOG = LoggerFactory.getLogger(SingularityLeaderController.class);
 
   private final StateManager stateManager;
-  private final SingularityDriverManager driverManager;
   private final SingularityAbort abort;
   private final SingularityExceptionNotifier exceptionNotifier;
   private final HostAndPort hostAndPort;
@@ -48,10 +46,13 @@ public class SingularityLeaderController implements Managed, LeaderLatchListener
   private volatile boolean master;
 
   @Inject
-  public SingularityLeaderController(StateManager stateManager, SingularityConfiguration configuration, SingularityDriverManager driverManager,
-      SingularityAbort abort, SingularityExceptionNotifier exceptionNotifier, @Named(SingularityMainModule.HTTP_HOST_AND_PORT) HostAndPort hostAndPort, SingularityMesosScheduler scheduler,
-      OfferCache offerCache) {
-    this.driverManager = driverManager;
+  public SingularityLeaderController(StateManager stateManager,
+                                     SingularityConfiguration configuration,
+                                     SingularityAbort abort,
+                                     SingularityExceptionNotifier exceptionNotifier,
+                                     @Named(SingularityMainModule.HTTP_HOST_AND_PORT) HostAndPort hostAndPort,
+                                     SingularityMesosScheduler scheduler,
+                                     OfferCache offerCache) {
     this.stateManager = stateManager;
     this.abort = abort;
     this.exceptionNotifier = exceptionNotifier;
@@ -78,23 +79,16 @@ public class SingularityLeaderController implements Managed, LeaderLatchListener
 
   @Override
   public void isLeader() {
-    LOG.info("We are now the leader! Current status {}", driverManager.getCurrentStatus());
+    LOG.info("We are now the leader! Current state {}", scheduler.getState());
 
     master = true;
-
-    if (driverManager.getCurrentStatus() != Protos.Status.DRIVER_RUNNING) {
-      try {
-        driverManager.startMesos();
-        statePoller.wake();
-      } catch (Throwable t) {
-        LOG.error("While starting driver", t);
-        exceptionNotifier.notify(String.format("Error starting driver (%s)", t.getMessage()), t);
-        abort.abort(AbortReason.UNRECOVERABLE_ERROR, Optional.of(t));
-      }
-
-      if (driverManager.getCurrentStatus() != Protos.Status.DRIVER_RUNNING) {
-        abort.abort(AbortReason.UNRECOVERABLE_ERROR, Optional.<Throwable>absent());
-      }
+   try {
+      scheduler.start();
+      statePoller.wake();
+    } catch (Throwable t) {
+      LOG.error("While starting driver", t);
+      exceptionNotifier.notify(String.format("Error starting driver (%s)", t.getMessage()), t);
+      abort.abort(AbortReason.UNRECOVERABLE_ERROR, Optional.of(t));
     }
   }
 
@@ -103,27 +97,22 @@ public class SingularityLeaderController implements Managed, LeaderLatchListener
   }
 
   public Optional<MasterInfo> getMaster() {
-    return driverManager.getMaster();
+    return scheduler.getMaster();
   }
 
   public Optional<Long> getLastOfferTimestamp() {
-    return driverManager.getLastOfferTimestamp();
-  }
-
-  public Protos.Status getCurrentStatus() {
-    return driverManager.getCurrentStatus();
+    return scheduler.getLastOfferTimestamp();
   }
 
   @Override
   public void notLeader() {
-    LOG.info("We are not the leader! Current status {}", driverManager.getCurrentStatus());
+    LOG.info("We are not the leader! Current state {}", scheduler.getState());
 
     master = false;
 
-    if (driverManager.getCurrentStatus() == Protos.Status.DRIVER_RUNNING) {
+    if (scheduler.isRunning()) {
       try {
-        driverManager.stop();
-
+        scheduler.notifyStopping();
         statePoller.wake();
       } catch (Throwable t) {
         LOG.error("While stopping driver", t);
@@ -136,7 +125,6 @@ public class SingularityLeaderController implements Managed, LeaderLatchListener
 
   private SingularityHostState getHostState() {
     final boolean master = isMaster();
-    final Protos.Status driverStatus = getCurrentStatus();
 
     final RuntimeMXBean mxBean = ManagementFactory.getRuntimeMXBean();
     final long uptime = mxBean.getUptime();
@@ -162,7 +150,7 @@ public class SingularityLeaderController implements Managed, LeaderLatchListener
       numCachedOffers++;
     }
 
-    return new SingularityHostState(master, uptime, driverStatus.name(), millisSinceLastOfferTimestamp, hostAndPort.getHostText(), hostAndPort.getHostText(), mesosMaster, scheduler.isConnected(),
+    return new SingularityHostState(master, uptime, scheduler.getState().name(), millisSinceLastOfferTimestamp, hostAndPort.getHostText(), hostAndPort.getHostText(), mesosMaster, scheduler.isRunning(),
        numCachedOffers, cachedCpus, cachedMemoryBytes);
   }
 

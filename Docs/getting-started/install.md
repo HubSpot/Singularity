@@ -63,7 +63,7 @@ database:
   url: jdbc:mysql://[database host]:[database port]/[database name]
 
 mesos:
-  master: zk://[comma separated host:port list of ZK hosts]/mesos
+  master: http://[mesos master hostname]/api/v1/scheduler
   defaultCpus: 1
   defaultMemory: 128
   frameworkName: Singularity
