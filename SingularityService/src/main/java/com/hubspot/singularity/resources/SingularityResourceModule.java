@@ -1,14 +1,21 @@
 package com.hubspot.singularity.resources;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import static com.hubspot.singularity.SingularityMainModule.SINGULARITY_URI_BASE;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.AbstractModule;
+import com.google.inject.Provides;
 import com.google.inject.Scopes;
+import com.google.inject.Singleton;
+import com.google.inject.name.Named;
+import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.config.UIConfiguration;
 import com.hubspot.singularity.guice.GuicePropertyFilteringMessageBodyWriter;
+import com.hubspot.singularity.views.IndexView;
 
 public class SingularityResourceModule extends AbstractModule {
   private static final Logger LOG = LoggerFactory.getLogger(SingularityResourceModule.class);
@@ -63,5 +70,11 @@ public class SingularityResourceModule extends AbstractModule {
       break;
     }
     }
+  }
+
+  @Provides
+  @Singleton
+  public IndexView providesIndexView(@Named(SINGULARITY_URI_BASE) String singularityUriBase, SingularityConfiguration configuration, ObjectMapper mapper) {
+    return new IndexView(singularityUriBase, UiResource.UI_RESOURCE_LOCATION, configuration, mapper);
   }
 }
