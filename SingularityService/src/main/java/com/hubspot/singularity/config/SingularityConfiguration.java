@@ -114,6 +114,8 @@ public class SingularityConfiguration extends Configuration {
   @NotNull
   private SlavePlacement defaultSlavePlacement = SlavePlacement.GREEDY;
 
+  private double placementLeniency = 0.0d;
+
   private boolean defaultValueForKillTasksOfPausedRequests = true;
 
   private int defaultDeployStepWaitTimeMs = 0;
@@ -526,6 +528,10 @@ public class SingularityConfiguration extends Configuration {
 
   public SlavePlacement getDefaultSlavePlacement() {
     return defaultSlavePlacement;
+  }
+
+  public double getPlacementLeniency() {
+    return placementLeniency;
   }
 
   public int getDefaultDeployStepWaitTimeMs() {
@@ -956,6 +962,10 @@ public class SingularityConfiguration extends Configuration {
 
   public void setDefaultSlavePlacement(SlavePlacement defaultSlavePlacement) {
     this.defaultSlavePlacement = defaultSlavePlacement;
+  }
+
+  public void setPlacementLeniency(double placementLeniency) {
+    this.placementLeniency = placementLeniency;
   }
 
   public void setDefaultValueForKillTasksOfPausedRequests(boolean defaultValueForKillTasksOfPausedRequests) {
