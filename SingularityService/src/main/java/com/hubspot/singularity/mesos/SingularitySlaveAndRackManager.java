@@ -226,12 +226,13 @@ public class SingularitySlaveAndRackManager {
 
           final double numPerSlave = currentlyActiveTasksForRequestClusterwide.size() / (double) currentHostsForRequest.size();
           final double leniencyCoefficient = configuration.getPlacementLeniency();
-          final boolean isSlaveOk = numOnSlave <= (numPerSlave * (1 + (pendingTasksForRequestClusterwide.size() * leniencyCoefficient)));
+          final double threshold = numPerSlave * (1 + (pendingTasksForRequestClusterwide.size() * leniencyCoefficient));
+          final boolean isSlaveOk = numOnSlave <= threshold;
 
           if (!isSlaveOk) {
             LOG.trace(
-                "Rejecting OPTIMISTIC task {} from slave {} ({}) due to numOnSlave {} and numPerSlave {} (based on currentlyActiveTasksForRequest {} and currentHostsForRequest {})",
-                taskRequest.getRequest().getId(), slaveId, host, numOnSlave, numPerSlave, currentlyActiveTasksForRequestClusterwide.size(), currentHostsForRequest.size()
+                "Rejecting OPTIMISTIC task {} from slave {} ({}) because numOnSlave {} violates threshold {} (based on active tasks for request {}, current hosts for request {}, pending tasks for request {})",
+                taskRequest.getRequest().getId(), slaveId, host, numOnSlave, threshold, currentlyActiveTasksForRequestClusterwide.size(), currentHostsForRequest.size(), pendingTasksForRequestClusterwide.size()
             );
             return SlaveMatchState.SLAVE_SATURATED;
           }
