@@ -104,32 +104,33 @@ public class SingularitySlavePlacementTest extends SingularitySchedulerTestBase 
     initRequest();
     initFirstDeploy();
 
-    saveAndSchedule(request.toBuilder().setInstances(Optional.of(7)).setSlavePlacement(Optional.of(SlavePlacement.OPTIMISTIC)));
+    saveAndSchedule(request.toBuilder().setInstances(Optional.of(20)).setSlavePlacement(Optional.of(SlavePlacement.OPTIMISTIC)));
 
     // Default behavior if we don't have info about other hosts that can run this task: be greedy.
     sms.resourceOffers(Arrays.asList(createOffer(2, 128 * 2, "slave1", "host1")));
     Assert.assertEquals(2, taskManager.getActiveTaskIds().size());
 
-    // Now that at least one other host is running tasks for this request, we expect an even spread.
+    // Now that at least one other host is running tasks for this request, we expect an even-ish spread,
+    // but because we have many tasks pending, we allow quite a bit of unevenness.
     sms.resourceOffers(Arrays.asList(createOffer(20, 20000, "slave2", "host2")));
-    Assert.assertEquals(5, taskManager.getActiveTaskIds().size());
+    Assert.assertEquals(13, taskManager.getActiveTaskIds().size());
 
-    // ...and we don't allow a violation of this even spread by refusing to schedule more tasks on host2 (because it's hosting 3/5 tasks).
+    // ...but now we won't schedule more tasks on host2, because it's hosting a disproportionate number of tasks.
     sms.resourceOffers(Arrays.asList(createOffer(20, 20000, "slave2", "host2")));
-    Assert.assertEquals(5, taskManager.getActiveTaskIds().size());
+    Assert.assertEquals(13, taskManager.getActiveTaskIds().size());
 
-    // ...but since host1 is only hosting 2/5 tasks, we will schedule more tasks on it when an offer is received.
+    // ...but since host1 is only hosting 2 tasks, we will schedule more tasks on it when an offer is received.
     sms.resourceOffers(Arrays.asList(createOffer(20, 20000, "slave1", "host1")));
-    Assert.assertEquals(7, taskManager.getActiveTaskIds().size());
+    Assert.assertEquals(20, taskManager.getActiveTaskIds().size());
 
     Map<String, List<SingularityTaskId>> tasksByHost = taskManager.getActiveTaskIdsForRequest(request.getId()).stream()
         .collect(Collectors.groupingBy(SingularityTaskId::getSanitizedHost));
 
     Assert.assertNotNull(tasksByHost.get("host1"));
-    Assert.assertEquals(4, tasksByHost.get("host1").size());
+    Assert.assertEquals(9, tasksByHost.get("host1").size());
 
     Assert.assertNotNull(tasksByHost.get("host2"));
-    Assert.assertEquals(3, tasksByHost.get("host2").size());
+    Assert.assertEquals(11, tasksByHost.get("host2").size());
 
   }
 
