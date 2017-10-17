@@ -114,7 +114,7 @@ public class SingularityConfiguration extends Configuration {
   @NotNull
   private SlavePlacement defaultSlavePlacement = SlavePlacement.GREEDY;
 
-  private double placementLeniency = 0.0d;
+  private double placementLeniency = 0.09d;
 
   private boolean defaultValueForKillTasksOfPausedRequests = true;
 
