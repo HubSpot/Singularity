@@ -28,6 +28,10 @@
       <name>Tom Petr</name>
       <email>tpetr@hubspot.com</email>
     </developer>
+    <developer>
+      <name>Stephen Salinas</name>
+      <email>ssalinas@hubspot.com</email>
+    </developer>
   </developers>
 
   <properties>
@@ -65,6 +69,8 @@
     <module>EmbedSingularityExample</module>
     <module>SingularityServiceIntegrationTests</module>
     <module>SingularityUI</module>
+    <module>SingularityServiceBase</module>
+    <module>SingularityClusterCoordinator</module>
   </modules>
 
   <dependencyManagement>
@@ -126,6 +132,19 @@
       <dependency>
         <groupId>com.hubspot</groupId>
         <artifactId>SingularityExecutorCleanup</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>com.hubspot</groupId>
+        <artifactId>SingularityServiceBase</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+
+
+      <dependency>
+        <groupId>com.hubspot</groupId>
+        <artifactId>SingularityClusterCoordinator</artifactId>
         <version>${project.version}</version>
       </dependency>
 

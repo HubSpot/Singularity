@@ -20,21 +20,19 @@ import com.hubspot.singularity.SingularityAction;
 import com.hubspot.singularity.SingularityDisabledAction;
 import com.hubspot.singularity.SingularityDisasterType;
 import com.hubspot.singularity.SingularityDisastersData;
-import com.hubspot.singularity.SingularityService;
 import com.hubspot.singularity.SingularityTaskCredits;
 import com.hubspot.singularity.SingularityUser;
 import com.hubspot.singularity.api.SingularityDisabledActionRequest;
 import com.hubspot.singularity.auth.SingularityAuthorizationHelper;
+import com.hubspot.singularity.config.ApiPaths;
 import com.hubspot.singularity.data.DisasterManager;
 import com.wordnik.swagger.annotations.Api;
 import com.wordnik.swagger.annotations.ApiOperation;
 
-@Path(DisastersResource.PATH)
+@Path(ApiPaths.DISASTERS_RESOURCE_PATH)
 @Produces(MediaType.APPLICATION_JSON)
-@Api(description="Manages Singularity Deploys for existing requests", value=DisastersResource.PATH)
+@Api(description="Manages Singularity Deploys for existing requests", value=ApiPaths.DISASTERS_RESOURCE_PATH)
 public class DisastersResource {
-  public static final String PATH = SingularityService.API_BASE_PATH + "/disasters";
-
   private final DisasterManager disasterManager;
   private final SingularityAuthorizationHelper authorizationHelper;
   private final Optional<SingularityUser> user;

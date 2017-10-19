@@ -51,6 +51,7 @@ public class SingularityRequestBuilder {
   private Optional<Double> taskPriorityLevel;
   private Optional<Integer> maxTasksPerOffer;
   private Optional<Boolean> allowBounceToSameHost;
+  private Optional<String> dataCenter;
 
   public SingularityRequestBuilder(String id, RequestType requestType) {
     this.id = checkNotNull(id, "id cannot be null");
@@ -85,12 +86,14 @@ public class SingularityRequestBuilder {
     this.maxTasksPerOffer = Optional.absent();
     this.allowBounceToSameHost = Optional.absent();
     this.requiredRole = Optional.absent();
+    this.dataCenter = Optional.absent();
   }
 
   public SingularityRequest build() {
     return new SingularityRequest(id, requestType, owners, numRetriesOnFailure, schedule, instances, rackSensitive, loadBalanced, killOldNonLongRunningTasksAfterMillis, taskExecutionTimeLimitMillis, scheduleType, quartzSchedule, scheduleTimeZone,
         rackAffinity, slavePlacement, requiredSlaveAttributes, allowedSlaveAttributes, scheduledExpectedRuntimeMillis, waitAtLeastMillisAfterTaskFinishesForReschedule, group, readWriteGroups, readOnlyGroups,
-        bounceAfterScale, skipHealthchecks, emailConfigurationOverrides, Optional.<Boolean>absent(), hideEvenNumberAcrossRacksHint, taskLogErrorRegex, taskLogErrorRegexCaseSensitive, taskPriorityLevel, maxTasksPerOffer, allowBounceToSameHost, requiredRole);
+        bounceAfterScale, skipHealthchecks, emailConfigurationOverrides, Optional.<Boolean>absent(), hideEvenNumberAcrossRacksHint, taskLogErrorRegex, taskLogErrorRegexCaseSensitive, taskPriorityLevel, maxTasksPerOffer, allowBounceToSameHost,
+        requiredRole, dataCenter);
   }
 
   public Optional<Boolean> getSkipHealthchecks() {
@@ -354,6 +357,15 @@ public class SingularityRequestBuilder {
     return this;
   }
 
+  public Optional<String> getDataCenter() {
+    return dataCenter;
+  }
+
+  public SingularityRequestBuilder setDataCenter(Optional<String> dataCenter) {
+    this.dataCenter = dataCenter;
+    return this;
+  }
+
   @Override
   public boolean equals(Object o) {
     if (this == o) {
@@ -394,12 +406,13 @@ public class SingularityRequestBuilder {
         Objects.equals(taskLogErrorRegexCaseSensitive, that.taskLogErrorRegexCaseSensitive) &&
         Objects.equals(taskPriorityLevel, that.taskPriorityLevel) &&
         Objects.equals(maxTasksPerOffer, that.maxTasksPerOffer) &&
-        Objects.equals(allowBounceToSameHost, that.allowBounceToSameHost);
+        Objects.equals(allowBounceToSameHost, that.allowBounceToSameHost) &&
+        Objects.equals(dataCenter, that.dataCenter);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(id, requestType, owners, numRetriesOnFailure, schedule, quartzSchedule, scheduleTimeZone, scheduleType, killOldNonLongRunningTasksAfterMillis, taskExecutionTimeLimitMillis, scheduledExpectedRuntimeMillis, waitAtLeastMillisAfterTaskFinishesForReschedule, instances, skipHealthchecks, rackSensitive, rackAffinity, slavePlacement, requiredSlaveAttributes, allowedSlaveAttributes, loadBalanced, requiredRole, group, readWriteGroups, readOnlyGroups, bounceAfterScale, emailConfigurationOverrides, hideEvenNumberAcrossRacksHint, taskLogErrorRegex, taskLogErrorRegexCaseSensitive, taskPriorityLevel, maxTasksPerOffer, allowBounceToSameHost);
+    return Objects.hash(id, requestType, owners, numRetriesOnFailure, schedule, quartzSchedule, scheduleTimeZone, scheduleType, killOldNonLongRunningTasksAfterMillis, taskExecutionTimeLimitMillis, scheduledExpectedRuntimeMillis, waitAtLeastMillisAfterTaskFinishesForReschedule, instances, skipHealthchecks, rackSensitive, rackAffinity, slavePlacement, requiredSlaveAttributes, allowedSlaveAttributes, loadBalanced, requiredRole, group, readWriteGroups, readOnlyGroups, bounceAfterScale, emailConfigurationOverrides, hideEvenNumberAcrossRacksHint, taskLogErrorRegex, taskLogErrorRegexCaseSensitive, taskPriorityLevel, maxTasksPerOffer, allowBounceToSameHost, dataCenter);
   }
 
   @Override
@@ -437,6 +450,7 @@ public class SingularityRequestBuilder {
         ", taskPriorityLevel=" + taskPriorityLevel +
         ", maxTasksPerOffer=" + maxTasksPerOffer +
         ", allowBounceToSameHost=" + allowBounceToSameHost +
+        ", dataCenter=" + dataCenter +
         '}';
   }
 }

@@ -19,23 +19,21 @@ import com.hubspot.singularity.SingularityCreateResult;
 import com.hubspot.singularity.SingularityDeleteResult;
 import com.hubspot.singularity.SingularityDeployUpdate;
 import com.hubspot.singularity.SingularityRequestHistory;
-import com.hubspot.singularity.SingularityService;
 import com.hubspot.singularity.SingularityTaskHistoryUpdate;
 import com.hubspot.singularity.SingularityUser;
 import com.hubspot.singularity.SingularityWebhook;
 import com.hubspot.singularity.SingularityWebhookSummary;
 import com.hubspot.singularity.auth.SingularityAuthorizationHelper;
+import com.hubspot.singularity.config.ApiPaths;
 import com.hubspot.singularity.data.SingularityValidator;
 import com.hubspot.singularity.data.WebhookManager;
 import com.wordnik.swagger.annotations.Api;
 import com.wordnik.swagger.annotations.ApiOperation;
 
-@Path(WebhookResource.PATH)
+@Path(ApiPaths.WEBHOOK_RESOURCE_PATH)
 @Produces({ MediaType.APPLICATION_JSON })
-@Api(description="Manages Singularity webhooks.", value=WebhookResource.PATH)
+@Api(description="Manages Singularity webhooks.", value=ApiPaths.WEBHOOK_RESOURCE_PATH)
 public class WebhookResource {
-  public static final String PATH = SingularityService.API_BASE_PATH + "/webhooks";
-
   private final WebhookManager webhookManager;
   private final Optional<SingularityUser> user;
   private final SingularityAuthorizationHelper authorizationHelper;

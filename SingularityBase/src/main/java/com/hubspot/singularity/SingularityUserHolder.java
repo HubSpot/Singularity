@@ -36,4 +36,14 @@ public class SingularityUserHolder {
   public boolean isAuthEnabled() {
     return authEnabled;
   }
+
+  @Override
+  public String toString() {
+    return "SingularityUserHolder{" +
+        "user=" + user +
+        ", settings=" + settings +
+        ", authenticated=" + authenticated +
+        ", authEnabled=" + authEnabled +
+        '}';
+  }
 }
