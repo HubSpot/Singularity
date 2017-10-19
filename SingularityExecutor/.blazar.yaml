@@ -1,0 +1,3 @@
+env:
+  MAVEN_ARGS: "-T 8 -Dsingularity.jar.name.format=\\${project.artifactId} -Dgpg.skip=true -DforkCount=2C"
+  SET_VERSION_OVERRIDE: "0.18.0-$GIT_BRANCH-SNAPSHOT"

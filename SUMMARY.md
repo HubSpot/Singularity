@@ -15,6 +15,7 @@
   * [Load Balancer Integration](Docs/development/load-balancer-integration.md)
   * [Basepom](Docs/development/basepom.md)
 * [Releases](Docs/releases/index.md)
+  * [Upgrading to Mesos 1.x](Docs/reference/upgrading-to-mesos-1.md)
 * Feature Docs
   * [Choosing Custom Ports](Docs/features/custom-ports.md)
   * [Expiring Actions](Docs/features/expiring-actions.md)
@@ -22,6 +23,7 @@
   * [Task Search](Docs/features/task-search.md)
   * [Incremental Deploys](Docs/features/incremental-deploys.md)
   * [Disaster Detection & Disabled Actions](Docs/features/disaster-detection.md)
+  * [Cluster Coordinator](Docs/features/cluster-coordinator.md)
 * Reference
   * [Configuration](Docs/reference/configuration.md)
   * [Container Options](Docs/reference/container-options.md)

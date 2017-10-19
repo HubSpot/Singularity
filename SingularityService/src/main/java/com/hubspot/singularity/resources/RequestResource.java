@@ -51,7 +51,6 @@ import com.hubspot.singularity.SingularityRequestDeployState;
 import com.hubspot.singularity.SingularityRequestHistory.RequestHistoryType;
 import com.hubspot.singularity.SingularityRequestParent;
 import com.hubspot.singularity.SingularityRequestWithState;
-import com.hubspot.singularity.SingularityService;
 import com.hubspot.singularity.SingularityShellCommand;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTransformHelpers;
@@ -67,7 +66,7 @@ import com.hubspot.singularity.api.SingularityScaleRequest;
 import com.hubspot.singularity.api.SingularitySkipHealthchecksRequest;
 import com.hubspot.singularity.api.SingularityUnpauseRequest;
 import com.hubspot.singularity.auth.SingularityAuthorizationHelper;
-import com.hubspot.singularity.config.SingularityConfiguration;
+import com.hubspot.singularity.config.ApiPaths;
 import com.hubspot.singularity.data.DeployManager;
 import com.hubspot.singularity.data.DisasterManager;
 import com.hubspot.singularity.data.RequestManager;
@@ -88,11 +87,10 @@ import com.wordnik.swagger.annotations.ApiParam;
 import com.wordnik.swagger.annotations.ApiResponse;
 import com.wordnik.swagger.annotations.ApiResponses;
 
-@Path(RequestResource.PATH)
+@Path(ApiPaths.REQUEST_RESOURCE_PATH)
 @Produces({ MediaType.APPLICATION_JSON })
-@Api(description="Manages Singularity Requests, the parent object for any deployed task", value=RequestResource.PATH, position=1)
+@Api(description="Manages Singularity Requests, the parent object for any deployed task", value=ApiPaths.REQUEST_RESOURCE_PATH, position=1)
 public class RequestResource extends AbstractRequestResource {
-  public static final String PATH = SingularityService.API_BASE_PATH + "/requests";
   private static final Logger LOG = LoggerFactory.getLogger(RequestResource.class);
 
   private final SingularityMailer mailer;
@@ -100,19 +98,17 @@ public class RequestResource extends AbstractRequestResource {
   private final RequestHelper requestHelper;
   private final SlaveManager slaveManager;
   private final DisasterManager disasterManager;
-  private final SingularityConfiguration singularityConfiguration;
 
   @Inject
   public RequestResource(SingularityValidator validator, DeployManager deployManager, TaskManager taskManager, RequestManager requestManager, SingularityMailer mailer,
                          SingularityAuthorizationHelper authorizationHelper, Optional<SingularityUser> user, RequestHelper requestHelper, LeaderLatch leaderLatch,
-                         SlaveManager slaveManager, DisasterManager disasterManager, AsyncHttpClient httpClient, ObjectMapper objectMapper, SingularityConfiguration singularityConfiguration) {
+                         SlaveManager slaveManager, DisasterManager disasterManager, AsyncHttpClient httpClient, ObjectMapper objectMapper) {
     super(requestManager, deployManager, user, validator, authorizationHelper, httpClient, leaderLatch, objectMapper);
     this.mailer = mailer;
     this.taskManager = taskManager;
     this.requestHelper = requestHelper;
     this.slaveManager = slaveManager;
     this.disasterManager = disasterManager;
-    this.singularityConfiguration = singularityConfiguration;
   }
 
   private void submitRequest(SingularityRequest request, Optional<SingularityRequestWithState> oldRequestWithState, Optional<RequestHistoryType> historyType,
@@ -627,7 +623,7 @@ public class RequestResource extends AbstractRequestResource {
       scaleMessage = String.format("%s", scaleMessage);
     }
 
-    if (newRequest.getBounceAfterScale().or(scaleRequest.getBounce().or(false))) {
+    if (scaleRequest.getBounce().or(newRequest.getBounceAfterScale().or(false))) {
       validator.checkActionEnabled(SingularityAction.BOUNCE_REQUEST);
 
       checkBadRequest(newRequest.isLongRunning(), "Can not bounce a %s request (%s)", newRequest.getRequestType(), newRequest);

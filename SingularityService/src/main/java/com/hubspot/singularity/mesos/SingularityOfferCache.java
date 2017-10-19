@@ -6,14 +6,11 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import org.apache.mesos.Protos.Offer;
-import org.apache.mesos.Protos.OfferID;
-import org.apache.mesos.Protos.Status;
-import org.apache.mesos.SchedulerDriver;
+import org.apache.mesos.v1.Protos.Offer;
+import org.apache.mesos.v1.Protos.OfferID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
@@ -32,14 +29,14 @@ public class SingularityOfferCache implements OfferCache, RemovalListener<String
   private static final Logger LOG = LoggerFactory.getLogger(SingularityOfferCache.class);
 
   private final Cache<String, CachedOffer> offerCache;
-  private final SchedulerDriverSupplier schedulerDriverSupplier;
+  private final SingularityMesosSchedulerClient schedulerClient;
   private final SingularityConfiguration configuration;
   private final AtomicBoolean useOfferCache = new AtomicBoolean(true);
 
   @Inject
-  public SingularityOfferCache(SingularityConfiguration configuration, SchedulerDriverSupplier schedulerDriverSupplier) {
+  public SingularityOfferCache(SingularityConfiguration configuration, SingularityMesosSchedulerClient schedulerClient) {
     this.configuration = configuration;
-    this.schedulerDriverSupplier = schedulerDriverSupplier;
+    this.schedulerClient = schedulerClient;
 
     offerCache = CacheBuilder.newBuilder()
         .expireAfterWrite(configuration.getCacheOffersForMillis(), TimeUnit.MILLISECONDS)
@@ -49,9 +46,9 @@ public class SingularityOfferCache implements OfferCache, RemovalListener<String
   }
 
   @Override
-  public void cacheOffer(SchedulerDriver driver, long timestamp, Offer offer) {
+  public void cacheOffer(long timestamp, Offer offer) {
     if (!useOfferCache.get()) {
-      driver.declineOffer(offer.getId());
+      schedulerClient.decline(Collections.singletonList(offer.getId()));
       return;
     }
     LOG.debug("Caching offer {} for {}", offer.getId().getValue(), JavaUtils.durationFromMillis(configuration.getCacheOffersForMillis()));
@@ -77,7 +74,7 @@ public class SingularityOfferCache implements OfferCache, RemovalListener<String
   }
 
   @Override
-  public void rescindOffer(SchedulerDriver driver, OfferID offerId) {
+  public void rescindOffer(OfferID offerId) {
     offerCache.invalidate(offerId.getValue());
   }
 
@@ -137,16 +134,14 @@ public class SingularityOfferCache implements OfferCache, RemovalListener<String
   }
 
   private void declineOffer(CachedOffer offer) {
-    Optional<SchedulerDriver> driver = schedulerDriverSupplier.get();
-
-    if (!driver.isPresent()) {
-      LOG.error("No scheduler driver present to handle expired offer {} - this should never happen", offer.offerId);
+    if (!schedulerClient.isRunning()) {
+      LOG.error("No active scheduler driver present to handle expired offer {} - this should never happen", offer.offerId);
       return;
     }
 
-    Status status = driver.get().declineOffer(offer.offer.getId());
+    schedulerClient.decline(Collections.singletonList(offer.offer.getId()));
 
-    LOG.debug("Declined cached offer {} - driver status {}", offer.offerId, status);
+    LOG.debug("Declined cached offer {}", offer.offerId);
   }
 
   private enum OfferState {

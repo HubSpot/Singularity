@@ -1,6 +1,6 @@
 package com.hubspot.singularity.scheduler;
 
-import org.apache.mesos.Protos.TaskState;
+import org.apache.mesos.v1.Protos.TaskState;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -114,6 +114,7 @@ public class SingularityExpiringActionsTest extends SingularitySchedulerTestBase
     expiringUserActionPoller.runActionOnPoll();
 
     resourceOffers();
+    cleaner.drainCleanupQueue();
     cleaner.drainCleanupQueue();
     killKilledTasks();
 

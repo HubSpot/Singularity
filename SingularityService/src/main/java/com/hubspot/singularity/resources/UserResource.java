@@ -9,18 +9,18 @@ import javax.ws.rs.core.MediaType;
 
 import com.google.common.base.Optional;
 import com.google.inject.Inject;
-import com.hubspot.singularity.SingularityService;
 import com.hubspot.singularity.SingularityUser;
 import com.hubspot.singularity.SingularityUserSettings;
 import com.hubspot.singularity.auth.SingularityAuthorizationHelper;
+import com.hubspot.singularity.config.ApiPaths;
 import com.hubspot.singularity.data.UserManager;
+import com.wordnik.swagger.annotations.Api;
 import com.wordnik.swagger.annotations.ApiParam;
 
-@Path(UserResource.PATH)
+@Path(ApiPaths.USER_RESOURCE_PATH)
 @Produces({ MediaType.APPLICATION_JSON })
+@Api(description = "Retrieve settings for a particular user", value = ApiPaths.USER_RESOURCE_PATH)
 public class UserResource {
-  public static final String PATH = SingularityService.API_BASE_PATH + "/users";
-
   private final UserManager userManager;
   private final Optional<SingularityUser> user;
   private final SingularityAuthorizationHelper authorizationHelper;
