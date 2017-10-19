@@ -32,11 +32,11 @@ import org.slf4j.LoggerFactory;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import com.google.protobuf.ByteString;
-import com.hubspot.singularity.SingularityMainModule;
+import com.hubspot.singularity.SingularityServiceBaseModule;
 import com.hubspot.singularity.config.MesosConfiguration;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.config.UIConfiguration;
-import com.hubspot.singularity.resources.UiResource;
+import com.hubspot.singularity.resources.ui.UiResource;
 import com.mesosphere.mesos.rx.java.AwaitableSubscription;
 import com.mesosphere.mesos.rx.java.MesosClient;
 import com.mesosphere.mesos.rx.java.MesosClientBuilder;
@@ -69,7 +69,7 @@ public class SingularityMesosSchedulerClient {
   private Thread subscriberThread;
 
   @Inject
-  public SingularityMesosSchedulerClient(SingularityConfiguration configuration, @Named(SingularityMainModule.SINGULARITY_URI_BASE) final String singularityUriBase) {
+  public SingularityMesosSchedulerClient(SingularityConfiguration configuration, @Named(SingularityServiceBaseModule.SINGULARITY_URI_BASE) final String singularityUriBase) {
     this.configuration = configuration;
     this.mesosConfiguration = configuration.getMesosConfiguration();
     this.singularityUriBase = singularityUriBase;

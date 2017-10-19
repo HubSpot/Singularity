@@ -76,6 +76,7 @@ import com.hubspot.singularity.api.ContinuationToken;
 import com.hubspot.singularity.api.SingularityS3SearchRequest;
 import com.hubspot.singularity.api.SingularityS3SearchResult;
 import com.hubspot.singularity.auth.SingularityAuthorizationHelper;
+import com.hubspot.singularity.config.ApiPaths;
 import com.hubspot.singularity.config.S3Configuration;
 import com.hubspot.singularity.data.DeployManager;
 import com.hubspot.singularity.data.RequestManager;
@@ -89,11 +90,10 @@ import com.wordnik.swagger.annotations.Api;
 import com.wordnik.swagger.annotations.ApiOperation;
 import com.wordnik.swagger.annotations.ApiParam;
 
-@Path(S3LogResource.PATH)
+@Path(ApiPaths.S3_LOG_RESOURCE_PATH)
 @Produces({ MediaType.APPLICATION_JSON })
-@Api(description="Manages Singularity task logs stored in S3.", value=S3LogResource.PATH)
+@Api(description="Manages Singularity task logs stored in S3.", value=ApiPaths.S3_LOG_RESOURCE_PATH)
 public class S3LogResource extends AbstractHistoryResource {
-  public static final String PATH = SingularityService.API_BASE_PATH + "/logs";
   private static final Logger LOG = LoggerFactory.getLogger(S3LogResource.class);
   private static final String CONTENT_DISPOSITION_DOWNLOAD_HEADER = "attachment";
   private static final String CONTENT_ENCODING_DOWNLOAD_HEADER = "identity";

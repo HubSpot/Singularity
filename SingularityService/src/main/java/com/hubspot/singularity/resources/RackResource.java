@@ -18,10 +18,10 @@ import com.hubspot.singularity.MachineState;
 import com.hubspot.singularity.SingularityAction;
 import com.hubspot.singularity.SingularityMachineStateHistoryUpdate;
 import com.hubspot.singularity.SingularityRack;
-import com.hubspot.singularity.SingularityService;
 import com.hubspot.singularity.SingularityUser;
 import com.hubspot.singularity.api.SingularityMachineChangeRequest;
 import com.hubspot.singularity.auth.SingularityAuthorizationHelper;
+import com.hubspot.singularity.config.ApiPaths;
 import com.hubspot.singularity.data.RackManager;
 import com.hubspot.singularity.data.SingularityValidator;
 import com.hubspot.singularity.expiring.SingularityExpiringMachineState;
@@ -29,13 +29,10 @@ import com.wordnik.swagger.annotations.Api;
 import com.wordnik.swagger.annotations.ApiOperation;
 import com.wordnik.swagger.annotations.ApiParam;
 
-@Path(RackResource.PATH)
+@Path(ApiPaths.RACK_RESOURCE_PATH)
 @Produces({ MediaType.APPLICATION_JSON })
-@Api( description="Manages Singularity racks.", value=RackResource.PATH )
+@Api( description="Manages Singularity racks.", value=ApiPaths.RACK_RESOURCE_PATH )
 public class RackResource extends AbstractMachineResource<SingularityRack> {
-
-  public static final String PATH = SingularityService.API_BASE_PATH + "/racks";
-
 
   @Inject
   public RackResource(RackManager rackManager, SingularityAuthorizationHelper authorizationHelper, Optional<SingularityUser> user, SingularityValidator validator) {

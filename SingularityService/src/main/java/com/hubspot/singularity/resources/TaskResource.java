@@ -52,7 +52,6 @@ import com.hubspot.singularity.SingularityPendingRequest.PendingType;
 import com.hubspot.singularity.SingularityPendingTask;
 import com.hubspot.singularity.SingularityPendingTaskId;
 import com.hubspot.singularity.SingularityRequestWithState;
-import com.hubspot.singularity.SingularityService;
 import com.hubspot.singularity.SingularityShellCommand;
 import com.hubspot.singularity.SingularitySlave;
 import com.hubspot.singularity.SingularityTask;
@@ -72,6 +71,7 @@ import com.hubspot.singularity.WebExceptions;
 import com.hubspot.singularity.api.SingularityKillTaskRequest;
 import com.hubspot.singularity.api.SingularityTaskMetadataRequest;
 import com.hubspot.singularity.auth.SingularityAuthorizationHelper;
+import com.hubspot.singularity.config.ApiPaths;
 import com.hubspot.singularity.config.SingularityTaskMetadataConfiguration;
 import com.hubspot.singularity.data.DeployManager;
 import com.hubspot.singularity.data.DisasterManager;
@@ -87,11 +87,10 @@ import com.wordnik.swagger.annotations.ApiOperation;
 import com.wordnik.swagger.annotations.ApiResponse;
 import com.wordnik.swagger.annotations.ApiResponses;
 
-@Path(TaskResource.PATH)
+@Path(ApiPaths.TASK_RESOURCE_PATH)
 @Produces({ MediaType.APPLICATION_JSON })
-@Api(description="Manages Singularity tasks.", value=TaskResource.PATH)
+@Api(description="Manages Singularity tasks.", value=ApiPaths.TASK_RESOURCE_PATH)
 public class TaskResource extends AbstractLeaderAwareResource {
-  public static final String PATH = SingularityService.API_BASE_PATH + "/tasks";
   private static final Logger LOG = LoggerFactory.getLogger(TaskResource.class);
 
   private final TaskManager taskManager;

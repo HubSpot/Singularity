@@ -40,13 +40,13 @@ import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityRequestDeployState;
 import com.hubspot.singularity.SingularityRequestParent;
 import com.hubspot.singularity.SingularityRequestWithState;
-import com.hubspot.singularity.SingularityService;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTransformHelpers;
 import com.hubspot.singularity.SingularityUpdatePendingDeployRequest;
 import com.hubspot.singularity.SingularityUser;
 import com.hubspot.singularity.api.SingularityDeployRequest;
 import com.hubspot.singularity.auth.SingularityAuthorizationHelper;
+import com.hubspot.singularity.config.ApiPaths;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.DeployManager;
 import com.hubspot.singularity.data.RequestManager;
@@ -59,11 +59,10 @@ import com.wordnik.swagger.annotations.ApiParam;
 import com.wordnik.swagger.annotations.ApiResponse;
 import com.wordnik.swagger.annotations.ApiResponses;
 
-@Path(DeployResource.PATH)
+@Path(ApiPaths.DEPLOY_RESOURCE_PATH)
 @Produces({ MediaType.APPLICATION_JSON })
-@Api(description="Manages Singularity Deploys for existing requests", value=DeployResource.PATH, position=2)
+@Api(description="Manages Singularity Deploys for existing requests", value=ApiPaths.DEPLOY_RESOURCE_PATH, position=2)
 public class DeployResource extends AbstractRequestResource {
-  public static final String PATH = SingularityService.API_BASE_PATH + "/deploys";
   private final SingularityConfiguration configuration;
   private final TaskManager taskManager;
 

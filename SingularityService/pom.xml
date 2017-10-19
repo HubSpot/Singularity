@@ -23,6 +23,11 @@
 
     <dependency>
       <groupId>com.hubspot</groupId>
+      <artifactId>SingularityServiceBase</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>com.hubspot</groupId>
       <artifactId>SingularityUI</artifactId>
       <scope>runtime</scope>
     </dependency>

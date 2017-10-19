@@ -8,28 +8,24 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.hubspot.singularity.SingularityPendingTask;
-import com.hubspot.singularity.SingularityService;
 import com.hubspot.singularity.SingularityTaskHistory;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTaskState;
+import com.hubspot.singularity.config.ApiPaths;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.data.history.HistoryManager;
+import com.wordnik.swagger.annotations.Api;
 import com.wordnik.swagger.annotations.ApiOperation;
 import com.wordnik.swagger.annotations.ApiResponse;
 import com.wordnik.swagger.annotations.ApiResponses;
 
-@Path(TaskTrackerResource.PATH)
+@Path(ApiPaths.TASK_TRACKER_RESOURCE_PATH)
 @Produces({MediaType.APPLICATION_JSON})
+@Api(description="Find a task by taskId or runId", value=ApiPaths.TASK_TRACKER_RESOURCE_PATH)
 public class TaskTrackerResource {
-  public static final String PATH = SingularityService.API_BASE_PATH + "/track";
-  private static final Logger LOG = LoggerFactory.getLogger(TaskTrackerResource.class);
-
   private final TaskManager taskManager;
   private final HistoryManager historyManager;
 

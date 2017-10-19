@@ -11,21 +11,19 @@ import javax.ws.rs.core.Response;
 import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.hubspot.singularity.SingularityAuthorizationScope;
-import com.hubspot.singularity.SingularityService;
 import com.hubspot.singularity.SingularityUser;
 import com.hubspot.singularity.SingularityUserHolder;
 import com.hubspot.singularity.SingularityUserSettings;
 import com.hubspot.singularity.auth.SingularityAuthorizationHelper;
 import com.hubspot.singularity.auth.datastore.SingularityAuthDatastore;
+import com.hubspot.singularity.config.ApiPaths;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.UserManager;
 import com.wordnik.swagger.annotations.ApiOperation;
 
-@Path(AuthResource.PATH)
+@Path(ApiPaths.AUTH_RESOURCE_PATH)
 @Produces({ MediaType.APPLICATION_JSON })
 public class AuthResource {
-  public static final String PATH = SingularityService.API_BASE_PATH + "/auth";
-
   private final Optional<SingularityUser> user;
   private final UserManager userManager;
   private final SingularityConfiguration configuration;

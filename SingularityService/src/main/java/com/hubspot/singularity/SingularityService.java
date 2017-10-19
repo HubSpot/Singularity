@@ -12,6 +12,7 @@ import com.google.inject.Module;
 import com.hubspot.dropwizard.guicier.GuiceBundle;
 import com.hubspot.jackson.datatype.protobuf.ProtobufModule;
 import com.hubspot.singularity.bundles.CorsBundle;
+import com.hubspot.singularity.config.ApiPaths;
 import com.hubspot.singularity.config.MergingSourceProvider;
 import com.hubspot.singularity.config.SingularityConfiguration;
 
@@ -28,7 +29,7 @@ import io.dropwizard.views.ViewBundle;
 public class SingularityService<T extends SingularityConfiguration> extends Application<T> {
   private static final String SINGULARITY_DEFAULT_CONFIGURATION_PROPERTY = "singularityDefaultConfiguration";
 
-  public static final String API_BASE_PATH = "/api";
+  public static final String API_BASE_PATH = ApiPaths.API_BASE_PATH;
 
   private GuiceBundle<SingularityConfiguration> guiceBundle;
 

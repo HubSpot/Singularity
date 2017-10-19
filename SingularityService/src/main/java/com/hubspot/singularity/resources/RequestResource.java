@@ -51,7 +51,6 @@ import com.hubspot.singularity.SingularityRequestDeployState;
 import com.hubspot.singularity.SingularityRequestHistory.RequestHistoryType;
 import com.hubspot.singularity.SingularityRequestParent;
 import com.hubspot.singularity.SingularityRequestWithState;
-import com.hubspot.singularity.SingularityService;
 import com.hubspot.singularity.SingularityShellCommand;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTransformHelpers;
@@ -67,6 +66,7 @@ import com.hubspot.singularity.api.SingularityScaleRequest;
 import com.hubspot.singularity.api.SingularitySkipHealthchecksRequest;
 import com.hubspot.singularity.api.SingularityUnpauseRequest;
 import com.hubspot.singularity.auth.SingularityAuthorizationHelper;
+import com.hubspot.singularity.config.ApiPaths;
 import com.hubspot.singularity.data.DeployManager;
 import com.hubspot.singularity.data.DisasterManager;
 import com.hubspot.singularity.data.RequestManager;
@@ -87,11 +87,10 @@ import com.wordnik.swagger.annotations.ApiParam;
 import com.wordnik.swagger.annotations.ApiResponse;
 import com.wordnik.swagger.annotations.ApiResponses;
 
-@Path(RequestResource.PATH)
+@Path(ApiPaths.REQUEST_RESOURCE_PATH)
 @Produces({ MediaType.APPLICATION_JSON })
-@Api(description="Manages Singularity Requests, the parent object for any deployed task", value=RequestResource.PATH, position=1)
+@Api(description="Manages Singularity Requests, the parent object for any deployed task", value=ApiPaths.REQUEST_RESOURCE_PATH, position=1)
 public class RequestResource extends AbstractRequestResource {
-  public static final String PATH = SingularityService.API_BASE_PATH + "/requests";
   private static final Logger LOG = LoggerFactory.getLogger(RequestResource.class);
 
   private final SingularityMailer mailer;

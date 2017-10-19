@@ -1,7 +1,4 @@
-package com.hubspot.singularity.resources;
-
-import static com.hubspot.singularity.SingularityMainModule.SINGULARITY_URI_BASE;
-import static com.hubspot.singularity.resources.UiResource.UI_RESOURCE_LOCATION;
+package com.hubspot.singularity.resources.ui;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -15,6 +12,7 @@ import javax.ws.rs.core.UriInfo;
 
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
+import com.hubspot.singularity.SingularityServiceBaseModule;
 
 @Path("/")
 @Produces(MediaType.TEXT_HTML)
@@ -22,13 +20,13 @@ public class IndexResource {
   private final String singularityUriBase;
 
   @Inject
-  public IndexResource(@Named(SINGULARITY_URI_BASE) String singularityUriBase) {
+  public IndexResource(@Named(SingularityServiceBaseModule.SINGULARITY_URI_BASE) String singularityUriBase) {
     this.singularityUriBase = singularityUriBase;
   }
 
   @GET
   @Path("/")
   public Response getIndex(@Context UriInfo info) {
-    return Response.status(Status.MOVED_PERMANENTLY).location(UriBuilder.fromPath(singularityUriBase).path(UI_RESOURCE_LOCATION).build()).build();
+    return Response.status(Status.MOVED_PERMANENTLY).location(UriBuilder.fromPath(singularityUriBase).path(UiResource.UI_RESOURCE_LOCATION).build()).build();
   }
 }
