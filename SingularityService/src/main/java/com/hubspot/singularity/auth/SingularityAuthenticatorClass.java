@@ -10,7 +10,7 @@ public enum SingularityAuthenticatorClass {
   DISABLED(SingularityDisabledAuthenticator.class),
   HEADER_PASSTHROUGH(SingularityHeaderPassthroughAuthenticator.class),
   QUERYPARAM_PASSTHROUGH(SingularityQueryParamAuthenticator.class),
-  JWT(SingularityWebhookAuthenticator.class);
+  WEBHOOK(SingularityWebhookAuthenticator.class);
 
   private final Class<? extends SingularityAuthenticator> authenticatorClass;
 
