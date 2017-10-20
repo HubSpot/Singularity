@@ -6,7 +6,6 @@ import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
-import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 
 import org.slf4j.Logger;
@@ -25,71 +24,72 @@ import com.google.inject.Provider;
 import com.google.inject.Singleton;
 import com.hubspot.singularity.SingularityUser;
 import com.hubspot.singularity.WebExceptions;
-import com.hubspot.singularity.config.JWTConfiguration;
 import com.hubspot.singularity.config.SingularityConfiguration;
+import com.hubspot.singularity.config.WebhookAuthConfiguration;
 import com.ning.http.client.AsyncHttpClient;
 import com.ning.http.client.Response;
 
 @Singleton
-public class SingularityExternalJWTAuthenticator implements SingularityAuthenticator {
-  private static final Logger LOG = LoggerFactory.getLogger(SingularityExternalJWTAuthenticator.class);
+public class SingularityWebhookAuthenticator implements SingularityAuthenticator {
+  private static final Logger LOG = LoggerFactory.getLogger(SingularityWebhookAuthenticator.class);
 
   private final AsyncHttpClient asyncHttpClient;
-  private final JWTConfiguration jwtConfiguration;
+  private final WebhookAuthConfiguration webhookAuthConfiguration;
   private final Provider<HttpServletRequest> requestProvider;
   private final ObjectMapper objectMapper;
   private final Cache<String, UserPermissions> permissionsCache;
 
   @Inject
-  public SingularityExternalJWTAuthenticator(AsyncHttpClient asyncHttpClient,
-                                             SingularityConfiguration configuration,
-                                             Provider<HttpServletRequest> requestProvider,
-                                             ObjectMapper objectMapper) {
+  public SingularityWebhookAuthenticator(AsyncHttpClient asyncHttpClient,
+                                         SingularityConfiguration configuration,
+                                         Provider<HttpServletRequest> requestProvider,
+                                         ObjectMapper objectMapper) {
     this.asyncHttpClient = asyncHttpClient;
-    this.jwtConfiguration = configuration.getJwtConfiguration();
+    this.webhookAuthConfiguration = configuration.getWebhookAuthConfiguration();
     this.requestProvider = requestProvider;
     this.objectMapper = objectMapper;
     this.permissionsCache = CacheBuilder.<String, UserPermissions>newBuilder()
-        .expireAfterWrite(jwtConfiguration.getCacheValidationMs(), TimeUnit.MILLISECONDS)
+        .expireAfterWrite(webhookAuthConfiguration.getCacheValidationMs(), TimeUnit.MILLISECONDS)
         .build();
   }
 
   @Override
   public Optional<SingularityUser> get() {
-    String jwt = extractJWT(requestProvider.get());
+    String authHeaderValue = extractAuthHeader(requestProvider.get());
 
-    UserPermissions permissions = verifyToken(jwt);
+    UserPermissions permissions = verify(authHeaderValue);
 
     Set<String> groups = new HashSet<>();
     groups.addAll(permissions.getGroups());
     groups.addAll(permissions.getScopes());
-    return Optional.of(new SingularityUser(permissions.getUid(), Optional.of(permissions.getUid()), Optional.of(permissions.getUid()), groups));
+
+    String email = permissions.getUid().contains("@") ? permissions.getUid() : String.format("%s@%s", permissions.getUid(), webhookAuthConfiguration.getDefaultEmailDomain());
+
+    return Optional.of(new SingularityUser(
+        permissions.getUid(),
+        Optional.of(permissions.getUid()),
+        Optional.of(email),
+        groups));
   }
 
-  private String extractJWT(HttpServletRequest request) {
-    String cookieValue = null;
-    for (Cookie cookie : request.getCookies()) {
-      if (cookie.getName().equals(jwtConfiguration.getAuthCookieName())) {
-        cookieValue = cookie.getValue();
-        break;
-      }
-    }
+  private String extractAuthHeader(HttpServletRequest request) {
+    String authHeaderValue = request.getHeader("Authorization");
 
-    if (Strings.isNullOrEmpty(cookieValue)) {
-      throw WebExceptions.unauthorized(String.format("No %s cookie present, please log in first", jwtConfiguration.getAuthCookieName()));
+    if (Strings.isNullOrEmpty(authHeaderValue)) {
+      throw WebExceptions.unauthorized("No Authorization header present, please log in first");
     } else {
-      return cookieValue;
+      return authHeaderValue;
     }
   }
 
-  private UserPermissions verifyToken(String jwt) {
-    UserPermissions maybeCachedPermissions = permissionsCache.getIfPresent(jwt);
+  private UserPermissions verify(String authHeaderValue) {
+    UserPermissions maybeCachedPermissions = permissionsCache.getIfPresent(authHeaderValue);
     if (maybeCachedPermissions != null) {
       return maybeCachedPermissions;
     } else {
       try {
-        Response response = asyncHttpClient.prepareGet(jwtConfiguration.getAuthVerificationUrl())
-            .addHeader("Authorization", String.format("Bearer: %s", jwt))
+        Response response = asyncHttpClient.prepareGet(webhookAuthConfiguration.getAuthVerificationUrl())
+            .addHeader("Authorization", authHeaderValue)
             .execute()
             .get();
         if (response.getStatusCode() > 299) {
@@ -97,7 +97,7 @@ public class SingularityExternalJWTAuthenticator implements SingularityAuthentic
         } else {
           String responseBody = response.getResponseBody();
           UserPermissions permissions = objectMapper.readValue(responseBody, UserPermissions.class);
-          permissionsCache.put(jwt, permissions);
+          permissionsCache.put(authHeaderValue, permissions);
           return permissions;
         }
       } catch (IOException|ExecutionException|InterruptedException e) {

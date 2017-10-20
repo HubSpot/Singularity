@@ -308,7 +308,7 @@ public class SingularityConfiguration extends Configuration {
 
   @JsonProperty("jwt")
   @Valid
-  private JWTConfiguration jwtConfiguration;
+  private WebhookAuthConfiguration webhookAuthConfiguration;
 
   @JsonProperty("auth")
   @NotNull
@@ -1260,12 +1260,12 @@ public class SingularityConfiguration extends Configuration {
     return Optional.fromNullable(ldapConfiguration);
   }
 
-  public JWTConfiguration getJwtConfiguration() {
-    return jwtConfiguration;
+  public WebhookAuthConfiguration getWebhookAuthConfiguration() {
+    return webhookAuthConfiguration;
   }
 
-  public SingularityConfiguration setJwtConfiguration(JWTConfiguration jwtConfiguration) {
-    this.jwtConfiguration = jwtConfiguration;
+  public SingularityConfiguration setWebhookAuthConfiguration(WebhookAuthConfiguration webhookAuthConfiguration) {
+    this.webhookAuthConfiguration = webhookAuthConfiguration;
     return this;
   }
 
