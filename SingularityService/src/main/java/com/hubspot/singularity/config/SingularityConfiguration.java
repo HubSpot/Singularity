@@ -306,6 +306,10 @@ public class SingularityConfiguration extends Configuration {
   @Valid
   private LDAPConfiguration ldapConfiguration;
 
+  @JsonProperty("jwt")
+  @Valid
+  private JWTConfiguration jwtConfiguration;
+
   @JsonProperty("auth")
   @NotNull
   @Valid
@@ -1254,6 +1258,15 @@ public class SingularityConfiguration extends Configuration {
   @JsonIgnore
   public Optional<LDAPConfiguration> getLdapConfigurationOptional() {
     return Optional.fromNullable(ldapConfiguration);
+  }
+
+  public JWTConfiguration getJwtConfiguration() {
+    return jwtConfiguration;
+  }
+
+  public SingularityConfiguration setJwtConfiguration(JWTConfiguration jwtConfiguration) {
+    this.jwtConfiguration = jwtConfiguration;
+    return this;
   }
 
   public void setLdapConfiguration(LDAPConfiguration ldapConfiguration) {

@@ -45,14 +45,6 @@ public class AuthConfiguration {
   @NotNull
   private String requestUserHeaderName = "X-Username";  // used by SingularityHeaderPassthroughAuthenticator
 
-  @JsonProperty
-  @NotNull
-  private String jwtAuthVerificationUrl = ""; // used by SingularityExternalJWTAuthenticator
-
-  @JsonProperty
-  @NotNull
-  private String jwtAuthCookieName = ""; // used by SingularityExternalJWTAuthenticator
-
   public boolean isEnabled() {
     return enabled;
   }
@@ -123,23 +115,5 @@ public class AuthConfiguration {
 
   public void setRequestUserHeaderName(String requestUserHeaderName) {
     this.requestUserHeaderName = requestUserHeaderName;
-  }
-
-  public String getJwtAuthVerificationUrl() {
-    return jwtAuthVerificationUrl;
-  }
-
-  public AuthConfiguration setJwtAuthVerificationUrl(String jwtAuthVerificationUrl) {
-    this.jwtAuthVerificationUrl = jwtAuthVerificationUrl;
-    return this;
-  }
-
-  public String getJwtAuthCookieName() {
-    return jwtAuthCookieName;
-  }
-
-  public AuthConfiguration setJwtAuthCookieName(String jwtAuthCookieName) {
-    this.jwtAuthCookieName = jwtAuthCookieName;
-    return this;
   }
 }
