@@ -459,7 +459,7 @@ public class RequestResource extends AbstractRequestResource {
                                                           @QueryParam("limit") Optional<Integer> limit) {
     return requestHelper.fillDataForRequestsAndFilter(
         filterAutorized(Lists.newArrayList(requestManager.getActiveRequests(useWebCache(useWebCache))), SingularityAuthorizationScope.READ, user),
-        user, filterRelevantForUser, includeFullRequestData, limit);
+        user, valueOrFalse(filterRelevantForUser), valueOrFalse(includeFullRequestData), limit);
   }
 
 
@@ -474,7 +474,7 @@ public class RequestResource extends AbstractRequestResource {
                                                           @QueryParam("limit") Optional<Integer> limit) {
     return requestHelper.fillDataForRequestsAndFilter(
         filterAutorized(Lists.newArrayList(requestManager.getPausedRequests(useWebCache(useWebCache))), SingularityAuthorizationScope.READ, user),
-        user, filterRelevantForUser, includeFullRequestData, limit);
+        user, valueOrFalse(filterRelevantForUser), valueOrFalse(includeFullRequestData), limit);
   }
 
   @GET
@@ -487,7 +487,7 @@ public class RequestResource extends AbstractRequestResource {
                                                             @QueryParam("limit") Optional<Integer> limit) {
     return requestHelper.fillDataForRequestsAndFilter(
         filterAutorized(Lists.newArrayList(requestManager.getCooldownRequests(useWebCache(useWebCache))), SingularityAuthorizationScope.READ, user),
-        user, filterRelevantForUser, includeFullRequestData, limit);
+        user, valueOrFalse(filterRelevantForUser), valueOrFalse(includeFullRequestData), limit);
   }
 
   @GET
@@ -500,7 +500,7 @@ public class RequestResource extends AbstractRequestResource {
                                                             @QueryParam("limit") Optional<Integer> limit) {
     return requestHelper.fillDataForRequestsAndFilter(
         filterAutorized(Lists.newArrayList(requestManager.getFinishedRequests(useWebCache(useWebCache))), SingularityAuthorizationScope.READ, user),
-        user, filterRelevantForUser, includeFullRequestData, limit);
+        user, valueOrFalse(filterRelevantForUser), valueOrFalse(includeFullRequestData), limit);
   }
 
   @GET
@@ -512,7 +512,11 @@ public class RequestResource extends AbstractRequestResource {
                                                     @QueryParam("limit") Optional<Integer> limit) {
     return requestHelper.fillDataForRequestsAndFilter(
         filterAutorized(requestManager.getRequests(useWebCache(useWebCache)), SingularityAuthorizationScope.READ, user),
-        user, filterRelevantForUser, includeFullRequestData, limit);
+        user, valueOrFalse(filterRelevantForUser), valueOrFalse(includeFullRequestData), limit);
+  }
+
+  private boolean valueOrFalse(Boolean input) {
+    return input == null ? false : input;
   }
 
   private List<SingularityRequestWithState> filterAutorized(List<SingularityRequestWithState> requests, final SingularityAuthorizationScope scope, Optional<SingularityUser> user) {

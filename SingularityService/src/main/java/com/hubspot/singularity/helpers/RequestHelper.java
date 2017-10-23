@@ -175,8 +175,8 @@ public class RequestHelper {
 
   public List<SingularityRequestParent> fillDataForRequestsAndFilter(List<SingularityRequestWithState> requests,
                                                                      Optional<SingularityUser> user,
-                                                                     Boolean filterRelevantForUser,
-                                                                     Boolean includeFullRequestData,
+                                                                     boolean filterRelevantForUser,
+                                                                     boolean includeFullRequestData,
                                                                      Optional<Integer> limit) {
     Map<String, Optional<SingularityRequestHistory>> requestIdToLastHistory = new HashMap<>();
     Map<String, Optional<SingularityRequestDeployState>> deployStates = new HashMap<>();
