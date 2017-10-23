@@ -455,12 +455,11 @@ public class RequestResource extends AbstractRequestResource {
   @ApiOperation(value="Retrieve the list of active requests", response=SingularityRequestParent.class, responseContainer="List")
   public List<SingularityRequestParent> getActiveRequests(@QueryParam("useWebCache") Boolean useWebCache,
                                                           @QueryParam("filterRelevantForUser") Boolean filterRelevantForUser,
-                                                          @QueryParam("includeTaskIds") Boolean includeTaskIds,
-                                                          @QueryParam("includeLastHistory") Boolean includeLastHistory,
+                                                          @QueryParam("includeFullRequestData") Boolean includeFullRequestData,
                                                           @QueryParam("limit") Optional<Integer> limit) {
     return requestHelper.fillDataForRequestsAndFilter(
         filterAutorized(Lists.newArrayList(requestManager.getActiveRequests(useWebCache(useWebCache))), SingularityAuthorizationScope.READ, user),
-        user, filterRelevantForUser, includeTaskIds, includeLastHistory, limit);
+        user, filterRelevantForUser, includeFullRequestData, limit);
   }
 
 
@@ -471,12 +470,11 @@ public class RequestResource extends AbstractRequestResource {
   @ApiOperation(value="Retrieve the list of paused requests", response=SingularityRequestParent.class, responseContainer="List")
   public List<SingularityRequestParent> getPausedRequests(@QueryParam("useWebCache") Boolean useWebCache,
                                                           @QueryParam("filterRelevantForUser") Boolean filterRelevantForUser,
-                                                          @QueryParam("includeTaskIds") Boolean includeTaskIds,
-                                                          @QueryParam("includeLastHistory") Boolean includeLastHistory,
+                                                          @QueryParam("includeFullRequestData") Boolean includeFullRequestData,
                                                           @QueryParam("limit") Optional<Integer> limit) {
     return requestHelper.fillDataForRequestsAndFilter(
         filterAutorized(Lists.newArrayList(requestManager.getPausedRequests(useWebCache(useWebCache))), SingularityAuthorizationScope.READ, user),
-        user, filterRelevantForUser, includeTaskIds, includeLastHistory, limit);
+        user, filterRelevantForUser, includeFullRequestData, limit);
   }
 
   @GET
@@ -485,12 +483,11 @@ public class RequestResource extends AbstractRequestResource {
   @ApiOperation(value="Retrieve the list of requests in system cooldown", response=SingularityRequestParent.class, responseContainer="List")
   public List<SingularityRequestParent> getCooldownRequests(@QueryParam("useWebCache") Boolean useWebCache,
                                                             @QueryParam("filterRelevantForUser") Boolean filterRelevantForUser,
-                                                            @QueryParam("includeTaskIds") Boolean includeTaskIds,
-                                                            @QueryParam("includeLastHistory") Boolean includeLastHistory,
+                                                            @QueryParam("includeFullRequestData") Boolean includeFullRequestData,
                                                             @QueryParam("limit") Optional<Integer> limit) {
     return requestHelper.fillDataForRequestsAndFilter(
         filterAutorized(Lists.newArrayList(requestManager.getCooldownRequests(useWebCache(useWebCache))), SingularityAuthorizationScope.READ, user),
-        user, filterRelevantForUser, includeTaskIds, includeLastHistory, limit);
+        user, filterRelevantForUser, includeFullRequestData, limit);
   }
 
   @GET
@@ -499,12 +496,11 @@ public class RequestResource extends AbstractRequestResource {
   @ApiOperation(value="Retreive the list of finished requests (Scheduled requests which have exhausted their schedules)", response=SingularityRequestParent.class, responseContainer="List")
   public List<SingularityRequestParent> getFinishedRequests(@QueryParam("useWebCache") Boolean useWebCache,
                                                             @QueryParam("filterRelevantForUser") Boolean filterRelevantForUser,
-                                                            @QueryParam("includeTaskIds") Boolean includeTaskIds,
-                                                            @QueryParam("includeLastHistory") Boolean includeLastHistory,
+                                                            @QueryParam("includeFullRequestData") Boolean includeFullRequestData,
                                                             @QueryParam("limit") Optional<Integer> limit) {
     return requestHelper.fillDataForRequestsAndFilter(
         filterAutorized(Lists.newArrayList(requestManager.getFinishedRequests(useWebCache(useWebCache))), SingularityAuthorizationScope.READ, user),
-        user, filterRelevantForUser, includeTaskIds, includeLastHistory, limit);
+        user, filterRelevantForUser, includeFullRequestData, limit);
   }
 
   @GET
@@ -512,12 +508,11 @@ public class RequestResource extends AbstractRequestResource {
   @ApiOperation(value="Retrieve the list of all requests", response=SingularityRequestParent.class, responseContainer="List")
   public List<SingularityRequestParent> getRequests(@QueryParam("useWebCache") Boolean useWebCache,
                                                     @QueryParam("filterRelevantForUser") Boolean filterRelevantForUser,
-                                                    @QueryParam("includeTaskIds") Boolean includeTaskIds,
-                                                    @QueryParam("includeLastHistory") Boolean includeLastHistory,
+                                                    @QueryParam("includeFullRequestData") Boolean includeFullRequestData,
                                                     @QueryParam("limit") Optional<Integer> limit) {
     return requestHelper.fillDataForRequestsAndFilter(
         filterAutorized(requestManager.getRequests(useWebCache(useWebCache)), SingularityAuthorizationScope.READ, user),
-        user, filterRelevantForUser, includeTaskIds, includeLastHistory, limit);
+        user, filterRelevantForUser, includeFullRequestData, limit);
   }
 
   private List<SingularityRequestWithState> filterAutorized(List<SingularityRequestWithState> requests, final SingularityAuthorizationScope scope, Optional<SingularityUser> user) {
