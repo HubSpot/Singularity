@@ -176,8 +176,7 @@ public class RequestHelper {
   public List<SingularityRequestParent> fillDataForRequestsAndFilter(List<SingularityRequestWithState> requests,
                                                                      Optional<SingularityUser> user,
                                                                      Boolean filterRelevantForUser,
-                                                                     Boolean includeTaskIds,
-                                                                     Boolean includeLastHistory,
+                                                                     Boolean includeFullRequestData,
                                                                      Optional<Integer> limit) {
     Map<String, Optional<SingularityRequestHistory>> requestIdToLastHistory = new HashMap<>();
     Map<String, Optional<SingularityRequestDeployState>> deployStates = new HashMap<>();
@@ -197,7 +196,7 @@ public class RequestHelper {
             // The user is in the group for this request
             return true;
           }
-          if (includeLastHistory) {
+          if (includeFullRequestData) {
             Optional<SingularityRequestHistory> lastHistory = requestIdToLastHistory.computeIfAbsent(requestId, requestHistoryHelper::getLastHistory);
             if (userModifiedRequestLast(lastHistory, user)) {
               return true;
@@ -222,20 +221,18 @@ public class RequestHelper {
     final List<SingularityRequestParent> parents = Lists.newArrayListWithCapacity(requestIds.size());
 
     for (SingularityRequestWithState requestWithState : requests) {
-      Optional<SingularityRequestHistory> lastHistory = includeLastHistory ? requestIdToLastHistory.computeIfAbsent(requestWithState.getRequest().getId(), requestHistoryHelper::getLastHistory) : Optional.absent();
-      Optional<SingularityRequestDeployState> deployState = deployStates.computeIfAbsent(requestWithState.getRequest().getId(), deployManager::getRequestDeployState);
       parents.add(new SingularityRequestParent(
           requestWithState.getRequest(),
           requestWithState.getState(),
-          deployState,
+          deployStates.computeIfAbsent(requestWithState.getRequest().getId(), deployManager::getRequestDeployState),
           Optional.absent(), // full activeDeploy data not provided
           Optional.absent(), Optional.absent(), // full pendingDeploy data and state not provided
-          requestManager.getExpiringBounce(requestWithState.getRequest().getId()),
-          requestManager.getExpiringPause(requestWithState.getRequest().getId()),
-          requestManager.getExpiringScale(requestWithState.getRequest().getId()),
-          requestManager.getExpiringSkipHealthchecks(requestWithState.getRequest().getId()),
-          includeTaskIds ? getTaskIdsByStatusForRequest(requestWithState.getRequest().getId()) : Optional.absent(),
-          includeLastHistory ? requestIdToLastHistory.computeIfAbsent(requestWithState.getRequest().getId(), requestHistoryHelper::getLastHistory) : Optional.absent()));
+          includeFullRequestData ? requestManager.getExpiringBounce(requestWithState.getRequest().getId()) : Optional.absent(),
+          includeFullRequestData ? requestManager.getExpiringPause(requestWithState.getRequest().getId()) : Optional.absent(),
+          includeFullRequestData ? requestManager.getExpiringScale(requestWithState.getRequest().getId()) : Optional.absent(),
+          includeFullRequestData ? requestManager.getExpiringSkipHealthchecks(requestWithState.getRequest().getId()) : Optional.absent(),
+          includeFullRequestData ? getTaskIdsByStatusForRequest(requestWithState) : Optional.absent(),
+          includeFullRequestData ? requestIdToLastHistory.computeIfAbsent(requestWithState.getRequest().getId(), requestHistoryHelper::getLastHistory) : Optional.absent()));
     }
 
     return parents;
@@ -246,6 +243,12 @@ public class RequestHelper {
     if (!requestWithState.isPresent()) {
       return Optional.absent();
     }
+
+    return getTaskIdsByStatusForRequest(requestWithState.get());
+  }
+
+  private Optional<SingularityTaskIdsByStatus> getTaskIdsByStatusForRequest(SingularityRequestWithState requestWithState) {
+    String requestId = requestWithState.getRequest().getId();
     Optional<SingularityPendingDeploy> pendingDeploy = deployManager.getPendingDeploy(requestId);
 
     List<SingularityTaskId> cleaningTaskIds = taskManager.getCleanupTaskIds().stream().filter((t) -> t.getRequestId().equals(requestId)).collect(Collectors.toList());
@@ -259,7 +262,7 @@ public class RequestHelper {
     for (Map.Entry<String, List<SingularityTaskId>> entry : taskIdsByDeployId.entrySet()) {
       Optional<SingularityDeploy> deploy = deployManager.getDeploy(requestId, entry.getKey());
       List<SingularityTaskId> healthyTasksIdsForDeploy = deployHealthHelper.getHealthyTasks(
-          requestWithState.get().getRequest(),
+          requestWithState.getRequest(),
           deploy,
           entry.getValue(),
           pendingDeploy.isPresent() && pendingDeploy.get().getDeployMarker().getDeployId().equals(entry.getKey()));

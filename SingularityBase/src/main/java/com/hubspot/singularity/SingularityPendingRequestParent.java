@@ -1,7 +1,5 @@
 package com.hubspot.singularity;
 
-import java.util.List;
-
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
@@ -18,7 +16,7 @@ public class SingularityPendingRequestParent extends SingularityRequestParent {
     return new SingularityPendingRequestParent(singularityRequestParent.getRequest(), singularityRequestParent.getState(), singularityRequestParent.getRequestDeployState(),
         singularityRequestParent.getActiveDeploy(), singularityRequestParent.getPendingDeploy(), singularityRequestParent.getPendingDeployState(), pendingRequest,
         singularityRequestParent.getExpiringBounce(), singularityRequestParent.getExpiringPause(), singularityRequestParent.getExpiringScale(),
-        singularityRequestParent.getExpiringSkipHealthchecks(), singularityRequestParent.getTaskIds(), singularityRequestParent.getRecentHistory());
+        singularityRequestParent.getExpiringSkipHealthchecks(), singularityRequestParent.getTaskIds(), singularityRequestParent.getLastHistory());
   }
 
   @JsonCreator
@@ -34,7 +32,7 @@ public class SingularityPendingRequestParent extends SingularityRequestParent {
                                          @JsonProperty("expiringScale") Optional<SingularityExpiringScale> expiringScale,
                                          @JsonProperty("expiringSkipHealthchecks") Optional<SingularityExpiringSkipHealthchecks> expiringSkipHealthchecks,
                                          @JsonProperty("taskIds") Optional<SingularityTaskIdsByStatus> taskIds,
-                                         @JsonProperty("recentHistory") List<SingularityRequestHistory> recentHistory) {
+                                         @JsonProperty("recentHistory") Optional<SingularityRequestHistory> recentHistory) {
     super(request, state, requestDeployState, activeDeploy, pendingDeploy, pendingDeployState, expiringBounce, expiringPause, expiringScale, expiringSkipHealthchecks, taskIds, recentHistory);
     this.pendingRequest = pendingRequest;
   }
