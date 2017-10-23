@@ -4,10 +4,9 @@ import static com.hubspot.singularity.WebExceptions.checkBadRequest;
 import static com.hubspot.singularity.WebExceptions.checkConflict;
 import static com.hubspot.singularity.WebExceptions.checkNotNullBadRequest;
 
-import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
@@ -28,8 +27,6 @@ import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
-import com.google.common.base.Predicate;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.hubspot.jackson.jaxrs.PropertyFiltering;
@@ -47,7 +44,6 @@ import com.hubspot.singularity.SingularityPendingRequest.PendingType;
 import com.hubspot.singularity.SingularityPendingRequestParent;
 import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityRequestCleanup;
-import com.hubspot.singularity.SingularityRequestDeployState;
 import com.hubspot.singularity.SingularityRequestHistory.RequestHistoryType;
 import com.hubspot.singularity.SingularityRequestParent;
 import com.hubspot.singularity.SingularityRequestWithState;
@@ -73,6 +69,7 @@ import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.data.SingularityValidator;
 import com.hubspot.singularity.data.SlaveManager;
 import com.hubspot.singularity.data.TaskManager;
+import com.hubspot.singularity.data.history.RequestHistoryHelper;
 import com.hubspot.singularity.expiring.SingularityExpiringBounce;
 import com.hubspot.singularity.expiring.SingularityExpiringPause;
 import com.hubspot.singularity.expiring.SingularityExpiringRequestActionParent;
@@ -97,18 +94,16 @@ public class RequestResource extends AbstractRequestResource {
   private final TaskManager taskManager;
   private final RequestHelper requestHelper;
   private final SlaveManager slaveManager;
-  private final DisasterManager disasterManager;
 
   @Inject
   public RequestResource(SingularityValidator validator, DeployManager deployManager, TaskManager taskManager, RequestManager requestManager, SingularityMailer mailer,
                          SingularityAuthorizationHelper authorizationHelper, Optional<SingularityUser> user, RequestHelper requestHelper, LeaderLatch leaderLatch,
-                         SlaveManager slaveManager, DisasterManager disasterManager, AsyncHttpClient httpClient, ObjectMapper objectMapper) {
-    super(requestManager, deployManager, user, validator, authorizationHelper, httpClient, leaderLatch, objectMapper);
+                         SlaveManager slaveManager, DisasterManager disasterManager, AsyncHttpClient httpClient, ObjectMapper objectMapper, RequestHistoryHelper requestHistoryHelper) {
+    super(requestManager, deployManager, user, validator, authorizationHelper, httpClient, leaderLatch, objectMapper, requestHelper, requestHistoryHelper);
     this.mailer = mailer;
     this.taskManager = taskManager;
     this.requestHelper = requestHelper;
     this.slaveManager = slaveManager;
-    this.disasterManager = disasterManager;
   }
 
   private void submitRequest(SingularityRequest request, Optional<SingularityRequestWithState> oldRequestWithState, Optional<RequestHistoryType> historyType,
@@ -458,71 +453,80 @@ public class RequestResource extends AbstractRequestResource {
   @PropertyFiltering
   @Path("/active")
   @ApiOperation(value="Retrieve the list of active requests", response=SingularityRequestParent.class, responseContainer="List")
-  public List<SingularityRequestParent> getActiveRequests(@QueryParam("useWebCache") Boolean useWebCache) {
-    return getRequestsWithDeployState(requestManager.getActiveRequests(useWebCache(useWebCache)), SingularityAuthorizationScope.READ);
+  public List<SingularityRequestParent> getActiveRequests(@QueryParam("useWebCache") Boolean useWebCache,
+                                                          @QueryParam("filterRelevantForUser") Boolean filterRelevantForUser,
+                                                          @QueryParam("includeTaskIds") Boolean includeTaskIds,
+                                                          @QueryParam("includeLastHistory") Boolean includeLastHistory,
+                                                          @QueryParam("limit") Optional<Integer> limit) {
+    return requestHelper.fillDataForRequestsAndFilter(
+        filterAutorized(Lists.newArrayList(requestManager.getActiveRequests(useWebCache(useWebCache))), SingularityAuthorizationScope.READ, user),
+        user, filterRelevantForUser, includeTaskIds, includeLastHistory, limit);
   }
 
-  private List<SingularityRequestParent> getRequestsWithDeployState(Iterable<SingularityRequestWithState> requests, final SingularityAuthorizationScope scope) {
-    if (!authorizationHelper.hasAdminAuthorization(user) && disasterManager.isDisabled(SingularityAction.EXPENSIVE_API_CALLS)) {
-      LOG.trace("Short circuting getRequestsWithDeployState() to [] due to EXPENSIVE_API_CALLS disabled");
-      return Collections.emptyList();
-    }
 
-    if (!authorizationHelper.hasAdminAuthorization(user)) {
-      requests = Iterables.filter(requests, new Predicate<SingularityRequestWithState>() {
-        @Override
-        public boolean apply(SingularityRequestWithState input) {
-          return authorizationHelper.isAuthorizedForRequest(input.getRequest(), user, scope);
-        }
-      });
-    }
-
-    final List<String> requestIds = Lists.newArrayList();
-    for (SingularityRequestWithState requestWithState : requests) {
-      requestIds.add(requestWithState.getRequest().getId());
-    }
-
-    final List<SingularityRequestParent> parents = Lists.newArrayListWithCapacity(requestIds.size());
-
-    final Map<String, SingularityRequestDeployState> deployStates = deployManager.getRequestDeployStatesByRequestIds(requestIds);
-
-    for (SingularityRequestWithState requestWithState : requests) {
-      Optional<SingularityRequestDeployState> deployState = Optional.fromNullable(deployStates.get(requestWithState.getRequest().getId()));
-      parents.add(new SingularityRequestParent(requestWithState.getRequest(), requestWithState.getState(), deployState));
-    }
-
-    return parents;
-  }
 
   @GET
   @PropertyFiltering
   @Path("/paused")
   @ApiOperation(value="Retrieve the list of paused requests", response=SingularityRequestParent.class, responseContainer="List")
-  public List<SingularityRequestParent> getPausedRequests(@QueryParam("useWebCache") Boolean useWebCache) {
-    return getRequestsWithDeployState(requestManager.getPausedRequests(useWebCache(useWebCache)), SingularityAuthorizationScope.READ);
+  public List<SingularityRequestParent> getPausedRequests(@QueryParam("useWebCache") Boolean useWebCache,
+                                                          @QueryParam("filterRelevantForUser") Boolean filterRelevantForUser,
+                                                          @QueryParam("includeTaskIds") Boolean includeTaskIds,
+                                                          @QueryParam("includeLastHistory") Boolean includeLastHistory,
+                                                          @QueryParam("limit") Optional<Integer> limit) {
+    return requestHelper.fillDataForRequestsAndFilter(
+        filterAutorized(Lists.newArrayList(requestManager.getPausedRequests(useWebCache(useWebCache))), SingularityAuthorizationScope.READ, user),
+        user, filterRelevantForUser, includeTaskIds, includeLastHistory, limit);
   }
 
   @GET
   @PropertyFiltering
   @Path("/cooldown")
   @ApiOperation(value="Retrieve the list of requests in system cooldown", response=SingularityRequestParent.class, responseContainer="List")
-  public List<SingularityRequestParent> getCooldownRequests(@QueryParam("useWebCache") Boolean useWebCache) {
-    return getRequestsWithDeployState(requestManager.getCooldownRequests(useWebCache(useWebCache)), SingularityAuthorizationScope.READ);
+  public List<SingularityRequestParent> getCooldownRequests(@QueryParam("useWebCache") Boolean useWebCache,
+                                                            @QueryParam("filterRelevantForUser") Boolean filterRelevantForUser,
+                                                            @QueryParam("includeTaskIds") Boolean includeTaskIds,
+                                                            @QueryParam("includeLastHistory") Boolean includeLastHistory,
+                                                            @QueryParam("limit") Optional<Integer> limit) {
+    return requestHelper.fillDataForRequestsAndFilter(
+        filterAutorized(Lists.newArrayList(requestManager.getCooldownRequests(useWebCache(useWebCache))), SingularityAuthorizationScope.READ, user),
+        user, filterRelevantForUser, includeTaskIds, includeLastHistory, limit);
   }
 
   @GET
   @PropertyFiltering
   @Path("/finished")
   @ApiOperation(value="Retreive the list of finished requests (Scheduled requests which have exhausted their schedules)", response=SingularityRequestParent.class, responseContainer="List")
-  public List<SingularityRequestParent> getFinishedRequests(@QueryParam("useWebCache") Boolean useWebCache) {
-    return getRequestsWithDeployState(requestManager.getFinishedRequests(useWebCache(useWebCache)), SingularityAuthorizationScope.READ);
+  public List<SingularityRequestParent> getFinishedRequests(@QueryParam("useWebCache") Boolean useWebCache,
+                                                            @QueryParam("filterRelevantForUser") Boolean filterRelevantForUser,
+                                                            @QueryParam("includeTaskIds") Boolean includeTaskIds,
+                                                            @QueryParam("includeLastHistory") Boolean includeLastHistory,
+                                                            @QueryParam("limit") Optional<Integer> limit) {
+    return requestHelper.fillDataForRequestsAndFilter(
+        filterAutorized(Lists.newArrayList(requestManager.getFinishedRequests(useWebCache(useWebCache))), SingularityAuthorizationScope.READ, user),
+        user, filterRelevantForUser, includeTaskIds, includeLastHistory, limit);
   }
 
   @GET
   @PropertyFiltering
   @ApiOperation(value="Retrieve the list of all requests", response=SingularityRequestParent.class, responseContainer="List")
-  public List<SingularityRequestParent> getRequests(@QueryParam("useWebCache") Boolean useWebCache) {
-    return getRequestsWithDeployState(requestManager.getRequests(useWebCache(useWebCache)), SingularityAuthorizationScope.READ);
+  public List<SingularityRequestParent> getRequests(@QueryParam("useWebCache") Boolean useWebCache,
+                                                    @QueryParam("filterRelevantForUser") Boolean filterRelevantForUser,
+                                                    @QueryParam("includeTaskIds") Boolean includeTaskIds,
+                                                    @QueryParam("includeLastHistory") Boolean includeLastHistory,
+                                                    @QueryParam("limit") Optional<Integer> limit) {
+    return requestHelper.fillDataForRequestsAndFilter(
+        filterAutorized(requestManager.getRequests(useWebCache(useWebCache)), SingularityAuthorizationScope.READ, user),
+        user, filterRelevantForUser, includeTaskIds, includeLastHistory, limit);
+  }
+
+  private List<SingularityRequestWithState> filterAutorized(List<SingularityRequestWithState> requests, final SingularityAuthorizationScope scope, Optional<SingularityUser> user) {
+    if (!authorizationHelper.hasAdminAuthorization(user)) {
+      return requests.stream()
+          .filter((parent) -> authorizationHelper.isAuthorizedForRequest(parent.getRequest(), user, scope))
+          .collect(Collectors.toList());
+    }
+    return requests;
   }
 
   @GET
