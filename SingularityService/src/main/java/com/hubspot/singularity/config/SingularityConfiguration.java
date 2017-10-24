@@ -1264,9 +1264,8 @@ public class SingularityConfiguration extends Configuration {
     return webhookAuthConfiguration;
   }
 
-  public SingularityConfiguration setWebhookAuthConfiguration(WebhookAuthConfiguration webhookAuthConfiguration) {
+  public void setWebhookAuthConfiguration(WebhookAuthConfiguration webhookAuthConfiguration) {
     this.webhookAuthConfiguration = webhookAuthConfiguration;
-    return this;
   }
 
   public void setLdapConfiguration(LDAPConfiguration ldapConfiguration) {
