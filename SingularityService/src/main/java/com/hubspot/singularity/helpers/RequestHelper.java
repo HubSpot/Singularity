@@ -285,7 +285,7 @@ public class RequestHelper {
   }
 
   private boolean userMatches(Optional<String> input, Optional<SingularityUser> user) {
-    return input.isPresent() &&r
+    return input.isPresent() &&
         user.isPresent() &&
         (user.get().getEmail().equals(input) || user.get().getId().equals(input.get()) || user.get().getName().equals(input));
   }
