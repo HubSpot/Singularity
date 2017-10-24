@@ -96,7 +96,7 @@ export function buildApiAction(actionName, opts = {}, keyFunc = undefined) {
 
       if (config.generateAuthHeader) {
         options.headers = options.headers || {};
-        options.header.Authorization = getAuthHeader(config.authCookieName)
+        options.headers.Authorization = getAuthHeader(config.authCookieName)
       }
 
       return fetch(config.apiRoot + options.url + userParam, _.extend({credentials: 'include'}, _.omit(options, 'url')))
