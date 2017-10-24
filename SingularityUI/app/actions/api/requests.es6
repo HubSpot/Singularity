@@ -5,6 +5,11 @@ export const FetchRequests = buildApiAction(
   {url: '/requests'}
 );
 
+export const FetchUserRelevantRequests = buildApiAction(
+  'FETCH_USER_RELEVANT_REQUESTS',
+  {url: '/requests?filterRelevantForUser=true&includeFullRequestData=true&limit=20'}
+);
+
 export const FetchRequestsInState = buildApiAction(
   'FETCH_REQUESTS_IN_STATE',
   (state, renderNotFoundIf404) => {

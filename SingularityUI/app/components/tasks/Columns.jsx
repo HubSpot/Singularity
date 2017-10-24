@@ -400,3 +400,56 @@ export const InstanceNumber = (
     sortable={true}
   />
 );
+
+export const InstanceNumberWithLink = (
+  <Column
+    label="Instance"
+    id="instanceNo"
+    key="instanceNo"
+    cellData={
+      (rowData) => rowData.instanceNo
+    }
+    cellRender={
+      (cellData, rowData) => (
+        <Link to={`task/${rowData.taskId ? rowData.taskId.id : rowData.id}`}>
+          {cellData}
+        </Link>
+      )
+    }
+    sortable={true}
+  />
+);
+
+export const Health = (
+  <Column
+    label=""
+    id="health"
+    key="health"
+    cellData={
+      (rowData) => rowData.health
+    }
+    cellRender={
+      (cellData) => {
+        let glyph;
+        if (cellData === "healthy" || cellData === "cleaning") {
+          glyph = "ok"
+        } else if (cellData === "pending") {
+          glyph = "question-sign"
+        } else {
+          glyph = "hourglass"
+        }
+        const tooltip = (
+          <ToolTip id="iew-task-health">
+            {cellData}
+          </ToolTip>
+        )
+        return (
+          <OverlayTrigger placement="top" id="view-task-health-overlay" overlay={tooltip}>
+            <Glyphicon glyph={glyph} />
+          </OverlayTrigger>
+        );
+      }
+    }
+    sortable={true}
+  />
+);

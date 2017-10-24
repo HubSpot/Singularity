@@ -441,6 +441,16 @@ const Utils = {
     return !Utils.isIn(slaveInfo.currentState.state, ['DEAD', 'MISSING_ON_STARTUP']);
   },
 
+  glyphiconForType: (type) => {
+    return {
+      'SERVICE': 'phone',
+      'WORKER': 'cog',
+      'SCHEDULED': 'time',
+      'ON_DEMAND': 'play-circle',
+      'RUN_ONCE': 'flash'
+      }[type]
+  },
+
   enums: {
     SingularityRequestTypes: ['SERVICE', 'WORKER', 'SCHEDULED', 'ON_DEMAND', 'RUN_ONCE'],
     SingularityEmailDestination: ['OWNERS', 'ACTION_TAKER', 'ADMINS'],
@@ -474,6 +484,7 @@ const Utils = {
     }
     return array.join('&');
   }
+
 };
 
 export default Utils;
