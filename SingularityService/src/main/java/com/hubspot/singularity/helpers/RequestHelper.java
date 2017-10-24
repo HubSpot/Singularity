@@ -281,11 +281,11 @@ public class RequestHelper {
   private boolean userAssociatedWithDeploy(Optional<SingularityRequestDeployState> deployState, Optional<SingularityUser> user) {
     return deployState.isPresent() &&
         (deployState.get().getPendingDeploy().isPresent() && userMatches(deployState.get().getPendingDeploy().get().getUser(), user) ||
-            deployState.get().getActiveDeploy().isPresent() && userMatches(deployState.get().getPendingDeploy().get().getUser(), user));
+            deployState.get().getActiveDeploy().isPresent() && userMatches(deployState.get().getActiveDeploy().get().getUser(), user));
   }
 
   private boolean userMatches(Optional<String> input, Optional<SingularityUser> user) {
-    return input.isPresent() &&
+    return input.isPresent() &&r
         user.isPresent() &&
         (user.get().getEmail().equals(input) || user.get().getId().equals(input.get()) || user.get().getName().equals(input));
   }
