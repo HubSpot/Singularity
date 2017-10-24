@@ -22,26 +22,23 @@ public class WebhookAuthConfiguration {
     return authVerificationUrl;
   }
 
-  public WebhookAuthConfiguration setAuthVerificationUrl(String authVerificationUrl) {
+  public void setAuthVerificationUrl(String authVerificationUrl) {
     this.authVerificationUrl = authVerificationUrl;
-    return this;
   }
 
   public long getCacheValidationMs() {
     return cacheValidationMs;
   }
 
-  public WebhookAuthConfiguration setCacheValidationMs(long cacheValidationMs) {
+  public void setCacheValidationMs(long cacheValidationMs) {
     this.cacheValidationMs = cacheValidationMs;
-    return this;
   }
 
   public String getDefaultEmailDomain() {
     return defaultEmailDomain;
   }
 
-  public WebhookAuthConfiguration setDefaultEmailDomain(String defaultEmailDomain) {
+  public void setDefaultEmailDomain(String defaultEmailDomain) {
     this.defaultEmailDomain = defaultEmailDomain;
-    return this;
   }
 }
