@@ -306,9 +306,9 @@ public class SingularityConfiguration extends Configuration {
   @Valid
   private LDAPConfiguration ldapConfiguration;
 
-  @JsonProperty("jwt")
+  @JsonProperty("webhookAuth")
   @Valid
-  private WebhookAuthConfiguration webhookAuthConfiguration;
+  private WebhookAuthConfiguration webhookAuthConfiguration = new WebhookAuthConfiguration();
 
   @JsonProperty("auth")
   @NotNull
