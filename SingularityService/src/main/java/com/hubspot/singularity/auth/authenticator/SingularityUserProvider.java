@@ -1,6 +1,6 @@
 package com.hubspot.singularity.auth.authenticator;
 
-import java.util.List;
+import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,11 +17,11 @@ import com.hubspot.singularity.config.SingularityConfiguration;
 public class SingularityUserProvider implements Provider<Optional<SingularityUser>>  {
   private static final Logger LOG = LoggerFactory.getLogger(SingularityUserProvider.class);
 
-  private List<SingularityAuthenticator> authenticators;
+  private Set<SingularityAuthenticator> authenticators;
   private boolean authEnabled;
 
   @Inject
-  public SingularityUserProvider(List<SingularityAuthenticator> authenticators, SingularityConfiguration configuration) {
+  public SingularityUserProvider(Set<SingularityAuthenticator> authenticators, SingularityConfiguration configuration) {
     this.authenticators = authenticators;
     this.authEnabled = configuration.getAuthConfiguration().isEnabled();
   }
