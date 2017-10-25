@@ -1,9 +1,6 @@
 package com.hubspot.singularity.auth.authenticator;
 
 import java.io.IOException;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
@@ -12,9 +9,6 @@ import javax.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
 import com.google.common.base.Strings;
@@ -38,7 +32,7 @@ public class SingularityWebhookAuthenticator implements SingularityAuthenticator
   private final WebhookAuthConfiguration webhookAuthConfiguration;
   private final Provider<HttpServletRequest> requestProvider;
   private final ObjectMapper objectMapper;
-  private final Cache<String, UserPermissions> permissionsCache;
+  private final Cache<String, SingularityUserPermissionsResponse> permissionsCache;
 
   @Inject
   public SingularityWebhookAuthenticator(AsyncHttpClient asyncHttpClient,
@@ -49,7 +43,7 @@ public class SingularityWebhookAuthenticator implements SingularityAuthenticator
     this.webhookAuthConfiguration = configuration.getWebhookAuthConfiguration();
     this.requestProvider = requestProvider;
     this.objectMapper = objectMapper;
-    this.permissionsCache = CacheBuilder.<String, UserPermissions>newBuilder()
+    this.permissionsCache = CacheBuilder.<String, SingularityUserPermissionsResponse>newBuilder()
         .expireAfterWrite(webhookAuthConfiguration.getCacheValidationMs(), TimeUnit.MILLISECONDS)
         .build();
   }
@@ -58,20 +52,10 @@ public class SingularityWebhookAuthenticator implements SingularityAuthenticator
   public Optional<SingularityUser> get() {
     String authHeaderValue = extractAuthHeader(requestProvider.get());
 
-    UserPermissions permissions = verify(authHeaderValue);
-    LOG.trace("Verified permissions for user {}", permissions);
+    SingularityUserPermissionsResponse permissionsResponse = verify(authHeaderValue);
+    LOG.trace("Verified permissions for user {}", permissionsResponse);
 
-    Set<String> groups = new HashSet<>();
-    groups.addAll(permissions.getGroups());
-    groups.addAll(permissions.getScopes());
-
-    String email = permissions.getUid().contains("@") ? permissions.getUid() : String.format("%s@%s", permissions.getUid(), webhookAuthConfiguration.getDefaultEmailDomain());
-
-    return Optional.of(new SingularityUser(
-        permissions.getUid(),
-        Optional.of(permissions.getUid()),
-        Optional.of(email),
-        groups));
+    return Optional.of(permissionsResponse.getUser());
   }
 
   private String extractAuthHeader(HttpServletRequest request) {
@@ -84,8 +68,8 @@ public class SingularityWebhookAuthenticator implements SingularityAuthenticator
     }
   }
 
-  private UserPermissions verify(String authHeaderValue) {
-    UserPermissions maybeCachedPermissions = permissionsCache.getIfPresent(authHeaderValue);
+  private SingularityUserPermissionsResponse verify(String authHeaderValue) {
+    SingularityUserPermissionsResponse maybeCachedPermissions = permissionsCache.getIfPresent(authHeaderValue);
     if (maybeCachedPermissions != null) {
       return maybeCachedPermissions;
     } else {
@@ -98,49 +82,17 @@ public class SingularityWebhookAuthenticator implements SingularityAuthenticator
           throw WebExceptions.unauthorized(String.format("Got status code %d when verifying jwt", response.getStatusCode()));
         } else {
           String responseBody = response.getResponseBody();
-          UserPermissions permissions = objectMapper.readValue(responseBody, UserPermissions.class);
-          permissionsCache.put(authHeaderValue, permissions);
-          return permissions;
+          SingularityUserPermissionsResponse permissionsResponse = objectMapper.readValue(responseBody, SingularityUserPermissionsResponse.class);
+          if (!permissionsResponse.isAuthenticated()) {
+            throw WebExceptions.unauthorized(String.format("User %s not authenticated (error: %s)", permissionsResponse.getUser().getId(), permissionsResponse.getError()));
+          }
+          permissionsCache.put(authHeaderValue, permissionsResponse);
+          return permissionsResponse;
         }
       } catch (IOException|ExecutionException|InterruptedException e) {
         LOG.error("Exception while verifying jwt", e);
         throw WebExceptions.unauthorized(String.format("Exception while verifying jwt: %s", e.getMessage()));
       }
-    }
-  }
-
-  @JsonIgnoreProperties(ignoreUnknown = true)
-  private class UserPermissions {
-    private final String uid;
-    private final Set<String> groups;
-    private final Set<String> scopes;
-
-    @JsonCreator
-    public UserPermissions(@JsonProperty("uid") String uid, @JsonProperty("groups") Set<String> groups, @JsonProperty("scopes") Set<String> scopes) {
-      this.uid = uid;
-      this.groups = groups != null ? groups : Collections.emptySet();
-      this.scopes = scopes != null ? scopes : Collections.emptySet();
-    }
-
-    public String getUid() {
-      return uid;
-    }
-
-    public Set<String> getGroups() {
-      return groups;
-    }
-
-    public Set<String> getScopes() {
-      return scopes;
-    }
-
-    @Override
-    public String toString() {
-      return "UserPermissions{" +
-          "uid='" + uid + '\'' +
-          ", groups=" + groups +
-          ", scopes=" + scopes +
-          '}';
     }
   }
 }
