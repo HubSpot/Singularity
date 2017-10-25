@@ -2,6 +2,9 @@ package com.hubspot.singularity.auth.authenticator;
 
 import javax.servlet.http.HttpServletRequest;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.google.common.base.Optional;
 import com.google.common.base.Strings;
 import com.google.inject.Inject;
@@ -14,6 +17,8 @@ import com.hubspot.singularity.config.SingularityConfiguration;
 
 @Singleton
 public class SingularityHeaderPassthroughAuthenticator implements SingularityAuthenticator {
+  private static final Logger LOG = LoggerFactory.getLogger(SingularityHeaderPassthroughAuthenticator.class);
+
   private final SingularityAuthDatastore datastore;
   private final String requestUserHeaderName;
   private final Provider<HttpServletRequest> requestProvider;
@@ -36,6 +41,8 @@ public class SingularityHeaderPassthroughAuthenticator implements SingularityAut
   @Override
   public Optional<SingularityUser> get() {
     final Optional<String> maybeUsername = getUserId();
+
+    LOG.trace("Fetched user {} from header", maybeUsername);
 
     if (!maybeUsername.isPresent()) {
       return Optional.absent();
