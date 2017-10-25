@@ -59,6 +59,7 @@ public class SingularityWebhookAuthenticator implements SingularityAuthenticator
     String authHeaderValue = extractAuthHeader(requestProvider.get());
 
     UserPermissions permissions = verify(authHeaderValue);
+    LOG.trace("Verified permissions for user {}", permissions);
 
     Set<String> groups = new HashSet<>();
     groups.addAll(permissions.getGroups());
