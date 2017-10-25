@@ -120,18 +120,15 @@ public class SingularityS3Uploader {
 
   public int upload(Set<Path> synchronizedToUpload, boolean isFinished) throws IOException {
     final List<Path> toUpload = Lists.newArrayList();
-    int found = 0;
 
     final Path directory = Paths.get(fileDirectory);
 
     if (!Files.exists(directory)) {
       LOG.info("Path {} doesn't exist", fileDirectory);
-      return found;
+      return 0;
     }
 
-    for (Path file : JavaUtils.iterable(directory)) {
-      found += handleFile(file, isFinished, synchronizedToUpload, toUpload);
-    }
+    int found = handleDirectory(directory, isFinished, synchronizedToUpload, toUpload);
 
     if (toUpload.isEmpty()) {
       return found;
@@ -142,42 +139,53 @@ public class SingularityS3Uploader {
     return found;
   }
 
-  private int handleFile(Path path, boolean isFinished, Set<Path> synchronizedToUpload, List<Path> toUpload) throws IOException {
-    int found = 0;
-    if (Files.isDirectory(path, LinkOption.NOFOLLOW_LINKS)) {
-      if (uploadMetadata.isCheckSubdirectories()) {
-        LOG.debug("{} was a directory, checking files in directory", path);
-        for (Path file : JavaUtils.iterable(path)) {
-          found += handleFile(file, isFinished, synchronizedToUpload, toUpload);
+
+  private int handleDirectory(Path directory, boolean isFinished, Set<Path> synchronizedToUpload, List<Path> toUpload) throws IOException {
+    List<Path> filesToCheck = new ArrayList<>();
+    List<Path> dirsToCheck = new ArrayList<>();
+
+    dirsToCheck.add(directory);
+
+    while (!dirsToCheck.isEmpty()) {
+      Path toCheck = dirsToCheck.get(0);
+      for (Path path : JavaUtils.iterable(toCheck)) {
+        if (Files.isDirectory(path, LinkOption.NOFOLLOW_LINKS)) {
+          dirsToCheck.add(path);
+        } else {
+          filesToCheck.add(path);
         }
-      } else {
-        LOG.debug("{} was a directory, skipping", path);
-      }
-      return found;
-    }
-
-    if (!pathMatcher.matches(path.getFileName())) {
-      if (!isFinished || !finishedPathMatcher.isPresent() || !finishedPathMatcher.get().matches(path.getFileName())) {
-        LOG.trace("{} Skipping {} because it doesn't match {}", logIdentifier, path, uploadMetadata.getFileGlob());
-        return found;
-      } else {
-        LOG.trace("Not skipping file {} because it matched finish glob {}", path, uploadMetadata.getOnFinishGlob().get());
       }
     }
 
-    if (Files.size(path) == 0) {
-      LOG.trace("{} Skipping {} because its size is 0", logIdentifier, path);
-      return found;
+    int found = 0;
+    for (Path file : filesToCheck) {
+      found += checkFile(file, isFinished, synchronizedToUpload, toUpload);
     }
 
-    found++;
-
-    if (synchronizedToUpload.add(path)) {
-      toUpload.add(path);
-    } else {
-      LOG.debug("{} Another uploader already added {}", logIdentifier, path);
-    }
     return found;
+  }
+
+  private int checkFile(Path file, boolean isFinished, Set<Path> synchronizedToUpload, List<Path> toUpload) throws IOException {
+    if (!pathMatcher.matches(file.getFileName())) {
+      if (!isFinished || !finishedPathMatcher.isPresent() || !finishedPathMatcher.get().matches(file.getFileName())) {
+        LOG.trace("{} Skipping {} because it doesn't match {}", logIdentifier, file, uploadMetadata.getFileGlob());
+        return 0;
+      } else {
+        LOG.trace("Not skipping file {} because it matched finish glob {}", file, uploadMetadata.getOnFinishGlob().get());
+      }
+    }
+
+    if (Files.size(file) == 0) {
+      LOG.trace("{} Skipping {} because its size is 0", logIdentifier, file);
+      return 0;
+    }
+
+    if (synchronizedToUpload.add(file)) {
+      toUpload.add(file);
+    } else {
+      LOG.debug("{} Another uploader already added {}", logIdentifier, file);
+    }
+    return 1;
   }
 
   private void uploadBatch(List<Path> toUpload) {
