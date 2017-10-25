@@ -147,7 +147,7 @@ public class SingularityS3Uploader {
     dirsToCheck.add(directory);
 
     while (!dirsToCheck.isEmpty()) {
-      Path toCheck = dirsToCheck.get(0);
+      Path toCheck = dirsToCheck.remove(0);
       for (Path path : JavaUtils.iterable(toCheck)) {
         if (Files.isDirectory(path, LinkOption.NOFOLLOW_LINKS)) {
           dirsToCheck.add(path);
