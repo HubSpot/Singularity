@@ -6,6 +6,7 @@ import java.util.Set;
 import javax.validation.constraints.NotNull;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.collect.Sets;
 import com.hubspot.singularity.auth.SingularityAuthDatastoreClass;
 import com.hubspot.singularity.auth.SingularityAuthenticatorClass;
 
@@ -15,7 +16,12 @@ public class AuthConfiguration {
 
   @JsonProperty
   @NotNull
+  @Deprecated
   private SingularityAuthenticatorClass authenticator = SingularityAuthenticatorClass.QUERYPARAM_PASSTHROUGH;
+
+  @JsonProperty
+  @NotNull
+  private Set<SingularityAuthenticatorClass> authenticators = Sets.newHashSet(SingularityAuthenticatorClass.QUERYPARAM_PASSTHROUGH);
 
   @JsonProperty
   @NotNull
@@ -53,12 +59,22 @@ public class AuthConfiguration {
     this.enabled = enabled;
   }
 
+  @Deprecated
   public SingularityAuthenticatorClass getAuthenticator() {
     return authenticator;
   }
 
   public void setAuthenticator(SingularityAuthenticatorClass authenticator) {
     this.authenticator = authenticator;
+    this.authenticators.add(authenticator);
+  }
+
+  public Set<SingularityAuthenticatorClass> getAuthenticators() {
+    return authenticators;
+  }
+
+  public void setAuthenticators(Set<SingularityAuthenticatorClass> authenticators) {
+    this.authenticators = authenticators;
   }
 
   public SingularityAuthDatastoreClass getDatastore() {

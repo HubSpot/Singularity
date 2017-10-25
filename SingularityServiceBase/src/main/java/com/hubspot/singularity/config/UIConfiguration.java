@@ -90,6 +90,13 @@ public class UIConfiguration {
   @JsonProperty
   private Optional<String> extraScript = Optional.absent();
 
+  @JsonProperty
+  private boolean generateAuthHeader = false;
+
+  @JsonProperty
+  @NotNull
+  private String authCookieName = "";
+
 
   public boolean isHideNewDeployButton() {
     return hideNewDeployButton;
@@ -225,5 +232,23 @@ public class UIConfiguration {
 
   public void setExtraScript(Optional<String> extraScript) {
     this.extraScript = extraScript;
+  }
+
+  public boolean isGenerateAuthHeader() {
+    return generateAuthHeader;
+  }
+
+  public UIConfiguration setGenerateAuthHeader(boolean generateAuthHeader) {
+    this.generateAuthHeader = generateAuthHeader;
+    return this;
+  }
+
+  public String getAuthCookieName() {
+    return authCookieName;
+  }
+
+  public UIConfiguration setAuthCookieName(String authCookieName) {
+    this.authCookieName = authCookieName;
+    return this;
   }
 }

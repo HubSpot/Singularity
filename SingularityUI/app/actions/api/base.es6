@@ -58,6 +58,23 @@ export function buildApiAction(actionName, opts = {}, keyFunc = undefined) {
     };
   }
 
+  function getCookie(key) {
+    if (!key) {
+      return null;
+    }
+    const encodedKey = encodeURIComponent(key).replace(/[\-\.\+\*]/g, '\\$&');
+    return decodeURIComponent(document.cookie.replace(new RegExp(`(?:(?:^|.*;)\\s*${encodedKey}\\s*\\=\\s*([^;]*).*$)|^.*$`), '$1')) || null;
+  }
+
+  function getAuthHeader(headerName) {
+    const authCookie = getCookie(headerName);
+    if (!authCookie) {
+      return '';
+    }
+    const authToken = JSON.parse(authCookie).token;
+    return `Bearer ${ authToken }`;
+  }
+
   function trigger(...args) {
     return (dispatch) => {
       let key;
@@ -76,6 +93,12 @@ export function buildApiAction(actionName, opts = {}, keyFunc = undefined) {
           userParam = `?user=${localStorage.getItem('singularityUserId')}`
         }
       }
+
+      if (config.generateAuthHeader) {
+        options.headers = options.headers || {};
+        options.headers.Authorization = getAuthHeader(config.authCookieName)
+      }
+
       return fetch(config.apiRoot + options.url + userParam, _.extend({credentials: 'include'}, _.omit(options, 'url')))
         .then(response => {
           apiResponse = response;
