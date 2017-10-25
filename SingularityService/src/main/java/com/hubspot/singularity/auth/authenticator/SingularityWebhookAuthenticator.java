@@ -1,6 +1,7 @@
 package com.hubspot.singularity.auth.authenticator;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
@@ -116,8 +117,8 @@ public class SingularityWebhookAuthenticator implements SingularityAuthenticator
     @JsonCreator
     public UserPermissions(@JsonProperty("uid") String uid, @JsonProperty("groups") Set<String> groups, @JsonProperty("scopes") Set<String> scopes) {
       this.uid = uid;
-      this.groups = groups;
-      this.scopes = scopes;
+      this.groups = groups != null ? groups : Collections.emptySet();
+      this.scopes = scopes != null ? scopes : Collections.emptySet();
     }
 
     public String getUid() {
