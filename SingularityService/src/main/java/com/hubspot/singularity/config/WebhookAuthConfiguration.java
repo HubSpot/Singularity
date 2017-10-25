@@ -14,10 +14,6 @@ public class WebhookAuthConfiguration {
   @Nonnegative
   private long cacheValidationMs = 60000;
 
-  @JsonProperty
-  @NotNull
-  private String defaultEmailDomain = "";
-
   public String getAuthVerificationUrl() {
     return authVerificationUrl;
   }
@@ -32,13 +28,5 @@ public class WebhookAuthConfiguration {
 
   public void setCacheValidationMs(long cacheValidationMs) {
     this.cacheValidationMs = cacheValidationMs;
-  }
-
-  public String getDefaultEmailDomain() {
-    return defaultEmailDomain;
-  }
-
-  public void setDefaultEmailDomain(String defaultEmailDomain) {
-    this.defaultEmailDomain = defaultEmailDomain;
   }
 }
