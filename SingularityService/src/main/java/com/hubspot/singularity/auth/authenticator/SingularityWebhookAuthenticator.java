@@ -55,7 +55,7 @@ public class SingularityWebhookAuthenticator implements SingularityAuthenticator
     SingularityUserPermissionsResponse permissionsResponse = verify(authHeaderValue);
     LOG.trace("Verified permissions for user {}", permissionsResponse);
 
-    return Optional.of(permissionsResponse.getUser());
+    return permissionsResponse.getUser();
   }
 
   private String extractAuthHeader(HttpServletRequest request) {
@@ -84,7 +84,10 @@ public class SingularityWebhookAuthenticator implements SingularityAuthenticator
           String responseBody = response.getResponseBody();
           SingularityUserPermissionsResponse permissionsResponse = objectMapper.readValue(responseBody, SingularityUserPermissionsResponse.class);
           if (!permissionsResponse.isAuthenticated()) {
-            throw WebExceptions.unauthorized(String.format("User %s not authenticated (error: %s)", permissionsResponse.getUser().getId(), permissionsResponse.getError()));
+            throw WebExceptions.unauthorized(String.format("User not authenticated (response: %s)", permissionsResponse));
+          }
+          if (!permissionsResponse.getUser().isPresent()) {
+            throw WebExceptions.unauthorized(String.format("No user present in response %s", permissionsResponse));
           }
           permissionsCache.put(authHeaderValue, permissionsResponse);
           return permissionsResponse;

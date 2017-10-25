@@ -1,25 +1,25 @@
 package com.hubspot.singularity.auth.authenticator;
 
 import java.util.Objects;
-import java.util.Optional;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.base.Optional;
 import com.hubspot.singularity.SingularityUser;
 
 public class SingularityUserPermissionsResponse {
-  private final SingularityUser user;
+  private final Optional<SingularityUser> user;
   private final boolean authenticated;
   private final Optional<String> error;
 
   @JsonCreator
-  public SingularityUserPermissionsResponse(@JsonProperty("user") SingularityUser user, @JsonProperty("authenticated") boolean authenticated, @JsonProperty("error") Optional<String> error) {
+  public SingularityUserPermissionsResponse(@JsonProperty("user") Optional<SingularityUser> user, @JsonProperty("authenticated") boolean authenticated, @JsonProperty("error") Optional<String> error) {
     this.user = user;
     this.authenticated = authenticated;
     this.error = error;
   }
 
-  public SingularityUser getUser() {
+  public Optional<SingularityUser> getUser() {
     return user;
   }
 
