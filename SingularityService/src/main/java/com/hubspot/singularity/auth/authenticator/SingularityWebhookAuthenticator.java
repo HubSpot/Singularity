@@ -5,6 +5,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.WebApplicationException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -50,12 +51,17 @@ public class SingularityWebhookAuthenticator implements SingularityAuthenticator
 
   @Override
   public Optional<SingularityUser> get() {
-    String authHeaderValue = extractAuthHeader(requestProvider.get());
+    try {
+      String authHeaderValue = extractAuthHeader(requestProvider.get());
 
-    SingularityUserPermissionsResponse permissionsResponse = verify(authHeaderValue);
-    LOG.trace("Verified permissions for user {}", permissionsResponse);
+      SingularityUserPermissionsResponse permissionsResponse = verify(authHeaderValue);
+      LOG.trace("Verified permissions for user {}", permissionsResponse);
 
-    return permissionsResponse.getUser();
+      return permissionsResponse.getUser();
+    } catch (WebApplicationException wae) {
+      LOG.trace("Not authenticated: {}", wae.getMessage());
+      return Optional.absent();
+    }
   }
 
   private String extractAuthHeader(HttpServletRequest request) {
