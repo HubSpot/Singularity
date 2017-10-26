@@ -8,7 +8,6 @@ import javax.ws.rs.WebApplicationException;
 
 import org.glassfish.jersey.server.internal.inject.AbstractContainerRequestValueFactory;
 
-import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.hubspot.singularity.SingularityUser;
 import com.hubspot.singularity.WebExceptions;
@@ -20,7 +19,7 @@ public class SingularityAuthedUserFactory extends AbstractContainerRequestValueF
   private final Set<SingularityAuthenticator> authenticators;
   private final SingularityConfiguration configuration;
 
-  @Inject
+  @javax.inject.Inject
   public SingularityAuthedUserFactory(Set<SingularityAuthenticator> authenticators, SingularityConfiguration configuration) {
     this.authenticators = authenticators;
     this.configuration = configuration;

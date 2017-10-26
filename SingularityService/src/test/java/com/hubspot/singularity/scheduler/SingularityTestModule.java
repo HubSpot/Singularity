@@ -192,7 +192,7 @@ public class SingularityTestModule implements Module {
     mainBinder.install(new SingularityZkMigrationsModule());
 
     mainBinder.install(new SingularityEventModule(configuration));
-    mainBinder.install(Modules.override(new SingularityAuthModule(configuration))
+    mainBinder.install(Modules.override(new SingularityAuthModule())
         .with(new Module() {
           @Override
           public void configure(Binder binder) {

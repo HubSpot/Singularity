@@ -12,7 +12,11 @@ import com.hubspot.singularity.auth.authenticator.SingularityMultiLevelAuthentic
 
 import io.dropwizard.auth.Auth;
 
+@javax.ws.rs.ext.Provider
 public class SingularityAuthFeature implements Feature {
+  @javax.inject.Inject
+  SingularityAuthFeature() {}
+
   @Override
   public boolean configure(FeatureContext context) {
     context.register(new AbstractBinder() {

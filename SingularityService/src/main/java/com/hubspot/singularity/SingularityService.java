@@ -2,8 +2,6 @@ package com.hubspot.singularity;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-import javax.ws.rs.container.ContainerRequestContext;
-
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
@@ -13,7 +11,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.inject.Module;
 import com.hubspot.dropwizard.guicier.GuiceBundle;
 import com.hubspot.jackson.datatype.protobuf.ProtobufModule;
-import com.hubspot.singularity.auth.authenticator.SingularityMultiLevelAuthenticator;
 import com.hubspot.singularity.bundles.CorsBundle;
 import com.hubspot.singularity.config.ApiPaths;
 import com.hubspot.singularity.config.MergingSourceProvider;
@@ -23,8 +20,6 @@ import io.dropwizard.Application;
 import io.dropwizard.Bundle;
 import io.dropwizard.ConfiguredBundle;
 import io.dropwizard.assets.AssetsBundle;
-import io.dropwizard.auth.AuthDynamicFeature;
-import io.dropwizard.auth.AuthFilter;
 import io.dropwizard.db.DataSourceFactory;
 import io.dropwizard.migrations.MigrationsBundle;
 import io.dropwizard.setup.Bootstrap;
@@ -50,6 +45,7 @@ public class SingularityService<T extends SingularityConfiguration> extends Appl
 
     guiceBundle = GuiceBundle.defaultBuilder(SingularityConfiguration.class)
         .modules(new SingularityServiceModule())
+        .modules(new SingularityAuthModule())
         .modules(additionalModules)
         .build();
     bootstrap.addBundle(guiceBundle);
@@ -80,12 +76,7 @@ public class SingularityService<T extends SingularityConfiguration> extends Appl
   }
 
   @Override
-  public void run(final T configuration, final Environment environment) throws Exception {
-    SingularityMultiLevelAuthenticator authenticator = guiceBundle.getInjector().getInstance(SingularityMultiLevelAuthenticator.class);
-    environment.jersey().register(new AuthDynamicFeature(
-        
-    ));
-  }
+  public void run(final T configuration, final Environment environment) throws Exception {}
 
   /**
    * Guice modules used in addition to the modules required by Singularity. This is an extension point when embedding

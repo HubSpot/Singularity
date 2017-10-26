@@ -7,7 +7,6 @@ import org.glassfish.jersey.server.internal.inject.MultivaluedParameterExtractor
 import org.glassfish.jersey.server.model.Parameter;
 import org.glassfish.jersey.server.model.Parameter.Source;
 
-import com.google.inject.Inject;
 import com.hubspot.singularity.SingularityUser;
 
 import io.dropwizard.auth.Auth;
@@ -15,7 +14,7 @@ import io.dropwizard.auth.Auth;
 public class SingularityAuthFactoryProvider extends AbstractValueFactoryProvider {
   private SingularityAuthedUserFactory authFactory;
 
-  @Inject
+  @javax.inject.Inject
   public SingularityAuthFactoryProvider(final MultivaluedParameterExtractorProvider extractorProvider,
                                         ServiceLocator locator,
                                         SingularityAuthedUserFactory authFactory) {
