@@ -83,8 +83,8 @@ class RequestsPage extends Component {
       case 'noDeploy':
         return [
           Cols.Starred,
-          Cols.RequestId,
           Cols.Type,
+          Cols.RequestId,
           Cols.State,
           Cols.Instances,
           Cols.Group,
@@ -93,8 +93,8 @@ class RequestsPage extends Component {
       default:
         return [
           Cols.Starred,
-          Cols.RequestId,
           Cols.Type,
+          Cols.RequestId,
           Cols.State,
           Cols.Instances,
           Cols.DeployId,

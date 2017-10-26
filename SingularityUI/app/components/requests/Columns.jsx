@@ -6,11 +6,13 @@ import Column from '../common/table/Column';
 import Utils from '../../utils';
 
 import JSONButton from '../common/JSONButton';
+import { Glyphicon } from 'react-bootstrap'
 import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
 import ToolTip from 'react-bootstrap/lib/Tooltip';
 
 import RequestStar from './RequestStar';
 import UnpauseButton from '../common/modalButtons/UnpauseButton';
+import PauseButton from '../common/modalButtons/PauseButton';
 import RemoveButton from '../common/modalButtons/RemoveButton';
 import RunNowButton from '../common/modalButtons/RunNowButton';
 import ScaleButton from '../common/modalButtons/ScaleButton';
@@ -126,6 +128,19 @@ export const Type = (
     cellData={
       (rowData) => Utils.humanizeText(rowData.request.requestType)
     }
+    cellRender={(cellData, rowData) => {
+        const tooltip = (
+          <ToolTip id="view-request-type">
+            {cellData}
+          </ToolTip>
+        )
+        return (
+          <OverlayTrigger placement="top" id="view-request-type-overlay" overlay={tooltip}>
+            <Glyphicon glyph={Utils.glyphiconForType(rowData.request.requestType)} />
+          </OverlayTrigger>
+        );
+      }
+    }
     sortable={true}
   />
 );
@@ -205,6 +220,13 @@ export const Actions = (
           <UnpauseButton requestId={cellData.id} />
         );
 
+        const pause = cellData.state != 'PAUSED' && (
+          <PauseButton
+            requestId={cellData.id}
+            isScheduled={cellData.requestType === 'SCHEDULED'}
+          />
+        );
+
         const scale = cellData.canBeScaled && (
           <ScaleButton
             requestId={cellData.id}
@@ -222,6 +244,7 @@ export const Actions = (
             {scale}
             {runNow}
             {unpause}
+            {pause}
             <RemoveButton 
               requestId={cellData.id}
               loadBalancerData={Utils.maybe(cellData, ['activeDeploy', 'loadBalancerOptions'], {})}

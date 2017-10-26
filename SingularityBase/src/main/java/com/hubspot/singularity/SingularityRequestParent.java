@@ -20,24 +20,30 @@ public class SingularityRequestParent {
   private final Optional<SingularityExpiringPause> expiringPause;
   private final Optional<SingularityExpiringScale> expiringScale;
   private final Optional<SingularityExpiringSkipHealthchecks> expiringSkipHealthchecks;
+  private final Optional<SingularityTaskIdsByStatus> taskIds;
+  private final Optional<SingularityRequestHistory> lastHistory;
 
   public SingularityRequestParent(SingularityRequest request, RequestState state) {
-    this(request, state, Optional.<SingularityRequestDeployState> absent());
+    this(request, state, Optional.absent());
   }
 
   public SingularityRequestParent(SingularityRequest request, RequestState state, Optional<SingularityRequestDeployState> requestDeployState) {
-    this(request, state, requestDeployState, Optional.<SingularityDeploy> absent(), Optional.<SingularityDeploy> absent(),
-        Optional.<SingularityPendingDeploy> absent(), Optional.<SingularityExpiringBounce> absent(), Optional.<SingularityExpiringPause> absent(),
-        Optional.<SingularityExpiringScale> absent(), Optional.<SingularityExpiringSkipHealthchecks> absent());
+    this(request, state, requestDeployState, Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent());
   }
 
   @JsonCreator
-  public SingularityRequestParent(@JsonProperty("request") SingularityRequest request, @JsonProperty("state") RequestState state,
-      @JsonProperty("requestDeployState") Optional<SingularityRequestDeployState> requestDeployState,
-      @JsonProperty("activeDeploy") Optional<SingularityDeploy> activeDeploy, @JsonProperty("pendingDeploy") Optional<SingularityDeploy> pendingDeploy,
-      @JsonProperty("pendingDeployState") Optional<SingularityPendingDeploy> pendingDeployState, @JsonProperty("expiringBounce") Optional<SingularityExpiringBounce> expiringBounce,
-      @JsonProperty("expiringPause") Optional<SingularityExpiringPause> expiringPause, @JsonProperty("expiringScale") Optional<SingularityExpiringScale> expiringScale,
-      @JsonProperty("expiringSkipHealthchecks") Optional<SingularityExpiringSkipHealthchecks> expiringSkipHealthchecks) {
+  public SingularityRequestParent(@JsonProperty("request") SingularityRequest request,
+                                  @JsonProperty("state") RequestState state,
+                                  @JsonProperty("requestDeployState") Optional<SingularityRequestDeployState> requestDeployState,
+                                  @JsonProperty("activeDeploy") Optional<SingularityDeploy> activeDeploy,
+                                  @JsonProperty("pendingDeploy") Optional<SingularityDeploy> pendingDeploy,
+                                  @JsonProperty("pendingDeployState") Optional<SingularityPendingDeploy> pendingDeployState,
+                                  @JsonProperty("expiringBounce") Optional<SingularityExpiringBounce> expiringBounce,
+                                  @JsonProperty("expiringPause") Optional<SingularityExpiringPause> expiringPause,
+                                  @JsonProperty("expiringScale") Optional<SingularityExpiringScale> expiringScale,
+                                  @JsonProperty("expiringSkipHealthchecks") Optional<SingularityExpiringSkipHealthchecks> expiringSkipHealthchecks,
+                                  @JsonProperty("taskIds") Optional<SingularityTaskIdsByStatus> taskIds,
+                                  @JsonProperty("lastHistory") Optional<SingularityRequestHistory> lastHistory) {
     this.request = request;
     this.state = state;
     this.requestDeployState = requestDeployState;
@@ -48,6 +54,8 @@ public class SingularityRequestParent {
     this.expiringPause = expiringPause;
     this.expiringScale = expiringScale;
     this.expiringSkipHealthchecks = expiringSkipHealthchecks;
+    this.taskIds = taskIds;
+    this.lastHistory = lastHistory;
   }
 
 
@@ -91,6 +99,14 @@ public class SingularityRequestParent {
     return expiringSkipHealthchecks;
   }
 
+  public Optional<SingularityTaskIdsByStatus> getTaskIds() {
+    return taskIds;
+  }
+
+  public Optional<SingularityRequestHistory> getLastHistory() {
+    return lastHistory;
+  }
+
   @Override
   public String toString() {
     return "SingularityRequestParent{" +
@@ -104,6 +120,8 @@ public class SingularityRequestParent {
         ", expiringPause=" + expiringPause +
         ", expiringScale=" + expiringScale +
         ", expiringSkipHealthchecks=" + expiringSkipHealthchecks +
+        ", taskIds=" + taskIds +
+        ", lastHistory=" + lastHistory +
         '}';
   }
 }

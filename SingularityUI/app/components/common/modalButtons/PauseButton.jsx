@@ -27,7 +27,7 @@ export default class PauseButton extends Component {
     children: (
       <OverlayTrigger placement="top" id="view-pause-overlay" overlay={pauseTooltip}>
         <a>
-          <Glyphicon glyph="play" />
+          <Glyphicon glyph="pause" />
         </a>
       </OverlayTrigger>
     )
