@@ -63,19 +63,19 @@ public class SingularityTaskShellCommandTest extends SingularitySchedulerTestBas
 
     // bad shell cmd
     try {
-      taskResource.runShellCommand(task.getTaskId().getId(), new SingularityShellCommand("test-cmd", Optional.of(Arrays.asList("one", "two")), user, Optional.<String>absent()));
+      taskResource.runShellCommand(singularityUser, task.getTaskId().getId(), new SingularityShellCommand("test-cmd", Optional.of(Arrays.asList("one", "two")), user, Optional.absent()));
     } catch (WebApplicationException exception) {
       assertEquals(400, exception.getResponse().getStatus());
     }
 
     // bad option
     try {
-      taskResource.runShellCommand(task.getTaskId().getId(), new SingularityShellCommand("d1", Optional.of(Arrays.asList("one", "two")), user, Optional.<String>absent()));
+      taskResource.runShellCommand(singularityUser, task.getTaskId().getId(), new SingularityShellCommand("d1", Optional.of(Arrays.asList("one", "two")), user, Optional.absent()));
     } catch (WebApplicationException exception) {
       assertEquals(400, exception.getResponse().getStatus());
     }
 
-    SingularityTaskShellCommandRequest firstShellRequest = taskResource.runShellCommand(task.getTaskId().getId(), new SingularityShellCommand("d1", Optional.of(Arrays.asList("o1", "o2")), user, Optional.<String>absent()));
+    SingularityTaskShellCommandRequest firstShellRequest = taskResource.runShellCommand(singularityUser, task.getTaskId().getId(), new SingularityShellCommand("d1", Optional.of(Arrays.asList("o1", "o2")), user, Optional.absent()));
 
     try {
       Thread.sleep(3);
@@ -83,7 +83,7 @@ public class SingularityTaskShellCommandTest extends SingularitySchedulerTestBas
 
     }
 
-    SingularityTaskShellCommandRequest secondShellRequest = taskResource.runShellCommand(task.getTaskId().getId(), new SingularityShellCommand("d2", Optional.<List<String>> absent(), user, Optional.<String>absent()));
+    SingularityTaskShellCommandRequest secondShellRequest = taskResource.runShellCommand(singularityUser, task.getTaskId().getId(), new SingularityShellCommand("d2", Optional.<List<String>> absent(), user, Optional.absent()));
 
     assertEquals(2, taskManager.getAllQueuedTaskShellCommandRequests().size());
 
@@ -127,8 +127,8 @@ public class SingularityTaskShellCommandTest extends SingularitySchedulerTestBas
 
     launchTask(request, firstDeploy, 1, TaskState.TASK_RUNNING);
 
-    requestResource.bounce(requestId, Optional.of(new SingularityBounceRequest(Optional.<Boolean>absent(), Optional.<Boolean>absent(), Optional.<Long>absent(), Optional.<String>absent(), Optional.<String>absent(),
-      Optional.of(new SingularityShellCommand("d1", Optional.of(Arrays.asList("o1", "o2")), user, Optional.<String>absent())))));
+    requestResource.bounce(requestId, Optional.of(new SingularityBounceRequest(Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent(),
+      Optional.of(new SingularityShellCommand("d1", Optional.of(Arrays.asList("o1", "o2")), user, Optional.absent())))), singularityUser);
 
     cleaner.drainCleanupQueue();
 

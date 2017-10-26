@@ -1,10 +1,10 @@
 package com.hubspot.singularity.auth.authenticator;
 
 import java.util.Objects;
+import java.util.Optional;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.Optional;
 import com.hubspot.singularity.SingularityUser;
 
 public class SingularityUserPermissionsResponse {

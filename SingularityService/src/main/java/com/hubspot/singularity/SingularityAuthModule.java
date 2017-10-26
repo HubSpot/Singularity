@@ -1,6 +1,7 @@
 package com.hubspot.singularity;
 
-import com.google.common.base.Optional;
+import javax.ws.rs.container.ContainerRequestContext;
+
 import com.google.inject.Binder;
 import com.google.inject.Module;
 import com.google.inject.Scopes;
@@ -9,9 +10,11 @@ import com.google.inject.multibindings.Multibinder;
 import com.hubspot.singularity.auth.SingularityAuthenticatorClass;
 import com.hubspot.singularity.auth.SingularityAuthorizationHelper;
 import com.hubspot.singularity.auth.authenticator.SingularityAuthenticator;
-import com.hubspot.singularity.auth.authenticator.SingularityUserProvider;
+import com.hubspot.singularity.auth.authenticator.SingularityMultiLevelAuthenticator;
 import com.hubspot.singularity.auth.datastore.SingularityAuthDatastore;
 import com.hubspot.singularity.config.SingularityConfiguration;
+
+import io.dropwizard.auth.Authenticator;
 
 public class SingularityAuthModule implements Module {
   private final SingularityConfiguration configuration;
@@ -26,9 +29,9 @@ public class SingularityAuthModule implements Module {
     for (SingularityAuthenticatorClass clazz : configuration.getAuthConfiguration().getAuthenticators()) {
       multibinder.addBinding().to(clazz.getAuthenticatorClass());
     }
+    binder.bind(new TypeLiteral<Authenticator<ContainerRequestContext, SingularityUser>>() {}).to(SingularityMultiLevelAuthenticator.class);
 
     binder.bind(SingularityAuthDatastore.class).to(configuration.getAuthConfiguration().getDatastore().getAuthDatastoreClass());
-    binder.bind(new TypeLiteral<Optional<SingularityUser>>() {}).toProvider(SingularityUserProvider.class);
     binder.bind(SingularityAuthorizationHelper.class).in(Scopes.SINGLETON);
   }
 }

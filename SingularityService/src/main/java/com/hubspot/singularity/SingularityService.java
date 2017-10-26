@@ -100,7 +100,7 @@ public class SingularityService<T extends SingularityConfiguration> extends Appl
 
   public static void main(final String[] args) throws Exception {
     try {
-      new SingularityService<SingularityConfiguration>().run(args);
+      new SingularityService<>().run(args);
     } catch (final Throwable t) {
       t.printStackTrace();
       System.exit(1);
