@@ -347,7 +347,7 @@ public class TaskResource extends AbstractLeaderAwareResource {
   public SingularityTaskCleanup killTask(@PathParam("taskId") String taskId,
                                          @Context HttpServletRequest requestContext,
                                          SingularityKillTaskRequest killTaskRequest,
-                                         SingularityUser user) {
+                                         @Auth SingularityUser user) {
     final Optional<SingularityKillTaskRequest> maybeKillTaskRequest = Optional.fromNullable(killTaskRequest);
     return maybeProxyToLeader(requestContext, SingularityTaskCleanup.class, maybeKillTaskRequest.orNull(), () -> killTask(taskId, maybeKillTaskRequest, user));
   }

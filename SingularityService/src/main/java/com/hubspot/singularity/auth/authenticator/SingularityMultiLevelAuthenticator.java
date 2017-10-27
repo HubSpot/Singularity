@@ -6,7 +6,6 @@ import java.util.stream.Collectors;
 
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.container.ContainerRequestContext;
-import javax.ws.rs.ext.Provider;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,7 +16,6 @@ import com.hubspot.singularity.config.SingularityConfiguration;
 
 import io.dropwizard.auth.Authenticator;
 
-@Provider
 public class SingularityMultiLevelAuthenticator implements Authenticator<ContainerRequestContext, SingularityUser> {
   private static final Logger LOG = LoggerFactory.getLogger(SingularityMultiLevelAuthenticator.class);
 
