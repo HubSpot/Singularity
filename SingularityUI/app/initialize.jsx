@@ -62,7 +62,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     store.dispatch(tailerActions.sandboxSetApiRoot(config.apiRoot));
     if (config.generateAuthHeader) {
-      store.dispath(tailerActions.setAuthorizationHeader(Utils.getAuthTokenHeader()));
+      store.dispatch(tailerActions.setAuthorizationHeader(Utils.getAuthTokenHeader()));
     }
 
     // set up user
