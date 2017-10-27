@@ -37,8 +37,6 @@ public class SingularityServiceModule extends DropwizardAwareModule<SingularityC
     binder.install(new SingularityJerseyModule());
 
     binder.install(new SingularityEventModule(getConfiguration()));
-
-    binder.install(new SingularityAuthModule(getConfiguration()));
   }
 
   @Provides

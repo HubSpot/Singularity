@@ -28,7 +28,7 @@ public class StateManagerTest extends SingularitySchedulerTestBase{
     initRequest();
     initFirstDeploy();
 
-    SingularityRequest request = requestResource.getRequest(requestId).getRequest();
+    SingularityRequest request = requestResource.getRequest(requestId, singularityUser).getRequest();
     saveAndSchedule(request.toBuilder().setInstances(Optional.of(3)));
     resourceOffers();
 

@@ -174,7 +174,7 @@ public class RequestHelper {
   }
 
   public List<SingularityRequestParent> fillDataForRequestsAndFilter(List<SingularityRequestWithState> requests,
-                                                                     Optional<SingularityUser> user,
+                                                                     SingularityUser user,
                                                                      boolean filterRelevantForUser,
                                                                      boolean includeFullRequestData,
                                                                      Optional<Integer> limit) {
@@ -183,16 +183,16 @@ public class RequestHelper {
 
     List<String> requestIds = requests.stream()
         .filter((request) -> {
-          if (!filterRelevantForUser || !user.isPresent()) {
+          if (!filterRelevantForUser) {
             return true;
           }
           String requestId = request.getRequest().getId();
-          Optional<SingularityUserSettings> maybeUserSettings = userManager.getUserSettings(user.get().getId());
+          Optional<SingularityUserSettings> maybeUserSettings = userManager.getUserSettings(user.getId());
           if (maybeUserSettings.isPresent() && maybeUserSettings.get().getStarredRequestIds().contains(requestId)) {
             // This is a starred request for the user
             return true;
           }
-          if (request.getRequest().getGroup().isPresent() && user.get().getGroups().contains(request.getRequest().getGroup().get())) {
+          if (request.getRequest().getGroup().isPresent() && user.getGroups().contains(request.getRequest().getGroup().get())) {
             // The user is in the group for this request
             return true;
           }
@@ -278,19 +278,18 @@ public class RequestHelper {
     return Optional.of(new SingularityTaskIdsByStatus(healthyTaskIds, notYetHealthyTaskIds, pendingTaskIds, cleaningTaskIds));
   }
 
-  private boolean userAssociatedWithDeploy(Optional<SingularityRequestDeployState> deployState, Optional<SingularityUser> user) {
+  private boolean userAssociatedWithDeploy(Optional<SingularityRequestDeployState> deployState, SingularityUser user) {
     return deployState.isPresent() &&
         (deployState.get().getPendingDeploy().isPresent() && userMatches(deployState.get().getPendingDeploy().get().getUser(), user) ||
             deployState.get().getActiveDeploy().isPresent() && userMatches(deployState.get().getActiveDeploy().get().getUser(), user));
   }
 
-  private boolean userMatches(Optional<String> input, Optional<SingularityUser> user) {
+  private boolean userMatches(Optional<String> input, SingularityUser user) {
     return input.isPresent() &&
-        user.isPresent() &&
-        (user.get().getEmail().equals(input) || user.get().getId().equals(input.get()) || user.get().getName().equals(input));
+        (user.getEmail().equals(input) || user.getId().equals(input.get()) || user.getName().equals(input));
   }
 
-  private boolean userModifiedRequestLast(Optional<SingularityRequestHistory> lastHistory, Optional<SingularityUser> user) {
+  private boolean userModifiedRequestLast(Optional<SingularityRequestHistory> lastHistory, SingularityUser user) {
     return lastHistory.isPresent() && userMatches(lastHistory.get().getUser(), user);
   }
 

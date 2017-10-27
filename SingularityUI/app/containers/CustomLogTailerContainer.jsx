@@ -2,7 +2,7 @@ import React from 'react';
 
 import { connect } from 'react-redux';
 
-import { setTailerGroups } from '../actions/tailer';
+import { setTailerGroups, setAuthHeaderIfConfigured } from '../actions/tailer';
 
 import LogTailerContainer from './LogTailerContainer';
 import Utils from '../utils';
@@ -14,6 +14,8 @@ class CustomLogTailerContainer extends React.Component {
 
     // TODO: error if no task ids
     const tg = taskIds.map((taskId) => ({taskId, path: this.props.params.splat, offset: -1}));
+
+    this.props.setAuthHeaderIfConfigured();
 
     if (unifiedView) {
       this.props.setTailerGroups([tg]);
@@ -28,5 +30,6 @@ class CustomLogTailerContainer extends React.Component {
 };
 
 export default connect(null, {
-  setTailerGroups
+  setTailerGroups,
+  setAuthHeaderIfConfigured
 })(CustomLogTailerContainer);

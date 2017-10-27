@@ -29,27 +29,25 @@ public class AbstractRequestResource extends AbstractLeaderAwareResource {
   protected final DeployManager deployManager;
   protected final RequestHelper requestHelper;
   private final RequestHistoryHelper requestHistoryHelper;
-  protected final Optional<SingularityUser> user;
   protected final SingularityValidator validator;
   protected final SingularityAuthorizationHelper authorizationHelper;
 
-  public AbstractRequestResource(RequestManager requestManager, DeployManager deployManager, Optional<SingularityUser> user, SingularityValidator validator, SingularityAuthorizationHelper authorizationHelper,
+  public AbstractRequestResource(RequestManager requestManager, DeployManager deployManager, SingularityValidator validator, SingularityAuthorizationHelper authorizationHelper,
                                  AsyncHttpClient httpClient, LeaderLatch leaderLatch, ObjectMapper objectMapper, RequestHelper requestHelper, RequestHistoryHelper requestHistoryHelper) {
     super(httpClient, leaderLatch, objectMapper);
     this.requestManager = requestManager;
     this.deployManager = deployManager;
     this.requestHelper = requestHelper;
     this.requestHistoryHelper = requestHistoryHelper;
-    this.user = user;
     this.validator = validator;
     this.authorizationHelper = authorizationHelper;
   }
 
-  protected SingularityRequestWithState fetchRequestWithState(String requestId) {
-    return fetchRequestWithState(requestId, false);
+  protected SingularityRequestWithState fetchRequestWithState(String requestId, SingularityUser user) {
+    return fetchRequestWithState(requestId, false, user);
   }
 
-  protected SingularityRequestWithState fetchRequestWithState(String requestId, boolean useWebCache) {
+  protected SingularityRequestWithState fetchRequestWithState(String requestId, boolean useWebCache, SingularityUser user) {
     Optional<SingularityRequestWithState> request = requestManager.getRequest(requestId, useWebCache);
 
     checkNotFound(request.isPresent(), "Couldn't find request with id %s", requestId);

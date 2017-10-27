@@ -218,7 +218,7 @@ public class SingularityMachineStatesTest extends SingularitySchedulerTestBase {
 
     Assert.assertEquals(0, taskManager.getTasksOnSlave(taskManager.getActiveTaskIds(), slaveManager.getObject("slave1").get()).size());
 
-    slaveResource.activateSlave("slave1", null);
+    slaveResource.activateSlave(singularityUser, "slave1", null);
 
     sms.resourceOffers(Arrays.asList(createOffer(1, 129, "slave1", "host1", Optional.of("rack1"))));
 
@@ -437,7 +437,7 @@ public class SingularityMachineStatesTest extends SingularitySchedulerTestBase {
 
     SingularitySlave slave = slaveManager.getObjects().get(0);
 
-    slaveResource.freezeSlave(slave.getId(), new SingularityMachineChangeRequest(Optional.of(1L), Optional.absent(), Optional.absent(), Optional.of(MachineState.ACTIVE), Optional.absent()));
+    slaveResource.freezeSlave(singularityUser, slave.getId(), new SingularityMachineChangeRequest(Optional.of(1L), Optional.absent(), Optional.absent(), Optional.of(MachineState.ACTIVE), Optional.absent()));
 
     Assert.assertEquals(MachineState.FROZEN, slaveManager.getObjects().get(0).getCurrentState().getState());
 
@@ -454,31 +454,31 @@ public class SingularityMachineStatesTest extends SingularitySchedulerTestBase {
   @Test(expected = WebApplicationException.class)
   public void testCannotUseStateReservedForSystem() {
     SingularitySlave slave = getSingleSlave();
-    slaveResource.freezeSlave(slave.getId(), new SingularityMachineChangeRequest(Optional.of(1L), Optional.absent(), Optional.absent(), Optional.of(MachineState.DEAD), Optional.absent()));
+    slaveResource.freezeSlave(singularityUser, slave.getId(), new SingularityMachineChangeRequest(Optional.of(1L), Optional.absent(), Optional.absent(), Optional.of(MachineState.DEAD), Optional.absent()));
   }
 
   @Test(expected = WebApplicationException.class)
   public void testBadExpiringStateTransition() {
     SingularitySlave slave = getSingleSlave();
-    slaveResource.decommissionSlave(slave.getId(), new SingularityMachineChangeRequest(Optional.of(1L), Optional.absent(), Optional.absent(), Optional.of(MachineState.FROZEN), Optional.absent()));
+    slaveResource.decommissionSlave(singularityUser, slave.getId(), new SingularityMachineChangeRequest(Optional.of(1L), Optional.absent(), Optional.absent(), Optional.of(MachineState.FROZEN), Optional.absent()));
   }
 
   @Test(expected = WebApplicationException.class)
   public void testInvalidTransitionToDecommissioned() {
     SingularitySlave slave = getSingleSlave();
-    slaveResource.decommissionSlave(slave.getId(), new SingularityMachineChangeRequest(Optional.of(1L), Optional.absent(), Optional.absent(), Optional.of(MachineState.DECOMMISSIONED), Optional.absent()));
+    slaveResource.decommissionSlave(singularityUser, slave.getId(), new SingularityMachineChangeRequest(Optional.of(1L), Optional.absent(), Optional.absent(), Optional.of(MachineState.DECOMMISSIONED), Optional.absent()));
   }
 
   @Test
   public void testValidTransitionToDecommissioned() {
     initRequest();
     initFirstDeploy();
-    requestResource.postRequest(request.toBuilder().setInstances(Optional.of(2)).build());
+    requestResource.postRequest(request.toBuilder().setInstances(Optional.of(2)).build(), singularityUser);
     scheduler.drainPendingQueue();
     resourceOffers(1);
     SingularitySlave slave = slaveManager.getObjects().get(0);
 
-    slaveResource.decommissionSlave(slave.getId(), new SingularityMachineChangeRequest(Optional.of(1L), Optional.absent(), Optional.absent(), Optional.of(MachineState.DECOMMISSIONED), Optional.of(true)));
+    slaveResource.decommissionSlave(singularityUser, slave.getId(), new SingularityMachineChangeRequest(Optional.of(1L), Optional.absent(), Optional.absent(), Optional.of(MachineState.DECOMMISSIONED), Optional.of(true)));
     Assert.assertEquals(MachineState.STARTING_DECOMMISSION, slaveManager.getObjects().get(0).getCurrentState().getState());
     scheduler.checkForDecomissions();
     scheduler.drainPendingQueue();
@@ -492,10 +492,10 @@ public class SingularityMachineStatesTest extends SingularitySchedulerTestBase {
   @Test
   public void testSystemChangeClearsExpiringChangeIfInvalid() {
     SingularitySlave slave = getSingleSlave();
-    slaveResource.freezeSlave(slave.getId(), null);
-    slaveResource.activateSlave(slave.getId(), new SingularityMachineChangeRequest(Optional.of(1L), Optional.absent(), Optional.absent(), Optional.of(MachineState.FROZEN), Optional.absent()));
+    slaveResource.freezeSlave(singularityUser, slave.getId(), null);
+    slaveResource.activateSlave(singularityUser, slave.getId(), new SingularityMachineChangeRequest(Optional.of(1L), Optional.absent(), Optional.absent(), Optional.of(MachineState.FROZEN), Optional.absent()));
     Assert.assertTrue(slaveManager.getExpiringObject(slave.getId()).isPresent());
-    slaveResource.decommissionSlave(slave.getId(), null);
+    slaveResource.decommissionSlave(singularityUser, slave.getId(), null);
     Assert.assertFalse(slaveManager.getExpiringObject(slave.getId()).isPresent());
   }
 

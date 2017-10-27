@@ -45,6 +45,7 @@ public class SingularityService<T extends SingularityConfiguration> extends Appl
 
     guiceBundle = GuiceBundle.defaultBuilder(SingularityConfiguration.class)
         .modules(new SingularityServiceModule())
+        .modules(new SingularityAuthModule())
         .modules(additionalModules)
         .build();
     bootstrap.addBundle(guiceBundle);

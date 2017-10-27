@@ -146,7 +146,12 @@ export const sandboxFetchChunk = (id, taskId, path, start, end, config) => {
     const query = `?path=${path}&offset=${start}&length=${end - start}`;
     const apiPath = `${apiRoot}/sandbox/${taskId}/read${query}`;
 
-    return fetch(apiPath, {credentials: 'include'})
+    const options = {credentials: 'include'}
+    if (config.authorizationHeader) {
+      options['headers'] = {'Authorization': config.authorizationHeader}
+    }
+
+    return fetch(apiPath, options)
       .then((r) => {return checkStatus(r, taskId)})
       .then(parseJSON)
       .then(({data, offset}) => {
@@ -185,7 +190,12 @@ export const sandboxFetchLength = (id, taskId, path, config) => {
     const query = `?path=${path}&length=${0}`;
     const apiPath = `${apiRoot}/sandbox/${taskId}/read${query}`;
 
-    return fetch(apiPath, {credentials: 'include'})
+    const options = {credentials: 'include'}
+    if (config.authorizationHeader) {
+      options['headers'] = {'Authorization': config.authorizationHeader}
+    }
+
+    return fetch(apiPath, options)
       .then((r) => {return checkStatus(r, taskId)})
       .then(parseJSON)
       .then(({offset}) => {
@@ -247,7 +257,12 @@ export const blazarLogFetchChunk = (id, buildId, start, end, config) => {
     const query = `?offset=${start}&length=${end - start}`;
     const apiPath = `${apiRoot}/modules/builds/${buildId}/log${query}`;
 
-    return fetch(apiPath, {credentials: 'include'})
+    const options = {credentials: 'include'}
+    if (config.authorizationHeader) {
+      options['headers'] = {'Authorization': config.authorizationHeader}
+    }
+
+    return fetch(apiPath, options)
       .then(checkStatus)
       .then(parseJSON)
       .then(({data, offset}) => {
@@ -285,7 +300,12 @@ export const blazarLogFetchLength = (id, buildId, config) => {
     const apiRoot = config.blazarApiRoot;
     const apiPath = `${apiRoot}/modules/builds/${buildId}/log/size`;
 
-    return fetch(apiPath, {credentials: 'include'})
+    const options = {credentials: 'include'}
+    if (config.authorizationHeader) {
+      options['headers'] = {'Authorization': config.authorizationHeader}
+    }
+
+    return fetch(apiPath, options)
       .then(checkStatus)
       .then(parseJSON)
       .then(({size}) => {

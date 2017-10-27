@@ -162,6 +162,12 @@
       </dependency>
 
       <dependency>
+        <groupId>io.dropwizard</groupId>
+        <artifactId>dropwizard-auth</artifactId>
+        <version>${dropwizard.version}</version>
+      </dependency>
+
+      <dependency>
         <groupId>com.hubspot.jackson</groupId>
         <artifactId>jackson-jaxrs-propertyfiltering</artifactId>
         <version>0.8.1</version>

@@ -12,7 +12,6 @@ import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.google.inject.name.Named;
 import com.hubspot.singularity.SingularityMainModule;
-import com.hubspot.singularity.SingularityUser;
 import com.hubspot.singularity.config.SentryConfiguration;
 
 import net.kencochrane.raven.Raven;
@@ -21,20 +20,17 @@ import net.kencochrane.raven.event.Event;
 import net.kencochrane.raven.event.EventBuilder;
 import net.kencochrane.raven.event.interfaces.ExceptionInterface;
 import net.kencochrane.raven.event.interfaces.HttpInterface;
-import net.kencochrane.raven.event.interfaces.UserInterface;
 
 @Singleton
 public class SingularityExceptionNotifier {
   private final Optional<Raven> raven;
   private final Optional<SentryConfiguration> sentryConfiguration;
   private final Provider<Optional<HttpServletRequest>> requestProvider;
-  private final Provider<Optional<SingularityUser>> userProvider;
 
   @Inject
-  public SingularityExceptionNotifier(Optional<SentryConfiguration> sentryConfiguration, @Named(SingularityMainModule.CURRENT_HTTP_REQUEST) Provider<Optional<HttpServletRequest>> requestProvider, Provider<Optional<SingularityUser>> userProvider) {
+  public SingularityExceptionNotifier(Optional<SentryConfiguration> sentryConfiguration, @Named(SingularityMainModule.CURRENT_HTTP_REQUEST) Provider<Optional<HttpServletRequest>> requestProvider) {
     this.sentryConfiguration = sentryConfiguration;
     this.requestProvider = requestProvider;
-    this.userProvider = userProvider;
     if (sentryConfiguration.isPresent()) {
       this.raven = Optional.of(RavenFactory.ravenInstance(sentryConfiguration.get().getDsn()));
     } else {
@@ -86,12 +82,6 @@ public class SingularityExceptionNotifier {
 
     if (maybeRequest.isPresent()) {
       eventBuilder.withSentryInterface(new HttpInterface(maybeRequest.get()));
-    }
-
-    final Optional<SingularityUser> maybeUser = userProvider.get();
-
-    if (maybeUser.isPresent()) {
-      eventBuilder.withSentryInterface(new UserInterface(maybeUser.get().getId(), maybeUser.get().getId(), "", maybeUser.get().getEmail().or("")));
     }
 
     if (extraData != null && !extraData.isEmpty()) {
