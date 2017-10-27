@@ -136,6 +136,12 @@ export const tailIntervalMs = (tailIntervalMs) => ({
   tailIntervalMs
 });
 
+export const SET_AUTHORIZATION_HEADER = `${frameworkName}_SET_AUTHORIZATION_HEADER`;
+export const setAuthorizationHeader = (authorizationHeader) => ({
+  type: SET_AUTHORIZATION_HEADER,
+  authorizationHeader
+});
+
 export const sandboxFetchChunk = (id, taskId, path, start, end, config) => {
   return (dispatch) => {
     dispatch(
