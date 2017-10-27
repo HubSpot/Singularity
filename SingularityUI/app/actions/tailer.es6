@@ -28,7 +28,7 @@ export const setAuthHeaderIfConfigured = () => (dispatch) => {
   if (config.generateAuthHeader) {
     dispatch({
       type: SET_AUTHORIZATION_HEADER,
-      authorizationHeader: utils.getAuthTokenHeader()
+      authorizationHeader: Utils.getAuthTokenHeader()
     })
   }
 }
