@@ -148,7 +148,7 @@ export const sandboxFetchChunk = (id, taskId, path, start, end, config) => {
 
     const options = {credentials: 'include'}
     if (config.authorizationHeader) {
-      options['headers'] = {'Authorization', config.authorizationHeader}
+      options['headers'] = {'Authorization': config.authorizationHeader}
     }
 
     return fetch(apiPath, options)
@@ -192,7 +192,7 @@ export const sandboxFetchLength = (id, taskId, path, config) => {
 
     const options = {credentials: 'include'}
     if (config.authorizationHeader) {
-      options['headers'] = {'Authorization', config.authorizationHeader}
+      options['headers'] = {'Authorization': config.authorizationHeader}
     }
 
     return fetch(apiPath, options)
@@ -259,7 +259,7 @@ export const blazarLogFetchChunk = (id, buildId, start, end, config) => {
 
     const options = {credentials: 'include'}
     if (config.authorizationHeader) {
-      options['headers'] = {'Authorization', config.authorizationHeader}
+      options['headers'] = {'Authorization': config.authorizationHeader}
     }
 
     return fetch(apiPath, options)
@@ -302,7 +302,7 @@ export const blazarLogFetchLength = (id, buildId, config) => {
 
     const options = {credentials: 'include'}
     if (config.authorizationHeader) {
-      options['headers'] = {'Authorization', config.authorizationHeader}
+      options['headers'] = {'Authorization': config.authorizationHeader}
     }
 
     return fetch(apiPath, options)
