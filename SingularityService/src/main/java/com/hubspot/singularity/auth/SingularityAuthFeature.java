@@ -11,7 +11,7 @@ import org.glassfish.hk2.utilities.binding.AbstractBinder;
 import org.glassfish.jersey.server.spi.internal.ValueFactoryProvider;
 
 import com.hubspot.singularity.SingularityUser;
-import com.hubspot.singularity.auth.authenticator.SingularityMultiLevelAuthenticator;
+import com.hubspot.singularity.auth.authenticator.SingularityMultiMethodAuthenticator;
 
 import io.dropwizard.auth.Auth;
 import io.dropwizard.auth.Authenticator;
@@ -26,7 +26,7 @@ public class SingularityAuthFeature implements Feature {
     context.register(new AbstractBinder() {
       @Override
       public void configure() {
-        bind(SingularityMultiLevelAuthenticator.class).to(new TypeLiteral<Authenticator<ContainerRequestContext, SingularityUser>>() {}).in(Singleton.class);
+        bind(SingularityMultiMethodAuthenticator.class).to(new TypeLiteral<Authenticator<ContainerRequestContext, SingularityUser>>() {}).in(Singleton.class);
         bind(SingularityAuthedUserFactory.class).to(SingularityAuthedUserFactory.class).in(Singleton.class);
         bind(SingularityAuthFactoryProvider.class).to(ValueFactoryProvider.class).in(Singleton.class);
         bind(SingularityAuthParamInjectionResolver.class).to(new TypeLiteral<InjectionResolver<Auth>>(){}).in(Singleton.class);

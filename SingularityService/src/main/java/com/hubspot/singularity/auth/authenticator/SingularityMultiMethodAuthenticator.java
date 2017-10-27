@@ -16,14 +16,14 @@ import com.hubspot.singularity.config.SingularityConfiguration;
 
 import io.dropwizard.auth.Authenticator;
 
-public class SingularityMultiLevelAuthenticator implements Authenticator<ContainerRequestContext, SingularityUser> {
-  private static final Logger LOG = LoggerFactory.getLogger(SingularityMultiLevelAuthenticator.class);
+public class SingularityMultiMethodAuthenticator implements Authenticator<ContainerRequestContext, SingularityUser> {
+  private static final Logger LOG = LoggerFactory.getLogger(SingularityMultiMethodAuthenticator.class);
 
   private final Set<SingularityAuthenticator> authenticators;
   private final SingularityConfiguration configuration;
 
   @javax.inject.Inject
-  public SingularityMultiLevelAuthenticator(Set<SingularityAuthenticator> authenticators, SingularityConfiguration configuration) {
+  public SingularityMultiMethodAuthenticator(Set<SingularityAuthenticator> authenticators, SingularityConfiguration configuration) {
     this.authenticators = authenticators;
     this.configuration = configuration;
   }
