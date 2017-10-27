@@ -74,7 +74,7 @@ public class SingularityWebhookAuthenticator implements SingularityAuthenticator
         } else {
           String responseBody = response.getResponseBody();
           SingularityUserPermissionsResponse permissionsResponse = objectMapper.readValue(responseBody, SingularityUserPermissionsResponse.class);
-          if (!permissionsResponse.isAuthenticated()) {
+          if (!permissionsResponse.getUser().isPresent() && permissionsResponse.getUser().get().isAuthenticated()) {
             throw WebExceptions.unauthorized(String.format("(Webhook) User not authenticated (response: %s)", permissionsResponse));
           }
           if (!permissionsResponse.getUser().isPresent()) {
