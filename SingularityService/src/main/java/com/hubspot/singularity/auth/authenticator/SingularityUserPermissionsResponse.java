@@ -9,22 +9,16 @@ import com.hubspot.singularity.SingularityUser;
 
 public class SingularityUserPermissionsResponse {
   private final Optional<SingularityUser> user;
-  private final boolean authenticated;
   private final Optional<String> error;
 
   @JsonCreator
-  public SingularityUserPermissionsResponse(@JsonProperty("user") Optional<SingularityUser> user, @JsonProperty("authenticated") boolean authenticated, @JsonProperty("error") Optional<String> error) {
+  public SingularityUserPermissionsResponse(@JsonProperty("user") Optional<SingularityUser> user, @JsonProperty("error") Optional<String> error) {
     this.user = user;
-    this.authenticated = authenticated;
     this.error = error;
   }
 
   public Optional<SingularityUser> getUser() {
     return user;
-  }
-
-  public boolean isAuthenticated() {
-    return authenticated;
   }
 
   public Optional<String> getError() {
@@ -38,8 +32,7 @@ public class SingularityUserPermissionsResponse {
     }
     if (obj instanceof SingularityUserPermissionsResponse) {
       final SingularityUserPermissionsResponse that = (SingularityUserPermissionsResponse) obj;
-      return Objects.equals(this.authenticated, that.authenticated) &&
-          Objects.equals(this.user, that.user) &&
+      return Objects.equals(this.user, that.user) &&
           Objects.equals(this.error, that.error);
     }
     return false;
@@ -47,14 +40,13 @@ public class SingularityUserPermissionsResponse {
 
   @Override
   public int hashCode() {
-    return Objects.hash(user, authenticated, error);
+    return Objects.hash(user, error);
   }
 
   @Override
   public String toString() {
     return "SingularityUserPermissionsResponse{" +
         "user=" + user +
-        ", authenticated=" + authenticated +
         ", error=" + error +
         '}';
   }
