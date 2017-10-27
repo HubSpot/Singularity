@@ -10,7 +10,6 @@ export const PICK_TAILER_GROUP = "TAILER_PICK_TAILER_GROUP";
 export const TOGGLE_TAILER_GROUP = "TAILER_TOGGLE_TAILER_GROUP";
 export const SET_COLOR = "TAILER_SET_COLOR";
 export const TAILER_SET_NOT_FOUND = "TAILER_SET_NOT_FOUND";
-export const SET_AUTHORIZATION_HEADER = "SET_AUTHORIZATION_HEADER";
 
 export const buildTailerGroupInfo = (taskId, path, offset=-1) => ({taskId, path, offset});
 
@@ -23,15 +22,6 @@ export const setSearch = (search) => ({
   type: SET_SEARCH,
   search
 });
-
-export const setAuthHeaderIfConfigured = () => (dispatch) => {
-  if (config.generateAuthHeader) {
-    dispatch({
-      type: SET_AUTHORIZATION_HEADER,
-      authorizationHeader: Utils.getAuthTokenHeader()
-    })
-  }
-}
 
 export const markNotFound = (taskId) => (dispatch, getState) => {
   const { tailerView } = getState();

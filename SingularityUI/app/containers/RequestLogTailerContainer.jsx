@@ -2,7 +2,7 @@ import React from 'react';
 
 import { connect } from 'react-redux';
 
-import { setTailerGroups, setAuthHeaderIfConfigured } from '../actions/tailer';
+import { setTailerGroups } from '../actions/tailer';
 
 import LogTailerContainer from './LogTailerContainer';
 
@@ -29,8 +29,6 @@ class RequestLogTailerContainer extends React.Component {
         offset: -1
       }));
 
-      this.props.setAuthHeaderIfConfigured();
-
       if (unifiedView) {
         this.props.setTailerGroups([tg]);
       } else {
@@ -46,6 +44,5 @@ class RequestLogTailerContainer extends React.Component {
 
 export default connect(null, {
   setTailerGroups,
-  setAuthHeaderIfConfigured,
   fetchActiveTasksForRequest: FetchActiveTasksForRequest.trigger
 })(RequestLogTailerContainer);
