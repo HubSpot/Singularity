@@ -70,9 +70,6 @@ document.addEventListener('DOMContentLoaded', () => {
     window.app = {};
     window.app.setupUser = () => store.dispatch(FetchUser.trigger());
     window.app.setupUser().then(() => {
-      if (store.getState().api.user.data.authEnabled && !store.getState().api.user.data.authenticated) { // redirect to login
-        window.location.href = config.redirectOnUnauthorizedUrl.replace('{URL}', encodeURIComponent(window.location.href));
-      }
       if (!store.getState().api.user.data.user) {
         return renderUserIdForm();
       } else {
