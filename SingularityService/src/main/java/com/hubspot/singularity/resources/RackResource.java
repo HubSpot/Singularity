@@ -48,14 +48,16 @@ public class RackResource extends AbstractMachineResource<SingularityRack> {
   @GET
   @Path("/")
   @ApiOperation("Retrieve the list of all known racks, optionally filtering by a particular state")
-  public List<SingularityRack> getRacks(@ApiParam("Optionally specify a particular state to filter racks by") @QueryParam("state") Optional<MachineState> filterState) {
+  public List<SingularityRack> getRacks(@Auth SingularityUser user, @ApiParam("Optionally specify a particular state to filter racks by") @QueryParam("state") Optional<MachineState> filterState) {
+    authorizationHelper.checkAdminAuthorization(user);
     return manager.getObjectsFiltered(filterState);
   }
 
   @GET
   @Path("/rack/{rackId}")
   @ApiOperation("Retrieve the history of a given rack")
-  public List<SingularityMachineStateHistoryUpdate> getRackHistory(@ApiParam("Rack ID") @PathParam("rackId") String rackId) {
+  public List<SingularityMachineStateHistoryUpdate> getRackHistory(@Auth SingularityUser user, @ApiParam("Rack ID") @PathParam("rackId") String rackId) {
+    authorizationHelper.checkAdminAuthorization(user);
     return manager.getHistory(rackId);
   }
 

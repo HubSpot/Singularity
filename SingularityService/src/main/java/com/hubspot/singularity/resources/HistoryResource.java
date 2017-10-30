@@ -69,8 +69,9 @@ public class HistoryResource extends AbstractHistoryResource {
   @GET
   @Path("/task/{taskId}")
   @ApiOperation("Retrieve the history for a specific task.")
-  public SingularityTaskHistory getHistoryForTask(@Auth SingularityUser user,
-                                                  @ApiParam("Task ID to look up") @PathParam("taskId") String taskId) {
+  public SingularityTaskHistory getHistoryForTask(
+      @Auth SingularityUser user,
+      @ApiParam("Task ID to look up") @PathParam("taskId") String taskId) {
     SingularityTaskId taskIdObj = getTaskIdObject(taskId);
 
     return getTaskHistoryRequired(taskIdObj, user);
@@ -121,9 +122,10 @@ public class HistoryResource extends AbstractHistoryResource {
   @GET
   @Path("/request/{requestId}/deploy/{deployId}")
   @ApiOperation("Retrieve the history for a specific deploy.")
-  public SingularityDeployHistory getDeploy(@Auth SingularityUser user,
-                                            @ApiParam("Request ID for deploy") @PathParam("requestId") String requestId,
-                                            @ApiParam("Deploy ID") @PathParam("deployId") String deployId) {
+  public SingularityDeployHistory getDeploy(
+      @Auth SingularityUser user,
+      @ApiParam("Request ID for deploy") @PathParam("requestId") String requestId,
+      @ApiParam("Deploy ID") @PathParam("deployId") String deployId) {
     return getDeployHistory(requestId, deployId, user);
   }
 
@@ -142,7 +144,8 @@ public class HistoryResource extends AbstractHistoryResource {
   @GET
   @Path("/request/{requestId}/deploy/{deployId}/tasks/inactive")
   @ApiOperation("Retrieve the task history for a specific deploy.")
-  public List<SingularityTaskIdHistory> getInactiveDeployTasks(@Auth SingularityUser user,
+  public List<SingularityTaskIdHistory> getInactiveDeployTasks(
+      @Auth SingularityUser user,
       @ApiParam("Request ID for deploy") @PathParam("requestId") String requestId,
       @ApiParam("Deploy ID") @PathParam("deployId") String deployId,
       @ApiParam("Maximum number of items to return") @QueryParam("count") Integer count,
