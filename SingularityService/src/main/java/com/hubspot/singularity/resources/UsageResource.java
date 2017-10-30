@@ -11,6 +11,7 @@ import javax.ws.rs.core.MediaType;
 
 import com.google.common.base.Optional;
 import com.google.inject.Inject;
+import com.hubspot.singularity.SingularityAuthorizationScope;
 import com.hubspot.singularity.SingularityClusterUtilization;
 import com.hubspot.singularity.SingularityService;
 import com.hubspot.singularity.SingularitySlave;
@@ -86,14 +87,14 @@ public class UsageResource {
   @GET
   @Path("/tasks/{taskId}/history")
   public List<SingularityTaskUsage> getTaskUsageHistory(@Auth SingularityUser user, @PathParam("taskId") String taskId) {
-    authorizationHelper.checkAdminAuthorization(user);
+    authorizationHelper.checkForAuthorizationByTaskId(taskId, user, SingularityAuthorizationScope.READ);
     return usageManager.getTaskUsage(taskId);
   }
 
   @GET
   @Path("/cluster/utilization")
   public SingularityClusterUtilization getClusterUtilization(@Auth SingularityUser user) {
-    authorizationHelper.checkAdminAuthorization(user);
+    //authorizationHelper.checkAdminAuthorization(user); Needed for ui pages outside single request
     WebExceptions.checkNotFound(usageManager.getClusterUtilization().isPresent(), "No cluster utilization has been saved yet");
 
     return usageManager.getClusterUtilization().get();
