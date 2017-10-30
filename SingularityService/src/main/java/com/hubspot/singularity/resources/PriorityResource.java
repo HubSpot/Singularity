@@ -48,7 +48,8 @@ public class PriorityResource {
         @ApiResponse(code=200, message="The active priority freeze."),
         @ApiResponse(code=404, message="There was no active priority freeze.")
     })
-    public Optional<SingularityPriorityFreezeParent> getActivePriorityFreeze() {
+    public Optional<SingularityPriorityFreezeParent> getActivePriorityFreeze(@Auth SingularityUser user) {
+        authorizationHelper.checkAdminAuthorization(user);
         return priorityManager.getActivePriorityFreeze();
     }
 

@@ -47,21 +47,25 @@ public class SlaveResource extends AbstractMachineResource<SingularitySlave> {
   @GET
   @Path("/")
   @ApiOperation("Retrieve the list of all known slaves, optionally filtering by a particular state")
-  public List<SingularitySlave> getSlaves(@ApiParam("Optionally specify a particular state to filter slaves by") @QueryParam("state") Optional<MachineState> filterState) {
+  public List<SingularitySlave> getSlaves(@Auth SingularityUser user,
+                                          @ApiParam("Optionally specify a particular state to filter slaves by") @QueryParam("state") Optional<MachineState> filterState) {
+    authorizationHelper.checkAdminAuthorization(user);
     return manager.getObjectsFiltered(filterState);
   }
 
   @GET
   @Path("/slave/{slaveId}")
   @ApiOperation("Retrieve the history of a given slave")
-  public List<SingularityMachineStateHistoryUpdate> getSlaveHistory(@ApiParam("Slave ID") @PathParam("slaveId") String slaveId) {
+  public List<SingularityMachineStateHistoryUpdate> getSlaveHistory(@Auth SingularityUser user, @ApiParam("Slave ID") @PathParam("slaveId") String slaveId) {
+    authorizationHelper.checkAdminAuthorization(user);
     return manager.getHistory(slaveId);
   }
 
   @GET
   @Path("/slave/{slaveId}/details")
   @ApiOperation("Get information about a particular slave")
-  public Optional<SingularitySlave> getSlave(@ApiParam("Slave ID") @PathParam("slaveId") String slaveId) {
+  public Optional<SingularitySlave> getSlave(@Auth SingularityUser user, @ApiParam("Slave ID") @PathParam("slaveId") String slaveId) {
+    authorizationHelper.checkAdminAuthorization(user);
     return manager.getObject(slaveId);
   }
 
