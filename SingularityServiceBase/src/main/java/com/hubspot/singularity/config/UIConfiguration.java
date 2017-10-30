@@ -90,6 +90,21 @@ public class UIConfiguration {
   @JsonProperty
   private Optional<String> extraScript = Optional.absent();
 
+  @JsonProperty
+  private boolean generateAuthHeader = false;
+
+  @JsonProperty
+  @NotNull
+  private String authCookieName = "";
+
+  @JsonProperty
+  private Optional<String> apiRootOverride = Optional.absent();
+
+  @JsonProperty
+  private Optional<String> appRootOverride = Optional.absent();
+
+  @JsonProperty
+  private Optional<String> staticRootOverride = Optional.absent();
 
   public boolean isHideNewDeployButton() {
     return hideNewDeployButton;
@@ -225,5 +240,45 @@ public class UIConfiguration {
 
   public void setExtraScript(Optional<String> extraScript) {
     this.extraScript = extraScript;
+  }
+
+  public boolean isGenerateAuthHeader() {
+    return generateAuthHeader;
+  }
+
+  public void setGenerateAuthHeader(boolean generateAuthHeader) {
+    this.generateAuthHeader = generateAuthHeader;
+  }
+
+  public String getAuthCookieName() {
+    return authCookieName;
+  }
+
+  public void setAuthCookieName(String authCookieName) {
+    this.authCookieName = authCookieName;
+  }
+
+  public Optional<String> getApiRootOverride() {
+    return apiRootOverride;
+  }
+
+  public void setApiRootOverride(Optional<String> apiRootOverride) {
+    this.apiRootOverride = apiRootOverride;
+  }
+
+  public Optional<String> getAppRootOverride() {
+    return appRootOverride;
+  }
+
+  public void setAppRootOverride(Optional<String> appRootOverride) {
+    this.appRootOverride = appRootOverride;
+  }
+
+  public Optional<String> getStaticRootOverride() {
+    return staticRootOverride;
+  }
+
+  public void setStaticRootOverride(Optional<String> staticRootOverride) {
+    this.staticRootOverride = staticRootOverride;
   }
 }

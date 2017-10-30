@@ -61,6 +61,9 @@ public class IndexView extends View {
 
   private final String extraScript;
 
+  private final boolean generateAuthHeader;
+  private final String authCookieName;
+
   public IndexView(String singularityUriBase, String appRoot, IndexViewConfiguration configuration, ObjectMapper mapper) {
     super("index.mustache");
 
@@ -70,10 +73,10 @@ public class IndexView extends View {
 
     String rawAppRoot = String.format("%s%s", singularityUriBase, appRoot);
 
-    this.appRoot = (rawAppRoot.endsWith("/")) ? rawAppRoot.substring(0, rawAppRoot.length() - 1) : rawAppRoot;
-    this.staticRoot = String.format("%s/static", singularityUriBase);
+    this.appRoot = uiConfiguration.getAppRootOverride().or((rawAppRoot.endsWith("/")) ? rawAppRoot.substring(0, rawAppRoot.length() - 1) : rawAppRoot);
+    this.staticRoot = uiConfiguration.getStaticRootOverride().or(String.format("%s/static", singularityUriBase));
     this.apiDocs = String.format("%s/api-docs/", singularityUriBase);
-    this.apiRoot = String.format("%s%s", singularityUriBase, ApiPaths.API_BASE_PATH);
+    this.apiRoot = uiConfiguration.getApiRootOverride().or(String.format("%s%s", singularityUriBase, ApiPaths.API_BASE_PATH));
 
     this.title = uiConfiguration.getTitle();
 
@@ -122,6 +125,9 @@ public class IndexView extends View {
     this.timestampWithSecondsFormat = uiConfiguration.getTimestampWithSecondsFormat();
 
     this.extraScript = uiConfiguration.getExtraScript().orNull();
+
+    this.generateAuthHeader = uiConfiguration.isGenerateAuthHeader();
+    this.authCookieName = uiConfiguration.getAuthCookieName();
   }
 
   public String getAppRoot() {
@@ -244,6 +250,14 @@ public class IndexView extends View {
     return shortenSlaveUsageHostname;
   }
 
+  public boolean isGenerateAuthHeader() {
+    return generateAuthHeader;
+  }
+
+  public String getAuthCookieName() {
+    return authCookieName;
+  }
+
   @Override
   public String toString() {
     return "IndexView{" +
@@ -277,6 +291,8 @@ public class IndexView extends View {
         ", timestampWithSecondsFormat='" + timestampWithSecondsFormat + '\'' +
         ", redirectOnUnauthorizedUrl='" + redirectOnUnauthorizedUrl + '\'' +
         ", extraScript='" + extraScript + '\'' +
+        ", generateAuthHeader=" + generateAuthHeader +
+        ", authCookieName='" + authCookieName + '\'' +
         "} " + super.toString();
   }
 }

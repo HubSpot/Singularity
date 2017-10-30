@@ -1,11 +1,14 @@
 package com.hubspot.singularity;
 
-import com.google.common.base.Optional;
+import java.util.Optional;
+
+import javax.ws.rs.container.ContainerRequestContext;
+
 import com.google.inject.Inject;
 import com.hubspot.singularity.auth.authenticator.SingularityAuthenticator;
 
 public class SingularityTestAuthenticator implements SingularityAuthenticator {
-  private Optional<SingularityUser> user = Optional.absent();
+  private Optional<SingularityUser> user = Optional.empty();
 
   @Inject
   public SingularityTestAuthenticator() {
@@ -13,7 +16,7 @@ public class SingularityTestAuthenticator implements SingularityAuthenticator {
   }
 
   @Override
-  public Optional<SingularityUser> get() {
+  public Optional<SingularityUser> getUser(ContainerRequestContext context) {
     return user;
   }
 

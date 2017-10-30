@@ -21,14 +21,12 @@ public abstract class AbstractHistoryResource {
   protected final TaskManager taskManager;
   protected final DeployManager deployManager;
   protected final SingularityAuthorizationHelper authorizationHelper;
-  protected final Optional<SingularityUser> user;
 
-  public AbstractHistoryResource(HistoryManager historyManager, TaskManager taskManager, DeployManager deployManager, SingularityAuthorizationHelper authorizationHelper, Optional<SingularityUser> user) {
+  public AbstractHistoryResource(HistoryManager historyManager, TaskManager taskManager, DeployManager deployManager, SingularityAuthorizationHelper authorizationHelper) {
     this.historyManager = historyManager;
     this.taskManager = taskManager;
     this.deployManager = deployManager;
     this.authorizationHelper = authorizationHelper;
-    this.user = user;
   }
 
   protected SingularityTaskId getTaskIdObject(String taskId) {
@@ -39,7 +37,7 @@ public abstract class AbstractHistoryResource {
     }
   }
 
-  protected Optional<SingularityTaskHistory> getTaskHistory(SingularityTaskId taskId) {
+  protected Optional<SingularityTaskHistory> getTaskHistory(SingularityTaskId taskId, SingularityUser user) {
     authorizationHelper.checkForAuthorizationByRequestId(taskId.getRequestId(), user, SingularityAuthorizationScope.READ);
 
     Optional<SingularityTaskHistory> history = taskManager.getTaskHistory(taskId);
@@ -51,15 +49,15 @@ public abstract class AbstractHistoryResource {
     return history;
   }
 
-  protected SingularityTaskHistory getTaskHistoryRequired(SingularityTaskId taskId) {
-    Optional<SingularityTaskHistory> history = getTaskHistory(taskId);
+  protected SingularityTaskHistory getTaskHistoryRequired(SingularityTaskId taskId, SingularityUser user) {
+    Optional<SingularityTaskHistory> history = getTaskHistory(taskId, user);
 
     checkNotFound(history.isPresent(), "No history for task %s", taskId);
 
     return history.get();
   }
 
-  protected SingularityDeployHistory getDeployHistory(String requestId, String deployId) {
+  protected SingularityDeployHistory getDeployHistory(String requestId, String deployId, SingularityUser user) {
     authorizationHelper.checkForAuthorizationByRequestId(requestId, user, SingularityAuthorizationScope.READ);
 
     Optional<SingularityDeployHistory> deployHistory = deployManager.getDeployHistory(requestId, deployId, true);

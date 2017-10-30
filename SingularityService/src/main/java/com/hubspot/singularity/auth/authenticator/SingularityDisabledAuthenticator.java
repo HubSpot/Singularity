@@ -1,6 +1,9 @@
 package com.hubspot.singularity.auth.authenticator;
 
-import com.google.common.base.Optional;
+import java.util.Optional;
+
+import javax.ws.rs.container.ContainerRequestContext;
+
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.hubspot.singularity.SingularityUser;
@@ -11,7 +14,7 @@ public class SingularityDisabledAuthenticator implements SingularityAuthenticato
   public SingularityDisabledAuthenticator() {}
 
   @Override
-  public Optional<SingularityUser> get() {
-    return Optional.absent();
+  public Optional<SingularityUser> getUser(ContainerRequestContext context) {
+    return Optional.empty();
   }
 }

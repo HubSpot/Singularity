@@ -479,6 +479,19 @@ const Utils = {
       }
     }
     return array.join('&');
+  },
+
+  getAuthTokenHeader() {
+    if (!config.authCookieName) {
+      return null;
+    }
+    const encodedKey = encodeURIComponent(config.authCookieName).replace(/[\-\.\+\*]/g, '\\$&');
+    const authCookie = decodeURIComponent(document.cookie.replace(new RegExp(`(?:(?:^|.*;)\\s*${encodedKey}\\s*\\=\\s*([^;]*).*$)|^.*$`), '$1')) || null;
+    if (!authCookie) {
+      return '';
+    }
+    const authToken = JSON.parse(authCookie).token;
+    return `Bearer ${ authToken }`;
   }
 };
 
