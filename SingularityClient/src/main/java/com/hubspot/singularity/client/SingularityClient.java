@@ -104,7 +104,8 @@ public class SingularityClient {
 
   private static final String BASE_API_FORMAT = "%s://%s/%s";
 
-  private static final String AUTH_CHECK_FORMAT = "%s/auth/%s/auth-check/%s";
+  private static final String AUTH_CHECK_FORMAT = "%s/auth/%s/auth-check";
+  private static final String AUTH_CHECK_USER_FORMAT = AUTH_CHECK_FORMAT + "/%s";
 
   private static final String STATE_FORMAT = "%s/state";
   private static final String TASK_RECONCILIATION_FORMAT = STATE_FORMAT + "/task-reconciliation";
@@ -1446,7 +1447,27 @@ public class SingularityClient {
    *    true if the user is authorized for scope, false otherwise
    */
   public boolean isUserAuthorized(String requestId, String userId, SingularityAuthorizationScope scope) {
-    final Function<String, String> requestUri = (host) -> String.format(AUTH_CHECK_FORMAT, getApiBase(host), requestId, userId);
+    final Function<String, String> requestUri = (host) -> String.format(AUTH_CHECK_USER_FORMAT, getApiBase(host), requestId, userId);
+    Map<String, Object> params = Collections.singletonMap("scope", scope.name());
+    HttpResponse response = executeGetSingleWithParams(requestUri, "auth check", "", Optional.of(params));
+    return response.isSuccess();
+  }
+
+  /**
+   * Check if the current client's user is authorized for the specified scope on the specified request
+   *
+   * @param requestId
+   *    The request to check authorization on
+   * @param userId
+   *    The user whose authorization will be checked
+   * @param scope
+   *    The scope to check that `user` has
+   *
+   * @return
+   *    true if the user is authorized for scope, false otherwise
+   */
+  public boolean isUserAuthorized(String requestId, SingularityAuthorizationScope scope) {
+    final Function<String, String> requestUri = (host) -> String.format(AUTH_CHECK_FORMAT, getApiBase(host), requestId);
     Map<String, Object> params = Collections.singletonMap("scope", scope.name());
     HttpResponse response = executeGetSingleWithParams(requestUri, "auth check", "", Optional.of(params));
     return response.isSuccess();

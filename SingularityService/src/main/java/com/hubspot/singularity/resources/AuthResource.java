@@ -59,4 +59,14 @@ public class AuthResource {
     authorizationHelper.checkForAuthorizationByRequestId(requestId, authDatastore.getUser(userId).orElse(SingularityUser.defaultUser()), scope.or(SingularityAuthorizationScope.READ));
     return Response.ok().build();
   }
+
+  @GET
+  @Path("/{requestId}/auth-check}")
+  @ApiOperation("Check if the specified user is authorized for a request")
+  public Response checkReadOnlyAuth(@Auth SingularityUser user,
+                                    @PathParam("requestId") String requestId, @PathParam("userId") String userId,
+                                    @QueryParam("scope") Optional<SingularityAuthorizationScope> scope) {
+    authorizationHelper.checkForAuthorizationByRequestId(requestId, user, scope.or(SingularityAuthorizationScope.READ));
+    return Response.ok().build();
+  }
 }
