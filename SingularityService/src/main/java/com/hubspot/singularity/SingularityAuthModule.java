@@ -27,7 +27,5 @@ public class SingularityAuthModule extends DropwizardAwareModule<SingularityConf
     binder.bind(SingularityMultiMethodAuthenticator.class);
     binder.bind(SingularityAuthDatastore.class).to(getConfiguration().getAuthConfiguration().getDatastore().getAuthDatastoreClass());
     binder.bind(SingularityAuthorizationHelper.class).in(Scopes.SINGLETON);
-
-    getEnvironment().jersey().register(SingularityAuthFeature.class);
   }
 }
