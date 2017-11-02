@@ -145,6 +145,10 @@
                 <pattern>com.github.rholder</pattern>
                 <shadedPattern>com.hubspot.singularity.shaded.com.github.rholder</shadedPattern>
               </relocation>
+              <relocation>
+                <pattern>com.google.protobuf</pattern>
+                <shadedPattern>com.hubspot.singularity.shaded.com.google.protobuf</shadedPattern>
+              </relocation>
             </relocations>
           </configuration>
         </plugin>
