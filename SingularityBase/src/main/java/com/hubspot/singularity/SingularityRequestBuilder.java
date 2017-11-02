@@ -51,6 +51,7 @@ public class SingularityRequestBuilder {
   private Optional<Double> taskPriorityLevel;
   private Optional<Integer> maxTasksPerOffer;
   private Optional<Boolean> allowBounceToSameHost;
+  @Deprecated
   private Optional<String> dataCenter;
 
   public SingularityRequestBuilder(String id, RequestType requestType) {
@@ -357,10 +358,12 @@ public class SingularityRequestBuilder {
     return this;
   }
 
+  @Deprecated
   public Optional<String> getDataCenter() {
     return dataCenter;
   }
 
+  @Deprecated
   public SingularityRequestBuilder setDataCenter(Optional<String> dataCenter) {
     this.dataCenter = dataCenter;
     return this;
