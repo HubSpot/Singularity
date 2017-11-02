@@ -71,7 +71,6 @@
     <module>SingularityServiceIntegrationTests</module>
     <module>SingularityUI</module>
     <module>SingularityServiceBase</module>
-    <module>SingularityClusterCoordinator</module>
   </modules>
 
   <dependencyManagement>

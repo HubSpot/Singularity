@@ -500,7 +500,7 @@ const Utils = {
     if (!authCookie) {
       return '';
     }
-    const authToken = JSON.parse(authCookie).token;
+    const authToken = JSON.parse(authCookie)[config.authTokenKey];
     return `Bearer ${ authToken }`;
   }
 

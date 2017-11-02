@@ -65,6 +65,7 @@ public class IndexView extends View {
 
   private final boolean generateAuthHeader;
   private final String authCookieName;
+  private final String authTokenKey;
 
   public IndexView(String singularityUriBase, String appRoot, IndexViewConfiguration configuration, ObjectMapper mapper) {
     super("index.mustache");
@@ -128,8 +129,9 @@ public class IndexView extends View {
 
     this.extraScript = uiConfiguration.getExtraScript().orNull();
 
-    this.generateAuthHeader = uiConfiguration.isGenerateAuthHeader();
+    this.generateAuthHeader = configuration.isGenerateAuthHeader();
     this.authCookieName = uiConfiguration.getAuthCookieName();
+    this.authTokenKey = uiConfiguration.getAuthTokenKey();
   }
 
   public String getAppRoot() {
@@ -260,6 +262,10 @@ public class IndexView extends View {
     return authCookieName;
   }
 
+  public String getAuthTokenKey() {
+    return authTokenKey;
+  }
+
   @Override
   public String toString() {
     return "IndexView{" +
@@ -295,6 +301,7 @@ public class IndexView extends View {
         ", extraScript='" + extraScript + '\'' +
         ", generateAuthHeader=" + generateAuthHeader +
         ", authCookieName='" + authCookieName + '\'' +
+        ", authTokenKey='" + authTokenKey + '\'' +
         "} " + super.toString();
   }
 }
