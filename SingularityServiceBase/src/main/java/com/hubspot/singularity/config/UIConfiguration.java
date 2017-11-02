@@ -91,7 +91,7 @@ public class UIConfiguration {
   private Optional<String> extraScript = Optional.absent();
 
   @JsonProperty
-  private boolean generateAuthHeader = false;
+  private String authTokenKey = "token";
 
   @JsonProperty
   @NotNull
@@ -242,12 +242,12 @@ public class UIConfiguration {
     this.extraScript = extraScript;
   }
 
-  public boolean isGenerateAuthHeader() {
-    return generateAuthHeader;
+  public String getAuthTokenKey() {
+    return authTokenKey;
   }
 
-  public void setGenerateAuthHeader(boolean generateAuthHeader) {
-    this.generateAuthHeader = generateAuthHeader;
+  public void setAuthTokenKey(String authTokenKey) {
+    this.authTokenKey = authTokenKey;
   }
 
   public String getAuthCookieName() {
