@@ -67,6 +67,43 @@
     </dependency>
   </dependencies>
 
+  <build>
+    <pluginManagement>
+      <plugins>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-shade-plugin</artifactId>
+          <configuration combine.self="override">
+            <minimizeJar>true</minimizeJar>
+            <shadedArtifactAttached>true</shadedArtifactAttached>
+            <shadedClassifierName>shaded</shadedClassifierName>
+            <relocations>
+              <relocation>
+                <pattern>org.apache.mesos</pattern>
+                <shadedPattern>com.hubspot.singularity.shaded.org.apache.mesos</shadedPattern>
+              </relocation>
+            </relocations>
+          </configuration>
+        </plugin>
+      </plugins>
+    </pluginManagement>
+
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-shade-plugin</artifactId>
+        <executions>
+          <execution>
+            <phase>package</phase>
+            <goals>
+              <goal>shade</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+
 </project>
 
 <!-- Local Variables:     -->
