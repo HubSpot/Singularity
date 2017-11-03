@@ -451,6 +451,15 @@ const Utils = {
       }[type]
   },
 
+  glyphiconForRequestState: (state) => {
+    return {
+      'DELETING': 'trash',
+      'ACTIVE': 'ok',
+      'PAUSED': 'pause',
+      'SYSTEM_COOLDOWN': 'warning-sign'
+    }[state]
+  },
+
   enums: {
     SingularityRequestTypes: ['SERVICE', 'WORKER', 'SCHEDULED', 'ON_DEMAND', 'RUN_ONCE'],
     SingularityEmailDestination: ['OWNERS', 'ACTION_TAKER', 'ADMINS'],

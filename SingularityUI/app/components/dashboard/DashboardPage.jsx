@@ -67,6 +67,17 @@ class DashboardPage extends Component {
       );
       lastEventTime = request.lastHistory.createdAt;
     }
+    if (request.request.requestType != 'SERVICE' && request.request.requestType != 'WORKER' && request.mostRecentTask && request.mostRecentTask.updatedAt > lastEventTime) {
+      lastEvent = (
+        <p>
+          <Link to={`task/${request.mostRecentTask.taskId.id}`}>
+            <strong>{Utils.humanizeText(request.mostRecentTask.lastTaskState)}</strong>
+          </Link>
+          {` ${Utils.timestampFromNow(request.mostRecentTask.updatedAt)}`}
+        </p>
+      );
+      lastEventTime = request.mostRecentTask.updatedAt;
+    }
     if (!lastEvent) {
       lastEvent = "No Recent Activity";
     }
@@ -108,6 +119,7 @@ class DashboardPage extends Component {
         {[
           Cols.Starred,
           Cols.Type,
+          Cols.State,
           Cols.RequestId,
           summaryColumn,
           Cols.Actions

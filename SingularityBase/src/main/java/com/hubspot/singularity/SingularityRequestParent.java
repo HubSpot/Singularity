@@ -22,13 +22,14 @@ public class SingularityRequestParent {
   private final Optional<SingularityExpiringSkipHealthchecks> expiringSkipHealthchecks;
   private final Optional<SingularityTaskIdsByStatus> taskIds;
   private final Optional<SingularityRequestHistory> lastHistory;
+  private final Optional<SingularityTaskIdHistory> mostRecentTask;
 
   public SingularityRequestParent(SingularityRequest request, RequestState state) {
     this(request, state, Optional.absent());
   }
 
   public SingularityRequestParent(SingularityRequest request, RequestState state, Optional<SingularityRequestDeployState> requestDeployState) {
-    this(request, state, requestDeployState, Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent());
+    this(request, state, requestDeployState, Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent());
   }
 
   @JsonCreator
@@ -43,7 +44,8 @@ public class SingularityRequestParent {
                                   @JsonProperty("expiringScale") Optional<SingularityExpiringScale> expiringScale,
                                   @JsonProperty("expiringSkipHealthchecks") Optional<SingularityExpiringSkipHealthchecks> expiringSkipHealthchecks,
                                   @JsonProperty("taskIds") Optional<SingularityTaskIdsByStatus> taskIds,
-                                  @JsonProperty("lastHistory") Optional<SingularityRequestHistory> lastHistory) {
+                                  @JsonProperty("lastHistory") Optional<SingularityRequestHistory> lastHistory,
+                                  @JsonProperty("mostRecentTask") Optional<SingularityTaskIdHistory> mostRecentTask) {
     this.request = request;
     this.state = state;
     this.requestDeployState = requestDeployState;
@@ -56,6 +58,7 @@ public class SingularityRequestParent {
     this.expiringSkipHealthchecks = expiringSkipHealthchecks;
     this.taskIds = taskIds;
     this.lastHistory = lastHistory;
+    this.mostRecentTask = mostRecentTask;
   }
 
 
@@ -107,6 +110,10 @@ public class SingularityRequestParent {
     return lastHistory;
   }
 
+  public Optional<SingularityTaskIdHistory> getMostRecentTask() {
+    return mostRecentTask;
+  }
+
   @Override
   public String toString() {
     return "SingularityRequestParent{" +
@@ -122,6 +129,7 @@ public class SingularityRequestParent {
         ", expiringSkipHealthchecks=" + expiringSkipHealthchecks +
         ", taskIds=" + taskIds +
         ", lastHistory=" + lastHistory +
+        ", mostRecentTask=" + mostRecentTask +
         '}';
   }
 }
