@@ -107,16 +107,13 @@ export default class RequestSummaryBox extends Component {
     }
 
     return (
-      <Well className="request-summary" bsStyle={this.getActivityPanelStyle(this.props.request)} bsSize="small">
+      <div className="request-summary">
         <Row>
-          <Col md={2}>
+          <Col md={3}>
             {activeDeploy}
           </Col>
-          <Col md={8}>
+          <Col md={9}>
             {this.props.currentEvent}
-          </Col>
-          <Col md={2}>
-            <span className="request-state" data-state={this.props.request.state}>{Utils.humanizeText(this.props.request.state)}</span>
           </Col>
         </Row>
         {tasks.length > 0 &&
@@ -147,7 +144,7 @@ export default class RequestSummaryBox extends Component {
             </Col>
           </Row>
         }
-      </Well>
+      </div>
     );
   }
 }

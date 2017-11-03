@@ -84,8 +84,8 @@ class RequestsPage extends Component {
         return [
           Cols.Starred,
           Cols.Type,
-          Cols.RequestId,
           Cols.State,
+          Cols.RequestId,
           Cols.Instances,
           Cols.Group,
           Cols.Actions
@@ -94,8 +94,8 @@ class RequestsPage extends Component {
         return [
           Cols.Starred,
           Cols.Type,
-          Cols.RequestId,
           Cols.State,
+          Cols.RequestId,
           Cols.Instances,
           Cols.DeployId,
           Cols.DeployUser,

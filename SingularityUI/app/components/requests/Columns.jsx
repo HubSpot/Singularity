@@ -6,7 +6,7 @@ import Column from '../common/table/Column';
 import Utils from '../../utils';
 
 import JSONButton from '../common/JSONButton';
-import { Glyphicon } from 'react-bootstrap'
+import { Glyphicon, Dropdown, MenuItem } from 'react-bootstrap'
 import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
 import ToolTip from 'react-bootstrap/lib/Tooltip';
 
@@ -114,7 +114,20 @@ export const State = (
     id="state"
     key="state"
     cellData={
-      (rowData) => Utils.humanizeText(rowData.state)
+      (rowData) => Utils.humanizeText(rowData.state) //PAUSED DELETING ACTIVE SYSTEM_COOLDOWN
+    }
+    cellRender={(cellData, rowData) => {
+        const tooltip = (
+          <ToolTip id="view-request-state">
+            {cellData}
+          </ToolTip>
+        )
+        return (
+          <OverlayTrigger placement="top" id="view-request-state-overlay" overlay={tooltip}>
+            <Glyphicon glyph={Utils.glyphiconForRequestState(rowData.state)} />
+          </OverlayTrigger>
+        );
+      }
     }
     sortable={true}
   />
@@ -209,51 +222,66 @@ export const Actions = (
     cellRender={
       (cellData, rowData) => {
         const edit = !config.hideNewRequestButton && (
-          <OverlayTrigger placement="top" id="view-edit-overlay" overlay={editTooltip}>
-            <Link to={`requests/edit/${rowData.id}`} alt="Edit">
-              <span className="glyphicon glyphicon-edit"></span>
-            </Link>
-          </OverlayTrigger>
+          <li className="col-xs-2">
+            <OverlayTrigger placement="top" id="view-edit-overlay" overlay={editTooltip}>
+              <Link to={`requests/edit/${rowData.id}`} alt="Edit">
+                <span className="glyphicon glyphicon-edit"></span>
+              </Link>
+            </OverlayTrigger>
+          </li>
         );
 
         const unpause = cellData.state === 'PAUSED' && (
-          <UnpauseButton requestId={cellData.id} />
+          <li className="col-xs-2"><UnpauseButton requestId={cellData.id} /></li>
         );
 
         const pause = cellData.state != 'PAUSED' && (
-          <PauseButton
-            requestId={cellData.id}
-            isScheduled={cellData.requestType === 'SCHEDULED'}
-          />
+          <li className="col-xs-2">
+            <PauseButton
+              requestId={cellData.id}
+              isScheduled={cellData.requestType === 'SCHEDULED'}
+            />
+          </li>
         );
 
         const scale = cellData.canBeScaled && (
-          <ScaleButton
-            requestId={cellData.id}
-            currentInstances={cellData.request.instances}
-            bounceAfterScaleDefault={Utils.maybe(cellData.request, ['bounceAfterScale'], false)}
-          />
+          <li className="col-xs-2">
+            <ScaleButton
+              requestId={cellData.id}
+              currentInstances={cellData.request.instances}
+              bounceAfterScaleDefault={Utils.maybe(cellData.request, ['bounceAfterScale'], false)}
+            />
+          </li>
         );
 
         const runNow = cellData.canBeRunNow && (
-          <RunNowButton requestId={cellData.id} />
+          <li className="col-xs-2"><RunNowButton requestId={cellData.id} /></li>
         );
 
         return (
-          <div className="hidden-xs">
-            {scale}
-            {runNow}
-            {unpause}
-            {pause}
-            <RemoveButton 
-              requestId={cellData.id}
-              loadBalancerData={Utils.maybe(cellData, ['activeDeploy', 'loadBalancerOptions'], {})}
-            />
-            <JSONButton className="inline" object={cellData} showOverlay={true}>
-              {'{ }'}
-            </JSONButton>
-            {edit}
-          </div>
+          <Dropdown id={rowData.id} pullRight>
+            <Dropdown.Toggle>
+              Actions
+            </Dropdown.Toggle>
+            <Dropdown.Menu>
+              {scale}
+              {runNow}
+              {unpause}
+              {pause}
+              <li className="col-xs-2">
+                <RemoveButton 
+                  requestId={cellData.id}
+                  loadBalancerData={Utils.maybe(cellData, ['activeDeploy', 'loadBalancerOptions'], {})}
+                />
+              </li>
+              <li className="col-xs-2">
+                <JSONButton className="inline" object={cellData} showOverlay={true}>
+                  {'{ }'}
+                </JSONButton>
+              </li>
+              {edit}
+            </Dropdown.Menu>
+          </Dropdown>
         );
       }
     }

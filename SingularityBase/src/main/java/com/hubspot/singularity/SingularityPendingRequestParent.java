@@ -16,7 +16,7 @@ public class SingularityPendingRequestParent extends SingularityRequestParent {
     return new SingularityPendingRequestParent(singularityRequestParent.getRequest(), singularityRequestParent.getState(), singularityRequestParent.getRequestDeployState(),
         singularityRequestParent.getActiveDeploy(), singularityRequestParent.getPendingDeploy(), singularityRequestParent.getPendingDeployState(), pendingRequest,
         singularityRequestParent.getExpiringBounce(), singularityRequestParent.getExpiringPause(), singularityRequestParent.getExpiringScale(),
-        singularityRequestParent.getExpiringSkipHealthchecks(), singularityRequestParent.getTaskIds(), singularityRequestParent.getLastHistory());
+        singularityRequestParent.getExpiringSkipHealthchecks(), singularityRequestParent.getTaskIds(), singularityRequestParent.getLastHistory(), singularityRequestParent.getMostRecentTask());
   }
 
   @JsonCreator
@@ -32,8 +32,9 @@ public class SingularityPendingRequestParent extends SingularityRequestParent {
                                          @JsonProperty("expiringScale") Optional<SingularityExpiringScale> expiringScale,
                                          @JsonProperty("expiringSkipHealthchecks") Optional<SingularityExpiringSkipHealthchecks> expiringSkipHealthchecks,
                                          @JsonProperty("taskIds") Optional<SingularityTaskIdsByStatus> taskIds,
-                                         @JsonProperty("recentHistory") Optional<SingularityRequestHistory> recentHistory) {
-    super(request, state, requestDeployState, activeDeploy, pendingDeploy, pendingDeployState, expiringBounce, expiringPause, expiringScale, expiringSkipHealthchecks, taskIds, recentHistory);
+                                         @JsonProperty("lastHistory") Optional<SingularityRequestHistory> lastHistory,
+                                         @JsonProperty("mostRecentTask") Optional<SingularityTaskIdHistory> mostRecentTask) {
+    super(request, state, requestDeployState, activeDeploy, pendingDeploy, pendingDeployState, expiringBounce, expiringPause, expiringScale, expiringSkipHealthchecks, taskIds, lastHistory, mostRecentTask);
     this.pendingRequest = pendingRequest;
   }
 

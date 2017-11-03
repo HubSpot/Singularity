@@ -151,7 +151,7 @@ export default class RequestFilters extends React.Component {
       return (
         <li key={index} className={isActive ? 'active' : ''}>
           <a onClick={() => this.toggleRequestType(requestType)}>
-            {isActive ? <Glyphicon glyph="ok" /> : <span className="icon-placeholder" />} {Utils.humanizeText(requestType)}
+            {isActive ? <Glyphicon glyph="ok" /> : <span className="icon-placeholder" />} {Utils.humanizeText(requestType)} <Glyphicon glyph={Utils.glyphiconForType(requestType)} />
           </a>
         </li>
       );

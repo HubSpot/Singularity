@@ -27,7 +27,9 @@ import com.hubspot.singularity.SingularityRequestHistory;
 import com.hubspot.singularity.SingularityRequestHistory.RequestHistoryType;
 import com.hubspot.singularity.SingularityRequestParent;
 import com.hubspot.singularity.SingularityRequestWithState;
+import com.hubspot.singularity.SingularityTaskHistoryQuery;
 import com.hubspot.singularity.SingularityTaskId;
+import com.hubspot.singularity.SingularityTaskIdHistory;
 import com.hubspot.singularity.SingularityTaskIdsByStatus;
 import com.hubspot.singularity.SingularityUser;
 import com.hubspot.singularity.SingularityUserSettings;
@@ -38,6 +40,7 @@ import com.hubspot.singularity.data.SingularityValidator;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.data.UserManager;
 import com.hubspot.singularity.data.history.RequestHistoryHelper;
+import com.hubspot.singularity.data.history.TaskHistoryHelper;
 import com.hubspot.singularity.expiring.SingularityExpiringBounce;
 import com.hubspot.singularity.scheduler.SingularityDeployHealthHelper;
 import com.hubspot.singularity.smtp.SingularityMailer;
@@ -53,9 +56,18 @@ public class RequestHelper {
   private final RequestHistoryHelper requestHistoryHelper;
   private final TaskManager taskManager;
   private final SingularityDeployHealthHelper deployHealthHelper;
+  private final TaskHistoryHelper taskHistoryHelper;
 
   @Inject
-  public RequestHelper(RequestManager requestManager, SingularityMailer mailer, DeployManager deployManager, SingularityValidator validator, UserManager userManager, RequestHistoryHelper requestHistoryHelper, TaskManager taskManager, SingularityDeployHealthHelper deployHealthHelper) {
+  public RequestHelper(RequestManager requestManager,
+                       SingularityMailer mailer,
+                       DeployManager deployManager,
+                       SingularityValidator validator,
+                       UserManager userManager,
+                       RequestHistoryHelper requestHistoryHelper,
+                       TaskManager taskManager,
+                       SingularityDeployHealthHelper deployHealthHelper,
+                       TaskHistoryHelper taskHistoryHelper) {
     this.requestManager = requestManager;
     this.mailer = mailer;
     this.deployManager = deployManager;
@@ -64,6 +76,7 @@ public class RequestHelper {
     this.requestHistoryHelper = requestHistoryHelper;
     this.taskManager = taskManager;
     this.deployHealthHelper = deployHealthHelper;
+    this.taskHistoryHelper = taskHistoryHelper;
   }
 
   public long unpause(SingularityRequest request, Optional<String> user, Optional<String> message, Optional<Boolean> skipHealthchecks) {
@@ -232,7 +245,8 @@ public class RequestHelper {
           includeFullRequestData ? requestManager.getExpiringScale(requestWithState.getRequest().getId()) : Optional.absent(),
           includeFullRequestData ? requestManager.getExpiringSkipHealthchecks(requestWithState.getRequest().getId()) : Optional.absent(),
           includeFullRequestData ? getTaskIdsByStatusForRequest(requestWithState) : Optional.absent(),
-          includeFullRequestData ? requestIdToLastHistory.computeIfAbsent(requestWithState.getRequest().getId(), requestHistoryHelper::getLastHistory) : Optional.absent()));
+          includeFullRequestData ? requestIdToLastHistory.computeIfAbsent(requestWithState.getRequest().getId(),requestHistoryHelper::getLastHistory) : Optional.absent(),
+          includeFullRequestData ? getMostRecentTask(requestWithState.getRequest().getId()) : Optional.absent()));
     }
 
     return parents;
@@ -245,6 +259,14 @@ public class RequestHelper {
     }
 
     return getTaskIdsByStatusForRequest(requestWithState.get());
+  }
+
+  public Optional<SingularityTaskIdHistory> getMostRecentTask(String requestId) {
+    List<SingularityTaskIdHistory> maybeRecentTasks = taskHistoryHelper.getBlendedHistory(new SingularityTaskHistoryQuery(requestId), 0 , 1);
+    if (!maybeRecentTasks.isEmpty()) {
+      return Optional.of(maybeRecentTasks.get(0));
+    }
+    return Optional.absent();
   }
 
   private Optional<SingularityTaskIdsByStatus> getTaskIdsByStatusForRequest(SingularityRequestWithState requestWithState) {
