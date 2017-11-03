@@ -145,6 +145,10 @@
                 <pattern>com.github.rholder</pattern>
                 <shadedPattern>com.hubspot.singularity.shaded.com.github.rholder</shadedPattern>
               </relocation>
+              <relocation>
+                <pattern>org.apache.mesos</pattern>
+                <shadedPattern>com.hubspot.singularity.shaded.org.apache.mesos.oneonetwo</shadedPattern>
+              </relocation>
             </relocations>
           </configuration>
         </plugin>
