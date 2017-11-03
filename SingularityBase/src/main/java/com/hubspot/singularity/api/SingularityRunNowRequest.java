@@ -6,6 +6,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
 import com.hubspot.mesos.Resources;
+import com.hubspot.mesos.SingularityMesosArtifact;
 import com.wordnik.swagger.annotations.ApiModelProperty;
 
 public class SingularityRunNowRequest {
@@ -15,6 +16,7 @@ public class SingularityRunNowRequest {
   private final Optional<List<String>> commandLineArgs;
   private final Optional<Boolean> skipHealthchecks;
   private final Optional<Resources> resources;
+  private final Optional<List<SingularityMesosArtifact>> extraArtifacts;
   private final Optional<Long> runAt;
 
   public SingularityRunNowRequest(
@@ -24,7 +26,18 @@ public class SingularityRunNowRequest {
       Optional<List<String>> commandLineArgs,
       Optional<Resources> resources
   ) {
-    this(message, skipHealthchecks, runId, commandLineArgs, resources, Optional.<Long>absent());
+    this(message, skipHealthchecks, runId, commandLineArgs, resources, Optional.<List<SingularityMesosArtifact>>absent(), Optional.<Long>absent());
+  }
+
+  public SingularityRunNowRequest(
+      Optional<String> message,
+      Optional<Boolean> skipHealthchecks,
+      Optional<String> runId,
+      Optional<List<String>> commandLineArgs,
+      Optional<Resources> resources,
+      Optional<Long> runAt
+  ) {
+    this(message, skipHealthchecks, runId, commandLineArgs, resources, Optional.<List<SingularityMesosArtifact>>absent(), runAt);
   }
 
   @JsonCreator
@@ -33,12 +46,14 @@ public class SingularityRunNowRequest {
                                   @JsonProperty("runId") Optional<String> runId,
                                   @JsonProperty("commandLineArgs") Optional<List<String>> commandLineArgs,
                                   @JsonProperty("resources") Optional<Resources> resources,
+                                  @JsonProperty("extraArtifacts") Optional<List<SingularityMesosArtifact>> extraArtifacts,
                                   @JsonProperty("runAt") Optional<Long> runAt) {
     this.message = message;
     this.commandLineArgs = commandLineArgs;
     this.runId = runId;
     this.skipHealthchecks = skipHealthchecks;
     this.resources = resources;
+    this.extraArtifacts = extraArtifacts;
     this.runAt = runAt;
   }
 
@@ -67,6 +82,11 @@ public class SingularityRunNowRequest {
     return resources;
   }
 
+  @ApiModelProperty(required=false, value="Additional artifacts to download for this run")
+  public Optional<List<SingularityMesosArtifact>> getExtraArtifacts() {
+    return extraArtifacts;
+  }
+
   @ApiModelProperty(required=false, value="Schedule this task to run at a specified time")
   public Optional<Long> getRunAt() {
     return runAt;
@@ -80,6 +100,7 @@ public class SingularityRunNowRequest {
         ", commandLineArgs=" + commandLineArgs +
         ", skipHealthchecks=" + skipHealthchecks +
         ", resources=" + resources +
+        ", extraArtifacts=" + extraArtifacts +
         ", runAt=" + runAt +
         '}';
   }
