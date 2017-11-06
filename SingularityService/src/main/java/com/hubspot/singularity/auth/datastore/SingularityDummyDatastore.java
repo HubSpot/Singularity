@@ -14,8 +14,8 @@ public class SingularityDummyDatastore implements SingularityAuthDatastore {
   }
 
   @Override
-  public Optional<SingularityUser> getUser(String username) {
-    return Optional.of(new SingularityUser(username, Optional.of(username), Optional.of(username), Collections.<String>emptySet()));
+  public java.util.Optional<SingularityUser> getUser(String username) {
+    return java.util.Optional.of(new SingularityUser(username, Optional.of(username), Optional.of(username), Collections.emptySet()));
   }
 
   @Override

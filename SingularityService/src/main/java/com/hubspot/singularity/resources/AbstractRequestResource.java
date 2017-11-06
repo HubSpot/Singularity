@@ -25,25 +25,23 @@ public class AbstractRequestResource extends AbstractLeaderAwareResource {
 
   protected final RequestManager requestManager;
   protected final DeployManager deployManager;
-  protected final Optional<SingularityUser> user;
   protected final SingularityValidator validator;
   protected final SingularityAuthorizationHelper authorizationHelper;
 
-  public AbstractRequestResource(RequestManager requestManager, DeployManager deployManager, Optional<SingularityUser> user, SingularityValidator validator, SingularityAuthorizationHelper authorizationHelper,
+  public AbstractRequestResource(RequestManager requestManager, DeployManager deployManager, SingularityValidator validator, SingularityAuthorizationHelper authorizationHelper,
                                  AsyncHttpClient httpClient, LeaderLatch leaderLatch, ObjectMapper objectMapper) {
     super(httpClient, leaderLatch, objectMapper);
     this.requestManager = requestManager;
     this.deployManager = deployManager;
-    this.user = user;
     this.validator = validator;
     this.authorizationHelper = authorizationHelper;
   }
 
-  protected SingularityRequestWithState fetchRequestWithState(String requestId) {
-    return fetchRequestWithState(requestId, false);
+  protected SingularityRequestWithState fetchRequestWithState(String requestId, SingularityUser user) {
+    return fetchRequestWithState(requestId, false, user);
   }
 
-  protected SingularityRequestWithState fetchRequestWithState(String requestId, boolean useWebCache) {
+  protected SingularityRequestWithState fetchRequestWithState(String requestId, boolean useWebCache, SingularityUser user) {
     Optional<SingularityRequestWithState> request = requestManager.getRequest(requestId, useWebCache);
 
     checkNotFound(request.isPresent(), "Couldn't find request with id %s", requestId);

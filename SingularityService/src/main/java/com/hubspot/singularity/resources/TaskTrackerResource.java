@@ -10,10 +10,13 @@ import javax.ws.rs.core.MediaType;
 
 import com.google.common.base.Optional;
 import com.google.inject.Inject;
+import com.hubspot.singularity.SingularityAuthorizationScope;
 import com.hubspot.singularity.SingularityPendingTask;
 import com.hubspot.singularity.SingularityTaskHistory;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTaskState;
+import com.hubspot.singularity.SingularityUser;
+import com.hubspot.singularity.auth.SingularityAuthorizationHelper;
 import com.hubspot.singularity.config.ApiPaths;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.data.history.HistoryManager;
@@ -22,17 +25,21 @@ import com.wordnik.swagger.annotations.ApiOperation;
 import com.wordnik.swagger.annotations.ApiResponse;
 import com.wordnik.swagger.annotations.ApiResponses;
 
+import io.dropwizard.auth.Auth;
+
 @Path(ApiPaths.TASK_TRACKER_RESOURCE_PATH)
 @Produces({MediaType.APPLICATION_JSON})
 @Api(description="Find a task by taskId or runId", value=ApiPaths.TASK_TRACKER_RESOURCE_PATH)
 public class TaskTrackerResource {
   private final TaskManager taskManager;
   private final HistoryManager historyManager;
+  private final SingularityAuthorizationHelper authorizationHelper;
 
   @Inject
-  public TaskTrackerResource(TaskManager taskManager, HistoryManager historyManager) {
+  public TaskTrackerResource(TaskManager taskManager, HistoryManager historyManager, SingularityAuthorizationHelper authorizationHelper) {
     this.taskManager = taskManager;
     this.historyManager = historyManager;
+    this.authorizationHelper = authorizationHelper;
   }
 
   @GET
@@ -41,7 +48,8 @@ public class TaskTrackerResource {
   @ApiResponses({
       @ApiResponse(code=404, message="Task with this id does not exist")
   })
-  public Optional<SingularityTaskState> getTaskState(@PathParam("taskId") String taskId) {
+  public Optional<SingularityTaskState> getTaskState(@Auth SingularityUser user, @PathParam("taskId") String taskId) {
+    authorizationHelper.checkForAuthorizationByTaskId(taskId, user, SingularityAuthorizationScope.READ);
     return getTaskStateFromId(SingularityTaskId.valueOf(taskId));
   }
 
@@ -51,7 +59,9 @@ public class TaskTrackerResource {
   @ApiResponses({
       @ApiResponse(code=404, message="Task with this runId does not exist")
   })
-  public Optional<SingularityTaskState> getTaskStateByRunId(@PathParam("requestId") String requestId, @PathParam("runId") String runId) {
+  public Optional<SingularityTaskState> getTaskStateByRunId(@Auth SingularityUser user, @PathParam("requestId") String requestId, @PathParam("runId") String runId) {
+    authorizationHelper.checkForAuthorizationByRequestId(requestId, user, SingularityAuthorizationScope.READ);
+
     // Check if it's active or inactive
     Optional<SingularityTaskId> maybeTaskId = taskManager.getTaskByRunId(requestId, runId);
     if (maybeTaskId.isPresent()) {
