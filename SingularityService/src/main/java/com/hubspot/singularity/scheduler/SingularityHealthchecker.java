@@ -20,6 +20,7 @@ import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import com.hubspot.deploy.HealthcheckOptions;
+import com.hubspot.mesos.MesosUtils;
 import com.hubspot.singularity.ExtendedTaskState;
 import com.hubspot.singularity.HealthcheckProtocol;
 import com.hubspot.singularity.SingularityAbort;
@@ -213,7 +214,7 @@ public class SingularityHealthchecker {
 
     final String hostname = task.getHostname();
 
-    Optional<Long> healthcheckPort = options.getPortNumber().or(task.getPortByIndex(options.getPortIndex().or(0)));
+    Optional<Long> healthcheckPort = options.getPortNumber().or(MesosUtils.getPortByIndex(task.getMesosTask().getResources(), options.getPortIndex().or(0)));
 
     if (!healthcheckPort.isPresent() || healthcheckPort.get() < 1L) {
       LOG.warn("Couldn't find a port for health check for task {}", task);

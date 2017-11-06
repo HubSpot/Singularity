@@ -36,6 +36,7 @@ import com.google.common.primitives.Ints;
 import com.google.inject.Inject;
 import com.google.protobuf.ByteString;
 import com.hubspot.deploy.ExecutorDataBuilder;
+import com.hubspot.mesos.MesosProtosUtils;
 import com.hubspot.mesos.MesosUtils;
 import com.hubspot.mesos.Resources;
 import com.hubspot.mesos.SingularityContainerInfo;
@@ -44,10 +45,9 @@ import com.hubspot.mesos.SingularityDockerNetworkType;
 import com.hubspot.mesos.SingularityDockerParameter;
 import com.hubspot.mesos.SingularityDockerPortMapping;
 import com.hubspot.mesos.SingularityMesosArtifact;
+import com.hubspot.mesos.SingularityMesosTaskHolder;
 import com.hubspot.mesos.SingularityMesosTaskLabel;
 import com.hubspot.mesos.SingularityVolume;
-import com.hubspot.mesos.json.SingularityMesosOfferObject;
-import com.hubspot.mesos.json.SingularityMesosTaskObject;
 import com.hubspot.singularity.SingularityS3UploaderFile;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskExecutorData;
@@ -72,7 +72,7 @@ class SingularityMesosTaskBuilder {
     this.configuration = configuration;
   }
 
-  public SingularityTask buildTask(SingularityOfferHolder offerHolder, List<Resource> availableResources, SingularityTaskRequest taskRequest, Resources desiredTaskResources, Resources desiredExecutorResources) {
+  public SingularityMesosTaskHolder buildTask(SingularityOfferHolder offerHolder, List<Resource> availableResources, SingularityTaskRequest taskRequest, Resources desiredTaskResources, Resources desiredExecutorResources) {
     final String sanitizedRackId = offerHolder.getSanitizedRackId();
     final String sanitizedHost = offerHolder.getSanitizedHost();
 
@@ -151,12 +151,13 @@ class SingularityMesosTaskBuilder {
 
     TaskInfo task = bldr.build();
 
-    return new SingularityTask(taskRequest,
-        taskId,
-        offerHolder.getOffers().stream().map(SingularityMesosOfferObject::fromProtos).collect(Collectors.toList()),
-        task,
-        SingularityMesosTaskObject.fromProtos(task),
-        Optional.of(offerHolder.getRackId()));
+    return new SingularityMesosTaskHolder(
+        new SingularityTask(taskRequest,
+            taskId,
+            offerHolder.getOffers().stream().map((o) -> MesosProtosUtils.offerFromProtos(o)).collect(Collectors.toList()),
+            MesosProtosUtils.taskFromProtos(task),
+            Optional.of(offerHolder.getRackId())),
+        task);
   }
 
   private boolean hasLiteralPortMapping(Optional<SingularityContainerInfo> maybeContainerInfo) {

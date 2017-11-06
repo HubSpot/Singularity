@@ -41,11 +41,10 @@ import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import com.hubspot.baragon.models.BaragonRequestState;
 import com.hubspot.deploy.HealthcheckOptionsBuilder;
+import com.hubspot.mesos.MesosProtosUtils;
 import com.hubspot.mesos.MesosUtils;
 import com.hubspot.mesos.Resources;
-import com.hubspot.mesos.json.SingularityMesosOfferObject;
-import com.hubspot.mesos.json.SingularityMesosTaskObject;
-import com.hubspot.mesos.json.SingularityMesosTaskStatusObject;
+import com.hubspot.mesos.protos.MesosTaskStatusObject;
 import com.hubspot.singularity.DeployState;
 import com.hubspot.singularity.LoadBalancerRequestType;
 import com.hubspot.singularity.LoadBalancerRequestType.LoadBalancerRequestId;
@@ -319,7 +318,7 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
         .setName("name")
         .build();
 
-    SingularityTask task = new SingularityTask(taskRequest, taskId, Collections.singletonList(SingularityMesosOfferObject.fromProtos(offer)), taskInfo, SingularityMesosTaskObject.fromProtos(taskInfo), Optional.of("rack1"));
+    SingularityTask task = new SingularityTask(taskRequest, taskId, Collections.singletonList(MesosProtosUtils.offerFromProtos(offer)), MesosProtosUtils.taskFromProtos(taskInfo), Optional.of("rack1"));
 
     taskManager.savePendingTask(pendingTask);
 
@@ -342,8 +341,8 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
 
   protected void statusUpdate(SingularityTask task, TaskState state, Optional<Long> timestamp) {
     TaskStatus.Builder bldr = TaskStatus.newBuilder()
-        .setTaskId(task.getMesosTask().getTaskId())
-        .setAgentId(task.getAgentId())
+        .setTaskId(TaskID.newBuilder().setValue(task.getMesosTask().getTaskId().getValue()).build())
+        .setAgentId(AgentID.newBuilder().setValue(task.getAgentId().getValue()).build())
         .setState(state);
 
     if (timestamp.isPresent()) {
@@ -704,12 +703,12 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
     }
   }
 
-  protected void saveLastActiveTaskStatus(SingularityTask task, Optional<SingularityMesosTaskStatusObject> taskStatus, long millisAdjustment) {
+  protected void saveLastActiveTaskStatus(SingularityTask task, Optional<MesosTaskStatusObject> taskStatus, long millisAdjustment) {
     taskManager.saveLastActiveTaskStatus(new SingularityTaskStatusHolder(task.getTaskId(), taskStatus, System.currentTimeMillis() + millisAdjustment, serverId, Optional.of("slaveId")));
   }
 
-  protected SingularityMesosTaskStatusObject buildTaskStatus(SingularityTask task) {
-    return SingularityMesosTaskStatusObject.fromProtos(TaskStatus.newBuilder().setTaskId(TaskID.newBuilder().setValue(task.getTaskId().getId())).setState(TaskState.TASK_RUNNING).build());
+  protected MesosTaskStatusObject buildTaskStatus(SingularityTask task) {
+    return MesosTaskStatusObject.fromProtos(TaskStatus.newBuilder().setTaskId(TaskID.newBuilder().setValue(task.getTaskId().getId())).setState(TaskState.TASK_RUNNING).build());
   }
 
   protected SingularityRequest buildRequest(String requestId) {

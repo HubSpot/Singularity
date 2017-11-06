@@ -17,7 +17,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import com.hubspot.mesos.JavaUtils;
-import com.hubspot.mesos.json.SingularityMesosTaskStatusObject;
+import com.hubspot.mesos.protos.MesosTaskStatusObject;
 import com.hubspot.singularity.ExtendedTaskState;
 import com.hubspot.singularity.InvalidSingularityTaskIdException;
 import com.hubspot.singularity.SingularityCreateResult;
@@ -180,7 +180,7 @@ public class SingularityMesosStatusUpdateHandler {
 
     final SingularityTaskId taskIdObj = maybeTaskId.get();
 
-    final SingularityTaskStatusHolder newTaskStatusHolder = new SingularityTaskStatusHolder(taskIdObj, Optional.of(SingularityMesosTaskStatusObject.fromProtos(status)), System.currentTimeMillis(), serverId, Optional.<String>absent());
+    final SingularityTaskStatusHolder newTaskStatusHolder = new SingularityTaskStatusHolder(taskIdObj, Optional.of(MesosTaskStatusObject.fromProtos(status)), System.currentTimeMillis(), serverId, Optional.<String>absent());
     final Optional<SingularityTaskStatusHolder> previousTaskStatusHolder = taskManager.getLastActiveTaskStatus(taskIdObj);
     final ExtendedTaskState taskState = ExtendedTaskState.fromTaskState(status.getState());
 

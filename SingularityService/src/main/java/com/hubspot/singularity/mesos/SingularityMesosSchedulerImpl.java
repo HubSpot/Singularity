@@ -424,7 +424,7 @@ public class SingularityMesosSchedulerImpl extends SingularityMesosScheduler {
         if (task.get().getTaskRequest().getDeploy().getCustomExecutorCmd().isPresent()) {
           byte[] messageBytes = transcoder.toBytes(new SingularityTaskDestroyFrameworkMessage(taskId, user));
           message(Message.newBuilder()
-              .setAgentId(task.get().getMesosTask().getAgentId())
+              .setAgentId(AgentID.newBuilder().setValue(task.get().getMesosTask().getAgentId().getValue()).build())
               .setExecutorId(task.get().getMesosTask().getExecutor().getExecutorId())
               .setData(ByteString.copyFrom(messageBytes))
               .build());

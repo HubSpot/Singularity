@@ -24,6 +24,7 @@ import com.hubspot.baragon.models.BaragonService;
 import com.hubspot.baragon.models.RequestAction;
 import com.hubspot.baragon.models.UpstreamInfo;
 import com.hubspot.mesos.JavaUtils;
+import com.hubspot.mesos.MesosUtils;
 import com.hubspot.singularity.LoadBalancerRequestType.LoadBalancerRequestId;
 import com.hubspot.singularity.SingularityDeploy;
 import com.hubspot.singularity.SingularityLoadBalancerUpdate;
@@ -186,7 +187,7 @@ public class LoadBalancerClientImpl implements LoadBalancerClient {
     final List<UpstreamInfo> upstreams = Lists.newArrayListWithCapacity(tasks.size());
 
     for (SingularityTask task : tasks) {
-      final Optional<Long> maybeLoadBalancerPort = task.getPortByIndex(task.getTaskRequest().getDeploy().getLoadBalancerPortIndex().or(0));
+      final Optional<Long> maybeLoadBalancerPort = MesosUtils.getPortByIndex(task.getMesosTask().getResources(), task.getTaskRequest().getDeploy().getLoadBalancerPortIndex().or(0));
 
       if (maybeLoadBalancerPort.isPresent()) {
         String upstream = String.format("%s:%d", task.getHostname(), maybeLoadBalancerPort.get());

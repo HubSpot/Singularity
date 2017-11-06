@@ -1,4 +1,4 @@
-package com.hubspot.mesos.json;
+package com.hubspot.mesos.protos;
 
 import org.apache.mesos.v1.Protos.AgentID;
 import org.apache.mesos.v1.Protos.ContainerStatus;
@@ -15,7 +15,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
 
-public class SingularityMesosTaskStatusObject {
+public class MesosTaskStatusObject {
   private final Optional<AgentID> agentId;
   private final Optional<AgentID> slaveId;
   private final Optional<ContainerStatus> containerStatus;
@@ -31,19 +31,19 @@ public class SingularityMesosTaskStatusObject {
   private final Optional<TimeInfo> unreachableTime;
 
   @JsonCreator
-  public SingularityMesosTaskStatusObject(@JsonProperty("agentId") Optional<AgentID> agentId,
-                                          @JsonProperty("slaveId") Optional<AgentID> slaveId,
-                                          @JsonProperty("containerStatus") Optional<ContainerStatus> containerStatus,
-                                          @JsonProperty("executorID") Optional<ExecutorID> executorId,
-                                          @JsonProperty("healthy") Optional<Boolean> healthy,
-                                          @JsonProperty("labels") Optional<Labels> labels,
-                                          @JsonProperty("message") Optional<String> message,
-                                          @JsonProperty("reason") Optional<Reason> reason,
-                                          @JsonProperty("source") Optional<Source> source,
-                                          @JsonProperty("state") Optional<TaskState> state,
-                                          @JsonProperty("taskId") Optional<TaskID> taskId,
-                                          @JsonProperty("timestamp") Optional<Double> timestamp,
-                                          @JsonProperty("unreachableTime") Optional<TimeInfo> unreachableTime) {
+  public MesosTaskStatusObject(@JsonProperty("agentId") Optional<AgentID> agentId,
+                               @JsonProperty("slaveId") Optional<AgentID> slaveId,
+                               @JsonProperty("containerStatus") Optional<ContainerStatus> containerStatus,
+                               @JsonProperty("executorID") Optional<ExecutorID> executorId,
+                               @JsonProperty("healthy") Optional<Boolean> healthy,
+                               @JsonProperty("labels") Optional<Labels> labels,
+                               @JsonProperty("message") Optional<String> message,
+                               @JsonProperty("reason") Optional<Reason> reason,
+                               @JsonProperty("source") Optional<Source> source,
+                               @JsonProperty("state") Optional<TaskState> state,
+                               @JsonProperty("taskId") Optional<TaskID> taskId,
+                               @JsonProperty("timestamp") Optional<Double> timestamp,
+                               @JsonProperty("unreachableTime") Optional<TimeInfo> unreachableTime) {
     this.agentId = agentId.or(slaveId);
     this.slaveId = agentId.or(slaveId);
     this.containerStatus = containerStatus;
@@ -59,8 +59,8 @@ public class SingularityMesosTaskStatusObject {
     this.unreachableTime = unreachableTime;
   }
 
-  public static SingularityMesosTaskStatusObject fromProtos(TaskStatus status) {
-    return new SingularityMesosTaskStatusObject(
+  public static MesosTaskStatusObject fromProtos(TaskStatus status) {
+    return new MesosTaskStatusObject(
         status.hasAgentId() ? Optional.of(status.getAgentId()) : Optional.absent(),
         status.hasAgentId() ? Optional.of(status.getAgentId()) : Optional.absent(),
         status.hasContainerStatus() ? Optional.of(status.getContainerStatus()) : Optional.absent(),

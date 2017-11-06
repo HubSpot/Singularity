@@ -1,9 +1,8 @@
-package com.hubspot.mesos.json;
+package com.hubspot.mesos.protos;
 
 import java.util.Collections;
 import java.util.List;
 
-import org.apache.mesos.v1.Protos.AgentID;
 import org.apache.mesos.v1.Protos.CommandInfo;
 import org.apache.mesos.v1.Protos.ContainerInfo;
 import org.apache.mesos.v1.Protos.DiscoveryInfo;
@@ -12,8 +11,6 @@ import org.apache.mesos.v1.Protos.HealthCheck;
 import org.apache.mesos.v1.Protos.KillPolicy;
 import org.apache.mesos.v1.Protos.Labels;
 import org.apache.mesos.v1.Protos.Resource;
-import org.apache.mesos.v1.Protos.TaskID;
-import org.apache.mesos.v1.Protos.TaskInfo;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -24,12 +21,12 @@ import com.google.common.base.Optional;
  * AgentID from either a field named slaveId or a field named agentId for
  * better backwards compatibility
  */
-public class SingularityMesosTaskObject {
-  private final TaskID taskId;
+public class MesosTaskObject {
+  private final MesosStringValue taskId;
   private final Optional<ExecutorInfo> executor;
   private final Optional<Labels> labels;
-  private final AgentID agentId;
-  private final AgentID slaveId;
+  private final MesosStringValue agentId;
+  private final MesosStringValue slaveId;
   private final List<Resource> resources;
   private final Optional<CommandInfo> command;
   private final Optional<ContainerInfo> container;
@@ -38,36 +35,19 @@ public class SingularityMesosTaskObject {
   private final Optional<KillPolicy> killPolicy;
   private final String name;
 
-  public static SingularityMesosTaskObject fromProtos(TaskInfo taskInfo) {
-    return new SingularityMesosTaskObject(
-        taskInfo.getTaskId(),
-        taskInfo.hasExecutor() ? Optional.of(taskInfo.getExecutor()) : Optional.absent(),
-        taskInfo.hasLabels() ? Optional.of(taskInfo.getLabels()) : Optional.absent(),
-        taskInfo.getAgentId(),
-        null,
-        taskInfo.getResourcesList(),
-        taskInfo.hasCommand() ? Optional.of(taskInfo.getCommand()) : Optional.absent(),
-        taskInfo.hasContainer() ? Optional.of(taskInfo.getContainer()) : Optional.absent(),
-        taskInfo.hasDiscovery() ? Optional.of(taskInfo.getDiscovery()) : Optional.absent(),
-        taskInfo.hasHealthCheck() ? Optional.of(taskInfo.getHealthCheck()) : Optional.absent(),
-        taskInfo.hasKillPolicy() ? Optional.of(taskInfo.getKillPolicy()) : Optional.absent(),
-        taskInfo.getName()
-    );
-  }
-
   @JsonCreator
-  public SingularityMesosTaskObject(@JsonProperty("taskId") TaskID taskId,
-                                    @JsonProperty("executor") Optional<ExecutorInfo> executor,
-                                    @JsonProperty("labels") Optional<Labels> labels,
-                                    @JsonProperty("agentId") AgentID agentId,
-                                    @JsonProperty("slaveId") AgentID slaveId,
-                                    @JsonProperty("resources") List<Resource> resources,
-                                    @JsonProperty("command") Optional<CommandInfo> command,
-                                    @JsonProperty("container") Optional<ContainerInfo> container,
-                                    @JsonProperty("discovery") Optional<DiscoveryInfo> discovery,
-                                    @JsonProperty("healthCheck") Optional<HealthCheck> healthCheck,
-                                    @JsonProperty("killPolicy") Optional<KillPolicy> killPolicy,
-                                    @JsonProperty("name") String name) {
+  public MesosTaskObject(@JsonProperty("taskId") MesosStringValue taskId,
+                         @JsonProperty("executor") Optional<ExecutorInfo> executor,
+                         @JsonProperty("labels") Optional<Labels> labels,
+                         @JsonProperty("agentId") MesosStringValue agentId,
+                         @JsonProperty("slaveId") MesosStringValue slaveId,
+                         @JsonProperty("resources") List<Resource> resources,
+                         @JsonProperty("command") Optional<CommandInfo> command,
+                         @JsonProperty("container") Optional<ContainerInfo> container,
+                         @JsonProperty("discovery") Optional<DiscoveryInfo> discovery,
+                         @JsonProperty("healthCheck") Optional<HealthCheck> healthCheck,
+                         @JsonProperty("killPolicy") Optional<KillPolicy> killPolicy,
+                         @JsonProperty("name") String name) {
     this.taskId = taskId;
     this.executor = executor;
     this.labels = labels;
@@ -82,7 +62,7 @@ public class SingularityMesosTaskObject {
     this.name = name;
   }
 
-  public TaskID getTaskId() {
+  public MesosStringValue getTaskId() {
     return taskId;
   }
 
@@ -102,11 +82,11 @@ public class SingularityMesosTaskObject {
     return labels.isPresent();
   }
 
-  public AgentID getAgentId() {
+  public MesosStringValue getAgentId() {
     return agentId;
   }
 
-  public AgentID getSlaveId() {
+  public MesosStringValue getSlaveId() {
     return slaveId;
   }
 
@@ -167,7 +147,7 @@ public class SingularityMesosTaskObject {
       return false;
     }
 
-    SingularityMesosTaskObject that = (SingularityMesosTaskObject) o;
+    MesosTaskObject that = (MesosTaskObject) o;
 
     if (taskId != null ? !taskId.equals(that.taskId) : that.taskId != null) {
       return false;

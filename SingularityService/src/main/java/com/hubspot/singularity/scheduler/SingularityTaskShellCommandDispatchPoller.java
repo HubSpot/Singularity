@@ -63,7 +63,7 @@ public class SingularityTaskShellCommandDispatchPoller extends SingularityLeader
       }
 
       final ExecutorID executorId = task.get().getMesosTask().getExecutor().getExecutorId();
-      final AgentID slaveId = task.get().getMesosTask().getAgentId();
+      final AgentID slaveId = AgentID.newBuilder().setValue(task.get().getMesosTask().getAgentId().getValue()).build();
       final byte[] bytes = transcoder.toBytes(shellRequest);
 
       schedulerClient.frameworkMessage(executorId, slaveId, bytes);

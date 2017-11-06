@@ -148,6 +148,16 @@ public final class MesosUtils {
     return ports;
   }
 
+
+  public static Optional<Long> getPortByIndex(List<Resource> resources, int index) {
+    List<Long> ports = MesosUtils.getAllPorts(resources);
+    if (index >= ports.size() || index < 0) {
+      return Optional.absent();
+    } else {
+      return Optional.of(ports.get(index));
+    }
+  }
+
   public static Resource getPortsResource(int numPorts, Offer offer) {
     return getPortsResource(numPorts, offer.getResourcesList(), Collections.<Long>emptyList());
   }

@@ -1,16 +1,7 @@
-package com.hubspot.mesos.json;
+package com.hubspot.mesos.protos;
 
 import java.util.Collections;
 import java.util.List;
-
-import org.apache.mesos.v1.Protos.AgentID;
-import org.apache.mesos.v1.Protos.Attribute;
-import org.apache.mesos.v1.Protos.ExecutorID;
-import org.apache.mesos.v1.Protos.FrameworkID;
-import org.apache.mesos.v1.Protos.Offer;
-import org.apache.mesos.v1.Protos.OfferID;
-import org.apache.mesos.v1.Protos.Resource;
-import org.apache.mesos.v1.Protos.URL;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -18,41 +9,27 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 /*
  * Mirrors the mesos Offer object, with the exception that slaveId can be read into agentId
  */
-public class SingularityMesosOfferObject {
-  private final List<Attribute> attributes;
-  private final List<ExecutorID> executorIds;
-  private final URL url;
-  private final AgentID agentId;
-  private final AgentID slaveId;
-  private final FrameworkID frameworkId;
+public class MesosOfferObject {
+  private final List<MesosAttributeObject> attributes;
+  private final List<MesosStringValue> executorIds;
+  private final MesosURL url;
+  private final MesosStringValue agentId;
+  private final MesosStringValue slaveId;
+  private final MesosStringValue frameworkId;
   private final String hostname;
-  private final List<Resource> resources;
-  private final OfferID id;
-
-  public static final SingularityMesosOfferObject fromProtos(Offer offer) {
-    return new SingularityMesosOfferObject(
-        offer.getAttributesList(),
-        offer.getExecutorIdsList(),
-        offer.getUrl(),
-        offer.getAgentId(),
-        null,
-        offer.getFrameworkId(),
-        offer.getHostname(),
-        offer.getResourcesList(),
-        offer.getId()
-    );
-  }
+  private final List<MesosResourceObject> resources;
+  private final MesosStringValue id;
 
   @JsonCreator
-  public SingularityMesosOfferObject(@JsonProperty("attributes") List<Attribute> attributes,
-                                     @JsonProperty("executorIds") List<ExecutorID> executorIds,
-                                     @JsonProperty("url") URL url,
-                                     @JsonProperty("agentId") AgentID agentId,
-                                     @JsonProperty("slaveId") AgentID slaveId,
-                                     @JsonProperty("frameworkId") FrameworkID frameworkId,
-                                     @JsonProperty("hostname") String hostname,
-                                     @JsonProperty("resources") List<Resource> resources,
-                                     @JsonProperty("id") OfferID id) {
+  public MesosOfferObject(@JsonProperty("attributes") List<MesosAttributeObject> attributes,
+                          @JsonProperty("executorIds") List<MesosStringValue> executorIds,
+                          @JsonProperty("url") MesosURL url,
+                          @JsonProperty("agentId") MesosStringValue agentId,
+                          @JsonProperty("slaveId") MesosStringValue slaveId,
+                          @JsonProperty("frameworkId") MesosStringValue frameworkId,
+                          @JsonProperty("hostname") String hostname,
+                          @JsonProperty("resources") List<MesosResourceObject> resources,
+                          @JsonProperty("id") MesosStringValue id) {
     this.attributes = attributes;
     this.executorIds = executorIds;
     this.url = url;
@@ -64,31 +41,31 @@ public class SingularityMesosOfferObject {
     this.id = id;
   }
 
-  public SingularityMesosOfferObject sizeOptimized() {
-    return new SingularityMesosOfferObject(attributes, Collections.emptyList(), url, agentId, null, frameworkId, hostname, Collections.emptyList(), id);
+  public MesosOfferObject sizeOptimized() {
+    return new MesosOfferObject(attributes, Collections.emptyList(), url, agentId, null, frameworkId, hostname, Collections.emptyList(), id);
   }
 
-  public List<Attribute> getAttributes() {
+  public List<MesosAttributeObject> getAttributes() {
     return attributes;
   }
 
-  public List<ExecutorID> getExecutorIds() {
+  public List<MesosStringValue> getExecutorIds() {
     return executorIds;
   }
 
-  public URL getUrl() {
+  public MesosURL getUrl() {
     return url;
   }
 
-  public AgentID getAgentId() {
+  public MesosStringValue getAgentId() {
     return agentId;
   }
 
-  public AgentID getSlaveId() {
+  public MesosStringValue getSlaveId() {
     return slaveId;
   }
 
-  public FrameworkID getFrameworkId() {
+  public MesosStringValue getFrameworkId() {
     return frameworkId;
   }
 
@@ -96,11 +73,11 @@ public class SingularityMesosOfferObject {
     return hostname;
   }
 
-  public List<Resource> getResources() {
+  public List<MesosResourceObject> getResources() {
     return resources;
   }
 
-  public OfferID getId() {
+  public MesosStringValue getId() {
     return id;
   }
 
@@ -113,7 +90,7 @@ public class SingularityMesosOfferObject {
       return false;
     }
 
-    SingularityMesosOfferObject that = (SingularityMesosOfferObject) o;
+    MesosOfferObject that = (MesosOfferObject) o;
 
     if (attributes != null ? !attributes.equals(that.attributes) : that.attributes != null) {
       return false;

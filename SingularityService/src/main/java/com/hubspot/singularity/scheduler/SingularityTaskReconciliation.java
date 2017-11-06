@@ -27,7 +27,7 @@ import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import com.hubspot.mesos.JavaUtils;
-import com.hubspot.mesos.json.SingularityMesosTaskStatusObject;
+import com.hubspot.mesos.protos.MesosTaskStatusObject;
 import com.hubspot.singularity.SingularityAbort;
 import com.hubspot.singularity.SingularityAbort.AbortReason;
 import com.hubspot.singularity.SingularityMainModule;
@@ -132,7 +132,7 @@ public class SingularityTaskReconciliation {
 
   private void checkReconciliation(final long reconciliationStart, final Collection<SingularityTaskId> remainingTaskIds, final int numTimes, final Histogram histogram) {
     final List<SingularityTaskStatusHolder> taskStatusHolders = taskManager.getLastActiveTaskStatusesFor(remainingTaskIds);
-    final List<SingularityMesosTaskStatusObject> taskStatuses = Lists.newArrayListWithCapacity(taskStatusHolders.size());
+    final List<MesosTaskStatusObject> taskStatuses = Lists.newArrayListWithCapacity(taskStatusHolders.size());
 
     for (SingularityTaskStatusHolder taskStatusHolder : taskStatusHolders) {
       if (taskStatusHolder.getServerId().equals(serverId) && taskStatusHolder.getServerTimestamp() > reconciliationStart) {
@@ -153,7 +153,7 @@ public class SingularityTaskReconciliation {
         }
 
         LOG.info("Task {} didn't have a TaskStatus yet, submitting fake status", taskStatusHolder.getTaskId());
-        taskStatuses.add(SingularityMesosTaskStatusObject.fromProtos(fakeTaskStatusBuilder.build()));
+        taskStatuses.add(MesosTaskStatusObject.fromProtos(fakeTaskStatusBuilder.build()));
       }
     }
 
