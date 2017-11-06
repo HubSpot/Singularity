@@ -52,6 +52,6 @@ public class SingularityMultiMethodAuthenticator implements Authenticator<Contai
     }
 
     // Auth is disabled, return a dummy/default user
-    return Optional.of(SingularityUser.defaultUser());
+    return Optional.of(SingularityUser.DEFAULT_USER);
   }
 }
