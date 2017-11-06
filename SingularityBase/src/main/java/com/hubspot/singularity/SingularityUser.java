@@ -18,9 +18,7 @@ public class SingularityUser implements Principal {
   private final Set<String> groups;
   private final boolean authenticated;
 
-  public static SingularityUser defaultUser() {
-    return new SingularityUser("singularity", Optional.absent(), Optional.absent(), Collections.emptySet(), false);
-  }
+  public static SingularityUser DEFAULT_USER = new SingularityUser("singularity", Optional.absent(), Optional.absent(), Collections.emptySet(), false);
 
   public SingularityUser(String id, Optional<String> name, Optional<String> email, Set<String> groups) {
     this(id, name, email, groups, true);

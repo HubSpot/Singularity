@@ -189,7 +189,7 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
 
   protected Optional<String> user = Optional.absent();
 
-  protected SingularityUser singularityUser = SingularityUser.defaultUser();
+  protected SingularityUser singularityUser = SingularityUser.DEFAULT_USER;
 
   public SingularitySchedulerTestBase(boolean useDBTests) {
     super(useDBTests);
