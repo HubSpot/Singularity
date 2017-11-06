@@ -50,6 +50,6 @@ public class SingularityAuthedUserFactory extends AbstractContainerRequestValueF
     }
 
     // Auth is disabled, return a dummy/default user
-    return SingularityUser.defaultUser();
+    return SingularityUser.DEFAULT_USER;
   }
 }
