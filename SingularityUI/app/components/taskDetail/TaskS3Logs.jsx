@@ -12,7 +12,6 @@ class TaskS3Logs extends Component {
     this.state = {
       viewingGroup: null
     };
-    this.getFileType = this.getFileType.bind(this);
   }
 
   getFileType(s3File) {
@@ -23,12 +22,13 @@ class TaskS3Logs extends Component {
     const { taskStartedAt, taskId } = this.props;
     return (
       <div>
-        <a onClick={() => this.setState({ viewingGroup: null })}>
-          <h5>
+        <h5>
+          <a onClick={() => this.setState({ viewingGroup: null })}>
             <Glyphicon glyph="chevron-left" />
             <span className="file-name">Back</span>
-          </h5>
-        </a>
+          </a>
+          <span className="file-name">{this.state.viewingGroup}</span>
+        </h5>
         <UITable
           emptyTableMessage="This task has no history yet"
           data={s3Files}
