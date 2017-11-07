@@ -89,7 +89,7 @@ class TaskS3Logs extends Component {
     return (
       <ul style={{ listStyle: 'none', margin: '25px 0 50px' }}>
         {groups.map(group => (
-          <li key={group}>
+          <li key={group} style={{ paddingBottom: '10px' }}>
             <a onClick={() => this.setState({ viewingGroup: group })}>
               <Glyphicon glyph="folder-open" />
               <span className="file-name">{group}</span>
