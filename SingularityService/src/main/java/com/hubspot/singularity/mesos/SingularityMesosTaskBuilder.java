@@ -121,7 +121,7 @@ class SingularityMesosTaskBuilder {
       // This is just a temporary hack to enable disk usage reporting where we can, not an actual way to match task disk requirements to offers.
       // If the requested disk for a task is 0, disk usage reporting is not enabled.
       int taskBuilderDiskAllocationMb = configuration.getMesosConfiguration().getMesosTaskBuilderDiskAllocationMb();
-      offerHolder.subtractResources(Collections.singletonList(MesosUtils.getDiskResource(taskBuilderDiskAllocationMb, Optional.absent())));
+      offerHolder.subtractResources(Collections.singletonList(MesosUtils.getDiskResource(taskBuilderDiskAllocationMb, requiredRole)));
       bldr.addResources(MesosUtils.getDiskResource(taskBuilderDiskAllocationMb, requiredRole));
     }
 
