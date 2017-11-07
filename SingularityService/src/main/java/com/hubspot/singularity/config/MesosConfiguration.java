@@ -22,6 +22,10 @@ public class MesosConfiguration {
   private int defaultMemory = 64;
 
   private int defaultDisk = 0;
+  // ^ This refers to SingularityDeploy-scoped resources.
+
+  // v This refers to Mesos TaskInfo-scoped resources. Changing this doesn't require a redeploy of the world.
+  private int mesosTaskBuilderDiskAllocationMb = 1;
 
   private boolean checkpoint = true;
 
@@ -209,6 +213,14 @@ public class MesosConfiguration {
 
   public void setDefaultDisk(int defaultDisk) {
     this.defaultDisk = defaultDisk;
+  }
+
+  public int getMesosTaskBuilderDiskAllocationMb() {
+    return mesosTaskBuilderDiskAllocationMb;
+  }
+
+  public void setMesosTaskBuilderDiskAllocationMb(int mesosTaskBuilderDiskAllocationMb) {
+    this.mesosTaskBuilderDiskAllocationMb = mesosTaskBuilderDiskAllocationMb;
   }
 
   public String getFrameworkUser() {
