@@ -1,5 +1,6 @@
 package com.hubspot.singularity;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
@@ -21,7 +22,7 @@ public class SingularityPendingTask {
   private final Optional<Boolean> skipHealthchecks;
   private final Optional<String> message;
   private final Optional<Resources> resources;
-  private final Optional<List<SingularityMesosArtifact>> extraArtifacts;
+  private final List<SingularityMesosArtifact> extraArtifacts;
   private final Optional<String> actionId;
 
   public static Predicate<SingularityPendingTask> matchingRequest(final String requestId) {
@@ -54,7 +55,7 @@ public class SingularityPendingTask {
                                 @JsonProperty("skipHealthchecks") Optional<Boolean> skipHealthchecks,
                                 @JsonProperty("message") Optional<String> message,
                                 @JsonProperty("resources") Optional<Resources> resources,
-                                @JsonProperty("extraArtifacts") Optional<List<SingularityMesosArtifact>> extraArtifacts,
+                                @JsonProperty("extraArtifacts") List<SingularityMesosArtifact> extraArtifacts,
                                 @JsonProperty("actionId") Optional<String> actionId) {
     this.pendingTaskId = pendingTaskId;
     this.user = user;
@@ -63,7 +64,11 @@ public class SingularityPendingTask {
     this.runId = runId;
     this.skipHealthchecks = skipHealthchecks;
     this.resources = resources;
-    this.extraArtifacts = extraArtifacts;
+    if (Objects.nonNull(extraArtifacts)) {
+      this.extraArtifacts = extraArtifacts;
+    } else {
+      this.extraArtifacts = Collections.emptyList();
+    }
     this.actionId = actionId;
   }
 
@@ -112,7 +117,7 @@ public class SingularityPendingTask {
     return resources;
   }
 
-  public Optional<List<SingularityMesosArtifact>> getExtraArtifacts() {
+  public List<SingularityMesosArtifact> getExtraArtifacts() {
     return extraArtifacts;
   }
 

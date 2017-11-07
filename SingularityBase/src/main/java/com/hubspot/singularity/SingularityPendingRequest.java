@@ -1,6 +1,8 @@
 package com.hubspot.singularity;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -25,16 +27,16 @@ public class SingularityPendingRequest {
   private final Optional<String> message;
   private final Optional<String> actionId;
   private final Optional<Resources> resources;
-  private final Optional<List<SingularityMesosArtifact>> extraArtifacts;
+  private final List<SingularityMesosArtifact> extraArtifacts;
   private final Optional<Long> runAt;
 
   public SingularityPendingRequest(String requestId, String deployId, long timestamp, Optional<String> user, PendingType pendingType, Optional<Boolean> skipHealthchecks, Optional<String> message) {
-    this(requestId, deployId, timestamp, user, pendingType, Optional.<List<String>> absent(), Optional.<String> absent(), skipHealthchecks, message, Optional.<String> absent(), Optional.<Resources>absent(), Optional.<List<SingularityMesosArtifact>>absent(), Optional.<Long> absent());
+    this(requestId, deployId, timestamp, user, pendingType, Optional.<List<String>> absent(), Optional.<String> absent(), skipHealthchecks, message, Optional.<String> absent(), Optional.<Resources>absent(), null, Optional.<Long> absent());
   }
 
   public SingularityPendingRequest(String requestId, String deployId, long timestamp, Optional<String> user, PendingType pendingType, Optional<List<String>> cmdLineArgsList,
     Optional<String> runId, Optional<Boolean> skipHealthchecks, Optional<String> message, Optional<String> actionId) {
-    this(requestId, deployId, timestamp, user, pendingType, cmdLineArgsList, runId, skipHealthchecks, message, actionId, Optional.<Resources>absent(), Optional.<List<SingularityMesosArtifact>>absent(), Optional.<Long>absent());
+    this(requestId, deployId, timestamp, user, pendingType, cmdLineArgsList, runId, skipHealthchecks, message, actionId, Optional.<Resources>absent(), null, Optional.<Long>absent());
   }
 
   @JsonCreator
@@ -49,7 +51,7 @@ public class SingularityPendingRequest {
                                    @JsonProperty("message") Optional<String> message,
                                    @JsonProperty("actionId") Optional<String> actionId,
                                    @JsonProperty("resources") Optional<Resources> resources,
-                                   @JsonProperty("extraArtifacts") Optional<List<SingularityMesosArtifact>> extraArtifacts,
+                                   @JsonProperty("extraArtifacts") List<SingularityMesosArtifact> extraArtifacts,
                                    @JsonProperty("runAt") Optional<Long> runAt) {
     this.requestId = requestId;
     this.deployId = deployId;
@@ -62,7 +64,11 @@ public class SingularityPendingRequest {
     this.message = message;
     this.actionId = actionId;
     this.resources = resources;
-    this.extraArtifacts = extraArtifacts;
+    if (Objects.nonNull(extraArtifacts)) {
+      this.extraArtifacts = extraArtifacts;
+    } else {
+      this.extraArtifacts = Collections.emptyList();
+    }
     this.runAt = runAt;
   }
 
@@ -110,7 +116,7 @@ public class SingularityPendingRequest {
     return resources;
   }
 
-  public Optional<List<SingularityMesosArtifact>> getExtraArtifacts() {
+  public List<SingularityMesosArtifact> getExtraArtifacts() {
     return extraArtifacts;
   }
 

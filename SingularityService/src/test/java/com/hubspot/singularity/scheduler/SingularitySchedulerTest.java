@@ -36,7 +36,6 @@ import com.hubspot.mesos.SingularityContainerType;
 import com.hubspot.mesos.SingularityDockerInfo;
 import com.hubspot.mesos.SingularityDockerNetworkType;
 import com.hubspot.mesos.SingularityDockerPortMapping;
-import com.hubspot.mesos.SingularityMesosArtifact;
 import com.hubspot.mesos.SingularityPortMappingType;
 import com.hubspot.mesos.SingularityVolume;
 import com.hubspot.singularity.DeployState;
@@ -114,7 +113,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
 
   private SingularityPendingTask pendingTask(String requestId, String deployId, PendingType pendingType) {
     return new SingularityPendingTask(new SingularityPendingTaskId(requestId, deployId, System.currentTimeMillis(), 1, pendingType, System.currentTimeMillis()),
-        Optional.<List<String>> absent(), Optional.<String> absent(), Optional.<String> absent(), Optional.<Boolean> absent(), Optional.<String> absent(), Optional.<Resources>absent(), Optional.<List<SingularityMesosArtifact>>absent(), Optional.<String>absent());
+        Optional.<List<String>> absent(), Optional.<String> absent(), Optional.<String> absent(), Optional.<Boolean> absent(), Optional.<String> absent(), Optional.<Resources>absent(), null, Optional.<String>absent());
   }
 
   @Test

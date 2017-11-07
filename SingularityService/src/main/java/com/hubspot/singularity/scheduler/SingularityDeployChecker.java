@@ -285,7 +285,7 @@ public class SingularityDeployChecker {
       Optional<List<String>> commandLineArgs = runNowRequest.getCommandLineArgs();
       Optional<Boolean> skipHealthChecks = runNowRequest.getSkipHealthchecks().or(request.getSkipHealthchecks());
       Optional<Resources> resources = runNowRequest.getResources();
-      Optional<List<SingularityMesosArtifact>> extraArtifacts = runNowRequest.getExtraArtifacts();
+      List<SingularityMesosArtifact> extraArtifacts = runNowRequest.getExtraArtifacts();
       List<SingularityTaskId> activeTasks = taskManager.getActiveTaskIdsForRequest(requestId);
       List<SingularityPendingTaskId> pendingTasks = taskManager.getPendingTaskIdsForRequest(requestId);
 

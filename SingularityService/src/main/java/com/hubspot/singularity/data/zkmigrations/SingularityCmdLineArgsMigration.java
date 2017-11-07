@@ -17,7 +17,6 @@ import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
 import com.google.inject.Inject;
 import com.hubspot.mesos.Resources;
-import com.hubspot.mesos.SingularityMesosArtifact;
 import com.hubspot.singularity.SingularityCreateResult;
 import com.hubspot.singularity.SingularityPendingRequest;
 import com.hubspot.singularity.SingularityPendingRequest.PendingType;
@@ -144,7 +143,7 @@ public class SingularityCmdLineArgsMigration extends ZkDataMigration {
         Optional<String> cmdLineArgs = getCmdLineArgs(pendingTaskId);
 
         SingularityCreateResult result = taskManager.savePendingTask(new SingularityPendingTask(pendingTaskId, getCmdLineArgs(cmdLineArgs), Optional.<String> absent(),
-            Optional.<String> absent(), Optional.<Boolean> absent(), Optional.<String> absent(), Optional.<Resources>absent(), Optional.<List<SingularityMesosArtifact>>absent(), Optional.<String>absent()));
+            Optional.<String> absent(), Optional.<Boolean> absent(), Optional.<String> absent(), Optional.<Resources>absent(), null, Optional.<String>absent()));
 
         LOG.info("Saving {} ({}) {}", pendingTaskId, cmdLineArgs, result);
       }

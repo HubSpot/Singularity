@@ -43,7 +43,6 @@ import com.hubspot.baragon.models.BaragonRequestState;
 import com.hubspot.deploy.HealthcheckOptionsBuilder;
 import com.hubspot.mesos.MesosUtils;
 import com.hubspot.mesos.Resources;
-import com.hubspot.mesos.SingularityMesosArtifact;
 import com.hubspot.mesos.json.SingularityMesosOfferObject;
 import com.hubspot.mesos.json.SingularityMesosTaskObject;
 import com.hubspot.mesos.json.SingularityMesosTaskStatusObject;
@@ -289,7 +288,7 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
 
   protected SingularityPendingTask buildPendingTask(SingularityRequest request, SingularityDeploy deploy, long launchTime, int instanceNo, Optional<String> runId) {
     SingularityPendingTaskId pendingTaskId = new SingularityPendingTaskId(request.getId(), deploy.getId(), launchTime, instanceNo, PendingType.IMMEDIATE, launchTime);
-    SingularityPendingTask pendingTask = new SingularityPendingTask(pendingTaskId, Optional.<List<String>>absent(), Optional.<String>absent(), runId, Optional.<Boolean>absent(), Optional.<String>absent(), Optional.<Resources>absent(), Optional.<List<SingularityMesosArtifact>>absent(), Optional.<String>absent());
+    SingularityPendingTask pendingTask = new SingularityPendingTask(pendingTaskId, Optional.<List<String>>absent(), Optional.<String>absent(), runId, Optional.<Boolean>absent(), Optional.<String>absent(), Optional.<Resources>absent(), null, Optional.<String>absent());
 
     return pendingTask;
   }
@@ -677,7 +676,7 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
     SingularityPendingTaskId pendingTaskId = new SingularityPendingTaskId(requestId, deployId,
         System.currentTimeMillis() + TimeUnit.DAYS.toMillis(random.nextInt(3)), random.nextInt(10), PendingType.NEW_DEPLOY, System.currentTimeMillis());
 
-    SingularityPendingTask pendingTask = new SingularityPendingTask(pendingTaskId, Optional.<List<String>> absent(), Optional.<String> absent(), Optional.<String> absent(), Optional.<Boolean> absent(), Optional.<String> absent(), Optional.<Resources>absent(), Optional.<List<SingularityMesosArtifact>>absent(), Optional.<String>absent());
+    SingularityPendingTask pendingTask = new SingularityPendingTask(pendingTaskId, Optional.<List<String>> absent(), Optional.<String> absent(), Optional.<String> absent(), Optional.<Boolean> absent(), Optional.<String> absent(), Optional.<Resources>absent(), null, Optional.<String>absent());
 
     taskManager.savePendingTask(pendingTask);
 
