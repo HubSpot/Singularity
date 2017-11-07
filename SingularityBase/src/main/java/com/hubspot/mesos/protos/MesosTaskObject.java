@@ -1,17 +1,13 @@
 package com.hubspot.mesos.protos;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 
-import org.apache.mesos.v1.Protos.CommandInfo;
-import org.apache.mesos.v1.Protos.ContainerInfo;
-import org.apache.mesos.v1.Protos.DiscoveryInfo;
-import org.apache.mesos.v1.Protos.ExecutorInfo;
-import org.apache.mesos.v1.Protos.HealthCheck;
-import org.apache.mesos.v1.Protos.KillPolicy;
-import org.apache.mesos.v1.Protos.Labels;
-import org.apache.mesos.v1.Protos.Resource;
-
+import com.fasterxml.jackson.annotation.JsonAnyGetter;
+import com.fasterxml.jackson.annotation.JsonAnySetter;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
@@ -23,30 +19,21 @@ import com.google.common.base.Optional;
  */
 public class MesosTaskObject {
   private final MesosStringValue taskId;
-  private final Optional<ExecutorInfo> executor;
-  private final Optional<Labels> labels;
+  private final Optional<MesosExecutorInfo> executor;
+  private final MesosLabels labels;
   private final MesosStringValue agentId;
   private final MesosStringValue slaveId;
-  private final List<Resource> resources;
-  private final Optional<CommandInfo> command;
-  private final Optional<ContainerInfo> container;
-  private final Optional<DiscoveryInfo> discovery;
-  private final Optional<HealthCheck> healthCheck;
-  private final Optional<KillPolicy> killPolicy;
+  private final List<MesosResourceObject> resources;
   private final String name;
+  private final Map<String, Object> allOtherFields;
 
   @JsonCreator
   public MesosTaskObject(@JsonProperty("taskId") MesosStringValue taskId,
-                         @JsonProperty("executor") Optional<ExecutorInfo> executor,
-                         @JsonProperty("labels") Optional<Labels> labels,
+                         @JsonProperty("executor") Optional<MesosExecutorInfo> executor,
+                         @JsonProperty("labels") MesosLabels labels,
                          @JsonProperty("agentId") MesosStringValue agentId,
                          @JsonProperty("slaveId") MesosStringValue slaveId,
-                         @JsonProperty("resources") List<Resource> resources,
-                         @JsonProperty("command") Optional<CommandInfo> command,
-                         @JsonProperty("container") Optional<ContainerInfo> container,
-                         @JsonProperty("discovery") Optional<DiscoveryInfo> discovery,
-                         @JsonProperty("healthCheck") Optional<HealthCheck> healthCheck,
-                         @JsonProperty("killPolicy") Optional<KillPolicy> killPolicy,
+                         @JsonProperty("resources") List<MesosResourceObject> resources,
                          @JsonProperty("name") String name) {
     this.taskId = taskId;
     this.executor = executor;
@@ -54,19 +41,15 @@ public class MesosTaskObject {
     this.agentId = agentId != null ? agentId : slaveId;
     this.slaveId = agentId != null ? agentId : slaveId;
     this.resources = resources != null ? resources : Collections.emptyList();
-    this.command = command;
-    this.container = container;
-    this.discovery = discovery;
-    this.healthCheck = healthCheck;
-    this.killPolicy = killPolicy;
     this.name = name;
+    this.allOtherFields = new HashMap<>();
   }
 
   public MesosStringValue getTaskId() {
     return taskId;
   }
 
-  public ExecutorInfo getExecutor() {
+  public MesosExecutorInfo getExecutor() {
     return executor.orNull();
   }
 
@@ -74,12 +57,8 @@ public class MesosTaskObject {
     return executor.isPresent();
   }
 
-  public Labels getLabels() {
-    return labels.orNull();
-  }
-
-  public boolean hasLabels() {
-    return labels.isPresent();
+  public MesosLabels getLabels() {
+    return labels;
   }
 
   public MesosStringValue getAgentId() {
@@ -90,48 +69,19 @@ public class MesosTaskObject {
     return slaveId;
   }
 
-  public List<Resource> getResources() {
+  public List<MesosResourceObject> getResources() {
     return resources;
   }
 
-  public CommandInfo getCommand() {
-    return command.orNull();
+  // Unknown fields
+  @JsonAnyGetter
+  public Map<String, Object> getAllOtherFields() {
+    return allOtherFields;
   }
 
-  public boolean hasCommand() {
-    return command.isPresent();
-  }
-
-  public ContainerInfo getContainer() {
-    return container.orNull();
-  }
-
-  public boolean hasContainer() {
-    return container.isPresent();
-  }
-
-  public DiscoveryInfo getDiscovery() {
-    return discovery.orNull();
-  }
-
-  public boolean hasDiscovery() {
-    return discovery.isPresent();
-  }
-
-  public HealthCheck getHealthCheck() {
-    return healthCheck.orNull();
-  }
-
-  public boolean hasHealthCheck() {
-    return healthCheck.isPresent();
-  }
-
-  public KillPolicy getKillPolicy() {
-    return killPolicy.orNull();
-  }
-
-  public boolean hasKillPolicy() {
-    return killPolicy.isPresent();
+  @JsonAnySetter
+  public void setAllOtherFields(String name, Object value) {
+    allOtherFields.put(name, value);
   }
 
   public String getName() {
@@ -139,79 +89,40 @@ public class MesosTaskObject {
   }
 
   @Override
-  public boolean equals(Object o) {
-    if (this == o) {
+  public boolean equals(Object obj) {
+    if (this == obj) {
       return true;
     }
-    if (o == null || getClass() != o.getClass()) {
-      return false;
+    if (obj instanceof MesosTaskObject) {
+      final MesosTaskObject that = (MesosTaskObject) obj;
+      return Objects.equals(this.taskId, that.taskId) &&
+          Objects.equals(this.executor, that.executor) &&
+          Objects.equals(this.labels, that.labels) &&
+          Objects.equals(this.agentId, that.agentId) &&
+          Objects.equals(this.slaveId, that.slaveId) &&
+          Objects.equals(this.resources, that.resources) &&
+          Objects.equals(this.name, that.name) &&
+          Objects.equals(this.allOtherFields, that.allOtherFields);
     }
-
-    MesosTaskObject that = (MesosTaskObject) o;
-
-    if (taskId != null ? !taskId.equals(that.taskId) : that.taskId != null) {
-      return false;
-    }
-    if (executor != null ? !executor.equals(that.executor) : that.executor != null) {
-      return false;
-    }
-    if (labels != null ? !labels.equals(that.labels) : that.labels != null) {
-      return false;
-    }
-    if (agentId != null ? !agentId.equals(that.agentId) : that.agentId != null) {
-      return false;
-    }
-    if (resources != null ? !resources.equals(that.resources) : that.resources != null) {
-      return false;
-    }
-    if (command != null ? !command.equals(that.command) : that.command != null) {
-      return false;
-    }
-    if (container != null ? !container.equals(that.container) : that.container != null) {
-      return false;
-    }
-    if (discovery != null ? !discovery.equals(that.discovery) : that.discovery != null) {
-      return false;
-    }
-    if (healthCheck != null ? !healthCheck.equals(that.healthCheck) : that.healthCheck != null) {
-      return false;
-    }
-    if (killPolicy != null ? !killPolicy.equals(that.killPolicy) : that.killPolicy != null) {
-      return false;
-    }
-    return name != null ? name.equals(that.name) : that.name == null;
+    return false;
   }
 
   @Override
   public int hashCode() {
-    int result = taskId != null ? taskId.hashCode() : 0;
-    result = 31 * result + (executor != null ? executor.hashCode() : 0);
-    result = 31 * result + (labels != null ? labels.hashCode() : 0);
-    result = 31 * result + (agentId != null ? agentId.hashCode() : 0);
-    result = 31 * result + (resources != null ? resources.hashCode() : 0);
-    result = 31 * result + (command != null ? command.hashCode() : 0);
-    result = 31 * result + (container != null ? container.hashCode() : 0);
-    result = 31 * result + (discovery != null ? discovery.hashCode() : 0);
-    result = 31 * result + (healthCheck != null ? healthCheck.hashCode() : 0);
-    result = 31 * result + (killPolicy != null ? killPolicy.hashCode() : 0);
-    result = 31 * result + (name != null ? name.hashCode() : 0);
-    return result;
+    return Objects.hash(taskId, executor, labels, agentId, slaveId, resources, name, allOtherFields);
   }
 
   @Override
   public String toString() {
-    return "SingularityMesosTaskObject{" +
+    return "MesosTaskObject{" +
         "taskId=" + taskId +
         ", executor=" + executor +
         ", labels=" + labels +
         ", agentId=" + agentId +
+        ", slaveId=" + slaveId +
         ", resources=" + resources +
-        ", command=" + command +
-        ", container=" + container +
-        ", discovery=" + discovery +
-        ", healthCheck=" + healthCheck +
-        ", killPolicy=" + killPolicy +
         ", name='" + name + '\'' +
+        ", allOtherFields=" + allOtherFields +
         '}';
   }
 }

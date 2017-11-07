@@ -1,4 +1,4 @@
-package com.hubspot.mesos;
+package com.hubspot.singularity.helpers;
 
 import org.apache.mesos.v1.Protos.TaskInfo;
 

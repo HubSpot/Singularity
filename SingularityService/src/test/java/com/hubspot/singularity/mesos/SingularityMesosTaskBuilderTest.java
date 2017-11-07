@@ -27,8 +27,11 @@ import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.guava.GuavaModule;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
+import com.hubspot.jackson.datatype.protobuf.ProtobufModule;
+import com.hubspot.mesos.MesosProtosUtils;
 import com.hubspot.mesos.MesosUtils;
 import com.hubspot.mesos.Resources;
 import com.hubspot.mesos.SingularityContainerInfo;
@@ -37,7 +40,7 @@ import com.hubspot.mesos.SingularityDockerInfo;
 import com.hubspot.mesos.SingularityDockerNetworkType;
 import com.hubspot.mesos.SingularityDockerPortMapping;
 import com.hubspot.mesos.SingularityDockerVolumeMode;
-import com.hubspot.mesos.SingularityMesosTaskHolder;
+import com.hubspot.singularity.helpers.SingularityMesosTaskHolder;
 import com.hubspot.mesos.SingularityPortMappingType;
 import com.hubspot.mesos.SingularityVolume;
 import com.hubspot.singularity.RequestType;
@@ -61,6 +64,7 @@ public class SingularityMesosTaskBuilderTest {
   private Offer offer;
   private SingularityOfferHolder offerHolder;
   private SingularityPendingTask pendingTask;
+  private ObjectMapper objectMapper;
 
   private final String user = "testUser";
 
@@ -74,7 +78,11 @@ public class SingularityMesosTaskBuilderTest {
 
     when(idGenerator.getNextExecutorId()).then(new CreateFakeId());
 
-    builder = new SingularityMesosTaskBuilder(new ObjectMapper(), idGenerator, configuration);
+    objectMapper = new ObjectMapper();
+    objectMapper.registerModule(new ProtobufModule());
+    objectMapper.registerModule(new GuavaModule());
+
+    builder = new SingularityMesosTaskBuilder(objectMapper, idGenerator, configuration, new MesosProtosUtils(objectMapper));
 
     taskResources = new Resources(1, 1, 0, 0);
     executorResources = new Resources(0.1, 1, 0, 0);

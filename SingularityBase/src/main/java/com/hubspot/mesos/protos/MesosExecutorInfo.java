@@ -7,28 +7,25 @@ import java.util.Objects;
 import com.fasterxml.jackson.annotation.JsonAnyGetter;
 import com.fasterxml.jackson.annotation.JsonAnySetter;
 import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
 
-public class MesosResourceObject {
-  private final Optional<String> name;
+public class MesosExecutorInfo {
+  private final Optional<MesosStringValue> executorId;
   private final Map<String, Object> allOtherFields;
 
   @JsonCreator
-
-  public MesosResourceObject(@JsonProperty("name") Optional<String> name) {
-    this.name = name;
+  public MesosExecutorInfo(@JsonProperty("executorId") Optional<MesosStringValue> executorId) {
+    this.executorId = executorId;
     this.allOtherFields = new HashMap<>();
   }
 
-  public String getName() {
-    return name.orNull();
+  public MesosStringValue getExecutorId() {
+    return executorId.orNull();
   }
 
-  @JsonIgnore
-  public boolean hasName() {
-    return name.isPresent();
+  public boolean hasExecutorId() {
+    return executorId.isPresent();
   }
 
   // Unknown fields
@@ -47,9 +44,9 @@ public class MesosResourceObject {
     if (this == obj) {
       return true;
     }
-    if (obj instanceof MesosResourceObject) {
-      final MesosResourceObject that = (MesosResourceObject) obj;
-      return Objects.equals(this.name, that.name) &&
+    if (obj instanceof MesosExecutorInfo) {
+      final MesosExecutorInfo that = (MesosExecutorInfo) obj;
+      return Objects.equals(this.executorId, that.executorId) &&
           Objects.equals(this.allOtherFields, that.allOtherFields);
     }
     return false;
@@ -57,13 +54,13 @@ public class MesosResourceObject {
 
   @Override
   public int hashCode() {
-    return Objects.hash(name, allOtherFields);
+    return Objects.hash(executorId, allOtherFields);
   }
 
   @Override
   public String toString() {
-    return "MesosResourceObject{" +
-        "name=" + name +
+    return "MesosExecutorInfo{" +
+        "executorId=" + executorId +
         ", allOtherFields=" + allOtherFields +
         '}';
   }

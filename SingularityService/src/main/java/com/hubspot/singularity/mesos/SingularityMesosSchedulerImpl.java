@@ -39,6 +39,7 @@ import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import com.google.protobuf.ByteString;
 import com.hubspot.mesos.JavaUtils;
+import com.hubspot.mesos.MesosProtosUtils;
 import com.hubspot.mesos.MesosUtils;
 import com.hubspot.singularity.RequestCleanupType;
 import com.hubspot.singularity.SingularityAbort;
@@ -85,6 +86,7 @@ public class SingularityMesosSchedulerImpl extends SingularityMesosScheduler {
   private final SingularityConfiguration configuration;
   private final TaskManager taskManager;
   private final Transcoder<SingularityTaskDestroyFrameworkMessage> transcoder;
+  private final MesosProtosUtils mesosProtosUtils;
 
   private final Lock stateLock;
   private final SingularitySchedulerLock lock;
@@ -111,6 +113,7 @@ public class SingularityMesosSchedulerImpl extends SingularityMesosScheduler {
                                 SingularityConfiguration configuration,
                                 TaskManager taskManager,
                                 Transcoder<SingularityTaskDestroyFrameworkMessage> transcoder,
+                                MesosProtosUtils mesosProtosUtils,
                                 @Named(SingularityMainModule.STATUS_UPDATE_DELTA_30S_AVERAGE) AtomicLong statusUpdateDeltaAvg) {
     this.exceptionNotifier = exceptionNotifier;
     this.startup = startup;
@@ -128,6 +131,7 @@ public class SingularityMesosSchedulerImpl extends SingularityMesosScheduler {
     this.statusUpdateDeltaAvg = statusUpdateDeltaAvg;
     this.taskManager = taskManager;
     this.transcoder = transcoder;
+    this.mesosProtosUtils = mesosProtosUtils;
     this.leaderCacheCoordinator = leaderCacheCoordinator;
     this.queuedUpdates = Lists.newArrayList();
     this.lock = lock;
@@ -425,7 +429,7 @@ public class SingularityMesosSchedulerImpl extends SingularityMesosScheduler {
           byte[] messageBytes = transcoder.toBytes(new SingularityTaskDestroyFrameworkMessage(taskId, user));
           message(Message.newBuilder()
               .setAgentId(AgentID.newBuilder().setValue(task.get().getMesosTask().getAgentId().getValue()).build())
-              .setExecutorId(task.get().getMesosTask().getExecutor().getExecutorId())
+              .setExecutorId(mesosProtosUtils.toExecutorId(task.get().getMesosTask().getExecutor().getExecutorId()))
               .setData(ByteString.copyFrom(messageBytes))
               .build());
         } else {

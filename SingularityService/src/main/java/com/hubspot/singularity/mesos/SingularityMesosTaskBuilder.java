@@ -45,7 +45,7 @@ import com.hubspot.mesos.SingularityDockerNetworkType;
 import com.hubspot.mesos.SingularityDockerParameter;
 import com.hubspot.mesos.SingularityDockerPortMapping;
 import com.hubspot.mesos.SingularityMesosArtifact;
-import com.hubspot.mesos.SingularityMesosTaskHolder;
+import com.hubspot.singularity.helpers.SingularityMesosTaskHolder;
 import com.hubspot.mesos.SingularityMesosTaskLabel;
 import com.hubspot.mesos.SingularityVolume;
 import com.hubspot.singularity.SingularityS3UploaderFile;
@@ -64,12 +64,14 @@ class SingularityMesosTaskBuilder {
   private final ObjectMapper objectMapper;
   private final ExecutorIdGenerator idGenerator;
   private final SingularityConfiguration configuration;
+  private final MesosProtosUtils mesosProtosUtils;
 
   @Inject
-  SingularityMesosTaskBuilder(ObjectMapper objectMapper, ExecutorIdGenerator idGenerator, SingularityConfiguration configuration) {
+  SingularityMesosTaskBuilder(ObjectMapper objectMapper, ExecutorIdGenerator idGenerator, SingularityConfiguration configuration, MesosProtosUtils mesosProtosUtils) {
     this.objectMapper = objectMapper;
     this.idGenerator = idGenerator;
     this.configuration = configuration;
+    this.mesosProtosUtils = mesosProtosUtils;
   }
 
   public SingularityMesosTaskHolder buildTask(SingularityOfferHolder offerHolder, List<Resource> availableResources, SingularityTaskRequest taskRequest, Resources desiredTaskResources, Resources desiredExecutorResources) {
@@ -154,8 +156,8 @@ class SingularityMesosTaskBuilder {
     return new SingularityMesosTaskHolder(
         new SingularityTask(taskRequest,
             taskId,
-            offerHolder.getOffers().stream().map((o) -> MesosProtosUtils.offerFromProtos(o)).collect(Collectors.toList()),
-            MesosProtosUtils.taskFromProtos(task),
+            offerHolder.getOffers().stream().map((o) -> mesosProtosUtils.offerFromProtos(o)).collect(Collectors.toList()),
+            mesosProtosUtils.taskFromProtos(task),
             Optional.of(offerHolder.getRackId())),
         task);
   }

@@ -21,7 +21,7 @@ import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.mesos.MesosUtils;
-import com.hubspot.mesos.SingularityMesosTaskHolder;
+import com.hubspot.singularity.helpers.SingularityMesosTaskHolder;
 import com.hubspot.singularity.SingularityPendingTaskId;
 import com.hubspot.singularity.SingularityTaskId;
 

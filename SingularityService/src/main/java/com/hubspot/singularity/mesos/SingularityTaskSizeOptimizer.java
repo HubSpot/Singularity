@@ -9,7 +9,7 @@ import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.hubspot.mesos.MesosProtosUtils;
-import com.hubspot.mesos.SingularityMesosTaskHolder;
+import com.hubspot.singularity.helpers.SingularityMesosTaskHolder;
 import com.hubspot.mesos.protos.MesosOfferObject;
 import com.hubspot.singularity.SingularityDeployBuilder;
 import com.hubspot.singularity.SingularityTask;
@@ -20,10 +20,12 @@ import com.hubspot.singularity.config.SingularityConfiguration;
 public class SingularityTaskSizeOptimizer {
 
   private final SingularityConfiguration configuration;
+  private final MesosProtosUtils mesosProtosUtils;
 
   @Inject
-  public SingularityTaskSizeOptimizer(SingularityConfiguration configuration) {
+  public SingularityTaskSizeOptimizer(SingularityConfiguration configuration, MesosProtosUtils mesosProtosUtils) {
     this.configuration = configuration;
+    this.mesosProtosUtils = mesosProtosUtils;
   }
 
   SingularityTask getSizeOptimizedTask(SingularityMesosTaskHolder taskHolder) {
@@ -54,7 +56,7 @@ public class SingularityTaskSizeOptimizer {
           deploy.build(), task.getTaskRequest().getPendingTask());
     }
 
-    return new SingularityTask(taskRequest, task.getTaskId(), offers, MesosProtosUtils.taskFromProtos(mesosTask.build()), task.getRackId());
+    return new SingularityTask(taskRequest, task.getTaskId(), offers, mesosProtosUtils.taskFromProtos(mesosTask.build()), task.getRackId());
   }
 
 }
