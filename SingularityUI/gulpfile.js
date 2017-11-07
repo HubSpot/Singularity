@@ -44,7 +44,9 @@ var templateData = {
   timestampWithSecondsFormat: process.env.SINGULARITY_TIMESTAMP_WITH_SECONDS_FORMAT || 'lll:ss',
   redirectOnUnauthorizedUrl: process.env.SINGULARITY_REDIRECT_ON_UNAUTHORIZED_URL || '',
   extraScript: process.env.SINGULARITY_EXTRA_SCRIPT || '',
-  sentryDsn: process.env.SINGULARITY_SENTRY_DSN || ''
+  sentryDsn: process.env.SINGULARITY_SENTRY_DSN || '',
+  authTokenKey: process.env.SINGULARITY_AUTH_TOKEN_KEY || 'token',
+  authCookieName: process.env.SINGULARITY_AUTH_COOKIE_NAME || ''
 };
 
 var dest = path.resolve(__dirname, 'dist');

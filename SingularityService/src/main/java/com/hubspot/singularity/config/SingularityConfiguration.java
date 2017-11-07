@@ -309,6 +309,10 @@ public class SingularityConfiguration extends Configuration {
   @Valid
   private LDAPConfiguration ldapConfiguration;
 
+  @JsonProperty("webhookAuth")
+  @Valid
+  private WebhookAuthConfiguration webhookAuthConfiguration = new WebhookAuthConfiguration();
+
   @JsonProperty("auth")
   @NotNull
   @Valid
@@ -1265,6 +1269,14 @@ public class SingularityConfiguration extends Configuration {
   @JsonIgnore
   public Optional<LDAPConfiguration> getLdapConfigurationOptional() {
     return Optional.fromNullable(ldapConfiguration);
+  }
+
+  public WebhookAuthConfiguration getWebhookAuthConfiguration() {
+    return webhookAuthConfiguration;
+  }
+
+  public void setWebhookAuthConfiguration(WebhookAuthConfiguration webhookAuthConfiguration) {
+    this.webhookAuthConfiguration = webhookAuthConfiguration;
   }
 
   public void setLdapConfiguration(LDAPConfiguration ldapConfiguration) {

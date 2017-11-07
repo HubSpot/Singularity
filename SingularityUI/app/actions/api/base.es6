@@ -76,6 +76,12 @@ export function buildApiAction(actionName, opts = {}, keyFunc = undefined) {
           userParam = `?user=${localStorage.getItem('singularityUserId')}`
         }
       }
+
+      if (config.generateAuthHeader) {
+        options.headers = options.headers || {};
+        options.headers.Authorization = Utils.getAuthTokenHeader();
+      }
+
       return fetch(config.apiRoot + options.url + userParam, _.extend({credentials: 'include'}, _.omit(options, 'url')))
         .then(response => {
           apiResponse = response;

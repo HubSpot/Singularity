@@ -75,6 +75,7 @@ import com.hubspot.singularity.SingularityTaskHistoryUpdate.SimplifiedTaskState;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTaskRequest;
 import com.hubspot.singularity.SingularityTaskStatusHolder;
+import com.hubspot.singularity.SingularityUser;
 import com.hubspot.singularity.SlavePlacement;
 import com.hubspot.singularity.api.SingularityDeployRequest;
 import com.hubspot.singularity.api.SingularityScaleRequest;
@@ -187,6 +188,8 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
   protected SingularityDeploy secondDeploy;
 
   protected Optional<String> user = Optional.absent();
+
+  protected SingularityUser singularityUser = SingularityUser.DEFAULT_USER;
 
   public SingularitySchedulerTestBase(boolean useDBTests) {
     super(useDBTests);
@@ -459,7 +462,7 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
         .setResources(Optional.of(r))
         .build();
 
-    deployResource.deploy(new SingularityDeployRequest(deploy, Optional.<Boolean> absent(), Optional.<String> absent()));
+    deployResource.deploy(new SingularityDeployRequest(deploy, Optional.absent(), Optional.absent()), singularityUser);
 
     return deploy;
   }
@@ -488,7 +491,7 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
 
     SingularityDeploy deploy = new SingularityDeployBuilder(request.getId(), "d1").setCommand(Optional.of("sleep 1")).build();
 
-    deployResource.deploy(new SingularityDeployRequest(deploy, Optional.<Boolean> absent(), Optional.<String> absent()));
+    deployResource.deploy(new SingularityDeployRequest(deploy, Optional.absent(), Optional.absent()), singularityUser);
 
     return request;
   }
@@ -510,7 +513,7 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
   protected void initWithTasks(int num) {
     initRequest();
 
-    requestResource.scale(requestId, new SingularityScaleRequest(Optional.of(num), Optional.<Long> absent(), Optional.<Boolean> absent(), Optional.<String> absent(), Optional.<String>absent(), Optional.<Boolean>absent(), Optional.<Boolean>absent()));
+    requestResource.scale(requestId, new SingularityScaleRequest(Optional.of(num), Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent()), singularityUser);
 
     initFirstDeploy();
 
@@ -667,7 +670,7 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
           .setServiceBasePath(Optional.of("/basepath"))
           .setLoadBalancerGroups(Optional.of(groups));
     }
-    deployResource.deploy(new SingularityDeployRequest(builder.build(), unpauseOnDeploy, Optional.<String> absent()));
+    deployResource.deploy(new SingularityDeployRequest(builder.build(), unpauseOnDeploy, Optional.absent()), singularityUser);
   }
 
   protected SingularityPendingTask createAndSchedulePendingTask(String deployId) {
