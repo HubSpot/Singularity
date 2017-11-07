@@ -364,6 +364,8 @@ class SingularityMesosTaskBuilder {
       commandBuilder.setUser(task.getDeploy().getUser().get());
     }
 
+    prepareMesosUriDownloads(task.getPendingTask().getExtraArtifacts(), commandBuilder);
+
     bldr.setExecutor(ExecutorInfo.newBuilder()
         .setCommand(commandBuilder.build())
         .setExecutorId(ExecutorID.newBuilder().setValue(task.getDeploy().getCustomExecutorId().or(idGenerator.getNextExecutorId())))
@@ -453,7 +455,15 @@ class SingularityMesosTaskBuilder {
     combinedArtifacts.addAll(task.getDeploy().getUris().or(Collections.emptyList()));
     combinedArtifacts.addAll(task.getPendingTask().getExtraArtifacts());
 
-    for (SingularityMesosArtifact artifact : combinedArtifacts) {
+    prepareMesosUriDownloads(combinedArtifacts, commandBldr);
+
+    prepareEnvironment(task, taskId, commandBldr, offerHolder, ports);
+
+    bldr.setCommand(commandBldr);
+  }
+
+  private void prepareMesosUriDownloads(List<SingularityMesosArtifact> extraArtifacts, CommandInfo.Builder commandBldr) {
+    for (SingularityMesosArtifact artifact : extraArtifacts) {
       commandBldr.addUris(URI.newBuilder()
           .setValue(artifact.getUri())
           .setCache(artifact.isCache())
@@ -461,10 +471,6 @@ class SingularityMesosTaskBuilder {
           .setExtract(artifact.isExtract())
           .build());
     }
-
-    prepareEnvironment(task, taskId, commandBldr, offerHolder, ports);
-
-    bldr.setCommand(commandBldr);
   }
 
 }
