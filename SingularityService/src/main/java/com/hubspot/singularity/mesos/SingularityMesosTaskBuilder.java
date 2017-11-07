@@ -469,12 +469,17 @@ class SingularityMesosTaskBuilder {
 
   private void prepareMesosUriDownloads(List<SingularityMesosArtifact> extraArtifacts, CommandInfo.Builder commandBldr) {
     for (SingularityMesosArtifact artifact : extraArtifacts) {
-      commandBldr.addUris(URI.newBuilder()
+      CommandInfo.URI.Builder uriBldr = URI.newBuilder()
           .setValue(artifact.getUri())
           .setCache(artifact.isCache())
           .setExecutable(artifact.isExecutable())
-          .setExtract(artifact.isExtract())
-          .build());
+          .setExtract(artifact.isExtract());
+
+      if (artifact.getOutputFile().isPresent()) {
+        uriBldr.setOutputFile(artifact.getOutputFile().get());
+      }
+
+      commandBldr.addUris(uriBldr.build());
     }
   }
 
