@@ -454,7 +454,10 @@ class SingularityMesosTaskBuilder {
       commandBldr.setShell(false);
     }
 
-    for (SingularityMesosArtifact artifact : task.getDeploy().getUris().or(Collections.<SingularityMesosArtifact> emptyList())) {
+    List<SingularityMesosArtifact> combinedArtifacts = task.getDeploy().getUris().or(Collections.emptyList());
+    combinedArtifacts.addAll(task.getPendingTask().getExtraArtifacts());
+
+    for (SingularityMesosArtifact artifact : combinedArtifacts) {
       commandBldr.addUris(URI.newBuilder()
           .setValue(artifact.getUri())
           .setCache(artifact.isCache())
