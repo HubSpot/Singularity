@@ -449,7 +449,7 @@ class SingularityMesosTaskBuilder {
       commandBldr.setShell(false);
     }
 
-    List<SingularityMesosArtifact> combinedArtifacts = task.getDeploy().getUris().or(Collections.emptyList());
+    List<SingularityMesosArtifact> combinedArtifacts = task.getDeploy().getUris().or(new ArrayList<>());
     combinedArtifacts.addAll(task.getPendingTask().getExtraArtifacts());
 
     for (SingularityMesosArtifact artifact : combinedArtifacts) {
