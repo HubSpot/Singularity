@@ -45,6 +45,7 @@ var templateData = {
   redirectOnUnauthorizedUrl: process.env.SINGULARITY_REDIRECT_ON_UNAUTHORIZED_URL || '',
   extraScript: process.env.SINGULARITY_EXTRA_SCRIPT || '',
   sentryDsn: process.env.SINGULARITY_SENTRY_DSN || '',
+  generateAuthHeader: process.env.SINGULARITY_GENERATE_AUTH_HEADER || 'false',
   authTokenKey: process.env.SINGULARITY_AUTH_TOKEN_KEY || 'token',
   authCookieName: process.env.SINGULARITY_AUTH_COOKIE_NAME || ''
 };
