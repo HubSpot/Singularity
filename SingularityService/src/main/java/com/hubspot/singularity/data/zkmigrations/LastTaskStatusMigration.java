@@ -4,7 +4,6 @@ import java.util.List;
 
 import javax.inject.Singleton;
 
-import org.apache.mesos.v1.Protos.AgentID;
 import org.apache.mesos.v1.Protos.TaskID;
 import org.apache.mesos.v1.Protos.TaskStatus;
 
@@ -12,7 +11,6 @@ import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
-import com.hubspot.singularity.helpers.MesosProtosUtils;
 import com.hubspot.mesos.protos.MesosTaskStatusObject;
 import com.hubspot.singularity.SingularityMainModule;
 import com.hubspot.singularity.SingularityTask;
@@ -20,6 +18,7 @@ import com.hubspot.singularity.SingularityTaskHistoryUpdate;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTaskStatusHolder;
 import com.hubspot.singularity.data.TaskManager;
+import com.hubspot.singularity.helpers.MesosProtosUtils;
 
 @Singleton
 public class LastTaskStatusMigration extends ZkDataMigration {
@@ -51,8 +50,8 @@ public class LastTaskStatusMigration extends ZkDataMigration {
 
           taskStatus = Optional.of(mesosProtosUtils.taskStatusFromProtos(TaskStatus.newBuilder()
               .setTaskId(TaskID.newBuilder().setValue(taskId.getId()))
-              .setAgentId(AgentID.newBuilder().setValue(task.get().getAgentId().getValue()).build())
-              .setState(mesosProtosUtils.toTaskState(update.getTaskState()))
+              .setAgentId(MesosProtosUtils.toAgentId(task.get().getAgentId()))
+              .setState(MesosProtosUtils.toTaskState(update.getTaskState()))
               .build()));
 
           break;

@@ -1,6 +1,5 @@
 package com.hubspot.singularity.helpers;
 
-import java.io.IOException;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -57,13 +56,7 @@ public class MesosProtosUtils {
 
   public List<Resource> toResourceList(List<MesosResourceObject> resourceObjects) {
     return resourceObjects.stream()
-        .map((r) -> {
-          try {
-            return objectMapper.readValue(objectMapper.writeValueAsString(r), Resource.class);
-          } catch (IOException ioe) {
-            throw new RuntimeException(ioe);
-          }
-        })
+        .map((r) -> objectMapper.convertValue(r, Resource.class))
         .collect(Collectors.toList());
   }
 

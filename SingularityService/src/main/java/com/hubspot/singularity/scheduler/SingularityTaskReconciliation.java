@@ -174,7 +174,7 @@ public class SingularityTaskReconciliation {
 
     LOG.info("Requesting reconciliation of {} taskStatuses, task reconciliation has been running for {}", taskStatuses.size(), JavaUtils.duration(reconciliationStart));
 
-    schedulerClient.reconcile(taskStatuses.stream().map((t) -> Task.newBuilder().setTaskId(mesosProtosUtils.toTaskId(t.getTaskId())).setAgentId(mesosProtosUtils.toAgentId(t.getAgentId())).build()).collect(Collectors.toList()));
+    schedulerClient.reconcile(taskStatuses.stream().map((t) -> Task.newBuilder().setTaskId(MesosProtosUtils.toTaskId(t.getTaskId())).setAgentId(MesosProtosUtils.toAgentId(t.getAgentId())).build()).collect(Collectors.toList()));
 
     scheduleReconciliationCheck(reconciliationStart, remainingTaskIds, numTimes, histogram);
   }

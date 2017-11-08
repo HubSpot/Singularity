@@ -29,6 +29,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.hubspot.baragon.models.BaragonRequestState;
+import com.hubspot.mesos.protos.MesosTaskState;
 import com.hubspot.singularity.helpers.MesosProtosUtils;
 import com.hubspot.singularity.helpers.MesosUtils;
 import com.hubspot.mesos.Resources;
@@ -1554,7 +1555,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
 
     SingularityDeployStatistics deployStatistics = deployManager.getDeployStatistics(task.getTaskId().getRequestId(), task.getTaskId().getDeployId()).get();
 
-    Assert.assertEquals(TaskState.TASK_FAILED, deployStatistics.getLastTaskState().get().toTaskState().get());
+    Assert.assertEquals(MesosTaskState.TASK_FAILED, deployStatistics.getLastTaskState().get().toTaskState().get());
     Assert.assertEquals(PendingType.TASK_DONE, taskManager.getPendingTaskIds().get(0).getPendingType());
     Assert.assertEquals(1, deployStatistics.getNumFailures());
     Assert.assertEquals(0, deployStatistics.getNumSequentialRetries());

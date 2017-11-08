@@ -41,6 +41,7 @@ import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import com.hubspot.baragon.models.BaragonRequestState;
 import com.hubspot.deploy.HealthcheckOptionsBuilder;
+import com.hubspot.singularity.helpers.MesosProtosUtils;
 import com.hubspot.singularity.helpers.MesosUtils;
 import com.hubspot.mesos.Resources;
 import com.hubspot.mesos.protos.MesosTaskStatusObject;
@@ -340,8 +341,8 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
 
   protected void statusUpdate(SingularityTask task, TaskState state, Optional<Long> timestamp) {
     TaskStatus.Builder bldr = TaskStatus.newBuilder()
-        .setTaskId(TaskID.newBuilder().setValue(task.getMesosTask().getTaskId().getValue()).build())
-        .setAgentId(AgentID.newBuilder().setValue(task.getAgentId().getValue()).build())
+        .setTaskId(MesosProtosUtils.toTaskId(task.getMesosTask().getTaskId()))
+        .setAgentId(MesosProtosUtils.toAgentId(task.getAgentId()))
         .setState(state);
 
     if (timestamp.isPresent()) {
