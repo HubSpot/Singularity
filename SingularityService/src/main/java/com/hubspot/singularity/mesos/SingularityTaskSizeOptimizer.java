@@ -8,7 +8,7 @@ import org.apache.mesos.v1.Protos.TaskInfo;
 import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import com.hubspot.mesos.MesosProtosUtils;
+import com.hubspot.singularity.helpers.MesosProtosUtils;
 import com.hubspot.singularity.helpers.SingularityMesosTaskHolder;
 import com.hubspot.mesos.protos.MesosOfferObject;
 import com.hubspot.singularity.SingularityDeployBuilder;

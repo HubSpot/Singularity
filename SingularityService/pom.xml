@@ -23,11 +23,6 @@
 
     <dependency>
       <groupId>com.hubspot</groupId>
-      <artifactId>SingularityMesosUtils</artifactId>
-    </dependency>
-
-    <dependency>
-      <groupId>com.hubspot</groupId>
       <artifactId>SingularityServiceBase</artifactId>
     </dependency>
 

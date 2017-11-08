@@ -18,7 +18,7 @@ import org.slf4j.LoggerFactory;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.inject.Inject;
-import com.hubspot.mesos.MesosUtils;
+import com.hubspot.singularity.helpers.MesosUtils;
 import com.hubspot.mesos.Resources;
 import com.hubspot.singularity.helpers.SingularityMesosTaskHolder;
 import com.hubspot.singularity.RequestType;

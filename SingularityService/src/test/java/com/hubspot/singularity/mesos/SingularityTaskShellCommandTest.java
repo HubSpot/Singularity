@@ -31,7 +31,7 @@ import com.hubspot.singularity.config.UIConfiguration;
 import com.hubspot.singularity.config.shell.ShellCommandDescriptor;
 import com.hubspot.singularity.config.shell.ShellCommandOptionDescriptor;
 import com.hubspot.singularity.data.transcoders.Transcoder;
-import com.hubspot.mesos.MesosProtosUtils;
+import com.hubspot.singularity.helpers.MesosProtosUtils;
 import com.hubspot.singularity.resources.TaskResource;
 import com.hubspot.singularity.scheduler.SingularitySchedulerTestBase;
 import com.hubspot.singularity.scheduler.SingularityTaskShellCommandDispatchPoller;

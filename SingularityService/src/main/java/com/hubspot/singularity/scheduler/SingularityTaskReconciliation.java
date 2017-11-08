@@ -27,6 +27,7 @@ import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import com.hubspot.mesos.JavaUtils;
+import com.hubspot.singularity.helpers.MesosProtosUtils;
 import com.hubspot.mesos.protos.MesosTaskStatusObject;
 import com.hubspot.singularity.SingularityAbort;
 import com.hubspot.singularity.SingularityAbort.AbortReason;
@@ -52,6 +53,7 @@ public class SingularityTaskReconciliation {
   private final AtomicBoolean isRunningReconciliation;
   private final SingularityConfiguration configuration;
   private final SingularityAbort abort;
+  private final MesosProtosUtils mesosProtosUtils;
   private final SingularityExceptionNotifier exceptionNotifier;
   private final SingularityMesosSchedulerClient schedulerClient;
   private final StateManager stateManager;
@@ -64,6 +66,7 @@ public class SingularityTaskReconciliation {
                                        SingularityConfiguration configuration,
                                        @Named(SingularityMainModule.SERVER_ID_PROPERTY) String serverId,
                                        SingularityAbort abort,
+                                       MesosProtosUtils mesosProtosUtils,
                                        SingularityMesosSchedulerClient schedulerClient) {
     this.taskManager = taskManager;
     this.stateManager = stateManager;
@@ -72,6 +75,7 @@ public class SingularityTaskReconciliation {
     this.exceptionNotifier = exceptionNotifier;
     this.configuration = configuration;
     this.abort = abort;
+    this.mesosProtosUtils = mesosProtosUtils;
     this.schedulerClient = schedulerClient;
 
     this.isRunningReconciliation = new AtomicBoolean(false);
@@ -153,7 +157,7 @@ public class SingularityTaskReconciliation {
         }
 
         LOG.info("Task {} didn't have a TaskStatus yet, submitting fake status", taskStatusHolder.getTaskId());
-        taskStatuses.add(MesosTaskStatusObject.fromProtos(fakeTaskStatusBuilder.build()));
+        taskStatuses.add(mesosProtosUtils.taskStatusFromProtos(fakeTaskStatusBuilder.build()));
       }
     }
 
@@ -170,7 +174,7 @@ public class SingularityTaskReconciliation {
 
     LOG.info("Requesting reconciliation of {} taskStatuses, task reconciliation has been running for {}", taskStatuses.size(), JavaUtils.duration(reconciliationStart));
 
-    schedulerClient.reconcile(taskStatuses.stream().map((t) -> Task.newBuilder().setTaskId(t.getTaskId()).setAgentId(t.getAgentId()).build()).collect(Collectors.toList()));
+    schedulerClient.reconcile(taskStatuses.stream().map((t) -> Task.newBuilder().setTaskId(mesosProtosUtils.toTaskId(t.getTaskId())).setAgentId(mesosProtosUtils.toAgentId(t.getAgentId())).build()).collect(Collectors.toList()));
 
     scheduleReconciliationCheck(reconciliationStart, remainingTaskIds, numTimes, histogram);
   }

@@ -57,7 +57,6 @@
   <modules>
     <module>SingularityService</module>
     <module>SingularityBase</module>
-    <module>SingularityMesosUtils</module>
     <module>SingularityRunnerBase</module>
     <module>SingularityS3Base</module>
     <module>SingularityMesosClient</module>
@@ -79,12 +78,6 @@
       <dependency>
         <groupId>com.hubspot</groupId>
         <artifactId>SingularityBase</artifactId>
-        <version>${project.version}</version>
-      </dependency>
-
-      <dependency>
-        <groupId>com.hubspot</groupId>
-        <artifactId>SingularityMesosUtils</artifactId>
         <version>${project.version}</version>
       </dependency>
 
