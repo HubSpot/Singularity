@@ -11,7 +11,7 @@ import com.google.inject.Provides;
 import com.google.inject.Scopes;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
-import com.hubspot.mesos.MesosProtosUtils;
+import com.hubspot.mesos.MesosUtilsModule;
 
 public class SingularityMesosModule extends AbstractModule {
 
@@ -20,7 +20,7 @@ public class SingularityMesosModule extends AbstractModule {
 
   @Override
   public void configure() {
-    bind(MesosProtosUtils.class);
+    install(new MesosUtilsModule());
     bind(SingularityMesosExecutorInfoSupport.class).in(Scopes.SINGLETON);
     bind(SingularityMesosScheduler.class).to(SingularityMesosSchedulerImpl.class).in(Scopes.SINGLETON);
     bind(SingularityMesosFrameworkMessageHandler.class).in(Scopes.SINGLETON);
