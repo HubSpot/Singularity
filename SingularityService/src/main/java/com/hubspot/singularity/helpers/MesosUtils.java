@@ -1,13 +1,12 @@
-package com.hubspot.mesos;
+package com.hubspot.singularity.helpers;
 
 import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 
@@ -24,9 +23,12 @@ import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.common.net.InetAddresses;
 import com.google.common.primitives.Longs;
+import com.hubspot.mesos.Resources;
+import com.hubspot.singularity.ExtendedTaskState;
 
 public final class MesosUtils {
 
@@ -146,6 +148,16 @@ public final class MesosUtils {
     }
 
     return ports;
+  }
+
+
+  public static Optional<Long> getPortByIndex(List<Resource> resources, int index) {
+    List<Long> ports = MesosUtils.getAllPorts(resources);
+    if (index >= ports.size() || index < 0) {
+      return Optional.absent();
+    } else {
+      return Optional.of(ports.get(index));
+    }
   }
 
   public static Resource getPortsResource(int numPorts, Offer offer) {
@@ -427,8 +439,27 @@ public final class MesosUtils {
     return new Resources(getNumCpus(resources, requiredRole), getMemory(resources, requiredRole), getNumPorts(resources), getDisk(resources, requiredRole));
   }
 
-  public static Path getTaskDirectoryPath(String taskId) {
-    return Paths.get(getSafeTaskIdForDirectory(taskId)).toAbsolutePath();
+  private static final Map<TaskState, ExtendedTaskState> map;
+  static {
+    map = Maps.newHashMapWithExpectedSize(ExtendedTaskState.values().length);
+    for (ExtendedTaskState extendedTaskState : ExtendedTaskState.values()) {
+      if (extendedTaskState.toTaskState().isPresent()) {
+
+        map.put(TaskState.valueOf(extendedTaskState.toTaskState().get().name()), extendedTaskState);
+      }
+    }
+
+    for (TaskState t : TaskState.values()) {
+      if (map.get(t) == null) {
+        throw new IllegalStateException("No ExtendedTaskState provided for TaskState " + t + ", you probably have incompatible versions of Mesos and Singularity.");
+      }
+    }
+  }
+
+  public static ExtendedTaskState fromTaskState(TaskState taskState) {
+    ExtendedTaskState extendedTaskState = map.get(taskState);
+    Preconditions.checkArgument(extendedTaskState != null, "No ExtendedTaskState for TaskState %s", taskState);
+    return extendedTaskState;
   }
 
   public static String getSafeTaskIdForDirectory(String taskId) {
