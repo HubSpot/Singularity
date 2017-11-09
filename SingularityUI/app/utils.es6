@@ -55,6 +55,11 @@ const Utils = {
     return `${timeObject.fromNow()} (${timeObject.format(window.config.timestampFormat)})`;
   },
 
+  timestampFromNowTextOnly(millis) {
+    const timeObject = moment(millis);
+    return `${timeObject.fromNow()}`;
+  },
+
   absoluteTimestamp(millis) {
     return moment(millis).format(window.config.timestampFormat);
   },
@@ -453,10 +458,10 @@ const Utils = {
 
   glyphiconForRequestState: (state) => {
     return {
-      'DELETING': 'trash',
-      'ACTIVE': 'ok',
-      'PAUSED': 'pause',
-      'SYSTEM_COOLDOWN': 'warning-sign'
+      'DELETING': {'color': 'color-grey', 'icon':'trash'},
+      'ACTIVE': {'color': 'color-success', 'icon':'ok'},
+      'PAUSED': {'color': 'color-paused', 'icon':'pause'},
+      'SYSTEM_COOLDOWN': {'color': 'color-warning', 'icon':'warning-sign'}
     }[state]
   },
 

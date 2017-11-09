@@ -1,7 +1,6 @@
 package com.hubspot.singularity.helpers;
 
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -28,6 +27,7 @@ import com.hubspot.singularity.SingularityRequestHistory.RequestHistoryType;
 import com.hubspot.singularity.SingularityRequestParent;
 import com.hubspot.singularity.SingularityRequestWithState;
 import com.hubspot.singularity.SingularityTaskHistoryQuery;
+import com.hubspot.singularity.SingularityTaskHistoryUpdate;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTaskIdHistory;
 import com.hubspot.singularity.SingularityTaskIdsByStatus;
@@ -194,7 +194,7 @@ public class RequestHelper {
     Map<String, Optional<SingularityRequestHistory>> requestIdToLastHistory = new HashMap<>();
     Map<String, Optional<SingularityRequestDeployState>> deployStates = new HashMap<>();
 
-    List<String> requestIds = requests.stream()
+    List<SingularityRequestWithState> filteredRequests = requests.stream()
         .filter((request) -> {
           if (!filterRelevantForUser || !user.isPresent()) {
             return true;
@@ -222,18 +222,12 @@ public class RequestHelper {
 
           return false;
         })
-        .sorted(Comparator.comparingLong((parent) ->
-                getLastActionTimeForRequest(
-                    requestIdToLastHistory.computeIfAbsent(parent.getRequest().getId(), requestHistoryHelper::getLastHistory),
-                    deployStates.computeIfAbsent(parent.getRequest().getId(), deployManager::getRequestDeployState)))
-        )
         .limit(limit.or(requests.size()))
-        .map((parent) -> parent.getRequest().getId())
         .collect(Collectors.toList());
 
-    final List<SingularityRequestParent> parents = Lists.newArrayListWithCapacity(requestIds.size());
+    final List<SingularityRequestParent> parents = Lists.newArrayListWithCapacity(filteredRequests.size());
 
-    for (SingularityRequestWithState requestWithState : requests) {
+    for (SingularityRequestWithState requestWithState : filteredRequests) {
       parents.add(new SingularityRequestParent(
           requestWithState.getRequest(),
           requestWithState.getState(),
@@ -246,7 +240,7 @@ public class RequestHelper {
           includeFullRequestData ? requestManager.getExpiringSkipHealthchecks(requestWithState.getRequest().getId()) : Optional.absent(),
           includeFullRequestData ? getTaskIdsByStatusForRequest(requestWithState) : Optional.absent(),
           includeFullRequestData ? requestIdToLastHistory.computeIfAbsent(requestWithState.getRequest().getId(),requestHistoryHelper::getLastHistory) : Optional.absent(),
-          includeFullRequestData ? getMostRecentTask(requestWithState.getRequest().getId()) : Optional.absent()));
+          includeFullRequestData ? getMostRecentTask(requestWithState.getRequest()) : Optional.absent()));
     }
 
     return parents;
@@ -261,8 +255,22 @@ public class RequestHelper {
     return getTaskIdsByStatusForRequest(requestWithState.get());
   }
 
-  public Optional<SingularityTaskIdHistory> getMostRecentTask(String requestId) {
-    List<SingularityTaskIdHistory> maybeRecentTasks = taskHistoryHelper.getBlendedHistory(new SingularityTaskHistoryQuery(requestId), 0 , 1);
+  public Optional<SingularityTaskIdHistory> getMostRecentTask(SingularityRequest request) {
+    List<SingularityTaskId> activeTaskIds = taskManager.getActiveTaskIdsForRequest(request.getId());
+    if (!activeTaskIds.isEmpty()) {
+      SingularityTaskId lastTaskId = activeTaskIds.get(0);
+      List<SingularityTaskHistoryUpdate> historyUpdates = taskManager.getTaskHistoryUpdates(lastTaskId);
+      if (!historyUpdates.isEmpty()) {
+        SingularityTaskHistoryUpdate lastUpdate = historyUpdates.get(historyUpdates.size() - 1);
+        return Optional.of(new SingularityTaskIdHistory(
+            lastTaskId,
+            lastUpdate.getTimestamp(),
+            Optional.of(lastUpdate.getTaskState()),
+            Optional.absent() // runId not currently provided here, grabbing the full task data for this is a more expensive call
+        ));
+      }
+    }
+    List<SingularityTaskIdHistory> maybeRecentTasks = taskHistoryHelper.getBlendedHistory(new SingularityTaskHistoryQuery(request.getId()), 0 , 1);
     if (!maybeRecentTasks.isEmpty()) {
       return Optional.of(maybeRecentTasks.get(0));
     }
@@ -314,21 +322,5 @@ public class RequestHelper {
 
   private boolean userModifiedRequestLast(Optional<SingularityRequestHistory> lastHistory, Optional<SingularityUser> user) {
     return lastHistory.isPresent() && userMatches(lastHistory.get().getUser(), user);
-  }
-
-  private long getLastActionTimeForRequest(Optional<SingularityRequestHistory> lastHistory, Optional<SingularityRequestDeployState> deployState) {
-    long lastUpdate = 0;
-    if (lastHistory.isPresent()) {
-      lastUpdate = lastHistory.get().getCreatedAt();
-    }
-    if (deployState.isPresent()) {
-      if (deployState.get().getActiveDeploy().isPresent()) {
-        lastUpdate = Math.max(lastUpdate, deployState.get().getActiveDeploy().get().getTimestamp());
-      }
-      if (deployState.get().getPendingDeploy().isPresent()) {
-        lastUpdate = Math.max(lastUpdate, deployState.get().getPendingDeploy().get().getTimestamp());
-      }
-    }
-    return lastUpdate;
   }
 }

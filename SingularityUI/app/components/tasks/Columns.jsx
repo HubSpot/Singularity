@@ -116,7 +116,7 @@ export const Host = (
     id="host"
     key="host"
     cellData={
-      (rowData) => (rowData.taskId ? rowData.taskId.host : rowData.host)
+      (rowData) => (Utils.humanizeSlaveHostName(rowData.host ? rowData.host : rowData.taskId.host))
     }
     cellRender={
       (cellData) => (
@@ -395,7 +395,7 @@ export const InstanceNumber = (
     id="instanceNo"
     key="instanceNo"
     cellData={
-      (rowData) => rowData.instanceNo
+      (rowData) => rowData.instanceNo ? rowData.instanceNo : rowData.taskId.instanceNo
     }
     sortable={true}
   />
@@ -407,7 +407,7 @@ export const InstanceNumberWithLink = (
     id="instanceNo"
     key="instanceNo"
     cellData={
-      (rowData) => rowData.instanceNo
+      (rowData) => rowData.instanceNo ? rowData.instanceNo : rowData.taskId.instanceNo
     }
     cellRender={
       (cellData, rowData) => (
@@ -431,21 +431,24 @@ export const Health = (
     cellRender={
       (cellData) => {
         let glyph;
+        let colorClass;
         if (cellData === "healthy" || cellData === "cleaning") {
-          glyph = "ok"
+          glyph = "ok";
+          colorClass = "color-success";
         } else if (cellData === "pending") {
-          glyph = "question-sign"
+          glyph = "question-sign";
         } else {
-          glyph = "hourglass"
+          glyph = "hourglass";
+          colorClass = "color-info"
         }
         const tooltip = (
-          <ToolTip id="iew-task-health">
+          <ToolTip id="view-task-health">
             {cellData}
           </ToolTip>
         )
         return (
           <OverlayTrigger placement="top" id="view-task-health-overlay" overlay={tooltip}>
-            <Glyphicon glyph={glyph} />
+            <Glyphicon className={colorClass} glyph={glyph} />
           </OverlayTrigger>
         );
       }
