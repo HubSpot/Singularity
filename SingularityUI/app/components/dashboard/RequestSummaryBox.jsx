@@ -11,7 +11,7 @@ import {
   DeployId,
   StartedAt,
   UpdatedAt,
-  LogLinkAndJSON
+  LogLinkAndActions
 } from '../tasks/Columns';
 
 export default class RequestSummaryBox extends Component {
@@ -138,7 +138,7 @@ export default class RequestSummaryBox extends Component {
                   {DeployId}
                   {StartedAt}
                   {UpdatedAt}
-                  {LogLinkAndJSON(config.runningTaskLogPath)}
+                  {LogLinkAndActions(config.runningTaskLogPath, this.props.request.requestType)}
                 </UITable>
               </Panel>
             </Col>

@@ -17,20 +17,19 @@ import {
   DeployId,
   StartedAt,
   UpdatedAt,
-  LogLinkAndJSON
+  LogLinkAndActions
 } from '../tasks/Columns';
 
 import { FetchTaskHistoryForRequest } from '../../actions/api/history';
 
 import TaskStateBreakdown from './TaskStateBreakdown';
 
-const ActiveTasksTable = ({requestId, tasksAPI, healthyTaskIds, cleaningTaskIds, fetchTaskHistoryForRequest}) => {
+const ActiveTasksTable = ({request, requestId, tasksAPI, healthyTaskIds, cleaningTaskIds, fetchTaskHistoryForRequest}) => {
   const tasks = tasksAPI ? tasksAPI.data : [];
   const emptyTableMessage = (Utils.api.isFirstLoad(tasksAPI)
     ? <p>Loading...</p>
     : <p>No active tasks</p>
   );
-  console.log(healthyTaskIds)
 
   let maybeAggregateTailButton;
   if (tasks.length > 1) {
@@ -75,7 +74,7 @@ const ActiveTasksTable = ({requestId, tasksAPI, healthyTaskIds, cleaningTaskIds,
         {DeployId}
         {StartedAt}
         {UpdatedAt}
-        {LogLinkAndJSON(config.runningTaskLogPath)}
+        {LogLinkAndActions(config.runningTaskLogPath, Utils.maybe(request, ['request', 'requestType'], 'UNKNOWN'))}
       </UITable>
     </Section>
   );
@@ -90,15 +89,17 @@ ActiveTasksTable.propTypes = {
 };
 
 const mapStateToProps = (state, ownProps) => {
+  const request = Utils.maybe(state.api.request, [ownProps.requestId, 'data'])
   return {
+    request: request,
   tasksAPI: Utils.maybe(
     state.api.activeTasksForRequest,
     [ownProps.requestId]
   ),
-  healthyTaskIds: _.map(Utils.maybe(state.api.request, [ownProps.requestId, 'data', 'taskIds', 'healthy'], []), (task) => {
+  healthyTaskIds: _.map(Utils.maybe(request, ['data', 'taskIds', 'healthy'], []), (task) => {
     return task.id;
   }),
-  cleaningTaskIds: _.map(Utils.maybe(state.api.request, [ownProps.requestId, 'data', 'taskIds', 'cleaning'], []), (task) => {
+  cleaningTaskIds: _.map(Utils.maybe(request, ['data', 'taskIds', 'cleaning'], []), (task) => {
     return task.id;
   })
 }};

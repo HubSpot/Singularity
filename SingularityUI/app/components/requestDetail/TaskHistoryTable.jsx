@@ -71,7 +71,8 @@ const TaskHistoryTable = ({requestId, requestParent, tasksAPI, fetchTaskHistoryF
           key="instanceNo"
           cellData={(task) => (
             <Link to={`task/${task.taskId.id}`}>
-              {task.taskId.instanceNo}
+              {task.taskId.instanceNo + " "}
+              <Glyphicon glyph="new-window" />
             </Link>
           )}
         />
