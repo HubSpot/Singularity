@@ -351,7 +351,7 @@ const logTooltip = (
   </ToolTip>
 );
 
-export const LogLinkAndJSON = logPath => (
+export const LogLinkAndActions = (logPath, requestType) => (
   <Column
     label=""
     id="logLink"
@@ -360,6 +360,10 @@ export const LogLinkAndJSON = logPath => (
     cellData={(rowData) => rowData.taskId}
     cellRender={(taskId, rowData) => (
       <div className="hidden-xs">
+        <KillTaskButton
+          taskId={taskId.id}
+          shouldShowWaitForReplacementTask={Utils.isIn(requestType, ['SERVICE', 'WORKER'])}
+        />
         <OverlayTrigger placement="top" id="view-log-overlay" overlay={logTooltip}>
           <Link to={Utils.tailerPath(taskId.id, logPath)} title="Log">
             <Glyphicon glyph="file" />
@@ -412,7 +416,8 @@ export const InstanceNumberWithLink = (
     cellRender={
       (cellData, rowData) => (
         <Link to={`task/${rowData.taskId ? rowData.taskId.id : rowData.id}`}>
-          {cellData}
+          {cellData + " "}
+          <Glyphicon glyph="new-window" />
         </Link>
       )
     }
