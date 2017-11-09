@@ -66,14 +66,20 @@ const TaskHistoryTable = ({requestId, requestParent, tasksAPI, fetchTaskHistoryF
         isFetching={isFetching}
       >
         <Column
-          label="Name"
-          id="url"
-          key="url"
+          label="Instance"
+          id="instanceNo"
+          key="instanceNo"
           cellData={(task) => (
             <Link to={`task/${task.taskId.id}`}>
-              {task.taskId.id}
+              {task.taskId.instanceNo}
             </Link>
           )}
+        />
+        <Column
+          label="Host"
+          id="host"
+          key="host"
+          cellData={(task) => Utils.humanizeSlaveHostName(task.taskId.host)}
         />
         <Column
           label="Last State"
