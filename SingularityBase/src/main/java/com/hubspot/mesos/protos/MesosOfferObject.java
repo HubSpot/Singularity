@@ -16,6 +16,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 public class MesosOfferObject {
   private final MesosStringValue agentId;
   private final MesosStringValue slaveId;
+  private final MesosStringValue frameworkId;
   private final String hostname;
   private final MesosStringValue id;
   private final Map<String, Object> allOtherFields;
@@ -23,10 +24,12 @@ public class MesosOfferObject {
   @JsonCreator
   public MesosOfferObject(@JsonProperty("agentId") MesosStringValue agentId,
                           @JsonProperty("slaveId") MesosStringValue slaveId,
+                          @JsonProperty("frameworkId") MesosStringValue frameworkId,
                           @JsonProperty("hostname") String hostname,
                           @JsonProperty("id") MesosStringValue id) {
     this.agentId = agentId != null ? agentId : slaveId;
     this.slaveId = agentId != null ? agentId : slaveId;
+    this.frameworkId = frameworkId;
     this.hostname = hostname;
     this.id = id;
     this.allOtherFields = new HashMap<>();
@@ -34,7 +37,9 @@ public class MesosOfferObject {
 
   @JsonIgnore
   public MesosOfferObject sizeOptimized() {
-    return new MesosOfferObject(agentId, null, hostname, id);
+    MesosOfferObject optimized = new MesosOfferObject(agentId, null, frameworkId, hostname, id);
+    optimized.setAllOtherFields("url", allOtherFields.get("url"));
+    return optimized;
   }
 
   public MesosStringValue getAgentId() {
@@ -43,6 +48,10 @@ public class MesosOfferObject {
 
   public MesosStringValue getSlaveId() {
     return slaveId;
+  }
+
+  public MesosStringValue getFrameworkId() {
+    return frameworkId;
   }
 
   public String getHostname() {
@@ -73,6 +82,7 @@ public class MesosOfferObject {
       final MesosOfferObject that = (MesosOfferObject) obj;
       return Objects.equals(this.agentId, that.agentId) &&
           Objects.equals(this.slaveId, that.slaveId) &&
+          Objects.equals(this.frameworkId, that.frameworkId) &&
           Objects.equals(this.hostname, that.hostname) &&
           Objects.equals(this.id, that.id) &&
           Objects.equals(this.allOtherFields, that.allOtherFields);
@@ -82,7 +92,7 @@ public class MesosOfferObject {
 
   @Override
   public int hashCode() {
-    return Objects.hash(agentId, slaveId, hostname, id, allOtherFields);
+    return Objects.hash(agentId, slaveId, frameworkId, hostname, id, allOtherFields);
   }
 
   @Override
@@ -90,6 +100,7 @@ public class MesosOfferObject {
     return "MesosOfferObject{" +
         "agentId=" + agentId +
         ", slaveId=" + slaveId +
+        ", frameworkId=" + frameworkId +
         ", hostname='" + hostname + '\'' +
         ", id=" + id +
         ", allOtherFields=" + allOtherFields +
