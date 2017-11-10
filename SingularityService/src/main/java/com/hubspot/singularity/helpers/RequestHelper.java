@@ -1,7 +1,6 @@
 package com.hubspot.singularity.helpers;
 
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -224,29 +223,36 @@ public class RequestHelper {
 
           return false;
         })
-        .sorted(Comparator.comparingLong((parent) -> {
+        .map((request) -> {
+          Long lastActionTime = null;
           if (includeFullRequestData) {
-            return getLastActionTimeForRequest(
-                parent.getRequest(),
-                requestIdToLastHistory.computeIfAbsent(parent.getRequest().getId(), requestHistoryHelper::getLastHistory),
-                deployStates.computeIfAbsent(parent.getRequest().getId(), deployManager::getRequestDeployState),
-                mostRecentTasks.computeIfAbsent(parent.getRequest().getId(), (id) -> getMostRecentTask(parent.getRequest()))
+            lastActionTime = getLastActionTimeForRequest(
+                request.getRequest(),
+                requestIdToLastHistory.computeIfAbsent(request.getRequest().getId(), requestHistoryHelper::getLastHistory),
+                deployStates.computeIfAbsent(request.getRequest().getId(), deployManager::getRequestDeployState),
+                mostRecentTasks.computeIfAbsent(request.getRequest().getId(), (id) -> getMostRecentTask(request.getRequest()))
             );
           } else {
             // To save on zk calls, if not returning all data, use the most recent deploy timestamps
-            Optional<SingularityRequestDeployState> deployState = deployStates.computeIfAbsent(parent.getRequest().getId(), deployManager::getRequestDeployState);
+            Optional<SingularityRequestDeployState> deployState = deployStates.computeIfAbsent(request.getRequest().getId(), deployManager::getRequestDeployState);
             if (deployState.isPresent()) {
               if (deployState.get().getPendingDeploy().isPresent()) {
-                return deployState.get().getPendingDeploy().get().getTimestamp();
+                lastActionTime = deployState.get().getPendingDeploy().get().getTimestamp();
               }
               if (deployState.get().getActiveDeploy().isPresent()) {
-                return deployState.get().getActiveDeploy().get().getTimestamp();
+                lastActionTime = deployState.get().getActiveDeploy().get().getTimestamp();
               }
             }
-            return System.currentTimeMillis();
+            if (lastActionTime == null) {
+              lastActionTime = System.currentTimeMillis();
+            }
           }
-        }).reversed())
+
+          return new RequestParentWithLastActionTime(request, lastActionTime);
+        })
+        .sorted()
         .limit(limit.or(requests.size()))
+        .map(RequestParentWithLastActionTime::getRequestWithState)
         .collect(Collectors.toList());
 
     final List<SingularityRequestParent> parents = Lists.newArrayListWithCapacity(filteredRequests.size());
