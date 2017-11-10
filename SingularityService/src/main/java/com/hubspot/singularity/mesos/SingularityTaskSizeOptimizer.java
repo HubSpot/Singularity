@@ -8,8 +8,9 @@ import org.apache.mesos.v1.Protos.TaskInfo;
 import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import com.hubspot.mesos.json.SingularityMesosOfferObject;
-import com.hubspot.mesos.json.SingularityMesosTaskObject;
+import com.hubspot.singularity.helpers.MesosProtosUtils;
+import com.hubspot.singularity.helpers.SingularityMesosTaskHolder;
+import com.hubspot.mesos.protos.MesosOfferObject;
 import com.hubspot.singularity.SingularityDeployBuilder;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskRequest;
@@ -19,24 +20,28 @@ import com.hubspot.singularity.config.SingularityConfiguration;
 public class SingularityTaskSizeOptimizer {
 
   private final SingularityConfiguration configuration;
+  private final MesosProtosUtils mesosProtosUtils;
 
   @Inject
-  public SingularityTaskSizeOptimizer(SingularityConfiguration configuration) {
+  public SingularityTaskSizeOptimizer(SingularityConfiguration configuration, MesosProtosUtils mesosProtosUtils) {
     this.configuration = configuration;
+    this.mesosProtosUtils = mesosProtosUtils;
   }
 
-  SingularityTask getSizeOptimizedTask(SingularityTask task) {
+  SingularityTask getSizeOptimizedTask(SingularityMesosTaskHolder taskHolder) {
     if (configuration.isStoreAllMesosTaskInfoForDebugging()) {
-      return task;
+      return taskHolder.getTask();
     }
 
-    TaskInfo.Builder mesosTask = task.getMesosTaskProtos().toBuilder();
+    SingularityTask task = taskHolder.getTask();
+
+    TaskInfo.Builder mesosTask = taskHolder.getMesosTask().toBuilder();
 
     mesosTask.clearData();
 
-    List<SingularityMesosOfferObject> offers = task.getOffers()
+    List<MesosOfferObject> offers = task.getOffers()
         .stream()
-        .map(SingularityMesosOfferObject::sizeOptimized)
+        .map(MesosOfferObject::sizeOptimized)
         .collect(Collectors.toList());
 
     SingularityTaskRequest taskRequest = task.getTaskRequest();
@@ -51,7 +56,7 @@ public class SingularityTaskSizeOptimizer {
           deploy.build(), task.getTaskRequest().getPendingTask());
     }
 
-    return new SingularityTask(taskRequest, task.getTaskId(), offers, SingularityMesosTaskObject.fromProtos(mesosTask.build()), task.getRackId());
+    return new SingularityTask(taskRequest, task.getTaskId(), offers, mesosProtosUtils.taskFromProtos(mesosTask.build()), task.getRackId());
   }
 
 }
