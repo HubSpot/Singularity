@@ -1,6 +1,7 @@
 package com.hubspot.singularity.helpers;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -222,6 +223,11 @@ public class RequestHelper {
 
           return false;
         })
+        .sorted(Comparator.comparingLong((parent) ->
+            getLastActionTimeForRequest(
+                requestIdToLastHistory.computeIfAbsent(parent.getRequest().getId(), requestHistoryHelper::getLastHistory),
+                deployStates.computeIfAbsent(parent.getRequest().getId(), deployManager::getRequestDeployState)))
+        )
         .limit(limit.or(requests.size()))
         .collect(Collectors.toList());
 
@@ -322,5 +328,21 @@ public class RequestHelper {
 
   private boolean userModifiedRequestLast(Optional<SingularityRequestHistory> lastHistory, Optional<SingularityUser> user) {
     return lastHistory.isPresent() && userMatches(lastHistory.get().getUser(), user);
+  }
+
+  private long getLastActionTimeForRequest(Optional<SingularityRequestHistory> lastHistory, Optional<SingularityRequestDeployState> deployState) {
+    long lastUpdate = 0;
+    if (lastHistory.isPresent()) {
+      lastUpdate = lastHistory.get().getCreatedAt();
+    }
+    if (deployState.isPresent()) {
+      if (deployState.get().getActiveDeploy().isPresent()) {
+        lastUpdate = Math.max(lastUpdate, deployState.get().getActiveDeploy().get().getTimestamp());
+      }
+      if (deployState.get().getPendingDeploy().isPresent()) {
+        lastUpdate = Math.max(lastUpdate, deployState.get().getPendingDeploy().get().getTimestamp());
+      }
+    }
+    return lastUpdate;
   }
 }
