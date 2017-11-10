@@ -72,7 +72,7 @@ const TaskHistoryTable = ({requestId, requestParent, tasksAPI, fetchTaskHistoryF
           cellData={(task) => (
             <Link to={`task/${task.taskId.id}`}>
               {task.taskId.instanceNo + " "}
-              <Glyphicon glyph="new-window" />
+              <span className="label label-info">Details</span>
             </Link>
           )}
         />

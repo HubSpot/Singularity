@@ -2,6 +2,7 @@ import React from 'react';
 import { Link } from 'react-router';
 
 import Column from '../common/table/Column';
+import RequestTypeIcon from '../common/icons/RequestTypeIcon';
 
 import Utils from '../../utils';
 
@@ -160,7 +161,7 @@ export const Type = (
         )
         return (
           <OverlayTrigger placement="top" id="view-request-type-overlay" overlay={tooltip}>
-            <Glyphicon glyph={Utils.glyphiconForType(rowData.request.requestType)} />
+            <RequestTypeIcon requestType={rowData.request.requestType}/>
           </OverlayTrigger>
         );
       }

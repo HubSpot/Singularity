@@ -1,4 +1,5 @@
 import React, { Component, PropTypes } from 'react';
+import { Row, Col } from 'react-bootstrap';
 import { connect } from 'react-redux';
 import rootComponent from '../../rootComponent';
 import { Link } from 'react-router';
@@ -8,13 +9,23 @@ import Utils from '../../utils';
 import { refresh } from '../../actions/ui/dashboard';
 import UITable from '../common/table/UITable';
 import Column from '../common/table/Column';
+import Section from '../common/Section';
+import RequestTypeIcon from '../common/icons/RequestTypeIcon'
 import * as Cols from '../requests/Columns';
 import RequestSummaryBox from './RequestSummaryBox';
+import RequestFilters from '../requests/RequestFilters';
 
 class DashboardPage extends Component {
   static propTypes = {
     requests: PropTypes.arrayOf(PropTypes.object).isRequired
   };
+
+  constructor(props) {
+    super(props);
+    this.state = {
+      requestTypeFilters: RequestFilters.REQUEST_TYPES
+    };
+  }
 
   getCurrentEventAndTime(request) {
     let lastEvent;
@@ -87,6 +98,22 @@ class DashboardPage extends Component {
     }
   }
 
+  toggleRequestType(requestType) {
+    let selected = this.state.requestTypeFilters;
+    if (selected.length === RequestFilters.REQUEST_TYPES.length) {
+      selected = [requestType];
+    } else if (_.isEmpty(_.without(selected, requestType))) {
+      selected = RequestFilters.REQUEST_TYPES;
+    } else if (_.contains(selected, requestType)) {
+      selected = _.without(selected, requestType);
+    } else {
+      selected.push(requestType);
+    }
+    this.setState({
+      requestTypeFilters: selected
+    })
+  }
+
   render() {
     const summaryColumn = (
       <Column
@@ -108,23 +135,50 @@ class DashboardPage extends Component {
       />
     );
 
+    const filterItems = RequestFilters.REQUEST_TYPES.map((requestType, index) => {
+      const isActive = _.contains(this.state.requestTypeFilters, requestType);
+      return (
+        <li key={index} className={isActive ? 'active' : ''}>
+          <a onClick={() => this.toggleRequestType(requestType)}>
+            {isActive ? <RequestTypeIcon requestType={requestType} /> : <RequestTypeIcon requestType={requestType} translucent={true} />} {Utils.humanizeText(requestType)} 
+          </a>
+        </li>
+      );
+    });
+
     return (
-      <UITable
-        data={this.props.requests}
-        keyGetter={(requestParent) => requestParent.request.id}
-        paginated={false}
-        defaultSortBy="summary"
-        defaultSortDirection={UITable.SortDirection.ASC}
-      >
-        {[
-          Cols.Starred,
-          Cols.Type,
-          Cols.State,
-          Cols.RequestId,
-          summaryColumn,
-          Cols.Actions
-        ]}
-      </UITable>
+      <div>
+        <header className="detail-header">
+          <Row>
+            <Col md={3}>
+              <h2>My Requests</h2>
+            </Col>
+            <Col md={9}>
+              <div className="requests-filter-container pull-right">
+                <ul className="nav nav-pills nav-pills-multi-select">
+                  {filterItems}
+                </ul>
+              </div>
+            </Col>
+          </Row>
+        </header>
+        <UITable
+          data={_.filter(this.props.requests, (request) => _.contains(this.state.requestTypeFilters, request.request.requestType))}
+          keyGetter={(requestParent) => requestParent.request.id}
+          paginated={false}
+          defaultSortBy="summary"
+          defaultSortDirection={UITable.SortDirection.ASC}
+        >
+          {[
+            Cols.Starred,
+            Cols.Type,
+            Cols.State,
+            Cols.RequestId,
+            summaryColumn,
+            Cols.Actions
+          ]}
+        </UITable>
+      </div>
     );
   }
 }

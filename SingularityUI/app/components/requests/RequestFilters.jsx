@@ -3,6 +3,7 @@ import Utils from '../../utils';
 import { Link } from 'react-router';
 
 import { Row, Col, Nav, NavItem, Glyphicon, Button, ButtonGroup, DropdownButton, MenuItem } from 'react-bootstrap';
+import RequestTypeIcon from '../common/icons/RequestTypeIcon';
 
 export default class RequestFilters extends React.Component {
 
@@ -159,7 +160,7 @@ export default class RequestFilters extends React.Component {
       return (
         <li key={index} className={isActive ? 'active' : ''}>
           <a onClick={() => this.toggleRequestType(requestType)}>
-            {isActive ? <Glyphicon glyph="ok" /> : <span className="icon-placeholder" />} {Utils.humanizeText(requestType)} <Glyphicon glyph={Utils.glyphiconForType(requestType)} />
+            {isActive ? <RequestTypeIcon requestType={requestType} /> : <RequestTypeIcon requestType={requestType} translucent={true} />} {Utils.humanizeText(requestType)} 
           </a>
         </li>
       );
