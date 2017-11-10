@@ -33,7 +33,7 @@
                                 <phase>generate-resources</phase>
                                 <goals>
                                     <goal>copy-resources</goal>
-                                </goals>
+                                </goals>r
                                 <configuration>
                                     <outputDirectory>${basedir}/target/generated-resources/com/hubspot/singularity/views</outputDirectory>
                                     <resources>

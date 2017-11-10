@@ -49,7 +49,7 @@ const ActiveTasksTable = ({request, requestId, tasksAPI, healthyTaskIds, cleanin
     } else if (_.contains(cleaningTaskIds, task.taskId.id)) {
       health = 'cleaning';
     } else {
-      health = 'unknown'
+      health = 'not yet healthy'
     }
     return {
       ...task,
@@ -96,7 +96,7 @@ const mapStateToProps = (state, ownProps) => {
     state.api.activeTasksForRequest,
     [ownProps.requestId]
   ),
-  healthyTaskIds: _.map(Utils.maybe(request, ['data', 'taskIds', 'healthy'], []), (task) => {
+  healthyTaskIds: _.map(Utils.maybe(request, ['taskIds', 'healthy'], []), (task) => {
     return task.id;
   }),
   cleaningTaskIds: _.map(Utils.maybe(request, ['data', 'taskIds', 'cleaning'], []), (task) => {

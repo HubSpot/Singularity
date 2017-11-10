@@ -54,3 +54,40 @@
 
 .request-group-navitem
   word-wrap break-word
+
+.request-type-icon
+  padding-left: 22px
+  position: relative
+
+  &:after
+    display: inline-block
+    position: absolute
+    top: 0
+    left: 0
+    content: ' '
+    width: 16px
+    height: 16px
+    opacity: .7
+
+.request-type-icon-translucent
+  opacity: .2
+
+.request-type-icon-ON_DEMAND
+  &:after
+    background: url('../assets/static/images/icons/icon-on_demand.svg')
+
+.request-type-icon-SCHEDULED
+  &:after
+    background: url('../assets/static/images/icons/icon-scheduled.svg')
+
+.request-type-icon-SERVICE
+  &:after
+    background: url('../assets/static/images/icons/icon-service.svg')
+
+.request-type-icon-WORKER
+  &:after
+    background: url('../assets/static/images/icons/icon-worker.svg')
+
+.request-type-icon-RUN_ONCE
+  &:after
+    background: url('../assets/static/images/icons/icon-run_once.svg')

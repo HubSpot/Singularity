@@ -417,7 +417,7 @@ export const InstanceNumberWithLink = (
       (cellData, rowData) => (
         <Link to={`task/${rowData.taskId ? rowData.taskId.id : rowData.id}`}>
           {cellData + " "}
-          <Glyphicon glyph="new-window" />
+          <span className="label label-info">Details</span>
         </Link>
       )
     }

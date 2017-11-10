@@ -27,6 +27,11 @@ import { createHistory } from 'history';
 import  { loadThirdParty } from 'thirdPartyConfigurations';
 
 import './assets/static/images/favicon.ico';
+import './assets/static/images/icons/icon-on_demand.svg';
+import './assets/static/images/icons/icon-run_once.svg';
+import './assets/static/images/icons/icon-scheduled.svg';
+import './assets/static/images/icons/icon-service.svg';
+import './assets/static/images/icons/icon-worker.svg';
 
 import './styles/index.scss';
 import './styles/index.styl';
