@@ -245,7 +245,7 @@ public class RequestHelper {
             }
             return System.currentTimeMillis();
           }
-        }))
+        }).reversed())
         .limit(limit.or(requests.size()))
         .collect(Collectors.toList());
 
