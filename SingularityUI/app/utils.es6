@@ -452,22 +452,14 @@ const Utils = {
     return !Utils.isIn(slaveInfo.currentState.state, ['DEAD', 'MISSING_ON_STARTUP']);
   },
 
-  glyphiconForType: (type) => {
-    return {
-      'SERVICE': 'phone',
-      'WORKER': 'cog',
-      'SCHEDULED': 'time',
-      'ON_DEMAND': 'play-circle',
-      'RUN_ONCE': 'flash'
-      }[type]
-  },
-
   glyphiconForRequestState: (state) => {
     return {
       'DELETING': {'color': 'color-grey', 'icon':'trash'},
       'ACTIVE': {'color': 'color-success', 'icon':'ok'},
       'PAUSED': {'color': 'color-paused', 'icon':'pause'},
-      'SYSTEM_COOLDOWN': {'color': 'color-warning', 'icon':'warning-sign'}
+      'SYSTEM_COOLDOWN': {'color': 'color-warning', 'icon':'warning-sign'},
+      'PENDING': {'color': 'color-info', 'icon':'hourglass'},
+      'CLEANING': {'color': 'color-cleaning', 'icon':'erase'},
     }[state]
   },
 
