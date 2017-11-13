@@ -197,7 +197,7 @@ public class RequestHelper {
 
     List<SingularityRequestWithState> filteredRequests = requests.stream()
         .filter((request) -> {
-          if (!filterRelevantForUser) {
+          if (!filterRelevantForUser || user.equals(SingularityUser.DEFAULT_USER)) {
             return true;
           }
           String requestId = request.getRequest().getId();
