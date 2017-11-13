@@ -346,7 +346,7 @@ public class RequestHelper {
 
   private boolean userMatches(Optional<String> input, SingularityUser user) {
     return input.isPresent() &&
-        (user.getEmail().equals(input) || user.getId().equals(input.get()) || user.getName().equals(input));
+        (user.getEmail().equals(input) || user.getId().equals(input.get()) || user.getName().equals(input.get()));
   }
 
   private boolean userModifiedRequestLast(Optional<SingularityRequestHistory> lastHistory, SingularityUser user) {
