@@ -114,6 +114,9 @@ public class SingularityConfiguration extends Configuration {
   @NotNull
   private SlavePlacement defaultSlavePlacement = SlavePlacement.GREEDY;
 
+  @Min(value = 0, message = "Must be non-negative")
+  private double placementLeniency = 0.09d;
+
   private boolean defaultValueForKillTasksOfPausedRequests = true;
 
   private int defaultDeployStepWaitTimeMs = 0;
@@ -305,6 +308,10 @@ public class SingularityConfiguration extends Configuration {
   @JsonProperty("ldap")
   @Valid
   private LDAPConfiguration ldapConfiguration;
+
+  @JsonProperty("webhookAuth")
+  @Valid
+  private WebhookAuthConfiguration webhookAuthConfiguration = new WebhookAuthConfiguration();
 
   @JsonProperty("auth")
   @NotNull
@@ -526,6 +533,10 @@ public class SingularityConfiguration extends Configuration {
 
   public SlavePlacement getDefaultSlavePlacement() {
     return defaultSlavePlacement;
+  }
+
+  public double getPlacementLeniency() {
+    return placementLeniency;
   }
 
   public int getDefaultDeployStepWaitTimeMs() {
@@ -958,6 +969,10 @@ public class SingularityConfiguration extends Configuration {
     this.defaultSlavePlacement = defaultSlavePlacement;
   }
 
+  public void setPlacementLeniency(double placementLeniency) {
+    this.placementLeniency = placementLeniency;
+  }
+
   public void setDefaultValueForKillTasksOfPausedRequests(boolean defaultValueForKillTasksOfPausedRequests) {
     this.defaultValueForKillTasksOfPausedRequests = defaultValueForKillTasksOfPausedRequests;
   }
@@ -1254,6 +1269,14 @@ public class SingularityConfiguration extends Configuration {
   @JsonIgnore
   public Optional<LDAPConfiguration> getLdapConfigurationOptional() {
     return Optional.fromNullable(ldapConfiguration);
+  }
+
+  public WebhookAuthConfiguration getWebhookAuthConfiguration() {
+    return webhookAuthConfiguration;
+  }
+
+  public void setWebhookAuthConfiguration(WebhookAuthConfiguration webhookAuthConfiguration) {
+    this.webhookAuthConfiguration = webhookAuthConfiguration;
   }
 
   public void setLdapConfiguration(LDAPConfiguration ldapConfiguration) {

@@ -120,6 +120,12 @@ public class SingularityLeaderCache {
     return new ArrayList<>(pendingTaskIdToPendingTask.keySet());
   }
 
+  public List<SingularityPendingTaskId> getPendingTaskIdsForRequest(String requestId) {
+    return pendingTaskIdToPendingTask.keySet().stream()
+        .filter(t -> t.getRequestId().equals(requestId))
+        .collect(Collectors.toList());
+  }
+
   public void deletePendingTask(SingularityPendingTaskId pendingTaskId) {
     if (!active) {
       LOG.warn("deletePendingTask {}, but not active", pendingTaskId);

@@ -202,12 +202,4 @@ public final class JavaUtils {
   public static String getReplaceHyphensWithUnderscores(String string) {
     return string.replace("-", "_");
   }
-
-  public static final Optional<String> getUserEmail(Optional<SingularityUser> user) {
-    if (user.isPresent()) {
-      return user.get().getEmail();
-    } else {
-      return Optional.absent();
-    }
-  }
 }

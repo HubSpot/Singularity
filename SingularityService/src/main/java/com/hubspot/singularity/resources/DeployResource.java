@@ -23,7 +23,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.hubspot.jackson.jaxrs.PropertyFiltering;
-import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.DeployState;
 import com.hubspot.singularity.RequestState;
 import com.hubspot.singularity.SingularityAction;
@@ -40,7 +39,6 @@ import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityRequestDeployState;
 import com.hubspot.singularity.SingularityRequestParent;
 import com.hubspot.singularity.SingularityRequestWithState;
-import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTransformHelpers;
 import com.hubspot.singularity.SingularityUpdatePendingDeployRequest;
 import com.hubspot.singularity.SingularityUser;
@@ -61,6 +59,8 @@ import com.wordnik.swagger.annotations.ApiParam;
 import com.wordnik.swagger.annotations.ApiResponse;
 import com.wordnik.swagger.annotations.ApiResponses;
 
+import io.dropwizard.auth.Auth;
+
 @Path(ApiPaths.DEPLOY_RESOURCE_PATH)
 @Produces({ MediaType.APPLICATION_JSON })
 @Api(description="Manages Singularity Deploys for existing requests", value=ApiPaths.DEPLOY_RESOURCE_PATH, position=2)
@@ -69,10 +69,10 @@ public class DeployResource extends AbstractRequestResource {
   private final TaskManager taskManager;
 
   @Inject
-  public DeployResource(RequestManager requestManager, DeployManager deployManager, SingularityValidator validator, SingularityAuthorizationHelper authorizationHelper, Optional<SingularityUser> user,
+  public DeployResource(RequestManager requestManager, DeployManager deployManager, SingularityValidator validator, SingularityAuthorizationHelper authorizationHelper,
                         SingularityConfiguration configuration, TaskManager taskManager, LeaderLatch leaderLatch,
                         AsyncHttpClient httpClient, ObjectMapper objectMapper, RequestHelper requestHelper, RequestHistoryHelper requestHistoryHelper) {
-    super(requestManager, deployManager, user, validator, authorizationHelper, httpClient, leaderLatch, objectMapper, requestHelper, requestHistoryHelper);
+    super(requestManager, deployManager, validator, authorizationHelper, httpClient, leaderLatch, objectMapper, requestHelper, requestHistoryHelper);
     this.configuration = configuration;
     this.taskManager = taskManager;
   }
@@ -81,7 +81,7 @@ public class DeployResource extends AbstractRequestResource {
   @PropertyFiltering
   @Path("/pending")
   @ApiOperation(response=SingularityPendingDeploy.class, responseContainer="List", value="Retrieve the list of current pending deploys")
-  public Iterable<SingularityPendingDeploy> getPendingDeploys() {
+  public Iterable<SingularityPendingDeploy> getPendingDeploys(@Auth SingularityUser user) {
     return authorizationHelper.filterByAuthorizedRequests(user, deployManager.getPendingDeploys(), SingularityTransformHelpers.PENDING_DEPLOY_TO_REQUEST_ID, SingularityAuthorizationScope.READ);
   }
 
@@ -92,19 +92,19 @@ public class DeployResource extends AbstractRequestResource {
     @ApiResponse(code=400, message="Deploy object is invalid"),
     @ApiResponse(code=409, message="A current deploy is in progress. It may be canceled by calling DELETE"),
   })
-  public SingularityRequestParent deploy(@Context HttpServletRequest requestContext, @ApiParam(required=true) SingularityDeployRequest deployRequest) {
-    return maybeProxyToLeader(requestContext, SingularityRequestParent.class, deployRequest, () -> deploy(deployRequest));
+  public SingularityRequestParent deploy(@Auth SingularityUser user, @Context HttpServletRequest requestContext, @ApiParam(required=true) SingularityDeployRequest deployRequest) {
+    return maybeProxyToLeader(requestContext, SingularityRequestParent.class, deployRequest, () -> deploy(deployRequest, user));
   }
 
-  public SingularityRequestParent deploy(SingularityDeployRequest deployRequest) {
+  public SingularityRequestParent deploy(SingularityDeployRequest deployRequest, SingularityUser user) {
     validator.checkActionEnabled(SingularityAction.DEPLOY);
     SingularityDeploy deploy = deployRequest.getDeploy();
     checkNotNullBadRequest(deploy, "DeployRequest must have a deploy object");
 
-    final Optional<String> deployUser = JavaUtils.getUserEmail(user);
+    final Optional<String> deployUser = user.getEmail();
     final String requestId = checkNotNullBadRequest(deploy.getRequestId(), "DeployRequest must have a non-null requestId");
 
-    SingularityRequestWithState requestWithState = fetchRequestWithState(requestId);
+    SingularityRequestWithState requestWithState = fetchRequestWithState(requestId, user);
 
     authorizationHelper.checkForAuthorization(requestWithState.getRequest(), user, SingularityAuthorizationScope.WRITE);
 
@@ -142,7 +142,7 @@ public class DeployResource extends AbstractRequestResource {
           deploy.getDeployStepWaitTimeMs().or(configuration.getDefaultDeployStepWaitTimeMs()),
           false,
           deploy.getAutoAdvanceDeploySteps().or(true),
-          Collections.<SingularityTaskId>emptySet(),
+          Collections.emptySet(),
           System.currentTimeMillis()));
     }
 
@@ -156,7 +156,7 @@ public class DeployResource extends AbstractRequestResource {
 
     boolean deployAlreadyInProgress = deployManager.createPendingDeploy(pendingDeployObj) == SingularityCreateResult.EXISTED;
     if (deployAlreadyInProgress && deployToUnpause) {
-      requestManager.pause(request, now, deployUser, Optional.<String>absent());
+      requestManager.pause(request, now, deployUser, Optional.absent());
     }
 
     checkConflict(!deployAlreadyInProgress,
@@ -179,9 +179,10 @@ public class DeployResource extends AbstractRequestResource {
     @ApiResponse(code=400, message="Deploy is not in the pending state pending or is not not present"),
   })
   public SingularityRequestParent cancelDeploy(
+      @Auth SingularityUser user,
       @ApiParam(required=true, value="The Singularity Request Id from which the deployment is removed.") @PathParam("requestId") String requestId,
       @ApiParam(required=true, value="The Singularity Deploy Id that should be removed.") @PathParam("deployId") String deployId) {
-    SingularityRequestWithState requestWithState = fetchRequestWithState(requestId);
+    SingularityRequestWithState requestWithState = fetchRequestWithState(requestId, user);
 
     authorizationHelper.checkForAuthorization(requestWithState.getRequest(), user, SingularityAuthorizationScope.WRITE);
     validator.checkActionEnabled(SingularityAction.CANCEL_DEPLOY);
@@ -191,7 +192,7 @@ public class DeployResource extends AbstractRequestResource {
     checkBadRequest(deployState.isPresent() && deployState.get().getPendingDeploy().isPresent() && deployState.get().getPendingDeploy().get().getDeployId().equals(deployId),
       "Request %s does not have a pending deploy %s", requestId, deployId);
 
-    deployManager.createCancelDeployRequest(new SingularityDeployMarker(requestId, deployId, System.currentTimeMillis(), JavaUtils.getUserEmail(user), Optional.<String> absent()));
+    deployManager.createCancelDeployRequest(new SingularityDeployMarker(requestId, deployId, System.currentTimeMillis(), user.getEmail(), Optional.<String> absent()));
 
     return fillEntireRequest(requestWithState);
   }
@@ -202,8 +203,9 @@ public class DeployResource extends AbstractRequestResource {
   @ApiResponses({
     @ApiResponse(code=400, message="Deploy is not in the pending state pending or is not not present")
   })
-  public SingularityRequestParent updatePendingDeploy(@ApiParam(required=true) SingularityUpdatePendingDeployRequest updateRequest) {
-    SingularityRequestWithState requestWithState = fetchRequestWithState(updateRequest.getRequestId());
+  public SingularityRequestParent updatePendingDeploy(@Auth SingularityUser user,
+                                                      @ApiParam(required=true) SingularityUpdatePendingDeployRequest updateRequest) {
+    SingularityRequestWithState requestWithState = fetchRequestWithState(updateRequest.getRequestId(), user);
 
     authorizationHelper.checkForAuthorization(requestWithState.getRequest(), user, SingularityAuthorizationScope.WRITE);
 
