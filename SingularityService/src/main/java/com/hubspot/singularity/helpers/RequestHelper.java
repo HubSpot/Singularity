@@ -195,7 +195,7 @@ public class RequestHelper {
     Map<String, Optional<SingularityRequestDeployState>> deployStates = new HashMap<>();
     Map<String, Optional<SingularityTaskIdHistory>> mostRecentTasks = new HashMap<>();
 
-    List<SingularityRequestWithState> filteredRequests = requests.stream()
+    List<SingularityRequestWithState> filteredRequests = requests.parallelStream()
         .filter((request) -> {
           if (!filterRelevantForUser || user.equals(SingularityUser.DEFAULT_USER)) {
             return true;
