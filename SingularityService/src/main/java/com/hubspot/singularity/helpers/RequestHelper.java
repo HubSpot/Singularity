@@ -1,14 +1,13 @@
 package com.hubspot.singularity.helpers;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 import com.google.common.base.Optional;
-import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.hubspot.singularity.RequestCleanupType;
@@ -191,11 +190,11 @@ public class RequestHelper {
                                                                      boolean filterRelevantForUser,
                                                                      boolean includeFullRequestData,
                                                                      Optional<Integer> limit) {
-    Map<String, Optional<SingularityRequestHistory>> requestIdToLastHistory = new HashMap<>();
-    Map<String, Optional<SingularityRequestDeployState>> deployStates = new HashMap<>();
-    Map<String, Optional<SingularityTaskIdHistory>> mostRecentTasks = new HashMap<>();
+    Map<String, Optional<SingularityRequestHistory>> requestIdToLastHistory = new ConcurrentHashMap<>();
+    Map<String, Optional<SingularityRequestDeployState>> deployStates = new ConcurrentHashMap<>();
+    Map<String, Optional<SingularityTaskIdHistory>> mostRecentTasks = new ConcurrentHashMap<>();
 
-    List<SingularityRequestWithState> filteredRequests = requests.parallelStream()
+    return requests.parallelStream()
         .filter((request) -> {
           if (!filterRelevantForUser || user.equals(SingularityUser.DEFAULT_USER)) {
             return true;
@@ -217,11 +216,7 @@ public class RequestHelper {
             }
           }
           Optional<SingularityRequestDeployState> deployState = deployStates.computeIfAbsent(requestId, deployManager::getRequestDeployState);
-          if (userAssociatedWithDeploy(deployState, user)) {
-            return true;
-          }
-
-          return false;
+          return userAssociatedWithDeploy(deployState, user);
         })
         .map((request) -> {
           Long lastActionTime = null;
@@ -244,36 +239,31 @@ public class RequestHelper {
               }
             }
             if (lastActionTime == null) {
-              lastActionTime = System.currentTimeMillis();
+              lastActionTime = 0L;
             }
           }
 
           return new RequestParentWithLastActionTime(request, lastActionTime);
         })
-        .sorted()
+        .sorted() // Sorted by last action time descending
         .limit(limit.or(requests.size()))
-        .map(RequestParentWithLastActionTime::getRequestWithState)
+        .map((parentWithActionTime) -> {
+          SingularityRequestWithState requestWithState = parentWithActionTime.getRequestWithState();
+          return new SingularityRequestParent(
+              requestWithState.getRequest(),
+              requestWithState.getState(),
+              deployStates.computeIfAbsent(requestWithState.getRequest().getId(), deployManager::getRequestDeployState),
+              Optional.absent(), // full activeDeploy data not provided
+              Optional.absent(), Optional.absent(), // full pendingDeploy data and state not provided
+              includeFullRequestData ? requestManager.getExpiringBounce(requestWithState.getRequest().getId()) : Optional.absent(),
+              includeFullRequestData ? requestManager.getExpiringPause(requestWithState.getRequest().getId()) : Optional.absent(),
+              includeFullRequestData ? requestManager.getExpiringScale(requestWithState.getRequest().getId()) : Optional.absent(),
+              includeFullRequestData ? requestManager.getExpiringSkipHealthchecks(requestWithState.getRequest().getId()) : Optional.absent(),
+              includeFullRequestData ? getTaskIdsByStatusForRequest(requestWithState) : Optional.absent(),
+              includeFullRequestData ? requestIdToLastHistory.computeIfAbsent(requestWithState.getRequest().getId(),requestHistoryHelper::getLastHistory) : Optional.absent(),
+              includeFullRequestData ? mostRecentTasks.computeIfAbsent(requestWithState.getRequest().getId(), (id) -> getMostRecentTask(requestWithState.getRequest())) : Optional.absent());
+        })
         .collect(Collectors.toList());
-
-    final List<SingularityRequestParent> parents = Lists.newArrayListWithCapacity(filteredRequests.size());
-
-    for (SingularityRequestWithState requestWithState : filteredRequests) {
-      parents.add(new SingularityRequestParent(
-          requestWithState.getRequest(),
-          requestWithState.getState(),
-          deployStates.computeIfAbsent(requestWithState.getRequest().getId(), deployManager::getRequestDeployState),
-          Optional.absent(), // full activeDeploy data not provided
-          Optional.absent(), Optional.absent(), // full pendingDeploy data and state not provided
-          includeFullRequestData ? requestManager.getExpiringBounce(requestWithState.getRequest().getId()) : Optional.absent(),
-          includeFullRequestData ? requestManager.getExpiringPause(requestWithState.getRequest().getId()) : Optional.absent(),
-          includeFullRequestData ? requestManager.getExpiringScale(requestWithState.getRequest().getId()) : Optional.absent(),
-          includeFullRequestData ? requestManager.getExpiringSkipHealthchecks(requestWithState.getRequest().getId()) : Optional.absent(),
-          includeFullRequestData ? getTaskIdsByStatusForRequest(requestWithState) : Optional.absent(),
-          includeFullRequestData ? requestIdToLastHistory.computeIfAbsent(requestWithState.getRequest().getId(),requestHistoryHelper::getLastHistory) : Optional.absent(),
-          includeFullRequestData ? mostRecentTasks.computeIfAbsent(requestWithState.getRequest().getId(), (id) -> getMostRecentTask(requestWithState.getRequest())) : Optional.absent()));
-    }
-
-    return parents;
   }
 
   public Optional<SingularityTaskIdsByStatus> getTaskIdsByStatusForRequest(String requestId) {
