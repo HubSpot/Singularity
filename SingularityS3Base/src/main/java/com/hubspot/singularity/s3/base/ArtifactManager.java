@@ -207,11 +207,11 @@ public class ArtifactManager extends SimpleProcessManager {
       Files.copy(source, destinationPath);
     } catch (FileAlreadyExistsException e) {
       if (!calculateMd5sum(source).equals(calculateMd5sum(destinationPath))) {
-        Throwables.propagate(e);
+        throw new RuntimeException(e);
       }
     }
     catch (IOException e) {
-      throw Throwables.propagate(e);
+      throw new RuntimeException(e);
     }
   }
 
