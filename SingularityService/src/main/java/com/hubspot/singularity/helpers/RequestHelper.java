@@ -1,10 +1,10 @@
 package com.hubspot.singularity.helpers;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 import com.google.common.base.Optional;
@@ -190,9 +190,9 @@ public class RequestHelper {
                                                                      boolean filterRelevantForUser,
                                                                      boolean includeFullRequestData,
                                                                      Optional<Integer> limit) {
-    Map<String, Optional<SingularityRequestHistory>> requestIdToLastHistory = new HashMap<>();
-    Map<String, Optional<SingularityRequestDeployState>> deployStates = new HashMap<>();
-    Map<String, Optional<SingularityTaskIdHistory>> mostRecentTasks = new HashMap<>();
+    Map<String, Optional<SingularityRequestHistory>> requestIdToLastHistory = new ConcurrentHashMap<>();
+    Map<String, Optional<SingularityRequestDeployState>> deployStates = new ConcurrentHashMap<>();
+    Map<String, Optional<SingularityTaskIdHistory>> mostRecentTasks = new ConcurrentHashMap<>();
 
     return requests.parallelStream()
         .filter((request) -> {
