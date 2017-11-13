@@ -38,11 +38,13 @@ export default class RequestFilters extends React.Component {
     },
     {
       filterVal: 'pending',
-      displayVal: 'Pending'
+      displayVal: 'Pending',
+      fullStateName: 'PENDING'
     },
     {
       filterVal: 'cleaning',
-      displayVal: 'Cleaning'
+      displayVal: 'Cleaning',
+      fullStateName: 'CLEANING'
     },
     {
       displayVal: 'Deploy status'
