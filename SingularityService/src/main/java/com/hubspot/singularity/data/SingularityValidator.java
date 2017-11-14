@@ -448,6 +448,7 @@ public class SingularityValidator {
           Optional.of(getRunId(request.getRunId())),
           request.getCommandLineArgs(),
           request.getResources(),
+          request.getEnvironmentVariables(),
           request.getRunAt());
     } else {
       return new SingularityRunNowRequest(

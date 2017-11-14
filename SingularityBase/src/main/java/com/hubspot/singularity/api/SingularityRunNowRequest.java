@@ -1,6 +1,7 @@
 package com.hubspot.singularity.api;
 
 import java.util.List;
+import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -15,6 +16,7 @@ public class SingularityRunNowRequest {
   private final Optional<List<String>> commandLineArgs;
   private final Optional<Boolean> skipHealthchecks;
   private final Optional<Resources> resources;
+  private final Optional<Map<String, String>> environmentVariables;
   private final Optional<Long> runAt;
 
   public SingularityRunNowRequest(
@@ -22,9 +24,10 @@ public class SingularityRunNowRequest {
       Optional<Boolean> skipHealthchecks,
       Optional<String> runId,
       Optional<List<String>> commandLineArgs,
-      Optional<Resources> resources
+      Optional<Resources> resources,
+      Optional<Map<String, String>> environmentVariables
   ) {
-    this(message, skipHealthchecks, runId, commandLineArgs, resources, Optional.<Long>absent());
+    this(message, skipHealthchecks, runId, commandLineArgs, resources, environmentVariables, Optional.<Long>absent());
   }
 
   @JsonCreator
@@ -33,12 +36,14 @@ public class SingularityRunNowRequest {
                                   @JsonProperty("runId") Optional<String> runId,
                                   @JsonProperty("commandLineArgs") Optional<List<String>> commandLineArgs,
                                   @JsonProperty("resources") Optional<Resources> resources,
+                                  @JsonProperty("environmentVariables") Optional<Map<String, String>> environmentVariables,
                                   @JsonProperty("runAt") Optional<Long> runAt) {
     this.message = message;
     this.commandLineArgs = commandLineArgs;
     this.runId = runId;
     this.skipHealthchecks = skipHealthchecks;
     this.resources = resources;
+    this.environmentVariables = environmentVariables;
     this.runAt = runAt;
   }
 
@@ -67,6 +72,11 @@ public class SingularityRunNowRequest {
     return resources;
   }
 
+  @ApiModelProperty(required=false, value="Override the environment variables for launched tasks")
+  public Optional<Map<String, String>> getEnvironmentVariables() {
+    return environmentVariables;
+  }
+
   @ApiModelProperty(required=false, value="Schedule this task to run at a specified time")
   public Optional<Long> getRunAt() {
     return runAt;
@@ -80,6 +90,7 @@ public class SingularityRunNowRequest {
         ", commandLineArgs=" + commandLineArgs +
         ", skipHealthchecks=" + skipHealthchecks +
         ", resources=" + resources +
+        ", environmentVariables=" + environmentVariables +
         ", runAt=" + runAt +
         '}';
   }

@@ -3,16 +3,18 @@ package com.hubspot.singularity.mesos;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.stream.Collectors;
 
 import org.apache.mesos.v1.Protos;
+import org.apache.mesos.v1.Protos.AgentID;
 import org.apache.mesos.v1.Protos.ContainerInfo.DockerInfo.PortMapping;
 import org.apache.mesos.v1.Protos.ContainerInfo.Type;
 import org.apache.mesos.v1.Protos.Environment.Variable;
@@ -20,7 +22,6 @@ import org.apache.mesos.v1.Protos.FrameworkID;
 import org.apache.mesos.v1.Protos.Offer;
 import org.apache.mesos.v1.Protos.OfferID;
 import org.apache.mesos.v1.Protos.Parameter;
-import org.apache.mesos.v1.Protos.AgentID;
 import org.apache.mesos.v1.Protos.Volume.Mode;
 import org.junit.Before;
 import org.junit.Test;
@@ -48,8 +49,10 @@ import com.hubspot.singularity.SingularityPendingTask;
 import com.hubspot.singularity.SingularityPendingTaskId;
 import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityRequestBuilder;
+import com.hubspot.singularity.SingularityRunNowRequestBuilder;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskRequest;
+import com.hubspot.singularity.api.SingularityRunNowRequest;
 import com.hubspot.singularity.config.NetworkConfiguration;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.ExecutorIdGenerator;
@@ -135,6 +138,40 @@ public class SingularityMesosTaskBuilderTest {
     }
 
     assertTrue("Expected env variable STARTED_BY_USER to be set to " + user, success);
+  }
+
+  @Test
+  public void testEnvironmentVariableOverrides() {
+    Map<String, String> overrideVariables = new HashMap<>();
+    overrideVariables.put("HS_ACCESS_GROUP", "test");
+    overrideVariables.put("STARTED_BY_USER", "notTestUser");
+
+    SingularityRunNowRequest runNowRequest = new SingularityRunNowRequestBuilder()
+        .environmentVariables(overrideVariables)
+        .build();
+
+    final SingularityRequest request = new SingularityRequestBuilder("test", RequestType.WORKER)
+        .build();
+    final SingularityDeploy deploy = new SingularityDeployBuilder("test", "1")
+        .setCommand(Optional.of("/bin/echo hi"))
+        .setRunImmediately(Optional.of(runNowRequest))
+        .build();
+    final SingularityTaskRequest taskRequest = new SingularityTaskRequest(request, deploy, pendingTask);
+    final SingularityTask task = builder.buildTask(offerHolder, null, taskRequest, taskResources, executorResources);
+
+    Map<String, String> environmentVariables = task.getMesosTask()
+        .getCommand()
+        .getEnvironment()
+        .getVariablesList()
+        .stream()
+        .collect(Collectors.toMap(Variable::getName, Variable::getValue));
+
+    for (String key : overrideVariables.keySet()) {
+      assertEquals(
+          "Environment variable " + key + " not overridden.",
+          environmentVariables.get(key),
+          overrideVariables.get(key));
+    }
   }
 
   @Test
