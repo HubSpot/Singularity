@@ -2,7 +2,9 @@ package com.hubspot.singularity.mesos;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
 import java.util.stream.Collectors;
 
@@ -53,6 +55,7 @@ import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskExecutorData;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTaskRequest;
+import com.hubspot.singularity.api.SingularityRunNowRequest;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.ExecutorIdGenerator;
 
@@ -163,47 +166,47 @@ class SingularityMesosTaskBuilder {
     return maybeContainerInfo.isPresent() && maybeContainerInfo.get().getDocker().isPresent() && !maybeContainerInfo.get().getDocker().get().getLiteralHostPorts().isEmpty();
   }
 
-  private void setEnv(Environment.Builder envBldr, String key, Object value) {
+  private void setEnv(Environment.Builder envBldr, Object key, Object value) {
     if (value == null) {
       return;
     }
-    envBldr.addVariables(Variable.newBuilder().setName(key).setValue(value.toString()));
+    envBldr.addVariables(Variable.newBuilder().setName(key.toString()).setValue(value.toString()));
   }
 
   private void prepareEnvironment(final SingularityTaskRequest task, SingularityTaskId taskId, CommandInfo.Builder commandBuilder, final SingularityOfferHolder offerHolder, final Optional<long[]> ports) {
-    Environment.Builder envBldr = Environment.newBuilder();
+    Map<String, Object> envVars = new HashMap<>();
 
-    setEnv(envBldr, "INSTANCE_NO", task.getPendingTask().getPendingTaskId().getInstanceNo());
-    setEnv(envBldr, "TASK_HOST", offerHolder.getHostname());
+    envVars.put("INSTANCE_NO", task.getPendingTask().getPendingTaskId().getInstanceNo());
+    envVars.put("TASK_HOST", offerHolder.getHostname());
 
-    setEnv(envBldr, "TASK_RACK_ID", offerHolder.getRackId());
+    envVars.put("TASK_RACK_ID", offerHolder.getRackId());
 
-    setEnv(envBldr, "TASK_REQUEST_ID", task.getPendingTask().getPendingTaskId().getRequestId());
-    setEnv(envBldr, "TASK_DEPLOY_ID", taskId.getDeployId());
-    setEnv(envBldr, "TASK_ID", taskId.getId());
-    setEnv(envBldr, "ESTIMATED_INSTANCE_COUNT", task.getRequest().getInstancesSafe());
+    envVars.put("TASK_REQUEST_ID", task.getPendingTask().getPendingTaskId().getRequestId());
+    envVars.put("TASK_DEPLOY_ID", taskId.getDeployId());
+    envVars.put("TASK_ID", taskId.getId());
+    envVars.put("ESTIMATED_INSTANCE_COUNT", task.getRequest().getInstancesSafe());
 
     if (task.getPendingTask().getUser().isPresent()) {
-      setEnv(envBldr, "STARTED_BY_USER", task.getPendingTask().getUser().get());
+      envVars.put("STARTED_BY_USER", task.getPendingTask().getUser().get());
     }
 
     for (Entry<String, String> envEntry : task.getDeploy().getEnv().or(Collections.<String, String>emptyMap()).entrySet()) {
-      setEnv(envBldr, envEntry.getKey(), fillInTaskIdValues(envEntry.getValue(), offerHolder, taskId));
+      envVars.put(envEntry.getKey(), fillInTaskIdValues(envEntry.getValue(), offerHolder, taskId));
     }
 
     if (task.getDeploy().getTaskEnv().isPresent() && task.getDeploy().getTaskEnv().get().containsKey(taskId.getInstanceNo()) && !task.getDeploy().getTaskEnv().get().get(taskId.getInstanceNo()).isEmpty()) {
       for (Entry<String, String> envEntry : task.getDeploy().getTaskEnv().get().get(taskId.getInstanceNo()).entrySet()) {
-        setEnv(envBldr, envEntry.getKey(), fillInTaskIdValues(envEntry.getValue(), offerHolder, taskId));
+        envVars.put(envEntry.getKey(), fillInTaskIdValues(envEntry.getValue(), offerHolder, taskId));
       }
     }
 
     if (ports.isPresent()) {
       for (int portNum = 0; portNum < ports.get().length; portNum++) {
         if (portNum == 0) {
-          setEnv(envBldr, "PORT", ports.get()[portNum]);
+          envVars.put("PORT", ports.get()[portNum]);
         }
 
-        setEnv(envBldr, String.format("PORT%s", portNum), ports.get()[portNum]);
+        envVars.put(String.format("PORT%s", portNum), ports.get()[portNum]);
       }
     }
 
@@ -211,15 +214,28 @@ class SingularityMesosTaskBuilder {
       Resources override = task.getPendingTask().getResources().get();
 
       if (override.getCpus() != 0) {
-        setEnv(envBldr, "DEPLOY_CPUS", ((long) override.getCpus()));
+        envVars.put("DEPLOY_CPUS", ((long) override.getCpus()));
       }
 
       if (override.getMemoryMb() != 0) {
-        setEnv(envBldr, "DEPLOY_MEM", ((long) override.getMemoryMb()));
+        envVars.put("DEPLOY_MEM", ((long) override.getMemoryMb()));
       }
-
     }
 
+    if (task.getDeploy().getRunImmediately().isPresent()) {
+      SingularityRunNowRequest runNowRequest = task.getDeploy().getRunImmediately().get();
+
+      if (runNowRequest.getEnvironmentVariables().isPresent()) {
+        for (Entry entry : runNowRequest.getEnvironmentVariables().get().entrySet()) {
+          envVars.put(entry.getKey().toString(), entry.getValue());
+        }
+      }
+    }
+
+    Environment.Builder envBldr = Environment.newBuilder();
+    for (Entry entry : envVars.entrySet()) {
+      setEnv(envBldr, entry.getKey(), entry.getValue());
+    }
     commandBuilder.setEnvironment(envBldr.build());
   }
 
