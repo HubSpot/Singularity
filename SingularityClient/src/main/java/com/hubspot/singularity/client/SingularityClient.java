@@ -14,6 +14,7 @@ import java.util.Random;
 import java.util.concurrent.ExecutionException;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.function.Supplier;
 
 import javax.inject.Provider;
 
@@ -235,9 +236,10 @@ public class SingularityClient {
   private final boolean ssl;
 
   private final HttpClient httpClient;
-  private final Optional<SingularityClientCredentials> credentials;
+  private Optional<SingularityClientCredentials> credentials;
 
   private final Retryer<HttpResponse> httpResponseRetryer;
+  private final Supplier<SingularityClientCredentials> credentialsSupplier;
 
   @Inject
   @Deprecated
@@ -262,6 +264,10 @@ public class SingularityClient {
   }
 
   public SingularityClient(String contextPath, HttpClient httpClient, Provider<List<String>> hostsProvider, Optional<SingularityClientCredentials> credentials, boolean ssl, int retryAttempts, Predicate<HttpResponse> retryStrategy) {
+    this(contextPath, httpClient, hostsProvider, credentials, ssl, retryAttempts, retryStrategy, null);
+  }
+
+  public SingularityClient(String contextPath, HttpClient httpClient, Provider<List<String>> hostsProvider, Optional<SingularityClientCredentials> credentials, boolean ssl, int retryAttempts, Predicate<HttpResponse> retryStrategy, Supplier<SingularityClientCredentials> credentialsSupplier) {
     this.httpClient = httpClient;
     this.contextPath = contextPath;
 
@@ -277,6 +283,7 @@ public class SingularityClient {
         .retryIfResult(retryStrategy::test)
         .retryIfException()
         .build();
+    this.credentialsSupplier = credentialsSupplier;
   }
 
   private String getApiBase(String host) {
@@ -397,6 +404,10 @@ public class SingularityClient {
     }
   }
 
+  private void authenticate() {
+    credentials = Optional.of(credentialsSupplier.get());
+  }
+
   private void delete(Function<String, String> hostToUrl, String type, String id) {
     delete(hostToUrl, type, id, Optional.absent());
   }
@@ -476,6 +487,14 @@ public class SingularityClient {
     }
 
     addQueryParams(request, queryParams);
+
+    if (!credentials.isPresent() && credentialsSupplier != null) {
+      try {
+        authenticate();
+      } catch (Exception e) {
+        throw new SingularityClientException("Could not authenticate", e);
+      }
+    }
     addCredentials(request);
 
     List<String> hosts = new ArrayList<>(hostsProvider.get());

@@ -6,6 +6,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.function.Predicate;
+import java.util.function.Supplier;
 
 import javax.inject.Named;
 import javax.inject.Provider;
@@ -38,6 +39,7 @@ public class SingularityClientProvider implements Provider<SingularityClient> {
 
   private int retryAttempts = 3;
   private Predicate<HttpResponse> retryStrategy = HttpResponse::isServerError;
+  private Supplier<SingularityClientCredentials> credentialsSupplier = null;
 
   @Inject
   public SingularityClientProvider(@Named(SingularityClientModule.HTTP_CLIENT_NAME) HttpClient httpClient) {
@@ -81,6 +83,12 @@ public class SingularityClientProvider implements Provider<SingularityClient> {
   @Inject(optional = true)
   public SingularityClientProvider setRetryStrategy(@Named(SingularityClientModule.RETRY_STRATEGY) Predicate<HttpResponse> retryStrategy) {
     this.retryStrategy = retryStrategy;
+    return this;
+  }
+
+  @Inject(optional = true)
+  public SingularityClientProvider setAuthenticateMethod(@Named(SingularityClientModule.CREDENTIALS_SUPPLIER) Supplier<SingularityClientCredentials> credentialsSupplier) {
+    this.credentialsSupplier = credentialsSupplier;
     return this;
   }
 

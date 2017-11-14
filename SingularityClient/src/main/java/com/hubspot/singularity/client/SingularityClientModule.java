@@ -39,6 +39,9 @@ public class SingularityClientModule extends AbstractModule {
   // bind this to a Predicate<HttpResponse> to say whether a request should be retried
   public static final String RETRY_STRATEGY = "singularity.client.retry.strategy";
 
+  // bind this to a Supplier<SingularityClientCredentials> to generate client credentials
+  public static final String CREDENTIALS_SUPPLIER = "singularity.client.credentials.supplier";
+
   private final List<String> hosts;
   private final Optional<HttpConfig> httpConfig;
 
