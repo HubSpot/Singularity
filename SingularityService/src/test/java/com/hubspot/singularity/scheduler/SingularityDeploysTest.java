@@ -911,7 +911,7 @@ public class SingularityDeploysTest extends SingularitySchedulerTestBase {
     initRequestWithType(RequestType.SCHEDULED, false);
     String deployId = "d1";
 
-    SingularityRunNowRequest runNowRequest = new SingularityRunNowRequestBuilder().message("Message").build();
+    SingularityRunNowRequest runNowRequest = new SingularityRunNowRequestBuilder().setMessage("Message").build();
     SingularityDeploy deploy = new SingularityDeployBuilder(requestId, deployId)
         .setRunImmediately(Optional.of(runNowRequest))
         .setCommand(Optional.of("printenv > tmp.txt"))
@@ -936,7 +936,7 @@ public class SingularityDeploysTest extends SingularitySchedulerTestBase {
     initRequestWithType(RequestType.SCHEDULED, false);
     String deployId = "d1";
 
-    SingularityRunNowRequest runNowRequest = new SingularityRunNowRequestBuilder().message("Message").build();
+    SingularityRunNowRequest runNowRequest = new SingularityRunNowRequestBuilder().setMessage("Message").build();
     SingularityDeploy deploy = new SingularityDeployBuilder(requestId, deployId)
         .setRunImmediately(Optional.of(runNowRequest))
         .setCommand(Optional.of("printenv > tmp.txt"))

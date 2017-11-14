@@ -13,7 +13,7 @@ public class SingularityRunNowRequestBuilder {
   private Optional<List<String>> commandLineArgs;
   private Optional<Boolean> skipHealthchecks;
   private Optional<Resources> resources;
-  private Optional<Map<String, String>> environmentVariables;
+  private Map<String, String> envOverrides;
   private Optional<Long> runAt;
 
   public SingularityRunNowRequestBuilder()
@@ -23,48 +23,48 @@ public class SingularityRunNowRequestBuilder {
     this.commandLineArgs = Optional.absent();
     this.skipHealthchecks = Optional.absent();
     this.resources = Optional.absent();
-    this.environmentVariables = Optional.absent();
+    this.envOverrides = null;
     this.runAt = Optional.absent();
   }
 
-  public SingularityRunNowRequestBuilder message(String message) {
+  public SingularityRunNowRequestBuilder setMessage(String message) {
     this.message = Optional.of(message);
     return this;
   }
 
-  public SingularityRunNowRequestBuilder runId(String runId) {
+  public SingularityRunNowRequestBuilder setRunId(String runId) {
     this.runId = Optional.of(runId);
     return this;
   }
 
-  public SingularityRunNowRequestBuilder commandLineArgs(List<String> commandLineArgs) {
+  public SingularityRunNowRequestBuilder setCommandLineArgs(List<String> commandLineArgs) {
     this.commandLineArgs = Optional.of(commandLineArgs);
     return this;
   }
 
-  public SingularityRunNowRequestBuilder skipHealthchecks(Boolean skipHealthchecks) {
+  public SingularityRunNowRequestBuilder setSkipHealthchecks(Boolean skipHealthchecks) {
     this.skipHealthchecks = Optional.of(skipHealthchecks);
     return this;
   }
 
-  public SingularityRunNowRequestBuilder resources(Resources resources) {
+  public SingularityRunNowRequestBuilder setResources(Resources resources) {
     this.resources = Optional.of(resources);
     return this;
   }
 
-  public SingularityRunNowRequestBuilder environmentVariables(Map<String, String> environmentVariables) {
-    this.environmentVariables = Optional.of(environmentVariables);
+  public SingularityRunNowRequestBuilder setEnvOverrides(Map<String, String> environmentVariables) {
+    this.envOverrides = environmentVariables;
     return this;
   }
 
-  public SingularityRunNowRequestBuilder runAt(Long runAt) {
+  public SingularityRunNowRequestBuilder setRunAt(Long runAt) {
     this.runAt = Optional.of(runAt);
     return this;
   }
 
   public SingularityRunNowRequest build() {
     return new SingularityRunNowRequest(
-        message, skipHealthchecks, runId, commandLineArgs, resources, environmentVariables, runAt);
+        message, skipHealthchecks, runId, commandLineArgs, resources, envOverrides, runAt);
   }
 
 }

@@ -641,7 +641,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     deploy("d2");
 
     SingularityRunNowRequest runNowRequest = new SingularityRunNowRequestBuilder()
-        .resources(new Resources(2, 2, 0))
+        .setResources(new Resources(2, 2, 0))
         .build();
     requestResource.scheduleImmediately(singularityUser, requestId, runNowRequest);
 
@@ -1570,7 +1570,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
         singularityUser,
         requestId,
         new SingularityRunNowRequestBuilder()
-            .runAt(requestedLaunchTime)
+            .setRunAt(requestedLaunchTime)
             .build()
     );
 
@@ -1593,7 +1593,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
         singularityUser,
         requestId,
         new SingularityRunNowRequestBuilder()
-            .runAt(requestedLaunchTime)
+            .setRunAt(requestedLaunchTime)
             .build()
     );
 
@@ -2328,7 +2328,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     deploy("d2");
 
     SingularityRunNowRequest runNowRequest = new SingularityRunNowRequestBuilder()
-        .resources(new Resources(2, 2, 0))
+        .setResources(new Resources(2, 2, 0))
         .build();
     requestResource.scheduleImmediately(singularityUser, requestId, runNowRequest);
 
@@ -2356,7 +2356,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     deploy("d2");
 
     SingularityRunNowRequest runNowRequest = new SingularityRunNowRequestBuilder()
-        .resources(new Resources(2, 2, 0))
+        .setResources(new Resources(2, 2, 0))
         .build();
     requestResource.scheduleImmediately(singularityUser, requestId, runNowRequest);
 

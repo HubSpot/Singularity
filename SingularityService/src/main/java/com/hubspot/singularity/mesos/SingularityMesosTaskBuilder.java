@@ -166,11 +166,11 @@ class SingularityMesosTaskBuilder {
     return maybeContainerInfo.isPresent() && maybeContainerInfo.get().getDocker().isPresent() && !maybeContainerInfo.get().getDocker().get().getLiteralHostPorts().isEmpty();
   }
 
-  private void setEnv(Environment.Builder envBldr, Object key, Object value) {
+  private void setEnv(Environment.Builder envBldr, String key, Object value) {
     if (value == null) {
       return;
     }
-    envBldr.addVariables(Variable.newBuilder().setName(key.toString()).setValue(value.toString()));
+    envBldr.addVariables(Variable.newBuilder().setName(key).setValue(value.toString()));
   }
 
   private void prepareEnvironment(final SingularityTaskRequest task, SingularityTaskId taskId, CommandInfo.Builder commandBuilder, final SingularityOfferHolder offerHolder, final Optional<long[]> ports) {
@@ -225,16 +225,14 @@ class SingularityMesosTaskBuilder {
     if (task.getDeploy().getRunImmediately().isPresent()) {
       SingularityRunNowRequest runNowRequest = task.getDeploy().getRunImmediately().get();
 
-      if (runNowRequest.getEnvironmentVariables().isPresent()) {
-        for (Entry entry : runNowRequest.getEnvironmentVariables().get().entrySet()) {
-          envVars.put(entry.getKey().toString(), entry.getValue());
-        }
+      for (Entry entry : runNowRequest.getEnvOverrides().entrySet()) {
+        envVars.put(entry.getKey().toString(), entry.getValue());
       }
     }
 
     Environment.Builder envBldr = Environment.newBuilder();
     for (Entry entry : envVars.entrySet()) {
-      setEnv(envBldr, entry.getKey(), entry.getValue());
+      setEnv(envBldr, entry.getKey().toString(), entry.getValue());
     }
     commandBuilder.setEnvironment(envBldr.build());
   }

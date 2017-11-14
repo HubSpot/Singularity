@@ -448,7 +448,7 @@ public class SingularityValidator {
           Optional.of(getRunId(request.getRunId())),
           request.getCommandLineArgs(),
           request.getResources(),
-          request.getEnvironmentVariables(),
+          request.getEnvOverrides(),
           request.getRunAt());
     } else {
       return new SingularityRunNowRequest(
@@ -457,7 +457,7 @@ public class SingularityValidator {
           Optional.of(getRunId(Optional.absent())),
           Optional.absent(),
           Optional.absent(),
-          Optional.absent());
+          null);
     }
   }
 
