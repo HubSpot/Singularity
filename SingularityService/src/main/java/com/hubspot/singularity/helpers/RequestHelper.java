@@ -266,15 +266,10 @@ public class RequestHelper {
             CompletableFuture<Optional<SingularityExpiringScale>> maybeExpiringScale = CompletableFuture.supplyAsync(() -> requestManager.getExpiringScale(requestWithState.getRequest().getId())).exceptionally((throwable) -> Optional.absent());
             CompletableFuture<Optional<SingularityExpiringSkipHealthchecks>> maybeExpiringSkipHealthchecks = CompletableFuture.supplyAsync(() -> requestManager.getExpiringSkipHealthchecks(requestWithState.getRequest().getId())).exceptionally((throwable) -> Optional.absent());
             return new SingularityRequestParent(
-                requestWithState.getRequest(),
-                requestWithState.getState(),
+                requestWithState.getRequest(), requestWithState.getState(),
                 deployStates.computeIfAbsent(requestWithState.getRequest().getId(), deployManager::getRequestDeployState),
-                Optional.absent(), // full activeDeploy data not provided
-                Optional.absent(), Optional.absent(), // full pendingDeploy data and state not provided
-                maybeExpiringBounce.join(),
-                maybeExpiringPause.join(),
-                maybeExpiringScale.join(),
-                maybeExpiringSkipHealthchecks.join(),
+                Optional.absent(), Optional.absent(), Optional.absent(), // full deploy data not provided
+                maybeExpiringBounce.join(), maybeExpiringPause.join(), maybeExpiringScale.join(), maybeExpiringSkipHealthchecks.join(),
                 maybeTaskIdsByStatus.join(),
                 requestIdToLastHistory.computeIfAbsent(requestWithState.getRequest().getId(),requestHistoryHelper::getLastHistory),
                 mostRecentTasks.computeIfAbsent(requestWithState.getRequest().getId(), (id) -> getMostRecentTask(requestWithState.getRequest())));
