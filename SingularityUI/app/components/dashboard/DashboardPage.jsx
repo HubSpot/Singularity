@@ -168,6 +168,7 @@ class DashboardPage extends Component {
           paginated={false}
           defaultSortBy="summary"
           defaultSortDirection={UITable.SortDirection.ASC}
+          renderAllRows={true}
         >
           {[
             Cols.Starred,
