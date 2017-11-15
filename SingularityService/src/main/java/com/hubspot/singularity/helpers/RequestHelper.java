@@ -196,13 +196,10 @@ public class RequestHelper {
                                                                      boolean filterRelevantForUser,
                                                                      boolean includeFullRequestData,
                                                                      Optional<Integer> limit) {
-    Map<String, Optional<SingularityTaskIdHistory>> mostRecentTasks = new ConcurrentHashMap<>();
-
-    LOG.trace("Start stream {}", System.currentTimeMillis());
-
+    final Map<String, Optional<SingularityTaskIdHistory>> mostRecentTasks = new ConcurrentHashMap<>();
     final Map<String, SingularityRequestDeployState> deployStates = deployManager.getRequestDeployStatesByRequestIds(requests.stream().map((r) -> r.getRequest().getId()).collect(Collectors.toList()));
-    LOG.trace("Fetched deploy states {}", System.currentTimeMillis());
     final Map<String, Optional<SingularityRequestHistory>> requestIdToLastHistory;
+
     if (includeFullRequestData) {
       requestIdToLastHistory = requests.parallelStream()
           .collect(Collectors.toMap(
@@ -212,7 +209,6 @@ public class RequestHelper {
     } else {
       requestIdToLastHistory = Collections.emptyMap();
     }
-    LOG.trace("Fethed request histories {}", System.currentTimeMillis());
 
     return requests.parallelStream()
         .filter((request) -> {
@@ -237,7 +233,6 @@ public class RequestHelper {
           return userAssociatedWithDeploy(Optional.fromNullable(deployStates.get(requestId)), user);
         })
         .map((request) -> {
-          long start = System.currentTimeMillis();
           Long lastActionTime = null;
           if (includeFullRequestData) {
             lastActionTime = getLastActionTimeForRequest(
@@ -261,7 +256,6 @@ public class RequestHelper {
               lastActionTime = 0L;
             }
           }
-          LOG.trace("Got last action time in {}ms", System.currentTimeMillis() - start);
 
           return new RequestParentWithLastActionTime(request, lastActionTime);
         })
@@ -330,7 +324,6 @@ public class RequestHelper {
   }
 
   private Optional<SingularityTaskIdsByStatus> getTaskIdsByStatusForRequest(SingularityRequestWithState requestWithState) {
-    long start = System.currentTimeMillis();
     String requestId = requestWithState.getRequest().getId();
     Optional<SingularityPendingDeploy> pendingDeploy = deployManager.getPendingDeploy(requestId);
 
@@ -357,8 +350,6 @@ public class RequestHelper {
         }
       }
     }
-
-    LOG.trace("Got task ids by status in {}ms", System.currentTimeMillis() - start);
 
     return Optional.of(new SingularityTaskIdsByStatus(healthyTaskIds, notYetHealthyTaskIds, pendingTaskIds, cleaningTaskIds));
   }
