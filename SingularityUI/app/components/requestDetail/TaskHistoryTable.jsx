@@ -71,8 +71,7 @@ const TaskHistoryTable = ({requestId, requestParent, tasksAPI, fetchTaskHistoryF
           key="instanceNo"
           cellData={(task) => (
             <Link to={`task/${task.taskId.id}`}>
-              {task.taskId.instanceNo + " "}
-              <span className="label label-info">Details</span>
+              {task.taskId.instanceNo} - launched {Utils.timestampFromNow(task.taskId.startedAt)}
             </Link>
           )}
         />
@@ -101,12 +100,6 @@ const TaskHistoryTable = ({requestId, requestParent, tasksAPI, fetchTaskHistoryF
               {task.taskId.deployId}
             </Link>
           )}
-        />
-        <Column
-          label="Started At"
-          id="started"
-          key="started"
-          cellData={(task) => Utils.timestampFromNow(task.taskId.startedAt)}
         />
         <Column
           label="Updated At"
