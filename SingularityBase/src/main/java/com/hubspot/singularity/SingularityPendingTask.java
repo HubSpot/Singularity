@@ -1,6 +1,8 @@
 package com.hubspot.singularity;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 import javax.annotation.Nonnull;
@@ -20,6 +22,7 @@ public class SingularityPendingTask {
   private final Optional<Boolean> skipHealthchecks;
   private final Optional<String> message;
   private final Optional<Resources> resources;
+  private final Map<String, String> envOverrides;
   private final Optional<String> actionId;
 
   public static Predicate<SingularityPendingTask> matchingRequest(final String requestId) {
@@ -45,9 +48,16 @@ public class SingularityPendingTask {
   }
 
   @JsonCreator
-  public SingularityPendingTask(@JsonProperty("pendingTaskId") SingularityPendingTaskId pendingTaskId, @JsonProperty("cmdLineArgsList") Optional<List<String>> cmdLineArgsList,
-      @JsonProperty("user") Optional<String> user, @JsonProperty("runId") Optional<String> runId, @JsonProperty("skipHealthchecks") Optional<Boolean> skipHealthchecks,
-      @JsonProperty("message") Optional<String> message, @JsonProperty("resources") Optional<Resources> resources, @JsonProperty("actionId") Optional<String> actionId) {
+  public SingularityPendingTask(
+      @JsonProperty("pendingTaskId") SingularityPendingTaskId pendingTaskId,
+      @JsonProperty("cmdLineArgsList") Optional<List<String>> cmdLineArgsList,
+      @JsonProperty("user") Optional<String> user,
+      @JsonProperty("runId") Optional<String> runId,
+      @JsonProperty("skipHealthchecks") Optional<Boolean> skipHealthchecks,
+      @JsonProperty("message") Optional<String> message,
+      @JsonProperty("resources") Optional<Resources> resources,
+      @JsonProperty("envOverrides") Map<String, String> envOverrides,
+      @JsonProperty("actionId") Optional<String> actionId) {
     this.pendingTaskId = pendingTaskId;
     this.user = user;
     this.message = message;
@@ -55,6 +65,7 @@ public class SingularityPendingTask {
     this.runId = runId;
     this.skipHealthchecks = skipHealthchecks;
     this.resources = resources;
+    this.envOverrides = envOverrides == null ? Collections.emptyMap() : envOverrides;
     this.actionId = actionId;
   }
 
@@ -103,6 +114,8 @@ public class SingularityPendingTask {
     return resources;
   }
 
+  public Map<String, String> getEnvOverrides() { return envOverrides; }
+
   public Optional<String> getActionId() {
     return actionId;
   }
@@ -117,6 +130,7 @@ public class SingularityPendingTask {
         ", skipHealthchecks=" + skipHealthchecks +
         ", message=" + message +
         ", resources=" + resources +
+        ", envOverrides=" + envOverrides +
         ", actionId=" + actionId +
         '}';
   }

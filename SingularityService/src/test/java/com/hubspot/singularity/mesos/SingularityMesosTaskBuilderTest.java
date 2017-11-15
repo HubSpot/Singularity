@@ -46,13 +46,12 @@ import com.hubspot.singularity.SingularityDeploy;
 import com.hubspot.singularity.SingularityDeployBuilder;
 import com.hubspot.singularity.SingularityPendingRequest.PendingType;
 import com.hubspot.singularity.SingularityPendingTask;
+import com.hubspot.singularity.SingularityPendingTaskBuilder;
 import com.hubspot.singularity.SingularityPendingTaskId;
 import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityRequestBuilder;
-import com.hubspot.singularity.SingularityRunNowRequestBuilder;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskRequest;
-import com.hubspot.singularity.api.SingularityRunNowRequest;
 import com.hubspot.singularity.config.NetworkConfiguration;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.ExecutorIdGenerator;
@@ -70,8 +69,10 @@ public class SingularityMesosTaskBuilderTest {
 
   @Before
   public void createMocks() {
-    pendingTask = new SingularityPendingTask(new SingularityPendingTaskId("test", "1", 0, 1, PendingType.IMMEDIATE, 0), Optional.<List<String>> absent(),
-        Optional.of(user), Optional.<String> absent(), Optional.<Boolean> absent(), Optional.<String> absent(), Optional.<Resources>absent(), Optional.<String>absent());
+    pendingTask = new SingularityPendingTaskBuilder()
+        .setPendingTaskId(new SingularityPendingTaskId("test", "1", 0, 1, PendingType.IMMEDIATE, 0))
+        .setUser(user)
+        .build();
 
     final SingularitySlaveAndRackHelper slaveAndRackHelper = mock(SingularitySlaveAndRackHelper.class);
     final ExecutorIdGenerator idGenerator = mock(ExecutorIdGenerator.class);
@@ -146,15 +147,15 @@ public class SingularityMesosTaskBuilderTest {
     overrideVariables.put("MY_NEW_ENV_VAR", "test");
     overrideVariables.put("STARTED_BY_USER", "notTestUser");
 
-    SingularityRunNowRequest runNowRequest = new SingularityRunNowRequestBuilder()
-        .setEnvOverrides(overrideVariables)
-        .build();
-
     final SingularityRequest request = new SingularityRequestBuilder("test", RequestType.WORKER)
         .build();
     final SingularityDeploy deploy = new SingularityDeployBuilder("test", "1")
         .setCommand(Optional.of("/bin/echo hi"))
-        .setRunImmediately(Optional.of(runNowRequest))
+        .build();
+    final SingularityPendingTask pendingTask = new SingularityPendingTaskBuilder()
+        .setPendingTaskId(new SingularityPendingTaskId("test", "1", 0, 1, PendingType.IMMEDIATE, 0))
+        .setUser(user)
+        .setEnvOverrides(overrideVariables)
         .build();
     final SingularityTaskRequest taskRequest = new SingularityTaskRequest(request, deploy, pendingTask);
     final SingularityTask task = builder.buildTask(offerHolder, null, taskRequest, taskResources, executorResources);

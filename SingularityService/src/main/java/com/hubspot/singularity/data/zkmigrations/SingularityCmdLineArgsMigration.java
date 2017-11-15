@@ -16,11 +16,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
 import com.google.inject.Inject;
-import com.hubspot.mesos.Resources;
 import com.hubspot.singularity.SingularityCreateResult;
 import com.hubspot.singularity.SingularityPendingRequest;
 import com.hubspot.singularity.SingularityPendingRequest.PendingType;
-import com.hubspot.singularity.SingularityPendingTask;
+import com.hubspot.singularity.SingularityPendingTaskBuilder;
 import com.hubspot.singularity.SingularityPendingTaskId;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.data.transcoders.StringTranscoder;
@@ -142,8 +141,12 @@ public class SingularityCmdLineArgsMigration extends ZkDataMigration {
       for (SingularityPendingTaskId pendingTaskId : taskManager.getPendingTaskIds()) {
         Optional<String> cmdLineArgs = getCmdLineArgs(pendingTaskId);
 
-        SingularityCreateResult result = taskManager.savePendingTask(new SingularityPendingTask(pendingTaskId, getCmdLineArgs(cmdLineArgs), Optional.<String> absent(),
-            Optional.<String> absent(), Optional.<Boolean> absent(), Optional.<String> absent(), Optional.<Resources>absent(), Optional.<String>absent()));
+        SingularityCreateResult result = taskManager.savePendingTask(
+            new SingularityPendingTaskBuilder()
+                .setPendingTaskId(pendingTaskId)
+                .setCmdLineArgsList(getCmdLineArgs(cmdLineArgs))
+                .build()
+        );
 
         LOG.info("Saving {} ({}) {}", pendingTaskId, cmdLineArgs, result);
       }

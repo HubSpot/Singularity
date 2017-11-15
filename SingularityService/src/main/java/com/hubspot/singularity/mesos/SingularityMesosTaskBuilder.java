@@ -55,7 +55,6 @@ import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskExecutorData;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTaskRequest;
-import com.hubspot.singularity.api.SingularityRunNowRequest;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.ExecutorIdGenerator;
 
@@ -222,12 +221,8 @@ class SingularityMesosTaskBuilder {
       }
     }
 
-    if (task.getDeploy().getRunImmediately().isPresent()) {
-      SingularityRunNowRequest runNowRequest = task.getDeploy().getRunImmediately().get();
-
-      for (Entry entry : runNowRequest.getEnvOverrides().entrySet()) {
-        envVars.put(entry.getKey().toString(), entry.getValue());
-      }
+    for (Entry entry : task.getPendingTask().getEnvOverrides().entrySet()) {
+      envVars.put(entry.getKey().toString(), entry.getValue());
     }
 
     Environment.Builder envBldr = Environment.newBuilder();
