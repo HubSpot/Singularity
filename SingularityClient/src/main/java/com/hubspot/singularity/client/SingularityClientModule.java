@@ -42,6 +42,9 @@ public class SingularityClientModule extends AbstractModule {
   // bind this to a Supplier<SingularityClientCredentials> to generate client credentials
   public static final String CREDENTIALS_SUPPLIER = "singularity.client.credentials.supplier";
 
+  // bind this to a boolean to determine if unauthorized responses should be retried when credentialsSupplier is present
+  public static final String RETRY_ON_UNAUTHORIZED = "singularity.client.retry.on.unauthorized";
+
   private final List<String> hosts;
   private final Optional<HttpConfig> httpConfig;
 

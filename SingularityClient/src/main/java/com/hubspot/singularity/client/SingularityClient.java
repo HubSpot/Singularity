@@ -264,10 +264,10 @@ public class SingularityClient {
   }
 
   public SingularityClient(String contextPath, HttpClient httpClient, Provider<List<String>> hostsProvider, Optional<SingularityClientCredentials> credentials, boolean ssl, int retryAttempts, Predicate<HttpResponse> retryStrategy) {
-    this(contextPath, httpClient, hostsProvider, credentials, ssl, retryAttempts, retryStrategy, null);
+    this(contextPath, httpClient, hostsProvider, credentials, ssl, retryAttempts, retryStrategy, null, true);
   }
 
-  public SingularityClient(String contextPath, HttpClient httpClient, Provider<List<String>> hostsProvider, Optional<SingularityClientCredentials> credentials, boolean ssl, int retryAttempts, Predicate<HttpResponse> retryStrategy, Supplier<SingularityClientCredentials> credentialsSupplier) {
+  public SingularityClient(String contextPath, HttpClient httpClient, Provider<List<String>> hostsProvider, Optional<SingularityClientCredentials> credentials, boolean ssl, int retryAttempts, Predicate<HttpResponse> retryStrategy, Supplier<SingularityClientCredentials> credentialsSupplier, boolean retryOnUnauthorized) {
     this.httpClient = httpClient;
     this.contextPath = contextPath;
 
@@ -280,6 +280,13 @@ public class SingularityClient {
     this.httpResponseRetryer = RetryerBuilder.<HttpResponse>newBuilder()
         .withStopStrategy(StopStrategies.stopAfterAttempt(retryAttempts))
         .withWaitStrategy(WaitStrategies.exponentialWait())
+        .retryIfResult((response) -> {
+          if (response != null && response.getStatusCode() == 401 && credentialsSupplier != null && retryOnUnauthorized) {
+            authenticate();
+            return true;
+          }
+          return false;
+        })
         .retryIfResult(retryStrategy::test)
         .retryIfException()
         .build();

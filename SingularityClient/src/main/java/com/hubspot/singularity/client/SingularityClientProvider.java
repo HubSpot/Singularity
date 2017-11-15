@@ -40,6 +40,7 @@ public class SingularityClientProvider implements Provider<SingularityClient> {
   private int retryAttempts = 3;
   private Predicate<HttpResponse> retryStrategy = HttpResponse::isServerError;
   private Supplier<SingularityClientCredentials> credentialsSupplier = null;
+  private boolean retryOnUnauthorized = true;
 
   @Inject
   public SingularityClientProvider(@Named(SingularityClientModule.HTTP_CLIENT_NAME) HttpClient httpClient) {
@@ -87,8 +88,14 @@ public class SingularityClientProvider implements Provider<SingularityClient> {
   }
 
   @Inject(optional = true)
-  public SingularityClientProvider setAuthenticateMethod(@Named(SingularityClientModule.CREDENTIALS_SUPPLIER) Supplier<SingularityClientCredentials> credentialsSupplier) {
+  public SingularityClientProvider setCredentialsSupplier(@Named(SingularityClientModule.CREDENTIALS_SUPPLIER) Supplier<SingularityClientCredentials> credentialsSupplier) {
     this.credentialsSupplier = credentialsSupplier;
+    return this;
+  }
+
+  @Inject
+  public SingularityClientProvider setRetryOnUnauthorized(@Named(SingularityClientModule.RETRY_ON_UNAUTHORIZED) Boolean retryOnUnauthorized) {
+    this.retryOnUnauthorized = retryOnUnauthorized;
     return this;
   }
 
@@ -108,14 +115,21 @@ public class SingularityClientProvider implements Provider<SingularityClient> {
   public SingularityClient get() {
     Preconditions.checkState(contextPath != null, "contextPath null");
     Preconditions.checkState(!hosts.isEmpty(), "no hosts provided");
-    return new SingularityClient(contextPath, httpClient, hosts, credentials, ssl);
+    return new SingularityClient(contextPath, httpClient, ProviderUtils.of(hosts), credentials, ssl, retryAttempts, retryStrategy, credentialsSupplier, retryOnUnauthorized);
   }
 
   public SingularityClient get(Optional<SingularityClientCredentials> credentials) {
     Preconditions.checkState(contextPath != null, "contextPath null");
     Preconditions.checkState(!hosts.isEmpty(), "no hosts provided");
     Preconditions.checkNotNull(credentials);
-    return new SingularityClient(contextPath, httpClient, hosts, credentials, ssl);
+    return new SingularityClient(contextPath, httpClient, ProviderUtils.of(hosts), credentials, ssl, retryAttempts, retryStrategy, credentialsSupplier, retryOnUnauthorized);
+  }
+
+  public SingularityClient get(Supplier<SingularityClientCredentials> credentialsSupplier) {
+    Preconditions.checkState(contextPath != null, "contextPath null");
+    Preconditions.checkState(!hosts.isEmpty(), "no hosts provided");
+    Preconditions.checkNotNull(credentialsSupplier);
+    return new SingularityClient(contextPath, httpClient, ProviderUtils.of(hosts), credentials, ssl, retryAttempts, retryStrategy, credentialsSupplier, retryOnUnauthorized);
   }
 
   static String getClusterMembers(CuratorFramework curator) {
