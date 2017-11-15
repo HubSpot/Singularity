@@ -32,13 +32,13 @@ public class SingularityRunNowRequest {
   }
 
   @JsonCreator
-  public SingularityRunNowRequest(@JsonProperty("setMessage") Optional<String> message,
-                                  @JsonProperty("setSkipHealthchecks") Optional<Boolean> skipHealthchecks,
-                                  @JsonProperty("setRunId") Optional<String> runId,
-                                  @JsonProperty("setCommandLineArgs") Optional<List<String>> commandLineArgs,
+  public SingularityRunNowRequest(@JsonProperty("message") Optional<String> message,
+                                  @JsonProperty("skipHealthchecks") Optional<Boolean> skipHealthchecks,
+                                  @JsonProperty("runId") Optional<String> runId,
+                                  @JsonProperty("commandLineArgs") Optional<List<String>> commandLineArgs,
                                   @JsonProperty("resources") Optional<Resources> resources,
-                                  @JsonProperty("setEnvOverrides") Map<String, String> envOverrides,
-                                  @JsonProperty("setRunAt") Optional<Long> runAt) {
+                                  @JsonProperty("envOverrides") Map<String, String> envOverrides,
+                                  @JsonProperty("runAt") Optional<Long> runAt) {
     this.message = message;
     this.commandLineArgs = commandLineArgs;
     this.runId = runId;
@@ -48,7 +48,7 @@ public class SingularityRunNowRequest {
     this.runAt = runAt;
   }
 
-  @ApiModelProperty(required=false, value="A setMessage to show to users about why this action was taken")
+  @ApiModelProperty(required=false, value="A message to show to users about why this action was taken")
   public Optional<String> getMessage() {
     return message;
   }
@@ -68,7 +68,7 @@ public class SingularityRunNowRequest {
     return skipHealthchecks;
   }
 
-  @ApiModelProperty(required=false, value="Override the setResources from the active deploy for this run")
+  @ApiModelProperty(required=false, value="Override the resources from the active deploy for this run")
   public Optional<Resources> getResources() {
     return resources;
   }

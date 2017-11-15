@@ -1,5 +1,6 @@
 package com.hubspot.singularity;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -26,7 +27,7 @@ public class SingularityPendingTaskBuilder {
     this.skipHealthchecks = Optional.absent();
     this.message = Optional.absent();
     this.resources = Optional.absent();
-    this.envOverrides = null;
+    this.envOverrides = Collections.emptyMap();
     this.actionId = Optional.absent();
   }
 
@@ -87,4 +88,18 @@ public class SingularityPendingTaskBuilder {
     );
   }
 
+  @Override
+  public String toString() {
+    return "SingularityPendingTask{" +
+        "pendingTaskId=" + pendingTaskId +
+        ", cmdLineArgsList=" + cmdLineArgsList +
+        ", user=" + user +
+        ", runId=" + runId +
+        ", skipHealthchecks=" + skipHealthchecks +
+        ", message=" + message +
+        ", resources=" + resources +
+        ", envOverrides=" + envOverrides +
+        ", actionId=" + actionId +
+        '}';
+  }
 }

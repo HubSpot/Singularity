@@ -1,5 +1,6 @@
 package com.hubspot.singularity;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -23,7 +24,7 @@ public class SingularityRunNowRequestBuilder {
     this.commandLineArgs = Optional.absent();
     this.skipHealthchecks = Optional.absent();
     this.resources = Optional.absent();
-    this.envOverrides = null;
+    this.envOverrides = Collections.emptyMap();
     this.runAt = Optional.absent();
   }
 
@@ -67,4 +68,16 @@ public class SingularityRunNowRequestBuilder {
         message, skipHealthchecks, runId, commandLineArgs, resources, envOverrides, runAt);
   }
 
+  @Override
+  public String toString() {
+    return "SingularityRunNowRequestBuilder{" +
+        "message=" + message +
+        ", runId=" + runId +
+        ", commandLineArgs=" + commandLineArgs +
+        ", skipHealthchecks=" + skipHealthchecks +
+        ", resources=" + resources +
+        ", envOverrides=" + envOverrides +
+        ", runAt=" + runAt +
+        "}";
+  }
 }
