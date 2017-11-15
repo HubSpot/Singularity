@@ -47,29 +47,29 @@ public class SingularityClientProvider implements Provider<SingularityClient> {
     this.httpClient = httpClient;
   }
 
-  @Inject(optional=true) // optional because we have a default
+  @Inject(optional = true) // optional because we have a default
   public SingularityClientProvider setContextPath(@Named(SingularityClientModule.CONTEXT_PATH) String contextPath) {
     this.contextPath = contextPath;
     return this;
   }
 
-  @Inject(optional=true) // optional in case we use fixed hosts
+  @Inject(optional = true) // optional in case we use fixed hosts
   public SingularityClientProvider setHosts(@Named(SingularityClientModule.HOSTS_PROPERTY_NAME) String commaSeparatedHosts) {
     return setHosts(commaSeparatedHosts.split(","));
   }
 
-  @Inject(optional=true) // optional in case we use Curator
+  @Inject(optional = true) // optional in case we use Curator
   public SingularityClientProvider setCurator(@Named(SingularityClientModule.CURATOR_NAME) CuratorFramework curator) {
     return setHosts(getClusterMembers(curator));
   }
 
-  @Inject(optional=true)
+  @Inject(optional = true)
   public SingularityClientProvider setHosts(@Named(SingularityClientModule.HOSTS_PROPERTY_NAME) List<String> hosts) {
     this.hosts = ImmutableList.copyOf(hosts);
     return this;
   }
 
-  @Inject(optional=true)
+  @Inject(optional = true)
   public SingularityClientProvider setCredentials(@Named(SingularityClientModule.CREDENTIALS_PROPERTY_NAME) SingularityClientCredentials credentials) {
     this.credentials = Optional.of(credentials);
     return this;
@@ -93,7 +93,7 @@ public class SingularityClientProvider implements Provider<SingularityClient> {
     return this;
   }
 
-  @Inject
+  @Inject(optional = true)
   public SingularityClientProvider setRetryOnUnauthorized(@Named(SingularityClientModule.RETRY_ON_UNAUTHORIZED) Boolean retryOnUnauthorized) {
     this.retryOnUnauthorized = retryOnUnauthorized;
     return this;
@@ -105,7 +105,7 @@ public class SingularityClientProvider implements Provider<SingularityClient> {
     return this;
   }
 
-  @Inject(optional=true)
+  @Inject(optional = true)
   public SingularityClientProvider setSsl(boolean ssl) {
     this.ssl = ssl;
     return this;

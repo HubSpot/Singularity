@@ -282,8 +282,12 @@ public class SingularityClient {
         .withWaitStrategy(WaitStrategies.exponentialWait())
         .retryIfResult((response) -> {
           if (response != null && response.getStatusCode() == 401 && credentialsSupplier != null && retryOnUnauthorized) {
-            authenticate();
-            return true;
+            try {
+              authenticate();
+              return true;
+            } catch (Exception e) {
+              throw new SingularityClientException("Could not authenticate", e);
+            }
           }
           return false;
         })
