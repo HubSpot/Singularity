@@ -1,6 +1,7 @@
 package com.hubspot.singularity.helpers;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -8,9 +9,13 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.RequestCleanupType;
 import com.hubspot.singularity.RequestState;
 import com.hubspot.singularity.SingularityCreateResult;
@@ -39,7 +44,6 @@ import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.data.SingularityValidator;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.data.UserManager;
-import com.hubspot.singularity.data.history.RequestHistoryHelper;
 import com.hubspot.singularity.data.history.TaskHistoryHelper;
 import com.hubspot.singularity.expiring.SingularityExpiringBounce;
 import com.hubspot.singularity.expiring.SingularityExpiringPause;
@@ -50,13 +54,13 @@ import com.hubspot.singularity.smtp.SingularityMailer;
 
 @Singleton
 public class RequestHelper {
+  private static final Logger LOG = LoggerFactory.getLogger(RequestHelper.class);
 
   private final RequestManager requestManager;
   private final SingularityMailer mailer;
   private final DeployManager deployManager;
   private final SingularityValidator validator;
   private final UserManager userManager;
-  private final RequestHistoryHelper requestHistoryHelper;
   private final TaskManager taskManager;
   private final SingularityDeployHealthHelper deployHealthHelper;
   private final TaskHistoryHelper taskHistoryHelper;
@@ -67,7 +71,6 @@ public class RequestHelper {
                        DeployManager deployManager,
                        SingularityValidator validator,
                        UserManager userManager,
-                       RequestHistoryHelper requestHistoryHelper,
                        TaskManager taskManager,
                        SingularityDeployHealthHelper deployHealthHelper,
                        TaskHistoryHelper taskHistoryHelper) {
@@ -76,7 +79,6 @@ public class RequestHelper {
     this.deployManager = deployManager;
     this.validator = validator;
     this.userManager = userManager;
-    this.requestHistoryHelper = requestHistoryHelper;
     this.taskManager = taskManager;
     this.deployHealthHelper = deployHealthHelper;
     this.taskHistoryHelper = taskHistoryHelper;
@@ -194,9 +196,23 @@ public class RequestHelper {
                                                                      boolean filterRelevantForUser,
                                                                      boolean includeFullRequestData,
                                                                      Optional<Integer> limit) {
-    Map<String, Optional<SingularityRequestHistory>> requestIdToLastHistory = new ConcurrentHashMap<>();
-    Map<String, Optional<SingularityRequestDeployState>> deployStates = new ConcurrentHashMap<>();
     Map<String, Optional<SingularityTaskIdHistory>> mostRecentTasks = new ConcurrentHashMap<>();
+
+    LOG.trace("Start stream {}", System.currentTimeMillis());
+
+    final Map<String, SingularityRequestDeployState> deployStates = deployManager.getRequestDeployStatesByRequestIds(requests.stream().map((r) -> r.getRequest().getId()).collect(Collectors.toList()));
+    LOG.trace("Fetched deploy states {}", System.currentTimeMillis());
+    final Map<String, Optional<SingularityRequestHistory>> requestIdToLastHistory;
+    if (includeFullRequestData) {
+      requestIdToLastHistory = requests.parallelStream()
+          .collect(Collectors.toMap(
+              (r) -> r.getRequest().getId(),
+              (r) -> getMostRecentHistoryFromZk(r.getRequest().getId())
+          ));
+    } else {
+      requestIdToLastHistory = Collections.emptyMap();
+    }
+    LOG.trace("Fethed request histories {}", System.currentTimeMillis());
 
     return requests.parallelStream()
         .filter((request) -> {
@@ -214,32 +230,25 @@ public class RequestHelper {
             return true;
           }
           if (includeFullRequestData) {
-            Optional<SingularityRequestHistory> lastHistory = requestIdToLastHistory.computeIfAbsent(requestId, requestHistoryHelper::getLastHistory);
-            if (userModifiedRequestLast(lastHistory, user)) {
+            if (userModifiedRequestLast(requestIdToLastHistory.getOrDefault(requestId, Optional.absent()), user)) {
               return true;
             }
           }
-          Optional<SingularityRequestDeployState> deployState = deployStates.computeIfAbsent(requestId, deployManager::getRequestDeployState);
-          return userAssociatedWithDeploy(deployState, user);
+          return userAssociatedWithDeploy(Optional.fromNullable(deployStates.get(requestId)), user);
         })
         .map((request) -> {
+          long start = System.currentTimeMillis();
           Long lastActionTime = null;
           if (includeFullRequestData) {
-            CompletableFuture<Void> fetchFutures = CompletableFuture.allOf(
-                CompletableFuture.runAsync(() -> requestIdToLastHistory.computeIfAbsent(request.getRequest().getId(), requestHistoryHelper::getLastHistory)),
-                CompletableFuture.runAsync(() -> deployStates.computeIfAbsent(request.getRequest().getId(), deployManager::getRequestDeployState)),
-                CompletableFuture.runAsync(() -> mostRecentTasks.computeIfAbsent(request.getRequest().getId(), (id) -> getMostRecentTask(request.getRequest())))
-            );
-            fetchFutures.join();
             lastActionTime = getLastActionTimeForRequest(
                 request.getRequest(),
-                requestIdToLastHistory.computeIfAbsent(request.getRequest().getId(), requestHistoryHelper::getLastHistory),
-                deployStates.computeIfAbsent(request.getRequest().getId(), deployManager::getRequestDeployState),
+                requestIdToLastHistory.getOrDefault(request.getRequest().getId(), Optional.absent()),
+                Optional.fromNullable(deployStates.get(request.getRequest().getId())),
                 mostRecentTasks.computeIfAbsent(request.getRequest().getId(), (id) -> getMostRecentTask(request.getRequest()))
             );
           } else {
             // To save on zk calls, if not returning all data, use the most recent deploy timestamps
-            Optional<SingularityRequestDeployState> deployState = deployStates.computeIfAbsent(request.getRequest().getId(), deployManager::getRequestDeployState);
+            Optional<SingularityRequestDeployState> deployState = Optional.fromNullable(deployStates.get(request.getRequest().getId()));
             if (deployState.isPresent()) {
               if (deployState.get().getPendingDeploy().isPresent()) {
                 lastActionTime = deployState.get().getPendingDeploy().get().getTimestamp();
@@ -252,6 +261,7 @@ public class RequestHelper {
               lastActionTime = 0L;
             }
           }
+          LOG.trace("Got last action time in {}ms", System.currentTimeMillis() - start);
 
           return new RequestParentWithLastActionTime(request, lastActionTime);
         })
@@ -267,19 +277,25 @@ public class RequestHelper {
             CompletableFuture<Optional<SingularityExpiringSkipHealthchecks>> maybeExpiringSkipHealthchecks = CompletableFuture.supplyAsync(() -> requestManager.getExpiringSkipHealthchecks(requestWithState.getRequest().getId())).exceptionally((throwable) -> Optional.absent());
             return new SingularityRequestParent(
                 requestWithState.getRequest(), requestWithState.getState(),
-                deployStates.computeIfAbsent(requestWithState.getRequest().getId(), deployManager::getRequestDeployState),
+                Optional.fromNullable(deployStates.get(requestWithState.getRequest().getId())),
                 Optional.absent(), Optional.absent(), Optional.absent(), // full deploy data not provided
                 maybeExpiringBounce.join(), maybeExpiringPause.join(), maybeExpiringScale.join(), maybeExpiringSkipHealthchecks.join(),
                 maybeTaskIdsByStatus.join(),
-                requestIdToLastHistory.computeIfAbsent(requestWithState.getRequest().getId(),requestHistoryHelper::getLastHistory),
+                requestIdToLastHistory.getOrDefault(requestWithState.getRequest().getId(), Optional.absent()),
                 mostRecentTasks.computeIfAbsent(requestWithState.getRequest().getId(), (id) -> getMostRecentTask(requestWithState.getRequest())));
           } else {
             return new SingularityRequestParent(
-                requestWithState.getRequest(), requestWithState.getState(), deployStates.computeIfAbsent(requestWithState.getRequest().getId(), deployManager::getRequestDeployState),
+                requestWithState.getRequest(), requestWithState.getState(), Optional.fromNullable(deployStates.get(requestWithState.getRequest().getId())),
                 Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent());
           }
         })
         .collect(Collectors.toList());
+  }
+
+  public Optional<SingularityRequestHistory> getMostRecentHistoryFromZk(String requestId) {
+    // Most recent history is stored in zk, don't need to check mysql
+    List<SingularityRequestHistory> requestHistory = requestManager.getRequestHistory(requestId);
+    return JavaUtils.getFirst(requestHistory);
   }
 
   public Optional<SingularityTaskIdsByStatus> getTaskIdsByStatusForRequest(String requestId) {
@@ -314,6 +330,7 @@ public class RequestHelper {
   }
 
   private Optional<SingularityTaskIdsByStatus> getTaskIdsByStatusForRequest(SingularityRequestWithState requestWithState) {
+    long start = System.currentTimeMillis();
     String requestId = requestWithState.getRequest().getId();
     Optional<SingularityPendingDeploy> pendingDeploy = deployManager.getPendingDeploy(requestId);
 
@@ -340,6 +357,8 @@ public class RequestHelper {
         }
       }
     }
+
+    LOG.trace("Got task ids by status in {}ms", System.currentTimeMillis() - start);
 
     return Optional.of(new SingularityTaskIdsByStatus(healthyTaskIds, notYetHealthyTaskIds, pendingTaskIds, cleaningTaskIds));
   }
