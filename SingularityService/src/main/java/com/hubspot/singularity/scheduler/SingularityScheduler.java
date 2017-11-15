@@ -798,7 +798,7 @@ public class SingularityScheduler {
               pendingRequest.getSkipHealthchecks(),
               pendingRequest.getMessage(),
               pendingRequest.getResources(),
-              null,
+              pendingRequest.getEnvOverrides(),
               pendingRequest.getActionId()));
 
       nextInstanceNumber++;

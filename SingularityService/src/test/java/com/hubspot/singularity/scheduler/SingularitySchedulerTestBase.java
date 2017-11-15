@@ -292,7 +292,10 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
 
   protected SingularityPendingTask buildPendingTask(SingularityRequest request, SingularityDeploy deploy, long launchTime, int instanceNo, Optional<String> runId) {
     SingularityPendingTaskId pendingTaskId = new SingularityPendingTaskId(request.getId(), deploy.getId(), launchTime, instanceNo, PendingType.IMMEDIATE, launchTime);
-    SingularityPendingTask pendingTask = new SingularityPendingTaskBuilder().setPendingTaskId(pendingTaskId).build();
+    SingularityPendingTask pendingTask = new SingularityPendingTaskBuilder()
+        .setPendingTaskId(pendingTaskId)
+        .setRunId(runId)
+        .build();
 
     return pendingTask;
   }

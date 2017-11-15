@@ -164,13 +164,13 @@ public class ValidatorTest extends SingularityTestBaseNoDb {
     Optional<String> userEmail = Optional.absent();
     SingularityRequest request = new SingularityRequestBuilder("request2", RequestType.ON_DEMAND)
         .build();
-    Optional<SingularityRunNowRequest> runNowRequest = Optional.of(runNowRequest("setRunId"));
+    Optional<SingularityRunNowRequest> runNowRequest = Optional.of(runNowRequest("runId"));
     List<SingularityTaskId> activeTasks = Collections.emptyList();
     List<SingularityPendingTaskId> pendingTasks = Collections.emptyList();
 
     SingularityPendingRequest pendingRequest = validator.checkRunNowRequest(deployID, userEmail, request, runNowRequest, activeTasks, pendingTasks);
 
-    Assert.assertEquals("setRunId", pendingRequest.getRunId().get());
+    Assert.assertEquals("runId", pendingRequest.getRunId().get());
   }
 
   @Test
@@ -251,7 +251,7 @@ public class ValidatorTest extends SingularityTestBaseNoDb {
 
   private SingularityRunNowRequest runNowRequest(String runId) {
     return new SingularityRunNowRequestBuilder()
-        .setMessage("setMessage")
+        .setMessage("message")
         .setSkipHealthchecks(false)
         .setRunId(runId)
         .setCommandLineArgs(Collections.singletonList("--help"))
@@ -260,7 +260,7 @@ public class ValidatorTest extends SingularityTestBaseNoDb {
 
   private SingularityRunNowRequest runNowRequest() {
     return new SingularityRunNowRequestBuilder()
-        .setMessage("setMessage")
+        .setMessage("message")
         .setSkipHealthchecks(false)
         .setCommandLineArgs(Collections.singletonList("--help"))
         .build();

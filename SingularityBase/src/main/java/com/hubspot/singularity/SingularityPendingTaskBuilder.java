@@ -52,9 +52,13 @@ public class SingularityPendingTaskBuilder {
     return this;
   }
 
-
   public SingularityPendingTaskBuilder setRunId(String runId) {
     this.runId = Optional.of(runId);
+    return this;
+  }
+
+  public SingularityPendingTaskBuilder setRunId(Optional<String> runId) {
+    this.runId = runId;
     return this;
   }
 
