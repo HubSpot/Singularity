@@ -139,21 +139,15 @@ public class SingularityRequestHistoryPersister extends SingularityHistoryPersis
 
   @Override
   protected boolean moveToHistory(SingularityRequestHistoryParent object) {
-    List<SingularityRequestHistory> requestHistories = object.history;
-    Collections.sort(requestHistories);
-
-    if (requestHistories.size() > 1) {
-      // Keep the most recent history entry in zk
-      for (SingularityRequestHistory requestHistory : requestHistories.subList(1, requestHistories.size())) {
-        try {
-          historyManager.saveRequestHistoryUpdate(requestHistory);
-        } catch (Throwable t) {
-          LOG.warn("Failed to persist {} into History", requestHistory, t);
-          return false;
-        }
-
-        requestManager.deleteHistoryItem(requestHistory);
+    for (SingularityRequestHistory requestHistory : object.history) {
+      try {
+        historyManager.saveRequestHistoryUpdate(requestHistory);
+      } catch (Throwable t) {
+        LOG.warn("Failed to persist {} into History", requestHistory, t);
+        return false;
       }
+
+      requestManager.deleteHistoryItem(requestHistory);
     }
 
     return true;
