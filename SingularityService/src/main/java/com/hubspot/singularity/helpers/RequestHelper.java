@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
@@ -41,6 +42,9 @@ import com.hubspot.singularity.data.UserManager;
 import com.hubspot.singularity.data.history.RequestHistoryHelper;
 import com.hubspot.singularity.data.history.TaskHistoryHelper;
 import com.hubspot.singularity.expiring.SingularityExpiringBounce;
+import com.hubspot.singularity.expiring.SingularityExpiringPause;
+import com.hubspot.singularity.expiring.SingularityExpiringScale;
+import com.hubspot.singularity.expiring.SingularityExpiringSkipHealthchecks;
 import com.hubspot.singularity.scheduler.SingularityDeployHealthHelper;
 import com.hubspot.singularity.smtp.SingularityMailer;
 
@@ -221,6 +225,12 @@ public class RequestHelper {
         .map((request) -> {
           Long lastActionTime = null;
           if (includeFullRequestData) {
+            CompletableFuture<Void> fetchFutures = CompletableFuture.allOf(
+                CompletableFuture.runAsync(() -> requestIdToLastHistory.computeIfAbsent(request.getRequest().getId(), requestHistoryHelper::getLastHistory)),
+                CompletableFuture.runAsync(() -> deployStates.computeIfAbsent(request.getRequest().getId(), deployManager::getRequestDeployState)),
+                CompletableFuture.runAsync(() -> mostRecentTasks.computeIfAbsent(request.getRequest().getId(), (id) -> getMostRecentTask(request.getRequest())))
+            );
+            fetchFutures.join();
             lastActionTime = getLastActionTimeForRequest(
                 request.getRequest(),
                 requestIdToLastHistory.computeIfAbsent(request.getRequest().getId(), requestHistoryHelper::getLastHistory),
@@ -249,19 +259,30 @@ public class RequestHelper {
         .limit(limit.or(requests.size()))
         .map((parentWithActionTime) -> {
           SingularityRequestWithState requestWithState = parentWithActionTime.getRequestWithState();
-          return new SingularityRequestParent(
-              requestWithState.getRequest(),
-              requestWithState.getState(),
-              deployStates.computeIfAbsent(requestWithState.getRequest().getId(), deployManager::getRequestDeployState),
-              Optional.absent(), // full activeDeploy data not provided
-              Optional.absent(), Optional.absent(), // full pendingDeploy data and state not provided
-              includeFullRequestData ? requestManager.getExpiringBounce(requestWithState.getRequest().getId()) : Optional.absent(),
-              includeFullRequestData ? requestManager.getExpiringPause(requestWithState.getRequest().getId()) : Optional.absent(),
-              includeFullRequestData ? requestManager.getExpiringScale(requestWithState.getRequest().getId()) : Optional.absent(),
-              includeFullRequestData ? requestManager.getExpiringSkipHealthchecks(requestWithState.getRequest().getId()) : Optional.absent(),
-              includeFullRequestData ? getTaskIdsByStatusForRequest(requestWithState) : Optional.absent(),
-              includeFullRequestData ? requestIdToLastHistory.computeIfAbsent(requestWithState.getRequest().getId(),requestHistoryHelper::getLastHistory) : Optional.absent(),
-              includeFullRequestData ? mostRecentTasks.computeIfAbsent(requestWithState.getRequest().getId(), (id) -> getMostRecentTask(requestWithState.getRequest())) : Optional.absent());
+          if (includeFullRequestData) {
+            CompletableFuture<Optional<SingularityTaskIdsByStatus>> maybeTaskIdsByStatus = CompletableFuture.supplyAsync(() -> getTaskIdsByStatusForRequest(requestWithState)).exceptionally((throwable) -> Optional.absent());
+            CompletableFuture<Optional<SingularityExpiringBounce>> maybeExpiringBounce = CompletableFuture.supplyAsync(() -> requestManager.getExpiringBounce(requestWithState.getRequest().getId())).exceptionally((throwable) -> Optional.absent());
+            CompletableFuture<Optional<SingularityExpiringPause>> maybeExpiringPause = CompletableFuture.supplyAsync(() -> requestManager.getExpiringPause(requestWithState.getRequest().getId())).exceptionally((throwable) -> Optional.absent());
+            CompletableFuture<Optional<SingularityExpiringScale>> maybeExpiringScale = CompletableFuture.supplyAsync(() -> requestManager.getExpiringScale(requestWithState.getRequest().getId())).exceptionally((throwable) -> Optional.absent());
+            CompletableFuture<Optional<SingularityExpiringSkipHealthchecks>> maybeExpiringSkipHealthchecks = CompletableFuture.supplyAsync(() -> requestManager.getExpiringSkipHealthchecks(requestWithState.getRequest().getId())).exceptionally((throwable) -> Optional.absent());
+            return new SingularityRequestParent(
+                requestWithState.getRequest(),
+                requestWithState.getState(),
+                deployStates.computeIfAbsent(requestWithState.getRequest().getId(), deployManager::getRequestDeployState),
+                Optional.absent(), // full activeDeploy data not provided
+                Optional.absent(), Optional.absent(), // full pendingDeploy data and state not provided
+                maybeExpiringBounce.join(),
+                maybeExpiringPause.join(),
+                maybeExpiringScale.join(),
+                maybeExpiringSkipHealthchecks.join(),
+                maybeTaskIdsByStatus.join(),
+                requestIdToLastHistory.computeIfAbsent(requestWithState.getRequest().getId(),requestHistoryHelper::getLastHistory),
+                mostRecentTasks.computeIfAbsent(requestWithState.getRequest().getId(), (id) -> getMostRecentTask(requestWithState.getRequest())));
+          } else {
+            return new SingularityRequestParent(
+                requestWithState.getRequest(), requestWithState.getState(), deployStates.computeIfAbsent(requestWithState.getRequest().getId(), deployManager::getRequestDeployState),
+                Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent());
+          }
         })
         .collect(Collectors.toList());
   }
