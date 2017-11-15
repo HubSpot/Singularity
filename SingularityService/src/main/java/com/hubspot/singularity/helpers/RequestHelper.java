@@ -8,6 +8,9 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -50,6 +53,7 @@ import com.hubspot.singularity.smtp.SingularityMailer;
 
 @Singleton
 public class RequestHelper {
+  private static final Logger LOG = LoggerFactory.getLogger(RequestHelper.class);
 
   private final RequestManager requestManager;
   private final SingularityMailer mailer;
@@ -223,6 +227,7 @@ public class RequestHelper {
           return userAssociatedWithDeploy(deployState, user);
         })
         .map((request) -> {
+          long start = System.currentTimeMillis();
           Long lastActionTime = null;
           if (includeFullRequestData) {
             CompletableFuture<Void> fetchFutures = CompletableFuture.allOf(
@@ -252,6 +257,7 @@ public class RequestHelper {
               lastActionTime = 0L;
             }
           }
+          LOG.trace("Got last action time in {}ms", System.currentTimeMillis() - start);
 
           return new RequestParentWithLastActionTime(request, lastActionTime);
         })
@@ -314,6 +320,7 @@ public class RequestHelper {
   }
 
   private Optional<SingularityTaskIdsByStatus> getTaskIdsByStatusForRequest(SingularityRequestWithState requestWithState) {
+    long start = System.currentTimeMillis();
     String requestId = requestWithState.getRequest().getId();
     Optional<SingularityPendingDeploy> pendingDeploy = deployManager.getPendingDeploy(requestId);
 
@@ -340,6 +347,8 @@ public class RequestHelper {
         }
       }
     }
+
+    LOG.trace("Got task Ids by status in {}ms", System.currentTimeMillis() - start);
 
     return Optional.of(new SingularityTaskIdsByStatus(healthyTaskIds, notYetHealthyTaskIds, pendingTaskIds, cleaningTaskIds));
   }
