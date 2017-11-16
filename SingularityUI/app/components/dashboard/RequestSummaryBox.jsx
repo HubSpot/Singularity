@@ -10,7 +10,11 @@ import {
   InstanceNumberWithShortStartTime,
   DeployId,
   UpdatedAt,
-  LogLinkAndActions
+  LogLinkAndActions,
+  NextRun,
+  PendingType,
+  PendingDeployId,
+  ScheduledActions
 } from '../tasks/Columns';
 
 export default class RequestSummaryBox extends Component {
@@ -81,14 +85,25 @@ export default class RequestSummaryBox extends Component {
 
   render() {
     const tasks = [];
+    const pendingTasks = [];
     _.each(this.props.request.taskIds, (taskIds, status) => {
-      tasks.push.apply(tasks, taskIds.map((taskId) => {
-        return {
-          taskId: taskId,
-          instanceNo: taskId.instanceNo,
-          health: status
-        }
-      }));
+      if (status === "pending") {
+        taskIds.forEach((taskId) => {
+          pendingTasks.push({
+            pendingTask: {
+              pendingTaskId: taskId
+            }
+          });
+        })
+      } else {
+        taskIds.forEach((taskId) => {
+          tasks.push({
+            taskId: taskId,
+            instanceNo: taskId.instanceNo,
+            health: status
+          });
+        })
+      }
     });
     
     let activeDeploy;
@@ -105,6 +120,35 @@ export default class RequestSummaryBox extends Component {
       activeDeploy = "No Active Deploy"
     }
 
+    const pendingTasksTable = (
+      <UITable
+        data={pendingTasks}
+        keyGetter={(task) => task.pendingTask.pendingTaskId.id}
+        emptyTableMessage='No tasks'
+        defaultSortBy="instanceNo"
+      >
+        {NextRun}
+        {PendingType}
+        {PendingDeployId}
+        {ScheduledActions}
+      </UITable>
+    );
+
+    const tasksTable = (
+      <UITable
+        data={tasks}
+        keyGetter={(task) => task.taskId.id}
+        emptyTableMessage='No tasks'
+        defaultSortBy="instanceNo"
+      >
+        {Health}
+        {InstanceNumberWithShortStartTime}
+        {DeployId}
+        {UpdatedAt}
+        {LogLinkAndActions(config.runningTaskLogPath, this.props.request.requestType)}
+      </UITable>
+    );
+
     return (
       <div className="request-summary">
         <Row>
@@ -115,7 +159,7 @@ export default class RequestSummaryBox extends Component {
             {this.props.currentEvent}
           </Col>
         </Row>
-        {tasks.length > 0 &&
+        {(tasks.length > 0 || pendingTasks.length > 0) &&
           <Row>
             <Col md={12}>
               <Button className="tasks-button btn-block" onClick={() => this.setState({ showTasks: !this.state.showTasks })}>
@@ -126,18 +170,8 @@ export default class RequestSummaryBox extends Component {
                 expanded={this.state.showTasks}
                 collapsible
               >
-                <UITable
-                  data={tasks}
-                  keyGetter={(task) => task.taskId.id}
-                  emptyTableMessage='No tasks'
-                  defaultSortBy="instanceNo"
-                >
-                  {Health}
-                  {InstanceNumberWithShortStartTime}
-                  {DeployId}
-                  {UpdatedAt}
-                  {LogLinkAndActions(config.runningTaskLogPath, this.props.request.requestType)}
-                </UITable>
+                {tasks.length > 0 && tasksTable}
+                {pendingTasks.length > 0 && pendingTasksTable}
               </Panel>
             </Col>
           </Row>
