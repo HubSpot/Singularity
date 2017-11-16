@@ -1,6 +1,7 @@
 package com.hubspot.singularity.resources;
 
 import static com.hubspot.singularity.WebExceptions.badRequest;
+import static com.hubspot.singularity.WebExceptions.checkBadRequest;
 import static com.hubspot.singularity.WebExceptions.checkNotFound;
 import static com.hubspot.singularity.WebExceptions.notFound;
 
@@ -40,6 +41,7 @@ import com.hubspot.mesos.client.MesosClient;
 import com.hubspot.mesos.json.MesosTaskMonitorObject;
 import com.hubspot.mesos.json.MesosTaskStatisticsObject;
 import com.hubspot.singularity.InvalidSingularityTaskIdException;
+import com.hubspot.singularity.RequestType;
 import com.hubspot.singularity.SingularityAction;
 import com.hubspot.singularity.SingularityAuthorizationScope;
 import com.hubspot.singularity.SingularityCreateResult;
@@ -50,6 +52,7 @@ import com.hubspot.singularity.SingularityPendingRequest;
 import com.hubspot.singularity.SingularityPendingRequest.PendingType;
 import com.hubspot.singularity.SingularityPendingTask;
 import com.hubspot.singularity.SingularityPendingTaskId;
+import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityRequestWithState;
 import com.hubspot.singularity.SingularityShellCommand;
 import com.hubspot.singularity.SingularitySlave;
@@ -178,6 +181,19 @@ public class TaskResource extends AbstractLeaderAwareResource {
     authorizationHelper.checkForAuthorization(taskRequestList.get(0).getRequest(), user, SingularityAuthorizationScope.READ);
 
     return taskRequestList.get(0);
+  }
+
+  @DELETE
+  @Path("/scheduled/task/{scheduledTaskId}")
+  @ApiOperation("Delete a scheduled task.")
+  public void deleteScheduledTask(@Auth SingularityUser user, @PathParam("scheduledTaskId") String taskId) {
+    SingularityTaskRequest taskRequest = getPendingTask(user, taskId);
+    SingularityRequest request = taskRequest.getRequest();
+
+    authorizationHelper.checkForAuthorization(request, user, SingularityAuthorizationScope.ADMIN);
+    checkBadRequest(request.getRequestType() == RequestType.ON_DEMAND, "Only ON_DEMAND tasks may be deleted.");
+
+    taskManager.deletePendingTask(taskRequest.getPendingTask().getPendingTaskId());
   }
 
   @GET
