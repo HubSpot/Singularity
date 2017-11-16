@@ -20,9 +20,9 @@ import org.slf4j.LoggerFactory;
 import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
 import com.hubspot.mesos.JavaUtils;
-import com.hubspot.mesos.MesosUtils;
+import com.hubspot.singularity.helpers.MesosUtils;
+import com.hubspot.singularity.helpers.SingularityMesosTaskHolder;
 import com.hubspot.singularity.SingularityPendingTaskId;
-import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskId;
 
 public class SingularityOfferHolder {
@@ -30,7 +30,7 @@ public class SingularityOfferHolder {
   private static final Logger LOG = LoggerFactory.getLogger(SingularityMesosScheduler.class);
 
   private final List<Protos.Offer> offers;
-  private final List<SingularityTask> acceptedTasks;
+  private final List<SingularityMesosTaskHolder> acceptedTasks;
   private final Set<SingularityPendingTaskId> rejectedPendingTaskIds;
   private List<Resource> currentResources;
   private Set<String> roles;
@@ -103,16 +103,16 @@ public class SingularityOfferHolder {
     return rejectedPendingTaskIds.contains(pendingTaskId);
   }
 
-  public void addMatchedTask(SingularityTask task) {
-    LOG.trace("Accepting task {} for offers {}", task.getTaskId(), offers.stream().map(Offer::getId).collect(Collectors.toList()));
-    acceptedTasks.add(task);
+  public void addMatchedTask(SingularityMesosTaskHolder taskHolder) {
+    LOG.trace("Accepting task {} for offers {}", taskHolder.getTask().getTaskId(), offers.stream().map(Offer::getId).collect(Collectors.toList()));
+    acceptedTasks.add(taskHolder);
 
     // subtract task resources from offer
-    currentResources = MesosUtils.subtractResources(currentResources, task.getMesosTask().getResources());
+    currentResources = MesosUtils.subtractResources(currentResources, taskHolder.getMesosTask().getResourcesList());
 
     // subtract executor resources from offer, if any are defined
-    if (task.getMesosTask().hasExecutor() && task.getMesosTask().getExecutor().getResourcesCount() > 0) {
-      currentResources = MesosUtils.subtractResources(currentResources, task.getMesosTask().getExecutor().getResourcesList());
+    if (taskHolder.getMesosTask().hasExecutor() && taskHolder.getMesosTask().getExecutor().getResourcesCount() > 0) {
+      currentResources = MesosUtils.subtractResources(currentResources, taskHolder.getMesosTask().getExecutor().getResourcesList());
     }
   }
 
@@ -120,11 +120,11 @@ public class SingularityOfferHolder {
     final List<TaskInfo> toLaunch = Lists.newArrayListWithCapacity(acceptedTasks.size());
     final List<SingularityTaskId> taskIds = Lists.newArrayListWithCapacity(acceptedTasks.size());
 
-    for (SingularityTask task : acceptedTasks) {
-      taskIds.add(task.getTaskId());
-      toLaunch.add(task.getMesosTaskProtos());
-      LOG.debug("Launching {} with offer {}", task.getTaskId(), offers.get(0).getId());
-      LOG.trace("Launching {} mesos task: {}", task.getTaskId(), MesosUtils.formatForLogging(task.getMesosTask()));
+    for (SingularityMesosTaskHolder taskHolder : acceptedTasks) {
+      taskIds.add(taskHolder.getTask().getTaskId());
+      toLaunch.add(taskHolder.getMesosTask());
+      LOG.debug("Launching {} with offer {}", taskHolder.getTask().getTaskId(), offers.get(0).getId());
+      LOG.trace("Launching {} mesos task: {}", taskHolder.getTask().getTaskId(), MesosUtils.formatForLogging(taskHolder.getMesosTask()));
     }
 
     // At this point, `currentResources` contains a list of unused resources, because we subtracted out the required resources of every task we accepted.
@@ -178,7 +178,7 @@ public class SingularityOfferHolder {
     return leftoverOffers;
   }
 
-  public List<SingularityTask> getAcceptedTasks() {
+  public List<SingularityMesosTaskHolder> getAcceptedTasks() {
     return acceptedTasks;
   }
 

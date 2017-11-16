@@ -18,8 +18,9 @@ import org.slf4j.LoggerFactory;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.inject.Inject;
-import com.hubspot.mesos.MesosUtils;
+import com.hubspot.singularity.helpers.MesosUtils;
 import com.hubspot.mesos.Resources;
+import com.hubspot.singularity.helpers.SingularityMesosTaskHolder;
 import com.hubspot.singularity.RequestType;
 import com.hubspot.singularity.SingularityDeployStatistics;
 import com.hubspot.singularity.SingularityPendingTaskId;
@@ -163,14 +164,14 @@ public class SingularityMesosOfferScheduler {
           SingularityOfferHolder bestOffer = Collections.max(scorePerOffer.entrySet(), Map.Entry.comparingByValue()).getKey();
           LOG.info("Best offer {}/1 is on {}", scorePerOffer.get(bestOffer), bestOffer.getSanitizedHost());
 
-          SingularityTask task = acceptTask(bestOffer, tasksPerOfferPerRequest, taskRequestHolder);
+          SingularityMesosTaskHolder taskHolder = acceptTask(bestOffer, tasksPerOfferPerRequest, taskRequestHolder);
 
           tasksScheduled++;
           if (useTaskCredits) {
             taskCredits--;
             LOG.debug("Remaining task credits: {}", taskCredits);
           }
-          bestOffer.addMatchedTask(task);
+          bestOffer.addMatchedTask(taskHolder);
           addedTaskInLastLoop = true;
           iterator.remove();
           if (useTaskCredits && taskCredits == 0) {
@@ -353,23 +354,23 @@ public class SingularityMesosOfferScheduler {
     return score;
   }
 
-  private SingularityTask acceptTask(SingularityOfferHolder offerHolder, Map<String, Map<String, Integer>> tasksPerOfferPerRequest, SingularityTaskRequestHolder taskRequestHolder) {
+  private SingularityMesosTaskHolder acceptTask(SingularityOfferHolder offerHolder, Map<String, Map<String, Integer>> tasksPerOfferPerRequest, SingularityTaskRequestHolder taskRequestHolder) {
     final SingularityTaskRequest taskRequest = taskRequestHolder.getTaskRequest();
-    final SingularityTask task = mesosTaskBuilder.buildTask(offerHolder, offerHolder.getCurrentResources(), taskRequest, taskRequestHolder.getTaskResources(), taskRequestHolder.getExecutorResources());
+    final SingularityMesosTaskHolder taskHolder = mesosTaskBuilder.buildTask(offerHolder, offerHolder.getCurrentResources(), taskRequest, taskRequestHolder.getTaskResources(), taskRequestHolder.getExecutorResources());
 
-    final SingularityTask zkTask = taskSizeOptimizer.getSizeOptimizedTask(task);
+    final SingularityTask zkTask = taskSizeOptimizer.getSizeOptimizedTask(taskHolder);
 
     if (LOG.isTraceEnabled()) {
       LOG.trace("Accepted and built task {}", zkTask);
     }
 
-    LOG.info("Launching task {} slot on slave {} ({})", task.getTaskId(), offerHolder.getSlaveId(), offerHolder.getHostname());
+    LOG.info("Launching task {} slot on slave {} ({})", taskHolder.getTask().getTaskId(), offerHolder.getSlaveId(), offerHolder.getHostname());
 
     taskManager.createTaskAndDeletePendingTask(zkTask);
 
     addRequestToMapByOfferHost(tasksPerOfferPerRequest, offerHolder.getHostname(), taskRequest.getRequest().getId());
 
-    return task;
+    return taskHolder;
   }
 
   private void addRequestToMapByOfferHost(Map<String, Map<String, Integer>> tasksPerOfferHostPerRequest, String hostname, String requestId) {

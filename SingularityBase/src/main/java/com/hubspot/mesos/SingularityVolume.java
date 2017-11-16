@@ -2,8 +2,6 @@ package com.hubspot.mesos;
 
 import java.util.Objects;
 
-import org.apache.mesos.v1.Protos;
-
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
@@ -21,19 +19,6 @@ public class SingularityVolume {
     this.containerPath = containerPath;
     this.hostPath = hostPath;
     this.mode = Optional.fromNullable(mode);
-  }
-
-  @Deprecated
-  public SingularityVolume(String containerPath, Optional<String> hostPath, Optional<Protos.Volume.Mode> mode) {
-    this(containerPath, hostPath, convertedMode(mode));
-  }
-
-  private static SingularityDockerVolumeMode convertedMode(Optional<Protos.Volume.Mode> mode) {
-    if (mode.isPresent()) {
-      return SingularityDockerVolumeMode.valueOf(mode.get().toString());
-    } else {
-      return null;
-    }
   }
 
   public String getContainerPath() {

@@ -39,7 +39,8 @@ import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import com.google.protobuf.ByteString;
 import com.hubspot.mesos.JavaUtils;
-import com.hubspot.mesos.MesosUtils;
+import com.hubspot.singularity.helpers.MesosProtosUtils;
+import com.hubspot.singularity.helpers.MesosUtils;
 import com.hubspot.singularity.RequestCleanupType;
 import com.hubspot.singularity.SingularityAbort;
 import com.hubspot.singularity.SingularityAbort.AbortReason;
@@ -424,8 +425,8 @@ public class SingularityMesosSchedulerImpl extends SingularityMesosScheduler {
         if (task.get().getTaskRequest().getDeploy().getCustomExecutorCmd().isPresent()) {
           byte[] messageBytes = transcoder.toBytes(new SingularityTaskDestroyFrameworkMessage(taskId, user));
           message(Message.newBuilder()
-              .setAgentId(task.get().getMesosTask().getAgentId())
-              .setExecutorId(task.get().getMesosTask().getExecutor().getExecutorId())
+              .setAgentId(MesosProtosUtils.toAgentId(task.get().getMesosTask().getAgentId()))
+              .setExecutorId(MesosProtosUtils.toExecutorId(task.get().getMesosTask().getExecutor().getExecutorId()))
               .setData(ByteString.copyFrom(messageBytes))
               .build());
         } else {

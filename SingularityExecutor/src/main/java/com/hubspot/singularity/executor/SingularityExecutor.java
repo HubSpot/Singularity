@@ -8,12 +8,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.inject.Inject;
-import com.hubspot.mesos.MesosUtils;
 import com.hubspot.singularity.executor.SingularityExecutorMonitor.KillState;
 import com.hubspot.singularity.executor.SingularityExecutorMonitor.SubmitState;
 import com.hubspot.singularity.executor.config.SingularityExecutorTaskBuilder;
 import com.hubspot.singularity.executor.task.SingularityExecutorTask;
 import com.hubspot.singularity.executor.utils.ExecutorUtils;
+import com.hubspot.singularity.executor.utils.MesosUtils;
 
 public class SingularityExecutor implements Executor {
 
