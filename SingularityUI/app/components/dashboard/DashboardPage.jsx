@@ -90,7 +90,7 @@ class DashboardPage extends Component {
       lastEventTime = request.mostRecentTask.updatedAt;
     }
     if (!lastEvent) {
-      lastEvent = "No Recent Activity";
+      lastEvent = (<p>No Recent Activity</p>);
     }
     return {
       lastEvent: lastEvent,
