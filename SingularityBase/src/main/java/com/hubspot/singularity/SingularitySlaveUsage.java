@@ -9,7 +9,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 public class SingularitySlaveUsage {
 
   public enum ResourceUsageType {
-    CPU_USED, MEMORY_BYTES_USED, CPU_FREE, MEMORY_BYTES_FREE
+    CPU_USED, MEMORY_BYTES_USED, DISK_BYTES_USED, CPU_FREE, MEMORY_BYTES_FREE, DISK_BYTES_FREE
   }
 
   public static final long BYTES_PER_MEGABYTE = 1000L * 1000L;
