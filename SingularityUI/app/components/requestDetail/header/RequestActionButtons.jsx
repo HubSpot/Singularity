@@ -2,7 +2,7 @@ import React, { PropTypes } from 'react';
 import { connect } from 'react-redux';
 import { withRouter } from 'react-router';
 
-import { Button } from 'react-bootstrap';
+import { Button, DropdownButton, MenuItem } from 'react-bootstrap';
 import { Link } from 'react-router';
 
 import JSONButton from '../../common/JSONButton';
@@ -172,6 +172,19 @@ const RequestActionButtons = ({requestParent, fetchRequest, fetchRequestHistory,
     </RemoveButton>
   );
 
+  const quickLinks = [];
+
+  Utils.maybe(config.quickLinks, ['request', request.requestType], []).forEach((link) => {
+    quickLinks.push(
+      <MenuItem href={Utils.template(link.template, request)}>{link.title}</MenuItem>
+    );
+  });
+  Utils.maybe(config.quickLinks, ['request', 'ALL'], []).forEach((link) => {
+    quickLinks.push(
+      <MenuItem href={Utils.template(link.template, request)}>{link.title}</MenuItem>
+    );
+  });
+
   return (
     <div>
       <JSONButton linkClassName="btn btn-default" object={requestParent}>JSON</JSONButton>
@@ -184,6 +197,11 @@ const RequestActionButtons = ({requestParent, fetchRequest, fetchRequestHistory,
       {maybeEditButton}
       {maybeToggleHealthchecksButton}
       {removeButton}
+      {quickLinks.length > 0 &&
+        <DropdownButton bsStyle="default" title="Quick Links" pullRight>
+          {quickLinks}
+        </DropdownButton>
+      }
     </div>
   );
 };
