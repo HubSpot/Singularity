@@ -9,7 +9,12 @@ import org.apache.mesos.v1.Protos.Offer;
 import org.junit.Ignore;
 import org.junit.Test;
 
+import com.google.common.base.Optional;
 import com.hubspot.mesos.JavaUtils;
+import com.hubspot.singularity.RequestType;
+import com.hubspot.singularity.SingularityRequest;
+import com.hubspot.singularity.SingularityRequestBuilder;
+import com.hubspot.singularity.SlavePlacement;
 
 public class SingularityOfferPerformanceTestRunner extends SingularitySchedulerTestBase {
 
@@ -17,7 +22,7 @@ public class SingularityOfferPerformanceTestRunner extends SingularitySchedulerT
     super(false);
   }
 
-  @Test
+  @Test(timeout = 300000L)
   @Ignore
   public void testOfferCache() {
     long start = System.currentTimeMillis();
@@ -30,7 +35,13 @@ public class SingularityOfferPerformanceTestRunner extends SingularitySchedulerT
     Iterator<Double> memoryIterator = r.doubles(15, 20000).iterator();
 
     for (int i = 0; i < numRequests; i++) {
-      createAndDeployRequest("request-" + i, cpuIterator.next(), memoryIterator.next());
+      SingularityRequestBuilder bldr = new SingularityRequestBuilder("request-" + i, RequestType.SERVICE);
+
+      bldr.setInstances(Optional.of(5));
+      bldr.setSlavePlacement(Optional.of(SlavePlacement.GREEDY));
+      SingularityRequest request = bldr.build();
+      saveRequest(request);
+      deployRequest(request, cpuIterator.next(), memoryIterator.next());
     }
 
     List<Offer> offers = new ArrayList<>(numOffers);

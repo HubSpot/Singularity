@@ -20,6 +20,8 @@ import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import com.hubspot.deploy.HealthcheckOptions;
+import com.hubspot.singularity.helpers.MesosProtosUtils;
+import com.hubspot.singularity.helpers.MesosUtils;
 import com.hubspot.singularity.ExtendedTaskState;
 import com.hubspot.singularity.HealthcheckProtocol;
 import com.hubspot.singularity.SingularityAbort;
@@ -57,11 +59,13 @@ public class SingularityHealthchecker {
 
   private final SingularityExceptionNotifier exceptionNotifier;
   private final DisasterManager disasterManager;
+  private final MesosProtosUtils mesosProtosUtils;
 
   @Inject
   public SingularityHealthchecker(@Named(SingularityMainModule.HEALTHCHECK_THREADPOOL_NAME) ScheduledExecutorService executorService,
                                   AsyncHttpClient http, SingularityConfiguration configuration, SingularityNewTaskChecker newTaskChecker,
-                                  TaskManager taskManager, SingularityAbort abort, SingularityExceptionNotifier exceptionNotifier, DisasterManager disasterManager) {
+                                  TaskManager taskManager, SingularityAbort abort, SingularityExceptionNotifier exceptionNotifier, DisasterManager disasterManager,
+                                  MesosProtosUtils mesosProtosUtils) {
     this.http = http;
     this.configuration = configuration;
     this.newTaskChecker = newTaskChecker;
@@ -73,6 +77,7 @@ public class SingularityHealthchecker {
 
     this.executorService = executorService;
     this.disasterManager = disasterManager;
+    this.mesosProtosUtils = mesosProtosUtils;
   }
 
   public void enqueueHealthcheck(SingularityTask task, boolean ignoreExisting, boolean inStartup, boolean isFirstCheck) {
@@ -213,7 +218,7 @@ public class SingularityHealthchecker {
 
     final String hostname = task.getHostname();
 
-    Optional<Long> healthcheckPort = options.getPortNumber().or(task.getPortByIndex(options.getPortIndex().or(0)));
+    Optional<Long> healthcheckPort = options.getPortNumber().or(MesosUtils.getPortByIndex(mesosProtosUtils.toResourceList(task.getMesosTask().getResources()), options.getPortIndex().or(0)));
 
     if (!healthcheckPort.isPresent() || healthcheckPort.get() < 1L) {
       LOG.warn("Couldn't find a port for health check for task {}", task);
