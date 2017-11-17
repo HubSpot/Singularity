@@ -6,6 +6,7 @@ import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.hubspot.dropwizard.guicier.DropwizardAwareModule;
 import com.hubspot.mesos.client.SingularityMesosClientModule;
+import com.hubspot.singularity.auth.SingularityAuthenticatorClass;
 import com.hubspot.singularity.config.IndexViewConfiguration;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.SingularityDataModule;
@@ -37,8 +38,6 @@ public class SingularityServiceModule extends DropwizardAwareModule<SingularityC
     binder.install(new SingularityJerseyModule());
 
     binder.install(new SingularityEventModule(getConfiguration()));
-
-    binder.install(new SingularityAuthModule(getConfiguration()));
   }
 
   @Provides
@@ -58,7 +57,8 @@ public class SingularityServiceModule extends DropwizardAwareModule<SingularityC
         configuration.getStartupTimeoutSeconds(),
         !Strings.isNullOrEmpty(configuration.getLoadBalancerUri()),
         configuration.getCommonHostnameSuffixToOmit(),
-        configuration.getWarnIfScheduledJobIsRunningPastNextRunPct()
+        configuration.getWarnIfScheduledJobIsRunningPastNextRunPct(),
+        configuration.getAuthConfiguration().isEnabled() && configuration.getAuthConfiguration().getAuthenticators().contains(SingularityAuthenticatorClass.WEBHOOK)
     );
   }
 }

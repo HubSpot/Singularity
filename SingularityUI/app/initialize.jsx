@@ -61,6 +61,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const store = configureStore({}, history);
 
     store.dispatch(tailerActions.sandboxSetApiRoot(config.apiRoot));
+    if (config.generateAuthHeader) {
+      store.dispatch(tailerActions.setAuthorizationHeader(Utils.getAuthTokenHeader()));
+    }
 
     // set up user
     let userId;

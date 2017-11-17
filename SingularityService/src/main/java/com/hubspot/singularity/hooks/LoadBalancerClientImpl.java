@@ -8,7 +8,6 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import org.apache.mesos.v1.Protos;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -24,6 +23,7 @@ import com.hubspot.baragon.models.BaragonService;
 import com.hubspot.baragon.models.RequestAction;
 import com.hubspot.baragon.models.UpstreamInfo;
 import com.hubspot.mesos.JavaUtils;
+import com.hubspot.mesos.protos.MesosParameter;
 import com.hubspot.singularity.LoadBalancerRequestType.LoadBalancerRequestId;
 import com.hubspot.singularity.SingularityDeploy;
 import com.hubspot.singularity.SingularityLoadBalancerUpdate;
@@ -31,6 +31,8 @@ import com.hubspot.singularity.SingularityLoadBalancerUpdate.LoadBalancerMethod;
 import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.config.SingularityConfiguration;
+import com.hubspot.singularity.helpers.MesosProtosUtils;
+import com.hubspot.singularity.helpers.MesosUtils;
 import com.ning.http.client.AsyncHttpClient;
 import com.ning.http.client.AsyncHttpClient.BoundRequestBuilder;
 import com.ning.http.client.ListenableFuture;
@@ -51,17 +53,19 @@ public class LoadBalancerClientImpl implements LoadBalancerClient {
   private final AsyncHttpClient httpClient;
   private final ObjectMapper objectMapper;
   private final Optional<String> taskLabelForLoadBalancerUpstreamGroup;
+  private final MesosProtosUtils mesosProtosUtils;
 
   private static final String OPERATION_URI = "%s/%s";
 
   @Inject
-  public LoadBalancerClientImpl(SingularityConfiguration configuration, ObjectMapper objectMapper, AsyncHttpClient httpClient) {
+  public LoadBalancerClientImpl(SingularityConfiguration configuration, ObjectMapper objectMapper, AsyncHttpClient httpClient, MesosProtosUtils mesosProtosUtils) {
     this.httpClient = httpClient;
     this.objectMapper = objectMapper;
     this.loadBalancerUri = configuration.getLoadBalancerUri();
     this.loadBalancerTimeoutMillis = configuration.getLoadBalancerRequestTimeoutMillis();
     this.loadBalancerQueryParams = configuration.getLoadBalancerQueryParams();
     this.taskLabelForLoadBalancerUpstreamGroup = configuration.getTaskLabelForLoadBalancerUpstreamGroup();
+    this.mesosProtosUtils = mesosProtosUtils;
   }
 
   private String getLoadBalancerUri(LoadBalancerRequestId loadBalancerRequestId) {
@@ -186,14 +190,14 @@ public class LoadBalancerClientImpl implements LoadBalancerClient {
     final List<UpstreamInfo> upstreams = Lists.newArrayListWithCapacity(tasks.size());
 
     for (SingularityTask task : tasks) {
-      final Optional<Long> maybeLoadBalancerPort = task.getPortByIndex(task.getTaskRequest().getDeploy().getLoadBalancerPortIndex().or(0));
+      final Optional<Long> maybeLoadBalancerPort = MesosUtils.getPortByIndex(mesosProtosUtils.toResourceList(task.getMesosTask().getResources()), task.getTaskRequest().getDeploy().getLoadBalancerPortIndex().or(0));
 
       if (maybeLoadBalancerPort.isPresent()) {
         String upstream = String.format("%s:%d", task.getHostname(), maybeLoadBalancerPort.get());
         Optional<String> group = loadBalancerUpstreamGroup;
 
         if (taskLabelForLoadBalancerUpstreamGroup.isPresent()) {
-          for (Protos.Label label : task.getMesosTask().getLabels().getLabelsList()) {
+          for (MesosParameter label : task.getMesosTask().getLabels().getLabels()) {
             if (label.hasKey() && label.getKey().equals(taskLabelForLoadBalancerUpstreamGroup.get()) && label.hasValue()) {
               group = Optional.of(label.getValue());
               break;

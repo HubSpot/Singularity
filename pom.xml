@@ -70,7 +70,6 @@
     <module>SingularityServiceIntegrationTests</module>
     <module>SingularityUI</module>
     <module>SingularityServiceBase</module>
-    <module>SingularityClusterCoordinator</module>
   </modules>
 
   <dependencyManagement>
@@ -158,6 +157,12 @@
         <groupId>com.hubspot.dropwizard</groupId>
         <artifactId>dropwizard-guicier</artifactId>
         <version>${dropwizard.guicier.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>io.dropwizard</groupId>
+        <artifactId>dropwizard-auth</artifactId>
+        <version>${dropwizard.version}</version>
       </dependency>
 
       <dependency>

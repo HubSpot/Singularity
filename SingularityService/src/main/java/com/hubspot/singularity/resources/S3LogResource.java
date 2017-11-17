@@ -66,7 +66,6 @@ import com.hubspot.singularity.SingularityS3FormatHelper;
 import com.hubspot.singularity.SingularityS3Log;
 import com.hubspot.singularity.SingularityS3LogMetadata;
 import com.hubspot.singularity.SingularityS3UploaderFile;
-import com.hubspot.singularity.SingularityService;
 import com.hubspot.singularity.SingularityTaskHistory;
 import com.hubspot.singularity.SingularityTaskHistoryUpdate;
 import com.hubspot.singularity.SingularityTaskHistoryUpdate.SimplifiedTaskState;
@@ -89,6 +88,8 @@ import com.hubspot.singularity.helpers.SingularityS3Services;
 import com.wordnik.swagger.annotations.Api;
 import com.wordnik.swagger.annotations.ApiOperation;
 import com.wordnik.swagger.annotations.ApiParam;
+
+import io.dropwizard.auth.Auth;
 
 @Path(ApiPaths.S3_LOG_RESOURCE_PATH)
 @Produces({ MediaType.APPLICATION_JSON })
@@ -116,8 +117,8 @@ public class S3LogResource extends AbstractHistoryResource {
 
   @Inject
   public S3LogResource(RequestManager requestManager, HistoryManager historyManager, RequestHistoryHelper requestHistoryHelper, TaskManager taskManager, DeployManager deployManager,
-      Optional<S3Configuration> configuration, SingularityAuthorizationHelper authorizationHelper, Optional<SingularityUser> user,SingularityS3Services s3Services) {
-    super(historyManager, taskManager, deployManager, authorizationHelper, user);
+      Optional<S3Configuration> configuration, SingularityAuthorizationHelper authorizationHelper, SingularityS3Services s3Services) {
+    super(historyManager, taskManager, deployManager, authorizationHelper);
     this.requestManager = requestManager;
     this.configuration = configuration;
     this.requestHistoryHelper = requestHistoryHelper;
@@ -125,8 +126,8 @@ public class S3LogResource extends AbstractHistoryResource {
   }
 
   // Generation of prefixes
-  private Collection<String> getS3PrefixesForTask(S3Configuration s3Configuration, SingularityTaskId taskId, Optional<Long> startArg, Optional<Long> endArg, String group) {
-    Optional<SingularityTaskHistory> history = getTaskHistory(taskId);
+  private Collection<String> getS3PrefixesForTask(S3Configuration s3Configuration, SingularityTaskId taskId, Optional<Long> startArg, Optional<Long> endArg, String group, SingularityUser user) {
+    Optional<SingularityTaskHistory> history = getTaskHistory(taskId, user);
 
     long start = taskId.getStartedAt();
     if (startArg.isPresent()) {
@@ -204,8 +205,8 @@ public class S3LogResource extends AbstractHistoryResource {
     return prefixes;
   }
 
-  private Collection<String> getS3PrefixesForDeploy(S3Configuration s3Configuration, String requestId, String deployId, Optional<Long> startArg, Optional<Long> endArg, String group) {
-    SingularityDeployHistory deployHistory = getDeployHistory(requestId, deployId);
+  private Collection<String> getS3PrefixesForDeploy(S3Configuration s3Configuration, String requestId, String deployId, Optional<Long> startArg, Optional<Long> endArg, String group, SingularityUser user) {
+    SingularityDeployHistory deployHistory = getDeployHistory(requestId, deployId, user);
 
     long start = deployHistory.getDeployMarker().getTimestamp();
     if (startArg.isPresent()) {
@@ -240,15 +241,15 @@ public class S3LogResource extends AbstractHistoryResource {
     return prefixes;
   }
 
-  private Map<SingularityS3Service, Set<String>> getServiceToPrefixes(SingularityS3SearchRequest search) {
+  private Map<SingularityS3Service, Set<String>> getServiceToPrefixes(SingularityS3SearchRequest search, SingularityUser user) {
     Map<SingularityS3Service, Set<String>> servicesToPrefixes = new HashMap<>();
 
     if (!search.getTaskIds().isEmpty()) {
       for (String taskId : search.getTaskIds()) {
         SingularityTaskId taskIdObject = getTaskIdObject(taskId);
-        String group = getRequestGroupForTask(taskIdObject).or(SingularityS3FormatHelper.DEFAULT_GROUP_NAME);
+        String group = getRequestGroupForTask(taskIdObject, user).or(SingularityS3FormatHelper.DEFAULT_GROUP_NAME);
         Set<String> s3Buckets = getBuckets(group);
-        Collection<String> prefixes = getS3PrefixesForTask(configuration.get(), taskIdObject, search.getStart(), search.getEnd(), group);
+        Collection<String> prefixes = getS3PrefixesForTask(configuration.get(), taskIdObject, search.getStart(), search.getEnd(), group, user);
         for (String s3Bucket : s3Buckets) {
           SingularityS3Service s3Service = s3Services.getServiceByGroupAndBucketOrDefault(group, s3Bucket);
           if (!servicesToPrefixes.containsKey(s3Service)) {
@@ -260,12 +261,12 @@ public class S3LogResource extends AbstractHistoryResource {
     }
     if (!search.getRequestsAndDeploys().isEmpty()) {
       for (Map.Entry<String, List<String>> entry : search.getRequestsAndDeploys().entrySet()) {
-        String group = getRequestGroup(entry.getKey()).or(SingularityS3FormatHelper.DEFAULT_GROUP_NAME);
+        String group = getRequestGroup(entry.getKey(), user).or(SingularityS3FormatHelper.DEFAULT_GROUP_NAME);
         Set<String> s3Buckets = getBuckets(group);
         List<String> prefixes = new ArrayList<>();
         if (!entry.getValue().isEmpty()) {
           for (String deployId : entry.getValue()) {
-            prefixes.addAll(getS3PrefixesForDeploy(configuration.get(), entry.getKey(), deployId, search.getStart(), search.getEnd(), group));
+            prefixes.addAll(getS3PrefixesForDeploy(configuration.get(), entry.getKey(), deployId, search.getStart(), search.getEnd(), group, user));
           }
         } else {
           prefixes.addAll(getS3PrefixesForRequest(configuration.get(), entry.getKey(), search.getStart(), search.getEnd(), group));
@@ -502,18 +503,18 @@ public class S3LogResource extends AbstractHistoryResource {
   }
 
   // Finding request group
-  private Optional<String> getRequestGroupForTask(final SingularityTaskId taskId) {
-    Optional<SingularityTaskHistory> maybeTaskHistory = getTaskHistory(taskId);
+  private Optional<String> getRequestGroupForTask(final SingularityTaskId taskId, SingularityUser user) {
+    Optional<SingularityTaskHistory> maybeTaskHistory = getTaskHistory(taskId, user);
     if (maybeTaskHistory.isPresent()) {
       SingularityRequest request = maybeTaskHistory.get().getTask().getTaskRequest().getRequest();
       authorizationHelper.checkForAuthorization(request, user, SingularityAuthorizationScope.READ);
       return request.getGroup();
     } else {
-      return getRequestGroup(taskId.getRequestId());
+      return getRequestGroup(taskId.getRequestId(), user);
     }
   }
 
-  private Optional<String> getRequestGroup(final String requestId) {
+  private Optional<String> getRequestGroup(final String requestId, SingularityUser user) {
     final Optional<SingularityRequestWithState> maybeRequest = requestManager.getRequest(requestId);
     if (maybeRequest.isPresent()) {
       authorizationHelper.checkForAuthorization(maybeRequest.get().getRequest(), user, SingularityAuthorizationScope.READ);
@@ -540,6 +541,7 @@ public class S3LogResource extends AbstractHistoryResource {
   @Path("/task/{taskId}")
   @ApiOperation("Retrieve the list of logs stored in S3 for a specific task.")
   public List<SingularityS3LogMetadata> getS3LogsForTask(
+      @Auth SingularityUser user,
       @ApiParam("The task ID to search for") @PathParam("taskId") String taskId,
       @ApiParam("Start timestamp (millis, 13 digit)") @QueryParam("start") Optional<Long> start,
       @ApiParam("End timestamp (mills, 13 digit)") @QueryParam("end") Optional<Long> end,
@@ -558,7 +560,7 @@ public class S3LogResource extends AbstractHistoryResource {
         Collections.<String, ContinuationToken>emptyMap());
 
     try {
-      return getS3Logs(configuration.get(), getServiceToPrefixes(search), search, false).getResults();
+      return getS3Logs(configuration.get(), getServiceToPrefixes(search, user), search, false).getResults();
     } catch (TimeoutException te) {
       throw timeout("Timed out waiting for response from S3 for %s", taskId);
     } catch (Throwable t) {
@@ -570,6 +572,7 @@ public class S3LogResource extends AbstractHistoryResource {
   @Path("/request/{requestId}")
   @ApiOperation("Retrieve the list of logs stored in S3 for a specific request.")
   public List<SingularityS3LogMetadata> getS3LogsForRequest(
+      @Auth SingularityUser user,
       @ApiParam("The request ID to search for") @PathParam("requestId") String requestId,
       @ApiParam("Start timestamp (millis, 13 digit)") @QueryParam("start") Optional<Long> start,
       @ApiParam("End timestamp (mills, 13 digit)") @QueryParam("end") Optional<Long> end,
@@ -589,7 +592,7 @@ public class S3LogResource extends AbstractHistoryResource {
           Optional.<Integer>absent(),
           Collections.<String, ContinuationToken>emptyMap());
 
-      return getS3Logs(configuration.get(), getServiceToPrefixes(search), search, false).getResults();
+      return getS3Logs(configuration.get(), getServiceToPrefixes(search, user), search, false).getResults();
     } catch (TimeoutException te) {
       throw timeout("Timed out waiting for response from S3 for %s", requestId);
     } catch (Throwable t) {
@@ -601,6 +604,7 @@ public class S3LogResource extends AbstractHistoryResource {
   @Path("/request/{requestId}/deploy/{deployId}")
   @ApiOperation("Retrieve the list of logs stored in S3 for a specific deploy.")
   public List<SingularityS3LogMetadata> getS3LogsForDeploy(
+      @Auth SingularityUser user,
       @ApiParam("The request ID to search for") @PathParam("requestId") String requestId,
       @ApiParam("The deploy ID to search for") @PathParam("deployId") String deployId,
       @ApiParam("Start timestamp (millis, 13 digit)") @QueryParam("start") Optional<Long> start,
@@ -621,7 +625,7 @@ public class S3LogResource extends AbstractHistoryResource {
           Optional.<Integer>absent(),
           Collections.<String, ContinuationToken>emptyMap());
 
-      return getS3Logs(configuration.get(), getServiceToPrefixes(search), search, false).getResults();
+      return getS3Logs(configuration.get(), getServiceToPrefixes(search, user), search, false).getResults();
     } catch (TimeoutException te) {
       throw timeout("Timed out waiting for response from S3 for %s-%s", requestId, deployId);
     } catch (Throwable t) {
@@ -633,13 +637,13 @@ public class S3LogResource extends AbstractHistoryResource {
   @Path("/search")
   @Consumes(MediaType.APPLICATION_JSON)
   @ApiOperation("Retrieve a paginated list of logs stored in S3")
-  public SingularityS3SearchResult getPaginatedS3Logs(@ApiParam(required = true) SingularityS3SearchRequest search) throws Exception {
+  public SingularityS3SearchResult getPaginatedS3Logs(@Auth SingularityUser user, @ApiParam(required = true) SingularityS3SearchRequest search) throws Exception {
     checkS3();
 
     checkBadRequest(!search.getRequestsAndDeploys().isEmpty() || !search.getTaskIds().isEmpty(), "Must specify at least one request or task to search");
 
     try {
-      return getS3Logs(configuration.get(), getServiceToPrefixes(search), search, true);
+      return getS3Logs(configuration.get(), getServiceToPrefixes(search, user), search, true);
     } catch (TimeoutException te) {
       throw timeout("Timed out waiting for response from S3 for %s", search);
     } catch (Throwable t) {

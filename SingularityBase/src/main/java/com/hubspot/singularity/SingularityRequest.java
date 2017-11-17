@@ -61,6 +61,7 @@ public class SingularityRequest {
   private final Optional<Integer> maxTasksPerOffer;
 
   private final Optional<Boolean> allowBounceToSameHost;
+  @Deprecated
   private final Optional<String> dataCenter;
 
   @JsonCreator
@@ -361,7 +362,8 @@ public class SingularityRequest {
     return taskPriorityLevel;
   }
 
-  @ApiModelProperty(required=false, value="When using the cluster coordinator, the data center associated with this request")
+  @Deprecated
+  @ApiModelProperty(required=false, value="the data center associated with this request")
   public Optional<String> getDataCenter() {
     return dataCenter;
   }

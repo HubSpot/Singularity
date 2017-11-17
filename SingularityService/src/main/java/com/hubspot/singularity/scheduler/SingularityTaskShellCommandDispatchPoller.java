@@ -18,6 +18,7 @@ import com.hubspot.singularity.SingularityTaskShellCommandRequest;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.data.transcoders.Transcoder;
+import com.hubspot.singularity.helpers.MesosProtosUtils;
 import com.hubspot.singularity.mesos.SingularityMesosSchedulerClient;
 
 @Singleton
@@ -62,8 +63,8 @@ public class SingularityTaskShellCommandDispatchPoller extends SingularityLeader
         continue;
       }
 
-      final ExecutorID executorId = task.get().getMesosTask().getExecutor().getExecutorId();
-      final AgentID slaveId = task.get().getMesosTask().getAgentId();
+      final ExecutorID executorId = MesosProtosUtils.toExecutorId(task.get().getMesosTask().getExecutor().getExecutorId());
+      final AgentID slaveId = MesosProtosUtils.toAgentId(task.get().getMesosTask().getAgentId());
       final byte[] bytes = transcoder.toBytes(shellRequest);
 
       schedulerClient.frameworkMessage(executorId, slaveId, bytes);

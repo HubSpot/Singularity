@@ -10,7 +10,6 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
-import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.hubspot.singularity.SingularityUser;
 import com.hubspot.singularity.auth.SingularityAuthorizationHelper;
@@ -18,22 +17,21 @@ import com.hubspot.singularity.config.ApiPaths;
 import com.hubspot.singularity.data.InactiveSlaveManager;
 import com.wordnik.swagger.annotations.Api;
 
+import io.dropwizard.auth.Auth;
+
 @Path(ApiPaths.INACTIVE_SLAVES_RESOURCE_PATH)
 @Produces(MediaType.APPLICATION_JSON)
 @Api(description="Manages Singularity Deploys for existing requests", value=ApiPaths.INACTIVE_SLAVES_RESOURCE_PATH)
 public class InactiveSlaveResource {
   private final InactiveSlaveManager inactiveSlaveManager;
   private final SingularityAuthorizationHelper authorizationHelper;
-  private final Optional<SingularityUser> user;
 
 
   @Inject
   public InactiveSlaveResource(InactiveSlaveManager inactiveSlaveManager,
-                               SingularityAuthorizationHelper authorizationHelper,
-                               Optional<SingularityUser> user) {
+                               SingularityAuthorizationHelper authorizationHelper) {
     this.inactiveSlaveManager = inactiveSlaveManager;
     this.authorizationHelper = authorizationHelper;
-    this.user = user;
   }
 
   @GET
@@ -42,13 +40,15 @@ public class InactiveSlaveResource {
   }
 
   @POST
-  public void deactivateSlave(@QueryParam("host") String host) {
+  public void deactivateSlave(@Auth SingularityUser user,
+                              @QueryParam("host") String host) {
     authorizationHelper.checkAdminAuthorization(user);
     inactiveSlaveManager.deactivateSlave(host);
   }
 
   @DELETE
-  public void reactivateSlave(@QueryParam("host") String host) {
+  public void reactivateSlave(@Auth SingularityUser user,
+                              @QueryParam("host") String host) {
     authorizationHelper.checkAdminAuthorization(user);
     inactiveSlaveManager.activateSlave(host);
   }

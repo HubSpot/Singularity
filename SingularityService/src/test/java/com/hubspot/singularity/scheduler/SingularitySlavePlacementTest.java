@@ -307,7 +307,7 @@ public class SingularitySlavePlacementTest extends SingularitySchedulerTestBase 
 
       Assert.assertEquals(7, taskManager.getActiveTaskIds().size());
 
-      requestResource.postRequest(request.toBuilder().setInstances(Optional.of(4)).setRackSensitive(Optional.of(true)).build());
+      requestResource.postRequest(request.toBuilder().setInstances(Optional.of(4)).setRackSensitive(Optional.of(true)).build(), singularityUser);
 
       scheduler.drainPendingQueue();
 
@@ -346,7 +346,7 @@ public class SingularitySlavePlacementTest extends SingularitySchedulerTestBase 
     sms.resourceOffers(Arrays.asList(createOffer(1, 128, "slave2", "host2", Optional.of("rack1"))));
     Assert.assertEquals(2, taskManager.getActiveTaskIds().size());
 
-    requestResource.bounce(requestId, Optional.absent());
+    requestResource.bounce(requestId, Optional.absent(), singularityUser);
     cleaner.drainCleanupQueue();
     scheduler.drainPendingQueue();
 
