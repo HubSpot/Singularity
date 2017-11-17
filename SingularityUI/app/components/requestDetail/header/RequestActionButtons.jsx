@@ -174,25 +174,16 @@ const RequestActionButtons = ({requestParent, fetchRequest, fetchRequestHistory,
 
   const quickLinks = [];
 
-  const maybeLinksForRequest = Utils.maybe(config.quickLinks, ['request', request.requestType], []);
-  const maybeLinksForAllRequests = Utils.maybe(config.quickLinks, ['request', 'ALL'], []);
-
-  maybeLinksForRequest.forEach((link) => {
+  Utils.maybe(config.quickLinks, ['request', request.requestType], []).forEach((link) => {
     quickLinks.push(
       <MenuItem href={Utils.template(link.template, request)}>{link.title}</MenuItem>
     );
   });
-  maybeLinksForAllRequests.forEach((link) => {
+  Utils.maybe(config.quickLinks, ['request', 'ALL'], []).forEach((link) => {
     quickLinks.push(
       <MenuItem href={Utils.template(link.template, request)}>{link.title}</MenuItem>
     );
   });
-
-  const quickLinksDropwdown = (quickLinks.length > 0 &&
-    <DropdownButton bsStyle="default" title="Quick Links" pullRight>
-      {quickLinks}
-    </DropdownButton>
-  );
 
   return (
     <div>
@@ -206,7 +197,11 @@ const RequestActionButtons = ({requestParent, fetchRequest, fetchRequestHistory,
       {maybeEditButton}
       {maybeToggleHealthchecksButton}
       {removeButton}
-      {quickLinks.length > 0 && quickLinksDropwdown}
+      {quickLinks.length > 0 &&
+        <DropdownButton bsStyle="default" title="Quick Links" pullRight>
+          {quickLinks}
+        </DropdownButton>
+      }
     </div>
   );
 };
