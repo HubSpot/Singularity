@@ -8,10 +8,12 @@ import com.hubspot.singularity.SingularityRequestWithState;
 public class RequestParentWithLastActionTime implements Comparable<RequestParentWithLastActionTime> {
   private final SingularityRequestWithState requestWithState;
   private final long lastActionTime;
+  private final boolean starred;
 
-  public RequestParentWithLastActionTime(SingularityRequestWithState requestWithState, long lastActionTime) {
+  public RequestParentWithLastActionTime(SingularityRequestWithState requestWithState, long lastActionTime, boolean starred) {
     this.requestWithState = requestWithState;
     this.lastActionTime = lastActionTime;
+    this.starred = starred;
   }
 
   public SingularityRequestWithState getRequestWithState() {
@@ -22,9 +24,17 @@ public class RequestParentWithLastActionTime implements Comparable<RequestParent
     return lastActionTime;
   }
 
+  public boolean isStarred() {
+    return starred;
+  }
+
+  private long adjustedSortTime() {
+    return lastActionTime * (starred ? 1000 : 1);
+  }
+
   @Override
   public int compareTo(RequestParentWithLastActionTime other) {
-    return Longs.compare(other.getLastActionTime(), lastActionTime);
+    return Longs.compare(other.adjustedSortTime(), adjustedSortTime());
   }
 
   @Override
