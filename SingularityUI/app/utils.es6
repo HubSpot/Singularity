@@ -332,7 +332,8 @@ const Utils = {
     if (object.hasOwnProperty(path[0])) {
       return Utils.maybe(
         object[path[0]],
-        path.slice(1, path.length)
+        path.slice(1, path.length),
+        defaultValue
       );
     }
 
@@ -508,6 +509,32 @@ const Utils = {
     }
     const authToken = JSON.parse(authCookie)[config.authTokenKey];
     return `Bearer ${ authToken }`;
+  },
+
+  template(template, data) {
+    const start = "{{";
+    const end = "}}";
+    const path = "[a-z0-9_$][\\.a-z0-9_]*";
+    const pattern = new RegExp(start + "\\s*("+ path +")\\s*" + end, "gi");
+    try {
+      return template.replace(pattern, (tag, token) => {
+        const tokenPath = token.split(".");
+        let value = data;
+        let i = 0;
+
+        for (; i < tokenPath.length; i++){
+          value = value[tokenPath[i]];
+          if (value === undefined){
+            throw tokenPath[i] + "' not found in " + tag;
+          }
+          if (i === tokenPath.length - 1){
+            return value;
+          }
+        }
+      });
+    } catch (err) {
+      return undefined;
+    }
   }
 
 };
