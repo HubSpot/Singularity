@@ -210,13 +210,14 @@ public class RequestHelper {
       requestIdToLastHistory = Collections.emptyMap();
     }
 
+    Optional<SingularityUserSettings> maybeUserSettings = userManager.getUserSettings(user.getId());
+
     return requests.parallelStream()
         .filter((request) -> {
           if (!filterRelevantForUser || user.equals(SingularityUser.DEFAULT_USER)) {
             return true;
           }
           String requestId = request.getRequest().getId();
-          Optional<SingularityUserSettings> maybeUserSettings = userManager.getUserSettings(user.getId());
           if (maybeUserSettings.isPresent() && maybeUserSettings.get().getStarredRequestIds().contains(requestId)) {
             // This is a starred request for the user
             return true;
@@ -257,9 +258,9 @@ public class RequestHelper {
             }
           }
 
-          return new RequestParentWithLastActionTime(request, lastActionTime);
+          return new RequestParentWithLastActionTime(request, lastActionTime, maybeUserSettings.isPresent() && maybeUserSettings.get().getStarredRequestIds().contains(request.getRequest().getId()));
         })
-        .sorted() // Sorted by last action time descending
+        .sorted() // Sorted by last action time descending, with starred requests coming first
         .limit(limit.or(requests.size()))
         .map((parentWithActionTime) -> {
           SingularityRequestWithState requestWithState = parentWithActionTime.getRequestWithState();
