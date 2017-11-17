@@ -176,12 +176,12 @@ const RequestActionButtons = ({requestParent, fetchRequest, fetchRequestHistory,
 
   Utils.maybe(config.quickLinks, ['request', request.requestType], []).forEach((link) => {
     quickLinks.push(
-      <MenuItem href={Utils.template(link.template, request)}>{link.title}</MenuItem>
+      <MenuItem href={Utils.template(link.template, requestParent)}>{link.title}</MenuItem>
     );
   });
   Utils.maybe(config.quickLinks, ['request', 'ALL'], []).forEach((link) => {
     quickLinks.push(
-      <MenuItem href={Utils.template(link.template, request)}>{link.title}</MenuItem>
+      <MenuItem href={Utils.template(link.template, requestParent)}>{link.title}</MenuItem>
     );
   });
 
