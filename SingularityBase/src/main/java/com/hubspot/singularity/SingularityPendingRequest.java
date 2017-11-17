@@ -3,6 +3,7 @@ package com.hubspot.singularity;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
+import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -28,31 +29,34 @@ public class SingularityPendingRequest {
   private final Optional<String> actionId;
   private final Optional<Resources> resources;
   private final List<SingularityMesosArtifact> extraArtifacts;
+  private final Map<String, String> envOverrides;
   private final Optional<Long> runAt;
 
   public SingularityPendingRequest(String requestId, String deployId, long timestamp, Optional<String> user, PendingType pendingType, Optional<Boolean> skipHealthchecks, Optional<String> message) {
-    this(requestId, deployId, timestamp, user, pendingType, Optional.<List<String>> absent(), Optional.<String> absent(), skipHealthchecks, message, Optional.<String> absent(), Optional.<Resources>absent(), null, Optional.<Long> absent());
+    this(requestId, deployId, timestamp, user, pendingType, Optional.<List<String>> absent(), Optional.<String> absent(), skipHealthchecks, message, Optional.<String> absent(), Optional.<Resources>absent(), null, null, Optional.<Long> absent());
   }
 
   public SingularityPendingRequest(String requestId, String deployId, long timestamp, Optional<String> user, PendingType pendingType, Optional<List<String>> cmdLineArgsList,
     Optional<String> runId, Optional<Boolean> skipHealthchecks, Optional<String> message, Optional<String> actionId) {
-    this(requestId, deployId, timestamp, user, pendingType, cmdLineArgsList, runId, skipHealthchecks, message, actionId, Optional.<Resources>absent(), null, Optional.<Long>absent());
+    this(requestId, deployId, timestamp, user, pendingType, cmdLineArgsList, runId, skipHealthchecks, message, actionId, Optional.<Resources>absent(), null, null, Optional.<Long>absent());
   }
 
   @JsonCreator
-  public SingularityPendingRequest(@JsonProperty("requestId") String requestId,
-                                   @JsonProperty("deployId") String deployId,
-                                   @JsonProperty("timestamp") long timestamp,
-                                   @JsonProperty("user") Optional<String> user,
-                                   @JsonProperty("pendingType") PendingType pendingType,
-                                   @JsonProperty("cmdLineArgsList") Optional<List<String>> cmdLineArgsList,
-                                   @JsonProperty("runId") Optional<String> runId,
-                                   @JsonProperty("skipHealthchecks") Optional<Boolean> skipHealthchecks,
-                                   @JsonProperty("message") Optional<String> message,
-                                   @JsonProperty("actionId") Optional<String> actionId,
-                                   @JsonProperty("resources") Optional<Resources> resources,
-                                   @JsonProperty("extraArtifacts") List<SingularityMesosArtifact> extraArtifacts,
-                                   @JsonProperty("runAt") Optional<Long> runAt) {
+  public SingularityPendingRequest(
+      @JsonProperty("requestId") String requestId,
+      @JsonProperty("deployId") String deployId,
+      @JsonProperty("timestamp") long timestamp,
+      @JsonProperty("user") Optional<String> user,
+      @JsonProperty("pendingType") PendingType pendingType,
+      @JsonProperty("cmdLineArgsList") Optional<List<String>> cmdLineArgsList,
+      @JsonProperty("runId") Optional<String> runId,
+      @JsonProperty("skipHealthchecks") Optional<Boolean> skipHealthchecks,
+      @JsonProperty("message") Optional<String> message,
+      @JsonProperty("actionId") Optional<String> actionId,
+      @JsonProperty("resources") Optional<Resources> resources,
+      @JsonProperty("extraArtifacts") List<SingularityMesosArtifact> extraArtifacts,
+      @JsonProperty("envOverrides") Map<String, String> envOverrides,
+      @JsonProperty("runAt") Optional<Long> runAt) {
     this.requestId = requestId;
     this.deployId = deployId;
     this.timestamp = timestamp;
@@ -69,6 +73,7 @@ public class SingularityPendingRequest {
     } else {
       this.extraArtifacts = Collections.emptyList();
     }
+    this.envOverrides = envOverrides == null ? Collections.emptyMap() : envOverrides;
     this.runAt = runAt;
   }
 
@@ -120,6 +125,8 @@ public class SingularityPendingRequest {
     return extraArtifacts;
   }
 
+  public Map<String, String> getEnvOverrides() { return envOverrides; }
+
   public Optional<Long> getRunAt() {
     return runAt;
   }
@@ -139,6 +146,7 @@ public class SingularityPendingRequest {
         ", actionId=" + actionId +
         ", resources=" + resources +
         ", extraArtifacts=" + extraArtifacts +
+        ", envOverrides=" + envOverrides +
         ", runAt=" + runAt +
         '}';
   }

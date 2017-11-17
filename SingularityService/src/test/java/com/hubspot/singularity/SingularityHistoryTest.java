@@ -21,7 +21,6 @@ import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.hubspot.singularity.SingularityRequestHistory.RequestHistoryType;
 import com.hubspot.singularity.api.SingularityDeleteRequestRequest;
-import com.hubspot.singularity.api.SingularityRunNowRequest;
 import com.hubspot.singularity.api.SingularityScaleRequest;
 import com.hubspot.singularity.config.HistoryPurgingConfiguration;
 import com.hubspot.singularity.data.MetadataManager;
@@ -198,7 +197,7 @@ public class SingularityHistoryTest extends SingularitySchedulerTestBase {
     String runId = "my-run-id";
 
     SingularityPendingRequestParent parent = requestResource.scheduleImmediately(singularityUser, requestId,
-        new SingularityRunNowRequest(Optional.absent(), Optional.absent(), Optional.of(runId), Optional.absent(), Optional.absent(), Optional.absent()));
+        new SingularityRunNowRequestBuilder().setRunId(runId).build());
 
     Assert.assertEquals(runId, parent.getPendingRequest().getRunId().get());
 

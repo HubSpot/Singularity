@@ -788,9 +788,19 @@ public class SingularityScheduler {
         nextInstanceNumber++;
       }
 
-      newTasks
-          .add(new SingularityPendingTask(new SingularityPendingTaskId(request.getId(), deployId, nextRunAt.get(), nextInstanceNumber, pendingRequest.getPendingType(), pendingRequest.getTimestamp()),
-              pendingRequest.getCmdLineArgsList(), pendingRequest.getUser(), pendingRequest.getRunId(), pendingRequest.getSkipHealthchecks(), pendingRequest.getMessage(), pendingRequest.getResources(), pendingRequest.getExtraArtifacts(),
+      newTasks.add(
+          new SingularityPendingTask(
+              new SingularityPendingTaskId(
+                  request.getId(), deployId, nextRunAt.get(), nextInstanceNumber,
+                  pendingRequest.getPendingType(), pendingRequest.getTimestamp()),
+              pendingRequest.getCmdLineArgsList(),
+              pendingRequest.getUser(),
+              pendingRequest.getRunId(),
+              pendingRequest.getSkipHealthchecks(),
+              pendingRequest.getMessage(),
+              pendingRequest.getResources(),
+              pendingRequest.getExtraArtifacts(),
+              pendingRequest.getEnvOverrides(),
               pendingRequest.getActionId()));
 
       nextInstanceNumber++;

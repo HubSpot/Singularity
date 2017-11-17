@@ -7,9 +7,11 @@ import static org.mockito.Mockito.*;
 
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.stream.Collectors;
 
 import org.apache.mesos.v1.Protos;
 import org.apache.mesos.v1.Protos.AgentID;
@@ -31,6 +33,7 @@ import com.fasterxml.jackson.datatype.guava.GuavaModule;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 import com.hubspot.jackson.datatype.protobuf.ProtobufModule;
+import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.helpers.MesosProtosUtils;
 import com.hubspot.singularity.helpers.MesosUtils;
 import com.hubspot.mesos.Resources;
@@ -48,6 +51,7 @@ import com.hubspot.singularity.SingularityDeploy;
 import com.hubspot.singularity.SingularityDeployBuilder;
 import com.hubspot.singularity.SingularityPendingRequest.PendingType;
 import com.hubspot.singularity.SingularityPendingTask;
+import com.hubspot.singularity.SingularityPendingTaskBuilder;
 import com.hubspot.singularity.SingularityPendingTaskId;
 import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityRequestBuilder;
@@ -70,8 +74,10 @@ public class SingularityMesosTaskBuilderTest {
 
   @Before
   public void createMocks() {
-    pendingTask = new SingularityPendingTask(new SingularityPendingTaskId("test", "1", 0, 1, PendingType.IMMEDIATE, 0), Optional.<List<String>> absent(),
-        Optional.of(user), Optional.<String> absent(), Optional.<Boolean> absent(), Optional.<String> absent(), Optional.<Resources>absent(), null, Optional.<String>absent());
+    pendingTask = new SingularityPendingTaskBuilder()
+        .setPendingTaskId(new SingularityPendingTaskId("test", "1", 0, 1, PendingType.IMMEDIATE, 0))
+        .setUser(user)
+        .build();
 
     final SingularitySlaveAndRackHelper slaveAndRackHelper = mock(SingularitySlaveAndRackHelper.class);
     final ExecutorIdGenerator idGenerator = mock(ExecutorIdGenerator.class);
@@ -142,6 +148,40 @@ public class SingularityMesosTaskBuilderTest {
     }
 
     assertTrue("Expected env variable STARTED_BY_USER to be set to " + user, success);
+  }
+
+  @Test
+  public void testEnvironmentVariableOverrides() {
+    Map<String, String> overrideVariables = new HashMap<>();
+    overrideVariables.put("MY_NEW_ENV_VAR", "test");
+    overrideVariables.put("STARTED_BY_USER", "notTestUser");
+
+    final SingularityRequest request = new SingularityRequestBuilder("test", RequestType.WORKER)
+        .build();
+    final SingularityDeploy deploy = new SingularityDeployBuilder("test", "1")
+        .setCommand(Optional.of("/bin/echo hi"))
+        .build();
+    final SingularityPendingTask pendingTask = new SingularityPendingTaskBuilder()
+        .setPendingTaskId(new SingularityPendingTaskId("test", "1", 0, 1, PendingType.IMMEDIATE, 0))
+        .setUser(user)
+        .setEnvOverrides(overrideVariables)
+        .build();
+    final SingularityTaskRequest taskRequest = new SingularityTaskRequest(request, deploy, pendingTask);
+    final SingularityMesosTaskHolder task = builder.buildTask(offerHolder, null, taskRequest, taskResources, executorResources);
+
+    Map<String, String> environmentVariables = task.getMesosTask()
+        .getCommand()
+        .getEnvironment()
+        .getVariablesList()
+        .stream()
+        .collect(Collectors.toMap(Variable::getName, Variable::getValue));
+
+    for (String key : overrideVariables.keySet()) {
+      assertEquals(
+          "Environment variable " + key + " not overridden.",
+          environmentVariables.get(key),
+          overrideVariables.get(key));
+    }
   }
 
   @Test

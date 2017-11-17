@@ -3,6 +3,7 @@ package com.hubspot.singularity.api;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
+import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -19,6 +20,7 @@ public class SingularityRunNowRequest {
   private final Optional<Boolean> skipHealthchecks;
   private final Optional<Resources> resources;
   private final List<SingularityMesosArtifact> extraArtifacts;
+  private final Map<String, String> envOverrides;
   private final Optional<Long> runAt;
 
   public SingularityRunNowRequest(
@@ -26,20 +28,11 @@ public class SingularityRunNowRequest {
       Optional<Boolean> skipHealthchecks,
       Optional<String> runId,
       Optional<List<String>> commandLineArgs,
-      Optional<Resources> resources
-  ) {
-    this(message, skipHealthchecks, runId, commandLineArgs, resources, null, Optional.<Long>absent());
-  }
-
-  public SingularityRunNowRequest(
-      Optional<String> message,
-      Optional<Boolean> skipHealthchecks,
-      Optional<String> runId,
-      Optional<List<String>> commandLineArgs,
       Optional<Resources> resources,
-      Optional<Long> runAt
-  ) {
-    this(message, skipHealthchecks, runId, commandLineArgs, resources, null, runAt);
+      Map<String, String> envOverrides,
+      Optional<Long> runAt)
+  {
+    this(message, skipHealthchecks, runId, commandLineArgs, resources, null, envOverrides, runAt);
   }
 
   @JsonCreator
@@ -49,6 +42,7 @@ public class SingularityRunNowRequest {
                                   @JsonProperty("commandLineArgs") Optional<List<String>> commandLineArgs,
                                   @JsonProperty("resources") Optional<Resources> resources,
                                   @JsonProperty("extraArtifacts") List<SingularityMesosArtifact> extraArtifacts,
+                                  @JsonProperty("envOverrides") Map<String, String> envOverrides,
                                   @JsonProperty("runAt") Optional<Long> runAt) {
     this.message = message;
     this.commandLineArgs = commandLineArgs;
@@ -60,6 +54,7 @@ public class SingularityRunNowRequest {
     } else {
       this.extraArtifacts = Collections.emptyList();
     }
+    this.envOverrides = envOverrides == null ? Collections.emptyMap() : envOverrides;
     this.runAt = runAt;
   }
 
@@ -93,6 +88,11 @@ public class SingularityRunNowRequest {
     return extraArtifacts;
   }
 
+  @ApiModelProperty(required=false, value="Override the environment variables for launched tasks")
+  public Map<String, String> getEnvOverrides() {
+    return envOverrides;
+  }
+
   @ApiModelProperty(required=false, value="Schedule this task to run at a specified time")
   public Optional<Long> getRunAt() {
     return runAt;
@@ -107,6 +107,7 @@ public class SingularityRunNowRequest {
         ", skipHealthchecks=" + skipHealthchecks +
         ", resources=" + resources +
         ", extraArtifacts=" + extraArtifacts +
+        ", envOverrides=" + envOverrides +
         ", runAt=" + runAt +
         '}';
   }
