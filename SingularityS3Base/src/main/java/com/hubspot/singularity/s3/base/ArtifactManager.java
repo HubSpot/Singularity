@@ -3,6 +3,7 @@ package com.hubspot.singularity.s3.base;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.SeekableByteChannel;
+import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -200,11 +201,17 @@ public class ArtifactManager extends SimpleProcessManager {
   public void copy(Path source, Path destination, String destinationFilename) {
     log.info("Copying {} to {}", source, destination);
 
+    Path destinationPath = destination.resolve(destinationFilename);
     try {
       Files.createDirectories(destination);
-      Files.copy(source, destination.resolve(destinationFilename));
-    } catch (IOException e) {
-      throw Throwables.propagate(e);
+      Files.copy(source, destinationPath);
+    } catch (FileAlreadyExistsException e) {
+      if (!calculateMd5sum(source).equals(calculateMd5sum(destinationPath))) {
+        throw new RuntimeException(e);
+      }
+    }
+    catch (IOException e) {
+      throw new RuntimeException(e);
     }
   }
 
