@@ -107,7 +107,7 @@ public class UIConfiguration {
   @JsonProperty
   private Optional<String> staticRootOverride = Optional.absent();
 
-  // e.g. {"request":{"SERVICE":[{"title":"my link","template":"http://example.com/{{id}}"}]}}
+  // e.g. {"request":{"SERVICE":[{"title":"my link","template":"http://example.com/{{request.id}}"}]}}
   @JsonProperty
   private Map<String, Map<String, List<UIQuickLinkConfiguration>>> quickLinks = Collections.emptyMap();
 
