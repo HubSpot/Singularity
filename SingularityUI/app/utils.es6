@@ -516,22 +516,25 @@ const Utils = {
     const end = "}}";
     const path = "[a-z0-9_$][\\.a-z0-9_]*";
     const pattern = new RegExp(start + "\\s*("+ path +")\\s*" + end, "gi");
-    return template.replace(pattern, (tag, token) => {
-      const tokenPath = token.split(".");
-      let value = data;
-      let i = 0;
+    try {
+      return template.replace(pattern, (tag, token) => {
+        const tokenPath = token.split(".");
+        let value = data;
+        let i = 0;
 
-      for (; i < tokenPath.length; i++){
-        value = value[tokenPath[i]];
-        if (value === undefined){
-          console.err(tokenPath[i] + "' not found in " + tag);
-          return "";
+        for (; i < tokenPath.length; i++){
+          value = value[tokenPath[i]];
+          if (value === undefined){
+            throw tokenPath[i] + "' not found in " + tag;
+          }
+          if (i === tokenPath.length - 1){
+            return value;
+          }
         }
-        if (i === tokenPath.length - 1){
-          return value;
-        }
-      }
-    });
+      });
+    } catch (err) {
+      return undefined;
+    }
   }
 
 };
