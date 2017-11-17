@@ -2,6 +2,9 @@ package com.hubspot.singularity.views;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import java.util.List;
+import java.util.Map;
+
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
@@ -9,6 +12,7 @@ import com.google.common.base.Throwables;
 import com.hubspot.singularity.config.ApiPaths;
 import com.hubspot.singularity.config.IndexViewConfiguration;
 import com.hubspot.singularity.config.UIConfiguration;
+import com.hubspot.singularity.config.UIQuickLinkConfiguration;
 
 import io.dropwizard.views.View;
 
@@ -64,6 +68,7 @@ public class IndexView extends View {
   private final boolean generateAuthHeader;
   private final String authCookieName;
   private final String authTokenKey;
+  private final Map<String, Map<String, List<UIQuickLinkConfiguration>>> quickLinks;
 
   public IndexView(String singularityUriBase, String appRoot, IndexViewConfiguration configuration, ObjectMapper mapper) {
     super("index.mustache");
@@ -130,6 +135,7 @@ public class IndexView extends View {
     this.generateAuthHeader = configuration.isGenerateAuthHeader();
     this.authCookieName = uiConfiguration.getAuthCookieName();
     this.authTokenKey = uiConfiguration.getAuthTokenKey();
+    this.quickLinks = uiConfiguration.getQuickLinks();
   }
 
   public String getAppRoot() {
@@ -264,6 +270,10 @@ public class IndexView extends View {
     return authTokenKey;
   }
 
+  public Map<String, Map<String, List<UIQuickLinkConfiguration>>> getQuickLinks() {
+    return quickLinks;
+  }
+
   @Override
   public String toString() {
     return "IndexView{" +
@@ -300,6 +310,7 @@ public class IndexView extends View {
         ", generateAuthHeader=" + generateAuthHeader +
         ", authCookieName='" + authCookieName + '\'' +
         ", authTokenKey='" + authTokenKey + '\'' +
+        ", quickLinks='" + quickLinks + '\'' +
         "} " + super.toString();
   }
 }
