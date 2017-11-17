@@ -33,6 +33,14 @@ mesos:
 
 ```
 
+### SingularityClient Considerations
+
+As part of the mesos 1 update, the `org.apache.mesos:mesos` library is now pulling in a newer version of protobuf. This can cause issues for users using any other protobuf version. As a result, we have refactored the models in `SingularityBase` such that `SingularityBase` and the `SingularityClient` no longer have a dependency on `org.apache.mesos:mesos`.
+
+For users of the java client, this means that a few of the previously accessible methods on the `SingularityTask` object may not be present. All information from the mesos `TaskInfo` protos is still being saved as json for later usage, but only the parts needed by Singularity internals are mapped to POJO fields, with the remainder being caught by jackson's `@JsonAnyGetter`/`@JsonAnySetter`. Extra fields on objects are available as a `Map<String, Object>` under `getAllOtherFields` on the objects.
+
+See [#1648](https://github.com/HubSpot/Singularity/pull/1648) for more details.
+
 ### Other Mesos Considerations
 
 - The `--work_dir` flag _must_ be set on all mesos agents or they will error on startup
