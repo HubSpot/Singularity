@@ -444,13 +444,8 @@ public class SingularityValidator {
         runNowRequest.getMessage(),
         Optional.absent(),
         runNowRequest.getResources(),
-<<<<<<< HEAD
-        runNowRequest.getExtraArtifacts(),
-        runNowRequest.getEnvOverrides(),
-=======
         runNowRequest.getEnvOverrides(),
         runNowRequest.getExtraArtifacts(),
->>>>>>> run_now_overrides
         runNowRequest.getRunAt()
     );
   }
@@ -464,13 +459,8 @@ public class SingularityValidator {
           Optional.of(getRunId(request.getRunId())),
           request.getCommandLineArgs(),
           request.getResources(),
-<<<<<<< HEAD
-          request.getExtraArtifacts(),
-          request.getEnvOverrides(),
-=======
           request.getEnvOverrides(),
           request.getExtraArtifacts(),
->>>>>>> run_now_overrides
           request.getRunAt());
     } else {
       return new SingularityRunNowRequestBuilder()
