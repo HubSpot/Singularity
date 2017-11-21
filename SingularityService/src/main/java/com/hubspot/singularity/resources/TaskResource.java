@@ -52,6 +52,7 @@ import com.hubspot.singularity.SingularityPendingRequest;
 import com.hubspot.singularity.SingularityPendingRequest.PendingType;
 import com.hubspot.singularity.SingularityPendingTask;
 import com.hubspot.singularity.SingularityPendingTaskId;
+import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityRequestWithState;
 import com.hubspot.singularity.SingularityShellCommand;
 import com.hubspot.singularity.SingularitySlave;
@@ -190,8 +191,6 @@ public class TaskResource extends AbstractLeaderAwareResource {
   }
 
   public Optional<SingularityPendingTask> deleteScheduledTask(String taskId, SingularityUser user) {
-    authorizationHelper.checkForAuthorizationByTaskId(taskId, user, SingularityAuthorizationScope.WRITE);
-
     Optional<SingularityPendingTask> maybePendingTask = taskManager.getPendingTask(getPendingTaskIdFromStr(taskId));
 
     if (maybePendingTask.isPresent()) {
@@ -199,8 +198,10 @@ public class TaskResource extends AbstractLeaderAwareResource {
 
       Optional<SingularityRequestWithState> maybeRequest = requestManager.getRequest(pendingTaskId.getRequestId());
       checkNotFound(maybeRequest.isPresent(), "Couldn't find: " + taskId);
-      checkBadRequest(maybeRequest.get().getRequest().getRequestType() == RequestType.ON_DEMAND,
-          "Only ON_DEMAND tasks may be deleted.");
+
+      SingularityRequest request = maybeRequest.get().getRequest();
+      authorizationHelper.checkForAuthorizationByRequestId(request.getId(), user, SingularityAuthorizationScope.WRITE);
+      checkBadRequest(request.getRequestType() == RequestType.ON_DEMAND, "Only ON_DEMAND tasks may be deleted.");
 
       taskManager.markPendingTaskForDeletion(pendingTaskId);
     }
