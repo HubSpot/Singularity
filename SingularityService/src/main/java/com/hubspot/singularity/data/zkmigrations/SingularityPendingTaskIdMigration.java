@@ -63,6 +63,10 @@ public class SingularityPendingTaskIdMigration extends ZkDataMigration {
                   .setPendingTaskId(newPendingTaskId)
                   .setCmdLineArgsList(cmdLineArgs.isPresent() ? Optional.of(Collections.singletonList(cmdLineArgs.get())) : Optional.<List<String>> absent())
                   .build());
+<<<<<<< HEAD
+=======
+
+>>>>>>> run_now_overrides
           curator.delete().forPath(ZKPaths.makePath(PENDING_TASKS_ROOT, pendingTaskId));
         }
       }

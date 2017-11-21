@@ -24,6 +24,7 @@ public class SingularityPendingRequestBuilder {
   private Optional<Resources> resources;
   private List<SingularityMesosArtifact> extraArtifacts;
   private Map<String, String> envOverrides;
+  private List<SingularityMesosArtifact> extraArtifacts;
   private Optional<Long> runAt;
 
   public SingularityPendingRequestBuilder() {
@@ -36,6 +37,7 @@ public class SingularityPendingRequestBuilder {
     this.resources = Optional.absent();
     this.extraArtifacts = Collections.emptyList();
     this.envOverrides = Collections.emptyMap();
+    this.extraArtifacts = Collections.emptyList();
     this.runAt = Optional.absent();
   }
 
@@ -134,6 +136,11 @@ public class SingularityPendingRequestBuilder {
     return this;
   }
 
+  public SingularityPendingRequestBuilder setExtraArtifacts(List<SingularityMesosArtifact> extraArtifacts) {
+    this.extraArtifacts = extraArtifacts;
+    return this;
+  }
+
   public SingularityPendingRequestBuilder setRunAt(Long runAt) {
     this.runAt = Optional.of(runAt);
     return this;
@@ -159,6 +166,7 @@ public class SingularityPendingRequestBuilder {
         resources,
         extraArtifacts,
         envOverrides,
+        extraArtifacts,
         runAt
     );
   }
@@ -179,6 +187,7 @@ public class SingularityPendingRequestBuilder {
         ", resources" + resources +
         ", extraArtifacts" + extraArtifacts +
         ", envOverrides" + envOverrides +
+        ", extraArtifacts" + extraArtifacts +
         ", runAt" + runAt +
         "}";
   }

@@ -15,8 +15,8 @@ public class SingularityRunNowRequestBuilder {
   private Optional<List<String>> commandLineArgs;
   private Optional<Boolean> skipHealthchecks;
   private Optional<Resources> resources;
-  private List<SingularityMesosArtifact> extraArtifacts;
   private Map<String, String> envOverrides;
+  private List<SingularityMesosArtifact> extraArtifacts;
   private Optional<Long> runAt;
 
   public SingularityRunNowRequestBuilder()
@@ -28,6 +28,7 @@ public class SingularityRunNowRequestBuilder {
     this.resources = Optional.absent();
     this.extraArtifacts = Collections.emptyList();
     this.envOverrides = Collections.emptyMap();
+    this.extraArtifacts = Collections.emptyList();
     this.runAt = Optional.absent();
   }
 
@@ -61,13 +62,13 @@ public class SingularityRunNowRequestBuilder {
     return this;
   }
 
-  public SingularityRunNowRequestBuilder setExtraArtifacts(List<SingularityMesosArtifact> extraArtifacts) {
-    this.extraArtifacts = extraArtifacts;
+  public SingularityRunNowRequestBuilder setEnvOverrides(Map<String, String> environmentVariables) {
+    this.envOverrides = environmentVariables;
     return this;
   }
 
-  public SingularityRunNowRequestBuilder setEnvOverrides(Map<String, String> environmentVariables) {
-    this.envOverrides = environmentVariables;
+  public SingularityRunNowRequestBuilder setExtraArtifacts(List<SingularityMesosArtifact> extraArtifacts) {
+    this.extraArtifacts = extraArtifacts;
     return this;
   }
 
@@ -78,7 +79,7 @@ public class SingularityRunNowRequestBuilder {
 
   public SingularityRunNowRequest build() {
     return new SingularityRunNowRequest(
-        message, skipHealthchecks, runId, commandLineArgs, resources, extraArtifacts, envOverrides, runAt);
+        message, skipHealthchecks, runId, commandLineArgs, resources, envOverrides, extraArtifacts, runAt);
   }
 
   @Override
@@ -91,6 +92,7 @@ public class SingularityRunNowRequestBuilder {
         ", resources=" + resources +
         ", extraArtifacts=" + extraArtifacts +
         ", envOverrides=" + envOverrides +
+        ", extraArtifacts=" + extraArtifacts +
         ", runAt=" + runAt +
         "}";
   }

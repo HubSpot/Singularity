@@ -2,8 +2,8 @@ package com.hubspot.singularity;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
 import java.util.Map;
+import java.util.Objects;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -28,8 +28,8 @@ public class SingularityPendingRequest {
   private final Optional<String> message;
   private final Optional<String> actionId;
   private final Optional<Resources> resources;
-  private final List<SingularityMesosArtifact> extraArtifacts;
   private final Map<String, String> envOverrides;
+  private final List<SingularityMesosArtifact> extraArtifacts;
   private final Optional<Long> runAt;
 
   public SingularityPendingRequest(String requestId, String deployId, long timestamp, Optional<String> user, PendingType pendingType, Optional<Boolean> skipHealthchecks, Optional<String> message) {
@@ -42,21 +42,20 @@ public class SingularityPendingRequest {
   }
 
   @JsonCreator
-  public SingularityPendingRequest(
-      @JsonProperty("requestId") String requestId,
-      @JsonProperty("deployId") String deployId,
-      @JsonProperty("timestamp") long timestamp,
-      @JsonProperty("user") Optional<String> user,
-      @JsonProperty("pendingType") PendingType pendingType,
-      @JsonProperty("cmdLineArgsList") Optional<List<String>> cmdLineArgsList,
-      @JsonProperty("runId") Optional<String> runId,
-      @JsonProperty("skipHealthchecks") Optional<Boolean> skipHealthchecks,
-      @JsonProperty("message") Optional<String> message,
-      @JsonProperty("actionId") Optional<String> actionId,
-      @JsonProperty("resources") Optional<Resources> resources,
-      @JsonProperty("extraArtifacts") List<SingularityMesosArtifact> extraArtifacts,
-      @JsonProperty("envOverrides") Map<String, String> envOverrides,
-      @JsonProperty("runAt") Optional<Long> runAt) {
+  public SingularityPendingRequest(@JsonProperty("requestId") String requestId,
+                                   @JsonProperty("deployId") String deployId,
+                                   @JsonProperty("timestamp") long timestamp,
+                                   @JsonProperty("user") Optional<String> user,
+                                   @JsonProperty("pendingType") PendingType pendingType,
+                                   @JsonProperty("cmdLineArgsList") Optional<List<String>> cmdLineArgsList,
+                                   @JsonProperty("runId") Optional<String> runId,
+                                   @JsonProperty("skipHealthchecks") Optional<Boolean> skipHealthchecks,
+                                   @JsonProperty("message") Optional<String> message,
+                                   @JsonProperty("actionId") Optional<String> actionId,
+                                   @JsonProperty("resources") Optional<Resources> resources,
+                                   @JsonProperty("envOverrides") Map<String, String> envOverrides,
+                                   @JsonProperty("extraArtifacts") List<SingularityMesosArtifact> extraArtifacts,
+                                   @JsonProperty("runAt") Optional<Long> runAt) {
     this.requestId = requestId;
     this.deployId = deployId;
     this.timestamp = timestamp;
@@ -68,12 +67,16 @@ public class SingularityPendingRequest {
     this.message = message;
     this.actionId = actionId;
     this.resources = resources;
+    if (Objects.nonNull(envOverrides)) {
+      this.envOverrides = envOverrides;
+    } else {
+      this.envOverrides = Collections.emptyMap();
+    }
     if (Objects.nonNull(extraArtifacts)) {
       this.extraArtifacts = extraArtifacts;
     } else {
       this.extraArtifacts = Collections.emptyList();
     }
-    this.envOverrides = envOverrides == null ? Collections.emptyMap() : envOverrides;
     this.runAt = runAt;
   }
 
@@ -145,6 +148,7 @@ public class SingularityPendingRequest {
         ", message=" + message +
         ", actionId=" + actionId +
         ", resources=" + resources +
+        ", envOverrides=" + envOverrides +
         ", extraArtifacts=" + extraArtifacts +
         ", envOverrides=" + envOverrides +
         ", runAt=" + runAt +
