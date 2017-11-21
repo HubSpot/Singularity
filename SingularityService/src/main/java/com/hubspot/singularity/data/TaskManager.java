@@ -77,6 +77,7 @@ public class TaskManager extends CuratorAsyncManager {
   private static final String DRIVER_KILLED_PATH_ROOT = TASKS_ROOT + "/killed";
   private static final String FINISHED_TASK_MAIL_QUEUE = TASKS_ROOT + "/mailqueue";
   private static final String SHELL_REQUESTS_QUEUE_PATH_ROOT = TASKS_ROOT + "/shellqueue";
+  private static final String PENDING_TASKS_TO_DELETE_PATH_ROOT = TASKS_ROOT + "/pendingdeletes";
 
   private static final String HISTORY_PATH_ROOT = TASKS_ROOT + "/history";
 
@@ -258,6 +259,8 @@ public class TaskManager extends CuratorAsyncManager {
   private String getPendingPath(SingularityPendingTaskId pendingTaskId) {
     return ZKPaths.makePath(PENDING_PATH_ROOT, pendingTaskId.getId());
   }
+
+  private String getPendingTasksToDeletePath(SingularityPendingTaskId pendingTaskId) { return ZKPaths.makePath(PENDING_TASKS_TO_DELETE_PATH_ROOT, pendingTaskId.getId()); }
 
   private String getCleanupPath(String taskId) {
     return ZKPaths.makePath(CLEANUP_PATH_ROOT, taskId);
@@ -805,6 +808,7 @@ public class TaskManager extends CuratorAsyncManager {
 
   public void activateLeaderCache() {
     leaderCache.cachePendingTasks(fetchPendingTasks());
+    leaderCache.cachePendingTasksToDelete(getPendingTasksMarkedForDeletion());
     leaderCache.cacheActiveTaskIds(getTaskIds(ACTIVE_PATH_ROOT));
     leaderCache.cacheCleanupTasks(fetchCleanupTasks());
     leaderCache.cacheKilledTasks(fetchKilledTaskIdRecords());
@@ -1066,6 +1070,20 @@ public class TaskManager extends CuratorAsyncManager {
   public void deletePendingTask(SingularityPendingTaskId pendingTaskId) {
     leaderCache.deletePendingTask(pendingTaskId);
     delete(getPendingPath(pendingTaskId));
+    delete(getPendingTasksToDeletePath(pendingTaskId));
+  }
+
+  public void markPendingTaskForDeletion(SingularityPendingTaskId pendingTaskId) {
+    leaderCache.markPendingTaskForDeletion(pendingTaskId);
+    create(getPendingTasksToDeletePath(pendingTaskId));
+  }
+
+  public List<SingularityPendingTaskId> getPendingTasksMarkedForDeletion() {
+    if (leaderCache.active()) {
+      return leaderCache.getPendingTaskIdsToDelete();
+    }
+
+    return getChildrenAsIds(PENDING_TASKS_TO_DELETE_PATH_ROOT, pendingTaskIdTranscoder);
   }
 
   public void deleteCleanupTask(String taskId) {

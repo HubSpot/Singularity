@@ -186,14 +186,19 @@ public class TaskResource extends AbstractLeaderAwareResource {
   @DELETE
   @Path("/scheduled/task/{scheduledTaskId}")
   @ApiOperation("Delete a scheduled task.")
-  public void deleteScheduledTask(@Auth SingularityUser user, @PathParam("scheduledTaskId") String taskId) {
+  public Void deleteScheduledTask(@Auth SingularityUser user, @PathParam("scheduledTaskId") String taskId, @Context HttpServletRequest requestContext) {
+    return maybeProxyToLeader(requestContext, Void.class, null, () -> deleteScheduledTask(taskId, user));
+  }
+
+  private Void deleteScheduledTask(String taskId, SingularityUser user) {
     SingularityTaskRequest taskRequest = getPendingTask(user, taskId);
     SingularityRequest request = taskRequest.getRequest();
 
-    authorizationHelper.checkForAuthorization(request, user, SingularityAuthorizationScope.ADMIN);
+    authorizationHelper.checkForAuthorization(request, user, SingularityAuthorizationScope.WRITE);
     checkBadRequest(request.getRequestType() == RequestType.ON_DEMAND, "Only ON_DEMAND tasks may be deleted.");
 
-    taskManager.deletePendingTask(taskRequest.getPendingTask().getPendingTaskId());
+    taskManager.markPendingTaskForDeletion(taskRequest.getPendingTask().getPendingTaskId());
+    return null;
   }
 
   @GET
