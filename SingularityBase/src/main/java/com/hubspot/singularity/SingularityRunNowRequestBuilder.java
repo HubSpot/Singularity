@@ -6,6 +6,7 @@ import java.util.Map;
 
 import com.google.common.base.Optional;
 import com.hubspot.mesos.Resources;
+import com.hubspot.mesos.SingularityMesosArtifact;
 import com.hubspot.singularity.api.SingularityRunNowRequest;
 
 public class SingularityRunNowRequestBuilder {
@@ -15,6 +16,7 @@ public class SingularityRunNowRequestBuilder {
   private Optional<Boolean> skipHealthchecks;
   private Optional<Resources> resources;
   private Map<String, String> envOverrides;
+  private List<SingularityMesosArtifact> extraArtifacts;
   private Optional<Long> runAt;
 
   public SingularityRunNowRequestBuilder()
@@ -25,6 +27,7 @@ public class SingularityRunNowRequestBuilder {
     this.skipHealthchecks = Optional.absent();
     this.resources = Optional.absent();
     this.envOverrides = Collections.emptyMap();
+    this.extraArtifacts = Collections.emptyList();
     this.runAt = Optional.absent();
   }
 
@@ -58,6 +61,11 @@ public class SingularityRunNowRequestBuilder {
     return this;
   }
 
+  public SingularityRunNowRequestBuilder setExtraArtifacts(List<SingularityMesosArtifact> extraArtifacts) {
+    this.extraArtifacts = extraArtifacts;
+    return this;
+  }
+
   public SingularityRunNowRequestBuilder setRunAt(Long runAt) {
     this.runAt = Optional.of(runAt);
     return this;
@@ -65,7 +73,7 @@ public class SingularityRunNowRequestBuilder {
 
   public SingularityRunNowRequest build() {
     return new SingularityRunNowRequest(
-        message, skipHealthchecks, runId, commandLineArgs, resources, envOverrides, runAt);
+        message, skipHealthchecks, runId, commandLineArgs, resources, envOverrides, extraArtifacts, runAt);
   }
 
   @Override
@@ -77,6 +85,7 @@ public class SingularityRunNowRequestBuilder {
         ", skipHealthchecks=" + skipHealthchecks +
         ", resources=" + resources +
         ", envOverrides=" + envOverrides +
+        ", extraArtifacts=" + extraArtifacts +
         ", runAt=" + runAt +
         "}";
   }

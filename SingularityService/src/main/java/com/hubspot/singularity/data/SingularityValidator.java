@@ -435,6 +435,7 @@ public class SingularityValidator {
         Optional.absent(),
         runNowRequest.getResources(),
         runNowRequest.getEnvOverrides(),
+        runNowRequest.getExtraArtifacts(),
         runNowRequest.getRunAt()
     );
   }
@@ -449,6 +450,7 @@ public class SingularityValidator {
           request.getCommandLineArgs(),
           request.getResources(),
           request.getEnvOverrides(),
+          request.getExtraArtifacts(),
           request.getRunAt());
     } else {
       return new SingularityRunNowRequestBuilder()

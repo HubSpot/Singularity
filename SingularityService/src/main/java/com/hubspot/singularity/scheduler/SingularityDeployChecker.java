@@ -12,6 +12,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import javax.inject.Singleton;
+import javax.ws.rs.HEAD;
 
 import org.apache.commons.lang3.time.DurationFormatUtils;
 import org.slf4j.Logger;
@@ -23,6 +24,8 @@ import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.hubspot.baragon.models.BaragonRequestState;
 import com.hubspot.mesos.JavaUtils;
+import com.hubspot.mesos.Resources;
+import com.hubspot.mesos.SingularityMesosArtifact;
 import com.hubspot.singularity.DeployState;
 import com.hubspot.singularity.LoadBalancerRequestType;
 import com.hubspot.singularity.LoadBalancerRequestType.LoadBalancerRequestId;
@@ -290,6 +293,7 @@ public class SingularityDeployChecker {
               .or(pendingDeploy.getDeployMarker().getMessage()))
           .setResources(runNowRequest.getResources())
           .setEnvOverrides(runNowRequest.getEnvOverrides())
+          .setExtraArtifacts(runNowRequest.getExtraArtifacts())
           .setRunAt(runNowRequest.getRunAt());
 
       PendingType pendingType = null;

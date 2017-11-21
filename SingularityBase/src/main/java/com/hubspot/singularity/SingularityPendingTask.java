@@ -12,6 +12,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 import com.hubspot.mesos.Resources;
+import com.hubspot.mesos.SingularityMesosArtifact;
 
 public class SingularityPendingTask {
 
@@ -23,6 +24,7 @@ public class SingularityPendingTask {
   private final Optional<String> message;
   private final Optional<Resources> resources;
   private final Map<String, String> envOverrides;
+  private final List<SingularityMesosArtifact> extraArtifacts;
   private final Optional<String> actionId;
 
   public static Predicate<SingularityPendingTask> matchingRequest(final String requestId) {
@@ -48,16 +50,16 @@ public class SingularityPendingTask {
   }
 
   @JsonCreator
-  public SingularityPendingTask(
-      @JsonProperty("pendingTaskId") SingularityPendingTaskId pendingTaskId,
-      @JsonProperty("cmdLineArgsList") Optional<List<String>> cmdLineArgsList,
-      @JsonProperty("user") Optional<String> user,
-      @JsonProperty("runId") Optional<String> runId,
-      @JsonProperty("skipHealthchecks") Optional<Boolean> skipHealthchecks,
-      @JsonProperty("message") Optional<String> message,
-      @JsonProperty("resources") Optional<Resources> resources,
-      @JsonProperty("envOverrides") Map<String, String> envOverrides,
-      @JsonProperty("actionId") Optional<String> actionId) {
+  public SingularityPendingTask(@JsonProperty("pendingTaskId") SingularityPendingTaskId pendingTaskId,
+                                @JsonProperty("cmdLineArgsList") Optional<List<String>> cmdLineArgsList,
+                                @JsonProperty("user") Optional<String> user,
+                                @JsonProperty("runId") Optional<String> runId,
+                                @JsonProperty("skipHealthchecks") Optional<Boolean> skipHealthchecks,
+                                @JsonProperty("message") Optional<String> message,
+                                @JsonProperty("resources") Optional<Resources> resources,
+                                @JsonProperty("envOverrides") Map<String, String> envOverrides,
+                                @JsonProperty("extraArtifacts") List<SingularityMesosArtifact> extraArtifacts,
+                                @JsonProperty("actionId") Optional<String> actionId) {
     this.pendingTaskId = pendingTaskId;
     this.user = user;
     this.message = message;
@@ -65,7 +67,19 @@ public class SingularityPendingTask {
     this.runId = runId;
     this.skipHealthchecks = skipHealthchecks;
     this.resources = resources;
-    this.envOverrides = envOverrides == null ? Collections.emptyMap() : envOverrides;
+
+    if (Objects.nonNull(envOverrides)) {
+      this.envOverrides = envOverrides;
+    } else {
+      this.envOverrides = Collections.emptyMap();
+    }
+
+    if (Objects.nonNull(extraArtifacts)) {
+      this.extraArtifacts = extraArtifacts;
+    } else {
+      this.extraArtifacts = Collections.emptyList();
+    }
+
     this.actionId = actionId;
   }
 
@@ -116,6 +130,10 @@ public class SingularityPendingTask {
 
   public Map<String, String> getEnvOverrides() { return envOverrides; }
 
+  public List<SingularityMesosArtifact> getExtraArtifacts() {
+    return extraArtifacts;
+  }
+
   public Optional<String> getActionId() {
     return actionId;
   }
@@ -131,6 +149,7 @@ public class SingularityPendingTask {
         ", message=" + message +
         ", resources=" + resources +
         ", envOverrides=" + envOverrides +
+        ", extraArtifacts" + extraArtifacts +
         ", actionId=" + actionId +
         '}';
   }

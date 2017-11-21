@@ -3,11 +3,13 @@ package com.hubspot.singularity.api;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
 import com.hubspot.mesos.Resources;
+import com.hubspot.mesos.SingularityMesosArtifact;
 import com.wordnik.swagger.annotations.ApiModelProperty;
 
 public class SingularityRunNowRequest {
@@ -18,6 +20,7 @@ public class SingularityRunNowRequest {
   private final Optional<Boolean> skipHealthchecks;
   private final Optional<Resources> resources;
   private final Map<String, String> envOverrides;
+  private final List<SingularityMesosArtifact> extraArtifacts;
   private final Optional<Long> runAt;
 
   public SingularityRunNowRequest(
@@ -26,9 +29,9 @@ public class SingularityRunNowRequest {
       Optional<String> runId,
       Optional<List<String>> commandLineArgs,
       Optional<Resources> resources,
-      Map<String, String> envOverrides
+      Optional<Long> runAt
   ) {
-    this(message, skipHealthchecks, runId, commandLineArgs, resources, envOverrides, Optional.<Long>absent());
+    this(message, skipHealthchecks, runId, commandLineArgs, resources, null, null, runAt);
   }
 
   @JsonCreator
@@ -38,13 +41,26 @@ public class SingularityRunNowRequest {
                                   @JsonProperty("commandLineArgs") Optional<List<String>> commandLineArgs,
                                   @JsonProperty("resources") Optional<Resources> resources,
                                   @JsonProperty("envOverrides") Map<String, String> envOverrides,
+                                  @JsonProperty("extraArtifacts") List<SingularityMesosArtifact> extraArtifacts,
                                   @JsonProperty("runAt") Optional<Long> runAt) {
     this.message = message;
     this.commandLineArgs = commandLineArgs;
     this.runId = runId;
     this.skipHealthchecks = skipHealthchecks;
     this.resources = resources;
-    this.envOverrides = envOverrides == null ? Collections.emptyMap() : envOverrides;
+
+    if (Objects.nonNull(envOverrides)) {
+      this.envOverrides = envOverrides;
+    } else {
+      this.envOverrides = Collections.emptyMap();
+    }
+
+    if (Objects.nonNull(extraArtifacts)) {
+      this.extraArtifacts = extraArtifacts;
+    } else {
+      this.extraArtifacts = Collections.emptyList();
+    }
+
     this.runAt = runAt;
   }
 
@@ -78,6 +94,11 @@ public class SingularityRunNowRequest {
     return envOverrides;
   }
 
+  @ApiModelProperty(required=false, value="Additional artifacts to download for this run")
+  public List<SingularityMesosArtifact> getExtraArtifacts() {
+    return extraArtifacts;
+  }
+
   @ApiModelProperty(required=false, value="Schedule this task to run at a specified time")
   public Optional<Long> getRunAt() {
     return runAt;
@@ -92,6 +113,7 @@ public class SingularityRunNowRequest {
         ", skipHealthchecks=" + skipHealthchecks +
         ", resources=" + resources +
         ", envOverrides=" + envOverrides +
+        ", extraArtifacts=" + extraArtifacts +
         ", runAt=" + runAt +
         '}';
   }

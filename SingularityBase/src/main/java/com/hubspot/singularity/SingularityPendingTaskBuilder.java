@@ -6,6 +6,7 @@ import java.util.Map;
 
 import com.google.common.base.Optional;
 import com.hubspot.mesos.Resources;
+import com.hubspot.mesos.SingularityMesosArtifact;
 
 public class SingularityPendingTaskBuilder {
 
@@ -17,6 +18,7 @@ public class SingularityPendingTaskBuilder {
   private Optional<String> message;
   private Optional<Resources> resources;
   private Map<String, String> envOverrides;
+  private List<SingularityMesosArtifact> extraArtifacts;
   private Optional<String> actionId;
 
   public SingularityPendingTaskBuilder() {
@@ -28,6 +30,7 @@ public class SingularityPendingTaskBuilder {
     this.message = Optional.absent();
     this.resources = Optional.absent();
     this.envOverrides = Collections.emptyMap();
+    this.extraArtifacts = Collections.emptyList();
     this.actionId = Optional.absent();
   }
 
@@ -81,6 +84,12 @@ public class SingularityPendingTaskBuilder {
     this.envOverrides = envOverrides;
     return this;
   }
+
+  public SingularityPendingTaskBuilder setExtraArtifacts(List<SingularityMesosArtifact> extraArtifacts) {
+    this.extraArtifacts = extraArtifacts;
+    return this;
+  }
+
   public SingularityPendingTaskBuilder setActionId(String actionId) {
     this.actionId = Optional.of(actionId);
     return this;
@@ -88,7 +97,7 @@ public class SingularityPendingTaskBuilder {
 
   public SingularityPendingTask build() {
     return new SingularityPendingTask(
-        pendingTaskId, cmdLineArgsList, user, runId, skipHealthchecks, message, resources, envOverrides, actionId
+        pendingTaskId, cmdLineArgsList, user, runId, skipHealthchecks, message, resources, envOverrides, extraArtifacts, actionId
     );
   }
 
@@ -103,6 +112,7 @@ public class SingularityPendingTaskBuilder {
         ", message=" + message +
         ", resources=" + resources +
         ", envOverrides=" + envOverrides +
+        ", extraArtifacts=" + extraArtifacts +
         ", actionId=" + actionId +
         '}';
   }

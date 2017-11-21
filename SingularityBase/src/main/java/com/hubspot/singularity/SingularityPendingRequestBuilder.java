@@ -6,6 +6,7 @@ import java.util.Map;
 
 import com.google.common.base.Optional;
 import com.hubspot.mesos.Resources;
+import com.hubspot.mesos.SingularityMesosArtifact;
 import com.hubspot.singularity.SingularityPendingRequest.PendingType;
 
 public class SingularityPendingRequestBuilder {
@@ -22,6 +23,7 @@ public class SingularityPendingRequestBuilder {
   private Optional<String> actionId;
   private Optional<Resources> resources;
   private Map<String, String> envOverrides;
+  private List<SingularityMesosArtifact> extraArtifacts;
   private Optional<Long> runAt;
 
   public SingularityPendingRequestBuilder() {
@@ -33,6 +35,7 @@ public class SingularityPendingRequestBuilder {
     this.actionId = Optional.absent();
     this.resources = Optional.absent();
     this.envOverrides = Collections.emptyMap();
+    this.extraArtifacts = Collections.emptyList();
     this.runAt = Optional.absent();
   }
 
@@ -126,6 +129,11 @@ public class SingularityPendingRequestBuilder {
     return this;
   }
 
+  public SingularityPendingRequestBuilder setExtraArtifacts(List<SingularityMesosArtifact> extraArtifacts) {
+    this.extraArtifacts = extraArtifacts;
+    return this;
+  }
+
   public SingularityPendingRequestBuilder setRunAt(Long runAt) {
     this.runAt = Optional.of(runAt);
     return this;
@@ -150,6 +158,7 @@ public class SingularityPendingRequestBuilder {
         actionId,
         resources,
         envOverrides,
+        extraArtifacts,
         runAt
     );
   }
@@ -169,6 +178,7 @@ public class SingularityPendingRequestBuilder {
         ", actionId" + actionId +
         ", resources" + resources +
         ", envOverrides" + envOverrides +
+        ", extraArtifacts" + extraArtifacts +
         ", runAt" + runAt +
         "}";
   }
