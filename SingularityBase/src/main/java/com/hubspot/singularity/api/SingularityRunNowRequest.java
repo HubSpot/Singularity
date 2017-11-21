@@ -28,10 +28,9 @@ public class SingularityRunNowRequest {
       Optional<Boolean> skipHealthchecks,
       Optional<String> runId,
       Optional<List<String>> commandLineArgs,
-      Optional<Resources> resources,
-      Optional<Long> runAt
+      Optional<Resources> resources
   ) {
-    this(message, skipHealthchecks, runId, commandLineArgs, resources, null, null, runAt);
+    this(message, skipHealthchecks, runId, commandLineArgs, resources, null, null, Optional.absent());
   }
 
   @JsonCreator
