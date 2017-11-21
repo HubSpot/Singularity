@@ -12,7 +12,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import javax.inject.Singleton;
-import javax.ws.rs.HEAD;
 
 import org.apache.commons.lang3.time.DurationFormatUtils;
 import org.slf4j.Logger;
@@ -24,8 +23,6 @@ import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.hubspot.baragon.models.BaragonRequestState;
 import com.hubspot.mesos.JavaUtils;
-import com.hubspot.mesos.Resources;
-import com.hubspot.mesos.SingularityMesosArtifact;
 import com.hubspot.singularity.DeployState;
 import com.hubspot.singularity.LoadBalancerRequestType;
 import com.hubspot.singularity.LoadBalancerRequestType.LoadBalancerRequestId;
@@ -277,13 +274,14 @@ public class SingularityDeployChecker {
 
     if (deploy.isPresent() && deploy.get().getRunImmediately().isPresent()) {
       String requestId = deploy.get().getRequestId();
+      String deployId = deploy.get().getId();
       SingularityRunNowRequest runNowRequest = deploy.get().getRunImmediately().get();
       List<SingularityTaskId> activeTasks = taskManager.getActiveTaskIdsForRequest(requestId);
       List<SingularityPendingTaskId> pendingTasks = taskManager.getPendingTaskIdsForRequest(requestId);
 
       SingularityPendingRequestBuilder builder = new SingularityPendingRequestBuilder()
           .setRequestId(requestId)
-          .setDeployId(deploy.get().getId())
+          .setDeployId(deployId)
           .setTimestamp(deployResult.getTimestamp())
           .setUser(pendingDeploy.getDeployMarker().getUser())
           .setCmdLineArgsList(runNowRequest.getCommandLineArgs())
@@ -316,6 +314,8 @@ public class SingularityDeployChecker {
       if (pendingType != null) {
         builder.setPendingType(canceledOr(deployResult.getDeployState(), pendingType));
         requestManager.addToPendingQueue(builder.build());
+      } else {
+        LOG.warn("Could not determine pending type for deploy {}.", deployId);
       }
 
     } else if (!request.isDeployable() && !request.isOneOff()) {
