@@ -198,18 +198,24 @@ public class SingularityMesosOfferScheduler {
   private double getNormalizedWeight(ResourceUsageType type) {
     double freeCpuWeight = configuration.getFreeCpuWeightForOffer();
     double freeMemWeight = configuration.getFreeMemWeightForOffer();
+    double freeDiskWeight = configuration.getFreeDiskWeightForOffer();
     double usedCpuWeight = configuration.getLongRunningUsedCpuWeightForOffer();
     double usedMemWeight = configuration.getLongRunningUsedMemWeightForOffer();
+    double usedDiskWeight = configuration.getLongRunningUsedDiskWeightForOffer();
 
     switch (type) {
       case CPU_FREE:
-        return freeCpuWeight + freeMemWeight != 1 ? freeCpuWeight / (freeCpuWeight + freeMemWeight) : freeCpuWeight;
+        return freeCpuWeight + freeMemWeight + freeDiskWeight != 1 ? freeCpuWeight / (freeCpuWeight + freeMemWeight + freeDiskWeight) : freeCpuWeight;
       case MEMORY_BYTES_FREE:
-        return freeCpuWeight + freeMemWeight != 1 ? freeMemWeight / (freeCpuWeight + freeMemWeight) : freeMemWeight;
+        return freeCpuWeight + freeMemWeight + freeDiskWeight != 1 ? freeMemWeight / (freeCpuWeight + freeMemWeight + freeDiskWeight) : freeMemWeight;
+      case DISK_BYTES_FREE:
+        return freeCpuWeight + freeMemWeight + freeDiskWeight != 1 ? freeDiskWeight / (freeCpuWeight + freeMemWeight + freeDiskWeight) : freeDiskWeight;
       case CPU_USED:
-        return usedCpuWeight + usedMemWeight != 1 ? usedCpuWeight / (usedCpuWeight + usedMemWeight) : usedCpuWeight;
+        return usedCpuWeight + usedMemWeight + usedDiskWeight != 1 ? usedCpuWeight / (usedCpuWeight + usedMemWeight + usedDiskWeight) : usedCpuWeight;
       case MEMORY_BYTES_USED:
-        return usedCpuWeight + usedMemWeight != 1 ? usedMemWeight / (usedCpuWeight + usedMemWeight) : usedMemWeight;
+        return usedCpuWeight + usedMemWeight + usedDiskWeight != 1 ? usedMemWeight / (usedCpuWeight + usedMemWeight + usedDiskWeight) : usedMemWeight;
+      case DISK_BYTES_USED:
+        return usedCpuWeight + usedMemWeight + usedDiskWeight != 1 ? usedDiskWeight / (usedCpuWeight + usedMemWeight + usedDiskWeight) : usedDiskWeight;
       default:
         LOG.error("Invalid ResourceUsageType {}", type);
         return 0;
@@ -300,32 +306,35 @@ public class SingularityMesosOfferScheduler {
 
     double longRunningCpusUsedScore = longRunningTasksUsage.get(ResourceUsageType.CPU_USED).doubleValue() / slaveUsage.getCpusTotal().get();
     double longRunningMemUsedScore = ((double) longRunningTasksUsage.get(ResourceUsageType.MEMORY_BYTES_USED).longValue() / slaveUsage.getMemoryBytesTotal().get());
+    double longRunningDiskUsedScore = ((double) longRunningTasksUsage.get(ResourceUsageType.DISK_BYTES_USED).longValue() / slaveUsage.getDiskBytesTotal().get());
 
     double cpusFreeScore = 1 - (slaveUsage.getCpusReserved() / slaveUsage.getCpusTotal().get());
     double memFreeScore = 1 - ((double) slaveUsage.getMemoryMbReserved() / slaveUsage.getMemoryMbTotal().get());
+    double diskFreeScore = 1 - ((double) slaveUsage.getDiskMbReserved() / slaveUsage.getDiskMbTotal().get());
 
-    return isLongRunning(taskRequest) ? scoreLongRunningTask(longRunningMemUsedScore, memFreeScore, longRunningCpusUsedScore, cpusFreeScore)
-        : scoreNonLongRunningTask(taskRequest, longRunningMemUsedScore, memFreeScore, longRunningCpusUsedScore, cpusFreeScore);
+    return isLongRunning(taskRequest) ? scoreLongRunningTask(longRunningMemUsedScore, memFreeScore, longRunningCpusUsedScore, cpusFreeScore, longRunningDiskUsedScore, diskFreeScore)
+        : scoreNonLongRunningTask(taskRequest, longRunningMemUsedScore, memFreeScore, longRunningCpusUsedScore, cpusFreeScore, longRunningDiskUsedScore, diskFreeScore);
   }
 
   private boolean isMissingUsageData(Optional<SingularitySlaveUsageWithId> maybeSlaveUsage) {
     return !maybeSlaveUsage.isPresent() ||
-        !maybeSlaveUsage.get().getCpusTotal().isPresent() || !maybeSlaveUsage.get().getMemoryMbTotal().isPresent() ||
+        !maybeSlaveUsage.get().getCpusTotal().isPresent() || !maybeSlaveUsage.get().getMemoryMbTotal().isPresent() || !maybeSlaveUsage.get().getDiskMbTotal().isPresent() ||
         maybeSlaveUsage.get().getLongRunningTasksUsage() == null ||
         !maybeSlaveUsage.get().getLongRunningTasksUsage().containsKey(ResourceUsageType.CPU_USED) ||
-        !maybeSlaveUsage.get().getLongRunningTasksUsage().containsKey(ResourceUsageType.MEMORY_BYTES_USED);
+        !maybeSlaveUsage.get().getLongRunningTasksUsage().containsKey(ResourceUsageType.MEMORY_BYTES_USED) ||
+        !maybeSlaveUsage.get().getLongRunningTasksUsage().containsKey(ResourceUsageType.DISK_BYTES_USED);
   }
 
   private boolean isLongRunning(SingularityTaskRequest taskRequest) {
     return taskRequest.getRequest().getRequestType().isLongRunning();
   }
 
-  private double scoreLongRunningTask(double longRunningMemUsedScore, double memFreeScore, double longRunningCpusUsedScore, double cpusFreeScore) {
+  private double scoreLongRunningTask(double longRunningMemUsedScore, double memFreeScore, double longRunningCpusUsedScore, double cpusFreeScore, double longRunningDiskUsedScore, double diskFreeScore) {
     // unused, reserved resources improve score
-    return calculateScore(1 - longRunningMemUsedScore, memFreeScore, 1 - longRunningCpusUsedScore, cpusFreeScore, 0.50, 0.50);
+    return calculateScore(1 - longRunningMemUsedScore, memFreeScore, 1 - longRunningCpusUsedScore, cpusFreeScore, 1 - longRunningDiskUsedScore, diskFreeScore, 0.50, 0.50);
   }
 
-  private double scoreNonLongRunningTask(SingularityTaskRequest taskRequest, double longRunningMemUsedScore, double memFreeScore, double longRunningCpusUsedScore, double cpusFreeScore) {
+  private double scoreNonLongRunningTask(SingularityTaskRequest taskRequest, double longRunningMemUsedScore, double memFreeScore, double longRunningCpusUsedScore, double cpusFreeScore, double longRunningDiskUsedScore, double diskFreeScore) {
     Optional<SingularityDeployStatistics> statistics = deployManager.getDeployStatistics(taskRequest.getRequest().getId(), taskRequest.getDeploy().getId());
     final double epsilon = 0.0001;
 
@@ -337,23 +346,25 @@ public class SingularityMesosOfferScheduler {
       usedResourceWeight = Math.min((double) TimeUnit.MILLISECONDS.toSeconds(statistics.get().getAverageRuntimeMillis().get()) / configuration.getConsiderNonLongRunningTaskLongRunningAfterRunningForSeconds(), 1) * maxNonLongRunningUsedResourceWeight;
 
       if (Math.abs(usedResourceWeight - maxNonLongRunningUsedResourceWeight) < epsilon) {
-        return scoreLongRunningTask(longRunningMemUsedScore, memFreeScore, longRunningCpusUsedScore, cpusFreeScore);
+        return scoreLongRunningTask(longRunningMemUsedScore, memFreeScore, longRunningCpusUsedScore, cpusFreeScore, longRunningDiskUsedScore, diskFreeScore);
       }
       freeResourceWeight = 1 - usedResourceWeight;
     }
 
     // usage reduces score
-    return calculateScore(longRunningMemUsedScore, memFreeScore, longRunningCpusUsedScore, cpusFreeScore, freeResourceWeight, usedResourceWeight * -1);
+    return calculateScore(longRunningMemUsedScore, memFreeScore, longRunningCpusUsedScore, cpusFreeScore, longRunningDiskUsedScore, diskFreeScore, freeResourceWeight, usedResourceWeight * -1);
   }
 
-  private double calculateScore(double longRunningMemUsedScore, double memFreeScore, double longRunningCpusUsedScore, double cpusFreeScore, double freeResourceWeight, double usedResourceWeight) {
+  private double calculateScore(double longRunningMemUsedScore, double memFreeScore, double longRunningCpusUsedScore, double cpusFreeScore, double longRunningDiskUsedScore, double diskFreeScore, double freeResourceWeight, double usedResourceWeight) {
     double score = 0;
 
     score += (getNormalizedWeight(ResourceUsageType.CPU_USED) * usedResourceWeight) * longRunningCpusUsedScore;
     score += (getNormalizedWeight(ResourceUsageType.MEMORY_BYTES_USED) * usedResourceWeight) * longRunningMemUsedScore;
+    score += (getNormalizedWeight(ResourceUsageType.DISK_BYTES_USED) * usedResourceWeight) * longRunningDiskUsedScore;
 
     score += (getNormalizedWeight(ResourceUsageType.CPU_FREE) * freeResourceWeight) * cpusFreeScore;
     score += (getNormalizedWeight(ResourceUsageType.MEMORY_BYTES_FREE) * freeResourceWeight) * memFreeScore;
+    score += (getNormalizedWeight(ResourceUsageType.DISK_BYTES_FREE) * freeResourceWeight) * diskFreeScore;
 
     return score;
   }
