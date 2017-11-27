@@ -55,6 +55,7 @@ import com.hubspot.singularity.SingularityPendingTaskId;
 import com.hubspot.singularity.SingularityPriorityFreezeParent;
 import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityRequestGroup;
+import com.hubspot.singularity.SingularityRunNowRequestBuilder;
 import com.hubspot.singularity.SingularityShellCommand;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityWebhook;
@@ -442,6 +443,8 @@ public class SingularityValidator {
         runNowRequest.getMessage(),
         Optional.absent(),
         runNowRequest.getResources(),
+        runNowRequest.getEnvOverrides(),
+        runNowRequest.getExtraArtifacts(),
         runNowRequest.getRunAt()
     );
   }
@@ -455,15 +458,13 @@ public class SingularityValidator {
           Optional.of(getRunId(request.getRunId())),
           request.getCommandLineArgs(),
           request.getResources(),
+          request.getEnvOverrides(),
+          request.getExtraArtifacts(),
           request.getRunAt());
     } else {
-      return new SingularityRunNowRequest(
-          Optional.absent(),
-          Optional.absent(),
-          Optional.of(getRunId(Optional.absent())),
-          Optional.absent(),
-          Optional.absent(),
-          Optional.absent());
+      return new SingularityRunNowRequestBuilder()
+          .setRunId(getRunId(Optional.absent()))
+          .build();
     }
   }
 
