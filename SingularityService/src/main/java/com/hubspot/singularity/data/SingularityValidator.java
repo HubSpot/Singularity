@@ -569,7 +569,7 @@ public class SingularityValidator {
 
     checkBadRequest(cpusPerInstance > 0, "Request must have more than 0 cpus");
     checkBadRequest(memoryMbPerInstance > 0, "Request must have more than 0 memoryMb");
-    checkBadRequest(diskMbPerInstance > 0, "Request must have more than 0 diskMb");
+    checkBadRequest(diskMbPerInstance >= 0, "Request must have non-negative diskMb");
 
     checkBadRequest(cpusPerInstance <= maxCpusPerInstance, "Deploy %s uses too many cpus %s (maxCpusPerInstance %s in mesos configuration)", deploy.getId(), cpusPerInstance, maxCpusPerInstance);
     checkBadRequest(cpusPerInstance * instances <= maxCpusPerRequest,
@@ -580,7 +580,7 @@ public class SingularityValidator {
     checkBadRequest(memoryMbPerInstance * instances <= maxMemoryMbPerRequest, "Deploy %s uses too much memoryMb %s (%s*%s) (maxMemoryMbPerRequest %s in mesos configuration)", deploy.getId(),
         memoryMbPerInstance * instances, memoryMbPerInstance, instances, maxMemoryMbPerRequest);
 
-    checkBadRequest(diskMbPerInstance < maxDiskMbPerInstance,
+    checkBadRequest(diskMbPerInstance <= maxDiskMbPerInstance,
         "Deploy %s uses too much diskMb %s (maxDiskMbPerInstance %s in mesos configuration)", deploy.getId(), diskMbPerInstance, maxDiskMbPerInstance);
     checkBadRequest(diskMbPerInstance * instances <= maxDiskMbPerRequest, "Deploy %s uses too much diskMb %s (%s*%s) (maxDiskMbPerRequest %s in mesos configuration)", deploy.getId(),
         diskMbPerInstance * instances, diskMbPerInstance, instances, maxDiskMbPerRequest);
