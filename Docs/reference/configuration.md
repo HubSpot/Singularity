@@ -176,6 +176,7 @@ These settings should live under the "mesos" field inside the root configuration
 |-----------|---------|-------------|------|
 | defaultCpus | 1 | Number of CPUs to request for a task if none are specified | int |
 | defaultMemory | 64 | MB of memory to request for a task if none is specified | int |
+| defaultDisk | 1024 | MB of disk to request for a task if none is specified | int |
 | maxNumInstancesPerRequest | 25 | Max instances (tasks) to allow for a request (requests using over this will return a 400) | int |
 | maxNumCpusPerInstance | 50 | Max number of CPUs allowed on a given task | int |
 | maxNumCpusPerRequest | 900 | Max number of CPUs allowed for a given request (cpus per task * task instance) | int |
