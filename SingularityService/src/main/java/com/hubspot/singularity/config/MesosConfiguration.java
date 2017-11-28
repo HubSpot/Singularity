@@ -45,6 +45,8 @@ public class MesosConfiguration {
   private int maxNumCpusPerRequest = 900;
   private int maxMemoryMbPerInstance = 24000;
   private int maxMemoryMbPerRequest = 450000;
+  private int maxDiskMbPerInstance = 60000;
+  private int maxDiskMbPerRequest = 3000000;
 
   private Optional<String> credentialPrincipal = Optional.absent();
   private Optional<String> credentialSecret = Optional.absent();
@@ -85,6 +87,22 @@ public class MesosConfiguration {
 
   public int getMaxMemoryMbPerRequest() {
     return maxMemoryMbPerRequest;
+  }
+
+  public void setMaxDiskMbPerInstance(int maxDiskMbPerInstance) {
+    this.maxDiskMbPerInstance = maxDiskMbPerInstance;
+  }
+
+  public int getMaxDiskMbPerInstance() {
+    return maxDiskMbPerInstance;
+  }
+
+  public void setMaxDiskMbPerRequest(int maxDiskMbPerRequest) {
+    this.maxDiskMbPerRequest = maxDiskMbPerRequest;
+  }
+
+  public int getMaxDiskMbPerRequest() {
+    return maxDiskMbPerRequest;
   }
 
   public void setMaxMemoryMbPerRequest(int maxMemoryMbPerRequest) {

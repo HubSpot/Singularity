@@ -6,6 +6,7 @@ public class IndexViewConfiguration {
   private final UIConfiguration uiConfiguration;
   private final Integer defaultMemory;
   private final Integer defaultCpus;
+  private final Integer defaultDisk;
   private final Integer slaveHttpPort;
   private final Optional<Integer> slaveHttpsPort;
   private final int bounceExpirationMinutes;
@@ -20,6 +21,7 @@ public class IndexViewConfiguration {
   public IndexViewConfiguration(UIConfiguration uiConfiguration,
                                 Integer defaultMemory,
                                 Integer defaultCpus,
+                                Integer defaultDisk,
                                 Integer slaveHttpPort,
                                 Optional<Integer> slaveHttpsPort,
                                 int bounceExpirationMinutes,
@@ -32,6 +34,7 @@ public class IndexViewConfiguration {
     this.uiConfiguration = uiConfiguration;
     this.defaultMemory = defaultMemory;
     this.defaultCpus = defaultCpus;
+    this.defaultDisk = defaultDisk;
     this.slaveHttpPort = slaveHttpPort;
     this.slaveHttpsPort = slaveHttpsPort;
     this.bounceExpirationMinutes = bounceExpirationMinutes;
@@ -50,6 +53,10 @@ public class IndexViewConfiguration {
 
   public Integer getDefaultMemory() {
     return defaultMemory;
+  }
+
+  public Integer getDefaultDisk() {
+    return defaultDisk;
   }
 
   public Integer getDefaultCpus() {
