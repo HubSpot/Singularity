@@ -3,7 +3,7 @@ import { connect } from 'react-redux';
 
 import { DeletePendingOnDemandTask } from '../../../actions/api/tasks';
 
-import FormModal from '../../common/modal/FormModal';
+import ConfirmationDialog from '../../common/ConfirmationDialog';
 
 class DeletePendingTaskModal extends Component {
   static propTypes = {
@@ -19,16 +19,15 @@ class DeletePendingTaskModal extends Component {
 
   render() {
     return (
-      <FormModal
+      <ConfirmationDialog
         name="Delete Pending Task"
         ref="deletePendingTaskModal"
         action="Delete Pending Task"
         onConfirm={() => this.props.deletePendingTask()}
-        buttonStyle="primary"
-        formElements={[]}>
+        buttonStyle="primary">
         <p>Are you sure you want to delete this task?</p>
         <pre>{this.props.taskId}</pre>
-      </FormModal>
+      </ConfirmationDialog>
     );
   }
 }

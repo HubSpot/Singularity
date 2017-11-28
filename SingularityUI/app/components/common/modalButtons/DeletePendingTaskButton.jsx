@@ -33,19 +33,16 @@ export default class DeletePendingTaskButton extends Component {
   };
 
   render() {
-    if (this.props.requestType == "ON_DEMAND") {
-      return (
-        <span>
-          {getClickComponent(this)}
-          <DeletePendingTaskModal
-            ref="modal"
-            taskId={this.props.taskId}
-            requestType={this.props.requestType}
-            then={this.props.then}
-          />
-        </span>
-      );
-    }
-    return (null);
+    return (
+      <span>
+        {getClickComponent(this)}
+        <DeletePendingTaskModal
+          ref="modal"
+          taskId={this.props.taskId}
+          requestType={this.props.requestType}
+          then={this.props.then}
+        />
+      </span>
+    );
   }
 }
