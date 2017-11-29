@@ -201,7 +201,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     configuration.setCacheOffers(true);
 
     Offer neededOffer = createOffer(1, 128, 1024, "slave1", "host1", Optional.absent(), Collections.emptyMap(), new String[]{"80:81"});
-    Offer extraOffer = createOffer(4, 256, 0, "slave1", "host1", Optional.absent(), Collections.emptyMap(), new String[]{"83:84"});
+    Offer extraOffer = createOffer(4, 256, 1024, "slave1", "host1", Optional.absent(), Collections.emptyMap(), new String[]{"83:84"});
 
     sms.resourceOffers(ImmutableList.of(neededOffer, extraOffer));
 
