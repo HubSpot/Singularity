@@ -17,6 +17,7 @@ public class IndexViewConfiguration {
   private final boolean loadBalancingEnabled;
   private final Optional<String> commonHostnameSuffixToOmit;
   private final Integer warnIfScheduledJobIsRunningPastNextRunPct;
+  private final boolean generateAuthHeader;
 
   public IndexViewConfiguration(UIConfiguration uiConfiguration,
                                 Integer defaultMemory,
@@ -30,7 +31,8 @@ public class IndexViewConfiguration {
                                 Optional<Integer> healthcheckMaxRetries,
                                 int startupTimeoutSeconds,
                                 boolean loadBalancingEnabled,
-                                Optional<String> commonHostnameSuffixToOmit, Integer warnIfScheduledJobIsRunningPastNextRunPct) {
+                                Optional<String> commonHostnameSuffixToOmit, Integer warnIfScheduledJobIsRunningPastNextRunPct,
+                                boolean generateAuthHeader) {
     this.uiConfiguration = uiConfiguration;
     this.defaultMemory = defaultMemory;
     this.defaultCpus = defaultCpus;
@@ -45,6 +47,7 @@ public class IndexViewConfiguration {
     this.loadBalancingEnabled = loadBalancingEnabled;
     this.commonHostnameSuffixToOmit = commonHostnameSuffixToOmit;
     this.warnIfScheduledJobIsRunningPastNextRunPct = warnIfScheduledJobIsRunningPastNextRunPct;
+    this.generateAuthHeader = generateAuthHeader;
   }
 
   public UIConfiguration getUiConfiguration() {
@@ -101,5 +104,9 @@ public class IndexViewConfiguration {
 
   public Integer getWarnIfScheduledJobIsRunningPastNextRunPct() {
     return warnIfScheduledJobIsRunningPastNextRunPct;
+  }
+
+  public boolean isGenerateAuthHeader() {
+    return generateAuthHeader;
   }
 }

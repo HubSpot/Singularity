@@ -11,8 +11,8 @@ import java.util.stream.Collectors;
 
 import javax.inject.Singleton;
 
-import org.apache.mesos.v1.Protos.Offer;
 import org.apache.mesos.v1.Protos.AgentID;
+import org.apache.mesos.v1.Protos.Offer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,6 +30,7 @@ import com.hubspot.singularity.MachineState;
 import com.hubspot.singularity.SingularityMachineAbstraction;
 import com.hubspot.singularity.SingularityPendingRequest.PendingType;
 import com.hubspot.singularity.SingularityPendingTask;
+import com.hubspot.singularity.SingularityPendingTaskId;
 import com.hubspot.singularity.SingularityRack;
 import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularitySlave;
@@ -217,19 +218,21 @@ public class SingularitySlaveAndRackManager {
 
         // If no tasks are active for this request yet, we can fall back to greedy.
         if (currentlyActiveTasksForRequestClusterwide.size() > 0) {
+          Collection<SingularityPendingTaskId> pendingTasksForRequestClusterwide = leaderCache.getPendingTaskIdsForRequest(taskRequest.getRequest().getId());
 
           Set<String> currentHostsForRequest = currentlyActiveTasksForRequestClusterwide.stream()
               .map(SingularityTaskId::getSanitizedHost)
               .collect(Collectors.toSet());
 
           final double numPerSlave = currentlyActiveTasksForRequestClusterwide.size() / (double) currentHostsForRequest.size();
-
-          final boolean isSlaveOk = numOnSlave <= numPerSlave;
+          final double leniencyCoefficient = configuration.getPlacementLeniency();
+          final double threshold = numPerSlave * (1 + (pendingTasksForRequestClusterwide.size() * leniencyCoefficient));
+          final boolean isSlaveOk = numOnSlave <= threshold;
 
           if (!isSlaveOk) {
             LOG.trace(
-                "Rejecting OPTIMISTIC task {} from slave {} ({}) due to numOnSlave {} and numPerSlave {} (based on currentlyActiveTasksForRequest {} and currentHostsForRequest {})",
-                taskRequest.getRequest().getId(), slaveId, host, numOnSlave, numPerSlave, currentlyActiveTasksForRequestClusterwide.size(), currentHostsForRequest.size()
+                "Rejecting OPTIMISTIC task {} from slave {} ({}) because numOnSlave {} violates threshold {} (based on active tasks for request {}, current hosts for request {}, pending tasks for request {})",
+                taskRequest.getRequest().getId(), slaveId, host, numOnSlave, threshold, currentlyActiveTasksForRequestClusterwide.size(), currentHostsForRequest.size(), pendingTasksForRequestClusterwide.size()
             );
             return SlaveMatchState.SLAVE_SATURATED;
           }

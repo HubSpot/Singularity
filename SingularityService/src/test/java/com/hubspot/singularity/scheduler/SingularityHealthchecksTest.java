@@ -17,7 +17,6 @@ import com.hubspot.mesos.Resources;
 import com.hubspot.singularity.DeployState;
 import com.hubspot.singularity.SingularityDeploy;
 import com.hubspot.singularity.SingularityDeployBuilder;
-import com.hubspot.singularity.SingularityShellCommand;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskHealthcheckResult;
 import com.hubspot.singularity.SingularityTaskId;
@@ -42,7 +41,7 @@ public class SingularityHealthchecksTest extends SingularitySchedulerTestBase {
       initRequest();
       initHCDeploy();
 
-      requestResource.skipHealthchecks(requestId, new SingularitySkipHealthchecksRequest(Optional.of(Boolean.TRUE), Optional.<Long> absent(), Optional.<String> absent(), Optional.<String> absent()));
+      requestResource.skipHealthchecks(requestId, new SingularitySkipHealthchecksRequest(Optional.of(Boolean.TRUE), Optional.absent(), Optional.absent(), Optional.absent()), singularityUser);
 
       SingularityTask firstTask = startTask(firstDeploy, 1);
 
@@ -53,7 +52,7 @@ public class SingularityHealthchecksTest extends SingularitySchedulerTestBase {
 
       Assert.assertEquals(1, taskManager.getNumActiveTasks());
 
-      requestResource.skipHealthchecks(requestId, new SingularitySkipHealthchecksRequest(Optional.of(Boolean.FALSE), Optional.<Long> absent(), Optional.<String> absent(), Optional.<String> absent()));
+      requestResource.skipHealthchecks(requestId, new SingularitySkipHealthchecksRequest(Optional.of(Boolean.FALSE), Optional.absent(), Optional.absent(), Optional.absent()), singularityUser);
 
       // run new task check ONLY.
       newTaskChecker.enqueueNewTaskCheck(firstTask, requestManager.getRequest(requestId), healthchecker);
@@ -79,7 +78,7 @@ public class SingularityHealthchecksTest extends SingularitySchedulerTestBase {
 
       SingularityTask firstTask = startTask(firstDeploy, 1);
 
-      requestResource.bounce(requestId, Optional.of(new SingularityBounceRequest(Optional.<Boolean> absent(), Optional.of(true), Optional.<Long> absent(), Optional.<String> absent(), Optional.<String>absent(), Optional.<SingularityShellCommand>absent())));
+      requestResource.bounce(requestId, Optional.of(new SingularityBounceRequest(Optional.absent(), Optional.of(true), Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent())), singularityUser);
 
       setConfigurationForNoDelay();
 
@@ -121,7 +120,7 @@ public class SingularityHealthchecksTest extends SingularitySchedulerTestBase {
 
     startTask(firstDeploy);
 
-    requestResource.bounce(requestId, Optional.absent());
+    requestResource.bounce(requestId, Optional.absent(), singularityUser);
 
     cleaner.drainCleanupQueue();
 
@@ -373,7 +372,7 @@ public class SingularityHealthchecksTest extends SingularitySchedulerTestBase {
       firstDeploy = initAndFinishDeploy(request, new SingularityDeployBuilder(request.getId(), firstDeployId).setCommand(Optional.of("sleep 100"))
           .setHealthcheck(Optional.of(options)), Optional.of(new Resources(1, 64, 3, 0)));
 
-      requestResource.postRequest(request.toBuilder().setInstances(Optional.of(2)).build());
+      requestResource.postRequest(request.toBuilder().setInstances(Optional.of(2)).build(), singularityUser);
       scheduler.drainPendingQueue();
 
       String[] portRange = {"80:82"};
@@ -404,7 +403,7 @@ public class SingularityHealthchecksTest extends SingularitySchedulerTestBase {
         .setCommand(Optional.of("sleep 100")).setResources(Optional.of(new Resources(1, 64, 3, 0)))
         .setHealthcheck(Optional.of(options)), Optional.absent());
 
-      requestResource.postRequest(request.toBuilder().setInstances(Optional.of(2)).build());
+      requestResource.postRequest(request.toBuilder().setInstances(Optional.of(2)).build(), singularityUser);
       scheduler.drainPendingQueue();
 
       String[] portRange = {"80:82"};

@@ -41,11 +41,10 @@ import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import com.hubspot.baragon.models.BaragonRequestState;
 import com.hubspot.deploy.HealthcheckOptionsBuilder;
-import com.hubspot.mesos.MesosUtils;
+import com.hubspot.singularity.helpers.MesosProtosUtils;
+import com.hubspot.singularity.helpers.MesosUtils;
 import com.hubspot.mesos.Resources;
-import com.hubspot.mesos.json.SingularityMesosOfferObject;
-import com.hubspot.mesos.json.SingularityMesosTaskObject;
-import com.hubspot.mesos.json.SingularityMesosTaskStatusObject;
+import com.hubspot.mesos.protos.MesosTaskStatusObject;
 import com.hubspot.singularity.DeployState;
 import com.hubspot.singularity.LoadBalancerRequestType;
 import com.hubspot.singularity.LoadBalancerRequestType.LoadBalancerRequestId;
@@ -75,6 +74,7 @@ import com.hubspot.singularity.SingularityTaskHistoryUpdate.SimplifiedTaskState;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTaskRequest;
 import com.hubspot.singularity.SingularityTaskStatusHolder;
+import com.hubspot.singularity.SingularityUser;
 import com.hubspot.singularity.SlavePlacement;
 import com.hubspot.singularity.api.SingularityDeployRequest;
 import com.hubspot.singularity.api.SingularityScaleRequest;
@@ -187,6 +187,8 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
   protected SingularityDeploy secondDeploy;
 
   protected Optional<String> user = Optional.absent();
+
+  protected SingularityUser singularityUser = SingularityUser.DEFAULT_USER;
 
   public SingularitySchedulerTestBase(boolean useDBTests) {
     super(useDBTests);
@@ -322,7 +324,7 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
         .setName("name")
         .build();
 
-    SingularityTask task = new SingularityTask(taskRequest, taskId, Collections.singletonList(SingularityMesosOfferObject.fromProtos(offer)), taskInfo, SingularityMesosTaskObject.fromProtos(taskInfo), Optional.of("rack1"));
+    SingularityTask task = new SingularityTask(taskRequest, taskId, Collections.singletonList(mesosProtosUtils.offerFromProtos(offer)), mesosProtosUtils.taskFromProtos(taskInfo), Optional.of("rack1"));
 
     taskManager.savePendingTask(pendingTask);
 
@@ -345,8 +347,8 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
 
   protected void statusUpdate(SingularityTask task, TaskState state, Optional<Long> timestamp) {
     TaskStatus.Builder bldr = TaskStatus.newBuilder()
-        .setTaskId(task.getMesosTask().getTaskId())
-        .setAgentId(task.getAgentId())
+        .setTaskId(MesosProtosUtils.toTaskId(task.getMesosTask().getTaskId()))
+        .setAgentId(MesosProtosUtils.toAgentId(task.getAgentId()))
         .setState(state);
 
     if (timestamp.isPresent()) {
@@ -462,7 +464,7 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
         .setResources(Optional.of(r))
         .build();
 
-    deployResource.deploy(new SingularityDeployRequest(deploy, Optional.<Boolean> absent(), Optional.<String> absent()));
+    deployResource.deploy(new SingularityDeployRequest(deploy, Optional.absent(), Optional.absent()), singularityUser);
 
     return deploy;
   }
@@ -491,7 +493,7 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
 
     SingularityDeploy deploy = new SingularityDeployBuilder(request.getId(), "d1").setCommand(Optional.of("sleep 1")).build();
 
-    deployResource.deploy(new SingularityDeployRequest(deploy, Optional.<Boolean> absent(), Optional.<String> absent()));
+    deployResource.deploy(new SingularityDeployRequest(deploy, Optional.absent(), Optional.absent()), singularityUser);
 
     return request;
   }
@@ -513,7 +515,7 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
   protected void initWithTasks(int num) {
     initRequest();
 
-    requestResource.scale(requestId, new SingularityScaleRequest(Optional.of(num), Optional.<Long> absent(), Optional.<Boolean> absent(), Optional.<String> absent(), Optional.<String>absent(), Optional.<Boolean>absent(), Optional.<Boolean>absent()));
+    requestResource.scale(requestId, new SingularityScaleRequest(Optional.of(num), Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent()), singularityUser);
 
     initFirstDeploy();
 
@@ -670,7 +672,7 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
           .setServiceBasePath(Optional.of("/basepath"))
           .setLoadBalancerGroups(Optional.of(groups));
     }
-    deployResource.deploy(new SingularityDeployRequest(builder.build(), unpauseOnDeploy, Optional.<String> absent()));
+    deployResource.deploy(new SingularityDeployRequest(builder.build(), unpauseOnDeploy, Optional.absent()), singularityUser);
   }
 
   protected SingularityPendingTask createAndSchedulePendingTask(String deployId) {
@@ -707,12 +709,12 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
     }
   }
 
-  protected void saveLastActiveTaskStatus(SingularityTask task, Optional<SingularityMesosTaskStatusObject> taskStatus, long millisAdjustment) {
+  protected void saveLastActiveTaskStatus(SingularityTask task, Optional<MesosTaskStatusObject> taskStatus, long millisAdjustment) {
     taskManager.saveLastActiveTaskStatus(new SingularityTaskStatusHolder(task.getTaskId(), taskStatus, System.currentTimeMillis() + millisAdjustment, serverId, Optional.of("slaveId")));
   }
 
-  protected SingularityMesosTaskStatusObject buildTaskStatus(SingularityTask task) {
-    return SingularityMesosTaskStatusObject.fromProtos(TaskStatus.newBuilder().setTaskId(TaskID.newBuilder().setValue(task.getTaskId().getId())).setState(TaskState.TASK_RUNNING).build());
+  protected MesosTaskStatusObject buildTaskStatus(SingularityTask task) {
+    return mesosProtosUtils.taskStatusFromProtos(TaskStatus.newBuilder().setTaskId(TaskID.newBuilder().setValue(task.getTaskId().getId())).setState(TaskState.TASK_RUNNING).build());
   }
 
   protected SingularityRequest buildRequest(String requestId) {
