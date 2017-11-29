@@ -522,7 +522,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     requestResource.postRequest(request.toBuilder().setInstances(Optional.of(15)).build());
     scheduler.drainPendingQueue();
 
-    sms.resourceOffers(Arrays.asList(createOffer(20, 1024, 5000), createOffer(20, 1024, 5000)));
+    sms.resourceOffers(Arrays.asList(createOffer(20, 1024, 20000), createOffer(20, 1024, 20000)));
 
     Assert.assertEquals(15, taskManager.getActiveTaskIds().size());
 
