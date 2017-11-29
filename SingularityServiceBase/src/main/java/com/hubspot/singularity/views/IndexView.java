@@ -22,6 +22,7 @@ public class IndexView extends View {
 
   private final Integer defaultMemory;
   private final Integer defaultCpus;
+  private final Integer defaultDisk;
 
   private final Boolean hideNewDeployButton;
   private final Boolean hideNewRequestButton;
@@ -87,6 +88,7 @@ public class IndexView extends View {
 
     this.defaultCpus = configuration.getDefaultCpus();
     this.defaultMemory = configuration.getDefaultMemory();
+    this.defaultDisk = configuration.getDefaultDisk();
 
     this.hideNewDeployButton = uiConfiguration.isHideNewDeployButton();
     this.hideNewRequestButton = uiConfiguration.isHideNewRequestButton();
@@ -177,6 +179,10 @@ public class IndexView extends View {
 
   public Integer getDefaultCpus() {
     return defaultCpus;
+  }
+
+  public Integer getDefaultDisk() {
+    return defaultDisk;
   }
 
   public Boolean getHideNewDeployButton() {
@@ -285,6 +291,7 @@ public class IndexView extends View {
         ", navColor='" + navColor + '\'' +
         ", defaultMemory=" + defaultMemory +
         ", defaultCpus=" + defaultCpus +
+        ", defaultDisk=" + defaultDisk +
         ", hideNewDeployButton=" + hideNewDeployButton +
         ", hideNewRequestButton=" + hideNewRequestButton +
         ", loadBalancingEnabled=" + loadBalancingEnabled +
