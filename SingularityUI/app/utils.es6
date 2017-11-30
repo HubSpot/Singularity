@@ -502,7 +502,7 @@ const Utils = {
 
         for (; i < tokenPath.length; i++){
           value = value[tokenPath[i]];
-          if (value === undefined){
+          if (value == null){
             throw tokenPath[i] + "' not found in " + tag;
           }
           if (i === tokenPath.length - 1){
@@ -511,7 +511,7 @@ const Utils = {
         }
       });
     } catch (err) {
-      return undefined;
+      return null;
     }
   }
 };
