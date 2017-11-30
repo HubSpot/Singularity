@@ -308,7 +308,7 @@ export const ScheduledActions = (
     cellRender={(cellData) => (
       <div className="hidden-xs">
         <RunNowButton requestId={cellData.pendingTask.pendingTaskId.requestId} />
-        {cellData.request.requestType == "ON_DEMAND" &&
+        {cellData.request && cellData.request.requestType == "ON_DEMAND" &&
             <DeletePendingTaskButton
                 taskId={cellData.pendingTask.pendingTaskId.id}
                 requestType={cellData.request.requestType}
