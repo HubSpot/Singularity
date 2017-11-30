@@ -51,7 +51,7 @@
         data-chapter-title="/api/priority"
         data-filepath="Docs/reference/apidocs/api-priority.md"
         data-basepath="../../.."
-        data-revision="Thu Jun 29 2017 11:56:00 GMT-0400 (EDT)"
+        data-revision="Thu Nov 30 2017 09:23:37 GMT-0500 (EST)"
         data-innerlanguage="">
     
 
@@ -297,6 +297,27 @@
                     </a>
             
             
+            <ul class="articles">
+                
+    
+        <li class="chapter " data-level="4.1" data-path="Docs/reference/upgrading-to-mesos-1.html">
+            
+                
+                    <a href="../../../Docs/reference/upgrading-to-mesos-1.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>4.1.</b>
+                        
+                        Upgrading to Mesos 1.x
+                    </a>
+            
+            
+        </li>
+    
+
+            </ul>
+            
         </li>
     
         <li class="chapter " data-level="5" >
@@ -392,6 +413,51 @@
                             <b>5.6.</b>
                         
                         Disaster Detection &amp; Disabled Actions
+                    </a>
+            
+            
+        </li>
+    
+        <li class="chapter " data-level="5.7" data-path="Docs/features/cluster-coordinator.html">
+            
+                
+                    <a href="../../../Docs/features/cluster-coordinator.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>5.7.</b>
+                        
+                        Cluster Coordinator
+                    </a>
+            
+            
+        </li>
+    
+        <li class="chapter " data-level="5.8" data-path="Docs/features/mesos-1.html">
+            
+                
+                    <a href="../../../Docs/features/mesos-1.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>5.8.</b>
+                        
+                        Upgrading to Mesos 1
+                    </a>
+            
+            
+        </li>
+    
+        <li class="chapter " data-level="5.9" data-path="Docs/features/auth.html">
+            
+                
+                    <a href="../../../Docs/features/auth.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>5.9.</b>
+                        
+                        Authentication and Authorization
                     </a>
             
             
@@ -801,43 +867,28 @@
                     
                         <h4 id="overview">Overview</h4>
 <p>Manages whether or not to schedule tasks based on their priority levels.</p>
-<h4 id="get-apipriorityfreeze"><strong>GET</strong> <code>/api/priority/freeze</code></h4>
-<p>Get information about the active priority freeze.</p>
+<h4 id="delete-apipriorityfreeze"><strong>DELETE</strong> <code>/api/priority/freeze</code></h4>
+<p>Stops the active priority freeze.</p>
 <h6 id="parameters">Parameters</h6>
-<ul>
-<li>No parameters</li>
-</ul>
-<h6 id="response">Response</h6>
-<p><a href="models.html#model-SingularityPriorityFreezeParent">SingularityPriorityFreezeParent</a></p>
-<h6 id="errors">Errors</h6>
+<p><strong>body</strong></p>
 <table>
 <thead>
 <tr>
-<th>Status Code</th>
-<th>Reason</th>
-<th>Response Model</th>
+<th>Parameter</th>
+<th>Required</th>
+<th>Description</th>
+<th>Data Type</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td>200</td>
-<td>The active priority freeze.</td>
-<td>-</td>
-</tr>
-<tr>
-<td>404</td>
-<td>There was no active priority freeze.</td>
-<td>-</td>
+<td>body</td>
+<td>false</td>
+<td></td>
+<td><a href="models.html#model-linkType">SingularityUser</a>&lt;/a&gt;</td>
 </tr>
 </tbody>
 </table>
-<hr>
-<h4 id="delete-apipriorityfreeze"><strong>DELETE</strong> <code>/api/priority/freeze</code></h4>
-<p>Stops the active priority freeze.</p>
-<h6 id="parameters">Parameters</h6>
-<ul>
-<li>No parameters</li>
-</ul>
 <h6 id="response">Response</h6>
 <h6 id="errors">Errors</h6>
 <table>
@@ -904,6 +955,53 @@
 <tr>
 <td>400</td>
 <td>There was a validation error with the priority freeze request.</td>
+<td>-</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h4 id="get-apipriorityfreeze"><strong>GET</strong> <code>/api/priority/freeze</code></h4>
+<p>Get information about the active priority freeze.</p>
+<h6 id="parameters">Parameters</h6>
+<p><strong>body</strong></p>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Required</th>
+<th>Description</th>
+<th>Data Type</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>body</td>
+<td>false</td>
+<td></td>
+<td><a href="models.html#model-linkType">SingularityUser</a>&lt;/a&gt;</td>
+</tr>
+</tbody>
+</table>
+<h6 id="response">Response</h6>
+<p><a href="models.html#model-SingularityPriorityFreezeParent">SingularityPriorityFreezeParent</a></p>
+<h6 id="errors">Errors</h6>
+<table>
+<thead>
+<tr>
+<th>Status Code</th>
+<th>Reason</th>
+<th>Response Model</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>200</td>
+<td>The active priority freeze.</td>
+<td>-</td>
+</tr>
+<tr>
+<td>404</td>
+<td>There was no active priority freeze.</td>
 <td>-</td>
 </tr>
 </tbody>

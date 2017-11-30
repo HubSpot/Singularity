@@ -49,7 +49,7 @@
         data-chapter-title="Models"
         data-filepath="Docs/reference/apidocs/models.md"
         data-basepath="../../.."
-        data-revision="Thu Jun 29 2017 11:56:00 GMT-0400 (EDT)"
+        data-revision="Thu Nov 30 2017 09:23:37 GMT-0500 (EST)"
         data-innerlanguage="">
     
 
@@ -295,6 +295,27 @@
                     </a>
             
             
+            <ul class="articles">
+                
+    
+        <li class="chapter " data-level="4.1" data-path="Docs/reference/upgrading-to-mesos-1.html">
+            
+                
+                    <a href="../../../Docs/reference/upgrading-to-mesos-1.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>4.1.</b>
+                        
+                        Upgrading to Mesos 1.x
+                    </a>
+            
+            
+        </li>
+    
+
+            </ul>
+            
         </li>
     
         <li class="chapter " data-level="5" >
@@ -390,6 +411,51 @@
                             <b>5.6.</b>
                         
                         Disaster Detection &amp; Disabled Actions
+                    </a>
+            
+            
+        </li>
+    
+        <li class="chapter " data-level="5.7" data-path="Docs/features/cluster-coordinator.html">
+            
+                
+                    <a href="../../../Docs/features/cluster-coordinator.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>5.7.</b>
+                        
+                        Cluster Coordinator
+                    </a>
+            
+            
+        </li>
+    
+        <li class="chapter " data-level="5.8" data-path="Docs/features/mesos-1.html">
+            
+                
+                    <a href="../../../Docs/features/mesos-1.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>5.8.</b>
+                        
+                        Upgrading to Mesos 1
+                    </a>
+            
+            
+        </li>
+    
+        <li class="chapter " data-level="5.9" data-path="Docs/features/auth.html">
+            
+                
+                    <a href="../../../Docs/features/auth.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>5.9.</b>
+                        
+                        Authentication and Authorization
                     </a>
             
             
@@ -839,7 +905,6 @@
 <li><a href="models.html#model-SingularityExpiringScale"><code>SingularityExpiringScale</code></a></li>
 <li><a href="models.html#model-SingularityExpiringSkipHealthchecks"><code>SingularityExpiringSkipHealthchecks</code></a></li>
 <li><a href="models.html#model-SingularityHostState"><code>SingularityHostState</code></a></li>
-<li><a href="models.html#model-SingularityKillTaskRequest"><code>SingularityKillTaskRequest</code></a></li>
 <li><a href="models.html#model-SingularityLoadBalancerUpdate"><code>SingularityLoadBalancerUpdate</code></a></li>
 <li><a href="models.html#model-SingularityMachineChangeRequest"><code>SingularityMachineChangeRequest</code></a></li>
 <li><a href="models.html#model-SingularityMachineStateHistoryUpdate"><code>SingularityMachineStateHistoryUpdate</code></a></li>
@@ -878,6 +943,7 @@
 <li><a href="models.html#model-SingularityTaskHistoryUpdate"><code>SingularityTaskHistoryUpdate</code></a></li>
 <li><a href="models.html#model-SingularityTaskId"><code>SingularityTaskId</code></a></li>
 <li><a href="models.html#model-SingularityTaskIdHistory"><code>SingularityTaskIdHistory</code></a></li>
+<li><a href="models.html#model-SingularityTaskIdsByStatus"><code>SingularityTaskIdsByStatus</code></a></li>
 <li><a href="models.html#model-SingularityTaskMetadata"><code>SingularityTaskMetadata</code></a></li>
 <li><a href="models.html#model-SingularityTaskMetadataRequest"><code>SingularityTaskMetadataRequest</code></a></li>
 <li><a href="models.html#model-SingularityTaskReconciliationStatistics"><code>SingularityTaskReconciliationStatistics</code></a></li>
@@ -886,8 +952,10 @@
 <li><a href="models.html#model-SingularityTaskShellCommandRequest"><code>SingularityTaskShellCommandRequest</code></a></li>
 <li><a href="models.html#model-SingularityTaskShellCommandRequestId"><code>SingularityTaskShellCommandRequestId</code></a></li>
 <li><a href="models.html#model-SingularityTaskShellCommandUpdate"><code>SingularityTaskShellCommandUpdate</code></a></li>
+<li><a href="models.html#model-SingularityTaskState"><code>SingularityTaskState</code></a></li>
 <li><a href="models.html#model-SingularityUnpauseRequest"><code>SingularityUnpauseRequest</code></a></li>
 <li><a href="models.html#model-SingularityUpdatePendingDeployRequest"><code>SingularityUpdatePendingDeployRequest</code></a></li>
+<li><a href="models.html#model-SingularityUser"><code>SingularityUser</code></a></li>
 <li><a href="models.html#model-SingularityVolume"><code>SingularityVolume</code></a></li>
 <li><a href="models.html#model-SingularityWebhook"><code>SingularityWebhook</code></a></li>
 <li><a href="models.html#model-SingularityWebhookSummary"><code>SingularityWebhookSummary</code></a></li>
@@ -1279,14 +1347,14 @@
 <td></td>
 </tr>
 <tr>
-<td>memLimitBytes</td>
-<td>long</td>
+<td>cpusThrottledTimeSecs</td>
+<td>double</td>
 <td>optional</td>
 <td></td>
 </tr>
 <tr>
-<td>cpusThrottledTimeSecs</td>
-<td>double</td>
+<td>memLimitBytes</td>
+<td>long</td>
 <td>optional</td>
 <td></td>
 </tr>
@@ -1321,14 +1389,14 @@
 <td></td>
 </tr>
 <tr>
-<td>timestamp</td>
-<td>double</td>
+<td>cpusNrPeriods</td>
+<td>long</td>
 <td>optional</td>
 <td></td>
 </tr>
 <tr>
-<td>cpusNrPeriods</td>
-<td>long</td>
+<td>timestamp</td>
+<td>double</td>
 <td>optional</td>
 <td></td>
 </tr>
@@ -1340,6 +1408,12 @@
 </tr>
 <tr>
 <td>cpusNrThrottled</td>
+<td>long</td>
+<td>optional</td>
+<td></td>
+</tr>
+<tr>
+<td>memTotalBytes</td>
 <td>long</td>
 <td>optional</td>
 </tr>
@@ -2215,6 +2289,12 @@
 <td></td>
 </tr>
 <tr>
+<td>averageSchedulingDelayMillis</td>
+<td>long</td>
+<td>optional</td>
+<td></td>
+</tr>
+<tr>
 <td>averageRuntimeMillis</td>
 <td>long</td>
 <td>optional</td>
@@ -2951,49 +3031,6 @@
 </tr>
 </tbody>
 </table>
-<h2 id="singularitykilltaskrequest"><a name="model-SingularityKillTaskRequest"></a> SingularityKillTaskRequest</h2>
-<table>
-<thead>
-<tr>
-<th>name</th>
-<th>type</th>
-<th>required</th>
-<th>description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>waitForReplacementTask</td>
-<td>boolean</td>
-<td>optional</td>
-<td>If set to true, treats this task kill as a bounce - launching another task and waiting for it to become healthy</td>
-</tr>
-<tr>
-<td>override</td>
-<td>boolean</td>
-<td>optional</td>
-<td>If set to true, instructs the executor to attempt to immediately kill the task, rather than waiting gracefully</td>
-</tr>
-<tr>
-<td>message</td>
-<td>string</td>
-<td>optional</td>
-<td>A message to show to users about why this action was taken</td>
-</tr>
-<tr>
-<td>runShellCommandBeforeKill</td>
-<td><a href="models.html#model-SingularityShellCommand">SingularityShellCommand</a></td>
-<td>optional</td>
-<td>Attempt to run this shell command on each task before it is shut down</td>
-</tr>
-<tr>
-<td>actionId</td>
-<td>string</td>
-<td>optional</td>
-<td>An id to associate with this action for metadata purposes</td>
-</tr>
-</tbody>
-</table>
 <h2 id="singularityloadbalancerupdate"><a name="model-SingularityLoadBalancerUpdate"></a> SingularityLoadBalancerUpdate</h2>
 <table>
 <thead>
@@ -3716,6 +3753,12 @@
 <td><a href="models.html#model-Map[string,string]">Map[string,string]</a></td>
 <td>optional</td>
 <td>Only allow tasks for this request to run on slaves which have these attributes</td>
+</tr>
+<tr>
+<td>dataCenter</td>
+<td>string</td>
+<td>optional</td>
+<td>the data center associated with this request</td>
 </tr>
 <tr>
 <td>numRetriesOnFailure</td>
@@ -4973,7 +5016,7 @@
 <td>taskState</td>
 <td><a href="models.html#model-ExtendedTaskState">ExtendedTaskState</a></td>
 <td>optional</td>
-<td>Allowable values: TASK_LAUNCHED, TASK_STAGING, TASK_STARTING, TASK_RUNNING, TASK_CLEANING, TASK_KILLING, TASK_FINISHED, TASK_FAILED, TASK_KILLED, TASK_LOST, TASK_LOST_WHILE_DOWN, TASK_ERROR</td>
+<td>Allowable values: TASK_LAUNCHED, TASK_STAGING, TASK_STARTING, TASK_RUNNING, TASK_CLEANING, TASK_KILLING, TASK_FINISHED, TASK_FAILED, TASK_KILLED, TASK_LOST, TASK_LOST_WHILE_DOWN, TASK_ERROR, TASK_DROPPED, TASK_GONE, TASK_UNREACHABLE, TASK_GONE_BY_OPERATOR, TASK_UNKNOWN</td>
 </tr>
 <tr>
 <td>timestamp</td>
@@ -5086,6 +5129,42 @@
 <tr>
 <td>lastTaskState</td>
 <td><a href="models.html#model-ExtendedTaskState">ExtendedTaskState</a></td>
+<td>optional</td>
+</tr>
+</tbody>
+</table>
+<h2 id="singularitytaskidsbystatus"><a name="model-SingularityTaskIdsByStatus"></a> SingularityTaskIdsByStatus</h2>
+<table>
+<thead>
+<tr>
+<th>name</th>
+<th>type</th>
+<th>required</th>
+<th>description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>pending</td>
+<td><a href="models.html#model-SingularityPendingTaskId">Array[SingularityPendingTaskId]</a></td>
+<td>optional</td>
+<td></td>
+</tr>
+<tr>
+<td>cleaning</td>
+<td><a href="models.html#model-SingularityTaskId">Array[SingularityTaskId]</a></td>
+<td>optional</td>
+<td></td>
+</tr>
+<tr>
+<td>healthy</td>
+<td><a href="models.html#model-SingularityTaskId">Array[SingularityTaskId]</a></td>
+<td>optional</td>
+<td></td>
+</tr>
+<tr>
+<td>notYetHealthy</td>
+<td><a href="models.html#model-SingularityTaskId">Array[SingularityTaskId]</a></td>
 <td>optional</td>
 </tr>
 </tbody>
@@ -5439,6 +5518,54 @@
 </tr>
 </tbody>
 </table>
+<h2 id="singularitytaskstate"><a name="model-SingularityTaskState"></a> SingularityTaskState</h2>
+<table>
+<thead>
+<tr>
+<th>name</th>
+<th>type</th>
+<th>required</th>
+<th>description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>pending</td>
+<td>boolean</td>
+<td>optional</td>
+<td></td>
+</tr>
+<tr>
+<td>taskId</td>
+<td><a href="models.html#model-SingularityTaskId">SingularityTaskId</a></td>
+<td>optional</td>
+<td></td>
+</tr>
+<tr>
+<td>currentState</td>
+<td><a href="models.html#model-ExtendedTaskState">ExtendedTaskState</a></td>
+<td>optional</td>
+<td></td>
+</tr>
+<tr>
+<td>runId</td>
+<td>string</td>
+<td>optional</td>
+<td></td>
+</tr>
+<tr>
+<td>pendingTaskId</td>
+<td><a href="models.html#model-SingularityPendingTaskId">SingularityPendingTaskId</a></td>
+<td>optional</td>
+<td></td>
+</tr>
+<tr>
+<td>taskHistory</td>
+<td><a href="models.html#model-SingularityTaskHistoryUpdate">Array[SingularityTaskHistoryUpdate]</a></td>
+<td>optional</td>
+</tr>
+</tbody>
+</table>
 <h2 id="singularityunpauserequest"><a name="model-SingularityUnpauseRequest"></a> SingularityUnpauseRequest</h2>
 <table>
 <thead>
@@ -5498,6 +5625,48 @@
 <td>int</td>
 <td>required</td>
 <td>Updated target instance count for the active deploy</td>
+</tr>
+</tbody>
+</table>
+<h2 id="singularityuser"><a name="model-SingularityUser"></a> SingularityUser</h2>
+<table>
+<thead>
+<tr>
+<th>name</th>
+<th>type</th>
+<th>required</th>
+<th>description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>authenticated</td>
+<td>boolean</td>
+<td>optional</td>
+<td></td>
+</tr>
+<tr>
+<td>groups</td>
+<td><a href="models.html#model-Set">Set</a></td>
+<td>optional</td>
+<td></td>
+</tr>
+<tr>
+<td>name</td>
+<td>string</td>
+<td>optional</td>
+<td></td>
+</tr>
+<tr>
+<td>email</td>
+<td>string</td>
+<td>optional</td>
+<td></td>
+</tr>
+<tr>
+<td>id</td>
+<td>string</td>
+<td>optional</td>
 </tr>
 </tbody>
 </table>

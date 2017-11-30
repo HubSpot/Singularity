@@ -51,7 +51,7 @@
         data-chapter-title="/api/disasters"
         data-filepath="Docs/reference/apidocs/api-disasters.md"
         data-basepath="../../.."
-        data-revision="Thu Jun 29 2017 11:56:00 GMT-0400 (EDT)"
+        data-revision="Thu Nov 30 2017 09:23:37 GMT-0500 (EST)"
         data-innerlanguage="">
     
 
@@ -297,6 +297,27 @@
                     </a>
             
             
+            <ul class="articles">
+                
+    
+        <li class="chapter " data-level="4.1" data-path="Docs/reference/upgrading-to-mesos-1.html">
+            
+                
+                    <a href="../../../Docs/reference/upgrading-to-mesos-1.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>4.1.</b>
+                        
+                        Upgrading to Mesos 1.x
+                    </a>
+            
+            
+        </li>
+    
+
+            </ul>
+            
         </li>
     
         <li class="chapter " data-level="5" >
@@ -392,6 +413,51 @@
                             <b>5.6.</b>
                         
                         Disaster Detection &amp; Disabled Actions
+                    </a>
+            
+            
+        </li>
+    
+        <li class="chapter " data-level="5.7" data-path="Docs/features/cluster-coordinator.html">
+            
+                
+                    <a href="../../../Docs/features/cluster-coordinator.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>5.7.</b>
+                        
+                        Cluster Coordinator
+                    </a>
+            
+            
+        </li>
+    
+        <li class="chapter " data-level="5.8" data-path="Docs/features/mesos-1.html">
+            
+                
+                    <a href="../../../Docs/features/mesos-1.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>5.8.</b>
+                        
+                        Upgrading to Mesos 1
+                    </a>
+            
+            
+        </li>
+    
+        <li class="chapter " data-level="5.9" data-path="Docs/features/auth.html">
+            
+                
+                    <a href="../../../Docs/features/auth.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>5.9.</b>
+                        
+                        Authentication and Authorization
                     </a>
             
             
@@ -823,6 +889,25 @@
 </tr>
 </tbody>
 </table>
+<p><strong>body</strong></p>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Required</th>
+<th>Description</th>
+<th>Data Type</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>body</td>
+<td>false</td>
+<td></td>
+<td><a href="models.html#model-linkType">SingularityUser</a>&lt;/a&gt;</td>
+</tr>
+</tbody>
+</table>
 <h6 id="response">Response</h6>
 <h6 id="errors">Errors</h6>
 <table>
@@ -845,9 +930,25 @@
 <h4 id="delete-apidisasterstaskcredits"><strong>DELETE</strong> <code>/api/disasters/task-credits</code></h4>
 <p>Disable task credit system</p>
 <h6 id="parameters">Parameters</h6>
-<ul>
-<li>No parameters</li>
-</ul>
+<p><strong>body</strong></p>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Required</th>
+<th>Description</th>
+<th>Data Type</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>body</td>
+<td>false</td>
+<td></td>
+<td><a href="models.html#model-linkType">SingularityUser</a>&lt;/a&gt;</td>
+</tr>
+</tbody>
+</table>
 <h6 id="response">Response</h6>
 <h6 id="errors">Errors</h6>
 <table>
@@ -870,9 +971,25 @@
 <h4 id="get-apidisasterstaskcredits"><strong>GET</strong> <code>/api/disasters/task-credits</code></h4>
 <p>Get task credit data</p>
 <h6 id="parameters">Parameters</h6>
-<ul>
-<li>No parameters</li>
-</ul>
+<p><strong>body</strong></p>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Required</th>
+<th>Description</th>
+<th>Data Type</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>body</td>
+<td>false</td>
+<td></td>
+<td><a href="models.html#model-linkType">SingularityUser</a>&lt;/a&gt;</td>
+</tr>
+</tbody>
+</table>
 <h6 id="response">Response</h6>
 <p><a href="models.html#model-SingularityTaskCredits">SingularityTaskCredits</a></p>
 <h6 id="errors">Errors</h6>
@@ -896,9 +1013,25 @@
 <h4 id="get-apidisastersstats"><strong>GET</strong> <code>/api/disasters/stats</code></h4>
 <p>Get current data related to disaster detection</p>
 <h6 id="parameters">Parameters</h6>
-<ul>
-<li>No parameters</li>
-</ul>
+<p><strong>body</strong></p>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Required</th>
+<th>Description</th>
+<th>Data Type</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>body</td>
+<td>false</td>
+<td></td>
+<td><a href="models.html#model-linkType">SingularityUser</a>&lt;/a&gt;</td>
+</tr>
+</tbody>
+</table>
 <h6 id="response">Response</h6>
 <p><a href="models.html#model-SingularityDisastersData">SingularityDisastersData</a></p>
 <h6 id="errors">Errors</h6>
@@ -922,9 +1055,25 @@
 <h4 id="post-apidisastersenable"><strong>POST</strong> <code>/api/disasters/enable</code></h4>
 <p>Allow the automated poller to disable actions when a disaster is detected</p>
 <h6 id="parameters">Parameters</h6>
-<ul>
-<li>No parameters</li>
-</ul>
+<p><strong>body</strong></p>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Required</th>
+<th>Description</th>
+<th>Data Type</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>body</td>
+<td>false</td>
+<td></td>
+<td><a href="models.html#model-linkType">SingularityUser</a>&lt;/a&gt;</td>
+</tr>
+</tbody>
+</table>
 <h6 id="response">Response</h6>
 <h6 id="errors">Errors</h6>
 <table>
@@ -1026,6 +1175,25 @@
 </tr>
 </tbody>
 </table>
+<p><strong>body</strong></p>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Required</th>
+<th>Description</th>
+<th>Data Type</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>body</td>
+<td>false</td>
+<td></td>
+<td><a href="models.html#model-linkType">SingularityUser</a>&lt;/a&gt;</td>
+</tr>
+</tbody>
+</table>
 <h6 id="response">Response</h6>
 <h6 id="errors">Errors</h6>
 <table>
@@ -1048,9 +1216,25 @@
 <h4 id="get-apidisastersdisabledactions"><strong>GET</strong> <code>/api/disasters/disabled-actions</code></h4>
 <p>Get a list of actions that are currently disable</p>
 <h6 id="parameters">Parameters</h6>
-<ul>
-<li>No parameters</li>
-</ul>
+<p><strong>body</strong></p>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Required</th>
+<th>Description</th>
+<th>Data Type</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>body</td>
+<td>false</td>
+<td></td>
+<td><a href="models.html#model-linkType">SingularityUser</a>&lt;/a&gt;</td>
+</tr>
+</tbody>
+</table>
 <h6 id="response">Response</h6>
 <p><a href="models.html#model-SingularityDisabledAction">List[SingularityDisabledAction]</a></p>
 <h6 id="errors">Errors</h6>
@@ -1074,9 +1258,25 @@
 <h4 id="post-apidisastersdisable"><strong>POST</strong> <code>/api/disasters/disable</code></h4>
 <p>Do not allow the automated poller to disable actions when a disaster is detected</p>
 <h6 id="parameters">Parameters</h6>
-<ul>
-<li>No parameters</li>
-</ul>
+<p><strong>body</strong></p>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Required</th>
+<th>Description</th>
+<th>Data Type</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>body</td>
+<td>false</td>
+<td></td>
+<td><a href="models.html#model-linkType">SingularityUser</a>&lt;/a&gt;</td>
+</tr>
+</tbody>
+</table>
 <h6 id="response">Response</h6>
 <h6 id="errors">Errors</h6>
 <table>
@@ -1115,6 +1315,25 @@
 <td>true</td>
 <td></td>
 <td>string</td>
+</tr>
+</tbody>
+</table>
+<p><strong>body</strong></p>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Required</th>
+<th>Description</th>
+<th>Data Type</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>body</td>
+<td>false</td>
+<td></td>
+<td><a href="models.html#model-linkType">SingularityUser</a>&lt;/a&gt;</td>
 </tr>
 </tbody>
 </table>
@@ -1159,6 +1378,25 @@
 </tr>
 </tbody>
 </table>
+<p><strong>body</strong></p>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Required</th>
+<th>Description</th>
+<th>Data Type</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>body</td>
+<td>false</td>
+<td></td>
+<td><a href="models.html#model-linkType">SingularityUser</a>&lt;/a&gt;</td>
+</tr>
+</tbody>
+</table>
 <h6 id="response">Response</h6>
 <h6 id="errors">Errors</h6>
 <table>
@@ -1181,9 +1419,25 @@
 <h4 id="get-apidisastersactive"><strong>GET</strong> <code>/api/disasters/active</code></h4>
 <p>Get a list of current active disasters</p>
 <h6 id="parameters">Parameters</h6>
-<ul>
-<li>No parameters</li>
-</ul>
+<p><strong>body</strong></p>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Required</th>
+<th>Description</th>
+<th>Data Type</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>body</td>
+<td>false</td>
+<td></td>
+<td><a href="models.html#model-linkType">SingularityUser</a>&lt;/a&gt;</td>
+</tr>
+</tbody>
+</table>
 <h6 id="response">Response</h6>
 <p>List[string]</p>
 <h6 id="errors">Errors</h6>

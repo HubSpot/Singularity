@@ -5,7 +5,7 @@
         <!-- head:start -->
         <meta charset="UTF-8">
         <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-        <title>Shell Commands | Singularity</title>
+        <title>Authentication and Authorization | Singularity</title>
         <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
         <meta name="description" content="">
         <meta name="generator" content="GitBook 2.6.7">
@@ -35,10 +35,10 @@
         
     
     
-    <link rel="next" href="../../Docs/features/task-search.html" />
+    <link rel="next" href="../../Docs/reference/configuration.html" />
     
     
-    <link rel="prev" href="../../Docs/features/expiring-actions.html" />
+    <link rel="prev" href="../../Docs/features/mesos-1.html" />
     
 
         <!-- head:end -->
@@ -47,9 +47,9 @@
         <!-- body:start -->
         
     <div class="book"
-        data-level="5.3"
-        data-chapter-title="Shell Commands"
-        data-filepath="Docs/features/shell-commands.md"
+        data-level="5.9"
+        data-chapter-title="Authentication and Authorization"
+        data-filepath="Docs/features/auth.md"
         data-basepath="../.."
         data-revision="Thu Nov 30 2017 09:23:37 GMT-0500 (EST)"
         data-innerlanguage="">
@@ -358,7 +358,7 @@
             
         </li>
     
-        <li class="chapter active" data-level="5.3" data-path="Docs/features/shell-commands.html">
+        <li class="chapter " data-level="5.3" data-path="Docs/features/shell-commands.html">
             
                 
                     <a href="../../Docs/features/shell-commands.html">
@@ -448,7 +448,7 @@
             
         </li>
     
-        <li class="chapter " data-level="5.9" data-path="Docs/features/auth.html">
+        <li class="chapter active" data-level="5.9" data-path="Docs/features/auth.html">
             
                 
                     <a href="../../Docs/features/auth.html">
@@ -865,39 +865,64 @@
                 
                     <section class="normal" id="section-">
                     
-                        <h3 id="shell-commands">Shell Commands</h3>
-<p>As of release <code>0.4.6</code>, when using the SingularityExecutor you have the ability to run pre-configured shell commands from the ui, eliminating the need to ssh to the mesos-slave.</p>
-<p>The following example shows how to configure SingularityService and the SingularityExecutor for the simple command <code>lsof</code>.</p>
-<h4 id="configuration">Configuration</h4>
-<p>First, add a configuration section to SingularityService&apos;s config, this will allow the shell command to appear as an option in the UI. The section will be nested under the <code>ui</code> item and look like:</p>
-<pre><code class="lang-yaml">ui:
-  shellCommands:
-    - name: lsof
-      description: List open files, including all sockets.
+                        <h2 id="singularity-webhook-auth">Singularity Webhook Auth</h2>
+<p>Singularity contains a few options for authentication andautorization. The most reliable of these is webhook auth. The setup for Singularity&apos;s webhook auth is based on the <a href="https://kubernetes.io/docs/admin/authentication/#webhook-token-authentication" target="_blank">webhook token auth</a> provided in kubernetes.</p>
+<h3 id="webhook-authentication-flow">Webhook Authentication Flow</h3>
+<p>When webhook atuh is configured, Singularity will look for an <code>Authorization</code> header on each api call. Singularity will then make a <code>GET</code> call to the configured <code>webhookAuth.authVerificationUrl</code> with the same <code>Authorization</code> header send. The system expects a response which describes the user as JSON in a format like:</p>
+<pre><code class="lang-json">{
+    &quot;user&quot;: {
+        &quot;id&quot;: &quot;required-user-id&quot;,
+        &quot;name&quot;: &quot;Optional User Name&quot;,
+        &quot;email&quot;: &quot;useremail@example.com&quot;,
+        &quot;groups&quot;: [
+            &quot;engineering&quot;,
+            &quot;singularity-admin&quot;
+        ],
+        &quot;authenticated&quot;: true
+    },
+    &quot;error&quot;: &quot;Optional exception message&quot;
+}
 </code></pre>
-<p><code>shellCommands</code> is a list of objects with fields of <code>name</code> and `description. Now, in the ui there will be a Shell Commands section available for running tasks like the following:</p>
-<p><img src="../images/singularity_ui_shell_commands.png" alt="Shell Commands in UI"></p>
-<p>Next, configure the SingularityExecutor to properly run the command. Add a <code>shellCommands</code> section under the <code>executor</code> section of the config similar to the following:</p>
-<pre><code class="lang-yaml">executor:
-  shellCommands:
-    - name: lsof
-     command: [&quot;/usr/sbin/lsof&quot;, &quot;-P&quot;, &quot;-p&quot;, &quot;{PID}&quot;]
+<p>The authenticating system should return <code>&quot;authenticated&quot;: true</code> for the user if the user was successfully authenticated, as well as any groups the user is part of (for later use with authorization). If there was an exception/error while authenticating, Singularity can display that to the user if it is returned in the <code>error</code> field.</p>
+<h3 id="configuring-webhook-authentication-and-authorization-groups">Configuring Webhook Authentication and Authorization Groups</h3>
+<p>To enable webhook auth in Singularity, there are two main sections of the configuration yaml to update. An example is shown below with explanations </p>
+<pre><code class="lang-yaml">auth:
+  enabled: true
+  authenticators:
+    - WEBHOOK
+  adminGroups:
+  - singularity-admin
+  requiredGroups:
+  - engineering
+  jitaGroups:
+  - engineering-jita
+  defaultReadOnlyGroups:
+  - engineering-ro
+  globalReadOnlyGroups:
+  - engineering-leaders-ro
+
+ webhookAuth:
+  authVerificationUrl: https://my-auth-domain.com/singularity
 </code></pre>
-<p>A few important notes about the <code>shellCommands</code> objects:</p>
+<p><strong><em>Verification URL</em></strong></p>
+<p>The <code>webhookAuth.authVerificationUrl</code> will be sent a <code>GET</code> with the <code>Authorization</code> header provided as described in the section above</p>
+<p><strong><em>Auth Config</em></strong></p>
 <ul>
-<li><code>name</code> must match the name of the command from the ui config</li>
-<li><code>command</code> is an array of strings that form the shell command. Each argument should be a separate array item</li>
-<li><code>{PID}</code> and <code>{USER}</code> are special items and will be replaced with the current process pid or the current user before the command is executed. Placeholder values can be changed by specifying <code>shellCommandPidPlaceholder</code> or <code>shellCommandUserPlaceholder</code> under the <code>executor</code> section of the config.</li>
-<li>If the process you are operating on is not the parent pid (e.g. using a wrapper script), you can instead pull the process pid from a file. The file to pull from is specified by <code>shellCommandPidFile</code> under the <code>executor</code> section of the config and defaults to <code>.task-pid</code> (found in the root of the sandbox)</li>
-<li><p>You can optionally prefix all commands specified with an array of command strings specified in <code>shellCommandPrefix</code>. This is useful for things like being sure to execute a switch user command for each command to execute.</p>
-<h4 id="running-a-shell-command">Running a Shell Command</h4>
-<p>Now that it is configured, navigate to a running task in the Singularity UI. Near the bottom there is a Shell Commands section that can be expanded. In that section, select the shell command you want from the dropdown and hit <code>Run</code>. An option of <em>Redirect to command output upon success</em> is specified by default, which will wait for the command to return and redirect you to view the output file.</p>
-</li>
+<li><code>enabled</code> - defaults to <code>false</code>. If set to <code>true</code>, auth will be enforced</li>
+<li><code>authenticators</code> - a list of authentication types to use. For webhook auth, this is simply <code>- WEBHOOK</code></li>
+<li><code>adminGroups</code> - If a user is part of these groups they are allowed admin actions in Singularity (actions on slaves, view all requests, etc)</li>
+<li><code>requiredGroups</code> - A user must be part of one at least of these groups in order to access Singularity</li>
+<li><code>jitaGroups</code> - Groups that can be allowed access to any SingularityRequest (but not admin actions)</li>
+<li><code>defaultReadOnlyGroups</code> - If read only groups are not set for a SingularityRequest, these groups are used for read access</li>
+<li><code>globalReadOnlyGroups</code> - These groups are allowed read access to requests regardless of what groups are set on the SingularityRequest</li>
 </ul>
-<p>You should see a message similar to the following indicating that the command has been sent to the executor to be run.</p>
-<p><img src="../images/singularity_ui_command_queued.png" alt="Command Queued"></p>
-<p>Once that completes, you will be redirected to the output of your command (saved as a file in the task sandbox). Back on the task detail page you will also be able to view a history of shell commands run for that process:</p>
-<p><img src="../images/singularity_ui_command_history.png" alt="Command History"></p>
+<p><strong><em>SingularityRequest Fields</em></strong></p>
+<p>You can configure access to individual SingularityRequests using the <code>group</code>, <code>readWriteGroups</code>, and <code>readOnlyGroups</code> fields.</p>
+<ul>
+<li><code>group</code> - The primary group for this request. A user in this group is allowed read/write access</li>
+<li><code>readWriteGroups</code> - alternate groups that are also allowed read-write access</li>
+<li><code>readOnlyGroups</code> - alternative groups that are only allowed read access</li>
+</ul>
 
                     
                     </section>
@@ -908,10 +933,10 @@
         </div>
 
         
-        <a href="../../Docs/features/expiring-actions.html" class="navigation navigation-prev " aria-label="Previous page: Expiring Actions"><i class="fa fa-angle-left"></i></a>
+        <a href="../../Docs/features/mesos-1.html" class="navigation navigation-prev " aria-label="Previous page: Upgrading to Mesos 1"><i class="fa fa-angle-left"></i></a>
         
         
-        <a href="../../Docs/features/task-search.html" class="navigation navigation-next " aria-label="Next page: Task Search"><i class="fa fa-angle-right"></i></a>
+        <a href="../../Docs/reference/configuration.html" class="navigation navigation-next " aria-label="Next page: Configuration"><i class="fa fa-angle-right"></i></a>
         
     </div>
 </div>

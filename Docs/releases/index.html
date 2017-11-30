@@ -35,7 +35,7 @@
         
     
     
-    <link rel="next" href="../../Docs/features/custom-ports.html" />
+    <link rel="next" href="../../Docs/reference/upgrading-to-mesos-1.html" />
     
     
     <link rel="prev" href="../../Docs/development/basepom.html" />
@@ -51,7 +51,7 @@
         data-chapter-title="Releases"
         data-filepath="Docs/releases/index.md"
         data-basepath="../.."
-        data-revision="Thu Jun 29 2017 11:56:00 GMT-0400 (EDT)"
+        data-revision="Thu Nov 30 2017 09:23:37 GMT-0500 (EST)"
         data-innerlanguage="">
     
 
@@ -297,6 +297,27 @@
                     </a>
             
             
+            <ul class="articles">
+                
+    
+        <li class="chapter " data-level="4.1" data-path="Docs/reference/upgrading-to-mesos-1.html">
+            
+                
+                    <a href="../../Docs/reference/upgrading-to-mesos-1.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>4.1.</b>
+                        
+                        Upgrading to Mesos 1.x
+                    </a>
+            
+            
+        </li>
+    
+
+            </ul>
+            
         </li>
     
         <li class="chapter " data-level="5" >
@@ -392,6 +413,51 @@
                             <b>5.6.</b>
                         
                         Disaster Detection &amp; Disabled Actions
+                    </a>
+            
+            
+        </li>
+    
+        <li class="chapter " data-level="5.7" data-path="Docs/features/cluster-coordinator.html">
+            
+                
+                    <a href="../../Docs/features/cluster-coordinator.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>5.7.</b>
+                        
+                        Cluster Coordinator
+                    </a>
+            
+            
+        </li>
+    
+        <li class="chapter " data-level="5.8" data-path="Docs/features/mesos-1.html">
+            
+                
+                    <a href="../../Docs/features/mesos-1.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>5.8.</b>
+                        
+                        Upgrading to Mesos 1
+                    </a>
+            
+            
+        </li>
+    
+        <li class="chapter " data-level="5.9" data-path="Docs/features/auth.html">
+            
+                
+                    <a href="../../Docs/features/auth.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>5.9.</b>
+                        
+                        Authentication and Authorization
                     </a>
             
             
@@ -801,6 +867,10 @@
                     
                         <h1 id="releases">Releases</h1>
 <ul>
+<li><a href="#changes-in-0180">Changes in 0.18.0</a></li>
+<li><a href="#changes-in-0170">Changes in 0.17.0</a></li>
+<li><a href="#changes-in-0162">Changes in 0.16.2</a></li>
+<li><a href="#changes-in-0161">Changes in 0.16.1</a></li>
 <li><a href="#changes-in-0160">Changes in 0.16.0</a></li>
 <li><a href="#changes-in-0151">Changes in 0.15.1</a></li>
 <li><a href="#changes-in-0150">Changes in 0.15.0</a></li>
@@ -827,6 +897,91 @@
 <li><a href="#changes-in-046">Changes in 0.4.6</a></li>
 <li><a href="#changes-in-045">Changes in 0.4.5</a></li>
 </ul>
+<h2 id="changes-in-0180">Changes in <code>0.18.0</code></h2>
+<p>Check out the <a href="https://github.com/HubSpot/Singularity/issues?q=milestone%3A%0.18.0+is%3Aclosed" target="_blank">0.18.0 milestone</a> to see new features / bugfixes in detail.</p>
+<h3 id="mesos-1">Mesos 1</h3>
+<p>The release of Singularity 0.18.0 marks an update to mesos <code>1.x</code>. Singularity will now utilize the mesos http api when connecting to mesos (native libraries no longer need to be present for Singularity to run). <strong><em>Configuration changes for Singularity Service are needed when upgrading</em></strong> so be sure to check out the <a href="../features/mesos-1.html">upgrading to mesos 1 docs</a>.</p>
+<h3 id="new-featuresupdates">New Features/Updates</h3>
+<ul>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1571" target="_blank">1571</a> - Mesos 1.1.2</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1648" target="_blank">1648</a> - Remove mesos dependency from SingularityBase</li>
+</ul>
+<h3 id="improvements">Improvements</h3>
+<ul>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1631" target="_blank">1631</a> - Support subdirectories in the s3 uploader</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1618" target="_blank">1618</a> - Pass resource overrides to environment.</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1626" target="_blank">1626</a> - Expose instance counts for singularity requests</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1629" target="_blank">1629</a> - Add shell commands to the client</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1633" target="_blank">1633</a> - Make the leniency of OPTIMISTIC tunable.</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1599" target="_blank">1599</a> - Add logrotateFrequency field in new deploy form</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1647" target="_blank">1647</a> - S3 Folders UI display</li>
+</ul>
+<h3 id="bug-fixes">Bug Fixes</h3>
+<ul>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1628" target="_blank">1628</a> - Preserve instance id order when scaling down</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1634" target="_blank">1634</a> - Catch errors in FetchRequestArgHistory</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1625" target="_blank">1625</a> - Fixes to latest log file link</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1630" target="_blank">1630</a> - Mesos backpressure</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1621" target="_blank">1621</a> - look at new scale request before opting to old request</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1642" target="_blank">1642</a> - Shade protobuf for SingularityClient/SingularityBase</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1649" target="_blank">1649</a> - Don&apos;t error when ArtifactManager copies duplicate files </li>
+</ul>
+<hr>
+<h2 id="changes-in-0170">Changes in <code>0.17.0</code></h2>
+<p>Check out the <a href="https://github.com/HubSpot/Singularity/issues?q=milestone%3A0.17.0%20is%3Aclosed%20" target="_blank">0.17.0 milestone</a> to see new features / bugfixes in detail.</p>
+<p><strong>Note</strong>: Mesos 1.1.x support didn&apos;t quite make it into this release, but those changes are coming soon. In the meantime, here are the new features in Singularity 0.17.0.</p>
+<h3 id="new-features">New Features</h3>
+<ul>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1592" target="_blank">1592</a> - Resource Usage UI</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1576" target="_blank">1576</a> - Evenly-spread task placement</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1570" target="_blank">1570</a> - resource usage endpoint</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1610" target="_blank">1610</a> - Highlight new files</li>
+</ul>
+<h3 id="improvements">Improvements</h3>
+<ul>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1583" target="_blank">1583</a> - Track average scheduling delay when accepting tasks.</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1578" target="_blank">1578</a> - Allow WORKER &lt;-&gt; SERVICE type change if not load balanced</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1586" target="_blank">1586</a> - Refactor tailer instance selection dropdown</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1615" target="_blank">1615</a> - Add visibility around getChildren() calls.</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1597" target="_blank">1597</a> - Also relocate guava-retrying in SingularityClient</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1598" target="_blank">1598</a> - timestampSeconds -&gt; timestamp in statistics object</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1594" target="_blank">1594</a> - Leader cache everywhere</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1590" target="_blank">1590</a> - package.json tune-up</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1603" target="_blank">1603</a> - Reorganize request group view</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1611" target="_blank">1611</a> - Add request group filter</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1608" target="_blank">1608</a> - Add Nitro as adopter</li>
+</ul>
+<h3 id="bug-fixes">Bug Fixes</h3>
+<ul>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1591" target="_blank">1591</a> - Fix flaky testSchedulerPriority test</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1593" target="_blank">1593</a> - More flaky tests</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1588" target="_blank">1588</a> - Force Guava cache maintenance before processing cached offers.</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1587" target="_blank">1587</a> - Fix key error on requests page</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1595" target="_blank">1595</a> - Only write to the leader cache when it&apos;s active.</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1614" target="_blank">1614</a> - Fix cron length validation when creating new requests.</li>
+</ul>
+<h3 id="thanks">Thanks</h3>
+<ul>
+<li>@ssalinas</li>
+<li>@darcatron</li>
+<li>@kwm4385</li>
+</ul>
+<hr>
+<h2 id="changes-in-0162">Changes in <code>0.16.2</code></h2>
+<p><strong><em>This is a bug fix release!</em></strong></p>
+<p>Check out the <a href="https://github.com/HubSpot/Singularity/issues?q=milestone%3A0.16.2+is%3Aclosed" target="_blank">0.16.2 milestone</a> to see pull requests in detail.</p>
+<h3 id="bug-fixes">Bug Fixes</h3>
+<ul>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1605" target="_blank">1605</a> - Deploy IDs should allow &apos;.&apos;</li>
+</ul>
+<hr>
+<h2 id="changes-in-0161">Changes in <code>0.16.1</code></h2>
+<p><strong><em>This is a bugfix release</em></strong></p>
+<p>Check out the <a href="https://github.com/HubSpot/Singularity/issues?q=milestone%3A%0.16.1+is%3Aclosed" target="_blank">0.16.1 milestone</a> to see new features / bugfixes in detail.</p>
+<ul>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1580" target="_blank">1580</a> - Fix mapping of docker fields in &apos;new deploy&apos; ui</li>
+</ul>
+<hr>
 <h2 id="changes-in-0160">Changes in <code>0.16.0</code></h2>
 <p>Check out the <a href="https://github.com/HubSpot/Singularity/issues?q=milestone%3A%0.16.0+is%3Aclosed" target="_blank">0.16.0 milestone</a> to see new features / bugfixes in detail.</p>
 <p><strong><em>Important</em></strong></p>
@@ -2161,7 +2316,7 @@ The UI build for this release is known to only contain partial css. Please use t
         <a href="../../Docs/development/basepom.html" class="navigation navigation-prev " aria-label="Previous page: Basepom"><i class="fa fa-angle-left"></i></a>
         
         
-        <a href="../../Docs/features/custom-ports.html" class="navigation navigation-next " aria-label="Next page: Choosing Custom Ports"><i class="fa fa-angle-right"></i></a>
+        <a href="../../Docs/reference/upgrading-to-mesos-1.html" class="navigation navigation-next " aria-label="Next page: Upgrading to Mesos 1.x"><i class="fa fa-angle-right"></i></a>
         
     </div>
 </div>

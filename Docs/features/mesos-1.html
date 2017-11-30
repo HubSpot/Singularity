@@ -5,7 +5,7 @@
         <!-- head:start -->
         <meta charset="UTF-8">
         <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-        <title>Shell Commands | Singularity</title>
+        <title>Upgrading to Mesos 1 | Singularity</title>
         <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
         <meta name="description" content="">
         <meta name="generator" content="GitBook 2.6.7">
@@ -35,10 +35,10 @@
         
     
     
-    <link rel="next" href="../../Docs/features/task-search.html" />
+    <link rel="next" href="../../Docs/features/auth.html" />
     
     
-    <link rel="prev" href="../../Docs/features/expiring-actions.html" />
+    <link rel="prev" href="../../Docs/features/cluster-coordinator.html" />
     
 
         <!-- head:end -->
@@ -47,9 +47,9 @@
         <!-- body:start -->
         
     <div class="book"
-        data-level="5.3"
-        data-chapter-title="Shell Commands"
-        data-filepath="Docs/features/shell-commands.md"
+        data-level="5.8"
+        data-chapter-title="Upgrading to Mesos 1"
+        data-filepath="Docs/features/mesos-1.md"
         data-basepath="../.."
         data-revision="Thu Nov 30 2017 09:23:37 GMT-0500 (EST)"
         data-innerlanguage="">
@@ -358,7 +358,7 @@
             
         </li>
     
-        <li class="chapter active" data-level="5.3" data-path="Docs/features/shell-commands.html">
+        <li class="chapter " data-level="5.3" data-path="Docs/features/shell-commands.html">
             
                 
                     <a href="../../Docs/features/shell-commands.html">
@@ -433,7 +433,7 @@
             
         </li>
     
-        <li class="chapter " data-level="5.8" data-path="Docs/features/mesos-1.html">
+        <li class="chapter active" data-level="5.8" data-path="Docs/features/mesos-1.html">
             
                 
                     <a href="../../Docs/features/mesos-1.html">
@@ -865,39 +865,32 @@
                 
                     <section class="normal" id="section-">
                     
-                        <h3 id="shell-commands">Shell Commands</h3>
-<p>As of release <code>0.4.6</code>, when using the SingularityExecutor you have the ability to run pre-configured shell commands from the ui, eliminating the need to ssh to the mesos-slave.</p>
-<p>The following example shows how to configure SingularityService and the SingularityExecutor for the simple command <code>lsof</code>.</p>
-<h4 id="configuration">Configuration</h4>
-<p>First, add a configuration section to SingularityService&apos;s config, this will allow the shell command to appear as an option in the UI. The section will be nested under the <code>ui</code> item and look like:</p>
-<pre><code class="lang-yaml">ui:
-  shellCommands:
-    - name: lsof
-      description: List open files, including all sockets.
+                        <h1 id="upgrading-singularity-to-use-mesos-1x">Upgrading Singularity to use Mesos <code>1.x</code></h1>
+<p>Starting with release version <code>0.18.0</code>, Singularity will use the mesos http api to communicate with the mesos master via the <a href="https://github.com/mesosphere/mesos-rxjava" target="_blank">mesos rx-java library</a>. Documentation on upgrading mesos itself can be found on the <a href="http://mesos.apache.org/documentation/latest/upgrades/" target="_blank">mesos website</a>. In order to upgrade Singularity there are a few things to keep in mind beyond the scope of a normal release:</p>
+<h3 id="mesos-version-selection">Mesos Version Selection</h3>
+<p>As of mesos <code>1.2</code>, the mesos master will no longer accept registrations from mesos agents running <code>0.x.x</code> versions. As a result, we have chosen to release Singularity <code>0.18.0</code> built against mesos <code>1.1.2</code>, allowing for a smoother upgrade path for users.</p>
+<p>For future <code>1.x</code> version upgrades, less overall change should be needed due to the fact that we are now using the http api and do not depend on native libraires being installed.</p>
+<h3 id="singularity-executor-updates">Singularity Executor Updates</h3>
+<p>If you are running the custom Singularity Executor, we recomend updating mesos on your agents <em>before</em> updating the Singularity Executor. We have found in our testing that the older executor (built against <code>0.x</code>) can run smoothly on mesos <code>1.1</code>, but the inverse is not always true.</p>
+<h3 id="singularity-service-configuration-updates">Singularity Service Configuration Updates</h3>
+<p>The configuration to connect to the mesos master is the only field that has changed with the 1.x upgrade. The new <code>mesos.master</code> field in the configuration yaml is now a comma seaprated list of mesos master <code>host:port</code> vaules. Singularity will randomly select from the list when searching for a master (1.x masters will automatically redirect requests to the leading master), trying other hosts in the list if it is not successful.</p>
+<p>For example an old configuration of:</p>
+<pre><code class="lang-yaml">mesos:
+  master: zk://my-zk-hostname.com:2181/mesos/singularity
 </code></pre>
-<p><code>shellCommands</code> is a list of objects with fields of <code>name</code> and `description. Now, in the ui there will be a Shell Commands section available for running tasks like the following:</p>
-<p><img src="../images/singularity_ui_shell_commands.png" alt="Shell Commands in UI"></p>
-<p>Next, configure the SingularityExecutor to properly run the command. Add a <code>shellCommands</code> section under the <code>executor</code> section of the config similar to the following:</p>
-<pre><code class="lang-yaml">executor:
-  shellCommands:
-    - name: lsof
-     command: [&quot;/usr/sbin/lsof&quot;, &quot;-P&quot;, &quot;-p&quot;, &quot;{PID}&quot;]
+<p>Would now become:</p>
+<pre><code class="lang-yaml">mesos:
+  master: my-mesos-master-host.com:5050
 </code></pre>
-<p>A few important notes about the <code>shellCommands</code> objects:</p>
+<h3 id="singularityclient-considerations">SingularityClient Considerations</h3>
+<p>As part of the mesos 1 update, the <code>org.apache.mesos:mesos</code> library is now pulling in a newer version of protobuf. This can cause issues for users using any other protobuf version. As a result, we have refactored the models in <code>SingularityBase</code> such that <code>SingularityBase</code> and the <code>SingularityClient</code> no longer have a dependency on <code>org.apache.mesos:mesos</code>.</p>
+<p>For users of the java client, this means that a few of the previously accessible methods on the <code>SingularityTask</code> object may not be present. All information from the mesos <code>TaskInfo</code> protos is still being saved as json for later usage, but only the parts needed by Singularity internals are mapped to POJO fields, with the remainder being caught by jackson&apos;s <code>@JsonAnyGetter</code>/<code>@JsonAnySetter</code>. Extra fields on objects are available as a <code>Map<String, Object=""></String,></code> under <code>getAllOtherFields</code> on the objects.</p>
+<p>See <a href="https://github.com/HubSpot/Singularity/pull/1648" target="_blank">#1648</a> for more details.</p>
+<h3 id="other-mesos-considerations">Other Mesos Considerations</h3>
 <ul>
-<li><code>name</code> must match the name of the command from the ui config</li>
-<li><code>command</code> is an array of strings that form the shell command. Each argument should be a separate array item</li>
-<li><code>{PID}</code> and <code>{USER}</code> are special items and will be replaced with the current process pid or the current user before the command is executed. Placeholder values can be changed by specifying <code>shellCommandPidPlaceholder</code> or <code>shellCommandUserPlaceholder</code> under the <code>executor</code> section of the config.</li>
-<li>If the process you are operating on is not the parent pid (e.g. using a wrapper script), you can instead pull the process pid from a file. The file to pull from is specified by <code>shellCommandPidFile</code> under the <code>executor</code> section of the config and defaults to <code>.task-pid</code> (found in the root of the sandbox)</li>
-<li><p>You can optionally prefix all commands specified with an array of command strings specified in <code>shellCommandPrefix</code>. This is useful for things like being sure to execute a switch user command for each command to execute.</p>
-<h4 id="running-a-shell-command">Running a Shell Command</h4>
-<p>Now that it is configured, navigate to a running task in the Singularity UI. Near the bottom there is a Shell Commands section that can be expanded. In that section, select the shell command you want from the dropdown and hit <code>Run</code>. An option of <em>Redirect to command output upon success</em> is specified by default, which will wait for the command to return and redirect you to view the output file.</p>
-</li>
+<li>The <code>--work_dir</code> flag <em>must</em> be set on all mesos agents or they will error on startup</li>
+<li>internally the slave -&gt; agent rename is being used, but all apis endpoints and fields still reference slave as they did before. Singularity will tackle the slave -&gt; agent rename in future versions</li>
 </ul>
-<p>You should see a message similar to the following indicating that the command has been sent to the executor to be run.</p>
-<p><img src="../images/singularity_ui_command_queued.png" alt="Command Queued"></p>
-<p>Once that completes, you will be redirected to the output of your command (saved as a file in the task sandbox). Back on the task detail page you will also be able to view a history of shell commands run for that process:</p>
-<p><img src="../images/singularity_ui_command_history.png" alt="Command History"></p>
 
                     
                     </section>
@@ -908,10 +901,10 @@
         </div>
 
         
-        <a href="../../Docs/features/expiring-actions.html" class="navigation navigation-prev " aria-label="Previous page: Expiring Actions"><i class="fa fa-angle-left"></i></a>
+        <a href="../../Docs/features/cluster-coordinator.html" class="navigation navigation-prev " aria-label="Previous page: Cluster Coordinator"><i class="fa fa-angle-left"></i></a>
         
         
-        <a href="../../Docs/features/task-search.html" class="navigation navigation-next " aria-label="Next page: Task Search"><i class="fa fa-angle-right"></i></a>
+        <a href="../../Docs/features/auth.html" class="navigation navigation-next " aria-label="Next page: Authentication and Authorization"><i class="fa fa-angle-right"></i></a>
         
     </div>
 </div>
