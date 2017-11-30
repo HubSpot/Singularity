@@ -13,8 +13,7 @@ import {
   LogLinkAndActions,
   NextRun,
   PendingType,
-  PendingDeployId,
-  ScheduledActions
+  PendingDeployId
 } from '../tasks/Columns';
 
 export default class RequestSummaryBox extends Component {
@@ -130,7 +129,6 @@ export default class RequestSummaryBox extends Component {
         {NextRun}
         {PendingType}
         {PendingDeployId}
-        {ScheduledActions}
       </UITable>
     );
 
