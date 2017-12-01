@@ -367,6 +367,8 @@ class SingularityMesosTaskBuilder {
       commandBuilder.setUser(task.getDeploy().getUser().get());
     }
 
+    prepareMesosUriDownloads(task.getPendingTask().getExtraArtifacts(), commandBuilder);
+
     bldr.setExecutor(ExecutorInfo.newBuilder()
         .setCommand(commandBuilder.build())
         .setExecutorId(ExecutorID.newBuilder().setValue(task.getDeploy().getCustomExecutorId().or(idGenerator.getNextExecutorId())))
@@ -452,18 +454,31 @@ class SingularityMesosTaskBuilder {
       commandBldr.setShell(false);
     }
 
-    for (SingularityMesosArtifact artifact : task.getDeploy().getUris().or(Collections.<SingularityMesosArtifact> emptyList())) {
-      commandBldr.addUris(URI.newBuilder()
-          .setValue(artifact.getUri())
-          .setCache(artifact.isCache())
-          .setExecutable(artifact.isExecutable())
-          .setExtract(artifact.isExtract())
-          .build());
-    }
+    List<SingularityMesosArtifact> combinedArtifacts = new ArrayList<>();
+    combinedArtifacts.addAll(task.getDeploy().getUris().or(Collections.emptyList()));
+    combinedArtifacts.addAll(task.getPendingTask().getExtraArtifacts());
+
+    prepareMesosUriDownloads(combinedArtifacts, commandBldr);
 
     prepareEnvironment(task, taskId, commandBldr, offerHolder, ports);
 
     bldr.setCommand(commandBldr);
+  }
+
+  private void prepareMesosUriDownloads(List<SingularityMesosArtifact> extraArtifacts, CommandInfo.Builder commandBldr) {
+    for (SingularityMesosArtifact artifact : extraArtifacts) {
+      CommandInfo.URI.Builder uriBldr = URI.newBuilder()
+          .setValue(artifact.getUri())
+          .setCache(artifact.isCache())
+          .setExecutable(artifact.isExecutable())
+          .setExtract(artifact.isExtract());
+
+      if (artifact.getOutputFile().isPresent()) {
+        uriBldr.setOutputFile(artifact.getOutputFile().get());
+      }
+
+      commandBldr.addUris(uriBldr.build());
+    }
   }
 
 }
