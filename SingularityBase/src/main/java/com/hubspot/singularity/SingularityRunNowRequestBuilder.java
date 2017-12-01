@@ -63,11 +63,6 @@ public class SingularityRunNowRequestBuilder {
     return this;
   }
 
-  public SingularityRunNowRequestBuilder setMessage(Optional<String> message) {
-    this.message = message;
-    return this;
-  }
-
   public SingularityRunNowRequestBuilder setEnvOverrides(Map<String, String> environmentVariables) {
     this.envOverrides = environmentVariables;
     return this;
