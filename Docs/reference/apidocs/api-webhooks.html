@@ -51,7 +51,7 @@
         data-chapter-title="/api/webhooks"
         data-filepath="Docs/reference/apidocs/api-webhooks.md"
         data-basepath="../../.."
-        data-revision="Thu Nov 30 2017 09:25:52 GMT-0500 (EST)"
+        data-revision="Fri Dec 01 2017 16:33:41 GMT-0500 (EST)"
         data-innerlanguage="">
     
 
@@ -296,6 +296,27 @@
                         Releases
                     </a>
             
+            
+            <ul class="articles">
+                
+    
+        <li class="chapter " data-level="4.1" data-path="Docs/reference/upgrading-to-mesos-1.html">
+            
+                
+                    <a href="../../../Docs/reference/upgrading-to-mesos-1.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>4.1.</b>
+                        
+                        Upgrading to Mesos 1.x
+                    </a>
+            
+            
+        </li>
+    
+
+            </ul>
             
         </li>
     
@@ -1315,48 +1336,6 @@
 </tbody>
 </table>
 <hr>
-<h4 id="get-apiwebhooks"><strong>GET</strong> <code>/api/webhooks</code></h4>
-<p>Retrieve a list of active webhooks.</p>
-<h6 id="parameters">Parameters</h6>
-<p><strong>body</strong></p>
-<table>
-<thead>
-<tr>
-<th>Parameter</th>
-<th>Required</th>
-<th>Description</th>
-<th>Data Type</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>body</td>
-<td>false</td>
-<td></td>
-<td><a href="models.html#model-linkType">SingularityUser</a>&lt;/a&gt;</td>
-</tr>
-</tbody>
-</table>
-<h6 id="response">Response</h6>
-<p><a href="models.html#model-SingularityWebhook">List[SingularityWebhook]</a></p>
-<h6 id="errors">Errors</h6>
-<table>
-<thead>
-<tr>
-<th>Status Code</th>
-<th>Reason</th>
-<th>Response Model</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>-</td>
-<td>-</td>
-<td>-</td>
-</tr>
-</tbody>
-</table>
-<hr>
 <h4 id="post-apiwebhooks"><strong>POST</strong> <code>/api/webhooks</code></h4>
 <p>Add a new webhook.</p>
 <h6 id="parameters">Parameters</h6>
@@ -1381,6 +1360,48 @@
 </table>
 <h6 id="response">Response</h6>
 <p>string</p>
+<h6 id="errors">Errors</h6>
+<table>
+<thead>
+<tr>
+<th>Status Code</th>
+<th>Reason</th>
+<th>Response Model</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>-</td>
+<td>-</td>
+<td>-</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h4 id="get-apiwebhooks"><strong>GET</strong> <code>/api/webhooks</code></h4>
+<p>Retrieve a list of active webhooks.</p>
+<h6 id="parameters">Parameters</h6>
+<p><strong>body</strong></p>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Required</th>
+<th>Description</th>
+<th>Data Type</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>body</td>
+<td>false</td>
+<td></td>
+<td><a href="models.html#model-linkType">SingularityUser</a>&lt;/a&gt;</td>
+</tr>
+</tbody>
+</table>
+<h6 id="response">Response</h6>
+<p><a href="models.html#model-SingularityWebhook">List[SingularityWebhook]</a></p>
 <h6 id="errors">Errors</h6>
 <table>
 <thead>
