@@ -224,6 +224,32 @@ public class SingularityMesosTaskBuilderTest {
   }
 
   @Test
+  public void testGetPortByIndex() throws Exception{
+    taskResources = new Resources(1, 1, 4, 0);
+
+    final Protos.Resource portsResource = Protos.Resource.newBuilder()
+        .setName("ports")
+        .setType(Protos.Value.Type.RANGES)
+        .setRanges(Protos.Value.Ranges.newBuilder()
+            .addRange(Protos.Value.Range.newBuilder()
+                .setBegin(31003)
+                .setEnd(31004).build())
+            .addRange(Protos.Value.Range.newBuilder()
+                .setBegin(31000)
+                .setEnd(31001).build())
+            .build()).build();
+
+    final SingularityRequest request = new SingularityRequestBuilder("test", RequestType.WORKER).build();
+    final SingularityDeploy deploy = new SingularityDeployBuilder("test", "1")
+        .setCommand(Optional.of("/bin/echo"))
+        .setArguments(Optional.of(Collections.singletonList("wat")))
+        .build();
+    final SingularityTaskRequest taskRequest = new SingularityTaskRequest(request, deploy, pendingTask);
+    final SingularityMesosTaskHolder task = builder.buildTask(offerHolder, Collections.singletonList(portsResource), taskRequest, taskResources, executorResources);
+    assertEquals(31003L, task.getTask().getPortByIndex(2).get().longValue());
+  }
+
+  @Test
   public void testDockerMinimalNetworking() {
     taskResources = new Resources(1, 1, 0, 0);
 

@@ -8,6 +8,9 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
+import com.hubspot.mesos.protos.MesosRangeObject;
+import com.hubspot.mesos.protos.MesosResourceObject;
 import com.hubspot.mesos.protos.MesosStringValue;
 import com.hubspot.mesos.protos.MesosOfferObject;
 import com.hubspot.mesos.protos.MesosTaskObject;
@@ -78,6 +81,36 @@ public class SingularityTask extends SingularityTaskIdHolder {
   @JsonIgnore
   public String getHostname() {
     return offers.get(0).getHostname();
+  }
+
+  @JsonIgnore
+  public Optional<Long> getPortByIndex(int index) {
+    Optional<MesosResourceObject> maybePortResource = getPortsResource();
+    final List<Long> ports = Lists.newArrayList();
+    if (maybePortResource.isPresent() && maybePortResource.get().hasRanges()) {
+      List<MesosRangeObject> portRanges = maybePortResource.get().getRanges().getRangesList();
+      for (MesosRangeObject range : portRanges) {
+        for (long port = range.getBegin(); port <= range.getEnd(); port++) {
+          ports.add(port);
+        }
+      }
+    }
+    if (index >= ports.size() || index < 0) {
+      return Optional.absent();
+    } else {
+      Collections.sort(ports); // ports are always in ascending order
+      return Optional.of(ports.get(index));
+    }
+  }
+
+  @JsonIgnore
+  private Optional<MesosResourceObject> getPortsResource() {
+    for (MesosResourceObject resourceObject : mesosTask.getResources()) {
+      if (resourceObject.hasName() && resourceObject.getName().equals("ports")) {
+        return Optional.of(resourceObject);
+      }
+    }
+    return Optional.absent();
   }
 
   @Override
