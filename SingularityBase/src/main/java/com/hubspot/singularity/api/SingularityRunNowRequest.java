@@ -19,6 +19,7 @@ public class SingularityRunNowRequest {
   private final Optional<List<String>> commandLineArgs;
   private final Optional<Boolean> skipHealthchecks;
   private final Optional<Resources> resources;
+  private final Optional<String> runAsUserOverride;
   private final Map<String, String> envOverrides;
   private final List<SingularityMesosArtifact> extraArtifacts;
   private final Optional<Long> runAt;
@@ -30,7 +31,7 @@ public class SingularityRunNowRequest {
       Optional<List<String>> commandLineArgs,
       Optional<Resources> resources
   ) {
-    this(message, skipHealthchecks, runId, commandLineArgs, resources, null, null, Optional.absent());
+    this(message, skipHealthchecks, runId, commandLineArgs, resources, Optional.absent(), null, null, Optional.absent());
   }
 
   @JsonCreator
@@ -39,6 +40,7 @@ public class SingularityRunNowRequest {
                                   @JsonProperty("runId") Optional<String> runId,
                                   @JsonProperty("commandLineArgs") Optional<List<String>> commandLineArgs,
                                   @JsonProperty("resources") Optional<Resources> resources,
+                                  @JsonProperty("runAsUserOverride") Optional<String> runAsUserOverride,
                                   @JsonProperty("envOverrides") Map<String, String> envOverrides,
                                   @JsonProperty("extraArtifacts") List<SingularityMesosArtifact> extraArtifacts,
                                   @JsonProperty("runAt") Optional<Long> runAt) {
@@ -47,6 +49,7 @@ public class SingularityRunNowRequest {
     this.runId = runId;
     this.skipHealthchecks = skipHealthchecks;
     this.resources = resources;
+    this.runAsUserOverride = runAsUserOverride;
 
     if (Objects.nonNull(envOverrides)) {
       this.envOverrides = envOverrides;
@@ -88,6 +91,11 @@ public class SingularityRunNowRequest {
     return resources;
   }
 
+  @ApiModelProperty(required=false, value="Override the user under which this task's command will be launched.")
+  public Optional<String> getRunAsUserOverride() {
+    return runAsUserOverride;
+  }
+
   @ApiModelProperty(required=false, value="Override the environment variables for launched tasks")
   public Map<String, String> getEnvOverrides() {
     return envOverrides;
@@ -111,6 +119,7 @@ public class SingularityRunNowRequest {
         ", commandLineArgs=" + commandLineArgs +
         ", skipHealthchecks=" + skipHealthchecks +
         ", resources=" + resources +
+        ", runAsUserOverride=" + runAsUserOverride +
         ", envOverrides=" + envOverrides +
         ", extraArtifacts=" + extraArtifacts +
         ", runAt=" + runAt +

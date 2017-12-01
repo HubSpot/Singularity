@@ -23,6 +23,7 @@ public class SingularityPendingTask {
   private final Optional<Boolean> skipHealthchecks;
   private final Optional<String> message;
   private final Optional<Resources> resources;
+  private final Optional<String> runAsUserOverride;
   private final Map<String, String> envOverrides;
   private final List<SingularityMesosArtifact> extraArtifacts;
   private final Optional<String> actionId;
@@ -57,6 +58,7 @@ public class SingularityPendingTask {
                                 @JsonProperty("skipHealthchecks") Optional<Boolean> skipHealthchecks,
                                 @JsonProperty("message") Optional<String> message,
                                 @JsonProperty("resources") Optional<Resources> resources,
+                                @JsonProperty("runAsUserOverride") Optional<String> runAsUserOverride,
                                 @JsonProperty("envOverrides") Map<String, String> envOverrides,
                                 @JsonProperty("extraArtifacts") List<SingularityMesosArtifact> extraArtifacts,
                                 @JsonProperty("actionId") Optional<String> actionId) {
@@ -67,6 +69,7 @@ public class SingularityPendingTask {
     this.runId = runId;
     this.skipHealthchecks = skipHealthchecks;
     this.resources = resources;
+    this.runAsUserOverride = runAsUserOverride;
 
     if (Objects.nonNull(envOverrides)) {
       this.envOverrides = envOverrides;
@@ -128,6 +131,10 @@ public class SingularityPendingTask {
     return resources;
   }
 
+  public Optional<String> getRunAsUserOverride() {
+    return runAsUserOverride;
+  }
+
   public Map<String, String> getEnvOverrides() { return envOverrides; }
 
   public List<SingularityMesosArtifact> getExtraArtifacts() {
@@ -148,6 +155,7 @@ public class SingularityPendingTask {
         ", skipHealthchecks=" + skipHealthchecks +
         ", message=" + message +
         ", resources=" + resources +
+        ", runAsUserOverride=" + runAsUserOverride +
         ", envOverrides=" + envOverrides +
         ", extraArtifacts" + extraArtifacts +
         ", actionId=" + actionId +

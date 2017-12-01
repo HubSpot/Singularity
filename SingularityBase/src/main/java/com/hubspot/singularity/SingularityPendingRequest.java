@@ -28,17 +28,18 @@ public class SingularityPendingRequest {
   private final Optional<String> message;
   private final Optional<String> actionId;
   private final Optional<Resources> resources;
+  private final Optional<String> runAsUserOverride;
   private final Map<String, String> envOverrides;
   private final List<SingularityMesosArtifact> extraArtifacts;
   private final Optional<Long> runAt;
 
   public SingularityPendingRequest(String requestId, String deployId, long timestamp, Optional<String> user, PendingType pendingType, Optional<Boolean> skipHealthchecks, Optional<String> message) {
-    this(requestId, deployId, timestamp, user, pendingType, Optional.<List<String>> absent(), Optional.<String> absent(), skipHealthchecks, message, Optional.<String> absent(), Optional.<Resources>absent(), null, null, Optional.<Long> absent());
+    this(requestId, deployId, timestamp, user, pendingType, Optional.<List<String>> absent(), Optional.<String> absent(), skipHealthchecks, message, Optional.<String> absent(), Optional.<Resources>absent(), Optional.absent(), null, null, Optional.<Long> absent());
   }
 
   public SingularityPendingRequest(String requestId, String deployId, long timestamp, Optional<String> user, PendingType pendingType, Optional<List<String>> cmdLineArgsList,
     Optional<String> runId, Optional<Boolean> skipHealthchecks, Optional<String> message, Optional<String> actionId) {
-    this(requestId, deployId, timestamp, user, pendingType, cmdLineArgsList, runId, skipHealthchecks, message, actionId, Optional.<Resources>absent(), null, null, Optional.<Long>absent());
+    this(requestId, deployId, timestamp, user, pendingType, cmdLineArgsList, runId, skipHealthchecks, message, actionId, Optional.<Resources>absent(), Optional.absent(), null, null, Optional.<Long>absent());
   }
 
   @JsonCreator
@@ -53,6 +54,7 @@ public class SingularityPendingRequest {
                                    @JsonProperty("message") Optional<String> message,
                                    @JsonProperty("actionId") Optional<String> actionId,
                                    @JsonProperty("resources") Optional<Resources> resources,
+                                   @JsonProperty("runAsUserOverride") Optional<String> runAsUserOverride,
                                    @JsonProperty("envOverrides") Map<String, String> envOverrides,
                                    @JsonProperty("extraArtifacts") List<SingularityMesosArtifact> extraArtifacts,
                                    @JsonProperty("runAt") Optional<Long> runAt) {
@@ -67,6 +69,7 @@ public class SingularityPendingRequest {
     this.message = message;
     this.actionId = actionId;
     this.resources = resources;
+    this.runAsUserOverride = runAsUserOverride;
 
     if (Objects.nonNull(envOverrides)) {
       this.envOverrides = envOverrides;
@@ -127,7 +130,13 @@ public class SingularityPendingRequest {
     return resources;
   }
 
-  public Map<String, String> getEnvOverrides() { return envOverrides; }
+  public Map<String, String> getEnvOverrides() {
+    return envOverrides;
+  }
+
+  public Optional<String> getRunAsUserOverride() {
+    return runAsUserOverride;
+  }
 
   public List<SingularityMesosArtifact> getExtraArtifacts() {
     return extraArtifacts;
@@ -152,6 +161,7 @@ public class SingularityPendingRequest {
         ", message=" + message +
         ", actionId=" + actionId +
         ", resources=" + resources +
+        ", runAsUserOverride=" + runAsUserOverride +
         ", envOverrides=" + envOverrides +
         ", extraArtifacts=" + extraArtifacts +
         ", runAt=" + runAt +
