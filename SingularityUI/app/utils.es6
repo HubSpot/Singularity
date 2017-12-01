@@ -461,7 +461,7 @@ const Utils = {
       'SYSTEM_COOLDOWN': {'color': 'color-warning', 'icon':'warning-sign'},
       'PENDING': {'color': 'color-info', 'icon':'hourglass'},
       'CLEANING': {'color': 'color-cleaning', 'icon':'erase'},
-    }[state]
+    }[state] || {'color': 'color-info', 'icon':'question-sign'}
   },
 
   enums: {
