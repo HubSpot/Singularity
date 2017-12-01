@@ -117,15 +117,7 @@ class SingularityMesosTaskBuilder {
     Optional<String> requiredRole = taskRequest.getRequest().getRequiredRole();
     bldr.addResources(MesosUtils.getCpuResource(desiredTaskResources.getCpus(), requiredRole));
     bldr.addResources(MesosUtils.getMemoryResource(desiredTaskResources.getMemoryMb(), requiredRole));
-
-    if (desiredTaskResources.getDiskMb() > 0) {
-      bldr.addResources(MesosUtils.getDiskResource(desiredTaskResources.getDiskMb(), requiredRole));
-    } else if (MesosUtils.getDisk(offerHolder.getCurrentResources(), Optional.absent()) >= 1.0) {
-      // If this offer contains 1MB of disk resources, claim it to enable disk usage reporting.
-      // This is just a temporary hack to enable disk usage reporting where we can, not an actual way to match task disk requirements to offers.
-      offerHolder.subtractResources(Collections.singletonList(MesosUtils.getDiskResource(1.0, Optional.absent())));
-      bldr.addResources(MesosUtils.getDiskResource(1.0, requiredRole));
-    }
+    bldr.addResources(MesosUtils.getDiskResource(desiredTaskResources.getDiskMb(), requiredRole));
 
     bldr.setAgentId(offerHolder.getOffers().get(0).getAgentId());
 
