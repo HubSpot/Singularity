@@ -89,7 +89,6 @@ public class SingularityTask extends SingularityTaskIdHolder {
     final List<Long> ports = Lists.newArrayList();
     if (maybePortResource.isPresent() && maybePortResource.get().hasRanges()) {
       List<MesosRangeObject> portRanges = maybePortResource.get().getRanges().getRangesList();
-      System.out.println(portRanges);
       for (MesosRangeObject range : portRanges) {
         for (long port = range.getBegin(); port <= range.getEnd(); port++) {
           ports.add(port);
@@ -99,6 +98,7 @@ public class SingularityTask extends SingularityTaskIdHolder {
     if (index >= ports.size() || index < 0) {
       return Optional.absent();
     } else {
+      Collections.sort(ports); // ports are always in ascending order
       return Optional.of(ports.get(index));
     }
   }

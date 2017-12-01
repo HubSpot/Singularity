@@ -224,7 +224,7 @@ public class SingularityMesosTaskBuilderTest {
   }
 
   @Test
-  public void testGetPortByIndex() {
+  public void testGetPortByIndex() throws Exception{
     taskResources = new Resources(1, 1, 4, 0);
 
     final Protos.Resource portsResource = Protos.Resource.newBuilder()
@@ -232,11 +232,11 @@ public class SingularityMesosTaskBuilderTest {
         .setType(Protos.Value.Type.RANGES)
         .setRanges(Protos.Value.Ranges.newBuilder()
             .addRange(Protos.Value.Range.newBuilder()
-                .setBegin(31000)
-                .setEnd(31001).build())
-            .addRange(Protos.Value.Range.newBuilder()
                 .setBegin(31003)
                 .setEnd(31004).build())
+            .addRange(Protos.Value.Range.newBuilder()
+                .setBegin(31000)
+                .setEnd(31001).build())
             .build()).build();
 
     final SingularityRequest request = new SingularityRequestBuilder("test", RequestType.WORKER).build();
