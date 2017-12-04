@@ -63,7 +63,7 @@ database:
   url: jdbc:mysql://[database host]:[database port]/[database name]
 
 mesos:
-  master: [comma separated list of mesos master host:post]
+  master: [comma separated list of mesos master host:port]
   defaultCpus: 1
   defaultMemory: 128
   frameworkName: Singularity
