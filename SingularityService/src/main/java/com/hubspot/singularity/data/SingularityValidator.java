@@ -443,6 +443,7 @@ public class SingularityValidator {
         runNowRequest.getMessage(),
         Optional.absent(),
         runNowRequest.getResources(),
+        runNowRequest.getRunAsUserOverride(),
         runNowRequest.getEnvOverrides(),
         runNowRequest.getExtraArtifacts(),
         runNowRequest.getRunAt()
@@ -458,6 +459,7 @@ public class SingularityValidator {
           Optional.of(getRunId(request.getRunId())),
           request.getCommandLineArgs(),
           request.getResources(),
+          request.getRunAsUserOverride(),
           request.getEnvOverrides(),
           request.getExtraArtifacts(),
           request.getRunAt());

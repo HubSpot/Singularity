@@ -290,6 +290,7 @@ public class SingularityDeployChecker {
           .setMessage(runNowRequest.getMessage()
               .or(pendingDeploy.getDeployMarker().getMessage()))
           .setResources(runNowRequest.getResources())
+          .setRunAsUserOverride(runNowRequest.getRunAsUserOverride())
           .setEnvOverrides(runNowRequest.getEnvOverrides())
           .setExtraArtifacts(runNowRequest.getExtraArtifacts())
           .setRunAt(runNowRequest.getRunAt());

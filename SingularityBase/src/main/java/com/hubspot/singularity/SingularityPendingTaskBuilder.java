@@ -17,6 +17,7 @@ public class SingularityPendingTaskBuilder {
   private Optional<Boolean> skipHealthchecks;
   private Optional<String> message;
   private Optional<Resources> resources;
+  private Optional<String> runAsUserOverride;
   private Map<String, String> envOverrides;
   private List<SingularityMesosArtifact> extraArtifacts;
   private Optional<String> actionId;
@@ -29,6 +30,7 @@ public class SingularityPendingTaskBuilder {
     this.skipHealthchecks = Optional.absent();
     this.message = Optional.absent();
     this.resources = Optional.absent();
+    this.runAsUserOverride = Optional.absent();
     this.envOverrides = Collections.emptyMap();
     this.extraArtifacts = Collections.emptyList();
     this.actionId = Optional.absent();
@@ -80,6 +82,11 @@ public class SingularityPendingTaskBuilder {
     return this;
   }
 
+  public SingularityPendingTaskBuilder setRunAsUserOverride(Optional<String> runAsUserOverride) {
+    this.runAsUserOverride = runAsUserOverride;
+    return this;
+  }
+
   public SingularityPendingTaskBuilder setEnvOverrides(Map<String, String> envOverrides) {
     this.envOverrides = envOverrides;
     return this;
@@ -97,7 +104,7 @@ public class SingularityPendingTaskBuilder {
 
   public SingularityPendingTask build() {
     return new SingularityPendingTask(
-        pendingTaskId, cmdLineArgsList, user, runId, skipHealthchecks, message, resources, envOverrides, extraArtifacts, actionId
+        pendingTaskId, cmdLineArgsList, user, runId, skipHealthchecks, message, resources, runAsUserOverride, envOverrides, extraArtifacts, actionId
     );
   }
 
@@ -111,6 +118,7 @@ public class SingularityPendingTaskBuilder {
         ", skipHealthchecks=" + skipHealthchecks +
         ", message=" + message +
         ", resources=" + resources +
+        ", runAsUserOverride=" + runAsUserOverride +
         ", envOverrides=" + envOverrides +
         ", extraArtifacts=" + extraArtifacts +
         ", actionId=" + actionId +
