@@ -1,4 +1,4 @@
-package com.hubspot.singularity.resources.views;
+package com.hubspot.singularity.views;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 

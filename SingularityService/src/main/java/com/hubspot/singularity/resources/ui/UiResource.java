@@ -11,7 +11,7 @@ import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import com.hubspot.singularity.resources.SingularityServiceUIModule;
 import com.hubspot.singularity.config.IndexViewConfiguration;
-import com.hubspot.singularity.resources.views.IndexView;
+import com.hubspot.singularity.views.IndexView;
 
 /**
  * Serves as the base for the UI, returns the mustache view for the actual GUI.
