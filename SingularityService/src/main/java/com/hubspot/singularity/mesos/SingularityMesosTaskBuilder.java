@@ -363,6 +363,9 @@ class SingularityMesosTaskBuilder {
     return builder.build();
   }
 
+  /**
+   * Prepares the Mesos TaskInfo object when using our custom SingularityExecutor.
+   */
   private void prepareCustomExecutor(final TaskInfo.Builder bldr, final SingularityTaskId taskId, final SingularityTaskRequest task, final SingularityOfferHolder offerHolder,
       final Optional<long[]> ports, final Resources desiredExecutorResources) {
     CommandInfo.Builder commandBuilder = CommandInfo.newBuilder().setValue(task.getDeploy().getCustomExecutorCmd().get());
@@ -414,6 +417,10 @@ class SingularityMesosTaskBuilder {
       Optional<String> maybeS3StorageClass = configuration.getS3ConfigurationOptional().isPresent() ? configuration.getS3ConfigurationOptional().get().getS3StorageClass() : Optional.<String>absent();
       Optional<Long> maybeApplyAfterBytes = configuration.getS3ConfigurationOptional().isPresent() ? configuration.getS3ConfigurationOptional().get().getApplyS3StorageClassAfterBytes() : Optional.<Long>absent();
 
+      if (task.getPendingTask().getRunAsUserOverride().isPresent()) {
+        executorDataBldr.setUser(task.getPendingTask().getRunAsUserOverride());
+      }
+
       final SingularityTaskExecutorData executorData = new SingularityTaskExecutorData(executorDataBldr.build(), uploaderAdditionalFiles, defaultS3Bucket, s3UploaderKeyPattern,
           configuration.getCustomExecutorConfiguration().getServiceLog(), configuration.getCustomExecutorConfiguration().getServiceFinishedTailLog(), task.getRequest().getGroup(),
           maybeS3StorageClass, maybeApplyAfterBytes);
@@ -430,12 +437,15 @@ class SingularityMesosTaskBuilder {
     }
   }
 
-
+  /**
+   * Prepares the Mesos TaskInfo object when using the Mesos Default Executor.
+   */
   private void prepareCommand(final TaskInfo.Builder bldr, final SingularityTaskId taskId, final SingularityTaskRequest task, final SingularityOfferHolder offerHolder, final Optional<long[]> ports) {
     CommandInfo.Builder commandBldr = CommandInfo.newBuilder();
 
-    if (task.getDeploy().getUser().isPresent()) {
-      commandBldr.setUser(task.getDeploy().getUser().get());
+    Optional<String> specifiedUser = task.getPendingTask().getRunAsUserOverride().or(task.getDeploy().getUser());
+    if (specifiedUser.isPresent()) {
+      commandBldr.setUser(specifiedUser.get());
     }
 
     if (task.getDeploy().getCommand().isPresent()) {

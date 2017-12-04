@@ -22,6 +22,7 @@ public class SingularityPendingRequestBuilder {
   private Optional<String> message;
   private Optional<String> actionId;
   private Optional<Resources> resources;
+  private Optional<String> runAsUserOverride;
   private Map<String, String> envOverrides;
   private List<SingularityMesosArtifact> extraArtifacts;
   private Optional<Long> runAt;
@@ -34,6 +35,7 @@ public class SingularityPendingRequestBuilder {
     this.message = Optional.absent();
     this.actionId = Optional.absent();
     this.resources = Optional.absent();
+    this.runAsUserOverride = Optional.absent();
     this.envOverrides = Collections.emptyMap();
     this.extraArtifacts = Collections.emptyList();
     this.runAt = Optional.absent();
@@ -124,6 +126,11 @@ public class SingularityPendingRequestBuilder {
     return this;
   }
 
+  public SingularityPendingRequestBuilder setRunAsUserOverride(Optional<String> runAsUserOverride) {
+    this.runAsUserOverride = runAsUserOverride;
+    return this;
+  }
+
   public SingularityPendingRequestBuilder setEnvOverrides(Map<String, String> envOverrides) {
     this.envOverrides = envOverrides;
     return this;
@@ -157,6 +164,7 @@ public class SingularityPendingRequestBuilder {
         message,
         actionId,
         resources,
+        runAsUserOverride,
         envOverrides,
         extraArtifacts,
         runAt
@@ -177,6 +185,7 @@ public class SingularityPendingRequestBuilder {
         ", message" + message +
         ", actionId" + actionId +
         ", resources" + resources +
+        ", runAsUserOverride" + runAsUserOverride +
         ", envOverrides" + envOverrides +
         ", extraArtifacts" + extraArtifacts +
         ", runAt" + runAt +
