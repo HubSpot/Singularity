@@ -70,7 +70,6 @@
     <module>EmbedSingularityExample</module>
     <module>SingularityServiceIntegrationTests</module>
     <module>SingularityUI</module>
-    <module>SingularityServiceBase</module>
   </modules>
 
   <dependencyManagement>
@@ -134,13 +133,6 @@
         <artifactId>SingularityExecutorCleanup</artifactId>
         <version>${project.version}</version>
       </dependency>
-
-      <dependency>
-        <groupId>com.hubspot</groupId>
-        <artifactId>SingularityServiceBase</artifactId>
-        <version>${project.version}</version>
-      </dependency>
-
 
       <dependency>
         <groupId>com.hubspot</groupId>
