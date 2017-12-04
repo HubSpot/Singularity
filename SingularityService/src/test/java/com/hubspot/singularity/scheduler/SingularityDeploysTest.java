@@ -3,6 +3,7 @@ package com.hubspot.singularity.scheduler;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import javax.ws.rs.WebApplicationException;
@@ -927,7 +928,9 @@ public class SingularityDeploysTest extends SingularitySchedulerTestBase {
     SingularityTaskId taskId = taskManager.getActiveTaskIdsForDeploy(requestId, deployId).get(0);
     SingularityTask task = taskManager.getTask(taskId).get();
 
-    Assert.assertEquals("printenv > tmp.txt", task.getMesosTask().getCommand().getValue());
+    Map<String, Object> command = (Map<String, Object>) task.getMesosTask().getAllOtherFields().get("command");
+
+    Assert.assertEquals("printenv > tmp.txt", (String) command.get("value"));
   }
 
   @Test

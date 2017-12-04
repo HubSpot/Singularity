@@ -17,7 +17,8 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import com.hubspot.mesos.JavaUtils;
-import com.hubspot.mesos.json.SingularityMesosTaskStatusObject;
+import com.hubspot.singularity.helpers.MesosProtosUtils;
+import com.hubspot.singularity.helpers.MesosUtils;
 import com.hubspot.singularity.ExtendedTaskState;
 import com.hubspot.singularity.InvalidSingularityTaskIdException;
 import com.hubspot.singularity.SingularityCreateResult;
@@ -55,6 +56,7 @@ public class SingularityMesosStatusUpdateHandler {
   private final SingularityMesosExecutorInfoSupport logSupport;
   private final SingularityScheduler scheduler;
   private final SingularityLeaderCache leaderCache;
+  private final MesosProtosUtils mesosProtosUtils;
   private final String serverId;
   private final SingularityMesosSchedulerClient schedulerClient;
   private final SingularitySchedulerLock schedulerLock;
@@ -79,6 +81,7 @@ public class SingularityMesosStatusUpdateHandler {
                                              SingularitySchedulerLock schedulerLock,
                                              SingularityConfiguration configuration,
                                              SingularityLeaderCache leaderCache,
+                                             MesosProtosUtils mesosProtosUtils,
                                              @Named(SingularityMesosModule.TASK_LOST_REASONS_COUNTER) Multiset<Protos.TaskStatus.Reason> taskLostReasons,
                                              @Named(SingularityMainModule.LOST_TASKS_METER) Meter lostTasksMeter,
                                              @Named(SingularityMainModule.STATUS_UPDATE_DELTAS) ConcurrentHashMap<Long, Long> statusUpdateDeltas) {
@@ -93,6 +96,7 @@ public class SingularityMesosStatusUpdateHandler {
     this.logSupport = logSupport;
     this.scheduler = scheduler;
     this.leaderCache = leaderCache;
+    this.mesosProtosUtils = mesosProtosUtils;
     this.serverId = serverId;
     this.schedulerClient = schedulerClient;
     this.schedulerLock = schedulerLock;
@@ -180,9 +184,9 @@ public class SingularityMesosStatusUpdateHandler {
 
     final SingularityTaskId taskIdObj = maybeTaskId.get();
 
-    final SingularityTaskStatusHolder newTaskStatusHolder = new SingularityTaskStatusHolder(taskIdObj, Optional.of(SingularityMesosTaskStatusObject.fromProtos(status)), System.currentTimeMillis(), serverId, Optional.<String>absent());
+    final SingularityTaskStatusHolder newTaskStatusHolder = new SingularityTaskStatusHolder(taskIdObj, Optional.of(mesosProtosUtils.taskStatusFromProtos(status)), System.currentTimeMillis(), serverId, Optional.<String>absent());
     final Optional<SingularityTaskStatusHolder> previousTaskStatusHolder = taskManager.getLastActiveTaskStatus(taskIdObj);
-    final ExtendedTaskState taskState = ExtendedTaskState.fromTaskState(status.getState());
+    final ExtendedTaskState taskState = MesosUtils.fromTaskState(status.getState());
 
     if (isDuplicateOrIgnorableStatusUpdate(previousTaskStatusHolder, newTaskStatusHolder)) {
       LOG.trace("Ignoring status update {} to {}", taskState, taskIdObj);
@@ -243,6 +247,8 @@ public class SingularityMesosStatusUpdateHandler {
 
       scheduler.handleCompletedTask(task, taskIdObj, isActiveTask, timestamp, taskState, taskHistoryUpdateCreateResult, status);
     }
+
+    System.out.println(newTaskStatusHolder);
 
     saveNewTaskStatusHolder(taskIdObj, newTaskStatusHolder, taskState);
   }

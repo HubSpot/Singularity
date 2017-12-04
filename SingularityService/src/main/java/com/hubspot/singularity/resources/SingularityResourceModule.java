@@ -4,7 +4,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Scopes;
-import com.hubspot.singularity.SingularityServiceBaseModule;
 import com.hubspot.singularity.config.UIConfiguration;
 import com.hubspot.singularity.guice.GuicePropertyFilteringMessageBodyWriter;
 
@@ -42,6 +41,6 @@ public class SingularityResourceModule extends AbstractModule {
     bind(InactiveSlaveResource.class);
     bind(TaskTrackerResource.class);
 
-    install(new SingularityServiceBaseModule(uiConfiguration));
+    install(new SingularityServiceUIModule(uiConfiguration));
   }
 }

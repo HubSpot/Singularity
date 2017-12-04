@@ -30,6 +30,7 @@ import com.hubspot.singularity.config.UIConfiguration;
 import com.hubspot.singularity.config.shell.ShellCommandDescriptor;
 import com.hubspot.singularity.config.shell.ShellCommandOptionDescriptor;
 import com.hubspot.singularity.data.transcoders.Transcoder;
+import com.hubspot.singularity.helpers.MesosProtosUtils;
 import com.hubspot.singularity.resources.TaskResource;
 import com.hubspot.singularity.scheduler.SingularitySchedulerTestBase;
 import com.hubspot.singularity.scheduler.SingularityTaskShellCommandDispatchPoller;
@@ -46,6 +47,8 @@ public class SingularityTaskShellCommandTest extends SingularitySchedulerTestBas
   private Transcoder<SingularityTaskShellCommandUpdate> updateTranscoder;
   @Inject
   private UIConfiguration uiConfiguration;
+  @Inject
+  private MesosProtosUtils mesosProtosUtils;
 
   public SingularityTaskShellCommandTest() {
     super(false);
@@ -94,20 +97,20 @@ public class SingularityTaskShellCommandTest extends SingularitySchedulerTestBas
     assertEquals(2, taskManager.getTaskShellCommandRequestsForTask(task.getTaskId()).size());
 
     mesosScheduler.message(Event.Message.newBuilder()
-        .setExecutorId(task.getMesosTask().getExecutor().getExecutorId())
-        .setAgentId(task.getMesosTask().getAgentId())
+        .setExecutorId(MesosProtosUtils.toExecutorId(task.getMesosTask().getExecutor().getExecutorId()))
+        .setAgentId(MesosProtosUtils.toAgentId(task.getMesosTask().getAgentId()))
         .setData(ByteString.copyFrom(updateTranscoder.toBytes(new SingularityTaskShellCommandUpdate(firstShellRequest.getId(), System.currentTimeMillis(), Optional.<String> of("hi"), Optional.<String>absent(), UpdateType.STARTED))))
         .build());
 
     mesosScheduler.message(Event.Message.newBuilder()
-        .setExecutorId(task.getMesosTask().getExecutor().getExecutorId())
-        .setAgentId(task.getMesosTask().getAgentId())
+        .setExecutorId(MesosProtosUtils.toExecutorId(task.getMesosTask().getExecutor().getExecutorId()))
+        .setAgentId(MesosProtosUtils.toAgentId(task.getMesosTask().getAgentId()))
         .setData(ByteString.copyFrom(updateTranscoder.toBytes(new SingularityTaskShellCommandUpdate(new SingularityTaskShellCommandRequestId(task.getTaskId(), "wat", System.currentTimeMillis()), System.currentTimeMillis(), Optional.<String> of("hi"), Optional.<String>absent(), UpdateType.STARTED))))
         .build());
 
     mesosScheduler.message(Event.Message.newBuilder()
-        .setExecutorId(task.getMesosTask().getExecutor().getExecutorId())
-        .setAgentId(task.getMesosTask().getAgentId())
+        .setExecutorId(MesosProtosUtils.toExecutorId(task.getMesosTask().getExecutor().getExecutorId()))
+        .setAgentId(MesosProtosUtils.toAgentId(task.getMesosTask().getAgentId()))
         .setData(ByteString.copyFrom(updateTranscoder.toBytes(new SingularityTaskShellCommandUpdate(new SingularityTaskShellCommandRequestId(new SingularityTaskId("makingitup", "did", System.currentTimeMillis(), 1, "host", "rack"), "wat", System.currentTimeMillis()), System.currentTimeMillis(), Optional.<String> of("hi"), Optional.<String>absent(), UpdateType.STARTED))))
         .build());
 
