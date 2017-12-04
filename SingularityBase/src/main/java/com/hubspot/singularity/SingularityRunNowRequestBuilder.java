@@ -15,6 +15,7 @@ public class SingularityRunNowRequestBuilder {
   private Optional<List<String>> commandLineArgs;
   private Optional<Boolean> skipHealthchecks;
   private Optional<Resources> resources;
+  private Optional<String> runAsUserOverride;
   private Map<String, String> envOverrides;
   private List<SingularityMesosArtifact> extraArtifacts;
   private Optional<Long> runAt;
@@ -27,6 +28,7 @@ public class SingularityRunNowRequestBuilder {
     this.skipHealthchecks = Optional.absent();
     this.resources = Optional.absent();
     this.extraArtifacts = Collections.emptyList();
+    this.runAsUserOverride = Optional.absent();
     this.envOverrides = Collections.emptyMap();
     this.extraArtifacts = Collections.emptyList();
     this.runAt = Optional.absent();
@@ -62,6 +64,11 @@ public class SingularityRunNowRequestBuilder {
     return this;
   }
 
+  public SingularityRunNowRequestBuilder setRunAsUserOverride(Optional<String> runAsUserOverride) {
+    this.runAsUserOverride = runAsUserOverride;
+    return this;
+  }
+
   public SingularityRunNowRequestBuilder setEnvOverrides(Map<String, String> environmentVariables) {
     this.envOverrides = environmentVariables;
     return this;
@@ -79,7 +86,7 @@ public class SingularityRunNowRequestBuilder {
 
   public SingularityRunNowRequest build() {
     return new SingularityRunNowRequest(
-        message, skipHealthchecks, runId, commandLineArgs, resources, envOverrides, extraArtifacts, runAt);
+        message, skipHealthchecks, runId, commandLineArgs, resources, runAsUserOverride, envOverrides, extraArtifacts, runAt);
   }
 
   @Override
@@ -91,6 +98,7 @@ public class SingularityRunNowRequestBuilder {
         ", skipHealthchecks=" + skipHealthchecks +
         ", resources=" + resources +
         ", extraArtifacts=" + extraArtifacts +
+        ", runNowUserOverride=" + runAsUserOverride +
         ", envOverrides=" + envOverrides +
         ", extraArtifacts=" + extraArtifacts +
         ", runAt=" + runAt +
