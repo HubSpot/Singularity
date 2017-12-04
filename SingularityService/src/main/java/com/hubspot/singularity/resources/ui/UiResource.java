@@ -9,19 +9,25 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
-import com.hubspot.singularity.SingularityServiceBaseModule;
+import com.hubspot.singularity.resources.SingularityServiceUIModule;
 import com.hubspot.singularity.config.IndexViewConfiguration;
 import com.hubspot.singularity.views.IndexView;
 
+/**
+ * Serves as the base for the UI, returns the mustache view for the actual GUI.
+ */
 @Singleton
-@Path("/{uiPath:.*}")
-public class StaticCatchallResource {
+@Path(UiResource.UI_RESOURCE_LOCATION + "{uiPath:.*}")
+public class UiResource {
+
+  public static final String UI_RESOURCE_LOCATION = "/ui/";
+
   private final IndexViewConfiguration configuration;
   private final String singularityUriBase;
   private final ObjectMapper mapper;
 
   @Inject
-  public StaticCatchallResource(@Named(SingularityServiceBaseModule.SINGULARITY_URI_BASE) String singularityUriBase, IndexViewConfiguration configuration, ObjectMapper mapper) {
+  public UiResource(@Named(SingularityServiceUIModule.SINGULARITY_URI_BASE) String singularityUriBase, IndexViewConfiguration configuration, ObjectMapper mapper) {
     this.configuration = configuration;
     this.singularityUriBase = singularityUriBase;
     this.mapper = mapper;
@@ -30,6 +36,6 @@ public class StaticCatchallResource {
   @GET
   @Produces(MediaType.TEXT_HTML)
   public IndexView getIndex() {
-    return new IndexView(singularityUriBase, "", configuration, mapper);
+    return new IndexView(singularityUriBase, UI_RESOURCE_LOCATION, configuration, mapper);
   }
 }
