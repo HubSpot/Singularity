@@ -11,11 +11,12 @@ import Utils from '../../utils';
 import UITable from '../common/table/UITable';
 import {
   Health,
-  InstanceNumberWithStartTime,
+  InstanceNumberWithHostname,
   Host,
   LastTaskState,
   DeployId,
   UpdatedAt,
+  StartedAt,
   LogLinkAndActions
 } from '../tasks/Columns';
 
@@ -67,10 +68,10 @@ const ActiveTasksTable = ({request, requestId, tasksAPI, healthyTaskIds, cleanin
         triggerOnDataSizeChange={fetchTaskHistoryForRequest}
       >
         {Health}
-        {InstanceNumberWithStartTime}
-        {Host}
+        {InstanceNumberWithHostname}
         {LastTaskState}
         {DeployId}
+        {StartedAt}
         {UpdatedAt}
         {LogLinkAndActions(config.runningTaskLogPath, Utils.maybe(request, ['request', 'requestType'], 'UNKNOWN'))}
       </UITable>

@@ -405,7 +405,7 @@ export const InstanceNumber = (
   />
 );
 
-export const InstanceNumberWithStartTime = (
+export const InstanceNumberWithHostname = (
   <Column
     label="Instance"
     id="instanceNo"
@@ -416,26 +416,7 @@ export const InstanceNumberWithStartTime = (
     cellRender={
       (cellData, rowData) => (
         <Link to={`task/${rowData.taskId ? rowData.taskId.id : rowData.id}`}>
-          {cellData} - launched {Utils.timestampFromNow(rowData.taskId ? rowData.taskId.startedAt : rowData.startedAt)}
-        </Link>
-      )
-    }
-    sortable={true}
-  />
-);
-
-export const InstanceNumberWithShortStartTime = (
-  <Column
-    label="Instance"
-    id="instanceNo"
-    key="instanceNo"
-    cellData={
-      (rowData) => rowData.instanceNo ? rowData.instanceNo : rowData.taskId.instanceNo
-    }
-    cellRender={
-      (cellData, rowData) => (
-        <Link to={`task/${rowData.taskId ? rowData.taskId.id : rowData.id}`}>
-          {cellData} - launched {Utils.timestampFromNowTextOnly(rowData.taskId ? rowData.taskId.startedAt : rowData.startedAt)}
+          {cellData} - {Utils.humanizeSlaveHostName(rowData.host ? rowData.host : rowData.taskId.host)}
         </Link>
       )
     }
