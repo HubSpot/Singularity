@@ -7,9 +7,10 @@ import Utils from '../../utils';
 import UITable from '../common/table/UITable';
 import {
   Health,
-  InstanceNumberWithShortStartTime,
+  InstanceNumberWithHostname,
   DeployId,
   UpdatedAt,
+  StartedAt,
   LogLinkAndActions,
   NextRun,
   PendingType,
@@ -140,8 +141,9 @@ export default class RequestSummaryBox extends Component {
         defaultSortBy="instanceNo"
       >
         {Health}
-        {InstanceNumberWithShortStartTime}
+        {InstanceNumberWithHostname}
         {DeployId}
+        {StartedAt}
         {UpdatedAt}
         {LogLinkAndActions(config.runningTaskLogPath, this.props.request.requestType)}
       </UITable>
