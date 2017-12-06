@@ -347,13 +347,17 @@ public class SmtpMailer implements SingularityMailer, Managed {
   private List<SingularityEmailDestination> getDestination(SingularityRequest request, SingularityEmailType type) {
     // check for request-level email override
     if (request.getEmailConfigurationOverrides().isPresent() && request.getEmailConfigurationOverrides().get().get(type) != null) {
+      LOG.debug("Request level configuration found {} for type {}", request.getEmailConfigurationOverrides().get(), type);
       return request.getEmailConfigurationOverrides().get().get(type);
     }
 
     List<SingularityEmailDestination> fromMap = smtpConfiguration.getEmailConfiguration().get(type);
     if (fromMap == null) {
+      LOG.debug("No configurations found for type {} -- {}", type, smtpConfiguration);
       return Collections.emptyList();
     }
+
+    LOG.debug("Using configuration for type {} -- {}", type, fromMap);
     return fromMap;
   }
 
@@ -691,6 +695,7 @@ public class SmtpMailer implements SingularityMailer, Managed {
       }
     }
 
+    LOG.debug("Action taker is {}", actionTaker);
     if (actionTaker.isPresent() && !Strings.isNullOrEmpty(actionTaker.get())) {
       if (destination.contains(SingularityEmailDestination.ACTION_TAKER)) {
         toList.add(actionTaker.get());
