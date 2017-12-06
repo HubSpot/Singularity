@@ -116,7 +116,7 @@ export const Host = (
     id="host"
     key="host"
     cellData={
-      (rowData) => (rowData.taskId ? rowData.taskId.host : rowData.host)
+      (rowData) => (Utils.humanizeSlaveHostName(rowData.host ? rowData.host : rowData.taskId.host))
     }
     cellRender={
       (cellData) => (
@@ -351,7 +351,7 @@ const logTooltip = (
   </ToolTip>
 );
 
-export const LogLinkAndJSON = logPath => (
+export const LogLinkAndActions = (logPath, requestType) => (
   <Column
     label=""
     id="logLink"
@@ -360,6 +360,10 @@ export const LogLinkAndJSON = logPath => (
     cellData={(rowData) => rowData.taskId}
     cellRender={(taskId, rowData) => (
       <div className="hidden-xs">
+        <KillTaskButton
+          taskId={taskId.id}
+          shouldShowWaitForReplacementTask={Utils.isIn(requestType, ['SERVICE', 'WORKER'])}
+        />
         <OverlayTrigger placement="top" id="view-log-overlay" overlay={logTooltip}>
           <Link to={Utils.tailerPath(taskId.id, logPath)} title="Log">
             <Glyphicon glyph="file" />
@@ -395,7 +399,63 @@ export const InstanceNumber = (
     id="instanceNo"
     key="instanceNo"
     cellData={
-      (rowData) => rowData.instanceNo
+      (rowData) => rowData.instanceNo ? rowData.instanceNo : rowData.taskId.instanceNo
+    }
+    sortable={true}
+  />
+);
+
+export const InstanceNumberWithHostname = (
+  <Column
+    label="Instance"
+    id="instanceNo"
+    key="instanceNo"
+    cellData={
+      (rowData) => rowData.instanceNo ? rowData.instanceNo : rowData.taskId.instanceNo
+    }
+    cellRender={
+      (cellData, rowData) => (
+        <Link to={`task/${rowData.taskId ? rowData.taskId.id : rowData.id}`}>
+          {cellData} - {Utils.humanizeSlaveHostName(rowData.host ? rowData.host : rowData.taskId.host)}
+        </Link>
+      )
+    }
+    sortable={true}
+  />
+);
+
+export const Health = (
+  <Column
+    label=""
+    id="health"
+    key="health"
+    cellData={
+      (rowData) => rowData.health
+    }
+    cellRender={
+      (cellData) => {
+        let glyph;
+        let colorClass;
+        if (cellData === "healthy" || cellData === "cleaning") {
+          glyph = "ok";
+          colorClass = "color-success";
+        } else if (cellData === "pending") {
+          glyph = "question-sign";
+        } else {
+          glyph = "hourglass";
+          colorClass = "color-info"
+        }
+        const tooltip = (
+          <ToolTip id="view-task-health">
+            {cellData}
+          </ToolTip>
+        )
+        return (
+          <OverlayTrigger placement="top" id="view-task-health-overlay" overlay={tooltip}>
+            <Glyphicon className={colorClass} glyph={glyph} />
+          </OverlayTrigger>
+        );
+      }
     }
     sortable={true}
   />
