@@ -22,6 +22,7 @@ import org.apache.mesos.v1.Protos.FrameworkID;
 import org.apache.mesos.v1.Protos.Offer;
 import org.apache.mesos.v1.Protos.OfferID;
 import org.apache.mesos.v1.Protos.Parameter;
+import org.apache.mesos.v1.Protos.TaskInfo;
 import org.apache.mesos.v1.Protos.Volume.Mode;
 import org.junit.Before;
 import org.junit.Test;
@@ -33,8 +34,6 @@ import com.fasterxml.jackson.datatype.guava.GuavaModule;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 import com.hubspot.jackson.datatype.protobuf.ProtobufModule;
-import com.hubspot.singularity.helpers.MesosProtosUtils;
-import com.hubspot.singularity.helpers.MesosUtils;
 import com.hubspot.mesos.Resources;
 import com.hubspot.mesos.SingularityContainerInfo;
 import com.hubspot.mesos.SingularityContainerType;
@@ -42,7 +41,6 @@ import com.hubspot.mesos.SingularityDockerInfo;
 import com.hubspot.mesos.SingularityDockerNetworkType;
 import com.hubspot.mesos.SingularityDockerPortMapping;
 import com.hubspot.mesos.SingularityDockerVolumeMode;
-import com.hubspot.singularity.helpers.SingularityMesosTaskHolder;
 import com.hubspot.mesos.SingularityPortMappingType;
 import com.hubspot.mesos.SingularityVolume;
 import com.hubspot.singularity.RequestType;
@@ -54,10 +52,14 @@ import com.hubspot.singularity.SingularityPendingTaskBuilder;
 import com.hubspot.singularity.SingularityPendingTaskId;
 import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityRequestBuilder;
+import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskRequest;
 import com.hubspot.singularity.config.NetworkConfiguration;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.ExecutorIdGenerator;
+import com.hubspot.singularity.helpers.MesosProtosUtils;
+import com.hubspot.singularity.helpers.MesosUtils;
+import com.hubspot.singularity.helpers.SingularityMesosTaskHolder;
 
 public class SingularityMesosTaskBuilderTest {
   private final SingularityConfiguration configuration = new SingularityConfiguration();
@@ -166,9 +168,9 @@ public class SingularityMesosTaskBuilderTest {
         .setEnvOverrides(overrideVariables)
         .build();
     final SingularityTaskRequest taskRequest = new SingularityTaskRequest(request, deploy, pendingTask);
-    final SingularityTask task = builder.buildTask(offerHolder, null, taskRequest, taskResources, executorResources);
+    final TaskInfo task = builder.buildTask(offerHolder, null, taskRequest, taskResources, executorResources).getMesosTask();
 
-    Map<String, String> environmentVariables = task.getMesosTask()
+    Map<String, String> environmentVariables = task
         .getCommand()
         .getEnvironment()
         .getVariablesList()
