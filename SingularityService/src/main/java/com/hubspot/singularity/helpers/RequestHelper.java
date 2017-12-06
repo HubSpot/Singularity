@@ -18,6 +18,7 @@ import com.google.inject.Singleton;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.RequestCleanupType;
 import com.hubspot.singularity.RequestState;
+import com.hubspot.singularity.RequestType;
 import com.hubspot.singularity.SingularityCreateResult;
 import com.hubspot.singularity.SingularityDeploy;
 import com.hubspot.singularity.SingularityPendingDeploy;
@@ -195,7 +196,8 @@ public class RequestHelper {
                                                                      SingularityUser user,
                                                                      boolean filterRelevantForUser,
                                                                      boolean includeFullRequestData,
-                                                                     Optional<Integer> limit) {
+                                                                     Optional<Integer> limit,
+                                                                     List<RequestType> requestTypeFilters) {
     final Map<String, Optional<SingularityTaskIdHistory>> mostRecentTasks = new ConcurrentHashMap<>();
     final Map<String, SingularityRequestDeployState> deployStates = deployManager.getRequestDeployStatesByRequestIds(requests.stream().map((r) -> r.getRequest().getId()).collect(Collectors.toList()));
     final Map<String, Optional<SingularityRequestHistory>> requestIdToLastHistory;
@@ -214,6 +216,9 @@ public class RequestHelper {
 
     return requests.parallelStream()
         .filter((request) -> {
+          if (!requestTypeFilters.isEmpty() && !requestTypeFilters.contains(request.getRequest().getRequestType())) {
+            return false;
+          }
           if (!filterRelevantForUser || user.equals(SingularityUser.DEFAULT_USER)) {
             return true;
           }
