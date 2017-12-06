@@ -69,9 +69,9 @@ class TaskHistoryTable extends Component {
     const showButtons = (
       <ButtonToolbar>
         <ButtonGroup bsSize="small" className="pull-right">
-          <Button onClick={() => this.handleTableSizeToggle(5)} >Show 5</Button>
-          <Button onClick={() => this.handleTableSizeToggle(10)} >Show 10</Button>
-          <Button onClick={() => this.handleTableSizeToggle(20)} >Show 20</Button>
+          <Button disabled={this.state.tableChunkSize == 5} onClick={() => this.handleTableSizeToggle(5)} >Show 5</Button>
+          <Button disabled={this.state.tableChunkSize == 10} onClick={() => this.handleTableSizeToggle(10)} >Show 10</Button>
+          <Button disabled={this.state.tableChunkSize == 20} onClick={() => this.handleTableSizeToggle(20)} >Show 20</Button>
         </ButtonGroup>
       </ButtonToolbar>
     )
