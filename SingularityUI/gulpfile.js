@@ -47,7 +47,8 @@ var templateData = {
   sentryDsn: process.env.SINGULARITY_SENTRY_DSN || '',
   generateAuthHeader: process.env.SINGULARITY_GENERATE_AUTH_HEADER || 'false',
   authTokenKey: process.env.SINGULARITY_AUTH_TOKEN_KEY || 'token',
-  authCookieName: process.env.SINGULARITY_AUTH_COOKIE_NAME || ''
+  authCookieName: process.env.SINGULARITY_AUTH_COOKIE_NAME || '',
+  quickLinks: process.env.SINGULARITY_QUICK_LINKS || '{}'
 };
 
 var dest = path.resolve(__dirname, 'dist');
