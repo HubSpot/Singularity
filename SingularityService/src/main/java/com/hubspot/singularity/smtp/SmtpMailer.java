@@ -392,7 +392,7 @@ public class SmtpMailer implements SingularityMailer, Managed {
     final List<SingularityEmailDestination> emailDestination = getDestination(request, type.getEmailType());
 
     if (emailDestination.isEmpty()) {
-      LOG.debug("Not configured to send request cooldown mail for");
+      LOG.debug("Not configured to send request mail for {}", request);
       return;
     }
 
@@ -507,7 +507,7 @@ public class SmtpMailer implements SingularityMailer, Managed {
     final List<SingularityEmailDestination> emailDestination = getDestination(request, SingularityEmailType.REQUEST_IN_COOLDOWN);
 
     if (emailDestination.isEmpty()) {
-      LOG.debug("Not configured to send request cooldown mail for");
+      LOG.debug("Not configured to send request cooldown mail for {}", request);
       return;
     }
 
