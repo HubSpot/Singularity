@@ -5,8 +5,10 @@ import rootComponent from '../../rootComponent';
 import { Link } from 'react-router';
 
 import Utils from '../../utils';
+import Loader from '../common/Loader';
 
 import { refresh } from '../../actions/ui/dashboard';
+import { FetchUserRelevantRequests } from '../../actions/api/requests';
 import UITable from '../common/table/UITable';
 import Column from '../common/table/Column';
 import Section from '../common/Section';
@@ -17,13 +19,15 @@ import RequestFilters from '../requests/RequestFilters';
 
 class DashboardPage extends Component {
   static propTypes = {
-    requests: PropTypes.arrayOf(PropTypes.object).isRequired
+    requests: PropTypes.arrayOf(PropTypes.object).isRequired,
+    fetchRequests: PropTypes.func.isRequired
   };
 
   constructor(props) {
     super(props);
     this.state = {
-      requestTypeFilters: RequestFilters.REQUEST_TYPES
+      requestTypeFilters: RequestFilters.REQUEST_TYPES,
+      loading: false
     };
   }
 
@@ -110,8 +114,15 @@ class DashboardPage extends Component {
       selected.push(requestType);
     }
     this.setState({
-      requestTypeFilters: selected
+      requestTypeFilters: selected,
+      loading: true
     })
+    this.props.fetchRequests(selected).then(() => {
+      this.setState({
+        loading: false
+      })
+    })
+
   }
 
   render() {
@@ -146,6 +157,32 @@ class DashboardPage extends Component {
       );
     });
 
+    let table;
+
+    if (this.state.loading) {
+      table = <Loader />;
+    } else {
+      table = (
+        <UITable
+          data={this.props.requests}
+          keyGetter={(requestParent) => requestParent.request.id}
+          paginated={false}
+          defaultSortBy="summary"
+          defaultSortDirection={UITable.SortDirection.ASC}
+          renderAllRows={true}
+        >
+          {[
+            Cols.Starred,
+            Cols.Type,
+            Cols.State,
+            Cols.RequestId,
+            summaryColumn,
+            Cols.Actions
+          ]}
+        </UITable>
+      );
+    }
+
     return (
       <div>
         <header className="detail-header">
@@ -162,23 +199,7 @@ class DashboardPage extends Component {
             </Col>
           </Row>
         </header>
-        <UITable
-          data={_.filter(this.props.requests, (request) => _.contains(this.state.requestTypeFilters, request.request.requestType))}
-          keyGetter={(requestParent) => requestParent.request.id}
-          paginated={false}
-          defaultSortBy="summary"
-          defaultSortDirection={UITable.SortDirection.ASC}
-          renderAllRows={true}
-        >
-          {[
-            Cols.Starred,
-            Cols.Type,
-            Cols.State,
-            Cols.RequestId,
-            summaryColumn,
-            Cols.Actions
-          ]}
-        </UITable>
+        {table}
       </div>
     );
   }
@@ -198,4 +219,10 @@ function mapStateToProps(state) {
   return {requests: modifiedRequests}
 }
 
-export default connect(mapStateToProps)(rootComponent(DashboardPage, refresh));
+function mapDispatchToProps(dispatch) {
+  return {
+    fetchRequests: (requestTypes) => dispatch(FetchUserRelevantRequests.trigger(requestTypes))
+  }
+}
+
+export default connect(mapStateToProps, mapDispatchToProps)(rootComponent(DashboardPage, refresh));
