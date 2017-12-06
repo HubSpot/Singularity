@@ -7,7 +7,13 @@ export const FetchRequests = buildApiAction(
 
 export const FetchUserRelevantRequests = buildApiAction(
   'FETCH_USER_RELEVANT_REQUESTS',
-  {url: '/requests?filterRelevantForUser=true&includeFullRequestData=true&limit=50'}
+  (requestTypes = []) => {
+    let params = 'filterRelevantForUser=true&includeFullRequestData=true&limit=50'
+    _.each(requestTypes, (requestType) => {
+      params = params + `&requestType=${requestType}`
+    });
+    return {url: `/requests?${params}`}
+  }
 );
 
 export const FetchRequestsInState = buildApiAction(
