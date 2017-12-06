@@ -13,6 +13,17 @@ public class SingularityScaleRequest extends SingularityExpiringRequestParent {
   private final Optional<Boolean> incremental;
   private final Optional<Boolean> skipEmailNotification;
 
+  @Deprecated
+  public SingularityScaleRequest(Optional<Integer> instances,
+                                 Optional<Long> durationMillis,
+                                 Optional<Boolean> skipHealthchecks,
+                                 Optional<String> actionId,
+                                 Optional<String> message,
+                                 Optional<Boolean> bounce,
+                                 Optional<Boolean> incremental) {
+    this(instances, durationMillis, skipHealthchecks, actionId, message, bounce, incremental, Optional.absent());
+  }
+
   @JsonCreator
   public SingularityScaleRequest(@JsonProperty("instances") Optional<Integer> instances,
                                  @JsonProperty("durationMillis") Optional<Long> durationMillis,
