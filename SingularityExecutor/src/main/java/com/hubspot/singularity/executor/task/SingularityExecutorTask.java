@@ -20,6 +20,7 @@ import com.hubspot.singularity.executor.TemplateManager;
 import com.hubspot.singularity.executor.config.SingularityExecutorConfiguration;
 import com.hubspot.singularity.executor.utils.DockerUtils;
 import com.hubspot.singularity.executor.utils.ExecutorUtils;
+import com.hubspot.singularity.executor.utils.MesosUtils;
 import com.hubspot.singularity.runner.base.configuration.SingularityRunnerBaseConfiguration;
 import com.hubspot.singularity.runner.base.shared.JsonObjectFileHelper;
 import com.hubspot.singularity.s3.base.config.SingularityS3Configuration;
@@ -67,7 +68,7 @@ public class SingularityExecutorTask {
   }
 
   public void cleanup(TaskState state) {
-    ExtendedTaskState extendedTaskState = ExtendedTaskState.fromTaskState(org.apache.mesos.v1.Protos.TaskState.valueOf(state.toString())); // #gross
+    ExtendedTaskState extendedTaskState = MesosUtils.fromTaskState(org.apache.mesos.v1.Protos.TaskState.valueOf(state.toString()));
 
     boolean cleanupAppTaskDirectory = !extendedTaskState.isFailed() && !taskDefinition.getExecutorData().getPreserveTaskSandboxAfterFinish().or(Boolean.FALSE);
 

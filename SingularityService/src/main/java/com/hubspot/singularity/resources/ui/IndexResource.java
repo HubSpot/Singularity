@@ -12,7 +12,7 @@ import javax.ws.rs.core.UriInfo;
 
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
-import com.hubspot.singularity.SingularityServiceBaseModule;
+import com.hubspot.singularity.resources.SingularityServiceUIModule;
 
 @Path("/")
 @Produces(MediaType.TEXT_HTML)
@@ -20,7 +20,7 @@ public class IndexResource {
   private final String singularityUriBase;
 
   @Inject
-  public IndexResource(@Named(SingularityServiceBaseModule.SINGULARITY_URI_BASE) String singularityUriBase) {
+  public IndexResource(@Named(SingularityServiceUIModule.SINGULARITY_URI_BASE) String singularityUriBase) {
     this.singularityUriBase = singularityUriBase;
   }
 

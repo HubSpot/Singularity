@@ -1,4 +1,4 @@
-package com.hubspot.singularity;
+package com.hubspot.singularity.resources;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -8,12 +8,12 @@ import com.hubspot.singularity.resources.ui.IndexResource;
 import com.hubspot.singularity.resources.ui.StaticCatchallResource;
 import com.hubspot.singularity.resources.ui.UiResource;
 
-public class SingularityServiceBaseModule extends AbstractModule {
+public class SingularityServiceUIModule extends AbstractModule {
   public static final String SINGULARITY_URI_BASE = "_singularity_uri_base";
 
   private final UIConfiguration uiConfiguration;
 
-  public SingularityServiceBaseModule(UIConfiguration uiConfiguration) {
+  public SingularityServiceUIModule(UIConfiguration uiConfiguration) {
     this.uiConfiguration = checkNotNull(uiConfiguration, "uiConfiguration is null");
   }
 

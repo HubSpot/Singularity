@@ -8,6 +8,7 @@ import org.junit.Rule;
 import org.junit.rules.Timeout;
 
 import com.google.inject.Inject;
+import com.hubspot.singularity.helpers.MesosProtosUtils;
 import com.hubspot.singularity.scheduler.SingularityTestModule;
 import com.squarespace.jersey2.guice.JerseyGuiceUtils;
 
@@ -20,6 +21,8 @@ public class SingularityCuratorTestBase {
   protected CuratorFramework cf;
   @Inject
   protected TestingServer ts;
+  @Inject
+  protected MesosProtosUtils mesosProtosUtils;
 
   private SingularityTestModule singularityTestModule;
 

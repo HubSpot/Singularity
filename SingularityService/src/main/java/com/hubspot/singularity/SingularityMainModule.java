@@ -62,6 +62,7 @@ import com.hubspot.singularity.mesos.SingularityMesosStatusUpdateHandler;
 import com.hubspot.singularity.mesos.SingularityNoOfferCache;
 import com.hubspot.singularity.mesos.SingularityOfferCache;
 import com.hubspot.singularity.metrics.SingularityGraphiteReporterManaged;
+import com.hubspot.singularity.resources.SingularityServiceUIModule;
 import com.hubspot.singularity.scheduler.SingularityUsageHelper;
 import com.hubspot.singularity.sentry.NotifyingExceptionMapper;
 import com.hubspot.singularity.sentry.SingularityExceptionNotifier;
@@ -220,7 +221,7 @@ public class SingularityMainModule implements Module {
   }
 
   @Provides
-  @Named(SingularityServiceBaseModule.SINGULARITY_URI_BASE)
+  @Named(SingularityServiceUIModule.SINGULARITY_URI_BASE)
   String getSingularityUriBase(final SingularityConfiguration configuration) {
     final String singularityUiPrefix;
     if (configuration.getServerFactory() instanceof  SimpleServerFactory) {
