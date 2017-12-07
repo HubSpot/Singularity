@@ -22,6 +22,7 @@ import org.apache.mesos.v1.Protos.FrameworkID;
 import org.apache.mesos.v1.Protos.Offer;
 import org.apache.mesos.v1.Protos.OfferID;
 import org.apache.mesos.v1.Protos.Parameter;
+import org.apache.mesos.v1.Protos.TaskInfo;
 import org.apache.mesos.v1.Protos.Volume.Mode;
 import org.junit.Before;
 import org.junit.Test;
@@ -166,9 +167,9 @@ public class SingularityMesosTaskBuilderTest {
         .setEnvOverrides(overrideVariables)
         .build();
     final SingularityTaskRequest taskRequest = new SingularityTaskRequest(request, deploy, pendingTask);
-    final SingularityMesosTaskHolder task = builder.buildTask(offerHolder, null, taskRequest, taskResources, executorResources);
+    final TaskInfo task = builder.buildTask(offerHolder, null, taskRequest, taskResources, executorResources).getMesosTask();
 
-    Map<String, String> environmentVariables = task.getMesosTask()
+    Map<String, String> environmentVariables = task
         .getCommand()
         .getEnvironment()
         .getVariablesList()
