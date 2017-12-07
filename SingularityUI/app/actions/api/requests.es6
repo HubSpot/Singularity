@@ -5,6 +5,17 @@ export const FetchRequests = buildApiAction(
   {url: '/requests'}
 );
 
+export const FetchUserRelevantRequests = buildApiAction(
+  'FETCH_USER_RELEVANT_REQUESTS',
+  (requestTypes = []) => {
+    let params = 'filterRelevantForUser=true&includeFullRequestData=true&limit=50'
+    _.each(requestTypes, (requestType) => {
+      params = params + `&requestType=${requestType}`
+    });
+    return {url: `/requests?${params}`}
+  }
+);
+
 export const FetchRequestsInState = buildApiAction(
   'FETCH_REQUESTS_IN_STATE',
   (state, renderNotFoundIf404) => {

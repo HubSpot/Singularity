@@ -112,7 +112,7 @@ public class SingularityRequestHistoryPersister extends SingularityHistoryPersis
       requestHistoryParents.add(new SingularityRequestHistoryParent(requestManager.getRequestHistory(requestId), requestId));
     }
 
-    Collections.sort(requestHistoryParents, Collections.<SingularityRequestHistoryParent>reverseOrder());  // createdAt descending
+    Collections.sort(requestHistoryParents, Collections.reverseOrder());  // createdAt descending
 
     int i=0;
     for (SingularityRequestHistoryParent requestHistoryParent : requestHistoryParents) {

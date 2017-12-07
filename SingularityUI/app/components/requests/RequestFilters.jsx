@@ -3,6 +3,7 @@ import Utils from '../../utils';
 import { Link } from 'react-router';
 
 import { Row, Col, Nav, NavItem, Glyphicon, Button, ButtonGroup, DropdownButton, MenuItem } from 'react-bootstrap';
+import RequestTypeIcon from '../common/icons/RequestTypeIcon';
 
 export default class RequestFilters extends React.Component {
 
@@ -22,23 +23,28 @@ export default class RequestFilters extends React.Component {
     },
     {
       filterVal: 'active',
-      displayVal: 'Active'
+      displayVal: 'Active',
+      fullStateName: 'ACTIVE'
     },
     {
       filterVal: 'cooldown',
-      displayVal: 'Cooldown'
+      displayVal: 'Cooldown',
+      fullStateName: 'SYSTEM_COOLDOWN'
     },
     {
       filterVal: 'paused',
-      displayVal: 'Paused'
+      displayVal: 'Paused',
+      fullStateName: 'PAUSED'
     },
     {
       filterVal: 'pending',
-      displayVal: 'Pending'
+      displayVal: 'Pending',
+      fullStateName: 'PENDING'
     },
     {
       filterVal: 'cleaning',
-      displayVal: 'Cleaning'
+      displayVal: 'Cleaning',
+      fullStateName: 'CLEANING'
     },
     {
       displayVal: 'Deploy status'
@@ -100,8 +106,9 @@ export default class RequestFilters extends React.Component {
 
   renderStatusFilter() {
     const selectedIndex = _.findIndex(RequestFilters.REQUEST_STATES, (requestState) => requestState.filterVal === this.props.filter.state);
-    const navItems = RequestFilters.REQUEST_STATES.map((requestState, index) => (
-      requestState.filterVal ?
+    const navItems = RequestFilters.REQUEST_STATES.map((requestState, index) => {
+      const glyphSettings = requestState.fullStateName && Utils.glyphiconForRequestState(requestState.fullStateName)
+      return (requestState.filterVal ?
         <NavItem
           key={index}
           className="table-nav-pill--child"
@@ -110,12 +117,16 @@ export default class RequestFilters extends React.Component {
           active={index === selectedIndex}
           onClick={() => this.handleStatusSelect(index)}
         >
-          {requestState.displayVal}
+          {requestState.displayVal + " "}
+          {glyphSettings &&
+            <Glyphicon className={glyphSettings.color} glyph={glyphSettings.icon} />
+          }
         </NavItem> :
         <NavItem key={index} disabled={true}>
           {requestState.displayVal}
         </NavItem>
-    ));
+      )
+    });
 
     return (
       <Nav bsStyle="pills" className="table-nav-pills" stacked={true} activeKey={selectedIndex}>
@@ -147,7 +158,7 @@ export default class RequestFilters extends React.Component {
       return (
         <li key={index} className={isActive ? 'active' : ''}>
           <a onClick={() => this.toggleRequestType(requestType)}>
-            {isActive ? <Glyphicon glyph="ok" /> : <span className="icon-placeholder" />} {Utils.humanizeText(requestType)}
+            {isActive ? <RequestTypeIcon requestType={requestType} /> : <RequestTypeIcon requestType={requestType} translucent={true} />} {Utils.humanizeText(requestType)} 
           </a>
         </li>
       );

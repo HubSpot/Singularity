@@ -550,7 +550,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     requestResource.postRequest(request.toBuilder().setQuartzSchedule(Optional.of(schedule)).build(), singularityUser);
     scheduler.drainPendingQueue();
 
-    Assert.assertTrue(requestResource.getActiveRequests(singularityUser, false).isEmpty());
+    Assert.assertTrue(requestResource.getActiveRequests(singularityUser, false, false, false, 10, Collections.emptyList()).isEmpty());
     Assert.assertTrue(requestManager.getRequest(requestId).get().getState() == RequestState.FINISHED);
     Assert.assertTrue(taskManager.getPendingTaskIds().isEmpty());
 
@@ -558,7 +558,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     requestResource.postRequest(request.toBuilder().setQuartzSchedule(Optional.of(schedule)).build(), singularityUser);
     scheduler.drainPendingQueue();
 
-    Assert.assertTrue(!requestResource.getActiveRequests(singularityUser, false).isEmpty());
+    Assert.assertTrue(!requestResource.getActiveRequests(singularityUser, false, false, false, 10, Collections.emptyList()).isEmpty());
     Assert.assertTrue(requestManager.getRequest(requestId).get().getState() == RequestState.ACTIVE);
 
     Assert.assertTrue(!taskManager.getPendingTaskIds().isEmpty());

@@ -55,6 +55,11 @@ const Utils = {
     return `${timeObject.fromNow()} (${timeObject.format(window.config.timestampFormat)})`;
   },
 
+  timestampFromNowTextOnly(millis) {
+    const timeObject = moment(millis);
+    return `${timeObject.fromNow()}`;
+  },
+
   absoluteTimestamp(millis) {
     return moment(millis).format(window.config.timestampFormat);
   },
@@ -442,6 +447,17 @@ const Utils = {
     return !Utils.isIn(slaveInfo.currentState.state, ['DEAD', 'MISSING_ON_STARTUP']);
   },
 
+  glyphiconForRequestState: (state) => {
+    return {
+      'DELETING': {'color': 'color-grey', 'icon':'trash'},
+      'ACTIVE': {'color': 'color-success', 'icon':'ok'},
+      'PAUSED': {'color': 'color-paused', 'icon':'pause'},
+      'SYSTEM_COOLDOWN': {'color': 'color-warning', 'icon':'warning-sign'},
+      'PENDING': {'color': 'color-info', 'icon':'hourglass'},
+      'CLEANING': {'color': 'color-cleaning', 'icon':'erase'},
+    }[state] || {'color': 'color-info', 'icon':'question-sign'}
+  },
+
   enums: {
     SingularityRequestTypes: ['SERVICE', 'WORKER', 'SCHEDULED', 'ON_DEMAND', 'RUN_ONCE'],
     SingularityEmailDestination: ['OWNERS', 'ACTION_TAKER', 'ADMINS'],
@@ -514,6 +530,7 @@ const Utils = {
       return null;
     }
   }
+
 };
 
 export default Utils;

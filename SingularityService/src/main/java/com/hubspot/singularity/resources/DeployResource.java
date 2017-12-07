@@ -50,6 +50,8 @@ import com.hubspot.singularity.data.DeployManager;
 import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.data.SingularityValidator;
 import com.hubspot.singularity.data.TaskManager;
+import com.hubspot.singularity.data.history.RequestHistoryHelper;
+import com.hubspot.singularity.helpers.RequestHelper;
 import com.ning.http.client.AsyncHttpClient;
 import com.wordnik.swagger.annotations.Api;
 import com.wordnik.swagger.annotations.ApiOperation;
@@ -69,8 +71,8 @@ public class DeployResource extends AbstractRequestResource {
   @Inject
   public DeployResource(RequestManager requestManager, DeployManager deployManager, SingularityValidator validator, SingularityAuthorizationHelper authorizationHelper,
                         SingularityConfiguration configuration, TaskManager taskManager, LeaderLatch leaderLatch,
-                        AsyncHttpClient httpClient, ObjectMapper objectMapper) {
-    super(requestManager, deployManager, validator, authorizationHelper, httpClient, leaderLatch, objectMapper);
+                        AsyncHttpClient httpClient, ObjectMapper objectMapper, RequestHelper requestHelper, RequestHistoryHelper requestHistoryHelper) {
+    super(requestManager, deployManager, validator, authorizationHelper, httpClient, leaderLatch, objectMapper, requestHelper, requestHistoryHelper);
     this.configuration = configuration;
     this.taskManager = taskManager;
   }
