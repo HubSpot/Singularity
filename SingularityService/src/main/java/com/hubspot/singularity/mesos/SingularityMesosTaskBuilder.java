@@ -180,6 +180,7 @@ class SingularityMesosTaskBuilder {
     setEnv(envBldr, "TASK_HOST", offerHolder.getHostname());
 
     setEnv(envBldr, "TASK_RACK_ID", offerHolder.getRackId());
+    setEnv(envBldr, "AVAILABILITY_ZONE", offerHolder.getRackId());
 
     setEnv(envBldr, "TASK_REQUEST_ID", task.getPendingTask().getPendingTaskId().getRequestId());
     setEnv(envBldr, "TASK_DEPLOY_ID", taskId.getDeployId());

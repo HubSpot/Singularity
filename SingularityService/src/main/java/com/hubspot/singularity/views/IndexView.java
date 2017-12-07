@@ -64,6 +64,7 @@ public class IndexView extends View {
   private final boolean generateAuthHeader;
   private final String authCookieName;
   private final String authTokenKey;
+  private final String quickLinks;
 
   public IndexView(String singularityUriBase, String appRoot, IndexViewConfiguration configuration, ObjectMapper mapper) {
     super("index.mustache");
@@ -130,6 +131,12 @@ public class IndexView extends View {
     this.generateAuthHeader = configuration.isGenerateAuthHeader();
     this.authCookieName = uiConfiguration.getAuthCookieName();
     this.authTokenKey = uiConfiguration.getAuthTokenKey();
+
+    try {
+      this.quickLinks = ow.writeValueAsString(uiConfiguration.getQuickLinks());
+    } catch (JsonProcessingException e) {
+      throw Throwables.propagate(e);
+    }
   }
 
   public String getAppRoot() {
@@ -264,6 +271,10 @@ public class IndexView extends View {
     return authTokenKey;
   }
 
+  public String getQuickLinks() {
+    return quickLinks;
+  }
+
   @Override
   public String toString() {
     return "IndexView{" +
@@ -300,6 +311,7 @@ public class IndexView extends View {
         ", generateAuthHeader=" + generateAuthHeader +
         ", authCookieName='" + authCookieName + '\'' +
         ", authTokenKey='" + authTokenKey + '\'' +
+        ", quickLinks='" + quickLinks + '\'' +
         "} " + super.toString();
   }
 }

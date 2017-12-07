@@ -83,8 +83,6 @@ const mapStateToProps = (state, ownProps) => {
 const mapDispatchToProps = (dispatch, ownProps) => {
   const refreshActions = [
     FetchRequest.trigger(ownProps.params.requestId, true),
-    FetchActiveTasksForRequest.trigger(ownProps.params.requestId),
-    FetchScheduledTasksForRequest.trigger(ownProps.params.requestId),
     FetchTaskCleanups.trigger()
   ];
   return {
@@ -99,8 +97,6 @@ const mapDispatchToProps = (dispatch, ownProps) => {
       RefreshActions.CancelAutoRefresh(`RequestDetailPage-${ownProps.index}`)
     ),
     fetchRequest: (requestId) => dispatch(FetchRequest.trigger(requestId, true)),
-    fetchActiveTasksForRequest: (requestId) => dispatch(FetchActiveTasksForRequest.trigger(requestId)),
-    fetchScheduledTasksForRequest: (requestId) => dispatch(FetchScheduledTasksForRequest.trigger(requestId)),
     fetchTaskCleanups: () => dispatch(FetchTaskCleanups.trigger()),
     fetchTaskHistoryForRequest: (requestId, count, page) => dispatch(FetchTaskHistoryForRequest.trigger(requestId, count, page)),
     fetchDeploysForRequest: (requestId, count, page) => dispatch(FetchDeploysForRequest.trigger(requestId, count, page)),

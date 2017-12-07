@@ -488,7 +488,7 @@ public class SingularityHistoryTest extends SingularitySchedulerTestBase {
       msg = msg + i;
     }
 
-    requestResource.scale(requestId, new SingularityScaleRequest(Optional.of(2), Optional.absent(), Optional.absent(), Optional.absent(), Optional.of(msg), Optional.absent(), Optional.absent()), singularityUser);
+    requestResource.scale(requestId, new SingularityScaleRequest(Optional.of(2), Optional.absent(), Optional.absent(), Optional.absent(), Optional.of(msg), Optional.absent(), Optional.absent(), Optional.absent()), singularityUser);
     requestResource.deleteRequest(requestId, Optional.of(new SingularityDeleteRequestRequest(Optional.of("a msg"), Optional.absent(), Optional.absent())), singularityUser);
 
     cleaner.drainCleanupQueue();

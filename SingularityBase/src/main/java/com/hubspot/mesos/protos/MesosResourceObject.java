@@ -13,12 +13,15 @@ import com.google.common.base.Optional;
 
 public class MesosResourceObject {
   private final Optional<String> name;
+  private final Optional<MesosRangesObject> ranges;
   private final Map<String, Object> allOtherFields;
 
   @JsonCreator
 
-  public MesosResourceObject(@JsonProperty("name") Optional<String> name) {
+  public MesosResourceObject(@JsonProperty("name") Optional<String> name,
+                             @JsonProperty("ranges") Optional<MesosRangesObject> ranges) {
     this.name = name;
+    this.ranges = ranges;
     this.allOtherFields = new HashMap<>();
   }
 
@@ -31,14 +34,23 @@ public class MesosResourceObject {
     return name.isPresent();
   }
 
+  public MesosRangesObject getRanges() {
+    return ranges.orNull();
+  }
+
+  @JsonIgnore
+  public boolean hasRanges() {
+    return ranges.isPresent();
+  }
+
   // Unknown fields
   @JsonAnyGetter
-  public Map<String, Object> getUnknownFields() {
+  public Map<String, Object> getAllOtherFields() {
     return allOtherFields;
   }
 
   @JsonAnySetter
-  public void setUnknownFields(String name, Object value) {
+  public void setAllOtherFields(String name, Object value) {
     allOtherFields.put(name, value);
   }
 
@@ -50,6 +62,7 @@ public class MesosResourceObject {
     if (obj instanceof MesosResourceObject) {
       final MesosResourceObject that = (MesosResourceObject) obj;
       return Objects.equals(this.name, that.name) &&
+          Objects.equals(this.ranges, that.ranges) &&
           Objects.equals(this.allOtherFields, that.allOtherFields);
     }
     return false;
@@ -57,13 +70,14 @@ public class MesosResourceObject {
 
   @Override
   public int hashCode() {
-    return Objects.hash(name, allOtherFields);
+    return Objects.hash(name, ranges, allOtherFields);
   }
 
   @Override
   public String toString() {
     return "MesosResourceObject{" +
         "name=" + name +
+        ", ranges=" + ranges +
         ", allOtherFields=" + allOtherFields +
         '}';
   }
