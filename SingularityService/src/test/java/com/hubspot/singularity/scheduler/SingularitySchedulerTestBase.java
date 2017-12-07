@@ -512,7 +512,7 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
   protected void initWithTasks(int num) {
     initRequest();
 
-    requestResource.scale(requestId, new SingularityScaleRequest(Optional.of(num), Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent()), singularityUser);
+    requestResource.scale(requestId, new SingularityScaleRequest(Optional.of(num), Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent()), singularityUser);
 
     initFirstDeploy();
 
