@@ -59,6 +59,7 @@ import com.hubspot.singularity.SingularityLoadBalancerUpdate;
 import com.hubspot.singularity.SingularityPendingRequest;
 import com.hubspot.singularity.SingularityPendingRequest.PendingType;
 import com.hubspot.singularity.SingularityPendingTask;
+import com.hubspot.singularity.SingularityPendingTaskBuilder;
 import com.hubspot.singularity.SingularityPendingTaskId;
 import com.hubspot.singularity.SingularityPriorityFreezeParent;
 import com.hubspot.singularity.SingularityRequest;
@@ -67,6 +68,7 @@ import com.hubspot.singularity.SingularityRequestCleanup;
 import com.hubspot.singularity.SingularityRequestHistory;
 import com.hubspot.singularity.SingularityRequestHistory.RequestHistoryType;
 import com.hubspot.singularity.SingularityRequestLbCleanup;
+import com.hubspot.singularity.SingularityRunNowRequestBuilder;
 import com.hubspot.singularity.SingularityShellCommand;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskCleanup;
@@ -116,8 +118,9 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
   }
 
   private SingularityPendingTask pendingTask(String requestId, String deployId, PendingType pendingType) {
-    return new SingularityPendingTask(new SingularityPendingTaskId(requestId, deployId, System.currentTimeMillis(), 1, pendingType, System.currentTimeMillis()),
-        Optional.<List<String>> absent(), Optional.<String> absent(), Optional.<String> absent(), Optional.<Boolean> absent(), Optional.<String> absent(), Optional.<Resources>absent(), Optional.<String>absent());
+    return new SingularityPendingTaskBuilder()
+        .setPendingTaskId(new SingularityPendingTaskId(requestId, deployId, System.currentTimeMillis(), 1, pendingType, System.currentTimeMillis()))
+        .build();
   }
 
   @Test
@@ -644,7 +647,9 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     requestResource.postRequest(bldr.build(), singularityUser);
     deploy("d2");
 
-    SingularityRunNowRequest runNowRequest = new SingularityRunNowRequest(Optional.<String>absent(), Optional.<Boolean>absent(), Optional.<String>absent(), Optional.<List<String>>absent(), Optional.of(new Resources(2, 2, 0)), Optional.<Long>absent());
+    SingularityRunNowRequest runNowRequest = new SingularityRunNowRequestBuilder()
+        .setResources(new Resources(2, 2, 0))
+        .build();
     requestResource.scheduleImmediately(singularityUser, requestId, runNowRequest);
 
     scheduler.drainPendingQueue();
@@ -1546,7 +1551,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     requestResource.postRequest(newRequest, singularityUser);
     initFirstDeploy();
 
-    requestResource.scheduleImmediately(singularityUser, requestId, new SingularityRunNowRequest(Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent(), Optional.<Long>absent()));
+    requestResource.scheduleImmediately(singularityUser, requestId, new SingularityRunNowRequestBuilder().build());
     resourceOffers();
 
     SingularityTask task = taskManager.getActiveTasks().get(0);
@@ -1571,14 +1576,9 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     requestResource.scheduleImmediately(
         singularityUser,
         requestId,
-        new SingularityRunNowRequest(
-            Optional.absent(),
-            Optional.absent(),
-            Optional.absent(),
-            Optional.absent(),
-            Optional.absent(),
-            Optional.of(requestedLaunchTime)
-        )
+        new SingularityRunNowRequestBuilder()
+            .setRunAt(requestedLaunchTime)
+            .build()
     );
 
     scheduler.drainPendingQueue();
@@ -1599,14 +1599,9 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     requestResource.scheduleImmediately(
         singularityUser,
         requestId,
-        new SingularityRunNowRequest(
-            Optional.absent(),
-            Optional.absent(),
-            Optional.absent(),
-            Optional.absent(),
-            Optional.absent(),
-            Optional.of(requestedLaunchTime)
-        )
+        new SingularityRunNowRequestBuilder()
+            .setRunAt(requestedLaunchTime)
+            .build()
     );
 
     scheduler.drainPendingQueue();
@@ -2158,13 +2153,12 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
 
 
     scheduler.drainPendingQueue();
-    requestManager.addToPendingQueue(new SingularityPendingRequest(requestId, firstDeployId, Instant.now().plus(3, ChronoUnit.DAYS).toEpochMilli(), Optional.absent(), PendingType.NEW_DEPLOY, Optional.absent(), Optional.absent()));
+    requestManager.addToPendingQueue(new SingularityPendingRequest(requestId, firstDeployId,
+        Instant.now().plus(3, ChronoUnit.DAYS).toEpochMilli(),
+        Optional.absent(), PendingType.NEW_DEPLOY, Optional.absent(), Optional.absent()));
 
-    SingularityRunNowRequest runNowRequest = new SingularityRunNowRequest(Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent());
+    SingularityRunNowRequest runNowRequest = new SingularityRunNowRequestBuilder().build();
     requestResource.scheduleImmediately(singularityUser, requestId, runNowRequest);
-
-
-
 
     Assert.assertEquals("Both requests make it into the pending queue", 2, requestManager.getPendingRequests().size());
     Assert.assertEquals(PendingType.IMMEDIATE, requestManager.getPendingRequests().get(0).getPendingType());
@@ -2340,7 +2334,9 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     requestResource.postRequest(bldr.build(), singularityUser);
     deploy("d2");
 
-    SingularityRunNowRequest runNowRequest = new SingularityRunNowRequest(Optional.<String>absent(), Optional.<Boolean>absent(), Optional.<String>absent(), Optional.<List<String>>absent(), Optional.of(new Resources(2, 2, 0)), Optional.<Long>absent());
+    SingularityRunNowRequest runNowRequest = new SingularityRunNowRequestBuilder()
+        .setResources(new Resources(2, 2, 0))
+        .build();
     requestResource.scheduleImmediately(singularityUser, requestId, runNowRequest);
 
     scheduler.drainPendingQueue();
@@ -2366,7 +2362,9 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     requestResource.postRequest(bldr.build(), singularityUser);
     deploy("d2");
 
-    SingularityRunNowRequest runNowRequest = new SingularityRunNowRequest(Optional.<String>absent(), Optional.<Boolean>absent(), Optional.<String>absent(), Optional.<List<String>>absent(), Optional.of(new Resources(2, 2, 0)), Optional.<Long>absent());
+    SingularityRunNowRequest runNowRequest = new SingularityRunNowRequestBuilder()
+        .setResources(new Resources(2, 2, 0))
+        .build();
     requestResource.scheduleImmediately(singularityUser, requestId, runNowRequest);
 
     scheduler.drainPendingQueue();

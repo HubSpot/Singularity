@@ -11,21 +11,24 @@ public class SingularityMesosArtifact {
   private final boolean cache;
   private final boolean executable;
   private final boolean extract;
+  private final Optional<String> outputFile;
 
   @JsonCreator
   public static SingularityMesosArtifact fromString(String uri) {
-    return new SingularityMesosArtifact(uri, Optional.<Boolean>absent(), Optional.<Boolean>absent(), Optional.<Boolean>absent());
+    return new SingularityMesosArtifact(uri, Optional.<Boolean>absent(), Optional.<Boolean>absent(), Optional.<Boolean>absent(), Optional.absent());
   }
 
   @JsonCreator
   public SingularityMesosArtifact(@JsonProperty("uri") String uri,
                                   @JsonProperty("cache") Optional<Boolean> cache,
                                   @JsonProperty("executable") Optional<Boolean> executable,
-                                  @JsonProperty("extract") Optional<Boolean> extract) {
+                                  @JsonProperty("extract") Optional<Boolean> extract,
+                                  @JsonProperty("outputFile") Optional<String> outputFile) {
     this.uri = uri;
     this.cache = cache.or(false);
     this.executable = executable.or(false);
     this.extract = extract.or(true);
+    this.outputFile = outputFile;
   }
 
   public String getUri() {
@@ -42,6 +45,10 @@ public class SingularityMesosArtifact {
 
   public boolean isExtract() {
     return extract;
+  }
+
+  public Optional<String> getOutputFile() {
+    return outputFile;
   }
 
   @Override

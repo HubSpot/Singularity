@@ -2,7 +2,9 @@ package com.hubspot.singularity.mesos;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
 import java.util.stream.Collectors;
 
@@ -174,40 +176,40 @@ class SingularityMesosTaskBuilder {
   }
 
   private void prepareEnvironment(final SingularityTaskRequest task, SingularityTaskId taskId, CommandInfo.Builder commandBuilder, final SingularityOfferHolder offerHolder, final Optional<long[]> ports) {
-    Environment.Builder envBldr = Environment.newBuilder();
+    Map<String, Object> envVars = new HashMap<>();
 
-    setEnv(envBldr, "INSTANCE_NO", task.getPendingTask().getPendingTaskId().getInstanceNo());
-    setEnv(envBldr, "TASK_HOST", offerHolder.getHostname());
+    envVars.put("INSTANCE_NO", task.getPendingTask().getPendingTaskId().getInstanceNo());
+    envVars.put("TASK_HOST", offerHolder.getHostname());
 
-    setEnv(envBldr, "TASK_RACK_ID", offerHolder.getRackId());
-    setEnv(envBldr, "AVAILABILITY_ZONE", offerHolder.getRackId());
+    envVars.put("TASK_RACK_ID", offerHolder.getRackId());
+    envVars.put("AVAILABILITY_ZONE", offerHolder.getRackId());
 
-    setEnv(envBldr, "TASK_REQUEST_ID", task.getPendingTask().getPendingTaskId().getRequestId());
-    setEnv(envBldr, "TASK_DEPLOY_ID", taskId.getDeployId());
-    setEnv(envBldr, "TASK_ID", taskId.getId());
-    setEnv(envBldr, "ESTIMATED_INSTANCE_COUNT", task.getRequest().getInstancesSafe());
+    envVars.put("TASK_REQUEST_ID", task.getPendingTask().getPendingTaskId().getRequestId());
+    envVars.put("TASK_DEPLOY_ID", taskId.getDeployId());
+    envVars.put("TASK_ID", taskId.getId());
+    envVars.put("ESTIMATED_INSTANCE_COUNT", task.getRequest().getInstancesSafe());
 
     if (task.getPendingTask().getUser().isPresent()) {
-      setEnv(envBldr, "STARTED_BY_USER", task.getPendingTask().getUser().get());
+      envVars.put("STARTED_BY_USER", task.getPendingTask().getUser().get());
     }
 
     for (Entry<String, String> envEntry : task.getDeploy().getEnv().or(Collections.<String, String>emptyMap()).entrySet()) {
-      setEnv(envBldr, envEntry.getKey(), fillInTaskIdValues(envEntry.getValue(), offerHolder, taskId));
+      envVars.put(envEntry.getKey(), fillInTaskIdValues(envEntry.getValue(), offerHolder, taskId));
     }
 
     if (task.getDeploy().getTaskEnv().isPresent() && task.getDeploy().getTaskEnv().get().containsKey(taskId.getInstanceNo()) && !task.getDeploy().getTaskEnv().get().get(taskId.getInstanceNo()).isEmpty()) {
       for (Entry<String, String> envEntry : task.getDeploy().getTaskEnv().get().get(taskId.getInstanceNo()).entrySet()) {
-        setEnv(envBldr, envEntry.getKey(), fillInTaskIdValues(envEntry.getValue(), offerHolder, taskId));
+        envVars.put(envEntry.getKey(), fillInTaskIdValues(envEntry.getValue(), offerHolder, taskId));
       }
     }
 
     if (ports.isPresent()) {
       for (int portNum = 0; portNum < ports.get().length; portNum++) {
         if (portNum == 0) {
-          setEnv(envBldr, "PORT", ports.get()[portNum]);
+          envVars.put("PORT", ports.get()[portNum]);
         }
 
-        setEnv(envBldr, String.format("PORT%s", portNum), ports.get()[portNum]);
+        envVars.put(String.format("PORT%s", portNum), ports.get()[portNum]);
       }
     }
 
@@ -215,15 +217,22 @@ class SingularityMesosTaskBuilder {
       Resources override = task.getPendingTask().getResources().get();
 
       if (override.getCpus() != 0) {
-        setEnv(envBldr, "DEPLOY_CPUS", ((long) override.getCpus()));
+        envVars.put("DEPLOY_CPUS", ((long) override.getCpus()));
       }
 
       if (override.getMemoryMb() != 0) {
-        setEnv(envBldr, "DEPLOY_MEM", ((long) override.getMemoryMb()));
+        envVars.put("DEPLOY_MEM", ((long) override.getMemoryMb()));
       }
-
     }
 
+    for (Entry entry : task.getPendingTask().getEnvOverrides().entrySet()) {
+      envVars.put(entry.getKey().toString(), entry.getValue());
+    }
+
+    Environment.Builder envBldr = Environment.newBuilder();
+    for (Entry entry : envVars.entrySet()) {
+      setEnv(envBldr, entry.getKey().toString(), entry.getValue());
+    }
     commandBuilder.setEnvironment(envBldr.build());
   }
 
@@ -358,6 +367,9 @@ class SingularityMesosTaskBuilder {
     return builder.build();
   }
 
+  /**
+   * Prepares the Mesos TaskInfo object when using our custom SingularityExecutor.
+   */
   private void prepareCustomExecutor(final TaskInfo.Builder bldr, final SingularityTaskId taskId, final SingularityTaskRequest task, final SingularityOfferHolder offerHolder,
       final Optional<long[]> ports, final Resources desiredExecutorResources) {
     CommandInfo.Builder commandBuilder = CommandInfo.newBuilder().setValue(task.getDeploy().getCustomExecutorCmd().get());
@@ -367,6 +379,8 @@ class SingularityMesosTaskBuilder {
     if (task.getDeploy().getUser().isPresent()) {
       commandBuilder.setUser(task.getDeploy().getUser().get());
     }
+
+    prepareMesosUriDownloads(task.getPendingTask().getExtraArtifacts(), commandBuilder);
 
     bldr.setExecutor(ExecutorInfo.newBuilder()
         .setCommand(commandBuilder.build())
@@ -407,6 +421,10 @@ class SingularityMesosTaskBuilder {
       Optional<String> maybeS3StorageClass = configuration.getS3ConfigurationOptional().isPresent() ? configuration.getS3ConfigurationOptional().get().getS3StorageClass() : Optional.<String>absent();
       Optional<Long> maybeApplyAfterBytes = configuration.getS3ConfigurationOptional().isPresent() ? configuration.getS3ConfigurationOptional().get().getApplyS3StorageClassAfterBytes() : Optional.<Long>absent();
 
+      if (task.getPendingTask().getRunAsUserOverride().isPresent()) {
+        executorDataBldr.setUser(task.getPendingTask().getRunAsUserOverride());
+      }
+
       final SingularityTaskExecutorData executorData = new SingularityTaskExecutorData(executorDataBldr.build(), uploaderAdditionalFiles, defaultS3Bucket, s3UploaderKeyPattern,
           configuration.getCustomExecutorConfiguration().getServiceLog(), configuration.getCustomExecutorConfiguration().getServiceFinishedTailLog(), task.getRequest().getGroup(),
           maybeS3StorageClass, maybeApplyAfterBytes);
@@ -423,12 +441,15 @@ class SingularityMesosTaskBuilder {
     }
   }
 
-
+  /**
+   * Prepares the Mesos TaskInfo object when using the Mesos Default Executor.
+   */
   private void prepareCommand(final TaskInfo.Builder bldr, final SingularityTaskId taskId, final SingularityTaskRequest task, final SingularityOfferHolder offerHolder, final Optional<long[]> ports) {
     CommandInfo.Builder commandBldr = CommandInfo.newBuilder();
 
-    if (task.getDeploy().getUser().isPresent()) {
-      commandBldr.setUser(task.getDeploy().getUser().get());
+    Optional<String> specifiedUser = task.getPendingTask().getRunAsUserOverride().or(task.getDeploy().getUser());
+    if (specifiedUser.isPresent()) {
+      commandBldr.setUser(specifiedUser.get());
     }
 
     if (task.getDeploy().getCommand().isPresent()) {
@@ -453,18 +474,31 @@ class SingularityMesosTaskBuilder {
       commandBldr.setShell(false);
     }
 
-    for (SingularityMesosArtifact artifact : task.getDeploy().getUris().or(Collections.<SingularityMesosArtifact> emptyList())) {
-      commandBldr.addUris(URI.newBuilder()
-          .setValue(artifact.getUri())
-          .setCache(artifact.isCache())
-          .setExecutable(artifact.isExecutable())
-          .setExtract(artifact.isExtract())
-          .build());
-    }
+    List<SingularityMesosArtifact> combinedArtifacts = new ArrayList<>();
+    combinedArtifacts.addAll(task.getDeploy().getUris().or(Collections.emptyList()));
+    combinedArtifacts.addAll(task.getPendingTask().getExtraArtifacts());
+
+    prepareMesosUriDownloads(combinedArtifacts, commandBldr);
 
     prepareEnvironment(task, taskId, commandBldr, offerHolder, ports);
 
     bldr.setCommand(commandBldr);
+  }
+
+  private void prepareMesosUriDownloads(List<SingularityMesosArtifact> extraArtifacts, CommandInfo.Builder commandBldr) {
+    for (SingularityMesosArtifact artifact : extraArtifacts) {
+      CommandInfo.URI.Builder uriBldr = URI.newBuilder()
+          .setValue(artifact.getUri())
+          .setCache(artifact.isCache())
+          .setExecutable(artifact.isExecutable())
+          .setExtract(artifact.isExtract());
+
+      if (artifact.getOutputFile().isPresent()) {
+        uriBldr.setOutputFile(artifact.getOutputFile().get());
+      }
+
+      commandBldr.addUris(uriBldr.build());
+    }
   }
 
 }
