@@ -128,7 +128,7 @@ public class SingularityExpiringActionsTest extends SingularitySchedulerTestBase
   public void testExpiringIncrementalBounce() {
     initRequest();
 
-    requestResource.scale(requestId, new SingularityScaleRequest(Optional.of(3), Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent()), singularityUser);
+    requestResource.scale(requestId, new SingularityScaleRequest(Optional.of(3), Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent()), singularityUser);
 
     initFirstDeploy();
 
@@ -186,7 +186,7 @@ public class SingularityExpiringActionsTest extends SingularitySchedulerTestBase
     initRequest();
     initFirstDeploy();
 
-    requestResource.scale(requestId, new SingularityScaleRequest(Optional.of(5), Optional.of(1L), Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent()), singularityUser);
+    requestResource.scale(requestId, new SingularityScaleRequest(Optional.of(5), Optional.of(1L), Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent()), singularityUser);
 
     try {
       Thread.sleep(2);
@@ -237,7 +237,7 @@ public class SingularityExpiringActionsTest extends SingularitySchedulerTestBase
 
     requestResource.postRequest(request.toBuilder().setBounceAfterScale(Optional.of(true)).build(), singularityUser);
 
-    requestResource.scale(requestId, new SingularityScaleRequest(Optional.of(5), Optional.of(1L), Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent()), singularityUser);
+    requestResource.scale(requestId, new SingularityScaleRequest(Optional.of(5), Optional.of(1L), Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent()), singularityUser);
 
     Assert.assertEquals(1, requestManager.getCleanupRequests().size());
     cleaner.drainCleanupQueue();
