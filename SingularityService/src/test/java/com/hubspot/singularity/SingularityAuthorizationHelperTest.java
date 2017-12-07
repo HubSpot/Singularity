@@ -217,8 +217,8 @@ public class SingularityAuthorizationHelperTest {
     authorizationHelper.checkForAuthorization(REQUEST_WITH_GROUP_A_CHANGED_TO_B, USER_GROUP_A, SingularityAuthorizationScope.READ);
   }
 
-  @Test(expected = WebApplicationException.class)
-  public void itRestrictsReadWriteChangesForNonAdminsAndGroupOwners() {
+  @Test
+  public void itAllowsUserInReadWriteGroupsToUpdateReadWriteGroups() {
     final SingularityAuthorizationHelper authorizationHelper = buildAuthorizationHelper(buildAuthEnabledConfig());
 
     Set<String> readWriteGroupsOld = new HashSet<>();
@@ -230,6 +230,27 @@ public class SingularityAuthorizationHelperTest {
 
     Set<String> readWriteGroupsNew = new HashSet<>();
     readWriteGroupsNew.addAll(readWriteGroupsOld);
+    readWriteGroupsNew.add("b");
+    final SingularityRequest newRequest = new SingularityRequestBuilder("test_c", RequestType.SERVICE)
+        .setGroup(Optional.of("c"))
+        .setReadWriteGroups(Optional.of(readWriteGroupsNew))
+        .build();
+
+    authorizationHelper.checkForAuthorizedChanges(newRequest, oldRequest, USER_GROUP_A);
+  }
+
+  @Test(expected = WebApplicationException.class)
+  public void itRestrictsAUserFromUpdatingGroupsIfTheyWillNotHaveAccess() {
+    final SingularityAuthorizationHelper authorizationHelper = buildAuthorizationHelper(buildAuthEnabledConfig());
+
+    Set<String> readWriteGroupsOld = new HashSet<>();
+    readWriteGroupsOld.add("a");
+    final SingularityRequest oldRequest = new SingularityRequestBuilder("test_c", RequestType.SERVICE)
+        .setGroup(Optional.of("c"))
+        .setReadWriteGroups(Optional.of(readWriteGroupsOld))
+        .build();
+
+    Set<String> readWriteGroupsNew = new HashSet<>();
     readWriteGroupsNew.add("b");
     final SingularityRequest newRequest = new SingularityRequestBuilder("test_c", RequestType.SERVICE)
         .setGroup(Optional.of("c"))
