@@ -3,7 +3,6 @@ package com.hubspot.singularity.auth;
 import static com.google.common.collect.ImmutableSet.copyOf;
 import static com.hubspot.singularity.WebExceptions.badRequest;
 import static com.hubspot.singularity.WebExceptions.checkForbidden;
-import static com.hubspot.singularity.WebExceptions.checkUnauthorized;
 
 import java.util.Collections;
 import java.util.List;
@@ -180,19 +179,10 @@ public class SingularityAuthorizationHelper {
 
     checkForbidden(user.isAuthenticated(), "Not Authenticated!");
 
-    if (oldRequest.getGroup().isPresent() && !oldRequest.getReadWriteGroups().equals(request.getReadWriteGroups())) {
-      final Set<String> userGroups = user.getGroups();
-      final Set<String> newReadWriteGroups = request.getReadWriteGroups().or(Collections.emptySet());
-      final Set<String> oldReadWriteGroups = oldRequest.getReadWriteGroups().or(Collections.emptySet());
-      final boolean userIsAdmin = !adminGroups.isEmpty() && groupsIntersect(userGroups, adminGroups);
-      final boolean userIsJITA = !jitaGroups.isEmpty() && groupsIntersect(userGroups, jitaGroups);
-      final boolean userIsRequestOwner = userGroups.contains(oldRequest.getGroup().get());
-
-      // User must be authorized for both the new and old readWrite groups to change them if not a request owner
-      final boolean userIsReadWriteUser = !newReadWriteGroups.isEmpty() && !oldReadWriteGroups.isEmpty() && groupsIntersect(userGroups, newReadWriteGroups) && groupsIntersect(userGroups, oldReadWriteGroups);
-
-      checkUnauthorized(userIsAdmin || userIsRequestOwner || userIsJITA || userIsReadWriteUser,
-          "Only admins and members of the request's owner group can add or remove groups from readWriteGroups");
+    if (!oldRequest.getReadWriteGroups().equals(request.getReadWriteGroups()) || !oldRequest.getGroup().equals(request.getGroup())) {
+      // If group or readWriteGroups are changing, a user must be authorized for both the old and new request groups
+      checkForAuthorization(oldRequest, user, SingularityAuthorizationScope.WRITE);
+      checkForAuthorization(request, user, SingularityAuthorizationScope.WRITE);
     }
   }
 
