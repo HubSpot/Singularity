@@ -21,6 +21,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 
 import org.apache.curator.framework.recipes.leader.LeaderLatch;
 import org.slf4j.Logger;
@@ -64,6 +65,7 @@ import com.hubspot.singularity.api.SingularityRunNowRequest;
 import com.hubspot.singularity.api.SingularityScaleRequest;
 import com.hubspot.singularity.api.SingularitySkipHealthchecksRequest;
 import com.hubspot.singularity.api.SingularityUnpauseRequest;
+import com.hubspot.singularity.api.SingularityUpdateGroupsRequest;
 import com.hubspot.singularity.auth.SingularityAuthorizationHelper;
 import com.hubspot.singularity.config.ApiPaths;
 import com.hubspot.singularity.data.DeployManager;
@@ -175,6 +177,46 @@ public class RequestResource extends AbstractRequestResource {
     checkConflict(maybeDeployId.isPresent(), "Can not schedule/bounce a request (%s) with no deploy", requestId);
 
     return maybeDeployId.get();
+  }
+
+  @POST
+  @Path("/request/{requestId}/groups")
+  public SingularityRequestParent updateAuthorizedGroups(@Auth SingularityUser user,
+                                                         @PathParam("requestId") String requestId,
+                                                         @Context HttpServletRequest requestContext,
+                                                         @ApiParam("Updated groups") SingularityUpdateGroupsRequest updateGroupsRequest) {
+    return maybeProxyToLeader(requestContext, SingularityRequestParent.class, updateGroupsRequest, () -> updateAuthorizedGroups(user, requestId, updateGroupsRequest));
+  }
+
+  public SingularityRequestParent updateAuthorizedGroups(SingularityUser user, String requestId, SingularityUpdateGroupsRequest updateGroupsRequest) {
+    SingularityRequestWithState oldRequestWithState = fetchRequestWithState(requestId, user);
+    authorizationHelper.checkForAuthorization(oldRequestWithState.getRequest(), user, SingularityAuthorizationScope.WRITE);
+
+    SingularityRequest newRequest = oldRequestWithState.getRequest().toBuilder()
+        .setGroup(updateGroupsRequest.getGroup())
+        .setReadWriteGroups(Optional.of(updateGroupsRequest.getReadWriteGroups()))
+        .setReadOnlyGroups(Optional.of(updateGroupsRequest.getReadOnlyGroups()))
+        .build();
+
+    submitRequest(newRequest, Optional.of(oldRequestWithState), Optional.of(RequestHistoryType.UPDATED), Optional.absent(), updateGroupsRequest.getMessage(), Optional.absent(), user);
+    return fillEntireRequest(fetchRequestWithState(requestId, user));
+  }
+
+  @POST
+  @Path("/request/{requestId}/groups/auth-verify")
+  public Response checkAuthForGroupsUpdate(@Auth SingularityUser user,
+                                           @PathParam("requestId") String requestId,
+                                           @ApiParam("Updated groups") SingularityUpdateGroupsRequest updateGroupsRequest) {
+    SingularityRequestWithState oldRequestWithState = fetchRequestWithState(requestId, user);
+    authorizationHelper.checkForAuthorization(oldRequestWithState.getRequest(), user, SingularityAuthorizationScope.WRITE);
+
+    SingularityRequest newRequest = oldRequestWithState.getRequest().toBuilder()
+        .setGroup(updateGroupsRequest.getGroup())
+        .setReadWriteGroups(Optional.of(updateGroupsRequest.getReadWriteGroups()))
+        .setReadOnlyGroups(Optional.of(updateGroupsRequest.getReadOnlyGroups()))
+        .build();
+    authorizationHelper.checkForAuthorizedChanges(newRequest, oldRequestWithState.getRequest(), user);
+    return Response.ok().build();
   }
 
   @POST
