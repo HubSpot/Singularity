@@ -8,6 +8,7 @@ import classNames from 'classnames';
 
 import Utils from '../../utils';
 
+import DeletePendingTaskButton from '../common/modalButtons/DeletePendingTaskButton';
 import JSONButton from '../common/JSONButton';
 import KillTaskButton from '../common/modalButtons/KillTaskButton';
 import RunNowButton from '../common/modalButtons/RunNowButton';
@@ -307,6 +308,12 @@ export const ScheduledActions = (
     cellRender={(cellData) => (
       <div className="hidden-xs">
         <RunNowButton requestId={cellData.pendingTask.pendingTaskId.requestId} />
+        {cellData.request.requestType == "ON_DEMAND" &&
+            <DeletePendingTaskButton
+                taskId={cellData.pendingTask.pendingTaskId.id}
+                requestType={cellData.request.requestType}
+            />
+        }
         <JSONButton className="inline" object={cellData} showOverlay={true}>
           {'{ }'}
         </JSONButton>
