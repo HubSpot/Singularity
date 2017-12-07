@@ -45,6 +45,7 @@ public class SingularityLeaderCache {
   private Map<SingularityTaskId, Map<ExtendedTaskState, SingularityTaskHistoryUpdate>> historyUpdates;
   private Map<String, SingularitySlave> slaves;
   private Map<String, SingularityRack> racks;
+  private Set<SingularityPendingTaskId> pendingTaskIdsToDelete;
 
   private volatile boolean active;
 
@@ -60,6 +61,11 @@ public class SingularityLeaderCache {
   public void cachePendingTasks(List<SingularityPendingTask> pendingTasks) {
     this.pendingTaskIdToPendingTask = new ConcurrentHashMap<>(pendingTasks.size());
     pendingTasks.forEach((t) -> pendingTaskIdToPendingTask.put(t.getPendingTaskId(), t));
+  }
+
+  public void cachePendingTasksToDelete(List<SingularityPendingTaskId> pendingTaskIds) {
+    this.pendingTaskIdsToDelete = new HashSet<>(pendingTaskIds.size());
+    pendingTaskIdsToDelete.addAll(pendingTaskIds);
   }
 
   public void cacheActiveTaskIds(List<SingularityTaskId> activeTaskIds) {
@@ -126,12 +132,20 @@ public class SingularityLeaderCache {
         .collect(Collectors.toList());
   }
 
+  public List<SingularityPendingTaskId> getPendingTaskIdsToDelete() { return new ArrayList<SingularityPendingTaskId>(pendingTaskIdsToDelete); }
+
+  public void markPendingTaskForDeletion(SingularityPendingTaskId taskId) {
+    pendingTaskIdsToDelete.add(taskId);
+  }
+
   public void deletePendingTask(SingularityPendingTaskId pendingTaskId) {
     if (!active) {
       LOG.warn("deletePendingTask {}, but not active", pendingTaskId);
       return;
     }
-
+    if (pendingTaskIdsToDelete.contains(pendingTaskId)) {
+      pendingTaskIdsToDelete.remove(pendingTaskId);
+    }
     pendingTaskIdToPendingTask.remove(pendingTaskId);
   }
 
