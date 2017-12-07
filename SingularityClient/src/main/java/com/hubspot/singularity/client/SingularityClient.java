@@ -97,6 +97,7 @@ import com.hubspot.singularity.api.SingularityPriorityFreeze;
 import com.hubspot.singularity.api.SingularityRunNowRequest;
 import com.hubspot.singularity.api.SingularityScaleRequest;
 import com.hubspot.singularity.api.SingularityUnpauseRequest;
+import com.hubspot.singularity.api.SingularityUpdateGroupsRequest;
 
 public class SingularityClient {
 
@@ -104,8 +105,10 @@ public class SingularityClient {
 
   private static final String BASE_API_FORMAT = "%s://%s/%s";
 
-  private static final String AUTH_CHECK_FORMAT = "%s/auth/%s/auth-check";
+  private static final String AUTH_FORMAT = "%s/auth";
+  private static final String AUTH_CHECK_FORMAT = AUTH_FORMAT + "/%s/auth-check";
   private static final String AUTH_CHECK_USER_FORMAT = AUTH_CHECK_FORMAT + "/%s";
+  private static final String AUTH_GROUPS_CHECK_FORMAT = AUTH_FORMAT + "/groups/auth-check";
 
   private static final String STATE_FORMAT = "%s/state";
   private static final String TASK_RECONCILIATION_FORMAT = STATE_FORMAT + "/task-reconciliation";
@@ -173,6 +176,8 @@ public class SingularityClient {
   private static final String REQUEST_SCALE_FORMAT = REQUESTS_FORMAT + "/request/%s/scale";
   private static final String REQUEST_RUN_FORMAT = REQUESTS_FORMAT + "/request/%s/run";
   private static final String REQUEST_EXIT_COOLDOWN_FORMAT = REQUESTS_FORMAT + "/request/%s/exit-cooldown";
+  private static final String REQUEST_GROUPS_UPDATE_FORMAT = REQUESTS_FORMAT + "/request/%s/groups";
+  private static final String REQUEST_GROUPS_UPDATE_AUTH_CHECK_FORMAT = REQUEST_GROUPS_UPDATE_FORMAT + "/auth-check";
 
   private static final String DEPLOYS_FORMAT = "%s/deploys";
   private static final String DELETE_DEPLOY_FORMAT = DEPLOYS_FORMAT + "/deploy/%s/request/%s";
@@ -633,6 +638,22 @@ public class SingularityClient {
     final Function<String, String> requestUri = (host) -> String.format(REQUEST_EXIT_COOLDOWN_FORMAT, getApiBase(host), requestId);
 
     post(requestUri, String.format("exit cooldown of request %s", requestId), exitCooldownRequest);
+  }
+
+  public SingularityPendingRequestParent updateAuthorizedGroups(String requestId, SingularityUpdateGroupsRequest updateGroupsRequest) {
+    final Function<String, String> requestUri = (host) -> String.format(REQUEST_GROUPS_UPDATE_FORMAT, getApiBase(host), requestId);
+
+    final HttpResponse response = post(requestUri, String.format("update authorized groups of request %s", requestId), Optional.of(updateGroupsRequest));
+
+    return response.getAs(SingularityPendingRequestParent.class);
+  }
+
+  public boolean checkAuthForRequestGroupsUpdate(String requestId, SingularityUpdateGroupsRequest updateGroupsRequest) {
+    final Function<String, String> requestUri = (host) -> String.format(REQUEST_GROUPS_UPDATE_AUTH_CHECK_FORMAT, getApiBase(host), requestId);
+
+    final HttpResponse response = post(requestUri, String.format("check auth for update authorized groups of request %s", requestId), Optional.of(updateGroupsRequest));
+
+    return response.isSuccess();
   }
 
   //
