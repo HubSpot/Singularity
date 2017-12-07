@@ -181,6 +181,11 @@ public class RequestResource extends AbstractRequestResource {
 
   @POST
   @Path("/request/{requestId}/groups")
+  @ApiOperation(value="Update the group, readOnlyGroups, and readWriteGroups for a SingularityRequest")
+  @ApiResponses({
+      @ApiResponse(code=400, message="Request object is invalid"),
+      @ApiResponse(code=401, message="User is not authorized to make these updates"),
+  })
   public SingularityRequestParent updateAuthorizedGroups(@Auth SingularityUser user,
                                                          @PathParam("requestId") String requestId,
                                                          @Context HttpServletRequest requestContext,
@@ -203,7 +208,12 @@ public class RequestResource extends AbstractRequestResource {
   }
 
   @POST
-  @Path("/request/{requestId}/groups/auth-verify")
+  @Path("/request/{requestId}/groups/auth-check")
+  @ApiOperation(value="Check authorization for updating the group, readOnlyGroups, and readWriteGroups for a SingularityReques, without commiting the change")
+  @ApiResponses({
+      @ApiResponse(code=200, message="User is authorized to make these changes"),
+      @ApiResponse(code=401, message="User is not authorized to make these updates"),
+  })
   public Response checkAuthForGroupsUpdate(@Auth SingularityUser user,
                                            @PathParam("requestId") String requestId,
                                            @ApiParam("Updated groups") SingularityUpdateGroupsRequest updateGroupsRequest) {
