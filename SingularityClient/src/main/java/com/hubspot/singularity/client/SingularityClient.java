@@ -1494,21 +1494,6 @@ public class SingularityClient {
     return response.isSuccess();
   }
 
-  /**
-   * Check if the current client's user is authorized for the specified groups
-   *
-   * @param updateGroupsRequest
-   *    The group, readWriteGroups, and readOnlyGroups to be checked
-   *
-   * @return
-   *    true if the user is authorized for WRITE scope, false otherwise
-   */
-  public boolean isUserAuthorizedForGroups(SingularityUpdateGroupsRequest updateGroupsRequest) {
-    final Function<String, String> requestUri = (host) -> String.format(AUTH_GROUPS_CHECK_FORMAT, getApiBase(host));
-    final HttpResponse response = post(requestUri, "check auth for groups", Optional.of(updateGroupsRequest));
-    return response.isSuccess();
-  }
-
   //
   // TASK STATE
   //

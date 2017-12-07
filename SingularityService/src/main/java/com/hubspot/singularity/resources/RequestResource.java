@@ -32,6 +32,7 @@ import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.hubspot.jackson.jaxrs.PropertyFiltering;
 import com.hubspot.singularity.MachineState;
@@ -217,7 +218,17 @@ public class RequestResource extends AbstractRequestResource {
   public Response checkAuthForGroupsUpdate(@Auth SingularityUser user,
                                            @PathParam("requestId") String requestId,
                                            @ApiParam("Updated groups") SingularityUpdateGroupsRequest updateGroupsRequest) {
-    SingularityRequestWithState oldRequestWithState = fetchRequestWithState(requestId, user);
+    Optional<SingularityRequestWithState> maybeOldRequestWithState = requestManager.getRequest(requestId, false);
+    if (!maybeOldRequestWithState.isPresent()) {
+      authorizationHelper.checkForAuthorization(
+          user,
+          Sets.union(updateGroupsRequest.getGroup().asSet(), updateGroupsRequest.getReadWriteGroups()),
+          updateGroupsRequest.getReadOnlyGroups(),
+          SingularityAuthorizationScope.WRITE,
+          Optional.absent());
+      return Response.ok().build();
+    }
+    SingularityRequestWithState oldRequestWithState = maybeOldRequestWithState.get();
     authorizationHelper.checkForAuthorization(oldRequestWithState.getRequest(), user, SingularityAuthorizationScope.WRITE);
 
     SingularityRequest newRequest = oldRequestWithState.getRequest().toBuilder()
