@@ -105,8 +105,10 @@ public class SingularityClient {
 
   private static final String BASE_API_FORMAT = "%s://%s/%s";
 
-  private static final String AUTH_CHECK_FORMAT = "%s/auth/%s/auth-check";
+  private static final String AUTH_FORMAT = "%s/auth";
+  private static final String AUTH_CHECK_FORMAT = AUTH_FORMAT + "/%s/auth-check";
   private static final String AUTH_CHECK_USER_FORMAT = AUTH_CHECK_FORMAT + "/%s";
+  private static final String AUTH_GROUPS_CHECK_FORMAT = AUTH_FORMAT + "/groups/auth-check";
 
   private static final String STATE_FORMAT = "%s/state";
   private static final String TASK_RECONCILIATION_FORMAT = STATE_FORMAT + "/task-reconciliation";
@@ -1489,6 +1491,21 @@ public class SingularityClient {
     final Function<String, String> requestUri = (host) -> String.format(AUTH_CHECK_FORMAT, getApiBase(host), requestId);
     Map<String, Object> params = Collections.singletonMap("scope", scope.name());
     HttpResponse response = executeGetSingleWithParams(requestUri, "auth check", "", Optional.of(params));
+    return response.isSuccess();
+  }
+
+  /**
+   * Check if the current client's user is authorized for the specified groups
+   *
+   * @param updateGroupsRequest
+   *    The group, readWriteGroups, and readOnlyGroups to be checked
+   *
+   * @return
+   *    true if the user is authorized for WRITE scope, false otherwise
+   */
+  public boolean isUserAuthorizedForGroups(SingularityUpdateGroupsRequest updateGroupsRequest) {
+    final Function<String, String> requestUri = (host) -> String.format(AUTH_GROUPS_CHECK_FORMAT, getApiBase(host));
+    final HttpResponse response = post(requestUri, "check auth for groups", Optional.of(updateGroupsRequest));
     return response.isSuccess();
   }
 
