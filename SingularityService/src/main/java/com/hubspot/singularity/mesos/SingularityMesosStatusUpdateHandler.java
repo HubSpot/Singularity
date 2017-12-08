@@ -155,7 +155,13 @@ public class SingularityMesosStatusUpdateHandler {
         }
 
       }
-      return Optional.of("Task exceeded memory limit");
+      return Optional.of("Task exceeded memory limit.");
+    } else if (status.hasReason() && status.getReason() == Reason.REASON_CONTAINER_LIMITATION_DISK) {
+      if (task.isPresent() && task.get().getTaskRequest().getDeploy().getResources().isPresent()) {
+        return Optional.of(String.format("Task exceeded disk limit (%s MB disk).", task.get().getTaskRequest().getDeploy().getResources().get().getDiskMb()));
+      } else {
+        return Optional.of("Task exceeded disk limit.");
+      }
     }
 
     return Optional.absent();

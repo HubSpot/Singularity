@@ -33,6 +33,7 @@ public class SingularityOfferPerformanceTestRunner extends SingularitySchedulerT
     Random r = new Random();
     Iterator<Double> cpuIterator = r.doubles(1, 5).iterator();
     Iterator<Double> memoryIterator = r.doubles(15, 20000).iterator();
+    Iterator<Double> diskIterator = r.doubles(30, 50000).iterator();
 
     for (int i = 0; i < numRequests; i++) {
       SingularityRequestBuilder bldr = new SingularityRequestBuilder("request-" + i, RequestType.SERVICE);
@@ -47,7 +48,7 @@ public class SingularityOfferPerformanceTestRunner extends SingularitySchedulerT
     List<Offer> offers = new ArrayList<>(numOffers);
 
     for (int i = 0; i < numOffers; i++) {
-      offers.add(createOffer(cpuIterator.next(), memoryIterator.next(), "slave-" + i, "host-" + i));
+      offers.add(createOffer(cpuIterator.next(), memoryIterator.next(), diskIterator.next(), "slave-" + i, "host-" + i));
     }
 
     System.out.println("Starting after " + JavaUtils.duration(start));
