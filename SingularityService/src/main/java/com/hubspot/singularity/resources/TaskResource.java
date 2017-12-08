@@ -1,14 +1,12 @@
 package com.hubspot.singularity.resources;
 
 import static com.hubspot.singularity.WebExceptions.badRequest;
+import static com.hubspot.singularity.WebExceptions.checkBadRequest;
 import static com.hubspot.singularity.WebExceptions.checkNotFound;
 import static com.hubspot.singularity.WebExceptions.notFound;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
@@ -40,16 +38,16 @@ import com.hubspot.mesos.client.MesosClient;
 import com.hubspot.mesos.json.MesosTaskMonitorObject;
 import com.hubspot.mesos.json.MesosTaskStatisticsObject;
 import com.hubspot.singularity.InvalidSingularityTaskIdException;
+import com.hubspot.singularity.RequestType;
 import com.hubspot.singularity.SingularityAction;
 import com.hubspot.singularity.SingularityAuthorizationScope;
 import com.hubspot.singularity.SingularityCreateResult;
-import com.hubspot.singularity.SingularityDeploy;
 import com.hubspot.singularity.SingularityKilledTaskIdRecord;
-import com.hubspot.singularity.SingularityPendingDeploy;
 import com.hubspot.singularity.SingularityPendingRequest;
 import com.hubspot.singularity.SingularityPendingRequest.PendingType;
 import com.hubspot.singularity.SingularityPendingTask;
 import com.hubspot.singularity.SingularityPendingTaskId;
+import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityRequestWithState;
 import com.hubspot.singularity.SingularityShellCommand;
 import com.hubspot.singularity.SingularitySlave;
@@ -72,14 +70,13 @@ import com.hubspot.singularity.api.SingularityTaskMetadataRequest;
 import com.hubspot.singularity.auth.SingularityAuthorizationHelper;
 import com.hubspot.singularity.config.ApiPaths;
 import com.hubspot.singularity.config.SingularityTaskMetadataConfiguration;
-import com.hubspot.singularity.data.DeployManager;
 import com.hubspot.singularity.data.DisasterManager;
 import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.data.SingularityValidator;
 import com.hubspot.singularity.data.SlaveManager;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.data.TaskRequestManager;
-import com.hubspot.singularity.scheduler.SingularityDeployHealthHelper;
+import com.hubspot.singularity.helpers.RequestHelper;
 import com.ning.http.client.AsyncHttpClient;
 import com.wordnik.swagger.annotations.Api;
 import com.wordnik.swagger.annotations.ApiOperation;
@@ -103,13 +100,12 @@ public class TaskResource extends AbstractLeaderAwareResource {
   private final SingularityTaskMetadataConfiguration taskMetadataConfiguration;
   private final SingularityValidator validator;
   private final DisasterManager disasterManager;
-  private final SingularityDeployHealthHelper deployHealthHelper;
-  private final DeployManager deployManager;
+  private final RequestHelper requestHelper;
 
   @Inject
   public TaskResource(TaskRequestManager taskRequestManager, TaskManager taskManager, SlaveManager slaveManager, MesosClient mesosClient, SingularityTaskMetadataConfiguration taskMetadataConfiguration,
                       SingularityAuthorizationHelper authorizationHelper, RequestManager requestManager, SingularityValidator validator, DisasterManager disasterManager,
-                      AsyncHttpClient httpClient, LeaderLatch leaderLatch, ObjectMapper objectMapper, SingularityDeployHealthHelper deployHealthHelper, DeployManager deployManager) {
+                      AsyncHttpClient httpClient, LeaderLatch leaderLatch, ObjectMapper objectMapper, RequestHelper requestHelper) {
     super(httpClient, leaderLatch, objectMapper);
     this.taskManager = taskManager;
     this.taskRequestManager = taskRequestManager;
@@ -120,8 +116,7 @@ public class TaskResource extends AbstractLeaderAwareResource {
     this.authorizationHelper = authorizationHelper;
     this.validator = validator;
     this.disasterManager = disasterManager;
-    this.deployHealthHelper = deployHealthHelper;
-    this.deployManager = deployManager;
+    this.requestHelper = requestHelper;
   }
 
   @GET
@@ -180,6 +175,31 @@ public class TaskResource extends AbstractLeaderAwareResource {
     return taskRequestList.get(0);
   }
 
+  @DELETE
+  @Path("/scheduled/task/{scheduledTaskId}")
+  @ApiOperation("Delete a scheduled task.")
+  public Optional<SingularityPendingTask> deleteScheduledTask(@Auth SingularityUser user, @PathParam("scheduledTaskId") String taskId, @Context HttpServletRequest requestContext) {
+    return maybeProxyToLeader(requestContext, Optional.class, null, () -> deleteScheduledTask(taskId, user));
+  }
+
+  public Optional<SingularityPendingTask> deleteScheduledTask(String taskId, SingularityUser user) {
+    Optional<SingularityPendingTask> maybePendingTask = taskManager.getPendingTask(getPendingTaskIdFromStr(taskId));
+
+    if (maybePendingTask.isPresent()) {
+      SingularityPendingTaskId pendingTaskId = maybePendingTask.get().getPendingTaskId();
+
+      Optional<SingularityRequestWithState> maybeRequest = requestManager.getRequest(pendingTaskId.getRequestId());
+      checkNotFound(maybeRequest.isPresent(), "Couldn't find: " + taskId);
+
+      SingularityRequest request = maybeRequest.get().getRequest();
+      authorizationHelper.checkForAuthorizationByRequestId(request.getId(), user, SingularityAuthorizationScope.WRITE);
+      checkBadRequest(request.getRequestType() == RequestType.ON_DEMAND, "Only ON_DEMAND tasks may be deleted.");
+
+      taskManager.markPendingTaskForDeletion(pendingTaskId);
+    }
+    return maybePendingTask;
+  }
+
   @GET
   @PropertyFiltering
   @Path("/scheduled/request/{requestId}")
@@ -198,37 +218,7 @@ public class TaskResource extends AbstractLeaderAwareResource {
   public Optional<SingularityTaskIdsByStatus> getTaskIdsByStatusForRequest(@Auth SingularityUser user, @PathParam("requestId") String requestId) {
     authorizationHelper.checkForAuthorizationByRequestId(requestId, user, SingularityAuthorizationScope.READ);
 
-    Optional<SingularityRequestWithState> requestWithState = requestManager.getRequest(requestId);
-    if (!requestWithState.isPresent()) {
-       return Optional.absent();
-    }
-    Optional<SingularityPendingDeploy> pendingDeploy = deployManager.getPendingDeploy(requestId);
-
-    List<SingularityTaskId> cleaningTaskIds = taskManager.getCleanupTaskIds().stream().filter((t) -> t.getRequestId().equals(requestId)).collect(Collectors.toList());
-    List<SingularityPendingTaskId> pendingTaskIds = taskManager.getPendingTaskIdsForRequest(requestId);
-    List<SingularityTaskId> activeTaskIds = taskManager.getActiveTaskIdsForRequest(requestId);
-    activeTaskIds.removeAll(cleaningTaskIds);
-
-    List<SingularityTaskId> healthyTaskIds = new ArrayList<>();
-    List<SingularityTaskId> notYetHealthyTaskIds = new ArrayList<>();
-    Map<String, List<SingularityTaskId>> taskIdsByDeployId = activeTaskIds.stream().collect(Collectors.groupingBy(SingularityTaskId::getDeployId));
-    for (Map.Entry<String, List<SingularityTaskId>> entry : taskIdsByDeployId.entrySet()) {
-      Optional<SingularityDeploy> deploy = deployManager.getDeploy(requestId, entry.getKey());
-      List<SingularityTaskId> healthyTasksIdsForDeploy = deployHealthHelper.getHealthyTasks(
-          requestWithState.get().getRequest(),
-          deploy,
-          entry.getValue(),
-          pendingDeploy.isPresent() && pendingDeploy.get().getDeployMarker().getDeployId().equals(entry.getKey()));
-      for (SingularityTaskId taskId : entry.getValue()) {
-        if (healthyTasksIdsForDeploy.contains(taskId)) {
-          healthyTaskIds.add(taskId);
-        } else {
-          notYetHealthyTaskIds.add(taskId);
-        }
-      }
-    }
-
-    return Optional.of(new SingularityTaskIdsByStatus(healthyTaskIds, notYetHealthyTaskIds, pendingTaskIds, cleaningTaskIds));
+    return requestHelper.getTaskIdsByStatusForRequest(requestId);
   }
 
   @GET

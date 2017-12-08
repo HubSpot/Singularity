@@ -93,6 +93,10 @@ public class SingularityMesosOfferScheduler {
   }
 
   public List<SingularityOfferHolder> checkOffers(final Collection<Offer> offers) {
+    for (SingularityPendingTaskId taskId : taskManager.getPendingTasksMarkedForDeletion()) {
+      taskManager.deletePendingTask(taskId);
+    }
+
     boolean useTaskCredits = disasterManager.isTaskCreditEnabled();
     int taskCredits = useTaskCredits ? disasterManager.getUpdatedCreditCount() : -1;
 

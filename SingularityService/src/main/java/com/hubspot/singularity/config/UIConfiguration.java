@@ -5,6 +5,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
@@ -105,6 +106,10 @@ public class UIConfiguration {
 
   @JsonProperty
   private Optional<String> staticRootOverride = Optional.absent();
+
+  // e.g. {"request":{"SERVICE":[{"title":"my link","template":"http://example.com/{{request.id}}"}]}}
+  @JsonProperty
+  private Map<String, Map<String, List<UIQuickLinkConfiguration>>> quickLinks = Collections.emptyMap();
 
   public boolean isHideNewDeployButton() {
     return hideNewDeployButton;
@@ -280,5 +285,13 @@ public class UIConfiguration {
 
   public void setStaticRootOverride(Optional<String> staticRootOverride) {
     this.staticRootOverride = staticRootOverride;
+  }
+
+  public Map<String, Map<String, List<UIQuickLinkConfiguration>>> getQuickLinks() {
+    return quickLinks;
+  }
+
+  public void setQuickLinks(Map<String, Map<String, List<UIQuickLinkConfiguration>>> quickLinks) {
+    this.quickLinks = quickLinks;
   }
 }

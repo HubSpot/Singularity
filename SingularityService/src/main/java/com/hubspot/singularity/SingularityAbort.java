@@ -110,7 +110,7 @@ public class SingularityAbort implements ConnectionStateListener {
   }
 
   private void sendAbortNotification(AbortReason abortReason, Optional<Throwable> throwable) {
-    final String message = String.format("Singularity on %s is aborting due to %s", hostAndPort.getHostText(), abortReason);
+    final String message = String.format("Singularity on %s is aborting due to %s", hostAndPort.getHost(), abortReason);
 
     LOG.error(message);
 

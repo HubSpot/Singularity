@@ -14,7 +14,6 @@ import org.junit.Test;
 
 import com.google.common.base.Optional;
 import com.hubspot.baragon.models.BaragonRequestState;
-import com.hubspot.mesos.Resources;
 import com.hubspot.singularity.DeployState;
 import com.hubspot.singularity.LoadBalancerRequestType;
 import com.hubspot.singularity.RequestState;
@@ -25,8 +24,10 @@ import com.hubspot.singularity.SingularityDeployProgress;
 import com.hubspot.singularity.SingularityPendingDeploy;
 import com.hubspot.singularity.SingularityPendingRequest.PendingType;
 import com.hubspot.singularity.SingularityPendingTask;
+import com.hubspot.singularity.SingularityPendingTaskBuilder;
 import com.hubspot.singularity.SingularityPendingTaskId;
 import com.hubspot.singularity.SingularityRequest;
+import com.hubspot.singularity.SingularityRunNowRequestBuilder;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityUpdatePendingDeployRequest;
@@ -78,16 +79,16 @@ public class SingularityDeploysTest extends SingularitySchedulerTestBase {
     initSecondDeploy();
 
     SingularityPendingTaskId taskIdOne = new SingularityPendingTaskId(requestId, firstDeployId, System.currentTimeMillis() + TimeUnit.DAYS.toMillis(3), 1, PendingType.IMMEDIATE, System.currentTimeMillis());
-    SingularityPendingTask taskOne = new SingularityPendingTask(taskIdOne, Optional.<List<String>> absent(), Optional.<String> absent(), Optional.<String> absent(), Optional.<Boolean> absent(), Optional.<String> absent(), Optional.<Resources>absent(), Optional.<String>absent());
+    SingularityPendingTask taskOne = new SingularityPendingTaskBuilder().setPendingTaskId(taskIdOne).build();
 
     SingularityPendingTaskId taskIdTwo = new SingularityPendingTaskId(requestId, firstDeployId, System.currentTimeMillis() + TimeUnit.DAYS.toMillis(1), 2, PendingType.IMMEDIATE, System.currentTimeMillis());
-    SingularityPendingTask taskTwo = new SingularityPendingTask(taskIdTwo, Optional.<List<String>> absent(), Optional.<String> absent(), Optional.<String> absent(), Optional.<Boolean> absent(), Optional.<String> absent(), Optional.<Resources>absent(), Optional.<String>absent());
+    SingularityPendingTask taskTwo = new SingularityPendingTaskBuilder().setPendingTaskId(taskIdTwo).build();
 
     SingularityPendingTaskId taskIdThree = new SingularityPendingTaskId(requestId, secondDeployId, System.currentTimeMillis() + TimeUnit.DAYS.toMillis(3), 1, PendingType.IMMEDIATE, System.currentTimeMillis());
-    SingularityPendingTask taskThree = new SingularityPendingTask(taskIdThree, Optional.<List<String>> absent(), Optional.<String> absent(), Optional.<String> absent(), Optional.<Boolean> absent(), Optional.<String> absent(), Optional.<Resources>absent(), Optional.<String>absent());
+    SingularityPendingTask taskThree = new SingularityPendingTaskBuilder().setPendingTaskId(taskIdThree).build();
 
     SingularityPendingTaskId taskIdFour = new SingularityPendingTaskId(requestId + "hi", firstDeployId, System.currentTimeMillis() + TimeUnit.DAYS.toMillis(3), 5, PendingType.IMMEDIATE, System.currentTimeMillis());
-    SingularityPendingTask taskFour = new SingularityPendingTask(taskIdFour,Optional.<List<String>> absent(), Optional.<String> absent(), Optional.<String> absent(), Optional.<Boolean> absent(), Optional.<String> absent(), Optional.<Resources>absent(), Optional.<String>absent());
+    SingularityPendingTask taskFour = new SingularityPendingTaskBuilder().setPendingTaskId(taskIdFour).build();
 
     taskManager.savePendingTask(taskOne);
     taskManager.savePendingTask(taskTwo);
@@ -911,7 +912,7 @@ public class SingularityDeploysTest extends SingularitySchedulerTestBase {
     initRequestWithType(RequestType.SCHEDULED, false);
     String deployId = "d1";
 
-    SingularityRunNowRequest runNowRequest = new SingularityRunNowRequest(Optional.of("Message"), Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent());
+    SingularityRunNowRequest runNowRequest = new SingularityRunNowRequestBuilder().setMessage("Message").build();
     SingularityDeploy deploy = new SingularityDeployBuilder(requestId, deployId)
         .setRunImmediately(Optional.of(runNowRequest))
         .setCommand(Optional.of("printenv > tmp.txt"))
@@ -938,7 +939,7 @@ public class SingularityDeploysTest extends SingularitySchedulerTestBase {
     initRequestWithType(RequestType.SCHEDULED, false);
     String deployId = "d1";
 
-    SingularityRunNowRequest runNowRequest = new SingularityRunNowRequest(Optional.of("Message"), Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent());
+    SingularityRunNowRequest runNowRequest = new SingularityRunNowRequestBuilder().setMessage("Message").build();
     SingularityDeploy deploy = new SingularityDeployBuilder(requestId, deployId)
         .setRunImmediately(Optional.of(runNowRequest))
         .setCommand(Optional.of("printenv > tmp.txt"))
