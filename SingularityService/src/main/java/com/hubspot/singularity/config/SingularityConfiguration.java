@@ -114,6 +114,9 @@ public class SingularityConfiguration extends Configuration {
   @NotNull
   private SlavePlacement defaultSlavePlacement = SlavePlacement.GREEDY;
 
+  @Min(value = 0, message = "Must be non-negative")
+  private double placementLeniency = 0.09d;
+
   private boolean defaultValueForKillTasksOfPausedRequests = true;
 
   private int defaultDeployStepWaitTimeMs = 0;
@@ -202,13 +205,17 @@ public class SingularityConfiguration extends Configuration {
 
   private int maxTasksPerOfferPerRequest = 0;
 
-  private double longRunningUsedCpuWeightForOffer = 0.30;
+  private double longRunningUsedCpuWeightForOffer = 0.25;
 
-  private double longRunningUsedMemWeightForOffer = 0.70;
+  private double longRunningUsedMemWeightForOffer = 0.65;
 
-  private double freeCpuWeightForOffer = 0.30;
+  private double longRunningUsedDiskWeightForOffer = 0.10;
 
-  private double freeMemWeightForOffer = 0.70;
+  private double freeCpuWeightForOffer = 0.25;
+
+  private double freeMemWeightForOffer = 0.65;
+
+  private double freeDiskWeightForOffer = 0.10;
 
   private double defaultOfferScoreForMissingUsage = 0.30;
 
@@ -305,6 +312,10 @@ public class SingularityConfiguration extends Configuration {
   @JsonProperty("ldap")
   @Valid
   private LDAPConfiguration ldapConfiguration;
+
+  @JsonProperty("webhookAuth")
+  @Valid
+  private WebhookAuthConfiguration webhookAuthConfiguration = new WebhookAuthConfiguration();
 
   @JsonProperty("auth")
   @NotNull
@@ -528,6 +539,10 @@ public class SingularityConfiguration extends Configuration {
     return defaultSlavePlacement;
   }
 
+  public double getPlacementLeniency() {
+    return placementLeniency;
+  }
+
   public int getDefaultDeployStepWaitTimeMs() {
     return defaultDeployStepWaitTimeMs;
   }
@@ -704,12 +719,20 @@ public class SingularityConfiguration extends Configuration {
     return longRunningUsedMemWeightForOffer;
   }
 
+  public double getLongRunningUsedDiskWeightForOffer() {
+    return longRunningUsedDiskWeightForOffer;
+  }
+
   public double getFreeCpuWeightForOffer() {
     return freeCpuWeightForOffer;
   }
 
   public double getFreeMemWeightForOffer() {
     return freeMemWeightForOffer;
+  }
+
+  public double getFreeDiskWeightForOffer() {
+    return freeDiskWeightForOffer;
   }
 
   public double getDefaultOfferScoreForMissingUsage() {
@@ -958,6 +981,10 @@ public class SingularityConfiguration extends Configuration {
     this.defaultSlavePlacement = defaultSlavePlacement;
   }
 
+  public void setPlacementLeniency(double placementLeniency) {
+    this.placementLeniency = placementLeniency;
+  }
+
   public void setDefaultValueForKillTasksOfPausedRequests(boolean defaultValueForKillTasksOfPausedRequests) {
     this.defaultValueForKillTasksOfPausedRequests = defaultValueForKillTasksOfPausedRequests;
   }
@@ -1098,6 +1125,11 @@ public class SingularityConfiguration extends Configuration {
     return this;
   }
 
+  public SingularityConfiguration setLongRunningUsedDiskWeightForOffer(double longRunningUsedDiskWeightForOffer) {
+    this.longRunningUsedDiskWeightForOffer = longRunningUsedDiskWeightForOffer;
+    return this;
+  }
+
   public SingularityConfiguration setFreeCpuWeightForOffer(double freeCpuWeightForOffer) {
     this.freeCpuWeightForOffer = freeCpuWeightForOffer;
     return this;
@@ -1105,6 +1137,11 @@ public class SingularityConfiguration extends Configuration {
 
   public SingularityConfiguration setFreeMemWeightForOffer(double freeMemWeightForOffer) {
     this.freeMemWeightForOffer = freeMemWeightForOffer;
+    return this;
+  }
+
+  public SingularityConfiguration setFreeDiskWeightForOffer(double freeDiskWeightForOffer) {
+    this.freeDiskWeightForOffer = freeDiskWeightForOffer;
     return this;
   }
 
@@ -1254,6 +1291,14 @@ public class SingularityConfiguration extends Configuration {
   @JsonIgnore
   public Optional<LDAPConfiguration> getLdapConfigurationOptional() {
     return Optional.fromNullable(ldapConfiguration);
+  }
+
+  public WebhookAuthConfiguration getWebhookAuthConfiguration() {
+    return webhookAuthConfiguration;
+  }
+
+  public void setWebhookAuthConfiguration(WebhookAuthConfiguration webhookAuthConfiguration) {
+    this.webhookAuthConfiguration = webhookAuthConfiguration;
   }
 
   public void setLdapConfiguration(LDAPConfiguration ldapConfiguration) {

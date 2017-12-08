@@ -86,6 +86,7 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
       Map<ResourceUsageType, Number> longRunningTasksUsage = new HashMap<>();
       longRunningTasksUsage.put(ResourceUsageType.MEMORY_BYTES_USED, 0);
       longRunningTasksUsage.put(ResourceUsageType.CPU_USED, 0);
+      longRunningTasksUsage.put(ResourceUsageType.DISK_BYTES_USED, 0);
 
       Optional<Long> memoryMbTotal = Optional.absent();
       Optional<Double> cpusTotal = Optional.absent();
@@ -140,7 +141,7 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
             double taskCpusUsed = ((latestUsage.getCpuSeconds() - lastUsage.getCpuSeconds()) / (latestUsage.getTimestamp() - lastUsage.getTimestamp()));
 
             if (isLongRunning(task) ||  isConsideredLongRunning(task)) {
-              updateLongRunningTasksUsage(longRunningTasksUsage, latestUsage.getMemoryTotalBytes(), taskCpusUsed);
+              updateLongRunningTasksUsage(longRunningTasksUsage, latestUsage.getMemoryTotalBytes(), taskCpusUsed, latestUsage.getDiskTotalBytes());
             }
             SingularityTaskCurrentUsage currentUsage = new SingularityTaskCurrentUsage(latestUsage.getMemoryTotalBytes(), now, taskCpusUsed);
 
@@ -210,9 +211,10 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
         deployStatistics.get().getAverageRuntimeMillis().get() >= configuration.getConsiderNonLongRunningTaskLongRunningAfterRunningForSeconds();
   }
 
-  private void updateLongRunningTasksUsage(Map<ResourceUsageType, Number> longRunningTasksUsage, long memBytesUsed, double cpuUsed) {
+  private void updateLongRunningTasksUsage(Map<ResourceUsageType, Number> longRunningTasksUsage, long memBytesUsed, double cpuUsed, long diskBytesUsed) {
     longRunningTasksUsage.compute(ResourceUsageType.MEMORY_BYTES_USED, (k, v) -> (v == null) ? memBytesUsed : v.longValue() + memBytesUsed);
     longRunningTasksUsage.compute(ResourceUsageType.CPU_USED, (k, v) -> (v == null) ? cpuUsed : v.doubleValue() + cpuUsed);
+    longRunningTasksUsage.compute(ResourceUsageType.DISK_BYTES_USED, (k, v) -> (v == null) ? diskBytesUsed : v.doubleValue() + diskBytesUsed);
   }
 
   private void updateRequestUtilization(Map<String, RequestUtilization> utilizationPerRequestId,

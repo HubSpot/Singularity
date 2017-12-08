@@ -36,7 +36,6 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.hubspot.jackson.jaxrs.PropertyFiltering;
-import com.hubspot.mesos.JavaUtils;
 import com.hubspot.mesos.client.MesosClient;
 import com.hubspot.mesos.json.MesosTaskMonitorObject;
 import com.hubspot.mesos.json.MesosTaskStatisticsObject;
@@ -87,6 +86,8 @@ import com.wordnik.swagger.annotations.ApiOperation;
 import com.wordnik.swagger.annotations.ApiResponse;
 import com.wordnik.swagger.annotations.ApiResponses;
 
+import io.dropwizard.auth.Auth;
+
 @Path(ApiPaths.TASK_RESOURCE_PATH)
 @Produces({ MediaType.APPLICATION_JSON })
 @Api(description="Manages Singularity tasks.", value=ApiPaths.TASK_RESOURCE_PATH)
@@ -99,7 +100,6 @@ public class TaskResource extends AbstractLeaderAwareResource {
   private final TaskRequestManager taskRequestManager;
   private final MesosClient mesosClient;
   private final SingularityAuthorizationHelper authorizationHelper;
-  private final Optional<SingularityUser> user;
   private final SingularityTaskMetadataConfiguration taskMetadataConfiguration;
   private final SingularityValidator validator;
   private final DisasterManager disasterManager;
@@ -108,7 +108,7 @@ public class TaskResource extends AbstractLeaderAwareResource {
 
   @Inject
   public TaskResource(TaskRequestManager taskRequestManager, TaskManager taskManager, SlaveManager slaveManager, MesosClient mesosClient, SingularityTaskMetadataConfiguration taskMetadataConfiguration,
-                      SingularityAuthorizationHelper authorizationHelper, Optional<SingularityUser> user, RequestManager requestManager, SingularityValidator validator, DisasterManager disasterManager,
+                      SingularityAuthorizationHelper authorizationHelper, RequestManager requestManager, SingularityValidator validator, DisasterManager disasterManager,
                       AsyncHttpClient httpClient, LeaderLatch leaderLatch, ObjectMapper objectMapper, SingularityDeployHealthHelper deployHealthHelper, DeployManager deployManager) {
     super(httpClient, leaderLatch, objectMapper);
     this.taskManager = taskManager;
@@ -118,7 +118,6 @@ public class TaskResource extends AbstractLeaderAwareResource {
     this.mesosClient = mesosClient;
     this.requestManager = requestManager;
     this.authorizationHelper = authorizationHelper;
-    this.user = user;
     this.validator = validator;
     this.disasterManager = disasterManager;
     this.deployHealthHelper = deployHealthHelper;
@@ -129,7 +128,7 @@ public class TaskResource extends AbstractLeaderAwareResource {
   @PropertyFiltering
   @Path("/scheduled")
   @ApiOperation("Retrieve list of scheduled tasks.")
-  public List<SingularityTaskRequest> getScheduledTasks(@QueryParam("useWebCache") Boolean useWebCache) {
+  public List<SingularityTaskRequest> getScheduledTasks(@Auth SingularityUser user, @QueryParam("useWebCache") Boolean useWebCache) {
     if (!authorizationHelper.hasAdminAuthorization(user) && disasterManager.isDisabled(SingularityAction.EXPENSIVE_API_CALLS)) {
       LOG.trace("Short circuting getScheduledTasks() to [] due to EXPENSIVE_API_CALLS disabled");
       return Collections.emptyList();
@@ -143,7 +142,7 @@ public class TaskResource extends AbstractLeaderAwareResource {
   @PropertyFiltering
   @Path("/scheduled/ids")
   @ApiOperation("Retrieve list of scheduled task IDs.")
-  public Iterable<SingularityPendingTaskId> getScheduledTaskIds(@QueryParam("useWebCache") Boolean useWebCache) {
+  public Iterable<SingularityPendingTaskId> getScheduledTaskIds(@Auth SingularityUser user, @QueryParam("useWebCache") Boolean useWebCache) {
     return authorizationHelper.filterByAuthorizedRequests(user, taskManager.getPendingTaskIds(useWebCache(useWebCache)), SingularityTransformHelpers.PENDING_TASK_ID_TO_REQUEST_ID, SingularityAuthorizationScope.READ);
   }
 
@@ -167,7 +166,7 @@ public class TaskResource extends AbstractLeaderAwareResource {
   @PropertyFiltering
   @Path("/scheduled/task/{pendingTaskId}")
   @ApiOperation("Retrieve information about a pending task.")
-  public SingularityTaskRequest getPendingTask(@PathParam("pendingTaskId") String pendingTaskIdStr) {
+  public SingularityTaskRequest getPendingTask(@Auth SingularityUser user, @PathParam("pendingTaskId") String pendingTaskIdStr) {
     Optional<SingularityPendingTask> pendingTask = taskManager.getPendingTask(getPendingTaskIdFromStr(pendingTaskIdStr));
 
     checkNotFound(pendingTask.isPresent(), "Couldn't find %s", pendingTaskIdStr);
@@ -185,7 +184,7 @@ public class TaskResource extends AbstractLeaderAwareResource {
   @PropertyFiltering
   @Path("/scheduled/request/{requestId}")
   @ApiOperation("Retrieve list of scheduled tasks for a specific request.")
-  public List<SingularityTaskRequest> getScheduledTasksForRequest(@PathParam("requestId") String requestId, @QueryParam("useWebCache") Boolean useWebCache) {
+  public List<SingularityTaskRequest> getScheduledTasksForRequest(@Auth SingularityUser user, @PathParam("requestId") String requestId, @QueryParam("useWebCache") Boolean useWebCache) {
     authorizationHelper.checkForAuthorizationByRequestId(requestId, user, SingularityAuthorizationScope.READ);
 
     final List<SingularityPendingTask> tasks = Lists.newArrayList(Iterables.filter(taskManager.getPendingTasks(useWebCache(useWebCache)), SingularityPendingTask.matchingRequest(requestId)));
@@ -196,7 +195,7 @@ public class TaskResource extends AbstractLeaderAwareResource {
   @GET
   @Path("/ids/request/{requestId}")
   @ApiOperation("Retrieve a list of task ids separated by status")
-  public Optional<SingularityTaskIdsByStatus> getTaskIdsByStatusForRequest(@PathParam("requestId") String requestId) {
+  public Optional<SingularityTaskIdsByStatus> getTaskIdsByStatusForRequest(@Auth SingularityUser user, @PathParam("requestId") String requestId) {
     authorizationHelper.checkForAuthorizationByRequestId(requestId, user, SingularityAuthorizationScope.READ);
 
     Optional<SingularityRequestWithState> requestWithState = requestManager.getRequest(requestId);
@@ -235,7 +234,7 @@ public class TaskResource extends AbstractLeaderAwareResource {
   @GET
   @Path("/active/slave/{slaveId}")
   @ApiOperation("Retrieve list of active tasks on a specific slave.")
-  public Iterable<SingularityTask> getTasksForSlave(@PathParam("slaveId") String slaveId, @QueryParam("useWebCache") Boolean useWebCache) {
+  public Iterable<SingularityTask> getTasksForSlave(@Auth SingularityUser user, @PathParam("slaveId") String slaveId, @QueryParam("useWebCache") Boolean useWebCache) {
     Optional<SingularitySlave> maybeSlave = slaveManager.getObject(slaveId);
 
     checkNotFound(maybeSlave.isPresent(), "Couldn't find a slave in any state with id %s", slaveId);
@@ -247,7 +246,7 @@ public class TaskResource extends AbstractLeaderAwareResource {
   @PropertyFiltering
   @Path("/active")
   @ApiOperation("Retrieve the list of active tasks.")
-  public Iterable<SingularityTask> getActiveTasks(@QueryParam("useWebCache") Boolean useWebCache) {
+  public Iterable<SingularityTask> getActiveTasks(@Auth SingularityUser user, @QueryParam("useWebCache") Boolean useWebCache) {
     return authorizationHelper.filterByAuthorizedRequests(user, taskManager.getActiveTasks(useWebCache(useWebCache)), SingularityTransformHelpers.TASK_TO_REQUEST_ID, SingularityAuthorizationScope.READ);
   }
 
@@ -255,7 +254,7 @@ public class TaskResource extends AbstractLeaderAwareResource {
   @PropertyFiltering
   @Path("/cleaning")
   @ApiOperation("Retrieve the list of cleaning tasks.")
-  public Iterable<SingularityTaskCleanup> getCleaningTasks(@QueryParam("useWebCache") Boolean useWebCache) {
+  public Iterable<SingularityTaskCleanup> getCleaningTasks(@Auth SingularityUser user, @QueryParam("useWebCache") Boolean useWebCache) {
     if (!authorizationHelper.hasAdminAuthorization(user) && disasterManager.isDisabled(SingularityAction.EXPENSIVE_API_CALLS)) {
       LOG.trace("Short circuting getCleaningTasks() to [] due to EXPENSIVE_API_CALLS disabled");
       return Collections.emptyList();
@@ -267,7 +266,7 @@ public class TaskResource extends AbstractLeaderAwareResource {
   @GET
   @Path("/killed")
   @ApiOperation("Retrieve the list of killed tasks.")
-  public Iterable<SingularityKilledTaskIdRecord> getKilledTasks() {
+  public Iterable<SingularityKilledTaskIdRecord> getKilledTasks(@Auth SingularityUser user) {
     return authorizationHelper.filterByAuthorizedRequests(user, taskManager.getKilledTaskIdRecords(), SingularityTransformHelpers.KILLED_TASK_ID_RECORD_TO_REQUEST_ID, SingularityAuthorizationScope.READ);
   }
 
@@ -275,11 +274,11 @@ public class TaskResource extends AbstractLeaderAwareResource {
   @PropertyFiltering
   @Path("/lbcleanup")
   @ApiOperation("Retrieve the list of tasks being cleaned from load balancers.")
-  public Iterable<SingularityTaskId> getLbCleanupTasks() {
+  public Iterable<SingularityTaskId> getLbCleanupTasks(@Auth SingularityUser user) {
     return authorizationHelper.filterByAuthorizedRequests(user, taskManager.getLBCleanupTasks(), SingularityTransformHelpers.TASK_ID_TO_REQUEST_ID, SingularityAuthorizationScope.READ);
   }
 
-  private SingularityTask checkActiveTask(String taskId, SingularityAuthorizationScope scope) {
+  private SingularityTask checkActiveTask(String taskId, SingularityAuthorizationScope scope, SingularityUser user) {
     SingularityTaskId taskIdObj = getTaskIdFromStr(taskId);
 
     Optional<SingularityTask> task = taskManager.getTask(taskIdObj);
@@ -296,15 +295,15 @@ public class TaskResource extends AbstractLeaderAwareResource {
   @GET
   @Path("/task/{taskId}")
   @ApiOperation("Retrieve information about a specific active task.")
-  public SingularityTask getActiveTask(@PathParam("taskId") String taskId) {
-    return checkActiveTask(taskId, SingularityAuthorizationScope.READ);
+  public SingularityTask getActiveTask(@Auth SingularityUser user, @PathParam("taskId") String taskId) {
+    return checkActiveTask(taskId, SingularityAuthorizationScope.READ, user);
   }
 
   @GET
   @Path("/task/{taskId}/statistics")
   @ApiOperation("Retrieve statistics about a specific active task.")
-  public MesosTaskStatisticsObject getTaskStatistics(@PathParam("taskId") String taskId) {
-    SingularityTask task = checkActiveTask(taskId, SingularityAuthorizationScope.READ);
+  public MesosTaskStatisticsObject getTaskStatistics(@Auth SingularityUser user, @PathParam("taskId") String taskId) {
+    SingularityTask task = checkActiveTask(taskId, SingularityAuthorizationScope.READ, user);
 
     String executorIdToMatch = null;
 
@@ -326,7 +325,7 @@ public class TaskResource extends AbstractLeaderAwareResource {
   @GET
   @Path("/task/{taskId}/cleanup")
   @ApiOperation("Get the cleanup object for the task, if it exists")
-  public Optional<SingularityTaskCleanup> getTaskCleanup(@PathParam("taskId") String taskId) {
+  public Optional<SingularityTaskCleanup> getTaskCleanup(@Auth SingularityUser user, @PathParam("taskId") String taskId) {
     authorizationHelper.checkForAuthorizationByTaskId(taskId, user, SingularityAuthorizationScope.READ);
 
     return taskManager.getTaskCleanup(taskId);
@@ -334,8 +333,8 @@ public class TaskResource extends AbstractLeaderAwareResource {
 
   @DELETE
   @Path("/task/{taskId}")
-  public SingularityTaskCleanup killTask(@PathParam("taskId") String taskId, @Context HttpServletRequest requestContext) {
-    return killTask(taskId, requestContext, null);
+  public SingularityTaskCleanup killTask(@Auth SingularityUser user, @PathParam("taskId") String taskId, @Context HttpServletRequest requestContext) {
+    return killTask(taskId, requestContext, null, user);
   }
 
   @DELETE
@@ -347,13 +346,14 @@ public class TaskResource extends AbstractLeaderAwareResource {
   })
   public SingularityTaskCleanup killTask(@PathParam("taskId") String taskId,
                                          @Context HttpServletRequest requestContext,
-                                         SingularityKillTaskRequest killTaskRequest) {
+                                         SingularityKillTaskRequest killTaskRequest,
+                                         @Auth SingularityUser user) {
     final Optional<SingularityKillTaskRequest> maybeKillTaskRequest = Optional.fromNullable(killTaskRequest);
-    return maybeProxyToLeader(requestContext, SingularityTaskCleanup.class, maybeKillTaskRequest.orNull(), () -> killTask(taskId, maybeKillTaskRequest));
+    return maybeProxyToLeader(requestContext, SingularityTaskCleanup.class, maybeKillTaskRequest.orNull(), () -> killTask(taskId, maybeKillTaskRequest, user));
   }
 
-  public SingularityTaskCleanup killTask(String taskId, Optional<SingularityKillTaskRequest> killTaskRequest) {
-    final SingularityTask task = checkActiveTask(taskId, SingularityAuthorizationScope.WRITE);
+  public SingularityTaskCleanup killTask(String taskId, Optional<SingularityKillTaskRequest> killTaskRequest, SingularityUser user) {
+    final SingularityTask task = checkActiveTask(taskId, SingularityAuthorizationScope.WRITE, user);
 
     Optional<String> message = Optional.absent();
     Optional<Boolean> override = Optional.absent();
@@ -367,7 +367,7 @@ public class TaskResource extends AbstractLeaderAwareResource {
       override = killTaskRequest.get().getOverride();
       waitForReplacementTask = killTaskRequest.get().getWaitForReplacementTask();
       if (killTaskRequest.get().getRunShellCommandBeforeKill().isPresent()) {
-        SingularityTaskShellCommandRequest shellCommandRequest = startShellCommand(task.getTaskId(), killTaskRequest.get().getRunShellCommandBeforeKill().get());
+        SingularityTaskShellCommandRequest shellCommandRequest = startShellCommand(task.getTaskId(), killTaskRequest.get().getRunShellCommandBeforeKill().get(), user);
         runBeforeKillId = Optional.of(shellCommandRequest.getId());
       }
     }
@@ -388,11 +388,11 @@ public class TaskResource extends AbstractLeaderAwareResource {
     if (override.isPresent() && override.get()) {
       LOG.debug("Requested destroy of {}", taskId);
       cleanupType = TaskCleanupType.USER_REQUESTED_DESTROY;
-      taskCleanup = new SingularityTaskCleanup(JavaUtils.getUserEmail(user), cleanupType, now,
+      taskCleanup = new SingularityTaskCleanup(user.getEmail(), cleanupType, now,
         task.getTaskId(), message, actionId, runBeforeKillId);
       taskManager.saveTaskCleanup(taskCleanup);
     } else {
-      taskCleanup = new SingularityTaskCleanup(JavaUtils.getUserEmail(user), cleanupType, now,
+      taskCleanup = new SingularityTaskCleanup(user.getEmail(), cleanupType, now,
         task.getTaskId(), message, actionId, runBeforeKillId);
       SingularityCreateResult result = taskManager.createTaskCleanup(taskCleanup);
 
@@ -412,7 +412,7 @@ public class TaskResource extends AbstractLeaderAwareResource {
     }
 
     if (cleanupType == TaskCleanupType.USER_REQUESTED_TASK_BOUNCE) {
-      requestManager.addToPendingQueue(new SingularityPendingRequest(task.getTaskId().getRequestId(), task.getTaskId().getDeployId(), now, JavaUtils.getUserEmail(user),
+      requestManager.addToPendingQueue(new SingularityPendingRequest(task.getTaskId().getRequestId(), task.getTaskId().getDeployId(), now, user.getEmail(),
           PendingType.TASK_BOUNCE, Optional.<List<String>> absent(), Optional.<String> absent(), Optional.<Boolean> absent(), message, actionId));
     }
 
@@ -429,7 +429,7 @@ public class TaskResource extends AbstractLeaderAwareResource {
 
   @Path("/commands/queued")
   @ApiOperation(value="Retrieve a list of all the shell commands queued for execution")
-  public List<SingularityTaskShellCommandRequest> getQueuedShellCommands() {
+  public List<SingularityTaskShellCommandRequest> getQueuedShellCommands(@Auth SingularityUser user) {
     authorizationHelper.checkAdminAuthorization(user);
     return taskManager.getAllQueuedTaskShellCommandRequests();
   }
@@ -443,7 +443,7 @@ public class TaskResource extends AbstractLeaderAwareResource {
     @ApiResponse(code=409, message="Metadata with this type/timestamp already existed")
   })
   @Consumes({ MediaType.APPLICATION_JSON })
-  public void postTaskMetadata(@PathParam("taskId") String taskId, final SingularityTaskMetadataRequest taskMetadataRequest) {
+  public void postTaskMetadata(@Auth SingularityUser user, @PathParam("taskId") String taskId, final SingularityTaskMetadataRequest taskMetadataRequest) {
     SingularityTaskId taskIdObj = getTaskIdFromStr(taskId);
 
     authorizationHelper.checkForAuthorizationByTaskId(taskId, user, SingularityAuthorizationScope.WRITE);
@@ -464,7 +464,7 @@ public class TaskResource extends AbstractLeaderAwareResource {
     WebExceptions.checkNotFound(taskManager.taskExistsInZk(taskIdObj), "Task %s not found in ZooKeeper (can not save metadata to tasks which have been persisted", taskIdObj);
 
     final SingularityTaskMetadata taskMetadata = new SingularityTaskMetadata(taskIdObj, System.currentTimeMillis(), taskMetadataRequest.getType(), taskMetadataRequest.getTitle(),
-        taskMetadataRequest.getMessage(), JavaUtils.getUserEmail(user), taskMetadataRequest.getLevel());
+        taskMetadataRequest.getMessage(),  user.getEmail(), taskMetadataRequest.getLevel());
 
     SingularityCreateResult result = taskManager.saveTaskMetadata(taskMetadata);
 
@@ -479,7 +479,7 @@ public class TaskResource extends AbstractLeaderAwareResource {
     @ApiResponse(code=403, message="Given shell command doesn't exist")
   })
   @Consumes({ MediaType.APPLICATION_JSON })
-  public SingularityTaskShellCommandRequest runShellCommand(@PathParam("taskId") String taskId, final SingularityShellCommand shellCommand) {
+  public SingularityTaskShellCommandRequest runShellCommand(@Auth SingularityUser user, @PathParam("taskId") String taskId, final SingularityShellCommand shellCommand) {
     SingularityTaskId taskIdObj = getTaskIdFromStr(taskId);
 
     authorizationHelper.checkForAuthorizationByTaskId(taskId, user, SingularityAuthorizationScope.WRITE);
@@ -489,13 +489,13 @@ public class TaskResource extends AbstractLeaderAwareResource {
       throw WebExceptions.badRequest("%s is not an active task, can't run %s on it", taskId, shellCommand.getName());
     }
 
-    return startShellCommand(taskIdObj, shellCommand);
+    return startShellCommand(taskIdObj, shellCommand, user);
   }
 
-  private SingularityTaskShellCommandRequest startShellCommand(SingularityTaskId taskId, final SingularityShellCommand shellCommand) {
+  private SingularityTaskShellCommandRequest startShellCommand(SingularityTaskId taskId, final SingularityShellCommand shellCommand, SingularityUser user) {
     validator.checkValidShellCommand(shellCommand);
 
-    SingularityTaskShellCommandRequest shellRequest = new SingularityTaskShellCommandRequest(taskId, JavaUtils.getUserEmail(user), System.currentTimeMillis(), shellCommand);
+    SingularityTaskShellCommandRequest shellRequest = new SingularityTaskShellCommandRequest(taskId, user.getEmail(), System.currentTimeMillis(), shellCommand);
     taskManager.saveTaskShellCommandRequestToQueue(shellRequest);
     return shellRequest;
   }
@@ -503,7 +503,7 @@ public class TaskResource extends AbstractLeaderAwareResource {
   @GET
   @Path("/task/{taskId}/command")
   @ApiOperation(value="Retrieve a list of shell commands that have run for a task")
-  public List<SingularityTaskShellCommandHistory> getShellCommandHisotry(@PathParam("taskId") String taskId) {
+  public List<SingularityTaskShellCommandHistory> getShellCommandHisotry(@Auth SingularityUser user, @PathParam("taskId") String taskId) {
     authorizationHelper.checkForAuthorizationByTaskId(taskId, user, SingularityAuthorizationScope.READ);
 
     SingularityTaskId taskIdObj = getTaskIdFromStr(taskId);
@@ -513,7 +513,7 @@ public class TaskResource extends AbstractLeaderAwareResource {
   @GET
   @Path("/task/{taskId}/command/{commandName}/{commandTimestamp}")
   @ApiOperation(value="Retrieve a list of shell commands updates for a particular shell command on a task")
-  public List<SingularityTaskShellCommandUpdate> getShellCommandHisotryUpdates(@PathParam("taskId") String taskId, @PathParam("commandName") String commandName, @PathParam("commandTimestamp") Long commandTimestamp) {
+  public List<SingularityTaskShellCommandUpdate> getShellCommandHisotryUpdates(@Auth SingularityUser user, @PathParam("taskId") String taskId, @PathParam("commandName") String commandName, @PathParam("commandTimestamp") Long commandTimestamp) {
     authorizationHelper.checkForAuthorizationByTaskId(taskId, user, SingularityAuthorizationScope.READ);
 
     SingularityTaskId taskIdObj = getTaskIdFromStr(taskId);

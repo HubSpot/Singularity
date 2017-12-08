@@ -1,8 +1,7 @@
 package com.hubspot.singularity;
 
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.*;
 
 import java.util.Arrays;
 import java.util.List;
@@ -20,7 +19,6 @@ import org.skife.jdbi.v2.Handle;
 import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
-import com.hubspot.mesos.Resources;
 import com.hubspot.singularity.SingularityRequestHistory.RequestHistoryType;
 import com.hubspot.singularity.api.SingularityDeleteRequestRequest;
 import com.hubspot.singularity.api.SingularityRunNowRequest;
@@ -199,8 +197,8 @@ public class SingularityHistoryTest extends SingularitySchedulerTestBase {
 
     String runId = "my-run-id";
 
-    SingularityPendingRequestParent parent = requestResource.scheduleImmediately(requestId,
-        new SingularityRunNowRequest(Optional.<String> absent(), Optional.<Boolean> absent(), Optional.of(runId), Optional.<List<String>> absent(), Optional.<Resources>absent(), Optional.<Long>absent()));
+    SingularityPendingRequestParent parent = requestResource.scheduleImmediately(singularityUser, requestId,
+        new SingularityRunNowRequest(Optional.absent(), Optional.absent(), Optional.of(runId), Optional.absent(), Optional.absent(), Optional.absent()));
 
     Assert.assertEquals(runId, parent.getPendingRequest().getRunId().get());
 
@@ -220,7 +218,7 @@ public class SingularityHistoryTest extends SingularitySchedulerTestBase {
     Assert.assertEquals(runId, historyManager.getTaskHistory(taskId.getId()).get().getTask().getTaskRequest().getPendingTask().getRunId().get());
     Assert.assertEquals(runId, getTaskHistoryForRequest(requestId, 0, 10).get(0).getRunId().get());
 
-    parent = requestResource.scheduleImmediately(requestId);
+    parent = requestResource.scheduleImmediately(singularityUser, requestId);
 
     Assert.assertTrue(parent.getPendingRequest().getRunId().isPresent());
   }
@@ -261,7 +259,7 @@ public class SingularityHistoryTest extends SingularitySchedulerTestBase {
     initScheduledRequest();
     initFirstDeploy();
 
-    requestResource.scheduleImmediately(requestId);
+    requestResource.scheduleImmediately(singularityUser, requestId);
 
     resourceOffers();
 
@@ -490,8 +488,8 @@ public class SingularityHistoryTest extends SingularitySchedulerTestBase {
       msg = msg + i;
     }
 
-    requestResource.scale(requestId, new SingularityScaleRequest(Optional.of(2), Optional.<Long> absent(), Optional.<Boolean> absent(), Optional.<String> absent(), Optional.of(msg), Optional.<Boolean>absent(), Optional.<Boolean>absent()));
-    requestResource.deleteRequest(requestId, Optional.of(new SingularityDeleteRequestRequest(Optional.of("a msg"), Optional.<String> absent(), Optional.absent())));
+    requestResource.scale(requestId, new SingularityScaleRequest(Optional.of(2), Optional.absent(), Optional.absent(), Optional.absent(), Optional.of(msg), Optional.absent(), Optional.absent()), singularityUser);
+    requestResource.deleteRequest(requestId, Optional.of(new SingularityDeleteRequestRequest(Optional.of("a msg"), Optional.absent(), Optional.absent())), singularityUser);
 
     cleaner.drainCleanupQueue();
 

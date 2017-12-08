@@ -11,7 +11,6 @@ import javax.ws.rs.core.MediaType;
 
 import com.google.common.base.Optional;
 import com.google.inject.Inject;
-import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.SingularityDeleteResult;
 import com.hubspot.singularity.SingularityPriorityFreezeParent;
 import com.hubspot.singularity.SingularityUser;
@@ -25,18 +24,18 @@ import com.wordnik.swagger.annotations.ApiOperation;
 import com.wordnik.swagger.annotations.ApiResponse;
 import com.wordnik.swagger.annotations.ApiResponses;
 
+import io.dropwizard.auth.Auth;
+
 @Path(ApiPaths.PRIORITY_RESOURCE_PATH)
 @Produces({ MediaType.APPLICATION_JSON })
 @Api(description="Manages whether or not to schedule tasks based on their priority levels.", value=ApiPaths.PRIORITY_RESOURCE_PATH )
 public class PriorityResource {
-    private final Optional<SingularityUser> user;
     private final SingularityAuthorizationHelper authorizationHelper;
     private final SingularityValidator singularityValidator;
     private final PriorityManager priorityManager;
 
     @Inject
-    public PriorityResource(Optional<SingularityUser> user, SingularityAuthorizationHelper authorizationHelper, SingularityValidator singularityValidator, PriorityManager priorityManager) {
-        this.user = user;
+    public PriorityResource(SingularityAuthorizationHelper authorizationHelper, SingularityValidator singularityValidator, PriorityManager priorityManager) {
         this.authorizationHelper = authorizationHelper;
         this.singularityValidator = singularityValidator;
         this.priorityManager = priorityManager;
@@ -49,7 +48,8 @@ public class PriorityResource {
         @ApiResponse(code=200, message="The active priority freeze."),
         @ApiResponse(code=404, message="There was no active priority freeze.")
     })
-    public Optional<SingularityPriorityFreezeParent> getActivePriorityFreeze() {
+    public Optional<SingularityPriorityFreezeParent> getActivePriorityFreeze(@Auth SingularityUser user) {
+        authorizationHelper.checkAdminAuthorization(user);
         return priorityManager.getActivePriorityFreeze();
     }
 
@@ -60,7 +60,7 @@ public class PriorityResource {
         @ApiResponse(code=202, message="The active priority freeze was deleted."),
         @ApiResponse(code=400, message="There was no active priority freeze to delete.")
     })
-    public void deleteActivePriorityFreeze() {
+    public void deleteActivePriorityFreeze(@Auth SingularityUser user) {
         authorizationHelper.checkAdminAuthorization(user);
 
         final SingularityDeleteResult deleteResult = priorityManager.deleteActivePriorityFreeze();
@@ -77,11 +77,11 @@ public class PriorityResource {
         @ApiResponse(code=200, message="The priority freeze request was accepted."),
         @ApiResponse(code=400, message="There was a validation error with the priority freeze request.")
     })
-    public SingularityPriorityFreezeParent createPriorityFreeze(SingularityPriorityFreeze priorityFreezeRequest) {
+    public SingularityPriorityFreezeParent createPriorityFreeze(@Auth SingularityUser user, SingularityPriorityFreeze priorityFreezeRequest) {
         authorizationHelper.checkAdminAuthorization(user);
         priorityFreezeRequest = singularityValidator.checkSingularityPriorityFreeze(priorityFreezeRequest);
 
-        final SingularityPriorityFreezeParent priorityFreezeRequestParent = new SingularityPriorityFreezeParent(priorityFreezeRequest, System.currentTimeMillis(), JavaUtils.getUserEmail(user));
+        final SingularityPriorityFreezeParent priorityFreezeRequestParent = new SingularityPriorityFreezeParent(priorityFreezeRequest, System.currentTimeMillis(), user.getEmail());
 
         priorityManager.createPriorityFreeze(priorityFreezeRequestParent);
 

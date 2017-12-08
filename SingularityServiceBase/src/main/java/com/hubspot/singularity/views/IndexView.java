@@ -22,6 +22,7 @@ public class IndexView extends View {
 
   private final Integer defaultMemory;
   private final Integer defaultCpus;
+  private final Integer defaultDisk;
 
   private final Boolean hideNewDeployButton;
   private final Boolean hideNewRequestButton;
@@ -61,6 +62,10 @@ public class IndexView extends View {
 
   private final String extraScript;
 
+  private final boolean generateAuthHeader;
+  private final String authCookieName;
+  private final String authTokenKey;
+
   public IndexView(String singularityUriBase, String appRoot, IndexViewConfiguration configuration, ObjectMapper mapper) {
     super("index.mustache");
 
@@ -70,10 +75,10 @@ public class IndexView extends View {
 
     String rawAppRoot = String.format("%s%s", singularityUriBase, appRoot);
 
-    this.appRoot = (rawAppRoot.endsWith("/")) ? rawAppRoot.substring(0, rawAppRoot.length() - 1) : rawAppRoot;
-    this.staticRoot = String.format("%s/static", singularityUriBase);
+    this.appRoot = uiConfiguration.getAppRootOverride().or((rawAppRoot.endsWith("/")) ? rawAppRoot.substring(0, rawAppRoot.length() - 1) : rawAppRoot);
+    this.staticRoot = uiConfiguration.getStaticRootOverride().or(String.format("%s/static", singularityUriBase));
     this.apiDocs = String.format("%s/api-docs/", singularityUriBase);
-    this.apiRoot = String.format("%s%s", singularityUriBase, ApiPaths.API_BASE_PATH);
+    this.apiRoot = uiConfiguration.getApiRootOverride().or(String.format("%s%s", singularityUriBase, ApiPaths.API_BASE_PATH));
 
     this.title = uiConfiguration.getTitle();
 
@@ -82,6 +87,7 @@ public class IndexView extends View {
 
     this.defaultCpus = configuration.getDefaultCpus();
     this.defaultMemory = configuration.getDefaultMemory();
+    this.defaultDisk = configuration.getDefaultDisk();
 
     this.hideNewDeployButton = uiConfiguration.isHideNewDeployButton();
     this.hideNewRequestButton = uiConfiguration.isHideNewRequestButton();
@@ -122,6 +128,10 @@ public class IndexView extends View {
     this.timestampWithSecondsFormat = uiConfiguration.getTimestampWithSecondsFormat();
 
     this.extraScript = uiConfiguration.getExtraScript().orNull();
+
+    this.generateAuthHeader = configuration.isGenerateAuthHeader();
+    this.authCookieName = uiConfiguration.getAuthCookieName();
+    this.authTokenKey = uiConfiguration.getAuthTokenKey();
   }
 
   public String getAppRoot() {
@@ -162,6 +172,10 @@ public class IndexView extends View {
 
   public Integer getDefaultCpus() {
     return defaultCpus;
+  }
+
+  public Integer getDefaultDisk() {
+    return defaultDisk;
   }
 
   public Boolean getHideNewDeployButton() {
@@ -244,6 +258,18 @@ public class IndexView extends View {
     return shortenSlaveUsageHostname;
   }
 
+  public boolean isGenerateAuthHeader() {
+    return generateAuthHeader;
+  }
+
+  public String getAuthCookieName() {
+    return authCookieName;
+  }
+
+  public String getAuthTokenKey() {
+    return authTokenKey;
+  }
+
   @Override
   public String toString() {
     return "IndexView{" +
@@ -254,6 +280,7 @@ public class IndexView extends View {
         ", navColor='" + navColor + '\'' +
         ", defaultMemory=" + defaultMemory +
         ", defaultCpus=" + defaultCpus +
+        ", defaultDisk=" + defaultDisk +
         ", hideNewDeployButton=" + hideNewDeployButton +
         ", hideNewRequestButton=" + hideNewRequestButton +
         ", loadBalancingEnabled=" + loadBalancingEnabled +
@@ -277,6 +304,9 @@ public class IndexView extends View {
         ", timestampWithSecondsFormat='" + timestampWithSecondsFormat + '\'' +
         ", redirectOnUnauthorizedUrl='" + redirectOnUnauthorizedUrl + '\'' +
         ", extraScript='" + extraScript + '\'' +
+        ", generateAuthHeader=" + generateAuthHeader +
+        ", authCookieName='" + authCookieName + '\'' +
+        ", authTokenKey='" + authTokenKey + '\'' +
         "} " + super.toString();
   }
 }

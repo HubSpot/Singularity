@@ -24,29 +24,27 @@ import com.hubspot.singularity.expiring.SingularityExpiringMachineState;
 public abstract class AbstractMachineResource<T extends SingularityMachineAbstraction<T>> {
 
   protected final AbstractMachineManager<T> manager;
-  protected final Optional<SingularityUser> user;
 
   protected final SingularityAuthorizationHelper authorizationHelper;
   private final SingularityValidator validator;
 
-  public AbstractMachineResource(AbstractMachineManager<T> manager, SingularityAuthorizationHelper authorizationHelper, Optional<SingularityUser> user, SingularityValidator validator) {
+  public AbstractMachineResource(AbstractMachineManager<T> manager, SingularityAuthorizationHelper authorizationHelper, SingularityValidator validator) {
     this.manager = manager;
     this.authorizationHelper = authorizationHelper;
-    this.user = user;
     this.validator = validator;
   }
 
-  protected void remove(String objectId) {
+  protected void remove(String objectId, SingularityUser user) {
     authorizationHelper.checkAdminAuthorization(user);
     checkNotFound(manager.deleteObject(objectId) == SingularityDeleteResult.DELETED, "Couldn't find dead %s with id %s", getObjectTypeString(), objectId);
   }
 
-  protected void cancelExpiring(String objectId) {
+  protected void cancelExpiring(String objectId, SingularityUser user) {
     authorizationHelper.checkAdminAuthorization(user);
     manager.deleteExpiringObject(objectId);
   }
 
-  protected List<SingularityExpiringMachineState> getExpiringStateChanges() {
+  protected List<SingularityExpiringMachineState> getExpiringStateChanges(SingularityUser user) {
     authorizationHelper.checkAdminAuthorization(user);
     return manager.getExpiringObjects();
   }
@@ -73,36 +71,36 @@ public abstract class AbstractMachineResource<T extends SingularityMachineAbstra
     }
   }
 
-  protected void decommission(String objectId, Optional<SingularityMachineChangeRequest> decommissionRequest, Optional<String> queryUser, SingularityAction action) {
+  protected void decommission(String objectId, Optional<SingularityMachineChangeRequest> decommissionRequest, SingularityUser user, SingularityAction action) {
     authorizationHelper.checkAdminAuthorization(user);
     validator.checkActionEnabled(action);
     validator.validateExpiringMachineStateChange(decommissionRequest, MachineState.STARTING_DECOMMISSION, manager.getExpiringObject(objectId));
     validator.validateDecommissioningCount();
-    changeState(objectId, MachineState.STARTING_DECOMMISSION, decommissionRequest, queryUser);
-    saveExpiring(decommissionRequest, queryUser, objectId);
+    changeState(objectId, MachineState.STARTING_DECOMMISSION, decommissionRequest, user.getEmail());
+    saveExpiring(decommissionRequest, user, objectId);
   }
 
-  protected void freeze(String objectId, Optional<SingularityMachineChangeRequest> freezeRequest, Optional<String> queryUser, SingularityAction action) {
+  protected void freeze(String objectId, Optional<SingularityMachineChangeRequest> freezeRequest, SingularityUser user, SingularityAction action) {
     authorizationHelper.checkAdminAuthorization(user);
     validator.checkActionEnabled(action);
     validator.validateExpiringMachineStateChange(freezeRequest, MachineState.FROZEN, manager.getExpiringObject(objectId));
-    changeState(objectId, MachineState.FROZEN, freezeRequest, queryUser);
-    saveExpiring(freezeRequest, queryUser, objectId);
+    changeState(objectId, MachineState.FROZEN, freezeRequest, user.getEmail());
+    saveExpiring(freezeRequest, user, objectId);
   }
 
-  protected void activate(String objectId, Optional<SingularityMachineChangeRequest> activateRequest, Optional<String> queryUser, SingularityAction action) {
+  protected void activate(String objectId, Optional<SingularityMachineChangeRequest> activateRequest, SingularityUser user, SingularityAction action) {
     authorizationHelper.checkAdminAuthorization(user);
     validator.checkActionEnabled(action);
     validator.validateExpiringMachineStateChange(activateRequest, MachineState.ACTIVE, manager.getExpiringObject(objectId));
-    changeState(objectId, MachineState.ACTIVE, activateRequest, queryUser);
-    saveExpiring(activateRequest, queryUser, objectId);
+    changeState(objectId, MachineState.ACTIVE, activateRequest, user.getEmail());
+    saveExpiring(activateRequest, user, objectId);
   }
 
-  private void saveExpiring(Optional<SingularityMachineChangeRequest> changeRequest, Optional<String> queryUser, String objectId) {
+  private void saveExpiring(Optional<SingularityMachineChangeRequest> changeRequest, SingularityUser user, String objectId) {
     if (changeRequest.isPresent() && changeRequest.get().getDurationMillis().isPresent()) {
       manager.saveExpiringObject(
         new SingularityExpiringMachineState(
-          queryUser,
+          user.getEmail(),
           System.currentTimeMillis(),
           changeRequest.get().getActionId().or(UUID.randomUUID().toString()),
           changeRequest.get(),

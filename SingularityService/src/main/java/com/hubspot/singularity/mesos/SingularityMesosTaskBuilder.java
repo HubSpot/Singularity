@@ -36,7 +36,8 @@ import com.google.common.primitives.Ints;
 import com.google.inject.Inject;
 import com.google.protobuf.ByteString;
 import com.hubspot.deploy.ExecutorDataBuilder;
-import com.hubspot.mesos.MesosUtils;
+import com.hubspot.singularity.helpers.MesosProtosUtils;
+import com.hubspot.singularity.helpers.MesosUtils;
 import com.hubspot.mesos.Resources;
 import com.hubspot.mesos.SingularityContainerInfo;
 import com.hubspot.mesos.SingularityDockerInfo;
@@ -44,10 +45,9 @@ import com.hubspot.mesos.SingularityDockerNetworkType;
 import com.hubspot.mesos.SingularityDockerParameter;
 import com.hubspot.mesos.SingularityDockerPortMapping;
 import com.hubspot.mesos.SingularityMesosArtifact;
+import com.hubspot.singularity.helpers.SingularityMesosTaskHolder;
 import com.hubspot.mesos.SingularityMesosTaskLabel;
 import com.hubspot.mesos.SingularityVolume;
-import com.hubspot.mesos.json.SingularityMesosOfferObject;
-import com.hubspot.mesos.json.SingularityMesosTaskObject;
 import com.hubspot.singularity.SingularityS3UploaderFile;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskExecutorData;
@@ -64,15 +64,17 @@ class SingularityMesosTaskBuilder {
   private final ObjectMapper objectMapper;
   private final ExecutorIdGenerator idGenerator;
   private final SingularityConfiguration configuration;
+  private final MesosProtosUtils mesosProtosUtils;
 
   @Inject
-  SingularityMesosTaskBuilder(ObjectMapper objectMapper, ExecutorIdGenerator idGenerator, SingularityConfiguration configuration) {
+  SingularityMesosTaskBuilder(ObjectMapper objectMapper, ExecutorIdGenerator idGenerator, SingularityConfiguration configuration, MesosProtosUtils mesosProtosUtils) {
     this.objectMapper = objectMapper;
     this.idGenerator = idGenerator;
     this.configuration = configuration;
+    this.mesosProtosUtils = mesosProtosUtils;
   }
 
-  public SingularityTask buildTask(SingularityOfferHolder offerHolder, List<Resource> availableResources, SingularityTaskRequest taskRequest, Resources desiredTaskResources, Resources desiredExecutorResources) {
+  public SingularityMesosTaskHolder buildTask(SingularityOfferHolder offerHolder, List<Resource> availableResources, SingularityTaskRequest taskRequest, Resources desiredTaskResources, Resources desiredExecutorResources) {
     final String sanitizedRackId = offerHolder.getSanitizedRackId();
     final String sanitizedHost = offerHolder.getSanitizedHost();
 
@@ -113,15 +115,7 @@ class SingularityMesosTaskBuilder {
     Optional<String> requiredRole = taskRequest.getRequest().getRequiredRole();
     bldr.addResources(MesosUtils.getCpuResource(desiredTaskResources.getCpus(), requiredRole));
     bldr.addResources(MesosUtils.getMemoryResource(desiredTaskResources.getMemoryMb(), requiredRole));
-
-    if (desiredTaskResources.getDiskMb() > 0) {
-      bldr.addResources(MesosUtils.getDiskResource(desiredTaskResources.getDiskMb(), requiredRole));
-    } else if (MesosUtils.getDisk(offerHolder.getCurrentResources(), Optional.absent()) >= 1.0) {
-      // If this offer contains 1MB of disk resources, claim it to enable disk usage reporting.
-      // This is just a temporary hack to enable disk usage reporting where we can, not an actual way to match task disk requirements to offers.
-      offerHolder.subtractResources(Collections.singletonList(MesosUtils.getDiskResource(1.0, Optional.absent())));
-      bldr.addResources(MesosUtils.getDiskResource(1.0, requiredRole));
-    }
+    bldr.addResources(MesosUtils.getDiskResource(desiredTaskResources.getDiskMb(), requiredRole));
 
     bldr.setAgentId(offerHolder.getOffers().get(0).getAgentId());
 
@@ -156,12 +150,13 @@ class SingularityMesosTaskBuilder {
 
     TaskInfo task = bldr.build();
 
-    return new SingularityTask(taskRequest,
-        taskId,
-        offerHolder.getOffers().stream().map(SingularityMesosOfferObject::fromProtos).collect(Collectors.toList()),
-        task,
-        SingularityMesosTaskObject.fromProtos(task),
-        Optional.of(offerHolder.getRackId()));
+    return new SingularityMesosTaskHolder(
+        new SingularityTask(taskRequest,
+            taskId,
+            offerHolder.getOffers().stream().map((o) -> mesosProtosUtils.offerFromProtos(o)).collect(Collectors.toList()),
+            mesosProtosUtils.taskFromProtos(task),
+            Optional.of(offerHolder.getRackId())),
+        task);
   }
 
   private boolean hasLiteralPortMapping(Optional<SingularityContainerInfo> maybeContainerInfo) {
