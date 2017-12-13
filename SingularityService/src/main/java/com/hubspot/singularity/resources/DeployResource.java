@@ -37,7 +37,6 @@ import com.hubspot.singularity.SingularityPendingRequest;
 import com.hubspot.singularity.SingularityPendingRequest.PendingType;
 import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityRequestDeployState;
-import com.hubspot.singularity.SingularityRequestHistory.RequestHistoryType;
 import com.hubspot.singularity.SingularityRequestParent;
 import com.hubspot.singularity.SingularityRequestWithState;
 import com.hubspot.singularity.SingularityTransformHelpers;
@@ -163,9 +162,6 @@ public class DeployResource extends AbstractRequestResource {
     checkConflict(!deployAlreadyInProgress,
         "Pending deploy already in progress for %s - cancel it or wait for it to complete (%s)", requestId, deployManager.getPendingDeploy(requestId).orNull());
 
-    if (requestWithState.getState() == RequestState.FINISHED) {
-      requestManager.activate(request, RequestHistoryType.UPDATED, now, deployUser, deployRequest.getMessage());
-    }
     deployManager.saveDeploy(request, deployMarker, deploy);
 
     if (request.isDeployable()) {
