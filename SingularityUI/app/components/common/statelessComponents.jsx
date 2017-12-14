@@ -1,6 +1,5 @@
 import React, { PropTypes } from 'react';
 import { Panel, ProgressBar } from 'react-bootstrap';
-import classNames from 'classnames';
 import CopyToClipboard from 'react-copy-to-clipboard';
 
 export const DeployState = (props) => {
@@ -26,7 +25,7 @@ export const InfoBox = (props) => {
         <h4>
           {props.name}
           <CopyToClipboard text={value}>
-            <a className={classNames(props.copyableClassName, 'copy-btn')}>Copy</a>
+            <a className="copy-btn">Copy</a>
           </CopyToClipboard>
         </h4>
         <p>{value}</p>
@@ -37,7 +36,6 @@ export const InfoBox = (props) => {
 
 InfoBox.propTypes = {
   name: PropTypes.string,
-  copyableClassName: PropTypes.string,
   join: PropTypes.string,
   value: PropTypes.oneOfType([
     PropTypes.string,

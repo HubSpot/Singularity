@@ -1,6 +1,5 @@
 import React, { Component, PropTypes } from 'react';
 import { Modal, Button, MenuItem } from 'react-bootstrap';
-import Clipboard from 'clipboard';
 import Utils from '../../utils';
 
 import { InfoBox } from '../common/statelessComponents';
@@ -24,10 +23,6 @@ export default class MetadataButton extends Component {
     _.bindAll(this, 'hide', 'show');
   }
 
-  componentDidMount() {
-    this.clipboard = new Clipboard('.copy-btn');
-  }
-
   show() {
     this.setState({
       modalOpen: true
@@ -44,7 +39,7 @@ export default class MetadataButton extends Component {
     const items = [];
     for (const key of _.keys(this.props.metadata)) {
       items.push(
-        <InfoBox copyableClassName="info-copyable" key={key} name={Utils.humanizeCamelcase(key)} value={this.props.metadata[key]} />
+        <InfoBox key={key} name={Utils.humanizeCamelcase(key)} value={this.props.metadata[key]} />
       );
     }
 
