@@ -81,6 +81,7 @@ import de.neuland.jade4j.parser.node.Node;
 import de.neuland.jade4j.template.JadeTemplate;
 import io.dropwizard.jetty.ConnectorFactory;
 import io.dropwizard.jetty.HttpConnectorFactory;
+import io.dropwizard.jetty.HttpsConnectorFactory;
 import io.dropwizard.server.DefaultServerFactory;
 import io.dropwizard.server.SimpleServerFactory;
 
@@ -218,7 +219,8 @@ public class SingularityMainModule implements Module {
       } else {
         DefaultServerFactory defaultServerFactory = (DefaultServerFactory) configuration.getServerFactory();
         for (ConnectorFactory connectorFactory : defaultServerFactory.getApplicationConnectors()) {
-          if (connectorFactory instanceof HttpConnectorFactory) {
+          // Currently we will default to needing an http connector for service -> service communication
+          if (connectorFactory instanceof HttpConnectorFactory && !(connectorFactory instanceof HttpsConnectorFactory)) {
             HttpConnectorFactory httpFactory = (HttpConnectorFactory) connectorFactory;
             port = httpFactory.getPort();
           }
