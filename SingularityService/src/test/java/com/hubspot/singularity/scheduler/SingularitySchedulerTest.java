@@ -568,6 +568,27 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
   }
 
   @Test
+  public void testFinishedRequestCanBeDeployed() {
+    initScheduledRequest();
+    initFirstDeploy();
+
+    schedule = "*/1 * * * * ? 1995";
+
+    // cause it to be pending
+    requestResource.postRequest(request.toBuilder().setQuartzSchedule(Optional.of(schedule)).build(), singularityUser);
+    scheduler.drainPendingQueue();
+
+    Assert.assertTrue(requestResource.getActiveRequests(singularityUser, false, false, false, 10, Collections.emptyList()).isEmpty());
+    Assert.assertTrue(requestManager.getRequest(requestId).get().getState() == RequestState.FINISHED);
+
+    SingularityDeployBuilder db = new SingularityDeployBuilder(requestId, secondDeployId);
+    initDeploy(db, System.currentTimeMillis());
+    deployChecker.checkDeploys();
+    Assert.assertEquals(RequestState.ACTIVE, requestManager.getRequest(requestId).get().getState());
+    Assert.assertEquals(1, requestManager.getPendingRequests().size());
+  }
+
+  @Test
   public void testOneOffsDontRunByThemselves() {
     SingularityRequestBuilder bldr = new SingularityRequestBuilder(requestId, RequestType.ON_DEMAND);
     requestResource.postRequest(bldr.build(), singularityUser);

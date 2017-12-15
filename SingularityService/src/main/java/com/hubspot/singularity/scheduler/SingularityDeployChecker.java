@@ -125,7 +125,8 @@ public class SingularityDeployChecker {
 
     Optional<SingularityRequestWithState> maybeRequestWithState = requestManager.getRequest(pendingDeploy.getDeployMarker().getRequestId());
 
-    if (!SingularityRequestWithState.isActive(maybeRequestWithState)) {
+    if (!(maybeRequestWithState.isPresent() && maybeRequestWithState.get().getState() == RequestState.FINISHED)
+        && !SingularityRequestWithState.isActive(maybeRequestWithState)) {
       LOG.warn("Deploy {} request was {}, removing deploy", pendingDeploy, SingularityRequestWithState.getRequestState(maybeRequestWithState));
 
       if (shouldCancelLoadBalancer(pendingDeploy)) {
@@ -326,10 +327,19 @@ public class SingularityDeployChecker {
           deploy.isPresent() ? deploy.get().getSkipHealthchecksOnDeploy() : Optional.absent(), pendingDeploy.getDeployMarker().getMessage()));
     }
 
-    if (!request.isDeployable() && !request.isOneOff()) {
-      if (deployResult.getDeployState() == DeployState.SUCCEEDED) {
+    if (deployResult.getDeployState() == DeployState.SUCCEEDED) {
+      if (!request.isDeployable() && !request.isOneOff()) {
         // remove the lock on bounces in case we deployed during a bounce
         requestManager.markBounceComplete(request.getId());
+      }
+      if (requestWithState.getState() == RequestState.FINISHED) {
+        // A FINISHED request is moved to ACTIVE state so we can reevaluate the schedule
+        requestManager.activate(
+            request,
+            RequestHistoryType.UPDATED,
+            System.currentTimeMillis(),
+            deploy.isPresent() ? deploy.get().getUser() : Optional.absent(),
+            Optional.absent());
       }
     }
 
