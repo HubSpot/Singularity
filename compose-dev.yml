@@ -44,6 +44,7 @@ scheduler:
     - SINGULARITY_SMTP_HOST=localhost
     - SINGULARITY_SMTP_PORT=1025
     - SINGULARITY_MESOS_FRAMEWORK_ROLE=OPS
+    - SINGULARITY_MESOS_MASTER=${DOCKER_IP}:5050
 
 baragonservice:
   image: hubspot/baragonservice:0.5.0
