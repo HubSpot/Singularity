@@ -58,6 +58,7 @@
     <dependency>
       <groupId>org.apache.mesos</groupId>
       <artifactId>mesos</artifactId>
+      <classifier>shaded-protobuf</classifier>
     </dependency>
 
     <dependency>
