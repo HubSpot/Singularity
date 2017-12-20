@@ -9,6 +9,7 @@ import java.util.List;
 
 import javax.ws.rs.WebApplicationException;
 
+import org.apache.mesos.protobuf.ByteString;
 import org.apache.mesos.v1.Protos.TaskState;
 import org.apache.mesos.v1.scheduler.Protos.Event;
 import org.junit.Assert;
@@ -16,7 +17,6 @@ import org.junit.Test;
 
 import com.google.common.base.Optional;
 import com.google.inject.Inject;
-import com.google.protobuf.ByteString;
 import com.hubspot.singularity.SingularityShellCommand;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskCleanup;

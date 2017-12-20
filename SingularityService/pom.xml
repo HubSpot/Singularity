@@ -63,11 +63,6 @@
     </dependency>
 
     <dependency>
-      <groupId>com.google.protobuf</groupId>
-      <artifactId>protobuf-java</artifactId>
-    </dependency>
-
-    <dependency>
       <groupId>com.hubspot.dropwizard</groupId>
       <artifactId>dropwizard-guicier</artifactId>
     </dependency>
@@ -122,6 +117,7 @@
     <dependency>
       <groupId>org.apache.mesos</groupId>
       <artifactId>mesos</artifactId>
+      <classifier>shaded-protobuf</classifier>
     </dependency>
 
     <dependency>
