@@ -14,6 +14,7 @@ import java.util.stream.Collectors;
 
 import javax.inject.Singleton;
 
+import org.apache.mesos.protobuf.ByteString;
 import org.apache.mesos.v1.Protos;
 import org.apache.mesos.v1.Protos.AgentID;
 import org.apache.mesos.v1.Protos.ExecutorID;
@@ -37,10 +38,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
-import com.google.protobuf.ByteString;
 import com.hubspot.mesos.JavaUtils;
-import com.hubspot.singularity.helpers.MesosProtosUtils;
-import com.hubspot.singularity.helpers.MesosUtils;
 import com.hubspot.singularity.RequestCleanupType;
 import com.hubspot.singularity.SingularityAbort;
 import com.hubspot.singularity.SingularityAbort.AbortReason;
@@ -55,6 +53,8 @@ import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.DisasterManager;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.data.transcoders.Transcoder;
+import com.hubspot.singularity.helpers.MesosProtosUtils;
+import com.hubspot.singularity.helpers.MesosUtils;
 import com.hubspot.singularity.mesos.SingularitySlaveAndRackManager.CheckResult;
 import com.hubspot.singularity.scheduler.SingularityLeaderCacheCoordinator;
 import com.hubspot.singularity.sentry.SingularityExceptionNotifier;

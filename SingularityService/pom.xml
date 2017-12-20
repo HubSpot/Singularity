@@ -63,11 +63,6 @@
     </dependency>
 
     <dependency>
-      <groupId>com.google.protobuf</groupId>
-      <artifactId>protobuf-java</artifactId>
-    </dependency>
-
-    <dependency>
       <groupId>com.hubspot.dropwizard</groupId>
       <artifactId>dropwizard-guicier</artifactId>
     </dependency>

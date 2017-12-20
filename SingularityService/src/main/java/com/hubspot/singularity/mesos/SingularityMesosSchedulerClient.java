@@ -5,6 +5,7 @@ import java.net.URISyntaxException;
 import java.util.List;
 import java.util.Optional;
 
+import org.apache.mesos.protobuf.ByteString;
 import org.apache.mesos.v1.Protos.AgentID;
 import org.apache.mesos.v1.Protos.ExecutorID;
 import org.apache.mesos.v1.Protos.Filters;
@@ -31,11 +32,10 @@ import org.slf4j.LoggerFactory;
 
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
-import com.google.protobuf.ByteString;
-import com.hubspot.singularity.resources.SingularityServiceUIModule;
 import com.hubspot.singularity.config.MesosConfiguration;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.config.UIConfiguration;
+import com.hubspot.singularity.resources.SingularityServiceUIModule;
 import com.hubspot.singularity.resources.ui.UiResource;
 import com.mesosphere.mesos.rx.java.AwaitableSubscription;
 import com.mesosphere.mesos.rx.java.MesosClient;
