@@ -159,10 +159,20 @@ const RequestAlerts = ({requestId, requestAPI, bounces, activeTasksForRequest, d
     );
   }
 
+  let maybeFinished;
+  if (requestParent.state == "FINISHED") {
+    maybeFinished=(
+      <Alert bsStyle="warning">
+        <p>Schedule <code>{requestParent.request.quartzSchedule}</code> has no more occurences. Redeploy with a new schedule to continue running tasks for this request</p>
+      </Alert>
+    );
+  }
+
   return (
     <div>
       {maybeBouncing}
       {maybeDeploying}
+      {maybeFinished}
       <Well>
         <Row>
           <Col md={10} sm={8}>
