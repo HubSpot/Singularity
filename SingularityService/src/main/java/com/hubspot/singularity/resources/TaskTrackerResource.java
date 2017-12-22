@@ -11,6 +11,7 @@ import javax.ws.rs.core.MediaType;
 import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.hubspot.singularity.SingularityAuthorizationScope;
+import com.hubspot.singularity.SingularityPendingRequest;
 import com.hubspot.singularity.SingularityPendingTask;
 import com.hubspot.singularity.SingularityTaskHistory;
 import com.hubspot.singularity.SingularityTaskId;
@@ -18,6 +19,7 @@ import com.hubspot.singularity.SingularityTaskState;
 import com.hubspot.singularity.SingularityUser;
 import com.hubspot.singularity.auth.SingularityAuthorizationHelper;
 import com.hubspot.singularity.config.ApiPaths;
+import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.data.history.HistoryManager;
 import com.wordnik.swagger.annotations.Api;
@@ -32,12 +34,14 @@ import io.dropwizard.auth.Auth;
 @Api(description="Find a task by taskId or runId", value=ApiPaths.TASK_TRACKER_RESOURCE_PATH)
 public class TaskTrackerResource {
   private final TaskManager taskManager;
+  private final RequestManager requestManager;
   private final HistoryManager historyManager;
   private final SingularityAuthorizationHelper authorizationHelper;
 
   @Inject
-  public TaskTrackerResource(TaskManager taskManager, HistoryManager historyManager, SingularityAuthorizationHelper authorizationHelper) {
+  public TaskTrackerResource(TaskManager taskManager, RequestManager requestManager, HistoryManager historyManager, SingularityAuthorizationHelper authorizationHelper) {
     this.taskManager = taskManager;
+    this.requestManager = requestManager;
     this.historyManager = historyManager;
     this.authorizationHelper = authorizationHelper;
   }
@@ -88,6 +92,20 @@ public class TaskTrackerResource {
         ));
       }
     }
+
+    for (SingularityPendingRequest pendingRequest : requestManager.getPendingRequests()) {
+      if (pendingRequest.getRequestId().equals(requestId) && pendingRequest.getRunId().isPresent() && pendingRequest.getRunId().get().equals(runId)) {
+        return Optional.of(new SingularityTaskState(
+            Optional.absent(),
+            Optional.absent(),
+            pendingRequest.getRunId(),
+            Optional.absent(),
+            Collections.emptyList(),
+            true
+        ));
+      }
+    }
+
     return Optional.absent();
   }
 
