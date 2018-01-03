@@ -15,7 +15,7 @@ public class SingularityVolumeSource {
   @JsonCreator
   public SingularityVolumeSource(
       @JsonProperty("type") SingularityVolumeSourceType type,
-      @JsonProperty("docker_volume") Optional<SingularityDockerVolume> dockerVolume) {
+      @JsonProperty("dockerVolume") Optional<SingularityDockerVolume> dockerVolume) {
     this.type = MoreObjects.firstNonNull(type, SingularityVolumeSourceType.UNKNOWN);
     this.dockerVolume = dockerVolume;
   }
@@ -26,7 +26,6 @@ public class SingularityVolumeSource {
   }
 
   @ApiModelProperty(required=false, value="Docker source volume spec")
-  @JsonProperty("docker_volume")
   public Optional<SingularityDockerVolume> getDockerVolume() {
     return dockerVolume;
   }
@@ -53,7 +52,7 @@ public class SingularityVolumeSource {
   public String toString() {
     return "SingularityVolumeSource{" +
         "type='" + type + '\'' +
-        ", docker_volume=" + dockerVolume +
+        ", dockerVolume=" + dockerVolume +
         '}';
   }
 }

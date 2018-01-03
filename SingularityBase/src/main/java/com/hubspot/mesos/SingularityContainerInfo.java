@@ -28,7 +28,7 @@ public class SingularityContainerInfo {
       @JsonProperty("volumes") Optional<List<SingularityVolume>> volumes,
       @JsonProperty("docker") Optional<SingularityDockerInfo> docker,
       @JsonProperty("mesos") Optional<SingularityMesosInfo> mesos,
-      @JsonProperty("network_infos") Optional<List<SingularityNetworkInfo>> networkInfos) {
+      @JsonProperty("networkInfos") Optional<List<SingularityNetworkInfo>> networkInfos) {
     this.type = type;
     this.volumes = volumes;
     this.docker = docker;
@@ -56,7 +56,6 @@ public class SingularityContainerInfo {
     return mesos;
   }
 
-  @JsonProperty("network_infos")
   @ApiModelProperty(required=false, value="Mesos container network configuration")
   public Optional<List<SingularityNetworkInfo>> getNetworkInfos() {
     return networkInfos;
@@ -90,7 +89,7 @@ public class SingularityContainerInfo {
         ", volumes=" + volumes +
         ", docker=" + docker +
         ", mesos=" + mesos +
-        ", network_infos=" + networkInfos +
+        ", networkInfos=" + networkInfos +
         '}';
   }
 }

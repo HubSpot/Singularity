@@ -16,7 +16,7 @@ public class SingularityNetworkInfo {
   @JsonCreator
   public SingularityNetworkInfo(@JsonProperty("name") Optional<String> name,
       @JsonProperty("groups") Optional<List<String>> groups,
-      @JsonProperty("port_mappings") Optional<List<SingularityPortMapping>> portMappings) {
+      @JsonProperty("portMappings") Optional<List<SingularityPortMapping>> portMappings) {
     this.name = name;
     this.groups = groups;
     this.portMappings = portMappings;
@@ -61,7 +61,7 @@ public class SingularityNetworkInfo {
     return "SingularityNetworkInfo{" +
         "name='" + name + '\'' +
         ", groups=" + groups +
-        ", port_mappings=" + portMappings +
+        ", portMappings=" + portMappings +
         '}';
   }
 }

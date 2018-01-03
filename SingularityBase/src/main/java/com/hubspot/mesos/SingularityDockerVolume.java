@@ -1,26 +1,28 @@
 package com.hubspot.mesos;
 
+import java.util.Collections;
 import java.util.Map;
 import java.util.Objects;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Optional;
 import com.wordnik.swagger.annotations.ApiModelProperty;
 
 public class SingularityDockerVolume {
     private final Optional<String> driver, name;
-    private final Map<String, Object> driverOptions;
+    private final Map<String, String> driverOptions;
 
     @JsonCreator
     public SingularityDockerVolume(
             @JsonProperty("driver") Optional<String> driver,
             @JsonProperty("name") Optional<String> name,
-            @JsonProperty("driver_options") Map<String, Object> driverOptions)
+            @JsonProperty("driverOptions") Map<String, String> driverOptions)
     {
         this.driver = driver;
         this.name = name;
-        this.driverOptions = driverOptions;
+        this.driverOptions = MoreObjects.firstNonNull(driverOptions, Collections.emptyMap());
     }
 
     @ApiModelProperty(required=false, value="Docker volume driver name")
@@ -28,14 +30,13 @@ public class SingularityDockerVolume {
         return driver;
     }
 
-    @ApiModelProperty(required=false, value="Volume name")
+    @ApiModelProperty(required=false, value="Volume name '%i' will be replaced with the instance index")
     public Optional<String> getName() {
         return name;
     }
 
-    @JsonProperty("driver_options")
     @ApiModelProperty(required=false, value="Volume driver options")
-    public Map<String, Object> getDriverOptions() {
+    public Map<String, String> getDriverOptions() {
         return driverOptions;
     }
 
@@ -63,7 +64,7 @@ public class SingularityDockerVolume {
       return "SingularityDockerVolume{" +
           "driver='" + driver + '\'' +
           ", name=" + name +
-          ", driver_options=" + driverOptions +
+          ", driverOptions=" + driverOptions +
           '}';
     }
 }

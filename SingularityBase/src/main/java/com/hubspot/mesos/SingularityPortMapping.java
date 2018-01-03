@@ -12,21 +12,19 @@ public class SingularityPortMapping {
   private final Optional<String> protocol;
 
   @JsonCreator
-  public SingularityPortMapping(@JsonProperty("host_port") int hostPort,
-      @JsonProperty("container_port") int containerPort,
+  public SingularityPortMapping(@JsonProperty("hostPort") int hostPort,
+      @JsonProperty("containerPort") int containerPort,
       @JsonProperty("protocol") Optional<String> protocol) {
     this.hostPort = hostPort;
     this.containerPort = containerPort;
     this.protocol = protocol;
   }
 
-  @JsonProperty("host_port")
   @ApiModelProperty(required=true, value="the port to map from on the host network interface")
   public int getHostPort() {
     return hostPort;
   }
 
-  @JsonProperty("container_port")
   @ApiModelProperty(required=true, value="the port to map to on the container network interface")
   public int getContainerPort() {
     return containerPort;
@@ -59,8 +57,8 @@ public class SingularityPortMapping {
   @Override
   public String toString() {
     return "SingularityPortMapping{" +
-        "host_port='" + hostPort + '\'' +
-        ", container_port=" + containerPort +
+        "hostPort='" + hostPort + '\'' +
+        ", containerPort=" + containerPort +
         ", protocol=" + protocol +
         '}';
   }
