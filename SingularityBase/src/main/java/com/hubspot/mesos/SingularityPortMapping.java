@@ -4,9 +4,11 @@ import java.util.Objects;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.annotations.Beta;
 import com.google.common.base.Optional;
 import com.wordnik.swagger.annotations.ApiModelProperty;
 
+@Beta
 public class SingularityPortMapping {
   private final int hostPort, containerPort;
   private final Optional<String> protocol;

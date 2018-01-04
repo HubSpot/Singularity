@@ -4,8 +4,10 @@ import java.util.Objects;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.annotations.Beta;
 import com.google.common.base.Optional;
 
+@Beta
 public class SingularityVolume {
   private final String containerPath;
   private final Optional<String> hostPath;
