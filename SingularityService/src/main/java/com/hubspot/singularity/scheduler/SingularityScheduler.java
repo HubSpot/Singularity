@@ -798,6 +798,7 @@ public class SingularityScheduler {
                   pendingRequest.getSkipHealthchecks(),
                   pendingRequest.getMessage(),
                   pendingRequest.getResources(),
+                  pendingRequest.getS3UploaderKeyPatternOverride(),
                   pendingRequest.getRunAsUserOverride(),
                   pendingRequest.getEnvOverrides(),
                   pendingRequest.getExtraArtifacts(),
