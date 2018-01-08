@@ -9,7 +9,6 @@ import java.util.Map.Entry;
 import java.util.stream.Collectors;
 
 import javax.inject.Singleton;
-import javax.ws.rs.HEAD;
 
 import org.apache.mesos.v1.Protos.CommandInfo;
 import org.apache.mesos.v1.Protos.CommandInfo.URI;
@@ -402,7 +401,7 @@ class SingularityMesosTaskBuilder {
         } else {
           defaultS3Bucket = configuration.getS3ConfigurationOptional().get().getS3Bucket();
         }
-        s3UploaderKeyPattern = task.getPendingTask().getS3UploaderKeyPatternOverride().or(configuration.getS3ConfigurationOptional().get().getS3KeyFormat());
+        s3UploaderKeyPattern = configuration.getS3ConfigurationOptional().get().getS3KeyFormat();
       }
 
       if (task.getPendingTask().getCmdLineArgsList().isPresent() && !task.getPendingTask().getCmdLineArgsList().get().isEmpty()) {
@@ -416,7 +415,12 @@ class SingularityMesosTaskBuilder {
         executorDataBldr.setExtraCmdLineArgs(extraCmdLineArgsBuilder.build());
       }
 
-      List<SingularityS3UploaderFile> uploaderAdditionalFiles = configuration.getS3ConfigurationOptional().isPresent() ? configuration.getS3ConfigurationOptional().get().getS3UploaderAdditionalFiles() : Collections.<SingularityS3UploaderFile>emptyList();
+      List<SingularityS3UploaderFile> uploaderAdditionalFiles = new ArrayList<>();
+      if (configuration.getS3ConfigurationOptional().isPresent()) {
+        uploaderAdditionalFiles.addAll(configuration.getS3ConfigurationOptional().get().getS3UploaderAdditionalFiles());
+      }
+      uploaderAdditionalFiles.addAll(task.getPendingTask().getS3UploaderAdditionalFiles());
+
       Optional<String> maybeS3StorageClass = configuration.getS3ConfigurationOptional().isPresent() ? configuration.getS3ConfigurationOptional().get().getS3StorageClass() : Optional.<String>absent();
       Optional<Long> maybeApplyAfterBytes = configuration.getS3ConfigurationOptional().isPresent() ? configuration.getS3ConfigurationOptional().get().getApplyS3StorageClassAfterBytes() : Optional.<Long>absent();
 
