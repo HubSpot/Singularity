@@ -15,6 +15,7 @@ public class SingularityRunNowRequestBuilder {
   private Optional<List<String>> commandLineArgs;
   private Optional<Boolean> skipHealthchecks;
   private Optional<Resources> resources;
+  private Optional<String> s3UploaderKeyPatternOverride;
   private Optional<String> runAsUserOverride;
   private Map<String, String> envOverrides;
   private List<SingularityMesosArtifact> extraArtifacts;
@@ -64,6 +65,11 @@ public class SingularityRunNowRequestBuilder {
     return this;
   }
 
+  public SingularityRunNowRequestBuilder setS3UploaderKeyPatternOverride(Optional<String> s3UploaderKeyPatternOverride) {
+    this.s3UploaderKeyPatternOverride = s3UploaderKeyPatternOverride;
+    return this;
+  }
+
   public SingularityRunNowRequestBuilder setRunAsUserOverride(Optional<String> runAsUserOverride) {
     this.runAsUserOverride = runAsUserOverride;
     return this;
@@ -86,7 +92,7 @@ public class SingularityRunNowRequestBuilder {
 
   public SingularityRunNowRequest build() {
     return new SingularityRunNowRequest(
-        message, skipHealthchecks, runId, commandLineArgs, resources, runAsUserOverride, envOverrides, extraArtifacts, runAt);
+        message, skipHealthchecks, runId, commandLineArgs, resources, s3UploaderKeyPatternOverride, runAsUserOverride, envOverrides, extraArtifacts, runAt);
   }
 
   @Override
@@ -97,6 +103,7 @@ public class SingularityRunNowRequestBuilder {
         ", commandLineArgs=" + commandLineArgs +
         ", skipHealthchecks=" + skipHealthchecks +
         ", resources=" + resources +
+        ", s3UploaderKeyPatternOverride=" + s3UploaderKeyPatternOverride +
         ", extraArtifacts=" + extraArtifacts +
         ", runNowUserOverride=" + runAsUserOverride +
         ", envOverrides=" + envOverrides +

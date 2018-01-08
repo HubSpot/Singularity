@@ -22,6 +22,7 @@ public class SingularityPendingRequestBuilder {
   private Optional<String> message;
   private Optional<String> actionId;
   private Optional<Resources> resources;
+  private Optional<String> s3UploaderKeyPatternOverride;
   private Optional<String> runAsUserOverride;
   private Map<String, String> envOverrides;
   private List<SingularityMesosArtifact> extraArtifacts;
@@ -127,6 +128,11 @@ public class SingularityPendingRequestBuilder {
     return this;
   }
 
+  public SingularityPendingRequestBuilder setS3UploaderKeyPatternOverride(Optional<String> s3UploaderKeyPatternOverride) {
+    this.s3UploaderKeyPatternOverride = s3UploaderKeyPatternOverride;
+    return this;
+  }
+
   public SingularityPendingRequestBuilder setRunAsUserOverride(Optional<String> runAsUserOverride) {
     this.runAsUserOverride = runAsUserOverride;
     return this;
@@ -165,6 +171,7 @@ public class SingularityPendingRequestBuilder {
         message,
         actionId,
         resources,
+        s3UploaderKeyPatternOverride,
         runAsUserOverride,
         envOverrides,
         extraArtifacts,
@@ -186,6 +193,7 @@ public class SingularityPendingRequestBuilder {
         ", message" + message +
         ", actionId" + actionId +
         ", resources" + resources +
+        ", s3UploaderKeyPatternOverride=" + s3UploaderKeyPatternOverride +
         ", runAsUserOverride" + runAsUserOverride +
         ", envOverrides" + envOverrides +
         ", extraArtifacts" + extraArtifacts +

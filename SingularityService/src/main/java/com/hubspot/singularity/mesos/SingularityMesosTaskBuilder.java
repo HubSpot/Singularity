@@ -394,6 +394,7 @@ class SingularityMesosTaskBuilder {
 
       String defaultS3Bucket = "";
       String s3UploaderKeyPattern = "";
+
       if (configuration.getS3ConfigurationOptional().isPresent()) {
         if (task.getRequest().getGroup().isPresent() && configuration.getS3ConfigurationOptional().get().getGroupOverrides().containsKey(task.getRequest().getGroup().get())) {
           defaultS3Bucket = configuration.getS3ConfigurationOptional().get().getGroupOverrides().get(task.getRequest().getGroup().get()).getS3Bucket();
@@ -401,7 +402,7 @@ class SingularityMesosTaskBuilder {
         } else {
           defaultS3Bucket = configuration.getS3ConfigurationOptional().get().getS3Bucket();
         }
-        s3UploaderKeyPattern = configuration.getS3ConfigurationOptional().get().getS3KeyFormat();
+        s3UploaderKeyPattern = task.getPendingTask().getS3UploaderKeyPatternOverride().or(configuration.getS3ConfigurationOptional().get().getS3KeyFormat());
       }
 
       if (task.getPendingTask().getCmdLineArgsList().isPresent() && !task.getPendingTask().getCmdLineArgsList().get().isEmpty()) {
