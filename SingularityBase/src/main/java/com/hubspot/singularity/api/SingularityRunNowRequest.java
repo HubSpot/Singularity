@@ -52,7 +52,13 @@ public class SingularityRunNowRequest {
     this.runId = runId;
     this.skipHealthchecks = skipHealthchecks;
     this.resources = resources;
-    this.s3UploaderAdditionalFiles = s3UploaderAdditionalFiles;
+
+    if (Objects.nonNull(s3UploaderAdditionalFiles)) {
+      this.s3UploaderAdditionalFiles = s3UploaderAdditionalFiles;
+    } else {
+      this.s3UploaderAdditionalFiles = Collections.emptyList();
+    }
+
     this.runAsUserOverride = runAsUserOverride;
 
     if (Objects.nonNull(envOverrides)) {
