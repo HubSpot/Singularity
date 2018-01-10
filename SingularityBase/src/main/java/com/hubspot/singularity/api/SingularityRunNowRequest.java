@@ -36,6 +36,16 @@ public class SingularityRunNowRequest {
     this(message, skipHealthchecks, runId, commandLineArgs, resources, Collections.emptyList(), Optional.absent(), null, null, Optional.absent());
   }
 
+  @Deprecated
+  public SingularityRunNowRequest(Optional<String> message,
+                                  Optional<Boolean> skipHealthchecks,
+                                  Optional<String> runId,
+                                  Optional<List<String>> commandLineArgs,
+                                  Optional<Resources> resources,
+                                  Optional<Long> runAt) {
+    this(message, skipHealthchecks, runId, commandLineArgs, resources, Collections.emptyList(), Optional.absent(), null, null, runAt);
+  }
+
   @JsonCreator
   public SingularityRunNowRequest(@JsonProperty("message") Optional<String> message,
                                   @JsonProperty("skipHealthchecks") Optional<Boolean> skipHealthchecks,
