@@ -393,6 +393,7 @@ class SingularityMesosTaskBuilder {
 
       String defaultS3Bucket = "";
       String s3UploaderKeyPattern = "";
+
       if (configuration.getS3ConfigurationOptional().isPresent()) {
         if (task.getRequest().getGroup().isPresent() && configuration.getS3ConfigurationOptional().get().getGroupOverrides().containsKey(task.getRequest().getGroup().get())) {
           defaultS3Bucket = configuration.getS3ConfigurationOptional().get().getGroupOverrides().get(task.getRequest().getGroup().get()).getS3Bucket();
@@ -414,7 +415,12 @@ class SingularityMesosTaskBuilder {
         executorDataBldr.setExtraCmdLineArgs(extraCmdLineArgsBuilder.build());
       }
 
-      List<SingularityS3UploaderFile> uploaderAdditionalFiles = configuration.getS3ConfigurationOptional().isPresent() ? configuration.getS3ConfigurationOptional().get().getS3UploaderAdditionalFiles() : Collections.<SingularityS3UploaderFile>emptyList();
+      List<SingularityS3UploaderFile> uploaderAdditionalFiles = new ArrayList<>();
+      if (configuration.getS3ConfigurationOptional().isPresent()) {
+        uploaderAdditionalFiles.addAll(configuration.getS3ConfigurationOptional().get().getS3UploaderAdditionalFiles());
+      }
+      uploaderAdditionalFiles.addAll(task.getPendingTask().getS3UploaderAdditionalFiles());
+
       Optional<String> maybeS3StorageClass = configuration.getS3ConfigurationOptional().isPresent() ? configuration.getS3ConfigurationOptional().get().getS3StorageClass() : Optional.<String>absent();
       Optional<Long> maybeApplyAfterBytes = configuration.getS3ConfigurationOptional().isPresent() ? configuration.getS3ConfigurationOptional().get().getApplyS3StorageClassAfterBytes() : Optional.<Long>absent();
 
