@@ -149,7 +149,10 @@ public class SingularityConfiguration extends Configuration {
 
   private long debugCuratorCallOverMillis = 250;
 
+  @Deprecated
   private boolean enableCorsFilter = false;
+
+  private CorsConfiguration cors = new CorsConfiguration();
 
   private int healthcheckIntervalSeconds = 5;
 
@@ -857,6 +860,7 @@ public class SingularityConfiguration extends Configuration {
     return defaultValueForKillTasksOfPausedRequests;
   }
 
+  @Deprecated
   public boolean isEnableCorsFilter() {
     return enableCorsFilter;
   }
@@ -1543,5 +1547,13 @@ public class SingularityConfiguration extends Configuration {
 
   public void setMaxRunNowTaskLaunchDelayDays(int maxRunNowTaskLaunchDelayDays) {
     this.maxRunNowTaskLaunchDelayDays = maxRunNowTaskLaunchDelayDays;
+  }
+
+  public CorsConfiguration getCors() {
+    return cors;
+  }
+
+  public void setCors(CorsConfiguration cors) {
+    this.cors = cors;
   }
 }
