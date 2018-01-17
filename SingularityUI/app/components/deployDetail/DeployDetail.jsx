@@ -3,8 +3,6 @@ import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
 import rootComponent from '../../rootComponent';
 
-import Clipboard from 'clipboard';
-
 import Utils from '../../utils';
 import { Link } from 'react-router';
 import { Glyphicon, Button } from 'react-bootstrap';
@@ -37,10 +35,6 @@ class DeployDetail extends React.Component {
     isTaskHistoryFetching: PropTypes.bool,
     notFound: PropTypes.bool,
     group: PropTypes.object
-  }
-
-  componentDidMount() {
-    return new Clipboard('.info-copyable');
   }
 
   renderHeader(deploy) {
@@ -213,27 +207,27 @@ class DeployDetail extends React.Component {
     let stats = [];
 
     if (deploy.deployMarker.timestamp) {
-      stats.push(<InfoBox key="initiated" copyableClassName="info-copyable" name="Initiated" value={Utils.timestampFromNow(deploy.deployMarker.timestamp)} />);
+      stats.push(<InfoBox key="initiated" name="Initiated" value={Utils.timestampFromNow(deploy.deployMarker.timestamp)} />);
     }
     if (deploy.deployResult && deploy.deployResult.timestamp) {
-      stats.push(<InfoBox key="completed" copyableClassName="info-copyable" name="Completed" value={Utils.timestampFromNow(deploy.deployResult.timestamp)} />);
+      stats.push(<InfoBox key="completed" name="Completed" value={Utils.timestampFromNow(deploy.deployResult.timestamp)} />);
     }
     if (deploy.deploy.executorData && deploy.deploy.executorData.cmd) {
-      stats.push(<InfoBox key="cmd" copyableClassName="info-copyable" name="Command" value={deploy.deploy.executorData.cmd} />);
+      stats.push(<InfoBox key="cmd"  name="Command" value={deploy.deploy.executorData.cmd} />);
     }
     if (deploy.deploy.resources && deploy.deploy.resources.cpus) {
       let value = `CPUs: ${deploy.deploy.resources.cpus} | Memory (Mb): ${deploy.deploy.resources.memoryMb} | Ports: ${deploy.deploy.resources.numPorts}`;
-      stats.push(<InfoBox key="cpus" copyableClassName="info-copyable" name="Resources" value={value} />);
+      stats.push(<InfoBox key="cpus" name="Resources" value={value} />);
     }
     if (deploy.deploy.executorData && !_.isEmpty(deploy.deploy.executorData.extraCmdLineArgs)) {
-      stats.push(<InfoBox key="args" copyableClassName="info-copyable" name="Extra Command Line Arguments" join=" " value={deploy.deploy.executorData.extraCmdLineArgsd} />);
+      stats.push(<InfoBox key="args" name="Extra Command Line Arguments" join=" " value={deploy.deploy.executorData.extraCmdLineArgsd} />);
     }
 
     for (let statistic in deploy.deployStatistics) {
       if (typeof deploy.deployStatistics[statistic] !== 'object') {
         let value = typeof deploy.deployStatistics[statistic] === 'string' ? Utils.humanizeText(deploy.deployStatistics[statistic]) : deploy.deployStatistics[statistic];
         stats.push(
-          <InfoBox copyableClassName="info-copyable" key={statistic} name={Utils.humanizeCamelcase(statistic)} value={value} />
+          <InfoBox key={statistic} name={Utils.humanizeCamelcase(statistic)} value={value} />
         );
       }
     }

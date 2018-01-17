@@ -5,7 +5,7 @@ import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
 import ToolTip from 'react-bootstrap/lib/Tooltip';
 import JSONTree from 'react-json-tree';
 import { JSONTreeTheme } from '../../thirdPartyConfigurations';
-import Clipboard from 'clipboard';
+import CopyToClipboard from 'react-copy-to-clipboard';
 
 export default class JSONButton extends Component {
   static propTypes = {
@@ -25,21 +25,13 @@ export default class JSONButton extends Component {
       modalOpen: false
     };
 
-    _.bindAll(this, 'showJSON', 'hideJSON', 'attachClipboard', 'removeClipboard');
+    _.bindAll(this, 'showJSON', 'hideJSON');
   }
 
   showJSON() {
     this.setState({
       modalOpen: true
     });
-  }
-
-  attachClipboard() {
-    this.clipboard = new Clipboard('.copy-btn');
-  }
-
-  removeClipboard() {
-    this.clipboard.destroy();
   }
 
   hideJSON() {
@@ -64,11 +56,7 @@ export default class JSONButton extends Component {
             {button}
           </OverlayTrigger>) : button
         }
-        <Modal show={this.state.modalOpen} onHide={this.hideJSON} bsSize="large"
-          enforceFocus={false}
-          onEntered={this.attachClipboard}
-          onExit={this.removeClipboard}
-        >
+        <Modal show={this.state.modalOpen} onHide={this.hideJSON} bsSize="large" enforceFocus={false}>
           <Modal.Body>
             <div className="constrained-modal json-modal">
               <JSONTree
@@ -79,7 +67,9 @@ export default class JSONButton extends Component {
             </div>
           </Modal.Body>
           <Modal.Footer>
-            <Button bsStyle="default" className="copy-btn" data-clipboard-text={JSON.stringify(this.props.object, null, 2)}>Copy</Button>
+            <CopyToClipboard text={JSON.stringify(this.props.object, null, 2)}>
+              <Button bsStyle="default" className="copy-btn">Copy</Button>
+            </CopyToClipboard>
             <Button bsStyle="info" onClick={this.hideJSON}>Close</Button>
           </Modal.Footer>
         </Modal>

@@ -24,7 +24,6 @@
     "bootstrap-sass": "^3.3.6",
     "chroma-js": "^1.2.2",
     "classnames": "^2.2.3",
-    "clipboard": "^1.5.8",
     "core-js": "^2.4.1",
     "fuse.js": "^3.0.5",
     "fuzzy": "git://github.com/HubSpot/fuzzy.git#v0.1.1-plus-return-match-structure",
