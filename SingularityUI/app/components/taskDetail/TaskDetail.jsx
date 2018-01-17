@@ -89,6 +89,8 @@ class TaskDetail extends Component {
       cpusSystemTimeSecs: PropTypes.number,
       cpusUserTimeSecs: PropTypes.number,
       cpusLimit: PropTypes.number,
+      diskUsedBytes: PropTypes.number,
+      diskLimitBytes: PropTypes.number,
       memLimitBytes: PropTypes.number,
       memRssBytes: PropTypes.number,
       cpusNrPeriods: PropTypes.number,
@@ -387,27 +389,43 @@ class TaskDetail extends Component {
         </Panel>
       );
       maybeResourceUsage = (
-        <div className="row">
-          <div className="col-md-3">
-            <UsageInfo
-              title="Memory (rss vs limit)"
-              style="success"
-              total={this.props.resourceUsage.memLimitBytes}
-              used={this.props.resourceUsage.memRssBytes}
-            >
-              {Utils.humanizeFileSize(this.props.resourceUsage.memRssBytes)} / {Utils.humanizeFileSize(this.props.resourceUsage.memLimitBytes)}
-            </UsageInfo>
-            {maybeCpuUsage}
+        <div>
+          <div className="row">
+            <div className="col-md-3 col-sm-4">
+              <UsageInfo
+                title="Memory (rss vs limit)"
+                style="success"
+                total={this.props.resourceUsage.memLimitBytes}
+                used={this.props.resourceUsage.memRssBytes}
+              >
+                {Utils.humanizeFileSize(this.props.resourceUsage.memRssBytes)} / {Utils.humanizeFileSize(this.props.resourceUsage.memLimitBytes)}
+              </UsageInfo>
+            </div>
+            <div className="col-md-3 col-sm-4">
+              {maybeCpuUsage}
+            </div>
+            <div className="col-md-3 col-sm-4">
+              <UsageInfo
+                title="Disk"
+                style={this.props.resourceUsage.diskUsedBytes > this.props.resourceUsage.diskLimitBytes ? 'danger' : 'success'}
+                total={this.props.resourceUsage.diskLimitBytes}
+                used={this.props.resourceUsage.diskUsedBytes}
+              >
+                {Utils.humanizeFileSize(this.props.resourceUsage.diskUsedBytes)} / {Utils.humanizeFileSize(this.props.resourceUsage.diskLimitBytes)}
+              </UsageInfo>
+            </div>
           </div>
-          <div className="col-md-9">
-            <ul className="list-unstyled horizontal-description-list">
-              {!!this.props.resourceUsage.cpusNrPeriods && <InfoBox copyableClassName="info-copyable" name="CPUs number of periods" value={this.props.resourceUsage.cpusNrPeriods} />}
-              {!!this.props.resourceUsage.cpusNrThrottled && <InfoBox copyableClassName="info-copyable" name="CPUs number throttled" value={this.props.resourceUsage.cpusNrThrottled} />}
-              {!!this.props.resourceUsage.cpusThrottledTimeSecs && <InfoBox copyableClassName="info-copyable" name="Throttled time (sec)" value={this.props.resourceUsage.cpusThrottledTimeSecs} />}
-              <InfoBox copyableClassName="info-copyable" name="Memory (anon)" value={Utils.humanizeFileSize(this.props.resourceUsage.memAnonBytes)} />
-              <InfoBox copyableClassName="info-copyable" name="Memory (file)" value={Utils.humanizeFileSize(this.props.resourceUsage.memFileBytes)} />
-              <InfoBox copyableClassName="info-copyable" name="Memory (mapped file)" value={Utils.humanizeFileSize(this.props.resourceUsage.memMappedFileBytes)} />
-            </ul>
+          <div className="row">
+            <div className="col-md-12">
+              <ul className="list-unstyled horizontal-description-list">
+                {!!this.props.resourceUsage.cpusNrPeriods && <InfoBox copyableClassName="info-copyable" name="CPUs number of periods" value={this.props.resourceUsage.cpusNrPeriods} />}
+                {!!this.props.resourceUsage.cpusNrThrottled && <InfoBox copyableClassName="info-copyable" name="CPUs number throttled" value={this.props.resourceUsage.cpusNrThrottled} />}
+                {!!this.props.resourceUsage.cpusThrottledTimeSecs && <InfoBox copyableClassName="info-copyable" name="Throttled time (sec)" value={this.props.resourceUsage.cpusThrottledTimeSecs} />}
+                <InfoBox copyableClassName="info-copyable" name="Memory (anon)" value={Utils.humanizeFileSize(this.props.resourceUsage.memAnonBytes)} />
+                <InfoBox copyableClassName="info-copyable" name="Memory (file)" value={Utils.humanizeFileSize(this.props.resourceUsage.memFileBytes)} />
+                <InfoBox copyableClassName="info-copyable" name="Memory (mapped file)" value={Utils.humanizeFileSize(this.props.resourceUsage.memMappedFileBytes)} />
+              </ul>
+            </div>
           </div>
         </div>
       );

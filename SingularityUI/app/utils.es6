@@ -197,13 +197,19 @@ const Utils = {
         } catch (e) {
           throw new Error(`Could not find resource (memory) for slave ${slaveInfo.host} (${slaveInfo.id})`);
         }
+      case STAT_NAMES.diskBytesUsedStat:
+        try {
+          return parseFloat(slaveInfo.attributes.real_disk_mb || slaveInfo.resources.disk) * Math.pow(1024, 2);
+        } catch (e) {
+          throw new Error(`Could not find resource (disk) for slave ${slaveInfo.host} (${slaveInfo.id})`);
+        }
       default:
         throw new Error(`${statName} is an unsupported statistic'`);
     }
   },
 
   isResourceStat(stat) {
-    return stat === STAT_NAMES.cpusUsedStat || stat === STAT_NAMES.memoryBytesUsedStat;
+    return stat === STAT_NAMES.cpusUsedStat || stat === STAT_NAMES.memoryBytesUsedStat || stat === STAT_NAMES.diskBytesUsedStat;
   },
 
   getRequestIdFromTaskId(taskId) {

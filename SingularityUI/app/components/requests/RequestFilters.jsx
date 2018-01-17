@@ -71,6 +71,10 @@ export default class RequestFilters extends React.Component {
     {
       filterVal: 'underUtilizedMem',
       displayVal: 'Under-utilized Memory'
+    },
+    {
+      filterVal: 'underUtilizedDisk',
+      displayVal: 'Under-utilized Disk'
     }
   ];
 
