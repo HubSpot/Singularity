@@ -57,7 +57,7 @@ public class UIConfiguration {
 
   @JsonProperty
   @NotNull
-  private boolean showTaskDiskResource = false;
+  private boolean showTaskDiskResource = true;
 
   @JsonProperty
   @NotNull

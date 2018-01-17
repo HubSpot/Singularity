@@ -14,14 +14,18 @@ import org.apache.mesos.v1.Protos.CommandInfo;
 import org.apache.mesos.v1.Protos.CommandInfo.URI;
 import org.apache.mesos.v1.Protos.ContainerInfo;
 import org.apache.mesos.v1.Protos.ContainerInfo.DockerInfo;
+import org.apache.mesos.v1.Protos.ContainerInfo.MesosInfo;
 import org.apache.mesos.v1.Protos.Environment;
 import org.apache.mesos.v1.Protos.Environment.Variable;
 import org.apache.mesos.v1.Protos.ExecutorID;
 import org.apache.mesos.v1.Protos.ExecutorInfo;
+import org.apache.mesos.v1.Protos.Image;
 import org.apache.mesos.v1.Protos.Label;
 import org.apache.mesos.v1.Protos.Labels;
 import org.apache.mesos.v1.Protos.Labels.Builder;
+import org.apache.mesos.v1.Protos.NetworkInfo;
 import org.apache.mesos.v1.Protos.Parameter;
+import org.apache.mesos.v1.Protos.Parameters;
 import org.apache.mesos.v1.Protos.Resource;
 import org.apache.mesos.v1.Protos.TaskID;
 import org.apache.mesos.v1.Protos.TaskInfo;
@@ -33,23 +37,29 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
 import com.google.common.base.Strings;
+import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
 import com.google.common.primitives.Ints;
 import com.google.inject.Inject;
 import com.google.protobuf.ByteString;
 import com.hubspot.deploy.ExecutorDataBuilder;
-import com.hubspot.singularity.helpers.MesosProtosUtils;
-import com.hubspot.singularity.helpers.MesosUtils;
 import com.hubspot.mesos.Resources;
+import com.hubspot.mesos.SingularityAppcImage;
 import com.hubspot.mesos.SingularityContainerInfo;
+import com.hubspot.mesos.SingularityDockerImage;
 import com.hubspot.mesos.SingularityDockerInfo;
 import com.hubspot.mesos.SingularityDockerNetworkType;
 import com.hubspot.mesos.SingularityDockerParameter;
 import com.hubspot.mesos.SingularityDockerPortMapping;
+import com.hubspot.mesos.SingularityDockerVolume;
 import com.hubspot.mesos.SingularityMesosArtifact;
-import com.hubspot.singularity.helpers.SingularityMesosTaskHolder;
+import com.hubspot.mesos.SingularityMesosImage;
+import com.hubspot.mesos.SingularityMesosInfo;
 import com.hubspot.mesos.SingularityMesosTaskLabel;
+import com.hubspot.mesos.SingularityNetworkInfo;
+import com.hubspot.mesos.SingularityPortMapping;
 import com.hubspot.mesos.SingularityVolume;
+import com.hubspot.mesos.SingularityVolumeSource;
 import com.hubspot.singularity.SingularityS3UploaderFile;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskExecutorData;
@@ -57,6 +67,9 @@ import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTaskRequest;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.ExecutorIdGenerator;
+import com.hubspot.singularity.helpers.MesosProtosUtils;
+import com.hubspot.singularity.helpers.MesosUtils;
+import com.hubspot.singularity.helpers.SingularityMesosTaskHolder;
 
 @Singleton
 class SingularityMesosTaskBuilder {
@@ -117,10 +130,7 @@ class SingularityMesosTaskBuilder {
     Optional<String> requiredRole = taskRequest.getRequest().getRequiredRole();
     bldr.addResources(MesosUtils.getCpuResource(desiredTaskResources.getCpus(), requiredRole));
     bldr.addResources(MesosUtils.getMemoryResource(desiredTaskResources.getMemoryMb(), requiredRole));
-
-    if (desiredTaskResources.getDiskMb() > 0) {
-      bldr.addResources(MesosUtils.getDiskResource(desiredTaskResources.getDiskMb(), requiredRole));
-    }
+    bldr.addResources(MesosUtils.getDiskResource(desiredTaskResources.getDiskMb(), requiredRole));
 
     bldr.setAgentId(offerHolder.getOffers().get(0).getAgentId());
 
@@ -343,10 +353,112 @@ class SingularityMesosTaskBuilder {
       } else {
         volumeBuilder.setMode(Volume.Mode.RO);
       }
+      if (volumeInfo.getSource().isPresent()) {
+        final Volume.Source.Builder sourceBuilder = Volume.Source.newBuilder();
+        final SingularityVolumeSource source = volumeInfo.getSource().get();
+        sourceBuilder.setType(Volume.Source.Type.valueOf(source.getType().toString()));
+        if (source.getDockerVolume().isPresent()) {
+          final Volume.Source.DockerVolume.Builder dockerVolumeBuilder = Volume.Source.DockerVolume.newBuilder();
+          final SingularityDockerVolume dockerVolume = source.getDockerVolume().get();
+          if (dockerVolume.getDriver().isPresent()) {
+            dockerVolumeBuilder.setDriver(dockerVolume.getDriver().get());
+          }
+          if (dockerVolume.getName().isPresent()) {
+            dockerVolumeBuilder.setName(dockerVolume.getName().get().replace("%i", Integer.toString(taskId.getInstanceNo())));
+          }
+          if (!dockerVolume.getDriverOptions().isEmpty()) {
+            final Parameters.Builder parameters = Parameters.newBuilder();
+            for (Entry<String, String> option : dockerVolume.getDriverOptions().entrySet()) {
+              parameters.addParameter(Parameter.newBuilder().setKey(option.getKey()).setValue(option.getValue()).build());
+            }
+            dockerVolumeBuilder.setDriverOptions(parameters.build());
+          }
+          sourceBuilder.setDockerVolume(dockerVolumeBuilder.build());
+        }
+        volumeBuilder.setSource(sourceBuilder.build());
+      }
       containerBuilder.addVolumes(volumeBuilder);
     }
 
+    prepareMesosInfo(containerBuilder, containerInfo);
+
+    prepareNetworkInfos(containerBuilder, containerInfo, ports);
+
     bldr.setContainer(containerBuilder);
+  }
+
+  private void prepareMesosInfo(ContainerInfo.Builder containerBuilder, final SingularityContainerInfo containerInfo) {
+    if (!containerInfo.getMesos().isPresent()) {
+        return;
+    }
+    final MesosInfo.Builder builder = MesosInfo.newBuilder();
+    final SingularityMesosInfo mesos = containerInfo.getMesos().get();
+    if (mesos.getImage().isPresent()) {
+      final SingularityMesosImage image = mesos.getImage().get();
+      final Image.Builder imageBuilder = Image.newBuilder();
+
+      imageBuilder.setType(Image.Type.valueOf(image.getType().toString()));
+      if (image.getAppc().isPresent()) {
+        final SingularityAppcImage appc = image.getAppc().get();
+        final Image.Appc.Builder appcBuilder = Image.Appc.newBuilder();
+        appcBuilder.setName(appc.getName());
+        if (appc.getId().isPresent()) {
+          appcBuilder.setId(appc.getId().get());
+        }
+        imageBuilder.setAppc(appcBuilder.build());
+      }
+
+      if (image.getDocker().isPresent()) {
+        final SingularityDockerImage docker = image.getDocker().get();
+        final Image.Docker.Builder dockerBuilder = Image.Docker.newBuilder();
+        dockerBuilder.setName(docker.getName());
+        imageBuilder.setDocker(dockerBuilder.build());
+      }
+
+      builder.setImage(imageBuilder.build());
+    }
+    containerBuilder.setMesos(builder.build());
+  }
+
+  private void prepareNetworkInfos(ContainerInfo.Builder containerBuilder, final SingularityContainerInfo containerInfo, final Optional<long[]> ports) {
+    for (SingularityNetworkInfo netInfo : containerInfo.getNetworkInfos().or(Collections.emptyList())) {
+      final NetworkInfo.Builder netBuilder = NetworkInfo.newBuilder();
+      if (netInfo.getName().isPresent()) {
+        netBuilder.setName(netInfo.getName().get());
+      }
+      for (String group : netInfo.getGroups().or(Collections.emptyList())) {
+        netBuilder.addGroups(group);
+      }
+      for (SingularityPortMapping mapping : netInfo.getPortMappings().or(defaultPortMappingFor(ports))) {
+        final NetworkInfo.PortMapping.Builder portBuilder = NetworkInfo.PortMapping.newBuilder();
+        final int hostPort = mapping.getHostPort();
+        final int containerPort = mapping.getContainerPort();
+        final long[] offerPorts = ports.or(new long[0]);
+        portBuilder.setHostPort(hostPort < offerPorts.length ? (int) offerPorts[hostPort] : hostPort);
+        portBuilder.setContainerPort(containerPort < offerPorts.length ? (int) offerPorts[containerPort] : containerPort);
+        if (mapping.getProtocol().isPresent()) {
+          portBuilder.setProtocol(mapping.getProtocol().get());
+        }
+        netBuilder.addPortMappings(portBuilder.build());
+      }
+      containerBuilder.addNetworkInfos(netBuilder.build());
+    }
+  }
+
+  private Supplier<List<SingularityPortMapping>> defaultPortMappingFor(Optional<long[]> ports) {
+    return new Supplier<List<SingularityPortMapping>>() {
+      @Override
+      public List<SingularityPortMapping> get() {
+        final long[] portArray = ports.or(new long[0]);
+        final List<SingularityPortMapping> mappings = new ArrayList<>(portArray.length);
+        for (long port : portArray) {
+          final int p = (int) port;
+          mappings.add(new SingularityPortMapping(p, p, Optional.of("tcp")));
+          mappings.add(new SingularityPortMapping(p, p, Optional.of("udp")));
+        }
+        return mappings;
+      }
+    };
   }
 
   private List<Resource> buildMesosResources(final Resources resources, Optional<String> role) {
@@ -396,6 +508,7 @@ class SingularityMesosTaskBuilder {
 
       String defaultS3Bucket = "";
       String s3UploaderKeyPattern = "";
+
       if (configuration.getS3ConfigurationOptional().isPresent()) {
         if (task.getRequest().getGroup().isPresent() && configuration.getS3ConfigurationOptional().get().getGroupOverrides().containsKey(task.getRequest().getGroup().get())) {
           defaultS3Bucket = configuration.getS3ConfigurationOptional().get().getGroupOverrides().get(task.getRequest().getGroup().get()).getS3Bucket();
@@ -417,7 +530,12 @@ class SingularityMesosTaskBuilder {
         executorDataBldr.setExtraCmdLineArgs(extraCmdLineArgsBuilder.build());
       }
 
-      List<SingularityS3UploaderFile> uploaderAdditionalFiles = configuration.getS3ConfigurationOptional().isPresent() ? configuration.getS3ConfigurationOptional().get().getS3UploaderAdditionalFiles() : Collections.<SingularityS3UploaderFile>emptyList();
+      List<SingularityS3UploaderFile> uploaderAdditionalFiles = new ArrayList<>();
+      if (configuration.getS3ConfigurationOptional().isPresent()) {
+        uploaderAdditionalFiles.addAll(configuration.getS3ConfigurationOptional().get().getS3UploaderAdditionalFiles());
+      }
+      uploaderAdditionalFiles.addAll(task.getPendingTask().getS3UploaderAdditionalFiles());
+
       Optional<String> maybeS3StorageClass = configuration.getS3ConfigurationOptional().isPresent() ? configuration.getS3ConfigurationOptional().get().getS3StorageClass() : Optional.<String>absent();
       Optional<Long> maybeApplyAfterBytes = configuration.getS3ConfigurationOptional().isPresent() ? configuration.getS3ConfigurationOptional().get().getApplyS3StorageClassAfterBytes() : Optional.<Long>absent();
 

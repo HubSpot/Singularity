@@ -79,7 +79,9 @@ import com.ning.http.client.AsyncHttpClient;
 import de.neuland.jade4j.parser.Parser;
 import de.neuland.jade4j.parser.node.Node;
 import de.neuland.jade4j.template.JadeTemplate;
+import io.dropwizard.jetty.ConnectorFactory;
 import io.dropwizard.jetty.HttpConnectorFactory;
+import io.dropwizard.jetty.HttpsConnectorFactory;
 import io.dropwizard.server.DefaultServerFactory;
 import io.dropwizard.server.SimpleServerFactory;
 
@@ -208,10 +210,26 @@ public class SingularityMainModule implements Module {
       checkNotNull(configuration, "configuration is null");
       this.hostname = configuration.getHostname().or(hostname);
 
-      SimpleServerFactory simpleServerFactory = (SimpleServerFactory) configuration.getServerFactory();
-      HttpConnectorFactory httpFactory = (HttpConnectorFactory) simpleServerFactory.getConnector();
+      Integer port = null;
+      if (configuration.getServerFactory() instanceof SimpleServerFactory) {
+        SimpleServerFactory simpleServerFactory = (SimpleServerFactory) configuration.getServerFactory();
+        HttpConnectorFactory httpFactory = (HttpConnectorFactory) simpleServerFactory.getConnector();
 
-      this.httpPort = httpFactory.getPort();
+        port = httpFactory.getPort();
+      } else {
+        DefaultServerFactory defaultServerFactory = (DefaultServerFactory) configuration.getServerFactory();
+        for (ConnectorFactory connectorFactory : defaultServerFactory.getApplicationConnectors()) {
+          // Currently we will default to needing an http connector for service -> service communication
+          if (connectorFactory instanceof HttpConnectorFactory && !(connectorFactory instanceof HttpsConnectorFactory)) {
+            HttpConnectorFactory httpFactory = (HttpConnectorFactory) connectorFactory;
+            port = httpFactory.getPort();
+          }
+        }
+      }
+      if (port == null) {
+        throw new RuntimeException("Could not determine http port");
+      }
+      this.httpPort = port;
     }
 
     @Override
