@@ -1279,6 +1279,7 @@ class NewDeployForm extends Component {
         onChange={event => this.updateField('diskMb', event.target.value)}
         value={this.props.form.diskMb}
         label="Disk (MB)"
+        placeholder={`default: ${config.defaultDisk}`}
         feedback={this.formFieldFeedback(INDEXED_FIELDS.diskMb, this.props.form.diskMb)}
       />
     );

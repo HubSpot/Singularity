@@ -20,6 +20,7 @@ args+=( -Ddw.mesos.frameworkId="${SINGULARITY_MESOS_FRAMEWORK_ID:=Singularity}" 
 [[ ! ${SINGULARITY_MESOS_FRAMEWORK_ROLE:-} ]] || args+=( -Ddw.mesos.frameworkRole="${SINGULARITY_MESOS_FRAMEWORK_ROLE}" )
 args+=( -Ddw.mesos.defaultCpus="${SINGULARITY_MESOS_DEFAULT_CPUS:=1}" )
 args+=( -Ddw.mesos.defaultMemory="${SINGULARITY_MESOS_DEFAULT_MEMORY:=128}" )
+args+=( -Ddw.mesos.defaultDisk="${SINGULARITY_MESOS_DEFAULT_DISK:=1024}" )
 args+=( -Ddw.zookeeper.quorum="${SINGULARITY_ZK:=localhost:2181}" )
 args+=( -Ddw.zookeeper.zkNamespace="${SINGULARITY_ZK_NAMESPACE:=singularity}" )
 args+=( -Ddw.ui.baseUrl="${SINGULARITY_UI_BASE:=/singularity}" )
