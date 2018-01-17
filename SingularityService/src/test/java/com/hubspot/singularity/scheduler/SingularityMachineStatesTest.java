@@ -76,9 +76,9 @@ public class SingularityMachineStatesTest extends SingularitySchedulerTestBase {
 
   @Test
   public void testBasicSlaveAndRackState() {
-    sms.resourceOffers(Arrays.asList(createOffer(1, 1, "slave1", "host1", Optional.of("rack1"))));
-    sms.resourceOffers(Arrays.asList(createOffer(1, 1, "slave2", "host2", Optional.of("rack2"))));
-    sms.resourceOffers(Arrays.asList(createOffer(1, 1, "slave1", "host1", Optional.of("rack1"))));
+    sms.resourceOffers(Arrays.asList(createOffer(1, 1, 1, "slave1", "host1", Optional.of("rack1"))));
+    sms.resourceOffers(Arrays.asList(createOffer(1, 1, 1, "slave2", "host2", Optional.of("rack2"))));
+    sms.resourceOffers(Arrays.asList(createOffer(1, 1, 1, "slave1", "host1", Optional.of("rack1"))));
 
     Assert.assertEquals(1, slaveManager.getHistory("slave1").size());
     Assert.assertTrue(slaveManager.getNumObjectsAtState(MachineState.ACTIVE) == 2);
@@ -97,7 +97,7 @@ public class SingularityMachineStatesTest extends SingularitySchedulerTestBase {
     Assert.assertTrue(slaveManager.getObject("slave1").get().getCurrentState().getState() == MachineState.DEAD);
     Assert.assertTrue(rackManager.getObject("rack1").get().getCurrentState().getState() == MachineState.DEAD);
 
-    sms.resourceOffers(Arrays.asList(createOffer(1, 1, "slave3", "host3", Optional.of("rack1"))));
+    sms.resourceOffers(Arrays.asList(createOffer(1, 1, 1, "slave3", "host3", Optional.of("rack1"))));
 
     Assert.assertTrue(slaveManager.getNumObjectsAtState(MachineState.ACTIVE) == 2);
     Assert.assertEquals(2, rackManager.getNumObjectsAtState(MachineState.ACTIVE));
@@ -105,7 +105,7 @@ public class SingularityMachineStatesTest extends SingularitySchedulerTestBase {
 
     Assert.assertTrue(rackManager.getHistory("rack1").size() == 3);
 
-    sms.resourceOffers(Arrays.asList(createOffer(1, 1, "slave1", "host1", Optional.of("rack1"))));
+    sms.resourceOffers(Arrays.asList(createOffer(1, 1, 1, "slave1", "host1", Optional.of("rack1"))));
 
     Assert.assertTrue(slaveManager.getNumObjectsAtState(MachineState.ACTIVE) == 3);
     Assert.assertTrue(rackManager.getNumObjectsAtState(MachineState.ACTIVE) == 2);
@@ -140,10 +140,10 @@ public class SingularityMachineStatesTest extends SingularitySchedulerTestBase {
 
     scheduler.drainPendingQueue();
 
-    sms.resourceOffers(Arrays.asList(createOffer(1, 129, "slave1", "host1", Optional.of("rack1"))));
-    sms.resourceOffers(Arrays.asList(createOffer(1, 129, "slave2", "host2", Optional.of("rack1"))));
-    sms.resourceOffers(Arrays.asList(createOffer(1, 129, "slave3", "host3", Optional.of("rack2"))));
-    sms.resourceOffers(Arrays.asList(createOffer(1, 129, "slave4", "host4", Optional.of("rack2"))));
+    sms.resourceOffers(Arrays.asList(createOffer(1, 129, 1025, "slave1", "host1", Optional.of("rack1"))));
+    sms.resourceOffers(Arrays.asList(createOffer(1, 129, 1025, "slave2", "host2", Optional.of("rack1"))));
+    sms.resourceOffers(Arrays.asList(createOffer(1, 129, 1025, "slave3", "host3", Optional.of("rack2"))));
+    sms.resourceOffers(Arrays.asList(createOffer(1, 129, 1025, "slave4", "host4", Optional.of("rack2"))));
 
 
     for (SingularityTask task : taskManager.getTasksOnSlave(taskManager.getActiveTaskIds(), slaveManager.getObject("slave1").get())) {
@@ -170,7 +170,7 @@ public class SingularityMachineStatesTest extends SingularitySchedulerTestBase {
 
     saveAndSchedule(request.toBuilder().setInstances(Optional.of(3)));
 
-    sms.resourceOffers(Arrays.asList(createOffer(1, 129, "slave1", "host1", Optional.of("rack1"))));
+    sms.resourceOffers(Arrays.asList(createOffer(1, 129, 1025, "slave1", "host1", Optional.of("rack1"))));
 
     Assert.assertTrue(taskManager.getTasksOnSlave(taskManager.getActiveTaskIds(), slaveManager.getObject("slave1").get()).size() == 1);
 
@@ -182,8 +182,8 @@ public class SingularityMachineStatesTest extends SingularitySchedulerTestBase {
     Assert.assertTrue(slaveManager.getObject("slave1").get().getCurrentState().getState() == MachineState.DECOMMISSIONING);
     Assert.assertTrue(slaveManager.getObject("slave1").get().getCurrentState().getUser().get().equals("user1"));
 
-    sms.resourceOffers(Arrays.asList(createOffer(1, 129, "slave4", "host4", Optional.of("rack2"))));
-    sms.resourceOffers(Arrays.asList(createOffer(1, 129, "slave3", "host3", Optional.of("rack2"))));
+    sms.resourceOffers(Arrays.asList(createOffer(1, 129, 1025, "slave4", "host4", Optional.of("rack2"))));
+    sms.resourceOffers(Arrays.asList(createOffer(1, 129, 1025, "slave3", "host3", Optional.of("rack2"))));
 
     for (SingularityTask task : taskManager.getTasksOnSlave(taskManager.getActiveTaskIds(), slaveManager.getObject("slave4").get())) {
       statusUpdate(task, TaskState.TASK_RUNNING);
@@ -210,23 +210,23 @@ public class SingularityMachineStatesTest extends SingularitySchedulerTestBase {
     Assert.assertEquals(StateChangeResult.SUCCESS, rackManager.changeState("rack2", MachineState.STARTING_DECOMMISSION, Optional.absent(), Optional.of("user2")));
 
     // it shouldn't place any on here, since it's DECOMMissioned
-    sms.resourceOffers(Arrays.asList(createOffer(1, 129, "slave1", "host1", Optional.of("rack1"))));
+    sms.resourceOffers(Arrays.asList(createOffer(1, 129, 1025, "slave1", "host1", Optional.of("rack1"))));
 
     Assert.assertEquals(0, taskManager.getTasksOnSlave(taskManager.getActiveTaskIds(), slaveManager.getObject("slave1").get()).size());
 
-    sms.resourceOffers(Arrays.asList(createOffer(1, 129, "slave1", "host1", Optional.of("rack1"))));
+    sms.resourceOffers(Arrays.asList(createOffer(1, 129, 1025, "slave1", "host1", Optional.of("rack1"))));
 
     Assert.assertEquals(0, taskManager.getTasksOnSlave(taskManager.getActiveTaskIds(), slaveManager.getObject("slave1").get()).size());
 
     slaveResource.activateSlave(singularityUser, "slave1", null);
 
-    sms.resourceOffers(Arrays.asList(createOffer(1, 129, "slave1", "host1", Optional.of("rack1"))));
+    sms.resourceOffers(Arrays.asList(createOffer(1, 129, 1025, "slave1", "host1", Optional.of("rack1"))));
 
     Assert.assertEquals(1, taskManager.getTasksOnSlave(taskManager.getActiveTaskIds(), slaveManager.getObject("slave1").get()).size());
 
     Assert.assertTrue(rackManager.getObject("rack2").get().getCurrentState().getState() == MachineState.DECOMMISSIONING);
 
-    sms.resourceOffers(Arrays.asList(createOffer(1, 129, "slave2", "host2", Optional.of("rack1"))));
+    sms.resourceOffers(Arrays.asList(createOffer(1, 129, 1025, "slave2", "host2", Optional.of("rack1"))));
 
     for (SingularityTask task : taskManager.getTasksOnSlave(taskManager.getActiveTaskIds(), slaveManager.getObject("slave1").get())) {
       statusUpdate(task, TaskState.TASK_RUNNING);
@@ -250,12 +250,12 @@ public class SingularityMachineStatesTest extends SingularitySchedulerTestBase {
 
   @Test
   public void testEmptyDecommissioning() {
-    sms.resourceOffers(Arrays.asList(createOffer(1, 129, "slave1", "host1", Optional.of("rack1"))));
+    sms.resourceOffers(Arrays.asList(createOffer(1, 129, 1025, "slave1", "host1", Optional.of("rack1"))));
 
     Assert.assertEquals(StateChangeResult.SUCCESS, slaveManager.changeState("slave1", MachineState.STARTING_DECOMMISSION, Optional.absent(), Optional.of("user1")));
 
     scheduler.drainPendingQueue();
-    sms.resourceOffers(Arrays.asList(createOffer(1, 129, "slave1", "host1", Optional.of("rack1"))));
+    sms.resourceOffers(Arrays.asList(createOffer(1, 129, 1025, "slave1", "host1", Optional.of("rack1"))));
 
     Assert.assertEquals(MachineState.DECOMMISSIONED, slaveManager.getObject("slave1").get().getCurrentState().getState());
   }
@@ -333,8 +333,8 @@ public class SingularityMachineStatesTest extends SingularitySchedulerTestBase {
 
     saveAndSchedule(request.toBuilder().setSlavePlacement(Optional.of(SlavePlacement.GREEDY)).setInstances(Optional.of(2)));
 
-    sms.resourceOffers(Arrays.asList(createOffer(1, 128, "slave1", "host1")));
-    sms.resourceOffers(Arrays.asList(createOffer(1, 128, "slave2", "host2")));
+    sms.resourceOffers(Arrays.asList(createOffer(1, 128, 1024, "slave1", "host1")));
+    sms.resourceOffers(Arrays.asList(createOffer(1, 128, 1024, "slave2", "host2")));
 
     // freeze slave1
     Assert.assertEquals(StateChangeResult.SUCCESS, slaveManager.changeState("slave1", MachineState.FROZEN, Optional.absent(), Optional.of("user1")));

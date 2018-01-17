@@ -108,12 +108,16 @@ public class SingularityOfferHolder {
     acceptedTasks.add(taskHolder);
 
     // subtract task resources from offer
-    currentResources = MesosUtils.subtractResources(currentResources, taskHolder.getMesosTask().getResourcesList());
+    subtractResources(taskHolder.getMesosTask().getResourcesList());
 
     // subtract executor resources from offer, if any are defined
     if (taskHolder.getMesosTask().hasExecutor() && taskHolder.getMesosTask().getExecutor().getResourcesCount() > 0) {
-      currentResources = MesosUtils.subtractResources(currentResources, taskHolder.getMesosTask().getExecutor().getResourcesList());
+      subtractResources(taskHolder.getMesosTask().getExecutor().getResourcesList());
     }
+  }
+
+  public void subtractResources(List<Resource> resources) {
+    currentResources = MesosUtils.subtractResources(currentResources, resources);
   }
 
   public List<Offer> launchTasksAndGetUnusedOffers(SingularityMesosSchedulerClient schedulerClient) {

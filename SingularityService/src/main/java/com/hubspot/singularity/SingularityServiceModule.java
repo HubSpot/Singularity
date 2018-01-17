@@ -48,6 +48,7 @@ public class SingularityServiceModule extends DropwizardAwareModule<SingularityC
         configuration.getUiConfiguration(),
         configuration.getMesosConfiguration().getDefaultMemory(),
         configuration.getMesosConfiguration().getDefaultCpus(),
+        configuration.getMesosConfiguration().getDefaultDisk(),
         configuration.getMesosConfiguration().getSlaveHttpPort(),
         configuration.getMesosConfiguration().getSlaveHttpsPort(),
         configuration.getDefaultBounceExpirationMinutes(),
