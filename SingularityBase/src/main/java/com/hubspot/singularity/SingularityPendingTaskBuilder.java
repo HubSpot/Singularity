@@ -17,6 +17,7 @@ public class SingularityPendingTaskBuilder {
   private Optional<Boolean> skipHealthchecks;
   private Optional<String> message;
   private Optional<Resources> resources;
+  private List<SingularityS3UploaderFile> s3UploaderAdditionalFiles;
   private Optional<String> runAsUserOverride;
   private Map<String, String> envOverrides;
   private List<SingularityMesosArtifact> extraArtifacts;
@@ -30,6 +31,7 @@ public class SingularityPendingTaskBuilder {
     this.skipHealthchecks = Optional.absent();
     this.message = Optional.absent();
     this.resources = Optional.absent();
+    this.s3UploaderAdditionalFiles = Collections.emptyList();
     this.runAsUserOverride = Optional.absent();
     this.envOverrides = Collections.emptyMap();
     this.extraArtifacts = Collections.emptyList();
@@ -82,6 +84,11 @@ public class SingularityPendingTaskBuilder {
     return this;
   }
 
+  public SingularityPendingTaskBuilder setS3UploaderAdditionalFiles(List<SingularityS3UploaderFile> s3UploaderAdditionalFiles) {
+    this.s3UploaderAdditionalFiles = s3UploaderAdditionalFiles;
+    return this;
+  }
+
   public SingularityPendingTaskBuilder setRunAsUserOverride(Optional<String> runAsUserOverride) {
     this.runAsUserOverride = runAsUserOverride;
     return this;
@@ -104,7 +111,7 @@ public class SingularityPendingTaskBuilder {
 
   public SingularityPendingTask build() {
     return new SingularityPendingTask(
-        pendingTaskId, cmdLineArgsList, user, runId, skipHealthchecks, message, resources, runAsUserOverride, envOverrides, extraArtifacts, actionId
+        pendingTaskId, cmdLineArgsList, user, runId, skipHealthchecks, message, resources, s3UploaderAdditionalFiles, runAsUserOverride, envOverrides, extraArtifacts, actionId
     );
   }
 
@@ -118,6 +125,7 @@ public class SingularityPendingTaskBuilder {
         ", skipHealthchecks=" + skipHealthchecks +
         ", message=" + message +
         ", resources=" + resources +
+        ", s3UploaderAdditionalFiles=" + s3UploaderAdditionalFiles +
         ", runAsUserOverride=" + runAsUserOverride +
         ", envOverrides=" + envOverrides +
         ", extraArtifacts=" + extraArtifacts +
