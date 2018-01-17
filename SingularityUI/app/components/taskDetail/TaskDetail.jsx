@@ -418,12 +418,12 @@ class TaskDetail extends Component {
           <div className="row">
             <div className="col-md-12">
               <ul className="list-unstyled horizontal-description-list">
-                {!!this.props.resourceUsage.cpusNrPeriods && <InfoBox copyableClassName="info-copyable" name="CPUs number of periods" value={this.props.resourceUsage.cpusNrPeriods} />}
-                {!!this.props.resourceUsage.cpusNrThrottled && <InfoBox copyableClassName="info-copyable" name="CPUs number throttled" value={this.props.resourceUsage.cpusNrThrottled} />}
-                {!!this.props.resourceUsage.cpusThrottledTimeSecs && <InfoBox copyableClassName="info-copyable" name="Throttled time (sec)" value={this.props.resourceUsage.cpusThrottledTimeSecs} />}
-                <InfoBox copyableClassName="info-copyable" name="Memory (anon)" value={Utils.humanizeFileSize(this.props.resourceUsage.memAnonBytes)} />
-                <InfoBox copyableClassName="info-copyable" name="Memory (file)" value={Utils.humanizeFileSize(this.props.resourceUsage.memFileBytes)} />
-                <InfoBox copyableClassName="info-copyable" name="Memory (mapped file)" value={Utils.humanizeFileSize(this.props.resourceUsage.memMappedFileBytes)} />
+                {!!this.props.resourceUsage.cpusNrPeriods && <InfoBox name="CPUs number of periods" value={this.props.resourceUsage.cpusNrPeriods} />}
+                {!!this.props.resourceUsage.cpusNrThrottled && <InfoBox name="CPUs number throttled" value={this.props.resourceUsage.cpusNrThrottled} />}
+                {!!this.props.resourceUsage.cpusThrottledTimeSecs && <InfoBox name="Throttled time (sec)" value={this.props.resourceUsage.cpusThrottledTimeSecs} />}
+                <InfoBox name="Memory (anon)" value={Utils.humanizeFileSize(this.props.resourceUsage.memAnonBytes)} />
+                <InfoBox name="Memory (file)" value={Utils.humanizeFileSize(this.props.resourceUsage.memFileBytes)} />
+                <InfoBox name="Memory (mapped file)" value={Utils.humanizeFileSize(this.props.resourceUsage.memMappedFileBytes)} />
               </ul>
             </div>
           </div>
