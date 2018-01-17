@@ -19,11 +19,15 @@ import org.apache.mesos.v1.Protos.ContainerInfo.DockerInfo.PortMapping;
 import org.apache.mesos.v1.Protos.ContainerInfo.Type;
 import org.apache.mesos.v1.Protos.Environment.Variable;
 import org.apache.mesos.v1.Protos.FrameworkID;
+import org.apache.mesos.v1.Protos.Image;
+import org.apache.mesos.v1.Protos.NetworkInfo;
 import org.apache.mesos.v1.Protos.Offer;
 import org.apache.mesos.v1.Protos.OfferID;
 import org.apache.mesos.v1.Protos.Parameter;
 import org.apache.mesos.v1.Protos.TaskInfo;
+import org.apache.mesos.v1.Protos.Volume;
 import org.apache.mesos.v1.Protos.Volume.Mode;
+import org.apache.mesos.v1.Protos.Volume.Source.DockerVolume;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.invocation.InvocationOnMock;
@@ -37,12 +41,21 @@ import com.hubspot.jackson.datatype.protobuf.ProtobufModule;
 import com.hubspot.mesos.Resources;
 import com.hubspot.mesos.SingularityContainerInfo;
 import com.hubspot.mesos.SingularityContainerType;
+import com.hubspot.mesos.SingularityDockerImage;
 import com.hubspot.mesos.SingularityDockerInfo;
 import com.hubspot.mesos.SingularityDockerNetworkType;
 import com.hubspot.mesos.SingularityDockerPortMapping;
+import com.hubspot.mesos.SingularityDockerVolume;
 import com.hubspot.mesos.SingularityDockerVolumeMode;
+import com.hubspot.mesos.SingularityMesosImage;
+import com.hubspot.mesos.SingularityMesosImageType;
+import com.hubspot.mesos.SingularityMesosInfo;
+import com.hubspot.mesos.SingularityNetworkInfo;
+import com.hubspot.mesos.SingularityPortMapping;
 import com.hubspot.mesos.SingularityPortMappingType;
 import com.hubspot.mesos.SingularityVolume;
+import com.hubspot.mesos.SingularityVolumeSource;
+import com.hubspot.mesos.SingularityVolumeSourceType;
 import com.hubspot.singularity.RequestType;
 import com.hubspot.singularity.SingularityDeploy;
 import com.hubspot.singularity.SingularityDeployBuilder;
@@ -52,7 +65,6 @@ import com.hubspot.singularity.SingularityPendingTaskBuilder;
 import com.hubspot.singularity.SingularityPendingTaskId;
 import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityRequestBuilder;
-import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskRequest;
 import com.hubspot.singularity.config.NetworkConfiguration;
 import com.hubspot.singularity.config.SingularityConfiguration;
@@ -347,6 +359,73 @@ public class SingularityMesosTaskBuilderTest {
 
     assertEquals(31011, portMappings.get(1).getHostPort());
     assertEquals(31011, portMappings.get(1).getContainerPort());
+  }
+
+  @Test
+  public void testMesosContainer() {
+    taskResources = new Resources(1, 1, 2);
+
+    final SingularityRequest request = new SingularityRequestBuilder("test", RequestType.WORKER).build();
+    final SingularityContainerInfo containerInfo = new SingularityContainerInfo(
+        SingularityContainerType.MESOS,
+        Optional.of(Collections.singletonList(
+          new SingularityVolume("/testing", Optional.of("/host"), SingularityDockerVolumeMode.RW, Optional.of(
+            new SingularityVolumeSource(SingularityVolumeSourceType.DOCKER_VOLUME, Optional.of(
+              new SingularityDockerVolume(
+                Optional.of("rexray"),
+                Optional.of("testvolume-%i"),
+                Collections.singletonMap("iops", "1")))))))),
+        Optional.absent(),
+        Optional.of(new SingularityMesosInfo(
+          Optional.of(
+            new SingularityMesosImage(
+              SingularityMesosImageType.DOCKER,
+              Optional.absent(),
+              Optional.of(new SingularityDockerImage("test:image")),
+              true)))),
+        Optional.of(Arrays.asList(
+          new SingularityNetworkInfo(
+            Optional.of("network-name"),
+            Optional.of(Arrays.asList("blue", "purple")),
+            Optional.of(Arrays.asList(
+              new SingularityPortMapping(0, 8080, Optional.of("tcp")),
+              new SingularityPortMapping(8888, 8081, Optional.of("udp"))))))));
+
+    final SingularityDeploy deploy = new SingularityDeployBuilder("test", "1")
+        .setContainerInfo(Optional.of(containerInfo))
+        .build();
+    final SingularityTaskRequest taskRequest = new SingularityTaskRequest(request, deploy, pendingTask);
+    final SingularityMesosTaskHolder task = builder.buildTask(offerHolder, Collections.singletonList(MesosUtils.getPortRangeResource(31010, 31011)), taskRequest, taskResources, executorResources);
+
+    assertEquals(Type.MESOS, task.getMesosTask().getContainer().getType());
+    final Image image = task.getMesosTask().getContainer().getMesos().getImage();
+    assertEquals(Protos.Image.Type.DOCKER, image.getType());
+    assertEquals("test:image", image.getDocker().getName());
+
+    final Volume volume = task.getMesosTask().getContainer().getVolumesList().get(0);
+    assertEquals("/testing", volume.getContainerPath());
+    assertEquals("/host", volume.getHostPath());
+    assertEquals(Volume.Mode.RW, volume.getMode());
+    assertEquals(Volume.Source.Type.DOCKER_VOLUME, volume.getSource().getType());
+    final DockerVolume dockerVolume = volume.getSource().getDockerVolume();
+    assertEquals("rexray", dockerVolume.getDriver());
+    assertEquals("testvolume-1", dockerVolume.getName());
+    assertEquals("iops", dockerVolume.getDriverOptions().getParameterList().get(0).getKey());
+
+    final NetworkInfo networkInfo = task.getMesosTask().getContainer().getNetworkInfosList().get(0);
+    assertEquals("network-name", networkInfo.getName());
+    assertEquals(Arrays.asList("blue", "purple"), networkInfo.getGroupsList());
+
+    final List<Protos.NetworkInfo.PortMapping> portMappings = networkInfo.getPortMappingsList();
+    assertEquals(2, portMappings.size());
+
+    assertEquals(31010, portMappings.get(0).getHostPort());
+    assertEquals(8080, portMappings.get(0).getContainerPort());
+    assertEquals("tcp", portMappings.get(0).getProtocol());
+
+    assertEquals(8888, portMappings.get(1).getHostPort());
+    assertEquals(8081, portMappings.get(1).getContainerPort());
+    assertEquals("udp", portMappings.get(1).getProtocol());
   }
 
   private static class CreateFakeId implements Answer<String> {
