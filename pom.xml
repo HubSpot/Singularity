@@ -327,6 +327,12 @@
         <artifactId>netty-codec</artifactId>
         <version>4.1.4.Final</version>
       </dependency>
+
+      <dependency>
+        <groupId>com.google.cloud</groupId>
+        <artifactId>google-cloud-storage</artifactId>
+        <version>1.14.0</version>
+      </dependency>
     </dependencies>
   </dependencyManagement>
 
