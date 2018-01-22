@@ -73,8 +73,6 @@ public class SingularityS3UploaderConfiguration extends BaseRunnerConfiguration 
   @JsonProperty
   private List<SingularityS3UploaderContentHeaders> s3ContentHeaders = new ArrayList<>();
 
-  private Optional<String> gcsCredentialsPath = Optional.absent();
-
   public SingularityS3UploaderConfiguration() {
     super(Optional.of("singularity-s3uploader.log"));
   }
@@ -183,14 +181,6 @@ public class SingularityS3UploaderConfiguration extends BaseRunnerConfiguration 
     this.s3ContentHeaders = s3ContentHeaders;
   }
 
-  public Optional<String> getGcsCredentialsPath() {
-    return gcsCredentialsPath;
-  }
-
-  public void setGcsCredentialsPath(Optional<String> gcsCredentialsPath) {
-    this.gcsCredentialsPath = gcsCredentialsPath;
-  }
-
   @Override
   public String toString() {
     return "SingularityS3UploaderConfiguration{" +
@@ -207,7 +197,6 @@ public class SingularityS3UploaderConfiguration extends BaseRunnerConfiguration 
         ", checkForOpenFiles=" + checkForOpenFiles +
         ", s3BucketCredentials=" + s3BucketCredentials +
         ", s3ContentHeaders=" + s3ContentHeaders +
-        ", gcsCredentialsPath=" + gcsCredentialsPath +
         "} " + super.toString();
   }
 }
