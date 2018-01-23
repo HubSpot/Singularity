@@ -108,7 +108,7 @@ class TaskDetail extends Component {
       }).isRequired
     })).isRequired,
     router: PropTypes.object.isRequired,
-    s3Logs: PropTypes.array,
+    s3Logs: PropTypes.object,
     deploy: PropTypes.object,
     pendingDeploys: PropTypes.array,
     shellCommandResponse: PropTypes.object,
@@ -457,7 +457,7 @@ class TaskDetail extends Component {
         <TaskHistory taskUpdates={this.props.task.taskUpdates} />
         <TaskLatestLog taskId={this.props.taskId} status={this.props.task.status} files={filesToDisplay} available={filesAvailable} />
         {this.renderFiles(filesToDisplay)}
-        {_.isEmpty(this.props.s3Logs) || <TaskS3Logs taskId={this.props.task.task.taskId.id} s3Files={this.props.s3Logs} taskStartedAt={this.props.task.task.taskId.startedAt} />}
+        <TaskS3Logs taskId={this.props.task.task.taskId.id} s3Files={this.props.s3Logs} taskStartedAt={this.props.task.task.taskId.startedAt} />
         {_.isEmpty(this.props.task.loadBalancerUpdates) || <TaskLbUpdates loadBalancerUpdates={this.props.task.loadBalancerUpdates} />}
         <TaskInfo task={this.props.task.task} ports={this.props.task.ports} directory={this.props.task.directory} />
         {this.renderResourceUsage()}
@@ -540,7 +540,7 @@ function mapStateToProps(state, ownProps) {
     resourceUsageNotFound: state.api.taskResourceUsage.statusCode === 404,
     resourceUsage: state.api.taskResourceUsage.data,
     cpuTimestamp: state.api.taskResourceUsage.data.timestamp,
-    s3Logs: state.api.taskS3Logs.data,
+    s3Logs: state.api.taskS3Logs,
     deploy: state.api.deploy.data,
     pendingDeploys: state.api.deploys.data,
     shellCommandResponse: state.api.taskShellCommandResponse.data,
@@ -557,7 +557,7 @@ function mapDispatchToProps(dispatch) {
     fetchDeployForRequest: (taskId, deployId) => dispatch(FetchDeployForRequest.trigger(taskId, deployId)),
     fetchTaskCleanups: () => dispatch(FetchTaskCleanups.trigger()),
     fetchPendingDeploys: () => dispatch(FetchPendingDeploys.trigger()),
-    fechS3Logs: (taskId) => dispatch(FetchTaskS3Logs.trigger(taskId, [404])),
+    fecthS3Logs: (taskId) => dispatch(FetchTaskS3Logs.trigger(taskId, [404, 500])),
   };
 }
 
