@@ -102,7 +102,7 @@ class TaskS3Logs extends Component {
 
   render() {
     const { s3Files } = this.props;
-    if (s3Files.data && _.isEmpty(s3Files.data)) {
+    if (s3Files.data && !_.isEmpty(s3Files.data)) {
       const groupedFiles = groupBy(s3Files.data, this.getFileType);
 
       return (
