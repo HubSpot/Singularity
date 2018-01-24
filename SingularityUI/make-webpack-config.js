@@ -32,7 +32,6 @@ module.exports = function(options) {
         'react',
         'jquery',
         'underscore',
-        'clipboard',
         'select2',
         'moment',
         'messenger',
