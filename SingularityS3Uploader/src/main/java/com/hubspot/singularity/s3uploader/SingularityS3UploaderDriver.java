@@ -448,7 +448,7 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper implements S
       if (metadata.getUploaderType() == SingularityUploaderType.S3) {
         uploader = new SingularityS3Uploader(bucketCreds.or(defaultCredentials), metadata, fileSystem, metrics, filename, configuration, hostname, exceptionNotifier);
       } else {
-        uploader = new SingularityGCSUploader(metadata, fileSystem, metrics, filename, configuration, hostname, exceptionNotifier);
+        uploader = new SingularityGCSUploader(metadata, fileSystem, metrics, filename, configuration, hostname, exceptionNotifier, jsonObjectFileHelper);
       }
 
       if (metadata.isFinished()) {
