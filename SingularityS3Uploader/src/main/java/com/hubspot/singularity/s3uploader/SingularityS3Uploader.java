@@ -101,7 +101,7 @@ public class SingularityS3Uploader extends SingularityUploader {
 
         Optional<StorageClass> maybeStorageClass = Optional.absent();
 
-        if (shouldApplyStorageClass(fileSizeBytes)) {
+        if (shouldApplyStorageClass(fileSizeBytes, uploadMetadata.getS3StorageClass())) {
           LOG.debug("{} adding storage class {} to {}", logIdentifier, uploadMetadata.getS3StorageClass().get(), file);
           maybeStorageClass = Optional.of(StorageClass.fromValue(uploadMetadata.getS3StorageClass().get()));
         }
