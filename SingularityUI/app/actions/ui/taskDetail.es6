@@ -32,5 +32,5 @@ export const refresh = (taskId, splat) => (dispatch, getState) => {
 };
 
 export const onLoad = (taskId) => (dispatch) => {
-  return dispatch(FetchTaskS3Logs.trigger(taskId, [404]));
+  return dispatch(FetchTaskS3Logs.trigger(taskId, [404, 500]));
 };

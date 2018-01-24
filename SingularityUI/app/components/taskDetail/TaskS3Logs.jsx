@@ -102,28 +102,38 @@ class TaskS3Logs extends Component {
 
   render() {
     const { s3Files } = this.props;
-    const groupedFiles = groupBy(s3Files, this.getFileType);
+    if (s3Files.data && !_.isEmpty(s3Files.data)) {
+      const groupedFiles = groupBy(s3Files.data, this.getFileType);
 
-    return (
-      <Section title="S3 Logs">
-        {this.state.viewingGroup
-          ? this.renderTable(groupedFiles[this.state.viewingGroup])
-          : this.renderFolders(Object.keys(groupedFiles))
-        }
-      </Section>
-    );
+      return (
+        <Section title="S3 Logs">
+          {this.state.viewingGroup
+            ? this.renderTable(groupedFiles[this.state.viewingGroup])
+            : this.renderFolders(Object.keys(groupedFiles))
+          }
+        </Section>
+      );
+    } else if (s3Files.error || s3Files.statusCode == 500) {
+      return (
+        <Section title="S3 Logs" subtitle="Error Fetching Logs from S3"></Section>
+      );
+    } else {
+      return null;
+    }
   }
 }
 
 TaskS3Logs.propTypes = {
-  s3Files: PropTypes.arrayOf(PropTypes.shape({
-    getUrl: PropTypes.string.isRequired,
-    key: PropTypes.string.isRequired,
-    size: PropTypes.number.isRequired,
-    lastModified: PropTypes.number.isRequired,
-    startTime: PropTypes.number,
-    endTime: PropTypes.number
-  })).isRequired,
+  s3Files: PropTypes.shape({
+    data: PropTypes.arrayOf(PropTypes.shape({
+      getUrl: PropTypes.string.isRequired,
+      key: PropTypes.string.isRequired,
+      size: PropTypes.number.isRequired,
+      lastModified: PropTypes.number.isRequired,
+      startTime: PropTypes.number,
+      endTime: PropTypes.number
+    }))
+  }).isRequired,
   taskId: PropTypes.string.isRequired,
   taskStartedAt: PropTypes.number.isRequired
 };
