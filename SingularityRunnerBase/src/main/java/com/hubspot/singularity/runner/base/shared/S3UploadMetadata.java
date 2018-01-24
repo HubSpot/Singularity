@@ -1,5 +1,8 @@
 package com.hubspot.singularity.runner.base.shared;
 
+import java.util.Collections;
+import java.util.Map;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
@@ -52,6 +55,8 @@ public class S3UploadMetadata {
   private final Optional<Long> applyStorageClassIfOverBytes;
   private final Optional<Boolean> uploadImmediately;
   private final boolean checkSubdirectories;
+  private final SingularityUploaderType uploaderType;
+  private final Map<String, Object> gcsCredentials;
 
   @JsonCreator
   public S3UploadMetadata(@JsonProperty("directory") String directory,
@@ -67,7 +72,9 @@ public class S3UploadMetadata {
                           @JsonProperty("storageClass") Optional<String> s3StorageClass,
                           @JsonProperty("applyStorageClassIfOverBytes") Optional<Long> applyStorageClassIfOverBytes,
                           @JsonProperty("uploadImmediately") Optional<Boolean> uploadImmediately,
-                          @JsonProperty("checkSubdirectories") Optional<Boolean> checkSubdirectories) {
+                          @JsonProperty("checkSubdirectories") Optional<Boolean> checkSubdirectories,
+                          @JsonProperty("uploaderType") Optional<SingularityUploaderType> uploaderType,
+                          @JsonProperty("gcsCredentials") Map<String, Object> gcsCredentials) {
     Preconditions.checkNotNull(directory);
     Preconditions.checkNotNull(fileGlob);
     Preconditions.checkNotNull(s3Bucket);
@@ -87,6 +94,8 @@ public class S3UploadMetadata {
     this.applyStorageClassIfOverBytes = applyStorageClassIfOverBytes;
     this.uploadImmediately = uploadImmediately;
     this.checkSubdirectories = checkSubdirectories.or(false);
+    this.uploaderType = uploaderType.or(SingularityUploaderType.S3);
+    this.gcsCredentials = gcsCredentials != null ? gcsCredentials : Collections.emptyMap();
   }
 
 
@@ -185,6 +194,14 @@ public class S3UploadMetadata {
     return checkSubdirectories;
   }
 
+  public SingularityUploaderType getUploaderType() {
+    return uploaderType;
+  }
+
+  public Map<String, Object> getGcsCredentials() {
+    return gcsCredentials;
+  }
+
   @Override
   public String toString() {
     return "S3UploadMetadata{" +
@@ -202,6 +219,7 @@ public class S3UploadMetadata {
         ", applyStorageClassIfOverBytes=" + applyStorageClassIfOverBytes +
         ", uploadImmediately=" + uploadImmediately +
         ", checkSubdirectories=" + checkSubdirectories +
+        ", uploaderType=" + uploaderType +
         '}';
   }
 }

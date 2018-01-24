@@ -24,7 +24,7 @@ public class SingularityS3UploaderMetrics {
   private final Timer uploadTimer;
   private final Meter filesystemEventsMeter;
 
-  private Optional<Collection<SingularityS3Uploader>> expiring;
+  private Optional<Collection<SingularityUploader>> expiring;
 
   private long timeOfLastSuccessUpload;
   private int lastUploadDuration;
@@ -86,7 +86,7 @@ public class SingularityS3UploaderMetrics {
     return MetricRegistry.name(SingularityS3UploaderMetrics.class, names);
   }
 
-  public void setExpiringCollection(Collection<SingularityS3Uploader> expiring) {
+  public void setExpiringCollection(Collection<SingularityUploader> expiring) {
     this.expiring = Optional.of(expiring);
   }
 
