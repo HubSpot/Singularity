@@ -183,20 +183,20 @@ public class SingularityS3UploaderConfiguration extends BaseRunnerConfiguration 
 
   @Override
   public String toString() {
-    return "SingularityS3UploaderConfiguration[" +
-            "pollForShutDownMillis=" + pollForShutDownMillis +
-            ", executorMaxUploadThreads=" + executorMaxUploadThreads +
-            ", checkUploadsEverySeconds=" + checkUploadsEverySeconds +
-            ", stopCheckingAfterMillisWithoutNewFile=" + stopCheckingAfterMillisWithoutNewFile +
-            ", s3AccessKey=" + s3AccessKey +
-            ", s3SecretKey=" + s3SecretKey +
-            ", maxSingleUploadSizeBytes=" + maxSingleUploadSizeBytes +
-            ", uploadPartSize=" + uploadPartSize +
-            ", retryWaitMs=" + retryWaitMs +
-            ", retryCount=" + retryCount +
-            ", checkForOpenFiles=" + checkForOpenFiles +
-            ", s3BucketCredentials=" + s3BucketCredentials +
-            ", s3ContentHeaders=" + s3ContentHeaders +
-            ']';
+    return "SingularityS3UploaderConfiguration{" +
+        "pollForShutDownMillis=" + pollForShutDownMillis +
+        ", executorMaxUploadThreads=" + executorMaxUploadThreads +
+        ", checkUploadsEverySeconds=" + checkUploadsEverySeconds +
+        ", stopCheckingAfterMillisWithoutNewFile=" + stopCheckingAfterMillisWithoutNewFile +
+        ", s3AccessKey=" + s3AccessKey +
+        ", s3SecretKey=" + s3SecretKey +
+        ", maxSingleUploadSizeBytes=" + maxSingleUploadSizeBytes +
+        ", uploadPartSize=" + uploadPartSize +
+        ", retryWaitMs=" + retryWaitMs +
+        ", retryCount=" + retryCount +
+        ", checkForOpenFiles=" + checkForOpenFiles +
+        ", s3BucketCredentials=" + s3BucketCredentials +
+        ", s3ContentHeaders=" + s3ContentHeaders +
+        "} " + super.toString();
   }
 }
