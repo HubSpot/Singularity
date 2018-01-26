@@ -254,8 +254,6 @@ public class SingularityMesosStatusUpdateHandler {
       scheduler.handleCompletedTask(task, taskIdObj, isActiveTask, timestamp, taskState, taskHistoryUpdateCreateResult, status);
     }
 
-    System.out.println(newTaskStatusHolder);
-
     saveNewTaskStatusHolder(taskIdObj, newTaskStatusHolder, taskState);
   }
 
