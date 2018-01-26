@@ -53,6 +53,7 @@
     <dep.dropwizard-metrics.version>3.1.4</dep.dropwizard-metrics.version>
     <dep.guava.version>20.0</dep.guava.version>
     <dep.mesos.rxjava.version>0.2.0</dep.mesos.rxjava.version>
+    <dep.protobuf.version>2.6.1</dep.protobuf.version>
   </properties>
 
   <modules>
@@ -314,7 +315,7 @@
       <dependency>
         <groupId>com.google.protobuf</groupId>
         <artifactId>protobuf-java</artifactId>
-        <version>2.6.1</version>
+        <version>${dep.protobuf.version}</version>
       </dependency>
       <dependency>
         <groupId>org.jukito</groupId>
@@ -327,6 +328,43 @@
         <artifactId>netty-codec</artifactId>
         <version>4.1.4.Final</version>
       </dependency>
+
+      <dependency>
+        <groupId>com.google.cloud</groupId>
+        <artifactId>google-cloud-storage</artifactId>
+        <version>1.15.0</version>
+      </dependency>
+
+      <dependency>
+        <groupId>com.google.apis</groupId>
+        <artifactId>google-http-client-jackson2</artifactId>
+        <version>1.23.0</version>
+      </dependency>
+
+      <dependency>
+        <groupId>com.google.api-client</groupId>
+        <artifactId>google-api-client</artifactId>
+        <version>1.23.0</version>
+      </dependency>
+
+      <dependency>
+        <groupId>com.google.http-client</groupId>
+        <artifactId>google-http-client</artifactId>
+        <version>1.23.0</version>
+      </dependency>
+
+      <dependency>
+        <groupId>com.google.auth</groupId>
+        <artifactId>google-auth-library-oauth2-http</artifactId>
+        <version>0.9.0</version>
+        <exclusions>
+          <exclusion>
+            <groupId>com.google.http-client</groupId>
+            <artifactId>google-http-client-jackson2</artifactId>
+          </exclusion>
+        </exclusions>
+      </dependency>
+
     </dependencies>
   </dependencyManagement>
 

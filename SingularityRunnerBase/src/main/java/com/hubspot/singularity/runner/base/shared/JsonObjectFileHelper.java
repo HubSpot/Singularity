@@ -2,11 +2,14 @@ package com.hubspot.singularity.runner.base.shared;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
+import java.util.Map;
 
 import org.slf4j.Logger;
 
@@ -49,6 +52,10 @@ public class JsonObjectFileHelper {
     }
 
     return Optional.absent();
+  }
+
+  public InputStream toInputStream(Map<String, Object> input) throws IOException {
+    return new ByteArrayInputStream(objectMapper.writeValueAsBytes(input));
   }
 
   public boolean writeObject(Object object, Path path, Logger log) {
