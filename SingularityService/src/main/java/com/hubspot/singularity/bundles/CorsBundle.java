@@ -14,6 +14,7 @@ import org.eclipse.jetty.servlets.CrossOriginFilter;
 
 import com.google.common.base.Throwables;
 import com.google.common.collect.Iterators;
+import com.hubspot.singularity.config.CorsConfiguration;
 import com.hubspot.singularity.config.SingularityConfiguration;
 
 import io.dropwizard.ConfiguredBundle;
@@ -32,7 +33,8 @@ public class CorsBundle implements ConfiguredBundle<SingularityConfiguration> {
 
   @Override
   public void run(final SingularityConfiguration config, final Environment environment) {
-    if (!config.isEnableCorsFilter()) {
+    CorsConfiguration corsConfiguration = config.getCors();
+    if (!config.isEnableCorsFilter() && !corsConfiguration.isEnabled()) {
       return;
     }
 
@@ -67,7 +69,12 @@ public class CorsBundle implements ConfiguredBundle<SingularityConfiguration> {
     }
 
     FilterRegistration.Dynamic filter = environment.servlets().addFilter(FILTER_NAME, corsFilter);
+
+    filter.setInitParameter(CrossOriginFilter.ALLOWED_ORIGINS_PARAM, corsConfiguration.getAllowedOrigins());
+    filter.setInitParameter(CrossOriginFilter.ALLOWED_HEADERS_PARAM, corsConfiguration.getAllowedHeaders());
+    filter.setInitParameter(CrossOriginFilter.ALLOWED_METHODS_PARAM, corsConfiguration.getAllowedMethods());
+    filter.setInitParameter(CrossOriginFilter.ALLOW_CREDENTIALS_PARAM, corsConfiguration.isAllowCredentials() ? "true" : "false");
+
     filter.addMappingForUrlPatterns(EnumSet.of(DispatcherType.REQUEST), false, "/*");
-    filter.setInitParameter(CrossOriginFilter.ALLOWED_METHODS_PARAM, "GET,PUT,POST,DELETE,OPTIONS");
   }
 }
