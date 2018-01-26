@@ -214,8 +214,8 @@ public abstract class SingularityUploader {
     }
   }
 
-  boolean shouldApplyStorageClass(long fileSizeBytes) {
-    if (!getUploadMetadata().getS3StorageClass().isPresent()) {
+  boolean shouldApplyStorageClass(long fileSizeBytes, Optional<String> maybeStorageClass) {
+    if (!maybeStorageClass.isPresent()) {
       return false;
     }
 

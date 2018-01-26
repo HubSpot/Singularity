@@ -101,9 +101,9 @@ public class SingularityGCSUploader extends SingularityUploader {
         }
       }
 
-      if (shouldApplyStorageClass(fileSizeBytes)) {
-        LOG.debug("{} adding storage class {} to {}", logIdentifier, uploadMetadata.getS3StorageClass().get(), file);
-        blobInfoBuilder.setStorageClass(StorageClass.valueOf(uploadMetadata.getS3StorageClass().get()));
+      if (shouldApplyStorageClass(fileSizeBytes, uploadMetadata.getGcsStorageClass())) {
+        LOG.debug("{} adding storage class {} to {}", logIdentifier, uploadMetadata.getGcsStorageClass().get(), file);
+        blobInfoBuilder.setStorageClass(StorageClass.valueOf(uploadMetadata.getGcsStorageClass().get()));
       }
 
       try (FileInputStream fileInputStream = new FileInputStream(file.toFile())){
