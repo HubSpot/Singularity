@@ -87,6 +87,7 @@ Models:
 - [`SingularityTaskShellCommandRequest`](models.md#model-SingularityTaskShellCommandRequest)
 - [`SingularityTaskShellCommandRequestId`](models.md#model-SingularityTaskShellCommandRequestId)
 - [`SingularityTaskShellCommandUpdate`](models.md#model-SingularityTaskShellCommandUpdate)
+- [`SingularityTaskWebhook`](models.md#model-SingularityTaskWebhook)
 - [`SingularityUnpauseRequest`](models.md#model-SingularityUnpauseRequest)
 - [`SingularityUpdatePendingDeployRequest`](models.md#model-SingularityUpdatePendingDeployRequest)
 - [`SingularityVolume`](models.md#model-SingularityVolume)

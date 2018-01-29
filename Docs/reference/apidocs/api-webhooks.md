@@ -37,7 +37,7 @@ Retrieve a list of queued task updates for a specific webhook.
 | webhookId | true |  | string |
 
 ###### Response
-[List[SingularityTaskWebhook]](models.md#model-SingularityTaskWebhook)
+[List[SingularityTaskHistoryUpdate]](models.md#model-SingularityTaskHistoryUpdate)
 
 
 ###### Errors
@@ -60,7 +60,7 @@ Retrieve a list of queued task updates for a specific webhook.
 | webhookId | false |  | string |
 
 ###### Response
-[List[SingularityTaskWebhook]](models.md#model-SingularityTaskWebhook)
+[List[SingularityTaskHistoryUpdate]](models.md#model-SingularityTaskHistoryUpdate)
 
 
 ###### Errors
