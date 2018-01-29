@@ -59,6 +59,10 @@ public class SingularityS3Configuration extends BaseRunnerConfiguration {
   @JsonProperty
   private Map<String, SingularityS3Credentials> s3BucketCredentials = new HashMap<>();
 
+  @NotNull
+  @JsonProperty
+  private Optional<String> s3Endpoint = Optional.absent();
+
   public SingularityS3Configuration() {
     super(Optional.<String>absent());
   }
@@ -141,6 +145,14 @@ public class SingularityS3Configuration extends BaseRunnerConfiguration {
 
   public void setS3BucketCredentials(Map<String, SingularityS3Credentials> s3BucketCredentials) {
     this.s3BucketCredentials = s3BucketCredentials;
+  }
+
+  public Optional<String> getS3Endpoint() {
+    return s3Endpoint;
+  }
+
+  public void setS3Endpoint(Optional<String> s3Endpoint) {
+    this.s3Endpoint = s3Endpoint;
   }
 
   @Override
