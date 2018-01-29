@@ -63,10 +63,6 @@ public class SingularityS3Configuration extends BaseRunnerConfiguration {
   @JsonProperty
   private Optional<String> s3Endpoint = Optional.absent();
 
-  @NotNull
-  @JsonProperty
-  private boolean s3PathStyleAccessEnabled = false;
-
   public SingularityS3Configuration() {
     super(Optional.<String>absent());
   }
@@ -157,14 +153,6 @@ public class SingularityS3Configuration extends BaseRunnerConfiguration {
 
   public void setS3Endpoint(Optional<String> s3Endpoint) {
     this.s3Endpoint = s3Endpoint;
-  }
-
-  public boolean isS3PathStyleAccessEnabled() {
-    return s3PathStyleAccessEnabled;
-  }
-
-  public void setS3PathStyleAccessEnabled(boolean s3PathStyleAccessEnabled) {
-    this.s3PathStyleAccessEnabled = s3PathStyleAccessEnabled;
   }
 
   @Override

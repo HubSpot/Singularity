@@ -16,10 +16,9 @@ import java.util.concurrent.TimeoutException;
 import org.slf4j.Logger;
 
 import com.amazonaws.ClientConfiguration;
-import com.amazonaws.auth.AWSStaticCredentialsProvider;
 import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.services.s3.AmazonS3;
-import com.amazonaws.services.s3.AmazonS3ClientBuilder;
+import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.model.S3Object;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
@@ -70,11 +69,7 @@ public class S3ArtifactDownloader {
 
     ClientConfiguration clientConfiguration = new ClientConfiguration()
         .withSocketTimeout(configuration.getS3ChunkDownloadTimeoutMillis());
-    final AmazonS3 s3Client = AmazonS3ClientBuilder.standard()
-        .withCredentials(new AWSStaticCredentialsProvider(getCredentialsForBucket(s3Artifact.getS3Bucket())))
-        .withClientConfiguration(clientConfiguration)
-        .withPathStyleAccessEnabled(configuration.isS3PathStyleAccessEnabled())
-        .build();
+    final AmazonS3 s3Client = new AmazonS3Client(getCredentialsForBucket(s3Artifact.getS3Bucket()), clientConfiguration);
 
     if (configuration.getS3Endpoint().isPresent()) {
       s3Client.setEndpoint(configuration.getS3Endpoint().get());
