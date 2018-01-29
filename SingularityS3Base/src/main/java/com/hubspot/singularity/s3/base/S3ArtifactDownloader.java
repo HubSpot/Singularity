@@ -18,6 +18,8 @@ import org.slf4j.Logger;
 import com.amazonaws.ClientConfiguration;
 import com.amazonaws.auth.AWSStaticCredentialsProvider;
 import com.amazonaws.auth.BasicAWSCredentials;
+import com.amazonaws.regions.Region;
+import com.amazonaws.regions.Regions;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3ClientBuilder;
 import com.amazonaws.services.s3.model.S3Object;
@@ -78,6 +80,7 @@ public class S3ArtifactDownloader {
 
     if (configuration.getS3Endpoint().isPresent()) {
       s3Client.setEndpoint(configuration.getS3Endpoint().get());
+      s3Client.setRegion(Region.getRegion(Regions.US_EAST_1));  // hardcode for now
     }
 
     long length = 0;
