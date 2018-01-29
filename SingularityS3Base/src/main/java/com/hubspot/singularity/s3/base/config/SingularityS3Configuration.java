@@ -63,6 +63,10 @@ public class SingularityS3Configuration extends BaseRunnerConfiguration {
   @JsonProperty
   private Optional<String> s3Endpoint = Optional.absent();
 
+  @NotNull
+  @JsonProperty
+  private boolean s3UseV2Signing = false;
+
   public SingularityS3Configuration() {
     super(Optional.<String>absent());
   }
@@ -153,6 +157,14 @@ public class SingularityS3Configuration extends BaseRunnerConfiguration {
 
   public void setS3Endpoint(Optional<String> s3Endpoint) {
     this.s3Endpoint = s3Endpoint;
+  }
+
+  public boolean isS3UseV2Signing() {
+    return s3UseV2Signing;
+  }
+
+  public void setS3UseV2Signing(boolean s3UseV2Signing) {
+    this.s3UseV2Signing = s3UseV2Signing;
   }
 
   @Override

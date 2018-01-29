@@ -69,6 +69,10 @@ public class S3ArtifactDownloader {
 
     ClientConfiguration clientConfiguration = new ClientConfiguration()
         .withSocketTimeout(configuration.getS3ChunkDownloadTimeoutMillis());
+    if (configuration.isS3UseV2Signing()) {
+      clientConfiguration.setSignerOverride("S3SignerType");
+    }
+
     final AmazonS3 s3Client = new AmazonS3Client(getCredentialsForBucket(s3Artifact.getS3Bucket()), clientConfiguration);
 
     if (configuration.getS3Endpoint().isPresent()) {
