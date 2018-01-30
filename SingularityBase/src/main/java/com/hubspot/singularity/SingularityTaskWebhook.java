@@ -2,6 +2,7 @@ package com.hubspot.singularity;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.wordnik.swagger.annotations.ApiModelProperty;
 
 public class SingularityTaskWebhook {
 
@@ -14,10 +15,12 @@ public class SingularityTaskWebhook {
     this.taskUpdate = taskUpdate;
   }
 
+  @ApiModelProperty(required=false, value="The task this webhook refers to.")
   public SingularityTask getTask() {
     return task;
   }
 
+  @ApiModelProperty(required=false, value="The task history update this webhook refers to.")
   public SingularityTaskHistoryUpdate getTaskUpdate() {
     return taskUpdate;
   }

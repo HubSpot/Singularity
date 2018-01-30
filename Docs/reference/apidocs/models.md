@@ -87,7 +87,6 @@ Models:
 - [`SingularityTaskShellCommandRequest`](models.md#model-SingularityTaskShellCommandRequest)
 - [`SingularityTaskShellCommandRequestId`](models.md#model-SingularityTaskShellCommandRequestId)
 - [`SingularityTaskShellCommandUpdate`](models.md#model-SingularityTaskShellCommandUpdate)
-- [`SingularityTaskWebhook`](models.md#model-SingularityTaskWebhook)
 - [`SingularityUnpauseRequest`](models.md#model-SingularityUnpauseRequest)
 - [`SingularityUpdatePendingDeployRequest`](models.md#model-SingularityUpdatePendingDeployRequest)
 - [`SingularityVolume`](models.md#model-SingularityVolume)
@@ -1193,14 +1192,6 @@ Models:
 | message | string | optional |  |
 | timestamp | long | optional |  |
 | shellRequestId | [SingularityTaskShellCommandRequestId](models.md#model-SingularityTaskShellCommandRequestId) | optional |  |
-
-
-## <a name="model-SingularityTaskWebhook"></a> SingularityTaskWebhook
-
-| name | type | required | description |
-|------|------|----------|-------------|
-| task | [SingularityTask](models.md#model-SingularityTask) | required | The task this webhook is referring to. |
-| taskUpdate | [SingularityTaskHistoryUpdate](models.md#model-SingularityTaskHistoryUpdate)  | required | The task update this webhook is referring to. |
 
 
 ## <a name="model-SingularityUnpauseRequest"></a> SingularityUnpauseRequest
