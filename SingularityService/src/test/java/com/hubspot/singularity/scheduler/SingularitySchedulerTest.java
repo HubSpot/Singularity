@@ -1527,7 +1527,6 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     statusUpdate(taskOne, TaskState.TASK_FAILED);
 
     Assert.assertTrue(!taskManager.isActiveTask(taskOne.getTaskId().getId()));
-    System.out.println(taskManager.getTaskHistoryUpdates(taskOne.getTaskId()));
 
     Assert.assertEquals(2, taskManager.getTaskHistoryUpdates(taskOne.getTaskId()).size());
   }
@@ -1702,8 +1701,6 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     killKilledTasks();
 
     scheduler.drainPendingQueue();
-
-    System.out.println(taskManager.getPendingTaskIds());
 
     requestResource.scale(requestId, new SingularityScaleRequest(Optional.of(3), Optional.absent(), Optional.absent(),
         Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent()), singularityUser);
