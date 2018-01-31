@@ -9,7 +9,7 @@
   </parent>
 
   <artifactId>Singularity</artifactId>
-  <version>0.18.0-SNAPSHOT</version>
+  <version>0.19.0-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <scm>
@@ -51,7 +51,9 @@
     <project.build.targetJdk>1.8</project.build.targetJdk>
     <dep.metrics-guice.version>3.1.3</dep.metrics-guice.version>
     <dep.dropwizard-metrics.version>3.1.4</dep.dropwizard-metrics.version>
+    <dep.guava.version>20.0</dep.guava.version>
     <dep.mesos.rxjava.version>0.2.0</dep.mesos.rxjava.version>
+    <dep.protobuf.version>2.6.1</dep.protobuf.version>
   </properties>
 
   <modules>
@@ -69,8 +71,6 @@
     <module>EmbedSingularityExample</module>
     <module>SingularityServiceIntegrationTests</module>
     <module>SingularityUI</module>
-    <module>SingularityServiceBase</module>
-    <module>SingularityClusterCoordinator</module>
   </modules>
 
   <dependencyManagement>
@@ -137,13 +137,6 @@
 
       <dependency>
         <groupId>com.hubspot</groupId>
-        <artifactId>SingularityServiceBase</artifactId>
-        <version>${project.version}</version>
-      </dependency>
-
-
-      <dependency>
-        <groupId>com.hubspot</groupId>
         <artifactId>SingularityClusterCoordinator</artifactId>
         <version>${project.version}</version>
       </dependency>
@@ -158,6 +151,12 @@
         <groupId>com.hubspot.dropwizard</groupId>
         <artifactId>dropwizard-guicier</artifactId>
         <version>${dropwizard.guicier.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>io.dropwizard</groupId>
+        <artifactId>dropwizard-auth</artifactId>
+        <version>${dropwizard.version}</version>
       </dependency>
 
       <dependency>
@@ -316,7 +315,7 @@
       <dependency>
         <groupId>com.google.protobuf</groupId>
         <artifactId>protobuf-java</artifactId>
-        <version>2.6.1</version>
+        <version>${dep.protobuf.version}</version>
       </dependency>
       <dependency>
         <groupId>org.jukito</groupId>
@@ -329,6 +328,43 @@
         <artifactId>netty-codec</artifactId>
         <version>4.1.4.Final</version>
       </dependency>
+
+      <dependency>
+        <groupId>com.google.cloud</groupId>
+        <artifactId>google-cloud-storage</artifactId>
+        <version>1.15.0</version>
+      </dependency>
+
+      <dependency>
+        <groupId>com.google.apis</groupId>
+        <artifactId>google-http-client-jackson2</artifactId>
+        <version>1.23.0</version>
+      </dependency>
+
+      <dependency>
+        <groupId>com.google.api-client</groupId>
+        <artifactId>google-api-client</artifactId>
+        <version>1.23.0</version>
+      </dependency>
+
+      <dependency>
+        <groupId>com.google.http-client</groupId>
+        <artifactId>google-http-client</artifactId>
+        <version>1.23.0</version>
+      </dependency>
+
+      <dependency>
+        <groupId>com.google.auth</groupId>
+        <artifactId>google-auth-library-oauth2-http</artifactId>
+        <version>0.9.0</version>
+        <exclusions>
+          <exclusion>
+            <groupId>com.google.http-client</groupId>
+            <artifactId>google-http-client-jackson2</artifactId>
+          </exclusion>
+        </exclusions>
+      </dependency>
+
     </dependencies>
   </dependencyManagement>
 

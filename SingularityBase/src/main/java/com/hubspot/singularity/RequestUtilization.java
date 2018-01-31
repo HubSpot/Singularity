@@ -12,12 +12,16 @@ public class RequestUtilization {
   private long memBytesReserved = 0;
   private double cpuUsed = 0;
   private double cpuReserved = 0;
+  private long diskBytesUsed = 0;
+  private long diskBytesReserved = 0;
   private int numTasks = 0;
 
   private long maxMemBytesUsed = 0;
   private long minMemBytesUsed = Long.MAX_VALUE;
   private double maxCpuUsed = 0;
   private double minCpuUsed = Double.MAX_VALUE;
+  private long maxDiskBytesUsed = 0;
+  private long minDiskBytesUsed = 0;
 
   @JsonCreator
   public RequestUtilization(@JsonProperty("requestId") String requestId,
@@ -46,6 +50,16 @@ public class RequestUtilization {
     return this;
   }
 
+  public RequestUtilization addDiskBytesUsed(long diskBytes) {
+    this.diskBytesUsed += diskBytes;
+    return this;
+  }
+
+  public RequestUtilization addDiskBytesReserved(long diskBytes) {
+    this.diskBytesReserved += diskBytes;
+    return this;
+  }
+
   public RequestUtilization incrementTaskCount() {
     this.numTasks++;
     return this;
@@ -67,6 +81,14 @@ public class RequestUtilization {
     return cpuReserved;
   }
 
+  public long getDiskBytesUsed() {
+    return diskBytesUsed;
+  }
+
+  public long getDiskBytesReserved() {
+    return diskBytesReserved;
+  }
+
   public int getNumTasks() {
     return numTasks;
   }
@@ -79,6 +101,11 @@ public class RequestUtilization {
   @JsonIgnore
   public double getAvgCpuUsed() {
     return cpuUsed / (double) numTasks;
+  }
+
+  @JsonIgnore
+  public double getAvgDiskBytesUsed() {
+    return diskBytesUsed / (double) numTasks;
   }
 
   public String getDeployId() {
@@ -107,6 +134,15 @@ public class RequestUtilization {
     return this;
   }
 
+  public long getMaxDiskBytesUsed() {
+    return maxDiskBytesUsed;
+  }
+
+  public RequestUtilization setMaxDiskBytesUsed(long maxDiskBytesUsed) {
+    this.maxDiskBytesUsed = maxDiskBytesUsed;
+    return this;
+  }
+
   public long getMinMemBytesUsed() {
     return minMemBytesUsed;
   }
@@ -122,6 +158,15 @@ public class RequestUtilization {
 
   public RequestUtilization setMinCpuUsed(double minCpuUsed) {
     this.minCpuUsed = minCpuUsed;
+    return this;
+  }
+
+  public long getMinDiskBytesUsed() {
+    return minDiskBytesUsed;
+  }
+
+  public RequestUtilization setMinDiskBytesUsed(long minDiskBytesUsed) {
+    this.minDiskBytesUsed = minDiskBytesUsed;
     return this;
   }
 

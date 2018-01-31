@@ -5,8 +5,16 @@ import { fetchTasksForRequest } from './activeTasks';
 
 let fetchData = function(taskId, path, offset = undefined, length = 0) {
   length = Math.max(length, 0); // API breaks if you request a negative length
+  const headers = {};
+  if (config.generateAuthHeader) {
+    headers['Authorization'] = Utils.getAuthTokenHeader();
+  }
   return $.ajax(
-    {url: `${ config.apiRoot }/sandbox/${ taskId }/read?${$.param({path, length, offset})}`});
+    {
+      url: `${ config.apiRoot }/sandbox/${ taskId }/read?${$.param({path, length, offset})}`,
+      headers: headers
+    }
+  );
 };
 
 const fetchTaskHistory = (taskId) =>

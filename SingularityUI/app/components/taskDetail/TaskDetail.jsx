@@ -89,6 +89,8 @@ class TaskDetail extends Component {
       cpusSystemTimeSecs: PropTypes.number,
       cpusUserTimeSecs: PropTypes.number,
       cpusLimit: PropTypes.number,
+      diskUsedBytes: PropTypes.number,
+      diskLimitBytes: PropTypes.number,
       memLimitBytes: PropTypes.number,
       memRssBytes: PropTypes.number,
       cpusNrPeriods: PropTypes.number,
@@ -106,7 +108,7 @@ class TaskDetail extends Component {
       }).isRequired
     })).isRequired,
     router: PropTypes.object.isRequired,
-    s3Logs: PropTypes.array,
+    s3Logs: PropTypes.object,
     deploy: PropTypes.object,
     pendingDeploys: PropTypes.array,
     shellCommandResponse: PropTypes.object,
@@ -387,27 +389,43 @@ class TaskDetail extends Component {
         </Panel>
       );
       maybeResourceUsage = (
-        <div className="row">
-          <div className="col-md-3">
-            <UsageInfo
-              title="Memory (rss vs limit)"
-              style="success"
-              total={this.props.resourceUsage.memLimitBytes}
-              used={this.props.resourceUsage.memRssBytes}
-            >
-              {Utils.humanizeFileSize(this.props.resourceUsage.memRssBytes)} / {Utils.humanizeFileSize(this.props.resourceUsage.memLimitBytes)}
-            </UsageInfo>
-            {maybeCpuUsage}
+        <div>
+          <div className="row">
+            <div className="col-md-3 col-sm-4">
+              <UsageInfo
+                title="Memory (rss vs limit)"
+                style="success"
+                total={this.props.resourceUsage.memLimitBytes}
+                used={this.props.resourceUsage.memRssBytes}
+              >
+                {Utils.humanizeFileSize(this.props.resourceUsage.memRssBytes)} / {Utils.humanizeFileSize(this.props.resourceUsage.memLimitBytes)}
+              </UsageInfo>
+            </div>
+            <div className="col-md-3 col-sm-4">
+              {maybeCpuUsage}
+            </div>
+            <div className="col-md-3 col-sm-4">
+              <UsageInfo
+                title="Disk"
+                style={this.props.resourceUsage.diskUsedBytes > this.props.resourceUsage.diskLimitBytes ? 'danger' : 'success'}
+                total={this.props.resourceUsage.diskLimitBytes}
+                used={this.props.resourceUsage.diskUsedBytes}
+              >
+                {Utils.humanizeFileSize(this.props.resourceUsage.diskUsedBytes)} / {Utils.humanizeFileSize(this.props.resourceUsage.diskLimitBytes)}
+              </UsageInfo>
+            </div>
           </div>
-          <div className="col-md-9">
-            <ul className="list-unstyled horizontal-description-list">
-              {!!this.props.resourceUsage.cpusNrPeriods && <InfoBox copyableClassName="info-copyable" name="CPUs number of periods" value={this.props.resourceUsage.cpusNrPeriods} />}
-              {!!this.props.resourceUsage.cpusNrThrottled && <InfoBox copyableClassName="info-copyable" name="CPUs number throttled" value={this.props.resourceUsage.cpusNrThrottled} />}
-              {!!this.props.resourceUsage.cpusThrottledTimeSecs && <InfoBox copyableClassName="info-copyable" name="Throttled time (sec)" value={this.props.resourceUsage.cpusThrottledTimeSecs} />}
-              <InfoBox copyableClassName="info-copyable" name="Memory (anon)" value={Utils.humanizeFileSize(this.props.resourceUsage.memAnonBytes)} />
-              <InfoBox copyableClassName="info-copyable" name="Memory (file)" value={Utils.humanizeFileSize(this.props.resourceUsage.memFileBytes)} />
-              <InfoBox copyableClassName="info-copyable" name="Memory (mapped file)" value={Utils.humanizeFileSize(this.props.resourceUsage.memMappedFileBytes)} />
-            </ul>
+          <div className="row">
+            <div className="col-md-12">
+              <ul className="list-unstyled horizontal-description-list">
+                {!!this.props.resourceUsage.cpusNrPeriods && <InfoBox name="CPUs number of periods" value={this.props.resourceUsage.cpusNrPeriods} />}
+                {!!this.props.resourceUsage.cpusNrThrottled && <InfoBox name="CPUs number throttled" value={this.props.resourceUsage.cpusNrThrottled} />}
+                {!!this.props.resourceUsage.cpusThrottledTimeSecs && <InfoBox name="Throttled time (sec)" value={this.props.resourceUsage.cpusThrottledTimeSecs} />}
+                <InfoBox name="Memory (anon)" value={Utils.humanizeFileSize(this.props.resourceUsage.memAnonBytes)} />
+                <InfoBox name="Memory (file)" value={Utils.humanizeFileSize(this.props.resourceUsage.memFileBytes)} />
+                <InfoBox name="Memory (mapped file)" value={Utils.humanizeFileSize(this.props.resourceUsage.memMappedFileBytes)} />
+              </ul>
+            </div>
           </div>
         </div>
       );
@@ -439,7 +457,7 @@ class TaskDetail extends Component {
         <TaskHistory taskUpdates={this.props.task.taskUpdates} />
         <TaskLatestLog taskId={this.props.taskId} status={this.props.task.status} files={filesToDisplay} available={filesAvailable} />
         {this.renderFiles(filesToDisplay)}
-        {_.isEmpty(this.props.s3Logs) || <TaskS3Logs taskId={this.props.task.task.taskId.id} s3Files={this.props.s3Logs} taskStartedAt={this.props.task.task.taskId.startedAt} />}
+        <TaskS3Logs taskId={this.props.task.task.taskId.id} s3Files={this.props.s3Logs} taskStartedAt={this.props.task.task.taskId.startedAt} />
         {_.isEmpty(this.props.task.loadBalancerUpdates) || <TaskLbUpdates loadBalancerUpdates={this.props.task.loadBalancerUpdates} />}
         <TaskInfo task={this.props.task.task} ports={this.props.task.ports} directory={this.props.task.directory} />
         {this.renderResourceUsage()}
@@ -522,7 +540,7 @@ function mapStateToProps(state, ownProps) {
     resourceUsageNotFound: state.api.taskResourceUsage.statusCode === 404,
     resourceUsage: state.api.taskResourceUsage.data,
     cpuTimestamp: state.api.taskResourceUsage.data.timestamp,
-    s3Logs: state.api.taskS3Logs.data,
+    s3Logs: state.api.taskS3Logs,
     deploy: state.api.deploy.data,
     pendingDeploys: state.api.deploys.data,
     shellCommandResponse: state.api.taskShellCommandResponse.data,
@@ -539,7 +557,7 @@ function mapDispatchToProps(dispatch) {
     fetchDeployForRequest: (taskId, deployId) => dispatch(FetchDeployForRequest.trigger(taskId, deployId)),
     fetchTaskCleanups: () => dispatch(FetchTaskCleanups.trigger()),
     fetchPendingDeploys: () => dispatch(FetchPendingDeploys.trigger()),
-    fechS3Logs: (taskId) => dispatch(FetchTaskS3Logs.trigger(taskId, [404])),
+    fecthS3Logs: (taskId) => dispatch(FetchTaskS3Logs.trigger(taskId, [404, 500])),
   };
 }
 

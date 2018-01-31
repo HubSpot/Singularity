@@ -63,9 +63,10 @@ database:
   url: jdbc:mysql://[database host]:[database port]/[database name]
 
 mesos:
-  master: http://[mesos master hostname]/api/v1/scheduler
+  master: [comma separated list of mesos master host:port]
   defaultCpus: 1
   defaultMemory: 128
+  defaultDisk: 1024
   frameworkName: Singularity
   frameworkId: Singularity
   frameworkFailoverTimeout: 1000000

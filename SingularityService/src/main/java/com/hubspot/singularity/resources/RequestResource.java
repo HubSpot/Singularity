@@ -4,10 +4,9 @@ import static com.hubspot.singularity.WebExceptions.checkBadRequest;
 import static com.hubspot.singularity.WebExceptions.checkConflict;
 import static com.hubspot.singularity.WebExceptions.checkNotNullBadRequest;
 
-import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
@@ -21,6 +20,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 
 import org.apache.curator.framework.recipes.leader.LeaderLatch;
 import org.slf4j.Logger;
@@ -28,15 +28,14 @@ import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
-import com.google.common.base.Predicate;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.hubspot.jackson.jaxrs.PropertyFiltering;
-import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.MachineState;
 import com.hubspot.singularity.RequestCleanupType;
 import com.hubspot.singularity.RequestState;
+import com.hubspot.singularity.RequestType;
 import com.hubspot.singularity.SingularityAction;
 import com.hubspot.singularity.SingularityAuthorizationScope;
 import com.hubspot.singularity.SingularityCreateResult;
@@ -47,7 +46,6 @@ import com.hubspot.singularity.SingularityPendingRequest.PendingType;
 import com.hubspot.singularity.SingularityPendingRequestParent;
 import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityRequestCleanup;
-import com.hubspot.singularity.SingularityRequestDeployState;
 import com.hubspot.singularity.SingularityRequestHistory.RequestHistoryType;
 import com.hubspot.singularity.SingularityRequestParent;
 import com.hubspot.singularity.SingularityRequestWithState;
@@ -65,14 +63,15 @@ import com.hubspot.singularity.api.SingularityRunNowRequest;
 import com.hubspot.singularity.api.SingularityScaleRequest;
 import com.hubspot.singularity.api.SingularitySkipHealthchecksRequest;
 import com.hubspot.singularity.api.SingularityUnpauseRequest;
+import com.hubspot.singularity.api.SingularityUpdateGroupsRequest;
 import com.hubspot.singularity.auth.SingularityAuthorizationHelper;
 import com.hubspot.singularity.config.ApiPaths;
 import com.hubspot.singularity.data.DeployManager;
-import com.hubspot.singularity.data.DisasterManager;
 import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.data.SingularityValidator;
 import com.hubspot.singularity.data.SlaveManager;
 import com.hubspot.singularity.data.TaskManager;
+import com.hubspot.singularity.data.history.RequestHistoryHelper;
 import com.hubspot.singularity.expiring.SingularityExpiringBounce;
 import com.hubspot.singularity.expiring.SingularityExpiringPause;
 import com.hubspot.singularity.expiring.SingularityExpiringRequestActionParent;
@@ -87,6 +86,8 @@ import com.wordnik.swagger.annotations.ApiParam;
 import com.wordnik.swagger.annotations.ApiResponse;
 import com.wordnik.swagger.annotations.ApiResponses;
 
+import io.dropwizard.auth.Auth;
+
 @Path(ApiPaths.REQUEST_RESOURCE_PATH)
 @Produces({ MediaType.APPLICATION_JSON })
 @Api(description="Manages Singularity Requests, the parent object for any deployed task", value=ApiPaths.REQUEST_RESOURCE_PATH, position=1)
@@ -97,22 +98,20 @@ public class RequestResource extends AbstractRequestResource {
   private final TaskManager taskManager;
   private final RequestHelper requestHelper;
   private final SlaveManager slaveManager;
-  private final DisasterManager disasterManager;
 
   @Inject
   public RequestResource(SingularityValidator validator, DeployManager deployManager, TaskManager taskManager, RequestManager requestManager, SingularityMailer mailer,
-                         SingularityAuthorizationHelper authorizationHelper, Optional<SingularityUser> user, RequestHelper requestHelper, LeaderLatch leaderLatch,
-                         SlaveManager slaveManager, DisasterManager disasterManager, AsyncHttpClient httpClient, ObjectMapper objectMapper) {
-    super(requestManager, deployManager, user, validator, authorizationHelper, httpClient, leaderLatch, objectMapper);
+                         SingularityAuthorizationHelper authorizationHelper, RequestHelper requestHelper, LeaderLatch leaderLatch,
+                         SlaveManager slaveManager, AsyncHttpClient httpClient, ObjectMapper objectMapper, RequestHistoryHelper requestHistoryHelper) {
+    super(requestManager, deployManager, validator, authorizationHelper, httpClient, leaderLatch, objectMapper, requestHelper, requestHistoryHelper);
     this.mailer = mailer;
     this.taskManager = taskManager;
     this.requestHelper = requestHelper;
     this.slaveManager = slaveManager;
-    this.disasterManager = disasterManager;
   }
 
   private void submitRequest(SingularityRequest request, Optional<SingularityRequestWithState> oldRequestWithState, Optional<RequestHistoryType> historyType,
-      Optional<Boolean> skipHealthchecks, Optional<String> message, Optional<SingularityBounceRequest> maybeBounceRequest) {
+      Optional<Boolean> skipHealthchecks, Optional<String> message, Optional<SingularityBounceRequest> maybeBounceRequest, SingularityUser user) {
     checkNotNullBadRequest(request.getId(), "Request must have an id");
     checkConflict(!requestManager.cleanupRequestExists(request.getId()), "Request %s is currently cleaning. Try again after a few moments", request.getId());
 
@@ -147,7 +146,7 @@ public class RequestResource extends AbstractRequestResource {
       requestState = oldRequestWithState.get().getState();
     }
 
-    requestHelper.updateRequest(request, oldRequest, requestState, historyType, JavaUtils.getUserEmail(user), skipHealthchecks, message, maybeBounceRequest);
+    requestHelper.updateRequest(request, oldRequest, requestState, historyType, user.getEmail(), skipHealthchecks, message, maybeBounceRequest);
   }
 
   @POST
@@ -157,14 +156,15 @@ public class RequestResource extends AbstractRequestResource {
     @ApiResponse(code=400, message="Request object is invalid"),
     @ApiResponse(code=409, message="Request object is being cleaned. Try again shortly"),
   })
-  public SingularityRequestParent postRequest(@Context HttpServletRequest requestContext,
+  public SingularityRequestParent postRequest(@Auth SingularityUser user,
+                                              @Context HttpServletRequest requestContext,
                                               @ApiParam("The Singularity request to create or update") SingularityRequest request) {
-    return maybeProxyToLeader(requestContext, SingularityRequestParent.class, request, () -> postRequest(request));
+    return maybeProxyToLeader(requestContext, SingularityRequestParent.class, request, () -> postRequest(request, user));
   }
 
-  public SingularityRequestParent postRequest(SingularityRequest request) {
-    submitRequest(request, requestManager.getRequest(request.getId()), Optional.<RequestHistoryType> absent(), Optional.<Boolean> absent(), Optional.<String> absent(), Optional.<SingularityBounceRequest>absent());
-    return fillEntireRequest(fetchRequestWithState(request.getId()));
+  public SingularityRequestParent postRequest(SingularityRequest request, SingularityUser user) {
+    submitRequest(request, requestManager.getRequest(request.getId()), Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent(), user);
+    return fillEntireRequest(fetchRequestWithState(request.getId(), user));
   }
 
   private String getAndCheckDeployId(String requestId) {
@@ -176,10 +176,71 @@ public class RequestResource extends AbstractRequestResource {
   }
 
   @POST
+  @Path("/request/{requestId}/groups")
+  @ApiOperation(value="Update the group, readOnlyGroups, and readWriteGroups for a SingularityRequest")
+  @ApiResponses({
+      @ApiResponse(code=400, message="Request object is invalid"),
+      @ApiResponse(code=401, message="User is not authorized to make these updates"),
+  })
+  public SingularityRequestParent updateAuthorizedGroups(@Auth SingularityUser user,
+                                                         @PathParam("requestId") String requestId,
+                                                         @Context HttpServletRequest requestContext,
+                                                         @ApiParam("Updated groups") SingularityUpdateGroupsRequest updateGroupsRequest) {
+    return maybeProxyToLeader(requestContext, SingularityRequestParent.class, updateGroupsRequest, () -> updateAuthorizedGroups(user, requestId, updateGroupsRequest));
+  }
+
+  public SingularityRequestParent updateAuthorizedGroups(SingularityUser user, String requestId, SingularityUpdateGroupsRequest updateGroupsRequest) {
+    SingularityRequestWithState oldRequestWithState = fetchRequestWithState(requestId, user);
+    authorizationHelper.checkForAuthorization(oldRequestWithState.getRequest(), user, SingularityAuthorizationScope.WRITE);
+
+    SingularityRequest newRequest = oldRequestWithState.getRequest().toBuilder()
+        .setGroup(updateGroupsRequest.getGroup())
+        .setReadWriteGroups(Optional.of(updateGroupsRequest.getReadWriteGroups()))
+        .setReadOnlyGroups(Optional.of(updateGroupsRequest.getReadOnlyGroups()))
+        .build();
+
+    submitRequest(newRequest, Optional.of(oldRequestWithState), Optional.of(RequestHistoryType.UPDATED), Optional.absent(), updateGroupsRequest.getMessage(), Optional.absent(), user);
+    return fillEntireRequest(fetchRequestWithState(requestId, user));
+  }
+
+  @POST
+  @Path("/request/{requestId}/groups/auth-check")
+  @ApiOperation(value="Check authorization for updating the group, readOnlyGroups, and readWriteGroups for a SingularityReques, without commiting the change")
+  @ApiResponses({
+      @ApiResponse(code=200, message="User is authorized to make these changes"),
+      @ApiResponse(code=401, message="User is not authorized to make these updates"),
+  })
+  public Response checkAuthForGroupsUpdate(@Auth SingularityUser user,
+                                           @PathParam("requestId") String requestId,
+                                           @ApiParam("Updated groups") SingularityUpdateGroupsRequest updateGroupsRequest) {
+    Optional<SingularityRequestWithState> maybeOldRequestWithState = requestManager.getRequest(requestId, false);
+    if (!maybeOldRequestWithState.isPresent()) {
+      authorizationHelper.checkForAuthorization(
+          user,
+          Sets.union(updateGroupsRequest.getGroup().asSet(), updateGroupsRequest.getReadWriteGroups()),
+          updateGroupsRequest.getReadOnlyGroups(),
+          SingularityAuthorizationScope.WRITE,
+          Optional.absent());
+      return Response.ok().build();
+    }
+    SingularityRequestWithState oldRequestWithState = maybeOldRequestWithState.get();
+    authorizationHelper.checkForAuthorization(oldRequestWithState.getRequest(), user, SingularityAuthorizationScope.WRITE);
+
+    SingularityRequest newRequest = oldRequestWithState.getRequest().toBuilder()
+        .setGroup(updateGroupsRequest.getGroup())
+        .setReadWriteGroups(Optional.of(updateGroupsRequest.getReadWriteGroups()))
+        .setReadOnlyGroups(Optional.of(updateGroupsRequest.getReadOnlyGroups()))
+        .build();
+    authorizationHelper.checkForAuthorizedChanges(newRequest, oldRequestWithState.getRequest(), user);
+    return Response.ok().build();
+  }
+
+  @POST
   @Path("/request/{requestId}/bounce")
-  public SingularityRequestParent bounce(@PathParam("requestId") String requestId,
+  public SingularityRequestParent bounce(@Auth SingularityUser user,
+                                         @PathParam("requestId") String requestId,
                                          @Context HttpServletRequest requestContext) {
-    return bounce(requestId, requestContext, null);
+    return bounce(user, requestId, requestContext, null);
   }
 
   @POST
@@ -187,15 +248,16 @@ public class RequestResource extends AbstractRequestResource {
   @Consumes({ MediaType.APPLICATION_JSON })
   @ApiOperation(value="Bounce a specific Singularity request. A bounce launches replacement task(s), and then kills the original task(s) if the replacement(s) are healthy.",
   response=SingularityRequestParent.class)
-  public SingularityRequestParent bounce(@ApiParam("The request ID to bounce") @PathParam("requestId") String requestId,
+  public SingularityRequestParent bounce(@Auth SingularityUser user,
+                                         @ApiParam("The request ID to bounce") @PathParam("requestId") String requestId,
                                          @Context HttpServletRequest requestContext,
                                          @ApiParam("Bounce request options") SingularityBounceRequest bounceRequest) {
     final Optional<SingularityBounceRequest> maybeBounceRequest = Optional.fromNullable(bounceRequest);
-    return maybeProxyToLeader(requestContext, SingularityRequestParent.class, maybeBounceRequest.orNull(), () -> bounce(requestId, maybeBounceRequest));
+    return maybeProxyToLeader(requestContext, SingularityRequestParent.class, maybeBounceRequest.orNull(), () -> bounce(requestId, maybeBounceRequest, user));
   }
 
-  public SingularityRequestParent bounce(String requestId, Optional<SingularityBounceRequest> bounceRequest) {
-    SingularityRequestWithState requestWithState = fetchRequestWithState(requestId);
+  public SingularityRequestParent bounce(String requestId, Optional<SingularityBounceRequest> bounceRequest, SingularityUser user) {
+    SingularityRequestWithState requestWithState = fetchRequestWithState(requestId, user);
 
     authorizationHelper.checkForAuthorization(requestWithState.getRequest(), user, SingularityAuthorizationScope.WRITE);
     validator.checkActionEnabled(SingularityAction.BOUNCE_REQUEST);
@@ -233,14 +295,14 @@ public class RequestResource extends AbstractRequestResource {
     checkConflict(!(requestManager.markAsBouncing(requestId) == SingularityCreateResult.EXISTED), "%s is already bouncing", requestId);
 
     requestManager.createCleanupRequest(
-        new SingularityRequestCleanup(JavaUtils.getUserEmail(user), isIncrementalBounce ? RequestCleanupType.INCREMENTAL_BOUNCE : RequestCleanupType.BOUNCE,
-            System.currentTimeMillis(), Optional.<Boolean> absent(), Optional.absent(), requestId, Optional.of(deployId), skipHealthchecks, message, actionId, runBeforeKill));
+        new SingularityRequestCleanup(user.getEmail(), isIncrementalBounce ? RequestCleanupType.INCREMENTAL_BOUNCE : RequestCleanupType.BOUNCE,
+            System.currentTimeMillis(), Optional.absent(), Optional.absent(), requestId, Optional.of(deployId), skipHealthchecks, message, actionId, runBeforeKill));
 
-    requestManager.bounce(requestWithState.getRequest(), System.currentTimeMillis(), JavaUtils.getUserEmail(user), message);
+    requestManager.bounce(requestWithState.getRequest(), System.currentTimeMillis(), Optional.of(user.getId()), message);
 
     final SingularityBounceRequest validatedBounceRequest = validator.checkBounceRequest(bounceRequest.or(SingularityBounceRequest.defaultRequest()));
 
-    requestManager.saveExpiringObject(new SingularityExpiringBounce(requestId, deployId, JavaUtils.getUserEmail(user),
+    requestManager.saveExpiringObject(new SingularityExpiringBounce(requestId, deployId, Optional.of(user.getId()),
         System.currentTimeMillis(), validatedBounceRequest, actionId.get()));
 
     return fillEntireRequest(requestWithState);
@@ -248,8 +310,8 @@ public class RequestResource extends AbstractRequestResource {
 
   @POST
   @Path("/request/{requestId}/run")
-  public SingularityPendingRequestParent scheduleImmediately(@PathParam("requestId") String requestId) {
-    return scheduleImmediately(requestId, null);
+  public SingularityPendingRequestParent scheduleImmediately(@Auth SingularityUser user, @PathParam("requestId") String requestId) {
+    return scheduleImmediately(user, requestId, null);
   }
 
   @POST
@@ -259,10 +321,11 @@ public class RequestResource extends AbstractRequestResource {
   @ApiResponses({
     @ApiResponse(code=400, message="Singularity Request is not scheduled or one-off"),
   })
-  public SingularityPendingRequestParent scheduleImmediately(@ApiParam("The request ID to run") @PathParam("requestId") String requestId,
+  public SingularityPendingRequestParent scheduleImmediately(@Auth SingularityUser user,
+                                                             @ApiParam("The request ID to run") @PathParam("requestId") String requestId,
                                                              SingularityRunNowRequest runNowRequest) {
     final Optional<SingularityRunNowRequest> maybeRunNowRequest = Optional.fromNullable(runNowRequest);
-    SingularityRequestWithState requestWithState = fetchRequestWithState(requestId);
+    SingularityRequestWithState requestWithState = fetchRequestWithState(requestId, user);
 
     authorizationHelper.checkForAuthorization(requestWithState.getRequest(), user, SingularityAuthorizationScope.WRITE);
 
@@ -271,7 +334,7 @@ public class RequestResource extends AbstractRequestResource {
 
     final SingularityPendingRequest pendingRequest = validator.checkRunNowRequest(
         getAndCheckDeployId(requestId),
-        JavaUtils.getUserEmail(user),
+        user.getEmail(),
         requestWithState.getRequest(),
         maybeRunNowRequest,
         taskManager.getActiveTaskIdsForRequest(requestId),
@@ -287,17 +350,18 @@ public class RequestResource extends AbstractRequestResource {
   @GET
   @Path("/request/{requestId}/run/{runId}")
   @ApiOperation("Retrieve an active task by runId")
-  public Optional<SingularityTaskId> getTaskByRunId(@PathParam("requestId") String requestId, @PathParam("runId") String runId) {
-    SingularityRequestWithState requestWithState = fetchRequestWithState(requestId);
+  public Optional<SingularityTaskId> getTaskByRunId(@Auth SingularityUser user, @PathParam("requestId") String requestId, @PathParam("runId") String runId) {
+    SingularityRequestWithState requestWithState = fetchRequestWithState(requestId, user);
     authorizationHelper.checkForAuthorization(requestWithState.getRequest(), user, SingularityAuthorizationScope.READ);
     return taskManager.getTaskByRunId(requestId, runId);
   }
 
   @POST
   @Path("/request/{requestId}/pause")
-  public SingularityRequestParent pause(@PathParam("requestId") String requestId,
+  public SingularityRequestParent pause(@Auth SingularityUser user,
+                                        @PathParam("requestId") String requestId,
                                         @Context HttpServletRequest requestContext) {
-    return pause(requestId, requestContext, null);
+    return pause(user, requestId, requestContext, null);
   }
 
   @POST
@@ -307,16 +371,17 @@ public class RequestResource extends AbstractRequestResource {
   @ApiResponses({
     @ApiResponse(code=409, message="Request is already paused or being cleaned"),
   })
-  public SingularityRequestParent pause(@ApiParam("The request ID to pause") @PathParam("requestId") String requestId,
+  public SingularityRequestParent pause(@Auth SingularityUser user,
+                                        @ApiParam("The request ID to pause") @PathParam("requestId") String requestId,
                                         @Context HttpServletRequest requestContext,
                                         @ApiParam("Pause Request Options") SingularityPauseRequest pauseRequest) {
     final Optional<SingularityPauseRequest> maybePauseRequest = Optional.fromNullable(pauseRequest);
-    return maybeProxyToLeader(requestContext, SingularityRequestParent.class, maybePauseRequest.orNull(), () -> pause(requestId, maybePauseRequest));
+    return maybeProxyToLeader(requestContext, SingularityRequestParent.class, maybePauseRequest.orNull(), () -> pause(requestId, maybePauseRequest, user));
   }
 
-  public SingularityRequestParent pause(String requestId, Optional<SingularityPauseRequest> pauseRequest) {
+  public SingularityRequestParent pause(String requestId, Optional<SingularityPauseRequest> pauseRequest, SingularityUser user) {
 
-    SingularityRequestWithState requestWithState = fetchRequestWithState(requestId);
+    SingularityRequestWithState requestWithState = fetchRequestWithState(requestId, user);
 
     authorizationHelper.checkForAuthorization(requestWithState.getRequest(), user, SingularityAuthorizationScope.WRITE);
 
@@ -343,17 +408,17 @@ public class RequestResource extends AbstractRequestResource {
     final long now = System.currentTimeMillis();
     Optional<Boolean> removeFromLoadBalancer = Optional.absent();
 
-    SingularityCreateResult result = requestManager.createCleanupRequest(new SingularityRequestCleanup(JavaUtils.getUserEmail(user),
+    SingularityCreateResult result = requestManager.createCleanupRequest(new SingularityRequestCleanup(user.getEmail(),
         RequestCleanupType.PAUSING, now, killTasks, removeFromLoadBalancer, requestId, Optional.<String> absent(), Optional.<Boolean> absent(), message, actionId, runBeforeKill));
 
     checkConflict(result == SingularityCreateResult.CREATED, "%s is already pausing - try again soon", requestId, result);
 
-    mailer.sendRequestPausedMail(requestWithState.getRequest(), pauseRequest, JavaUtils.getUserEmail(user));
+    mailer.sendRequestPausedMail(requestWithState.getRequest(), pauseRequest, user.getEmail());
 
-    requestManager.pause(requestWithState.getRequest(), now, JavaUtils.getUserEmail(user), message);
+    requestManager.pause(requestWithState.getRequest(), now, user.getEmail(), message);
 
     if (pauseRequest.isPresent() && pauseRequest.get().getDurationMillis().isPresent()) {
-      requestManager.saveExpiringObject(new SingularityExpiringPause(requestId, JavaUtils.getUserEmail(user),
+      requestManager.saveExpiringObject(new SingularityExpiringPause(requestId, user.getEmail(),
           System.currentTimeMillis(), pauseRequest.get(), actionId.get()));
     }
 
@@ -362,9 +427,10 @@ public class RequestResource extends AbstractRequestResource {
 
   @POST
   @Path("/request/{requestId}/unpause")
-  public SingularityRequestParent unpauseNoBody(@PathParam("requestId") String requestId,
+  public SingularityRequestParent unpauseNoBody(@Auth SingularityUser user,
+                                                @PathParam("requestId") String requestId,
                                                 @Context HttpServletRequest requestContext) {
-    return unpause(requestId, requestContext, null);
+    return unpause(user, requestId, requestContext, null);
   }
 
   @POST
@@ -374,16 +440,17 @@ public class RequestResource extends AbstractRequestResource {
   @ApiResponses({
     @ApiResponse(code=409, message="Request is not paused"),
   })
-  public SingularityRequestParent unpause(@ApiParam("The request ID to unpause") @PathParam("requestId") String requestId,
+  public SingularityRequestParent unpause(@Auth SingularityUser user,
+                                          @ApiParam("The request ID to unpause") @PathParam("requestId") String requestId,
                                           @Context HttpServletRequest requestContext,
                                           SingularityUnpauseRequest unpauseRequest) {
     final Optional<SingularityUnpauseRequest> maybeUnpauseRequest = Optional.fromNullable(unpauseRequest);
-    return maybeProxyToLeader(requestContext, SingularityRequestParent.class, maybeUnpauseRequest.orNull(), () -> unpause(requestId, maybeUnpauseRequest));
+    return maybeProxyToLeader(requestContext, SingularityRequestParent.class, maybeUnpauseRequest.orNull(), () -> unpause(requestId, maybeUnpauseRequest, user));
   }
 
-  public SingularityRequestParent unpause(String requestId, Optional<SingularityUnpauseRequest> unpauseRequest) {
+  public SingularityRequestParent unpause(String requestId, Optional<SingularityUnpauseRequest> unpauseRequest, SingularityUser user) {
 
-    SingularityRequestWithState requestWithState = fetchRequestWithState(requestId);
+    SingularityRequestWithState requestWithState = fetchRequestWithState(requestId, user);
 
     authorizationHelper.checkForAuthorization(requestWithState.getRequest(), user, SingularityAuthorizationScope.WRITE);
 
@@ -399,16 +466,17 @@ public class RequestResource extends AbstractRequestResource {
 
     requestManager.deleteExpiringObject(SingularityExpiringPause.class, requestId);
 
-    final long now = requestHelper.unpause(requestWithState.getRequest(), JavaUtils.getUserEmail(user), message, skipHealthchecks);
+    final long now = requestHelper.unpause(requestWithState.getRequest(), user.getEmail(), message, skipHealthchecks);
 
     return fillEntireRequest(new SingularityRequestWithState(requestWithState.getRequest(), RequestState.ACTIVE, now));
   }
 
   @POST
   @Path("/request/{requestId}/exit-cooldown")
-  public SingularityRequestParent exitCooldown(@PathParam("requestId") String requestId,
+  public SingularityRequestParent exitCooldown(@Auth SingularityUser user,
+                                               @PathParam("requestId") String requestId,
                                                @Context HttpServletRequest requestContext) {
-    return exitCooldown(requestId, requestContext, null);
+    return exitCooldown(user, requestId, requestContext, null);
   }
 
   @POST
@@ -418,15 +486,16 @@ public class RequestResource extends AbstractRequestResource {
   @ApiResponses({
     @ApiResponse(code=409, message="Request is not in cooldown"),
   })
-  public SingularityRequestParent exitCooldown(@PathParam("requestId") String requestId,
+  public SingularityRequestParent exitCooldown(@Auth SingularityUser user,
+                                               @PathParam("requestId") String requestId,
                                                @Context HttpServletRequest requestContext,
                                                SingularityExitCooldownRequest exitCooldownRequest) {
     final Optional<SingularityExitCooldownRequest> maybeExitCooldownRequest = Optional.fromNullable(exitCooldownRequest);
-    return maybeProxyToLeader(requestContext, SingularityRequestParent.class, maybeExitCooldownRequest.orNull(), () -> exitCooldown(requestId, maybeExitCooldownRequest));
+    return maybeProxyToLeader(requestContext, SingularityRequestParent.class, maybeExitCooldownRequest.orNull(), () -> exitCooldown(requestId, maybeExitCooldownRequest, user));
   }
 
-  public SingularityRequestParent exitCooldown(String requestId, Optional<SingularityExitCooldownRequest> exitCooldownRequest) {
-    final SingularityRequestWithState requestWithState = fetchRequestWithState(requestId);
+  public SingularityRequestParent exitCooldown(String requestId, Optional<SingularityExitCooldownRequest> exitCooldownRequest, SingularityUser user) {
+    final SingularityRequestWithState requestWithState = fetchRequestWithState(requestId, user);
 
     authorizationHelper.checkForAuthorization(requestWithState.getRequest(), user, SingularityAuthorizationScope.WRITE);
 
@@ -444,10 +513,10 @@ public class RequestResource extends AbstractRequestResource {
       skipHealthchecks = exitCooldownRequest.get().getSkipHealthchecks();
     }
 
-    requestManager.exitCooldown(requestWithState.getRequest(), now, JavaUtils.getUserEmail(user), message);
+    requestManager.exitCooldown(requestWithState.getRequest(), now, Optional.of(user.getId()), message);
 
     if (maybeDeployId.isPresent() && !requestWithState.getRequest().isOneOff()) {
-      requestManager.addToPendingQueue(new SingularityPendingRequest(requestId, maybeDeployId.get(), now, JavaUtils.getUserEmail(user),
+      requestManager.addToPendingQueue(new SingularityPendingRequest(requestId, maybeDeployId.get(), now, Optional.of(user.getId()),
           PendingType.IMMEDIATE, skipHealthchecks, message));
     }
 
@@ -458,78 +527,95 @@ public class RequestResource extends AbstractRequestResource {
   @PropertyFiltering
   @Path("/active")
   @ApiOperation(value="Retrieve the list of active requests", response=SingularityRequestParent.class, responseContainer="List")
-  public List<SingularityRequestParent> getActiveRequests(@QueryParam("useWebCache") Boolean useWebCache) {
-    return getRequestsWithDeployState(requestManager.getActiveRequests(useWebCache(useWebCache)), SingularityAuthorizationScope.READ);
+  public List<SingularityRequestParent> getActiveRequests(@Auth SingularityUser user,
+                                                          @QueryParam("useWebCache") Boolean useWebCache,
+                                                          @QueryParam("filterRelevantForUser") Boolean filterRelevantForUser,
+                                                          @QueryParam("includeFullRequestData") Boolean includeFullRequestData,
+                                                          @QueryParam("limit") Integer limit,
+                                                          @QueryParam("requestType") List<RequestType> requestTypes) {
+    return requestHelper.fillDataForRequestsAndFilter(
+        filterAutorized(Lists.newArrayList(requestManager.getActiveRequests(useWebCache(useWebCache))), SingularityAuthorizationScope.READ, user),
+        user, valueOrFalse(filterRelevantForUser), valueOrFalse(includeFullRequestData), Optional.fromNullable(limit), requestTypes);
   }
 
-  private List<SingularityRequestParent> getRequestsWithDeployState(Iterable<SingularityRequestWithState> requests, final SingularityAuthorizationScope scope) {
-    if (!authorizationHelper.hasAdminAuthorization(user) && disasterManager.isDisabled(SingularityAction.EXPENSIVE_API_CALLS)) {
-      LOG.trace("Short circuting getRequestsWithDeployState() to [] due to EXPENSIVE_API_CALLS disabled");
-      return Collections.emptyList();
-    }
-
-    if (!authorizationHelper.hasAdminAuthorization(user)) {
-      requests = Iterables.filter(requests, new Predicate<SingularityRequestWithState>() {
-        @Override
-        public boolean apply(SingularityRequestWithState input) {
-          return authorizationHelper.isAuthorizedForRequest(input.getRequest(), user, scope);
-        }
-      });
-    }
-
-    final List<String> requestIds = Lists.newArrayList();
-    for (SingularityRequestWithState requestWithState : requests) {
-      requestIds.add(requestWithState.getRequest().getId());
-    }
-
-    final List<SingularityRequestParent> parents = Lists.newArrayListWithCapacity(requestIds.size());
-
-    final Map<String, SingularityRequestDeployState> deployStates = deployManager.getRequestDeployStatesByRequestIds(requestIds);
-
-    for (SingularityRequestWithState requestWithState : requests) {
-      Optional<SingularityRequestDeployState> deployState = Optional.fromNullable(deployStates.get(requestWithState.getRequest().getId()));
-      parents.add(new SingularityRequestParent(requestWithState.getRequest(), requestWithState.getState(), deployState));
-    }
-
-    return parents;
-  }
 
   @GET
   @PropertyFiltering
   @Path("/paused")
   @ApiOperation(value="Retrieve the list of paused requests", response=SingularityRequestParent.class, responseContainer="List")
-  public List<SingularityRequestParent> getPausedRequests(@QueryParam("useWebCache") Boolean useWebCache) {
-    return getRequestsWithDeployState(requestManager.getPausedRequests(useWebCache(useWebCache)), SingularityAuthorizationScope.READ);
+  public List<SingularityRequestParent> getPausedRequests(@Auth SingularityUser user,
+                                                          @QueryParam("useWebCache") Boolean useWebCache,
+                                                          @QueryParam("filterRelevantForUser") Boolean filterRelevantForUser,
+                                                          @QueryParam("includeFullRequestData") Boolean includeFullRequestData,
+                                                          @QueryParam("limit") Integer limit,
+                                                          @QueryParam("requestType") List<RequestType> requestTypes) {
+    return requestHelper.fillDataForRequestsAndFilter(
+        filterAutorized(Lists.newArrayList(requestManager.getPausedRequests(useWebCache(useWebCache))), SingularityAuthorizationScope.READ, user),
+        user, valueOrFalse(filterRelevantForUser), valueOrFalse(includeFullRequestData), Optional.fromNullable(limit), requestTypes);
   }
 
   @GET
   @PropertyFiltering
   @Path("/cooldown")
   @ApiOperation(value="Retrieve the list of requests in system cooldown", response=SingularityRequestParent.class, responseContainer="List")
-  public List<SingularityRequestParent> getCooldownRequests(@QueryParam("useWebCache") Boolean useWebCache) {
-    return getRequestsWithDeployState(requestManager.getCooldownRequests(useWebCache(useWebCache)), SingularityAuthorizationScope.READ);
+  public List<SingularityRequestParent> getCooldownRequests(@Auth SingularityUser user,
+                                                            @QueryParam("useWebCache") Boolean useWebCache,
+                                                            @QueryParam("filterRelevantForUser") Boolean filterRelevantForUser,
+                                                            @QueryParam("includeFullRequestData") Boolean includeFullRequestData,
+                                                            @QueryParam("limit") Integer limit,
+                                                            @QueryParam("requestType") List<RequestType> requestTypes) {
+    return requestHelper.fillDataForRequestsAndFilter(
+        filterAutorized(Lists.newArrayList(requestManager.getCooldownRequests(useWebCache(useWebCache))), SingularityAuthorizationScope.READ, user),
+        user, valueOrFalse(filterRelevantForUser), valueOrFalse(includeFullRequestData), Optional.fromNullable(limit), requestTypes);
   }
 
   @GET
   @PropertyFiltering
   @Path("/finished")
   @ApiOperation(value="Retreive the list of finished requests (Scheduled requests which have exhausted their schedules)", response=SingularityRequestParent.class, responseContainer="List")
-  public List<SingularityRequestParent> getFinishedRequests(@QueryParam("useWebCache") Boolean useWebCache) {
-    return getRequestsWithDeployState(requestManager.getFinishedRequests(useWebCache(useWebCache)), SingularityAuthorizationScope.READ);
+  public List<SingularityRequestParent> getFinishedRequests(@Auth SingularityUser user,
+                                                            @QueryParam("useWebCache") Boolean useWebCache,
+                                                            @QueryParam("filterRelevantForUser") Boolean filterRelevantForUser,
+                                                            @QueryParam("includeFullRequestData") Boolean includeFullRequestData,
+                                                            @QueryParam("limit") Integer limit,
+                                                            @QueryParam("requestType") List<RequestType> requestTypes) {
+    return requestHelper.fillDataForRequestsAndFilter(
+        filterAutorized(Lists.newArrayList(requestManager.getFinishedRequests(useWebCache(useWebCache))), SingularityAuthorizationScope.READ, user),
+        user, valueOrFalse(filterRelevantForUser), valueOrFalse(includeFullRequestData), Optional.fromNullable(limit), requestTypes);
   }
 
   @GET
   @PropertyFiltering
   @ApiOperation(value="Retrieve the list of all requests", response=SingularityRequestParent.class, responseContainer="List")
-  public List<SingularityRequestParent> getRequests(@QueryParam("useWebCache") Boolean useWebCache) {
-    return getRequestsWithDeployState(requestManager.getRequests(useWebCache(useWebCache)), SingularityAuthorizationScope.READ);
+  public List<SingularityRequestParent> getRequests(@Auth SingularityUser user,
+                                                    @QueryParam("useWebCache") Boolean useWebCache,
+                                                    @QueryParam("filterRelevantForUser") Boolean filterRelevantForUser,
+                                                    @QueryParam("includeFullRequestData") Boolean includeFullRequestData,
+                                                    @QueryParam("limit") Integer limit,
+                                                    @QueryParam("requestType") List<RequestType> requestTypes) {
+    return requestHelper.fillDataForRequestsAndFilter(
+        filterAutorized(requestManager.getRequests(useWebCache(useWebCache)), SingularityAuthorizationScope.READ, user),
+        user, valueOrFalse(filterRelevantForUser), valueOrFalse(includeFullRequestData), Optional.fromNullable(limit), requestTypes);
+  }
+
+  private boolean valueOrFalse(Boolean input) {
+    return input == null ? false : input;
+  }
+
+  private List<SingularityRequestWithState> filterAutorized(List<SingularityRequestWithState> requests, final SingularityAuthorizationScope scope, SingularityUser user) {
+    if (!authorizationHelper.hasAdminAuthorization(user)) {
+      return requests.stream()
+          .filter((parent) -> authorizationHelper.isAuthorizedForRequest(parent.getRequest(), user, scope))
+          .collect(Collectors.toList());
+    }
+    return requests;
   }
 
   @GET
   @PropertyFiltering
   @Path("/queued/pending")
   @ApiOperation(value="Retrieve the list of pending requests", response=SingularityPendingRequest.class, responseContainer="List")
-  public Iterable<SingularityPendingRequest> getPendingRequests() {
+  public Iterable<SingularityPendingRequest> getPendingRequests(@Auth SingularityUser user) {
     return authorizationHelper.filterByAuthorizedRequests(user, requestManager.getPendingRequests(), SingularityTransformHelpers.PENDING_REQUEST_TO_REQUEST_ID, SingularityAuthorizationScope.READ);
   }
 
@@ -537,7 +623,7 @@ public class RequestResource extends AbstractRequestResource {
   @PropertyFiltering
   @Path("/queued/cleanup")
   @ApiOperation(value="Retrieve the list of requests being cleaned up", response=SingularityRequestCleanup.class, responseContainer="List")
-  public Iterable<SingularityRequestCleanup> getCleanupRequests() {
+  public Iterable<SingularityRequestCleanup> getCleanupRequests(@Auth SingularityUser user) {
     return authorizationHelper.filterByAuthorizedRequests(user, requestManager.getCleanupRequests(), SingularityTransformHelpers.REQUEST_CLEANUP_TO_REQUEST_ID, SingularityAuthorizationScope.READ);
   }
 
@@ -547,12 +633,14 @@ public class RequestResource extends AbstractRequestResource {
   @ApiResponses({
     @ApiResponse(code=404, message="No Request with that ID"),
   })
-  public SingularityRequestParent getRequest(@ApiParam("Request ID") @PathParam("requestId") String requestId, @QueryParam("useWebCache") Boolean useWebCache) {
-    return fillEntireRequest(fetchRequestWithState(requestId, useWebCache(useWebCache)));
+  public SingularityRequestParent getRequest(@Auth SingularityUser user,
+                                             @ApiParam("Request ID") @PathParam("requestId") String requestId,
+                                             @QueryParam("useWebCache") Boolean useWebCache) {
+    return fillEntireRequest(fetchRequestWithState(requestId, useWebCache(useWebCache), user));
   }
 
-  public SingularityRequestParent getRequest(String requestId) {
-    return fillEntireRequest(fetchRequestWithState(requestId, false));
+  public SingularityRequestParent getRequest(String requestId, SingularityUser user) {
+    return fillEntireRequest(fetchRequestWithState(requestId, false, user));
   }
 
   @DELETE
@@ -562,15 +650,16 @@ public class RequestResource extends AbstractRequestResource {
   @ApiResponses({
     @ApiResponse(code=404, message="No Request with that ID"),
   })
-  public SingularityRequest deleteRequest(@ApiParam("The request ID to delete.") @PathParam("requestId") String requestId,
+  public SingularityRequest deleteRequest(@Auth SingularityUser user,
+                                          @ApiParam("The request ID to delete.") @PathParam("requestId") String requestId,
                                           @Context HttpServletRequest requestContext,
                                           @ApiParam("Delete options") SingularityDeleteRequestRequest deleteRequest) {
     final Optional<SingularityDeleteRequestRequest> maybeDeleteRequest = Optional.fromNullable(deleteRequest);
-    return maybeProxyToLeader(requestContext, SingularityRequest.class, maybeDeleteRequest.orNull(), () -> deleteRequest(requestId, maybeDeleteRequest));
+    return maybeProxyToLeader(requestContext, SingularityRequest.class, maybeDeleteRequest.orNull(), () -> deleteRequest(requestId, maybeDeleteRequest, user));
   }
 
-  public SingularityRequest deleteRequest(String requestId, Optional<SingularityDeleteRequestRequest> deleteRequest) {
-    SingularityRequest request = fetchRequestWithState(requestId).getRequest();
+  public SingularityRequest deleteRequest(String requestId, Optional<SingularityDeleteRequestRequest> deleteRequest, SingularityUser user) {
+    SingularityRequest request = fetchRequestWithState(requestId, user).getRequest();
 
     authorizationHelper.checkForAuthorization(request, user, SingularityAuthorizationScope.WRITE);
     validator.checkActionEnabled(SingularityAction.REMOVE_REQUEST);
@@ -585,9 +674,9 @@ public class RequestResource extends AbstractRequestResource {
       deleteFromLoadBalancer = deleteRequest.get().getDeleteFromLoadBalancer();
     }
 
-    requestManager.startDeletingRequest(request, deleteFromLoadBalancer, JavaUtils.getUserEmail(user), actionId, message);
+    requestManager.startDeletingRequest(request, deleteFromLoadBalancer, user.getEmail(), actionId, message);
 
-    mailer.sendRequestRemovedMail(request, JavaUtils.getUserEmail(user), message);
+    mailer.sendRequestRemovedMail(request, user.getEmail(), message);
 
     return request;
   }
@@ -599,14 +688,15 @@ public class RequestResource extends AbstractRequestResource {
   @ApiResponses({
     @ApiResponse(code=404, message="No Request with that ID"),
   })
-  public SingularityRequestParent scale(@ApiParam("The Request ID to scale") @PathParam("requestId") String requestId,
+  public SingularityRequestParent scale(@Auth SingularityUser user,
+                                        @ApiParam("The Request ID to scale") @PathParam("requestId") String requestId,
                                         @Context HttpServletRequest requestContext,
                                         @ApiParam("Object to hold number of instances to request") SingularityScaleRequest scaleRequest) {
-    return maybeProxyToLeader(requestContext, SingularityRequestParent.class, scaleRequest, () -> scale(requestId, scaleRequest));
+    return maybeProxyToLeader(requestContext, SingularityRequestParent.class, scaleRequest, () -> scale(requestId, scaleRequest, user));
   }
 
-  public SingularityRequestParent scale(String requestId, SingularityScaleRequest scaleRequest) {
-    SingularityRequestWithState oldRequestWithState = fetchRequestWithState(requestId);
+  public SingularityRequestParent scale(String requestId, SingularityScaleRequest scaleRequest, SingularityUser user) {
+    SingularityRequestWithState oldRequestWithState = fetchRequestWithState(requestId, user);
 
     SingularityRequest oldRequest = oldRequestWithState.getRequest();
     authorizationHelper.checkForAuthorization(oldRequest, user, SingularityAuthorizationScope.WRITE);
@@ -637,23 +727,25 @@ public class RequestResource extends AbstractRequestResource {
 
       SingularityBounceRequest bounceRequest = new SingularityBounceRequest(Optional.of(isIncrementalBounce), scaleRequest.getSkipHealthchecks(), Optional.<Long>absent(), Optional.of(UUID.randomUUID().toString()), Optional.<String>absent(), Optional.<SingularityShellCommand>absent());
 
-      submitRequest(newRequest, Optional.of(oldRequestWithState), Optional.of(RequestHistoryType.SCALED), scaleRequest.getSkipHealthchecks(), Optional.of(scaleMessage), Optional.of(bounceRequest));
+      submitRequest(newRequest, Optional.of(oldRequestWithState), Optional.of(RequestHistoryType.SCALED), scaleRequest.getSkipHealthchecks(), Optional.of(scaleMessage), Optional.of(bounceRequest), user);
     } else {
-      submitRequest(newRequest, Optional.of(oldRequestWithState), Optional.of(RequestHistoryType.SCALED), scaleRequest.getSkipHealthchecks(), Optional.of(scaleMessage), Optional.<SingularityBounceRequest>absent());
+      submitRequest(newRequest, Optional.of(oldRequestWithState), Optional.of(RequestHistoryType.SCALED), scaleRequest.getSkipHealthchecks(), Optional.of(scaleMessage), Optional.absent(), user);
     }
 
     if (scaleRequest.getDurationMillis().isPresent()) {
-      requestManager.saveExpiringObject(new SingularityExpiringScale(requestId, JavaUtils.getUserEmail(user),
+      requestManager.saveExpiringObject(new SingularityExpiringScale(requestId, user.getEmail(),
           System.currentTimeMillis(), scaleRequest, oldRequest.getInstances(), scaleRequest.getActionId().or(UUID.randomUUID().toString()), scaleRequest.getBounce()));
     }
 
-    mailer.sendRequestScaledMail(newRequest, Optional.of(scaleRequest), oldRequest.getInstances(), JavaUtils.getUserEmail(user));
+    if (!scaleRequest.getSkipEmailNotification().isPresent() || !scaleRequest.getSkipEmailNotification().get()) {
+      mailer.sendRequestScaledMail(newRequest, Optional.of(scaleRequest), oldRequest.getInstances(), user.getEmail());
+    }
 
-    return fillEntireRequest(fetchRequestWithState(requestId));
+    return fillEntireRequest(fetchRequestWithState(requestId, user));
   }
 
-  private <T extends SingularityExpiringRequestActionParent<?>> SingularityRequestParent deleteExpiringObject(Class<T> clazz, String requestId) {
-    SingularityRequestWithState requestWithState = fetchRequestWithState(requestId);
+  private <T extends SingularityExpiringRequestActionParent<?>> SingularityRequestParent deleteExpiringObject(Class<T> clazz, String requestId, SingularityUser user) {
+    SingularityRequestWithState requestWithState = fetchRequestWithState(requestId, user);
 
     SingularityDeleteResult deleteResult = requestManager.deleteExpiringObject(clazz, requestId);
 
@@ -668,8 +760,9 @@ public class RequestResource extends AbstractRequestResource {
   @ApiResponses({
     @ApiResponse(code=404, message="No Request or expiring scale request for that ID"),
   })
-  public SingularityRequestParent deleteExpiringScale(@ApiParam("The Request ID") @PathParam("requestId") String requestId) {
-    return deleteExpiringObject(SingularityExpiringScale.class, requestId);
+  public SingularityRequestParent deleteExpiringScale(@Auth SingularityUser user,
+                                                      @ApiParam("The Request ID") @PathParam("requestId") String requestId) {
+    return deleteExpiringObject(SingularityExpiringScale.class, requestId, user);
   }
 
   @Deprecated
@@ -679,8 +772,9 @@ public class RequestResource extends AbstractRequestResource {
   @ApiResponses({
       @ApiResponse(code=404, message="No Request or expiring skipHealthchecks request for that ID"),
   })
-  public SingularityRequestParent deleteExpiringSkipHealthchecksDeprecated(@ApiParam("The Request ID") @PathParam("requestId") String requestId) {
-    return deleteExpiringSkipHealthchecks(requestId);
+  public SingularityRequestParent deleteExpiringSkipHealthchecksDeprecated(@Auth SingularityUser user,
+                                                                           @ApiParam("The Request ID") @PathParam("requestId") String requestId) {
+    return deleteExpiringSkipHealthchecks(user, requestId);
   }
 
   @DELETE
@@ -689,8 +783,9 @@ public class RequestResource extends AbstractRequestResource {
   @ApiResponses({
     @ApiResponse(code=404, message="No Request or expiring skipHealthchecks request for that ID"),
   })
-  public SingularityRequestParent deleteExpiringSkipHealthchecks(@ApiParam("The Request ID") @PathParam("requestId") String requestId) {
-    return deleteExpiringObject(SingularityExpiringSkipHealthchecks.class, requestId);
+  public SingularityRequestParent deleteExpiringSkipHealthchecks(@Auth SingularityUser user,
+                                                                 @ApiParam("The Request ID") @PathParam("requestId") String requestId) {
+    return deleteExpiringObject(SingularityExpiringSkipHealthchecks.class, requestId, user);
   }
 
   @DELETE
@@ -699,8 +794,9 @@ public class RequestResource extends AbstractRequestResource {
   @ApiResponses({
     @ApiResponse(code=404, message="No Request or expiring pause request for that ID"),
   })
-  public SingularityRequestParent deleteExpiringPause(@ApiParam("The Request ID") @PathParam("requestId") String requestId) {
-    return deleteExpiringObject(SingularityExpiringPause.class, requestId);
+  public SingularityRequestParent deleteExpiringPause(@Auth SingularityUser user,
+                                                      @ApiParam("The Request ID") @PathParam("requestId") String requestId) {
+    return deleteExpiringObject(SingularityExpiringPause.class, requestId, user);
   }
 
   @DELETE
@@ -709,8 +805,9 @@ public class RequestResource extends AbstractRequestResource {
   @ApiResponses({
     @ApiResponse(code=404, message="No Request or expiring bounce request for that ID"),
   })
-  public SingularityRequestParent deleteExpiringBounce(@ApiParam("The Request ID") @PathParam("requestId") String requestId) {
-    return deleteExpiringObject(SingularityExpiringBounce.class, requestId);
+  public SingularityRequestParent deleteExpiringBounce(@Auth SingularityUser user,
+                                                       @ApiParam("The Request ID") @PathParam("requestId") String requestId) {
+    return deleteExpiringObject(SingularityExpiringBounce.class, requestId, user);
   }
 
   @Deprecated
@@ -721,10 +818,11 @@ public class RequestResource extends AbstractRequestResource {
   @ApiResponses({
       @ApiResponse(code=404, message="No Request with that ID"),
   })
-  public SingularityRequestParent skipHealthchecksDeprecated(@ApiParam("The Request ID to scale") @PathParam("requestId") String requestId,
+  public SingularityRequestParent skipHealthchecksDeprecated(@Auth SingularityUser user,
+                                                             @ApiParam("The Request ID to scale") @PathParam("requestId") String requestId,
                                                              @Context HttpServletRequest requestContext,
                                                              @ApiParam("SkipHealtchecks options") SingularitySkipHealthchecksRequest skipHealthchecksRequest) {
-    return skipHealthchecks(requestId, requestContext, skipHealthchecksRequest);
+    return skipHealthchecks(user, requestId, requestContext, skipHealthchecksRequest);
   }
 
   @PUT
@@ -734,33 +832,35 @@ public class RequestResource extends AbstractRequestResource {
   @ApiResponses({
     @ApiResponse(code=404, message="No Request with that ID"),
   })
-  public SingularityRequestParent skipHealthchecks(@ApiParam("The Request ID to scale") @PathParam("requestId") String requestId,
+  public SingularityRequestParent skipHealthchecks(@Auth SingularityUser user,
+                                                   @ApiParam("The Request ID to scale") @PathParam("requestId") String requestId,
                                                    @Context HttpServletRequest requestContext,
                                                    @ApiParam("SkipHealtchecks options") SingularitySkipHealthchecksRequest skipHealthchecksRequest) {
-    return maybeProxyToLeader(requestContext, SingularityRequestParent.class, skipHealthchecksRequest, () -> skipHealthchecks(requestId, skipHealthchecksRequest));
+    return maybeProxyToLeader(requestContext, SingularityRequestParent.class, skipHealthchecksRequest, () -> skipHealthchecks(requestId, skipHealthchecksRequest, user));
   }
 
-  public SingularityRequestParent skipHealthchecks(String requestId, SingularitySkipHealthchecksRequest skipHealthchecksRequest) {
-    SingularityRequestWithState oldRequestWithState = fetchRequestWithState(requestId);
+  public SingularityRequestParent skipHealthchecks(String requestId, SingularitySkipHealthchecksRequest skipHealthchecksRequest, SingularityUser user) {
+    SingularityRequestWithState oldRequestWithState = fetchRequestWithState(requestId, user);
 
     SingularityRequest oldRequest = oldRequestWithState.getRequest();
     SingularityRequest newRequest = oldRequest.toBuilder().setSkipHealthchecks(skipHealthchecksRequest.getSkipHealthchecks()).build();
 
-    submitRequest(newRequest, Optional.of(oldRequestWithState), Optional.<RequestHistoryType> absent(), Optional.<Boolean> absent(), skipHealthchecksRequest.getMessage(), Optional.<SingularityBounceRequest>absent());
+    submitRequest(newRequest, Optional.of(oldRequestWithState), Optional.absent(), Optional.absent(), skipHealthchecksRequest.getMessage(), Optional.absent(), user);
 
     if (skipHealthchecksRequest.getDurationMillis().isPresent()) {
-      requestManager.saveExpiringObject(new SingularityExpiringSkipHealthchecks(requestId, JavaUtils.getUserEmail(user),
+      requestManager.saveExpiringObject(new SingularityExpiringSkipHealthchecks(requestId, user.getEmail(),
           System.currentTimeMillis(), skipHealthchecksRequest, oldRequest.getSkipHealthchecks(), skipHealthchecksRequest.getActionId().or(UUID.randomUUID().toString())));
     }
 
-    return fillEntireRequest(fetchRequestWithState(requestId));
+    return fillEntireRequest(fetchRequestWithState(requestId, user));
   }
 
   @GET
   @PropertyFiltering
   @Path("/lbcleanup")
   @ApiOperation("Retrieve the list of tasks being cleaned from load balancers.")
-  public Iterable<String> getLbCleanupRequests(@QueryParam("useWebCache") Boolean useWebCache) {
+  public Iterable<String> getLbCleanupRequests(@Auth SingularityUser user,
+                                               @QueryParam("useWebCache") Boolean useWebCache) {
     return authorizationHelper.filterAuthorizedRequestIds(user, requestManager.getLbCleanupRequestIds(), SingularityAuthorizationScope.READ, useWebCache(useWebCache));
   }
 }

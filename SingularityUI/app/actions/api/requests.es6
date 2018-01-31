@@ -5,12 +5,23 @@ export const FetchRequests = buildApiAction(
   {url: '/requests'}
 );
 
+export const FetchUserRelevantRequests = buildApiAction(
+  'FETCH_USER_RELEVANT_REQUESTS',
+  (requestTypes = []) => {
+    let params = 'filterRelevantForUser=true&includeFullRequestData=true&limit=50'
+    _.each(requestTypes, (requestType) => {
+      params = params + `&requestType=${requestType}`
+    });
+    return {url: `/requests?${params}`}
+  }
+);
+
 export const FetchRequestsInState = buildApiAction(
   'FETCH_REQUESTS_IN_STATE',
   (state, renderNotFoundIf404) => {
     if (_.contains(['pending', 'cleanup'], state)) {
       return {url: `/requests/queued/${state}`, renderNotFoundIf404};
-    } else if (_.contains(['all', 'noDeploy', 'activeDeploy', 'overUtilizedCpu', 'underUtilizedCpu', 'underUtilizedMem'], state)) {
+    } else if (_.contains(['all', 'noDeploy', 'activeDeploy', 'overUtilizedCpu', 'underUtilizedCpu', 'underUtilizedMem', 'underUtilizedDisk'], state)) {
       return {url: '/requests', renderNotFoundIf404};
     }
     return {url: `/requests/${state}`, renderNotFoundIf404};

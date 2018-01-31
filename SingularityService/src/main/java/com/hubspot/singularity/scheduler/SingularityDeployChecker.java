@@ -23,7 +23,6 @@ import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.hubspot.baragon.models.BaragonRequestState;
 import com.hubspot.mesos.JavaUtils;
-import com.hubspot.mesos.Resources;
 import com.hubspot.singularity.DeployState;
 import com.hubspot.singularity.LoadBalancerRequestType;
 import com.hubspot.singularity.LoadBalancerRequestType.LoadBalancerRequestId;
@@ -41,6 +40,7 @@ import com.hubspot.singularity.SingularityLoadBalancerUpdate;
 import com.hubspot.singularity.SingularityPendingDeploy;
 import com.hubspot.singularity.SingularityPendingRequest;
 import com.hubspot.singularity.SingularityPendingRequest.PendingType;
+import com.hubspot.singularity.SingularityPendingRequestBuilder;
 import com.hubspot.singularity.SingularityPendingTaskId;
 import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityRequestDeployState;
@@ -125,7 +125,8 @@ public class SingularityDeployChecker {
 
     Optional<SingularityRequestWithState> maybeRequestWithState = requestManager.getRequest(pendingDeploy.getDeployMarker().getRequestId());
 
-    if (!SingularityRequestWithState.isActive(maybeRequestWithState)) {
+    if (!(maybeRequestWithState.isPresent() && maybeRequestWithState.get().getState() == RequestState.FINISHED)
+        && !SingularityRequestWithState.isActive(maybeRequestWithState)) {
       LOG.warn("Deploy {} request was {}, removing deploy", pendingDeploy, SingularityRequestWithState.getRequestState(maybeRequestWithState));
 
       if (shouldCancelLoadBalancer(pendingDeploy)) {
@@ -275,38 +276,50 @@ public class SingularityDeployChecker {
     if (deploy.isPresent() && deploy.get().getRunImmediately().isPresent()) {
       String requestId = deploy.get().getRequestId();
       String deployId = deploy.get().getId();
-      long timestamp = deployResult.getTimestamp();
       SingularityRunNowRequest runNowRequest = deploy.get().getRunImmediately().get();
-      Optional<String> runId = runNowRequest.getRunId().or(Optional.of(UUID.randomUUID().toString()));
-      Optional<String> message = runNowRequest.getMessage()
-          .or(pendingDeploy.getDeployMarker().getMessage());
-      Optional<String> user = pendingDeploy.getDeployMarker().getUser();
-      Optional<List<String>> commandLineArgs = runNowRequest.getCommandLineArgs();
-      Optional<Boolean> skipHealthChecks = runNowRequest.getSkipHealthchecks().or(request.getSkipHealthchecks());
-      Optional<Resources> resources = runNowRequest.getResources();
       List<SingularityTaskId> activeTasks = taskManager.getActiveTaskIdsForRequest(requestId);
       List<SingularityPendingTaskId> pendingTasks = taskManager.getPendingTaskIdsForRequest(requestId);
 
+      SingularityPendingRequestBuilder builder = new SingularityPendingRequestBuilder()
+          .setRequestId(requestId)
+          .setDeployId(deployId)
+          .setTimestamp(deployResult.getTimestamp())
+          .setUser(pendingDeploy.getDeployMarker().getUser())
+          .setCmdLineArgsList(runNowRequest.getCommandLineArgs())
+          .setRunId(runNowRequest.getRunId().or(Optional.of(UUID.randomUUID().toString())))
+          .setSkipHealthchecks(runNowRequest.getSkipHealthchecks().or(request.getSkipHealthchecks()))
+          .setMessage(runNowRequest.getMessage()
+              .or(pendingDeploy.getDeployMarker().getMessage()))
+          .setResources(runNowRequest.getResources())
+          .setRunAsUserOverride(runNowRequest.getRunAsUserOverride())
+          .setEnvOverrides(runNowRequest.getEnvOverrides())
+          .setExtraArtifacts(runNowRequest.getExtraArtifacts())
+          .setRunAt(runNowRequest.getRunAt());
+
+      PendingType pendingType = null;
       if (request.isScheduled()) {
         if (activeTasks.isEmpty()) {
-          PendingType pendingType = canceledOr(deployResult.getDeployState(), PendingType.IMMEDIATE);
-          requestManager.addToPendingQueue(new SingularityPendingRequest(requestId, deployId, timestamp, user, pendingType, commandLineArgs, runId, skipHealthChecks, message, Optional.absent(), resources, runNowRequest.getRunAt()));
+          pendingType = PendingType.IMMEDIATE;
         } else {
           // Don't run scheduled task over a running task. Will be picked up on the next run.
-          PendingType pendingType = canceledOr(deployResult.getDeployState(), PendingType.NEW_DEPLOY);
-          requestManager.addToPendingQueue(new SingularityPendingRequest(requestId, deployId, timestamp, user, pendingType, commandLineArgs, runId, skipHealthChecks, message, Optional.absent(), resources, runNowRequest.getRunAt()));
+          pendingType = PendingType.NEW_DEPLOY;
         }
       } else if (!request.isLongRunning()) {
         if (request.getInstances().isPresent()
             && (activeTasks.size() + pendingTasks.size() < request.getInstances().get())) {
-          PendingType pendingType = canceledOr(deployResult.getDeployState(), PendingType.ONEOFF);
-          requestManager.addToPendingQueue(new SingularityPendingRequest(requestId, deployId, timestamp, user, pendingType, commandLineArgs, runId, skipHealthChecks, message, Optional.absent(), resources, runNowRequest.getRunAt()));
+          pendingType = PendingType.ONEOFF;
         } else {
           // Don't run one-off / on-demand task when already at instance count cap
-          PendingType pendingType = canceledOr(deployResult.getDeployState(), PendingType.NEW_DEPLOY);
-          requestManager.addToPendingQueue(new SingularityPendingRequest(requestId, deployId, timestamp, user, pendingType, commandLineArgs, runId, skipHealthChecks, message, Optional.absent(), resources, runNowRequest.getRunAt()));
+          pendingType = PendingType.NEW_DEPLOY;
         }
       }
+      if (pendingType != null) {
+        builder.setPendingType(canceledOr(deployResult.getDeployState(), pendingType));
+        requestManager.addToPendingQueue(builder.build());
+      } else {
+        LOG.warn("Could not determine pending type for deploy {}.", deployId);
+      }
+
     } else if (!request.isDeployable() && !request.isOneOff()) {
       PendingType pendingType = canceledOr(deployResult.getDeployState(), PendingType.NEW_DEPLOY);
       requestManager.addToPendingQueue(new SingularityPendingRequest(request.getId(), pendingDeploy.getDeployMarker().getDeployId(),
@@ -314,10 +327,19 @@ public class SingularityDeployChecker {
           deploy.isPresent() ? deploy.get().getSkipHealthchecksOnDeploy() : Optional.absent(), pendingDeploy.getDeployMarker().getMessage()));
     }
 
-    if (!request.isDeployable() && !request.isOneOff()) {
-      if (deployResult.getDeployState() == DeployState.SUCCEEDED) {
+    if (deployResult.getDeployState() == DeployState.SUCCEEDED) {
+      if (!request.isDeployable() && !request.isOneOff()) {
         // remove the lock on bounces in case we deployed during a bounce
         requestManager.markBounceComplete(request.getId());
+      }
+      if (requestWithState.getState() == RequestState.FINISHED) {
+        // A FINISHED request is moved to ACTIVE state so we can reevaluate the schedule
+        requestManager.activate(
+            request,
+            RequestHistoryType.UPDATED,
+            System.currentTimeMillis(),
+            deploy.isPresent() ? deploy.get().getUser() : Optional.absent(),
+            Optional.absent());
       }
     }
 

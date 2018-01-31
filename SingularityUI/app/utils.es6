@@ -55,6 +55,11 @@ const Utils = {
     return `${timeObject.fromNow()} (${timeObject.format(window.config.timestampFormat)})`;
   },
 
+  timestampFromNowTextOnly(millis) {
+    const timeObject = moment(millis);
+    return `${timeObject.fromNow()}`;
+  },
+
   absoluteTimestamp(millis) {
     return moment(millis).format(window.config.timestampFormat);
   },
@@ -192,13 +197,19 @@ const Utils = {
         } catch (e) {
           throw new Error(`Could not find resource (memory) for slave ${slaveInfo.host} (${slaveInfo.id})`);
         }
+      case STAT_NAMES.diskBytesUsedStat:
+        try {
+          return parseFloat(slaveInfo.attributes.real_disk_mb || slaveInfo.resources.disk) * Math.pow(1024, 2);
+        } catch (e) {
+          throw new Error(`Could not find resource (disk) for slave ${slaveInfo.host} (${slaveInfo.id})`);
+        }
       default:
         throw new Error(`${statName} is an unsupported statistic'`);
     }
   },
 
   isResourceStat(stat) {
-    return stat === STAT_NAMES.cpusUsedStat || stat === STAT_NAMES.memoryBytesUsedStat;
+    return stat === STAT_NAMES.cpusUsedStat || stat === STAT_NAMES.memoryBytesUsedStat || stat === STAT_NAMES.diskBytesUsedStat;
   },
 
   getRequestIdFromTaskId(taskId) {
@@ -321,7 +332,8 @@ const Utils = {
     if (object.hasOwnProperty(path[0])) {
       return Utils.maybe(
         object[path[0]],
-        path.slice(1, path.length)
+        path.slice(1, path.length),
+        defaultValue
       );
     }
 
@@ -441,6 +453,17 @@ const Utils = {
     return !Utils.isIn(slaveInfo.currentState.state, ['DEAD', 'MISSING_ON_STARTUP']);
   },
 
+  glyphiconForRequestState: (state) => {
+    return {
+      'DELETING': {'color': 'color-grey', 'icon':'trash'},
+      'ACTIVE': {'color': 'color-success', 'icon':'ok'},
+      'PAUSED': {'color': 'color-paused', 'icon':'pause'},
+      'SYSTEM_COOLDOWN': {'color': 'color-warning', 'icon':'warning-sign'},
+      'PENDING': {'color': 'color-info', 'icon':'hourglass'},
+      'CLEANING': {'color': 'color-cleaning', 'icon':'erase'},
+    }[state] || {'color': 'color-info', 'icon':'question-sign'}
+  },
+
   enums: {
     SingularityRequestTypes: ['SERVICE', 'WORKER', 'SCHEDULED', 'ON_DEMAND', 'RUN_ONCE'],
     SingularityEmailDestination: ['OWNERS', 'ACTION_TAKER', 'ADMINS'],
@@ -473,7 +496,47 @@ const Utils = {
       }
     }
     return array.join('&');
+  },
+
+  getAuthTokenHeader() {
+    if (!config.authCookieName) {
+      return null;
+    }
+    const encodedKey = encodeURIComponent(config.authCookieName).replace(/[\-\.\+\*]/g, '\\$&');
+    const authCookie = decodeURIComponent(document.cookie.replace(new RegExp(`(?:(?:^|.*;)\\s*${encodedKey}\\s*\\=\\s*([^;]*).*$)|^.*$`), '$1')) || null;
+    if (!authCookie) {
+      return '';
+    }
+    const authToken = JSON.parse(authCookie)[config.authTokenKey];
+    return `Bearer ${ authToken }`;
+  },
+
+  template(template, data) {
+    const start = "{{";
+    const end = "}}";
+    const path = "[a-z0-9_$][\\.a-z0-9_]*";
+    const pattern = new RegExp(start + "\\s*("+ path +")\\s*" + end, "gi");
+    try {
+      return template.replace(pattern, (tag, token) => {
+        const tokenPath = token.split(".");
+        let value = data;
+        let i = 0;
+
+        for (; i < tokenPath.length; i++){
+          value = value[tokenPath[i]];
+          if (value == null){
+            throw tokenPath[i] + "' not found in " + tag;
+          }
+          if (i === tokenPath.length - 1){
+            return value;
+          }
+        }
+      });
+    } catch (err) {
+      return null;
+    }
   }
+
 };
 
 export default Utils;

@@ -2,38 +2,35 @@ package com.hubspot.mesos;
 
 import java.util.Objects;
 
-import org.apache.mesos.v1.Protos;
-
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.annotations.Beta;
 import com.google.common.base.Optional;
 
+@Beta
 public class SingularityVolume {
   private final String containerPath;
   private final Optional<String> hostPath;
   private final Optional<SingularityDockerVolumeMode> mode;
+  private final Optional<SingularityVolumeSource> source;
+
+  public SingularityVolume(
+      String containerPath,
+      Optional<String> hostPath,
+      SingularityDockerVolumeMode mode) {
+    this(containerPath, hostPath, mode, Optional.absent());
+  }
 
   @JsonCreator
   public SingularityVolume(
       @JsonProperty("containerPath") String containerPath,
       @JsonProperty("hostPath") Optional<String> hostPath,
-      @JsonProperty("mode") SingularityDockerVolumeMode mode) {
+      @JsonProperty("mode") SingularityDockerVolumeMode mode,
+      @JsonProperty("source") Optional<SingularityVolumeSource> source) {
     this.containerPath = containerPath;
     this.hostPath = hostPath;
     this.mode = Optional.fromNullable(mode);
-  }
-
-  @Deprecated
-  public SingularityVolume(String containerPath, Optional<String> hostPath, Optional<Protos.Volume.Mode> mode) {
-    this(containerPath, hostPath, convertedMode(mode));
-  }
-
-  private static SingularityDockerVolumeMode convertedMode(Optional<Protos.Volume.Mode> mode) {
-    if (mode.isPresent()) {
-      return SingularityDockerVolumeMode.valueOf(mode.get().toString());
-    } else {
-      return null;
-    }
+    this.source = source;
   }
 
   public String getContainerPath() {
@@ -46,6 +43,11 @@ public class SingularityVolume {
 
   public Optional<SingularityDockerVolumeMode> getMode() {
     return mode;
+  }
+
+  public Optional<SingularityVolumeSource> getSource()
+  {
+    return source;
   }
 
   @Override

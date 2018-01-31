@@ -10,7 +10,7 @@ import com.google.common.base.Optional;
 
 public class SingularityTaskState {
   private final Optional<SingularityTaskId> taskId;
-  private final SingularityPendingTaskId pendingTaskId;
+  private final Optional<SingularityPendingTaskId> pendingTaskId;
   private final Optional<String> runId;
   private final Optional<ExtendedTaskState> currentState;
   private final List<SingularityTaskHistoryUpdate> taskHistory;
@@ -18,7 +18,7 @@ public class SingularityTaskState {
 
   @JsonCreator
   public SingularityTaskState(@JsonProperty("taskId") Optional<SingularityTaskId> taskId,
-                              @JsonProperty("pendingTaskId") SingularityPendingTaskId pendingTaskId,
+                              @JsonProperty("pendingTaskId") Optional<SingularityPendingTaskId> pendingTaskId,
                               @JsonProperty("runId") Optional<String> runId,
                               @JsonProperty("currentState") Optional<ExtendedTaskState> currentState,
                               @JsonProperty("taskHistory") List<SingularityTaskHistoryUpdate> taskHistory,
@@ -31,10 +31,15 @@ public class SingularityTaskState {
     this.pending = pending;
   }
 
+  @Deprecated
+  public SingularityTaskState(Optional<SingularityTaskId> taskId, SingularityPendingTaskId pendingTaskId, Optional<String> runId, Optional<ExtendedTaskState> currentState, List<SingularityTaskHistoryUpdate> taskHistory, boolean pending) {
+   this(taskId, Optional.of(pendingTaskId), runId, currentState, taskHistory, pending);
+  }
+
   public static SingularityTaskState fromTaskHistory(SingularityTaskHistory taskHistory) {
     return new SingularityTaskState(
         Optional.of(taskHistory.getTask().getTaskId()),
-        taskHistory.getTask().getTaskRequest().getPendingTask().getPendingTaskId(),
+        Optional.of(taskHistory.getTask().getTaskRequest().getPendingTask().getPendingTaskId()),
         taskHistory.getTask().getTaskRequest().getPendingTask().getRunId(),
         Optional.of(taskHistory.getLastTaskUpdate().get().getTaskState()),
         taskHistory.getTaskUpdates(),
@@ -50,6 +55,11 @@ public class SingularityTaskState {
   }
 
   public SingularityPendingTaskId getPendingTaskId() {
+    return pendingTaskId.orNull();
+  }
+
+  @JsonIgnore
+  public Optional<SingularityPendingTaskId> getMaybePendingTaskId() {
     return pendingTaskId;
   }
 

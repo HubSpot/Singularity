@@ -1,6 +1,6 @@
 #!/bin/bash
 
-DOCKER_IP=`echo "$DOCKER_HOST" | awk -F/ '{print $3}' | awk -F: '{print $1}'`
+export DOCKER_IP=`echo "$DOCKER_HOST" | awk -F/ '{print $3}' | awk -F: '{print $1}'`
 
 function pull {
   docker-compose -f compose-dev.yml pull

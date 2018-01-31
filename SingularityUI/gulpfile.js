@@ -24,12 +24,13 @@ var templateData = {
   navColor: process.env.SINGULARITY_NAV_COLOR,
   defaultCpus: process.env.SINGUALRITY_DEFAULT_CPUS || 1,
   defaultMemory: process.env.SINGULARITY_DEFAULT_MEMORY || 128,
+  defaultDisk: process.env.SINGULARITY_DEFAULT_DISK || 1024,
   defaultBounceExpirationMinutes: process.env.SINGULARITY_DEFAULT_BOUNCE_EXPIRATION_MINUTES || 60,
   defaultHealthcheckIntervalSeconds: process.env.SINGULARITY_DEFAULT_HEALTHCHECK_INTERVAL_SECONDS || 5,
   defaultHealthcheckTimeoutSeconds: process.env.SINGULARITY_HEALTHCHECK_TIMEOUT_SECONDS || 5,
   defaultStartupTimeoutSeconds: process.env.SINGULARITY_DEFAULT_STARTUP_TIMEOUT_SECONDS || 60,
   defaultHealthcheckMaxRetries: process.env.SINGULARITY_HEALTHCHECK_MAX_RETRIES || 0,
-  showTaskDiskResource: process.env.SINGULARITY_SHOW_TASK_DISK_RESOURCE || 'false',
+  showTaskDiskResource: process.env.SINGULARITY_SHOW_TASK_DISK_RESOURCE || 'true',
   hideNewDeployButton: process.env.SINGULARITY_HIDE_NEW_DEPLOY_BUTTON || 'false',
   hideNewRequestButton: process.env.SINGULARITY_HIDE_NEW_REQUEST_BUTTON || 'false',
   loadBalancingEnabled: process.env.SINGULARITY_LOAD_BALANCING_ENABLED || 'false',
@@ -44,7 +45,11 @@ var templateData = {
   timestampWithSecondsFormat: process.env.SINGULARITY_TIMESTAMP_WITH_SECONDS_FORMAT || 'lll:ss',
   redirectOnUnauthorizedUrl: process.env.SINGULARITY_REDIRECT_ON_UNAUTHORIZED_URL || '',
   extraScript: process.env.SINGULARITY_EXTRA_SCRIPT || '',
-  sentryDsn: process.env.SINGULARITY_SENTRY_DSN || ''
+  sentryDsn: process.env.SINGULARITY_SENTRY_DSN || '',
+  generateAuthHeader: process.env.SINGULARITY_GENERATE_AUTH_HEADER || 'false',
+  authTokenKey: process.env.SINGULARITY_AUTH_TOKEN_KEY || 'token',
+  authCookieName: process.env.SINGULARITY_AUTH_COOKIE_NAME || '',
+  quickLinks: process.env.SINGULARITY_QUICK_LINKS || '{}'
 };
 
 var dest = path.resolve(__dirname, 'dist');

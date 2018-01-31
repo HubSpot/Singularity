@@ -20,7 +20,7 @@ const Aggregate = ({width, vcenter, graph, className, value, label, link}) => {
   return (
     <div className={classNames(
       'aggregate',
-      `col-xs-${width}`,
+      `col-md-${width}`,
       {vcenter},
       {graph}
     )}>

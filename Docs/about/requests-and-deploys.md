@@ -36,6 +36,7 @@ Now you want `TestService` to actually run. To do this, you need to create a `De
     "resources": {
         "cpus":1,
         "memoryMb":128,
+        "diskMb": 1024,
         "numPorts":2
     }, 
 	"command":"java -Ddw.server.applicationConnectors[0].port=$PORT0 -Ddw.server.adminConnectors[0].port=$PORT1 -jar singularitytest-1.0-SNAPSHOT.jar server example.yml",

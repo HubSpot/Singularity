@@ -1,0 +1,28 @@
+.request-summary, .request-summary .panel
+     margin-bottom: 0
+
+.request-summary .row
+     margin-bottom: 5px
+
+.request-summary .request-state
+    padding 4px .8em
+    line-height 27px
+    border-radius 4px
+    background #f3f3f3
+    color #888
+    margin-right .5em
+
+    &[data-state='ACTIVE']
+        color #519D3D
+
+    &[data-state='PAUSED']
+        color #3374CD
+
+    &[data-state='SYSTEM_COOLDOWN']
+        color #BF5D36
+
+    &[data-state='DELETED']
+        color #ff0000
+
+    &:empty
+        display none

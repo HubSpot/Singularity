@@ -1,7 +1,7 @@
 import React, { PropTypes } from 'react';
 
 const LabeledSection = ({title, width, children, className}) => (
-  <div className={`col-xs-${width} ${className || ''}`}>
+  <div className={`col-md-${width} ${className || ''}`}>
     <h4>{title}</h4>
     <div className="row">
       <div className="col-xs-12">

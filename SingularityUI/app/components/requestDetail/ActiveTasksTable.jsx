@@ -10,19 +10,21 @@ import Utils from '../../utils';
 
 import UITable from '../common/table/UITable';
 import {
-  TaskId,
+  Health,
+  InstanceNumberWithHostname,
+  Host,
   LastTaskState,
   DeployId,
-  StartedAt,
   UpdatedAt,
-  LogLinkAndJSON
+  StartedAt,
+  LogLinkAndActions
 } from '../tasks/Columns';
 
 import { FetchTaskHistoryForRequest } from '../../actions/api/history';
 
 import TaskStateBreakdown from './TaskStateBreakdown';
 
-const ActiveTasksTable = ({requestId, tasksAPI, fetchTaskHistoryForRequest}) => {
+const ActiveTasksTable = ({request, requestId, tasksAPI, healthyTaskIds, cleaningTaskIds, fetchTaskHistoryForRequest}) => {
   const tasks = tasksAPI ? tasksAPI.data : [];
   const emptyTableMessage = (Utils.api.isFirstLoad(tasksAPI)
     ? <p>Loading...</p>
@@ -40,23 +42,38 @@ const ActiveTasksTable = ({requestId, tasksAPI, fetchTaskHistoryForRequest}) => 
     );
   }
 
+  const tasksWithHealth = _.map(tasks, (task) => {
+    let health;
+    if (_.contains(healthyTaskIds, task.taskId.id)) {
+      health = 'healthy';
+    } else if (_.contains(cleaningTaskIds, task.taskId.id)) {
+      health = 'cleaning';
+    } else {
+      health = 'not yet healthy'
+    }
+    return {
+      ...task,
+      health: health
+    }
+  });
   const title = <span>Running instances {maybeAggregateTailButton}</span>;
 
   return (
     <Section id="running-instances" title={title}>
       { localStorage.enableTaskStateBreakdown ? <TaskStateBreakdown requestId={requestId} /> : null }
       <UITable
-        data={tasks}
+        data={tasksWithHealth}
         keyGetter={(task) => task.taskId.id}
         emptyTableMessage={emptyTableMessage}
         triggerOnDataSizeChange={fetchTaskHistoryForRequest}
       >
-        {TaskId}
+        {Health}
+        {InstanceNumberWithHostname}
         {LastTaskState}
         {DeployId}
         {StartedAt}
         {UpdatedAt}
-        {LogLinkAndJSON(config.runningTaskLogPath)}
+        {LogLinkAndActions(config.runningTaskLogPath, Utils.maybe(request, ['request', 'requestType'], 'UNKNOWN'))}
       </UITable>
     </Section>
   );
@@ -65,15 +82,26 @@ const ActiveTasksTable = ({requestId, tasksAPI, fetchTaskHistoryForRequest}) => 
 ActiveTasksTable.propTypes = {
   requestId: PropTypes.string.isRequired,
   tasksAPI: PropTypes.object.isRequired,
+  healthyTaskIds: PropTypes.array.isRequired,
+  cleaningTaskIds: PropTypes.array.isRequired,
   fetchTaskHistoryForRequest: PropTypes.func.isRequired
 };
 
-const mapStateToProps = (state, ownProps) => ({
+const mapStateToProps = (state, ownProps) => {
+  const request = Utils.maybe(state.api.request, [ownProps.requestId, 'data'])
+  return {
+    request: request,
   tasksAPI: Utils.maybe(
     state.api.activeTasksForRequest,
     [ownProps.requestId]
-  )
-});
+  ),
+  healthyTaskIds: _.map(Utils.maybe(request, ['taskIds', 'healthy'], []), (task) => {
+    return task.id;
+  }),
+  cleaningTaskIds: _.map(Utils.maybe(request, ['data', 'taskIds', 'cleaning'], []), (task) => {
+    return task.id;
+  })
+}};
 
 const mapDispatchToProps = (dispatch, ownProps) => ({
   fetchTaskHistoryForRequest: () => dispatch(FetchTaskHistoryForRequest.trigger(ownProps.requestId, 5, 1))
