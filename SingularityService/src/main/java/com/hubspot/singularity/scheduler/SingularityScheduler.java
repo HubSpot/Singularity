@@ -218,6 +218,7 @@ public class SingularityScheduler {
 
   @Timed
   public void drainPendingQueue() {
+    REQUEST LOCK
     final long start = System.currentTimeMillis();
     final ImmutableList<SingularityPendingRequest> pendingRequests = ImmutableList.copyOf(requestManager.getPendingRequests());
 

@@ -6,7 +6,6 @@ import javax.inject.Singleton;
 
 import com.google.inject.Inject;
 import com.hubspot.singularity.config.SingularityConfiguration;
-import com.hubspot.singularity.mesos.SingularitySchedulerLock;
 
 @Singleton
 public class SingularityCooldownPoller extends SingularityLeaderOnlyPoller {
@@ -14,8 +13,8 @@ public class SingularityCooldownPoller extends SingularityLeaderOnlyPoller {
   private final SingularityCooldownChecker checker;
 
   @Inject
-  SingularityCooldownPoller(SingularityConfiguration configuration, SingularityCooldownChecker checker, SingularitySchedulerLock lock) {
-    super(TimeUnit.MINUTES.toMillis(configuration.getCooldownExpiresAfterMinutes()) / 2, TimeUnit.MILLISECONDS, lock, true);
+  SingularityCooldownPoller(SingularityConfiguration configuration, SingularityCooldownChecker checker) {
+    super(TimeUnit.MINUTES.toMillis(configuration.getCooldownExpiresAfterMinutes()) / 2, TimeUnit.MILLISECONDS, true);
 
     this.checker = checker;
   }

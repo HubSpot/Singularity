@@ -57,8 +57,7 @@ public class SingularityMesosOfferScheduler {
   private final DisasterManager disasterManager;
   private final UsageManager usageManager;
   private final DeployManager deployManager;
-
-
+  private final SingularitySchedulerLock lock;
   private final SingularityLeaderCache leaderCache;
 
   @Inject
@@ -75,7 +74,8 @@ public class SingularityMesosOfferScheduler {
                                         SingularityLeaderCache leaderCache,
                                         DisasterManager disasterManager,
                                         UsageManager usageManager,
-                                        DeployManager deployManager) {
+                                        DeployManager deployManager,
+                                        SingularitySchedulerLock lock) {
     this.defaultResources = new Resources(mesosConfiguration.getDefaultCpus(), mesosConfiguration.getDefaultMemory(), 0, mesosConfiguration.getDefaultDisk());
     this.defaultCustomExecutorResources = new Resources(customExecutorConfiguration.getNumCpus(), customExecutorConfiguration.getMemoryMb(), 0, customExecutorConfiguration.getDiskMb());
     this.taskManager = taskManager;
@@ -90,11 +90,12 @@ public class SingularityMesosOfferScheduler {
     this.taskPrioritizer = taskPrioritizer;
     this.usageManager = usageManager;
     this.deployManager = deployManager;
+    this.lock = lock;
   }
 
   public List<SingularityOfferHolder> checkOffers(final Collection<Offer> offers) {
     for (SingularityPendingTaskId taskId : taskManager.getPendingTasksMarkedForDeletion()) {
-      taskManager.deletePendingTask(taskId);
+      lock.runWithRequestLock(() -> taskManager.deletePendingTask(taskId), taskId.getRequestId(), "pendingTaskDeletes");
     }
 
     boolean useTaskCredits = disasterManager.isTaskCreditEnabled();
@@ -102,6 +103,7 @@ public class SingularityMesosOfferScheduler {
 
     scheduler.checkForDecomissions();
     scheduler.drainPendingQueue();
+    REQUEST LOCK
 
     final Map<String, SingularityTaskRequestHolder> pendingTaskIdToTaskRequest = getDueTaskRequestHolders();
 

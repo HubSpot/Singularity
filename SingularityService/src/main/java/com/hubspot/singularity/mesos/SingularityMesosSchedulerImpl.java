@@ -8,8 +8,6 @@ import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
 
 import javax.inject.Singleton;
@@ -85,8 +83,6 @@ public class SingularityMesosSchedulerImpl extends SingularityMesosScheduler {
   private final SingularityConfiguration configuration;
   private final TaskManager taskManager;
   private final Transcoder<SingularityTaskDestroyFrameworkMessage> transcoder;
-
-  private final Lock stateLock;
   private final SingularitySchedulerLock lock;
 
   private volatile SchedulerState state;
@@ -131,28 +127,21 @@ public class SingularityMesosSchedulerImpl extends SingularityMesosScheduler {
     this.leaderCacheCoordinator = leaderCacheCoordinator;
     this.queuedUpdates = Lists.newArrayList();
     this.lock = lock;
-    this.stateLock = new ReentrantLock();
     this.state = SchedulerState.NOT_STARTED;
     this.configuration = configuration;
   }
 
   @Override
   public void subscribed(Subscribed subscribed) {
-    callWithLock(() -> {
+    callWithStateLock(() -> {
       Preconditions.checkState(state == SchedulerState.NOT_STARTED, "Asked to startup - but in invalid state: %s", state.name());
 
       leaderCacheCoordinator.activateLeaderCache();
       MasterInfo newMasterInfo = subscribed.getMasterInfo();
       masterInfo.set(newMasterInfo);
       startup.startup(newMasterInfo);
-      stateLock.lock(); // ensure we aren't adding queued updates. calls to status updates are now blocked.
-
-      try {
-        state = SchedulerState.SUBSCRIBED;
-        queuedUpdates.forEach(statusUpdateHandler::processStatusUpdate);
-      } finally {
-        stateLock.unlock();
-      }
+      state = SchedulerState.SUBSCRIBED;
+      queuedUpdates.forEach(this::handleStatusUpdateAsync);
     }, "subscribed", false);
   }
 
@@ -164,7 +153,7 @@ public class SingularityMesosSchedulerImpl extends SingularityMesosScheduler {
       mesosSchedulerClient.decline(offers.stream().map(Offer::getId).collect(Collectors.toList()));
       return;
     }
-    callWithLock(() -> {
+    callWithOffersLock(() -> {
       final long start = System.currentTimeMillis();
       lastOfferTimestamp = Optional.of(start);
       LOG.info("Received {} offer(s)", offers.size());
@@ -230,9 +219,9 @@ public class SingularityMesosSchedulerImpl extends SingularityMesosScheduler {
         LOG.error("Received fatal error while handling offers - will decline all available offers", t);
 
         mesosSchedulerClient.decline(offersToCheck.stream()
-        .filter((o) -> !acceptedOffers.contains(o.getId()))
-        .map(Offer::getId)
-        .collect(Collectors.toList()));
+            .filter((o) -> !acceptedOffers.contains(o.getId()))
+            .map(Offer::getId)
+            .collect(Collectors.toList()));
 
         throw t;
       }
@@ -249,7 +238,7 @@ public class SingularityMesosSchedulerImpl extends SingularityMesosScheduler {
 
   @Override
   public void rescind(OfferID offerId) {
-    callWithLock(() -> offerCache.rescindOffer(offerId), "rescind");
+    callWithOffersLock(() -> offerCache.rescindOffer(offerId), "rescind");
   }
 
   @Override
@@ -259,40 +248,22 @@ public class SingularityMesosSchedulerImpl extends SingularityMesosScheduler {
 
   @Override
   public void statusUpdate(TaskStatus status) {
-    final long start = System.currentTimeMillis();
-    stateLock.lock();
-
-    try {
-      if (!isRunning()) {
-        LOG.info("Scheduler is in state {}, queueing an update {} - {} queued updates so far", state.name(), status, queuedUpdates.size());
-        queuedUpdates.add(status);
-        return;
-      }
-    } finally {
-      stateLock.unlock();
+    long start = System.currentTimeMillis();
+    if (!isRunning()) {
+      LOG.info("Scheduler is in state {}, queueing an update {} - {} queued updates so far", state.name(), status, queuedUpdates.size());
+      queuedUpdates.add(status);
+      return;
     }
-
-    try {
-      statusUpdateHandler.processStatusUpdate(status);
-    } catch (Throwable t) {
-      LOG.error("Scheduler threw an uncaught exception - exiting", t);
-      exceptionNotifier.notify(String.format("Scheduler threw an uncaught exception (%s)", t.getMessage()), t);
-      notifyStopping();
-      abort.abort(AbortReason.UNRECOVERABLE_ERROR, Optional.of(t));
-    } finally {
-      LOG.debug("Handled status update for {} in {}", status.getTaskId().getValue(), JavaUtils.duration(start));
-    }
+    handleStatusUpdateAsync(status);
   }
 
   @Override
   public void message(Message message) {
-    callWithLock(() -> {
-      ExecutorID executorID = message.getExecutorId();
-      AgentID slaveId = message.getAgentId();
-      byte[] data = message.getData().toByteArray();
-      LOG.info("Framework message from executor {} on slave {} with {} bytes of data", executorID, slaveId, data.length);
-      messageHandler.handleMessage(executorID, slaveId, data);
-    }, "frameworkMessage");
+    ExecutorID executorID = message.getExecutorId();
+    AgentID slaveId = message.getAgentId();
+    byte[] data = message.getData().toByteArray();
+    LOG.info("Framework message from executor {} on slave {} with {} bytes of data", executorID, slaveId, data.length);
+    messageHandler.handleMessage(executorID, slaveId, data);
   }
 
   @Override
@@ -300,17 +271,17 @@ public class SingularityMesosSchedulerImpl extends SingularityMesosScheduler {
     if (failure.hasExecutorId()) {
       LOG.warn("Lost an executor {} on slave {} with status {}", failure.getExecutorId(), failure.getAgentId(), failure.getStatus());
     } else {
-      callWithLock(() -> slaveLost(failure.getAgentId()), "slaveLost");
+      slaveLost(failure.getAgentId());
     }
   }
 
   @Override
   public void error(String message) {
-    callWithLock(() -> {
+    callWithStateLock(() -> {
       LOG.error("Aborting due to error: {}", message);
       notifyStopping();
       abort.abort(AbortReason.MESOS_ERROR, Optional.absent());
-    }, "error");
+    }, "error", true);
   }
 
   @Override
@@ -320,7 +291,7 @@ public class SingularityMesosSchedulerImpl extends SingularityMesosScheduler {
 
   @Override
   public void onUncaughtException(Throwable t) {
-    callWithLock(() -> {
+    callWithStateLock(() -> {
       if (t instanceof PrematureChannelClosureException) {
         LOG.error("Lost connection to the mesos master, aborting", t);
         notifyStopping();
@@ -330,16 +301,16 @@ public class SingularityMesosSchedulerImpl extends SingularityMesosScheduler {
         notifyStopping();
         abort.abort(AbortReason.MESOS_ERROR, Optional.absent());
       }
-    }, "errorUncaughtException");
+    }, "errorUncaughtException", true);
   }
 
   @Override
   public void onConnectException(Throwable t) {
-    callWithLock(() -> {
+    callWithStateLock(() -> {
       LOG.error("Unable to connect to mesos master {}", t.getMessage(), t);
       notifyStopping();
       abort.abort(AbortReason.MESOS_ERROR, Optional.absent());
-    }, "errorUncaughtException", false);
+    }, "errorConnectException", false);
   }
 
   @Override
@@ -354,16 +325,12 @@ public class SingularityMesosSchedulerImpl extends SingularityMesosScheduler {
     mesosSchedulerClient.subscribe(masterUrl, this);
   }
 
-  private void callWithLock(Runnable function, String name) {
-    callWithLock(function, name, true);
-  }
-
-  private void callWithLock(Runnable function, String name, boolean ignoreIfNotRunning) {
-    if (ignoreIfNotRunning && !isRunning()) {
+  private void callWithOffersLock(Runnable function, String name) {
+    if (!isRunning()) {
       LOG.info("Ignoring {} because scheduler isn't running ({})", name, state);
       return;
     }
-    final long start = lock.lock(name);
+    final long start = lock.lockOffers(name);
     try {
       function.run();
     } catch (Throwable t) {
@@ -372,7 +339,25 @@ public class SingularityMesosSchedulerImpl extends SingularityMesosScheduler {
       notifyStopping();
       abort.abort(AbortReason.UNRECOVERABLE_ERROR, Optional.of(t));
     } finally {
-      lock.unlock(name, start);
+      lock.unlockOffers(name, start);
+    }
+  }
+
+  private void callWithStateLock(Runnable function, String name, boolean ignoreIfNotRunning) {
+    if (ignoreIfNotRunning && !isRunning()) {
+      LOG.info("Ignoring {} because scheduler isn't running ({})", name, state);
+      return;
+    }
+    final long start = lock.lockState(name);
+    try {
+      function.run();
+    } catch (Throwable t) {
+      LOG.error("Scheduler threw an uncaught exception - exiting", t);
+      exceptionNotifier.notify(String.format("Scheduler threw an uncaught exception (%s)", t.getMessage()), t);
+      notifyStopping();
+      abort.abort(AbortReason.UNRECOVERABLE_ERROR, Optional.of(t));
+    } finally {
+      lock.unlockState(name, start);
     }
   }
 
@@ -392,12 +377,10 @@ public class SingularityMesosSchedulerImpl extends SingularityMesosScheduler {
   }
 
   public void setSubscribed() {
-    stateLock.lock();
-    try {
+    callWithStateLock(() -> {
       state = SchedulerState.SUBSCRIBED;
-    } finally {
-      stateLock.unlock();
-    }
+      return;
+    }, "setSubscribed", false);
   }
 
   public Optional<MasterInfo> getMaster() {
@@ -455,5 +438,21 @@ public class SingularityMesosSchedulerImpl extends SingularityMesosScheduler {
 
   public SchedulerState getState() {
     return state;
+  }
+
+  private void handleStatusUpdateAsync(TaskStatus status) {
+    long start = System.currentTimeMillis();
+    statusUpdateHandler.processStatusUpdateAsync(status)
+        .whenCompleteAsync((result, throwable) -> {
+          if (throwable != null) {
+            exceptionNotifier.notify(String.format("Scheduler threw an uncaught exception (%s)", throwable.getMessage()), throwable);
+            notifyStopping();
+            abort.abort(AbortReason.UNRECOVERABLE_ERROR, Optional.of(throwable));
+          }
+          if (status.hasUuid()) {
+            mesosSchedulerClient.acknowledge(status.getAgentId(), status.getTaskId(), status.getUuid());
+          }
+          LOG.debug("Handled status update for {} in {}", status.getTaskId().getValue(), JavaUtils.duration(start));
+        });
   }
 }

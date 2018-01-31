@@ -11,7 +11,6 @@ import com.google.inject.Inject;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.SingularityAction;
 import com.hubspot.singularity.config.SingularityConfiguration;
-import com.hubspot.singularity.mesos.SingularitySchedulerLock;
 import com.hubspot.singularity.data.DisasterManager;
 
 @Singleton
@@ -23,8 +22,8 @@ public class SingularityDeployPoller extends SingularityLeaderOnlyPoller {
   private final DisasterManager disasterManager;
 
   @Inject
-  SingularityDeployPoller(SingularityDeployChecker deployChecker, SingularityConfiguration configuration, SingularitySchedulerLock lock, DisasterManager disasterManager) {
-    super(configuration.getCheckDeploysEverySeconds(), TimeUnit.SECONDS, lock, true);
+  SingularityDeployPoller(SingularityDeployChecker deployChecker, SingularityConfiguration configuration, DisasterManager disasterManager) {
+    super(configuration.getCheckDeploysEverySeconds(), TimeUnit.SECONDS, true);
 
     this.deployChecker = deployChecker;
     this.disasterManager = disasterManager;
