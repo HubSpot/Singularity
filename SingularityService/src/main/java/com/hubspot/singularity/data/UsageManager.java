@@ -6,6 +6,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.stream.Collectors;
 
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.utils.ZKPaths;
@@ -187,23 +188,19 @@ public class UsageManager extends CuratorAsyncManager {
     return getData(USAGE_SUMMARY_PATH, clusterUtilizationTranscoder);
   }
 
-  public List<SingularitySlaveUsageWithId> getCurrentSlaveUsages(List<String> slaveIds) {
+  public Map<String, SingularitySlaveUsage> getCurrentSlaveUsages(List<String> slaveIds) {
     List<String> paths = new ArrayList<>(slaveIds.size());
     for (String slaveId : slaveIds) {
       paths.add(getCurrentSlaveUsagePath(slaveId));
     }
 
-    Map<String, SingularitySlaveUsage> currentSlaveUsage = getAsyncWithPath("getAllCurrentSlaveUsage", paths, slaveUsageTranscoder);
-    List<SingularitySlaveUsageWithId> slaveUsageWithIds = new ArrayList<>(currentSlaveUsage.size());
-    for (Entry<String, SingularitySlaveUsage> entry : currentSlaveUsage.entrySet()) {
-      slaveUsageWithIds.add(new SingularitySlaveUsageWithId(entry.getValue(), getSlaveIdFromCurrentUsagePath(entry.getKey())));
-    }
-
-    return slaveUsageWithIds;
+    return getAsyncWithPath("getAllCurrentSlaveUsage", paths, slaveUsageTranscoder);
   }
 
   public List<SingularitySlaveUsageWithId> getAllCurrentSlaveUsage() {
-    return getCurrentSlaveUsages(getSlavesWithUsage());
+    return getCurrentSlaveUsages(getSlavesWithUsage()).entrySet().stream()
+        .map((entry) -> new SingularitySlaveUsageWithId(entry.getValue(), entry.getKey()))
+        .collect(Collectors.toList());
   }
 
   public List<Long> getSlaveUsageTimestamps(String slaveId) {

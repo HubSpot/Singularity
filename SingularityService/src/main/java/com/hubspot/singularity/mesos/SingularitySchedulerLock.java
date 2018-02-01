@@ -25,26 +25,16 @@ public class SingularitySchedulerLock {
   }
 
   public long lock(String requestId, String name) {
-    synchronized (stateLock) {
-      while (stateLock.isLocked()) {
-        try {
-          stateLock.wait();
-        } catch (InterruptedException ie) {
-          LOG.error("Interrupted while waiting for global lock", ie);
-          throw new RuntimeException(ie);
-        }
-      }
-    }
     final long start = System.currentTimeMillis();
-    LOG.info("{} - Locking {}", name, requestId);
+    LOG.trace("{} - Locking {}", name, requestId);
     ReentrantLock lock = requestLocks.computeIfAbsent(requestId, (r) -> new ReentrantLock());
     lock.lock();
-    LOG.info("{} - Acquired lock on {} ({})", name, requestId, JavaUtils.duration(start));
+    LOG.trace("{} - Acquired lock on {} ({})", name, requestId, JavaUtils.duration(start));
     return System.currentTimeMillis();
   }
 
   public void unlock(String requestId, String name, long start) {
-    LOG.info("{} - Unlocking {} ({})", name, requestId, JavaUtils.duration(start));
+    LOG.trace("{} - Unlocking {} ({})", name, requestId, JavaUtils.duration(start));
     ReentrantLock lock = requestLocks.computeIfAbsent(requestId, (r) -> new ReentrantLock());
     lock.unlock();
   }
@@ -70,26 +60,22 @@ public class SingularitySchedulerLock {
 
   public void unlockState(String name, long start) {
     LOG.info("{} - Unlocking state lock ({})", name, JavaUtils.duration(start));
-    synchronized (stateLock) {
-      stateLock.unlock();
-    }
+    stateLock.unlock();
   }
 
   public long lockOffers(String name) {
     final long start = System.currentTimeMillis();
-    LOG.info("{} - Locking offers lock", name);
+    LOG.debug("{} - Locking offers lock", name);
     synchronized (offersLock) {
       offersLock.lock();
     }
-    LOG.info("{} - Acquired offers lock ({})", name, JavaUtils.duration(start));
+    LOG.debug("{} - Acquired offers lock ({})", name, JavaUtils.duration(start));
     return System.currentTimeMillis();
   }
 
   public void unlockOffers(String name, long start) {
-    LOG.info("{} - Unlocking offers lock ({})", name, JavaUtils.duration(start));
-    synchronized (offersLock) {
-      offersLock.unlock();
-    }
+    LOG.debug("{} - Unlocking offers lock ({})", name, JavaUtils.duration(start));
+    offersLock.unlock();
   }
 
 }

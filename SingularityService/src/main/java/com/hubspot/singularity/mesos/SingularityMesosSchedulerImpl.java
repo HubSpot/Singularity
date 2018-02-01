@@ -248,7 +248,6 @@ public class SingularityMesosSchedulerImpl extends SingularityMesosScheduler {
 
   @Override
   public void statusUpdate(TaskStatus status) {
-    long start = System.currentTimeMillis();
     if (!isRunning()) {
       LOG.info("Scheduler is in state {}, queueing an update {} - {} queued updates so far", state.name(), status, queuedUpdates.size());
       queuedUpdates.add(status);

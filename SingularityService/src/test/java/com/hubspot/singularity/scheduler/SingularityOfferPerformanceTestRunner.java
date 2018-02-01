@@ -5,6 +5,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.mesos.v1.Protos.Offer;
@@ -31,8 +33,8 @@ public class SingularityOfferPerformanceTestRunner extends SingularitySchedulerT
   public void testSchedulerPerformance() {
     long start = System.currentTimeMillis();
 
-    int numRequests = 2000;
-    int numOffers = 1000;
+    int numRequests = 1000;
+    int numOffers = 500;
 
     Random r = new Random();
     Iterator<Double> cpuIterator = r.doubles(1, 5).iterator();
@@ -69,29 +71,30 @@ public class SingularityOfferPerformanceTestRunner extends SingularitySchedulerT
 
     start = System.currentTimeMillis();
 
+    ExecutorService statusUpadtes = Executors.newFixedThreadPool(100);
     CompletableFuture<Void>[] updateFutures = new CompletableFuture[taskManager.getActiveTaskIds().size()*5];
     AtomicInteger i = new AtomicInteger(0);
     for (SingularityTaskId taskId : taskManager.getActiveTaskIds()) {
       updateFutures[i.getAndIncrement()] = CompletableFuture.supplyAsync(() -> {
         statusUpdate(taskManager.getTask(taskId).get(), TaskState.TASK_STAGING);
         return null;
-      });
+      }, statusUpadtes);
       updateFutures[i.getAndIncrement()] = CompletableFuture.supplyAsync(() -> {
         statusUpdate(taskManager.getTask(taskId).get(), TaskState.TASK_STARTING);
         return null;
-      });
+      }, statusUpadtes);
       updateFutures[i.getAndIncrement()] = CompletableFuture.supplyAsync(() -> {
         statusUpdate(taskManager.getTask(taskId).get(), TaskState.TASK_RUNNING);
         return null;
-      });
+      }, statusUpadtes);
       updateFutures[i.getAndIncrement()] = CompletableFuture.supplyAsync(() -> {
         statusUpdate(taskManager.getTask(taskId).get(), TaskState.TASK_FAILED);
         return null;
-      });
+      }, statusUpadtes);
       updateFutures[i.getAndIncrement()] = CompletableFuture.supplyAsync(() -> {
         statusUpdate(taskManager.getTask(taskId).get(), TaskState.TASK_FAILED);
         return null;
-      });
+      }, statusUpadtes);
     }
     CompletableFuture.allOf(updateFutures).join();
 

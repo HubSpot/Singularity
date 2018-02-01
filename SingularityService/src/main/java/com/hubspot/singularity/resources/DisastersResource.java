@@ -9,7 +9,6 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
 import com.google.common.base.Optional;
@@ -18,7 +17,6 @@ import com.hubspot.singularity.SingularityAction;
 import com.hubspot.singularity.SingularityDisabledAction;
 import com.hubspot.singularity.SingularityDisasterType;
 import com.hubspot.singularity.SingularityDisastersData;
-import com.hubspot.singularity.SingularityTaskCredits;
 import com.hubspot.singularity.SingularityUser;
 import com.hubspot.singularity.api.SingularityDisabledActionRequest;
 import com.hubspot.singularity.auth.SingularityAuthorizationHelper;
@@ -116,30 +114,5 @@ public class DisastersResource {
   public void enableAction(@Auth SingularityUser user, @PathParam("action") SingularityAction action) {
     authorizationHelper.checkAdminAuthorization(user);
     disasterManager.enable(action);
-  }
-
-  @POST
-  @Path("/task-credits")
-  @ApiOperation(value="Add task credits, enables task credit system if not already enabled")
-  public void addTaskCredits(@Auth SingularityUser user, @QueryParam("credits") Optional<Integer> credits) throws Exception {
-    authorizationHelper.checkAdminAuthorization(user);
-    disasterManager.enableTaskCredits();
-    disasterManager.enqueueCreditsChange(credits.or(0));
-  }
-
-  @DELETE
-  @Path("/task-credits")
-  @ApiOperation(value="Disable task credit system")
-  public void disableTaskCredits(@Auth SingularityUser user) throws Exception {
-    authorizationHelper.checkAdminAuthorization(user);
-    disasterManager.disableTaskCredits();
-  }
-
-  @GET
-  @Path("/task-credits")
-  @ApiOperation(value="Get task credit data")
-  public SingularityTaskCredits getTaskCreditData(@Auth SingularityUser user) throws Exception {
-    authorizationHelper.checkAdminAuthorization(user);
-    return new SingularityTaskCredits(disasterManager.isTaskCreditEnabled(), disasterManager.getTaskCredits());
   }
 }

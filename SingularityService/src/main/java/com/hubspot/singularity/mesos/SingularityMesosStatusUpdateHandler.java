@@ -30,6 +30,7 @@ import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskHistoryUpdate;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTaskStatusHolder;
+import com.hubspot.singularity.async.AsyncSemaphore;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.DeployManager;
 import com.hubspot.singularity.data.RequestManager;
@@ -68,6 +69,7 @@ public class SingularityMesosStatusUpdateHandler {
   private final ConcurrentHashMap<Long, Long> statusUpdateDeltas;
 
   private final ExecutorService statusUpdatesExecutor = Executors.newCachedThreadPool(new ThreadFactoryBuilder().setNameFormat("status-updates-%d").build());
+  private final AsyncSemaphore<Boolean> statusUpdatesSemaphore;
 
   @Inject
   public SingularityMesosStatusUpdateHandler(TaskManager taskManager,
@@ -106,6 +108,10 @@ public class SingularityMesosStatusUpdateHandler {
     this.taskLostReasons = taskLostReasons;
     this.lostTasksMeter = lostTasksMeter;
     this.statusUpdateDeltas = statusUpdateDeltas;
+    this.statusUpdatesSemaphore = AsyncSemaphore
+        .newBuilder(() -> configuration.getMesosConfiguration().getStatusUpdateConcurrencyLimit())
+        .withQueueSize(configuration.getMesosConfiguration().getMaxStatusUpdateQueueSize())
+        .build();
   }
 
   /**
@@ -252,25 +258,26 @@ public class SingularityMesosStatusUpdateHandler {
   }
 
   public CompletableFuture<Boolean> processStatusUpdateAsync(Protos.TaskStatus status) {
-    return CompletableFuture.supplyAsync(() -> {
-      long insideLock = 0;
-      final String taskId = status.getTaskId().getValue();
-      final Optional<SingularityTaskId> maybeTaskId = getTaskId(taskId);
+    return statusUpdatesSemaphore.call(() -> CompletableFuture.supplyAsync(() -> {
+        long insideLock = 0;
+        final String taskId = status.getTaskId().getValue();
+        final Optional<SingularityTaskId> maybeTaskId = getTaskId(taskId);
 
-      if (!maybeTaskId.isPresent()) {
-        return false;
-      }
+        if (!maybeTaskId.isPresent()) {
+          return false;
+        }
 
-      final long start = schedulerLock.lock(maybeTaskId.get().getRequestId(), "statusUpdate");
-      try {
-        insideLock = System.currentTimeMillis();
-        unsafeProcessStatusUpdate(status, maybeTaskId.get());
-      } finally {
-        schedulerLock.unlock(maybeTaskId.get().getRequestId(), "statusUpdate", start);
-        LOG.info("Processed status update for {} ({}) in {} (waited {} for lock)", status.getTaskId()
-            .getValue(), status.getState(), JavaUtils.duration(start), JavaUtils.durationFromMillis(insideLock - start));
-      }
-      return true;
-    }, statusUpdatesExecutor);
+        final long start = schedulerLock.lock(maybeTaskId.get().getRequestId(), "statusUpdate");
+        try {
+          insideLock = System.currentTimeMillis();
+          unsafeProcessStatusUpdate(status, maybeTaskId.get());
+        } finally {
+          schedulerLock.unlock(maybeTaskId.get().getRequestId(), "statusUpdate", start);
+          LOG.info("Processed status update for {} ({}) in {} (waited {} for lock)", status.getTaskId()
+              .getValue(), status.getState(), JavaUtils.duration(start), JavaUtils.durationFromMillis(insideLock - start));
+        }
+        return true;
+      }, statusUpdatesExecutor)
+    );
   }
 }

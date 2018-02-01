@@ -12,6 +12,7 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 import javax.inject.Singleton;
@@ -218,7 +219,6 @@ public class SingularityScheduler {
 
   @Timed
   public void drainPendingQueue() {
-    REQUEST LOCK
     final long start = System.currentTimeMillis();
     final ImmutableList<SingularityPendingRequest> pendingRequests = ImmutableList.copyOf(requestManager.getPendingRequests());
 
@@ -227,89 +227,94 @@ public class SingularityScheduler {
       return;
     }
 
-    Map<SingularityDeployKey, List<SingularityPendingRequest>> deployKeyToPendingRequests = groupPendingRequests(pendingRequests);
-
     LOG.info("Pending queue had {} requests", pendingRequests.size());
 
-    int totalNewScheduledTasks = 0;
-    int heldForScheduledActiveTask = 0;
-    int obsoleteRequests = 0;
+    Map<SingularityDeployKey, List<SingularityPendingRequest>> deployKeyToPendingRequests = pendingRequests.stream()
+        .collect(Collectors.groupingBy((request) -> new SingularityDeployKey(request.getRequestId(), request.getDeployId())));
 
-    for (Entry<SingularityDeployKey, List<SingularityPendingRequest>> singularityDeployKeyListEntry : deployKeyToPendingRequests.entrySet()) {
-      final String requestId = singularityDeployKeyListEntry.getKey().getRequestId();
-      final SingularityDeployKey deployKey = singularityDeployKeyListEntry.getKey();
-      final List<SingularityPendingRequest> pendingRequestsForDeploy = singularityDeployKeyListEntry.getValue();
-      final Optional<SingularityRequestWithState> maybeRequest = requestManager.getRequest(requestId);
-      final SingularityDeployStatistics deployStatistics = getDeployStatistics(deployKey.getRequestId(), deployKey.getDeployId());
+    AtomicInteger totalNewScheduledTasks = new AtomicInteger(0);
+    AtomicInteger heldForScheduledActiveTask = new AtomicInteger(0);
+    AtomicInteger obsoleteRequests = new AtomicInteger(0);
 
-      if (!isRequestActive(maybeRequest)) {
-        LOG.debug("Pending request {} was obsolete (request {})", requestId, SingularityRequestWithState.getRequestState(maybeRequest));
-        obsoleteRequests++;
-        for (SingularityPendingRequest pendingRequest : pendingRequestsForDeploy) {
-          requestManager.deletePendingRequest(pendingRequest);
-        }
+    deployKeyToPendingRequests.entrySet().parallelStream()
+        .forEach((deployKeyToPendingRequest) -> {
+          handlePendingRequestsForDeployKey(obsoleteRequests, heldForScheduledActiveTask, totalNewScheduledTasks, deployKeyToPendingRequest.getKey(), deployKeyToPendingRequest.getValue());
+        });
+
+    LOG.info("Scheduled {} new tasks ({} obsolete requests, {} held) in {}", totalNewScheduledTasks.get(), obsoleteRequests.get(), heldForScheduledActiveTask.get(), JavaUtils.duration(start));
+  }
+
+  private void handlePendingRequestsForDeployKey(AtomicInteger obsoleteRequests, AtomicInteger heldForScheduledActiveTask, AtomicInteger totalNewScheduledTasks, SingularityDeployKey deployKey, List<SingularityPendingRequest> pendingRequestsForDeploy) {
+    final String requestId = deployKey.getRequestId();
+    final Optional<SingularityRequestWithState> maybeRequest = requestManager.getRequest(requestId);
+    final SingularityDeployStatistics deployStatistics = getDeployStatistics(deployKey.getRequestId(), deployKey.getDeployId());
+
+    if (!isRequestActive(maybeRequest)) {
+      LOG.debug("Pending request {} was obsolete (request {})", requestId, SingularityRequestWithState.getRequestState(maybeRequest));
+      obsoleteRequests.getAndIncrement();
+      for (SingularityPendingRequest pendingRequest : pendingRequestsForDeploy) {
+        requestManager.deletePendingRequest(pendingRequest);
+      }
+      return;
+    }
+
+    SingularityRequestWithState request = maybeRequest.get();
+
+    Optional<SingularityRequestDeployState> maybeRequestDeployState = deployManager.getRequestDeployState(requestId);
+    Optional<SingularityPendingDeploy> maybePendingDeploy = deployManager.getPendingDeploy(requestId);
+    List<SingularityTaskId> matchingTaskIds = getMatchingTaskIds(request.getRequest(), deployKey);
+
+    List<SingularityPendingRequest> effectivePendingRequests = new ArrayList<>();
+
+    // Things that are closest to now (ie smaller timestamps) should come first in the queue
+    pendingRequestsForDeploy.sort(Comparator.comparingLong(SingularityPendingRequest::getTimestamp));
+    int scheduledTasks = 0;
+    for (SingularityPendingRequest pendingRequest : pendingRequestsForDeploy) {
+      final SingularityRequest updatedRequest = updatedRequest(maybePendingDeploy, pendingRequest, request);
+
+      if (!shouldScheduleTasks(updatedRequest, pendingRequest, maybePendingDeploy, maybeRequestDeployState)) {
+        LOG.debug("Pending request {} was obsolete (request {})", pendingRequest, SingularityRequestWithState.getRequestState(maybeRequest));
+        obsoleteRequests.getAndIncrement();
+        requestManager.deletePendingRequest(pendingRequest);
         continue;
       }
 
-      Optional<SingularityRequestDeployState> maybeRequestDeployState = deployManager.getRequestDeployState(requestId);
-      Optional<SingularityPendingDeploy> maybePendingDeploy = deployManager.getPendingDeploy(requestId);
-      List<SingularityTaskId> matchingTaskIds = getMatchingTaskIds(maybeRequest.get().getRequest(), deployKey);
-
-      List<SingularityPendingRequest> effectivePendingRequests = new ArrayList<>();
-
-      // Things that are closest to now (ie smaller timestamps) should come first in the queue
-      pendingRequestsForDeploy.sort(Comparator.comparingLong(SingularityPendingRequest::getTimestamp));
-      int scheduledTasks = 0;
-      for (SingularityPendingRequest pendingRequest : pendingRequestsForDeploy) {
-        final SingularityRequest updatedRequest = updatedRequest(maybePendingDeploy, pendingRequest, maybeRequest.get());
-
-        if (!shouldScheduleTasks(updatedRequest, pendingRequest, maybePendingDeploy, maybeRequestDeployState)) {
-          LOG.debug("Pending request {} was obsolete (request {})", pendingRequest, SingularityRequestWithState.getRequestState(maybeRequest));
-          obsoleteRequests++;
-          requestManager.deletePendingRequest(pendingRequest);
-          continue;
-        }
-
-        int missingInstances = getNumMissingInstances(matchingTaskIds, updatedRequest, pendingRequest, maybePendingDeploy);
-        if (missingInstances == 0 && !matchingTaskIds.isEmpty() && updatedRequest.isScheduled() && pendingRequest.getPendingType() == PendingType.NEW_DEPLOY) {
-          LOG.trace("Holding pending request {} because it is scheduled and has an active task", pendingRequest);
-          heldForScheduledActiveTask++;
-          continue;
-        }
-
-        if (effectivePendingRequests.isEmpty()) {
-          effectivePendingRequests.add(pendingRequest);
-          RequestState requestState = checkCooldown(maybeRequest.get().getState(), maybeRequest.get().getRequest(), deployStatistics);
-          scheduledTasks += scheduleTasks(maybeRequest.get().getRequest(), requestState,
-              deployStatistics, pendingRequest, matchingTaskIds, maybePendingDeploy);
-          requestManager.deletePendingRequest(pendingRequest);
-        } else if (pendingRequest.getPendingType() == PendingType.IMMEDIATE) {
-          effectivePendingRequests.add(pendingRequest);
-          RequestState requestState = checkCooldown(maybeRequest.get().getState(), maybeRequest.get().getRequest(), deployStatistics);
-          scheduledTasks += scheduleTasks(maybeRequest.get().getRequest(), requestState,
-              deployStatistics, pendingRequest, matchingTaskIds, maybePendingDeploy);
-          requestManager.deletePendingRequest(pendingRequest);
-        } else if (pendingRequest.getPendingType() == PendingType.ONEOFF) {
-          effectivePendingRequests.add(pendingRequest);
-          RequestState requestState = checkCooldown(maybeRequest.get().getState(), maybeRequest.get().getRequest(), deployStatistics);
-          scheduledTasks += scheduleTasks(maybeRequest.get().getRequest(), requestState,
-              deployStatistics, pendingRequest, matchingTaskIds, maybePendingDeploy);
-          requestManager.deletePendingRequest(pendingRequest);
-        } else if (updatedRequest.isScheduled()
-            && (pendingRequest.getPendingType() == PendingType.NEW_DEPLOY
-            || pendingRequest.getPendingType() == PendingType.TASK_DONE)) {
-          // If we are here, there is already an immediate of run of the scheduled task launched. Drop anything that would
-          // leave a second instance of the request in the pending queue.
-          requestManager.deletePendingRequest(pendingRequest);
-        } else {
-          // Any other subsequent requests are not honored until after the pending queue is cleared.
-        }
+      int missingInstances = getNumMissingInstances(matchingTaskIds, updatedRequest, pendingRequest, maybePendingDeploy);
+      if (missingInstances == 0 && !matchingTaskIds.isEmpty() && updatedRequest.isScheduled() && pendingRequest.getPendingType() == PendingType.NEW_DEPLOY) {
+        LOG.trace("Holding pending request {} because it is scheduled and has an active task", pendingRequest);
+        heldForScheduledActiveTask.getAndIncrement();
+        continue;
       }
 
-      totalNewScheduledTasks += scheduledTasks;
+      if (effectivePendingRequests.isEmpty()) {
+        effectivePendingRequests.add(pendingRequest);
+        RequestState requestState = checkCooldown(request.getState(), request.getRequest(), deployStatistics);
+        scheduledTasks += scheduleTasks(request.getRequest(), requestState,
+            deployStatistics, pendingRequest, matchingTaskIds, maybePendingDeploy);
+        requestManager.deletePendingRequest(pendingRequest);
+      } else if (pendingRequest.getPendingType() == PendingType.IMMEDIATE) {
+        effectivePendingRequests.add(pendingRequest);
+        RequestState requestState = checkCooldown(request.getState(), request.getRequest(), deployStatistics);
+        scheduledTasks += scheduleTasks(request.getRequest(), requestState,
+            deployStatistics, pendingRequest, matchingTaskIds, maybePendingDeploy);
+        requestManager.deletePendingRequest(pendingRequest);
+      } else if (pendingRequest.getPendingType() == PendingType.ONEOFF) {
+        effectivePendingRequests.add(pendingRequest);
+        RequestState requestState = checkCooldown(request.getState(), request.getRequest(), deployStatistics);
+        scheduledTasks += scheduleTasks(request.getRequest(), requestState,
+            deployStatistics, pendingRequest, matchingTaskIds, maybePendingDeploy);
+        requestManager.deletePendingRequest(pendingRequest);
+      } else if (updatedRequest.isScheduled()
+          && (pendingRequest.getPendingType() == PendingType.NEW_DEPLOY
+          || pendingRequest.getPendingType() == PendingType.TASK_DONE)) {
+        // If we are here, there is already an immediate of run of the scheduled task launched. Drop anything that would
+        // leave a second instance of the request in the pending queue.
+        requestManager.deletePendingRequest(pendingRequest);
+      }
+      // Any other subsequent requests are not honored until after the pending queue is cleared.
     }
 
-    LOG.info("Scheduled {} new tasks ({} obsolete requests, {} held) in {}", totalNewScheduledTasks, obsoleteRequests, heldForScheduledActiveTask, JavaUtils.duration(start));
+    totalNewScheduledTasks.getAndAdd(scheduledTasks);
   }
 
   private RequestState checkCooldown(RequestState requestState, SingularityRequest request, SingularityDeployStatistics deployStatistics) {
@@ -882,11 +887,4 @@ public class SingularityScheduler {
       return currentRequest.getRequest();
     }
   }
-
-  private Map<SingularityDeployKey, List<SingularityPendingRequest>> groupPendingRequests(List<SingularityPendingRequest> inputPendingRequests) {
-    return inputPendingRequests.stream()
-        .collect(Collectors.groupingBy((request) -> new SingularityDeployKey(request.getRequestId(), request.getDeployId())));
-  }
-
-
 }

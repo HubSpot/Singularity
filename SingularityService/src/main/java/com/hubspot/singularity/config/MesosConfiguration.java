@@ -52,6 +52,8 @@ public class MesosConfiguration {
   private Optional<String> credentialSecret = Optional.absent();
 
   private long rxEventBufferSize = 10000;
+  private int statusUpdateConcurrencyLimit = 500;
+  private int maxStatusUpdateQueueSize = 5000;
 
   public int getMaxNumInstancesPerRequest() {
     return maxNumInstancesPerRequest;
@@ -243,6 +245,24 @@ public class MesosConfiguration {
 
   public MesosConfiguration setRxEventBufferSize(long rxEventBufferSize) {
     this.rxEventBufferSize = rxEventBufferSize;
+    return this;
+  }
+
+  public int getStatusUpdateConcurrencyLimit() {
+    return statusUpdateConcurrencyLimit;
+  }
+
+  public MesosConfiguration setStatusUpdateConcurrencyLimit(int statusUpdateConcurrencyLimit) {
+    this.statusUpdateConcurrencyLimit = statusUpdateConcurrencyLimit;
+    return this;
+  }
+
+  public int getMaxStatusUpdateQueueSize() {
+    return maxStatusUpdateQueueSize;
+  }
+
+  public MesosConfiguration setMaxStatusUpdateQueueSize(int maxStatusUpdateQueueSize) {
+    this.maxStatusUpdateQueueSize = maxStatusUpdateQueueSize;
     return this;
   }
 }
