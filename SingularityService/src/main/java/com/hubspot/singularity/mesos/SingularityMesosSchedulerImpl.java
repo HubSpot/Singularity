@@ -294,11 +294,11 @@ public class SingularityMesosSchedulerImpl extends SingularityMesosScheduler {
       if (t instanceof PrematureChannelClosureException) {
         LOG.error("Lost connection to the mesos master, aborting", t);
         notifyStopping();
-        abort.abort(AbortReason.LOST_MESOS_CONNECTION, Optional.absent());
+        abort.abort(AbortReason.LOST_MESOS_CONNECTION, Optional.of(t));
       } else {
         LOG.error("Aborting due to error: {}", t.getMessage(), t);
         notifyStopping();
-        abort.abort(AbortReason.MESOS_ERROR, Optional.absent());
+        abort.abort(AbortReason.MESOS_ERROR, Optional.of(t));
       }
     }, "errorUncaughtException", true);
   }
@@ -307,8 +307,13 @@ public class SingularityMesosSchedulerImpl extends SingularityMesosScheduler {
   public void onConnectException(Throwable t) {
     callWithStateLock(() -> {
       LOG.error("Unable to connect to mesos master {}", t.getMessage(), t);
-      notifyStopping();
-      abort.abort(AbortReason.MESOS_ERROR, Optional.absent());
+      try {
+        start();
+      } catch (Throwable startThrowable) {
+        LOG.error("Unable to retry mesos master connection", startThrowable);
+        notifyStopping();
+        abort.abort(AbortReason.MESOS_ERROR, Optional.of(startThrowable));
+      }
     }, "errorConnectException", false);
   }
 
