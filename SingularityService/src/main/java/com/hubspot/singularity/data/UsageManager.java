@@ -199,7 +199,7 @@ public class UsageManager extends CuratorAsyncManager {
 
   public List<SingularitySlaveUsageWithId> getAllCurrentSlaveUsage() {
     return getCurrentSlaveUsages(getSlavesWithUsage()).entrySet().stream()
-        .map((entry) -> new SingularitySlaveUsageWithId(entry.getValue(), entry.getKey()))
+        .map((entry) -> new SingularitySlaveUsageWithId(entry.getValue(), getSlaveIdFromCurrentUsagePath(entry.getKey())))
         .collect(Collectors.toList());
   }
 

@@ -182,8 +182,7 @@ public class SingularityMesosSchedulerImpl extends SingularityMesosScheduler {
       }
 
       List<Offer> offersToCheck = new ArrayList<>(offers);
-
-      for (Offer offer : offers) {
+      offers.parallelStream().forEach((offer) -> {
         String rolesInfo = MesosUtils.getRoles(offer).toString();
         LOG.debug("Received offer ID {} with roles {} from {} ({}) for {} cpu(s), {} memory, {} ports, and {} disk", offer.getId().getValue(), rolesInfo, offer.getHostname(), offer.getAgentId().getValue(), MesosUtils.getNumCpus(offer), MesosUtils.getMemory(offer),
             MesosUtils.getNumPorts(offer), MesosUtils.getDisk(offer));
@@ -194,7 +193,7 @@ public class SingularityMesosSchedulerImpl extends SingularityMesosScheduler {
           offersToCheck.remove(offer);
           LOG.debug("Will decline offer {}, slave {} is not currently in a state to launch tasks", offer.getId().getValue(), offer.getHostname());
         }
-      }
+      });
 
       final Set<OfferID> acceptedOffers = Sets.newHashSetWithExpectedSize(offersToCheck.size());
 
