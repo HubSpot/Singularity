@@ -3,13 +3,12 @@ package com.hubspot.singularity.mesos;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.Function;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
 import javax.inject.Singleton;
@@ -158,22 +157,19 @@ public class SingularityMesosOfferScheduler {
 
     for (SingularityTaskRequestHolder taskRequestHolder : sortedTaskRequestHolders) {
       lock.runWithRequestLock(() -> {
-        Map<SingularityOfferHolder, Double> scorePerOffer = offerHolders
-            .parallelStream()
-            .filter((offerHolder) ->
-                !(configuration.getMaxTasksPerOffer() > 0 && offerHolder.getAcceptedTasks().size() >= configuration.getMaxTasksPerOffer())
-                    && !fullOffers.contains(offerHolder))
-            .collect(Collectors.toMap(
-                Function.identity(),
-                (offerHolder) -> calculateScore(offerHolder, currentSlaveUsagesBySlaveId, tasksPerOfferPerRequest, taskRequestHolder)
-            ));
-        java.util.Optional<SingularityOfferHolder> bestOffer = scorePerOffer.keySet()
-            .stream()
-            .filter((offerHolder) -> scorePerOffer.get(offerHolder) > 0)
-            .max(Comparator.comparingDouble(scorePerOffer::get));
+        AtomicReference<SingularityOfferHolder> bestOffer = new AtomicReference<>(null);
+        offerHolders.parallelStream()
+          .filter((offerHolder) ->
+              !(configuration.getMaxTasksPerOffer() > 0 && offerHolder.getAcceptedTasks().size() >= configuration.getMaxTasksPerOffer())
+                  && !fullOffers.contains(offerHolder))
+          .forEach((offerHolder) -> {
+              offerHolder.setScore(calculateScore(offerHolder, currentSlaveUsagesBySlaveId, tasksPerOfferPerRequest, taskRequestHolder));
+              bestOffer.getAndUpdate((offerHolder1) -> offerHolder1 != null && offerHolder1.getScore() > offerHolder.getScore() ? offerHolder1 : offerHolder);
+            }
+          );
 
-        if (bestOffer.isPresent() && scorePerOffer.get(bestOffer.get()) > 0) {
-          LOG.info("Best offer {}/1 is on {}", scorePerOffer.get(bestOffer.get()), bestOffer.get().getSanitizedHost());
+        if (bestOffer.get() != null && bestOffer.get().getScore() > 0) {
+          LOG.info("Best offer {}/1 is on {}", bestOffer.get().getScore(), bestOffer.get().getSanitizedHost());
           SingularityMesosTaskHolder taskHolder = acceptTask(bestOffer.get(), tasksPerOfferPerRequest, taskRequestHolder);
           tasksScheduled.getAndIncrement();
           bestOffer.get().addMatchedTask(taskHolder);

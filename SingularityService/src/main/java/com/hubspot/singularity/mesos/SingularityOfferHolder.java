@@ -45,6 +45,8 @@ public class SingularityOfferHolder {
   private final Map<String, String> textAttributes;
   private final Map<String, String> reservedSlaveAttributes;
 
+  private double score = 0;
+
   public SingularityOfferHolder(List<Protos.Offer> offers, int taskSizeHint, String rackId, String slaveId, String hostname, Map<String, String> textAttributes, Map<String, String> reservedSlaveAttributes) {
     this.rackId = rackId;
     this.slaveId = slaveId;
@@ -193,6 +195,15 @@ public class SingularityOfferHolder {
 
   public List<Protos.Offer> getOffers() {
     return offers;
+  }
+
+  public double getScore() {
+    return score;
+  }
+
+  public SingularityOfferHolder setScore(double score) {
+    this.score = score;
+    return this;
   }
 
   @Override
