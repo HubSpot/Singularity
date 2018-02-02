@@ -359,7 +359,7 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
       bldr.setTimestamp(timestamp.get() / 1000);
     }
 
-    sms.statusUpdate(bldr.build());
+    sms.statusUpdate(bldr.build()).join();
   }
 
   protected void statusUpdate(SingularityTask task, TaskState state) {

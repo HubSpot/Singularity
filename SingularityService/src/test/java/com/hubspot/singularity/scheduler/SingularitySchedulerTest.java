@@ -358,6 +358,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     killKilledTasks();
 
     Assert.assertEquals(2, taskManager.getNumActiveTasks());
+    System.out.println(requestManager.getCleanupRequests());
     Assert.assertEquals(0, requestManager.getCleanupRequests().size());
     Assert.assertEquals(RequestState.ACTIVE, requestManager.getRequest(requestId).get().getState());
   }
@@ -1512,7 +1513,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
         .setState(TaskState.TASK_RUNNING);
 
     // should not throw exception:
-    sms.statusUpdate(bldr.build());
+    sms.statusUpdate(bldr.build()).join();
 
     initRequest();
     initFirstDeploy();

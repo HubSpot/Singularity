@@ -6,6 +6,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
@@ -247,13 +248,13 @@ public class SingularityMesosSchedulerImpl extends SingularityMesosScheduler {
   }
 
   @Override
-  public void statusUpdate(TaskStatus status) {
+  public CompletableFuture<Boolean> statusUpdate(TaskStatus status) {
     if (!isRunning()) {
       LOG.info("Scheduler is in state {}, queueing an update {} - {} queued updates so far", state.name(), status, queuedUpdates.size());
       queuedUpdates.add(status);
-      return;
+      return CompletableFuture.completedFuture(false);
     }
-    handleStatusUpdateAsync(status);
+    return handleStatusUpdateAsync(status);
   }
 
   @Override
@@ -439,9 +440,9 @@ public class SingularityMesosSchedulerImpl extends SingularityMesosScheduler {
     return state;
   }
 
-  private void handleStatusUpdateAsync(TaskStatus status) {
+  private CompletableFuture<Boolean> handleStatusUpdateAsync(TaskStatus status) {
     long start = System.currentTimeMillis();
-    statusUpdateHandler.processStatusUpdateAsync(status)
+    return statusUpdateHandler.processStatusUpdateAsync(status)
         .whenCompleteAsync((result, throwable) -> {
           if (throwable != null) {
             exceptionNotifier.notify(String.format("Scheduler threw an uncaught exception (%s)", throwable.getMessage()), throwable);

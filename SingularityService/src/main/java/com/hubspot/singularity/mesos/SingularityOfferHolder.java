@@ -4,6 +4,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -192,6 +193,28 @@ public class SingularityOfferHolder {
 
   public List<Protos.Offer> getOffers() {
     return offers;
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (this == obj) {
+      return true;
+    }
+    if (obj instanceof SingularityOfferHolder) {
+      final SingularityOfferHolder that = (SingularityOfferHolder) obj;
+      return Objects.equals(this.roles, that.roles) &&
+          Objects.equals(this.rackId, that.rackId) &&
+          Objects.equals(this.slaveId, that.slaveId) &&
+          Objects.equals(this.hostname, that.hostname) &&
+          Objects.equals(this.textAttributes, that.textAttributes) &&
+          Objects.equals(this.reservedSlaveAttributes, that.reservedSlaveAttributes);
+    }
+    return false;
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(roles, rackId, slaveId, hostname, textAttributes, reservedSlaveAttributes);
   }
 
   @Override

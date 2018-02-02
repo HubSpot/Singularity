@@ -1,14 +1,13 @@
 package com.hubspot.singularity.mesos;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -106,8 +105,9 @@ public class SingularityMesosOfferScheduler {
       return Collections.emptyList();
     }
 
-    final List<SingularityTaskRequestHolder> sortedTaskRequests = getSortedDueTaskRequests();
-    final int numDueTasks = sortedTaskRequests.size();
+    final List<SingularityTaskRequest> sortedTaskRequests = getSortedDueTaskRequests();
+    final List<SingularityTaskRequestHolder> sortedTaskRequestHolders = new ArrayList<>();
+    final int numDueTasks = sortedTaskRequestHolders.size();
 
     final List<SingularityOfferHolder> offerHolders = offers.stream()
         .collect(Collectors.groupingBy((o) -> o.getAgentId().getValue()))
@@ -127,29 +127,63 @@ public class SingularityMesosOfferScheduler {
         })
         .collect(Collectors.toList());
 
+    if (sortedTaskRequests.isEmpty()) {
+      return offerHolders;
+    }
+
+    Double smallestMemAsk = null;
+    Double smallestCpuAsk = null;
+    Double smallestDiskAsk = null;
+
+    for (SingularityTaskRequest taskRequest : getSortedDueTaskRequests()) {
+      SingularityTaskRequestHolder taskRequestHolder = new SingularityTaskRequestHolder(taskRequest, defaultResources, defaultCustomExecutorResources);
+      sortedTaskRequestHolders.add(taskRequestHolder);
+      if (smallestDiskAsk == null || taskRequestHolder.getTotalResources().getDiskMb() < smallestDiskAsk) {
+        smallestDiskAsk = taskRequestHolder.getTotalResources().getDiskMb();
+      }
+      if (smallestCpuAsk == null || taskRequestHolder.getTotalResources().getCpus() < smallestCpuAsk) {
+        smallestCpuAsk = taskRequestHolder.getTotalResources().getCpus();
+      }
+      if (smallestMemAsk == null || taskRequestHolder.getTotalResources().getMemoryMb() < smallestMemAsk) {
+        smallestMemAsk = taskRequestHolder.getTotalResources().getMemoryMb();
+      }
+    }
+
+    final Resources minResources = new Resources(smallestCpuAsk, smallestMemAsk, 0, smallestDiskAsk);
+
     final Map<String, Map<String, Integer>> tasksPerOfferPerRequest = new HashMap<>();
     final AtomicInteger tasksScheduled = new AtomicInteger(0);
     final Map<String, SingularitySlaveUsage> currentSlaveUsagesBySlaveId = usageManager.getCurrentSlaveUsages(offerHolders.stream().map(SingularityOfferHolder::getSlaveId).collect(Collectors.toList()));
+    final List<SingularityOfferHolder> fullOffers = new ArrayList<>();
 
-    for (SingularityTaskRequestHolder taskRequestHolder : sortedTaskRequests) {
-      AtomicBoolean addedTask = new AtomicBoolean(false);
+    for (SingularityTaskRequestHolder taskRequestHolder : sortedTaskRequestHolders) {
       lock.runWithRequestLock(() -> {
-        addedTask.set(false);
-        Map<SingularityOfferHolder, Double> scorePerOffer = new ConcurrentHashMap<>();
-        java.util.Optional<SingularityOfferHolder> bestOffer = offerHolders.parallelStream()
-            .filter((offerHolder) -> !(configuration.getMaxTasksPerOffer() > 0 && offerHolder.getAcceptedTasks().size() >= configuration.getMaxTasksPerOffer()))
-            .max(Comparator.comparingDouble((offerHolder) -> scorePerOffer.computeIfAbsent(offerHolder, calculateScore(currentSlaveUsagesBySlaveId, tasksPerOfferPerRequest, taskRequestHolder))));
-        if (bestOffer.isPresent()) {
+        Map<SingularityOfferHolder, Double> scorePerOffer = offerHolders
+            .parallelStream()
+            .filter((offerHolder) ->
+                !(configuration.getMaxTasksPerOffer() > 0 && offerHolder.getAcceptedTasks().size() >= configuration.getMaxTasksPerOffer())
+                    && !fullOffers.contains(offerHolder))
+            .collect(Collectors.toMap(
+                Function.identity(),
+                (offerHolder) -> calculateScore(offerHolder, currentSlaveUsagesBySlaveId, tasksPerOfferPerRequest, taskRequestHolder)
+            ));
+        java.util.Optional<SingularityOfferHolder> bestOffer = scorePerOffer.keySet()
+            .stream()
+            .filter((offerHolder) -> scorePerOffer.get(offerHolder) > 0)
+            .max(Comparator.comparingDouble(scorePerOffer::get));
+
+        if (bestOffer.isPresent() && scorePerOffer.get(bestOffer.get()) > 0) {
           LOG.info("Best offer {}/1 is on {}", scorePerOffer.get(bestOffer.get()), bestOffer.get().getSanitizedHost());
           SingularityMesosTaskHolder taskHolder = acceptTask(bestOffer.get(), tasksPerOfferPerRequest, taskRequestHolder);
           tasksScheduled.getAndIncrement();
           bestOffer.get().addMatchedTask(taskHolder);
-          addedTask.set(true);
+
+          // If this offer doesn't have any of the minimum requested resources left, skip it for future iterations
+          if (!MesosUtils.doesOfferMatchResources(Optional.absent(), minResources, bestOffer.get().getCurrentResources(), Collections.emptyList())) {
+            fullOffers.add(bestOffer.get());
+          }
         }
       }, taskRequestHolder.getTaskRequest().getRequest().getId(), "checkOffers");
-      if (!addedTask.get()) {
-        break;
-      }
     }
 
     LOG.info("{} tasks scheduled, {} tasks remaining after examining {} offers", tasksScheduled, numDueTasks - tasksScheduled.get(), offers.size());
@@ -157,14 +191,12 @@ public class SingularityMesosOfferScheduler {
     return offerHolders;
   }
 
-  private Function<SingularityOfferHolder, Double> calculateScore(Map<String, SingularitySlaveUsage> currentSlaveUsagesBySlaveId, Map<String, Map<String, Integer>> tasksPerOfferPerRequest, SingularityTaskRequestHolder taskRequestHolder) {
-    return (offerHolder) -> {
-      Optional<SingularitySlaveUsage> maybeSlaveUsage = Optional.fromNullable(currentSlaveUsagesBySlaveId.get(offerHolder.getSlaveId()));
-      double score = score(offerHolder, tasksPerOfferPerRequest, taskRequestHolder, maybeSlaveUsage);
-      LOG.warn("Scored {} | Task {} | Offer - mem {} - cpu {} | Slave {} | maybeSlaveUsage - {}", score, taskRequestHolder.getTaskRequest().getPendingTask().getPendingTaskId().getId(),
-          MesosUtils.getMemory(offerHolder.getCurrentResources(), Optional.absent()), MesosUtils.getNumCpus(offerHolder.getCurrentResources(), Optional.absent()), offerHolder.getHostname(), maybeSlaveUsage);
-      return score;
-    };
+  private double calculateScore(SingularityOfferHolder offerHolder, Map<String, SingularitySlaveUsage> currentSlaveUsagesBySlaveId, Map<String, Map<String, Integer>> tasksPerOfferPerRequest, SingularityTaskRequestHolder taskRequestHolder) {
+    Optional<SingularitySlaveUsage> maybeSlaveUsage = Optional.fromNullable(currentSlaveUsagesBySlaveId.get(offerHolder.getSlaveId()));
+    double score = score(offerHolder, tasksPerOfferPerRequest, taskRequestHolder, maybeSlaveUsage);
+    LOG.trace("Scored {} | Task {} | Offer - mem {} - cpu {} | Slave {} | maybeSlaveUsage - {}", score, taskRequestHolder.getTaskRequest().getPendingTask().getPendingTaskId().getId(),
+        MesosUtils.getMemory(offerHolder.getCurrentResources(), Optional.absent()), MesosUtils.getNumCpus(offerHolder.getCurrentResources(), Optional.absent()), offerHolder.getHostname(), maybeSlaveUsage);
+    return score;
   }
 
   private double getNormalizedWeight(ResourceUsageType type) {
@@ -194,16 +226,14 @@ public class SingularityMesosOfferScheduler {
     }
   }
 
-  private List<SingularityTaskRequestHolder> getSortedDueTaskRequests() {
+  private List<SingularityTaskRequest> getSortedDueTaskRequests() {
     final List<SingularityTaskRequest> taskRequests = taskPrioritizer.getSortedDueTasks(scheduler.getDueTasks());
 
     taskRequests.forEach((taskRequest) -> LOG.trace("Task {} is due", taskRequest.getPendingTask().getPendingTaskId()));
 
     taskPrioritizer.removeTasksAffectedByPriorityFreeze(taskRequests);
 
-    return taskRequests.stream()
-        .map((taskRequest) -> new SingularityTaskRequestHolder(taskRequest, defaultResources, defaultCustomExecutorResources))
-        .collect(Collectors.toList());
+    return taskRequests;
   }
 
   private double score(SingularityOfferHolder offerHolder, Map<String, Map<String, Integer>> tasksPerOfferHostPerRequest,

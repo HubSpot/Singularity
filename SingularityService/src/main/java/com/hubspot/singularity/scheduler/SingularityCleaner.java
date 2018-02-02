@@ -618,7 +618,9 @@ public class SingularityCleaner {
     final Multiset<SingularityDeployKey> incrementalCleaningTasks = HashMultiset.create(cleanupTasks.size());
     final Set<SingularityDeployKey> isBouncing = new HashSet<>(cleanupTasks.size());
     final List<String> taskIdsForDeletedRequest = new ArrayList<>();
+    boolean isRequestDeleting = false;
 
+    // TODO - Better check for deleting request state
     final Set<SingularityTaskId> cleaningTasks = new HashSet<>(cleanupTasks.size());
     for (SingularityTaskCleanup cleanupTask : cleanupTasks) {
       cleaningTasks.add(cleanupTask.getTaskId());
@@ -630,6 +632,7 @@ public class SingularityCleaner {
       }
       if (cleanupTask.getCleanupType() == TaskCleanupType.REQUEST_DELETING) {
         taskIdsForDeletedRequest.add(cleanupTask.getTaskId().getId());
+        isRequestDeleting = true;
       }
     }
 
@@ -652,7 +655,7 @@ public class SingularityCleaner {
         isBouncing.remove(SingularityDeployKey.fromTaskId(taskId));
       }
 
-      cleanupRequestIfNoRemainingTasks(cleanupTask, taskIdsForDeletedRequest);
+      cleanupRequestIfNoRemainingTasks(cleanupTask, taskIdsForDeletedRequest, isRequestDeleting);
     }
 
     for (SingularityDeployKey bounceSucceeded : isBouncing) {
@@ -668,12 +671,12 @@ public class SingularityCleaner {
 
   }
 
-  private void cleanupRequestIfNoRemainingTasks(SingularityTaskCleanup cleanupTask, List<String> taskIdsForDeletedRequest) {
+  private void cleanupRequestIfNoRemainingTasks(SingularityTaskCleanup cleanupTask, List<String> taskIdsForDeletedRequest, boolean isRequestDeleting) {
     String requestId = cleanupTask.getTaskId().getRequestId();
 
     taskIdsForDeletedRequest.remove(cleanupTask.getTaskId().getId());
-    if (taskIdsForDeletedRequest.isEmpty()) {
-      LOG.info("All tasks for requestId {} are now killed, re-enqueueing request cleanup", requestId);
+    if (taskIdsForDeletedRequest.isEmpty() && isRequestDeleting) {
+      LOG.warn("All tasks for requestId {} are now killed, re-enqueueing request cleanup", requestId);
       requestManager.createCleanupRequest(
           new SingularityRequestCleanup(
               cleanupTask.getUser(), RequestCleanupType.DELETING, System.currentTimeMillis(),
