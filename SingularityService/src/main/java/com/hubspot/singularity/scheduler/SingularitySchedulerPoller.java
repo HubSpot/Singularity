@@ -1,6 +1,7 @@
 package com.hubspot.singularity.scheduler;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -68,7 +69,7 @@ public class SingularitySchedulerPoller extends SingularityLeaderOnlyPoller {
         offers.add(cachedOffer.getOffer());
       }
 
-      List<SingularityOfferHolder> offerHolders = offerScheduler.checkOffers(offers);
+      Collection<SingularityOfferHolder> offerHolders = offerScheduler.checkOffers(offers);
 
       if (offerHolders.isEmpty()) {
         return;

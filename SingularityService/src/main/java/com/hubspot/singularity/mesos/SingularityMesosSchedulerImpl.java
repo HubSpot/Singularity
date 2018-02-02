@@ -2,6 +2,7 @@ package com.hubspot.singularity.mesos;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Random;
@@ -198,7 +199,7 @@ public class SingularityMesosSchedulerImpl extends SingularityMesosScheduler {
       final Set<OfferID> acceptedOffers = Sets.newHashSetWithExpectedSize(offersToCheck.size());
 
       try {
-        List<SingularityOfferHolder> offerHolders = offerScheduler.checkOffers(offersToCheck);
+        Collection<SingularityOfferHolder> offerHolders = offerScheduler.checkOffers(offersToCheck);
 
         for (SingularityOfferHolder offerHolder : offerHolders) {
           if (!offerHolder.getAcceptedTasks().isEmpty()) {
