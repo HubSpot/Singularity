@@ -35,6 +35,26 @@ function isActive(navbarPath, fragment) {
 // put into page wrapper, render children
 const Navigation = (props) => {
   const fragment = props.location.pathname.split('/')[1];
+  let renderedNavTitle;
+
+  if (Object.keys(config.navTitleLinks).length > 0) {
+    const renderedNavTitleLinks = Object.keys(config.navTitleLinks).map(linkTitle => {
+      return <li><a href={config.navTitleLinks[linkTitle]}>{linkTitle}</a></li>;
+    });
+
+    renderedNavTitle =
+      <div className="dropdown nav">
+        <a href="#" className="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
+          {config.title} <span className="caret"></span>
+        </a>
+        <ul className="dropdown-menu">
+          {renderedNavTitleLinks}
+        </ul>
+      </div>
+
+  } else {
+    renderedNavTitle = <Link to="/">{config.title}</Link>;
+  }
   return (
     <nav className="navbar navbar-default">
       <div className="container-fluid">
@@ -45,7 +65,7 @@ const Navigation = (props) => {
             <span className="icon-bar"></span>
             <span className="icon-bar"></span>
           </button>
-          <Link className="navbar-brand" to="/">{config.title}</Link>
+          <div className="navbar-brand">{renderedNavTitle}</div>
         </div>
         <div className="collapse navbar-collapse" id="navbar-collapse">
           <ul className="nav navbar-nav">
