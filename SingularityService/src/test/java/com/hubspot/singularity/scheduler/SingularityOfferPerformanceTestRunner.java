@@ -33,8 +33,8 @@ public class SingularityOfferPerformanceTestRunner extends SingularitySchedulerT
   public void testSchedulerPerformance() {
     long start = System.currentTimeMillis();
 
-    int numRequests = 1000;
-    int numOffers = 500;
+    int numRequests = 4500;
+    int numOffers = 2500;
 
     Random r = new Random();
     Iterator<Double> cpuIterator = r.doubles(1, 5).iterator();

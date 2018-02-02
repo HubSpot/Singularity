@@ -54,6 +54,7 @@ public class MesosConfiguration {
   private long rxEventBufferSize = 10000;
   private int statusUpdateConcurrencyLimit = 500;
   private int maxStatusUpdateQueueSize = 5000;
+  private int offersConcurrencyLimit = 100;
 
   public int getMaxNumInstancesPerRequest() {
     return maxNumInstancesPerRequest;
@@ -243,26 +244,31 @@ public class MesosConfiguration {
     return rxEventBufferSize;
   }
 
-  public MesosConfiguration setRxEventBufferSize(long rxEventBufferSize) {
+  public void setRxEventBufferSize(long rxEventBufferSize) {
     this.rxEventBufferSize = rxEventBufferSize;
-    return this;
   }
 
   public int getStatusUpdateConcurrencyLimit() {
     return statusUpdateConcurrencyLimit;
   }
 
-  public MesosConfiguration setStatusUpdateConcurrencyLimit(int statusUpdateConcurrencyLimit) {
+  public void setStatusUpdateConcurrencyLimit(int statusUpdateConcurrencyLimit) {
     this.statusUpdateConcurrencyLimit = statusUpdateConcurrencyLimit;
-    return this;
   }
 
   public int getMaxStatusUpdateQueueSize() {
     return maxStatusUpdateQueueSize;
   }
 
-  public MesosConfiguration setMaxStatusUpdateQueueSize(int maxStatusUpdateQueueSize) {
+  public void setMaxStatusUpdateQueueSize(int maxStatusUpdateQueueSize) {
     this.maxStatusUpdateQueueSize = maxStatusUpdateQueueSize;
-    return this;
+  }
+
+  public int getOffersConcurrencyLimit() {
+    return offersConcurrencyLimit;
+  }
+
+  public void setOffersConcurrencyLimit(int offersConcurrencyLimit) {
+    this.offersConcurrencyLimit = offersConcurrencyLimit;
   }
 }
