@@ -1,5 +1,7 @@
 package com.hubspot.singularity.auth.authenticator;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -29,7 +31,7 @@ public class SingularityMultiMethodAuthenticator implements Authenticator<Contai
   }
 
   public Optional<SingularityUser> authenticate(ContainerRequestContext context) {
-    WebApplicationException unauthorizedException = null;
+    List<String> unauthorizedExceptionMessages = new ArrayList<>();
     for (SingularityAuthenticator authenticator : authenticators) {
       try {
         Optional<SingularityUser> maybeUser = authenticator.getUser(context);
@@ -38,14 +40,14 @@ public class SingularityMultiMethodAuthenticator implements Authenticator<Contai
         }
       } catch (WebApplicationException e) {
         LOG.trace("Unauthenticated: {}", e.getMessage());
-        unauthorizedException = e;
+        unauthorizedExceptionMessages.add(String.format("%s (%s)", authenticator.getClass().getSimpleName(), e.getMessage()));
       }
     }
 
     // No user found if we got here
     if (configuration.getAuthConfiguration().isEnabled()) {
-      if (unauthorizedException != null) {
-        throw unauthorizedException;
+      if (!unauthorizedExceptionMessages.isEmpty()) {
+        throw WebExceptions.unauthorized(String.format("Unable to authenticate using methods: %s", unauthorizedExceptionMessages));
       } else {
         throw WebExceptions.unauthorized(String.format("Unable to authenticate user using methods: %s", authenticators.stream().map(SingularityAuthenticator::getClass).collect(Collectors.toList())));
       }
