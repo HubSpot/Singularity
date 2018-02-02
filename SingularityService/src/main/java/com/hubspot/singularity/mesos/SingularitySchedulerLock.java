@@ -51,9 +51,7 @@ public class SingularitySchedulerLock {
   public long lockState(String name) {
     final long start = System.currentTimeMillis();
     LOG.info("{} - Locking state lock", name);
-    synchronized (stateLock) {
-      stateLock.lock();
-    }
+    stateLock.lock();
     LOG.info("{} - Acquired state lock ({})", name, JavaUtils.duration(start));
     return System.currentTimeMillis();
   }
@@ -66,9 +64,7 @@ public class SingularitySchedulerLock {
   public long lockOffers(String name) {
     final long start = System.currentTimeMillis();
     LOG.debug("{} - Locking offers lock", name);
-    synchronized (offersLock) {
-      offersLock.lock();
-    }
+    offersLock.lock();
     LOG.debug("{} - Acquired offers lock ({})", name, JavaUtils.duration(start));
     return System.currentTimeMillis();
   }
