@@ -6,6 +6,8 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import javax.ws.rs.WebApplicationException;
+
 import org.glassfish.jersey.server.internal.inject.AbstractContainerRequestValueFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,8 +41,12 @@ public class SingularityAuthedUserFactory extends AbstractContainerRequestValueF
           return maybeUser.get();
         }
       } catch (Throwable t) {
-        LOG.trace("Unauthenticated: {}", t.getMessage());
-        unauthorizedExceptionMessages.add(String.format("%s (%s)", authenticator.getClass().getSimpleName(), t.getMessage()));
+        if (t instanceof WebApplicationException) {
+          WebApplicationException wae = (WebApplicationException) t;
+          unauthorizedExceptionMessages.add(String.format("%s (%s)", authenticator.getClass().getSimpleName(), wae.getResponse().getEntity().toString()));
+        } else {
+          unauthorizedExceptionMessages.add(String.format("%s (%s)", authenticator.getClass().getSimpleName(), t.getMessage()));
+        }
       }
     }
 
