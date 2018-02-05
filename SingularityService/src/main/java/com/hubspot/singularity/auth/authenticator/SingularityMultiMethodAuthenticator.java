@@ -6,7 +6,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.container.ContainerRequestContext;
 
 import org.slf4j.Logger;
@@ -38,9 +37,9 @@ public class SingularityMultiMethodAuthenticator implements Authenticator<Contai
         if (maybeUser.isPresent()) {
           return maybeUser;
         }
-      } catch (WebApplicationException e) {
-        LOG.trace("Unauthenticated: {}", e.getMessage());
-        unauthorizedExceptionMessages.add(String.format("%s (%s)", authenticator.getClass().getSimpleName(), e.getMessage()));
+      } catch (Throwable t) {
+        LOG.trace("Unauthenticated: {}", t.getMessage());
+        unauthorizedExceptionMessages.add(String.format("%s (%s)", authenticator.getClass().getSimpleName(), t.getMessage()));
       }
     }
 
