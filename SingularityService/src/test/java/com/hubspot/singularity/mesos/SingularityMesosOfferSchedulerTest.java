@@ -47,21 +47,21 @@ public class SingularityMesosOfferSchedulerTest extends SingularityCuratorTestBa
 
 
   public SingularityMesosOfferSchedulerTest() {
-    super(false);
+    super(false, (configuration) -> {configuration.setLongRunningUsedCpuWeightForOffer(0.30);
+      configuration.setLongRunningUsedMemWeightForOffer(0.50);
+      configuration.setLongRunningUsedDiskWeightForOffer(0.20);
+      configuration.setFreeCpuWeightForOffer(0.30);
+      configuration.setFreeMemWeightForOffer(0.50);
+      configuration.setFreeDiskWeightForOffer(0.20);
+      configuration.setDefaultOfferScoreForMissingUsage(0.10);
+      configuration.setConsiderNonLongRunningTaskLongRunningAfterRunningForSeconds(TimeUnit.HOURS.toSeconds(6));
+      configuration.setMaxNonLongRunningUsedResourceWeight(0.50);
+      return null;
+    });
   }
 
   @Before
   public void setup() {
-    configuration.setLongRunningUsedCpuWeightForOffer(0.30);
-    configuration.setLongRunningUsedMemWeightForOffer(0.50);
-    configuration.setLongRunningUsedDiskWeightForOffer(0.20);
-    configuration.setFreeCpuWeightForOffer(0.30);
-    configuration.setFreeMemWeightForOffer(0.50);
-    configuration.setFreeDiskWeightForOffer(0.20);
-    configuration.setDefaultOfferScoreForMissingUsage(0.10);
-    configuration.setConsiderNonLongRunningTaskLongRunningAfterRunningForSeconds(TimeUnit.HOURS.toSeconds(6));
-    configuration.setMaxNonLongRunningUsedResourceWeight(0.50);
-
     Mockito.when(taskRequest.getRequest()).thenReturn(request);
     Mockito.when(request.getId()).thenReturn("requestId");
 

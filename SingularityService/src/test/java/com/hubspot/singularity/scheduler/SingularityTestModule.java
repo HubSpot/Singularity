@@ -5,6 +5,7 @@ import static com.hubspot.singularity.SingularityMainModule.HTTP_HOST_AND_PORT;
 import static org.mockito.Mockito.*;
 
 import java.util.Set;
+import java.util.function.Function;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -84,9 +85,15 @@ public class SingularityTestModule implements Module {
   private final Environment environment = new Environment("test-env", om, null, new MetricRegistry(), null);
 
   private final boolean useDBTests;
+  private final Function<SingularityConfiguration, Void> customConfigSetup;
 
   public SingularityTestModule(boolean useDbTests) throws Exception {
+    this(useDbTests, null);
+  }
+
+  public SingularityTestModule(boolean useDbTests,Function<SingularityConfiguration, Void> customConfigSetup) throws Exception {
     this.useDBTests = useDbTests;
+    this.customConfigSetup = customConfigSetup;
 
     dropwizardModule = new DropwizardModule(environment);
 
@@ -134,6 +141,10 @@ public class SingularityTestModule implements Module {
 
     if (useDBTests) {
       configuration.setDatabaseConfiguration(getDataSourceFactory());
+    }
+
+    if (customConfigSetup != null) {
+      customConfigSetup.apply(configuration);
     }
 
     mainBinder.bind(SingularityConfiguration.class).toInstance(configuration);
