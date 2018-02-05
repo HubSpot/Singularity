@@ -111,6 +111,10 @@ public class UIConfiguration {
   @JsonProperty
   private Map<String, Map<String, List<UIQuickLinkConfiguration>>> quickLinks = Collections.emptyMap();
 
+  // e.g. {"QA": "https://singularity-qa.my-paas.net", "Production": "https://singularity-prod.my-paas.net"}
+  @JsonProperty
+  private Map<String, String> navTitleLinks = Collections.emptyMap();
+
   public boolean isHideNewDeployButton() {
     return hideNewDeployButton;
   }
@@ -293,5 +297,13 @@ public class UIConfiguration {
 
   public void setQuickLinks(Map<String, Map<String, List<UIQuickLinkConfiguration>>> quickLinks) {
     this.quickLinks = quickLinks;
+  }
+
+  public Map<String, String> getNavTitleLinks() {
+    return navTitleLinks;
+  }
+
+  public void setNavTitleLinks(Map<String, String> navTitleLinks) {
+    this.navTitleLinks = navTitleLinks;
   }
 }
