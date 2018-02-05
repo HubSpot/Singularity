@@ -42,8 +42,8 @@ public class SingularityWebhookAuthenticator implements SingularityAuthenticator
         .refreshAfterWrite(webhookAuthConfiguration.getCacheValidationMs(), TimeUnit.MILLISECONDS)
         .build(new CacheLoader<String, SingularityUserPermissionsResponse>() {
           @Override
-          public SingularityUserPermissionsResponse load(String authHeaderVaule) throws Exception {
-            return verifyUncached(authHeaderVaule);
+          public SingularityUserPermissionsResponse load(String authHeaderValue) throws Exception {
+            return verifyUncached(authHeaderValue);
           }
 
           @Override
