@@ -5,6 +5,9 @@ import java.util.concurrent.TimeUnit;
 
 import javax.ws.rs.container.ContainerRequestContext;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Strings;
 import com.google.common.cache.CacheBuilder;
@@ -26,6 +29,8 @@ import com.ning.http.client.Response;
 
 @Singleton
 public class SingularityWebhookAuthenticator implements SingularityAuthenticator {
+  private static final Logger LOG = LoggerFactory.getLogger(SingularityWebhookAuthenticator.class);
+
   private final AsyncHttpClient asyncHttpClient;
   private final WebhookAuthConfiguration webhookAuthConfiguration;
   private final ObjectMapper objectMapper;
@@ -52,6 +57,7 @@ public class SingularityWebhookAuthenticator implements SingularityAuthenticator
               try {
                 return verifyUncached(authHeaderVaule);
               } catch (Throwable t) {
+                LOG.warn("Unable to refresh user information", t);
                 return oldVaule;
               }
             });
