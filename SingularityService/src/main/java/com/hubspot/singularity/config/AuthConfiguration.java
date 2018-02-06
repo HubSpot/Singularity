@@ -52,6 +52,15 @@ public class AuthConfiguration {
   @NotNull
   private String requestUserHeaderName = "X-Username";  // used by SingularityHeaderPassthroughAuthenticator
 
+  @JsonProperty
+  private int webhookAuthRequestTimeoutMs = 2000;
+
+  @JsonProperty
+  private int webhookAuthRetries = 2;
+
+  @JsonProperty
+  private int webhookAuthConnectTimeoutMs = 2000;
+
   public boolean isEnabled() {
     return enabled;
   }
@@ -132,5 +141,32 @@ public class AuthConfiguration {
 
   public void setRequestUserHeaderName(String requestUserHeaderName) {
     this.requestUserHeaderName = requestUserHeaderName;
+  }
+
+  public int getWebhookAuthRequestTimeoutMs() {
+    return webhookAuthRequestTimeoutMs;
+  }
+
+  public AuthConfiguration setWebhookAuthRequestTimeoutMs(int webhookAuthRequestTimeoutMs) {
+    this.webhookAuthRequestTimeoutMs = webhookAuthRequestTimeoutMs;
+    return this;
+  }
+
+  public int getWebhookAuthRetries() {
+    return webhookAuthRetries;
+  }
+
+  public AuthConfiguration setWebhookAuthRetries(int webhookAuthRetries) {
+    this.webhookAuthRetries = webhookAuthRetries;
+    return this;
+  }
+
+  public int getWebhookAuthConnectTimeoutMs() {
+    return webhookAuthConnectTimeoutMs;
+  }
+
+  public AuthConfiguration setWebhookAuthConnectTimeoutMs(int webhookAuthConnectTimeoutMs) {
+    this.webhookAuthConnectTimeoutMs = webhookAuthConnectTimeoutMs;
+    return this;
   }
 }
