@@ -74,9 +74,16 @@ export default createSelector([getRequests, getFilter, getUtilizations], (reques
       });
       filteredRequests = _.union(res1, res2).reverse();
     } else {
-      _.each(filteredRequests, (requestParent) => {requestParent.id = id.extract(requestParent);});
+      _.each(filteredRequests, (requestParent) => (requestParent.id = id.extract(requestParent)));
+      // Allow searching by the first letter of each word by applying same
+      // search heuristics to just the upper case characters of each option
+      const options = {
+        extract: Utils.isAllUpperCase(filter.searchFilter)
+          ? (requestParent) => Utils.getUpperCaseCharacters(requestParent.id)
+          : id.extract,
+      };
       const res1 = fuzzy.filter(filter.searchFilter, filteredRequests, user);
-      const res2 = fuzzy.filter(filter.searchFilter, filteredRequests, id);
+      const res2 = fuzzy.filter(filter.searchFilter, filteredRequests, options);
       filteredRequests = Utils.fuzzyFilter(filter.searchFilter, _.union(res1, res2));
     }
   }
