@@ -68,8 +68,15 @@ export const getFilteredTasks = createSelector(
         _.each(tasks, (task) => {
           task.id = id.extract(task);
         });
+        // Allow searching by the first letter of each word by applying same
+        // search heuristics to just the upper case characters of each option
+        const options = {
+          extract: Utils.isAllUpperCase(filter.filterText)
+            ? (task) => Utils.getUpperCaseCharacters(task.id)
+            : id.extract,
+        };
         const hostMatch = fuzzy.filter(filter.filterText.replace(/-/g, '_'), tasks, host);
-        const idMatch = fuzzy.filter(filter.filterText, tasks, id);
+        const idMatch = fuzzy.filter(filter.filterText, tasks, options);
         const rackMatch = fuzzy.filter(filter.filterText, tasks, rack);
         tasks = Utils.fuzzyFilter(filter.filterText, _.union(rackMatch, hostMatch, idMatch));
       }
