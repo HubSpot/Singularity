@@ -237,7 +237,7 @@ public class SingularityMesosOfferScheduler {
       double diskFreeScore = 1 - ((double) slaveUsage.getDiskMbReserved() / slaveUsage.getDiskMbTotal().get());
       return new SingularitySlaveUsageWithCalculatedScores(
           slaveUsage, false, longRunningCpusUsedScore, longRunningMemUsedScore, longRunningDiskUsedScore, cpusFreeScore, memFreeScore, diskFreeScore,
-          scoreLongRunningTask(longRunningCpusUsedScore, memFreeScore, longRunningCpusUsedScore, cpusFreeScore, longRunningDiskUsedScore, diskFreeScore)
+          scoreLongRunningTask(longRunningMemUsedScore, memFreeScore, longRunningCpusUsedScore, cpusFreeScore, longRunningDiskUsedScore, diskFreeScore)
       );
     }
   }
@@ -315,8 +315,6 @@ public class SingularityMesosOfferScheduler {
       LOG.info("Slave {} has missing usage data ({}). Will default to {}", hostname, maybeSlaveUsage, configuration.getDefaultOfferScoreForMissingUsage());
       return configuration.getDefaultOfferScoreForMissingUsage();
     }
-
-    System.out.println(maybeSlaveUsage);
 
     return isLongRunning(taskRequest)
         ? maybeSlaveUsage.get().getDefaultLongRunningTaskScore()
