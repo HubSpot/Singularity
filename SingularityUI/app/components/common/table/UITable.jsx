@@ -10,44 +10,40 @@ class UITable extends Component {
 
   constructor(props) {
     super(props);
-
-    let { data } = props;
-    const { defaultSortBy, defaultSortDirection, rowChunkSize } = props;
-    if (defaultSortBy) {
-      data = this.doSort(data, defaultSortBy, defaultSortDirection);
-    }
+    const {
+      data,
+      defaultSortBy,
+      defaultSortDirection,
+      rowChunkSize
+    } = props;
 
     this.state = {
+      chunkNum: 1,
+      data: defaultSortBy
+        ? this.doSort(data, defaultSortBy, defaultSortDirection)
+        : data,
+      rowChunkSize,
       sortBy: defaultSortBy,
       sortDirection: defaultSortDirection,
-      sortTime: null,
-      chunkNum: 1,
-      data,
-      rowChunkSize
+      sortTime: defaultSortBy ? Date.now() : null,
     };
 
     this.handlePageChange = this.handlePageChange.bind(this);
   }
 
-  componentDidUpdate(prevProps, prevState) {
-    if (this.props.triggerOnDataSizeChange && prevState.data && prevState.data.length != this.state.data.length) {
-      this.props.triggerOnDataSizeChange();
-    }
-  }
-
   componentWillReceiveProps(nextProps) {
-    this.updateSort(nextProps.data, this.state.sortBy, this.state.sortDirection);
-    if (nextProps.isFetching) {
+    const { lookahead, sortBy, sortDirection } = this.state;
+    this.updateSort(nextProps.data, sortBy, sortDirection);
+    if (nextProps.isFetching || !this.isApiPaginated() || lookahead) {
       return;
     }
 
-    if (this.isApiPaginated() && _.isEmpty(nextProps.data) && this.state.chunkNum > 1) {
-      this.fetchDataFromApi(this.state.chunkNum - 1, this.state.rowChunkSize, this.state.sortBy);
-      this.setState({ pastEnd: true, data: nextProps.data });
-    } else if (this.isApiPaginated() && (this.state.pastEnd || nextProps.data.length < this.state.rowChunkSize)) {
-      this.setState({ pastEnd: false, lastPage: true, data: nextProps.data });
-    } else if (this.isApiPaginated()) {
-      this.setState({ data: nextProps.data });
+    this.setState({ data: nextProps.data });
+  }
+
+  componentDidUpdate(prevProps, prevState) {
+    if (this.props.triggerOnDataSizeChange && prevState.data && prevState.data.length !== this.state.data.length) {
+      this.props.triggerOnDataSizeChange();
     }
   }
 
@@ -79,23 +75,24 @@ class UITable extends Component {
         chunkNum: 1,
         rowChunkSize: this.props.rowChunkSize,
         lastPage: false,
-        pastEnd: false
       });
     };
   }
 
   fetchDataFromApi(chunkNum, rowChunkSize, updateStateAfterFetching = false, sortBy = this.state.sortBy) {
-    let lastPage = this.state.lastPage;
-    if (chunkNum < this.state.chunkNum) {
-      lastPage = false;
-    }
-    if (!updateStateAfterFetching) {
-      this.setState({chunkNum, rowChunkSize, sortBy, lastPage});
-    }
-    return this.props.fetchDataFromApi(chunkNum, rowChunkSize, sortBy).then(() => {
-      if (updateStateAfterFetching) {
-        this.setState({chunkNum, rowChunkSize, sortBy, lastPage});
+    const lookaheadNum = (chunkNum * rowChunkSize) + 1;
+    this.setState({ lookahead: true });
+    return this.props.fetchDataFromApi(lookaheadNum, 1).then((lookaheadResponse) => {
+      const lastPage = _.isEmpty(lookaheadResponse.data);
+
+      if (!updateStateAfterFetching) {
+        this.setState({chunkNum, rowChunkSize, sortBy, lastPage, lookahead: false});
       }
+      return this.props.fetchDataFromApi(chunkNum, rowChunkSize, sortBy).then(() => {
+        if (updateStateAfterFetching) {
+          this.setState({chunkNum, rowChunkSize, sortBy, lastPage, lookahead: false});
+        }
+      });
     });
   }
 
@@ -223,7 +220,7 @@ class UITable extends Component {
 
   handleSortClick(col) {
     if (this.isApiPaginated()) {
-      this.props.fetchDataFromApi(this.state.chunkNum, this.state.rowChunkSize, false, col.props.id);
+      this.props.fetchDataFromApi(this.state.chunkNum, this.state.rowChunkSize, col.props.id);
     }
     const colId = col.props.id;
     if (colId === this.state.sortBy) {
@@ -236,13 +233,13 @@ class UITable extends Component {
       }
 
       this.updateSort(
-        this.props.data,
+        this.state.data,
         colId,
         newSortDirection
       );
     } else {
       this.updateSort(
-        this.props.data,
+        this.state.data,
         colId,
         UITable.SortDirection.DESC
       );
@@ -292,7 +289,7 @@ class UITable extends Component {
 
       return rows;
     } else if (this.props.paginated) {
-      return this.props.data.map((row, index) => {
+      return this.state.data.map((row, index) => {
         return this.renderTableRow(row, index);
       });
     }
@@ -347,7 +344,7 @@ class UITable extends Component {
       return (
         <Pagination
           prev={true}
-          next={true}
+          next={!this.state.lastPage && numRows === rowsPerPage}
           first={numPages > maxPaginationButtons}
           last={!this.isApiPaginated() && numPages > maxPaginationButtons}
           ellipsis={false}
@@ -391,7 +388,7 @@ class UITable extends Component {
     const headerRow = this.props.children.map((col) => {
       let cell;
       if (typeof col.props.label === 'function') {
-        cell = col.props.label(this.props.data);
+        cell = col.props.label(this.state.data);
       } else {
         // should only be string according to propTypes
         cell = col.props.label;
@@ -440,7 +437,7 @@ class UITable extends Component {
       </BootstrapTable>
     );
 
-    if (this.props.emptyTableMessage && !this.props.data.length) {
+    if (this.props.emptyTableMessage && !this.state.data.length) {
       maybeTable = (
         <div className="empty-table-message">
           {this.props.emptyTableMessage}
