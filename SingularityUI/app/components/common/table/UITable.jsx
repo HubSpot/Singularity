@@ -74,7 +74,6 @@ class UITable extends Component {
       table.setState({
         chunkNum: 1,
         rowChunkSize: this.props.rowChunkSize,
-        lastPage: false,
       });
     };
   }
