@@ -74,7 +74,6 @@ class UITable extends Component {
       table.setState({
         chunkNum: 1,
         rowChunkSize: this.props.rowChunkSize,
-        lastPage: false,
       });
     };
   }
@@ -344,7 +343,7 @@ class UITable extends Component {
       return (
         <Pagination
           prev={true}
-          next={!this.state.lastPage && numRows === rowsPerPage}
+          next={true}
           first={numPages > maxPaginationButtons}
           last={!this.isApiPaginated() && numPages > maxPaginationButtons}
           ellipsis={false}
@@ -449,7 +448,7 @@ class UITable extends Component {
       <div>
         {this.props.rowChunkSizeChoices && <div className="row"><div className="col-md-12">{this.renderRowChunkSizeChoices()}</div></div>}
         {maybeTable}
-        {this.renderPagination()}
+        <div className="text-center">{this.renderPagination()}</div>
       </div>
     );
   }
