@@ -259,7 +259,6 @@ public class SingularityMesosStatusUpdateHandler {
 
   public CompletableFuture<Boolean> processStatusUpdateAsync(Protos.TaskStatus status) {
     return statusUpdatesSemaphore.call(() -> CompletableFuture.supplyAsync(() -> {
-        long insideLock = 0;
         final String taskId = status.getTaskId().getValue();
         final Optional<SingularityTaskId> maybeTaskId = getTaskId(taskId);
 
@@ -267,15 +266,11 @@ public class SingularityMesosStatusUpdateHandler {
           return false;
         }
 
-        final long start = schedulerLock.lock(maybeTaskId.get().getRequestId(), "statusUpdate");
-        try {
-          insideLock = System.currentTimeMillis();
+        schedulerLock.runWithRequestLock(
+            () -> unsafeProcessStatusUpdate(status, maybeTaskId.get()),
+            maybeTaskId.get().getRequestId(),
+            "statusUpdate");
           unsafeProcessStatusUpdate(status, maybeTaskId.get());
-        } finally {
-          schedulerLock.unlock(maybeTaskId.get().getRequestId(), "statusUpdate", start);
-          LOG.info("Processed status update for {} ({}) in {} (waited {} for lock)", status.getTaskId()
-              .getValue(), status.getState(), JavaUtils.duration(start), JavaUtils.durationFromMillis(insideLock - start));
-        }
         return true;
       }, statusUpdatesExecutor)
     );
