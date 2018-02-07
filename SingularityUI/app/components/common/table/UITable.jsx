@@ -448,7 +448,7 @@ class UITable extends Component {
       <div>
         {this.props.rowChunkSizeChoices && <div className="row"><div className="col-md-12">{this.renderRowChunkSizeChoices()}</div></div>}
         {maybeTable}
-        {this.renderPagination()}
+        <div className="text-center">{this.renderPagination()}</div>
       </div>
     );
   }
