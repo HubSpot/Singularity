@@ -127,7 +127,8 @@ public class SingularityLeaderCache {
   }
 
   public List<SingularityPendingTaskId> getPendingTaskIdsForRequest(String requestId) {
-    return pendingTaskIdToPendingTask.keySet().stream()
+    Set<SingularityPendingTaskId> allPendingTaskIds = new HashSet<>(pendingTaskIdToPendingTask.keySet());
+    return allPendingTaskIds.stream()
         .filter(t -> t.getRequestId().equals(requestId))
         .collect(Collectors.toList());
   }
@@ -186,7 +187,8 @@ public class SingularityLeaderCache {
   }
 
   public List<SingularityTaskId> getActiveTaskIdsForRequest(String requestId) {
-    return activeTaskIds.stream()
+    Set<SingularityTaskId> allActiveTaskIds = new HashSet<>(activeTaskIds);
+    return allActiveTaskIds.stream()
         .filter(t -> t.getRequestId().equals(requestId))
         .collect(Collectors.toList());
   }
@@ -305,9 +307,10 @@ public class SingularityLeaderCache {
   }
 
   public Map<String, SingularityRequestDeployState> getRequestDeployStateByRequestId(Collection<String> requestIds) {
-    return new HashMap<>(requestIdToDeployState.entrySet().stream()
+    Map<String, SingularityRequestDeployState> allDeployStates = new HashMap<>(requestIdToDeployState);
+    return allDeployStates.entrySet().stream()
         .filter((e) -> requestIds.contains(e.getKey()))
-        .collect(Collectors.toMap((e) -> e.getKey(), (e) -> e.getValue()))
+        .collect(Collectors.toMap((e) -> e.getKey(), (e) -> e.getValue())
     );
   }
 
@@ -356,10 +359,10 @@ public class SingularityLeaderCache {
   }
 
   public Map<SingularityTaskId, List<SingularityTaskHistoryUpdate>> getTaskHistoryUpdates(Collection<SingularityTaskId> taskIds) {
-    return new HashMap<>(historyUpdates.entrySet()
-        .stream()
+    Map<SingularityTaskId, Map<ExtendedTaskState, SingularityTaskHistoryUpdate>> allHistoryUpdates = new HashMap<>(historyUpdates);
+    return allHistoryUpdates.entrySet().stream()
         .filter((e) -> taskIds.contains(e.getKey()))
-        .collect(Collectors.toMap((e) -> e.getKey(), (e) -> new ArrayList<>(e.getValue().values())))
+        .collect(Collectors.toMap(Map.Entry::getKey, (e) -> new ArrayList<>(e.getValue().values()))
     );
   }
 
