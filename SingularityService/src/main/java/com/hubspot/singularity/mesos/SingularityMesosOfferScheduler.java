@@ -319,7 +319,7 @@ public class SingularityMesosOfferScheduler {
     System.out.println(maybeSlaveUsage);
 
     return isLongRunning(taskRequest)
-        ? maybeSlaveUsage.get().getLongRunningMemUsedScore()
+        ? maybeSlaveUsage.get().getDefaultLongRunningTaskScore()
         : scoreNonLongRunningTask(taskRequest, maybeSlaveUsage.get());
   }
 
@@ -350,7 +350,11 @@ public class SingularityMesosOfferScheduler {
     }
 
     // usage reduces score
-    return calculateScore(slaveUsageWithScores.getLongRunningMemUsedScore(), slaveUsageWithScores.getMemFreeScore(), slaveUsageWithScores.getLongRunningCpusUsedScore(), slaveUsageWithScores.getCpusFreeScore(), slaveUsageWithScores.getLongRunningDiskUsedScore(), slaveUsageWithScores.getDiskFreeScore(), freeResourceWeight, usedResourceWeight * -1);
+    return calculateScore(
+        slaveUsageWithScores.getLongRunningMemUsedScore(), slaveUsageWithScores.getMemFreeScore(),
+        slaveUsageWithScores.getLongRunningCpusUsedScore(), slaveUsageWithScores.getCpusFreeScore(),
+        slaveUsageWithScores.getLongRunningDiskUsedScore(), slaveUsageWithScores.getDiskFreeScore(),
+        freeResourceWeight, usedResourceWeight * -1);
   }
 
   private double calculateScore(double longRunningMemUsedScore, double memFreeScore, double longRunningCpusUsedScore, double cpusFreeScore, double longRunningDiskUsedScore, double diskFreeScore, double freeResourceWeight, double usedResourceWeight) {
