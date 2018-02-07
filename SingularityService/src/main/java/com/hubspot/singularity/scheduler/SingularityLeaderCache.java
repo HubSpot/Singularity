@@ -133,7 +133,11 @@ public class SingularityLeaderCache {
         .collect(Collectors.toList());
   }
 
-  public List<SingularityPendingTaskId> getPendingTaskIdsToDelete() { return new ArrayList<SingularityPendingTaskId>(pendingTaskIdsToDelete); }
+  public List<SingularityPendingTaskId> getPendingTaskIdsToDelete() {
+    synchronized (pendingTaskIdsToDelete) {
+      return new ArrayList<>(pendingTaskIdsToDelete);
+    }
+  }
 
   public void markPendingTaskForDeletion(SingularityPendingTaskId taskId) {
     pendingTaskIdsToDelete.add(taskId);
@@ -187,7 +191,10 @@ public class SingularityLeaderCache {
   }
 
   public List<SingularityTaskId> getActiveTaskIdsForRequest(String requestId) {
-    Set<SingularityTaskId> allActiveTaskIds = new HashSet<>(activeTaskIds);
+    Set<SingularityTaskId> allActiveTaskIds;
+    synchronized (activeTaskIds) {
+      allActiveTaskIds = new HashSet<>(activeTaskIds);
+    }
     return allActiveTaskIds.stream()
         .filter(t -> t.getRequestId().equals(requestId))
         .collect(Collectors.toList());
