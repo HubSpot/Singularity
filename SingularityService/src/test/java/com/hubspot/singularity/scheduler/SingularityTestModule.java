@@ -57,6 +57,7 @@ import com.hubspot.singularity.mesos.OfferCache;
 import com.hubspot.singularity.mesos.SingularityMesosExecutorInfoSupport;
 import com.hubspot.singularity.mesos.SingularityMesosModule;
 import com.hubspot.singularity.mesos.SingularityMesosSchedulerClient;
+import com.hubspot.singularity.mesos.SingularityNoOfferCache;
 import com.hubspot.singularity.mesos.SingularityOfferCache;
 import com.hubspot.singularity.resources.DeployResource;
 import com.hubspot.singularity.resources.PriorityResource;
@@ -165,7 +166,11 @@ public class SingularityTestModule implements Module {
             TestingLoadBalancerClient tlbc = new TestingLoadBalancerClient();
             binder.bind(LoadBalancerClient.class).toInstance(tlbc);
             binder.bind(TestingLoadBalancerClient.class).toInstance(tlbc);
-            binder.bind(OfferCache.class).to(SingularityOfferCache.class);
+            if (configuration.isCacheOffers()) {
+              binder.bind(OfferCache.class).to(SingularityOfferCache.class);
+            } else {
+              binder.bind(OfferCache.class).to(SingularityNoOfferCache.class);
+            }
 
             binder.bind(ObjectMapper.class).toInstance(om);
             binder.bind(Environment.class).toInstance(environment);

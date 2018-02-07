@@ -220,6 +220,10 @@ public class SingularityMesosSchedulerImpl extends SingularityMesosScheduler {
 
             List<Offer> offersAcceptedFromSlave = offerHolder.getOffers();
             offersAcceptedFromSlave.removeAll(leftoverOffers);
+            offersAcceptedFromSlave.stream()
+                .filter((offer) -> cachedOffers.containsKey(offer.getId().getValue()))
+                .map((o) -> cachedOffers.get(o.getId().getValue()))
+                .forEach(offerCache::useOffer);
             acceptedOffers.addAll(offersAcceptedFromSlave.stream().map(Offer::getId).collect(Collectors.toList()));
           } else {
             offerHolder.getOffers().forEach((o) -> {

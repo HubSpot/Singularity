@@ -14,6 +14,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 
 import org.apache.mesos.v1.Protos.Address;
 import org.apache.mesos.v1.Protos.AgentID;
@@ -192,7 +193,11 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
   protected SingularityUser singularityUser = SingularityUser.DEFAULT_USER;
 
   public SingularitySchedulerTestBase(boolean useDBTests) {
-    super(useDBTests);
+    super(useDBTests, null);
+  }
+
+  public SingularitySchedulerTestBase(boolean useDBTests, Function<SingularityConfiguration, Void> customConfigSetup) {
+    super(useDBTests, customConfigSetup);
   }
 
   @After
