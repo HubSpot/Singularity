@@ -19,6 +19,7 @@ import com.hubspot.singularity.data.DeployManager;
 import com.hubspot.singularity.data.MetadataManager;
 import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.data.TaskManager;
+import com.hubspot.singularity.mesos.SingularitySchedulerLock;
 import com.hubspot.singularity.scheduler.SingularityLeaderOnlyPoller;
 
 @Singleton
@@ -32,10 +33,12 @@ public class SingularityHistoryPurger extends SingularityLeaderOnlyPoller {
   private final DeployManager deployManager;
   private final RequestManager requestManager;
   private final MetadataManager metadataManager;
+  private final SingularitySchedulerLock lock;
 
   @Inject
   public SingularityHistoryPurger(HistoryPurgingConfiguration historyPurgingConfiguration, HistoryManager historyManager,
-                                  TaskManager taskManager, DeployManager deployManager, RequestManager requestManager, MetadataManager metadataManager) {
+                                  TaskManager taskManager, DeployManager deployManager, RequestManager requestManager, MetadataManager metadataManager,
+                                  SingularitySchedulerLock lock) {
     super(historyPurgingConfiguration.getCheckTaskHistoryEveryHours(), TimeUnit.HOURS);
 
     this.historyPurgingConfiguration = historyPurgingConfiguration;
@@ -44,6 +47,7 @@ public class SingularityHistoryPurger extends SingularityLeaderOnlyPoller {
     this.deployManager = deployManager;
     this.requestManager = requestManager;
     this.metadataManager = metadataManager;
+    this.lock = lock;
   }
 
   @Override
@@ -55,19 +59,21 @@ public class SingularityHistoryPurger extends SingularityLeaderOnlyPoller {
   public void runActionOnPoll() {
     final long start = System.currentTimeMillis();
     for (String requestId : historyManager.getRequestIdsInTaskHistory()) {
-      HistoryPurgeRequestSettings settings = getRequestPurgeSettings(requestId);
+      lock.runWithRequestLock(() -> {
+        HistoryPurgeRequestSettings settings = getRequestPurgeSettings(requestId);
 
-      LOG.debug("Attempting to purge tasks for {}, using purge settings {}", requestId, settings);
-      if (settings.getDeleteTaskHistoryAfterTasksPerRequest().isPresent() || settings.getDeleteTaskHistoryAfterDays().isPresent()) {
-        purge(requestId, start, settings.getDeleteTaskHistoryAfterTasksPerRequest(), settings.getDeleteTaskHistoryAfterDays(), true);
-      } else {
-        LOG.debug("No purge settings for deleting task row, skipping for request {}", requestId);
-      }
-      if (settings.getDeleteTaskHistoryBytesAfterTasksPerRequest().isPresent() || settings.getDeleteTaskHistoryBytesAfterDays().isPresent()) {
-        purge(requestId, start, settings.getDeleteTaskHistoryBytesAfterTasksPerRequest(), settings.getDeleteTaskHistoryBytesAfterDays(), false);
-      } else {
-        LOG.debug("No purge settings for removing task bytes, skipping for request {}", requestId);
-      }
+        LOG.debug("Attempting to purge tasks for {}, using purge settings {}", requestId, settings);
+        if (settings.getDeleteTaskHistoryAfterTasksPerRequest().isPresent() || settings.getDeleteTaskHistoryAfterDays().isPresent()) {
+          purge(requestId, start, settings.getDeleteTaskHistoryAfterTasksPerRequest(), settings.getDeleteTaskHistoryAfterDays(), true);
+        } else {
+          LOG.debug("No purge settings for deleting task row, skipping for request {}", requestId);
+        }
+        if (settings.getDeleteTaskHistoryBytesAfterTasksPerRequest().isPresent() || settings.getDeleteTaskHistoryBytesAfterDays().isPresent()) {
+          purge(requestId, start, settings.getDeleteTaskHistoryBytesAfterTasksPerRequest(), settings.getDeleteTaskHistoryBytesAfterDays(), false);
+        } else {
+          LOG.debug("No purge settings for removing task bytes, skipping for request {}", requestId);
+        }
+      }, requestId, "historyPurge");
     }
     purgeStaleZkData();
   }

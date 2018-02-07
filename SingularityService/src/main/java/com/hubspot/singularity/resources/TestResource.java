@@ -57,7 +57,7 @@ public class TestResource {
     scheduler.statusUpdate(TaskStatus.newBuilder()
         .setTaskId(TaskID.newBuilder().setValue(taskId))
         .setState(TaskState.valueOf(taskState))
-        .build());
+        .build()).join();
   }
 
   @POST

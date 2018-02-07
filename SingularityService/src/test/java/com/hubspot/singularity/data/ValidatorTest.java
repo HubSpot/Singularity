@@ -313,7 +313,6 @@ public class ValidatorTest extends SingularityTestBaseNoDb {
     SingularityRequest request = new SingularityRequestBuilder("1234567", RequestType.SERVICE).build();
 
     WebApplicationException exn = (WebApplicationException) catchThrowable(() -> validator.checkDeploy(request, deploy, Collections.emptyList(), Collections.emptyList()));
-    System.out.println(exn.getResponse().getEntity());
     assertThat((String) exn.getResponse().getEntity())
         .contains("Max healthcheck time");
   }
