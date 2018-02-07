@@ -344,7 +344,7 @@ class UITable extends Component {
       return (
         <Pagination
           prev={true}
-          next={!this.state.lastPage && numRows === rowsPerPage}
+          next={true}
           first={numPages > maxPaginationButtons}
           last={!this.isApiPaginated() && numPages > maxPaginationButtons}
           ellipsis={false}
