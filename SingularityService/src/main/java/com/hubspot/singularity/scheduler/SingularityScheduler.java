@@ -421,13 +421,14 @@ public class SingularityScheduler {
   }
 
   private List<SingularityTaskId> getMatchingTaskIds(SingularityRequest request, SingularityDeployKey deployKey) {
+    List<SingularityTaskId> activeTaskIdsFroRequest = leaderCache.getActiveTaskIdsForRequest(deployKey.getRequestId());
     if (request.isLongRunning()) {
       Set<SingularityTaskId> killedTaskIds = leaderCache.getKilledTasks().stream()
           .map(SingularityKilledTaskIdRecord::getTaskId)
           .collect(Collectors.toSet());
 
       List<SingularityTaskId> matchingTaskIds = new ArrayList<>();
-      for (SingularityTaskId taskId : leaderCache.getActiveTaskIdsForRequest(deployKey.getRequestId())) {
+      for (SingularityTaskId taskId : activeTaskIdsFroRequest) {
         if (!taskId.getDeployId().equals(deployKey.getDeployId())) {
           continue;
         }
@@ -441,7 +442,7 @@ public class SingularityScheduler {
       }
       return matchingTaskIds;
     } else {
-      return new ArrayList<>(leaderCache.getActiveTaskIdsForRequest(deployKey.getRequestId()));
+      return new ArrayList<>(activeTaskIdsFroRequest);
     }
   }
 

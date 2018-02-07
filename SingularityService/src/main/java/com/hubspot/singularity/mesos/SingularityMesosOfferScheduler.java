@@ -3,7 +3,6 @@ package com.hubspot.singularity.mesos;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
@@ -29,6 +28,7 @@ import com.hubspot.singularity.SingularityPendingTaskId;
 import com.hubspot.singularity.SingularitySlaveUsage;
 import com.hubspot.singularity.SingularitySlaveUsage.ResourceUsageType;
 import com.hubspot.singularity.SingularityTask;
+import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTaskRequest;
 import com.hubspot.singularity.SlaveMatchState;
 import com.hubspot.singularity.async.AsyncSemaphore;
@@ -178,18 +178,29 @@ public class SingularityMesosOfferScheduler {
       return offerHolders.values();
     }
 
-    final Map<String, Map<String, Integer>> tasksPerOfferPerRequest = new HashMap<>();
     final AtomicInteger tasksScheduled = new AtomicInteger(0);
-    final Map<String, SingularitySlaveUsage> currentSlaveUsagesBySlaveId = usageManager.getCurrentSlaveUsages(offerHolders.values().stream().map(SingularityOfferHolder::getSlaveId).collect(Collectors.toList()));
+    final Map<String, SingularitySlaveUsageWithCalculatedScores> currentSlaveUsagesBySlaveId = usageManager.getCurrentSlaveUsages(
+        offerHolders.values()
+            .stream()
+            .map(SingularityOfferHolder::getSlaveId)
+            .collect(Collectors.toList()))
+        .entrySet().parallelStream()
+        .collect(Collectors.toMap(
+            Map.Entry::getKey,
+            (e) -> this.buildSlaveUsageWithScores(e.getValue())
+        ));
 
     for (SingularityTaskRequestHolder taskRequestHolder : sortedTaskRequestHolders) {
       lock.runWithRequestLock(() -> {
+        Map<String, Integer> tasksPerOffer = new ConcurrentHashMap<>();
         Map<String, Double> scorePerOffer = new ConcurrentHashMap<>();
+        List<SingularityTaskId> activeTaskIdsForRequest = leaderCache.getActiveTaskIdsForRequest(taskRequestHolder.getTaskRequest().getRequest().getId());
+
         List<CompletableFuture<Void>> scoringFutures = new ArrayList<>();
         for (SingularityOfferHolder offerHolder : offerHolders.values()) {
           if (!isOfferFull(offerHolder)) {
             scoringFutures.add(offerScoringSemaphore.call(() -> CompletableFuture.runAsync(() -> {
-              double score = calculateScore(offerHolder, currentSlaveUsagesBySlaveId, tasksPerOfferPerRequest, taskRequestHolder);
+              double score = calculateScore(offerHolder, currentSlaveUsagesBySlaveId, tasksPerOffer, taskRequestHolder, activeTaskIdsForRequest);
               if (score != 0) {
                 scorePerOffer.put(offerHolder.getSlaveId(), score);
               }
@@ -202,7 +213,7 @@ public class SingularityMesosOfferScheduler {
         if (!scorePerOffer.isEmpty()) {
           SingularityOfferHolder bestOffer = offerHolders.get(Collections.max(scorePerOffer.entrySet(), Map.Entry.comparingByValue()).getKey());
           LOG.info("Best offer {}/1 is on {}", scorePerOffer.get(bestOffer.getSlaveId()), bestOffer.getSanitizedHost());
-          SingularityMesosTaskHolder taskHolder = acceptTask(bestOffer, tasksPerOfferPerRequest, taskRequestHolder);
+          SingularityMesosTaskHolder taskHolder = acceptTask(bestOffer, tasksPerOffer, taskRequestHolder);
           tasksScheduled.getAndIncrement();
           bestOffer.addMatchedTask(taskHolder);
         }
@@ -214,13 +225,31 @@ public class SingularityMesosOfferScheduler {
     return offerHolders.values();
   }
 
+  SingularitySlaveUsageWithCalculatedScores buildSlaveUsageWithScores(SingularitySlaveUsage slaveUsage) {
+    if (SingularitySlaveUsageWithCalculatedScores.missingUsageData(slaveUsage)) {
+      return new SingularitySlaveUsageWithCalculatedScores(slaveUsage, true, 0, 0, 0, 0, 0, 0, 0);
+    } else {
+      double longRunningCpusUsedScore = slaveUsage.getLongRunningTasksUsage().get(ResourceUsageType.CPU_USED).doubleValue() / slaveUsage.getCpusTotal().get();
+      double longRunningMemUsedScore = ((double) slaveUsage.getLongRunningTasksUsage().get(ResourceUsageType.MEMORY_BYTES_USED).longValue() / slaveUsage.getMemoryBytesTotal().get());
+      double longRunningDiskUsedScore = ((double) slaveUsage.getLongRunningTasksUsage().get(ResourceUsageType.DISK_BYTES_USED).longValue() / slaveUsage.getDiskBytesTotal().get());
+      double cpusFreeScore = 1 - (slaveUsage.getCpusReserved() / slaveUsage.getCpusTotal().get());
+      double memFreeScore = 1 - ((double) slaveUsage.getMemoryMbReserved() / slaveUsage.getMemoryMbTotal().get());
+      double diskFreeScore = 1 - ((double) slaveUsage.getDiskMbReserved() / slaveUsage.getDiskMbTotal().get());
+      return new SingularitySlaveUsageWithCalculatedScores(
+          slaveUsage, false, longRunningCpusUsedScore, longRunningMemUsedScore, longRunningDiskUsedScore, cpusFreeScore, memFreeScore, diskFreeScore,
+          scoreLongRunningTask(longRunningCpusUsedScore, memFreeScore, longRunningCpusUsedScore, cpusFreeScore, longRunningDiskUsedScore, diskFreeScore)
+      );
+    }
+  }
+
   private boolean isOfferFull(SingularityOfferHolder offerHolder) {
     return configuration.getMaxTasksPerOffer() > 0 && offerHolder.getAcceptedTasks().size() >= configuration.getMaxTasksPerOffer();
   }
 
-  private double calculateScore(SingularityOfferHolder offerHolder, Map<String, SingularitySlaveUsage> currentSlaveUsagesBySlaveId, Map<String, Map<String, Integer>> tasksPerOfferPerRequest, SingularityTaskRequestHolder taskRequestHolder) {
-    Optional<SingularitySlaveUsage> maybeSlaveUsage = Optional.fromNullable(currentSlaveUsagesBySlaveId.get(offerHolder.getSlaveId()));
-    double score = score(offerHolder, tasksPerOfferPerRequest, taskRequestHolder, maybeSlaveUsage);
+  private double calculateScore(SingularityOfferHolder offerHolder, Map<String, SingularitySlaveUsageWithCalculatedScores> currentSlaveUsagesBySlaveId, Map<String, Integer> tasksPerOffer,
+                                SingularityTaskRequestHolder taskRequestHolder, List<SingularityTaskId> activeTaskIdsForRequest) {
+    Optional<SingularitySlaveUsageWithCalculatedScores> maybeSlaveUsage = Optional.fromNullable(currentSlaveUsagesBySlaveId.get(offerHolder.getSlaveId()));
+    double score = score(offerHolder, tasksPerOffer, taskRequestHolder, maybeSlaveUsage, activeTaskIdsForRequest);
     if (LOG.isTraceEnabled()) {
       LOG.trace("Scored {} | Task {} | Offer - mem {} - cpu {} | Slave {} | maybeSlaveUsage - {}", score, taskRequestHolder.getTaskRequest().getPendingTask().getPendingTaskId().getId(),
           MesosUtils.getMemory(offerHolder.getCurrentResources(), Optional.absent()), MesosUtils.getNumCpus(offerHolder.getCurrentResources(), Optional.absent()), offerHolder.getHostname(), maybeSlaveUsage);
@@ -240,18 +269,18 @@ public class SingularityMesosOfferScheduler {
         .collect(Collectors.toList());
   }
 
-  private double score(SingularityOfferHolder offerHolder, Map<String, Map<String, Integer>> tasksPerOfferHostPerRequest,
-                       SingularityTaskRequestHolder taskRequestHolder, Optional<SingularitySlaveUsage> maybeSlaveUsage) {
+  private double score(SingularityOfferHolder offerHolder, Map<String, Integer> tasksPerOffer, SingularityTaskRequestHolder taskRequestHolder,
+                       Optional<SingularitySlaveUsageWithCalculatedScores> maybeSlaveUsage, List<SingularityTaskId> activeTaskIdsForRequest) {
 
     final SingularityTaskRequest taskRequest = taskRequestHolder.getTaskRequest();
     final SingularityPendingTaskId pendingTaskId = taskRequest.getPendingTask().getPendingTaskId();
 
-    if (tooManyTasksPerOfferHostForRequest(tasksPerOfferHostPerRequest, offerHolder.getHostname(), taskRequestHolder.getTaskRequest())) {
+    if (tooManyTasksPerOfferHostForRequest(tasksPerOffer, offerHolder.getHostname(), taskRequestHolder.getTaskRequest())) {
       LOG.debug("Skipping task request for request id {}, too many tasks already scheduled using offer {}", taskRequest.getRequest().getId(), offerHolder.getHostname());
       return 0;
     }
 
-    if (isTooManyInstancesForRequest(taskRequest)) {
+    if (isTooManyInstancesForRequest(taskRequest, activeTaskIdsForRequest)) {
       LOG.debug("Skipping pending task {}, too many instances already running", pendingTaskId);
       return 0;
     }
@@ -268,7 +297,7 @@ public class SingularityMesosOfferScheduler {
       return 0;
     }
 
-    final SlaveMatchState slaveMatchState = slaveAndRackManager.doesOfferMatch(offerHolder, taskRequest);
+    final SlaveMatchState slaveMatchState = slaveAndRackManager.doesOfferMatch(offerHolder, taskRequest, activeTaskIdsForRequest);
 
     if (slaveMatchState.isMatchAllowed()) {
       return score(offerHolder.getHostname(), taskRequest, maybeSlaveUsage);
@@ -281,34 +310,17 @@ public class SingularityMesosOfferScheduler {
   }
 
   @VisibleForTesting
-  double score(String hostname, SingularityTaskRequest taskRequest, Optional<SingularitySlaveUsage> maybeSlaveUsage) {
-    if (isMissingUsageData(maybeSlaveUsage)) {
+  double score(String hostname, SingularityTaskRequest taskRequest, Optional<SingularitySlaveUsageWithCalculatedScores> maybeSlaveUsage) {
+    if (!maybeSlaveUsage.isPresent() || maybeSlaveUsage.get().isMissingUsageData()) {
       LOG.info("Slave {} has missing usage data ({}). Will default to {}", hostname, maybeSlaveUsage, configuration.getDefaultOfferScoreForMissingUsage());
       return configuration.getDefaultOfferScoreForMissingUsage();
     }
 
-    SingularitySlaveUsage slaveUsage = maybeSlaveUsage.get();
-    Map<ResourceUsageType, Number> longRunningTasksUsage = slaveUsage.getLongRunningTasksUsage();
+    System.out.println(maybeSlaveUsage);
 
-    double longRunningCpusUsedScore = longRunningTasksUsage.get(ResourceUsageType.CPU_USED).doubleValue() / slaveUsage.getCpusTotal().get();
-    double longRunningMemUsedScore = ((double) longRunningTasksUsage.get(ResourceUsageType.MEMORY_BYTES_USED).longValue() / slaveUsage.getMemoryBytesTotal().get());
-    double longRunningDiskUsedScore = ((double) longRunningTasksUsage.get(ResourceUsageType.DISK_BYTES_USED).longValue() / slaveUsage.getDiskBytesTotal().get());
-
-    double cpusFreeScore = 1 - (slaveUsage.getCpusReserved() / slaveUsage.getCpusTotal().get());
-    double memFreeScore = 1 - ((double) slaveUsage.getMemoryMbReserved() / slaveUsage.getMemoryMbTotal().get());
-    double diskFreeScore = 1 - ((double) slaveUsage.getDiskMbReserved() / slaveUsage.getDiskMbTotal().get());
-
-    return isLongRunning(taskRequest) ? scoreLongRunningTask(longRunningMemUsedScore, memFreeScore, longRunningCpusUsedScore, cpusFreeScore, longRunningDiskUsedScore, diskFreeScore)
-        : scoreNonLongRunningTask(taskRequest, longRunningMemUsedScore, memFreeScore, longRunningCpusUsedScore, cpusFreeScore, longRunningDiskUsedScore, diskFreeScore);
-  }
-
-  private boolean isMissingUsageData(Optional<SingularitySlaveUsage> maybeSlaveUsage) {
-    return !maybeSlaveUsage.isPresent() ||
-        !maybeSlaveUsage.get().getCpusTotal().isPresent() || !maybeSlaveUsage.get().getMemoryMbTotal().isPresent() || !maybeSlaveUsage.get().getDiskMbTotal().isPresent() ||
-        maybeSlaveUsage.get().getLongRunningTasksUsage() == null ||
-        !maybeSlaveUsage.get().getLongRunningTasksUsage().containsKey(ResourceUsageType.CPU_USED) ||
-        !maybeSlaveUsage.get().getLongRunningTasksUsage().containsKey(ResourceUsageType.MEMORY_BYTES_USED) ||
-        !maybeSlaveUsage.get().getLongRunningTasksUsage().containsKey(ResourceUsageType.DISK_BYTES_USED);
+    return isLongRunning(taskRequest)
+        ? maybeSlaveUsage.get().getLongRunningMemUsedScore()
+        : scoreNonLongRunningTask(taskRequest, maybeSlaveUsage.get());
   }
 
   private boolean isLongRunning(SingularityTaskRequest taskRequest) {
@@ -320,7 +332,7 @@ public class SingularityMesosOfferScheduler {
     return calculateScore(1 - longRunningMemUsedScore, memFreeScore, 1 - longRunningCpusUsedScore, cpusFreeScore, 1 - longRunningDiskUsedScore, diskFreeScore, 0.50, 0.50);
   }
 
-  private double scoreNonLongRunningTask(SingularityTaskRequest taskRequest, double longRunningMemUsedScore, double memFreeScore, double longRunningCpusUsedScore, double cpusFreeScore, double longRunningDiskUsedScore, double diskFreeScore) {
+  private double scoreNonLongRunningTask(SingularityTaskRequest taskRequest, SingularitySlaveUsageWithCalculatedScores slaveUsageWithScores) {
     Optional<SingularityDeployStatistics> statistics = deployManager.getDeployStatistics(taskRequest.getRequest().getId(), taskRequest.getDeploy().getId());
     final double epsilon = 0.0001;
 
@@ -332,13 +344,13 @@ public class SingularityMesosOfferScheduler {
       usedResourceWeight = Math.min((double) TimeUnit.MILLISECONDS.toSeconds(statistics.get().getAverageRuntimeMillis().get()) / configuration.getConsiderNonLongRunningTaskLongRunningAfterRunningForSeconds(), 1) * maxNonLongRunningUsedResourceWeight;
 
       if (Math.abs(usedResourceWeight - maxNonLongRunningUsedResourceWeight) < epsilon) {
-        return scoreLongRunningTask(longRunningMemUsedScore, memFreeScore, longRunningCpusUsedScore, cpusFreeScore, longRunningDiskUsedScore, diskFreeScore);
+        return slaveUsageWithScores.getDefaultLongRunningTaskScore();
       }
       freeResourceWeight = 1 - usedResourceWeight;
     }
 
     // usage reduces score
-    return calculateScore(longRunningMemUsedScore, memFreeScore, longRunningCpusUsedScore, cpusFreeScore, longRunningDiskUsedScore, diskFreeScore, freeResourceWeight, usedResourceWeight * -1);
+    return calculateScore(slaveUsageWithScores.getLongRunningMemUsedScore(), slaveUsageWithScores.getMemFreeScore(), slaveUsageWithScores.getLongRunningCpusUsedScore(), slaveUsageWithScores.getCpusFreeScore(), slaveUsageWithScores.getLongRunningDiskUsedScore(), slaveUsageWithScores.getDiskFreeScore(), freeResourceWeight, usedResourceWeight * -1);
   }
 
   private double calculateScore(double longRunningMemUsedScore, double memFreeScore, double longRunningCpusUsedScore, double cpusFreeScore, double longRunningDiskUsedScore, double diskFreeScore, double freeResourceWeight, double usedResourceWeight) {
@@ -355,7 +367,7 @@ public class SingularityMesosOfferScheduler {
     return score;
   }
 
-  private SingularityMesosTaskHolder acceptTask(SingularityOfferHolder offerHolder, Map<String, Map<String, Integer>> tasksPerOfferPerRequest, SingularityTaskRequestHolder taskRequestHolder) {
+  private SingularityMesosTaskHolder acceptTask(SingularityOfferHolder offerHolder, Map<String, Integer> tasksPerOffer, SingularityTaskRequestHolder taskRequestHolder) {
     final SingularityTaskRequest taskRequest = taskRequestHolder.getTaskRequest();
     final SingularityMesosTaskHolder taskHolder = mesosTaskBuilder.buildTask(offerHolder, offerHolder.getCurrentResources(), taskRequest, taskRequestHolder.getTaskResources(), taskRequestHolder.getExecutorResources());
 
@@ -366,42 +378,34 @@ public class SingularityMesosOfferScheduler {
 
     taskManager.createTaskAndDeletePendingTask(zkTask);
 
-    addRequestToMapByOfferHost(tasksPerOfferPerRequest, offerHolder.getHostname(), taskRequest.getRequest().getId());
+    addRequestToMapByOfferHost(tasksPerOffer, offerHolder.getHostname(), taskRequest.getRequest().getId());
 
     return taskHolder;
   }
 
-  private void addRequestToMapByOfferHost(Map<String, Map<String, Integer>> tasksPerOfferHostPerRequest, String hostname, String requestId) {
-    if (tasksPerOfferHostPerRequest.containsKey(hostname)) {
-      if (tasksPerOfferHostPerRequest.get(hostname).containsKey(requestId)) {
-        int count = tasksPerOfferHostPerRequest.get(hostname).get(requestId);
-        tasksPerOfferHostPerRequest.get(hostname).put(requestId, count + 1);
-      } else {
-        tasksPerOfferHostPerRequest.get(hostname).put(requestId, 0);
-      }
+  private void addRequestToMapByOfferHost(Map<String, Integer> tasksPerOffer, String hostname, String requestId) {
+    if (tasksPerOffer.containsKey(hostname)) {
+      int count = tasksPerOffer.get(hostname);
+      tasksPerOffer.put(hostname, count + 1);
     } else {
-      tasksPerOfferHostPerRequest.put(hostname, new HashMap<>());
-      tasksPerOfferHostPerRequest.get(hostname).put(requestId, 1);
+      tasksPerOffer.put(hostname, 1);
     }
   }
 
-  private boolean tooManyTasksPerOfferHostForRequest(Map<String, Map<String, Integer>> tasksPerOfferHostPerRequest, String hostname, SingularityTaskRequest taskRequest) {
-    if (!tasksPerOfferHostPerRequest.containsKey(hostname)) {
-      return false;
-    }
-    if (!tasksPerOfferHostPerRequest.get(hostname).containsKey(taskRequest.getRequest().getId())) {
+  private boolean tooManyTasksPerOfferHostForRequest(Map<String, Integer> tasksPerOffer, String hostname, SingularityTaskRequest taskRequest) {
+    if (!tasksPerOffer.containsKey(hostname)) {
       return false;
     }
 
     int maxPerOfferPerRequest = taskRequest.getRequest().getMaxTasksPerOffer().or(configuration.getMaxTasksPerOfferPerRequest());
-    return maxPerOfferPerRequest > 0 && tasksPerOfferHostPerRequest.get(hostname).get(taskRequest.getRequest().getId()) > maxPerOfferPerRequest;
+    return maxPerOfferPerRequest > 0 && tasksPerOffer.get(hostname) > maxPerOfferPerRequest;
   }
 
-  private boolean isTooManyInstancesForRequest(SingularityTaskRequest taskRequest) {
+  private boolean isTooManyInstancesForRequest(SingularityTaskRequest taskRequest, List<SingularityTaskId> activeTaskIdsForRequest) {
     if (taskRequest.getRequest().getRequestType() == RequestType.ON_DEMAND) {
       int maxActiveOnDemandTasks = taskRequest.getRequest().getInstances().or(configuration.getMaxActiveOnDemandTasksPerRequest());
       if (maxActiveOnDemandTasks > 0) {
-        int activeTasksForRequest = leaderCache.getActiveTaskIdsForRequest(taskRequest.getRequest().getId()).size();
+        int activeTasksForRequest = activeTaskIdsForRequest.size();
         LOG.debug("Running {} instances for request {}. Max is {}", activeTasksForRequest, taskRequest.getRequest().getId(), maxActiveOnDemandTasks);
         if (activeTasksForRequest >= maxActiveOnDemandTasks) {
           return true;
