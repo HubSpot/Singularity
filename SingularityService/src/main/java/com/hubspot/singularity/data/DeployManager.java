@@ -324,6 +324,7 @@ public class DeployManager extends CuratorAsyncManager {
   }
 
   public SingularityDeleteResult deleteCancelDeployRequest(SingularityDeployMarker deployMarker) {
+    LOG.debug("Removing cancel deploy request {}", deployMarker);
     return delete(getCancelDeployPath(deployMarker));
   }
 
@@ -358,6 +359,7 @@ public class DeployManager extends CuratorAsyncManager {
   }
 
   public SingularityDeleteResult deleteUpdatePendingDeployRequest(SingularityUpdatePendingDeployRequest updateRequest) {
+    LOG.debug("Removing request to update pending deploy {}", updateRequest);
     return delete(getUpdatePendingDeployPath(updateRequest));
   }
 

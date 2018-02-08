@@ -16,7 +16,6 @@ import org.apache.mesos.v1.Protos.Offer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.codahale.metrics.annotation.Timed;
 import com.google.common.base.Optional;
 import com.google.common.collect.HashMultiset;
 import com.google.common.collect.ImmutableMap;
@@ -82,7 +81,7 @@ public class SingularitySlaveAndRackManager {
     this.leaderCache = leaderCache;
   }
 
-  public SlaveMatchState doesOfferMatch(SingularityOfferHolder offerHolder, SingularityTaskRequest taskRequest) {
+  SlaveMatchState doesOfferMatch(SingularityOfferHolder offerHolder, SingularityTaskRequest taskRequest, List<SingularityTaskId> activeTaskIdsForRequest) {
     final String host = offerHolder.getHostname();
     final String rackId = offerHolder.getRackId();
     final String slaveId = offerHolder.getSlaveId();
@@ -138,7 +137,7 @@ public class SingularitySlaveAndRackManager {
     final String sanitizedRackId = offerHolder.getSanitizedRackId();
     Collection<SingularityTaskId> cleaningTasks = leaderCache.getCleanupTaskIds();
 
-    for (SingularityTaskId taskId : leaderCache.getActiveTaskIdsForRequest(taskRequest.getRequest().getId())) {
+    for (SingularityTaskId taskId : activeTaskIdsForRequest) {
       // TODO consider using executorIds
 
       if (!cleaningTasks.contains(taskId) && taskRequest.getDeploy().getId().equals(taskId.getDeployId())) {
@@ -214,17 +213,15 @@ public class SingularitySlaveAndRackManager {
         }
         break;
       case OPTIMISTIC:
-        Collection<SingularityTaskId> currentlyActiveTasksForRequestClusterwide = leaderCache.getActiveTaskIdsForRequest(taskRequest.getRequest().getId());
-
         // If no tasks are active for this request yet, we can fall back to greedy.
-        if (currentlyActiveTasksForRequestClusterwide.size() > 0) {
+        if (activeTaskIdsForRequest.size() > 0) {
           Collection<SingularityPendingTaskId> pendingTasksForRequestClusterwide = leaderCache.getPendingTaskIdsForRequest(taskRequest.getRequest().getId());
 
-          Set<String> currentHostsForRequest = currentlyActiveTasksForRequestClusterwide.stream()
+          Set<String> currentHostsForRequest = activeTaskIdsForRequest.stream()
               .map(SingularityTaskId::getSanitizedHost)
               .collect(Collectors.toSet());
 
-          final double numPerSlave = currentlyActiveTasksForRequestClusterwide.size() / (double) currentHostsForRequest.size();
+          final double numPerSlave = activeTaskIdsForRequest.size() / (double) currentHostsForRequest.size();
           final double leniencyCoefficient = configuration.getPlacementLeniency();
           final double threshold = numPerSlave * (1 + (pendingTasksForRequestClusterwide.size() * leniencyCoefficient));
           final boolean isSlaveOk = numOnSlave <= threshold;
@@ -232,7 +229,7 @@ public class SingularitySlaveAndRackManager {
           if (!isSlaveOk) {
             LOG.trace(
                 "Rejecting OPTIMISTIC task {} from slave {} ({}) because numOnSlave {} violates threshold {} (based on active tasks for request {}, current hosts for request {}, pending tasks for request {})",
-                taskRequest.getRequest().getId(), slaveId, host, numOnSlave, threshold, currentlyActiveTasksForRequestClusterwide.size(), currentHostsForRequest.size(), pendingTasksForRequestClusterwide.size()
+                taskRequest.getRequest().getId(), slaveId, host, numOnSlave, threshold, activeTaskIdsForRequest.size(), currentHostsForRequest.size(), pendingTasksForRequestClusterwide.size()
             );
             return SlaveMatchState.SLAVE_SATURATED;
           }
@@ -307,7 +304,7 @@ public class SingularitySlaveAndRackManager {
     return false;
   }
 
-  public void slaveLost(AgentID slaveIdObj) {
+  void slaveLost(AgentID slaveIdObj) {
     final String slaveId = slaveIdObj.getValue();
 
     Optional<SingularitySlave> slave = slaveManager.getObject(slaveId);
@@ -433,8 +430,7 @@ public class SingularitySlaveAndRackManager {
     throw new IllegalStateException(String.format("Invalid state %s for %s", currentState, object.getId()));
   }
 
-  @Timed
-  public CheckResult checkOffer(Offer offer) {
+  CheckResult checkOffer(Offer offer) {
     final String slaveId = offer.getAgentId().getValue();
     final String rackId = slaveAndRackHelper.getRackIdOrDefault(offer);
     final String host = slaveAndRackHelper.getMaybeTruncatedHost(offer);
@@ -464,8 +460,7 @@ public class SingularitySlaveAndRackManager {
     return result;
   }
 
-  @Timed
-  public void checkStateAfterFinishedTask(SingularityTaskId taskId, String slaveId, SingularityLeaderCache leaderCache) {
+  void checkStateAfterFinishedTask(SingularityTaskId taskId, String slaveId, SingularityLeaderCache leaderCache) {
     Optional<SingularitySlave> slave = slaveManager.getSlave(slaveId);
 
     if (!slave.isPresent()) {

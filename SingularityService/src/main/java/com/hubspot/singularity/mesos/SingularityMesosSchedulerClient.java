@@ -219,12 +219,7 @@ public class SingularityMesosSchedulerClient {
               return true;
             }
           })
-          .subscribe(status -> {
-            if (status.hasUuid()) {
-              acknowledge(status.getAgentId(), status.getTaskId(), status.getUuid());
-            }
-            scheduler.statusUpdate(status);
-          }, scheduler::onUncaughtException);
+          .subscribe(scheduler::statusUpdate, scheduler::onUncaughtException);
 
       // This is the observable that is responsible for sending calls to mesos master.
       PublishSubject<Optional<SinkOperation<Call>>> p = PublishSubject.create();

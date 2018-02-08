@@ -31,15 +31,17 @@ public class SingularityAutoScaleSpreadAllPoller extends SingularityLeaderOnlyPo
   private final SlavePlacement defaultSlavePlacement;
   private final RequestHelper requestHelper;
   private final boolean spreadAllSlavesEnabled;
+  private final SingularitySchedulerLock lock;
 
   @Inject
   SingularityAutoScaleSpreadAllPoller(SingularityConfiguration configuration, SlaveManager slaveManager, RequestManager requestManager, RequestHelper requestHelper, SingularitySchedulerLock lock) {
-    super(configuration.getCheckAutoSpreadAllSlavesEverySeconds(), TimeUnit.SECONDS, lock, true);
+    super(configuration.getCheckAutoSpreadAllSlavesEverySeconds(), TimeUnit.SECONDS, true);
     this.slaveManager = slaveManager;
     this.requestManager = requestManager;
     this.defaultSlavePlacement = configuration.getDefaultSlavePlacement();
     this.requestHelper = requestHelper;
     this.spreadAllSlavesEnabled = configuration.isSpreadAllSlavesEnabled();
+    this.lock = lock;
   }
 
   @Override
@@ -47,21 +49,23 @@ public class SingularityAutoScaleSpreadAllPoller extends SingularityLeaderOnlyPo
     int currentActiveSlaveCount = slaveManager.getNumObjectsAtState(MachineState.ACTIVE);
 
     for (SingularityRequestWithState requestWithState : requestManager.getActiveRequests()) {
-      SingularityRequest request = requestWithState.getRequest();
-      SlavePlacement placement = request.getSlavePlacement().or(defaultSlavePlacement);
+      lock.runWithRequestLock(() -> {
+        SingularityRequest request = requestWithState.getRequest();
+        SlavePlacement placement = request.getSlavePlacement().or(defaultSlavePlacement);
 
-      if (placement != SlavePlacement.SPREAD_ALL_SLAVES) {
-        continue;
-      }
+        if (placement != SlavePlacement.SPREAD_ALL_SLAVES) {
+          return;
+        }
 
-      int requestInstanceCount = request.getInstancesSafe();
+        int requestInstanceCount = request.getInstancesSafe();
 
-      if (requestInstanceCount == currentActiveSlaveCount) {
-        LOG.trace("Active Request {} is already spread to all {} available slaves", request.getId(), currentActiveSlaveCount);
-      } else {
-        LOG.info("Scaling request {} from {} instances to {} available slaves", request.getId(), requestInstanceCount, currentActiveSlaveCount);
-        submitScaleRequest(requestWithState, currentActiveSlaveCount);
-      }
+        if (requestInstanceCount == currentActiveSlaveCount) {
+          LOG.trace("Active Request {} is already spread to all {} available slaves", request.getId(), currentActiveSlaveCount);
+        } else {
+          LOG.info("Scaling request {} from {} instances to {} available slaves", request.getId(), requestInstanceCount, currentActiveSlaveCount);
+          submitScaleRequest(requestWithState, currentActiveSlaveCount);
+        }
+      }, requestWithState.getRequest().getId(), getClass().getSimpleName());
     }
   }
 
