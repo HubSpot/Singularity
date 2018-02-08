@@ -15,7 +15,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.inject.Inject;
-import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.SingularityAction;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.DisasterManager;
@@ -57,9 +56,7 @@ public class SingularitySchedulerPoller extends SingularityLeaderOnlyPoller {
     }
 
 
-    final long start = lock.lockOffers("schedulerPoller");
-    try {
-
+    lock.runWithOffersLock(() -> {
       List<CachedOffer> cachedOffers = offerCache.checkoutOffers();
       Map<String, CachedOffer> offerIdToCachedOffer = new HashMap<>(cachedOffers.size());
       List<Offer> offers = new ArrayList<>(cachedOffers.size());
@@ -98,9 +95,7 @@ public class SingularitySchedulerPoller extends SingularityLeaderOnlyPoller {
         }
       }
 
-      LOG.info("Launched {} tasks on {} cached offers (returned {}) in {}", launchedTasks, acceptedOffers, offerHolders.size() - acceptedOffers, JavaUtils.duration(start));
-    } finally {
-      lock.unlockOffers("schedulerPoller", start);
-    }
+      LOG.info("Launched {} tasks on {} cached offers (returned {})", launchedTasks, acceptedOffers, offerHolders.size() - acceptedOffers);
+    }, getClass().getSimpleName());
   }
 }

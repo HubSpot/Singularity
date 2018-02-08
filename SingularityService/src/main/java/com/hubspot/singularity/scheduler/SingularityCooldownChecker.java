@@ -55,7 +55,7 @@ public class SingularityCooldownChecker {
         if (checkCooldown(cooldownRequest)) {
           exitedCooldown.getAndIncrement();
         }
-      }, cooldownRequest.getRequest().getId(), "cooldownChecker");
+      }, cooldownRequest.getRequest().getId(), getClass().getSimpleName());
     });
 
     LOG.info("{} out of {} cooldown requests exited cooldown in {}", exitedCooldown.get(), cooldownRequests.size(), JavaUtils.duration(start));

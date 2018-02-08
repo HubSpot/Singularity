@@ -65,7 +65,7 @@ public class SingularityAutoScaleSpreadAllPoller extends SingularityLeaderOnlyPo
           LOG.info("Scaling request {} from {} instances to {} available slaves", request.getId(), requestInstanceCount, currentActiveSlaveCount);
           submitScaleRequest(requestWithState, currentActiveSlaveCount);
         }
-      }, requestWithState.getRequest().getId(), "spreadToAllHostsPoller");
+      }, requestWithState.getRequest().getId(), getClass().getSimpleName());
     }
   }
 

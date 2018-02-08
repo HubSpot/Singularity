@@ -73,7 +73,7 @@ public class SingularityHistoryPurger extends SingularityLeaderOnlyPoller {
         } else {
           LOG.debug("No purge settings for removing task bytes, skipping for request {}", requestId);
         }
-      }, requestId, "historyPurge");
+      }, requestId, getClass().getSimpleName());
     }
     purgeStaleZkData();
   }

@@ -329,7 +329,7 @@ public class SingularityCleaner {
     cleanupRequests.parallelStream().forEach((requestCleanup) -> {
       lock.runWithRequestLock(() -> {
         processRequestCleanup(start, numTasksKilled, numScheduledTasksRemoved, requestCleanup);
-      }, requestCleanup.getRequestId(), "requestCleanup");
+      }, requestCleanup.getRequestId(), String.format("%s#%s", getClass().getSimpleName(), "drainRequestCleanupQueue"));
     });
 
     LOG.info("Killed {} tasks (removed {} scheduled) in {}", numTasksKilled.get(), numScheduledTasksRemoved.get(), JavaUtils.duration(start));
@@ -583,7 +583,7 @@ public class SingularityCleaner {
                 waiting.getAndIncrement();
               }
             }
-          }, killedTaskIdRecordsForRequest.getKey(), "killTaskIdRecordCleanup");
+          }, killedTaskIdRecordsForRequest.getKey(), String.format("%s#%s", getClass().getSimpleName(), "checkKilledTaskIdRecords"));
         });
 
     LOG.info("{} obsolete, {} waiting, {} rekilled tasks based on {} killedTaskIdRecords", obsolete, waiting, rekilled, killedTaskIdRecords.size());
@@ -607,7 +607,7 @@ public class SingularityCleaner {
         .forEach((taskCleanupsForRequest) -> {
           lock.runWithRequestLock(() -> {
             processTaskCleanupsForRequest(taskCleanupsForRequest.getKey(), taskCleanupsForRequest.getValue(), killedTasks);
-          }, taskCleanupsForRequest.getKey(), "taskCleanup");
+          }, taskCleanupsForRequest.getKey(), String.format("%s#%s", getClass().getSimpleName(), "drainTaskCleanupQueue"));
         });
 
     LOG.info("Killed {} tasks in {}", killedTasks, JavaUtils.duration(start));
@@ -862,7 +862,7 @@ public class SingularityCleaner {
 
               taskManager.deleteLBCleanupTask(taskId);
             }
-          }, lbCleanupsForRequest.getKey(), "lbTaskCleanup");
+          }, lbCleanupsForRequest.getKey(), String.format("%s#%s", getClass().getSimpleName(), "drainLBTaskCleanupQueue"));
         });
 
     LOG.info("LB cleaned {} tasks ({} left, {} obsolete) in {}", cleanedTasks, lbCleanupTasks.size() - (ignoredTasks.get() + cleanedTasks.get()), ignoredTasks, JavaUtils.duration(start));
@@ -905,7 +905,7 @@ public class SingularityCleaner {
         }
 
         requestManager.deleteLbCleanupRequest(cleanup.getRequestId());
-      }, cleanup.getRequestId(), "lbRequestCleanup");
+      }, cleanup.getRequestId(), String.format("%s#%s", getClass().getSimpleName(), "drainLBRequestCleanupQueue"));
     });
     LOG.info("LB cleaned {} requests ({} left, {} obsolete) in {}", cleanedRequests, lbCleanupRequests.size() - (ignoredRequests.get() + cleanedRequests.get()), ignoredRequests, JavaUtils.duration(start));
   }
