@@ -107,7 +107,7 @@ public class SingularityDeployChecker {
     pendingDeploys.parallelStream().forEach((pendingDeploy) -> {
       lock.runWithRequestLock(() -> {
         checkDeploy(pendingDeploy, cancelDeploys, pendingDeployToKey, deployKeyToDeploy, updateRequests);
-      }, pendingDeploy.getDeployMarker().getRequestId(), "deployChecker");
+      }, pendingDeploy.getDeployMarker().getRequestId(), getClass().getSimpleName());
     });
 
     cancelDeploys.forEach(deployManager::deleteCancelDeployRequest);

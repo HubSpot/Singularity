@@ -142,7 +142,7 @@ public class SingularityMesosOfferScheduler {
 
   public Collection<SingularityOfferHolder> checkOffers(final Collection<Offer> offers) {
     for (SingularityPendingTaskId taskId : taskManager.getPendingTasksMarkedForDeletion()) {
-      lock.runWithRequestLock(() -> taskManager.deletePendingTask(taskId), taskId.getRequestId(), "pendingTaskDeletes");
+      lock.runWithRequestLock(() -> taskManager.deletePendingTask(taskId), taskId.getRequestId(), String.format("%s#%s", getClass().getSimpleName(), "checkOffers -> pendingTaskDeletes"));
     }
 
     scheduler.checkForDecomissions();
@@ -217,7 +217,7 @@ public class SingularityMesosOfferScheduler {
           tasksScheduled.getAndIncrement();
           bestOffer.addMatchedTask(taskHolder);
         }
-      }, taskRequestHolder.getTaskRequest().getRequest().getId(), "checkOffers");
+      }, taskRequestHolder.getTaskRequest().getRequest().getId(), String.format("%s#%s", getClass().getSimpleName(), "checkOffers"));
     }
 
     LOG.info("{} tasks scheduled, {} tasks remaining after examining {} offers", tasksScheduled, numDueTasks - tasksScheduled.get(), offers.size());

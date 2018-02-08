@@ -248,7 +248,7 @@ public class SingularityMesosSchedulerImpl extends SingularityMesosScheduler {
 
       LOG.info("Finished handling {} new offer(s) ({}), {} accepted, {} declined/cached", offers.size(), JavaUtils.duration(start), acceptedOffers.size(),
           offers.size() - acceptedOffers.size());
-    }, "offers");
+    }, "resourceOffers");
   }
 
   @Override
@@ -349,21 +349,18 @@ public class SingularityMesosSchedulerImpl extends SingularityMesosScheduler {
     mesosSchedulerClient.subscribe(masterUrl, this);
   }
 
-  private void callWithOffersLock(Runnable function, String name) {
+  private void callWithOffersLock(Runnable function, String method) {
     if (!isRunning()) {
-      LOG.info("Ignoring {} because scheduler isn't running ({})", name, state);
+      LOG.info("Ignoring {} because scheduler isn't running ({})", method, state);
       return;
     }
-    final long start = lock.lockOffers(name);
     try {
-      function.run();
+      lock.runWithOffersLock(function, String.format("%s#%s", getClass().getSimpleName(), method));
     } catch (Throwable t) {
       LOG.error("Scheduler threw an uncaught exception - exiting", t);
       exceptionNotifier.notify(String.format("Scheduler threw an uncaught exception (%s)", t.getMessage()), t);
       notifyStopping();
       abort.abort(AbortReason.UNRECOVERABLE_ERROR, Optional.of(t));
-    } finally {
-      lock.unlockOffers(name, start);
     }
   }
 
@@ -372,16 +369,14 @@ public class SingularityMesosSchedulerImpl extends SingularityMesosScheduler {
       LOG.info("Ignoring {} because scheduler isn't running ({})", name, state);
       return;
     }
-    final long start = lock.lockState(name);
+
     try {
-      function.run();
+      lock.runWithStateLock(function, name);
     } catch (Throwable t) {
       LOG.error("Scheduler threw an uncaught exception - exiting", t);
       exceptionNotifier.notify(String.format("Scheduler threw an uncaught exception (%s)", t.getMessage()), t);
       notifyStopping();
       abort.abort(AbortReason.UNRECOVERABLE_ERROR, Optional.of(t));
-    } finally {
-      lock.unlockState(name, start);
     }
   }
 

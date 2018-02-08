@@ -24,7 +24,7 @@ public class SingularitySchedulerLock {
     this.requestLocks = new ConcurrentHashMap<>();
   }
 
-  public long lock(String requestId, String name) {
+  private long lock(String requestId, String name) {
     final long start = System.currentTimeMillis();
     LOG.trace("{} - Locking {}", name, requestId);
     ReentrantLock lock = requestLocks.computeIfAbsent(requestId, (r) -> new ReentrantLock());
@@ -33,7 +33,7 @@ public class SingularitySchedulerLock {
     return System.currentTimeMillis();
   }
 
-  public void unlock(String requestId, String name, long start) {
+  private void unlock(String requestId, String name, long start) {
     LOG.trace("{} - Unlocking {} ({})", name, requestId, JavaUtils.duration(start));
     ReentrantLock lock = requestLocks.computeIfAbsent(requestId, (r) -> new ReentrantLock());
     lock.unlock();
@@ -48,7 +48,16 @@ public class SingularitySchedulerLock {
     }
   }
 
-  public long lockState(String name) {
+  void runWithStateLock(Runnable function, String name) {
+    long start = lockState(name);
+    try {
+      function.run();
+    } finally {
+      unlockState(name, start);
+    }
+  }
+
+  private long lockState(String name) {
     final long start = System.currentTimeMillis();
     LOG.info("{} - Locking state lock", name);
     stateLock.lock();
@@ -56,12 +65,21 @@ public class SingularitySchedulerLock {
     return System.currentTimeMillis();
   }
 
-  public void unlockState(String name, long start) {
+  private void unlockState(String name, long start) {
     LOG.info("{} - Unlocking state lock ({})", name, JavaUtils.duration(start));
     stateLock.unlock();
   }
 
-  public long lockOffers(String name) {
+  public void runWithOffersLock(Runnable function,  String name) {
+    long start = lockOffers(name);
+    try {
+      function.run();
+    } finally {
+      unlockOffers(name, start);
+    }
+  }
+
+  private long lockOffers(String name) {
     final long start = System.currentTimeMillis();
     LOG.debug("{} - Locking offers lock", name);
     offersLock.lock();
@@ -69,7 +87,7 @@ public class SingularitySchedulerLock {
     return System.currentTimeMillis();
   }
 
-  public void unlockOffers(String name, long start) {
+  private void unlockOffers(String name, long start) {
     LOG.debug("{} - Unlocking offers lock ({})", name, JavaUtils.duration(start));
     offersLock.unlock();
   }
