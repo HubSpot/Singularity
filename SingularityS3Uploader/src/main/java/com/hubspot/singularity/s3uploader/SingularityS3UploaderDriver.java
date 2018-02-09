@@ -262,8 +262,7 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper implements S
     }
 
     // Check regular uploaders
-    int initialExpectedSize = Math.max(metadataToUploader.size(), 1);
-    final Set<Path> filesToUpload = Collections.newSetFromMap(new ConcurrentHashMap<Path, Boolean>(initialExpectedSize * 2, 0.75f, initialExpectedSize));
+    int initialExpectedSize = Math.max(Math.min(metadataToUploader.size(), configuration.getExecutorMaxUploadThreads()), 1);
     final Map<SingularityUploader, Future<Integer>> futures = Maps.newHashMapWithExpectedSize(initialExpectedSize);
     final Map<SingularityUploader, Boolean> finishing = Maps.newHashMapWithExpectedSize(initialExpectedSize);
 
@@ -272,7 +271,7 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper implements S
       // do this here so we run at least once with isFinished = true
       finishing.put(uploader, isFinished);
 
-      futures.put(uploader, executorService.submit(performUploadCallable(uploader, filesToUpload, isFinished, false)));
+      futures.put(uploader, executorService.submit(performUploadCallable(uploader, isFinished, false)));
     }
 
     LOG.info("Waiting on {} future(s)", futures.size());
@@ -323,11 +322,11 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper implements S
     return totesUploads;
   }
 
-  private Callable<Integer> performUploadCallable(final SingularityUploader uploader, final Set<Path> filesToUpload, final boolean finished, final boolean immediate) {
+  private Callable<Integer> performUploadCallable(final SingularityUploader uploader, final boolean finished, final boolean immediate) {
     return () -> {
       Integer returnValue = 0;
       try {
-        returnValue = uploader.upload(filesToUpload, finished);
+        returnValue = uploader.upload(finished);
       } catch (Throwable t) {
         metrics.error();
         LOG.error("Error while processing uploader {}", uploader, t);
@@ -344,7 +343,7 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper implements S
     final Set<Path> filesToUpload = Collections
         .newSetFromMap(new ConcurrentHashMap<Path, Boolean>(Math.max(metadataToUploader.size(), 1) * 2, 0.75f, Math.max(metadataToUploader.size(), 1)));
     final boolean finished = isFinished(uploader);
-    immediateUploaders.put(uploader, executorService.submit(performUploadCallable(uploader, filesToUpload, finished, true)));
+    immediateUploaders.put(uploader, executorService.submit(performUploadCallable(uploader, finished, true)));
   }
 
   private boolean shouldExpire(SingularityUploader uploader, boolean isFinished) {

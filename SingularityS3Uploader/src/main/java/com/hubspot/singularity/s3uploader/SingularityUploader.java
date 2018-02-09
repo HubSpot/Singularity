@@ -113,7 +113,7 @@ public abstract class SingularityUploader {
     return uploadMetadata;
   }
 
-  private int handleDirectory(Path directory, boolean isFinished, Set<Path> synchronizedToUpload, List<Path> toUpload) throws IOException {
+  private int handleDirectory(Path directory, boolean isFinished, List<Path> toUpload) throws IOException {
     List<Path> filesToCheck = new ArrayList<>();
     List<Path> dirsToCheck = new ArrayList<>();
 
@@ -132,13 +132,13 @@ public abstract class SingularityUploader {
 
     int found = 0;
     for (Path file : filesToCheck) {
-      found += checkFile(file, isFinished, synchronizedToUpload, toUpload);
+      found += checkFile(file, isFinished, toUpload);
     }
 
     return found;
   }
 
-  private int checkFile(Path file, boolean isFinished, Set<Path> synchronizedToUpload, List<Path> toUpload) throws IOException {
+  private int checkFile(Path file, boolean isFinished, List<Path> toUpload) throws IOException {
     if (!pathMatcher.matches(file.getFileName())) {
       if (!isFinished || !finishedPathMatcher.isPresent() || !finishedPathMatcher.get().matches(file.getFileName())) {
         LOG.trace("{} Skipping {} because it doesn't match {}", logIdentifier, file, uploadMetadata.getFileGlob());
@@ -153,15 +153,11 @@ public abstract class SingularityUploader {
       return 0;
     }
 
-    if (synchronizedToUpload.add(file)) {
-      toUpload.add(file);
-    } else {
-      LOG.debug("{} Another uploader already added {}", logIdentifier, file);
-    }
+    toUpload.add(file);
     return 1;
   }
 
-  public int upload(Set<Path> synchronizedToUpload, boolean isFinished) throws IOException {
+  public int upload(boolean isFinished) throws IOException {
     final List<Path> toUpload = Lists.newArrayList();
 
     final Path directory = Paths.get(fileDirectory);
@@ -171,7 +167,7 @@ public abstract class SingularityUploader {
       return 0;
     }
 
-    int found = handleDirectory(directory, isFinished, synchronizedToUpload, toUpload);
+    int found = handleDirectory(directory, isFinished, toUpload);
 
     if (toUpload.isEmpty()) {
       return found;
