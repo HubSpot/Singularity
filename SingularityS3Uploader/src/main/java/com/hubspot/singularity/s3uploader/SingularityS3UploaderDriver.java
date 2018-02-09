@@ -16,7 +16,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.Callable;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -340,8 +339,6 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper implements S
   }
 
   private void performImmediateUpload(final SingularityUploader uploader) {
-    final Set<Path> filesToUpload = Collections
-        .newSetFromMap(new ConcurrentHashMap<Path, Boolean>(Math.max(metadataToUploader.size(), 1) * 2, 0.75f, Math.max(metadataToUploader.size(), 1)));
     final boolean finished = isFinished(uploader);
     immediateUploaders.put(uploader, executorService.submit(performUploadCallable(uploader, finished, true)));
   }
