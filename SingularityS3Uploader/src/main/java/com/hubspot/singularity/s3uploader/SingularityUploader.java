@@ -123,7 +123,10 @@ public abstract class SingularityUploader {
       Path toCheck = dirsToCheck.remove(0);
       for (Path path : JavaUtils.iterable(toCheck)) {
         if (Files.isDirectory(path, LinkOption.NOFOLLOW_LINKS)) {
-          dirsToCheck.add(path);
+          if (uploadMetadata.isCheckSubdirectories()) {
+            LOG.debug("{} was a directory, have to check files in directory", path);
+            dirsToCheck.add(path);
+          }
         } else {
           filesToCheck.add(path);
         }
