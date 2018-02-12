@@ -11,6 +11,12 @@ class BounceModal extends Component {
     bounceRequest: PropTypes.func.isRequired
   };
 
+  componentDidMount() {
+    if (window.location.search.includes('bounce=true')) {
+      this.show();
+    }
+  }
+
   show() {
     this.refs.bouceModal.show();
   }

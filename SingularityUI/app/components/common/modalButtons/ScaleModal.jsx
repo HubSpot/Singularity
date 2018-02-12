@@ -32,6 +32,12 @@ class ScaleModal extends Component {
     }
   };
 
+  componentDidMount() {
+    if (window.location.search.includes('scale=true')) {
+      this.show();
+    }
+  }
+
   handleScale(data) {
     const { instances, durationMillis, message, bounce, incremental } = data;
     const isIncremental = incremental === 'incremental';
