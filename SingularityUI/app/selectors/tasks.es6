@@ -49,36 +49,29 @@ export const getFilteredTasks = createSelector(
 
     // Filter by glob or fuzzy string
     if (filter.filterText) {
-      const getHost = (task) => task.taskId && task.taskId.host || '';
-      const getId = (task) => (task.taskId ? task.taskId.id : task.pendingTask.pendingTaskId.id) || '';
-      const getRack = (task) => task.taskId && task.taskId.rackId || '';
+      const host = {extract: (task) => `${task.taskId && task.taskId.host}`};
+      const id = {extract: (task) => `${task.taskId ? task.taskId.id : task.pendingTask.pendingTaskId.id}`};
+      const rack = {extract: (task) => `${task.taskId && task.taskId.rackId}`};
 
       if (Utils.isGlobFilter(filter.filterText)) {
-        const hosts = _.filter(tasks, (task) => (
-          micromatch.isMatch(getHost(task), `${filter.filterText}*`)
-        ));
-        const ids = _.filter(tasks, (task) => (
-          micromatch.isMatch(getId(task), `${filter.filterText}*`)
-        ));
-        const racks = _.filter(tasks, (task) => (
-          micromatch.isMatch(getRack(task), `${filter.filterText}*`)
-        ));
-        tasks = _.union(hosts, ids, racks);
+        const hostMatch = _.filter(tasks, (task) => {
+          return micromatch.any(host.extract(task), `${filter.filterText}*`);
+        });
+        const idMatch = _.filter(tasks, (task) => {
+          return micromatch.any(id.extract(task), `${filter.filterText}*`);
+        });
+        const rackMatch = _.filter(tasks, (task) => {
+          return micromatch.any(rack.extract(task), `${filter.filterText}*`);
+        });
+        tasks = _.union(hostMatch, idMatch, rackMatch).reverse();
       } else {
-        // Allow searching by the first letter of each word by applying same
-        // search heuristics to just the upper case characters of each option
-        const hosts = fuzzy.filter(filter.filterText.replace(/-/g, '_'), tasks, {
-          extract: getHost
+        _.each(tasks, (task) => {
+          task.id = id.extract(task);
         });
-        const ids = fuzzy.filter(filter.filterText, tasks, {
-          extract: Utils.isAllUpperCase(filter.filterText)
-            ? (task) => Utils.getUpperCaseCharacters(getId(task))
-            : getId,
-        });
-        const racks = fuzzy.filter(filter.filterText, tasks, {
-          extract: getRack
-        });
-        tasks = Utils.fuzzyFilter(filter.filterText, _.union(hosts, ids, racks));
+        const hostMatch = fuzzy.filter(filter.filterText.replace(/-/g, '_'), tasks, host);
+        const idMatch = fuzzy.filter(filter.filterText, tasks, id);
+        const rackMatch = fuzzy.filter(filter.filterText, tasks, rack);
+        tasks = Utils.fuzzyFilter(filter.filterText, _.union(rackMatch, hostMatch, idMatch));
       }
     }
 
