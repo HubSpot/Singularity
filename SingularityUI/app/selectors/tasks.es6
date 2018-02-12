@@ -73,7 +73,7 @@ export const getFilteredTasks = createSelector(
         const options = {
           extract: Utils.isAllUpperCase(filter.filterText)
             ? (task) => Utils.getUpperCaseCharacters(task.id)
-            : id.extract,
+            : (task) => task.id,
         };
         const hostMatch = fuzzy.filter(filter.filterText.replace(/-/g, '_'), tasks, host);
         const idMatch = fuzzy.filter(filter.filterText, tasks, options);

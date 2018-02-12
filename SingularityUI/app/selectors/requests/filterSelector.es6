@@ -62,7 +62,7 @@ export default createSelector([getRequests, getFilter, getUtilizations], (reques
 
   // Filter by glob or fuzzy string
   if (filter.searchFilter) {
-    const id = {extract: (requestParent) => requestParent.id || ''};
+    const id = {extract: (requestParent) => `${requestParent.id}`};
     const user = {extract: (requestParent) => `${requestParent.hasActiveDeploy ? requestParent.requestDeployState.activeDeploy.user : ''}`};
 
     if (Utils.isGlobFilter(filter.searchFilter)) {
@@ -78,8 +78,8 @@ export default createSelector([getRequests, getFilter, getUtilizations], (reques
       // search heuristics to just the upper case characters of each option
       const options = {
         extract: Utils.isAllUpperCase(filter.searchFilter)
-          ? (requestParent) => Utils.getUpperCaseCharacters(requestParent.id)
-          : id.extract,
+          ? (requestParent) => Utils.getUpperCaseCharacters(`${requestParent.id}`)
+          : (requestParent) => `${requestParent.id}`,
       };
       const res1 = fuzzy.filter(filter.searchFilter, filteredRequests, user);
       const res2 = fuzzy.filter(filter.searchFilter, filteredRequests, options);
