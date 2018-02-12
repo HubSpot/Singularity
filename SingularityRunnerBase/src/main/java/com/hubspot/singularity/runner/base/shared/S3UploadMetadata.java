@@ -56,6 +56,7 @@ public class S3UploadMetadata {
   private final SingularityUploaderType uploaderType;
   private final Map<String, Object> gcsCredentials;
   private final Optional<String> gcsStorageClass;
+  private final Optional<String> encryptionKey;
 
   @JsonCreator
   public S3UploadMetadata(@JsonProperty("directory") String directory,
@@ -74,7 +75,8 @@ public class S3UploadMetadata {
                           @JsonProperty("checkSubdirectories") Optional<Boolean> checkSubdirectories,
                           @JsonProperty("uploaderType") Optional<SingularityUploaderType> uploaderType,
                           @JsonProperty("gcsCredentials") Map<String, Object> gcsCredentials,
-                          @JsonProperty("gcsStorageClass") Optional<String> gcsStorageClass) {
+                          @JsonProperty("gcsStorageClass") Optional<String> gcsStorageClass,
+                          @JsonProperty("encryptionKey") Optional<String> encryptionKey) {
     Preconditions.checkNotNull(directory);
     Preconditions.checkNotNull(fileGlob);
     Preconditions.checkNotNull(s3Bucket);
@@ -97,6 +99,7 @@ public class S3UploadMetadata {
     this.uploaderType = uploaderType.or(SingularityUploaderType.S3);
     this.gcsCredentials = gcsCredentials != null ? gcsCredentials : Collections.emptyMap();
     this.gcsStorageClass = gcsStorageClass;
+    this.encryptionKey = encryptionKey;
   }
 
 
@@ -207,6 +210,10 @@ public class S3UploadMetadata {
     return gcsCredentials;
   }
 
+  public Optional<String> getEncryptionKey() {
+    return encryptionKey;
+  }
+
   @Override
   public String toString() {
     return "S3UploadMetadata{" +
@@ -226,6 +233,7 @@ public class S3UploadMetadata {
         ", checkSubdirectories=" + checkSubdirectories +
         ", uploaderType=" + uploaderType +
         ", gcsStorageClass=" + gcsStorageClass +
+        ", encryptionKey=" + encryptionKey +
         '}';
   }
 }
