@@ -54,31 +54,31 @@ export const getFilteredTasks = createSelector(
       const getRack = (task) => task.taskId && task.taskId.rackId || '';
 
       if (Utils.isGlobFilter(filter.filterText)) {
-        const hosts = _.filter(tasks, (task) => (
+        const hostMatches = _.filter(tasks, (task) => (
           micromatch.isMatch(getHost(task), `${filter.filterText}*`)
         ));
-        const ids = _.filter(tasks, (task) => (
+        const idMatches = _.filter(tasks, (task) => (
           micromatch.isMatch(getId(task), `${filter.filterText}*`)
         ));
-        const racks = _.filter(tasks, (task) => (
+        const rackMatches = _.filter(tasks, (task) => (
           micromatch.isMatch(getRack(task), `${filter.filterText}*`)
         ));
-        tasks = _.union(hosts, ids, racks);
+        tasks = _.union(hostMatches, idMatches, rackMatches);
       } else {
-        // Allow searching by the first letter of each word by applying same
-        // search heuristics to just the upper case characters of each option
-        const hosts = fuzzy.filter(filter.filterText.replace(/-/g, '_'), tasks, {
+        const hostMatches = fuzzy.filter(filter.filterText.replace(/-/g, '_'), tasks, {
           extract: getHost
         });
-        const ids = fuzzy.filter(filter.filterText, tasks, {
+        // Allow searching by the first letter of each word by applying same
+        // search heuristics to just the upper case characters of each option
+        const idMatches = fuzzy.filter(filter.filterText, tasks, {
           extract: Utils.isAllUpperCase(filter.filterText)
             ? (task) => Utils.getUpperCaseCharacters(getId(task))
             : getId,
         });
-        const racks = fuzzy.filter(filter.filterText, tasks, {
+        const rackMatches = fuzzy.filter(filter.filterText, tasks, {
           extract: getRack
         });
-        tasks = Utils.fuzzyFilter(filter.filterText, _.union(hosts, ids, racks));
+        tasks = Utils.fuzzyFilter(filter.filterText, _.union(hostMatches, idMatches, rackMatches));
       }
     }
 

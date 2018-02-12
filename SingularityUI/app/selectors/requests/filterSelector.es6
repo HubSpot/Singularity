@@ -66,25 +66,25 @@ export default createSelector([getRequests, getFilter, getUtilizations], (reques
     const getUser = (requestParent) => requestParent.hasActiveDeploy && requestParent.requestDeployState.activeDeploy.user || '';
 
     if (Utils.isGlobFilter(filter.searchFilter)) {
-      const users = _.filter(filteredRequests, (requestParent) => (
+      const userMatches = _.filter(filteredRequests, (requestParent) => (
         micromatch.isMatch(getUser(requestParent), `${filter.searchFilter}*`)
       ));
-      const ids = _.filter(filteredRequests, (requestParent) => (
+      const idMatches = _.filter(filteredRequests, (requestParent) => (
         micromatch.isMatch(getId(requestParent), `${filter.searchFilter}*`)
       ));
-      filteredRequests = _.union(users, ids);
+      filteredRequests = _.union(userMatches, idMatches);
     } else {
-      // Allow searching by the first letter of each word by applying same
-      // search heuristics to just the upper case characters of each option
-      const users = fuzzy.filter(filter.searchFilter, filteredRequests, {
+      const userMatches = fuzzy.filter(filter.searchFilter, filteredRequests, {
         extract: getUser
       });
-      const ids = fuzzy.filter(filter.searchFilter, filteredRequests, {
+      // Allow searching by the first letter of each word by applying same
+      // search heuristics to just the upper case characters of each option
+      const idMatches = fuzzy.filter(filter.searchFilter, filteredRequests, {
         extract: Utils.isAllUpperCase(filter.searchFilter)
           ? (requestParent) => Utils.getUpperCaseCharacters(getId(requestParent))
           : getId,
       });
-      filteredRequests = Utils.fuzzyFilter(filter.searchFilter, _.union(users, ids));
+      filteredRequests = Utils.fuzzyFilter(filter.searchFilter, _.union(userMatches, idMatches));
     }
   }
 
