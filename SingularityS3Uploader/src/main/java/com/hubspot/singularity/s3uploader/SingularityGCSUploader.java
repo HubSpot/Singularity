@@ -17,6 +17,7 @@ import com.github.rholder.retry.WaitStrategies;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.cloud.storage.BlobInfo;
 import com.google.cloud.storage.Storage;
+import com.google.cloud.storage.Storage.BlobWriteOption;
 import com.google.cloud.storage.StorageClass;
 import com.google.cloud.storage.StorageException;
 import com.google.cloud.storage.StorageOptions;
@@ -107,7 +108,11 @@ public class SingularityGCSUploader extends SingularityUploader {
       }
 
       try (FileInputStream fileInputStream = new FileInputStream(file.toFile())){
-        storage.create(blobInfoBuilder.build(), fileInputStream);
+        if (uploadMetadata.getEncryptionKey().isPresent()) {
+          storage.create(blobInfoBuilder.build(), fileInputStream, BlobWriteOption.encryptionKey(uploadMetadata.getEncryptionKey().get()));
+        } else {
+          storage.create(blobInfoBuilder.build(), fileInputStream);
+        }
         LOG.info("{} Uploaded {} in {}", logIdentifier, key, JavaUtils.duration(start));
         return true;
       } catch (StorageException se) {
