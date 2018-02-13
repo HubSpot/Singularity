@@ -20,6 +20,7 @@ import com.amazonaws.services.s3.model.InitiateMultipartUploadResult;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.PartETag;
 import com.amazonaws.services.s3.model.PutObjectRequest;
+import com.amazonaws.services.s3.model.SSEAwsKeyManagementParams;
 import com.amazonaws.services.s3.model.StorageClass;
 import com.amazonaws.services.s3.model.UploadPartRequest;
 import com.github.rholder.retry.Retryer;
@@ -114,6 +115,9 @@ public class SingularityS3Uploader extends SingularityUploader {
           PutObjectRequest putObjectRequest = new PutObjectRequest(bucketName, key, file.toFile()).withMetadata(objectMetadata);
           if (maybeStorageClass.isPresent()) {
             putObjectRequest.setStorageClass(maybeStorageClass.get());
+          }
+          if (uploadMetadata.getEncryptionKey().isPresent()) {
+            putObjectRequest.withSSEAwsKeyManagementParams(new SSEAwsKeyManagementParams(uploadMetadata.getEncryptionKey().get()));
           }
           s3Client.putObject(putObjectRequest);
         }
