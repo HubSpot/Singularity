@@ -1,9 +1,9 @@
 package com.hubspot.singularity.mesos;
 
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -20,10 +20,9 @@ import org.slf4j.LoggerFactory;
 import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
 import com.hubspot.mesos.JavaUtils;
+import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.helpers.MesosUtils;
 import com.hubspot.singularity.helpers.SingularityMesosTaskHolder;
-import com.hubspot.singularity.SingularityPendingTaskId;
-import com.hubspot.singularity.SingularityTaskId;
 
 public class SingularityOfferHolder {
 
@@ -31,7 +30,6 @@ public class SingularityOfferHolder {
 
   private final List<Protos.Offer> offers;
   private final List<SingularityMesosTaskHolder> acceptedTasks;
-  private final Set<SingularityPendingTaskId> rejectedPendingTaskIds;
   private List<Resource> currentResources;
   private Set<String> roles;
 
@@ -52,7 +50,6 @@ public class SingularityOfferHolder {
     this.roles = MesosUtils.getRoles(offers.get(0));
     this.acceptedTasks = Lists.newArrayListWithExpectedSize(taskSizeHint);
     this.currentResources = offers.size()  > 1 ? MesosUtils.combineResources(offers.stream().map(Protos.Offer::getResourcesList).collect(Collectors.toList())) : offers.get(0).getResourcesList();
-    this.rejectedPendingTaskIds = new HashSet<>();
     this.sanitizedHost = JavaUtils.getReplaceHyphensWithUnderscores(hostname);
     this.sanitizedRackId = JavaUtils.getReplaceHyphensWithUnderscores(rackId);
     this.textAttributes = textAttributes;
@@ -93,14 +90,6 @@ public class SingularityOfferHolder {
 
   public Set<String> getRoles() {
     return roles;
-  }
-
-  public void addRejectedTask(SingularityPendingTaskId pendingTaskId) {
-    rejectedPendingTaskIds.add(pendingTaskId);
-  }
-
-  boolean hasRejectedPendingTaskAlready(SingularityPendingTaskId pendingTaskId) {
-    return rejectedPendingTaskIds.contains(pendingTaskId);
   }
 
   public void addMatchedTask(SingularityMesosTaskHolder taskHolder) {
@@ -195,11 +184,32 @@ public class SingularityOfferHolder {
   }
 
   @Override
+  public boolean equals(Object obj) {
+    if (this == obj) {
+      return true;
+    }
+    if (obj instanceof SingularityOfferHolder) {
+      final SingularityOfferHolder that = (SingularityOfferHolder) obj;
+      return Objects.equals(this.roles, that.roles) &&
+          Objects.equals(this.rackId, that.rackId) &&
+          Objects.equals(this.slaveId, that.slaveId) &&
+          Objects.equals(this.hostname, that.hostname) &&
+          Objects.equals(this.textAttributes, that.textAttributes) &&
+          Objects.equals(this.reservedSlaveAttributes, that.reservedSlaveAttributes);
+    }
+    return false;
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(roles, rackId, slaveId, hostname, textAttributes, reservedSlaveAttributes);
+  }
+
+  @Override
   public String toString() {
     return "SingularityOfferHolder{" +
         "offers=" + offers +
         ", acceptedTasks=" + acceptedTasks +
-        ", rejectedPendingTaskIds=" + rejectedPendingTaskIds +
         ", currentResources=" + currentResources +
         ", roles=" + roles +
         ", rackId='" + rackId + '\'' +

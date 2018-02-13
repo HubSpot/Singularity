@@ -13,7 +13,6 @@ import org.slf4j.LoggerFactory;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.ExtendedTaskState;
@@ -68,11 +67,12 @@ public class SingularityExpiringUserActionPoller extends SingularityLeaderOnlyPo
   private final List<SingularityExpiringUserActionHandler<?, ?>> handlers;
   private final SingularityConfiguration configuration;
   private final DisasterManager disasterManager;
+  private final SingularitySchedulerLock lock;
 
   @Inject
   SingularityExpiringUserActionPoller(SingularityConfiguration configuration, RequestManager requestManager, DeployManager deployManager, TaskManager taskManager, SlaveManager slaveManager, RackManager rackManager,
       SingularitySchedulerLock lock, RequestHelper requestHelper, SingularityMailer mailer, DisasterManager disasterManager) {
-    super(configuration.getCheckExpiringUserActionEveryMillis(), TimeUnit.MILLISECONDS, lock, true);
+    super(configuration.getCheckExpiringUserActionEveryMillis(), TimeUnit.MILLISECONDS, true);
 
     this.deployManager = deployManager;
     this.requestManager = requestManager;
@@ -83,16 +83,15 @@ public class SingularityExpiringUserActionPoller extends SingularityLeaderOnlyPo
     this.rackManager = rackManager;
     this.configuration = configuration;
     this.disasterManager = disasterManager;
-
-    List<SingularityExpiringUserActionHandler<?, ?>> tempHandlers = Lists.newArrayList();
-    tempHandlers.add(new SingularityExpiringBounceHandler());
-    tempHandlers.add(new SingularityExpiringPauseHandler());
-    tempHandlers.add(new SingularityExpiringScaleHandler());
-    tempHandlers.add(new SingularityExpiringSkipHealthchecksHandler());
-    tempHandlers.add(new SingularityExpiringSlaveStateHandler());
-    tempHandlers.add(new SingularityExpiringRackStateHandler());
-
-    this.handlers = ImmutableList.copyOf(tempHandlers);
+    this.lock = lock;
+    this.handlers = ImmutableList.of(
+        new SingularityExpiringBounceHandler(),
+        new SingularityExpiringPauseHandler(),
+        new SingularityExpiringScaleHandler(),
+        new SingularityExpiringSkipHealthchecksHandler(),
+        new SingularityExpiringSlaveStateHandler(),
+        new SingularityExpiringRackStateHandler()
+    );
   }
 
   @Override
@@ -160,7 +159,9 @@ public class SingularityExpiringUserActionPoller extends SingularityLeaderOnlyPo
           if (!requestWithState.isPresent()) {
             LOG.warn("Request {} not present, discarding {}", expiringObject.getRequestId(), expiringObject);
           } else {
-            handleExpiringObject(expiringObject, requestWithState.get(), getMessage(expiringObject));
+            lock.runWithRequestLock(() -> {
+              handleExpiringObject(expiringObject, requestWithState.get(), getMessage(expiringObject));
+            }, requestWithState.get().getRequest().getId(), getClazz().getSimpleName());
           }
 
           requestManager.deleteExpiringObject(getClazz(), expiringObject.getRequestId());
@@ -214,7 +215,7 @@ public class SingularityExpiringUserActionPoller extends SingularityLeaderOnlyPo
       }
 
       requestManager.addToPendingQueue(new SingularityPendingRequest(expiringObject.getRequestId(), expiringObject.getDeployId(), System.currentTimeMillis(), expiringObject.getUser(),
-          PendingType.CANCEL_BOUNCE, Optional.<List<String>> absent(), Optional.<String> absent(), Optional.<Boolean> absent(), Optional.of(message), Optional.of(expiringObject.getActionId())));
+          PendingType.CANCEL_BOUNCE, Optional.absent(), Optional.absent(), Optional.absent(), Optional.of(message), Optional.of(expiringObject.getActionId())));
     }
 
   }
@@ -239,7 +240,7 @@ public class SingularityExpiringUserActionPoller extends SingularityLeaderOnlyPo
 
       LOG.info("Unpausing request {} because of {}", requestWithState.getRequest().getId(), expiringObject);
 
-      requestHelper.unpause(requestWithState.getRequest(), expiringObject.getUser(), Optional.of(message), Optional.<Boolean> absent());
+      requestHelper.unpause(requestWithState.getRequest(), expiringObject.getUser(), Optional.of(message), Optional.absent());
     }
 
   }
@@ -274,9 +275,9 @@ public class SingularityExpiringUserActionPoller extends SingularityLeaderOnlyPo
         }
 
         requestHelper.updateRequest(newRequest, Optional.of(oldRequest), requestWithState.getState(), Optional.of(RequestHistoryType.SCALE_REVERTED), expiringObject.getUser(),
-            Optional.<Boolean> absent(), Optional.of(message), maybeBounceRequest);
+            Optional.<Boolean>absent(), Optional.of(message), maybeBounceRequest);
 
-        mailer.sendRequestScaledMail(newRequest, Optional.<SingularityScaleRequest> absent(), oldRequest.getInstances(), expiringObject.getUser());
+        mailer.sendRequestScaledMail(newRequest, Optional.<SingularityScaleRequest>absent(), oldRequest.getInstances(), expiringObject.getUser());
       } catch (WebApplicationException wae) {
         LOG.error("While trying to apply {} for {}", expiringObject, expiringObject.getRequestId(), wae);
       }
@@ -301,8 +302,8 @@ public class SingularityExpiringUserActionPoller extends SingularityLeaderOnlyPo
       final SingularityRequest newRequest = oldRequest.toBuilder().setSkipHealthchecks(expiringObject.getRevertToSkipHealthchecks()).build();
 
       try {
-        requestHelper.updateRequest(newRequest, Optional.of(oldRequest), requestWithState.getState(), Optional.<RequestHistoryType> absent(), expiringObject.getUser(),
-            Optional.<Boolean> absent(), Optional.of(message), Optional.<SingularityBounceRequest>absent());
+        requestHelper.updateRequest(newRequest, Optional.of(oldRequest), requestWithState.getState(), Optional.<RequestHistoryType>absent(), expiringObject.getUser(),
+            Optional.<Boolean>absent(), Optional.of(message), Optional.<SingularityBounceRequest>absent());
       } catch (WebApplicationException wae) {
         LOG.error("While trying to apply {} for {}", expiringObject, expiringObject.getRequestId(), wae);
       }

@@ -11,7 +11,6 @@ import com.google.inject.Inject;
 import com.hubspot.singularity.SingularityAction;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.DisasterManager;
-import com.hubspot.singularity.mesos.SingularitySchedulerLock;
 
 @Singleton
 public class SingularityCleanupPoller extends SingularityLeaderOnlyPoller {
@@ -22,8 +21,8 @@ public class SingularityCleanupPoller extends SingularityLeaderOnlyPoller {
   private final DisasterManager disasterManager;
 
   @Inject
-  SingularityCleanupPoller(SingularityConfiguration configuration, SingularityCleaner cleaner, SingularitySchedulerLock lock, DisasterManager disasterManager) {
-    super(configuration.getCleanupEverySeconds(), TimeUnit.SECONDS, lock, true);
+  SingularityCleanupPoller(SingularityConfiguration configuration, SingularityCleaner cleaner, DisasterManager disasterManager) {
+    super(configuration.getCleanupEverySeconds(), TimeUnit.SECONDS, true);
 
     this.cleaner = cleaner;
     this.disasterManager = disasterManager;
