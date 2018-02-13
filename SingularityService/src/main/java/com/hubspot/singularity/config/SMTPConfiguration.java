@@ -15,7 +15,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 import com.hubspot.singularity.SingularityEmailDestination;
-import com.hubspot.singularity.SingularityEmailType;
+import com.hubspot.singularity.SingularityNotificationType;
 
 public class SMTPConfiguration {
 
@@ -90,27 +90,27 @@ public class SMTPConfiguration {
   private Optional<String> uiBaseUrl = Optional.absent();
 
   @JsonProperty("emails")
-  private Map<SingularityEmailType, List<SingularityEmailDestination>> emailConfiguration = Maps.newHashMap(ImmutableMap.<SingularityEmailType, List<SingularityEmailDestination>>builder()
-      .put(SingularityEmailType.REQUEST_IN_COOLDOWN, ImmutableList.of(SingularityEmailDestination.ADMINS, SingularityEmailDestination.OWNERS))
-      .put(SingularityEmailType.SINGULARITY_ABORTING, ImmutableList.of(SingularityEmailDestination.ADMINS))
-      .put(SingularityEmailType.TASK_FAILED, ImmutableList.of(SingularityEmailDestination.ADMINS, SingularityEmailDestination.OWNERS, SingularityEmailDestination.ACTION_TAKER))
-      .put(SingularityEmailType.TASK_LOST, ImmutableList.of(SingularityEmailDestination.ADMINS, SingularityEmailDestination.ACTION_TAKER))
-      .put(SingularityEmailType.TASK_FINISHED_LONG_RUNNING, ImmutableList.of(SingularityEmailDestination.OWNERS, SingularityEmailDestination.ADMINS))
-      .put(SingularityEmailType.TASK_FINISHED_ON_DEMAND, ImmutableList.of(SingularityEmailDestination.OWNERS, SingularityEmailDestination.ACTION_TAKER))
-      .put(SingularityEmailType.TASK_SCHEDULED_OVERDUE_TO_FINISH, ImmutableList.of(SingularityEmailDestination.OWNERS, SingularityEmailDestination.ADMINS))
-      .put(SingularityEmailType.TASK_KILLED_UNHEALTHY, ImmutableList.of(SingularityEmailDestination.OWNERS, SingularityEmailDestination.ADMINS))
-      .put(SingularityEmailType.REQUEST_PAUSED, ImmutableList.of(SingularityEmailDestination.OWNERS, SingularityEmailDestination.ADMINS))
-      .put(SingularityEmailType.REQUEST_REMOVED, ImmutableList.of(SingularityEmailDestination.OWNERS, SingularityEmailDestination.ADMINS))
-      .put(SingularityEmailType.REQUEST_UNPAUSED, ImmutableList.of(SingularityEmailDestination.OWNERS, SingularityEmailDestination.ADMINS))
-      .put(SingularityEmailType.REQUEST_SCALED, ImmutableList.of(SingularityEmailDestination.OWNERS))
-      .put(SingularityEmailType.DISASTER_DETECTED, ImmutableList.of(SingularityEmailDestination.ADMINS))
+  private Map<SingularityNotificationType, List<SingularityEmailDestination>> emailConfiguration = Maps.newHashMap(ImmutableMap.<SingularityNotificationType, List<SingularityEmailDestination>>builder()
+      .put(SingularityNotificationType.REQUEST_IN_COOLDOWN, ImmutableList.of(SingularityEmailDestination.ADMINS, SingularityEmailDestination.OWNERS))
+      .put(SingularityNotificationType.SINGULARITY_ABORTING, ImmutableList.of(SingularityEmailDestination.ADMINS))
+      .put(SingularityNotificationType.TASK_FAILED, ImmutableList.of(SingularityEmailDestination.ADMINS, SingularityEmailDestination.OWNERS, SingularityEmailDestination.ACTION_TAKER))
+      .put(SingularityNotificationType.TASK_LOST, ImmutableList.of(SingularityEmailDestination.ADMINS, SingularityEmailDestination.ACTION_TAKER))
+      .put(SingularityNotificationType.TASK_FINISHED_LONG_RUNNING, ImmutableList.of(SingularityEmailDestination.OWNERS, SingularityEmailDestination.ADMINS))
+      .put(SingularityNotificationType.TASK_FINISHED_ON_DEMAND, ImmutableList.of(SingularityEmailDestination.OWNERS, SingularityEmailDestination.ACTION_TAKER))
+      .put(SingularityNotificationType.TASK_SCHEDULED_OVERDUE_TO_FINISH, ImmutableList.of(SingularityEmailDestination.OWNERS, SingularityEmailDestination.ADMINS))
+      .put(SingularityNotificationType.TASK_KILLED_UNHEALTHY, ImmutableList.of(SingularityEmailDestination.OWNERS, SingularityEmailDestination.ADMINS))
+      .put(SingularityNotificationType.REQUEST_PAUSED, ImmutableList.of(SingularityEmailDestination.OWNERS, SingularityEmailDestination.ADMINS))
+      .put(SingularityNotificationType.REQUEST_REMOVED, ImmutableList.of(SingularityEmailDestination.OWNERS, SingularityEmailDestination.ADMINS))
+      .put(SingularityNotificationType.REQUEST_UNPAUSED, ImmutableList.of(SingularityEmailDestination.OWNERS, SingularityEmailDestination.ADMINS))
+      .put(SingularityNotificationType.REQUEST_SCALED, ImmutableList.of(SingularityEmailDestination.OWNERS))
+      .put(SingularityNotificationType.DISASTER_DETECTED, ImmutableList.of(SingularityEmailDestination.ADMINS))
       .build());
 
-  public Map<SingularityEmailType, List<SingularityEmailDestination>> getEmailConfiguration() {
+  public Map<SingularityNotificationType, List<SingularityEmailDestination>> getEmailConfiguration() {
     return emailConfiguration;
   }
 
-  public void setEmailConfiguration(Map<SingularityEmailType, List<SingularityEmailDestination>> emailConfiguration) {
+  public void setEmailConfiguration(Map<SingularityNotificationType, List<SingularityEmailDestination>> emailConfiguration) {
     this.emailConfiguration.putAll(emailConfiguration);
   }
 

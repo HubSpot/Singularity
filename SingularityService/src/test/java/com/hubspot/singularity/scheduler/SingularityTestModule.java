@@ -59,6 +59,7 @@ import com.hubspot.singularity.mesos.SingularityMesosModule;
 import com.hubspot.singularity.mesos.SingularityMesosSchedulerClient;
 import com.hubspot.singularity.mesos.SingularityNoOfferCache;
 import com.hubspot.singularity.mesos.SingularityOfferCache;
+import com.hubspot.singularity.notifications.SingularityIntercom;
 import com.hubspot.singularity.resources.DeployResource;
 import com.hubspot.singularity.resources.PriorityResource;
 import com.hubspot.singularity.resources.RackResource;
@@ -66,7 +67,6 @@ import com.hubspot.singularity.resources.RequestResource;
 import com.hubspot.singularity.resources.SlaveResource;
 import com.hubspot.singularity.resources.TaskResource;
 import com.hubspot.singularity.sentry.SingularityExceptionNotifier;
-import com.hubspot.singularity.smtp.SingularityMailer;
 
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
@@ -158,10 +158,12 @@ public class SingularityTestModule implements Module {
             binder.bind(SingularityExceptionNotifier.class).toInstance(mock(SingularityExceptionNotifier.class));
 
             SingularityAbort abort = mock(SingularityAbort.class);
-            SingularityMailer mailer = mock(SingularityMailer.class);
+            SingularityIntercom intercom = mock(SingularityIntercom.class);
+            SingularityNotificationScheduler scheduler = mock(SingularityNotificationScheduler.class);
 
-            binder.bind(SingularityMailer.class).toInstance(mailer);
+            binder.bind(SingularityIntercom.class).toInstance(intercom);
             binder.bind(SingularityAbort.class).toInstance(abort);
+            binder.bind(SingularityNotificationScheduler.class).toInstance(scheduler);
 
             TestingLoadBalancerClient tlbc = new TestingLoadBalancerClient();
             binder.bind(LoadBalancerClient.class).toInstance(tlbc);

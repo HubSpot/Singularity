@@ -9,20 +9,20 @@ import com.hubspot.singularity.mesos.SingularityOfferCache.CachedOffer;
 
 public interface OfferCache {
 
-  public void cacheOffer(long timestamp, Offer offer);
+  void cacheOffer(long timestamp, Offer offer);
 
-  public void rescindOffer(OfferID offerId);
+  void rescindOffer(OfferID offerId);
 
-  public void useOffer(CachedOffer cachedOffer);
+  void useOffer(CachedOffer cachedOffer);
 
-  public List<CachedOffer> checkoutOffers();
+  List<CachedOffer> checkoutOffers();
 
-  public void returnOffer(CachedOffer cachedOffer);
+  void returnOffer(CachedOffer cachedOffer);
 
-  public List<Offer> peekOffers();
+  List<Offer> peekOffers();
 
-  public void disableOfferCache();
+  void disableOfferCache();
 
-  public void enableOfferCache();
+  void enableOfferCache();
 
 }

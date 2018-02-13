@@ -1348,17 +1348,17 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
 
     scheduledJobPoller.runActionOnPoll();
 
-    Mockito.verify(mailer, Mockito.times(0)).sendTaskOverdueMail(ArgumentMatchers.<Optional<SingularityTask>> any(), ArgumentMatchers.<SingularityTaskId> any(), ArgumentMatchers.<SingularityRequest> any(), ArgumentMatchers.anyLong(), ArgumentMatchers.anyLong());
+    Mockito.verify(notifier, Mockito.times(0)).sendTaskOverdueNotification(ArgumentMatchers.<Optional<SingularityTask>> any(), ArgumentMatchers.<SingularityTaskId> any(), ArgumentMatchers.<SingularityRequest> any(), ArgumentMatchers.anyLong(), ArgumentMatchers.anyLong());
 
     configuration.setWarnIfScheduledJobIsRunningForAtLeastMillis(TimeUnit.HOURS.toMillis(1));
 
     scheduledJobPoller.runActionOnPoll();
 
-    Mockito.verify(mailer, Mockito.times(1)).sendTaskOverdueMail(ArgumentMatchers.<Optional<SingularityTask>> any(), ArgumentMatchers.<SingularityTaskId> any(), ArgumentMatchers.<SingularityRequest> any(), ArgumentMatchers.anyLong(), ArgumentMatchers.anyLong());
+    Mockito.verify(notifier, Mockito.times(1)).sendTaskOverdueNotification(ArgumentMatchers.<Optional<SingularityTask>> any(), ArgumentMatchers.<SingularityTaskId> any(), ArgumentMatchers.<SingularityRequest> any(), ArgumentMatchers.anyLong(), ArgumentMatchers.anyLong());
 
     scheduledJobPoller.runActionOnPoll();
 
-    Mockito.verify(mailer, Mockito.times(1)).sendTaskOverdueMail(ArgumentMatchers.<Optional<SingularityTask>> any(), ArgumentMatchers.<SingularityTaskId> any(), ArgumentMatchers.<SingularityRequest> any(), ArgumentMatchers.anyLong(), ArgumentMatchers.anyLong());
+    Mockito.verify(notifier, Mockito.times(1)).sendTaskOverdueNotification(ArgumentMatchers.<Optional<SingularityTask>> any(), ArgumentMatchers.<SingularityTaskId> any(), ArgumentMatchers.<SingularityRequest> any(), ArgumentMatchers.anyLong(), ArgumentMatchers.anyLong());
 
     statusUpdate(firstTask, TaskState.TASK_FINISHED);
 
@@ -1375,7 +1375,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
 
     scheduledJobPoller.runActionOnPoll();
 
-    Mockito.verify(mailer, Mockito.times(1)).sendTaskOverdueMail(ArgumentMatchers.<Optional<SingularityTask>> any(), ArgumentMatchers.<SingularityTaskId> any(), ArgumentMatchers.<SingularityRequest> any(), ArgumentMatchers.anyLong(), ArgumentMatchers.anyLong());
+    Mockito.verify(notifier, Mockito.times(1)).sendTaskOverdueNotification(ArgumentMatchers.<Optional<SingularityTask>> any(), ArgumentMatchers.<SingularityTaskId> any(), ArgumentMatchers.<SingularityRequest> any(), ArgumentMatchers.anyLong(), ArgumentMatchers.anyLong());
 
     statusUpdate(secondTask, TaskState.TASK_FINISHED);
 
@@ -1390,13 +1390,13 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
 
     scheduledJobPoller.runActionOnPoll();
 
-    Mockito.verify(mailer, Mockito.times(2)).sendTaskOverdueMail(ArgumentMatchers.<Optional<SingularityTask>> any(), ArgumentMatchers.<SingularityTaskId> any(), ArgumentMatchers.<SingularityRequest> any(), ArgumentMatchers.anyLong(), ArgumentMatchers.anyLong());
+    Mockito.verify(notifier, Mockito.times(2)).sendTaskOverdueNotification(ArgumentMatchers.<Optional<SingularityTask>> any(), ArgumentMatchers.<SingularityTaskId> any(), ArgumentMatchers.<SingularityRequest> any(), ArgumentMatchers.anyLong(), ArgumentMatchers.anyLong());
 
     taskManager.deleteTaskHistory(thirdTask.getTaskId());
 
     scheduledJobPoller.runActionOnPoll();
 
-    Mockito.verify(mailer, Mockito.times(3)).sendTaskOverdueMail(ArgumentMatchers.<Optional<SingularityTask>> any(), ArgumentMatchers.<SingularityTaskId> any(), ArgumentMatchers.<SingularityRequest> any(), ArgumentMatchers.anyLong(), ArgumentMatchers.anyLong());
+    Mockito.verify(notifier, Mockito.times(3)).sendTaskOverdueNotification(ArgumentMatchers.<Optional<SingularityTask>> any(), ArgumentMatchers.<SingularityTaskId> any(), ArgumentMatchers.<SingularityRequest> any(), ArgumentMatchers.anyLong(), ArgumentMatchers.anyLong());
   }
 
   @Test

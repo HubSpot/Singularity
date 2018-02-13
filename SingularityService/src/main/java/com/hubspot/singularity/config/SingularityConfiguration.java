@@ -273,6 +273,10 @@ public class SingularityConfiguration extends Configuration {
   @Valid
   private SMTPConfiguration smtpConfiguration;
 
+  @JsonProperty("slack")
+  @Valid
+  private SlackConfiguration slackConfiguration;
+
   private long startNewReconcileEverySeconds = TimeUnit.MINUTES.toSeconds(10);
 
   @JsonProperty("ui")
@@ -788,6 +792,11 @@ public class SingularityConfiguration extends Configuration {
     return Optional.fromNullable(smtpConfiguration);
   }
 
+  @JsonIgnore
+  public Optional<SlackConfiguration> getSlackConfigurationOptional() {
+    return Optional.fromNullable(slackConfiguration);
+  }
+
   public S3Configuration getS3Configuration() {
     return s3Configuration;
   }
@@ -798,6 +807,10 @@ public class SingularityConfiguration extends Configuration {
 
   public SMTPConfiguration getSmtpConfiguration() {
     return smtpConfiguration;
+  }
+
+  public SlackConfiguration getSlackConfiguration() {
+    return slackConfiguration;
   }
 
   public long getStartNewReconcileEverySeconds() {
@@ -1205,6 +1218,10 @@ public class SingularityConfiguration extends Configuration {
 
   public void setSmtpConfiguration(SMTPConfiguration smtpConfiguration) {
     this.smtpConfiguration = smtpConfiguration;
+  }
+
+  public void setSlackConfiguration(SlackConfiguration slackConfiguration) {
+    this.slackConfiguration = slackConfiguration;
   }
 
   public void setStartNewReconcileEverySeconds(long startNewReconcileEverySeconds) {

@@ -43,7 +43,7 @@ public abstract class CuratorAsyncManager extends CuratorManager {
 
     private final OperationType operationType;
 
-    private CuratorQueryMethod(OperationType operationType) {
+    CuratorQueryMethod(OperationType operationType) {
       this.operationType = operationType;
     }
 

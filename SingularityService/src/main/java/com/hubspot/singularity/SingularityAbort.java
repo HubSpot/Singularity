@@ -125,7 +125,7 @@ public class SingularityAbort implements ConnectionStateListener {
       return;
     }
 
-    final List<SingularityEmailDestination> emailDestination = maybeSmtpConfiguration.get().getEmailConfiguration().get(SingularityEmailType.SINGULARITY_ABORTING);
+    final List<SingularityEmailDestination> emailDestination = maybeSmtpConfiguration.get().getEmailConfiguration().get(SingularityNotificationType.SINGULARITY_ABORTING);
 
     if (emailDestination.isEmpty() || !emailDestination.contains(SingularityEmailDestination.ADMINS)) {
       LOG.info("Not configured to send abort mail");

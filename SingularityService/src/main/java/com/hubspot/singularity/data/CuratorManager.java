@@ -61,7 +61,7 @@ public abstract class CuratorManager {
     private final Meter itemsMeter;
     private final Timer timer;
 
-    public Metrics(MetricRegistry registry, OperationType type) {
+    Metrics(MetricRegistry registry, OperationType type) {
       this.bytesMeter = registry.meter(String.format("zk.bytes.%s", type.name().toLowerCase()));
       this.itemsMeter = registry.meter(String.format("zk.items.%s", type.name().toLowerCase()));
       this.timer = registry.timer(String.format("zk.%s", type.name().toLowerCase()));

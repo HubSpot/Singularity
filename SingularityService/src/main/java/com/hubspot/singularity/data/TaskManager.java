@@ -192,7 +192,7 @@ public class TaskManager extends CuratorAsyncManager {
     return ZKPaths.makePath(SHELL_REQUESTS_QUEUE_PATH_ROOT, shellRequest.getId().getId());
   }
 
-  private String getFinishedTaskMailQueuePath(SingularityTaskId taskId) {
+  private String getFinishedTaskNotificationQueuePath(SingularityTaskId taskId) {
     return ZKPaths.makePath(FINISHED_TASK_MAIL_QUEUE, taskId.getId());
   }
 
@@ -981,16 +981,16 @@ public class TaskManager extends CuratorAsyncManager {
     return save(getShellRequestQueuePath(shellRequest), shellRequest, taskShellCommandRequestTranscoder);
   }
 
-  public SingularityCreateResult saveTaskFinishedInMailQueue(SingularityTaskId taskId) {
-    return save(getFinishedTaskMailQueuePath(taskId), Optional.<byte[]>absent());
+  public SingularityCreateResult saveTaskFinishedInNotificationQueue(SingularityTaskId taskId) {
+    return save(getFinishedTaskNotificationQueuePath(taskId), Optional.absent());
   }
 
-  public List<SingularityTaskId> getTaskFinishedMailQueue() {
+  public List<SingularityTaskId> getTaskFinishedNotificationQueue() {
     return getChildrenAsIds(FINISHED_TASK_MAIL_QUEUE, taskIdTranscoder);
   }
 
-  public SingularityDeleteResult deleteFinishedTaskMailQueue(SingularityTaskId taskId) {
-    return delete(getFinishedTaskMailQueuePath(taskId));
+  public SingularityDeleteResult deleteFinishedTaskNotificationQueue(SingularityTaskId taskId) {
+    return delete(getFinishedTaskNotificationQueuePath(taskId));
   }
 
   public SingularityCreateResult saveTaskShellCommandRequestToTask(SingularityTaskShellCommandRequest shellRequest) {

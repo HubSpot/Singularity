@@ -111,7 +111,7 @@ public class LoadBalancerClientImpl implements LoadBalancerClient {
     private final Optional<String> message;
     private final BaragonRequestState state;
 
-    public LoadBalancerUpdateHolder(BaragonRequestState state, Optional<String> message) {
+    LoadBalancerUpdateHolder(BaragonRequestState state, Optional<String> message) {
       this.message = message;
       this.state = state;
     }

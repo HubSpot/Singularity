@@ -54,7 +54,7 @@ public class SingularityCmdLineArgsMigration extends ZkDataMigration {
     private final Optional<String> cmdLineArgs;
 
     @JsonCreator
-    public SingularityPendingRequestPrevious(@JsonProperty("requestId") String requestId, @JsonProperty("deployId") String deployId, @JsonProperty("timestamp") long timestamp,
+    SingularityPendingRequestPrevious(@JsonProperty("requestId") String requestId, @JsonProperty("deployId") String deployId, @JsonProperty("timestamp") long timestamp,
         @JsonProperty("user") Optional<String> user, @JsonProperty("pendingType") PendingType pendingType, @JsonProperty("cmdLineArgs") Optional<String> cmdLineArgs) {
       this.requestId = requestId;
       this.deployId = deployId;
