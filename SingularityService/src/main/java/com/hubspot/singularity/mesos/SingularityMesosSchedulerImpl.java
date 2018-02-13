@@ -276,7 +276,7 @@ public class SingularityMesosSchedulerImpl extends SingularityMesosScheduler {
     try {
       return handleStatusUpdateAsync(status);
     } catch (Throwable t) {
-      exceptionNotifier.notify(String.format("Scheduler threw an uncaught exception (%s)", t.getMessage()), t);
+      LOG.error("Scheduler threw an uncaught exception", t);
       notifyStopping();
       abort.abort(AbortReason.UNRECOVERABLE_ERROR, Optional.of(t));
       return CompletableFuture.completedFuture(false);
@@ -468,7 +468,7 @@ public class SingularityMesosSchedulerImpl extends SingularityMesosScheduler {
     return statusUpdateHandler.processStatusUpdateAsync(status)
         .whenCompleteAsync((result, throwable) -> {
           if (throwable != null) {
-            exceptionNotifier.notify(String.format("Scheduler threw an uncaught exception (%s)", throwable.getMessage()), throwable);
+            LOG.error("Scheduler threw an uncaught exception processing status updates", throwable);
             notifyStopping();
             abort.abort(AbortReason.UNRECOVERABLE_ERROR, Optional.of(throwable));
           }
