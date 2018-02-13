@@ -21,7 +21,6 @@ import com.hubspot.singularity.SingularityPendingTaskId;
 import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularitySlaveUsage;
 import com.hubspot.singularity.SingularitySlaveUsage.ResourceUsageType;
-import com.hubspot.singularity.SingularitySlaveUsageWithId;
 import com.hubspot.singularity.SingularityTaskRequest;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.DeployManager;
@@ -47,21 +46,21 @@ public class SingularityMesosOfferSchedulerTest extends SingularityCuratorTestBa
 
 
   public SingularityMesosOfferSchedulerTest() {
-    super(false);
+    super(false, (configuration) -> {configuration.setLongRunningUsedCpuWeightForOffer(0.30);
+      configuration.setLongRunningUsedMemWeightForOffer(0.50);
+      configuration.setLongRunningUsedDiskWeightForOffer(0.20);
+      configuration.setFreeCpuWeightForOffer(0.30);
+      configuration.setFreeMemWeightForOffer(0.50);
+      configuration.setFreeDiskWeightForOffer(0.20);
+      configuration.setDefaultOfferScoreForMissingUsage(0.10);
+      configuration.setConsiderNonLongRunningTaskLongRunningAfterRunningForSeconds(TimeUnit.HOURS.toSeconds(6));
+      configuration.setMaxNonLongRunningUsedResourceWeight(0.50);
+      return null;
+    });
   }
 
   @Before
   public void setup() {
-    configuration.setLongRunningUsedCpuWeightForOffer(0.30);
-    configuration.setLongRunningUsedMemWeightForOffer(0.50);
-    configuration.setLongRunningUsedDiskWeightForOffer(0.20);
-    configuration.setFreeCpuWeightForOffer(0.30);
-    configuration.setFreeMemWeightForOffer(0.50);
-    configuration.setFreeDiskWeightForOffer(0.20);
-    configuration.setDefaultOfferScoreForMissingUsage(0.10);
-    configuration.setConsiderNonLongRunningTaskLongRunningAfterRunningForSeconds(TimeUnit.HOURS.toSeconds(6));
-    configuration.setMaxNonLongRunningUsedResourceWeight(0.50);
-
     Mockito.when(taskRequest.getRequest()).thenReturn(request);
     Mockito.when(request.getId()).thenReturn("requestId");
 
@@ -318,12 +317,10 @@ public class SingularityMesosOfferSchedulerTest extends SingularityCuratorTestBa
     return memMb * 1000L * 1000L;
   }
 
-  private SingularitySlaveUsageWithId getUsage(long memMbReserved, long memMbTotal, double cpusReserved, double cpusTotal, long diskMbReserved, long diskMbTotal, Map<ResourceUsageType, Number> longRunningTasksUsage) {
-    return new SingularitySlaveUsageWithId(
-        new SingularitySlaveUsage(
+  private SingularitySlaveUsageWithCalculatedScores getUsage(long memMbReserved, long memMbTotal, double cpusReserved, double cpusTotal, long diskMbReserved, long diskMbTotal, Map<ResourceUsageType, Number> longRunningTasksUsage) {
+    return scheduler.buildSlaveUsageWithScores(new SingularitySlaveUsage(
             0, cpusReserved, Optional.of(cpusTotal), 0, memMbReserved, Optional.of(memMbTotal), 0, diskMbReserved, Optional.of(diskMbTotal), longRunningTasksUsage, 1, 0L
-        ),
-        SLAVE_ID
+        )
     );
   }
 

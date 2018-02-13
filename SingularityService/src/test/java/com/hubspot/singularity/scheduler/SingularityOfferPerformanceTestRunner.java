@@ -4,8 +4,13 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.mesos.v1.Protos.Offer;
+import org.apache.mesos.v1.Protos.TaskState;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -14,6 +19,7 @@ import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.RequestType;
 import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityRequestBuilder;
+import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SlavePlacement;
 
 public class SingularityOfferPerformanceTestRunner extends SingularitySchedulerTestBase {
@@ -22,13 +28,13 @@ public class SingularityOfferPerformanceTestRunner extends SingularitySchedulerT
     super(false);
   }
 
-  @Test(timeout = 300000L)
+  @Test(timeout = 600000L)
   @Ignore
-  public void testOfferCache() {
+  public void testSchedulerPerformance() {
     long start = System.currentTimeMillis();
 
-    int numRequests = 1000;
-    int numOffers = 500;
+    int numRequests = 4500;
+    int numOffers = 2500;
 
     Random r = new Random();
     Iterator<Double> cpuIterator = r.doubles(1, 5).iterator();
@@ -62,6 +68,37 @@ public class SingularityOfferPerformanceTestRunner extends SingularitySchedulerT
     int activeTasks = taskManager.getActiveTaskIds().size();
 
     System.out.println(String.format("Launched %s tasks on %s offers in %s", activeTasks, numOffers, JavaUtils.durationFromMillis(duration)));
+
+    start = System.currentTimeMillis();
+
+    ExecutorService statusUpadtes = Executors.newFixedThreadPool(100);
+    CompletableFuture<Void>[] updateFutures = new CompletableFuture[taskManager.getActiveTaskIds().size()*5];
+    AtomicInteger i = new AtomicInteger(0);
+    for (SingularityTaskId taskId : taskManager.getActiveTaskIds()) {
+      updateFutures[i.getAndIncrement()] = CompletableFuture.supplyAsync(() -> {
+        statusUpdate(taskManager.getTask(taskId).get(), TaskState.TASK_STAGING);
+        return null;
+      }, statusUpadtes);
+      updateFutures[i.getAndIncrement()] = CompletableFuture.supplyAsync(() -> {
+        statusUpdate(taskManager.getTask(taskId).get(), TaskState.TASK_STARTING);
+        return null;
+      }, statusUpadtes);
+      updateFutures[i.getAndIncrement()] = CompletableFuture.supplyAsync(() -> {
+        statusUpdate(taskManager.getTask(taskId).get(), TaskState.TASK_RUNNING);
+        return null;
+      }, statusUpadtes);
+      updateFutures[i.getAndIncrement()] = CompletableFuture.supplyAsync(() -> {
+        statusUpdate(taskManager.getTask(taskId).get(), TaskState.TASK_FAILED);
+        return null;
+      }, statusUpadtes);
+      updateFutures[i.getAndIncrement()] = CompletableFuture.supplyAsync(() -> {
+        statusUpdate(taskManager.getTask(taskId).get(), TaskState.TASK_FAILED);
+        return null;
+      }, statusUpadtes);
+    }
+    CompletableFuture.allOf(updateFutures).join();
+
+    System.out.println(String.format("Ran %s status updates in %s", activeTasks * 5, JavaUtils.durationFromMillis(System.currentTimeMillis() - start)));
   }
 
 

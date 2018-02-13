@@ -30,6 +30,7 @@ import com.hubspot.singularity.data.history.SingularityHistoryPurger;
 import com.hubspot.singularity.data.history.SingularityRequestHistoryPersister;
 import com.hubspot.singularity.data.history.SingularityTaskHistoryPersister;
 import com.hubspot.singularity.data.history.TaskHistoryHelper;
+import com.hubspot.singularity.mesos.SingularitySchedulerLock;
 import com.hubspot.singularity.scheduler.SingularitySchedulerTestBase;
 
 import liquibase.Liquibase;
@@ -60,6 +61,9 @@ public class SingularityHistoryTest extends SingularitySchedulerTestBase {
 
   @Inject
   protected TaskHistoryHelper taskHistoryHelper;
+
+  @Inject
+  protected SingularitySchedulerLock lock;
 
   public SingularityHistoryTest() {
     super(true);
@@ -141,7 +145,7 @@ public class SingularityHistoryTest extends SingularitySchedulerTestBase {
 
     Assert.assertEquals(1, getTaskHistoryForRequest(requestId, 0, 100).size());
 
-    SingularityHistoryPurger purger = new SingularityHistoryPurger(historyPurgingConfiguration, historyManager, taskManager, deployManager, requestManager, metadataManager);
+    SingularityHistoryPurger purger = new SingularityHistoryPurger(historyPurgingConfiguration, historyManager, taskManager, deployManager, requestManager, metadataManager, lock);
 
     purger.runActionOnPoll();
 
@@ -163,7 +167,7 @@ public class SingularityHistoryTest extends SingularitySchedulerTestBase {
     historyPurgingConfiguration.setEnabled(true);
     historyPurgingConfiguration.setDeleteTaskHistoryAfterDays(10);
 
-    SingularityHistoryPurger purger = new SingularityHistoryPurger(historyPurgingConfiguration, historyManager, taskManager, deployManager, requestManager, metadataManager);
+    SingularityHistoryPurger purger = new SingularityHistoryPurger(historyPurgingConfiguration, historyManager, taskManager, deployManager, requestManager, metadataManager, lock);
 
     purger.runActionOnPoll();
 
