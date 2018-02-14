@@ -190,6 +190,8 @@ public class SingularityMesosOfferScheduler {
             (e) -> this.buildSlaveUsageWithScores(e.getValue())
         ));
 
+    LOG.trace("Found slave usages {}", currentSlaveUsagesBySlaveId);
+
     for (SingularityTaskRequestHolder taskRequestHolder : sortedTaskRequestHolders) {
       lock.runWithRequestLock(() -> {
         Map<String, Integer> tasksPerOffer = new ConcurrentHashMap<>();
