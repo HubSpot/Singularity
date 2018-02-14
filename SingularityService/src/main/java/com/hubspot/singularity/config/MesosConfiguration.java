@@ -56,7 +56,7 @@ public class MesosConfiguration {
   private int statusUpdateConcurrencyLimit = 500;
   private int maxStatusUpdateQueueSize = 5000;
   private int offersConcurrencyLimit = 100;
-  private SingularityUsageScoringStrategy scoringStrategy = SingularityUsageScoringStrategy.SPREAD_SYSTEM_USAGE;
+  private SingularityUsageScoringStrategy scoringStrategy = SingularityUsageScoringStrategy.SPREAD_TASK_USAGE;
 
   public int getMaxNumInstancesPerRequest() {
     return maxNumInstancesPerRequest;
