@@ -15,6 +15,7 @@ import com.hubspot.horizon.HttpResponse;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.mesos.json.MesosMasterMetricsSnapshotObject;
 import com.hubspot.mesos.json.MesosMasterStateObject;
+import com.hubspot.mesos.json.MesosSlaveMetricsSnapshotObject;
 import com.hubspot.mesos.json.MesosSlaveStateObject;
 import com.hubspot.mesos.json.MesosTaskMonitorObject;
 
@@ -28,7 +29,8 @@ public class SingularityMesosClient implements MesosClient {
   private static final String MASTER_STATE_FORMAT = "http://%s/master/state";
   private static final String MESOS_SLAVE_JSON_URL = "http://%s:5051/slave(1)/state";
   private static final String MESOS_SLAVE_STATISTICS_URL = "http://%s:5051/monitor/statistics";
-  private static final String MESOS_METRICS_SNAPSHOT_URL = "http://%s/metrics/snapshot";
+  private static final String MESOS_MASTER_METRICS_SNAPSHOT_URL = "http://%s/metrics/snapshot";
+  private static final String MESOS_SLAVE_METRICS_SNAPSHOT_URL = "http://%s:5051/metrics/snapshot";
 
   private static final TypeReference<List<MesosTaskMonitorObject>> TASK_MONITOR_TYPE_REFERENCE = new TypeReference<List<MesosTaskMonitorObject>>() {};
 
@@ -45,8 +47,8 @@ public class SingularityMesosClient implements MesosClient {
   }
 
   @Override
-  public String getMetricsSnapshotUri(String hostnameAndPort) {
-    return String.format(MESOS_METRICS_SNAPSHOT_URL, hostnameAndPort);
+  public String getMasterMetricsSnapshotUri(String hostnameAndPort) {
+    return String.format(MESOS_MASTER_METRICS_SNAPSHOT_URL, hostnameAndPort);
   }
 
   private HttpResponse getFromMesos(String uri) {
@@ -89,6 +91,11 @@ public class SingularityMesosClient implements MesosClient {
   @Override
   public MesosMasterMetricsSnapshotObject getMasterMetricsSnapshot(String uri) {
     return getFromMesos(uri, MesosMasterMetricsSnapshotObject.class);
+  }
+
+  @Override
+  public MesosSlaveMetricsSnapshotObject getSlaveMetricsSnapshot(String hostname) {
+    return getFromMesos(String.format(MESOS_SLAVE_METRICS_SNAPSHOT_URL, hostname), MesosSlaveMetricsSnapshotObject.class);
   }
 
   @Override

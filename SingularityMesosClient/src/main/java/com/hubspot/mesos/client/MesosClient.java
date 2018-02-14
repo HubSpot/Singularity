@@ -4,6 +4,7 @@ import java.util.List;
 
 import com.hubspot.mesos.json.MesosMasterMetricsSnapshotObject;
 import com.hubspot.mesos.json.MesosMasterStateObject;
+import com.hubspot.mesos.json.MesosSlaveMetricsSnapshotObject;
 import com.hubspot.mesos.json.MesosSlaveStateObject;
 import com.hubspot.mesos.json.MesosTaskMonitorObject;
 
@@ -11,7 +12,11 @@ public interface MesosClient {
 
   public String getMasterUri(String hostnameAndPort);
 
-  public String getMetricsSnapshotUri(String hostnameAndPort);
+  default String getMetricsSnapshotUri(String hostnameAndPort) {
+    return getMasterMetricsSnapshotUri(hostnameAndPort);
+  }
+
+  public String getMasterMetricsSnapshotUri(String hostnameAndPort);
 
   public static class MesosClientException extends RuntimeException {
     private static final long serialVersionUID = 1L;
@@ -29,6 +34,8 @@ public interface MesosClient {
   public MesosMasterStateObject getMasterState(String uri);
 
   public MesosMasterMetricsSnapshotObject getMasterMetricsSnapshot(String uri);
+
+  public MesosSlaveMetricsSnapshotObject getSlaveMetricsSnapshot(String uri);
 
   public String getSlaveUri(String hostname);
 
