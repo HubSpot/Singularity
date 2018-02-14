@@ -188,19 +188,20 @@ public class UsageManager extends CuratorAsyncManager {
     return getData(USAGE_SUMMARY_PATH, clusterUtilizationTranscoder);
   }
 
-  public Map<String, SingularitySlaveUsage> getCurrentSlaveUsages(List<String> slaveIds) {
+  public List<SingularitySlaveUsageWithId> getCurrentSlaveUsages(List<String> slaveIds) {
     List<String> paths = new ArrayList<>(slaveIds.size());
     for (String slaveId : slaveIds) {
       paths.add(getCurrentSlaveUsagePath(slaveId));
     }
 
-    return getAsyncWithPath("getAllCurrentSlaveUsage", paths, slaveUsageTranscoder);
+    return getAsyncWithPath("getAllCurrentSlaveUsage", paths, slaveUsageTranscoder)
+        .entrySet().stream()
+        .map((entry) -> new SingularitySlaveUsageWithId(entry.getValue(), getSlaveIdFromCurrentUsagePath(entry.getKey())))
+        .collect(Collectors.toList());
   }
 
   public List<SingularitySlaveUsageWithId> getAllCurrentSlaveUsage() {
-    return getCurrentSlaveUsages(getSlavesWithUsage()).entrySet().stream()
-        .map((entry) -> new SingularitySlaveUsageWithId(entry.getValue(), getSlaveIdFromCurrentUsagePath(entry.getKey())))
-        .collect(Collectors.toList());
+    return getCurrentSlaveUsages(getSlavesWithUsage());
   }
 
   public List<Long> getSlaveUsageTimestamps(String slaveId) {

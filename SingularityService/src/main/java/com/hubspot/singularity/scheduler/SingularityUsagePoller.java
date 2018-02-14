@@ -165,7 +165,8 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
 
         SingularitySlaveUsage slaveUsage = new SingularitySlaveUsage(cpusUsedOnSlave, cpuReservedOnSlave, cpusTotal, memoryBytesUsedOnSlave, memoryMbReservedOnSlave,
             memoryMbTotal, diskMbUsedOnSlave, diskMbReservedOnSlave, diskMbTotal, longRunningTasksUsage, allTaskUsage.size(), now,
-            slaveMetricsSnapshot.getSystemMemTotalBytes(), slaveMetricsSnapshot.getSystemMemFreeBytes(), slaveMetricsSnapshot.getSystemLoad1Min(), slaveMetricsSnapshot.getSystemLoad5Min(), slaveMetricsSnapshot.getSystemLoad15Min());
+            slaveMetricsSnapshot.getSystemMemTotalBytes(), slaveMetricsSnapshot.getSystemMemFreeBytes(), slaveMetricsSnapshot.getSystemLoad1Min(),
+            slaveMetricsSnapshot.getSystemLoad5Min(), slaveMetricsSnapshot.getSystemLoad15Min(), slaveMetricsSnapshot.getSlaveDiskUsed(), slaveMetricsSnapshot.getSlaveDiskTotal());
         List<Long> slaveTimestamps = usageManager.getSlaveUsageTimestamps(slave.getId());
         if (slaveTimestamps.size() + 1 > configuration.getNumUsageToKeep()) {
           usageManager.deleteSpecificSlaveUsage(slave.getId(), slaveTimestamps.get(0));

@@ -27,6 +27,7 @@ import com.hubspot.singularity.SingularityDeployStatistics;
 import com.hubspot.singularity.SingularityPendingTaskId;
 import com.hubspot.singularity.SingularitySlaveUsage;
 import com.hubspot.singularity.SingularitySlaveUsage.ResourceUsageType;
+import com.hubspot.singularity.SingularitySlaveUsageWithId;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTaskRequest;
@@ -184,10 +185,10 @@ public class SingularityMesosOfferScheduler {
             .stream()
             .map(SingularityOfferHolder::getSlaveId)
             .collect(Collectors.toList()))
-        .entrySet().parallelStream()
+        .parallelStream()
         .collect(Collectors.toMap(
-            Map.Entry::getKey,
-            (e) -> this.buildSlaveUsageWithScores(e.getValue())
+            SingularitySlaveUsageWithId::getSlaveId,
+            this::buildSlaveUsageWithScores
         ));
 
     LOG.trace("Found slave usages {}", currentSlaveUsagesBySlaveId);
