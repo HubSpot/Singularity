@@ -76,6 +76,7 @@ import com.hubspot.singularity.data.SlaveManager;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.data.TaskRequestManager;
 import com.hubspot.singularity.helpers.RFC5545Schedule;
+import com.hubspot.singularity.mesos.SingularitySchedulerLock;
 import com.hubspot.singularity.smtp.SingularityMailer;
 
 @Singleton
@@ -85,22 +86,20 @@ public class SingularityScheduler {
 
   private final SingularityConfiguration configuration;
   private final SingularityCooldown cooldown;
-
   private final TaskManager taskManager;
   private final RequestManager requestManager;
   private final TaskRequestManager taskRequestManager;
   private final DeployManager deployManager;
-
   private final SlaveManager slaveManager;
   private final RackManager rackManager;
-
   private final SingularityMailer mailer;
-
   private final SingularityLeaderCache leaderCache;
+  private final SingularitySchedulerLock lock;
 
   @Inject
   public SingularityScheduler(TaskRequestManager taskRequestManager, SingularityConfiguration configuration, SingularityCooldown cooldown, DeployManager deployManager,
-    TaskManager taskManager, RequestManager requestManager, SlaveManager slaveManager, RackManager rackManager, SingularityMailer mailer, SingularityLeaderCache leaderCache) {
+                              TaskManager taskManager, RequestManager requestManager, SlaveManager slaveManager, RackManager rackManager, SingularityMailer mailer,
+                              SingularityLeaderCache leaderCache, SingularitySchedulerLock lock) {
     this.taskRequestManager = taskRequestManager;
     this.configuration = configuration;
     this.deployManager = deployManager;
@@ -111,6 +110,7 @@ public class SingularityScheduler {
     this.mailer = mailer;
     this.cooldown = cooldown;
     this.leaderCache = leaderCache;
+    this.lock = lock;
   }
 
   private void cleanupTaskDueToDecomission(final Map<String, Optional<String>> requestIdsToUserToReschedule, final Set<SingularityTaskId> matchingTaskIds, SingularityTask task,
@@ -239,7 +239,10 @@ public class SingularityScheduler {
 
     deployKeyToPendingRequests.entrySet().parallelStream()
         .forEach((deployKeyToPendingRequest) -> {
-          handlePendingRequestsForDeployKey(obsoleteRequests, heldForScheduledActiveTask, totalNewScheduledTasks, deployKeyToPendingRequest.getKey(), deployKeyToPendingRequest.getValue());
+          lock.runWithRequestLock(
+              () -> handlePendingRequestsForDeployKey(obsoleteRequests, heldForScheduledActiveTask, totalNewScheduledTasks, deployKeyToPendingRequest.getKey(), deployKeyToPendingRequest.getValue()),
+              deployKeyToPendingRequest.getKey().getRequestId(),
+              String.format("%s#%s", getClass().getSimpleName(), "drainPendingQueue"));
         });
 
     LOG.info("Scheduled {} new tasks ({} obsolete requests, {} held) in {}", totalNewScheduledTasks.get(), obsoleteRequests.get(), heldForScheduledActiveTask.get(), JavaUtils.duration(start));

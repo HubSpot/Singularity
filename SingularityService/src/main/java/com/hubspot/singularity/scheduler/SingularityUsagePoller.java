@@ -14,6 +14,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.hubspot.mesos.client.MesosClient;
+import com.hubspot.mesos.json.MesosSlaveMetricsSnapshotObject;
 import com.hubspot.mesos.json.MesosTaskMonitorObject;
 import com.hubspot.singularity.InvalidSingularityTaskIdException;
 import com.hubspot.singularity.RequestUtilization;
@@ -102,6 +103,7 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
 
       try {
         List<MesosTaskMonitorObject> allTaskUsage = mesosClient.getSlaveResourceUsage(slave.getHost());
+        MesosSlaveMetricsSnapshotObject slaveMetricsSnapshot = mesosClient.getSlaveMetricsSnapshot(slave.getHost());
 
         for (MesosTaskMonitorObject taskUsage : allTaskUsage) {
           String taskId = taskUsage.getSource();
@@ -161,7 +163,10 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
           diskMbTotal = Optional.of(slave.getResources().get().getDiskSpace().get());
         }
 
-        SingularitySlaveUsage slaveUsage = new SingularitySlaveUsage(cpusUsedOnSlave, cpuReservedOnSlave, cpusTotal, memoryBytesUsedOnSlave, memoryMbReservedOnSlave, memoryMbTotal, diskMbUsedOnSlave, diskMbReservedOnSlave, diskMbTotal, longRunningTasksUsage, allTaskUsage.size(), now);
+        SingularitySlaveUsage slaveUsage = new SingularitySlaveUsage(cpusUsedOnSlave, cpuReservedOnSlave, cpusTotal, memoryBytesUsedOnSlave, memoryMbReservedOnSlave,
+            memoryMbTotal, diskMbUsedOnSlave, diskMbReservedOnSlave, diskMbTotal, longRunningTasksUsage, allTaskUsage.size(), now,
+            slaveMetricsSnapshot.getSystemMemTotalBytes(), slaveMetricsSnapshot.getSystemMemFreeBytes(), slaveMetricsSnapshot.getSystemLoad1Min(),
+            slaveMetricsSnapshot.getSystemLoad5Min(), slaveMetricsSnapshot.getSystemLoad15Min(), slaveMetricsSnapshot.getSlaveDiskUsed(), slaveMetricsSnapshot.getSlaveDiskTotal());
         List<Long> slaveTimestamps = usageManager.getSlaveUsageTimestamps(slave.getId());
         if (slaveTimestamps.size() + 1 > configuration.getNumUsageToKeep()) {
           usageManager.deleteSpecificSlaveUsage(slave.getId(), slaveTimestamps.get(0));
