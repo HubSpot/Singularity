@@ -239,9 +239,15 @@ public class SingularityMesosSchedulerImpl extends SingularityMesosScheduler {
         LOG.error("Received fatal error while handling offers - will decline all available offers", t);
 
         mesosSchedulerClient.decline(offersToCheck.stream()
-            .filter((o) -> !acceptedOffers.contains(o.getId()))
+            .filter((o) -> !acceptedOffers.contains(o.getId()) && !cachedOffers.containsKey(o.getId().getValue()))
             .map(Offer::getId)
             .collect(Collectors.toList()));
+
+        offersToCheck.forEach((o) -> {
+          if (cachedOffers.containsKey(o.getId().getValue())) {
+            offerCache.returnOffer(cachedOffers.get(o.getId().getValue()));
+          }
+        });
 
         throw t;
       }
