@@ -104,6 +104,22 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
       try {
         List<MesosTaskMonitorObject> allTaskUsage = mesosClient.getSlaveResourceUsage(slave.getHost());
         MesosSlaveMetricsSnapshotObject slaveMetricsSnapshot = mesosClient.getSlaveMetricsSnapshot(slave.getHost());
+        double systemMemTotalBytes = 0;
+        double systemMemFreeBytes = 0;
+        double systemLoad1Min = 0;
+        double systemLoad5Min = 0;
+        double systemLoad15Min = 0;
+        double slaveDiskUsed = 0;
+        double slaveDiskTotal = 0;
+        if (slaveMetricsSnapshot != null) {
+          systemMemTotalBytes = slaveMetricsSnapshot.getSystemMemTotalBytes();
+          systemMemFreeBytes = slaveMetricsSnapshot.getSystemMemFreeBytes();
+          systemLoad1Min = slaveMetricsSnapshot.getSystemLoad1Min();
+          systemLoad5Min = slaveMetricsSnapshot.getSystemLoad5Min();
+          systemLoad15Min = slaveMetricsSnapshot.getSystemLoad15Min();
+          slaveDiskUsed = slaveMetricsSnapshot.getSlaveDiskUsed();
+          slaveDiskTotal = slaveMetricsSnapshot.getSlaveDiskTotal();
+        }
 
         for (MesosTaskMonitorObject taskUsage : allTaskUsage) {
           String taskId = taskUsage.getSource();
@@ -165,8 +181,7 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
 
         SingularitySlaveUsage slaveUsage = new SingularitySlaveUsage(cpusUsedOnSlave, cpuReservedOnSlave, cpusTotal, memoryBytesUsedOnSlave, memoryMbReservedOnSlave,
             memoryMbTotal, diskMbUsedOnSlave, diskMbReservedOnSlave, diskMbTotal, longRunningTasksUsage, allTaskUsage.size(), now,
-            slaveMetricsSnapshot.getSystemMemTotalBytes(), slaveMetricsSnapshot.getSystemMemFreeBytes(), slaveMetricsSnapshot.getSystemLoad1Min(),
-            slaveMetricsSnapshot.getSystemLoad5Min(), slaveMetricsSnapshot.getSystemLoad15Min(), slaveMetricsSnapshot.getSlaveDiskUsed(), slaveMetricsSnapshot.getSlaveDiskTotal());
+            systemMemTotalBytes, systemMemFreeBytes, systemLoad1Min, systemLoad5Min, systemLoad15Min, slaveDiskUsed, slaveDiskTotal);
         List<Long> slaveTimestamps = usageManager.getSlaveUsageTimestamps(slave.getId());
         if (slaveTimestamps.size() + 1 > configuration.getNumUsageToKeep()) {
           usageManager.deleteSpecificSlaveUsage(slave.getId(), slaveTimestamps.get(0));
