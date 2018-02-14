@@ -4,6 +4,7 @@ import javax.validation.constraints.NotNull;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.google.common.base.Optional;
+import com.hubspot.singularity.SingularityUsageScoringStrategy;
 
 @JsonIgnoreProperties( ignoreUnknown = true )
 public class MesosConfiguration {
@@ -55,6 +56,7 @@ public class MesosConfiguration {
   private int statusUpdateConcurrencyLimit = 500;
   private int maxStatusUpdateQueueSize = 5000;
   private int offersConcurrencyLimit = 100;
+  private SingularityUsageScoringStrategy scoringStrategy = SingularityUsageScoringStrategy.SPREAD_SYSTEM_USAGE;
 
   public int getMaxNumInstancesPerRequest() {
     return maxNumInstancesPerRequest;
@@ -270,5 +272,9 @@ public class MesosConfiguration {
 
   public void setOffersConcurrencyLimit(int offersConcurrencyLimit) {
     this.offersConcurrencyLimit = offersConcurrencyLimit;
+  }
+
+  public SingularityUsageScoringStrategy getScoringStrategy() {
+    return scoringStrategy;
   }
 }

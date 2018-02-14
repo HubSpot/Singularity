@@ -190,6 +190,8 @@ public class SingularityMesosOfferScheduler {
             (e) -> this.buildSlaveUsageWithScores(e.getValue())
         ));
 
+    LOG.trace("Found slave usages {}", currentSlaveUsagesBySlaveId);
+
     for (SingularityTaskRequestHolder taskRequestHolder : sortedTaskRequestHolders) {
       lock.runWithRequestLock(() -> {
         Map<String, Integer> tasksPerOffer = new ConcurrentHashMap<>();
@@ -228,18 +230,37 @@ public class SingularityMesosOfferScheduler {
   SingularitySlaveUsageWithCalculatedScores buildSlaveUsageWithScores(SingularitySlaveUsage slaveUsage) {
     if (SingularitySlaveUsageWithCalculatedScores.missingUsageData(slaveUsage)) {
       return new SingularitySlaveUsageWithCalculatedScores(slaveUsage, true, 0, 0, 0, 0, 0, 0, 0);
-    } else {
-      double longRunningCpusUsedScore = slaveUsage.getLongRunningTasksUsage().get(ResourceUsageType.CPU_USED).doubleValue() / slaveUsage.getCpusTotal().get();
-      double longRunningMemUsedScore = ((double) slaveUsage.getLongRunningTasksUsage().get(ResourceUsageType.MEMORY_BYTES_USED).longValue() / slaveUsage.getMemoryBytesTotal().get());
-      double longRunningDiskUsedScore = ((double) slaveUsage.getLongRunningTasksUsage().get(ResourceUsageType.DISK_BYTES_USED).longValue() / slaveUsage.getDiskBytesTotal().get());
-      double cpusFreeScore = 1 - (slaveUsage.getCpusReserved() / slaveUsage.getCpusTotal().get());
-      double memFreeScore = 1 - ((double) slaveUsage.getMemoryMbReserved() / slaveUsage.getMemoryMbTotal().get());
-      double diskFreeScore = 1 - ((double) slaveUsage.getDiskMbReserved() / slaveUsage.getDiskMbTotal().get());
-      return new SingularitySlaveUsageWithCalculatedScores(
-          slaveUsage, false, longRunningCpusUsedScore, longRunningMemUsedScore, longRunningDiskUsedScore, cpusFreeScore, memFreeScore, diskFreeScore,
-          scoreLongRunningTask(longRunningMemUsedScore, memFreeScore, longRunningCpusUsedScore, cpusFreeScore, longRunningDiskUsedScore, diskFreeScore)
-      );
     }
+    double longRunningCpusUsedScore = slaveUsage.getLongRunningTasksUsage().get(ResourceUsageType.CPU_USED).doubleValue() / slaveUsage.getCpusTotal().get();
+    double longRunningMemUsedScore = ((double) slaveUsage.getLongRunningTasksUsage().get(ResourceUsageType.MEMORY_BYTES_USED).longValue() / slaveUsage.getMemoryBytesTotal().get());
+    double longRunningDiskUsedScore = ((double) slaveUsage.getLongRunningTasksUsage().get(ResourceUsageType.DISK_BYTES_USED).longValue() / slaveUsage.getDiskBytesTotal().get());
+    switch (configuration.getMesosConfiguration().getScoringStrategy()) {
+      case SPREAD_TASK_USAGE:
+        double cpusFreeScore = 1 - (slaveUsage.getCpusReserved() / slaveUsage.getCpusTotal().get());
+        double memFreeScore = 1 - ((double) slaveUsage.getMemoryMbReserved() / slaveUsage.getMemoryMbTotal().get());
+        double diskFreeScore = 1 - ((double) slaveUsage.getDiskMbReserved() / slaveUsage.getDiskMbTotal().get());
+        return new SingularitySlaveUsageWithCalculatedScores(
+            slaveUsage, false, longRunningCpusUsedScore, longRunningMemUsedScore, longRunningDiskUsedScore, cpusFreeScore, memFreeScore, diskFreeScore,
+            scoreLongRunningTask(longRunningMemUsedScore, memFreeScore, longRunningCpusUsedScore, cpusFreeScore, longRunningDiskUsedScore, diskFreeScore)
+        );
+      case SPREAD_SYSTEM_USAGE:
+      default:
+        double systemCpuFreeScore = Math.max(0, 1 - slaveUsage.getSystemLoad15Min());
+        double systemMemFreeScore = 1 - (slaveUsage.getSystemMemTotalBytes() - slaveUsage.getSystemMemTotalBytes()) / slaveUsage.getSystemMemTotalBytes();
+        double systemDiskFreeScore = 1 - (slaveUsage.getSlaveDiskUsed() / slaveUsage.getSlaveDiskTotal());
+        return new SingularitySlaveUsageWithCalculatedScores(
+            slaveUsage,
+            false,
+            longRunningCpusUsedScore,
+            longRunningMemUsedScore,
+            longRunningDiskUsedScore,
+            systemCpuFreeScore,
+            systemMemFreeScore,
+            systemDiskFreeScore,
+            scoreLongRunningTask(longRunningMemUsedScore, systemMemFreeScore, longRunningCpusUsedScore, systemCpuFreeScore, longRunningDiskUsedScore, systemDiskFreeScore)
+        );
+    }
+
   }
 
   private boolean isOfferFull(SingularityOfferHolder offerHolder) {
