@@ -20,7 +20,14 @@ public class SingularitySlaveUsageWithId extends SingularitySlaveUsage {
         usage.getDiskMbTotal(),
         usage.getLongRunningTasksUsage(),
         usage.getNumTasks(),
-        usage.getTimestamp()
+        usage.getTimestamp(),
+        usage.getSystemMemTotalBytes(),
+        usage.getSystemMemFreeBytes(),
+        usage.getSystemLoad1Min(),
+        usage.getSystemLoad5Min(),
+        usage.getSystemLoad15Min(),
+        usage.getSlaveDiskUsed(),
+        usage.getSlaveDiskTotal()
     );
     this.slaveId = slaveId;
   }

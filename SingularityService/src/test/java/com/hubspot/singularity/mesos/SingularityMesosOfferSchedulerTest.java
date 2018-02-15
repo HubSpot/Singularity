@@ -319,8 +319,8 @@ public class SingularityMesosOfferSchedulerTest extends SingularityCuratorTestBa
 
   private SingularitySlaveUsageWithCalculatedScores getUsage(long memMbReserved, long memMbTotal, double cpusReserved, double cpusTotal, long diskMbReserved, long diskMbTotal, Map<ResourceUsageType, Number> longRunningTasksUsage) {
     return scheduler.buildSlaveUsageWithScores(new SingularitySlaveUsage(
-            0, cpusReserved, Optional.of(cpusTotal), 0, memMbReserved, Optional.of(memMbTotal), 0, diskMbReserved, Optional.of(diskMbTotal), longRunningTasksUsage, 1, 0L
-        )
+            0, cpusReserved, Optional.of(cpusTotal), 0, memMbReserved, Optional.of(memMbTotal), 0, diskMbReserved, Optional.of(diskMbTotal), longRunningTasksUsage, 1, 0L,
+        0, 0, 0, 0, 0, 0 , 0)
     );
   }
 
