@@ -181,44 +181,6 @@ public abstract class SingularityUploader {
     return found;
   }
 
-  int handleFile(Path path, boolean isFinished, Set<Path> synchronizedToUpload, List<Path> toUpload) throws IOException {
-    int found = 0;
-    if (Files.isDirectory(path, LinkOption.NOFOLLOW_LINKS)) {
-      if (uploadMetadata.isCheckSubdirectories()) {
-        LOG.debug("{} was a directory, checking files in directory", path);
-        for (Path file : JavaUtils.iterable(path)) {
-          found += handleFile(file, isFinished, synchronizedToUpload, toUpload);
-        }
-      } else {
-        LOG.debug("{} was a directory, skipping", path);
-      }
-      return found;
-    }
-
-    if (!pathMatcher.matches(path.getFileName())) {
-      if (!isFinished || !finishedPathMatcher.isPresent() || !finishedPathMatcher.get().matches(path.getFileName())) {
-        LOG.trace("{} Skipping {} because it doesn't match {}", logIdentifier, path, uploadMetadata.getFileGlob());
-        return found;
-      } else {
-        LOG.trace("Not skipping file {} because it matched finish glob {}", path, uploadMetadata.getOnFinishGlob().get());
-      }
-    }
-
-    if (Files.size(path) == 0) {
-      LOG.trace("{} Skipping {} because its size is 0", logIdentifier, path);
-      return found;
-    }
-
-    found++;
-
-    if (synchronizedToUpload.add(path)) {
-      toUpload.add(path);
-    } else {
-      LOG.debug("{} Another uploader already added {}", logIdentifier, path);
-    }
-    return found;
-  }
-
   static boolean isFileOpen(Path path) {
     try {
       SimpleProcessManager lsof = new SimpleProcessManager(LOG);
