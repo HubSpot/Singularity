@@ -16,6 +16,7 @@ import com.google.inject.Inject;
 import com.hubspot.mesos.client.MesosClient;
 import com.hubspot.mesos.json.MesosSlaveMetricsSnapshotObject;
 import com.hubspot.mesos.json.MesosTaskMonitorObject;
+import com.hubspot.singularity.ExtendedTaskState;
 import com.hubspot.singularity.InvalidSingularityTaskIdException;
 import com.hubspot.singularity.RequestUtilization;
 import com.hubspot.singularity.SingularityClusterUtilization;
@@ -28,6 +29,7 @@ import com.hubspot.singularity.SingularitySlaveUsage;
 import com.hubspot.singularity.SingularitySlaveUsage.ResourceUsageType;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskCurrentUsage;
+import com.hubspot.singularity.SingularityTaskHistoryUpdate;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTaskUsage;
 import com.hubspot.singularity.config.SingularityConfiguration;
@@ -155,7 +157,20 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
           memoryBytesUsedOnSlave += latestUsage.getMemoryTotalBytes();
           diskMbUsedOnSlave += latestUsage.getDiskTotalBytes();
 
-          if (!pastTaskUsages.isEmpty()) {
+          if (pastTaskUsages.isEmpty()) {
+            Optional<SingularityTaskHistoryUpdate> maybeStartingUpdate = taskManager.getTaskHistoryUpdate(task, ExtendedTaskState.TASK_STARTING);
+            if (maybeStartingUpdate.isPresent()) {
+              long startTimestampSeconds = TimeUnit.MILLISECONDS.toSeconds(maybeStartingUpdate.get().getTimestamp());
+              double usedCpusSinceStart = latestUsage.getCpuSeconds() / (latestUsage.getTimestamp() - startTimestampSeconds);
+              if (isLongRunning(task) ||  isConsideredLongRunning(task)) {
+                updateLongRunningTasksUsage(longRunningTasksUsage, latestUsage.getMemoryTotalBytes(), usedCpusSinceStart, latestUsage.getDiskTotalBytes());
+              }
+              SingularityTaskCurrentUsage currentUsage = new SingularityTaskCurrentUsage(latestUsage.getMemoryTotalBytes(), now, usedCpusSinceStart);
+              usageManager.saveCurrentTaskUsage(taskId, currentUsage);
+
+              cpusUsedOnSlave += usedCpusSinceStart;
+            }
+          } else {
             SingularityTaskUsage lastUsage = pastTaskUsages.get(pastTaskUsages.size() - 1);
 
             double taskCpusUsed = ((latestUsage.getCpuSeconds() - lastUsage.getCpuSeconds()) / (latestUsage.getTimestamp() - lastUsage.getTimestamp()));
