@@ -23,6 +23,7 @@ public class SingularitySlaveUsageWithId extends SingularitySlaveUsage {
         usage.getTimestamp(),
         usage.getSystemMemTotalBytes(),
         usage.getSystemMemFreeBytes(),
+        usage.getSystemCpusTotal(),
         usage.getSystemLoad1Min(),
         usage.getSystemLoad5Min(),
         usage.getSystemLoad15Min(),
