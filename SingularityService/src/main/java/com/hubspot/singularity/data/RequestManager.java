@@ -473,6 +473,11 @@ public class RequestManager extends CuratorAsyncManager {
     return delete(getExpiringPath(clazz, requestId));
   }
 
+  public <T extends SingularityExpiringRequestActionParent<? extends SingularityExpiringRequestParent>> SingularityCreateResult updateExpiringObject(String requestId, T expiringObject) {
+    delete(getExpiringPath(expiringObject.getClass(), requestId));
+    return save(getExpiringPath(expiringObject), expiringObject, getTranscoder(expiringObject));
+  }
+
   public Optional<SingularityExpiringBounce> getExpiringBounce(String requestId) {
     return getExpiringObject(SingularityExpiringBounce.class, requestId);
   }
