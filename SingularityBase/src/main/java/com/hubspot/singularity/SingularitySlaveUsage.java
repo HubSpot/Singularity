@@ -28,6 +28,7 @@ public class SingularitySlaveUsage {
   private final long timestamp;
   private final double systemMemTotalBytes;
   private final double systemMemFreeBytes;
+  private final double systemCpusTotal;
   private final double systemLoad1Min;
   private final double systemLoad5Min;
   private final double systemLoad15Min;
@@ -49,6 +50,7 @@ public class SingularitySlaveUsage {
                                @JsonProperty("timestamp") long timestamp,
                                @JsonProperty("systemMemTotalBytes") double systemMemTotalBytes,
                                @JsonProperty("systemMemFreeBytes") double systemMemFreeBytes,
+                               @JsonProperty("systemCpusTotal") double systemCpusTotal,
                                @JsonProperty("systemLoad1Min") double systemLoad1Min,
                                @JsonProperty("systemLoad5Min") double systemLoad5Min,
                                @JsonProperty("systemLoad15Min") double systemLoad15Min,
@@ -68,6 +70,7 @@ public class SingularitySlaveUsage {
     this.timestamp = timestamp;
     this.systemMemTotalBytes = systemMemTotalBytes;
     this.systemMemFreeBytes = systemMemFreeBytes;
+    this.systemCpusTotal = systemCpusTotal;
     this.systemLoad1Min = systemLoad1Min;
     this.systemLoad5Min = systemLoad5Min;
     this.systemLoad15Min = systemLoad15Min;
@@ -139,6 +142,10 @@ public class SingularitySlaveUsage {
     return systemMemFreeBytes;
   }
 
+  public double getSystemCpusTotal() {
+    return systemCpusTotal;
+  }
+
   public double getSystemLoad1Min() {
     return systemLoad1Min;
   }
@@ -176,6 +183,7 @@ public class SingularitySlaveUsage {
         ", timestamp=" + timestamp +
         ", systemMemTotalBytes=" + systemMemTotalBytes +
         ", systemMemFreeBytes=" + systemMemFreeBytes +
+        ", systemCpusTotal=" + systemCpusTotal +
         ", systemLoad1Min=" + systemLoad1Min +
         ", systemLoad5Min=" + systemLoad5Min +
         ", systemLoad15Min=" + systemLoad15Min +
