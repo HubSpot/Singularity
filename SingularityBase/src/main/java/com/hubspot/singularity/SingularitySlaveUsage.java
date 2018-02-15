@@ -26,6 +26,13 @@ public class SingularitySlaveUsage {
   private final Map<ResourceUsageType, Number> longRunningTasksUsage;
   private final int numTasks;
   private final long timestamp;
+  private final double systemMemTotalBytes;
+  private final double systemMemFreeBytes;
+  private final double systemLoad1Min;
+  private final double systemLoad5Min;
+  private final double systemLoad15Min;
+  private final double slaveDiskUsed;
+  private final double slaveDiskTotal;
 
   @JsonCreator
   public SingularitySlaveUsage(@JsonProperty("cpusUsed") double cpusUsed,
@@ -39,7 +46,14 @@ public class SingularitySlaveUsage {
                                @JsonProperty("diskMbTotal") Optional<Long> diskMbTotal,
                                @JsonProperty("longRunningTasksUsage") Map<ResourceUsageType, Number> longRunningTasksUsage,
                                @JsonProperty("numTasks") int numTasks,
-                               @JsonProperty("timestamp") long timestamp) {
+                               @JsonProperty("timestamp") long timestamp,
+                               @JsonProperty("systemMemTotalBytes") double systemMemTotalBytes,
+                               @JsonProperty("systemMemFreeBytes") double systemMemFreeBytes,
+                               @JsonProperty("systemLoad1Min") double systemLoad1Min,
+                               @JsonProperty("systemLoad5Min") double systemLoad5Min,
+                               @JsonProperty("systemLoad15Min") double systemLoad15Min,
+                               @JsonProperty("slaveDiskUsed") double slaveDiskUsed,
+                               @JsonProperty("slaveDiskTotal") double slaveDiskTotal) {
     this.cpusUsed = cpusUsed;
     this.cpusReserved = cpusReserved;
     this.cpusTotal = cpusTotal;
@@ -52,6 +66,13 @@ public class SingularitySlaveUsage {
     this.longRunningTasksUsage = longRunningTasksUsage;
     this.numTasks = numTasks;
     this.timestamp = timestamp;
+    this.systemMemTotalBytes = systemMemTotalBytes;
+    this.systemMemFreeBytes = systemMemFreeBytes;
+    this.systemLoad1Min = systemLoad1Min;
+    this.systemLoad5Min = systemLoad5Min;
+    this.systemLoad15Min = systemLoad15Min;
+    this.slaveDiskUsed = slaveDiskUsed;
+    this.slaveDiskTotal = slaveDiskTotal;
   }
 
   public double getCpusUsed() {
@@ -110,17 +131,56 @@ public class SingularitySlaveUsage {
     return timestamp;
   }
 
+  public double getSystemMemTotalBytes() {
+    return systemMemTotalBytes;
+  }
+
+  public double getSystemMemFreeBytes() {
+    return systemMemFreeBytes;
+  }
+
+  public double getSystemLoad1Min() {
+    return systemLoad1Min;
+  }
+
+  public double getSystemLoad5Min() {
+    return systemLoad5Min;
+  }
+
+  public double getSystemLoad15Min() {
+    return systemLoad15Min;
+  }
+
+  public double getSlaveDiskUsed() {
+    return slaveDiskUsed;
+  }
+
+  public double getSlaveDiskTotal() {
+    return slaveDiskTotal;
+  }
+
   @Override
   public String toString() {
-    return "SingularitySlaveUsage [memoryBytesUsed=" + memoryBytesUsed +
-        ", memoryMbReserved=" + memoryMbReserved +
-        ", memoryMbTotal=" + memoryMbTotal +
-        ", cpusUsed=" + cpusUsed +
+    return "SingularitySlaveUsage{" +
+        "cpusUsed=" + cpusUsed +
         ", cpusReserved=" + cpusReserved +
         ", cpusTotal=" + cpusTotal +
-        ", numTasks=" + numTasks +
+        ", memoryBytesUsed=" + memoryBytesUsed +
+        ", memoryMbReserved=" + memoryMbReserved +
+        ", memoryMbTotal=" + memoryMbTotal +
+        ", diskBytesUsed=" + diskBytesUsed +
+        ", diskMbReserved=" + diskMbReserved +
+        ", diskMbTotal=" + diskMbTotal +
         ", longRunningTasksUsage=" + longRunningTasksUsage +
+        ", numTasks=" + numTasks +
         ", timestamp=" + timestamp +
-        "]";
+        ", systemMemTotalBytes=" + systemMemTotalBytes +
+        ", systemMemFreeBytes=" + systemMemFreeBytes +
+        ", systemLoad1Min=" + systemLoad1Min +
+        ", systemLoad5Min=" + systemLoad5Min +
+        ", systemLoad15Min=" + systemLoad15Min +
+        ", slaveDiskUsed=" + slaveDiskUsed +
+        ", slaveDiskTotal=" + slaveDiskTotal +
+        '}';
   }
 }

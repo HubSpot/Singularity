@@ -8,6 +8,7 @@ import java.util.Map;
 import com.hubspot.mesos.client.MesosClient;
 import com.hubspot.mesos.json.MesosMasterMetricsSnapshotObject;
 import com.hubspot.mesos.json.MesosMasterStateObject;
+import com.hubspot.mesos.json.MesosSlaveMetricsSnapshotObject;
 import com.hubspot.mesos.json.MesosSlaveStateObject;
 import com.hubspot.mesos.json.MesosTaskMonitorObject;
 
@@ -29,7 +30,7 @@ public class TestingMesosClient implements MesosClient {
   }
 
   @Override
-  public String getMetricsSnapshotUri(String hostnameAndPort) {
+  public String getMasterMetricsSnapshotUri(String hostnameAndPort) {
     return null;
   }
 
@@ -40,6 +41,11 @@ public class TestingMesosClient implements MesosClient {
 
   @Override
   public MesosMasterMetricsSnapshotObject getMasterMetricsSnapshot(String uri) {
+    return null;
+  }
+
+  @Override
+  public MesosSlaveMetricsSnapshotObject getSlaveMetricsSnapshot(String hostname) {
     return null;
   }
 
