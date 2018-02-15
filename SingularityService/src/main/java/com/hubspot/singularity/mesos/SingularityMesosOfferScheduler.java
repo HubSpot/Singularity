@@ -246,7 +246,7 @@ public class SingularityMesosOfferScheduler {
         );
       case SPREAD_SYSTEM_USAGE:
       default:
-        double systemCpuFreeScore = Math.max(0, 1 - slaveUsage.getSystemLoad15Min());
+        double systemCpuFreeScore = Math.max(0, 1 - (slaveUsage.getSystemLoad15Min() / slaveUsage.getSystemCpusTotal()));
         double systemMemFreeScore = 1 - (slaveUsage.getSystemMemTotalBytes() - slaveUsage.getSystemMemFreeBytes()) / slaveUsage.getSystemMemTotalBytes();
         double systemDiskFreeScore = 1 - (slaveUsage.getSlaveDiskUsed() / slaveUsage.getSlaveDiskTotal());
         return new SingularitySlaveUsageWithCalculatedScores(

@@ -111,6 +111,7 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
         double systemLoad15Min = 0;
         double slaveDiskUsed = 0;
         double slaveDiskTotal = 0;
+        double systemCpusTotal = 0;
         if (slaveMetricsSnapshot != null) {
           systemMemTotalBytes = slaveMetricsSnapshot.getSystemMemTotalBytes();
           systemMemFreeBytes = slaveMetricsSnapshot.getSystemMemFreeBytes();
@@ -119,6 +120,7 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
           systemLoad15Min = slaveMetricsSnapshot.getSystemLoad15Min();
           slaveDiskUsed = slaveMetricsSnapshot.getSlaveDiskUsed();
           slaveDiskTotal = slaveMetricsSnapshot.getSlaveDiskTotal();
+          systemCpusTotal = slaveMetricsSnapshot.getSystemCpusTotal();
         }
 
         for (MesosTaskMonitorObject taskUsage : allTaskUsage) {
@@ -181,7 +183,7 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
 
         SingularitySlaveUsage slaveUsage = new SingularitySlaveUsage(cpusUsedOnSlave, cpuReservedOnSlave, cpusTotal, memoryBytesUsedOnSlave, memoryMbReservedOnSlave,
             memoryMbTotal, diskMbUsedOnSlave, diskMbReservedOnSlave, diskMbTotal, longRunningTasksUsage, allTaskUsage.size(), now,
-            systemMemTotalBytes, systemMemFreeBytes, systemLoad1Min, systemLoad5Min, systemLoad15Min, slaveDiskUsed, slaveDiskTotal);
+            systemMemTotalBytes, systemMemFreeBytes, systemCpusTotal, systemLoad1Min, systemLoad5Min, systemLoad15Min, slaveDiskUsed, slaveDiskTotal);
         List<Long> slaveTimestamps = usageManager.getSlaveUsageTimestamps(slave.getId());
         if (slaveTimestamps.size() + 1 > configuration.getNumUsageToKeep()) {
           usageManager.deleteSpecificSlaveUsage(slave.getId(), slaveTimestamps.get(0));
