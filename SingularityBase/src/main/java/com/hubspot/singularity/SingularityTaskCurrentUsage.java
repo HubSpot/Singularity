@@ -8,12 +8,17 @@ public class SingularityTaskCurrentUsage {
   private final long memoryTotalBytes;
   private final long timestamp;
   private final double cpusUsed;
+  private final long diskTotalBytes;
 
   @JsonCreator
-  public SingularityTaskCurrentUsage(@JsonProperty("memoryTotalBytes") long memoryTotalBytes, @JsonProperty("long") long timestamp, @JsonProperty("cpusUsed") double cpusUsed) {
+  public SingularityTaskCurrentUsage(@JsonProperty("memoryTotalBytes") long memoryTotalBytes,
+                                     @JsonProperty("long") long timestamp,
+                                     @JsonProperty("cpusUsed") double cpusUsed,
+                                     @JsonProperty("diskTotalBytes") long diskTotalBytes) {
     this.memoryTotalBytes = memoryTotalBytes;
     this.timestamp = timestamp;
     this.cpusUsed = cpusUsed;
+    this.diskTotalBytes = diskTotalBytes;
   }
 
   public long getMemoryTotalBytes() {
@@ -28,9 +33,17 @@ public class SingularityTaskCurrentUsage {
     return cpusUsed;
   }
 
-  @Override
-  public String toString() {
-    return "SingularityTaskCurrentUsage [memoryTotalBytes=" + memoryTotalBytes + ", timestamp=" + timestamp + ", cpusUsed=" + cpusUsed + "]";
+  public long getDiskTotalBytes() {
+    return diskTotalBytes;
   }
 
+  @Override
+  public String toString() {
+    return "SingularityTaskCurrentUsage{" +
+        "memoryTotalBytes=" + memoryTotalBytes +
+        ", timestamp=" + timestamp +
+        ", cpusUsed=" + cpusUsed +
+        ", diskTotalBytes=" + diskTotalBytes +
+        '}';
+  }
 }
