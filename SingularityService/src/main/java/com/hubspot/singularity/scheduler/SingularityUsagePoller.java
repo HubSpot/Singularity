@@ -13,6 +13,7 @@ import org.slf4j.LoggerFactory;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.inject.Inject;
+import com.hubspot.mesos.Resources;
 import com.hubspot.mesos.client.MesosClient;
 import com.hubspot.mesos.json.MesosSlaveMetricsSnapshotObject;
 import com.hubspot.mesos.json.MesosTaskMonitorObject;
@@ -143,16 +144,20 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
           usageManager.saveSpecificTaskUsage(taskId, latestUsage);
 
           Optional<SingularityTask> maybeTask = taskManager.getTask(task);
-          if (maybeTask.isPresent() && maybeTask.get().getTaskRequest().getDeploy().getResources().isPresent()) {
-            double memoryMbReservedForTask = maybeTask.get().getTaskRequest().getDeploy().getResources().get().getMemoryMb();
-            double cpuReservedForTask = maybeTask.get().getTaskRequest().getDeploy().getResources().get().getCpus();
-            double diskMbReservedForTask = maybeTask.get().getTaskRequest().getDeploy().getResources().get().getDiskMb();
+          if (maybeTask.isPresent()) {
+            Optional<Resources> maybeResources = maybeTask.get().getTaskRequest().getPendingTask().getResources().or(maybeTask.get().getTaskRequest().getDeploy().getResources());
+            if (maybeResources.isPresent()) {
+              Resources taskResources = maybeResources.get();
+              double memoryMbReservedForTask = taskResources.getMemoryMb();
+              double cpuReservedForTask = taskResources.getCpus();
+              double diskMbReservedForTask = taskResources.getDiskMb();
 
-            memoryMbReservedOnSlave += memoryMbReservedForTask;
-            cpuReservedOnSlave += cpuReservedForTask;
-            diskMbReservedOnSlave += diskMbReservedForTask;
+              memoryMbReservedOnSlave += memoryMbReservedForTask;
+              cpuReservedOnSlave += cpuReservedForTask;
+              diskMbReservedOnSlave += diskMbReservedForTask;
 
-            updateRequestUtilization(utilizationPerRequestId, pastTaskUsages, latestUsage, task, memoryMbReservedForTask, cpuReservedForTask, diskMbReservedForTask);
+              updateRequestUtilization(utilizationPerRequestId, pastTaskUsages, latestUsage, task, memoryMbReservedForTask, cpuReservedForTask, diskMbReservedForTask);
+            }
           }
           memoryBytesUsedOnSlave += latestUsage.getMemoryTotalBytes();
           diskMbUsedOnSlave += latestUsage.getDiskTotalBytes();
