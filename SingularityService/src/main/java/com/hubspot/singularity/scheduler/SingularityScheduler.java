@@ -237,11 +237,10 @@ public class SingularityScheduler {
     AtomicInteger heldForScheduledActiveTask = new AtomicInteger(0);
     AtomicInteger obsoleteRequests = new AtomicInteger(0);
 
-    deployKeyToPendingRequests.entrySet().parallelStream()
-        .forEach((deployKeyToPendingRequest) -> {
+    deployKeyToPendingRequests.forEach((deployKey, pendingRequestsForDeployKey) -> {
           lock.runWithRequestLock(
-              () -> handlePendingRequestsForDeployKey(obsoleteRequests, heldForScheduledActiveTask, totalNewScheduledTasks, deployKeyToPendingRequest.getKey(), deployKeyToPendingRequest.getValue()),
-              deployKeyToPendingRequest.getKey().getRequestId(),
+              () -> handlePendingRequestsForDeployKey(obsoleteRequests, heldForScheduledActiveTask, totalNewScheduledTasks, deployKey, pendingRequestsForDeployKey),
+              deployKey.getRequestId(),
               String.format("%s#%s", getClass().getSimpleName(), "drainPendingQueue"));
         });
 
