@@ -193,9 +193,10 @@ public class SingularityMesosOfferScheduler {
 
     LOG.trace("Found slave usages {}", currentSlaveUsagesBySlaveId);
 
+    Map<String, Integer> tasksPerOfferHost = new ConcurrentHashMap<>();
+
     for (SingularityTaskRequestHolder taskRequestHolder : sortedTaskRequestHolders) {
       lock.runWithRequestLock(() -> {
-        Map<String, Integer> tasksPerOffer = new ConcurrentHashMap<>();
         Map<String, Double> scorePerOffer = new ConcurrentHashMap<>();
         List<SingularityTaskId> activeTaskIdsForRequest = leaderCache.getActiveTaskIdsForRequest(taskRequestHolder.getTaskRequest().getRequest().getId());
 
@@ -203,7 +204,7 @@ public class SingularityMesosOfferScheduler {
         for (SingularityOfferHolder offerHolder : offerHolders.values()) {
           if (!isOfferFull(offerHolder)) {
             scoringFutures.add(offerScoringSemaphore.call(() -> CompletableFuture.runAsync(() -> {
-              double score = calculateScore(offerHolder, currentSlaveUsagesBySlaveId, tasksPerOffer, taskRequestHolder, activeTaskIdsForRequest);
+              double score = calculateScore(offerHolder, currentSlaveUsagesBySlaveId, tasksPerOfferHost, taskRequestHolder, activeTaskIdsForRequest);
               if (score != 0) {
                 scorePerOffer.put(offerHolder.getSlaveId(), score);
               }
@@ -216,7 +217,7 @@ public class SingularityMesosOfferScheduler {
         if (!scorePerOffer.isEmpty()) {
           SingularityOfferHolder bestOffer = offerHolders.get(Collections.max(scorePerOffer.entrySet(), Map.Entry.comparingByValue()).getKey());
           LOG.info("Best offer {}/1 is on {}", scorePerOffer.get(bestOffer.getSlaveId()), bestOffer.getSanitizedHost());
-          SingularityMesosTaskHolder taskHolder = acceptTask(bestOffer, tasksPerOffer, taskRequestHolder);
+          SingularityMesosTaskHolder taskHolder = acceptTask(bestOffer, tasksPerOfferHost, taskRequestHolder);
           tasksScheduled.getAndIncrement();
           bestOffer.addMatchedTask(taskHolder);
         }

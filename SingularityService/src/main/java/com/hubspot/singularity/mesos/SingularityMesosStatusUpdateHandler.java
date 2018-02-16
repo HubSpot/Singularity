@@ -269,8 +269,8 @@ public class SingularityMesosStatusUpdateHandler {
         schedulerLock.runWithRequestLock(
             () -> unsafeProcessStatusUpdate(status, maybeTaskId.get()),
             maybeTaskId.get().getRequestId(),
-            getClass().getSimpleName());
-          unsafeProcessStatusUpdate(status, maybeTaskId.get());
+            getClass().getSimpleName()
+        );
         return true;
       }, statusUpdatesExecutor)
     );
