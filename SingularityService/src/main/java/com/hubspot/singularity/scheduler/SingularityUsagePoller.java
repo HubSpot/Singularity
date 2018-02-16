@@ -163,7 +163,7 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
               if (isLongRunning(task) ||  isConsideredLongRunning(task)) {
                 updateLongRunningTasksUsage(longRunningTasksUsage, latestUsage.getMemoryTotalBytes(), usedCpusSinceStart, latestUsage.getDiskTotalBytes());
               }
-              SingularityTaskCurrentUsage currentUsage = new SingularityTaskCurrentUsage(latestUsage.getMemoryTotalBytes(), now, usedCpusSinceStart);
+              SingularityTaskCurrentUsage currentUsage = new SingularityTaskCurrentUsage(latestUsage.getMemoryTotalBytes(), now, usedCpusSinceStart, latestUsage.getDiskTotalBytes());
               usageManager.saveCurrentTaskUsage(taskId, currentUsage);
 
               cpusUsedOnSlave += usedCpusSinceStart;
@@ -176,7 +176,7 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
             if (isLongRunning(task) ||  isConsideredLongRunning(task)) {
               updateLongRunningTasksUsage(longRunningTasksUsage, latestUsage.getMemoryTotalBytes(), taskCpusUsed, latestUsage.getDiskTotalBytes());
             }
-            SingularityTaskCurrentUsage currentUsage = new SingularityTaskCurrentUsage(latestUsage.getMemoryTotalBytes(), now, taskCpusUsed);
+            SingularityTaskCurrentUsage currentUsage = new SingularityTaskCurrentUsage(latestUsage.getMemoryTotalBytes(), now, taskCpusUsed, latestUsage.getDiskTotalBytes());
 
             usageManager.saveCurrentTaskUsage(taskId, currentUsage);
 
