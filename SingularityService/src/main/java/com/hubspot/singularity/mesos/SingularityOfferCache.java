@@ -116,10 +116,8 @@ public class SingularityOfferCache implements OfferCache, RemovalListener<String
   public void returnOffer(CachedOffer cachedOffer) {
     synchronized (offerCache) {
       if (cachedOffer.offerState == OfferState.EXPIRED) {
-        LOG.trace("Declining returned offer {}", cachedOffer.getOfferId());
         declineOffer(cachedOffer);
       } else {
-        LOG.trace("Returning offer {} to cache", cachedOffer.getOfferId());
         cachedOffer.checkIn();
       }
     }
