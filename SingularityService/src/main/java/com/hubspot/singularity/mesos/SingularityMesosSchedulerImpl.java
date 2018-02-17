@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -11,7 +12,6 @@ import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import javax.inject.Singleton;
@@ -186,8 +186,14 @@ public class SingularityMesosSchedulerImpl extends SingularityMesosScheduler {
       }
 
       List<Offer> offersToCheck = new ArrayList<>(offers);
-      Map<String, CachedOffer> cachedOffers = offerCache.checkoutOffers().stream().collect(Collectors.toMap(CachedOffer::getOfferId, Function.identity()));
-      offersToCheck.addAll(cachedOffers.values().stream().map(CachedOffer::getOffer).collect(Collectors.toList()));
+
+      List<CachedOffer> cachedOfferList = offerCache.checkoutOffers();
+      Map<String, CachedOffer> cachedOffers = new HashMap<>();
+      for (CachedOffer cachedOffer : cachedOfferList) {
+        cachedOffers.put(cachedOffer.getOfferId(), cachedOffer);
+        offersToCheck.add(cachedOffer.getOffer());
+      }
+
       offers.parallelStream().forEach((offer) -> {
         String rolesInfo = MesosUtils.getRoles(offer).toString();
         LOG.debug("Received offer ID {} with roles {} from {} ({}) for {} cpu(s), {} memory, {} ports, and {} disk", offer.getId().getValue(), rolesInfo, offer.getHostname(), offer.getAgentId().getValue(), MesosUtils.getNumCpus(offer), MesosUtils.getMemory(offer),
@@ -209,7 +215,6 @@ public class SingularityMesosSchedulerImpl extends SingularityMesosScheduler {
         for (SingularityOfferHolder offerHolder : offerHolders) {
           if (!offerHolder.getAcceptedTasks().isEmpty()) {
             List<Offer> leftoverOffers = offerHolder.launchTasksAndGetUnusedOffers(mesosSchedulerClient);
-            LOG.debug("Leftover offers: {}", leftoverOffers.stream().map(Offer::getId).collect(Collectors.toList()));
 
             leftoverOffers.forEach((o) -> {
               if (cachedOffers.containsKey(o.getId().getValue())) {
@@ -221,7 +226,6 @@ public class SingularityMesosSchedulerImpl extends SingularityMesosScheduler {
 
             List<Offer> offersAcceptedFromSlave = offerHolder.getOffers();
             offersAcceptedFromSlave.removeAll(leftoverOffers);
-            LOG.trace("Accepted offers {}", offersAcceptedFromSlave.stream().map(Offer::getId).collect(Collectors.toList()));
             offersAcceptedFromSlave.stream()
                 .filter((offer) -> cachedOffers.containsKey(offer.getId().getValue()))
                 .map((o) -> cachedOffers.get(o.getId().getValue()))

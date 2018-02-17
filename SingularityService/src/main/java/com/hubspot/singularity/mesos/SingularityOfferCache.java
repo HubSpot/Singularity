@@ -75,13 +75,11 @@ public class SingularityOfferCache implements OfferCache, RemovalListener<String
 
   @Override
   public void rescindOffer(OfferID offerId) {
-    LOG.trace("Offer {} rescinded, removing from cache", offerId.getValue());
     offerCache.invalidate(offerId.getValue());
   }
 
   @Override
   public void useOffer(CachedOffer cachedOffer) {
-    LOG.trace("Using cached offer {}", cachedOffer.getOfferId());
     offerCache.invalidate(cachedOffer.offerId);
   }
 
@@ -96,7 +94,6 @@ public class SingularityOfferCache implements OfferCache, RemovalListener<String
 
     List<CachedOffer> offers = new ArrayList<>((int) offerCache.size());
     for (CachedOffer cachedOffer : offerCache.asMap().values()) {
-      LOG.trace("Checking out offer {}", cachedOffer.getOfferId());
       cachedOffer.checkOut();
       offers.add(cachedOffer);
     }
