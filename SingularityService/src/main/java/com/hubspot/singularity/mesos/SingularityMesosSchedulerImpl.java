@@ -209,6 +209,7 @@ public class SingularityMesosSchedulerImpl extends SingularityMesosScheduler {
         for (SingularityOfferHolder offerHolder : offerHolders) {
           if (!offerHolder.getAcceptedTasks().isEmpty()) {
             List<Offer> leftoverOffers = offerHolder.launchTasksAndGetUnusedOffers(mesosSchedulerClient);
+            LOG.debug("Leftover offers: {}", leftoverOffers.stream().map(Offer::getId));
 
             leftoverOffers.forEach((o) -> {
               if (cachedOffers.containsKey(o.getId().getValue())) {
