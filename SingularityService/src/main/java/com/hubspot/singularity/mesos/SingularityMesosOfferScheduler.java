@@ -268,9 +268,9 @@ public class SingularityMesosOfferScheduler {
     switch (configuration.getMesosConfiguration().getScoreUsingSystemLoad()) {
       case LOAD_1:
         return slaveUsage.getSystemLoad1Min();
-      case LOAD_5:
-        return slaveUsage.getSystemLoad5Min();
       case LOAD_15:
+        return slaveUsage.getSystemLoad5Min();
+      case LOAD_5:
       default:
         return slaveUsage.getSystemLoad15Min();
     }
