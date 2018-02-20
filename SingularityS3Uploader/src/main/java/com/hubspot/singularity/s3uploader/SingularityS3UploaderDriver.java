@@ -269,7 +269,7 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper implements S
     }
 
     for (S3UploadMetadata uploaderMetadata : toRetry) {
-      SingularityUploader uploader = metadataToImmediateUploader.remove(uploaderMetadata);
+      SingularityUploader uploader = metadataToImmediateUploader.get(uploaderMetadata);
       if (uploader != null) {
         LOG.debug("Retrying immediate uploader {}", uploaderMetadata);
         performImmediateUpload(uploader);
