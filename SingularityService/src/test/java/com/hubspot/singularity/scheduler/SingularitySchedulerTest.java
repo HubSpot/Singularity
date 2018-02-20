@@ -25,14 +25,10 @@ import org.mockito.ArgumentMatchers;
 import org.mockito.Mockito;
 
 import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.hubspot.baragon.models.BaragonRequestState;
-import com.hubspot.mesos.protos.MesosTaskState;
-import com.hubspot.singularity.helpers.MesosProtosUtils;
-import com.hubspot.singularity.helpers.MesosUtils;
 import com.hubspot.mesos.Resources;
 import com.hubspot.mesos.SingularityContainerInfo;
 import com.hubspot.mesos.SingularityContainerType;
@@ -41,6 +37,7 @@ import com.hubspot.mesos.SingularityDockerNetworkType;
 import com.hubspot.mesos.SingularityDockerPortMapping;
 import com.hubspot.mesos.SingularityPortMappingType;
 import com.hubspot.mesos.SingularityVolume;
+import com.hubspot.mesos.protos.MesosTaskState;
 import com.hubspot.singularity.DeployState;
 import com.hubspot.singularity.ExtendedTaskState;
 import com.hubspot.singularity.LoadBalancerRequestType;
@@ -89,6 +86,8 @@ import com.hubspot.singularity.api.SingularityRunNowRequest;
 import com.hubspot.singularity.api.SingularityScaleRequest;
 import com.hubspot.singularity.data.AbstractMachineManager.StateChangeResult;
 import com.hubspot.singularity.data.SingularityValidator;
+import com.hubspot.singularity.helpers.MesosProtosUtils;
+import com.hubspot.singularity.helpers.MesosUtils;
 import com.hubspot.singularity.mesos.OfferCache;
 import com.hubspot.singularity.mesos.SingularityMesosTaskPrioritizer;
 import com.hubspot.singularity.scheduler.SingularityDeployHealthHelper.DeployHealth;
@@ -1473,6 +1472,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
 
     SingularityTask task = taskManager.getActiveTasks().get(0);
     statusUpdate(task, TaskState.TASK_FAILED);
+    scheduler.drainPendingQueue();
 
     SingularityDeployStatistics deployStatistics = deployManager.getDeployStatistics(task.getTaskId().getRequestId(), task.getTaskId().getDeployId()).get();
 
@@ -1545,6 +1545,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     cleaner.drainCleanupQueue();
 
     statusUpdate(task, TaskState.TASK_FINISHED);
+    scheduler.drainPendingQueue();
 
     Assert.assertTrue(!taskManager.getPendingTaskIds().isEmpty());
   }
@@ -1676,6 +1677,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     SingularityTask task = launchTask(request, firstDeploy, 1, TaskState.TASK_RUNNING);
 
     statusUpdate(task, TaskState.TASK_FAILED);
+    scheduler.drainPendingQueue();
 
     Assert.assertTrue(taskManager.getPendingTaskIds().get(0).getNextRunAt() - System.currentTimeMillis() < 1000L);
 
@@ -1687,6 +1689,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     resourceOffers();
 
     statusUpdate(taskManager.getActiveTasks().get(0), TaskState.TASK_FAILED);
+    scheduler.drainPendingQueue();
 
     Assert.assertTrue(taskManager.getPendingTaskIds().get(0).getNextRunAt() - System.currentTimeMillis() > 1000L);
     Assert.assertEquals(1, taskManager.getActiveTaskIds().size());

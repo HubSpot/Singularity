@@ -603,16 +603,14 @@ public class SingularityScheduler {
     if (state.isSuccess() && requestState == RequestState.SYSTEM_COOLDOWN) {
       // TODO send not cooldown anymore email
       LOG.info("Request {} succeeded a task, removing from cooldown", request.getId());
-      requestState = RequestState.ACTIVE;
       requestManager.exitCooldown(request, System.currentTimeMillis(), Optional.<String>absent(), Optional.<String>absent());
     }
 
     SingularityPendingRequest pendingRequest = new SingularityPendingRequest(request.getId(), requestDeployState.get().getActiveDeploy().get().getDeployId(),
-      System.currentTimeMillis(), Optional.<String>absent(), pendingType, cmdLineArgsList, Optional.<String>absent(), Optional.<Boolean>absent(), Optional.<String>absent(),
-      Optional.<String>absent());
+        System.currentTimeMillis(), Optional.absent(), pendingType, cmdLineArgsList, Optional.absent(), Optional.absent(), Optional.absent(),
+        Optional.absent());
 
-    SingularityDeployKey deployKey = new SingularityDeployKey(taskId.getRequestId(), taskId.getDeployId());
-    scheduleTasks(request, requestState, deployStatistics, pendingRequest, getMatchingTaskIds(request, deployKey), maybePendingDeploy);
+    requestManager.addToPendingQueue(pendingRequest);
 
     return Optional.of(pendingType);
   }
