@@ -393,6 +393,7 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
     for (SingularityKilledTaskIdRecord killed : taskManager.getKilledTaskIdRecords()) {
       statusUpdate(taskManager.getTask(killed.getTaskId()).get(), TaskState.TASK_KILLED);
     }
+    scheduler.drainPendingQueue();
   }
 
   protected void finishNewTaskChecksAndCleanup() {

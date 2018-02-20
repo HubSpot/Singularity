@@ -61,6 +61,7 @@ public class SingularityDeploysTest extends SingularitySchedulerTestBase {
 
     statusUpdate(secondTask, TaskState.TASK_FAILED);
     statusUpdate(firstTask, TaskState.TASK_FAILED);
+    scheduler.drainPendingQueue();
 
     deployChecker.checkDeploys();
 
