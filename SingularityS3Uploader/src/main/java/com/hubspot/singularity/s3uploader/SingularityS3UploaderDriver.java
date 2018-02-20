@@ -16,7 +16,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.Callable;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -32,7 +31,6 @@ import org.slf4j.LoggerFactory;
 
 import com.amazonaws.auth.BasicAWSCredentials;
 import com.google.common.base.Optional;
-import com.google.common.base.Predicate;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -83,8 +81,13 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper implements S
   private ScheduledFuture<?> future;
 
   @Inject
-  public SingularityS3UploaderDriver(SingularityRunnerBaseConfiguration baseConfiguration, SingularityS3UploaderConfiguration configuration, SingularityS3Configuration s3Configuration,
-      SingularityS3UploaderMetrics metrics, JsonObjectFileHelper jsonObjectFileHelper, @Named(SingularityRunnerBaseModule.HOST_NAME_PROPERTY) String hostname, SingularityRunnerExceptionNotifier exceptionNotifier) {
+  public SingularityS3UploaderDriver(SingularityRunnerBaseConfiguration baseConfiguration,
+                                     SingularityS3UploaderConfiguration configuration,
+                                     SingularityS3Configuration s3Configuration,
+                                     SingularityS3UploaderMetrics metrics,
+                                     JsonObjectFileHelper jsonObjectFileHelper,
+                                     SingularityRunnerExceptionNotifier exceptionNotifier,
+                                     @Named(SingularityRunnerBaseModule.HOST_NAME_PROPERTY) String hostname) {
     super(configuration.getPollForShutDownMillis(), Paths.get(baseConfiguration.getS3UploaderMetadataDirectory()), ImmutableList.of(StandardWatchEventKinds.ENTRY_CREATE, StandardWatchEventKinds.ENTRY_MODIFY, StandardWatchEventKinds.ENTRY_DELETE));
 
     this.baseConfiguration = baseConfiguration;
@@ -150,33 +153,29 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper implements S
       throw Throwables.propagate(t);
     }
 
-    future = this.scheduler.scheduleAtFixedRate(new Runnable() {
+    future = this.scheduler.scheduleAtFixedRate(() -> {
+      final long start = System.currentTimeMillis();
 
-      @Override
-      public void run() {
-        final long start = System.currentTimeMillis();
+      runLock.lock();
 
-        runLock.lock();
+      if (isStopped()) {
+        LOG.warn("Driver is stopped, not checking uploads");
+        return;
+      }
 
-        if (isStopped()) {
-          LOG.warn("Driver is stopped, not checking uploads");
-          return;
-        }
+      int uploads = 0;
+      final int uploaders = metadataToUploader.size();
+      metrics.startUploads();
 
-        int uploads = 0;
-        final int uploaders = metadataToUploader.size();
-        metrics.startUploads();
-
-        try {
-          uploads = checkUploads();
-        } catch (Throwable t) {
-          LOG.error("Uncaught exception while checking {} upload(s)", uploaders, t);
-          exceptionNotifier.notify(String.format("Error checking uploads (%s)", t.getMessage()), t, Collections.<String, String>emptyMap());
-        } finally {
-          runLock.unlock();
-          metrics.finishUploads();
-          LOG.info("Found {} items from {} uploader(s) in {}", uploads, uploaders, JavaUtils.duration(start));
-        }
+      try {
+        uploads = checkUploads();
+      } catch (Throwable t) {
+        LOG.error("Uncaught exception while checking {} upload(s)", uploaders, t);
+        exceptionNotifier.notify(String.format("Error checking uploads (%s)", t.getMessage()), t, Collections.emptyMap());
+      } finally {
+        runLock.unlock();
+        metrics.finishUploads();
+        LOG.info("Found {} items from {} uploader(s) in {}", uploads, uploaders, JavaUtils.duration(start));
       }
     }, configuration.getCheckUploadsEverySeconds(), configuration.getCheckUploadsEverySeconds(), TimeUnit.SECONDS);
 
@@ -262,8 +261,7 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper implements S
     }
 
     // Check regular uploaders
-    int initialExpectedSize = Math.max(metadataToUploader.size(), 1);
-    final Set<Path> filesToUpload = Collections.newSetFromMap(new ConcurrentHashMap<Path, Boolean>(initialExpectedSize * 2, 0.75f, initialExpectedSize));
+    int initialExpectedSize = Math.max(Math.min(metadataToUploader.size(), configuration.getExecutorMaxUploadThreads()), 1);
     final Map<SingularityUploader, Future<Integer>> futures = Maps.newHashMapWithExpectedSize(initialExpectedSize);
     final Map<SingularityUploader, Boolean> finishing = Maps.newHashMapWithExpectedSize(initialExpectedSize);
 
@@ -272,7 +270,7 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper implements S
       // do this here so we run at least once with isFinished = true
       finishing.put(uploader, isFinished);
 
-      futures.put(uploader, executorService.submit(performUploadCallable(uploader, filesToUpload, isFinished, false)));
+      futures.put(uploader, executorService.submit(performUploadCallable(uploader, isFinished, false)));
     }
 
     LOG.info("Waiting on {} future(s)", futures.size());
@@ -323,32 +321,26 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper implements S
     return totesUploads;
   }
 
-  private Callable<Integer> performUploadCallable(final SingularityUploader uploader, final Set<Path> filesToUpload, final boolean finished, final boolean immediate) {
-    return new Callable<Integer>() {
-      @Override
-      public Integer call() {
-
-        Integer returnValue = 0;
-        try {
-          returnValue = uploader.upload(filesToUpload, finished);
-        } catch (Throwable t) {
-          metrics.error();
-          LOG.error("Error while processing uploader {}", uploader, t);
-          exceptionNotifier.notify(String.format("Error processing uploader (%s)", t.getMessage()), t, ImmutableMap.of("metadataPath", uploader.getMetadataPath().toString()));
-          if (immediate) {
-            return -1;
-          }
+  private Callable<Integer> performUploadCallable(final SingularityUploader uploader, final boolean finished, final boolean immediate) {
+    return () -> {
+      Integer returnValue = 0;
+      try {
+        returnValue = uploader.upload(finished);
+      } catch (Throwable t) {
+        metrics.error();
+        LOG.error("Error while processing uploader {}", uploader, t);
+        exceptionNotifier.notify(String.format("Error processing uploader (%s)", t.getMessage()), t, ImmutableMap.of("metadataPath", uploader.getMetadataPath().toString()));
+        if (immediate) {
+          return -1;
         }
-        return returnValue;
       }
+      return returnValue;
     };
   }
 
   private void performImmediateUpload(final SingularityUploader uploader) {
-    final Set<Path> filesToUpload = Collections
-        .newSetFromMap(new ConcurrentHashMap<Path, Boolean>(Math.max(metadataToUploader.size(), 1) * 2, 0.75f, Math.max(metadataToUploader.size(), 1)));
     final boolean finished = isFinished(uploader);
-    immediateUploaders.put(uploader, executorService.submit(performUploadCallable(uploader, filesToUpload, finished, true)));
+    immediateUploaders.put(uploader, executorService.submit(performUploadCallable(uploader, finished, true)));
   }
 
   private boolean shouldExpire(SingularityUploader uploader, boolean isFinished) {
@@ -497,12 +489,7 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper implements S
       final Path fullPath = Paths.get(baseConfiguration.getS3UploaderMetadataDirectory()).resolve(filename);
 
       if (kind.equals(StandardWatchEventKinds.ENTRY_DELETE)) {
-        Optional<SingularityUploader> found = Iterables.tryFind(metadataToUploader.values(), new Predicate<SingularityUploader>() {
-          @Override
-          public boolean apply(SingularityUploader input) {
-            return input.getMetadataPath().equals(fullPath);
-          }
-        });
+        Optional<SingularityUploader> found = Iterables.tryFind(metadataToUploader.values(), input -> input.getMetadataPath().equals(fullPath));
 
         LOG.trace("Found {} to match deleted path {}", found, filename);
 

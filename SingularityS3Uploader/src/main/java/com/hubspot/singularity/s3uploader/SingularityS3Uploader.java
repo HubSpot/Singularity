@@ -40,9 +40,16 @@ import com.hubspot.singularity.s3uploader.config.SingularityS3UploaderContentHea
 public class SingularityS3Uploader extends SingularityUploader {
   private final AmazonS3 s3Client;
 
-  SingularityS3Uploader(BasicAWSCredentials defaultCredentials, S3UploadMetadata uploadMetadata, FileSystem fileSystem, SingularityS3UploaderMetrics metrics, Path metadataPath,
-                        SingularityS3UploaderConfiguration configuration, String hostname, SingularityRunnerExceptionNotifier exceptionNotifier) {
+  SingularityS3Uploader(BasicAWSCredentials defaultCredentials,
+                        S3UploadMetadata uploadMetadata,
+                        FileSystem fileSystem,
+                        SingularityS3UploaderMetrics metrics,
+                        Path metadataPath,
+                        SingularityS3UploaderConfiguration configuration,
+                        String hostname,
+                        SingularityRunnerExceptionNotifier exceptionNotifier) {
     super(uploadMetadata, fileSystem, metrics, metadataPath, configuration, hostname, exceptionNotifier);
+
     BasicAWSCredentials credentials = defaultCredentials;
 
     if (uploadMetadata.getS3SecretKey().isPresent() && uploadMetadata.getS3AccessKey().isPresent()) {
@@ -135,7 +142,7 @@ public class SingularityS3Uploader extends SingularityUploader {
     });
   }
 
-  private void multipartUpload(String key, File file, ObjectMetadata objectMetadata, Optional<StorageClass> maybeStorageClass) throws Exception {
+  private void multipartUpload(String key, File file, ObjectMetadata objectMetadata, Optional<StorageClass> maybeStorageClass) {
     List<PartETag> partETags = new ArrayList<>();
     InitiateMultipartUploadRequest initRequest = new InitiateMultipartUploadRequest(bucketName, key, objectMetadata);
     if (maybeStorageClass.isPresent()) {
