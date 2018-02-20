@@ -126,15 +126,23 @@ const Utils = {
     return false;
   },
 
+  getUpperCaseCharacters(string) {
+    return string.replace(/[^A-Z]/g, '');
+  },
+
+  isAllUpperCase(string) {
+    return string === this.getUpperCaseCharacters(string);
+  },
+
   fuzzyFilter(filter, fuzzyObjects) {
     const maxScore = _.max(fuzzyObjects, (fuzzyObject) => fuzzyObject.score).score;
     _.chain(fuzzyObjects).map((fuzzyObject) => {
-        if (fuzzyObject.original.id.toLowerCase().startsWith(filter.toLowerCase())) {
-          fuzzyObject.score = fuzzyObject.score * 10;
-        } else if (fuzzyObject.original.id.toLowerCase().indexOf(filter.toLowerCase()) > -1) {
-          fuzzyObject.score = fuzzyObject.score * 5;
-        }
-        return fuzzyObject;
+      if (fuzzyObject.string.toLowerCase().startsWith(filter.toLowerCase())) {
+        fuzzyObject.score = fuzzyObject.score * 10;
+      } else if (fuzzyObject.string.toLowerCase().indexOf(filter.toLowerCase()) > -1) {
+        fuzzyObject.score = fuzzyObject.score * 5;
+      }
+      return fuzzyObject;
     });
     return _.uniq(
       _.pluck(
