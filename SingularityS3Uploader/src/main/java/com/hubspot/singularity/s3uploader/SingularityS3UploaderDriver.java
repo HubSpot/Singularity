@@ -274,7 +274,7 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper implements S
         LOG.debug("Retrying immediate uploader {}", uploaderMetadata);
         performImmediateUpload(uploader);
       } else {
-        LOG.debug("Uploader for metadata {} not found to retry, recreating", uploaderMetadata);
+        LOG.debug("Uploader for metadata {} not found to retry upload", uploaderMetadata);
       }
     }
 
