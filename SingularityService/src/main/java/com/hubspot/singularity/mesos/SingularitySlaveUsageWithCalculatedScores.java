@@ -64,13 +64,13 @@ class SingularitySlaveUsageWithCalculatedScores {
     switch (scoringStrategy) {
       case SPREAD_TASK_USAGE:
         double cpusFreeScore = 1 - ((slaveUsage.getCpusReserved() + estimatedAddedCpusReserved) / slaveUsage.getCpusTotal().get());
-        double memFreeScore = 1 - ((slaveUsage.getMemoryMbReserved() + estimatedAddedMemoryBytesReserved) / slaveUsage.getMemoryMbTotal().get());
-        double diskFreeScore = 1 - ((slaveUsage.getDiskMbReserved() + estimatedAddedDiskBytesReserved) / slaveUsage.getDiskMbTotal().get());
+        double memFreeScore = 1 - ((slaveUsage.getMemoryMbReserved() + (estimatedAddedMemoryBytesReserved / SingularitySlaveUsage.BYTES_PER_MEGABYTE)) / slaveUsage.getMemoryMbTotal().get());
+        double diskFreeScore = 1 - ((slaveUsage.getDiskMbReserved() + (estimatedAddedDiskBytesReserved / SingularitySlaveUsage.BYTES_PER_MEGABYTE)) / slaveUsage.getDiskMbTotal().get());
         setScores(longRunningCpusUsedScore, longRunningMemUsedScore, longRunningDiskUsedScore, cpusFreeScore, memFreeScore, diskFreeScore);
         break;
       case SPREAD_SYSTEM_USAGE:
       default:
-        double systemCpuFreeScore = Math.max(0, 1 - ((slaveUsage.getSystemLoad15Min() + estimatedAddedCpusUsage) / slaveUsage.getSystemCpusTotal()));
+        double systemCpuFreeScore = Math.max(0, 1 - ((slaveUsage.getSystemLoad15Min() + (estimatedAddedCpusUsage / slaveUsage.getCpusTotal().get())) / slaveUsage.getSystemCpusTotal()));
         double systemMemFreeScore = 1 - (slaveUsage.getSystemMemTotalBytes() - slaveUsage.getSystemMemFreeBytes() + estimatedAddedMemoryBytesUsage) / slaveUsage.getSystemMemTotalBytes();
         double systemDiskFreeScore = 1 - ((slaveUsage.getSlaveDiskUsed() + estimatedAddedDiskBytesUsage) / slaveUsage.getSlaveDiskTotal());
         setScores(longRunningCpusUsedScore, longRunningMemUsedScore, longRunningDiskUsedScore, systemCpuFreeScore, systemMemFreeScore, systemDiskFreeScore);
@@ -144,6 +144,12 @@ class SingularitySlaveUsageWithCalculatedScores {
         ", cpusFreeScore=" + cpusFreeScore +
         ", memFreeScore=" + memFreeScore +
         ", diskFreeScore=" + diskFreeScore +
+        ", estimatedAddedCpusUsage=" + estimatedAddedCpusUsage +
+        ", estimatedAddedMemoryBytesUsage=" + estimatedAddedMemoryBytesUsage +
+        ", estimatedAddedDiskBytesUsage=" + estimatedAddedDiskBytesUsage +
+        ", estimatedAddedCpusReserved=" + estimatedAddedCpusReserved +
+        ", estimatedAddedMemoryBytesReserved=" + estimatedAddedMemoryBytesReserved +
+        ", estimatedAddedDiskBytesReserved=" + estimatedAddedDiskBytesReserved +
         '}';
   }
 }

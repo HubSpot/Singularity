@@ -42,6 +42,8 @@ import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import com.hubspot.baragon.models.BaragonRequestState;
 import com.hubspot.deploy.HealthcheckOptionsBuilder;
+import com.hubspot.mesos.json.MesosTaskMonitorObject;
+import com.hubspot.mesos.json.MesosTaskStatisticsObject;
 import com.hubspot.singularity.helpers.MesosProtosUtils;
 import com.hubspot.singularity.helpers.MesosUtils;
 import com.hubspot.mesos.Resources;
@@ -736,6 +738,14 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
 
   protected SingularityTaskRequest buildTaskRequest(SingularityRequest request, SingularityDeploy deploy, long launchTime) {
     return new SingularityTaskRequest(request, deploy, buildPendingTask(request, deploy, launchTime, 100, Optional.<String>absent()));
+  }
+
+  protected MesosTaskStatisticsObject getStatistics(double cpuSecs, double timestamp, long memBytes) {
+    return new MesosTaskStatisticsObject(1, 0L, 0L, 0, 0, cpuSecs, 0L, 0L, 0L, 0L, 0L, memBytes, 0L, 0L, timestamp);
+  }
+
+  protected MesosTaskMonitorObject getTaskMonitor(String id, double cpuSecs, long timestampSeconds, int memBytes) {
+    return new MesosTaskMonitorObject(null, null, null, id, getStatistics(cpuSecs, timestampSeconds, memBytes));
   }
 
 }
