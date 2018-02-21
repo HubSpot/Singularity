@@ -3,9 +3,11 @@ package com.hubspot.singularity.data;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.apache.curator.framework.CuratorFramework;
@@ -15,6 +17,7 @@ import com.codahale.metrics.MetricRegistry;
 import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.hubspot.singularity.RequestUtilization;
 import com.hubspot.singularity.SingularityClusterUtilization;
 import com.hubspot.singularity.SingularityCreateResult;
 import com.hubspot.singularity.SingularityDeleteResult;
@@ -186,6 +189,19 @@ public class UsageManager extends CuratorAsyncManager {
 
   public Optional<SingularityClusterUtilization> getClusterUtilization() {
     return getData(USAGE_SUMMARY_PATH, clusterUtilizationTranscoder);
+  }
+
+  public Map<String, RequestUtilization> getRequestUtilizations() {
+    Optional<SingularityClusterUtilization> clusterUtilization = getClusterUtilization();
+    if (clusterUtilization.isPresent()) {
+      return clusterUtilization.get().getRequestUtilizations().stream()
+          .collect(Collectors.toMap(
+              RequestUtilization::getRequestId,
+              Function.identity(),
+              (r1, r2) -> r1 // Ignore duplicate usages for a single request id
+          ));
+    }
+    return new HashMap<>();
   }
 
   public List<SingularitySlaveUsageWithId> getCurrentSlaveUsages(List<String> slaveIds) {
