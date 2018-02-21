@@ -188,7 +188,7 @@ public class SingularityMesosOfferScheduler {
         .parallelStream()
         .collect(Collectors.toMap(
             SingularitySlaveUsageWithId::getSlaveId,
-            (usageWithId) -> new SingularitySlaveUsageWithCalculatedScores(usageWithId, configuration.getMesosConfiguration().getScoringStrategy())
+            (usageWithId) -> new SingularitySlaveUsageWithCalculatedScores(usageWithId, configuration.getMesosConfiguration().getScoringStrategy(), configuration.getMesosConfiguration().getScoreUsingSystemLoad())
         ));
 
     LOG.trace("Found slave usages {}", currentSlaveUsagesBySlaveId);
