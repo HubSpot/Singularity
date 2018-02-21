@@ -1,11 +1,13 @@
 package com.hubspot.singularity.mesos;
 
+import com.hubspot.singularity.MachineLoadMetric;
 import com.hubspot.singularity.SingularitySlaveUsage;
 import com.hubspot.singularity.SingularitySlaveUsage.ResourceUsageType;
 import com.hubspot.singularity.SingularityUsageScoringStrategy;
 
 class SingularitySlaveUsageWithCalculatedScores {
   private final SingularitySlaveUsage slaveUsage;
+  private final MachineLoadMetric systemLoadMetric;
   private boolean missingUsageData;
   private double longRunningCpusUsedScore;
   private double longRunningMemUsedScore;
@@ -22,8 +24,9 @@ class SingularitySlaveUsageWithCalculatedScores {
   private double estimatedAddedMemoryBytesReserved = 0;
   private double estimatedAddedDiskBytesReserved = 0;
 
-  public SingularitySlaveUsageWithCalculatedScores(SingularitySlaveUsage slaveUsage, SingularityUsageScoringStrategy scoringStrategy) {
+  public SingularitySlaveUsageWithCalculatedScores(SingularitySlaveUsage slaveUsage, SingularityUsageScoringStrategy scoringStrategy, MachineLoadMetric systemLoadMetric) {
     this.slaveUsage = slaveUsage;
+    this.systemLoadMetric = systemLoadMetric;
     if (missingUsageData(slaveUsage)) {
       this.missingUsageData = true;
       setScores(0, 0, 0, 0, 0, 0);
@@ -70,7 +73,7 @@ class SingularitySlaveUsageWithCalculatedScores {
         break;
       case SPREAD_SYSTEM_USAGE:
       default:
-        double systemCpuFreeScore = Math.max(0, 1 - ((slaveUsage.getSystemLoad15Min() + (estimatedAddedCpusUsage / slaveUsage.getCpusTotal().get())) / slaveUsage.getSystemCpusTotal()));
+        double systemCpuFreeScore = Math.max(0, 1 - ((getSystemLoadMetric() + (estimatedAddedCpusUsage / slaveUsage.getCpusTotal().get())) / slaveUsage.getSystemCpusTotal()));
         double systemMemFreeScore = 1 - (slaveUsage.getSystemMemTotalBytes() - slaveUsage.getSystemMemFreeBytes() + estimatedAddedMemoryBytesUsage) / slaveUsage.getSystemMemTotalBytes();
         double systemDiskFreeScore = 1 - ((slaveUsage.getSlaveDiskUsed() + estimatedAddedDiskBytesUsage) / slaveUsage.getSlaveDiskTotal());
         setScores(longRunningCpusUsedScore, longRunningMemUsedScore, longRunningDiskUsedScore, systemCpuFreeScore, systemMemFreeScore, systemDiskFreeScore);
@@ -131,6 +134,18 @@ class SingularitySlaveUsageWithCalculatedScores {
 
   void addEstimatedDiskReserved(double estimatedAddedDiskBytes) {
     this.estimatedAddedDiskBytesReserved = estimatedAddedDiskBytes;
+  }
+
+  private double getSystemLoadMetric() {
+    switch (systemLoadMetric) {
+      case LOAD_1:
+        return slaveUsage.getSystemLoad1Min();
+      case LOAD_15:
+        return slaveUsage.getSystemLoad5Min();
+      case LOAD_5:
+      default:
+        return slaveUsage.getSystemLoad15Min();
+    }
   }
 
   @Override

@@ -38,7 +38,7 @@ const Navigation = (props) => {
   const navTitle = config.navTitleLinks
     ? (
       <ul className="nav navbar-nav">
-        <li className="dropdown nav">
+        <li className="dropdown">
           <a href="#" className="dropdown-toggle navbar-brand" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
             {config.title} <span className="caret" />
           </a>
