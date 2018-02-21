@@ -374,6 +374,7 @@ public class SingularityMesosOfferSchedulerTest extends SingularitySchedulerTest
     Collection<SingularityOfferHolder> offerHolders = offerScheduler.checkOffers(Arrays.asList(host2Offer, host3Offer));
     Assert.assertEquals(2, offerHolders.size());
 
+    // A single offer should only ever get a single task even though both have room for both tasks here. Adding a task should reduce the score for the next check
     for (SingularityOfferHolder offerHolder : offerHolders) {
       Assert.assertEquals(1, offerHolder.getAcceptedTasks().size());
     }
