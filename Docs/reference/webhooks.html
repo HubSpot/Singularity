@@ -51,7 +51,7 @@
         data-chapter-title="Webhooks"
         data-filepath="Docs/reference/webhooks.md"
         data-basepath="../.."
-        data-revision="Mon Dec 04 2017 17:00:35 GMT-0500 (EST)"
+        data-revision="Wed Feb 21 2018 13:50:38 GMT-0500 (EST)"
         data-innerlanguage="">
     
 
@@ -891,7 +891,7 @@ http://singularityhostname/singularity/api/webhooks
 <p>Deploy webhooks are in the format of <a href="apidocs/models.html#model-SingularityDeployUpdate">SingularityDeployUpdate</a> objects.</p>
 <h4 id="task">Task</h4>
 <p>Task webhooks are sent when tasks are launched by Singularity, killed with by Singularity users, and on all task updates recieved from Mesos.</p>
-<p>Task webhooks are in the format of <a href="apidocs/models.html#model-SingularityTaskHistoryUpdate">SingularityTaskHistoryUpdate</a> objects.</p>
+<p>Task webhooks are in the format of <a href="https://github.com/HubSpot/Singularity/blob/master/SingularityBase/src/main/java/com/hubspot/singularity/SingularityTaskWebhook.java" target="_blank">SingularityTaskWebhook</a> objects.</p>
 <h3 id="webhook-notes">Webhook notes</h3>
 <ul>
 <li>Webhooks are only considered successful if the response code to the webhook is between 200 and 299 inclusive.</li>

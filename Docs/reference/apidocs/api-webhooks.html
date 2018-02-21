@@ -51,7 +51,7 @@
         data-chapter-title="/api/webhooks"
         data-filepath="Docs/reference/apidocs/api-webhooks.md"
         data-basepath="../../.."
-        data-revision="Mon Dec 04 2017 17:00:35 GMT-0500 (EST)"
+        data-revision="Wed Feb 21 2018 13:50:38 GMT-0500 (EST)"
         data-innerlanguage="">
     
 
@@ -1336,48 +1336,6 @@
 </tbody>
 </table>
 <hr>
-<h4 id="post-apiwebhooks"><strong>POST</strong> <code>/api/webhooks</code></h4>
-<p>Add a new webhook.</p>
-<h6 id="parameters">Parameters</h6>
-<p><strong>body</strong></p>
-<table>
-<thead>
-<tr>
-<th>Parameter</th>
-<th>Required</th>
-<th>Description</th>
-<th>Data Type</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>body</td>
-<td>false</td>
-<td></td>
-<td><a href="models.html#model-linkType">SingularityWebhook</a>&lt;/a&gt;</td>
-</tr>
-</tbody>
-</table>
-<h6 id="response">Response</h6>
-<p>string</p>
-<h6 id="errors">Errors</h6>
-<table>
-<thead>
-<tr>
-<th>Status Code</th>
-<th>Reason</th>
-<th>Response Model</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>-</td>
-<td>-</td>
-<td>-</td>
-</tr>
-</tbody>
-</table>
-<hr>
 <h4 id="get-apiwebhooks"><strong>GET</strong> <code>/api/webhooks</code></h4>
 <p>Retrieve a list of active webhooks.</p>
 <h6 id="parameters">Parameters</h6>
@@ -1402,6 +1360,48 @@
 </table>
 <h6 id="response">Response</h6>
 <p><a href="models.html#model-SingularityWebhook">List[SingularityWebhook]</a></p>
+<h6 id="errors">Errors</h6>
+<table>
+<thead>
+<tr>
+<th>Status Code</th>
+<th>Reason</th>
+<th>Response Model</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>-</td>
+<td>-</td>
+<td>-</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h4 id="post-apiwebhooks"><strong>POST</strong> <code>/api/webhooks</code></h4>
+<p>Add a new webhook.</p>
+<h6 id="parameters">Parameters</h6>
+<p><strong>body</strong></p>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Required</th>
+<th>Description</th>
+<th>Data Type</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>body</td>
+<td>false</td>
+<td></td>
+<td><a href="models.html#model-linkType">SingularityWebhook</a>&lt;/a&gt;</td>
+</tr>
+</tbody>
+</table>
+<h6 id="response">Response</h6>
+<p>string</p>
 <h6 id="errors">Errors</h6>
 <table>
 <thead>

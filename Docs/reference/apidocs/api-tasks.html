@@ -51,7 +51,7 @@
         data-chapter-title="/api/tasks"
         data-filepath="Docs/reference/apidocs/api-tasks.md"
         data-basepath="../../.."
-        data-revision="Mon Dec 04 2017 17:00:35 GMT-0500 (EST)"
+        data-revision="Wed Feb 21 2018 13:50:38 GMT-0500 (EST)"
         data-innerlanguage="">
     
 
@@ -1376,6 +1376,67 @@
 <tr>
 <td>409</td>
 <td>Task already has a cleanup request (can be overridden with override=true)</td>
+<td>-</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h4 id="delete-apitasksscheduledtaskscheduledtaskid"><strong>DELETE</strong> <code>/api/tasks/scheduled/task/{scheduledTaskId}</code></h4>
+<p>Delete a scheduled task.</p>
+<h6 id="parameters">Parameters</h6>
+<p><strong>path</strong></p>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Required</th>
+<th>Description</th>
+<th>Data Type</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>scheduledTaskId</td>
+<td>true</td>
+<td></td>
+<td>string</td>
+</tr>
+</tbody>
+</table>
+<p><strong>body</strong></p>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Required</th>
+<th>Description</th>
+<th>Data Type</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>body</td>
+<td>false</td>
+<td></td>
+<td><a href="models.html#model-linkType">SingularityUser</a>&lt;/a&gt;</td>
+</tr>
+</tbody>
+</table>
+<h6 id="response">Response</h6>
+<p><a href="models.html#model-SingularityPendingTask">SingularityPendingTask</a></p>
+<h6 id="errors">Errors</h6>
+<table>
+<thead>
+<tr>
+<th>Status Code</th>
+<th>Reason</th>
+<th>Response Model</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>-</td>
+<td>-</td>
 <td>-</td>
 </tr>
 </tbody>

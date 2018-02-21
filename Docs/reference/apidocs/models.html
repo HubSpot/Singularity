@@ -49,7 +49,7 @@
         data-chapter-title="Models"
         data-filepath="Docs/reference/apidocs/models.md"
         data-basepath="../../.."
-        data-revision="Mon Dec 04 2017 17:00:35 GMT-0500 (EST)"
+        data-revision="Wed Feb 21 2018 13:50:38 GMT-0500 (EST)"
         data-innerlanguage="">
     
 
@@ -878,6 +878,7 @@
 <li><a href="models.html#model-S3Artifact"><code>S3Artifact</code></a></li>
 <li><a href="models.html#model-S3ArtifactSignature"><code>S3ArtifactSignature</code></a></li>
 <li><a href="models.html#model-Set"><code>Set</code></a></li>
+<li><a href="models.html#model-SingularityAppcImage"><code>SingularityAppcImage</code></a></li>
 <li><a href="models.html#model-SingularityBounceRequest"><code>SingularityBounceRequest</code></a></li>
 <li><a href="models.html#model-SingularityContainerInfo"><code>SingularityContainerInfo</code></a></li>
 <li><a href="models.html#model-SingularityDeleteRequestRequest"><code>SingularityDeleteRequestRequest</code></a></li>
@@ -895,9 +896,11 @@
 <li><a href="models.html#model-SingularityDisaster"><code>SingularityDisaster</code></a></li>
 <li><a href="models.html#model-SingularityDisasterDataPoint"><code>SingularityDisasterDataPoint</code></a></li>
 <li><a href="models.html#model-SingularityDisastersData"><code>SingularityDisastersData</code></a></li>
+<li><a href="models.html#model-SingularityDockerImage"><code>SingularityDockerImage</code></a></li>
 <li><a href="models.html#model-SingularityDockerInfo"><code>SingularityDockerInfo</code></a></li>
 <li><a href="models.html#model-SingularityDockerParameter"><code>SingularityDockerParameter</code></a></li>
 <li><a href="models.html#model-SingularityDockerPortMapping"><code>SingularityDockerPortMapping</code></a></li>
+<li><a href="models.html#model-SingularityDockerVolume"><code>SingularityDockerVolume</code></a></li>
 <li><a href="models.html#model-SingularityExitCooldownRequest"><code>SingularityExitCooldownRequest</code></a></li>
 <li><a href="models.html#model-SingularityExpiringBounce"><code>SingularityExpiringBounce</code></a></li>
 <li><a href="models.html#model-SingularityExpiringMachineState"><code>SingularityExpiringMachineState</code></a></li>
@@ -909,12 +912,16 @@
 <li><a href="models.html#model-SingularityMachineChangeRequest"><code>SingularityMachineChangeRequest</code></a></li>
 <li><a href="models.html#model-SingularityMachineStateHistoryUpdate"><code>SingularityMachineStateHistoryUpdate</code></a></li>
 <li><a href="models.html#model-SingularityMesosArtifact"><code>SingularityMesosArtifact</code></a></li>
+<li><a href="models.html#model-SingularityMesosImage"><code>SingularityMesosImage</code></a></li>
+<li><a href="models.html#model-SingularityMesosInfo"><code>SingularityMesosInfo</code></a></li>
 <li><a href="models.html#model-SingularityMesosTaskLabel"><code>SingularityMesosTaskLabel</code></a></li>
+<li><a href="models.html#model-SingularityNetworkInfo"><code>SingularityNetworkInfo</code></a></li>
 <li><a href="models.html#model-SingularityPauseRequest"><code>SingularityPauseRequest</code></a></li>
 <li><a href="models.html#model-SingularityPendingDeploy"><code>SingularityPendingDeploy</code></a></li>
 <li><a href="models.html#model-SingularityPendingRequest"><code>SingularityPendingRequest</code></a></li>
 <li><a href="models.html#model-SingularityPendingTask"><code>SingularityPendingTask</code></a></li>
 <li><a href="models.html#model-SingularityPendingTaskId"><code>SingularityPendingTaskId</code></a></li>
+<li><a href="models.html#model-SingularityPortMapping"><code>SingularityPortMapping</code></a></li>
 <li><a href="models.html#model-SingularityPriorityFreeze"><code>SingularityPriorityFreeze</code></a></li>
 <li><a href="models.html#model-SingularityPriorityFreezeParent"><code>SingularityPriorityFreezeParent</code></a></li>
 <li><a href="models.html#model-SingularityRack"><code>SingularityRack</code></a></li>
@@ -928,6 +935,7 @@
 <li><a href="models.html#model-SingularityS3LogMetadata"><code>SingularityS3LogMetadata</code></a></li>
 <li><a href="models.html#model-SingularityS3SearchRequest"><code>SingularityS3SearchRequest</code></a></li>
 <li><a href="models.html#model-SingularityS3SearchResult"><code>SingularityS3SearchResult</code></a></li>
+<li><a href="models.html#model-SingularityS3UploaderFile"><code>SingularityS3UploaderFile</code></a></li>
 <li><a href="models.html#model-SingularitySandbox"><code>SingularitySandbox</code></a></li>
 <li><a href="models.html#model-SingularitySandboxFile"><code>SingularitySandboxFile</code></a></li>
 <li><a href="models.html#model-SingularityScaleRequest"><code>SingularityScaleRequest</code></a></li>
@@ -937,7 +945,6 @@
 <li><a href="models.html#model-SingularityState"><code>SingularityState</code></a></li>
 <li><a href="models.html#model-SingularityTask"><code>SingularityTask</code></a></li>
 <li><a href="models.html#model-SingularityTaskCleanup"><code>SingularityTaskCleanup</code></a></li>
-<li><a href="models.html#model-SingularityTaskCredits"><code>SingularityTaskCredits</code></a></li>
 <li><a href="models.html#model-SingularityTaskHealthcheckResult"><code>SingularityTaskHealthcheckResult</code></a></li>
 <li><a href="models.html#model-SingularityTaskHistory"><code>SingularityTaskHistory</code></a></li>
 <li><a href="models.html#model-SingularityTaskHistoryUpdate"><code>SingularityTaskHistoryUpdate</code></a></li>
@@ -954,9 +961,11 @@
 <li><a href="models.html#model-SingularityTaskShellCommandUpdate"><code>SingularityTaskShellCommandUpdate</code></a></li>
 <li><a href="models.html#model-SingularityTaskState"><code>SingularityTaskState</code></a></li>
 <li><a href="models.html#model-SingularityUnpauseRequest"><code>SingularityUnpauseRequest</code></a></li>
+<li><a href="models.html#model-SingularityUpdateGroupsRequest"><code>SingularityUpdateGroupsRequest</code></a></li>
 <li><a href="models.html#model-SingularityUpdatePendingDeployRequest"><code>SingularityUpdatePendingDeployRequest</code></a></li>
 <li><a href="models.html#model-SingularityUser"><code>SingularityUser</code></a></li>
 <li><a href="models.html#model-SingularityVolume"><code>SingularityVolume</code></a></li>
+<li><a href="models.html#model-SingularityVolumeSource"><code>SingularityVolumeSource</code></a></li>
 <li><a href="models.html#model-SingularityWebhook"><code>SingularityWebhook</code></a></li>
 <li><a href="models.html#model-SingularityWebhookSummary"><code>SingularityWebhookSummary</code></a></li>
 </ul>
@@ -1347,6 +1356,12 @@
 <td></td>
 </tr>
 <tr>
+<td>diskUsedBytes</td>
+<td>long</td>
+<td>optional</td>
+<td></td>
+</tr>
+<tr>
 <td>cpusThrottledTimeSecs</td>
 <td>double</td>
 <td>optional</td>
@@ -1377,6 +1392,12 @@
 <td></td>
 </tr>
 <tr>
+<td>diskLimitBytes</td>
+<td>long</td>
+<td>optional</td>
+<td></td>
+</tr>
+<tr>
 <td>memMappedFileBytes</td>
 <td>long</td>
 <td>optional</td>
@@ -1395,7 +1416,7 @@
 <td></td>
 </tr>
 <tr>
-<td>timestamp</td>
+<td>timestampSeconds</td>
 <td>double</td>
 <td>optional</td>
 <td></td>
@@ -1599,6 +1620,30 @@
 </tr>
 </tbody>
 </table>
+<h2 id="singularityappcimage"><a name="model-SingularityAppcImage"></a> SingularityAppcImage</h2>
+<table>
+<thead>
+<tr>
+<th>name</th>
+<th>type</th>
+<th>required</th>
+<th>description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>name</td>
+<td>string</td>
+<td>required</td>
+<td>Appc image name</td>
+</tr>
+<tr>
+<td>id</td>
+<td>string</td>
+<td>optional</td>
+</tr>
+</tbody>
+</table>
 <h2 id="singularitybouncerequest"><a name="model-SingularityBounceRequest"></a> SingularityBounceRequest</h2>
 <table>
 <thead>
@@ -1664,6 +1709,18 @@
 <td><a href="models.html#model-SingularityContainerType">SingularityContainerType</a></td>
 <td>required</td>
 <td>Container type, can be MESOS or DOCKER. Default is MESOS Allowable values: MESOS, DOCKER</td>
+</tr>
+<tr>
+<td>networkInfos</td>
+<td><a href="models.html#model-SingularityNetworkInfo">Array[SingularityNetworkInfo]</a></td>
+<td>optional</td>
+<td>Mesos container network configuration</td>
+</tr>
+<tr>
+<td>mesos</td>
+<td><a href="models.html#model-SingularityMesosInfo">SingularityMesosInfo</a></td>
+<td>optional</td>
+<td>Information specific to Mesos container type</td>
 </tr>
 <tr>
 <td>volumes</td>
@@ -2554,6 +2611,26 @@
 </tr>
 </tbody>
 </table>
+<h2 id="singularitydockerimage"><a name="model-SingularityDockerImage"></a> SingularityDockerImage</h2>
+<table>
+<thead>
+<tr>
+<th>name</th>
+<th>type</th>
+<th>required</th>
+<th>description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>name</td>
+<td>string</td>
+<td>required</td>
+<td>Docker image name, expected format: [REGISTRY_HOST[:REGISTRY_PORT]/]REPOSITORY[:TAG</td>
+<td>@TYPE:DIGEST]</td>
+</tr>
+</tbody>
+</table>
 <h2 id="singularitydockerinfo"><a name="model-SingularityDockerInfo"></a> SingularityDockerInfo</h2>
 <table>
 <thead>
@@ -2673,6 +2750,37 @@
 <td><a href="models.html#model-SingularityPortMappingType">SingularityPortMappingType</a></td>
 <td>optional</td>
 <td>Host port. Use the port number provided (LITERAL) or the dynamically allocated port at this index (FROM_OFFER) Allowable values: LITERAL, FROM_OFFER</td>
+</tr>
+</tbody>
+</table>
+<h2 id="singularitydockervolume"><a name="model-SingularityDockerVolume"></a> SingularityDockerVolume</h2>
+<table>
+<thead>
+<tr>
+<th>name</th>
+<th>type</th>
+<th>required</th>
+<th>description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>driver</td>
+<td>string</td>
+<td>optional</td>
+<td>Docker volume driver name</td>
+</tr>
+<tr>
+<td>name</td>
+<td>string</td>
+<td>optional</td>
+<td>Volume name &apos;%i&apos; will be replaced with the instance index</td>
+</tr>
+<tr>
+<td>driverOptions</td>
+<td><a href="models.html#model-Map[string,string]">Map[string,string]</a></td>
+<td>optional</td>
+<td>Volume driver options</td>
 </tr>
 </tbody>
 </table>
@@ -3176,6 +3284,12 @@
 </thead>
 <tbody>
 <tr>
+<td>outputFile</td>
+<td>string</td>
+<td>optional</td>
+<td></td>
+</tr>
+<tr>
 <td>cache</td>
 <td>boolean</td>
 <td>optional</td>
@@ -3200,6 +3314,62 @@
 </tr>
 </tbody>
 </table>
+<h2 id="singularitymesosimage"><a name="model-SingularityMesosImage"></a> SingularityMesosImage</h2>
+<table>
+<thead>
+<tr>
+<th>name</th>
+<th>type</th>
+<th>required</th>
+<th>description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>type</td>
+<td><a href="models.html#model-SingularityMesosImageType">SingularityMesosImageType</a></td>
+<td>required</td>
+<td>Mesos image type Allowable values: APPC, DOCKER</td>
+</tr>
+<tr>
+<td>appc</td>
+<td><a href="models.html#model-SingularityAppcImage">SingularityAppcImage</a></td>
+<td>optional</td>
+<td>Appc image configuration</td>
+</tr>
+<tr>
+<td>cached</td>
+<td>boolean</td>
+<td>optional</td>
+<td>Determines if a cached image is considered up to date</td>
+</tr>
+<tr>
+<td>docker</td>
+<td><a href="models.html#model-SingularityDockerImage">SingularityDockerImage</a></td>
+<td>optional</td>
+<td>Docker image configuration</td>
+</tr>
+</tbody>
+</table>
+<h2 id="singularitymesosinfo"><a name="model-SingularityMesosInfo"></a> SingularityMesosInfo</h2>
+<table>
+<thead>
+<tr>
+<th>name</th>
+<th>type</th>
+<th>required</th>
+<th>description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>image</td>
+<td><a href="models.html#model-SingularityMesosImage">SingularityMesosImage</a></td>
+<td>optional</td>
+<td>Mesos image descriptor</td>
+</tr>
+</tbody>
+</table>
 <h2 id="singularitymesostasklabel"><a name="model-SingularityMesosTaskLabel"></a> SingularityMesosTaskLabel</h2>
 <table>
 <thead>
@@ -3221,6 +3391,37 @@
 <td>value</td>
 <td>string</td>
 <td>optional</td>
+</tr>
+</tbody>
+</table>
+<h2 id="singularitynetworkinfo"><a name="model-SingularityNetworkInfo"></a> SingularityNetworkInfo</h2>
+<table>
+<thead>
+<tr>
+<th>name</th>
+<th>type</th>
+<th>required</th>
+<th>description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>groups</td>
+<td>Array[string]</td>
+<td>optional</td>
+<td>List of network groups for the container</td>
+</tr>
+<tr>
+<td>name</td>
+<td>string</td>
+<td>optional</td>
+<td>Name of the network for the network driver to use</td>
+</tr>
+<tr>
+<td>portMappings</td>
+<td><a href="models.html#model-SingularityPortMapping">Array[SingularityPortMapping]</a></td>
+<td>optional</td>
+<td>List of ip port mappings to expose</td>
 </tr>
 </tbody>
 </table>
@@ -3333,19 +3534,31 @@
 <td></td>
 </tr>
 <tr>
+<td>runAsUserOverride</td>
+<td>string</td>
+<td>optional</td>
+<td></td>
+</tr>
+<tr>
 <td>skipHealthchecks</td>
 <td>boolean</td>
 <td>optional</td>
 <td></td>
 </tr>
 <tr>
-<td>user</td>
-<td>string</td>
+<td>s3UploaderAdditionalFiles</td>
+<td><a href="models.html#model-SingularityS3UploaderFile">Array[SingularityS3UploaderFile]</a></td>
 <td>optional</td>
 <td></td>
 </tr>
 <tr>
 <td>requestId</td>
+<td>string</td>
+<td>optional</td>
+<td></td>
+</tr>
+<tr>
+<td>user</td>
 <td>string</td>
 <td>optional</td>
 <td></td>
@@ -3357,14 +3570,20 @@
 <td></td>
 </tr>
 <tr>
-<td>timestamp</td>
-<td>long</td>
+<td>extraArtifacts</td>
+<td><a href="models.html#model-SingularityMesosArtifact">Array[SingularityMesosArtifact]</a></td>
 <td>optional</td>
 <td></td>
 </tr>
 <tr>
 <td>deployId</td>
 <td>string</td>
+<td>optional</td>
+<td></td>
+</tr>
+<tr>
+<td>timestamp</td>
+<td>long</td>
 <td>optional</td>
 <td></td>
 </tr>
@@ -3381,8 +3600,8 @@
 <td></td>
 </tr>
 <tr>
-<td>cmdLineArgsList</td>
-<td>Array[string]</td>
+<td>envOverrides</td>
+<td><a href="models.html#model-Map[string,string]">Map[string,string]</a></td>
 <td>optional</td>
 <td></td>
 </tr>
@@ -3391,6 +3610,11 @@
 <td><a href="models.html#model-PendingType">PendingType</a></td>
 <td>optional</td>
 <td>Allowable values: IMMEDIATE, ONEOFF, BOUNCE, NEW_DEPLOY, NEXT_DEPLOY_STEP, UNPAUSED, RETRY, UPDATED_REQUEST, DECOMISSIONED_SLAVE_OR_RACK, TASK_DONE, STARTUP, CANCEL_BOUNCE, TASK_BOUNCE, DEPLOY_CANCELLED, DEPLOY_FAILED</td>
+</tr>
+<tr>
+<td>cmdLineArgsList</td>
+<td>Array[string]</td>
+<td>optional</td>
 </tr>
 </tbody>
 </table>
@@ -3408,6 +3632,12 @@
 <tr>
 <td>resources</td>
 <td><a href="models.html#model-Resources">Resources</a></td>
+<td>optional</td>
+<td></td>
+</tr>
+<tr>
+<td>runAsUserOverride</td>
+<td>string</td>
 <td>optional</td>
 <td></td>
 </tr>
@@ -3430,8 +3660,20 @@
 <td></td>
 </tr>
 <tr>
+<td>s3UploaderAdditionalFiles</td>
+<td><a href="models.html#model-SingularityS3UploaderFile">Array[SingularityS3UploaderFile]</a></td>
+<td>optional</td>
+<td></td>
+</tr>
+<tr>
 <td>user</td>
 <td>string</td>
+<td>optional</td>
+<td></td>
+</tr>
+<tr>
+<td>extraArtifacts</td>
+<td><a href="models.html#model-SingularityMesosArtifact">Array[SingularityMesosArtifact]</a></td>
 <td>optional</td>
 <td></td>
 </tr>
@@ -3444,6 +3686,12 @@
 <tr>
 <td>actionId</td>
 <td>string</td>
+<td>optional</td>
+<td></td>
+</tr>
+<tr>
+<td>envOverrides</td>
+<td><a href="models.html#model-Map[string,string]">Map[string,string]</a></td>
 <td>optional</td>
 <td></td>
 </tr>
@@ -3505,6 +3753,37 @@
 <td>id</td>
 <td>string</td>
 <td>optional</td>
+</tr>
+</tbody>
+</table>
+<h2 id="singularityportmapping"><a name="model-SingularityPortMapping"></a> SingularityPortMapping</h2>
+<table>
+<thead>
+<tr>
+<th>name</th>
+<th>type</th>
+<th>required</th>
+<th>description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>hostPort</td>
+<td>int</td>
+<td>required</td>
+<td>the port to map from on the host network interface</td>
+</tr>
+<tr>
+<td>containerPort</td>
+<td>int</td>
+<td>required</td>
+<td>the port to map to on the container network interface</td>
+</tr>
+<tr>
+<td>protocol</td>
+<td>string</td>
+<td>optional</td>
+<td>the protocol e.g. &apos;tcp&apos; or &apos;udp&apos;</td>
 </tr>
 </tbody>
 </table>
@@ -4014,14 +4293,32 @@
 <td></td>
 </tr>
 <tr>
+<td>lastHistory</td>
+<td><a href="models.html#model-SingularityRequestHistory">SingularityRequestHistory</a></td>
+<td>optional</td>
+<td></td>
+</tr>
+<tr>
 <td>state</td>
 <td><a href="models.html#model-RequestState">RequestState</a></td>
 <td>optional</td>
 <td>Allowable values: ACTIVE, DELETING, DELETED, PAUSED, SYSTEM_COOLDOWN, FINISHED, DEPLOYING_TO_UNPAUSE</td>
 </tr>
 <tr>
+<td>mostRecentTask</td>
+<td><a href="models.html#model-SingularityTaskIdHistory">SingularityTaskIdHistory</a></td>
+<td>optional</td>
+<td></td>
+</tr>
+<tr>
 <td>pendingDeploy</td>
 <td><a href="models.html#model-SingularityDeploy">SingularityDeploy</a></td>
+<td>optional</td>
+<td></td>
+</tr>
+<tr>
+<td>taskIds</td>
+<td><a href="models.html#model-SingularityTaskIdsByStatus">SingularityTaskIdsByStatus</a></td>
 <td>optional</td>
 <td></td>
 </tr>
@@ -4032,14 +4329,14 @@
 <td></td>
 </tr>
 <tr>
-<td>expiringPause</td>
-<td><a href="models.html#model-SingularityExpiringPause">SingularityExpiringPause</a></td>
+<td>expiringBounce</td>
+<td><a href="models.html#model-SingularityExpiringBounce">SingularityExpiringBounce</a></td>
 <td>optional</td>
 <td></td>
 </tr>
 <tr>
-<td>expiringBounce</td>
-<td><a href="models.html#model-SingularityExpiringBounce">SingularityExpiringBounce</a></td>
+<td>expiringPause</td>
+<td><a href="models.html#model-SingularityExpiringPause">SingularityExpiringPause</a></td>
 <td>optional</td>
 <td></td>
 </tr>
@@ -4086,6 +4383,12 @@
 <td>Override the resources from the active deploy for this run</td>
 </tr>
 <tr>
+<td>runAsUserOverride</td>
+<td>string</td>
+<td>optional</td>
+<td>Override the user under which this task&apos;s command will be launched.</td>
+</tr>
+<tr>
 <td>runId</td>
 <td>string</td>
 <td>optional</td>
@@ -4104,6 +4407,18 @@
 <td>Command line arguments to be passed to the task</td>
 </tr>
 <tr>
+<td>s3UploaderAdditionalFiles</td>
+<td><a href="models.html#model-SingularityS3UploaderFile">Array[SingularityS3UploaderFile]</a></td>
+<td>optional</td>
+<td>Specify additional sandbox files to upload to S3 for this run</td>
+</tr>
+<tr>
+<td>extraArtifacts</td>
+<td><a href="models.html#model-SingularityMesosArtifact">Array[SingularityMesosArtifact]</a></td>
+<td>optional</td>
+<td>Additional artifacts to download for this run</td>
+</tr>
+<tr>
 <td>message</td>
 <td>string</td>
 <td>optional</td>
@@ -4114,6 +4429,12 @@
 <td>long</td>
 <td>optional</td>
 <td>Schedule this task to run at a specified time</td>
+</tr>
+<tr>
+<td>envOverrides</td>
+<td><a href="models.html#model-Map[string,string]">Map[string,string]</a></td>
+<td>optional</td>
+<td>Override the environment variables for launched tasks</td>
 </tr>
 </tbody>
 </table>
@@ -4252,6 +4573,66 @@
 </tr>
 </tbody>
 </table>
+<h2 id="singularitys3uploaderfile"><a name="model-SingularityS3UploaderFile"></a> SingularityS3UploaderFile</h2>
+<table>
+<thead>
+<tr>
+<th>name</th>
+<th>type</th>
+<th>required</th>
+<th>description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>directory</td>
+<td>string</td>
+<td>optional</td>
+<td></td>
+</tr>
+<tr>
+<td>s3UploaderKeyPattern</td>
+<td>string</td>
+<td>optional</td>
+<td></td>
+</tr>
+<tr>
+<td>checkSubdirectories</td>
+<td>boolean</td>
+<td>optional</td>
+<td></td>
+</tr>
+<tr>
+<td>filename</td>
+<td>string</td>
+<td>optional</td>
+<td></td>
+</tr>
+<tr>
+<td>s3UploaderFilenameHint</td>
+<td>string</td>
+<td>optional</td>
+<td></td>
+</tr>
+<tr>
+<td>s3UploaderBucket</td>
+<td>string</td>
+<td>optional</td>
+<td></td>
+</tr>
+<tr>
+<td>applyS3StorageClassAfterBytes</td>
+<td>long</td>
+<td>optional</td>
+<td></td>
+</tr>
+<tr>
+<td>s3StorageClass</td>
+<td>string</td>
+<td>optional</td>
+</tr>
+</tbody>
+</table>
 <h2 id="singularitysandbox"><a name="model-SingularitySandbox"></a> SingularitySandbox</h2>
 <table>
 <thead>
@@ -4366,6 +4747,12 @@
 <td>string</td>
 <td>optional</td>
 <td>An id to associate with this action for metadata purposes</td>
+</tr>
+<tr>
+<td>skipEmailNotification</td>
+<td>boolean</td>
+<td>optional</td>
+<td>If set to true, no email notification will be sent out for this specific scale event</td>
 </tr>
 <tr>
 <td>instances</td>
@@ -4841,30 +5228,6 @@
 <tr>
 <td>actionId</td>
 <td>string</td>
-<td>optional</td>
-</tr>
-</tbody>
-</table>
-<h2 id="singularitytaskcredits"><a name="model-SingularityTaskCredits"></a> SingularityTaskCredits</h2>
-<table>
-<thead>
-<tr>
-<th>name</th>
-<th>type</th>
-<th>required</th>
-<th>description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>remaining</td>
-<td>int</td>
-<td>optional</td>
-<td></td>
-</tr>
-<tr>
-<td>enabled</td>
-<td>boolean</td>
 <td>optional</td>
 </tr>
 </tbody>
@@ -5597,6 +5960,42 @@
 </tr>
 </tbody>
 </table>
+<h2 id="singularityupdategroupsrequest"><a name="model-SingularityUpdateGroupsRequest"></a> SingularityUpdateGroupsRequest</h2>
+<table>
+<thead>
+<tr>
+<th>name</th>
+<th>type</th>
+<th>required</th>
+<th>description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>readOnlyGroups</td>
+<td><a href="models.html#model-Set">Set</a></td>
+<td>optional</td>
+<td></td>
+</tr>
+<tr>
+<td>readWriteGroups</td>
+<td><a href="models.html#model-Set">Set</a></td>
+<td>optional</td>
+<td></td>
+</tr>
+<tr>
+<td>group</td>
+<td>string</td>
+<td>optional</td>
+<td></td>
+</tr>
+<tr>
+<td>message</td>
+<td>string</td>
+<td>optional</td>
+</tr>
+</tbody>
+</table>
 <h2 id="singularityupdatependingdeployrequest"><a name="model-SingularityUpdatePendingDeployRequest"></a> SingularityUpdatePendingDeployRequest</h2>
 <table>
 <thead>
@@ -5694,9 +6093,40 @@
 <td></td>
 </tr>
 <tr>
+<td>source</td>
+<td><a href="models.html#model-SingularityVolumeSource">SingularityVolumeSource</a></td>
+<td>optional</td>
+<td></td>
+</tr>
+<tr>
 <td>mode</td>
 <td><a href="models.html#model-SingularityDockerVolumeMode">SingularityDockerVolumeMode</a></td>
 <td>optional</td>
+</tr>
+</tbody>
+</table>
+<h2 id="singularityvolumesource"><a name="model-SingularityVolumeSource"></a> SingularityVolumeSource</h2>
+<table>
+<thead>
+<tr>
+<th>name</th>
+<th>type</th>
+<th>required</th>
+<th>description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>dockerVolume</td>
+<td><a href="models.html#model-SingularityDockerVolume">SingularityDockerVolume</a></td>
+<td>optional</td>
+<td>Docker source volume spec</td>
+</tr>
+<tr>
+<td>type</td>
+<td><a href="models.html#model-SingularityVolumeSourceType">SingularityVolumeSourceType</a></td>
+<td>optional</td>
+<td>Volume source type Allowable values: UNKNOWN, DOCKER_VOLUME</td>
 </tr>
 </tbody>
 </table>

@@ -51,7 +51,7 @@
         data-chapter-title="Releases"
         data-filepath="Docs/releases/index.md"
         data-basepath="../.."
-        data-revision="Mon Dec 04 2017 17:00:35 GMT-0500 (EST)"
+        data-revision="Wed Feb 21 2018 13:50:38 GMT-0500 (EST)"
         data-innerlanguage="">
     
 
@@ -867,6 +867,7 @@
                     
                         <h1 id="releases">Releases</h1>
 <ul>
+<li><a href="#changes-in-0190">Changes in 0.19.0</a></li>
 <li><a href="#changes-in-0182">Changes in 0.18.2</a></li>
 <li><a href="#changes-in-0181">Changes in 0.18.1</a></li>
 <li><a href="#changes-in-0180">Changes in 0.18.0</a></li>
@@ -899,6 +900,74 @@
 <li><a href="#changes-in-046">Changes in 0.4.6</a></li>
 <li><a href="#changes-in-045">Changes in 0.4.5</a></li>
 </ul>
+<h2 id="changes-in-0190">Changes in <code>0.19.0</code></h2>
+<p>Check out the <a href="https://github.com/HubSpot/Singularity/issues?q=milestone%3A%0.19.0+is%3Aclosed" target="_blank">0.19.0 milestone</a> to see new features / bugfixes in detail.</p>
+<h3 id="new-features">New Features</h3>
+<ul>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1668" target="_blank">1668</a>/<a href="https://github.com/HubSpot/Singularity/pull/1650" target="_blank">1650</a> Adds support for more overrides in run now requests. You can now override items like environment variables for individual runs of a SingularityRequest by <code>POST</code>ing json in the form of a <a href="https://github.com/HubSpot/Singularity/blob/master/SingularityBase/src/main/java/com/hubspot/singularity/api/SingularityRunNowRequest.java" target="_blank"><code>SingularityRunNowRequest</code></a></li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1690" target="_blank">1690</a> - Adds initial support for Mesos containers, with volume sources and network mapping. These can be specified
+in the <code>containerInfo.volumes</code> and <code>containerInfo.mesos.image</code> sections of the <a href="https://github.com/HubSpot/Singularity/blob/master/SingularityBase/src/main/java/com/hubspot/mesos/SingularityContainerInfo.java" target="_blank"><code>SingularityContainerInfo</code></a> in your <a href="https://github.com/HubSpot/Singularity/blob/master/SingularityBase/src/main/java/com/hubspot/singularity/SingularityDeploy.java" target="_blank"><code>SingularityDeploy</code></a></li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1702" target="_blank">1702</a> - Updates the internal locking scheme for Singularity to allow more parallel processing. As a result, the concurrency of offer and status update processing can now be tuned, with increased concurrency coming with a cost of increased memory/cpu usage by the scheduler. The following parameters in the <code>mesos</code> section of the <code>SingularityConfiguration</code> impact concurrency and tuning of the scheduler:<ul>
+<li><code>statusUpdateConcurrencyLimit</code> - The number of status updates that can be processed in parallel. Defaults to 500 and is backed by its own cached thread pool</li>
+<li><code>maxStatusUpdateQueueSize</code> - A semaphore limits the number of submissions to the status update cached thread pool. If there are currently no more permits available (i.e. &gt; <code>statusUpdateConcurrencyLimit</code> status updates), these are added to a queue where they wait until more capacity is available. This configuration parameter controls teh max size of that queue. It is recommended that this be set a bit above the maximum number of tasks you expect to have active in Singularity at any one time, due to the fact that during reconciliation a status update for each task is sent in rapid succession.</li>
+<li><code>offersConcurrencyLimit</code> - The number of offer scoring calculations and checks to be done in parallel. Defaults to 100. This should generally not need to be updated.</li>
+</ul>
+</li>
+</ul>
+<h3 id="improvements">Improvements</h3>
+<h4 id="apischeduler">API/Scheduler</h4>
+<ul>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1666" target="_blank">1666</a> - Set AVAILABILITY_ZONE on the default task environment.</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1681" target="_blank">1681</a> - Provide option to prevent emails for scale events</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1653" target="_blank">1653</a> - Endpoint to allow users to delete pending on-demand tasks</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1657" target="_blank">1657</a> - Include disk resources when scoring offers</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1683" target="_blank">1683</a> - Support usage of DefaultServerFactory to find port</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1692" target="_blank">1692</a> - Wire up overrides for the S3 uploader path.</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1616" target="_blank">1616</a> - Remove swagger jackson version override</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1600" target="_blank">1600</a> - Report disk usage</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1690" target="_blank">1690</a> - Second pass at Mesos containers, with volume sources and network mapping</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1682" target="_blank">1682</a> - Ability to update authorized groups separately from full request</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1695" target="_blank">1695</a> - Allow the cors bundle to be more configurable</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1697" target="_blank">1697</a> - Support uploads to GCS</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1703" target="_blank">1703</a> - Better webhook auth timeouts and exception messages</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1699" target="_blank">1699</a> - add support for overriding S3 endpoint URL for the downloader</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1707" target="_blank">1707</a> - Enable server side encryption params for uploads</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1717" target="_blank">1717</a> - Collect cpu usage for tasks that have just started</li>
+</ul>
+<h4 id="ui">UI</h4>
+<ul>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1654" target="_blank">1654</a> - Ability to specify quick links for requests</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1636" target="_blank">1636</a> - New dashboard in Singularity + UI performance improvements</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1604" target="_blank">1604</a> - Disk usage ui</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1687" target="_blank">1687</a> - Correct copy button on InfoBlocks of Task tab. Also, remove clipboard.js.</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1704" target="_blank">1704</a> - Add support for configurable navbar title links.</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1701" target="_blank">1701</a> - Permalinks for bounce and scale modals</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1705" target="_blank">1705</a> - Capitals search on Singularity requests page</li>
+</ul>
+<h3 id="bug-fixes">Bug Fixes</h3>
+<ul>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1609" target="_blank">1609</a> - Use HostAndPort#getHostText instead of HostAndPort#getHost</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1658" target="_blank">1658</a> - Corrected path for executor download fallback</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1659" target="_blank">1659</a> - Make sandbox logs/ dir world-readable.</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1685" target="_blank">1685</a> - Allow a request in FINISHED state to be redeployed</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1688" target="_blank">1688</a> - Also check pending requests on the track task endpoint</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1693" target="_blank">1693</a> - Properly send task destroy message to executor</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1698" target="_blank">1698</a> - Don&apos;t show s3 logs error message as a pop up</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1708" target="_blank">1708</a> - Better catch for statusUpdate exceptions</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1718" target="_blank">1718</a> - Account for task level overrides in usage collection</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1719" target="_blank">1719</a> - Remove unneeded call to unsafeProcessStatusUpdate, fix tasksPerOfferHost check</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1711" target="_blank">1711</a> - Take system usage into account when scoring offers</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1696" target="_blank">1696</a> - Fix nav bar for mobile view</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1715" target="_blank">1715</a> - Use total system cpus, not totalCpus in system calculation</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1713" target="_blank">1713</a> - Fix mobile menu responsiveness</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1726" target="_blank">1726</a> - Don&apos;t operate directly on pending tasks during statusUpdate</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1721" target="_blank">1721</a> - Fix cached offer checkin in resourceOffers</li>
+</ul>
+<h3 id="documentation">Documentation</h3>
+<ul>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1700" target="_blank">1700</a> - Fixed task webhook docs</li>
+</ul>
+<hr>
 <h2 id="changes-in-0182">Changes in <code>0.18.2</code></h2>
 <p><strong><em>This is a bugfix release</em></strong></p>
 <p>Check out the <a href="https://github.com/HubSpot/Singularity/milestone/34?closed=1" target="_blank">0.18.2 milestone</a> to see new features / bugfixes in detail.</p>

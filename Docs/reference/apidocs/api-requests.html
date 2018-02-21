@@ -51,7 +51,7 @@
         data-chapter-title="/api/requests"
         data-filepath="Docs/reference/apidocs/api-requests.md"
         data-basepath="../../.."
-        data-revision="Mon Dec 04 2017 17:00:35 GMT-0500 (EST)"
+        data-revision="Wed Feb 21 2018 13:50:38 GMT-0500 (EST)"
         data-innerlanguage="">
     
 
@@ -1544,6 +1544,137 @@
 </tbody>
 </table>
 <hr>
+<h4 id="post-apirequestsrequestrequestidgroupsauthcheck"><strong>POST</strong> <code>/api/requests/request/{requestId}/groups/auth-check</code></h4>
+<p>Check authorization for updating the group, readOnlyGroups, and readWriteGroups for a SingularityReques, without commiting the change</p>
+<h6 id="parameters">Parameters</h6>
+<p><strong>path</strong></p>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Required</th>
+<th>Description</th>
+<th>Data Type</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>requestId</td>
+<td>true</td>
+<td></td>
+<td>string</td>
+</tr>
+</tbody>
+</table>
+<p><strong>body</strong></p>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Required</th>
+<th>Description</th>
+<th>Data Type</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>body</td>
+<td>false</td>
+<td>Updated groups</td>
+<td><a href="models.html#model-linkType">SingularityUpdateGroupsRequest</a>&lt;/a&gt;</td>
+</tr>
+</tbody>
+</table>
+<h6 id="response">Response</h6>
+<h6 id="errors">Errors</h6>
+<table>
+<thead>
+<tr>
+<th>Status Code</th>
+<th>Reason</th>
+<th>Response Model</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>200</td>
+<td>User is authorized to make these changes</td>
+<td>-</td>
+</tr>
+<tr>
+<td>401</td>
+<td>User is not authorized to make these updates</td>
+<td>-</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h4 id="post-apirequestsrequestrequestidgroups"><strong>POST</strong> <code>/api/requests/request/{requestId}/groups</code></h4>
+<p>Update the group, readOnlyGroups, and readWriteGroups for a SingularityRequest</p>
+<h6 id="parameters">Parameters</h6>
+<p><strong>path</strong></p>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Required</th>
+<th>Description</th>
+<th>Data Type</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>requestId</td>
+<td>true</td>
+<td></td>
+<td>string</td>
+</tr>
+</tbody>
+</table>
+<p><strong>body</strong></p>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Required</th>
+<th>Description</th>
+<th>Data Type</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>body</td>
+<td>false</td>
+<td>Updated groups</td>
+<td><a href="models.html#model-linkType">SingularityUpdateGroupsRequest</a>&lt;/a&gt;</td>
+</tr>
+</tbody>
+</table>
+<h6 id="response">Response</h6>
+<p><a href="models.html#model-SingularityRequestParent">SingularityRequestParent</a></p>
+<h6 id="errors">Errors</h6>
+<table>
+<thead>
+<tr>
+<th>Status Code</th>
+<th>Reason</th>
+<th>Response Model</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>400</td>
+<td>Request object is invalid</td>
+<td>-</td>
+</tr>
+<tr>
+<td>401</td>
+<td>User is not authorized to make these updates</td>
+<td>-</td>
+</tr>
+</tbody>
+</table>
+<hr>
 <h4 id="post-apirequestsrequestrequestidexitcooldown"><strong>POST</strong> <code>/api/requests/request/{requestId}/exit-cooldown</code></h4>
 <p>Immediately exits cooldown, scheduling new tasks immediately</p>
 <h6 id="parameters">Parameters</h6>
@@ -1972,6 +2103,30 @@
 <td></td>
 <td>boolean</td>
 </tr>
+<tr>
+<td>filterRelevantForUser</td>
+<td>false</td>
+<td></td>
+<td>boolean</td>
+</tr>
+<tr>
+<td>includeFullRequestData</td>
+<td>false</td>
+<td></td>
+<td>boolean</td>
+</tr>
+<tr>
+<td>limit</td>
+<td>false</td>
+<td></td>
+<td>int</td>
+</tr>
+<tr>
+<td>requestType</td>
+<td>false</td>
+<td></td>
+<td>List[string]</td>
+</tr>
 </tbody>
 </table>
 <p><strong>body</strong></p>
@@ -2094,6 +2249,30 @@
 <td></td>
 <td>boolean</td>
 </tr>
+<tr>
+<td>filterRelevantForUser</td>
+<td>false</td>
+<td></td>
+<td>boolean</td>
+</tr>
+<tr>
+<td>includeFullRequestData</td>
+<td>false</td>
+<td></td>
+<td>boolean</td>
+</tr>
+<tr>
+<td>limit</td>
+<td>false</td>
+<td></td>
+<td>int</td>
+</tr>
+<tr>
+<td>requestType</td>
+<td>false</td>
+<td></td>
+<td>List[string]</td>
+</tr>
 </tbody>
 </table>
 <p><strong>body</strong></p>
@@ -2154,6 +2333,30 @@
 <td>false</td>
 <td></td>
 <td>boolean</td>
+</tr>
+<tr>
+<td>filterRelevantForUser</td>
+<td>false</td>
+<td></td>
+<td>boolean</td>
+</tr>
+<tr>
+<td>includeFullRequestData</td>
+<td>false</td>
+<td></td>
+<td>boolean</td>
+</tr>
+<tr>
+<td>limit</td>
+<td>false</td>
+<td></td>
+<td>int</td>
+</tr>
+<tr>
+<td>requestType</td>
+<td>false</td>
+<td></td>
+<td>List[string]</td>
 </tr>
 </tbody>
 </table>
@@ -2216,6 +2419,30 @@
 <td></td>
 <td>boolean</td>
 </tr>
+<tr>
+<td>filterRelevantForUser</td>
+<td>false</td>
+<td></td>
+<td>boolean</td>
+</tr>
+<tr>
+<td>includeFullRequestData</td>
+<td>false</td>
+<td></td>
+<td>boolean</td>
+</tr>
+<tr>
+<td>limit</td>
+<td>false</td>
+<td></td>
+<td>int</td>
+</tr>
+<tr>
+<td>requestType</td>
+<td>false</td>
+<td></td>
+<td>List[string]</td>
+</tr>
 </tbody>
 </table>
 <p><strong>body</strong></p>
@@ -2276,6 +2503,30 @@
 <td>false</td>
 <td></td>
 <td>boolean</td>
+</tr>
+<tr>
+<td>filterRelevantForUser</td>
+<td>false</td>
+<td></td>
+<td>boolean</td>
+</tr>
+<tr>
+<td>includeFullRequestData</td>
+<td>false</td>
+<td></td>
+<td>boolean</td>
+</tr>
+<tr>
+<td>limit</td>
+<td>false</td>
+<td></td>
+<td>int</td>
+</tr>
+<tr>
+<td>requestType</td>
+<td>false</td>
+<td></td>
+<td>List[string]</td>
 </tr>
 </tbody>
 </table>
