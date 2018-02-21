@@ -247,7 +247,7 @@ public class SingularityMesosOfferScheduler {
         );
       case SPREAD_SYSTEM_USAGE:
       default:
-        double systemCpuFreeScore = Math.max(0, 1 - (slaveUsage.getSystemLoad15Min() / slaveUsage.getSystemCpusTotal()));
+        double systemCpuFreeScore = Math.max(0, 1 - (getSystemLoadMetric(slaveUsage) / slaveUsage.getSystemCpusTotal()));
         double systemMemFreeScore = 1 - (slaveUsage.getSystemMemTotalBytes() - slaveUsage.getSystemMemFreeBytes()) / slaveUsage.getSystemMemTotalBytes();
         double systemDiskFreeScore = 1 - (slaveUsage.getSlaveDiskUsed() / slaveUsage.getSlaveDiskTotal());
         return new SingularitySlaveUsageWithCalculatedScores(
@@ -262,7 +262,18 @@ public class SingularityMesosOfferScheduler {
             scoreLongRunningTask(longRunningMemUsedScore, systemMemFreeScore, longRunningCpusUsedScore, systemCpuFreeScore, longRunningDiskUsedScore, systemDiskFreeScore)
         );
     }
+  }
 
+  private double getSystemLoadMetric(SingularitySlaveUsage slaveUsage) {
+    switch (configuration.getMesosConfiguration().getScoreUsingSystemLoad()) {
+      case LOAD_1:
+        return slaveUsage.getSystemLoad1Min();
+      case LOAD_15:
+        return slaveUsage.getSystemLoad5Min();
+      case LOAD_5:
+      default:
+        return slaveUsage.getSystemLoad15Min();
+    }
   }
 
   private boolean isOfferFull(SingularityOfferHolder offerHolder) {

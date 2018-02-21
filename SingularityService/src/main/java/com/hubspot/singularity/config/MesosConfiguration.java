@@ -4,6 +4,7 @@ import javax.validation.constraints.NotNull;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.google.common.base.Optional;
+import com.hubspot.singularity.MachineLoadMetric;
 import com.hubspot.singularity.SingularityUsageScoringStrategy;
 
 @JsonIgnoreProperties( ignoreUnknown = true )
@@ -57,6 +58,7 @@ public class MesosConfiguration {
   private int maxStatusUpdateQueueSize = 5000;
   private int offersConcurrencyLimit = 100;
   private SingularityUsageScoringStrategy scoringStrategy = SingularityUsageScoringStrategy.SPREAD_TASK_USAGE;
+  private MachineLoadMetric scoreUsingSystemLoad = MachineLoadMetric.LOAD_5;
 
   public int getMaxNumInstancesPerRequest() {
     return maxNumInstancesPerRequest;
@@ -276,5 +278,17 @@ public class MesosConfiguration {
 
   public SingularityUsageScoringStrategy getScoringStrategy() {
     return scoringStrategy;
+  }
+
+  public void setScoringStrategy(SingularityUsageScoringStrategy scoringStrategy) {
+    this.scoringStrategy = scoringStrategy;
+  }
+
+  public MachineLoadMetric getScoreUsingSystemLoad() {
+    return scoreUsingSystemLoad;
+  }
+
+  public void setScoreUsingSystemLoad(MachineLoadMetric scoreUsingSystemLoad) {
+    this.scoreUsingSystemLoad = scoreUsingSystemLoad;
   }
 }
