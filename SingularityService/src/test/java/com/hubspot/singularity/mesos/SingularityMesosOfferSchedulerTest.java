@@ -16,6 +16,7 @@ import org.mockito.Mockito;
 import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.hubspot.mesos.json.MesosTaskMonitorObject;
+import com.hubspot.singularity.MachineLoadMetric;
 import com.hubspot.singularity.RequestType;
 import com.hubspot.singularity.SingularityDeploy;
 import com.hubspot.singularity.SingularityDeployStatistics;
@@ -393,7 +394,7 @@ public class SingularityMesosOfferSchedulerTest extends SingularitySchedulerTest
     return new SingularitySlaveUsageWithCalculatedScores(
         new SingularitySlaveUsage(0, cpusReserved, Optional.of(cpusTotal), 0, memMbReserved, Optional.of(memMbTotal), 0, diskMbReserved, Optional.of(diskMbTotal), longRunningTasksUsage, 1, 0L,
             0, 0, 0, 0, 0, 0, 0 , 0),
-        SingularityUsageScoringStrategy.SPREAD_TASK_USAGE
+        SingularityUsageScoringStrategy.SPREAD_TASK_USAGE, MachineLoadMetric.LOAD_5
     );
   }
 
