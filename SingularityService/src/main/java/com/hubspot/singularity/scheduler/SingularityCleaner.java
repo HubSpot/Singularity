@@ -657,18 +657,6 @@ public class SingularityCleaner {
 
       cleanupRequestIfNoRemainingTasks(cleanupTask, taskIdsForDeletedRequest, isRequestDeleting);
     }
-
-    for (SingularityDeployKey bounceSucceeded : isBouncing) {
-      Optional<SingularityExpiringBounce> expiringBounce = requestManager.getExpiringBounce(bounceSucceeded.getRequestId());
-
-      if (expiringBounce.isPresent() && expiringBounce.get().getDeployId().equals(bounceSucceeded.getDeployId())) {
-        LOG.info("Bounce succeeded for {}, deleting expiring bounce {}", bounceSucceeded.getRequestId(), expiringBounce.get());
-
-        requestManager.deleteExpiringObject(SingularityExpiringBounce.class, bounceSucceeded.getRequestId());
-      }
-      requestManager.markBounceComplete(bounceSucceeded.getRequestId());
-    }
-
   }
 
   private void cleanupRequestIfNoRemainingTasks(SingularityTaskCleanup cleanupTask, List<String> taskIdsForDeletedRequest, boolean isRequestDeleting) {
