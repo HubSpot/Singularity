@@ -75,6 +75,7 @@ import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.data.SlaveManager;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.data.TaskRequestManager;
+import com.hubspot.singularity.expiring.SingularityExpiringBounce;
 import com.hubspot.singularity.helpers.RFC5545Schedule;
 import com.hubspot.singularity.mesos.SingularitySchedulerLock;
 import com.hubspot.singularity.smtp.SingularityMailer;
@@ -637,6 +638,38 @@ public class SingularityScheduler {
 
     if (!task.isPresent() || task.get().getTaskRequest().getRequest().isLoadBalanced()) {
       taskManager.createLBCleanupTask(taskId);
+    }
+
+    if (requestManager.isBouncing(taskId.getRequestId())) {
+      List<SingularityTaskId> activeTaskIds = taskManager.getActiveTaskIdsForRequest(taskId.getRequestId());
+      boolean foundBouncingTask = false;
+      for (SingularityTaskId activeTaskId : activeTaskIds) {
+        Optional<SingularityTaskHistoryUpdate> maybeCleaningUpdate = taskManager.getTaskHistoryUpdate(activeTaskId, ExtendedTaskState.TASK_CLEANING);
+        if (maybeCleaningUpdate.isPresent()) {
+          if (maybeCleaningUpdate.get().getStatusReason().or("").contains("BOUNCE")) { // TaskCleanupType enum is included in status message
+            LOG.debug("Found task {} still waiting for bounce to complete", activeTaskId);
+            foundBouncingTask = true;
+            break;
+          } else if (!maybeCleaningUpdate.get().getPrevious().isEmpty()) {
+            for (SingularityTaskHistoryUpdate previousUpdate : maybeCleaningUpdate.get().getPrevious()) {
+              if (previousUpdate.getStatusMessage().or("").contains("BOUNCE")) {
+                LOG.debug("Found task {} still waiting for bounce to complete", activeTaskId);
+                foundBouncingTask = true;
+                break;
+              }
+            }
+          }
+        }
+      }
+      if (!foundBouncingTask) {
+        LOG.info("Bounce completed for request {}, no cleaning tasks due to bounce found", taskId.getRequestId());
+        Optional<SingularityExpiringBounce> expiringBounce = requestManager.getExpiringBounce(taskId.getRequestId());
+
+        if (expiringBounce.isPresent() && expiringBounce.get().getDeployId().equals(taskId.getDeployId())) {
+          requestManager.deleteExpiringObject(SingularityExpiringBounce.class, taskId.getRequestId());
+        }
+        requestManager.markBounceComplete(taskId.getRequestId());
+      }
     }
 
     final Optional<PendingType> scheduleResult = handleCompletedTaskWithStatistics(task, taskId, timestamp, state, deployStatistics, taskHistoryUpdateCreateResult, status);
