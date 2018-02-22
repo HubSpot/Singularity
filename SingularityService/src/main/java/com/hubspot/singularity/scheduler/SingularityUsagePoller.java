@@ -126,6 +126,10 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
           systemCpusTotal = slaveMetricsSnapshot.getSystemCpusTotal();
         }
 
+        boolean slaveOverloaded = systemLoad5Min > 1.0;
+        double cpuOverage = slaveOverloaded ? (systemLoad5Min - 1.0) * systemCpusTotal : 0.0;
+        List<TaskIdWithUsage> tasksToShuffle = new ArrayList<>();
+
         for (MesosTaskMonitorObject taskUsage : allTaskUsage) {
           String taskId = taskUsage.getSource();
           SingularityTaskId task;
@@ -162,6 +166,7 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
           memoryBytesUsedOnSlave += latestUsage.getMemoryTotalBytes();
           diskMbUsedOnSlave += latestUsage.getDiskTotalBytes();
 
+          SingularityTaskCurrentUsage currentUsage = null;
           if (pastTaskUsages.isEmpty()) {
             Optional<SingularityTaskHistoryUpdate> maybeStartingUpdate = taskManager.getTaskHistoryUpdate(task, ExtendedTaskState.TASK_STARTING);
             if (maybeStartingUpdate.isPresent()) {
@@ -170,7 +175,7 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
               if (isLongRunning(task) ||  isConsideredLongRunning(task)) {
                 updateLongRunningTasksUsage(longRunningTasksUsage, latestUsage.getMemoryTotalBytes(), usedCpusSinceStart, latestUsage.getDiskTotalBytes());
               }
-              SingularityTaskCurrentUsage currentUsage = new SingularityTaskCurrentUsage(latestUsage.getMemoryTotalBytes(), now, usedCpusSinceStart, latestUsage.getDiskTotalBytes());
+              currentUsage = new SingularityTaskCurrentUsage(latestUsage.getMemoryTotalBytes(), now, usedCpusSinceStart, latestUsage.getDiskTotalBytes());
               usageManager.saveCurrentTaskUsage(taskId, currentUsage);
 
               cpusUsedOnSlave += usedCpusSinceStart;
@@ -183,13 +188,21 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
             if (isLongRunning(task) ||  isConsideredLongRunning(task)) {
               updateLongRunningTasksUsage(longRunningTasksUsage, latestUsage.getMemoryTotalBytes(), taskCpusUsed, latestUsage.getDiskTotalBytes());
             }
-            SingularityTaskCurrentUsage currentUsage = new SingularityTaskCurrentUsage(latestUsage.getMemoryTotalBytes(), now, taskCpusUsed, latestUsage.getDiskTotalBytes());
+            currentUsage = new SingularityTaskCurrentUsage(latestUsage.getMemoryTotalBytes(), now, taskCpusUsed, latestUsage.getDiskTotalBytes());
 
             usageManager.saveCurrentTaskUsage(taskId, currentUsage);
 
             cpusUsedOnSlave += taskCpusUsed;
           }
+
+          if (slaveOverloaded && currentUsage != null) {
+            if (canShuffleTask(task)) {
+              tasksToShuffle.add(new TaskIdWithUsage(task, currentUsage));
+            }
+          }
         }
+
+        TODO // cleanups for overloaded slave
 
         if (!slave.getResources().isPresent() ||
             !slave.getResources().get().getMemoryMegaBytes().isPresent() ||
@@ -228,6 +241,10 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
       }
     }
     usageManager.saveClusterUtilization(getClusterUtilization(utilizationPerRequestId, totalMemBytesUsed, totalMemBytesAvailable, totalCpuUsed, totalCpuAvailable, totalDiskBytesUsed, totalDiskBytesAvailable, now));
+  }
+
+  private boolean canShuffleTask(SingularityTaskId taskId) {
+    TODO
   }
 
   private SingularityTaskUsage getUsage(MesosTaskMonitorObject taskUsage) {
@@ -466,5 +483,23 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
       }
     }
 
+  }
+
+  private class TaskIdWithUsage {
+    private final SingularityTaskId taskId;
+    private final SingularityTaskCurrentUsage usage;
+
+    public TaskIdWithUsage(SingularityTaskId taskId, SingularityTaskCurrentUsage usage) {
+      this.taskId = taskId;
+      this.usage = usage;
+    }
+
+    public SingularityTaskId getTaskId() {
+      return taskId;
+    }
+
+    public SingularityTaskCurrentUsage getUsage() {
+      return usage;
+    }
   }
 }
