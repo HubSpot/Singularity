@@ -141,10 +141,10 @@ class SingularitySlaveUsageWithCalculatedScores {
       case LOAD_1:
         return slaveUsage.getSystemLoad1Min();
       case LOAD_15:
-        return slaveUsage.getSystemLoad5Min();
+        return slaveUsage.getSystemLoad15Min();
       case LOAD_5:
       default:
-        return slaveUsage.getSystemLoad15Min();
+        return slaveUsage.getSystemLoad5Min();
     }
   }
 
