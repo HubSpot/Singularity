@@ -1234,6 +1234,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     Assert.assertEquals(1, taskManager.getActiveTaskIds().size());
 
     requestResource.bounce(requestId, Optional.of(new SingularityBounceRequest(Optional.absent(), Optional.of(true), Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent())), singularityUser);
+    Assert.assertTrue(requestManager.isBouncing(requestId));
     cleaner.drainCleanupQueue();
 
     // It acquires a lock on the bounce
@@ -1247,8 +1248,10 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     }
 
     Assert.assertTrue("Need to start at least 1 instance to begin killing old instances", taskManager.getActiveTaskIds().size() >= 2);
+    Assert.assertTrue(requestManager.isBouncing(requestId));
     cleaner.drainCleanupQueue();
     killKilledTasks();
+    Assert.assertFalse(requestManager.isBouncing(requestId));
 
 
     // It finishes with one task running and the bounce released
