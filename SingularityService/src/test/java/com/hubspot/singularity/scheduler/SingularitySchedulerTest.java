@@ -1267,6 +1267,35 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
   }
 
   @Test
+  public void testBounceReleasesLockWithAlternateCleanupType() {
+    initRequest();
+    initFirstDeploy();
+
+    startTask(firstDeploy, 1);
+    List<SingularityTaskId> activeTaskIds = taskManager.getActiveTaskIds();
+    Assert.assertEquals(1, activeTaskIds.size());
+    SingularityTaskId firstTaskId = activeTaskIds.get(0);
+
+    requestResource.bounce(requestId, Optional.of(new SingularityBounceRequest(Optional.absent(), Optional.of(true), Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent())), singularityUser);
+    Assert.assertTrue(requestManager.isBouncing(requestId));
+    cleaner.drainCleanupQueue();
+
+    scheduler.drainPendingQueue();
+    resourceOffers();
+
+    // Save a new cleanup type over the old one, and make sure the bounce lock still releases
+    taskManager.saveTaskCleanup(new SingularityTaskCleanup(Optional.absent(), TaskCleanupType.USER_REQUESTED, System.currentTimeMillis(), firstTaskId, Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent()));
+
+    for (SingularityTaskId singularityTaskId : taskManager.getActiveTaskIds()) {
+      taskManager.saveTaskHistoryUpdate(new SingularityTaskHistoryUpdate(singularityTaskId, System.currentTimeMillis(), ExtendedTaskState.TASK_RUNNING, Optional.absent(), Optional.absent(), Collections.emptySet()));
+    }
+    Assert.assertTrue(requestManager.isBouncing(requestId));
+    cleaner.drainCleanupQueue();
+    killKilledTasks();
+    Assert.assertFalse(requestManager.isBouncing(requestId));
+  }
+
+  @Test
   public void testIncrementalBounce() {
     initRequest();
     resourceOffers(2); // set up slaves so scale validate will pass
