@@ -616,7 +616,6 @@ public class SingularityCleaner {
 
   private void processTaskCleanupsForRequest(String requestId, List<SingularityTaskCleanup> cleanupTasks, AtomicInteger killedTasks) {
     final Multiset<SingularityDeployKey> incrementalCleaningTasks = HashMultiset.create(cleanupTasks.size());
-    final Set<SingularityDeployKey> isBouncing = new HashSet<>(cleanupTasks.size());
     final List<String> taskIdsForDeletedRequest = new ArrayList<>();
     boolean isRequestDeleting = false;
 
@@ -626,9 +625,6 @@ public class SingularityCleaner {
       cleaningTasks.add(cleanupTask.getTaskId());
       if (isIncrementalDeployCleanup(cleanupTask) || cleanupTask.getCleanupType() == TaskCleanupType.INCREMENTAL_BOUNCE) {
         incrementalCleaningTasks.add(SingularityDeployKey.fromTaskId(cleanupTask.getTaskId()));
-      }
-      if (cleanupTask.getCleanupType() == TaskCleanupType.BOUNCING || cleanupTask.getCleanupType() == TaskCleanupType.INCREMENTAL_BOUNCE) {
-        isBouncing.add(SingularityDeployKey.fromTaskId(cleanupTask.getTaskId()));
       }
       if (cleanupTask.getCleanupType() == TaskCleanupType.REQUEST_DELETING) {
         taskIdsForDeletedRequest.add(cleanupTask.getTaskId().getId());
@@ -651,8 +647,6 @@ public class SingularityCleaner {
         taskManager.deleteCleanupTask(taskId.getId());
 
         killedTasks.getAndIncrement();
-      } else if (cleanupTask.getCleanupType() == TaskCleanupType.BOUNCING || cleanupTask.getCleanupType() == TaskCleanupType.INCREMENTAL_BOUNCE) {
-        isBouncing.remove(SingularityDeployKey.fromTaskId(taskId));
       }
 
       cleanupRequestIfNoRemainingTasks(cleanupTask, taskIdsForDeletedRequest, isRequestDeleting);
