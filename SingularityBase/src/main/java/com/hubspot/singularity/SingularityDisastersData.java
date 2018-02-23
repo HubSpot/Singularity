@@ -6,6 +6,9 @@ import java.util.Objects;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
+@Schema(title = "Information about currently active disasters")
 public class SingularityDisastersData {
   private final List<SingularityDisasterDataPoint> stats;
   private final List<SingularityDisaster> disasters;
@@ -20,14 +23,17 @@ public class SingularityDisastersData {
     this.automatedActionDisabled = automatedActionDisabled;
   }
 
+  @Schema(title = "Previous data points for disaster metrics")
   public List<SingularityDisasterDataPoint> getStats() {
     return stats;
   }
 
+  @Schema(title = "A list of active disasters")
   public List<SingularityDisaster> getDisasters() {
     return disasters;
   }
 
+  @Schema(title = "`true` if automated disaster actions are currently disabled")
   public boolean isAutomatedActionsDisabled() {
     return automatedActionDisabled;
   }

@@ -17,12 +17,19 @@ import com.hubspot.singularity.SingularityRequestGroup;
 import com.hubspot.singularity.config.ApiPaths;
 import com.hubspot.singularity.data.RequestGroupManager;
 import com.hubspot.singularity.data.SingularityValidator;
-import com.wordnik.swagger.annotations.Api;
-import com.wordnik.swagger.annotations.ApiOperation;
+
+import io.swagger.v3.oas.annotations.OpenAPIDefinition;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.info.Info;
+import io.swagger.v3.oas.annotations.parameters.RequestBody;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 
 @Path(ApiPaths.REQUEST_GROUP_RESOURCE_PATH)
 @Produces({MediaType.APPLICATION_JSON})
-@Api(description = "Manages Singularity Request Groups, which are collections of one or more Singularity Requests", value = ApiPaths.REQUEST_GROUP_RESOURCE_PATH, position = 1)
+@OpenAPIDefinition(
+    info = @Info(title = "Manages Singularity Request Groups, which are collections of one or more Singularity Requests")
+)
 public class RequestGroupResource {
   private final RequestGroupManager requestGroupManager;
   private final SingularityValidator validator;
@@ -34,28 +41,37 @@ public class RequestGroupResource {
   }
 
   @GET
-  @ApiOperation(value = "Get a list of Singularity request groups")
-  public List<SingularityRequestGroup> getRequestGroupIds(@QueryParam("useWebCache") Boolean useWebCache) {
+  @Operation(summary = "Get a list of Singularity request groups")
+  public List<SingularityRequestGroup> getRequestGroupIds(
+      @Parameter(description = "Use a cached version of this data to limit expensive api calls") @QueryParam("useWebCache") Boolean useWebCache) {
     return requestGroupManager.getRequestGroups(useWebCache != null && useWebCache);
   }
 
   @GET
   @Path("/group/{requestGroupId}")
-  @ApiOperation(value = "Get a specific Singularity request group by ID")
-  public Optional<SingularityRequestGroup> getRequestGroup(@PathParam("requestGroupId") String requestGroupId) {
+  @Operation(
+      summary = "Get a specific Singularity request group by ID",
+      responses = {
+          @ApiResponse(responseCode = "404", description = "The specified request group was not found")
+      }
+  )
+  public Optional<SingularityRequestGroup> getRequestGroup(
+      @Parameter(required = true, description = "The id of the request group") @PathParam("requestGroupId") String requestGroupId) {
     return requestGroupManager.getRequestGroup(requestGroupId);
   }
 
   @DELETE
   @Path("/group/{requestGroupId}")
-  @ApiOperation(value = "Delete a specific Singularity request group by ID")
-  public void deleteRequestGroup(@PathParam("requestGroupId") String requestGroupId) {
+  @Operation(summary = "Delete a specific Singularity request group by ID")
+  public void deleteRequestGroup(
+      @Parameter(required = true, description = "The id of the request group") @PathParam("requestGroupId") String requestGroupId) {
     requestGroupManager.deleteRequestGroup(requestGroupId);
   }
 
   @POST
-  @ApiOperation(value = "Create a Singularity request group")
-  public SingularityRequestGroup saveRequestGroup(SingularityRequestGroup requestGroup) {
+  @Operation(summary = "Create a Singularity request group")
+  public SingularityRequestGroup saveRequestGroup(
+      @RequestBody(required = true, description = "The new request group to create") SingularityRequestGroup requestGroup) {
     validator.checkRequestGroup(requestGroup);
 
     requestGroupManager.saveRequestGroup(requestGroup);

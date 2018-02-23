@@ -25,10 +25,15 @@ import com.wordnik.swagger.annotations.ApiResponse;
 import com.wordnik.swagger.annotations.ApiResponses;
 
 import io.dropwizard.auth.Auth;
+import io.swagger.v3.oas.annotations.OpenAPIDefinition;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.info.Info;
 
 @Path(ApiPaths.PRIORITY_RESOURCE_PATH)
 @Produces({ MediaType.APPLICATION_JSON })
-@Api(description="Manages whether or not to schedule tasks based on their priority levels.", value=ApiPaths.PRIORITY_RESOURCE_PATH )
+@OpenAPIDefinition(
+    info = @Info(title = "Manages whether or not to schedule tasks based on their priority levels")
+)
 public class PriorityResource {
     private final SingularityAuthorizationHelper authorizationHelper;
     private final SingularityValidator singularityValidator;

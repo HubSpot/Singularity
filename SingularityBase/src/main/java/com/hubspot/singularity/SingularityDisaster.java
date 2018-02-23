@@ -5,6 +5,9 @@ import java.util.Objects;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
+@Schema(title = "Representation of an active disaster")
 public class SingularityDisaster {
   private final SingularityDisasterType type;
   private final boolean active;
@@ -15,10 +18,12 @@ public class SingularityDisaster {
     this.active = active;
   }
 
+  @Schema(title = "The enum type of disaster, indicative of cause")
   public SingularityDisasterType getType() {
     return type;
   }
 
+  @Schema(title = "`true` if a disaster of this type is currently active")
   public boolean isActive() {
     return active;
   }

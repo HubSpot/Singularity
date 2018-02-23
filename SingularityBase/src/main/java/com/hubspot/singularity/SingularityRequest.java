@@ -161,7 +161,12 @@ public class SingularityRequest {
     .setDataCenter(dataCenter);
   }
 
-  @Schema(required=true, title = "A unique id for the request")
+  @Schema(
+      required=true,
+      title = "A unique id for the request",
+      pattern = "a-zA-Z0-9_-",
+      description = "Max length is set in configuration yaml as maxRequestIdSize",
+  )
   public String getId() {
     return id;
   }

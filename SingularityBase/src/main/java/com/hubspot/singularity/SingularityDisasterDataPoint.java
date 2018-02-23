@@ -6,6 +6,9 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.primitives.Longs;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
+@Schema(title = "Data collected to identify disasters")
 public class SingularityDisasterDataPoint implements Comparable<SingularityDisasterDataPoint> {
   private final long timestamp;
   private final int numActiveTasks;
@@ -18,13 +21,13 @@ public class SingularityDisasterDataPoint implements Comparable<SingularityDisas
 
   @JsonCreator
   public SingularityDisasterDataPoint(@JsonProperty("timestamp") long timestamp,
-                                  @JsonProperty("numActiveTasks") int numActiveTasks,
-                                  @JsonProperty("numPendingTasks") int numPendingTasks,
-                                  @JsonProperty("numLateTasks") int numLateTasks,
-                                  @JsonProperty("avgTaskLagMillis") long avgTaskLagMillis,
-                                  @JsonProperty("numLostTasks") int numLostTasks,
-                                  @JsonProperty("numActiveSlaves") int numActiveSlaves,
-                                  @JsonProperty("numLostSlaves") int numLostSlaves) {
+                                      @JsonProperty("numActiveTasks") int numActiveTasks,
+                                      @JsonProperty("numPendingTasks") int numPendingTasks,
+                                      @JsonProperty("numLateTasks") int numLateTasks,
+                                      @JsonProperty("avgTaskLagMillis") long avgTaskLagMillis,
+                                      @JsonProperty("numLostTasks") int numLostTasks,
+                                      @JsonProperty("numActiveSlaves") int numActiveSlaves,
+                                      @JsonProperty("numLostSlaves") int numLostSlaves) {
     this.timestamp = timestamp;
     this.numActiveTasks = numActiveTasks;
     this.numPendingTasks = numPendingTasks;
@@ -35,34 +38,42 @@ public class SingularityDisasterDataPoint implements Comparable<SingularityDisas
     this.numLostSlaves = numLostSlaves;
   }
 
+  @Schema(title = "The time this data was collected")
   public long getTimestamp() {
     return timestamp;
   }
 
+  @Schema(title = "A count of active tasks")
   public int getNumActiveTasks() {
     return numActiveTasks;
   }
 
+  @Schema(title = "A count of pending tasks")
   public int getNumPendingTasks() {
     return numPendingTasks;
   }
 
+  @Schema(title = "A count of late tasks")
   public int getNumLateTasks() {
     return numLateTasks;
   }
 
+  @Schema(title = "The average task lag for all pending tasks")
   public long getAvgTaskLagMillis() {
     return avgTaskLagMillis;
   }
 
+  @Schema(title = "A count of lost tasks")
   public int getNumLostTasks() {
     return numLostTasks;
   }
 
+  @Schema(title = "A count of active slaves")
   public int getNumActiveSlaves() {
     return numActiveSlaves;
   }
 
+  @Schema(title = "A count of slaves lost since the last data point was collected")
   public int getNumLostSlaves() {
     return numLostSlaves;
   }

@@ -87,10 +87,14 @@ import com.wordnik.swagger.annotations.ApiResponse;
 import com.wordnik.swagger.annotations.ApiResponses;
 
 import io.dropwizard.auth.Auth;
+import io.swagger.v3.oas.annotations.OpenAPIDefinition;
+import io.swagger.v3.oas.annotations.info.Info;
 
 @Path(ApiPaths.REQUEST_RESOURCE_PATH)
 @Produces({ MediaType.APPLICATION_JSON })
-@Api(description="Manages Singularity Requests, the parent object for any deployed task", value=ApiPaths.REQUEST_RESOURCE_PATH, position=1)
+@OpenAPIDefinition(
+    info = @Info(title = "Manages Singularity Requests, the parent object for any deployed task")
+)
 public class RequestResource extends AbstractRequestResource {
   private static final Logger LOG = LoggerFactory.getLogger(RequestResource.class);
 

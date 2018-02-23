@@ -1,5 +1,6 @@
 package com.hubspot.singularity.resources;
 
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -18,12 +19,19 @@ import com.hubspot.singularity.auth.datastore.SingularityAuthDatastore;
 import com.hubspot.singularity.config.ApiPaths;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.UserManager;
-import com.wordnik.swagger.annotations.ApiOperation;
 
 import io.dropwizard.auth.Auth;
+import io.swagger.v3.oas.annotations.OpenAPIDefinition;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.info.Info;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 
 @Path(ApiPaths.AUTH_RESOURCE_PATH)
 @Produces({ MediaType.APPLICATION_JSON })
+@OpenAPIDefinition(
+    info = @Info(title = "Verify authentication for a user")
+)
 public class AuthResource {
   private final UserManager userManager;
   private final SingularityConfiguration configuration;
@@ -43,6 +51,7 @@ public class AuthResource {
 
   @GET
   @Path("/user")
+  @Operation(summary = "Get information about the currently authenticated user")
   public SingularityUserHolder getUser(@Auth SingularityUser user) {
     return new SingularityUserHolder(
       Optional.of(user),
@@ -53,19 +62,32 @@ public class AuthResource {
 
   @GET
   @Path("/{requestId}/auth-check/{userId}")
-  @ApiOperation("Check if the specified user is authorized for a request")
-  public Response checkReadOnlyAuth(@PathParam("requestId") String requestId, @PathParam("userId") String userId,
-                                    @QueryParam("scope") Optional<SingularityAuthorizationScope> scope) {
+  @Operation(
+      summary = "Check if the specified user is authorized for a request",
+      responses = {
+          @ApiResponse(responseCode = "200", description = "The user is authorized for the request and scope provided")
+      }
+  )
+  public Response checkReadOnlyAuth(
+      @Parameter(required = true, description = "Request id to check") @PathParam("requestId") String requestId,
+      @Parameter(required = true, description = "User id to check") @PathParam("userId") String userId,
+      @Parameter(description = "Scope to check for") @QueryParam("scope") @DefaultValue("READ") Optional<SingularityAuthorizationScope> scope) {
     authorizationHelper.checkForAuthorizationByRequestId(requestId, authDatastore.getUser(userId).orElse(SingularityUser.DEFAULT_USER), scope.or(SingularityAuthorizationScope.READ));
     return Response.ok().build();
   }
 
   @GET
   @Path("/{requestId}/auth-check}")
-  @ApiOperation("Check if the specified user is authorized for a request")
-  public Response checkReadOnlyAuth(@Auth SingularityUser user,
-                                    @PathParam("requestId") String requestId, @PathParam("userId") String userId,
-                                    @QueryParam("scope") Optional<SingularityAuthorizationScope> scope) {
+  @Operation(
+      summary = "Check if the specified user is authorized for a request",
+      responses = {
+          @ApiResponse(responseCode = "200", description = "The user is authorized for the request and scope provided")
+      }
+  )
+  public Response checkReadOnlyAuth(
+      @Auth SingularityUser user,
+      @Parameter(required = true, description = "Request id to check") @PathParam("requestId") String requestId,
+      @Parameter(description = "Scope to check for") @QueryParam("scope") @DefaultValue("READ") Optional<SingularityAuthorizationScope> scope) {
     authorizationHelper.checkForAuthorizationByRequestId(requestId, user, scope.or(SingularityAuthorizationScope.READ));
     return Response.ok().build();
   }
