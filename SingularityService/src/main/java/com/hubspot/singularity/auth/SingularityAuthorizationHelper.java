@@ -8,6 +8,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.annotation.Nonnull;
 
@@ -191,7 +192,7 @@ public class SingularityAuthorizationHelper {
     }
   }
 
-  public <T> Iterable<T> filterByAuthorizedRequests(final SingularityUser user, List<T> objects, final Function<T, String> requestIdFunction, final SingularityAuthorizationScope scope) {
+  public <T> List<T> filterByAuthorizedRequests(final SingularityUser user, List<T> objects, final Function<T, String> requestIdFunction, final SingularityAuthorizationScope scope) {
     if (hasAdminAuthorization(user)) {
       return objects;
     }
@@ -210,13 +211,12 @@ public class SingularityAuthorizationHelper {
       }
     });
 
-    return Iterables.filter(objects, new Predicate<T>() {
-      @Override
-      public boolean apply(@Nonnull T input) {
-        final String requestId = requestIdFunction.apply(input);
-        return requestMap.containsKey(requestId) && isAuthorizedForRequest(requestMap.get(requestId).getRequest(), user, scope);
-      }
-    });
+    return objects.stream()
+        .filter((input) -> {
+          final String requestId = requestIdFunction.apply(input);
+          return requestMap.containsKey(requestId) && isAuthorizedForRequest(requestMap.get(requestId).getRequest(), user, scope);
+        })
+        .collect(Collectors.toList());
   }
 
   public Iterable<String> filterAuthorizedRequestIds(final SingularityUser user, List<String> requestIds, final SingularityAuthorizationScope scope, boolean useWebCache) {

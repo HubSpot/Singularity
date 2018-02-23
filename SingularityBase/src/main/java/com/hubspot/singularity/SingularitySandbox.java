@@ -4,10 +4,10 @@ import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.wordnik.swagger.annotations.ApiModel;
-import com.wordnik.swagger.annotations.ApiModelProperty;
 
-@ApiModel( description = "Represents the path to a specific task's Mesos sandbox" )
+import io.swagger.v3.oas.annotations.media.Schema;
+
+@Schema(title = "Represents the path to a specific task's Mesos sandbox")
 public class SingularitySandbox {
 
   private final List<SingularitySandboxFile> files;
@@ -16,29 +16,32 @@ public class SingularitySandbox {
   private final String slaveHostname;
 
   @JsonCreator
-  public SingularitySandbox(@JsonProperty("files") List<SingularitySandboxFile> files, @JsonProperty("fullPathToRoot") String fullPathToRoot, @JsonProperty("currentDirectory") String currentDirectory, @JsonProperty("slaveHostname") String slaveHostname) {
+  public SingularitySandbox(@JsonProperty("files") List<SingularitySandboxFile> files,
+                            @JsonProperty("fullPathToRoot") String fullPathToRoot,
+                            @JsonProperty("currentDirectory") String currentDirectory,
+                            @JsonProperty("slaveHostname") String slaveHostname) {
     this.files = files;
     this.currentDirectory = currentDirectory;
     this.fullPathToRoot = fullPathToRoot;
     this.slaveHostname = slaveHostname;
   }
 
-  @ApiModelProperty("Full path to the root of the Mesos task sandbox")
+  @Schema(title = "Full path to the root of the Mesos task sandbox")
   public String getFullPathToRoot() {
     return fullPathToRoot;
   }
 
-  @ApiModelProperty("Hostname of tasks's slave")
+  @Schema(title = "Hostname of tasks's slave")
   public String getSlaveHostname() {
     return slaveHostname;
   }
 
-  @ApiModelProperty("List of files inside sandbox")
+  @Schema(title = "List of files inside sandbox")
   public List<SingularitySandboxFile> getFiles() {
     return files;
   }
 
-  @ApiModelProperty("Current directory")
+  @Schema(title = "Current directory")
   public String getCurrentDirectory() {
     return currentDirectory;
   }

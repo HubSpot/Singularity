@@ -14,12 +14,17 @@ import com.hubspot.singularity.SingularityState;
 import com.hubspot.singularity.SingularityTaskReconciliationStatistics;
 import com.hubspot.singularity.config.ApiPaths;
 import com.hubspot.singularity.data.StateManager;
-import com.wordnik.swagger.annotations.Api;
-import com.wordnik.swagger.annotations.ApiOperation;
+
+import io.swagger.v3.oas.annotations.OpenAPIDefinition;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.info.Info;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 
 @Path(ApiPaths.STATE_RESOURCE_PATH)
 @Produces({ MediaType.APPLICATION_JSON })
-@Api(description="Provides information about the current state of Singularity.", value=ApiPaths.STATE_RESOURCE_PATH)
+@OpenAPIDefinition(
+    info = @Info(title = "Provides information about the current state of Singularity")
+)
 public class StateResource {
   private final StateManager stateManager;
 
@@ -29,28 +34,33 @@ public class StateResource {
   }
 
   @GET
-  @ApiOperation("Retrieve information about the current state of Singularity.")
+  @Operation(summary = "Retrieve information about the current state of Singularity.")
   public SingularityState getState(@QueryParam("skipCache") boolean skipCache, @QueryParam("includeRequestIds") boolean includeRequestIds) {
     return stateManager.getState(skipCache, includeRequestIds);
   }
 
   @GET
   @Path("/requests/under-provisioned")
-  @ApiOperation("Retrieve the list of under-provisioned request IDs.")
+  @Operation(summary = "Retrieve the list of under-provisioned request IDs.")
   public List<String> getUnderProvisionedRequestIds(@QueryParam("skipCache") boolean skipCache) {
     return stateManager.getState(skipCache, true).getUnderProvisionedRequestIds();
   }
 
   @GET
   @Path("/requests/over-provisioned")
-  @ApiOperation("Retrieve the list of over-provisioned request IDs.")
+  @Operation(summary = "Retrieve the list of over-provisioned request IDs.")
   public List<String> getOverProvisionedRequestIds(@QueryParam("skipCache") boolean skipCache) {
     return stateManager.getState(skipCache, true).getOverProvisionedRequestIds();
   }
 
   @GET
   @Path("/task-reconciliation")
-  @ApiOperation("Retrieve information about the most recent task reconciliation")
+  @Operation(
+      summary = "Retrieve information about the most recent task reconciliation",
+      responses = {
+          @ApiResponse(responseCode = "404", description = "No reconciliation statistics are present")
+      }
+  )
   public Optional<SingularityTaskReconciliationStatistics> getTaskReconciliationStatistics() {
     return stateManager.getTaskReconciliationStatistics();
   }

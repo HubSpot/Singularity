@@ -3,6 +3,9 @@ package com.hubspot.singularity;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
+@Schema(title = "Describes the last run of task reconciliation with the mesos master")
 public class SingularityTaskReconciliationStatistics {
     private final long taskReconciliationStartedAt;
     private final long taskReconciliationDurationMillis;
@@ -21,19 +24,19 @@ public class SingularityTaskReconciliationStatistics {
 
     @JsonCreator
     public SingularityTaskReconciliationStatistics(@JsonProperty("taskReconciliationStartedAt") long taskReconciliationStartedAt,
-        @JsonProperty("taskReconciliationDurationMillis") long taskReconciliationDurationMillis,
-        @JsonProperty("taskReconciliationIterations") int taskReconciliationIterations,
-        @JsonProperty("taskReconciliationResponseCount") long taskReconciliationResponseCount,
-        @JsonProperty("taskReconciliationResponseMax") long taskReconciliationResponseMax,
-        @JsonProperty("taskReconciliationResponseMean") double taskReconciliationResponseMean,
-        @JsonProperty("taskReconciliationResponseMin") long taskReconciliationResponseMin,
-        @JsonProperty("taskReconciliationResponseP50") double taskReconciliationResponseP50,
-        @JsonProperty("taskReconciliationResponseP75") double taskReconciliationResponseP75,
-        @JsonProperty("taskReconciliationResponseP95") double taskReconciliationResponseP95,
-        @JsonProperty("taskReconciliationResponseP98") double taskReconciliationResponseP98,
-        @JsonProperty("taskReconciliationResponseP99") double taskReconciliationResponseP99,
-        @JsonProperty("taskReconciliationResponseP999") double taskReconciliationResponseP999,
-        @JsonProperty("taskReconciliationResponseStddev") double taskReconciliationResponseStddev) {
+                                                   @JsonProperty("taskReconciliationDurationMillis") long taskReconciliationDurationMillis,
+                                                   @JsonProperty("taskReconciliationIterations") int taskReconciliationIterations,
+                                                   @JsonProperty("taskReconciliationResponseCount") long taskReconciliationResponseCount,
+                                                   @JsonProperty("taskReconciliationResponseMax") long taskReconciliationResponseMax,
+                                                   @JsonProperty("taskReconciliationResponseMean") double taskReconciliationResponseMean,
+                                                   @JsonProperty("taskReconciliationResponseMin") long taskReconciliationResponseMin,
+                                                   @JsonProperty("taskReconciliationResponseP50") double taskReconciliationResponseP50,
+                                                   @JsonProperty("taskReconciliationResponseP75") double taskReconciliationResponseP75,
+                                                   @JsonProperty("taskReconciliationResponseP95") double taskReconciliationResponseP95,
+                                                   @JsonProperty("taskReconciliationResponseP98") double taskReconciliationResponseP98,
+                                                   @JsonProperty("taskReconciliationResponseP99") double taskReconciliationResponseP99,
+                                                   @JsonProperty("taskReconciliationResponseP999") double taskReconciliationResponseP999,
+                                                   @JsonProperty("taskReconciliationResponseStddev") double taskReconciliationResponseStddev) {
         this.taskReconciliationStartedAt = taskReconciliationStartedAt;
         this.taskReconciliationDurationMillis = taskReconciliationDurationMillis;
         this.taskReconciliationIterations = taskReconciliationIterations;
@@ -50,58 +53,72 @@ public class SingularityTaskReconciliationStatistics {
         this.taskReconciliationResponseStddev = taskReconciliationResponseStddev;
     }
 
+    @Schema(title = "Start time of the last reconciliation")
     public long getTaskReconciliationStartedAt() {
         return taskReconciliationStartedAt;
     }
 
+    @Schema(title = "Duration in milliseconds of the last reconciliation")
     public long getTaskReconciliationDurationMillis() {
         return taskReconciliationDurationMillis;
     }
 
+    @Schema(title = "Number of iterations required for the last reconciliation")
     public int getTaskReconciliationIterations() {
         return taskReconciliationIterations;
     }
 
+    @Schema(title = "Responses counted for the last reconciliation")
     public long getTaskReconciliationResponseCount() {
         return taskReconciliationResponseCount;
     }
 
+    @Schema(title = "Max time taken for a response during the last reconciliation")
     public long getTaskReconciliationResponseMax() {
         return taskReconciliationResponseMax;
     }
 
+    @Schema(title = "Average time taken for a response during the last reconciliation")
     public double getTaskReconciliationResponseMean() {
         return taskReconciliationResponseMean;
     }
 
+    @Schema(title = "Minimum time taken for a response during the last reconciliation")
     public long getTaskReconciliationResponseMin() {
         return taskReconciliationResponseMin;
     }
 
+    @Schema(title = "50th percentile time taken for a response during the last reconciliation")
     public double getTaskReconciliationResponseP50() {
         return taskReconciliationResponseP50;
     }
 
+    @Schema(title = "75th percentile time taken for a response during the last reconciliation")
     public double getTaskReconciliationResponseP75() {
         return taskReconciliationResponseP75;
     }
 
+    @Schema(title = "95th percentile time taken for a response during the last reconciliation")
     public double getTaskReconciliationResponseP95() {
         return taskReconciliationResponseP95;
     }
 
+    @Schema(title = "98th percentile time taken for a response during the last reconciliation")
     public double getTaskReconciliationResponseP98() {
         return taskReconciliationResponseP98;
     }
 
+    @Schema(title = "99th percentile time taken for a response during the last reconciliation")
     public double getTaskReconciliationResponseP99() {
         return taskReconciliationResponseP99;
     }
 
+    @Schema(title = "99.9th percentile time taken for a response during the last reconciliation")
     public double getTaskReconciliationResponseP999() {
         return taskReconciliationResponseP999;
     }
 
+    @Schema(title = "Standard deviation in response time during the last reconciliation")
     public double getTaskReconciliationResponseStddev() {
         return taskReconciliationResponseStddev;
     }

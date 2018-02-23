@@ -11,8 +11,12 @@ import com.google.common.base.Optional;
 import com.hubspot.mesos.Resources;
 import com.hubspot.mesos.SingularityMesosArtifact;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
+@Schema(title = "Describes a task that is waiting to be launched")
 public class SingularityPendingRequest {
 
+  @Schema
   public enum PendingType {
     IMMEDIATE, ONEOFF, BOUNCE, NEW_DEPLOY, NEXT_DEPLOY_STEP, UNPAUSED, RETRY, UPDATED_REQUEST, DECOMISSIONED_SLAVE_OR_RACK, TASK_DONE, STARTUP, CANCEL_BOUNCE, TASK_BOUNCE, DEPLOY_CANCELLED, DEPLOY_FAILED;
   }

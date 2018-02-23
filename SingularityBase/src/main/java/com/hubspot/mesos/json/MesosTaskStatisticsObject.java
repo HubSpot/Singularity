@@ -3,6 +3,9 @@ package com.hubspot.mesos.json;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
+@Schema(title = "Describes the current resource usage for a task")
 public class MesosTaskStatisticsObject {
   private final int cpusLimit;
   private final long cpusNrPeriods;
@@ -53,62 +56,77 @@ public class MesosTaskStatisticsObject {
     this.timestampSeconds = timestampSeconds;
   }
 
+  @Schema(title = "The cpu limit for this task")
   public int getCpusLimit() {
     return cpusLimit;
   }
 
+  @Schema(title = "From cgroups cpu.stat")
   public long getCpusNrPeriods() {
     return cpusNrPeriods;
   }
 
+  @Schema(title = "From cgroups cpu.stat")
   public long getCpusNrThrottled() {
     return cpusNrThrottled;
   }
 
+  @Schema(title = "From cgroups cpu.stat")
   public double getCpusSystemTimeSecs() {
     return cpusSystemTimeSecs;
   }
 
+  @Schema(title = "From cgroups cpu.stat")
   public double getCpusThrottledTimeSecs() {
     return cpusThrottledTimeSecs;
   }
 
+  @Schema(title = "The cpu seconds consumed by this task")
   public double getCpusUserTimeSecs() {
     return cpusUserTimeSecs;
   }
 
+  @Schema(title = "Bytes of anonymous memory")
   public long getMemAnonBytes() {
     return memAnonBytes;
   }
 
+  @Schema(title = "File memory used in bytes")
   public long getMemFileBytes() {
     return memFileBytes;
   }
 
+  @Schema(title = "Memory limit of this task in bytes")
   public long getMemLimitBytes() {
     return memLimitBytes;
   }
 
+  @Schema(title = "Mapped file memory used in bytes")
   public long getMemMappedFileBytes() {
     return memMappedFileBytes;
   }
 
+  @Schema(title = "rss used in bytes")
   public long getMemRssBytes() {
     return memRssBytes;
   }
 
+  @Schema(title = "Total memory used in bytes")
   public long getMemTotalBytes() {
     return memTotalBytes;
   }
 
+  @Schema(title = "Disk space limit for this task in bytes")
   public long getDiskLimitBytes() {
     return diskLimitBytes;
   }
 
+  @Schema(title = "Disk space used by this task in bytes")
   public long getDiskUsedBytes() {
     return diskUsedBytes;
   }
 
+  @Schema(title = "Timestamp in seconds at which this usage was collected")
   public double getTimestampSeconds() {
     return timestampSeconds;
   }

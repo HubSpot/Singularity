@@ -39,7 +39,7 @@
     <basepom.jar.name.format>${singularity.jar.name.format}</basepom.jar.name.format>
 
     <!-- build the docs for releases -->
-    <basepom.release.profiles>oss-release,build-swagger-documentation</basepom.release.profiles>
+    <basepom.release.profiles>oss-release</basepom.release.profiles>
 
     <dropwizard.guicier.version>1.0.6.0</dropwizard.guicier.version>
     <baragon.version>0.5.0</baragon.version>
@@ -67,7 +67,6 @@
     <module>SingularityExecutorCleanup</module>
     <module>SingularityS3Uploader</module>
     <module>SingularityS3Downloader</module>
-    <module>SingularitySwagger</module>
     <module>EmbedSingularityExample</module>
     <module>SingularityServiceIntegrationTests</module>
     <module>SingularityUI</module>
@@ -312,6 +311,7 @@
           </exclusion>
         </exclusions>
       </dependency>
+
       <dependency>
         <groupId>com.google.protobuf</groupId>
         <artifactId>protobuf-java</artifactId>
@@ -333,6 +333,24 @@
         <groupId>io.netty</groupId>
         <artifactId>netty-common</artifactId>
         <version>4.1.4.Final</version>
+      </dependency>
+
+      <dependency>
+        <groupId>io.swagger.core.v3</groupId>
+        <artifactId>swagger-annotations</artifactId>
+        <version>2.0.0-rc4</version>
+      </dependency>
+
+      <dependency>
+        <groupId>io.swagger.core.v3</groupId>
+        <artifactId>swagger-core</artifactId>
+        <version>2.0.0-rc4</version>
+      </dependency>
+
+      <dependency>
+        <groupId>io.swagger.core.v3</groupId>
+        <artifactId>swagger-jaxrs2</artifactId>
+        <version>2.0.0-rc4</version>
       </dependency>
 
       <dependency>
@@ -413,28 +431,6 @@
           <artifactId>frontend-maven-plugin</artifactId>
           <version>0.0.23</version>
         </plugin>
-        <plugin>
-          <groupId>com.github.kongchen</groupId>
-          <artifactId>swagger-maven-plugin</artifactId>
-          <version>${dep.swagger-plugin.version}</version>
-          <dependencies>
-            <dependency>
-              <groupId>com.wordnik</groupId>
-              <artifactId>swagger-jaxrs_2.10</artifactId>
-              <version>${dep.swagger.version}</version>
-            </dependency>
-            <dependency>
-              <groupId>com.wordnik</groupId>
-              <artifactId>swagger-jersey-jaxrs_2.10</artifactId>
-              <version>${dep.swagger.version}</version>
-            </dependency>
-            <dependency>
-              <groupId>com.hubspot</groupId>
-              <artifactId>SingularitySwagger</artifactId>
-              <version>${project.version}</version>
-            </dependency>
-          </dependencies>
-        </plugin>
         <!--This plugin's configuration is used to store Eclipse m2e settings only. It has no influence on the Maven build itself.-->
         <plugin>
         	<groupId>org.eclipse.m2e</groupId>
@@ -445,12 +441,8 @@
         			<pluginExecutions>
         				<pluginExecution>
         					<pluginExecutionFilter>
-        						<groupId>
-        							com.hubspot.maven.plugins
-        						</groupId>
-        						<artifactId>
-        							dependency-management-plugin
-        						</artifactId>
+        						<groupId>com.hubspot.maven.plugins</groupId>
+        						<artifactId>dependency-management-plugin</artifactId>
         						<versionRange>[0.3,)</versionRange>
         						<goals>
         							<goal>analyze</goal>

@@ -7,6 +7,9 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.hubspot.mesos.JavaUtils;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
+@Schema(title = "The unique id for a singularity task")
 public class SingularityTaskId extends SingularityId implements SingularityHistoryItem {
 
   private final String requestId;
@@ -54,10 +57,16 @@ public class SingularityTaskId extends SingularityId implements SingularityHisto
   /**
    * @Deprecated use getSanitizedRackId() or matchesOriginalRackId() instead
    */
+  @Deprecated
+  @Schema(title = "The id of the rack where this task was launched")
   public String getRackId() {
     return getSanitizedRackId();
   }
 
+  @Schema(
+      title = "The id of the rack where this task was launched",
+      description = "- characters are repalced with _ in this id due to the fact that sections of the task id are delimited by -'s"
+  )
   public String getSanitizedRackId() {
     return sanitizedRackId;
   }
@@ -67,6 +76,7 @@ public class SingularityTaskId extends SingularityId implements SingularityHisto
     return sanitizedRackId.equals(JavaUtils.getReplaceHyphensWithUnderscores(unsanitizedRackId));
   }
 
+  @Schema(title = "The deploy associated with this task")
   public String getDeployId() {
     return deployId;
   }
@@ -74,10 +84,16 @@ public class SingularityTaskId extends SingularityId implements SingularityHisto
   /**
    * @Deprecated use getSanitizedHost() or matchesOriginalHost() instead
    */
+  @Deprecated
+  @Schema(title = "The hostname of the machine where this task was launched")
   public String getHost() {
     return getSanitizedHost();
   }
 
+  @Schema(
+      title = "The hostname of the machine where this task was launched",
+      description = "- characters are repalced with _ in this id due to the fact that sections of the task id are delimited by -'s"
+  )
   public String getSanitizedHost() {
     return sanitizedHost;
   }
@@ -87,14 +103,17 @@ public class SingularityTaskId extends SingularityId implements SingularityHisto
     return sanitizedHost.equals(JavaUtils.getReplaceHyphensWithUnderscores(unsanitizedHost));
   }
 
+  @Schema(title = "The request associated with this task")
   public String getRequestId() {
     return requestId;
   }
 
+  @Schema(title = "The time at which this task was started")
   public long getStartedAt() {
     return startedAt;
   }
 
+  @Schema(title = "The instance number for this task", minimum = "1")
   public int getInstanceNo() {
     return instanceNo;
   }

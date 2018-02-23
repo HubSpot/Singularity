@@ -7,6 +7,9 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
+@Schema(title = "The result of a deploy for a particular request")
 public class SingularityDeployResult {
 
   private final DeployState deployState;
@@ -42,22 +45,27 @@ public class SingularityDeployResult {
     this.timestamp = timestamp;
   }
 
+  @Schema(title = "The result of the load balancer update, if one occured, for a load balanced request", nullable = true)
   public Optional<SingularityLoadBalancerUpdate> getLbUpdate() {
     return lbUpdate;
   }
 
+  @Schema(title = "An optional message accompanying the deploy result", nullable = true)
   public Optional<String> getMessage() {
     return message;
   }
 
+  @Schema(title = "The current state of the deploy")
   public DeployState getDeployState() {
     return deployState;
   }
 
+  @Schema(title = "Details about a failed deploy", nullable = true)
   public List<SingularityDeployFailure> getDeployFailures() {
     return deployFailures;
   }
 
+  @Schema(title = "The time of this deploy update")
   public long getTimestamp() {
     return timestamp;
   }

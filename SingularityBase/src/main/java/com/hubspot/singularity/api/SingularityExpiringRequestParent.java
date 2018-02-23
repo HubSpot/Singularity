@@ -1,8 +1,17 @@
 package com.hubspot.singularity.api;
 
 import com.google.common.base.Optional;
-import com.wordnik.swagger.annotations.ApiModelProperty;
+import com.hubspot.singularity.expiring.SingularityExpiringParent;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
+@Schema(
+    title = "Description of a request for a future action",
+    subTypes = {
+        SingularityMachineChangeRequest.class,
+        SingularityExpiringParent.class
+    }
+)
 public abstract class SingularityExpiringRequestParent {
 
   private final Optional<Long> durationMillis;
@@ -15,17 +24,17 @@ public abstract class SingularityExpiringRequestParent {
     this.message = message;
   }
 
-  @ApiModelProperty(required=false, value="A message to show to users about why this action was taken")
+  @Schema(description = "A message to show to users about why this action was taken", nullable = true)
   public Optional<String> getMessage() {
     return message;
   }
 
-  @ApiModelProperty(required=false, value="An id to associate with this action for metadata purposes")
+  @Schema(description = "An id to associate with this action for metadata purposes", nullable = true)
   public Optional<String> getActionId() {
     return actionId;
   }
 
-  @ApiModelProperty(required=false, value="The number of milliseconds to wait before reversing the effects of this action (letting it expire)")
+  @Schema(description = "The number of milliseconds to wait before reversing the effects of this action (letting it expire)", nullable = true)
   public Optional<Long> getDurationMillis() {
     return durationMillis;
   }

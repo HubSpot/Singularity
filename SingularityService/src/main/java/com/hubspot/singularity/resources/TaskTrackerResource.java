@@ -22,16 +22,19 @@ import com.hubspot.singularity.config.ApiPaths;
 import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.data.history.HistoryManager;
-import com.wordnik.swagger.annotations.Api;
-import com.wordnik.swagger.annotations.ApiOperation;
-import com.wordnik.swagger.annotations.ApiResponse;
-import com.wordnik.swagger.annotations.ApiResponses;
 
 import io.dropwizard.auth.Auth;
+import io.swagger.v3.oas.annotations.OpenAPIDefinition;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.info.Info;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 
 @Path(ApiPaths.TASK_TRACKER_RESOURCE_PATH)
 @Produces({MediaType.APPLICATION_JSON})
-@Api(description="Find a task by taskId or runId", value=ApiPaths.TASK_TRACKER_RESOURCE_PATH)
+@OpenAPIDefinition(
+    info = @Info(title = "Retrieve a task by taskId or runId")
+)
 public class TaskTrackerResource {
   private final TaskManager taskManager;
   private final RequestManager requestManager;
@@ -48,22 +51,31 @@ public class TaskTrackerResource {
 
   @GET
   @Path("/task/{taskId}")
-  @ApiOperation(value="Get the current state of a task by taskId whether it is active, or inactive")
-  @ApiResponses({
-      @ApiResponse(code=404, message="Task with this id does not exist")
-  })
-  public Optional<SingularityTaskState> getTaskState(@Auth SingularityUser user, @PathParam("taskId") String taskId) {
+  @Operation(
+      summary = "Get the current state of a task by taskId whether it is active, or inactive",
+      responses = {
+          @ApiResponse(responseCode = "404", description = "Task with this id does not exist")
+      }
+  )
+  public Optional<SingularityTaskState> getTaskState(
+      @Auth SingularityUser user,
+      @Parameter(required = true, description = "the task id to search for") @PathParam("taskId") String taskId) {
     authorizationHelper.checkForAuthorizationByTaskId(taskId, user, SingularityAuthorizationScope.READ);
     return getTaskStateFromId(SingularityTaskId.valueOf(taskId));
   }
 
   @GET
   @Path("/run/{requestId}/{runId}")
-  @ApiOperation(value="Get the current state of a task by taskId whether it is pending, active, or inactive")
-  @ApiResponses({
-      @ApiResponse(code=404, message="Task with this runId does not exist")
-  })
-  public Optional<SingularityTaskState> getTaskStateByRunId(@Auth SingularityUser user, @PathParam("requestId") String requestId, @PathParam("runId") String runId) {
+  @Operation(
+      summary = "Get the current state of a task by taskId whether it is pending, active, or inactive",
+      responses = {
+          @ApiResponse(responseCode = "404", description = "Task with this runId does not exist")
+      }
+  )
+  public Optional<SingularityTaskState> getTaskStateByRunId(
+      @Auth SingularityUser user,
+      @Parameter(required = true, description = "the request id to search for tasks") @PathParam("requestId") String requestId,
+      @Parameter(required = true, description = "the run id to search for") @PathParam("runId") String runId) {
     authorizationHelper.checkForAuthorizationByRequestId(requestId, user, SingularityAuthorizationScope.READ);
 
     // Check if it's active or inactive

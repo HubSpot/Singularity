@@ -14,6 +14,9 @@ import com.google.common.base.Predicate;
 import com.hubspot.mesos.Resources;
 import com.hubspot.mesos.SingularityMesosArtifact;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
+@Schema(title = "Overrides and settings for a particular task being launched")
 public class SingularityPendingTask {
 
   private final SingularityPendingTaskId pendingTaskId;
@@ -112,48 +115,67 @@ public class SingularityPendingTask {
     return Objects.hash(pendingTaskId);
   }
 
+  @Schema(nullable = true, title = "The user who triggered the launch of this task")
   public Optional<String> getUser() {
     return user;
   }
 
+  @Schema(title = "A unique id for the request to launch this task")
   public SingularityPendingTaskId getPendingTaskId() {
     return pendingTaskId;
   }
 
+  @Schema(title = "Extra command line arguments for this particular task")
   public Optional<List<String>> getCmdLineArgsList() {
     return cmdLineArgsList;
   }
 
+  @Schema(nullable = true, title = "An optional unique run id associated with this task")
   public Optional<String> getRunId() {
     return runId;
   }
 
+  @Schema(
+      nullable = true,
+      title = "If `true`, do not run healthchecks for this task and immediately consider it healthy",
+      defaultValue = "false"
+  )
   public Optional<Boolean> getSkipHealthchecks() {
     return skipHealthchecks;
   }
 
+  @Schema(title = "An optional message for the launch of this task")
   public Optional<String> getMessage() {
     return message;
   }
 
+  @Schema(
+      title = "Optional overrides to the resources requested for this task",
+      defaultValue = "resources sepcified in the deploy associated with this task"
+  )
   public Optional<Resources> getResources() {
     return resources;
   }
 
+  @Schema(title = "A list of additional files for the SingularityS3Uploader to upload")
   public List<SingularityS3UploaderFile> getS3UploaderAdditionalFiles() {
     return s3UploaderAdditionalFiles;
   }
 
+  @Schema(title = "Override the system user this task will be run as", nullable = true)
   public Optional<String> getRunAsUserOverride() {
     return runAsUserOverride;
   }
 
+  @Schema(title = "Environment variable overrides for this particular task")
   public Map<String, String> getEnvOverrides() { return envOverrides; }
 
+  @Schema(title = "A list of additional artifacts to download for this particular task")
   public List<SingularityMesosArtifact> getExtraArtifacts() {
     return extraArtifacts;
   }
 
+  @Schema(title = "An optional unique id associated with the launch of this task", nullable = true)
   public Optional<String> getActionId() {
     return actionId;
   }

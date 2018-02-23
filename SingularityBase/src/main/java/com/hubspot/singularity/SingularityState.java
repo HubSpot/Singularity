@@ -6,6 +6,9 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
+@Schema(title = "Describes the current state of singularity")
 public class SingularityState {
 
   private final int activeTasks;
@@ -58,16 +61,41 @@ public class SingularityState {
   private final long avgStatusUpdateDelayMs;
 
   @JsonCreator
-  public SingularityState(@JsonProperty("activeTasks") int activeTasks, @JsonProperty("launchingTasks") int launchingTasks, @JsonProperty("activeRequests") int activeRequests, @JsonProperty("cooldownRequests") int cooldownRequests,
-                          @JsonProperty("pausedRequests") int pausedRequests, @JsonProperty("scheduledTasks") int scheduledTasks, @JsonProperty("pendingRequests") int pendingRequests, @JsonProperty("lbCleanupTasks") int lbCleanupTasks,
-                          @JsonProperty("lbCleanupRequests") int lbCleanupRequests, @JsonProperty("cleaningRequests") int cleaningRequests, @JsonProperty("activeSlaves") int activeSlaves, @JsonProperty("deadSlaves") int deadSlaves,
-                          @JsonProperty("decommissioningSlaves") int decommissioningSlaves, @JsonProperty("activeRacks") int activeRacks, @JsonProperty("deadRacks") int deadRacks, @JsonProperty("decommissioningRacks") int decommissioningRacks,
-                          @JsonProperty("cleaningTasks") int cleaningTasks, @JsonProperty("hostStates") List<SingularityHostState> hostStates, @JsonProperty("oldestDeploy") long oldestDeploy, @JsonProperty("numDeploys") int numDeploys,
-                          @JsonProperty("oldestDeployStep") long oldestDeployStep, @JsonProperty("activeDeploys") List<SingularityDeployMarker> activeDeploys,
-                          @JsonProperty("lateTasks") int lateTasks, @JsonProperty("futureTasks") int futureTasks, @JsonProperty("maxTaskLag") long maxTaskLag, @JsonProperty("generatedAt") long generatedAt,
-                          @JsonProperty("overProvisionedRequestIds") List<String> overProvisionedRequestIds, @JsonProperty("underProvisionedRequestIds") List<String> underProvisionedRequestIds,
-                          @JsonProperty("overProvisionedRequests") int overProvisionedRequests, @JsonProperty("underProvisionedRequests") int underProvisionedRequests, @JsonProperty("finishedRequests") int finishedRequests,
-                          @JsonProperty("unknownRacks") int unknownRacks, @JsonProperty("unknownSlaves") int unknownSlaves, @JsonProperty("authDatastoreHealthy") Optional<Boolean> authDatastoreHealthy, @JsonProperty("minimumPriorityLevel") Optional<Double> minimumPriorityLevel,
+  public SingularityState(@JsonProperty("activeTasks") int activeTasks,
+                          @JsonProperty("launchingTasks") int launchingTasks,
+                          @JsonProperty("activeRequests") int activeRequests,
+                          @JsonProperty("cooldownRequests") int cooldownRequests,
+                          @JsonProperty("pausedRequests") int pausedRequests,
+                          @JsonProperty("scheduledTasks") int scheduledTasks,
+                          @JsonProperty("pendingRequests") int pendingRequests,
+                          @JsonProperty("lbCleanupTasks") int lbCleanupTasks,
+                          @JsonProperty("lbCleanupRequests") int lbCleanupRequests,
+                          @JsonProperty("cleaningRequests") int cleaningRequests,
+                          @JsonProperty("activeSlaves") int activeSlaves,
+                          @JsonProperty("deadSlaves") int deadSlaves,
+                          @JsonProperty("decommissioningSlaves") int decommissioningSlaves,
+                          @JsonProperty("activeRacks") int activeRacks,
+                          @JsonProperty("deadRacks") int deadRacks,
+                          @JsonProperty("decommissioningRacks") int decommissioningRacks,
+                          @JsonProperty("cleaningTasks") int cleaningTasks,
+                          @JsonProperty("hostStates") List<SingularityHostState> hostStates,
+                          @JsonProperty("oldestDeploy") long oldestDeploy,
+                          @JsonProperty("numDeploys") int numDeploys,
+                          @JsonProperty("oldestDeployStep") long oldestDeployStep,
+                          @JsonProperty("activeDeploys") List<SingularityDeployMarker> activeDeploys,
+                          @JsonProperty("lateTasks") int lateTasks,
+                          @JsonProperty("futureTasks") int futureTasks,
+                          @JsonProperty("maxTaskLag") long maxTaskLag,
+                          @JsonProperty("generatedAt") long generatedAt,
+                          @JsonProperty("overProvisionedRequestIds") List<String> overProvisionedRequestIds,
+                          @JsonProperty("underProvisionedRequestIds") List<String> underProvisionedRequestIds,
+                          @JsonProperty("overProvisionedRequests") int overProvisionedRequests,
+                          @JsonProperty("underProvisionedRequests") int underProvisionedRequests,
+                          @JsonProperty("finishedRequests") int finishedRequests,
+                          @JsonProperty("unknownRacks") int unknownRacks,
+                          @JsonProperty("unknownSlaves") int unknownSlaves,
+                          @JsonProperty("authDatastoreHealthy") Optional<Boolean> authDatastoreHealthy,
+                          @JsonProperty("minimumPriorityLevel") Optional<Double> minimumPriorityLevel,
                           @JsonProperty("avgStatusUpdateDelayMs") long avgStatusUpdateDelayMs) {
     this.activeTasks = activeTasks;
     this.launchingTasks = launchingTasks;
@@ -107,160 +135,205 @@ public class SingularityState {
     this.avgStatusUpdateDelayMs = avgStatusUpdateDelayMs;
   }
 
+  @Schema(title = "Count of requests in finished state")
   public int getFinishedRequests() {
     return finishedRequests;
   }
 
+  @Schema(title = "Time this state was generated")
   public long getGeneratedAt() {
     return generatedAt;
   }
 
+  @Schema(title = "Timestamp of the oldest running deploy")
   public long getOldestDeploy() {
     return oldestDeploy;
   }
 
+  @Schema(title = "Number of active/in-progress deploys")
   public int getNumDeploys() {
     return numDeploys;
   }
 
+  @Schema(
+      title = "Timestamp of the oldest single step for a deploy",
+      description = "For incremental deploys this is a measure of the time taken for a single step of the deploy"
+  )
   public long getOldestDeployStep() {
     return oldestDeployStep;
   }
 
+  @Schema(title = "List of active deploy identifiers")
   public List<SingularityDeployMarker> getActiveDeploys() {
     return activeDeploys;
   }
 
+  @Schema(title = "Count of requests in paused state")
   public int getPausedRequests() {
     return pausedRequests;
   }
 
+  @Schema(title = "Describes the state of all Singularity scheduler instances")
   public List<SingularityHostState> getHostStates() {
     return hostStates;
   }
 
+  @Schema(title = "The count of cleaning tasks")
   public int getCleaningTasks() {
     return cleaningTasks;
   }
 
+  @Schema(title = "The count of active slaves")
   public int getActiveSlaves() {
     return activeSlaves;
   }
 
+  @Schema(title = "The count of dead slaves (no longer reachable or considered lost by mesos)")
   public int getDeadSlaves() {
     return deadSlaves;
   }
 
+  @Schema(title = "The count of slaves currently decommissioning")
   public int getDecommissioningSlaves() {
     return decommissioningSlaves;
   }
 
   @Deprecated
+  @Schema(title = "The count of slaves currently decommissioning")
   public int getDecomissioningSlaves() {
     return decommissioningSlaves;
   }
 
+  @Schema(title = "The count of active racks")
   public int getActiveRacks() {
     return activeRacks;
   }
 
+  @Schema(title = "The count of racks considered dead")
   public int getDeadRacks() {
     return deadRacks;
   }
 
   @Deprecated
+  @Schema(title = "The count of racks that are currently decommissioning")
   public int getDecomissioningRacks() {
     return decommissioningRacks;
   }
 
+  @Schema(title = "The count of racks that are currently decommissioning")
   public int getDecommissioningRacks() {
     return decommissioningRacks;
   }
 
+  @Schema(title = "The count of active tasks")
   public int getActiveTasks() {
     return activeTasks;
   }
 
+  @Schema(title = "The count of tasks in launching state")
   public int getLaunchingTasks() {
     return launchingTasks;
   }
 
+  @Schema(title = "The count of all requests in all states")
   public int getAllRequests() {
-    return getActiveRequests() + getCooldownRequests() + getPausedRequests();
+    return activeRequests + cooldownRequests + pausedRequests;
   }
 
+  @Schema(title = "The count of requests in active state")
   public int getActiveRequests() {
     return activeRequests;
   }
 
+  @Schema(title = "The count of requests in cooldown state")
   public int getCooldownRequests() {
     return cooldownRequests;
   }
 
+  @Schema(title = "The count of tasks waiting to be launched")
   public int getScheduledTasks() {
     return scheduledTasks;
   }
 
+  @Schema(
+      title = "The count of pending requests",
+      description = "A pending request is a trigger for the scheduler to perform an action for a request (create a cleanup, launch a task, etc)"
+  )
   public int getPendingRequests() {
     return pendingRequests;
   }
 
+  @Schema(title = "The count of requests with associated cleanups (e.g. due to a bounce)")
   public int getCleaningRequests() {
     return cleaningRequests;
   }
 
+  @Schema(title = "The count of tasks that have not been launched in time")
   public int getLateTasks() {
     return lateTasks;
   }
 
+  @Schema(title = "The count of pending tasks that will be launched at a future time")
   public int getFutureTasks() {
     return futureTasks;
   }
 
+  @Schema(title = "The maximum delay in launching any pending task")
   public long getMaxTaskLag() {
     return maxTaskLag;
   }
 
+  @Schema(title = "The count of tasks with associated load balancer cleanups")
   public int getLbCleanupTasks() {
     return lbCleanupTasks;
   }
 
+  @Schema(title = "The count of requests with associated load balancer cleanups")
   public int getLbCleanupRequests() {
     return lbCleanupRequests;
   }
 
+  @Schema(title = "The count of requests running too many instances")
   public List<String> getOverProvisionedRequestIds() {
     return overProvisionedRequestIds;
   }
 
+  @Schema(title = "The ids of requests running too many instances")
   public List<String> getUnderProvisionedRequestIds() {
     return underProvisionedRequestIds;
   }
 
+  @Schema(title = "The count of requests running too few instances")
   public int getOverProvisionedRequests() {
     return overProvisionedRequests;
   }
 
+  @Schema(title = "The ids of requests running too few instances")
   public int getUnderProvisionedRequests() {
     return underProvisionedRequests;
   }
 
+  @Schema(title = "The count of slaves in an unknown state")
   public int getUnknownSlaves() {
     return unknownSlaves;
   }
 
+  @Schema(title = "The count of racks in an unknown state")
   public int getUnknownRacks() {
     return unknownRacks;
   }
 
+  @Schema(title = "`true` if the auth datastore is reachable (when auth is configured)", nullable = true)
   public Optional<Boolean> getAuthDatastoreHealthy() {
     return authDatastoreHealthy;
   }
 
+  @Schema(title = "The minimum priority level for launching tasks if a priority freeze is active, empty otherwise", nullable = true)
   public Optional<Double> getMinimumPriorityLevel() {
     return minimumPriorityLevel;
   }
 
+  @Schema(title = "The average delay (in millis) for processing status updates from mesos")
   public long getAvgStatusUpdateDelayMs() {
     return avgStatusUpdateDelayMs;
   }

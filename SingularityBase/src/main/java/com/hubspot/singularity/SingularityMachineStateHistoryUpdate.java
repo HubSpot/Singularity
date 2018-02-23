@@ -6,6 +6,9 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
+@Schema(title = "Describes an update to the state of a rack or slave")
 public class SingularityMachineStateHistoryUpdate {
 
   private final String objectId;
@@ -24,22 +27,27 @@ public class SingularityMachineStateHistoryUpdate {
     this.message = message;
   }
 
+  @Schema(title = "An optional message describing this update", nullable = true)
   public Optional<String> getMessage() {
     return message;
   }
 
+  @Schema(title = "The user who triggered this update", nullable = true)
   public Optional<String> getUser() {
     return user;
   }
 
+  @Schema(title = "The id of the machine")
   public String getObjectId() {
     return objectId;
   }
 
+  @Schema(title = "The state of the machine")
   public MachineState getState() {
     return state;
   }
 
+  @Schema(title = "the timestamp of this state update")
   public long getTimestamp() {
     return timestamp;
   }

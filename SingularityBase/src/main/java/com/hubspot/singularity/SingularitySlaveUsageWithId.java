@@ -1,8 +1,8 @@
 package com.hubspot.singularity;
 
-import com.wordnik.swagger.annotations.ApiModel;
+import io.swagger.v3.oas.annotations.media.Schema;
 
-@ApiModel(description = "Singularity's view of a Mesos slave")
+@Schema(title = "A description of resources used on a mesos slave")
 public class SingularitySlaveUsageWithId extends SingularitySlaveUsage {
 
   private final String slaveId;
@@ -33,6 +33,7 @@ public class SingularitySlaveUsageWithId extends SingularitySlaveUsage {
     this.slaveId = slaveId;
   }
 
+  @Schema(title = "The id as assigned by mesos for this particualr slave")
   public String getSlaveId() {
     return slaveId;
   }

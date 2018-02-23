@@ -1,5 +1,8 @@
 package com.hubspot.singularity;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
+@Schema
 public enum TaskCleanupType {
 
   USER_REQUESTED(true, true), USER_REQUESTED_TASK_BOUNCE(false, false), DECOMISSIONING(false, false), SCALING_DOWN(true, false), BOUNCING(false, false), INCREMENTAL_BOUNCE(false, false),

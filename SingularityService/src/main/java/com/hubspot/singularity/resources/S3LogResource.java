@@ -23,6 +23,7 @@ import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.ws.rs.Consumes;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -85,15 +86,23 @@ import com.hubspot.singularity.data.history.RequestHistoryHelper;
 import com.hubspot.singularity.helpers.S3ObjectSummaryHolder;
 import com.hubspot.singularity.helpers.SingularityS3Service;
 import com.hubspot.singularity.helpers.SingularityS3Services;
-import com.wordnik.swagger.annotations.Api;
-import com.wordnik.swagger.annotations.ApiOperation;
-import com.wordnik.swagger.annotations.ApiParam;
 
 import io.dropwizard.auth.Auth;
+import io.swagger.v3.oas.annotations.OpenAPIDefinition;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.info.Info;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.parameters.RequestBody;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 
 @Path(ApiPaths.S3_LOG_RESOURCE_PATH)
 @Produces({ MediaType.APPLICATION_JSON })
-@Api(description="Manages Singularity task logs stored in S3.", value=ApiPaths.S3_LOG_RESOURCE_PATH)
+@OpenAPIDefinition(
+    info = @Info(title = "Manage Singularity task logs stored in S3")
+)
 public class S3LogResource extends AbstractHistoryResource {
   private static final Logger LOG = LoggerFactory.getLogger(S3LogResource.class);
   private static final String CONTENT_DISPOSITION_DOWNLOAD_HEADER = "attachment";
@@ -539,25 +548,38 @@ public class S3LogResource extends AbstractHistoryResource {
 
   @GET
   @Path("/task/{taskId}")
-  @ApiOperation("Retrieve the list of logs stored in S3 for a specific task.")
+  @Operation(
+      summary = "Retrieve the list of logs stored in S3 for a specific task",
+      responses = {
+          @ApiResponse(
+              responseCode = "200",
+              description = "Returns a list of metadata about log files for the specified task",
+              content = {
+                  @Content(array = @ArraySchema(schema = @Schema(implementation = SingularityS3LogMetadata.class))),
+                  @Content(array = @ArraySchema(schema = @Schema(implementation = SingularityS3Log.class)))
+              }
+          ),
+          @ApiResponse(responseCode = "404", description = "S3 configuration is not present")
+      }
+  )
   public List<SingularityS3LogMetadata> getS3LogsForTask(
       @Auth SingularityUser user,
-      @ApiParam("The task ID to search for") @PathParam("taskId") String taskId,
-      @ApiParam("Start timestamp (millis, 13 digit)") @QueryParam("start") Optional<Long> start,
-      @ApiParam("End timestamp (mills, 13 digit)") @QueryParam("end") Optional<Long> end,
-      @ApiParam("Exclude custom object metadata") @QueryParam("excludeMetadata") boolean excludeMetadata,
-      @ApiParam("Do not generate download/get urls, only list the files and metadata") @QueryParam("list") boolean listOnly) throws Exception {
+      @Parameter(required = true, description = "The task ID to search for") @PathParam("taskId") String taskId,
+      @Parameter(description = "Start timestamp (millis, 13 digit)") @QueryParam("start") Optional<Long> start,
+      @Parameter(description = "End timestamp (mills, 13 digit)") @QueryParam("end") Optional<Long> end,
+      @Parameter(description = "Exclude custom object metadata") @QueryParam("excludeMetadata") @DefaultValue ("false") boolean excludeMetadata,
+      @Parameter(description = "Do not generate download/get urls, only list the files and metadata") @QueryParam("list") @DefaultValue ("false") boolean listOnly) throws Exception {
     checkS3();
 
     final SingularityS3SearchRequest search = new SingularityS3SearchRequest(
-        Collections.<String, List<String>>emptyMap(),
+        Collections.emptyMap(),
         Collections.singletonList(taskId),
         start,
         end,
         excludeMetadata,
         listOnly,
-        Optional.<Integer>absent(),
-        Collections.<String, ContinuationToken>emptyMap());
+        Optional.absent(),
+        Collections.emptyMap());
 
     try {
       return getS3Logs(configuration.get(), getServiceToPrefixes(search, user), search, false).getResults();
@@ -570,15 +592,28 @@ public class S3LogResource extends AbstractHistoryResource {
 
   @GET
   @Path("/request/{requestId}")
-  @ApiOperation("Retrieve the list of logs stored in S3 for a specific request.")
+  @Operation(
+      summary = "Retrieve the list of logs stored in S3 for a specific request",
+      responses = {
+          @ApiResponse(
+              responseCode = "200",
+              description = "Returns a list of metadata about log files for the specified task",
+              content = {
+                  @Content(array = @ArraySchema(schema = @Schema(implementation = SingularityS3LogMetadata.class))),
+                  @Content(array = @ArraySchema(schema = @Schema(implementation = SingularityS3Log.class)))
+              }
+          ),
+          @ApiResponse(responseCode = "404", description = "S3 configuration is not present")
+      }
+  )
   public List<SingularityS3LogMetadata> getS3LogsForRequest(
       @Auth SingularityUser user,
-      @ApiParam("The request ID to search for") @PathParam("requestId") String requestId,
-      @ApiParam("Start timestamp (millis, 13 digit)") @QueryParam("start") Optional<Long> start,
-      @ApiParam("End timestamp (mills, 13 digit)") @QueryParam("end") Optional<Long> end,
-      @ApiParam("Exclude custom object metadata") @QueryParam("excludeMetadata") boolean excludeMetadata,
-      @ApiParam("Do not generate download/get urls, only list the files and metadata") @QueryParam("list") boolean listOnly,
-      @ApiParam("Max number of results to return per bucket searched") @QueryParam("maxPerPage") Optional<Integer> maxPerPage) throws Exception {
+      @Parameter(required = true, description = "The request ID to search for") @PathParam("requestId") String requestId,
+      @Parameter(description = "Start timestamp (millis, 13 digit)") @QueryParam("start") Optional<Long> start,
+      @Parameter(description = "End timestamp (mills, 13 digit)") @QueryParam("end") Optional<Long> end,
+      @Parameter(description = "Exclude custom object metadata") @QueryParam("excludeMetadata") @DefaultValue ("false") boolean excludeMetadata,
+      @Parameter(description = "Do not generate download/get urls, only list the files and metadata") @QueryParam("list") @DefaultValue ("false") boolean listOnly,
+      @Parameter(description = "Max number of results to return per bucket searched") @QueryParam("maxPerPage") Optional<Integer> maxPerPage) throws Exception {
     checkS3();
 
     try {
@@ -602,16 +637,29 @@ public class S3LogResource extends AbstractHistoryResource {
 
   @GET
   @Path("/request/{requestId}/deploy/{deployId}")
-  @ApiOperation("Retrieve the list of logs stored in S3 for a specific deploy.")
+  @Operation(
+      summary = "Retrieve the list of logs stored in S3 for a specific deploy",
+      responses = {
+          @ApiResponse(
+              responseCode = "200",
+              description = "Returns a list of metadata about log files for the specified task",
+              content = {
+                  @Content(array = @ArraySchema(schema = @Schema(implementation = SingularityS3LogMetadata.class))),
+                  @Content(array = @ArraySchema(schema = @Schema(implementation = SingularityS3Log.class)))
+              }
+          ),
+          @ApiResponse(responseCode = "404", description = "S3 configuration is not present")
+      }
+  )
   public List<SingularityS3LogMetadata> getS3LogsForDeploy(
       @Auth SingularityUser user,
-      @ApiParam("The request ID to search for") @PathParam("requestId") String requestId,
-      @ApiParam("The deploy ID to search for") @PathParam("deployId") String deployId,
-      @ApiParam("Start timestamp (millis, 13 digit)") @QueryParam("start") Optional<Long> start,
-      @ApiParam("End timestamp (mills, 13 digit)") @QueryParam("end") Optional<Long> end,
-      @ApiParam("Exclude custom object metadata") @QueryParam("excludeMetadata") boolean excludeMetadata,
-      @ApiParam("Do not generate download/get urls, only list the files and metadata") @QueryParam("list") boolean listOnly,
-      @ApiParam("Max number of results to return per bucket searched") @QueryParam("maxPerPage") Optional<Integer> maxPerPage) throws Exception {
+      @Parameter(required = true, description = "The request ID to search for") @PathParam("requestId") String requestId,
+      @Parameter(required = true, description = "The deploy ID to search for") @PathParam("deployId") String deployId,
+      @Parameter(description = "Start timestamp (millis, 13 digit)") @QueryParam("start") Optional<Long> start,
+      @Parameter(description = "End timestamp (mills, 13 digit)") @QueryParam("end") Optional<Long> end,
+      @Parameter(description = "Exclude custom object metadata") @QueryParam("excludeMetadata") @DefaultValue ("false") boolean excludeMetadata,
+      @Parameter(description = "Do not generate download/get urls, only list the files and metadata") @QueryParam("list") @DefaultValue ("false") boolean listOnly,
+      @Parameter(description = "Max number of results to return per bucket searched") @QueryParam("maxPerPage") Optional<Integer> maxPerPage) throws Exception {
     checkS3();
 
     try {
@@ -636,8 +684,24 @@ public class S3LogResource extends AbstractHistoryResource {
   @POST
   @Path("/search")
   @Consumes(MediaType.APPLICATION_JSON)
-  @ApiOperation("Retrieve a paginated list of logs stored in S3")
-  public SingularityS3SearchResult getPaginatedS3Logs(@Auth SingularityUser user, @ApiParam(required = true) SingularityS3SearchRequest search) throws Exception {
+  @Operation(
+      summary = "Retrieve a paginated list of logs stored in S3",
+      responses = {
+          @ApiResponse(
+              responseCode = "200",
+              description = "Returns a list of metadata about log files for the specified task",
+              content = {
+                  @Content(array = @ArraySchema(schema = @Schema(implementation = SingularityS3LogMetadata.class))),
+                  @Content(array = @ArraySchema(schema = @Schema(implementation = SingularityS3Log.class)))
+              }
+          ),
+          @ApiResponse(responseCode = "404", description = "S3 configuration is not present"),
+          @ApiResponse(responseCode = "400", description = "Missing required data for search")
+      }
+  )
+  public SingularityS3SearchResult getPaginatedS3Logs(
+      @Auth SingularityUser user,
+      @RequestBody(required = true) SingularityS3SearchRequest search) throws Exception {
     checkS3();
 
     checkBadRequest(!search.getRequestsAndDeploys().isEmpty() || !search.getTaskIds().isEmpty(), "Must specify at least one request or task to search");

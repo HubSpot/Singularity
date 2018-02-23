@@ -41,15 +41,19 @@ import com.hubspot.singularity.data.SandboxManager.SlaveNotFoundException;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.data.history.HistoryManager;
 import com.hubspot.singularity.mesos.SingularityMesosExecutorInfoSupport;
-import com.wordnik.swagger.annotations.Api;
-import com.wordnik.swagger.annotations.ApiOperation;
-import com.wordnik.swagger.annotations.ApiParam;
 
 import io.dropwizard.auth.Auth;
+import io.swagger.v3.oas.annotations.OpenAPIDefinition;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.info.Info;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 
 @Path(ApiPaths.SANDBOX_RESOURCE_PATH)
 @Produces({MediaType.APPLICATION_JSON})
-@Api(description="Provides a proxy to Mesos sandboxes.", value=ApiPaths.SANDBOX_RESOURCE_PATH)
+@OpenAPIDefinition(
+    info = @Info(title = "Provides a proxy to Mesos sandboxes")
+)
 public class SandboxResource extends AbstractHistoryResource {
   private final SandboxManager sandboxManager;
   private final SingularityMesosExecutorInfoSupport logSupport;
@@ -90,9 +94,16 @@ public class SandboxResource extends AbstractHistoryResource {
 
   @GET
   @Path("/{taskId}/browse")
-  @ApiOperation("Retrieve information about a specific task's sandbox.")
-  public SingularitySandbox browse(@Auth SingularityUser user, @ApiParam("The task ID to browse") @PathParam("taskId") String taskId,
-                                   @ApiParam("The path to browse from") @QueryParam("path") String path) {
+  @Operation(
+      summary = "Retrieve information about a specific task's sandbox",
+      responses = {
+          @ApiResponse(responseCode = "404", description = "A slave or task with the specified id was not found")
+      }
+  )
+  public SingularitySandbox browse(
+      @Auth SingularityUser user,
+      @Parameter(required = true, description = "The task ID to browse") @PathParam("taskId") String taskId,
+      @Parameter(required = true, description = "The path to browse from") @QueryParam("path") String path) {
     authorizationHelper.checkForAuthorizationByTaskId(taskId, user, SingularityAuthorizationScope.READ);
 
     // Remove all trailing slashes from the path
@@ -128,13 +139,19 @@ public class SandboxResource extends AbstractHistoryResource {
 
   @GET
   @Path("/{taskId}/read")
-  @ApiOperation("Retrieve part of the contents of a file in a specific task's sandbox.")
-  public MesosFileChunkObject read(@Auth SingularityUser user,
-                                   @ApiParam("The task ID of the sandbox to read from") @PathParam("taskId") String taskId,
-                                   @ApiParam("The path to the file to be read") @QueryParam("path") String path,
-                                   @ApiParam("Optional string to grep for") @QueryParam("grep") Optional<String> grep,
-                                   @ApiParam("Byte offset to start reading from") @QueryParam("offset") Optional<Long> offset,
-                                   @ApiParam("Maximum number of bytes to read") @QueryParam("length") Optional<Long> length) {
+  @Operation(
+      summary = "Retrieve part of the contents of a file in a specific task's sandbox",
+      responses = {
+          @ApiResponse(responseCode = "404", description = "A slave, task, or file with the specified id was not found")
+      }
+  )
+  public MesosFileChunkObject read(
+      @Auth SingularityUser user,
+      @Parameter(required = true, description = "The task ID of the sandbox to read from") @PathParam("taskId") String taskId,
+      @Parameter(required = true, description = "The path to the file to be read") @QueryParam("path") String path,
+      @Parameter(description = "Optional string to grep for") @QueryParam("grep") Optional<String> grep,
+      @Parameter(description = "Byte offset to start reading from") @QueryParam("offset") Optional<Long> offset,
+      @Parameter(description = "Maximum number of bytes to read") @QueryParam("length") Optional<Long> length) {
     authorizationHelper.checkForAuthorizationByTaskId(taskId, user, SingularityAuthorizationScope.READ);
 
     final SingularityTaskHistory history = checkHistory(taskId, user);

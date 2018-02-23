@@ -4,6 +4,9 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
+@Schema(title = "Describes a task that has been sent a kill signal")
 public class SingularityKilledTaskIdRecord {
 
   private final SingularityTaskId taskId;
@@ -25,26 +28,32 @@ public class SingularityKilledTaskIdRecord {
     this.originalTimestamp = originalTimestamp;
   }
 
+  @Schema(title = "The unique id of the task")
   public SingularityTaskId getTaskId() {
     return taskId;
   }
 
+  @Schema(title = "the time at which the signal was triggered")
   public long getTimestamp() {
     return timestamp;
   }
 
+  @Schema(title = "An optional enum cleanup type associated with this task kill", nullable = true)
   public Optional<RequestCleanupType> getRequestCleanupType() {
     return requestCleanupType;
   }
 
+  @Schema(title = "An optional enum cleanup type associated with this task kill", nullable = true)
   public Optional<TaskCleanupType> getTaskCleanupType() {
     return taskCleanupType;
   }
 
+  @Schema(title = "The original time when the task kill was triggered (in case multiple kills have been issued)")
   public long getOriginalTimestamp() {
     return originalTimestamp;
   }
 
+  @Schema(title = "The number of attempts to kill this task so far")
   public int getRetries() {
     return retries;
   }

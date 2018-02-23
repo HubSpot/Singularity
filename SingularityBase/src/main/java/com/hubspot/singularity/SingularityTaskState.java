@@ -8,6 +8,9 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
+@Schema(title = "Describes the current state of a task")
 public class SingularityTaskState {
   private final Optional<SingularityTaskId> taskId;
   private final Optional<SingularityPendingTaskId> pendingTaskId;
@@ -47,13 +50,19 @@ public class SingularityTaskState {
     );
   }
 
-  /*
-   * Will be present when pending is `false`
-   */
+  @Schema(
+      title = "The unique id for this task",
+      nullable = true,
+      description = "Will be present if `pending` is `false` (i.e. the task has been assigned an id and launched)"
+  )
   public Optional<SingularityTaskId> getTaskId() {
     return taskId;
   }
 
+  @Schema(
+      title = "A unique id describing a task that is waiting to launch",
+      nullable = true
+  )
   public SingularityPendingTaskId getPendingTaskId() {
     return pendingTaskId.orNull();
   }
@@ -63,18 +72,32 @@ public class SingularityTaskState {
     return pendingTaskId;
   }
 
+  @Schema(
+      title = "The run id associated with this task if one is present",
+      nullable = true
+  )
   public Optional<String> getRunId() {
     return runId;
   }
 
+  @Schema(
+      title = "The current state of this task",
+      description = "Present if the task has already been launched",
+      nullable = true
+  )
   public Optional<ExtendedTaskState> getCurrentState() {
     return currentState;
   }
 
+  @Schema(
+      title = "A list of state updates for this task",
+      description = "Empty if the task has not yet been launched"
+  )
   public List<SingularityTaskHistoryUpdate> getTaskHistory() {
     return taskHistory;
   }
 
+  @Schema(title = "true if the task is still waiting to be launched")
   public boolean isPending() {
     return pending;
   }

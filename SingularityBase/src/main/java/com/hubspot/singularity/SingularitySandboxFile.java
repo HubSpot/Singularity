@@ -2,10 +2,10 @@ package com.hubspot.singularity;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.wordnik.swagger.annotations.ApiModel;
-import com.wordnik.swagger.annotations.ApiModelProperty;
 
-@ApiModel(description = "Represents a file in a Mesos sandbox")
+import io.swagger.v3.oas.annotations.media.Schema;
+
+@Schema(title = "Represents a file in a Mesos sandbox")
 public class SingularitySandboxFile {
 
   private final String name;
@@ -21,22 +21,22 @@ public class SingularitySandboxFile {
     this.size = size;
   }
 
-  @ApiModelProperty("Filename")
+  @Schema(title = "Filename")
   public String getName() {
     return name;
   }
 
-  @ApiModelProperty("Last modified time")
+  @Schema(title = "Last modified time")
   public long getMtime() {
     return mtime;
   }
 
-  @ApiModelProperty("File size (in bytes)")
+  @Schema(title = "File size (in bytes)")
   public long getSize() {
     return size;
   }
 
-  @ApiModelProperty("File mode")
+  @Schema(title = "File mode")
   public String getMode() {
     return mode;
   }

@@ -6,6 +6,9 @@ import java.util.Objects;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
+@Schema(title = "Tasks in all states for a particular request")
 public class SingularityTaskIdsByStatus {
   private List<SingularityTaskId> healthy;
   private List<SingularityTaskId> notYetHealthy;
@@ -23,18 +26,22 @@ public class SingularityTaskIdsByStatus {
     this.cleaning = cleaning;
   }
 
+  @Schema(title = "Active tasks whose healthchecks and load balancer updates (when applicable) have finished successfully")
   public List<SingularityTaskId> getHealthy() {
     return healthy;
   }
 
+  @Schema(title = "Active tasks whose healthchecks and load balancer updates (when applicable) have not yet finished successfully")
   public List<SingularityTaskId> getNotYetHealthy() {
     return notYetHealthy;
   }
 
+  @Schema(title = "Tasks that have not yet been launched")
   public List<SingularityPendingTaskId> getPending() {
     return pending;
   }
 
+  @Schema(title = "Active tasks in a cleaning state")
   public List<SingularityTaskId> getCleaning() {
     return cleaning;
   }

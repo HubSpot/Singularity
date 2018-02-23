@@ -3,8 +3,15 @@ package com.hubspot.singularity;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
-import com.wordnik.swagger.annotations.ApiModelProperty;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
+@Schema(
+    title = "Metadata about a log file stored in s3",
+    subTypes = {
+        SingularityS3Log.class
+    }
+)
 public class SingularityS3LogMetadata {
   public static final String LOG_START_S3_ATTR = "starttime";
   public static final String LOG_END_S3_ATTR = "endtime";
@@ -25,27 +32,27 @@ public class SingularityS3LogMetadata {
     this.endTime = endTime;
   }
 
-  @ApiModelProperty("S3 key")
+  @Schema(title = "S3 key")
   public String getKey() {
     return key;
   }
 
-  @ApiModelProperty("Last modified time")
+  @Schema(title = "Last modified time")
   public long getLastModified() {
     return lastModified;
   }
 
-  @ApiModelProperty("File size (in bytes)")
+  @Schema(title = "File size (in bytes)")
   public long getSize() {
     return size;
   }
 
-  @ApiModelProperty("Time the log file started being written to")
+  @Schema(title = "Time the log file started being written to", nullable = true)
   public Optional<Long> getStartTime() {
     return startTime;
   }
 
-  @ApiModelProperty("Time the log file was finished being written to")
+  @Schema(title = "Time the log file was finished being written to", nullable = true)
   public Optional<Long> getEndTime() {
     return endTime;
   }

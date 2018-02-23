@@ -7,6 +7,8 @@ import com.google.inject.Scopes;
 import com.hubspot.singularity.config.UIConfiguration;
 import com.hubspot.singularity.guice.GuicePropertyFilteringMessageBodyWriter;
 
+import io.swagger.v3.jaxrs2.integration.resources.OpenApiResource;
+
 public class SingularityResourceModule extends AbstractModule {
   private final UIConfiguration uiConfiguration;
 
@@ -40,6 +42,9 @@ public class SingularityResourceModule extends AbstractModule {
     bind(RequestGroupResource.class);
     bind(InactiveSlaveResource.class);
     bind(TaskTrackerResource.class);
+
+    // Serves up /openapi.json for apidocs
+    bind(OpenApiResource.class);
 
     install(new SingularityServiceUIModule(uiConfiguration));
   }

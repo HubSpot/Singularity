@@ -4,6 +4,9 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
+@Schema(title = "Describes the state of a singularity scheduler instance")
 public class SingularityHostState {
 
   private final boolean master;
@@ -25,16 +28,16 @@ public class SingularityHostState {
 
   @JsonCreator
   public SingularityHostState(@JsonProperty("master") boolean master,
-      @JsonProperty("uptime") long uptime,
-      @JsonProperty("driverStatus") String driverStatus,
-      @JsonProperty("millisSinceLastOffer") Optional<Long> millisSinceLastOffer,
-      @JsonProperty("hostAddress") String hostAddress,
-      @JsonProperty("hostname") String hostname,
-      @JsonProperty("mesosMaster") String mesosMaster,
-      @JsonProperty("mesosConnected") boolean mesosConnected,
-      @JsonProperty("offerCacheSize") int offerCacheSize,
-      @JsonProperty("availableCachedCpus") double availableCachedCpus,
-      @JsonProperty("availableCachedMemory") double availableCachedMemory) {
+                              @JsonProperty("uptime") long uptime,
+                              @JsonProperty("driverStatus") String driverStatus,
+                              @JsonProperty("millisSinceLastOffer") Optional<Long> millisSinceLastOffer,
+                              @JsonProperty("hostAddress") String hostAddress,
+                              @JsonProperty("hostname") String hostname,
+                              @JsonProperty("mesosMaster") String mesosMaster,
+                              @JsonProperty("mesosConnected") boolean mesosConnected,
+                              @JsonProperty("offerCacheSize") int offerCacheSize,
+                              @JsonProperty("availableCachedCpus") double availableCachedCpus,
+                              @JsonProperty("availableCachedMemory") double availableCachedMemory) {
     this.master = master;
     this.uptime = uptime;
     this.driverStatus = driverStatus;
@@ -48,46 +51,57 @@ public class SingularityHostState {
     this.offerCacheSize = offerCacheSize;
   }
 
+  @Schema(title = "Address for this scheduler instance (host:port)")
   public String getHostAddress() {
     return hostAddress;
   }
 
+  @Schema(title = "`true` if this host is currently the leading singularity instance")
   public boolean isMaster() {
     return master;
   }
 
+  @Schema(title = "Uptime for this scheduler instance")
   public long getUptime() {
     return uptime;
   }
 
+  @Schema(title = "Status of the mesos driver for this scheduler instance")
   public String getDriverStatus() {
     return driverStatus;
   }
 
+  @Schema(title = "Time since the last offer was received from mesos in milliseconds")
   public Optional<Long> getMillisSinceLastOffer() {
     return millisSinceLastOffer;
   }
 
+  @Schema(title = "hostname of this scheduler instance")
   public String getHostname() {
     return hostname;
   }
 
+  @Schema(title = "uri of the mesos master this host is connected to")
   public String getMesosMaster() {
     return mesosMaster;
   }
 
+  @Schema(title = "`true` if currently connected to the mesos master (should only be true on the leading instance)")
   public boolean isMesosConnected() {
     return mesosConnected;
   }
 
+  @Schema(title = "Number of offers currently in the cache")
   public int getOfferCacheSize() {
     return offerCacheSize;
   }
 
+  @Schema(title = "Total cpus from cached offers")
   public double getAvailableCachedCpus() {
     return availableCachedCpus;
   }
 
+  @Schema(title = "Total memory in MB from cached offers")
   public double getAvailableCachedMemory() {
     return availableCachedMemory;
   }
