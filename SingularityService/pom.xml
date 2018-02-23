@@ -453,6 +453,11 @@
       <artifactId>netty-common</artifactId>
     </dependency>
 
+    <dependency>
+      <groupId>com.ullink.slack</groupId>
+      <artifactId>simpleslackapi</artifactId>
+    </dependency>
+
   </dependencies>
 
   <build>

@@ -47,6 +47,7 @@ import com.hubspot.singularity.config.SMTPConfiguration;
 import com.hubspot.singularity.config.SentryConfiguration;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.config.SingularityTaskMetadataConfiguration;
+import com.hubspot.singularity.config.SlackConfiguration;
 import com.hubspot.singularity.config.UIConfiguration;
 import com.hubspot.singularity.config.ZooKeeperConfiguration;
 import com.hubspot.singularity.guice.DropwizardMetricRegistryProvider;
@@ -62,6 +63,8 @@ import com.hubspot.singularity.mesos.SingularityMesosStatusUpdateHandler;
 import com.hubspot.singularity.mesos.SingularityNoOfferCache;
 import com.hubspot.singularity.mesos.SingularityOfferCache;
 import com.hubspot.singularity.metrics.SingularityGraphiteReporterManaged;
+import com.hubspot.singularity.notifications.SingularityIntercom;
+import com.hubspot.singularity.notifications.SingularityNotifier;
 import com.hubspot.singularity.resources.SingularityServiceUIModule;
 import com.hubspot.singularity.scheduler.SingularityUsageHelper;
 import com.hubspot.singularity.sentry.NotifyingExceptionMapper;
@@ -69,11 +72,7 @@ import com.hubspot.singularity.sentry.SingularityExceptionNotifier;
 import com.hubspot.singularity.sentry.SingularityExceptionNotifierManaged;
 import com.hubspot.singularity.smtp.JadeTemplateLoader;
 import com.hubspot.singularity.smtp.MailTemplateHelpers;
-import com.hubspot.singularity.smtp.NoopMailer;
 import com.hubspot.singularity.smtp.SingularityMailRecordCleaner;
-import com.hubspot.singularity.smtp.SingularityMailer;
-import com.hubspot.singularity.smtp.SingularitySmtpSender;
-import com.hubspot.singularity.smtp.SmtpMailer;
 import com.ning.http.client.AsyncHttpClient;
 
 import de.neuland.jade4j.parser.Parser;
@@ -132,12 +131,7 @@ public class SingularityMainModule implements Module {
     leaderLatchListeners.addBinding().to(SingularityLeaderController.class).in(Scopes.SINGLETON);
 
     binder.bind(SingularityLeaderController.class).in(Scopes.SINGLETON);
-    if (configuration.getSmtpConfigurationOptional().isPresent()) {
-      binder.bind(SingularityMailer.class).to(SmtpMailer.class).in(Scopes.SINGLETON);
-    } else {
-      binder.bind(SingularityMailer.class).toInstance(NoopMailer.getInstance());
-    }
-    binder.bind(SingularitySmtpSender.class).in(Scopes.SINGLETON);
+    binder.bind(SingularityNotifier.class).to(SingularityIntercom.class).in(Scopes.SINGLETON);
     binder.bind(MailTemplateHelpers.class).in(Scopes.SINGLETON);
     binder.bind(SingularityExceptionNotifier.class).in(Scopes.SINGLETON);
     binder.bind(LoadBalancerClient.class).to(LoadBalancerClientImpl.class).in(Scopes.SINGLETON);
@@ -309,6 +303,12 @@ public class SingularityMainModule implements Module {
   @Singleton
   public Optional<SMTPConfiguration> smtpConfiguration(final SingularityConfiguration config) {
     return config.getSmtpConfigurationOptional();
+  }
+
+  @Provides
+  @Singleton
+  public Optional<SlackConfiguration> slackConfiguration(final SingularityConfiguration config) {
+    return config.getSlackConfigurationOptional();
   }
 
   @Provides

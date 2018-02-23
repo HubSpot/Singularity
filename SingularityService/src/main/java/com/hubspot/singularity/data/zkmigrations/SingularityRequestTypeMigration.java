@@ -81,7 +81,7 @@ public class SingularityRequestTypeMigration extends ZkDataMigration {
         private final Map<String, Object> unknownFields = new HashMap<>();
 
         @JsonCreator
-        public OldSingularityRequest(@JsonProperty("id") String id,
+        OldSingularityRequest(@JsonProperty("id") String id,
             @JsonProperty("requestType") Optional<RequestType> originalRequestType,
             @JsonProperty("schedule") Optional<String> schedule,
             @JsonProperty("daemon") Optional<Boolean> daemon,
@@ -136,7 +136,7 @@ public class SingularityRequestTypeMigration extends ZkDataMigration {
         private final long timestamp;
 
         @JsonCreator
-        public OldSingularityRequestWithState(@JsonProperty("request") OldSingularityRequest request,
+        OldSingularityRequestWithState(@JsonProperty("request") OldSingularityRequest request,
             @JsonProperty("state") RequestState state,
             @JsonProperty("timestamp") long timestamp) {
             this.request = request;

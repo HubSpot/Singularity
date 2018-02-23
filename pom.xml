@@ -214,6 +214,26 @@
       </dependency>
 
       <dependency>
+        <groupId>com.ullink.slack</groupId>
+        <artifactId>simpleslackapi</artifactId>
+        <version>1.2.0</version>
+        <exclusions>
+          <exclusion>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpcore</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpclient</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>javax.websocket</groupId>
+            <artifactId>javax.websocket-api</artifactId>
+          </exclusion>
+        </exclusions>
+      </dependency>
+
+      <dependency>
         <groupId>com.spotify</groupId>
         <artifactId>docker-client</artifactId>
         <version>8.4.0</version>

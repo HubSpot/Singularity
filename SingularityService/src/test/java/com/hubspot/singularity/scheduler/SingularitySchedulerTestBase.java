@@ -42,8 +42,6 @@ import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import com.hubspot.baragon.models.BaragonRequestState;
 import com.hubspot.deploy.HealthcheckOptionsBuilder;
-import com.hubspot.singularity.helpers.MesosProtosUtils;
-import com.hubspot.singularity.helpers.MesosUtils;
 import com.hubspot.mesos.Resources;
 import com.hubspot.mesos.protos.MesosTaskStatusObject;
 import com.hubspot.singularity.DeployState;
@@ -91,14 +89,16 @@ import com.hubspot.singularity.data.SlaveManager;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.data.zkmigrations.ZkDataMigrationRunner;
 import com.hubspot.singularity.event.SingularityEventListener;
+import com.hubspot.singularity.helpers.MesosProtosUtils;
+import com.hubspot.singularity.helpers.MesosUtils;
 import com.hubspot.singularity.mesos.SingularityMesosScheduler;
+import com.hubspot.singularity.notifications.SingularityNotifier;
 import com.hubspot.singularity.resources.DeployResource;
 import com.hubspot.singularity.resources.PriorityResource;
 import com.hubspot.singularity.resources.RackResource;
 import com.hubspot.singularity.resources.RequestResource;
 import com.hubspot.singularity.resources.SlaveResource;
 import com.hubspot.singularity.resources.TaskResource;
-import com.hubspot.singularity.smtp.SingularityMailer;
 import com.ning.http.client.AsyncHttpClient;
 
 public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
@@ -154,7 +154,7 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
   @Inject
   protected SingularityTaskReconciliation taskReconciliation;
   @Inject
-  protected SingularityMailer mailer;
+  protected SingularityNotifier notifier;
   @Inject
   protected SingularityJobPoller scheduledJobPoller;
   @Inject

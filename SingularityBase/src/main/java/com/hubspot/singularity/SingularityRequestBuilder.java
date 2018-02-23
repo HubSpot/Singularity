@@ -44,7 +44,8 @@ public class SingularityRequestBuilder {
   private Optional<Set<String>> readWriteGroups;
   private Optional<Set<String>> readOnlyGroups;
   private Optional<Boolean> bounceAfterScale;
-  private Optional<Map<SingularityEmailType, List<SingularityEmailDestination>>> emailConfigurationOverrides;
+  private Optional<Map<SingularityNotificationType, List<SingularityEmailDestination>>> emailConfigurationOverrides;
+  private Optional<Map<SingularityNotificationType, List<String>>> slackConfigurationOverrides;
   private Optional<Boolean> hideEvenNumberAcrossRacksHint;
   private Optional<String> taskLogErrorRegex;
   private Optional<Boolean> taskLogErrorRegexCaseSensitive;
@@ -79,6 +80,7 @@ public class SingularityRequestBuilder {
     this.readOnlyGroups = Optional.absent();
     this.bounceAfterScale = Optional.absent();
     this.emailConfigurationOverrides = Optional.absent();
+    this.slackConfigurationOverrides = Optional.absent();
     this.skipHealthchecks = Optional.absent();
     this.hideEvenNumberAcrossRacksHint = Optional.absent();
     this.taskLogErrorRegex = Optional.absent();
@@ -93,7 +95,7 @@ public class SingularityRequestBuilder {
   public SingularityRequest build() {
     return new SingularityRequest(id, requestType, owners, numRetriesOnFailure, schedule, instances, rackSensitive, loadBalanced, killOldNonLongRunningTasksAfterMillis, taskExecutionTimeLimitMillis, scheduleType, quartzSchedule, scheduleTimeZone,
         rackAffinity, slavePlacement, requiredSlaveAttributes, allowedSlaveAttributes, scheduledExpectedRuntimeMillis, waitAtLeastMillisAfterTaskFinishesForReschedule, group, readWriteGroups, readOnlyGroups,
-        bounceAfterScale, skipHealthchecks, emailConfigurationOverrides, Optional.<Boolean>absent(), hideEvenNumberAcrossRacksHint, taskLogErrorRegex, taskLogErrorRegexCaseSensitive, taskPriorityLevel, maxTasksPerOffer, allowBounceToSameHost,
+        bounceAfterScale, skipHealthchecks, emailConfigurationOverrides, slackConfigurationOverrides, Optional.<Boolean>absent(), hideEvenNumberAcrossRacksHint, taskLogErrorRegex, taskLogErrorRegexCaseSensitive, taskPriorityLevel, maxTasksPerOffer, allowBounceToSameHost,
         requiredRole, dataCenter);
   }
 
@@ -301,12 +303,21 @@ public class SingularityRequestBuilder {
     return this;
   }
 
-  public Optional<Map<SingularityEmailType, List<SingularityEmailDestination>>> getEmailConfigurationOverrides() {
+  public Optional<Map<SingularityNotificationType, List<SingularityEmailDestination>>> getEmailConfigurationOverrides() {
     return emailConfigurationOverrides;
   }
 
-  public SingularityRequestBuilder setEmailConfigurationOverrides(Optional<Map<SingularityEmailType, List<SingularityEmailDestination>>> emailConfigurationOverrides) {
+  public Optional<Map<SingularityNotificationType, List<String>>> getSlackConfigurationOverrides() {
+    return slackConfigurationOverrides;
+  }
+
+  public SingularityRequestBuilder setEmailConfigurationOverrides(Optional<Map<SingularityNotificationType, List<SingularityEmailDestination>>> emailConfigurationOverrides) {
     this.emailConfigurationOverrides = emailConfigurationOverrides;
+    return this;
+  }
+
+  public SingularityRequestBuilder setSlackConfigurationOverrides(Optional<Map<SingularityNotificationType, List<String>>> slackConfigurationOverrides) {
+    this.slackConfigurationOverrides = slackConfigurationOverrides;
     return this;
   }
 
@@ -404,6 +415,7 @@ public class SingularityRequestBuilder {
         Objects.equals(readOnlyGroups, that.readOnlyGroups) &&
         Objects.equals(bounceAfterScale, that.bounceAfterScale) &&
         Objects.equals(emailConfigurationOverrides, that.emailConfigurationOverrides) &&
+        Objects.equals(slackConfigurationOverrides, that.slackConfigurationOverrides) &&
         Objects.equals(hideEvenNumberAcrossRacksHint, that.hideEvenNumberAcrossRacksHint) &&
         Objects.equals(taskLogErrorRegex, that.taskLogErrorRegex) &&
         Objects.equals(taskLogErrorRegexCaseSensitive, that.taskLogErrorRegexCaseSensitive) &&
@@ -415,7 +427,7 @@ public class SingularityRequestBuilder {
 
   @Override
   public int hashCode() {
-    return Objects.hash(id, requestType, owners, numRetriesOnFailure, schedule, quartzSchedule, scheduleTimeZone, scheduleType, killOldNonLongRunningTasksAfterMillis, taskExecutionTimeLimitMillis, scheduledExpectedRuntimeMillis, waitAtLeastMillisAfterTaskFinishesForReschedule, instances, skipHealthchecks, rackSensitive, rackAffinity, slavePlacement, requiredSlaveAttributes, allowedSlaveAttributes, loadBalanced, requiredRole, group, readWriteGroups, readOnlyGroups, bounceAfterScale, emailConfigurationOverrides, hideEvenNumberAcrossRacksHint, taskLogErrorRegex, taskLogErrorRegexCaseSensitive, taskPriorityLevel, maxTasksPerOffer, allowBounceToSameHost, dataCenter);
+    return Objects.hash(id, requestType, owners, numRetriesOnFailure, schedule, quartzSchedule, scheduleTimeZone, scheduleType, killOldNonLongRunningTasksAfterMillis, taskExecutionTimeLimitMillis, scheduledExpectedRuntimeMillis, waitAtLeastMillisAfterTaskFinishesForReschedule, instances, skipHealthchecks, rackSensitive, rackAffinity, slavePlacement, requiredSlaveAttributes, allowedSlaveAttributes, loadBalanced, requiredRole, group, readWriteGroups, readOnlyGroups, bounceAfterScale, emailConfigurationOverrides, slackConfigurationOverrides, hideEvenNumberAcrossRacksHint, taskLogErrorRegex, taskLogErrorRegexCaseSensitive, taskPriorityLevel, maxTasksPerOffer, allowBounceToSameHost, dataCenter);
   }
 
   @Override
@@ -447,6 +459,7 @@ public class SingularityRequestBuilder {
         ", readOnlyGroups=" + readOnlyGroups +
         ", bounceAfterScale=" + bounceAfterScale +
         ", emailConfigurationOverrides=" + emailConfigurationOverrides +
+        ", slackConfigurationOverrides=" + slackConfigurationOverrides +
         ", hideEvenNumberAcrossRacksHint=" + hideEvenNumberAcrossRacksHint +
         ", taskLogErrorRegex=" + taskLogErrorRegex +
         ", taskLogErrorRegexCaseSensitive=" + taskLogErrorRegexCaseSensitive +

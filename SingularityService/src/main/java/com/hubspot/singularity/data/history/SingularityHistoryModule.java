@@ -123,7 +123,7 @@ public class SingularityHistoryModule extends AbstractModule {
     private final DBI dbi;
 
     @Inject
-    public HistoryJDBIProvider(DBI dbi) {
+    HistoryJDBIProvider(DBI dbi) {
       this.dbi = dbi;
     }
 

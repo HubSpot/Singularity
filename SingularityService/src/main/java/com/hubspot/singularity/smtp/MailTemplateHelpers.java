@@ -18,12 +18,13 @@ import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import com.hubspot.singularity.helpers.MesosUtils;
 import com.hubspot.mesos.json.MesosFileChunkObject;
 import com.hubspot.singularity.ExtendedTaskState;
 import com.hubspot.singularity.SingularityDisasterDataPoint;
-import com.hubspot.singularity.SingularityEmailType;
+import com.hubspot.singularity.SingularityEmailDestination;
 import com.hubspot.singularity.SingularityMailDisasterDataPoint;
+import com.hubspot.singularity.SingularityNotificationType;
+import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskHistoryUpdate;
 import com.hubspot.singularity.SingularityTaskId;
@@ -31,6 +32,7 @@ import com.hubspot.singularity.SingularityTaskMetadata;
 import com.hubspot.singularity.config.SMTPConfiguration;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.SandboxManager;
+import com.hubspot.singularity.helpers.MesosUtils;
 
 @Singleton
 public class MailTemplateHelpers {
@@ -309,8 +311,8 @@ public class MailTemplateHelpers {
     return String.format(LOG_LINK_FORMAT, uiBaseUrl.get(), taskId, logPath);
   }
 
-  public String getSubjectForTaskHistory(SingularityTaskId taskId, ExtendedTaskState state, SingularityEmailType type, Collection<SingularityTaskHistoryUpdate> history) {
-    if (type == SingularityEmailType.TASK_SCHEDULED_OVERDUE_TO_FINISH) {
+  public String getSubjectForTaskHistory(SingularityTaskId taskId, ExtendedTaskState state, SingularityNotificationType type, Collection<SingularityTaskHistoryUpdate> history) {
+    if (type == SingularityNotificationType.TASK_SCHEDULED_OVERDUE_TO_FINISH) {
       return String.format("Task is overdue to finish (%s)", taskId.toString());
     }
 
@@ -325,5 +327,18 @@ public class MailTemplateHelpers {
     SingularityTaskHistoryUpdate.SimplifiedTaskState simplifiedTaskState = SingularityTaskHistoryUpdate.getCurrentState(history);
 
     return simplifiedTaskState == SingularityTaskHistoryUpdate.SimplifiedTaskState.DONE || simplifiedTaskState == SingularityTaskHistoryUpdate.SimplifiedTaskState.RUNNING;
+  }
+
+  public List<SingularityEmailDestination> getDestination(SingularityRequest request, SingularityNotificationType type) {
+    // check for request-level email override
+    if (request.getEmailConfigurationOverrides().isPresent() && request.getEmailConfigurationOverrides().get().get(type) != null) {
+      return request.getEmailConfigurationOverrides().get().get(type);
+    }
+
+    List<SingularityEmailDestination> fromMap = smtpConfiguration.get().getEmailConfiguration().get(type);
+    if (fromMap == null) {
+      return Collections.emptyList();
+    }
+    return fromMap;
   }
 }

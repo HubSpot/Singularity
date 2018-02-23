@@ -19,7 +19,7 @@ import com.hubspot.singularity.config.shell.ShellCommandDescriptor;
 
 public class UIConfiguration {
 
-  public static enum RootUrlMode {
+  public enum RootUrlMode {
     UI_REDIRECT,
     INDEX_CATCHALL,
     DISABLED;

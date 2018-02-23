@@ -34,8 +34,8 @@ import com.hubspot.singularity.data.DeployManager;
 import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.helpers.RFC5545Schedule;
+import com.hubspot.singularity.notifications.SingularityIntercom;
 import com.hubspot.singularity.sentry.SingularityExceptionNotifier;
-import com.hubspot.singularity.smtp.SingularityMailer;
 
 @Singleton
 public class SingularityJobPoller extends SingularityLeaderOnlyPoller {
@@ -45,13 +45,14 @@ public class SingularityJobPoller extends SingularityLeaderOnlyPoller {
   private final TaskManager taskManager;
   private final RequestManager requestManager;
   private final DeployManager deployManager;
-  private final SingularityMailer mailer;
+  private final SingularityIntercom intercom;
   private final SingularityConfiguration configuration;
   private final SingularityExceptionNotifier exceptionNotifier;
 
   @Inject
   public SingularityJobPoller(SingularityExceptionNotifier exceptionNotifier, TaskManager taskManager,
-                              SingularityConfiguration configuration, RequestManager requestManager, DeployManager deployManager, SingularityMailer mailer) {
+                              SingularityConfiguration configuration, RequestManager requestManager, DeployManager deployManager, SingularityIntercom intercom) {
+
 
     super(configuration.getCheckJobsEveryMillis(), TimeUnit.MILLISECONDS);
 
@@ -60,7 +61,7 @@ public class SingularityJobPoller extends SingularityLeaderOnlyPoller {
     this.configuration = configuration;
     this.exceptionNotifier = exceptionNotifier;
     this.requestManager = requestManager;
-    this.mailer = mailer;
+    this.intercom = intercom;
   }
 
   @Override
@@ -105,7 +106,7 @@ public class SingularityJobPoller extends SingularityLeaderOnlyPoller {
         if (overDuePct > configuration.getWarnIfScheduledJobIsRunningPastNextRunPct()) {
           LOG.info("{} is overdue by {}% (expectedRunTime: {}, warnIfScheduledJobIsRunningPastNextRunPct: {})", taskId, overDuePct, expectedRuntime.get(), configuration.getWarnIfScheduledJobIsRunningPastNextRunPct());
 
-          mailer.sendTaskOverdueMail(taskManager.getTask(taskId), taskId, request, runtime, expectedRuntime.get());
+          intercom.sendTaskOverdueNotification(taskManager.getTask(taskId), taskId, request, runtime, expectedRuntime.get());
 
           taskManager.saveNotifiedOverdue(taskId);
         } else {
@@ -122,7 +123,7 @@ public class SingularityJobPoller extends SingularityLeaderOnlyPoller {
         runtime >= request.getTaskExecutionTimeLimitMillis().or(configuration.getTaskExecutionTimeLimitMillis()).get()) {
 
       taskManager.createTaskCleanup(new SingularityTaskCleanup(
-          Optional.<String>absent(),
+          Optional.absent(),
           TaskCleanupType.TASK_EXCEEDED_TIME_LIMIT,
           now,
           taskId,

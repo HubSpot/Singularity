@@ -50,15 +50,15 @@ import com.hubspot.singularity.expiring.SingularityExpiringBounce;
 import com.hubspot.singularity.expiring.SingularityExpiringPause;
 import com.hubspot.singularity.expiring.SingularityExpiringScale;
 import com.hubspot.singularity.expiring.SingularityExpiringSkipHealthchecks;
+import com.hubspot.singularity.notifications.SingularityIntercom;
 import com.hubspot.singularity.scheduler.SingularityDeployHealthHelper;
-import com.hubspot.singularity.smtp.SingularityMailer;
 
 @Singleton
 public class RequestHelper {
   private static final Logger LOG = LoggerFactory.getLogger(RequestHelper.class);
 
   private final RequestManager requestManager;
-  private final SingularityMailer mailer;
+  private final SingularityIntercom intercom;
   private final DeployManager deployManager;
   private final SingularityValidator validator;
   private final UserManager userManager;
@@ -68,7 +68,7 @@ public class RequestHelper {
 
   @Inject
   public RequestHelper(RequestManager requestManager,
-                       SingularityMailer mailer,
+                       SingularityIntercom intercom,
                        DeployManager deployManager,
                        SingularityValidator validator,
                        UserManager userManager,
@@ -76,7 +76,7 @@ public class RequestHelper {
                        SingularityDeployHealthHelper deployHealthHelper,
                        TaskHistoryHelper taskHistoryHelper) {
     this.requestManager = requestManager;
-    this.mailer = mailer;
+    this.intercom= intercom;
     this.deployManager = deployManager;
     this.validator = validator;
     this.userManager = userManager;
@@ -86,7 +86,7 @@ public class RequestHelper {
   }
 
   public long unpause(SingularityRequest request, Optional<String> user, Optional<String> message, Optional<Boolean> skipHealthchecks) {
-    mailer.sendRequestUnpausedMail(request, user, message);
+    intercom.sendRequestUnpausedNotification(request, user, message);
 
     Optional<String> maybeDeployId = deployManager.getInUseDeployId(request.getId());
 

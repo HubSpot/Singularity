@@ -33,7 +33,6 @@ import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTaskShellCommandRequestId;
 import com.hubspot.singularity.TaskCleanupType;
 import com.hubspot.singularity.api.SingularityBounceRequest;
-import com.hubspot.singularity.api.SingularityScaleRequest;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.DeployManager;
 import com.hubspot.singularity.data.DisasterManager;
@@ -50,7 +49,7 @@ import com.hubspot.singularity.expiring.SingularityExpiringScale;
 import com.hubspot.singularity.expiring.SingularityExpiringSkipHealthchecks;
 import com.hubspot.singularity.helpers.RequestHelper;
 import com.hubspot.singularity.mesos.SingularitySchedulerLock;
-import com.hubspot.singularity.smtp.SingularityMailer;
+import com.hubspot.singularity.notifications.SingularityIntercom;
 
 @Singleton
 public class SingularityExpiringUserActionPoller extends SingularityLeaderOnlyPoller {
@@ -60,7 +59,7 @@ public class SingularityExpiringUserActionPoller extends SingularityLeaderOnlyPo
   private final RequestManager requestManager;
   private final DeployManager deployManager;
   private final TaskManager taskManager;
-  private final SingularityMailer mailer;
+  private final SingularityIntercom intercom;
   private final RequestHelper requestHelper;
   private final SlaveManager slaveManager;
   private final RackManager rackManager;
@@ -71,13 +70,13 @@ public class SingularityExpiringUserActionPoller extends SingularityLeaderOnlyPo
 
   @Inject
   SingularityExpiringUserActionPoller(SingularityConfiguration configuration, RequestManager requestManager, DeployManager deployManager, TaskManager taskManager, SlaveManager slaveManager, RackManager rackManager,
-      SingularitySchedulerLock lock, RequestHelper requestHelper, SingularityMailer mailer, DisasterManager disasterManager) {
+                                      SingularitySchedulerLock lock, RequestHelper requestHelper, SingularityIntercom intercom, DisasterManager disasterManager) {
     super(configuration.getCheckExpiringUserActionEveryMillis(), TimeUnit.MILLISECONDS, true);
 
     this.deployManager = deployManager;
     this.requestManager = requestManager;
     this.requestHelper = requestHelper;
-    this.mailer = mailer;
+    this.intercom = intercom;
     this.taskManager = taskManager;
     this.slaveManager = slaveManager;
     this.rackManager = rackManager;
@@ -173,7 +172,7 @@ public class SingularityExpiringUserActionPoller extends SingularityLeaderOnlyPo
 
   private class SingularityExpiringBounceHandler extends SingularityExpiringRequestActionHandler<SingularityExpiringBounce> {
 
-    public SingularityExpiringBounceHandler() {
+    SingularityExpiringBounceHandler() {
       super(SingularityExpiringBounce.class);
     }
 
@@ -222,7 +221,7 @@ public class SingularityExpiringUserActionPoller extends SingularityLeaderOnlyPo
 
   private class SingularityExpiringPauseHandler extends SingularityExpiringRequestActionHandler<SingularityExpiringPause> {
 
-    public SingularityExpiringPauseHandler() {
+    SingularityExpiringPauseHandler() {
       super(SingularityExpiringPause.class);
     }
 
@@ -247,7 +246,7 @@ public class SingularityExpiringUserActionPoller extends SingularityLeaderOnlyPo
 
   private class SingularityExpiringScaleHandler extends SingularityExpiringRequestActionHandler<SingularityExpiringScale> {
 
-    public SingularityExpiringScaleHandler() {
+    SingularityExpiringScaleHandler() {
       super(SingularityExpiringScale.class);
     }
 
@@ -277,7 +276,7 @@ public class SingularityExpiringUserActionPoller extends SingularityLeaderOnlyPo
         requestHelper.updateRequest(newRequest, Optional.of(oldRequest), requestWithState.getState(), Optional.of(RequestHistoryType.SCALE_REVERTED), expiringObject.getUser(),
             Optional.<Boolean>absent(), Optional.of(message), maybeBounceRequest);
 
-        mailer.sendRequestScaledMail(newRequest, Optional.<SingularityScaleRequest>absent(), oldRequest.getInstances(), expiringObject.getUser());
+        intercom.sendRequestScaledNotification(newRequest, Optional.absent(), oldRequest.getInstances(), expiringObject.getUser());
       } catch (WebApplicationException wae) {
         LOG.error("While trying to apply {} for {}", expiringObject, expiringObject.getRequestId(), wae);
       }
@@ -287,7 +286,7 @@ public class SingularityExpiringUserActionPoller extends SingularityLeaderOnlyPo
 
   private class SingularityExpiringSkipHealthchecksHandler extends SingularityExpiringRequestActionHandler<SingularityExpiringSkipHealthchecks> {
 
-    public SingularityExpiringSkipHealthchecksHandler() {
+    SingularityExpiringSkipHealthchecksHandler() {
       super(SingularityExpiringSkipHealthchecks.class);
     }
 

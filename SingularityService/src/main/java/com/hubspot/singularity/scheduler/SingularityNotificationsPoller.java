@@ -21,23 +21,23 @@ import com.hubspot.singularity.config.SingularityTaskMetadataConfiguration;
 import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.data.history.HistoryManager;
-import com.hubspot.singularity.smtp.SingularityMailer;
+import com.hubspot.singularity.notifications.SingularityIntercom;
 
 @Singleton
-public class SingularityMailPoller extends SingularityLeaderOnlyPoller {
+public class SingularityNotificationsPoller extends SingularityLeaderOnlyPoller {
 
-  private static final Logger LOG = LoggerFactory.getLogger(SingularityMailPoller.class);
+  private static final Logger LOG = LoggerFactory.getLogger(SingularityNotificationsPoller.class);
 
   private final SingularityConfiguration configuration;
   private final TaskManager taskManager;
   private final RequestManager requestManager;
   private final HistoryManager historyManager;
-  private final SingularityMailer mailer;
+  private final SingularityIntercom intercom;
   private final SingularityTaskMetadataConfiguration taskMetadataConfiguration;
 
   @Inject
-  SingularityMailPoller(SingularityConfiguration configuration, SingularityTaskMetadataConfiguration taskMetadataConfiguration, TaskManager taskManager, RequestManager requestManager,
-      HistoryManager historyManager, SingularityMailer mailer) {
+  SingularityNotificationsPoller(SingularityConfiguration configuration, SingularityTaskMetadataConfiguration taskMetadataConfiguration, TaskManager taskManager, RequestManager requestManager,
+                                 HistoryManager historyManager, SingularityIntercom intercom) {
     super(configuration.getCheckQueuedMailsEveryMillis(), TimeUnit.MILLISECONDS);
 
     this.configuration = configuration;
@@ -45,7 +45,7 @@ public class SingularityMailPoller extends SingularityLeaderOnlyPoller {
     this.taskManager = taskManager;
     this.requestManager = requestManager;
     this.historyManager = historyManager;
-    this.mailer = mailer;
+    this.intercom = intercom;
   }
 
   @Override
@@ -53,7 +53,7 @@ public class SingularityMailPoller extends SingularityLeaderOnlyPoller {
     return configuration.getSmtpConfigurationOptional().isPresent();
   }
 
-  private enum ShouldSendMailState {
+  private enum ShouldSendNotificationState {
     SEND, WAIT, ERROR;
   }
 
@@ -61,26 +61,26 @@ public class SingularityMailPoller extends SingularityLeaderOnlyPoller {
     Optional<SingularityRequestWithState> requestWithState = requestManager.getRequest(taskId.getRequestId());
     Optional<SingularityTaskHistory> taskHistory = taskManager.getTaskHistory(taskId);
 
-    ShouldSendMailState shouldSendState = shouldSendTaskFinishedMail(taskId, requestWithState, taskHistory);
+    ShouldSendNotificationState shouldNotifyState = shouldSendTaskFinishedNotification(taskId, requestWithState, taskHistory);
 
-    if (shouldSendState == ShouldSendMailState.WAIT) {
+    if (shouldNotifyState == ShouldSendNotificationState.WAIT) {
       return;
     }
 
     try {
-      mailer.sendTaskCompletedMail(taskHistory.get(), requestWithState.get().getRequest());
+      intercom.sendTaskFinishedNotification(taskHistory.get(), requestWithState.get().getRequest());
     } catch (Throwable t) {
-      LOG.error("While trying to send task completed mail for {}", taskId, t);
+      LOG.error("While trying to send task completed notifications for {}", taskId, t);
     } finally {
-      SingularityDeleteResult result = taskManager.deleteFinishedTaskMailQueue(taskId);
-      LOG.debug("Task {} mail sent with status {} (delete result {})", taskId, shouldSendState, result);
+      SingularityDeleteResult result = taskManager.deleteFinishedTaskNotificationQueue(taskId);
+      LOG.debug("Task {} notifications sent with status {} (delete result {})", taskId, shouldNotifyState, result);
     }
   }
 
-  private ShouldSendMailState shouldSendTaskFinishedMail(SingularityTaskId taskId, Optional<SingularityRequestWithState> requestWithState, Optional<SingularityTaskHistory> taskHistory) {
+  private ShouldSendNotificationState shouldSendTaskFinishedNotification(SingularityTaskId taskId, Optional<SingularityRequestWithState> requestWithState, Optional<SingularityTaskHistory> taskHistory) {
     if (!requestWithState.isPresent()) {
       LOG.warn("No request found for {}, can't send task finished email", taskId);
-      return ShouldSendMailState.ERROR;
+      return ShouldSendNotificationState.ERROR;
     }
 
     if (!taskHistory.isPresent()) {
@@ -89,7 +89,7 @@ public class SingularityMailPoller extends SingularityLeaderOnlyPoller {
 
     if (!taskHistory.isPresent()) {
       LOG.warn("No task history found for {}, can't send task finished email", taskId);
-      return ShouldSendMailState.ERROR;
+      return ShouldSendNotificationState.ERROR;
     }
 
     if (taskMetadataConfiguration.getSendTaskCompletedMailOnceMetadataTypeIsAvailable().isPresent()) {
@@ -97,7 +97,7 @@ public class SingularityMailPoller extends SingularityLeaderOnlyPoller {
         if (taskMetadata.getType().equals(taskMetadataConfiguration.getSendTaskCompletedMailOnceMetadataTypeIsAvailable().get())) {
           LOG.debug("Sending task finished email for {} because metadata type {} is present", taskId,
               taskMetadataConfiguration.getSendTaskCompletedMailOnceMetadataTypeIsAvailable().get());
-          return ShouldSendMailState.SEND;
+          return ShouldSendNotificationState.SEND;
         }
       }
     }
@@ -108,7 +108,7 @@ public class SingularityMailPoller extends SingularityLeaderOnlyPoller {
 
       if (!lastUpdate.isPresent()) {
         LOG.warn("Missing last update for {}, can't send task finished email", taskId);
-        return ShouldSendMailState.ERROR;
+        return ShouldSendNotificationState.ERROR;
       }
 
       final long timeSinceLastUpdate = System.currentTimeMillis() - lastUpdate.get().getTimestamp();
@@ -116,16 +116,16 @@ public class SingularityMailPoller extends SingularityLeaderOnlyPoller {
       if (timeSinceLastUpdate < taskMetadataConfiguration.getWaitToSendTaskCompletedMailBufferMillis()) {
         LOG.debug("Not sending task finished email for {} because last update was {} ago, buffer is {}", taskId, JavaUtils.durationFromMillis(timeSinceLastUpdate),
             JavaUtils.durationFromMillis(taskMetadataConfiguration.getWaitToSendTaskCompletedMailBufferMillis()));
-        return ShouldSendMailState.WAIT;
+        return ShouldSendNotificationState.WAIT;
       }
     }
 
-    return ShouldSendMailState.SEND;
+    return ShouldSendNotificationState.SEND;
   }
 
   @Override
   public void runActionOnPoll() {
-    for (SingularityTaskId finishedTaskId : taskManager.getTaskFinishedMailQueue()) {
+    for (SingularityTaskId finishedTaskId : taskManager.getTaskFinishedNotificationQueue()) {
       checkToSendTaskFinishedMail(finishedTaskId);
     }
   }
