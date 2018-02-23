@@ -6,8 +6,10 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
 import com.hubspot.singularity.SingularityDeploy;
 import com.hubspot.singularity.SingularityRequest;
-import com.wordnik.swagger.annotations.ApiModelProperty;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
+@Schema(title = "Describes a new deploy")
 public class SingularityDeployRequest {
 
   private final Optional<Boolean> unpauseOnSuccessfulDeploy;
@@ -31,22 +33,22 @@ public class SingularityDeployRequest {
     this(deploy, unpauseOnSuccessfulDeploy, message, Optional.<SingularityRequest>absent());
   }
 
-  @ApiModelProperty(required=false, value="If deploy is successful, also unpause the request")
+  @Schema(title = "If deploy is successful, also unpause the request", nullable = true, defaultValue = "false")
   public Optional<Boolean> getUnpauseOnSuccessfulDeploy() {
     return unpauseOnSuccessfulDeploy;
   }
 
-  @ApiModelProperty(required=true, value="The Singularity deploy object, containing all the required details about the Deploy")
+  @Schema(required = true, title = "The Singularity deploy object, containing all the required details about the Deploy")
   public SingularityDeploy getDeploy() {
     return deploy;
   }
 
-  @ApiModelProperty(required=false, value="A message to show users about this deploy (metadata)")
+  @Schema(title = "A message to show users about this deploy (metadata)", nullable = true)
   public Optional<String> getMessage() {
     return message;
   }
 
-  @ApiModelProperty(required=false, value="use this request data for this deploy, and update the request on successful deploy")
+  @Schema(title = "use this request data for this deploy, and update the request on successful deploy", nullable = true)
   public Optional<SingularityRequest> getUpdatedRequest() {
     return updatedRequest;
   }

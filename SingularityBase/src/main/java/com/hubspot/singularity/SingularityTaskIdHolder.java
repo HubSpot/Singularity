@@ -4,6 +4,15 @@ import javax.annotation.Nonnull;
 
 import com.google.common.base.Function;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
+@Schema(
+    title = "Holder for a SingularityTaskId",
+    subTypes = {
+        SingularityTaskMetadata.class,
+        SingularityTaskHealthcheckResult.class
+    }
+)
 public class SingularityTaskIdHolder {
 
   private final SingularityTaskId taskId;
@@ -12,6 +21,7 @@ public class SingularityTaskIdHolder {
     this.taskId = taskId;
   }
 
+  @Schema(title = "Task id")
   public SingularityTaskId getTaskId() {
     return taskId;
   }

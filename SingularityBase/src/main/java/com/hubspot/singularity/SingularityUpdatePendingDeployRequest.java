@@ -1,8 +1,10 @@
 package com.hubspot.singularity;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.wordnik.swagger.annotations.ApiModelProperty;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
+@Schema(title = "A request to update a pending deploy")
 public class SingularityUpdatePendingDeployRequest {
   private final String requestId;
   private final String deployId;
@@ -16,17 +18,17 @@ public class SingularityUpdatePendingDeployRequest {
     this.targetActiveInstances = targetActiveInstances;
   }
 
-  @ApiModelProperty(value="Request id", required=true)
+  @Schema(title = "Request id", required=true)
   public String getRequestId() {
     return requestId;
   }
 
-  @ApiModelProperty(value="Deploy id", required=true)
+  @Schema(title = "Deploy id", required=true)
   public String getDeployId() {
     return deployId;
   }
 
-  @ApiModelProperty(value="Updated target instance count for the active deploy", required=true)
+  @Schema(title = "Updated target instance count for the active deploy", required=true)
   public int getTargetActiveInstances() {
     return targetActiveInstances;
   }

@@ -8,6 +8,9 @@ import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ComparisonChain;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
+@Schema(title = "Custom metadata associated with a Singularity task")
 public class SingularityTaskMetadata extends SingularityTaskIdHolder implements Comparable<SingularityTaskMetadata> {
 
   private static final MetadataLevel DEFAULT_METADATA_LEVEL = MetadataLevel.INFO;
@@ -20,7 +23,7 @@ public class SingularityTaskMetadata extends SingularityTaskIdHolder implements 
 
   @JsonCreator
   public SingularityTaskMetadata(@JsonProperty("taskId") SingularityTaskId taskId, @JsonProperty("timestamp") long timestamp, @JsonProperty("type") String type, @JsonProperty("title") String title,
-      @JsonProperty("message") Optional<String> message, @JsonProperty("user") Optional<String> user, @JsonProperty("level") Optional<MetadataLevel> level) {
+                                 @JsonProperty("message") Optional<String> message, @JsonProperty("user") Optional<String> user, @JsonProperty("level") Optional<MetadataLevel> level) {
     super(taskId);
     Preconditions.checkNotNull(type);
     Preconditions.checkState(!type.contains("/"));
@@ -32,26 +35,32 @@ public class SingularityTaskMetadata extends SingularityTaskIdHolder implements 
     this.level = level.or(DEFAULT_METADATA_LEVEL);
   }
 
+  @Schema(title = "Timestamp this metadata was created")
   public long getTimestamp() {
     return timestamp;
   }
 
+  @Schema(required = true, title = "Type of metadata", description = "Cannot contain a '/'")
   public String getType() {
     return type;
   }
 
+  @Schema(title = "Title for this metadata")
   public String getTitle() {
     return title;
   }
 
+  @Schema(title = "Optional metadata message", nullable = true)
   public Optional<String> getMessage() {
     return message;
   }
 
+  @Schema(title = "The user who added this metadata", nullable = true)
   public Optional<String> getUser() {
     return user;
   }
 
+  @Schema(title = "Metadata level")
   public MetadataLevel getLevel() { return level; }
 
   @Override

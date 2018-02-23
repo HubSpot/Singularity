@@ -5,6 +5,9 @@ import java.util.Set;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
+@Schema(title = "Describes the progress a deploy has made")
 public class SingularityDeployProgress {
   private final int targetActiveInstances;
   private final int currentActiveInstances;
@@ -33,34 +36,42 @@ public class SingularityDeployProgress {
     this.timestamp = timestamp;
   }
 
+  @Schema(title = "The desired number of instances for the current deploy step")
   public int getTargetActiveInstances() {
     return targetActiveInstances;
   }
 
+  @Schema(title = "The current number of active tasks for this deploy")
   public int getCurrentActiveInstances() {
     return currentActiveInstances;
   }
 
+  @Schema(title = "The number of instances to increment each time a deploy step completes")
   public int getDeployInstanceCountPerStep() {
     return deployInstanceCountPerStep;
   }
 
+  @Schema(title = "`true` if the current deploy step has completed")
   public boolean isStepComplete() {
     return stepComplete;
   }
 
+  @Schema(title = "If `true` automatically move to the next deploy step when reaching the target active instances for the current step")
   public boolean isAutoAdvanceDeploySteps() {
     return autoAdvanceDeploySteps;
   }
 
+  @Schema(title = "The time to wait between deploy steps in milliseconds")
   public long getDeployStepWaitTimeMs() {
     return deployStepWaitTimeMs;
   }
 
+  @Schema(title = "Tasks for this deploy that have failed so far")
   public Set<SingularityTaskId> getFailedDeployTasks() {
     return failedDeployTasks;
   }
 
+  @Schema(title = "The timestamp of this deploy progress update")
   public long getTimestamp() {
     return timestamp;
   }

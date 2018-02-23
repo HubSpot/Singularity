@@ -8,6 +8,9 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
 import com.google.common.primitives.Longs;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
+@Schema(title = "A request to run a shell command against a task")
 public class SingularityTaskShellCommandRequest extends SingularityFrameworkMessage implements Comparable<SingularityTaskShellCommandRequest> {
 
   private final SingularityTaskId taskId;
@@ -53,18 +56,22 @@ public class SingularityTaskShellCommandRequest extends SingularityFrameworkMess
     return Objects.hash(id);
   }
 
+  @Schema(title = "The task id to run the command against")
   public SingularityTaskId getTaskId() {
     return taskId;
   }
 
+  @Schema(title = "The user who initiated this shell command", nullable = true)
   public Optional<String> getUser() {
     return user;
   }
 
+  @Schema(required = true, title = "The shell command to run")
   public SingularityShellCommand getShellCommand() {
     return shellCommand;
   }
 
+  @Schema(title = "Time the shell command execution was requested")
   public long getTimestamp() {
     return timestamp;
   }

@@ -6,6 +6,9 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.hubspot.mesos.JavaUtils;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
+@Schema(title = "Describes a shell command run against a task")
 public class SingularityTaskShellCommandHistory {
 
   private final SingularityTaskShellCommandRequest shellRequest;
@@ -18,10 +21,12 @@ public class SingularityTaskShellCommandHistory {
     this.shellUpdates = JavaUtils.nonNullImmutable(shellUpdates);
   }
 
+  @Schema(title = "The request to run the shell command")
   public SingularityTaskShellCommandRequest getShellRequest() {
     return shellRequest;
   }
 
+  @Schema(title = "Updates on the execution of the shell command")
   public List<SingularityTaskShellCommandUpdate> getShellUpdates() {
     return shellUpdates;
   }
