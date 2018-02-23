@@ -430,7 +430,7 @@ public class SingularitySlaveAndRackManager {
     throw new IllegalStateException(String.format("Invalid state %s for %s", currentState, object.getId()));
   }
 
-  CheckResult checkOffer(Offer offer) {
+  public CheckResult checkOffer(Offer offer) {
     final String slaveId = offer.getAgentId().getValue();
     final String rackId = slaveAndRackHelper.getRackIdOrDefault(offer);
     final String host = slaveAndRackHelper.getMaybeTruncatedHost(offer);
