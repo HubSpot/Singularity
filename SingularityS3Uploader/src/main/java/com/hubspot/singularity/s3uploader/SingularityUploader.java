@@ -11,6 +11,7 @@ import java.nio.file.Path;
 import java.nio.file.PathMatcher;
 import java.nio.file.Paths;
 import java.nio.file.attribute.UserDefinedFileAttributeView;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
@@ -71,7 +72,7 @@ public abstract class SingularityUploader {
 
   protected abstract void uploadSingle(int sequence, Path file) throws Exception;
 
-  private void uploadBatch(List<Path> toUpload) {
+  int uploadBatch(List<Path> toUpload) {
     final long start = System.currentTimeMillis();
     LOG.info("{} Uploading {} item(s)", logIdentifier, toUpload.size());
 
@@ -103,6 +104,7 @@ public abstract class SingularityUploader {
     }
 
     LOG.info("{} Uploaded {} out of {} item(s) in {}", logIdentifier, success, toUpload.size(), JavaUtils.duration(start));
+    return toUpload.size();
   }
 
   Path getMetadataPath() {
@@ -113,37 +115,34 @@ public abstract class SingularityUploader {
     return uploadMetadata;
   }
 
-  int upload(Set<Path> synchronizedToUpload, boolean isFinished) throws IOException {
+  int upload(boolean isFinished) throws IOException {
+    return uploadBatch(filesToUpload(isFinished));
+  }
+
+  List<Path> filesToUpload(boolean isFinished) throws IOException {
     final List<Path> toUpload = Lists.newArrayList();
-    int found = 0;
 
     final Path directory = Paths.get(fileDirectory);
 
     if (!Files.exists(directory)) {
       LOG.info("Path {} doesn't exist", fileDirectory);
-      return found;
+      return Collections.emptyList();
     }
 
     for (Path file : JavaUtils.iterable(directory)) {
-      found += handleFile(file, isFinished, synchronizedToUpload, toUpload);
+      handleFile(file, isFinished, toUpload);
     }
 
-    if (toUpload.isEmpty()) {
-      return found;
-    }
-
-    uploadBatch(toUpload);
-
-    return found;
+    return toUpload;
   }
 
-  int handleFile(Path path, boolean isFinished, Set<Path> synchronizedToUpload, List<Path> toUpload) throws IOException {
+  private int handleFile(Path path, boolean isFinished, List<Path> toUpload) throws IOException {
     int found = 0;
     if (Files.isDirectory(path, LinkOption.NOFOLLOW_LINKS)) {
       if (uploadMetadata.isCheckSubdirectories()) {
         LOG.debug("{} was a directory, checking files in directory", path);
         for (Path file : JavaUtils.iterable(path)) {
-          found += handleFile(file, isFinished, synchronizedToUpload, toUpload);
+          found += handleFile(file, isFinished, toUpload);
         }
       } else {
         LOG.debug("{} was a directory, skipping", path);
@@ -167,11 +166,8 @@ public abstract class SingularityUploader {
 
     found++;
 
-    if (synchronizedToUpload.add(path)) {
-      toUpload.add(path);
-    } else {
-      LOG.debug("{} Another uploader already added {}", logIdentifier, path);
-    }
+    toUpload.add(path);
+
     return found;
   }
 
