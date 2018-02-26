@@ -478,10 +478,11 @@ public class RequestResource extends AbstractRequestResource {
           @ApiResponse(responseCode = "409", description = "Request is not paused")
       }
   )
-  public SingularityRequestParent unpause(@Auth SingularityUser user,
-                                          @ApiParam("The request ID to unpause") @PathParam("requestId") String requestId,
-                                          @Context HttpServletRequest requestContext,
-                                          SingularityUnpauseRequest unpauseRequest) {
+  public SingularityRequestParent unpause(
+      @Auth SingularityUser user,
+      @Parameter(required = true, description = "The request ID to unpause") @PathParam("requestId") String requestId,
+      @Context HttpServletRequest requestContext,
+      @RequestBody(description = "Settings for how the unpause should behave") SingularityUnpauseRequest unpauseRequest) {
     final Optional<SingularityUnpauseRequest> maybeUnpauseRequest = Optional.fromNullable(unpauseRequest);
     return maybeProxyToLeader(requestContext, SingularityRequestParent.class, maybeUnpauseRequest.orNull(), () -> unpause(requestId, maybeUnpauseRequest, user));
   }
@@ -511,21 +512,25 @@ public class RequestResource extends AbstractRequestResource {
 
   @POST
   @Path("/request/{requestId}/exit-cooldown")
-  public SingularityRequestParent exitCooldown(@Auth SingularityUser user,
-                                               @PathParam("requestId") String requestId,
-                                               @Context HttpServletRequest requestContext) {
+  @Operation(summary = "Immediately exits cooldown, scheduling new tasks immediately")
+  public SingularityRequestParent exitCooldown(
+      @Auth SingularityUser user,
+      @Parameter(required = true, description = "The request to operate on") @PathParam("requestId") String requestId,
+      @Context HttpServletRequest requestContext) {
     return exitCooldown(user, requestId, requestContext, null);
   }
 
   @POST
   @Path("/request/{requestId}/exit-cooldown")
   @Consumes({ MediaType.APPLICATION_JSON })
-  @Operation(summary = "Immediately exits cooldown, scheduling new tasks immediately", response=SingularityRequestParent.class,
+  @Operation(
+      summary = "Immediately exits cooldown, scheduling new tasks immediately",
       responses = {
         @ApiResponse(responseCode = "409", description = "Request is not in cooldown"),
-  })
+      }
+  )
   public SingularityRequestParent exitCooldown(@Auth SingularityUser user,
-                                               @PathParam("requestId") String requestId,
+                                               @Parameter(required = true, description = "The request to operate on") @PathParam("requestId") String requestId,
                                                @Context HttpServletRequest requestContext,
                                                SingularityExitCooldownRequest exitCooldownRequest) {
     final Optional<SingularityExitCooldownRequest> maybeExitCooldownRequest = Optional.fromNullable(exitCooldownRequest);
