@@ -539,7 +539,7 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
 
   }
 
-  private class TaskIdWithUsage {
+  private static class TaskIdWithUsage {
     private final SingularityTaskId taskId;
     private final SingularityTaskCurrentUsage usage;
 
