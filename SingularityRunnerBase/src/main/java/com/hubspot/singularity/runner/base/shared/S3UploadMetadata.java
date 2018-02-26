@@ -4,6 +4,7 @@ import java.util.Collections;
 import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -214,6 +215,11 @@ public class S3UploadMetadata {
 
   public Optional<String> getEncryptionKey() {
     return encryptionKey;
+  }
+
+  @JsonIgnore
+  public boolean isImmediate() {
+    return uploadImmediately.or(false);
   }
 
   @Override

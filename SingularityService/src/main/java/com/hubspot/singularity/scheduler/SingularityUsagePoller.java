@@ -129,8 +129,25 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
           systemCpusTotal = slaveMetricsSnapshot.getSystemCpusTotal();
         }
 
-        boolean slaveOverloaded = systemLoad5Min > 1.0;
-        double cpuOverage = slaveOverloaded ? (systemLoad5Min - 1.0) * systemCpusTotal : 0.0;
+        double systemLoad;
+
+        switch (configuration.getMesosConfiguration().getScoreUsingSystemLoad()) {
+          case LOAD_1:
+            systemLoad = systemLoad1Min;
+            break;
+          case LOAD_15:
+            systemLoad = systemLoad15Min;
+            break;
+          case LOAD_5:
+          default:
+            systemLoad = systemLoad5Min;
+            break;
+        }
+
+
+
+        boolean slaveOverloaded = systemLoad > 1.0;
+        double cpuOverage = slaveOverloaded ? (systemLoad - 1.0) * systemCpusTotal : 0.0;
         int shuffledTasks = 0;
         List<TaskIdWithUsage> possibleTasksToShuffle = new ArrayList<>();
 
@@ -225,7 +242,7 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
                     TaskCleanupType.REBALANCE_CPU_USAGE,
                     System.currentTimeMillis(),
                     taskIdWithUsage.getTaskId(),
-                    Optional.of(String.format("Load on slave %s is %s / %s, shuffling task to less busy host", slave.getHost(), systemLoad5Min, systemCpusTotal)),
+                    Optional.of(String.format("Load on slave %s is %s / %s, shuffling task to less busy host", slave.getHost(), systemLoad, systemCpusTotal)),
                     Optional.of(UUID.randomUUID().toString()),
                     Optional.absent(), Optional.absent()));
             cpuOverage -= taskIdWithUsage.getUsage().getCpusUsed();

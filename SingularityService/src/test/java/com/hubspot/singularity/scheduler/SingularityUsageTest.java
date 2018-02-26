@@ -552,16 +552,8 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
     }
   }
 
-  private MesosTaskStatisticsObject getStatistics(double cpuSecs, double timestamp, long memBytes) {
-    return new MesosTaskStatisticsObject(1, 0L, 0L, 0, 0, cpuSecs, 0L, 0L, 0L, 0L, 0L, memBytes, 0L, 0L, timestamp);
-  }
-
   private long getTimestampSeconds(SingularityTaskId taskId, long seconds) {
     return TimeUnit.MILLISECONDS.toSeconds(taskId.getStartedAt()) + seconds;
-  }
-
-  private MesosTaskMonitorObject getTaskMonitor(String id, double cpuSecs, long timestampSeconds, int memBytes) {
-    return new MesosTaskMonitorObject(null, null, null, id, getStatistics(cpuSecs, timestampSeconds, memBytes));
   }
 
   private void saveTaskUsage(String taskId, long... times) {
