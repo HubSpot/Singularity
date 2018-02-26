@@ -8,7 +8,8 @@ import io.swagger.v3.oas.annotations.media.Schema;
 @Schema(
     title = "Represents a future action on an object",
     subTypes = {
-        SingularityExpiringMachineState.class
+        SingularityExpiringMachineState.class,
+        SingularityExpiringRequestActionParent.class
     }
 )
 public abstract class SingularityExpiringParent<T extends SingularityExpiringRequestParent> {

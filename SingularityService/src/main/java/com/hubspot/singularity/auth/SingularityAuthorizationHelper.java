@@ -14,7 +14,6 @@ import javax.annotation.Nonnull;
 
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
-import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
@@ -219,7 +218,7 @@ public class SingularityAuthorizationHelper {
         .collect(Collectors.toList());
   }
 
-  public Iterable<String> filterAuthorizedRequestIds(final SingularityUser user, List<String> requestIds, final SingularityAuthorizationScope scope, boolean useWebCache) {
+  public List<String> filterAuthorizedRequestIds(final SingularityUser user, List<String> requestIds, final SingularityAuthorizationScope scope, boolean useWebCache) {
     if (hasAdminAuthorization(user)) {
       return requestIds;
     }
@@ -231,11 +230,8 @@ public class SingularityAuthorizationHelper {
       }
     });
 
-    return Iterables.filter(requestIds, new Predicate<String>() {
-      @Override
-      public boolean apply(@Nonnull String input) {
-        return requestMap.containsKey(input) && isAuthorizedForRequest(requestMap.get(input).getRequest(), user, scope);
-      }
-    });
+    return requestIds.stream()
+        .filter((input) -> requestMap.containsKey(input) && isAuthorizedForRequest(requestMap.get(input).getRequest(), user, scope))
+        .collect(Collectors.toList());
   }
 }

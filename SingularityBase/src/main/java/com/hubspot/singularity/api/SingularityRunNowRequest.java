@@ -11,8 +11,10 @@ import com.google.common.base.Optional;
 import com.hubspot.mesos.Resources;
 import com.hubspot.mesos.SingularityMesosArtifact;
 import com.hubspot.singularity.SingularityS3UploaderFile;
-import com.wordnik.swagger.annotations.ApiModelProperty;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
+@Schema(description = "Settings for a specific run of a request")
 public class SingularityRunNowRequest {
 
   private final Optional<String> message;
@@ -86,52 +88,52 @@ public class SingularityRunNowRequest {
     this.runAt = runAt;
   }
 
-  @ApiModelProperty(required=false, value="A message to show to users about why this action was taken")
+  @Schema(description = "A message to show to users about why this action was taken", nullable = true)
   public Optional<String> getMessage() {
     return message;
   }
 
-  @ApiModelProperty(required=false, value="An id to associate with this request which will be associated with the corresponding launched tasks")
+  @Schema(description = "An id to associate with this request which will be associated with the corresponding launched tasks", nullable = true)
   public Optional<String> getRunId() {
     return runId;
   }
 
-  @ApiModelProperty(required=false, value="Command line arguments to be passed to the task")
+  @Schema(description = "Command line arguments to be passed to the task", nullable = true)
   public Optional<List<String>> getCommandLineArgs() {
     return commandLineArgs;
   }
 
-  @ApiModelProperty(required=false, value="If set to true, healthchecks will be skipped for this task run")
+  @Schema(description = "If set to true, healthchecks will be skipped for this task run", nullable = true)
   public Optional<Boolean> getSkipHealthchecks() {
     return skipHealthchecks;
   }
 
-  @ApiModelProperty(required=false, value="Override the resources from the active deploy for this run")
+  @Schema(description = "Override the resources from the active deploy for this run", nullable = true)
   public Optional<Resources> getResources() {
     return resources;
   }
 
-  @ApiModelProperty(required=false, value="Specify additional sandbox files to upload to S3 for this run")
+  @Schema(description = "Specify additional sandbox files to upload to S3 for this run")
   public List<SingularityS3UploaderFile> getS3UploaderAdditionalFiles() {
     return s3UploaderAdditionalFiles;
   }
 
-  @ApiModelProperty(required=false, value="Override the user under which this task's command will be launched.")
+  @Schema(description = "Override the user under which this task's command will be launched", nullable = true)
   public Optional<String> getRunAsUserOverride() {
     return runAsUserOverride;
   }
 
-  @ApiModelProperty(required=false, value="Override the environment variables for launched tasks")
+  @Schema(description = "Override the environment variables for launched tasks")
   public Map<String, String> getEnvOverrides() {
     return envOverrides;
   }
 
-  @ApiModelProperty(required=false, value="Additional artifacts to download for this run")
+  @Schema(description = "Additional artifacts to download for this run")
   public List<SingularityMesosArtifact> getExtraArtifacts() {
     return extraArtifacts;
   }
 
-  @ApiModelProperty(required=false, value="Schedule this task to run at a specified time")
+  @Schema(description = "Schedule this task to run at a specified time", nullable = true)
   public Optional<Long> getRunAt() {
     return runAt;
   }
