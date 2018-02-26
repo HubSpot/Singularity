@@ -1234,6 +1234,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     Assert.assertEquals(1, taskManager.getActiveTaskIds().size());
 
     requestResource.bounce(requestId, Optional.of(new SingularityBounceRequest(Optional.absent(), Optional.of(true), Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent())), singularityUser);
+    Assert.assertTrue(requestManager.isBouncing(requestId));
     cleaner.drainCleanupQueue();
 
     // It acquires a lock on the bounce
@@ -1247,8 +1248,10 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     }
 
     Assert.assertTrue("Need to start at least 1 instance to begin killing old instances", taskManager.getActiveTaskIds().size() >= 2);
+    Assert.assertTrue(requestManager.isBouncing(requestId));
     cleaner.drainCleanupQueue();
     killKilledTasks();
+    Assert.assertFalse(requestManager.isBouncing(requestId));
 
 
     // It finishes with one task running and the bounce released
@@ -1261,6 +1264,35 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
       Assert.assertTrue("Task was started by bounce", statusMessage.contains("BOUNCE"));
     }
     Assert.assertFalse("Lock on bounce should be released after bounce", requestManager.getExpiringBounce(requestId).isPresent());
+  }
+
+  @Test
+  public void testBounceReleasesLockWithAlternateCleanupType() {
+    initRequest();
+    initFirstDeploy();
+
+    startTask(firstDeploy, 1);
+    List<SingularityTaskId> activeTaskIds = taskManager.getActiveTaskIds();
+    Assert.assertEquals(1, activeTaskIds.size());
+    SingularityTaskId firstTaskId = activeTaskIds.get(0);
+
+    requestResource.bounce(requestId, Optional.of(new SingularityBounceRequest(Optional.absent(), Optional.of(true), Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent())), singularityUser);
+    Assert.assertTrue(requestManager.isBouncing(requestId));
+    cleaner.drainCleanupQueue();
+
+    scheduler.drainPendingQueue();
+    resourceOffers();
+
+    // Save a new cleanup type over the old one, and make sure the bounce lock still releases
+    taskManager.saveTaskCleanup(new SingularityTaskCleanup(Optional.absent(), TaskCleanupType.USER_REQUESTED, System.currentTimeMillis(), firstTaskId, Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent()));
+
+    for (SingularityTaskId singularityTaskId : taskManager.getActiveTaskIds()) {
+      taskManager.saveTaskHistoryUpdate(new SingularityTaskHistoryUpdate(singularityTaskId, System.currentTimeMillis(), ExtendedTaskState.TASK_RUNNING, Optional.absent(), Optional.absent(), Collections.emptySet()));
+    }
+    Assert.assertTrue(requestManager.isBouncing(requestId));
+    cleaner.drainCleanupQueue();
+    killKilledTasks();
+    Assert.assertFalse(requestManager.isBouncing(requestId));
   }
 
   @Test

@@ -497,6 +497,10 @@ public class RequestManager extends CuratorAsyncManager {
     return create(getIsBouncingPath(requestId));
   }
 
+  public boolean isBouncing(String requestId) {
+    return exists(getIsBouncingPath(requestId));
+  }
+
   public SingularityDeleteResult markBounceComplete(String requestId) {
     return delete(getIsBouncingPath(requestId));
   }
