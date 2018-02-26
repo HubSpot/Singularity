@@ -11,7 +11,7 @@ const Application = (props) => {
   if (taskLagMinutes >= 3) {
     Messenger().error({
       message: `
-        <strong>Singularity is experiencing some delays.</strong> 
+        <strong>Singularity is experiencing some delays.</strong>
         The team has already been notified. (Max task lag: ${Utils.duration(props.maxTaskLag)})
       `
     });
@@ -28,10 +28,12 @@ const Application = (props) => {
 };
 
 Application.propTypes = {
-  location: React.PropTypes.object.isRequired,
-  history: React.PropTypes.object.isRequired,
   children: React.PropTypes.object,
-  maxTaskLag: React.PropTypes.number
+  history: React.PropTypes.object.isRequired,
+  location: React.PropTypes.object.isRequired,
+  maxTaskLag: React.PropTypes.number,
+  params: React.PropTypes.object.isRequired,
+  routes: React.PropTypes.object.isRequired,
 };
 
 const mapStateToProps = (state) => {
