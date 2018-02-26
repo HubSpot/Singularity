@@ -75,6 +75,10 @@ public class SingularityConfiguration extends Configuration {
 
   private int usageIntervalSeconds = 5760; // 15 saved each 5760 seconds (96 min) apart is 1 day of usage
 
+  private boolean shuffleTasksForOverloadedSlaves = false; // recommended 'true' when oversubscribing cpu for larger clusters
+
+  private int maxTasksToShuffleForCpuOverage = 3;
+
   private long cleanUsageEveryMillis = TimeUnit.MINUTES.toMillis(5);
 
   private int numUsageToKeep = 15;
@@ -1477,6 +1481,22 @@ public class SingularityConfiguration extends Configuration {
   public SingularityConfiguration setUsageIntervalSeconds(int usageIntervalSeconds) {
     this.usageIntervalSeconds = usageIntervalSeconds;
     return this;
+  }
+
+  public int getMaxTasksToShuffleForCpuOverage() {
+    return maxTasksToShuffleForCpuOverage;
+  }
+
+  public void setMaxTasksToShuffleForCpuOverage(int maxTasksToShuffleForCpuOverage) {
+    this.maxTasksToShuffleForCpuOverage = maxTasksToShuffleForCpuOverage;
+  }
+
+  public boolean isShuffleTasksForOverloadedSlaves() {
+    return shuffleTasksForOverloadedSlaves;
+  }
+
+  public void setShuffleTasksForOverloadedSlaves(boolean shuffleTasksForOverloadedSlaves) {
+    this.shuffleTasksForOverloadedSlaves = shuffleTasksForOverloadedSlaves;
   }
 
   public long getCleanUsageEveryMillis() {
