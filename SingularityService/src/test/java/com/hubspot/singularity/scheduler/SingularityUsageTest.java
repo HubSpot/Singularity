@@ -13,7 +13,6 @@ import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.hubspot.mesos.json.MesosSlaveMetricsSnapshotObject;
 import com.hubspot.mesos.json.MesosTaskMonitorObject;
-import com.hubspot.mesos.json.MesosTaskStatisticsObject;
 import com.hubspot.singularity.MachineState;
 import com.hubspot.singularity.SingularityClusterUtilization;
 import com.hubspot.singularity.SingularitySlaveUsage;
@@ -515,7 +514,7 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
       initFirstDeploy();
       saveAndSchedule(requestManager.getRequest(requestId).get().getRequest().toBuilder().setInstances(Optional.of(3)));
       resourceOffers(1);
-      SingularitySlaveUsage highUsage = new SingularitySlaveUsage(15, 10, Optional.of(10.0), 1, 1, Optional.of(30L), 1, 1, Optional.of(1024L), Collections.emptyMap(), 1, System.currentTimeMillis(), 1, 30000, 10, 1.5, 1.5, 1.5, 0, 107374182);
+      SingularitySlaveUsage highUsage = new SingularitySlaveUsage(15, 10, Optional.of(10.0), 1, 1, Optional.of(30L), 1, 1, Optional.of(1024L), Collections.emptyMap(), 1, System.currentTimeMillis(), 1, 30000, 10, 15, 15, 15, 0, 107374182);
       usageManager.saveSpecificSlaveUsageAndSetCurrent("host1", highUsage);
 
       SingularityTaskId taskId1 = taskManager.getActiveTaskIds().get(0);
@@ -536,7 +535,7 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
       mesosClient.setSlaveResourceUsage("host1", Arrays.asList(t1u1, t2u1, t3u1));
       mesosClient.setSlaveMetricsSnapshot(
           "host1",
-          new MesosSlaveMetricsSnapshotObject(0, 0, 0, 10.0, 0, 0, 0, 0, 0, 0, 0, 0, 10.0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1.5, 0, 0, 1.5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 15, 0, 0, 0, 0, 0, 0, 1.5, 0, 0, 0, 0)
+          new MesosSlaveMetricsSnapshotObject(0, 0, 0, 10.0, 0, 0, 0, 0, 0, 0, 0, 0, 10.0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 15, 0, 0, 15, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 15, 0, 0, 0, 0, 0, 0, 15, 0, 0, 0, 0)
       );
 
       usagePoller.runActionOnPoll();
