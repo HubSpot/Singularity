@@ -8,7 +8,7 @@ import com.hubspot.singularity.MetadataLevel;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
-@Schema(title = "Request to add custom metadata to a task")
+@Schema(description = "Request to add custom metadata to a task")
 public class SingularityTaskMetadataRequest {
 
   private final String type;
@@ -26,22 +26,22 @@ public class SingularityTaskMetadataRequest {
     this.level = level;
   }
 
-  @Schema(required = true, title = "A type to be associated with this metadata")
+  @Schema(required = true, description = "A type to be associated with this metadata")
   public String getType() {
     return type;
   }
 
-  @Schema(required = true, title = "A title to be associated with this metadata")
+  @Schema(required = true, description = "A title to be associated with this metadata")
   public String getTitle() {
     return title;
   }
 
-  @Schema(title = "An optional message")
+  @Schema(description = "An optional message")
   public Optional<String> getMessage() {
     return message;
   }
 
-  @Schema(title = "Level of metadata, can be INFO, WARN, or ERROR", nullable = true)
+  @Schema(description = "Level of metadata, can be INFO, WARN, or ERROR", nullable = true)
   public Optional<MetadataLevel> getLevel() { return level; }
 
   @Override

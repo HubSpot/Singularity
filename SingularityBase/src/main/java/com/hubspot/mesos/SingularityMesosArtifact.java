@@ -8,7 +8,7 @@ import com.google.common.base.Optional;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
-@Schema(title = "Describes an artifact to be downloaded")
+@Schema(description = "Describes an artifact to be downloaded")
 public class SingularityMesosArtifact {
   private final String uri;
   private final boolean cache;
@@ -34,13 +34,13 @@ public class SingularityMesosArtifact {
     this.outputFile = outputFile;
   }
 
-  @Schema(required = true, title = "The uri of the artifact to download")
+  @Schema(required = true, description = "The uri of the artifact to download")
   public String getUri() {
     return uri;
   }
 
   @Schema(
-      title = "Cache this artifact to avoid multiple downloads on the same host",
+      description = "Cache this artifact to avoid multiple downloads on the same host",
       defaultValue = "false"
   )
   public boolean isCache() {
@@ -48,7 +48,7 @@ public class SingularityMesosArtifact {
   }
 
   @Schema(
-      title = "If true, chmod the download file so it is executable",
+      description = "If true, chmod the download file so it is executable",
       defaultValue = "false"
   )
   public boolean isExecutable() {

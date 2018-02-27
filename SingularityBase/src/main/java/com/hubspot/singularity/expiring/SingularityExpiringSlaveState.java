@@ -8,7 +8,7 @@ import com.hubspot.singularity.api.SingularityMachineChangeRequest;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
-@Schema(title = "Represents a future update to the state of a slave")
+@Schema(description = "Represents a future update to the state of a slave")
 public class SingularityExpiringSlaveState extends SingularityExpiringMachineState {
 
   @JsonCreator

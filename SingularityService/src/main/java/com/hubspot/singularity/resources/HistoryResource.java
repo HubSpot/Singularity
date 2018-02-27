@@ -44,13 +44,15 @@ import io.swagger.v3.oas.annotations.OpenAPIDefinition;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.info.Info;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.tags.Tags;
 
 @Path(ApiPaths.HISTORY_RESOURCE_PATH)
 @Produces({ MediaType.APPLICATION_JSON })
-@OpenAPIDefinition(
-    info = @Info(title = "Manages historical data for tasks, requests, and deploys")
-)
+@Schema(title = "Manages historical data for tasks, requests, and deploys")
+@Tags({@Tag(name = "History")})
 public class HistoryResource extends AbstractHistoryResource {
   public static final int DEFAULT_ARGS_HISTORY_COUNT = 5;
 
@@ -404,7 +406,7 @@ public class HistoryResource extends AbstractHistoryResource {
       @Parameter(required = true, description = "Request ID prefix to search for") @QueryParam("requestIdLike") String requestIdLike,
       @Parameter(description = "Maximum number of items to return") @QueryParam("count") Integer count,
       @Parameter(description = "Which page of items to view") @QueryParam("page") Integer page,
-      @QueryParam("useWebCache") Boolean useWebCache) {
+      @Parameter(description = "Fetched a cached version of this data to limit expensive operations") @QueryParam("useWebCache") Boolean useWebCache) {
     final Integer limitCount = getLimitCount(count);
     final Integer limitStart = getLimitStart(limitCount, page);
 

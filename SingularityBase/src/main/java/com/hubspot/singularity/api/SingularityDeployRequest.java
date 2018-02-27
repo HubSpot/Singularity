@@ -9,7 +9,7 @@ import com.hubspot.singularity.SingularityRequest;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
-@Schema(title = "Describes a new deploy")
+@Schema(description = "Describes a new deploy")
 public class SingularityDeployRequest {
 
   private final Optional<Boolean> unpauseOnSuccessfulDeploy;
@@ -33,22 +33,22 @@ public class SingularityDeployRequest {
     this(deploy, unpauseOnSuccessfulDeploy, message, Optional.<SingularityRequest>absent());
   }
 
-  @Schema(title = "If deploy is successful, also unpause the request", nullable = true, defaultValue = "false")
+  @Schema(description = "If deploy is successful, also unpause the request", nullable = true, defaultValue = "false")
   public Optional<Boolean> getUnpauseOnSuccessfulDeploy() {
     return unpauseOnSuccessfulDeploy;
   }
 
-  @Schema(required = true, title = "The Singularity deploy object, containing all the required details about the Deploy")
+  @Schema(required = true, description = "The Singularity deploy object, containing all the required details about the Deploy")
   public SingularityDeploy getDeploy() {
     return deploy;
   }
 
-  @Schema(title = "A message to show users about this deploy (metadata)", nullable = true)
+  @Schema(description = "A message to show users about this deploy (metadata)", nullable = true)
   public Optional<String> getMessage() {
     return message;
   }
 
-  @Schema(title = "use this request data for this deploy, and update the request on successful deploy", nullable = true)
+  @Schema(description = "use this request data for this deploy, and update the request on successful deploy", nullable = true)
   public Optional<SingularityRequest> getUpdatedRequest() {
     return updatedRequest;
   }

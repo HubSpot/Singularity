@@ -6,7 +6,7 @@ import com.google.common.base.Optional;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
-@Schema(title = "A webhook event representing an update to deploy data")
+@Schema(description = "A webhook event representing an update to deploy data")
 public class SingularityDeployUpdate {
 
   @Schema
@@ -27,22 +27,22 @@ public class SingularityDeployUpdate {
     this.deployResult = deployResult;
   }
 
-  @Schema(title = "An object identifying a particular deploy for a request")
+  @Schema(description = "An object identifying a particular deploy for a request")
   public SingularityDeployMarker getDeployMarker() {
     return deployMarker;
   }
 
-  @Schema(title = "The full data of the deploy", nullable = true)
+  @Schema(description = "The full data of the deploy", nullable = true)
   public Optional<SingularityDeploy> getDeploy() {
     return deploy;
   }
 
-  @Schema(title = "Starting or Finished")
+  @Schema(description = "Starting or Finished")
   public DeployEventType getEventType() {
     return eventType;
   }
 
-  @Schema(title = "The result of the deploy if it has finished", nullable = true)
+  @Schema(description = "The result of the deploy if it has finished", nullable = true)
   public Optional<SingularityDeployResult> getDeployResult() {
     return deployResult;
   }

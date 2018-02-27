@@ -14,15 +14,15 @@ import com.google.inject.Inject;
 import com.hubspot.singularity.config.ApiPaths;
 import com.hubspot.singularity.metrics.SingularityMetricsContainer;
 
-import io.swagger.v3.oas.annotations.OpenAPIDefinition;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.info.Info;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.tags.Tags;
 
 @Path(ApiPaths.METRICS_RESOURCE_PATH)
 @Produces({ MediaType.APPLICATION_JSON })
-@OpenAPIDefinition(
-    info = @Info(title = "Retrieve metrics from the Singularity scheduler")
-)
+@Schema(title = "Retrieve metrics from the Singularity scheduler")
+@Tags({@Tag(name = "Metrics")})
 public class MetricsResource {
   private final MetricRegistry registry;
 

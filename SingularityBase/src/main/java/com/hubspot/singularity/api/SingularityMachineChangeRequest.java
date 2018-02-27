@@ -7,7 +7,7 @@ import com.hubspot.singularity.MachineState;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
-@Schema(title = "Settings related to changing the state of a rack or slave")
+@Schema(description = "Settings related to changing the state of a rack or slave")
 public class SingularityMachineChangeRequest extends SingularityExpiringRequestParent {
 
   private final Optional<MachineState> revertToState;

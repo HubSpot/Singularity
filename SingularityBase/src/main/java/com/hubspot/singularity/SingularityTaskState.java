@@ -10,7 +10,7 @@ import com.google.common.base.Optional;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
-@Schema(title = "Describes the current state of a task")
+@Schema(description = "Describes the current state of a task")
 public class SingularityTaskState {
   private final Optional<SingularityTaskId> taskId;
   private final Optional<SingularityPendingTaskId> pendingTaskId;
@@ -97,7 +97,7 @@ public class SingularityTaskState {
     return taskHistory;
   }
 
-  @Schema(title = "true if the task is still waiting to be launched")
+  @Schema(description = "true if the task is still waiting to be launched")
   public boolean isPending() {
     return pending;
   }

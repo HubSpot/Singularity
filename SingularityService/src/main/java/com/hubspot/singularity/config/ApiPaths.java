@@ -23,4 +23,5 @@ public class ApiPaths {
   public static final String USAGE_RESOURCE_PATH = API_BASE_PATH + "/usage";
   public static final String USER_RESOURCE_PATH = API_BASE_PATH + "/users";
   public static final String WEBHOOK_RESOURCE_PATH = API_BASE_PATH + "/webhooks";
+  public static final String OPEN_API_RESOURCE_PATH = API_BASE_PATH + "/openapi.json";
 }

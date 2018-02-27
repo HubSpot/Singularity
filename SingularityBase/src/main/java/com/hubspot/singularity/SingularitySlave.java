@@ -10,7 +10,7 @@ import com.hubspot.mesos.json.MesosResourcesObject;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
-@Schema(title = "Singularity's view of a Mesos slave")
+@Schema(description = "Singularity's view of a Mesos slave")
 public class SingularitySlave extends SingularityMachineAbstraction<SingularitySlave> {
 
   private final String host;
@@ -42,7 +42,7 @@ public class SingularitySlave extends SingularityMachineAbstraction<SingularityS
     return new SingularitySlave(getId(), getFirstSeenAt(), newState, host, rackId, attributes, resources);
   }
 
-  @Schema(title = "Slave hostname")
+  @Schema(description = "Slave hostname")
   public String getHost() {
     return host;
   }
@@ -64,17 +64,17 @@ public class SingularitySlave extends SingularityMachineAbstraction<SingularityS
     return new SingularitySlave(getId(), getFirstSeenAt(), getCurrentState(), host, rackId, attributes, Optional.of(resources));
   }
 
-  @Schema(title = "Slave rack ID")
+  @Schema(description = "Slave rack ID")
   public String getRackId() {
     return rackId;
   }
 
-  @Schema(title = "Mesos attributes associated with this slave")
+  @Schema(description = "Mesos attributes associated with this slave")
   public Map<String, String> getAttributes() {
     return attributes;
   }
 
-  @Schema(title = "Resources available to allocate on this slave")
+  @Schema(description = "Resources available to allocate on this slave")
   public Optional<MesosResourcesObject> getResources() {
     return resources;
   }

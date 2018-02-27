@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
-@Schema(title = "A request to update a pending deploy")
+@Schema(description = "A request to update a pending deploy")
 public class SingularityUpdatePendingDeployRequest {
   private final String requestId;
   private final String deployId;
@@ -18,17 +18,17 @@ public class SingularityUpdatePendingDeployRequest {
     this.targetActiveInstances = targetActiveInstances;
   }
 
-  @Schema(title = "Request id", required=true)
+  @Schema(description = "Request id", required=true)
   public String getRequestId() {
     return requestId;
   }
 
-  @Schema(title = "Deploy id", required=true)
+  @Schema(description = "Deploy id", required=true)
   public String getDeployId() {
     return deployId;
   }
 
-  @Schema(title = "Updated target instance count for the active deploy", required=true)
+  @Schema(description = "Updated target instance count for the active deploy", required=true)
   public int getTargetActiveInstances() {
     return targetActiveInstances;
   }

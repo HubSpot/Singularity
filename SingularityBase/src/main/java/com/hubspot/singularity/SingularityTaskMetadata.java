@@ -10,7 +10,7 @@ import com.google.common.collect.ComparisonChain;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
-@Schema(title = "Custom metadata associated with a Singularity task")
+@Schema(description = "Custom metadata associated with a Singularity task")
 public class SingularityTaskMetadata extends SingularityTaskIdHolder implements Comparable<SingularityTaskMetadata> {
 
   private static final MetadataLevel DEFAULT_METADATA_LEVEL = MetadataLevel.INFO;
@@ -35,7 +35,7 @@ public class SingularityTaskMetadata extends SingularityTaskIdHolder implements 
     this.level = level.or(DEFAULT_METADATA_LEVEL);
   }
 
-  @Schema(title = "Timestamp this metadata was created")
+  @Schema(description = "Timestamp this metadata was created")
   public long getTimestamp() {
     return timestamp;
   }
@@ -45,22 +45,22 @@ public class SingularityTaskMetadata extends SingularityTaskIdHolder implements 
     return type;
   }
 
-  @Schema(title = "Title for this metadata")
+  @Schema(description = "Title for this metadata")
   public String getTitle() {
     return title;
   }
 
-  @Schema(title = "Optional metadata message", nullable = true)
+  @Schema(description = "Optional metadata message", nullable = true)
   public Optional<String> getMessage() {
     return message;
   }
 
-  @Schema(title = "The user who added this metadata", nullable = true)
+  @Schema(description = "The user who added this metadata", nullable = true)
   public Optional<String> getUser() {
     return user;
   }
 
-  @Schema(title = "Metadata level")
+  @Schema(description = "Metadata level")
   public MetadataLevel getLevel() { return level; }
 
   @Override

@@ -8,7 +8,7 @@ import com.google.common.base.Optional;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
-@Schema(title = "Describes a freeze on task launches based on task priority")
+@Schema(description = "Describes a freeze on task launches based on task priority")
 public class SingularityPriorityFreeze {
   private final double minimumPriorityLevel;
   private final boolean killTasks;
@@ -23,22 +23,22 @@ public class SingularityPriorityFreeze {
     this.actionId = actionId;
   }
 
-  @Schema(required = true, title = "Kill (if killTasks is true) or do not launch (if killTasks is false) tasks below this priority level")
+  @Schema(required = true, description = "Kill (if killTasks is true) or do not launch (if killTasks is false) tasks below this priority level")
   public double getMinimumPriorityLevel() {
     return minimumPriorityLevel;
   }
 
-  @Schema(required = true, title = "If true, kill currently running tasks, and do not launch new tasks below the minimumPriorityLevel. If false, do not launch new tasks below minimumPriorityLevel")
+  @Schema(required = true, description = "If true, kill currently running tasks, and do not launch new tasks below the minimumPriorityLevel. If false, do not launch new tasks below minimumPriorityLevel")
   public boolean isKillTasks() {
     return killTasks;
   }
 
-  @Schema(title = "An optional message/reason for creating the priority kill", nullable = true)
+  @Schema(description = "An optional message/reason for creating the priority kill", nullable = true)
   public Optional<String> getMessage() {
     return message;
   }
 
-  @Schema(title = "A unique ID for this priority kill", nullable = true)
+  @Schema(description = "A unique ID for this priority kill", nullable = true)
   public Optional<String> getActionId() {
     return actionId;
   }

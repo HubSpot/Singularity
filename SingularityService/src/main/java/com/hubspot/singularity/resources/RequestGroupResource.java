@@ -18,18 +18,18 @@ import com.hubspot.singularity.config.ApiPaths;
 import com.hubspot.singularity.data.RequestGroupManager;
 import com.hubspot.singularity.data.SingularityValidator;
 
-import io.swagger.v3.oas.annotations.OpenAPIDefinition;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.info.Info;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.tags.Tags;
 
 @Path(ApiPaths.REQUEST_GROUP_RESOURCE_PATH)
 @Produces({MediaType.APPLICATION_JSON})
-@OpenAPIDefinition(
-    info = @Info(title = "Manages Singularity Request Groups, which are collections of one or more Singularity Requests")
-)
+@Schema(title = "Manages Singularity Request Groups, which are collections of one or more Singularity Requests")
+@Tags({@Tag(name = "Request Groups")})
 public class RequestGroupResource {
   private final RequestGroupManager requestGroupManager;
   private final SingularityValidator validator;

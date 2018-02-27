@@ -10,7 +10,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
-@Schema(title = "Describes a request grouping")
+@Schema(description = "Describes a request grouping")
 public class SingularityRequestGroup {
     private final String id;
     private final List<String> requestIds;
@@ -32,12 +32,12 @@ public class SingularityRequestGroup {
         return id;
     }
 
-    @Schema(title = "The list of request ids that belong to this group")
+    @Schema(description = "The list of request ids that belong to this group")
     public List<String> getRequestIds() {
         return requestIds;
     }
 
-    @Schema(title = "Metadata related to this request group")
+    @Schema(description = "Metadata related to this request group")
     public Map<String, String> getMetadata() {
         return metadata;
     }

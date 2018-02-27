@@ -1,8 +1,8 @@
 package com.hubspot.singularity;
 
-import com.wordnik.swagger.annotations.ApiModel;
+import io.swagger.v3.oas.annotations.media.Schema;
 
-@ApiModel
+@Schema
 public enum WebhookType {
   TASK, REQUEST, DEPLOY
 }

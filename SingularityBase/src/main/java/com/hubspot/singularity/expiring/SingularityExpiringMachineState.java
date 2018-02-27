@@ -34,12 +34,12 @@ public class SingularityExpiringMachineState extends SingularityExpiringParent<S
     this.killTasksOnDecommissionTimeout = killTasksOnDecommissionTimeout.or(false);
   }
 
-  @Schema(title = "Id of the machine being updated")
+  @Schema(description = "Id of the machine being updated")
   public String getMachineId() {
     return machineId;
   }
 
-  @Schema(title = "State the machine will transition to")
+  @Schema(description = "State the machine will transition to")
   public MachineState getRevertToState() {
     return revertToState;
   }

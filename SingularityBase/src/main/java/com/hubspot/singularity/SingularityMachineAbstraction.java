@@ -30,7 +30,7 @@ public abstract class SingularityMachineAbstraction<T extends SingularityMachine
     this.firstSeenAt = firstSeenAt;
   }
 
-  @Schema(title = "The machine id")
+  @Schema(description = "The machine id")
   public String getId() {
     return id;
   }
@@ -69,12 +69,12 @@ public abstract class SingularityMachineAbstraction<T extends SingularityMachine
     return true;
   }
 
-  @Schema(title = "Timestamp of the first time this machine was seen")
+  @Schema(description = "Timestamp of the first time this machine was seen")
   public long getFirstSeenAt() {
     return firstSeenAt;
   }
 
-  @Schema(title = "The current state of this machine")
+  @Schema(description = "The current state of this machine")
   public SingularityMachineStateHistoryUpdate getCurrentState() {
     return currentState;
   }

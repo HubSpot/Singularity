@@ -10,7 +10,7 @@ import com.google.common.collect.ComparisonChain;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
-@Schema(title = "Describes an update or action on a Singularity request")
+@Schema(description = "Describes an update or action on a Singularity request")
 public class SingularityRequestHistory implements Comparable<SingularityRequestHistory>, SingularityHistoryItem {
 
   private final long createdAt;
@@ -44,34 +44,34 @@ public class SingularityRequestHistory implements Comparable<SingularityRequestH
         .result();
   }
 
-  @Schema(title = "The time the request update occured")
+  @Schema(description = "The time the request update occured")
   public long getCreatedAt() {
     return createdAt;
   }
 
-  @Schema(title = "The user associated with the request update", nullable = true)
+  @Schema(description = "The user associated with the request update", nullable = true)
   public Optional<String> getUser() {
     return user;
   }
 
   @Deprecated
   @JsonIgnore
-  @Schema(title = "The type of request history update")
+  @Schema(description = "The type of request history update")
   public RequestHistoryType getState() {
     return eventType;
   }
 
-  @Schema(title = "The type of request history update")
+  @Schema(description = "The type of request history update")
   public RequestHistoryType getEventType() {
     return eventType;
   }
 
-  @Schema(title = "The full data of the request after being updated")
+  @Schema(description = "The full data of the request after being updated")
   public SingularityRequest getRequest() {
     return request;
   }
 
-  @Schema(title = "An optional message accompanying the update", nullable = true)
+  @Schema(description = "An optional message accompanying the update", nullable = true)
   public Optional<String> getMessage() {
     return message;
   }

@@ -17,7 +17,7 @@ import com.hubspot.mesos.protos.MesosTaskObject;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
-@Schema(title = "Describes a singularity task")
+@Schema(description = "Describes a singularity task")
 public class SingularityTask extends SingularityTaskIdHolder {
 
   private final SingularityTaskRequest taskRequest;
@@ -48,7 +48,7 @@ public class SingularityTask extends SingularityTaskIdHolder {
     }
   }
 
-  @Schema(title = "The full request, deploy, and pending task data used to launch this tasl")
+  @Schema(description = "The full request, deploy, and pending task data used to launch this tasl")
   public SingularityTaskRequest getTaskRequest() {
     return taskRequest;
   }
@@ -72,7 +72,7 @@ public class SingularityTask extends SingularityTaskIdHolder {
     return mesosTask;
   }
 
-  @Schema(title = "The id of the rack where this task was launched")
+  @Schema(description = "The id of the rack where this task was launched")
   public Optional<String> getRackId() {
     return rackId;
   }

@@ -23,16 +23,16 @@ import com.hubspot.singularity.data.history.SingularityHistoryPurger;
 import com.hubspot.singularity.mesos.SingularityMesosScheduler;
 import com.hubspot.singularity.scheduler.SingularityTaskReconciliation;
 
-import io.swagger.v3.oas.annotations.OpenAPIDefinition;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.info.Info;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.tags.Tags;
 
 @Path(ApiPaths.TEST_RESOURCE_PATH)
-@OpenAPIDefinition(
-    info = @Info(title = "Misc testing endpoints")
-)
+@Schema(title = "Misc testing endpoints")
+@Tags({@Tag(name = "Test")})
 public class TestResource {
   private final SingularityAbort abort;
   private final SingularityLeaderController managed;

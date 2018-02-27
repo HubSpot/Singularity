@@ -29,7 +29,7 @@ public class SingularityTaskCurrentUsageWithId extends SingularityTaskCurrentUsa
     this.taskId = taskId;
   }
 
-  @Schema(title = "The ID of the task")
+  @Schema(description = "The ID of the task")
   public SingularityTaskId getTaskId() {
     return taskId;
   }

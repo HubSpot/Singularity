@@ -22,7 +22,7 @@ import com.hubspot.singularity.api.SingularityRunNowRequest;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
-@Schema(title = "A set of instructions for launching tasks associated with a request")
+@Schema(description = "A set of instructions for launching tasks associated with a request")
 public class SingularityDeploy {
 
   private final String requestId;
@@ -288,248 +288,248 @@ public class SingularityDeploy {
     .setUser(user);
   }
 
-  @Schema(nullable = true, title = "Number of seconds that Singularity waits for this service to become healthy (for it to download artifacts, start running, and optionally pass healthchecks)")
+  @Schema(nullable = true, description = "Number of seconds that Singularity waits for this service to become healthy (for it to download artifacts, start running, and optionally pass healthchecks)")
   public Optional<Long> getDeployHealthTimeoutSeconds() {
     return deployHealthTimeoutSeconds;
   }
 
-  @Schema(required=true, title = "Singularity Request Id which is associated with this deploy")
+  @Schema(required = true, description = "Singularity Request Id which is associated with this deploy")
   public String getRequestId() {
     return requestId;
   }
 
-  @Schema(required=true, title = "Singularity deploy id")
+  @Schema(required = true, description = "Singularity deploy id")
   public String getId() {
     return id;
   }
 
-  @Schema(nullable = true, title = "Deploy version")
+  @Schema(nullable = true, description = "Deploy version")
   public Optional<String> getVersion() {
     return version;
   }
 
-  @Schema(nullable = true, title = "Deploy timestamp")
+  @Schema(nullable = true, description = "Deploy timestamp")
   public Optional<Long> getTimestamp() {
     return timestamp;
   }
 
-  @Schema(nullable = true, title = "Map of metadata key/value pairs associated with the deployment")
+  @Schema(nullable = true, description = "Map of metadata key/value pairs associated with the deployment")
   public Optional<Map<String, String>> getMetadata() {
     return metadata;
   }
 
-  @Schema(nullable = true, title = "Container information for deployment into a container")
+  @Schema(nullable = true, description = "Container information for deployment into a container")
   public Optional<SingularityContainerInfo> getContainerInfo() {
     return containerInfo;
   }
 
-  @Schema(nullable = true, title = "Custom Mesos executor")
+  @Schema(nullable = true, description = "Custom Mesos executor")
   public Optional<String> getCustomExecutorCmd() {
     return customExecutorCmd;
   }
 
-  @Schema(nullable = true, title = "Custom Mesos executor id")
+  @Schema(nullable = true, description = "Custom Mesos executor id")
   public Optional<String> getCustomExecutorId() {
     return customExecutorId;
   }
 
-  @Schema(nullable = true, title = "Custom Mesos executor source")
+  @Schema(nullable = true, description = "Custom Mesos executor source")
   public Optional<String> getCustomExecutorSource() { return customExecutorSource; }
 
-  @Schema(nullable = true, title = "Resources to allocate for custom mesos executor")
+  @Schema(nullable = true, description = "Resources to allocate for custom mesos executor")
   public Optional<Resources> getCustomExecutorResources() {
     return customExecutorResources;
   }
 
-  @Schema(nullable = true, title = "Resources required for this deploy")
+  @Schema(nullable = true, description = "Resources required for this deploy")
   public Optional<Resources> getResources() {
     return resources;
   }
 
-  @Schema(nullable = true, title = "Command to execute for this deployment")
+  @Schema(nullable = true, description = "Command to execute for this deployment")
   public Optional<String> getCommand() {
     return command;
   }
 
-  @Schema(nullable = true, title = "Command arguments")
+  @Schema(nullable = true, description = "Command arguments")
   public Optional<List<String>> getArguments() {
     return arguments;
   }
 
-  @Schema(nullable = true, title = "Map of environment variable definitions")
+  @Schema(nullable = true, description = "Map of environment variable definitions")
   public Optional<Map<String, String>> getEnv() {
     return env;
   }
 
-  @Schema(nullable = true, title = "Map of environment variable overrides for specific task instances (task instance number -> Map<String, String> of environment variables")
+  @Schema(nullable = true, description = "Map of environment variable overrides for specific task instances (task instance number -> Map<String, String> of environment variables")
   public Optional<Map<Integer, Map<String, String>>> getTaskEnv() {
     return taskEnv;
   }
 
-  @Schema(nullable = true, title = "Settings used to run this deploy immediately (for non-long-running request types)")
+  @Schema(nullable = true, description = "Settings used to run this deploy immediately (for non-long-running request types)")
   public Optional<SingularityRunNowRequest> getRunImmediately() {
     return runImmediatelyRequest;
   }
 
-  @Schema(nullable = true, title = "List of URIs to download before executing the deploy command")
+  @Schema(nullable = true, description = "List of URIs to download before executing the deploy command")
   public Optional<List<SingularityMesosArtifact>> getUris() {
     return uris;
   }
 
-  @Schema(nullable = true, title = "Executor specific information")
+  @Schema(nullable = true, description = "Executor specific information")
   public Optional<ExecutorData> getExecutorData() {
     return executorData;
   }
 
   @Deprecated
-  @Schema(nullable = true, title = "Deployment Healthcheck URI, if specified will be called after TASK_RUNNING")
+  @Schema(nullable = true, description = "Deployment Healthcheck URI, if specified will be called after TASK_RUNNING")
   public Optional<String> getHealthcheckUri() {
     return healthcheckUri;
   }
 
   @Deprecated
-  @Schema(nullable = true, title = "Healthcheck protocol - HTTP or HTTPS")
+  @Schema(nullable = true, description = "Healthcheck protocol - HTTP or HTTPS")
   public Optional<HealthcheckProtocol> getHealthcheckProtocol() {
     return healthcheckProtocol;
   }
 
   @Deprecated
-  @Schema(nullable = true, title = "Time to wait after a failed healthcheck to try again in seconds")
+  @Schema(nullable = true, description = "Time to wait after a failed healthcheck to try again in seconds")
   public Optional<Long> getHealthcheckIntervalSeconds() {
     return healthcheckIntervalSeconds;
   }
 
   @Deprecated
-  @Schema(nullable = true, title = "Single healthcheck HTTP timeout in seconds")
+  @Schema(nullable = true, description = "Single healthcheck HTTP timeout in seconds")
   public Optional<Long> getHealthcheckTimeoutSeconds() {
     return healthcheckTimeoutSeconds;
   }
 
   @Deprecated
-  @Schema(nullable = true, title = "Perform healthcheck on this dynamically allocated port (e.g. 0 for first port), defaults to first port")
+  @Schema(nullable = true, description = "Perform healthcheck on this dynamically allocated port (e.g. 0 for first port), defaults to first port")
   public Optional<Integer> getHealthcheckPortIndex() {
     return healthcheckPortIndex;
   }
 
-  @Schema(nullable = true, title = "The base path for the API exposed by the deploy. Used in conjunction with the Load balancer API")
+  @Schema(nullable = true, description = "The base path for the API exposed by the deploy. Used in conjunction with the Load balancer API")
   public Optional<String> getServiceBasePath() {
     return serviceBasePath;
   }
 
-  @Schema(nullable = true, title = "Number of seconds that a service must be healthy to consider the deployment to be successful")
+  @Schema(nullable = true, description = "Number of seconds that a service must be healthy to consider the deployment to be successful")
   public Optional<Long> getConsiderHealthyAfterRunningForSeconds() {
     return considerHealthyAfterRunningForSeconds;
   }
 
-  @Schema(nullable = true, title = "List of load balancer groups associated with this deployment")
+  @Schema(nullable = true, description = "List of load balancer groups associated with this deployment")
   public Optional<Set<String>> getLoadBalancerGroups() {
     return loadBalancerGroups;
   }
 
-  @Schema(nullable = true, title = "Send this port to the load balancer api (e.g. 0 for first port), defaults to first port")
+  @Schema(nullable = true, description = "Send this port to the load balancer api (e.g. 0 for first port), defaults to first port")
   public Optional<Integer> getLoadBalancerPortIndex() {
     return loadBalancerPortIndex;
   }
 
-  @Schema(nullable = true, title = "Map (Key/Value) of options for the load balancer")
+  @Schema(nullable = true, description = "Map (Key/Value) of options for the load balancer")
   public Optional<Map<String, Object>> getLoadBalancerOptions() {
     return loadBalancerOptions;
   }
 
-  @Schema(nullable = true, title = "List of domains to host this service on, for use with the load balancer api")
+  @Schema(nullable = true, description = "List of domains to host this service on, for use with the load balancer api")
   public Optional<Set<String>> getLoadBalancerDomains() {
     return loadBalancerDomains;
   }
 
-  @Schema(nullable = true, title = "Additional routes besides serviceBasePath used by this service")
+  @Schema(nullable = true, description = "Additional routes besides serviceBasePath used by this service")
   public Optional<List<String>> getLoadBalancerAdditionalRoutes() {
     return loadBalancerAdditionalRoutes;
   }
 
-  @Schema(nullable = true, title = "Name of load balancer template to use if not using the default template")
+  @Schema(nullable = true, description = "Name of load balancer template to use if not using the default template")
   public Optional<String> getLoadBalancerTemplate() {
     return loadBalancerTemplate;
   }
 
-  @Schema(nullable = true, title = "Name of load balancer Service ID to use instead of the Request ID")
+  @Schema(nullable = true, description = "Name of load balancer Service ID to use instead of the Request ID")
   public Optional<String> getLoadBalancerServiceIdOverride() {
     return loadBalancerServiceIdOverride;
   }
 
-  @Schema(nullable = true, title = "Group name to tag all upstreams with in load balancer")
+  @Schema(nullable = true, description = "Group name to tag all upstreams with in load balancer")
   public Optional<String> getLoadBalancerUpstreamGroup() {
     return loadBalancerUpstreamGroup;
   }
 
   @Deprecated
-  @Schema(nullable = true, title = "Labels for all tasks associated with this deploy")
+  @Schema(nullable = true, description = "Labels for all tasks associated with this deploy")
   public Optional<Map<String, String>> getLabels() {
     return labels;
   }
 
-  @Schema(nullable = true, title = "Labels for all tasks associated with this deploy")
+  @Schema(nullable = true, description = "Labels for all tasks associated with this deploy")
   public Optional<List<SingularityMesosTaskLabel>> getMesosLabels() {
     return mesosLabels;
   }
 
-  @Schema(nullable = true, title = "(Deprecated) Labels for specific tasks associated with this deploy, indexed by instance number")
+  @Schema(nullable = true, description = "(Deprecated) Labels for specific tasks associated with this deploy, indexed by instance number")
   public Optional<Map<Integer, Map<String, String>>> getTaskLabels() {
     return taskLabels;
   }
 
-  @Schema(nullable = true, title = "Labels for specific tasks associated with this deploy, indexed by instance number")
+  @Schema(nullable = true, description = "Labels for specific tasks associated with this deploy, indexed by instance number")
   public Optional<Map<Integer, List<SingularityMesosTaskLabel>>> getMesosTaskLabels() {
     return mesosTaskLabels;
   }
 
-  @Schema(nullable = true, title = "Allows skipping of health checks when deploying.")
+  @Schema(nullable = true, description = "Allows skipping of health checks when deploying.")
   public Optional<Boolean> getSkipHealthchecksOnDeploy() {
     return skipHealthchecksOnDeploy;
   }
 
   @Deprecated
-  @Schema(nullable = true, title = "Maximum number of times to retry an individual healthcheck before failing the deploy.")
+  @Schema(nullable = true, description = "Maximum number of times to retry an individual healthcheck before failing the deploy.")
   public Optional<Integer> getHealthcheckMaxRetries() {
     return healthcheckMaxRetries;
   }
 
   @Deprecated
-  @Schema(nullable = true, title = "Maximum amount of time to wait before failing a deploy for healthchecks to pass.")
+  @Schema(nullable = true, description = "Maximum amount of time to wait before failing a deploy for healthchecks to pass.")
   public Optional<Long> getHealthcheckMaxTotalTimeoutSeconds() {
     return healthcheckMaxTotalTimeoutSeconds;
   }
 
-  @Schema(required = false, title = "HTTP Healthcheck settings")
+  @Schema(description = "HTTP Healthcheck settings")
   public Optional<HealthcheckOptions> getHealthcheck() {
     return healthcheck;
   }
 
-  @Schema(nullable = true, title = "deploy this many instances at a time")
+  @Schema(nullable = true, description = "deploy this many instances at a time")
   public Optional<Integer> getDeployInstanceCountPerStep() {
     return deployInstanceCountPerStep;
   }
 
-  @Schema(nullable = true, title = "wait this long between deploy steps")
+  @Schema(nullable = true, description = "wait this long between deploy steps")
   public Optional<Integer> getDeployStepWaitTimeMs() {
     return deployStepWaitTimeMs;
   }
 
-  @Schema(nullable = true, title = "automatically advance to the next target instance count after `deployStepWaitTimeMs` seconds")
+  @Schema(nullable = true, description = "automatically advance to the next target instance count after `deployStepWaitTimeMs` seconds")
   public Optional<Boolean> getAutoAdvanceDeploySteps() {
     return autoAdvanceDeploySteps;
   }
 
-  @Schema(nullable = true, title = "allowed at most this many failed tasks to be retried before failing the deploy")
+  @Schema(nullable = true, description = "allowed at most this many failed tasks to be retried before failing the deploy")
   public Optional<Integer> getMaxTaskRetries() {
     return maxTaskRetries;
   }
 
-  @Schema(nullable = true, title = "Override the shell property on the mesos task")
+  @Schema(nullable = true, description = "Override the shell property on the mesos task")
   public Optional<Boolean> getShell() {
     return shell;
   }
 
-  @Schema(nullable = true, title = "Run tasks as this user")
+  @Schema(nullable = true, description = "Run tasks as this user")
   public Optional<String> getUser() {
     return user;
   }

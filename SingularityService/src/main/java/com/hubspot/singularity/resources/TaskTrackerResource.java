@@ -24,17 +24,17 @@ import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.data.history.HistoryManager;
 
 import io.dropwizard.auth.Auth;
-import io.swagger.v3.oas.annotations.OpenAPIDefinition;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.info.Info;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.tags.Tags;
 
 @Path(ApiPaths.TASK_TRACKER_RESOURCE_PATH)
 @Produces({MediaType.APPLICATION_JSON})
-@OpenAPIDefinition(
-    info = @Info(title = "Retrieve a task by taskId or runId")
-)
+@Schema(title = "Retrieve a task by taskId or runId")
+@Tags({@Tag(name = "Task Tracking")})
 public class TaskTrackerResource {
   private final TaskManager taskManager;
   private final RequestManager requestManager;

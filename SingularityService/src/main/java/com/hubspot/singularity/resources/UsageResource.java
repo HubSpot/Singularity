@@ -29,16 +29,16 @@ import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.data.UsageManager;
 
 import io.dropwizard.auth.Auth;
-import io.swagger.v3.oas.annotations.OpenAPIDefinition;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.info.Info;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.tags.Tags;
 
 @Path(ApiPaths.USAGE_RESOURCE_PATH)
 @Produces({ MediaType.APPLICATION_JSON })
-@OpenAPIDefinition(
-    info = @Info(title = "Retrieve usage data about slaves and tasks")
-)
+@Schema(title = "Retrieve usage data about slaves and tasks")
+@Tags({@Tag(name = "Resource Usage")})
 public class UsageResource {
   private final UsageManager usageManager;
   private final TaskManager taskManager;

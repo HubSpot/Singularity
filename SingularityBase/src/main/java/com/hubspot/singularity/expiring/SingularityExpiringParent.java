@@ -26,22 +26,22 @@ public abstract class SingularityExpiringParent<T extends SingularityExpiringReq
     this.actionId = actionId;
   }
 
-  @Schema(title = "Object associated with the future action")
+  @Schema(description = "Object associated with the future action")
   public T getExpiringAPIRequestObject() {
     return expiringAPIRequestObject;
   }
 
-  @Schema(title = "User who initially triggered the future action", nullable = true)
+  @Schema(description = "User who initially triggered the future action", nullable = true)
   public Optional<String> getUser() {
     return user;
   }
 
-  @Schema(title = "Time the future action was created")
+  @Schema(description = "Time the future action was created")
   public long getStartMillis() {
     return startMillis;
   }
 
-  @Schema(title = "A unique id for this future action")
+  @Schema(description = "A unique id for this future action")
   public String getActionId() {
     return actionId;
   }

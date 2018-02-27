@@ -21,17 +21,17 @@ import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.UserManager;
 
 import io.dropwizard.auth.Auth;
-import io.swagger.v3.oas.annotations.OpenAPIDefinition;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.info.Info;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.tags.Tags;
 
 @Path(ApiPaths.AUTH_RESOURCE_PATH)
 @Produces({ MediaType.APPLICATION_JSON })
-@OpenAPIDefinition(
-    info = @Info(title = "Verify authentication for a user")
-)
+@Schema(title = "Verify authentication for a user")
+@Tags({@Tag(name = "Auth")})
 public class AuthResource {
   private final UserManager userManager;
   private final SingularityConfiguration configuration;

@@ -11,7 +11,7 @@ import com.google.common.collect.ComparisonChain;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
-@Schema(title = "A task id and latest state for a task")
+@Schema(description = "A task id and latest state for a task")
 public class SingularityTaskIdHistory implements Comparable<SingularityTaskIdHistory> {
 
   private final SingularityTaskId taskId;
@@ -49,22 +49,22 @@ public class SingularityTaskIdHistory implements Comparable<SingularityTaskIdHis
       .result();
   }
 
-  @Schema(title = "Task id")
+  @Schema(description = "Task id")
   public SingularityTaskId getTaskId() {
     return taskId;
   }
 
-  @Schema(title = "The latest state of the task", nullable = true)
+  @Schema(description = "The latest state of the task", nullable = true)
   public Optional<ExtendedTaskState> getLastTaskState() {
     return lastTaskState;
   }
 
-  @Schema(title = "The timestamp of the latest update for the task")
+  @Schema(description = "The timestamp of the latest update for the task")
   public long getUpdatedAt() {
     return updatedAt;
   }
 
-  @Schema(title = "A runId associated with this task", nullable = true)
+  @Schema(description = "A runId associated with this task", nullable = true)
   public Optional<String> getRunId() {
     return runId;
   }

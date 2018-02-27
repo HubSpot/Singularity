@@ -17,16 +17,16 @@ import com.hubspot.singularity.config.ApiPaths;
 import com.hubspot.singularity.data.InactiveSlaveManager;
 
 import io.dropwizard.auth.Auth;
-import io.swagger.v3.oas.annotations.OpenAPIDefinition;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.info.Info;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.tags.Tags;
 
 @Path(ApiPaths.INACTIVE_SLAVES_RESOURCE_PATH)
 @Produces(MediaType.APPLICATION_JSON)
-@OpenAPIDefinition(
-    info = @Info(title = "Manages Singularity Deploys for existing requests")
-)
+@Schema(title = "Manage Singularity machines that should be marked as inactive")
+@Tags({@Tag(name = "Inactive Machines")})
 public class InactiveSlaveResource {
   private final InactiveSlaveManager inactiveSlaveManager;
   private final SingularityAuthorizationHelper authorizationHelper;

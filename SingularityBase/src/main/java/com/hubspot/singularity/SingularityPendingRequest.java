@@ -13,7 +13,7 @@ import com.hubspot.mesos.SingularityMesosArtifact;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
-@Schema(title = "Describes a task that is waiting to be launched")
+@Schema(description = "Describes a task that is waiting to be launched")
 public class SingularityPendingRequest {
 
   @Schema

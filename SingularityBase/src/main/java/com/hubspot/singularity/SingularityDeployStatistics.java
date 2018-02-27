@@ -9,7 +9,7 @@ import com.google.common.collect.ListMultimap;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
-@Schema(title = "Task statistics related to a particular deploy")
+@Schema(description = "Task statistics related to a particular deploy")
 public class SingularityDeployStatistics {
 
   private final String requestId;
@@ -62,57 +62,57 @@ public class SingularityDeployStatistics {
     .setInstanceSequentialFailureTimestamps(ArrayListMultimap.create(instanceSequentialFailureTimestamps));
   }
 
-  @Schema(title = "The number of tasks associated with this deploy")
+  @Schema(description = "The number of tasks associated with this deploy")
   public int getNumTasks() {
     return numTasks;
   }
 
-  @Schema(title = "Average runtime of tasks associated with this deploy", nullable = true)
+  @Schema(description = "Average runtime of tasks associated with this deploy", nullable = true)
   public Optional<Long> getAverageRuntimeMillis() {
     return averageRuntimeMillis;
   }
 
-  @Schema(title = "Average delay launching tasks for this deploy", nullable = true)
+  @Schema(description = "Average delay launching tasks for this deploy", nullable = true)
   public Optional<Long> getAverageSchedulingDelayMillis() {
     return averageSchedulingDelayMillis;
   }
 
-  @Schema(title = "Request id")
+  @Schema(description = "Request id")
   public String getRequestId() {
     return requestId;
   }
 
-  @Schema(title = "Deploy id")
+  @Schema(description = "Deploy id")
   public String getDeployId() {
     return deployId;
   }
 
-  @Schema(title = "Number of tasks that have finished successfully for this deploy")
+  @Schema(description = "Number of tasks that have finished successfully for this deploy")
   public int getNumSuccess() {
     return numSuccess;
   }
 
-  @Schema(title = "Number of tasks that have finished with a failure for this deploy")
+  @Schema(description = "Number of tasks that have finished with a failure for this deploy")
   public int getNumFailures() {
     return numFailures;
   }
 
-  @Schema(title = "Time of the last finished task for this deploy", nullable = true)
+  @Schema(description = "Time of the last finished task for this deploy", nullable = true)
   public Optional<Long> getLastFinishAt() {
     return lastFinishAt;
   }
 
-  @Schema(title = "The most recent task state for this deploy", nullable = true)
+  @Schema(description = "The most recent task state for this deploy", nullable = true)
   public Optional<ExtendedTaskState> getLastTaskState() {
     return lastTaskState;
   }
 
-  @Schema(title = "Number of retries for tasks in this deploy, relevant for scheduled request types")
+  @Schema(description = "Number of retries for tasks in this deploy, relevant for scheduled request types")
   public int getNumSequentialRetries() {
     return numSequentialRetries;
   }
 
-  @Schema(title = "Timestamps of failed tasks by instance number")
+  @Schema(description = "Timestamps of failed tasks by instance number")
   public ListMultimap<Integer, Long> getInstanceSequentialFailureTimestamps() {
     return instanceSequentialFailureTimestamps;
   }

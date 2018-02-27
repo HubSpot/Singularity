@@ -8,7 +8,7 @@ import com.hubspot.singularity.LoadBalancerRequestType.LoadBalancerRequestId;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
-@Schema(title = "An updated to load balancer configuration")
+@Schema(description = "An updated to load balancer configuration")
 public class SingularityLoadBalancerUpdate {
 
   private final BaragonRequestState loadBalancerState;
@@ -35,32 +35,32 @@ public class SingularityLoadBalancerUpdate {
     this.loadBalancerRequestId = loadBalancerRequestId;
   }
 
-  @Schema(title = "The current state of the request to update load balancer configuration")
+  @Schema(description = "The current state of the request to update load balancer configuration")
   public BaragonRequestState getLoadBalancerState() {
     return loadBalancerState;
   }
 
-  @Schema(title = "An optional message accompanying the load balancer update")
+  @Schema(description = "An optional message accompanying the load balancer update")
   public Optional<String> getMessage() {
     return message;
   }
 
-  @Schema(title = "The time at which this update occured")
+  @Schema(description = "The time at which this update occured")
   public long getTimestamp() {
     return timestamp;
   }
 
-  @Schema(title = "The uri used to update the load balancer configuration")
+  @Schema(description = "The uri used to update the load balancer configuration")
   public Optional<String> getUri() {
     return uri;
   }
 
-  @Schema(title = "Describes the reason for this load balancer update")
+  @Schema(description = "Describes the reason for this load balancer update")
   public LoadBalancerMethod getMethod() {
     return method;
   }
 
-  @Schema(title = "A unique id describing this load balancer update")
+  @Schema(description = "A unique id describing this load balancer update")
   public LoadBalancerRequestId getLoadBalancerRequestId() {
     return loadBalancerRequestId;
   }

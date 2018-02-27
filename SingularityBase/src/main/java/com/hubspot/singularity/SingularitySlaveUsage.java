@@ -84,12 +84,12 @@ public class SingularitySlaveUsage {
     this.slaveDiskTotal = slaveDiskTotal;
   }
 
-  @Schema(title = "Total cpus used by tasks")
+  @Schema(description = "Total cpus used by tasks")
   public double getCpusUsed() {
     return cpusUsed;
   }
 
-  @Schema(title = "Total cpus reserved by tasks")
+  @Schema(description = "Total cpus reserved by tasks")
   public double getCpusReserved() {
     return cpusReserved;
   }
@@ -103,12 +103,12 @@ public class SingularitySlaveUsage {
     return cpusTotal;
   }
 
-  @Schema(title = "Total memory used by tasks in bytes")
+  @Schema(description = "Total memory used by tasks in bytes")
   public long getMemoryBytesUsed() {
     return memoryBytesUsed;
   }
 
-  @Schema(title = "Total memory reserved by tasks in MB")
+  @Schema(description = "Total memory reserved by tasks in MB")
   public long getMemoryMbReserved() {
     return memoryMbReserved;
   }
@@ -131,12 +131,12 @@ public class SingularitySlaveUsage {
     return memoryMbTotal.isPresent() ? Optional.of(memoryMbTotal.get() * BYTES_PER_MEGABYTE) : Optional.absent();
   }
 
-  @Schema(title = "Total disk currently used by tasks in bytes")
+  @Schema(description = "Total disk currently used by tasks in bytes")
   public long getDiskBytesUsed() {
     return diskBytesUsed;
   }
 
-  @Schema(title = "Total disk currently reserved by tasks in MB")
+  @Schema(description = "Total disk currently reserved by tasks in MB")
   public long getDiskMbReserved() {
     return diskMbReserved;
   }
@@ -159,47 +159,47 @@ public class SingularitySlaveUsage {
     return diskMbTotal.isPresent() ? Optional.of(diskMbTotal.get() * BYTES_PER_MEGABYTE) : Optional.absent();
   }
 
-  @Schema(title = "CPU/DISK/MEMORY usage of long running tasks on this slave")
+  @Schema(description = "CPU/DISK/MEMORY usage of long running tasks on this slave")
   public Map<ResourceUsageType, Number> getLongRunningTasksUsage() {
     return longRunningTasksUsage;
   }
 
-  @Schema(title = "Number of active tasks on this salve")
+  @Schema(description = "Number of active tasks on this salve")
   public int getNumTasks() {
     return numTasks;
   }
 
-  @Schema(title = "Timestamp when usage data was collected")
+  @Schema(description = "Timestamp when usage data was collected")
   public long getTimestamp() {
     return timestamp;
   }
 
-  @Schema(title = "Total memory in bytes")
+  @Schema(description = "Total memory in bytes")
   public double getSystemMemTotalBytes() {
     return systemMemTotalBytes;
   }
 
-  @Schema(title = "Free memory in bytes")
+  @Schema(description = "Free memory in bytes")
   public double getSystemMemFreeBytes() {
     return systemMemFreeBytes;
   }
 
-  @Schema(title = "Number of CPUs available in this slave node")
+  @Schema(description = "Number of CPUs available in this slave node")
   public double getSystemCpusTotal() {
     return systemCpusTotal;
   }
 
-  @Schema(title = "Load average for the past minute")
+  @Schema(description = "Load average for the past minute")
   public double getSystemLoad1Min() {
     return systemLoad1Min;
   }
 
-  @Schema(title = "Load average for the past 5 minutes")
+  @Schema(description = "Load average for the past 5 minutes")
   public double getSystemLoad5Min() {
     return systemLoad5Min;
   }
 
-  @Schema(title = "Load average for the past 15 minutes")
+  @Schema(description = "Load average for the past 15 minutes")
   public double getSystemLoad15Min() {
     return systemLoad15Min;
   }
@@ -212,7 +212,7 @@ public class SingularitySlaveUsage {
     return slaveDiskUsed;
   }
 
-  @Schema(title = "Total disk spave available on the slave in bytes")
+  @Schema(description = "Total disk spave available on the slave in bytes")
   public double getSlaveDiskTotal() {
     return slaveDiskTotal;
   }

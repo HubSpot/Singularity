@@ -5,7 +5,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
-@Schema(title = "Represents a file in a Mesos sandbox")
+@Schema(description = "Represents a file in a Mesos sandbox")
 public class SingularitySandboxFile {
 
   private final String name;
@@ -21,22 +21,22 @@ public class SingularitySandboxFile {
     this.size = size;
   }
 
-  @Schema(title = "Filename")
+  @Schema(description = "Filename")
   public String getName() {
     return name;
   }
 
-  @Schema(title = "Last modified time")
+  @Schema(description = "Last modified time")
   public long getMtime() {
     return mtime;
   }
 
-  @Schema(title = "File size (in bytes)")
+  @Schema(description = "File size (in bytes)")
   public long getSize() {
     return size;
   }
 
-  @Schema(title = "File mode")
+  @Schema(description = "File mode")
   public String getMode() {
     return mode;
   }

@@ -9,7 +9,7 @@ import com.hubspot.singularity.SingularityAction;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
-@Schema(title = "Notes related to a particular disabled action")
+@Schema(description = "Notes related to a particular disabled action")
 public class SingularityDisabledActionRequest {
   private final SingularityAction type;
   private final Optional<String> message;
@@ -20,12 +20,12 @@ public class SingularityDisabledActionRequest {
     this.message = message;
   }
 
-  @Schema(required = true, title = "The type of action to disable")
+  @Schema(required = true, description = "The type of action to disable")
   public SingularityAction getType() {
     return type;
   }
 
-  @Schema(title = "An optional message/reason for disabling the action specified")
+  @Schema(description = "An optional message/reason for disabling the action specified")
   public Optional<String> getMessage() {
     return message;
   }

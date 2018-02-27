@@ -19,12 +19,12 @@ public class SingularityS3Log extends SingularityS3LogMetadata {
     this.downloadUrl = downloadUrl;
   }
 
-  @Schema(title = "URL to file in S3")
+  @Schema(description = "URL to file in S3")
   public String getGetUrl() {
     return getUrl;
   }
 
-  @Schema(title = "URL to file in S3 containing headers that will force file to be downloaded instead of viewed")
+  @Schema(description = "URL to file in S3 containing headers that will force file to be downloaded instead of viewed")
   public String getDownloadUrl() {
     return downloadUrl;
   }

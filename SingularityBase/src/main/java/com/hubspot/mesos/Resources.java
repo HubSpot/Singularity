@@ -9,7 +9,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
-@Schema(title = "Describes the resources requested by a particular task")
+@Schema(description = "Describes the resources requested by a particular task")
 public class Resources {
   public static Resources add(Resources a, Resources b) {
     checkNotNull(a, "first argument of Resources.add() is null");
@@ -37,22 +37,22 @@ public class Resources {
     this.diskMb = diskMb;
   }
 
-  @Schema(title = "the number of ports requested")
+  @Schema(description = "the number of ports requested")
   public int getNumPorts() {
     return numPorts;
   }
 
-  @Schema(title = "The number of cpus requested")
+  @Schema(description = "The number of cpus requested")
   public double getCpus() {
     return cpus;
   }
 
-  @Schema(title = "The amount of memory request in MB")
+  @Schema(description = "The amount of memory request in MB")
   public double getMemoryMb() {
     return memoryMb;
   }
 
-  @Schema(title = "The amount of disk space requested in MB")
+  @Schema(description = "The amount of disk space requested in MB")
   public double getDiskMb() {
     return diskMb;
   }

@@ -9,7 +9,7 @@ import com.google.common.base.Optional;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
-@Schema(title = "Describes a completed deploy")
+@Schema(description = "Describes a completed deploy")
 public class SingularityDeployHistory implements Comparable<SingularityDeployHistory>, SingularityHistoryItem {
 
   private final Optional<SingularityDeployResult> deployResult;
@@ -31,17 +31,17 @@ public class SingularityDeployHistory implements Comparable<SingularityDeployHis
     return o.getDeployMarker().compareTo(getDeployMarker());
   }
 
-  @Schema(title = "The result of the deploy", nullable = true)
+  @Schema(description = "The result of the deploy", nullable = true)
   public Optional<SingularityDeployResult> getDeployResult() {
     return deployResult;
   }
 
-  @Schema(title = "Uniquely identifies the deploy")
+  @Schema(description = "Uniquely identifies the deploy")
   public SingularityDeployMarker getDeployMarker() {
     return deployMarker;
   }
 
-  @Schema(title = "Full deploy data", nullable = true)
+  @Schema(description = "Full deploy data", nullable = true)
   public Optional<SingularityDeploy> getDeploy() {
     return deploy;
   }
@@ -52,7 +52,7 @@ public class SingularityDeployHistory implements Comparable<SingularityDeployHis
     return deployMarker.getTimestamp();
   }
 
-  @Schema(title = "Task statistics related to this deploy")
+  @Schema(description = "Task statistics related to this deploy")
   public Optional<SingularityDeployStatistics> getDeployStatistics() {
     return deployStatistics;
   }

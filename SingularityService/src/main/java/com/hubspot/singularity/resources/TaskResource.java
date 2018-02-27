@@ -80,18 +80,18 @@ import com.hubspot.singularity.helpers.RequestHelper;
 import com.ning.http.client.AsyncHttpClient;
 
 import io.dropwizard.auth.Auth;
-import io.swagger.v3.oas.annotations.OpenAPIDefinition;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.info.Info;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.tags.Tags;
 
 @Path(ApiPaths.TASK_RESOURCE_PATH)
 @Produces({ MediaType.APPLICATION_JSON })
-@OpenAPIDefinition(
-    info = @Info(title = "Manage Singularity tasks")
-)
+@Schema(title = "Manage Singularity tasks")
+@Tags({@Tag(name = "Tasks")})
 public class TaskResource extends AbstractLeaderAwareResource {
   private static final Logger LOG = LoggerFactory.getLogger(TaskResource.class);
 

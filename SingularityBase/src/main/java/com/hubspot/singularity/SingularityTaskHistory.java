@@ -10,7 +10,7 @@ import com.hubspot.mesos.JavaUtils;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
-@Schema(title = "Describes the full history of a Singularity task")
+@Schema(description = "Describes the full history of a Singularity task")
 public class SingularityTaskHistory {
 
   private final List<SingularityTaskHistoryUpdate> taskUpdates;
@@ -41,42 +41,42 @@ public class SingularityTaskHistory {
     this.taskMetadata = JavaUtils.nonNullImmutable(taskMetadata);
   }
 
-  @Schema(title = "A list of status updates for this task")
+  @Schema(description = "A list of status updates for this task")
   public List<SingularityTaskHistoryUpdate> getTaskUpdates() {
     return taskUpdates;
   }
 
-  @Schema(title = "The directory of the task sandbox on teh mesos slave", nullable = true)
+  @Schema(description = "The directory of the task sandbox on teh mesos slave", nullable = true)
   public Optional<String> getDirectory() {
     return directory;
   }
 
-  @Schema(title = "If a docker task, the docker container id", nullable = true)
+  @Schema(description = "If a docker task, the docker container id", nullable = true)
   public Optional<String> getContainerId() {
     return containerId;
   }
 
-  @Schema(title = "Full Singularity task data")
+  @Schema(description = "Full Singularity task data")
   public SingularityTask getTask() {
     return task;
   }
 
-  @Schema(title = "A list of custom metadata associated with this task")
+  @Schema(description = "A list of custom metadata associated with this task")
   public List<SingularityTaskMetadata> getTaskMetadata() {
     return taskMetadata;
   }
 
-  @Schema(title = "Healthcheck results for this task")
+  @Schema(description = "Healthcheck results for this task")
   public List<SingularityTaskHealthcheckResult> getHealthcheckResults() {
     return healthcheckResults;
   }
 
-  @Schema(title = "A list of load balancer updates for this task")
+  @Schema(description = "A list of load balancer updates for this task")
   public List<SingularityLoadBalancerUpdate> getLoadBalancerUpdates() {
     return loadBalancerUpdates;
   }
 
-  @Schema(title = "A list of shell commands that have been run against this task")
+  @Schema(description = "A list of shell commands that have been run against this task")
   public List<SingularityTaskShellCommandHistory> getShellCommandHistory() {
     return shellCommandHistory;
   }

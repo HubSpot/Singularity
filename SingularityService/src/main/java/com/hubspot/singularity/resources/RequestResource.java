@@ -86,14 +86,16 @@ import io.swagger.v3.oas.annotations.OpenAPIDefinition;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.info.Info;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.tags.Tags;
 
 @Path(ApiPaths.REQUEST_RESOURCE_PATH)
 @Produces({ MediaType.APPLICATION_JSON })
-@OpenAPIDefinition(
-    info = @Info(title = "Manages Singularity Requests, the parent object for any deployed task")
-)
+@Schema(title = "Manages Singularity Requests, the parent object for any deployed task")
+@Tags({@Tag(name = "Requests")})
 public class RequestResource extends AbstractRequestResource {
   private static final Logger LOG = LoggerFactory.getLogger(RequestResource.class);
 
@@ -526,13 +528,14 @@ public class RequestResource extends AbstractRequestResource {
   @Operation(
       summary = "Immediately exits cooldown, scheduling new tasks immediately",
       responses = {
-        @ApiResponse(responseCode = "409", description = "Request is not in cooldown"),
+        @ApiResponse(responseCode = "409", description = "Request is not in cooldown")
       }
   )
-  public SingularityRequestParent exitCooldown(@Auth SingularityUser user,
-                                               @Parameter(required = true, description = "The request to operate on") @PathParam("requestId") String requestId,
-                                               @Context HttpServletRequest requestContext,
-                                               SingularityExitCooldownRequest exitCooldownRequest) {
+  public SingularityRequestParent exitCooldown(
+      @Auth SingularityUser user,
+      @Parameter(required = true, description = "The request to operate on") @PathParam("requestId") String requestId,
+      @Context HttpServletRequest requestContext,
+      @RequestBody(description = "Settings related to how an exit cooldown should behave") SingularityExitCooldownRequest exitCooldownRequest) {
     final Optional<SingularityExitCooldownRequest> maybeExitCooldownRequest = Optional.fromNullable(exitCooldownRequest);
     return maybeProxyToLeader(requestContext, SingularityRequestParent.class, maybeExitCooldownRequest.orNull(), () -> exitCooldown(requestId, maybeExitCooldownRequest, user));
   }
@@ -569,13 +572,14 @@ public class RequestResource extends AbstractRequestResource {
   @GET
   @PropertyFiltering
   @Path("/active")
-  @Operation(summary = "Retrieve the list of active requests", response=SingularityRequestParent.class, responseContainer="List")
-  public List<SingularityRequestParent> getActiveRequests(@Auth SingularityUser user,
-                                                          @QueryParam("useWebCache") Boolean useWebCache,
-                                                          @QueryParam("filterRelevantForUser") Boolean filterRelevantForUser,
-                                                          @QueryParam("includeFullRequestData") Boolean includeFullRequestData,
-                                                          @QueryParam("limit") Integer limit,
-                                                          @QueryParam("requestType") List<RequestType> requestTypes) {
+  @Operation(summary = "Retrieve the list of active requests")
+  public List<SingularityRequestParent> getActiveRequests(
+      @Auth SingularityUser user,
+      @Parameter(description = "Fetched a cached version of this data to limit expensive operations") @QueryParam("useWebCache") Boolean useWebCache,
+      @Parameter(description = "Only include requests that the user has operated on or is in a group for") @QueryParam("filterRelevantForUser") Boolean filterRelevantForUser,
+      @Parameter(description = "Return full data, including deploy data and active task ids") @QueryParam("includeFullRequestData") Boolean includeFullRequestData,
+      @Parameter(description = "The maximum number of results to return") @QueryParam("limit") Integer limit,
+      @Parameter(description = "Only return requests of these types") @QueryParam("requestType") List<RequestType> requestTypes) {
     return requestHelper.fillDataForRequestsAndFilter(
         filterAutorized(Lists.newArrayList(requestManager.getActiveRequests(useWebCache(useWebCache))), SingularityAuthorizationScope.READ, user),
         user, valueOrFalse(filterRelevantForUser), valueOrFalse(includeFullRequestData), Optional.fromNullable(limit), requestTypes);
@@ -585,13 +589,14 @@ public class RequestResource extends AbstractRequestResource {
   @GET
   @PropertyFiltering
   @Path("/paused")
-  @Operation(summary = "Retrieve the list of paused requests", response=SingularityRequestParent.class, responseContainer="List")
-  public List<SingularityRequestParent> getPausedRequests(@Auth SingularityUser user,
-                                                          @QueryParam("useWebCache") Boolean useWebCache,
-                                                          @QueryParam("filterRelevantForUser") Boolean filterRelevantForUser,
-                                                          @QueryParam("includeFullRequestData") Boolean includeFullRequestData,
-                                                          @QueryParam("limit") Integer limit,
-                                                          @QueryParam("requestType") List<RequestType> requestTypes) {
+  @Operation(summary = "Retrieve the list of paused requests")
+  public List<SingularityRequestParent> getPausedRequests(
+      @Auth SingularityUser user,
+      @Parameter(description = "Fetched a cached version of this data to limit expensive operations") @QueryParam("useWebCache") Boolean useWebCache,
+      @Parameter(description = "Only include requests that the user has operated on or is in a group for") @QueryParam("filterRelevantForUser") Boolean filterRelevantForUser,
+      @Parameter(description = "Return full data, including deploy data and active task ids") @QueryParam("includeFullRequestData") Boolean includeFullRequestData,
+      @Parameter(description = "The maximum number of results to return") @QueryParam("limit") Integer limit,
+      @Parameter(description = "Only return requests of these types") @QueryParam("requestType") List<RequestType> requestTypes) {
     return requestHelper.fillDataForRequestsAndFilter(
         filterAutorized(Lists.newArrayList(requestManager.getPausedRequests(useWebCache(useWebCache))), SingularityAuthorizationScope.READ, user),
         user, valueOrFalse(filterRelevantForUser), valueOrFalse(includeFullRequestData), Optional.fromNullable(limit), requestTypes);
@@ -600,13 +605,14 @@ public class RequestResource extends AbstractRequestResource {
   @GET
   @PropertyFiltering
   @Path("/cooldown")
-  @Operation(summary = "Retrieve the list of requests in system cooldown", response=SingularityRequestParent.class, responseContainer="List")
-  public List<SingularityRequestParent> getCooldownRequests(@Auth SingularityUser user,
-                                                            @QueryParam("useWebCache") Boolean useWebCache,
-                                                            @QueryParam("filterRelevantForUser") Boolean filterRelevantForUser,
-                                                            @QueryParam("includeFullRequestData") Boolean includeFullRequestData,
-                                                            @QueryParam("limit") Integer limit,
-                                                            @QueryParam("requestType") List<RequestType> requestTypes) {
+  @Operation(summary = "Retrieve the list of requests in system cooldown")
+  public List<SingularityRequestParent> getCooldownRequests(
+      @Auth SingularityUser user,
+      @Parameter(description = "Fetched a cached version of this data to limit expensive operations") @QueryParam("useWebCache") Boolean useWebCache,
+      @Parameter(description = "Only include requests that the user has operated on or is in a group for") @QueryParam("filterRelevantForUser") Boolean filterRelevantForUser,
+      @Parameter(description = "Return full data, including deploy data and active task ids") @QueryParam("includeFullRequestData") Boolean includeFullRequestData,
+      @Parameter(description = "The maximum number of results to return") @QueryParam("limit") Integer limit,
+      @Parameter(description = "Only return requests of these types") @QueryParam("requestType") List<RequestType> requestTypes) {
     return requestHelper.fillDataForRequestsAndFilter(
         filterAutorized(Lists.newArrayList(requestManager.getCooldownRequests(useWebCache(useWebCache))), SingularityAuthorizationScope.READ, user),
         user, valueOrFalse(filterRelevantForUser), valueOrFalse(includeFullRequestData), Optional.fromNullable(limit), requestTypes);
@@ -615,9 +621,10 @@ public class RequestResource extends AbstractRequestResource {
   @GET
   @PropertyFiltering
   @Path("/finished")
-  @Operation(summary = "Retreive the list of finished requests (Scheduled requests which have exhausted their schedules)", response=SingularityRequestParent.class, responseContainer="List")
-  public List<SingularityRequestParent> getFinishedRequests(@Auth SingularityUser user,
-                                                            @QueryParam("useWebCache") Boolean useWebCache,
+  @Operation(summary = "Retreive the list of finished requests (Scheduled requests which have exhausted their schedules)")
+  public List<SingularityRequestParent> getFinishedRequests(
+      @Auth SingularityUser user,
+      @Parameter(description = "Fetched a cached version of this data to limit expensive operations") @QueryParam("useWebCache") Boolean useWebCache,
                                                             @QueryParam("filterRelevantForUser") Boolean filterRelevantForUser,
                                                             @QueryParam("includeFullRequestData") Boolean includeFullRequestData,
                                                             @QueryParam("limit") Integer limit,
@@ -629,13 +636,14 @@ public class RequestResource extends AbstractRequestResource {
 
   @GET
   @PropertyFiltering
-  @Operation(summary = "Retrieve the list of all requests", response=SingularityRequestParent.class, responseContainer="List")
-  public List<SingularityRequestParent> getRequests(@Auth SingularityUser user,
-                                                    @QueryParam("useWebCache") Boolean useWebCache,
-                                                    @QueryParam("filterRelevantForUser") Boolean filterRelevantForUser,
-                                                    @QueryParam("includeFullRequestData") Boolean includeFullRequestData,
-                                                    @QueryParam("limit") Integer limit,
-                                                    @QueryParam("requestType") List<RequestType> requestTypes) {
+  @Operation(summary = "Retrieve the list of all requests")
+  public List<SingularityRequestParent> getRequests(
+      @Auth SingularityUser user,
+      @Parameter(description = "Fetched a cached version of this data to limit expensive operations") @QueryParam("useWebCache") Boolean useWebCache,
+      @Parameter(description = "Only include requests that the user has operated on or is in a group for") @QueryParam("filterRelevantForUser") Boolean filterRelevantForUser,
+      @Parameter(description = "Return full data, including deploy data and active task ids") @QueryParam("includeFullRequestData") Boolean includeFullRequestData,
+      @Parameter(description = "The maximum number of results to return") @QueryParam("limit") Integer limit,
+      @Parameter(description = "Only return requests of these types") @QueryParam("requestType") List<RequestType> requestTypes) {
     return requestHelper.fillDataForRequestsAndFilter(
         filterAutorized(requestManager.getRequests(useWebCache(useWebCache)), SingularityAuthorizationScope.READ, user),
         user, valueOrFalse(filterRelevantForUser), valueOrFalse(includeFullRequestData), Optional.fromNullable(limit), requestTypes);
@@ -657,28 +665,31 @@ public class RequestResource extends AbstractRequestResource {
   @GET
   @PropertyFiltering
   @Path("/queued/pending")
-  @Operation(summary = "Retrieve the list of pending requests", response=SingularityPendingRequest.class, responseContainer="List")
-  public Iterable<SingularityPendingRequest> getPendingRequests(@Auth SingularityUser user) {
+  @Operation(summary = "Retrieve the list of pending requests")
+  public List<SingularityPendingRequest> getPendingRequests(@Auth SingularityUser user) {
     return authorizationHelper.filterByAuthorizedRequests(user, requestManager.getPendingRequests(), SingularityTransformHelpers.PENDING_REQUEST_TO_REQUEST_ID, SingularityAuthorizationScope.READ);
   }
 
   @GET
   @PropertyFiltering
   @Path("/queued/cleanup")
-  @Operation(summary = "Retrieve the list of requests being cleaned up", response=SingularityRequestCleanup.class, responseContainer="List")
-  public Iterable<SingularityRequestCleanup> getCleanupRequests(@Auth SingularityUser user) {
+  @Operation(summary = "Retrieve the list of requests being cleaned up")
+  public List<SingularityRequestCleanup> getCleanupRequests(@Auth SingularityUser user) {
     return authorizationHelper.filterByAuthorizedRequests(user, requestManager.getCleanupRequests(), SingularityTransformHelpers.REQUEST_CLEANUP_TO_REQUEST_ID, SingularityAuthorizationScope.READ);
   }
 
   @GET
   @Path("/request/{requestId}")
-  @Operation(summary = "Retrieve a specific Request by ID", response=SingularityRequestParent.class,
+  @Operation(
+      summary = "Retrieve a specific Request by ID",
       responses = {
-        @ApiResponse(responseCode = "404", description = "No Request with that ID"),
-  })
-  public SingularityRequestParent getRequest(@Auth SingularityUser user,
-                                             @ApiParam("Request ID") @PathParam("requestId") String requestId,
-                                             @QueryParam("useWebCache") Boolean useWebCache) {
+        @ApiResponse(responseCode = "404", description = "No Request with that ID")
+      }
+  )
+  public SingularityRequestParent getRequest(
+      @Auth SingularityUser user,
+      @Parameter(required = true, description = "Request ID") @PathParam("requestId") String requestId,
+      @Parameter(description = "Fetched a cached version of this data to limit expensive operations") @QueryParam("useWebCache") Boolean useWebCache) {
     return fillEntireRequest(fetchRequestWithState(requestId, useWebCache(useWebCache), user));
   }
 
@@ -689,14 +700,17 @@ public class RequestResource extends AbstractRequestResource {
   @DELETE
   @Path("/request/{requestId}")
   @Consumes({ MediaType.APPLICATION_JSON })
-  @Operation(summary = "Delete a specific Request by ID and return the deleted Request", response=SingularityRequest.class,
+  @Operation(
+      summary = "Delete a specific Request by ID and return the deleted Request",
       responses = {
-        @ApiResponse(responseCode = "404", description = "No Request with that ID"),
-  })
-  public SingularityRequest deleteRequest(@Auth SingularityUser user,
-                                          @ApiParam("The request ID to delete.") @PathParam("requestId") String requestId,
-                                          @Context HttpServletRequest requestContext,
-                                          @ApiParam("Delete options") SingularityDeleteRequestRequest deleteRequest) {
+        @ApiResponse(responseCode = "404", description = "No Request with that ID")
+      }
+  )
+  public SingularityRequest deleteRequest(
+      @Auth SingularityUser user,
+      @Parameter(required = true, description = "The request ID to delete") @PathParam("requestId") String requestId,
+      @Context HttpServletRequest requestContext,
+      @RequestBody(description = "Delete options") SingularityDeleteRequestRequest deleteRequest) {
     final Optional<SingularityDeleteRequestRequest> maybeDeleteRequest = Optional.fromNullable(deleteRequest);
     return maybeProxyToLeader(requestContext, SingularityRequest.class, maybeDeleteRequest.orNull(), () -> deleteRequest(requestId, maybeDeleteRequest, user));
   }
@@ -727,14 +741,16 @@ public class RequestResource extends AbstractRequestResource {
   @PUT
   @Path("/request/{requestId}/scale")
   @Consumes({ MediaType.APPLICATION_JSON })
-  @Operation(summary = "Scale the number of instances up or down for a specific Request", response=SingularityRequestParent.class,
+  @Operation(summary = "Scale the number of instances up or down for a specific Request",
       responses = {
-        @ApiResponse(responseCode = "404", description = "No Request with that ID"),
-  })
-  public SingularityRequestParent scale(@Auth SingularityUser user,
-                                        @ApiParam("The Request ID to scale") @PathParam("requestId") String requestId,
-                                        @Context HttpServletRequest requestContext,
-                                        @ApiParam("Object to hold number of instances to request") SingularityScaleRequest scaleRequest) {
+        @ApiResponse(responseCode = "404", description = "No Request with that ID")
+      }
+  )
+  public SingularityRequestParent scale(
+      @Auth SingularityUser user,
+      @Parameter(required = true, description = "The Request ID to scale") @PathParam("requestId") String requestId,
+      @Context HttpServletRequest requestContext,
+      @RequestBody(required = true, description = "Object to hold number of instances to request") SingularityScaleRequest scaleRequest) {
     return maybeProxyToLeader(requestContext, SingularityRequestParent.class, scaleRequest, () -> scale(requestId, scaleRequest, user));
   }
 
@@ -799,57 +815,68 @@ public class RequestResource extends AbstractRequestResource {
 
   @DELETE
   @Path("/request/{requestId}/scale")
-  @Operation(summary = "Delete/cancel the expiring scale. This makes the scale request permanent.", response=SingularityRequestParent.class,
+  @Operation(
+      summary = "Delete/cancel the expiring scale. This makes the scale request permanent",
       responses = {
-        @ApiResponse(responseCode = "404", description = "No Request or expiring scale request for that ID"),
-  })
-  public SingularityRequestParent deleteExpiringScale(@Auth SingularityUser user,
-                                                      @ApiParam("The Request ID") @PathParam("requestId") String requestId) {
+        @ApiResponse(responseCode = "404", description = "No Request or expiring scale request for that ID")
+      }
+  )
+  public SingularityRequestParent deleteExpiringScale(
+      @Auth SingularityUser user,
+      @Parameter(required = true, description = "The Request ID") @PathParam("requestId") String requestId) {
     return deleteExpiringObject(SingularityExpiringScale.class, requestId, user);
   }
 
   @Deprecated
   @DELETE
   @Path("/request/{requestId}/skipHealthchecks")
-  @Operation(summary = "Delete/cancel the expiring skipHealthchecks. This makes the skipHealthchecks request permanent.", response=SingularityRequestParent.class,
+  @Operation(
+      summary = "Delete/cancel the expiring skipHealthchecks. This makes the skipHealthchecks request permanent",
       responses = {
-          @ApiResponse(responseCode = "404", description = "No Request or expiring skipHealthchecks request for that ID"),
-  })
-  public SingularityRequestParent deleteExpiringSkipHealthchecksDeprecated(@Auth SingularityUser user,
-                                                                           @ApiParam("The Request ID") @PathParam("requestId") String requestId) {
+          @ApiResponse(responseCode = "404", description = "No Request or expiring skipHealthchecks request for that ID")
+      }
+  )
+  public SingularityRequestParent deleteExpiringSkipHealthchecksDeprecated(
+      @Auth SingularityUser user,
+      @Parameter(required = true, description = "The Request ID") @PathParam("requestId") String requestId) {
     return deleteExpiringSkipHealthchecks(user, requestId);
   }
 
   @DELETE
   @Path("/request/{requestId}/skip-healthchecks")
-  @Operation(summary = "Delete/cancel the expiring skipHealthchecks. This makes the skipHealthchecks request permanent.", response=SingularityRequestParent.class,
+  @Operation(
+      summary = "Delete/cancel the expiring skipHealthchecks. This makes the skipHealthchecks request permanent",
       responses = {
-        @ApiResponse(responseCode = "404", description = "No Request or expiring skipHealthchecks request for that ID"),
-  })
-  public SingularityRequestParent deleteExpiringSkipHealthchecks(@Auth SingularityUser user,
-                                                                 @ApiParam("The Request ID") @PathParam("requestId") String requestId) {
+        @ApiResponse(responseCode = "404", description = "No Request or expiring skipHealthchecks request for that ID")
+      }
+  )
+  public SingularityRequestParent deleteExpiringSkipHealthchecks(
+      @Auth SingularityUser user,
+      @Parameter(required = true, description = "The Request ID") @PathParam("requestId") String requestId) {
     return deleteExpiringObject(SingularityExpiringSkipHealthchecks.class, requestId, user);
   }
 
   @DELETE
   @Path("/request/{requestId}/pause")
-  @Operation(summary = "Delete/cancel the expiring pause. This makes the pause request permanent.", response=SingularityRequestParent.class,
+  @Operation(summary = "Delete/cancel the expiring pause. This makes the pause request permanent",
       responses = {
         @ApiResponse(responseCode = "404", description = "No Request or expiring pause request for that ID"),
   })
-  public SingularityRequestParent deleteExpiringPause(@Auth SingularityUser user,
-                                                      @ApiParam("The Request ID") @PathParam("requestId") String requestId) {
+  public SingularityRequestParent deleteExpiringPause(
+      @Auth SingularityUser user,
+      @Parameter(required = true, description = "The Request ID") @PathParam("requestId") String requestId) {
     return deleteExpiringObject(SingularityExpiringPause.class, requestId, user);
   }
 
   @DELETE
   @Path("/request/{requestId}/bounce")
-  @Operation(summary = "Delete/cancel the expiring bounce. This makes the bounce request permanent.", response=SingularityRequestParent.class,
+  @Operation(summary = "Delete/cancel the expiring bounce. This makes the bounce request permanent",
       responses = {
         @ApiResponse(responseCode = "404", description = "No Request or expiring bounce request for that ID"),
   })
-  public SingularityRequestParent deleteExpiringBounce(@Auth SingularityUser user,
-                                                       @ApiParam("The Request ID") @PathParam("requestId") String requestId) {
+  public SingularityRequestParent deleteExpiringBounce(
+      @Auth SingularityUser user,
+      @Parameter(required = true, description = "The Request ID") @PathParam("requestId") String requestId) {
     return deleteExpiringObject(SingularityExpiringBounce.class, requestId, user);
   }
 
@@ -857,28 +884,33 @@ public class RequestResource extends AbstractRequestResource {
   @PUT
   @Path("/request/{requestId}/skipHealthchecks")
   @Consumes({ MediaType.APPLICATION_JSON })
-  @Operation(summary = "Update the skipHealthchecks field for the request, possibly temporarily", response=SingularityRequestParent.class,
+  @Operation(
+      summary = "Update the skipHealthchecks field for the request, possibly temporarily",
       responses = {
-          @ApiResponse(responseCode = "404", description = "No Request with that ID"),
-  })
-  public SingularityRequestParent skipHealthchecksDeprecated(@Auth SingularityUser user,
-                                                             @ApiParam("The Request ID to scale") @PathParam("requestId") String requestId,
-                                                             @Context HttpServletRequest requestContext,
-                                                             @ApiParam("SkipHealtchecks options") SingularitySkipHealthchecksRequest skipHealthchecksRequest) {
+          @ApiResponse(responseCode = "404", description = "No Request with that ID")
+      }
+  )
+  public SingularityRequestParent skipHealthchecksDeprecated(
+      @Auth SingularityUser user,
+      @Parameter(required = true, description = "The Request ID to scale") @PathParam("requestId") String requestId,
+      @Context HttpServletRequest requestContext,
+      @RequestBody(description = "SkipHealtchecks options") SingularitySkipHealthchecksRequest skipHealthchecksRequest) {
     return skipHealthchecks(user, requestId, requestContext, skipHealthchecksRequest);
   }
 
   @PUT
   @Path("/request/{requestId}/skip-healthchecks")
   @Consumes({ MediaType.APPLICATION_JSON })
-  @Operation(summary = "Update the skipHealthchecks field for the request, possibly temporarily", response=SingularityRequestParent.class,
+  @Operation(
+      summary = "Update the skipHealthchecks field for the request, possibly temporarily",
       responses = {
         @ApiResponse(responseCode = "404", description = "No Request with that ID"),
   })
-  public SingularityRequestParent skipHealthchecks(@Auth SingularityUser user,
-                                                   @ApiParam("The Request ID to scale") @PathParam("requestId") String requestId,
-                                                   @Context HttpServletRequest requestContext,
-                                                   @ApiParam("SkipHealtchecks options") SingularitySkipHealthchecksRequest skipHealthchecksRequest) {
+  public SingularityRequestParent skipHealthchecks(
+      @Auth SingularityUser user,
+      @Parameter(required = true, description = "The Request ID to skip healthchecks for") @PathParam("requestId") String requestId,
+      @Context HttpServletRequest requestContext,
+      @RequestBody(description = "SkipHealtchecks options") SingularitySkipHealthchecksRequest skipHealthchecksRequest) {
     return maybeProxyToLeader(requestContext, SingularityRequestParent.class, skipHealthchecksRequest, () -> skipHealthchecks(requestId, skipHealthchecksRequest, user));
   }
 
@@ -901,9 +933,10 @@ public class RequestResource extends AbstractRequestResource {
   @GET
   @PropertyFiltering
   @Path("/lbcleanup")
-  @Operation("Retrieve the list of tasks being cleaned from load balancers.")
-  public Iterable<String> getLbCleanupRequests(@Auth SingularityUser user,
-                                               @QueryParam("useWebCache") Boolean useWebCache) {
+  @Operation(summary = "Retrieve the list of tasks being cleaned from load balancers.")
+  public Iterable<String> getLbCleanupRequests(
+      @Auth SingularityUser user,
+      @Parameter(description = "Fetched a cached version of this data to limit expensive operations") @QueryParam("useWebCache") Boolean useWebCache) {
     return authorizationHelper.filterAuthorizedRequestIds(user, requestManager.getLbCleanupRequestIds(), SingularityAuthorizationScope.READ, useWebCache(useWebCache));
   }
 }

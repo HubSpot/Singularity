@@ -6,7 +6,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
-@Schema(title = "Describes a singularity rack")
+@Schema(description = "Describes a singularity rack")
 public class SingularityRack extends SingularityMachineAbstraction<SingularityRack> {
 
   public SingularityRack(String rackId) {

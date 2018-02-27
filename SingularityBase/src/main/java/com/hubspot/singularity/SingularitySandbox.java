@@ -7,7 +7,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
-@Schema(title = "Represents the path to a specific task's Mesos sandbox")
+@Schema(description = "Represents the path to a specific task's Mesos sandbox")
 public class SingularitySandbox {
 
   private final List<SingularitySandboxFile> files;
@@ -26,22 +26,22 @@ public class SingularitySandbox {
     this.slaveHostname = slaveHostname;
   }
 
-  @Schema(title = "Full path to the root of the Mesos task sandbox")
+  @Schema(description = "Full path to the root of the Mesos task sandbox")
   public String getFullPathToRoot() {
     return fullPathToRoot;
   }
 
-  @Schema(title = "Hostname of tasks's slave")
+  @Schema(description = "Hostname of tasks's slave")
   public String getSlaveHostname() {
     return slaveHostname;
   }
 
-  @Schema(title = "List of files inside sandbox")
+  @Schema(description = "List of files inside sandbox")
   public List<SingularitySandboxFile> getFiles() {
     return files;
   }
 
-  @Schema(title = "Current directory")
+  @Schema(description = "Current directory")
   public String getCurrentDirectory() {
     return currentDirectory;
   }

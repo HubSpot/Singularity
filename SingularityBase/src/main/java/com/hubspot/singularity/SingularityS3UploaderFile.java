@@ -6,7 +6,7 @@ import com.google.common.base.Optional;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
-@Schema(title = "Describes a file that shouldbe uploaded by the SingularityS3Uploader")
+@Schema(description = "Describes a file that shouldbe uploaded by the SingularityS3Uploader")
 public class SingularityS3UploaderFile {
   private final String filename;
   private final Optional<String> s3UploaderBucket;
@@ -41,7 +41,7 @@ public class SingularityS3UploaderFile {
     this.checkSubdirectories = checkSubdirectories.or(false);
   }
 
-  @Schema(title = "The name of the file")
+  @Schema(description = "The name of the file")
   public String getFilename() {
     return filename;
   }

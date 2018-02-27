@@ -11,7 +11,7 @@ import com.hubspot.singularity.SingularityPendingRequest.PendingType;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
-@Schema(title = "A unique id describing a task that is waiting to launch")
+@Schema(description = "A unique id describing a task that is waiting to launch")
 public class SingularityPendingTaskId extends SingularityId implements Comparable<SingularityPendingTaskId> {
 
   private final String requestId;
@@ -55,32 +55,32 @@ public class SingularityPendingTaskId extends SingularityId implements Comparabl
     this.pendingType = pendingType;
   }
 
-  @Schema(title = "The deploy associated with this task")
+  @Schema(description = "The deploy associated with this task")
   public String getDeployId() {
     return deployId;
   }
 
-  @Schema(title = "The request associated with this task")
+  @Schema(description = "The request associated with this task")
   public String getRequestId() {
     return requestId;
   }
 
-  @Schema(title = "The time at which this task should be launched")
+  @Schema(description = "The time at which this task should be launched")
   public long getNextRunAt() {
     return nextRunAt;
   }
 
-  @Schema(title = "The instance number for this task", minimum = "1")
+  @Schema(description = "The instance number for this task", minimum = "1")
   public int getInstanceNo() {
     return instanceNo;
   }
 
-  @Schema(title = "The time the pending task was created")
+  @Schema(description = "The time the pending task was created")
   public long getCreatedAt() {
     return createdAt;
   }
 
-  @Schema(title = "The reason this task was requested to launch")
+  @Schema(description = "The reason this task was requested to launch")
   public PendingType getPendingType() {
     return pendingType;
   }

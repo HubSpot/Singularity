@@ -24,17 +24,17 @@ import com.hubspot.singularity.config.ApiPaths;
 import com.hubspot.singularity.data.DisasterManager;
 
 import io.dropwizard.auth.Auth;
-import io.swagger.v3.oas.annotations.OpenAPIDefinition;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.info.Info;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.parameters.RequestBody;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.tags.Tags;
 
 @Path(ApiPaths.DISASTERS_RESOURCE_PATH)
 @Produces(MediaType.APPLICATION_JSON)
-@OpenAPIDefinition(
-    info = @Info(title = "Manages Singularity Deploys for existing requests")
-)
+@Schema(title = "Manages active disasters and disabled actions")
+@Tags({@Tag(name = "Disasters")})
 public class DisastersResource {
   private final DisasterManager disasterManager;
   private final SingularityAuthorizationHelper authorizationHelper;

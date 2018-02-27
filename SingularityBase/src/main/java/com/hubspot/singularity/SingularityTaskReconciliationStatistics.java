@@ -5,7 +5,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
-@Schema(title = "Describes the last run of task reconciliation with the mesos master")
+@Schema(description = "Describes the last run of task reconciliation with the mesos master")
 public class SingularityTaskReconciliationStatistics {
     private final long taskReconciliationStartedAt;
     private final long taskReconciliationDurationMillis;
@@ -53,72 +53,72 @@ public class SingularityTaskReconciliationStatistics {
         this.taskReconciliationResponseStddev = taskReconciliationResponseStddev;
     }
 
-    @Schema(title = "Start time of the last reconciliation")
+    @Schema(description = "Start time of the last reconciliation")
     public long getTaskReconciliationStartedAt() {
         return taskReconciliationStartedAt;
     }
 
-    @Schema(title = "Duration in milliseconds of the last reconciliation")
+    @Schema(description = "Duration in milliseconds of the last reconciliation")
     public long getTaskReconciliationDurationMillis() {
         return taskReconciliationDurationMillis;
     }
 
-    @Schema(title = "Number of iterations required for the last reconciliation")
+    @Schema(description = "Number of iterations required for the last reconciliation")
     public int getTaskReconciliationIterations() {
         return taskReconciliationIterations;
     }
 
-    @Schema(title = "Responses counted for the last reconciliation")
+    @Schema(description = "Responses counted for the last reconciliation")
     public long getTaskReconciliationResponseCount() {
         return taskReconciliationResponseCount;
     }
 
-    @Schema(title = "Max time taken for a response during the last reconciliation")
+    @Schema(description = "Max time taken for a response during the last reconciliation")
     public long getTaskReconciliationResponseMax() {
         return taskReconciliationResponseMax;
     }
 
-    @Schema(title = "Average time taken for a response during the last reconciliation")
+    @Schema(description = "Average time taken for a response during the last reconciliation")
     public double getTaskReconciliationResponseMean() {
         return taskReconciliationResponseMean;
     }
 
-    @Schema(title = "Minimum time taken for a response during the last reconciliation")
+    @Schema(description = "Minimum time taken for a response during the last reconciliation")
     public long getTaskReconciliationResponseMin() {
         return taskReconciliationResponseMin;
     }
 
-    @Schema(title = "50th percentile time taken for a response during the last reconciliation")
+    @Schema(description = "50th percentile time taken for a response during the last reconciliation")
     public double getTaskReconciliationResponseP50() {
         return taskReconciliationResponseP50;
     }
 
-    @Schema(title = "75th percentile time taken for a response during the last reconciliation")
+    @Schema(description = "75th percentile time taken for a response during the last reconciliation")
     public double getTaskReconciliationResponseP75() {
         return taskReconciliationResponseP75;
     }
 
-    @Schema(title = "95th percentile time taken for a response during the last reconciliation")
+    @Schema(description = "95th percentile time taken for a response during the last reconciliation")
     public double getTaskReconciliationResponseP95() {
         return taskReconciliationResponseP95;
     }
 
-    @Schema(title = "98th percentile time taken for a response during the last reconciliation")
+    @Schema(description = "98th percentile time taken for a response during the last reconciliation")
     public double getTaskReconciliationResponseP98() {
         return taskReconciliationResponseP98;
     }
 
-    @Schema(title = "99th percentile time taken for a response during the last reconciliation")
+    @Schema(description = "99th percentile time taken for a response during the last reconciliation")
     public double getTaskReconciliationResponseP99() {
         return taskReconciliationResponseP99;
     }
 
-    @Schema(title = "99.9th percentile time taken for a response during the last reconciliation")
+    @Schema(description = "99.9th percentile time taken for a response during the last reconciliation")
     public double getTaskReconciliationResponseP999() {
         return taskReconciliationResponseP999;
     }
 
-    @Schema(title = "Standard deviation in response time during the last reconciliation")
+    @Schema(description = "Standard deviation in response time during the last reconciliation")
     public double getTaskReconciliationResponseStddev() {
         return taskReconciliationResponseStddev;
     }

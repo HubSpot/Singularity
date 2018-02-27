@@ -9,7 +9,7 @@ import com.google.common.base.Optional;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
-@Schema(title = "Details about a failed deploy")
+@Schema(description = "Details about a failed deploy")
 public class SingularityDeployFailure {
   private final SingularityDeployFailureReason reason;
   private final Optional<SingularityTaskId> taskId;
@@ -40,17 +40,17 @@ public class SingularityDeployFailure {
     this.message = message;
   }
 
-  @Schema(title = "The enum reason for deploy failure")
+  @Schema(description = "The enum reason for deploy failure")
   public SingularityDeployFailureReason getReason() {
     return reason;
   }
 
-  @Schema(title = "The task id associated with this deploy failure reason. Failure is not task-specific if not present", nullable = true)
+  @Schema(description = "The task id associated with this deploy failure reason. Failure is not task-specific if not present", nullable = true)
   public Optional<SingularityTaskId> getTaskId() {
     return taskId;
   }
 
-  @Schema(title = "Extra details associated with the deploy failure", nullable = true)
+  @Schema(description = "Extra details associated with the deploy failure", nullable = true)
   public Optional<String> getMessage() {
     return message;
   }

@@ -8,7 +8,7 @@ import com.google.common.base.Optional;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
-@Schema(title = "Describes the current state of singularity")
+@Schema(description = "Describes the current state of singularity")
 public class SingularityState {
 
   private final int activeTasks;
@@ -135,22 +135,22 @@ public class SingularityState {
     this.avgStatusUpdateDelayMs = avgStatusUpdateDelayMs;
   }
 
-  @Schema(title = "Count of requests in finished state")
+  @Schema(description = "Count of requests in finished state")
   public int getFinishedRequests() {
     return finishedRequests;
   }
 
-  @Schema(title = "Time this state was generated")
+  @Schema(description = "Time this state was generated")
   public long getGeneratedAt() {
     return generatedAt;
   }
 
-  @Schema(title = "Timestamp of the oldest running deploy")
+  @Schema(description = "Timestamp of the oldest running deploy")
   public long getOldestDeploy() {
     return oldestDeploy;
   }
 
-  @Schema(title = "Number of active/in-progress deploys")
+  @Schema(description = "Number of active/in-progress deploys")
   public int getNumDeploys() {
     return numDeploys;
   }
@@ -163,94 +163,94 @@ public class SingularityState {
     return oldestDeployStep;
   }
 
-  @Schema(title = "List of active deploy identifiers")
+  @Schema(description = "List of active deploy identifiers")
   public List<SingularityDeployMarker> getActiveDeploys() {
     return activeDeploys;
   }
 
-  @Schema(title = "Count of requests in paused state")
+  @Schema(description = "Count of requests in paused state")
   public int getPausedRequests() {
     return pausedRequests;
   }
 
-  @Schema(title = "Describes the state of all Singularity scheduler instances")
+  @Schema(description = "Describes the state of all Singularity scheduler instances")
   public List<SingularityHostState> getHostStates() {
     return hostStates;
   }
 
-  @Schema(title = "The count of cleaning tasks")
+  @Schema(description = "The count of cleaning tasks")
   public int getCleaningTasks() {
     return cleaningTasks;
   }
 
-  @Schema(title = "The count of active slaves")
+  @Schema(description = "The count of active slaves")
   public int getActiveSlaves() {
     return activeSlaves;
   }
 
-  @Schema(title = "The count of dead slaves (no longer reachable or considered lost by mesos)")
+  @Schema(description = "The count of dead slaves (no longer reachable or considered lost by mesos)")
   public int getDeadSlaves() {
     return deadSlaves;
   }
 
-  @Schema(title = "The count of slaves currently decommissioning")
+  @Schema(description = "The count of slaves currently decommissioning")
   public int getDecommissioningSlaves() {
     return decommissioningSlaves;
   }
 
   @Deprecated
-  @Schema(title = "The count of slaves currently decommissioning")
+  @Schema(description = "The count of slaves currently decommissioning")
   public int getDecomissioningSlaves() {
     return decommissioningSlaves;
   }
 
-  @Schema(title = "The count of active racks")
+  @Schema(description = "The count of active racks")
   public int getActiveRacks() {
     return activeRacks;
   }
 
-  @Schema(title = "The count of racks considered dead")
+  @Schema(description = "The count of racks considered dead")
   public int getDeadRacks() {
     return deadRacks;
   }
 
   @Deprecated
-  @Schema(title = "The count of racks that are currently decommissioning")
+  @Schema(description = "The count of racks that are currently decommissioning")
   public int getDecomissioningRacks() {
     return decommissioningRacks;
   }
 
-  @Schema(title = "The count of racks that are currently decommissioning")
+  @Schema(description = "The count of racks that are currently decommissioning")
   public int getDecommissioningRacks() {
     return decommissioningRacks;
   }
 
-  @Schema(title = "The count of active tasks")
+  @Schema(description = "The count of active tasks")
   public int getActiveTasks() {
     return activeTasks;
   }
 
-  @Schema(title = "The count of tasks in launching state")
+  @Schema(description = "The count of tasks in launching state")
   public int getLaunchingTasks() {
     return launchingTasks;
   }
 
-  @Schema(title = "The count of all requests in all states")
+  @Schema(description = "The count of all requests in all states")
   public int getAllRequests() {
     return activeRequests + cooldownRequests + pausedRequests;
   }
 
-  @Schema(title = "The count of requests in active state")
+  @Schema(description = "The count of requests in active state")
   public int getActiveRequests() {
     return activeRequests;
   }
 
-  @Schema(title = "The count of requests in cooldown state")
+  @Schema(description = "The count of requests in cooldown state")
   public int getCooldownRequests() {
     return cooldownRequests;
   }
 
-  @Schema(title = "The count of tasks waiting to be launched")
+  @Schema(description = "The count of tasks waiting to be launched")
   public int getScheduledTasks() {
     return scheduledTasks;
   }
@@ -263,77 +263,77 @@ public class SingularityState {
     return pendingRequests;
   }
 
-  @Schema(title = "The count of requests with associated cleanups (e.g. due to a bounce)")
+  @Schema(description = "The count of requests with associated cleanups (e.g. due to a bounce)")
   public int getCleaningRequests() {
     return cleaningRequests;
   }
 
-  @Schema(title = "The count of tasks that have not been launched in time")
+  @Schema(description = "The count of tasks that have not been launched in time")
   public int getLateTasks() {
     return lateTasks;
   }
 
-  @Schema(title = "The count of pending tasks that will be launched at a future time")
+  @Schema(description = "The count of pending tasks that will be launched at a future time")
   public int getFutureTasks() {
     return futureTasks;
   }
 
-  @Schema(title = "The maximum delay in launching any pending task")
+  @Schema(description = "The maximum delay in launching any pending task")
   public long getMaxTaskLag() {
     return maxTaskLag;
   }
 
-  @Schema(title = "The count of tasks with associated load balancer cleanups")
+  @Schema(description = "The count of tasks with associated load balancer cleanups")
   public int getLbCleanupTasks() {
     return lbCleanupTasks;
   }
 
-  @Schema(title = "The count of requests with associated load balancer cleanups")
+  @Schema(description = "The count of requests with associated load balancer cleanups")
   public int getLbCleanupRequests() {
     return lbCleanupRequests;
   }
 
-  @Schema(title = "The count of requests running too many instances")
+  @Schema(description = "The count of requests running too many instances")
   public List<String> getOverProvisionedRequestIds() {
     return overProvisionedRequestIds;
   }
 
-  @Schema(title = "The ids of requests running too many instances")
+  @Schema(description = "The ids of requests running too many instances")
   public List<String> getUnderProvisionedRequestIds() {
     return underProvisionedRequestIds;
   }
 
-  @Schema(title = "The count of requests running too few instances")
+  @Schema(description = "The count of requests running too few instances")
   public int getOverProvisionedRequests() {
     return overProvisionedRequests;
   }
 
-  @Schema(title = "The ids of requests running too few instances")
+  @Schema(description = "The ids of requests running too few instances")
   public int getUnderProvisionedRequests() {
     return underProvisionedRequests;
   }
 
-  @Schema(title = "The count of slaves in an unknown state")
+  @Schema(description = "The count of slaves in an unknown state")
   public int getUnknownSlaves() {
     return unknownSlaves;
   }
 
-  @Schema(title = "The count of racks in an unknown state")
+  @Schema(description = "The count of racks in an unknown state")
   public int getUnknownRacks() {
     return unknownRacks;
   }
 
-  @Schema(title = "`true` if the auth datastore is reachable (when auth is configured)", nullable = true)
+  @Schema(description = "`true` if the auth datastore is reachable (when auth is configured)", nullable = true)
   public Optional<Boolean> getAuthDatastoreHealthy() {
     return authDatastoreHealthy;
   }
 
-  @Schema(title = "The minimum priority level for launching tasks if a priority freeze is active, empty otherwise", nullable = true)
+  @Schema(description = "The minimum priority level for launching tasks if a priority freeze is active, empty otherwise", nullable = true)
   public Optional<Double> getMinimumPriorityLevel() {
     return minimumPriorityLevel;
   }
 
-  @Schema(title = "The average delay (in millis) for processing status updates from mesos")
+  @Schema(description = "The average delay (in millis) for processing status updates from mesos")
   public long getAvgStatusUpdateDelayMs() {
     return avgStatusUpdateDelayMs;
   }

@@ -32,27 +32,27 @@ public class SingularityS3LogMetadata {
     this.endTime = endTime;
   }
 
-  @Schema(title = "S3 key")
+  @Schema(description = "S3 key")
   public String getKey() {
     return key;
   }
 
-  @Schema(title = "Last modified time")
+  @Schema(description = "Last modified time")
   public long getLastModified() {
     return lastModified;
   }
 
-  @Schema(title = "File size (in bytes)")
+  @Schema(description = "File size (in bytes)")
   public long getSize() {
     return size;
   }
 
-  @Schema(title = "Time the log file started being written to", nullable = true)
+  @Schema(description = "Time the log file started being written to", nullable = true)
   public Optional<Long> getStartTime() {
     return startTime;
   }
 
-  @Schema(title = "Time the log file was finished being written to", nullable = true)
+  @Schema(description = "Time the log file was finished being written to", nullable = true)
   public Optional<Long> getEndTime() {
     return endTime;
   }

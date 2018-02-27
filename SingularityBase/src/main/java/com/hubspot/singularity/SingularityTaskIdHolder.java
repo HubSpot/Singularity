@@ -21,7 +21,7 @@ public class SingularityTaskIdHolder {
     this.taskId = taskId;
   }
 
-  @Schema(title = "Task id")
+  @Schema(description = "Task id")
   public SingularityTaskId getTaskId() {
     return taskId;
   }

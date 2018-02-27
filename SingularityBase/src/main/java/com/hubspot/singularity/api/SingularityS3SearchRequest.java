@@ -10,7 +10,7 @@ import com.google.common.base.Optional;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
-@Schema(title = "Describes a request to search for task logs in s3")
+@Schema(description = "Describes a request to search for task logs in s3")
 public class SingularityS3SearchRequest {
   private final Map<String, List<String>> requestsAndDeploys;
   private final List<String> taskIds;
@@ -41,32 +41,32 @@ public class SingularityS3SearchRequest {
     this.continuationTokens = continuationTokens != null ? continuationTokens : Collections.<String, ContinuationToken>emptyMap();
   }
 
-  @Schema(title = "A map of request IDs to a list of deploy ids to search")
+  @Schema(description = "A map of request IDs to a list of deploy ids to search")
   public Map<String, List<String>> getRequestsAndDeploys() {
     return requestsAndDeploys;
   }
 
-  @Schema(title = "A list of task IDs to search for")
+  @Schema(description = "A list of task IDs to search for")
   public List<String> getTaskIds() {
     return taskIds;
   }
 
-  @Schema(title = "Start timestamp (millis, 13 digit)", nullable = true)
+  @Schema(description = "Start timestamp (millis, 13 digit)", nullable = true)
   public Optional<Long> getStart() {
     return start;
   }
 
-  @Schema(title = "End timestamp (millis, 13 digit)", nullable = true)
+  @Schema(description = "End timestamp (millis, 13 digit)", nullable = true)
   public Optional<Long> getEnd() {
     return end;
   }
 
-  @Schema(title = "if true, do not query for custom start/end time metadata", defaultValue = "false")
+  @Schema(description = "if true, do not query for custom start/end time metadata", defaultValue = "false")
   public boolean isExcludeMetadata() {
     return excludeMetadata;
   }
 
-  @Schema(title = "If true, do not generate download/get urls, only list objects", defaultValue = "false")
+  @Schema(description = "If true, do not generate download/get urls, only list objects", defaultValue = "false")
   public boolean isListOnly() {
     return listOnly;
   }
@@ -75,12 +75,12 @@ public class SingularityS3SearchRequest {
    * NOTE: maxPerPage is not a guaranteed value. It is possible to get as many as (maxPerPage * 2 - 1) results
    * when using the paginated search endpoint
    */
-  @Schema(title = "Target number of results to return", nullable = true)
+  @Schema(description = "Target number of results to return", nullable = true)
   public Optional<Integer> getMaxPerPage() {
     return maxPerPage;
   }
 
-  @Schema(title = "S3 continuation tokens, return these to Singularity to continue searching subsequent pages of results")
+  @Schema(description = "S3 continuation tokens, return these to Singularity to continue searching subsequent pages of results")
   public Map<String, ContinuationToken> getContinuationTokens() {
     return continuationTokens;
   }

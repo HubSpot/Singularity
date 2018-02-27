@@ -11,7 +11,7 @@ import com.hubspot.mesos.JavaUtils;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
-@Schema(title = "A Healthcheck result for a particular task")
+@Schema(description = "A Healthcheck result for a particular task")
 public class SingularityTaskHealthcheckResult extends SingularityTaskIdHolder implements Comparable<SingularityTaskHealthcheckResult> {
 
   private final Optional<Integer> statusCode;
@@ -69,32 +69,32 @@ public class SingularityTaskHealthcheckResult extends SingularityTaskIdHolder im
     return Objects.hash(statusCode, durationMillis, responseBody, errorMessage, startup, timestamp);
   }
 
-  @Schema(title = "Status code if a response was received", nullable = true)
+  @Schema(description = "Status code if a response was received", nullable = true)
   public Optional<Integer> getStatusCode() {
     return statusCode;
   }
 
-  @Schema(title = "Response time of the check if a response was received", nullable = true)
+  @Schema(description = "Response time of the check if a response was received", nullable = true)
   public Optional<Long> getDurationMillis() {
     return durationMillis;
   }
 
-  @Schema(title = "Error message if the check failed", nullable = true)
+  @Schema(description = "Error message if the check failed", nullable = true)
   public Optional<String> getErrorMessage() {
     return errorMessage;
   }
 
-  @Schema(title = "Timestamp of this healthcheck", nullable = true)
+  @Schema(description = "Timestamp of this healthcheck", nullable = true)
   public long getTimestamp() {
     return timestamp;
   }
 
-  @Schema(title = "response body if a response was received", nullable = true)
+  @Schema(description = "response body if a response was received", nullable = true)
   public Optional<String> getResponseBody() {
     return responseBody;
   }
 
-  @Schema(title = "`true` if the healthcheck was running during the startup phase")
+  @Schema(description = "`true` if the healthcheck was running during the startup phase")
   public boolean isStartup() {
     return startup;
   }

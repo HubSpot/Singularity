@@ -9,7 +9,7 @@ import com.google.common.collect.ComparisonChain;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
-@Schema(title = "Uniquely identifies a deploy")
+@Schema(description = "Uniquely identifies a deploy")
 public class SingularityDeployMarker implements Comparable<SingularityDeployMarker> {
 
   private final String requestId;
@@ -54,27 +54,27 @@ public class SingularityDeployMarker implements Comparable<SingularityDeployMark
     return Objects.hash(requestId, deployId);
   }
 
-  @Schema(title = "The request associated with thsi deploy")
+  @Schema(description = "The request associated with thsi deploy")
   public String getRequestId() {
     return requestId;
   }
 
-  @Schema(title = "A unique ID for this deploy")
+  @Schema(description = "A unique ID for this deploy")
   public String getDeployId() {
     return deployId;
   }
 
-  @Schema(title = "The time this deploy was created")
+  @Schema(description = "The time this deploy was created")
   public long getTimestamp() {
     return timestamp;
   }
 
-  @Schema(title = "The user associated with this deploy", nullable = true)
+  @Schema(description = "The user associated with this deploy", nullable = true)
   public Optional<String> getUser() {
     return user;
   }
 
-  @Schema(title = "An optional message associated with this deploy", nullable = true)
+  @Schema(description = "An optional message associated with this deploy", nullable = true)
   public Optional<String> getMessage() {
     return message;
   }

@@ -2,7 +2,7 @@ package com.hubspot.singularity;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
-@Schema(title = "A description of resources used on a mesos slave")
+@Schema(description = "A description of resources used on a mesos slave")
 public class SingularitySlaveUsageWithId extends SingularitySlaveUsage {
 
   private final String slaveId;
@@ -33,7 +33,7 @@ public class SingularitySlaveUsageWithId extends SingularitySlaveUsage {
     this.slaveId = slaveId;
   }
 
-  @Schema(title = "The id as assigned by mesos for this particualr slave")
+  @Schema(description = "The id as assigned by mesos for this particualr slave")
   public String getSlaveId() {
     return slaveId;
   }

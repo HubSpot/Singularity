@@ -7,7 +7,7 @@ import com.google.common.base.Optional;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
-@Schema(title = "Describes a command to run against an active task")
+@Schema(description = "Describes a command to run against an active task")
 public class SingularityShellCommand {
 
   private final String name;
@@ -22,7 +22,7 @@ public class SingularityShellCommand {
     this.logfileName = logfileName;
   }
 
-  @Schema(title = "User who requested the shell command")
+  @Schema(description = "User who requested the shell command")
   public Optional<String> getUser() {
     return user;
   }
@@ -32,12 +32,12 @@ public class SingularityShellCommand {
     return name;
   }
 
-  @Schema(title = "Additional options related to the shell command")
+  @Schema(description = "Additional options related to the shell command")
   public Optional<List<String>> getOptions() {
     return options;
   }
 
-  @Schema(title = "File name for shell command output")
+  @Schema(description = "File name for shell command output")
   public Optional<String> getLogfileName() {
     return logfileName;
   }

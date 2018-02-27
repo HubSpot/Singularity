@@ -9,7 +9,7 @@ import com.hubspot.mesos.JavaUtils;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
-@Schema(title = "The unique id for a singularity task")
+@Schema(description = "The unique id for a singularity task")
 public class SingularityTaskId extends SingularityId implements SingularityHistoryItem {
 
   private final String requestId;
@@ -58,7 +58,7 @@ public class SingularityTaskId extends SingularityId implements SingularityHisto
    * @Deprecated use getSanitizedRackId() or matchesOriginalRackId() instead
    */
   @Deprecated
-  @Schema(title = "The id of the rack where this task was launched")
+  @Schema(description = "The id of the rack where this task was launched")
   public String getRackId() {
     return getSanitizedRackId();
   }
@@ -76,7 +76,7 @@ public class SingularityTaskId extends SingularityId implements SingularityHisto
     return sanitizedRackId.equals(JavaUtils.getReplaceHyphensWithUnderscores(unsanitizedRackId));
   }
 
-  @Schema(title = "The deploy associated with this task")
+  @Schema(description = "The deploy associated with this task")
   public String getDeployId() {
     return deployId;
   }
@@ -85,7 +85,7 @@ public class SingularityTaskId extends SingularityId implements SingularityHisto
    * @Deprecated use getSanitizedHost() or matchesOriginalHost() instead
    */
   @Deprecated
-  @Schema(title = "The hostname of the machine where this task was launched")
+  @Schema(description = "The hostname of the machine where this task was launched")
   public String getHost() {
     return getSanitizedHost();
   }
@@ -103,17 +103,17 @@ public class SingularityTaskId extends SingularityId implements SingularityHisto
     return sanitizedHost.equals(JavaUtils.getReplaceHyphensWithUnderscores(unsanitizedHost));
   }
 
-  @Schema(title = "The request associated with this task")
+  @Schema(description = "The request associated with this task")
   public String getRequestId() {
     return requestId;
   }
 
-  @Schema(title = "The time at which this task was started")
+  @Schema(description = "The time at which this task was started")
   public long getStartedAt() {
     return startedAt;
   }
 
-  @Schema(title = "The instance number for this task", minimum = "1")
+  @Schema(description = "The instance number for this task", minimum = "1")
   public int getInstanceNo() {
     return instanceNo;
   }

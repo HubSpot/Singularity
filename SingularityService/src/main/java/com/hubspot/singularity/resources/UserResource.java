@@ -15,16 +15,16 @@ import com.hubspot.singularity.config.ApiPaths;
 import com.hubspot.singularity.data.UserManager;
 
 import io.dropwizard.auth.Auth;
-import io.swagger.v3.oas.annotations.OpenAPIDefinition;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.info.Info;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.parameters.RequestBody;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.tags.Tags;
 
 @Path(ApiPaths.USER_RESOURCE_PATH)
 @Produces({ MediaType.APPLICATION_JSON })
-@OpenAPIDefinition(
-    info = @Info(title = "Retrieve or update settings for a particular user")
-)
+@Schema(title = "Retrieve or update settings for a particular user")
+@Tags({@Tag(name = "Users")})
 public class UserResource {
   private final UserManager userManager;
 

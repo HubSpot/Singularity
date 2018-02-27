@@ -2,6 +2,7 @@ package com.hubspot.singularity.api;
 
 import com.google.common.base.Optional;
 import com.hubspot.singularity.expiring.SingularityExpiringParent;
+import com.hubspot.singularity.expiring.SingularityExpiringSkipHealthchecks;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
@@ -9,7 +10,10 @@ import io.swagger.v3.oas.annotations.media.Schema;
     title = "Description of a request for a future action",
     subTypes = {
         SingularityMachineChangeRequest.class,
-        SingularityExpiringParent.class
+        SingularityExpiringParent.class,
+        SingularityScaleRequest.class,
+        SingularityBounceRequest.class,
+        SingularityExpiringSkipHealthchecks.class
     }
 )
 public abstract class SingularityExpiringRequestParent {

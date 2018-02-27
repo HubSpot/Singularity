@@ -14,7 +14,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
 import io.swagger.v3.oas.annotations.media.Schema;
 
-@Schema(title = "Settings that apply to all tasks and deploys assocaited with this request")
+@Schema(description = "Settings that apply to all tasks and deploys assocaited with this request")
 public class SingularityRequest {
 
   private final String id;
@@ -162,51 +162,51 @@ public class SingularityRequest {
   }
 
   @Schema(
-      required=true,
+      required = true,
       title = "A unique id for the request",
       pattern = "a-zA-Z0-9_-",
-      description = "Max length is set in configuration yaml as maxRequestIdSize",
+      description = "Max length is set in configuration yaml as maxRequestIdSize"
   )
   public String getId() {
     return id;
   }
 
-  @Schema(nullable = true, title = "A list of emails for the owners of this request")
+  @Schema(nullable = true, description = "A list of emails for the owners of this request")
   public Optional<List<String>> getOwners() {
     return owners;
   }
 
-  @Schema(nullable = true, title = "For scheduled jobs, retry up to this many times if the job fails")
+  @Schema(nullable = true, description = "For scheduled jobs, retry up to this many times if the job fails")
   public Optional<Integer> getNumRetriesOnFailure() {
     return numRetriesOnFailure;
   }
 
-  @Schema(nullable = true, title = "A schedule in cron, RFC5545, or quartz format")
+  @Schema(nullable = true, description = "A schedule in cron, RFC5545, or quartz format")
   public Optional<String> getSchedule() {
     return schedule;
   }
 
-  @Schema(nullable = true, title = "A schedule in quartz format")
+  @Schema(nullable = true, description = "A schedule in quartz format")
   public Optional<String> getQuartzSchedule() {
     return quartzSchedule;
   }
 
-  @Schema(nullable = true, title = "Time zone to use when running the")
+  @Schema(nullable = true, description = "Time zone to use when running the")
   public Optional<String> getScheduleTimeZone() {
     return scheduleTimeZone;
   }
 
-  @Schema(nullable = true, title = "A count of tasks to run for long-running requests")
+  @Schema(nullable = true, description = "A count of tasks to run for long-running requests")
   public Optional<Integer> getInstances() {
     return instances;
   }
 
-  @Schema(nullable = true, title = "Spread instances for this request evenly across separate racks")
+  @Schema(nullable = true, description = "Spread instances for this request evenly across separate racks")
   public Optional<Boolean> getRackSensitive() {
     return rackSensitive;
   }
 
-  @Schema(nullable = true, title = "Indicates that a SERVICE should be load balanced")
+  @Schema(nullable = true, description = "Indicates that a SERVICE should be load balanced")
   public Optional<Boolean> getLoadBalanced() {
     return loadBalanced;
   }
@@ -216,52 +216,52 @@ public class SingularityRequest {
     return requestType;
   }
 
-  @Schema(nullable = true, title = "For non-long-running request types, kill a task after this amount of time if it has been put into CLEANING and has not shut down")
+  @Schema(nullable = true, description = "For non-long-running request types, kill a task after this amount of time if it has been put into CLEANING and has not shut down")
   public Optional<Long> getKillOldNonLongRunningTasksAfterMillis() {
     return killOldNonLongRunningTasksAfterMillis;
   }
 
-  @Schema(nullable = true, title = "If set, don't allow any taks for this request to run for longer than this amount of time")
+  @Schema(nullable = true, description = "If set, don't allow any taks for this request to run for longer than this amount of time")
   public Optional<Long> getTaskExecutionTimeLimitMillis() {
     return taskExecutionTimeLimitMillis;
   }
 
-  @Schema(nullable = true, title = "The type of schedule associated with the scheduled field. Can be CRON, QUARTZ, or RFC5545")
+  @Schema(nullable = true, description = "The type of schedule associated with the scheduled field. Can be CRON, QUARTZ, or RFC5545")
   public Optional<ScheduleType> getScheduleType() {
     return scheduleType;
   }
 
-  @Schema(nullable = true, title = "If set, prefer this specific rack when launching tasks")
+  @Schema(nullable = true, description = "If set, prefer this specific rack when launching tasks")
   public Optional<List<String>> getRackAffinity() {
     return rackAffinity;
   }
 
-  @Schema(nullable = true, title = "Strategy for determining where to place new tasks. Can be SEPARATE, OPTIMISTIC, GREEDY, SEPARATE_BY_DEPLOY, or SEPARATE_BY_REQUEST")
+  @Schema(nullable = true, description = "Strategy for determining where to place new tasks. Can be SEPARATE, OPTIMISTIC, GREEDY, SEPARATE_BY_DEPLOY, or SEPARATE_BY_REQUEST")
   public Optional<SlavePlacement> getSlavePlacement() {
     return slavePlacement;
   }
 
-  @Schema(nullable = true, title = "Expected time for a non-long-running task to run. Singularity will notify owners if a task exceeds this time")
+  @Schema(nullable = true, description = "Expected time for a non-long-running task to run. Singularity will notify owners if a task exceeds this time")
   public Optional<Long> getScheduledExpectedRuntimeMillis() {
     return scheduledExpectedRuntimeMillis;
   }
 
-  @Schema(nullable = true, title = "Only allow tasks for this request to run on slaves which have these attributes")
+  @Schema(nullable = true, description = "Only allow tasks for this request to run on slaves which have these attributes")
   public Optional<Map<String, String>> getRequiredSlaveAttributes() {
     return requiredSlaveAttributes;
   }
 
-  @Schema(nullable = true, title = "Allow tasks to run on slaves with these attributes, but do not restrict them to only these slaves")
+  @Schema(nullable = true, description = "Allow tasks to run on slaves with these attributes, but do not restrict them to only these slaves")
   public Optional<Map<String, String>> getAllowedSlaveAttributes() {
     return allowedSlaveAttributes;
   }
 
-  @Schema(nullable = true, title = "Do not schedule more than this many tasks using a single offer from a single mesos slave")
+  @Schema(nullable = true, description = "Do not schedule more than this many tasks using a single offer from a single mesos slave")
   public Optional<Integer> getMaxTasksPerOffer() {
     return maxTasksPerOffer;
   }
 
-  @Schema(nullable = true, title = "If set to true, allow tasks to be scheduled on the same host as an existing active task when bouncing")
+  @Schema(nullable = true, description = "If set to true, allow tasks to be scheduled on the same host as an existing active task when bouncing")
   public Optional<Boolean> getAllowBounceToSameHost() {
     return allowBounceToSameHost;
   }
@@ -320,62 +320,62 @@ public class SingularityRequest {
     return scheduleType.or(ScheduleType.CRON);
   }
 
-  @Schema(nullable = true, title = "When a scheduled job finishes, wait at least this long before rescheduling it")
+  @Schema(nullable = true, description = "When a scheduled job finishes, wait at least this long before rescheduling it")
   public Optional<Long> getWaitAtLeastMillisAfterTaskFinishesForReschedule() {
     return waitAtLeastMillisAfterTaskFinishesForReschedule;
   }
 
-  @Schema(nullable = true, title = "Auth group associated with this request. Users in this group are allowed read/write access to this request")
+  @Schema(nullable = true, description = "Auth group associated with this request. Users in this group are allowed read/write access to this request")
   public Optional<String> getGroup() {
     return group;
   }
 
-  @Schema(nullable = true, title = "Mesos Role required for this request. Only offers with the required role will be accepted to execute the tasks associated with the request")
+  @Schema(nullable = true, description = "Mesos Role required for this request. Only offers with the required role will be accepted to execute the tasks associated with the request")
   public Optional<String> getRequiredRole() {
     return requiredRole;
   }
 
-  @Schema(nullable = true, title = "Users in these groups are allowed read/write access to this request")
+  @Schema(nullable = true, description = "Users in these groups are allowed read/write access to this request")
   public Optional<Set<String>> getReadWriteGroups() {
     return readWriteGroups;
   }
 
-  @Schema(nullable = true, title = "Users in these groups are allowed read only access to this request")
+  @Schema(nullable = true, description = "Users in these groups are allowed read only access to this request")
   public Optional<Set<String>> getReadOnlyGroups() {
     return readOnlyGroups;
   }
 
-  @Schema(nullable = true, title = "Used for SingularityUI. If true, automatically trigger a bounce after changing the request's instance count")
+  @Schema(nullable = true, description = "Used for SingularityUI. If true, automatically trigger a bounce after changing the request's instance count")
   public Optional<Boolean> getBounceAfterScale() {
     return bounceAfterScale;
   }
 
-  @Schema(nullable = true, title = "Overrides for email recipients by email type for this request")
+  @Schema(nullable = true, description = "Overrides for email recipients by email type for this request")
   public Optional<Map<SingularityEmailType, List<SingularityEmailDestination>>> getEmailConfigurationOverrides() {
     return emailConfigurationOverrides;
 }
 
-  @Schema(nullable = true, title = "If true, do not run healthchecks")
+  @Schema(nullable = true, description = "If true, do not run healthchecks")
   public Optional<Boolean> getSkipHealthchecks() {
     return skipHealthchecks;
   }
 
-  @Schema(nullable = true, title = "Do not show the UI hint about evenly distributing intances accross racks when scaling")
+  @Schema(nullable = true, description = "Do not show the UI hint about evenly distributing intances accross racks when scaling")
   public Optional<Boolean> getHideEvenNumberAcrossRacksHint() { return hideEvenNumberAcrossRacksHint; }
 
-  @Schema(nullable = true, title = "Searching for errors in task logs to include in emails using this regex")
+  @Schema(nullable = true, description = "Searching for errors in task logs to include in emails using this regex")
   public Optional<String> getTaskLogErrorRegex() { return taskLogErrorRegex; }
 
-  @Schema(nullable = true, title = "Determines if taskLogErrorRegex is case sensitive")
+  @Schema(nullable = true, description = "Determines if taskLogErrorRegex is case sensitive")
   public Optional<Boolean> getTaskLogErrorRegexCaseSensitive() { return taskLogErrorRegexCaseSensitive; }
 
-  @Schema(nullable = true, title = "a priority level from 0.0 to 1.0 for all tasks associated with the request")
+  @Schema(nullable = true, description = "a priority level from 0.0 to 1.0 for all tasks associated with the request")
   public Optional<Double> getTaskPriorityLevel() {
     return taskPriorityLevel;
   }
 
   @Deprecated
-  @Schema(nullable = true, title = "the data center associated with this request")
+  @Schema(nullable = true, description = "the data center associated with this request")
   public Optional<String> getDataCenter() {
     return dataCenter;
   }

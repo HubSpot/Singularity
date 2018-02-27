@@ -5,7 +5,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
-@Schema(title = "A description of the current resource usage of a task")
+@Schema(description = "A description of the current resource usage of a task")
 public class SingularityTaskCurrentUsage {
 
   private final long memoryTotalBytes;
@@ -24,22 +24,22 @@ public class SingularityTaskCurrentUsage {
     this.diskTotalBytes = diskTotalBytes;
   }
 
-  @Schema(title = "The total memory used by the task in bytes")
+  @Schema(description = "The total memory used by the task in bytes")
   public long getMemoryTotalBytes() {
     return memoryTotalBytes;
   }
 
-  @Schema(title = "The time at which this usage data was collected")
+  @Schema(description = "The time at which this usage data was collected")
   public long getTimestamp() {
     return timestamp;
   }
 
-  @Schema(title = "The cpus used by this task")
+  @Schema(description = "The cpus used by this task")
   public double getCpusUsed() {
     return cpusUsed;
   }
 
-  @Schema(title = "The total disk usage for this task in bytes")
+  @Schema(description = "The total disk usage for this task in bytes")
   public long getDiskTotalBytes() {
     return diskTotalBytes;
   }

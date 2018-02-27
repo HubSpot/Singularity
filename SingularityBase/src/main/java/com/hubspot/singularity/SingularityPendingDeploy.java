@@ -6,7 +6,7 @@ import com.google.common.base.Optional;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
-@Schema(title = "Describes an in-progress deploy")
+@Schema(description = "Describes an in-progress deploy")
 public class SingularityPendingDeploy {
 
   private final SingularityDeployMarker deployMarker;
@@ -25,27 +25,27 @@ public class SingularityPendingDeploy {
     this.updatedRequest = updatedRequest;
   }
 
-  @Schema(title = "Uniquely identifies this deploy")
+  @Schema(description = "Uniquely identifies this deploy")
   public SingularityDeployMarker getDeployMarker() {
     return deployMarker;
   }
 
-  @Schema(title = "The latest load balancer update for this deploy (if a long running service with load balancing enabled)", nullable = true)
+  @Schema(description = "The latest load balancer update for this deploy (if a long running service with load balancing enabled)", nullable = true)
   public Optional<SingularityLoadBalancerUpdate> getLastLoadBalancerUpdate() {
     return lastLoadBalancerUpdate;
   }
 
-  @Schema(title = "Current state of this deploy")
+  @Schema(description = "Current state of this deploy")
   public DeployState getCurrentDeployState() {
     return currentDeployState;
   }
 
-  @Schema(title = "Describes the progress this deploy has made so far", nullable = true)
+  @Schema(description = "Describes the progress this deploy has made so far", nullable = true)
   public Optional<SingularityDeployProgress> getDeployProgress() {
     return deployProgress;
   }
 
-  @Schema(title = "New request data to be committed if this deploy succeeds")
+  @Schema(description = "New request data to be committed if this deploy succeeds")
   public Optional<SingularityRequest> getUpdatedRequest() {
     return updatedRequest;
   }
