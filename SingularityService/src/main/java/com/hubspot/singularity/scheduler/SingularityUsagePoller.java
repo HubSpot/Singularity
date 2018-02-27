@@ -148,8 +148,8 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
 
 
 
-        boolean slaveOverloaded = systemLoad > 1.0;
-        double cpuOverage = slaveOverloaded ? (systemLoad - 1.0) * systemCpusTotal : 0.0;
+        boolean slaveOverloaded = systemCpusTotal > 0 && systemLoad / systemCpusTotal > 1.0;
+        double cpuOverage = slaveOverloaded ? systemLoad - systemCpusTotal : 0.0;
         int shuffledTasks = 0;
         List<TaskIdWithUsage> possibleTasksToShuffle = new ArrayList<>();
 
