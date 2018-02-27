@@ -25,6 +25,8 @@ import com.hubspot.singularity.SingularityClusterUtilization;
 import com.hubspot.singularity.SingularityDeleteResult;
 import com.hubspot.singularity.SingularityDeploy;
 import com.hubspot.singularity.SingularityDeployStatistics;
+import com.hubspot.singularity.SingularityPendingRequest;
+import com.hubspot.singularity.SingularityPendingRequest.PendingType;
 import com.hubspot.singularity.SingularityRequestWithState;
 import com.hubspot.singularity.SingularitySlave;
 import com.hubspot.singularity.SingularitySlaveUsage;
@@ -236,15 +238,18 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
               break;
             }
             LOG.debug("Cleaning up task {} to free up cpu on overloaded host (remaining cpu overage: {})", taskIdWithUsage.getTaskId(), cpuOverage);
+            Optional<String> message = Optional.of(String.format("Load on slave %s is %s / %s, shuffling task to less busy host", slave.getHost(), systemLoad, systemCpusTotal));
             taskManager.createTaskCleanup(
                 new SingularityTaskCleanup(
                     Optional.absent(),
                     TaskCleanupType.REBALANCE_CPU_USAGE,
                     System.currentTimeMillis(),
                     taskIdWithUsage.getTaskId(),
-                    Optional.of(String.format("Load on slave %s is %s / %s, shuffling task to less busy host", slave.getHost(), systemLoad, systemCpusTotal)),
+                    message,
                     Optional.of(UUID.randomUUID().toString()),
                     Optional.absent(), Optional.absent()));
+            requestManager.addToPendingQueue(new SingularityPendingRequest(taskIdWithUsage.getTaskId().getRequestId(), taskIdWithUsage.getTaskId().getDeployId(), now, Optional.absent(),
+                PendingType.TASK_BOUNCE, Optional.absent(), Optional.absent(), Optional.absent(), message, Optional.of(UUID.randomUUID().toString())));
             cpuOverage -= taskIdWithUsage.getUsage().getCpusUsed();
             shuffledTasks++;
           }
