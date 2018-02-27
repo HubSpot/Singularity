@@ -5,19 +5,12 @@
   <parent>
     <groupId>com.hubspot</groupId>
     <artifactId>basepom</artifactId>
-    <version>15.11</version>
+    <version>18.2</version>
   </parent>
 
   <artifactId>Singularity</artifactId>
   <version>0.20.0-SNAPSHOT</version>
   <packaging>pom</packaging>
-
-  <scm>
-    <connection>scm:git:git@github.com:HubSpot/Singularity.git</connection>
-    <developerConnection>scm:git:ssh://git@github.com/HubSpot/Singularity.git</developerConnection>
-    <url>git@github.com:HubSpot/Singularity.git</url>
-    <tag>HEAD</tag>
-  </scm>
 
   <developers>
     <developer>
@@ -34,27 +27,12 @@
     </developer>
   </developers>
 
-  <properties>
-    <singularity.jar.name.format>${project.artifactId}-${project.version}</singularity.jar.name.format>
-    <basepom.jar.name.format>${singularity.jar.name.format}</basepom.jar.name.format>
-
-    <!-- build the docs for releases -->
-    <basepom.release.profiles>oss-release</basepom.release.profiles>
-
-    <dropwizard.guicier.version>1.0.6.0</dropwizard.guicier.version>
-    <baragon.version>0.5.0</baragon.version>
-    <horizon.version>0.0.25</horizon.version>
-    <mesos.docker.tag>1.1.1</mesos.docker.tag>
-    <mesos.version>1.1.2</mesos.version>
-    <singularitybase.image.revision>1</singularitybase.image.revision>
-    <aws.sdk.version>1.11.69</aws.sdk.version>
-    <project.build.targetJdk>1.8</project.build.targetJdk>
-    <dep.metrics-guice.version>3.1.3</dep.metrics-guice.version>
-    <dep.dropwizard-metrics.version>3.1.4</dep.dropwizard-metrics.version>
-    <dep.guava.version>20.0</dep.guava.version>
-    <dep.mesos.rxjava.version>0.2.0</dep.mesos.rxjava.version>
-    <dep.protobuf.version>2.6.1</dep.protobuf.version>
-  </properties>
+  <scm>
+    <connection>scm:git:git@github.com:HubSpot/Singularity.git</connection>
+    <developerConnection>scm:git:ssh://git@github.com/HubSpot/Singularity.git</developerConnection>
+    <url>git@github.com:HubSpot/Singularity.git</url>
+    <tag>HEAD</tag>
+  </scm>
 
   <modules>
     <module>SingularityService</module>
@@ -72,29 +50,125 @@
     <module>SingularityUI</module>
   </modules>
 
+  <properties>
+    <aws.sdk.version>1.11.285</aws.sdk.version>
+    <baragon.version>0.6.1</baragon.version>
+    <basepom.jar.name.format>${singularity.jar.name.format}</basepom.jar.name.format>
+    <basepom.release.profiles>oss-release</basepom.release.profiles>
+    <dep.commons-lang3.version>3.7</dep.commons-lang3.version>
+    <dep.dropwizard-metrics.version>3.1.4</dep.dropwizard-metrics.version>
+    <dep.guava.version>20.0</dep.guava.version>
+    <dep.jackson-databind.version>2.9.4</dep.jackson-databind.version>
+    <dep.jackson.version>2.9.4</dep.jackson.version>
+    <dep.javassist.version>3.21.0-GA</dep.javassist.version>
+    <dep.mesos.rxjava.version>0.2.0</dep.mesos.rxjava.version>
+    <dep.metrics-guice.version>3.1.3</dep.metrics-guice.version>
+    <dep.protobuf.version>2.6.1</dep.protobuf.version>
+    <dep.reflections.version>0.9.11</dep.reflections.version>
+
+    <dropwizard.guicier.version>1.0.6.0</dropwizard.guicier.version>
+    <horizon.version>0.0.25</horizon.version>
+    <mesos.docker.tag>1.1.1</mesos.docker.tag>
+    <mesos.version>1.1.2</mesos.version>
+    <project.build.targetJdk>1.8</project.build.targetJdk>
+    <singularity.jar.name.format>${project.artifactId}-${project.version}</singularity.jar.name.format>
+    <singularitybase.image.revision>1</singularitybase.image.revision>
+  </properties>
+
   <dependencyManagement>
     <dependencies>
+
+      <dependency>
+        <groupId>com.amazonaws</groupId>
+        <artifactId>aws-java-sdk-s3</artifactId>
+        <version>${aws.sdk.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>commons-logging</groupId>
+            <artifactId>commons-logging</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>joda-time</groupId>
+            <artifactId>joda-time</artifactId>
+          </exclusion>
+        </exclusions>
+      </dependency>
+
+      <dependency>
+        <groupId>com.google.api-client</groupId>
+        <artifactId>google-api-client</artifactId>
+        <version>1.23.0</version>
+      </dependency>
+
+      <dependency>
+        <groupId>com.google.apis</groupId>
+        <artifactId>google-http-client-jackson2</artifactId>
+        <version>1.23.0</version>
+      </dependency>
+
+      <dependency>
+        <groupId>com.google.auth</groupId>
+        <artifactId>google-auth-library-oauth2-http</artifactId>
+        <version>0.9.0</version>
+        <exclusions>
+          <exclusion>
+            <groupId>com.google.http-client</groupId>
+            <artifactId>google-http-client-jackson2</artifactId>
+          </exclusion>
+        </exclusions>
+      </dependency>
+
+      <dependency>
+        <groupId>com.google.cloud</groupId>
+        <artifactId>google-cloud-storage</artifactId>
+        <version>1.15.0</version>
+      </dependency>
+
+      <dependency>
+        <groupId>com.google.http-client</groupId>
+        <artifactId>google-http-client</artifactId>
+        <version>1.23.0</version>
+      </dependency>
+
+      <dependency>
+        <groupId>com.google.http-client</groupId>
+        <artifactId>google-http-client-jackson2</artifactId>
+        <version>1.23.0</version>
+      </dependency>
+
+
+      <dependency>
+        <groupId>com.google.protobuf</groupId>
+        <artifactId>protobuf-java</artifactId>
+        <version>${dep.protobuf.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>com.h2database</groupId>
+        <artifactId>h2</artifactId>
+        <version>1.4.193</version>
+      </dependency>
+
+      <dependency>
+        <groupId>com.hubspot</groupId>
+        <artifactId>BaragonCore</artifactId>
+        <version>${baragon.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>com.hubspot</groupId>
+        <artifactId>HorizonCore</artifactId>
+        <version>${horizon.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>com.hubspot</groupId>
+        <artifactId>HorizonNing</artifactId>
+        <version>${horizon.version}</version>
+      </dependency>
       <dependency>
         <groupId>com.hubspot</groupId>
         <artifactId>SingularityBase</artifactId>
-        <version>${project.version}</version>
-      </dependency>
-
-      <dependency>
-        <groupId>com.hubspot</groupId>
-        <artifactId>SingularityRunnerBase</artifactId>
-        <version>${project.version}</version>
-      </dependency>
-
-      <dependency>
-        <groupId>com.hubspot</groupId>
-        <artifactId>SingularityS3Base</artifactId>
-        <version>${project.version}</version>
-      </dependency>
-
-      <dependency>
-        <groupId>com.hubspot</groupId>
-        <artifactId>SingularityMesosClient</artifactId>
         <version>${project.version}</version>
       </dependency>
 
@@ -106,19 +180,7 @@
 
       <dependency>
         <groupId>com.hubspot</groupId>
-        <artifactId>SingularityUI</artifactId>
-        <version>${project.version}</version>
-      </dependency>
-
-      <dependency>
-        <groupId>com.hubspot</groupId>
-        <artifactId>SingularityService</artifactId>
-        <version>${project.version}</version>
-      </dependency>
-
-      <dependency>
-        <groupId>com.hubspot</groupId>
-        <artifactId>SingularityServiceIntegrationTests</artifactId>
+        <artifactId>SingularityClusterCoordinator</artifactId>
         <version>${project.version}</version>
       </dependency>
 
@@ -136,14 +198,38 @@
 
       <dependency>
         <groupId>com.hubspot</groupId>
-        <artifactId>SingularityClusterCoordinator</artifactId>
+        <artifactId>SingularityMesosClient</artifactId>
         <version>${project.version}</version>
       </dependency>
 
       <dependency>
-        <groupId>com.hubspot.jackson</groupId>
-        <artifactId>jackson-datatype-protobuf</artifactId>
-        <version>0.9.3</version>
+        <groupId>com.hubspot</groupId>
+        <artifactId>SingularityRunnerBase</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>com.hubspot</groupId>
+        <artifactId>SingularityS3Base</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>com.hubspot</groupId>
+        <artifactId>SingularityService</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>com.hubspot</groupId>
+        <artifactId>SingularityServiceIntegrationTests</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>com.hubspot</groupId>
+        <artifactId>SingularityUI</artifactId>
+        <version>${project.version}</version>
       </dependency>
 
       <dependency>
@@ -153,51 +239,15 @@
       </dependency>
 
       <dependency>
-        <groupId>io.dropwizard</groupId>
-        <artifactId>dropwizard-auth</artifactId>
-        <version>${dropwizard.version}</version>
+        <groupId>com.hubspot.jackson</groupId>
+        <artifactId>jackson-datatype-protobuf</artifactId>
+        <version>0.9.9-jackson2.9-proto2</version>
       </dependency>
 
       <dependency>
         <groupId>com.hubspot.jackson</groupId>
         <artifactId>jackson-jaxrs-propertyfiltering</artifactId>
         <version>0.8.1</version>
-      </dependency>
-
-      <dependency>
-        <groupId>com.h2database</groupId>
-        <artifactId>h2</artifactId>
-        <version>1.4.193</version>
-      </dependency>
-
-      <dependency>
-        <groupId>org.liquibase</groupId>
-        <artifactId>liquibase-core</artifactId>
-        <version>3.5.1</version>
-      </dependency>
-
-      <dependency>
-        <groupId>org.yaml</groupId>
-        <artifactId>snakeyaml</artifactId>
-        <version>1.15</version>
-      </dependency>
-
-      <dependency>
-        <groupId>com.hubspot</groupId>
-        <artifactId>BaragonCore</artifactId>
-        <version>${baragon.version}</version>
-      </dependency>
-
-      <dependency>
-        <groupId>com.mesosphere.mesos.rx.java</groupId>
-        <artifactId>mesos-rxjava-protobuf-client</artifactId>
-        <version>${dep.mesos.rxjava.version}</version>
-      </dependency>
-
-      <dependency>
-        <groupId>io.reactivex</groupId>
-        <artifactId>rxjava</artifactId>
-        <version>1.1.8</version>
       </dependency>
 
       <dependency>
@@ -208,8 +258,20 @@
 
       <dependency>
         <groupId>com.mesosphere.mesos.rx.java</groupId>
+        <artifactId>mesos-rxjava-protobuf-client</artifactId>
+        <version>${dep.mesos.rxjava.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>com.mesosphere.mesos.rx.java</groupId>
         <artifactId>mesos-rxjava-util</artifactId>
         <version>${dep.mesos.rxjava.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>com.palominolabs.metrics</groupId>
+        <artifactId>metrics-guice</artifactId>
+        <version>${dep.metrics-guice.version}</version>
       </dependency>
 
       <dependency>
@@ -241,86 +303,15 @@
       </dependency>
 
       <dependency>
-        <groupId>com.hubspot</groupId>
-        <artifactId>HorizonCore</artifactId>
-        <version>${horizon.version}</version>
-      </dependency>
-
-      <dependency>
-        <groupId>com.hubspot</groupId>
-        <artifactId>HorizonNing</artifactId>
-        <version>${horizon.version}</version>
-      </dependency>
-
-      <dependency>
-        <groupId>org.apache.directory.api</groupId>
-        <artifactId>api-all</artifactId>
-        <version>1.0.0-M28</version>
-        <exclusions>
-          <exclusion>
-            <groupId>org.apache.servicemix.bundles</groupId>
-            <artifactId>org.apache.servicemix.bundles.antlr</artifactId>
-          </exclusion>
-        </exclusions>
-      </dependency>
-
-      <dependency>
-        <groupId>com.palominolabs.metrics</groupId>
-        <artifactId>metrics-guice</artifactId>
-        <version>${dep.metrics-guice.version}</version>
+        <groupId>io.dropwizard</groupId>
+        <artifactId>dropwizard-auth</artifactId>
+        <version>${dropwizard.version}</version>
       </dependency>
 
       <dependency>
         <groupId>io.dropwizard.metrics</groupId>
         <artifactId>metrics-graphite</artifactId>
-        <version>${dep.dropwizard-metrics.version}</version><!-- TOOD: add this to HubSpot's basepom -->
-      </dependency>
-
-      <dependency>
-        <groupId>org.dmfs</groupId>
-        <artifactId>lib-recur</artifactId>
-        <version>0.9.4</version>
-      </dependency>
-
-      <dependency>
-        <groupId>org.dmfs</groupId>
-        <artifactId>rfc5545-datetime</artifactId>
-        <version>0.2.2</version>
-      </dependency>
-
-      <dependency>
-        <groupId>com.jayway.awaitility</groupId>
-        <artifactId>awaitility</artifactId>
-        <version>1.7.0</version>
-        <scope>test</scope>
-      </dependency>
-
-
-      <dependency>
-        <groupId>com.amazonaws</groupId>
-        <artifactId>aws-java-sdk-s3</artifactId>
-        <version>${aws.sdk.version}</version>
-        <exclusions>
-          <exclusion>
-            <groupId>commons-logging</groupId>
-            <artifactId>commons-logging</artifactId>
-          </exclusion>
-          <exclusion>
-            <groupId>joda-time</groupId>
-            <artifactId>joda-time</artifactId>
-          </exclusion>
-        </exclusions>
-      </dependency>
-
-      <dependency>
-        <groupId>com.google.protobuf</groupId>
-        <artifactId>protobuf-java</artifactId>
-        <version>${dep.protobuf.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.jukito</groupId>
-        <artifactId>jukito</artifactId>
-        <version>1.5</version>
+        <version>${dep.dropwizard-metrics.version}</version>
       </dependency>
 
       <dependency>
@@ -336,6 +327,12 @@
       </dependency>
 
       <dependency>
+        <groupId>io.reactivex</groupId>
+        <artifactId>rxjava</artifactId>
+        <version>1.1.8</version>
+      </dependency>
+
+      <dependency>
         <groupId>io.swagger.core.v3</groupId>
         <artifactId>swagger-annotations</artifactId>
         <version>2.0.0-rc4</version>
@@ -345,48 +342,80 @@
         <groupId>io.swagger.core.v3</groupId>
         <artifactId>swagger-core</artifactId>
         <version>2.0.0-rc4</version>
+        <exclusions>
+          <exclusion>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.yaml</groupId>
+            <artifactId>snakeyaml</artifactId>
+          </exclusion>
+        </exclusions>
       </dependency>
 
       <dependency>
         <groupId>io.swagger.core.v3</groupId>
         <artifactId>swagger-jaxrs2</artifactId>
         <version>2.0.0-rc4</version>
-      </dependency>
-
-      <dependency>
-        <groupId>com.google.cloud</groupId>
-        <artifactId>google-cloud-storage</artifactId>
-        <version>1.15.0</version>
-      </dependency>
-
-      <dependency>
-        <groupId>com.google.apis</groupId>
-        <artifactId>google-http-client-jackson2</artifactId>
-        <version>1.23.0</version>
-      </dependency>
-
-      <dependency>
-        <groupId>com.google.api-client</groupId>
-        <artifactId>google-api-client</artifactId>
-        <version>1.23.0</version>
-      </dependency>
-
-      <dependency>
-        <groupId>com.google.http-client</groupId>
-        <artifactId>google-http-client</artifactId>
-        <version>1.23.0</version>
-      </dependency>
-
-      <dependency>
-        <groupId>com.google.auth</groupId>
-        <artifactId>google-auth-library-oauth2-http</artifactId>
-        <version>0.9.0</version>
         <exclusions>
           <exclusion>
-            <groupId>com.google.http-client</groupId>
-            <artifactId>google-http-client-jackson2</artifactId>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.yaml</groupId>
+            <artifactId>snakeyaml</artifactId>
           </exclusion>
         </exclusions>
+      </dependency>
+
+      <dependency>
+        <groupId>org.apache.directory.api</groupId>
+        <artifactId>api-all</artifactId>
+        <version>1.0.0-M28</version>
+        <exclusions>
+          <exclusion>
+            <groupId>org.apache.servicemix.bundles</groupId>
+            <artifactId>org.apache.servicemix.bundles.antlr</artifactId>
+          </exclusion>
+        </exclusions>
+      </dependency>
+
+      <dependency>
+        <groupId>org.dmfs</groupId>
+        <artifactId>lib-recur</artifactId>
+        <version>0.9.4</version>
+      </dependency>
+
+      <dependency>
+        <groupId>org.dmfs</groupId>
+        <artifactId>rfc5545-datetime</artifactId>
+        <version>0.2.2</version>
+      </dependency>
+      <dependency>
+        <groupId>org.jukito</groupId>
+        <artifactId>jukito</artifactId>
+        <version>1.5</version>
+      </dependency>
+
+      <dependency>
+        <groupId>org.liquibase</groupId>
+        <artifactId>liquibase-core</artifactId>
+        <version>3.5.1</version>
+      </dependency>
+
+      <dependency>
+        <groupId>org.yaml</groupId>
+        <artifactId>snakeyaml</artifactId>
+        <version>1.15</version>
+      </dependency>
+
+      <dependency>
+        <groupId>com.jayway.awaitility</groupId>
+        <artifactId>awaitility</artifactId>
+        <version>1.7.0</version>
+        <scope>test</scope>
       </dependency>
 
     </dependencies>
@@ -400,15 +429,16 @@
           <artifactId>docker-maven-plugin</artifactId>
           <version>0.13.2</version>
           <configuration>
-            <images />  <!-- default to no images to allow building from parent, let submodules override -->
+            <images></images>
+            <!-- default to no images to allow building from parent, let submodules override -->
           </configuration>
           <executions>
             <execution>
               <id>build-docker-images</id>
-              <phase>pre-integration-test</phase>
               <goals>
                 <goal>build</goal>
               </goals>
+              <phase>pre-integration-test</phase>
             </execution>
           </executions>
         </plugin>
@@ -422,7 +452,8 @@
           <artifactId>git-commit-id-plugin</artifactId>
           <configuration>
             <gitDescribe>
-              <match>Singularity*</match>  <!-- logfetch tags exist too... don't use those -->
+              <match>Singularity*</match>
+              <!-- logfetch tags exist too... don't use those -->
             </gitDescribe>
           </configuration>
         </plugin>
@@ -433,28 +464,28 @@
         </plugin>
         <!--This plugin's configuration is used to store Eclipse m2e settings only. It has no influence on the Maven build itself.-->
         <plugin>
-        	<groupId>org.eclipse.m2e</groupId>
-        	<artifactId>lifecycle-mapping</artifactId>
-        	<version>1.0.0</version>
-        	<configuration>
-        		<lifecycleMappingMetadata>
-        			<pluginExecutions>
-        				<pluginExecution>
-        					<pluginExecutionFilter>
-        						<groupId>com.hubspot.maven.plugins</groupId>
-        						<artifactId>dependency-management-plugin</artifactId>
-        						<versionRange>[0.3,)</versionRange>
-        						<goals>
-        							<goal>analyze</goal>
-        						</goals>
-        					</pluginExecutionFilter>
-        					<action>
-        						<ignore />
-        					</action>
-        				</pluginExecution>
-        			</pluginExecutions>
-        		</lifecycleMappingMetadata>
-        	</configuration>
+          <groupId>org.eclipse.m2e</groupId>
+          <artifactId>lifecycle-mapping</artifactId>
+          <version>1.0.0</version>
+          <configuration>
+            <lifecycleMappingMetadata>
+              <pluginExecutions>
+                <pluginExecution>
+                  <pluginExecutionFilter>
+                    <groupId>com.hubspot.maven.plugins</groupId>
+                    <artifactId>dependency-management-plugin</artifactId>
+                    <versionRange>[0.3,)</versionRange>
+                    <goals>
+                      <goal>analyze</goal>
+                    </goals>
+                  </pluginExecutionFilter>
+                  <action>
+                    <ignore></ignore>
+                  </action>
+                </pluginExecution>
+              </pluginExecutions>
+            </lifecycleMappingMetadata>
+          </configuration>
         </plugin>
         <plugin>
           <groupId>org.basepom.maven</groupId>
@@ -481,12 +512,12 @@
           <dependencies>
             <dependency>
               <groupId>org.slf4j</groupId>
-              <artifactId>slf4j-jdk14</artifactId>
+              <artifactId>jcl-over-slf4j</artifactId>
               <version>1.7.5</version>
             </dependency>
             <dependency>
               <groupId>org.slf4j</groupId>
-              <artifactId>jcl-over-slf4j</artifactId>
+              <artifactId>slf4j-jdk14</artifactId>
               <version>1.7.5</version>
             </dependency>
           </dependencies>
@@ -495,7 +526,6 @@
     </pluginManagement>
   </build>
 </project>
-
 <!-- Local Variables: -->
 <!-- mode: nxml -->
 <!-- nxml-child-indent: 2 -->

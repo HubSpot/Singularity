@@ -29,7 +29,6 @@ public class SingularityOpenApiResource extends BaseOpenApiResource {
   @Operation(hidden = true)
   public Response getOpenApi(@Context HttpHeaders headers,
                              @Context UriInfo uriInfo) throws Exception {
-    
     return super.getOpenApi(headers, config, app, uriInfo, "json");
   }
 }
