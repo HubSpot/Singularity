@@ -164,7 +164,7 @@ public class RequestResource extends AbstractRequestResource {
       }
   )
   public SingularityRequestParent postRequest(
-      @Auth SingularityUser user,
+      @Parameter(hidden = true) @Auth SingularityUser user,
       @Context HttpServletRequest requestContext,
       @RequestBody(required = true, description = "The Singularity request to create or update") SingularityRequest request) {
     return maybeProxyToLeader(requestContext, SingularityRequestParent.class, request, () -> postRequest(request, user));
@@ -193,7 +193,7 @@ public class RequestResource extends AbstractRequestResource {
       }
   )
   public SingularityRequestParent updateAuthorizedGroups(
-      @Auth SingularityUser user,
+      @Parameter(hidden = true) @Auth SingularityUser user,
       @Parameter(required = true, description = "The id of the request to update") @PathParam("requestId") String requestId,
       @Context HttpServletRequest requestContext,
       @RequestBody(required = true, description = "Updated group settings") SingularityUpdateGroupsRequest updateGroupsRequest) {
@@ -224,7 +224,7 @@ public class RequestResource extends AbstractRequestResource {
       }
   )
   public Response checkAuthForGroupsUpdate(
-      @Auth SingularityUser user,
+      @Parameter(hidden = true) @Auth SingularityUser user,
       @Parameter(required = true, description = "The id of the request to update") @PathParam("requestId") String requestId,
       @RequestBody(required = true, description = "Updated group settings") SingularityUpdateGroupsRequest updateGroupsRequest) {
     Optional<SingularityRequestWithState> maybeOldRequestWithState = requestManager.getRequest(requestId, false);
@@ -253,7 +253,7 @@ public class RequestResource extends AbstractRequestResource {
   @Path("/request/{requestId}/bounce")
   @Operation(summary = "Trigger a bounce for a request")
   public SingularityRequestParent bounce(
-      @Auth SingularityUser user,
+      @Parameter(hidden = true) @Auth SingularityUser user,
       @Parameter(required = true, description = "The request to bounce") @PathParam("requestId") String requestId,
       @Context HttpServletRequest requestContext) {
     return bounce(user, requestId, requestContext, null);
@@ -264,7 +264,7 @@ public class RequestResource extends AbstractRequestResource {
   @Consumes({ MediaType.APPLICATION_JSON })
   @Operation(summary = "Bounce a specific Singularity request. A bounce launches replacement task(s), and then kills the original task(s) if the replacement(s) are healthy")
   public SingularityRequestParent bounce(
-      @Auth SingularityUser user,
+      @Parameter(hidden = true) @Auth SingularityUser user,
       @Parameter(required = true, description = "The request ID to bounce") @PathParam("requestId") String requestId,
       @Context HttpServletRequest requestContext,
       @RequestBody(description = "Bounce request options") SingularityBounceRequest bounceRequest) {
@@ -327,7 +327,7 @@ public class RequestResource extends AbstractRequestResource {
   @POST
   @Path("/request/{requestId}/run")
   @Operation(summary = "Schedule a one-off or scheduled Singularity request for immediate or delayed execution")
-  public SingularityPendingRequestParent scheduleImmediately(@Auth SingularityUser user, @PathParam("requestId") String requestId) {
+  public SingularityPendingRequestParent scheduleImmediately(@Parameter(hidden = true) @Auth SingularityUser user, @PathParam("requestId") String requestId) {
     return scheduleImmediately(user, requestId, null);
   }
 
@@ -341,7 +341,7 @@ public class RequestResource extends AbstractRequestResource {
       }
   )
   public SingularityPendingRequestParent scheduleImmediately(
-      @Auth SingularityUser user,
+      @Parameter(hidden = true) @Auth SingularityUser user,
       @Parameter(required = true, description = "The request ID to run") @PathParam("requestId") String requestId,
       @RequestBody(description = "Settings specific to this run of the request") SingularityRunNowRequest runNowRequest) {
     final Optional<SingularityRunNowRequest> maybeRunNowRequest = Optional.fromNullable(runNowRequest);
@@ -376,7 +376,7 @@ public class RequestResource extends AbstractRequestResource {
       }
   )
   public Optional<SingularityTaskId> getTaskByRunId(
-      @Auth SingularityUser user,
+      @Parameter(hidden = true) @Auth SingularityUser user,
       @Parameter(required = true, description = "Id of the request") @PathParam("requestId") String requestId,
       @Parameter(required = true, description = "Run id to search for") @PathParam("runId") String runId) {
     SingularityRequestWithState requestWithState = fetchRequestWithState(requestId, user);
@@ -393,7 +393,7 @@ public class RequestResource extends AbstractRequestResource {
       }
   )
   public SingularityRequestParent pause(
-      @Auth SingularityUser user,
+      @Parameter(hidden = true) @Auth SingularityUser user,
       @Parameter(required = true, description = "The request ID to pause") @PathParam("requestId") String requestId,
       @Context HttpServletRequest requestContext) {
     return pause(user, requestId, requestContext, null);
@@ -409,7 +409,7 @@ public class RequestResource extends AbstractRequestResource {
       }
   )
   public SingularityRequestParent pause(
-      @Auth SingularityUser user,
+      @Parameter(hidden = true) @Auth SingularityUser user,
       @Parameter(required = true, description = "The request ID to pause") @PathParam("requestId") String requestId,
       @Context HttpServletRequest requestContext,
       @RequestBody(description = "Pause Request Options") SingularityPauseRequest pauseRequest) {
@@ -465,7 +465,7 @@ public class RequestResource extends AbstractRequestResource {
 
   @POST
   @Path("/request/{requestId}/unpause")
-  public SingularityRequestParent unpauseNoBody(@Auth SingularityUser user,
+  public SingularityRequestParent unpauseNoBody(@Parameter(hidden = true) @Auth SingularityUser user,
                                                 @PathParam("requestId") String requestId,
                                                 @Context HttpServletRequest requestContext) {
     return unpause(user, requestId, requestContext, null);
@@ -481,7 +481,7 @@ public class RequestResource extends AbstractRequestResource {
       }
   )
   public SingularityRequestParent unpause(
-      @Auth SingularityUser user,
+      @Parameter(hidden = true) @Auth SingularityUser user,
       @Parameter(required = true, description = "The request ID to unpause") @PathParam("requestId") String requestId,
       @Context HttpServletRequest requestContext,
       @RequestBody(description = "Settings for how the unpause should behave") SingularityUnpauseRequest unpauseRequest) {
@@ -516,7 +516,7 @@ public class RequestResource extends AbstractRequestResource {
   @Path("/request/{requestId}/exit-cooldown")
   @Operation(summary = "Immediately exits cooldown, scheduling new tasks immediately")
   public SingularityRequestParent exitCooldown(
-      @Auth SingularityUser user,
+      @Parameter(hidden = true) @Auth SingularityUser user,
       @Parameter(required = true, description = "The request to operate on") @PathParam("requestId") String requestId,
       @Context HttpServletRequest requestContext) {
     return exitCooldown(user, requestId, requestContext, null);
@@ -532,7 +532,7 @@ public class RequestResource extends AbstractRequestResource {
       }
   )
   public SingularityRequestParent exitCooldown(
-      @Auth SingularityUser user,
+      @Parameter(hidden = true) @Auth SingularityUser user,
       @Parameter(required = true, description = "The request to operate on") @PathParam("requestId") String requestId,
       @Context HttpServletRequest requestContext,
       @RequestBody(description = "Settings related to how an exit cooldown should behave") SingularityExitCooldownRequest exitCooldownRequest) {
@@ -574,7 +574,7 @@ public class RequestResource extends AbstractRequestResource {
   @Path("/active")
   @Operation(summary = "Retrieve the list of active requests")
   public List<SingularityRequestParent> getActiveRequests(
-      @Auth SingularityUser user,
+      @Parameter(hidden = true) @Auth SingularityUser user,
       @Parameter(description = "Fetched a cached version of this data to limit expensive operations") @QueryParam("useWebCache") Boolean useWebCache,
       @Parameter(description = "Only include requests that the user has operated on or is in a group for") @QueryParam("filterRelevantForUser") Boolean filterRelevantForUser,
       @Parameter(description = "Return full data, including deploy data and active task ids") @QueryParam("includeFullRequestData") Boolean includeFullRequestData,
@@ -591,7 +591,7 @@ public class RequestResource extends AbstractRequestResource {
   @Path("/paused")
   @Operation(summary = "Retrieve the list of paused requests")
   public List<SingularityRequestParent> getPausedRequests(
-      @Auth SingularityUser user,
+      @Parameter(hidden = true) @Auth SingularityUser user,
       @Parameter(description = "Fetched a cached version of this data to limit expensive operations") @QueryParam("useWebCache") Boolean useWebCache,
       @Parameter(description = "Only include requests that the user has operated on or is in a group for") @QueryParam("filterRelevantForUser") Boolean filterRelevantForUser,
       @Parameter(description = "Return full data, including deploy data and active task ids") @QueryParam("includeFullRequestData") Boolean includeFullRequestData,
@@ -607,7 +607,7 @@ public class RequestResource extends AbstractRequestResource {
   @Path("/cooldown")
   @Operation(summary = "Retrieve the list of requests in system cooldown")
   public List<SingularityRequestParent> getCooldownRequests(
-      @Auth SingularityUser user,
+      @Parameter(hidden = true) @Auth SingularityUser user,
       @Parameter(description = "Fetched a cached version of this data to limit expensive operations") @QueryParam("useWebCache") Boolean useWebCache,
       @Parameter(description = "Only include requests that the user has operated on or is in a group for") @QueryParam("filterRelevantForUser") Boolean filterRelevantForUser,
       @Parameter(description = "Return full data, including deploy data and active task ids") @QueryParam("includeFullRequestData") Boolean includeFullRequestData,
@@ -623,7 +623,7 @@ public class RequestResource extends AbstractRequestResource {
   @Path("/finished")
   @Operation(summary = "Retreive the list of finished requests (Scheduled requests which have exhausted their schedules)")
   public List<SingularityRequestParent> getFinishedRequests(
-      @Auth SingularityUser user,
+      @Parameter(hidden = true) @Auth SingularityUser user,
       @Parameter(description = "Fetched a cached version of this data to limit expensive operations") @QueryParam("useWebCache") Boolean useWebCache,
                                                             @QueryParam("filterRelevantForUser") Boolean filterRelevantForUser,
                                                             @QueryParam("includeFullRequestData") Boolean includeFullRequestData,
@@ -638,7 +638,7 @@ public class RequestResource extends AbstractRequestResource {
   @PropertyFiltering
   @Operation(summary = "Retrieve the list of all requests")
   public List<SingularityRequestParent> getRequests(
-      @Auth SingularityUser user,
+      @Parameter(hidden = true) @Auth SingularityUser user,
       @Parameter(description = "Fetched a cached version of this data to limit expensive operations") @QueryParam("useWebCache") Boolean useWebCache,
       @Parameter(description = "Only include requests that the user has operated on or is in a group for") @QueryParam("filterRelevantForUser") Boolean filterRelevantForUser,
       @Parameter(description = "Return full data, including deploy data and active task ids") @QueryParam("includeFullRequestData") Boolean includeFullRequestData,
@@ -666,7 +666,7 @@ public class RequestResource extends AbstractRequestResource {
   @PropertyFiltering
   @Path("/queued/pending")
   @Operation(summary = "Retrieve the list of pending requests")
-  public List<SingularityPendingRequest> getPendingRequests(@Auth SingularityUser user) {
+  public List<SingularityPendingRequest> getPendingRequests(@Parameter(hidden = true) @Auth SingularityUser user) {
     return authorizationHelper.filterByAuthorizedRequests(user, requestManager.getPendingRequests(), SingularityTransformHelpers.PENDING_REQUEST_TO_REQUEST_ID, SingularityAuthorizationScope.READ);
   }
 
@@ -674,7 +674,7 @@ public class RequestResource extends AbstractRequestResource {
   @PropertyFiltering
   @Path("/queued/cleanup")
   @Operation(summary = "Retrieve the list of requests being cleaned up")
-  public List<SingularityRequestCleanup> getCleanupRequests(@Auth SingularityUser user) {
+  public List<SingularityRequestCleanup> getCleanupRequests(@Parameter(hidden = true) @Auth SingularityUser user) {
     return authorizationHelper.filterByAuthorizedRequests(user, requestManager.getCleanupRequests(), SingularityTransformHelpers.REQUEST_CLEANUP_TO_REQUEST_ID, SingularityAuthorizationScope.READ);
   }
 
@@ -687,7 +687,7 @@ public class RequestResource extends AbstractRequestResource {
       }
   )
   public SingularityRequestParent getRequest(
-      @Auth SingularityUser user,
+      @Parameter(hidden = true) @Auth SingularityUser user,
       @Parameter(required = true, description = "Request ID") @PathParam("requestId") String requestId,
       @Parameter(description = "Fetched a cached version of this data to limit expensive operations") @QueryParam("useWebCache") Boolean useWebCache) {
     return fillEntireRequest(fetchRequestWithState(requestId, useWebCache(useWebCache), user));
@@ -707,7 +707,7 @@ public class RequestResource extends AbstractRequestResource {
       }
   )
   public SingularityRequest deleteRequest(
-      @Auth SingularityUser user,
+      @Parameter(hidden = true) @Auth SingularityUser user,
       @Parameter(required = true, description = "The request ID to delete") @PathParam("requestId") String requestId,
       @Context HttpServletRequest requestContext,
       @RequestBody(description = "Delete options") SingularityDeleteRequestRequest deleteRequest) {
@@ -747,7 +747,7 @@ public class RequestResource extends AbstractRequestResource {
       }
   )
   public SingularityRequestParent scale(
-      @Auth SingularityUser user,
+      @Parameter(hidden = true) @Auth SingularityUser user,
       @Parameter(required = true, description = "The Request ID to scale") @PathParam("requestId") String requestId,
       @Context HttpServletRequest requestContext,
       @RequestBody(required = true, description = "Object to hold number of instances to request") SingularityScaleRequest scaleRequest) {
@@ -822,7 +822,7 @@ public class RequestResource extends AbstractRequestResource {
       }
   )
   public SingularityRequestParent deleteExpiringScale(
-      @Auth SingularityUser user,
+      @Parameter(hidden = true) @Auth SingularityUser user,
       @Parameter(required = true, description = "The Request ID") @PathParam("requestId") String requestId) {
     return deleteExpiringObject(SingularityExpiringScale.class, requestId, user);
   }
@@ -837,7 +837,7 @@ public class RequestResource extends AbstractRequestResource {
       }
   )
   public SingularityRequestParent deleteExpiringSkipHealthchecksDeprecated(
-      @Auth SingularityUser user,
+      @Parameter(hidden = true) @Auth SingularityUser user,
       @Parameter(required = true, description = "The Request ID") @PathParam("requestId") String requestId) {
     return deleteExpiringSkipHealthchecks(user, requestId);
   }
@@ -851,7 +851,7 @@ public class RequestResource extends AbstractRequestResource {
       }
   )
   public SingularityRequestParent deleteExpiringSkipHealthchecks(
-      @Auth SingularityUser user,
+      @Parameter(hidden = true) @Auth SingularityUser user,
       @Parameter(required = true, description = "The Request ID") @PathParam("requestId") String requestId) {
     return deleteExpiringObject(SingularityExpiringSkipHealthchecks.class, requestId, user);
   }
@@ -863,7 +863,7 @@ public class RequestResource extends AbstractRequestResource {
         @ApiResponse(responseCode = "404", description = "No Request or expiring pause request for that ID"),
   })
   public SingularityRequestParent deleteExpiringPause(
-      @Auth SingularityUser user,
+      @Parameter(hidden = true) @Auth SingularityUser user,
       @Parameter(required = true, description = "The Request ID") @PathParam("requestId") String requestId) {
     return deleteExpiringObject(SingularityExpiringPause.class, requestId, user);
   }
@@ -875,7 +875,7 @@ public class RequestResource extends AbstractRequestResource {
         @ApiResponse(responseCode = "404", description = "No Request or expiring bounce request for that ID"),
   })
   public SingularityRequestParent deleteExpiringBounce(
-      @Auth SingularityUser user,
+      @Parameter(hidden = true) @Auth SingularityUser user,
       @Parameter(required = true, description = "The Request ID") @PathParam("requestId") String requestId) {
     return deleteExpiringObject(SingularityExpiringBounce.class, requestId, user);
   }
@@ -891,7 +891,7 @@ public class RequestResource extends AbstractRequestResource {
       }
   )
   public SingularityRequestParent skipHealthchecksDeprecated(
-      @Auth SingularityUser user,
+      @Parameter(hidden = true) @Auth SingularityUser user,
       @Parameter(required = true, description = "The Request ID to scale") @PathParam("requestId") String requestId,
       @Context HttpServletRequest requestContext,
       @RequestBody(description = "SkipHealtchecks options") SingularitySkipHealthchecksRequest skipHealthchecksRequest) {
@@ -907,7 +907,7 @@ public class RequestResource extends AbstractRequestResource {
         @ApiResponse(responseCode = "404", description = "No Request with that ID"),
   })
   public SingularityRequestParent skipHealthchecks(
-      @Auth SingularityUser user,
+      @Parameter(hidden = true) @Auth SingularityUser user,
       @Parameter(required = true, description = "The Request ID to skip healthchecks for") @PathParam("requestId") String requestId,
       @Context HttpServletRequest requestContext,
       @RequestBody(description = "SkipHealtchecks options") SingularitySkipHealthchecksRequest skipHealthchecksRequest) {
@@ -935,7 +935,7 @@ public class RequestResource extends AbstractRequestResource {
   @Path("/lbcleanup")
   @Operation(summary = "Retrieve the list of tasks being cleaned from load balancers.")
   public Iterable<String> getLbCleanupRequests(
-      @Auth SingularityUser user,
+      @Parameter(hidden = true) @Auth SingularityUser user,
       @Parameter(description = "Fetched a cached version of this data to limit expensive operations") @QueryParam("useWebCache") Boolean useWebCache) {
     return authorizationHelper.filterAuthorizedRequestIds(user, requestManager.getLbCleanupRequestIds(), SingularityAuthorizationScope.READ, useWebCache(useWebCache));
   }

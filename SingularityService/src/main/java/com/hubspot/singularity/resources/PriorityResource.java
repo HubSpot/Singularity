@@ -22,6 +22,7 @@ import com.hubspot.singularity.data.SingularityValidator;
 
 import io.dropwizard.auth.Auth;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -53,7 +54,7 @@ public class PriorityResource {
           @ApiResponse(responseCode = "404", description = "There was no active priority freeze")
       }
   )
-  public Optional<SingularityPriorityFreezeParent> getActivePriorityFreeze(@Auth SingularityUser user) {
+  public Optional<SingularityPriorityFreezeParent> getActivePriorityFreeze(@Parameter(hidden = true) @Auth SingularityUser user) {
     authorizationHelper.checkAdminAuthorization(user);
     return priorityManager.getActivePriorityFreeze();
   }
@@ -67,7 +68,7 @@ public class PriorityResource {
           @ApiResponse(responseCode = "400", description = "There was no active priority freeze to delete")
       }
   )
-  public void deleteActivePriorityFreeze(@Auth SingularityUser user) {
+  public void deleteActivePriorityFreeze(@Parameter(hidden = true) @Auth SingularityUser user) {
     authorizationHelper.checkAdminAuthorization(user);
 
     final SingularityDeleteResult deleteResult = priorityManager.deleteActivePriorityFreeze();
@@ -87,7 +88,7 @@ public class PriorityResource {
       }
   )
   public SingularityPriorityFreezeParent createPriorityFreeze(
-      @Auth SingularityUser user,
+      @Parameter(hidden = true) @Auth SingularityUser user,
       @RequestBody(description = "the new priority freeze to create") SingularityPriorityFreeze priorityFreezeRequest) {
     authorizationHelper.checkAdminAuthorization(user);
     priorityFreezeRequest = singularityValidator.checkSingularityPriorityFreeze(priorityFreezeRequest);

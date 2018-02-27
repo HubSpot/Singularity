@@ -15,7 +15,8 @@ class ApiDocs extends Component {
       url: this.props.url,
       spec: this.props.spec,
       presets: [presets.apis],
-      defaultModelRendering: "model"
+      defaultModelRendering: 'model',
+      supportedSubmitMethods: ['get']
     });
   }
 

@@ -16,6 +16,7 @@ import com.hubspot.singularity.data.UserManager;
 
 import io.dropwizard.auth.Auth;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -36,7 +37,7 @@ public class UserResource {
   @GET
   @Path("/settings")
   @Operation(summary = "Retrieve the settings for the current authenticated user")
-  public SingularityUserSettings getUserSettings(@Auth SingularityUser user) {
+  public SingularityUserSettings getUserSettings(@Parameter(hidden = true) @Auth SingularityUser user) {
     return userManager.getUserSettings(user.getId()).or(SingularityUserSettings.empty());
   }
 
@@ -44,7 +45,7 @@ public class UserResource {
   @Path("/settings")
   @Operation(summary = "Update the settings for the current authenticated user")
   public void setUserSettings(
-      @Auth SingularityUser user,
+      @Parameter(hidden = true) @Auth SingularityUser user,
       @RequestBody(
           required = true,
           description = "The new settings to be saved for the currently authenticated user"
@@ -57,7 +58,7 @@ public class UserResource {
   @Path("/settings/starred-requests")
   @Operation(summary = "Add starred requests for the current authenticated user")
   public void addStarredRequests(
-      @Auth SingularityUser user,
+      @Parameter(hidden = true) @Auth SingularityUser user,
       @RequestBody(required = true, description = "A SingularityUserSettings object containing the new starred requests for the currently authenticated user") SingularityUserSettings settings) {
     userManager.addStarredRequestIds(user.getId(), settings.getStarredRequestIds());
   }
@@ -67,7 +68,7 @@ public class UserResource {
   @Path("/settings/starred-requests")
   @Operation(summary = "Remove starred requests for the current authenticated user")
   public void deleteStarredRequests(
-      @Auth SingularityUser user,
+      @Parameter(hidden = true) @Auth SingularityUser user,
       @RequestBody(
           required = true,
           description = "A SingularityUserSettings object containing starred requests to remove for the currently authenticated user"

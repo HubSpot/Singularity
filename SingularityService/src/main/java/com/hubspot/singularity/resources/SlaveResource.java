@@ -53,7 +53,7 @@ public class SlaveResource extends AbstractMachineResource<SingularitySlave> {
   @Path("/")
   @Operation(summary = "Retrieve the list of all known slaves, optionally filtering by a particular state")
   public List<SingularitySlave> getSlaves(
-      @Auth SingularityUser user,
+      @Parameter(hidden = true) @Auth SingularityUser user,
       @Parameter(description = "Optionally specify a particular state to filter slaves by") @QueryParam("state") Optional<MachineState> filterState) {
     authorizationHelper.checkAdminAuthorization(user);
     return manager.getObjectsFiltered(filterState);
@@ -63,7 +63,7 @@ public class SlaveResource extends AbstractMachineResource<SingularitySlave> {
   @Path("/slave/{slaveId}")
   @Operation(summary = "Retrieve the history of a given slave")
   public List<SingularityMachineStateHistoryUpdate> getSlaveHistory(
-      @Auth SingularityUser user,
+      @Parameter(hidden = true) @Auth SingularityUser user,
       @Parameter(required = true, description = "Slave ID") @PathParam("slaveId") String slaveId) {
     authorizationHelper.checkAdminAuthorization(user);
     return manager.getHistory(slaveId);
@@ -73,7 +73,7 @@ public class SlaveResource extends AbstractMachineResource<SingularitySlave> {
   @Path("/slave/{slaveId}/details")
   @Operation(summary = "Get information about a particular slave")
   public Optional<SingularitySlave> getSlave(
-      @Auth SingularityUser user,
+      @Parameter(hidden = true) @Auth SingularityUser user,
       @Parameter(required = true, description = "Slave ID") @PathParam("slaveId") String slaveId) {
     authorizationHelper.checkAdminAuthorization(user);
     return manager.getObject(slaveId);
@@ -83,7 +83,7 @@ public class SlaveResource extends AbstractMachineResource<SingularitySlave> {
   @Path("/slave/{slaveId}")
   @Operation(summary = "Remove a known slave, erasing history. This operation will cancel decomissioning of the slave")
   public void removeSlave(
-      @Auth SingularityUser user,
+      @Parameter(hidden = true) @Auth SingularityUser user,
       @Parameter(required = true, description = "Active SlaveId") @PathParam("slaveId") String slaveId) {
     super.remove(slaveId, user);
   }
@@ -93,7 +93,7 @@ public class SlaveResource extends AbstractMachineResource<SingularitySlave> {
   @Operation(summary = "Begin decommissioning a specific active slave")
   @Consumes({ MediaType.APPLICATION_JSON })
   public void decommissionSlave(
-      @Auth SingularityUser user,
+      @Parameter(hidden = true) @Auth SingularityUser user,
       @Parameter(required = true, description = "Active slaveId") @PathParam("slaveId") String slaveId,
       @RequestBody(description = "Settings related to changing the state of a slave") SingularityMachineChangeRequest changeRequest) {
     final Optional<SingularityMachineChangeRequest> maybeChangeRequest = Optional.fromNullable(changeRequest);
@@ -105,7 +105,7 @@ public class SlaveResource extends AbstractMachineResource<SingularitySlave> {
   @Operation(summary = "Freeze tasks on a specific slave")
   @Consumes({ MediaType.APPLICATION_JSON })
   public void freezeSlave(
-      @Auth SingularityUser user,
+      @Parameter(hidden = true) @Auth SingularityUser user,
       @Parameter(required = true, description = "Slave ID") @PathParam("slaveId") String slaveId,
       @RequestBody(description = "Settings related to changing the state of a slave") SingularityMachineChangeRequest changeRequest) {
     final Optional<SingularityMachineChangeRequest> maybeChangeRequest = Optional.fromNullable(changeRequest);
@@ -117,7 +117,7 @@ public class SlaveResource extends AbstractMachineResource<SingularitySlave> {
   @Operation(summary = "Activate a decomissioning slave, canceling decomission without erasing history")
   @Consumes({ MediaType.APPLICATION_JSON })
   public void activateSlave(
-      @Auth SingularityUser user,
+      @Parameter(hidden = true) @Auth SingularityUser user,
       @Parameter(required = true, description = "Active slaveId") @PathParam("slaveId") String slaveId,
       @RequestBody(description = "Settings related to changing the state of a slave") SingularityMachineChangeRequest changeRequest) {
     final Optional<SingularityMachineChangeRequest> maybeChangeRequest = Optional.fromNullable(changeRequest);
@@ -128,7 +128,7 @@ public class SlaveResource extends AbstractMachineResource<SingularitySlave> {
   @Path("/slave/{slaveId}/expiring")
   @Operation(summary = "Delete any expiring machine state changes for this slave")
   public void deleteExpiringStateChange(
-      @Auth SingularityUser user,
+      @Parameter(hidden = true) @Auth SingularityUser user,
       @Parameter(required = true, description = "Active slaveId") @PathParam("slaveId") String slaveId) {
     super.cancelExpiring(slaveId, user);
   }
@@ -136,7 +136,7 @@ public class SlaveResource extends AbstractMachineResource<SingularitySlave> {
   @GET
   @Path("/expiring")
   @Operation(summary = "Get all expiring state changes for all slaves")
-  public List<SingularityExpiringMachineState> getExpiringStateChanges(@Auth SingularityUser user) {
+  public List<SingularityExpiringMachineState> getExpiringStateChanges(@Parameter(hidden = true) @Auth SingularityUser user) {
     return super.getExpiringStateChanges(user);
   }
 

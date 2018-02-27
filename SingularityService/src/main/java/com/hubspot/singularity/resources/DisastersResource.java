@@ -49,7 +49,7 @@ public class DisastersResource {
   @GET
   @Path("/stats")
   @Operation(summary = "Get current data related to disaster detection")
-  public SingularityDisastersData disasterStats(@Auth SingularityUser user) {
+  public SingularityDisastersData disasterStats(@Parameter(hidden = true) @Auth SingularityUser user) {
     authorizationHelper.checkAdminAuthorization(user);
     return disasterManager.getDisastersData();
   }
@@ -57,7 +57,7 @@ public class DisastersResource {
   @GET
   @Path("/active")
   @Operation(summary = "Get a list of current active disasters")
-  public List<SingularityDisasterType> activeDisasters(@Auth SingularityUser user) {
+  public List<SingularityDisasterType> activeDisasters(@Parameter(hidden = true) @Auth SingularityUser user) {
     authorizationHelper.checkAdminAuthorization(user);
     return disasterManager.getActiveDisasters();
   }
@@ -65,7 +65,7 @@ public class DisastersResource {
   @POST
   @Path("/disable")
   @Operation(summary = "Do not allow the automated poller to disable actions when a disaster is detected")
-  public void disableAutomatedDisasterCreation(@Auth SingularityUser user) {
+  public void disableAutomatedDisasterCreation(@Parameter(hidden = true) @Auth SingularityUser user) {
     authorizationHelper.checkAdminAuthorization(user);
     disasterManager.disableAutomatedDisabledActions();
   }
@@ -73,7 +73,7 @@ public class DisastersResource {
   @POST
   @Path("/enable")
   @Operation(summary = "Allow the automated poller to disable actions when a disaster is detected")
-  public void enableAutomatedDisasterCreation(@Auth SingularityUser user) {
+  public void enableAutomatedDisasterCreation(@Parameter(hidden = true) @Auth SingularityUser user) {
     authorizationHelper.checkAdminAuthorization(user);
     disasterManager.enableAutomatedDisabledActions();
   }
@@ -82,7 +82,7 @@ public class DisastersResource {
   @Path("/active/{type}")
   @Operation(summary = "Remove an active disaster (make it inactive)")
   public void removeDisaster(
-      @Auth SingularityUser user,
+      @Parameter(hidden = true) @Auth SingularityUser user,
       @Parameter(required = true, description = "The type of disaster to operate on") @PathParam("type") SingularityDisasterType type) {
     authorizationHelper.checkAdminAuthorization(user);
     disasterManager.removeDisaster(type);
@@ -92,7 +92,7 @@ public class DisastersResource {
   @Path("/active/{type}")
   @Operation(summary = "Create a new active disaster")
   public void newDisaster(
-      @Auth SingularityUser user,
+      @Parameter(hidden = true) @Auth SingularityUser user,
       @Parameter(required = true, description = "The type of disaster to operate on") @PathParam("type") SingularityDisasterType type) {
     authorizationHelper.checkAdminAuthorization(user);
     disasterManager.addDisaster(type);
@@ -102,7 +102,7 @@ public class DisastersResource {
   @GET
   @Path("/disabled-actions")
   @Operation(summary = "Get a list of actions that are currently disable")
-  public List<SingularityDisabledAction> disabledActions(@Auth SingularityUser user) {
+  public List<SingularityDisabledAction> disabledActions(@Parameter(hidden = true) @Auth SingularityUser user) {
     authorizationHelper.checkAdminAuthorization(user);
     return disasterManager.getDisabledActions();
   }
@@ -111,7 +111,7 @@ public class DisastersResource {
   @Path("/disabled-actions/{action}")
   @Operation(summary = "Disable a specific action")
   public void disableAction(
-      @Auth SingularityUser user,
+      @Parameter(hidden = true) @Auth SingularityUser user,
       @Parameter(required = true, description = "The action to disable") @PathParam("action") SingularityAction action,
       @RequestBody(description = "Notes related to a particular disabled action") SingularityDisabledActionRequest disabledActionRequest) {
     final Optional<SingularityDisabledActionRequest> maybeRequest = Optional.fromNullable(disabledActionRequest);
@@ -124,7 +124,7 @@ public class DisastersResource {
   @Path("/disabled-actions/{action}")
   @Operation(summary = "Re-enable a specific action if it has been disabled")
   public void enableAction(
-      @Auth SingularityUser user,
+      @Parameter(hidden = true) @Auth SingularityUser user,
       @Parameter(required = true, description = "The action to enable") @PathParam("action") SingularityAction action) {
     authorizationHelper.checkAdminAuthorization(user);
     disasterManager.enable(action);

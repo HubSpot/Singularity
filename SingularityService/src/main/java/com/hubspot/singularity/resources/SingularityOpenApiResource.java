@@ -25,7 +25,7 @@ public class SingularityOpenApiResource extends BaseOpenApiResource {
   Application app;
 
   @GET
-  @Produces({MediaType.APPLICATION_JSON, "application/yaml"})
+  @Produces({MediaType.APPLICATION_JSON})
   @Operation(hidden = true)
   public Response getOpenApi(@Context HttpHeaders headers,
                              @Context UriInfo uriInfo) throws Exception {

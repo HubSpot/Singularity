@@ -52,7 +52,7 @@ public class AuthResource {
   @GET
   @Path("/user")
   @Operation(summary = "Get information about the currently authenticated user")
-  public SingularityUserHolder getUser(@Auth SingularityUser user) {
+  public SingularityUserHolder getUser(@Parameter(hidden = true) @Auth SingularityUser user) {
     return new SingularityUserHolder(
       Optional.of(user),
       userManager.getUserSettings(user.getId()),
@@ -85,7 +85,7 @@ public class AuthResource {
       }
   )
   public Response checkReadOnlyAuth(
-      @Auth SingularityUser user,
+      @Parameter(hidden = true) @Auth SingularityUser user,
       @Parameter(required = true, description = "Request id to check") @PathParam("requestId") String requestId,
       @Parameter(description = "Scope to check for") @QueryParam("scope") @DefaultValue("READ") Optional<SingularityAuthorizationScope> scope) {
     authorizationHelper.checkForAuthorizationByRequestId(requestId, user, scope.or(SingularityAuthorizationScope.READ));

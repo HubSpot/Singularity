@@ -81,7 +81,7 @@ public class HistoryResource extends AbstractHistoryResource {
       }
   )
   public SingularityTaskHistory getHistoryForTask(
-      @Auth SingularityUser user,
+      @Parameter(hidden = true) @Auth SingularityUser user,
       @Parameter(required = true, description = "Task ID to look up") @PathParam("taskId") String taskId) {
     SingularityTaskId taskIdObj = getTaskIdObject(taskId);
 
@@ -123,7 +123,7 @@ public class HistoryResource extends AbstractHistoryResource {
   @Path("/request/{requestId}/tasks/active")
   @Operation(summary = "Retrieve the history for all active tasks of a specific request")
   public List<SingularityTaskIdHistory> getTaskHistoryForRequest(
-      @Auth SingularityUser user,
+      @Parameter(hidden = true) @Auth SingularityUser user,
       @Parameter(required = true, description = "Request ID to look up") @PathParam("requestId") String requestId) {
     authorizationHelper.checkForAuthorizationByRequestId(requestId, user, SingularityAuthorizationScope.READ);
     List<SingularityTaskId> activeTaskIds = taskManager.getActiveTaskIdsForRequest(requestId);
@@ -140,7 +140,7 @@ public class HistoryResource extends AbstractHistoryResource {
       }
   )
   public SingularityDeployHistory getDeploy(
-      @Auth SingularityUser user,
+      @Parameter(hidden = true) @Auth SingularityUser user,
       @Parameter(required = true, description = "Request ID for deploy") @PathParam("requestId") String requestId,
       @Parameter(required = true, description = "Deploy ID") @PathParam("deployId") String deployId) {
     return getDeployHistory(requestId, deployId, user);
@@ -150,7 +150,7 @@ public class HistoryResource extends AbstractHistoryResource {
   @Path("/request/{requestId}/deploy/{deployId}/tasks/active")
   @Operation(summary = "Retrieve the task history for a specific deploy")
   public List<SingularityTaskIdHistory> getActiveDeployTasks(
-      @Auth SingularityUser user,
+      @Parameter(hidden = true) @Auth SingularityUser user,
       @Parameter(required = true, description = "Request ID for deploy") @PathParam("requestId") String requestId,
       @Parameter(required = true, description = "Deploy ID") @PathParam("deployId") String deployId) {
     authorizationHelper.checkForAuthorizationByRequestId(requestId, user, SingularityAuthorizationScope.READ);
@@ -162,7 +162,7 @@ public class HistoryResource extends AbstractHistoryResource {
   @Path("/request/{requestId}/deploy/{deployId}/tasks/inactive")
   @Operation(summary = "Retrieve the task history for a specific deploy")
   public List<SingularityTaskIdHistory> getInactiveDeployTasks(
-      @Auth SingularityUser user,
+      @Parameter(hidden = true) @Auth SingularityUser user,
       @Parameter(required = true, description = "Request ID for deploy") @PathParam("requestId") String requestId,
       @Parameter(required = true, description = "Deploy ID") @PathParam("deployId") String deployId,
       @Parameter(description = "Maximum number of items to return") @QueryParam("count") Integer count,
@@ -180,7 +180,7 @@ public class HistoryResource extends AbstractHistoryResource {
   @Path("/request/{requestId}/deploy/{deployId}/tasks/inactive/withmetadata")
   @Operation(summary = "Retrieve the task history for a specific deploy")
   public SingularityPaginatedResponse<SingularityTaskIdHistory> getInactiveDeployTasksWithMetadata(
-      @Auth SingularityUser user,
+      @Parameter(hidden = true) @Auth SingularityUser user,
       @Parameter(required = true, description = "Request ID for deploy") @PathParam("requestId") String requestId,
       @Parameter(required = true, description = "Deploy ID") @PathParam("deployId") String deployId,
       @Parameter(description = "Maximum number of items to return") @QueryParam("count") Integer count,
@@ -202,7 +202,7 @@ public class HistoryResource extends AbstractHistoryResource {
   @Path("/tasks")
   @Operation(summary = "Retrieve the history sorted by startedAt for all inactive tasks")
   public List<SingularityTaskIdHistory> getTaskHistory(
-      @Auth SingularityUser user,
+      @Parameter(hidden = true) @Auth SingularityUser user,
       @Parameter(description = "Optional Request ID to match") @QueryParam("requestId") Optional<String> requestId,
       @Parameter(description = "Optional deploy ID to match") @QueryParam("deployId") Optional<String> deployId,
       @Parameter(description = "Optional runId to match") @QueryParam("runId") Optional<String> runId,
@@ -232,7 +232,7 @@ public class HistoryResource extends AbstractHistoryResource {
   @Path("/tasks/withmetadata")
   @Operation(summary = "Retrieve the history sorted by startedAt for all inactive tasks")
   public SingularityPaginatedResponse<SingularityTaskIdHistory> getTaskHistoryWithMetadata(
-      @Auth SingularityUser user,
+      @Parameter(hidden = true) @Auth SingularityUser user,
       @Parameter(description = "Optional Request ID to match") @QueryParam("requestId") Optional<String> requestId,
       @Parameter(description = "Optional deploy ID to match") @QueryParam("deployId") Optional<String> deployId,
       @Parameter(description = "Optional runId to match") @QueryParam("runId") Optional<String> runId,
@@ -263,7 +263,7 @@ public class HistoryResource extends AbstractHistoryResource {
   @Path("/request/{requestId}/tasks")
   @Operation(summary = "Retrieve the history sorted by startedAt for all inactive tasks of a specific request")
   public List<SingularityTaskIdHistory> getTaskHistoryForRequest(
-      @Auth SingularityUser user,
+      @Parameter(hidden = true) @Auth SingularityUser user,
       @Parameter(required = true, description = "Request ID to match") @PathParam("requestId") String requestId,
       @Parameter(description = "Optional deploy ID to match") @QueryParam("deployId") Optional<String> deployId,
       @Parameter(description = "Optional runId to match") @QueryParam("runId") Optional<String> runId,
@@ -289,7 +289,7 @@ public class HistoryResource extends AbstractHistoryResource {
   @Path("/request/{requestId}/tasks/withmetadata")
   @Operation(summary = "Retrieve the history count for all inactive tasks of a specific request")
   public SingularityPaginatedResponse<SingularityTaskIdHistory> getTaskHistoryForRequestWithMetadata(
-      @Auth SingularityUser user,
+      @Parameter(hidden = true) @Auth SingularityUser user,
       @Parameter(required = true, description = "Request ID to match") @PathParam("requestId") String requestId,
       @Parameter(description = "Optional deploy ID to match") @QueryParam("deployId") Optional<String> deployId,
       @Parameter(description = "Optional runId to match") @QueryParam("runId") Optional<String> runId,
@@ -321,7 +321,7 @@ public class HistoryResource extends AbstractHistoryResource {
       }
   )
   public Optional<SingularityTaskIdHistory> getTaskHistoryForRequestAndRunId(
-      @Auth SingularityUser user,
+      @Parameter(hidden = true) @Auth SingularityUser user,
       @Parameter(required = true, description = "Request ID to look up") @PathParam("requestId") String requestId,
       @Parameter(required = true, description = "runId to look up") @PathParam("runId") String runId) {
     authorizationHelper.checkForAuthorizationByRequestId(requestId, user, SingularityAuthorizationScope.READ);
@@ -333,7 +333,7 @@ public class HistoryResource extends AbstractHistoryResource {
   @Path("/request/{requestId}/deploys")
   @Operation(summary = "Get deploy history for a single request")
   public List<SingularityDeployHistory> getDeploys(
-      @Auth SingularityUser user,
+      @Parameter(hidden = true) @Auth SingularityUser user,
       @Parameter(required = true, description = "Request ID to look up") @PathParam("requestId") String requestId,
       @Parameter(description = "Maximum number of items to return") @QueryParam("count") Integer count,
       @Parameter(description = "Which page of items to view") @QueryParam("page") Integer page) {
@@ -349,7 +349,7 @@ public class HistoryResource extends AbstractHistoryResource {
   @Path("/request/{requestId}/deploys/withmetadata")
   @Operation(summary = "Get deploy history with metadata for a single request")
   public SingularityPaginatedResponse<SingularityDeployHistory> getDeploysWithMetadata(
-      @Auth SingularityUser user,
+      @Parameter(hidden = true) @Auth SingularityUser user,
       @Parameter(required = true, description = "Request ID to look up") @PathParam("requestId") String requestId,
       @Parameter(description = "Maximum number of items to return") @QueryParam("count") Integer count,
       @Parameter(description = "Which page of items to view") @QueryParam("page") Integer page) {
@@ -367,7 +367,7 @@ public class HistoryResource extends AbstractHistoryResource {
   @Path("/request/{requestId}/requests")
   @Operation(summary = "Get request history for a single request")
   public List<SingularityRequestHistory> getRequestHistoryForRequest(
-      @Auth SingularityUser user,
+      @Parameter(hidden = true) @Auth SingularityUser user,
       @Parameter(required = true, description = "Request ID to look up") @PathParam("requestId") String requestId,
       @Parameter(description = "Maximum number of items to return") @QueryParam("count") Integer count,
       @Parameter(description = "Which page of items to view") @QueryParam("page") Integer page) {
@@ -383,7 +383,7 @@ public class HistoryResource extends AbstractHistoryResource {
   @Path("/request/{requestId}/requests/withmetadata")
   @Operation(summary = "Get request history for a single request")
   public SingularityPaginatedResponse<SingularityRequestHistory> getRequestHistoryForRequestWithMetadata(
-      @Auth SingularityUser user,
+      @Parameter(hidden = true) @Auth SingularityUser user,
       @Parameter(required = true, description = "Request ID to look up") @PathParam("requestId") String requestId,
       @Parameter(description = "Maximum number of items to return") @QueryParam("count") Integer count,
       @Parameter(description = "Which page of items to view") @QueryParam("page") Integer page) {
@@ -402,7 +402,7 @@ public class HistoryResource extends AbstractHistoryResource {
   @Path("/requests/search")
   @Operation(summary = "Search for requests")
   public List<String> getRequestHistoryForRequestLike(
-      @Auth SingularityUser user,
+      @Parameter(hidden = true) @Auth SingularityUser user,
       @Parameter(required = true, description = "Request ID prefix to search for") @QueryParam("requestIdLike") String requestIdLike,
       @Parameter(description = "Maximum number of items to return") @QueryParam("count") Integer count,
       @Parameter(description = "Which page of items to view") @QueryParam("page") Integer page,
@@ -419,7 +419,7 @@ public class HistoryResource extends AbstractHistoryResource {
   @Path("/request/{requestId}/command-line-args")
   @Operation(summary = "Get a list of recently used command line args for an on-demand or scheduled request")
   public Set<List<String>> getRecentCommandLineArgs(
-      @Auth SingularityUser user,
+      @Parameter(hidden = true) @Auth SingularityUser user,
       @Parameter(required = true, description = "Request ID to look up") @PathParam("requestId") String requestId,
       @Parameter(description = "Max number of recent args to return") @QueryParam("count") Optional<Integer> count) {
     authorizationHelper.checkForAuthorizationByRequestId(requestId, user, SingularityAuthorizationScope.READ);

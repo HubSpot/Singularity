@@ -58,7 +58,7 @@ public class TaskTrackerResource {
       }
   )
   public Optional<SingularityTaskState> getTaskState(
-      @Auth SingularityUser user,
+      @Parameter(hidden = true) @Auth SingularityUser user,
       @Parameter(required = true, description = "the task id to search for") @PathParam("taskId") String taskId) {
     authorizationHelper.checkForAuthorizationByTaskId(taskId, user, SingularityAuthorizationScope.READ);
     return getTaskStateFromId(SingularityTaskId.valueOf(taskId));
@@ -73,7 +73,7 @@ public class TaskTrackerResource {
       }
   )
   public Optional<SingularityTaskState> getTaskStateByRunId(
-      @Auth SingularityUser user,
+      @Parameter(hidden = true) @Auth SingularityUser user,
       @Parameter(required = true, description = "the request id to search for tasks") @PathParam("requestId") String requestId,
       @Parameter(required = true, description = "the run id to search for") @PathParam("runId") String runId) {
     authorizationHelper.checkForAuthorizationByRequestId(requestId, user, SingularityAuthorizationScope.READ);

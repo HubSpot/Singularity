@@ -48,7 +48,7 @@ public class InactiveSlaveResource {
   @POST
   @Operation(summary = "Mark a slave as inactive")
   public void deactivateSlave(
-      @Auth SingularityUser user,
+      @Parameter(hidden = true) @Auth SingularityUser user,
       @Parameter(required = true, description = "The host to deactivate") @QueryParam("host") String host) {
     authorizationHelper.checkAdminAuthorization(user);
     inactiveSlaveManager.deactivateSlave(host);
@@ -57,7 +57,7 @@ public class InactiveSlaveResource {
   @DELETE
   @Operation(summary = "Remove a host from teh deactivated list")
   public void reactivateSlave(
-      @Auth SingularityUser user,
+      @Parameter(hidden = true) @Auth SingularityUser user,
       @Parameter(required = true, description = "The host to remove from the deactivated list") @QueryParam("host") String host) {
     authorizationHelper.checkAdminAuthorization(user);
     inactiveSlaveManager.activateSlave(host);

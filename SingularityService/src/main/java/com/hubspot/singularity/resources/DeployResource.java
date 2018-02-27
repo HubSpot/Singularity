@@ -85,7 +85,7 @@ public class DeployResource extends AbstractRequestResource {
   @PropertyFiltering
   @Path("/pending")
   @Operation(description = "Retrieve the list of current pending deploys")
-  public List<SingularityPendingDeploy> getPendingDeploys(@Auth SingularityUser user) {
+  public List<SingularityPendingDeploy> getPendingDeploys(@Parameter(hidden = true) @Auth SingularityUser user) {
     return authorizationHelper.filterByAuthorizedRequests(user, deployManager.getPendingDeploys(), SingularityTransformHelpers.PENDING_DEPLOY_TO_REQUEST_ID, SingularityAuthorizationScope.READ);
   }
 
@@ -99,7 +99,7 @@ public class DeployResource extends AbstractRequestResource {
       }
   )
   public SingularityRequestParent deploy(
-      @Auth SingularityUser user,
+      @Parameter(hidden = true) @Auth SingularityUser user,
       @Context HttpServletRequest requestContext,
       @RequestBody(required = true, description = "Deploy data") SingularityDeployRequest deployRequest) {
     return maybeProxyToLeader(requestContext, SingularityRequestParent.class, deployRequest, () -> deploy(deployRequest, user));
@@ -190,7 +190,7 @@ public class DeployResource extends AbstractRequestResource {
       }
   )
   public SingularityRequestParent cancelDeploy(
-      @Auth SingularityUser user,
+      @Parameter(hidden = true) @Auth SingularityUser user,
       @Parameter(required = true, description = "The Singularity Request Id from which the deployment is removed.") @PathParam("requestId") String requestId,
       @Parameter(required = true, description = "The Singularity Deploy Id that should be removed.") @PathParam("deployId") String deployId) {
     SingularityRequestWithState requestWithState = fetchRequestWithState(requestId, user);
@@ -217,7 +217,7 @@ public class DeployResource extends AbstractRequestResource {
       }
   )
   public SingularityRequestParent updatePendingDeploy(
-      @Auth SingularityUser user,
+      @Parameter(hidden = true) @Auth SingularityUser user,
       @RequestBody(required = true) SingularityUpdatePendingDeployRequest updateRequest) {
     SingularityRequestWithState requestWithState = fetchRequestWithState(updateRequest.getRequestId(), user);
 

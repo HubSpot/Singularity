@@ -562,7 +562,7 @@ public class S3LogResource extends AbstractHistoryResource {
       }
   )
   public List<SingularityS3LogMetadata> getS3LogsForTask(
-      @Auth SingularityUser user,
+      @Parameter(hidden = true) @Auth SingularityUser user,
       @Parameter(required = true, description = "The task ID to search for") @PathParam("taskId") String taskId,
       @Parameter(description = "Start timestamp (millis, 13 digit)") @QueryParam("start") Optional<Long> start,
       @Parameter(description = "End timestamp (mills, 13 digit)") @QueryParam("end") Optional<Long> end,
@@ -606,7 +606,7 @@ public class S3LogResource extends AbstractHistoryResource {
       }
   )
   public List<SingularityS3LogMetadata> getS3LogsForRequest(
-      @Auth SingularityUser user,
+      @Parameter(hidden = true) @Auth SingularityUser user,
       @Parameter(required = true, description = "The request ID to search for") @PathParam("requestId") String requestId,
       @Parameter(description = "Start timestamp (millis, 13 digit)") @QueryParam("start") Optional<Long> start,
       @Parameter(description = "End timestamp (mills, 13 digit)") @QueryParam("end") Optional<Long> end,
@@ -651,7 +651,7 @@ public class S3LogResource extends AbstractHistoryResource {
       }
   )
   public List<SingularityS3LogMetadata> getS3LogsForDeploy(
-      @Auth SingularityUser user,
+      @Parameter(hidden = true) @Auth SingularityUser user,
       @Parameter(required = true, description = "The request ID to search for") @PathParam("requestId") String requestId,
       @Parameter(required = true, description = "The deploy ID to search for") @PathParam("deployId") String deployId,
       @Parameter(description = "Start timestamp (millis, 13 digit)") @QueryParam("start") Optional<Long> start,
@@ -699,7 +699,7 @@ public class S3LogResource extends AbstractHistoryResource {
       }
   )
   public SingularityS3SearchResult getPaginatedS3Logs(
-      @Auth SingularityUser user,
+      @Parameter(hidden = true) @Auth SingularityUser user,
       @RequestBody(required = true) SingularityS3SearchRequest search) throws Exception {
     checkS3();
 

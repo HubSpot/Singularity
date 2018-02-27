@@ -56,7 +56,7 @@ public class UsageResource {
   @GET
   @Path("/slaves")
   @Operation(summary = "Retrieve a list of slave resource usage models with slave ids")
-  public List<SingularitySlaveUsageWithId> getSlavesWithUsage(@Auth SingularityUser user) {
+  public List<SingularitySlaveUsageWithId> getSlavesWithUsage(@Parameter(hidden = true) @Auth SingularityUser user) {
     authorizationHelper.checkAdminAuthorization(user);
     return usageManager.getAllCurrentSlaveUsage();
   }
@@ -65,7 +65,7 @@ public class UsageResource {
   @Path("/slaves/{slaveId}/tasks/current")
   @Operation(summary = "Retrieve a list of resource usages for active tasks on a particular slave")
   public List<SingularityTaskCurrentUsageWithId> getSlaveCurrentTaskUsage(
-      @Auth SingularityUser user,
+      @Parameter(hidden = true) @Auth SingularityUser user,
       @Parameter(required = true, description = "The slave to retrieve task usages for") @PathParam("slaveId") String slaveId) {
     authorizationHelper.checkAdminAuthorization(user);
     Optional<SingularitySlave> slave = slaveManager.getObject(slaveId);
@@ -86,7 +86,7 @@ public class UsageResource {
   @Path("/slaves/{slaveId}/history")
   @Operation(summary = "Retrieve the usage history for a particular slave")
   public List<SingularitySlaveUsage> getSlaveUsageHistory(
-      @Auth SingularityUser user,
+      @Parameter(hidden = true) @Auth SingularityUser user,
       @Parameter(required = true, description = "The slave to retrieve usage history for") @PathParam("slaveId") String slaveId) {
     authorizationHelper.checkAdminAuthorization(user);
     return usageManager.getSlaveUsage(slaveId);
@@ -99,7 +99,7 @@ public class UsageResource {
       description = "Empty if the task usage has not been collected or has been cleaned up"
   )
   public List<SingularityTaskUsage> getTaskUsageHistory(
-      @Auth SingularityUser user,
+      @Parameter(hidden = true) @Auth SingularityUser user,
       @Parameter(required = true, description = "The id of the task to retrieve usage history for") @PathParam("taskId") String taskId) {
     authorizationHelper.checkForAuthorizationByTaskId(taskId, user, SingularityAuthorizationScope.READ);
     return usageManager.getTaskUsage(taskId);
@@ -108,7 +108,7 @@ public class UsageResource {
   @GET
   @Path("/cluster/utilization")
   @Operation(summary = "GET a summary of utilization for all slaves and requests in the mesos cluster")
-  public SingularityClusterUtilization getClusterUtilization(@Auth SingularityUser user) {
+  public SingularityClusterUtilization getClusterUtilization(@Parameter(hidden = true) @Auth SingularityUser user) {
     //authorizationHelper.checkAdminAuthorization(user); Needed for ui pages outside single request
     WebExceptions.checkNotFound(usageManager.getClusterUtilization().isPresent(), "No cluster utilization has been saved yet");
 

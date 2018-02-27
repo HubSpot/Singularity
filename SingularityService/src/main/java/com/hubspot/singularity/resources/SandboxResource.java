@@ -101,7 +101,7 @@ public class SandboxResource extends AbstractHistoryResource {
       }
   )
   public SingularitySandbox browse(
-      @Auth SingularityUser user,
+      @Parameter(hidden = true) @Auth SingularityUser user,
       @Parameter(required = true, description = "The task ID to browse") @PathParam("taskId") String taskId,
       @Parameter(required = true, description = "The path to browse from") @QueryParam("path") String path) {
     authorizationHelper.checkForAuthorizationByTaskId(taskId, user, SingularityAuthorizationScope.READ);
@@ -146,7 +146,7 @@ public class SandboxResource extends AbstractHistoryResource {
       }
   )
   public MesosFileChunkObject read(
-      @Auth SingularityUser user,
+      @Parameter(hidden = true) @Auth SingularityUser user,
       @Parameter(required = true, description = "The task ID of the sandbox to read from") @PathParam("taskId") String taskId,
       @Parameter(required = true, description = "The path to the file to be read") @QueryParam("path") String path,
       @Parameter(description = "Optional string to grep for") @QueryParam("grep") Optional<String> grep,

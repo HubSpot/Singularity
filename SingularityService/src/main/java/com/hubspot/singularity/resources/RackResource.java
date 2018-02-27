@@ -53,7 +53,7 @@ public class RackResource extends AbstractMachineResource<SingularityRack> {
   @Path("/")
   @Operation(summary = "Retrieve the list of all known racks, optionally filtering by a particular state")
   public List<SingularityRack> getRacks(
-      @Auth SingularityUser user,
+      @Parameter(hidden = true) @Auth SingularityUser user,
       @Parameter(description = "Optionally specify a particular state to filter racks by") @QueryParam("state") Optional<MachineState> filterState) {
     authorizationHelper.checkAdminAuthorization(user);
     return manager.getObjectsFiltered(filterState);
@@ -63,7 +63,7 @@ public class RackResource extends AbstractMachineResource<SingularityRack> {
   @Path("/rack/{rackId}")
   @Operation(summary = "Retrieve the history of a given rack")
   public List<SingularityMachineStateHistoryUpdate> getRackHistory(
-      @Auth SingularityUser user,
+      @Parameter(hidden = true) @Auth SingularityUser user,
       @Parameter(required = true, description = "Rack ID") @PathParam("rackId") String rackId) {
     authorizationHelper.checkAdminAuthorization(user);
     return manager.getHistory(rackId);
@@ -73,7 +73,7 @@ public class RackResource extends AbstractMachineResource<SingularityRack> {
   @Path("/rack/{rackId}")
   @Operation(summary = "Remove a known rack, erasing history. This operation will cancel decommissioning of racks")
   public void removeRack(
-      @Auth SingularityUser user,
+      @Parameter(hidden = true) @Auth SingularityUser user,
       @Parameter(required = true, description = "Rack ID") @PathParam("rackId") String rackId) {
     super.remove(rackId, user);
   }
@@ -82,7 +82,7 @@ public class RackResource extends AbstractMachineResource<SingularityRack> {
   @Path("/rack/{rackId}/decommission")
   @Operation(summary = "Begin decommissioning a specific active rack")
   public void decommissionRack(
-      @Auth SingularityUser user,
+      @Parameter(hidden = true) @Auth SingularityUser user,
       @Parameter(required = true, description = "Rack ID") @PathParam("rackId") String rackId,
       @RequestBody(description = "Settings related to changing the state of a rack") SingularityMachineChangeRequest changeRequest) {
     final Optional<SingularityMachineChangeRequest> maybeChangeRequest = Optional.fromNullable(changeRequest);
@@ -93,7 +93,7 @@ public class RackResource extends AbstractMachineResource<SingularityRack> {
   @Path("/rack/{rackId}/freeze")
   @Operation(summary = "Freeze a specific rack")
   public void freezeRack(
-      @Auth SingularityUser user,
+      @Parameter(hidden = true) @Auth SingularityUser user,
       @Parameter(required = true, description = "Rack ID") @PathParam("rackId") String rackId,
       @RequestBody(description = "Settings related to changing the state of a slave") SingularityMachineChangeRequest changeRequest) {
     final Optional<SingularityMachineChangeRequest> maybeChangeRequest = Optional.fromNullable(changeRequest);
@@ -104,7 +104,7 @@ public class RackResource extends AbstractMachineResource<SingularityRack> {
   @Path("/rack/{rackId}/activate")
   @Operation(summary = "Activate a decomissioning rack, canceling decomission without erasing history")
   public void activateRack(
-      @Auth SingularityUser user,
+      @Parameter(hidden = true) @Auth SingularityUser user,
       @Parameter(required = true, description = "Rack ID") @PathParam("rackId") String rackId,
       @RequestBody(description = "Settings related to changing the state of a slave") SingularityMachineChangeRequest changeRequest) {
     final Optional<SingularityMachineChangeRequest> maybeChangeRequest = Optional.fromNullable(changeRequest);
@@ -115,7 +115,7 @@ public class RackResource extends AbstractMachineResource<SingularityRack> {
   @Path("/rack/{rackId}/expiring")
   @Operation(summary = "Delete any expiring machine state changes for this rack")
   public void deleteExpiringStateChange(
-      @Auth SingularityUser user,
+      @Parameter(hidden = true) @Auth SingularityUser user,
       @Parameter(required = true, description = "Rack ID") @PathParam("rackId") String rackId) {
     super.cancelExpiring(rackId, user);
   }
@@ -123,7 +123,7 @@ public class RackResource extends AbstractMachineResource<SingularityRack> {
   @GET
   @Path("/expiring")
   @Operation(summary = "Get all expiring state changes for all racks")
-  public List<SingularityExpiringMachineState> getExpiringStateChanges(@Auth SingularityUser user) {
+  public List<SingularityExpiringMachineState> getExpiringStateChanges(@Parameter(hidden = true) @Auth SingularityUser user) {
     return super.getExpiringStateChanges(user);
   }
 
