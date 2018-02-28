@@ -2,11 +2,11 @@ package com.hubspot.mesos.client;
 
 import java.util.List;
 
-import com.hubspot.mesos.json.MesosMasterMetricsSnapshotObject;
-import com.hubspot.mesos.json.MesosMasterStateObject;
-import com.hubspot.mesos.json.MesosSlaveMetricsSnapshotObject;
-import com.hubspot.mesos.json.MesosSlaveStateObject;
-import com.hubspot.mesos.json.MesosTaskMonitorObject;
+import com.hubspot.mesos.master.MesosMasterMetricsSnapshotObject;
+import com.hubspot.mesos.master.MesosMasterStateObject;
+import com.hubspot.mesos.slave.MesosSlaveMetricsSnapshotObject;
+import com.hubspot.mesos.slave.MesosSlaveStateObject;
+import com.hubspot.mesos.slave.MesosTaskMonitorObject;
 
 public interface MesosClient {
 

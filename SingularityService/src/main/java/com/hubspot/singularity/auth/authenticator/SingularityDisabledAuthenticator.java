@@ -6,7 +6,7 @@ import javax.ws.rs.container.ContainerRequestContext;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import com.hubspot.singularity.SingularityUser;
+import com.hubspot.singularity.api.auth.SingularityUser;
 
 @Singleton
 public class SingularityDisabledAuthenticator implements SingularityAuthenticator {

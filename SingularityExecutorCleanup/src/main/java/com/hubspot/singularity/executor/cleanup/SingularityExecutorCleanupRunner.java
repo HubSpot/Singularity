@@ -13,7 +13,7 @@ import com.google.inject.Stage;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.mesos.client.SingularityMesosClientModule;
 import com.hubspot.singularity.client.SingularityClientModule;
-import com.hubspot.singularity.executor.SingularityExecutorCleanupStatistics;
+import com.hubspot.singularity.api.common.SingularityExecutorCleanupStatistics;
 import com.hubspot.singularity.executor.cleanup.config.SingularityExecutorCleanupConfiguration;
 import com.hubspot.singularity.executor.cleanup.config.SingularityExecutorCleanupModule;
 import com.hubspot.singularity.executor.config.SingularityExecutorConfiguration;

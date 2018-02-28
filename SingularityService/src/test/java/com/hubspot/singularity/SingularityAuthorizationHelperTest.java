@@ -14,6 +14,13 @@ import javax.ws.rs.WebApplicationException;
 import org.junit.Test;
 
 import com.google.common.collect.ImmutableSet;
+import com.hubspot.singularity.api.auth.SingularityAuthorizationScope;
+import com.hubspot.singularity.api.auth.SingularityUser;
+import com.hubspot.singularity.api.request.RequestState;
+import com.hubspot.singularity.api.request.RequestType;
+import com.hubspot.singularity.api.request.SingularityRequest;
+import com.hubspot.singularity.api.request.SingularityRequestBuilder;
+import com.hubspot.singularity.api.request.SingularityRequestWithState;
 import com.hubspot.singularity.auth.SingularityAuthorizationHelper;
 import com.hubspot.singularity.config.AuthConfiguration;
 import com.hubspot.singularity.config.MesosConfiguration;

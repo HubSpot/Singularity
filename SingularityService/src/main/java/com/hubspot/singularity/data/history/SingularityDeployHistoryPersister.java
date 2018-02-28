@@ -14,10 +14,10 @@ import java.util.Optional;
 import com.google.common.collect.TreeMultimap;
 import com.google.inject.Inject;
 import com.hubspot.mesos.JavaUtils;
-import com.hubspot.singularity.SingularityDeleteResult;
-import com.hubspot.singularity.SingularityDeployHistory;
-import com.hubspot.singularity.SingularityDeployKey;
-import com.hubspot.singularity.SingularityRequestDeployState;
+import com.hubspot.singularity.api.common.SingularityDeleteResult;
+import com.hubspot.singularity.api.deploy.SingularityDeployHistory;
+import com.hubspot.singularity.api.deploy.SingularityDeployKey;
+import com.hubspot.singularity.api.request.SingularityRequestDeployState;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.DeployManager;
 

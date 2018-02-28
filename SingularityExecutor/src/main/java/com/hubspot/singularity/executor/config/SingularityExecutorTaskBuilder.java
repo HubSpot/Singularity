@@ -8,12 +8,11 @@ import org.apache.mesos.Protos.TaskInfo;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Throwables;
 import com.google.common.io.Files;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
-import com.hubspot.singularity.SingularityTaskExecutorData;
+import com.hubspot.singularity.api.task.SingularityTaskExecutorData;
 import com.hubspot.singularity.executor.TemplateManager;
 import com.hubspot.singularity.executor.task.SingularityExecutorArtifactFetcher;
 import com.hubspot.singularity.executor.task.SingularityExecutorTask;

@@ -21,14 +21,13 @@ import org.apache.mesos.v1.Protos.Value.Type;
 
 import java.util.Optional;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Throwables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.common.net.InetAddresses;
 import com.google.common.primitives.Longs;
-import com.hubspot.mesos.Resources;
-import com.hubspot.singularity.ExtendedTaskState;
+import com.hubspot.singularity.api.deploy.mesos.Resources;
+import com.hubspot.singularity.api.task.ExtendedTaskState;
 
 public final class MesosUtils {
 

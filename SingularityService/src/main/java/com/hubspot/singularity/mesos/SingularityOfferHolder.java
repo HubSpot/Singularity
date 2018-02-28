@@ -20,7 +20,7 @@ import org.slf4j.LoggerFactory;
 import java.util.Optional;
 import com.google.common.collect.Lists;
 import com.hubspot.mesos.JavaUtils;
-import com.hubspot.singularity.SingularityTaskId;
+import com.hubspot.singularity.api.task.SingularityTaskId;
 import com.hubspot.singularity.helpers.MesosUtils;
 import com.hubspot.singularity.helpers.SingularityMesosTaskHolder;
 

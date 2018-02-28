@@ -12,7 +12,6 @@ import org.slf4j.LoggerFactory;
 import java.util.Optional;
 import com.google.inject.Inject;
 import com.hubspot.mesos.JavaUtils;
-import com.hubspot.singularity.ExtendedTaskState;
 import com.hubspot.singularity.config.HistoryPurgeRequestSettings;
 import com.hubspot.singularity.config.HistoryPurgingConfiguration;
 import com.hubspot.singularity.data.DeployManager;

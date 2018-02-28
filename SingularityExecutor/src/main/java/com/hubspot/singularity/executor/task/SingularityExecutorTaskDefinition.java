@@ -7,7 +7,7 @@ import java.util.Optional;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.hubspot.singularity.SingularityTaskExecutorData;
+import com.hubspot.singularity.api.task.SingularityTaskExecutorData;
 
 public class SingularityExecutorTaskDefinition {
 

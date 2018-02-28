@@ -10,7 +10,7 @@ import com.google.common.base.Charsets;
 import java.util.Optional;
 import com.google.common.io.BaseEncoding;
 import com.google.inject.Inject;
-import com.hubspot.singularity.SingularityUserSettings;
+import com.hubspot.singularity.api.auth.SingularityUserSettings;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.transcoders.Transcoder;
 

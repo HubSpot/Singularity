@@ -20,7 +20,7 @@ import com.hubspot.mesos.protos.MesosResourceObject;
 import com.hubspot.mesos.protos.MesosStringValue;
 import com.hubspot.mesos.protos.MesosTaskObject;
 import com.hubspot.mesos.protos.MesosTaskStatusObject;
-import com.hubspot.singularity.ExtendedTaskState;
+import com.hubspot.singularity.api.task.ExtendedTaskState;
 
 public class MesosProtosUtils {
   private final ObjectMapper objectMapper;

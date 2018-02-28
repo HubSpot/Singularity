@@ -5,7 +5,7 @@ import java.util.Optional;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.hubspot.singularity.SingularityUser;
+import com.hubspot.singularity.api.auth.SingularityUser;
 
 public class SingularityUserPermissionsResponse {
   private final Optional<SingularityUser> user;

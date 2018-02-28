@@ -20,7 +20,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import com.hubspot.singularity.SingularityAuthModule;
-import com.hubspot.singularity.SingularityUser;
+import com.hubspot.singularity.api.auth.SingularityUser;
 import com.hubspot.singularity.WebExceptions;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.config.WebhookAuthConfiguration;

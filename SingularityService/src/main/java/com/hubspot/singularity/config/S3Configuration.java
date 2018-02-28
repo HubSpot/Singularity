@@ -9,7 +9,7 @@ import java.util.concurrent.TimeUnit;
 import javax.validation.constraints.NotNull;
 
 import java.util.Optional;
-import com.hubspot.singularity.SingularityS3UploaderFile;
+import com.hubspot.singularity.api.logs.SingularityS3UploaderFile;
 
 public class S3Configuration {
 

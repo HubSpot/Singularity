@@ -12,15 +12,15 @@ import org.slf4j.LoggerFactory;
 
 import com.codahale.metrics.MetricRegistry;
 import com.google.inject.Inject;
-import com.hubspot.singularity.SingularityAction;
-import com.hubspot.singularity.SingularityCreateResult;
-import com.hubspot.singularity.SingularityDeleteResult;
-import com.hubspot.singularity.SingularityDisabledAction;
-import com.hubspot.singularity.SingularityDisaster;
-import com.hubspot.singularity.SingularityDisasterDataPoints;
-import com.hubspot.singularity.SingularityDisasterType;
-import com.hubspot.singularity.SingularityDisastersData;
-import com.hubspot.singularity.SingularityUser;
+import com.hubspot.singularity.api.common.SingularityAction;
+import com.hubspot.singularity.api.common.SingularityCreateResult;
+import com.hubspot.singularity.api.common.SingularityDeleteResult;
+import com.hubspot.singularity.api.disasters.SingularityDisabledAction;
+import com.hubspot.singularity.api.disasters.SingularityDisaster;
+import com.hubspot.singularity.api.disasters.SingularityDisasterDataPoints;
+import com.hubspot.singularity.api.disasters.SingularityDisasterType;
+import com.hubspot.singularity.api.disasters.SingularityDisastersData;
+import com.hubspot.singularity.api.auth.SingularityUser;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.transcoders.Transcoder;
 

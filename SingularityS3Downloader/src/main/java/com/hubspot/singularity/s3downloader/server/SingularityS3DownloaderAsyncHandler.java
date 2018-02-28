@@ -12,7 +12,7 @@ import org.slf4j.LoggerFactory;
 
 import com.codahale.metrics.Timer.Context;
 import com.google.common.collect.ImmutableMap;
-import com.hubspot.deploy.S3Artifact;
+import com.hubspot.singularity.api.deploy.S3Artifact;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.runner.base.sentry.SingularityRunnerExceptionNotifier;
 import com.hubspot.singularity.s3.base.ArtifactDownloadRequest;

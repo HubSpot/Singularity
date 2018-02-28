@@ -13,7 +13,7 @@ import javax.ws.rs.core.MediaType;
 
 import java.util.Optional;
 import com.google.inject.Inject;
-import com.hubspot.singularity.SingularityRequestGroup;
+import com.hubspot.singularity.api.request.SingularityRequestGroup;
 import com.hubspot.singularity.config.ApiPaths;
 import com.hubspot.singularity.data.RequestGroupManager;
 import com.hubspot.singularity.data.SingularityValidator;

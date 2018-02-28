@@ -4,7 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.hubspot.mesos.JavaUtils;
-import com.hubspot.singularity.SingularityWebhook;
+import com.hubspot.singularity.api.webhooks.SingularityWebhook;
 import com.ning.http.client.AsyncCompletionHandler;
 import com.ning.http.client.Response;
 

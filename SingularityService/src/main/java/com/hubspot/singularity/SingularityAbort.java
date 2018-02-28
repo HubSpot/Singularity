@@ -22,6 +22,8 @@ import com.google.common.net.HostAndPort;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.hubspot.mesos.JavaUtils;
+import com.hubspot.singularity.api.common.SingularityEmailDestination;
+import com.hubspot.singularity.api.common.SingularityEmailType;
 import com.hubspot.singularity.config.SMTPConfiguration;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.sentry.SingularityExceptionNotifier;

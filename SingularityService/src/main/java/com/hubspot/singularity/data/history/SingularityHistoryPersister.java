@@ -7,8 +7,8 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Optional;
 import com.hubspot.mesos.JavaUtils;
-import com.hubspot.singularity.SingularityDeleteResult;
-import com.hubspot.singularity.SingularityHistoryItem;
+import com.hubspot.singularity.api.common.SingularityDeleteResult;
+import com.hubspot.singularity.api.common.SingularityHistoryItem;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.scheduler.SingularityLeaderOnlyPoller;
 

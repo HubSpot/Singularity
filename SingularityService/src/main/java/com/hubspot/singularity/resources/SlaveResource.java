@@ -14,17 +14,17 @@ import javax.ws.rs.core.MediaType;
 
 import java.util.Optional;
 import com.google.inject.Inject;
-import com.hubspot.singularity.MachineState;
-import com.hubspot.singularity.SingularityAction;
-import com.hubspot.singularity.SingularityMachineStateHistoryUpdate;
-import com.hubspot.singularity.SingularitySlave;
-import com.hubspot.singularity.SingularityUser;
-import com.hubspot.singularity.api.SingularityMachineChangeRequest;
+import com.hubspot.singularity.api.machines.MachineState;
+import com.hubspot.singularity.api.common.SingularityAction;
+import com.hubspot.singularity.api.machines.SingularityMachineStateHistoryUpdate;
+import com.hubspot.singularity.api.machines.SingularitySlave;
+import com.hubspot.singularity.api.auth.SingularityUser;
+import com.hubspot.singularity.api.expiring.SingularityMachineChangeRequest;
 import com.hubspot.singularity.auth.SingularityAuthorizationHelper;
 import com.hubspot.singularity.config.ApiPaths;
 import com.hubspot.singularity.data.SingularityValidator;
 import com.hubspot.singularity.data.SlaveManager;
-import com.hubspot.singularity.expiring.SingularityExpiringMachineState;
+import com.hubspot.singularity.api.expiring.SingularityExpiringMachineState;
 
 import io.dropwizard.auth.Auth;
 import io.swagger.v3.oas.annotations.Operation;

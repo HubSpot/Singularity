@@ -19,9 +19,9 @@ import com.google.common.util.concurrent.MoreExecutors;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
-import com.hubspot.singularity.SingularityDeployUpdate;
-import com.hubspot.singularity.SingularityRequestHistory;
-import com.hubspot.singularity.SingularityTaskHistoryUpdate;
+import com.hubspot.singularity.api.deploy.SingularityDeployUpdate;
+import com.hubspot.singularity.api.request.SingularityRequestHistory;
+import com.hubspot.singularity.api.task.SingularityTaskHistoryUpdate;
 import com.hubspot.singularity.config.SingularityConfiguration;
 
 @Singleton

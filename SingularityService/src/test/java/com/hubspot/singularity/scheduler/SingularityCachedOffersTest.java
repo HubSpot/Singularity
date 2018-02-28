@@ -10,11 +10,11 @@ import org.junit.Test;
 import java.util.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
-import com.hubspot.mesos.Resources;
-import com.hubspot.singularity.SingularityDeployBuilder;
-import com.hubspot.singularity.SingularityPendingRequest;
-import com.hubspot.singularity.SingularityPendingRequest.PendingType;
-import com.hubspot.singularity.SlavePlacement;
+import com.hubspot.singularity.api.deploy.mesos.Resources;
+import com.hubspot.singularity.api.deploy.SingularityDeployBuilder;
+import com.hubspot.singularity.api.request.SingularityPendingRequest;
+import com.hubspot.singularity.api.request.SingularityPendingRequest.PendingType;
+import com.hubspot.singularity.api.request.SlavePlacement;
 import com.hubspot.singularity.mesos.OfferCache;
 
 public class SingularityCachedOffersTest extends SingularitySchedulerTestBase {

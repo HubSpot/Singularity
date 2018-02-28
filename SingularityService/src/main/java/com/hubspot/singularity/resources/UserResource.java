@@ -9,8 +9,8 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
 import com.google.inject.Inject;
-import com.hubspot.singularity.SingularityUser;
-import com.hubspot.singularity.SingularityUserSettings;
+import com.hubspot.singularity.api.auth.SingularityUser;
+import com.hubspot.singularity.api.auth.SingularityUserSettings;
 import com.hubspot.singularity.config.ApiPaths;
 import com.hubspot.singularity.data.UserManager;
 

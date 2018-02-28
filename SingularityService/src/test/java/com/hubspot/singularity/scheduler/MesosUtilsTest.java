@@ -20,9 +20,9 @@ import java.util.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.hubspot.singularity.helpers.MesosUtils;
-import com.hubspot.singularity.ExtendedTaskState;
-import com.hubspot.singularity.SingularityTaskHistoryUpdate;
-import com.hubspot.singularity.SingularityTaskId;
+import com.hubspot.singularity.api.task.ExtendedTaskState;
+import com.hubspot.singularity.api.task.SingularityTaskHistoryUpdate;
+import com.hubspot.singularity.api.task.SingularityTaskId;
 
 public class MesosUtilsTest {
 

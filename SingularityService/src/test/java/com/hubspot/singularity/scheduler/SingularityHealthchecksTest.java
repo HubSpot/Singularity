@@ -11,17 +11,17 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import com.google.common.collect.ImmutableList;
-import com.hubspot.deploy.HealthcheckOptions;
-import com.hubspot.deploy.HealthcheckOptionsBuilder;
-import com.hubspot.mesos.Resources;
-import com.hubspot.singularity.DeployState;
-import com.hubspot.singularity.SingularityDeploy;
-import com.hubspot.singularity.SingularityDeployBuilder;
-import com.hubspot.singularity.SingularityTask;
-import com.hubspot.singularity.SingularityTaskHealthcheckResult;
-import com.hubspot.singularity.SingularityTaskId;
-import com.hubspot.singularity.api.SingularityBounceRequest;
-import com.hubspot.singularity.api.SingularitySkipHealthchecksRequest;
+import com.hubspot.singularity.api.deploy.HealthcheckOptions;
+import com.hubspot.singularity.api.deploy.HealthcheckOptionsBuilder;
+import com.hubspot.singularity.api.deploy.mesos.Resources;
+import com.hubspot.singularity.api.deploy.DeployState;
+import com.hubspot.singularity.api.deploy.SingularityDeploy;
+import com.hubspot.singularity.api.deploy.SingularityDeployBuilder;
+import com.hubspot.singularity.api.task.SingularityTask;
+import com.hubspot.singularity.api.task.SingularityTaskHealthcheckResult;
+import com.hubspot.singularity.api.task.SingularityTaskId;
+import com.hubspot.singularity.api.expiring.SingularityBounceRequest;
+import com.hubspot.singularity.api.expiring.SingularitySkipHealthchecksRequest;
 import com.hubspot.singularity.scheduler.SingularityNewTaskChecker.CheckTaskState;
 import com.jayway.awaitility.Awaitility;
 

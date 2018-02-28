@@ -4,12 +4,12 @@ import static com.hubspot.singularity.WebExceptions.badRequest;
 import static com.hubspot.singularity.WebExceptions.checkNotFound;
 
 import java.util.Optional;
-import com.hubspot.singularity.InvalidSingularityTaskIdException;
-import com.hubspot.singularity.SingularityAuthorizationScope;
-import com.hubspot.singularity.SingularityDeployHistory;
-import com.hubspot.singularity.SingularityTaskHistory;
-import com.hubspot.singularity.SingularityTaskId;
-import com.hubspot.singularity.SingularityUser;
+import com.hubspot.singularity.exceptions.InvalidSingularityTaskIdException;
+import com.hubspot.singularity.api.auth.SingularityAuthorizationScope;
+import com.hubspot.singularity.api.deploy.SingularityDeployHistory;
+import com.hubspot.singularity.api.task.SingularityTaskHistory;
+import com.hubspot.singularity.api.task.SingularityTaskId;
+import com.hubspot.singularity.api.auth.SingularityUser;
 import com.hubspot.singularity.auth.SingularityAuthorizationHelper;
 import com.hubspot.singularity.data.DeployManager;
 import com.hubspot.singularity.data.TaskManager;

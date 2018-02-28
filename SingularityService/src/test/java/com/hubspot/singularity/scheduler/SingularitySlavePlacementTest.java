@@ -12,14 +12,14 @@ import org.junit.Test;
 
 import java.util.Optional;
 import com.google.common.collect.ImmutableMap;
-import com.hubspot.singularity.ExtendedTaskState;
-import com.hubspot.singularity.MachineState;
-import com.hubspot.singularity.SingularityRequest;
-import com.hubspot.singularity.SingularityTaskCleanup;
-import com.hubspot.singularity.SingularityTaskHistoryUpdate;
-import com.hubspot.singularity.SingularityTaskId;
-import com.hubspot.singularity.SlavePlacement;
-import com.hubspot.singularity.TaskCleanupType;
+import com.hubspot.singularity.api.task.ExtendedTaskState;
+import com.hubspot.singularity.api.machines.MachineState;
+import com.hubspot.singularity.api.request.SingularityRequest;
+import com.hubspot.singularity.api.task.SingularityTaskCleanup;
+import com.hubspot.singularity.api.task.SingularityTaskHistoryUpdate;
+import com.hubspot.singularity.api.task.SingularityTaskId;
+import com.hubspot.singularity.api.request.SlavePlacement;
+import com.hubspot.singularity.api.task.TaskCleanupType;
 
 public class SingularitySlavePlacementTest extends SingularitySchedulerTestBase {
 

@@ -5,12 +5,12 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import java.util.Optional;
-import com.hubspot.singularity.RequestState;
-import com.hubspot.singularity.SingularityTask;
-import com.hubspot.singularity.api.SingularityBounceRequest;
-import com.hubspot.singularity.api.SingularityPauseRequest;
-import com.hubspot.singularity.api.SingularityScaleRequest;
-import com.hubspot.singularity.api.SingularitySkipHealthchecksRequest;
+import com.hubspot.singularity.api.request.RequestState;
+import com.hubspot.singularity.api.task.SingularityTask;
+import com.hubspot.singularity.api.expiring.SingularityBounceRequest;
+import com.hubspot.singularity.api.expiring.SingularityPauseRequest;
+import com.hubspot.singularity.api.request.SingularityScaleRequest;
+import com.hubspot.singularity.api.expiring.SingularitySkipHealthchecksRequest;
 
 public class SingularityExpiringActionsTest extends SingularitySchedulerTestBase {
 

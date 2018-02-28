@@ -9,6 +9,15 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import java.util.Optional;
+
+import com.hubspot.singularity.api.deploy.DeployState;
+import com.hubspot.singularity.api.deploy.SingularityDeploy;
+import com.hubspot.singularity.api.deploy.SingularityDeployBuilder;
+import com.hubspot.singularity.api.deploy.SingularityDeployHistory;
+import com.hubspot.singularity.api.request.RequestType;
+import com.hubspot.singularity.api.request.SingularityRequest;
+import com.hubspot.singularity.api.request.SingularityRequestBuilder;
+import com.hubspot.singularity.api.request.SingularityRequestParent;
 import com.hubspot.singularity.client.SingularityClient;
 
 @RunWith(JukitoRunner.class)

@@ -5,12 +5,12 @@ import java.util.Set;
 
 import java.util.Optional;
 import com.hubspot.baragon.models.BaragonRequestState;
-import com.hubspot.singularity.LoadBalancerRequestType.LoadBalancerRequestId;
-import com.hubspot.singularity.SingularityDeploy;
-import com.hubspot.singularity.SingularityLoadBalancerUpdate;
-import com.hubspot.singularity.SingularityLoadBalancerUpdate.LoadBalancerMethod;
-import com.hubspot.singularity.SingularityRequest;
-import com.hubspot.singularity.SingularityTask;
+import com.hubspot.singularity.api.common.LoadBalancerRequestType.LoadBalancerRequestId;
+import com.hubspot.singularity.api.deploy.SingularityDeploy;
+import com.hubspot.singularity.api.common.SingularityLoadBalancerUpdate;
+import com.hubspot.singularity.api.common.SingularityLoadBalancerUpdate.LoadBalancerMethod;
+import com.hubspot.singularity.api.request.SingularityRequest;
+import com.hubspot.singularity.api.task.SingularityTask;
 import com.hubspot.singularity.hooks.LoadBalancerClient;
 
 public class TestingLoadBalancerClient implements LoadBalancerClient {

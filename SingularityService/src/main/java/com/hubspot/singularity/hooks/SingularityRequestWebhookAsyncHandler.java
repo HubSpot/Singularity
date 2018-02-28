@@ -1,7 +1,7 @@
 package com.hubspot.singularity.hooks;
 
-import com.hubspot.singularity.SingularityRequestHistory;
-import com.hubspot.singularity.SingularityWebhook;
+import com.hubspot.singularity.api.request.SingularityRequestHistory;
+import com.hubspot.singularity.api.webhooks.SingularityWebhook;
 import com.hubspot.singularity.data.WebhookManager;
 
 public class SingularityRequestWebhookAsyncHandler extends AbstractSingularityWebhookAsyncHandler<SingularityRequestHistory>  {

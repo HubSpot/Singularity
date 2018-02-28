@@ -8,6 +8,9 @@ import org.junit.Test;
 
 import java.util.Optional;
 
+import com.hubspot.singularity.api.logs.SingularityS3FormatHelper;
+import com.hubspot.singularity.api.task.SingularityTaskId;
+
 public class SingularityS3Test {
 
   @Test

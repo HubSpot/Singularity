@@ -12,8 +12,8 @@ import com.codahale.metrics.MetricRegistry;
 import java.util.Optional;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import com.hubspot.singularity.SingularityEmailType;
-import com.hubspot.singularity.SingularityRequest;
+import com.hubspot.singularity.api.common.SingularityEmailType;
+import com.hubspot.singularity.api.request.SingularityRequest;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.transcoders.StringTranscoder;
 

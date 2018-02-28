@@ -7,9 +7,9 @@ import java.util.Optional;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import com.hubspot.singularity.SingularityDeploy;
-import com.hubspot.singularity.SingularityDeployHistory;
-import com.hubspot.singularity.SingularityDeployKey;
+import com.hubspot.singularity.api.deploy.SingularityDeploy;
+import com.hubspot.singularity.api.deploy.SingularityDeployHistory;
+import com.hubspot.singularity.api.deploy.SingularityDeployKey;
 import com.hubspot.singularity.data.DeployManager;
 
 @Singleton

@@ -16,11 +16,11 @@ import org.junit.Test;
 
 import java.util.Optional;
 import com.hubspot.mesos.JavaUtils;
-import com.hubspot.singularity.RequestType;
-import com.hubspot.singularity.SingularityRequest;
-import com.hubspot.singularity.SingularityRequestBuilder;
-import com.hubspot.singularity.SingularityTaskId;
-import com.hubspot.singularity.SlavePlacement;
+import com.hubspot.singularity.api.request.RequestType;
+import com.hubspot.singularity.api.request.SingularityRequest;
+import com.hubspot.singularity.api.request.SingularityRequestBuilder;
+import com.hubspot.singularity.api.task.SingularityTaskId;
+import com.hubspot.singularity.api.request.SlavePlacement;
 
 public class SingularityOfferPerformanceTestRunner extends SingularitySchedulerTestBase {
 

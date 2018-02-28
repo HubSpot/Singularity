@@ -4,8 +4,8 @@ import javax.validation.constraints.NotNull;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import java.util.Optional;
-import com.hubspot.singularity.MachineLoadMetric;
-import com.hubspot.singularity.SingularityUsageScoringStrategy;
+import com.hubspot.singularity.api.machines.MachineLoadMetric;
+import com.hubspot.singularity.api.machines.SingularityUsageScoringStrategy;
 
 @JsonIgnoreProperties( ignoreUnknown = true )
 public class MesosConfiguration {

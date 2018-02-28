@@ -4,12 +4,12 @@ import java.util.Date;
 import java.util.List;
 
 import java.util.Optional;
-import com.hubspot.singularity.ExtendedTaskState;
-import com.hubspot.singularity.OrderDirection;
-import com.hubspot.singularity.SingularityDeployHistory;
-import com.hubspot.singularity.SingularityRequestHistory;
-import com.hubspot.singularity.SingularityTaskHistory;
-import com.hubspot.singularity.SingularityTaskIdHistory;
+import com.hubspot.singularity.api.task.ExtendedTaskState;
+import com.hubspot.singularity.api.common.OrderDirection;
+import com.hubspot.singularity.api.deploy.SingularityDeployHistory;
+import com.hubspot.singularity.api.request.SingularityRequestHistory;
+import com.hubspot.singularity.api.task.SingularityTaskHistory;
+import com.hubspot.singularity.api.task.SingularityTaskIdHistory;
 import com.hubspot.singularity.data.history.SingularityMappers.SingularityRequestIdCount;
 
 public interface HistoryManager {

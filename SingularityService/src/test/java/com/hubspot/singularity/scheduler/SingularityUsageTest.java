@@ -11,14 +11,14 @@ import org.junit.Test;
 
 import java.util.Optional;
 import com.google.inject.Inject;
-import com.hubspot.mesos.json.MesosTaskMonitorObject;
-import com.hubspot.singularity.MachineState;
-import com.hubspot.singularity.SingularityClusterUtilization;
-import com.hubspot.singularity.SingularitySlaveUsage;
-import com.hubspot.singularity.SingularityTask;
-import com.hubspot.singularity.SingularityTaskCurrentUsageWithId;
-import com.hubspot.singularity.SingularityTaskId;
-import com.hubspot.singularity.SingularityTaskUsage;
+import com.hubspot.mesos.slave.MesosTaskMonitorObject;
+import com.hubspot.singularity.api.machines.MachineState;
+import com.hubspot.singularity.api.machines.SingularityClusterUtilization;
+import com.hubspot.singularity.api.machines.SingularitySlaveUsage;
+import com.hubspot.singularity.api.task.SingularityTask;
+import com.hubspot.singularity.api.task.SingularityTaskCurrentUsageWithId;
+import com.hubspot.singularity.api.task.SingularityTaskId;
+import com.hubspot.singularity.api.task.SingularityTaskUsage;
 import com.hubspot.singularity.data.UsageManager;
 
 public class SingularityUsageTest extends SingularitySchedulerTestBase {

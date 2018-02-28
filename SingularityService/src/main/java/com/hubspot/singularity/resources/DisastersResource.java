@@ -13,12 +13,12 @@ import javax.ws.rs.core.MediaType;
 
 import java.util.Optional;
 import com.google.inject.Inject;
-import com.hubspot.singularity.SingularityAction;
-import com.hubspot.singularity.SingularityDisabledAction;
-import com.hubspot.singularity.SingularityDisasterType;
-import com.hubspot.singularity.SingularityDisastersData;
-import com.hubspot.singularity.SingularityUser;
-import com.hubspot.singularity.api.SingularityDisabledActionRequest;
+import com.hubspot.singularity.api.common.SingularityAction;
+import com.hubspot.singularity.api.disasters.SingularityDisabledAction;
+import com.hubspot.singularity.api.disasters.SingularityDisasterType;
+import com.hubspot.singularity.api.disasters.SingularityDisastersData;
+import com.hubspot.singularity.api.auth.SingularityUser;
+import com.hubspot.singularity.api.disasters.SingularityDisabledActionRequest;
 import com.hubspot.singularity.auth.SingularityAuthorizationHelper;
 import com.hubspot.singularity.config.ApiPaths;
 import com.hubspot.singularity.data.DisasterManager;

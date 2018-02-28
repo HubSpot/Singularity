@@ -12,14 +12,14 @@ import com.codahale.metrics.MetricRegistry;
 import java.util.Optional;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hubspot.singularity.MachineState;
-import com.hubspot.singularity.SingularityCreateResult;
-import com.hubspot.singularity.SingularityDeleteResult;
-import com.hubspot.singularity.SingularityMachineAbstraction;
-import com.hubspot.singularity.SingularityMachineStateHistoryUpdate;
+import com.hubspot.singularity.api.machines.MachineState;
+import com.hubspot.singularity.api.common.SingularityCreateResult;
+import com.hubspot.singularity.api.common.SingularityDeleteResult;
+import com.hubspot.singularity.api.machines.SingularityMachineAbstraction;
+import com.hubspot.singularity.api.machines.SingularityMachineStateHistoryUpdate;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.transcoders.Transcoder;
-import com.hubspot.singularity.expiring.SingularityExpiringMachineState;
+import com.hubspot.singularity.api.expiring.SingularityExpiringMachineState;
 
 public abstract class AbstractMachineManager<T extends SingularityMachineAbstraction<T>> extends CuratorAsyncManager {
 

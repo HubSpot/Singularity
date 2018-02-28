@@ -3,8 +3,8 @@ package com.hubspot.singularity.mesos;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.hubspot.mesos.Resources;
-import com.hubspot.singularity.SingularityTaskRequest;
+import com.hubspot.singularity.api.deploy.mesos.Resources;
+import com.hubspot.singularity.api.task.SingularityTaskRequest;
 
 public class SingularityTaskRequestHolder {
 

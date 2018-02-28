@@ -6,10 +6,10 @@ import org.junit.Test;
 
 import java.util.Optional;
 import com.google.inject.Inject;
-import com.hubspot.singularity.SingularityRequest;
-import com.hubspot.singularity.SingularityTask;
-import com.hubspot.singularity.SingularityTaskCleanup;
-import com.hubspot.singularity.TaskCleanupType;
+import com.hubspot.singularity.api.request.SingularityRequest;
+import com.hubspot.singularity.api.task.SingularityTask;
+import com.hubspot.singularity.api.task.SingularityTaskCleanup;
+import com.hubspot.singularity.api.task.TaskCleanupType;
 import com.hubspot.singularity.scheduler.SingularitySchedulerTestBase;
 
 public class StateManagerTest extends SingularitySchedulerTestBase{

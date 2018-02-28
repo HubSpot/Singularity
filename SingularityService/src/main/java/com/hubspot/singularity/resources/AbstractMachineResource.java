@@ -9,17 +9,17 @@ import java.util.UUID;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response.Status;
 
-import com.hubspot.singularity.MachineState;
-import com.hubspot.singularity.SingularityAction;
-import com.hubspot.singularity.SingularityDeleteResult;
-import com.hubspot.singularity.SingularityMachineAbstraction;
-import com.hubspot.singularity.SingularityUser;
-import com.hubspot.singularity.api.SingularityMachineChangeRequest;
+import com.hubspot.singularity.api.machines.MachineState;
+import com.hubspot.singularity.api.common.SingularityAction;
+import com.hubspot.singularity.api.common.SingularityDeleteResult;
+import com.hubspot.singularity.api.machines.SingularityMachineAbstraction;
+import com.hubspot.singularity.api.auth.SingularityUser;
+import com.hubspot.singularity.api.expiring.SingularityMachineChangeRequest;
 import com.hubspot.singularity.auth.SingularityAuthorizationHelper;
 import com.hubspot.singularity.data.AbstractMachineManager;
 import com.hubspot.singularity.data.AbstractMachineManager.StateChangeResult;
 import com.hubspot.singularity.data.SingularityValidator;
-import com.hubspot.singularity.expiring.SingularityExpiringMachineState;
+import com.hubspot.singularity.api.expiring.SingularityExpiringMachineState;
 
 public abstract class AbstractMachineResource<T extends SingularityMachineAbstraction<T>> {
 

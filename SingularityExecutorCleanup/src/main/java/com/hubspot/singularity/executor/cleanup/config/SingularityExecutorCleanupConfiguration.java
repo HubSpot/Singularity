@@ -11,8 +11,8 @@ import org.hibernate.validator.constraints.NotEmpty;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.Optional;
-import com.hubspot.singularity.SingularityClientCredentials;
-import com.hubspot.singularity.SingularityS3UploaderFile;
+import com.hubspot.singularity.api.auth.SingularityClientCredentials;
+import com.hubspot.singularity.api.logs.SingularityS3UploaderFile;
 import com.hubspot.singularity.runner.base.configuration.BaseRunnerConfiguration;
 import com.hubspot.singularity.runner.base.configuration.Configuration;
 import com.hubspot.singularity.runner.base.constraints.DirectoryExists;

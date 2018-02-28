@@ -12,12 +12,12 @@ import org.mockito.ArgumentMatchers;
 
 import java.util.Optional;
 import com.google.inject.Inject;
-import com.hubspot.singularity.OrderDirection;
-import com.hubspot.singularity.RequestType;
-import com.hubspot.singularity.SingularityRequest;
-import com.hubspot.singularity.SingularityRequestBuilder;
-import com.hubspot.singularity.SingularityRequestHistory;
-import com.hubspot.singularity.SingularityRequestHistory.RequestHistoryType;
+import com.hubspot.singularity.api.common.OrderDirection;
+import com.hubspot.singularity.api.request.RequestType;
+import com.hubspot.singularity.api.request.SingularityRequest;
+import com.hubspot.singularity.api.request.SingularityRequestBuilder;
+import com.hubspot.singularity.api.request.SingularityRequestHistory;
+import com.hubspot.singularity.api.request.SingularityRequestHistory.RequestHistoryType;
 import com.hubspot.singularity.SingularityTestBaseNoDb;
 import com.hubspot.singularity.data.history.HistoryManager;
 import com.hubspot.singularity.data.history.RequestHistoryHelper;

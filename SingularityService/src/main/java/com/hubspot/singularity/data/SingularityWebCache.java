@@ -10,13 +10,13 @@ import com.codahale.metrics.MetricRegistry;
 import java.util.Optional;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import com.hubspot.singularity.SingularityPendingTask;
-import com.hubspot.singularity.SingularityPendingTaskId;
-import com.hubspot.singularity.SingularityRequestGroup;
-import com.hubspot.singularity.SingularityRequestWithState;
-import com.hubspot.singularity.SingularityTask;
-import com.hubspot.singularity.SingularityTaskCleanup;
-import com.hubspot.singularity.SingularityTaskId;
+import com.hubspot.singularity.api.task.SingularityPendingTask;
+import com.hubspot.singularity.api.task.SingularityPendingTaskId;
+import com.hubspot.singularity.api.request.SingularityRequestGroup;
+import com.hubspot.singularity.api.request.SingularityRequestWithState;
+import com.hubspot.singularity.api.task.SingularityTask;
+import com.hubspot.singularity.api.task.SingularityTaskCleanup;
+import com.hubspot.singularity.api.task.SingularityTaskId;
 import com.hubspot.singularity.config.SingularityConfiguration;
 
 @Singleton

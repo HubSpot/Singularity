@@ -5,6 +5,7 @@ import java.util.Optional;
 import javax.ws.rs.container.ContainerRequestContext;
 
 import com.google.inject.Inject;
+import com.hubspot.singularity.api.auth.SingularityUser;
 import com.hubspot.singularity.auth.authenticator.SingularityAuthenticator;
 
 public class SingularityTestAuthenticator implements SingularityAuthenticator {

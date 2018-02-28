@@ -9,11 +9,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.inject.Inject;
-import com.hubspot.singularity.MachineState;
-import com.hubspot.singularity.SingularityRequest;
-import com.hubspot.singularity.SingularityRequestHistory;
-import com.hubspot.singularity.SingularityRequestWithState;
-import com.hubspot.singularity.SlavePlacement;
+import com.hubspot.singularity.api.machines.MachineState;
+import com.hubspot.singularity.api.request.SingularityRequest;
+import com.hubspot.singularity.api.request.SingularityRequestHistory;
+import com.hubspot.singularity.api.request.SingularityRequestWithState;
+import com.hubspot.singularity.api.request.SlavePlacement;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.data.SlaveManager;

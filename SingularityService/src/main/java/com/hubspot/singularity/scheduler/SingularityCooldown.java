@@ -10,10 +10,10 @@ import org.slf4j.LoggerFactory;
 import java.util.Optional;
 import com.google.inject.Inject;
 import com.hubspot.mesos.JavaUtils;
-import com.hubspot.singularity.RequestState;
-import com.hubspot.singularity.SingularityDeployStatistics;
-import com.hubspot.singularity.SingularityRequest;
-import com.hubspot.singularity.SingularityTaskId;
+import com.hubspot.singularity.api.request.RequestState;
+import com.hubspot.singularity.api.deploy.SingularityDeployStatistics;
+import com.hubspot.singularity.api.request.SingularityRequest;
+import com.hubspot.singularity.api.task.SingularityTaskId;
 import com.hubspot.singularity.config.SingularityConfiguration;
 
 @Singleton

@@ -11,9 +11,9 @@ import org.slf4j.LoggerFactory;
 import java.util.Optional;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import com.hubspot.singularity.SingularityPriorityFreezeParent;
-import com.hubspot.singularity.SingularityTaskRequest;
-import com.hubspot.singularity.SingularityTaskRequestWithPriority;
+import com.hubspot.singularity.api.disasters.SingularityPriorityFreezeParent;
+import com.hubspot.singularity.api.task.SingularityTaskRequest;
+import com.hubspot.singularity.api.task.SingularityTaskRequestWithPriority;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.PriorityManager;
 

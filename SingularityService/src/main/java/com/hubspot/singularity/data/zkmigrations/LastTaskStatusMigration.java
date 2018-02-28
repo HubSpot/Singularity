@@ -13,10 +13,10 @@ import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import com.hubspot.mesos.protos.MesosTaskStatusObject;
 import com.hubspot.singularity.SingularityMainModule;
-import com.hubspot.singularity.SingularityTask;
-import com.hubspot.singularity.SingularityTaskHistoryUpdate;
-import com.hubspot.singularity.SingularityTaskId;
-import com.hubspot.singularity.SingularityTaskStatusHolder;
+import com.hubspot.singularity.api.task.SingularityTask;
+import com.hubspot.singularity.api.task.SingularityTaskHistoryUpdate;
+import com.hubspot.singularity.api.task.SingularityTaskId;
+import com.hubspot.singularity.api.task.SingularityTaskStatusHolder;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.helpers.MesosProtosUtils;
 

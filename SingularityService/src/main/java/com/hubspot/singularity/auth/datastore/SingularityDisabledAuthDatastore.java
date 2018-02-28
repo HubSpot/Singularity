@@ -4,7 +4,7 @@ import java.util.Optional;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import com.hubspot.singularity.SingularityUser;
+import com.hubspot.singularity.api.auth.SingularityUser;
 
 @Singleton
 public class SingularityDisabledAuthDatastore implements SingularityAuthDatastore {

@@ -14,8 +14,8 @@ import java.util.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
-import com.hubspot.singularity.SingularityEmailDestination;
-import com.hubspot.singularity.SingularityEmailType;
+import com.hubspot.singularity.api.common.SingularityEmailDestination;
+import com.hubspot.singularity.api.common.SingularityEmailType;
 
 public class SMTPConfiguration {
 

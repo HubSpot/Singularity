@@ -7,12 +7,12 @@ import org.junit.Test;
 
 import java.util.Optional;
 import com.google.inject.Inject;
-import com.hubspot.singularity.RequestType;
-import com.hubspot.singularity.SingularityPendingRequest;
-import com.hubspot.singularity.SingularityPendingRequest.PendingType;
-import com.hubspot.singularity.SingularityPendingTask;
-import com.hubspot.singularity.SingularityRequestBuilder;
-import com.hubspot.singularity.SingularityTask;
+import com.hubspot.singularity.api.request.RequestType;
+import com.hubspot.singularity.api.request.SingularityPendingRequest;
+import com.hubspot.singularity.api.request.SingularityPendingRequest.PendingType;
+import com.hubspot.singularity.api.task.SingularityPendingTask;
+import com.hubspot.singularity.api.request.SingularityRequestBuilder;
+import com.hubspot.singularity.api.task.SingularityTask;
 import com.hubspot.singularity.scheduler.SingularitySchedulerTestBase;
 
 public class SingularityStartupTest extends SingularitySchedulerTestBase {

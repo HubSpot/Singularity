@@ -9,9 +9,9 @@ import com.codahale.metrics.MetricRegistry;
 import java.util.Optional;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import com.hubspot.singularity.SingularityCreateResult;
-import com.hubspot.singularity.SingularityDeleteResult;
-import com.hubspot.singularity.SingularityRequestGroup;
+import com.hubspot.singularity.api.common.SingularityCreateResult;
+import com.hubspot.singularity.api.common.SingularityDeleteResult;
+import com.hubspot.singularity.api.request.SingularityRequestGroup;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.transcoders.Transcoder;
 

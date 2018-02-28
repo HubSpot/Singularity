@@ -12,7 +12,7 @@ import org.slf4j.Logger;
 import com.google.common.base.Charsets;
 import java.util.Optional;
 import com.hubspot.mesos.JavaUtils;
-import com.hubspot.singularity.SingularityTaskShellCommandUpdate.UpdateType;
+import com.hubspot.singularity.api.task.SingularityTaskShellCommandUpdate.UpdateType;
 import com.hubspot.singularity.runner.base.shared.SafeProcessManager;
 
 public class SingularityExecutorShellCommandRunnerCallable extends SafeProcessManager implements Callable<Integer> {

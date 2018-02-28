@@ -4,9 +4,9 @@ import java.util.Optional;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.hubspot.singularity.SingularityTaskShellCommandRequest;
-import com.hubspot.singularity.SingularityTaskShellCommandUpdate;
-import com.hubspot.singularity.SingularityTaskShellCommandUpdate.UpdateType;
+import com.hubspot.singularity.api.task.SingularityTaskShellCommandRequest;
+import com.hubspot.singularity.api.task.SingularityTaskShellCommandUpdate;
+import com.hubspot.singularity.api.task.SingularityTaskShellCommandUpdate.UpdateType;
 import com.hubspot.singularity.executor.task.SingularityExecutorTask;
 
 public class SingularityExecutorShellCommandUpdater {

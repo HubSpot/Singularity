@@ -13,9 +13,9 @@ import org.apache.mesos.v1.scheduler.Protos;
 import org.apache.mesos.v1.scheduler.Protos.Event;
 
 import java.util.Optional;
-import com.hubspot.singularity.RequestCleanupType;
-import com.hubspot.singularity.SingularityTaskId;
-import com.hubspot.singularity.TaskCleanupType;
+import com.hubspot.singularity.api.request.RequestCleanupType;
+import com.hubspot.singularity.api.task.SingularityTaskId;
+import com.hubspot.singularity.api.task.TaskCleanupType;
 
 public abstract class SingularityMesosScheduler {
 

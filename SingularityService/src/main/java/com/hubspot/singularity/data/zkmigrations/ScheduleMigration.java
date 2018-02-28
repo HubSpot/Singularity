@@ -8,12 +8,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Optional;
-import com.google.common.base.Throwables;
+
 import com.google.inject.Inject;
 import com.hubspot.mesos.JavaUtils;
-import com.hubspot.singularity.ScheduleType;
-import com.hubspot.singularity.SingularityRequest;
-import com.hubspot.singularity.SingularityRequestWithState;
+import com.hubspot.singularity.api.request.ScheduleType;
+import com.hubspot.singularity.api.request.SingularityRequest;
+import com.hubspot.singularity.api.request.SingularityRequestWithState;
 import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.data.SingularityValidator;
 import com.hubspot.singularity.data.transcoders.Transcoder;

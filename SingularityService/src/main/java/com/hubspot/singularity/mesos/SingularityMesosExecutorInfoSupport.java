@@ -15,12 +15,12 @@ import com.google.common.util.concurrent.MoreExecutors;
 import com.google.inject.Inject;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.mesos.client.MesosClient;
-import com.hubspot.mesos.json.MesosExecutorObject;
-import com.hubspot.mesos.json.MesosSlaveFrameworkObject;
-import com.hubspot.mesos.json.MesosSlaveStateObject;
-import com.hubspot.mesos.json.MesosTaskObject;
-import com.hubspot.singularity.SingularityTask;
-import com.hubspot.singularity.SingularityTaskId;
+import com.hubspot.mesos.slave.MesosExecutorObject;
+import com.hubspot.mesos.slave.MesosSlaveFrameworkObject;
+import com.hubspot.mesos.slave.MesosSlaveStateObject;
+import com.hubspot.mesos.slave.MesosTaskObject;
+import com.hubspot.singularity.api.task.SingularityTask;
+import com.hubspot.singularity.api.task.SingularityTaskId;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.TaskManager;
 

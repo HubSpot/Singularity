@@ -15,7 +15,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.Optional;
-import com.hubspot.singularity.executor.SingularityExecutorLogrotateFrequency;
+import com.hubspot.singularity.api.deploy.SingularityExecutorLogrotateFrequency;
 import com.hubspot.singularity.executor.models.ThreadCheckerType;
 import com.hubspot.singularity.executor.shells.SingularityExecutorShellCommandDescriptor;
 import com.hubspot.singularity.executor.utils.MesosUtils;

@@ -9,8 +9,7 @@ import java.util.List;
 
 import org.slf4j.Logger;
 
-import com.google.common.base.Throwables;
-import com.hubspot.deploy.S3ArtifactSignature;
+import com.hubspot.singularity.api.deploy.S3ArtifactSignature;
 import com.hubspot.singularity.executor.config.SingularityExecutorConfiguration;
 import com.hubspot.singularity.s3.base.config.SingularityS3Configuration;
 

@@ -9,14 +9,14 @@ import org.slf4j.LoggerFactory;
 
 import com.codahale.metrics.annotation.Timed;
 import com.google.inject.Inject;
-import com.hubspot.singularity.DeployState;
-import com.hubspot.singularity.ExtendedTaskState;
-import com.hubspot.singularity.OrderDirection;
-import com.hubspot.singularity.SingularityDeployHistory;
-import com.hubspot.singularity.SingularityRequest;
-import com.hubspot.singularity.SingularityRequestHistory;
-import com.hubspot.singularity.SingularityTaskHistory;
-import com.hubspot.singularity.SingularityTaskIdHistory;
+import com.hubspot.singularity.api.deploy.DeployState;
+import com.hubspot.singularity.api.task.ExtendedTaskState;
+import com.hubspot.singularity.api.common.OrderDirection;
+import com.hubspot.singularity.api.deploy.SingularityDeployHistory;
+import com.hubspot.singularity.api.request.SingularityRequest;
+import com.hubspot.singularity.api.request.SingularityRequestHistory;
+import com.hubspot.singularity.api.task.SingularityTaskHistory;
+import com.hubspot.singularity.api.task.SingularityTaskIdHistory;
 import com.hubspot.singularity.data.history.SingularityMappers.SingularityRequestIdCount;
 import com.hubspot.singularity.data.transcoders.Transcoder;
 

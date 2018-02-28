@@ -16,8 +16,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.Optional;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableMap;
-import com.hubspot.singularity.RequestType;
-import com.hubspot.singularity.SlavePlacement;
+import com.hubspot.singularity.api.request.RequestType;
+import com.hubspot.singularity.api.request.SlavePlacement;
 
 import io.dropwizard.Configuration;
 import io.dropwizard.db.DataSourceFactory;

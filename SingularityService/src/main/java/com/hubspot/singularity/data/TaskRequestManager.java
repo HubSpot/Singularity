@@ -13,13 +13,13 @@ import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import com.hubspot.singularity.SingularityDeploy;
-import com.hubspot.singularity.SingularityDeployKey;
-import com.hubspot.singularity.SingularityPendingDeploy;
-import com.hubspot.singularity.SingularityPendingTask;
-import com.hubspot.singularity.SingularityRequest;
-import com.hubspot.singularity.SingularityRequestWithState;
-import com.hubspot.singularity.SingularityTaskRequest;
+import com.hubspot.singularity.api.deploy.SingularityDeploy;
+import com.hubspot.singularity.api.deploy.SingularityDeployKey;
+import com.hubspot.singularity.api.request.SingularityPendingDeploy;
+import com.hubspot.singularity.api.task.SingularityPendingTask;
+import com.hubspot.singularity.api.request.SingularityRequest;
+import com.hubspot.singularity.api.request.SingularityRequestWithState;
+import com.hubspot.singularity.api.task.SingularityTaskRequest;
 
 @Singleton
 public class TaskRequestManager {

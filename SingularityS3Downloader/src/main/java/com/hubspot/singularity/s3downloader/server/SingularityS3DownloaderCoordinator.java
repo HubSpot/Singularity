@@ -22,7 +22,7 @@ import com.google.common.util.concurrent.MoreExecutors;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.google.inject.name.Named;
-import com.hubspot.deploy.S3Artifact;
+import com.hubspot.singularity.api.deploy.S3Artifact;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.runner.base.sentry.SingularityRunnerExceptionNotifier;
 import com.hubspot.singularity.s3.base.ArtifactDownloadRequest;

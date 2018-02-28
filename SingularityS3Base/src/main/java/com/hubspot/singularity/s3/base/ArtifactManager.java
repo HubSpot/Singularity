@@ -15,15 +15,15 @@ import java.util.List;
 import org.slf4j.Logger;
 
 import java.util.Optional;
-import com.google.common.base.Throwables;
+
 import com.google.common.collect.ImmutableList;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hashing;
-import com.hubspot.deploy.Artifact;
-import com.hubspot.deploy.EmbeddedArtifact;
-import com.hubspot.deploy.ExternalArtifact;
-import com.hubspot.deploy.RemoteArtifact;
-import com.hubspot.deploy.S3Artifact;
+import com.hubspot.singularity.api.deploy.Artifact;
+import com.hubspot.singularity.api.deploy.EmbeddedArtifact;
+import com.hubspot.singularity.api.deploy.ExternalArtifact;
+import com.hubspot.singularity.api.deploy.RemoteArtifact;
+import com.hubspot.singularity.api.deploy.S3Artifact;
 import com.hubspot.singularity.runner.base.configuration.SingularityRunnerBaseConfiguration;
 import com.hubspot.singularity.runner.base.sentry.SingularityRunnerExceptionNotifier;
 import com.hubspot.singularity.runner.base.shared.ProcessFailedException;

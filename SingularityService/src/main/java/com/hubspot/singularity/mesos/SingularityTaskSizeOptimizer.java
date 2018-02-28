@@ -11,9 +11,9 @@ import com.google.inject.Singleton;
 import com.hubspot.singularity.helpers.MesosProtosUtils;
 import com.hubspot.singularity.helpers.SingularityMesosTaskHolder;
 import com.hubspot.mesos.protos.MesosOfferObject;
-import com.hubspot.singularity.SingularityDeployBuilder;
-import com.hubspot.singularity.SingularityTask;
-import com.hubspot.singularity.SingularityTaskRequest;
+import com.hubspot.singularity.api.deploy.SingularityDeployBuilder;
+import com.hubspot.singularity.api.task.SingularityTask;
+import com.hubspot.singularity.api.task.SingularityTaskRequest;
 import com.hubspot.singularity.config.SingularityConfiguration;
 
 @Singleton

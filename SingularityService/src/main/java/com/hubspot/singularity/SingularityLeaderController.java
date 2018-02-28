@@ -20,6 +20,7 @@ import com.google.common.net.HostAndPort;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import com.hubspot.singularity.SingularityAbort.AbortReason;
+import com.hubspot.singularity.api.machines.SingularityHostState;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.StateManager;
 import com.hubspot.singularity.helpers.MesosUtils;

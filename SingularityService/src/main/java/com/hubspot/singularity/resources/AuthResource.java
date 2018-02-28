@@ -12,9 +12,9 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import com.google.inject.Inject;
-import com.hubspot.singularity.SingularityAuthorizationScope;
-import com.hubspot.singularity.SingularityUser;
-import com.hubspot.singularity.SingularityUserHolder;
+import com.hubspot.singularity.api.auth.SingularityAuthorizationScope;
+import com.hubspot.singularity.api.auth.SingularityUser;
+import com.hubspot.singularity.api.auth.SingularityUserHolder;
 import com.hubspot.singularity.auth.SingularityAuthorizationHelper;
 import com.hubspot.singularity.auth.datastore.SingularityAuthDatastore;
 import com.hubspot.singularity.config.ApiPaths;

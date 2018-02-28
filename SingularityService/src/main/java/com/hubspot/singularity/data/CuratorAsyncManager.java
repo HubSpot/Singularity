@@ -21,10 +21,10 @@ import org.slf4j.LoggerFactory;
 
 import com.codahale.metrics.MetricRegistry;
 import java.util.Optional;
-import com.google.common.base.Throwables;
+
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hubspot.singularity.SingularityId;
+import com.hubspot.singularity.api.common.SingularityId;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.transcoders.IdTranscoder;
 import com.hubspot.singularity.data.transcoders.Transcoder;
