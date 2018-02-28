@@ -11,7 +11,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
-import com.google.common.base.Optional;
+import java.util.Optional;
 import com.google.inject.Inject;
 import com.hubspot.singularity.MachineState;
 import com.hubspot.singularity.SingularityAction;
@@ -85,7 +85,7 @@ public class RackResource extends AbstractMachineResource<SingularityRack> {
       @Parameter(hidden = true) @Auth SingularityUser user,
       @Parameter(required = true, description = "Rack ID") @PathParam("rackId") String rackId,
       @RequestBody(description = "Settings related to changing the state of a rack") SingularityMachineChangeRequest changeRequest) {
-    final Optional<SingularityMachineChangeRequest> maybeChangeRequest = Optional.fromNullable(changeRequest);
+    final Optional<SingularityMachineChangeRequest> maybeChangeRequest = Optional.ofNullable(changeRequest);
     super.decommission(rackId, maybeChangeRequest, user, SingularityAction.DECOMMISSION_RACK);
   }
 
@@ -96,7 +96,7 @@ public class RackResource extends AbstractMachineResource<SingularityRack> {
       @Parameter(hidden = true) @Auth SingularityUser user,
       @Parameter(required = true, description = "Rack ID") @PathParam("rackId") String rackId,
       @RequestBody(description = "Settings related to changing the state of a slave") SingularityMachineChangeRequest changeRequest) {
-    final Optional<SingularityMachineChangeRequest> maybeChangeRequest = Optional.fromNullable(changeRequest);
+    final Optional<SingularityMachineChangeRequest> maybeChangeRequest = Optional.ofNullable(changeRequest);
     super.freeze(rackId, maybeChangeRequest, user, SingularityAction.FREEZE_RACK);
   }
 
@@ -107,7 +107,7 @@ public class RackResource extends AbstractMachineResource<SingularityRack> {
       @Parameter(hidden = true) @Auth SingularityUser user,
       @Parameter(required = true, description = "Rack ID") @PathParam("rackId") String rackId,
       @RequestBody(description = "Settings related to changing the state of a slave") SingularityMachineChangeRequest changeRequest) {
-    final Optional<SingularityMachineChangeRequest> maybeChangeRequest = Optional.fromNullable(changeRequest);
+    final Optional<SingularityMachineChangeRequest> maybeChangeRequest = Optional.ofNullable(changeRequest);
     super.activate(rackId, maybeChangeRequest, user, SingularityAction.ACTIVATE_RACK);
   }
 

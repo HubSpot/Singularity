@@ -2,7 +2,7 @@ package com.hubspot.singularity.executor.config;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.Optional;
+import java.util.Optional;
 
 public class SingularityExecutorLogrotateAdditionalFile {
     private final String filename;
@@ -11,7 +11,7 @@ public class SingularityExecutorLogrotateAdditionalFile {
 
     @JsonCreator
     public static SingularityExecutorLogrotateAdditionalFile fromString(String value) {
-        return new SingularityExecutorLogrotateAdditionalFile(value, Optional.<String>absent(), Optional.<String>absent());
+        return new SingularityExecutorLogrotateAdditionalFile(value, Optional.empty(), Optional.empty());
     }
 
     @JsonCreator

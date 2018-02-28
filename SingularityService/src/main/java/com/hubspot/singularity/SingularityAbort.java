@@ -15,7 +15,7 @@ import org.slf4j.ILoggerFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Optional;
+import java.util.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.net.HostAndPort;
@@ -62,7 +62,7 @@ public class SingularityAbort implements ConnectionStateListener {
   public void stateChanged(CuratorFramework client, ConnectionState newState) {
     if (newState == ConnectionState.LOST) {
       LOG.error("Aborting due to new connection state received from ZooKeeper: {}", newState);
-      abort(AbortReason.LOST_ZK_CONNECTION, Optional.<Throwable>absent());
+      abort(AbortReason.LOST_ZK_CONNECTION, Optional.empty());
     }
   }
 

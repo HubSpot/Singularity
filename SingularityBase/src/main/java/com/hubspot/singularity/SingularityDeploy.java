@@ -7,11 +7,11 @@ import static com.hubspot.singularity.JsonHelpers.copyOfSet;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.Optional;
 import com.hubspot.deploy.ExecutorData;
 import com.hubspot.deploy.HealthcheckOptions;
 import com.hubspot.mesos.Resources;
@@ -181,9 +181,9 @@ public class SingularityDeploy {
     this.runImmediatelyRequest = runImmediatelyRequest;
 
     this.labels = labels;
-    this.mesosLabels = mesosLabels.or(labels.isPresent() ? Optional.of(SingularityMesosTaskLabel.labelsFromMap(labels.get())) : Optional.<List<SingularityMesosTaskLabel>>absent());
+    this.mesosLabels = mesosLabels.isPresent() ? mesosLabels : (labels.isPresent() ? Optional.of(SingularityMesosTaskLabel.labelsFromMap(labels.get())) : Optional.empty());
     this.taskLabels = taskLabels;
-    this.mesosTaskLabels = mesosTaskLabels.or(taskLabels.isPresent() ? Optional.of(parseMesosTaskLabelsFromMap(taskLabels.get())) : Optional.<Map<Integer,List<SingularityMesosTaskLabel>>>absent());
+    this.mesosTaskLabels = mesosTaskLabels.isPresent() ? mesosTaskLabels : (taskLabels.isPresent() ? Optional.of(parseMesosTaskLabelsFromMap(taskLabels.get())) : Optional.empty());
 
     this.healthcheckUri = healthcheckUri;
     this.healthcheckIntervalSeconds = healthcheckIntervalSeconds;
@@ -198,15 +198,15 @@ public class SingularityDeploy {
       this.healthcheck = Optional.of(new HealthcheckOptions(
         healthcheckUri.get(),
         healthcheckPortIndex,
-        Optional.<Long>absent(),
+        Optional.empty(),
         healthcheckProtocol,
-        Optional.<Integer>absent(),
-        Optional.<Integer>absent(),
-        Optional.<Integer>absent(),
-        healthcheckIntervalSeconds.isPresent() ? Optional.of(healthcheckIntervalSeconds.get().intValue()) : Optional.<Integer>absent(),
-        healthcheckTimeoutSeconds.isPresent() ? Optional.of(healthcheckTimeoutSeconds.get().intValue()) : Optional.<Integer>absent(),
+        Optional.empty(),
+        Optional.empty(),
+        Optional.empty(),
+        healthcheckIntervalSeconds.isPresent() ? Optional.of(healthcheckIntervalSeconds.get().intValue()) : Optional.empty(),
+        healthcheckTimeoutSeconds.isPresent() ? Optional.of(healthcheckTimeoutSeconds.get().intValue()) : Optional.empty(),
         healthcheckMaxRetries,
-        Optional.<List<Integer>>absent()));
+        Optional.empty()));
     } else {
       this.healthcheck = healthcheck;
     }

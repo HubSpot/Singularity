@@ -1,5 +1,7 @@
 package com.hubspot.singularity.resources;
 
+import java.util.Optional;
+
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -9,7 +11,6 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
-import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.hubspot.singularity.SingularityAuthorizationScope;
 import com.hubspot.singularity.SingularityUser;
@@ -72,7 +73,7 @@ public class AuthResource {
       @Parameter(required = true, description = "Request id to check") @PathParam("requestId") String requestId,
       @Parameter(required = true, description = "User id to check") @PathParam("userId") String userId,
       @Parameter(description = "Scope to check for") @QueryParam("scope") @DefaultValue("READ") Optional<SingularityAuthorizationScope> scope) {
-    authorizationHelper.checkForAuthorizationByRequestId(requestId, authDatastore.getUser(userId).orElse(SingularityUser.DEFAULT_USER), scope.or(SingularityAuthorizationScope.READ));
+    authorizationHelper.checkForAuthorizationByRequestId(requestId, authDatastore.getUser(userId).orElse(SingularityUser.DEFAULT_USER), scope.orElse(SingularityAuthorizationScope.READ));
     return Response.ok().build();
   }
 
@@ -88,7 +89,7 @@ public class AuthResource {
       @Parameter(hidden = true) @Auth SingularityUser user,
       @Parameter(required = true, description = "Request id to check") @PathParam("requestId") String requestId,
       @Parameter(description = "Scope to check for") @QueryParam("scope") @DefaultValue("READ") Optional<SingularityAuthorizationScope> scope) {
-    authorizationHelper.checkForAuthorizationByRequestId(requestId, user, scope.or(SingularityAuthorizationScope.READ));
+    authorizationHelper.checkForAuthorizationByRequestId(requestId, user, scope.orElse(SingularityAuthorizationScope.READ));
     return Response.ok().build();
   }
 }

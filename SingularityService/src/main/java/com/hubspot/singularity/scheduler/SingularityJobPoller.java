@@ -4,6 +4,7 @@ import java.text.ParseException;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
@@ -16,7 +17,6 @@ import org.quartz.CronExpression;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -27,7 +27,6 @@ import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityRequestWithState;
 import com.hubspot.singularity.SingularityTaskCleanup;
 import com.hubspot.singularity.SingularityTaskId;
-import com.hubspot.singularity.SingularityTaskShellCommandRequestId;
 import com.hubspot.singularity.TaskCleanupType;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.DeployManager;
@@ -118,20 +117,20 @@ public class SingularityJobPoller extends SingularityLeaderOnlyPoller {
   private void checkTaskExecutionTimeLimit(long now, SingularityTaskId taskId, SingularityRequest request) {
     final long runtime = now - taskId.getStartedAt();
 
-    if (request.getTaskExecutionTimeLimitMillis().or(configuration.getTaskExecutionTimeLimitMillis()).isPresent() &&
-        runtime >= request.getTaskExecutionTimeLimitMillis().or(configuration.getTaskExecutionTimeLimitMillis()).get()) {
+    if ((request.getTaskExecutionTimeLimitMillis().isPresent() || configuration.getTaskExecutionTimeLimitMillis().isPresent()) &&
+        runtime >= (request.getTaskExecutionTimeLimitMillis().isPresent() ? request.getTaskExecutionTimeLimitMillis().get() : configuration.getTaskExecutionTimeLimitMillis().get())) {
 
       taskManager.createTaskCleanup(new SingularityTaskCleanup(
-          Optional.<String>absent(),
+          Optional.empty(),
           TaskCleanupType.TASK_EXCEEDED_TIME_LIMIT,
           now,
           taskId,
           Optional.of(String.format("Task has run for %s, which exceeds the maximum execution time of %s",
               DurationFormatUtils.formatDurationHMS(runtime),
-              DurationFormatUtils.formatDurationHMS(request.getTaskExecutionTimeLimitMillis().or(configuration.getTaskExecutionTimeLimitMillis()).get()))
+              DurationFormatUtils.formatDurationHMS(request.getTaskExecutionTimeLimitMillis().map(Optional::of).orElse(configuration.getTaskExecutionTimeLimitMillis()).get()))
           ),
           Optional.of(UUID.randomUUID().toString()),
-          Optional.<SingularityTaskShellCommandRequestId>absent())
+          Optional.empty())
       );
     }
   }
@@ -163,13 +162,13 @@ public class SingularityJobPoller extends SingularityLeaderOnlyPoller {
           String msg = String.format("No next run date found for %s (%s)", taskId, scheduleExpression);
           LOG.warn(msg);
           exceptionNotifier.notify(msg, ImmutableMap.of("taskId", taskId.toString()));
-          return Optional.absent();
+          return Optional.empty();
         }
 
       } catch (ParseException|InvalidRecurrenceRuleException e) {
         LOG.warn("Unable to parse schedule of type {} for expression {} (taskId: {}, err: {})", request.getScheduleTypeSafe(), scheduleExpression, taskId, e);
         exceptionNotifier.notify(String.format("Unable to parse schedule (%s)", e.getMessage()), e, ImmutableMap.of("taskId", taskId.toString(), "scheduleExpression", scheduleExpression, "scheduleType", request.getScheduleTypeSafe().toString()));
-        return Optional.absent();
+        return Optional.empty();
       }
 
       return Optional.of(nextRunAtDate.getTime() - taskId.getStartedAt());

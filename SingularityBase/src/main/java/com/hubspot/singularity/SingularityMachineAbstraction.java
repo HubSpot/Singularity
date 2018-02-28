@@ -3,7 +3,7 @@ package com.hubspot.singularity;
 import java.util.Objects;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.google.common.base.Optional;
+import java.util.Optional;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
@@ -21,7 +21,7 @@ public abstract class SingularityMachineAbstraction<T extends SingularityMachine
   private final SingularityMachineStateHistoryUpdate currentState;
 
   public SingularityMachineAbstraction(String id) {
-    this(id, System.currentTimeMillis(), new SingularityMachineStateHistoryUpdate(id, MachineState.ACTIVE, System.currentTimeMillis(), Optional.<String> absent(), Optional.<String> absent()));
+    this(id, System.currentTimeMillis(), new SingularityMachineStateHistoryUpdate(id, MachineState.ACTIVE, System.currentTimeMillis(), Optional.empty(), Optional.empty()));
   }
 
   public SingularityMachineAbstraction(String id, long firstSeenAt, SingularityMachineStateHistoryUpdate currentState) {

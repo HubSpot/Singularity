@@ -8,12 +8,11 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 import org.slf4j.Logger;
 
-import com.google.common.base.Optional;
-import com.google.common.base.Throwables;
 import com.google.common.collect.Sets;
 
 public class SimpleProcessManager extends SafeProcessManager {
@@ -45,9 +44,9 @@ public class SimpleProcessManager extends SafeProcessManager {
   public List<String> runCommand(final List<String> command, final Redirect redirectOutput, final Set<Integer> acceptableExitCodes) throws InterruptedException, ProcessFailedException {
     final ProcessBuilder processBuilder = new ProcessBuilder(command);
 
-    Optional<Integer> exitCode = Optional.absent();
+    Optional<Integer> exitCode = Optional.empty();
 
-    Optional<OutputReader> reader = Optional.absent();
+    Optional<OutputReader> reader = Optional.empty();
 
     String processToString = getCurrentProcessToString();
 
@@ -83,7 +82,7 @@ public class SimpleProcessManager extends SafeProcessManager {
 
       signalKillToProcessIfActive();
 
-      throw Throwables.propagate(t);
+      throw new RuntimeException(t);
     } finally {
       processFinished(exitCode);
     }
@@ -108,7 +107,7 @@ public class SimpleProcessManager extends SafeProcessManager {
     public OutputReader(InputStream inputStream) {
       this.output = new ArrayList<>();
       this.inputStream = inputStream;
-      this.error = Optional.absent();
+      this.error = Optional.empty();
     }
 
     @Override

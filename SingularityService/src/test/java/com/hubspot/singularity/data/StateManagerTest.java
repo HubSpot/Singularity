@@ -4,7 +4,7 @@ import org.apache.mesos.v1.Protos.TaskState;
 import org.junit.Assert;
 import org.junit.Test;
 
-import com.google.common.base.Optional;
+import java.util.Optional;
 import com.google.inject.Inject;
 import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityTask;
@@ -41,7 +41,7 @@ public class StateManagerTest extends SingularitySchedulerTestBase{
     statusUpdate(task, TaskState.TASK_KILLED);
     scheduler.drainPendingQueue();
 
-    taskManager.createTaskCleanup(new SingularityTaskCleanup(Optional.absent(), TaskCleanupType.BOUNCING, 1L, task.getTaskId(), Optional.absent(), Optional.absent(), Optional.absent()));
+    taskManager.createTaskCleanup(new SingularityTaskCleanup(Optional.empty(), TaskCleanupType.BOUNCING, 1L, task.getTaskId(), Optional.empty(), Optional.empty(), Optional.empty()));
     Assert.assertEquals(2, taskManager.getActiveTaskIds().size());
     Assert.assertEquals(0, stateManager.getState(true, false).getOverProvisionedRequests());
     Assert.assertEquals(1, stateManager.getState(true, false).getUnderProvisionedRequests());

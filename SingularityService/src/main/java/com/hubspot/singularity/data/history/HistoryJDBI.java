@@ -4,6 +4,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import org.skife.jdbi.v2.Query;
 import org.skife.jdbi.v2.sqlobject.Bind;
@@ -15,7 +16,6 @@ import org.skife.jdbi.v2.sqlobject.stringtemplate.UseStringTemplate3StatementLoc
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Optional;
 import com.hubspot.singularity.ExtendedTaskState;
 import com.hubspot.singularity.OrderDirection;
 import com.hubspot.singularity.SingularityDeployHistory;
@@ -163,11 +163,11 @@ public abstract class HistoryJDBI implements GetHandle {
     applyTaskIdHistoryBaseQuery(sqlBuilder, binds, requestId, deployId, runId, host, lastTaskStatus, startedBefore, startedAfter, updatedBefore, updatedAfter);
 
     sqlBuilder.append(" ORDER BY startedAt ");
-    sqlBuilder.append(orderDirection.or(OrderDirection.DESC).name());
+    sqlBuilder.append(orderDirection.orElse(OrderDirection.DESC).name());
 
     if (!requestId.isPresent()) {
       sqlBuilder.append(", requestId ");
-      sqlBuilder.append(orderDirection.or(OrderDirection.DESC).name());
+      sqlBuilder.append(orderDirection.orElse(OrderDirection.DESC).name());
     }
 
     if (limitStart.isPresent()) {

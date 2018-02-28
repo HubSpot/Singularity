@@ -7,7 +7,7 @@ import java.util.Map;
 
 import com.codahale.metrics.Meter;
 import com.codahale.metrics.MetricRegistry;
-import com.google.common.base.Optional;
+import java.util.Optional;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.hubspot.singularity.SingularityPendingTask;
@@ -129,7 +129,7 @@ public class SingularityWebCache {
   }
 
   public Optional<SingularityRequestWithState> getRequest(String requestId) {
-    return Optional.fromNullable(cachedRequests.get(requestId));
+    return Optional.ofNullable(cachedRequests.get(requestId));
   }
 
   public List<SingularityRequestGroup> getRequestGroups() {

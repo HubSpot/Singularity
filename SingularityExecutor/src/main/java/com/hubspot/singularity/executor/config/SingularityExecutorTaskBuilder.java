@@ -89,7 +89,7 @@ public class SingularityExecutorTaskBuilder {
 
       return objectMapper.readValue(taskInfo.getData().toByteArray(), SingularityTaskExecutorData.class);
     } catch (Exception e) {
-      throw Throwables.propagate(e);
+      throw new RuntimeException(e);
     }
   }
 

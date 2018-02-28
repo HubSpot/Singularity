@@ -2,7 +2,7 @@ package com.hubspot.singularity;
 
 import java.util.List;
 
-import com.google.common.base.Optional;
+import java.util.Optional;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
@@ -17,7 +17,7 @@ public class SingularityPaginatedResponse<Q> {
   public SingularityPaginatedResponse(final Optional<Integer> dataCount, final Optional<Integer> pageCount, final Optional<Integer> page, final List<Q> objects) {
     this.dataCount = dataCount;
     this.pageCount = pageCount;
-    this.page = page.or(1);
+    this.page = page.orElse(1);
     this.objects = objects;
   }
 

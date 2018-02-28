@@ -6,7 +6,7 @@ import java.util.TimeZone;
 import org.junit.Assert;
 import org.junit.Test;
 
-import com.google.common.base.Optional;
+import java.util.Optional;
 
 public class SingularityS3Test {
 
@@ -19,24 +19,24 @@ public class SingularityS3Test {
     long start = 1414610537117L; // Wed, 29 Oct 2014 19:22:17 GMT
     long end = 1415724215000L; // Tue, 11 Nov 2014 16:43:35 GMT
 
-    Collection<String> prefixes = SingularityS3FormatHelper.getS3KeyPrefixes("%Y/%m/%taskId", taskId, Optional.<String> absent(), start, end, "default");
+    Collection<String> prefixes = SingularityS3FormatHelper.getS3KeyPrefixes("%Y/%m/%taskId", taskId, Optional.empty(), start, end, "default");
 
     Assert.assertTrue(prefixes.size() == 2);
 
     end = 1447265861000L; // Tue, 11 Nov 2015 16:43:35 GMT
 
-    prefixes = SingularityS3FormatHelper.getS3KeyPrefixes("%Y/%taskId", taskId, Optional.<String> absent(), start, end, "default");
+    prefixes = SingularityS3FormatHelper.getS3KeyPrefixes("%Y/%taskId", taskId, Optional.empty(), start, end, "default");
 
     Assert.assertTrue(prefixes.size() == 2);
 
     start = 1415750399999L;
     end = 1415771999000L;
 
-    prefixes = SingularityS3FormatHelper.getS3KeyPrefixes("%Y/%m/%d/%taskId", taskId, Optional.<String> absent(), start, end, "default");
+    prefixes = SingularityS3FormatHelper.getS3KeyPrefixes("%Y/%m/%d/%taskId", taskId, Optional.empty(), start, end, "default");
 
     Assert.assertTrue(prefixes.size() == 2);
 
-    prefixes = SingularityS3FormatHelper.getS3KeyPrefixes("%requestId/%group/%Y/%m", taskId, Optional.<String> absent(), start, end, "groupName");
+    prefixes = SingularityS3FormatHelper.getS3KeyPrefixes("%requestId/%group/%Y/%m", taskId, Optional.empty(), start, end, "groupName");
 
     Assert.assertEquals("rid/groupName/2014/11", prefixes.iterator().next());
 

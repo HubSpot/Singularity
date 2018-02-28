@@ -22,7 +22,7 @@ public final class Transcoders {
         try {
           return transcoder.toBytes(value);
         } catch (Throwable e) {
-          throw Throwables.propagate(e);
+          throw new RuntimeException(e);
         }
       }
     };
@@ -37,7 +37,7 @@ public final class Transcoders {
         try {
           return transcoder.fromBytes(value);
         } catch (Throwable e) {
-          throw Throwables.propagate(e);
+          throw new RuntimeException(e);
         }
       }
     };
@@ -55,7 +55,7 @@ public final class Transcoders {
         try {
           return transcoder.fromBytes(value.getBytes(UTF_8));
         } catch (Throwable e) {
-          throw Throwables.propagate(e);
+          throw new RuntimeException(e);
         }
       }
     };

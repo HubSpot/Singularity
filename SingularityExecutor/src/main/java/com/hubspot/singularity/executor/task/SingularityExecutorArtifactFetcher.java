@@ -4,12 +4,11 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Optional;
-import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
@@ -144,7 +143,7 @@ public class SingularityExecutorArtifactFetcher {
         try {
           return future.get();
         } catch (ExecutionException e) {
-          throw Throwables.propagate(e);
+          throw new RuntimeException(e);
         }
       }
 
@@ -165,7 +164,7 @@ public class SingularityExecutorArtifactFetcher {
         try {
           postRequestBldr.setBody(objectMapper.writeValueAsBytes(artifactDownloadRequest));
         } catch (JsonProcessingException e) {
-          throw Throwables.propagate(e);
+          throw new RuntimeException(e);
         }
 
         try {
@@ -173,7 +172,7 @@ public class SingularityExecutorArtifactFetcher {
 
           futures.add(new FutureHolder(future, System.currentTimeMillis(), s3Artifact));
         } catch (IOException ioe) {
-          throw Throwables.propagate(ioe);
+          throw new RuntimeException(ioe);
         }
       }
 

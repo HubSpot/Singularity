@@ -65,7 +65,7 @@ public class CorsBundle implements ConfiguredBundle<SingularityConfiguration> {
     try {
       corsFilter.init(corsFilterConfig);
     } catch (final Exception e) {
-      throw Throwables.propagate(e);
+      throw new RuntimeException(e);
     }
 
     FilterRegistration.Dynamic filter = environment.servlets().addFilter(FILTER_NAME, corsFilter);

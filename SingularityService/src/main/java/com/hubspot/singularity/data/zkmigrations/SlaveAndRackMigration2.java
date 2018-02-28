@@ -30,7 +30,7 @@ public class SlaveAndRackMigration2 extends ZkDataMigration {
         curator.delete().deletingChildrenIfNeeded().forPath("/racks");
       } catch (NoNodeException nee) {}
     } catch (Exception e) {
-      throw Throwables.propagate(e);
+      throw new RuntimeException(e);
     }
   }
 

@@ -12,7 +12,7 @@ import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.Optional;
+import java.util.Optional;
 import com.hubspot.singularity.runner.base.configuration.BaseRunnerConfiguration;
 import com.hubspot.singularity.runner.base.configuration.Configuration;
 import com.hubspot.singularity.runner.base.jackson.Obfuscate;
@@ -38,11 +38,11 @@ public class SingularityS3UploaderConfiguration extends BaseRunnerConfiguration 
 
   @JsonProperty
   @Obfuscate
-  private Optional<String> s3AccessKey = Optional.absent();
+  private Optional<String> s3AccessKey = Optional.empty();
 
   @JsonProperty
   @Obfuscate
-  private Optional<String> s3SecretKey = Optional.absent();
+  private Optional<String> s3SecretKey = Optional.empty();
 
   @Max(5368709120L)
   @Min(5242880L)

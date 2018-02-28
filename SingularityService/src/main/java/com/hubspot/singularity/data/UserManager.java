@@ -7,7 +7,7 @@ import org.apache.curator.utils.ZKPaths;
 
 import com.codahale.metrics.MetricRegistry;
 import com.google.common.base.Charsets;
-import com.google.common.base.Optional;
+import java.util.Optional;
 import com.google.common.io.BaseEncoding;
 import com.google.inject.Inject;
 import com.hubspot.singularity.SingularityUserSettings;

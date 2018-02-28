@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -11,7 +12,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.hubspot.mesos.Resources;
 import com.hubspot.mesos.client.MesosClient;
@@ -92,9 +92,9 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
       longRunningTasksUsage.put(ResourceUsageType.CPU_USED, 0);
       longRunningTasksUsage.put(ResourceUsageType.DISK_BYTES_USED, 0);
 
-      Optional<Long> memoryMbTotal = Optional.absent();
-      Optional<Double> cpusTotal = Optional.absent();
-      Optional<Long> diskMbTotal = Optional.absent();
+      Optional<Long> memoryMbTotal = Optional.empty();
+      Optional<Double> cpusTotal = Optional.empty();
+      Optional<Long> diskMbTotal = Optional.empty();
 
       long memoryMbReservedOnSlave = 0;
       double cpuReservedOnSlave = 0;
@@ -145,7 +145,7 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
 
           Optional<SingularityTask> maybeTask = taskManager.getTask(task);
           if (maybeTask.isPresent()) {
-            Optional<Resources> maybeResources = maybeTask.get().getTaskRequest().getPendingTask().getResources().or(maybeTask.get().getTaskRequest().getDeploy().getResources());
+            Optional<Resources> maybeResources = maybeTask.get().getTaskRequest().getPendingTask().getResources().map(Optional::of).orElse(maybeTask.get().getTaskRequest().getDeploy().getResources());
             if (maybeResources.isPresent()) {
               Resources taskResources = maybeResources.get();
               double memoryMbReservedForTask = taskResources.getMemoryMb();

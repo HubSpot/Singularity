@@ -47,7 +47,7 @@ public class ExecutorIdGenerator implements Managed {
       Preconditions.checkState(atomic.succeeded(), "Atomic increment did not succeed");
       return convertUsingAlphabet(atomic.postValue());
     } catch (Throwable t) {
-      throw Throwables.propagate(t);
+      throw new RuntimeException(t);
     }
   }
 

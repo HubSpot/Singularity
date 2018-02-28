@@ -5,7 +5,7 @@ import java.util.stream.Collectors;
 
 import org.apache.mesos.v1.Protos.TaskInfo;
 
-import com.google.common.base.Optional;
+import java.util.Optional;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.hubspot.singularity.helpers.MesosProtosUtils;
@@ -50,7 +50,7 @@ public class SingularityTaskSizeOptimizer {
 
       SingularityDeployBuilder deploy = task.getTaskRequest().getDeploy().toBuilder();
 
-      deploy.setExecutorData(Optional.absent());
+      deploy.setExecutorData(Optional.empty());
 
       taskRequest = new SingularityTaskRequest(task.getTaskRequest().getRequest(),
           deploy.build(), task.getTaskRequest().getPendingTask());

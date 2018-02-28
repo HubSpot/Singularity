@@ -2,12 +2,12 @@ package com.hubspot.singularity.data.history;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.codahale.metrics.annotation.Timed;
-import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.hubspot.singularity.DeployState;
 import com.hubspot.singularity.ExtendedTaskState;
@@ -95,7 +95,7 @@ public class JDBIHistoryManager implements HistoryManager {
     byte[] historyBytes = history.getDeployHistoryForDeploy(requestId, deployId);
 
     if (historyBytes == null) {
-      return Optional.absent();
+      return Optional.empty();
     }
 
     return Optional.of(deployHistoryTranscoder.fromBytes(historyBytes));
@@ -112,7 +112,7 @@ public class JDBIHistoryManager implements HistoryManager {
   }
 
   private String getOrderDirection(Optional<OrderDirection> orderDirection) {
-    return orderDirection.or(OrderDirection.DESC).name();
+    return orderDirection.orElse(OrderDirection.DESC).name();
   }
 
   @Override
@@ -144,7 +144,7 @@ public class JDBIHistoryManager implements HistoryManager {
     }
 
     history.insertTaskHistory(taskIdHistory.getTaskId().getRequestId(), taskIdHistory.getTaskId().getId(), taskHistoryTranscoder.toBytes(taskHistory), new Date(taskIdHistory.getUpdatedAt()),
-        lastTaskStatus, taskHistory.getTask().getTaskRequest().getPendingTask().getRunId().orNull(), taskIdHistory.getTaskId().getDeployId(), taskIdHistory.getTaskId().getHost(),
+        lastTaskStatus, taskHistory.getTask().getTaskRequest().getPendingTask().getRunId().orElse(null), taskIdHistory.getTaskId().getDeployId(), taskIdHistory.getTaskId().getHost(),
         new Date(taskIdHistory.getTaskId().getStartedAt()));
   }
 
@@ -153,7 +153,7 @@ public class JDBIHistoryManager implements HistoryManager {
     byte[] historyBytes = history.getTaskHistoryForTask(taskId);
 
     if (historyBytes == null || historyBytes.length == 0) {
-      return Optional.absent();
+      return Optional.empty();
     }
 
     return Optional.of(taskHistoryTranscoder.fromBytes(historyBytes));
@@ -164,7 +164,7 @@ public class JDBIHistoryManager implements HistoryManager {
     byte[] historyBytes = history.getTaskHistoryForTaskByRunId(requestId, runId);
 
     if (historyBytes == null || historyBytes.length == 0) {
-      return Optional.absent();
+      return Optional.empty();
     }
 
     return Optional.of(taskHistoryTranscoder.fromBytes(historyBytes));

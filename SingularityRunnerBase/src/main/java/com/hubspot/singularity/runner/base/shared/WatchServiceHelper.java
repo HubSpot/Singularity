@@ -67,7 +67,7 @@ public abstract class WatchServiceHelper implements Closeable {
     try {
       return FileSystems.getDefault().newWatchService();
     } catch (IOException e) {
-      throw Throwables.propagate(e);
+      throw new RuntimeException(e);
     }
   }
 

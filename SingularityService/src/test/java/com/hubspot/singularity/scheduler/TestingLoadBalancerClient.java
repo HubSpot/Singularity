@@ -3,7 +3,7 @@ package com.hubspot.singularity.scheduler;
 import java.util.List;
 import java.util.Set;
 
-import com.google.common.base.Optional;
+import java.util.Optional;
 import com.hubspot.baragon.models.BaragonRequestState;
 import com.hubspot.singularity.LoadBalancerRequestType.LoadBalancerRequestId;
 import com.hubspot.singularity.SingularityDeploy;
@@ -26,7 +26,7 @@ public class TestingLoadBalancerClient implements LoadBalancerClient {
   }
 
   private SingularityLoadBalancerUpdate getReturnValue(LoadBalancerRequestId loadBalancerRequestId, LoadBalancerMethod method) {
-    return new SingularityLoadBalancerUpdate(requestState, loadBalancerRequestId, Optional.<String> absent(), System.currentTimeMillis(), method, Optional.<String> absent());
+    return new SingularityLoadBalancerUpdate(requestState, loadBalancerRequestId, Optional.empty(), System.currentTimeMillis(), method, Optional.empty());
   }
 
   @Override

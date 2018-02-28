@@ -10,6 +10,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
@@ -35,7 +36,7 @@ import org.mockito.stubbing.Answer;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.guava.GuavaModule;
-import com.google.common.base.Optional;
+import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.google.common.collect.ImmutableMap;
 import com.hubspot.jackson.datatype.protobuf.ProtobufModule;
 import com.hubspot.mesos.Resources;
@@ -100,13 +101,14 @@ public class SingularityMesosTaskBuilderTest {
     objectMapper = new ObjectMapper();
     objectMapper.registerModule(new ProtobufModule());
     objectMapper.registerModule(new GuavaModule());
+    objectMapper.registerModule(new Jdk8Module());
 
     builder = new SingularityMesosTaskBuilder(objectMapper, idGenerator, configuration, new MesosProtosUtils(objectMapper));
 
     taskResources = new Resources(1, 1, 0, 0);
     executorResources = new Resources(0.1, 1, 0, 0);
 
-    when(slaveAndRackHelper.getRackId(offer)).thenReturn(Optional.absent());
+    when(slaveAndRackHelper.getRackId(offer)).thenReturn(Optional.empty());
     when(slaveAndRackHelper.getMaybeTruncatedHost(offer)).thenReturn("host");
     when(slaveAndRackHelper.getRackIdOrDefault(offer)).thenReturn("DEFAULT");
 
@@ -225,8 +227,8 @@ public class SingularityMesosTaskBuilderTest {
                 .setBegin(31000)
                 .setEnd(31000).build()).build()).build();
 
-    final SingularityDockerPortMapping literalMapping = new SingularityDockerPortMapping(Optional.<SingularityPortMappingType>absent(), 80, Optional.of(SingularityPortMappingType.LITERAL), 8080, Optional.<String>absent());
-    final SingularityDockerPortMapping offerMapping = new SingularityDockerPortMapping(Optional.<SingularityPortMappingType>absent(), 81, Optional.of(SingularityPortMappingType.FROM_OFFER), 0, Optional.of("udp"));
+    final SingularityDockerPortMapping literalMapping = new SingularityDockerPortMapping(Optional.empty(), 80, Optional.of(SingularityPortMappingType.LITERAL), 8080, Optional.empty());
+    final SingularityDockerPortMapping offerMapping = new SingularityDockerPortMapping(Optional.empty(), 81, Optional.of(SingularityPortMappingType.FROM_OFFER), 0, Optional.of("udp"));
 
     final SingularityRequest request = new SingularityRequestBuilder("test", RequestType.WORKER).build();
     final SingularityContainerInfo containerInfo = new SingularityContainerInfo(
@@ -235,7 +237,7 @@ public class SingularityMesosTaskBuilderTest {
             new SingularityVolume("/container", Optional.of("/host"), SingularityDockerVolumeMode.RW),
             new SingularityVolume("/container/${TASK_REQUEST_ID}/${TASK_DEPLOY_ID}", Optional.of("/host/${TASK_ID}"), SingularityDockerVolumeMode.RO))),
         Optional.of(new SingularityDockerInfo("docker-image", true, SingularityDockerNetworkType.BRIDGE, Optional.of(Arrays.asList(literalMapping, offerMapping)), Optional.of(false), Optional.<Map<String, String>>of(
-          ImmutableMap.of("env", "var=value")), Optional.absent())));
+          ImmutableMap.of("env", "var=value")), Optional.empty())));
     final SingularityDeploy deploy = new SingularityDeployBuilder("test", "1")
         .setContainerInfo(Optional.of(containerInfo))
         .setCommand(Optional.of("/bin/echo"))
@@ -309,12 +311,12 @@ public class SingularityMesosTaskBuilderTest {
     final SingularityRequest request = new SingularityRequestBuilder("test", RequestType.WORKER).build();
     final SingularityContainerInfo containerInfo = new SingularityContainerInfo(
         SingularityContainerType.DOCKER,
-        Optional.absent(),
+        Optional.empty(),
         Optional.of(new SingularityDockerInfo("docker-image", true, SingularityDockerNetworkType.NONE,
-            Optional.absent(),
-            Optional.absent(),
-            Optional.absent(),
-            Optional.absent())));
+            Optional.empty(),
+            Optional.empty(),
+            Optional.empty(),
+            Optional.empty())));
     final SingularityDeploy deploy = new SingularityDeployBuilder("test", "1")
         .setContainerInfo(Optional.of(containerInfo))
         .build();
@@ -336,12 +338,12 @@ public class SingularityMesosTaskBuilderTest {
     final SingularityRequest request = new SingularityRequestBuilder("test", RequestType.WORKER).build();
     final SingularityContainerInfo containerInfo = new SingularityContainerInfo(
         SingularityContainerType.DOCKER,
-        Optional.absent(),
+        Optional.empty(),
         Optional.of(new SingularityDockerInfo("docker-image", false, SingularityDockerNetworkType.BRIDGE,
-            Optional.absent(),
-            Optional.absent(),
-            Optional.absent(),
-            Optional.absent())));
+            Optional.empty(),
+            Optional.empty(),
+            Optional.empty(),
+            Optional.empty())));
     final SingularityDeploy deploy = new SingularityDeployBuilder("test", "1")
         .setContainerInfo(Optional.of(containerInfo))
         .build();
@@ -375,12 +377,12 @@ public class SingularityMesosTaskBuilderTest {
                 Optional.of("rexray"),
                 Optional.of("testvolume-%i"),
                 Collections.singletonMap("iops", "1")))))))),
-        Optional.absent(),
+        Optional.empty(),
         Optional.of(new SingularityMesosInfo(
           Optional.of(
             new SingularityMesosImage(
               SingularityMesosImageType.DOCKER,
-              Optional.absent(),
+              Optional.empty(),
               Optional.of(new SingularityDockerImage("test:image")),
               true)))),
         Optional.of(Arrays.asList(

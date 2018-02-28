@@ -1,6 +1,6 @@
 package com.hubspot.singularity.api;
 
-import com.google.common.base.Optional;
+import java.util.Optional;
 import com.hubspot.singularity.SingularityShellCommand;
 
 public class SingularityBounceRequestBuilder {
@@ -14,13 +14,13 @@ public class SingularityBounceRequestBuilder {
   private Optional<String> message;
 
   public SingularityBounceRequestBuilder() {
-    this.incremental = Optional.absent();
-    this.skipHealthchecks = Optional.absent();
-    this.runShellCommandBeforeKill = Optional.absent();
+    this.incremental = Optional.empty();
+    this.skipHealthchecks = Optional.empty();
+    this.runShellCommandBeforeKill = Optional.empty();
 
-    this.durationMillis = Optional.absent();
-    this.actionId = Optional.absent();
-    this.message = Optional.absent();
+    this.durationMillis = Optional.empty();
+    this.actionId = Optional.empty();
+    this.message = Optional.empty();
   }
 
   public SingularityBounceRequest build() {

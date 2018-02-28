@@ -12,7 +12,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.codahale.metrics.MetricRegistry;
-import com.google.common.base.Optional;
+import java.util.Optional;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
@@ -229,11 +229,11 @@ public class RequestManager extends CuratorAsyncManager {
   }
 
   public SingularityCreateResult cooldown(SingularityRequest request, long timestamp) {
-    return save(request, RequestState.SYSTEM_COOLDOWN, RequestHistoryType.ENTERED_COOLDOWN, timestamp, Optional.<String> absent(), Optional.<String> absent());
+    return save(request, RequestState.SYSTEM_COOLDOWN, RequestHistoryType.ENTERED_COOLDOWN, timestamp, Optional.empty(), Optional.empty());
   }
 
   public SingularityCreateResult finish(SingularityRequest request, long timestamp) {
-    return save(request, RequestState.FINISHED, RequestHistoryType.FINISHED, timestamp, Optional.<String> absent(), Optional.<String> absent());
+    return save(request, RequestState.FINISHED, RequestHistoryType.FINISHED, timestamp, Optional.empty(), Optional.empty());
   }
 
   public SingularityCreateResult addToPendingQueue(SingularityPendingRequest pendingRequest) {
@@ -415,8 +415,8 @@ public class RequestManager extends CuratorAsyncManager {
     final long now = System.currentTimeMillis();
 
     // delete it no matter if the delete request already exists.
-    createCleanupRequest(new SingularityRequestCleanup(user, RequestCleanupType.DELETING, now, Optional.of(Boolean.TRUE), removeFromLoadBalancer, request.getId(), Optional.<String> absent(),
-        Optional.<Boolean> absent(), message, actionId, Optional.<SingularityShellCommand>absent()));
+    createCleanupRequest(new SingularityRequestCleanup(user, RequestCleanupType.DELETING, now, Optional.of(Boolean.TRUE), removeFromLoadBalancer, request.getId(), Optional.empty(),
+        Optional.empty(), message, actionId, Optional.empty()));
 
     markDeleting(request, System.currentTimeMillis(), user, message);
 

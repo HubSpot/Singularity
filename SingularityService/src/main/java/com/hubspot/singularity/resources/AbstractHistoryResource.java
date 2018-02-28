@@ -3,7 +3,7 @@ package com.hubspot.singularity.resources;
 import static com.hubspot.singularity.WebExceptions.badRequest;
 import static com.hubspot.singularity.WebExceptions.checkNotFound;
 
-import com.google.common.base.Optional;
+import java.util.Optional;
 import com.hubspot.singularity.InvalidSingularityTaskIdException;
 import com.hubspot.singularity.SingularityAuthorizationScope;
 import com.hubspot.singularity.SingularityDeployHistory;

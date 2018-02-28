@@ -12,7 +12,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
-import com.google.common.base.Optional;
+import java.util.Optional;
 import com.google.inject.Inject;
 import com.hubspot.singularity.MachineState;
 import com.hubspot.singularity.SingularityAction;
@@ -96,7 +96,7 @@ public class SlaveResource extends AbstractMachineResource<SingularitySlave> {
       @Parameter(hidden = true) @Auth SingularityUser user,
       @Parameter(required = true, description = "Active slaveId") @PathParam("slaveId") String slaveId,
       @RequestBody(description = "Settings related to changing the state of a slave") SingularityMachineChangeRequest changeRequest) {
-    final Optional<SingularityMachineChangeRequest> maybeChangeRequest = Optional.fromNullable(changeRequest);
+    final Optional<SingularityMachineChangeRequest> maybeChangeRequest = Optional.ofNullable(changeRequest);
     super.decommission(slaveId, maybeChangeRequest, user, SingularityAction.DECOMMISSION_SLAVE);
   }
 
@@ -108,7 +108,7 @@ public class SlaveResource extends AbstractMachineResource<SingularitySlave> {
       @Parameter(hidden = true) @Auth SingularityUser user,
       @Parameter(required = true, description = "Slave ID") @PathParam("slaveId") String slaveId,
       @RequestBody(description = "Settings related to changing the state of a slave") SingularityMachineChangeRequest changeRequest) {
-    final Optional<SingularityMachineChangeRequest> maybeChangeRequest = Optional.fromNullable(changeRequest);
+    final Optional<SingularityMachineChangeRequest> maybeChangeRequest = Optional.ofNullable(changeRequest);
     super.freeze(slaveId, maybeChangeRequest, user, SingularityAction.FREEZE_SLAVE);
   }
 
@@ -120,7 +120,7 @@ public class SlaveResource extends AbstractMachineResource<SingularitySlave> {
       @Parameter(hidden = true) @Auth SingularityUser user,
       @Parameter(required = true, description = "Active slaveId") @PathParam("slaveId") String slaveId,
       @RequestBody(description = "Settings related to changing the state of a slave") SingularityMachineChangeRequest changeRequest) {
-    final Optional<SingularityMachineChangeRequest> maybeChangeRequest = Optional.fromNullable(changeRequest);
+    final Optional<SingularityMachineChangeRequest> maybeChangeRequest = Optional.ofNullable(changeRequest);
     super.activate(slaveId, maybeChangeRequest, user, SingularityAction.ACTIVATE_SLAVE);
   }
 

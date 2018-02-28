@@ -5,6 +5,7 @@ import static com.hubspot.singularity.WebExceptions.checkBadRequest;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 import javax.ws.rs.GET;
@@ -14,7 +15,6 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
-import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.hubspot.singularity.ExtendedTaskState;
 import com.hubspot.singularity.OrderDirection;
@@ -40,10 +40,8 @@ import com.hubspot.singularity.data.history.RequestHistoryHelper;
 import com.hubspot.singularity.data.history.TaskHistoryHelper;
 
 import io.dropwizard.auth.Auth;
-import io.swagger.v3.oas.annotations.OpenAPIDefinition;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.info.Info;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -114,9 +112,9 @@ public class HistoryResource extends AbstractHistoryResource {
 
   private Optional<Integer> getPageCount(Optional<Integer> dataCount, Integer count) {
     if (!dataCount.isPresent()) {
-      return Optional.absent();
+      return Optional.empty();
     }
-    return Optional.fromNullable((int) Math.ceil((double) dataCount.get() / count));
+    return Optional.ofNullable((int) Math.ceil((double) dataCount.get() / count));
   }
 
   @GET
@@ -195,7 +193,7 @@ public class HistoryResource extends AbstractHistoryResource {
     final List<SingularityTaskIdHistory> data = deployTaskHistoryHelper.getBlendedHistory(key, limitStart, limitCount);
     Optional<Integer> pageCount = getPageCount(dataCount, limitCount);
 
-    return new SingularityPaginatedResponse<>(dataCount, pageCount, Optional.fromNullable(page), data);
+    return new SingularityPaginatedResponse<>(dataCount, pageCount, Optional.ofNullable(page), data);
   }
 
   @GET
@@ -256,7 +254,7 @@ public class HistoryResource extends AbstractHistoryResource {
     final List<SingularityTaskIdHistory> data = this.getTaskHistory(user, requestId, deployId, runId, host, lastTaskStatus, startedBefore, startedAfter, updatedBefore, updatedAfter, orderDirection, count, page);
     final Optional<Integer> pageCount = getPageCount(dataCount, limitCount);
 
-    return new SingularityPaginatedResponse<>(dataCount, pageCount, Optional.fromNullable(page), data);
+    return new SingularityPaginatedResponse<>(dataCount, pageCount, Optional.ofNullable(page), data);
   }
 
   @GET
@@ -309,7 +307,7 @@ public class HistoryResource extends AbstractHistoryResource {
     final List<SingularityTaskIdHistory> data = this.getTaskHistoryForRequest(user, requestId, deployId, runId, host, lastTaskStatus, startedBefore, startedAfter, updatedBefore, updatedAfter, orderDirection, count, page);
     final Optional<Integer> pageCount = getPageCount(dataCount, limitCount);
 
-    return new SingularityPaginatedResponse<>(dataCount, pageCount, Optional.fromNullable(page), data);
+    return new SingularityPaginatedResponse<>(dataCount, pageCount, Optional.ofNullable(page), data);
   }
 
   @GET
@@ -360,7 +358,7 @@ public class HistoryResource extends AbstractHistoryResource {
     final List<SingularityDeployHistory> data = this.getDeploys(user, requestId, count, page);
     final Optional<Integer> pageCount = getPageCount(dataCount, limitCount);
 
-    return new SingularityPaginatedResponse<>(dataCount, pageCount, Optional.fromNullable(page), data);
+    return new SingularityPaginatedResponse<>(dataCount, pageCount, Optional.ofNullable(page), data);
   }
 
   @GET
@@ -395,7 +393,7 @@ public class HistoryResource extends AbstractHistoryResource {
     final List<SingularityRequestHistory> data = requestHistoryHelper.getBlendedHistory(requestId, limitStart, limitCount);
     final Optional<Integer> pageCount = getPageCount(dataCount, limitCount);
 
-    return new SingularityPaginatedResponse<>(dataCount, pageCount, Optional.fromNullable(page), data);
+    return new SingularityPaginatedResponse<>(dataCount, pageCount, Optional.ofNullable(page), data);
   }
 
   @GET
@@ -424,10 +422,10 @@ public class HistoryResource extends AbstractHistoryResource {
       @Parameter(description = "Max number of recent args to return") @QueryParam("count") Optional<Integer> count) {
     authorizationHelper.checkForAuthorizationByRequestId(requestId, user, SingularityAuthorizationScope.READ);
 
-    final int argCount = count.or(DEFAULT_ARGS_HISTORY_COUNT);
+    final int argCount = count.orElse(DEFAULT_ARGS_HISTORY_COUNT);
     List<SingularityTaskIdHistory> historiesToCheck = taskHistoryHelper.getBlendedHistory(new SingularityTaskHistoryQuery(
-      Optional.of(requestId), Optional.<String>absent(), Optional.<String>absent(), Optional.<String>absent(), Optional.<ExtendedTaskState>absent(), Optional.<Long>absent(), Optional.<Long>absent(),
-      Optional.<Long>absent(), Optional.<Long>absent(), Optional.<OrderDirection>absent()), 0, argCount);
+      Optional.of(requestId), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(),
+      Optional.empty(), Optional.empty(), Optional.empty()), 0, argCount);
     Collections.sort(historiesToCheck);
     Set<List<String>> args = new HashSet<>();
     for (SingularityTaskIdHistory taskIdHistory : historiesToCheck) {

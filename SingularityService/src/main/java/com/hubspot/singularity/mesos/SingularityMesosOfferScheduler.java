@@ -5,6 +5,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
@@ -19,7 +20,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.hubspot.mesos.Resources;
 import com.hubspot.singularity.RequestType;
@@ -238,7 +238,7 @@ public class SingularityMesosOfferScheduler {
   }
 
   private void updateSlaveUsageScores(SingularityTaskRequestHolder taskHolder, Map<String, SingularitySlaveUsageWithCalculatedScores> currentSlaveUsagesBySlaveId, String slaveId, Map<String, RequestUtilization> requestUtilizations) {
-    Optional<SingularitySlaveUsageWithCalculatedScores> maybeUsage = Optional.fromNullable(currentSlaveUsagesBySlaveId.get(slaveId));
+    Optional<SingularitySlaveUsageWithCalculatedScores> maybeUsage = Optional.ofNullable(currentSlaveUsagesBySlaveId.get(slaveId));
     if (maybeUsage.isPresent() && !maybeUsage.get().isMissingUsageData()) {
       SingularitySlaveUsageWithCalculatedScores usage = maybeUsage.get();
       usage.addEstimatedCpuReserved(taskHolder.getTotalResources().getCpus());
@@ -256,11 +256,11 @@ public class SingularityMesosOfferScheduler {
 
   private double calculateScore(SingularityOfferHolder offerHolder, Map<String, SingularitySlaveUsageWithCalculatedScores> currentSlaveUsagesBySlaveId, Map<String, Integer> tasksPerOffer,
                                 SingularityTaskRequestHolder taskRequestHolder, List<SingularityTaskId> activeTaskIdsForRequest) {
-    Optional<SingularitySlaveUsageWithCalculatedScores> maybeSlaveUsage = Optional.fromNullable(currentSlaveUsagesBySlaveId.get(offerHolder.getSlaveId()));
+    Optional<SingularitySlaveUsageWithCalculatedScores> maybeSlaveUsage = Optional.ofNullable(currentSlaveUsagesBySlaveId.get(offerHolder.getSlaveId()));
     double score = score(offerHolder, tasksPerOffer, taskRequestHolder, maybeSlaveUsage, activeTaskIdsForRequest);
     if (LOG.isTraceEnabled()) {
       LOG.trace("Scored {} | Task {} | Offer - mem {} - cpu {} | Slave {} | maybeSlaveUsage - {}", score, taskRequestHolder.getTaskRequest().getPendingTask().getPendingTaskId().getId(),
-          MesosUtils.getMemory(offerHolder.getCurrentResources(), Optional.absent()), MesosUtils.getNumCpus(offerHolder.getCurrentResources(), Optional.absent()), offerHolder.getHostname(), maybeSlaveUsage);
+          MesosUtils.getMemory(offerHolder.getCurrentResources(), Optional.empty()), MesosUtils.getNumCpus(offerHolder.getCurrentResources(), Optional.empty()), offerHolder.getHostname(), maybeSlaveUsage);
     }
     return score;
   }
@@ -295,7 +295,7 @@ public class SingularityMesosOfferScheduler {
 
     if (LOG.isTraceEnabled()) {
       LOG.trace("Attempting to match task {} resources {} with required role '{}' ({} for task + {} for executor) with remaining offer resources {}",
-          pendingTaskId, taskRequestHolder.getTotalResources(), taskRequest.getRequest().getRequiredRole().or("*"),
+          pendingTaskId, taskRequestHolder.getTotalResources(), taskRequest.getRequest().getRequiredRole().orElse("*"),
           taskRequestHolder.getTaskResources(), taskRequestHolder.getExecutorResources(), MesosUtils.formatForLogging(offerHolder.getCurrentResources()));
     }
 
@@ -411,13 +411,13 @@ public class SingularityMesosOfferScheduler {
       return false;
     }
 
-    int maxPerOfferPerRequest = taskRequest.getRequest().getMaxTasksPerOffer().or(configuration.getMaxTasksPerOfferPerRequest());
+    int maxPerOfferPerRequest = taskRequest.getRequest().getMaxTasksPerOffer().orElse(configuration.getMaxTasksPerOfferPerRequest());
     return maxPerOfferPerRequest > 0 && tasksPerOffer.get(hostname) > maxPerOfferPerRequest;
   }
 
   private boolean isTooManyInstancesForRequest(SingularityTaskRequest taskRequest, List<SingularityTaskId> activeTaskIdsForRequest) {
     if (taskRequest.getRequest().getRequestType() == RequestType.ON_DEMAND) {
-      int maxActiveOnDemandTasks = taskRequest.getRequest().getInstances().or(configuration.getMaxActiveOnDemandTasksPerRequest());
+      int maxActiveOnDemandTasks = taskRequest.getRequest().getInstances().orElse(configuration.getMaxActiveOnDemandTasksPerRequest());
       if (maxActiveOnDemandTasks > 0) {
         int activeTasksForRequest = activeTaskIdsForRequest.size();
         LOG.debug("Running {} instances for request {}. Max is {}", activeTasksForRequest, taskRequest.getRequest().getId(), maxActiveOnDemandTasks);

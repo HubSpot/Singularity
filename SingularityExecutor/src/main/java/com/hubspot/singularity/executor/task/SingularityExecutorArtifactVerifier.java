@@ -75,7 +75,7 @@ public class SingularityExecutorArtifactVerifier {
         log.info("Signature in {} for artifact {} is valid!", s3ArtifactSignature.getFilename(), s3ArtifactSignature.getArtifactFilename());
       }
     } catch (InterruptedException | IOException e) {
-      throw Throwables.propagate(e);
+      throw new RuntimeException(e);
     }
   }
 }

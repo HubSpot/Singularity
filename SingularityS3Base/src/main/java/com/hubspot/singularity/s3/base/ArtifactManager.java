@@ -14,7 +14,7 @@ import java.util.List;
 
 import org.slf4j.Logger;
 
-import com.google.common.base.Optional;
+import java.util.Optional;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.hash.HashCode;
@@ -233,7 +233,7 @@ public class ArtifactManager extends SimpleProcessManager {
     try {
       super.runCommand(command);
     } catch (InterruptedException | ProcessFailedException e) {
-      throw Throwables.propagate(e);
+      throw new RuntimeException(e);
     }
   }
 
@@ -243,7 +243,7 @@ public class ArtifactManager extends SimpleProcessManager {
 
       return hc.toString();
     } catch (IOException e) {
-      throw Throwables.propagate(e);
+      throw new RuntimeException(e);
     }
   }
 }

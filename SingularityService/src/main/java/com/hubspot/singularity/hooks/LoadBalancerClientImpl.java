@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -12,7 +13,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
@@ -95,7 +95,7 @@ public class LoadBalancerClientImpl implements LoadBalancerClient {
     try {
       return objectMapper.readValue(response.getResponseBodyAsBytes(), BaragonResponse.class);
     } catch (Exception e) {
-      throw Throwables.propagate(e);
+      throw new RuntimeException(e);
     }
   }
 
@@ -159,7 +159,7 @@ public class LoadBalancerClientImpl implements LoadBalancerClient {
 
       BaragonResponse lbResponse = readResponse(response);
 
-      return new LoadBalancerUpdateHolder(lbResponse.getLoadBalancerState(), lbResponse.getMessage());
+      return new LoadBalancerUpdateHolder(lbResponse.getLoadBalancerState(), lbResponse.getMessage().transform(Optional::of).or(Optional.empty()));
     } catch (TimeoutException te) {
       LOG.trace("LB {} request {} timed out after waiting {}", request.getMethod(), loadBalancerRequestId, JavaUtils.durationFromMillis(loadBalancerTimeoutMillis));
       return new LoadBalancerUpdateHolder(BaragonRequestState.UNKNOWN, Optional.of(String.format("Timed out after %s", JavaUtils.durationFromMillis(loadBalancerTimeoutMillis))));
@@ -172,11 +172,17 @@ public class LoadBalancerClientImpl implements LoadBalancerClient {
   @Override
   public SingularityLoadBalancerUpdate enqueue(LoadBalancerRequestId loadBalancerRequestId, SingularityRequest request, SingularityDeploy deploy, List<SingularityTask> add,
       List<SingularityTask> remove) {
-    final List<String> serviceOwners = request.getOwners().or(Collections.<String> emptyList());
-    final Set<String> loadBalancerGroups = deploy.getLoadBalancerGroups().or(Collections.<String>emptySet());
-    final BaragonService lbService = new BaragonService(deploy.getLoadBalancerServiceIdOverride().or(request.getId()), serviceOwners, deploy.getServiceBasePath().get(),
-      deploy.getLoadBalancerAdditionalRoutes().or(Collections.<String>emptyList()), loadBalancerGroups, deploy.getLoadBalancerOptions().orNull(),
-      deploy.getLoadBalancerTemplate(), deploy.getLoadBalancerDomains().or(Collections.<String>emptySet()));
+    final List<String> serviceOwners = request.getOwners().orElse(Collections.emptyList());
+    final Set<String> loadBalancerGroups = deploy.getLoadBalancerGroups().orElse(Collections.emptySet());
+    final BaragonService lbService = new BaragonService(
+        deploy.getLoadBalancerServiceIdOverride().orElse(request.getId()),
+        serviceOwners,
+        deploy.getServiceBasePath().get(),
+        deploy.getLoadBalancerAdditionalRoutes().orElse(Collections.emptyList()),
+        loadBalancerGroups,
+        deploy.getLoadBalancerOptions().orElse(null),
+        deploy.getLoadBalancerTemplate().map(com.google.common.base.Optional::of).orElse(com.google.common.base.Optional.absent()),
+        deploy.getLoadBalancerDomains().orElse(Collections.emptySet()));
 
     final List<UpstreamInfo> addUpstreams = tasksToUpstreams(add, loadBalancerRequestId.toString(), deploy.getLoadBalancerUpstreamGroup());
     final List<UpstreamInfo> removeUpstreams = tasksToUpstreams(remove, loadBalancerRequestId.toString(), deploy.getLoadBalancerUpstreamGroup());
@@ -190,7 +196,7 @@ public class LoadBalancerClientImpl implements LoadBalancerClient {
     final List<UpstreamInfo> upstreams = Lists.newArrayListWithCapacity(tasks.size());
 
     for (SingularityTask task : tasks) {
-      final Optional<Long> maybeLoadBalancerPort = MesosUtils.getPortByIndex(mesosProtosUtils.toResourceList(task.getMesosTask().getResources()), task.getTaskRequest().getDeploy().getLoadBalancerPortIndex().or(0));
+      final Optional<Long> maybeLoadBalancerPort = MesosUtils.getPortByIndex(mesosProtosUtils.toResourceList(task.getMesosTask().getResources()), task.getTaskRequest().getDeploy().getLoadBalancerPortIndex().orElse(0));
 
       if (maybeLoadBalancerPort.isPresent()) {
         String upstream = String.format("%s:%d", task.getHostname(), maybeLoadBalancerPort.get());
@@ -205,7 +211,12 @@ public class LoadBalancerClientImpl implements LoadBalancerClient {
           }
         }
 
-        upstreams.add(new UpstreamInfo(upstream, Optional.of(requestId), task.getRackId(), Optional.<String>absent(), group));
+        upstreams.add(new UpstreamInfo(
+            upstream,
+            com.google.common.base.Optional.of(requestId),
+            task.getRackId().map(com.google.common.base.Optional::of).orElse(com.google.common.base.Optional.absent()),
+            com.google.common.base.Optional.absent(),
+            group.map(com.google.common.base.Optional::of).orElse(com.google.common.base.Optional.absent())));
       } else {
         LOG.warn("Task {} is missing port but is being passed to LB  ({})", task.getTaskId(), task);
       }
@@ -229,8 +240,15 @@ public class LoadBalancerClientImpl implements LoadBalancerClient {
 
   @Override
   public SingularityLoadBalancerUpdate delete(LoadBalancerRequestId loadBalancerRequestId, String requestId, Set<String> loadBalancerGroups, String serviceBasePath) {
-    final BaragonService lbService = new BaragonService(requestId, Collections.<String> emptyList(), serviceBasePath, loadBalancerGroups, Collections.<String, Object>emptyMap());
-    final BaragonRequest loadBalancerRequest = new BaragonRequest(loadBalancerRequestId.toString(), lbService, Collections.<UpstreamInfo>emptyList(), Collections.<UpstreamInfo>emptyList(), Collections.<UpstreamInfo>emptyList(), Optional.<String>absent(), Optional.of(RequestAction.DELETE));
+    final BaragonService lbService = new BaragonService(requestId, Collections.<String> emptyList(), serviceBasePath, loadBalancerGroups, Collections.emptyMap());
+    final BaragonRequest loadBalancerRequest = new BaragonRequest(
+        loadBalancerRequestId.toString(),
+        lbService,
+        Collections.emptyList(),
+        Collections.emptyList(),
+        Collections.emptyList(),
+        com.google.common.base.Optional.absent(),
+        com.google.common.base.Optional.of(RequestAction.DELETE));
 
     return sendBaragonRequest(loadBalancerRequestId, loadBalancerRequest, LoadBalancerMethod.DELETE);
   }

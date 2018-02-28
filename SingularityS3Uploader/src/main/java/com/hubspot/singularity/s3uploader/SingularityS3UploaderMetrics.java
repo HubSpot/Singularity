@@ -9,7 +9,7 @@ import com.codahale.metrics.JmxReporter;
 import com.codahale.metrics.Meter;
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.Timer;
-import com.google.common.base.Optional;
+import java.util.Optional;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -39,7 +39,7 @@ public class SingularityS3UploaderMetrics {
     this.errorCounter = registry.counter(name("uploads", "errors"));
     this.uploadTimer = registry.timer(name("uploads", "timer"));
 
-    this.expiring = Optional.absent();
+    this.expiring = Optional.empty();
     this.timeOfLastSuccessUpload = -1;
 
     registry.register(name("uploads", "millissincelast"), new Gauge<Integer>() {

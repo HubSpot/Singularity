@@ -5,7 +5,7 @@ import org.eclipse.jetty.server.ServerConnector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Optional;
+import java.util.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 import com.google.inject.Inject;
@@ -27,7 +27,7 @@ public class SingularityS3DownloaderServer implements SingularityDriver {
     this.configuration = configuration;
     this.s3Configuration = s3Configuration;
     this.handler = handler;
-    this.server = Optional.absent();
+    this.server = Optional.empty();
   }
 
   @Override
@@ -36,7 +36,7 @@ public class SingularityS3DownloaderServer implements SingularityDriver {
       try {
         server.get().stop();
       } catch (Throwable t) {
-        throw Throwables.propagate(t);
+        throw new RuntimeException(t);
       }
     }
   }
@@ -67,7 +67,7 @@ public class SingularityS3DownloaderServer implements SingularityDriver {
 
       server.join();
     } catch (Throwable t) {
-      throw Throwables.propagate(t);
+      throw new RuntimeException(t);
     }
   }
 

@@ -5,7 +5,7 @@ import java.util.Objects;
 
 import javax.validation.constraints.NotNull;
 
-import com.google.common.base.Optional;
+import java.util.Optional;
 import com.hubspot.singularity.HealthcheckProtocol;
 
 public class HealthcheckOptionsBuilder {
@@ -24,16 +24,16 @@ public class HealthcheckOptionsBuilder {
 
   public HealthcheckOptionsBuilder(String uri) {
     this.uri = uri;
-    this.portIndex = Optional.absent();
-    this.portNumber = Optional.absent();
-    this.protocol = Optional.absent();
-    this.startupTimeoutSeconds = Optional.absent();
-    this.startupDelaySeconds = Optional.absent();
-    this.startupIntervalSeconds = Optional.absent();
-    this.intervalSeconds = Optional.absent();
-    this.responseTimeoutSeconds = Optional.absent();
-    this.maxRetries = Optional.absent();
-    this.failureStatusCodes = Optional.absent();
+    this.portIndex = Optional.empty();
+    this.portNumber = Optional.empty();
+    this.protocol = Optional.empty();
+    this.startupTimeoutSeconds = Optional.empty();
+    this.startupDelaySeconds = Optional.empty();
+    this.startupIntervalSeconds = Optional.empty();
+    this.intervalSeconds = Optional.empty();
+    this.responseTimeoutSeconds = Optional.empty();
+    this.maxRetries = Optional.empty();
+    this.failureStatusCodes = Optional.empty();
   }
 
   public String getUri() {

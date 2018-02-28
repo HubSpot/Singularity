@@ -72,7 +72,7 @@ public class TemplateManager {
     try (final BufferedWriter writer = Files.newBufferedWriter(path, UTF_8)) {
       template.apply(context, writer);
     } catch (Exception e) {
-      throw Throwables.propagate(e);
+      throw new RuntimeException(e);
     }
   }
 

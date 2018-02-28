@@ -1,9 +1,9 @@
 package com.hubspot.singularity;
 
 import java.util.Comparator;
+import java.util.Optional;
+import java.util.function.Predicate;
 
-import com.google.common.base.Optional;
-import com.google.common.base.Predicate;
 import com.google.common.collect.ComparisonChain;
 
 public class SingularityTaskHistoryQuery {
@@ -20,8 +20,8 @@ public class SingularityTaskHistoryQuery {
   private final Optional<OrderDirection> orderDirection;
 
   public SingularityTaskHistoryQuery(String requestId) {
-    this(Optional.of(requestId), Optional.<String> absent(), Optional.<String> absent(), Optional.<String>absent(), Optional.<ExtendedTaskState> absent(), Optional.<Long> absent(), Optional.<Long> absent(),
-        Optional.<Long>absent(), Optional.<Long>absent(), Optional.<OrderDirection> absent());
+    this(Optional.of(requestId), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(),
+        Optional.empty(), Optional.empty(), Optional.empty());
   }
 
   public SingularityTaskHistoryQuery(Optional<String> requestId, Optional<String> deployId,  Optional<String> runId, Optional<String> host, Optional<ExtendedTaskState> lastTaskStatus, Optional<Long> startedBefore,
@@ -79,62 +79,57 @@ public class SingularityTaskHistoryQuery {
   }
 
   public Predicate<SingularityTaskIdHistory> getHistoryFilter() {
-    return new Predicate<SingularityTaskIdHistory>() {
+    return (input) -> {
+      final SingularityTaskId taskId = input.getTaskId();
 
-      @Override
-      public boolean apply(SingularityTaskIdHistory input) {
-        final SingularityTaskId taskId = input.getTaskId();
-
-        if (requestId.isPresent() && !requestId.get().equals(taskId.getRequestId())) {
-          return false;
-        }
-
-        if (host.isPresent() && !host.get().equals(taskId.getHost())) {
-          return false;
-        }
-
-        if (deployId.isPresent() && !deployId.get().equals(taskId.getDeployId())) {
-          return false;
-        }
-
-        if (runId.isPresent() && !runId.get().equals(input.getRunId().or(""))) {
-          return false;
-        }
-
-        if (lastTaskStatus.isPresent()) {
-          if (!input.getLastTaskState().isPresent()) {
-            return false;
-          }
-
-          if (lastTaskStatus.get() != input.getLastTaskState().get()) {
-            return false;
-          }
-        }
-
-        if (startedAfter.isPresent() && startedAfter.get() >= taskId.getStartedAt()) {
-          return false;
-        }
-
-        if (startedBefore.isPresent() && startedBefore.get() <= taskId.getStartedAt()) {
-          return false;
-        }
-
-        if (updatedAfter.isPresent() && updatedAfter.get() >= input.getUpdatedAt()) {
-          return false;
-        }
-
-        if (updatedBefore.isPresent() && updatedBefore.get() <= input.getUpdatedAt()) {
-          return false;
-        }
-
-        return true;
+      if (requestId.isPresent() && !requestId.get().equals(taskId.getRequestId())) {
+        return false;
       }
 
+      if (host.isPresent() && !host.get().equals(taskId.getHost())) {
+        return false;
+      }
+
+      if (deployId.isPresent() && !deployId.get().equals(taskId.getDeployId())) {
+        return false;
+      }
+
+      if (runId.isPresent() && !runId.get().equals(input.getRunId().orElse(""))) {
+        return false;
+      }
+
+      if (lastTaskStatus.isPresent()) {
+        if (!input.getLastTaskState().isPresent()) {
+          return false;
+        }
+
+        if (lastTaskStatus.get() != input.getLastTaskState().get()) {
+          return false;
+        }
+      }
+
+      if (startedAfter.isPresent() && startedAfter.get() >= taskId.getStartedAt()) {
+        return false;
+      }
+
+      if (startedBefore.isPresent() && startedBefore.get() <= taskId.getStartedAt()) {
+        return false;
+      }
+
+      if (updatedAfter.isPresent() && updatedAfter.get() >= input.getUpdatedAt()) {
+        return false;
+      }
+
+      if (updatedBefore.isPresent() && updatedBefore.get() <= input.getUpdatedAt()) {
+        return false;
+      }
+
+      return true;
     };
   }
 
   public Comparator<SingularityTaskIdHistory> getComparator() {
-    final OrderDirection localOrderDirection = orderDirection.or(OrderDirection.DESC);
+    final OrderDirection localOrderDirection = orderDirection.orElse(OrderDirection.DESC);
 
     return new Comparator<SingularityTaskIdHistory>() {
 

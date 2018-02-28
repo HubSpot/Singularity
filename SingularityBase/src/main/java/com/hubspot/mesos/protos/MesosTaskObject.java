@@ -10,7 +10,7 @@ import com.fasterxml.jackson.annotation.JsonAnyGetter;
 import com.fasterxml.jackson.annotation.JsonAnySetter;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.Optional;
+import java.util.Optional;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
@@ -53,7 +53,7 @@ public class MesosTaskObject {
   }
 
   public MesosExecutorInfo getExecutor() {
-    return executor.orNull();
+    return executor.orElse(null);
   }
 
   public boolean hasExecutor() {

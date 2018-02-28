@@ -13,7 +13,7 @@ import javax.ws.rs.WebApplicationException;
 
 import org.junit.Test;
 
-import com.google.common.base.Optional;
+import java.util.Optional;
 import com.google.common.collect.ImmutableSet;
 import com.hubspot.singularity.auth.SingularityAuthorizationHelper;
 import com.hubspot.singularity.config.AuthConfiguration;

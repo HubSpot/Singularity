@@ -3,6 +3,7 @@ package com.hubspot.singularity.data;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicLong;
 
 import javax.inject.Singleton;
@@ -16,7 +17,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.codahale.metrics.MetricRegistry;
-import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
@@ -116,13 +116,13 @@ public class StateManager extends CuratorManager {
           curator.create().creatingParentsIfNeeded().withMode(CreateMode.EPHEMERAL).forPath(path, data);
         }
       } catch (Throwable t) {
-        throw Throwables.propagate(t);
+        throw new RuntimeException(t);
       }
     }
   }
 
   public SingularityState getState(boolean skipCache, boolean includeRequestIds) {
-    Optional<SingularityState> fromZk = Optional.absent();
+    Optional<SingularityState> fromZk = Optional.empty();
 
     if (!skipCache) {
       fromZk = getData(STATE_PATH, stateTranscoder);
@@ -358,7 +358,7 @@ public class StateManager extends CuratorManager {
         states.add(hostStateTranscoder.fromBytes(bytes));
       } catch (NoNodeException nne) {
       } catch (Exception e) {
-        throw Throwables.propagate(e);
+        throw new RuntimeException(e);
       }
     }
 
@@ -366,6 +366,6 @@ public class StateManager extends CuratorManager {
   }
 
   private Optional<Double> getMinimumPriorityLevel() {
-    return priorityManager.getActivePriorityFreeze().isPresent() ? Optional.of(priorityManager.getActivePriorityFreeze().get().getPriorityFreeze().getMinimumPriorityLevel()) : Optional.absent();
+    return priorityManager.getActivePriorityFreeze().isPresent() ? Optional.of(priorityManager.getActivePriorityFreeze().get().getPriorityFreeze().getMinimumPriorityLevel()) : Optional.empty();
   }
 }

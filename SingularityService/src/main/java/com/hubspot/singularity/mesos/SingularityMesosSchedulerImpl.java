@@ -7,6 +7,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
@@ -33,7 +34,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.codahale.metrics.annotation.Timed;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
@@ -91,7 +91,7 @@ public class SingularityMesosSchedulerImpl extends SingularityMesosScheduler {
   private final SingularitySchedulerLock lock;
 
   private volatile SchedulerState state;
-  private Optional<Long> lastOfferTimestamp = Optional.absent();
+  private Optional<Long> lastOfferTimestamp = Optional.empty();
 
   private final AtomicReference<MasterInfo> masterInfo = new AtomicReference<>();
   private final List<TaskStatus> queuedUpdates;
@@ -318,7 +318,7 @@ public class SingularityMesosSchedulerImpl extends SingularityMesosScheduler {
     callWithStateLock(() -> {
       LOG.error("Aborting due to error: {}", message);
       notifyStopping();
-      abort.abort(AbortReason.MESOS_ERROR, Optional.absent());
+      abort.abort(AbortReason.MESOS_ERROR, Optional.empty());
     }, "error", true);
   }
 
@@ -419,7 +419,7 @@ public class SingularityMesosSchedulerImpl extends SingularityMesosScheduler {
   }
 
   public Optional<MasterInfo> getMaster() {
-    return Optional.fromNullable(masterInfo.get());
+    return Optional.ofNullable(masterInfo.get());
   }
 
   public void slaveLost(Protos.AgentID slaveId) {
@@ -457,7 +457,7 @@ public class SingularityMesosSchedulerImpl extends SingularityMesosScheduler {
     }
     mesosSchedulerClient.kill(TaskID.newBuilder().setValue(taskId.toString()).build());
 
-    taskManager.saveKilledRecord(new SingularityKilledTaskIdRecord(taskId, System.currentTimeMillis(), originalTimestamp.or(System.currentTimeMillis()), requestCleanupType, taskCleanupType, retries.or(-1) + 1));
+    taskManager.saveKilledRecord(new SingularityKilledTaskIdRecord(taskId, System.currentTimeMillis(), originalTimestamp.orElse(System.currentTimeMillis()), requestCleanupType, taskCleanupType, retries.orElse(-1) + 1));
   }
 
   private Optional<TaskCleanupType> getTaskCleanupType(Optional<RequestCleanupType> requestCleanupType, Optional<TaskCleanupType> taskCleanupType) {
@@ -467,7 +467,7 @@ public class SingularityMesosSchedulerImpl extends SingularityMesosScheduler {
       if (requestCleanupType.isPresent()) {
         return requestCleanupType.get().getTaskCleanupType();
       }
-      return Optional.absent();
+      return Optional.empty();
     }
   }
 

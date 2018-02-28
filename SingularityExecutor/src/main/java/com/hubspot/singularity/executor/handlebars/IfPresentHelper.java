@@ -4,7 +4,7 @@ import java.io.IOException;
 
 import com.github.jknack.handlebars.Helper;
 import com.github.jknack.handlebars.Options;
-import com.google.common.base.Optional;
+import java.util.Optional;
 
 public class IfPresentHelper implements Helper<Object> {
 
@@ -14,7 +14,7 @@ public class IfPresentHelper implements Helper<Object> {
   @Override
   public CharSequence apply(Object context, Options options) throws IOException {
     if (context instanceof Optional) {
-      context = ((Optional<Object>) context).orNull();
+      context = ((Optional<Object>) context).orElse(null);
     }
 
     if (context != null) {

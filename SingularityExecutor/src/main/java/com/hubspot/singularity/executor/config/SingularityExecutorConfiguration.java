@@ -14,7 +14,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.Optional;
+import java.util.Optional;
 import com.hubspot.singularity.executor.SingularityExecutorLogrotateFrequency;
 import com.hubspot.singularity.executor.models.ThreadCheckerType;
 import com.hubspot.singularity.executor.shells.SingularityExecutorShellCommandDescriptor;
@@ -143,7 +143,7 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
   private int localDownloadServiceMaxConnections = 25;
 
   @JsonProperty
-  private Optional<Integer> maxTaskThreads = Optional.absent();
+  private Optional<Integer> maxTaskThreads = Optional.empty();
 
   @JsonProperty
   private String dockerPrefix = "se-";
@@ -207,7 +207,7 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
   private int maxDockerPullAttempts = 2;
 
   @JsonProperty
-  private Optional<SingularityExecutorDockerAuthConfig> dockerAuthConfig = Optional.absent();
+  private Optional<SingularityExecutorDockerAuthConfig> dockerAuthConfig = Optional.empty();
 
   @JsonProperty
   private ThreadCheckerType threadCheckerType = ThreadCheckerType.PS;

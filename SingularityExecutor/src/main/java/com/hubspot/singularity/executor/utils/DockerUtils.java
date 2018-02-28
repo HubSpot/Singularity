@@ -9,7 +9,7 @@ import java.util.concurrent.TimeUnit;
 import com.github.rholder.retry.AttemptTimeLimiters;
 import com.github.rholder.retry.RetryerBuilder;
 import com.github.rholder.retry.StopStrategies;
-import com.google.common.base.Optional;
+import java.util.Optional;
 import com.google.inject.Inject;
 import com.hubspot.singularity.executor.config.SingularityExecutorConfiguration;
 import com.spotify.docker.client.DockerClient;
@@ -111,7 +111,7 @@ public class DockerUtils {
   }
 
   private <T> T callWithRetriesAndTimeout(Callable<T> callable) throws Exception {
-    return callWithRetriesAndTimeout(callable, Optional.<Integer>absent());
+    return callWithRetriesAndTimeout(callable, Optional.empty());
   }
 
   private <T> T callWithRetriesAndTimeout(Callable<T> callable, Optional<Integer> retryCount) throws Exception {

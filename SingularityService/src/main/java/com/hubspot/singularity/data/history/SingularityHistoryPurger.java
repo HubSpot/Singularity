@@ -9,7 +9,7 @@ import javax.inject.Singleton;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Optional;
+import java.util.Optional;
 import com.google.inject.Inject;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.ExtendedTaskState;
@@ -79,7 +79,7 @@ public class SingularityHistoryPurger extends SingularityLeaderOnlyPoller {
   }
 
   private void purge(String requestId, long start, Optional<Integer> afterTasksPerRequest, Optional<Integer> afterDays, boolean deleteRow) {
-    Optional<Date> purgeBefore = Optional.absent();
+    Optional<Date> purgeBefore = Optional.empty();
     Date checkBefore = new Date();
 
     if (afterDays.isPresent()) {
@@ -94,7 +94,7 @@ public class SingularityHistoryPurger extends SingularityLeaderOnlyPoller {
 
     int unpurgedCount;
     if (deleteRow) {
-      unpurgedCount = historyManager.getTaskIdHistoryCount(Optional.of(requestId), Optional.<String>absent(), Optional.<String>absent(), Optional.<String>absent(), Optional.<ExtendedTaskState>absent(), Optional.<Long>absent(), Optional.<Long>absent(), Optional.<Long>absent(), Optional.<Long>absent());
+      unpurgedCount = historyManager.getTaskIdHistoryCount(Optional.of(requestId), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty());
     } else {
       unpurgedCount = historyManager.getUnpurgedTaskHistoryCountByRequestBefore(requestId, checkBefore);
     }

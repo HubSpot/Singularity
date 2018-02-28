@@ -19,7 +19,7 @@ import org.apache.mesos.v1.Protos.Value.Ranges;
 import org.apache.mesos.v1.Protos.Value.Scalar;
 import org.apache.mesos.v1.Protos.Value.Type;
 
-import com.google.common.base.Optional;
+import java.util.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 import com.google.common.collect.Lists;
@@ -154,7 +154,7 @@ public final class MesosUtils {
   public static Optional<Long> getPortByIndex(List<Resource> resources, int index) {
     List<Long> ports = MesosUtils.getAllPorts(resources);
     if (index >= ports.size() || index < 0) {
-      return Optional.absent();
+      return Optional.empty();
     } else {
       return Optional.of(ports.get(index));
     }
@@ -249,15 +249,15 @@ public final class MesosUtils {
   }
 
   public static double getNumCpus(Offer offer) {
-    return getNumCpus(offer.getResourcesList(), Optional.<String>absent());
+    return getNumCpus(offer.getResourcesList(), Optional.empty());
   }
 
   public static double getMemory(Offer offer) {
-    return getMemory(offer.getResourcesList(), Optional.<String>absent());
+    return getMemory(offer.getResourcesList(), Optional.empty());
   }
 
   public static double getDisk(Offer offer) {
-    return getDisk(offer.getResourcesList(), Optional.<String>absent());
+    return getDisk(offer.getResourcesList(), Optional.empty());
   }
 
   public static double getNumCpus(List<Resource> resources, Optional<String> requiredRole) {
@@ -322,7 +322,7 @@ public final class MesosUtils {
     try {
       return String.format("%s:%s", InetAddresses.fromLittleEndianByteArray(fromIp).getHostAddress(), masterInfo.getPort());
     } catch (UnknownHostException e) {
-      throw Throwables.propagate(e);
+      throw new RuntimeException(e);
     }
   }
 
@@ -333,7 +333,7 @@ public final class MesosUtils {
       }
     }
 
-    return Optional.absent();
+    return Optional.empty();
   }
 
   private static final Comparator<Range> RANGE_COMPARATOR = new Comparator<Range>() {

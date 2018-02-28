@@ -5,7 +5,7 @@ import java.util.Objects;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.Optional;
+import java.util.Optional;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
@@ -21,7 +21,7 @@ public class SingularityContainerInfo {
       SingularityContainerType type,
       Optional<List<SingularityVolume>> volumes,
       Optional<SingularityDockerInfo> docker) {
-    this(type, volumes, docker, Optional.absent(), Optional.absent());
+    this(type, volumes, docker, Optional.empty(), Optional.empty());
   }
 
   @JsonCreator

@@ -16,7 +16,7 @@ import org.apache.mesos.v1.Protos.Value.Type;
 import org.junit.Assert;
 import org.junit.Test;
 
-import com.google.common.base.Optional;
+import java.util.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.hubspot.singularity.helpers.MesosUtils;
@@ -50,18 +50,18 @@ public class MesosUtilsTest {
     );
     List<Resource> combined = MesosUtils.combineResources(toAdd);
 
-    Assert.assertEquals(6, MesosUtils.getNumCpus(combined, Optional.absent()), 0.1);
-    Assert.assertEquals(3072, MesosUtils.getMemory(combined, Optional.absent()), 0.1);
+    Assert.assertEquals(6, MesosUtils.getNumCpus(combined, Optional.empty()), 0.1);
+    Assert.assertEquals(3072, MesosUtils.getMemory(combined, Optional.empty()), 0.1);
   }
 
   @Test
   public void testTaskOrdering() {
     final SingularityTaskId taskId = new SingularityTaskId("r", "d", System.currentTimeMillis(), 1, "h", "r");
-    final Optional<String> msg = Optional.absent();
+    final Optional<String> msg = Optional.empty();
 
-    SingularityTaskHistoryUpdate update1 = new SingularityTaskHistoryUpdate(taskId, 1L, ExtendedTaskState.TASK_LAUNCHED, msg, Optional.<String>absent());
-    SingularityTaskHistoryUpdate update2 = new SingularityTaskHistoryUpdate(taskId, 2L, ExtendedTaskState.TASK_RUNNING, msg, Optional.<String>absent());
-    SingularityTaskHistoryUpdate update3 = new SingularityTaskHistoryUpdate(taskId, 2L, ExtendedTaskState.TASK_FAILED, msg, Optional.<String>absent());
+    SingularityTaskHistoryUpdate update1 = new SingularityTaskHistoryUpdate(taskId, 1L, ExtendedTaskState.TASK_LAUNCHED, msg, Optional.empty());
+    SingularityTaskHistoryUpdate update2 = new SingularityTaskHistoryUpdate(taskId, 2L, ExtendedTaskState.TASK_RUNNING, msg, Optional.empty());
+    SingularityTaskHistoryUpdate update3 = new SingularityTaskHistoryUpdate(taskId, 2L, ExtendedTaskState.TASK_FAILED, msg, Optional.empty());
 
     List<SingularityTaskHistoryUpdate> list = Arrays.asList(update2, update1, update3);
 

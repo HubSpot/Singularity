@@ -13,7 +13,7 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.google.common.base.Optional;
+import java.util.Optional;
 import com.google.inject.Inject;
 import com.hubspot.deploy.HealthcheckOptions;
 import com.hubspot.deploy.HealthcheckOptionsBuilder;
@@ -107,11 +107,11 @@ public class ValidatorTest extends SingularityTestBaseNoDb {
   @Test(expected = WebApplicationException.class)
   public void itForbidsRunNowOfScheduledWhenAlreadyRunning() {
     String deployID = "deploy";
-    Optional<String> userEmail = Optional.absent();
+    Optional<String> userEmail = Optional.empty();
     SingularityRequest request = new SingularityRequestBuilder("request2", RequestType.SCHEDULED)
         .setInstances(Optional.of(1))
         .build();
-    Optional<SingularityRunNowRequest> runNowRequest = Optional.absent();
+    Optional<SingularityRunNowRequest> runNowRequest = Optional.empty();
     List<SingularityTaskId> activeTasks = Collections.singletonList(activeTask());
     List<SingularityPendingTaskId> pendingTasks = Collections.emptyList();
 
@@ -121,11 +121,11 @@ public class ValidatorTest extends SingularityTestBaseNoDb {
   @Test(expected = WebApplicationException.class)
   public void whenRunNowItForbidsMoreInstancesForOnDemandThanInRequest() {
     String deployID = "deploy";
-    Optional<String> userEmail = Optional.absent();
+    Optional<String> userEmail = Optional.empty();
     SingularityRequest request = new SingularityRequestBuilder("request2", RequestType.ON_DEMAND)
         .setInstances(Optional.of(1))
         .build();
-    Optional<SingularityRunNowRequest> runNowRequest = Optional.absent();
+    Optional<SingularityRunNowRequest> runNowRequest = Optional.empty();
     List<SingularityTaskId> activeTasks = Collections.singletonList(activeTask());
     List<SingularityPendingTaskId> pendingTasks = Collections.emptyList();
 
@@ -135,10 +135,10 @@ public class ValidatorTest extends SingularityTestBaseNoDb {
   @Test(expected = WebApplicationException.class)
   public void whenRunNowItForbidsRequestsForLongRunningTasks() {
     String deployID = "deploy";
-    Optional<String> userEmail = Optional.absent();
+    Optional<String> userEmail = Optional.empty();
     SingularityRequest request = new SingularityRequestBuilder("request2", RequestType.SERVICE)
         .build();
-    Optional<SingularityRunNowRequest> runNowRequest = Optional.absent();
+    Optional<SingularityRunNowRequest> runNowRequest = Optional.empty();
     List<SingularityTaskId> activeTasks = Collections.emptyList();
     List<SingularityPendingTaskId> pendingTasks = Collections.emptyList();
 
@@ -148,7 +148,7 @@ public class ValidatorTest extends SingularityTestBaseNoDb {
   @Test(expected = WebApplicationException.class)
   public void whenRunNowItForbidsTooLongRunIds() {
     String deployID = "deploy";
-    Optional<String> userEmail = Optional.absent();
+    Optional<String> userEmail = Optional.empty();
     SingularityRequest request = new SingularityRequestBuilder("request2", RequestType.SERVICE)
         .build();
     Optional<SingularityRunNowRequest> runNowRequest = Optional.of(runNowRequest(tooLongId()));
@@ -161,7 +161,7 @@ public class ValidatorTest extends SingularityTestBaseNoDb {
   @Test
   public void whenRunNowIfRunIdSetItWillBePropagated() {
     String deployID = "deploy";
-    Optional<String> userEmail = Optional.absent();
+    Optional<String> userEmail = Optional.empty();
     SingularityRequest request = new SingularityRequestBuilder("request2", RequestType.ON_DEMAND)
         .build();
     Optional<SingularityRunNowRequest> runNowRequest = Optional.of(runNowRequest("runId"));
@@ -176,7 +176,7 @@ public class ValidatorTest extends SingularityTestBaseNoDb {
   @Test
   public void whenRunNowIfNoRunIdSetItWillGenerateAnId() {
     String deployID = "deploy";
-    Optional<String> userEmail = Optional.absent();
+    Optional<String> userEmail = Optional.empty();
     SingularityRequest request = new SingularityRequestBuilder("request2", RequestType.ON_DEMAND)
         .build();
     Optional<SingularityRunNowRequest> runNowRequest = Optional.of(runNowRequest());
@@ -323,7 +323,7 @@ public class ValidatorTest extends SingularityTestBaseNoDb {
         .build();
     SingularityRequest newRequest = new SingularityRequestBuilder("test", RequestType.SERVICE)
         .build();
-    SingularityRequest result = validator.checkSingularityRequest(newRequest, Optional.of(request), Optional.absent(), Optional.absent());
+    SingularityRequest result = validator.checkSingularityRequest(newRequest, Optional.of(request), Optional.empty(), Optional.empty());
     Assert.assertEquals(newRequest.getRequestType(), result.getRequestType());
   }
 
@@ -334,7 +334,7 @@ public class ValidatorTest extends SingularityTestBaseNoDb {
     SingularityRequest newRequest = new SingularityRequestBuilder("test", RequestType.SERVICE)
         .setLoadBalanced(Optional.of(true))
         .build();
-    validator.checkSingularityRequest(newRequest, Optional.of(request), Optional.absent(), Optional.absent());
+    validator.checkSingularityRequest(newRequest, Optional.of(request), Optional.empty(), Optional.empty());
   }
 
   @Test(expected = WebApplicationException.class)
@@ -343,6 +343,6 @@ public class ValidatorTest extends SingularityTestBaseNoDb {
         .build();
     SingularityRequest newRequest = new SingularityRequestBuilder("test", RequestType.SCHEDULED)
         .build();
-    validator.checkSingularityRequest(newRequest, Optional.of(request), Optional.absent(), Optional.absent());
+    validator.checkSingularityRequest(newRequest, Optional.of(request), Optional.empty(), Optional.empty());
   }
 }

@@ -9,7 +9,7 @@ import org.apache.mesos.v1.Protos.TaskState;
 import org.junit.Assert;
 import org.junit.Test;
 
-import com.google.common.base.Optional;
+import java.util.Optional;
 import com.google.inject.Inject;
 import com.hubspot.mesos.json.MesosTaskMonitorObject;
 import com.hubspot.singularity.MachineState;
@@ -110,7 +110,7 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
     Assert.assertEquals(1, usageManager.getTasksWithUsage().size());
     Assert.assertEquals(1, usageManager.getSlavesWithUsage().size());
 
-    slaveManager.changeState(slaveId, MachineState.DEAD, Optional.absent(), Optional.absent());
+    slaveManager.changeState(slaveId, MachineState.DEAD, Optional.empty(), Optional.empty());
 
     cleaner.runActionOnPoll();
 

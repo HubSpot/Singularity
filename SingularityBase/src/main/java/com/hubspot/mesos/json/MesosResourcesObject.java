@@ -3,11 +3,11 @@ package com.hubspot.mesos.json;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.Map;
+import java.util.Optional;
 
 import com.fasterxml.jackson.annotation.JsonAnyGetter;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -44,22 +44,22 @@ public class MesosResourcesObject {
 
   public Optional<Integer> getResourceAsInteger(String resourceName) {
     checkNotNull(resourceName, "resourceName is null");
-    return properties.containsKey(resourceName) ? Optional.of(((Number) properties.get(resourceName)).intValue()) : Optional.<Integer> absent();
+    return properties.containsKey(resourceName) ? Optional.of(((Number) properties.get(resourceName)).intValue()) : Optional.empty();
   }
 
   public Optional<Long> getResourceAsLong(String resourceName) {
     checkNotNull(resourceName, "resourceName is null");
-    return properties.containsKey(resourceName) ? Optional.of(((Number) properties.get(resourceName)).longValue()) : Optional.<Long> absent();
+    return properties.containsKey(resourceName) ? Optional.of(((Number) properties.get(resourceName)).longValue()) : Optional.empty();
   }
 
   public Optional<String> getResourceAsString(String resourceName) {
     checkNotNull(resourceName, "resourceName is null");
-    return properties.containsKey(resourceName) ? Optional.of(properties.get(resourceName).toString()) : Optional.<String> absent();
+    return properties.containsKey(resourceName) ? Optional.of(properties.get(resourceName).toString()) : Optional.empty();
   }
 
   public Optional<Object> getResourceAsObject(String resourceName) {
     checkNotNull(resourceName, "resourceName is null");
-    return Optional.fromNullable(properties.get(resourceName));
+    return Optional.ofNullable(properties.get(resourceName));
   }
 
   @JsonAnyGetter

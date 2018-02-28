@@ -2,11 +2,11 @@ package com.hubspot.singularity.scheduler;
 
 import java.net.ConnectException;
 import java.util.List;
+import java.util.Optional;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskHealthcheckResult;
@@ -38,7 +38,7 @@ public class SingularityHealthcheckAsyncHandler extends AsyncCompletionHandler<R
     this.task = task;
     this.maxHealthcheckResponseBodyBytes = configuration.getMaxHealthcheckResponseBodyBytes();
     this.failureStatusCodes = task.getTaskRequest().getDeploy().getHealthcheck().isPresent() ?
-      task.getTaskRequest().getDeploy().getHealthcheck().get().getFailureStatusCodes().or(configuration.getHealthcheckFailureStatusCodes()) :
+      task.getTaskRequest().getDeploy().getHealthcheck().get().getFailureStatusCodes().orElse(configuration.getHealthcheckFailureStatusCodes()) :
       configuration.getHealthcheckFailureStatusCodes();
 
     startTime = System.currentTimeMillis();
@@ -46,13 +46,13 @@ public class SingularityHealthcheckAsyncHandler extends AsyncCompletionHandler<R
 
   @Override
   public Response onCompleted(Response response) throws Exception {
-    Optional<String> responseBody = Optional.absent();
+    Optional<String> responseBody = Optional.empty();
 
     if (response.hasResponseBody()) {
       responseBody = Optional.of(response.getResponseBodyExcerpt(maxHealthcheckResponseBodyBytes));
     }
 
-    saveResult(Optional.of(response.getStatusCode()), responseBody, Optional.<String> absent(), Optional.<Throwable>absent());
+    saveResult(Optional.of(response.getStatusCode()), responseBody, Optional.empty(), Optional.empty());
 
     return response;
   }
@@ -61,7 +61,7 @@ public class SingularityHealthcheckAsyncHandler extends AsyncCompletionHandler<R
   public void onThrowable(Throwable t) {
     LOG.trace("Exception while making health check for task {}", task.getTaskId(), t);
 
-    saveResult(Optional.<Integer> absent(), Optional.<String> absent(), Optional.of(String.format("Healthcheck failed due to exception: %s", t.getMessage())), Optional.of(t));
+    saveResult(Optional.empty(), Optional.empty(), Optional.of(String.format("Healthcheck failed due to exception: %s", t.getMessage())), Optional.of(t));
   }
 
   public void saveResult(Optional<Integer> statusCode, Optional<String> responseBody, Optional<String> errorMessage, Optional<Throwable> throwable) {

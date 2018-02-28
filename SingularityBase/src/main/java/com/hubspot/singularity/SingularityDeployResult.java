@@ -5,7 +5,7 @@ import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.Optional;
+import java.util.Optional;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
@@ -19,11 +19,11 @@ public class SingularityDeployResult {
   private final long timestamp;
 
   public SingularityDeployResult(DeployState deployState) {
-    this(deployState, Optional.<String> absent(), Optional.<SingularityLoadBalancerUpdate>absent(), Collections.<SingularityDeployFailure> emptyList(), System.currentTimeMillis());
+    this(deployState, Optional.empty(), Optional.empty(), Collections.<SingularityDeployFailure> emptyList(), System.currentTimeMillis());
   }
 
   public SingularityDeployResult(DeployState deployState, String message) {
-    this(deployState, Optional.of(message), Optional.<SingularityLoadBalancerUpdate>absent(), Collections.<SingularityDeployFailure> emptyList(), System.currentTimeMillis());
+    this(deployState, Optional.of(message), Optional.empty(), Collections.<SingularityDeployFailure> emptyList(), System.currentTimeMillis());
   }
 
   public SingularityDeployResult(DeployState deployState, Optional<String> message, Optional<SingularityLoadBalancerUpdate> lbUpdate) {

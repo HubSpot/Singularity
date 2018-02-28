@@ -4,7 +4,7 @@ import org.apache.mesos.v1.Protos.TaskState;
 import org.junit.Assert;
 import org.junit.Test;
 
-import com.google.common.base.Optional;
+import java.util.Optional;
 import com.hubspot.singularity.RequestState;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.api.SingularityBounceRequest;
@@ -25,7 +25,7 @@ public class SingularityExpiringActionsTest extends SingularitySchedulerTestBase
 
     SingularityTask taskOne = startTask(firstDeploy);
 
-    requestResource.pause(requestId, Optional.of(new SingularityPauseRequest(Optional.absent(), Optional.of(1L), Optional.absent(), Optional.absent(), Optional.absent())), singularityUser);
+    requestResource.pause(requestId, Optional.of(new SingularityPauseRequest(Optional.empty(), Optional.of(1L), Optional.empty(), Optional.empty(), Optional.empty())), singularityUser);
 
     cleaner.drainCleanupQueue();
 
@@ -64,7 +64,7 @@ public class SingularityExpiringActionsTest extends SingularitySchedulerTestBase
     startTask(firstDeploy, 1);
 
     requestResource.bounce(requestId,
-      Optional.of(new SingularityBounceRequest(Optional.of(false), Optional.absent(), Optional.of(1L), Optional.absent(), Optional.of("msg"), Optional.absent())), singularityUser);
+      Optional.of(new SingularityBounceRequest(Optional.of(false), Optional.empty(), Optional.of(1L), Optional.empty(), Optional.of("msg"), Optional.empty())), singularityUser);
 
     cleaner.drainCleanupQueue();
     resourceOffers();
@@ -83,7 +83,7 @@ public class SingularityExpiringActionsTest extends SingularitySchedulerTestBase
     initWithTasks(3);
 
     requestResource.bounce(requestId,
-      Optional.of(new SingularityBounceRequest(Optional.absent(), Optional.absent(), Optional.of(1L), Optional.of("aid"), Optional.absent(), Optional.absent())), singularityUser);
+      Optional.of(new SingularityBounceRequest(Optional.empty(), Optional.empty(), Optional.of(1L), Optional.of("aid"), Optional.empty(), Optional.empty())), singularityUser);
 
     Assert.assertTrue(!requestManager.getCleanupRequests().get(0).getMessage().isPresent());
     Assert.assertEquals("aid", requestManager.getCleanupRequests().get(0).getActionId().get());
@@ -128,7 +128,7 @@ public class SingularityExpiringActionsTest extends SingularitySchedulerTestBase
   public void testExpiringIncrementalBounce() {
     initRequest();
 
-    requestResource.scale(requestId, new SingularityScaleRequest(Optional.of(3), Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent()), singularityUser);
+    requestResource.scale(requestId, new SingularityScaleRequest(Optional.of(3), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty()), singularityUser);
 
     initFirstDeploy();
 
@@ -137,7 +137,7 @@ public class SingularityExpiringActionsTest extends SingularitySchedulerTestBase
     startTask(firstDeploy, 3);
 
     requestResource.bounce(requestId,
-      Optional.of(new SingularityBounceRequest(Optional.of(true), Optional.absent(), Optional.of(1L), Optional.absent(), Optional.of("msg"), Optional.absent())), singularityUser);
+      Optional.of(new SingularityBounceRequest(Optional.of(true), Optional.empty(), Optional.of(1L), Optional.empty(), Optional.of("msg"), Optional.empty())), singularityUser);
 
     Assert.assertTrue(requestManager.cleanupRequestExists(requestId));
     Assert.assertEquals("msg", requestManager.getCleanupRequests().get(0).getMessage().get());
@@ -186,7 +186,7 @@ public class SingularityExpiringActionsTest extends SingularitySchedulerTestBase
     initRequest();
     initFirstDeploy();
 
-    requestResource.scale(requestId, new SingularityScaleRequest(Optional.of(5), Optional.of(1L), Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent()), singularityUser);
+    requestResource.scale(requestId, new SingularityScaleRequest(Optional.of(5), Optional.of(1L), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty()), singularityUser);
 
     try {
       Thread.sleep(2);
@@ -213,7 +213,7 @@ public class SingularityExpiringActionsTest extends SingularitySchedulerTestBase
 
     Assert.assertTrue(healthchecker.cancelHealthcheck(firstTask.getTaskId().getId()));
 
-    requestResource.skipHealthchecks(requestId, new SingularitySkipHealthchecksRequest(Optional.of(true), Optional.of(1L), Optional.absent(), Optional.absent()), singularityUser);
+    requestResource.skipHealthchecks(requestId, new SingularitySkipHealthchecksRequest(Optional.of(true), Optional.of(1L), Optional.empty(), Optional.empty()), singularityUser);
 
     statusUpdate(firstTask, TaskState.TASK_FAILED);
 
@@ -237,7 +237,7 @@ public class SingularityExpiringActionsTest extends SingularitySchedulerTestBase
 
     requestResource.postRequest(request.toBuilder().setBounceAfterScale(Optional.of(true)).build(), singularityUser);
 
-    requestResource.scale(requestId, new SingularityScaleRequest(Optional.of(5), Optional.of(1L), Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent()), singularityUser);
+    requestResource.scale(requestId, new SingularityScaleRequest(Optional.of(5), Optional.of(1L), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty()), singularityUser);
 
     Assert.assertEquals(1, requestManager.getCleanupRequests().size());
     cleaner.drainCleanupQueue();

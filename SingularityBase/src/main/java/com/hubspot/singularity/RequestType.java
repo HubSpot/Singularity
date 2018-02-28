@@ -1,6 +1,6 @@
 package com.hubspot.singularity;
 
-import com.google.common.base.Optional;
+import java.util.Optional;
 
 public enum RequestType {
 
@@ -34,7 +34,7 @@ public enum RequestType {
       return RequestType.SCHEDULED;
     }
 
-    if (!daemon.or(true)) {
+    if (!daemon.orElse(true)) {
       return RequestType.ON_DEMAND;
     }
 

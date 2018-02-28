@@ -2,10 +2,11 @@ package com.hubspot.singularity.resources;
 
 import static com.hubspot.singularity.WebExceptions.checkNotFound;
 
+import java.util.Optional;
+
 import org.apache.curator.framework.recipes.leader.LeaderLatch;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Optional;
 import com.hubspot.singularity.SingularityAuthorizationScope;
 import com.hubspot.singularity.SingularityDeploy;
 import com.hubspot.singularity.SingularityDeployMarker;
@@ -58,7 +59,7 @@ public class AbstractRequestResource extends AbstractLeaderAwareResource {
   }
 
   protected SingularityRequestParent fillEntireRequest(SingularityRequestWithState requestWithState) {
-    return fillEntireRequest(requestWithState, Optional.absent());
+    return fillEntireRequest(requestWithState, Optional.empty());
   }
 
   protected SingularityRequestParent fillEntireRequest(SingularityRequestWithState requestWithState, Optional<SingularityRequest> newRequestData) {
@@ -66,8 +67,8 @@ public class AbstractRequestResource extends AbstractLeaderAwareResource {
 
     final Optional<SingularityRequestDeployState> requestDeployState = deployManager.getRequestDeployState(requestId);
 
-    Optional<SingularityDeploy> activeDeploy = Optional.absent();
-    Optional<SingularityDeploy> pendingDeploy = Optional.absent();
+    Optional<SingularityDeploy> activeDeploy = Optional.empty();
+    Optional<SingularityDeploy> pendingDeploy = Optional.empty();
 
     if (requestDeployState.isPresent()) {
       activeDeploy = fillDeploy(requestDeployState.get().getActiveDeploy());
@@ -76,7 +77,7 @@ public class AbstractRequestResource extends AbstractLeaderAwareResource {
 
     Optional<SingularityPendingDeploy> pendingDeployState = deployManager.getPendingDeploy(requestId);
 
-    return new SingularityRequestParent(newRequestData.or(requestWithState.getRequest()), requestWithState.getState(), requestDeployState, activeDeploy, pendingDeploy, pendingDeployState,
+    return new SingularityRequestParent(newRequestData.orElse(requestWithState.getRequest()), requestWithState.getState(), requestDeployState, activeDeploy, pendingDeploy, pendingDeployState,
         requestManager.getExpiringBounce(requestId), requestManager.getExpiringPause(requestId), requestManager.getExpiringScale(requestId),
         requestManager.getExpiringSkipHealthchecks(requestId), requestHelper.getTaskIdsByStatusForRequest(requestId), requestHistoryHelper.getLastHistory(requestId),
         requestHelper.getMostRecentTask(requestWithState.getRequest()));
@@ -84,7 +85,7 @@ public class AbstractRequestResource extends AbstractLeaderAwareResource {
 
   protected Optional<SingularityDeploy> fillDeploy(Optional<SingularityDeployMarker> deployMarker) {
     if (!deployMarker.isPresent()) {
-      return Optional.absent();
+      return Optional.empty();
     }
 
     return deployManager.getDeploy(deployMarker.get().getRequestId(), deployMarker.get().getDeployId());

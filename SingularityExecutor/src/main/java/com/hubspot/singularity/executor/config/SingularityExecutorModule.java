@@ -116,7 +116,7 @@ public class SingularityExecutorModule extends AbstractModule {
           dockerClientBuilder.registryAuth(RegistryAuth.fromDockerConfig().build());
 
         } catch(IOException e) {
-          throw Throwables.propagate(e);
+          throw new RuntimeException(e);
         }
       }
       else {

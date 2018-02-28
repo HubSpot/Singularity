@@ -8,7 +8,7 @@ import org.jukito.JukitoRunner;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import com.google.common.base.Optional;
+import java.util.Optional;
 import com.hubspot.singularity.client.SingularityClient;
 
 @RunWith(JukitoRunner.class)
@@ -40,13 +40,13 @@ public class SingularityDeployIT {
         .setCommand(Optional.of("sleep 10"))
         .build();
 
-    singularityClient.createDeployForSingularityRequest(REQUEST_ID, deploy, Optional.<Boolean>absent(), Optional.<String> absent());
+    singularityClient.createDeployForSingularityRequest(REQUEST_ID, deploy, Optional.empty(), Optional.empty());
 
-    Optional<DeployState> deployState = Optional.absent();
+    Optional<DeployState> deployState = Optional.empty();
     for (int i = 0; i < 10; i++) {
       final Optional<SingularityDeployHistory> deployHistory = singularityClient.getHistoryForRequestDeploy(REQUEST_ID, deployId);
       if (deployHistory.isPresent() && deployHistory.get().getDeployResult().isPresent()) {
-        deployState = Optional.fromNullable(deployHistory.get().getDeployResult().get().getDeployState());
+        deployState = Optional.ofNullable(deployHistory.get().getDeployResult().get().getDeployState());
 
         if (deployState.get().isDeployFinished()) {
           break;

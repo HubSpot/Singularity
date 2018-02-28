@@ -12,7 +12,7 @@ import org.apache.mesos.v1.Protos.TaskID;
 import org.apache.mesos.v1.Protos.TaskState;
 import org.apache.mesos.v1.Protos.TaskStatus;
 
-import com.google.common.base.Optional;
+import java.util.Optional;
 import com.google.inject.Inject;
 import com.hubspot.singularity.SingularityAbort;
 import com.hubspot.singularity.SingularityAbort.AbortReason;
@@ -121,7 +121,7 @@ public class TestResource {
   public void abort() {
     checkForbidden(configuration.isAllowTestResourceCalls(), "Test resource calls are disabled (set isAllowTestResourceCalls to true in configuration)");
 
-    abort.abort(AbortReason.TEST_ABORT, Optional.<Throwable>absent());
+    abort.abort(AbortReason.TEST_ABORT, Optional.empty());
   }
 
   @POST

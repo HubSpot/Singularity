@@ -15,7 +15,7 @@ import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.utils.ZKPaths;
 
 import com.google.common.base.Joiner;
-import com.google.common.base.Optional;
+import java.util.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
@@ -33,7 +33,7 @@ public class SingularityClientProvider implements Provider<SingularityClient> {
 
   private String contextPath = DEFAULT_CONTEXT_PATH;
   private List<String> hosts = Collections.emptyList();
-  private Optional<SingularityClientCredentials> credentials = Optional.absent();
+  private Optional<SingularityClientCredentials> credentials = Optional.empty();
   private boolean ssl = false;
 
   private int retryAttempts = 3;
@@ -123,7 +123,7 @@ public class SingularityClientProvider implements Provider<SingularityClient> {
 
       return Joiner.on(",").join(hosts);
     } catch (Exception e) {
-      throw Throwables.propagate(e);
+      throw new RuntimeException(e);
     }
   }
 }

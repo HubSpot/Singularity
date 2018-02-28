@@ -6,7 +6,7 @@ import java.util.List;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.Optional;
+import java.util.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.hubspot.mesos.protos.MesosOfferObject;
@@ -100,7 +100,7 @@ public class SingularityTask extends SingularityTaskIdHolder {
       }
     }
     if (index >= ports.size() || index < 0) {
-      return Optional.absent();
+      return Optional.empty();
     } else {
       Collections.sort(ports); // ports are always in ascending order
       return Optional.of(ports.get(index));
@@ -114,7 +114,7 @@ public class SingularityTask extends SingularityTaskIdHolder {
         return Optional.of(resourceObject);
       }
     }
-    return Optional.absent();
+    return Optional.empty();
   }
 
   @Override

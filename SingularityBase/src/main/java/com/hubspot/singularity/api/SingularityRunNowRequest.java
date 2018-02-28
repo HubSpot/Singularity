@@ -7,7 +7,7 @@ import java.util.Objects;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.Optional;
+import java.util.Optional;
 import com.hubspot.mesos.Resources;
 import com.hubspot.mesos.SingularityMesosArtifact;
 import com.hubspot.singularity.SingularityS3UploaderFile;
@@ -35,7 +35,7 @@ public class SingularityRunNowRequest {
       Optional<List<String>> commandLineArgs,
       Optional<Resources> resources
   ) {
-    this(message, skipHealthchecks, runId, commandLineArgs, resources, Collections.emptyList(), Optional.absent(), null, null, Optional.absent());
+    this(message, skipHealthchecks, runId, commandLineArgs, resources, Collections.emptyList(), Optional.empty(), null, null, Optional.empty());
   }
 
   @Deprecated
@@ -45,7 +45,7 @@ public class SingularityRunNowRequest {
                                   Optional<List<String>> commandLineArgs,
                                   Optional<Resources> resources,
                                   Optional<Long> runAt) {
-    this(message, skipHealthchecks, runId, commandLineArgs, resources, Collections.emptyList(), Optional.absent(), null, null, runAt);
+    this(message, skipHealthchecks, runId, commandLineArgs, resources, Collections.emptyList(), Optional.empty(), null, null, runAt);
   }
 
   @JsonCreator

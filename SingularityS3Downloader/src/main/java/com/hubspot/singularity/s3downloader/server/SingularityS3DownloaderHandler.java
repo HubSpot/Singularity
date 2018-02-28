@@ -13,7 +13,7 @@ import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.handler.AbstractHandler;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Optional;
+import java.util.Optional;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.hubspot.singularity.s3.base.ArtifactDownloadRequest;
@@ -74,7 +74,7 @@ public class SingularityS3DownloaderHandler extends AbstractHandler {
     try {
       return Optional.of(objectMapper.readValue(request.getInputStream(), ArtifactDownloadRequest.class));
     } catch (Throwable t) {
-      return Optional.absent();
+      return Optional.empty();
     }
   }
 

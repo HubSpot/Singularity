@@ -10,7 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Charsets;
-import com.google.common.base.Optional;
+import java.util.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 import com.google.common.io.CharStreams;
@@ -28,7 +28,7 @@ public class ProcessUtils {
   }
 
   public ProcessUtils(@Nullable Logger log) {
-    this.log = Optional.fromNullable(log);
+    this.log = Optional.ofNullable(log);
   }
 
   public static class ProcessResult {
@@ -90,7 +90,7 @@ public class ProcessUtils {
 
       return new ProcessResult(exitCode, output.trim());
     } catch (InterruptedException | IOException e) {
-      throw Throwables.propagate(e);
+      throw new RuntimeException(e);
     }
   }
 
@@ -105,7 +105,7 @@ public class ProcessUtils {
       Object pidObject = field.get(process);
       return (Integer) pidObject;
     } catch (NoSuchFieldException | SecurityException | IllegalArgumentException | IllegalAccessException e) {
-      throw Throwables.propagate(e);
+      throw new RuntimeException(e);
     }
   }
 
