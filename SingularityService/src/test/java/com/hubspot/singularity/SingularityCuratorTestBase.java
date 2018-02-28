@@ -17,8 +17,12 @@ import com.squarespace.jersey2.guice.JerseyGuiceUtils;
 
 public class SingularityCuratorTestBase {
 
+  static {
+    JerseyGuiceUtils.install((s, serviceLocator) -> null); // lolwut... avoid a ClassNotFoundException failing to find ServiceLocatorGenerator
+  }
+
   @Rule
-  public Timeout globalTimeout = Timeout.seconds(30); // 30 seconds max for each @Test method
+  public Timeout globalTimeout = Timeout.seconds(45); // 30 seconds max for each @Test method
 
   @Inject
   protected CuratorFramework cf;

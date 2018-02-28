@@ -3,13 +3,13 @@ package com.hubspot.singularity.scheduler;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.mesos.v1.Protos.TaskState;
 import org.junit.Assert;
 import org.junit.Test;
 
-import java.util.Optional;
 import com.google.common.collect.ImmutableList;
 import com.hubspot.deploy.HealthcheckOptions;
 import com.hubspot.deploy.HealthcheckOptionsBuilder;
@@ -398,7 +398,11 @@ public class SingularityHealthchecksTest extends SingularitySchedulerTestBase {
     try {
       setConfigurationForNoDelay();
       initRequest();
-      HealthcheckOptions options = new HealthcheckOptionsBuilder("http://uri").setPortNumber(Optional.of(81L)).setStartupDelaySeconds(Optional.of(0)).build();
+      HealthcheckOptions options = new HealthcheckOptionsBuilder("http://uri")
+          .setPortNumber(Optional.of(81L))
+          .setStartupDelaySeconds(Optional.of(0))
+          .setIntervalSeconds(Optional.of(0))
+          .build();
       firstDeploy = initAndFinishDeploy(request, new SingularityDeployBuilder(request.getId(), firstDeployId)
         .setCommand(Optional.of("sleep 100")).setResources(Optional.of(new Resources(1, 64, 3, 0)))
         .setHealthcheck(Optional.of(options)), Optional.empty());
@@ -416,7 +420,7 @@ public class SingularityHealthchecksTest extends SingularitySchedulerTestBase {
 
       newTaskChecker.enqueueNewTaskCheck(firstTask, requestManager.getRequest(requestId), healthchecker);
 
-      Awaitility.await("healthcheck present").atMost(5, TimeUnit.SECONDS).until(() -> taskManager.getLastHealthcheck(firstTask.getTaskId()).isPresent());
+      Awaitility.await("healthcheck present").atMost(10, TimeUnit.SECONDS).until(() -> taskManager.getLastHealthcheck(firstTask.getTaskId()).isPresent());
 
       Assert.assertTrue(taskManager.getLastHealthcheck(firstTask.getTaskId()).get().toString().contains("host1:81"));
     } finally {

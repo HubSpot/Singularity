@@ -2,26 +2,30 @@ package com.hubspot.singularity;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.Optional;
 import java.util.Set;
 
 import javax.ws.rs.WebApplicationException;
 
 import org.junit.Test;
 
-import java.util.Optional;
 import com.google.common.collect.ImmutableSet;
 import com.hubspot.singularity.auth.SingularityAuthorizationHelper;
 import com.hubspot.singularity.config.AuthConfiguration;
 import com.hubspot.singularity.config.MesosConfiguration;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.RequestManager;
+import com.squarespace.jersey2.guice.JerseyGuiceUtils;
 
 public class SingularityAuthorizationHelperTest {
+
+  static {
+    JerseyGuiceUtils.install((s, serviceLocator) -> null);
+  }
 
   public static SingularityConfiguration buildAuthDisabledConfig() {
     AuthConfiguration authConfiguration = new AuthConfiguration();
