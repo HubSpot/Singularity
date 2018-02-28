@@ -6,39 +6,39 @@ import GlobalSearch from '../globalSearch/GlobalSearch';
 import Title from './Title';
 import Utils from '../../utils';
 
-const PAUSE_INTERVAL_IN_MS = 1000 * 60 * 60;
-const LAG_THRESHOLD_IN_MS = 1000 * 60 * 3;
+const DISMISS_TASK_LAG_NOFICATION_DURATION_IN_MS = 1000 * 60 * 60;
+const MAX_TASK_LAG_NOTIFICATION_THRESHOLD_IN_MS = 1000 * 60 * 3;
 
 class Application extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      canShowLagError: true,
+      canShowTaskLagNotification: true,
     };
     _.bindAll(this,
-      'pauseNotification',
+      'dismissTaskLagNotification',
       'notifyLag',
     );
   }
 
   componentWillUnmount() {
-    clearInterval(this.timerId);
+    clearInterval(this.reenableTaskLagNotificationTimeoutId);
   }
 
-  pauseNotification() {
-    this.setState({ canShowLagError: false });
-    this.timerId = setInterval(() => {
-      clearInterval(this.timerId);
-      this.setState({ canShowLagError: true });
-    }, PAUSE_INTERVAL_IN_MS);
+  dismissTaskLagNotification() {
+    this.setState({ canShowTaskLagNotification: false });
+    this.reenableTaskLagNotificationTimeoutId = setInterval(() => {
+      clearInterval(this.reenableTaskLagNotificationTimeoutId);
+      this.setState({ canShowTaskLagNotification: true });
+    }, DISMISS_TASK_LAG_NOFICATION_DURATION_IN_MS);
   }
 
   notifyLag(maxTaskLag) {
-    const { canShowLagError: canNotify } = this.state;
-    const shouldNotify = maxTaskLag >= LAG_THRESHOLD_IN_MS;
+    const { canShowTaskLagNotification: canNotify } = this.state;
+    const shouldNotify = maxTaskLag >= MAX_TASK_LAG_NOTIFICATION_THRESHOLD_IN_MS;
     if (canNotify && shouldNotify) {
       Messenger().error({
-        onClickClose: this.pauseNotification,
+        onClickClose: this.dismissTaskLagNotification,
         message: `
           Singularity is experiencing some delays. The team has already been
           notified. (Max task lag: ${Utils.duration(maxTaskLag)})
