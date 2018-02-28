@@ -21,6 +21,7 @@ const Application = (props) => {
     <div>
       <Title routes={props.routes} params={props.params} />
       <Navigation location={props.location} history={props.history} />
+      <div className="messenger-notification-container" />
       <GlobalSearch />
       {props.children}
     </div>
