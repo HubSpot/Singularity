@@ -22,13 +22,12 @@ class Application extends Component {
   }
 
   componentWillUnmount() {
-    clearInterval(this.reenableTaskLagNotificationTimeoutId);
+    clearTimeout(this.reenableTaskLagNotificationTimeoutId);
   }
 
   dismissTaskLagNotification() {
     this.setState({ canShowTaskLagNotification: false });
-    this.reenableTaskLagNotificationTimeoutId = setInterval(() => {
-      clearInterval(this.reenableTaskLagNotificationTimeoutId);
+    this.reenableTaskLagNotificationTimeoutId = setTimeout(() => {
       this.setState({ canShowTaskLagNotification: true });
     }, DISMISS_TASK_LAG_NOFICATION_DURATION_IN_MS);
   }
