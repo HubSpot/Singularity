@@ -794,6 +794,8 @@ public class RequestResource extends AbstractRequestResource {
     if (scaleRequest.getDurationMillis().isPresent()) {
       requestManager.saveExpiringObject(new SingularityExpiringScale(requestId, user.getEmail(),
           System.currentTimeMillis(), scaleRequest, oldRequest.getInstances(), scaleRequest.getActionId().or(UUID.randomUUID().toString()), scaleRequest.getBounce()));
+    } else {
+      requestManager.deleteExpiringObject(SingularityExpiringScale.class, requestId);
     }
 
     if (!scaleRequest.getSkipEmailNotification().isPresent() || !scaleRequest.getSkipEmailNotification().get()) {
