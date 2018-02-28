@@ -1,35 +1,35 @@
 package com.hubspot.singularity.mesos;
 
-import java.util.HashSet;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import org.apache.mesos.Protos;
-import org.apache.mesos.Protos.Offer;
-import org.apache.mesos.Protos.Resource;
-import org.apache.mesos.Protos.Status;
-import org.apache.mesos.Protos.TaskInfo;
-import org.apache.mesos.SchedulerDriver;
+import org.apache.mesos.v1.Protos;
+import org.apache.mesos.v1.Protos.Offer;
+import org.apache.mesos.v1.Protos.Offer.Operation;
+import org.apache.mesos.v1.Protos.Offer.Operation.Launch;
+import org.apache.mesos.v1.Protos.Offer.Operation.Type;
+import org.apache.mesos.v1.Protos.Resource;
+import org.apache.mesos.v1.Protos.TaskInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
 import com.hubspot.mesos.JavaUtils;
-import com.hubspot.mesos.MesosUtils;
-import com.hubspot.singularity.SingularityPendingTaskId;
-import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskId;
+import com.hubspot.singularity.helpers.MesosUtils;
+import com.hubspot.singularity.helpers.SingularityMesosTaskHolder;
 
 public class SingularityOfferHolder {
 
   private static final Logger LOG = LoggerFactory.getLogger(SingularityMesosScheduler.class);
 
   private final List<Protos.Offer> offers;
-  private final List<SingularityTask> acceptedTasks;
-  private final Set<SingularityPendingTaskId> rejectedPendingTaskIds;
+  private final List<SingularityMesosTaskHolder> acceptedTasks;
   private List<Resource> currentResources;
   private Set<String> roles;
 
@@ -50,18 +50,17 @@ public class SingularityOfferHolder {
     this.roles = MesosUtils.getRoles(offers.get(0));
     this.acceptedTasks = Lists.newArrayListWithExpectedSize(taskSizeHint);
     this.currentResources = offers.size()  > 1 ? MesosUtils.combineResources(offers.stream().map(Protos.Offer::getResourcesList).collect(Collectors.toList())) : offers.get(0).getResourcesList();
-    this.rejectedPendingTaskIds = new HashSet<>();
     this.sanitizedHost = JavaUtils.getReplaceHyphensWithUnderscores(hostname);
     this.sanitizedRackId = JavaUtils.getReplaceHyphensWithUnderscores(rackId);
     this.textAttributes = textAttributes;
     this.reservedSlaveAttributes = reservedSlaveAttributes;
   }
 
-  public Map<String, String> getTextAttributes() {
+  Map<String, String> getTextAttributes() {
     return textAttributes;
   }
 
-  public String getRackId() {
+  String getRackId() {
     return rackId;
   }
 
@@ -73,7 +72,7 @@ public class SingularityOfferHolder {
     return !reservedSlaveAttributes.isEmpty();
   }
 
-  public Map<String, String> getReservedSlaveAttributes() {
+  Map<String, String> getReservedSlaveAttributes() {
     return reservedSlaveAttributes;
   }
 
@@ -85,7 +84,7 @@ public class SingularityOfferHolder {
     return sanitizedHost;
   }
 
-  public String getSanitizedRackId() {
+  String getSanitizedRackId() {
     return sanitizedRackId;
   }
 
@@ -93,36 +92,32 @@ public class SingularityOfferHolder {
     return roles;
   }
 
-  public void addRejectedTask(SingularityPendingTaskId pendingTaskId) {
-    rejectedPendingTaskIds.add(pendingTaskId);
-  }
-
-  public boolean hasRejectedPendingTaskAlready(SingularityPendingTaskId pendingTaskId) {
-    return rejectedPendingTaskIds.contains(pendingTaskId);
-  }
-
-  public void addMatchedTask(SingularityTask task) {
-    LOG.trace("Accepting task {} for offers {}", task.getTaskId(), offers.stream().map(Offer::getId).collect(Collectors.toList()));
-    acceptedTasks.add(task);
+  public void addMatchedTask(SingularityMesosTaskHolder taskHolder) {
+    LOG.trace("Accepting task {} for offers {}", taskHolder.getTask().getTaskId(), offers.stream().map(Offer::getId).collect(Collectors.toList()));
+    acceptedTasks.add(taskHolder);
 
     // subtract task resources from offer
-    currentResources = MesosUtils.subtractResources(currentResources, task.getMesosTask().getResourcesList());
+    subtractResources(taskHolder.getMesosTask().getResourcesList());
 
     // subtract executor resources from offer, if any are defined
-    if (task.getMesosTask().hasExecutor() && task.getMesosTask().getExecutor().getResourcesCount() > 0) {
-      currentResources = MesosUtils.subtractResources(currentResources, task.getMesosTask().getExecutor().getResourcesList());
+    if (taskHolder.getMesosTask().hasExecutor() && taskHolder.getMesosTask().getExecutor().getResourcesCount() > 0) {
+      subtractResources(taskHolder.getMesosTask().getExecutor().getResourcesList());
     }
   }
 
-  public List<Offer> launchTasksAndGetUnusedOffers(SchedulerDriver driver) {
+  public void subtractResources(List<Resource> resources) {
+    currentResources = MesosUtils.subtractResources(currentResources, resources);
+  }
+
+  public List<Offer> launchTasksAndGetUnusedOffers(SingularityMesosSchedulerClient schedulerClient) {
     final List<TaskInfo> toLaunch = Lists.newArrayListWithCapacity(acceptedTasks.size());
     final List<SingularityTaskId> taskIds = Lists.newArrayListWithCapacity(acceptedTasks.size());
 
-    for (SingularityTask task : acceptedTasks) {
-      taskIds.add(task.getTaskId());
-      toLaunch.add(task.getMesosTask());
-      LOG.debug("Launching {} with offer {}", task.getTaskId(), offers.get(0).getId());
-      LOG.trace("Launching {} mesos task: {}", task.getTaskId(), MesosUtils.formatForLogging(task.getMesosTask()));
+    for (SingularityMesosTaskHolder taskHolder : acceptedTasks) {
+      taskIds.add(taskHolder.getTask().getTaskId());
+      toLaunch.add(taskHolder.getMesosTask());
+      LOG.debug("Launching {} with offer {}", taskHolder.getTask().getTaskId(), offers.get(0).getId());
+      LOG.trace("Launching {} mesos task: {}", taskHolder.getTask().getTaskId(), MesosUtils.formatForLogging(taskHolder.getMesosTask()));
     }
 
     // At this point, `currentResources` contains a list of unused resources, because we subtracted out the required resources of every task we accepted.
@@ -167,17 +162,20 @@ public class SingularityOfferHolder {
     List<Offer> leftoverOffers = partitionedOffers.get(true);
     List<Offer> neededOffers = partitionedOffers.get(false);
 
-    Status initialStatus = driver.launchTasks(neededOffers.stream().map(Protos.Offer::getId).collect(Collectors.toList()), toLaunch);
+    schedulerClient.accept(
+        neededOffers.stream().map(Offer::getId).collect(Collectors.toList()),
+        Collections.singletonList(Operation.newBuilder().setType(Type.LAUNCH).setLaunch(Launch.newBuilder().addAllTaskInfos(toLaunch).build()).build())
+    );
 
-    LOG.info("{} tasks ({}) launched with status {}", taskIds.size(), taskIds, initialStatus);
+    LOG.info("{} tasks ({}) launched", taskIds.size(), taskIds);
     return leftoverOffers;
   }
 
-  public List<SingularityTask> getAcceptedTasks() {
+  public List<SingularityMesosTaskHolder> getAcceptedTasks() {
     return acceptedTasks;
   }
 
-  public List<Resource> getCurrentResources() {
+  List<Resource> getCurrentResources() {
     return currentResources;
   }
 
@@ -186,11 +184,32 @@ public class SingularityOfferHolder {
   }
 
   @Override
+  public boolean equals(Object obj) {
+    if (this == obj) {
+      return true;
+    }
+    if (obj instanceof SingularityOfferHolder) {
+      final SingularityOfferHolder that = (SingularityOfferHolder) obj;
+      return Objects.equals(this.roles, that.roles) &&
+          Objects.equals(this.rackId, that.rackId) &&
+          Objects.equals(this.slaveId, that.slaveId) &&
+          Objects.equals(this.hostname, that.hostname) &&
+          Objects.equals(this.textAttributes, that.textAttributes) &&
+          Objects.equals(this.reservedSlaveAttributes, that.reservedSlaveAttributes);
+    }
+    return false;
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(roles, rackId, slaveId, hostname, textAttributes, reservedSlaveAttributes);
+  }
+
+  @Override
   public String toString() {
     return "SingularityOfferHolder{" +
         "offers=" + offers +
         ", acceptedTasks=" + acceptedTasks +
-        ", rejectedPendingTaskIds=" + rejectedPendingTaskIds +
         ", currentResources=" + currentResources +
         ", roles=" + roles +
         ", rackId='" + rackId + '\'' +

@@ -9,12 +9,14 @@ import java.util.List;
 
 import javax.ws.rs.WebApplicationException;
 
-import org.apache.mesos.Protos.TaskState;
+import org.apache.mesos.v1.Protos.TaskState;
+import org.apache.mesos.v1.scheduler.Protos.Event;
 import org.junit.Assert;
 import org.junit.Test;
 
 import com.google.common.base.Optional;
 import com.google.inject.Inject;
+import com.google.protobuf.ByteString;
 import com.hubspot.singularity.SingularityShellCommand;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskCleanup;
@@ -28,6 +30,7 @@ import com.hubspot.singularity.config.UIConfiguration;
 import com.hubspot.singularity.config.shell.ShellCommandDescriptor;
 import com.hubspot.singularity.config.shell.ShellCommandOptionDescriptor;
 import com.hubspot.singularity.data.transcoders.Transcoder;
+import com.hubspot.singularity.helpers.MesosProtosUtils;
 import com.hubspot.singularity.resources.TaskResource;
 import com.hubspot.singularity.scheduler.SingularitySchedulerTestBase;
 import com.hubspot.singularity.scheduler.SingularityTaskShellCommandDispatchPoller;
@@ -44,6 +47,8 @@ public class SingularityTaskShellCommandTest extends SingularitySchedulerTestBas
   private Transcoder<SingularityTaskShellCommandUpdate> updateTranscoder;
   @Inject
   private UIConfiguration uiConfiguration;
+  @Inject
+  private MesosProtosUtils mesosProtosUtils;
 
   public SingularityTaskShellCommandTest() {
     super(false);
@@ -61,19 +66,19 @@ public class SingularityTaskShellCommandTest extends SingularitySchedulerTestBas
 
     // bad shell cmd
     try {
-      taskResource.runShellCommand(task.getTaskId().getId(), new SingularityShellCommand("test-cmd", Optional.of(Arrays.asList("one", "two")), user, Optional.<String>absent()));
+      taskResource.runShellCommand(singularityUser, task.getTaskId().getId(), new SingularityShellCommand("test-cmd", Optional.of(Arrays.asList("one", "two")), user, Optional.absent()));
     } catch (WebApplicationException exception) {
       assertEquals(400, exception.getResponse().getStatus());
     }
 
     // bad option
     try {
-      taskResource.runShellCommand(task.getTaskId().getId(), new SingularityShellCommand("d1", Optional.of(Arrays.asList("one", "two")), user, Optional.<String>absent()));
+      taskResource.runShellCommand(singularityUser, task.getTaskId().getId(), new SingularityShellCommand("d1", Optional.of(Arrays.asList("one", "two")), user, Optional.absent()));
     } catch (WebApplicationException exception) {
       assertEquals(400, exception.getResponse().getStatus());
     }
 
-    SingularityTaskShellCommandRequest firstShellRequest = taskResource.runShellCommand(task.getTaskId().getId(), new SingularityShellCommand("d1", Optional.of(Arrays.asList("o1", "o2")), user, Optional.<String>absent()));
+    SingularityTaskShellCommandRequest firstShellRequest = taskResource.runShellCommand(singularityUser, task.getTaskId().getId(), new SingularityShellCommand("d1", Optional.of(Arrays.asList("o1", "o2")), user, Optional.absent()));
 
     try {
       Thread.sleep(3);
@@ -81,7 +86,7 @@ public class SingularityTaskShellCommandTest extends SingularitySchedulerTestBas
 
     }
 
-    SingularityTaskShellCommandRequest secondShellRequest = taskResource.runShellCommand(task.getTaskId().getId(), new SingularityShellCommand("d2", Optional.<List<String>> absent(), user, Optional.<String>absent()));
+    SingularityTaskShellCommandRequest secondShellRequest = taskResource.runShellCommand(singularityUser, task.getTaskId().getId(), new SingularityShellCommand("d2", Optional.<List<String>> absent(), user, Optional.absent()));
 
     assertEquals(2, taskManager.getAllQueuedTaskShellCommandRequests().size());
 
@@ -91,17 +96,23 @@ public class SingularityTaskShellCommandTest extends SingularitySchedulerTestBas
 
     assertEquals(2, taskManager.getTaskShellCommandRequestsForTask(task.getTaskId()).size());
 
-    mesosScheduler.frameworkMessage(driver, task.getMesosTask().getExecutor().getExecutorId(), task.getMesosTask().getSlaveId(),
-        updateTranscoder.toBytes(
-            new SingularityTaskShellCommandUpdate(firstShellRequest.getId(), System.currentTimeMillis(), Optional.<String> of("hi"), Optional.<String>absent(), UpdateType.STARTED)));
+    mesosScheduler.message(Event.Message.newBuilder()
+        .setExecutorId(MesosProtosUtils.toExecutorId(task.getMesosTask().getExecutor().getExecutorId()))
+        .setAgentId(MesosProtosUtils.toAgentId(task.getMesosTask().getAgentId()))
+        .setData(ByteString.copyFrom(updateTranscoder.toBytes(new SingularityTaskShellCommandUpdate(firstShellRequest.getId(), System.currentTimeMillis(), Optional.<String> of("hi"), Optional.<String>absent(), UpdateType.STARTED))))
+        .build());
 
-    mesosScheduler.frameworkMessage(driver, task.getMesosTask().getExecutor().getExecutorId(), task.getMesosTask().getSlaveId(),
-        updateTranscoder.toBytes(
-            new SingularityTaskShellCommandUpdate(new SingularityTaskShellCommandRequestId(task.getTaskId(), "wat", System.currentTimeMillis()), System.currentTimeMillis(), Optional.<String> of("hi"), Optional.<String>absent(), UpdateType.STARTED)));
+    mesosScheduler.message(Event.Message.newBuilder()
+        .setExecutorId(MesosProtosUtils.toExecutorId(task.getMesosTask().getExecutor().getExecutorId()))
+        .setAgentId(MesosProtosUtils.toAgentId(task.getMesosTask().getAgentId()))
+        .setData(ByteString.copyFrom(updateTranscoder.toBytes(new SingularityTaskShellCommandUpdate(new SingularityTaskShellCommandRequestId(task.getTaskId(), "wat", System.currentTimeMillis()), System.currentTimeMillis(), Optional.<String> of("hi"), Optional.<String>absent(), UpdateType.STARTED))))
+        .build());
 
-    mesosScheduler.frameworkMessage(driver, task.getMesosTask().getExecutor().getExecutorId(), task.getMesosTask().getSlaveId(),
-        updateTranscoder.toBytes(
-            new SingularityTaskShellCommandUpdate(new SingularityTaskShellCommandRequestId(new SingularityTaskId("makingitup", "did", System.currentTimeMillis(), 1, "host", "rack"), "wat", System.currentTimeMillis()), System.currentTimeMillis(), Optional.<String> of("hi"), Optional.<String>absent(), UpdateType.STARTED)));
+    mesosScheduler.message(Event.Message.newBuilder()
+        .setExecutorId(MesosProtosUtils.toExecutorId(task.getMesosTask().getExecutor().getExecutorId()))
+        .setAgentId(MesosProtosUtils.toAgentId(task.getMesosTask().getAgentId()))
+        .setData(ByteString.copyFrom(updateTranscoder.toBytes(new SingularityTaskShellCommandUpdate(new SingularityTaskShellCommandRequestId(new SingularityTaskId("makingitup", "did", System.currentTimeMillis(), 1, "host", "rack"), "wat", System.currentTimeMillis()), System.currentTimeMillis(), Optional.<String> of("hi"), Optional.<String>absent(), UpdateType.STARTED))))
+        .build());
 
     assertEquals(true, taskManager.getTaskHistory(task.getTaskId()).get().getShellCommandHistory().get(1).getShellUpdates().get(0).getUpdateType() == UpdateType.STARTED);
 
@@ -119,8 +130,8 @@ public class SingularityTaskShellCommandTest extends SingularitySchedulerTestBas
 
     launchTask(request, firstDeploy, 1, TaskState.TASK_RUNNING);
 
-    requestResource.bounce(requestId, Optional.of(new SingularityBounceRequest(Optional.<Boolean>absent(), Optional.<Boolean>absent(), Optional.<Long>absent(), Optional.<String>absent(), Optional.<String>absent(),
-      Optional.of(new SingularityShellCommand("d1", Optional.of(Arrays.asList("o1", "o2")), user, Optional.<String>absent())))));
+    requestResource.bounce(requestId, Optional.of(new SingularityBounceRequest(Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent(),
+      Optional.of(new SingularityShellCommand("d1", Optional.of(Arrays.asList("o1", "o2")), user, Optional.absent())))), singularityUser);
 
     cleaner.drainCleanupQueue();
 

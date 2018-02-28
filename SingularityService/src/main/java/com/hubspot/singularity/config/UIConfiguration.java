@@ -5,6 +5,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
@@ -56,7 +57,7 @@ public class UIConfiguration {
 
   @JsonProperty
   @NotNull
-  private boolean showTaskDiskResource = false;
+  private boolean showTaskDiskResource = true;
 
   @JsonProperty
   @NotNull
@@ -90,6 +91,29 @@ public class UIConfiguration {
   @JsonProperty
   private Optional<String> extraScript = Optional.absent();
 
+  @JsonProperty
+  private String authTokenKey = "token";
+
+  @JsonProperty
+  @NotNull
+  private String authCookieName = "";
+
+  @JsonProperty
+  private Optional<String> apiRootOverride = Optional.absent();
+
+  @JsonProperty
+  private Optional<String> appRootOverride = Optional.absent();
+
+  @JsonProperty
+  private Optional<String> staticRootOverride = Optional.absent();
+
+  // e.g. {"request":{"SERVICE":[{"title":"my link","template":"http://example.com/{{request.id}}"}]}}
+  @JsonProperty
+  private Map<String, Map<String, List<UIQuickLinkConfiguration>>> quickLinks = Collections.emptyMap();
+
+  // e.g. {"QA": "https://singularity-qa.my-paas.net", "Production": "https://singularity-prod.my-paas.net"}
+  @JsonProperty
+  private Map<String, String> navTitleLinks = Collections.emptyMap();
 
   public boolean isHideNewDeployButton() {
     return hideNewDeployButton;
@@ -225,5 +249,61 @@ public class UIConfiguration {
 
   public void setExtraScript(Optional<String> extraScript) {
     this.extraScript = extraScript;
+  }
+
+  public String getAuthTokenKey() {
+    return authTokenKey;
+  }
+
+  public void setAuthTokenKey(String authTokenKey) {
+    this.authTokenKey = authTokenKey;
+  }
+
+  public String getAuthCookieName() {
+    return authCookieName;
+  }
+
+  public void setAuthCookieName(String authCookieName) {
+    this.authCookieName = authCookieName;
+  }
+
+  public Optional<String> getApiRootOverride() {
+    return apiRootOverride;
+  }
+
+  public void setApiRootOverride(Optional<String> apiRootOverride) {
+    this.apiRootOverride = apiRootOverride;
+  }
+
+  public Optional<String> getAppRootOverride() {
+    return appRootOverride;
+  }
+
+  public void setAppRootOverride(Optional<String> appRootOverride) {
+    this.appRootOverride = appRootOverride;
+  }
+
+  public Optional<String> getStaticRootOverride() {
+    return staticRootOverride;
+  }
+
+  public void setStaticRootOverride(Optional<String> staticRootOverride) {
+    this.staticRootOverride = staticRootOverride;
+  }
+
+  public Map<String, Map<String, List<UIQuickLinkConfiguration>>> getQuickLinks() {
+    return quickLinks;
+  }
+
+  public void setQuickLinks(Map<String, Map<String, List<UIQuickLinkConfiguration>>> quickLinks) {
+    this.quickLinks = quickLinks;
+  }
+
+  public Map<String, String> getNavTitleLinks() {
+    return navTitleLinks;
+  }
+
+  public void setNavTitleLinks(Map<String, String> navTitleLinks) {
+    this.navTitleLinks = navTitleLinks;
   }
 }

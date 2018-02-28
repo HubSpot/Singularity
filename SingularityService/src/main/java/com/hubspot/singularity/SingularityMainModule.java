@@ -62,6 +62,7 @@ import com.hubspot.singularity.mesos.SingularityMesosStatusUpdateHandler;
 import com.hubspot.singularity.mesos.SingularityNoOfferCache;
 import com.hubspot.singularity.mesos.SingularityOfferCache;
 import com.hubspot.singularity.metrics.SingularityGraphiteReporterManaged;
+import com.hubspot.singularity.resources.SingularityServiceUIModule;
 import com.hubspot.singularity.scheduler.SingularityUsageHelper;
 import com.hubspot.singularity.sentry.NotifyingExceptionMapper;
 import com.hubspot.singularity.sentry.SingularityExceptionNotifier;
@@ -78,7 +79,10 @@ import com.ning.http.client.AsyncHttpClient;
 import de.neuland.jade4j.parser.Parser;
 import de.neuland.jade4j.parser.node.Node;
 import de.neuland.jade4j.template.JadeTemplate;
+import io.dropwizard.jetty.ConnectorFactory;
 import io.dropwizard.jetty.HttpConnectorFactory;
+import io.dropwizard.jetty.HttpsConnectorFactory;
+import io.dropwizard.server.DefaultServerFactory;
 import io.dropwizard.server.SimpleServerFactory;
 
 
@@ -94,8 +98,6 @@ public class SingularityMainModule implements Module {
   public static final String HOST_NAME_PROPERTY = "singularity.host.name";
 
   public static final String HTTP_HOST_AND_PORT = "http.host.and.port";
-
-  public static final String SINGULARITY_URI_BASE = "_singularity_uri_base";
 
   public static final String HEALTHCHECK_THREADPOOL_NAME = "_healthcheck_threadpool";
   public static final Named HEALTHCHECK_THREADPOOL_NAMED = Names.named(HEALTHCHECK_THREADPOOL_NAME);
@@ -129,7 +131,6 @@ public class SingularityMainModule implements Module {
     Multibinder<LeaderLatchListener> leaderLatchListeners = Multibinder.newSetBinder(binder, LeaderLatchListener.class);
     leaderLatchListeners.addBinding().to(SingularityLeaderController.class).in(Scopes.SINGLETON);
 
-    binder.bind(SingularityDriverManager.class).in(Scopes.SINGLETON);
     binder.bind(SingularityLeaderController.class).in(Scopes.SINGLETON);
     if (configuration.getSmtpConfigurationOptional().isPresent()) {
       binder.bind(SingularityMailer.class).to(SmtpMailer.class).in(Scopes.SINGLETON);
@@ -209,10 +210,26 @@ public class SingularityMainModule implements Module {
       checkNotNull(configuration, "configuration is null");
       this.hostname = configuration.getHostname().or(hostname);
 
-      SimpleServerFactory simpleServerFactory = (SimpleServerFactory) configuration.getServerFactory();
-      HttpConnectorFactory httpFactory = (HttpConnectorFactory) simpleServerFactory.getConnector();
+      Integer port = null;
+      if (configuration.getServerFactory() instanceof SimpleServerFactory) {
+        SimpleServerFactory simpleServerFactory = (SimpleServerFactory) configuration.getServerFactory();
+        HttpConnectorFactory httpFactory = (HttpConnectorFactory) simpleServerFactory.getConnector();
 
-      this.httpPort = httpFactory.getPort();
+        port = httpFactory.getPort();
+      } else {
+        DefaultServerFactory defaultServerFactory = (DefaultServerFactory) configuration.getServerFactory();
+        for (ConnectorFactory connectorFactory : defaultServerFactory.getApplicationConnectors()) {
+          // Currently we will default to needing an http connector for service -> service communication
+          if (connectorFactory instanceof HttpConnectorFactory && !(connectorFactory instanceof HttpsConnectorFactory)) {
+            HttpConnectorFactory httpFactory = (HttpConnectorFactory) connectorFactory;
+            port = httpFactory.getPort();
+          }
+        }
+      }
+      if (port == null) {
+        throw new RuntimeException("Could not determine http port");
+      }
+      this.httpPort = port;
     }
 
     @Override
@@ -222,9 +239,14 @@ public class SingularityMainModule implements Module {
   }
 
   @Provides
-  @Named(SINGULARITY_URI_BASE)
+  @Named(SingularityServiceUIModule.SINGULARITY_URI_BASE)
   String getSingularityUriBase(final SingularityConfiguration configuration) {
-    final String singularityUiPrefix = configuration.getUiConfiguration().getBaseUrl().or(((SimpleServerFactory) configuration.getServerFactory()).getApplicationContextPath());
+    final String singularityUiPrefix;
+    if (configuration.getServerFactory() instanceof  SimpleServerFactory) {
+      singularityUiPrefix = configuration.getUiConfiguration().getBaseUrl().or(((SimpleServerFactory) configuration.getServerFactory()).getApplicationContextPath());
+    } else {
+      singularityUiPrefix = configuration.getUiConfiguration().getBaseUrl().or(((DefaultServerFactory) configuration.getServerFactory()).getApplicationContextPath());
+    }
     return (singularityUiPrefix.endsWith("/")) ?  singularityUiPrefix.substring(0, singularityUiPrefix.length() - 1) : singularityUiPrefix;
   }
 

@@ -139,15 +139,3 @@ optional arguments:
   -h, --help             show this help message and exit
   -v, --version          show the application version and exit
 ```
-  
-
-### Compiling with Travis CI
-
-As Travis only supports a single installed JDK at a time; when the
-build detects that it runs in the Travis environment (by checking the
-`TRAVIS` environment variable), it will set the jdk7 home to be the
-same as the current JDK. Therefore, the Travis build to JDK8 or newer
-does actually build against the JDK8 runtime. As Travis is only used
-as a smoke test to see whether the code base builds (and not for
-continous delivery), this is not a problem.
-

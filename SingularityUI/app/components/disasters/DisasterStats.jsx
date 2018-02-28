@@ -20,7 +20,7 @@ function DisasterStats (props) {
     if (key == 'timestamp') {
       value = Utils.timestampFromNow(value);
     }
-    stats.push(<InfoBox key={key} copyableClassName="info-copyable" name={key} value={value} />)
+    stats.push(<InfoBox key={key} name={key} value={value} />)
   }
   return (
     <Section title="Current Statistics">

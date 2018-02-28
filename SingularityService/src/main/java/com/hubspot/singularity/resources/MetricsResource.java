@@ -11,14 +11,12 @@ import javax.ws.rs.core.MediaType;
 import com.codahale.metrics.Metric;
 import com.codahale.metrics.MetricRegistry;
 import com.google.inject.Inject;
-import com.hubspot.singularity.SingularityService;
+import com.hubspot.singularity.config.ApiPaths;
 import com.hubspot.singularity.metrics.SingularityMetricsContainer;
 
-@Path(MetricsResource.PATH)
+@Path(ApiPaths.METRICS_RESOURCE_PATH)
 @Produces({ MediaType.APPLICATION_JSON })
 public class MetricsResource {
-  public static final String PATH = SingularityService.API_BASE_PATH + "/metrics";
-
   private final MetricRegistry registry;
 
   @Inject

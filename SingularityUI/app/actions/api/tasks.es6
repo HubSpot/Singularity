@@ -71,3 +71,11 @@ export const RunCommandOnTask = buildJsonApiAction(
     body: {name: commandName}
   })
 );
+
+export const DeletePendingOnDemandTask = buildJsonApiAction(
+  'DELETE_PENDING_ON_DEMAND_TASK',
+  'DELETE',
+  (taskId) => ({
+    url: `/tasks/scheduled/task/${taskId}`
+  })
+);

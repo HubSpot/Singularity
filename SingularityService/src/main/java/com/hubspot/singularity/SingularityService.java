@@ -12,6 +12,7 @@ import com.google.inject.Module;
 import com.hubspot.dropwizard.guicier.GuiceBundle;
 import com.hubspot.jackson.datatype.protobuf.ProtobufModule;
 import com.hubspot.singularity.bundles.CorsBundle;
+import com.hubspot.singularity.config.ApiPaths;
 import com.hubspot.singularity.config.MergingSourceProvider;
 import com.hubspot.singularity.config.SingularityConfiguration;
 
@@ -28,7 +29,9 @@ import io.dropwizard.views.ViewBundle;
 public class SingularityService<T extends SingularityConfiguration> extends Application<T> {
   private static final String SINGULARITY_DEFAULT_CONFIGURATION_PROPERTY = "singularityDefaultConfiguration";
 
-  public static final String API_BASE_PATH = "/api";
+  public static final String API_BASE_PATH = ApiPaths.API_BASE_PATH;
+
+  private GuiceBundle<SingularityConfiguration> guiceBundle;
 
   @Override
   public void initialize(final Bootstrap<T> bootstrap) {
@@ -40,14 +43,15 @@ public class SingularityService<T extends SingularityConfiguration> extends Appl
     final Iterable<? extends Bundle> additionalBundles = checkNotNull(getDropwizardBundles(bootstrap), "getDropwizardBundles() returned null");
     final Iterable<? extends ConfiguredBundle<T>> additionalConfiguredBundles = checkNotNull(getDropwizardConfiguredBundles(bootstrap), "getDropwizardConfiguredBundles() returned null");
 
-    final GuiceBundle<SingularityConfiguration> guiceBundle = GuiceBundle.defaultBuilder(SingularityConfiguration.class)
+    guiceBundle = GuiceBundle.defaultBuilder(SingularityConfiguration.class)
         .modules(new SingularityServiceModule())
+        .modules(new SingularityAuthModule())
         .modules(additionalModules)
         .build();
     bootstrap.addBundle(guiceBundle);
 
     bootstrap.addBundle(new CorsBundle());
-    bootstrap.addBundle(new ViewBundle());
+    bootstrap.addBundle(new ViewBundle<>());
     bootstrap.addBundle(new AssetsBundle("/assets/static/", "/static/"));
     bootstrap.addBundle(new AssetsBundle("/assets/api-docs/", "/api-docs/", "index.html", "api-docs"));
     bootstrap.addBundle(new MigrationsBundle<SingularityConfiguration>() {

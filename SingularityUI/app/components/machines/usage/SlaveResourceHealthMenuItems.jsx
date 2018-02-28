@@ -15,6 +15,8 @@ const humanizeStatName = (name) => {
       return 'CPU';
     case STAT_NAMES.memoryBytesUsedStat:
       return 'MEM';
+    case STAT_NAMES.diskBytesUsedStat:
+      return 'DISK';
     case STAT_NAMES.numTasksStat:
       return 'TASKS';
     default:
@@ -29,6 +31,7 @@ const humanizeStatValue = (name, value, maybeTotalResource) => {
     case STAT_NAMES.cpusUsedStat:
       return `${Utils.roundTo(value, HUNDREDTHS_PLACE)} / ${maybeTotalResource}`;
     case STAT_NAMES.memoryBytesUsedStat:
+    case STAT_NAMES.diskBytesUsedStat:
       return `${Utils.humanizeFileSize(value)} / ${Utils.humanizeFileSize(maybeTotalResource)}`;
     case STAT_NAMES.numTasksStat:
       return value.toString();

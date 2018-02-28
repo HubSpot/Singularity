@@ -1,46 +1,50 @@
 package com.hubspot.singularity.auth.authenticator;
 
-import javax.servlet.http.HttpServletRequest;
+import java.util.Optional;
 
-import com.google.common.base.Optional;
+import javax.ws.rs.container.ContainerRequestContext;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.google.common.base.Strings;
 import com.google.inject.Inject;
-import com.google.inject.Provider;
 import com.google.inject.ProvisionException;
 import com.google.inject.Singleton;
 import com.hubspot.singularity.SingularityUser;
+import com.hubspot.singularity.WebExceptions;
 import com.hubspot.singularity.auth.datastore.SingularityAuthDatastore;
 import com.hubspot.singularity.config.SingularityConfiguration;
 
 @Singleton
 public class SingularityHeaderPassthroughAuthenticator implements SingularityAuthenticator {
-  private final SingularityAuthDatastore datastore;
+  private static final Logger LOG = LoggerFactory.getLogger(SingularityHeaderPassthroughAuthenticator.class);
+
+  private final SingularityAuthDatastore authDatastore;
   private final String requestUserHeaderName;
-  private final Provider<HttpServletRequest> requestProvider;
 
   @Inject
-  public SingularityHeaderPassthroughAuthenticator(SingularityAuthDatastore datastore, SingularityConfiguration configuration, Provider<HttpServletRequest> requestProvider) {
-    this.datastore = datastore;
+  public SingularityHeaderPassthroughAuthenticator(SingularityAuthDatastore authDatastore, SingularityConfiguration configuration) {
+    this.authDatastore = authDatastore;
     this.requestUserHeaderName = configuration.getAuthConfiguration().getRequestUserHeaderName();
-    this.requestProvider = requestProvider;
   }
 
-  private Optional<String> getUserId() {
+  private Optional<String> getUserId(ContainerRequestContext context) {
     try {
-      return Optional.fromNullable(Strings.emptyToNull(requestProvider.get().getHeader(requestUserHeaderName)));
+      return Optional.ofNullable(Strings.emptyToNull(context.getHeaderString(requestUserHeaderName)));
     } catch (ProvisionException pe) {
-      return Optional.absent();
+      return Optional.empty();
     }
   }
 
   @Override
-  public Optional<SingularityUser> get() {
-    final Optional<String> maybeUsername = getUserId();
+  public Optional<SingularityUser> getUser(ContainerRequestContext context) {
+    final Optional<String> maybeUsername = getUserId(context);
 
     if (!maybeUsername.isPresent()) {
-      return Optional.absent();
+      throw WebExceptions.unauthorized("(HeaderPassthrough) Could not determine username from header");
     }
 
-    return datastore.getUser(maybeUsername.get());
+    return authDatastore.getUser(maybeUsername.get());
   }
 }

@@ -5,8 +5,7 @@ import java.util.Map;
 
 import javax.inject.Singleton;
 
-import org.apache.mesos.Protos.MasterInfo;
-import org.apache.mesos.SchedulerDriver;
+import org.apache.mesos.v1.Protos.MasterInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -15,7 +14,7 @@ import com.google.common.base.Optional;
 import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 import com.hubspot.mesos.JavaUtils;
-import com.hubspot.mesos.MesosUtils;
+import com.hubspot.singularity.helpers.MesosUtils;
 import com.hubspot.mesos.client.MesosClient;
 import com.hubspot.mesos.json.MesosMasterStateObject;
 import com.hubspot.singularity.RequestType;
@@ -74,7 +73,7 @@ class SingularityStartup {
     this.taskReconciliation = taskReconciliation;
   }
 
-  public void startup(MasterInfo masterInfo, SchedulerDriver driver) throws Exception {
+  public void startup(MasterInfo masterInfo) {
     final long start = System.currentTimeMillis();
 
     final String uri = mesosClient.getMasterUri(MesosUtils.getMasterHostAndPort(masterInfo));

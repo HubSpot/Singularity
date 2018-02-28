@@ -45,7 +45,7 @@ Deploy webhooks are in the format of [SingularityDeployUpdate](apidocs/models.md
 
 Task webhooks are sent when tasks are launched by Singularity, killed with by Singularity users, and on all task updates recieved from Mesos.
 
-Task webhooks are in the format of [SingularityTaskHistoryUpdate](apidocs/models.md#model-SingularityTaskHistoryUpdate) objects.
+Task webhooks are in the format of [SingularityTaskWebhook](https://github.com/HubSpot/Singularity/blob/master/SingularityBase/src/main/java/com/hubspot/singularity/SingularityTaskWebhook.java) objects.
 
 ### Webhook notes
 

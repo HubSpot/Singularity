@@ -4,6 +4,8 @@ import javax.validation.constraints.NotNull;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.google.common.base.Optional;
+import com.hubspot.singularity.MachineLoadMetric;
+import com.hubspot.singularity.SingularityUsageScoringStrategy;
 
 @JsonIgnoreProperties( ignoreUnknown = true )
 public class MesosConfiguration {
@@ -28,6 +30,9 @@ public class MesosConfiguration {
   private Optional<String> frameworkRole = Optional.absent();
 
   @NotNull
+  private String frameworkUser = "root";
+
+  @NotNull
   private String rackIdAttributeKey = "rackid";
 
   @NotNull
@@ -42,9 +47,18 @@ public class MesosConfiguration {
   private int maxNumCpusPerRequest = 900;
   private int maxMemoryMbPerInstance = 24000;
   private int maxMemoryMbPerRequest = 450000;
+  private int maxDiskMbPerInstance = 60000;
+  private int maxDiskMbPerRequest = 3000000;
 
   private Optional<String> credentialPrincipal = Optional.absent();
   private Optional<String> credentialSecret = Optional.absent();
+
+  private long rxEventBufferSize = 10000;
+  private int statusUpdateConcurrencyLimit = 500;
+  private int maxStatusUpdateQueueSize = 5000;
+  private int offersConcurrencyLimit = 100;
+  private SingularityUsageScoringStrategy scoringStrategy = SingularityUsageScoringStrategy.SPREAD_TASK_USAGE;
+  private MachineLoadMetric scoreUsingSystemLoad = MachineLoadMetric.LOAD_5;
 
   public int getMaxNumInstancesPerRequest() {
     return maxNumInstancesPerRequest;
@@ -80,6 +94,22 @@ public class MesosConfiguration {
 
   public int getMaxMemoryMbPerRequest() {
     return maxMemoryMbPerRequest;
+  }
+
+  public void setMaxDiskMbPerInstance(int maxDiskMbPerInstance) {
+    this.maxDiskMbPerInstance = maxDiskMbPerInstance;
+  }
+
+  public int getMaxDiskMbPerInstance() {
+    return maxDiskMbPerInstance;
+  }
+
+  public void setMaxDiskMbPerRequest(int maxDiskMbPerRequest) {
+    this.maxDiskMbPerRequest = maxDiskMbPerRequest;
+  }
+
+  public int getMaxDiskMbPerRequest() {
+    return maxDiskMbPerRequest;
   }
 
   public void setMaxMemoryMbPerRequest(int maxMemoryMbPerRequest) {
@@ -142,7 +172,7 @@ public class MesosConfiguration {
     this.master = master;
   }
 
-  public boolean getCheckpoint() {
+  public boolean isCheckpoint() {
     return checkpoint;
   }
 
@@ -204,5 +234,61 @@ public class MesosConfiguration {
 
   public void setDefaultDisk(int defaultDisk) {
     this.defaultDisk = defaultDisk;
+  }
+
+  public String getFrameworkUser() {
+    return frameworkUser;
+  }
+
+  public void setFrameworkUser(String frameworkUser) {
+    this.frameworkUser = frameworkUser;
+  }
+
+  public long getRxEventBufferSize() {
+    return rxEventBufferSize;
+  }
+
+  public void setRxEventBufferSize(long rxEventBufferSize) {
+    this.rxEventBufferSize = rxEventBufferSize;
+  }
+
+  public int getStatusUpdateConcurrencyLimit() {
+    return statusUpdateConcurrencyLimit;
+  }
+
+  public void setStatusUpdateConcurrencyLimit(int statusUpdateConcurrencyLimit) {
+    this.statusUpdateConcurrencyLimit = statusUpdateConcurrencyLimit;
+  }
+
+  public int getMaxStatusUpdateQueueSize() {
+    return maxStatusUpdateQueueSize;
+  }
+
+  public void setMaxStatusUpdateQueueSize(int maxStatusUpdateQueueSize) {
+    this.maxStatusUpdateQueueSize = maxStatusUpdateQueueSize;
+  }
+
+  public int getOffersConcurrencyLimit() {
+    return offersConcurrencyLimit;
+  }
+
+  public void setOffersConcurrencyLimit(int offersConcurrencyLimit) {
+    this.offersConcurrencyLimit = offersConcurrencyLimit;
+  }
+
+  public SingularityUsageScoringStrategy getScoringStrategy() {
+    return scoringStrategy;
+  }
+
+  public void setScoringStrategy(SingularityUsageScoringStrategy scoringStrategy) {
+    this.scoringStrategy = scoringStrategy;
+  }
+
+  public MachineLoadMetric getScoreUsingSystemLoad() {
+    return scoreUsingSystemLoad;
+  }
+
+  public void setScoreUsingSystemLoad(MachineLoadMetric scoreUsingSystemLoad) {
+    this.scoreUsingSystemLoad = scoreUsingSystemLoad;
   }
 }

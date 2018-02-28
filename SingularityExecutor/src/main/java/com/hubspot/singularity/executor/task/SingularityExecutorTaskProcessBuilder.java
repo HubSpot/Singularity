@@ -75,7 +75,7 @@ public class SingularityExecutorTaskProcessBuilder implements Callable<ProcessBu
   @Override
   public ProcessBuilder call() throws Exception {
     if (task.getTaskInfo().hasContainer() && task.getTaskInfo().getContainer().hasDocker()) {
-      executorUtils.sendStatusUpdate(task.getDriver(), task.getTaskInfo(), TaskState.TASK_STARTING, String.format("Pulling image... (executor pid: %s)", executorPid), task.getLog());
+      executorUtils.sendStatusUpdate(task.getDriver(), task.getTaskInfo().getTaskId(), TaskState.TASK_STARTING, String.format("Pulling image... (executor pid: %s)", executorPid), task.getLog());
       try {
         dockerUtils.pull(task.getTaskInfo().getContainer().getDocker().getImage());
       } catch (DockerException e) {
@@ -83,7 +83,7 @@ public class SingularityExecutorTaskProcessBuilder implements Callable<ProcessBu
       }
     }
 
-    executorUtils.sendStatusUpdate(task.getDriver(), task.getTaskInfo(), TaskState.TASK_STARTING, String.format("Staging files... (executor pid: %s)", executorPid), task.getLog());
+    executorUtils.sendStatusUpdate(task.getDriver(), task.getTaskInfo().getTaskId(), TaskState.TASK_STARTING, String.format("Staging files... (executor pid: %s)", executorPid), task.getLog());
 
     taskArtifactFetcher = Optional.of(artifactFetcher.buildTaskFetcher(executorData, task));
 

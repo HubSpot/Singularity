@@ -11,9 +11,10 @@ server:
         archivedLogFilenamePattern: ../logs/access-%d.log.gz
 
 mesos:
-  master: zk://localhost:2181/mesos
+  master: localhost:5050
   defaultCpus: 1
   defaultMemory: 128
+  defaultDisk: 1024
   frameworkName: Singularity
   frameworkId: Singularity
   frameworkFailoverTimeout: 1000000

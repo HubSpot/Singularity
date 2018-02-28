@@ -23,6 +23,7 @@ import com.hubspot.singularity.SingularityPendingRequest;
 import com.hubspot.singularity.SingularityPendingTaskId;
 import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityRequestBuilder;
+import com.hubspot.singularity.SingularityRunNowRequestBuilder;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTestBaseNoDb;
 import com.hubspot.singularity.config.SingularityConfiguration;
@@ -249,23 +250,20 @@ public class ValidatorTest extends SingularityTestBaseNoDb {
   }
 
   private SingularityRunNowRequest runNowRequest(String runId) {
-    return new SingularityRunNowRequest(
-        Optional.of("message"),
-        Optional.of(false),
-        Optional.of(runId),
-        Optional.of(Collections.singletonList("--help")),
-        Optional.absent()
-    );
+    return new SingularityRunNowRequestBuilder()
+        .setMessage("message")
+        .setSkipHealthchecks(false)
+        .setRunId(runId)
+        .setCommandLineArgs(Collections.singletonList("--help"))
+        .build();
   }
 
   private SingularityRunNowRequest runNowRequest() {
-    return new SingularityRunNowRequest(
-        Optional.of("message"),
-        Optional.of(false),
-        Optional.absent(),
-        Optional.of(Collections.singletonList("--help")),
-        Optional.absent()
-    );
+    return new SingularityRunNowRequestBuilder()
+        .setMessage("message")
+        .setSkipHealthchecks(false)
+        .setCommandLineArgs(Collections.singletonList("--help"))
+        .build();
   }
 
   private String tooLongId() {
@@ -315,7 +313,6 @@ public class ValidatorTest extends SingularityTestBaseNoDb {
     SingularityRequest request = new SingularityRequestBuilder("1234567", RequestType.SERVICE).build();
 
     WebApplicationException exn = (WebApplicationException) catchThrowable(() -> validator.checkDeploy(request, deploy, Collections.emptyList(), Collections.emptyList()));
-    System.out.println(exn.getResponse().getEntity());
     assertThat((String) exn.getResponse().getEntity())
         .contains("Max healthcheck time");
   }

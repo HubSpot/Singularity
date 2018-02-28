@@ -1,6 +1,7 @@
 package com.hubspot.singularity.scheduler;
 
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.inject.Singleton;
 
@@ -17,6 +18,7 @@ import com.hubspot.singularity.SingularityRequestDeployState;
 import com.hubspot.singularity.SingularityRequestWithState;
 import com.hubspot.singularity.data.DeployManager;
 import com.hubspot.singularity.data.RequestManager;
+import com.hubspot.singularity.mesos.SingularitySchedulerLock;
 
 @Singleton
 public class SingularityCooldownChecker {
@@ -25,14 +27,15 @@ public class SingularityCooldownChecker {
 
   private final RequestManager requestManager;
   private final DeployManager deployManager;
-
   private final SingularityCooldown cooldown;
+  private final SingularitySchedulerLock lock;
 
   @Inject
-  public SingularityCooldownChecker(RequestManager requestManager, DeployManager deployManager, SingularityCooldown cooldown) {
+  public SingularityCooldownChecker(RequestManager requestManager, DeployManager deployManager, SingularityCooldown cooldown, SingularitySchedulerLock lock) {
     this.requestManager = requestManager;
     this.deployManager = deployManager;
     this.cooldown = cooldown;
+    this.lock = lock;
   }
 
   public void checkCooldowns() {
@@ -45,15 +48,17 @@ public class SingularityCooldownChecker {
       return;
     }
 
-    int exitedCooldown = 0;
+    AtomicInteger exitedCooldown = new AtomicInteger(0);
 
-    for (SingularityRequestWithState cooldownRequest : cooldownRequests) {
-      if (checkCooldown(cooldownRequest)) {
-        exitedCooldown++;
-      }
-    }
+    cooldownRequests.parallelStream().forEach((cooldownRequest) -> {
+      lock.runWithRequestLock(() -> {
+        if (checkCooldown(cooldownRequest)) {
+          exitedCooldown.getAndIncrement();
+        }
+      }, cooldownRequest.getRequest().getId(), getClass().getSimpleName());
+    });
 
-    LOG.info("{} out of {} cooldown requests exited cooldown in {}", exitedCooldown, cooldownRequests.size(), JavaUtils.duration(start));
+    LOG.info("{} out of {} cooldown requests exited cooldown in {}", exitedCooldown.get(), cooldownRequests.size(), JavaUtils.duration(start));
   }
 
   private boolean checkCooldown(SingularityRequestWithState cooldownRequest) {

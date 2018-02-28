@@ -5,14 +5,13 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.mesos.Protos.TaskState;
+import org.apache.mesos.v1.Protos.TaskState;
 import org.junit.Assert;
 import org.junit.Test;
 
 import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.hubspot.mesos.json.MesosTaskMonitorObject;
-import com.hubspot.mesos.json.MesosTaskStatisticsObject;
 import com.hubspot.singularity.MachineState;
 import com.hubspot.singularity.SingularityClusterUtilization;
 import com.hubspot.singularity.SingularitySlaveUsage;
@@ -57,7 +56,7 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
     mesosClient.setSlaveResourceUsage(hostname, Collections.singletonList(usage));
     usagePoller.runActionOnPoll();
 
-    String slaveId = firstTask.getSlaveId().getValue();
+    String slaveId = firstTask.getAgentId().getValue();
 
     List<String> slaves = usageManager.getSlavesWithUsage();
 
@@ -504,21 +503,13 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
     Assert.assertEquals(600, minMemBytes);
   }
 
-  private MesosTaskStatisticsObject getStatistics(double cpuSecs, double timestamp, long memBytes) {
-    return new MesosTaskStatisticsObject(1, 0L, 0L, 0, 0, cpuSecs, 0L, 0L, 0L, 0L, 0L, memBytes, timestamp);
-  }
-
   private long getTimestampSeconds(SingularityTaskId taskId, long seconds) {
     return TimeUnit.MILLISECONDS.toSeconds(taskId.getStartedAt()) + seconds;
   }
 
-  private MesosTaskMonitorObject getTaskMonitor(String id, double cpuSecs, long timestampSeconds, int memBytes) {
-    return new MesosTaskMonitorObject(null, null, null, id, getStatistics(cpuSecs, timestampSeconds, memBytes));
-  }
-
   private void saveTaskUsage(String taskId, long... times) {
     for (long time : times) {
-      usageManager.saveSpecificTaskUsage(taskId, new SingularityTaskUsage(0, time, 0));
+      usageManager.saveSpecificTaskUsage(taskId, new SingularityTaskUsage(0, time, 0, 0));
     }
   }
 

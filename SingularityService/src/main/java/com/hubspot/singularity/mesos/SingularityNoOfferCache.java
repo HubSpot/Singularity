@@ -3,9 +3,8 @@ package com.hubspot.singularity.mesos;
 import java.util.Collections;
 import java.util.List;
 
-import org.apache.mesos.Protos.Offer;
-import org.apache.mesos.Protos.OfferID;
-import org.apache.mesos.SchedulerDriver;
+import org.apache.mesos.v1.Protos.Offer;
+import org.apache.mesos.v1.Protos.OfferID;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -14,17 +13,20 @@ import com.hubspot.singularity.mesos.SingularityOfferCache.CachedOffer;
 @Singleton
 public class SingularityNoOfferCache implements OfferCache {
 
+  private final SingularityMesosSchedulerClient schedulerClient;
+
   @Inject
-  public SingularityNoOfferCache() {
+  public SingularityNoOfferCache(SingularityMesosSchedulerClient schedulerClient) {
+    this.schedulerClient = schedulerClient;
   }
 
   @Override
-  public void cacheOffer(SchedulerDriver driver, long timestamp, Offer offer) {
-    driver.declineOffer(offer.getId());
+  public void cacheOffer(long timestamp, Offer offer) {
+    schedulerClient.decline(Collections.singletonList(offer.getId()));
   }
 
   @Override
-  public void rescindOffer(SchedulerDriver driver, OfferID offerId) {
+  public void rescindOffer(OfferID offerId) {
     // no-op
   }
 

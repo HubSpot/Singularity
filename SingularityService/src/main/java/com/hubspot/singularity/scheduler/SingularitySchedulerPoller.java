@@ -1,6 +1,7 @@
 package com.hubspot.singularity.scheduler;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -9,20 +10,17 @@ import java.util.stream.Collectors;
 
 import javax.inject.Singleton;
 
-import org.apache.mesos.Protos.Offer;
-import org.apache.mesos.SchedulerDriver;
+import org.apache.mesos.v1.Protos.Offer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Optional;
 import com.google.inject.Inject;
-import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.SingularityAction;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.DisasterManager;
 import com.hubspot.singularity.mesos.OfferCache;
-import com.hubspot.singularity.mesos.SchedulerDriverSupplier;
 import com.hubspot.singularity.mesos.SingularityMesosOfferScheduler;
+import com.hubspot.singularity.mesos.SingularityMesosSchedulerClient;
 import com.hubspot.singularity.mesos.SingularityOfferCache.CachedOffer;
 import com.hubspot.singularity.mesos.SingularityOfferHolder;
 import com.hubspot.singularity.mesos.SingularitySchedulerLock;
@@ -33,21 +31,21 @@ public class SingularitySchedulerPoller extends SingularityLeaderOnlyPoller {
   private static final Logger LOG = LoggerFactory.getLogger(SingularitySchedulerPoller.class);
 
   private final OfferCache offerCache;
-  private final SchedulerDriverSupplier schedulerDriverSupplier;
+  private final SingularityMesosSchedulerClient schedulerClient;
   private final SingularityMesosOfferScheduler offerScheduler;
   private final DisasterManager disasterManager;
-  private final SingularityConfiguration configuration;
+  private final SingularitySchedulerLock lock;
 
   @Inject
-  SingularitySchedulerPoller(SingularityMesosOfferScheduler offerScheduler, OfferCache offerCache, SchedulerDriverSupplier schedulerDriverSupplier,
-      SingularityConfiguration configuration, SingularitySchedulerLock lock, DisasterManager disasterManager) {
-    super(configuration.getCheckSchedulerEverySeconds(), TimeUnit.SECONDS, lock, true);
+  SingularitySchedulerPoller(SingularityMesosOfferScheduler offerScheduler, OfferCache offerCache, SingularityMesosSchedulerClient schedulerClient,
+                             SingularityConfiguration configuration, SingularitySchedulerLock lock, DisasterManager disasterManager) {
+    super(configuration.getCheckSchedulerEverySeconds(), TimeUnit.SECONDS, true);
 
     this.offerCache = offerCache;
     this.offerScheduler = offerScheduler;
-    this.schedulerDriverSupplier = schedulerDriverSupplier;
+    this.schedulerClient = schedulerClient;
     this.disasterManager = disasterManager;
-    this.configuration = configuration;
+    this.lock = lock;
   }
 
   @Override
@@ -57,38 +55,31 @@ public class SingularitySchedulerPoller extends SingularityLeaderOnlyPoller {
       return;
     }
 
-    final long start = System.currentTimeMillis();
 
-    List<CachedOffer> cachedOffers = offerCache.checkoutOffers();
-    Map<String, CachedOffer> offerIdToCachedOffer = new HashMap<>(cachedOffers.size());
-    List<Offer> offers = new ArrayList<>(cachedOffers.size());
+    lock.runWithOffersLock(() -> {
+      List<CachedOffer> cachedOffers = offerCache.checkoutOffers();
+      Map<String, CachedOffer> offerIdToCachedOffer = new HashMap<>(cachedOffers.size());
+      List<Offer> offers = new ArrayList<>(cachedOffers.size());
 
-    for (CachedOffer cachedOffer : cachedOffers) {
-      offerIdToCachedOffer.put(cachedOffer.getOfferId(), cachedOffer);
-      offers.add(cachedOffer.getOffer());
-    }
+      for (CachedOffer cachedOffer : cachedOffers) {
+        offerIdToCachedOffer.put(cachedOffer.getOfferId(), cachedOffer);
+        offers.add(cachedOffer.getOffer());
+      }
 
-    List<SingularityOfferHolder> offerHolders = offerScheduler.checkOffers(offers);
+      Collection<SingularityOfferHolder> offerHolders = offerScheduler.checkOffers(offers);
 
-    if (offerHolders.isEmpty()) {
-      return;
-    }
+      if (offerHolders.isEmpty()) {
+        return;
+      }
 
-    Optional<SchedulerDriver> driver = schedulerDriverSupplier.get();
+      int acceptedOffers = 0;
+      int launchedTasks = 0;
 
-    if (!driver.isPresent()) {
-      LOG.error("No driver present, can't accept cached offers");
-      return;
-    }
-
-    int acceptedOffers = 0;
-    int launchedTasks = 0;
-
-    for (SingularityOfferHolder offerHolder : offerHolders) {
+      for (SingularityOfferHolder offerHolder : offerHolders) {
         List<CachedOffer> cachedOffersFromHolder = offerHolder.getOffers().stream().map((o) -> offerIdToCachedOffer.get(o.getId().getValue())).collect(Collectors.toList());
 
         if (!offerHolder.getAcceptedTasks().isEmpty()) {
-          List<Offer> unusedOffers = offerHolder.launchTasksAndGetUnusedOffers(driver.get());
+          List<Offer> unusedOffers = offerHolder.launchTasksAndGetUnusedOffers(schedulerClient);
           launchedTasks += offerHolder.getAcceptedTasks().size();
           acceptedOffers += cachedOffersFromHolder.size() - unusedOffers.size();
 
@@ -102,8 +93,9 @@ public class SingularitySchedulerPoller extends SingularityLeaderOnlyPoller {
         } else {
           cachedOffersFromHolder.forEach(offerCache::returnOffer);
         }
-    }
+      }
 
-    LOG.info("Launched {} tasks on {} cached offers (returned {}) in {}", launchedTasks, acceptedOffers, offerHolders.size() - acceptedOffers, JavaUtils.duration(start));
+      LOG.info("Launched {} tasks on {} cached offers (returned {})", launchedTasks, acceptedOffers, offerHolders.size() - acceptedOffers);
+    }, getClass().getSimpleName());
   }
 }

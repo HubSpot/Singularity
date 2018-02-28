@@ -1,9 +1,11 @@
 package com.hubspot.singularity.auth.authenticator;
 
-import com.google.common.base.Optional;
-import com.google.inject.Provider;
+import java.util.Optional;
+
+import javax.ws.rs.container.ContainerRequestContext;
+
 import com.hubspot.singularity.SingularityUser;
 
-public interface SingularityAuthenticator extends Provider<Optional<SingularityUser>> {
-
+public interface SingularityAuthenticator {
+  Optional<SingularityUser> getUser(ContainerRequestContext context);
 }

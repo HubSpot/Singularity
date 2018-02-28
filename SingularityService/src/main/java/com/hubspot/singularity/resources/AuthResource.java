@@ -11,34 +11,30 @@ import javax.ws.rs.core.Response;
 import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.hubspot.singularity.SingularityAuthorizationScope;
-import com.hubspot.singularity.SingularityService;
 import com.hubspot.singularity.SingularityUser;
 import com.hubspot.singularity.SingularityUserHolder;
-import com.hubspot.singularity.SingularityUserSettings;
 import com.hubspot.singularity.auth.SingularityAuthorizationHelper;
 import com.hubspot.singularity.auth.datastore.SingularityAuthDatastore;
+import com.hubspot.singularity.config.ApiPaths;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.UserManager;
 import com.wordnik.swagger.annotations.ApiOperation;
 
-@Path(AuthResource.PATH)
+import io.dropwizard.auth.Auth;
+
+@Path(ApiPaths.AUTH_RESOURCE_PATH)
 @Produces({ MediaType.APPLICATION_JSON })
 public class AuthResource {
-  public static final String PATH = SingularityService.API_BASE_PATH + "/auth";
-
-  private final Optional<SingularityUser> user;
   private final UserManager userManager;
   private final SingularityConfiguration configuration;
   private final SingularityAuthorizationHelper authorizationHelper;
   private final SingularityAuthDatastore authDatastore;
 
   @Inject
-  public AuthResource(Optional<SingularityUser> user,
-                      UserManager userManager,
+  public AuthResource(UserManager userManager,
                       SingularityConfiguration configuration,
                       SingularityAuthorizationHelper authorizationHelper,
                       SingularityAuthDatastore authDatastore) {
-    this.user = user;
     this.userManager = userManager;
     this.configuration = configuration;
     this.authorizationHelper = authorizationHelper;
@@ -47,19 +43,30 @@ public class AuthResource {
 
   @GET
   @Path("/user")
-  public SingularityUserHolder getUser() {
+  public SingularityUserHolder getUser(@Auth SingularityUser user) {
     return new SingularityUserHolder(
-      user,
-      user.isPresent() ? userManager.getUserSettings(user.get().getId()) : Optional.<SingularityUserSettings>absent(),
-      user.isPresent(),
+      Optional.of(user),
+      userManager.getUserSettings(user.getId()),
+      true,
       configuration.getAuthConfiguration().isEnabled());
   }
 
   @GET
   @Path("/{requestId}/auth-check/{userId}")
   @ApiOperation("Check if the specified user is authorized for a request")
-  public Response checkReadOnlyAuth(@PathParam("requestId") String requestId, @PathParam("userId") String userId, @QueryParam("scope") Optional<SingularityAuthorizationScope> scope) {
-    authorizationHelper.checkForAuthorizationByRequestId(requestId, authDatastore.getUser(userId), scope.or(SingularityAuthorizationScope.READ));
+  public Response checkReadOnlyAuth(@PathParam("requestId") String requestId, @PathParam("userId") String userId,
+                                    @QueryParam("scope") Optional<SingularityAuthorizationScope> scope) {
+    authorizationHelper.checkForAuthorizationByRequestId(requestId, authDatastore.getUser(userId).orElse(SingularityUser.DEFAULT_USER), scope.or(SingularityAuthorizationScope.READ));
+    return Response.ok().build();
+  }
+
+  @GET
+  @Path("/{requestId}/auth-check}")
+  @ApiOperation("Check if the specified user is authorized for a request")
+  public Response checkReadOnlyAuth(@Auth SingularityUser user,
+                                    @PathParam("requestId") String requestId, @PathParam("userId") String userId,
+                                    @QueryParam("scope") Optional<SingularityAuthorizationScope> scope) {
+    authorizationHelper.checkForAuthorizationByRequestId(requestId, user, scope.or(SingularityAuthorizationScope.READ));
     return Response.ok().build();
   }
 }

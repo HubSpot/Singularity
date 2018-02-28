@@ -101,7 +101,7 @@ export const FetchRequestArgHistory = buildApiAction(
   'FETCH_REQUEST_ARG_HISTORY',
   (requestId) => ({
     url: `/history/request/${requestId}/command-line-args`,
-    catchStatusCodes: [400, 404]
+    catchStatusCodes: [400, 404, 500]
   }),
   (requestId) => requestId
 );

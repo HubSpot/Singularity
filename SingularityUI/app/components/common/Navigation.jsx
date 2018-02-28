@@ -35,11 +35,37 @@ function isActive(navbarPath, fragment) {
 // put into page wrapper, render children
 const Navigation = (props) => {
   const fragment = props.location.pathname.split('/')[1];
+  const navTitle = config.navTitleLinks
+    ? (
+      <ul className="nav navbar-nav">
+        <li className="dropdown">
+          <a href="#" className="dropdown-toggle navbar-brand" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
+            {config.title} <span className="caret" />
+          </a>
+          <ul className="dropdown-menu">
+            {Object.keys(config.navTitleLinks).map((linkTitle, index) =>
+              <li key={index}>
+                <a href={config.navTitleLinks[linkTitle]}>{linkTitle}</a>
+              </li>
+            )}
+          </ul>
+        </li>
+      </ul>
+    ) : (
+      <Link className="navbar-brand" to="/">{config.title}</Link>
+    );
+
   return (
     <nav className="navbar navbar-default">
       <div className="container-fluid">
         <div className="navbar-header">
-          <Link className="navbar-brand" to="/">{config.title}</Link>
+          <button type="button" className="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar-collapse" aria-expanded="false">
+            <span className="sr-only">Toggle navigation</span>
+            <span className="icon-bar"></span>
+            <span className="icon-bar"></span>
+            <span className="icon-bar"></span>
+          </button>
+          {navTitle}
         </div>
         <div className="collapse navbar-collapse" id="navbar-collapse">
           <ul className="nav navbar-nav">
@@ -57,7 +83,7 @@ const Navigation = (props) => {
             </li>
             <li className={classnames('dropdown', {active: isActive('admin', fragment)})}>
               <a href="#" className="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
-                Admin <span className="caret"></span>
+                Admin <span className="caret" />
               </a>
               <ul className="dropdown-menu">
                 <li><Link to="/racks">Racks</Link></li>

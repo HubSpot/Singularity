@@ -63,9 +63,10 @@ database:
   url: jdbc:mysql://[database host]:[database port]/[database name]
 
 mesos:
-  master: zk://[comma separated host:port list of ZK hosts]/mesos
+  master: [comma separated list of mesos master host:port]
   defaultCpus: 1
   defaultMemory: 128
+  defaultDisk: 1024
   frameworkName: Singularity
   frameworkId: Singularity
   frameworkFailoverTimeout: 1000000

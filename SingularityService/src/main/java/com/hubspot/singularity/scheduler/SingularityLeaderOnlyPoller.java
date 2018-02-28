@@ -19,8 +19,7 @@ import com.hubspot.singularity.SingularityAbort.AbortReason;
 import com.hubspot.singularity.SingularityMainModule;
 import com.hubspot.singularity.SingularityManagedScheduledExecutorServiceFactory;
 import com.hubspot.singularity.config.SingularityConfiguration;
-import com.hubspot.singularity.mesos.SingularityMesosSchedulerDelegator;
-import com.hubspot.singularity.mesos.SingularitySchedulerLock;
+import com.hubspot.singularity.mesos.SingularityMesosScheduler;
 import com.hubspot.singularity.sentry.SingularityExceptionNotifier;
 
 import io.dropwizard.lifecycle.Managed;
@@ -31,40 +30,34 @@ public abstract class SingularityLeaderOnlyPoller implements Managed {
 
   private final long pollDelay;
   private final TimeUnit pollTimeUnit;
-  private final Optional<SingularitySchedulerLock> lockHolder;
   private final boolean delayWhenLargeStatusUpdateDelta;
 
   private ScheduledExecutorService executorService;
   private LeaderLatch leaderLatch;
   private SingularityExceptionNotifier exceptionNotifier;
   private SingularityAbort abort;
-  private SingularityMesosSchedulerDelegator mesosScheduler;
+  private SingularityMesosScheduler mesosScheduler;
   private long delayPollersWhenDeltaOverMs;
   private AtomicLong statusUpdateDelta30sAverage;
 
   protected SingularityLeaderOnlyPoller(long pollDelay, TimeUnit pollTimeUnit) {
-    this(pollDelay, pollTimeUnit, Optional.<SingularitySchedulerLock> absent(), false);
+    this(pollDelay, pollTimeUnit, false);
   }
 
-  protected SingularityLeaderOnlyPoller(long pollDelay, TimeUnit pollTimeUnit, SingularitySchedulerLock lock, boolean delayWhenLargeStatusUpdateDelta) {
-    this(pollDelay, pollTimeUnit, Optional.of(lock), delayWhenLargeStatusUpdateDelta);
-  }
-
-  private SingularityLeaderOnlyPoller(long pollDelay, TimeUnit pollTimeUnit, Optional<SingularitySchedulerLock> lockHolder, boolean delayWhenLargeStatusUpdateDelta) {
+  protected SingularityLeaderOnlyPoller(long pollDelay, TimeUnit pollTimeUnit, boolean delayWhenLargeStatusUpdateDelta) {
     this.pollDelay = pollDelay;
     this.pollTimeUnit = pollTimeUnit;
-    this.lockHolder = lockHolder;
     this.delayWhenLargeStatusUpdateDelta = delayWhenLargeStatusUpdateDelta;
   }
 
   @Inject
   void injectPollerDependencies(SingularityManagedScheduledExecutorServiceFactory executorServiceFactory,
-      LeaderLatch leaderLatch,
-      SingularityExceptionNotifier exceptionNotifier,
-      SingularityAbort abort,
-      SingularityMesosSchedulerDelegator mesosScheduler,
-      SingularityConfiguration configuration,
-      @Named(SingularityMainModule.STATUS_UPDATE_DELTA_30S_AVERAGE) AtomicLong statusUpdateDelta30sAverage) {
+                                LeaderLatch leaderLatch,
+                                SingularityExceptionNotifier exceptionNotifier,
+                                SingularityAbort abort,
+                                SingularityMesosScheduler mesosScheduler,
+                                SingularityConfiguration configuration,
+                                @Named(SingularityMainModule.STATUS_UPDATE_DELTA_30S_AVERAGE) AtomicLong statusUpdateDelta30sAverage) {
     this.executorService = executorServiceFactory.get(getClass().getSimpleName());
     this.leaderLatch = checkNotNull(leaderLatch, "leaderLatch is null");
     this.exceptionNotifier = checkNotNull(exceptionNotifier, "exceptionNotifier is null");
@@ -117,10 +110,6 @@ public abstract class SingularityLeaderOnlyPoller implements Managed {
 
     long start = System.currentTimeMillis();
 
-    if (lockHolder.isPresent()) {
-      start = lockHolder.get().lock(getClass().getSimpleName());
-    }
-
     try {
       runActionOnPoll();
     } catch (Throwable t) {
@@ -130,10 +119,6 @@ public abstract class SingularityLeaderOnlyPoller implements Managed {
         abort.abort(AbortReason.UNRECOVERABLE_ERROR, Optional.of(t));
       }
     } finally {
-      if (lockHolder.isPresent()) {
-        lockHolder.get().unlock(getClass().getSimpleName(), start);
-      }
-
       LOG.debug("Ran {} in {}", getClass().getSimpleName(), JavaUtils.duration(start));
     }
   }

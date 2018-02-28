@@ -7,15 +7,15 @@ import javax.inject.Inject;
 import org.apache.curator.framework.recipes.leader.LeaderLatch;
 
 import com.codahale.metrics.health.HealthCheck;
-import com.hubspot.singularity.mesos.SingularityMesosSchedulerDelegator;
+import com.hubspot.singularity.mesos.SingularityMesosScheduler;
 
 public class SingularityDropwizardHealthcheck extends HealthCheck {
 
-  private final SingularityMesosSchedulerDelegator mesosScheduler;
+  private final SingularityMesosScheduler mesosScheduler;
   private final LeaderLatch leaderLatch;
 
   @Inject
-  public SingularityDropwizardHealthcheck(final SingularityMesosSchedulerDelegator mesosScheduler, final LeaderLatch leaderLatch) {
+  public SingularityDropwizardHealthcheck(final SingularityMesosScheduler mesosScheduler, final LeaderLatch leaderLatch) {
     this.mesosScheduler = checkNotNull(mesosScheduler, "mesosScheduler is null");
     this.leaderLatch = checkNotNull(leaderLatch, "leaderLatch is null");
   }

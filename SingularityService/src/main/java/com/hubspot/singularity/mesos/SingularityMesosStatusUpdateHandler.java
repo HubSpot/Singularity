@@ -1,19 +1,21 @@
 package com.hubspot.singularity.mesos;
 
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
-import org.apache.mesos.Protos;
-import org.apache.mesos.Protos.TaskState;
-import org.apache.mesos.Protos.TaskStatus.Reason;
-import org.apache.mesos.SchedulerDriver;
+import org.apache.mesos.v1.Protos;
+import org.apache.mesos.v1.Protos.TaskState;
+import org.apache.mesos.v1.Protos.TaskStatus.Reason;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.codahale.metrics.Meter;
-import com.codahale.metrics.annotation.Timed;
 import com.google.common.base.Optional;
 import com.google.common.base.Strings;
 import com.google.common.collect.Multiset;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
@@ -28,12 +30,15 @@ import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskHistoryUpdate;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTaskStatusHolder;
+import com.hubspot.singularity.async.AsyncSemaphore;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.DeployManager;
 import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.data.transcoders.IdTranscoder;
 import com.hubspot.singularity.data.transcoders.SingularityTranscoderException;
+import com.hubspot.singularity.helpers.MesosProtosUtils;
+import com.hubspot.singularity.helpers.MesosUtils;
 import com.hubspot.singularity.scheduler.SingularityHealthchecker;
 import com.hubspot.singularity.scheduler.SingularityLeaderCache;
 import com.hubspot.singularity.scheduler.SingularityNewTaskChecker;
@@ -55,25 +60,36 @@ public class SingularityMesosStatusUpdateHandler {
   private final SingularityMesosExecutorInfoSupport logSupport;
   private final SingularityScheduler scheduler;
   private final SingularityLeaderCache leaderCache;
+  private final MesosProtosUtils mesosProtosUtils;
   private final String serverId;
-  private final SchedulerDriverSupplier schedulerDriverSupplier;
   private final SingularitySchedulerLock schedulerLock;
   private final SingularityConfiguration configuration;
   private final Multiset<Protos.TaskStatus.Reason> taskLostReasons;
   private final Meter lostTasksMeter;
   private final ConcurrentHashMap<Long, Long> statusUpdateDeltas;
 
+  private final ExecutorService statusUpdatesExecutor = Executors.newCachedThreadPool(new ThreadFactoryBuilder().setNameFormat("status-updates-%d").build());
+  private final AsyncSemaphore<Boolean> statusUpdatesSemaphore;
+
   @Inject
-  public SingularityMesosStatusUpdateHandler(TaskManager taskManager, DeployManager deployManager, RequestManager requestManager,
-      IdTranscoder<SingularityTaskId> taskIdTranscoder, SingularityExceptionNotifier exceptionNotifier, SingularityHealthchecker healthchecker,
-      SingularityNewTaskChecker newTaskChecker, SingularitySlaveAndRackManager slaveAndRackManager, SingularityMesosExecutorInfoSupport logSupport, SingularityScheduler scheduler,
-      SingularityLeaderCache leaderCache, @Named(SingularityMainModule.SERVER_ID_PROPERTY) String serverId,
-      SchedulerDriverSupplier schedulerDriverSupplier,
-      SingularitySchedulerLock schedulerLock,
-      SingularityConfiguration configuration,
-      @Named(SingularityMesosModule.TASK_LOST_REASONS_COUNTER) Multiset<Protos.TaskStatus.Reason> taskLostReasons,
-      @Named(SingularityMainModule.LOST_TASKS_METER) Meter lostTasksMeter,
-      @Named(SingularityMainModule.STATUS_UPDATE_DELTAS) ConcurrentHashMap<Long, Long> statusUpdateDeltas) {
+  public SingularityMesosStatusUpdateHandler(TaskManager taskManager,
+                                             DeployManager deployManager,
+                                             RequestManager requestManager,
+                                             IdTranscoder<SingularityTaskId> taskIdTranscoder,
+                                             SingularityExceptionNotifier exceptionNotifier,
+                                             SingularityHealthchecker healthchecker,
+                                             SingularityNewTaskChecker newTaskChecker,
+                                             SingularitySlaveAndRackManager slaveAndRackManager,
+                                             SingularityMesosExecutorInfoSupport logSupport,
+                                             SingularityScheduler scheduler,
+                                             @Named(SingularityMainModule.SERVER_ID_PROPERTY) String serverId,
+                                             SingularitySchedulerLock schedulerLock,
+                                             SingularityConfiguration configuration,
+                                             SingularityLeaderCache leaderCache,
+                                             MesosProtosUtils mesosProtosUtils,
+                                             @Named(SingularityMesosModule.TASK_LOST_REASONS_COUNTER) Multiset<Protos.TaskStatus.Reason> taskLostReasons,
+                                             @Named(SingularityMainModule.LOST_TASKS_METER) Meter lostTasksMeter,
+                                             @Named(SingularityMainModule.STATUS_UPDATE_DELTAS) ConcurrentHashMap<Long, Long> statusUpdateDeltas) {
     this.taskManager = taskManager;
     this.deployManager = deployManager;
     this.requestManager = requestManager;
@@ -85,13 +101,17 @@ public class SingularityMesosStatusUpdateHandler {
     this.logSupport = logSupport;
     this.scheduler = scheduler;
     this.leaderCache = leaderCache;
+    this.mesosProtosUtils = mesosProtosUtils;
     this.serverId = serverId;
-    this.schedulerDriverSupplier = schedulerDriverSupplier;
     this.schedulerLock = schedulerLock;
     this.configuration = configuration;
     this.taskLostReasons = taskLostReasons;
     this.lostTasksMeter = lostTasksMeter;
     this.statusUpdateDeltas = statusUpdateDeltas;
+    this.statusUpdatesSemaphore = AsyncSemaphore
+        .newBuilder(() -> configuration.getMesosConfiguration().getStatusUpdateConcurrencyLimit())
+        .withQueueSize(configuration.getMesosConfiguration().getMaxStatusUpdateQueueSize())
+        .build();
   }
 
   /**
@@ -143,24 +163,19 @@ public class SingularityMesosStatusUpdateHandler {
         }
 
       }
-      return Optional.of("Task exceeded memory limit");
+      return Optional.of("Task exceeded memory limit.");
+    } else if (status.hasReason() && status.getReason() == Reason.REASON_CONTAINER_LIMITATION_DISK) {
+      if (task.isPresent() && task.get().getTaskRequest().getDeploy().getResources().isPresent()) {
+        return Optional.of(String.format("Task exceeded disk limit (%s MB disk).", task.get().getTaskRequest().getDeploy().getResources().get().getDiskMb()));
+      } else {
+        return Optional.of("Task exceeded disk limit.");
+      }
     }
 
     return Optional.absent();
   }
 
-  private SchedulerDriver getSchedulerDriver() {
-    final Optional<SchedulerDriver> maybeSchedulerDriver = schedulerDriverSupplier.get();
-
-    if (!maybeSchedulerDriver.isPresent()) {
-      throw new RuntimeException("scheduler driver not present!");
-      // TODO: how best to handle?
-    }
-
-    return maybeSchedulerDriver.get();
-  }
-
-  private void unsafeProcessStatusUpdate(Protos.TaskStatus status) {
+  private void unsafeProcessStatusUpdate(Protos.TaskStatus status, SingularityTaskId taskIdObj) {
     final String taskId = status.getTaskId().getValue();
 
     long timestamp = System.currentTimeMillis();
@@ -175,17 +190,9 @@ public class SingularityMesosStatusUpdateHandler {
     LOG.debug("Update: task {} is now {} ({}) at {} (delta: {})", taskId, status.getState(), status.getMessage(), timestamp, JavaUtils.durationFromMillis(delta));
     statusUpdateDeltas.put(now, delta);
 
-    final Optional<SingularityTaskId> maybeTaskId = getTaskId(taskId);
-
-    if (!maybeTaskId.isPresent()) {
-      return;
-    }
-
-    final SingularityTaskId taskIdObj = maybeTaskId.get();
-
-    final SingularityTaskStatusHolder newTaskStatusHolder = new SingularityTaskStatusHolder(taskIdObj, Optional.of(status), System.currentTimeMillis(), serverId, Optional.<String>absent());
+    final SingularityTaskStatusHolder newTaskStatusHolder = new SingularityTaskStatusHolder(taskIdObj, Optional.of(mesosProtosUtils.taskStatusFromProtos(status)), System.currentTimeMillis(), serverId, Optional.<String>absent());
     final Optional<SingularityTaskStatusHolder> previousTaskStatusHolder = taskManager.getLastActiveTaskStatus(taskIdObj);
-    final ExtendedTaskState taskState = ExtendedTaskState.fromTaskState(status.getState());
+    final ExtendedTaskState taskState = MesosUtils.fromTaskState(status.getState());
 
     if (isDuplicateOrIgnorableStatusUpdate(previousTaskStatusHolder, newTaskStatusHolder)) {
       LOG.trace("Ignoring status update {} to {}", taskState, taskIdObj);
@@ -242,7 +249,7 @@ public class SingularityMesosStatusUpdateHandler {
 
       taskManager.deleteKilledRecord(taskIdObj);
 
-      slaveAndRackManager.checkStateAfterFinishedTask(taskIdObj, status.getSlaveId().getValue(), leaderCache);
+      slaveAndRackManager.checkStateAfterFinishedTask(taskIdObj, status.getAgentId().getValue(), leaderCache);
 
       scheduler.handleCompletedTask(task, taskIdObj, isActiveTask, timestamp, taskState, taskHistoryUpdateCreateResult, status);
     }
@@ -250,16 +257,22 @@ public class SingularityMesosStatusUpdateHandler {
     saveNewTaskStatusHolder(taskIdObj, newTaskStatusHolder, taskState);
   }
 
-  @Timed
-  public void processStatusUpdate(Protos.TaskStatus status) {
-    long insideLock = 0;
-    final long start = schedulerLock.lock("statusUpdate");
-    try {
-      insideLock = System.currentTimeMillis();
-      unsafeProcessStatusUpdate(status);
-    } finally {
-      schedulerLock.unlock("statusUpdate", start);
-      LOG.info("Processed status update for {} ({}) in {} (waited {} for lock)", status.getTaskId().getValue(), status.getState(), JavaUtils.duration(start), JavaUtils.durationFromMillis(insideLock - start));
-    }
+  public CompletableFuture<Boolean> processStatusUpdateAsync(Protos.TaskStatus status) {
+    return statusUpdatesSemaphore.call(() -> CompletableFuture.supplyAsync(() -> {
+        final String taskId = status.getTaskId().getValue();
+        final Optional<SingularityTaskId> maybeTaskId = getTaskId(taskId);
+
+        if (!maybeTaskId.isPresent()) {
+          return false;
+        }
+
+        schedulerLock.runWithRequestLock(
+            () -> unsafeProcessStatusUpdate(status, maybeTaskId.get()),
+            maybeTaskId.get().getRequestId(),
+            getClass().getSimpleName()
+        );
+        return true;
+      }, statusUpdatesExecutor)
+    );
   }
 }

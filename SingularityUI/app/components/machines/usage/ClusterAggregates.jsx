@@ -100,6 +100,43 @@ const SlaveAggregates = ({utilization, totalRequests}) => {
           </div>
         </LabeledColumn>
       </div>
+
+      <h3>Disk</h3>
+      <div className="row">
+        <div className="col-md-2">
+          <h4>Requests</h4>
+          {utilization.numRequestsWithUnderUtilizedDiskBytes !== undefined ?
+            <Breakdown
+              total={totalRequests}
+              data={[
+                {
+                  attribute: 'normal',
+                  count: totalRequests - utilization.numRequestsWithUnderUtilizedDiskBytes,
+                  type: 'success',
+                  label: 'Normal',
+                  percent: ((totalRequests - utilization.numRequestsWithUnderUtilizedDiskBytes) / totalRequests) * 100
+                },
+                {
+                  attribute: 'underDisk',
+                  count: utilization.numRequestsWithUnderUtilizedDiskBytes,
+                  type: 'warning',
+                  label: 'Under-utilized',
+                  link: '/requests/underUtilizedDisk/all/',
+                  percent: (utilization.numRequestsWithUnderUtilizedDiskBytes / totalRequests) * 100
+                }
+              ]}
+            /> : <Loader fixed={false} />}
+        </div>
+
+        <LabeledColumn width={10}>
+          <div className="row">
+            <Aggregate width={3} value={Utils.humanizeFileSize(utilization.totalUnderUtilizedDiskBytes)} label="Total Under-utilized Disk" className="text-warning" />
+            <Aggregate width={3} value={Utils.humanizeFileSize(utilization.avgUnderUtilizedDiskBytes)} label="Avg Under-utilized Disk" className="text-warning" />
+            <Aggregate width={3} value={Utils.humanizeFileSize(utilization.minUnderUtilizedDiskBytes)} label="Min Under-utilized Disk" className="text-warning" />
+            <Aggregate width={3} value={Utils.humanizeFileSize(utilization.maxUnderUtilizedDiskBytes)} label="Max Under-utilized Disk" className="text-warning" link={utilization.maxUnderUtilizedDiskBytesRequestId && `/request/${utilization.maxUnderUtilizedDiskBytesRequestId}`} />
+          </div>
+        </LabeledColumn>
+      </div>
     </div>
   );
 };

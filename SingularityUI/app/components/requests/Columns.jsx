@@ -2,15 +2,18 @@ import React from 'react';
 import { Link } from 'react-router';
 
 import Column from '../common/table/Column';
+import RequestTypeIcon from '../common/icons/RequestTypeIcon';
 
 import Utils from '../../utils';
 
 import JSONButton from '../common/JSONButton';
+import { Glyphicon, Dropdown, MenuItem } from 'react-bootstrap'
 import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
 import ToolTip from 'react-bootstrap/lib/Tooltip';
 
 import RequestStar from './RequestStar';
 import UnpauseButton from '../common/modalButtons/UnpauseButton';
+import PauseButton from '../common/modalButtons/PauseButton';
 import RemoveButton from '../common/modalButtons/RemoveButton';
 import RunNowButton from '../common/modalButtons/RunNowButton';
 import ScaleButton from '../common/modalButtons/ScaleButton';
@@ -76,9 +79,19 @@ export const LastDeploy = (
     cellRender={
       (cellData) => {
         if (cellData) {
-          return Utils.timestampFromNow(cellData);
+          const tooltip = (
+            <ToolTip id="view-full-timestamp">
+              {Utils.absoluteTimestampWithSeconds(cellData)}
+            </ToolTip>
+          );
+          return (
+            <OverlayTrigger  placement="top" id="view-full-timestamp-overlay" overlay={tooltip}>
+              <p>{Utils.timestampFromNowTextOnly(cellData)}</p>
+            </OverlayTrigger>
+          );
+        } else {
+          return '';
         }
-        return '';
       }
     }
     sortable={true}
@@ -112,7 +125,21 @@ export const State = (
     id="state"
     key="state"
     cellData={
-      (rowData) => Utils.humanizeText(rowData.state)
+      (rowData) => Utils.humanizeText(rowData.state) //PAUSED DELETING ACTIVE SYSTEM_COOLDOWN
+    }
+    cellRender={(cellData, rowData) => {
+        const tooltip = (
+          <ToolTip id="view-request-state">
+            {cellData}
+          </ToolTip>
+        )
+        const glyph = Utils.glyphiconForRequestState(rowData.state);
+        return (
+          <OverlayTrigger  placement="top" id="view-request-state-overlay" overlay={tooltip}>
+            <Glyphicon className={glyph.color} glyph={glyph.icon} />
+          </OverlayTrigger>
+        );
+      }
     }
     sortable={true}
   />
@@ -125,6 +152,19 @@ export const Type = (
     key="type"
     cellData={
       (rowData) => Utils.humanizeText(rowData.request.requestType)
+    }
+    cellRender={(cellData, rowData) => {
+        const tooltip = (
+          <ToolTip id="view-request-type">
+            {cellData}
+          </ToolTip>
+        )
+        return (
+          <OverlayTrigger placement="top" id="view-request-type-overlay" overlay={tooltip}>
+            <RequestTypeIcon requestType={rowData.request.requestType}/>
+          </OverlayTrigger>
+        );
+      }
     }
     sortable={true}
   />
@@ -205,6 +245,13 @@ export const Actions = (
           <UnpauseButton requestId={cellData.id} />
         );
 
+        const pause = cellData.state != 'PAUSED' && (
+          <PauseButton
+            requestId={cellData.id}
+            isScheduled={cellData.requestType === 'SCHEDULED'}
+          />
+        );
+
         const scale = cellData.canBeScaled && (
           <ScaleButton
             requestId={cellData.id}
@@ -218,10 +265,11 @@ export const Actions = (
         );
 
         return (
-          <div className="hidden-xs">
+          <div>
             {scale}
             {runNow}
             {unpause}
+            {pause}
             <RemoveButton 
               requestId={cellData.id}
               loadBalancerData={Utils.maybe(cellData, ['activeDeploy', 'loadBalancerOptions'], {})}

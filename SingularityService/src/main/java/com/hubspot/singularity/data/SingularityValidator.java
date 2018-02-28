@@ -55,6 +55,7 @@ import com.hubspot.singularity.SingularityPendingTaskId;
 import com.hubspot.singularity.SingularityPriorityFreezeParent;
 import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityRequestGroup;
+import com.hubspot.singularity.SingularityRunNowRequestBuilder;
 import com.hubspot.singularity.SingularityShellCommand;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityWebhook;
@@ -89,6 +90,8 @@ public class SingularityValidator {
   private final int defaultBounceExpirationMinutes;
   private final int maxMemoryMbPerRequest;
   private final int maxMemoryMbPerInstance;
+  private final int maxDiskMbPerRequest;
+  private final int maxDiskMbPerInstance;
   private final Optional<Integer> maxTotalHealthcheckTimeoutSeconds;
   private final long defaultKillHealthcheckAfterSeconds;
   private final int defaultHealthcheckIntervalSeconds;
@@ -133,6 +136,8 @@ public class SingularityValidator {
     this.maxCpusPerRequest = configuration.getMesosConfiguration().getMaxNumCpusPerRequest();
     this.maxMemoryMbPerInstance = configuration.getMesosConfiguration().getMaxMemoryMbPerInstance();
     this.maxMemoryMbPerRequest = configuration.getMesosConfiguration().getMaxMemoryMbPerRequest();
+    this.maxDiskMbPerInstance = configuration.getMesosConfiguration().getMaxDiskMbPerInstance();
+    this.maxDiskMbPerRequest = configuration.getMesosConfiguration().getMaxDiskMbPerRequest();
     this.maxInstancesPerRequest = configuration.getMesosConfiguration().getMaxNumInstancesPerRequest();
 
     this.allowBounceToSameHost = configuration.isAllowBounceToSameHost();
@@ -423,8 +428,6 @@ public class SingularityValidator {
       throw badRequest("Task launch delay can be at most %d days from now.", maxRunNowTaskLaunchDelay);
     }
 
-
-
     return new SingularityPendingRequest(
         request.getId(),
         deployId,
@@ -437,6 +440,10 @@ public class SingularityValidator {
         runNowRequest.getMessage(),
         Optional.absent(),
         runNowRequest.getResources(),
+        runNowRequest.getS3UploaderAdditionalFiles(),
+        runNowRequest.getRunAsUserOverride(),
+        runNowRequest.getEnvOverrides(),
+        runNowRequest.getExtraArtifacts(),
         runNowRequest.getRunAt()
     );
   }
@@ -450,15 +457,15 @@ public class SingularityValidator {
           Optional.of(getRunId(request.getRunId())),
           request.getCommandLineArgs(),
           request.getResources(),
+          request.getS3UploaderAdditionalFiles(),
+          request.getRunAsUserOverride(),
+          request.getEnvOverrides(),
+          request.getExtraArtifacts(),
           request.getRunAt());
     } else {
-      return new SingularityRunNowRequest(
-          Optional.absent(),
-          Optional.absent(),
-          Optional.of(getRunId(Optional.absent())),
-          Optional.absent(),
-          Optional.absent(),
-          Optional.absent());
+      return new SingularityRunNowRequestBuilder()
+          .setRunId(getRunId(Optional.absent()))
+          .build();
     }
   }
 
@@ -563,9 +570,11 @@ public class SingularityValidator {
     int instances = request.getInstancesSafe();
     double cpusPerInstance = deploy.getResources().or(defaultResources).getCpus();
     double memoryMbPerInstance = deploy.getResources().or(defaultResources).getMemoryMb();
+    double diskMbPerInstance = deploy.getResources().or(defaultResources).getDiskMb();
 
     checkBadRequest(cpusPerInstance > 0, "Request must have more than 0 cpus");
     checkBadRequest(memoryMbPerInstance > 0, "Request must have more than 0 memoryMb");
+    checkBadRequest(diskMbPerInstance >= 0, "Request must have non-negative diskMb");
 
     checkBadRequest(cpusPerInstance <= maxCpusPerInstance, "Deploy %s uses too many cpus %s (maxCpusPerInstance %s in mesos configuration)", deploy.getId(), cpusPerInstance, maxCpusPerInstance);
     checkBadRequest(cpusPerInstance * instances <= maxCpusPerRequest,
@@ -575,6 +584,11 @@ public class SingularityValidator {
         "Deploy %s uses too much memoryMb %s (maxMemoryMbPerInstance %s in mesos configuration)", deploy.getId(), memoryMbPerInstance, maxMemoryMbPerInstance);
     checkBadRequest(memoryMbPerInstance * instances <= maxMemoryMbPerRequest, "Deploy %s uses too much memoryMb %s (%s*%s) (maxMemoryMbPerRequest %s in mesos configuration)", deploy.getId(),
         memoryMbPerInstance * instances, memoryMbPerInstance, instances, maxMemoryMbPerRequest);
+
+    checkBadRequest(diskMbPerInstance <= maxDiskMbPerInstance,
+        "Deploy %s uses too much diskMb %s (maxDiskMbPerInstance %s in mesos configuration)", deploy.getId(), diskMbPerInstance, maxDiskMbPerInstance);
+    checkBadRequest(diskMbPerInstance * instances <= maxDiskMbPerRequest, "Deploy %s uses too much diskMb %s (%s*%s) (maxDiskMbPerRequest %s in mesos configuration)", deploy.getId(),
+        diskMbPerInstance * instances, diskMbPerInstance, instances, maxDiskMbPerRequest);
   }
 
   private void checkForValidRFC5545Schedule(String schedule) {

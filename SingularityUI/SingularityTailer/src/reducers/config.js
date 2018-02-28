@@ -3,7 +3,8 @@ import {
   BLAZAR_SET_API_ROOT,
   TOGGLE_ANSI_COLORING,
   TOGGLE_FETCH_OVERSCAN,
-  SET_TAIL_INTERVAL_MS
+  SET_TAIL_INTERVAL_MS,
+  SET_AUTHORIZATION_HEADER
 } from '../actions';
 
 const initialState = {
@@ -38,6 +39,11 @@ const configReducer = (state = initialState, action) => {
       return {
         ...state,
         tailIntervalMs: action.tailIntervalMs
+      }
+    case SET_AUTHORIZATION_HEADER:
+      return {
+        ...state,
+        authorizationHeader: action.authorizationHeader
       }
     default:
       return state;

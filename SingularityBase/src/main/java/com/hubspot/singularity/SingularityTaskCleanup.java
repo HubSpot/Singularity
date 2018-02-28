@@ -17,8 +17,8 @@ public class SingularityTaskCleanup {
 
   @JsonCreator
   public SingularityTaskCleanup(@JsonProperty("user") Optional<String> user, @JsonProperty("cleanupType") TaskCleanupType cleanupType, @JsonProperty("timestamp") long timestamp,
-      @JsonProperty("taskId") SingularityTaskId taskId, @JsonProperty("message") Optional<String> message, @JsonProperty("actionId") Optional<String> actionId,
-      @JsonProperty("runBeforeKillId") Optional<SingularityTaskShellCommandRequestId> runBeforeKillId,
+                                @JsonProperty("taskId") SingularityTaskId taskId, @JsonProperty("message") Optional<String> message, @JsonProperty("actionId") Optional<String> actionId,
+                                @JsonProperty("runBeforeKillId") Optional<SingularityTaskShellCommandRequestId> runBeforeKillId,
                                 @JsonProperty("removeFromLoadBalancer") Optional<Boolean> removeFromLoadBalancer
   ) {
     this.user = user;

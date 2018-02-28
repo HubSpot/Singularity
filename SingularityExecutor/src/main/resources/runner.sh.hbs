@@ -41,9 +41,9 @@ if [[ ! -d {{{ logDir }}} ]]; then
     mkdir -p {{{ logDir }}}
 fi
 
-echo "Ensuring {{{ logDir }}} is owned by {{{ user }}} with 0750"
+echo "Ensuring {{{ logDir }}} is owned by {{{ user }}} with 0755"
 sudo chown -R {{{ user }}} {{{ logDir }}}
-sudo chmod -R 0750 {{{ logDir }}}
+sudo chmod -R 0755 {{{ logDir }}}
 
 echo "Ensuring {{{ taskAppDirectory }}} exists and is owned by {{{ user }}}"
 if [[ ! -d {{{ taskAppDirectory }}} ]]; then

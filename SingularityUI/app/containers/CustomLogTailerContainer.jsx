@@ -28,5 +28,5 @@ class CustomLogTailerContainer extends React.Component {
 };
 
 export default connect(null, {
-  setTailerGroups
+  setTailerGroups,
 })(CustomLogTailerContainer);

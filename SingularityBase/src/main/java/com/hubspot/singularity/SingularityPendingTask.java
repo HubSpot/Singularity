@@ -1,6 +1,8 @@
 package com.hubspot.singularity;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 import javax.annotation.Nonnull;
@@ -10,6 +12,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 import com.hubspot.mesos.Resources;
+import com.hubspot.mesos.SingularityMesosArtifact;
 
 public class SingularityPendingTask {
 
@@ -20,6 +23,10 @@ public class SingularityPendingTask {
   private final Optional<Boolean> skipHealthchecks;
   private final Optional<String> message;
   private final Optional<Resources> resources;
+  private final List<SingularityS3UploaderFile> s3UploaderAdditionalFiles;
+  private final Optional<String> runAsUserOverride;
+  private final Map<String, String> envOverrides;
+  private final List<SingularityMesosArtifact> extraArtifacts;
   private final Optional<String> actionId;
 
   public static Predicate<SingularityPendingTask> matchingRequest(final String requestId) {
@@ -45,9 +52,18 @@ public class SingularityPendingTask {
   }
 
   @JsonCreator
-  public SingularityPendingTask(@JsonProperty("pendingTaskId") SingularityPendingTaskId pendingTaskId, @JsonProperty("cmdLineArgsList") Optional<List<String>> cmdLineArgsList,
-      @JsonProperty("user") Optional<String> user, @JsonProperty("runId") Optional<String> runId, @JsonProperty("skipHealthchecks") Optional<Boolean> skipHealthchecks,
-      @JsonProperty("message") Optional<String> message, @JsonProperty("resources") Optional<Resources> resources, @JsonProperty("actionId") Optional<String> actionId) {
+  public SingularityPendingTask(@JsonProperty("pendingTaskId") SingularityPendingTaskId pendingTaskId,
+                                @JsonProperty("cmdLineArgsList") Optional<List<String>> cmdLineArgsList,
+                                @JsonProperty("user") Optional<String> user,
+                                @JsonProperty("runId") Optional<String> runId,
+                                @JsonProperty("skipHealthchecks") Optional<Boolean> skipHealthchecks,
+                                @JsonProperty("message") Optional<String> message,
+                                @JsonProperty("resources") Optional<Resources> resources,
+                                @JsonProperty("s3UploaderAdditionalFiles") List<SingularityS3UploaderFile> s3UploaderAdditionalFiles,
+                                @JsonProperty("runAsUserOverride") Optional<String> runAsUserOverride,
+                                @JsonProperty("envOverrides") Map<String, String> envOverrides,
+                                @JsonProperty("extraArtifacts") List<SingularityMesosArtifact> extraArtifacts,
+                                @JsonProperty("actionId") Optional<String> actionId) {
     this.pendingTaskId = pendingTaskId;
     this.user = user;
     this.message = message;
@@ -55,6 +71,27 @@ public class SingularityPendingTask {
     this.runId = runId;
     this.skipHealthchecks = skipHealthchecks;
     this.resources = resources;
+
+    if (Objects.nonNull(s3UploaderAdditionalFiles)) {
+      this.s3UploaderAdditionalFiles = s3UploaderAdditionalFiles;
+    } else {
+      this.s3UploaderAdditionalFiles = Collections.emptyList();
+    }
+
+    this.runAsUserOverride = runAsUserOverride;
+
+    if (Objects.nonNull(envOverrides)) {
+      this.envOverrides = envOverrides;
+    } else {
+      this.envOverrides = Collections.emptyMap();
+    }
+
+    if (Objects.nonNull(extraArtifacts)) {
+      this.extraArtifacts = extraArtifacts;
+    } else {
+      this.extraArtifacts = Collections.emptyList();
+    }
+
     this.actionId = actionId;
   }
 
@@ -103,6 +140,20 @@ public class SingularityPendingTask {
     return resources;
   }
 
+  public List<SingularityS3UploaderFile> getS3UploaderAdditionalFiles() {
+    return s3UploaderAdditionalFiles;
+  }
+
+  public Optional<String> getRunAsUserOverride() {
+    return runAsUserOverride;
+  }
+
+  public Map<String, String> getEnvOverrides() { return envOverrides; }
+
+  public List<SingularityMesosArtifact> getExtraArtifacts() {
+    return extraArtifacts;
+  }
+
   public Optional<String> getActionId() {
     return actionId;
   }
@@ -117,6 +168,10 @@ public class SingularityPendingTask {
         ", skipHealthchecks=" + skipHealthchecks +
         ", message=" + message +
         ", resources=" + resources +
+        ", s3UploaderAdditionalFiles=" + s3UploaderAdditionalFiles +
+        ", runAsUserOverride=" + runAsUserOverride +
+        ", envOverrides=" + envOverrides +
+        ", extraArtifacts" + extraArtifacts +
         ", actionId=" + actionId +
         '}';
   }

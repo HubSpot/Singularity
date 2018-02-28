@@ -8,7 +8,28 @@ public class SingularitySlaveUsageWithId extends SingularitySlaveUsage {
   private final String slaveId;
 
   public SingularitySlaveUsageWithId(SingularitySlaveUsage usage, String slaveId) {
-    super(usage.getMemoryBytesUsed(), usage.getMemoryMbReserved(), usage.getTimestamp(), usage.getCpusUsed(), usage.getCpusReserved(), usage.getNumTasks(), usage.getMemoryMbTotal(), usage.getCpusTotal(), usage.getLongRunningTasksUsage());
+    super(
+        usage.getCpusUsed(),
+        usage.getCpusReserved(),
+        usage.getCpusTotal(),
+        usage.getMemoryBytesUsed(),
+        usage.getMemoryMbReserved(),
+        usage.getMemoryMbTotal(),
+        usage.getDiskBytesUsed(),
+        usage.getDiskMbReserved(),
+        usage.getDiskMbTotal(),
+        usage.getLongRunningTasksUsage(),
+        usage.getNumTasks(),
+        usage.getTimestamp(),
+        usage.getSystemMemTotalBytes(),
+        usage.getSystemMemFreeBytes(),
+        usage.getSystemCpusTotal(),
+        usage.getSystemLoad1Min(),
+        usage.getSystemLoad5Min(),
+        usage.getSystemLoad15Min(),
+        usage.getSlaveDiskUsed(),
+        usage.getSlaveDiskTotal()
+    );
     this.slaveId = slaveId;
   }
 

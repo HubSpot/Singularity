@@ -5,15 +5,12 @@ import static com.hubspot.singularity.SingularityMainModule.HTTP_HOST_AND_PORT;
 import static org.mockito.Mockito.*;
 
 import java.util.Set;
+import java.util.function.Function;
 
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.curator.test.TestingServer;
-import org.apache.mesos.Protos.MasterInfo;
-import org.apache.mesos.Protos.Status;
-import org.apache.mesos.SchedulerDriver;
 import org.eclipse.jetty.util.component.LifeCycle;
-import org.mockito.Matchers;
 import org.slf4j.LoggerFactory;
 
 import com.codahale.metrics.MetricRegistry;
@@ -39,11 +36,12 @@ import com.hubspot.dropwizard.guicier.GuiceBundle;
 import com.hubspot.jackson.datatype.protobuf.ProtobufModule;
 import com.hubspot.mesos.client.MesosClient;
 import com.hubspot.singularity.SingularityAbort;
-import com.hubspot.singularity.SingularityAuthModule;
 import com.hubspot.singularity.SingularityMainModule;
-import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTestAuthenticator;
+import com.hubspot.singularity.auth.SingularityAuthorizationHelper;
 import com.hubspot.singularity.auth.authenticator.SingularityAuthenticator;
+import com.hubspot.singularity.auth.datastore.SingularityAuthDatastore;
+import com.hubspot.singularity.auth.datastore.SingularityDisabledAuthDatastore;
 import com.hubspot.singularity.config.MesosConfiguration;
 import com.hubspot.singularity.config.SMTPConfiguration;
 import com.hubspot.singularity.config.SentryConfiguration;
@@ -56,10 +54,10 @@ import com.hubspot.singularity.data.zkmigrations.SingularityZkMigrationsModule;
 import com.hubspot.singularity.event.SingularityEventModule;
 import com.hubspot.singularity.hooks.LoadBalancerClient;
 import com.hubspot.singularity.mesos.OfferCache;
-import com.hubspot.singularity.mesos.SchedulerDriverSupplier;
-import com.hubspot.singularity.mesos.SingularityDriver;
 import com.hubspot.singularity.mesos.SingularityMesosExecutorInfoSupport;
 import com.hubspot.singularity.mesos.SingularityMesosModule;
+import com.hubspot.singularity.mesos.SingularityMesosSchedulerClient;
+import com.hubspot.singularity.mesos.SingularityNoOfferCache;
 import com.hubspot.singularity.mesos.SingularityOfferCache;
 import com.hubspot.singularity.resources.DeployResource;
 import com.hubspot.singularity.resources.PriorityResource;
@@ -88,9 +86,15 @@ public class SingularityTestModule implements Module {
   private final Environment environment = new Environment("test-env", om, null, new MetricRegistry(), null);
 
   private final boolean useDBTests;
+  private final Function<SingularityConfiguration, Void> customConfigSetup;
 
   public SingularityTestModule(boolean useDbTests) throws Exception {
+    this(useDbTests, null);
+  }
+
+  public SingularityTestModule(boolean useDbTests,Function<SingularityConfiguration, Void> customConfigSetup) throws Exception {
     this.useDBTests = useDbTests;
+    this.customConfigSetup = customConfigSetup;
 
     dropwizardModule = new DropwizardModule(environment);
 
@@ -134,9 +138,14 @@ public class SingularityTestModule implements Module {
 
     mainBinder.bind(TestingServer.class).toInstance(ts);
     final SingularityConfiguration configuration = getSingularityConfigurationForTestingServer(ts);
+    configuration.getMesosConfiguration().setMaster("");
 
     if (useDBTests) {
       configuration.setDatabaseConfiguration(getDataSourceFactory());
+    }
+
+    if (customConfigSetup != null) {
+      customConfigSetup.apply(configuration);
     }
 
     mainBinder.bind(SingularityConfiguration.class).toInstance(configuration);
@@ -157,7 +166,11 @@ public class SingularityTestModule implements Module {
             TestingLoadBalancerClient tlbc = new TestingLoadBalancerClient();
             binder.bind(LoadBalancerClient.class).toInstance(tlbc);
             binder.bind(TestingLoadBalancerClient.class).toInstance(tlbc);
-            binder.bind(OfferCache.class).to(SingularityOfferCache.class);
+            if (configuration.isCacheOffers()) {
+              binder.bind(OfferCache.class).to(SingularityOfferCache.class);
+            } else {
+              binder.bind(OfferCache.class).to(SingularityNoOfferCache.class);
+            }
 
             binder.bind(ObjectMapper.class).toInstance(om);
             binder.bind(Environment.class).toInstance(environment);
@@ -184,21 +197,9 @@ public class SingularityTestModule implements Module {
             SingularityMesosExecutorInfoSupport logSupport = mock(SingularityMesosExecutorInfoSupport.class);
             binder.bind(SingularityMesosExecutorInfoSupport.class).toInstance(logSupport);
 
-            SingularityDriver mock = mock(SingularityDriver.class);
-            when(mock.kill((SingularityTaskId) Matchers.any())).thenReturn(Status.DRIVER_RUNNING);
-            when(mock.getMaster()).thenReturn(Optional.<MasterInfo>absent());
-            when(mock.start()).thenReturn(Status.DRIVER_RUNNING);
-            when(mock.getLastOfferTimestamp()).thenReturn(Optional.<Long>absent());
-            binder.bind(SingularityDriver.class).toInstance(mock);
-
-            SchedulerDriver driver = mock(SchedulerDriver.class);
-
-            when(driver.killTask(null)).thenReturn(Status.DRIVER_RUNNING);
-
-            SchedulerDriverSupplier driverSupplier = new SchedulerDriverSupplier();
-            driverSupplier.setSchedulerDriver(driver);
-
-            binder.bind(SchedulerDriverSupplier.class).toInstance(driverSupplier);
+            SingularityMesosSchedulerClient mockClient = mock(SingularityMesosSchedulerClient.class);
+            when(mockClient.isRunning()).thenReturn(true);
+            binder.bind(SingularityMesosSchedulerClient.class).toInstance(mockClient);
           }
         }));
 
@@ -209,14 +210,12 @@ public class SingularityTestModule implements Module {
     mainBinder.install(new SingularityZkMigrationsModule());
 
     mainBinder.install(new SingularityEventModule(configuration));
-    mainBinder.install(Modules.override(new SingularityAuthModule(configuration))
-        .with(new Module() {
-          @Override
-          public void configure(Binder binder) {
-            binder.bind(SingularityAuthenticator.class).to(SingularityTestAuthenticator.class);
-            binder.bind(SingularityTestAuthenticator.class).in(Scopes.SINGLETON);
-          }
-        }));
+
+    // Auth module bits
+    mainBinder.bind(SingularityAuthenticator.class).to(SingularityTestAuthenticator.class);
+    mainBinder.bind(SingularityAuthDatastore.class).to(SingularityDisabledAuthDatastore.class);
+    mainBinder.bind(SingularityAuthorizationHelper.class).in(Scopes.SINGLETON);
+    mainBinder.bind(SingularityTestAuthenticator.class).in(Scopes.SINGLETON);
 
     mainBinder.bind(DeployResource.class);
     mainBinder.bind(RequestResource.class);
@@ -243,6 +242,7 @@ public class SingularityTestModule implements Module {
     MesosConfiguration mc = new MesosConfiguration();
     mc.setDefaultCpus(1);
     mc.setDefaultMemory(128);
+    mc.setDefaultDisk(1024);
     config.setMesosConfiguration(mc);
 
     config.setSmtpConfiguration(new SMTPConfiguration());
