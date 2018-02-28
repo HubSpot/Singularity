@@ -1,5 +1,6 @@
 import React, {PropTypes, Component} from 'react';
 import { connect } from 'react-redux';
+import { LinkContainer } from 'react-router-bootstrap';
 import rootComponent from '../../rootComponent';
 
 import { Row, Col, Nav, NavItem, Label } from 'react-bootstrap';
@@ -13,7 +14,7 @@ class GroupDetail extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      showRequestId: _.first(props.group.requestIds)
+      showRequestId: props.params.requestId || _.first(props.group.requestIds),
     };
     _.bindAll(this, 'handleRequestSelect');
   }
@@ -50,9 +51,15 @@ class GroupDetail extends Component {
 
             <Nav bsStyle="pills" stacked={true} activeKey={this.state.showRequestId} onSelect={this.handleRequestSelect}>
               {group.requestIds.map((requestId, index) =>
-                <NavItem className="request-group-navitem" key={index} eventKey={requestId}>
-                  {requestId} {requestsNotFound.includes(requestId) && <Label bsStyle="danger">Deleted</Label>}
-                </NavItem>
+                <LinkContainer
+                  eventKey={requestId}
+                  key={index}
+                  to={`/group/${group.id}/${requestId}`}
+                >
+                  <NavItem className="request-group-navitem">
+                    {requestId} {requestsNotFound.includes(requestId) && <Label bsStyle="danger">Deleted</Label>}
+                  </NavItem>
+                </LinkContainer>
               )}
             </Nav>
           </Col>
@@ -68,7 +75,9 @@ class GroupDetail extends Component {
 GroupDetail.propTypes = {
   group: PropTypes.object,
   location: PropTypes.object,
-  requests: PropTypes.object,
+  params: PropTypes.shape({
+    requestId: PropTypes.string,
+  }),
   requestsNotFound: PropTypes.array
 };
 
