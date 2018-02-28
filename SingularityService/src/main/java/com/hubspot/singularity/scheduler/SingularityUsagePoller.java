@@ -221,7 +221,7 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
           if (slaveOverloaded && configuration.isShuffleTasksForOverloadedSlaves() && currentUsage != null && currentUsage.getCpusUsed() > 0) {
             if (isLongRunning(task)) {
               Optional<SingularityTaskHistoryUpdate> maybeCleanupUpdate = taskManager.getTaskHistoryUpdate(task, ExtendedTaskState.TASK_CLEANING);
-              if (maybeCleanupUpdate.isPresent() && isTaskShuffleCleanup(maybeCleanupUpdate.get())) {
+              if (maybeCleanupUpdate.isPresent() && isTaskAlreadyCleanedUpForShuffle(maybeCleanupUpdate.get())) {
                 LOG.trace("Task {} already being cleaned up to spread cpu usage, skipping", taskId);
                 shuffledTasks++;
               } else {
@@ -294,7 +294,7 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
     usageManager.saveClusterUtilization(getClusterUtilization(utilizationPerRequestId, totalMemBytesUsed, totalMemBytesAvailable, totalCpuUsed, totalCpuAvailable, totalDiskBytesUsed, totalDiskBytesAvailable, now));
   }
 
-  private boolean isTaskShuffleCleanup(SingularityTaskHistoryUpdate taskHistoryUpdate) {
+  private boolean isTaskAlreadyCleanedUpForShuffle(SingularityTaskHistoryUpdate taskHistoryUpdate) {
     if (taskHistoryUpdate.getStatusMessage().or("").contains(TaskCleanupType.REBALANCE_CPU_USAGE.name())) {
       return true;
     }
