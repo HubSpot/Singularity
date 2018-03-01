@@ -243,6 +243,7 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
           possibleTasksToShuffle.sort((u1, u2) -> Double.compare(u2.getUsage().getCpusUsed(), u1.getUsage().getCpusUsed()));
           for (TaskIdWithUsage taskIdWithUsage : possibleTasksToShuffle) {
             if (cpuOverage <= 0 || shuffledTasks > configuration.getMaxTasksToShufflePerHost() || currentShuffleCleanupsTotal >= configuration.getMaxTasksToShuffleTotal()) {
+              LOG.debug("Not shuffling any more tasks (overage: {}, shuffledOnHost: {}, totalShuffleCleanups: {})", cpuOverage, shuffledTasks, currentShuffleCleanupsTotal);
               break;
             }
             LOG.debug("Cleaning up task {} to free up cpu on overloaded host (remaining cpu overage: {})", taskIdWithUsage.getTaskId(), cpuOverage);
