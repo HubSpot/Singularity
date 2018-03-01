@@ -247,7 +247,7 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
           possibleTasksToShuffle.sort((u1, u2) -> Double.compare(u2.getUsage().getCpusUsed(), u1.getUsage().getCpusUsed()));
           for (TaskIdWithUsage taskIdWithUsage : possibleTasksToShuffle) {
             if (requestsWithShuffledTasks.contains(taskIdWithUsage.getTaskId().getRequestId())) {
-              LOG.debug("Request {} laready has a shuffling task, skipping", taskIdWithUsage.getTaskId().getRequestId());
+              LOG.debug("Request {} already has a shuffling task, skipping", taskIdWithUsage.getTaskId().getRequestId());
               continue;
             }
             if (cpuOverage <= 0 || shuffledTasks > configuration.getMaxTasksToShufflePerHost() || currentShuffleCleanupsTotal >= configuration.getMaxTasksToShuffleTotal()) {
