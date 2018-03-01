@@ -745,7 +745,7 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
   }
 
   protected MesosTaskMonitorObject getTaskMonitor(String id, double cpuSecs, long timestampSeconds, int memBytes) {
-    return new MesosTaskMonitorObject(null, null, null, id, getStatistics(cpuSecs, timestampSeconds, memBytes));
+    return new MesosTaskMonitorObject("123", "123", "123", id, getStatistics(cpuSecs, timestampSeconds, memBytes));
   }
 
 }
