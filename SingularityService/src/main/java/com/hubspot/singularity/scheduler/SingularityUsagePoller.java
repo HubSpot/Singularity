@@ -94,14 +94,16 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
     long totalDiskBytesAvailable = 0;
 
     long currentShuffleCleanupsTotal = 0;
-    if (configuration.isShuffleTasksForOverloadedSlaves()) {
-      currentShuffleCleanupsTotal = taskManager.getCleanupTasks()
-          .stream()
-          .filter((taskCleanup) -> taskCleanup.getCleanupType() == TaskCleanupType.REBALANCE_CPU_USAGE)
-          .count();
-    }
 
     Set<String> requestsWithShuffledTasks = new HashSet<>();
+    if (configuration.isShuffleTasksForOverloadedSlaves()) {
+      List<SingularityTaskCleanup> shuffleCleanups = taskManager.getCleanupTasks()
+          .stream()
+          .filter((taskCleanup) -> taskCleanup.getCleanupType() == TaskCleanupType.REBALANCE_CPU_USAGE)
+          .collect(Collectors.toList());
+      currentShuffleCleanupsTotal = shuffleCleanups.size();
+      shuffleCleanups.forEach((taskCleanup) -> requestsWithShuffledTasks.add(taskCleanup.getTaskId().getRequestId()));
+    }
 
     for (SingularitySlave slave : usageHelper.getSlavesToTrackUsageFor()) {
       Map<ResourceUsageType, Number> longRunningTasksUsage = new HashMap<>();
