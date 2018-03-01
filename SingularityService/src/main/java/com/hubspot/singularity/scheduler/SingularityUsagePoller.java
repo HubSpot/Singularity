@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -24,15 +25,19 @@ import com.hubspot.singularity.SingularityClusterUtilization;
 import com.hubspot.singularity.SingularityDeleteResult;
 import com.hubspot.singularity.SingularityDeploy;
 import com.hubspot.singularity.SingularityDeployStatistics;
+import com.hubspot.singularity.SingularityPendingRequest;
+import com.hubspot.singularity.SingularityPendingRequest.PendingType;
 import com.hubspot.singularity.SingularityRequestWithState;
 import com.hubspot.singularity.SingularitySlave;
 import com.hubspot.singularity.SingularitySlaveUsage;
 import com.hubspot.singularity.SingularitySlaveUsage.ResourceUsageType;
 import com.hubspot.singularity.SingularityTask;
+import com.hubspot.singularity.SingularityTaskCleanup;
 import com.hubspot.singularity.SingularityTaskCurrentUsage;
 import com.hubspot.singularity.SingularityTaskHistoryUpdate;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTaskUsage;
+import com.hubspot.singularity.TaskCleanupType;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.DeployManager;
 import com.hubspot.singularity.data.RequestManager;
@@ -126,6 +131,28 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
           systemCpusTotal = slaveMetricsSnapshot.getSystemCpusTotal();
         }
 
+        double systemLoad;
+
+        switch (configuration.getMesosConfiguration().getScoreUsingSystemLoad()) {
+          case LOAD_1:
+            systemLoad = systemLoad1Min;
+            break;
+          case LOAD_15:
+            systemLoad = systemLoad15Min;
+            break;
+          case LOAD_5:
+          default:
+            systemLoad = systemLoad5Min;
+            break;
+        }
+
+
+
+        boolean slaveOverloaded = systemCpusTotal > 0 && systemLoad / systemCpusTotal > 1.0;
+        double cpuOverage = slaveOverloaded ? systemLoad - systemCpusTotal : 0.0;
+        int shuffledTasks = 0;
+        List<TaskIdWithUsage> possibleTasksToShuffle = new ArrayList<>();
+
         for (MesosTaskMonitorObject taskUsage : allTaskUsage) {
           String taskId = taskUsage.getSource();
           SingularityTaskId task;
@@ -162,6 +189,7 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
           memoryBytesUsedOnSlave += latestUsage.getMemoryTotalBytes();
           diskMbUsedOnSlave += latestUsage.getDiskTotalBytes();
 
+          SingularityTaskCurrentUsage currentUsage = null;
           if (pastTaskUsages.isEmpty()) {
             Optional<SingularityTaskHistoryUpdate> maybeStartingUpdate = taskManager.getTaskHistoryUpdate(task, ExtendedTaskState.TASK_STARTING);
             if (maybeStartingUpdate.isPresent()) {
@@ -170,7 +198,7 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
               if (isLongRunning(task) ||  isConsideredLongRunning(task)) {
                 updateLongRunningTasksUsage(longRunningTasksUsage, latestUsage.getMemoryTotalBytes(), usedCpusSinceStart, latestUsage.getDiskTotalBytes());
               }
-              SingularityTaskCurrentUsage currentUsage = new SingularityTaskCurrentUsage(latestUsage.getMemoryTotalBytes(), now, usedCpusSinceStart, latestUsage.getDiskTotalBytes());
+              currentUsage = new SingularityTaskCurrentUsage(latestUsage.getMemoryTotalBytes(), now, usedCpusSinceStart, latestUsage.getDiskTotalBytes());
               usageManager.saveCurrentTaskUsage(taskId, currentUsage);
 
               cpusUsedOnSlave += usedCpusSinceStart;
@@ -183,11 +211,47 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
             if (isLongRunning(task) ||  isConsideredLongRunning(task)) {
               updateLongRunningTasksUsage(longRunningTasksUsage, latestUsage.getMemoryTotalBytes(), taskCpusUsed, latestUsage.getDiskTotalBytes());
             }
-            SingularityTaskCurrentUsage currentUsage = new SingularityTaskCurrentUsage(latestUsage.getMemoryTotalBytes(), now, taskCpusUsed, latestUsage.getDiskTotalBytes());
+            currentUsage = new SingularityTaskCurrentUsage(latestUsage.getMemoryTotalBytes(), now, taskCpusUsed, latestUsage.getDiskTotalBytes());
 
             usageManager.saveCurrentTaskUsage(taskId, currentUsage);
 
             cpusUsedOnSlave += taskCpusUsed;
+          }
+
+          if (slaveOverloaded && configuration.isShuffleTasksForOverloadedSlaves() && currentUsage != null && currentUsage.getCpusUsed() > 0) {
+            if (isLongRunning(task)) {
+              Optional<SingularityTaskHistoryUpdate> maybeCleanupUpdate = taskManager.getTaskHistoryUpdate(task, ExtendedTaskState.TASK_CLEANING);
+              if (maybeCleanupUpdate.isPresent() && isTaskAlreadyCleanedUpForShuffle(maybeCleanupUpdate.get())) {
+                LOG.trace("Task {} already being cleaned up to spread cpu usage, skipping", taskId);
+                shuffledTasks++;
+              } else {
+                possibleTasksToShuffle.add(new TaskIdWithUsage(task, currentUsage));
+              }
+            }
+          }
+        }
+
+        if (slaveOverloaded && configuration.isShuffleTasksForOverloadedSlaves()) {
+          possibleTasksToShuffle.sort((u1, u2) -> Double.compare(u2.getUsage().getCpusUsed(), u1.getUsage().getCpusUsed()));
+          for (TaskIdWithUsage taskIdWithUsage : possibleTasksToShuffle) {
+            if (cpuOverage <= 0 || shuffledTasks > configuration.getMaxTasksToShuffleForCpuOverage()) {
+              break;
+            }
+            LOG.debug("Cleaning up task {} to free up cpu on overloaded host (remaining cpu overage: {})", taskIdWithUsage.getTaskId(), cpuOverage);
+            Optional<String> message = Optional.of(String.format("Load on slave %s is %s / %s, shuffling task to less busy host", slave.getHost(), systemLoad, systemCpusTotal));
+            taskManager.createTaskCleanup(
+                new SingularityTaskCleanup(
+                    Optional.absent(),
+                    TaskCleanupType.REBALANCE_CPU_USAGE,
+                    System.currentTimeMillis(),
+                    taskIdWithUsage.getTaskId(),
+                    message,
+                    Optional.of(UUID.randomUUID().toString()),
+                    Optional.absent(), Optional.absent()));
+            requestManager.addToPendingQueue(new SingularityPendingRequest(taskIdWithUsage.getTaskId().getRequestId(), taskIdWithUsage.getTaskId().getDeployId(), now, Optional.absent(),
+                PendingType.TASK_BOUNCE, Optional.absent(), Optional.absent(), Optional.absent(), message, Optional.of(UUID.randomUUID().toString())));
+            cpuOverage -= taskIdWithUsage.getUsage().getCpusUsed();
+            shuffledTasks++;
           }
         }
 
@@ -228,6 +292,18 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
       }
     }
     usageManager.saveClusterUtilization(getClusterUtilization(utilizationPerRequestId, totalMemBytesUsed, totalMemBytesAvailable, totalCpuUsed, totalCpuAvailable, totalDiskBytesUsed, totalDiskBytesAvailable, now));
+  }
+
+  private boolean isTaskAlreadyCleanedUpForShuffle(SingularityTaskHistoryUpdate taskHistoryUpdate) {
+    if (taskHistoryUpdate.getStatusMessage().or("").contains(TaskCleanupType.REBALANCE_CPU_USAGE.name())) {
+      return true;
+    }
+    for (SingularityTaskHistoryUpdate previous : taskHistoryUpdate.getPrevious()) {
+      if (previous.getStatusMessage().or("").contains(TaskCleanupType.REBALANCE_CPU_USAGE.name())) {
+        return true;
+      }
+    }
+    return false;
   }
 
   private SingularityTaskUsage getUsage(MesosTaskMonitorObject taskUsage) {
@@ -466,5 +542,23 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
       }
     }
 
+  }
+
+  private static class TaskIdWithUsage {
+    private final SingularityTaskId taskId;
+    private final SingularityTaskCurrentUsage usage;
+
+    TaskIdWithUsage(SingularityTaskId taskId, SingularityTaskCurrentUsage usage) {
+      this.taskId = taskId;
+      this.usage = usage;
+    }
+
+    public SingularityTaskId getTaskId() {
+      return taskId;
+    }
+
+    public SingularityTaskCurrentUsage getUsage() {
+      return usage;
+    }
   }
 }
