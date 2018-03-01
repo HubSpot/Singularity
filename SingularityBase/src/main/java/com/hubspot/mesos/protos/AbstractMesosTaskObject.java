@@ -1,12 +1,10 @@
 package com.hubspot.mesos.protos;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
 import javax.annotation.Nullable;
 
-import org.immutables.value.Value.Default;
 import org.immutables.value.Value.Immutable;
 
 import com.fasterxml.jackson.annotation.JsonAnyGetter;
@@ -44,10 +42,7 @@ public abstract class AbstractMesosTaskObject {
   @Nullable
   public abstract MesosStringValue getSlaveId();
 
-  @Default
-  public List<MesosResourceObject> getResources() {
-    return Collections.emptyList();
-  }
+  public abstract List<MesosResourceObject> getResources();
 
   // Unknown fields
   @JsonAnyGetter

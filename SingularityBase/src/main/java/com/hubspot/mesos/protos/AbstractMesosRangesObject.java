@@ -1,9 +1,7 @@
 package com.hubspot.mesos.protos;
 
-import java.util.Collections;
 import java.util.List;
 
-import org.immutables.value.Value.Default;
 import org.immutables.value.Value.Immutable;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -13,10 +11,7 @@ import com.hubspot.singularity.annotations.SingularityStyle;
 @SingularityStyle
 public abstract class AbstractMesosRangesObject {
 
-  @Default
-  public List<MesosRangeObject> getRange() {
-    return Collections.emptyList();
-  }
+  public abstract List<MesosRangeObject> getRange();
 
   @JsonIgnore // to mimic mesos
   public List<MesosRangeObject> getRangesList() {

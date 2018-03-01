@@ -13,7 +13,7 @@ import com.google.inject.Inject;
 import com.hubspot.singularity.api.common.SingularityFrameworkMessage;
 import com.hubspot.singularity.api.task.SingularityTaskDestroyFrameworkMessage;
 import com.hubspot.singularity.api.task.SingularityTaskShellCommandRequest;
-import com.hubspot.singularity.api.task.SingularityTaskShellCommandUpdate.UpdateType;
+import com.hubspot.singularity.api.task.ShellCommandUpdateType;
 import com.hubspot.singularity.executor.SingularityExecutorMonitor.KillState;
 import com.hubspot.singularity.executor.config.SingularityExecutorConfiguration;
 import com.hubspot.singularity.executor.shells.SingularityExecutorShellCommandRunner;
@@ -82,7 +82,7 @@ public class SingularityExecutorMesosFrameworkMessageHandler {
     Optional<SingularityExecutorTaskProcessCallable> taskProcess = monitor.getTaskProcess(shellRequest.getTaskId().getId());
 
     if (!taskProcess.isPresent()) {
-      updater.sendUpdate(UpdateType.INVALID, Optional.of("No task process found"), Optional.empty());
+      updater.sendUpdate(ShellCommandUpdateType.INVALID, Optional.of("No task process found"), Optional.empty());
       return;
     }
 

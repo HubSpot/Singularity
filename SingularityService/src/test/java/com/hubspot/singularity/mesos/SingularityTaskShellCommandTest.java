@@ -25,7 +25,7 @@ import com.hubspot.singularity.api.task.SingularityTaskId;
 import com.hubspot.singularity.api.task.SingularityTaskShellCommandRequest;
 import com.hubspot.singularity.api.task.SingularityTaskShellCommandRequestId;
 import com.hubspot.singularity.api.task.SingularityTaskShellCommandUpdate;
-import com.hubspot.singularity.api.task.SingularityTaskShellCommandUpdate.UpdateType;
+import com.hubspot.singularity.api.task.ShellCommandUpdateType;
 import com.hubspot.singularity.config.UIConfiguration;
 import com.hubspot.singularity.config.shell.ShellCommandDescriptor;
 import com.hubspot.singularity.config.shell.ShellCommandOptionDescriptor;
@@ -99,22 +99,22 @@ public class SingularityTaskShellCommandTest extends SingularitySchedulerTestBas
     mesosScheduler.message(Event.Message.newBuilder()
         .setExecutorId(MesosProtosUtils.toExecutorId(task.getMesosTask().getExecutor().getExecutorId()))
         .setAgentId(MesosProtosUtils.toAgentId(task.getMesosTask().getAgentId()))
-        .setData(ByteString.copyFrom(updateTranscoder.toBytes(new SingularityTaskShellCommandUpdate(firstShellRequest.getId(), System.currentTimeMillis(), Optional.<String> of("hi"), Optional.empty(), UpdateType.STARTED))))
+        .setData(ByteString.copyFrom(updateTranscoder.toBytes(new SingularityTaskShellCommandUpdate(firstShellRequest.getId(), System.currentTimeMillis(), Optional.<String> of("hi"), Optional.empty(), ShellCommandUpdateType.STARTED))))
         .build());
 
     mesosScheduler.message(Event.Message.newBuilder()
         .setExecutorId(MesosProtosUtils.toExecutorId(task.getMesosTask().getExecutor().getExecutorId()))
         .setAgentId(MesosProtosUtils.toAgentId(task.getMesosTask().getAgentId()))
-        .setData(ByteString.copyFrom(updateTranscoder.toBytes(new SingularityTaskShellCommandUpdate(new SingularityTaskShellCommandRequestId(task.getTaskId(), "wat", System.currentTimeMillis()), System.currentTimeMillis(), Optional.<String> of("hi"), Optional.empty(), UpdateType.STARTED))))
+        .setData(ByteString.copyFrom(updateTranscoder.toBytes(new SingularityTaskShellCommandUpdate(new SingularityTaskShellCommandRequestId(task.getTaskId(), "wat", System.currentTimeMillis()), System.currentTimeMillis(), Optional.<String> of("hi"), Optional.empty(), ShellCommandUpdateType.STARTED))))
         .build());
 
     mesosScheduler.message(Event.Message.newBuilder()
         .setExecutorId(MesosProtosUtils.toExecutorId(task.getMesosTask().getExecutor().getExecutorId()))
         .setAgentId(MesosProtosUtils.toAgentId(task.getMesosTask().getAgentId()))
-        .setData(ByteString.copyFrom(updateTranscoder.toBytes(new SingularityTaskShellCommandUpdate(new SingularityTaskShellCommandRequestId(new SingularityTaskId("makingitup", "did", System.currentTimeMillis(), 1, "host", "rack"), "wat", System.currentTimeMillis()), System.currentTimeMillis(), Optional.<String> of("hi"), Optional.empty(), UpdateType.STARTED))))
+        .setData(ByteString.copyFrom(updateTranscoder.toBytes(new SingularityTaskShellCommandUpdate(new SingularityTaskShellCommandRequestId(new SingularityTaskId("makingitup", "did", System.currentTimeMillis(), 1, "host", "rack"), "wat", System.currentTimeMillis()), System.currentTimeMillis(), Optional.<String> of("hi"), Optional.empty(), ShellCommandUpdateType.STARTED))))
         .build());
 
-    assertEquals(true, taskManager.getTaskHistory(task.getTaskId()).get().getShellCommandHistory().get(1).getShellUpdates().get(0).getUpdateType() == UpdateType.STARTED);
+    assertEquals(true, taskManager.getTaskHistory(task.getTaskId()).get().getShellCommandHistory().get(1).getShellUpdates().get(0).getUpdateType() == ShellCommandUpdateType.STARTED);
 
     assertEquals(1, taskManager.getTaskShellCommandUpdates(firstShellRequest.getId()).size());
 
@@ -148,11 +148,11 @@ public class SingularityTaskShellCommandTest extends SingularitySchedulerTestBas
     cleaner.drainCleanupQueue();
     Assert.assertEquals(2, taskManager.getActiveTaskIdsForRequest(requestId).size());
 
-    taskManager.saveTaskShellCommandUpdate(new SingularityTaskShellCommandUpdate(shellCommandRequestId, System.currentTimeMillis(), Optional.empty(), Optional.empty(), UpdateType.ACKED));
+    taskManager.saveTaskShellCommandUpdate(new SingularityTaskShellCommandUpdate(shellCommandRequestId, System.currentTimeMillis(), Optional.empty(), Optional.empty(), ShellCommandUpdateType.ACKED));
     cleaner.drainCleanupQueue();
     Assert.assertEquals(2, taskManager.getActiveTaskIdsForRequest(requestId).size());
 
-    taskManager.saveTaskShellCommandUpdate(new SingularityTaskShellCommandUpdate(shellCommandRequestId, System.currentTimeMillis(), Optional.empty(), Optional.empty(), UpdateType.FINISHED));
+    taskManager.saveTaskShellCommandUpdate(new SingularityTaskShellCommandUpdate(shellCommandRequestId, System.currentTimeMillis(), Optional.empty(), Optional.empty(), ShellCommandUpdateType.FINISHED));
     cleaner.drainCleanupQueue();
     Assert.assertEquals(1, taskManager.getKilledTaskIdRecords().size());
   }

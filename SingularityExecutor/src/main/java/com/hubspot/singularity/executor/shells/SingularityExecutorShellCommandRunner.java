@@ -16,7 +16,7 @@ import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.hubspot.singularity.api.task.SingularityTaskShellCommandRequest;
-import com.hubspot.singularity.api.task.SingularityTaskShellCommandUpdate.UpdateType;
+import com.hubspot.singularity.api.task.ShellCommandUpdateType;
 import com.hubspot.singularity.executor.config.SingularityExecutorConfiguration;
 import com.hubspot.singularity.executor.task.SingularityExecutorTask;
 import com.hubspot.singularity.executor.task.SingularityExecutorTaskProcessCallable;
@@ -77,7 +77,7 @@ public class SingularityExecutorShellCommandRunner {
     try {
       command = buildCommand();
     } catch (InvalidShellCommandException isce) {
-      shellCommandUpdater.sendUpdate(UpdateType.INVALID, Optional.of(isce.getMessage()), Optional.empty());
+      shellCommandUpdater.sendUpdate(ShellCommandUpdateType.INVALID, Optional.of(isce.getMessage()), Optional.empty());
       return;
     }
 
@@ -85,7 +85,7 @@ public class SingularityExecutorShellCommandRunner {
         .replace("{NAME}", shellRequest.getShellCommand().getLogfileName().orElse(convertCommandNameToLogfileName(shellRequest.getShellCommand().getName())))
         .replace("{TIMESTAMP}", Long.toString(shellRequest.getTimestamp()));
 
-    shellCommandUpdater.sendUpdate(UpdateType.ACKED, Optional.of(Joiner.on(" ").join(command)), Optional.of(outputFilename));
+    shellCommandUpdater.sendUpdate(ShellCommandUpdateType.ACKED, Optional.of(Joiner.on(" ").join(command)), Optional.of(outputFilename));
 
     final File outputFile = MesosUtils.getTaskDirectoryPath(getTask().getTaskId()).resolve(outputFilename).toFile();
 
@@ -99,14 +99,14 @@ public class SingularityExecutorShellCommandRunner {
       public void onSuccess(Integer result) {
         task.getLog().info("ShellRequest {} finished with {}", shellRequest, result);
 
-        shellCommandUpdater.sendUpdate(UpdateType.FINISHED, Optional.of(String.format("Finished with code %s", result)), Optional.empty());
+        shellCommandUpdater.sendUpdate(ShellCommandUpdateType.FINISHED, Optional.of(String.format("Finished with code %s", result)), Optional.empty());
       }
 
       @Override
       public void onFailure(Throwable t) {
         task.getLog().warn("ShellRequest {} failed", shellRequest, t);
 
-        shellCommandUpdater.sendUpdate(UpdateType.FAILED, Optional.of(String.format("Failed - %s (%s)", t.getClass().getSimpleName(), t.getMessage())), Optional.empty());
+        shellCommandUpdater.sendUpdate(ShellCommandUpdateType.FAILED, Optional.of(String.format("Failed - %s (%s)", t.getClass().getSimpleName(), t.getMessage())), Optional.empty());
       }
 
     });
