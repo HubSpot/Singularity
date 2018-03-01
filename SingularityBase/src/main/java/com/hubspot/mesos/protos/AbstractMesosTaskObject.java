@@ -7,9 +7,11 @@ import java.util.Map;
 import javax.annotation.Nullable;
 
 import org.immutables.value.Value.Default;
+import org.immutables.value.Value.Immutable;
 
 import com.fasterxml.jackson.annotation.JsonAnyGetter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.hubspot.singularity.annotations.SingularityStyle;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
@@ -18,8 +20,10 @@ import io.swagger.v3.oas.annotations.media.Schema;
  * AgentID from either a field named slaveId or a field named agentId for
  * better backwards compatibility
  */
+@Immutable
+@SingularityStyle
 @Schema(description = "The mesos protos representation of a task")
-public abstract class MesosTaskObject {
+public abstract class AbstractMesosTaskObject {
 
   public abstract MesosStringValue getTaskId();
 
@@ -31,6 +35,7 @@ public abstract class MesosTaskObject {
     return getExecutor() != null;
   }
 
+  @Nullable
   public abstract MesosLabels getLabels();
 
   @Nullable
