@@ -34,11 +34,6 @@ public class SingularityTaskState {
     this.pending = pending;
   }
 
-  @Deprecated
-  public SingularityTaskState(Optional<SingularityTaskId> taskId, SingularityPendingTaskId pendingTaskId, Optional<String> runId, Optional<ExtendedTaskState> currentState, List<SingularityTaskHistoryUpdate> taskHistory, boolean pending) {
-   this(taskId, Optional.of(pendingTaskId), runId, currentState, taskHistory, pending);
-  }
-
   public static SingularityTaskState fromTaskHistory(SingularityTaskHistory taskHistory) {
     return new SingularityTaskState(
         Optional.of(taskHistory.getTask().getTaskId()),
