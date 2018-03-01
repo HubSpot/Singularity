@@ -91,6 +91,14 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
     long totalDiskBytesUsed = 0;
     long totalDiskBytesAvailable = 0;
 
+    long currentShuffleCleanupsTotal = 0;
+    if (configuration.isShuffleTasksForOverloadedSlaves()) {
+      currentShuffleCleanupsTotal = taskManager.getCleanupTasks()
+          .stream()
+          .filter((taskCleanup) -> taskCleanup.getCleanupType() == TaskCleanupType.REBALANCE_CPU_USAGE)
+          .count();
+    }
+
     for (SingularitySlave slave : usageHelper.getSlavesToTrackUsageFor()) {
       Map<ResourceUsageType, Number> longRunningTasksUsage = new HashMap<>();
       longRunningTasksUsage.put(ResourceUsageType.MEMORY_BYTES_USED, 0);
@@ -234,7 +242,7 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
         if (slaveOverloaded && configuration.isShuffleTasksForOverloadedSlaves()) {
           possibleTasksToShuffle.sort((u1, u2) -> Double.compare(u2.getUsage().getCpusUsed(), u1.getUsage().getCpusUsed()));
           for (TaskIdWithUsage taskIdWithUsage : possibleTasksToShuffle) {
-            if (cpuOverage <= 0 || shuffledTasks > configuration.getMaxTasksToShuffleForCpuOverage()) {
+            if (cpuOverage <= 0 || shuffledTasks > configuration.getMaxTasksToShufflePerHost() || currentShuffleCleanupsTotal >= configuration.getMaxTasksToShuffleTotal()) {
               break;
             }
             LOG.debug("Cleaning up task {} to free up cpu on overloaded host (remaining cpu overage: {})", taskIdWithUsage.getTaskId(), cpuOverage);
@@ -252,6 +260,7 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
                 PendingType.TASK_BOUNCE, Optional.absent(), Optional.absent(), Optional.absent(), message, Optional.of(UUID.randomUUID().toString())));
             cpuOverage -= taskIdWithUsage.getUsage().getCpusUsed();
             shuffledTasks++;
+            currentShuffleCleanupsTotal++;
           }
         }
 
