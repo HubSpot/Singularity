@@ -77,7 +77,9 @@ public class SingularityConfiguration extends Configuration {
 
   private boolean shuffleTasksForOverloadedSlaves = false; // recommended 'true' when oversubscribing cpu for larger clusters
 
-  private int maxTasksToShuffleForCpuOverage = 3;
+  private int maxTasksToShuffleTotal = 6; // Do not allow more than this many shuffle cleanups at once cluster-wide
+
+  private int maxTasksToShufflePerHost = 2;
 
   private long cleanUsageEveryMillis = TimeUnit.MINUTES.toMillis(5);
 
@@ -1478,17 +1480,16 @@ public class SingularityConfiguration extends Configuration {
     return usageIntervalSeconds;
   }
 
-  public SingularityConfiguration setUsageIntervalSeconds(int usageIntervalSeconds) {
+  public void setUsageIntervalSeconds(int usageIntervalSeconds) {
     this.usageIntervalSeconds = usageIntervalSeconds;
-    return this;
   }
 
-  public int getMaxTasksToShuffleForCpuOverage() {
-    return maxTasksToShuffleForCpuOverage;
+  public int getMaxTasksToShufflePerHost() {
+    return maxTasksToShufflePerHost;
   }
 
-  public void setMaxTasksToShuffleForCpuOverage(int maxTasksToShuffleForCpuOverage) {
-    this.maxTasksToShuffleForCpuOverage = maxTasksToShuffleForCpuOverage;
+  public void setMaxTasksToShufflePerHost(int maxTasksToShufflePerHost) {
+    this.maxTasksToShufflePerHost = maxTasksToShufflePerHost;
   }
 
   public boolean isShuffleTasksForOverloadedSlaves() {
@@ -1497,6 +1498,14 @@ public class SingularityConfiguration extends Configuration {
 
   public void setShuffleTasksForOverloadedSlaves(boolean shuffleTasksForOverloadedSlaves) {
     this.shuffleTasksForOverloadedSlaves = shuffleTasksForOverloadedSlaves;
+  }
+
+  public int getMaxTasksToShuffleTotal() {
+    return maxTasksToShuffleTotal;
+  }
+
+  public void setMaxTasksToShuffleTotal(int maxTasksToShuffleTotal) {
+    this.maxTasksToShuffleTotal = maxTasksToShuffleTotal;
   }
 
   public long getCleanUsageEveryMillis() {
