@@ -49,6 +49,7 @@ import com.hubspot.singularity.api.request.SingularityPendingRequest;
 import com.hubspot.singularity.api.request.SingularityPendingRequest.PendingType;
 import com.hubspot.singularity.api.request.SingularityRequest;
 import com.hubspot.singularity.api.request.SingularityRequestWithState;
+import com.hubspot.singularity.api.task.MetadataLevel;
 import com.hubspot.singularity.api.task.SingularityKillTaskRequest;
 import com.hubspot.singularity.api.task.SingularityKilledTaskIdRecord;
 import com.hubspot.singularity.api.task.SingularityPendingTask;
@@ -542,8 +543,14 @@ public class TaskResource extends AbstractLeaderAwareResource {
 
     WebExceptions.checkNotFound(taskManager.taskExistsInZk(taskIdObj), "Task %s not found in ZooKeeper (can not save metadata to tasks which have been persisted", taskIdObj);
 
-    final SingularityTaskMetadata taskMetadata = new SingularityTaskMetadata(taskIdObj, System.currentTimeMillis(), taskMetadataRequest.getType(), taskMetadataRequest.getTitle(),
-        taskMetadataRequest.getMessage(),  user.getEmail(), taskMetadataRequest.getLevel());
+    final SingularityTaskMetadata taskMetadata = SingularityTaskMetadata.builder()
+        .setTaskId(taskIdObj)
+        .setTimestamp(System.currentTimeMillis())
+        .setMessage(taskMetadataRequest.getMessage())
+        .setType(taskMetadataRequest.getType())
+        .setUser(user.getEmail())
+        .setLevel(taskMetadataRequest.getLevel().orElse(MetadataLevel.INFO))
+        .build();
 
     SingularityCreateResult result = taskManager.saveTaskMetadata(taskMetadata);
 

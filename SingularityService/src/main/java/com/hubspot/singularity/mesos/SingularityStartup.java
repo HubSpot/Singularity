@@ -25,10 +25,10 @@ import com.hubspot.singularity.api.request.SingularityPendingRequest.PendingType
 import com.hubspot.singularity.api.request.SingularityRequest;
 import com.hubspot.singularity.api.request.SingularityRequestDeployState;
 import com.hubspot.singularity.api.request.SingularityRequestWithState;
+import com.hubspot.singularity.api.task.SimplifiedTaskState;
 import com.hubspot.singularity.api.task.SingularityPendingTaskId;
 import com.hubspot.singularity.api.task.SingularityTask;
 import com.hubspot.singularity.api.task.SingularityTaskHistoryUpdate;
-import com.hubspot.singularity.api.task.SingularityTaskHistoryUpdate.SimplifiedTaskState;
 import com.hubspot.singularity.api.task.SingularityTaskId;
 import com.hubspot.singularity.api.task.SingularityTaskIdHolder;
 import com.hubspot.singularity.data.DeployManager;
@@ -171,7 +171,7 @@ class SingularityStartup {
     final long start = System.currentTimeMillis();
 
     final List<SingularityTask> activeTasks = taskManager.getActiveTasks();
-    final Map<SingularityTaskId, SingularityTask> activeTaskMap = Maps.uniqueIndex(activeTasks, SingularityTaskIdHolder.getTaskIdFunction());
+    final Map<SingularityTaskId, SingularityTask> activeTaskMap = Maps.uniqueIndex(activeTasks, SingularityTaskIdHolder::getTaskId);
 
     final Map<SingularityTaskId, List<SingularityTaskHistoryUpdate>> taskUpdates = taskManager.getTaskHistoryUpdates(activeTaskMap.keySet());
 

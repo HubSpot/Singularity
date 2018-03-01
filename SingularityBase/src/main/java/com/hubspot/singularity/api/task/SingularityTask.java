@@ -18,8 +18,8 @@ import com.hubspot.mesos.protos.MesosTaskObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 @Schema(description = "Describes a singularity task")
-public class SingularityTask extends SingularityTaskIdHolder {
-
+public class SingularityTask implements SingularityTaskIdHolder {
+  private final SingularityTaskId taskId;
   private final SingularityTaskRequest taskRequest;
   private final List<MesosOfferObject> offers;
   private final MesosTaskObject mesosTask;
@@ -36,7 +36,7 @@ public class SingularityTask extends SingularityTaskIdHolder {
                          @JsonProperty("offers") List<MesosOfferObject> offers,
                          @JsonProperty("mesosTask") MesosTaskObject task,
                          @JsonProperty("rackId") Optional<String> rackId) {
-    super(taskId);
+    this.taskId = taskId;
     Preconditions.checkArgument(offer != null || offers != null, "Must specify at least one of offer / offers");
     this.taskRequest = taskRequest;
     this.mesosTask = task;
@@ -46,6 +46,11 @@ public class SingularityTask extends SingularityTaskIdHolder {
     } else {
       this.offers = Collections.singletonList(offer);
     }
+  }
+
+  @Override
+  public SingularityTaskId getTaskId() {
+    return taskId;
   }
 
   @Schema(description = "The full request, deploy, and pending task data used to launch this tasl")

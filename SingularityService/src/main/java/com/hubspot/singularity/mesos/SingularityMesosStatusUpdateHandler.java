@@ -1,5 +1,6 @@
 package com.hubspot.singularity.mesos;
 
+import java.util.Collections;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
@@ -238,7 +239,7 @@ public class SingularityMesosStatusUpdateHandler {
     final Optional<String> statusMessage = getStatusMessage(status, task);
 
     final SingularityTaskHistoryUpdate taskUpdate =
-        new SingularityTaskHistoryUpdate(taskIdObj, timestamp, taskState, statusMessage, status.hasReason() ? Optional.of(status.getReason().name()) : Optional.empty());
+        new SingularityTaskHistoryUpdate(taskIdObj, timestamp, taskState, statusMessage, status.hasReason() ? Optional.of(status.getReason().name()) : Optional.empty(), Collections.emptyList());
     final SingularityCreateResult taskHistoryUpdateCreateResult = taskManager.saveTaskHistoryUpdate(taskUpdate);
 
     logSupport.checkDirectoryAndContainerId(taskIdObj);

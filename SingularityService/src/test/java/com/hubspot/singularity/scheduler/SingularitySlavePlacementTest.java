@@ -1,6 +1,7 @@
 package com.hubspot.singularity.scheduler;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -44,7 +45,7 @@ public class SingularitySlavePlacementTest extends SingularitySchedulerTestBase 
     Assert.assertTrue(taskManager.getPendingTaskIds().size() == 1);
     Assert.assertTrue(taskManager.getActiveTaskIds().size() == 1);
 
-    eventListener.taskHistoryUpdateEvent(new SingularityTaskHistoryUpdate(taskManager.getActiveTaskIds().get(0), System.currentTimeMillis(), ExtendedTaskState.TASK_CLEANING, Optional.empty(), Optional.empty()));
+    eventListener.taskHistoryUpdateEvent(new SingularityTaskHistoryUpdate(taskManager.getActiveTaskIds().get(0), System.currentTimeMillis(), ExtendedTaskState.TASK_CLEANING, Optional.empty(), Optional.empty(), Collections.emptyList()));
 
     sms.resourceOffers(Arrays.asList(createOffer(20, 20000, 50000, "slave1", "host1")));
 

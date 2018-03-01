@@ -59,9 +59,9 @@ public class MesosUtilsTest {
     final SingularityTaskId taskId = new SingularityTaskId("r", "d", System.currentTimeMillis(), 1, "h", "r");
     final Optional<String> msg = Optional.empty();
 
-    SingularityTaskHistoryUpdate update1 = new SingularityTaskHistoryUpdate(taskId, 1L, ExtendedTaskState.TASK_LAUNCHED, msg, Optional.empty());
-    SingularityTaskHistoryUpdate update2 = new SingularityTaskHistoryUpdate(taskId, 2L, ExtendedTaskState.TASK_RUNNING, msg, Optional.empty());
-    SingularityTaskHistoryUpdate update3 = new SingularityTaskHistoryUpdate(taskId, 2L, ExtendedTaskState.TASK_FAILED, msg, Optional.empty());
+    SingularityTaskHistoryUpdate update1 = new SingularityTaskHistoryUpdate(taskId, 1L, ExtendedTaskState.TASK_LAUNCHED, msg, Optional.empty(), Collections.emptyList());
+    SingularityTaskHistoryUpdate update2 = new SingularityTaskHistoryUpdate(taskId, 2L, ExtendedTaskState.TASK_RUNNING, msg, Optional.empty(), Collections.emptyList());
+    SingularityTaskHistoryUpdate update3 = new SingularityTaskHistoryUpdate(taskId, 2L, ExtendedTaskState.TASK_FAILED, msg, Optional.empty(), Collections.emptyList());
 
     List<SingularityTaskHistoryUpdate> list = Arrays.asList(update2, update1, update3);
 

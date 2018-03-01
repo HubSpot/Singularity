@@ -75,7 +75,7 @@ import com.hubspot.singularity.api.task.SingularityPendingTaskBuilder;
 import com.hubspot.singularity.api.task.SingularityPendingTaskId;
 import com.hubspot.singularity.api.task.SingularityTask;
 import com.hubspot.singularity.api.task.SingularityTaskHistoryUpdate;
-import com.hubspot.singularity.api.task.SingularityTaskHistoryUpdate.SimplifiedTaskState;
+import com.hubspot.singularity.api.task.SimplifiedTaskState;
 import com.hubspot.singularity.api.task.SingularityTaskId;
 import com.hubspot.singularity.api.task.SingularityTaskRequest;
 import com.hubspot.singularity.api.task.SingularityTaskStatusHolder;

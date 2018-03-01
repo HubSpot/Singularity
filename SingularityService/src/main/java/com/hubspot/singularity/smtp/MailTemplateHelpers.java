@@ -23,6 +23,7 @@ import com.hubspot.singularity.api.common.SingularityEmailType;
 import com.hubspot.singularity.api.disasters.SingularityDisasterDataPoint;
 import com.hubspot.singularity.api.disasters.SingularityMailDisasterDataPoint;
 import com.hubspot.singularity.api.task.ExtendedTaskState;
+import com.hubspot.singularity.api.task.SimplifiedTaskState;
 import com.hubspot.singularity.api.task.SingularityTask;
 import com.hubspot.singularity.api.task.SingularityTaskHistoryUpdate;
 import com.hubspot.singularity.api.task.SingularityTaskId;
@@ -322,8 +323,8 @@ public class MailTemplateHelpers {
   }
 
   public boolean didTaskRun(Collection<SingularityTaskHistoryUpdate> history) {
-    SingularityTaskHistoryUpdate.SimplifiedTaskState simplifiedTaskState = SingularityTaskHistoryUpdate.getCurrentState(history);
+    SimplifiedTaskState simplifiedTaskState = SingularityTaskHistoryUpdate.getCurrentState(history);
 
-    return simplifiedTaskState == SingularityTaskHistoryUpdate.SimplifiedTaskState.DONE || simplifiedTaskState == SingularityTaskHistoryUpdate.SimplifiedTaskState.RUNNING;
+    return simplifiedTaskState == SimplifiedTaskState.DONE || simplifiedTaskState == SimplifiedTaskState.RUNNING;
   }
 }

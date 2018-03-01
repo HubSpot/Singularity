@@ -131,14 +131,14 @@ public class SingularityHealthchecksTest extends SingularitySchedulerTestBase {
     Assert.assertEquals(1, taskManager.getNumCleanupTasks());
     Assert.assertEquals(2, taskManager.getNumActiveTasks());
 
-    taskManager.saveHealthcheckResult(new SingularityTaskHealthcheckResult(Optional.of(503), Optional.of(1000L), 1, Optional.empty(), Optional.empty(), secondTask.getTaskId(), Optional.empty()));
+    taskManager.saveHealthcheckResult(new SingularityTaskHealthcheckResult(Optional.of(503), Optional.of(1000L), 1, Optional.empty(), Optional.empty(), secondTask.getTaskId(), false));
 
     cleaner.drainCleanupQueue();
 
     Assert.assertEquals(1, taskManager.getNumCleanupTasks());
     Assert.assertEquals(2, taskManager.getNumActiveTasks());
 
-    taskManager.saveHealthcheckResult(new SingularityTaskHealthcheckResult(Optional.of(200), Optional.of(1000L), System.currentTimeMillis(), Optional.empty(), Optional.empty(), secondTask.getTaskId(), Optional.empty()));
+    taskManager.saveHealthcheckResult(new SingularityTaskHealthcheckResult(Optional.of(200), Optional.of(1000L), System.currentTimeMillis(), Optional.empty(), Optional.empty(), secondTask.getTaskId(), false));
 
     cleaner.drainCleanupQueue();
     killKilledTasks();
@@ -172,7 +172,7 @@ public class SingularityHealthchecksTest extends SingularitySchedulerTestBase {
 
     Assert.assertTrue(!deployManager.getDeployResult(requestId, deployId).isPresent());
 
-    taskManager.saveHealthcheckResult(new SingularityTaskHealthcheckResult(Optional.of(503), Optional.of(1000L), hourAgo + 1, Optional.empty(), Optional.empty(), task.getTaskId(), Optional.empty()));
+    taskManager.saveHealthcheckResult(new SingularityTaskHealthcheckResult(Optional.of(503), Optional.of(1000L), hourAgo + 1, Optional.empty(), Optional.empty(), task.getTaskId(), false));
 
     deployChecker.checkDeploys();
 
@@ -200,14 +200,14 @@ public class SingularityHealthchecksTest extends SingularitySchedulerTestBase {
 
     Assert.assertTrue(!deployManager.getDeployResult(requestId, deployId).isPresent());
 
-    taskManager.saveHealthcheckResult(new SingularityTaskHealthcheckResult(Optional.of(503), Optional.of(1000L), System.currentTimeMillis(), Optional.empty(), Optional.empty(), task.getTaskId(), Optional.empty()));
-    taskManager.saveHealthcheckResult(new SingularityTaskHealthcheckResult(Optional.of(503), Optional.of(1000L), System.currentTimeMillis() + 1, Optional.empty(), Optional.empty(), task.getTaskId(), Optional.empty()));
+    taskManager.saveHealthcheckResult(new SingularityTaskHealthcheckResult(Optional.of(503), Optional.of(1000L), System.currentTimeMillis(), Optional.empty(), Optional.empty(), task.getTaskId(), false));
+    taskManager.saveHealthcheckResult(new SingularityTaskHealthcheckResult(Optional.of(503), Optional.of(1000L), System.currentTimeMillis() + 1, Optional.empty(), Optional.empty(), task.getTaskId(), false));
 
     deployChecker.checkDeploys();
 
     Assert.assertTrue(!deployManager.getDeployResult(requestId, deployId).isPresent());
 
-    taskManager.saveHealthcheckResult(new SingularityTaskHealthcheckResult(Optional.of(503), Optional.of(1000L), System.currentTimeMillis() + 1, Optional.empty(), Optional.empty(), task.getTaskId(), Optional.empty()));
+    taskManager.saveHealthcheckResult(new SingularityTaskHealthcheckResult(Optional.of(503), Optional.of(1000L), System.currentTimeMillis() + 1, Optional.empty(), Optional.empty(), task.getTaskId(), false));
 
     deployChecker.checkDeploys();
 
@@ -230,11 +230,11 @@ public class SingularityHealthchecksTest extends SingularitySchedulerTestBase {
     Assert.assertEquals(CheckTaskState.CHECK_IF_HEALTHCHECK_OVERDUE, newTaskChecker.getTaskState(task, requestManager.getRequest(requestId), healthchecker));
     Assert.assertTrue(taskManager.getCleanupTaskIds().isEmpty());
 
-    taskManager.saveHealthcheckResult(new SingularityTaskHealthcheckResult(Optional.of(503), Optional.of(1000L), System.currentTimeMillis() + 1, Optional.empty(), Optional.empty(), task.getTaskId(), Optional.empty()));
+    taskManager.saveHealthcheckResult(new SingularityTaskHealthcheckResult(Optional.of(503), Optional.of(1000L), System.currentTimeMillis() + 1, Optional.empty(), Optional.empty(), task.getTaskId(), false));
 
     Assert.assertEquals(CheckTaskState.CHECK_IF_HEALTHCHECK_OVERDUE, newTaskChecker.getTaskState(task, requestManager.getRequest(requestId), healthchecker));
 
-    taskManager.saveHealthcheckResult(new SingularityTaskHealthcheckResult(Optional.of(503), Optional.of(1000L), System.currentTimeMillis() + 1, Optional.empty(), Optional.empty(), task.getTaskId(), Optional.empty()));
+    taskManager.saveHealthcheckResult(new SingularityTaskHealthcheckResult(Optional.of(503), Optional.of(1000L), System.currentTimeMillis() + 1, Optional.empty(), Optional.empty(), task.getTaskId(), false));
 
     Assert.assertEquals(CheckTaskState.UNHEALTHY_KILL_TASK, newTaskChecker.getTaskState(task, requestManager.getRequest(requestId), healthchecker));
   }
@@ -260,13 +260,13 @@ public class SingularityHealthchecksTest extends SingularitySchedulerTestBase {
 
     Assert.assertTrue(!deployManager.getDeployResult(requestId, deployId).isPresent());
 
-    taskManager.saveHealthcheckResult(new SingularityTaskHealthcheckResult(Optional.of(503), Optional.of(1000L), System.currentTimeMillis(), Optional.empty(), Optional.empty(), task.getTaskId(), Optional.empty()));
+    taskManager.saveHealthcheckResult(new SingularityTaskHealthcheckResult(Optional.of(503), Optional.of(1000L), System.currentTimeMillis(), Optional.empty(), Optional.empty(), task.getTaskId(), false));
 
     deployChecker.checkDeploys();
 
     Assert.assertTrue(!deployManager.getDeployResult(requestId, deployId).isPresent());
 
-    taskManager.saveHealthcheckResult(new SingularityTaskHealthcheckResult(Optional.of(200), Optional.of(1000L), System.currentTimeMillis() + 1, Optional.empty(), Optional.empty(), task.getTaskId(), Optional.empty()));
+    taskManager.saveHealthcheckResult(new SingularityTaskHealthcheckResult(Optional.of(200), Optional.of(1000L), System.currentTimeMillis() + 1, Optional.empty(), Optional.empty(), task.getTaskId(), false));
 
     deployChecker.checkDeploys();
 
@@ -295,13 +295,13 @@ public class SingularityHealthchecksTest extends SingularitySchedulerTestBase {
 
     Assert.assertTrue(!deployManager.getDeployResult(requestId, deployId).isPresent());
 
-    taskManager.saveHealthcheckResult(new SingularityTaskHealthcheckResult(Optional.of(503), Optional.of(1000L), System.currentTimeMillis(), Optional.empty(), Optional.empty(), task.getTaskId(), Optional.empty()));
+    taskManager.saveHealthcheckResult(new SingularityTaskHealthcheckResult(Optional.of(503), Optional.of(1000L), System.currentTimeMillis(), Optional.empty(), Optional.empty(), task.getTaskId(), false));
 
     deployChecker.checkDeploys();
 
     Assert.assertTrue(!deployManager.getDeployResult(requestId, deployId).isPresent());
 
-    taskManager.saveHealthcheckResult(new SingularityTaskHealthcheckResult(Optional.of(404), Optional.of(1000L), System.currentTimeMillis() + 1, Optional.empty(), Optional.empty(), task.getTaskId(), Optional.empty()));
+    taskManager.saveHealthcheckResult(new SingularityTaskHealthcheckResult(Optional.of(404), Optional.of(1000L), System.currentTimeMillis() + 1, Optional.empty(), Optional.empty(), task.getTaskId(), false));
 
     deployChecker.checkDeploys();
 
@@ -328,7 +328,7 @@ public class SingularityHealthchecksTest extends SingularitySchedulerTestBase {
     deployChecker.checkDeploys();
     Assert.assertTrue(!deployManager.getDeployResult(requestId, deployId).isPresent());
 
-    taskManager.saveHealthcheckResult(new SingularityTaskHealthcheckResult(Optional.empty(), Optional.of(1000L), hourAgo + 1, Optional.empty(), Optional.of("ERROR"), task.getTaskId(), Optional.of(true)));
+    taskManager.saveHealthcheckResult(new SingularityTaskHealthcheckResult(Optional.empty(), Optional.of(1000L), hourAgo + 1, Optional.empty(), Optional.of("ERROR"), task.getTaskId(), true));
     deployChecker.checkDeploys();
     Assert.assertEquals(DeployState.FAILED, deployManager.getDeployResult(requestId, deployId).get().getDeployState());
   }
@@ -349,16 +349,16 @@ public class SingularityHealthchecksTest extends SingularitySchedulerTestBase {
     deployChecker.checkDeploys();
     Assert.assertTrue(!deployManager.getDeployResult(requestId, deployId).isPresent());
 
-    taskManager.saveHealthcheckResult(new SingularityTaskHealthcheckResult(Optional.empty(), Optional.of(1000L), System.currentTimeMillis(), Optional.empty(), Optional.of("ConnectionRefused"), task.getTaskId(), Optional.of(true)));
-    taskManager.saveHealthcheckResult(new SingularityTaskHealthcheckResult(Optional.empty(), Optional.of(1000L), System.currentTimeMillis() + 1, Optional.empty(), Optional.of("ConnectionRefused"), task.getTaskId(), Optional.of(true)));
+    taskManager.saveHealthcheckResult(new SingularityTaskHealthcheckResult(Optional.empty(), Optional.of(1000L), System.currentTimeMillis(), Optional.empty(), Optional.of("ConnectionRefused"), task.getTaskId(), true));
+    taskManager.saveHealthcheckResult(new SingularityTaskHealthcheckResult(Optional.empty(), Optional.of(1000L), System.currentTimeMillis() + 1, Optional.empty(), Optional.of("ConnectionRefused"), task.getTaskId(), true));
     deployChecker.checkDeploys();
     Assert.assertTrue(!deployManager.getDeployResult(requestId, deployId).isPresent());
 
-    taskManager.saveHealthcheckResult(new SingularityTaskHealthcheckResult(Optional.of(503), Optional.of(1000L), System.currentTimeMillis() + 1, Optional.empty(), Optional.empty(), task.getTaskId(), Optional.empty()));
+    taskManager.saveHealthcheckResult(new SingularityTaskHealthcheckResult(Optional.of(503), Optional.of(1000L), System.currentTimeMillis() + 1, Optional.empty(), Optional.empty(), task.getTaskId(), false));
     deployChecker.checkDeploys();
     Assert.assertTrue(!deployManager.getDeployResult(requestId, deployId).isPresent());
 
-    taskManager.saveHealthcheckResult(new SingularityTaskHealthcheckResult(Optional.of(200), Optional.of(1000L), System.currentTimeMillis() + 1, Optional.empty(), Optional.empty(), task.getTaskId(), Optional.empty()));
+    taskManager.saveHealthcheckResult(new SingularityTaskHealthcheckResult(Optional.of(200), Optional.of(1000L), System.currentTimeMillis() + 1, Optional.empty(), Optional.empty(), task.getTaskId(), false));
     deployChecker.checkDeploys();
     Assert.assertEquals(DeployState.SUCCEEDED, deployManager.getDeployResult(requestId, deployId).get().getDeployState());
   }

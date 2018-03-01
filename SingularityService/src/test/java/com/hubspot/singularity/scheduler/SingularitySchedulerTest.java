@@ -1337,7 +1337,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
 
     // No old tasks should be killed before new ones pass healthchecks
     Assert.assertEquals(2, taskManager.getCleanupTaskIds().size());
-    taskManager.saveHealthcheckResult(new SingularityTaskHealthcheckResult(Optional.of(200), Optional.of(1000L), System.currentTimeMillis(), Optional.empty(), Optional.empty(), taskThree.getTaskId(), Optional.empty()));
+    taskManager.saveHealthcheckResult(new SingularityTaskHealthcheckResult(Optional.of(200), Optional.of(1000L), System.currentTimeMillis(), Optional.empty(), Optional.empty(), taskThree.getTaskId(), false));
 
     cleaner.drainCleanupQueue();
     Assert.assertEquals(1, taskManager.getCleanupTaskIds().size());
@@ -1355,7 +1355,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     }
 
     statusUpdate(taskFour, TaskState.TASK_RUNNING, Optional.of(1L));
-    taskManager.saveHealthcheckResult(new SingularityTaskHealthcheckResult(Optional.of(200), Optional.of(1000L), System.currentTimeMillis(), Optional.empty(), Optional.empty(), taskFour.getTaskId(), Optional.empty()));
+    taskManager.saveHealthcheckResult(new SingularityTaskHealthcheckResult(Optional.of(200), Optional.of(1000L), System.currentTimeMillis(), Optional.empty(), Optional.empty(), taskFour.getTaskId(), false));
 
     cleaner.drainCleanupQueue();
 
@@ -2242,7 +2242,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     SingularityTask newTaskTwoWithCheck = prepTask(updatedRequest, firstDeploy, now + 4000, 2);
     taskManager.createTaskAndDeletePendingTask(newTaskTwoWithCheck);
     statusUpdate(newTaskTwoWithCheck, TaskState.TASK_RUNNING, Optional.of(now + 5000));
-    taskManager.saveHealthcheckResult(new SingularityTaskHealthcheckResult(Optional.of(200), Optional.of(1000L), now + 6000, Optional.empty(), Optional.empty(), newTaskTwoWithCheck.getTaskId(), Optional.empty()));
+    taskManager.saveHealthcheckResult(new SingularityTaskHealthcheckResult(Optional.of(200), Optional.of(1000L), now + 6000, Optional.empty(), Optional.empty(), newTaskTwoWithCheck.getTaskId(), false));
 
     SingularityTask unhealthyTaskThree = prepTask(updatedRequest, firstDeploy, now + 4000, 3);
     taskManager.createTaskAndDeletePendingTask(unhealthyTaskThree);
@@ -2254,7 +2254,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     Assert.assertEquals(2, healthyTaskIds.size()); // Healthchecked and skip-healthchecked tasks should both be here
     Assert.assertEquals(DeployHealth.WAITING, deployHealthHelper.getDeployHealth(updatedRequest, Optional.of(firstDeploy), activeTaskIds, false));
 
-    taskManager.saveHealthcheckResult(new SingularityTaskHealthcheckResult(Optional.of(200), Optional.of(1000L), now + 6000, Optional.empty(), Optional.empty(), unhealthyTaskThree.getTaskId(), Optional.empty()));
+    taskManager.saveHealthcheckResult(new SingularityTaskHealthcheckResult(Optional.of(200), Optional.of(1000L), now + 6000, Optional.empty(), Optional.empty(), unhealthyTaskThree.getTaskId(), false));
     Assert.assertEquals(DeployHealth.HEALTHY, deployHealthHelper.getDeployHealth(updatedRequest, Optional.of(firstDeploy), activeTaskIds, false));
   }
 

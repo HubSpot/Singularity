@@ -553,7 +553,7 @@ public class TaskManager extends CuratorAsyncManager {
 
     List<SingularityTaskHealthcheckResult> healthcheckResults = getAsync("getLastHealthcheck", paths, healthcheckResultTranscoder);
 
-    return Maps.uniqueIndex(healthcheckResults, SingularityTaskIdHolder.getTaskIdFunction());
+    return Maps.uniqueIndex(healthcheckResults, SingularityTaskIdHolder::getTaskId);
   }
 
   public SingularityCreateResult saveTaskHistoryUpdate(SingularityTaskHistoryUpdate taskHistoryUpdate) {
@@ -886,7 +886,7 @@ public class TaskManager extends CuratorAsyncManager {
       paths.add(getTaskPath(taskId));
     }
 
-    return Maps.uniqueIndex(getAsync("getTasks", paths, taskTranscoder, taskCache), SingularityTaskIdHolder.getTaskIdFunction());
+    return Maps.uniqueIndex(getAsync("getTasks", paths, taskTranscoder, taskCache), SingularityTaskIdHolder::getTaskId);
   }
 
   private void createTaskAndDeletePendingTaskPrivate(SingularityTask task) throws Exception {
@@ -905,7 +905,7 @@ public class TaskManager extends CuratorAsyncManager {
       msg = String.format("%s (%s)", msg, task.getTaskRequest().getPendingTask().getMessage().get());
     }
 
-    saveTaskHistoryUpdate(new SingularityTaskHistoryUpdate(task.getTaskId(), now, ExtendedTaskState.TASK_LAUNCHED, Optional.of(msg), Optional.empty()));
+    saveTaskHistoryUpdate(new SingularityTaskHistoryUpdate(task.getTaskId(), now, ExtendedTaskState.TASK_LAUNCHED, Optional.of(msg), Optional.empty(), Collections.emptyList()));
     saveLastActiveTaskStatus(new SingularityTaskStatusHolder(task.getTaskId(), Optional.empty(), now, serverId, Optional.of(task.getAgentId().getValue())));
 
     try {
@@ -1047,7 +1047,7 @@ public class TaskManager extends CuratorAsyncManager {
       msg.append(cleanup.getMessage().get());
     }
 
-    saveTaskHistoryUpdate(new SingularityTaskHistoryUpdate(cleanup.getTaskId(), cleanup.getTimestamp(), ExtendedTaskState.TASK_CLEANING, Optional.of(msg.toString()), Optional.empty()), true);
+    saveTaskHistoryUpdate(new SingularityTaskHistoryUpdate(cleanup.getTaskId(), cleanup.getTimestamp(), ExtendedTaskState.TASK_CLEANING, Optional.of(msg.toString()), Optional.empty(), Collections.emptyList()), true);
   }
 
   public SingularityCreateResult createTaskCleanup(SingularityTaskCleanup cleanup) {

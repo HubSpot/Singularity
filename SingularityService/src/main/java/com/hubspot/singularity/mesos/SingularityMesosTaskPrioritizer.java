@@ -14,6 +14,7 @@ import com.google.inject.Singleton;
 import com.hubspot.singularity.api.disasters.SingularityPriorityFreezeParent;
 import com.hubspot.singularity.api.task.SingularityTaskRequest;
 import com.hubspot.singularity.api.task.SingularityTaskRequestWithPriority;
+import com.hubspot.singularity.api.task.SingularityTaskRequestWithPriorityIF;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.PriorityManager;
 
@@ -37,7 +38,7 @@ public class SingularityMesosTaskPrioritizer {
     for (SingularityTaskRequest taskRequest : dueTasks) {
       taskRequestWithPriorities.add(new SingularityTaskRequestWithPriority(taskRequest, getWeightedPriority(taskRequest, now)));
     }
-    Collections.sort(taskRequestWithPriorities, SingularityTaskRequestWithPriority.weightedPriorityComparator());
+    Collections.sort(taskRequestWithPriorities, SingularityTaskRequestWithPriorityIF.weightedPriorityComparator());
     List<SingularityTaskRequest> taskRequests = new ArrayList<>();
     for (SingularityTaskRequestWithPriority taskRequestWithPriority : taskRequestWithPriorities) {
       taskRequests.add(taskRequestWithPriority.getTaskRequest());
