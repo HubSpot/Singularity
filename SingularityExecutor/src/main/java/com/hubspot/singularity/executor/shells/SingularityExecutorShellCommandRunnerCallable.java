@@ -5,12 +5,12 @@ import java.io.FileOutputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.util.Date;
+import java.util.Optional;
 import java.util.concurrent.Callable;
 
 import org.slf4j.Logger;
 
 import com.google.common.base.Charsets;
-import java.util.Optional;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.api.task.SingularityTaskShellCommandUpdate.UpdateType;
 import com.hubspot.singularity.runner.base.shared.SafeProcessManager;

@@ -4,8 +4,8 @@ import java.util.List;
 import java.util.Set;
 
 import com.hubspot.singularity.api.common.LoadBalancerRequestType.LoadBalancerRequestId;
-import com.hubspot.singularity.api.deploy.SingularityDeploy;
 import com.hubspot.singularity.api.common.SingularityLoadBalancerUpdate;
+import com.hubspot.singularity.api.deploy.SingularityDeploy;
 import com.hubspot.singularity.api.request.SingularityRequest;
 import com.hubspot.singularity.api.task.SingularityTask;
 

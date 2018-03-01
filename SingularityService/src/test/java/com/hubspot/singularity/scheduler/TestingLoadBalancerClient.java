@@ -1,14 +1,14 @@
 package com.hubspot.singularity.scheduler;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
-import java.util.Optional;
 import com.hubspot.baragon.models.BaragonRequestState;
 import com.hubspot.singularity.api.common.LoadBalancerRequestType.LoadBalancerRequestId;
-import com.hubspot.singularity.api.deploy.SingularityDeploy;
 import com.hubspot.singularity.api.common.SingularityLoadBalancerUpdate;
 import com.hubspot.singularity.api.common.SingularityLoadBalancerUpdate.LoadBalancerMethod;
+import com.hubspot.singularity.api.deploy.SingularityDeploy;
 import com.hubspot.singularity.api.request.SingularityRequest;
 import com.hubspot.singularity.api.task.SingularityTask;
 import com.hubspot.singularity.hooks.LoadBalancerClient;

@@ -8,6 +8,7 @@ import static com.hubspot.singularity.WebExceptions.notFound;
 import java.io.File;
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 import java.util.regex.Pattern;
 
 import javax.ws.rs.GET;
@@ -18,7 +19,6 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
 import com.google.common.base.Function;
-import java.util.Optional;
 import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
 import com.google.common.collect.Iterables;
@@ -27,11 +27,11 @@ import com.google.inject.Inject;
 import com.hubspot.mesos.slave.MesosFileChunkObject;
 import com.hubspot.mesos.slave.MesosFileObject;
 import com.hubspot.singularity.api.auth.SingularityAuthorizationScope;
+import com.hubspot.singularity.api.auth.SingularityUser;
 import com.hubspot.singularity.api.logs.SingularitySandbox;
 import com.hubspot.singularity.api.logs.SingularitySandboxFile;
 import com.hubspot.singularity.api.task.SingularityTaskHistory;
 import com.hubspot.singularity.api.task.SingularityTaskId;
-import com.hubspot.singularity.api.auth.SingularityUser;
 import com.hubspot.singularity.auth.SingularityAuthorizationHelper;
 import com.hubspot.singularity.config.ApiPaths;
 import com.hubspot.singularity.config.SingularityConfiguration;

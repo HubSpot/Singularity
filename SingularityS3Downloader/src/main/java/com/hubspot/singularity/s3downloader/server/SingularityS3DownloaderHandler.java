@@ -1,6 +1,7 @@
 package com.hubspot.singularity.s3downloader.server;
 
 import java.io.IOException;
+import java.util.Optional;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -13,7 +14,6 @@ import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.handler.AbstractHandler;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import java.util.Optional;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.hubspot.singularity.s3.base.ArtifactDownloadRequest;

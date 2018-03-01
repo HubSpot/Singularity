@@ -2,6 +2,7 @@ package com.hubspot.singularity.scheduler;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -9,18 +10,17 @@ import org.apache.mesos.v1.Protos.TaskStatus.Reason;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Optional;
 import com.google.common.collect.Multiset;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
-import com.hubspot.singularity.api.machines.MachineState;
 import com.hubspot.singularity.api.disasters.SingularityDisabledAction;
 import com.hubspot.singularity.api.disasters.SingularityDisasterDataPoint;
 import com.hubspot.singularity.api.disasters.SingularityDisasterDataPoints;
 import com.hubspot.singularity.api.disasters.SingularityDisasterType;
 import com.hubspot.singularity.api.disasters.SingularityDisastersData;
-import com.hubspot.singularity.api.task.SingularityPendingTaskId;
+import com.hubspot.singularity.api.machines.MachineState;
 import com.hubspot.singularity.api.machines.SingularitySlave;
+import com.hubspot.singularity.api.task.SingularityPendingTaskId;
 import com.hubspot.singularity.config.DisasterDetectionConfiguration;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.DisasterManager;

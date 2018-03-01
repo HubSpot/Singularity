@@ -2,6 +2,8 @@ package com.hubspot.singularity.resources;
 
 import static com.hubspot.singularity.WebExceptions.checkBadRequest;
 
+import java.util.Optional;
+
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -9,12 +11,11 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
-import java.util.Optional;
 import com.google.inject.Inject;
-import com.hubspot.singularity.api.common.SingularityDeleteResult;
-import com.hubspot.singularity.api.disasters.SingularityPriorityFreezeParent;
 import com.hubspot.singularity.api.auth.SingularityUser;
+import com.hubspot.singularity.api.common.SingularityDeleteResult;
 import com.hubspot.singularity.api.disasters.SingularityPriorityFreeze;
+import com.hubspot.singularity.api.disasters.SingularityPriorityFreezeParent;
 import com.hubspot.singularity.auth.SingularityAuthorizationHelper;
 import com.hubspot.singularity.config.ApiPaths;
 import com.hubspot.singularity.data.PriorityManager;

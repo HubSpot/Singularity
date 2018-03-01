@@ -1,6 +1,7 @@
 package com.hubspot.singularity.s3uploader;
 
 import java.util.Collection;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 import com.codahale.metrics.Counter;
@@ -9,7 +10,6 @@ import com.codahale.metrics.JmxReporter;
 import com.codahale.metrics.Meter;
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.Timer;
-import java.util.Optional;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 

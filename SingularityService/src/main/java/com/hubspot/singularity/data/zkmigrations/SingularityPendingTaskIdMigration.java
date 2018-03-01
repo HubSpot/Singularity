@@ -1,6 +1,7 @@
 package com.hubspot.singularity.data.zkmigrations;
 
 import java.util.Collections;
+import java.util.Optional;
 
 import javax.inject.Singleton;
 
@@ -9,16 +10,14 @@ import org.apache.curator.utils.ZKPaths;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Optional;
-
 import com.google.inject.Inject;
 import com.hubspot.mesos.JavaUtils;
-import com.hubspot.singularity.exceptions.InvalidSingularityTaskIdException;
 import com.hubspot.singularity.api.request.SingularityPendingRequest.PendingType;
 import com.hubspot.singularity.api.task.SingularityPendingTaskBuilder;
 import com.hubspot.singularity.api.task.SingularityPendingTaskId;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.data.transcoders.StringTranscoder;
+import com.hubspot.singularity.exceptions.InvalidSingularityTaskIdException;
 
 @Singleton
 public class SingularityPendingTaskIdMigration extends ZkDataMigration {

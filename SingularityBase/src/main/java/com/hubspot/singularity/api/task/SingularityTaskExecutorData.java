@@ -2,18 +2,17 @@ package com.hubspot.singularity.api.task;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import java.util.Optional;
-
-import com.hubspot.singularity.api.logs.SingularityS3UploaderFile;
 import com.hubspot.singularity.api.deploy.EmbeddedArtifact;
 import com.hubspot.singularity.api.deploy.ExecutorData;
 import com.hubspot.singularity.api.deploy.ExternalArtifact;
 import com.hubspot.singularity.api.deploy.S3Artifact;
 import com.hubspot.singularity.api.deploy.S3ArtifactSignature;
 import com.hubspot.singularity.api.deploy.SingularityExecutorLogrotateFrequency;
+import com.hubspot.singularity.api.logs.SingularityS3UploaderFile;
 
 public class SingularityTaskExecutorData extends ExecutorData {
   private final List<SingularityS3UploaderFile> s3UploaderAdditionalFiles;

@@ -11,10 +11,9 @@ import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Optional;
 
 import org.slf4j.Logger;
-
-import java.util.Optional;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.hash.HashCode;

@@ -1,16 +1,16 @@
 package com.hubspot.singularity.api.request;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.Optional;
 
-import com.hubspot.singularity.api.task.SingularityTaskIdHistory;
-import com.hubspot.singularity.api.task.SingularityTaskIdsByStatus;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.hubspot.singularity.api.deploy.SingularityDeploy;
 import com.hubspot.singularity.api.expiring.SingularityExpiringBounce;
 import com.hubspot.singularity.api.expiring.SingularityExpiringPause;
 import com.hubspot.singularity.api.expiring.SingularityExpiringScale;
 import com.hubspot.singularity.api.expiring.SingularityExpiringSkipHealthchecks;
+import com.hubspot.singularity.api.task.SingularityTaskIdHistory;
+import com.hubspot.singularity.api.task.SingularityTaskIdsByStatus;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 

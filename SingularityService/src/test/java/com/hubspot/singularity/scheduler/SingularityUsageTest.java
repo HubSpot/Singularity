@@ -3,13 +3,13 @@ package com.hubspot.singularity.scheduler;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.mesos.v1.Protos.TaskState;
 import org.junit.Assert;
 import org.junit.Test;
 
-import java.util.Optional;
 import com.google.inject.Inject;
 import com.hubspot.mesos.slave.MesosSlaveMetricsSnapshotObject;
 import com.hubspot.mesos.slave.MesosTaskMonitorObject;
@@ -20,7 +20,6 @@ import com.hubspot.singularity.api.task.SingularityTask;
 import com.hubspot.singularity.api.task.SingularityTaskCurrentUsageWithId;
 import com.hubspot.singularity.api.task.SingularityTaskId;
 import com.hubspot.singularity.api.task.SingularityTaskUsage;
-
 import com.hubspot.singularity.api.task.TaskCleanupType;
 import com.hubspot.singularity.data.UsageManager;
 

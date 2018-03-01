@@ -4,10 +4,10 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import java.util.Optional;
 import com.hubspot.singularity.api.deploy.mesos.Resources;
 import com.hubspot.singularity.api.deploy.mesos.SingularityMesosArtifact;
 import com.hubspot.singularity.api.logs.SingularityS3UploaderFile;

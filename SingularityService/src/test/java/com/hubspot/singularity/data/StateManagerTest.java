@@ -1,10 +1,11 @@
 package com.hubspot.singularity.data;
 
+import java.util.Optional;
+
 import org.apache.mesos.v1.Protos.TaskState;
 import org.junit.Assert;
 import org.junit.Test;
 
-import java.util.Optional;
 import com.google.inject.Inject;
 import com.hubspot.singularity.api.request.SingularityRequest;
 import com.hubspot.singularity.api.task.SingularityTask;

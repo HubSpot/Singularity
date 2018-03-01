@@ -4,6 +4,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Collections;
 import java.util.Date;
+import java.util.Optional;
 
 import javax.inject.Inject;
 
@@ -13,9 +14,7 @@ import org.skife.jdbi.v2.tweak.ResultSetMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Optional;
 import com.hubspot.singularity.api.deploy.DeployState;
-import com.hubspot.singularity.api.task.ExtendedTaskState;
 import com.hubspot.singularity.api.deploy.SingularityDeployFailure;
 import com.hubspot.singularity.api.deploy.SingularityDeployHistory;
 import com.hubspot.singularity.api.deploy.SingularityDeployMarker;
@@ -23,6 +22,7 @@ import com.hubspot.singularity.api.deploy.SingularityDeployResult;
 import com.hubspot.singularity.api.request.SingularityRequest;
 import com.hubspot.singularity.api.request.SingularityRequestHistory;
 import com.hubspot.singularity.api.request.SingularityRequestHistory.RequestHistoryType;
+import com.hubspot.singularity.api.task.ExtendedTaskState;
 import com.hubspot.singularity.api.task.SingularityTaskId;
 import com.hubspot.singularity.api.task.SingularityTaskIdHistory;
 import com.hubspot.singularity.data.transcoders.IdTranscoder;

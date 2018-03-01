@@ -3,8 +3,8 @@ package com.hubspot.singularity.api.task;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-
 import java.util.Optional;
+
 import com.hubspot.singularity.api.deploy.mesos.Resources;
 import com.hubspot.singularity.api.deploy.mesos.SingularityMesosArtifact;
 import com.hubspot.singularity.api.logs.SingularityS3UploaderFile;

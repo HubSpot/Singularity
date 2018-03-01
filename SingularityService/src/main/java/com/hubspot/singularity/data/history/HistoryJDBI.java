@@ -16,10 +16,10 @@ import org.skife.jdbi.v2.sqlobject.stringtemplate.UseStringTemplate3StatementLoc
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.hubspot.singularity.api.task.ExtendedTaskState;
 import com.hubspot.singularity.api.common.OrderDirection;
 import com.hubspot.singularity.api.deploy.SingularityDeployHistory;
 import com.hubspot.singularity.api.request.SingularityRequestHistory;
+import com.hubspot.singularity.api.task.ExtendedTaskState;
 import com.hubspot.singularity.api.task.SingularityTaskIdHistory;
 import com.hubspot.singularity.data.history.SingularityMappers.SingularityRequestIdCount;
 

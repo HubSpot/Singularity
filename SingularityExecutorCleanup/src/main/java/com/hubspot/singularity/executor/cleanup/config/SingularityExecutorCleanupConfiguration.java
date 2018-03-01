@@ -2,6 +2,7 @@ package com.hubspot.singularity.executor.cleanup.config;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 import javax.validation.constraints.Min;
@@ -10,7 +11,6 @@ import javax.validation.constraints.NotNull;
 import org.hibernate.validator.constraints.NotEmpty;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import java.util.Optional;
 import com.hubspot.singularity.api.auth.SingularityClientCredentials;
 import com.hubspot.singularity.api.logs.SingularityS3UploaderFile;
 import com.hubspot.singularity.runner.base.configuration.BaseRunnerConfiguration;

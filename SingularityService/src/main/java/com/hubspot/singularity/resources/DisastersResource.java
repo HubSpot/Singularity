@@ -2,6 +2,7 @@ package com.hubspot.singularity.resources;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -11,14 +12,13 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
-import java.util.Optional;
 import com.google.inject.Inject;
+import com.hubspot.singularity.api.auth.SingularityUser;
 import com.hubspot.singularity.api.common.SingularityAction;
 import com.hubspot.singularity.api.disasters.SingularityDisabledAction;
+import com.hubspot.singularity.api.disasters.SingularityDisabledActionRequest;
 import com.hubspot.singularity.api.disasters.SingularityDisasterType;
 import com.hubspot.singularity.api.disasters.SingularityDisastersData;
-import com.hubspot.singularity.api.auth.SingularityUser;
-import com.hubspot.singularity.api.disasters.SingularityDisabledActionRequest;
 import com.hubspot.singularity.auth.SingularityAuthorizationHelper;
 import com.hubspot.singularity.config.ApiPaths;
 import com.hubspot.singularity.data.DisasterManager;

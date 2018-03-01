@@ -5,7 +5,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
-import com.google.common.base.Throwables;
 import com.hubspot.singularity.config.ApiPaths;
 import com.hubspot.singularity.config.IndexViewConfiguration;
 import com.hubspot.singularity.config.UIConfiguration;

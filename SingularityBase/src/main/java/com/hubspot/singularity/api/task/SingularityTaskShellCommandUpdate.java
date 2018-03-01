@@ -1,8 +1,9 @@
 package com.hubspot.singularity.api.task;
 
+import java.util.Optional;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import java.util.Optional;
 
 public class SingularityTaskShellCommandUpdate {
 

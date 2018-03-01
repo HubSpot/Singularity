@@ -3,12 +3,12 @@ package com.hubspot.singularity.executor;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 import java.io.IOException;
+import java.util.Optional;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import java.util.Optional;
 import com.google.inject.Inject;
 import com.hubspot.singularity.api.common.SingularityFrameworkMessage;
 import com.hubspot.singularity.api.task.SingularityTaskDestroyFrameworkMessage;

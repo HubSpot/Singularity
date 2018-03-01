@@ -8,7 +8,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 import com.github.jknack.handlebars.Template;
-import com.google.common.base.Throwables;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;

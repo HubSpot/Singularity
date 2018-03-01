@@ -1,10 +1,10 @@
 package com.hubspot.singularity;
 
 import java.util.Arrays;
+import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import java.util.Optional;
 import com.google.common.base.Strings;
 import com.google.inject.AbstractModule;
 import com.hubspot.singularity.client.SingularityClientModule;

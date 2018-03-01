@@ -1,16 +1,17 @@
 package com.hubspot.singularity.scheduler;
 
+import java.util.Optional;
+
 import org.apache.mesos.v1.Protos.TaskState;
 import org.junit.Assert;
 import org.junit.Test;
 
-import java.util.Optional;
-import com.hubspot.singularity.api.request.RequestState;
-import com.hubspot.singularity.api.task.SingularityTask;
 import com.hubspot.singularity.api.expiring.SingularityBounceRequest;
 import com.hubspot.singularity.api.expiring.SingularityPauseRequest;
-import com.hubspot.singularity.api.request.SingularityScaleRequest;
 import com.hubspot.singularity.api.expiring.SingularitySkipHealthchecksRequest;
+import com.hubspot.singularity.api.request.RequestState;
+import com.hubspot.singularity.api.request.SingularityScaleRequest;
+import com.hubspot.singularity.api.task.SingularityTask;
 
 public class SingularityExpiringActionsTest extends SingularitySchedulerTestBase {
 

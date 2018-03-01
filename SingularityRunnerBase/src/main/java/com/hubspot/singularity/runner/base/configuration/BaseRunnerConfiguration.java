@@ -2,11 +2,11 @@ package com.hubspot.singularity.runner.base.configuration;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 import javax.validation.constraints.NotNull;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import java.util.Optional;
 
 public abstract class BaseRunnerConfiguration {
   public static final String DEFAULT_ROOT_LOG_LEVEL = "INFO";

@@ -3,12 +3,13 @@ package com.hubspot.singularity.scheduler;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
+import org.apache.mesos.v1.Protos.AgentID;
 import org.apache.mesos.v1.Protos.FrameworkID;
 import org.apache.mesos.v1.Protos.Offer;
 import org.apache.mesos.v1.Protos.OfferID;
 import org.apache.mesos.v1.Protos.Resource;
-import org.apache.mesos.v1.Protos.AgentID;
 import org.apache.mesos.v1.Protos.Value.Range;
 import org.apache.mesos.v1.Protos.Value.Ranges;
 import org.apache.mesos.v1.Protos.Value.Scalar;
@@ -16,13 +17,12 @@ import org.apache.mesos.v1.Protos.Value.Type;
 import org.junit.Assert;
 import org.junit.Test;
 
-import java.util.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
-import com.hubspot.singularity.helpers.MesosUtils;
 import com.hubspot.singularity.api.task.ExtendedTaskState;
 import com.hubspot.singularity.api.task.SingularityTaskHistoryUpdate;
 import com.hubspot.singularity.api.task.SingularityTaskId;
+import com.hubspot.singularity.helpers.MesosUtils;
 
 public class MesosUtilsTest {
 

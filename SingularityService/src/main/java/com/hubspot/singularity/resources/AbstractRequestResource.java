@@ -8,6 +8,7 @@ import org.apache.curator.framework.recipes.leader.LeaderLatch;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hubspot.singularity.api.auth.SingularityAuthorizationScope;
+import com.hubspot.singularity.api.auth.SingularityUser;
 import com.hubspot.singularity.api.deploy.SingularityDeploy;
 import com.hubspot.singularity.api.deploy.SingularityDeployMarker;
 import com.hubspot.singularity.api.request.SingularityPendingDeploy;
@@ -15,7 +16,6 @@ import com.hubspot.singularity.api.request.SingularityRequest;
 import com.hubspot.singularity.api.request.SingularityRequestDeployState;
 import com.hubspot.singularity.api.request.SingularityRequestParent;
 import com.hubspot.singularity.api.request.SingularityRequestWithState;
-import com.hubspot.singularity.api.auth.SingularityUser;
 import com.hubspot.singularity.auth.SingularityAuthorizationHelper;
 import com.hubspot.singularity.data.DeployManager;
 import com.hubspot.singularity.data.RequestManager;

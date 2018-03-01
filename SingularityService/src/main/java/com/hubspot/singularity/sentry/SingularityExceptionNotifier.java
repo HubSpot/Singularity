@@ -2,11 +2,11 @@ package com.hubspot.singularity.sentry;
 
 import java.util.Collections;
 import java.util.Map;
+import java.util.Optional;
 
 import javax.inject.Singleton;
 import javax.servlet.http.HttpServletRequest;
 
-import java.util.Optional;
 import com.google.common.base.Strings;
 import com.google.inject.Inject;
 import com.google.inject.Provider;

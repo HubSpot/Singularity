@@ -1,6 +1,7 @@
 package com.hubspot.singularity.mesos;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 import org.apache.mesos.v1.Protos.AgentID;
@@ -12,7 +13,6 @@ import org.apache.mesos.v1.Protos.TaskStatus;
 import org.apache.mesos.v1.scheduler.Protos;
 import org.apache.mesos.v1.scheduler.Protos.Event;
 
-import java.util.Optional;
 import com.hubspot.singularity.api.request.RequestCleanupType;
 import com.hubspot.singularity.api.task.SingularityTaskId;
 import com.hubspot.singularity.api.task.TaskCleanupType;

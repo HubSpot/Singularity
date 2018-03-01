@@ -2,12 +2,12 @@ package com.hubspot.singularity;
 
 import static org.junit.Assert.assertEquals;
 
+import java.util.Optional;
+
 import org.jukito.JukitoModule;
 import org.jukito.JukitoRunner;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-
-import java.util.Optional;
 
 import com.hubspot.singularity.api.common.SingularityState;
 import com.hubspot.singularity.client.SingularityClient;

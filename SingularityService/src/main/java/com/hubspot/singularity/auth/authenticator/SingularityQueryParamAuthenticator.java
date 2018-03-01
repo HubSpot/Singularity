@@ -7,8 +7,8 @@ import javax.ws.rs.container.ContainerRequestContext;
 import com.google.common.base.Strings;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import com.hubspot.singularity.api.auth.SingularityUser;
 import com.hubspot.singularity.WebExceptions;
+import com.hubspot.singularity.api.auth.SingularityUser;
 import com.hubspot.singularity.auth.datastore.SingularityAuthDatastore;
 
 @Singleton

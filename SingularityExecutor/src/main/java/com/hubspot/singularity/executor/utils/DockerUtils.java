@@ -1,6 +1,7 @@
 package com.hubspot.singularity.executor.utils;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -9,7 +10,6 @@ import java.util.concurrent.TimeUnit;
 import com.github.rholder.retry.AttemptTimeLimiters;
 import com.github.rholder.retry.RetryerBuilder;
 import com.github.rholder.retry.StopStrategies;
-import java.util.Optional;
 import com.google.inject.Inject;
 import com.hubspot.singularity.executor.config.SingularityExecutorConfiguration;
 import com.spotify.docker.client.DockerClient;

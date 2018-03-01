@@ -1,20 +1,20 @@
 package com.hubspot.singularity.mesos;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.apache.mesos.v1.Protos.TaskInfo;
 
-import java.util.Optional;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import com.hubspot.singularity.helpers.MesosProtosUtils;
-import com.hubspot.singularity.helpers.SingularityMesosTaskHolder;
 import com.hubspot.mesos.protos.MesosOfferObject;
 import com.hubspot.singularity.api.deploy.SingularityDeployBuilder;
 import com.hubspot.singularity.api.task.SingularityTask;
 import com.hubspot.singularity.api.task.SingularityTaskRequest;
 import com.hubspot.singularity.config.SingularityConfiguration;
+import com.hubspot.singularity.helpers.MesosProtosUtils;
+import com.hubspot.singularity.helpers.SingularityMesosTaskHolder;
 
 @Singleton
 public class SingularityTaskSizeOptimizer {

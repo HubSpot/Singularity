@@ -1,8 +1,9 @@
 package com.hubspot.singularity.executor.config;
 
+import java.util.Optional;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import java.util.Optional;
 
 public class LogrotateCompressionSettings {
   private Optional<String> compressCmd = Optional.empty();

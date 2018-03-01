@@ -6,6 +6,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
@@ -13,7 +14,6 @@ import javax.validation.constraints.NotNull;
 import org.hibernate.validator.constraints.NotEmpty;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import java.util.Optional;
 import com.google.common.base.Strings;
 import com.hubspot.singularity.config.shell.ShellCommandDescriptor;
 

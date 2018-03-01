@@ -10,7 +10,6 @@ import org.slf4j.Logger;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Throwables;
 import com.hubspot.mesos.JavaUtils;
 
 public abstract class SafeProcessManager {

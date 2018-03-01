@@ -1,13 +1,13 @@
 package com.hubspot.singularity.data.zkmigrations;
 
 import java.util.List;
+import java.util.Optional;
 
 import javax.inject.Singleton;
 
 import org.apache.mesos.v1.Protos.TaskID;
 import org.apache.mesos.v1.Protos.TaskStatus;
 
-import java.util.Optional;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;

@@ -18,14 +18,14 @@ import org.slf4j.LoggerFactory;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.hubspot.singularity.api.machines.SingularityRack;
+import com.hubspot.singularity.api.machines.SingularitySlave;
+import com.hubspot.singularity.api.request.SingularityRequestDeployState;
+import com.hubspot.singularity.api.request.SingularityRequestWithState;
 import com.hubspot.singularity.api.task.ExtendedTaskState;
 import com.hubspot.singularity.api.task.SingularityKilledTaskIdRecord;
 import com.hubspot.singularity.api.task.SingularityPendingTask;
 import com.hubspot.singularity.api.task.SingularityPendingTaskId;
-import com.hubspot.singularity.api.machines.SingularityRack;
-import com.hubspot.singularity.api.request.SingularityRequestDeployState;
-import com.hubspot.singularity.api.request.SingularityRequestWithState;
-import com.hubspot.singularity.api.machines.SingularitySlave;
 import com.hubspot.singularity.api.task.SingularityTask;
 import com.hubspot.singularity.api.task.SingularityTaskCleanup;
 import com.hubspot.singularity.api.task.SingularityTaskHistoryUpdate;

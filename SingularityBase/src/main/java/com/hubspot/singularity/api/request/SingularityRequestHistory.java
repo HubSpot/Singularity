@@ -1,11 +1,11 @@
 package com.hubspot.singularity.api.request;
 
 import java.util.Objects;
+import java.util.Optional;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import java.util.Optional;
 import com.google.common.collect.ComparisonChain;
 import com.hubspot.singularity.api.common.SingularityHistoryItem;
 

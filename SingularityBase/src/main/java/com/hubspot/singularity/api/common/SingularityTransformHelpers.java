@@ -3,12 +3,12 @@ package com.hubspot.singularity.api.common;
 import javax.annotation.Nonnull;
 
 import com.google.common.base.Function;
-import com.hubspot.singularity.api.task.SingularityKilledTaskIdRecord;
+import com.hubspot.singularity.api.request.SingularityPendingDeploy;
 import com.hubspot.singularity.api.request.SingularityPendingRequest;
+import com.hubspot.singularity.api.request.SingularityRequestCleanup;
+import com.hubspot.singularity.api.task.SingularityKilledTaskIdRecord;
 import com.hubspot.singularity.api.task.SingularityPendingTask;
 import com.hubspot.singularity.api.task.SingularityPendingTaskId;
-import com.hubspot.singularity.api.request.SingularityPendingDeploy;
-import com.hubspot.singularity.api.request.SingularityRequestCleanup;
 import com.hubspot.singularity.api.task.SingularityTask;
 import com.hubspot.singularity.api.task.SingularityTaskCleanup;
 import com.hubspot.singularity.api.task.SingularityTaskId;

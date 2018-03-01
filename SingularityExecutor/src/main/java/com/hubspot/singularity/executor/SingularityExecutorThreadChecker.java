@@ -18,7 +18,6 @@ import org.slf4j.LoggerFactory;
 import org.slf4j.helpers.NOPLogger;
 
 import com.google.common.base.Charsets;
-import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Inject;

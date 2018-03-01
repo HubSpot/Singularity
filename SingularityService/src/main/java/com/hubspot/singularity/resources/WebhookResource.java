@@ -14,13 +14,13 @@ import javax.ws.rs.core.MediaType;
 
 import com.google.inject.Inject;
 import com.hubspot.mesos.JavaUtils;
+import com.hubspot.singularity.api.auth.SingularityUser;
 import com.hubspot.singularity.api.common.SingularityAction;
 import com.hubspot.singularity.api.common.SingularityCreateResult;
 import com.hubspot.singularity.api.common.SingularityDeleteResult;
 import com.hubspot.singularity.api.deploy.SingularityDeployUpdate;
 import com.hubspot.singularity.api.request.SingularityRequestHistory;
 import com.hubspot.singularity.api.task.SingularityTaskHistoryUpdate;
-import com.hubspot.singularity.api.auth.SingularityUser;
 import com.hubspot.singularity.api.webhooks.SingularityWebhook;
 import com.hubspot.singularity.api.webhooks.SingularityWebhookSummary;
 import com.hubspot.singularity.auth.SingularityAuthorizationHelper;

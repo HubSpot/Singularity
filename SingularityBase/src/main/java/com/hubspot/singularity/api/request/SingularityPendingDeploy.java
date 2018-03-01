@@ -1,13 +1,13 @@
 package com.hubspot.singularity.api.request;
 
+import java.util.Optional;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.hubspot.singularity.api.common.SingularityLoadBalancerUpdate;
 import com.hubspot.singularity.api.deploy.DeployState;
 import com.hubspot.singularity.api.deploy.SingularityDeployMarker;
 import com.hubspot.singularity.api.deploy.SingularityDeployProgress;
-
-import java.util.Optional;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 

@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 import javax.ws.rs.WebApplicationException;
@@ -12,28 +13,27 @@ import org.apache.mesos.v1.Protos.TaskState;
 import org.junit.Assert;
 import org.junit.Test;
 
-import java.util.Optional;
 import com.hubspot.baragon.models.BaragonRequestState;
-import com.hubspot.singularity.api.deploy.DeployState;
 import com.hubspot.singularity.api.common.LoadBalancerRequestType;
-import com.hubspot.singularity.api.request.RequestState;
-import com.hubspot.singularity.api.request.RequestType;
+import com.hubspot.singularity.api.deploy.DeployState;
 import com.hubspot.singularity.api.deploy.SingularityDeploy;
 import com.hubspot.singularity.api.deploy.SingularityDeployBuilder;
 import com.hubspot.singularity.api.deploy.SingularityDeployProgress;
+import com.hubspot.singularity.api.deploy.SingularityDeployRequest;
+import com.hubspot.singularity.api.request.RequestState;
+import com.hubspot.singularity.api.request.RequestType;
 import com.hubspot.singularity.api.request.SingularityPendingDeploy;
 import com.hubspot.singularity.api.request.SingularityPendingRequest.PendingType;
+import com.hubspot.singularity.api.request.SingularityRequest;
+import com.hubspot.singularity.api.request.SingularityRunNowRequest;
+import com.hubspot.singularity.api.request.SingularityRunNowRequestBuilder;
+import com.hubspot.singularity.api.request.SingularityUpdatePendingDeployRequest;
 import com.hubspot.singularity.api.task.SingularityPendingTask;
 import com.hubspot.singularity.api.task.SingularityPendingTaskBuilder;
 import com.hubspot.singularity.api.task.SingularityPendingTaskId;
-import com.hubspot.singularity.api.request.SingularityRequest;
-import com.hubspot.singularity.api.request.SingularityRunNowRequestBuilder;
 import com.hubspot.singularity.api.task.SingularityTask;
 import com.hubspot.singularity.api.task.SingularityTaskId;
-import com.hubspot.singularity.api.request.SingularityUpdatePendingDeployRequest;
 import com.hubspot.singularity.api.task.TaskCleanupType;
-import com.hubspot.singularity.api.deploy.SingularityDeployRequest;
-import com.hubspot.singularity.api.request.SingularityRunNowRequest;
 
 public class SingularityDeploysTest extends SingularitySchedulerTestBase {
 

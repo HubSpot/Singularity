@@ -1,6 +1,7 @@
 package com.hubspot.singularity.api.task;
 
 import java.util.Optional;
+
 import com.hubspot.mesos.protos.MesosTaskState;
 
 import io.swagger.v3.oas.annotations.media.Schema;

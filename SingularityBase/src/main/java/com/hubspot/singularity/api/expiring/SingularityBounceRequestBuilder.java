@@ -1,6 +1,7 @@
 package com.hubspot.singularity.api.expiring;
 
 import java.util.Optional;
+
 import com.hubspot.singularity.api.task.SingularityShellCommand;
 
 public class SingularityBounceRequestBuilder {

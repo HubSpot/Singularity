@@ -8,9 +8,9 @@ import java.util.Optional;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.hubspot.singularity.api.logs.SingularityS3UploaderFile;
 import com.hubspot.singularity.api.deploy.mesos.Resources;
 import com.hubspot.singularity.api.deploy.mesos.SingularityMesosArtifact;
+import com.hubspot.singularity.api.logs.SingularityS3UploaderFile;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 

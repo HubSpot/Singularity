@@ -3,12 +3,12 @@ package com.hubspot.singularity;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import java.util.Optional;
+
 import org.jukito.JukitoModule;
 import org.jukito.JukitoRunner;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-
-import java.util.Optional;
 
 import com.hubspot.singularity.api.deploy.DeployState;
 import com.hubspot.singularity.api.deploy.SingularityDeploy;

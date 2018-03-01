@@ -2,10 +2,9 @@ package com.hubspot.singularity.api.deploy;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 import javax.validation.constraints.NotNull;
-
-import java.util.Optional;
 
 public class HealthcheckOptionsBuilder {
   @NotNull

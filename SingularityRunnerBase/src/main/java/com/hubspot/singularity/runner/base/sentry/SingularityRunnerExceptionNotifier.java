@@ -1,8 +1,8 @@
 package com.hubspot.singularity.runner.base.sentry;
 
 import java.util.Map;
-
 import java.util.Optional;
+
 import com.google.common.base.Strings;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;

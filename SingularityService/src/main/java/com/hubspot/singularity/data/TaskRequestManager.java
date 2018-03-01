@@ -16,9 +16,9 @@ import com.google.inject.Singleton;
 import com.hubspot.singularity.api.deploy.SingularityDeploy;
 import com.hubspot.singularity.api.deploy.SingularityDeployKey;
 import com.hubspot.singularity.api.request.SingularityPendingDeploy;
-import com.hubspot.singularity.api.task.SingularityPendingTask;
 import com.hubspot.singularity.api.request.SingularityRequest;
 import com.hubspot.singularity.api.request.SingularityRequestWithState;
+import com.hubspot.singularity.api.task.SingularityPendingTask;
 import com.hubspot.singularity.api.task.SingularityTaskRequest;
 
 @Singleton

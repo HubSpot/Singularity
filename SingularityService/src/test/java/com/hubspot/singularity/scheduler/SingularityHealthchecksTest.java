@@ -11,17 +11,17 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import com.google.common.collect.ImmutableList;
+import com.hubspot.singularity.api.deploy.DeployState;
 import com.hubspot.singularity.api.deploy.HealthcheckOptions;
 import com.hubspot.singularity.api.deploy.HealthcheckOptionsBuilder;
-import com.hubspot.singularity.api.deploy.mesos.Resources;
-import com.hubspot.singularity.api.deploy.DeployState;
 import com.hubspot.singularity.api.deploy.SingularityDeploy;
 import com.hubspot.singularity.api.deploy.SingularityDeployBuilder;
+import com.hubspot.singularity.api.deploy.mesos.Resources;
+import com.hubspot.singularity.api.expiring.SingularityBounceRequest;
+import com.hubspot.singularity.api.expiring.SingularitySkipHealthchecksRequest;
 import com.hubspot.singularity.api.task.SingularityTask;
 import com.hubspot.singularity.api.task.SingularityTaskHealthcheckResult;
 import com.hubspot.singularity.api.task.SingularityTaskId;
-import com.hubspot.singularity.api.expiring.SingularityBounceRequest;
-import com.hubspot.singularity.api.expiring.SingularitySkipHealthchecksRequest;
 import com.hubspot.singularity.scheduler.SingularityNewTaskChecker.CheckTaskState;
 import com.jayway.awaitility.Awaitility;
 

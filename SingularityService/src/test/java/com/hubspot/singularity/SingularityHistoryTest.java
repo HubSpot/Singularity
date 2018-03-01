@@ -5,6 +5,7 @@ import static org.mockito.Mockito.*;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.mesos.v1.Protos;
@@ -16,17 +17,16 @@ import org.junit.Test;
 import org.skife.jdbi.v2.DBI;
 import org.skife.jdbi.v2.Handle;
 
-import java.util.Optional;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.hubspot.singularity.api.common.OrderDirection;
+import com.hubspot.singularity.api.deploy.SingularityDeployMarker;
+import com.hubspot.singularity.api.request.SingularityDeleteRequestRequest;
 import com.hubspot.singularity.api.request.SingularityPendingRequestParent;
 import com.hubspot.singularity.api.request.SingularityRequestHistory;
 import com.hubspot.singularity.api.request.SingularityRequestHistory.RequestHistoryType;
-import com.hubspot.singularity.api.request.SingularityDeleteRequestRequest;
 import com.hubspot.singularity.api.request.SingularityRunNowRequestBuilder;
 import com.hubspot.singularity.api.request.SingularityScaleRequest;
-import com.hubspot.singularity.api.deploy.SingularityDeployMarker;
 import com.hubspot.singularity.api.task.ExtendedTaskState;
 import com.hubspot.singularity.api.task.SingularityTask;
 import com.hubspot.singularity.api.task.SingularityTaskHistory;

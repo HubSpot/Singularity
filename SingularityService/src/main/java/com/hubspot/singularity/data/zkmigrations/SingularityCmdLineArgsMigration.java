@@ -2,6 +2,7 @@ package com.hubspot.singularity.data.zkmigrations;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 import javax.inject.Singleton;
 
@@ -13,8 +14,6 @@ import org.slf4j.LoggerFactory;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import java.util.Optional;
-
 import com.google.inject.Inject;
 import com.hubspot.singularity.api.common.SingularityCreateResult;
 import com.hubspot.singularity.api.request.SingularityPendingRequest;

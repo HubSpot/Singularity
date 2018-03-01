@@ -1,11 +1,11 @@
 package com.hubspot.singularity.data.history;
 
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Optional;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.api.common.SingularityDeleteResult;
 import com.hubspot.singularity.api.common.SingularityHistoryItem;

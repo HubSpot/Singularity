@@ -4,21 +4,21 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.apache.mesos.v1.Protos.TaskState;
 import org.junit.Assert;
 import org.junit.Test;
 
-import java.util.Optional;
 import com.google.common.collect.ImmutableMap;
-import com.hubspot.singularity.api.task.ExtendedTaskState;
 import com.hubspot.singularity.api.machines.MachineState;
 import com.hubspot.singularity.api.request.SingularityRequest;
+import com.hubspot.singularity.api.request.SlavePlacement;
+import com.hubspot.singularity.api.task.ExtendedTaskState;
 import com.hubspot.singularity.api.task.SingularityTaskCleanup;
 import com.hubspot.singularity.api.task.SingularityTaskHistoryUpdate;
 import com.hubspot.singularity.api.task.SingularityTaskId;
-import com.hubspot.singularity.api.request.SlavePlacement;
 import com.hubspot.singularity.api.task.TaskCleanupType;
 
 public class SingularitySlavePlacementTest extends SingularitySchedulerTestBase {

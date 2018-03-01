@@ -2,6 +2,7 @@ package com.hubspot.singularity.mesos;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import javax.inject.Singleton;
 
@@ -10,23 +11,21 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.annotations.VisibleForTesting;
-import java.util.Optional;
 import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 import com.hubspot.mesos.JavaUtils;
-import com.hubspot.singularity.helpers.MesosUtils;
 import com.hubspot.mesos.client.MesosClient;
 import com.hubspot.mesos.master.MesosMasterStateObject;
-import com.hubspot.singularity.api.request.RequestType;
 import com.hubspot.singularity.api.common.SingularityAction;
 import com.hubspot.singularity.api.deploy.SingularityDeployKey;
+import com.hubspot.singularity.api.request.RequestType;
 import com.hubspot.singularity.api.request.SingularityPendingDeploy;
 import com.hubspot.singularity.api.request.SingularityPendingRequest;
 import com.hubspot.singularity.api.request.SingularityPendingRequest.PendingType;
-import com.hubspot.singularity.api.task.SingularityPendingTaskId;
 import com.hubspot.singularity.api.request.SingularityRequest;
 import com.hubspot.singularity.api.request.SingularityRequestDeployState;
 import com.hubspot.singularity.api.request.SingularityRequestWithState;
+import com.hubspot.singularity.api.task.SingularityPendingTaskId;
 import com.hubspot.singularity.api.task.SingularityTask;
 import com.hubspot.singularity.api.task.SingularityTaskHistoryUpdate;
 import com.hubspot.singularity.api.task.SingularityTaskHistoryUpdate.SimplifiedTaskState;
@@ -37,6 +36,7 @@ import com.hubspot.singularity.data.DisasterManager;
 import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.data.zkmigrations.ZkDataMigrationRunner;
+import com.hubspot.singularity.helpers.MesosUtils;
 import com.hubspot.singularity.scheduler.SingularityHealthchecker;
 import com.hubspot.singularity.scheduler.SingularityNewTaskChecker;
 import com.hubspot.singularity.scheduler.SingularityTaskReconciliation;

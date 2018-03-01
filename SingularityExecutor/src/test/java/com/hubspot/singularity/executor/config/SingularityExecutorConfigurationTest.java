@@ -12,7 +12,6 @@ import javax.validation.Validator;
 import org.junit.Test;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Throwables;
 import com.hubspot.singularity.runner.base.config.SingularityRunnerBaseModule;
 import com.hubspot.singularity.runner.base.config.SingularityRunnerConfigurationProvider;
 

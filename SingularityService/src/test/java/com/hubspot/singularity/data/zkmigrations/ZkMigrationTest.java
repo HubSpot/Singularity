@@ -2,6 +2,7 @@ package com.hubspot.singularity.data.zkmigrations;
 
 
 import java.util.List;
+import java.util.Optional;
 
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.utils.ZKPaths;
@@ -10,16 +11,15 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import java.util.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
+import com.hubspot.singularity.SingularityTestBaseNoDb;
+import com.hubspot.singularity.api.deploy.SingularityDeployKey;
 import com.hubspot.singularity.api.request.RequestState;
 import com.hubspot.singularity.api.request.RequestType;
-import com.hubspot.singularity.api.deploy.SingularityDeployKey;
 import com.hubspot.singularity.api.request.SingularityPendingRequest;
 import com.hubspot.singularity.api.request.SingularityPendingRequest.PendingType;
 import com.hubspot.singularity.api.task.SingularityPendingTaskId;
-import com.hubspot.singularity.SingularityTestBaseNoDb;
 import com.hubspot.singularity.data.MetadataManager;
 import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.data.TaskManager;

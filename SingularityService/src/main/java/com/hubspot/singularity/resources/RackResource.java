@@ -1,6 +1,7 @@
 package com.hubspot.singularity.resources;
 
 import java.util.List;
+import java.util.Optional;
 
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -11,19 +12,18 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
-import java.util.Optional;
 import com.google.inject.Inject;
-import com.hubspot.singularity.api.machines.MachineState;
+import com.hubspot.singularity.api.auth.SingularityUser;
 import com.hubspot.singularity.api.common.SingularityAction;
+import com.hubspot.singularity.api.expiring.SingularityExpiringMachineState;
+import com.hubspot.singularity.api.expiring.SingularityMachineChangeRequest;
+import com.hubspot.singularity.api.machines.MachineState;
 import com.hubspot.singularity.api.machines.SingularityMachineStateHistoryUpdate;
 import com.hubspot.singularity.api.machines.SingularityRack;
-import com.hubspot.singularity.api.auth.SingularityUser;
-import com.hubspot.singularity.api.expiring.SingularityMachineChangeRequest;
 import com.hubspot.singularity.auth.SingularityAuthorizationHelper;
 import com.hubspot.singularity.config.ApiPaths;
 import com.hubspot.singularity.data.RackManager;
 import com.hubspot.singularity.data.SingularityValidator;
-import com.hubspot.singularity.api.expiring.SingularityExpiringMachineState;
 
 import io.dropwizard.auth.Auth;
 import io.swagger.v3.oas.annotations.Operation;

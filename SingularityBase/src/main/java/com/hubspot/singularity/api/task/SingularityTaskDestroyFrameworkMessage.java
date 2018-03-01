@@ -1,12 +1,11 @@
 package com.hubspot.singularity.api.task;
 
 import java.util.Objects;
+import java.util.Optional;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.hubspot.singularity.api.common.SingularityFrameworkMessage;
-
-import java.util.Optional;
 
 public class SingularityTaskDestroyFrameworkMessage extends SingularityFrameworkMessage {
   private final SingularityTaskId taskId;

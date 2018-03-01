@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 import javax.ws.rs.WebApplicationException;
 
@@ -14,9 +15,9 @@ import org.apache.mesos.v1.scheduler.Protos.Event;
 import org.junit.Assert;
 import org.junit.Test;
 
-import java.util.Optional;
 import com.google.inject.Inject;
 import com.google.protobuf.ByteString;
+import com.hubspot.singularity.api.expiring.SingularityBounceRequest;
 import com.hubspot.singularity.api.task.SingularityShellCommand;
 import com.hubspot.singularity.api.task.SingularityTask;
 import com.hubspot.singularity.api.task.SingularityTaskCleanup;
@@ -25,7 +26,6 @@ import com.hubspot.singularity.api.task.SingularityTaskShellCommandRequest;
 import com.hubspot.singularity.api.task.SingularityTaskShellCommandRequestId;
 import com.hubspot.singularity.api.task.SingularityTaskShellCommandUpdate;
 import com.hubspot.singularity.api.task.SingularityTaskShellCommandUpdate.UpdateType;
-import com.hubspot.singularity.api.expiring.SingularityBounceRequest;
 import com.hubspot.singularity.config.UIConfiguration;
 import com.hubspot.singularity.config.shell.ShellCommandDescriptor;
 import com.hubspot.singularity.config.shell.ShellCommandOptionDescriptor;

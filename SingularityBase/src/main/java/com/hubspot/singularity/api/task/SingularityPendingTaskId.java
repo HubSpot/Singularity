@@ -7,8 +7,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ComparisonChain;
 import com.hubspot.mesos.JavaUtils;
-import com.hubspot.singularity.api.request.SingularityPendingRequest.PendingType;
 import com.hubspot.singularity.api.common.SingularityId;
+import com.hubspot.singularity.api.request.SingularityPendingRequest.PendingType;
 import com.hubspot.singularity.exceptions.InvalidSingularityTaskIdException;
 
 import io.swagger.v3.oas.annotations.media.Schema;

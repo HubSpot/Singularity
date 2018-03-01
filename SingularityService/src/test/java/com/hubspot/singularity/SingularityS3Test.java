@@ -1,12 +1,11 @@
 package com.hubspot.singularity;
 
 import java.util.Collection;
+import java.util.Optional;
 import java.util.TimeZone;
 
 import org.junit.Assert;
 import org.junit.Test;
-
-import java.util.Optional;
 
 import com.hubspot.singularity.api.logs.SingularityS3FormatHelper;
 import com.hubspot.singularity.api.task.SingularityTaskId;

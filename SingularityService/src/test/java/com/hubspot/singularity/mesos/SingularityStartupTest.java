@@ -1,17 +1,17 @@
 package com.hubspot.singularity.mesos;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.junit.Assert;
 import org.junit.Test;
 
-import java.util.Optional;
 import com.google.inject.Inject;
 import com.hubspot.singularity.api.request.RequestType;
 import com.hubspot.singularity.api.request.SingularityPendingRequest;
 import com.hubspot.singularity.api.request.SingularityPendingRequest.PendingType;
-import com.hubspot.singularity.api.task.SingularityPendingTask;
 import com.hubspot.singularity.api.request.SingularityRequestBuilder;
+import com.hubspot.singularity.api.task.SingularityPendingTask;
 import com.hubspot.singularity.api.task.SingularityTask;
 import com.hubspot.singularity.scheduler.SingularitySchedulerTestBase;
 

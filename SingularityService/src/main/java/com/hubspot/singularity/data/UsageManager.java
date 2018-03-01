@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -14,15 +15,14 @@ import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.utils.ZKPaths;
 
 import com.codahale.metrics.MetricRegistry;
-import java.util.Optional;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import com.hubspot.singularity.api.request.RequestUtilization;
-import com.hubspot.singularity.api.machines.SingularityClusterUtilization;
 import com.hubspot.singularity.api.common.SingularityCreateResult;
 import com.hubspot.singularity.api.common.SingularityDeleteResult;
+import com.hubspot.singularity.api.machines.SingularityClusterUtilization;
 import com.hubspot.singularity.api.machines.SingularitySlaveUsage;
 import com.hubspot.singularity.api.machines.SingularitySlaveUsageWithId;
+import com.hubspot.singularity.api.request.RequestUtilization;
 import com.hubspot.singularity.api.task.SingularityTaskCurrentUsage;
 import com.hubspot.singularity.api.task.SingularityTaskCurrentUsageWithId;
 import com.hubspot.singularity.api.task.SingularityTaskId;

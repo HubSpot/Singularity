@@ -2,16 +2,16 @@ package com.hubspot.singularity.scheduler;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.mesos.v1.Protos.TaskState;
 import org.junit.Assert;
 import org.junit.Test;
 
-import java.util.Optional;
 import com.google.inject.Inject;
-import com.hubspot.singularity.api.request.RequestType;
 import com.hubspot.singularity.api.deploy.SingularityDeploy;
+import com.hubspot.singularity.api.request.RequestType;
 import com.hubspot.singularity.api.request.SingularityRequest;
 import com.hubspot.singularity.api.request.SingularityRequestBuilder;
 import com.hubspot.singularity.api.request.SingularityRequestHistory.RequestHistoryType;

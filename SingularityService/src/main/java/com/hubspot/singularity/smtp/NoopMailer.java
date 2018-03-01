@@ -1,17 +1,18 @@
 package com.hubspot.singularity.smtp;
 
+import java.util.Optional;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Optional;
-import com.hubspot.singularity.api.task.ExtendedTaskState;
 import com.hubspot.singularity.api.disasters.SingularityDisastersData;
+import com.hubspot.singularity.api.expiring.SingularityPauseRequest;
 import com.hubspot.singularity.api.request.SingularityRequest;
+import com.hubspot.singularity.api.request.SingularityScaleRequest;
+import com.hubspot.singularity.api.task.ExtendedTaskState;
 import com.hubspot.singularity.api.task.SingularityTask;
 import com.hubspot.singularity.api.task.SingularityTaskHistory;
 import com.hubspot.singularity.api.task.SingularityTaskId;
-import com.hubspot.singularity.api.expiring.SingularityPauseRequest;
-import com.hubspot.singularity.api.request.SingularityScaleRequest;
 
 public class NoopMailer implements SingularityMailer {
   private static final Logger LOG = LoggerFactory.getLogger(NoopMailer.class);

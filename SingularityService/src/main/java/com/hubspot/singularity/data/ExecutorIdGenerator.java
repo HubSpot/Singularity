@@ -10,7 +10,6 @@ import org.apache.curator.framework.recipes.atomic.DistributedAtomicInteger;
 import org.apache.curator.retry.RetryOneTime;
 
 import com.google.common.base.Preconditions;
-import com.google.common.base.Throwables;
 import com.google.inject.Inject;
 
 import io.dropwizard.lifecycle.Managed;

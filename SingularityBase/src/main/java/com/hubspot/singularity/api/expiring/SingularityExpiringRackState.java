@@ -1,8 +1,9 @@
 package com.hubspot.singularity.api.expiring;
 
+import java.util.Optional;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import java.util.Optional;
 import com.hubspot.singularity.api.machines.MachineState;
 
 public class SingularityExpiringRackState extends SingularityExpiringMachineState {

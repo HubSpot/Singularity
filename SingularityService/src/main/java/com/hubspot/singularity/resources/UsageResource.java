@@ -2,6 +2,7 @@ package com.hubspot.singularity.resources;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -9,9 +10,10 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
-import java.util.Optional;
 import com.google.inject.Inject;
+import com.hubspot.singularity.WebExceptions;
 import com.hubspot.singularity.api.auth.SingularityAuthorizationScope;
+import com.hubspot.singularity.api.auth.SingularityUser;
 import com.hubspot.singularity.api.machines.SingularityClusterUtilization;
 import com.hubspot.singularity.api.machines.SingularitySlave;
 import com.hubspot.singularity.api.machines.SingularitySlaveUsage;
@@ -20,8 +22,6 @@ import com.hubspot.singularity.api.task.SingularityTask;
 import com.hubspot.singularity.api.task.SingularityTaskCurrentUsageWithId;
 import com.hubspot.singularity.api.task.SingularityTaskId;
 import com.hubspot.singularity.api.task.SingularityTaskUsage;
-import com.hubspot.singularity.api.auth.SingularityUser;
-import com.hubspot.singularity.WebExceptions;
 import com.hubspot.singularity.auth.SingularityAuthorizationHelper;
 import com.hubspot.singularity.config.ApiPaths;
 import com.hubspot.singularity.data.SlaveManager;

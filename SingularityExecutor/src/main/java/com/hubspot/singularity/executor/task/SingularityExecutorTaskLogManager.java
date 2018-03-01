@@ -14,10 +14,10 @@ import org.slf4j.Logger;
 
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
+import com.hubspot.singularity.api.deploy.SingularityExecutorLogrotateFrequency;
 import com.hubspot.singularity.api.logs.SingularityS3FormatHelper;
 import com.hubspot.singularity.api.logs.SingularityS3UploaderFile;
 import com.hubspot.singularity.api.task.SingularityTaskId;
-import com.hubspot.singularity.api.deploy.SingularityExecutorLogrotateFrequency;
 import com.hubspot.singularity.executor.TemplateManager;
 import com.hubspot.singularity.executor.config.SingularityExecutorConfiguration;
 import com.hubspot.singularity.executor.models.LogrotateCronTemplateContext;

@@ -21,14 +21,14 @@ import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.hubspot.mesos.JavaUtils;
-import com.hubspot.singularity.exceptions.InvalidSingularityTaskIdException;
 import com.hubspot.singularity.api.auth.SingularityAuthorizationScope;
+import com.hubspot.singularity.api.auth.SingularityUser;
 import com.hubspot.singularity.api.request.SingularityRequest;
 import com.hubspot.singularity.api.request.SingularityRequestWithState;
 import com.hubspot.singularity.api.task.SingularityTaskId;
-import com.hubspot.singularity.api.auth.SingularityUser;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.RequestManager;
+import com.hubspot.singularity.exceptions.InvalidSingularityTaskIdException;
 
 @Singleton
 public class SingularityAuthorizationHelper {

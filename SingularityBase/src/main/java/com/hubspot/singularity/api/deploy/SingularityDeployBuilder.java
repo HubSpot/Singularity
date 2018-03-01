@@ -2,9 +2,8 @@ package com.hubspot.singularity.api.deploy;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
-
 import java.util.Optional;
+import java.util.Set;
 
 import com.hubspot.singularity.api.deploy.mesos.Resources;
 import com.hubspot.singularity.api.deploy.mesos.SingularityContainerInfo;

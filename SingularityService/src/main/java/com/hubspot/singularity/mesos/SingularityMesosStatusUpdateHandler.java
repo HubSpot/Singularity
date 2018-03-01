@@ -1,5 +1,6 @@
 package com.hubspot.singularity.mesos;
 
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
@@ -12,7 +13,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.codahale.metrics.Meter;
-import java.util.Optional;
 import com.google.common.base.Strings;
 import com.google.common.collect.Multiset;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
@@ -20,12 +20,11 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import com.hubspot.mesos.JavaUtils;
-import com.hubspot.singularity.api.task.ExtendedTaskState;
-import com.hubspot.singularity.exceptions.InvalidSingularityTaskIdException;
-import com.hubspot.singularity.api.common.SingularityCreateResult;
 import com.hubspot.singularity.SingularityMainModule;
+import com.hubspot.singularity.api.common.SingularityCreateResult;
 import com.hubspot.singularity.api.request.SingularityPendingDeploy;
 import com.hubspot.singularity.api.request.SingularityRequestWithState;
+import com.hubspot.singularity.api.task.ExtendedTaskState;
 import com.hubspot.singularity.api.task.SingularityTask;
 import com.hubspot.singularity.api.task.SingularityTaskHistoryUpdate;
 import com.hubspot.singularity.api.task.SingularityTaskId;
@@ -37,6 +36,7 @@ import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.data.transcoders.IdTranscoder;
 import com.hubspot.singularity.data.transcoders.SingularityTranscoderException;
+import com.hubspot.singularity.exceptions.InvalidSingularityTaskIdException;
 import com.hubspot.singularity.helpers.MesosProtosUtils;
 import com.hubspot.singularity.helpers.MesosUtils;
 import com.hubspot.singularity.scheduler.SingularityHealthchecker;

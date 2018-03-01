@@ -4,8 +4,8 @@ import org.slf4j.LoggerFactory;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import com.hubspot.singularity.exceptions.InvalidSingularityTaskIdException;
 import com.hubspot.singularity.api.task.SingularityTaskId;
+import com.hubspot.singularity.exceptions.InvalidSingularityTaskIdException;
 import com.hubspot.singularity.runner.base.config.SingularityRunnerBaseLogging;
 
 import ch.qos.logback.classic.Logger;

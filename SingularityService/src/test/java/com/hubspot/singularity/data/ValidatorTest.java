@@ -6,6 +6,7 @@ import static org.assertj.core.api.AssertionsForClassTypes.catchThrowable;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 import javax.ws.rs.WebApplicationException;
 
@@ -13,23 +14,22 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.util.Optional;
 import com.google.inject.Inject;
+import com.hubspot.singularity.SingularityTestBaseNoDb;
 import com.hubspot.singularity.api.deploy.HealthcheckOptions;
 import com.hubspot.singularity.api.deploy.HealthcheckOptionsBuilder;
-import com.hubspot.singularity.api.request.RequestType;
 import com.hubspot.singularity.api.deploy.SingularityDeploy;
+import com.hubspot.singularity.api.request.RequestType;
 import com.hubspot.singularity.api.request.SingularityPendingRequest;
-import com.hubspot.singularity.api.task.SingularityPendingTaskId;
 import com.hubspot.singularity.api.request.SingularityRequest;
 import com.hubspot.singularity.api.request.SingularityRequestBuilder;
+import com.hubspot.singularity.api.request.SingularityRunNowRequest;
 import com.hubspot.singularity.api.request.SingularityRunNowRequestBuilder;
+import com.hubspot.singularity.api.task.SingularityPendingTaskId;
 import com.hubspot.singularity.api.task.SingularityTaskId;
-import com.hubspot.singularity.SingularityTestBaseNoDb;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.config.UIConfiguration;
 import com.hubspot.singularity.data.history.DeployHistoryHelper;
-import com.hubspot.singularity.api.request.SingularityRunNowRequest;
 
 
 public class ValidatorTest extends SingularityTestBaseNoDb {

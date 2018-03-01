@@ -1,9 +1,10 @@
 package com.hubspot.singularity.config;
 
+import java.util.Optional;
+
 import javax.validation.constraints.NotNull;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import java.util.Optional;
 import com.hubspot.singularity.api.machines.MachineLoadMetric;
 import com.hubspot.singularity.api.machines.SingularityUsageScoringStrategy;
 

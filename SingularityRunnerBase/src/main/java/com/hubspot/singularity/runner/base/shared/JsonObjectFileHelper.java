@@ -10,11 +10,11 @@ import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.Map;
+import java.util.Optional;
 
 import org.slf4j.Logger;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import java.util.Optional;
 import com.google.inject.Inject;
 import com.hubspot.mesos.JavaUtils;
 

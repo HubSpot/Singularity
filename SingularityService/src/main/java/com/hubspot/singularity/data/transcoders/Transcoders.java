@@ -6,7 +6,6 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import javax.annotation.Nullable;
 
 import com.google.common.base.Function;
-import com.google.common.base.Throwables;
 
 public final class Transcoders {
   private Transcoders() {
