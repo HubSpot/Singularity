@@ -2,8 +2,10 @@ package com.hubspot.singularity.scheduler;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -98,6 +100,8 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
           .filter((taskCleanup) -> taskCleanup.getCleanupType() == TaskCleanupType.REBALANCE_CPU_USAGE)
           .count();
     }
+
+    Set<String> requestsWithShuffledTasks = new HashSet<>();
 
     for (SingularitySlave slave : usageHelper.getSlavesToTrackUsageFor()) {
       Map<ResourceUsageType, Number> longRunningTasksUsage = new HashMap<>();
@@ -242,6 +246,10 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
         if (slaveOverloaded && configuration.isShuffleTasksForOverloadedSlaves()) {
           possibleTasksToShuffle.sort((u1, u2) -> Double.compare(u2.getUsage().getCpusUsed(), u1.getUsage().getCpusUsed()));
           for (TaskIdWithUsage taskIdWithUsage : possibleTasksToShuffle) {
+            if (requestsWithShuffledTasks.contains(taskIdWithUsage.getTaskId().getRequestId())) {
+              LOG.debug("Request {} laready has a shuffling task, skipping", taskIdWithUsage.getTaskId().getRequestId());
+              continue;
+            }
             if (cpuOverage <= 0 || shuffledTasks > configuration.getMaxTasksToShufflePerHost() || currentShuffleCleanupsTotal >= configuration.getMaxTasksToShuffleTotal()) {
               LOG.debug("Not shuffling any more tasks (overage: {}, shuffledOnHost: {}, totalShuffleCleanups: {})", cpuOverage, shuffledTasks, currentShuffleCleanupsTotal);
               break;
@@ -262,6 +270,7 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
             cpuOverage -= taskIdWithUsage.getUsage().getCpusUsed();
             shuffledTasks++;
             currentShuffleCleanupsTotal++;
+            requestsWithShuffledTasks.add(taskIdWithUsage.getTaskId().getRequestId());
           }
         }
 
