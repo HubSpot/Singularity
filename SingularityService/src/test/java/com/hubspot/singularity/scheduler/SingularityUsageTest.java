@@ -542,10 +542,8 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
 
       // First task is cleaned up
       Assert.assertEquals(taskManager.getTaskCleanup(taskId1.getId()).get().getCleanupType(), TaskCleanupType.REBALANCE_CPU_USAGE);
-      // Second task is cleaned up, which brings the cpu overage back down to 0
-      Assert.assertEquals(taskManager.getTaskCleanup(taskId2.getId()).get().getCleanupType(), TaskCleanupType.REBALANCE_CPU_USAGE);
-      // Third task doesn't get cleaned up due to cpu overage being satisfied
-      Assert.assertFalse(taskManager.getTaskCleanup(taskId3.getId()).isPresent());
+      // Second task is not cleaned up because it is from the same request as task 1
+      Assert.assertFalse(taskManager.getTaskCleanup(taskId2.getId()).isPresent());
     } finally {
       configuration.setShuffleTasksForOverloadedSlaves(false);
     }
