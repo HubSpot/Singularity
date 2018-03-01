@@ -1,6 +1,6 @@
-import React, {PropTypes, Component} from 'react';
+import React, { PropTypes } from 'react';
 import { connect } from 'react-redux';
-import { LinkContainer } from 'react-router-bootstrap';
+import { withRouter, routerShape } from 'react-router';
 import rootComponent from '../../rootComponent';
 
 import { Row, Col, Nav, NavItem, Label } from 'react-bootstrap';
@@ -9,68 +9,68 @@ import MetadataButton from '../common/MetadataButton';
 import { refresh } from '../../actions/ui/groupDetail';
 import ActionDropdown from './ActionDropdown';
 
-class GroupDetail extends Component {
+const GroupDetail = (props) => {
+  const { group, location, params, requestsNotFound, router } = props;
+  const showRequestId = params.requestId || _.first(group.requestIds);
 
-  constructor(props) {
-    super(props);
-    this.state = {
-      showRequestId: props.params.requestId || _.first(props.group.requestIds),
-    };
-    _.bindAll(this, 'handleRequestSelect');
-  }
+  const handleRequestSelect = (eventKey) => {
+    router.push(`/group/${group.id}/${eventKey}`);
+  };
 
-  handleRequestSelect(eventkey) {
-    this.setState({
-      showRequestId: eventkey
-    });
-  }
+  const metadata = !_.isEmpty(group.metadata) && (
+    <MetadataButton title={group.id} metadata={group.metadata}>View Metadata</MetadataButton>
+  );
 
-  render() {
-    const {group, location, requestsNotFound} = this.props;
-    const metadata = !_.isEmpty(group.metadata) && (
-      <MetadataButton title={group.id} metadata={group.metadata}>View Metadata</MetadataButton>
+  const requestPages = {};
+  group.requestIds.forEach((requestId, index) => {
+    requestPages[requestId] = (
+      <RequestDetailPage
+        index={index}
+        key={requestId}
+        params={{requestId}}
+        location={location}
+        showBreadcrumbs={false}
+      />
     );
-    const requestPages = {};
-    group.requestIds.forEach((requestId, index) => {
-      requestPages[requestId] = <RequestDetailPage key={index} index={index} params={{requestId}} location={location} showBreadcrumbs={false} />
-    });
+  });
 
-    return (
-      <div className="tabbed-page">
-        <Row className="clearfix">
-          <Col className="tab-col" sm={4} md={2}>
-            <h3>Request Group</h3>
-            <Row className="detail-header">
-              <Col xs={10}>
-                <h4>{group.id}</h4>
-              </Col>
-              <Col xs={2}>
-                <ActionDropdown group={group} metadata={metadata} />
-              </Col>
-            </Row>
-
-            <Nav bsStyle="pills" stacked={true} activeKey={this.state.showRequestId} onSelect={this.handleRequestSelect}>
-              {group.requestIds.map((requestId, index) =>
-                <LinkContainer
-                  eventKey={requestId}
-                  key={index}
-                  to={`/group/${group.id}/${requestId}`}
-                >
-                  <NavItem className="request-group-navitem">
-                    {requestId} {requestsNotFound.includes(requestId) && <Label bsStyle="danger">Deleted</Label>}
-                  </NavItem>
-                </LinkContainer>
-              )}
-            </Nav>
-          </Col>
-          <Col sm={8} md={10}>
-            {requestPages[this.state.showRequestId]}
-          </Col>
-        </Row>
-      </div>
-    );
-  }
-}
+  return (
+    <div className="tabbed-page">
+      <Row className="clearfix">
+        <Col className="tab-col" sm={4} md={2}>
+          <h3>Request Group</h3>
+          <Row className="detail-header">
+            <Col xs={10}>
+              <h4>{group.id}</h4>
+            </Col>
+            <Col xs={2}>
+              <ActionDropdown group={group} metadata={metadata} />
+            </Col>
+          </Row>
+          <Nav
+            activeKey={showRequestId}
+            bsStyle="pills"
+            onSelect={handleRequestSelect}
+            stacked={true}
+          >
+            {group.requestIds.map(requestId =>
+              <NavItem
+                className="request-group-navitem"
+                eventKey={requestId}
+                key={requestId}
+              >
+                {requestId} {requestsNotFound.includes(requestId) && <Label bsStyle="danger">Deleted</Label>}
+              </NavItem>
+            )}
+          </Nav>
+        </Col>
+        <Col sm={8} md={10}>
+          {requestPages[showRequestId]}
+        </Col>
+      </Row>
+    </div>
+  );
+};
 
 GroupDetail.propTypes = {
   group: PropTypes.object,
@@ -78,7 +78,8 @@ GroupDetail.propTypes = {
   params: PropTypes.shape({
     requestId: PropTypes.string,
   }),
-  requestsNotFound: PropTypes.array
+  requestsNotFound: PropTypes.array,
+  router: routerShape,
 };
 
 const mapStateToProps = (state, ownProps) => {
@@ -91,4 +92,6 @@ const mapStateToProps = (state, ownProps) => {
   });
 };
 
-export default connect(mapStateToProps)(rootComponent(GroupDetail, refresh, false, false));
+export default withRouter(
+  connect(mapStateToProps)(rootComponent(GroupDetail, refresh, false, false))
+);
