@@ -73,7 +73,7 @@ class SingularitySlaveUsageWithCalculatedScores {
         break;
       case SPREAD_SYSTEM_USAGE:
       default:
-        double systemCpuFreeScore = Math.max(0, 1 - ((getSystemLoadMetric() + (estimatedAddedCpusUsage / slaveUsage.getCpusTotal().get())) / slaveUsage.getSystemCpusTotal()));
+        double systemCpuFreeScore = Math.max(0, 1 - ((getSystemLoadMetric() + estimatedAddedCpusUsage) / slaveUsage.getSystemCpusTotal()));
         double systemMemFreeScore = 1 - (slaveUsage.getSystemMemTotalBytes() - slaveUsage.getSystemMemFreeBytes() + estimatedAddedMemoryBytesUsage) / slaveUsage.getSystemMemTotalBytes();
         double systemDiskFreeScore = 1 - ((slaveUsage.getSlaveDiskUsed() + estimatedAddedDiskBytesUsage) / slaveUsage.getSlaveDiskTotal());
         setScores(longRunningCpusUsedScore, longRunningMemUsedScore, longRunningDiskUsedScore, systemCpuFreeScore, systemMemFreeScore, systemDiskFreeScore);

@@ -399,4 +399,66 @@ public class MesosSlaveMetricsSnapshotObject {
   public double getContainerizerMesosContainerDestroyErrors() {
     return containerizerMesosContainerDestroyErrors;
   }
+
+  @Override
+  public String toString() {
+    return "MesosSlaveMetricsSnapshotObject{" +
+        "slaveDiskUsed=" + slaveDiskUsed +
+        ", slaveValidStatusUpdates=" + slaveValidStatusUpdates +
+        ", slaveTasksFinished=" + slaveTasksFinished +
+        ", slaveCpusTotal=" + slaveCpusTotal +
+        ", slaveExecutorsPreempted=" + slaveExecutorsPreempted +
+        ", slaveExecutorsTerminated=" + slaveExecutorsTerminated +
+        ", slaveCpusPercent=" + slaveCpusPercent +
+        ", slaveExecutorsRunning=" + slaveExecutorsRunning +
+        ", slaveGpusRevocableUsed=" + slaveGpusRevocableUsed +
+        ", slaveInvalidStatusUpdates=" + slaveInvalidStatusUpdates +
+        ", slaveExecutorsRegistering=" + slaveExecutorsRegistering +
+        ", slaveMemRevocableTotal=" + slaveMemRevocableTotal +
+        ", systemCpusTotal=" + systemCpusTotal +
+        ", slaveFrameworksActive=" + slaveFrameworksActive +
+        ", slaveCpusRevocablePercent=" + slaveCpusRevocablePercent +
+        ", slaveGpusTotal=" + slaveGpusTotal +
+        ", slaveTasksKilled=" + slaveTasksKilled +
+        ", slaveTasksStarting=" + slaveTasksStarting +
+        ", slaveRegistered=" + slaveRegistered +
+        ", slaveGpusRevocableTotal=" + slaveGpusRevocableTotal +
+        ", containerizerMesosProvisionerRemoveContainerErrors=" + containerizerMesosProvisionerRemoveContainerErrors +
+        ", slaveCpusRevocableUsed=" + slaveCpusRevocableUsed +
+        ", slaveDiskTotal=" + slaveDiskTotal +
+        ", slaveTasksStaging=" + slaveTasksStaging +
+        ", slaveGpusUsed=" + slaveGpusUsed +
+        ", systemLoad5Min=" + systemLoad5Min +
+        ", slaveExecutorDirectoryMaxAllowedAgeSecs=" + slaveExecutorDirectoryMaxAllowedAgeSecs +
+        ", slaveDiskRevocablePercent=" + slaveDiskRevocablePercent +
+        ", systemLoad1Min=" + systemLoad1Min +
+        ", slaveMemPercent=" + slaveMemPercent +
+        ", slaveContainerLaunchErrors=" + slaveContainerLaunchErrors +
+        ", slaveMemRevocableUsed=" + slaveMemRevocableUsed +
+        ", slaveTasksRunning=" + slaveTasksRunning +
+        ", slaveInvalidFrameworkMessages=" + slaveInvalidFrameworkMessages +
+        ", slaveValidFrameworkMessages=" + slaveValidFrameworkMessages +
+        ", slaveMemRevocablePercent=" + slaveMemRevocablePercent +
+        ", slaveTasksFailed=" + slaveTasksFailed +
+        ", slaveExecutorsTerminating=" + slaveExecutorsTerminating +
+        ", slaveTasksKilling=" + slaveTasksKilling +
+        ", slaveDiskRevocableTotal=" + slaveDiskRevocableTotal +
+        ", slaveGpusRevocablePercent=" + slaveGpusRevocablePercent +
+        ", slaveDiskRevocableUsed=" + slaveDiskRevocableUsed +
+        ", slaveUptimeSecs=" + slaveUptimeSecs +
+        ", slaveDiskPercent=" + slaveDiskPercent +
+        ", slaveCpusUsed=" + slaveCpusUsed +
+        ", systemMemTotalBytes=" + systemMemTotalBytes +
+        ", containerizerMesosProvisionerBindRemoveRootfsErrors=" + containerizerMesosProvisionerBindRemoveRootfsErrors +
+        ", systemMemFreeBytes=" + systemMemFreeBytes +
+        ", slaveCpusRevocableTotal=" + slaveCpusRevocableTotal +
+        ", slaveTasksLost=" + slaveTasksLost +
+        ", slaveGpusPercent=" + slaveGpusPercent +
+        ", systemLoad15Min=" + systemLoad15Min +
+        ", slaveRecoveryErrors=" + slaveRecoveryErrors +
+        ", slaveMemUsed=" + slaveMemUsed +
+        ", slaveMemTotal=" + slaveMemTotal +
+        ", containerizerMesosContainerDestroyErrors=" + containerizerMesosContainerDestroyErrors +
+        '}';
+  }
 }
