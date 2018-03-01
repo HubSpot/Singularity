@@ -239,7 +239,12 @@ public class UsageManager extends CuratorAsyncManager {
     Map<String, SingularityTaskCurrentUsage> currentTaskUsages = getAsyncWithPath("getTaskCurrentUsages", paths, taskCurrentUsageTranscoder);
     List<SingularityTaskCurrentUsageWithId> currentTaskUsagesWithIds = new ArrayList<>(paths.size());
     for (Entry<String, SingularityTaskCurrentUsage> entry : currentTaskUsages.entrySet()) {
-      currentTaskUsagesWithIds.add(new SingularityTaskCurrentUsageWithId(SingularityTaskId.valueOf(getTaskIdFromCurrentUsagePath(entry.getKey())), entry.getValue()));
+      currentTaskUsagesWithIds.add(new SingularityTaskCurrentUsageWithId(
+          entry.getValue().getMemoryTotalBytes(),
+          entry.getValue().getTimestamp(),
+          entry.getValue().getCpusUsed(),
+          entry.getValue().getDiskTotalBytes(),
+          SingularityTaskId.valueOf(getTaskIdFromCurrentUsagePath(entry.getKey()))));
     }
 
     return currentTaskUsagesWithIds;

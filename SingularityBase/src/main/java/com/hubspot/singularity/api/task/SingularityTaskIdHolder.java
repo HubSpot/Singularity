@@ -5,8 +5,10 @@ import io.swagger.v3.oas.annotations.media.Schema;
 @Schema(
     title = "Holder for a SingularityTaskId",
     subTypes = {
-        //SingularityTaskMetadata.class,
-        //SingularityTaskHealthcheckResult.class
+        SingularityTaskMetadata.class,
+        SingularityTaskHealthcheckResult.class,
+        SingularityTask.class,
+        SingularityTaskHistoryUpdate.class
     }
 )
 public interface SingularityTaskIdHolder {
