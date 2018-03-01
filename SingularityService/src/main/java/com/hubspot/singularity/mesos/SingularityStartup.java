@@ -15,7 +15,7 @@ import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.mesos.client.MesosClient;
-import com.hubspot.mesos.master.MesosMasterStateObject;
+import com.hubspot.mesos.json.MesosMasterStateObject;
 import com.hubspot.singularity.api.common.SingularityAction;
 import com.hubspot.singularity.api.deploy.SingularityDeployKey;
 import com.hubspot.singularity.api.request.RequestType;

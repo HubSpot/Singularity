@@ -63,11 +63,13 @@
     <dep.javassist.version>3.21.0-GA</dep.javassist.version>
     <dep.mesos.rxjava.version>0.2.0</dep.mesos.rxjava.version>
     <dep.metrics-guice.version>3.1.3</dep.metrics-guice.version>
+    <dep.netty.version>4.1.22.Final</dep.netty.version>
     <dep.protobuf.version>2.6.1</dep.protobuf.version>
     <dep.reflections.version>0.9.11</dep.reflections.version>
 
     <dropwizard.guicier.version>1.0.6.0</dropwizard.guicier.version>
     <horizon.version>0.0.25</horizon.version>
+    <jukito.version>1.5</jukito.version>
     <mesos.docker.tag>1.1.1</mesos.docker.tag>
     <mesos.version>1.1.2</mesos.version>
     <project.build.targetJdk>1.8</project.build.targetJdk>
@@ -180,12 +182,6 @@
 
       <dependency>
         <groupId>com.hubspot</groupId>
-        <artifactId>SingularityClusterCoordinator</artifactId>
-        <version>${project.version}</version>
-      </dependency>
-
-      <dependency>
-        <groupId>com.hubspot</groupId>
         <artifactId>SingularityExecutor</artifactId>
         <version>${project.version}</version>
       </dependency>
@@ -269,12 +265,6 @@
       </dependency>
 
       <dependency>
-        <groupId>com.palominolabs.metrics</groupId>
-        <artifactId>metrics-guice</artifactId>
-        <version>${dep.metrics-guice.version}</version>
-      </dependency>
-
-      <dependency>
         <groupId>com.spotify</groupId>
         <artifactId>docker-client</artifactId>
         <version>8.4.0</version>
@@ -303,39 +293,9 @@
       </dependency>
 
       <dependency>
-        <groupId>io.dropwizard</groupId>
-        <artifactId>dropwizard-auth</artifactId>
-        <version>${dropwizard.version}</version>
-      </dependency>
-
-      <dependency>
         <groupId>io.dropwizard.metrics</groupId>
         <artifactId>metrics-graphite</artifactId>
         <version>${dep.dropwizard-metrics.version}</version>
-      </dependency>
-
-      <dependency>
-        <groupId>io.netty</groupId>
-        <artifactId>netty-codec</artifactId>
-        <version>4.1.22.Final</version>
-      </dependency>
-
-      <dependency>
-        <groupId>io.netty</groupId>
-        <artifactId>netty-common</artifactId>
-        <version>4.1.22.Final</version>
-      </dependency>
-
-      <dependency>
-        <groupId>io.netty</groupId>
-        <artifactId>netty-buffer</artifactId>
-        <version>4.1.22.Final</version>
-      </dependency>
-
-      <dependency>
-        <groupId>io.netty</groupId>
-        <artifactId>netty-transport</artifactId>
-        <version>4.1.22.Final</version>
       </dependency>
 
       <dependency>
@@ -348,6 +308,16 @@
         <groupId>io.swagger.core.v3</groupId>
         <artifactId>swagger-annotations</artifactId>
         <version>2.0.0-rc4</version>
+        <exclusions>
+          <exclusion>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.yaml</groupId>
+            <artifactId>snakeyaml</artifactId>
+          </exclusion>
+        </exclusions>
       </dependency>
 
       <dependency>
@@ -405,22 +375,11 @@
         <artifactId>rfc5545-datetime</artifactId>
         <version>0.2.2</version>
       </dependency>
-      <dependency>
-        <groupId>org.jukito</groupId>
-        <artifactId>jukito</artifactId>
-        <version>1.5</version>
-      </dependency>
-
-      <dependency>
-        <groupId>org.liquibase</groupId>
-        <artifactId>liquibase-core</artifactId>
-        <version>3.5.1</version>
-      </dependency>
 
       <dependency>
         <groupId>org.yaml</groupId>
         <artifactId>snakeyaml</artifactId>
-        <version>1.15</version>
+        <version>1.18</version>
       </dependency>
 
       <dependency>

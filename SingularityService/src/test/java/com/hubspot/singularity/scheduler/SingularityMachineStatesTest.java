@@ -19,9 +19,9 @@ import org.junit.Test;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import com.hubspot.mesos.MesosResourcesObject;
-import com.hubspot.mesos.master.MesosMasterSlaveObject;
-import com.hubspot.mesos.master.MesosMasterStateObject;
-import com.hubspot.mesos.slave.MesosFrameworkObject;
+import com.hubspot.mesos.json.MesosMasterSlaveObject;
+import com.hubspot.mesos.json.MesosMasterStateObject;
+import com.hubspot.mesos.json.MesosFrameworkObject;
 import com.hubspot.singularity.api.expiring.SingularityMachineChangeRequest;
 import com.hubspot.singularity.api.machines.MachineState;
 import com.hubspot.singularity.api.machines.SingularityMachineStateHistoryUpdate;
@@ -422,12 +422,12 @@ public class SingularityMachineStatesTest extends SingularitySchedulerTestBase {
 
     List<MesosMasterSlaveObject> slaves = new ArrayList<>();
     for (Integer i = 0; i < numSlaves; i++) {
-      slaves.add(new MesosMasterSlaveObject(i.toString(), i.toString(), String.format("localhost:505%s", i), now, new MesosResourcesObject(resources), attributes, new MesosResourcesObject(resources), new MesosResourcesObject(resources), new MesosResourcesObject(resources), new MesosResourcesObject(resources), "", true));
+      slaves.add(new MesosMasterSlaveObject(i.toString(), i.toString(), String.format("localhost:505%s", i), Optional.of(now), new MesosResourcesObject(resources), attributes, new MesosResourcesObject(resources), new MesosResourcesObject(resources), new MesosResourcesObject(resources), new MesosResourcesObject(resources), "", true));
     }
 
-    MesosFrameworkObject framework = new MesosFrameworkObject("", "", "", "", "", "", "", now, now, now, true, true, new MesosResourcesObject(resources), new MesosResourcesObject(resources), new MesosResourcesObject(resources), Collections.emptyList());
+    MesosFrameworkObject framework = new MesosFrameworkObject("", "", Optional.empty(), "", Optional.empty(), Optional.empty(), Optional.empty(), Optional.of(now), Optional.of(now), Optional.of(now), true, true, new MesosResourcesObject(resources), new MesosResourcesObject(resources), new MesosResourcesObject(resources), Collections.emptyList());
 
-    return new MesosMasterStateObject("", "", "", "", now, "", now, now, "", "", "", 0, 0, "", "", "", Collections.emptyMap(), slaves, Collections.singletonList(framework));
+    return new MesosMasterStateObject(Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.of(now), "", now, now, "", "", "", 0, 0, "", "", Optional.empty(), Collections.emptyMap(), slaves, Collections.singletonList(framework));
   }
 
   @Test

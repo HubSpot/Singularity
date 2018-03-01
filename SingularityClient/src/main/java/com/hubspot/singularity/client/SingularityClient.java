@@ -37,7 +37,7 @@ import com.hubspot.horizon.HttpRequest;
 import com.hubspot.horizon.HttpRequest.Method;
 import com.hubspot.horizon.HttpResponse;
 import com.hubspot.horizon.RetryStrategy;
-import com.hubspot.mesos.slave.MesosFileChunkObject;
+import com.hubspot.mesos.json.MesosFileChunkObject;
 import com.hubspot.singularity.api.auth.SingularityAuthorizationScope;
 import com.hubspot.singularity.api.auth.SingularityClientCredentials;
 import com.hubspot.singularity.api.common.OrderDirection;

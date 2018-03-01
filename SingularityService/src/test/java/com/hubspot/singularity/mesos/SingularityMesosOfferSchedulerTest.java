@@ -15,7 +15,7 @@ import org.junit.Test;
 import org.mockito.Mockito;
 
 import com.google.inject.Inject;
-import com.hubspot.mesos.slave.MesosTaskMonitorObject;
+import com.hubspot.mesos.json.MesosTaskMonitorObject;
 import com.hubspot.singularity.api.auth.SingularityUser;
 import com.hubspot.singularity.api.deploy.SingularityDeploy;
 import com.hubspot.singularity.api.deploy.SingularityDeployStatistics;

@@ -11,7 +11,7 @@ import java.nio.charset.StandardCharsets;
 import org.junit.Test;
 
 import com.google.inject.Inject;
-import com.hubspot.mesos.slave.MesosFileChunkObject;
+import com.hubspot.mesos.json.MesosFileChunkObject;
 import com.hubspot.singularity.SingularityTestBaseNoDb;
 import com.ning.http.client.Response;
 

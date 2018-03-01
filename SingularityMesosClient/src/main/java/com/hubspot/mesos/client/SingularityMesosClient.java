@@ -13,11 +13,11 @@ import com.hubspot.horizon.HttpClient;
 import com.hubspot.horizon.HttpRequest;
 import com.hubspot.horizon.HttpResponse;
 import com.hubspot.mesos.JavaUtils;
-import com.hubspot.mesos.master.MesosMasterMetricsSnapshotObject;
-import com.hubspot.mesos.master.MesosMasterStateObject;
-import com.hubspot.mesos.slave.MesosSlaveMetricsSnapshotObject;
-import com.hubspot.mesos.slave.MesosSlaveStateObject;
-import com.hubspot.mesos.slave.MesosTaskMonitorObject;
+import com.hubspot.mesos.json.MesosMasterMetricsSnapshotObject;
+import com.hubspot.mesos.json.MesosMasterStateObject;
+import com.hubspot.mesos.json.MesosSlaveMetricsSnapshotObject;
+import com.hubspot.mesos.json.MesosSlaveStateObject;
+import com.hubspot.mesos.json.MesosTaskMonitorObject;
 
 @Singleton
 public class SingularityMesosClient implements MesosClient {

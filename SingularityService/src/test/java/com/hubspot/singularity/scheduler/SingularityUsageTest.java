@@ -11,8 +11,8 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import com.google.inject.Inject;
-import com.hubspot.mesos.slave.MesosSlaveMetricsSnapshotObject;
-import com.hubspot.mesos.slave.MesosTaskMonitorObject;
+import com.hubspot.mesos.json.MesosSlaveMetricsSnapshotObject;
+import com.hubspot.mesos.json.MesosTaskMonitorObject;
 import com.hubspot.singularity.api.machines.MachineState;
 import com.hubspot.singularity.api.machines.SingularityClusterUtilization;
 import com.hubspot.singularity.api.machines.SingularitySlaveUsage;

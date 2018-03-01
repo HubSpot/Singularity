@@ -18,7 +18,7 @@ import org.slf4j.LoggerFactory;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import com.hubspot.mesos.slave.MesosFileChunkObject;
+import com.hubspot.mesos.json.MesosFileChunkObject;
 import com.hubspot.singularity.api.common.SingularityEmailType;
 import com.hubspot.singularity.api.disasters.SingularityDisasterDataPoint;
 import com.hubspot.singularity.api.disasters.SingularityMailDisasterDataPoint;

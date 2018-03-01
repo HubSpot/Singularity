@@ -13,7 +13,7 @@ import org.slf4j.LoggerFactory;
 import com.google.inject.Inject;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.mesos.client.MesosClient;
-import com.hubspot.mesos.master.MesosMasterStateObject;
+import com.hubspot.mesos.json.MesosMasterStateObject;
 import com.hubspot.singularity.api.common.SingularityDeleteResult;
 import com.hubspot.singularity.api.machines.MachineState;
 import com.hubspot.singularity.api.machines.SingularitySlave;
