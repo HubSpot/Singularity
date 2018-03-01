@@ -1,16 +1,15 @@
 package com.hubspot.mesos.protos;
 
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
+
+import javax.annotation.Nullable;
+
+import org.immutables.value.Value.Default;
 
 import com.fasterxml.jackson.annotation.JsonAnyGetter;
-import com.fasterxml.jackson.annotation.JsonAnySetter;
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
@@ -20,112 +19,34 @@ import io.swagger.v3.oas.annotations.media.Schema;
  * better backwards compatibility
  */
 @Schema(description = "The mesos protos representation of a task")
-public class MesosTaskObject {
-  private final MesosStringValue taskId;
-  private final Optional<MesosExecutorInfo> executor;
-  private final MesosLabels labels;
-  private final MesosStringValue agentId;
-  private final MesosStringValue slaveId;
-  private final List<MesosResourceObject> resources;
-  private final String name;
-  private final Map<String, Object> allOtherFields;
+public abstract class MesosTaskObject {
 
-  @JsonCreator
-  public MesosTaskObject(@JsonProperty("taskId") MesosStringValue taskId,
-                         @JsonProperty("executor") Optional<MesosExecutorInfo> executor,
-                         @JsonProperty("labels") MesosLabels labels,
-                         @JsonProperty("agentId") MesosStringValue agentId,
-                         @JsonProperty("slaveId") MesosStringValue slaveId,
-                         @JsonProperty("resources") List<MesosResourceObject> resources,
-                         @JsonProperty("name") String name) {
-    this.taskId = taskId;
-    this.executor = executor;
-    this.labels = labels;
-    this.agentId = agentId != null ? agentId : slaveId;
-    this.slaveId = agentId != null ? agentId : slaveId;
-    this.resources = resources != null ? resources : Collections.emptyList();
-    this.name = name;
-    this.allOtherFields = new HashMap<>();
-  }
+  public abstract MesosStringValue getTaskId();
 
-  public MesosStringValue getTaskId() {
-    return taskId;
-  }
+  @Nullable
+  public abstract MesosExecutorInfo getExecutor();
 
-  public MesosExecutorInfo getExecutor() {
-    return executor.orElse(null);
-  }
-
+  @JsonIgnore
   public boolean hasExecutor() {
-    return executor.isPresent();
+    return getExecutor() != null;
   }
 
-  public MesosLabels getLabels() {
-    return labels;
-  }
+  public abstract MesosLabels getLabels();
 
-  public MesosStringValue getAgentId() {
-    return agentId;
-  }
+  @Nullable
+  public abstract MesosStringValue getAgentId();
 
-  public MesosStringValue getSlaveId() {
-    return slaveId;
-  }
+  @Nullable
+  public abstract MesosStringValue getSlaveId();
 
+  @Default
   public List<MesosResourceObject> getResources() {
-    return resources;
+    return Collections.emptyList();
   }
 
   // Unknown fields
   @JsonAnyGetter
-  public Map<String, Object> getAllOtherFields() {
-    return allOtherFields;
-  }
+  public abstract Map<String, Object> getAllOtherFields();
 
-  @JsonAnySetter
-  public void setAllOtherFields(String name, Object value) {
-    allOtherFields.put(name, value);
-  }
-
-  public String getName() {
-    return name;
-  }
-
-  @Override
-  public boolean equals(Object obj) {
-    if (this == obj) {
-      return true;
-    }
-    if (obj instanceof MesosTaskObject) {
-      final MesosTaskObject that = (MesosTaskObject) obj;
-      return Objects.equals(this.taskId, that.taskId) &&
-          Objects.equals(this.executor, that.executor) &&
-          Objects.equals(this.labels, that.labels) &&
-          Objects.equals(this.agentId, that.agentId) &&
-          Objects.equals(this.slaveId, that.slaveId) &&
-          Objects.equals(this.resources, that.resources) &&
-          Objects.equals(this.name, that.name) &&
-          Objects.equals(this.allOtherFields, that.allOtherFields);
-    }
-    return false;
-  }
-
-  @Override
-  public int hashCode() {
-    return Objects.hash(taskId, executor, labels, agentId, slaveId, resources, name, allOtherFields);
-  }
-
-  @Override
-  public String toString() {
-    return "MesosTaskObject{" +
-        "taskId=" + taskId +
-        ", executor=" + executor +
-        ", labels=" + labels +
-        ", agentId=" + agentId +
-        ", slaveId=" + slaveId +
-        ", resources=" + resources +
-        ", name='" + name + '\'' +
-        ", allOtherFields=" + allOtherFields +
-        '}';
-  }
+  public abstract String getName();
 }
