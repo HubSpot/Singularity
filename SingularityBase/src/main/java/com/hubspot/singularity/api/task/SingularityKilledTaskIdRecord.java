@@ -1,12 +1,10 @@
 package com.hubspot.singularity.api.task;
 
+import java.util.Optional;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.hubspot.singularity.api.request.RequestCleanupType;
-import com.hubspot.singularity.api.task.SingularityTaskId;
-import com.hubspot.singularity.api.task.TaskCleanupType;
-
-import java.util.Optional;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
