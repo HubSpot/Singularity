@@ -121,7 +121,7 @@ public class SingularityScheduler {
     LOG.trace("Scheduling a cleanup task for {} due to decomissioning {}", task.getTaskId(), decommissioningObject);
 
     taskManager.createTaskCleanup(new SingularityTaskCleanup(decommissioningObject.getCurrentState().getUser(), TaskCleanupType.DECOMISSIONING, System.currentTimeMillis(),
-      task.getTaskId(), Optional.of(String.format("%s %s is decomissioning", decommissioningObject.getTypeName(), decommissioningObject.getName())), Optional.empty(), Optional.empty()));
+      task.getTaskId(), Optional.of(String.format("%s %s is decomissioning", decommissioningObject.getTypeName(), decommissioningObject.getName())), Optional.empty(), Optional.empty(), Optional.empty()));
   }
 
   private <T extends SingularityMachineAbstraction<T>> Map<T, MachineState> getDefaultMap(List<T> objects) {
@@ -479,7 +479,7 @@ public class SingularityScheduler {
         if (usedIds.contains(taskId.getInstanceNo()) || taskId.getInstanceNo() > expectedInstances) {
           remainingActiveTasks.remove(taskId);
           LOG.info("Cleaning up task {} due to new request {} - scaling down to {} instances", taskId.getId(), request.getId(), request.getInstancesSafe());
-          taskManager.createTaskCleanup(new SingularityTaskCleanup(pendingRequest.getUser(), TaskCleanupType.SCALING_DOWN, now, taskId, Optional.empty(), Optional.empty(), Optional.empty()));
+          taskManager.createTaskCleanup(new SingularityTaskCleanup(pendingRequest.getUser(), TaskCleanupType.SCALING_DOWN, now, taskId, Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty()));
         }
         usedIds.add(taskId.getInstanceNo());
       }
@@ -496,7 +496,7 @@ public class SingularityScheduler {
           if (countPerRack.count(taskId.getRackId()) > perRack && extraCleanedTasks.size() < numActiveRacks / 2) {
             extraCleanedTasks.add(taskId);
             LOG.info("Cleaning up task {} to evenly distribute tasks among racks", taskId);
-            taskManager.createTaskCleanup(new SingularityTaskCleanup(pendingRequest.getUser(), TaskCleanupType.REBALANCE_RACKS, now, taskId, Optional.empty(), Optional.empty(), Optional.empty()));
+            taskManager.createTaskCleanup(new SingularityTaskCleanup(pendingRequest.getUser(), TaskCleanupType.REBALANCE_RACKS, now, taskId, Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty()));
           }
         }
         remainingActiveTasks.removeAll(extraCleanedTasks);
@@ -826,21 +826,20 @@ public class SingularityScheduler {
       }
 
       newTasks.add(
-          new SingularityPendingTask(
-              new SingularityPendingTaskId(
-                  request.getId(), deployId, nextRunAt.get(), nextInstanceNumber,
-                  pendingRequest.getPendingType(), pendingRequest.getTimestamp()),
-                  pendingRequest.getCmdLineArgsList(),
-                  pendingRequest.getUser(),
-                  pendingRequest.getRunId(),
-                  pendingRequest.getSkipHealthchecks(),
-                  pendingRequest.getMessage(),
-                  pendingRequest.getResources(),
-                  pendingRequest.getS3UploaderAdditionalFiles(),
-                  pendingRequest.getRunAsUserOverride(),
-                  pendingRequest.getEnvOverrides(),
-                  pendingRequest.getExtraArtifacts(),
-                  pendingRequest.getActionId()));
+          SingularityPendingTask.builder()
+              .setPendingTaskId(new SingularityPendingTaskId(request.getId(), deployId, nextRunAt.get(), nextInstanceNumber, pendingRequest.getPendingType(), pendingRequest.getTimestamp()))
+              .setCmdLineArgsList(pendingRequest.getCmdLineArgsList())
+              .setUser(pendingRequest.getUser())
+              .setRunId(pendingRequest.getRunId())
+              .setSkipHealthchecks(pendingRequest.getSkipHealthchecks())
+              .setMessage(pendingRequest.getMessage())
+              .setResources(pendingRequest.getResources())
+              .setS3UploaderAdditionalFiles(pendingRequest.getS3UploaderAdditionalFiles())
+              .setRunAsUserOverride(pendingRequest.getRunAsUserOverride())
+              .setEnvOverrides(pendingRequest.getEnvOverrides())
+              .setExtraArtifacts(pendingRequest.getExtraArtifacts())
+              .setActionId(pendingRequest.getActionId())
+              .build());
 
       nextInstanceNumber++;
     }

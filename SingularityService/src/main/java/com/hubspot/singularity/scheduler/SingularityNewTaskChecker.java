@@ -261,7 +261,7 @@ public class SingularityNewTaskChecker {
           LOG.info("Killing {} because it did not become healthy after {}", task.getTaskId(), JavaUtils.durationFromMillis(getKillAfterHealthcheckRunningForMillis()));
 
           taskManager.createTaskCleanup(new SingularityTaskCleanup(Optional.empty(), TaskCleanupType.OVERDUE_NEW_TASK, System.currentTimeMillis(),
-              task.getTaskId(), Optional.of(String.format("Task did not become healthy after %s", JavaUtils.durationFromMillis(getKillAfterHealthcheckRunningForMillis()))), Optional.empty(), Optional.empty()));
+              task.getTaskId(), Optional.of(String.format("Task did not become healthy after %s", JavaUtils.durationFromMillis(getKillAfterHealthcheckRunningForMillis()))), Optional.empty(), Optional.empty(), Optional.empty()));
           return false;
         } else {
           return true;
@@ -271,7 +271,7 @@ public class SingularityNewTaskChecker {
           LOG.info("Killing {} because it did not reach the task running state after {}", task.getTaskId(), JavaUtils.durationFromMillis(getKillAfterTaskNotRunningMillis()));
 
           taskManager.createTaskCleanup(new SingularityTaskCleanup(Optional.empty(), TaskCleanupType.OVERDUE_NEW_TASK, System.currentTimeMillis(),
-              task.getTaskId(), Optional.of(String.format("Task did not reach the task running state after %s", JavaUtils.durationFromMillis(getKillAfterTaskNotRunningMillis()))), Optional.empty(), Optional.empty()));
+              task.getTaskId(), Optional.of(String.format("Task did not reach the task running state after %s", JavaUtils.durationFromMillis(getKillAfterTaskNotRunningMillis()))), Optional.empty(), Optional.empty(), Optional.empty()));
           return false;
         } else {
           return true;
@@ -282,7 +282,7 @@ public class SingularityNewTaskChecker {
         LOG.info("Killing {} because it failed healthchecks", task.getTaskId());
 
         taskManager.createTaskCleanup(new SingularityTaskCleanup(Optional.empty(), TaskCleanupType.UNHEALTHY_NEW_TASK, System.currentTimeMillis(),
-            task.getTaskId(), Optional.of("Task is not healthy"), Optional.empty(), Optional.empty()));
+            task.getTaskId(), Optional.of("Task is not healthy"), Optional.empty(), Optional.empty(), Optional.empty()));
         return false;
       case HEALTHY:
       case OBSOLETE:

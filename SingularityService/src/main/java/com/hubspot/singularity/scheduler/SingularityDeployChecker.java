@@ -233,7 +233,7 @@ public class SingularityDeployChecker {
   private void cleanupTasks(SingularityPendingDeploy pendingDeploy, SingularityRequest request, SingularityDeployResult deployResult, Iterable<SingularityTaskId> tasksToKill) {
     for (SingularityTaskId matchingTask : tasksToKill) {
       taskManager.saveTaskCleanup(new SingularityTaskCleanup(pendingDeploy.getDeployMarker().getUser(), getCleanupType(pendingDeploy, request, deployResult), deployResult.getTimestamp(), matchingTask,
-        Optional.of(String.format("Deploy %s - %s", pendingDeploy.getDeployMarker().getDeployId(), deployResult.getDeployState().name())), Optional.empty(), Optional.empty()));
+        Optional.of(String.format("Deploy %s - %s", pendingDeploy.getDeployMarker().getDeployId(), deployResult.getDeployState().name())), Optional.empty(), Optional.empty(), Optional.empty()));
     }
   }
 
@@ -758,7 +758,7 @@ public class SingularityDeployChecker {
     for (SingularityTaskId taskId : tasksToShutDown(deployProgress, otherActiveTasks, request)) {
       taskManager.createTaskCleanup(
         new SingularityTaskCleanup(Optional.empty(), TaskCleanupType.DEPLOY_STEP_FINISHED, System.currentTimeMillis(), taskId, Optional.of(message),
-          Optional.empty(), Optional.empty()));
+          Optional.empty(), Optional.empty(), Optional.empty()));
     }
     return new SingularityDeployResult(deployState);
   }

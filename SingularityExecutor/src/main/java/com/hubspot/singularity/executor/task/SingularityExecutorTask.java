@@ -14,7 +14,7 @@ import org.apache.mesos.Protos.TaskState;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hubspot.singularity.api.deploy.Artifact;
-import com.hubspot.singularity.api.deploy.ExecutorData;
+import com.hubspot.singularity.api.deploy.ExecutorDataBase;
 import com.hubspot.singularity.api.task.ExtendedTaskState;
 import com.hubspot.singularity.executor.TemplateManager;
 import com.hubspot.singularity.executor.config.SingularityExecutorConfiguration;
@@ -173,7 +173,7 @@ public class SingularityExecutorTask {
     return taskDefinition.getTaskId();
   }
 
-  public ExecutorData getExecutorData() {
+  public ExecutorDataBase getExecutorData() {
     return taskDefinition.getExecutorData();
   }
 

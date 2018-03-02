@@ -15,6 +15,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 @Schema(description = "The unique id for a singularity task")
 public class SingularityTaskId extends SingularityId implements SingularityHistoryItem {
 
+  private final String id;
   private final String requestId;
   private final String deployId;
   private final long startedAt;
@@ -22,26 +23,12 @@ public class SingularityTaskId extends SingularityId implements SingularityHisto
   private final String sanitizedHost;
   private final String sanitizedRackId;
 
-  public static Comparator<SingularityTaskId> INSTANCE_NO_COMPARATOR = new Comparator<SingularityTaskId>() {
+  public static Comparator<SingularityTaskId> INSTANCE_NO_COMPARATOR = (o1, o2) -> Integer.compare(o1.instanceNo, o2.instanceNo);
 
-    @Override
-    public int compare(SingularityTaskId o1, SingularityTaskId o2) {
-      return Integer.compare(o1.instanceNo, o2.instanceNo);
-    }
-
-  };
-
-  public static Comparator<SingularityTaskId> STARTED_AT_COMPARATOR_DESC = new Comparator<SingularityTaskId>() {
-
-    @Override
-    public int compare(SingularityTaskId o1, SingularityTaskId o2) {
-      return Long.compare(o2.startedAt, o1.startedAt);
-    }
-
-  };
+  public static Comparator<SingularityTaskId> STARTED_AT_COMPARATOR_DESC = (o1, o2) -> Long.compare(o2.startedAt, o1.startedAt);
 
   public SingularityTaskId(String requestId, String deployId, long startedAt, int instanceNo, String sanitizedHost, String sanitizedRackId) {
-    super(String.format("%s-%s-%s-%s-%s-%s", requestId, deployId, startedAt, instanceNo, sanitizedHost, sanitizedRackId));
+    this.id = String.format("%s-%s-%s-%s-%s-%s", requestId, deployId, startedAt, instanceNo, sanitizedHost, sanitizedRackId);
     this.requestId = requestId;
     this.deployId = deployId;
     this.startedAt = startedAt;
@@ -51,10 +38,20 @@ public class SingularityTaskId extends SingularityId implements SingularityHisto
   }
 
   @JsonCreator
-  public SingularityTaskId(@JsonProperty("requestId") String requestId, @JsonProperty("deployId") String deployId, @JsonProperty("nextRunAt") Long nextRunAt, @JsonProperty("startedAt") Long startedAt,
-                           @JsonProperty("instanceNo") int instanceNo, @JsonProperty("host") String host, @JsonProperty("sanitizedHost") String sanitizedHost,
-                           @JsonProperty("sanitizedRackId") String sanitizedRackId, @JsonProperty("rackId") String rackId) {
+  public SingularityTaskId(@JsonProperty("requestId") String requestId,
+                           @JsonProperty("deployId") String deployId,
+                           @JsonProperty("nextRunAt") Long nextRunAt,
+                           @JsonProperty("startedAt") Long startedAt,
+                           @JsonProperty("instanceNo") int instanceNo,
+                           @JsonProperty("host") String host,
+                           @JsonProperty("sanitizedHost") String sanitizedHost,
+                           @JsonProperty("sanitizedRackId") String sanitizedRackId,
+                           @JsonProperty("rackId") String rackId) {
     this(requestId, deployId, startedAt != null ? startedAt : nextRunAt, instanceNo, sanitizedHost != null ? sanitizedHost : host, sanitizedRackId != null ? sanitizedRackId : rackId);
+  }
+
+  public String getId() {
+    return id;
   }
 
   /**

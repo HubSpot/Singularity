@@ -16,7 +16,7 @@ import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.hubspot.singularity.api.deploy.ArtifactList;
 import com.hubspot.singularity.api.deploy.EmbeddedArtifact;
-import com.hubspot.singularity.api.deploy.ExecutorData;
+import com.hubspot.singularity.api.deploy.ExecutorDataBase;
 import com.hubspot.singularity.api.deploy.ExternalArtifact;
 import com.hubspot.singularity.api.deploy.RemoteArtifact;
 import com.hubspot.singularity.api.deploy.S3Artifact;
@@ -43,7 +43,7 @@ public class SingularityExecutorTaskProcessBuilder implements Callable<ProcessBu
 
   private final ExecutorUtils executorUtils;
 
-  private final ExecutorData executorData;
+  private final ExecutorDataBase executorData;
 
   private final SingularityExecutorArtifactFetcher artifactFetcher;
 
@@ -54,12 +54,13 @@ public class SingularityExecutorTaskProcessBuilder implements Callable<ProcessBu
   private final ObjectMapper objectMapper;
 
   public SingularityExecutorTaskProcessBuilder(SingularityExecutorTask task,
-      ExecutorUtils executorUtils,
-      SingularityExecutorArtifactFetcher artifactFetcher,
-      TemplateManager templateManager,
-      SingularityExecutorConfiguration configuration,
-      ExecutorData executorData, String executorPid,
-      DockerUtils dockerUtils, ObjectMapper objectMapper) {
+                                               ExecutorUtils executorUtils,
+                                               SingularityExecutorArtifactFetcher artifactFetcher,
+                                               TemplateManager templateManager,
+                                               SingularityExecutorConfiguration configuration,
+                                               ExecutorDataBase executorData,
+                                               String executorPid,
+                                               DockerUtils dockerUtils, ObjectMapper objectMapper) {
     this.executorData = executorData;
     this.objectMapper = objectMapper;
     this.task = task;
@@ -151,7 +152,7 @@ public class SingularityExecutorTaskProcessBuilder implements Callable<ProcessBu
     return task.getTaskDefinition().getTaskDirectoryPath().resolve(filename);
   }
 
-  private String getCommand(ExecutorData executorData) {
+  private String getCommand(ExecutorDataBase executorData) {
     final StringBuilder bldr = new StringBuilder(Strings.isNullOrEmpty(executorData.getCmd()) ? "" : executorData.getCmd());
     for (String extraCmdLineArg : executorData.getExtraCmdLineArgs()) {
       bldr.append(" ");
@@ -164,7 +165,7 @@ public class SingularityExecutorTaskProcessBuilder implements Callable<ProcessBu
     return System.getProperty("user.name"); // TODO: better way to do this?
   }
 
-  private ProcessBuilder buildProcessBuilder(TaskInfo taskInfo, ExecutorData executorData, String serviceLog) {
+  private ProcessBuilder buildProcessBuilder(TaskInfo taskInfo, ExecutorDataBase executorData, String serviceLog) {
     final String cmd = getCommand(executorData);
 
     RunnerContext runnerContext = new RunnerContext(

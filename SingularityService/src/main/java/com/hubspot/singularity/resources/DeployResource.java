@@ -28,7 +28,6 @@ import com.hubspot.singularity.api.auth.SingularityAuthorizationScope;
 import com.hubspot.singularity.api.auth.SingularityUser;
 import com.hubspot.singularity.api.common.SingularityAction;
 import com.hubspot.singularity.api.common.SingularityCreateResult;
-import com.hubspot.singularity.api.common.SingularityTransformHelpers;
 import com.hubspot.singularity.api.deploy.DeployState;
 import com.hubspot.singularity.api.deploy.SingularityDeploy;
 import com.hubspot.singularity.api.deploy.SingularityDeployMarker;
@@ -85,7 +84,7 @@ public class DeployResource extends AbstractRequestResource {
   @Path("/pending")
   @Operation(description = "Retrieve the list of current pending deploys")
   public List<SingularityPendingDeploy> getPendingDeploys(@Parameter(hidden = true) @Auth SingularityUser user) {
-    return authorizationHelper.filterByAuthorizedRequests(user, deployManager.getPendingDeploys(), SingularityTransformHelpers.PENDING_DEPLOY_TO_REQUEST_ID, SingularityAuthorizationScope.READ);
+    return authorizationHelper.filterByAuthorizedRequests(user, deployManager.getPendingDeploys(), (p) -> p.getDeployMarker().getRequestId(), SingularityAuthorizationScope.READ);
   }
 
   @POST

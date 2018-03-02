@@ -449,7 +449,7 @@ public class SingularityCleaner {
         runBeforeKillId = Optional.of(shellRequest.getId());
       }
 
-      taskManager.createTaskCleanup(new SingularityTaskCleanup(requestCleanup.getUser(), requestCleanup.getCleanupType().getTaskCleanupType().get(), start, matchingTaskId, requestCleanup.getMessage(), requestCleanup.getActionId(), runBeforeKillId));
+      taskManager.createTaskCleanup(new SingularityTaskCleanup(requestCleanup.getUser(), requestCleanup.getCleanupType().getTaskCleanupType().get(), start, matchingTaskId, requestCleanup.getMessage(), requestCleanup.getActionId(), runBeforeKillId, Optional.empty()));
     }
 
     if (matchingTaskIds.isEmpty() && requestCleanup.getDeployId().isPresent()) {
@@ -488,7 +488,7 @@ public class SingularityCleaner {
         runBeforeKillId = Optional.of(shellRequest.getId());
       }
 
-      taskManager.createTaskCleanup(new SingularityTaskCleanup(requestCleanup.getUser(), cleanupType, start, taskId, requestCleanup.getMessage(), requestCleanup.getActionId(), runBeforeKillId));
+      taskManager.createTaskCleanup(new SingularityTaskCleanup(requestCleanup.getUser(), cleanupType, start, taskId, requestCleanup.getMessage(), requestCleanup.getActionId(), runBeforeKillId, Optional.empty()));
     }
 
     return cleanupType;

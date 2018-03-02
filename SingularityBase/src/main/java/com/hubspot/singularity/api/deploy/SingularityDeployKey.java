@@ -15,6 +15,7 @@ import com.hubspot.singularity.api.task.SingularityTaskId;
 
 public class SingularityDeployKey extends SingularityId {
 
+  private final String id;
   private final String requestId;
   private final String deployId;
 
@@ -56,17 +57,16 @@ public class SingularityDeployKey extends SingularityId {
     return Maps.toMap(pendingDeploys, FROM_PENDING_TO_DEPLOY_KEY);
   }
 
-  public static final Function<SingularityPendingDeploy, SingularityDeployKey> FROM_PENDING_TO_DEPLOY_KEY = new Function<SingularityPendingDeploy, SingularityDeployKey>() {
-    @Override
-    public SingularityDeployKey apply(@Nonnull SingularityPendingDeploy input) {
-      return SingularityDeployKey.fromDeployMarker(input.getDeployMarker());
-    }
-  };
+  public static final Function<SingularityPendingDeploy, SingularityDeployKey> FROM_PENDING_TO_DEPLOY_KEY = (input) -> SingularityDeployKey.fromDeployMarker(input.getDeployMarker());
 
   public SingularityDeployKey(String requestId, String deployId) {
-    super(String.format("%s-%s", requestId, deployId));
+    this.id = String.format("%s-%s", requestId, deployId);
     this.requestId = requestId;
     this.deployId = deployId;
+  }
+
+  public String getId() {
+    return id;
   }
 
   public String getRequestId() {

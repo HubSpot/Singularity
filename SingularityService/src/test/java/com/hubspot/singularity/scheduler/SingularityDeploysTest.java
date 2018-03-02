@@ -29,7 +29,6 @@ import com.hubspot.singularity.api.request.SingularityRunNowRequest;
 import com.hubspot.singularity.api.request.SingularityRunNowRequestBuilder;
 import com.hubspot.singularity.api.request.SingularityUpdatePendingDeployRequest;
 import com.hubspot.singularity.api.task.SingularityPendingTask;
-import com.hubspot.singularity.api.task.SingularityPendingTaskBuilder;
 import com.hubspot.singularity.api.task.SingularityPendingTaskId;
 import com.hubspot.singularity.api.task.SingularityTask;
 import com.hubspot.singularity.api.task.SingularityTaskId;
@@ -80,16 +79,16 @@ public class SingularityDeploysTest extends SingularitySchedulerTestBase {
     initSecondDeploy();
 
     SingularityPendingTaskId taskIdOne = new SingularityPendingTaskId(requestId, firstDeployId, System.currentTimeMillis() + TimeUnit.DAYS.toMillis(3), 1, PendingType.IMMEDIATE, System.currentTimeMillis());
-    SingularityPendingTask taskOne = new SingularityPendingTaskBuilder().setPendingTaskId(taskIdOne).build();
+    SingularityPendingTask taskOne = SingularityPendingTask.builder().setPendingTaskId(taskIdOne).build();
 
     SingularityPendingTaskId taskIdTwo = new SingularityPendingTaskId(requestId, firstDeployId, System.currentTimeMillis() + TimeUnit.DAYS.toMillis(1), 2, PendingType.IMMEDIATE, System.currentTimeMillis());
-    SingularityPendingTask taskTwo = new SingularityPendingTaskBuilder().setPendingTaskId(taskIdTwo).build();
+    SingularityPendingTask taskTwo = SingularityPendingTask.builder().setPendingTaskId(taskIdTwo).build();
 
     SingularityPendingTaskId taskIdThree = new SingularityPendingTaskId(requestId, secondDeployId, System.currentTimeMillis() + TimeUnit.DAYS.toMillis(3), 1, PendingType.IMMEDIATE, System.currentTimeMillis());
-    SingularityPendingTask taskThree = new SingularityPendingTaskBuilder().setPendingTaskId(taskIdThree).build();
+    SingularityPendingTask taskThree = SingularityPendingTask.builder().setPendingTaskId(taskIdThree).build();
 
     SingularityPendingTaskId taskIdFour = new SingularityPendingTaskId(requestId + "hi", firstDeployId, System.currentTimeMillis() + TimeUnit.DAYS.toMillis(3), 5, PendingType.IMMEDIATE, System.currentTimeMillis());
-    SingularityPendingTask taskFour = new SingularityPendingTaskBuilder().setPendingTaskId(taskIdFour).build();
+    SingularityPendingTask taskFour = SingularityPendingTask.builder().setPendingTaskId(taskIdFour).build();
 
     taskManager.savePendingTask(taskOne);
     taskManager.savePendingTask(taskTwo);

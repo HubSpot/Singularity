@@ -338,6 +338,7 @@ public class SingularityExpiringUserActionPoller extends SingularityLeaderOnlyPo
               now, taskId,
               Optional.of(String.format("Slave decommission (started by: %s) timed out after %sms", expiringObject.getUser(), now - expiringObject.getStartMillis())),
               Optional.empty(),
+              Optional.empty(),
               Optional.empty()));
           }
         }

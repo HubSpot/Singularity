@@ -1,21 +1,12 @@
 package com.hubspot.singularity.api.common;
 
 public abstract class SingularityId {
-
-  private final String id;
-
-  public SingularityId(String id) {
-    this.id = id;
-  }
-
   @Override
   public int hashCode() {
-    return id.hashCode();
+    return getId().hashCode();
   }
 
-  public String getId() {
-    return id;
-  }
+  public abstract String getId();
 
   @Override
   public boolean equals(Object obj) {
@@ -29,7 +20,7 @@ public abstract class SingularityId {
       return false;
     }
     SingularityId other = (SingularityId) obj;
-    return id.equals(other.id);
+    return getId().equals(other.getId());
   }
 
 

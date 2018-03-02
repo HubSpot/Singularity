@@ -42,7 +42,6 @@ import com.hubspot.singularity.api.auth.SingularityAuthorizationScope;
 import com.hubspot.singularity.api.auth.SingularityUser;
 import com.hubspot.singularity.api.common.SingularityAction;
 import com.hubspot.singularity.api.common.SingularityCreateResult;
-import com.hubspot.singularity.api.common.SingularityTransformHelpers;
 import com.hubspot.singularity.api.machines.SingularitySlave;
 import com.hubspot.singularity.api.request.RequestType;
 import com.hubspot.singularity.api.request.SingularityPendingRequest;
@@ -137,7 +136,7 @@ public class TaskResource extends AbstractLeaderAwareResource {
     }
 
     return taskRequestManager.getTaskRequests(ImmutableList.copyOf(authorizationHelper.filterByAuthorizedRequests(user,
-        taskManager.getPendingTasks(useWebCache(useWebCache)), SingularityTransformHelpers.PENDING_TASK_TO_REQUEST_ID, SingularityAuthorizationScope.READ)));
+        taskManager.getPendingTasks(useWebCache(useWebCache)), (p) -> p.getPendingTaskId().getRequestId(), SingularityAuthorizationScope.READ)));
   }
 
   @GET
@@ -150,7 +149,7 @@ public class TaskResource extends AbstractLeaderAwareResource {
   public List<SingularityPendingTaskId> getScheduledTaskIds(
       @Parameter(hidden = true) @Auth SingularityUser user,
       @Parameter(description = "Use the cached version of this data to limit expensive api calls") @QueryParam("useWebCache") Boolean useWebCache) {
-    return authorizationHelper.filterByAuthorizedRequests(user, taskManager.getPendingTaskIds(useWebCache(useWebCache)), SingularityTransformHelpers.PENDING_TASK_ID_TO_REQUEST_ID, SingularityAuthorizationScope.READ);
+    return authorizationHelper.filterByAuthorizedRequests(user, taskManager.getPendingTaskIds(useWebCache(useWebCache)), SingularityPendingTaskId::getRequestId, SingularityAuthorizationScope.READ);
   }
 
   private SingularityPendingTaskId getPendingTaskIdFromStr(String pendingTaskIdStr) {
@@ -272,7 +271,7 @@ public class TaskResource extends AbstractLeaderAwareResource {
 
     checkNotFound(maybeSlave.isPresent(), "Couldn't find a slave in any state with id %s", slaveId);
 
-    return authorizationHelper.filterByAuthorizedRequests(user, taskManager.getTasksOnSlave(taskManager.getActiveTaskIds(useWebCache(useWebCache)), maybeSlave.get()), SingularityTransformHelpers.TASK_TO_REQUEST_ID, SingularityAuthorizationScope.READ);
+    return authorizationHelper.filterByAuthorizedRequests(user, taskManager.getTasksOnSlave(taskManager.getActiveTaskIds(useWebCache(useWebCache)), maybeSlave.get()), (t) -> t.getTaskId().getRequestId(), SingularityAuthorizationScope.READ);
   }
 
   @GET
@@ -282,7 +281,7 @@ public class TaskResource extends AbstractLeaderAwareResource {
   public List<SingularityTask> getActiveTasks(
       @Parameter(hidden = true) @Auth SingularityUser user,
       @Parameter(description = "Use the cached version of this data to limit expensive api calls") @QueryParam("useWebCache") Boolean useWebCache) {
-    return authorizationHelper.filterByAuthorizedRequests(user, taskManager.getActiveTasks(useWebCache(useWebCache)), SingularityTransformHelpers.TASK_TO_REQUEST_ID, SingularityAuthorizationScope.READ);
+    return authorizationHelper.filterByAuthorizedRequests(user, taskManager.getActiveTasks(useWebCache(useWebCache)), (t) -> t.getTaskId().getRequestId(), SingularityAuthorizationScope.READ);
   }
 
   @GET
@@ -297,7 +296,7 @@ public class TaskResource extends AbstractLeaderAwareResource {
       return Collections.emptyList();
     }
 
-    return authorizationHelper.filterByAuthorizedRequests(user, taskManager.getCleanupTasks(useWebCache(useWebCache)), SingularityTransformHelpers.TASK_CLEANUP_TO_REQUEST_ID, SingularityAuthorizationScope.READ);
+    return authorizationHelper.filterByAuthorizedRequests(user, taskManager.getCleanupTasks(useWebCache(useWebCache)), (t) -> t.getTaskId().getRequestId(), SingularityAuthorizationScope.READ);
   }
 
   @GET
@@ -307,7 +306,7 @@ public class TaskResource extends AbstractLeaderAwareResource {
       description = "A list of task ids where the task has been sent a kill but has not yet sent a status update with a terminal state"
   )
   public List<SingularityKilledTaskIdRecord> getKilledTasks(@Parameter(hidden = true) @Auth SingularityUser user) {
-    return authorizationHelper.filterByAuthorizedRequests(user, taskManager.getKilledTaskIdRecords(), SingularityTransformHelpers.KILLED_TASK_ID_RECORD_TO_REQUEST_ID, SingularityAuthorizationScope.READ);
+    return authorizationHelper.filterByAuthorizedRequests(user, taskManager.getKilledTaskIdRecords(), (t) -> t.getTaskId().getRequestId(), SingularityAuthorizationScope.READ);
   }
 
   @GET
@@ -315,7 +314,7 @@ public class TaskResource extends AbstractLeaderAwareResource {
   @Path("/lbcleanup")
   @Operation(summary = "Retrieve the list of task ids being cleaned from load balancers")
   public List<SingularityTaskId> getLbCleanupTasks(@Parameter(hidden = true) @Auth SingularityUser user) {
-    return authorizationHelper.filterByAuthorizedRequests(user, taskManager.getLBCleanupTasks(), SingularityTransformHelpers.TASK_ID_TO_REQUEST_ID, SingularityAuthorizationScope.READ);
+    return authorizationHelper.filterByAuthorizedRequests(user, taskManager.getLBCleanupTasks(), SingularityTaskId::getRequestId, SingularityAuthorizationScope.READ);
   }
 
   private SingularityTask checkActiveTask(String taskId, SingularityAuthorizationScope scope, SingularityUser user) {
@@ -463,11 +462,11 @@ public class TaskResource extends AbstractLeaderAwareResource {
       LOG.debug("Requested destroy of {}", taskId);
       cleanupType = TaskCleanupType.USER_REQUESTED_DESTROY;
       taskCleanup = new SingularityTaskCleanup(user.getEmail(), cleanupType, now,
-        task.getTaskId(), message, actionId, runBeforeKillId);
+        task.getTaskId(), message, actionId, runBeforeKillId, Optional.empty());
       taskManager.saveTaskCleanup(taskCleanup);
     } else {
       taskCleanup = new SingularityTaskCleanup(user.getEmail(), cleanupType, now,
-        task.getTaskId(), message, actionId, runBeforeKillId);
+        task.getTaskId(), message, actionId, runBeforeKillId, Optional.empty());
       SingularityCreateResult result = taskManager.createTaskCleanup(taskCleanup);
 
       if (result == SingularityCreateResult.EXISTED && userRequestedKillTakesPriority(taskId)) {

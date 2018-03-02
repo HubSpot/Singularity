@@ -130,6 +130,7 @@ public class SingularityJobPoller extends SingularityLeaderOnlyPoller {
               DurationFormatUtils.formatDurationHMS(request.getTaskExecutionTimeLimitMillis().map(Optional::of).orElse(configuration.getTaskExecutionTimeLimitMillis()).get()))
           ),
           Optional.of(UUID.randomUUID().toString()),
+          Optional.empty(),
           Optional.empty())
       );
     }

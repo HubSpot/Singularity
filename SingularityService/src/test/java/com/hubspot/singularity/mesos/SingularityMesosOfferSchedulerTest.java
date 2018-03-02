@@ -71,20 +71,16 @@ public class SingularityMesosOfferSchedulerTest extends SingularitySchedulerTest
   private SingularityTaskRequest taskRequestNonLongRunning = SingularityTaskRequest.builder()
       .setRequest(new SingularityRequestBuilder("requestId", RequestType.ON_DEMAND).build())
       .setDeploy(new SingularityDeployBuilder("requestId", "deployId").build())
-      .setPendingTask(new SingularityPendingTask(
-              new SingularityPendingTaskId("requestId", "deployId", 0, 1, PendingType.NEW_DEPLOY, 0),
-              Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Collections.emptyList(), Optional.empty(),
-              Collections.emptyMap(), Collections.emptyList(), Optional.empty()
-          )
+      .setPendingTask(SingularityPendingTask.builder()
+              .setPendingTaskId(new SingularityPendingTaskId("requestId", "deployId", 0, 1, PendingType.NEW_DEPLOY, 0))
+              .build()
       ).build();
   private SingularityTaskRequest taskRequestLongRunning = SingularityTaskRequest.builder()
       .setRequest(new SingularityRequestBuilder("requestId", RequestType.SERVICE).build())
       .setDeploy(new SingularityDeployBuilder("requestId", "deployId").build())
-      .setPendingTask(new SingularityPendingTask(
-              new SingularityPendingTaskId("requestId", "deployId", 0, 1, PendingType.NEW_DEPLOY, 0),
-              Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Collections.emptyList(), Optional.empty(),
-              Collections.emptyMap(), Collections.emptyList(), Optional.empty()
-          )
+      .setPendingTask(SingularityPendingTask.builder()
+              .setPendingTaskId(new SingularityPendingTaskId("requestId", "deployId", 0, 1, PendingType.NEW_DEPLOY, 0))
+              .build()
       ).build();
   private SingularityDeploy deploy = Mockito.mock(SingularityDeploy.class);
   private SingularityRequest request = Mockito.mock(SingularityRequest.class);

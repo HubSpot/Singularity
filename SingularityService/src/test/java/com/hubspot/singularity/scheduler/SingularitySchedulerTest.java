@@ -72,7 +72,6 @@ import com.hubspot.singularity.api.task.ExtendedTaskState;
 import com.hubspot.singularity.api.task.SingularityKillTaskRequest;
 import com.hubspot.singularity.api.task.SingularityKilledTaskIdRecord;
 import com.hubspot.singularity.api.task.SingularityPendingTask;
-import com.hubspot.singularity.api.task.SingularityPendingTaskBuilder;
 import com.hubspot.singularity.api.task.SingularityPendingTaskId;
 import com.hubspot.singularity.api.task.SingularityTask;
 import com.hubspot.singularity.api.task.SingularityTaskCleanup;
@@ -115,7 +114,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
   }
 
   private SingularityPendingTask pendingTask(String requestId, String deployId, PendingType pendingType) {
-    return new SingularityPendingTaskBuilder()
+    return SingularityPendingTask.builder()
         .setPendingTaskId(new SingularityPendingTaskId(requestId, deployId, System.currentTimeMillis(), 1, pendingType, System.currentTimeMillis()))
         .build();
   }

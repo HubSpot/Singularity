@@ -71,7 +71,6 @@ import com.hubspot.singularity.api.request.SingularityScaleRequest;
 import com.hubspot.singularity.api.request.SlavePlacement;
 import com.hubspot.singularity.api.task.SingularityKilledTaskIdRecord;
 import com.hubspot.singularity.api.task.SingularityPendingTask;
-import com.hubspot.singularity.api.task.SingularityPendingTaskBuilder;
 import com.hubspot.singularity.api.task.SingularityPendingTaskId;
 import com.hubspot.singularity.api.task.SingularityTask;
 import com.hubspot.singularity.api.task.SingularityTaskHistoryUpdate;
@@ -300,7 +299,7 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
 
   protected SingularityPendingTask buildPendingTask(SingularityRequest request, SingularityDeploy deploy, long launchTime, int instanceNo, Optional<String> runId) {
     SingularityPendingTaskId pendingTaskId = new SingularityPendingTaskId(request.getId(), deploy.getId(), launchTime, instanceNo, PendingType.IMMEDIATE, launchTime);
-    SingularityPendingTask pendingTask = new SingularityPendingTaskBuilder()
+    SingularityPendingTask pendingTask = SingularityPendingTask.builder()
         .setPendingTaskId(pendingTaskId)
         .setRunId(runId)
         .build();
@@ -692,7 +691,7 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
     SingularityPendingTaskId pendingTaskId = new SingularityPendingTaskId(requestId, deployId,
         System.currentTimeMillis() + TimeUnit.DAYS.toMillis(random.nextInt(3)), random.nextInt(10), PendingType.NEW_DEPLOY, System.currentTimeMillis());
 
-    SingularityPendingTask pendingTask = new SingularityPendingTaskBuilder().setPendingTaskId(pendingTaskId).build();
+    SingularityPendingTask pendingTask = SingularityPendingTask.builder().setPendingTaskId(pendingTaskId).build();
 
     taskManager.savePendingTask(pendingTask);
 

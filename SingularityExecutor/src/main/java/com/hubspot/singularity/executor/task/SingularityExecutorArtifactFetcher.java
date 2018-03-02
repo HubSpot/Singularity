@@ -15,7 +15,7 @@ import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.api.deploy.EmbeddedArtifact;
-import com.hubspot.singularity.api.deploy.ExecutorData;
+import com.hubspot.singularity.api.deploy.ExecutorDataBase;
 import com.hubspot.singularity.api.deploy.ExternalArtifact;
 import com.hubspot.singularity.api.deploy.RemoteArtifact;
 import com.hubspot.singularity.api.deploy.S3Artifact;
@@ -57,7 +57,7 @@ public class SingularityExecutorArtifactFetcher {
     this.localDownloadUri = String.format(LOCAL_DOWNLOAD_STRING_FORMAT, s3Configuration.getLocalDownloadHttpPort(), s3Configuration.getLocalDownloadPath());
   }
 
-  public SingularityExecutorTaskArtifactFetcher buildTaskFetcher(ExecutorData executorData, SingularityExecutorTask task) {
+  public SingularityExecutorTaskArtifactFetcher buildTaskFetcher(ExecutorDataBase executorData, SingularityExecutorTask task) {
     ArtifactManager artifactManager = new ArtifactManager(runnerBaseConfiguration, s3Configuration, task.getLog(), exceptionNotifier);
 
     return new SingularityExecutorTaskArtifactFetcher(artifactManager, task);

@@ -64,7 +64,6 @@ import com.hubspot.singularity.api.request.SingularityPendingRequest.PendingType
 import com.hubspot.singularity.api.request.SingularityRequest;
 import com.hubspot.singularity.api.request.SingularityRequestBuilder;
 import com.hubspot.singularity.api.task.SingularityPendingTask;
-import com.hubspot.singularity.api.task.SingularityPendingTaskBuilder;
 import com.hubspot.singularity.api.task.SingularityPendingTaskId;
 import com.hubspot.singularity.api.task.SingularityTaskRequest;
 import com.hubspot.singularity.config.NetworkConfiguration;
@@ -88,7 +87,7 @@ public class SingularityMesosTaskBuilderTest {
 
   @Before
   public void createMocks() {
-    pendingTask = new SingularityPendingTaskBuilder()
+    pendingTask = SingularityPendingTask.builder()
         .setPendingTaskId(new SingularityPendingTaskId("test", "1", 0, 1, PendingType.IMMEDIATE, 0))
         .setUser(user)
         .build();
@@ -176,7 +175,7 @@ public class SingularityMesosTaskBuilderTest {
     final SingularityDeploy deploy = new SingularityDeployBuilder("test", "1")
         .setCommand(Optional.of("/bin/echo hi"))
         .build();
-    final SingularityPendingTask pendingTask = new SingularityPendingTaskBuilder()
+    final SingularityPendingTask pendingTask = SingularityPendingTask.builder()
         .setPendingTaskId(new SingularityPendingTaskId("test", "1", 0, 1, PendingType.IMMEDIATE, 0))
         .setUser(user)
         .setEnvOverrides(overrideVariables)

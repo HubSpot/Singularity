@@ -39,7 +39,6 @@ import com.hubspot.singularity.api.auth.SingularityUser;
 import com.hubspot.singularity.api.common.SingularityAction;
 import com.hubspot.singularity.api.common.SingularityCreateResult;
 import com.hubspot.singularity.api.common.SingularityDeleteResult;
-import com.hubspot.singularity.api.common.SingularityTransformHelpers;
 import com.hubspot.singularity.api.expiring.SingularityBounceRequest;
 import com.hubspot.singularity.api.expiring.SingularityExpiringBounce;
 import com.hubspot.singularity.api.expiring.SingularityExpiringPause;
@@ -666,7 +665,7 @@ public class RequestResource extends AbstractRequestResource {
   @Path("/queued/pending")
   @Operation(summary = "Retrieve the list of pending requests")
   public List<SingularityPendingRequest> getPendingRequests(@Parameter(hidden = true) @Auth SingularityUser user) {
-    return authorizationHelper.filterByAuthorizedRequests(user, requestManager.getPendingRequests(), SingularityTransformHelpers.PENDING_REQUEST_TO_REQUEST_ID, SingularityAuthorizationScope.READ);
+    return authorizationHelper.filterByAuthorizedRequests(user, requestManager.getPendingRequests(), SingularityPendingRequest::getRequestId, SingularityAuthorizationScope.READ);
   }
 
   @GET
@@ -674,7 +673,7 @@ public class RequestResource extends AbstractRequestResource {
   @Path("/queued/cleanup")
   @Operation(summary = "Retrieve the list of requests being cleaned up")
   public List<SingularityRequestCleanup> getCleanupRequests(@Parameter(hidden = true) @Auth SingularityUser user) {
-    return authorizationHelper.filterByAuthorizedRequests(user, requestManager.getCleanupRequests(), SingularityTransformHelpers.REQUEST_CLEANUP_TO_REQUEST_ID, SingularityAuthorizationScope.READ);
+    return authorizationHelper.filterByAuthorizedRequests(user, requestManager.getCleanupRequests(), SingularityRequestCleanup::getRequestId, SingularityAuthorizationScope.READ);
   }
 
   @GET

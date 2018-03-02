@@ -41,7 +41,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.primitives.Ints;
 import com.google.inject.Inject;
 import com.google.protobuf.ByteString;
-import com.hubspot.singularity.api.deploy.ExecutorDataBuilder;
+import com.hubspot.singularity.api.deploy.ExecutorData;
 import com.hubspot.singularity.api.deploy.mesos.Resources;
 import com.hubspot.singularity.api.deploy.mesos.SingularityAppcImage;
 import com.hubspot.singularity.api.deploy.mesos.SingularityContainerInfo;
@@ -498,7 +498,8 @@ class SingularityMesosTaskBuilder {
         );
 
     if (task.getDeploy().getExecutorData().isPresent()) {
-      final ExecutorDataBuilder executorDataBldr = task.getDeploy().getExecutorData().get().toBuilder();
+      ExecutorData executorData = task.getDeploy().getExecutorData().get();
+      final ExecutorData.Builder executorDataBldr = ExecutorData.builder().from(task.getDeploy().getExecutorData().get());
 
       String defaultS3Bucket = "";
       String s3UploaderKeyPattern = "";
@@ -517,8 +518,8 @@ class SingularityMesosTaskBuilder {
         LOG.trace("Adding cmd line args {} to task {} executorData", task.getPendingTask().getCmdLineArgsList(), taskId.getId());
 
         final ImmutableList.Builder<String> extraCmdLineArgsBuilder = ImmutableList.builder();
-        if (executorDataBldr.getExtraCmdLineArgs() != null && !executorDataBldr.getExtraCmdLineArgs().isEmpty()) {
-          extraCmdLineArgsBuilder.addAll(executorDataBldr.getExtraCmdLineArgs());
+        if (executorData.getExtraCmdLineArgs() != null && !executorData.getExtraCmdLineArgs().isEmpty()) {
+          extraCmdLineArgsBuilder.addAll(executorData.getExtraCmdLineArgs());
         }
         extraCmdLineArgsBuilder.addAll(task.getPendingTask().getCmdLineArgsList().get());
         executorDataBldr.setExtraCmdLineArgs(extraCmdLineArgsBuilder.build());
@@ -537,16 +538,23 @@ class SingularityMesosTaskBuilder {
         executorDataBldr.setUser(task.getPendingTask().getRunAsUserOverride());
       }
 
-      final SingularityTaskExecutorData executorData = new SingularityTaskExecutorData(executorDataBldr.build(), uploaderAdditionalFiles, defaultS3Bucket, s3UploaderKeyPattern,
-          configuration.getCustomExecutorConfiguration().getServiceLog(), configuration.getCustomExecutorConfiguration().getServiceFinishedTailLog(), task.getRequest().getGroup(),
-          maybeS3StorageClass, maybeApplyAfterBytes);
+      final SingularityTaskExecutorData taskExecutorData = SingularityTaskExecutorData.builder().from(executorDataBldr.build())
+          .setS3UploaderAdditionalFiles(uploaderAdditionalFiles)
+          .setDefaultS3Bucket(defaultS3Bucket)
+          .setS3UploaderKeyPattern(s3UploaderKeyPattern)
+          .setServiceLog(configuration.getCustomExecutorConfiguration().getServiceLog())
+          .setServiceFinishedTailLog(configuration.getCustomExecutorConfiguration().getServiceFinishedTailLog())
+          .setRequestGroup(task.getRequest().getGroup())
+          .setS3StorageClass(maybeS3StorageClass)
+          .setApplyS3StorageClassAfterBytes(maybeApplyAfterBytes)
+          .build();
 
       try {
-        bldr.setData(ByteString.copyFromUtf8(objectMapper.writeValueAsString(executorData)));
+        bldr.setData(ByteString.copyFromUtf8(objectMapper.writeValueAsString(taskExecutorData)));
       } catch (JsonProcessingException e) {
-        LOG.warn("Unable to process executor data {} for task {} as json (trying as string)", executorData, taskId.getId(), e);
+        LOG.warn("Unable to process executor data {} for task {} as json (trying as string)", taskExecutorData, taskId.getId(), e);
 
-        bldr.setData(ByteString.copyFromUtf8(executorData.toString()));
+        bldr.setData(ByteString.copyFromUtf8(taskExecutorData.toString()));
       }
     } else if (task.getDeploy().getCommand().isPresent()) {
       bldr.setData(ByteString.copyFromUtf8(task.getDeploy().getCommand().get()));

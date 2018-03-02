@@ -42,7 +42,7 @@ public class StateManagerTest extends SingularitySchedulerTestBase{
     statusUpdate(task, TaskState.TASK_KILLED);
     scheduler.drainPendingQueue();
 
-    taskManager.createTaskCleanup(new SingularityTaskCleanup(Optional.empty(), TaskCleanupType.BOUNCING, 1L, task.getTaskId(), Optional.empty(), Optional.empty(), Optional.empty()));
+    taskManager.createTaskCleanup(new SingularityTaskCleanup(Optional.empty(), TaskCleanupType.BOUNCING, 1L, task.getTaskId(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty()));
     Assert.assertEquals(2, taskManager.getActiveTaskIds().size());
     Assert.assertEquals(0, stateManager.getState(true, false).getOverProvisionedRequests());
     Assert.assertEquals(1, stateManager.getState(true, false).getUnderProvisionedRequests());

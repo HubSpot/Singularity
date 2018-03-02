@@ -82,7 +82,7 @@ public class SingularityPriorityKillPoller extends SingularityLeaderOnlyPoller {
                     LOG.info("Killing active task {} since priority level {} is less than {}", taskId.getId(), taskPriorityLevel, minPriorityLevel);
                     taskManager.createTaskCleanup(
                         new SingularityTaskCleanup(maybePriorityFreeze.get().getUser(), TaskCleanupType.PRIORITY_KILL, now, taskId, maybePriorityFreeze.get().getPriorityFreeze().getMessage(),
-                            maybePriorityFreeze.get().getPriorityFreeze().getActionId(), Optional.empty()));
+                            maybePriorityFreeze.get().getPriorityFreeze().getActionId(), Optional.empty(), Optional.empty()));
                     killedTaskCount++;
                 }
             }

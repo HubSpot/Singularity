@@ -13,7 +13,7 @@ import org.slf4j.LoggerFactory;
 import com.google.inject.Inject;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.api.request.SingularityPendingRequest.PendingType;
-import com.hubspot.singularity.api.task.SingularityPendingTaskBuilder;
+import com.hubspot.singularity.api.task.SingularityPendingTask;
 import com.hubspot.singularity.api.task.SingularityPendingTaskId;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.data.transcoders.StringTranscoder;
@@ -57,7 +57,7 @@ public class SingularityPendingTaskIdMigration extends ZkDataMigration {
           Optional<String> cmdLineArgs = getCmdLineArgs(pendingTaskId);
 
           taskManager.savePendingTask(
-              new SingularityPendingTaskBuilder()
+              SingularityPendingTask.builder()
                   .setPendingTaskId(newPendingTaskId)
                   .setCmdLineArgsList(cmdLineArgs.isPresent() ? Optional.of(Collections.singletonList(cmdLineArgs.get())) : Optional.empty())
                   .build());
