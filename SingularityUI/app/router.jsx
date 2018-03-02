@@ -1,7 +1,6 @@
 import React from 'react';
 import { Provider } from 'react-redux';
-import { Router, Route, IndexRoute, useRouterHistory } from 'react-router';
-import { createHistory } from 'history';
+import { Router, Route, IndexRoute } from 'react-router';
 import { syncHistoryWithStore } from 'react-router-redux';
 
 import Application from './components/common/Application';
@@ -76,7 +75,8 @@ const AppRouter = (props) => {
 };
 
 AppRouter.propTypes = {
-  store: React.PropTypes.object.isRequired
+  history: React.PropTypes.object.isRequired,
+  store: React.PropTypes.object.isRequired,
 };
 
 export default AppRouter;
