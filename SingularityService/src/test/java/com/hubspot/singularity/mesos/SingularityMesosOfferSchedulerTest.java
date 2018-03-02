@@ -11,7 +11,6 @@ import java.util.concurrent.TimeUnit;
 import org.apache.mesos.v1.Protos.Offer;
 import org.junit.Assert;
 import org.junit.Test;
-import org.mockito.Mockito;
 
 import com.google.inject.Inject;
 import com.hubspot.mesos.json.MesosTaskMonitorObject;
@@ -98,13 +97,11 @@ public class SingularityMesosOfferSchedulerTest extends SingularitySchedulerTest
   @Test
   public void itCorrectlyUsesDefaults() {
     Map<ResourceUsageType, Number> longRunningTasksUsage = new HashMap<>();
-    setRequestType(RequestType.SERVICE);
 
     // LR - no usage tracked -> default score
     assertValueIs(0.10, scheduler.score(SLAVE_ID, taskRequestNonLongRunning, Optional.empty()));
 
     // NLR - no deployStatistics -> default weights
-    setRequestType(RequestType.ON_DEMAND);
     longRunningTasksUsage.put(ResourceUsageType.CPU_USED, 5);
     longRunningTasksUsage.put(ResourceUsageType.MEMORY_BYTES_USED, mbToBytes(5));
     longRunningTasksUsage.put(ResourceUsageType.DISK_BYTES_USED, mbToBytes(5));
@@ -114,7 +111,6 @@ public class SingularityMesosOfferSchedulerTest extends SingularitySchedulerTest
   @Test
   public void itCorrectlyScoresLongRunningTasks() {
     Map<ResourceUsageType, Number> longRunningTasksUsage = new HashMap<>();
-    setRequestType(RequestType.SERVICE);
 
     // new slave (no resources used) -> perfect score
     longRunningTasksUsage.put(ResourceUsageType.CPU_USED, 0);
@@ -203,7 +199,6 @@ public class SingularityMesosOfferSchedulerTest extends SingularitySchedulerTest
   @Test
   public void itCorrectlyScoresMediumLongNonLongRunningTasks() {
     Map<ResourceUsageType, Number> longRunningTasksUsage = new HashMap<>();
-    setRequestType(RequestType.ON_DEMAND);
 
     // medium duration
     setDeployStatistics(TimeUnit.HOURS, 3);
@@ -249,7 +244,6 @@ public class SingularityMesosOfferSchedulerTest extends SingularitySchedulerTest
   @Test
   public void itCorrectlyScoresLongNonLongRunningTasks() {
     Map<ResourceUsageType, Number> longRunningTasksUsage = new HashMap<>();
-    setRequestType(RequestType.ON_DEMAND);
 
     // long duration
     setDeployStatistics(TimeUnit.HOURS, 6);
@@ -402,9 +396,5 @@ public class SingularityMesosOfferSchedulerTest extends SingularitySchedulerTest
     return new SingularityDeployStatisticsBuilder("requestId", "deployId")
         .setAverageRuntimeMillis(Optional.of(avgRunTimeMillis))
         .build();
-  }
-
-  private void setRequestType(RequestType type) {
-    Mockito.when(request.getRequestType()).thenReturn(type);
   }
 }

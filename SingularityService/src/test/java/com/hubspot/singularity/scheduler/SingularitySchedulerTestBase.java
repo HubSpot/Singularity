@@ -706,7 +706,7 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
 
   protected void saveLoadBalancerState(BaragonRequestState brs, SingularityTaskId taskId, LoadBalancerRequestType lbrt) {
     final LoadBalancerRequestId lbri = LoadBalancerRequestId.builder().setId(taskId.getId()).setRequestType(lbrt).build();
-    SingularityLoadBalancerUpdate update = new SingularityLoadBalancerUpdate(brs, lbri, Optional.empty(), System.currentTimeMillis(), LoadBalancerMethod.CHECK_STATE, null);
+    SingularityLoadBalancerUpdate update = new SingularityLoadBalancerUpdate(brs, lbri, Optional.empty(), System.currentTimeMillis(), LoadBalancerMethod.CHECK_STATE, Optional.empty());
 
     taskManager.saveLoadBalancerState(taskId, lbrt, update);
   }
