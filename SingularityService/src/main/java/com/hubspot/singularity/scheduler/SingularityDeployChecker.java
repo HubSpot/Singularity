@@ -518,9 +518,10 @@ public class SingularityDeployChecker {
   }
 
   private LoadBalancerRequestId getLoadBalancerRequestId(SingularityPendingDeploy pendingDeploy) {
-    return new LoadBalancerRequestId(
-      String.format("%s-%s-%s", pendingDeploy.getDeployMarker().getRequestId(), pendingDeploy.getDeployMarker().getDeployId(), pendingDeploy.getDeployProgress().get().getTargetActiveInstances()),
-      LoadBalancerRequestType.DEPLOY, Optional.empty());
+    return LoadBalancerRequestId.builder()
+        .setId(String.format("%s-%s-%s", pendingDeploy.getDeployMarker().getRequestId(), pendingDeploy.getDeployMarker().getDeployId(), pendingDeploy.getDeployProgress().get().getTargetActiveInstances()))
+        .setRequestType(LoadBalancerRequestType.DEPLOY)
+        .build();
   }
 
   private SingularityDeployResult getDeployResult(final SingularityRequest request, final Optional<SingularityDeployMarker> cancelRequest, final SingularityPendingDeploy pendingDeploy,

@@ -25,7 +25,7 @@ import com.hubspot.mesos.JavaUtils;
 import com.hubspot.mesos.protos.MesosParameter;
 import com.hubspot.singularity.api.common.LoadBalancerRequestId;
 import com.hubspot.singularity.api.common.SingularityLoadBalancerUpdate;
-import com.hubspot.singularity.api.common.SingularityLoadBalancerUpdate.LoadBalancerMethod;
+import com.hubspot.singularity.api.common.LoadBalancerMethod;
 import com.hubspot.singularity.api.deploy.SingularityDeploy;
 import com.hubspot.singularity.api.request.SingularityRequest;
 import com.hubspot.singularity.api.task.SingularityTask;

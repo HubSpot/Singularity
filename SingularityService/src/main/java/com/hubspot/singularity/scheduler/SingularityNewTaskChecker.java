@@ -30,7 +30,7 @@ import com.hubspot.singularity.api.common.LoadBalancerRequestType;
 import com.hubspot.singularity.api.common.LoadBalancerRequestId;
 import com.hubspot.singularity.api.common.SingularityAction;
 import com.hubspot.singularity.api.common.SingularityLoadBalancerUpdate;
-import com.hubspot.singularity.api.common.SingularityLoadBalancerUpdate.LoadBalancerMethod;
+import com.hubspot.singularity.api.common.LoadBalancerMethod;
 import com.hubspot.singularity.api.request.SingularityRequestWithState;
 import com.hubspot.singularity.api.task.ExtendedTaskState;
 import com.hubspot.singularity.api.task.SimplifiedTaskState;
@@ -335,7 +335,7 @@ public class SingularityNewTaskChecker {
     Optional<SingularityLoadBalancerUpdate> lbUpdate = taskManager.getLoadBalancerState(task.getTaskId(), LoadBalancerRequestType.ADD);
     SingularityLoadBalancerUpdate newLbUpdate;
 
-    final LoadBalancerRequestId loadBalancerRequestId = new LoadBalancerRequestId(task.getTaskId().getId(), LoadBalancerRequestType.ADD, Optional.empty());
+    final LoadBalancerRequestId loadBalancerRequestId = LoadBalancerRequestId.builder().setId(task.getTaskId().getId()).setRequestType(LoadBalancerRequestType.ADD).build();
     boolean taskCleaning = taskManager.getCleanupTaskIds().contains(task.getTaskId());
 
     if ((!lbUpdate.isPresent() || unknownNotRemoving(lbUpdate.get())) && !taskCleaning) {

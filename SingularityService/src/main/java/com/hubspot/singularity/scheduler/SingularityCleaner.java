@@ -707,13 +707,13 @@ public class SingularityCleaner {
 
   private LoadBalancerRequestId getLoadBalancerRequestId(SingularityTaskId taskId, Optional<SingularityLoadBalancerUpdate> lbRemoveUpdate) {
     if (!lbRemoveUpdate.isPresent()) {
-      return new LoadBalancerRequestId(taskId.getId(), LoadBalancerRequestType.REMOVE, Optional.empty());
+      return LoadBalancerRequestId.builder().setId(taskId.getId()).setRequestType(LoadBalancerRequestType.REMOVE).build();
     }
 
     switch (lbRemoveUpdate.get().getLoadBalancerState()) {
       case FAILED:
       case CANCELED:
-        return new LoadBalancerRequestId(taskId.getId(), LoadBalancerRequestType.REMOVE, Optional.of(lbRemoveUpdate.get().getLoadBalancerRequestId().getAttemptNumber() + 1));
+        return new LoadBalancerRequestId(taskId.getId(), LoadBalancerRequestType.REMOVE, lbRemoveUpdate.get().getLoadBalancerRequestId().getAttemptNumber() + 1);
       default:
         return lbRemoveUpdate.get().getLoadBalancerRequestId();
     }
@@ -958,13 +958,13 @@ public class SingularityCleaner {
 
   private LoadBalancerRequestId getLoadBalancerRequestId(String requestId, Optional<SingularityLoadBalancerUpdate> lbDeleteUpdate) {
     if (!lbDeleteUpdate.isPresent()) {
-      return new LoadBalancerRequestId(String.format("%s-%s", requestId, System.currentTimeMillis()), LoadBalancerRequestType.DELETE, Optional.empty());
+      return LoadBalancerRequestId.builder().setId(String.format("%s-%s", requestId, System.currentTimeMillis())).setRequestType(LoadBalancerRequestType.DELETE).build();
     }
 
     switch (lbDeleteUpdate.get().getLoadBalancerState()) {
       case FAILED:
       case CANCELED:
-        return new LoadBalancerRequestId(String.format("%s-%s", requestId, System.currentTimeMillis()), LoadBalancerRequestType.DELETE, Optional.of(lbDeleteUpdate.get().getLoadBalancerRequestId().getAttemptNumber() + 1));
+        return new LoadBalancerRequestId(String.format("%s-%s", requestId, System.currentTimeMillis()), LoadBalancerRequestType.DELETE, lbDeleteUpdate.get().getLoadBalancerRequestId().getAttemptNumber() + 1);
       default:
         return lbDeleteUpdate.get().getLoadBalancerRequestId();
     }

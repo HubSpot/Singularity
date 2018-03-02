@@ -49,7 +49,7 @@ import com.hubspot.singularity.api.auth.SingularityUser;
 import com.hubspot.singularity.api.common.LoadBalancerRequestType;
 import com.hubspot.singularity.api.common.LoadBalancerRequestId;
 import com.hubspot.singularity.api.common.SingularityLoadBalancerUpdate;
-import com.hubspot.singularity.api.common.SingularityLoadBalancerUpdate.LoadBalancerMethod;
+import com.hubspot.singularity.api.common.LoadBalancerMethod;
 import com.hubspot.singularity.api.deploy.DeployState;
 import com.hubspot.singularity.api.deploy.HealthcheckOptionsBuilder;
 import com.hubspot.singularity.api.deploy.SingularityDeploy;
@@ -705,7 +705,7 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
   }
 
   protected void saveLoadBalancerState(BaragonRequestState brs, SingularityTaskId taskId, LoadBalancerRequestType lbrt) {
-    final LoadBalancerRequestId lbri = new LoadBalancerRequestId(taskId.getId(), lbrt, Optional.empty());
+    final LoadBalancerRequestId lbri = LoadBalancerRequestId.builder().setId(taskId.getId()).setRequestType(lbrt).build();
     SingularityLoadBalancerUpdate update = new SingularityLoadBalancerUpdate(brs, lbri, Optional.empty(), System.currentTimeMillis(), LoadBalancerMethod.CHECK_STATE, null);
 
     taskManager.saveLoadBalancerState(taskId, lbrt, update);
