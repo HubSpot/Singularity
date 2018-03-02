@@ -73,7 +73,7 @@ public class AuthResource {
       @Parameter(required = true, description = "Request id to check") @PathParam("requestId") String requestId,
       @Parameter(required = true, description = "User id to check") @PathParam("userId") String userId,
       @Parameter(description = "Scope to check for") @QueryParam("scope") @DefaultValue("READ") Optional<SingularityAuthorizationScope> scope) {
-    authorizationHelper.checkForAuthorizationByRequestId(requestId, authDatastore.getUser(userId).orElse(SingularityUser.DEFAULT_USER), scope.orElse(SingularityAuthorizationScope.READ));
+    authorizationHelper.checkForAuthorizationByRequestId(requestId, authDatastore.getUser(userId).orElse(SingularityUser.defaultUser()), scope.orElse(SingularityAuthorizationScope.READ));
     return Response.ok().build();
   }
 

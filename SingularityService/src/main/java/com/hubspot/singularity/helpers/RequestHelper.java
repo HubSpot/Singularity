@@ -219,7 +219,7 @@ public class RequestHelper {
           if (!requestTypeFilters.isEmpty() && !requestTypeFilters.contains(request.getRequest().getRequestType())) {
             return false;
           }
-          if (!filterRelevantForUser || user.equals(SingularityUser.DEFAULT_USER)) {
+          if (!filterRelevantForUser || user.equals(SingularityUser.defaultUser())) {
             return true;
           }
           String requestId = request.getRequest().getId();

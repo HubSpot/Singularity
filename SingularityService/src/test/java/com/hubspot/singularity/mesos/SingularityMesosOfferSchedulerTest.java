@@ -353,7 +353,7 @@ public class SingularityMesosOfferSchedulerTest extends SingularitySchedulerTest
     usageManager.saveSpecificSlaveUsageAndSetCurrent("host2", smallUsage);
     usageManager.saveSpecificSlaveUsageAndSetCurrent("host3", smallUsage);
 
-    requestResource.scale(requestId, new SingularityScaleRequest(Optional.of(3), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty()), SingularityUser.DEFAULT_USER);
+    requestResource.scale(requestId, new SingularityScaleRequest(Optional.of(3), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty()), SingularityUser.defaultUser());
 
     Assert.assertEquals(2.0, usageManager.getRequestUtilizations().get(requestId).getCpuUsed(), 0.001);
 

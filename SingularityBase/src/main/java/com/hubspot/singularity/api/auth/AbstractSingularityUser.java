@@ -17,7 +17,9 @@ import io.swagger.v3.oas.annotations.media.Schema;
 @SingularityStyle
 @Schema(description = "Information about a user")
 public abstract class AbstractSingularityUser implements Principal {
-  public static SingularityUser DEFAULT_USER = SingularityUser.builder().setId("singularity").build();
+  public static SingularityUser defaultUser() {
+    return SingularityUser.builder().setId("singularity").build();
+  }
 
   @Schema(description = "The user's id")
   public abstract String getId();
