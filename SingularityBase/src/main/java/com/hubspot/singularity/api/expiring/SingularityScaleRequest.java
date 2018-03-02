@@ -1,10 +1,9 @@
-package com.hubspot.singularity.api.request;
+package com.hubspot.singularity.api.expiring;
 
 import java.util.Optional;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.hubspot.singularity.api.expiring.SingularityExpiringRequestParent;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
@@ -16,17 +15,6 @@ public class SingularityScaleRequest extends SingularityExpiringRequestParent {
   private final Optional<Boolean> bounce;
   private final Optional<Boolean> incremental;
   private final Optional<Boolean> skipEmailNotification;
-
-  @Deprecated
-  public SingularityScaleRequest(Optional<Integer> instances,
-                                 Optional<Long> durationMillis,
-                                 Optional<Boolean> skipHealthchecks,
-                                 Optional<String> actionId,
-                                 Optional<String> message,
-                                 Optional<Boolean> bounce,
-                                 Optional<Boolean> incremental) {
-    this(instances, durationMillis, skipHealthchecks, actionId, message, bounce, incremental, Optional.empty());
-  }
 
   @JsonCreator
   public SingularityScaleRequest(@JsonProperty("instances") Optional<Integer> instances,

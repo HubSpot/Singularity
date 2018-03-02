@@ -58,7 +58,6 @@ import com.hubspot.singularity.api.request.SingularityPendingRequest.PendingType
 import com.hubspot.singularity.api.request.SingularityRequest;
 import com.hubspot.singularity.api.request.SingularityRequestGroup;
 import com.hubspot.singularity.api.request.SingularityRunNowRequest;
-import com.hubspot.singularity.api.request.SingularityRunNowRequestBuilder;
 import com.hubspot.singularity.api.request.SlavePlacement;
 import com.hubspot.singularity.api.task.SingularityPendingTaskId;
 import com.hubspot.singularity.api.task.SingularityShellCommand;
@@ -459,7 +458,7 @@ public class SingularityValidator {
           request.getExtraArtifacts(),
           request.getRunAt());
     } else {
-      return new SingularityRunNowRequestBuilder()
+      return SingularityRunNowRequest.builder()
           .setRunId(getRunId(Optional.empty()))
           .build();
     }

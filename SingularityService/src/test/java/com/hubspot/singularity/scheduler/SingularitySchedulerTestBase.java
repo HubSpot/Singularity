@@ -67,7 +67,7 @@ import com.hubspot.singularity.api.request.SingularityRequest;
 import com.hubspot.singularity.api.request.SingularityRequestBuilder;
 import com.hubspot.singularity.api.request.SingularityRequestDeployState;
 import com.hubspot.singularity.api.request.SingularityRequestHistory.RequestHistoryType;
-import com.hubspot.singularity.api.request.SingularityScaleRequest;
+import com.hubspot.singularity.api.expiring.SingularityScaleRequest;
 import com.hubspot.singularity.api.request.SlavePlacement;
 import com.hubspot.singularity.api.task.SingularityKilledTaskIdRecord;
 import com.hubspot.singularity.api.task.SingularityPendingTask;

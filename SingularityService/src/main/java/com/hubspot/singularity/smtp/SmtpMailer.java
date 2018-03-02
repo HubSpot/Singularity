@@ -36,7 +36,7 @@ import com.hubspot.singularity.api.disasters.SingularityDisastersData;
 import com.hubspot.singularity.api.expiring.SingularityPauseRequest;
 import com.hubspot.singularity.api.request.RequestType;
 import com.hubspot.singularity.api.request.SingularityRequest;
-import com.hubspot.singularity.api.request.SingularityScaleRequest;
+import com.hubspot.singularity.api.expiring.SingularityScaleRequest;
 import com.hubspot.singularity.api.task.ExtendedTaskState;
 import com.hubspot.singularity.api.task.SingularityTask;
 import com.hubspot.singularity.api.task.SingularityTaskHistory;

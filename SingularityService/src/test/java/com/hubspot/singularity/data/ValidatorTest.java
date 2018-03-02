@@ -24,7 +24,6 @@ import com.hubspot.singularity.api.request.SingularityPendingRequest;
 import com.hubspot.singularity.api.request.SingularityRequest;
 import com.hubspot.singularity.api.request.SingularityRequestBuilder;
 import com.hubspot.singularity.api.request.SingularityRunNowRequest;
-import com.hubspot.singularity.api.request.SingularityRunNowRequestBuilder;
 import com.hubspot.singularity.api.task.SingularityPendingTaskId;
 import com.hubspot.singularity.api.task.SingularityTaskId;
 import com.hubspot.singularity.config.SingularityConfiguration;
@@ -250,7 +249,7 @@ public class ValidatorTest extends SingularityTestBaseNoDb {
   }
 
   private SingularityRunNowRequest runNowRequest(String runId) {
-    return new SingularityRunNowRequestBuilder()
+    return SingularityRunNowRequest.builder()
         .setMessage("message")
         .setSkipHealthchecks(false)
         .setRunId(runId)
@@ -259,7 +258,7 @@ public class ValidatorTest extends SingularityTestBaseNoDb {
   }
 
   private SingularityRunNowRequest runNowRequest() {
-    return new SingularityRunNowRequestBuilder()
+    return SingularityRunNowRequest.builder()
         .setMessage("message")
         .setSkipHealthchecks(false)
         .setCommandLineArgs(Collections.singletonList("--help"))

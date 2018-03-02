@@ -10,7 +10,7 @@ import com.hubspot.singularity.api.expiring.SingularityBounceRequest;
 import com.hubspot.singularity.api.expiring.SingularityPauseRequest;
 import com.hubspot.singularity.api.expiring.SingularitySkipHealthchecksRequest;
 import com.hubspot.singularity.api.request.RequestState;
-import com.hubspot.singularity.api.request.SingularityScaleRequest;
+import com.hubspot.singularity.api.expiring.SingularityScaleRequest;
 import com.hubspot.singularity.api.task.SingularityTask;
 
 public class SingularityExpiringActionsTest extends SingularitySchedulerTestBase {

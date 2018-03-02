@@ -3,7 +3,6 @@ package com.hubspot.singularity.api.expiring;
 import java.util.Optional;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.hubspot.singularity.api.request.SingularityScaleRequest;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 

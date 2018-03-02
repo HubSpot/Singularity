@@ -25,8 +25,9 @@ import com.hubspot.singularity.api.request.SingularityDeleteRequestRequest;
 import com.hubspot.singularity.api.request.SingularityPendingRequestParent;
 import com.hubspot.singularity.api.request.SingularityRequestHistory;
 import com.hubspot.singularity.api.request.SingularityRequestHistory.RequestHistoryType;
-import com.hubspot.singularity.api.request.SingularityRunNowRequestBuilder;
-import com.hubspot.singularity.api.request.SingularityScaleRequest;
+
+import com.hubspot.singularity.api.expiring.SingularityScaleRequest;
+import com.hubspot.singularity.api.request.SingularityRunNowRequest;
 import com.hubspot.singularity.api.task.ExtendedTaskState;
 import com.hubspot.singularity.api.task.SingularityTask;
 import com.hubspot.singularity.api.task.SingularityTaskHistory;
@@ -212,7 +213,7 @@ public class SingularityHistoryTest extends SingularitySchedulerTestBase {
     String runId = "my-run-id";
 
     SingularityPendingRequestParent parent = requestResource.scheduleImmediately(singularityUser, requestId,
-        new SingularityRunNowRequestBuilder().setRunId(runId).build());
+        SingularityRunNowRequest.builder().setRunId(runId).build());
 
     Assert.assertEquals(runId, parent.getPendingRequest().getRunId().get());
 

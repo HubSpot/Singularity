@@ -26,7 +26,6 @@ import com.hubspot.singularity.api.request.SingularityPendingDeploy;
 import com.hubspot.singularity.api.request.SingularityPendingRequest.PendingType;
 import com.hubspot.singularity.api.request.SingularityRequest;
 import com.hubspot.singularity.api.request.SingularityRunNowRequest;
-import com.hubspot.singularity.api.request.SingularityRunNowRequestBuilder;
 import com.hubspot.singularity.api.request.SingularityUpdatePendingDeployRequest;
 import com.hubspot.singularity.api.task.SingularityPendingTask;
 import com.hubspot.singularity.api.task.SingularityPendingTaskId;
@@ -912,7 +911,7 @@ public class SingularityDeploysTest extends SingularitySchedulerTestBase {
     initRequestWithType(RequestType.SCHEDULED, false);
     String deployId = "d1";
 
-    SingularityRunNowRequest runNowRequest = new SingularityRunNowRequestBuilder().setMessage("Message").build();
+    SingularityRunNowRequest runNowRequest = SingularityRunNowRequest.builder().setMessage("Message").build();
     SingularityDeploy deploy = new SingularityDeployBuilder(requestId, deployId)
         .setRunImmediately(Optional.of(runNowRequest))
         .setCommand(Optional.of("printenv > tmp.txt"))
@@ -939,7 +938,7 @@ public class SingularityDeploysTest extends SingularitySchedulerTestBase {
     initRequestWithType(RequestType.SCHEDULED, false);
     String deployId = "d1";
 
-    SingularityRunNowRequest runNowRequest = new SingularityRunNowRequestBuilder().setMessage("Message").build();
+    SingularityRunNowRequest runNowRequest = SingularityRunNowRequest.builder().setMessage("Message").build();
     SingularityDeploy deploy = new SingularityDeployBuilder(requestId, deployId)
         .setRunImmediately(Optional.of(runNowRequest))
         .setCommand(Optional.of("printenv > tmp.txt"))
