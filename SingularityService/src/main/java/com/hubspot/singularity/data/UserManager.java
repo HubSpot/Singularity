@@ -1,5 +1,6 @@
 package com.hubspot.singularity.data;
 
+import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
 
@@ -51,9 +52,12 @@ public class UserManager extends CuratorManager {
       save(path, new SingularityUserSettings(starredRequestIds), settingsTranscoder);
       return;
     }
-    settings.get().addStarredRequestIds(starredRequestIds);
-    validator.checkStarredRequests(settings.get().getStarredRequestIds());
-    save(path, settings.get(), settingsTranscoder);
+    SingularityUserSettings newSettings = SingularityUserSettings.builder()
+        .from(settings.get())
+        .addAllStarredRequestIds(starredRequestIds)
+        .build();
+    validator.checkStarredRequests(newSettings.getStarredRequestIds());
+    save(path, newSettings, settingsTranscoder);
   }
 
   public void deleteStarredRequestIds(String userId, Set<String> starredRequestIds) {
@@ -62,7 +66,9 @@ public class UserManager extends CuratorManager {
     if (!settings.isPresent()) {
       return;
     }
-    save(path, settings.get().deleteStarredRequestIds(starredRequestIds), settingsTranscoder);
+    Set<String> starredIds = new HashSet<>(settings.get().getStarredRequestIds());
+    starredIds.remove(starredRequestIds);
+    save(path, SingularityUserSettings.builder().setStarredRequestIds(starredIds).build(), settingsTranscoder);
   }
 
   public Optional<SingularityUserSettings> getUserSettings(String userId) {

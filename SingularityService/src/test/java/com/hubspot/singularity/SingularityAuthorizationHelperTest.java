@@ -70,10 +70,10 @@ public class SingularityAuthorizationHelperTest {
 
 
   public static final SingularityUser NOT_LOGGED_IN = SingularityUser.DEFAULT_USER;
-  public static final SingularityUser USER_GROUP_A = new SingularityUser("test1", Optional.of("test user1"), Optional.of("test1@test.com"), ImmutableSet.of("a"));
-  public static final SingularityUser USER_GROUP_AB = new SingularityUser("test2", Optional.of("test user2"), Optional.of("test2@test.com"), ImmutableSet.of("a", "b"));
-  public static final SingularityUser USER_GROUP_B = new SingularityUser("test3", Optional.of("test user3"), Optional.of("test3@test.com"), ImmutableSet.of("b"));
-  public static final SingularityUser USER_GROUP_ADMIN = new SingularityUser("admin", Optional.of("admin user"), Optional.of("admin@test.com"), ImmutableSet.of("admin"));
+  public static final SingularityUser USER_GROUP_A = new SingularityUser("test1", "test user1", Optional.of("test1@test.com"), ImmutableSet.of("a"), true);
+  public static final SingularityUser USER_GROUP_AB = new SingularityUser("test2", "test user2", Optional.of("test2@test.com"), ImmutableSet.of("a", "b"), true);
+  public static final SingularityUser USER_GROUP_B = new SingularityUser("test3", "test user3", Optional.of("test3@test.com"), ImmutableSet.of("b"), true);
+  public static final SingularityUser USER_GROUP_ADMIN = new SingularityUser("admin", "admin user", Optional.of("admin@test.com"), ImmutableSet.of("admin"), true);
 
   private SingularityAuthorizationHelper buildAuthorizationHelper(SingularityConfiguration configuration) {
     return new SingularityAuthorizationHelper(requestManager, configuration);

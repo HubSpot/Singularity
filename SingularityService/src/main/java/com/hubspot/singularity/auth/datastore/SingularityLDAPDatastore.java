@@ -169,8 +169,8 @@ public class SingularityLDAPDatastore implements SingularityAuthDatastore {
             groups.add(cursor.get().get(configuration.getGroupNameAttribute()).getString());
           }
 
-          Optional<SingularityUser> result = Optional.of(new SingularityUser(user, Optional.ofNullable(Strings.emptyToNull(userEntry.get(configuration.getUserNameAttribute()).getString())),
-              Optional.ofNullable(Strings.emptyToNull(userEntry.get(configuration.getUserEmailAttribute()).getString())), groups));
+          Optional<SingularityUser> result = Optional.of(new SingularityUser(user, Strings.emptyToNull(userEntry.get(configuration.getUserNameAttribute()).getString()),
+              Optional.ofNullable(Strings.emptyToNull(userEntry.get(configuration.getUserEmailAttribute()).getString())), groups, true));
 
           if (ldapCache.isPresent()) {
             ldapCache.get().put(user, result);
