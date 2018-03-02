@@ -5,7 +5,7 @@ import java.util.Optional;
 import java.util.Set;
 
 import com.hubspot.baragon.models.BaragonRequestState;
-import com.hubspot.singularity.api.common.LoadBalancerRequestType.LoadBalancerRequestId;
+import com.hubspot.singularity.api.common.LoadBalancerRequestId;
 import com.hubspot.singularity.api.common.SingularityLoadBalancerUpdate;
 import com.hubspot.singularity.api.common.SingularityLoadBalancerUpdate.LoadBalancerMethod;
 import com.hubspot.singularity.api.deploy.SingularityDeploy;

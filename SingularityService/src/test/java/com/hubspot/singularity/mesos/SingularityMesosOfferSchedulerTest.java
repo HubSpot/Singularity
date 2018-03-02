@@ -16,7 +16,6 @@ import org.mockito.Mockito;
 import com.google.inject.Inject;
 import com.hubspot.mesos.json.MesosTaskMonitorObject;
 import com.hubspot.singularity.api.auth.SingularityUser;
-import com.hubspot.singularity.api.deploy.SingularityDeploy;
 import com.hubspot.singularity.api.deploy.SingularityDeployBuilder;
 import com.hubspot.singularity.api.deploy.SingularityDeployStatistics;
 import com.hubspot.singularity.api.deploy.SingularityDeployStatisticsBuilder;
@@ -26,7 +25,6 @@ import com.hubspot.singularity.api.machines.SingularitySlaveUsage.ResourceUsageT
 import com.hubspot.singularity.api.machines.SingularityUsageScoringStrategy;
 import com.hubspot.singularity.api.request.RequestType;
 import com.hubspot.singularity.api.request.SingularityPendingRequest.PendingType;
-import com.hubspot.singularity.api.request.SingularityRequest;
 import com.hubspot.singularity.api.request.SingularityRequestBuilder;
 import com.hubspot.singularity.api.request.SingularityScaleRequest;
 import com.hubspot.singularity.api.task.SingularityPendingTask;
@@ -82,11 +80,6 @@ public class SingularityMesosOfferSchedulerTest extends SingularitySchedulerTest
               .setPendingTaskId(new SingularityPendingTaskId("requestId", "deployId", 0, 1, PendingType.NEW_DEPLOY, 0))
               .build()
       ).build();
-  private SingularityDeploy deploy = Mockito.mock(SingularityDeploy.class);
-  private SingularityRequest request = Mockito.mock(SingularityRequest.class);
-  private SingularityPendingTask task = Mockito.mock(SingularityPendingTask.class);
-  private SingularityPendingTaskId taskId = Mockito.mock(SingularityPendingTaskId.class);
-
 
   public SingularityMesosOfferSchedulerTest() {
     super(false, (configuration) -> {configuration.setLongRunningUsedCpuWeightForOffer(0.30);

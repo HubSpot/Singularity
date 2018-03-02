@@ -27,7 +27,7 @@ import com.hubspot.singularity.SingularityAbort;
 import com.hubspot.singularity.SingularityAbort.AbortReason;
 import com.hubspot.singularity.SingularityMainModule;
 import com.hubspot.singularity.api.common.LoadBalancerRequestType;
-import com.hubspot.singularity.api.common.LoadBalancerRequestType.LoadBalancerRequestId;
+import com.hubspot.singularity.api.common.LoadBalancerRequestId;
 import com.hubspot.singularity.api.common.SingularityAction;
 import com.hubspot.singularity.api.common.SingularityLoadBalancerUpdate;
 import com.hubspot.singularity.api.common.SingularityLoadBalancerUpdate.LoadBalancerMethod;

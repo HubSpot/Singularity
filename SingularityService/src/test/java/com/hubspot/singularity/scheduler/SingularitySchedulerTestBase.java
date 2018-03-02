@@ -47,7 +47,7 @@ import com.hubspot.singularity.SingularityCuratorTestBase;
 import com.hubspot.singularity.SingularityMainModule;
 import com.hubspot.singularity.api.auth.SingularityUser;
 import com.hubspot.singularity.api.common.LoadBalancerRequestType;
-import com.hubspot.singularity.api.common.LoadBalancerRequestType.LoadBalancerRequestId;
+import com.hubspot.singularity.api.common.LoadBalancerRequestId;
 import com.hubspot.singularity.api.common.SingularityLoadBalancerUpdate;
 import com.hubspot.singularity.api.common.SingularityLoadBalancerUpdate.LoadBalancerMethod;
 import com.hubspot.singularity.api.deploy.DeployState;

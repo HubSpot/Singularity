@@ -27,7 +27,6 @@ import com.google.inject.name.Named;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.mesos.client.MesosClient;
 import com.hubspot.singularity.api.common.SingularityExecutorCleanupStatistics;
-import com.hubspot.singularity.api.common.SingularityExecutorCleanupStatistics.SingularityExecutorCleanupStatisticsBuilder;
 import com.hubspot.singularity.api.deploy.mesos.SingularityContainerType;
 import com.hubspot.singularity.api.machines.MachineState;
 import com.hubspot.singularity.api.machines.SingularitySlave;
@@ -94,7 +93,7 @@ public class SingularityExecutorCleanup {
   }
 
   public SingularityExecutorCleanupStatistics clean() {
-    final SingularityExecutorCleanupStatisticsBuilder statisticsBldr = new SingularityExecutorCleanupStatisticsBuilder();
+    final SingularityExecutorCleanupStatistics.Builder statisticsBldr = SingularityExecutorCleanupStatistics.builder();
     final Path directory = Paths.get(executorConfiguration.getGlobalTaskDefinitionDirectory());
 
     Set<String> runningTaskIds = null;
@@ -133,20 +132,27 @@ public class SingularityExecutorCleanup {
       cleanDocker(runningTaskIds);
     }
 
+    int invalidTasks = 0;
+    int totalTaskFiles = 0;
+    int runningTasksIgnored = 0;
+    int errorTasks = 0;
+    int successfullyCleanedTasks = 0;
+    int waitingTasks = 0;
+    int ioErrorTasks = 0;
     for (Path file : JavaUtils.iterable(directory)) {
       if (!Objects.toString(file.getFileName()).endsWith(executorConfiguration.getGlobalTaskDefinitionSuffix())) {
         LOG.debug("Ignoring file {} that doesn't have suffix {}", file, executorConfiguration.getGlobalTaskDefinitionSuffix());
-        statisticsBldr.incrInvalidTasks();
+        invalidTasks++;
         continue;
       }
 
-      statisticsBldr.incrTotalTaskFiles();
+      totalTaskFiles++;
 
       try {
         Optional<SingularityExecutorTaskDefinition> maybeTaskDefinition = jsonObjectFileHelper.read(file, LOG, SingularityExecutorTaskDefinition.class);
 
         if (!maybeTaskDefinition.isPresent()) {
-          statisticsBldr.incrInvalidTasks();
+          invalidTasks++;
           continue;
         }
 
@@ -157,7 +163,7 @@ public class SingularityExecutorCleanup {
         LOG.info("{} - Starting possible cleanup", taskId);
 
         if (runningTaskIds.contains(taskId) || executorStillRunning(taskDefinition)) {
-          statisticsBldr.incrRunningTasksIgnored();
+          runningTasksIgnored++;
           continue;
         }
 
@@ -168,7 +174,7 @@ public class SingularityExecutorCleanup {
         } catch (SingularityClientException sce) {
           LOG.error("{} - Failed fetching history", taskId, sce);
           exceptionNotifier.notify(String.format("Error fetching history (%s)", sce.getMessage()), sce, ImmutableMap.<String, String>of("taskId", taskId));
-          statisticsBldr.incrErrorTasks();
+          errorTasks++;
           continue;
         }
 
@@ -178,13 +184,13 @@ public class SingularityExecutorCleanup {
 
         switch (result) {
           case ERROR:
-            statisticsBldr.incrErrorTasks();
+            errorTasks++;
             break;
           case SUCCESS:
-            statisticsBldr.incrSuccessfullyCleanedTasks();
+            successfullyCleanedTasks++;
             break;
           case WAITING:
-            statisticsBldr.incrWaitingTasks();
+            waitingTasks++;
             break;
            default:
             break;
@@ -193,11 +199,19 @@ public class SingularityExecutorCleanup {
       } catch (IOException ioe) {
         LOG.error("Couldn't read file {}", file, ioe);
         exceptionNotifier.notify(String.format("Error reading file (%s)", ioe.getMessage()), ioe, ImmutableMap.of("file", file.toString()));
-        statisticsBldr.incrIoErrorTasks();
+        ioErrorTasks++;
       }
     }
 
-    return statisticsBldr.build();
+    return statisticsBldr
+        .setTotalTaskFiles(totalTaskFiles)
+        .setErrorTasks(errorTasks)
+        .setIoErrorTasks(ioErrorTasks)
+        .setSuccessfullyCleanedTasks(successfullyCleanedTasks)
+        .setWaitingTasks(waitingTasks)
+        .setRunningTasksIgnored(runningTasksIgnored)
+        .setInvalidTasks(invalidTasks)
+        .build();
   }
 
   private SingularityExecutorTaskDefinition withDefaults(SingularityExecutorTaskDefinition oldDefinition) {

@@ -5,7 +5,6 @@ import java.util.Optional;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.hubspot.baragon.models.BaragonRequestState;
-import com.hubspot.singularity.api.common.LoadBalancerRequestType.LoadBalancerRequestId;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 

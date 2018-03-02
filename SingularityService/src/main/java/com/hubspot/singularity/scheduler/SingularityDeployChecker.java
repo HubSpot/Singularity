@@ -27,7 +27,7 @@ import com.google.inject.Inject;
 import com.hubspot.baragon.models.BaragonRequestState;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.api.common.LoadBalancerRequestType;
-import com.hubspot.singularity.api.common.LoadBalancerRequestType.LoadBalancerRequestId;
+import com.hubspot.singularity.api.common.LoadBalancerRequestId;
 import com.hubspot.singularity.api.common.SingularityLoadBalancerUpdate;
 import com.hubspot.singularity.api.deploy.DeployState;
 import com.hubspot.singularity.api.deploy.SingularityDeploy;
