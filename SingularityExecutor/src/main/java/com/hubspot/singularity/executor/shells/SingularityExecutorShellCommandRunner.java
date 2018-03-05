@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Scanner;
+import java.util.stream.Collectors;
 
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Joiner;
@@ -125,7 +126,10 @@ public class SingularityExecutorShellCommandRunner {
     });
 
     if (!matchingShellCommandDescriptor.isPresent()) {
-      throw new InvalidShellCommandException(String.format("%s not found in matching commands %s", shellRequest.getShellCommand().getName(), executorConfiguration.getShellCommands()));
+      throw new InvalidShellCommandException(String.format(
+          "\"%s\" command not found. If this command was added or modified after the task launched, then the task must be restarted to find it. Currently available commands are: %s",
+          shellRequest.getShellCommand().getName(),
+          executorConfiguration.getShellCommands().stream().map(SingularityExecutorShellCommandDescriptor::getName).collect(Collectors.toList())));
     }
 
     final SingularityExecutorShellCommandDescriptor shellCommandDescriptor = matchingShellCommandDescriptor.get();
