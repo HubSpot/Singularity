@@ -2,7 +2,6 @@ package com.hubspot.singularity.scheduler;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -93,15 +92,7 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
     long totalDiskBytesUsed = 0;
     long totalDiskBytesAvailable = 0;
 
-    long currentShuffleCleanupsTotal = 0;
-    if (configuration.isShuffleTasksForOverloadedSlaves()) {
-      currentShuffleCleanupsTotal = taskManager.getCleanupTasks()
-          .stream()
-          .filter((taskCleanup) -> taskCleanup.getCleanupType() == TaskCleanupType.REBALANCE_CPU_USAGE)
-          .count();
-    }
-
-    Set<String> requestsWithShuffledTasks = new HashSet<>();
+    Map<SingularitySlaveUsage, List<TaskIdWithUsage>> overLoadedHosts = new HashMap<>();
 
     for (SingularitySlave slave : usageHelper.getSlavesToTrackUsageFor()) {
       Map<ResourceUsageType, Number> longRunningTasksUsage = new HashMap<>();
@@ -144,7 +135,6 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
         }
 
         double systemLoad;
-
         switch (configuration.getMesosConfiguration().getScoreUsingSystemLoad()) {
           case LOAD_1:
             systemLoad = systemLoad1Min;
@@ -158,11 +148,7 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
             break;
         }
 
-
-
         boolean slaveOverloaded = systemCpusTotal > 0 && systemLoad / systemCpusTotal > 1.0;
-        double cpuOverage = slaveOverloaded ? systemLoad - systemCpusTotal : 0.0;
-        int shuffledTasks = 0;
         List<TaskIdWithUsage> possibleTasksToShuffle = new ArrayList<>();
 
         for (MesosTaskMonitorObject taskUsage : allTaskUsage) {
@@ -230,47 +216,15 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
             cpusUsedOnSlave += taskCpusUsed;
           }
 
-          if (slaveOverloaded && configuration.isShuffleTasksForOverloadedSlaves() && currentUsage != null && currentUsage.getCpusUsed() > 0) {
+          if (configuration.isShuffleTasksForOverloadedSlaves() && currentUsage != null && currentUsage.getCpusUsed() > 0) {
             if (isLongRunning(task)) {
               Optional<SingularityTaskHistoryUpdate> maybeCleanupUpdate = taskManager.getTaskHistoryUpdate(task, ExtendedTaskState.TASK_CLEANING);
               if (maybeCleanupUpdate.isPresent() && isTaskAlreadyCleanedUpForShuffle(maybeCleanupUpdate.get())) {
                 LOG.trace("Task {} already being cleaned up to spread cpu usage, skipping", taskId);
-                shuffledTasks++;
               } else {
                 possibleTasksToShuffle.add(new TaskIdWithUsage(task, currentUsage));
               }
             }
-          }
-        }
-
-        if (slaveOverloaded && configuration.isShuffleTasksForOverloadedSlaves()) {
-          possibleTasksToShuffle.sort((u1, u2) -> Double.compare(u2.getUsage().getCpusUsed(), u1.getUsage().getCpusUsed()));
-          for (TaskIdWithUsage taskIdWithUsage : possibleTasksToShuffle) {
-            if (requestsWithShuffledTasks.contains(taskIdWithUsage.getTaskId().getRequestId())) {
-              LOG.debug("Request {} already has a shuffling task, skipping", taskIdWithUsage.getTaskId().getRequestId());
-              continue;
-            }
-            if (cpuOverage <= 0 || shuffledTasks > configuration.getMaxTasksToShufflePerHost() || currentShuffleCleanupsTotal >= configuration.getMaxTasksToShuffleTotal()) {
-              LOG.debug("Not shuffling any more tasks (overage: {}, shuffledOnHost: {}, totalShuffleCleanups: {})", cpuOverage, shuffledTasks, currentShuffleCleanupsTotal);
-              break;
-            }
-            LOG.debug("Cleaning up task {} to free up cpu on overloaded host (remaining cpu overage: {})", taskIdWithUsage.getTaskId(), cpuOverage);
-            Optional<String> message = Optional.of(String.format("Load on slave %s is %s / %s, shuffling task to less busy host", slave.getHost(), systemLoad, systemCpusTotal));
-            taskManager.createTaskCleanup(
-                new SingularityTaskCleanup(
-                    Optional.absent(),
-                    TaskCleanupType.REBALANCE_CPU_USAGE,
-                    System.currentTimeMillis(),
-                    taskIdWithUsage.getTaskId(),
-                    message,
-                    Optional.of(UUID.randomUUID().toString()),
-                    Optional.absent(), Optional.absent()));
-            requestManager.addToPendingQueue(new SingularityPendingRequest(taskIdWithUsage.getTaskId().getRequestId(), taskIdWithUsage.getTaskId().getDeployId(), now, Optional.absent(),
-                PendingType.TASK_BOUNCE, Optional.absent(), Optional.absent(), Optional.absent(), message, Optional.of(UUID.randomUUID().toString())));
-            cpuOverage -= taskIdWithUsage.getUsage().getCpusUsed();
-            shuffledTasks++;
-            currentShuffleCleanupsTotal++;
-            requestsWithShuffledTasks.add(taskIdWithUsage.getTaskId().getRequestId());
           }
         }
 
@@ -287,6 +241,11 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
         SingularitySlaveUsage slaveUsage = new SingularitySlaveUsage(cpusUsedOnSlave, cpuReservedOnSlave, cpusTotal, memoryBytesUsedOnSlave, memoryMbReservedOnSlave,
             memoryMbTotal, diskMbUsedOnSlave, diskMbReservedOnSlave, diskMbTotal, longRunningTasksUsage, allTaskUsage.size(), now,
             systemMemTotalBytes, systemMemFreeBytes, systemCpusTotal, systemLoad1Min, systemLoad5Min, systemLoad15Min, slaveDiskUsed, slaveDiskTotal);
+
+        if (slaveOverloaded) {
+          overLoadedHosts.put(slaveUsage, possibleTasksToShuffle);
+        }
+
         List<Long> slaveTimestamps = usageManager.getSlaveUsageTimestamps(slave.getId());
         if (slaveTimestamps.size() + 1 > configuration.getNumUsageToKeep()) {
           usageManager.deleteSpecificSlaveUsage(slave.getId(), slaveTimestamps.get(0));
@@ -311,6 +270,81 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
       }
     }
     usageManager.saveClusterUtilization(getClusterUtilization(utilizationPerRequestId, totalMemBytesUsed, totalMemBytesAvailable, totalCpuUsed, totalCpuAvailable, totalDiskBytesUsed, totalDiskBytesAvailable, now));
+
+    if (configuration.isShuffleTasksForOverloadedSlaves()) {
+      shuffleTasksOnOverloadedHosts(overLoadedHosts);
+    }
+  }
+
+  private void shuffleTasksOnOverloadedHosts(Map<SingularitySlaveUsage, List<TaskIdWithUsage>> overLoadedHosts) {
+    List<SingularityTaskCleanup> shuffleCleanups = taskManager.getCleanupTasks()
+        .stream()
+        .filter((taskCleanup) -> taskCleanup.getCleanupType() == TaskCleanupType.REBALANCE_CPU_USAGE)
+        .collect(Collectors.toList());
+    long currentShuffleCleanupsTotal = shuffleCleanups.size();
+    Set<String> requestsWithShuffledTasks = shuffleCleanups
+        .stream()
+        .map((taskCleanup) -> taskCleanup.getTaskId().getRequestId())
+        .collect(Collectors.toSet());
+
+    List<SingularitySlaveUsage> overLoadedSlavesByUsage = overLoadedHosts.keySet().stream()
+        .sorted((usage1, usage2) -> Double.compare(
+            getSystemLoadForShuffle(usage2),
+            getSystemLoadForShuffle(usage1)
+        ))
+        .collect(Collectors.toList());
+    for (SingularitySlaveUsage overloadedSlave : overLoadedSlavesByUsage) {
+      if (currentShuffleCleanupsTotal >= configuration.getMaxTasksToShuffleTotal()) {
+        LOG.debug("Not shuffling any more tasks (totalShuffleCleanups: {})", currentShuffleCleanupsTotal);
+        break;
+      }
+      int shuffledTasksOnSlave = 0;
+      List<TaskIdWithUsage> possibleTasksToShuffle = overLoadedHosts.get(overloadedSlave);
+      possibleTasksToShuffle.sort((u1, u2) -> Double.compare(u2.getUsage().getCpusUsed(), u1.getUsage().getCpusUsed()));
+
+      double systemLoad = getSystemLoadForShuffle(overloadedSlave);
+      double cpuOverage = systemLoad - overloadedSlave.getSystemCpusTotal();
+
+      for (TaskIdWithUsage taskIdWithUsage : possibleTasksToShuffle) {
+        if (requestsWithShuffledTasks.contains(taskIdWithUsage.getTaskId().getRequestId())) {
+          LOG.debug("Request {} already has a shuffling task, skipping", taskIdWithUsage.getTaskId().getRequestId());
+          continue;
+        }
+        if (cpuOverage <= 0 || shuffledTasksOnSlave > configuration.getMaxTasksToShufflePerHost() || currentShuffleCleanupsTotal >= configuration.getMaxTasksToShuffleTotal()) {
+          LOG.debug("Not shuffling any more tasks (overage: {}, shuffledOnHost: {}, totalShuffleCleanups: {})", cpuOverage, shuffledTasksOnSlave, currentShuffleCleanupsTotal);
+          break;
+        }
+        LOG.debug("Cleaning up task {} to free up cpu on overloaded host (remaining cpu overage: {})", taskIdWithUsage.getTaskId(), cpuOverage);
+        Optional<String> message = Optional.of(String.format("Load on slave is %s / %s, shuffling task to less busy host", systemLoad, overloadedSlave.getSystemCpusTotal()));
+        taskManager.createTaskCleanup(
+            new SingularityTaskCleanup(
+                Optional.absent(),
+                TaskCleanupType.REBALANCE_CPU_USAGE,
+                System.currentTimeMillis(),
+                taskIdWithUsage.getTaskId(),
+                message,
+                Optional.of(UUID.randomUUID().toString()),
+                Optional.absent(), Optional.absent()));
+        requestManager.addToPendingQueue(new SingularityPendingRequest(taskIdWithUsage.getTaskId().getRequestId(), taskIdWithUsage.getTaskId().getDeployId(), System.currentTimeMillis(), Optional.absent(),
+            PendingType.TASK_BOUNCE, Optional.absent(), Optional.absent(), Optional.absent(), message, Optional.of(UUID.randomUUID().toString())));
+        cpuOverage -= taskIdWithUsage.getUsage().getCpusUsed();
+        shuffledTasksOnSlave++;
+        currentShuffleCleanupsTotal++;
+        requestsWithShuffledTasks.add(taskIdWithUsage.getTaskId().getRequestId());
+      }
+    }
+  }
+
+  private double getSystemLoadForShuffle(SingularitySlaveUsage usage) {
+    switch (configuration.getMesosConfiguration().getScoreUsingSystemLoad()) {
+      case LOAD_1:
+        return usage.getSystemLoad15Min();
+      case LOAD_15:
+        return usage.getSystemLoad15Min();
+      case LOAD_5:
+      default:
+        return usage.getSystemLoad5Min();
+    }
   }
 
   private boolean isTaskAlreadyCleanedUpForShuffle(SingularityTaskHistoryUpdate taskHistoryUpdate) {
