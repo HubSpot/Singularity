@@ -11,10 +11,15 @@ import org.immutables.value.Value.Immutable;
 
 import com.hubspot.singularity.annotations.SingularityStyle;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 @Immutable
 @SingularityStyle
+@SuppressFBWarnings(
+    value = "EQ_UNUSUAL",
+    justification = "Shows up in auto-generated JSON class due to how immutables treats implementation of Principal"
+)
 @Schema(description = "Information about a user")
 public abstract class AbstractSingularityUser implements Principal {
   public static SingularityUser defaultUser() {
