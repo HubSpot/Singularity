@@ -424,7 +424,7 @@ class NewDeployForm extends Component {
     if (this.props.request.request.loadBalanced) {
       this.copyFieldsToObject(deployObject, FIELDS.loadBalancer, (fieldId) => this.getValueOrDefault(fieldId));
     }
-    if (this.isRequestDaemon()) {
+    if (this.isRequestDaemon() && this.props.request.request.requestType === 'SERVICE') {
       this.copyFieldsToObject(deployObject, FIELDS.healthChecker, (fieldId) => this.getValueOrDefault(fieldId));
     }
     deployObject.requestId = this.props.request.request.id;

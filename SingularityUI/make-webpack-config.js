@@ -147,6 +147,7 @@ module.exports = function(options) {
       extensions: ['', '.js', '.es6', '.jsx', '.scss', '.styl', '.css'],
       alias: {
         'bootstrap': 'bootstrap/dist/js/bootstrap.js',
+        'messenger$': 'messenger/build/js/messenger.js',
       },
     },
 
