@@ -418,7 +418,6 @@ public class SingularityMesosOfferSchedulerTest extends SingularitySchedulerTest
 
       requestResource.scale(requestId, new SingularityScaleRequest(Optional.of(3), Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent(), Optional
           .absent()), SingularityUser.DEFAULT_USER);
-      System.out.println(usageManager.getRequestUtilizations());
 
       Assert.assertEquals(3.0, usageManager.getRequestUtilizations().get(requestId).getCpuUsed(), 0.001);
 
