@@ -542,12 +542,51 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
 
       // First task is cleaned up
       Assert.assertEquals(taskManager.getTaskCleanup(taskId1.getId()).get().getCleanupType(), TaskCleanupType.REBALANCE_CPU_USAGE);
-      // Second task is cleaned up, which brings the cpu overage back down to 0
-      Assert.assertEquals(taskManager.getTaskCleanup(taskId2.getId()).get().getCleanupType(), TaskCleanupType.REBALANCE_CPU_USAGE);
-      // Third task doesn't get cleaned up due to cpu overage being satisfied
-      Assert.assertFalse(taskManager.getTaskCleanup(taskId3.getId()).isPresent());
+      // Second task is not cleaned up because it is from the same request as task 1
+      Assert.assertFalse(taskManager.getTaskCleanup(taskId2.getId()).isPresent());
     } finally {
       configuration.setShuffleTasksForOverloadedSlaves(false);
+    }
+  }
+
+  @Test
+  public void itLimitsTheNumberOfTaskCleanupsToCreate() {
+    try {
+      configuration.setShuffleTasksForOverloadedSlaves(true);
+      configuration.setMaxTasksToShuffleTotal(1);
+
+      initRequest();
+      initFirstDeploy();
+      saveAndSchedule(requestManager.getRequest(requestId).get().getRequest().toBuilder().setInstances(Optional.of(3)));
+      resourceOffers(1);
+      SingularitySlaveUsage highUsage = new SingularitySlaveUsage(15, 10, Optional.of(10.0), 1, 1, Optional.of(30L), 1, 1, Optional.of(1024L), Collections.emptyMap(), 1, System.currentTimeMillis(), 1, 30000, 10, 15, 15, 15, 0, 107374182);
+      usageManager.saveSpecificSlaveUsageAndSetCurrent("host1", highUsage);
+
+      SingularityTaskId taskId1 = taskManager.getActiveTaskIds().get(0);
+      String t1 = taskId1.getId();
+      SingularityTaskId taskId2 = taskManager.getActiveTaskIds().get(1);
+      String t2 = taskId2.getId();
+      statusUpdate(taskManager.getTask(taskId1).get(), TaskState.TASK_STARTING, Optional.of(taskId1.getStartedAt()));
+      statusUpdate(taskManager.getTask(taskId2).get(), TaskState.TASK_STARTING, Optional.of(taskId2.getStartedAt()));
+      // task 1 using 3 cpus
+      MesosTaskMonitorObject t1u1 = getTaskMonitor(t1, 15, TimeUnit.MILLISECONDS.toSeconds(taskId1.getStartedAt()) + 5, 1000);
+      // task 2 using 2 cpus
+      MesosTaskMonitorObject t2u1 = getTaskMonitor(t2, 10, TimeUnit.MILLISECONDS.toSeconds(taskId2.getStartedAt()) + 5, 1000);
+      mesosClient.setSlaveResourceUsage("host1", Arrays.asList(t1u1, t2u1));
+      mesosClient.setSlaveMetricsSnapshot(
+          "host1",
+          new MesosSlaveMetricsSnapshotObject(0, 0, 0, 10.0, 0, 0, 0, 0, 0, 0, 0, 0, 10.0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 15, 0, 0, 15, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 15, 0, 0, 0, 0, 0, 0, 15, 0, 0, 0, 0)
+      );
+
+      usagePoller.runActionOnPoll();
+
+      // First task is cleaned up
+      Assert.assertEquals(taskManager.getTaskCleanup(taskId1.getId()).get().getCleanupType(), TaskCleanupType.REBALANCE_CPU_USAGE);
+      // Second task doesn't get cleaned up dur to cluster wide limit
+      Assert.assertFalse(taskManager.getTaskCleanup(taskId2.getId()).isPresent());
+    } finally {
+      configuration.setShuffleTasksForOverloadedSlaves(false);
+      configuration.setMaxTasksToShuffleTotal(6);
     }
   }
 
