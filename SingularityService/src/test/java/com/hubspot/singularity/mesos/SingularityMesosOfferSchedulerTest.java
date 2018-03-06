@@ -420,7 +420,7 @@ public class SingularityMesosOfferSchedulerTest extends SingularitySchedulerTest
           .absent()), SingularityUser.DEFAULT_USER);
       System.out.println(usageManager.getRequestUtilizations());
 
-      Assert.assertEquals(1.0, usageManager.getRequestUtilizations().get(requestId).getCpuUsed(), 0.001);
+      Assert.assertEquals(3.0, usageManager.getRequestUtilizations().get(requestId).getCpuUsed(), 0.001);
 
       Offer host2Offer = createOffer(6, 30000, 107374182, "host2", "host2");
       slaveAndRackManager.checkOffer(host2Offer);
@@ -445,7 +445,7 @@ public class SingularityMesosOfferSchedulerTest extends SingularitySchedulerTest
   }
 
   private long mbToBytes(long memMb) {
-    return memMb * 1000L * 1000L;
+    return memMb * SingularitySlaveUsage.BYTES_PER_MEGABYTE;
   }
 
   private SingularitySlaveUsageWithCalculatedScores getUsage(long memMbReserved, long memMbTotal, double cpusReserved, double cpusTotal, long diskMbReserved, long diskMbTotal, Map<ResourceUsageType, Number> longRunningTasksUsage) {

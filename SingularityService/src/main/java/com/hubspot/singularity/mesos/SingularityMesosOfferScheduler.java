@@ -26,6 +26,7 @@ import com.hubspot.singularity.RequestType;
 import com.hubspot.singularity.RequestUtilization;
 import com.hubspot.singularity.SingularityDeployStatistics;
 import com.hubspot.singularity.SingularityPendingTaskId;
+import com.hubspot.singularity.SingularitySlaveUsage;
 import com.hubspot.singularity.SingularitySlaveUsage.ResourceUsageType;
 import com.hubspot.singularity.SingularitySlaveUsageWithId;
 import com.hubspot.singularity.SingularityTask;
@@ -258,8 +259,8 @@ public class SingularityMesosOfferScheduler {
                 .or(maybeTask.get().getTaskRequest().getDeploy().getResources())
                 .or(defaultResources);
             cpu += resources.getCpus();
-            memBytes += resources.getDiskMb() * 1024 * 1024;
-            diskBytes += resources.getDiskMb() * 1024 * 1024;
+            memBytes += resources.getDiskMb() * SingularitySlaveUsage.BYTES_PER_MEGABYTE;
+            diskBytes += resources.getDiskMb() * SingularitySlaveUsage.BYTES_PER_MEGABYTE;
           }
         }
       }

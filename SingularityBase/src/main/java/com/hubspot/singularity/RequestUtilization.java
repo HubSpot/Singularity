@@ -40,8 +40,9 @@ public class RequestUtilization {
     return this;
   }
 
-  public RequestUtilization setCpuUsed(double cpu) {
-    this.cpuUsed = cpu;
+  // This is a running total, not the current usage
+  public RequestUtilization addCpuUsed(double cpu) {
+    this.cpuUsed += cpu;
     return this;
   }
 

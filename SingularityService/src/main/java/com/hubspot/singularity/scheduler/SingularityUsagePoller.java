@@ -203,7 +203,6 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
               cpusUsedOnSlave += usedCpusSinceStart;
             }
           } else {
-            System.out.println(pastTaskUsages.get(pastTaskUsages.size() - 1));
             SingularityTaskUsage lastUsage = pastTaskUsages.get(pastTaskUsages.size() - 1);
 
             double taskCpusUsed = ((latestUsage.getCpuSeconds() - lastUsage.getCpuSeconds()) / (latestUsage.getTimestamp() - lastUsage.getTimestamp()));
@@ -417,6 +416,7 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
 
     List<SingularityTaskUsage> pastTaskUsagesCopy = copyUsages(pastTaskUsages, latestUsage, task);
     pastTaskUsagesCopy.sort(Comparator.comparingDouble(SingularityTaskUsage::getTimestamp));
+    System.out.println(pastTaskUsagesCopy);
     int numTasks = pastTaskUsagesCopy.size() - 1;
 
     for (int i = 0; i < numTasks; i++) {
@@ -432,7 +432,7 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
       curMinDiskBytesUsed = Math.min(newerUsage.getDiskTotalBytes(), curMinDiskBytesUsed);
 
       requestUtilization
-          .setCpuUsed(cpusUsed)
+          .addCpuUsed(cpusUsed)
           .addMemBytesUsed(newerUsage.getMemoryTotalBytes())
           .addDiskBytesUsed(newerUsage.getDiskTotalBytes())
           .incrementTaskCount();
@@ -551,7 +551,7 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
     }
 
     double avgUnderUtilizedCpu = numRequestsWithUnderUtilizedCpu != 0 ? totalUnderUtilizedCpu / numRequestsWithUnderUtilizedCpu : 0;
-    double avgOverUtilizedCpu = numRequestsWithOverUtilizedCpu != 0? totalOverUtilizedCpu / numRequestsWithOverUtilizedCpu : 0;
+    double avgOverUtilizedCpu = numRequestsWithOverUtilizedCpu != 0 ? totalOverUtilizedCpu / numRequestsWithOverUtilizedCpu : 0;
     long avgUnderUtilizedMemBytes = numRequestsWithUnderUtilizedMemBytes != 0 ? totalUnderUtilizedMemBytes / numRequestsWithUnderUtilizedMemBytes : 0;
     long avgUnderUtilizedDiskBytes = numRequestsWithUnderUtilizedDiskBytes != 0 ? totalUnderUtilizedDiskBytes / numRequestsWithUnderUtilizedDiskBytes : 0;
 
