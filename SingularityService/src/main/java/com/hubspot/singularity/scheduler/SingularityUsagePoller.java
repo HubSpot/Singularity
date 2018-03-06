@@ -1,6 +1,7 @@
 package com.hubspot.singularity.scheduler;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -414,7 +415,10 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
     }
 
     List<SingularityTaskUsage> pastTaskUsagesCopy = copyUsages(pastTaskUsages, latestUsage, task);
+    pastTaskUsagesCopy.sort(Comparator.comparingDouble(SingularityTaskUsage::getTimestamp));
     int numTasks = pastTaskUsagesCopy.size() - 1;
+
+    int numCpuOverages = 0;
 
     for (int i = 0; i < numTasks; i++) {
       SingularityTaskUsage olderUsage = pastTaskUsagesCopy.get(i);
@@ -428,12 +432,18 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
       curMaxDiskBytesUsed = Math.max(newerUsage.getDiskTotalBytes(), curMaxDiskBytesUsed);
       curMinDiskBytesUsed = Math.min(newerUsage.getDiskTotalBytes(), curMinDiskBytesUsed);
 
+      if (cpusUsed > cpuReservedForTask) {
+        numCpuOverages ++;
+      }
+
       requestUtilization
           .addCpuUsed(cpusUsed)
           .addMemBytesUsed(newerUsage.getMemoryTotalBytes())
           .addDiskBytesUsed(newerUsage.getDiskTotalBytes())
           .incrementTaskCount();
     }
+
+    double cpuBurstRating = pastTaskUsagesCopy.size() > 0 ? numCpuOverages / (double) pastTaskUsagesCopy.size() : 1;
 
     requestUtilization
         .addMemBytesReserved((long) (memoryMbReservedForTask * SingularitySlaveUsage.BYTES_PER_MEGABYTE * numTasks))
@@ -444,7 +454,8 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
         .setMaxMemBytesUsed(curMaxMemBytesUsed)
         .setMinMemBytesUsed(curMinMemBytesUsed)
         .setMaxDiskBytesUsed(curMaxDiskBytesUsed)
-        .setMinDiskBytesUsed(curMinDiskBytesUsed);
+        .setMinDiskBytesUsed(curMinDiskBytesUsed)
+        .setCpuBurstRating(cpuBurstRating);
 
     utilizationPerRequestId.put(requestId, requestUtilization);
   }
@@ -548,7 +559,7 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
     }
 
     double avgUnderUtilizedCpu = numRequestsWithUnderUtilizedCpu != 0 ? totalUnderUtilizedCpu / numRequestsWithUnderUtilizedCpu : 0;
-    double avgOverUtilizedCpu = numRequestsWithOverUtilizedCpu != 0? totalOverUtilizedCpu / numRequestsWithOverUtilizedCpu : 0;
+    double avgOverUtilizedCpu = numRequestsWithOverUtilizedCpu != 0 ? totalOverUtilizedCpu / numRequestsWithOverUtilizedCpu : 0;
     long avgUnderUtilizedMemBytes = numRequestsWithUnderUtilizedMemBytes != 0 ? totalUnderUtilizedMemBytes / numRequestsWithUnderUtilizedMemBytes : 0;
     long avgUnderUtilizedDiskBytes = numRequestsWithUnderUtilizedDiskBytes != 0 ? totalUnderUtilizedDiskBytes / numRequestsWithUnderUtilizedDiskBytes : 0;
 

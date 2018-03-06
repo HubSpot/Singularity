@@ -59,6 +59,10 @@ public class MesosConfiguration {
   private int offersConcurrencyLimit = 100;
   private SingularityUsageScoringStrategy scoringStrategy = SingularityUsageScoringStrategy.SPREAD_TASK_USAGE;
   private MachineLoadMetric scoreUsingSystemLoad = MachineLoadMetric.LOAD_5;
+  private double longRunningFreeResourceWeight = 0.5;
+  private double longRunningUsedResourceWeight = 0.5;
+  private double nonLonRunningFreeResourceWeight = 0.75;
+  private double nonLongRunningUsedResourceWeight = 0.25;
 
   public int getMaxNumInstancesPerRequest() {
     return maxNumInstancesPerRequest;
@@ -290,5 +294,37 @@ public class MesosConfiguration {
 
   public void setScoreUsingSystemLoad(MachineLoadMetric scoreUsingSystemLoad) {
     this.scoreUsingSystemLoad = scoreUsingSystemLoad;
+  }
+
+  public double getLongRunningFreeResourceWeight() {
+    return longRunningFreeResourceWeight;
+  }
+
+  public void setLongRunningFreeResourceWeight(double longRunningFreeResourceWeight) {
+    this.longRunningFreeResourceWeight = longRunningFreeResourceWeight;
+  }
+
+  public double getLongRunningUsedResourceWeight() {
+    return longRunningUsedResourceWeight;
+  }
+
+  public void setLongRunningUsedResourceWeight(double longRunningUsedResourceWeight) {
+    this.longRunningUsedResourceWeight = longRunningUsedResourceWeight;
+  }
+
+  public double getNonLonRunningFreeResourceWeight() {
+    return nonLonRunningFreeResourceWeight;
+  }
+
+  public void setNonLonRunningFreeResourceWeight(double nonLonRunningFreeResourceWeight) {
+    this.nonLonRunningFreeResourceWeight = nonLonRunningFreeResourceWeight;
+  }
+
+  public double getNonLongRunningUsedResourceWeight() {
+    return nonLongRunningUsedResourceWeight;
+  }
+
+  public void setNonLongRunningUsedResourceWeight(double nonLongRunningUsedResourceWeight) {
+    this.nonLongRunningUsedResourceWeight = nonLongRunningUsedResourceWeight;
   }
 }

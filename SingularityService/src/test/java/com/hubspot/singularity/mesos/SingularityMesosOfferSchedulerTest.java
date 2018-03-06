@@ -34,6 +34,7 @@ import com.hubspot.singularity.api.SingularityScaleRequest;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.DeployManager;
 import com.hubspot.singularity.data.UsageManager;
+import com.hubspot.singularity.mesos.SingularitySlaveUsageWithCalculatedScores.MaxProbableUsage;
 import com.hubspot.singularity.scheduler.SingularitySchedulerTestBase;
 import com.hubspot.singularity.scheduler.SingularityUsagePoller;
 import com.hubspot.singularity.scheduler.TestingMesosClient;
@@ -381,20 +382,76 @@ public class SingularityMesosOfferSchedulerTest extends SingularitySchedulerTest
     }
   }
 
+  @Test
+  public void itAccountsForMaxHistoricalTaskUsage() {
+    try {
+      configuration.getMesosConfiguration().setScoringStrategy(SingularityUsageScoringStrategy.PROBABLE_MAX_USAGE);
+      initRequest();
+      double cpuReserved = 2;
+      double memMbReserved = 1000;
+      initFirstDeployWithResources(cpuReserved, memMbReserved);
+      saveAndSchedule(requestManager.getRequest(requestId).get().getRequest().toBuilder().setInstances(Optional.of(1)));
+      resourceOffers(3);
+
+      SingularityTaskId taskId = taskManager.getActiveTaskIds().get(0);
+      String t1 = taskId.getId();
+
+      // 2 cpus used
+      MesosTaskMonitorObject t1u1 = getTaskMonitor(t1, 10, TimeUnit.MILLISECONDS.toSeconds(taskId.getStartedAt()) + 5, 1000);
+      mesosClient.setSlaveResourceUsage("host1", Collections.singletonList(t1u1));
+      usagePoller.runActionOnPoll();
+
+      // 1 cpus used
+      MesosTaskMonitorObject t1u2 = getTaskMonitor(t1, 11, TimeUnit.MILLISECONDS.toSeconds(taskId.getStartedAt()) + 6, 1000);
+      mesosClient.setSlaveResourceUsage("host1", Collections.singletonList(t1u2));
+      usagePoller.runActionOnPoll();
+
+      Map<ResourceUsageType, Number> longRunningTasksUsage = new HashMap<>();
+      longRunningTasksUsage.put(ResourceUsageType.CPU_USED, 0.1);
+      longRunningTasksUsage.put(ResourceUsageType.MEMORY_BYTES_USED, 0.1);
+      longRunningTasksUsage.put(ResourceUsageType.DISK_BYTES_USED, 0.1);
+      SingularitySlaveUsage smallUsage = new SingularitySlaveUsage(0.1, 0.1, Optional.of(10.0), 1, 1, Optional.of(30L), 1, 1, Optional.of(1024L), longRunningTasksUsage, 1, System.currentTimeMillis(), 1, 30000, 10, 0, 0, 0, 0, 107374182);
+
+      usageManager.saveSpecificSlaveUsageAndSetCurrent("host1", smallUsage);
+      usageManager.saveSpecificSlaveUsageAndSetCurrent("host2", smallUsage);
+      usageManager.saveSpecificSlaveUsageAndSetCurrent("host3", smallUsage);
+
+      requestResource.scale(requestId, new SingularityScaleRequest(Optional.of(3), Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent(), Optional
+          .absent()), SingularityUser.DEFAULT_USER);
+
+      Assert.assertEquals(3.0, usageManager.getRequestUtilizations().get(requestId).getCpuUsed(), 0.001);
+
+      Offer host2Offer = createOffer(6, 30000, 107374182, "host2", "host2");
+      slaveAndRackManager.checkOffer(host2Offer);
+      Offer host3Offer = createOffer(6, 30000, 107374182, "host3", "host3");
+      slaveAndRackManager.checkOffer(host3Offer);
+
+      Collection<SingularityOfferHolder> offerHolders = offerScheduler.checkOffers(Arrays.asList(host2Offer, host3Offer));
+      Assert.assertEquals(2, offerHolders.size());
+
+      // A single offer should only ever get a single task even though both have room for both tasks here. Adding a task should reduce the score for the next check
+      for (SingularityOfferHolder offerHolder : offerHolders) {
+        Assert.assertEquals(1, offerHolder.getAcceptedTasks().size());
+      }
+    } finally {
+      configuration.getMesosConfiguration().setScoringStrategy(SingularityUsageScoringStrategy.SPREAD_TASK_USAGE);
+    }
+  }
+
   private void assertValueIs(double expectedValue, double actualValue) {
     actualValue = Math.round(actualValue * 1000.0) / 1000.0;
     Assert.assertTrue(String.format("Expected %f but found %f", expectedValue, actualValue),  actualValue == expectedValue);
   }
 
   private long mbToBytes(long memMb) {
-    return memMb * 1000L * 1000L;
+    return memMb * SingularitySlaveUsage.BYTES_PER_MEGABYTE;
   }
 
   private SingularitySlaveUsageWithCalculatedScores getUsage(long memMbReserved, long memMbTotal, double cpusReserved, double cpusTotal, long diskMbReserved, long diskMbTotal, Map<ResourceUsageType, Number> longRunningTasksUsage) {
     return new SingularitySlaveUsageWithCalculatedScores(
         new SingularitySlaveUsage(0, cpusReserved, Optional.of(cpusTotal), 0, memMbReserved, Optional.of(memMbTotal), 0, diskMbReserved, Optional.of(diskMbTotal), longRunningTasksUsage, 1, 0L,
             0, 0, 0, 0, 0, 0, 0 , 0),
-        SingularityUsageScoringStrategy.SPREAD_TASK_USAGE, MachineLoadMetric.LOAD_5
+        SingularityUsageScoringStrategy.SPREAD_TASK_USAGE, MachineLoadMetric.LOAD_5, new MaxProbableUsage(0, 0, 0)
     );
   }
 
