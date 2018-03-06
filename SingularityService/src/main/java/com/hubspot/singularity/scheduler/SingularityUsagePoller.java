@@ -416,8 +416,9 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
 
     List<SingularityTaskUsage> pastTaskUsagesCopy = copyUsages(pastTaskUsages, latestUsage, task);
     pastTaskUsagesCopy.sort(Comparator.comparingDouble(SingularityTaskUsage::getTimestamp));
-    System.out.println(pastTaskUsagesCopy);
     int numTasks = pastTaskUsagesCopy.size() - 1;
+
+    int numCpuOverages = 0;
 
     for (int i = 0; i < numTasks; i++) {
       SingularityTaskUsage olderUsage = pastTaskUsagesCopy.get(i);
@@ -431,12 +432,18 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
       curMaxDiskBytesUsed = Math.max(newerUsage.getDiskTotalBytes(), curMaxDiskBytesUsed);
       curMinDiskBytesUsed = Math.min(newerUsage.getDiskTotalBytes(), curMinDiskBytesUsed);
 
+      if (cpusUsed > cpuReservedForTask) {
+        numCpuOverages ++;
+      }
+
       requestUtilization
           .addCpuUsed(cpusUsed)
           .addMemBytesUsed(newerUsage.getMemoryTotalBytes())
           .addDiskBytesUsed(newerUsage.getDiskTotalBytes())
           .incrementTaskCount();
     }
+
+    double cpuBurstRating = pastTaskUsagesCopy.size() > 0 ? numCpuOverages / (double) pastTaskUsagesCopy.size() : 1;
 
     requestUtilization
         .addMemBytesReserved((long) (memoryMbReservedForTask * SingularitySlaveUsage.BYTES_PER_MEGABYTE * numTasks))
@@ -447,7 +454,8 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
         .setMaxMemBytesUsed(curMaxMemBytesUsed)
         .setMinMemBytesUsed(curMinMemBytesUsed)
         .setMaxDiskBytesUsed(curMaxDiskBytesUsed)
-        .setMinDiskBytesUsed(curMinDiskBytesUsed);
+        .setMinDiskBytesUsed(curMinDiskBytesUsed)
+        .setCpuBurstRating(cpuBurstRating);
 
     utilizationPerRequestId.put(requestId, requestUtilization);
   }

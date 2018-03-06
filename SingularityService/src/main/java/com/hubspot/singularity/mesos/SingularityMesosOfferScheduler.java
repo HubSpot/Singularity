@@ -249,9 +249,11 @@ public class SingularityMesosOfferScheduler {
     for (SingularityTaskId taskId : activeTaskIds) {
       if (taskId.getSanitizedHost().equals(sanitizedHostname)) {
         if (requestUtilizations.containsKey(taskId.getRequestId())) {
-          cpu += requestUtilizations.get(taskId.getRequestId()).getMaxCpuUsed();
-          memBytes += requestUtilizations.get(taskId.getRequestId()).getMaxMemBytesUsed();
-          diskBytes += requestUtilizations.get(taskId.getRequestId()).getMaxDiskBytesUsed();
+          RequestUtilization utilization = requestUtilizations.get(taskId.getRequestId());
+          // To account for cpu bursts, tend towards max usage if the app is consistently over-utilizing cpu, tend towards avg if it is over-utilized in short bursts
+          cpu += (utilization.getMaxCpuUsed() - utilization.getAvgCpuUsed()) * utilization.getCpuBurstRating() + utilization.getAvgCpuUsed();
+          memBytes += utilization.getMaxMemBytesUsed();
+          diskBytes += utilization.getMaxDiskBytesUsed();
         } else {
           Optional<SingularityTask> maybeTask = taskManager.getTask(taskId);
           if (maybeTask.isPresent()) {
