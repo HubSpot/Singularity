@@ -1,6 +1,7 @@
 package com.hubspot.singularity.scheduler;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -202,6 +203,7 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
               cpusUsedOnSlave += usedCpusSinceStart;
             }
           } else {
+            System.out.println(pastTaskUsages.get(pastTaskUsages.size() - 1));
             SingularityTaskUsage lastUsage = pastTaskUsages.get(pastTaskUsages.size() - 1);
 
             double taskCpusUsed = ((latestUsage.getCpuSeconds() - lastUsage.getCpuSeconds()) / (latestUsage.getTimestamp() - lastUsage.getTimestamp()));
@@ -414,6 +416,7 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
     }
 
     List<SingularityTaskUsage> pastTaskUsagesCopy = copyUsages(pastTaskUsages, latestUsage, task);
+    pastTaskUsagesCopy.sort(Comparator.comparingDouble(SingularityTaskUsage::getTimestamp));
     int numTasks = pastTaskUsagesCopy.size() - 1;
 
     for (int i = 0; i < numTasks; i++) {
@@ -429,7 +432,7 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
       curMinDiskBytesUsed = Math.min(newerUsage.getDiskTotalBytes(), curMinDiskBytesUsed);
 
       requestUtilization
-          .addCpuUsed(cpusUsed)
+          .setCpuUsed(cpusUsed)
           .addMemBytesUsed(newerUsage.getMemoryTotalBytes())
           .addDiskBytesUsed(newerUsage.getDiskTotalBytes())
           .incrementTaskCount();

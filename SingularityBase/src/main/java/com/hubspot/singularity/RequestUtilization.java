@@ -40,8 +40,8 @@ public class RequestUtilization {
     return this;
   }
 
-  public RequestUtilization addCpuUsed(double cpu) {
-    this.cpuUsed += cpu;
+  public RequestUtilization setCpuUsed(double cpu) {
+    this.cpuUsed = cpu;
     return this;
   }
 
@@ -173,13 +173,21 @@ public class RequestUtilization {
   @Override
   public String toString() {
     return "RequestUtilization{" +
-        "requestId=" + requestId +
-        ", deployId=" + deployId +
+        "requestId='" + requestId + '\'' +
+        ", deployId='" + deployId + '\'' +
         ", memBytesUsed=" + memBytesUsed +
         ", memBytesReserved=" + memBytesReserved +
         ", cpuUsed=" + cpuUsed +
         ", cpuReserved=" + cpuReserved +
+        ", diskBytesUsed=" + diskBytesUsed +
+        ", diskBytesReserved=" + diskBytesReserved +
         ", numTasks=" + numTasks +
+        ", maxMemBytesUsed=" + maxMemBytesUsed +
+        ", minMemBytesUsed=" + minMemBytesUsed +
+        ", maxCpuUsed=" + maxCpuUsed +
+        ", minCpuUsed=" + minCpuUsed +
+        ", maxDiskBytesUsed=" + maxDiskBytesUsed +
+        ", minDiskBytesUsed=" + minDiskBytesUsed +
         '}';
   }
 }
