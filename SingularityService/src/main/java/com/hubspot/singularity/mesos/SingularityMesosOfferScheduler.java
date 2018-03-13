@@ -7,8 +7,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -20,6 +23,7 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Inject;
 import com.hubspot.mesos.Resources;
 import com.hubspot.singularity.RequestType;
@@ -76,6 +80,7 @@ public class SingularityMesosOfferScheduler {
   private final double normalizedDiskUsedWeight;
 
   private final AsyncSemaphore<Void> offerScoringSemaphore;
+  private final ExecutorService offerScoringExecutor;
 
   @Inject
   public SingularityMesosOfferScheduler(MesosConfiguration mesosConfiguration,
@@ -116,6 +121,7 @@ public class SingularityMesosOfferScheduler {
     this.normalizedDiskUsedWeight = getNormalizedWeight(ResourceUsageType.DISK_BYTES_USED, configuration);
 
     this.offerScoringSemaphore = AsyncSemaphore.newBuilder(mesosConfiguration::getOffersConcurrencyLimit).build();
+    this.offerScoringExecutor = Executors.newCachedThreadPool(new ThreadFactoryBuilder().setNameFormat("offer-scoring-%d").build());
   }
 
   private static double getNormalizedWeight(ResourceUsageType type, SingularityConfiguration configuration) {
@@ -213,18 +219,35 @@ public class SingularityMesosOfferScheduler {
         List<SingularityTaskId> activeTaskIdsForRequest = leaderCache.getActiveTaskIdsForRequest(taskRequestHolder.getTaskRequest().getRequest().getId());
 
         List<CompletableFuture<Void>> scoringFutures = new ArrayList<>();
+        AtomicReference<Throwable> scoringException = new AtomicReference<>(null);
         for (SingularityOfferHolder offerHolder : offerHolders.values()) {
           if (!isOfferFull(offerHolder)) {
-            scoringFutures.add(offerScoringSemaphore.call(() -> CompletableFuture.runAsync(() -> {
-              double score = calculateScore(offerHolder, currentSlaveUsagesBySlaveId, tasksPerOfferHost, taskRequestHolder, activeTaskIdsForRequest);
-              if (score != 0) {
-                scorePerOffer.put(offerHolder.getSlaveId(), score);
-              }
-            })));
+            scoringFutures.add(
+                offerScoringSemaphore.call(
+                    () -> CompletableFuture.runAsync(() -> {
+                          try {
+                            double score = calculateScore(offerHolder, currentSlaveUsagesBySlaveId, tasksPerOfferHost, taskRequestHolder, activeTaskIdsForRequest);
+                            if (score != 0) {
+                              scorePerOffer.put(offerHolder.getSlaveId(), score);
+                            }
+                          } catch (Throwable t) {
+                            LOG.error("Uncaught exception while scoring offers", t);
+                            scoringException.set(t);
+                          }
+                        },
+                        offerScoringExecutor
+                    )));
           }
         }
 
         CompletableFutures.allOf(scoringFutures).join();
+
+        if (scoringException.get() != null) {
+          LOG.warn("Exception caught in offer scoring futures, semaphore info: (concurrentRequests: {}, queueSize: {})",
+              offerScoringSemaphore.getConcurrentRequests(), offerScoringSemaphore.getQueueSize());
+          // This will be caught by either the LeaderOnlyPoller or resourceOffers uncaught exception code, causing an abort
+          throw new RuntimeException(scoringException.get());
+        }
 
         if (!scorePerOffer.isEmpty()) {
           SingularityOfferHolder bestOffer = offerHolders.get(Collections.max(scorePerOffer.entrySet(), Map.Entry.comparingByValue()).getKey());
