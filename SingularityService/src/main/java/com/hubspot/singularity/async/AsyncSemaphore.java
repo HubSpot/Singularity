@@ -210,7 +210,7 @@ public class AsyncSemaphore<T> {
     }
   }
 
-  int getQueueSize() {
+  public int getQueueSize() {
     long stamp = stampedLock.tryOptimisticRead();
     int queueSize = requestQueue.size();
     if (!stampedLock.validate(stamp)) {
@@ -224,7 +224,7 @@ public class AsyncSemaphore<T> {
     return queueSize;
   }
 
-  int getConcurrentRequests() {
+  public int getConcurrentRequests() {
     return concurrentRequests.get();
   }
 }
