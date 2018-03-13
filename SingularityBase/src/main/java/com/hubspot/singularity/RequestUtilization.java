@@ -23,6 +23,8 @@ public class RequestUtilization {
   private long maxDiskBytesUsed = 0;
   private long minDiskBytesUsed = 0;
 
+  private double cpuBurstRating = 0;
+
   @JsonCreator
   public RequestUtilization(@JsonProperty("requestId") String requestId,
                             @JsonProperty("deployId") String deployId) {
@@ -40,6 +42,7 @@ public class RequestUtilization {
     return this;
   }
 
+  // This is a running total, not the current usage
   public RequestUtilization addCpuUsed(double cpu) {
     this.cpuUsed += cpu;
     return this;
@@ -91,6 +94,11 @@ public class RequestUtilization {
 
   public int getNumTasks() {
     return numTasks;
+  }
+
+  // 0 -> 1, where 0 is never over-utilized, or only short bursts and 1 is consistently overutilized
+  public double getCpuBurstRating() {
+    return cpuBurstRating;
   }
 
   @JsonIgnore
@@ -170,16 +178,30 @@ public class RequestUtilization {
     return this;
   }
 
+  public RequestUtilization setCpuBurstRating(double cpuBurstRating) {
+    this.cpuBurstRating = cpuBurstRating;
+    return this;
+  }
+
   @Override
   public String toString() {
     return "RequestUtilization{" +
-        "requestId=" + requestId +
-        ", deployId=" + deployId +
+        "requestId='" + requestId + '\'' +
+        ", deployId='" + deployId + '\'' +
         ", memBytesUsed=" + memBytesUsed +
         ", memBytesReserved=" + memBytesReserved +
         ", cpuUsed=" + cpuUsed +
         ", cpuReserved=" + cpuReserved +
+        ", diskBytesUsed=" + diskBytesUsed +
+        ", diskBytesReserved=" + diskBytesReserved +
         ", numTasks=" + numTasks +
+        ", maxMemBytesUsed=" + maxMemBytesUsed +
+        ", minMemBytesUsed=" + minMemBytesUsed +
+        ", maxCpuUsed=" + maxCpuUsed +
+        ", minCpuUsed=" + minCpuUsed +
+        ", maxDiskBytesUsed=" + maxDiskBytesUsed +
+        ", minDiskBytesUsed=" + minDiskBytesUsed +
+        ", cpuBurstRating=" + cpuBurstRating +
         '}';
   }
 }
