@@ -3,24 +3,24 @@ package com.hubspot.singularity.scheduler;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.mesos.v1.Protos.TaskState;
 import org.junit.Assert;
 import org.junit.Test;
 
-import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.hubspot.mesos.json.MesosSlaveMetricsSnapshotObject;
 import com.hubspot.mesos.json.MesosTaskMonitorObject;
-import com.hubspot.singularity.MachineState;
-import com.hubspot.singularity.SingularityClusterUtilization;
-import com.hubspot.singularity.SingularitySlaveUsage;
-import com.hubspot.singularity.SingularityTask;
-import com.hubspot.singularity.SingularityTaskCurrentUsageWithId;
-import com.hubspot.singularity.SingularityTaskId;
-import com.hubspot.singularity.SingularityTaskUsage;
-import com.hubspot.singularity.TaskCleanupType;
+import com.hubspot.singularity.api.machines.MachineState;
+import com.hubspot.singularity.api.machines.SingularityClusterUtilization;
+import com.hubspot.singularity.api.machines.SingularitySlaveUsage;
+import com.hubspot.singularity.api.task.SingularityTask;
+import com.hubspot.singularity.api.task.SingularityTaskCurrentUsageWithId;
+import com.hubspot.singularity.api.task.SingularityTaskId;
+import com.hubspot.singularity.api.task.SingularityTaskUsage;
+import com.hubspot.singularity.api.task.TaskCleanupType;
 import com.hubspot.singularity.data.UsageManager;
 
 public class SingularityUsageTest extends SingularitySchedulerTestBase {
@@ -112,7 +112,7 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
     Assert.assertEquals(1, usageManager.getTasksWithUsage().size());
     Assert.assertEquals(1, usageManager.getSlavesWithUsage().size());
 
-    slaveManager.changeState(slaveId, MachineState.DEAD, Optional.absent(), Optional.absent());
+    slaveManager.changeState(slaveId, MachineState.DEAD, Optional.empty(), Optional.empty());
 
     cleaner.runActionOnPoll();
 

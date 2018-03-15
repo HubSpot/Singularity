@@ -1,8 +1,10 @@
 package com.hubspot.singularity.data;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicLong;
 
 import javax.inject.Singleton;
@@ -16,28 +18,26 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.codahale.metrics.MetricRegistry;
-import com.google.common.base.Optional;
-import com.google.common.base.Throwables;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
-import com.hubspot.mesos.CounterMap;
 import com.hubspot.mesos.JavaUtils;
-import com.hubspot.singularity.SingularityCreateResult;
-import com.hubspot.singularity.SingularityDeployMarker;
-import com.hubspot.singularity.SingularityHostState;
 import com.hubspot.singularity.SingularityMainModule;
-import com.hubspot.singularity.SingularityPendingDeploy;
-import com.hubspot.singularity.SingularityPendingTaskId;
-import com.hubspot.singularity.SingularityRack;
-import com.hubspot.singularity.SingularityRequest;
-import com.hubspot.singularity.SingularityRequestDeployState;
-import com.hubspot.singularity.SingularityRequestWithState;
-import com.hubspot.singularity.SingularityScheduledTasksInfo;
-import com.hubspot.singularity.SingularitySlave;
-import com.hubspot.singularity.SingularityState;
-import com.hubspot.singularity.SingularityTaskId;
-import com.hubspot.singularity.SingularityTaskReconciliationStatistics;
+import com.hubspot.singularity.api.common.CounterMap;
+import com.hubspot.singularity.api.common.SingularityCreateResult;
+import com.hubspot.singularity.api.common.SingularityState;
+import com.hubspot.singularity.api.deploy.SingularityDeployMarker;
+import com.hubspot.singularity.api.machines.SingularityHostState;
+import com.hubspot.singularity.api.machines.SingularityRack;
+import com.hubspot.singularity.api.machines.SingularitySlave;
+import com.hubspot.singularity.api.request.SingularityPendingDeploy;
+import com.hubspot.singularity.api.request.SingularityRequest;
+import com.hubspot.singularity.api.request.SingularityRequestDeployState;
+import com.hubspot.singularity.api.request.SingularityRequestWithState;
+import com.hubspot.singularity.api.task.SingularityPendingTaskId;
+import com.hubspot.singularity.api.task.SingularityScheduledTasksInfo;
+import com.hubspot.singularity.api.task.SingularityTaskId;
+import com.hubspot.singularity.api.task.SingularityTaskReconciliationStatistics;
 import com.hubspot.singularity.auth.datastore.SingularityAuthDatastore;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.transcoders.Transcoder;
@@ -116,13 +116,13 @@ public class StateManager extends CuratorManager {
           curator.create().creatingParentsIfNeeded().withMode(CreateMode.EPHEMERAL).forPath(path, data);
         }
       } catch (Throwable t) {
-        throw Throwables.propagate(t);
+        throw new RuntimeException(t);
       }
     }
   }
 
   public SingularityState getState(boolean skipCache, boolean includeRequestIds) {
-    Optional<SingularityState> fromZk = Optional.absent();
+    Optional<SingularityState> fromZk = Optional.empty();
 
     if (!skipCache) {
       fromZk = getData(STATE_PATH, stateTranscoder);
@@ -287,8 +287,8 @@ public class StateManager extends CuratorManager {
 
     return new SingularityState(activeTasks, launchingTasks, numActiveRequests, cooldownRequests, numPausedRequests, scheduledTasks, pendingRequests, lbCleanupTasks, lbCleanupRequests, cleaningRequests, activeSlaves,
         deadSlaves, decommissioningSlaves, activeRacks, deadRacks, decommissioningRacks, cleaningTasks, states, oldestDeploy, numDeploys, oldestDeployStep, activeDeploys, scheduledTasksInfo.getNumLateTasks(),
-        scheduledTasksInfo.getNumFutureTasks(), scheduledTasksInfo.getMaxTaskLag(), System.currentTimeMillis(), includeRequestIds ? overProvisionedRequestIds : null,
-        includeRequestIds ? underProvisionedRequestIds : null, overProvisionedRequestIds.size(), underProvisionedRequestIds.size(), numFinishedRequests, unknownRacks, unknownSlaves, authDatastoreHealthy, minimumPriorityLevel,
+        scheduledTasksInfo.getNumFutureTasks(), scheduledTasksInfo.getMaxTaskLag(), System.currentTimeMillis(), includeRequestIds ? overProvisionedRequestIds : Collections.emptyList(),
+        includeRequestIds ? underProvisionedRequestIds : Collections.emptyList(), overProvisionedRequestIds.size(), underProvisionedRequestIds.size(), numFinishedRequests, unknownRacks, unknownSlaves, authDatastoreHealthy, minimumPriorityLevel,
         statusUpdateDeltaAvg.get());
   }
 
@@ -358,7 +358,7 @@ public class StateManager extends CuratorManager {
         states.add(hostStateTranscoder.fromBytes(bytes));
       } catch (NoNodeException nne) {
       } catch (Exception e) {
-        throw Throwables.propagate(e);
+        throw new RuntimeException(e);
       }
     }
 
@@ -366,6 +366,6 @@ public class StateManager extends CuratorManager {
   }
 
   private Optional<Double> getMinimumPriorityLevel() {
-    return priorityManager.getActivePriorityFreeze().isPresent() ? Optional.of(priorityManager.getActivePriorityFreeze().get().getPriorityFreeze().getMinimumPriorityLevel()) : Optional.absent();
+    return priorityManager.getActivePriorityFreeze().isPresent() ? Optional.of(priorityManager.getActivePriorityFreeze().get().getPriorityFreeze().getMinimumPriorityLevel()) : Optional.empty();
   }
 }

@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
@@ -20,11 +21,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.codahale.metrics.MetricRegistry;
-import com.google.common.base.Optional;
-import com.google.common.base.Throwables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hubspot.singularity.SingularityId;
+import com.hubspot.singularity.api.common.SingularityId;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.transcoders.IdTranscoder;
 import com.hubspot.singularity.data.transcoders.Transcoder;
@@ -58,7 +57,7 @@ public abstract class CuratorAsyncManager extends CuratorManager {
         paths.add(ZKPaths.makePath(parent, child));
       }
 
-      List<T> result = new ArrayList<>(getAsyncThrows(parent, paths, transcoder, Optional.absent()).values());
+      List<T> result = new ArrayList<>(getAsyncThrows(parent, paths, transcoder, Optional.empty()).values());
 
 
       return result;
@@ -155,7 +154,7 @@ public abstract class CuratorAsyncManager extends CuratorManager {
     try {
       return getChildrenAsIdsForParentsThrows(pathNameforLogs, parents, idTranscoder);
     } catch (Throwable t) {
-      throw Throwables.propagate(t);
+      throw new RuntimeException(t);
     }
   }
 
@@ -193,7 +192,7 @@ public abstract class CuratorAsyncManager extends CuratorManager {
     try {
       return existsThrows(pathNameForLogs, paths, idTranscoder);
     } catch (Throwable t) {
-      throw Throwables.propagate(t);
+      throw new RuntimeException(t);
     }
   }
 
@@ -227,7 +226,7 @@ public abstract class CuratorAsyncManager extends CuratorManager {
     try {
       return notExistsThrows(pathNameForLogs, pathsMap);
     } catch (Throwable t) {
-      throw Throwables.propagate(t);
+      throw new RuntimeException(t);
     }
   }
 
@@ -235,23 +234,23 @@ public abstract class CuratorAsyncManager extends CuratorManager {
     try {
       return new ArrayList<>(getAsyncThrows(pathNameForLogs, paths, transcoder, Optional.of(cache)).values());
     } catch (Throwable t) {
-      throw Throwables.propagate(t);
+      throw new RuntimeException(t);
     }
   }
 
   protected <T> List<T> getAsync(final String pathNameForLogs, final Collection<String> paths, final Transcoder<T> transcoder) {
     try {
-      return new ArrayList<>(getAsyncThrows(pathNameForLogs, paths, transcoder, Optional.<ZkCache<T>> absent()).values());
+      return new ArrayList<>(getAsyncThrows(pathNameForLogs, paths, transcoder, Optional.empty()).values());
     } catch (Throwable t) {
-      throw Throwables.propagate(t);
+      throw new RuntimeException(t);
     }
   }
 
   protected <T> Map<String, T> getAsyncWithPath(final String pathNameForLogs, final Collection<String> paths, final Transcoder<T> transcoder) {
     try {
-      return getAsyncThrows(pathNameForLogs, paths, transcoder, Optional.<ZkCache<T>> absent());
+      return getAsyncThrows(pathNameForLogs, paths, transcoder, Optional.empty());
     } catch (Throwable t) {
-      throw Throwables.propagate(t);
+      throw new RuntimeException(t);
     }
   }
 
@@ -259,7 +258,7 @@ public abstract class CuratorAsyncManager extends CuratorManager {
     try {
       return getAsyncChildrenThrows(parent, transcoder);
     } catch (Throwable t) {
-      throw Throwables.propagate(t);
+      throw new RuntimeException(t);
     }
   }
 
@@ -304,7 +303,7 @@ public abstract class CuratorAsyncManager extends CuratorManager {
     try {
       return getAsyncNestedChildDataAsMapThrows(pathNameForLogs, parentPathsMap, subpath, transcoder);
     } catch (Throwable t) {
-      throw Throwables.propagate(t);
+      throw new RuntimeException(t);
     }
   }
 
@@ -329,7 +328,7 @@ public abstract class CuratorAsyncManager extends CuratorManager {
 
       checkLatch(latch, pathNameForLogs);
     } finally {
-      log(method.operationType, Optional.of(paths.size()), bytes.get() > 0 ? Optional.of(bytes.get()) : Optional.<Integer>absent(), start, pathNameForLogs);
+      log(method.operationType, Optional.of(paths.size()), bytes.get() > 0 ? Optional.of(bytes.get()) : Optional.empty(), start, pathNameForLogs);
     }
 
     return results;

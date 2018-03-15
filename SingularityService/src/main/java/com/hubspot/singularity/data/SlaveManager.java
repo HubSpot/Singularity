@@ -1,17 +1,18 @@
 package com.hubspot.singularity.data;
 
+import java.util.Optional;
+
 import org.apache.curator.framework.CuratorFramework;
 
 import com.codahale.metrics.MetricRegistry;
-import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import com.hubspot.singularity.MachineState;
-import com.hubspot.singularity.SingularityMachineStateHistoryUpdate;
-import com.hubspot.singularity.SingularitySlave;
+import com.hubspot.singularity.api.expiring.SingularityExpiringMachineState;
+import com.hubspot.singularity.api.machines.MachineState;
+import com.hubspot.singularity.api.machines.SingularityMachineStateHistoryUpdate;
+import com.hubspot.singularity.api.machines.SingularitySlave;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.transcoders.Transcoder;
-import com.hubspot.singularity.expiring.SingularityExpiringMachineState;
 import com.hubspot.singularity.scheduler.SingularityLeaderCache;
 
 @Singleton

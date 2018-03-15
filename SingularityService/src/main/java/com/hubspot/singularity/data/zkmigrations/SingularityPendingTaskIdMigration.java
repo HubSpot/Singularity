@@ -1,7 +1,7 @@
 package com.hubspot.singularity.data.zkmigrations;
 
 import java.util.Collections;
-import java.util.List;
+import java.util.Optional;
 
 import javax.inject.Singleton;
 
@@ -10,16 +10,14 @@ import org.apache.curator.utils.ZKPaths;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Optional;
-import com.google.common.base.Throwables;
 import com.google.inject.Inject;
 import com.hubspot.mesos.JavaUtils;
-import com.hubspot.singularity.InvalidSingularityTaskIdException;
-import com.hubspot.singularity.SingularityPendingRequest.PendingType;
-import com.hubspot.singularity.SingularityPendingTaskBuilder;
-import com.hubspot.singularity.SingularityPendingTaskId;
+import com.hubspot.singularity.api.request.SingularityPendingRequest.PendingType;
+import com.hubspot.singularity.api.task.SingularityPendingTask;
+import com.hubspot.singularity.api.task.SingularityPendingTaskId;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.data.transcoders.StringTranscoder;
+import com.hubspot.singularity.exceptions.InvalidSingularityTaskIdException;
 
 @Singleton
 public class SingularityPendingTaskIdMigration extends ZkDataMigration {
@@ -47,7 +45,7 @@ public class SingularityPendingTaskIdMigration extends ZkDataMigration {
         return;
       }
     } catch (Exception e) {
-      throw Throwables.propagate(e);
+      throw new RuntimeException(e);
     }
 
     try {
@@ -59,16 +57,16 @@ public class SingularityPendingTaskIdMigration extends ZkDataMigration {
           Optional<String> cmdLineArgs = getCmdLineArgs(pendingTaskId);
 
           taskManager.savePendingTask(
-              new SingularityPendingTaskBuilder()
+              SingularityPendingTask.builder()
                   .setPendingTaskId(newPendingTaskId)
-                  .setCmdLineArgsList(cmdLineArgs.isPresent() ? Optional.of(Collections.singletonList(cmdLineArgs.get())) : Optional.<List<String>> absent())
+                  .setCmdLineArgsList(cmdLineArgs.isPresent() ? Optional.of(Collections.singletonList(cmdLineArgs.get())) : Optional.empty())
                   .build());
 
           curator.delete().forPath(ZKPaths.makePath(PENDING_TASKS_ROOT, pendingTaskId));
         }
       }
     } catch (Exception e) {
-      throw Throwables.propagate(e);
+      throw new RuntimeException(e);
     }
   }
 
@@ -79,7 +77,7 @@ public class SingularityPendingTaskIdMigration extends ZkDataMigration {
       return Optional.of(StringTranscoder.INSTANCE.fromBytes(data));
     }
 
-    return Optional.absent();
+    return Optional.empty();
   }
 
   public SingularityPendingTaskId createFrom(String string, long createdAt) {

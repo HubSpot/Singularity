@@ -2,21 +2,20 @@ package com.hubspot.singularity.scheduler;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.hubspot.mesos.JavaUtils;
-import com.hubspot.singularity.SingularityPriorityFreezeParent;
-import com.hubspot.singularity.SingularityRequestWithState;
-import com.hubspot.singularity.SingularityTaskCleanup;
-import com.hubspot.singularity.SingularityTaskId;
-import com.hubspot.singularity.SingularityTaskShellCommandRequestId;
-import com.hubspot.singularity.TaskCleanupType;
+import com.hubspot.singularity.api.disasters.SingularityPriorityFreezeParent;
+import com.hubspot.singularity.api.request.SingularityRequestWithState;
+import com.hubspot.singularity.api.task.SingularityTaskCleanup;
+import com.hubspot.singularity.api.task.SingularityTaskId;
+import com.hubspot.singularity.api.task.TaskCleanupType;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.PriorityManager;
 import com.hubspot.singularity.data.RequestManager;
@@ -83,7 +82,7 @@ public class SingularityPriorityKillPoller extends SingularityLeaderOnlyPoller {
                     LOG.info("Killing active task {} since priority level {} is less than {}", taskId.getId(), taskPriorityLevel, minPriorityLevel);
                     taskManager.createTaskCleanup(
                         new SingularityTaskCleanup(maybePriorityFreeze.get().getUser(), TaskCleanupType.PRIORITY_KILL, now, taskId, maybePriorityFreeze.get().getPriorityFreeze().getMessage(),
-                            maybePriorityFreeze.get().getPriorityFreeze().getActionId(), Optional.<SingularityTaskShellCommandRequestId>absent()));
+                            maybePriorityFreeze.get().getPriorityFreeze().getActionId(), Optional.empty(), Optional.empty()));
                     killedTaskCount++;
                 }
             }

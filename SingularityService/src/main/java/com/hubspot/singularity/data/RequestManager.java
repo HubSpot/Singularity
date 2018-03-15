@@ -4,6 +4,7 @@ import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.apache.curator.framework.CuratorFramework;
@@ -12,36 +13,34 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.codahale.metrics.MetricRegistry;
-import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import com.hubspot.singularity.RequestCleanupType;
-import com.hubspot.singularity.RequestState;
-import com.hubspot.singularity.SingularityCreateResult;
-import com.hubspot.singularity.SingularityDeleteResult;
-import com.hubspot.singularity.SingularityDeployKey;
-import com.hubspot.singularity.SingularityPendingRequest;
-import com.hubspot.singularity.SingularityPendingRequest.PendingType;
-import com.hubspot.singularity.SingularityRequest;
-import com.hubspot.singularity.SingularityRequestCleanup;
-import com.hubspot.singularity.SingularityRequestHistory;
-import com.hubspot.singularity.SingularityRequestHistory.RequestHistoryType;
-import com.hubspot.singularity.SingularityRequestLbCleanup;
-import com.hubspot.singularity.SingularityRequestWithState;
-import com.hubspot.singularity.SingularityShellCommand;
-import com.hubspot.singularity.api.SingularityExpiringRequestParent;
+import com.hubspot.singularity.api.common.SingularityCreateResult;
+import com.hubspot.singularity.api.common.SingularityDeleteResult;
+import com.hubspot.singularity.api.deploy.SingularityDeployKey;
+import com.hubspot.singularity.api.expiring.SingularityExpiringBounce;
+import com.hubspot.singularity.api.expiring.SingularityExpiringPause;
+import com.hubspot.singularity.api.expiring.SingularityExpiringRequestActionParent;
+import com.hubspot.singularity.api.expiring.SingularityExpiringRequestParent;
+import com.hubspot.singularity.api.expiring.SingularityExpiringScale;
+import com.hubspot.singularity.api.expiring.SingularityExpiringSkipHealthchecks;
+import com.hubspot.singularity.api.request.RequestCleanupType;
+import com.hubspot.singularity.api.request.RequestState;
+import com.hubspot.singularity.api.request.SingularityPendingRequest;
+import com.hubspot.singularity.api.request.SingularityPendingRequest.PendingType;
+import com.hubspot.singularity.api.request.SingularityRequest;
+import com.hubspot.singularity.api.request.SingularityRequestCleanup;
+import com.hubspot.singularity.api.request.SingularityRequestHistory;
+import com.hubspot.singularity.api.request.SingularityRequestHistory.RequestHistoryType;
+import com.hubspot.singularity.api.request.SingularityRequestLbCleanup;
+import com.hubspot.singularity.api.request.SingularityRequestWithState;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.transcoders.Transcoder;
 import com.hubspot.singularity.event.SingularityEventListener;
-import com.hubspot.singularity.expiring.SingularityExpiringBounce;
-import com.hubspot.singularity.expiring.SingularityExpiringPause;
-import com.hubspot.singularity.expiring.SingularityExpiringRequestActionParent;
-import com.hubspot.singularity.expiring.SingularityExpiringScale;
-import com.hubspot.singularity.expiring.SingularityExpiringSkipHealthchecks;
 import com.hubspot.singularity.scheduler.SingularityLeaderCache;
 
 @Singleton
@@ -229,11 +228,11 @@ public class RequestManager extends CuratorAsyncManager {
   }
 
   public SingularityCreateResult cooldown(SingularityRequest request, long timestamp) {
-    return save(request, RequestState.SYSTEM_COOLDOWN, RequestHistoryType.ENTERED_COOLDOWN, timestamp, Optional.<String> absent(), Optional.<String> absent());
+    return save(request, RequestState.SYSTEM_COOLDOWN, RequestHistoryType.ENTERED_COOLDOWN, timestamp, Optional.empty(), Optional.empty());
   }
 
   public SingularityCreateResult finish(SingularityRequest request, long timestamp) {
-    return save(request, RequestState.FINISHED, RequestHistoryType.FINISHED, timestamp, Optional.<String> absent(), Optional.<String> absent());
+    return save(request, RequestState.FINISHED, RequestHistoryType.FINISHED, timestamp, Optional.empty(), Optional.empty());
   }
 
   public SingularityCreateResult addToPendingQueue(SingularityPendingRequest pendingRequest) {
@@ -415,8 +414,8 @@ public class RequestManager extends CuratorAsyncManager {
     final long now = System.currentTimeMillis();
 
     // delete it no matter if the delete request already exists.
-    createCleanupRequest(new SingularityRequestCleanup(user, RequestCleanupType.DELETING, now, Optional.of(Boolean.TRUE), removeFromLoadBalancer, request.getId(), Optional.<String> absent(),
-        Optional.<Boolean> absent(), message, actionId, Optional.<SingularityShellCommand>absent()));
+    createCleanupRequest(new SingularityRequestCleanup(user, RequestCleanupType.DELETING, now, Optional.of(Boolean.TRUE), removeFromLoadBalancer, request.getId(), Optional.empty(),
+        Optional.empty(), message, actionId, Optional.empty()));
 
     markDeleting(request, System.currentTimeMillis(), user, message);
 

@@ -5,22 +5,22 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.Callable;
 
 import org.apache.mesos.Protos.TaskInfo;
 import org.apache.mesos.Protos.TaskState;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Optional;
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
-import com.hubspot.deploy.ArtifactList;
-import com.hubspot.deploy.EmbeddedArtifact;
-import com.hubspot.deploy.ExecutorData;
-import com.hubspot.deploy.ExternalArtifact;
-import com.hubspot.deploy.RemoteArtifact;
-import com.hubspot.deploy.S3Artifact;
-import com.hubspot.deploy.S3ArtifactSignature;
+import com.hubspot.singularity.api.deploy.ArtifactList;
+import com.hubspot.singularity.api.deploy.EmbeddedArtifact;
+import com.hubspot.singularity.api.deploy.ExecutorDataBase;
+import com.hubspot.singularity.api.deploy.ExternalArtifact;
+import com.hubspot.singularity.api.deploy.RemoteArtifact;
+import com.hubspot.singularity.api.deploy.S3Artifact;
+import com.hubspot.singularity.api.deploy.S3ArtifactSignature;
 import com.hubspot.singularity.executor.TemplateManager;
 import com.hubspot.singularity.executor.config.SingularityExecutorConfiguration;
 import com.hubspot.singularity.executor.models.DockerContext;
@@ -43,7 +43,7 @@ public class SingularityExecutorTaskProcessBuilder implements Callable<ProcessBu
 
   private final ExecutorUtils executorUtils;
 
-  private final ExecutorData executorData;
+  private final ExecutorDataBase executorData;
 
   private final SingularityExecutorArtifactFetcher artifactFetcher;
 
@@ -54,12 +54,13 @@ public class SingularityExecutorTaskProcessBuilder implements Callable<ProcessBu
   private final ObjectMapper objectMapper;
 
   public SingularityExecutorTaskProcessBuilder(SingularityExecutorTask task,
-      ExecutorUtils executorUtils,
-      SingularityExecutorArtifactFetcher artifactFetcher,
-      TemplateManager templateManager,
-      SingularityExecutorConfiguration configuration,
-      ExecutorData executorData, String executorPid,
-      DockerUtils dockerUtils, ObjectMapper objectMapper) {
+                                               ExecutorUtils executorUtils,
+                                               SingularityExecutorArtifactFetcher artifactFetcher,
+                                               TemplateManager templateManager,
+                                               SingularityExecutorConfiguration configuration,
+                                               ExecutorDataBase executorData,
+                                               String executorPid,
+                                               DockerUtils dockerUtils, ObjectMapper objectMapper) {
     this.executorData = executorData;
     this.objectMapper = objectMapper;
     this.task = task;
@@ -68,7 +69,7 @@ public class SingularityExecutorTaskProcessBuilder implements Callable<ProcessBu
     this.templateManager = templateManager;
     this.configuration = configuration;
     this.executorPid = executorPid;
-    this.taskArtifactFetcher = Optional.absent();
+    this.taskArtifactFetcher = Optional.empty();
     this.dockerUtils = dockerUtils;
   }
 
@@ -151,7 +152,7 @@ public class SingularityExecutorTaskProcessBuilder implements Callable<ProcessBu
     return task.getTaskDefinition().getTaskDirectoryPath().resolve(filename);
   }
 
-  private String getCommand(ExecutorData executorData) {
+  private String getCommand(ExecutorDataBase executorData) {
     final StringBuilder bldr = new StringBuilder(Strings.isNullOrEmpty(executorData.getCmd()) ? "" : executorData.getCmd());
     for (String extraCmdLineArg : executorData.getExtraCmdLineArgs()) {
       bldr.append(" ");
@@ -164,21 +165,21 @@ public class SingularityExecutorTaskProcessBuilder implements Callable<ProcessBu
     return System.getProperty("user.name"); // TODO: better way to do this?
   }
 
-  private ProcessBuilder buildProcessBuilder(TaskInfo taskInfo, ExecutorData executorData, String serviceLog) {
+  private ProcessBuilder buildProcessBuilder(TaskInfo taskInfo, ExecutorDataBase executorData, String serviceLog) {
     final String cmd = getCommand(executorData);
 
     RunnerContext runnerContext = new RunnerContext(
         cmd,
         configuration.getTaskAppDirectory(),
         configuration.getLogrotateToDirectory(),
-        executorData.getUser().or(configuration.getDefaultRunAsUser()),
+        executorData.getUser().orElse(configuration.getDefaultRunAsUser()),
         serviceLog,
         serviceLogOutPath(serviceLog),
         task.getTaskId(),
-        executorData.getMaxTaskThreads().or(configuration.getMaxTaskThreads()),
-        !getExecutorUser().equals(executorData.getUser().or(configuration.getDefaultRunAsUser())),
-        executorData.getMaxOpenFiles().orNull(),
-        String.format(configuration.getSwitchUserCommandFormat(), executorData.getUser().or(configuration.getDefaultRunAsUser())),
+        executorData.getMaxTaskThreads().isPresent() ? executorData.getMaxTaskThreads() : configuration.getMaxTaskThreads(),
+        !getExecutorUser().equals(executorData.getUser().orElse(configuration.getDefaultRunAsUser())),
+        executorData.getMaxOpenFiles().orElse(null),
+        String.format(configuration.getSwitchUserCommandFormat(), executorData.getUser().orElse(configuration.getDefaultRunAsUser())),
         configuration.isUseFileAttributes());
 
     EnvironmentContext environmentContext = new EnvironmentContext(taskInfo);

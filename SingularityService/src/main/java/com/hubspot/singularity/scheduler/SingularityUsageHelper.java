@@ -7,8 +7,8 @@ import java.util.Set;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import com.hubspot.singularity.MachineState;
-import com.hubspot.singularity.SingularitySlave;
+import com.hubspot.singularity.api.machines.MachineState;
+import com.hubspot.singularity.api.machines.SingularitySlave;
 import com.hubspot.singularity.data.SlaveManager;
 
 @Singleton

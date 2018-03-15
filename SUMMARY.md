@@ -23,7 +23,6 @@
   * [Task Search](Docs/features/task-search.md)
   * [Incremental Deploys](Docs/features/incremental-deploys.md)
   * [Disaster Detection & Disabled Actions](Docs/features/disaster-detection.md)
-  * [Cluster Coordinator](Docs/features/cluster-coordinator.md)
   * [Upgrading to Mesos 1](Docs/features/mesos-1.md)
   * [Authentication and Authorization](Docs/features/auth.md)
 * Reference

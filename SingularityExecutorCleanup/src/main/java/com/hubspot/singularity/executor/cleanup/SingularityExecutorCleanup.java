@@ -12,33 +12,31 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Optional;
 import com.google.common.base.Strings;
-import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import com.hubspot.mesos.JavaUtils;
-import com.hubspot.mesos.SingularityContainerType;
 import com.hubspot.mesos.client.MesosClient;
-import com.hubspot.singularity.MachineState;
-import com.hubspot.singularity.SingularitySlave;
-import com.hubspot.singularity.SingularityTask;
-import com.hubspot.singularity.SingularityTaskExecutorData;
-import com.hubspot.singularity.SingularityTaskHistory;
-import com.hubspot.singularity.SingularityTaskHistoryUpdate;
+import com.hubspot.singularity.api.common.SingularityExecutorCleanupStatistics;
+import com.hubspot.singularity.api.deploy.mesos.SingularityContainerType;
+import com.hubspot.singularity.api.machines.MachineState;
+import com.hubspot.singularity.api.machines.SingularitySlave;
+import com.hubspot.singularity.api.task.SingularityTask;
+import com.hubspot.singularity.api.task.SingularityTaskExecutorData;
+import com.hubspot.singularity.api.task.SingularityTaskHistory;
+import com.hubspot.singularity.api.task.SingularityTaskHistoryUpdate;
 import com.hubspot.singularity.client.SingularityClient;
 import com.hubspot.singularity.client.SingularityClientException;
 import com.hubspot.singularity.client.SingularityClientProvider;
-import com.hubspot.singularity.executor.SingularityExecutorCleanupStatistics;
-import com.hubspot.singularity.executor.SingularityExecutorCleanupStatistics.SingularityExecutorCleanupStatisticsBuilder;
 import com.hubspot.singularity.executor.TemplateManager;
 import com.hubspot.singularity.executor.cleanup.config.SingularityExecutorCleanupConfiguration;
 import com.hubspot.singularity.executor.config.SingularityExecutorConfiguration;
@@ -95,7 +93,7 @@ public class SingularityExecutorCleanup {
   }
 
   public SingularityExecutorCleanupStatistics clean() {
-    final SingularityExecutorCleanupStatisticsBuilder statisticsBldr = new SingularityExecutorCleanupStatisticsBuilder();
+    final SingularityExecutorCleanupStatistics.Builder statisticsBldr = SingularityExecutorCleanupStatistics.builder();
     final Path directory = Paths.get(executorConfiguration.getGlobalTaskDefinitionDirectory());
 
     Set<String> runningTaskIds = null;
@@ -134,20 +132,27 @@ public class SingularityExecutorCleanup {
       cleanDocker(runningTaskIds);
     }
 
+    int invalidTasks = 0;
+    int totalTaskFiles = 0;
+    int runningTasksIgnored = 0;
+    int errorTasks = 0;
+    int successfullyCleanedTasks = 0;
+    int waitingTasks = 0;
+    int ioErrorTasks = 0;
     for (Path file : JavaUtils.iterable(directory)) {
       if (!Objects.toString(file.getFileName()).endsWith(executorConfiguration.getGlobalTaskDefinitionSuffix())) {
         LOG.debug("Ignoring file {} that doesn't have suffix {}", file, executorConfiguration.getGlobalTaskDefinitionSuffix());
-        statisticsBldr.incrInvalidTasks();
+        invalidTasks++;
         continue;
       }
 
-      statisticsBldr.incrTotalTaskFiles();
+      totalTaskFiles++;
 
       try {
         Optional<SingularityExecutorTaskDefinition> maybeTaskDefinition = jsonObjectFileHelper.read(file, LOG, SingularityExecutorTaskDefinition.class);
 
         if (!maybeTaskDefinition.isPresent()) {
-          statisticsBldr.incrInvalidTasks();
+          invalidTasks++;
           continue;
         }
 
@@ -158,7 +163,7 @@ public class SingularityExecutorCleanup {
         LOG.info("{} - Starting possible cleanup", taskId);
 
         if (runningTaskIds.contains(taskId) || executorStillRunning(taskDefinition)) {
-          statisticsBldr.incrRunningTasksIgnored();
+          runningTasksIgnored++;
           continue;
         }
 
@@ -169,7 +174,7 @@ public class SingularityExecutorCleanup {
         } catch (SingularityClientException sce) {
           LOG.error("{} - Failed fetching history", taskId, sce);
           exceptionNotifier.notify(String.format("Error fetching history (%s)", sce.getMessage()), sce, ImmutableMap.<String, String>of("taskId", taskId));
-          statisticsBldr.incrErrorTasks();
+          errorTasks++;
           continue;
         }
 
@@ -179,13 +184,13 @@ public class SingularityExecutorCleanup {
 
         switch (result) {
           case ERROR:
-            statisticsBldr.incrErrorTasks();
+            errorTasks++;
             break;
           case SUCCESS:
-            statisticsBldr.incrSuccessfullyCleanedTasks();
+            successfullyCleanedTasks++;
             break;
           case WAITING:
-            statisticsBldr.incrWaitingTasks();
+            waitingTasks++;
             break;
            default:
             break;
@@ -194,27 +199,35 @@ public class SingularityExecutorCleanup {
       } catch (IOException ioe) {
         LOG.error("Couldn't read file {}", file, ioe);
         exceptionNotifier.notify(String.format("Error reading file (%s)", ioe.getMessage()), ioe, ImmutableMap.of("file", file.toString()));
-        statisticsBldr.incrIoErrorTasks();
+        ioErrorTasks++;
       }
     }
 
-    return statisticsBldr.build();
+    return statisticsBldr
+        .setTotalTaskFiles(totalTaskFiles)
+        .setErrorTasks(errorTasks)
+        .setIoErrorTasks(ioErrorTasks)
+        .setSuccessfullyCleanedTasks(successfullyCleanedTasks)
+        .setWaitingTasks(waitingTasks)
+        .setRunningTasksIgnored(runningTasksIgnored)
+        .setInvalidTasks(invalidTasks)
+        .build();
   }
 
   private SingularityExecutorTaskDefinition withDefaults(SingularityExecutorTaskDefinition oldDefinition) {
       return new SingularityExecutorTaskDefinition(
         oldDefinition.getTaskId(),
-        new SingularityTaskExecutorData(
-            oldDefinition.getExecutorData(),
-            oldDefinition.getExecutorData().getS3UploaderAdditionalFiles() == null ? cleanupConfiguration.getS3UploaderAdditionalFiles() :  oldDefinition.getExecutorData().getS3UploaderAdditionalFiles(),
-            Strings.isNullOrEmpty(oldDefinition.getExecutorData().getDefaultS3Bucket()) ? cleanupConfiguration.getDefaultS3Bucket() : oldDefinition.getExecutorData().getDefaultS3Bucket(),
-            Strings.isNullOrEmpty(oldDefinition.getExecutorData().getS3UploaderKeyPattern()) ? cleanupConfiguration.getS3KeyFormat(): oldDefinition.getExecutorData().getS3UploaderKeyPattern(),
-            Strings.isNullOrEmpty(oldDefinition.getExecutorData().getServiceLog()) ? cleanupConfiguration.getDefaultServiceLog() : oldDefinition.getExecutorData().getServiceLog(),
-            Strings.isNullOrEmpty(oldDefinition.getExecutorData().getServiceFinishedTailLog()) ? cleanupConfiguration.getDefaultServiceFinishedTailLog() : oldDefinition.getExecutorData().getServiceFinishedTailLog(),
-            oldDefinition.getExecutorData().getRequestGroup(),
-            oldDefinition.getExecutorData().getS3StorageClass(),
-            oldDefinition.getExecutorData().getApplyS3StorageClassAfterBytes()
-        ),
+        SingularityTaskExecutorData.builder()
+            .from(oldDefinition.getExecutorData())
+            .setS3UploaderAdditionalFiles(oldDefinition.getExecutorData().getS3UploaderAdditionalFiles() == null ? cleanupConfiguration.getS3UploaderAdditionalFiles() :  oldDefinition.getExecutorData().getS3UploaderAdditionalFiles())
+            .setDefaultS3Bucket(Strings.isNullOrEmpty(oldDefinition.getExecutorData().getDefaultS3Bucket()) ? cleanupConfiguration.getDefaultS3Bucket() : oldDefinition.getExecutorData().getDefaultS3Bucket())
+            .setS3UploaderKeyPattern(Strings.isNullOrEmpty(oldDefinition.getExecutorData().getS3UploaderKeyPattern()) ? cleanupConfiguration.getS3KeyFormat(): oldDefinition.getExecutorData().getS3UploaderKeyPattern())
+            .setServiceLog(Strings.isNullOrEmpty(oldDefinition.getExecutorData().getServiceLog()) ? cleanupConfiguration.getDefaultServiceLog() : oldDefinition.getExecutorData().getServiceLog())
+            .setServiceFinishedTailLog(Strings.isNullOrEmpty(oldDefinition.getExecutorData().getServiceFinishedTailLog()) ? cleanupConfiguration.getDefaultServiceFinishedTailLog() : oldDefinition.getExecutorData().getServiceFinishedTailLog())
+            .setRequestGroup(oldDefinition.getExecutorData().getRequestGroup())
+            .setS3StorageClass(oldDefinition.getExecutorData().getS3StorageClass())
+            .setApplyS3StorageClassAfterBytes(oldDefinition.getExecutorData().getApplyS3StorageClassAfterBytes())
+            .build(),
         oldDefinition.getTaskDirectory(),
         oldDefinition.getExecutorPid(),
         Strings.isNullOrEmpty(oldDefinition.getServiceLogFileName()) ? cleanupConfiguration.getDefaultServiceLog() :oldDefinition.getServiceLogFileName(),
@@ -267,7 +280,7 @@ public class SingularityExecutorCleanup {
 
     SingularityExecutorTaskCleanup taskCleanup = new SingularityExecutorTaskCleanup(logManager, executorConfiguration, taskDefinition, LOG, dockerUtils);
 
-    boolean cleanupTaskAppDirectory = !taskDefinition.getExecutorData().getPreserveTaskSandboxAfterFinish().or(Boolean.FALSE);
+    boolean cleanupTaskAppDirectory = !taskDefinition.getExecutorData().getPreserveTaskSandboxAfterFinish().orElse(Boolean.FALSE);
 
     if (taskHistory.isPresent()) {
       final Optional<SingularityTaskHistoryUpdate> lastUpdate = JavaUtils.getLast(taskHistory.get().getTaskUpdates());
@@ -311,7 +324,7 @@ public class SingularityExecutorCleanup {
       DirectoryStream<Path> dirStream = Files.newDirectoryStream(logrotateToPath, String.format("%s-*", serviceLogOutPath.getFileName()));
       return dirStream.iterator();
     } catch (IOException e) {
-      throw Throwables.propagate(e);
+      throw new RuntimeException(e);
     }
   }
 
@@ -364,7 +377,7 @@ public class SingularityExecutorCleanup {
     } else if (fileName.endsWith(CompressionType.BZIP2.getExtention())) {
       return Optional.of(CompressionType.BZIP2);
     } else {
-      return Optional.absent();
+      return Optional.empty();
     }
   }
 

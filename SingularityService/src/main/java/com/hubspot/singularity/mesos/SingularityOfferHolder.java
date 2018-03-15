@@ -4,6 +4,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -17,10 +18,9 @@ import org.apache.mesos.v1.Protos.TaskInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
 import com.hubspot.mesos.JavaUtils;
-import com.hubspot.singularity.SingularityTaskId;
+import com.hubspot.singularity.api.task.SingularityTaskId;
 import com.hubspot.singularity.helpers.MesosUtils;
 import com.hubspot.singularity.helpers.SingularityMesosTaskHolder;
 
@@ -135,7 +135,7 @@ public class SingularityOfferHolder {
             // Now, for each set of offer Resources grouped by role...
             String role = entry.getKey();
             List<Resource> offerResources = entry.getValue();
-            Optional<String> maybeRole = (!role.equals("") && !role.equals("*")) ? Optional.of(role) : Optional.absent();
+            Optional<String> maybeRole = (!role.equals("") && !role.equals("*")) ? Optional.of(role) : Optional.empty();
             // ...Check if we can pull the Resources belonging to this offer out of the pool of `currentResources`.
             return MesosUtils.doesOfferMatchResources(
                 maybeRole,

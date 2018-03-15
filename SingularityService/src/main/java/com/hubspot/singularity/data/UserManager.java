@@ -1,5 +1,7 @@
 package com.hubspot.singularity.data;
 
+import java.util.HashSet;
+import java.util.Optional;
 import java.util.Set;
 
 import org.apache.curator.framework.CuratorFramework;
@@ -7,10 +9,9 @@ import org.apache.curator.utils.ZKPaths;
 
 import com.codahale.metrics.MetricRegistry;
 import com.google.common.base.Charsets;
-import com.google.common.base.Optional;
 import com.google.common.io.BaseEncoding;
 import com.google.inject.Inject;
-import com.hubspot.singularity.SingularityUserSettings;
+import com.hubspot.singularity.api.auth.SingularityUserSettings;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.transcoders.Transcoder;
 
@@ -51,9 +52,12 @@ public class UserManager extends CuratorManager {
       save(path, new SingularityUserSettings(starredRequestIds), settingsTranscoder);
       return;
     }
-    settings.get().addStarredRequestIds(starredRequestIds);
-    validator.checkStarredRequests(settings.get().getStarredRequestIds());
-    save(path, settings.get(), settingsTranscoder);
+    SingularityUserSettings newSettings = SingularityUserSettings.builder()
+        .from(settings.get())
+        .addAllStarredRequestIds(starredRequestIds)
+        .build();
+    validator.checkStarredRequests(newSettings.getStarredRequestIds());
+    save(path, newSettings, settingsTranscoder);
   }
 
   public void deleteStarredRequestIds(String userId, Set<String> starredRequestIds) {
@@ -62,7 +66,9 @@ public class UserManager extends CuratorManager {
     if (!settings.isPresent()) {
       return;
     }
-    save(path, settings.get().deleteStarredRequestIds(starredRequestIds), settingsTranscoder);
+    Set<String> starredIds = new HashSet<>(settings.get().getStarredRequestIds());
+    starredIds.remove(starredRequestIds);
+    save(path, SingularityUserSettings.builder().setStarredRequestIds(starredIds).build(), settingsTranscoder);
   }
 
   public Optional<SingularityUserSettings> getUserSettings(String userId) {

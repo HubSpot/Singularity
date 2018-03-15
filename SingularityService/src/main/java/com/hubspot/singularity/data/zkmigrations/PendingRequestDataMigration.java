@@ -8,9 +8,9 @@ import org.slf4j.LoggerFactory;
 
 import com.google.inject.Inject;
 import com.hubspot.mesos.JavaUtils;
-import com.hubspot.singularity.SingularityDeployKey;
-import com.hubspot.singularity.SingularityPendingRequest;
-import com.hubspot.singularity.SingularityPendingRequest.PendingType;
+import com.hubspot.singularity.api.deploy.SingularityDeployKey;
+import com.hubspot.singularity.api.request.SingularityPendingRequest;
+import com.hubspot.singularity.api.request.SingularityPendingRequest.PendingType;
 import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.data.transcoders.Transcoder;
 

@@ -1,16 +1,16 @@
 package com.hubspot.singularity.scheduler;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
-import com.google.common.base.Optional;
 import com.hubspot.baragon.models.BaragonRequestState;
-import com.hubspot.singularity.LoadBalancerRequestType.LoadBalancerRequestId;
-import com.hubspot.singularity.SingularityDeploy;
-import com.hubspot.singularity.SingularityLoadBalancerUpdate;
-import com.hubspot.singularity.SingularityLoadBalancerUpdate.LoadBalancerMethod;
-import com.hubspot.singularity.SingularityRequest;
-import com.hubspot.singularity.SingularityTask;
+import com.hubspot.singularity.api.common.LoadBalancerRequestId;
+import com.hubspot.singularity.api.common.SingularityLoadBalancerUpdate;
+import com.hubspot.singularity.api.common.LoadBalancerMethod;
+import com.hubspot.singularity.api.deploy.SingularityDeploy;
+import com.hubspot.singularity.api.request.SingularityRequest;
+import com.hubspot.singularity.api.task.SingularityTask;
 import com.hubspot.singularity.hooks.LoadBalancerClient;
 
 public class TestingLoadBalancerClient implements LoadBalancerClient {
@@ -26,7 +26,7 @@ public class TestingLoadBalancerClient implements LoadBalancerClient {
   }
 
   private SingularityLoadBalancerUpdate getReturnValue(LoadBalancerRequestId loadBalancerRequestId, LoadBalancerMethod method) {
-    return new SingularityLoadBalancerUpdate(requestState, loadBalancerRequestId, Optional.<String> absent(), System.currentTimeMillis(), method, Optional.<String> absent());
+    return new SingularityLoadBalancerUpdate(requestState, loadBalancerRequestId, Optional.empty(), System.currentTimeMillis(), method, Optional.empty());
   }
 
   @Override

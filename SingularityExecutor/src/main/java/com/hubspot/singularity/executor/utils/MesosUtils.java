@@ -8,7 +8,7 @@ import org.apache.mesos.v1.Protos.TaskState;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Maps;
-import com.hubspot.singularity.ExtendedTaskState;
+import com.hubspot.singularity.api.task.ExtendedTaskState;
 
 public class MesosUtils {
   public static Path getTaskDirectoryPath(String taskId) {

@@ -19,8 +19,8 @@ import com.amazonaws.services.s3.model.GetObjectRequest;
 import com.amazonaws.services.s3.model.S3Object;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
-import com.hubspot.deploy.S3Artifact;
 import com.hubspot.mesos.JavaUtils;
+import com.hubspot.singularity.api.deploy.S3Artifact;
 import com.hubspot.singularity.runner.base.sentry.SingularityRunnerExceptionNotifier;
 import com.hubspot.singularity.s3.base.config.SingularityS3Configuration;
 

@@ -4,7 +4,7 @@ import java.util.Optional;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import com.hubspot.singularity.SingularityUser;
+import com.hubspot.singularity.api.auth.SingularityUser;
 
 @Singleton
 public class SingularityDisabledAuthDatastore implements SingularityAuthDatastore {
@@ -17,7 +17,7 @@ public class SingularityDisabledAuthDatastore implements SingularityAuthDatastor
   }
 
   @Override
-  public com.google.common.base.Optional<Boolean> isHealthy() {
-    return com.google.common.base.Optional.absent();
+  public Optional<Boolean> isHealthy() {
+    return Optional.empty();
   }
 }

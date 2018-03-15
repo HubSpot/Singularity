@@ -7,6 +7,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.apache.curator.framework.CuratorFramework;
@@ -20,10 +21,8 @@ import org.slf4j.LoggerFactory;
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.annotation.Timed;
 import com.google.common.base.Function;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
-import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
@@ -32,29 +31,29 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import com.hubspot.mesos.JavaUtils;
-import com.hubspot.singularity.ExtendedTaskState;
-import com.hubspot.singularity.LoadBalancerRequestType;
-import com.hubspot.singularity.SingularityCreateResult;
-import com.hubspot.singularity.SingularityDeleteResult;
-import com.hubspot.singularity.SingularityKilledTaskIdRecord;
-import com.hubspot.singularity.SingularityLoadBalancerUpdate;
 import com.hubspot.singularity.SingularityMainModule;
-import com.hubspot.singularity.SingularityPendingTask;
-import com.hubspot.singularity.SingularityPendingTaskId;
-import com.hubspot.singularity.SingularitySlave;
-import com.hubspot.singularity.SingularityTask;
-import com.hubspot.singularity.SingularityTaskCleanup;
-import com.hubspot.singularity.SingularityTaskHealthcheckResult;
-import com.hubspot.singularity.SingularityTaskHistory;
-import com.hubspot.singularity.SingularityTaskHistoryUpdate;
-import com.hubspot.singularity.SingularityTaskId;
-import com.hubspot.singularity.SingularityTaskIdHolder;
-import com.hubspot.singularity.SingularityTaskMetadata;
-import com.hubspot.singularity.SingularityTaskShellCommandHistory;
-import com.hubspot.singularity.SingularityTaskShellCommandRequest;
-import com.hubspot.singularity.SingularityTaskShellCommandRequestId;
-import com.hubspot.singularity.SingularityTaskShellCommandUpdate;
-import com.hubspot.singularity.SingularityTaskStatusHolder;
+import com.hubspot.singularity.api.common.LoadBalancerRequestType;
+import com.hubspot.singularity.api.common.SingularityCreateResult;
+import com.hubspot.singularity.api.common.SingularityDeleteResult;
+import com.hubspot.singularity.api.common.SingularityLoadBalancerUpdate;
+import com.hubspot.singularity.api.machines.SingularitySlave;
+import com.hubspot.singularity.api.task.ExtendedTaskState;
+import com.hubspot.singularity.api.task.SingularityKilledTaskIdRecord;
+import com.hubspot.singularity.api.task.SingularityPendingTask;
+import com.hubspot.singularity.api.task.SingularityPendingTaskId;
+import com.hubspot.singularity.api.task.SingularityTask;
+import com.hubspot.singularity.api.task.SingularityTaskCleanup;
+import com.hubspot.singularity.api.task.SingularityTaskHealthcheckResult;
+import com.hubspot.singularity.api.task.SingularityTaskHistory;
+import com.hubspot.singularity.api.task.SingularityTaskHistoryUpdate;
+import com.hubspot.singularity.api.task.SingularityTaskId;
+import com.hubspot.singularity.api.task.SingularityTaskIdHolder;
+import com.hubspot.singularity.api.task.SingularityTaskMetadata;
+import com.hubspot.singularity.api.task.SingularityTaskShellCommandHistory;
+import com.hubspot.singularity.api.task.SingularityTaskShellCommandRequest;
+import com.hubspot.singularity.api.task.SingularityTaskShellCommandRequestId;
+import com.hubspot.singularity.api.task.SingularityTaskShellCommandUpdate;
+import com.hubspot.singularity.api.task.SingularityTaskStatusHolder;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.transcoders.IdTranscoder;
 import com.hubspot.singularity.data.transcoders.StringTranscoder;
@@ -554,7 +553,7 @@ public class TaskManager extends CuratorAsyncManager {
 
     List<SingularityTaskHealthcheckResult> healthcheckResults = getAsync("getLastHealthcheck", paths, healthcheckResultTranscoder);
 
-    return Maps.uniqueIndex(healthcheckResults, SingularityTaskIdHolder.getTaskIdFunction());
+    return Maps.uniqueIndex(healthcheckResults, SingularityTaskIdHolder::getTaskId);
   }
 
   public SingularityCreateResult saveTaskHistoryUpdate(SingularityTaskHistoryUpdate taskHistoryUpdate) {
@@ -625,7 +624,7 @@ public class TaskManager extends CuratorAsyncManager {
         return Optional.of(entry.getKey());
       }
     }
-    return Optional.absent();
+    return Optional.empty();
   }
 
   private enum TaskFilter {
@@ -727,7 +726,7 @@ public class TaskManager extends CuratorAsyncManager {
     final Optional<SingularityTask> task = getTaskCheckCache(taskId, true);
 
     if (!task.isPresent()) {
-      return Optional.absent();
+      return Optional.empty();
     }
 
     List<SingularityTaskHistoryUpdate> taskUpdates = getTaskHistoryUpdates(taskId);
@@ -777,7 +776,7 @@ public class TaskManager extends CuratorAsyncManager {
   }
 
   public void saveNotifiedOverdue(SingularityTaskId taskId) {
-    save(getNotifiedOverduePath(taskId), Optional.<byte[]> absent());
+    save(getNotifiedOverduePath(taskId), Optional.empty());
   }
 
   public Optional<SingularityLoadBalancerUpdate> getLoadBalancerState(SingularityTaskId taskId, LoadBalancerRequestType requestType) {
@@ -876,7 +875,7 @@ public class TaskManager extends CuratorAsyncManager {
     try {
       createTaskAndDeletePendingTaskPrivate(task);
     } catch (Throwable t) {
-      throw Throwables.propagate(t);
+      throw new RuntimeException(t);
     }
   }
 
@@ -887,7 +886,7 @@ public class TaskManager extends CuratorAsyncManager {
       paths.add(getTaskPath(taskId));
     }
 
-    return Maps.uniqueIndex(getAsync("getTasks", paths, taskTranscoder, taskCache), SingularityTaskIdHolder.getTaskIdFunction());
+    return Maps.uniqueIndex(getAsync("getTasks", paths, taskTranscoder, taskCache), SingularityTaskIdHolder::getTaskId);
   }
 
   private void createTaskAndDeletePendingTaskPrivate(SingularityTask task) throws Exception {
@@ -906,8 +905,8 @@ public class TaskManager extends CuratorAsyncManager {
       msg = String.format("%s (%s)", msg, task.getTaskRequest().getPendingTask().getMessage().get());
     }
 
-    saveTaskHistoryUpdate(new SingularityTaskHistoryUpdate(task.getTaskId(), now, ExtendedTaskState.TASK_LAUNCHED, Optional.of(msg), Optional.<String>absent()));
-    saveLastActiveTaskStatus(new SingularityTaskStatusHolder(task.getTaskId(), Optional.absent(), now, serverId, Optional.of(task.getAgentId().getValue())));
+    saveTaskHistoryUpdate(new SingularityTaskHistoryUpdate(task.getTaskId(), now, ExtendedTaskState.TASK_LAUNCHED, Optional.of(msg), Optional.empty(), Collections.emptyList()));
+    saveLastActiveTaskStatus(new SingularityTaskStatusHolder(task.getTaskId(), Optional.empty(), now, serverId, Optional.of(task.getAgentId().getValue())));
 
     try {
       final String path = getTaskPath(task.getTaskId());
@@ -982,7 +981,7 @@ public class TaskManager extends CuratorAsyncManager {
   }
 
   public SingularityCreateResult saveTaskFinishedInMailQueue(SingularityTaskId taskId) {
-    return save(getFinishedTaskMailQueuePath(taskId), Optional.<byte[]>absent());
+    return save(getFinishedTaskMailQueuePath(taskId), Optional.empty());
   }
 
   public List<SingularityTaskId> getTaskFinishedMailQueue() {
@@ -1048,7 +1047,7 @@ public class TaskManager extends CuratorAsyncManager {
       msg.append(cleanup.getMessage().get());
     }
 
-    saveTaskHistoryUpdate(new SingularityTaskHistoryUpdate(cleanup.getTaskId(), cleanup.getTimestamp(), ExtendedTaskState.TASK_CLEANING, Optional.of(msg.toString()), Optional.<String>absent()), true);
+    saveTaskHistoryUpdate(new SingularityTaskHistoryUpdate(cleanup.getTaskId(), cleanup.getTimestamp(), ExtendedTaskState.TASK_CLEANING, Optional.of(msg.toString()), Optional.empty(), Collections.emptyList()), true);
   }
 
   public SingularityCreateResult createTaskCleanup(SingularityTaskCleanup cleanup) {

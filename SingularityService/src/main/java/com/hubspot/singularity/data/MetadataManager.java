@@ -3,17 +3,17 @@ package com.hubspot.singularity.data;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.utils.ZKPaths;
 import org.apache.zookeeper.data.Stat;
 
 import com.codahale.metrics.MetricRegistry;
-import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import com.hubspot.singularity.SingularityEmailType;
-import com.hubspot.singularity.SingularityRequest;
+import com.hubspot.singularity.api.common.SingularityEmailType;
+import com.hubspot.singularity.api.request.SingularityRequest;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.transcoders.StringTranscoder;
 

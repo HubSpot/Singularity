@@ -1,8 +1,7 @@
 package com.hubspot.singularity.config;
 
 import java.util.List;
-
-import com.google.common.base.Optional;
+import java.util.Optional;
 
 public class SingularityTaskMetadataConfiguration {
 
@@ -10,9 +9,9 @@ public class SingularityTaskMetadataConfiguration {
 
   private long waitToSendTaskCompletedMailBufferMillis = 0;
 
-  private Optional<List<String>> allowedMetadataTypes = Optional.absent();
+  private Optional<List<String>> allowedMetadataTypes = Optional.empty();
 
-  private Optional<String> sendTaskCompletedMailOnceMetadataTypeIsAvailable = Optional.absent();
+  private Optional<String> sendTaskCompletedMailOnceMetadataTypeIsAvailable = Optional.empty();
 
   private long maxMetadataMessageLength = 10000;
 

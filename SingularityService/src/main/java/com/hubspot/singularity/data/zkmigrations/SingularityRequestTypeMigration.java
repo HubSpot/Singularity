@@ -2,6 +2,7 @@ package com.hubspot.singularity.data.zkmigrations;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 import org.apache.curator.framework.CuratorFramework;
 import org.slf4j.Logger;
@@ -13,12 +14,10 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Optional;
-import com.google.common.base.Throwables;
 import com.google.inject.Inject;
 import com.hubspot.mesos.JavaUtils;
-import com.hubspot.singularity.RequestState;
-import com.hubspot.singularity.RequestType;
+import com.hubspot.singularity.api.request.RequestState;
+import com.hubspot.singularity.api.request.RequestType;
 import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.data.transcoders.JsonTranscoder;
 import com.hubspot.singularity.data.transcoders.Transcoder;
@@ -61,7 +60,7 @@ public class SingularityRequestTypeMigration extends ZkDataMigration {
                 num++;
             } catch (Throwable t) {
                 LOG.error("Failed to read {}", requestId, t);
-                throw Throwables.propagate(t);
+                throw new RuntimeException(t);
             }
         }
 
@@ -90,8 +89,8 @@ public class SingularityRequestTypeMigration extends ZkDataMigration {
             this.schedule = schedule;
             this.daemon = daemon;
             this.loadBalanced = loadBalanced;
-            this.originalRequestType = originalRequestType == null ? Optional.<RequestType>absent() : originalRequestType;
-            this.requestType = this.originalRequestType.or(RequestType.fromDaemonAndScheduleAndLoadBalanced(schedule, daemon, loadBalanced));
+            this.originalRequestType = originalRequestType == null ? Optional.empty() : originalRequestType;
+            this.requestType = this.originalRequestType.orElse(RequestType.fromDaemonAndScheduleAndLoadBalanced(schedule, daemon, loadBalanced));
         }
 
         @JsonAnySetter

@@ -5,20 +5,20 @@ import static org.mockito.Mockito.*;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 import org.junit.Assert;
 import org.junit.Test;
 import org.mockito.ArgumentMatchers;
 
-import com.google.common.base.Optional;
 import com.google.inject.Inject;
-import com.hubspot.singularity.OrderDirection;
-import com.hubspot.singularity.RequestType;
-import com.hubspot.singularity.SingularityRequest;
-import com.hubspot.singularity.SingularityRequestBuilder;
-import com.hubspot.singularity.SingularityRequestHistory;
-import com.hubspot.singularity.SingularityRequestHistory.RequestHistoryType;
 import com.hubspot.singularity.SingularityTestBaseNoDb;
+import com.hubspot.singularity.api.common.OrderDirection;
+import com.hubspot.singularity.api.request.RequestType;
+import com.hubspot.singularity.api.request.SingularityRequest;
+import com.hubspot.singularity.api.request.SingularityRequestBuilder;
+import com.hubspot.singularity.api.request.SingularityRequestHistory;
+import com.hubspot.singularity.api.request.SingularityRequestHistory.RequestHistoryType;
 import com.hubspot.singularity.data.history.HistoryManager;
 import com.hubspot.singularity.data.history.RequestHistoryHelper;
 
@@ -38,7 +38,7 @@ public class BlendedHistoryTest extends SingularityTestBaseNoDb {
   }
 
   private SingularityRequestHistory makeHistory(long createdAt, RequestHistoryType type) {
-    return new SingularityRequestHistory(createdAt, Optional.<String> absent(), type, request, Optional.<String> absent());
+    return new SingularityRequestHistory(createdAt, Optional.empty(), type, request, Optional.empty());
   }
 
   // DESCENDING

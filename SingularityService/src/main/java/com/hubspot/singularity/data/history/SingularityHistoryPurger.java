@@ -2,6 +2,7 @@ package com.hubspot.singularity.data.history;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 import javax.inject.Singleton;
@@ -9,10 +10,8 @@ import javax.inject.Singleton;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.hubspot.mesos.JavaUtils;
-import com.hubspot.singularity.ExtendedTaskState;
 import com.hubspot.singularity.config.HistoryPurgeRequestSettings;
 import com.hubspot.singularity.config.HistoryPurgingConfiguration;
 import com.hubspot.singularity.data.DeployManager;
@@ -79,7 +78,7 @@ public class SingularityHistoryPurger extends SingularityLeaderOnlyPoller {
   }
 
   private void purge(String requestId, long start, Optional<Integer> afterTasksPerRequest, Optional<Integer> afterDays, boolean deleteRow) {
-    Optional<Date> purgeBefore = Optional.absent();
+    Optional<Date> purgeBefore = Optional.empty();
     Date checkBefore = new Date();
 
     if (afterDays.isPresent()) {
@@ -94,7 +93,7 @@ public class SingularityHistoryPurger extends SingularityLeaderOnlyPoller {
 
     int unpurgedCount;
     if (deleteRow) {
-      unpurgedCount = historyManager.getTaskIdHistoryCount(Optional.of(requestId), Optional.<String>absent(), Optional.<String>absent(), Optional.<String>absent(), Optional.<ExtendedTaskState>absent(), Optional.<Long>absent(), Optional.<Long>absent(), Optional.<Long>absent(), Optional.<Long>absent());
+      unpurgedCount = historyManager.getTaskIdHistoryCount(Optional.of(requestId), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty());
     } else {
       unpurgedCount = historyManager.getUnpurgedTaskHistoryCountByRequestBefore(requestId, checkBefore);
     }

@@ -12,7 +12,6 @@ import javax.servlet.ServletContext;
 
 import org.eclipse.jetty.servlets.CrossOriginFilter;
 
-import com.google.common.base.Throwables;
 import com.google.common.collect.Iterators;
 import com.hubspot.singularity.config.CorsConfiguration;
 import com.hubspot.singularity.config.SingularityConfiguration;
@@ -65,7 +64,7 @@ public class CorsBundle implements ConfiguredBundle<SingularityConfiguration> {
     try {
       corsFilter.init(corsFilterConfig);
     } catch (final Exception e) {
-      throw Throwables.propagate(e);
+      throw new RuntimeException(e);
     }
 
     FilterRegistration.Dynamic filter = environment.servlets().addFilter(FILTER_NAME, corsFilter);

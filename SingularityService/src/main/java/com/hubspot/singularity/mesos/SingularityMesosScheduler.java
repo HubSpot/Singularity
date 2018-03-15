@@ -1,6 +1,7 @@
 package com.hubspot.singularity.mesos;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 import org.apache.mesos.v1.Protos.AgentID;
@@ -12,10 +13,9 @@ import org.apache.mesos.v1.Protos.TaskStatus;
 import org.apache.mesos.v1.scheduler.Protos;
 import org.apache.mesos.v1.scheduler.Protos.Event;
 
-import com.google.common.base.Optional;
-import com.hubspot.singularity.RequestCleanupType;
-import com.hubspot.singularity.SingularityTaskId;
-import com.hubspot.singularity.TaskCleanupType;
+import com.hubspot.singularity.api.request.RequestCleanupType;
+import com.hubspot.singularity.api.task.SingularityTaskId;
+import com.hubspot.singularity.api.task.TaskCleanupType;
 
 public abstract class SingularityMesosScheduler {
 
@@ -163,11 +163,11 @@ public abstract class SingularityMesosScheduler {
   public abstract void killAndRecord(SingularityTaskId taskId, Optional<RequestCleanupType> requestCleanupType, Optional<TaskCleanupType> taskCleanupType, Optional<Long> originalTimestamp, Optional<Integer> retries, Optional<String> user);
 
   public void killAndRecord(SingularityTaskId taskId, RequestCleanupType requestCleanupType, Optional<String> user) {
-    killAndRecord(taskId, Optional.of(requestCleanupType), Optional.absent(), Optional.absent(), Optional.absent(), user);
+    killAndRecord(taskId, Optional.of(requestCleanupType), Optional.empty(), Optional.empty(), Optional.empty(), user);
   }
 
   public void killAndRecord(SingularityTaskId taskId, TaskCleanupType taskCleanupType, Optional<String> user) {
-    killAndRecord(taskId, Optional.absent(), Optional.of(taskCleanupType), Optional.absent(), Optional.absent(), user);
+    killAndRecord(taskId, Optional.empty(), Optional.of(taskCleanupType), Optional.empty(), Optional.empty(), user);
   }
 
   public abstract Optional<Long> getLastOfferTimestamp();

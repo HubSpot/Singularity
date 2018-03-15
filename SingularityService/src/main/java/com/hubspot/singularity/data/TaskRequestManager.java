@@ -2,24 +2,24 @@ package com.hubspot.singularity.data;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Optional;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import com.hubspot.singularity.SingularityDeploy;
-import com.hubspot.singularity.SingularityDeployKey;
-import com.hubspot.singularity.SingularityPendingDeploy;
-import com.hubspot.singularity.SingularityPendingTask;
-import com.hubspot.singularity.SingularityRequest;
-import com.hubspot.singularity.SingularityRequestWithState;
-import com.hubspot.singularity.SingularityTaskRequest;
+import com.hubspot.singularity.api.deploy.SingularityDeploy;
+import com.hubspot.singularity.api.deploy.SingularityDeployKey;
+import com.hubspot.singularity.api.request.SingularityPendingDeploy;
+import com.hubspot.singularity.api.request.SingularityRequest;
+import com.hubspot.singularity.api.request.SingularityRequestWithState;
+import com.hubspot.singularity.api.task.SingularityPendingTask;
+import com.hubspot.singularity.api.task.SingularityTaskRequest;
 
 @Singleton
 public class TaskRequestManager {
@@ -64,9 +64,9 @@ public class TaskRequestManager {
           continue;
         }
 
-        Optional<SingularityRequest> updatedRequest = maybePendingDeploy.isPresent() && maybePendingDeploy.get().getDeployMarker().getDeployId().equals(task.getPendingTaskId().getDeployId()) ? maybePendingDeploy.get().getUpdatedRequest() : Optional.<SingularityRequest>absent();
+        Optional<SingularityRequest> updatedRequest = maybePendingDeploy.isPresent() && maybePendingDeploy.get().getDeployMarker().getDeployId().equals(task.getPendingTaskId().getDeployId()) ? maybePendingDeploy.get().getUpdatedRequest() : Optional.empty();
 
-        taskRequests.add(new SingularityTaskRequest(updatedRequest.or(request.getRequest()), foundDeploy, task));
+        taskRequests.add(new SingularityTaskRequest(updatedRequest.orElse(request.getRequest()), foundDeploy, task));
       }
     }
 

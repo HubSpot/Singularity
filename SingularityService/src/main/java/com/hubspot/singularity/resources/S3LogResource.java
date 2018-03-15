@@ -13,6 +13,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
@@ -23,6 +24,7 @@ import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.ws.rs.Consumes;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -42,9 +44,7 @@ import com.amazonaws.services.s3.model.ListObjectsV2Request;
 import com.amazonaws.services.s3.model.ListObjectsV2Result;
 import com.amazonaws.services.s3.model.ResponseHeaderOverrides;
 import com.amazonaws.services.s3.model.S3ObjectSummary;
-import com.google.common.base.Optional;
 import com.google.common.base.Strings;
-import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
@@ -56,24 +56,24 @@ import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Inject;
 import com.hubspot.mesos.JavaUtils;
-import com.hubspot.singularity.SingularityAuthorizationScope;
-import com.hubspot.singularity.SingularityDeployHistory;
-import com.hubspot.singularity.SingularityRequest;
-import com.hubspot.singularity.SingularityRequestHistory;
-import com.hubspot.singularity.SingularityRequestHistory.RequestHistoryType;
-import com.hubspot.singularity.SingularityRequestWithState;
-import com.hubspot.singularity.SingularityS3FormatHelper;
-import com.hubspot.singularity.SingularityS3Log;
-import com.hubspot.singularity.SingularityS3LogMetadata;
-import com.hubspot.singularity.SingularityS3UploaderFile;
-import com.hubspot.singularity.SingularityTaskHistory;
-import com.hubspot.singularity.SingularityTaskHistoryUpdate;
-import com.hubspot.singularity.SingularityTaskHistoryUpdate.SimplifiedTaskState;
-import com.hubspot.singularity.SingularityTaskId;
-import com.hubspot.singularity.SingularityUser;
-import com.hubspot.singularity.api.ContinuationToken;
-import com.hubspot.singularity.api.SingularityS3SearchRequest;
-import com.hubspot.singularity.api.SingularityS3SearchResult;
+import com.hubspot.singularity.api.auth.SingularityAuthorizationScope;
+import com.hubspot.singularity.api.auth.SingularityUser;
+import com.hubspot.singularity.api.deploy.SingularityDeployHistory;
+import com.hubspot.singularity.api.logs.ContinuationToken;
+import com.hubspot.singularity.api.logs.SingularityS3FormatHelper;
+import com.hubspot.singularity.api.logs.SingularityS3Log;
+import com.hubspot.singularity.api.logs.SingularityS3LogMetadata;
+import com.hubspot.singularity.api.logs.SingularityS3SearchRequest;
+import com.hubspot.singularity.api.logs.SingularityS3SearchResult;
+import com.hubspot.singularity.api.logs.SingularityS3UploaderFile;
+import com.hubspot.singularity.api.request.SingularityRequest;
+import com.hubspot.singularity.api.request.SingularityRequestHistory;
+import com.hubspot.singularity.api.request.SingularityRequestHistory.RequestHistoryType;
+import com.hubspot.singularity.api.request.SingularityRequestWithState;
+import com.hubspot.singularity.api.task.SimplifiedTaskState;
+import com.hubspot.singularity.api.task.SingularityTaskHistory;
+import com.hubspot.singularity.api.task.SingularityTaskHistoryUpdate;
+import com.hubspot.singularity.api.task.SingularityTaskId;
 import com.hubspot.singularity.auth.SingularityAuthorizationHelper;
 import com.hubspot.singularity.config.ApiPaths;
 import com.hubspot.singularity.config.S3Configuration;
@@ -85,15 +85,22 @@ import com.hubspot.singularity.data.history.RequestHistoryHelper;
 import com.hubspot.singularity.helpers.S3ObjectSummaryHolder;
 import com.hubspot.singularity.helpers.SingularityS3Service;
 import com.hubspot.singularity.helpers.SingularityS3Services;
-import com.wordnik.swagger.annotations.Api;
-import com.wordnik.swagger.annotations.ApiOperation;
-import com.wordnik.swagger.annotations.ApiParam;
 
 import io.dropwizard.auth.Auth;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.parameters.RequestBody;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.tags.Tags;
 
 @Path(ApiPaths.S3_LOG_RESOURCE_PATH)
 @Produces({ MediaType.APPLICATION_JSON })
-@Api(description="Manages Singularity task logs stored in S3.", value=ApiPaths.S3_LOG_RESOURCE_PATH)
+@Schema(title = "Manage Singularity task logs stored in S3")
+@Tags({@Tag(name = "S3 Logs")})
 public class S3LogResource extends AbstractHistoryResource {
   private static final Logger LOG = LoggerFactory.getLogger(S3LogResource.class);
   private static final String CONTENT_DISPOSITION_DOWNLOAD_HEADER = "attachment";
@@ -150,7 +157,7 @@ public class S3LogResource extends AbstractHistoryResource {
       end = Math.min(endArg.get(), end);
     }
 
-    Optional<String> tag = Optional.absent();
+    Optional<String> tag = Optional.empty();
     if (history.isPresent() && history.get().getTask().getTaskRequest().getDeploy().getExecutorData().isPresent()) {
       tag = history.get().getTask().getTaskRequest().getDeploy().getExecutorData().get().getLoggingTag();
     }
@@ -168,7 +175,7 @@ public class S3LogResource extends AbstractHistoryResource {
   }
 
   private boolean isCurrentDeploy(String requestId, String deployId) {
-    return deployId.equals(deployManager.getInUseDeployId(requestId).orNull());
+    return deployId.equals(deployManager.getInUseDeployId(requestId).orElse(null));
   }
 
   private Collection<String> getS3PrefixesForRequest(S3Configuration s3Configuration, String requestId, Optional<Long> startArg, Optional<Long> endArg, String group) {
@@ -223,7 +230,7 @@ public class S3LogResource extends AbstractHistoryResource {
       end = Math.min(endArg.get(), end);
     }
 
-    Optional<String> tag = Optional.absent();
+    Optional<String> tag = Optional.empty();
 
     if (deployHistory.getDeploy().isPresent() && deployHistory.getDeploy().get().getExecutorData().isPresent()) {
       tag = deployHistory.getDeploy().get().getExecutorData().get().getLoggingTag();
@@ -247,7 +254,7 @@ public class S3LogResource extends AbstractHistoryResource {
     if (!search.getTaskIds().isEmpty()) {
       for (String taskId : search.getTaskIds()) {
         SingularityTaskId taskIdObject = getTaskIdObject(taskId);
-        String group = getRequestGroupForTask(taskIdObject, user).or(SingularityS3FormatHelper.DEFAULT_GROUP_NAME);
+        String group = getRequestGroupForTask(taskIdObject, user).orElse(SingularityS3FormatHelper.DEFAULT_GROUP_NAME);
         Set<String> s3Buckets = getBuckets(group);
         Collection<String> prefixes = getS3PrefixesForTask(configuration.get(), taskIdObject, search.getStart(), search.getEnd(), group, user);
         for (String s3Bucket : s3Buckets) {
@@ -261,7 +268,7 @@ public class S3LogResource extends AbstractHistoryResource {
     }
     if (!search.getRequestsAndDeploys().isEmpty()) {
       for (Map.Entry<String, List<String>> entry : search.getRequestsAndDeploys().entrySet()) {
-        String group = getRequestGroup(entry.getKey(), user).or(SingularityS3FormatHelper.DEFAULT_GROUP_NAME);
+        String group = getRequestGroup(entry.getKey(), user).orElse(SingularityS3FormatHelper.DEFAULT_GROUP_NAME);
         Set<String> s3Buckets = getBuckets(group);
         List<String> prefixes = new ArrayList<>();
         if (!entry.getValue().isEmpty()) {
@@ -343,12 +350,12 @@ public class S3LogResource extends AbstractHistoryResource {
           public List<S3ObjectSummaryHolder> call() throws Exception {
             ListObjectsV2Request request = new ListObjectsV2Request().withBucketName(s3Bucket).withPrefix(s3Prefix);
             if (paginated) {
-              Optional<ContinuationToken> token = Optional.absent();
+              Optional<ContinuationToken> token = Optional.empty();
               if (search.getContinuationTokens().containsKey(key) && !Strings.isNullOrEmpty(search.getContinuationTokens().get(key).getValue())) {
                 request.setContinuationToken(search.getContinuationTokens().get(key).getValue());
                 token = Optional.of(search.getContinuationTokens().get(key));
               }
-              int targetResultCount = search.getMaxPerPage().or(DEFAULT_TARGET_MAX_RESULTS);
+              int targetResultCount = search.getMaxPerPage().orElse(DEFAULT_TARGET_MAX_RESULTS);
               request.setMaxKeys(targetResultCount);
               if (resultCount.get() < targetResultCount) {
                 ListObjectsV2Result result = s3Client.listObjectsV2(request);
@@ -365,12 +372,12 @@ public class S3LogResource extends AbstractHistoryResource {
                     }
                     return objectSummaryHolders;
                   } else {
-                    continuationTokens.putIfAbsent(key, token.or(new ContinuationToken(null, false)));
+                    continuationTokens.putIfAbsent(key, token.orElse(new ContinuationToken(null, false)));
                     return Collections.emptyList();
                   }
                 }
               } else {
-                continuationTokens.putIfAbsent(key, token.or(new ContinuationToken(null, false)));
+                continuationTokens.putIfAbsent(key, token.orElse(new ContinuationToken(null, false)));
                 return Collections.emptyList();
               }
             } else {
@@ -409,8 +416,8 @@ public class S3LogResource extends AbstractHistoryResource {
       logFutures.add(executorService.submit(new Callable<SingularityS3LogMetadata>() {
         @Override
         public SingularityS3LogMetadata call() throws Exception {
-          Optional<Long> maybeStartTime = Optional.absent();
-          Optional<Long> maybeEndTime = Optional.absent();
+          Optional<Long> maybeStartTime = Optional.empty();
+          Optional<Long> maybeEndTime = Optional.empty();
           if (!search.isExcludeMetadata()) {
             GetObjectMetadataRequest metadataRequest = new GetObjectMetadataRequest(s3Object.getBucketName(), s3Object.getKey());
             Map<String, String> objectMetadata = s3Client.getObjectMetadata(metadataRequest).getUserMetadata();
@@ -463,10 +470,10 @@ public class S3LogResource extends AbstractHistoryResource {
         Object maybeLong = objectMetadata.get(keyName);
         return Optional.of(Long.parseLong((String) maybeLong));
       } else {
-        return Optional.absent();
+        return Optional.empty();
       }
     } catch (Exception e) {
-      return Optional.absent();
+      return Optional.empty();
     }
   }
 
@@ -527,7 +534,7 @@ public class S3LogResource extends AbstractHistoryResource {
       } else {
         // Deleted requests with no history data are searchable, but only by admins since we have no auth information about them
         authorizationHelper.checkAdminAuthorization(user);
-        return Optional.absent();
+        return Optional.empty();
       }
     }
   }
@@ -539,46 +546,72 @@ public class S3LogResource extends AbstractHistoryResource {
 
   @GET
   @Path("/task/{taskId}")
-  @ApiOperation("Retrieve the list of logs stored in S3 for a specific task.")
+  @Operation(
+      summary = "Retrieve the list of logs stored in S3 for a specific task",
+      responses = {
+          @ApiResponse(
+              responseCode = "200",
+              description = "Returns a list of metadata about log files for the specified task",
+              content = {
+                  @Content(array = @ArraySchema(schema = @Schema(implementation = SingularityS3LogMetadata.class))),
+                  @Content(array = @ArraySchema(schema = @Schema(implementation = SingularityS3Log.class)))
+              }
+          ),
+          @ApiResponse(responseCode = "404", description = "S3 configuration is not present")
+      }
+  )
   public List<SingularityS3LogMetadata> getS3LogsForTask(
-      @Auth SingularityUser user,
-      @ApiParam("The task ID to search for") @PathParam("taskId") String taskId,
-      @ApiParam("Start timestamp (millis, 13 digit)") @QueryParam("start") Optional<Long> start,
-      @ApiParam("End timestamp (mills, 13 digit)") @QueryParam("end") Optional<Long> end,
-      @ApiParam("Exclude custom object metadata") @QueryParam("excludeMetadata") boolean excludeMetadata,
-      @ApiParam("Do not generate download/get urls, only list the files and metadata") @QueryParam("list") boolean listOnly) throws Exception {
+      @Parameter(hidden = true) @Auth SingularityUser user,
+      @Parameter(required = true, description = "The task ID to search for") @PathParam("taskId") String taskId,
+      @Parameter(description = "Start timestamp (millis, 13 digit)") @QueryParam("start") Optional<Long> start,
+      @Parameter(description = "End timestamp (mills, 13 digit)") @QueryParam("end") Optional<Long> end,
+      @Parameter(description = "Exclude custom object metadata") @QueryParam("excludeMetadata") @DefaultValue ("false") boolean excludeMetadata,
+      @Parameter(description = "Do not generate download/get urls, only list the files and metadata") @QueryParam("list") @DefaultValue ("false") boolean listOnly) throws Exception {
     checkS3();
 
     final SingularityS3SearchRequest search = new SingularityS3SearchRequest(
-        Collections.<String, List<String>>emptyMap(),
+        Collections.emptyMap(),
         Collections.singletonList(taskId),
         start,
         end,
         excludeMetadata,
         listOnly,
-        Optional.<Integer>absent(),
-        Collections.<String, ContinuationToken>emptyMap());
+        Optional.empty(),
+        Collections.emptyMap());
 
     try {
       return getS3Logs(configuration.get(), getServiceToPrefixes(search, user), search, false).getResults();
     } catch (TimeoutException te) {
       throw timeout("Timed out waiting for response from S3 for %s", taskId);
     } catch (Throwable t) {
-      throw Throwables.propagate(t);
+      throw new RuntimeException(t);
     }
   }
 
   @GET
   @Path("/request/{requestId}")
-  @ApiOperation("Retrieve the list of logs stored in S3 for a specific request.")
+  @Operation(
+      summary = "Retrieve the list of logs stored in S3 for a specific request",
+      responses = {
+          @ApiResponse(
+              responseCode = "200",
+              description = "Returns a list of metadata about log files for the specified task",
+              content = {
+                  @Content(array = @ArraySchema(schema = @Schema(implementation = SingularityS3LogMetadata.class))),
+                  @Content(array = @ArraySchema(schema = @Schema(implementation = SingularityS3Log.class)))
+              }
+          ),
+          @ApiResponse(responseCode = "404", description = "S3 configuration is not present")
+      }
+  )
   public List<SingularityS3LogMetadata> getS3LogsForRequest(
-      @Auth SingularityUser user,
-      @ApiParam("The request ID to search for") @PathParam("requestId") String requestId,
-      @ApiParam("Start timestamp (millis, 13 digit)") @QueryParam("start") Optional<Long> start,
-      @ApiParam("End timestamp (mills, 13 digit)") @QueryParam("end") Optional<Long> end,
-      @ApiParam("Exclude custom object metadata") @QueryParam("excludeMetadata") boolean excludeMetadata,
-      @ApiParam("Do not generate download/get urls, only list the files and metadata") @QueryParam("list") boolean listOnly,
-      @ApiParam("Max number of results to return per bucket searched") @QueryParam("maxPerPage") Optional<Integer> maxPerPage) throws Exception {
+      @Parameter(hidden = true) @Auth SingularityUser user,
+      @Parameter(required = true, description = "The request ID to search for") @PathParam("requestId") String requestId,
+      @Parameter(description = "Start timestamp (millis, 13 digit)") @QueryParam("start") Optional<Long> start,
+      @Parameter(description = "End timestamp (mills, 13 digit)") @QueryParam("end") Optional<Long> end,
+      @Parameter(description = "Exclude custom object metadata") @QueryParam("excludeMetadata") @DefaultValue ("false") boolean excludeMetadata,
+      @Parameter(description = "Do not generate download/get urls, only list the files and metadata") @QueryParam("list") @DefaultValue ("false") boolean listOnly,
+      @Parameter(description = "Max number of results to return per bucket searched") @QueryParam("maxPerPage") Optional<Integer> maxPerPage) throws Exception {
     checkS3();
 
     try {
@@ -589,29 +622,42 @@ public class S3LogResource extends AbstractHistoryResource {
           end,
           excludeMetadata,
           listOnly,
-          Optional.<Integer>absent(),
+          Optional.empty(),
           Collections.<String, ContinuationToken>emptyMap());
 
       return getS3Logs(configuration.get(), getServiceToPrefixes(search, user), search, false).getResults();
     } catch (TimeoutException te) {
       throw timeout("Timed out waiting for response from S3 for %s", requestId);
     } catch (Throwable t) {
-      throw Throwables.propagate(t);
+      throw new RuntimeException(t);
     }
   }
 
   @GET
   @Path("/request/{requestId}/deploy/{deployId}")
-  @ApiOperation("Retrieve the list of logs stored in S3 for a specific deploy.")
+  @Operation(
+      summary = "Retrieve the list of logs stored in S3 for a specific deploy",
+      responses = {
+          @ApiResponse(
+              responseCode = "200",
+              description = "Returns a list of metadata about log files for the specified task",
+              content = {
+                  @Content(array = @ArraySchema(schema = @Schema(implementation = SingularityS3LogMetadata.class))),
+                  @Content(array = @ArraySchema(schema = @Schema(implementation = SingularityS3Log.class)))
+              }
+          ),
+          @ApiResponse(responseCode = "404", description = "S3 configuration is not present")
+      }
+  )
   public List<SingularityS3LogMetadata> getS3LogsForDeploy(
-      @Auth SingularityUser user,
-      @ApiParam("The request ID to search for") @PathParam("requestId") String requestId,
-      @ApiParam("The deploy ID to search for") @PathParam("deployId") String deployId,
-      @ApiParam("Start timestamp (millis, 13 digit)") @QueryParam("start") Optional<Long> start,
-      @ApiParam("End timestamp (mills, 13 digit)") @QueryParam("end") Optional<Long> end,
-      @ApiParam("Exclude custom object metadata") @QueryParam("excludeMetadata") boolean excludeMetadata,
-      @ApiParam("Do not generate download/get urls, only list the files and metadata") @QueryParam("list") boolean listOnly,
-      @ApiParam("Max number of results to return per bucket searched") @QueryParam("maxPerPage") Optional<Integer> maxPerPage) throws Exception {
+      @Parameter(hidden = true) @Auth SingularityUser user,
+      @Parameter(required = true, description = "The request ID to search for") @PathParam("requestId") String requestId,
+      @Parameter(required = true, description = "The deploy ID to search for") @PathParam("deployId") String deployId,
+      @Parameter(description = "Start timestamp (millis, 13 digit)") @QueryParam("start") Optional<Long> start,
+      @Parameter(description = "End timestamp (mills, 13 digit)") @QueryParam("end") Optional<Long> end,
+      @Parameter(description = "Exclude custom object metadata") @QueryParam("excludeMetadata") @DefaultValue ("false") boolean excludeMetadata,
+      @Parameter(description = "Do not generate download/get urls, only list the files and metadata") @QueryParam("list") @DefaultValue ("false") boolean listOnly,
+      @Parameter(description = "Max number of results to return per bucket searched") @QueryParam("maxPerPage") Optional<Integer> maxPerPage) throws Exception {
     checkS3();
 
     try {
@@ -622,22 +668,38 @@ public class S3LogResource extends AbstractHistoryResource {
           end,
           excludeMetadata,
           listOnly,
-          Optional.<Integer>absent(),
+          Optional.empty(),
           Collections.<String, ContinuationToken>emptyMap());
 
       return getS3Logs(configuration.get(), getServiceToPrefixes(search, user), search, false).getResults();
     } catch (TimeoutException te) {
       throw timeout("Timed out waiting for response from S3 for %s-%s", requestId, deployId);
     } catch (Throwable t) {
-      throw Throwables.propagate(t);
+      throw new RuntimeException(t);
     }
   }
 
   @POST
   @Path("/search")
   @Consumes(MediaType.APPLICATION_JSON)
-  @ApiOperation("Retrieve a paginated list of logs stored in S3")
-  public SingularityS3SearchResult getPaginatedS3Logs(@Auth SingularityUser user, @ApiParam(required = true) SingularityS3SearchRequest search) throws Exception {
+  @Operation(
+      summary = "Retrieve a paginated list of logs stored in S3",
+      responses = {
+          @ApiResponse(
+              responseCode = "200",
+              description = "Returns a list of metadata about log files for the specified task",
+              content = {
+                  @Content(array = @ArraySchema(schema = @Schema(implementation = SingularityS3LogMetadata.class))),
+                  @Content(array = @ArraySchema(schema = @Schema(implementation = SingularityS3Log.class)))
+              }
+          ),
+          @ApiResponse(responseCode = "404", description = "S3 configuration is not present"),
+          @ApiResponse(responseCode = "400", description = "Missing required data for search")
+      }
+  )
+  public SingularityS3SearchResult getPaginatedS3Logs(
+      @Parameter(hidden = true) @Auth SingularityUser user,
+      @RequestBody(required = true) SingularityS3SearchRequest search) throws Exception {
     checkS3();
 
     checkBadRequest(!search.getRequestsAndDeploys().isEmpty() || !search.getTaskIds().isEmpty(), "Must specify at least one request or task to search");
@@ -647,7 +709,7 @@ public class S3LogResource extends AbstractHistoryResource {
     } catch (TimeoutException te) {
       throw timeout("Timed out waiting for response from S3 for %s", search);
     } catch (Throwable t) {
-      throw Throwables.propagate(t);
+      throw new RuntimeException(t);
     }
   }
 }

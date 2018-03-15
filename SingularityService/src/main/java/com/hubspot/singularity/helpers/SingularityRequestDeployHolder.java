@@ -1,7 +1,8 @@
 package com.hubspot.singularity.helpers;
 
-import com.google.common.base.Optional;
-import com.hubspot.singularity.SingularityDeploy;
+import java.util.Optional;
+
+import com.hubspot.singularity.api.deploy.SingularityDeploy;
 
 public class SingularityRequestDeployHolder {
 

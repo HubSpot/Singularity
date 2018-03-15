@@ -2,6 +2,7 @@ package com.hubspot.singularity;
 
 import java.lang.management.ManagementFactory;
 import java.lang.management.RuntimeMXBean;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.Lock;
@@ -15,14 +16,14 @@ import org.apache.mesos.v1.Protos.Offer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Optional;
 import com.google.common.net.HostAndPort;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
-import com.hubspot.singularity.helpers.MesosUtils;
 import com.hubspot.singularity.SingularityAbort.AbortReason;
+import com.hubspot.singularity.api.machines.SingularityHostState;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.StateManager;
+import com.hubspot.singularity.helpers.MesosUtils;
 import com.hubspot.singularity.mesos.OfferCache;
 import com.hubspot.singularity.mesos.SingularityMesosScheduler;
 import com.hubspot.singularity.sentry.SingularityExceptionNotifier;
@@ -118,7 +119,7 @@ public class SingularityLeaderController implements Managed, LeaderLatchListener
         LOG.error("While stopping driver", t);
         exceptionNotifier.notify(String.format("Error while stopping driver (%s)", t.getMessage()), t);
       } finally {
-        abort.abort(AbortReason.LOST_LEADERSHIP, Optional.<Throwable>absent());
+        abort.abort(AbortReason.LOST_LEADERSHIP, Optional.empty());
       }
     }
   }
@@ -131,7 +132,7 @@ public class SingularityLeaderController implements Managed, LeaderLatchListener
 
     final long now = System.currentTimeMillis();
     final Optional<Long> lastOfferTimestamp = getLastOfferTimestamp();
-    final Optional<Long> millisSinceLastOfferTimestamp = lastOfferTimestamp.isPresent() ? Optional.of(now - lastOfferTimestamp.get()) : Optional.<Long> absent();
+    final Optional<Long> millisSinceLastOfferTimestamp = lastOfferTimestamp.isPresent() ? Optional.of(now - lastOfferTimestamp.get()) : Optional.empty();
 
     String mesosMaster = null;
     Optional<MasterInfo> mesosMasterInfo = getMaster();
@@ -150,7 +151,7 @@ public class SingularityLeaderController implements Managed, LeaderLatchListener
       numCachedOffers++;
     }
 
-    return new SingularityHostState(master, uptime, scheduler.getState().name(), millisSinceLastOfferTimestamp, hostAndPort.getHostText(), hostAndPort.getHostText(), mesosMaster, scheduler.isRunning(),
+    return new SingularityHostState(master, uptime, scheduler.getState().name(), millisSinceLastOfferTimestamp, hostAndPort.getHost(), hostAndPort.getHost(), mesosMaster, scheduler.isRunning(),
        numCachedOffers, cachedCpus, cachedMemoryBytes);
   }
 

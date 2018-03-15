@@ -1,5 +1,7 @@
 package com.hubspot.singularity.mesos;
 
+import java.util.Collections;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
@@ -12,7 +14,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.codahale.metrics.Meter;
-import com.google.common.base.Optional;
 import com.google.common.base.Strings;
 import com.google.common.collect.Multiset;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
@@ -20,16 +21,15 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import com.hubspot.mesos.JavaUtils;
-import com.hubspot.singularity.ExtendedTaskState;
-import com.hubspot.singularity.InvalidSingularityTaskIdException;
-import com.hubspot.singularity.SingularityCreateResult;
 import com.hubspot.singularity.SingularityMainModule;
-import com.hubspot.singularity.SingularityPendingDeploy;
-import com.hubspot.singularity.SingularityRequestWithState;
-import com.hubspot.singularity.SingularityTask;
-import com.hubspot.singularity.SingularityTaskHistoryUpdate;
-import com.hubspot.singularity.SingularityTaskId;
-import com.hubspot.singularity.SingularityTaskStatusHolder;
+import com.hubspot.singularity.api.common.SingularityCreateResult;
+import com.hubspot.singularity.api.request.SingularityPendingDeploy;
+import com.hubspot.singularity.api.request.SingularityRequestWithState;
+import com.hubspot.singularity.api.task.ExtendedTaskState;
+import com.hubspot.singularity.api.task.SingularityTask;
+import com.hubspot.singularity.api.task.SingularityTaskHistoryUpdate;
+import com.hubspot.singularity.api.task.SingularityTaskId;
+import com.hubspot.singularity.api.task.SingularityTaskStatusHolder;
 import com.hubspot.singularity.async.AsyncSemaphore;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.DeployManager;
@@ -37,6 +37,7 @@ import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.data.transcoders.IdTranscoder;
 import com.hubspot.singularity.data.transcoders.SingularityTranscoderException;
+import com.hubspot.singularity.exceptions.InvalidSingularityTaskIdException;
 import com.hubspot.singularity.helpers.MesosProtosUtils;
 import com.hubspot.singularity.helpers.MesosUtils;
 import com.hubspot.singularity.scheduler.SingularityHealthchecker;
@@ -146,7 +147,7 @@ public class SingularityMesosStatusUpdateHandler {
     } catch (InvalidSingularityTaskIdException | SingularityTranscoderException e) {
       exceptionNotifier.notify(String.format("Unexpected taskId %s", taskId), e);
       LOG.error("Unexpected taskId {} ", taskId, e);
-      return Optional.absent();
+      return Optional.empty();
     }
   }
 
@@ -172,7 +173,7 @@ public class SingularityMesosStatusUpdateHandler {
       }
     }
 
-    return Optional.absent();
+    return Optional.empty();
   }
 
   private void unsafeProcessStatusUpdate(Protos.TaskStatus status, SingularityTaskId taskIdObj) {
@@ -190,7 +191,7 @@ public class SingularityMesosStatusUpdateHandler {
     LOG.debug("Update: task {} is now {} ({}) at {} (delta: {})", taskId, status.getState(), status.getMessage(), timestamp, JavaUtils.durationFromMillis(delta));
     statusUpdateDeltas.put(now, delta);
 
-    final SingularityTaskStatusHolder newTaskStatusHolder = new SingularityTaskStatusHolder(taskIdObj, Optional.of(mesosProtosUtils.taskStatusFromProtos(status)), System.currentTimeMillis(), serverId, Optional.<String>absent());
+    final SingularityTaskStatusHolder newTaskStatusHolder = new SingularityTaskStatusHolder(taskIdObj, Optional.of(mesosProtosUtils.taskStatusFromProtos(status)), System.currentTimeMillis(), serverId, Optional.empty());
     final Optional<SingularityTaskStatusHolder> previousTaskStatusHolder = taskManager.getLastActiveTaskStatus(taskIdObj);
     final ExtendedTaskState taskState = MesosUtils.fromTaskState(status.getState());
 
@@ -215,7 +216,7 @@ public class SingularityMesosStatusUpdateHandler {
       if (task.isPresent()) {
         final Optional<SingularityPendingDeploy> pendingDeploy = deployManager.getPendingDeploy(taskIdObj.getRequestId());
 
-        Optional<SingularityRequestWithState> requestWithState = Optional.absent();
+        Optional<SingularityRequestWithState> requestWithState = Optional.empty();
 
         if (taskState == ExtendedTaskState.TASK_RUNNING) {
           requestWithState = requestManager.getRequest(taskIdObj.getRequestId());
@@ -238,7 +239,7 @@ public class SingularityMesosStatusUpdateHandler {
     final Optional<String> statusMessage = getStatusMessage(status, task);
 
     final SingularityTaskHistoryUpdate taskUpdate =
-        new SingularityTaskHistoryUpdate(taskIdObj, timestamp, taskState, statusMessage, status.hasReason() ? Optional.of(status.getReason().name()) : Optional.<String>absent());
+        new SingularityTaskHistoryUpdate(taskIdObj, timestamp, taskState, statusMessage, status.hasReason() ? Optional.of(status.getReason().name()) : Optional.empty(), Collections.emptyList());
     final SingularityCreateResult taskHistoryUpdateCreateResult = taskManager.saveTaskHistoryUpdate(taskUpdate);
 
     logSupport.checkDirectoryAndContainerId(taskIdObj);

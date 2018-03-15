@@ -1,8 +1,8 @@
 package com.hubspot.singularity.event;
 
-import com.hubspot.singularity.SingularityDeployUpdate;
-import com.hubspot.singularity.SingularityRequestHistory;
-import com.hubspot.singularity.SingularityTaskHistoryUpdate;
+import com.hubspot.singularity.api.deploy.SingularityDeployUpdate;
+import com.hubspot.singularity.api.request.SingularityRequestHistory;
+import com.hubspot.singularity.api.task.SingularityTaskHistoryUpdate;
 
 public interface SingularityEventListener {
   void requestHistoryEvent(SingularityRequestHistory singularityRequestHistory);

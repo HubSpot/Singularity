@@ -1,6 +1,7 @@
 package com.hubspot.singularity.mesos;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
@@ -10,7 +11,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.codahale.metrics.annotation.Timed;
-import com.google.common.base.Optional;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.inject.Inject;
 import com.hubspot.mesos.JavaUtils;
@@ -19,8 +19,8 @@ import com.hubspot.mesos.json.MesosExecutorObject;
 import com.hubspot.mesos.json.MesosSlaveFrameworkObject;
 import com.hubspot.mesos.json.MesosSlaveStateObject;
 import com.hubspot.mesos.json.MesosTaskObject;
-import com.hubspot.singularity.SingularityTask;
-import com.hubspot.singularity.SingularityTaskId;
+import com.hubspot.singularity.api.task.SingularityTask;
+import com.hubspot.singularity.api.task.SingularityTaskId;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.TaskManager;
 
@@ -67,7 +67,7 @@ public class SingularityMesosExecutorInfoSupport implements Managed {
       }
     }
 
-    return Optional.absent();
+    return Optional.empty();
   }
 
   private void loadDirectoryAndContainer(SingularityTask task) {
@@ -79,8 +79,8 @@ public class SingularityMesosExecutorInfoSupport implements Managed {
 
     MesosSlaveStateObject slaveState = mesosClient.getSlaveState(slaveUri);
 
-    Optional<String> directory = Optional.absent();
-    Optional<String> containerId = Optional.absent();
+    Optional<String> directory = Optional.empty();
+    Optional<String> containerId = Optional.empty();
 
     for (MesosSlaveFrameworkObject slaveFramework : slaveState.getFrameworks()) {
       Optional<MesosExecutorObject> maybeExecutor = findExecutor(task.getTaskId(), slaveFramework.getExecutors());
@@ -103,7 +103,7 @@ public class SingularityMesosExecutorInfoSupport implements Managed {
       return;
     }
 
-    LOG.debug("Found a directory {} and container id {} for task {}", directory.or(""), containerId.or(""), task.getTaskId());
+    LOG.debug("Found a directory {} and container id {} for task {}", directory.orElse(""), containerId.orElse(""), task.getTaskId());
 
     if (directory.isPresent()) {
       taskManager.saveTaskDirectory(task.getTaskId(), directory.get());

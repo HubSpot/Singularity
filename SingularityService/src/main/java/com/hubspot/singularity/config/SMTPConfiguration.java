@@ -4,18 +4,18 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
 
 import javax.validation.constraints.NotNull;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
-import com.hubspot.singularity.SingularityEmailDestination;
-import com.hubspot.singularity.SingularityEmailType;
+import com.hubspot.singularity.api.common.SingularityEmailDestination;
+import com.hubspot.singularity.api.common.SingularityEmailType;
 
 public class SMTPConfiguration {
 
@@ -71,10 +71,10 @@ public class SMTPConfiguration {
   private List<String> taskEmailTailFiles = Arrays.asList("stdout", "stderr");
 
   @JsonProperty
-  private Optional<String> taskLogErrorRegex = Optional.absent();
+  private Optional<String> taskLogErrorRegex = Optional.empty();
 
   @JsonProperty
-  private Optional<Boolean> taskLogErrorRegexCaseSensitive = Optional.absent();
+  private Optional<Boolean> taskLogErrorRegexCaseSensitive = Optional.empty();
 
   @NotNull
   @JsonProperty
@@ -84,10 +84,10 @@ public class SMTPConfiguration {
   private TimeZone mailerTimeZone = TimeZone.getTimeZone("UTC");
 
   @JsonProperty
-  private Optional<String> subjectPrefix = Optional.absent();
+  private Optional<String> subjectPrefix = Optional.empty();
 
   @JsonProperty
-  private Optional<String> uiBaseUrl = Optional.absent();
+  private Optional<String> uiBaseUrl = Optional.empty();
 
   @JsonProperty("emails")
   private Map<SingularityEmailType, List<SingularityEmailDestination>> emailConfiguration = Maps.newHashMap(ImmutableMap.<SingularityEmailType, List<SingularityEmailDestination>>builder()
@@ -123,7 +123,7 @@ public class SMTPConfiguration {
   }
 
   public Optional<String> getUsername() {
-    return Optional.fromNullable(username);
+    return Optional.ofNullable(username);
   }
 
   public void setUsername(String username) {
@@ -139,7 +139,7 @@ public class SMTPConfiguration {
   }
 
   public Optional<String> getPassword() {
-    return Optional.fromNullable(password);
+    return Optional.ofNullable(password);
   }
 
   public void setPassword(String password) {

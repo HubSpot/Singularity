@@ -3,8 +3,8 @@ package com.hubspot.singularity.mesos;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.hubspot.mesos.Resources;
-import com.hubspot.singularity.SingularityTaskRequest;
+import com.hubspot.singularity.api.deploy.mesos.Resources;
+import com.hubspot.singularity.api.task.SingularityTaskRequest;
 
 public class SingularityTaskRequestHolder {
 
@@ -17,8 +17,8 @@ public class SingularityTaskRequestHolder {
   public SingularityTaskRequestHolder(SingularityTaskRequest taskRequest, Resources defaultResources, Resources defaultCustomExecutorResources) {
     this.taskRequest = taskRequest;
     this.executorResources = taskRequest.getDeploy().getCustomExecutorCmd().isPresent() ?
-        taskRequest.getDeploy().getCustomExecutorResources().or(defaultCustomExecutorResources) : Resources.EMPTY_RESOURCES;;
-    this.taskResources = taskRequest.getPendingTask().getResources().or(taskRequest.getDeploy().getResources()).or(defaultResources);
+        taskRequest.getDeploy().getCustomExecutorResources().orElse(defaultCustomExecutorResources) : Resources.EMPTY_RESOURCES;;
+    this.taskResources = taskRequest.getPendingTask().getResources().orElse(taskRequest.getDeploy().getResources().orElse(defaultResources));
     this.totalResources = Resources.add(taskResources, executorResources);
     this.requestedPorts = new ArrayList<>();
     if (taskRequest.getDeploy().getContainerInfo().isPresent() && taskRequest.getDeploy().getContainerInfo().get().getDocker().isPresent()) {

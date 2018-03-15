@@ -11,19 +11,18 @@ import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Optional;
 
 import org.slf4j.Logger;
 
-import com.google.common.base.Optional;
-import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hashing;
-import com.hubspot.deploy.Artifact;
-import com.hubspot.deploy.EmbeddedArtifact;
-import com.hubspot.deploy.ExternalArtifact;
-import com.hubspot.deploy.RemoteArtifact;
-import com.hubspot.deploy.S3Artifact;
+import com.hubspot.singularity.api.deploy.Artifact;
+import com.hubspot.singularity.api.deploy.EmbeddedArtifact;
+import com.hubspot.singularity.api.deploy.ExternalArtifact;
+import com.hubspot.singularity.api.deploy.RemoteArtifact;
+import com.hubspot.singularity.api.deploy.S3Artifact;
 import com.hubspot.singularity.runner.base.configuration.SingularityRunnerBaseConfiguration;
 import com.hubspot.singularity.runner.base.sentry.SingularityRunnerExceptionNotifier;
 import com.hubspot.singularity.runner.base.shared.ProcessFailedException;
@@ -233,7 +232,7 @@ public class ArtifactManager extends SimpleProcessManager {
     try {
       super.runCommand(command);
     } catch (InterruptedException | ProcessFailedException e) {
-      throw Throwables.propagate(e);
+      throw new RuntimeException(e);
     }
   }
 
@@ -243,7 +242,7 @@ public class ArtifactManager extends SimpleProcessManager {
 
       return hc.toString();
     } catch (IOException e) {
-      throw Throwables.propagate(e);
+      throw new RuntimeException(e);
     }
   }
 }

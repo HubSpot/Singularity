@@ -2,12 +2,12 @@ package com.hubspot.singularity.executor.task;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Optional;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.Optional;
-import com.hubspot.singularity.SingularityTaskExecutorData;
+import com.hubspot.singularity.api.task.SingularityTaskExecutorData;
 
 public class SingularityExecutorTaskDefinition {
 
@@ -69,7 +69,7 @@ public class SingularityExecutorTaskDefinition {
    * Convenience method for handling skipLogrotateAndCompress
    */
   public boolean shouldLogrotateLogFile() {
-    return !executorData.getSkipLogrotateAndCompress().or(Boolean.FALSE).booleanValue();
+    return !executorData.getSkipLogrotateAndCompress().orElse(Boolean.FALSE).booleanValue();
   }
 
   @JsonIgnore
@@ -139,7 +139,7 @@ public class SingularityExecutorTaskDefinition {
     try {
       return Optional.of(Integer.parseInt(executorPid));
     } catch (NumberFormatException nfe) {
-      return Optional.<Integer> absent();
+      return Optional.empty();
     }
   }
 

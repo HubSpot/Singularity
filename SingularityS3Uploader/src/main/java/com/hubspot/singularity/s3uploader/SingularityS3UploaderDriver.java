@@ -14,6 +14,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
@@ -30,11 +31,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.amazonaws.auth.BasicAWSCredentials;
-import com.google.common.base.Optional;
-import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
@@ -133,10 +131,10 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper implements S
 
   @Override
   public void startAndWait() {
-    if (!configuration.getS3AccessKey().or(s3Configuration.getS3AccessKey()).isPresent()) {
+    if (!configuration.getS3AccessKey().map(Optional::of).orElse(s3Configuration.getS3AccessKey()).isPresent()) {
       throw new MissingConfigException("s3AccessKey not set in any s3 configs!");
     }
-    if (!configuration.getS3SecretKey().or(s3Configuration.getS3SecretKey()).isPresent()) {
+    if (!configuration.getS3SecretKey().map(Optional::of).orElse(s3Configuration.getS3SecretKey()).isPresent()) {
       throw new MissingConfigException("s3SecretKey not set in any s3 configs!");
     }
 
@@ -178,7 +176,7 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper implements S
     try {
       super.watch();
     } catch (Throwable t) {
-      throw Throwables.propagate(t);
+      throw new RuntimeException(t);
     }
   }
 
@@ -382,7 +380,7 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper implements S
 
     final long durationSinceLastFile = System.currentTimeMillis() - uploaderLastHadFilesAt.get(uploader);
 
-    final long expireAfterMillis = uploader.getUploadMetadata().getFinishedAfterMillisWithoutNewFile().or(configuration.getStopCheckingAfterMillisWithoutNewFile());
+    final long expireAfterMillis = uploader.getUploadMetadata().getFinishedAfterMillisWithoutNewFile().orElse(configuration.getStopCheckingAfterMillisWithoutNewFile());
 
     if (durationSinceLastFile > expireAfterMillis) {
       return true;
@@ -462,18 +460,18 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper implements S
     }
 
     try {
-      Optional<BasicAWSCredentials> bucketCreds = Optional.absent();
+      Optional<BasicAWSCredentials> bucketCreds = Optional.empty();
 
       if (configuration.getS3BucketCredentials().containsKey(metadata.getS3Bucket())) {
         bucketCreds = Optional.of(configuration.getS3BucketCredentials().get(metadata.getS3Bucket()).toAWSCredentials());
       }
 
-      final BasicAWSCredentials defaultCredentials = new BasicAWSCredentials(configuration.getS3AccessKey().or(s3Configuration.getS3AccessKey()).get(), configuration.getS3SecretKey().or(s3Configuration.getS3SecretKey()).get());
+      final BasicAWSCredentials defaultCredentials = new BasicAWSCredentials(configuration.getS3AccessKey().map(Optional::of).orElse(s3Configuration.getS3AccessKey()).get(), configuration.getS3SecretKey().map(Optional::of).orElse(s3Configuration.getS3SecretKey()).get());
 
       final SingularityUploader uploader;
 
       if (metadata.getUploaderType() == SingularityUploaderType.S3) {
-        uploader = new SingularityS3Uploader(bucketCreds.or(defaultCredentials), metadata, fileSystem, metrics, filename, configuration, hostname, exceptionNotifier);
+        uploader = new SingularityS3Uploader(bucketCreds.orElse(defaultCredentials), metadata, fileSystem, metrics, filename, configuration, hostname, exceptionNotifier);
       } else {
         uploader = new SingularityGCSUploader(metadata, fileSystem, metrics, filename, configuration, hostname, exceptionNotifier, jsonObjectFileHelper);
       }
@@ -520,9 +518,15 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper implements S
       final Path fullPath = Paths.get(baseConfiguration.getS3UploaderMetadataDirectory()).resolve(filename);
 
       if (kind.equals(StandardWatchEventKinds.ENTRY_DELETE)) {
-        Optional<SingularityUploader> found = Iterables.tryFind(metadataToUploader.values(), input -> input != null && input.getMetadataPath().equals(fullPath))
-            .or(Iterables.tryFind(metadataToImmediateUploader.values(), input -> input != null && input.getMetadataPath().equals(fullPath)));
-
+        Optional<SingularityUploader> found = metadataToUploader.values()
+            .stream()
+            .filter(input -> input != null && input.getMetadataPath().equals(fullPath))
+            .findFirst()
+            .map(Optional::of)
+            .orElse(metadataToUploader.values()
+                .stream()
+                .filter(input -> input != null && input.getMetadataPath().equals(fullPath))
+                .findFirst());
         LOG.trace("Found {} to match deleted path {}", found, filename);
 
         if (found.isPresent()) {
@@ -543,7 +547,7 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper implements S
       return jsonObjectFileHelper.read(filename, LOG, S3UploadMetadata.class);
     } catch (NoSuchFileException nsfe) {
       LOG.warn("Tried to read {}, but it doesn't exist!", filename);
-      return Optional.absent();
+      return Optional.empty();
     }
   }
 

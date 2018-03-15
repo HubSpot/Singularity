@@ -10,6 +10,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Optional;
 import java.util.Random;
 import java.util.concurrent.ExecutionException;
 import java.util.function.Function;
@@ -26,7 +27,6 @@ import com.github.rholder.retry.Retryer;
 import com.github.rholder.retry.RetryerBuilder;
 import com.github.rholder.retry.StopStrategies;
 import com.github.rholder.retry.WaitStrategies;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMap.Builder;
@@ -38,66 +38,66 @@ import com.hubspot.horizon.HttpRequest.Method;
 import com.hubspot.horizon.HttpResponse;
 import com.hubspot.horizon.RetryStrategy;
 import com.hubspot.mesos.json.MesosFileChunkObject;
-import com.hubspot.singularity.ExtendedTaskState;
-import com.hubspot.singularity.MachineState;
-import com.hubspot.singularity.OrderDirection;
-import com.hubspot.singularity.SingularityAction;
-import com.hubspot.singularity.SingularityAuthorizationScope;
-import com.hubspot.singularity.SingularityClientCredentials;
-import com.hubspot.singularity.SingularityClusterUtilization;
-import com.hubspot.singularity.SingularityCreateResult;
-import com.hubspot.singularity.SingularityDeleteResult;
-import com.hubspot.singularity.SingularityDeploy;
-import com.hubspot.singularity.SingularityDeployHistory;
-import com.hubspot.singularity.SingularityDeployKey;
-import com.hubspot.singularity.SingularityDeployUpdate;
-import com.hubspot.singularity.SingularityDisabledAction;
-import com.hubspot.singularity.SingularityDisasterType;
-import com.hubspot.singularity.SingularityDisastersData;
-import com.hubspot.singularity.SingularityPaginatedResponse;
-import com.hubspot.singularity.SingularityPendingRequest;
-import com.hubspot.singularity.SingularityPendingRequestParent;
-import com.hubspot.singularity.SingularityPendingTaskId;
-import com.hubspot.singularity.SingularityPriorityFreezeParent;
-import com.hubspot.singularity.SingularityRack;
-import com.hubspot.singularity.SingularityRequest;
-import com.hubspot.singularity.SingularityRequestCleanup;
-import com.hubspot.singularity.SingularityRequestGroup;
-import com.hubspot.singularity.SingularityRequestHistory;
-import com.hubspot.singularity.SingularityRequestParent;
-import com.hubspot.singularity.SingularityS3Log;
-import com.hubspot.singularity.SingularitySandbox;
-import com.hubspot.singularity.SingularityShellCommand;
-import com.hubspot.singularity.SingularitySlave;
-import com.hubspot.singularity.SingularityState;
-import com.hubspot.singularity.SingularityTask;
-import com.hubspot.singularity.SingularityTaskCleanupResult;
-import com.hubspot.singularity.SingularityTaskHistory;
-import com.hubspot.singularity.SingularityTaskHistoryUpdate;
-import com.hubspot.singularity.SingularityTaskId;
-import com.hubspot.singularity.SingularityTaskIdHistory;
-import com.hubspot.singularity.SingularityTaskIdsByStatus;
-import com.hubspot.singularity.SingularityTaskReconciliationStatistics;
-import com.hubspot.singularity.SingularityTaskRequest;
-import com.hubspot.singularity.SingularityTaskShellCommandHistory;
-import com.hubspot.singularity.SingularityTaskShellCommandRequest;
-import com.hubspot.singularity.SingularityTaskShellCommandUpdate;
-import com.hubspot.singularity.SingularityTaskState;
-import com.hubspot.singularity.SingularityUpdatePendingDeployRequest;
-import com.hubspot.singularity.SingularityWebhook;
-import com.hubspot.singularity.api.SingularityBounceRequest;
-import com.hubspot.singularity.api.SingularityDeleteRequestRequest;
-import com.hubspot.singularity.api.SingularityDeployRequest;
-import com.hubspot.singularity.api.SingularityDisabledActionRequest;
-import com.hubspot.singularity.api.SingularityExitCooldownRequest;
-import com.hubspot.singularity.api.SingularityKillTaskRequest;
-import com.hubspot.singularity.api.SingularityMachineChangeRequest;
-import com.hubspot.singularity.api.SingularityPauseRequest;
-import com.hubspot.singularity.api.SingularityPriorityFreeze;
-import com.hubspot.singularity.api.SingularityRunNowRequest;
-import com.hubspot.singularity.api.SingularityScaleRequest;
-import com.hubspot.singularity.api.SingularityUnpauseRequest;
-import com.hubspot.singularity.api.SingularityUpdateGroupsRequest;
+import com.hubspot.singularity.api.auth.SingularityAuthorizationScope;
+import com.hubspot.singularity.api.auth.SingularityClientCredentials;
+import com.hubspot.singularity.api.common.OrderDirection;
+import com.hubspot.singularity.api.common.SingularityAction;
+import com.hubspot.singularity.api.common.SingularityCreateResult;
+import com.hubspot.singularity.api.common.SingularityDeleteResult;
+import com.hubspot.singularity.api.common.SingularityPaginatedResponse;
+import com.hubspot.singularity.api.common.SingularityState;
+import com.hubspot.singularity.api.deploy.SingularityDeploy;
+import com.hubspot.singularity.api.deploy.SingularityDeployHistory;
+import com.hubspot.singularity.api.deploy.SingularityDeployKey;
+import com.hubspot.singularity.api.deploy.SingularityDeployRequest;
+import com.hubspot.singularity.api.deploy.SingularityDeployUpdate;
+import com.hubspot.singularity.api.disasters.SingularityDisabledAction;
+import com.hubspot.singularity.api.disasters.SingularityDisabledActionRequest;
+import com.hubspot.singularity.api.disasters.SingularityDisasterType;
+import com.hubspot.singularity.api.disasters.SingularityDisastersData;
+import com.hubspot.singularity.api.disasters.SingularityPriorityFreeze;
+import com.hubspot.singularity.api.disasters.SingularityPriorityFreezeParent;
+import com.hubspot.singularity.api.expiring.SingularityBounceRequest;
+import com.hubspot.singularity.api.expiring.SingularityMachineChangeRequest;
+import com.hubspot.singularity.api.expiring.SingularityPauseRequest;
+import com.hubspot.singularity.api.logs.SingularityS3Log;
+import com.hubspot.singularity.api.logs.SingularitySandbox;
+import com.hubspot.singularity.api.machines.MachineState;
+import com.hubspot.singularity.api.machines.SingularityClusterUtilization;
+import com.hubspot.singularity.api.machines.SingularityRack;
+import com.hubspot.singularity.api.machines.SingularitySlave;
+import com.hubspot.singularity.api.request.SingularityDeleteRequestRequest;
+import com.hubspot.singularity.api.request.SingularityExitCooldownRequest;
+import com.hubspot.singularity.api.request.SingularityPendingRequest;
+import com.hubspot.singularity.api.request.SingularityPendingRequestParent;
+import com.hubspot.singularity.api.request.SingularityRequest;
+import com.hubspot.singularity.api.request.SingularityRequestCleanup;
+import com.hubspot.singularity.api.request.SingularityRequestGroup;
+import com.hubspot.singularity.api.request.SingularityRequestHistory;
+import com.hubspot.singularity.api.request.SingularityRequestParent;
+import com.hubspot.singularity.api.request.SingularityRunNowRequest;
+import com.hubspot.singularity.api.expiring.SingularityScaleRequest;
+import com.hubspot.singularity.api.request.SingularityUnpauseRequest;
+import com.hubspot.singularity.api.request.SingularityUpdateGroupsRequest;
+import com.hubspot.singularity.api.request.SingularityUpdatePendingDeployRequest;
+import com.hubspot.singularity.api.task.ExtendedTaskState;
+import com.hubspot.singularity.api.task.SingularityKillTaskRequest;
+import com.hubspot.singularity.api.task.SingularityPendingTaskId;
+import com.hubspot.singularity.api.task.SingularityShellCommand;
+import com.hubspot.singularity.api.task.SingularityTask;
+import com.hubspot.singularity.api.task.SingularityTaskCleanupResult;
+import com.hubspot.singularity.api.task.SingularityTaskHistory;
+import com.hubspot.singularity.api.task.SingularityTaskHistoryUpdate;
+import com.hubspot.singularity.api.task.SingularityTaskId;
+import com.hubspot.singularity.api.task.SingularityTaskIdHistory;
+import com.hubspot.singularity.api.task.SingularityTaskIdsByStatus;
+import com.hubspot.singularity.api.task.SingularityTaskReconciliationStatistics;
+import com.hubspot.singularity.api.task.SingularityTaskRequest;
+import com.hubspot.singularity.api.task.SingularityTaskShellCommandHistory;
+import com.hubspot.singularity.api.task.SingularityTaskShellCommandRequest;
+import com.hubspot.singularity.api.task.SingularityTaskShellCommandUpdate;
+import com.hubspot.singularity.api.task.SingularityTaskState;
+import com.hubspot.singularity.api.webhooks.SingularityWebhook;
 
 public class SingularityClient {
 
@@ -247,7 +247,7 @@ public class SingularityClient {
   @Inject
   @Deprecated
   public SingularityClient(@Named(SingularityClientModule.CONTEXT_PATH) String contextPath, @Named(SingularityClientModule.HTTP_CLIENT_NAME) HttpClient httpClient, @Named(SingularityClientModule.HOSTS_PROPERTY_NAME) String hosts) {
-    this(contextPath, httpClient, Arrays.asList(hosts.split(",")), Optional.absent());
+    this(contextPath, httpClient, Arrays.asList(hosts.split(",")), Optional.empty());
   }
 
   public SingularityClient(String contextPath, HttpClient httpClient, List<String> hosts, Optional<SingularityClientCredentials> credentials) {
@@ -319,7 +319,7 @@ public class SingularityClient {
   }
 
   private <T> Optional<T> getSingle(Function<String, String> hostToUrl, String type, String id, Class<T> clazz) {
-    return getSingleWithParams(hostToUrl, type, id, Optional.absent(), clazz);
+    return getSingleWithParams(hostToUrl, type, id, Optional.empty(), clazz);
   }
 
   private <T> Optional<T> getSingleWithParams(Function<String, String> hostToUrl, String type, String id, Optional<Map<String, Object>> queryParams, Class<T> clazz) {
@@ -327,13 +327,13 @@ public class SingularityClient {
     HttpResponse response = executeGetSingleWithParams(hostToUrl, type, id, queryParams);
 
     if (response.getStatusCode() == 404) {
-      return Optional.absent();
+      return Optional.empty();
     }
 
     checkResponse(type, response);
     LOG.info("Got {} {} in {}ms", type, id, System.currentTimeMillis() - start);
 
-    return Optional.fromNullable(response.getAs(clazz));
+    return Optional.ofNullable(response.getAs(clazz));
   }
 
   private <T> Optional<T> getSingleWithParams(Function<String, String> hostToUrl, String type, String id, Optional<Map<String, Object>> queryParams, TypeReference<T> typeReference) {
@@ -341,13 +341,13 @@ public class SingularityClient {
     HttpResponse response = executeGetSingleWithParams(hostToUrl, type, id, queryParams);
 
     if (response.getStatusCode() == 404) {
-      return Optional.absent();
+      return Optional.empty();
     }
 
     checkResponse(type, response);
     LOG.info("Got {} {} in {}ms", type, id, System.currentTimeMillis() - start);
 
-    return Optional.fromNullable(response.getAs(typeReference));
+    return Optional.ofNullable(response.getAs(typeReference));
   }
 
 
@@ -356,17 +356,17 @@ public class SingularityClient {
 
     LOG.info("Getting {} {} from Singularity host", type, id);
 
-    return executeRequest(hostToUrl, Method.GET, Optional.absent(), queryParams.or(Collections.emptyMap()));
+    return executeRequest(hostToUrl, Method.GET, Optional.empty(), queryParams.orElse(Collections.emptyMap()));
   }
 
   private <T> Collection<T> getCollection(Function<String, String> hostToUrl, String type, TypeReference<Collection<T>> typeReference) {
-    return getCollectionWithParams(hostToUrl, type, Optional.absent(), typeReference);
+    return getCollectionWithParams(hostToUrl, type, Optional.empty(), typeReference);
   }
 
   private <T> Collection<T> getCollectionWithParams(Function<String, String> hostToUrl, String type, Optional<Map<String, Object>> queryParams, TypeReference<Collection<T>> typeReference) {
     final long start = System.currentTimeMillis();
 
-    HttpResponse response = executeRequest(hostToUrl, Method.GET, Optional.absent(), queryParams.or(Collections.emptyMap()));
+    HttpResponse response = executeRequest(hostToUrl, Method.GET, Optional.empty(), queryParams.orElse(Collections.emptyMap()));
 
     if (response.getStatusCode() == 404) {
       return ImmutableList.of();
@@ -403,15 +403,15 @@ public class SingularityClient {
   }
 
   private void delete(Function<String, String> hostToUrl, String type, String id) {
-    delete(hostToUrl, type, id, Optional.absent());
+    delete(hostToUrl, type, id, Optional.empty());
   }
 
   private <T> void delete(Function<String, String> hostToUrl, String type, String id, Optional<?> body) {
-    delete(hostToUrl, type, id, body, Optional.<Class<T>>absent());
+    delete(hostToUrl, type, id, body, Optional.empty());
   }
 
   private <T> Optional<T> delete(Function<String, String> hostToUrl, String type, String id, Optional<?> body, Optional<Class<T>> clazz) {
-    return deleteWithParams(hostToUrl, type, id, body, Optional.absent(), clazz);
+    return deleteWithParams(hostToUrl, type, id, body, Optional.empty(), clazz);
   }
 
   private <T> Optional<T> deleteWithParams(Function<String, String> hostToUrl, String type, String id, Optional<?> body, Optional<Map<String, Object>> queryParams, Optional<Class<T>> clazz) {
@@ -419,11 +419,11 @@ public class SingularityClient {
 
     final long start = System.currentTimeMillis();
 
-    HttpResponse response = executeRequest(hostToUrl, Method.DELETE, body, queryParams.or(Collections.emptyMap()));
+    HttpResponse response = executeRequest(hostToUrl, Method.DELETE, body, queryParams.orElse(Collections.emptyMap()));
 
     if (response.getStatusCode() == 404) {
       LOG.info("{} ({}) was not found", type, id);
-      return Optional.absent();
+      return Optional.empty();
     }
 
     checkResponse(type, response);
@@ -434,16 +434,16 @@ public class SingularityClient {
       return Optional.of(response.getAs(clazz.get()));
     }
 
-    return Optional.absent();
+    return Optional.empty();
   }
 
   private HttpResponse put(Function<String, String> hostToUri, String type, Optional<?> body) {
-    return executeRequest(hostToUri, type, body, Method.PUT, Optional.absent());
+    return executeRequest(hostToUri, type, body, Method.PUT, Optional.empty());
   }
 
   private <T> Optional<T> post(Function<String, String> hostToUri, String type, Optional<?> body, Optional<Class<T>> clazz) {
     try {
-      HttpResponse response = executeRequest(hostToUri, type, body, Method.POST, Optional.absent());
+      HttpResponse response = executeRequest(hostToUri, type, body, Method.POST, Optional.empty());
 
       if (clazz.isPresent()) {
         return Optional.of(response.getAs(clazz.get()));
@@ -452,7 +452,7 @@ public class SingularityClient {
       LOG.warn("Http post failed", e);
     }
 
-    return Optional.absent();
+    return Optional.empty();
   }
 
   private HttpResponse postWithParams(Function<String, String> hostToUri, String type, Optional<?> body, Optional<Map<String, Object>> queryParams) {
@@ -460,13 +460,13 @@ public class SingularityClient {
   }
 
   private HttpResponse post(Function<String, String> hostToUri, String type, Optional<?> body) {
-    return executeRequest(hostToUri, type, body, Method.POST, Optional.absent());
+    return executeRequest(hostToUri, type, body, Method.POST, Optional.empty());
   }
 
   private HttpResponse executeRequest(Function<String, String> hostToUri, String type, Optional<?> body, Method method, Optional<Map<String, Object>> queryParams) {
     final long start = System.currentTimeMillis();
 
-    HttpResponse response = executeRequest(hostToUri, method, body, queryParams.or(Collections.emptyMap()));
+    HttpResponse response = executeRequest(hostToUri, method, body, queryParams.orElse(Collections.emptyMap()));
     checkResponse(type, response);
     LOG.info("Successfully {}ed {} in {}ms", method, type, System.currentTimeMillis() - start);
 
@@ -527,7 +527,7 @@ public class SingularityClient {
       queryParams.put("includeRequestIds", includeRequestIds.get());
     }
 
-    HttpResponse response = executeRequest(uri, Method.GET, Optional.absent(), queryParams);
+    HttpResponse response = executeRequest(uri, Method.GET, Optional.empty(), queryParams);
 
     checkResponse("state", response);
 
@@ -543,10 +543,10 @@ public class SingularityClient {
 
     final long start = System.currentTimeMillis();
 
-    HttpResponse response = executeRequest(uri, Method.GET, Optional.absent(), Collections.emptyMap());
+    HttpResponse response = executeRequest(uri, Method.GET, Optional.empty(), Collections.emptyMap());
 
     if (response.getStatusCode() == 404) {
-      return Optional.absent();
+      return Optional.empty();
     }
 
     checkResponse("task reconciliation statistics", response);
@@ -589,7 +589,7 @@ public class SingularityClient {
   /**
    * Delete a singularity request.
    * If the deletion is successful the singularity request is moved to a DELETING state and is returned.
-   * If the request to be deleted is not found {code Optional.absent()} is returned
+   * If the request to be deleted is not found {code Optional.empty()} is returned
    * If an error occurs during deletion an exception is returned
    *
    * @param requestId
@@ -661,7 +661,7 @@ public class SingularityClient {
   //
 
   public SingularityRequestParent createDeployForSingularityRequest(String requestId, SingularityDeploy pendingDeploy, Optional<Boolean> deployUnpause, Optional<String> message) {
-    return createDeployForSingularityRequest(requestId, pendingDeploy, deployUnpause, message, Optional.absent());
+    return createDeployForSingularityRequest(requestId, pendingDeploy, deployUnpause, message, Optional.empty());
   }
 
   public SingularityRequestParent createDeployForSingularityRequest(String requestId, SingularityDeploy pendingDeploy, Optional<Boolean> deployUnpause, Optional<String> message, Optional<SingularityRequest> updatedRequest) {
@@ -684,7 +684,7 @@ public class SingularityClient {
   public SingularityRequestParent cancelPendingDeployForSingularityRequest(String requestId, String deployId) {
     final Function<String, String> requestUri = (host) -> String.format(DELETE_DEPLOY_FORMAT, getApiBase(host), deployId, requestId);
 
-    SingularityRequestParent singularityRequestParent = delete(requestUri, "pending deploy", new SingularityDeployKey(requestId, deployId).getId(), Optional.absent(),
+    SingularityRequestParent singularityRequestParent = delete(requestUri, "pending deploy", new SingularityDeployKey(requestId, deployId).getId(), Optional.empty(),
         Optional.of(SingularityRequestParent.class)).get();
 
     return getAndLogRequestAndDeployStatus(singularityRequestParent);
@@ -841,7 +841,7 @@ public class SingularityClient {
   public SingularityTaskShellCommandRequest startShellCommand(String taskId, SingularityShellCommand shellCommand) {
     final Function<String, String> requestUri = (host) -> String.format(SHELL_COMMAND_FORMAT, getApiBase(host), taskId);
 
-    return post(requestUri, "start shell command", Optional.of(shellCommand), Optional.of(SingularityTaskShellCommandRequest.class)).orNull();
+    return post(requestUri, "start shell command", Optional.of(shellCommand), Optional.of(SingularityTaskShellCommandRequest.class)).orElse(null);
   }
 
   public Collection<SingularityTaskShellCommandHistory> getShellCommandHistory(String taskId) {
@@ -861,7 +861,7 @@ public class SingularityClient {
   //
   private Collection<SingularityRack> getRacks(Optional<MachineState> rackState) {
     final Function<String, String> requestUri = (host) -> String.format(RACKS_FORMAT, getApiBase(host));
-    Optional<Map<String, Object>> maybeQueryParams = Optional.absent();
+    Optional<Map<String, Object>> maybeQueryParams = Optional.empty();
 
     String type = "racks";
 
@@ -876,25 +876,25 @@ public class SingularityClient {
 
   @Deprecated
   public void decomissionRack(String rackId) {
-    decommissionRack(rackId, Optional.absent());
+    decommissionRack(rackId, Optional.empty());
   }
 
   public void decommissionRack(String rackId, Optional<SingularityMachineChangeRequest> machineChangeRequest) {
     final Function<String, String> requestUri = (host) -> String.format(RACKS_DECOMISSION_FORMAT, getApiBase(host), rackId);
 
-    post(requestUri, String.format("decommission rack %s", rackId), machineChangeRequest.or(Optional.of(SingularityMachineChangeRequest.empty())));
+    post(requestUri, String.format("decommission rack %s", rackId), Optional.of(machineChangeRequest.orElse(SingularityMachineChangeRequest.empty())));
   }
 
   public void freezeRack(String rackId, Optional<SingularityMachineChangeRequest> machineChangeRequest) {
     final Function<String, String> requestUri = (host) -> String.format(RACKS_FREEZE_FORMAT, getApiBase(host), rackId);
 
-    post(requestUri, String.format("freeze rack %s", rackId), machineChangeRequest.or(Optional.of(SingularityMachineChangeRequest.empty())));
+    post(requestUri, String.format("freeze rack %s", rackId), Optional.of(machineChangeRequest.orElse(SingularityMachineChangeRequest.empty())));
   }
 
   public void activateRack(String rackId, Optional<SingularityMachineChangeRequest> machineChangeRequest) {
     final Function<String, String> requestUri = (host) -> String.format(RACKS_ACTIVATE_FORMAT, getApiBase(host), rackId);
 
-    post(requestUri, String.format("activate rack %s", rackId), machineChangeRequest.or(Optional.of(SingularityMachineChangeRequest.empty())));
+    post(requestUri, String.format("activate rack %s", rackId), Optional.of(machineChangeRequest.orElse(SingularityMachineChangeRequest.empty())));
   }
 
   public void deleteRack(String rackId) {
@@ -918,7 +918,7 @@ public class SingularityClient {
   public Collection<SingularitySlave> getSlaves(Optional<MachineState> slaveState) {
     final Function<String, String> requestUri = (host) -> String.format(SLAVES_FORMAT, getApiBase(host));
 
-    Optional<Map<String, Object>> maybeQueryParams = Optional.absent();
+    Optional<Map<String, Object>> maybeQueryParams = Optional.empty();
 
     String type = "slaves";
 
@@ -947,25 +947,25 @@ public class SingularityClient {
 
   @Deprecated
   public void decomissionSlave(String slaveId) {
-    decommissionSlave(slaveId, Optional.absent());
+    decommissionSlave(slaveId, Optional.empty());
   }
 
   public void decommissionSlave(String slaveId, Optional<SingularityMachineChangeRequest> machineChangeRequest) {
     final Function<String, String> requestUri = (host) -> String.format(SLAVES_DECOMISSION_FORMAT, getApiBase(host), slaveId);
 
-    post(requestUri, String.format("decommission slave %s", slaveId), machineChangeRequest.or(Optional.of(SingularityMachineChangeRequest.empty())));
+    post(requestUri, String.format("decommission slave %s", slaveId), Optional.of(machineChangeRequest.orElse(SingularityMachineChangeRequest.empty())));
   }
 
   public void freezeSlave(String slaveId, Optional<SingularityMachineChangeRequest> machineChangeRequest) {
     final Function<String, String> requestUri = (host) -> String.format(SLAVES_FREEZE_FORMAT, getApiBase(host), slaveId);
 
-    post(requestUri, String.format("freeze slave %s", slaveId), machineChangeRequest.or(Optional.of(SingularityMachineChangeRequest.empty())));
+    post(requestUri, String.format("freeze slave %s", slaveId), Optional.of(machineChangeRequest.orElse(SingularityMachineChangeRequest.empty())));
   }
 
   public void activateSlave(String slaveId, Optional<SingularityMachineChangeRequest> machineChangeRequest) {
     final Function<String, String> requestUri = (host) -> String.format(SLAVES_ACTIVATE_FORMAT, getApiBase(host), slaveId);
 
-    post(requestUri, String.format("activate slave %s", slaveId), machineChangeRequest.or(Optional.of(SingularityMachineChangeRequest.empty())));
+    post(requestUri, String.format("activate slave %s", slaveId), Optional.of(machineChangeRequest.orElse(SingularityMachineChangeRequest.empty())));
   }
 
   public void deleteSlave(String slaveId) {
@@ -993,7 +993,7 @@ public class SingularityClient {
   public Collection<SingularityRequestHistory> getHistoryForRequest(String requestId,  Optional<Integer> count, Optional<Integer> page) {
     final Function<String, String> requestUri = (host) -> String.format(REQUEST_HISTORY_FORMAT, getApiBase(host), requestId);
 
-    Optional<Map<String, Object>> maybeQueryParams = Optional.absent();
+    Optional<Map<String, Object>> maybeQueryParams = Optional.empty();
 
     ImmutableMap.Builder<String, Object> queryParamsBuilder = ImmutableMap.builder();
 
@@ -1025,13 +1025,13 @@ public class SingularityClient {
   public void markSlaveAsInactive(String host) {
     final Function<String, String> requestUri = (singularityHost) -> String.format(INACTIVE_SLAVES_FORMAT, getApiBase(singularityHost));
     Map<String, Object> params = Collections.singletonMap("host", host);
-    postWithParams(requestUri, "deactivateSlave", Optional.absent(), Optional.of(params));
+    postWithParams(requestUri, "deactivateSlave", Optional.empty(), Optional.of(params));
   }
 
   public void clearInactiveSlave(String host) {
     final Function<String, String> requestUri = (singularityHost) -> String.format(INACTIVE_SLAVES_FORMAT, getApiBase(host));
     Map<String, Object> params = Collections.singletonMap("host", host);
-    deleteWithParams(requestUri, "clearInactiveSlave", host, Optional.absent(), Optional.of(params), Optional.absent());
+    deleteWithParams(requestUri, "clearInactiveSlave", host, Optional.empty(), Optional.of(params), Optional.empty());
   }
 
   //
@@ -1065,7 +1065,7 @@ public class SingularityClient {
   }
 
   public Collection<SingularityTaskIdHistory> getInactiveTaskHistoryForRequest(String requestId, int count, int page) {
-    return getInactiveTaskHistoryForRequest(requestId, count, page, Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent());
+    return getInactiveTaskHistoryForRequest(requestId, count, page, Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty());
   }
 
   public Collection<SingularityTaskIdHistory> getInactiveTaskHistoryForRequest(String requestId, int count, int page, Optional<String> host, Optional<String> runId,
@@ -1075,7 +1075,7 @@ public class SingularityClient {
 
     final String type = String.format("inactive (failed, killed, lost) task history for request %s", requestId);
 
-    Map<String, Object> params = taskSearchParams(Optional.of(requestId), Optional.absent(), runId, host, lastTaskStatus, startedBefore, startedAfter, updatedBefore, updatedAfter, orderDirection, count, page);
+    Map<String, Object> params = taskSearchParams(Optional.of(requestId), Optional.empty(), runId, host, lastTaskStatus, startedBefore, startedAfter, updatedBefore, updatedAfter, orderDirection, count, page);
 
     return getCollectionWithParams(requestUri, type, Optional.of(params), TASKID_HISTORY_COLLECTION);
   }
@@ -1182,7 +1182,7 @@ public class SingularityClient {
 
     Builder<String, Object> queryParamBuider = ImmutableMap.<String, Object>builder().put("webhookId", webhookId);
 
-    return deleteWithParams(requestUri, String.format("webhook with id %s", webhookId), webhookId, Optional.absent(), Optional.of(queryParamBuider.build()), Optional.of(SingularityDeleteResult.class));
+    return deleteWithParams(requestUri, String.format("webhook with id %s", webhookId), webhookId, Optional.empty(), Optional.of(queryParamBuider.build()), Optional.of(SingularityDeleteResult.class));
   }
 
   public Collection<SingularityWebhook> getActiveWebhook() {
@@ -1398,12 +1398,12 @@ public class SingularityClient {
 
   public void disableAutomatedDisasterCreation() {
     final Function<String, String> requestUri = (host) -> String.format(DISABLE_AUTOMATED_ACTIONS_FORMAT, getApiBase(host));
-    post(requestUri, "disable automated disasters", Optional.absent());
+    post(requestUri, "disable automated disasters", Optional.empty());
   }
 
   public void enableAutomatedDisasterCreation() {
     final Function<String, String> requestUri = (host) -> String.format(ENABLE_AUTOMATED_ACTIONS_FORMAT, getApiBase(host));
-    post(requestUri, "enable automated disasters", Optional.absent());
+    post(requestUri, "enable automated disasters", Optional.empty());
   }
 
   public void removeDisaster(SingularityDisasterType disasterType) {
@@ -1413,7 +1413,7 @@ public class SingularityClient {
 
   public void activateDisaster(SingularityDisasterType disasterType) {
     final Function<String, String> requestUri = (host) -> String.format(DISASTER_FORMAT, getApiBase(host), disasterType);
-    post(requestUri, "activate disaster", Optional.absent());
+    post(requestUri, "activate disaster", Optional.empty());
   }
 
   public Collection<SingularityDisabledAction> getDisabledActions() {

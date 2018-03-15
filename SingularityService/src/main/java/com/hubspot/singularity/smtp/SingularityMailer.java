@@ -1,14 +1,15 @@
 package com.hubspot.singularity.smtp;
 
-import com.google.common.base.Optional;
-import com.hubspot.singularity.ExtendedTaskState;
-import com.hubspot.singularity.SingularityDisastersData;
-import com.hubspot.singularity.SingularityRequest;
-import com.hubspot.singularity.SingularityTask;
-import com.hubspot.singularity.SingularityTaskHistory;
-import com.hubspot.singularity.SingularityTaskId;
-import com.hubspot.singularity.api.SingularityPauseRequest;
-import com.hubspot.singularity.api.SingularityScaleRequest;
+import java.util.Optional;
+
+import com.hubspot.singularity.api.disasters.SingularityDisastersData;
+import com.hubspot.singularity.api.expiring.SingularityPauseRequest;
+import com.hubspot.singularity.api.request.SingularityRequest;
+import com.hubspot.singularity.api.expiring.SingularityScaleRequest;
+import com.hubspot.singularity.api.task.ExtendedTaskState;
+import com.hubspot.singularity.api.task.SingularityTask;
+import com.hubspot.singularity.api.task.SingularityTaskHistory;
+import com.hubspot.singularity.api.task.SingularityTaskId;
 
 public interface SingularityMailer {
   void sendTaskOverdueMail(final Optional<SingularityTask> task, final SingularityTaskId taskId, final SingularityRequest request, final long runTime, final long expectedRuntime);

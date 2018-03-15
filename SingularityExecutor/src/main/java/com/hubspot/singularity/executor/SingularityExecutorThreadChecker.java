@@ -5,6 +5,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -17,8 +18,6 @@ import org.slf4j.LoggerFactory;
 import org.slf4j.helpers.NOPLogger;
 
 import com.google.common.base.Charsets;
-import com.google.common.base.Optional;
-import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Inject;
@@ -117,7 +116,7 @@ public class SingularityExecutorThreadChecker {
   }
 
   private int getNumUsedThreads(SingularityExecutorTaskProcessCallable taskProcess) throws InterruptedException, ProcessFailedException {
-    Optional<Integer> dockerPid = Optional.absent();
+    Optional<Integer> dockerPid = Optional.empty();
     if (taskProcess.getTask().getTaskInfo().hasContainer() && taskProcess.getTask().getTaskInfo().getContainer().hasDocker()) {
       try {
         String containerName = String.format("%s%s", configuration.getDockerPrefix(), taskProcess.getTask().getTaskId());
@@ -142,7 +141,7 @@ public class SingularityExecutorThreadChecker {
         return 0;
       }
     } catch (IOException e) {
-      throw Throwables.propagate(e);
+      throw new RuntimeException(e);
     }
   }
 
@@ -165,18 +164,18 @@ public class SingularityExecutorThreadChecker {
 
   private Optional<Integer> getNumThreadsFromCommand(SingularityExecutorTaskProcessCallable taskProcess, Optional<Integer> dockerPid, String commandFormat) throws InterruptedException, ProcessFailedException {
     SimpleProcessManager checkThreadsProcessManager = new SimpleProcessManager(NOPLogger.NOP_LOGGER);
-    List<String> cmd = ImmutableList.of("/bin/sh", "-c", String.format(commandFormat, dockerPid.or(taskProcess.getCurrentPid().get())));
+    List<String> cmd = ImmutableList.of("/bin/sh", "-c", String.format(commandFormat, dockerPid.orElse(taskProcess.getCurrentPid().get())));
     List<String> output = checkThreadsProcessManager.runCommandWithOutput(cmd);
     if (output.isEmpty()) {
       LOG.warn("Output from ls was empty ({})", cmd);
-      return Optional.absent();
+      return Optional.empty();
     } else {
       return Optional.of(Integer.parseInt(output.get(0)));
     }
   }
 
   private Optional<Integer> getNumThreadsFromProcStatus(SingularityExecutorTaskProcessCallable taskProcess, Optional<Integer> dockerPid) throws InterruptedException, IOException {
-    final Path procStatusPath = Paths.get(String.format("/proc/%s/status", dockerPid.or(taskProcess.getCurrentPid().get())));
+    final Path procStatusPath = Paths.get(String.format("/proc/%s/status", dockerPid.orElse(taskProcess.getCurrentPid().get())));
     if (Files.exists(procStatusPath)) {
       for (String line : Files.readAllLines(procStatusPath, Charsets.UTF_8)) {
         final Matcher matcher = PROC_STATUS_THREADS_REGEX.matcher(line);
@@ -185,15 +184,15 @@ public class SingularityExecutorThreadChecker {
         }
       }
       LOG.warn("Unable to parse threads from proc status file {}", procStatusPath);
-      return Optional.absent();
+      return Optional.empty();
     } else {
-      LOG.warn("Proc status file does not exist for pid {}", dockerPid.or(taskProcess.getCurrentPid().get()));
-      return Optional.absent();
+      LOG.warn("Proc status file does not exist for pid {}", dockerPid.orElse(taskProcess.getCurrentPid().get()));
+      return Optional.empty();
     }
   }
 
   private Optional<Integer> getNumThreadsFromCgroup(SingularityExecutorTaskProcessCallable taskProcess, Optional<Integer> dockerPid) throws InterruptedException, IOException {
-    final Path procCgroupPath = Paths.get(String.format(configuration.getProcCgroupFormat(), dockerPid.or(taskProcess.getCurrentPid().get())));
+    final Path procCgroupPath = Paths.get(String.format(configuration.getProcCgroupFormat(), dockerPid.orElse(taskProcess.getCurrentPid().get())));
     if (Files.exists(procCgroupPath)) {
       for (String line : Files.readAllLines(procCgroupPath, Charsets.UTF_8)) {
         final Matcher matcher = CGROUP_CPU_REGEX.matcher(line);
@@ -202,10 +201,10 @@ public class SingularityExecutorThreadChecker {
         }
       }
       LOG.warn("Unable to parse cgroup container from {}", procCgroupPath.toString());
-      return Optional.absent();
+      return Optional.empty();
     } else {
       LOG.warn("cgroup {} does not exist", procCgroupPath.toString());
-      return Optional.absent();
+      return Optional.empty();
     }
   }
 

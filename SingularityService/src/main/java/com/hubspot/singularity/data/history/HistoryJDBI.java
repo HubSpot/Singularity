@@ -4,6 +4,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import org.skife.jdbi.v2.Query;
 import org.skife.jdbi.v2.sqlobject.Bind;
@@ -15,12 +16,11 @@ import org.skife.jdbi.v2.sqlobject.stringtemplate.UseStringTemplate3StatementLoc
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Optional;
-import com.hubspot.singularity.ExtendedTaskState;
-import com.hubspot.singularity.OrderDirection;
-import com.hubspot.singularity.SingularityDeployHistory;
-import com.hubspot.singularity.SingularityRequestHistory;
-import com.hubspot.singularity.SingularityTaskIdHistory;
+import com.hubspot.singularity.api.common.OrderDirection;
+import com.hubspot.singularity.api.deploy.SingularityDeployHistory;
+import com.hubspot.singularity.api.request.SingularityRequestHistory;
+import com.hubspot.singularity.api.task.ExtendedTaskState;
+import com.hubspot.singularity.api.task.SingularityTaskIdHistory;
 import com.hubspot.singularity.data.history.SingularityMappers.SingularityRequestIdCount;
 
 @UseStringTemplate3StatementLocator
@@ -163,11 +163,11 @@ public abstract class HistoryJDBI implements GetHandle {
     applyTaskIdHistoryBaseQuery(sqlBuilder, binds, requestId, deployId, runId, host, lastTaskStatus, startedBefore, startedAfter, updatedBefore, updatedAfter);
 
     sqlBuilder.append(" ORDER BY startedAt ");
-    sqlBuilder.append(orderDirection.or(OrderDirection.DESC).name());
+    sqlBuilder.append(orderDirection.orElse(OrderDirection.DESC).name());
 
     if (!requestId.isPresent()) {
       sqlBuilder.append(", requestId ");
-      sqlBuilder.append(orderDirection.or(OrderDirection.DESC).name());
+      sqlBuilder.append(orderDirection.orElse(OrderDirection.DESC).name());
     }
 
     if (limitStart.isPresent()) {

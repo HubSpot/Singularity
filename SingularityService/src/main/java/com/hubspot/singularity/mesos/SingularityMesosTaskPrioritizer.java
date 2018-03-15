@@ -4,16 +4,17 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.ListIterator;
+import java.util.Optional;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import com.hubspot.singularity.SingularityPriorityFreezeParent;
-import com.hubspot.singularity.SingularityTaskRequest;
-import com.hubspot.singularity.SingularityTaskRequestWithPriority;
+import com.hubspot.singularity.api.disasters.SingularityPriorityFreezeParent;
+import com.hubspot.singularity.api.task.SingularityTaskRequest;
+import com.hubspot.singularity.api.task.SingularityTaskRequestWithPriority;
+import com.hubspot.singularity.api.task.SingularityTaskRequestWithPriorityIF;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.PriorityManager;
 
@@ -37,7 +38,7 @@ public class SingularityMesosTaskPrioritizer {
     for (SingularityTaskRequest taskRequest : dueTasks) {
       taskRequestWithPriorities.add(new SingularityTaskRequestWithPriority(taskRequest, getWeightedPriority(taskRequest, now)));
     }
-    Collections.sort(taskRequestWithPriorities, SingularityTaskRequestWithPriority.weightedPriorityComparator());
+    Collections.sort(taskRequestWithPriorities, SingularityTaskRequestWithPriorityIF.weightedPriorityComparator());
     List<SingularityTaskRequest> taskRequests = new ArrayList<>();
     for (SingularityTaskRequestWithPriority taskRequestWithPriority : taskRequestWithPriorities) {
       taskRequests.add(taskRequestWithPriority.getTaskRequest());

@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.TimeZone;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -14,23 +15,23 @@ import org.apache.commons.lang3.time.DateFormatUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import com.hubspot.singularity.helpers.MesosUtils;
 import com.hubspot.mesos.json.MesosFileChunkObject;
-import com.hubspot.singularity.ExtendedTaskState;
-import com.hubspot.singularity.SingularityDisasterDataPoint;
-import com.hubspot.singularity.SingularityEmailType;
-import com.hubspot.singularity.SingularityMailDisasterDataPoint;
-import com.hubspot.singularity.SingularityTask;
-import com.hubspot.singularity.SingularityTaskHistoryUpdate;
-import com.hubspot.singularity.SingularityTaskId;
-import com.hubspot.singularity.SingularityTaskMetadata;
+import com.hubspot.singularity.api.common.SingularityEmailType;
+import com.hubspot.singularity.api.disasters.SingularityDisasterDataPoint;
+import com.hubspot.singularity.api.disasters.SingularityMailDisasterDataPoint;
+import com.hubspot.singularity.api.task.ExtendedTaskState;
+import com.hubspot.singularity.api.task.SimplifiedTaskState;
+import com.hubspot.singularity.api.task.SingularityTask;
+import com.hubspot.singularity.api.task.SingularityTaskHistoryUpdate;
+import com.hubspot.singularity.api.task.SingularityTaskId;
+import com.hubspot.singularity.api.task.SingularityTaskMetadata;
 import com.hubspot.singularity.config.SMTPConfiguration;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.SandboxManager;
+import com.hubspot.singularity.helpers.MesosUtils;
 
 @Singleton
 public class MailTemplateHelpers {
@@ -52,7 +53,7 @@ public class MailTemplateHelpers {
   @Inject
   public MailTemplateHelpers(SandboxManager sandboxManager, SingularityConfiguration singularityConfiguration) {
     this.uiBaseUrl = singularityConfiguration.getSmtpConfigurationOptional().isPresent() ?
-        singularityConfiguration.getSmtpConfiguration().getUiBaseUrl().or(singularityConfiguration.getUiConfiguration().getBaseUrl()) :
+        singularityConfiguration.getSmtpConfiguration().getUiBaseUrl().map(Optional::of).orElse(singularityConfiguration.getUiConfiguration().getBaseUrl()) :
         singularityConfiguration.getUiConfiguration().getBaseUrl();
     this.sandboxManager = sandboxManager;
     this.smtpConfiguration = singularityConfiguration.getSmtpConfigurationOptional();
@@ -60,8 +61,8 @@ public class MailTemplateHelpers {
       this.taskDatePattern = Optional.of(this.smtpConfiguration.get().getMailerDatePattern());
       this.timeZone = Optional.of(this.smtpConfiguration.get().getMailerTimeZone());
     } else {
-      this.taskDatePattern = Optional.absent();
-      this.timeZone = Optional.absent();
+      this.taskDatePattern = Optional.empty();
+      this.timeZone = Optional.empty();
     }
   }
 
@@ -86,8 +87,8 @@ public class MailTemplateHelpers {
               humanizeTimestamp(metadataElement.getTimestamp()),
               metadataElement.getType(),
               metadataElement.getTitle(),
-              metadataElement.getUser().or(""),
-              metadataElement.getMessage().or(""),
+              metadataElement.getUser().orElse(""),
+              metadataElement.getMessage().orElse(""),
               metadataElement.getLevel().toString()));
     }
 
@@ -102,7 +103,7 @@ public class MailTemplateHelpers {
           new SingularityMailTaskHistoryUpdate(
               humanizeTimestamp(taskUpdate.getTimestamp()),
               WordUtils.capitalize(taskUpdate.getTaskState().getDisplayName()),
-              taskUpdate.getStatusMessage().or("")));
+              taskUpdate.getStatusMessage().orElse("")));
     }
 
     return output;
@@ -134,7 +135,7 @@ public class MailTemplateHelpers {
               filePath,
               getFileName(filePath),
               getSingularityLogLink(filePath, taskId.getId()),
-              getTaskLogFile(taskId, filePath, task, directory).or("")));
+              getTaskLogFile(taskId, filePath, task, directory).orElse("")));
     }
 
     return logTails;
@@ -151,7 +152,7 @@ public class MailTemplateHelpers {
     }
     if (!maybeRegex.isPresent()) {
       LOG.trace("No task log error regex provided.");
-      return Optional.absent();
+      return Optional.empty();
     }
     String regex = maybeRegex.get();
 
@@ -172,18 +173,18 @@ public class MailTemplateHelpers {
       }
     } catch (PatternSyntaxException e) {
       LOG.error("Invalid task log error regex supplied: \"{}\". Received exception: {}", regex, e);
-      return Optional.absent();
+      return Optional.empty();
     }
   }
 
   private Optional<String> getTaskLogFile(final SingularityTaskId taskId, final String filename, final Optional<SingularityTask> task, final Optional<String> directory) {
     if (!smtpConfiguration.isPresent()) {
       LOG.warn("Tried to get a task log file without SMTP configuration set up.");
-      return Optional.absent();
+      return Optional.empty();
     }
     if (!task.isPresent() || !directory.isPresent()) {
       LOG.warn("Couldn't retrieve {} for {} because task ({}) or directory ({}) wasn't present", filename, taskId, task.isPresent(), directory.isPresent());
-      return Optional.absent();
+      return Optional.empty();
     }
 
     final String slaveHostname = task.get().getHostname();
@@ -199,20 +200,20 @@ public class MailTemplateHelpers {
 
     if (!maybeOffset.isPresent()) {
       LOG.trace("Failed to find logs or error finding logs for task {} file {}", taskId.getId(), fullPath);
-      return Optional.absent();
+      return Optional.empty();
     }
     try {
       logChunkObject = sandboxManager.read(slaveHostname, fullPath, maybeOffset, Optional.of(logLength));
     } catch (RuntimeException e) {
       LOG.error("Sandboxmanager failed to read {}/{} on slave {}", directory.get(), filename, slaveHostname, e);
-      return Optional.absent();
+      return Optional.empty();
     }
 
     if (logChunkObject.isPresent()) {
       return Optional.of(logChunkObject.get().getData());
     } else {
       LOG.error("Failed to get {} log for {}", filename, taskId.getId());
-      return Optional.absent();
+      return Optional.empty();
     }
   }
 
@@ -230,14 +231,14 @@ public class MailTemplateHelpers {
     }
     long length = logLength + pattern.toString().length(); // Get extra so that we can be sure to find the error
     Optional<MesosFileChunkObject> logChunkObject;
-    Optional<MesosFileChunkObject> previous = Optional.absent();
+    Optional<MesosFileChunkObject> previous = Optional.empty();
 
     while (offset <= maxOffset) {
       try {
         logChunkObject = sandboxManager.read(slaveHostname, fullPath, Optional.of(offset), Optional.of(length));
       } catch (RuntimeException e) {
         LOG.error("Sandboxmanager failed to read {} on slave {}", fullPath, slaveHostname, e);
-        return Optional.absent();
+        return Optional.empty();
       }
       if (logChunkObject.isPresent()) {
         if (logChunkObject.get().getData().equals("")) { // Passed end of file
@@ -245,7 +246,7 @@ public class MailTemplateHelpers {
             long end = previous.get().getOffset() + previous.get().getData().length();
             return Optional.of(end - logLength);
           }
-          return Optional.absent();
+          return Optional.empty();
         }
         Matcher matcher = pattern.matcher(logChunkObject.get().getData());
         if (matcher.find()) {
@@ -255,7 +256,7 @@ public class MailTemplateHelpers {
         }
       } else { // Couldn't read anything
         LOG.error("Failed to read log file {}", fullPath);
-        return Optional.absent();
+        return Optional.empty();
       }
       previous = logChunkObject;
     }
@@ -266,16 +267,16 @@ public class MailTemplateHelpers {
   private Optional<Long> getMaybeTaskLogEndOfFileOffset(final String slaveHostname, final String fullPath, final long logLength) {
     Optional<MesosFileChunkObject> logChunkObject;
     try {
-      logChunkObject = sandboxManager.read(slaveHostname, fullPath, Optional.<Long>absent(), Optional.<Long>absent());
+      logChunkObject = sandboxManager.read(slaveHostname, fullPath, Optional.empty(), Optional.empty());
     } catch (RuntimeException e) {
       LOG.error("Sandboxmanager failed to read {} on slave {}", fullPath, slaveHostname, e);
-      return Optional.absent();
+      return Optional.empty();
     }
     if (logChunkObject.isPresent()) {
       return Optional.of(Math.max(0, logChunkObject.get().getOffset() - logLength));
     } else {
       LOG.error("Failed to get offset for log file {}", fullPath);
-      return Optional.absent();
+      return Optional.empty();
     }
 
   }
@@ -322,8 +323,8 @@ public class MailTemplateHelpers {
   }
 
   public boolean didTaskRun(Collection<SingularityTaskHistoryUpdate> history) {
-    SingularityTaskHistoryUpdate.SimplifiedTaskState simplifiedTaskState = SingularityTaskHistoryUpdate.getCurrentState(history);
+    SimplifiedTaskState simplifiedTaskState = SingularityTaskHistoryUpdate.getCurrentState(history);
 
-    return simplifiedTaskState == SingularityTaskHistoryUpdate.SimplifiedTaskState.DONE || simplifiedTaskState == SingularityTaskHistoryUpdate.SimplifiedTaskState.RUNNING;
+    return simplifiedTaskState == SimplifiedTaskState.DONE || simplifiedTaskState == SimplifiedTaskState.RUNNING;
   }
 }

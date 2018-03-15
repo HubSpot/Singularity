@@ -2,6 +2,7 @@ package com.hubspot.singularity.scheduler;
 
 import java.util.Collection;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
@@ -14,28 +15,27 @@ import org.slf4j.LoggerFactory;
 
 import com.codahale.metrics.annotation.Timed;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
-import com.hubspot.deploy.HealthcheckOptions;
-import com.hubspot.singularity.helpers.MesosProtosUtils;
-import com.hubspot.singularity.helpers.MesosUtils;
-import com.hubspot.singularity.ExtendedTaskState;
-import com.hubspot.singularity.HealthcheckProtocol;
 import com.hubspot.singularity.SingularityAbort;
-import com.hubspot.singularity.SingularityAction;
 import com.hubspot.singularity.SingularityMainModule;
-import com.hubspot.singularity.SingularityPendingDeploy;
-import com.hubspot.singularity.SingularityRequestWithState;
-import com.hubspot.singularity.SingularityTask;
-import com.hubspot.singularity.SingularityTaskHealthcheckResult;
-import com.hubspot.singularity.SingularityTaskHistoryUpdate;
-import com.hubspot.singularity.SingularityTaskId;
+import com.hubspot.singularity.api.common.SingularityAction;
+import com.hubspot.singularity.api.deploy.HealthcheckOptions;
+import com.hubspot.singularity.api.deploy.HealthcheckProtocol;
+import com.hubspot.singularity.api.request.SingularityPendingDeploy;
+import com.hubspot.singularity.api.request.SingularityRequestWithState;
+import com.hubspot.singularity.api.task.ExtendedTaskState;
+import com.hubspot.singularity.api.task.SingularityTask;
+import com.hubspot.singularity.api.task.SingularityTaskHealthcheckResult;
+import com.hubspot.singularity.api.task.SingularityTaskHistoryUpdate;
+import com.hubspot.singularity.api.task.SingularityTaskId;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.DisasterManager;
 import com.hubspot.singularity.data.TaskManager;
+import com.hubspot.singularity.helpers.MesosProtosUtils;
+import com.hubspot.singularity.helpers.MesosUtils;
 import com.hubspot.singularity.sentry.SingularityExceptionNotifier;
 import com.ning.http.client.AsyncHttpClient;
 import com.ning.http.client.PerRequestConfig;
@@ -82,12 +82,12 @@ public class SingularityHealthchecker {
 
   public void enqueueHealthcheck(SingularityTask task, boolean ignoreExisting, boolean inStartup, boolean isFirstCheck) {
     HealthcheckOptions options = task.getTaskRequest().getDeploy().getHealthcheck().get();
-    final Optional<Integer> healthcheckMaxRetries = options.getMaxRetries().or(configuration.getHealthcheckMaxRetries());
+    final Optional<Integer> healthcheckMaxRetries = options.getMaxRetries().isPresent() ? options.getMaxRetries() : configuration.getHealthcheckMaxRetries();
 
     Optional<Long> maybeRunningAt = getRunningAt(taskManager.getTaskHistoryUpdates(task.getTaskId()));
     if (maybeRunningAt.isPresent()) {
       final long durationSinceRunning = System.currentTimeMillis() - maybeRunningAt.get();
-      final int startupTimeout = options.getStartupTimeoutSeconds().or(configuration.getStartupTimeoutSeconds());
+      final int startupTimeout = options.getStartupTimeoutSeconds().orElse(configuration.getStartupTimeoutSeconds());
       if (inStartup && durationSinceRunning > TimeUnit.SECONDS.toMillis(startupTimeout)) {
         LOG.debug("{} since running", durationSinceRunning);
         LOG.info("Not enqueuing new healthcheck for {}, has not responded to healthchecks before startup timeout of {}s", task.getTaskId(), startupTimeout);
@@ -118,18 +118,18 @@ public class SingularityHealthchecker {
         return Optional.of(update.getTimestamp());
       }
     }
-    return Optional.absent();
+    return Optional.empty();
   }
 
   private int getDelaySeconds(SingularityTaskId taskId, HealthcheckOptions options, boolean inStartup, boolean isFirstCheck) {
-    if (isFirstCheck && options.getStartupDelaySeconds().or(configuration.getStartupDelaySeconds()).isPresent()) {
-      int delaySeconds = options.getStartupDelaySeconds().or(configuration.getStartupDelaySeconds()).get();
+    if (isFirstCheck && (options.getStartupDelaySeconds().isPresent() || configuration.getStartupDelaySeconds().isPresent())) {
+      int delaySeconds = options.getStartupDelaySeconds().isPresent() ? options.getStartupDelaySeconds().get() : configuration.getStartupDelaySeconds().get();
       LOG.trace("Delaying first healthcheck %s seconds for task {}", delaySeconds, taskId);
       return delaySeconds;
     } else if (inStartup) {
-      return options.getStartupIntervalSeconds().or(configuration.getStartupIntervalSeconds());
+      return options.getStartupIntervalSeconds().orElse(configuration.getStartupIntervalSeconds());
     } else {
-      return options.getIntervalSeconds().or(configuration.getHealthcheckIntervalSeconds());
+      return options.getIntervalSeconds().orElse(configuration.getHealthcheckIntervalSeconds());
     }
   }
 
@@ -211,18 +211,20 @@ public class SingularityHealthchecker {
 
   private Optional<String> getHealthcheckUri(SingularityTask task) {
     if (!task.getTaskRequest().getDeploy().getHealthcheck().isPresent()) {
-      return Optional.absent();
+      return Optional.empty();
     }
 
     HealthcheckOptions options = task.getTaskRequest().getDeploy().getHealthcheck().get();
 
     final String hostname = task.getHostname();
 
-    Optional<Long> healthcheckPort = options.getPortNumber().or(MesosUtils.getPortByIndex(mesosProtosUtils.toResourceList(task.getMesosTask().getResources()), options.getPortIndex().or(0)));
+    Optional<Long> healthcheckPort = options.getPortNumber().isPresent()
+        ? options.getPortNumber()
+        : MesosUtils.getPortByIndex(mesosProtosUtils.toResourceList(task.getMesosTask().getResources()), options.getPortIndex().orElse(0));
 
     if (!healthcheckPort.isPresent() || healthcheckPort.get() < 1L) {
       LOG.warn("Couldn't find a port for health check for task {}", task);
-      return Optional.absent();
+      return Optional.empty();
     }
 
     String uri = task.getTaskRequest().getDeploy().getHealthcheck().get().getUri();
@@ -231,13 +233,13 @@ public class SingularityHealthchecker {
       uri = uri.substring(1);
     }
 
-    HealthcheckProtocol protocol = options.getProtocol().or(DEFAULT_HEALTH_CHECK_SCHEME);
+    HealthcheckProtocol protocol = options.getProtocol().orElse(DEFAULT_HEALTH_CHECK_SCHEME);
 
     return Optional.of(String.format("%s://%s:%d/%s", protocol.getProtocol(), hostname, healthcheckPort.get(), uri));
   }
 
   private void saveFailure(SingularityHealthcheckAsyncHandler handler, String message) {
-    handler.saveResult(Optional.<Integer> absent(), Optional.<String> absent(), Optional.of(message), Optional.<Throwable>absent());
+    handler.saveResult(Optional.empty(), Optional.empty(), Optional.of(message), Optional.empty());
   }
 
   private boolean shouldHealthcheck(final SingularityTask task, final Optional<SingularityRequestWithState> request, Optional<SingularityPendingDeploy> pendingDeploy) {
@@ -248,15 +250,15 @@ public class SingularityHealthchecker {
       return false;
     }
 
-    if (task.getTaskRequest().getPendingTask().getSkipHealthchecks().or(false)) {
+    if (task.getTaskRequest().getPendingTask().getSkipHealthchecks().orElse(false)) {
       return false;
     }
 
-    if (pendingDeploy.isPresent() && pendingDeploy.get().getDeployMarker().getDeployId().equals(task.getTaskId().getDeployId()) && task.getTaskRequest().getDeploy().getSkipHealthchecksOnDeploy().or(false)) {
+    if (pendingDeploy.isPresent() && pendingDeploy.get().getDeployMarker().getDeployId().equals(task.getTaskId().getDeployId()) && task.getTaskRequest().getDeploy().getSkipHealthchecksOnDeploy().orElse(false)) {
       return false;
     }
 
-    if (request.isPresent() && request.get().getRequest().getSkipHealthchecks().or(false)) {
+    if (request.isPresent() && request.get().getRequest().getSkipHealthchecks().orElse(false)) {
       return false;
     }
 
@@ -280,7 +282,7 @@ public class SingularityHealthchecker {
     }
 
     final Integer timeoutSeconds = task.getTaskRequest().getDeploy().getHealthcheck().isPresent() ?
-      task.getTaskRequest().getDeploy().getHealthcheck().get().getResponseTimeoutSeconds().or(configuration.getHealthcheckTimeoutSeconds()) : configuration.getHealthcheckTimeoutSeconds();
+      task.getTaskRequest().getDeploy().getHealthcheck().get().getResponseTimeoutSeconds().orElse(configuration.getHealthcheckTimeoutSeconds()) : configuration.getHealthcheckTimeoutSeconds();
 
     try {
       PerRequestConfig prc = new PerRequestConfig();

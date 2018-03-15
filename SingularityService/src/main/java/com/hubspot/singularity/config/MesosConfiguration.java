@@ -1,11 +1,12 @@
 package com.hubspot.singularity.config;
 
+import java.util.Optional;
+
 import javax.validation.constraints.NotNull;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.google.common.base.Optional;
-import com.hubspot.singularity.MachineLoadMetric;
-import com.hubspot.singularity.SingularityUsageScoringStrategy;
+import com.hubspot.singularity.api.machines.MachineLoadMetric;
+import com.hubspot.singularity.api.machines.SingularityUsageScoringStrategy;
 
 @JsonIgnoreProperties( ignoreUnknown = true )
 public class MesosConfiguration {
@@ -27,7 +28,7 @@ public class MesosConfiguration {
 
   private boolean checkpoint = true;
 
-  private Optional<String> frameworkRole = Optional.absent();
+  private Optional<String> frameworkRole = Optional.empty();
 
   @NotNull
   private String frameworkUser = "root";
@@ -40,7 +41,7 @@ public class MesosConfiguration {
 
   private int slaveHttpPort = 5051;
 
-  private Optional<Integer> slaveHttpsPort = Optional.absent();
+  private Optional<Integer> slaveHttpsPort = Optional.empty();
 
   private int maxNumInstancesPerRequest = 25;
   private int maxNumCpusPerInstance = 50;
@@ -50,8 +51,8 @@ public class MesosConfiguration {
   private int maxDiskMbPerInstance = 60000;
   private int maxDiskMbPerRequest = 3000000;
 
-  private Optional<String> credentialPrincipal = Optional.absent();
-  private Optional<String> credentialSecret = Optional.absent();
+  private Optional<String> credentialPrincipal = Optional.empty();
+  private Optional<String> credentialSecret = Optional.empty();
 
   private long rxEventBufferSize = 10000;
   private int statusUpdateConcurrencyLimit = 500;

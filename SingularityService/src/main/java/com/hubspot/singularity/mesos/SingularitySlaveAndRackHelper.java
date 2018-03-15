@@ -3,13 +3,13 @@ package com.hubspot.singularity.mesos;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import javax.inject.Singleton;
 
 import org.apache.mesos.v1.Protos.Attribute;
 import org.apache.mesos.v1.Protos.Offer;
 
-import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.hubspot.singularity.config.MesosConfiguration;
 import com.hubspot.singularity.config.SingularityConfiguration;
@@ -63,11 +63,11 @@ public class SingularitySlaveAndRackHelper {
       }
     }
 
-    return Optional.absent();
+    return Optional.empty();
   }
 
   public String getRackIdOrDefault(Offer offer) {
-    return getRackId(offer).or(defaultRackId);
+    return getRackId(offer).orElse(defaultRackId);
   }
 
   public Map<String, String> getTextAttributes(Map<String, String> attributes) {

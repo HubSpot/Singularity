@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 import javax.ws.rs.WebApplicationException;
@@ -12,28 +13,25 @@ import org.apache.mesos.v1.Protos.TaskState;
 import org.junit.Assert;
 import org.junit.Test;
 
-import com.google.common.base.Optional;
 import com.hubspot.baragon.models.BaragonRequestState;
-import com.hubspot.singularity.DeployState;
-import com.hubspot.singularity.LoadBalancerRequestType;
-import com.hubspot.singularity.RequestState;
-import com.hubspot.singularity.RequestType;
-import com.hubspot.singularity.SingularityDeploy;
-import com.hubspot.singularity.SingularityDeployBuilder;
-import com.hubspot.singularity.SingularityDeployProgress;
-import com.hubspot.singularity.SingularityPendingDeploy;
-import com.hubspot.singularity.SingularityPendingRequest.PendingType;
-import com.hubspot.singularity.SingularityPendingTask;
-import com.hubspot.singularity.SingularityPendingTaskBuilder;
-import com.hubspot.singularity.SingularityPendingTaskId;
-import com.hubspot.singularity.SingularityRequest;
-import com.hubspot.singularity.SingularityRunNowRequestBuilder;
-import com.hubspot.singularity.SingularityTask;
-import com.hubspot.singularity.SingularityTaskId;
-import com.hubspot.singularity.SingularityUpdatePendingDeployRequest;
-import com.hubspot.singularity.TaskCleanupType;
-import com.hubspot.singularity.api.SingularityDeployRequest;
-import com.hubspot.singularity.api.SingularityRunNowRequest;
+import com.hubspot.singularity.api.common.LoadBalancerRequestType;
+import com.hubspot.singularity.api.deploy.DeployState;
+import com.hubspot.singularity.api.deploy.SingularityDeploy;
+import com.hubspot.singularity.api.deploy.SingularityDeployBuilder;
+import com.hubspot.singularity.api.deploy.SingularityDeployProgress;
+import com.hubspot.singularity.api.deploy.SingularityDeployRequest;
+import com.hubspot.singularity.api.request.RequestState;
+import com.hubspot.singularity.api.request.RequestType;
+import com.hubspot.singularity.api.request.SingularityPendingDeploy;
+import com.hubspot.singularity.api.request.SingularityPendingRequest.PendingType;
+import com.hubspot.singularity.api.request.SingularityRequest;
+import com.hubspot.singularity.api.request.SingularityRunNowRequest;
+import com.hubspot.singularity.api.request.SingularityUpdatePendingDeployRequest;
+import com.hubspot.singularity.api.task.SingularityPendingTask;
+import com.hubspot.singularity.api.task.SingularityPendingTaskId;
+import com.hubspot.singularity.api.task.SingularityTask;
+import com.hubspot.singularity.api.task.SingularityTaskId;
+import com.hubspot.singularity.api.task.TaskCleanupType;
 
 public class SingularityDeploysTest extends SingularitySchedulerTestBase {
 
@@ -80,16 +78,16 @@ public class SingularityDeploysTest extends SingularitySchedulerTestBase {
     initSecondDeploy();
 
     SingularityPendingTaskId taskIdOne = new SingularityPendingTaskId(requestId, firstDeployId, System.currentTimeMillis() + TimeUnit.DAYS.toMillis(3), 1, PendingType.IMMEDIATE, System.currentTimeMillis());
-    SingularityPendingTask taskOne = new SingularityPendingTaskBuilder().setPendingTaskId(taskIdOne).build();
+    SingularityPendingTask taskOne = SingularityPendingTask.builder().setPendingTaskId(taskIdOne).build();
 
     SingularityPendingTaskId taskIdTwo = new SingularityPendingTaskId(requestId, firstDeployId, System.currentTimeMillis() + TimeUnit.DAYS.toMillis(1), 2, PendingType.IMMEDIATE, System.currentTimeMillis());
-    SingularityPendingTask taskTwo = new SingularityPendingTaskBuilder().setPendingTaskId(taskIdTwo).build();
+    SingularityPendingTask taskTwo = SingularityPendingTask.builder().setPendingTaskId(taskIdTwo).build();
 
     SingularityPendingTaskId taskIdThree = new SingularityPendingTaskId(requestId, secondDeployId, System.currentTimeMillis() + TimeUnit.DAYS.toMillis(3), 1, PendingType.IMMEDIATE, System.currentTimeMillis());
-    SingularityPendingTask taskThree = new SingularityPendingTaskBuilder().setPendingTaskId(taskIdThree).build();
+    SingularityPendingTask taskThree = SingularityPendingTask.builder().setPendingTaskId(taskIdThree).build();
 
     SingularityPendingTaskId taskIdFour = new SingularityPendingTaskId(requestId + "hi", firstDeployId, System.currentTimeMillis() + TimeUnit.DAYS.toMillis(3), 5, PendingType.IMMEDIATE, System.currentTimeMillis());
-    SingularityPendingTask taskFour = new SingularityPendingTaskBuilder().setPendingTaskId(taskIdFour).build();
+    SingularityPendingTask taskFour = SingularityPendingTask.builder().setPendingTaskId(taskIdFour).build();
 
     taskManager.savePendingTask(taskOne);
     taskManager.savePendingTask(taskTwo);
@@ -156,7 +154,7 @@ public class SingularityDeploysTest extends SingularitySchedulerTestBase {
     SingularityTask firstTask = launchTask(request, firstDeploy, 1, TaskState.TASK_RUNNING);
     SingularityTask secondTask = launchTask(request, firstDeploy, 2, TaskState.TASK_RUNNING);
 
-    deploy(secondDeployId, Optional.<Boolean> absent(), Optional.of(1), Optional.<Boolean> absent(), false);
+    deploy(secondDeployId, Optional.empty(), Optional.of(1), Optional.empty(), false);
     deployChecker.checkDeploys();
     scheduler.drainPendingQueue();
     Assert.assertEquals(1, taskManager.getPendingTaskIds().size());
@@ -209,7 +207,7 @@ public class SingularityDeploysTest extends SingularitySchedulerTestBase {
 
     SingularityTask firstTask = launchTask(request, firstDeploy, 1, TaskState.TASK_RUNNING);
     launchTask(request, firstDeploy, 2, TaskState.TASK_RUNNING);
-    deploy(secondDeployId, Optional.<Boolean> absent(), Optional.of(1), Optional.<Boolean> absent(), false);
+    deploy(secondDeployId, Optional.empty(), Optional.of(1), Optional.empty(), false);
     deployChecker.checkDeploys();
     scheduler.drainPendingQueue();
     resourceOffers();
@@ -288,7 +286,7 @@ public class SingularityDeploysTest extends SingularitySchedulerTestBase {
     SingularityTask firstTask = launchTask(request, firstDeploy, 1, TaskState.TASK_RUNNING);
     SingularityTask secondTask = launchTask(request, firstDeploy, 2, TaskState.TASK_RUNNING);
 
-    deploy(secondDeployId, Optional.<Boolean>absent(), Optional.of(1), Optional.of(false), false);
+    deploy(secondDeployId, Optional.empty(), Optional.of(1), Optional.of(false), false);
     deployChecker.checkDeploys();
     scheduler.drainPendingQueue();
     Assert.assertEquals(1, taskManager.getPendingTaskIds().size());
@@ -355,7 +353,7 @@ public class SingularityDeploysTest extends SingularitySchedulerTestBase {
     SingularityTask thirdTask = launchTask(request, firstDeploy, 3, TaskState.TASK_RUNNING);
     SingularityTask fourthTask = launchTask(request, firstDeploy, 4, TaskState.TASK_RUNNING);
 
-    deploy(secondDeployId, Optional.<Boolean>absent(), Optional.of(2), Optional.<Boolean> absent(), false);
+    deploy(secondDeployId, Optional.empty(), Optional.of(2), Optional.empty(), false);
     deployChecker.checkDeploys();
     scheduler.drainPendingQueue();
     Assert.assertEquals(2, taskManager.getPendingTaskIds().size());
@@ -410,7 +408,7 @@ public class SingularityDeploysTest extends SingularitySchedulerTestBase {
 
     SingularityTask firstTask = launchTask(request, firstDeploy, 1, TaskState.TASK_RUNNING);
 
-    deploy(secondDeployId, Optional.<Boolean>absent(), Optional.of(1), Optional.of(false), false);
+    deploy(secondDeployId, Optional.empty(), Optional.of(1), Optional.of(false), false);
     deployChecker.checkDeploys();
     scheduler.drainPendingQueue();
     Assert.assertEquals(1, taskManager.getPendingTaskIds().size());
@@ -440,7 +438,7 @@ public class SingularityDeploysTest extends SingularitySchedulerTestBase {
 
     SingularityTask firstTask = launchTask(request, firstDeploy, 1, TaskState.TASK_RUNNING);
 
-    deploy(secondDeployId, Optional.<Boolean>absent(), Optional.of(1), Optional.of(false), false);
+    deploy(secondDeployId, Optional.empty(), Optional.of(1), Optional.of(false), false);
     deployChecker.checkDeploys();
     scheduler.drainPendingQueue();
     Assert.assertEquals(1, taskManager.getPendingTaskIds().size());
@@ -465,8 +463,8 @@ public class SingularityDeploysTest extends SingularitySchedulerTestBase {
 
     initFirstDeploy();
 
-    deploy(secondDeployId, Optional.<Boolean>absent(), Optional.of(1), Optional.of(false), false);
-    requestManager.pause(request, System.currentTimeMillis(), Optional.<String>absent(), Optional.<String>absent());
+    deploy(secondDeployId, Optional.empty(), Optional.of(1), Optional.of(false), false);
+    requestManager.pause(request, System.currentTimeMillis(), Optional.empty(), Optional.empty());
     deployChecker.checkDeploys();
 
     Assert.assertEquals(DeployState.FAILED, deployManager.getDeployResult(requestId, secondDeployId).get().getDeployState());
@@ -526,7 +524,7 @@ public class SingularityDeploysTest extends SingularitySchedulerTestBase {
     SingularityTask firstTask = launchTask(request, firstDeploy, 1, TaskState.TASK_RUNNING);
     SingularityTask secondTask = launchTask(request, firstDeploy, 2, TaskState.TASK_RUNNING);
 
-    deploy(secondDeployId, Optional.<Boolean>absent(), Optional.of(1), Optional.<Boolean> absent(), true);
+    deploy(secondDeployId, Optional.empty(), Optional.of(1), Optional.empty(), true);
     deployChecker.checkDeploys();
     scheduler.drainPendingQueue();
     Assert.assertEquals(1, taskManager.getPendingTaskIds().size());
@@ -606,7 +604,7 @@ public class SingularityDeploysTest extends SingularitySchedulerTestBase {
     SingularityTask firstTask = launchTask(request, firstDeploy, 1, TaskState.TASK_RUNNING);
     SingularityTask secondTask = launchTask(request, firstDeploy, 2, TaskState.TASK_RUNNING);
 
-    deploy(secondDeployId, Optional.<Boolean> absent(), Optional.of(1), Optional.<Boolean> absent(), false);
+    deploy(secondDeployId, Optional.empty(), Optional.of(1), Optional.empty(), false);
     deployChecker.checkDeploys();
     scheduler.drainPendingQueue();
     Assert.assertEquals(1, taskManager.getPendingTaskIds().size());
@@ -713,7 +711,7 @@ public class SingularityDeploysTest extends SingularitySchedulerTestBase {
     initRequest();
     initFirstDeploy();
 
-    requestManager.pause(request, System.currentTimeMillis(), Optional.<String>absent(), Optional.<String>absent());
+    requestManager.pause(request, System.currentTimeMillis(), Optional.empty(), Optional.empty());
 
     boolean exception = false;
 
@@ -798,7 +796,7 @@ public class SingularityDeploysTest extends SingularitySchedulerTestBase {
     String deployId = "test_new_request_data";
     SingularityDeploy deploy = new SingularityDeployBuilder(request.getId(), deployId).setCommand(Optional.of("sleep 100")).build();
 
-    deployResource.deploy(new SingularityDeployRequest(deploy, Optional.absent(), Optional.absent(), Optional.of(newRequest)), singularityUser);
+    deployResource.deploy(new SingularityDeployRequest(deploy, Optional.empty(), Optional.empty(), Optional.of(newRequest)), singularityUser);
 
     deployChecker.checkDeploys();
     scheduler.drainPendingQueue();
@@ -831,7 +829,7 @@ public class SingularityDeploysTest extends SingularitySchedulerTestBase {
     String deployId = "test_new_request_data";
     SingularityDeploy deploy = new SingularityDeployBuilder(request.getId(), deployId).setCommand(Optional.of("sleep 100")).build();
 
-    deployResource.deploy(new SingularityDeployRequest(deploy, Optional.absent(), Optional.absent(), Optional.of(newRequest)), singularityUser);
+    deployResource.deploy(new SingularityDeployRequest(deploy, Optional.empty(), Optional.empty(), Optional.of(newRequest)), singularityUser);
 
     requestResource.postRequest(newRequest, singularityUser);
   }
@@ -865,7 +863,7 @@ public class SingularityDeploysTest extends SingularitySchedulerTestBase {
     SingularityTask secondTask = launchTask(request, firstDeploy, 2, TaskState.TASK_RUNNING);
     SingularityTask thirdTask = launchTask(request, firstDeploy, 3, TaskState.TASK_RUNNING);
 
-    deploy(secondDeployId, Optional.<Boolean>absent(), Optional.of(1), Optional.<Boolean>absent(), false);
+    deploy(secondDeployId, Optional.empty(), Optional.of(1), Optional.empty(), false);
     deployChecker.checkDeploys();
     scheduler.drainPendingQueue();
     resourceOffers();
@@ -913,12 +911,12 @@ public class SingularityDeploysTest extends SingularitySchedulerTestBase {
     initRequestWithType(RequestType.SCHEDULED, false);
     String deployId = "d1";
 
-    SingularityRunNowRequest runNowRequest = new SingularityRunNowRequestBuilder().setMessage("Message").build();
+    SingularityRunNowRequest runNowRequest = SingularityRunNowRequest.builder().setMessage("Message").build();
     SingularityDeploy deploy = new SingularityDeployBuilder(requestId, deployId)
         .setRunImmediately(Optional.of(runNowRequest))
         .setCommand(Optional.of("printenv > tmp.txt"))
         .build();
-    SingularityDeployRequest deployRequest = new SingularityDeployRequest(deploy, Optional.absent(), Optional.absent());
+    SingularityDeployRequest deployRequest = new SingularityDeployRequest(deploy, Optional.empty(), Optional.empty());
     deployResource.deploy(deployRequest, singularityUser);
     deployChecker.checkDeploys();
 
@@ -940,12 +938,12 @@ public class SingularityDeploysTest extends SingularitySchedulerTestBase {
     initRequestWithType(RequestType.SCHEDULED, false);
     String deployId = "d1";
 
-    SingularityRunNowRequest runNowRequest = new SingularityRunNowRequestBuilder().setMessage("Message").build();
+    SingularityRunNowRequest runNowRequest = SingularityRunNowRequest.builder().setMessage("Message").build();
     SingularityDeploy deploy = new SingularityDeployBuilder(requestId, deployId)
         .setRunImmediately(Optional.of(runNowRequest))
         .setCommand(Optional.of("printenv > tmp.txt"))
         .build();
-    SingularityDeployRequest deployRequest = new SingularityDeployRequest(deploy, Optional.absent(), Optional.absent());
+    SingularityDeployRequest deployRequest = new SingularityDeployRequest(deploy, Optional.empty(), Optional.empty());
     deployResource.deploy(deployRequest, singularityUser);
     deployChecker.checkDeploys();
 

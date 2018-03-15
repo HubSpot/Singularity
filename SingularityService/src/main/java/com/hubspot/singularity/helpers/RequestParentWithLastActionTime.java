@@ -3,7 +3,7 @@ package com.hubspot.singularity.helpers;
 import java.util.Objects;
 
 import com.google.common.primitives.Longs;
-import com.hubspot.singularity.SingularityRequestWithState;
+import com.hubspot.singularity.api.request.SingularityRequestWithState;
 
 public class RequestParentWithLastActionTime implements Comparable<RequestParentWithLastActionTime> {
   private final SingularityRequestWithState requestWithState;

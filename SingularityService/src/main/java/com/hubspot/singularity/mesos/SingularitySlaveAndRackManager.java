@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
@@ -16,7 +17,6 @@ import org.apache.mesos.v1.Protos.Offer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Optional;
 import com.google.common.collect.HashMultiset;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
@@ -25,19 +25,19 @@ import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import com.hubspot.mesos.json.MesosMasterSlaveObject;
 import com.hubspot.mesos.json.MesosMasterStateObject;
-import com.hubspot.singularity.MachineState;
-import com.hubspot.singularity.SingularityMachineAbstraction;
-import com.hubspot.singularity.SingularityPendingRequest.PendingType;
-import com.hubspot.singularity.SingularityPendingTask;
-import com.hubspot.singularity.SingularityPendingTaskId;
-import com.hubspot.singularity.SingularityRack;
-import com.hubspot.singularity.SingularityRequest;
-import com.hubspot.singularity.SingularitySlave;
-import com.hubspot.singularity.SingularityTask;
-import com.hubspot.singularity.SingularityTaskId;
-import com.hubspot.singularity.SingularityTaskRequest;
-import com.hubspot.singularity.SlaveMatchState;
-import com.hubspot.singularity.SlavePlacement;
+import com.hubspot.singularity.api.machines.MachineState;
+import com.hubspot.singularity.api.machines.SingularityMachineAbstraction;
+import com.hubspot.singularity.api.machines.SingularityRack;
+import com.hubspot.singularity.api.machines.SingularitySlave;
+import com.hubspot.singularity.api.machines.SlaveMatchState;
+import com.hubspot.singularity.api.request.SingularityPendingRequest.PendingType;
+import com.hubspot.singularity.api.request.SingularityRequest;
+import com.hubspot.singularity.api.request.SlavePlacement;
+import com.hubspot.singularity.api.task.SingularityPendingTask;
+import com.hubspot.singularity.api.task.SingularityPendingTaskId;
+import com.hubspot.singularity.api.task.SingularityTask;
+import com.hubspot.singularity.api.task.SingularityTaskId;
+import com.hubspot.singularity.api.task.SingularityTaskRequest;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.AbstractMachineManager;
 import com.hubspot.singularity.data.InactiveSlaveManager;
@@ -106,7 +106,7 @@ public class SingularitySlaveAndRackManager {
       return SlaveMatchState.RACK_DECOMMISSIONING;
     }
 
-    if (!taskRequest.getRequest().getRackAffinity().or(Collections.emptyList()).isEmpty()) {
+    if (!taskRequest.getRequest().getRackAffinity().orElse(Collections.emptyList()).isEmpty()) {
       if (!taskRequest.getRequest().getRackAffinity().get().contains(rackId)) {
         LOG.trace("Task {} requires a rack in {} (current rack {})", taskRequest.getPendingTask().getPendingTaskId(), taskRequest.getRequest().getRackAffinity().get(), rackId);
         return SlaveMatchState.RACK_AFFINITY_NOT_MATCHING;
@@ -117,7 +117,7 @@ public class SingularitySlaveAndRackManager {
       return SlaveMatchState.SLAVE_ATTRIBUTES_DO_NOT_MATCH;
     }
 
-    final SlavePlacement slavePlacement = taskRequest.getRequest().getSlavePlacement().or(configuration.getDefaultSlavePlacement());
+    final SlavePlacement slavePlacement = taskRequest.getRequest().getSlavePlacement().orElse(configuration.getDefaultSlavePlacement());
 
     if (!taskRequest.getRequest().isRackSensitive() && slavePlacement == SlavePlacement.GREEDY) {
       // todo: account for this or let this behavior continue?
@@ -248,10 +248,10 @@ public class SingularitySlaveAndRackManager {
       if ((taskRequest.getRequest().getRequiredSlaveAttributes().isPresent() && !taskRequest.getRequest().getRequiredSlaveAttributes().get().isEmpty())
           || (taskRequest.getRequest().getAllowedSlaveAttributes().isPresent() && !taskRequest.getRequest().getAllowedSlaveAttributes().get().isEmpty())) {
         Map<String, String> mergedAttributes = new HashMap<>();
-        mergedAttributes.putAll(taskRequest.getRequest().getRequiredSlaveAttributes().or(new HashMap<>()));
-        mergedAttributes.putAll(taskRequest.getRequest().getAllowedSlaveAttributes().or(new HashMap<>()));
+        mergedAttributes.putAll(taskRequest.getRequest().getRequiredSlaveAttributes().orElse(new HashMap<>()));
+        mergedAttributes.putAll(taskRequest.getRequest().getAllowedSlaveAttributes().orElse(new HashMap<>()));
         if (!slaveAndRackHelper.hasRequiredAttributes(mergedAttributes, reservedSlaveAttributes)) {
-          LOG.trace("Slaves with attributes {} are reserved for matching tasks. Task with attributes {} does not match", reservedSlaveAttributes, taskRequest.getRequest().getRequiredSlaveAttributes().or(Collections.emptyMap()));
+          LOG.trace("Slaves with attributes {} are reserved for matching tasks. Task with attributes {} does not match", reservedSlaveAttributes, taskRequest.getRequest().getRequiredSlaveAttributes().orElse(Collections.emptyMap()));
           return false;
         }
       } else {
@@ -311,7 +311,7 @@ public class SingularitySlaveAndRackManager {
 
     if (slave.isPresent()) {
       MachineState previousState = slave.get().getCurrentState().getState();
-      slaveManager.changeState(slave.get(), MachineState.DEAD, Optional.absent(), Optional.absent());
+      slaveManager.changeState(slave.get(), MachineState.DEAD, Optional.empty(), Optional.empty());
       if (configuration.getDisasterDetection().isEnabled()) {
         updateDisasterCounter(previousState);
       }
@@ -342,7 +342,7 @@ public class SingularitySlaveAndRackManager {
     LOG.info("Found {} slaves left in rack {}", numInRack, lostSlave.getRackId());
 
     if (numInRack == 0) {
-      rackManager.changeState(lostSlave.getRackId(), MachineState.DEAD, Optional.absent(), Optional.absent());
+      rackManager.changeState(lostSlave.getRackId(), MachineState.DEAD, Optional.empty(), Optional.empty());
     }
   }
 
@@ -388,11 +388,11 @@ public class SingularitySlaveAndRackManager {
     }
 
     for (SingularitySlave leftOverSlave : activeSlavesById.values()) {
-      slaveManager.changeState(leftOverSlave, isStartup ? MachineState.MISSING_ON_STARTUP : MachineState.DEAD, Optional.absent(), Optional.absent());
+      slaveManager.changeState(leftOverSlave, isStartup ? MachineState.MISSING_ON_STARTUP : MachineState.DEAD, Optional.empty(), Optional.empty());
     }
 
     for (SingularityRack leftOverRack : remainingActiveRacks.values()) {
-      rackManager.changeState(leftOverRack, isStartup ? MachineState.MISSING_ON_STARTUP : MachineState.DEAD, Optional.absent(), Optional.absent());
+      rackManager.changeState(leftOverRack, isStartup ? MachineState.MISSING_ON_STARTUP : MachineState.DEAD, Optional.empty(), Optional.empty());
     }
 
     LOG.info("Found {} new racks ({} missing) and {} new slaves ({} missing)", racks, remainingActiveRacks.size(), slaves, activeSlavesById.size());
@@ -418,7 +418,7 @@ public class SingularitySlaveAndRackManager {
         return CheckResult.ALREADY_ACTIVE;
       case DEAD:
       case MISSING_ON_STARTUP:
-        manager.changeState(object.getId(), MachineState.ACTIVE, Optional.absent(), Optional.absent());
+        manager.changeState(object.getId(), MachineState.ACTIVE, Optional.empty(), Optional.empty());
         return CheckResult.NEW;
       case FROZEN:
       case DECOMMISSIONED:
@@ -436,7 +436,7 @@ public class SingularitySlaveAndRackManager {
     final String host = slaveAndRackHelper.getMaybeTruncatedHost(offer);
     final Map<String, String> textAttributes = slaveAndRackHelper.getTextAttributes(offer);
 
-    final SingularitySlave slave = new SingularitySlave(slaveId, host, rackId, textAttributes, Optional.absent());
+    final SingularitySlave slave = new SingularitySlave(slaveId, host, rackId, textAttributes, Optional.empty());
 
     CheckResult result = check(slave, slaveManager);
 
@@ -445,7 +445,7 @@ public class SingularitySlaveAndRackManager {
         LOG.info("Slave {} on inactive host {} attempted to rejoin. Marking as decommissioned.", slave, host);
         slaveManager.changeState(slave, MachineState.STARTING_DECOMMISSION,
             Optional.of(String.format("Slave %s on inactive host %s attempted to rejoin cluster.", slaveId, host)),
-            Optional.absent());
+            Optional.empty());
       } else {
         LOG.info("Offer revealed a new slave {}", slave);
       }

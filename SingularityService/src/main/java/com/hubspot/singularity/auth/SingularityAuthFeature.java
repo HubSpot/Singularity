@@ -10,7 +10,7 @@ import org.glassfish.hk2.api.TypeLiteral;
 import org.glassfish.hk2.utilities.binding.AbstractBinder;
 import org.glassfish.jersey.server.spi.internal.ValueFactoryProvider;
 
-import com.hubspot.singularity.SingularityUser;
+import com.hubspot.singularity.api.auth.SingularityUser;
 import com.hubspot.singularity.auth.authenticator.SingularityMultiMethodAuthenticator;
 
 import io.dropwizard.auth.Auth;

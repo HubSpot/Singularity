@@ -1,18 +1,18 @@
 package com.hubspot.singularity.data;
 
 import java.util.Map;
+import java.util.Optional;
 
 import org.apache.curator.framework.CuratorFramework;
 
 import com.codahale.metrics.MetricRegistry;
-import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import com.hubspot.singularity.RequestType;
-import com.hubspot.singularity.SingularityCreateResult;
-import com.hubspot.singularity.SingularityDeleteResult;
-import com.hubspot.singularity.SingularityPriorityFreezeParent;
-import com.hubspot.singularity.SingularityRequest;
+import com.hubspot.singularity.api.common.SingularityCreateResult;
+import com.hubspot.singularity.api.common.SingularityDeleteResult;
+import com.hubspot.singularity.api.disasters.SingularityPriorityFreezeParent;
+import com.hubspot.singularity.api.request.RequestType;
+import com.hubspot.singularity.api.request.SingularityRequest;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.transcoders.Transcoder;
 
@@ -61,6 +61,6 @@ public class PriorityManager extends CuratorAsyncManager {
     }
 
     public double getTaskPriorityLevelForRequest(SingularityRequest request) {
-        return request.getTaskPriorityLevel().or(Optional.fromNullable(defaultTaskPriorityLevelForRequestType.get(request.getRequestType()))).or(defaultTaskPriorityLevel);
+        return request.getTaskPriorityLevel().orElse(Optional.ofNullable(defaultTaskPriorityLevelForRequestType.get(request.getRequestType())).orElse(defaultTaskPriorityLevel));
     }
 }

@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
@@ -15,21 +16,20 @@ import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import com.hubspot.singularity.ExtendedTaskState;
-import com.hubspot.singularity.SingularityKilledTaskIdRecord;
-import com.hubspot.singularity.SingularityPendingTask;
-import com.hubspot.singularity.SingularityPendingTaskId;
-import com.hubspot.singularity.SingularityRack;
-import com.hubspot.singularity.SingularityRequestDeployState;
-import com.hubspot.singularity.SingularityRequestWithState;
-import com.hubspot.singularity.SingularitySlave;
-import com.hubspot.singularity.SingularityTask;
-import com.hubspot.singularity.SingularityTaskCleanup;
-import com.hubspot.singularity.SingularityTaskHistoryUpdate;
-import com.hubspot.singularity.SingularityTaskId;
+import com.hubspot.singularity.api.machines.SingularityRack;
+import com.hubspot.singularity.api.machines.SingularitySlave;
+import com.hubspot.singularity.api.request.SingularityRequestDeployState;
+import com.hubspot.singularity.api.request.SingularityRequestWithState;
+import com.hubspot.singularity.api.task.ExtendedTaskState;
+import com.hubspot.singularity.api.task.SingularityKilledTaskIdRecord;
+import com.hubspot.singularity.api.task.SingularityPendingTask;
+import com.hubspot.singularity.api.task.SingularityPendingTaskId;
+import com.hubspot.singularity.api.task.SingularityTask;
+import com.hubspot.singularity.api.task.SingularityTaskCleanup;
+import com.hubspot.singularity.api.task.SingularityTaskHistoryUpdate;
+import com.hubspot.singularity.api.task.SingularityTaskId;
 
 @Singleton
 public class SingularityLeaderCache {
@@ -155,7 +155,7 @@ public class SingularityLeaderCache {
   }
 
   public Optional<SingularityPendingTask> getPendingTask(SingularityPendingTaskId pendingTaskId) {
-    return Optional.fromNullable(pendingTaskIdToPendingTask.get(pendingTaskId));
+    return Optional.ofNullable(pendingTaskIdToPendingTask.get(pendingTaskId));
   }
 
   public void savePendingTask(SingularityPendingTask pendingTask) {
@@ -245,7 +245,7 @@ public class SingularityLeaderCache {
   }
 
   public Optional<SingularityRequestWithState> getRequest(String requestId) {
-    return Optional.fromNullable(requests.get(requestId));
+    return Optional.ofNullable(requests.get(requestId));
   }
 
   public void putRequest(SingularityRequestWithState requestWithState) {
@@ -275,7 +275,7 @@ public class SingularityLeaderCache {
   }
 
   public Optional<SingularityTaskCleanup> getTaskCleanup(SingularityTaskId taskId) {
-    return Optional.fromNullable(cleanupTasks.get(taskId));
+    return Optional.ofNullable(cleanupTasks.get(taskId));
   }
 
   public void deleteTaskCleanup(SingularityTaskId taskId) {
@@ -306,7 +306,7 @@ public class SingularityLeaderCache {
   }
 
   public Optional<SingularityRequestDeployState> getRequestDeployState(String requestId) {
-    return Optional.fromNullable(requestIdToDeployState.get(requestId));
+    return Optional.ofNullable(requestIdToDeployState.get(requestId));
   }
 
   public Map<String, SingularityRequestDeployState> getRequestDeployStateByRequestId() {
@@ -360,7 +360,7 @@ public class SingularityLeaderCache {
   }
 
   public List<SingularityTaskHistoryUpdate> getTaskHistoryUpdates(SingularityTaskId taskId) {
-    List<SingularityTaskHistoryUpdate> updates = new ArrayList<>(Optional.fromNullable(historyUpdates.get(taskId)).or(new HashMap<>()).values());
+    List<SingularityTaskHistoryUpdate> updates = new ArrayList<>(Optional.ofNullable(historyUpdates.get(taskId)).orElse(new HashMap<>()).values());
     Collections.sort(updates);
     return updates;
   }
@@ -407,7 +407,7 @@ public class SingularityLeaderCache {
   }
 
   public Optional<SingularitySlave> getSlave(String slaveId) {
-    return Optional.fromNullable(slaves.get(slaveId));
+    return Optional.ofNullable(slaves.get(slaveId));
   }
 
   public void putSlave(SingularitySlave slave) {
@@ -423,7 +423,7 @@ public class SingularityLeaderCache {
   }
 
   public Optional<SingularityRack> getRack(String rackName) {
-    return Optional.fromNullable(racks.get(rackName));
+    return Optional.ofNullable(racks.get(rackName));
   }
 
   public void putRack(SingularityRack rack) {

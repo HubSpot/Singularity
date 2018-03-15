@@ -1,6 +1,7 @@
 package com.hubspot.singularity.scheduler;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.inject.Singleton;
@@ -8,14 +9,13 @@ import javax.inject.Singleton;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.hubspot.mesos.JavaUtils;
-import com.hubspot.singularity.SingularityDeployKey;
-import com.hubspot.singularity.SingularityDeployStatistics;
-import com.hubspot.singularity.SingularityRequestDeployState;
-import com.hubspot.singularity.SingularityRequestWithState;
+import com.hubspot.singularity.api.deploy.SingularityDeployKey;
+import com.hubspot.singularity.api.deploy.SingularityDeployStatistics;
+import com.hubspot.singularity.api.request.SingularityRequestDeployState;
+import com.hubspot.singularity.api.request.SingularityRequestWithState;
 import com.hubspot.singularity.data.DeployManager;
 import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.mesos.SingularitySchedulerLock;
@@ -63,7 +63,7 @@ public class SingularityCooldownChecker {
 
   private boolean checkCooldown(SingularityRequestWithState cooldownRequest) {
     if (shouldExitCooldown(cooldownRequest)) {
-      requestManager.exitCooldown(cooldownRequest.getRequest(), System.currentTimeMillis(), Optional.<String> absent(), Optional.<String> absent());
+      requestManager.exitCooldown(cooldownRequest.getRequest(), System.currentTimeMillis(), Optional.empty(), Optional.empty());
       return true;
     }
 
@@ -92,7 +92,7 @@ public class SingularityCooldownChecker {
       return true;
     }
 
-    if (cooldown.hasCooldownExpired(cooldownRequest.getRequest(), maybeDeployStatistics.get(), Optional.<Integer> absent(), Optional.<Long> absent())) {
+    if (cooldown.hasCooldownExpired(cooldownRequest.getRequest(), maybeDeployStatistics.get(), Optional.empty(), Optional.empty())) {
       return true;
     }
 

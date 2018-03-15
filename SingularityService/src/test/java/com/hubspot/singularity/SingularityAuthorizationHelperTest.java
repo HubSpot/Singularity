@@ -2,26 +2,37 @@ package com.hubspot.singularity;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.Optional;
 import java.util.Set;
 
 import javax.ws.rs.WebApplicationException;
 
 import org.junit.Test;
 
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
+import com.hubspot.singularity.api.auth.SingularityAuthorizationScope;
+import com.hubspot.singularity.api.auth.SingularityUser;
+import com.hubspot.singularity.api.request.RequestState;
+import com.hubspot.singularity.api.request.RequestType;
+import com.hubspot.singularity.api.request.SingularityRequest;
+import com.hubspot.singularity.api.request.SingularityRequestBuilder;
+import com.hubspot.singularity.api.request.SingularityRequestWithState;
 import com.hubspot.singularity.auth.SingularityAuthorizationHelper;
 import com.hubspot.singularity.config.AuthConfiguration;
 import com.hubspot.singularity.config.MesosConfiguration;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.RequestManager;
+import com.squarespace.jersey2.guice.JerseyGuiceUtils;
 
 public class SingularityAuthorizationHelperTest {
+
+  static {
+    JerseyGuiceUtils.install((s, serviceLocator) -> null);
+  }
 
   public static SingularityConfiguration buildAuthDisabledConfig() {
     AuthConfiguration authConfiguration = new AuthConfiguration();
@@ -58,11 +69,11 @@ public class SingularityAuthorizationHelperTest {
   public static final SingularityRequest REQUEST_WITH_GROUP_B = new SingularityRequestBuilder("test_b", RequestType.SERVICE).setGroup(Optional.of("b")).build();
 
 
-  public static final SingularityUser NOT_LOGGED_IN = SingularityUser.DEFAULT_USER;
-  public static final SingularityUser USER_GROUP_A = new SingularityUser("test1", Optional.of("test user1"), Optional.of("test1@test.com"), ImmutableSet.of("a"));
-  public static final SingularityUser USER_GROUP_AB = new SingularityUser("test2", Optional.of("test user2"), Optional.of("test2@test.com"), ImmutableSet.of("a", "b"));
-  public static final SingularityUser USER_GROUP_B = new SingularityUser("test3", Optional.of("test user3"), Optional.of("test3@test.com"), ImmutableSet.of("b"));
-  public static final SingularityUser USER_GROUP_ADMIN = new SingularityUser("admin", Optional.of("admin user"), Optional.of("admin@test.com"), ImmutableSet.of("admin"));
+  public static final SingularityUser NOT_LOGGED_IN = SingularityUser.defaultUser();
+  public static final SingularityUser USER_GROUP_A = new SingularityUser("test1", "test user1", Optional.of("test1@test.com"), ImmutableSet.of("a"), true);
+  public static final SingularityUser USER_GROUP_AB = new SingularityUser("test2", "test user2", Optional.of("test2@test.com"), ImmutableSet.of("a", "b"), true);
+  public static final SingularityUser USER_GROUP_B = new SingularityUser("test3", "test user3", Optional.of("test3@test.com"), ImmutableSet.of("b"), true);
+  public static final SingularityUser USER_GROUP_ADMIN = new SingularityUser("admin", "admin user", Optional.of("admin@test.com"), ImmutableSet.of("admin"), true);
 
   private SingularityAuthorizationHelper buildAuthorizationHelper(SingularityConfiguration configuration) {
     return new SingularityAuthorizationHelper(requestManager, configuration);

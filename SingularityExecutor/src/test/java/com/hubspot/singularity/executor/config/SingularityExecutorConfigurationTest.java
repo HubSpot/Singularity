@@ -1,18 +1,17 @@
 package com.hubspot.singularity.executor.config;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.*;
 
 import java.io.File;
 import java.lang.reflect.Field;
+import java.util.Optional;
 
 import javax.validation.Validator;
 
 import org.junit.Test;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Optional;
-import com.google.common.base.Throwables;
 import com.hubspot.singularity.runner.base.config.SingularityRunnerBaseModule;
 import com.hubspot.singularity.runner.base.config.SingularityRunnerConfigurationProvider;
 
@@ -58,7 +57,7 @@ public class SingularityExecutorConfigurationTest {
             return configProvider.get();
         }
         catch(Exception e) {
-            throw Throwables.propagate(e);
+            throw new RuntimeException(e);
         }
     }
 

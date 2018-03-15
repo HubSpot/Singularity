@@ -3,6 +3,7 @@ package com.hubspot.singularity.scheduler;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Optional;
 import java.util.Random;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
@@ -14,13 +15,12 @@ import org.apache.mesos.v1.Protos.TaskState;
 import org.junit.Ignore;
 import org.junit.Test;
 
-import com.google.common.base.Optional;
 import com.hubspot.mesos.JavaUtils;
-import com.hubspot.singularity.RequestType;
-import com.hubspot.singularity.SingularityRequest;
-import com.hubspot.singularity.SingularityRequestBuilder;
-import com.hubspot.singularity.SingularityTaskId;
-import com.hubspot.singularity.SlavePlacement;
+import com.hubspot.singularity.api.request.RequestType;
+import com.hubspot.singularity.api.request.SingularityRequest;
+import com.hubspot.singularity.api.request.SingularityRequestBuilder;
+import com.hubspot.singularity.api.request.SlavePlacement;
+import com.hubspot.singularity.api.task.SingularityTaskId;
 
 public class SingularityOfferPerformanceTestRunner extends SingularitySchedulerTestBase {
 

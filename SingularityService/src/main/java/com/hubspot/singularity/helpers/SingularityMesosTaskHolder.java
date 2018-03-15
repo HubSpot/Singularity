@@ -2,7 +2,7 @@ package com.hubspot.singularity.helpers;
 
 import org.apache.mesos.v1.Protos.TaskInfo;
 
-import com.hubspot.singularity.SingularityTask;
+import com.hubspot.singularity.api.task.SingularityTask;
 
 public class SingularityMesosTaskHolder {
   private final SingularityTask task;

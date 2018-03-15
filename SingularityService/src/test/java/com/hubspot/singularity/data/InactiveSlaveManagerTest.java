@@ -3,7 +3,7 @@ package com.hubspot.singularity.data;
 import org.junit.Assert;
 import org.junit.Test;
 
-import com.hubspot.singularity.SingularitySlave;
+import com.hubspot.singularity.api.machines.SingularitySlave;
 import com.hubspot.singularity.scheduler.SingularitySchedulerTestBase;
 
 public class InactiveSlaveManagerTest extends SingularitySchedulerTestBase {

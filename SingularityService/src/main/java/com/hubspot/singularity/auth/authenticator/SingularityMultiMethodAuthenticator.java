@@ -12,8 +12,8 @@ import javax.ws.rs.container.ContainerRequestContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.hubspot.singularity.SingularityUser;
 import com.hubspot.singularity.WebExceptions;
+import com.hubspot.singularity.api.auth.SingularityUser;
 import com.hubspot.singularity.config.SingularityConfiguration;
 
 import io.dropwizard.auth.Authenticator;
@@ -59,6 +59,6 @@ public class SingularityMultiMethodAuthenticator implements Authenticator<Contai
     }
 
     // Auth is disabled, return a dummy/default user
-    return Optional.of(SingularityUser.DEFAULT_USER);
+    return Optional.of(SingularityUser.defaultUser());
   }
 }

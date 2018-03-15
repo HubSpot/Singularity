@@ -3,6 +3,7 @@ package com.hubspot.singularity.data;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.utils.ZKPaths;
@@ -10,17 +11,16 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.codahale.metrics.MetricRegistry;
-import com.google.common.base.Optional;
 import com.google.inject.Inject;
-import com.hubspot.singularity.SingularityAction;
-import com.hubspot.singularity.SingularityCreateResult;
-import com.hubspot.singularity.SingularityDeleteResult;
-import com.hubspot.singularity.SingularityDisabledAction;
-import com.hubspot.singularity.SingularityDisaster;
-import com.hubspot.singularity.SingularityDisasterDataPoints;
-import com.hubspot.singularity.SingularityDisasterType;
-import com.hubspot.singularity.SingularityDisastersData;
-import com.hubspot.singularity.SingularityUser;
+import com.hubspot.singularity.api.auth.SingularityUser;
+import com.hubspot.singularity.api.common.SingularityAction;
+import com.hubspot.singularity.api.common.SingularityCreateResult;
+import com.hubspot.singularity.api.common.SingularityDeleteResult;
+import com.hubspot.singularity.api.disasters.SingularityDisabledAction;
+import com.hubspot.singularity.api.disasters.SingularityDisaster;
+import com.hubspot.singularity.api.disasters.SingularityDisasterDataPoints;
+import com.hubspot.singularity.api.disasters.SingularityDisasterType;
+import com.hubspot.singularity.api.disasters.SingularityDisastersData;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.transcoders.Transcoder;
 
@@ -57,7 +57,7 @@ public class DisasterManager extends CuratorAsyncManager {
 
   public SingularityDisabledAction getDisabledAction(SingularityAction action) {
     Optional<SingularityDisabledAction> maybeDisabledAction = getData(getActionPath(action), disabledActionTranscoder);
-    return maybeDisabledAction.or(new SingularityDisabledAction(action, String.format(MESSAGE_FORMAT, action, DEFAULT_MESSAGE), Optional.<String>absent(), false, Optional.<Long>absent()));
+    return maybeDisabledAction.orElse(new SingularityDisabledAction(action, String.format(MESSAGE_FORMAT, action, DEFAULT_MESSAGE), Optional.empty(), false, Optional.empty()));
   }
 
   public SingularityCreateResult disable(SingularityAction action, Optional<String> maybeMessage, Optional<SingularityUser> user, boolean systemGenerated, Optional<Long> expiresAt) {
@@ -66,8 +66,8 @@ public class DisasterManager extends CuratorAsyncManager {
     }
     SingularityDisabledAction disabledAction = new SingularityDisabledAction(
       action,
-      String.format(MESSAGE_FORMAT, action, maybeMessage.or(DEFAULT_MESSAGE)),
-      user.isPresent() ? Optional.of(user.get().getId()) : Optional.<String>absent(),
+      String.format(MESSAGE_FORMAT, action, maybeMessage.orElse(DEFAULT_MESSAGE)),
+      user.isPresent() ? Optional.of(user.get().getId()) : Optional.empty(),
       systemGenerated,
       expiresAt);
 
@@ -128,7 +128,7 @@ public class DisasterManager extends CuratorAsyncManager {
   }
 
   public SingularityDisasterDataPoints getDisasterStats() {
-    SingularityDisasterDataPoints stats = getData(DISASTER_STATS_PATH, disasterStatsTranscoder).or(SingularityDisasterDataPoints.empty());
+    SingularityDisasterDataPoints stats = getData(DISASTER_STATS_PATH, disasterStatsTranscoder).orElse(SingularityDisasterDataPoints.empty());
     Collections.sort(stats.getDataPoints());
     return stats;
   }
@@ -163,13 +163,13 @@ public class DisasterManager extends CuratorAsyncManager {
     }
 
     String message = String.format("Active disasters detected: (%s)%s", newActiveDisasters, automaticallyClearable ? "" : ", action must be re-enabled by an admin user");
-    Optional<Long> expiresAt = Optional.absent();
+    Optional<Long> expiresAt = Optional.empty();
     if (automaticallyClearable) {
       expiresAt = Optional.of(System.currentTimeMillis() + configuration.getDisasterDetection().getDefaultDisabledActionExpiration());
     }
 
     for (SingularityAction action : configuration.getDisasterDetection().getDisableActionsOnDisaster()) {
-      disable(action, Optional.of(message), Optional.<SingularityUser>absent(), automaticallyClearable, expiresAt);
+      disable(action, Optional.of(message), Optional.empty(), automaticallyClearable, expiresAt);
     }
   }
 

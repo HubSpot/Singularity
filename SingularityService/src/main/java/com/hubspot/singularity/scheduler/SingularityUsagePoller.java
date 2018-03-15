@@ -5,6 +5,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
@@ -14,37 +15,36 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Optional;
 import com.google.inject.Inject;
-import com.hubspot.mesos.Resources;
 import com.hubspot.mesos.client.MesosClient;
 import com.hubspot.mesos.json.MesosSlaveMetricsSnapshotObject;
 import com.hubspot.mesos.json.MesosTaskMonitorObject;
-import com.hubspot.singularity.ExtendedTaskState;
-import com.hubspot.singularity.InvalidSingularityTaskIdException;
-import com.hubspot.singularity.RequestUtilization;
-import com.hubspot.singularity.SingularityClusterUtilization;
-import com.hubspot.singularity.SingularityDeleteResult;
-import com.hubspot.singularity.SingularityDeploy;
-import com.hubspot.singularity.SingularityDeployStatistics;
-import com.hubspot.singularity.SingularityPendingRequest;
-import com.hubspot.singularity.SingularityPendingRequest.PendingType;
-import com.hubspot.singularity.SingularityRequestWithState;
-import com.hubspot.singularity.SingularitySlave;
-import com.hubspot.singularity.SingularitySlaveUsage;
-import com.hubspot.singularity.SingularitySlaveUsage.ResourceUsageType;
-import com.hubspot.singularity.SingularityTask;
-import com.hubspot.singularity.SingularityTaskCleanup;
-import com.hubspot.singularity.SingularityTaskCurrentUsage;
-import com.hubspot.singularity.SingularityTaskHistoryUpdate;
-import com.hubspot.singularity.SingularityTaskId;
-import com.hubspot.singularity.SingularityTaskUsage;
-import com.hubspot.singularity.TaskCleanupType;
+import com.hubspot.singularity.api.common.SingularityDeleteResult;
+import com.hubspot.singularity.api.deploy.SingularityDeploy;
+import com.hubspot.singularity.api.deploy.SingularityDeployStatistics;
+import com.hubspot.singularity.api.deploy.mesos.Resources;
+import com.hubspot.singularity.api.machines.SingularityClusterUtilization;
+import com.hubspot.singularity.api.machines.SingularitySlave;
+import com.hubspot.singularity.api.machines.SingularitySlaveUsage;
+import com.hubspot.singularity.api.machines.SingularitySlaveUsage.ResourceUsageType;
+import com.hubspot.singularity.api.request.RequestUtilization;
+import com.hubspot.singularity.api.request.SingularityPendingRequest;
+import com.hubspot.singularity.api.request.SingularityPendingRequest.PendingType;
+import com.hubspot.singularity.api.request.SingularityRequestWithState;
+import com.hubspot.singularity.api.task.ExtendedTaskState;
+import com.hubspot.singularity.api.task.SingularityTask;
+import com.hubspot.singularity.api.task.SingularityTaskCleanup;
+import com.hubspot.singularity.api.task.SingularityTaskCurrentUsage;
+import com.hubspot.singularity.api.task.SingularityTaskHistoryUpdate;
+import com.hubspot.singularity.api.task.SingularityTaskId;
+import com.hubspot.singularity.api.task.SingularityTaskUsage;
+import com.hubspot.singularity.api.task.TaskCleanupType;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.DeployManager;
 import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.data.UsageManager;
+import com.hubspot.singularity.exceptions.InvalidSingularityTaskIdException;
 import com.hubspot.singularity.sentry.SingularityExceptionNotifier;
 
 public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
@@ -101,9 +101,9 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
       longRunningTasksUsage.put(ResourceUsageType.CPU_USED, 0);
       longRunningTasksUsage.put(ResourceUsageType.DISK_BYTES_USED, 0);
 
-      Optional<Long> memoryMbTotal = Optional.absent();
-      Optional<Double> cpusTotal = Optional.absent();
-      Optional<Long> diskMbTotal = Optional.absent();
+      Optional<Long> memoryMbTotal = Optional.empty();
+      Optional<Double> cpusTotal = Optional.empty();
+      Optional<Long> diskMbTotal = Optional.empty();
 
       long memoryMbReservedOnSlave = 0;
       double cpuReservedOnSlave = 0;
@@ -165,13 +165,12 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
           SingularityTaskUsage latestUsage = getUsage(taskUsage);
           List<SingularityTaskUsage> pastTaskUsages = usageManager.getTaskUsage(taskId);
 
-
           clearOldUsage(taskId);
           usageManager.saveSpecificTaskUsage(taskId, latestUsage);
 
           Optional<SingularityTask> maybeTask = taskManager.getTask(task);
           if (maybeTask.isPresent()) {
-            Optional<Resources> maybeResources = maybeTask.get().getTaskRequest().getPendingTask().getResources().or(maybeTask.get().getTaskRequest().getDeploy().getResources());
+            Optional<Resources> maybeResources = maybeTask.get().getTaskRequest().getPendingTask().getResources().map(Optional::of).orElse(maybeTask.get().getTaskRequest().getDeploy().getResources());
             if (maybeResources.isPresent()) {
               Resources taskResources = maybeResources.get();
               double memoryMbReservedForTask = taskResources.getMemoryMb();
@@ -319,15 +318,15 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
         Optional<String> message = Optional.of(String.format("Load on slave is %s / %s, shuffling task to less busy host", systemLoad, overloadedSlave.getSystemCpusTotal()));
         taskManager.createTaskCleanup(
             new SingularityTaskCleanup(
-                Optional.absent(),
+                Optional.empty(),
                 TaskCleanupType.REBALANCE_CPU_USAGE,
                 System.currentTimeMillis(),
                 taskIdWithUsage.getTaskId(),
                 message,
                 Optional.of(UUID.randomUUID().toString()),
-                Optional.absent(), Optional.absent()));
-        requestManager.addToPendingQueue(new SingularityPendingRequest(taskIdWithUsage.getTaskId().getRequestId(), taskIdWithUsage.getTaskId().getDeployId(), System.currentTimeMillis(), Optional.absent(),
-            PendingType.TASK_BOUNCE, Optional.absent(), Optional.absent(), Optional.absent(), message, Optional.of(UUID.randomUUID().toString())));
+                Optional.empty(), Optional.empty()));
+        requestManager.addToPendingQueue(new SingularityPendingRequest(taskIdWithUsage.getTaskId().getRequestId(), taskIdWithUsage.getTaskId().getDeployId(), System.currentTimeMillis(), Optional.empty(),
+            PendingType.TASK_BOUNCE, Optional.empty(), Optional.empty(), Optional.empty(), message, Optional.of(UUID.randomUUID().toString())));
         cpuOverage -= taskIdWithUsage.getUsage().getCpusUsed();
         shuffledTasksOnSlave++;
         currentShuffleCleanupsTotal++;
@@ -349,11 +348,11 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
   }
 
   private boolean isTaskAlreadyCleanedUpForShuffle(SingularityTaskHistoryUpdate taskHistoryUpdate) {
-    if (taskHistoryUpdate.getStatusMessage().or("").contains(TaskCleanupType.REBALANCE_CPU_USAGE.name())) {
+    if (taskHistoryUpdate.getStatusMessage().orElse("").contains(TaskCleanupType.REBALANCE_CPU_USAGE.name())) {
       return true;
     }
     for (SingularityTaskHistoryUpdate previous : taskHistoryUpdate.getPrevious()) {
-      if (previous.getStatusMessage().or("").contains(TaskCleanupType.REBALANCE_CPU_USAGE.name())) {
+      if (previous.getStatusMessage().orElse("").contains(TaskCleanupType.REBALANCE_CPU_USAGE.name())) {
         return true;
       }
     }

@@ -7,13 +7,13 @@ import static com.hubspot.singularity.WebExceptions.checkForbidden;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.annotation.Nonnull;
 
 import com.google.common.base.Function;
-import com.google.common.base.Optional;
-import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
@@ -21,14 +21,14 @@ import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.hubspot.mesos.JavaUtils;
-import com.hubspot.singularity.InvalidSingularityTaskIdException;
-import com.hubspot.singularity.SingularityAuthorizationScope;
-import com.hubspot.singularity.SingularityRequest;
-import com.hubspot.singularity.SingularityRequestWithState;
-import com.hubspot.singularity.SingularityTaskId;
-import com.hubspot.singularity.SingularityUser;
+import com.hubspot.singularity.api.auth.SingularityAuthorizationScope;
+import com.hubspot.singularity.api.auth.SingularityUser;
+import com.hubspot.singularity.api.request.SingularityRequest;
+import com.hubspot.singularity.api.request.SingularityRequestWithState;
+import com.hubspot.singularity.api.task.SingularityTaskId;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.RequestManager;
+import com.hubspot.singularity.exceptions.InvalidSingularityTaskIdException;
 
 @Singleton
 public class SingularityAuthorizationHelper {
@@ -120,8 +120,8 @@ public class SingularityAuthorizationHelper {
     }
 
     final Set<String> userGroups = user.getGroups();
-    final Set<String> readWriteGroups = Sets.union(request.getGroup().asSet(), request.getReadWriteGroups().or(Collections.<String>emptySet()));
-    final Set<String> readOnlyGroups = request.getReadOnlyGroups().or(defaultReadOnlyGroups);
+    final Set<String> readWriteGroups = Sets.union(request.getGroup().map(Collections::singleton).orElse(Collections.emptySet()), request.getReadWriteGroups().orElse(Collections.<String>emptySet()));
+    final Set<String> readOnlyGroups = request.getReadOnlyGroups().orElse(defaultReadOnlyGroups);
 
     final boolean userIsAdmin = !adminGroups.isEmpty() && groupsIntersect(userGroups, adminGroups);
     final boolean userIsJITA = !jitaGroups.isEmpty() && groupsIntersect(userGroups, jitaGroups);
@@ -147,8 +147,8 @@ public class SingularityAuthorizationHelper {
 
     checkForbidden(user.isAuthenticated(), "Not authenticated!");
 
-    final Set<String> readWriteGroups = Sets.union(request.getGroup().asSet(), request.getReadWriteGroups().or(Collections.emptySet()));
-    final Set<String> readOnlyGroups = request.getReadOnlyGroups().or(defaultReadOnlyGroups);
+    final Set<String> readWriteGroups = Sets.union(request.getGroup().map(Collections::singleton).orElse(Collections.emptySet()), request.getReadWriteGroups().orElse(Collections.emptySet()));
+    final Set<String> readOnlyGroups = request.getReadOnlyGroups().orElse(defaultReadOnlyGroups);
 
     checkForAuthorization(user, readWriteGroups, readOnlyGroups, scope, Optional.of(request.getId()));
   }
@@ -191,7 +191,7 @@ public class SingularityAuthorizationHelper {
     }
   }
 
-  public <T> Iterable<T> filterByAuthorizedRequests(final SingularityUser user, List<T> objects, final Function<T, String> requestIdFunction, final SingularityAuthorizationScope scope) {
+  public <T> List<T> filterByAuthorizedRequests(final SingularityUser user, List<T> objects, final Function<T, String> requestIdFunction, final SingularityAuthorizationScope scope) {
     if (hasAdminAuthorization(user)) {
       return objects;
     }
@@ -210,16 +210,15 @@ public class SingularityAuthorizationHelper {
       }
     });
 
-    return Iterables.filter(objects, new Predicate<T>() {
-      @Override
-      public boolean apply(@Nonnull T input) {
-        final String requestId = requestIdFunction.apply(input);
-        return requestMap.containsKey(requestId) && isAuthorizedForRequest(requestMap.get(requestId).getRequest(), user, scope);
-      }
-    });
+    return objects.stream()
+        .filter((input) -> {
+          final String requestId = requestIdFunction.apply(input);
+          return requestMap.containsKey(requestId) && isAuthorizedForRequest(requestMap.get(requestId).getRequest(), user, scope);
+        })
+        .collect(Collectors.toList());
   }
 
-  public Iterable<String> filterAuthorizedRequestIds(final SingularityUser user, List<String> requestIds, final SingularityAuthorizationScope scope, boolean useWebCache) {
+  public List<String> filterAuthorizedRequestIds(final SingularityUser user, List<String> requestIds, final SingularityAuthorizationScope scope, boolean useWebCache) {
     if (hasAdminAuthorization(user)) {
       return requestIds;
     }
@@ -231,11 +230,8 @@ public class SingularityAuthorizationHelper {
       }
     });
 
-    return Iterables.filter(requestIds, new Predicate<String>() {
-      @Override
-      public boolean apply(@Nonnull String input) {
-        return requestMap.containsKey(input) && isAuthorizedForRequest(requestMap.get(input).getRequest(), user, scope);
-      }
-    });
+    return requestIds.stream()
+        .filter((input) -> requestMap.containsKey(input) && isAuthorizedForRequest(requestMap.get(input).getRequest(), user, scope))
+        .collect(Collectors.toList());
   }
 }

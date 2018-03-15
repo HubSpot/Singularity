@@ -3,17 +3,17 @@ package com.hubspot.singularity.executor;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 import java.io.IOException;
+import java.util.Optional;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Optional;
 import com.google.inject.Inject;
-import com.hubspot.singularity.SingularityFrameworkMessage;
-import com.hubspot.singularity.SingularityTaskDestroyFrameworkMessage;
-import com.hubspot.singularity.SingularityTaskShellCommandRequest;
-import com.hubspot.singularity.SingularityTaskShellCommandUpdate.UpdateType;
+import com.hubspot.singularity.api.common.SingularityFrameworkMessage;
+import com.hubspot.singularity.api.task.SingularityTaskDestroyFrameworkMessage;
+import com.hubspot.singularity.api.task.SingularityTaskShellCommandRequest;
+import com.hubspot.singularity.api.task.ShellCommandUpdateType;
 import com.hubspot.singularity.executor.SingularityExecutorMonitor.KillState;
 import com.hubspot.singularity.executor.config.SingularityExecutorConfiguration;
 import com.hubspot.singularity.executor.shells.SingularityExecutorShellCommandRunner;
@@ -82,7 +82,7 @@ public class SingularityExecutorMesosFrameworkMessageHandler {
     Optional<SingularityExecutorTaskProcessCallable> taskProcess = monitor.getTaskProcess(shellRequest.getTaskId().getId());
 
     if (!taskProcess.isPresent()) {
-      updater.sendUpdate(UpdateType.INVALID, Optional.of("No task process found"), Optional.<String>absent());
+      updater.sendUpdate(ShellCommandUpdateType.INVALID, Optional.of("No task process found"), Optional.empty());
       return;
     }
 

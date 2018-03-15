@@ -15,10 +15,6 @@
   </properties>
 
   <dependencies>
-    <dependency>
-      <groupId>com.hubspot</groupId>
-      <artifactId>SingularityService</artifactId>
-    </dependency>
 
     <dependency>
       <groupId>com.google.guava</groupId>
@@ -29,6 +25,10 @@
       <groupId>com.google.inject</groupId>
       <artifactId>guice</artifactId>
     </dependency>
+    <dependency>
+      <groupId>com.hubspot</groupId>
+      <artifactId>SingularityService</artifactId>
+    </dependency>
 
     <dependency>
       <groupId>io.dropwizard</groupId>
@@ -36,7 +36,6 @@
     </dependency>
   </dependencies>
 </project>
-
 <!-- Local Variables: -->
 <!-- mode: nxml -->
 <!-- nxml-child-indent: 2 -->

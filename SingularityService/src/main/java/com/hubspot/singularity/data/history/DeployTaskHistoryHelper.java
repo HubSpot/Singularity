@@ -1,15 +1,13 @@
 package com.hubspot.singularity.data.history;
 
 import java.util.List;
+import java.util.Optional;
 
-import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import com.hubspot.singularity.ExtendedTaskState;
-import com.hubspot.singularity.OrderDirection;
-import com.hubspot.singularity.SingularityDeployKey;
-import com.hubspot.singularity.SingularityTaskId;
-import com.hubspot.singularity.SingularityTaskIdHistory;
+import com.hubspot.singularity.api.deploy.SingularityDeployKey;
+import com.hubspot.singularity.api.task.SingularityTaskId;
+import com.hubspot.singularity.api.task.SingularityTaskIdHistory;
 import com.hubspot.singularity.data.TaskManager;
 
 @Singleton
@@ -32,15 +30,15 @@ public class DeployTaskHistoryHelper extends BlendedHistoryHelper<SingularityTas
 
   @Override
   protected List<SingularityTaskIdHistory> getFromHistory(final SingularityDeployKey deployKey, int historyStart, int numFromHistory) {
-    return historyManager.getTaskIdHistory(Optional.of(deployKey.getRequestId()), Optional.of(deployKey.getDeployId()), Optional.<String>absent(), Optional.<String> absent(), Optional.<ExtendedTaskState> absent(),
-        Optional.<Long> absent(), Optional.<Long> absent(), Optional.<Long> absent(), Optional.<Long> absent(), Optional.<OrderDirection> absent(), Optional.of(historyStart), numFromHistory);
+    return historyManager.getTaskIdHistory(Optional.of(deployKey.getRequestId()), Optional.of(deployKey.getDeployId()), Optional.empty(), Optional.empty(), Optional.empty(),
+        Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.of(historyStart), numFromHistory);
   }
 
   @Override
   protected Optional<Integer> getTotalCount(SingularityDeployKey deployKey) {
     final int numFromZk = taskManager.getInactiveTaskIdsForDeploy(deployKey.getRequestId(), deployKey.getDeployId()).size();
-    final int numFromHistory = historyManager.getTaskIdHistoryCount(Optional.of(deployKey.getRequestId()), Optional.of(deployKey.getDeployId()), Optional.<String>absent(), Optional.<String> absent(), Optional.<ExtendedTaskState> absent(),
-      Optional.<Long> absent(), Optional.<Long> absent(), Optional.<Long> absent(), Optional.<Long> absent());
+    final int numFromHistory = historyManager.getTaskIdHistoryCount(Optional.of(deployKey.getRequestId()), Optional.of(deployKey.getDeployId()), Optional.empty(), Optional.empty(), Optional.empty(),
+      Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty());
     return Optional.of(numFromZk + numFromHistory);
   }
 

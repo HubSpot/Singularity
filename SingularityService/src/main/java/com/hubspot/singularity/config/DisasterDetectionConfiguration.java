@@ -10,7 +10,7 @@ import org.apache.mesos.v1.Protos.TaskStatus.Reason;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.collect.ImmutableList;
-import com.hubspot.singularity.SingularityAction;
+import com.hubspot.singularity.api.common.SingularityAction;
 
 public class DisasterDetectionConfiguration {
 

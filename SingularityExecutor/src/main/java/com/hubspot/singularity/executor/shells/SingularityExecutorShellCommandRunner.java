@@ -6,20 +6,18 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import java.util.Scanner;
 import java.util.stream.Collectors;
 
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Joiner;
-import com.google.common.base.Optional;
-import com.google.common.base.Predicate;
-import com.google.common.collect.Iterables;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
-import com.hubspot.singularity.SingularityTaskShellCommandRequest;
-import com.hubspot.singularity.SingularityTaskShellCommandUpdate.UpdateType;
+import com.hubspot.singularity.api.task.SingularityTaskShellCommandRequest;
+import com.hubspot.singularity.api.task.ShellCommandUpdateType;
 import com.hubspot.singularity.executor.config.SingularityExecutorConfiguration;
 import com.hubspot.singularity.executor.task.SingularityExecutorTask;
 import com.hubspot.singularity.executor.task.SingularityExecutorTaskProcessCallable;
@@ -80,15 +78,15 @@ public class SingularityExecutorShellCommandRunner {
     try {
       command = buildCommand();
     } catch (InvalidShellCommandException isce) {
-      shellCommandUpdater.sendUpdate(UpdateType.INVALID, Optional.of(isce.getMessage()), Optional.<String>absent());
+      shellCommandUpdater.sendUpdate(ShellCommandUpdateType.INVALID, Optional.of(isce.getMessage()), Optional.empty());
       return;
     }
 
     final String outputFilename = executorConfiguration.getShellCommandOutFile()
-        .replace("{NAME}", shellRequest.getShellCommand().getLogfileName().or(convertCommandNameToLogfileName(shellRequest.getShellCommand().getName())))
+        .replace("{NAME}", shellRequest.getShellCommand().getLogfileName().orElse(convertCommandNameToLogfileName(shellRequest.getShellCommand().getName())))
         .replace("{TIMESTAMP}", Long.toString(shellRequest.getTimestamp()));
 
-    shellCommandUpdater.sendUpdate(UpdateType.ACKED, Optional.of(Joiner.on(" ").join(command)), Optional.of(outputFilename));
+    shellCommandUpdater.sendUpdate(ShellCommandUpdateType.ACKED, Optional.of(Joiner.on(" ").join(command)), Optional.of(outputFilename));
 
     final File outputFile = MesosUtils.getTaskDirectoryPath(getTask().getTaskId()).resolve(outputFilename).toFile();
 
@@ -102,28 +100,24 @@ public class SingularityExecutorShellCommandRunner {
       public void onSuccess(Integer result) {
         task.getLog().info("ShellRequest {} finished with {}", shellRequest, result);
 
-        shellCommandUpdater.sendUpdate(UpdateType.FINISHED, Optional.of(String.format("Finished with code %s", result)), Optional.<String>absent());
+        shellCommandUpdater.sendUpdate(ShellCommandUpdateType.FINISHED, Optional.of(String.format("Finished with code %s", result)), Optional.empty());
       }
 
       @Override
       public void onFailure(Throwable t) {
         task.getLog().warn("ShellRequest {} failed", shellRequest, t);
 
-        shellCommandUpdater.sendUpdate(UpdateType.FAILED, Optional.of(String.format("Failed - %s (%s)", t.getClass().getSimpleName(), t.getMessage())), Optional.<String>absent());
+        shellCommandUpdater.sendUpdate(ShellCommandUpdateType.FAILED, Optional.of(String.format("Failed - %s (%s)", t.getClass().getSimpleName(), t.getMessage())), Optional.empty());
       }
 
     });
   }
 
   private List<String> buildCommand() {
-    Optional<SingularityExecutorShellCommandDescriptor> matchingShellCommandDescriptor = Iterables.tryFind(executorConfiguration.getShellCommands(), new Predicate<SingularityExecutorShellCommandDescriptor>() {
-
-      @Override
-      public boolean apply(SingularityExecutorShellCommandDescriptor input) {
-        return input.getName().equals(shellRequest.getShellCommand().getName());
-      }
-
-    });
+    Optional<SingularityExecutorShellCommandDescriptor> matchingShellCommandDescriptor = executorConfiguration.getShellCommands()
+        .stream()
+        .filter((input) -> input.getName().equals(shellRequest.getShellCommand().getName()))
+        .findFirst();
 
     if (!matchingShellCommandDescriptor.isPresent()) {
       throw new InvalidShellCommandException(String.format(
@@ -176,7 +170,7 @@ public class SingularityExecutorShellCommandRunner {
         }
         command.set(i, Integer.toString(pid));
       } else if (command.get(i).equals(executorConfiguration.getShellCommandUserPlaceholder())) {
-        command.set(i, taskProcess.getTask().getExecutorData().getUser().or(executorConfiguration.getDefaultRunAsUser()));
+        command.set(i, taskProcess.getTask().getExecutorData().getUser().orElse(executorConfiguration.getDefaultRunAsUser()));
       }
     }
 

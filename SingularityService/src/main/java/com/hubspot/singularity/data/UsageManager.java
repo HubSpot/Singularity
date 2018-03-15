@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -14,19 +15,18 @@ import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.utils.ZKPaths;
 
 import com.codahale.metrics.MetricRegistry;
-import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import com.hubspot.singularity.RequestUtilization;
-import com.hubspot.singularity.SingularityClusterUtilization;
-import com.hubspot.singularity.SingularityCreateResult;
-import com.hubspot.singularity.SingularityDeleteResult;
-import com.hubspot.singularity.SingularitySlaveUsage;
-import com.hubspot.singularity.SingularitySlaveUsageWithId;
-import com.hubspot.singularity.SingularityTaskCurrentUsage;
-import com.hubspot.singularity.SingularityTaskCurrentUsageWithId;
-import com.hubspot.singularity.SingularityTaskId;
-import com.hubspot.singularity.SingularityTaskUsage;
+import com.hubspot.singularity.api.common.SingularityCreateResult;
+import com.hubspot.singularity.api.common.SingularityDeleteResult;
+import com.hubspot.singularity.api.machines.SingularityClusterUtilization;
+import com.hubspot.singularity.api.machines.SingularitySlaveUsage;
+import com.hubspot.singularity.api.machines.SingularitySlaveUsageWithId;
+import com.hubspot.singularity.api.request.RequestUtilization;
+import com.hubspot.singularity.api.task.SingularityTaskCurrentUsage;
+import com.hubspot.singularity.api.task.SingularityTaskCurrentUsageWithId;
+import com.hubspot.singularity.api.task.SingularityTaskId;
+import com.hubspot.singularity.api.task.SingularityTaskUsage;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.transcoders.Transcoder;
 
@@ -239,7 +239,12 @@ public class UsageManager extends CuratorAsyncManager {
     Map<String, SingularityTaskCurrentUsage> currentTaskUsages = getAsyncWithPath("getTaskCurrentUsages", paths, taskCurrentUsageTranscoder);
     List<SingularityTaskCurrentUsageWithId> currentTaskUsagesWithIds = new ArrayList<>(paths.size());
     for (Entry<String, SingularityTaskCurrentUsage> entry : currentTaskUsages.entrySet()) {
-      currentTaskUsagesWithIds.add(new SingularityTaskCurrentUsageWithId(SingularityTaskId.valueOf(getTaskIdFromCurrentUsagePath(entry.getKey())), entry.getValue()));
+      currentTaskUsagesWithIds.add(new SingularityTaskCurrentUsageWithId(
+          entry.getValue().getMemoryTotalBytes(),
+          entry.getValue().getTimestamp(),
+          entry.getValue().getCpusUsed(),
+          entry.getValue().getDiskTotalBytes(),
+          SingularityTaskId.valueOf(getTaskIdFromCurrentUsagePath(entry.getKey()))));
     }
 
     return currentTaskUsagesWithIds;

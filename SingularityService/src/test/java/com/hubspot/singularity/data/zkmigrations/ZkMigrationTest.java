@@ -2,6 +2,7 @@ package com.hubspot.singularity.data.zkmigrations;
 
 
 import java.util.List;
+import java.util.Optional;
 
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.utils.ZKPaths;
@@ -10,16 +11,15 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
-import com.hubspot.singularity.RequestState;
-import com.hubspot.singularity.RequestType;
-import com.hubspot.singularity.SingularityDeployKey;
-import com.hubspot.singularity.SingularityPendingRequest;
-import com.hubspot.singularity.SingularityPendingRequest.PendingType;
-import com.hubspot.singularity.SingularityPendingTaskId;
 import com.hubspot.singularity.SingularityTestBaseNoDb;
+import com.hubspot.singularity.api.deploy.SingularityDeployKey;
+import com.hubspot.singularity.api.request.RequestState;
+import com.hubspot.singularity.api.request.RequestType;
+import com.hubspot.singularity.api.request.SingularityPendingRequest;
+import com.hubspot.singularity.api.request.SingularityPendingRequest.PendingType;
+import com.hubspot.singularity.api.task.SingularityPendingTaskId;
 import com.hubspot.singularity.data.MetadataManager;
 import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.data.TaskManager;
@@ -73,7 +73,7 @@ public class ZkMigrationTest extends SingularityTestBaseNoDb {
     metadataManager.setZkDataVersion("2");
 
     // save some old stuff
-    SingularityPendingRequestPrevious p1 = new SingularityPendingRequestPrevious("r1", "d1", 23L, Optional.<String> absent(), PendingType.BOUNCE, Optional.<String> absent());
+    SingularityPendingRequestPrevious p1 = new SingularityPendingRequestPrevious("r1", "d1", 23L, Optional.empty(), PendingType.BOUNCE, Optional.empty());
     SingularityPendingRequestPrevious p2 = new SingularityPendingRequestPrevious("r2", "d3", 123L, Optional.of("user1"), PendingType.BOUNCE, Optional.of("cmd line args"));
 
     byte[] p1b = objectMapper.writeValueAsBytes(p1);
@@ -123,10 +123,10 @@ public class ZkMigrationTest extends SingularityTestBaseNoDb {
 
     final List<String> owners = ImmutableList.of("foo1@bar.com", "foo2@bar.com");
 
-    final SingularityRequestTypeMigration.OldSingularityRequest oldOnDemandRequest = new SingularityRequestTypeMigration.OldSingularityRequest("old-on-demand", null, Optional.<String>absent(), Optional.of(false), Optional.<Boolean>absent());
-    final SingularityRequestTypeMigration.OldSingularityRequest oldWorkerRequest = new SingularityRequestTypeMigration.OldSingularityRequest("old-worker", null, Optional.<String>absent(), Optional.of(true), Optional.<Boolean>absent());
-    final SingularityRequestTypeMigration.OldSingularityRequest oldScheduledRequest = new SingularityRequestTypeMigration.OldSingularityRequest("old-scheduled", null, Optional.of("0 0 0 0 0"), Optional.<Boolean>absent(), Optional.<Boolean>absent());
-    final SingularityRequestTypeMigration.OldSingularityRequest oldServiceRequest = new SingularityRequestTypeMigration.OldSingularityRequest("old-service", null, Optional.<String>absent(), Optional.of(true), Optional.of(true));
+    final SingularityRequestTypeMigration.OldSingularityRequest oldOnDemandRequest = new SingularityRequestTypeMigration.OldSingularityRequest("old-on-demand", null, Optional.empty(), Optional.of(false), Optional.empty());
+    final SingularityRequestTypeMigration.OldSingularityRequest oldWorkerRequest = new SingularityRequestTypeMigration.OldSingularityRequest("old-worker", null, Optional.empty(), Optional.of(true), Optional.empty());
+    final SingularityRequestTypeMigration.OldSingularityRequest oldScheduledRequest = new SingularityRequestTypeMigration.OldSingularityRequest("old-scheduled", null, Optional.of("0 0 0 0 0"), Optional.empty(), Optional.empty());
+    final SingularityRequestTypeMigration.OldSingularityRequest oldServiceRequest = new SingularityRequestTypeMigration.OldSingularityRequest("old-service", null, Optional.empty(), Optional.of(true), Optional.of(true));
 
     oldOnDemandRequest.setUnknownField("owners", owners);
 
@@ -154,9 +154,9 @@ public class ZkMigrationTest extends SingularityTestBaseNoDb {
     metadataManager.setZkDataVersion("9");
     long now = System.currentTimeMillis();
 
-    SingularityPendingRequest immediateRequest = new SingularityPendingRequest("immediateRequest", "immediateDeploy", now, Optional.absent(), PendingType.IMMEDIATE, Optional.absent(), Optional.absent());
-    SingularityPendingRequest newDeploy = new SingularityPendingRequest("newDeployRequest", "newDeploy", now, Optional.absent(), PendingType.NEW_DEPLOY, Optional.absent(), Optional.absent());
-    SingularityPendingRequest oneOffRequest = new SingularityPendingRequest("oneOffRequest", "oneOffDeploy", now, Optional.absent(), PendingType.ONEOFF, Optional.absent(), Optional.absent());
+    SingularityPendingRequest immediateRequest = new SingularityPendingRequest("immediateRequest", "immediateDeploy", now, Optional.empty(), PendingType.IMMEDIATE, Optional.empty(), Optional.empty());
+    SingularityPendingRequest newDeploy = new SingularityPendingRequest("newDeployRequest", "newDeploy", now, Optional.empty(), PendingType.NEW_DEPLOY, Optional.empty(), Optional.empty());
+    SingularityPendingRequest oneOffRequest = new SingularityPendingRequest("oneOffRequest", "oneOffDeploy", now, Optional.empty(), PendingType.ONEOFF, Optional.empty(), Optional.empty());
     curator.create().creatingParentsIfNeeded().forPath("/requests/pending/immediateRequest-immediateDeploy", objectMapper.writeValueAsBytes(immediateRequest));
     curator.create().creatingParentsIfNeeded().forPath("/requests/pending/newDeployRequest-newDeploy", objectMapper.writeValueAsBytes(newDeploy));
     curator.create().creatingParentsIfNeeded().forPath(String.format("%s%s", "/requests/pending/oneOffRequest-oneOffDeploy", now), objectMapper.writeValueAsBytes(oneOffRequest));

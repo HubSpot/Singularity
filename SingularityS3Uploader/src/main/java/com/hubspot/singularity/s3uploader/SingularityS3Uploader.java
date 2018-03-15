@@ -7,6 +7,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 import com.amazonaws.auth.BasicAWSCredentials;
@@ -27,11 +28,9 @@ import com.github.rholder.retry.Retryer;
 import com.github.rholder.retry.RetryerBuilder;
 import com.github.rholder.retry.StopStrategies;
 import com.github.rholder.retry.WaitStrategies;
-import com.google.common.base.Optional;
-import com.google.common.base.Throwables;
 import com.hubspot.mesos.JavaUtils;
-import com.hubspot.singularity.SingularityS3FormatHelper;
-import com.hubspot.singularity.SingularityS3Log;
+import com.hubspot.singularity.api.logs.SingularityS3FormatHelper;
+import com.hubspot.singularity.api.logs.SingularityS3Log;
 import com.hubspot.singularity.runner.base.sentry.SingularityRunnerExceptionNotifier;
 import com.hubspot.singularity.runner.base.shared.S3UploadMetadata;
 import com.hubspot.singularity.s3uploader.config.SingularityS3UploaderConfiguration;
@@ -100,7 +99,7 @@ public class SingularityS3Uploader extends SingularityUploader {
           }
         }
 
-        Optional<StorageClass> maybeStorageClass = Optional.absent();
+        Optional<StorageClass> maybeStorageClass = Optional.empty();
 
         if (shouldApplyStorageClass(fileSizeBytes, uploadMetadata.getS3StorageClass())) {
           LOG.debug("{} adding storage class {} to {}", logIdentifier, uploadMetadata.getS3StorageClass().get(), file);
@@ -166,7 +165,7 @@ public class SingularityS3Uploader extends SingularityUploader {
       s3Client.completeMultipartUpload(completeRequest);
     } catch (Exception e) {
       s3Client.abortMultipartUpload(new AbortMultipartUploadRequest(bucketName, key, initResponse.getUploadId()));
-      Throwables.propagate(e);
+      throw new RuntimeException(e);
     }
   }
 }

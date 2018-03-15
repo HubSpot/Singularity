@@ -1,22 +1,22 @@
 package com.hubspot.singularity.data.zkmigrations;
 
 import java.util.List;
+import java.util.Optional;
 
 import javax.inject.Singleton;
 
 import org.apache.mesos.v1.Protos.TaskID;
 import org.apache.mesos.v1.Protos.TaskStatus;
 
-import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import com.hubspot.mesos.protos.MesosTaskStatusObject;
 import com.hubspot.singularity.SingularityMainModule;
-import com.hubspot.singularity.SingularityTask;
-import com.hubspot.singularity.SingularityTaskHistoryUpdate;
-import com.hubspot.singularity.SingularityTaskId;
-import com.hubspot.singularity.SingularityTaskStatusHolder;
+import com.hubspot.singularity.api.task.SingularityTask;
+import com.hubspot.singularity.api.task.SingularityTaskHistoryUpdate;
+import com.hubspot.singularity.api.task.SingularityTaskId;
+import com.hubspot.singularity.api.task.SingularityTaskStatusHolder;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.helpers.MesosProtosUtils;
 
@@ -42,7 +42,7 @@ public class LastTaskStatusMigration extends ZkDataMigration {
 
     for (SingularityTaskId taskId : taskIds) {
       List<SingularityTaskHistoryUpdate> updates = Lists.reverse(taskManager.getTaskHistoryUpdates(taskId));
-      Optional<MesosTaskStatusObject> taskStatus = Optional.absent();
+      Optional<MesosTaskStatusObject> taskStatus = Optional.empty();
 
       for (SingularityTaskHistoryUpdate update : updates) {
         if (update.getTaskState().toTaskState().isPresent()) {
@@ -58,7 +58,7 @@ public class LastTaskStatusMigration extends ZkDataMigration {
         }
       }
 
-      SingularityTaskStatusHolder taskStatusHolder = new SingularityTaskStatusHolder(taskId, taskStatus, start, serverId, Optional.absent());
+      SingularityTaskStatusHolder taskStatusHolder = new SingularityTaskStatusHolder(taskId, taskStatus, start, serverId, Optional.empty());
 
       taskManager.saveLastActiveTaskStatus(taskStatusHolder);
     }

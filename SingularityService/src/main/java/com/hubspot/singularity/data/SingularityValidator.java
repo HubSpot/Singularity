@@ -11,6 +11,7 @@ import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.TimeZone;
 import java.util.UUID;
@@ -25,52 +26,48 @@ import org.dmfs.rfc5545.recur.RecurrenceRule;
 import org.quartz.CronExpression;
 
 import com.google.common.base.Joiner;
-import com.google.common.base.Optional;
-import com.google.common.base.Predicate;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.common.hash.Hashing;
 import com.google.inject.Inject;
-import com.hubspot.deploy.HealthcheckOptions;
-import com.hubspot.mesos.Resources;
-import com.hubspot.mesos.SingularityContainerInfo;
-import com.hubspot.mesos.SingularityContainerType;
-import com.hubspot.mesos.SingularityDockerInfo;
-import com.hubspot.mesos.SingularityDockerPortMapping;
-import com.hubspot.mesos.SingularityMesosTaskLabel;
-import com.hubspot.mesos.SingularityPortMappingType;
-import com.hubspot.mesos.SingularityVolume;
-import com.hubspot.singularity.MachineState;
-import com.hubspot.singularity.RequestType;
-import com.hubspot.singularity.ScheduleType;
-import com.hubspot.singularity.SingularityAction;
-import com.hubspot.singularity.SingularityDeploy;
-import com.hubspot.singularity.SingularityDeployBuilder;
-import com.hubspot.singularity.SingularityPendingRequest;
-import com.hubspot.singularity.SingularityPendingRequest.PendingType;
-import com.hubspot.singularity.SingularityPendingTaskId;
-import com.hubspot.singularity.SingularityPriorityFreezeParent;
-import com.hubspot.singularity.SingularityRequest;
-import com.hubspot.singularity.SingularityRequestGroup;
-import com.hubspot.singularity.SingularityRunNowRequestBuilder;
-import com.hubspot.singularity.SingularityShellCommand;
-import com.hubspot.singularity.SingularityTaskId;
-import com.hubspot.singularity.SingularityWebhook;
-import com.hubspot.singularity.SlavePlacement;
 import com.hubspot.singularity.WebExceptions;
-import com.hubspot.singularity.api.SingularityBounceRequest;
-import com.hubspot.singularity.api.SingularityMachineChangeRequest;
-import com.hubspot.singularity.api.SingularityPriorityFreeze;
-import com.hubspot.singularity.api.SingularityRunNowRequest;
+import com.hubspot.singularity.api.common.SingularityAction;
+import com.hubspot.singularity.api.deploy.HealthcheckOptions;
+import com.hubspot.singularity.api.deploy.SingularityDeploy;
+import com.hubspot.singularity.api.deploy.SingularityDeployBuilder;
+import com.hubspot.singularity.api.deploy.mesos.Resources;
+import com.hubspot.singularity.api.deploy.mesos.SingularityContainerInfo;
+import com.hubspot.singularity.api.deploy.mesos.SingularityContainerType;
+import com.hubspot.singularity.api.deploy.mesos.SingularityDockerInfo;
+import com.hubspot.singularity.api.deploy.mesos.SingularityDockerPortMapping;
+import com.hubspot.singularity.api.deploy.mesos.SingularityMesosTaskLabel;
+import com.hubspot.singularity.api.deploy.mesos.SingularityPortMappingType;
+import com.hubspot.singularity.api.deploy.mesos.SingularityVolume;
+import com.hubspot.singularity.api.disasters.SingularityPriorityFreeze;
+import com.hubspot.singularity.api.disasters.SingularityPriorityFreezeParent;
+import com.hubspot.singularity.api.expiring.SingularityBounceRequest;
+import com.hubspot.singularity.api.expiring.SingularityExpiringMachineState;
+import com.hubspot.singularity.api.expiring.SingularityMachineChangeRequest;
+import com.hubspot.singularity.api.machines.MachineState;
+import com.hubspot.singularity.api.request.RequestType;
+import com.hubspot.singularity.api.request.ScheduleType;
+import com.hubspot.singularity.api.request.SingularityPendingRequest;
+import com.hubspot.singularity.api.request.SingularityPendingRequest.PendingType;
+import com.hubspot.singularity.api.request.SingularityRequest;
+import com.hubspot.singularity.api.request.SingularityRequestGroup;
+import com.hubspot.singularity.api.request.SingularityRunNowRequest;
+import com.hubspot.singularity.api.request.SlavePlacement;
+import com.hubspot.singularity.api.task.SingularityPendingTaskId;
+import com.hubspot.singularity.api.task.SingularityShellCommand;
+import com.hubspot.singularity.api.task.SingularityTaskId;
+import com.hubspot.singularity.api.webhooks.SingularityWebhook;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.config.UIConfiguration;
 import com.hubspot.singularity.config.shell.ShellCommandDescriptor;
 import com.hubspot.singularity.config.shell.ShellCommandOptionDescriptor;
 import com.hubspot.singularity.data.history.DeployHistoryHelper;
-import com.hubspot.singularity.expiring.SingularityExpiringMachineState;
 
 @Singleton
 public class SingularityValidator {
@@ -146,7 +143,7 @@ public class SingularityValidator {
     this.defaultKillHealthcheckAfterSeconds = configuration.getKillTaskIfNotHealthyAfterSeconds();
     this.defaultHealthcheckIntervalSeconds = configuration.getHealthcheckIntervalSeconds();
     this.defaultHealthcheckStartupTimeoutSeconds = configuration.getStartupTimeoutSeconds();
-    this.defaultHealthcehckMaxRetries = configuration.getHealthcheckMaxRetries().or(0);
+    this.defaultHealthcehckMaxRetries = configuration.getHealthcheckMaxRetries().orElse(0);
     this.defaultHealthcheckResponseTimeoutSeconds = configuration.getHealthcheckTimeoutSeconds();
     this.maxRunNowTaskLaunchDelay = configuration.getMaxRunNowTaskLaunchDelayDays();
 
@@ -200,15 +197,15 @@ public class SingularityValidator {
 
       String originalSchedule = request.getQuartzScheduleSafe();
 
-      if (request.getScheduleType().or(ScheduleType.QUARTZ) != ScheduleType.RFC5545) {
+      if (request.getScheduleType().orElse(ScheduleType.QUARTZ) != ScheduleType.RFC5545) {
         if (request.getQuartzSchedule().isPresent() && !request.getSchedule().isPresent()) {
-          checkBadRequest(request.getScheduleType().or(ScheduleType.QUARTZ) == ScheduleType.QUARTZ, "If using quartzSchedule specify scheduleType QUARTZ or leave it blank");
+          checkBadRequest(request.getScheduleType().orElse(ScheduleType.QUARTZ) == ScheduleType.QUARTZ, "If using quartzSchedule specify scheduleType QUARTZ or leave it blank");
         }
 
         if (request.getQuartzSchedule().isPresent() || (request.getScheduleType().isPresent() && request.getScheduleType().get() == ScheduleType.QUARTZ)) {
           quartzSchedule = originalSchedule;
         } else {
-          checkBadRequest(request.getScheduleType().or(ScheduleType.CRON) == ScheduleType.CRON, "If not using quartzSchedule specify scheduleType CRON or leave it blank");
+          checkBadRequest(request.getScheduleType().orElse(ScheduleType.CRON) == ScheduleType.CRON, "If not using quartzSchedule specify scheduleType CRON or leave it blank");
           checkBadRequest(!request.getQuartzSchedule().isPresent(), "If using schedule type CRON do not specify quartzSchedule");
 
           quartzSchedule = getQuartzScheduleFromCronSchedule(originalSchedule);
@@ -239,14 +236,14 @@ public class SingularityValidator {
     }
 
     if (request.isScheduled()) {
-      checkBadRequest(request.getInstances().or(1) == 1, "Scheduler requests can not be ran on more than one instance");
+      checkBadRequest(request.getInstances().orElse(1) == 1, "Scheduler requests can not be ran on more than one instance");
     }
 
     if (request.getMaxTasksPerOffer().isPresent()) {
       checkBadRequest(request.getMaxTasksPerOffer().get() > 0, "maxTasksPerOffer must be positive");
     }
 
-    return request.toBuilder().setQuartzSchedule(Optional.fromNullable(quartzSchedule)).build();
+    return request.toBuilder().setQuartzSchedule(Optional.ofNullable(quartzSchedule)).build();
   }
 
   public SingularityWebhook checkSingularityWebhook(SingularityWebhook webhook) {
@@ -320,10 +317,10 @@ public class SingularityValidator {
 
       if (maxTotalHealthcheckTimeoutSeconds.isPresent()) {
         HealthcheckOptions options = deploy.getHealthcheck().get();
-        int intervalSeconds = options.getIntervalSeconds().or(defaultHealthcheckIntervalSeconds);
-        int httpTimeoutSeconds = options.getResponseTimeoutSeconds().or(defaultHealthcheckResponseTimeoutSeconds);
-        int startupTime = options.getStartupTimeoutSeconds().or(defaultHealthcheckStartupTimeoutSeconds);
-        int attempts = options.getMaxRetries().or(defaultHealthcehckMaxRetries) + 1;
+        int intervalSeconds = options.getIntervalSeconds().orElse(defaultHealthcheckIntervalSeconds);
+        int httpTimeoutSeconds = options.getResponseTimeoutSeconds().orElse(defaultHealthcheckResponseTimeoutSeconds);
+        int startupTime = options.getStartupTimeoutSeconds().orElse(defaultHealthcheckStartupTimeoutSeconds);
+        int attempts = options.getMaxRetries().orElse(defaultHealthcehckMaxRetries) + 1;
 
         int totalHealthCheckTime = startupTime + ((httpTimeoutSeconds + intervalSeconds) * attempts);
         checkBadRequest(totalHealthCheckTime < maxTotalHealthcheckTimeoutSeconds.get(),
@@ -438,7 +435,7 @@ public class SingularityValidator {
         Optional.of(getRunId(runNowRequest.getRunId())),
         runNowRequest.getSkipHealthchecks(),
         runNowRequest.getMessage(),
-        Optional.absent(),
+        Optional.empty(),
         runNowRequest.getResources(),
         runNowRequest.getS3UploaderAdditionalFiles(),
         runNowRequest.getRunAsUserOverride(),
@@ -463,8 +460,8 @@ public class SingularityValidator {
           request.getExtraArtifacts(),
           request.getRunAt());
     } else {
-      return new SingularityRunNowRequestBuilder()
-          .setRunId(getRunId(Optional.absent()))
+      return SingularityRunNowRequest.builder()
+          .setRunId(getRunId(Optional.empty()))
           .build();
     }
   }
@@ -568,9 +565,9 @@ public class SingularityValidator {
 
   private void checkForIllegalResources(SingularityRequest request, SingularityDeploy deploy) {
     int instances = request.getInstancesSafe();
-    double cpusPerInstance = deploy.getResources().or(defaultResources).getCpus();
-    double memoryMbPerInstance = deploy.getResources().or(defaultResources).getMemoryMb();
-    double diskMbPerInstance = deploy.getResources().or(defaultResources).getDiskMb();
+    double cpusPerInstance = deploy.getResources().orElse(defaultResources).getCpus();
+    double memoryMbPerInstance = deploy.getResources().orElse(defaultResources).getMemoryMb();
+    double diskMbPerInstance = deploy.getResources().orElse(defaultResources).getDiskMb();
 
     checkBadRequest(cpusPerInstance > 0, "Request must have more than 0 cpus");
     checkBadRequest(memoryMbPerInstance > 0, "Request must have more than 0 memoryMb");
@@ -671,7 +668,7 @@ public class SingularityValidator {
   }
 
   public void checkResourcesForBounce(SingularityRequest request, boolean isIncremental) {
-    SlavePlacement placement = request.getSlavePlacement().or(defaultSlavePlacement);
+    SlavePlacement placement = request.getSlavePlacement().orElse(defaultSlavePlacement);
 
     if ((isAllowBounceToSameHost(request) && placement == SlavePlacement.SEPARATE_BY_REQUEST)
       || (!isAllowBounceToSameHost(request) && placement != SlavePlacement.GREEDY && placement != SlavePlacement.OPTIMISTIC)) {
@@ -691,7 +688,7 @@ public class SingularityValidator {
   }
 
   public void checkScale(SingularityRequest request, Optional<Integer> previousScale) {
-    SlavePlacement placement = request.getSlavePlacement().or(defaultSlavePlacement);
+    SlavePlacement placement = request.getSlavePlacement().orElse(defaultSlavePlacement);
 
     if (placement != SlavePlacement.GREEDY && placement != SlavePlacement.OPTIMISTIC) {
       int currentActiveSlaveCount = slaveManager.getNumObjectsAtState(MachineState.ACTIVE);
@@ -802,12 +799,7 @@ public class SingularityValidator {
   }
 
   public void checkValidShellCommand(final SingularityShellCommand shellCommand) {
-    Optional<ShellCommandDescriptor> commandDescriptor = Iterables.tryFind(uiConfiguration.getShellCommands(), new Predicate<ShellCommandDescriptor>() {
-      @Override
-      public boolean apply(ShellCommandDescriptor input) {
-        return input.getName().equals(shellCommand.getName());
-      }
-    });
+    Optional<ShellCommandDescriptor> commandDescriptor = uiConfiguration.getShellCommands().stream().filter((input) -> input.getName().equals(shellCommand.getName())).findFirst();
 
     if (!commandDescriptor.isPresent()) {
       throw WebExceptions.badRequest("Shell command %s not in %s", shellCommand.getName(), uiConfiguration.getShellCommands());

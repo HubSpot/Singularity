@@ -1,5 +1,6 @@
 package com.hubspot.singularity.scheduler;
 
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 import javax.inject.Singleton;
@@ -7,14 +8,12 @@ import javax.inject.Singleton;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Optional;
 import com.google.inject.Inject;
-import com.hubspot.singularity.MachineState;
-import com.hubspot.singularity.SingularityRequest;
-import com.hubspot.singularity.SingularityRequestHistory;
-import com.hubspot.singularity.SingularityRequestWithState;
-import com.hubspot.singularity.SlavePlacement;
-import com.hubspot.singularity.api.SingularityBounceRequest;
+import com.hubspot.singularity.api.machines.MachineState;
+import com.hubspot.singularity.api.request.SingularityRequest;
+import com.hubspot.singularity.api.request.SingularityRequestHistory;
+import com.hubspot.singularity.api.request.SingularityRequestWithState;
+import com.hubspot.singularity.api.request.SlavePlacement;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.data.SlaveManager;
@@ -51,7 +50,7 @@ public class SingularityAutoScaleSpreadAllPoller extends SingularityLeaderOnlyPo
     for (SingularityRequestWithState requestWithState : requestManager.getActiveRequests()) {
       lock.runWithRequestLock(() -> {
         SingularityRequest request = requestWithState.getRequest();
-        SlavePlacement placement = request.getSlavePlacement().or(defaultSlavePlacement);
+        SlavePlacement placement = request.getSlavePlacement().orElse(defaultSlavePlacement);
 
         if (placement != SlavePlacement.SPREAD_ALL_SLAVES) {
           return;
@@ -75,7 +74,7 @@ public class SingularityAutoScaleSpreadAllPoller extends SingularityLeaderOnlyPo
     Optional<SingularityRequestHistory.RequestHistoryType> historyType = Optional.of(SingularityRequestHistory.RequestHistoryType.SCALED);
     Optional<String> message = Optional.of(String.format("Auto scale number of instances to spread to all %d available slaves", newRequestedInstances));
 
-    requestHelper.updateRequest(newRequest, Optional.of(oldRequest), oldRequestWithState.getState(), historyType, Optional.<String>absent(), oldRequest.getSkipHealthchecks(), message, Optional.<SingularityBounceRequest>absent());
+    requestHelper.updateRequest(newRequest, Optional.of(oldRequest), oldRequestWithState.getState(), historyType, Optional.empty(), oldRequest.getSkipHealthchecks(), message, Optional.empty());
   }
 
   @Override

@@ -2,13 +2,13 @@ package com.hubspot.singularity.data.history;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
-import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.hubspot.mesos.JavaUtils;
-import com.hubspot.singularity.OrderDirection;
-import com.hubspot.singularity.SingularityRequestHistory;
+import com.hubspot.singularity.api.common.OrderDirection;
+import com.hubspot.singularity.api.request.SingularityRequestHistory;
 import com.hubspot.singularity.data.RequestManager;
 
 @Singleton

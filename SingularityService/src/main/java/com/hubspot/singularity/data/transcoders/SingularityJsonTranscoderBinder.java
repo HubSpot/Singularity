@@ -11,7 +11,7 @@ import com.google.inject.Inject;
 import com.google.inject.Key;
 import com.google.inject.Provider;
 import com.google.inject.Scopes;
-import com.hubspot.singularity.SingularityId;
+import com.hubspot.singularity.api.common.SingularityId;
 import com.hubspot.singularity.config.SingularityConfiguration;
 
 @SuppressWarnings("serial")

@@ -5,32 +5,31 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.mesos.v1.Protos.Offer;
 import org.junit.Assert;
-import org.junit.Before;
 import org.junit.Test;
-import org.mockito.Mockito;
 
-import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.hubspot.mesos.json.MesosTaskMonitorObject;
-import com.hubspot.singularity.MachineLoadMetric;
-import com.hubspot.singularity.RequestType;
-import com.hubspot.singularity.SingularityDeploy;
-import com.hubspot.singularity.SingularityDeployStatistics;
-import com.hubspot.singularity.SingularityDeployStatisticsBuilder;
-import com.hubspot.singularity.SingularityPendingTask;
-import com.hubspot.singularity.SingularityPendingTaskId;
-import com.hubspot.singularity.SingularityRequest;
-import com.hubspot.singularity.SingularitySlaveUsage;
-import com.hubspot.singularity.SingularitySlaveUsage.ResourceUsageType;
-import com.hubspot.singularity.SingularityTaskId;
-import com.hubspot.singularity.SingularityTaskRequest;
-import com.hubspot.singularity.SingularityUsageScoringStrategy;
-import com.hubspot.singularity.SingularityUser;
-import com.hubspot.singularity.api.SingularityScaleRequest;
+import com.hubspot.singularity.api.auth.SingularityUser;
+import com.hubspot.singularity.api.deploy.SingularityDeployBuilder;
+import com.hubspot.singularity.api.deploy.SingularityDeployStatistics;
+import com.hubspot.singularity.api.deploy.SingularityDeployStatisticsBuilder;
+import com.hubspot.singularity.api.machines.MachineLoadMetric;
+import com.hubspot.singularity.api.machines.SingularitySlaveUsage;
+import com.hubspot.singularity.api.machines.SingularitySlaveUsage.ResourceUsageType;
+import com.hubspot.singularity.api.machines.SingularityUsageScoringStrategy;
+import com.hubspot.singularity.api.request.RequestType;
+import com.hubspot.singularity.api.request.SingularityPendingRequest.PendingType;
+import com.hubspot.singularity.api.request.SingularityRequestBuilder;
+import com.hubspot.singularity.api.expiring.SingularityScaleRequest;
+import com.hubspot.singularity.api.task.SingularityPendingTask;
+import com.hubspot.singularity.api.task.SingularityPendingTaskId;
+import com.hubspot.singularity.api.task.SingularityTaskId;
+import com.hubspot.singularity.api.task.SingularityTaskRequest;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.DeployManager;
 import com.hubspot.singularity.data.UsageManager;
@@ -67,12 +66,20 @@ public class SingularityMesosOfferSchedulerTest extends SingularitySchedulerTest
 
   private static final String SLAVE_ID = "slave";
 
-  private SingularityTaskRequest taskRequest = Mockito.mock(SingularityTaskRequest.class);
-  private SingularityDeploy deploy = Mockito.mock(SingularityDeploy.class);
-  private SingularityRequest request = Mockito.mock(SingularityRequest.class);
-  private SingularityPendingTask task = Mockito.mock(SingularityPendingTask.class);
-  private SingularityPendingTaskId taskId = Mockito.mock(SingularityPendingTaskId.class);
-
+  private SingularityTaskRequest taskRequestNonLongRunning = SingularityTaskRequest.builder()
+      .setRequest(new SingularityRequestBuilder("requestId", RequestType.ON_DEMAND).build())
+      .setDeploy(new SingularityDeployBuilder("requestId", "deployId").build())
+      .setPendingTask(SingularityPendingTask.builder()
+              .setPendingTaskId(new SingularityPendingTaskId("requestId", "deployId", 0, 1, PendingType.NEW_DEPLOY, 0))
+              .build()
+      ).build();
+  private SingularityTaskRequest taskRequestLongRunning = SingularityTaskRequest.builder()
+      .setRequest(new SingularityRequestBuilder("requestId", RequestType.SERVICE).build())
+      .setDeploy(new SingularityDeployBuilder("requestId", "deployId").build())
+      .setPendingTask(SingularityPendingTask.builder()
+              .setPendingTaskId(new SingularityPendingTaskId("requestId", "deployId", 0, 1, PendingType.NEW_DEPLOY, 0))
+              .build()
+      ).build();
 
   public SingularityMesosOfferSchedulerTest() {
     super(false, (configuration) -> {configuration.setLongRunningUsedCpuWeightForOffer(0.30);
@@ -88,127 +95,111 @@ public class SingularityMesosOfferSchedulerTest extends SingularitySchedulerTest
     });
   }
 
-  @Before
-  public void setup() {
-    Mockito.when(taskRequest.getRequest()).thenReturn(request);
-    Mockito.when(request.getId()).thenReturn("requestId");
-
-    Mockito.when(taskRequest.getDeploy()).thenReturn(deploy);
-    Mockito.when(deploy.getId()).thenReturn("deployId");
-
-    Mockito.when(taskRequest.getPendingTask()).thenReturn(task);
-    Mockito.when(task.getPendingTaskId()).thenReturn(taskId);
-  }
-
   @Test
   public void itCorrectlyUsesDefaults() {
     Map<ResourceUsageType, Number> longRunningTasksUsage = new HashMap<>();
-    setRequestType(RequestType.SERVICE);
 
     // LR - no usage tracked -> default score
-    assertValueIs(0.10, scheduler.score(SLAVE_ID, taskRequest, Optional.absent()));
+    assertValueIs(0.10, scheduler.score(SLAVE_ID, taskRequestNonLongRunning, Optional.empty()));
 
     // NLR - no deployStatistics -> default weights
-    setRequestType(RequestType.ON_DEMAND);
     longRunningTasksUsage.put(ResourceUsageType.CPU_USED, 5);
     longRunningTasksUsage.put(ResourceUsageType.MEMORY_BYTES_USED, mbToBytes(5));
     longRunningTasksUsage.put(ResourceUsageType.DISK_BYTES_USED, mbToBytes(5));
-    assertValueIs(0.25, scheduler.score(SLAVE_ID, taskRequest, Optional.of(getUsage(5, 10, 5, 10, 5, 10, longRunningTasksUsage))));
+    assertValueIs(0.25, scheduler.score(SLAVE_ID, taskRequestNonLongRunning, Optional.of(getUsage(5, 10, 5, 10, 5, 10, longRunningTasksUsage))));
   }
 
   @Test
   public void itCorrectlyScoresLongRunningTasks() {
     Map<ResourceUsageType, Number> longRunningTasksUsage = new HashMap<>();
-    setRequestType(RequestType.SERVICE);
 
     // new slave (no resources used) -> perfect score
     longRunningTasksUsage.put(ResourceUsageType.CPU_USED, 0);
     longRunningTasksUsage.put(ResourceUsageType.MEMORY_BYTES_USED, 0);
     longRunningTasksUsage.put(ResourceUsageType.DISK_BYTES_USED, 0);
-    assertValueIs(1, scheduler.score(SLAVE_ID, taskRequest, Optional.of(getUsage(0,10, 0,10, 0, 10, longRunningTasksUsage))));
+    assertValueIs(1, scheduler.score(SLAVE_ID, taskRequestLongRunning, Optional.of(getUsage(0,10, 0,10, 0, 10, longRunningTasksUsage))));
 
     // cpu used, no mem used, no disk used
     longRunningTasksUsage.put(ResourceUsageType.CPU_USED, 5);
     longRunningTasksUsage.put(ResourceUsageType.MEMORY_BYTES_USED, 0);
     longRunningTasksUsage.put(ResourceUsageType.DISK_BYTES_USED, 0);
-    assertValueIs(0.85, scheduler.score(SLAVE_ID, taskRequest, Optional.of(getUsage(0, 10, 5, 10, 0, 10, longRunningTasksUsage))));
+    assertValueIs(0.85, scheduler.score(SLAVE_ID, taskRequestLongRunning, Optional.of(getUsage(0, 10, 5, 10, 0, 10, longRunningTasksUsage))));
 
     longRunningTasksUsage.put(ResourceUsageType.CPU_USED, 8);
     longRunningTasksUsage.put(ResourceUsageType.MEMORY_BYTES_USED, 0);
     longRunningTasksUsage.put(ResourceUsageType.DISK_BYTES_USED, 0);
-    assertValueIs(0.76, scheduler.score(SLAVE_ID, taskRequest, Optional.of(getUsage(0, 10, 8, 10, 0, 10, longRunningTasksUsage))));
+    assertValueIs(0.76, scheduler.score(SLAVE_ID, taskRequestLongRunning, Optional.of(getUsage(0, 10, 8, 10, 0, 10, longRunningTasksUsage))));
 
     // no cpu used, mem used, no disk used
     longRunningTasksUsage.put(ResourceUsageType.CPU_USED, 0);
     longRunningTasksUsage.put(ResourceUsageType.MEMORY_BYTES_USED, mbToBytes(5));
     longRunningTasksUsage.put(ResourceUsageType.DISK_BYTES_USED, 0);
-    assertValueIs(0.75, scheduler.score(SLAVE_ID, taskRequest, Optional.of(getUsage(5, 10, 0, 10, 0, 10, longRunningTasksUsage))));
+    assertValueIs(0.75, scheduler.score(SLAVE_ID, taskRequestLongRunning, Optional.of(getUsage(5, 10, 0, 10, 0, 10, longRunningTasksUsage))));
 
     longRunningTasksUsage.put(ResourceUsageType.CPU_USED, 0);
     longRunningTasksUsage.put(ResourceUsageType.MEMORY_BYTES_USED, mbToBytes(8));
     longRunningTasksUsage.put(ResourceUsageType.DISK_BYTES_USED, 0);
-    assertValueIs(0.60, scheduler.score(SLAVE_ID, taskRequest, Optional.of(getUsage(8, 10, 0, 10, 0, 10, longRunningTasksUsage))));
+    assertValueIs(0.60, scheduler.score(SLAVE_ID, taskRequestLongRunning, Optional.of(getUsage(8, 10, 0, 10, 0, 10, longRunningTasksUsage))));
 
     // no cpu used, no mem used, disk used
     longRunningTasksUsage.put(ResourceUsageType.CPU_USED, 0);
     longRunningTasksUsage.put(ResourceUsageType.MEMORY_BYTES_USED, 0);
     longRunningTasksUsage.put(ResourceUsageType.DISK_BYTES_USED, mbToBytes(5));
-    assertValueIs(0.90, scheduler.score(SLAVE_ID, taskRequest, Optional.of(getUsage(0, 10, 0, 10, 5, 10, longRunningTasksUsage))));
+    assertValueIs(0.90, scheduler.score(SLAVE_ID, taskRequestLongRunning, Optional.of(getUsage(0, 10, 0, 10, 5, 10, longRunningTasksUsage))));
 
     longRunningTasksUsage.put(ResourceUsageType.CPU_USED, 0);
     longRunningTasksUsage.put(ResourceUsageType.MEMORY_BYTES_USED, 0);
     longRunningTasksUsage.put(ResourceUsageType.DISK_BYTES_USED, mbToBytes(8));
-    assertValueIs(0.84, scheduler.score(SLAVE_ID, taskRequest, Optional.of(getUsage(0, 10, 0, 10, 8, 10, longRunningTasksUsage))));
+    assertValueIs(0.84, scheduler.score(SLAVE_ID, taskRequestLongRunning, Optional.of(getUsage(0, 10, 0, 10, 8, 10, longRunningTasksUsage))));
 
     // cpu used, mem used, no disk used
     longRunningTasksUsage.put(ResourceUsageType.CPU_USED, 5);
     longRunningTasksUsage.put(ResourceUsageType.MEMORY_BYTES_USED, mbToBytes(5));
     longRunningTasksUsage.put(ResourceUsageType.DISK_BYTES_USED, 0);
-    assertValueIs(0.60, scheduler.score(SLAVE_ID, taskRequest, Optional.of(getUsage(5, 10, 5, 10, 0, 10, longRunningTasksUsage))));
+    assertValueIs(0.60, scheduler.score(SLAVE_ID, taskRequestLongRunning, Optional.of(getUsage(5, 10, 5, 10, 0, 10, longRunningTasksUsage))));
 
     longRunningTasksUsage.put(ResourceUsageType.CPU_USED, 8);
     longRunningTasksUsage.put(ResourceUsageType.MEMORY_BYTES_USED, mbToBytes(8));
     longRunningTasksUsage.put(ResourceUsageType.DISK_BYTES_USED, 0);
-    assertValueIs(0.36, scheduler.score(SLAVE_ID, taskRequest, Optional.of(getUsage(8, 10, 8, 10, 0, 10, longRunningTasksUsage))));
+    assertValueIs(0.36, scheduler.score(SLAVE_ID, taskRequestLongRunning, Optional.of(getUsage(8, 10, 8, 10, 0, 10, longRunningTasksUsage))));
 
     // no cpu used, mem used, disk used
     longRunningTasksUsage.put(ResourceUsageType.CPU_USED, 0);
     longRunningTasksUsage.put(ResourceUsageType.MEMORY_BYTES_USED, mbToBytes(5));
     longRunningTasksUsage.put(ResourceUsageType.DISK_BYTES_USED, mbToBytes(5));
-    assertValueIs(0.65, scheduler.score(SLAVE_ID, taskRequest, Optional.of(getUsage(5,10, 0,10, 5, 10, longRunningTasksUsage))));
+    assertValueIs(0.65, scheduler.score(SLAVE_ID, taskRequestLongRunning, Optional.of(getUsage(5,10, 0,10, 5, 10, longRunningTasksUsage))));
 
     longRunningTasksUsage.put(ResourceUsageType.CPU_USED, 0);
     longRunningTasksUsage.put(ResourceUsageType.MEMORY_BYTES_USED, mbToBytes(8));
     longRunningTasksUsage.put(ResourceUsageType.DISK_BYTES_USED, mbToBytes(8));
-    assertValueIs(0.44, scheduler.score(SLAVE_ID, taskRequest, Optional.of(getUsage(8,10, 0,10, 8, 10, longRunningTasksUsage))));
+    assertValueIs(0.44, scheduler.score(SLAVE_ID, taskRequestLongRunning, Optional.of(getUsage(8,10, 0,10, 8, 10, longRunningTasksUsage))));
 
     // cpu used, no mem used, disk used
     longRunningTasksUsage.put(ResourceUsageType.CPU_USED, 5);
     longRunningTasksUsage.put(ResourceUsageType.MEMORY_BYTES_USED, 0);
     longRunningTasksUsage.put(ResourceUsageType.DISK_BYTES_USED, mbToBytes(5));
-    assertValueIs(0.75, scheduler.score(SLAVE_ID, taskRequest, Optional.of(getUsage(0,10, 5,10, 5, 10, longRunningTasksUsage))));
+    assertValueIs(0.75, scheduler.score(SLAVE_ID, taskRequestLongRunning, Optional.of(getUsage(0,10, 5,10, 5, 10, longRunningTasksUsage))));
 
     longRunningTasksUsage.put(ResourceUsageType.CPU_USED, 8);
     longRunningTasksUsage.put(ResourceUsageType.MEMORY_BYTES_USED, 0);
     longRunningTasksUsage.put(ResourceUsageType.DISK_BYTES_USED, mbToBytes(8));
-    assertValueIs(0.60, scheduler.score(SLAVE_ID, taskRequest, Optional.of(getUsage(0,10, 8,10, 8, 10, longRunningTasksUsage))));
+    assertValueIs(0.60, scheduler.score(SLAVE_ID, taskRequestLongRunning, Optional.of(getUsage(0,10, 8,10, 8, 10, longRunningTasksUsage))));
 
     // cpu used, mem used, disk used
     longRunningTasksUsage.put(ResourceUsageType.CPU_USED, 5);
     longRunningTasksUsage.put(ResourceUsageType.MEMORY_BYTES_USED, mbToBytes(5));
     longRunningTasksUsage.put(ResourceUsageType.DISK_BYTES_USED, mbToBytes(5));
-    assertValueIs(0.5, scheduler.score(SLAVE_ID, taskRequest, Optional.of(getUsage(5,10, 5,10, 5, 10, longRunningTasksUsage))));
+    assertValueIs(0.5, scheduler.score(SLAVE_ID, taskRequestLongRunning, Optional.of(getUsage(5,10, 5,10, 5, 10, longRunningTasksUsage))));
 
     longRunningTasksUsage.put(ResourceUsageType.CPU_USED, 8);
     longRunningTasksUsage.put(ResourceUsageType.MEMORY_BYTES_USED, mbToBytes(8));
     longRunningTasksUsage.put(ResourceUsageType.DISK_BYTES_USED, mbToBytes(8));
-    assertValueIs(0.2, scheduler.score(SLAVE_ID, taskRequest, Optional.of(getUsage(8,10, 8,10, 8, 10, longRunningTasksUsage))));
+    assertValueIs(0.2, scheduler.score(SLAVE_ID, taskRequestLongRunning, Optional.of(getUsage(8,10, 8,10, 8, 10, longRunningTasksUsage))));
   }
 
   @Test
   public void itCorrectlyScoresMediumLongNonLongRunningTasks() {
     Map<ResourceUsageType, Number> longRunningTasksUsage = new HashMap<>();
-    setRequestType(RequestType.ON_DEMAND);
 
     // medium duration
     setDeployStatistics(TimeUnit.HOURS, 3);
@@ -217,26 +208,26 @@ public class SingularityMesosOfferSchedulerTest extends SingularitySchedulerTest
     longRunningTasksUsage.put(ResourceUsageType.CPU_USED, 5);
     longRunningTasksUsage.put(ResourceUsageType.MEMORY_BYTES_USED, 0);
     longRunningTasksUsage.put(ResourceUsageType.DISK_BYTES_USED, 0);
-    assertValueIs(0.6, scheduler.score(SLAVE_ID, taskRequest, Optional.of(getUsage(0, 10, 5, 10, 0, 10, longRunningTasksUsage))));
+    assertValueIs(0.6, scheduler.score(SLAVE_ID, taskRequestNonLongRunning, Optional.of(getUsage(0, 10, 5, 10, 0, 10, longRunningTasksUsage))));
 
     // 0% LR cpu -- 0% LR mem -- 50% LR disk
     longRunningTasksUsage.put(ResourceUsageType.CPU_USED, 0);
     longRunningTasksUsage.put(ResourceUsageType.MEMORY_BYTES_USED, 0);
     longRunningTasksUsage.put(ResourceUsageType.DISK_BYTES_USED, mbToBytes(5));
-    assertValueIs(0.65, scheduler.score(SLAVE_ID, taskRequest, Optional.of(getUsage(0, 10, 0, 10, 5, 10, longRunningTasksUsage))));
+    assertValueIs(0.65, scheduler.score(SLAVE_ID, taskRequestNonLongRunning, Optional.of(getUsage(0, 10, 0, 10, 5, 10, longRunningTasksUsage))));
 
     // 20% NLR cpu -- 20% NLR mem -- 0% LR disk
     longRunningTasksUsage.put(ResourceUsageType.CPU_USED, 0);
     longRunningTasksUsage.put(ResourceUsageType.MEMORY_BYTES_USED, 0);
     longRunningTasksUsage.put(ResourceUsageType.DISK_BYTES_USED, 0);
-    double nlrScore = scheduler.score(SLAVE_ID, taskRequest, Optional.of(getUsage(2, 10, 2, 10, 0, 10, longRunningTasksUsage)));
+    double nlrScore = scheduler.score(SLAVE_ID, taskRequestNonLongRunning, Optional.of(getUsage(2, 10, 2, 10, 0, 10, longRunningTasksUsage)));
     assertValueIs(0.63, nlrScore);
 
     // 20% LR cpu -- 20% LR mem -- 0% LR disk
     longRunningTasksUsage.put(ResourceUsageType.CPU_USED, 2);
     longRunningTasksUsage.put(ResourceUsageType.MEMORY_BYTES_USED, mbToBytes(2));
     longRunningTasksUsage.put(ResourceUsageType.DISK_BYTES_USED, 0);
-    double lrScore = scheduler.score(SLAVE_ID, taskRequest, Optional.of(getUsage(2, 10,2, 10, 0, 10, longRunningTasksUsage)));
+    double lrScore = scheduler.score(SLAVE_ID, taskRequestNonLongRunning, Optional.of(getUsage(2, 10,2, 10, 0, 10, longRunningTasksUsage)));
     assertValueIs(0.59, lrScore);
 
     Assert.assertTrue(nlrScore > lrScore);
@@ -245,7 +236,7 @@ public class SingularityMesosOfferSchedulerTest extends SingularitySchedulerTest
     longRunningTasksUsage.put(ResourceUsageType.CPU_USED, 0);
     longRunningTasksUsage.put(ResourceUsageType.MEMORY_BYTES_USED, 0);
     longRunningTasksUsage.put(ResourceUsageType.DISK_BYTES_USED, 0);
-    nlrScore = scheduler.score(SLAVE_ID, taskRequest, Optional.of(getUsage(3, 10, 3, 10, 0, 10, longRunningTasksUsage)));
+    nlrScore = scheduler.score(SLAVE_ID, taskRequestNonLongRunning, Optional.of(getUsage(3, 10, 3, 10, 0, 10, longRunningTasksUsage)));
     assertValueIs(0.57, nlrScore);
 
     Assert.assertTrue(lrScore > nlrScore);
@@ -254,7 +245,6 @@ public class SingularityMesosOfferSchedulerTest extends SingularitySchedulerTest
   @Test
   public void itCorrectlyScoresLongNonLongRunningTasks() {
     Map<ResourceUsageType, Number> longRunningTasksUsage = new HashMap<>();
-    setRequestType(RequestType.ON_DEMAND);
 
     // long duration
     setDeployStatistics(TimeUnit.HOURS, 6);
@@ -263,26 +253,26 @@ public class SingularityMesosOfferSchedulerTest extends SingularitySchedulerTest
     longRunningTasksUsage.put(ResourceUsageType.CPU_USED, 5);
     longRunningTasksUsage.put(ResourceUsageType.MEMORY_BYTES_USED, 0);
     longRunningTasksUsage.put(ResourceUsageType.DISK_BYTES_USED, 0);
-    assertValueIs(0.85, scheduler.score(SLAVE_ID, taskRequest, Optional.of(getUsage(0, 10, 5, 10, 0, 10, longRunningTasksUsage))));
+    assertValueIs(0.85, scheduler.score(SLAVE_ID, taskRequestNonLongRunning, Optional.of(getUsage(0, 10, 5, 10, 0, 10, longRunningTasksUsage))));
 
     // 0% LR cpu -- 0% LR mem -- 50% LR disk
     longRunningTasksUsage.put(ResourceUsageType.CPU_USED, 0);
     longRunningTasksUsage.put(ResourceUsageType.MEMORY_BYTES_USED, 0);
     longRunningTasksUsage.put(ResourceUsageType.DISK_BYTES_USED, mbToBytes(5));
-    assertValueIs(0.9, scheduler.score(SLAVE_ID, taskRequest, Optional.of(getUsage(0, 10, 0, 10, 5, 10, longRunningTasksUsage))));
+    assertValueIs(0.9, scheduler.score(SLAVE_ID, taskRequestNonLongRunning, Optional.of(getUsage(0, 10, 0, 10, 5, 10, longRunningTasksUsage))));
 
     // 20% NLR cpu -- 20% NLR mem -- 0% LR disk
     longRunningTasksUsage.put(ResourceUsageType.CPU_USED, 0);
     longRunningTasksUsage.put(ResourceUsageType.MEMORY_BYTES_USED, 0);
     longRunningTasksUsage.put(ResourceUsageType.DISK_BYTES_USED, 0);
-    double nlrScore = scheduler.score(SLAVE_ID, taskRequest, Optional.of(getUsage(2, 10, 2, 10, 0, 10, longRunningTasksUsage)));
+    double nlrScore = scheduler.score(SLAVE_ID, taskRequestNonLongRunning, Optional.of(getUsage(2, 10, 2, 10, 0, 10, longRunningTasksUsage)));
     assertValueIs(0.92, nlrScore);
 
     // 20% LR cpu -- 20% LR mem -- 0% LR disk
     longRunningTasksUsage.put(ResourceUsageType.CPU_USED, 2);
     longRunningTasksUsage.put(ResourceUsageType.MEMORY_BYTES_USED, mbToBytes(2));
     longRunningTasksUsage.put(ResourceUsageType.DISK_BYTES_USED, 0);
-    double lrScore = scheduler.score(SLAVE_ID, taskRequest, Optional.of(getUsage(2, 10, 2, 10, 0, 10, longRunningTasksUsage)));
+    double lrScore = scheduler.score(SLAVE_ID, taskRequestNonLongRunning, Optional.of(getUsage(2, 10, 2, 10, 0, 10, longRunningTasksUsage)));
     assertValueIs(0.84, lrScore);
 
     Assert.assertTrue(nlrScore > lrScore);
@@ -291,7 +281,7 @@ public class SingularityMesosOfferSchedulerTest extends SingularitySchedulerTest
     longRunningTasksUsage.put(ResourceUsageType.CPU_USED, 0);
     longRunningTasksUsage.put(ResourceUsageType.MEMORY_BYTES_USED, 0);
     longRunningTasksUsage.put(ResourceUsageType.DISK_BYTES_USED, 0);
-    nlrScore = scheduler.score(SLAVE_ID, taskRequest, Optional.of(getUsage(3, 10, 3, 10, 0, 10, longRunningTasksUsage)));
+    nlrScore = scheduler.score(SLAVE_ID, taskRequestNonLongRunning, Optional.of(getUsage(3, 10, 3, 10, 0, 10, longRunningTasksUsage)));
     assertValueIs(0.88, nlrScore);
 
     Assert.assertTrue(nlrScore > lrScore);
@@ -303,26 +293,26 @@ public class SingularityMesosOfferSchedulerTest extends SingularitySchedulerTest
     longRunningTasksUsage.put(ResourceUsageType.CPU_USED, 5);
     longRunningTasksUsage.put(ResourceUsageType.MEMORY_BYTES_USED, 0);
     longRunningTasksUsage.put(ResourceUsageType.DISK_BYTES_USED, 0);
-    assertValueIs(0.85, scheduler.score(SLAVE_ID, taskRequest, Optional.of(getUsage(0, 10, 5, 10, 0, 10, longRunningTasksUsage))));
+    assertValueIs(0.85, scheduler.score(SLAVE_ID, taskRequestNonLongRunning, Optional.of(getUsage(0, 10, 5, 10, 0, 10, longRunningTasksUsage))));
 
     // 0% LR cpu -- 0% LR mem -- 50% LR disk
     longRunningTasksUsage.put(ResourceUsageType.CPU_USED, 0);
     longRunningTasksUsage.put(ResourceUsageType.MEMORY_BYTES_USED, 0);
     longRunningTasksUsage.put(ResourceUsageType.DISK_BYTES_USED, mbToBytes(5));
-    assertValueIs(0.9, scheduler.score(SLAVE_ID, taskRequest, Optional.of(getUsage(0, 10, 0, 10, 5, 10, longRunningTasksUsage))));
+    assertValueIs(0.9, scheduler.score(SLAVE_ID, taskRequestNonLongRunning, Optional.of(getUsage(0, 10, 0, 10, 5, 10, longRunningTasksUsage))));
 
     // 20% NLR cpu -- 20% NLR mem -- 0% LR disk
     longRunningTasksUsage.put(ResourceUsageType.CPU_USED, 0);
     longRunningTasksUsage.put(ResourceUsageType.MEMORY_BYTES_USED, 0);
     longRunningTasksUsage.put(ResourceUsageType.DISK_BYTES_USED, 0);
-    nlrScore = scheduler.score(SLAVE_ID, taskRequest, Optional.of(getUsage(2, 10, 2, 10, 0, 10, longRunningTasksUsage)));
+    nlrScore = scheduler.score(SLAVE_ID, taskRequestNonLongRunning, Optional.of(getUsage(2, 10, 2, 10, 0, 10, longRunningTasksUsage)));
     assertValueIs(0.92, nlrScore);
 
     // 20% LR cpu -- 20% LR mem -- 0% LR disk
     longRunningTasksUsage.put(ResourceUsageType.CPU_USED, 2);
     longRunningTasksUsage.put(ResourceUsageType.MEMORY_BYTES_USED, mbToBytes(2));
     longRunningTasksUsage.put(ResourceUsageType.DISK_BYTES_USED, 0);
-    lrScore = scheduler.score(SLAVE_ID, taskRequest, Optional.of(getUsage(2, 10, 2, 10, 0, 10, longRunningTasksUsage)));
+    lrScore = scheduler.score(SLAVE_ID, taskRequestNonLongRunning, Optional.of(getUsage(2, 10, 2, 10, 0, 10, longRunningTasksUsage)));
     assertValueIs(0.84, lrScore);
 
     Assert.assertTrue(nlrScore > lrScore);
@@ -331,7 +321,7 @@ public class SingularityMesosOfferSchedulerTest extends SingularitySchedulerTest
     longRunningTasksUsage.put(ResourceUsageType.CPU_USED, 0);
     longRunningTasksUsage.put(ResourceUsageType.MEMORY_BYTES_USED, 0);
     longRunningTasksUsage.put(ResourceUsageType.DISK_BYTES_USED, 0);
-    nlrScore = scheduler.score(SLAVE_ID, taskRequest, Optional.of(getUsage(3, 10, 3, 10, 0, 10, longRunningTasksUsage)));
+    nlrScore = scheduler.score(SLAVE_ID, taskRequestNonLongRunning, Optional.of(getUsage(3, 10, 3, 10, 0, 10, longRunningTasksUsage)));
     assertValueIs(0.88, nlrScore);
 
     Assert.assertTrue(nlrScore > lrScore);
@@ -364,7 +354,7 @@ public class SingularityMesosOfferSchedulerTest extends SingularitySchedulerTest
     usageManager.saveSpecificSlaveUsageAndSetCurrent("host2", smallUsage);
     usageManager.saveSpecificSlaveUsageAndSetCurrent("host3", smallUsage);
 
-    requestResource.scale(requestId, new SingularityScaleRequest(Optional.of(3), Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent()), SingularityUser.DEFAULT_USER);
+    requestResource.scale(requestId, new SingularityScaleRequest(Optional.of(3), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty()), SingularityUser.defaultUser());
 
     Assert.assertEquals(2.0, usageManager.getRequestUtilizations().get(requestId).getCpuUsed(), 0.001);
 
@@ -416,8 +406,7 @@ public class SingularityMesosOfferSchedulerTest extends SingularitySchedulerTest
       usageManager.saveSpecificSlaveUsageAndSetCurrent("host2", smallUsage);
       usageManager.saveSpecificSlaveUsageAndSetCurrent("host3", smallUsage);
 
-      requestResource.scale(requestId, new SingularityScaleRequest(Optional.of(3), Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent(), Optional
-          .absent()), SingularityUser.DEFAULT_USER);
+      requestResource.scale(requestId, new SingularityScaleRequest(Optional.of(3), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty()), SingularityUser.defaultUser());
 
       Assert.assertEquals(3.0, usageManager.getRequestUtilizations().get(requestId).getCpuUsed(), 0.001);
 
@@ -463,9 +452,5 @@ public class SingularityMesosOfferSchedulerTest extends SingularitySchedulerTest
     return new SingularityDeployStatisticsBuilder("requestId", "deployId")
         .setAverageRuntimeMillis(Optional.of(avgRunTimeMillis))
         .build();
-  }
-
-  private void setRequestType(RequestType type) {
-    Mockito.when(request.getRequestType()).thenReturn(type);
   }
 }

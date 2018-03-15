@@ -1,11 +1,12 @@
 package com.hubspot.singularity.executor.shells;
 
+import java.util.Optional;
+
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Optional;
-import com.hubspot.singularity.SingularityTaskShellCommandRequest;
-import com.hubspot.singularity.SingularityTaskShellCommandUpdate;
-import com.hubspot.singularity.SingularityTaskShellCommandUpdate.UpdateType;
+import com.hubspot.singularity.api.task.ShellCommandUpdateType;
+import com.hubspot.singularity.api.task.SingularityTaskShellCommandRequest;
+import com.hubspot.singularity.api.task.SingularityTaskShellCommandUpdate;
 import com.hubspot.singularity.executor.task.SingularityExecutorTask;
 
 public class SingularityExecutorShellCommandUpdater {
@@ -21,13 +22,13 @@ public class SingularityExecutorShellCommandUpdater {
   }
 
   // TODO thread?
-  public void sendUpdate(UpdateType updateType, Optional<String> message, Optional<String> outputFilename) {
+  public void sendUpdate(ShellCommandUpdateType updateType, Optional<String> message, Optional<String> outputFilename) {
     SingularityTaskShellCommandUpdate update = new SingularityTaskShellCommandUpdate(shellRequest.getId(), System.currentTimeMillis(), message, outputFilename, updateType);
 
     try {
       byte[] data = objectMapper.writeValueAsBytes(update);
 
-      task.getLog().info("Sending update {} ({}) for shell command {}", updateType, message.or(""), shellRequest.getId());
+      task.getLog().info("Sending update {} ({}) for shell command {}", updateType, message.orElse(""), shellRequest.getId());
 
       task.getDriver().sendFrameworkMessage(data);
 

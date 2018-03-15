@@ -1,9 +1,9 @@
 package com.hubspot.singularity.mesos;
 
-import com.hubspot.singularity.MachineLoadMetric;
-import com.hubspot.singularity.SingularitySlaveUsage;
-import com.hubspot.singularity.SingularitySlaveUsage.ResourceUsageType;
-import com.hubspot.singularity.SingularityUsageScoringStrategy;
+import com.hubspot.singularity.api.machines.MachineLoadMetric;
+import com.hubspot.singularity.api.machines.SingularitySlaveUsage;
+import com.hubspot.singularity.api.machines.SingularitySlaveUsage.ResourceUsageType;
+import com.hubspot.singularity.api.machines.SingularityUsageScoringStrategy;
 
 class SingularitySlaveUsageWithCalculatedScores {
   private final SingularitySlaveUsage slaveUsage;

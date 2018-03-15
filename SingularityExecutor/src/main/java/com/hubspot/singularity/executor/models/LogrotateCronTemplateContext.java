@@ -2,7 +2,7 @@ package com.hubspot.singularity.executor.models;
 
 import java.nio.file.Paths;
 
-import com.hubspot.singularity.executor.SingularityExecutorLogrotateFrequency;
+import com.hubspot.singularity.api.deploy.SingularityExecutorLogrotateFrequency;
 import com.hubspot.singularity.executor.config.SingularityExecutorConfiguration;
 import com.hubspot.singularity.executor.task.SingularityExecutorTaskDefinition;
 

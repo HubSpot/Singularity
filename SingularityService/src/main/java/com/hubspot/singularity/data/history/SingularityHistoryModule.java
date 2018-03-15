@@ -2,6 +2,7 @@ package com.hubspot.singularity.data.history;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import java.util.Optional;
 import java.util.Set;
 
 import org.aopalliance.intercept.MethodInterceptor;
@@ -9,7 +10,6 @@ import org.aopalliance.intercept.MethodInvocation;
 import org.skife.jdbi.v2.DBI;
 import org.skife.jdbi.v2.tweak.ResultSetMapper;
 
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.AbstractModule;
 import com.google.inject.Inject;

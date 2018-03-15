@@ -1,6 +1,7 @@
 package com.hubspot.singularity.resources;
 
 import java.util.Collections;
+import java.util.Optional;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -8,30 +9,32 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
-import com.google.common.base.Optional;
 import com.google.inject.Inject;
-import com.hubspot.singularity.SingularityAuthorizationScope;
-import com.hubspot.singularity.SingularityPendingRequest;
-import com.hubspot.singularity.SingularityPendingTask;
-import com.hubspot.singularity.SingularityTaskHistory;
-import com.hubspot.singularity.SingularityTaskId;
-import com.hubspot.singularity.SingularityTaskState;
-import com.hubspot.singularity.SingularityUser;
+import com.hubspot.singularity.api.auth.SingularityAuthorizationScope;
+import com.hubspot.singularity.api.auth.SingularityUser;
+import com.hubspot.singularity.api.request.SingularityPendingRequest;
+import com.hubspot.singularity.api.task.SingularityPendingTask;
+import com.hubspot.singularity.api.task.SingularityTaskHistory;
+import com.hubspot.singularity.api.task.SingularityTaskId;
+import com.hubspot.singularity.api.task.SingularityTaskState;
 import com.hubspot.singularity.auth.SingularityAuthorizationHelper;
 import com.hubspot.singularity.config.ApiPaths;
 import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.data.history.HistoryManager;
-import com.wordnik.swagger.annotations.Api;
-import com.wordnik.swagger.annotations.ApiOperation;
-import com.wordnik.swagger.annotations.ApiResponse;
-import com.wordnik.swagger.annotations.ApiResponses;
 
 import io.dropwizard.auth.Auth;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.tags.Tags;
 
 @Path(ApiPaths.TASK_TRACKER_RESOURCE_PATH)
 @Produces({MediaType.APPLICATION_JSON})
-@Api(description="Find a task by taskId or runId", value=ApiPaths.TASK_TRACKER_RESOURCE_PATH)
+@Schema(title = "Retrieve a task by taskId or runId")
+@Tags({@Tag(name = "Task Tracking")})
 public class TaskTrackerResource {
   private final TaskManager taskManager;
   private final RequestManager requestManager;
@@ -48,22 +51,31 @@ public class TaskTrackerResource {
 
   @GET
   @Path("/task/{taskId}")
-  @ApiOperation(value="Get the current state of a task by taskId whether it is active, or inactive")
-  @ApiResponses({
-      @ApiResponse(code=404, message="Task with this id does not exist")
-  })
-  public Optional<SingularityTaskState> getTaskState(@Auth SingularityUser user, @PathParam("taskId") String taskId) {
+  @Operation(
+      summary = "Get the current state of a task by taskId whether it is active, or inactive",
+      responses = {
+          @ApiResponse(responseCode = "404", description = "Task with this id does not exist")
+      }
+  )
+  public Optional<SingularityTaskState> getTaskState(
+      @Parameter(hidden = true) @Auth SingularityUser user,
+      @Parameter(required = true, description = "the task id to search for") @PathParam("taskId") String taskId) {
     authorizationHelper.checkForAuthorizationByTaskId(taskId, user, SingularityAuthorizationScope.READ);
     return getTaskStateFromId(SingularityTaskId.valueOf(taskId));
   }
 
   @GET
   @Path("/run/{requestId}/{runId}")
-  @ApiOperation(value="Get the current state of a task by taskId whether it is pending, active, or inactive")
-  @ApiResponses({
-      @ApiResponse(code=404, message="Task with this runId does not exist")
-  })
-  public Optional<SingularityTaskState> getTaskStateByRunId(@Auth SingularityUser user, @PathParam("requestId") String requestId, @PathParam("runId") String runId) {
+  @Operation(
+      summary = "Get the current state of a task by taskId whether it is pending, active, or inactive",
+      responses = {
+          @ApiResponse(responseCode = "404", description = "Task with this runId does not exist")
+      }
+  )
+  public Optional<SingularityTaskState> getTaskStateByRunId(
+      @Parameter(hidden = true) @Auth SingularityUser user,
+      @Parameter(required = true, description = "the request id to search for tasks") @PathParam("requestId") String requestId,
+      @Parameter(required = true, description = "the run id to search for") @PathParam("runId") String runId) {
     authorizationHelper.checkForAuthorizationByRequestId(requestId, user, SingularityAuthorizationScope.READ);
 
     // Check if it's active or inactive
@@ -83,10 +95,10 @@ public class TaskTrackerResource {
     for (SingularityPendingTask pendingTask : taskManager.getPendingTasksForRequest(requestId)) {
       if (pendingTask.getRunId().isPresent() && pendingTask.getRunId().get().equals(runId)) {
         return Optional.of(new SingularityTaskState(
-            Optional.absent(),
-            pendingTask.getPendingTaskId(),
+            Optional.empty(),
+            Optional.of(pendingTask.getPendingTaskId()),
             pendingTask.getRunId(),
-            Optional.absent(),
+            Optional.empty(),
             Collections.emptyList(),
             true
         ));
@@ -96,25 +108,26 @@ public class TaskTrackerResource {
     for (SingularityPendingRequest pendingRequest : requestManager.getPendingRequests()) {
       if (pendingRequest.getRequestId().equals(requestId) && pendingRequest.getRunId().isPresent() && pendingRequest.getRunId().get().equals(runId)) {
         return Optional.of(new SingularityTaskState(
-            Optional.absent(),
-            Optional.absent(),
+            Optional.empty(),
+            Optional.empty(),
             pendingRequest.getRunId(),
-            Optional.absent(),
+            Optional.empty(),
             Collections.emptyList(),
             true
         ));
       }
     }
 
-    return Optional.absent();
+    return Optional.empty();
   }
 
   private Optional<SingularityTaskState> getTaskStateFromId(SingularityTaskId singularityTaskId) {
-    Optional<SingularityTaskHistory> maybeTaskHistory = taskManager.getTaskHistory(singularityTaskId).or(historyManager.getTaskHistory(singularityTaskId.toString()));
+    Optional<SingularityTaskHistory> maybeFromZk = taskManager.getTaskHistory(singularityTaskId);
+    Optional<SingularityTaskHistory> maybeTaskHistory = maybeFromZk.isPresent() ? maybeFromZk : historyManager.getTaskHistory(singularityTaskId.toString());
     if (maybeTaskHistory.isPresent() && maybeTaskHistory.get().getLastTaskUpdate().isPresent()) {
       return Optional.of(SingularityTaskState.fromTaskHistory(maybeTaskHistory.get()));
     } else {
-      return Optional.absent();
+      return Optional.empty();
     }
   }
 }

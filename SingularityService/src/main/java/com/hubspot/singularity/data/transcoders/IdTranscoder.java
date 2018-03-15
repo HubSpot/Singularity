@@ -8,7 +8,7 @@ import java.lang.reflect.Method;
 
 import javax.annotation.Nullable;
 
-import com.hubspot.singularity.SingularityId;
+import com.hubspot.singularity.api.common.SingularityId;
 
 public class IdTranscoder<T extends SingularityId> implements Transcoder<T> {
 

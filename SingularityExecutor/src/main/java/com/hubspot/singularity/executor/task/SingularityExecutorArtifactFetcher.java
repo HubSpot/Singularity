@@ -4,23 +4,22 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Optional;
-import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
-import com.hubspot.deploy.EmbeddedArtifact;
-import com.hubspot.deploy.ExecutorData;
-import com.hubspot.deploy.ExternalArtifact;
-import com.hubspot.deploy.RemoteArtifact;
-import com.hubspot.deploy.S3Artifact;
-import com.hubspot.deploy.S3ArtifactSignature;
 import com.hubspot.mesos.JavaUtils;
+import com.hubspot.singularity.api.deploy.EmbeddedArtifact;
+import com.hubspot.singularity.api.deploy.ExecutorDataBase;
+import com.hubspot.singularity.api.deploy.ExternalArtifact;
+import com.hubspot.singularity.api.deploy.RemoteArtifact;
+import com.hubspot.singularity.api.deploy.S3Artifact;
+import com.hubspot.singularity.api.deploy.S3ArtifactSignature;
 import com.hubspot.singularity.executor.config.SingularityExecutorConfiguration;
 import com.hubspot.singularity.executor.config.SingularityExecutorModule;
 import com.hubspot.singularity.runner.base.configuration.SingularityRunnerBaseConfiguration;
@@ -58,7 +57,7 @@ public class SingularityExecutorArtifactFetcher {
     this.localDownloadUri = String.format(LOCAL_DOWNLOAD_STRING_FORMAT, s3Configuration.getLocalDownloadHttpPort(), s3Configuration.getLocalDownloadPath());
   }
 
-  public SingularityExecutorTaskArtifactFetcher buildTaskFetcher(ExecutorData executorData, SingularityExecutorTask task) {
+  public SingularityExecutorTaskArtifactFetcher buildTaskFetcher(ExecutorDataBase executorData, SingularityExecutorTask task) {
     ArtifactManager artifactManager = new ArtifactManager(runnerBaseConfiguration, s3Configuration, task.getLog(), exceptionNotifier);
 
     return new SingularityExecutorTaskArtifactFetcher(artifactManager, task);
@@ -144,7 +143,7 @@ public class SingularityExecutorArtifactFetcher {
         try {
           return future.get();
         } catch (ExecutionException e) {
-          throw Throwables.propagate(e);
+          throw new RuntimeException(e);
         }
       }
 
@@ -165,7 +164,7 @@ public class SingularityExecutorArtifactFetcher {
         try {
           postRequestBldr.setBody(objectMapper.writeValueAsBytes(artifactDownloadRequest));
         } catch (JsonProcessingException e) {
-          throw Throwables.propagate(e);
+          throw new RuntimeException(e);
         }
 
         try {
@@ -173,7 +172,7 @@ public class SingularityExecutorArtifactFetcher {
 
           futures.add(new FutureHolder(future, System.currentTimeMillis(), s3Artifact));
         } catch (IOException ioe) {
-          throw Throwables.propagate(ioe);
+          throw new RuntimeException(ioe);
         }
       }
 

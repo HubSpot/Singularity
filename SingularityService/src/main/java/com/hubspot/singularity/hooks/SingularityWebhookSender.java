@@ -2,6 +2,7 @@ package com.hubspot.singularity.hooks;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 import javax.inject.Singleton;
@@ -12,16 +13,14 @@ import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Optional;
-import com.google.common.base.Throwables;
 import com.google.inject.Inject;
 import com.hubspot.mesos.JavaUtils;
-import com.hubspot.singularity.SingularityDeployUpdate;
-import com.hubspot.singularity.SingularityRequestHistory;
-import com.hubspot.singularity.SingularityTask;
-import com.hubspot.singularity.SingularityTaskHistoryUpdate;
-import com.hubspot.singularity.SingularityTaskWebhook;
-import com.hubspot.singularity.SingularityWebhook;
+import com.hubspot.singularity.api.deploy.SingularityDeployUpdate;
+import com.hubspot.singularity.api.request.SingularityRequestHistory;
+import com.hubspot.singularity.api.task.SingularityTask;
+import com.hubspot.singularity.api.task.SingularityTaskHistoryUpdate;
+import com.hubspot.singularity.api.webhooks.SingularityTaskWebhook;
+import com.hubspot.singularity.api.webhooks.SingularityWebhook;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.WebhookManager;
 import com.hubspot.singularity.data.history.TaskHistoryHelper;
@@ -147,7 +146,7 @@ public class SingularityWebhookSender {
     try {
       postRequest.setBody(objectMapper.writeValueAsBytes(payload));
     } catch (JsonProcessingException e) {
-      throw Throwables.propagate(e);
+      throw new RuntimeException(e);
     }
 
     try {
