@@ -198,7 +198,7 @@ public class StateManager extends CuratorManager {
       updatePossiblyUnderProvisionedAndOverProvisionedIds(requestWithState, numInstances, overProvisionedRequestIds, possiblyUnderProvisionedRequestIds);
     }
 
-    removePendingRequestIds(possiblyUnderProvisionedRequestIds);
+    filterForPendingRequests(possiblyUnderProvisionedRequestIds);
     final List<String> underProvisionedRequestIds = getUnderProvisionedRequestIds(possiblyUnderProvisionedRequestIds);
 
     final int pendingRequests = requestManager.getSizeOfPendingQueue();
@@ -334,7 +334,7 @@ public class StateManager extends CuratorManager {
     }
   }
 
-  private void removePendingRequestIds(Set<String> possiblyUnderProvisionedRequestIds) {
+  private void filterForPendingRequests(Set<String> possiblyUnderProvisionedRequestIds) {
     if (possiblyUnderProvisionedRequestIds.size() == 0) {
       return;
     }
