@@ -50,6 +50,7 @@ import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskDestroyFrameworkMessage;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.TaskCleanupType;
+import com.hubspot.singularity.config.MesosConfiguration;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.DisasterManager;
 import com.hubspot.singularity.data.TaskManager;
@@ -67,7 +68,8 @@ import io.netty.handler.codec.PrematureChannelClosureException;
 public class SingularityMesosSchedulerImpl extends SingularityMesosScheduler {
 
   private static final Logger LOG = LoggerFactory.getLogger(SingularityMesosScheduler.class);
-  private static final String SCHEDULER_API_URL_FORMAT = "http://%s/api/v1/scheduler";
+  private static final String SCHEDULER_API_URL_FORMAT = "%s://%s/api/v1/scheduler";
+  private static final String SCHEDULER_API_URL_CREDENTIALS_FORMAT = "%s://%s:%s@%s/api/v1/scheduler";
 
   private final SingularityExceptionNotifier exceptionNotifier;
 
@@ -362,9 +364,16 @@ public class SingularityMesosSchedulerImpl extends SingularityMesosScheduler {
   }
 
   public void start() throws Exception {
+    MesosConfiguration mesosConfiguration = configuration.getMesosConfiguration();
     // If more than one host is provided choose at random, we will be redirected if the host is not the master
-    List<String> masters = Arrays.asList(configuration.getMesosConfiguration().getMaster().split(","));
-    String masterUrl = String.format(SCHEDULER_API_URL_FORMAT, masters.get(new Random().nextInt(masters.size())));
+    List<String> masters = Arrays.asList(mesosConfiguration.getMaster().split(","));
+    String masterUrl;
+    if (mesosConfiguration.getMesosUsername().isPresent() && mesosConfiguration.getMesosPassword().isPresent()) {
+      masterUrl = String.format(SCHEDULER_API_URL_FORMAT, mesosConfiguration.getMasterProtocol(), masters.get(new Random().nextInt(masters.size())));
+    } else {
+      masterUrl = String.format(SCHEDULER_API_URL_CREDENTIALS_FORMAT, mesosConfiguration.getMasterProtocol(), mesosConfiguration.getMesosUsername().get(),
+          mesosConfiguration.getMesosPassword().get(), masters.get(new Random().nextInt(masters.size())));
+    }
     mesosSchedulerClient.subscribe(masterUrl, this);
   }
 

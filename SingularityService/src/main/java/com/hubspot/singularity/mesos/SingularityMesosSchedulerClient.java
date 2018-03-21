@@ -119,6 +119,10 @@ public class SingularityMesosSchedulerClient {
         .setId(FrameworkID.newBuilder().setValue(mesosConfiguration.getFrameworkId()))
         .setUser(mesosConfiguration.getFrameworkUser()); // https://issues.apache.org/jira/browse/MESOS-3747
 
+    if (configuration.getMesosConfiguration().getCredentialPrincipal().isPresent()) {
+      frameworkInfoBuilder.setPrincipal(configuration.getMesosConfiguration().getCredentialPrincipal().get());
+    }
+
     if (configuration.getHostname().isPresent()) {
       frameworkInfoBuilder.setHostname(configuration.getHostname().get());
     }
