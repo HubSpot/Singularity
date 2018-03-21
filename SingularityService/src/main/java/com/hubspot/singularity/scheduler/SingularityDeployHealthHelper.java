@@ -154,8 +154,9 @@ public class SingularityDeployHealthHelper {
     Optional<SingularityTaskHistoryUpdate> runningUpdate = SingularityTaskHistoryUpdate.getUpdate(updates, ExtendedTaskState.TASK_RUNNING);
     long taskDuration = System.currentTimeMillis() - runningUpdate.get().getTimestamp();
 
-    if (taskDuration < TimeUnit.SECONDS.toMillis(runningThreshold)) {
-      LOG.debug("Task {} has been running for {}, has not yet reached running threshold of {}", taskId, JavaUtils.durationFromMillis(taskDuration), JavaUtils.durationFromMillis(runningThreshold));
+    long runningThresholdMillis = TimeUnit.SECONDS.toMillis(runningThreshold);
+    if (taskDuration < runningThresholdMillis) {
+      LOG.debug("Task {} has been running for {}, has not yet reached running threshold of {}", taskId, JavaUtils.durationFromMillis(taskDuration), JavaUtils.durationFromMillis(runningThresholdMillis));
       return false;
     }
     return true;
