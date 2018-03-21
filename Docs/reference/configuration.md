@@ -162,14 +162,15 @@ These settings should live under the "mesos" field inside the root configuration
 #### Framework ####
 | Parameter | Default | Description | Type |
 |-----------|---------|-------------|------|
-| master | null | A comma separated list of mesos master `host:port` | string |
-| frameworkName | null | | string |
-| frameworkId | null | | string |
+| master | null | A comma separated list of mesos master `host:port` | String |
+| mesosUsername | | Username to authenticate with the mesos master when using basic auth | String |
+| mesosPassword | | Password to authenticate with the mesos master when using basic auth | String |
+| frameworkName | null | | String |
+| frameworkId | null | | String |
 | frameworkFailoverTimeout | 0.0 | | double |
 | frameworkRole | null | Specify framework's desired role when Singularity registers with the master | String |
 | checkpoint | true | | boolean |
-| credentialPrincipal | | Enable framework auth by setting both this and credentialSecret | String |
-| credentialSecret | | Enable framework auth by setting both this and credentialPrincipal | String |
+| credentialPrincipal | | Used to enable authorization based on the authenticated principal | String |
 
 #### Resource Limits ####
 | Parameter | Default | Description | Type |
