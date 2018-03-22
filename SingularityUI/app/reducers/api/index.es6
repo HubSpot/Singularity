@@ -82,8 +82,7 @@ import { FetchWebhooks } from '../../actions/api/webhooks';
 import {
   FetchDisastersData,
   FetchDisabledActions,
-  FetchPriorityFreeze,
-  FetchTaskCredits
+  FetchPriorityFreeze
 } from '../../actions/api/disasters';
 
 import { FetchGroups } from '../../actions/api/requestGroups';
@@ -98,7 +97,6 @@ const deleteStarredRequests = buildApiActionReducer(DeleteStarredRequests, []);
 const webhooks = buildApiActionReducer(FetchWebhooks, []);
 const disabledActions = buildApiActionReducer(FetchDisabledActions, []);
 const disastersData = buildApiActionReducer(FetchDisastersData, []);
-const taskCredits = buildApiActionReducer(FetchTaskCredits, []);
 const priorityFreeze = buildApiActionReducer(FetchPriorityFreeze, []);
 const slaves = buildApiActionReducer(FetchSlaves, []);
 const freezeSlave = buildApiActionReducer(FreezeSlave, []);
@@ -155,7 +153,6 @@ export default combineReducers({
   webhooks,
   disabledActions,
   disastersData,
-  taskCredits,
   priorityFreeze,
   slaves,
   freezeSlave,
