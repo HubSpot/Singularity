@@ -170,8 +170,9 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
           usageManager.saveSpecificTaskUsage(taskId, latestUsage);
 
           Optional<SingularityTask> maybeTask = taskManager.getTask(task);
+          Optional<Resources> maybeResources = Optional.absent();
           if (maybeTask.isPresent()) {
-            Optional<Resources> maybeResources = maybeTask.get().getTaskRequest().getPendingTask().getResources().or(maybeTask.get().getTaskRequest().getDeploy().getResources());
+            maybeResources = maybeTask.get().getTaskRequest().getPendingTask().getResources().or(maybeTask.get().getTaskRequest().getDeploy().getResources());
             if (maybeResources.isPresent()) {
               Resources taskResources = maybeResources.get();
               double memoryMbReservedForTask = taskResources.getMemoryMb();
@@ -223,7 +224,9 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
               if (maybeCleanupUpdate.isPresent() && isTaskAlreadyCleanedUpForShuffle(maybeCleanupUpdate.get())) {
                 LOG.trace("Task {} already being cleaned up to spread cpu usage, skipping", taskId);
               } else {
-                possibleTasksToShuffle.add(new TaskIdWithUsage(task, currentUsage));
+                if (maybeResources.isPresent()) {
+                  possibleTasksToShuffle.add(new TaskIdWithUsage(task, maybeResources.get(), currentUsage));
+                }
               }
             }
           }
@@ -301,7 +304,11 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
       }
       int shuffledTasksOnSlave = 0;
       List<TaskIdWithUsage> possibleTasksToShuffle = overLoadedHosts.get(overloadedSlave);
-      possibleTasksToShuffle.sort((u1, u2) -> Double.compare(u2.getUsage().getCpusUsed(), u1.getUsage().getCpusUsed()));
+      possibleTasksToShuffle.sort((u1, u2) ->
+          Double.compare(
+              u2.getUsage().getCpusUsed() / u2.getRequestedResources().getCpus(),
+              u1.getUsage().getCpusUsed() / u1.getRequestedResources().getCpus()
+          ));
 
       double systemLoad = getSystemLoadForShuffle(overloadedSlave);
       double cpuOverage = systemLoad - overloadedSlave.getSystemCpusTotal();
@@ -610,15 +617,21 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
 
   private static class TaskIdWithUsage {
     private final SingularityTaskId taskId;
+    private final Resources requestedResources;
     private final SingularityTaskCurrentUsage usage;
 
-    TaskIdWithUsage(SingularityTaskId taskId, SingularityTaskCurrentUsage usage) {
+    TaskIdWithUsage(SingularityTaskId taskId, Resources requestedResources, SingularityTaskCurrentUsage usage) {
       this.taskId = taskId;
+      this.requestedResources = requestedResources;
       this.usage = usage;
     }
 
     public SingularityTaskId getTaskId() {
       return taskId;
+    }
+
+    public Resources getRequestedResources() {
+      return requestedResources;
     }
 
     public SingularityTaskCurrentUsage getUsage() {
