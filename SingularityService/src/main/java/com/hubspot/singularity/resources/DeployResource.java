@@ -123,7 +123,7 @@ public class DeployResource extends AbstractRequestResource {
 
     validator.checkScale(request, Optional.of(taskManager.getActiveTaskIdsForRequest(request.getId()).size()));
 
-    if (!deployRequest.isUnpauseOnSuccessfulDeploy()) {
+    if (!deployRequest.isUnpauseOnSuccessfulDeploy() && !configuration.isAllowDeployOfPausedRequests()) {
       checkConflict(requestWithState.getState() != RequestState.PAUSED, "Request %s is paused. Unable to deploy (it must be manually unpaused first)", requestWithState.getRequest().getId());
     }
 
@@ -149,7 +149,7 @@ public class DeployResource extends AbstractRequestResource {
     SingularityPendingDeploy pendingDeployObj = new SingularityPendingDeploy(deployMarker, Optional.<SingularityLoadBalancerUpdate> absent(), DeployState.WAITING, deployProgress, updatedValidatedRequest);
 
     boolean deployToUnpause = false;
-    if (requestWithState.getState() == RequestState.PAUSED) {
+    if (requestWithState.getState() == RequestState.PAUSED && !configuration.isAllowDeployOfPausedRequests()) {
       deployToUnpause = true;
       requestManager.deployToUnpause(request, now, deployUser, deployRequest.getMessage());
     }
@@ -164,7 +164,7 @@ public class DeployResource extends AbstractRequestResource {
 
     deployManager.saveDeploy(request, deployMarker, deploy);
 
-    if (request.isDeployable()) {
+    if (request.isDeployable() && !(requestWithState.getState() == RequestState.PAUSED && configuration.isAllowDeployOfPausedRequests())) {
       requestManager.addToPendingQueue(new SingularityPendingRequest(requestId, deployMarker.getDeployId(), now, deployUser, PendingType.NEW_DEPLOY,
           deployRequest.getDeploy().getSkipHealthchecksOnDeploy(), deployRequest.getMessage()));
     }
