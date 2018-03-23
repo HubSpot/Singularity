@@ -149,7 +149,7 @@ public class DeployResource extends AbstractRequestResource {
     SingularityPendingDeploy pendingDeployObj = new SingularityPendingDeploy(deployMarker, Optional.<SingularityLoadBalancerUpdate> absent(), DeployState.WAITING, deployProgress, updatedValidatedRequest);
 
     boolean deployToUnpause = false;
-    if (requestWithState.getState() == RequestState.PAUSED && !configuration.isAllowDeployOfPausedRequests()) {
+    if (requestWithState.getState() == RequestState.PAUSED && deployRequest.isUnpauseOnSuccessfulDeploy()) {
       deployToUnpause = true;
       requestManager.deployToUnpause(request, now, deployUser, deployRequest.getMessage());
     }
