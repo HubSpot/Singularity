@@ -1,5 +1,6 @@
 package com.hubspot.singularity.config;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -80,6 +81,8 @@ public class SingularityConfiguration extends Configuration {
   private int maxTasksToShuffleTotal = 6; // Do not allow more than this many shuffle cleanups at once cluster-wide
 
   private int maxTasksToShufflePerHost = 2;
+
+  private List<String> doNotShuffleRequests = new ArrayList<>();
 
   private long cleanUsageEveryMillis = TimeUnit.MINUTES.toMillis(5);
 
@@ -1506,6 +1509,14 @@ public class SingularityConfiguration extends Configuration {
 
   public void setMaxTasksToShuffleTotal(int maxTasksToShuffleTotal) {
     this.maxTasksToShuffleTotal = maxTasksToShuffleTotal;
+  }
+
+  public List<String> getDoNotShuffleRequests() {
+    return doNotShuffleRequests;
+  }
+
+  public void setDoNotShuffleRequests(List<String> doNotShuffleRequests) {
+    this.doNotShuffleRequests = doNotShuffleRequests;
   }
 
   public long getCleanUsageEveryMillis() {
