@@ -1,9 +1,12 @@
 package com.hubspot.singularity.data;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.stream.Collectors;
 
 import javax.inject.Singleton;
 
@@ -162,7 +165,7 @@ public class StateManager extends CuratorManager {
     final SingularityScheduledTasksInfo scheduledTasksInfo = SingularityScheduledTasksInfo.getInfo(taskManager.getPendingTasks(), singularityConfiguration.getDeltaAfterWhichTasksAreLateMillis());
 
     final List<String> overProvisionedRequestIds = new ArrayList<>();
-    final List<String> possiblyUnderProvisionedRequestIds = new ArrayList<>();
+    final Set<String> possiblyUnderProvisionedRequestIds = new HashSet<>();
 
     final List<SingularityRequestWithState> requests = requestManager.getRequests();
 
@@ -195,6 +198,7 @@ public class StateManager extends CuratorManager {
       updatePossiblyUnderProvisionedAndOverProvisionedIds(requestWithState, numInstances, overProvisionedRequestIds, possiblyUnderProvisionedRequestIds);
     }
 
+    filterForPendingRequests(possiblyUnderProvisionedRequestIds);
     final List<String> underProvisionedRequestIds = getUnderProvisionedRequestIds(possiblyUnderProvisionedRequestIds);
 
     final int pendingRequests = requestManager.getSizeOfPendingQueue();
@@ -315,7 +319,7 @@ public class StateManager extends CuratorManager {
     return numTasks.toCountMap();
   }
 
-  private void updatePossiblyUnderProvisionedAndOverProvisionedIds(SingularityRequestWithState requestWithState, Map<String, Long> numInstances, List<String> overProvisionedRequestIds, List<String> possiblyUnderProvisionedRequestIds) {
+  private void updatePossiblyUnderProvisionedAndOverProvisionedIds(SingularityRequestWithState requestWithState, Map<String, Long> numInstances, List<String> overProvisionedRequestIds, Set<String> possiblyUnderProvisionedRequestIds) {
     if (requestWithState.getState().isRunnable() && requestWithState.getRequest().isAlwaysRunning()) {
       SingularityRequest request = requestWithState.getRequest();
       final int expectedInstances = request.getInstancesSafe();
@@ -330,7 +334,16 @@ public class StateManager extends CuratorManager {
     }
   }
 
-  private List<String> getUnderProvisionedRequestIds(List<String> possiblyUnderProvisionedRequestIds) {
+  private void filterForPendingRequests(Set<String> possiblyUnderProvisionedRequestIds) {
+    if (possiblyUnderProvisionedRequestIds.size() == 0) {
+      return;
+    }
+
+    final Set<String> pendingRequestIds = requestManager.getPendingRequests().stream().map((r) -> r.getRequestId()).collect(Collectors.toCollection(HashSet::new));
+    possiblyUnderProvisionedRequestIds.removeAll(pendingRequestIds);
+  }
+
+  private List<String> getUnderProvisionedRequestIds(Set<String> possiblyUnderProvisionedRequestIds) {
     final List<String> underProvisionedRequestIds = new ArrayList<>(possiblyUnderProvisionedRequestIds.size());
 
     if (!possiblyUnderProvisionedRequestIds.isEmpty()) {
