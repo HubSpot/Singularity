@@ -60,7 +60,7 @@ public class S3UploadMetadata {
   private final Map<String, Object> gcsCredentials;
   private final Optional<String> gcsStorageClass;
   private final Optional<String> encryptionKey;
-  private final Optional<Boolean> s3ServerSideEncryption;
+  private final Optional<Boolean> useS3ServerSideEncryption;
 
   @JsonCreator
   public S3UploadMetadata(@JsonProperty("directory") String directory,
@@ -81,7 +81,7 @@ public class S3UploadMetadata {
                           @JsonProperty("gcsCredentials") Map<String, Object> gcsCredentials,
                           @JsonProperty("gcsStorageClass") Optional<String> gcsStorageClass,
                           @JsonProperty("encryptionKey") Optional<String> encryptionKey,
-                          @JsonProperty("s3ServerSideEncryption") Optional<Boolean> s3ServerSideEncryption) {
+                          @JsonProperty("useS3ServerSideEncryption") Optional<Boolean> useS3ServerSideEncryption) {
     Preconditions.checkNotNull(directory);
     Preconditions.checkNotNull(fileGlob);
     Preconditions.checkNotNull(s3Bucket);
@@ -105,7 +105,7 @@ public class S3UploadMetadata {
     this.gcsCredentials = gcsCredentials != null ? gcsCredentials : Collections.emptyMap();
     this.gcsStorageClass = gcsStorageClass;
     this.encryptionKey = encryptionKey;
-    this.s3ServerSideEncryption = s3ServerSideEncryption;
+    this.useS3ServerSideEncryption = useS3ServerSideEncryption;
   }
 
 
@@ -220,8 +220,8 @@ public class S3UploadMetadata {
     return encryptionKey;
   }
 
-  public boolean isS3ServerSideEncryption() {
-    return s3ServerSideEncryption.or(false);
+  public boolean getUseS3ServerSideEncryption() {
+    return useS3ServerSideEncryption.or(false);
   }
 
   @JsonIgnore
@@ -249,7 +249,7 @@ public class S3UploadMetadata {
         ", uploaderType=" + uploaderType +
         ", gcsStorageClass=" + gcsStorageClass +
         ", encryptionKey=" + encryptionKey +
-        ", s3ServerSideEncryption=" + s3ServerSideEncryption +
+        ", useS3ServerSideEncryption=" + useS3ServerSideEncryption +
         '}';
   }
 }
