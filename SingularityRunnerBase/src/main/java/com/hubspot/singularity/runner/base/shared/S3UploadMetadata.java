@@ -220,7 +220,7 @@ public class S3UploadMetadata {
     return encryptionKey;
   }
 
-  public boolean getUseS3ServerSideEncryption() {
+  public boolean isUseS3ServerSideEncryption() {
     return useS3ServerSideEncryption.or(false);
   }
 
