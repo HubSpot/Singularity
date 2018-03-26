@@ -65,6 +65,7 @@ These are settings that are more likely to be altered.
 |-----------|---------|-------------|------|
 | defaultDeployStepWaitTimeMs | 0 | If using an incremental deploy, wait this long between deploy steps if not specified in the deploy | int |
 | defaultDeployMaxTaskRetries | 0 | Allow this many tasks to fail and be retried before failing a new deploy | int |
+| allowDeployOfPausedRequests | false | If true, paused requests can be deployed without unpausing or starting new tasks at deploy time | boolean |
 
 #### Limits ####
 | Parameter | Default | Description | Type |
