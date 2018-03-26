@@ -219,7 +219,7 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
           }
 
           if (configuration.isShuffleTasksForOverloadedSlaves() && currentUsage != null && currentUsage.getCpusUsed() > 0) {
-            if (isLongRunning(task)) {
+            if (isLongRunning(task) && !configuration.getDoNotShuffleRequests().contains(task.getRequestId())) {
               Optional<SingularityTaskHistoryUpdate> maybeCleanupUpdate = taskManager.getTaskHistoryUpdate(task, ExtendedTaskState.TASK_CLEANING);
               if (maybeCleanupUpdate.isPresent() && isTaskAlreadyCleanedUpForShuffle(maybeCleanupUpdate.get())) {
                 LOG.trace("Task {} already being cleaned up to spread cpu usage, skipping", taskId);
