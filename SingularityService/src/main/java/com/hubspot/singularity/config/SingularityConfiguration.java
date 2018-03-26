@@ -379,6 +379,8 @@ public class SingularityConfiguration extends Configuration {
 
   private int maxRunNowTaskLaunchDelayDays = 30;
 
+  private boolean allowDeployOfPausedRequests = false;
+
   public long getAskDriverToKillTasksAgainAfterMillis() {
     return askDriverToKillTasksAgainAfterMillis;
   }
@@ -1617,5 +1619,13 @@ public class SingularityConfiguration extends Configuration {
 
   public void setCors(CorsConfiguration cors) {
     this.cors = cors;
+  }
+
+  public boolean isAllowDeployOfPausedRequests() {
+    return allowDeployOfPausedRequests;
+  }
+
+  public void setAllowDeployOfPausedRequests(boolean allowDeployOfPausedRequests) {
+    this.allowDeployOfPausedRequests = allowDeployOfPausedRequests;
   }
 }

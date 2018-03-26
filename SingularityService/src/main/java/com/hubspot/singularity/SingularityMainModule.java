@@ -271,7 +271,7 @@ public class SingularityMainModule implements Module {
   @Provides
   @Singleton
   public SingularityS3Services provideS3Services(Optional<S3Configuration> config) {
-    if (!config.isPresent() || config.get().getGroupOverrides().isEmpty()) {
+    if (!config.isPresent()) {
       return new SingularityS3Services();
     }
 
