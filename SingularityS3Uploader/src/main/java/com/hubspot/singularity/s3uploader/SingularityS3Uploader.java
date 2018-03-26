@@ -112,6 +112,9 @@ public class SingularityS3Uploader extends SingularityUploader {
         if (fileSizeBytes > configuration.getMaxSingleUploadSizeBytes()) {
           multipartUpload(key, file.toFile(), objectMetadata, maybeStorageClass);
         } else {
+          if (uploadMetadata.getUseS3ServerSideEncryption()) {
+            objectMetadata.setSSEAlgorithm(ObjectMetadata.AES_256_SERVER_SIDE_ENCRYPTION);
+          }
           PutObjectRequest putObjectRequest = new PutObjectRequest(bucketName, key, file.toFile()).withMetadata(objectMetadata);
           if (maybeStorageClass.isPresent()) {
             putObjectRequest.setStorageClass(maybeStorageClass.get());

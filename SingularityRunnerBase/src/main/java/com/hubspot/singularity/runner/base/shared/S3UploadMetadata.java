@@ -58,6 +58,7 @@ public class S3UploadMetadata {
   private final Map<String, Object> gcsCredentials;
   private final Optional<String> gcsStorageClass;
   private final Optional<String> encryptionKey;
+  private final Optional<Boolean> useS3ServerSideEncryption;
 
   @JsonCreator
   public S3UploadMetadata(@JsonProperty("directory") String directory,
@@ -77,7 +78,8 @@ public class S3UploadMetadata {
                           @JsonProperty("uploaderType") Optional<SingularityUploaderType> uploaderType,
                           @JsonProperty("gcsCredentials") Map<String, Object> gcsCredentials,
                           @JsonProperty("gcsStorageClass") Optional<String> gcsStorageClass,
-                          @JsonProperty("encryptionKey") Optional<String> encryptionKey) {
+                          @JsonProperty("encryptionKey") Optional<String> encryptionKey,
+                          @JsonProperty("useS3ServerSideEncryption") Optional<Boolean> useS3ServerSideEncryption) {
     Preconditions.checkNotNull(directory);
     Preconditions.checkNotNull(fileGlob);
     Preconditions.checkNotNull(s3Bucket);
@@ -101,6 +103,7 @@ public class S3UploadMetadata {
     this.gcsCredentials = gcsCredentials != null ? gcsCredentials : Collections.emptyMap();
     this.gcsStorageClass = gcsStorageClass;
     this.encryptionKey = encryptionKey;
+    this.useS3ServerSideEncryption = useS3ServerSideEncryption;
   }
 
 
@@ -215,6 +218,10 @@ public class S3UploadMetadata {
     return encryptionKey;
   }
 
+  public boolean getUseS3ServerSideEncryption() {
+    return useS3ServerSideEncryption.or(false);
+  }
+
   @JsonIgnore
   public boolean isImmediate() {
     return uploadImmediately.or(false);
@@ -240,6 +247,7 @@ public class S3UploadMetadata {
         ", uploaderType=" + uploaderType +
         ", gcsStorageClass=" + gcsStorageClass +
         ", encryptionKey=" + encryptionKey +
+        ", useS3ServerSideEncryption=" + useS3ServerSideEncryption +
         '}';
   }
 }
