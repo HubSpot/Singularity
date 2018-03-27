@@ -34,6 +34,7 @@ import com.hubspot.singularity.data.WebhookManager;
 import com.hubspot.singularity.data.history.TaskHistoryHelper;
 import com.ning.http.client.AsyncHttpClient;
 import com.ning.http.client.AsyncHttpClient.BoundRequestBuilder;
+import com.ning.http.client.Response;
 
 @Singleton
 public class SingularityWebhookSender {
@@ -46,7 +47,7 @@ public class SingularityWebhookSender {
   private final TaskHistoryHelper taskHistoryHelper;
   private final ObjectMapper objectMapper;
 
-  private final AsyncSemaphore<Void> webhookSemaphore;
+  private final AsyncSemaphore<Response> webhookSemaphore;
   private final ExecutorService webhookExecutorService;
 
   @Inject
@@ -170,7 +171,7 @@ public class SingularityWebhookSender {
   }
 
   // TODO handle retries, errors.
-  private <T> CompletableFuture<Void> executeWebhookAsync(SingularityWebhook webhook, Object payload, AbstractSingularityWebhookAsyncHandler<T> handler) {
+  private <T> CompletableFuture<Response> executeWebhookAsync(SingularityWebhook webhook, Object payload, AbstractSingularityWebhookAsyncHandler<T> handler) {
     LOG.trace("Sending {} to {}", payload, webhook.getUri());
     BoundRequestBuilder postRequest = http.preparePost(webhook.getUri());
     postRequest.setHeader(HttpHeaders.CONTENT_TYPE, "application/json");
@@ -181,7 +182,7 @@ public class SingularityWebhookSender {
       throw Throwables.propagate(e);
     }
 
-    CompletableFuture<Void> webhookFuture = new CompletableFuture<>();
+    CompletableFuture<Response> webhookFuture = new CompletableFuture<>();
     try {
       handler.setCompletableFuture(webhookFuture);
       postRequest.execute(handler);

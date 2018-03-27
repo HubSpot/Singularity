@@ -19,7 +19,7 @@ public abstract class AbstractSingularityWebhookAsyncHandler<T> extends AsyncCom
   private final long start;
   private final boolean shouldDeleteUpdateOnFailure;
 
-  private CompletableFuture<Void> completableFuture;
+  private CompletableFuture<Response> completableFuture;
 
   public AbstractSingularityWebhookAsyncHandler(SingularityWebhook webhook, T update, boolean shouldDeleteUpdateOnFailure) {
     this.webhook = webhook;
@@ -59,7 +59,7 @@ public abstract class AbstractSingularityWebhookAsyncHandler<T> extends AsyncCom
     }
 
     if (completableFuture != null) {
-      completableFuture.complete(null);
+      completableFuture.complete(response);
     }
 
     return response;
@@ -67,7 +67,7 @@ public abstract class AbstractSingularityWebhookAsyncHandler<T> extends AsyncCom
 
   public abstract void deleteWebhookUpdate();
 
-  public void setCompletableFuture(CompletableFuture<Void> completableFuture) {
+  public void setCompletableFuture(CompletableFuture<Response> completableFuture) {
     this.completableFuture = completableFuture;
   }
 }
