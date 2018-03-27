@@ -16,6 +16,8 @@ import java.util.function.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
 /**
  * AsyncSemaphore guarantees that at most N executions
  * of an underlying completablefuture exeuction are occuring
@@ -226,6 +228,7 @@ public class AsyncSemaphore<T> {
       return responseFuture;
     }
 
+    @SuppressFBWarnings("NP_NONNULL_PARAM_VIOLATION") // https://github.com/findbugsproject/findbugs/issues/79
     private CompletableFuture<Void> execute() {
       if (!EXECUTED_UPDATER.compareAndSet(this, 0, 1)) {
         return CompletableFuture.completedFuture(null);
