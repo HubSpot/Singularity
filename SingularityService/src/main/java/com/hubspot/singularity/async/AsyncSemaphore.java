@@ -1,9 +1,12 @@
 package com.hubspot.singularity.async;
+
 import java.util.Optional;
 import java.util.Queue;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executors;
 import java.util.concurrent.RejectedExecutionException;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicIntegerFieldUpdater;
@@ -11,6 +14,7 @@ import java.util.concurrent.locks.StampedLock;
 import java.util.function.Supplier;
 
 import com.google.common.base.Suppliers;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
 /**
  * AsyncSemaphore guarantees that at most N executions
@@ -34,6 +38,8 @@ public class AsyncSemaphore<T> {
   private final com.google.common.base.Supplier<Integer> queueRejectionThreshold;
   private final Supplier<Exception> timeoutExceptionSupplier;
   private final PermitSource permitSource;
+  private final ScheduledExecutorService flushingExecutor = Executors.newScheduledThreadPool(5,
+      new ThreadFactoryBuilder().setDaemon(true).setNameFormat("async-semaphore-flush-pool- %d").build());;
 
   /**
    * Create an AsyncSemaphore with the given limit.
@@ -56,11 +62,15 @@ public class AsyncSemaphore<T> {
   AsyncSemaphore(PermitSource permitSource,
                  Queue<DelayedExecution<T>> requestQueue,
                  Supplier<Integer> queueRejectionThreshold,
-                 Supplier<Exception> timeoutExceptionSupplier) {
+                 Supplier<Exception> timeoutExceptionSupplier,
+                 boolean flushQueuePeriodically) {
     this.permitSource = permitSource;
     this.requestQueue = requestQueue;
     this.queueRejectionThreshold = Suppliers.memoizeWithExpiration(queueRejectionThreshold::get, 1, TimeUnit.MINUTES);
     this.timeoutExceptionSupplier = timeoutExceptionSupplier;
+    if (flushQueuePeriodically) {
+      flushingExecutor.scheduleAtFixedRate(() -> flushQueue(), 1, 1, TimeUnit.SECONDS);
+    }
   }
 
   public CompletableFuture<T> call(Callable<CompletableFuture<T>> execution) {
@@ -85,11 +95,15 @@ public class AsyncSemaphore<T> {
 
   private CompletableFuture<T> callWithQueueTimeout(Callable<CompletableFuture<T>> execution,
                                                     Optional<Long> timeoutInMillis) {
-    CompletableFuture<T> responseFuture;
+
     if (timeoutInMillis.isPresent() && timeoutInMillis.get() <= 0) {
       return CompletableFutures.exceptionalFuture(timeoutExceptionSupplier.get());
+
     } else if (tryAcquirePermit()) {
-      responseFuture = executeCall(execution);
+      CompletableFuture<T> responseFuture = executeCall(execution);
+      pollQueueOnCompletion(responseFuture);
+      return responseFuture;
+
     } else {
       DelayedExecution<T> delayedExecution = new DelayedExecution<>(execution, timeoutExceptionSupplier, timeoutInMillis);
       if (!tryEnqueueAttempt(delayedExecution)) {
@@ -97,16 +111,34 @@ public class AsyncSemaphore<T> {
             new RejectedExecutionException("Could not queue future for execution.")
         );
       }
-      responseFuture = delayedExecution.getResponseFuture();
+      return delayedExecution.getResponseFuture();
     }
+  }
 
-    return responseFuture.whenComplete((ignored1, ignored2) -> {
-      DelayedExecution<T> nextExecutionDue = requestQueue.poll();
-      if (nextExecutionDue == null) {
-        releasePermit();
-      } else {
-        // reuse the previous permit for the queued request
-        nextExecutionDue.execute();
+  private <U> void pollQueueOnCompletion(CompletableFuture<U> future) {
+    future.whenComplete((ignored1, ignored2) -> {
+
+      // iterate through expired executions rather than using callbacks
+      // to avoid StackoverflowError if futures are completed or expired
+      while (true) {
+        DelayedExecution<T> nextExecutionDue = requestQueue.poll();
+
+        if (nextExecutionDue == null) {
+          releasePermit();
+          return;
+
+        } else if (nextExecutionDue.isExpired()) {
+          nextExecutionDue.getResponseFuture().completeExceptionally(timeoutExceptionSupplier.get());
+
+        } else {
+          // reuse the previous permit for the queued request
+          CompletableFuture<Void> nextExecution = nextExecutionDue.execute();
+
+          if (!nextExecution.isDone()) {
+            pollQueueOnCompletion(nextExecution);
+            return;
+          }
+        }
       }
     });
   }
@@ -162,7 +194,14 @@ public class AsyncSemaphore<T> {
     }
   }
 
-  private static class DelayedExecution<T> {
+  private void  flushQueue() {
+    if (tryAcquirePermit()) {
+      // Pass in an already completed future so that we execute the callback on this thread
+      pollQueueOnCompletion(CompletableFuture.completedFuture(true));
+    }
+  }
+
+  static class DelayedExecution<T> {
     private static final AtomicIntegerFieldUpdater<DelayedExecution> EXECUTED_UPDATER = AtomicIntegerFieldUpdater.newUpdater(
         DelayedExecution.class,
         "executed"
@@ -187,22 +226,18 @@ public class AsyncSemaphore<T> {
       return responseFuture;
     }
 
-    private void execute() {
+    private CompletableFuture<Void> execute() {
       if (!EXECUTED_UPDATER.compareAndSet(this, 0, 1)) {
-        return;
+        return CompletableFuture.completedFuture(null);
       }
-      if (isExpired()) {
-        Exception ex = timeoutExceptionSupplier.get();
-        responseFuture.completeExceptionally(ex);
-      } else {
-        executeCall(execution).whenComplete((response, ex) -> {
-          if (ex == null) {
-            responseFuture.complete(response);
-          } else {
-            responseFuture.completeExceptionally(ex);
-          }
-        });
-      }
+
+      return executeCall(execution).whenComplete((response, ex) -> {
+        if (ex == null) {
+          responseFuture.complete(response);
+        } else {
+          responseFuture.completeExceptionally(ex);
+        }
+      }).thenApply(ignored -> null);
     }
 
     private boolean isExpired() {
