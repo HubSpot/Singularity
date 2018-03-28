@@ -76,7 +76,7 @@ public class SingularitySchedulerPoller extends SingularityLeaderOnlyPoller {
       int launchedTasks = 0;
 
       for (SingularityOfferHolder offerHolder : offerHolders) {
-        List<CachedOffer> cachedOffersFromHolder = offerHolder.getOffers().stream().map((o) -> offerIdToCachedOffer.remove(o.getId().getValue())).collect(Collectors.toList());
+        List<CachedOffer> cachedOffersFromHolder = offerHolder.getOffers().stream().map((o) -> offerIdToCachedOffer.get(o.getId().getValue())).collect(Collectors.toList());
 
         if (!offerHolder.getAcceptedTasks().isEmpty()) {
           List<Offer> unusedOffers = offerHolder.launchTasksAndGetUnusedOffers(schedulerClient);
@@ -84,14 +84,23 @@ public class SingularitySchedulerPoller extends SingularityLeaderOnlyPoller {
           acceptedOffers += cachedOffersFromHolder.size() - unusedOffers.size();
 
           // Return to the cache those offers which we checked out of the cache, but didn't end up using.
-          List<CachedOffer> unusedCachedOffers = unusedOffers.stream().map((o) -> offerIdToCachedOffer.remove(o.getId().getValue())).collect(Collectors.toList());
-          unusedCachedOffers.forEach(offerCache::returnOffer);
+          List<CachedOffer> unusedCachedOffers = unusedOffers.stream().map((o) -> offerIdToCachedOffer.get(o.getId().getValue())).collect(Collectors.toList());
+          unusedCachedOffers.forEach((cachedOffer) -> {
+            offerIdToCachedOffer.remove(cachedOffer.getOfferId());
+            offerCache.returnOffer(cachedOffer);
+          });
 
           // Notify the cache of the cached offers that we did use.
           cachedOffersFromHolder.removeAll(unusedCachedOffers);
-          cachedOffersFromHolder.forEach(offerCache::useOffer);
+          cachedOffersFromHolder.forEach((cachedOffer) -> {
+            offerIdToCachedOffer.remove(cachedOffer.getOfferId());
+            offerCache.useOffer(cachedOffer);
+          });
         } else {
-          cachedOffersFromHolder.forEach(offerCache::returnOffer);
+          cachedOffersFromHolder.forEach((cachedOffer) -> {
+            offerIdToCachedOffer.remove(cachedOffer.getOfferId());
+            offerCache.returnOffer(cachedOffer);
+          });
         }
       }
 
