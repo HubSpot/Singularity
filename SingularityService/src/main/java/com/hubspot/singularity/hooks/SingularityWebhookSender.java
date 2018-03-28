@@ -4,8 +4,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 import javax.inject.Singleton;
@@ -18,7 +16,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Inject;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.SingularityDeployUpdate;
@@ -48,7 +45,6 @@ public class SingularityWebhookSender {
   private final ObjectMapper objectMapper;
 
   private final AsyncSemaphore<Response> webhookSemaphore;
-  private final ExecutorService webhookExecutorService;
 
   @Inject
   public SingularityWebhookSender(SingularityConfiguration configuration, AsyncHttpClient http, ObjectMapper objectMapper, TaskHistoryHelper taskHistoryHelper, WebhookManager webhookManager) {
@@ -59,7 +55,6 @@ public class SingularityWebhookSender {
     this.objectMapper = objectMapper;
 
     this.webhookSemaphore = AsyncSemaphore.newBuilder(configuration::getMaxConcurrentWebhooks).build();
-    this.webhookExecutorService = Executors.newCachedThreadPool(new ThreadFactoryBuilder().setNameFormat("webhooks-%d").build());
   }
 
   public void checkWebhooks() {
@@ -74,7 +69,7 @@ public class SingularityWebhookSender {
     int requestUpdates = 0;
     int deployUpdates = 0;
 
-    List<CompletableFuture<Void>> webhookFutures = new ArrayList<>();
+    List<CompletableFuture<Response>> webhookFutures = new ArrayList<>();
 
     for (SingularityWebhook webhook : webhooks) {
       switch (webhook.getType()) {
@@ -110,41 +105,41 @@ public class SingularityWebhookSender {
         && updateAge > TimeUnit.HOURS.toMillis(configuration.getDeleteUndeliverableWebhooksAfterHours());
   }
 
-  private int checkRequestUpdates(SingularityWebhook webhook, List<CompletableFuture<Void>> webhookFutures) {
+  private int checkRequestUpdates(SingularityWebhook webhook, List<CompletableFuture<Response>> webhookFutures) {
     final List<SingularityRequestHistory> requestUpdates = webhookManager.getQueuedRequestHistoryForHook(webhook.getId());
 
     int numRequestUpdates = 0;
 
     for (SingularityRequestHistory requestUpdate : requestUpdates) {
-      webhookSemaphore.call(() ->
+      webhookFutures.add(webhookSemaphore.call(() ->
           executeWebhookAsync(
               webhook,
               requestUpdate,
               new SingularityRequestWebhookAsyncHandler(webhookManager, webhook, requestUpdate, shouldDeleteUpdateOnFailure(numRequestUpdates, requestUpdate.getCreatedAt())))
-      );
+      ));
     }
 
     return requestUpdates.size();
   }
 
-  private int checkDeployUpdates(SingularityWebhook webhook, List<CompletableFuture<Void>> webhookFuture) {
+  private int checkDeployUpdates(SingularityWebhook webhook, List<CompletableFuture<Response>> webhookFutures) {
     final List<SingularityDeployUpdate> deployUpdates = webhookManager.getQueuedDeployUpdatesForHook(webhook.getId());
 
     int numDeployUpdates = 0;
 
     for (SingularityDeployUpdate deployUpdate : deployUpdates) {
-      webhookSemaphore.call(() ->
+      webhookFutures.add(webhookSemaphore.call(() ->
           executeWebhookAsync(
               webhook,
               deployUpdate,
               new SingularityDeployWebhookAsyncHandler(webhookManager, webhook, deployUpdate, shouldDeleteUpdateOnFailure(numDeployUpdates, deployUpdate.getDeployMarker().getTimestamp())))
-      );
+      ));
     }
 
     return deployUpdates.size();
   }
 
-  private int checkTaskUpdates(SingularityWebhook webhook, List<CompletableFuture<Void>> webhookFuture) {
+  private int checkTaskUpdates(SingularityWebhook webhook, List<CompletableFuture<Response>> webhookFutures) {
     final List<SingularityTaskHistoryUpdate> taskUpdates = webhookManager.getQueuedTaskUpdatesForHook(webhook.getId());
 
     int numTaskUpdates = 0;
@@ -159,12 +154,12 @@ public class SingularityWebhookSender {
         continue;
       }
 
-      webhookSemaphore.call(() ->
+      webhookFutures.add(webhookSemaphore.call(() ->
           executeWebhookAsync(
               webhook,
               new SingularityTaskWebhook(task.get(), taskUpdate),
               new SingularityTaskWebhookAsyncHandler(webhookManager, webhook, taskUpdate, shouldDeleteUpdateOnFailure(numTaskUpdates, taskUpdate.getTimestamp())))
-      );
+      ));
     }
 
     return taskUpdates.size();
