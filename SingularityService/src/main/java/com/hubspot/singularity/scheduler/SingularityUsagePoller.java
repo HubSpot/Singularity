@@ -219,7 +219,7 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
           }
 
           if (configuration.isShuffleTasksForOverloadedSlaves() && currentUsage != null && currentUsage.getCpusUsed() > 0) {
-            if (isLongRunning(task) && !configuration.getDoNotShuffleRequests().contains(task.getRequestId())) {
+            if (isEligibleForShuffle(task)) {
               Optional<SingularityTaskHistoryUpdate> maybeCleanupUpdate = taskManager.getTaskHistoryUpdate(task, ExtendedTaskState.TASK_CLEANING);
               if (maybeCleanupUpdate.isPresent() && isTaskAlreadyCleanedUpForShuffle(maybeCleanupUpdate.get())) {
                 LOG.trace("Task {} already being cleaned up to spread cpu usage, skipping", taskId);
@@ -278,6 +278,14 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
     if (configuration.isShuffleTasksForOverloadedSlaves()) {
       shuffleTasksOnOverloadedHosts(overLoadedHosts);
     }
+  }
+
+  private boolean isEligibleForShuffle(SingularityTaskId task) {
+    return (
+        isLongRunning(task)
+            && !configuration.getDoNotShuffleRequests().contains(task.getRequestId())
+            && (TimeUnit.MILLISECONDS.toMinutes(System.currentTimeMillis() - task.getStartedAt()) > configuration.getMinutesBeforeNewTaskEligibleForShuffle())
+    );
   }
 
   private void shuffleTasksOnOverloadedHosts(Map<SingularitySlaveUsage, List<TaskIdWithUsage>> overLoadedHosts) {
