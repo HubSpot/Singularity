@@ -11,6 +11,7 @@ public class AsyncSemaphoreBuilder {
   private int queueSize = -1;
   private Supplier<Integer> queueRejectionThreshold = () -> -1;
   private Supplier<Exception> timeoutExceptionSupplier = TimeoutException::new;
+  private boolean flushQueuePeriodically = false;
 
   AsyncSemaphoreBuilder(PermitSource permitSource) {
     this.permitSource = permitSource;
@@ -44,12 +45,25 @@ public class AsyncSemaphoreBuilder {
     return this;
   }
 
+  /**
+   * If set to a positive value, will flush the internal queue every once a second
+   * used in cases where the async semaphore is used in batch processing to avoid a
+   * rare case when work can become stuck in the queue and never complete.
+   * @param flushQueuePeriodically
+   * @return
+   */
+  public AsyncSemaphoreBuilder setFlushQueuePeriodically(boolean flushQueuePeriodically) {
+    this.flushQueuePeriodically = flushQueuePeriodically;
+    return this;
+  }
+
   public <T> AsyncSemaphore<T> build() {
     return new AsyncSemaphore<>(
         permitSource,
         queueSize == -1 ? new ConcurrentLinkedQueue<>() : new ArrayBlockingQueue<>(queueSize),
         queueRejectionThreshold,
-        timeoutExceptionSupplier
+        timeoutExceptionSupplier,
+        flushQueuePeriodically
     );
   }
 }
