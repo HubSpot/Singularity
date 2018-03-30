@@ -20,6 +20,11 @@ Retrieve the list of logs stored in S3 for a specific task.
 | end | false | End timestamp (mills, 13 digit) | long |
 | excludeMetadata | false | Exclude custom object metadata | boolean |
 | list | false | Do not generate download/get urls, only list the files and metadata | boolean |
+**body**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| body | false |  | [SingularityUser](models.md#model-linkType)</a> |
 
 ###### Response
 [List[SingularityS3LogMetadata]](models.md#model-SingularityS3LogMetadata)
@@ -76,6 +81,11 @@ Retrieve the list of logs stored in S3 for a specific deploy.
 | excludeMetadata | false | Exclude custom object metadata | boolean |
 | list | false | Do not generate download/get urls, only list the files and metadata | boolean |
 | maxPerPage | false | Max number of results to return per bucket searched | int |
+**body**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| body | false |  | [SingularityUser](models.md#model-linkType)</a> |
 
 ###### Response
 [List[SingularityS3LogMetadata]](models.md#model-SingularityS3LogMetadata)
@@ -108,6 +118,11 @@ Retrieve the list of logs stored in S3 for a specific request.
 | excludeMetadata | false | Exclude custom object metadata | boolean |
 | list | false | Do not generate download/get urls, only list the files and metadata | boolean |
 | maxPerPage | false | Max number of results to return per bucket searched | int |
+**body**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| body | false |  | [SingularityUser](models.md#model-linkType)</a> |
 
 ###### Response
 [List[SingularityS3LogMetadata]](models.md#model-SingularityS3LogMetadata)

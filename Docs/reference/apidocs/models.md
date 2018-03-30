@@ -13,6 +13,7 @@ Models:
 - [`S3Artifact`](models.md#model-S3Artifact)
 - [`S3ArtifactSignature`](models.md#model-S3ArtifactSignature)
 - [`Set`](models.md#model-Set)
+- [`SingularityAppcImage`](models.md#model-SingularityAppcImage)
 - [`SingularityBounceRequest`](models.md#model-SingularityBounceRequest)
 - [`SingularityContainerInfo`](models.md#model-SingularityContainerInfo)
 - [`SingularityDeleteRequestRequest`](models.md#model-SingularityDeleteRequestRequest)
@@ -30,9 +31,11 @@ Models:
 - [`SingularityDisaster`](models.md#model-SingularityDisaster)
 - [`SingularityDisasterDataPoint`](models.md#model-SingularityDisasterDataPoint)
 - [`SingularityDisastersData`](models.md#model-SingularityDisastersData)
+- [`SingularityDockerImage`](models.md#model-SingularityDockerImage)
 - [`SingularityDockerInfo`](models.md#model-SingularityDockerInfo)
 - [`SingularityDockerParameter`](models.md#model-SingularityDockerParameter)
 - [`SingularityDockerPortMapping`](models.md#model-SingularityDockerPortMapping)
+- [`SingularityDockerVolume`](models.md#model-SingularityDockerVolume)
 - [`SingularityExitCooldownRequest`](models.md#model-SingularityExitCooldownRequest)
 - [`SingularityExpiringBounce`](models.md#model-SingularityExpiringBounce)
 - [`SingularityExpiringMachineState`](models.md#model-SingularityExpiringMachineState)
@@ -40,17 +43,20 @@ Models:
 - [`SingularityExpiringScale`](models.md#model-SingularityExpiringScale)
 - [`SingularityExpiringSkipHealthchecks`](models.md#model-SingularityExpiringSkipHealthchecks)
 - [`SingularityHostState`](models.md#model-SingularityHostState)
-- [`SingularityKillTaskRequest`](models.md#model-SingularityKillTaskRequest)
 - [`SingularityLoadBalancerUpdate`](models.md#model-SingularityLoadBalancerUpdate)
 - [`SingularityMachineChangeRequest`](models.md#model-SingularityMachineChangeRequest)
 - [`SingularityMachineStateHistoryUpdate`](models.md#model-SingularityMachineStateHistoryUpdate)
 - [`SingularityMesosArtifact`](models.md#model-SingularityMesosArtifact)
+- [`SingularityMesosImage`](models.md#model-SingularityMesosImage)
+- [`SingularityMesosInfo`](models.md#model-SingularityMesosInfo)
 - [`SingularityMesosTaskLabel`](models.md#model-SingularityMesosTaskLabel)
+- [`SingularityNetworkInfo`](models.md#model-SingularityNetworkInfo)
 - [`SingularityPauseRequest`](models.md#model-SingularityPauseRequest)
 - [`SingularityPendingDeploy`](models.md#model-SingularityPendingDeploy)
 - [`SingularityPendingRequest`](models.md#model-SingularityPendingRequest)
 - [`SingularityPendingTask`](models.md#model-SingularityPendingTask)
 - [`SingularityPendingTaskId`](models.md#model-SingularityPendingTaskId)
+- [`SingularityPortMapping`](models.md#model-SingularityPortMapping)
 - [`SingularityPriorityFreeze`](models.md#model-SingularityPriorityFreeze)
 - [`SingularityPriorityFreezeParent`](models.md#model-SingularityPriorityFreezeParent)
 - [`SingularityRack`](models.md#model-SingularityRack)
@@ -64,6 +70,7 @@ Models:
 - [`SingularityS3LogMetadata`](models.md#model-SingularityS3LogMetadata)
 - [`SingularityS3SearchRequest`](models.md#model-SingularityS3SearchRequest)
 - [`SingularityS3SearchResult`](models.md#model-SingularityS3SearchResult)
+- [`SingularityS3UploaderFile`](models.md#model-SingularityS3UploaderFile)
 - [`SingularitySandbox`](models.md#model-SingularitySandbox)
 - [`SingularitySandboxFile`](models.md#model-SingularitySandboxFile)
 - [`SingularityScaleRequest`](models.md#model-SingularityScaleRequest)
@@ -73,12 +80,12 @@ Models:
 - [`SingularityState`](models.md#model-SingularityState)
 - [`SingularityTask`](models.md#model-SingularityTask)
 - [`SingularityTaskCleanup`](models.md#model-SingularityTaskCleanup)
-- [`SingularityTaskCredits`](models.md#model-SingularityTaskCredits)
 - [`SingularityTaskHealthcheckResult`](models.md#model-SingularityTaskHealthcheckResult)
 - [`SingularityTaskHistory`](models.md#model-SingularityTaskHistory)
 - [`SingularityTaskHistoryUpdate`](models.md#model-SingularityTaskHistoryUpdate)
 - [`SingularityTaskId`](models.md#model-SingularityTaskId)
 - [`SingularityTaskIdHistory`](models.md#model-SingularityTaskIdHistory)
+- [`SingularityTaskIdsByStatus`](models.md#model-SingularityTaskIdsByStatus)
 - [`SingularityTaskMetadata`](models.md#model-SingularityTaskMetadata)
 - [`SingularityTaskMetadataRequest`](models.md#model-SingularityTaskMetadataRequest)
 - [`SingularityTaskReconciliationStatistics`](models.md#model-SingularityTaskReconciliationStatistics)
@@ -87,9 +94,13 @@ Models:
 - [`SingularityTaskShellCommandRequest`](models.md#model-SingularityTaskShellCommandRequest)
 - [`SingularityTaskShellCommandRequestId`](models.md#model-SingularityTaskShellCommandRequestId)
 - [`SingularityTaskShellCommandUpdate`](models.md#model-SingularityTaskShellCommandUpdate)
+- [`SingularityTaskState`](models.md#model-SingularityTaskState)
 - [`SingularityUnpauseRequest`](models.md#model-SingularityUnpauseRequest)
+- [`SingularityUpdateGroupsRequest`](models.md#model-SingularityUpdateGroupsRequest)
 - [`SingularityUpdatePendingDeployRequest`](models.md#model-SingularityUpdatePendingDeployRequest)
+- [`SingularityUser`](models.md#model-SingularityUser)
 - [`SingularityVolume`](models.md#model-SingularityVolume)
+- [`SingularityVolumeSource`](models.md#model-SingularityVolumeSource)
 - [`SingularityWebhook`](models.md#model-SingularityWebhook)
 - [`SingularityWebhookSummary`](models.md#model-SingularityWebhookSummary)
 
@@ -191,17 +202,20 @@ Models:
 | name | type | required | description |
 |------|------|----------|-------------|
 | memFileBytes | long | optional |  |
-| memLimitBytes | long | optional |  |
+| diskUsedBytes | long | optional |  |
 | cpusThrottledTimeSecs | double | optional |  |
+| memLimitBytes | long | optional |  |
 | cpusSystemTimeSecs | double | optional |  |
 | memRssBytes | long | optional |  |
 | memAnonBytes | long | optional |  |
+| diskLimitBytes | long | optional |  |
 | memMappedFileBytes | long | optional |  |
 | cpusLimit | int | optional |  |
-| timestamp | double | optional |  |
 | cpusNrPeriods | long | optional |  |
+| timestampSeconds | double | optional |  |
 | cpusUserTimeSecs | double | optional |  |
 | cpusNrThrottled | long | optional |  |
+| memTotalBytes | long | optional |  |
 
 
 ## <a name="model-Resources"></a> Resources
@@ -250,6 +264,14 @@ Models:
 | empty | boolean | optional |  |
 
 
+## <a name="model-SingularityAppcImage"></a> SingularityAppcImage
+
+| name | type | required | description |
+|------|------|----------|-------------|
+| name | string | required | Appc image name |
+| id | string | optional |  |
+
+
 ## <a name="model-SingularityBounceRequest"></a> SingularityBounceRequest
 
 | name | type | required | description |
@@ -267,6 +289,8 @@ Models:
 | name | type | required | description |
 |------|------|----------|-------------|
 | type | [SingularityContainerType](models.md#model-SingularityContainerType) | required | Container type, can be MESOS or DOCKER. Default is MESOS Allowable values: MESOS, DOCKER |
+| networkInfos | [Array[SingularityNetworkInfo]](models.md#model-SingularityNetworkInfo) | optional | Mesos container network configuration |
+| mesos | [SingularityMesosInfo](models.md#model-SingularityMesosInfo) | optional | Information specific to Mesos container type |
 | volumes | [Array[SingularityVolume]](models.md#model-SingularityVolume) | optional | List of volumes to mount. Applicable only to DOCKER container type |
 | docker | [SingularityDockerInfo](models.md#model-SingularityDockerInfo) | optional | Information specific to docker runtime settings |
 
@@ -406,6 +430,7 @@ Models:
 | lastTaskState | [ExtendedTaskState](models.md#model-ExtendedTaskState) | optional |  |
 | numFailures | int | optional |  |
 | numTasks | int | optional |  |
+| averageSchedulingDelayMillis | long | optional |  |
 | averageRuntimeMillis | long | optional |  |
 | lastFinishAt | long | optional |  |
 | requestId | string | optional |  |
@@ -475,6 +500,13 @@ Models:
 | stats | [Array[SingularityDisasterDataPoint]](models.md#model-SingularityDisasterDataPoint) | optional |  |
 
 
+## <a name="model-SingularityDockerImage"></a> SingularityDockerImage
+
+| name | type | required | description |
+|------|------|----------|-------------|
+| name | string | required | Docker image name, expected format: [REGISTRY_HOST[:REGISTRY_PORT]/]REPOSITORY[:TAG|@TYPE:DIGEST] |
+
+
 ## <a name="model-SingularityDockerInfo"></a> SingularityDockerInfo
 
 | name | type | required | description |
@@ -505,6 +537,15 @@ Models:
 | containerPortType | [SingularityPortMappingType](models.md#model-SingularityPortMappingType) | optional | Container port. Use the port number provided (LITERAL) or the dynamically allocated port at this index (FROM_OFFER) Allowable values: LITERAL, FROM_OFFER |
 | protocol | string | optional | Protocol for binding the port. Default is tcp |
 | hostPortType | [SingularityPortMappingType](models.md#model-SingularityPortMappingType) | optional | Host port. Use the port number provided (LITERAL) or the dynamically allocated port at this index (FROM_OFFER) Allowable values: LITERAL, FROM_OFFER |
+
+
+## <a name="model-SingularityDockerVolume"></a> SingularityDockerVolume
+
+| name | type | required | description |
+|------|------|----------|-------------|
+| driver | string | optional | Docker volume driver name |
+| name | string | optional | Volume name '%i' will be replaced with the instance index |
+| driverOptions | [Map[string,string]](models.md#model-Map[string,string]) | optional | Volume driver options |
 
 
 ## <a name="model-SingularityExitCooldownRequest"></a> SingularityExitCooldownRequest
@@ -594,17 +635,6 @@ Models:
 | millisSinceLastOffer | long | optional |  |
 
 
-## <a name="model-SingularityKillTaskRequest"></a> SingularityKillTaskRequest
-
-| name | type | required | description |
-|------|------|----------|-------------|
-| waitForReplacementTask | boolean | optional | If set to true, treats this task kill as a bounce - launching another task and waiting for it to become healthy |
-| override | boolean | optional | If set to true, instructs the executor to attempt to immediately kill the task, rather than waiting gracefully |
-| message | string | optional | A message to show to users about why this action was taken |
-| runShellCommandBeforeKill | [SingularityShellCommand](models.md#model-SingularityShellCommand) | optional | Attempt to run this shell command on each task before it is shut down |
-| actionId | string | optional | An id to associate with this action for metadata purposes |
-
-
 ## <a name="model-SingularityLoadBalancerUpdate"></a> SingularityLoadBalancerUpdate
 
 | name | type | required | description |
@@ -643,10 +673,28 @@ Models:
 
 | name | type | required | description |
 |------|------|----------|-------------|
+| outputFile | string | optional |  |
 | cache | boolean | optional |  |
 | uri | string | optional |  |
 | extract | boolean | optional |  |
 | executable | boolean | optional |  |
+
+
+## <a name="model-SingularityMesosImage"></a> SingularityMesosImage
+
+| name | type | required | description |
+|------|------|----------|-------------|
+| type | [SingularityMesosImageType](models.md#model-SingularityMesosImageType) | required | Mesos image type Allowable values: APPC, DOCKER |
+| appc | [SingularityAppcImage](models.md#model-SingularityAppcImage) | optional | Appc image configuration |
+| cached | boolean | optional | Determines if a cached image is considered up to date |
+| docker | [SingularityDockerImage](models.md#model-SingularityDockerImage) | optional | Docker image configuration |
+
+
+## <a name="model-SingularityMesosInfo"></a> SingularityMesosInfo
+
+| name | type | required | description |
+|------|------|----------|-------------|
+| image | [SingularityMesosImage](models.md#model-SingularityMesosImage) | optional | Mesos image descriptor |
 
 
 ## <a name="model-SingularityMesosTaskLabel"></a> SingularityMesosTaskLabel
@@ -655,6 +703,15 @@ Models:
 |------|------|----------|-------------|
 | key | string | optional |  |
 | value | string | optional |  |
+
+
+## <a name="model-SingularityNetworkInfo"></a> SingularityNetworkInfo
+
+| name | type | required | description |
+|------|------|----------|-------------|
+| groups | Array[string] | optional | List of network groups for the container |
+| name | string | optional | Name of the network for the network driver to use |
+| portMappings | [Array[SingularityPortMapping]](models.md#model-SingularityPortMapping) | optional | List of ip port mappings to expose |
 
 
 ## <a name="model-SingularityPauseRequest"></a> SingularityPauseRequest
@@ -685,16 +742,20 @@ Models:
 |------|------|----------|-------------|
 | resources | [Resources](models.md#model-Resources) | optional |  |
 | runId | string | optional |  |
+| runAsUserOverride | string | optional |  |
 | skipHealthchecks | boolean | optional |  |
-| user | string | optional |  |
+| s3UploaderAdditionalFiles | [Array[SingularityS3UploaderFile]](models.md#model-SingularityS3UploaderFile) | optional |  |
 | requestId | string | optional |  |
+| user | string | optional |  |
 | message | string | optional |  |
-| timestamp | long | optional |  |
+| extraArtifacts | [Array[SingularityMesosArtifact]](models.md#model-SingularityMesosArtifact) | optional |  |
 | deployId | string | optional |  |
+| timestamp | long | optional |  |
 | runAt | long | optional |  |
 | actionId | string | optional |  |
-| cmdLineArgsList | Array[string] | optional |  |
+| envOverrides | [Map[string,string]](models.md#model-Map[string,string]) | optional |  |
 | pendingType | [PendingType](models.md#model-PendingType) | optional |  Allowable values: IMMEDIATE, ONEOFF, BOUNCE, NEW_DEPLOY, NEXT_DEPLOY_STEP, UNPAUSED, RETRY, UPDATED_REQUEST, DECOMISSIONED_SLAVE_OR_RACK, TASK_DONE, STARTUP, CANCEL_BOUNCE, TASK_BOUNCE, DEPLOY_CANCELLED, DEPLOY_FAILED |
+| cmdLineArgsList | Array[string] | optional |  |
 
 
 ## <a name="model-SingularityPendingTask"></a> SingularityPendingTask
@@ -702,12 +763,16 @@ Models:
 | name | type | required | description |
 |------|------|----------|-------------|
 | resources | [Resources](models.md#model-Resources) | optional |  |
+| runAsUserOverride | string | optional |  |
 | runId | string | optional |  |
 | skipHealthchecks | boolean | optional |  |
 | pendingTaskId | [SingularityPendingTaskId](models.md#model-SingularityPendingTaskId) | optional |  |
+| s3UploaderAdditionalFiles | [Array[SingularityS3UploaderFile]](models.md#model-SingularityS3UploaderFile) | optional |  |
 | user | string | optional |  |
+| extraArtifacts | [Array[SingularityMesosArtifact]](models.md#model-SingularityMesosArtifact) | optional |  |
 | message | string | optional |  |
 | actionId | string | optional |  |
+| envOverrides | [Map[string,string]](models.md#model-Map[string,string]) | optional |  |
 | cmdLineArgsList | Array[string] | optional |  |
 
 
@@ -722,6 +787,15 @@ Models:
 | instanceNo | int | optional |  |
 | createdAt | long | optional |  |
 | id | string | optional |  |
+
+
+## <a name="model-SingularityPortMapping"></a> SingularityPortMapping
+
+| name | type | required | description |
+|------|------|----------|-------------|
+| hostPort | int | required | the port to map from on the host network interface |
+| containerPort | int | required | the port to map to on the container network interface |
+| protocol | string | optional | the protocol e.g. 'tcp' or 'udp' |
 
 
 ## <a name="model-SingularityPriorityFreeze"></a> SingularityPriorityFreeze
@@ -779,6 +853,7 @@ Models:
 | scheduledExpectedRuntimeMillis | long | optional | Expected time for a non-long-running task to run. Singularity will notify owners if a task exceeds this time |
 | quartzSchedule | string | optional | A schedule in quartz format |
 | requiredSlaveAttributes | [Map[string,string]](models.md#model-Map[string,string]) | optional | Only allow tasks for this request to run on slaves which have these attributes |
+| dataCenter | string | optional | the data center associated with this request |
 | numRetriesOnFailure | int | optional | For scheduled jobs, retry up to this many times if the job fails |
 | loadBalanced | boolean | optional | Indicates that a SERVICE should be load balanced |
 | killOldNonLongRunningTasksAfterMillis | long | optional | For non-long-running request types, kill a task after this amount of time if it has been put into CLEANING and has not shut down |
@@ -841,11 +916,14 @@ Models:
 | name | type | required | description |
 |------|------|----------|-------------|
 | expiringSkipHealthchecks | [SingularityExpiringSkipHealthchecks](models.md#model-SingularityExpiringSkipHealthchecks) | optional |  |
+| lastHistory | [SingularityRequestHistory](models.md#model-SingularityRequestHistory) | optional |  |
 | state | [RequestState](models.md#model-RequestState) | optional |  Allowable values: ACTIVE, DELETING, DELETED, PAUSED, SYSTEM_COOLDOWN, FINISHED, DEPLOYING_TO_UNPAUSE |
+| mostRecentTask | [SingularityTaskIdHistory](models.md#model-SingularityTaskIdHistory) | optional |  |
 | pendingDeploy | [SingularityDeploy](models.md#model-SingularityDeploy) | optional |  |
+| taskIds | [SingularityTaskIdsByStatus](models.md#model-SingularityTaskIdsByStatus) | optional |  |
 | activeDeploy | [SingularityDeploy](models.md#model-SingularityDeploy) | optional |  |
-| expiringPause | [SingularityExpiringPause](models.md#model-SingularityExpiringPause) | optional |  |
 | expiringBounce | [SingularityExpiringBounce](models.md#model-SingularityExpiringBounce) | optional |  |
+| expiringPause | [SingularityExpiringPause](models.md#model-SingularityExpiringPause) | optional |  |
 | request | [SingularityRequest](models.md#model-SingularityRequest) | optional |  |
 | pendingDeployState | [SingularityPendingDeploy](models.md#model-SingularityPendingDeploy) | optional |  |
 | expiringScale | [SingularityExpiringScale](models.md#model-SingularityExpiringScale) | optional |  |
@@ -857,11 +935,15 @@ Models:
 | name | type | required | description |
 |------|------|----------|-------------|
 | resources | [Resources](models.md#model-Resources) | optional | Override the resources from the active deploy for this run |
+| runAsUserOverride | string | optional | Override the user under which this task's command will be launched. |
 | runId | string | optional | An id to associate with this request which will be associated with the corresponding launched tasks |
 | skipHealthchecks | boolean | optional | If set to true, healthchecks will be skipped for this task run |
 | commandLineArgs | Array[string] | optional | Command line arguments to be passed to the task |
+| s3UploaderAdditionalFiles | [Array[SingularityS3UploaderFile]](models.md#model-SingularityS3UploaderFile) | optional | Specify additional sandbox files to upload to S3 for this run |
+| extraArtifacts | [Array[SingularityMesosArtifact]](models.md#model-SingularityMesosArtifact) | optional | Additional artifacts to download for this run |
 | message | string | optional | A message to show to users about why this action was taken |
 | runAt | long | optional | Schedule this task to run at a specified time |
+| envOverrides | [Map[string,string]](models.md#model-Map[string,string]) | optional | Override the environment variables for launched tasks |
 
 
 ## <a name="model-SingularityS3LogMetadata"></a> SingularityS3LogMetadata
@@ -898,6 +980,20 @@ Models:
 | continuationTokens | [Map[string,ContinuationToken]](models.md#model-Map[string,ContinuationToken]) | optional | S3 continuation tokens, return these to Singularity to continue searching subsequent pages of results |
 
 
+## <a name="model-SingularityS3UploaderFile"></a> SingularityS3UploaderFile
+
+| name | type | required | description |
+|------|------|----------|-------------|
+| directory | string | optional |  |
+| s3UploaderKeyPattern | string | optional |  |
+| checkSubdirectories | boolean | optional |  |
+| filename | string | optional |  |
+| s3UploaderFilenameHint | string | optional |  |
+| s3UploaderBucket | string | optional |  |
+| applyS3StorageClassAfterBytes | long | optional |  |
+| s3StorageClass | string | optional |  |
+
+
 ## <a name="model-SingularitySandbox"></a> SingularitySandbox
 
 | name | type | required | description |
@@ -927,6 +1023,7 @@ Models:
 | bounce | boolean | optional | Bounce the request to get to the new scale |
 | message | string | optional | A message to show to users about why this action was taken |
 | actionId | string | optional | An id to associate with this action for metadata purposes |
+| skipEmailNotification | boolean | optional | If set to true, no email notification will be sent out for this specific scale event |
 | instances | int | optional | The number of instances to scale to |
 | incremental | boolean | optional | If present and set to true, old tasks will be killed as soon as replacement tasks are available, instead of waiting for all replacement tasks to be healthy |
 
@@ -1025,19 +1122,11 @@ Models:
 | taskId | [SingularityTaskId](models.md#model-SingularityTaskId) | optional |  |
 | removeFromLoadBalancer | boolean | optional |  |
 | user | string | optional |  |
-| cleanupType | [TaskCleanupType](models.md#model-TaskCleanupType) | optional |  Allowable values: USER_REQUESTED, USER_REQUESTED_TASK_BOUNCE, DECOMISSIONING, SCALING_DOWN, BOUNCING, INCREMENTAL_BOUNCE, DEPLOY_FAILED, NEW_DEPLOY_SUCCEEDED, DEPLOY_STEP_FINISHED, DEPLOY_CANCELED, TASK_EXCEEDED_TIME_LIMIT, UNHEALTHY_NEW_TASK, OVERDUE_NEW_TASK, USER_REQUESTED_DESTROY, INCREMENTAL_DEPLOY_FAILED, INCREMENTAL_DEPLOY_CANCELLED, PRIORITY_KILL, REBALANCE_RACKS, PAUSING, PAUSE, DECOMMISSION_TIMEOUT, REQUEST_DELETING |
+| cleanupType | [TaskCleanupType](models.md#model-TaskCleanupType) | optional |  Allowable values: USER_REQUESTED, USER_REQUESTED_TASK_BOUNCE, DECOMISSIONING, SCALING_DOWN, BOUNCING, INCREMENTAL_BOUNCE, DEPLOY_FAILED, NEW_DEPLOY_SUCCEEDED, DEPLOY_STEP_FINISHED, DEPLOY_CANCELED, TASK_EXCEEDED_TIME_LIMIT, UNHEALTHY_NEW_TASK, OVERDUE_NEW_TASK, USER_REQUESTED_DESTROY, INCREMENTAL_DEPLOY_FAILED, INCREMENTAL_DEPLOY_CANCELLED, PRIORITY_KILL, REBALANCE_RACKS, PAUSING, PAUSE, DECOMMISSION_TIMEOUT, REQUEST_DELETING, REBALANCE_CPU_USAGE |
 | message | string | optional |  |
 | runBeforeKillId | [SingularityTaskShellCommandRequestId](models.md#model-SingularityTaskShellCommandRequestId) | optional |  |
 | timestamp | long | optional |  |
 | actionId | string | optional |  |
-
-
-## <a name="model-SingularityTaskCredits"></a> SingularityTaskCredits
-
-| name | type | required | description |
-|------|------|----------|-------------|
-| remaining | int | optional |  |
-| enabled | boolean | optional |  |
 
 
 ## <a name="model-SingularityTaskHealthcheckResult"></a> SingularityTaskHealthcheckResult
@@ -1074,7 +1163,7 @@ Models:
 | taskId | [SingularityTaskId](models.md#model-SingularityTaskId) | optional |  |
 | statusReason | string | optional |  |
 | statusMessage | string | optional |  |
-| taskState | [ExtendedTaskState](models.md#model-ExtendedTaskState) | optional |  Allowable values: TASK_LAUNCHED, TASK_STAGING, TASK_STARTING, TASK_RUNNING, TASK_CLEANING, TASK_KILLING, TASK_FINISHED, TASK_FAILED, TASK_KILLED, TASK_LOST, TASK_LOST_WHILE_DOWN, TASK_ERROR |
+| taskState | [ExtendedTaskState](models.md#model-ExtendedTaskState) | optional |  Allowable values: TASK_LAUNCHED, TASK_STAGING, TASK_STARTING, TASK_RUNNING, TASK_CLEANING, TASK_KILLING, TASK_FINISHED, TASK_FAILED, TASK_KILLED, TASK_LOST, TASK_LOST_WHILE_DOWN, TASK_ERROR, TASK_DROPPED, TASK_GONE, TASK_UNREACHABLE, TASK_GONE_BY_OPERATOR, TASK_UNKNOWN |
 | timestamp | long | optional |  |
 | previous | [Set](models.md#model-Set) | optional |  |
 
@@ -1102,6 +1191,16 @@ Models:
 | runId | string | optional |  |
 | updatedAt | long | optional |  |
 | lastTaskState | [ExtendedTaskState](models.md#model-ExtendedTaskState) | optional |  |
+
+
+## <a name="model-SingularityTaskIdsByStatus"></a> SingularityTaskIdsByStatus
+
+| name | type | required | description |
+|------|------|----------|-------------|
+| pending | [Array[SingularityPendingTaskId]](models.md#model-SingularityPendingTaskId) | optional |  |
+| cleaning | [Array[SingularityTaskId]](models.md#model-SingularityTaskId) | optional |  |
+| healthy | [Array[SingularityTaskId]](models.md#model-SingularityTaskId) | optional |  |
+| notYetHealthy | [Array[SingularityTaskId]](models.md#model-SingularityTaskId) | optional |  |
 
 
 ## <a name="model-SingularityTaskMetadata"></a> SingularityTaskMetadata
@@ -1194,6 +1293,18 @@ Models:
 | shellRequestId | [SingularityTaskShellCommandRequestId](models.md#model-SingularityTaskShellCommandRequestId) | optional |  |
 
 
+## <a name="model-SingularityTaskState"></a> SingularityTaskState
+
+| name | type | required | description |
+|------|------|----------|-------------|
+| pending | boolean | optional |  |
+| taskId | [SingularityTaskId](models.md#model-SingularityTaskId) | optional |  |
+| currentState | [ExtendedTaskState](models.md#model-ExtendedTaskState) | optional |  |
+| runId | string | optional |  |
+| pendingTaskId | [SingularityPendingTaskId](models.md#model-SingularityPendingTaskId) | optional |  |
+| taskHistory | [Array[SingularityTaskHistoryUpdate]](models.md#model-SingularityTaskHistoryUpdate) | optional |  |
+
+
 ## <a name="model-SingularityUnpauseRequest"></a> SingularityUnpauseRequest
 
 | name | type | required | description |
@@ -1201,6 +1312,16 @@ Models:
 | skipHealthchecks | boolean | optional | If set to true, instructs new tasks that are scheduled immediately while unpausing to skip healthchecks |
 | message | string | optional | A message to show to users about why this action was taken |
 | actionId | string | optional | An id to associate with this action for metadata purposes |
+
+
+## <a name="model-SingularityUpdateGroupsRequest"></a> SingularityUpdateGroupsRequest
+
+| name | type | required | description |
+|------|------|----------|-------------|
+| readOnlyGroups | [Set](models.md#model-Set) | optional |  |
+| readWriteGroups | [Set](models.md#model-Set) | optional |  |
+| group | string | optional |  |
+| message | string | optional |  |
 
 
 ## <a name="model-SingularityUpdatePendingDeployRequest"></a> SingularityUpdatePendingDeployRequest
@@ -1212,13 +1333,33 @@ Models:
 | targetActiveInstances | int | required | Updated target instance count for the active deploy |
 
 
+## <a name="model-SingularityUser"></a> SingularityUser
+
+| name | type | required | description |
+|------|------|----------|-------------|
+| authenticated | boolean | optional |  |
+| groups | [Set](models.md#model-Set) | optional |  |
+| name | string | optional |  |
+| email | string | optional |  |
+| id | string | optional |  |
+
+
 ## <a name="model-SingularityVolume"></a> SingularityVolume
 
 | name | type | required | description |
 |------|------|----------|-------------|
 | hostPath | string | optional |  |
 | containerPath | string | optional |  |
+| source | [SingularityVolumeSource](models.md#model-SingularityVolumeSource) | optional |  |
 | mode | [SingularityDockerVolumeMode](models.md#model-SingularityDockerVolumeMode) | optional |  |
+
+
+## <a name="model-SingularityVolumeSource"></a> SingularityVolumeSource
+
+| name | type | required | description |
+|------|------|----------|-------------|
+| dockerVolume | [SingularityDockerVolume](models.md#model-SingularityDockerVolume) | optional | Docker source volume spec |
+| type | [SingularityVolumeSourceType](models.md#model-SingularityVolumeSourceType) | optional | Volume source type Allowable values: UNKNOWN, DOCKER_VOLUME |
 
 
 ## <a name="model-SingularityWebhook"></a> SingularityWebhook

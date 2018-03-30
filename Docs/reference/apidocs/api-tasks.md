@@ -12,6 +12,11 @@ Retrieve statistics about a specific active task.
 | Parameter | Required | Description | Data Type |
 |-----------|----------|-------------|-----------|
 | taskId | true |  | string |
+**body**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| body | false |  | [SingularityUser](models.md#model-linkType)</a> |
 
 ###### Response
 [MesosTaskStatisticsObject](models.md#model-MesosTaskStatisticsObject)
@@ -54,6 +59,36 @@ Post metadata about a task that will be persisted along with it and displayed in
 
 
 - - -
+#### **GET** `/api/tasks/task/{taskId}/command/{commandName}/{commandTimestamp}`
+
+Retrieve a list of shell commands updates for a particular shell command on a task
+
+
+###### Parameters
+**path**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| taskId | true |  | string |
+| commandName | true |  | string |
+| commandTimestamp | true |  | long |
+**body**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| body | false |  | [SingularityUser](models.md#model-linkType)</a> |
+
+###### Response
+[List[SingularityTaskShellCommandUpdate]](models.md#model-SingularityTaskShellCommandUpdate)
+
+
+###### Errors
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| - | - | - |
+
+
+- - -
 #### **POST** `/api/tasks/task/{taskId}/command`
 
 Run a configured shell command against the given task
@@ -83,6 +118,34 @@ Run a configured shell command against the given task
 
 
 - - -
+#### **GET** `/api/tasks/task/{taskId}/command`
+
+Retrieve a list of shell commands that have run for a task
+
+
+###### Parameters
+**path**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| taskId | true |  | string |
+**body**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| body | false |  | [SingularityUser](models.md#model-linkType)</a> |
+
+###### Response
+[List[SingularityTaskShellCommandHistory]](models.md#model-SingularityTaskShellCommandHistory)
+
+
+###### Errors
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| - | - | - |
+
+
+- - -
 #### **GET** `/api/tasks/task/{taskId}/cleanup`
 
 Get the cleanup object for the task, if it exists
@@ -94,9 +157,42 @@ Get the cleanup object for the task, if it exists
 | Parameter | Required | Description | Data Type |
 |-----------|----------|-------------|-----------|
 | taskId | true |  | string |
+**body**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| body | false |  | [SingularityUser](models.md#model-linkType)</a> |
 
 ###### Response
 [SingularityTaskCleanup](models.md#model-SingularityTaskCleanup)
+
+
+###### Errors
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| - | - | - |
+
+
+- - -
+#### **GET** `/api/tasks/task/{taskId}`
+
+Retrieve information about a specific active task.
+
+
+###### Parameters
+**path**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| taskId | true |  | string |
+**body**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| body | false |  | [SingularityUser](models.md#model-linkType)</a> |
+
+###### Response
+[SingularityTask](models.md#model-SingularityTask)
 
 
 ###### Errors
@@ -121,7 +217,7 @@ Attempt to kill task, optionally overriding an existing cleanup request (that ma
 
 | Parameter | Required | Description | Data Type |
 |-----------|----------|-------------|-----------|
-| body | false |  | [SingularityKillTaskRequest](models.md#model-linkType)</a> |
+| body | false |  | [SingularityUser](models.md#model-linkType)</a> |
 
 ###### Response
 [SingularityTaskCleanup](models.md#model-SingularityTaskCleanup)
@@ -134,9 +230,9 @@ Attempt to kill task, optionally overriding an existing cleanup request (that ma
 
 
 - - -
-#### **GET** `/api/tasks/task/{taskId}`
+#### **DELETE** `/api/tasks/scheduled/task/{scheduledTaskId}`
 
-Retrieve information about a specific active task.
+Delete a scheduled task.
 
 
 ###### Parameters
@@ -144,10 +240,15 @@ Retrieve information about a specific active task.
 
 | Parameter | Required | Description | Data Type |
 |-----------|----------|-------------|-----------|
-| taskId | true |  | string |
+| scheduledTaskId | true |  | string |
+**body**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| body | false |  | [SingularityUser](models.md#model-linkType)</a> |
 
 ###### Response
-[SingularityTask](models.md#model-SingularityTask)
+[SingularityPendingTask](models.md#model-SingularityPendingTask)
 
 
 ###### Errors
@@ -168,6 +269,11 @@ Retrieve information about a pending task.
 | Parameter | Required | Description | Data Type |
 |-----------|----------|-------------|-----------|
 | pendingTaskId | true |  | string |
+**body**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| body | false |  | [SingularityUser](models.md#model-linkType)</a> |
 
 ###### Response
 [SingularityTaskRequest](models.md#model-SingularityTaskRequest)
@@ -196,6 +302,11 @@ Retrieve list of scheduled tasks for a specific request.
 | Parameter | Required | Description | Data Type |
 |-----------|----------|-------------|-----------|
 | useWebCache | false |  | boolean |
+**body**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| body | false |  | [SingularityUser](models.md#model-linkType)</a> |
 
 ###### Response
 [List[SingularityTaskRequest]](models.md#model-SingularityTaskRequest)
@@ -219,6 +330,11 @@ Retrieve list of scheduled task IDs.
 | Parameter | Required | Description | Data Type |
 |-----------|----------|-------------|-----------|
 | useWebCache | false |  | boolean |
+**body**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| body | false |  | [SingularityUser](models.md#model-linkType)</a> |
 
 ###### Response
 [UNKNOWN[SingularityPendingTaskId]](models.md#model-UNKNOWN[SingularityPendingTaskId])
@@ -242,6 +358,11 @@ Retrieve list of scheduled tasks.
 | Parameter | Required | Description | Data Type |
 |-----------|----------|-------------|-----------|
 | useWebCache | false |  | boolean |
+**body**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| body | false |  | [SingularityUser](models.md#model-linkType)</a> |
 
 ###### Response
 [List[SingularityTaskRequest]](models.md#model-SingularityTaskRequest)
@@ -260,7 +381,11 @@ Retrieve the list of tasks being cleaned from load balancers.
 
 
 ###### Parameters
-- No parameters
+**body**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| body | false |  | [SingularityUser](models.md#model-linkType)</a> |
 
 ###### Response
 [UNKNOWN[SingularityTaskId]](models.md#model-UNKNOWN[SingularityTaskId])
@@ -279,10 +404,42 @@ Retrieve the list of killed tasks.
 
 
 ###### Parameters
-- No parameters
+**body**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| body | false |  | [SingularityUser](models.md#model-linkType)</a> |
 
 ###### Response
 [UNKNOWN[SingularityKilledTaskIdRecord]](models.md#model-UNKNOWN[SingularityKilledTaskIdRecord])
+
+
+###### Errors
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| - | - | - |
+
+
+- - -
+#### **GET** `/api/tasks/ids/request/{requestId}`
+
+Retrieve a list of task ids separated by status
+
+
+###### Parameters
+**path**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| requestId | true |  | string |
+**body**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| body | false |  | [SingularityUser](models.md#model-linkType)</a> |
+
+###### Response
+[SingularityTaskIdsByStatus](models.md#model-SingularityTaskIdsByStatus)
 
 
 ###### Errors
@@ -303,6 +460,11 @@ Retrieve the list of cleaning tasks.
 | Parameter | Required | Description | Data Type |
 |-----------|----------|-------------|-----------|
 | useWebCache | false |  | boolean |
+**body**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| body | false |  | [SingularityUser](models.md#model-linkType)</a> |
 
 ###### Response
 [UNKNOWN[SingularityTaskCleanup]](models.md#model-UNKNOWN[SingularityTaskCleanup])
@@ -331,6 +493,11 @@ Retrieve list of active tasks on a specific slave.
 | Parameter | Required | Description | Data Type |
 |-----------|----------|-------------|-----------|
 | useWebCache | false |  | boolean |
+**body**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| body | false |  | [SingularityUser](models.md#model-linkType)</a> |
 
 ###### Response
 [UNKNOWN[SingularityTask]](models.md#model-UNKNOWN[SingularityTask])
@@ -354,6 +521,11 @@ Retrieve the list of active tasks.
 | Parameter | Required | Description | Data Type |
 |-----------|----------|-------------|-----------|
 | useWebCache | false |  | boolean |
+**body**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| body | false |  | [SingularityUser](models.md#model-linkType)</a> |
 
 ###### Response
 [UNKNOWN[SingularityTask]](models.md#model-UNKNOWN[SingularityTask])
