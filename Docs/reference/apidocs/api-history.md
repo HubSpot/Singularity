@@ -23,6 +23,11 @@ Retrieve the history sorted by startedAt for all inactive tasks.
 | orderDirection | false | Sort direction | string |
 | count | false | Maximum number of items to return | int |
 | page | false | Which page of items to view | int |
+**body**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| body | false |  | [SingularityUser](models.md#model-linkType)</a> |
 
 ###### Response
 [UNKNOWN[SingularityTaskIdHistory]](models.md#model-UNKNOWN[SingularityTaskIdHistory])
@@ -57,6 +62,11 @@ Retrieve the history sorted by startedAt for all inactive tasks.
 | orderDirection | false | Sort direction | string |
 | count | false | Maximum number of items to return | int |
 | page | false | Which page of items to view | int |
+**body**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| body | false |  | [SingularityUser](models.md#model-linkType)</a> |
 
 ###### Response
 [List[SingularityTaskIdHistory]](models.md#model-SingularityTaskIdHistory)
@@ -80,6 +90,11 @@ Retrieve the history for a specific task.
 | Parameter | Required | Description | Data Type |
 |-----------|----------|-------------|-----------|
 | taskId | true | Task ID to look up | string |
+**body**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| body | false |  | [SingularityUser](models.md#model-linkType)</a> |
 
 ###### Response
 [SingularityTaskHistory](models.md#model-SingularityTaskHistory)
@@ -106,6 +121,11 @@ Search for requests.
 | count | false | Maximum number of items to return | int |
 | page | false | Which page of items to view | int |
 | useWebCache | false |  | boolean |
+**body**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| body | false |  | [SingularityUser](models.md#model-linkType)</a> |
 
 ###### Response
 [UNKNOWN[string]](models.md#model-UNKNOWN[string])
@@ -144,6 +164,11 @@ Retrieve the history count for all inactive tasks of a specific request.
 | orderDirection | false | Sort direction | string |
 | count | false | Maximum number of items to return | int |
 | page | false | Which page of items to view | int |
+**body**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| body | false |  | [SingularityUser](models.md#model-linkType)</a> |
 
 ###### Response
 [UNKNOWN[SingularityTaskIdHistory]](models.md#model-UNKNOWN[SingularityTaskIdHistory])
@@ -167,6 +192,11 @@ Retrieve the history for all active tasks of a specific request.
 | Parameter | Required | Description | Data Type |
 |-----------|----------|-------------|-----------|
 | requestId | true | Request ID to look up | string |
+**body**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| body | false |  | [SingularityUser](models.md#model-linkType)</a> |
 
 ###### Response
 [List[SingularityTaskIdHistory]](models.md#model-SingularityTaskIdHistory)
@@ -205,6 +235,11 @@ Retrieve the history sorted by startedAt for all inactive tasks of a specific re
 | orderDirection | false | Sort direction | string |
 | count | false | Maximum number of items to return | int |
 | page | false | Which page of items to view | int |
+**body**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| body | false |  | [SingularityUser](models.md#model-linkType)</a> |
 
 ###### Response
 [List[SingularityTaskIdHistory]](models.md#model-SingularityTaskIdHistory)
@@ -229,6 +264,11 @@ Retrieve the history for a task by runId
 |-----------|----------|-------------|-----------|
 | requestId | true | Request ID to look up | string |
 | runId | true | runId to look up | string |
+**body**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| body | false |  | [SingularityUser](models.md#model-linkType)</a> |
 
 ###### Response
 [SingularityTaskIdHistory](models.md#model-SingularityTaskIdHistory)
@@ -258,6 +298,11 @@ Get request history for a single request
 |-----------|----------|-------------|-----------|
 | count | false | Maximum number of items to return | int |
 | page | false | Which page of items to view | int |
+**body**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| body | false |  | [SingularityUser](models.md#model-linkType)</a> |
 
 ###### Response
 [UNKNOWN[SingularityRequestHistory]](models.md#model-UNKNOWN[SingularityRequestHistory])
@@ -287,6 +332,11 @@ Get request history for a single request
 |-----------|----------|-------------|-----------|
 | count | false | Maximum number of items to return | int |
 | page | false | Which page of items to view | int |
+**body**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| body | false |  | [SingularityUser](models.md#model-linkType)</a> |
 
 ###### Response
 [List[SingularityRequestHistory]](models.md#model-SingularityRequestHistory)
@@ -316,6 +366,11 @@ Get deploy history with metadata for a single request
 |-----------|----------|-------------|-----------|
 | count | false | Maximum number of items to return | int |
 | page | false | Which page of items to view | int |
+**body**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| body | false |  | [SingularityUser](models.md#model-linkType)</a> |
 
 ###### Response
 [UNKNOWN[SingularityDeployHistory]](models.md#model-UNKNOWN[SingularityDeployHistory])
@@ -345,6 +400,11 @@ Get deploy history for a single request
 |-----------|----------|-------------|-----------|
 | count | false | Maximum number of items to return | int |
 | page | false | Which page of items to view | int |
+**body**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| body | false |  | [SingularityUser](models.md#model-linkType)</a> |
 
 ###### Response
 [List[SingularityDeployHistory]](models.md#model-SingularityDeployHistory)
@@ -375,6 +435,11 @@ Retrieve the task history for a specific deploy.
 |-----------|----------|-------------|-----------|
 | count | false | Maximum number of items to return | int |
 | page | false | Which page of items to view | int |
+**body**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| body | false |  | [SingularityUser](models.md#model-linkType)</a> |
 
 ###### Response
 [UNKNOWN[SingularityTaskIdHistory]](models.md#model-UNKNOWN[SingularityTaskIdHistory])
@@ -405,6 +470,11 @@ Retrieve the task history for a specific deploy.
 |-----------|----------|-------------|-----------|
 | count | false | Maximum number of items to return | int |
 | page | false | Which page of items to view | int |
+**body**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| body | false |  | [SingularityUser](models.md#model-linkType)</a> |
 
 ###### Response
 [List[SingularityTaskIdHistory]](models.md#model-SingularityTaskIdHistory)
@@ -429,6 +499,11 @@ Retrieve the task history for a specific deploy.
 |-----------|----------|-------------|-----------|
 | requestId | true | Request ID for deploy | string |
 | deployId | true | Deploy ID | string |
+**body**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| body | false |  | [SingularityUser](models.md#model-linkType)</a> |
 
 ###### Response
 [List[SingularityTaskIdHistory]](models.md#model-SingularityTaskIdHistory)
@@ -453,6 +528,11 @@ Retrieve the history for a specific deploy.
 |-----------|----------|-------------|-----------|
 | requestId | true | Request ID for deploy | string |
 | deployId | true | Deploy ID | string |
+**body**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| body | false |  | [SingularityUser](models.md#model-linkType)</a> |
 
 ###### Response
 [SingularityDeployHistory](models.md#model-SingularityDeployHistory)
@@ -481,6 +561,11 @@ Get a list of recently used command line args for an on-demand or scheduled requ
 | Parameter | Required | Description | Data Type |
 |-----------|----------|-------------|-----------|
 | count | false | Max number of recent args to return | int |
+**body**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| body | false |  | [SingularityUser](models.md#model-linkType)</a> |
 
 ###### Response
 [Set](models.md#model-Set)

@@ -85,15 +85,27 @@ public class SingularitySchedulerPoller extends SingularityLeaderOnlyPoller {
 
           // Return to the cache those offers which we checked out of the cache, but didn't end up using.
           List<CachedOffer> unusedCachedOffers = unusedOffers.stream().map((o) -> offerIdToCachedOffer.get(o.getId().getValue())).collect(Collectors.toList());
-          unusedCachedOffers.forEach(offerCache::returnOffer);
+          unusedCachedOffers.forEach((cachedOffer) -> {
+            offerIdToCachedOffer.remove(cachedOffer.getOfferId());
+            offerCache.returnOffer(cachedOffer);
+          });
 
           // Notify the cache of the cached offers that we did use.
           cachedOffersFromHolder.removeAll(unusedCachedOffers);
-          cachedOffersFromHolder.forEach(offerCache::useOffer);
+          cachedOffersFromHolder.forEach((cachedOffer) -> {
+            offerIdToCachedOffer.remove(cachedOffer.getOfferId());
+            offerCache.useOffer(cachedOffer);
+          });
         } else {
-          cachedOffersFromHolder.forEach(offerCache::returnOffer);
+          cachedOffersFromHolder.forEach((cachedOffer) -> {
+            offerIdToCachedOffer.remove(cachedOffer.getOfferId());
+            offerCache.returnOffer(cachedOffer);
+          });
         }
       }
+
+      LOG.info("{} remaining offers not accounted for in offer check", offerIdToCachedOffer.size());
+      offerIdToCachedOffer.values().forEach(offerCache::returnOffer);
 
       LOG.info("Launched {} tasks on {} cached offers (returned {})", launchedTasks, acceptedOffers, offerHolders.size() - acceptedOffers);
     }, getClass().getSimpleName());
