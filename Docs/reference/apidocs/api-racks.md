@@ -40,6 +40,11 @@ Delete any expiring machine state changes for this rack
 | Parameter | Required | Description | Data Type |
 |-----------|----------|-------------|-----------|
 | rackId | true | Active slaveId | string |
+**body**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| body | false |  | [SingularityUser](models.md#model-linkType)</a> |
 
 ###### Response
 
@@ -119,6 +124,11 @@ Retrieve the history of a given rack
 | Parameter | Required | Description | Data Type |
 |-----------|----------|-------------|-----------|
 | rackId | true | Rack ID | string |
+**body**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| body | false |  | [SingularityUser](models.md#model-linkType)</a> |
 
 ###### Response
 [List[SingularityMachineStateHistoryUpdate]](models.md#model-SingularityMachineStateHistoryUpdate)
@@ -142,6 +152,11 @@ Remove a known rack, erasing history. This operation will cancel decommissioning
 | Parameter | Required | Description | Data Type |
 |-----------|----------|-------------|-----------|
 | rackId | true | Rack ID | string |
+**body**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| body | false |  | [SingularityUser](models.md#model-linkType)</a> |
 
 ###### Response
 
@@ -160,7 +175,11 @@ Get all expiring state changes for all racks
 
 
 ###### Parameters
-- No parameters
+**body**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| body | false |  | [SingularityUser](models.md#model-linkType)</a> |
 
 ###### Response
 [List[SingularityExpiringMachineState]](models.md#model-SingularityExpiringMachineState)
@@ -184,6 +203,11 @@ Retrieve the list of all known racks, optionally filtering by a particular state
 | Parameter | Required | Description | Data Type |
 |-----------|----------|-------------|-----------|
 | state | false | Optionally specify a particular state to filter racks by | string |
+**body**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| body | false |  | [SingularityUser](models.md#model-linkType)</a> |
 
 ###### Response
 [List[SingularityRack]](models.md#model-SingularityRack)
