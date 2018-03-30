@@ -51,7 +51,7 @@
         data-chapter-title="Configuration"
         data-filepath="Docs/reference/configuration.md"
         data-basepath="../.."
-        data-revision="Wed Feb 21 2018 13:50:38 GMT-0500 (EST)"
+        data-revision="Fri Mar 30 2018 10:50:40 GMT-0400 (EDT)"
         data-innerlanguage="">
     
 
@@ -1061,6 +1061,12 @@
 <td>Allow this many tasks to fail and be retried before failing a new deploy</td>
 <td>int</td>
 </tr>
+<tr>
+<td>allowDeployOfPausedRequests</td>
+<td>false</td>
+<td>If true, paused requests can be deployed without unpausing or starting new tasks at deploy time</td>
+<td>boolean</td>
+</tr>
 </tbody>
 </table>
 <h4 id="limits">Limits</h4>
@@ -1501,19 +1507,31 @@
 <td>master</td>
 <td>null</td>
 <td>A comma separated list of mesos master <code>host:port</code></td>
-<td>string</td>
+<td>String</td>
+</tr>
+<tr>
+<td>mesosUsername</td>
+<td></td>
+<td>Username to authenticate with the mesos master when using basic auth</td>
+<td>String</td>
+</tr>
+<tr>
+<td>mesosPassword</td>
+<td></td>
+<td>Password to authenticate with the mesos master when using basic auth</td>
+<td>String</td>
 </tr>
 <tr>
 <td>frameworkName</td>
 <td>null</td>
 <td></td>
-<td>string</td>
+<td>String</td>
 </tr>
 <tr>
 <td>frameworkId</td>
 <td>null</td>
 <td></td>
-<td>string</td>
+<td>String</td>
 </tr>
 <tr>
 <td>frameworkFailoverTimeout</td>
@@ -1536,13 +1554,7 @@
 <tr>
 <td>credentialPrincipal</td>
 <td></td>
-<td>Enable framework auth by setting both this and credentialSecret</td>
-<td>String</td>
-</tr>
-<tr>
-<td>credentialSecret</td>
-<td></td>
-<td>Enable framework auth by setting both this and credentialPrincipal</td>
+<td>Used to enable authorization based on the authenticated principal</td>
 <td>String</td>
 </tr>
 </tbody>

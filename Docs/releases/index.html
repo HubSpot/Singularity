@@ -51,7 +51,7 @@
         data-chapter-title="Releases"
         data-filepath="Docs/releases/index.md"
         data-basepath="../.."
-        data-revision="Wed Feb 21 2018 13:50:38 GMT-0500 (EST)"
+        data-revision="Fri Mar 30 2018 10:50:40 GMT-0400 (EDT)"
         data-innerlanguage="">
     
 
@@ -867,10 +867,13 @@
                     
                         <h1 id="releases">Releases</h1>
 <ul>
+<li><a href="#changes-in-0192">Changes in 0.19.2</a></li>
+<li><a href="#changes-in-0191">Changes in 0.19.1</a></li>
 <li><a href="#changes-in-0190">Changes in 0.19.0</a></li>
 <li><a href="#changes-in-0182">Changes in 0.18.2</a></li>
 <li><a href="#changes-in-0181">Changes in 0.18.1</a></li>
 <li><a href="#changes-in-0180">Changes in 0.18.0</a></li>
+<li><a href="#changes-in-0171">Changes in 0.17.1</a></li>
 <li><a href="#changes-in-0170">Changes in 0.17.0</a></li>
 <li><a href="#changes-in-0162">Changes in 0.16.2</a></li>
 <li><a href="#changes-in-0161">Changes in 0.16.1</a></li>
@@ -900,8 +903,40 @@
 <li><a href="#changes-in-046">Changes in 0.4.6</a></li>
 <li><a href="#changes-in-045">Changes in 0.4.5</a></li>
 </ul>
+<h2 id="changes-in-0192">Changes in <code>0.19.2</code></h2>
+<p>Check out the <a href="https://github.com/HubSpot/Singularity/milestone/37?closed=1" target="_blank">0.19.2 milestone</a> to see new features / bugfixes in detail.</p>
+<h3 id="improvements">Improvements</h3>
+<ul>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1762" target="_blank">1762</a> - Allow deploy of paused requests</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1758" target="_blank">1758</a> - Enable framework auth over http api</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1754" target="_blank">1754</a> - Add an offer scoring mode accounting for max historical usage of all tasks</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1760" target="_blank">1760</a> - Sort tasks to shuffle by overusage, not usage </li>
+</ul>
+<h3 id="bug-fixes">Bug Fixes</h3>
+<ul>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1761" target="_blank">1761</a> - Remove task credit ui calls, no longer used</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1762" target="_blank">1762</a> - Don&apos;t require group overrides for s3 logs listing + allow log level override in docker setup</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1759" target="_blank">1759</a> - Fix duration in logging statement</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1757" target="_blank">1757</a> - Don&apos;t count pending requests towards underprovisioning</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1741" target="_blank">1741</a> - Fix lag banner in UI</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1755" target="_blank">1755</a> - Catch exceptions in offer scoring and log them appropriately</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1748" target="_blank">1748</a> - Permalink request within group</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1751" target="_blank">1751</a> - Limit the number of tasks that can shuffle for cpu rebalance at once</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1752" target="_blank">1752</a> - Clarified command not found exception</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1766" target="_blank">1766</a> - More usage collection in parallel, less webhooks in parallel</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1767" target="_blank">1767</a> - Periodically flush the queue to make sure batch work does not get stuck</li>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1768" target="_blank">1768</a> - Keep track of offers not accounted for in SingularityOfferHolders returned by checkOffers</li>
+</ul>
+<hr>
+<h2 id="changes-in-0191">Changes in <code>0.19.1</code></h2>
+<p><strong><em>This is a bugfix release</em></strong></p>
+<p>Check out the <a href="https://github.com/HubSpot/Singularity/milestone/36?closed=1" target="_blank">0.19.1 milestone</a> to see bugfixes in detail.</p>
+<ul>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1740" target="_blank">1740</a> - Only send healthcheck object from ui when setting all fields</li>
+</ul>
+<hr>
 <h2 id="changes-in-0190">Changes in <code>0.19.0</code></h2>
-<p>Check out the <a href="https://github.com/HubSpot/Singularity/issues?q=milestone%3A%0.19.0+is%3Aclosed" target="_blank">0.19.0 milestone</a> to see new features / bugfixes in detail.</p>
+<p>Check out the <a href="https://github.com/HubSpot/Singularity/milestone/32?closed=1" target="_blank">0.19.0 milestone</a> to see new features / bugfixes in detail.</p>
 <h3 id="new-features">New Features</h3>
 <ul>
 <li><a href="https://github.com/HubSpot/Singularity/pull/1668" target="_blank">1668</a>/<a href="https://github.com/HubSpot/Singularity/pull/1650" target="_blank">1650</a> Adds support for more overrides in run now requests. You can now override items like environment variables for individual runs of a SingularityRequest by <code>POST</code>ing json in the form of a <a href="https://github.com/HubSpot/Singularity/blob/master/SingularityBase/src/main/java/com/hubspot/singularity/api/SingularityRunNowRequest.java" target="_blank"><code>SingularityRunNowRequest</code></a></li>
@@ -1014,6 +1049,13 @@ in the <code>containerInfo.volumes</code> and <code>containerInfo.mesos.image</c
 <li><a href="https://github.com/HubSpot/Singularity/pull/1621" target="_blank">1621</a> - look at new scale request before opting to old request</li>
 <li><a href="https://github.com/HubSpot/Singularity/pull/1642" target="_blank">1642</a> - Shade protobuf for SingularityClient/SingularityBase</li>
 <li><a href="https://github.com/HubSpot/Singularity/pull/1649" target="_blank">1649</a> - Don&apos;t error when ArtifactManager copies duplicate files </li>
+</ul>
+<hr>
+<h2 id="changes-in-0171">Changes in <code>0.17.1</code></h2>
+<p><strong><em>This is a bugfix release</em></strong></p>
+<p>Check out the <a href="https://github.com/HubSpot/Singularity/milestone/36?closed=1" target="_blank">0.17.1 milestone</a> to see bugfixes in detail.</p>
+<ul>
+<li><a href="https://github.com/HubSpot/Singularity/pull/1740" target="_blank">1740</a> - Only send healthcheck object from ui when setting all fields</li>
 </ul>
 <hr>
 <h2 id="changes-in-0170">Changes in <code>0.17.0</code></h2>
