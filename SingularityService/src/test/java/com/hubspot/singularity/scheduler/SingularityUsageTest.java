@@ -605,6 +605,7 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
   public void itLimitsTheNumberOfTaskCleanupsToCreate() {
     try {
       configuration.setShuffleTasksForOverloadedSlaves(true);
+      configuration.setMinutesBeforeNewTaskEligibleForShuffle(0);
       configuration.setMaxTasksToShuffleTotal(1);
 
       initRequest();
