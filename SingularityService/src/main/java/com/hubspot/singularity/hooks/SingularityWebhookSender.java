@@ -7,7 +7,6 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
 import javax.inject.Singleton;
-import javax.ws.rs.HEAD;
 import javax.ws.rs.core.HttpHeaders;
 
 import org.slf4j.Logger;
@@ -112,7 +111,7 @@ public class SingularityWebhookSender {
     int numRequestUpdates = 0;
 
     for (SingularityRequestHistory requestUpdate : requestUpdates) {
-      String concreteUri = webhook.getUri().replaceAll("\\$REQUEST_ID", requestUpdate.getRequest().getId());
+      String concreteUri = applyPlaceholders(webhook.getUri(), requestUpdate);
       webhookFutures.add(webhookSemaphore.call(() ->
           executeWebhookAsync(
               concreteUri,
@@ -130,7 +129,7 @@ public class SingularityWebhookSender {
     int numDeployUpdates = 0;
 
     for (SingularityDeployUpdate deployUpdate : deployUpdates) {
-      String concreteUri = webhook.getUri().replaceAll("\\$DEPLOY_ID", deployUpdate.getDeployMarker().getDeployId());
+      String concreteUri = applyPlaceholders(webhook.getUri(), deployUpdate);
       webhookFutures.add(webhookSemaphore.call(() ->
           executeWebhookAsync(
               concreteUri,
@@ -157,7 +156,7 @@ public class SingularityWebhookSender {
         continue;
       }
 
-      String concreteUri = webhook.getUri().replaceAll("\\$TASK_ID", taskUpdate.getTaskId().getId());
+      String concreteUri = applyPlaceholders(webhook.getUri(), taskUpdate);
       webhookFutures.add(webhookSemaphore.call(() ->
           executeWebhookAsync(
               concreteUri,
@@ -167,6 +166,25 @@ public class SingularityWebhookSender {
     }
 
     return taskUpdates.size();
+  }
+
+  private String applyPlaceholders(String uri, SingularityRequestHistory requestHistory) {
+    return uri
+        .replaceAll("\\$REQUEST_ID", requestHistory.getRequest().getId());
+  }
+
+  private String applyPlaceholders(String uri, SingularityDeployUpdate deployUpdate) {
+    return uri
+        .replaceAll("\\$REQUEST_ID", deployUpdate.getDeployMarker().getRequestId())
+        .replaceAll("\\$DEPLOY_ID", deployUpdate.getDeployMarker().getDeployId());
+  }
+
+  private String applyPlaceholders(String uri, SingularityTaskHistoryUpdate taskUpdate) {
+    return uri
+        .replaceAll("\\$REQUEST_ID", taskUpdate.getTaskId().getRequestId())
+        .replaceAll("\\$DEPLOY_ID", taskUpdate.getTaskId().getDeployId())
+        .replaceAll("\\$TASK_ID", taskUpdate.getTaskId().getId());
+
   }
 
   // TODO handle retries, errors.
