@@ -84,8 +84,6 @@ public class SingularityConfiguration extends Configuration {
 
   private List<String> doNotShuffleRequests = new ArrayList<>();
 
-  //          letTasksRunForMinutesBeforeShuffle?
-  //          shuffleNewlyLaunchedTasksAfterMinutes?
   private int minutesBeforeNewTaskEligibleForShuffle = 15;
 
   private long cleanUsageEveryMillis = TimeUnit.MINUTES.toMillis(5);
