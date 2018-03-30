@@ -40,6 +40,11 @@ Delete any expiring machine state changes for this slave
 | Parameter | Required | Description | Data Type |
 |-----------|----------|-------------|-----------|
 | slaveId | true | Active slaveId | string |
+**body**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| body | false |  | [SingularityUser](models.md#model-linkType)</a> |
 
 ###### Response
 
@@ -63,6 +68,11 @@ Get information about a particular slave
 | Parameter | Required | Description | Data Type |
 |-----------|----------|-------------|-----------|
 | slaveId | true | Slave ID | string |
+**body**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| body | false |  | [SingularityUser](models.md#model-linkType)</a> |
 
 ###### Response
 [SingularitySlave](models.md#model-SingularitySlave)
@@ -131,29 +141,6 @@ Activate a decomissioning slave, canceling decomission without erasing history
 
 
 - - -
-#### **GET** `/api/slaves/slave/{slaveId}`
-
-Retrieve the history of a given slave
-
-
-###### Parameters
-**path**
-
-| Parameter | Required | Description | Data Type |
-|-----------|----------|-------------|-----------|
-| slaveId | true | Slave ID | string |
-
-###### Response
-[List[SingularityMachineStateHistoryUpdate]](models.md#model-SingularityMachineStateHistoryUpdate)
-
-
-###### Errors
-| Status Code | Reason      | Response Model |
-|-------------|-------------|----------------|
-| - | - | - |
-
-
-- - -
 #### **DELETE** `/api/slaves/slave/{slaveId}`
 
 Remove a known slave, erasing history. This operation will cancel decomissioning of the slave
@@ -165,9 +152,42 @@ Remove a known slave, erasing history. This operation will cancel decomissioning
 | Parameter | Required | Description | Data Type |
 |-----------|----------|-------------|-----------|
 | slaveId | true | Active SlaveId | string |
+**body**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| body | false |  | [SingularityUser](models.md#model-linkType)</a> |
 
 ###### Response
 
+
+
+###### Errors
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| - | - | - |
+
+
+- - -
+#### **GET** `/api/slaves/slave/{slaveId}`
+
+Retrieve the history of a given slave
+
+
+###### Parameters
+**path**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| slaveId | true | Slave ID | string |
+**body**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| body | false |  | [SingularityUser](models.md#model-linkType)</a> |
+
+###### Response
+[List[SingularityMachineStateHistoryUpdate]](models.md#model-SingularityMachineStateHistoryUpdate)
 
 
 ###### Errors
@@ -183,7 +203,11 @@ Get all expiring state changes for all slaves
 
 
 ###### Parameters
-- No parameters
+**body**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| body | false |  | [SingularityUser](models.md#model-linkType)</a> |
 
 ###### Response
 [List[SingularityExpiringMachineState]](models.md#model-SingularityExpiringMachineState)
@@ -207,6 +231,11 @@ Retrieve the list of all known slaves, optionally filtering by a particular stat
 | Parameter | Required | Description | Data Type |
 |-----------|----------|-------------|-----------|
 | state | false | Optionally specify a particular state to filter slaves by | string |
+**body**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| body | false |  | [SingularityUser](models.md#model-linkType)</a> |
 
 ###### Response
 [List[SingularitySlave]](models.md#model-SingularitySlave)
