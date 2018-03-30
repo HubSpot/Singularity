@@ -220,7 +220,7 @@ public class SingularityMesosSchedulerImpl extends SingularityMesosScheduler {
 
             leftoverOffers.forEach((o) -> {
               if (cachedOffers.containsKey(o.getId().getValue())) {
-                offerCache.returnOffer(cachedOffers.get(o.getId().getValue()));
+                offerCache.returnOffer(cachedOffers.remove(o.getId().getValue()));
               } else {
                 offerCache.cacheOffer(start, o);
               }
@@ -230,19 +230,22 @@ public class SingularityMesosSchedulerImpl extends SingularityMesosScheduler {
             offersAcceptedFromSlave.removeAll(leftoverOffers);
             offersAcceptedFromSlave.stream()
                 .filter((offer) -> cachedOffers.containsKey(offer.getId().getValue()))
-                .map((o) -> cachedOffers.get(o.getId().getValue()))
+                .map((o) -> cachedOffers.remove(o.getId().getValue()))
                 .forEach(offerCache::useOffer);
             acceptedOffers.addAll(offersAcceptedFromSlave.stream().map(Offer::getId).collect(Collectors.toList()));
           } else {
             offerHolder.getOffers().forEach((o) -> {
               if (cachedOffers.containsKey(o.getId().getValue())) {
-                offerCache.returnOffer(cachedOffers.get(o.getId().getValue()));
+                offerCache.returnOffer(cachedOffers.remove(o.getId().getValue()));
               } else {
                 offerCache.cacheOffer(start, o);
               }
             });
           }
         }
+
+        LOG.info("{} remaining offers not accounted for in offer check", cachedOffers.size());
+        cachedOffers.values().forEach(offerCache::returnOffer);
       } catch (Throwable t) {
         LOG.error("Received fatal error while handling offers - will decline all available offers", t);
 

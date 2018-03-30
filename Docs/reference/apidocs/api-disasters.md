@@ -1,74 +1,17 @@
 #### Overview
 Manages Singularity Deploys for existing requests
 
-#### **POST** `/api/disasters/task-credits`
-
-Add task credits, enables task credit system if not already enabled
-
-
-###### Parameters
-**query**
-
-| Parameter | Required | Description | Data Type |
-|-----------|----------|-------------|-----------|
-| credits | false |  | int |
-
-###### Response
-
-
-
-###### Errors
-| Status Code | Reason      | Response Model |
-|-------------|-------------|----------------|
-| - | - | - |
-
-
-- - -
-#### **DELETE** `/api/disasters/task-credits`
-
-Disable task credit system
-
-
-###### Parameters
-- No parameters
-
-###### Response
-
-
-
-###### Errors
-| Status Code | Reason      | Response Model |
-|-------------|-------------|----------------|
-| - | - | - |
-
-
-- - -
-#### **GET** `/api/disasters/task-credits`
-
-Get task credit data
-
-
-###### Parameters
-- No parameters
-
-###### Response
-[SingularityTaskCredits](models.md#model-SingularityTaskCredits)
-
-
-###### Errors
-| Status Code | Reason      | Response Model |
-|-------------|-------------|----------------|
-| - | - | - |
-
-
-- - -
 #### **GET** `/api/disasters/stats`
 
 Get current data related to disaster detection
 
 
 ###### Parameters
-- No parameters
+**body**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| body | false |  | [SingularityUser](models.md#model-linkType)</a> |
 
 ###### Response
 [SingularityDisastersData](models.md#model-SingularityDisastersData)
@@ -87,7 +30,11 @@ Allow the automated poller to disable actions when a disaster is detected
 
 
 ###### Parameters
-- No parameters
+**body**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| body | false |  | [SingularityUser](models.md#model-linkType)</a> |
 
 ###### Response
 
@@ -139,6 +86,11 @@ Re-enable a specific action if it has been disabled
 | Parameter | Required | Description | Data Type |
 |-----------|----------|-------------|-----------|
 | action | true |  | string |
+**body**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| body | false |  | [SingularityUser](models.md#model-linkType)</a> |
 
 ###### Response
 
@@ -157,7 +109,11 @@ Get a list of actions that are currently disable
 
 
 ###### Parameters
-- No parameters
+**body**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| body | false |  | [SingularityUser](models.md#model-linkType)</a> |
 
 ###### Response
 [List[SingularityDisabledAction]](models.md#model-SingularityDisabledAction)
@@ -176,7 +132,11 @@ Do not allow the automated poller to disable actions when a disaster is detected
 
 
 ###### Parameters
-- No parameters
+**body**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| body | false |  | [SingularityUser](models.md#model-linkType)</a> |
 
 ###### Response
 
@@ -200,6 +160,11 @@ Remove an active disaster (make it inactive)
 | Parameter | Required | Description | Data Type |
 |-----------|----------|-------------|-----------|
 | type | true |  | string |
+**body**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| body | false |  | [SingularityUser](models.md#model-linkType)</a> |
 
 ###### Response
 
@@ -223,6 +188,11 @@ Create a new active disaster
 | Parameter | Required | Description | Data Type |
 |-----------|----------|-------------|-----------|
 | type | true |  | string |
+**body**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| body | false |  | [SingularityUser](models.md#model-linkType)</a> |
 
 ###### Response
 
@@ -241,7 +211,11 @@ Get a list of current active disasters
 
 
 ###### Parameters
-- No parameters
+**body**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| body | false |  | [SingularityUser](models.md#model-linkType)</a> |
 
 ###### Response
 List[string]

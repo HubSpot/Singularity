@@ -76,6 +76,8 @@ public class SingularityConfiguration extends Configuration {
 
   private int usageIntervalSeconds = 5760; // 15 saved each 5760 seconds (96 min) apart is 1 day of usage
 
+  private int maxConcurrentUsageCollections = 15;
+
   private boolean shuffleTasksForOverloadedSlaves = false; // recommended 'true' when oversubscribing cpu for larger clusters
 
   private int maxTasksToShuffleTotal = 6; // Do not allow more than this many shuffle cleanups at once cluster-wide
@@ -330,6 +332,8 @@ public class SingularityConfiguration extends Configuration {
   @JsonProperty("webhookAuth")
   @Valid
   private WebhookAuthConfiguration webhookAuthConfiguration = new WebhookAuthConfiguration();
+
+  private int maxConcurrentWebhooks = 100;
 
   @JsonProperty("auth")
   @NotNull
@@ -1318,6 +1322,14 @@ public class SingularityConfiguration extends Configuration {
     this.webhookAuthConfiguration = webhookAuthConfiguration;
   }
 
+  public int getMaxConcurrentWebhooks() {
+    return maxConcurrentWebhooks;
+  }
+
+  public void setMaxConcurrentWebhooks(int maxConcurrentWebhooks) {
+    this.maxConcurrentWebhooks = maxConcurrentWebhooks;
+  }
+
   public void setLdapConfiguration(LDAPConfiguration ldapConfiguration) {
     this.ldapConfiguration = ldapConfiguration;
   }
@@ -1489,6 +1501,14 @@ public class SingularityConfiguration extends Configuration {
 
   public void setUsageIntervalSeconds(int usageIntervalSeconds) {
     this.usageIntervalSeconds = usageIntervalSeconds;
+  }
+
+  public int getMaxConcurrentUsageCollections() {
+    return maxConcurrentUsageCollections;
+  }
+
+  public void setMaxConcurrentUsageCollections(int maxConcurrentUsageCollections) {
+    this.maxConcurrentUsageCollections = maxConcurrentUsageCollections;
   }
 
   public int getMaxTasksToShufflePerHost() {

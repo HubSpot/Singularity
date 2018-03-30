@@ -40,6 +40,11 @@ Delete/cancel the expiring skipHealthchecks. This makes the skipHealthchecks req
 | Parameter | Required | Description | Data Type |
 |-----------|----------|-------------|-----------|
 | requestId | true | The Request ID | string |
+**body**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| body | false |  | [SingularityUser](models.md#model-linkType)</a> |
 
 ###### Response
 [SingularityRequestParent](models.md#model-SingularityRequestParent)
@@ -119,6 +124,11 @@ Delete/cancel the expiring skipHealthchecks. This makes the skipHealthchecks req
 | Parameter | Required | Description | Data Type |
 |-----------|----------|-------------|-----------|
 | requestId | true | The Request ID | string |
+**body**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| body | false |  | [SingularityUser](models.md#model-linkType)</a> |
 
 ###### Response
 [SingularityRequestParent](models.md#model-SingularityRequestParent)
@@ -170,6 +180,11 @@ Delete/cancel the expiring scale. This makes the scale request permanent.
 | Parameter | Required | Description | Data Type |
 |-----------|----------|-------------|-----------|
 | requestId | true | The Request ID | string |
+**body**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| body | false |  | [SingularityUser](models.md#model-linkType)</a> |
 
 ###### Response
 [SingularityRequestParent](models.md#model-SingularityRequestParent)
@@ -194,6 +209,11 @@ Retrieve an active task by runId
 |-----------|----------|-------------|-----------|
 | requestId | true |  | string |
 | runId | true |  | string |
+**body**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| body | false |  | [SingularityUser](models.md#model-linkType)</a> |
 
 ###### Response
 [SingularityTaskId](models.md#model-SingularityTaskId)
@@ -273,6 +293,11 @@ Delete/cancel the expiring pause. This makes the pause request permanent.
 | Parameter | Required | Description | Data Type |
 |-----------|----------|-------------|-----------|
 | requestId | true | The Request ID | string |
+**body**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| body | false |  | [SingularityUser](models.md#model-linkType)</a> |
 
 ###### Response
 [SingularityRequestParent](models.md#model-SingularityRequestParent)
@@ -282,6 +307,64 @@ Delete/cancel the expiring pause. This makes the pause request permanent.
 | Status Code | Reason      | Response Model |
 |-------------|-------------|----------------|
 | 404    | No Request or expiring pause request for that ID | - |
+
+
+- - -
+#### **POST** `/api/requests/request/{requestId}/groups/auth-check`
+
+Check authorization for updating the group, readOnlyGroups, and readWriteGroups for a SingularityReques, without commiting the change
+
+
+###### Parameters
+**path**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| requestId | true |  | string |
+**body**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| body | false | Updated groups | [SingularityUpdateGroupsRequest](models.md#model-linkType)</a> |
+
+###### Response
+
+
+
+###### Errors
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| 200    | User is authorized to make these changes | - |
+| 401    | User is not authorized to make these updates | - |
+
+
+- - -
+#### **POST** `/api/requests/request/{requestId}/groups`
+
+Update the group, readOnlyGroups, and readWriteGroups for a SingularityRequest
+
+
+###### Parameters
+**path**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| requestId | true |  | string |
+**body**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| body | false | Updated groups | [SingularityUpdateGroupsRequest](models.md#model-linkType)</a> |
+
+###### Response
+[SingularityRequestParent](models.md#model-SingularityRequestParent)
+
+
+###### Errors
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| 400    | Request object is invalid | - |
+| 401    | User is not authorized to make these updates | - |
 
 
 - - -
@@ -352,6 +435,11 @@ Delete/cancel the expiring bounce. This makes the bounce request permanent.
 | Parameter | Required | Description | Data Type |
 |-----------|----------|-------------|-----------|
 | requestId | true | The Request ID | string |
+**body**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| body | false |  | [SingularityUser](models.md#model-linkType)</a> |
 
 ###### Response
 [SingularityRequestParent](models.md#model-SingularityRequestParent)
@@ -380,6 +468,11 @@ Retrieve a specific Request by ID
 | Parameter | Required | Description | Data Type |
 |-----------|----------|-------------|-----------|
 | useWebCache | false |  | boolean |
+**body**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| body | false |  | [SingularityUser](models.md#model-linkType)</a> |
 
 ###### Response
 [SingularityRequestParent](models.md#model-SingularityRequestParent)
@@ -426,7 +519,11 @@ Retrieve the list of pending requests
 
 
 ###### Parameters
-- No parameters
+**body**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| body | false |  | [SingularityUser](models.md#model-linkType)</a> |
 
 ###### Response
 [List[SingularityPendingRequest]](models.md#model-SingularityPendingRequest)
@@ -445,7 +542,11 @@ Retrieve the list of requests being cleaned up
 
 
 ###### Parameters
-- No parameters
+**body**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| body | false |  | [SingularityUser](models.md#model-linkType)</a> |
 
 ###### Response
 [List[SingularityRequestCleanup]](models.md#model-SingularityRequestCleanup)
@@ -469,6 +570,15 @@ Retrieve the list of paused requests
 | Parameter | Required | Description | Data Type |
 |-----------|----------|-------------|-----------|
 | useWebCache | false |  | boolean |
+| filterRelevantForUser | false |  | boolean |
+| includeFullRequestData | false |  | boolean |
+| limit | false |  | int |
+| requestType | false |  | List[string] |
+**body**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| body | false |  | [SingularityUser](models.md#model-linkType)</a> |
 
 ###### Response
 [List[SingularityRequestParent]](models.md#model-SingularityRequestParent)
@@ -492,6 +602,11 @@ Retrieve the list of tasks being cleaned from load balancers.
 | Parameter | Required | Description | Data Type |
 |-----------|----------|-------------|-----------|
 | useWebCache | false |  | boolean |
+**body**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| body | false |  | [SingularityUser](models.md#model-linkType)</a> |
 
 ###### Response
 [UNKNOWN[string]](models.md#model-UNKNOWN[string])
@@ -515,6 +630,15 @@ Retreive the list of finished requests (Scheduled requests which have exhausted 
 | Parameter | Required | Description | Data Type |
 |-----------|----------|-------------|-----------|
 | useWebCache | false |  | boolean |
+| filterRelevantForUser | false |  | boolean |
+| includeFullRequestData | false |  | boolean |
+| limit | false |  | int |
+| requestType | false |  | List[string] |
+**body**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| body | false |  | [SingularityUser](models.md#model-linkType)</a> |
 
 ###### Response
 [List[SingularityRequestParent]](models.md#model-SingularityRequestParent)
@@ -538,6 +662,15 @@ Retrieve the list of requests in system cooldown
 | Parameter | Required | Description | Data Type |
 |-----------|----------|-------------|-----------|
 | useWebCache | false |  | boolean |
+| filterRelevantForUser | false |  | boolean |
+| includeFullRequestData | false |  | boolean |
+| limit | false |  | int |
+| requestType | false |  | List[string] |
+**body**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| body | false |  | [SingularityUser](models.md#model-linkType)</a> |
 
 ###### Response
 [List[SingularityRequestParent]](models.md#model-SingularityRequestParent)
@@ -561,6 +694,15 @@ Retrieve the list of active requests
 | Parameter | Required | Description | Data Type |
 |-----------|----------|-------------|-----------|
 | useWebCache | false |  | boolean |
+| filterRelevantForUser | false |  | boolean |
+| includeFullRequestData | false |  | boolean |
+| limit | false |  | int |
+| requestType | false |  | List[string] |
+**body**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| body | false |  | [SingularityUser](models.md#model-linkType)</a> |
 
 ###### Response
 [List[SingularityRequestParent]](models.md#model-SingularityRequestParent)
@@ -584,6 +726,15 @@ Retrieve the list of all requests
 | Parameter | Required | Description | Data Type |
 |-----------|----------|-------------|-----------|
 | useWebCache | false |  | boolean |
+| filterRelevantForUser | false |  | boolean |
+| includeFullRequestData | false |  | boolean |
+| limit | false |  | int |
+| requestType | false |  | List[string] |
+**body**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| body | false |  | [SingularityUser](models.md#model-linkType)</a> |
 
 ###### Response
 [List[SingularityRequestParent]](models.md#model-SingularityRequestParent)
