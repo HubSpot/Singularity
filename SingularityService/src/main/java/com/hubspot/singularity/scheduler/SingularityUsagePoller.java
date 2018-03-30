@@ -282,11 +282,14 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
 
   private boolean isEligibleForShuffle(SingularityTaskId task) {
     Optional<SingularityTaskHistoryUpdate> taskRunning = taskManager.getTaskHistoryUpdate(task, ExtendedTaskState.TASK_RUNNING);
+
     return (
-        taskRunning.isPresent()
-            && !configuration.getDoNotShuffleRequests().contains(task.getRequestId())
+        !configuration.getDoNotShuffleRequests().contains(task.getRequestId())
             && isLongRunning(task)
-            && (TimeUnit.MILLISECONDS.toMinutes(System.currentTimeMillis() - taskRunning.get().getTimestamp()) > configuration.getMinutesBeforeNewTaskEligibleForShuffle())
+            && (
+            configuration.getMinutesBeforeNewTaskEligibleForShuffle() == 0 // Shuffle delay is disabled entirely
+                || (taskRunning.isPresent() && TimeUnit.MILLISECONDS.toMinutes(System.currentTimeMillis() - taskRunning.get().getTimestamp()) >= configuration.getMinutesBeforeNewTaskEligibleForShuffle())
+        )
     );
   }
 
