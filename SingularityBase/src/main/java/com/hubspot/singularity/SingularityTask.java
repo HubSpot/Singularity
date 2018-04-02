@@ -9,13 +9,15 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
+import com.hubspot.mesos.protos.MesosOfferObject;
 import com.hubspot.mesos.protos.MesosRangeObject;
 import com.hubspot.mesos.protos.MesosResourceObject;
 import com.hubspot.mesos.protos.MesosStringValue;
-import com.hubspot.mesos.protos.MesosOfferObject;
 import com.hubspot.mesos.protos.MesosTaskObject;
-import com.wordnik.swagger.annotations.ApiModelProperty;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
+@Schema(description = "Describes a singularity task")
 public class SingularityTask extends SingularityTaskIdHolder {
 
   private final SingularityTaskRequest taskRequest;
@@ -46,6 +48,7 @@ public class SingularityTask extends SingularityTaskIdHolder {
     }
   }
 
+  @Schema(description = "The full request, deploy, and pending task data used to launch this tasl")
   public SingularityTaskRequest getTaskRequest() {
     return taskRequest;
   }
@@ -54,21 +57,22 @@ public class SingularityTask extends SingularityTaskIdHolder {
    * Use getOffers instead. getOffer will currently return the first offer in getOffers
    */
   @Deprecated
-  @ApiModelProperty(hidden=true)
+  @Schema(hidden=true, title = "The offer used to launch this task")
   public MesosOfferObject getOffer() {
     return offers.get(0);
   }
 
-  @ApiModelProperty(hidden=true)
+  @Schema(hidden=true, title = "The list of offers used to launch this task")
   public List<MesosOfferObject> getOffers() {
     return offers;
   }
 
-  @ApiModelProperty(hidden=true)
+  @Schema(hidden=true, title = "The full mesos task definition (from the mesos protos)")
   public MesosTaskObject getMesosTask() {
     return mesosTask;
   }
 
+  @Schema(description = "The id of the rack where this task was launched")
   public Optional<String> getRackId() {
     return rackId;
   }

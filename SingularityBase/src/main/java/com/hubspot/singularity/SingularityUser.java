@@ -11,6 +11,9 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
+@Schema(description = "Information about a user")
 public class SingularityUser implements Principal {
   private final String id;
   private final Optional<String> name;
@@ -37,22 +40,27 @@ public class SingularityUser implements Principal {
     this.authenticated = authenticated;
   }
 
+  @Schema(description = "The user's id")
   public String getId() {
     return id;
   }
 
+  @Schema(description = "The user's name, or id if name not specified")
   public String getName() {
     return name.or(id);
   }
 
+  @Schema(description = "The user's email", nullable = true)
   public Optional<String> getEmail() {
     return email;
   }
 
+  @Schema(description = "Groups this user is a part of")
   public Set<String> getGroups() {
     return groups;
   }
 
+  @Schema(description = "True if the user was successfully authenticated")
   public boolean isAuthenticated() {
     return authenticated;
   }

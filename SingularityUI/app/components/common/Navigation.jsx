@@ -96,7 +96,7 @@ const Navigation = (props) => {
                 <li><Link to="/task-search">Task Search</Link></li>
               </ul>
             </li>
-            <li><a href={config.apiDocs}>API Docs <small>(Beta)</small></a></li>
+            <li><Link to="/api-docs">API Docs</Link></li>
             <li>
               <a href="#" onClick={(event) => handleSearchClick(event, props.toggleGlobalSearch)}>
                 <Glyphicon glyph="search" />

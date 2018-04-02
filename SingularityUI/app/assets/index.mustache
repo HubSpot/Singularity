@@ -14,10 +14,10 @@
     {{/isDebug}}
 
     <script>
+        window.noZensmooth = true
         window.config = {
             staticRoot: "{{{staticRoot}}}",
             appRoot: "{{{appRoot}}}",
-            apiDocs: "{{{apiDocs}}}",
             apiRoot: localStorage.getItem("apiRootOverride") || "{{{apiRoot}}}",
             title: "{{{title}}}",
             hideNewDeployButton: {{{hideNewDeployButton}}},

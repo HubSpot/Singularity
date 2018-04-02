@@ -3,10 +3,11 @@ package com.hubspot.deploy;
 import java.util.Objects;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.google.common.base.Optional;
 
-@JsonIgnoreProperties(ignoreUnknown = true)
+import io.swagger.v3.oas.annotations.media.Schema;
+
+@Schema(description = "Represents an artifact for a task")
 public abstract class Artifact {
 
   private final String name;
@@ -21,10 +22,12 @@ public abstract class Artifact {
     this.targetFolderRelativeToTask = targetFolderRelativeToTask;
   }
 
+  @Schema(description = "Name of the artifact")
   public String getName() {
     return name;
   }
 
+  @Schema(description = "Name of the file")
   public String getFilename() {
     return filename;
   }
@@ -38,10 +41,12 @@ public abstract class Artifact {
     }
   }
 
+  @Schema(description = "md5 sum of the file", nullable = true)
   public Optional<String> getMd5sum() {
     return md5sum;
   }
 
+  @Schema(description = "Target folder for the file, relative to the task sandbox directory")
   public Optional<String> getTargetFolderRelativeToTask() {
     return targetFolderRelativeToTask;
   }

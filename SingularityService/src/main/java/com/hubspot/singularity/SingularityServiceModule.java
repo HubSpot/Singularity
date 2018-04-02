@@ -16,6 +16,7 @@ import com.hubspot.singularity.data.zkmigrations.SingularityZkMigrationsModule;
 import com.hubspot.singularity.event.SingularityEventModule;
 import com.hubspot.singularity.jersey.SingularityJerseyModule;
 import com.hubspot.singularity.mesos.SingularityMesosModule;
+import com.hubspot.singularity.resources.SingularityOpenApiResource;
 import com.hubspot.singularity.resources.SingularityResourceModule;
 import com.hubspot.singularity.scheduler.SingularitySchedulerModule;
 import com.palominolabs.metrics.guice.MetricsInstrumentationModule;
@@ -36,6 +37,9 @@ public class SingularityServiceModule extends DropwizardAwareModule<SingularityC
     binder.install(new SingularityZkMigrationsModule());
     binder.install(new SingularityMesosClientModule());
     binder.install(new SingularityJerseyModule());
+
+    // API Docs
+    getEnvironment().jersey().register(SingularityOpenApiResource.class);
 
     binder.install(new SingularityEventModule(getConfiguration()));
   }

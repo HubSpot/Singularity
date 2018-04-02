@@ -6,6 +6,9 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
+@Schema(description = "A portion of a file from a task sandbox")
 public class MesosFileChunkObject {
   private final String data;
   private final long offset;
@@ -18,14 +21,17 @@ public class MesosFileChunkObject {
     this.nextOffset = nextOffset;
   }
 
+  @Schema(description = "Content of this portion of the file")
   public String getData() {
     return data;
   }
 
+  @Schema(description = "Offset in bytes of this content")
   public long getOffset() {
     return offset;
   }
 
+  @Schema(description = "The next offset to fetch to continue from the end of the content in this object", nullable = true)
   public Optional<Long> getNextOffset() {
     return nextOffset;
   }

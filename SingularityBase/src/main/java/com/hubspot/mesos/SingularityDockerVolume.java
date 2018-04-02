@@ -9,9 +9,11 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.annotations.Beta;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Optional;
-import com.wordnik.swagger.annotations.ApiModelProperty;
+
+import io.swagger.v3.oas.annotations.media.Schema;
 
 @Beta
+@Schema(description = "Describes a volume to be mounted in a docker container")
 public class SingularityDockerVolume {
     private final Optional<String> driver, name;
     private final Map<String, String> driverOptions;
@@ -27,17 +29,17 @@ public class SingularityDockerVolume {
         this.driverOptions = MoreObjects.firstNonNull(driverOptions, Collections.emptyMap());
     }
 
-    @ApiModelProperty(required=false, value="Docker volume driver name")
+    @Schema(description = "Docker volume driver name")
     public Optional<String> getDriver() {
         return driver;
     }
 
-    @ApiModelProperty(required=false, value="Volume name '%i' will be replaced with the instance index")
+    @Schema(description = "Volume name '%i' will be replaced with the instance index")
     public Optional<String> getName() {
         return name;
     }
 
-    @ApiModelProperty(required=false, value="Volume driver options")
+    @Schema(description = "Volume driver options")
     public Map<String, String> getDriverOptions() {
         return driverOptions;
     }

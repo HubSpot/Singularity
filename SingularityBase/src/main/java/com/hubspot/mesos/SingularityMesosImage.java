@@ -7,9 +7,11 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.annotations.Beta;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Optional;
-import com.wordnik.swagger.annotations.ApiModelProperty;
+
+import io.swagger.v3.oas.annotations.media.Schema;
 
 @Beta
+@Schema(description = "Describes a container image to be launched in mesos")
 public class SingularityMesosImage {
   private final SingularityMesosImageType type;
   private final Optional<SingularityAppcImage> appc;
@@ -18,33 +20,33 @@ public class SingularityMesosImage {
 
   @JsonCreator
   public SingularityMesosImage(@JsonProperty("type") SingularityMesosImageType type,
-      @JsonProperty("appc") Optional<SingularityAppcImage> appc,
-      @JsonProperty("docker") Optional<SingularityDockerImage> docker,
-      @JsonProperty("cached") Boolean cached) {
+                               @JsonProperty("appc") Optional<SingularityAppcImage> appc,
+                               @JsonProperty("docker") Optional<SingularityDockerImage> docker,
+                               @JsonProperty("cached") Boolean cached) {
     this.type = type;
     this.appc = appc;
     this.docker = docker;
     this.cached = MoreObjects.firstNonNull(cached, true);
   }
 
-  @ApiModelProperty(required=true, value="Mesos image type")
+  @Schema(required = true, description = "Mesos image type")
   public SingularityMesosImageType getType() {
     return type;
   }
 
-  @ApiModelProperty(required=false, value="Appc image configuration")
+  @Schema(description = "Appc image configuration")
   public Optional<SingularityAppcImage> getAppc()
   {
     return appc;
   }
 
-  @ApiModelProperty(required=false, value="Docker image configuration")
+  @Schema(description = "Docker image configuration")
   public Optional<SingularityDockerImage> getDocker()
   {
     return docker;
   }
 
-  @ApiModelProperty(required=false, value="Determines if a cached image is considered up to date")
+  @Schema(description = "Determines if a cached image is considered up to date")
   public boolean isCached()
   {
     return cached;

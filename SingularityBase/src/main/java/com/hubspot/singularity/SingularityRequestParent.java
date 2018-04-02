@@ -8,6 +8,9 @@ import com.hubspot.singularity.expiring.SingularityExpiringPause;
 import com.hubspot.singularity.expiring.SingularityExpiringScale;
 import com.hubspot.singularity.expiring.SingularityExpiringSkipHealthchecks;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
+@Schema(description = "Holds a SingularityRequest and its current state")
 public class SingularityRequestParent {
 
   private final SingularityRequest request;
@@ -62,54 +65,67 @@ public class SingularityRequestParent {
   }
 
 
+  @Schema(description = "Current state of the request")
   public RequestState getState() {
     return state;
   }
 
+  @Schema(description = "Full data for the request, a parent object for any deployed task")
   public SingularityRequest getRequest() {
     return request;
   }
 
+  @Schema(description = "Data about any active and/or pending deploys for this request", nullable = true)
   public Optional<SingularityRequestDeployState> getRequestDeployState() {
     return requestDeployState;
   }
 
+  @Schema(description = "Settings for the active deploy, may not contain the full deploy json", nullable = true)
   public Optional<SingularityDeploy> getActiveDeploy() {
     return activeDeploy;
   }
 
+  @Schema(description = "Settings for a pending/in-progress deploy, may not contain the full deploy json", nullable = true)
   public Optional<SingularityDeploy> getPendingDeploy() {
     return pendingDeploy;
   }
 
+  @Schema(description = "State of the pending deploy if one is present", nullable = true)
   public Optional<SingularityPendingDeploy> getPendingDeployState() {
     return pendingDeployState;
   }
 
+  @Schema(description = "Expiring bounce action details if one is active", nullable = true)
   public Optional<SingularityExpiringBounce> getExpiringBounce() {
     return expiringBounce;
   }
 
+  @Schema(description = "Details about an expiring pause if one is present", nullable = true)
   public Optional<SingularityExpiringPause> getExpiringPause() {
     return expiringPause;
   }
 
+  @Schema(description = "Details about a scale action that will eventually revert, if one is present", nullable = true)
   public Optional<SingularityExpiringScale> getExpiringScale() {
     return expiringScale;
   }
 
+  @Schema(description = "Details about a skip healthchecks action that will eventually revert", nullable = true)
   public Optional<SingularityExpiringSkipHealthchecks> getExpiringSkipHealthchecks() {
     return expiringSkipHealthchecks;
   }
 
+  @Schema(description = "A list of active and pending task ids, separated by status", nullable = true)
   public Optional<SingularityTaskIdsByStatus> getTaskIds() {
     return taskIds;
   }
 
+  @Schema(description = "The most recent historical update to this request", nullable = true)
   public Optional<SingularityRequestHistory> getLastHistory() {
     return lastHistory;
   }
 
+  @Schema(description = "The most recent completed task for this request", nullable = true)
   public Optional<SingularityTaskIdHistory> getMostRecentTask() {
     return mostRecentTask;
   }

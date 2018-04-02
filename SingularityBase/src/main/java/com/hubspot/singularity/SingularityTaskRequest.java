@@ -5,6 +5,9 @@ import java.util.Objects;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
+@Schema(description = "Describes a task that is waiting to be launched")
 public class SingularityTaskRequest implements Comparable<SingularityTaskRequest> {
 
   private final SingularityRequest request;
@@ -18,14 +21,17 @@ public class SingularityTaskRequest implements Comparable<SingularityTaskRequest
     this.pendingTask = pendingTask;
   }
 
+  @Schema(description = "The SingularityRequest data used at the time this task was launched")
   public SingularityRequest getRequest() {
     return request;
   }
 
+  @Schema(description = "The full SingularityDeploy data associated with this task")
   public SingularityDeploy getDeploy() {
     return deploy;
   }
 
+  @Schema(description = "Overrides and settings associated with this particular task")
   public SingularityPendingTask getPendingTask() {
     return pendingTask;
   }

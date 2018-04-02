@@ -7,7 +7,10 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.annotations.Beta;
 import com.google.common.base.Optional;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
 @Beta
+@Schema(description = "Represents a volume to be mounted into a docker container")
 public class SingularityVolume {
   private final String containerPath;
   private final Optional<String> hostPath;
@@ -33,18 +36,22 @@ public class SingularityVolume {
     this.source = source;
   }
 
+  @Schema(description = "The path within the container")
   public String getContainerPath() {
     return containerPath;
   }
 
+  @Schema(description = "The path on on the host")
   public Optional<String> getHostPath() {
     return hostPath;
   }
 
+  @Schema(description = "Read write or read only mode")
   public Optional<SingularityDockerVolumeMode> getMode() {
     return mode;
   }
 
+  @Schema(description = "Volume source")
   public Optional<SingularityVolumeSource> getSource()
   {
     return source;
