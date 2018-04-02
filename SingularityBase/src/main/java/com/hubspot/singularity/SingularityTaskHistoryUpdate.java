@@ -2,8 +2,8 @@ package com.hubspot.singularity;
 
 import java.util.Collections;
 import java.util.HashSet;
-import java.util.Set;
 import java.util.Objects;
+import java.util.Set;
 
 import javax.annotation.Nonnull;
 
@@ -148,7 +148,8 @@ public class SingularityTaskHistoryUpdate extends SingularityTaskIdHolder implem
     return statusReason;
   }
 
-  @Schema(description = "A list of task history updates of the same state. For example, multiple cleanups can be created for the same task")
+  // Swagger can't seem to handle the self reference here
+  // @Schema(description = "A list of task history updates of the same state. For example, multiple cleanups can be created for the same task")
   public Set<SingularityTaskHistoryUpdate> getPrevious() {
     return previous;
   }
