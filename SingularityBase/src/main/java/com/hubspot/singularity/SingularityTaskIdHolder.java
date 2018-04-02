@@ -10,7 +10,8 @@ import io.swagger.v3.oas.annotations.media.Schema;
     title = "Holder for a SingularityTaskId",
     subTypes = {
         SingularityTaskMetadata.class,
-        SingularityTaskHealthcheckResult.class
+        SingularityTaskHealthcheckResult.class,
+        SingularityTaskHistoryUpdate.class
     }
 )
 public class SingularityTaskIdHolder {
