@@ -11,8 +11,8 @@
   <artifactId>SingularityUI</artifactId>
 
   <properties>
-    <nodeVersion>v6.2.1</nodeVersion>
-    <npmVersion>3.9.3</npmVersion>
+    <nodeVersion>v6.9.1</nodeVersion>
+    <npmVersion>3.10.8</npmVersion>
   </properties>
 
   <profiles>
