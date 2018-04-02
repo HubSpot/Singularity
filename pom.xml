@@ -66,6 +66,7 @@
     <dep.netty.version>4.1.22.Final</dep.netty.version>
     <dep.protobuf.version>2.6.1</dep.protobuf.version>
     <dep.reflections.version>0.9.11</dep.reflections.version>
+    <dep.swagger.version>2.0.0</dep.swagger.version>
 
     <dropwizard.guicier.version>1.0.6.0</dropwizard.guicier.version>
     <horizon.version>0.0.25</horizon.version>
@@ -313,7 +314,7 @@
       <dependency>
         <groupId>io.swagger.core.v3</groupId>
         <artifactId>swagger-annotations</artifactId>
-        <version>2.0.0-rc4</version>
+        <version>${dep.swagger.version}</version>
         <exclusions>
           <exclusion>
             <groupId>org.slf4j</groupId>
@@ -325,7 +326,7 @@
       <dependency>
         <groupId>io.swagger.core.v3</groupId>
         <artifactId>swagger-core</artifactId>
-        <version>2.0.0-rc4</version>
+        <version>${dep.swagger.version}</version>
         <exclusions>
           <exclusion>
             <groupId>org.slf4j</groupId>
@@ -337,7 +338,7 @@
       <dependency>
         <groupId>io.swagger.core.v3</groupId>
         <artifactId>swagger-jaxrs2</artifactId>
-        <version>2.0.0-rc4</version>
+        <version>${dep.swagger.version}</version>
         <exclusions>
           <exclusion>
             <groupId>org.slf4j</groupId>
