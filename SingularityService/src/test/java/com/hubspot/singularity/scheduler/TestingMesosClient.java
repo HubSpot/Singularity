@@ -15,13 +15,19 @@ import com.hubspot.mesos.json.MesosTaskMonitorObject;
 public class TestingMesosClient implements MesosClient {
 
   private Map<String, List<MesosTaskMonitorObject>> slaveResourceUsage;
+  private Map<String, MesosSlaveMetricsSnapshotObject> slaveMetrics;
 
   public TestingMesosClient() {
     this.slaveResourceUsage = new HashMap<>();
+    this.slaveMetrics = new HashMap<>();
   }
 
   public void setSlaveResourceUsage(String hostname, List<MesosTaskMonitorObject> taskMonitorObjects) {
     slaveResourceUsage.put(hostname, taskMonitorObjects);
+  }
+
+  public void setSlaveMetricsSnapshot(String hostname, MesosSlaveMetricsSnapshotObject snapshotObject) {
+    slaveMetrics.put(hostname, snapshotObject);
   }
 
   @Override
@@ -46,7 +52,7 @@ public class TestingMesosClient implements MesosClient {
 
   @Override
   public MesosSlaveMetricsSnapshotObject getSlaveMetricsSnapshot(String hostname) {
-    return null;
+    return slaveMetrics.get(hostname);
   }
 
   @Override
@@ -61,10 +67,7 @@ public class TestingMesosClient implements MesosClient {
 
   @Override
   public List<MesosTaskMonitorObject> getSlaveResourceUsage(String hostname) {
-    if (!slaveResourceUsage.containsKey(hostname)) {
-      return Collections.emptyList();
-    }
-    return slaveResourceUsage.get(hostname);
+    return slaveResourceUsage.getOrDefault(hostname, Collections.emptyList());
   }
 
 }

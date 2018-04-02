@@ -29,6 +29,7 @@ args+=( -Ddw.ui.baseUrl="${SINGULARITY_UI_BASE:=/singularity}" )
 [[ ! ${SINGULARITY_DB_PASSWORD:-} ]] || args+=( -Ddw.database.password="${SINGULARITY_DB_PASSWORD}" )
 [[ ! ${SINGULARITY_DB_URL:-} ]] || args+=( -Ddw.database.url="${SINGULARITY_DB_URL}" -Ddw.database.driverClass="${SINGULARITY_DB_DRIVER_CLASS:-com.mysql.jdbc.Driver}" )
 [[ ! ${SINGULARITY_HOSTNAME:-} ]] || args+=( -Ddw.hostname="${SINGULARITY_HOSTNAME}" )
+[[ ! ${DW_LOG_LEVEL:-} ]] || args+=( -Ddw.logging.level="${DW_LOG_LEVEL}" )
 
 # SMTP
 [[ ! ${SINGULARITY_SMTP_USERNAME:-} ]] || args+=( -Ddw.smtp.username="${SINGULARITY_SMTP_USERNAME}" )

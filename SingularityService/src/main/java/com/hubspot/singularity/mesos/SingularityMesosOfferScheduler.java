@@ -7,8 +7,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -20,12 +23,14 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Inject;
 import com.hubspot.mesos.Resources;
 import com.hubspot.singularity.RequestType;
 import com.hubspot.singularity.RequestUtilization;
 import com.hubspot.singularity.SingularityDeployStatistics;
 import com.hubspot.singularity.SingularityPendingTaskId;
+import com.hubspot.singularity.SingularitySlaveUsage;
 import com.hubspot.singularity.SingularitySlaveUsage.ResourceUsageType;
 import com.hubspot.singularity.SingularitySlaveUsageWithId;
 import com.hubspot.singularity.SingularityTask;
@@ -42,6 +47,7 @@ import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.data.UsageManager;
 import com.hubspot.singularity.helpers.MesosUtils;
 import com.hubspot.singularity.helpers.SingularityMesosTaskHolder;
+import com.hubspot.singularity.mesos.SingularitySlaveUsageWithCalculatedScores.MaxProbableUsage;
 import com.hubspot.singularity.scheduler.SingularityLeaderCache;
 import com.hubspot.singularity.scheduler.SingularityScheduler;
 
@@ -56,6 +62,7 @@ public class SingularityMesosOfferScheduler {
   private final SingularityMesosTaskPrioritizer taskPrioritizer;
   private final SingularityScheduler scheduler;
   private final SingularityConfiguration configuration;
+  private final MesosConfiguration mesosConfiguration;
   private final SingularityMesosTaskBuilder mesosTaskBuilder;
   private final SingularitySlaveAndRackManager slaveAndRackManager;
   private final SingularitySlaveAndRackHelper slaveAndRackHelper;
@@ -73,6 +80,7 @@ public class SingularityMesosOfferScheduler {
   private final double normalizedDiskUsedWeight;
 
   private final AsyncSemaphore<Void> offerScoringSemaphore;
+  private final ExecutorService offerScoringExecutor;
 
   @Inject
   public SingularityMesosOfferScheduler(MesosConfiguration mesosConfiguration,
@@ -94,6 +102,7 @@ public class SingularityMesosOfferScheduler {
     this.taskManager = taskManager;
     this.scheduler = scheduler;
     this.configuration = configuration;
+    this.mesosConfiguration = mesosConfiguration;
     this.mesosTaskBuilder = mesosTaskBuilder;
     this.slaveAndRackManager = slaveAndRackManager;
     this.taskSizeOptimizer = taskSizeOptimizer;
@@ -111,7 +120,8 @@ public class SingularityMesosOfferScheduler {
     this.normalizedDiskFreeWeight = getNormalizedWeight(ResourceUsageType.DISK_BYTES_FREE, configuration);
     this.normalizedDiskUsedWeight = getNormalizedWeight(ResourceUsageType.DISK_BYTES_USED, configuration);
 
-    this.offerScoringSemaphore = AsyncSemaphore.newBuilder(mesosConfiguration::getOffersConcurrencyLimit).build();
+    this.offerScoringSemaphore = AsyncSemaphore.newBuilder(mesosConfiguration::getOffersConcurrencyLimit).setFlushQueuePeriodically(true).build();
+    this.offerScoringExecutor = Executors.newCachedThreadPool(new ThreadFactoryBuilder().setNameFormat("offer-scoring-%d").build());
   }
 
   private static double getNormalizedWeight(ResourceUsageType type, SingularityConfiguration configuration) {
@@ -180,6 +190,9 @@ public class SingularityMesosOfferScheduler {
     }
 
     final AtomicInteger tasksScheduled = new AtomicInteger(0);
+    Map<String, RequestUtilization> requestUtilizations = usageManager.getRequestUtilizations();
+    List<SingularityTaskId> activeTaskIds = taskManager.getActiveTaskIds();
+
     final Map<String, SingularitySlaveUsageWithCalculatedScores> currentSlaveUsagesBySlaveId = usageManager.getCurrentSlaveUsages(
         offerHolders.values()
             .stream()
@@ -188,13 +201,15 @@ public class SingularityMesosOfferScheduler {
         .parallelStream()
         .collect(Collectors.toMap(
             SingularitySlaveUsageWithId::getSlaveId,
-            (usageWithId) -> new SingularitySlaveUsageWithCalculatedScores(usageWithId, configuration.getMesosConfiguration().getScoringStrategy(), configuration.getMesosConfiguration().getScoreUsingSystemLoad())
+            (usageWithId) -> new SingularitySlaveUsageWithCalculatedScores(
+                  usageWithId,
+                  configuration.getMesosConfiguration().getScoringStrategy(),
+                  configuration.getMesosConfiguration().getScoreUsingSystemLoad(),
+                  getMaxProbableUsageForSlave(activeTaskIds, requestUtilizations, offerHolders.get(usageWithId.getSlaveId()).getSanitizedHost())
+            )
         ));
 
     LOG.trace("Found slave usages {}", currentSlaveUsagesBySlaveId);
-
-    Map<String, RequestUtilization> requestUtilizations = usageManager.getRequestUtilizations();
-
 
     Map<String, Integer> tasksPerOfferHost = new ConcurrentHashMap<>();
 
@@ -204,18 +219,35 @@ public class SingularityMesosOfferScheduler {
         List<SingularityTaskId> activeTaskIdsForRequest = leaderCache.getActiveTaskIdsForRequest(taskRequestHolder.getTaskRequest().getRequest().getId());
 
         List<CompletableFuture<Void>> scoringFutures = new ArrayList<>();
+        AtomicReference<Throwable> scoringException = new AtomicReference<>(null);
         for (SingularityOfferHolder offerHolder : offerHolders.values()) {
           if (!isOfferFull(offerHolder)) {
-            scoringFutures.add(offerScoringSemaphore.call(() -> CompletableFuture.runAsync(() -> {
-              double score = calculateScore(offerHolder, currentSlaveUsagesBySlaveId, tasksPerOfferHost, taskRequestHolder, activeTaskIdsForRequest);
-              if (score != 0) {
-                scorePerOffer.put(offerHolder.getSlaveId(), score);
-              }
-            })));
+            scoringFutures.add(
+                offerScoringSemaphore.call(
+                    () -> CompletableFuture.runAsync(() -> {
+                          try {
+                            double score = calculateScore(offerHolder, currentSlaveUsagesBySlaveId, tasksPerOfferHost, taskRequestHolder, activeTaskIdsForRequest);
+                            if (score != 0) {
+                              scorePerOffer.put(offerHolder.getSlaveId(), score);
+                            }
+                          } catch (Throwable t) {
+                            LOG.error("Uncaught exception while scoring offers", t);
+                            scoringException.set(t);
+                          }
+                        },
+                        offerScoringExecutor
+                    )));
           }
         }
 
         CompletableFutures.allOf(scoringFutures).join();
+
+        if (scoringException.get() != null) {
+          LOG.warn("Exception caught in offer scoring futures, semaphore info: (concurrentRequests: {}, queueSize: {})",
+              offerScoringSemaphore.getConcurrentRequests(), offerScoringSemaphore.getQueueSize());
+          // This will be caught by either the LeaderOnlyPoller or resourceOffers uncaught exception code, causing an abort
+          throw new RuntimeException(scoringException.get());
+        }
 
         if (!scorePerOffer.isEmpty()) {
           SingularityOfferHolder bestOffer = offerHolders.get(Collections.max(scorePerOffer.entrySet(), Map.Entry.comparingByValue()).getKey());
@@ -231,6 +263,34 @@ public class SingularityMesosOfferScheduler {
     LOG.info("{} tasks scheduled, {} tasks remaining after examining {} offers", tasksScheduled, numDueTasks - tasksScheduled.get(), offers.size());
 
     return offerHolders.values();
+  }
+
+  private MaxProbableUsage getMaxProbableUsageForSlave(List<SingularityTaskId> activeTaskIds, Map<String, RequestUtilization> requestUtilizations, String sanitizedHostname) {
+    double cpu = 0;
+    double memBytes = 0;
+    double diskBytes = 0;
+    for (SingularityTaskId taskId : activeTaskIds) {
+      if (taskId.getSanitizedHost().equals(sanitizedHostname)) {
+        if (requestUtilizations.containsKey(taskId.getRequestId())) {
+          RequestUtilization utilization = requestUtilizations.get(taskId.getRequestId());
+          // To account for cpu bursts, tend towards max usage if the app is consistently over-utilizing cpu, tend towards avg if it is over-utilized in short bursts
+          cpu += (utilization.getMaxCpuUsed() - utilization.getAvgCpuUsed()) * utilization.getCpuBurstRating() + utilization.getAvgCpuUsed();
+          memBytes += utilization.getMaxMemBytesUsed();
+          diskBytes += utilization.getMaxDiskBytesUsed();
+        } else {
+          Optional<SingularityTask> maybeTask = taskManager.getTask(taskId);
+          if (maybeTask.isPresent()) {
+            Resources resources = maybeTask.get().getTaskRequest().getPendingTask().getResources()
+                .or(maybeTask.get().getTaskRequest().getDeploy().getResources())
+                .or(defaultResources);
+            cpu += resources.getCpus();
+            memBytes += resources.getDiskMb() * SingularitySlaveUsage.BYTES_PER_MEGABYTE;
+            diskBytes += resources.getDiskMb() * SingularitySlaveUsage.BYTES_PER_MEGABYTE;
+          }
+        }
+      }
+    }
+    return new MaxProbableUsage(cpu, memBytes, diskBytes);
   }
 
   private boolean isOfferFull(SingularityOfferHolder offerHolder) {
@@ -339,15 +399,15 @@ public class SingularityMesosOfferScheduler {
         1 - slaveUsageWithScores.getLongRunningMemUsedScore(), slaveUsageWithScores.getMemFreeScore(),
         1 - slaveUsageWithScores.getLongRunningCpusUsedScore(), slaveUsageWithScores.getCpusFreeScore(),
         1 - slaveUsageWithScores.getLongRunningDiskUsedScore(), slaveUsageWithScores.getDiskFreeScore(),
-        0.50, 0.50);
+        mesosConfiguration.getLongRunningFreeResourceWeight(), mesosConfiguration.getLongRunningUsedResourceWeight());
   }
 
   private double scoreNonLongRunningTask(SingularityTaskRequest taskRequest, SingularitySlaveUsageWithCalculatedScores slaveUsageWithScores) {
     Optional<SingularityDeployStatistics> statistics = deployManager.getDeployStatistics(taskRequest.getRequest().getId(), taskRequest.getDeploy().getId());
     final double epsilon = 0.0001;
 
-    double freeResourceWeight = 0.75;
-    double usedResourceWeight = 0.25;
+    double freeResourceWeight = mesosConfiguration.getNonLonRunningFreeResourceWeight();
+    double usedResourceWeight = mesosConfiguration.getNonLongRunningUsedResourceWeight();
 
     if (statistics.isPresent() && statistics.get().getAverageRuntimeMillis().isPresent()) {
       final double maxNonLongRunningUsedResourceWeight = configuration.getMaxNonLongRunningUsedResourceWeight();

@@ -1,5 +1,6 @@
 package com.hubspot.singularity.config;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -74,6 +75,16 @@ public class SingularityConfiguration extends Configuration {
   private long checkUsageEveryMillis = TimeUnit.MINUTES.toMillis(1);
 
   private int usageIntervalSeconds = 5760; // 15 saved each 5760 seconds (96 min) apart is 1 day of usage
+
+  private int maxConcurrentUsageCollections = 15;
+
+  private boolean shuffleTasksForOverloadedSlaves = false; // recommended 'true' when oversubscribing cpu for larger clusters
+
+  private int maxTasksToShuffleTotal = 6; // Do not allow more than this many shuffle cleanups at once cluster-wide
+
+  private int maxTasksToShufflePerHost = 2;
+
+  private List<String> doNotShuffleRequests = new ArrayList<>();
 
   private long cleanUsageEveryMillis = TimeUnit.MINUTES.toMillis(5);
 
@@ -320,6 +331,8 @@ public class SingularityConfiguration extends Configuration {
   @Valid
   private WebhookAuthConfiguration webhookAuthConfiguration = new WebhookAuthConfiguration();
 
+  private int maxConcurrentWebhooks = 100;
+
   @JsonProperty("auth")
   @NotNull
   @Valid
@@ -369,6 +382,8 @@ public class SingularityConfiguration extends Configuration {
   private boolean delayOfferProcessingForLargeStatusUpdateDelta = true;
 
   private int maxRunNowTaskLaunchDelayDays = 30;
+
+  private boolean allowDeployOfPausedRequests = false;
 
   public long getAskDriverToKillTasksAgainAfterMillis() {
     return askDriverToKillTasksAgainAfterMillis;
@@ -1305,6 +1320,14 @@ public class SingularityConfiguration extends Configuration {
     this.webhookAuthConfiguration = webhookAuthConfiguration;
   }
 
+  public int getMaxConcurrentWebhooks() {
+    return maxConcurrentWebhooks;
+  }
+
+  public void setMaxConcurrentWebhooks(int maxConcurrentWebhooks) {
+    this.maxConcurrentWebhooks = maxConcurrentWebhooks;
+  }
+
   public void setLdapConfiguration(LDAPConfiguration ldapConfiguration) {
     this.ldapConfiguration = ldapConfiguration;
   }
@@ -1474,9 +1497,48 @@ public class SingularityConfiguration extends Configuration {
     return usageIntervalSeconds;
   }
 
-  public SingularityConfiguration setUsageIntervalSeconds(int usageIntervalSeconds) {
+  public void setUsageIntervalSeconds(int usageIntervalSeconds) {
     this.usageIntervalSeconds = usageIntervalSeconds;
-    return this;
+  }
+
+  public int getMaxConcurrentUsageCollections() {
+    return maxConcurrentUsageCollections;
+  }
+
+  public void setMaxConcurrentUsageCollections(int maxConcurrentUsageCollections) {
+    this.maxConcurrentUsageCollections = maxConcurrentUsageCollections;
+  }
+
+  public int getMaxTasksToShufflePerHost() {
+    return maxTasksToShufflePerHost;
+  }
+
+  public void setMaxTasksToShufflePerHost(int maxTasksToShufflePerHost) {
+    this.maxTasksToShufflePerHost = maxTasksToShufflePerHost;
+  }
+
+  public boolean isShuffleTasksForOverloadedSlaves() {
+    return shuffleTasksForOverloadedSlaves;
+  }
+
+  public void setShuffleTasksForOverloadedSlaves(boolean shuffleTasksForOverloadedSlaves) {
+    this.shuffleTasksForOverloadedSlaves = shuffleTasksForOverloadedSlaves;
+  }
+
+  public int getMaxTasksToShuffleTotal() {
+    return maxTasksToShuffleTotal;
+  }
+
+  public void setMaxTasksToShuffleTotal(int maxTasksToShuffleTotal) {
+    this.maxTasksToShuffleTotal = maxTasksToShuffleTotal;
+  }
+
+  public List<String> getDoNotShuffleRequests() {
+    return doNotShuffleRequests;
+  }
+
+  public void setDoNotShuffleRequests(List<String> doNotShuffleRequests) {
+    this.doNotShuffleRequests = doNotShuffleRequests;
   }
 
   public long getCleanUsageEveryMillis() {
@@ -1577,5 +1639,13 @@ public class SingularityConfiguration extends Configuration {
 
   public void setCors(CorsConfiguration cors) {
     this.cors = cors;
+  }
+
+  public boolean isAllowDeployOfPausedRequests() {
+    return allowDeployOfPausedRequests;
+  }
+
+  public void setAllowDeployOfPausedRequests(boolean allowDeployOfPausedRequests) {
+    this.allowDeployOfPausedRequests = allowDeployOfPausedRequests;
   }
 }

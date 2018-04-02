@@ -65,6 +65,7 @@ These are settings that are more likely to be altered.
 |-----------|---------|-------------|------|
 | defaultDeployStepWaitTimeMs | 0 | If using an incremental deploy, wait this long between deploy steps if not specified in the deploy | int |
 | defaultDeployMaxTaskRetries | 0 | Allow this many tasks to fail and be retried before failing a new deploy | int |
+| allowDeployOfPausedRequests | false | If true, paused requests can be deployed without unpausing or starting new tasks at deploy time | boolean |
 
 #### Limits ####
 | Parameter | Default | Description | Type |
@@ -162,14 +163,15 @@ These settings should live under the "mesos" field inside the root configuration
 #### Framework ####
 | Parameter | Default | Description | Type |
 |-----------|---------|-------------|------|
-| master | null | A comma separated list of mesos master `host:port` | string |
-| frameworkName | null | | string |
-| frameworkId | null | | string |
+| master | null | A comma separated list of mesos master `host:port` | String |
+| mesosUsername | | Username to authenticate with the mesos master when using basic auth | String |
+| mesosPassword | | Password to authenticate with the mesos master when using basic auth | String |
+| frameworkName | null | | String |
+| frameworkId | null | | String |
 | frameworkFailoverTimeout | 0.0 | | double |
 | frameworkRole | null | Specify framework's desired role when Singularity registers with the master | String |
 | checkpoint | true | | boolean |
-| credentialPrincipal | | Enable framework auth by setting both this and credentialSecret | String |
-| credentialSecret | | Enable framework auth by setting both this and credentialPrincipal | String |
+| credentialPrincipal | | Used to enable authorization based on the authenticated principal | String |
 
 #### Resource Limits ####
 | Parameter | Default | Description | Type |

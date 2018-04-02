@@ -50,6 +50,7 @@ import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskDestroyFrameworkMessage;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.TaskCleanupType;
+import com.hubspot.singularity.config.MesosConfiguration;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.DisasterManager;
 import com.hubspot.singularity.data.TaskManager;
@@ -67,7 +68,8 @@ import io.netty.handler.codec.PrematureChannelClosureException;
 public class SingularityMesosSchedulerImpl extends SingularityMesosScheduler {
 
   private static final Logger LOG = LoggerFactory.getLogger(SingularityMesosScheduler.class);
-  private static final String SCHEDULER_API_URL_FORMAT = "http://%s/api/v1/scheduler";
+  private static final String SCHEDULER_API_URL_FORMAT = "%s://%s/api/v1/scheduler";
+  private static final String SCHEDULER_API_URL_CREDENTIALS_FORMAT = "%s://%s:%s@%s/api/v1/scheduler";
 
   private final SingularityExceptionNotifier exceptionNotifier;
 
@@ -218,7 +220,7 @@ public class SingularityMesosSchedulerImpl extends SingularityMesosScheduler {
 
             leftoverOffers.forEach((o) -> {
               if (cachedOffers.containsKey(o.getId().getValue())) {
-                offerCache.returnOffer(cachedOffers.get(o.getId().getValue()));
+                offerCache.returnOffer(cachedOffers.remove(o.getId().getValue()));
               } else {
                 offerCache.cacheOffer(start, o);
               }
@@ -228,19 +230,22 @@ public class SingularityMesosSchedulerImpl extends SingularityMesosScheduler {
             offersAcceptedFromSlave.removeAll(leftoverOffers);
             offersAcceptedFromSlave.stream()
                 .filter((offer) -> cachedOffers.containsKey(offer.getId().getValue()))
-                .map((o) -> cachedOffers.get(o.getId().getValue()))
+                .map((o) -> cachedOffers.remove(o.getId().getValue()))
                 .forEach(offerCache::useOffer);
             acceptedOffers.addAll(offersAcceptedFromSlave.stream().map(Offer::getId).collect(Collectors.toList()));
           } else {
             offerHolder.getOffers().forEach((o) -> {
               if (cachedOffers.containsKey(o.getId().getValue())) {
-                offerCache.returnOffer(cachedOffers.get(o.getId().getValue()));
+                offerCache.returnOffer(cachedOffers.remove(o.getId().getValue()));
               } else {
                 offerCache.cacheOffer(start, o);
               }
             });
           }
         }
+
+        LOG.info("{} remaining offers not accounted for in offer check", cachedOffers.size());
+        cachedOffers.values().forEach(offerCache::returnOffer);
       } catch (Throwable t) {
         LOG.error("Received fatal error while handling offers - will decline all available offers", t);
 
@@ -362,9 +367,16 @@ public class SingularityMesosSchedulerImpl extends SingularityMesosScheduler {
   }
 
   public void start() throws Exception {
+    MesosConfiguration mesosConfiguration = configuration.getMesosConfiguration();
     // If more than one host is provided choose at random, we will be redirected if the host is not the master
-    List<String> masters = Arrays.asList(configuration.getMesosConfiguration().getMaster().split(","));
-    String masterUrl = String.format(SCHEDULER_API_URL_FORMAT, masters.get(new Random().nextInt(masters.size())));
+    List<String> masters = Arrays.asList(mesosConfiguration.getMaster().split(","));
+    String masterUrl;
+    if (mesosConfiguration.getMesosUsername().isPresent() && mesosConfiguration.getMesosPassword().isPresent()) {
+      masterUrl = String.format(SCHEDULER_API_URL_CREDENTIALS_FORMAT, mesosConfiguration.getMasterProtocol(), mesosConfiguration.getMesosUsername().get(),
+          mesosConfiguration.getMesosPassword().get(), masters.get(new Random().nextInt(masters.size())));
+    } else {
+      masterUrl = String.format(SCHEDULER_API_URL_FORMAT, mesosConfiguration.getMasterProtocol(), masters.get(new Random().nextInt(masters.size())));
+    }
     mesosSchedulerClient.subscribe(masterUrl, this);
   }
 

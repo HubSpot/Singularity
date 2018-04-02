@@ -8,6 +8,7 @@ import com.hubspot.singularity.SingularityUsageScoringStrategy;
 class SingularitySlaveUsageWithCalculatedScores {
   private final SingularitySlaveUsage slaveUsage;
   private final MachineLoadMetric systemLoadMetric;
+  private final MaxProbableUsage maxProbableTaskUsage;
   private boolean missingUsageData;
   private double longRunningCpusUsedScore;
   private double longRunningMemUsedScore;
@@ -24,9 +25,10 @@ class SingularitySlaveUsageWithCalculatedScores {
   private double estimatedAddedMemoryBytesReserved = 0;
   private double estimatedAddedDiskBytesReserved = 0;
 
-  public SingularitySlaveUsageWithCalculatedScores(SingularitySlaveUsage slaveUsage, SingularityUsageScoringStrategy scoringStrategy, MachineLoadMetric systemLoadMetric) {
+  public SingularitySlaveUsageWithCalculatedScores(SingularitySlaveUsage slaveUsage, SingularityUsageScoringStrategy scoringStrategy, MachineLoadMetric systemLoadMetric, MaxProbableUsage maxProbableTaskUsage) {
     this.slaveUsage = slaveUsage;
     this.systemLoadMetric = systemLoadMetric;
+    this.maxProbableTaskUsage = maxProbableTaskUsage;
     if (missingUsageData(slaveUsage)) {
       this.missingUsageData = true;
       setScores(0, 0, 0, 0, 0, 0);
@@ -71,13 +73,34 @@ class SingularitySlaveUsageWithCalculatedScores {
         double diskFreeScore = 1 - ((slaveUsage.getDiskMbReserved() + (estimatedAddedDiskBytesReserved / SingularitySlaveUsage.BYTES_PER_MEGABYTE)) / slaveUsage.getDiskMbTotal().get());
         setScores(longRunningCpusUsedScore, longRunningMemUsedScore, longRunningDiskUsedScore, cpusFreeScore, memFreeScore, diskFreeScore);
         break;
+      case PROBABLE_MAX_USAGE:
+        double probableMaxCpuFreeScore = Math.max(
+            0,
+            1 - (getMaxProbableCpuWithEstimatedUsage() / slaveUsage.getSystemCpusTotal())
+        );
+        double probableMaxMemFreeScore = 1 - (getMaxProbableMemBytesWithEstimatedUsage() / slaveUsage.getSystemMemTotalBytes());
+        double probableMaxDiskFreeScore = 1 - (getMaxProbableDiskBytesWithEstimatedUsage() / slaveUsage.getSlaveDiskTotal());
+        setScores(longRunningCpusUsedScore, longRunningMemUsedScore, longRunningDiskUsedScore, probableMaxCpuFreeScore, probableMaxMemFreeScore, probableMaxDiskFreeScore);
+        break;
       case SPREAD_SYSTEM_USAGE:
       default:
-        double systemCpuFreeScore = Math.max(0, 1 - ((getSystemLoadMetric() + (estimatedAddedCpusUsage / slaveUsage.getCpusTotal().get())) / slaveUsage.getSystemCpusTotal()));
+        double systemCpuFreeScore = Math.max(0, 1 - ((getSystemLoadMetric() + estimatedAddedCpusUsage) / slaveUsage.getSystemCpusTotal()));
         double systemMemFreeScore = 1 - (slaveUsage.getSystemMemTotalBytes() - slaveUsage.getSystemMemFreeBytes() + estimatedAddedMemoryBytesUsage) / slaveUsage.getSystemMemTotalBytes();
         double systemDiskFreeScore = 1 - ((slaveUsage.getSlaveDiskUsed() + estimatedAddedDiskBytesUsage) / slaveUsage.getSlaveDiskTotal());
         setScores(longRunningCpusUsedScore, longRunningMemUsedScore, longRunningDiskUsedScore, systemCpuFreeScore, systemMemFreeScore, systemDiskFreeScore);
     }
+  }
+
+  private double getMaxProbableCpuWithEstimatedUsage() {
+    return Math.max(getSystemLoadMetric(), maxProbableTaskUsage.getCpu()) + estimatedAddedCpusUsage;
+  }
+
+  private double getMaxProbableMemBytesWithEstimatedUsage() {
+    return Math.max(slaveUsage.getSystemMemTotalBytes() - slaveUsage.getSystemMemFreeBytes(), maxProbableTaskUsage.getMemBytes()) + estimatedAddedMemoryBytesUsage;
+  }
+
+  private double getMaxProbableDiskBytesWithEstimatedUsage() {
+    return Math.max(slaveUsage.getSlaveDiskUsed(), maxProbableTaskUsage.getDiskBytes()) + estimatedAddedDiskBytesUsage;
   }
 
   boolean isMissingUsageData() {
@@ -145,6 +168,30 @@ class SingularitySlaveUsageWithCalculatedScores {
       case LOAD_5:
       default:
         return slaveUsage.getSystemLoad5Min();
+    }
+  }
+
+  static class MaxProbableUsage {
+    private final double cpu;
+    private final double memBytes;
+    private final double diskBytes;
+
+    public MaxProbableUsage(double cpu, double memBytes, double diskBytes) {
+      this.cpu = cpu;
+      this.memBytes = memBytes;
+      this.diskBytes = diskBytes;
+    }
+
+    public double getCpu() {
+      return cpu;
+    }
+
+    public double getMemBytes() {
+      return memBytes;
+    }
+
+    public double getDiskBytes() {
+      return diskBytes;
     }
   }
 

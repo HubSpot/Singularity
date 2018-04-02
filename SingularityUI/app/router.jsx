@@ -1,7 +1,6 @@
 import React from 'react';
 import { Provider } from 'react-redux';
-import { Router, Route, IndexRoute, useRouterHistory } from 'react-router';
-import { createHistory } from 'history';
+import { Router, Route, IndexRoute } from 'react-router';
 import { syncHistoryWithStore } from 'react-router-redux';
 
 import Application from './components/common/Application';
@@ -38,7 +37,7 @@ const routes = (
     <Route path="requests/new" component={RequestForm} title="New Request" />
     <Route path="requests/edit/:requestId" component={RequestForm} title="New or Edit Request" />
     <Route path="requests(/:group)(/:state)(/:subFilter)(/:searchFilter)" component={RequestsPage} title="Requests" />
-    <Route path="group/:groupId" component={Group} title={(params) => `Group ${params.groupId}`} />
+    <Route path="group/:groupId(/:requestId)" component={Group} title={(params) => `Group ${params.groupId}`} />
     <Route path="request">
       <Route path=":requestId" component={RequestDetailPage} title={(params) => params.requestId} />
       <Route path=":requestId/task-search" component={TaskSearch} title="Task Search" />
@@ -78,7 +77,8 @@ const AppRouter = (props) => {
 };
 
 AppRouter.propTypes = {
-  store: React.PropTypes.object.isRequired
+  history: React.PropTypes.object.isRequired,
+  store: React.PropTypes.object.isRequired,
 };
 
 export default AppRouter;

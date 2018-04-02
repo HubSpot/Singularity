@@ -1,5 +1,7 @@
 package com.hubspot.singularity.hooks;
 
+import java.util.concurrent.CompletableFuture;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -17,6 +19,8 @@ public abstract class AbstractSingularityWebhookAsyncHandler<T> extends AsyncCom
   private final long start;
   private final boolean shouldDeleteUpdateOnFailure;
 
+  private CompletableFuture<Response> completableFuture;
+
   public AbstractSingularityWebhookAsyncHandler(SingularityWebhook webhook, T update, boolean shouldDeleteUpdateOnFailure) {
     this.webhook = webhook;
     this.update = update;
@@ -31,6 +35,10 @@ public abstract class AbstractSingularityWebhookAsyncHandler<T> extends AsyncCom
 
     if (shouldDeleteUpdateOnFailure) {
       deleteWebhookUpdate();
+    }
+
+    if (completableFuture != null) {
+      completableFuture.completeExceptionally(t);
     }
   }
 
@@ -50,9 +58,16 @@ public abstract class AbstractSingularityWebhookAsyncHandler<T> extends AsyncCom
       deleteWebhookUpdate();
     }
 
+    if (completableFuture != null) {
+      completableFuture.complete(response);
+    }
+
     return response;
   }
 
   public abstract void deleteWebhookUpdate();
 
+  public void setCompletableFuture(CompletableFuture<Response> completableFuture) {
+    this.completableFuture = completableFuture;
+  }
 }

@@ -30,7 +30,11 @@ Retrieve the list of current pending deploys
 
 
 ###### Parameters
-- No parameters
+**body**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| body | false |  | [SingularityUser](models.md#model-linkType)</a> |
 
 ###### Response
 [List[SingularityPendingDeploy]](models.md#model-SingularityPendingDeploy)
@@ -55,6 +59,11 @@ Cancel a pending deployment (best effort - the deploy may still succeed or fail)
 |-----------|----------|-------------|-----------|
 | requestId | true | The Singularity Request Id from which the deployment is removed. | string |
 | deployId | true | The Singularity Deploy Id that should be removed. | string |
+**body**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| body | false |  | [SingularityUser](models.md#model-linkType)</a> |
 
 ###### Response
 [SingularityRequestParent](models.md#model-SingularityRequestParent)
