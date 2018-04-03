@@ -22,6 +22,7 @@ import com.google.inject.name.Named;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.ExtendedTaskState;
 import com.hubspot.singularity.InvalidSingularityTaskIdException;
+import com.hubspot.singularity.RequestType;
 import com.hubspot.singularity.SingularityCreateResult;
 import com.hubspot.singularity.SingularityMainModule;
 import com.hubspot.singularity.SingularityPendingDeploy;
@@ -175,6 +176,10 @@ public class SingularityMesosStatusUpdateHandler {
     return Optional.absent();
   }
 
+  private void relaunchTask(SingularityTask task) {
+    taskManager.savePendingTask(task.getTaskRequest().getPendingTask());
+  }
+
   private void unsafeProcessStatusUpdate(Protos.TaskStatus status, SingularityTaskId taskIdObj) {
     final String taskId = status.getTaskId().getValue();
 
@@ -200,14 +205,34 @@ public class SingularityMesosStatusUpdateHandler {
       return;
     }
 
+    final Optional<SingularityTask> task = taskManager.getTask(taskIdObj);
+
     if (status.getState() == TaskState.TASK_LOST) {
-      lostTasksMeter.mark();
-      if (configuration.getDisasterDetection().isEnabled()) {
-        taskLostReasons.add(status.getReason());
+      boolean isMesosFailure =
+          status.getReason() == Reason.REASON_INVALID_OFFERS
+          || status.getReason() == Reason.REASON_AGENT_REMOVED
+          || status.getReason() == Reason.REASON_AGENT_RESTARTED
+          || status.getReason() == Reason.REASON_AGENT_UNKNOWN
+          || status.getReason() == Reason.REASON_MASTER_DISCONNECTED
+          || status.getReason() == Reason.REASON_AGENT_DISCONNECTED;
+
+      RequestType requestType = task.isPresent() ? task.get().getTaskRequest().getRequest().getRequestType() : null;
+      boolean isRelaunchable =
+          requestType != null
+              && (requestType == RequestType.ON_DEMAND
+                  || requestType == RequestType.SCHEDULED
+                  || requestType == RequestType.RUN_ONCE);
+
+      if (isMesosFailure && isRelaunchable) {
+        LOG.info("Relaunching lost task {}", task);
+        relaunchTask(task.get());
+      } else {
+        lostTasksMeter.mark();
+        if (configuration.getDisasterDetection().isEnabled()) {
+          taskLostReasons.add(status.getReason());
+        }
       }
     }
-
-    final Optional<SingularityTask> task = taskManager.getTask(taskIdObj);
 
     final boolean isActiveTask = taskManager.isActiveTask(taskId);
 
