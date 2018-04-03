@@ -15,8 +15,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
-import javax.ws.rs.HEAD;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
