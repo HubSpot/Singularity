@@ -60,7 +60,7 @@ The following URI placeholder values are supported for each kind of webhook:
 - **Task**
   - `$REQUEST_ID`
   - `$DEPLOY_ID`
-  - `TASK_ID`
+  - `$TASK_ID`
 
 You could, for example, send along the relevant Request ID with a Task-level webhook by creating the following webhook URI in Singularity:
 ```
