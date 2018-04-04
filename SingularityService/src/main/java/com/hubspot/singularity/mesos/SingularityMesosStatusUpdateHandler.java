@@ -241,11 +241,10 @@ public class SingularityMesosStatusUpdateHandler {
       if (isMesosFailure && isRelaunchable) {
         LOG.info("Relaunching lost task {}", task);
         relaunchTask(task.get());
-      } else {
-        lostTasksMeter.mark();
-        if (configuration.getDisasterDetection().isEnabled()) {
-          taskLostReasons.add(status.getReason());
-        }
+      }
+      lostTasksMeter.mark();
+      if (configuration.getDisasterDetection().isEnabled()) {
+        taskLostReasons.add(status.getReason());
       }
     }
 
