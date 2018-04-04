@@ -519,11 +519,6 @@ class SingularityMesosTaskBuilder {
         s3UploaderKeyPattern = configuration.getS3ConfigurationOptional().get().getS3KeyFormat();
       }
 
-      Optional<Resources> maybeResources = task.getPendingTask().getResources().or(task.getDeploy().getResources());
-      if (maybeResources.isPresent()) {
-        executorDataBldr.setCpuHardLimit(getCpuHardLimit(maybeResources.get().getCpus()));
-      }
-
       if (task.getPendingTask().getCmdLineArgsList().isPresent() && !task.getPendingTask().getCmdLineArgsList().get().isEmpty()) {
         LOG.trace("Adding cmd line args {} to task {} executorData", task.getPendingTask().getCmdLineArgsList(), taskId.getId());
 
@@ -550,7 +545,7 @@ class SingularityMesosTaskBuilder {
 
       final SingularityTaskExecutorData executorData = new SingularityTaskExecutorData(executorDataBldr.build(), uploaderAdditionalFiles, defaultS3Bucket, s3UploaderKeyPattern,
           configuration.getCustomExecutorConfiguration().getServiceLog(), configuration.getCustomExecutorConfiguration().getServiceFinishedTailLog(), task.getRequest().getGroup(),
-          maybeS3StorageClass, maybeApplyAfterBytes);
+          maybeS3StorageClass, maybeApplyAfterBytes, getCpuHardLimit(task));
 
       try {
         bldr.setData(ByteString.copyFromUtf8(objectMapper.writeValueAsString(executorData)));
@@ -564,13 +559,17 @@ class SingularityMesosTaskBuilder {
     }
   }
 
-  private Optional<Integer> getCpuHardLimit(double requestedCpus) {
+  private Optional<Integer> getCpuHardLimit(SingularityTaskRequest task) {
     if (configuration.getCpuHardLimit().isPresent()) {
-      if (requestedCpus > configuration.getCpuHardLimit().get()) {
-        Integer newHardLimit = (int) Math.ceil(requestedCpus * configuration.getCpuHardLimitScaleFactor());
-        return Optional.of(newHardLimit);
-      } else {
-        return configuration.getCpuHardLimit();
+      Optional<Resources> maybeResources = task.getPendingTask().getResources().or(task.getDeploy().getResources());
+      if (maybeResources.isPresent()) {
+        double requestedCpus = maybeResources.get().getCpus();
+        if (requestedCpus > configuration.getCpuHardLimit().get()) {
+          Integer newHardLimit = (int) Math.ceil(requestedCpus * configuration.getCpuHardLimitScaleFactor());
+          return Optional.of(newHardLimit);
+        } else {
+          return configuration.getCpuHardLimit();
+        }
       }
     }
     return Optional.absent();

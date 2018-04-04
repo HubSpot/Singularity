@@ -213,7 +213,8 @@ public class SingularityExecutorCleanup {
             Strings.isNullOrEmpty(oldDefinition.getExecutorData().getServiceFinishedTailLog()) ? cleanupConfiguration.getDefaultServiceFinishedTailLog() : oldDefinition.getExecutorData().getServiceFinishedTailLog(),
             oldDefinition.getExecutorData().getRequestGroup(),
             oldDefinition.getExecutorData().getS3StorageClass(),
-            oldDefinition.getExecutorData().getApplyS3StorageClassAfterBytes()
+            oldDefinition.getExecutorData().getApplyS3StorageClassAfterBytes(),
+            oldDefinition.getExecutorData().getCpuHardLimit()
         ),
         oldDefinition.getTaskDirectory(),
         oldDefinition.getExecutorPid(),
