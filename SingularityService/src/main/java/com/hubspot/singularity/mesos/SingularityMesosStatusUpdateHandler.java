@@ -26,6 +26,9 @@ import com.hubspot.singularity.RequestType;
 import com.hubspot.singularity.SingularityCreateResult;
 import com.hubspot.singularity.SingularityMainModule;
 import com.hubspot.singularity.SingularityPendingDeploy;
+import com.hubspot.singularity.SingularityPendingRequest;
+import com.hubspot.singularity.SingularityPendingRequestBuilder;
+import com.hubspot.singularity.SingularityPendingTask;
 import com.hubspot.singularity.SingularityRequestWithState;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskHistoryUpdate;
@@ -177,7 +180,23 @@ public class SingularityMesosStatusUpdateHandler {
   }
 
   private void relaunchTask(SingularityTask task) {
-    taskManager.savePendingTask(task.getTaskRequest().getPendingTask());
+    SingularityPendingTask pendingTask = task.getTaskRequest().getPendingTask();
+
+    SingularityPendingRequest pendingRequest = new SingularityPendingRequestBuilder()
+        .setUser(pendingTask.getUser())
+        .setRunId(pendingTask.getRunId())
+        .setCmdLineArgsList(pendingTask.getCmdLineArgsList())
+        .setSkipHealthchecks(pendingTask.getSkipHealthchecks())
+        .setMessage(pendingTask.getMessage())
+        .setResources(pendingTask.getResources())
+        .setS3UploaderAdditionalFiles(pendingTask.getS3UploaderAdditionalFiles())
+        .setRunAsUserOverride(pendingTask.getRunAsUserOverride())
+        .setEnvOverrides(pendingTask.getEnvOverrides())
+        .setExtraArtifacts(pendingTask.getExtraArtifacts())
+        .setActionId(pendingTask.getActionId())
+        .build();
+
+    requestManager.addToPendingQueue(pendingRequest);
   }
 
   private void unsafeProcessStatusUpdate(Protos.TaskStatus status, SingularityTaskId taskIdObj) {
@@ -217,11 +236,7 @@ public class SingularityMesosStatusUpdateHandler {
           || status.getReason() == Reason.REASON_AGENT_DISCONNECTED;
 
       RequestType requestType = task.isPresent() ? task.get().getTaskRequest().getRequest().getRequestType() : null;
-      boolean isRelaunchable =
-          requestType != null
-              && (requestType == RequestType.ON_DEMAND
-                  || requestType == RequestType.SCHEDULED
-                  || requestType == RequestType.RUN_ONCE);
+      boolean isRelaunchable = requestType != null && !requestType.isLongRunning();
 
       if (isMesosFailure && isRelaunchable) {
         LOG.info("Relaunching lost task {}", task);
