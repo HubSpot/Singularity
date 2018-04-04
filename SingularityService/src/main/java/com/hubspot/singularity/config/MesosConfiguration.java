@@ -66,6 +66,7 @@ public class MesosConfiguration {
   private double longRunningUsedResourceWeight = 0.5;
   private double nonLonRunningFreeResourceWeight = 0.75;
   private double nonLongRunningUsedResourceWeight = 0.25;
+  private boolean omitOverloadedHosts = false;
 
   public int getMaxNumInstancesPerRequest() {
     return maxNumInstancesPerRequest;
@@ -345,5 +346,13 @@ public class MesosConfiguration {
 
   public void setNonLongRunningUsedResourceWeight(double nonLongRunningUsedResourceWeight) {
     this.nonLongRunningUsedResourceWeight = nonLongRunningUsedResourceWeight;
+  }
+
+  public boolean isOmitOverloadedHosts() {
+    return omitOverloadedHosts;
+  }
+
+  public void setOmitOverloadedHosts(boolean omitOverloadedHosts) {
+    this.omitOverloadedHosts = omitOverloadedHosts;
   }
 }

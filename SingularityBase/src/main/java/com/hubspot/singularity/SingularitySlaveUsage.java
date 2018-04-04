@@ -2,6 +2,7 @@ package com.hubspot.singularity;
 
 import java.util.Map;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.base.Optional;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -82,6 +83,12 @@ public class SingularitySlaveUsage {
     this.systemLoad15Min = systemLoad15Min;
     this.slaveDiskUsed = slaveDiskUsed;
     this.slaveDiskTotal = slaveDiskTotal;
+  }
+
+  @JsonIgnore
+  public boolean isOverloaded() {
+    // Any host where load5 is > 1 is overloaded. Also consider a higher threshold for load1 to take into account spikes large enough to be disruptive
+    return  systemLoad5Min > 1.0 || systemLoad1Min > 1.5;
   }
 
   @Schema(description = "Total cpus used by tasks")
