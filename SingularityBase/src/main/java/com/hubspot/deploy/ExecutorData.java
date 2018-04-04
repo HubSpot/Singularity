@@ -33,6 +33,7 @@ public class ExecutorData {
   private final Optional<Boolean> skipLogrotateAndCompress;
   private final Optional<List<S3ArtifactSignature>> s3ArtifactSignatures;
   private final Optional<SingularityExecutorLogrotateFrequency> logrotateFrequency;
+  private final Optional<Integer> cpuHardLimit;
 
   @JsonCreator
   public ExecutorData(@JsonProperty("cmd") String cmd, @JsonProperty("embeddedArtifacts") List<EmbeddedArtifact> embeddedArtifacts, @JsonProperty("externalArtifacts") List<ExternalArtifact> externalArtifacts,
@@ -41,7 +42,7 @@ public class ExecutorData {
       @JsonProperty("loggingExtraFields") Map<String, String> loggingExtraFields, @JsonProperty("sigKillProcessesAfterMillis") Optional<Long> sigKillProcessesAfterMillis,
       @JsonProperty("maxTaskThreads") Optional<Integer> maxTaskThreads, @JsonProperty("preserveTaskSandboxAfterFinish") Optional<Boolean> preserveTaskSandboxAfterFinish, @JsonProperty("maxOpenFiles") Optional<Integer> maxOpenFiles,
       @JsonProperty("skipLogrotateAndCompress") Optional<Boolean> skipLogrotateAndCompress, @JsonProperty("s3ArtifactSignatures") Optional<List<S3ArtifactSignature>> s3ArtifactSignatures,
-      @JsonProperty("logrotateFrequency") Optional<SingularityExecutorLogrotateFrequency> logrotateFrequency) {
+      @JsonProperty("logrotateFrequency") Optional<SingularityExecutorLogrotateFrequency> logrotateFrequency, @JsonProperty("cpuHardLimit") Optional<Integer> cpuHardLimit) {
     this.cmd = cmd;
     this.embeddedArtifacts = JavaUtils.nonNullImmutable(embeddedArtifacts);
     this.externalArtifacts = JavaUtils.nonNullImmutable(externalArtifacts);
@@ -59,11 +60,13 @@ public class ExecutorData {
     this.skipLogrotateAndCompress = skipLogrotateAndCompress;
     this.s3ArtifactSignatures = s3ArtifactSignatures;
     this.logrotateFrequency = logrotateFrequency;
+    this.cpuHardLimit = cpuHardLimit;
   }
 
   public ExecutorDataBuilder toBuilder() {
     return new ExecutorDataBuilder(cmd, embeddedArtifacts, externalArtifacts, s3Artifacts, successfulExitCodes, runningSentinel, user, extraCmdLineArgs, loggingTag,
-        loggingExtraFields, sigKillProcessesAfterMillis, maxTaskThreads, preserveTaskSandboxAfterFinish, maxOpenFiles, skipLogrotateAndCompress, s3ArtifactSignatures, logrotateFrequency);
+        loggingExtraFields, sigKillProcessesAfterMillis, maxTaskThreads, preserveTaskSandboxAfterFinish, maxOpenFiles, skipLogrotateAndCompress, s3ArtifactSignatures,
+        logrotateFrequency, cpuHardLimit);
   }
 
   @ApiModelProperty(required=true, value="Command for the custom executor to run")
@@ -154,6 +157,11 @@ public class ExecutorData {
   @ApiModelProperty(required=false, value="Run logrotate this often. Can be HOURLY, DAILY, WEEKLY, MONTHLY")
   public Optional<SingularityExecutorLogrotateFrequency> getLogrotateFrequency() {
     return logrotateFrequency;
+  }
+
+  @ApiModelProperty(required = false, value = "An optional hard limit for cpu. If set this will be used to set the cgroup cpu.cfs_quota_us")
+  public Optional<Integer> getCpuHardLimit() {
+    return cpuHardLimit;
   }
 
   @Override

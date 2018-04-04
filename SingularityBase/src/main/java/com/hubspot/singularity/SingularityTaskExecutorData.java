@@ -42,6 +42,7 @@ public class SingularityTaskExecutorData extends ExecutorData {
         executorData.getSkipLogrotateAndCompress(),
         executorData.getS3ArtifactSignatures(),
         executorData.getLogrotateFrequency(),
+        executorData.getCpuHardLimit(),
         s3UploaderAdditionalFiles,
         defaultS3Bucket,
         s3UploaderKeyPattern,
@@ -70,6 +71,7 @@ public class SingularityTaskExecutorData extends ExecutorData {
                                      @JsonProperty("skipLogrotateAndCompress") Optional<Boolean> skipLogrotateAndCompress,
                                      @JsonProperty("s3ArtifactSignatures") Optional<List<S3ArtifactSignature>> s3ArtifactSignatures,
                                      @JsonProperty("logrotateFrequency") Optional<SingularityExecutorLogrotateFrequency> logrotateFrequency,
+                                     @JsonProperty("cpuHardLimit") Optional<Integer> cpuHardLimit,
                                      @JsonProperty("s3UploaderAdditionalFiles") List<SingularityS3UploaderFile> s3UploaderAdditionalFiles,
                                      @JsonProperty("defaultS3Bucket") String defaultS3Bucket,
                                      @JsonProperty("s3UploaderKeyPattern") String s3UploaderKeyPattern,
@@ -79,7 +81,7 @@ public class SingularityTaskExecutorData extends ExecutorData {
                                      @JsonProperty("s3StorageClass") Optional<String> s3StorageClass,
                                      @JsonProperty("applyS3StorageClassAfterBytes") Optional<Long> applyS3StorageClassAfterBytes) {
     super(cmd, embeddedArtifacts, externalArtifacts, s3Artifacts, successfulExitCodes, user, runningSentinel, extraCmdLineArgs, loggingTag, loggingExtraFields,
-        sigKillProcessesAfterMillis, maxTaskThreads, preserveTaskSandboxAfterFinish, maxOpenFiles, skipLogrotateAndCompress, s3ArtifactSignatures, logrotateFrequency);
+        sigKillProcessesAfterMillis, maxTaskThreads, preserveTaskSandboxAfterFinish, maxOpenFiles, skipLogrotateAndCompress, s3ArtifactSignatures, logrotateFrequency, cpuHardLimit);
     this.s3UploaderAdditionalFiles = s3UploaderAdditionalFiles;
     this.defaultS3Bucket = defaultS3Bucket;
     this.s3UploaderKeyPattern = s3UploaderKeyPattern;

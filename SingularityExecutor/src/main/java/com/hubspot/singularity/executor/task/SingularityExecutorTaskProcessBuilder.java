@@ -179,7 +179,9 @@ public class SingularityExecutorTaskProcessBuilder implements Callable<ProcessBu
         !getExecutorUser().equals(executorData.getUser().or(configuration.getDefaultRunAsUser())),
         executorData.getMaxOpenFiles().orNull(),
         String.format(configuration.getSwitchUserCommandFormat(), executorData.getUser().or(configuration.getDefaultRunAsUser())),
-        configuration.isUseFileAttributes());
+        configuration.isUseFileAttributes(),
+        getCfsQuota(executorData),
+        configuration.getDefaultCfsPeriod());
 
     EnvironmentContext environmentContext = new EnvironmentContext(taskInfo);
 
@@ -207,6 +209,14 @@ public class SingularityExecutorTaskProcessBuilder implements Callable<ProcessBu
     processBuilder.redirectOutput(task.getTaskDefinition().getExecutorBashOutPath().toFile());
 
     return processBuilder;
+  }
+
+  private Integer getCfsQuota(ExecutorData executorData) {
+    if (!executorData.getCpuHardLimit().isPresent()) {
+      return null;
+    } else {
+      return executorData.getCpuHardLimit().get() * configuration.getDefaultCfsPeriod();
+    }
   }
 
   private String serviceLogOutPath(String serviceLog) {
