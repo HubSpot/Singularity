@@ -353,6 +353,11 @@ public class SingularityMesosOfferScheduler {
       return 0;
     }
 
+    if (mesosConfiguration.isOmitOverloadedHosts() && maybeSlaveUsage.isPresent() && maybeSlaveUsage.get().getSlaveUsage().isOverloaded()) {
+      LOG.debug("Slave {} is overloaded (), ignoring offer");
+      return 0;
+    }
+
     if (LOG.isTraceEnabled()) {
       LOG.trace("Attempting to match task {} resources {} with required role '{}' ({} for task + {} for executor) with remaining offer resources {}",
           pendingTaskId, taskRequestHolder.getTotalResources(), taskRequest.getRequest().getRequiredRole().or("*"),
