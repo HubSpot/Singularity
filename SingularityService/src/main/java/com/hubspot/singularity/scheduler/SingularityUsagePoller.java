@@ -148,8 +148,17 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
     }
   }
 
-  private void collectSlaveUage(SingularitySlave slave, long now, Map<String, RequestUtilization> utilizationPerRequestId, Map<String, RequestUtilization> previousUtilizations, Map<SingularitySlaveUsage, List<TaskIdWithUsage>> overLoadedHosts,
-                                AtomicLong totalMemBytesUsed, AtomicLong totalMemBytesAvailable, AtomicDouble totalCpuUsed, AtomicDouble totalCpuAvailable, AtomicLong totalDiskBytesUsed, AtomicLong totalDiskBytesAvailable) {
+  private void collectSlaveUage(SingularitySlave slave,
+                                long now,
+                                Map<String, RequestUtilization> utilizationPerRequestId,
+                                Map<String, RequestUtilization> previousUtilizations,
+                                Map<SingularitySlaveUsage, List<TaskIdWithUsage>> overLoadedHosts,
+                                AtomicLong totalMemBytesUsed,
+                                AtomicLong totalMemBytesAvailable,
+                                AtomicDouble totalCpuUsed,
+                                AtomicDouble totalCpuAvailable,
+                                AtomicLong totalDiskBytesUsed,
+                                AtomicLong totalDiskBytesAvailable) {
     Map<ResourceUsageType, Number> longRunningTasksUsage = new HashMap<>();
     longRunningTasksUsage.put(ResourceUsageType.MEMORY_BYTES_USED, 0);
     longRunningTasksUsage.put(ResourceUsageType.CPU_USED, 0);
@@ -577,7 +586,7 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
     newRequestUtilization
         .addMemBytesReserved((long) (memoryMbReservedForTask * SingularitySlaveUsage.BYTES_PER_MEGABYTE * numTasks))
         .addCpuReserved(cpuReservedForTask * numTasks)
-        .addDiskBytesReserved((long) diskMbReservedForTask * SingularitySlaveUsage.BYTES_PER_MEGABYTE  * numTasks)
+        .addDiskBytesReserved((long) diskMbReservedForTask * SingularitySlaveUsage.BYTES_PER_MEGABYTE * numTasks)
         .setCpuBurstRating(cpuBurstRating);
 
     utilizationPerRequestId.put(requestId, newRequestUtilization);
