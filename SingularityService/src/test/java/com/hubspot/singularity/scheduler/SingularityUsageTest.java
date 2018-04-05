@@ -596,7 +596,7 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
 
   private void saveTaskUsage(String taskId, long... times) {
     for (long time : times) {
-      usageManager.saveSpecificTaskUsage(taskId, new SingularityTaskUsage(0, time, 0, 0));
+      usageManager.saveSpecificTaskUsage(taskId, new SingularityTaskUsage(0, time, 0, 0, 0, 0, 0));
     }
   }
 

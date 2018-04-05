@@ -399,9 +399,14 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
   }
 
   private SingularityTaskUsage getUsage(MesosTaskMonitorObject taskUsage) {
-    double cpuSeconds = taskUsage.getStatistics().getCpusSystemTimeSecs() + taskUsage.getStatistics().getCpusUserTimeSecs();
-
-    return new SingularityTaskUsage(taskUsage.getStatistics().getMemTotalBytes(), taskUsage.getStatistics().getTimestampSeconds(), cpuSeconds, taskUsage.getStatistics().getDiskUsedBytes());
+    return new SingularityTaskUsage(
+        taskUsage.getStatistics().getMemTotalBytes(),
+        taskUsage.getStatistics().getTimestampSeconds(),
+        taskUsage.getStatistics().getCpusSystemTimeSecs() + taskUsage.getStatistics().getCpusUserTimeSecs(),
+        taskUsage.getStatistics().getDiskUsedBytes(),
+        taskUsage.getStatistics().getCpusNrPeriods(),
+        taskUsage.getStatistics().getCpusNrThrottled(),
+        taskUsage.getStatistics().getCpusThrottledTimeSecs());
   }
 
   private boolean isLongRunning(SingularityTaskId task) {
@@ -462,6 +467,7 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
       SingularityTaskUsage olderUsage = pastTaskUsagesCopy.get(i);
       SingularityTaskUsage newerUsage = pastTaskUsagesCopy.get(i + 1);
       double cpusUsed = (newerUsage.getCpuSeconds() - olderUsage.getCpuSeconds()) / (newerUsage.getTimestamp() - olderUsage.getTimestamp());
+      double percentCpuTimeThrottled = (newerUsage.getCpusThrottledTimeSecs() - olderUsage.getCpusThrottledTimeSecs()) / (newerUsage.getTimestamp() - olderUsage.getTimestamp());
 
       curMaxCpuUsed = Math.max(cpusUsed, curMaxCpuUsed);
       curMinCpuUsed = Math.min(cpusUsed, curMinCpuUsed);
@@ -477,6 +483,7 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
       requestUtilization
           .addCpuUsed(cpusUsed)
           .addMemBytesUsed(newerUsage.getMemoryTotalBytes())
+          .addPercentCpuTimeThrottled(percentCpuTimeThrottled)
           .addDiskBytesUsed(newerUsage.getDiskTotalBytes())
           .incrementTaskCount();
     }
@@ -500,7 +507,7 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
 
   private List<SingularityTaskUsage> copyUsages(List<SingularityTaskUsage> pastTaskUsages, SingularityTaskUsage latestUsage, SingularityTaskId task) {
     List<SingularityTaskUsage> pastTaskUsagesCopy = new ArrayList<>();
-    pastTaskUsagesCopy.add(new SingularityTaskUsage(0, TimeUnit.MILLISECONDS.toSeconds(task.getStartedAt()), 0, 0)); // to calculate oldest cpu usage
+    pastTaskUsagesCopy.add(new SingularityTaskUsage(0, TimeUnit.MILLISECONDS.toSeconds(task.getStartedAt()), 0, 0, 0 , 0, 0)); // to calculate oldest cpu usage
     pastTaskUsagesCopy.addAll(pastTaskUsages);
     pastTaskUsagesCopy.add(latestUsage);
 
