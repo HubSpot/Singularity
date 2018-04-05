@@ -3,7 +3,6 @@ package com.hubspot.singularity.data;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -37,7 +36,7 @@ public class UsageManager extends CuratorAsyncManager {
 
   private static final String SLAVE_PATH = ROOT_PATH + "/slaves";
   private static final String TASK_PATH = ROOT_PATH + "/tasks";
-  private static final String REQUEST_PATH = ROOT_PATH + "/requests";
+  private static final String REQUESTS_PATH = ROOT_PATH + "/requests";
   private static final String USAGE_SUMMARY_PATH = ROOT_PATH + "/summary";
 
   private static final String USAGE_HISTORY_PATH_KEY = "history";
@@ -120,6 +119,10 @@ public class UsageManager extends CuratorAsyncManager {
     return ZKPaths.makePath(getTaskUsagePath(taskId), CURRENT_USAGE_NODE_KEY);
   }
 
+  private String getRequestPath(String requestId) {
+    return ZKPaths.makePath(REQUESTS_PATH, requestId);
+  }
+
   public SingularityDeleteResult deleteSlaveUsage(String slaveId) {
     return delete(getSlaveUsagePath(slaveId));
   }
@@ -182,16 +185,19 @@ public class UsageManager extends CuratorAsyncManager {
   }
 
   public Map<String, RequestUtilization> getRequestUtilizations() {
-    Optional<SingularityClusterUtilization> clusterUtilization = getClusterUtilization();
-    if (clusterUtilization.isPresent()) {
-      return clusterUtilization.get().getRequestUtilizations().stream()
-          .collect(Collectors.toMap(
-              RequestUtilization::getRequestId,
-              Function.identity(),
-              (r1, r2) -> r1 // Ignore duplicate usages for a single request id
-          ));
-    }
-    return new HashMap<>();
+    return getAsyncChildren(REQUESTS_PATH, requestUtilizationTranscoder).stream()
+        .collect(Collectors.toMap(
+            RequestUtilization::getRequestId,
+            Function.identity()
+        ));
+  }
+
+  public Optional<RequestUtilization> getRequestUtilization(String requestId) {
+    return getData(getRequestPath(requestId), requestUtilizationTranscoder);
+  }
+
+  public SingularityCreateResult saveRequestUtilization(RequestUtilization requestUtilization) {
+    return save(getRequestPath(requestUtilization.getRequestId()), requestUtilization, requestUtilizationTranscoder);
   }
 
   public List<SingularitySlaveUsageWithId> getCurrentSlaveUsages(List<String> slaveIds) {

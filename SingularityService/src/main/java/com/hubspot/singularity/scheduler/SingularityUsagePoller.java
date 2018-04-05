@@ -13,6 +13,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
@@ -72,6 +73,7 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
 
   private final AsyncSemaphore<Void> usageCollectionSemaphore;
   private final ExecutorService usageExecutor;
+  private final ConcurrentHashMap<String, ReentrantLock> requestLocks;
 
   @Inject
   SingularityUsagePoller(SingularityConfiguration configuration,
@@ -95,6 +97,7 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
 
     this.usageCollectionSemaphore = AsyncSemaphore.newBuilder(configuration::getMaxConcurrentUsageCollections).build();
     this.usageExecutor = Executors.newCachedThreadPool(new ThreadFactoryBuilder().setNameFormat("usage-collection-%d").build());
+    this.requestLocks = new ConcurrentHashMap<>();
   }
 
   @Override
@@ -128,9 +131,20 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
     usageManager.saveClusterUtilization(
         getClusterUtilization(utilizationPerRequestId, totalMemBytesUsed.get(), totalMemBytesAvailable.get(), totalCpuUsed.get(), totalCpuAvailable.get(), totalDiskBytesUsed.get(), totalDiskBytesAvailable
             .get(), now));
+    utilizationPerRequestId.values().forEach(usageManager::saveRequestUtilization);
 
     if (configuration.isShuffleTasksForOverloadedSlaves()) {
       shuffleTasksOnOverloadedHosts(overLoadedHosts);
+    }
+  }
+
+  public void runWithRequestLock(Runnable function, String requestId) {
+    ReentrantLock lock = requestLocks.computeIfAbsent(requestId, (r) -> new ReentrantLock());
+    lock.lock();
+    try {
+      function.run();
+    } finally {
+      lock.unlock();
     }
   }
 
@@ -223,7 +237,7 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
             cpuReservedOnSlave += cpuReservedForTask;
             diskMbReservedOnSlave += diskMbReservedForTask;
 
-            updateRequestUtilization(utilizationPerRequestId, previousUtilizations, pastTaskUsages, latestUsage, task, memoryMbReservedForTask, cpuReservedForTask, diskMbReservedForTask);
+            runWithRequestLock(() -> updateRequestUtilization(utilizationPerRequestId, previousUtilizations, pastTaskUsages, latestUsage, task, memoryMbReservedForTask, cpuReservedForTask, diskMbReservedForTask), task.getRequestId());
           }
         }
         memoryBytesUsedOnSlave += latestUsage.getMemoryTotalBytes();
@@ -652,7 +666,7 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
     long avgUnderUtilizedMemBytes = numRequestsWithUnderUtilizedMemBytes != 0 ? totalUnderUtilizedMemBytes / numRequestsWithUnderUtilizedMemBytes : 0;
     long avgUnderUtilizedDiskBytes = numRequestsWithUnderUtilizedDiskBytes != 0 ? totalUnderUtilizedDiskBytes / numRequestsWithUnderUtilizedDiskBytes : 0;
 
-    return new SingularityClusterUtilization(new ArrayList<>(utilizationPerRequestId.values()), numRequestsWithUnderUtilizedCpu, numRequestsWithOverUtilizedCpu,
+    return new SingularityClusterUtilization(numRequestsWithUnderUtilizedCpu, numRequestsWithOverUtilizedCpu,
         numRequestsWithUnderUtilizedMemBytes, numRequestsWithUnderUtilizedDiskBytes, totalUnderUtilizedCpu, totalOverUtilizedCpu, totalUnderUtilizedMemBytes, totalUnderUtilizedDiskBytes, avgUnderUtilizedCpu, avgOverUtilizedCpu,
         avgUnderUtilizedMemBytes, avgUnderUtilizedDiskBytes, maxUnderUtilizedCpu, maxOverUtilizedCpu, maxUnderUtilizedMemBytes, maxUnderUtilizedDiskBytes, maxUnderUtilizedCpuRequestId, maxOverUtilizedCpuRequestId,
         maxUnderUtilizedMemBytesRequestId, maxUnderUtilizedDiskBytesRequestId, getMin(minUnderUtilizedCpu), getMin(minOverUtilizedCpu), getMin(minUnderUtilizedMemBytes), getMin(minUnderUtilizedDiskBytes), totalMemBytesUsed,

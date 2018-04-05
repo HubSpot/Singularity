@@ -26,11 +26,11 @@ const RequestUtilization = ({isFetching, utilization}) => {
             <BootstrapTable responsive={false} striped={true} style={{marginTop: '10px'}}>
               <tbody>
                 <tr>
-                  <td>Min CPU (all tasks)</td>
+                  <td>Min CPU (24 hour min for all tasks)</td>
                   <td>{Utils.roundTo(utilization.minCpuUsed, HUNDREDTHS_PLACE)}</td>
                 </tr>
                 <tr>
-                  <td className={isCpuOverAllocated ? 'danger' : ''}>Max CPU (all tasks)</td>
+                  <td className={isCpuOverAllocated ? 'danger' : ''}>Max CPU (24 hour max for all tasks)</td>
                   <td className={isCpuOverAllocated ? 'danger' : ''}>{Utils.roundTo(utilization.maxCpuUsed, HUNDREDTHS_PLACE)}</td>
                 </tr>
               </tbody>
@@ -47,11 +47,11 @@ const RequestUtilization = ({isFetching, utilization}) => {
             <BootstrapTable responsive={false} striped={true} style={{marginTop: '10px'}}>
               <tbody>
                 <tr>
-                  <td>Min CPU Time Throttled % (all tasks)</td>
+                  <td>Min CPU Time Throttled % (24 hour min for all tasks)</td>
                   <td>{Utils.roundTo(utilization.minPercentCpuTimeThrottled, HUNDREDTHS_PLACE)}</td>
                 </tr>
                 <tr>
-                  <td className={isCpuThrottled ? 'danger' : ''}>Max CPU Time Throttled % (all tasks)</td>
+                  <td className={isCpuThrottled ? 'danger' : ''}>Max CPU Time Throttled % (24 hour max for all tasks)</td>
                   <td className={isCpuThrottled ? 'danger' : ''}>{Utils.roundTo(utilization.maxPercentCpuTimeThrottled, HUNDREDTHS_PLACE)}</td>
                 </tr>
               </tbody>
@@ -69,11 +69,11 @@ const RequestUtilization = ({isFetching, utilization}) => {
             <BootstrapTable responsive={false} striped={true} style={{marginTop: '10px'}}>
               <tbody>
                 <tr>
-                  <td>Min memory (all tasks)</td>
+                  <td>Min memory (24 hour min for all tasks)</td>
                   <td>{Utils.humanizeFileSize(utilization.minMemBytesUsed)}</td>
                 </tr>
                 <tr>
-                  <td>Max memory (all tasks)</td>
+                  <td>Max memory (24 hour max for all tasks)</td>
                   <td>{Utils.humanizeFileSize(utilization.maxMemBytesUsed)}</td>
                 </tr>
               </tbody>
@@ -105,16 +105,15 @@ const RequestUtilization = ({isFetching, utilization}) => {
     </div>
   );
 
-  return utilization ? (
-    <CollapsableSection id="request-utilization" title="Resource usage" subtitle="(past 24 hours)" defaultExpanded={isCpuOverAllocated}>
-      {isFetching ? <Loader /> : attributes}
+  return (
+    <CollapsableSection id="request-utilization" title="Resource usage" defaultExpanded={isCpuOverAllocated}>
+      {attributes}
     </CollapsableSection>
-  ) : <div></div>;
+  );
 };
 
 RequestUtilization.propTypes = {
   requestId: PropTypes.string.isRequired,
-  isFetching: PropTypes.bool.isRequired,
   utilization: PropTypes.object
 };
 
@@ -122,10 +121,7 @@ RequestUtilization.propTypes = {
 const mapStateToProps = function(state, ownProps) {
   const requestId = ownProps.requestId;
   return {
-    isFetching: state.api.utilization.isFetching,
-    utilization: _.find(state.api.utilization.data.requestUtilizations, (request) => {
-      return request.requestId === requestId;
-    })
+    utilization: Utils.maybe(state, ['api', 'requestUtilization', requestId])
   };
 };
 
