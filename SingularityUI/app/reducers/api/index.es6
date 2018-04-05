@@ -153,7 +153,7 @@ const requestGroups = buildApiActionReducer(FetchGroups, []);
 const inactiveHosts = buildApiActionReducer(FetchInactiveHosts, []);
 const utilization = buildApiActionReducer(FetchUtilization, {});
 const requestUtilizations = buildApiActionReducer(FetchRequestUtilizations, []);
-const requestUtilization = buildKeyedApiActionReducer(FetchRequestUtilizations, []);
+const requestUtilization = buildKeyedApiActionReducer(FetchRequestUtilization, []);
 
 export default combineReducers({
   user,

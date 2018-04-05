@@ -6,7 +6,7 @@ import {
   FetchRequestHistory,
 } from '../api/history';
 import { FetchTaskCleanups, FetchScheduledTasksForRequest } from '../api/tasks';
-import { FetchRequestUtilization } from '../api.utilization';
+import { FetchRequestUtilization } from '../api/utilization';
 
 export const refresh = (requestId) => (dispatch, getState) => {
   const requiredPromises = Promise.all([
