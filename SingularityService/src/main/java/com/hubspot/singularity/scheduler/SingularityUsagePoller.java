@@ -447,6 +447,8 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
     double curMinCpuUsed = Double.MAX_VALUE;
     long curMaxDiskBytesUsed = 0;
     long curMinDiskBytesUsed = Long.MAX_VALUE;
+    double curMaxPercentCpuTimeThrottled = 0;
+    double curMinPercentCpuTimeThrottled = Long.MAX_VALUE;
 
     if (utilizationPerRequestId.containsKey(requestId)) {
       curMaxMemBytesUsed = requestUtilization.getMaxMemBytesUsed();
@@ -455,6 +457,8 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
       curMinCpuUsed = requestUtilization.getMinCpuUsed();
       curMaxDiskBytesUsed = requestUtilization.getMaxDiskBytesUsed();
       curMinDiskBytesUsed = requestUtilization.getMinDiskBytesUsed();
+      curMaxPercentCpuTimeThrottled = requestUtilization.getMaxPercentCpuTimeThrottled();
+      curMinPercentCpuTimeThrottled = requestUtilization.getMinPercentCpuTimeThrottled();
     }
 
     List<SingularityTaskUsage> pastTaskUsagesCopy = copyUsages(pastTaskUsages, latestUsage, task);
@@ -475,6 +479,8 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
       curMinMemBytesUsed = Math.min(newerUsage.getMemoryTotalBytes(), curMinMemBytesUsed);
       curMaxDiskBytesUsed = Math.max(newerUsage.getDiskTotalBytes(), curMaxDiskBytesUsed);
       curMinDiskBytesUsed = Math.min(newerUsage.getDiskTotalBytes(), curMinDiskBytesUsed);
+      curMaxPercentCpuTimeThrottled = Math.max(percentCpuTimeThrottled, curMaxPercentCpuTimeThrottled);
+      curMinPercentCpuTimeThrottled = Math.min(percentCpuTimeThrottled, curMinPercentCpuTimeThrottled);
 
       if (cpusUsed > cpuReservedForTask) {
         numCpuOverages ++;
@@ -500,6 +506,8 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
         .setMinMemBytesUsed(curMinMemBytesUsed)
         .setMaxDiskBytesUsed(curMaxDiskBytesUsed)
         .setMinDiskBytesUsed(curMinDiskBytesUsed)
+        .setMaxPercentCpuTimeThrottled(curMaxPercentCpuTimeThrottled)
+        .setMinPercentCpuTimeThrottled(curMinPercentCpuTimeThrottled)
         .setCpuBurstRating(cpuBurstRating);
 
     utilizationPerRequestId.put(requestId, requestUtilization);

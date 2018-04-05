@@ -374,18 +374,18 @@ class TaskDetail extends Component {
           title="CPU Usage"
           style={cpuUsageExceeding ? 'danger' : 'success'}
           total={this.props.resourceUsage.cpusLimit}
-          used={Math.round(cpuUsage * 100) / 100}
+          used={cpuUsage.toFixed(3)}
         >
           <span>
             <p>
-              {Math.round(cpuUsage * 100) / 100} used / {this.props.resourceUsage.cpusLimit} allocated CPUs
+              {cpuUsage.toFixed(3)} used / {this.props.resourceUsage.cpusLimit} allocated CPUs
             </p>
             {exceedingWarning}
           </span>
         </UsageInfo>
       ) : (
         <Panel header="CPU Usage">
-          <p>{Math.round(cpuUsage * 100) / 100} shares used</p>
+          <p>{cpuUsage.toFixed(3)} shares used</p>
         </Panel>
       );
       maybeResourceUsage = (

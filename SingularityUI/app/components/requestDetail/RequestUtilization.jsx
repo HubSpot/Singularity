@@ -12,6 +12,7 @@ export const HUNDREDTHS_PLACE = 2;
 const RequestUtilization = ({isFetching, utilization}) => {
   const isCpuOverAllocated = utilization &&
     (utilization.maxCpuUsed > utilization.cpuReserved / utilization.numTasks);
+  const isCpuThrottled = utilization.percentCpuTimeThrottled > 0;
   const attributes = utilization && (
       <div className="row">
         <div className="col-md-3">
@@ -31,6 +32,27 @@ const RequestUtilization = ({isFetching, utilization}) => {
                 <tr>
                   <td className={isCpuOverAllocated ? 'danger' : ''}>Max CPU (all tasks)</td>
                   <td className={isCpuOverAllocated ? 'danger' : ''}>{Utils.roundTo(utilization.maxCpuUsed, HUNDREDTHS_PLACE)}</td>
+                </tr>
+              </tbody>
+            </BootstrapTable>
+          </UsageInfo>
+        </div>
+        <div className="col-md-3">
+          <UsageInfo
+            title="Averge % CPU Time Throttled"
+            total={100}
+            used={utilization.percentCpuTimeThrottled / utilization.numTasks}
+            style={isCpuThrottled ? 'danger' : null}
+          >
+            <BootstrapTable responsive={false} striped={true} style={{marginTop: '10px'}}>
+              <tbody>
+                <tr>
+                  <td>Min CPU Time Throttled % (all tasks)</td>
+                  <td>{Utils.roundTo(utilization.minPercentCpuTimeThrottled, HUNDREDTHS_PLACE)}</td>
+                </tr>
+                <tr>
+                  <td className={isCpuThrottled ? 'danger' : ''}>Max CPU Time Throttled % (all tasks)</td>
+                  <td className={isCpuThrottled ? 'danger' : ''}>{Utils.roundTo(utilization.maxPercentCpuTimeThrottled, HUNDREDTHS_PLACE)}</td>
                 </tr>
               </tbody>
             </BootstrapTable>
