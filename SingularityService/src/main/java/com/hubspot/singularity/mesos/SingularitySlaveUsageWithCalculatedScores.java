@@ -25,7 +25,10 @@ class SingularitySlaveUsageWithCalculatedScores {
   private double estimatedAddedMemoryBytesReserved = 0;
   private double estimatedAddedDiskBytesReserved = 0;
 
-  public SingularitySlaveUsageWithCalculatedScores(SingularitySlaveUsage slaveUsage, SingularityUsageScoringStrategy scoringStrategy, MachineLoadMetric systemLoadMetric, MaxProbableUsage maxProbableTaskUsage) {
+  private final double load5Threshold;
+  private final double load1Threshold;
+
+  public SingularitySlaveUsageWithCalculatedScores(SingularitySlaveUsage slaveUsage, SingularityUsageScoringStrategy scoringStrategy, MachineLoadMetric systemLoadMetric, MaxProbableUsage maxProbableTaskUsage, double load5Threshold, double load1Threshold) {
     this.slaveUsage = slaveUsage;
     this.systemLoadMetric = systemLoadMetric;
     this.maxProbableTaskUsage = maxProbableTaskUsage;
@@ -36,6 +39,12 @@ class SingularitySlaveUsageWithCalculatedScores {
       this.missingUsageData = false;
       setScores(scoringStrategy);
     }
+    this.load5Threshold = load5Threshold;
+    this.load1Threshold = load1Threshold;
+  }
+
+  public boolean isOverloaded() {
+    return  (slaveUsage.getSystemLoad5Min() / slaveUsage.getSystemCpusTotal()) > load5Threshold || (slaveUsage.getSystemLoad1Min() / slaveUsage.getSystemCpusTotal()) > load1Threshold;
   }
 
   private void setScores(double longRunningCpusUsedScore,
