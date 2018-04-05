@@ -1,5 +1,6 @@
 package com.hubspot.singularity.scheduler;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -14,6 +15,7 @@ import com.google.inject.Inject;
 import com.hubspot.mesos.json.MesosSlaveMetricsSnapshotObject;
 import com.hubspot.mesos.json.MesosTaskMonitorObject;
 import com.hubspot.singularity.MachineState;
+import com.hubspot.singularity.RequestUtilization;
 import com.hubspot.singularity.SingularityClusterUtilization;
 import com.hubspot.singularity.SingularitySlaveUsage;
 import com.hubspot.singularity.SingularityTask;
@@ -121,14 +123,13 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
   }
 
   @Test
-  public void testUsagePollerComplex() throws InterruptedException {
+  public void testUsagePoller() throws InterruptedException {
     initRequest();
     initFirstDeploy();
     saveAndSchedule(request.toBuilder().setInstances(Optional.of(2)));
     resourceOffers(1);
 
     configuration.setNumUsageToKeep(2);
-    configuration.setUsageIntervalSeconds(1);
     configuration.setCheckUsageEveryMillis(1);
 
     List<SingularityTaskId> taskIds = taskManager.getActiveTaskIds();
@@ -181,11 +182,11 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
     //check that there is only 2 usages
 
     Assert.assertEquals(2, usageManager.getSlaveUsage(slaveId).size());
-    Assert.assertEquals(2, usageManager.getTaskUsage(t1).size());
-    Assert.assertEquals(2, usageManager.getTaskUsage(t2).size());
+    Assert.assertEquals(3, usageManager.getTaskUsage(t1).size());
+    Assert.assertEquals(3, usageManager.getTaskUsage(t2).size());
 
-    Assert.assertEquals(22.5, usageManager.getTaskUsage(t2).get(0).getCpuSeconds(), 0);
-    Assert.assertEquals(23.5, usageManager.getTaskUsage(t2).get(1).getCpuSeconds(), 0);
+    Assert.assertEquals(10.0, usageManager.getTaskUsage(t2).get(0).getCpuSeconds(), 0);
+    Assert.assertEquals(22.5, usageManager.getTaskUsage(t2).get(1).getCpuSeconds(), 0);
 
     Assert.assertEquals(875, usageManager.getSlaveUsage(slaveId).get(0).getMemoryBytesUsed(), 0);
     Assert.assertEquals(1149, usageManager.getSlaveUsage(slaveId).get(1).getMemoryBytesUsed(), 0);
@@ -320,8 +321,7 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
 
   @Test
   public void itCorrectlyDeletesOldUsage() {
-    configuration.setNumUsageToKeep(3);
-    configuration.setUsageIntervalSeconds(180);
+    configuration.setNumUsageToKeep(2);
     configuration.setCheckUsageEveryMillis(TimeUnit.MINUTES.toMillis(1));
     long now = TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis());
 
@@ -341,32 +341,13 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
     clearUsages(taskId);
     Assert.assertEquals(2, usageManager.getTaskUsage(taskId).size());
 
-    // x1 (3 min apart) x2 (1 min apart) x3
-    // x3 is deleted
+    // 3 usages, oldest is deleted
     taskId = "threeUsages";
     saveTaskUsage(taskId, now, now + TimeUnit.MINUTES.toSeconds(3), now + TimeUnit.MINUTES.toSeconds(4));
     clearUsages(taskId);
     Assert.assertEquals(2, usageManager.getTaskUsage(taskId).size());
     Assert.assertEquals(now, (long) usageManager.getTaskUsage(taskId).get(0).getTimestamp());
     Assert.assertEquals(now + TimeUnit.MINUTES.toSeconds(3), (long) usageManager.getTaskUsage(taskId).get(1).getTimestamp());
-
-    // x1 (1 min apart) x2 (1 min apart) x3
-    // x2 is deleted
-    taskId = "threeUsages2";
-    saveTaskUsage(taskId, now, now + TimeUnit.MINUTES.toSeconds(1), now + TimeUnit.MINUTES.toSeconds(2));
-    clearUsages(taskId);
-    Assert.assertEquals(2, usageManager.getTaskUsage(taskId).size());
-    Assert.assertEquals(now, (long) usageManager.getTaskUsage(taskId).get(0).getTimestamp());
-    Assert.assertEquals(now + TimeUnit.MINUTES.toSeconds(2), (long) usageManager.getTaskUsage(taskId).get(1).getTimestamp());
-
-    // x1 (3 min apart) x2 (3 min apart) x3
-    // x1 is deleted
-    taskId = "threeUsages3";
-    saveTaskUsage(taskId, now, now + TimeUnit.MINUTES.toSeconds(3), now + TimeUnit.MINUTES.toSeconds(6));
-    clearUsages(taskId);
-    Assert.assertEquals(2, usageManager.getTaskUsage(taskId).size());
-    Assert.assertEquals(now + TimeUnit.MINUTES.toSeconds(3), (long) usageManager.getTaskUsage(taskId).get(0).getTimestamp());
-    Assert.assertEquals(now + TimeUnit.MINUTES.toSeconds(6), (long) usageManager.getTaskUsage(taskId).get(1).getTimestamp());
   }
 
   @Test
@@ -400,15 +381,16 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
     Assert.assertTrue("Couldn't find cluster utilization", usageManager.getClusterUtilization().isPresent());
 
     SingularityClusterUtilization utilization = usageManager.getClusterUtilization().get();
+    List<RequestUtilization> requestUtilizations = new ArrayList<>(usageManager.getRequestUtilizations().values());
 
     int t1TaskUsages = usageManager.getTaskUsage(t1.getId()).size();
     int t2TaskUsages = usageManager.getTaskUsage(t2.getId()).size();
     Assert.assertEquals(2, t1TaskUsages);
     Assert.assertEquals(2, t2TaskUsages);
 
-    Assert.assertEquals(1, utilization.getRequestUtilizations().size());
-    Assert.assertEquals(cpuReserved * (t1TaskUsages + t2TaskUsages), utilization.getRequestUtilizations().get(0).getCpuReserved(), 0);
-    Assert.assertEquals(Math.round(memMbReserved * SingularitySlaveUsage.BYTES_PER_MEGABYTE * (t1TaskUsages + t2TaskUsages)), utilization.getRequestUtilizations().get(0).getMemBytesReserved(), 1);
+    Assert.assertEquals(1, requestUtilizations.size());
+    Assert.assertEquals(cpuReserved * (t1TaskUsages + t2TaskUsages), requestUtilizations.get(0).getCpuReserved(), 0);
+    Assert.assertEquals(Math.round(memMbReserved * SingularitySlaveUsage.BYTES_PER_MEGABYTE * (t1TaskUsages + t2TaskUsages)), requestUtilizations.get(0).getMemBytesReserved(), 1);
   }
 
   @Test
@@ -434,17 +416,18 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
 
     Assert.assertTrue("Couldn't find cluster utilization", usageManager.getClusterUtilization().isPresent());
     SingularityClusterUtilization utilization = usageManager.getClusterUtilization().get();
+    List<RequestUtilization> requestUtilizations = new ArrayList<>(usageManager.getRequestUtilizations().values());
 
     int t1TaskUsages = usageManager.getTaskUsage(t1.getId()).size();
     int t2TaskUsages = usageManager.getTaskUsage(t2.getId()).size();
     Assert.assertEquals(1, t1TaskUsages);
     Assert.assertEquals(1, t2TaskUsages);
-    Assert.assertEquals(1, utilization.getRequestUtilizations().size());
+    Assert.assertEquals(1, requestUtilizations.size());
 
-    double maxCpu = utilization.getRequestUtilizations().get(0).getMaxCpuUsed();
-    double minCpu = utilization.getRequestUtilizations().get(0).getMinCpuUsed();
-    long maxMemBytes = utilization.getRequestUtilizations().get(0).getMaxMemBytesUsed();
-    long minMemBytes = utilization.getRequestUtilizations().get(0).getMinMemBytesUsed();
+    double maxCpu = requestUtilizations.get(0).getMaxCpuUsed();
+    double minCpu = requestUtilizations.get(0).getMinCpuUsed();
+    long maxMemBytes = requestUtilizations.get(0).getMaxMemBytesUsed();
+    long minMemBytes = requestUtilizations.get(0).getMinMemBytesUsed();
     Assert.assertEquals(10, maxCpu, 0);
     Assert.assertEquals(8, minCpu, 0);
     Assert.assertEquals(800, maxMemBytes);
@@ -461,17 +444,18 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
 
     Assert.assertTrue("Couldn't find cluster utilization", usageManager.getClusterUtilization().isPresent());
     utilization = usageManager.getClusterUtilization().get();
+    requestUtilizations = new ArrayList<>(usageManager.getRequestUtilizations().values());
 
     t1TaskUsages = usageManager.getTaskUsage(t1.getId()).size();
     t2TaskUsages = usageManager.getTaskUsage(t2.getId()).size();
     Assert.assertEquals(2, t1TaskUsages);
     Assert.assertEquals(2, t2TaskUsages);
-    Assert.assertEquals(1, utilization.getRequestUtilizations().size());
+    Assert.assertEquals(1, requestUtilizations.size());
 
-    maxCpu = utilization.getRequestUtilizations().get(0).getMaxCpuUsed();
-    minCpu = utilization.getRequestUtilizations().get(0).getMinCpuUsed();
-    maxMemBytes = utilization.getRequestUtilizations().get(0).getMaxMemBytesUsed();
-    minMemBytes = utilization.getRequestUtilizations().get(0).getMinMemBytesUsed();
+    maxCpu = requestUtilizations.get(0).getMaxCpuUsed();
+    minCpu = requestUtilizations.get(0).getMinCpuUsed();
+    maxMemBytes = requestUtilizations.get(0).getMaxMemBytesUsed();
+    minMemBytes = requestUtilizations.get(0).getMinMemBytesUsed();
     Assert.assertEquals(12, maxCpu, 0);
     Assert.assertEquals(7, minCpu, 0);
     Assert.assertEquals(850, maxMemBytes);
@@ -488,17 +472,18 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
 
     Assert.assertTrue("Couldn't find cluster utilization", usageManager.getClusterUtilization().isPresent());
     utilization = usageManager.getClusterUtilization().get();
+    requestUtilizations = new ArrayList<>(usageManager.getRequestUtilizations().values());
 
     t1TaskUsages = usageManager.getTaskUsage(t1.getId()).size();
     t2TaskUsages = usageManager.getTaskUsage(t2.getId()).size();
     Assert.assertEquals(3, t1TaskUsages);
     Assert.assertEquals(3, t2TaskUsages);
-    Assert.assertEquals(1, utilization.getRequestUtilizations().size());
+    Assert.assertEquals(1, requestUtilizations.size());
 
-    maxCpu = utilization.getRequestUtilizations().get(0).getMaxCpuUsed();
-    minCpu = utilization.getRequestUtilizations().get(0).getMinCpuUsed();
-    maxMemBytes = utilization.getRequestUtilizations().get(0).getMaxMemBytesUsed();
-    minMemBytes = utilization.getRequestUtilizations().get(0).getMinMemBytesUsed();
+    maxCpu = requestUtilizations.get(0).getMaxCpuUsed();
+    minCpu = requestUtilizations.get(0).getMinCpuUsed();
+    maxMemBytes = requestUtilizations.get(0).getMaxMemBytesUsed();
+    minMemBytes = requestUtilizations.get(0).getMinMemBytesUsed();
     Assert.assertEquals(12, maxCpu, 0);
     Assert.assertEquals(7, minCpu, 0);
     Assert.assertEquals(850, maxMemBytes);
@@ -676,10 +661,6 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
                                long expectedMinUnderUtilizedMemBytes) {
 
     Assert.assertEquals(expectedTaskUsages, actualTaskUsages);
-
-    Assert.assertEquals("Expected 1 request", 1, utilization.getRequestUtilizations().size());
-    Assert.assertEquals("Incorrect cpu reserved", cpuReserved * actualTaskUsages, utilization.getRequestUtilizations().get(0).getCpuReserved(), 0);
-    Assert.assertEquals("Incorrect mem reserved", memMbReserved * SingularitySlaveUsage.BYTES_PER_MEGABYTE * actualTaskUsages, utilization.getRequestUtilizations().get(0).getMemBytesReserved(), 0.5);
 
     Assert.assertEquals(expectedRequestsWithOverUtilizedCpu, utilization.getNumRequestsWithOverUtilizedCpu());
     Assert.assertEquals(expectedRequestsWithUnderUtilizedCpu, utilization.getNumRequestsWithUnderUtilizedCpu());

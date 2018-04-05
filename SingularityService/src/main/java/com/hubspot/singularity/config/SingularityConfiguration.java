@@ -74,8 +74,6 @@ public class SingularityConfiguration extends Configuration {
 
   private long checkUsageEveryMillis = TimeUnit.MINUTES.toMillis(1);
 
-  private int usageIntervalSeconds = 5760; // 15 saved each 5760 seconds (96 min) apart is 1 day of usage
-
   private int maxConcurrentUsageCollections = 15;
 
   private boolean shuffleTasksForOverloadedSlaves = false; // recommended 'true' when oversubscribing cpu for larger clusters
@@ -1498,14 +1496,6 @@ public class SingularityConfiguration extends Configuration {
 
   public void setCheckUsageEveryMillis(long checkUsageEveryMillis) {
     this.checkUsageEveryMillis = checkUsageEveryMillis;
-  }
-
-  public int getUsageIntervalSeconds() {
-    return usageIntervalSeconds;
-  }
-
-  public void setUsageIntervalSeconds(int usageIntervalSeconds) {
-    this.usageIntervalSeconds = usageIntervalSeconds;
   }
 
   public int getMaxConcurrentUsageCollections() {

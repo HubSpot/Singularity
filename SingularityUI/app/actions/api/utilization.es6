@@ -8,3 +8,20 @@ export const FetchUtilization = buildApiAction(
   })
 );
 
+export const FetchRequestUtilizations = buildApiAction(
+  'FETCH_REQUEST_UTILIZATIONS',
+  (catchStatusCodes = null) => ({
+    url: '/usage/requests',
+    catchStatusCodes
+  })
+);
+
+
+export const FetchRequestUtilization = buildApiAction(
+  'FETCH_REQUEST_UTILIZATION',
+  (requestId, catchStatusCodes = null) => ({
+    url: `/usage/requests/request/${requestId}`,
+    catchStatusCodes
+  }),
+  (requestId) => requestId
+);

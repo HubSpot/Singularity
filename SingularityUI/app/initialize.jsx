@@ -14,7 +14,6 @@ import AppRouter from './router';
 import configureStore from 'store';
 import { FetchUser } from 'actions/api/auth';
 import { FetchGroups } from 'actions/api/requestGroups';
-import { FetchUtilization } from 'actions/api/utilization';
 import { FetchSingularityStatus } from 'actions/api/state';
 import { actions as tailerActions } from 'singularityui-tailer';
 import { AddStarredRequests } from 'actions/api/users';
@@ -90,9 +89,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const globalRefresh = () => {
       // set up request groups
       store.dispatch(FetchGroups.trigger([404, 500]));
-
-      // set up cluster utilization
-      store.dispatch(FetchUtilization.trigger([404, 500]));
 
       // set up state
       store.dispatch(FetchSingularityStatus.trigger());
