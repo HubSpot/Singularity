@@ -348,12 +348,14 @@ class TaskDetail extends Component {
     if (!this.props.task.isStillRunning) return null;
     let cpuUsage = 0;
     let cpuUsageExceeding = false;
+    let percentCpuTimeThrottled = 0;
     if (this.state.previousUsage) {
       const currentTime = this.props.resourceUsage.cpusSystemTimeSecs + this.props.resourceUsage.cpusUserTimeSecs;
       const previousTime = this.state.previousUsage.cpusSystemTimeSecs + this.state.previousUsage.cpusUserTimeSecs;
       const timestampDiff = this.props.resourceUsage.timestamp - this.state.previousUsage.timestamp;
       cpuUsage = (currentTime - previousTime) / timestampDiff;
       cpuUsageExceeding = (cpuUsage / this.props.resourceUsage.cpusLimit) > 1.10;
+      percentCpuTimeThrottled = (this.props.resourceUsage.cpusThrottledTimeSecs - this.state.previousUsage.cpusThrottledTimeSecs) / timestampDiff
     }
 
     const exceedingWarning = cpuUsageExceeding && (
@@ -374,7 +376,7 @@ class TaskDetail extends Component {
           title="CPU Usage"
           style={cpuUsageExceeding ? 'danger' : 'success'}
           total={this.props.resourceUsage.cpusLimit}
-          used={cpuUsage.toFixed(3)}
+          used={cpuUsage}
         >
           <span>
             <p>
@@ -387,6 +389,21 @@ class TaskDetail extends Component {
         <Panel header="CPU Usage">
           <p>{cpuUsage.toFixed(3)} shares used</p>
         </Panel>
+      );
+
+      const maybePercentCpuTimeThrottled = (
+         <UsageInfo
+          title="% CPU Time Throttled"
+          style={percentCpuTimeThrottled > 0 ? 'danger' : 'success'}
+          total={100}
+          used={percentCpuTimeThrottled}
+        >
+          <span>
+            <p>
+              {percentCpuTimeThrottled.toFixed(3)}% of CPU Time Throttled
+            </p>
+          </span>
+        </UsageInfo>
       );
       maybeResourceUsage = (
         <div>
@@ -403,6 +420,9 @@ class TaskDetail extends Component {
             </div>
             <div className="col-md-3 col-sm-4">
               {maybeCpuUsage}
+            </div>
+            <div className="col-md-3 col-sm-4">
+              {maybePercentCpuTimeThrottled}
             </div>
             <div className="col-md-3 col-sm-4">
               <UsageInfo
