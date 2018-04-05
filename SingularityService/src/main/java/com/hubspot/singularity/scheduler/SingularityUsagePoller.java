@@ -376,7 +376,12 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
           break;
         }
         LOG.debug("Cleaning up task {} to free up cpu on overloaded host (remaining cpu overage: {})", taskIdWithUsage.getTaskId(), cpuOverage);
-        Optional<String> message = Optional.of(String.format("Load on slave is %s / %s, shuffling task to less busy host", systemLoad, overloadedSlave.getSystemCpusTotal()));
+        Optional<String> message = Optional.of(String.format(
+            "Load on slave is %s / %s, shuffling task using %s / %s to less busy host",
+            systemLoad,
+            overloadedSlave.getSystemCpusTotal(),
+            taskIdWithUsage.getUsage().getCpusUsed(),
+            taskIdWithUsage.getRequestedResources().getCpus()));
         taskManager.createTaskCleanup(
             new SingularityTaskCleanup(
                 Optional.absent(),
