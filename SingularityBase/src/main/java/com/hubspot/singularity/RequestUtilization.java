@@ -24,7 +24,10 @@ public class RequestUtilization {
   private long minDiskBytesUsed = 0;
 
   private double cpuBurstRating = 0;
-  private double percentCpuTimeThrottledForAllTasks = 0;
+
+  private double percentCpuTimeThrottled = 0;
+  private double maxPercentCpuTimeThrottled = 0;
+  private double minPercentCpuTimeThrottled = 0;
 
   @JsonCreator
   public RequestUtilization(@JsonProperty("requestId") String requestId,
@@ -65,7 +68,7 @@ public class RequestUtilization {
   }
 
   public RequestUtilization addPercentCpuTimeThrottled(double percentCpuTimeThrottled) {
-    this.percentCpuTimeThrottledForAllTasks += percentCpuTimeThrottled;
+    this.percentCpuTimeThrottled += percentCpuTimeThrottled;
     return this;
   }
 
@@ -98,6 +101,10 @@ public class RequestUtilization {
     return diskBytesReserved;
   }
 
+  public double getPercentCpuTimeThrottled() {
+    return percentCpuTimeThrottled;
+  }
+
   public int getNumTasks() {
     return numTasks;
   }
@@ -122,8 +129,9 @@ public class RequestUtilization {
     return diskBytesUsed / (double) numTasks;
   }
 
+  @JsonIgnore
   public double getAvgPercentCpuTimeThrottled() {
-    return percentCpuTimeThrottledForAllTasks / numTasks;
+    return percentCpuTimeThrottled / numTasks;
   }
 
   public String getDeployId() {
@@ -193,6 +201,24 @@ public class RequestUtilization {
     return this;
   }
 
+  public double getMaxPercentCpuTimeThrottled() {
+    return maxPercentCpuTimeThrottled;
+  }
+
+  public RequestUtilization setMaxPercentCpuTimeThrottled(double maxPercentCpuTimeThrottled) {
+    this.maxPercentCpuTimeThrottled = maxPercentCpuTimeThrottled;
+    return this;
+  }
+
+  public double getMinPercentCpuTimeThrottled() {
+    return minPercentCpuTimeThrottled;
+  }
+
+  public RequestUtilization setMinPercentCpuTimeThrottled(double minPercentCpuTimeThrottled) {
+    this.minPercentCpuTimeThrottled = minPercentCpuTimeThrottled;
+    return this;
+  }
+
   @Override
   public String toString() {
     return "RequestUtilization{" +
@@ -212,6 +238,9 @@ public class RequestUtilization {
         ", maxDiskBytesUsed=" + maxDiskBytesUsed +
         ", minDiskBytesUsed=" + minDiskBytesUsed +
         ", cpuBurstRating=" + cpuBurstRating +
+        ", percentCpuTimeThrottled=" + percentCpuTimeThrottled +
+        ", maxPercentCpuTimeThrottled=" + maxPercentCpuTimeThrottled +
+        ", minPercentCpuTimeThrottled=" + minPercentCpuTimeThrottled +
         '}';
   }
 }
