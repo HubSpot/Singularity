@@ -67,6 +67,8 @@ public class MesosConfiguration {
   private double nonLonRunningFreeResourceWeight = 0.75;
   private double nonLongRunningUsedResourceWeight = 0.25;
   private boolean omitOverloadedHosts = false;
+  private double load5OverloadedThreshold = 1.0;
+  private double load1OverloadedThreshold = 1.5;
 
   public int getMaxNumInstancesPerRequest() {
     return maxNumInstancesPerRequest;
@@ -354,5 +356,21 @@ public class MesosConfiguration {
 
   public void setOmitOverloadedHosts(boolean omitOverloadedHosts) {
     this.omitOverloadedHosts = omitOverloadedHosts;
+  }
+
+  public double getLoad5OverloadedThreshold() {
+    return load5OverloadedThreshold;
+  }
+
+  public void setLoad5OverloadedThreshold(double load5OverloadedThreshold) {
+    this.load5OverloadedThreshold = load5OverloadedThreshold;
+  }
+
+  public double getLoad1OverloadedThreshold() {
+    return load1OverloadedThreshold;
+  }
+
+  public void setLoad1OverloadedThreshold(double load1OverloadedThreshold) {
+    this.load1OverloadedThreshold = load1OverloadedThreshold;
   }
 }
