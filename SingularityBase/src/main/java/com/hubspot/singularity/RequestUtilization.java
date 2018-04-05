@@ -24,6 +24,7 @@ public class RequestUtilization {
   private long minDiskBytesUsed = 0;
 
   private double cpuBurstRating = 0;
+  private double percentCpuTimeThrottledForAllTasks = 0;
 
   @JsonCreator
   public RequestUtilization(@JsonProperty("requestId") String requestId,
@@ -60,6 +61,11 @@ public class RequestUtilization {
 
   public RequestUtilization addDiskBytesReserved(long diskBytes) {
     this.diskBytesReserved += diskBytes;
+    return this;
+  }
+
+  public RequestUtilization addPercentCpuTimeThrottled(double percentCpuTimeThrottled) {
+    this.percentCpuTimeThrottledForAllTasks += percentCpuTimeThrottled;
     return this;
   }
 
@@ -114,6 +120,10 @@ public class RequestUtilization {
   @JsonIgnore
   public double getAvgDiskBytesUsed() {
     return diskBytesUsed / (double) numTasks;
+  }
+
+  public double getAvgPercentCpuTimeThrottled() {
+    return percentCpuTimeThrottledForAllTasks / numTasks;
   }
 
   public String getDeployId() {
