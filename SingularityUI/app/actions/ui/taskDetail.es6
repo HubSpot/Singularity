@@ -32,7 +32,6 @@ export const refresh = (taskId, splat) => (dispatch, getState) => {
 };
 
 export const onLoad = (taskId) => (dispatch) => {
-  console.log('polling stats');
   const refreshStatistics = () => {
     dispatch(FetchTaskStatistics.trigger(taskId, [404, 500]));
   }
