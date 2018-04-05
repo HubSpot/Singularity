@@ -9,10 +9,10 @@ import Loader from "../common/Loader";
 
 export const HUNDREDTHS_PLACE = 2;
 
-const RequestUtilization = ({isFetching, utilization}) => {
+const RequestUtilization = ({utilization}) => {
   const isCpuOverAllocated = utilization &&
     (utilization.maxCpuUsed > utilization.cpuReserved / utilization.numTasks);
-  const isCpuThrottled = utilization.percentCpuTimeThrottled > 0;
+  const isCpuThrottled = utilization && utilization.percentCpuTimeThrottled > 0;
   const attributes = utilization && (
       <div className="row">
         <div className="col-md-3">
@@ -119,9 +119,10 @@ RequestUtilization.propTypes = {
 
 
 const mapStateToProps = function(state, ownProps) {
+  console.log(state);
   const requestId = ownProps.requestId;
   return {
-    utilization: Utils.maybe(state, ['api', 'requestUtilization', requestId])
+    utilization: Utils.maybe(state, ['api', 'requestUtilization', requestId, 'data'])
   };
 };
 
