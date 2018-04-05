@@ -148,8 +148,17 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
     }
   }
 
-  private void collectSlaveUage(SingularitySlave slave, long now, Map<String, RequestUtilization> utilizationPerRequestId, Map<String, RequestUtilization> previousUtilizations, Map<SingularitySlaveUsage, List<TaskIdWithUsage>> overLoadedHosts,
-                                AtomicLong totalMemBytesUsed, AtomicLong totalMemBytesAvailable, AtomicDouble totalCpuUsed, AtomicDouble totalCpuAvailable, AtomicLong totalDiskBytesUsed, AtomicLong totalDiskBytesAvailable) {
+  private void collectSlaveUage(SingularitySlave slave,
+                                long now,
+                                Map<String, RequestUtilization> utilizationPerRequestId,
+                                Map<String, RequestUtilization> previousUtilizations,
+                                Map<SingularitySlaveUsage, List<TaskIdWithUsage>> overLoadedHosts,
+                                AtomicLong totalMemBytesUsed,
+                                AtomicLong totalMemBytesAvailable,
+                                AtomicDouble totalCpuUsed,
+                                AtomicDouble totalCpuAvailable,
+                                AtomicLong totalDiskBytesUsed,
+                                AtomicLong totalDiskBytesAvailable) {
     Map<ResourceUsageType, Number> longRunningTasksUsage = new HashMap<>();
     longRunningTasksUsage.put(ResourceUsageType.MEMORY_BYTES_USED, 0);
     longRunningTasksUsage.put(ResourceUsageType.CPU_USED, 0);
@@ -249,7 +258,7 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
           if (maybeStartingUpdate.isPresent()) {
             long startTimestampSeconds = TimeUnit.MILLISECONDS.toSeconds(maybeStartingUpdate.get().getTimestamp());
             double usedCpusSinceStart = latestUsage.getCpuSeconds() / (latestUsage.getTimestamp() - startTimestampSeconds);
-            if (isLongRunning(task) ||  isConsideredLongRunning(task)) {
+            if (isLongRunning(task) || isConsideredLongRunning(task)) {
               updateLongRunningTasksUsage(longRunningTasksUsage, latestUsage.getMemoryTotalBytes(), usedCpusSinceStart, latestUsage.getDiskTotalBytes());
             }
             currentUsage = new SingularityTaskCurrentUsage(latestUsage.getMemoryTotalBytes(), now, usedCpusSinceStart, latestUsage.getDiskTotalBytes());
@@ -262,7 +271,7 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
 
           double taskCpusUsed = ((latestUsage.getCpuSeconds() - lastUsage.getCpuSeconds()) / (latestUsage.getTimestamp() - lastUsage.getTimestamp()));
 
-          if (isLongRunning(task) ||  isConsideredLongRunning(task)) {
+          if (isLongRunning(task) || isConsideredLongRunning(task)) {
             updateLongRunningTasksUsage(longRunningTasksUsage, latestUsage.getMemoryTotalBytes(), taskCpusUsed, latestUsage.getDiskTotalBytes());
           }
 
@@ -272,7 +281,7 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
         }
 
         if (configuration.isShuffleTasksForOverloadedSlaves() && currentUsage != null && currentUsage.getCpusUsed() > 0) {
-          if (isLongRunning(task) && !configuration.getDoNotShuffleRequests().contains(task.getRequestId())) {
+          if (isEligibleForShuffle(task)) {
             Optional<SingularityTaskHistoryUpdate> maybeCleanupUpdate = taskManager.getTaskHistoryUpdate(task, ExtendedTaskState.TASK_CLEANING);
             if (maybeCleanupUpdate.isPresent() && isTaskAlreadyCleanedUpForShuffle(maybeCleanupUpdate.get())) {
               LOG.trace("Task {} already being cleaned up to spread cpu usage, skipping", taskId);
@@ -325,6 +334,20 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
       LOG.error(message, t);
       exceptionNotifier.notify(message, t);
     }
+  }
+
+  private boolean isEligibleForShuffle(SingularityTaskId task) {
+    Optional<SingularityTaskHistoryUpdate> taskRunning = taskManager.getTaskHistoryUpdate(task, ExtendedTaskState.TASK_RUNNING);
+
+    return (
+        !configuration.getDoNotShuffleRequests().contains(task.getRequestId())
+            && isLongRunning(task)
+            && (
+            configuration.getMinutesBeforeNewTaskEligibleForShuffle() == 0 // Shuffle delay is disabled entirely
+                || (taskRunning.isPresent() && TimeUnit.MILLISECONDS.toMinutes(System.currentTimeMillis() - taskRunning.get()
+                .getTimestamp()) >= configuration.getMinutesBeforeNewTaskEligibleForShuffle())
+        )
+    );
   }
 
   private void shuffleTasksOnOverloadedHosts(Map<SingularitySlaveUsage, List<TaskIdWithUsage>> overLoadedHosts) {
@@ -380,7 +403,8 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
                 message,
                 Optional.of(UUID.randomUUID().toString()),
                 Optional.absent(), Optional.absent()));
-        requestManager.addToPendingQueue(new SingularityPendingRequest(taskIdWithUsage.getTaskId().getRequestId(), taskIdWithUsage.getTaskId().getDeployId(), System.currentTimeMillis(), Optional.absent(),
+        requestManager.addToPendingQueue(new SingularityPendingRequest(taskIdWithUsage.getTaskId().getRequestId(), taskIdWithUsage.getTaskId()
+            .getDeployId(), System.currentTimeMillis(), Optional.absent(),
             PendingType.TASK_BOUNCE, Optional.absent(), Optional.absent(), Optional.absent(), message, Optional.of(UUID.randomUUID().toString())));
         cpuOverage -= taskIdWithUsage.getUsage().getCpusUsed();
         shuffledTasksOnSlave++;
@@ -541,7 +565,7 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
       }
 
       if (cpusUsed > cpuReservedForTask) {
-        numCpuOverages ++;
+        numCpuOverages++;
       }
 
       newRequestUtilization
@@ -557,7 +581,7 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
     newRequestUtilization
         .addMemBytesReserved((long) (memoryMbReservedForTask * SingularitySlaveUsage.BYTES_PER_MEGABYTE * numTasks))
         .addCpuReserved(cpuReservedForTask * numTasks)
-        .addDiskBytesReserved((long) diskMbReservedForTask * SingularitySlaveUsage.BYTES_PER_MEGABYTE  * numTasks)
+        .addDiskBytesReserved((long) diskMbReservedForTask * SingularitySlaveUsage.BYTES_PER_MEGABYTE * numTasks)
         .setCpuBurstRating(cpuBurstRating);
 
     utilizationPerRequestId.put(requestId, newRequestUtilization);

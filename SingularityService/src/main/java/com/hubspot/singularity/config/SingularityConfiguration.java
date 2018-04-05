@@ -84,6 +84,8 @@ public class SingularityConfiguration extends Configuration {
 
   private List<String> doNotShuffleRequests = new ArrayList<>();
 
+  private int minutesBeforeNewTaskEligibleForShuffle = 15;
+
   private long cleanUsageEveryMillis = TimeUnit.MINUTES.toMillis(5);
 
   private int numUsageToKeep = 15;
@@ -1534,6 +1536,14 @@ public class SingularityConfiguration extends Configuration {
 
   public void setDoNotShuffleRequests(List<String> doNotShuffleRequests) {
     this.doNotShuffleRequests = doNotShuffleRequests;
+  }
+
+  public int getMinutesBeforeNewTaskEligibleForShuffle() {
+    return minutesBeforeNewTaskEligibleForShuffle;
+  }
+
+  public void setMinutesBeforeNewTaskEligibleForShuffle(int minutesBeforeNewTaskEligibleForShuffle) {
+    this.minutesBeforeNewTaskEligibleForShuffle = minutesBeforeNewTaskEligibleForShuffle;
   }
 
   public long getCleanUsageEveryMillis() {

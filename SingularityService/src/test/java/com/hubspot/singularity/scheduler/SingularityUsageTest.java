@@ -491,9 +491,61 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
   }
 
   @Test
+  public void itDelaysTaskShuffles() {
+    try {
+      configuration.setShuffleTasksForOverloadedSlaves(true);
+      configuration.setMinutesBeforeNewTaskEligibleForShuffle(15);
+
+      initRequest();
+      initFirstDeployWithResources(configuration.getMesosConfiguration().getDefaultCpus(), configuration.getMesosConfiguration().getDefaultMemory());
+      saveAndSchedule(requestManager.getRequest(requestId).get().getRequest().toBuilder().setInstances(Optional.of(3)));
+      resourceOffers(1);
+      SingularitySlaveUsage highUsage = new SingularitySlaveUsage(15, 10, Optional.of(10.0), 1, 1, Optional.of(30L), 1, 1, Optional.of(1024L), Collections.emptyMap(), 1, System.currentTimeMillis(), 1, 30000, 10, 15, 15, 15, 0, 107374182);
+      usageManager.saveSpecificSlaveUsageAndSetCurrent("host1", highUsage);
+
+      SingularityTaskId taskId1 = taskManager.getActiveTaskIds().get(0);
+      String t1 = taskId1.getId();
+      SingularityTaskId taskId2 = taskManager.getActiveTaskIds().get(1);
+      String t2 = taskId2.getId();
+      SingularityTaskId taskId3 = taskManager.getActiveTaskIds().get(2);
+      String t3 = taskId3.getId();
+      statusUpdate(taskManager.getTask(taskId1).get(), TaskState.TASK_STARTING, Optional.of(taskId1.getStartedAt()));
+      statusUpdate(taskManager.getTask(taskId2).get(), TaskState.TASK_STARTING, Optional.of(taskId2.getStartedAt()));
+      statusUpdate(taskManager.getTask(taskId3).get(), TaskState.TASK_STARTING, Optional.of(taskId3.getStartedAt()));
+
+      statusUpdate(taskManager.getTask(taskId2).get(), TaskState.TASK_RUNNING, Optional.of(taskId2.getStartedAt() - TimeUnit.MINUTES.toMillis(15)));
+
+      // task 1 using 3 cpus
+      MesosTaskMonitorObject t1u1 = getTaskMonitor(t1, 15, TimeUnit.MILLISECONDS.toSeconds(taskId1.getStartedAt()) + 5, 1024);
+      // task 2 using 2 cpus
+      MesosTaskMonitorObject t2u1 = getTaskMonitor(t2, 10, TimeUnit.MILLISECONDS.toSeconds(taskId2.getStartedAt()) + 5, 1024);
+      // task 3 using 1 cpus
+      MesosTaskMonitorObject t3u1 = getTaskMonitor(t3, 5, TimeUnit.MILLISECONDS.toSeconds(taskId3.getStartedAt()) + 5, 1024);
+      mesosClient.setSlaveResourceUsage("host1", Arrays.asList(t1u1, t2u1, t3u1));
+      mesosClient.setSlaveMetricsSnapshot(
+          "host1",
+          new MesosSlaveMetricsSnapshotObject(0, 0, 0, 10.0, 0, 0, 0, 0, 0, 0, 0, 0, 10.0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 15, 0, 0, 15, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 15, 0, 0, 0, 0, 0, 0, 15, 0, 0, 0, 0)
+      );
+
+      usagePoller.runActionOnPoll();
+
+      // Tasks are not cleaned up because they haven't been running for long enough.
+      Assert.assertFalse(taskManager.getTaskCleanup(taskId1.getId()).isPresent());
+      Assert.assertFalse(taskManager.getTaskCleanup(taskId3.getId()).isPresent());
+
+      // Even though it's not the worst offender, task 2 is cleaned up because it's been running long enough.
+      Assert.assertEquals(taskManager.getTaskCleanup(taskId2.getId()).get().getCleanupType(), TaskCleanupType.REBALANCE_CPU_USAGE);
+    } finally {
+      configuration.setShuffleTasksForOverloadedSlaves(false);
+    }
+
+  }
+
+  @Test
   public void itCreatesTaskCleanupsWhenAMachineIsOverloaded() {
     try {
       configuration.setShuffleTasksForOverloadedSlaves(true);
+      configuration.setMinutesBeforeNewTaskEligibleForShuffle(0);
 
       initRequest();
       initFirstDeployWithResources(configuration.getMesosConfiguration().getDefaultCpus(), configuration.getMesosConfiguration().getDefaultMemory());
@@ -538,6 +590,7 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
   public void itLimitsTheNumberOfTaskCleanupsToCreate() {
     try {
       configuration.setShuffleTasksForOverloadedSlaves(true);
+      configuration.setMinutesBeforeNewTaskEligibleForShuffle(0);
       configuration.setMaxTasksToShuffleTotal(1);
 
       initRequest();
