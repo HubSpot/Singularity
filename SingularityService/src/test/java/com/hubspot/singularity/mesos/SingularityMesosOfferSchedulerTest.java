@@ -452,6 +452,7 @@ public class SingularityMesosOfferSchedulerTest extends SingularitySchedulerTest
         new SingularitySlaveUsage(0, cpusReserved, Optional.of(cpusTotal), 0, memMbReserved, Optional.of(memMbTotal), 0, diskMbReserved, Optional.of(diskMbTotal), longRunningTasksUsage, 1, 0L,
             0, 0, 0, 0, 0, 0, 0 , 0),
         SingularityUsageScoringStrategy.SPREAD_TASK_USAGE, MachineLoadMetric.LOAD_5, new MaxProbableUsage(0, 0, 0)
+        0, 0
     );
   }
 
