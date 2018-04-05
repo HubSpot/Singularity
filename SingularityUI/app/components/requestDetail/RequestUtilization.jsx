@@ -26,11 +26,11 @@ const RequestUtilization = ({utilization}) => {
             <BootstrapTable responsive={false} striped={true} style={{marginTop: '10px'}}>
               <tbody>
                 <tr>
-                  <td>Min CPU (24 hour min for all tasks)</td>
+                  <td>Min CPU (24 Hr Min)</td>
                   <td>{Utils.roundTo(utilization.minCpuUsed, HUNDREDTHS_PLACE)}</td>
                 </tr>
                 <tr>
-                  <td className={isCpuOverAllocated ? 'danger' : ''}>Max CPU (24 hour max for all tasks)</td>
+                  <td className={isCpuOverAllocated ? 'danger' : ''}>Max CPU (24 Hr Max)</td>
                   <td className={isCpuOverAllocated ? 'danger' : ''}>{Utils.roundTo(utilization.maxCpuUsed, HUNDREDTHS_PLACE)}</td>
                 </tr>
               </tbody>
@@ -47,11 +47,11 @@ const RequestUtilization = ({utilization}) => {
             <BootstrapTable responsive={false} striped={true} style={{marginTop: '10px'}}>
               <tbody>
                 <tr>
-                  <td>Min CPU Time Throttled % (24 hour min for all tasks)</td>
+                  <td>Min CPU Time Throttled % (24 Hr Min)</td>
                   <td>{Utils.roundTo(utilization.minPercentCpuTimeThrottled, HUNDREDTHS_PLACE)}</td>
                 </tr>
                 <tr>
-                  <td className={isCpuThrottled ? 'danger' : ''}>Max CPU Time Throttled % (24 hour max for all tasks)</td>
+                  <td className={isCpuThrottled ? 'danger' : ''}>Max CPU Time Throttled % (24 Hr Max)</td>
                   <td className={isCpuThrottled ? 'danger' : ''}>{Utils.roundTo(utilization.maxPercentCpuTimeThrottled, HUNDREDTHS_PLACE)}</td>
                 </tr>
               </tbody>
@@ -69,11 +69,11 @@ const RequestUtilization = ({utilization}) => {
             <BootstrapTable responsive={false} striped={true} style={{marginTop: '10px'}}>
               <tbody>
                 <tr>
-                  <td>Min memory (24 hour min for all tasks)</td>
+                  <td>Min memory (24 Hr Min)</td>
                   <td>{Utils.humanizeFileSize(utilization.minMemBytesUsed)}</td>
                 </tr>
                 <tr>
-                  <td>Max memory (24 hour max for all tasks)</td>
+                  <td>Max memory (24 Hr Max)</td>
                   <td>{Utils.humanizeFileSize(utilization.maxMemBytesUsed)}</td>
                 </tr>
               </tbody>
