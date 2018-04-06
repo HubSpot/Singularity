@@ -33,6 +33,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import com.hubspot.mesos.JavaUtils;
+import com.hubspot.singularity.SingularityTaskExecutorData;
 import com.hubspot.singularity.executor.config.SingularityExecutorConfiguration;
 import com.hubspot.singularity.executor.config.SingularityExecutorLogging;
 import com.hubspot.singularity.executor.config.SingularityExecutorModule;
@@ -67,6 +68,7 @@ public class SingularityExecutorMonitor {
   private final Map<String, ListenableFuture<ProcessBuilder>> processBuildingTasks;
   private final Map<String, SingularityExecutorTaskProcessCallable> processRunningTasks;
   private final Map<String, ListeningExecutorService> taskToShellCommandPool;
+  private final Map<String, SingularityExecutorCgroupCfsChecker> cgroupCheckers;
 
   @Inject
   public SingularityExecutorMonitor(@Named(SingularityExecutorModule.ALREADY_SHUT_DOWN) AtomicBoolean alreadyShutDown, SingularityExecutorLogging logging, ExecutorUtils executorUtils,
@@ -83,6 +85,7 @@ public class SingularityExecutorMonitor {
     this.processBuildingTasks = Maps.newConcurrentMap();
     this.processRunningTasks = Maps.newConcurrentMap();
     this.taskToShellCommandPool = Maps.newConcurrentMap();
+    this.cgroupCheckers = Maps.newConcurrentMap();
 
     this.processBuilderPool = MoreExecutors.listeningDecorator(Executors.newCachedThreadPool(new ThreadFactoryBuilder().setNameFormat("SingularityExecutorProcessBuilder-%d").build()));
     this.runningProcessPool = MoreExecutors.listeningDecorator(Executors.newCachedThreadPool(new ThreadFactoryBuilder().setNameFormat("SingularityExecutorProcessRunner-%d").build()));
@@ -133,6 +136,8 @@ public class SingularityExecutorMonitor {
       LOG.warn("Shutting down abandoned pool for {}", taskIdToShellCommandPool.getKey());
       taskIdToShellCommandPool.getValue().shutdown();
     }
+
+    cgroupCheckers.values().forEach(SingularityExecutorCgroupCfsChecker::close);
 
     exitChecker.shutdown();
 
@@ -319,6 +324,14 @@ public class SingularityExecutorMonitor {
 
           if (!wasKilled) {
             processRunningTasks.put(task.getTaskId(), submitProcessMonitor(task, processBuilder));
+            SingularityTaskExecutorData taskExecutorData = (SingularityTaskExecutorData) task.getExecutorData();
+            if (taskExecutorData.getCpuHardLimit().isPresent()) {
+              try {
+                cgroupCheckers.put(task.getTaskId(), new SingularityExecutorCgroupCfsChecker(task, taskExecutorData.getCpuHardLimit().get(), configuration.getDefaultCfsPeriod()));
+              } catch (Throwable t) {
+                LOG.error("Could not start cgorup checker for task {}", task.getTaskId(), t);
+              }
+            }
           }
         } finally {
           taskLock.unlock();
