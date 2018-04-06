@@ -72,9 +72,9 @@ public class SingularityExecutorCgroupCfsChecker extends WatchServiceHelper {
       if (filename.toString().endsWith(CGROUP_CFS_PERIOD_FILE)) {
         long cfsPeriod = Long.parseLong(new String(Files.readAllBytes(filename), StandardCharsets.US_ASCII));
         if (cfsPeriod != desiredCfsPeriod) {
-          FileOutputStream overwriteFileStream = new FileOutputStream(filename.toFile(), false);
-          overwriteFileStream.write(Long.toString(desiredCfsPeriod).getBytes(StandardCharsets.US_ASCII));
-          overwriteFileStream.close();
+          try (FileOutputStream overwriteFileStream = new FileOutputStream(filename.toFile(), false)) {
+            overwriteFileStream.write(Long.toString(desiredCfsPeriod).getBytes(StandardCharsets.US_ASCII));
+          }
           LOG.info("Updated cfsPeriod from {} to {} for task {}", cfsPeriod, desiredCfsPeriod, taskId);
         }
       }
