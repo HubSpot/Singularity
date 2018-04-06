@@ -202,10 +202,12 @@ public class SingularityMesosOfferScheduler {
         .collect(Collectors.toMap(
             SingularitySlaveUsageWithId::getSlaveId,
             (usageWithId) -> new SingularitySlaveUsageWithCalculatedScores(
-                  usageWithId,
-                  configuration.getMesosConfiguration().getScoringStrategy(),
-                  configuration.getMesosConfiguration().getScoreUsingSystemLoad(),
-                  getMaxProbableUsageForSlave(activeTaskIds, requestUtilizations, offerHolders.get(usageWithId.getSlaveId()).getSanitizedHost())
+                usageWithId,
+                mesosConfiguration.getScoringStrategy(),
+                mesosConfiguration.getScoreUsingSystemLoad(),
+                getMaxProbableUsageForSlave(activeTaskIds, requestUtilizations, offerHolders.get(usageWithId.getSlaveId()).getSanitizedHost()),
+                mesosConfiguration.getLoad5OverloadedThreshold(),
+                mesosConfiguration.getLoad1OverloadedThreshold()
             )
         ));
 
@@ -350,6 +352,14 @@ public class SingularityMesosOfferScheduler {
 
     if (isTooManyInstancesForRequest(taskRequest, activeTaskIdsForRequest)) {
       LOG.debug("Skipping pending task {}, too many instances already running", pendingTaskId);
+      return 0;
+    }
+
+    if (mesosConfiguration.isOmitOverloadedHosts() && maybeSlaveUsage.isPresent() && maybeSlaveUsage.get().isOverloaded()) {
+      LOG.debug("Slave {} is overloaded (load5 {}/{}, load1 {}/{}), ignoring offer",
+          offerHolder.getHostname(),
+          maybeSlaveUsage.get().getSlaveUsage().getSystemLoad5Min(), maybeSlaveUsage.get().getSlaveUsage().getSystemCpusTotal(),
+          maybeSlaveUsage.get().getSlaveUsage().getSystemLoad1Min(), maybeSlaveUsage.get().getSlaveUsage().getSystemCpusTotal());
       return 0;
     }
 

@@ -7,8 +7,10 @@ import java.util.Map;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
-import com.wordnik.swagger.annotations.ApiModelProperty;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
+@Schema(description = "Describes a request to search for task logs in s3")
 public class SingularityS3SearchRequest {
   private final Map<String, List<String>> requestsAndDeploys;
   private final List<String> taskIds;
@@ -39,32 +41,32 @@ public class SingularityS3SearchRequest {
     this.continuationTokens = continuationTokens != null ? continuationTokens : Collections.<String, ContinuationToken>emptyMap();
   }
 
-  @ApiModelProperty(required=false, value="A map of request IDs to a list of deploy ids to search")
+  @Schema(description = "A map of request IDs to a list of deploy ids to search")
   public Map<String, List<String>> getRequestsAndDeploys() {
     return requestsAndDeploys;
   }
 
-  @ApiModelProperty(required=false, value="A list of task IDs to search for")
+  @Schema(description = "A list of task IDs to search for")
   public List<String> getTaskIds() {
     return taskIds;
   }
 
-  @ApiModelProperty(required=false, value="Start timestamp (millis, 13 digit)")
+  @Schema(description = "Start timestamp (millis, 13 digit)", nullable = true)
   public Optional<Long> getStart() {
     return start;
   }
 
-  @ApiModelProperty(required=false, value="End timestamp (millis, 13 digit)")
+  @Schema(description = "End timestamp (millis, 13 digit)", nullable = true)
   public Optional<Long> getEnd() {
     return end;
   }
 
-  @ApiModelProperty(required=false, value="if true, do not query for custom start/end time metadata")
+  @Schema(description = "if true, do not query for custom start/end time metadata", defaultValue = "false")
   public boolean isExcludeMetadata() {
     return excludeMetadata;
   }
 
-  @ApiModelProperty(required=false, value="If true, do not generate download/get urls, only list objects")
+  @Schema(description = "If true, do not generate download/get urls, only list objects", defaultValue = "false")
   public boolean isListOnly() {
     return listOnly;
   }
@@ -73,12 +75,12 @@ public class SingularityS3SearchRequest {
    * NOTE: maxPerPage is not a guaranteed value. It is possible to get as many as (maxPerPage * 2 - 1) results
    * when using the paginated search endpoint
    */
-  @ApiModelProperty(required=false, value="Target number of results to return")
+  @Schema(description = "Target number of results to return", nullable = true)
   public Optional<Integer> getMaxPerPage() {
     return maxPerPage;
   }
 
-  @ApiModelProperty(required=false, value="S3 continuation tokens, return these to Singularity to continue searching subsequent pages of results")
+  @Schema(description = "S3 continuation tokens, return these to Singularity to continue searching subsequent pages of results")
   public Map<String, ContinuationToken> getContinuationTokens() {
     return continuationTokens;
   }

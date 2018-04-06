@@ -29,7 +29,8 @@ public class ExecutorDataBuilder {
   public ExecutorDataBuilder(String cmd, List<EmbeddedArtifact> embeddedArtifacts, List<ExternalArtifact> externalArtifacts, List<S3Artifact> s3Artifacts, List<Integer> successfulExitCodes,
       Optional<String> runningSentinel, Optional<String> user, List<String> extraCmdLineArgs, Optional<String> loggingTag, Map<String, String> loggingExtraFields,
       Optional<Long> sigKillProcessesAfterMillis, Optional<Integer> maxTaskThreads, Optional<Boolean> preserveTaskSandboxAfterFinish,
-      Optional<Integer> maxOpenFiles, Optional<Boolean> skipLogrotateAndCompress, Optional<List<S3ArtifactSignature>> s3ArtifactSignatures, Optional<SingularityExecutorLogrotateFrequency> logrotateFrequency) {
+      Optional<Integer> maxOpenFiles, Optional<Boolean> skipLogrotateAndCompress, Optional<List<S3ArtifactSignature>> s3ArtifactSignatures,
+      Optional<SingularityExecutorLogrotateFrequency> logrotateFrequency) {
     this.cmd = cmd;
     this.embeddedArtifacts = embeddedArtifacts;
     this.externalArtifacts = externalArtifacts;

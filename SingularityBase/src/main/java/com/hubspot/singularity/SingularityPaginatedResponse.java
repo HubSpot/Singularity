@@ -4,6 +4,9 @@ import java.util.List;
 
 import com.google.common.base.Optional;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
+@Schema(description = "Holds a page of responses and metadata")
 public class SingularityPaginatedResponse<Q> {
 
   private final Optional<Integer> dataCount;
@@ -18,18 +21,22 @@ public class SingularityPaginatedResponse<Q> {
     this.objects = objects;
   }
 
+  @Schema(description = "The total number of rows on all pages", nullable = true)
   public Optional<Integer> getDataCount() {
     return dataCount;
   }
 
+  @Schema(description = "The total number of pages")
   public Optional<Integer> getPageCount() {
     return pageCount;
   }
 
+  @Schema(description = "Current page number")
   public int getPage() {
     return page;
   }
 
+  @Schema(description = "Data for this page")
   public List<Q> getObjects() {
     return objects;
   }

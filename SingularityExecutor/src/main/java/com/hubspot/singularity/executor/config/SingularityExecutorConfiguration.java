@@ -225,6 +225,8 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
   @JsonProperty
   private boolean useFileAttributes = false;
 
+  private int defaultCfsPeriod = 100000;
+
   public SingularityExecutorConfiguration() {
     super(Optional.of("singularity-executor.log"));
   }
@@ -658,6 +660,15 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
     this.initialIdleExecutorShutdownWaitMillis = initialIdleExecutorShutdownWaitMillis;
   }
 
+  public int getDefaultCfsPeriod() {
+    return defaultCfsPeriod;
+  }
+
+  public SingularityExecutorConfiguration setDefaultCfsPeriod(int defaultCfsPeriod) {
+    this.defaultCfsPeriod = defaultCfsPeriod;
+    return this;
+  }
+
   @Override
   public String toString() {
     return "SingularityExecutorConfiguration{" +
@@ -713,6 +724,7 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
         ", logrotateFrequency=" + logrotateFrequency +
         ", cronDirectory='" + cronDirectory + '\'' +
         ", useFileAttributes=" + useFileAttributes +
+        ", defaultCfsPeriod=" + defaultCfsPeriod +
         "} " + super.toString();
   }
 }

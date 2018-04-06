@@ -133,10 +133,15 @@ DOCKER_OPTIONS+=(--net=host)
 {{/if}}
 
 PARENT_CGROUP=$(get_deepest_cgroup)
+BASE_CGROUP_DIR=$(get_base_cgroup_directory)"
 
 DOCKER_OPTIONS+=(--name=$CONTAINER_NAME)
 DOCKER_OPTIONS+=(--cgroup-parent=$PARENT_CGROUP)
 DOCKER_OPTIONS+=(--env-file=docker.env)
+{{#if runContext.cfsQuota }}
+DOCKER_OPTIONS+=(--cpu-quota={{{ runContext.cfsQuota }}})
+DOCKER_OPTIONS+=(--cpu-period={{{ runContext.cfsPeriod }}})
+{{/if}}
 
 {{#unless envContext.dockerWorkdirOverriden }}
 DOCKER_OPTIONS+=(-w /mnt/mesos/sandbox/{{{ runContext.taskAppDirectory }}})

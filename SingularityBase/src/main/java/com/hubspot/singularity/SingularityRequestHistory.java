@@ -8,6 +8,9 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
 import com.google.common.collect.ComparisonChain;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
+@Schema(description = "Describes an update or action on a Singularity request")
 public class SingularityRequestHistory implements Comparable<SingularityRequestHistory>, SingularityHistoryItem {
 
   private final long createdAt;
@@ -16,13 +19,15 @@ public class SingularityRequestHistory implements Comparable<SingularityRequestH
   private final SingularityRequest request;
   private final Optional<String> message;
 
+  @Schema
   public enum RequestHistoryType {
     CREATED, UPDATED, DELETING, DELETED, PAUSED, UNPAUSED, ENTERED_COOLDOWN, EXITED_COOLDOWN, FINISHED, DEPLOYED_TO_UNPAUSE, BOUNCED, SCALED, SCALE_REVERTED;
   }
 
   @JsonCreator
   public SingularityRequestHistory(@JsonProperty("createdAt") long createdAt, @JsonProperty("user") Optional<String> user,
-      @JsonProperty("eventType") RequestHistoryType eventType, @JsonProperty("request") SingularityRequest request, @JsonProperty("message") Optional<String> message) {
+                                   @JsonProperty("eventType") RequestHistoryType eventType, @JsonProperty("request") SingularityRequest request,
+                                   @JsonProperty("message") Optional<String> message) {
     this.createdAt = createdAt;
     this.user = user;
     this.eventType = eventType;
@@ -39,28 +44,34 @@ public class SingularityRequestHistory implements Comparable<SingularityRequestH
         .result();
   }
 
+  @Schema(description = "The time the request update occured")
   public long getCreatedAt() {
     return createdAt;
   }
 
+  @Schema(description = "The user associated with the request update", nullable = true)
   public Optional<String> getUser() {
     return user;
   }
 
   @Deprecated
   @JsonIgnore
+  @Schema(description = "The type of request history update")
   public RequestHistoryType getState() {
     return eventType;
   }
 
+  @Schema(description = "The type of request history update")
   public RequestHistoryType getEventType() {
     return eventType;
   }
 
+  @Schema(description = "The full data of the request after being updated")
   public SingularityRequest getRequest() {
     return request;
   }
 
+  @Schema(description = "An optional message accompanying the update", nullable = true)
   public Optional<String> getMessage() {
     return message;
   }

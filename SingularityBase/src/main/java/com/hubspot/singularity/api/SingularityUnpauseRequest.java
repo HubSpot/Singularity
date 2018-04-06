@@ -3,8 +3,10 @@ package com.hubspot.singularity.api;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
-import com.wordnik.swagger.annotations.ApiModelProperty;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
+@Schema(description = "Settings for how an unpause should behave")
 public class SingularityUnpauseRequest {
 
   private final Optional<String> message;
@@ -19,17 +21,17 @@ public class SingularityUnpauseRequest {
     this.skipHealthchecks = skipHealthchecks;
   }
 
-  @ApiModelProperty(required=false, value="A message to show to users about why this action was taken")
+  @Schema(description = "A message to show to users about why this action was taken", nullable = true)
   public Optional<String> getMessage() {
     return message;
   }
 
-  @ApiModelProperty(required=false, value="An id to associate with this action for metadata purposes")
+  @Schema(description = "An id to associate with this action for metadata purposes", nullable = true)
   public Optional<String> getActionId() {
     return actionId;
   }
 
-  @ApiModelProperty(required=false, value="If set to true, instructs new tasks that are scheduled immediately while unpausing to skip healthchecks")
+  @Schema(description = "If set to true, instructs new tasks that are scheduled immediately while unpausing to skip healthchecks", nullable = true)
   public Optional<Boolean> getSkipHealthchecks() {
     return skipHealthchecks;
   }

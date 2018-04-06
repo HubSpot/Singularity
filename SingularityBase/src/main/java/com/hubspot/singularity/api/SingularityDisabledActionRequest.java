@@ -6,8 +6,10 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
 import com.hubspot.singularity.SingularityAction;
-import com.wordnik.swagger.annotations.ApiModelProperty;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
+@Schema(description = "Notes related to a particular disabled action")
 public class SingularityDisabledActionRequest {
   private final SingularityAction type;
   private final Optional<String> message;
@@ -18,12 +20,12 @@ public class SingularityDisabledActionRequest {
     this.message = message;
   }
 
-  @ApiModelProperty(required=true, value="The type of action to disable")
+  @Schema(required = true, description = "The type of action to disable")
   public SingularityAction getType() {
     return type;
   }
 
-  @ApiModelProperty(required=false, value="An optional message/reason for disabling the action specified")
+  @Schema(description = "An optional message/reason for disabling the action specified")
   public Optional<String> getMessage() {
     return message;
   }

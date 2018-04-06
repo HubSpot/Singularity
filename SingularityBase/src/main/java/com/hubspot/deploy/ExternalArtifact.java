@@ -6,6 +6,9 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
+@Schema(description = "An artifact identified by url")
 public class ExternalArtifact extends RemoteArtifact {
 
   private final String url;
@@ -18,6 +21,7 @@ public class ExternalArtifact extends RemoteArtifact {
     this.url = url;
   }
 
+  @Schema(description = "URL to download the artifact")
   public String getUrl() {
     return url;
   }

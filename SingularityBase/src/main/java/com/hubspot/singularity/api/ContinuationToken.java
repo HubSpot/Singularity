@@ -4,8 +4,10 @@ import java.util.Objects;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.wordnik.swagger.annotations.ApiModelProperty;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
+@Schema(description = "Describes parameters to fetch the next page of results from s3")
 public class ContinuationToken {
   private final String value;
   private final boolean lastPage;
@@ -16,12 +18,12 @@ public class ContinuationToken {
     this.lastPage = lastPage;
   }
 
-  @ApiModelProperty(required=true, value="S3 continuation token specific to a bucket + prefix being searched")
+  @Schema(required = true, description = "S3 continuation token specific to a bucket + prefix being searched")
   public String getValue() {
     return value;
   }
 
-  @ApiModelProperty(required=true, value="If true, there are no further results for this bucket + prefix")
+  @Schema(required = true, description = "If true, there are no further results for this bucket + prefix")
   public boolean isLastPage() {
     return lastPage;
   }

@@ -5,9 +5,11 @@ import java.util.Objects;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.annotations.Beta;
-import com.wordnik.swagger.annotations.ApiModelProperty;
+
+import io.swagger.v3.oas.annotations.media.Schema;
 
 @Beta
+@Schema(description = "Describes a docker image")
 public class SingularityDockerImage {
   private final String name;
 
@@ -16,7 +18,7 @@ public class SingularityDockerImage {
     this.name = name;
   }
 
-  @ApiModelProperty(required=true, value="Docker image name, expected format: [REGISTRY_HOST[:REGISTRY_PORT]/]REPOSITORY[:TAG|@TYPE:DIGEST]")
+  @Schema(required = true, description = "Docker image name, expected format: [REGISTRY_HOST[:REGISTRY_PORT]/]REPOSITORY[:TAG|@TYPE:DIGEST]")
   public String getName() {
     return name;
   }

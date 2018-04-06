@@ -11,24 +11,13 @@
   <artifactId>SingularityServiceIntegrationTests</artifactId>
 
   <properties>
-    <singularity.mysql.password>hellscape</singularity.mysql.password>
-    <singularity.mysql.database>Singularity</singularity.mysql.database>
-    <singularity.mailhog.smtp.port>1025</singularity.mailhog.smtp.port>
     <singularity.mailhog.http.port>8025</singularity.mailhog.http.port>
+    <singularity.mailhog.smtp.port>1025</singularity.mailhog.smtp.port>
+    <singularity.mysql.database>Singularity</singularity.mysql.database>
+    <singularity.mysql.password>hellscape</singularity.mysql.password>
   </properties>
 
   <dependencies>
-    <dependency>
-      <groupId>com.hubspot</groupId>
-      <artifactId>SingularityBase</artifactId>
-      <scope>test</scope>
-    </dependency>
-
-    <dependency>
-      <groupId>com.hubspot</groupId>
-      <artifactId>SingularityClient</artifactId>
-      <scope>test</scope>
-    </dependency>
 
     <dependency>
       <groupId>com.google.guava</groupId>
@@ -39,6 +28,17 @@
     <dependency>
       <groupId>com.google.inject</groupId>
       <artifactId>guice</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.hubspot</groupId>
+      <artifactId>SingularityBase</artifactId>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>com.hubspot</groupId>
+      <artifactId>SingularityClient</artifactId>
       <scope>test</scope>
     </dependency>
 
@@ -64,15 +64,27 @@
         </property>
       </activation>
       <properties>
+        <mesos.master.hostname>singularity-test-master</mesos.master.hostname>
         <mesos.slave1.hostname>singularity-test-slave1</mesos.slave1.hostname>
         <mesos.slave2.hostname>singularity-test-slave2</mesos.slave2.hostname>
         <mesos.slave3.hostname>singularity-test-slave3</mesos.slave3.hostname>
-        <mesos.master.hostname>singularity-test-master</mesos.master.hostname>
       </properties>
       <build>
         <plugins>
           <plugin>
             <artifactId>maven-failsafe-plugin</artifactId>
+            <configuration>
+              <systemPropertyVariables>
+                <!-- Needs to be repeated here (the following two lines strangely doesn't work when the next line is omitted although)
+                     Maven, you little sneaky beast ... -->
+                <zk.port>${zk.port}</zk.port>
+                <mesos.master.port>${mesos.master.port}</mesos.master.port>
+                <mesos.slave1.port>${mesos.slave.1.port}</mesos.slave1.port>
+                <mesos.slave2.port>${mesos.slave.2.port}</mesos.slave2.port>
+                <mesos.slave3.port>${mesos.slave.3.port}</mesos.slave3.port>
+                <singularity.port>${singularity.port}</singularity.port>
+              </systemPropertyVariables>
+            </configuration>
             <executions>
               <execution>
                 <id>integration-test</id>
@@ -87,18 +99,6 @@
                 </goals>
               </execution>
             </executions>
-            <configuration>
-              <systemPropertyVariables>
-                <!-- Needs to be repeated here (the following two lines strangely doesn't work when the next line is omitted although)
-                     Maven, you little sneaky beast ... -->
-                <zk.port>${zk.port}</zk.port>
-                <mesos.master.port>${mesos.master.port}</mesos.master.port>
-                <mesos.slave1.port>${mesos.slave.1.port}</mesos.slave1.port>
-                <mesos.slave2.port>${mesos.slave.2.port}</mesos.slave2.port>
-                <mesos.slave3.port>${mesos.slave.3.port}</mesos.slave3.port>
-                <singularity.port>${singularity.port}</singularity.port>
-              </systemPropertyVariables>
-            </configuration>
           </plugin>
           <plugin>
             <groupId>org.jolokia</groupId>
@@ -315,17 +315,17 @@
             <executions>
               <execution>
                 <id>start-docker-images</id>
-                <phase>pre-integration-test</phase>
                 <goals>
                   <goal>start</goal>
                 </goals>
+                <phase>pre-integration-test</phase>
               </execution>
               <execution>
                 <id>stop-docker-images</id>
-                <phase>post-integration-test</phase>
                 <goals>
                   <goal>stop</goal>
                 </goals>
+                <phase>post-integration-test</phase>
               </execution>
             </executions>
           </plugin>
@@ -335,7 +335,6 @@
     </profile>
   </profiles>
 </project>
-
 <!-- Local Variables: -->
 <!-- mode: nxml -->
 <!-- nxml-child-indent: 2 -->

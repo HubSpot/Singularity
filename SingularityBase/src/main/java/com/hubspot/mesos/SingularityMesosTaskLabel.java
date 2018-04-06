@@ -9,6 +9,9 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
+@Schema(description = "A label for a mesos task")
 public class SingularityMesosTaskLabel {
   private final String key;
   private final Optional<String> value;
@@ -24,10 +27,12 @@ public class SingularityMesosTaskLabel {
     this.value = value;
   }
 
+  @Schema(description = "Label key")
   public String getKey() {
     return key;
   }
 
+  @Schema(description = "Optional label value", nullable = true)
   public Optional<String> getValue() {
     return value;
   }

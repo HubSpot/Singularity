@@ -4,6 +4,9 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
+@Schema(description = "Describes a file that shouldbe uploaded by the SingularityS3Uploader")
 public class SingularityS3UploaderFile {
   private final String filename;
   private final Optional<String> s3UploaderBucket;
@@ -38,34 +41,68 @@ public class SingularityS3UploaderFile {
     this.checkSubdirectories = checkSubdirectories.or(false);
   }
 
+  @Schema(description = "The name of the file")
   public String getFilename() {
     return filename;
   }
 
+  @Schema(
+      title = "The s3 bucket to upload to",
+      nullable = true,
+      defaultValue = "The default bucket configured in the S3Uploader"
+  )
   public Optional<String> getS3UploaderBucket() {
     return s3UploaderBucket;
   }
 
+  @Schema(
+      title = "The pattern to use when generating the S3 key for the object that is uploaded",
+      nullable = true,
+      defaultValue = "The default pattern configured in the S3Uploader"
+  )
   public Optional<String> getS3UploaderKeyPattern() {
     return s3UploaderKeyPattern;
   }
 
+  @Schema(
+      title = "An optional suffix appended to the uploader metadata file for easier debugging",
+      nullable = true
+  )
   public Optional<String> getS3UploaderFilenameHint() {
     return s3UploaderFilenameHint;
   }
 
+  @Schema(
+      title = "The directory to search for files to upload",
+      nullable = true,
+      defaultValue = "The task sandbox directory"
+  )
   public Optional<String> getDirectory() {
     return directory;
   }
 
+  @Schema(
+      title = "The aws storage class to use for files uploaded",
+      nullable = true,
+      defaultValue = "The storage class as configured in the S3Uploader depending on file size"
+  )
   public Optional<String> getS3StorageClass() {
     return s3StorageClass;
   }
 
+  @Schema(
+      title = "The size of file required in order to apply the `s3StorageClass` if present",
+      nullable = true,
+      defaultValue = "`applyS3StorageClassAfterBytes` as configured in the S3Uploader"
+  )
   public Optional<Long> getApplyS3StorageClassAfterBytes() {
     return applyS3StorageClassAfterBytes;
   }
 
+  @Schema(
+      title = "Recursively check directories for matching files",
+      defaultValue = "false"
+  )
   public boolean isCheckSubdirectories() {
     return checkSubdirectories;
   }

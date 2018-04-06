@@ -4,18 +4,22 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
 import com.hubspot.singularity.api.SingularityBounceRequest;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
+@Schema(description = "Details about a bounce that will eventually expire/give up")
 public class SingularityExpiringBounce extends SingularityExpiringRequestActionParent<SingularityBounceRequest> {
 
   private final String deployId;
 
   public SingularityExpiringBounce(@JsonProperty("requestId") String requestId, @JsonProperty("deployId") String deployId,
-      @JsonProperty("user") Optional<String> user, @JsonProperty("startMillis") long startMillis,
-      @JsonProperty("expiringAPIRequestObject") SingularityBounceRequest bounceRequest, @JsonProperty("actionId") String actionId) {
+                                   @JsonProperty("user") Optional<String> user, @JsonProperty("startMillis") long startMillis,
+                                   @JsonProperty("expiringAPIRequestObject") SingularityBounceRequest bounceRequest, @JsonProperty("actionId") String actionId) {
     super(bounceRequest, user, startMillis, actionId, requestId);
 
     this.deployId = deployId;
   }
 
+  @Schema(description = "The deploy associated with this expiring bounce")
   public String getDeployId() {
     return deployId;
   }

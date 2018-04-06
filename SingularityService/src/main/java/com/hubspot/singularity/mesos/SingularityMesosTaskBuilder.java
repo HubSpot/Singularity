@@ -545,7 +545,7 @@ class SingularityMesosTaskBuilder {
 
       final SingularityTaskExecutorData executorData = new SingularityTaskExecutorData(executorDataBldr.build(), uploaderAdditionalFiles, defaultS3Bucket, s3UploaderKeyPattern,
           configuration.getCustomExecutorConfiguration().getServiceLog(), configuration.getCustomExecutorConfiguration().getServiceFinishedTailLog(), task.getRequest().getGroup(),
-          maybeS3StorageClass, maybeApplyAfterBytes);
+          maybeS3StorageClass, maybeApplyAfterBytes, getCpuHardLimit(task));
 
       try {
         bldr.setData(ByteString.copyFromUtf8(objectMapper.writeValueAsString(executorData)));
@@ -557,6 +557,22 @@ class SingularityMesosTaskBuilder {
     } else if (task.getDeploy().getCommand().isPresent()) {
       bldr.setData(ByteString.copyFromUtf8(task.getDeploy().getCommand().get()));
     }
+  }
+
+  private Optional<Integer> getCpuHardLimit(SingularityTaskRequest task) {
+    if (configuration.getCpuHardLimit().isPresent()) {
+      Optional<Resources> maybeResources = task.getPendingTask().getResources().or(task.getDeploy().getResources());
+      if (maybeResources.isPresent()) {
+        double requestedCpus = maybeResources.get().getCpus();
+        if (requestedCpus > configuration.getCpuHardLimit().get()) {
+          Integer newHardLimit = (int) Math.ceil(requestedCpus * configuration.getCpuHardLimitScaleFactor());
+          return Optional.of(newHardLimit);
+        } else {
+          return configuration.getCpuHardLimit();
+        }
+      }
+    }
+    return Optional.absent();
   }
 
   /**

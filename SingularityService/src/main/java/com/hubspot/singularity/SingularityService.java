@@ -25,7 +25,35 @@ import io.dropwizard.migrations.MigrationsBundle;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
 import io.dropwizard.views.ViewBundle;
+import io.swagger.v3.oas.annotations.OpenAPIDefinition;
+import io.swagger.v3.oas.annotations.info.Info;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
+@OpenAPIDefinition(
+    info = @Info(title = "Singularity"),
+    tags = {
+        @Tag(name = "Requests"),
+        @Tag(name = "Deploys"),
+        @Tag(name = "Tasks"),
+        @Tag(name = "Task Tracking"),
+        @Tag(name = "History"),
+        @Tag(name = "State"),
+        @Tag(name = "Slaves"),
+        @Tag(name = "Racks"),
+        @Tag(name = "Task Priorities"),
+        @Tag(name = "Disasters"),
+        @Tag(name = "Request Groups"),
+        @Tag(name = "Sandbox"),
+        @Tag(name = "Auth"),
+        @Tag(name = "Users"),
+        @Tag(name = "Inactive Machines"),
+        @Tag(name = "Metrics"),
+        @Tag(name = "S3 Logs"),
+        @Tag(name = "Resource Usage"),
+        @Tag(name = "Webhooks"),
+        @Tag(name = "Test")
+    }
+)
 public class SingularityService<T extends SingularityConfiguration> extends Application<T> {
   private static final String SINGULARITY_DEFAULT_CONFIGURATION_PROPERTY = "singularityDefaultConfiguration";
 
@@ -53,7 +81,6 @@ public class SingularityService<T extends SingularityConfiguration> extends Appl
     bootstrap.addBundle(new CorsBundle());
     bootstrap.addBundle(new ViewBundle<>());
     bootstrap.addBundle(new AssetsBundle("/assets/static/", "/static/"));
-    bootstrap.addBundle(new AssetsBundle("/assets/api-docs/", "/api-docs/", "index.html", "api-docs"));
     bootstrap.addBundle(new MigrationsBundle<SingularityConfiguration>() {
       @Override
       public DataSourceFactory getDataSourceFactory(final SingularityConfiguration configuration) {

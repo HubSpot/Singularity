@@ -6,6 +6,9 @@ import com.google.common.base.Optional;
 import com.hubspot.singularity.MachineState;
 import com.hubspot.singularity.api.SingularityMachineChangeRequest;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
+@Schema(description = "Represents a future update to the state of a slave")
 public class SingularityExpiringSlaveState extends SingularityExpiringMachineState {
 
   @JsonCreator

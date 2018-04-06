@@ -21,6 +21,7 @@ import com.hubspot.deploy.ExternalArtifact;
 import com.hubspot.deploy.RemoteArtifact;
 import com.hubspot.deploy.S3Artifact;
 import com.hubspot.deploy.S3ArtifactSignature;
+import com.hubspot.singularity.SingularityTaskExecutorData;
 import com.hubspot.singularity.executor.TemplateManager;
 import com.hubspot.singularity.executor.config.SingularityExecutorConfiguration;
 import com.hubspot.singularity.executor.models.DockerContext;
@@ -43,7 +44,7 @@ public class SingularityExecutorTaskProcessBuilder implements Callable<ProcessBu
 
   private final ExecutorUtils executorUtils;
 
-  private final ExecutorData executorData;
+  private final SingularityTaskExecutorData executorData;
 
   private final SingularityExecutorArtifactFetcher artifactFetcher;
 
@@ -58,7 +59,7 @@ public class SingularityExecutorTaskProcessBuilder implements Callable<ProcessBu
       SingularityExecutorArtifactFetcher artifactFetcher,
       TemplateManager templateManager,
       SingularityExecutorConfiguration configuration,
-      ExecutorData executorData, String executorPid,
+      SingularityTaskExecutorData executorData, String executorPid,
       DockerUtils dockerUtils, ObjectMapper objectMapper) {
     this.executorData = executorData;
     this.objectMapper = objectMapper;
@@ -164,7 +165,7 @@ public class SingularityExecutorTaskProcessBuilder implements Callable<ProcessBu
     return System.getProperty("user.name"); // TODO: better way to do this?
   }
 
-  private ProcessBuilder buildProcessBuilder(TaskInfo taskInfo, ExecutorData executorData, String serviceLog) {
+  private ProcessBuilder buildProcessBuilder(TaskInfo taskInfo, SingularityTaskExecutorData executorData, String serviceLog) {
     final String cmd = getCommand(executorData);
 
     RunnerContext runnerContext = new RunnerContext(
@@ -179,7 +180,9 @@ public class SingularityExecutorTaskProcessBuilder implements Callable<ProcessBu
         !getExecutorUser().equals(executorData.getUser().or(configuration.getDefaultRunAsUser())),
         executorData.getMaxOpenFiles().orNull(),
         String.format(configuration.getSwitchUserCommandFormat(), executorData.getUser().or(configuration.getDefaultRunAsUser())),
-        configuration.isUseFileAttributes());
+        configuration.isUseFileAttributes(),
+        getCfsQuota(executorData),
+        configuration.getDefaultCfsPeriod());
 
     EnvironmentContext environmentContext = new EnvironmentContext(taskInfo);
 
@@ -207,6 +210,14 @@ public class SingularityExecutorTaskProcessBuilder implements Callable<ProcessBu
     processBuilder.redirectOutput(task.getTaskDefinition().getExecutorBashOutPath().toFile());
 
     return processBuilder;
+  }
+
+  private Integer getCfsQuota(SingularityTaskExecutorData executorData) {
+    if (!executorData.getCpuHardLimit().isPresent()) {
+      return null;
+    } else {
+      return executorData.getCpuHardLimit().get() * configuration.getDefaultCfsPeriod();
+    }
   }
 
   private String serviceLogOutPath(String serviceLog) {

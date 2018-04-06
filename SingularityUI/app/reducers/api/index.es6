@@ -79,6 +79,8 @@ import {
 
 import { FetchWebhooks } from '../../actions/api/webhooks';
 
+import { FetchOpenApiJson } from '../../actions/api/apidocs';
+
 import {
   FetchDisastersData,
   FetchDisabledActions,
@@ -89,12 +91,17 @@ import { FetchGroups } from '../../actions/api/requestGroups';
 
 import { FetchInactiveHosts } from '../../actions/api/inactive';
 
-import { FetchUtilization } from '../../actions/api/utilization';
+import {
+  FetchUtilization,
+  FetchRequestUtilizations,
+  FetchRequestUtilization
+} from '../../actions/api/utilization';
 
 const user = buildApiActionReducer(FetchUser);
 const addStarredRequests = buildApiActionReducer(AddStarredRequests, []);
 const deleteStarredRequests = buildApiActionReducer(DeleteStarredRequests, []);
 const webhooks = buildApiActionReducer(FetchWebhooks, []);
+const apidocs = buildApiActionReducer(FetchOpenApiJson, {});
 const disabledActions = buildApiActionReducer(FetchDisabledActions, []);
 const disastersData = buildApiActionReducer(FetchDisastersData, []);
 const priorityFreeze = buildApiActionReducer(FetchPriorityFreeze, []);
@@ -145,12 +152,15 @@ const tasks = buildApiActionReducer(FetchTasksInState, []);
 const requestGroups = buildApiActionReducer(FetchGroups, []);
 const inactiveHosts = buildApiActionReducer(FetchInactiveHosts, []);
 const utilization = buildApiActionReducer(FetchUtilization, {});
+const requestUtilizations = buildApiActionReducer(FetchRequestUtilizations, []);
+const requestUtilization = buildKeyedApiActionReducer(FetchRequestUtilization, []);
 
 export default combineReducers({
   user,
   addStarredRequests,
   deleteStarredRequests,
   webhooks,
+  apidocs,
   disabledActions,
   disastersData,
   priorityFreeze,
@@ -200,5 +210,7 @@ export default combineReducers({
   taskHistory,
   requestGroups,
   inactiveHosts,
-  utilization
+  utilization,
+  requestUtilizations,
+  requestUtilization
 });

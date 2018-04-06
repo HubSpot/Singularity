@@ -9,6 +9,9 @@ import com.google.common.collect.ComparisonChain;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.SingularityPendingRequest.PendingType;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
+@Schema(description = "A unique id describing a task that is waiting to launch")
 public class SingularityPendingTaskId extends SingularityId implements Comparable<SingularityPendingTaskId> {
 
   private final String requestId;
@@ -52,26 +55,32 @@ public class SingularityPendingTaskId extends SingularityId implements Comparabl
     this.pendingType = pendingType;
   }
 
+  @Schema(description = "The deploy associated with this task")
   public String getDeployId() {
     return deployId;
   }
 
+  @Schema(description = "The request associated with this task")
   public String getRequestId() {
     return requestId;
   }
 
+  @Schema(description = "The time at which this task should be launched")
   public long getNextRunAt() {
     return nextRunAt;
   }
 
+  @Schema(description = "The instance number for this task", minimum = "1")
   public int getInstanceNo() {
     return instanceNo;
   }
 
+  @Schema(description = "The time the pending task was created")
   public long getCreatedAt() {
     return createdAt;
   }
 
+  @Schema(description = "The reason this task was requested to launch")
   public PendingType getPendingType() {
     return pendingType;
   }

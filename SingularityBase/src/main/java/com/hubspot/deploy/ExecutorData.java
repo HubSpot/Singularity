@@ -6,14 +6,14 @@ import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.executor.SingularityExecutorLogrotateFrequency;
-import com.wordnik.swagger.annotations.ApiModelProperty;
 
-@JsonIgnoreProperties(ignoreUnknown = true)
+import io.swagger.v3.oas.annotations.media.Schema;
+
+@Schema(description = "Custom executor settings")
 public class ExecutorData {
 
   private final String cmd;
@@ -35,13 +35,23 @@ public class ExecutorData {
   private final Optional<SingularityExecutorLogrotateFrequency> logrotateFrequency;
 
   @JsonCreator
-  public ExecutorData(@JsonProperty("cmd") String cmd, @JsonProperty("embeddedArtifacts") List<EmbeddedArtifact> embeddedArtifacts, @JsonProperty("externalArtifacts") List<ExternalArtifact> externalArtifacts,
-      @JsonProperty("s3Artifacts") List<S3Artifact> s3Artifacts, @JsonProperty("successfulExitCodes") List<Integer> successfulExitCodes, @JsonProperty("user") Optional<String> user,
-      @JsonProperty("runningSentinel") Optional<String> runningSentinel, @JsonProperty("extraCmdLineArgs") List<String> extraCmdLineArgs, @JsonProperty("loggingTag") Optional<String> loggingTag,
-      @JsonProperty("loggingExtraFields") Map<String, String> loggingExtraFields, @JsonProperty("sigKillProcessesAfterMillis") Optional<Long> sigKillProcessesAfterMillis,
-      @JsonProperty("maxTaskThreads") Optional<Integer> maxTaskThreads, @JsonProperty("preserveTaskSandboxAfterFinish") Optional<Boolean> preserveTaskSandboxAfterFinish, @JsonProperty("maxOpenFiles") Optional<Integer> maxOpenFiles,
-      @JsonProperty("skipLogrotateAndCompress") Optional<Boolean> skipLogrotateAndCompress, @JsonProperty("s3ArtifactSignatures") Optional<List<S3ArtifactSignature>> s3ArtifactSignatures,
-      @JsonProperty("logrotateFrequency") Optional<SingularityExecutorLogrotateFrequency> logrotateFrequency) {
+  public ExecutorData(@JsonProperty("cmd") String cmd,
+                      @JsonProperty("embeddedArtifacts") List<EmbeddedArtifact> embeddedArtifacts,
+                      @JsonProperty("externalArtifacts") List<ExternalArtifact> externalArtifacts,
+                      @JsonProperty("s3Artifacts") List<S3Artifact> s3Artifacts,
+                      @JsonProperty("successfulExitCodes") List<Integer> successfulExitCodes,
+                      @JsonProperty("user") Optional<String> user,
+                      @JsonProperty("runningSentinel") Optional<String> runningSentinel,
+                      @JsonProperty("extraCmdLineArgs") List<String> extraCmdLineArgs,
+                      @JsonProperty("loggingTag") Optional<String> loggingTag,
+                      @JsonProperty("loggingExtraFields") Map<String, String> loggingExtraFields,
+                      @JsonProperty("sigKillProcessesAfterMillis") Optional<Long> sigKillProcessesAfterMillis,
+                      @JsonProperty("maxTaskThreads") Optional<Integer> maxTaskThreads,
+                      @JsonProperty("preserveTaskSandboxAfterFinish") Optional<Boolean> preserveTaskSandboxAfterFinish,
+                      @JsonProperty("maxOpenFiles") Optional<Integer> maxOpenFiles,
+                      @JsonProperty("skipLogrotateAndCompress") Optional<Boolean> skipLogrotateAndCompress,
+                      @JsonProperty("s3ArtifactSignatures") Optional<List<S3ArtifactSignature>> s3ArtifactSignatures,
+                      @JsonProperty("logrotateFrequency") Optional<SingularityExecutorLogrotateFrequency> logrotateFrequency) {
     this.cmd = cmd;
     this.embeddedArtifacts = JavaUtils.nonNullImmutable(embeddedArtifacts);
     this.externalArtifacts = JavaUtils.nonNullImmutable(externalArtifacts);
@@ -63,85 +73,86 @@ public class ExecutorData {
 
   public ExecutorDataBuilder toBuilder() {
     return new ExecutorDataBuilder(cmd, embeddedArtifacts, externalArtifacts, s3Artifacts, successfulExitCodes, runningSentinel, user, extraCmdLineArgs, loggingTag,
-        loggingExtraFields, sigKillProcessesAfterMillis, maxTaskThreads, preserveTaskSandboxAfterFinish, maxOpenFiles, skipLogrotateAndCompress, s3ArtifactSignatures, logrotateFrequency);
+        loggingExtraFields, sigKillProcessesAfterMillis, maxTaskThreads, preserveTaskSandboxAfterFinish, maxOpenFiles, skipLogrotateAndCompress, s3ArtifactSignatures,
+        logrotateFrequency);
   }
 
-  @ApiModelProperty(required=true, value="Command for the custom executor to run")
+  @Schema(required = true, description = "Command for the custom executor to run")
   public String getCmd() {
     return cmd;
   }
 
-  @ApiModelProperty(required=false)
+  @Schema()
   public Optional<String> getLoggingTag() {
     return loggingTag;
   }
 
-  @ApiModelProperty(required=false)
+  @Schema()
   public Map<String, String> getLoggingExtraFields() {
     return loggingExtraFields;
   }
 
-  @ApiModelProperty(required=false, value="A list of the full content of any embedded artifacts")
+  @Schema(description = "A list of the full content of any embedded artifacts")
   public List<EmbeddedArtifact> getEmbeddedArtifacts() {
     return embeddedArtifacts;
   }
 
-  @ApiModelProperty(required=false, value="A list of external artifacts for the executor to download")
+  @Schema(description = "A list of external artifacts for the executor to download")
   public List<ExternalArtifact> getExternalArtifacts() {
     return externalArtifacts;
   }
 
-  @ApiModelProperty(required=false, value="Allowable exit codes for the task to be considered FINISHED instead of FAILED")
+  @Schema(description = "Allowable exit codes for the task to be considered FINISHED instead of FAILED")
   public List<Integer> getSuccessfulExitCodes() {
     return successfulExitCodes;
   }
 
-  @ApiModelProperty(required=false, value="Extra arguments in addition to any provided in the cmd field")
+  @Schema(description = "Extra arguments in addition to any provided in the cmd field")
   public List<String> getExtraCmdLineArgs() {
     return extraCmdLineArgs;
   }
 
-  @ApiModelProperty(required=false)
+  @Schema()
   public Optional<String> getRunningSentinel() {
     return runningSentinel;
   }
 
-  @ApiModelProperty(required=false, value="Run the task process as this user")
+  @Schema(description = "Run the task process as this user")
   public Optional<String> getUser() {
     return user;
   }
 
-  @ApiModelProperty(required=false, value="Send a sigkill to a process if it has not shut down this many millis after being sent a term signal")
+  @Schema(description = "Send a sigkill to a process if it has not shut down this many millis after being sent a term signal")
   public Optional<Long> getSigKillProcessesAfterMillis() {
     return sigKillProcessesAfterMillis;
   }
 
-  @ApiModelProperty(required=false, value="List of s3 artifacts for the executor to download")
+  @Schema(description = "List of s3 artifacts for the executor to download")
   public List<S3Artifact> getS3Artifacts() {
     return s3Artifacts;
   }
 
-  @ApiModelProperty(required=false, value="Maximum number of threads a task is allowed to use")
+  @Schema(description = "Maximum number of threads a task is allowed to use")
   public Optional<Integer> getMaxTaskThreads() {
     return maxTaskThreads;
   }
 
-  @ApiModelProperty(required=false, value="If true, do not delete files in the task sandbox after the task process has terminated")
+  @Schema(description = "If true, do not delete files in the task sandbox after the task process has terminated")
   public Optional<Boolean> getPreserveTaskSandboxAfterFinish() {
     return preserveTaskSandboxAfterFinish;
   }
 
-  @ApiModelProperty(required=false, value="Maximum number of open files the task process is allowed")
+  @Schema(description = "Maximum number of open files the task process is allowed")
   public Optional<Integer> getMaxOpenFiles() {
     return maxOpenFiles;
   }
 
-  @ApiModelProperty(required=false, value="If true, do not run logrotate or compress old log files")
+  @Schema(description = "If true, do not run logrotate or compress old log files")
   public Optional<Boolean> getSkipLogrotateAndCompress() {
     return skipLogrotateAndCompress;
   }
 
-  @ApiModelProperty(required=false, value="A list of signatures use to verify downloaded s3artifacts")
+  @Schema(description = "A list of signatures use to verify downloaded s3artifacts")
   public Optional<List<S3ArtifactSignature>> getS3ArtifactSignatures() {
     return s3ArtifactSignatures;
   }
@@ -151,7 +162,7 @@ public class ExecutorData {
     return s3ArtifactSignatures.or(Collections.<S3ArtifactSignature> emptyList());
   }
 
-  @ApiModelProperty(required=false, value="Run logrotate this often. Can be HOURLY, DAILY, WEEKLY, MONTHLY")
+  @Schema(description = "Run logrotate this often. Can be HOURLY, DAILY, WEEKLY, MONTHLY")
   public Optional<SingularityExecutorLogrotateFrequency> getLogrotateFrequency() {
     return logrotateFrequency;
   }
