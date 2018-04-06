@@ -69,6 +69,12 @@ public class SingularityExecutorTaskLogManager {
 
     for (SingularityS3UploaderFile additionalFile : taskDefinition.getExecutorData().getS3UploaderAdditionalFiles()) {
       Path directory = additionalFile.getDirectory().isPresent() ? taskDefinition.getTaskDirectoryPath().resolve(additionalFile.getDirectory().get()) : taskDefinition.getTaskDirectoryPath();
+
+      if (!directory.toAbsolutePath().startsWith(taskDefinition.getTaskDirectoryPath())) {
+        log.warn("Received request to upload files in directory outside task sandbox; these will not be uploaded ({})", directory);
+        continue;
+      }
+
       String fileGlob = additionalFile.getFilename() != null && additionalFile.getFilename().contains("*") ? additionalFile.getFilename() : String.format("%s*.[gb]z*", additionalFile.getFilename());
       result = result && writeS3MetadataFile(additionalFile.getS3UploaderFilenameHint().or(String.format("file%d", index)), directory, fileGlob, additionalFile.getS3UploaderBucket(), additionalFile.getS3UploaderKeyPattern(), finished,
           additionalFile.getS3StorageClass().or(taskDefinition.getExecutorData().getS3StorageClass()), additionalFile.getApplyS3StorageClassAfterBytes().or(taskDefinition.getExecutorData().getApplyS3StorageClassAfterBytes()),
@@ -255,7 +261,7 @@ public class SingularityExecutorTaskLogManager {
     }
 
     S3UploadMetadata s3UploadMetadata = new S3UploadMetadata(pathToS3Directory.toString(), globForS3Files, s3UploaderBucket, getS3KeyPattern(s3KeyPattern.or(taskDefinition.getExecutorData().getS3UploaderKeyPattern())), finished, Optional.<String> absent(),
-        Optional. absent(), Optional. absent(), Optional. absent(), Optional. absent(), s3StorageClass, applyS3StorageClassAfterBytes, Optional.of(finished), Optional.of(checkSubdirectories), Optional.absent(), Collections.emptyMap(), Optional.absent(), Optional.absent());
+        Optional. absent(), Optional. absent(), Optional. absent(), Optional. absent(), s3StorageClass, applyS3StorageClassAfterBytes, Optional.of(finished), Optional.of(checkSubdirectories), Optional.absent(), Collections.emptyMap(), Optional.absent(), Optional.absent(), Optional.absent());
 
     String s3UploadMetadataFileName = String.format("%s-%s%s", taskDefinition.getTaskId(), filenameHint, baseConfiguration.getS3UploaderMetadataSuffix());
 

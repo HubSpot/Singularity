@@ -12,6 +12,11 @@ Delete a specific webhook.
 | Parameter | Required | Description | Data Type |
 |-----------|----------|-------------|-----------|
 | webhookId | true |  | string |
+**body**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| body | false |  | [SingularityUser](models.md#model-linkType)</a> |
 
 ###### Response
 string
@@ -35,6 +40,11 @@ Retrieve a list of queued task updates for a specific webhook.
 | Parameter | Required | Description | Data Type |
 |-----------|----------|-------------|-----------|
 | webhookId | true |  | string |
+**body**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| body | false |  | [SingularityUser](models.md#model-linkType)</a> |
 
 ###### Response
 [List[SingularityTaskHistoryUpdate]](models.md#model-SingularityTaskHistoryUpdate)
@@ -58,6 +68,11 @@ Retrieve a list of queued task updates for a specific webhook.
 | Parameter | Required | Description | Data Type |
 |-----------|----------|-------------|-----------|
 | webhookId | false |  | string |
+**body**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| body | false |  | [SingularityUser](models.md#model-linkType)</a> |
 
 ###### Response
 [List[SingularityTaskHistoryUpdate]](models.md#model-SingularityTaskHistoryUpdate)
@@ -76,7 +91,11 @@ Retrieve a summary of each active webhook
 
 
 ###### Parameters
-- No parameters
+**body**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| body | false |  | [SingularityUser](models.md#model-linkType)</a> |
 
 ###### Response
 [List[SingularityWebhookSummary]](models.md#model-SingularityWebhookSummary)
@@ -100,6 +119,11 @@ Retrieve a list of queued request updates for a specific webhook.
 | Parameter | Required | Description | Data Type |
 |-----------|----------|-------------|-----------|
 | webhookId | true |  | string |
+**body**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| body | false |  | [SingularityUser](models.md#model-linkType)</a> |
 
 ###### Response
 [List[SingularityRequestHistory]](models.md#model-SingularityRequestHistory)
@@ -123,6 +147,11 @@ Retrieve a list of queued request updates for a specific webhook.
 | Parameter | Required | Description | Data Type |
 |-----------|----------|-------------|-----------|
 | webhookId | false |  | string |
+**body**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| body | false |  | [SingularityUser](models.md#model-linkType)</a> |
 
 ###### Response
 [List[SingularityRequestHistory]](models.md#model-SingularityRequestHistory)
@@ -146,6 +175,11 @@ Retrieve a list of queued deploy updates for a specific webhook.
 | Parameter | Required | Description | Data Type |
 |-----------|----------|-------------|-----------|
 | webhookId | true |  | string |
+**body**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| body | false |  | [SingularityUser](models.md#model-linkType)</a> |
 
 ###### Response
 [List[SingularityDeployUpdate]](models.md#model-SingularityDeployUpdate)
@@ -169,6 +203,11 @@ Retrieve a list of queued deploy updates for a specific webhook.
 | Parameter | Required | Description | Data Type |
 |-----------|----------|-------------|-----------|
 | webhookId | false |  | string |
+**body**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| body | false |  | [SingularityUser](models.md#model-linkType)</a> |
 
 ###### Response
 [List[SingularityDeployUpdate]](models.md#model-SingularityDeployUpdate)
@@ -187,7 +226,11 @@ Retrieve a list of active webhooks.
 
 
 ###### Parameters
-- No parameters
+**body**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| body | false |  | [SingularityUser](models.md#model-linkType)</a> |
 
 ###### Response
 [List[SingularityWebhook]](models.md#model-SingularityWebhook)
@@ -234,6 +277,11 @@ Delete a specific webhook.
 | Parameter | Required | Description | Data Type |
 |-----------|----------|-------------|-----------|
 | webhookId | false |  | string |
+**body**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| body | false |  | [SingularityUser](models.md#model-linkType)</a> |
 
 ###### Response
 string
