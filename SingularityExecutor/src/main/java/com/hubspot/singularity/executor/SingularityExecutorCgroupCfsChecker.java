@@ -63,7 +63,7 @@ public class SingularityExecutorCgroupCfsChecker extends WatchServiceHelper {
     try {
       if (filename.toString().endsWith(CGROUP_CFS_QUOTA_FILE)) {
         Path fullPath = getWatchDirectory().resolve(filename);
-        long cfsQuota = Long.parseLong(new String(Files.readAllBytes(fullPath), StandardCharsets.US_ASCII));
+        long cfsQuota = Long.parseLong(new String(Files.readAllBytes(fullPath), StandardCharsets.US_ASCII).trim());
         if (cfsQuota != desiredCfsQuota) {
           try (FileOutputStream overwriteFileStream = new FileOutputStream(fullPath.toFile(), false)) {
             overwriteFileStream.write(Long.toString(desiredCfsQuota).getBytes(StandardCharsets.US_ASCII));
@@ -73,7 +73,7 @@ public class SingularityExecutorCgroupCfsChecker extends WatchServiceHelper {
       }
       if (filename.toString().endsWith(CGROUP_CFS_PERIOD_FILE)) {
         Path fullPath = getWatchDirectory().resolve(filename);
-        long cfsPeriod = Long.parseLong(new String(Files.readAllBytes(fullPath), StandardCharsets.US_ASCII));
+        long cfsPeriod = Long.parseLong(new String(Files.readAllBytes(fullPath), StandardCharsets.US_ASCII).trim());
         if (cfsPeriod != desiredCfsPeriod) {
           try (FileOutputStream overwriteFileStream = new FileOutputStream(fullPath.toFile(), false)) {
             overwriteFileStream.write(Long.toString(desiredCfsPeriod).getBytes(StandardCharsets.US_ASCII));
