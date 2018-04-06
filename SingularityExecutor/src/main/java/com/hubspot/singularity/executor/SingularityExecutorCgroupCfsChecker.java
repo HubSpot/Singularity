@@ -17,6 +17,8 @@ import com.google.common.collect.ImmutableList;
 import com.hubspot.singularity.executor.task.SingularityExecutorTask;
 import com.hubspot.singularity.runner.base.shared.WatchServiceHelper;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
 public class SingularityExecutorCgroupCfsChecker extends WatchServiceHelper {
   private static final Logger LOG = LoggerFactory.getLogger(SingularityExecutorCgroupCfsChecker.class);
 
@@ -46,6 +48,7 @@ public class SingularityExecutorCgroupCfsChecker extends WatchServiceHelper {
     throw new RuntimeException(String.format("Found no cpu cgroup from output %s", cgroups));
   }
 
+  @SuppressFBWarnings("DMI_HARDCODED_ABSOLUTE_FILENAME")
   private static String getBaseCgroupPath() {
     if (Files.isDirectory(Paths.get("/cgroup"))) {
       return "/cgroup";
@@ -60,9 +63,9 @@ public class SingularityExecutorCgroupCfsChecker extends WatchServiceHelper {
       if (filename.toString().endsWith(CGROUP_CFS_QUOTA_FILE)) {
         long cfsQuota = Long.parseLong(new String(Files.readAllBytes(filename), StandardCharsets.US_ASCII));
         if (cfsQuota != desiredCfsQuota) {
-          FileOutputStream overwriteFileStream = new FileOutputStream(filename.toFile(), false);
-          overwriteFileStream.write(Long.toString(desiredCfsQuota).getBytes(StandardCharsets.US_ASCII));
-          overwriteFileStream.close();
+          try (FileOutputStream overwriteFileStream = new FileOutputStream(filename.toFile(), false)) {
+            overwriteFileStream.write(Long.toString(desiredCfsQuota).getBytes(StandardCharsets.US_ASCII));
+          }
           LOG.info("Updated cfsQuota from {} to {} for task {}", cfsQuota, desiredCfsQuota, taskId);
         }
       }
