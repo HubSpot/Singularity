@@ -62,18 +62,20 @@ public class SingularityExecutorCgroupCfsChecker extends WatchServiceHelper {
   public boolean processEvent(WatchEvent.Kind<?> kind, Path filename) throws IOException {
     try {
       if (filename.toString().endsWith(CGROUP_CFS_QUOTA_FILE)) {
-        long cfsQuota = Long.parseLong(new String(Files.readAllBytes(filename), StandardCharsets.US_ASCII));
+        Path fullPath = getWatchDirectory().resolve(filename);
+        long cfsQuota = Long.parseLong(new String(Files.readAllBytes(fullPath), StandardCharsets.US_ASCII));
         if (cfsQuota != desiredCfsQuota) {
-          try (FileOutputStream overwriteFileStream = new FileOutputStream(filename.toFile(), false)) {
+          try (FileOutputStream overwriteFileStream = new FileOutputStream(fullPath.toFile(), false)) {
             overwriteFileStream.write(Long.toString(desiredCfsQuota).getBytes(StandardCharsets.US_ASCII));
           }
           LOG.info("Updated cfsQuota from {} to {} for task {}", cfsQuota, desiredCfsQuota, taskId);
         }
       }
       if (filename.toString().endsWith(CGROUP_CFS_PERIOD_FILE)) {
-        long cfsPeriod = Long.parseLong(new String(Files.readAllBytes(filename), StandardCharsets.US_ASCII));
+        Path fullPath = getWatchDirectory().resolve(filename);
+        long cfsPeriod = Long.parseLong(new String(Files.readAllBytes(fullPath), StandardCharsets.US_ASCII));
         if (cfsPeriod != desiredCfsPeriod) {
-          try (FileOutputStream overwriteFileStream = new FileOutputStream(filename.toFile(), false)) {
+          try (FileOutputStream overwriteFileStream = new FileOutputStream(fullPath.toFile(), false)) {
             overwriteFileStream.write(Long.toString(desiredCfsPeriod).getBytes(StandardCharsets.US_ASCII));
           }
           LOG.info("Updated cfsPeriod from {} to {} for task {}", cfsPeriod, desiredCfsPeriod, taskId);
