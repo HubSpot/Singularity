@@ -327,7 +327,9 @@ public class SingularityExecutorMonitor {
             SingularityTaskExecutorData taskExecutorData = (SingularityTaskExecutorData) task.getExecutorData();
             if (taskExecutorData.getCpuHardLimit().isPresent()) {
               try {
-                cgroupCheckers.put(task.getTaskId(), new SingularityExecutorCgroupCfsChecker(task, taskExecutorData.getCpuHardLimit().get(), configuration.getDefaultCfsPeriod()));
+                SingularityExecutorCgroupCfsChecker cfsChecker = new SingularityExecutorCgroupCfsChecker(task, taskExecutorData.getCpuHardLimit().get(), configuration.getDefaultCfsPeriod());
+                cfsChecker.watch();
+                cgroupCheckers.put(task.getTaskId(), cfsChecker);
               } catch (Throwable t) {
                 LOG.error("Could not start cgorup checker for task {}", task.getTaskId(), t);
               }
