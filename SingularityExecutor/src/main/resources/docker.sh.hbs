@@ -138,15 +138,8 @@ DOCKER_OPTIONS+=(--name=$CONTAINER_NAME)
 DOCKER_OPTIONS+=(--cgroup-parent=$PARENT_CGROUP)
 DOCKER_OPTIONS+=(--env-file=docker.env)
 {{#if runContext.cfsQuota }}
-function get_base_cgroup_directory {
-  if [ -d "/cgroup" ]; then
-    echo "/cgroup"
-  else
-    echo "/sys/fs/cgroup"
-  fi
-}
-
-CGROUP_CPU_PATH="$(get_base_cgroup_directory)/cpu$PARENT_CGROUP"
+CPU_CGROUP_BASE_DIRECTORY=`findmnt --kernel --first-only --types cgroup --options cpu --noheadings --output TARGET`
+CGROUP_CPU_PATH="$CPU_CGROUP_BASE_DIRECTORY/cpu$PARENT_CGROUP"
 echo {{{ runContext.cfsQuota }}} > "$CGROUP_CPU_PATH/cpu.cfs_quota_us"
 echo {{{ runContext.cfsPeriod }}} > "$CGROUP_CPU_PATH/cpu.cfs_period_us"
 {{/if}}
