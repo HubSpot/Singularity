@@ -125,6 +125,7 @@ public class SingularityDeployChecker {
     Optional<SingularityRequestWithState> maybeRequestWithState = requestManager.getRequest(pendingDeploy.getDeployMarker().getRequestId());
 
     if (!(maybeRequestWithState.isPresent() && maybeRequestWithState.get().getState() == RequestState.FINISHED)
+        && !(configuration.isAllowDeployOfPausedRequests() && maybeRequestWithState.isPresent() && maybeRequestWithState.get().getState() == RequestState.PAUSED)
         && !SingularityRequestWithState.isActive(maybeRequestWithState)) {
       LOG.warn("Deploy {} request was {}, removing deploy", pendingDeploy, SingularityRequestWithState.getRequestState(maybeRequestWithState));
 
@@ -167,7 +168,7 @@ public class SingularityDeployChecker {
     }
 
     SingularityDeployResult deployResult =
-      getDeployResult(request, cancelRequest, pendingDeploy, updatePendingDeployRequest, deploy, deployMatchingTasks, allOtherMatchingTasks, inactiveDeployMatchingTasks);
+      getDeployResult(request, requestWithState.getState(), cancelRequest, pendingDeploy, updatePendingDeployRequest, deploy, deployMatchingTasks, allOtherMatchingTasks, inactiveDeployMatchingTasks);
 
     LOG.info("Deploy {} had result {} after {}", pendingDeployMarker, deployResult, JavaUtils.durationFromMillis(System.currentTimeMillis() - pendingDeployMarker.getTimestamp()));
 
@@ -327,7 +328,7 @@ public class SingularityDeployChecker {
     }
 
     if (deployResult.getDeployState() == DeployState.SUCCEEDED) {
-      if (!request.isDeployable() && !request.isOneOff()) {
+      if (request.isDeployable() && !request.isOneOff()) {
         // remove the lock on bounces in case we deployed during a bounce
         requestManager.markBounceComplete(request.getId());
       }
@@ -360,7 +361,7 @@ public class SingularityDeployChecker {
       }
     }
 
-    if (request.isDeployable() && deployResult.getDeployState() == DeployState.SUCCEEDED && pendingDeploy.getDeployProgress().isPresent()) {
+    if (request.isDeployable() && deployResult.getDeployState() == DeployState.SUCCEEDED && pendingDeploy.getDeployProgress().isPresent() && requestWithState.getState() != RequestState.PAUSED) {
       if (pendingDeploy.getDeployProgress().get().getTargetActiveInstances() != request.getInstancesSafe()) {
         requestManager.addToPendingQueue(new SingularityPendingRequest(request.getId(), pendingDeploy.getDeployMarker().getDeployId(), deployResult.getTimestamp(),
           pendingDeploy.getDeployMarker().getUser(), PendingType.UPDATED_REQUEST, request.getSkipHealthchecks(), pendingDeploy.getDeployMarker().getMessage()));
@@ -526,10 +527,10 @@ public class SingularityDeployChecker {
       LoadBalancerRequestType.DEPLOY, Optional.<Integer> absent());
   }
 
-  private SingularityDeployResult getDeployResult(final SingularityRequest request, final Optional<SingularityDeployMarker> cancelRequest, final SingularityPendingDeploy pendingDeploy,
+  private SingularityDeployResult getDeployResult(final SingularityRequest request, final RequestState requestState, final Optional<SingularityDeployMarker> cancelRequest, final SingularityPendingDeploy pendingDeploy,
     final Optional<SingularityUpdatePendingDeployRequest> updatePendingDeployRequest, final Optional<SingularityDeploy> deploy, final Collection<SingularityTaskId> deployActiveTasks, final Collection<SingularityTaskId> otherActiveTasks,
     final Collection<SingularityTaskId> inactiveDeployMatchingTasks) {
-    if (!request.isDeployable()) {
+    if (!request.isDeployable() || (configuration.isAllowDeployOfPausedRequests() && requestState == RequestState.PAUSED)) {
       LOG.info("Succeeding a deploy {} because the request {} was not deployable", pendingDeploy, request);
 
       return new SingularityDeployResult(DeployState.SUCCEEDED, "Request not deployable");

@@ -20,6 +20,11 @@ Retrieve part of the contents of a file in a specific task&#39;s sandbox.
 | grep | false | Optional string to grep for | string |
 | offset | false | Byte offset to start reading from | long |
 | length | false | Maximum number of bytes to read | long |
+**body**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| body | false |  | [SingularityUser](models.md#model-linkType)</a> |
 
 ###### Response
 [MesosFileChunkObject](models.md#model-MesosFileChunkObject)
@@ -48,6 +53,11 @@ Retrieve information about a specific task&#39;s sandbox.
 | Parameter | Required | Description | Data Type |
 |-----------|----------|-------------|-----------|
 | path | false | The path to browse from | string |
+**body**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| body | false |  | [SingularityUser](models.md#model-linkType)</a> |
 
 ###### Response
 [SingularitySandbox](models.md#model-SingularitySandbox)
