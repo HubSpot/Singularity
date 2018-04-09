@@ -140,6 +140,7 @@ class TaskDetail extends Component {
     if (this.props.task.isStillRunning) {
       this.props.fetchTaskStatistics(this.props.params.taskId);
     }
+    this.statisticsRefreshInterval = setInterval(this.props.fetchTaskStatistics, 3000);
   }
 
   componentWillReceiveProps(nextProps) {
@@ -149,6 +150,10 @@ class TaskDetail extends Component {
         previousUsage: this.props.resourceUsage
       });
     }
+  }
+
+  componentWillUnmount() {
+    clearInterval(this.statisticsRefreshInterval);
   }
 
   analyzeFiles(files) {
@@ -573,12 +578,12 @@ function mapDispatchToProps(dispatch) {
   return {
     runCommandOnTask: (taskId, commandName) => dispatch(RunCommandOnTask.trigger(taskId, commandName)),
     fetchTaskHistory: (taskId) => dispatch(FetchTaskHistory.trigger(taskId, true)),
-    fetchTaskStatistics: (taskId) => dispatch(FetchTaskStatistics.trigger(taskId, [404])),
+    fetchTaskStatistics: (taskId) => dispatch(FetchTaskStatistics.trigger(taskId, [404, 500])),
     fetchTaskFiles: (taskId, path, catchStatusCodes = []) => dispatch(FetchTaskFiles.trigger(taskId, path, catchStatusCodes.concat([404]))),
     fetchDeployForRequest: (taskId, deployId) => dispatch(FetchDeployForRequest.trigger(taskId, deployId)),
     fetchTaskCleanups: () => dispatch(FetchTaskCleanups.trigger()),
     fetchPendingDeploys: () => dispatch(FetchPendingDeploys.trigger()),
-    fecthS3Logs: (taskId) => dispatch(FetchTaskS3Logs.trigger(taskId, [404, 500])),
+    fecthS3Logs: (taskId) => dispatch(FetchTaskS3Logs.trigger(taskId, [404, 500]))
   };
 }
 

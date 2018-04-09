@@ -91,11 +91,11 @@ const RequestUtilization = ({utilization}) => {
             <BootstrapTable responsive={false} striped={true} style={{marginTop: '10px'}}>
               <tbody>
               <tr>
-                <td>Min disk (all tasks)</td>
+                <td>Min disk (24 Hr Min)</td>
                 <td>{Utils.humanizeFileSize(utilization.minDiskBytesUsed)}</td>
               </tr>
               <tr>
-                <td>Max disk (all tasks)</td>
+                <td>Max disk (24 Hr Max)</td>
                 <td>{Utils.humanizeFileSize(utilization.maxDiskBytesUsed)}</td>
               </tr>
               </tbody>

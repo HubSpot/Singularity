@@ -32,9 +32,5 @@ export const refresh = (taskId, splat) => (dispatch, getState) => {
 };
 
 export const onLoad = (taskId) => (dispatch) => {
-  const refreshStatistics = () => {
-    dispatch(FetchTaskStatistics.trigger(taskId, [404, 500]));
-  }
-  setInterval(refreshStatistics, 3000);
   return dispatch(FetchTaskS3Logs.trigger(taskId, [404, 500]));
 };
