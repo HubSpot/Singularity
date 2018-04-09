@@ -5,7 +5,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Scanner;
 import java.util.stream.Collectors;
 
@@ -65,8 +67,10 @@ public class SingularityExecutorShellCommandRunner {
     return task;
   }
 
-  public ProcessBuilder buildProcessBuilder(List<String> command, File outputFile) {
+  public ProcessBuilder buildProcessBuilder(List<String> command, File outputFile, Map<String, String> additionalEnv) {
     ProcessBuilder builder = new ProcessBuilder(command);
+
+    builder.environment().putAll(additionalEnv);
 
     builder.redirectOutput(ProcessBuilder.Redirect.appendTo(outputFile));
     builder.redirectError(ProcessBuilder.Redirect.appendTo(outputFile));
@@ -92,7 +96,10 @@ public class SingularityExecutorShellCommandRunner {
 
     final File outputFile = MesosUtils.getTaskDirectoryPath(getTask().getTaskId()).resolve(outputFilename).toFile();
 
-    SingularityExecutorShellCommandRunnerCallable callable = new SingularityExecutorShellCommandRunnerCallable(task.getLog(), shellCommandUpdater, buildProcessBuilder(command, outputFile), outputFile);
+    Map<String, String> additionalEnv = new HashMap<>();
+    additionalEnv.put("TASK_SANDBOX_DIR", MesosUtils.getTaskDirectoryPath(getTask().getTaskId()).toString());
+
+    SingularityExecutorShellCommandRunnerCallable callable = new SingularityExecutorShellCommandRunnerCallable(task.getLog(), shellCommandUpdater, buildProcessBuilder(command, outputFile, additionalEnv), outputFile);
 
     ListenableFuture<Integer> shellFuture = shellCommandExecutorService.submit(callable);
 
