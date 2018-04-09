@@ -74,8 +74,6 @@ public class SingularityConfiguration extends Configuration {
 
   private long checkUsageEveryMillis = TimeUnit.MINUTES.toMillis(1);
 
-  private int usageIntervalSeconds = 5760; // 15 saved each 5760 seconds (96 min) apart is 1 day of usage
-
   private int maxConcurrentUsageCollections = 15;
 
   private boolean shuffleTasksForOverloadedSlaves = false; // recommended 'true' when oversubscribing cpu for larger clusters
@@ -386,6 +384,11 @@ public class SingularityConfiguration extends Configuration {
   private int maxRunNowTaskLaunchDelayDays = 30;
 
   private boolean allowDeployOfPausedRequests = false;
+
+  private Optional<Integer> cpuHardLimit = Optional.absent();
+
+  // If cpuHardLimit is specified and a task is requesting a base cpu of > cpuHardLimit, that task's new  hard limit is requested cpus * cpuHardLimitScaleFactor
+  private double cpuHardLimitScaleFactor = 1.25;
 
   public long getAskDriverToKillTasksAgainAfterMillis() {
     return askDriverToKillTasksAgainAfterMillis;
@@ -1495,14 +1498,6 @@ public class SingularityConfiguration extends Configuration {
     this.checkUsageEveryMillis = checkUsageEveryMillis;
   }
 
-  public int getUsageIntervalSeconds() {
-    return usageIntervalSeconds;
-  }
-
-  public void setUsageIntervalSeconds(int usageIntervalSeconds) {
-    this.usageIntervalSeconds = usageIntervalSeconds;
-  }
-
   public int getMaxConcurrentUsageCollections() {
     return maxConcurrentUsageCollections;
   }
@@ -1657,5 +1652,22 @@ public class SingularityConfiguration extends Configuration {
 
   public void setAllowDeployOfPausedRequests(boolean allowDeployOfPausedRequests) {
     this.allowDeployOfPausedRequests = allowDeployOfPausedRequests;
+  }
+
+  public Optional<Integer> getCpuHardLimit() {
+    return cpuHardLimit;
+  }
+
+  public void setCpuHardLimit(Optional<Integer> cpuHardLimit) {
+    this.cpuHardLimit = cpuHardLimit;
+  }
+
+  public double getCpuHardLimitScaleFactor() {
+    return cpuHardLimitScaleFactor;
+  }
+
+  public SingularityConfiguration setCpuHardLimitScaleFactor(double cpuHardLimitScaleFactor) {
+    this.cpuHardLimitScaleFactor = cpuHardLimitScaleFactor;
+    return this;
   }
 }

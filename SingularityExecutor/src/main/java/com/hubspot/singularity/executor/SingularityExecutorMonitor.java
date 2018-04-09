@@ -4,6 +4,7 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
@@ -33,6 +34,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import com.hubspot.mesos.JavaUtils;
+import com.hubspot.singularity.SingularityTaskExecutorData;
 import com.hubspot.singularity.executor.config.SingularityExecutorConfiguration;
 import com.hubspot.singularity.executor.config.SingularityExecutorLogging;
 import com.hubspot.singularity.executor.config.SingularityExecutorModule;
@@ -48,6 +50,7 @@ public class SingularityExecutorMonitor {
   private final ListeningExecutorService processBuilderPool;
   private final ListeningExecutorService runningProcessPool;
   private final ScheduledExecutorService exitChecker;
+  private final ExecutorService cgroupCfsWatcherService;
 
   private final Lock exitLock;
   private final AtomicBoolean alreadyShutDown;
@@ -67,6 +70,7 @@ public class SingularityExecutorMonitor {
   private final Map<String, ListenableFuture<ProcessBuilder>> processBuildingTasks;
   private final Map<String, SingularityExecutorTaskProcessCallable> processRunningTasks;
   private final Map<String, ListeningExecutorService> taskToShellCommandPool;
+  private final Map<String, SingularityExecutorCgroupCfsChecker> cgroupCheckers;
 
   @Inject
   public SingularityExecutorMonitor(@Named(SingularityExecutorModule.ALREADY_SHUT_DOWN) AtomicBoolean alreadyShutDown, SingularityExecutorLogging logging, ExecutorUtils executorUtils,
@@ -83,9 +87,11 @@ public class SingularityExecutorMonitor {
     this.processBuildingTasks = Maps.newConcurrentMap();
     this.processRunningTasks = Maps.newConcurrentMap();
     this.taskToShellCommandPool = Maps.newConcurrentMap();
+    this.cgroupCheckers = Maps.newConcurrentMap();
 
     this.processBuilderPool = MoreExecutors.listeningDecorator(Executors.newCachedThreadPool(new ThreadFactoryBuilder().setNameFormat("SingularityExecutorProcessBuilder-%d").build()));
     this.runningProcessPool = MoreExecutors.listeningDecorator(Executors.newCachedThreadPool(new ThreadFactoryBuilder().setNameFormat("SingularityExecutorProcessRunner-%d").build()));
+    this.cgroupCfsWatcherService = Executors.newSingleThreadExecutor(new ThreadFactoryBuilder().setNameFormat("cgroup-cfs-watcher-%d").build());
 
     this.runState = RunState.STARTING;
     this.exitLock = new ReentrantLock();
@@ -121,6 +127,8 @@ public class SingularityExecutorMonitor {
 
     runningProcessPool.shutdown();
 
+    cgroupCfsWatcherService.shutdown();
+
     for (SingularityExecutorTask task : tasks.values()) {
       if (!task.wasKilled()) {
         task.getLog().info("Executor shutting down - requested task kill with state: {}", requestKill(task.getTaskId()));
@@ -133,6 +141,8 @@ public class SingularityExecutorMonitor {
       LOG.warn("Shutting down abandoned pool for {}", taskIdToShellCommandPool.getKey());
       taskIdToShellCommandPool.getValue().shutdown();
     }
+
+    cgroupCheckers.values().forEach(SingularityExecutorCgroupCfsChecker::close);
 
     exitChecker.shutdown();
 
@@ -319,6 +329,7 @@ public class SingularityExecutorMonitor {
 
           if (!wasKilled) {
             processRunningTasks.put(task.getTaskId(), submitProcessMonitor(task, processBuilder));
+            startCgroupWatcher(task);
           }
         } finally {
           taskLock.unlock();
@@ -356,6 +367,21 @@ public class SingularityExecutorMonitor {
 
     });
 
+  }
+
+  private void startCgroupWatcher(final SingularityExecutorTask task) {
+    SingularityTaskExecutorData taskExecutorData = (SingularityTaskExecutorData) task.getExecutorData();
+    if (taskExecutorData.getCpuHardLimit().isPresent()) {
+      cgroupCfsWatcherService.submit(() -> {
+        try {
+          SingularityExecutorCgroupCfsChecker cfsChecker = new SingularityExecutorCgroupCfsChecker(task, taskExecutorData.getCpuHardLimit().get(), configuration.getDefaultCfsPeriod());
+          cfsChecker.watch();
+          cgroupCheckers.put(task.getTaskId(), cfsChecker);
+        } catch (Throwable t) {
+          LOG.error("Could not start cgorup checker for task {}", task.getTaskId(), t);
+        }
+      });
+    }
   }
 
   private void sendStatusUpdate(SingularityExecutorTask task, Protos.TaskState taskState, String message) {

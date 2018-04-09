@@ -20,8 +20,23 @@ public class RunnerContext {
   private final Integer maxOpenFiles;
   private final String switchUserCommand;
   private final boolean useFileAttributes;
+  private final Integer cfsQuota;
+  private final Integer cfsPeriod;
 
-  public RunnerContext(String cmd, String taskAppDirectory, String logDir, String user, String logFile, String logFilePath, String taskId, Optional<Integer> maxTaskThreads, boolean shouldChangeUser, Integer maxOpenFiles, String switchUserCommand, boolean useFileAttributes) {
+  public RunnerContext(String cmd,
+                       String taskAppDirectory,
+                       String logDir,
+                       String user,
+                       String logFile,
+                       String logFilePath,
+                       String taskId,
+                       Optional<Integer> maxTaskThreads,
+                       boolean shouldChangeUser,
+                       Integer maxOpenFiles,
+                       String switchUserCommand,
+                       boolean useFileAttributes,
+                       Integer cfsQuota,
+                       Integer cfsPeriod) {
     this.cmd = cmd;
     this.taskAppDirectory = taskAppDirectory;
     this.logDir = logDir;
@@ -35,6 +50,8 @@ public class RunnerContext {
     this.maxOpenFiles = maxOpenFiles;
     this.switchUserCommand = switchUserCommand;
     this.useFileAttributes = useFileAttributes;
+    this.cfsQuota = cfsQuota;
+    this.cfsPeriod = cfsPeriod;
   }
 
   public String getCmd() {
@@ -85,21 +102,31 @@ public class RunnerContext {
     return useFileAttributes;
   }
 
+  public Integer getCfsQuota() {
+    return cfsQuota;
+  }
+
+  public Integer getCfsPeriod() {
+    return cfsPeriod;
+  }
+
   @Override
   public String toString() {
     return "RunnerContext{" +
-            "cmd='" + cmd + '\'' +
-            ", taskAppDirectory='" + taskAppDirectory + '\'' +
-            ", logDir='" + logDir + '\'' +
-            ", user='" + user + '\'' +
-            ", logFile='" + logFile + '\'' +
-            ", logFilePath='" + logFilePath + '\'' +
-            ", taskId='" + taskId + '\'' +
-            ", maxTaskThreads=" + maxTaskThreads +
-            ", shouldChangeUser=" + shouldChangeUser +
-            ", maxOpenFiles=" + maxOpenFiles +
-            ", switchUserCommand='" + switchUserCommand + '\'' +
-            ", useFileAttributes=" + useFileAttributes +
-            '}';
+        "cmd='" + cmd + '\'' +
+        ", taskAppDirectory='" + taskAppDirectory + '\'' +
+        ", logDir='" + logDir + '\'' +
+        ", user='" + user + '\'' +
+        ", logFile='" + logFile + '\'' +
+        ", logFilePath='" + logFilePath + '\'' +
+        ", taskId='" + taskId + '\'' +
+        ", maxTaskThreads=" + maxTaskThreads +
+        ", shouldChangeUser=" + shouldChangeUser +
+        ", maxOpenFiles=" + maxOpenFiles +
+        ", switchUserCommand='" + switchUserCommand + '\'' +
+        ", useFileAttributes=" + useFileAttributes +
+        ", cfsQuota=" + cfsQuota +
+        ", cfsPeriod=" + cfsPeriod +
+        '}';
   }
 }
