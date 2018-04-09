@@ -140,7 +140,7 @@ class TaskDetail extends Component {
     if (this.props.task.isStillRunning) {
       this.props.fetchTaskStatistics(this.props.params.taskId);
     }
-    this.statisticsRefreshInterval = setInterval(this.props.fetchTaskStatistics, 3000);
+    this.statisticsRefreshInterval = setInterval(() => this.props.fetchTaskStatistics(this.props.params.taskId), 3000);
   }
 
   componentWillReceiveProps(nextProps) {
