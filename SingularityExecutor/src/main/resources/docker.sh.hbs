@@ -133,7 +133,7 @@ DOCKER_OPTIONS+=(--net=host)
 {{/if}}
 
 PARENT_CGROUP=$(get_deepest_cgroup)
-BASE_CGROUP_DIR=$(get_base_cgroup_directory)"
+BASE_CGROUP_DIR=$(get_base_cgroup_directory)
 
 DOCKER_OPTIONS+=(--name=$CONTAINER_NAME)
 DOCKER_OPTIONS+=(--cgroup-parent=$PARENT_CGROUP)
