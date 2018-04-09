@@ -147,8 +147,8 @@ function get_base_cgroup_directory {
 }
 
 CGROUP_CPU_PATH="$(get_base_cgroup_directory)/cpu$PARENT_CGROUP"
-echo {{{ cfsQuota }}} > "$CGROUP_CPU_PATH/cpu.cfs_quota_us"
-echo {{{ cfsPeriod }}} > "$CGROUP_CPU_PATH/cpu.cfs_period_us"
+echo {{{ runContext.cfsQuota }}} > "$CGROUP_CPU_PATH/cpu.cfs_quota_us"
+echo {{{ runContext.cfsPeriod }}} > "$CGROUP_CPU_PATH/cpu.cfs_period_us"
 {{/if}}
 
 {{#unless envContext.dockerWorkdirOverriden }}
