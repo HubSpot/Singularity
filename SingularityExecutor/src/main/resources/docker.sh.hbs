@@ -80,6 +80,14 @@ function get_deepest_cgroup {
    echo "$max_path"
 }
 
+function get_base_cgroup_directory {
+  if [ -d "/cgroup" ]; then
+    echo "/cgroup"
+  else
+    echo "/sys/fs/cgroup"
+  fi
+}
+
 DOCKER_IMAGE={{{ envContext.dockerInfo.image }}}
 
 # load env vars
