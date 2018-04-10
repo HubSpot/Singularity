@@ -215,7 +215,7 @@ public class SingularityCleaner {
           }
         }
 
-        LOG.debug("Killing a task {}, all replacement tasks are healthy", taskCleanup);
+        LOG.debug("Killing a task {}, at least {} replacement tasks are healthy [{}]", taskCleanup, request.getInstancesSafe(), matchingTasks);
         return true;
       case WAITING:
       case UNHEALTHY:
