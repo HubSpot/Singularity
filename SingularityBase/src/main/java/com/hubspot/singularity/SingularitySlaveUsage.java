@@ -2,9 +2,9 @@ package com.hubspot.singularity;
 
 import java.util.Map;
 
-import com.google.common.base.Optional;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.base.Optional;
 
 public class SingularitySlaveUsage {
 
