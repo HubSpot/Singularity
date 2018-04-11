@@ -310,8 +310,8 @@ public class RequestResource extends AbstractRequestResource {
 
   @POST
   @Path("/request/{requestId}/run")
-  public SingularityPendingRequestParent scheduleImmediately(@Auth SingularityUser user, @PathParam("requestId") String requestId) {
-    return scheduleImmediately(user, requestId, null);
+  public SingularityPendingRequestParent scheduleImmediately(@Auth SingularityUser user, @PathParam("requestId") String requestId, @Context HttpServletRequest requestContext) {
+    return scheduleImmediately(user, requestId, requestContext, null);
   }
 
   @POST
@@ -323,7 +323,12 @@ public class RequestResource extends AbstractRequestResource {
   })
   public SingularityPendingRequestParent scheduleImmediately(@Auth SingularityUser user,
                                                              @ApiParam("The request ID to run") @PathParam("requestId") String requestId,
+                                                             @Context HttpServletRequest requestContext,
                                                              SingularityRunNowRequest runNowRequest) {
+    return maybeProxyToLeader(requestContext, SingularityPendingRequestParent.class, runNowRequest, () -> scheduleImmediately(user, requestId, runNowRequest));
+  }
+
+  public SingularityPendingRequestParent scheduleImmediately(SingularityUser user, String requestId, SingularityRunNowRequest runNowRequest) {
     final Optional<SingularityRunNowRequest> maybeRunNowRequest = Optional.fromNullable(runNowRequest);
     SingularityRequestWithState requestWithState = fetchRequestWithState(requestId, user);
 
