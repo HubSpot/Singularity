@@ -27,6 +27,7 @@ import com.hubspot.singularity.SingularityCreateResult;
 import com.hubspot.singularity.SingularityMainModule;
 import com.hubspot.singularity.SingularityPendingDeploy;
 import com.hubspot.singularity.SingularityPendingRequest;
+import com.hubspot.singularity.SingularityPendingRequest.PendingType;
 import com.hubspot.singularity.SingularityPendingRequestBuilder;
 import com.hubspot.singularity.SingularityPendingTask;
 import com.hubspot.singularity.SingularityRequestWithState;
@@ -183,6 +184,8 @@ public class SingularityMesosStatusUpdateHandler {
     SingularityPendingTask pendingTask = task.getTaskRequest().getPendingTask();
 
     SingularityPendingRequest pendingRequest = new SingularityPendingRequestBuilder()
+        .setDeployId(task.getTaskRequest().getDeploy().getId())
+        .setPendingType(PendingType.RETRY)
         .setUser(pendingTask.getUser())
         .setRunId(pendingTask.getRunId())
         .setCmdLineArgsList(pendingTask.getCmdLineArgsList())
