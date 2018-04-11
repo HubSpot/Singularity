@@ -310,12 +310,6 @@ public class RequestResource extends AbstractRequestResource {
 
   @POST
   @Path("/request/{requestId}/run")
-  public SingularityPendingRequestParent scheduleImmediately(@Auth SingularityUser user, @PathParam("requestId") String requestId, @Context HttpServletRequest requestContext) {
-    return scheduleImmediately(user, requestId, requestContext, null);
-  }
-
-  @POST
-  @Path("/request/{requestId}/run")
   @Consumes({ MediaType.APPLICATION_JSON })
   @ApiOperation(value="Schedule a one-off or scheduled Singularity request for immediate or delayed execution.", response=SingularityRequestParent.class)
   @ApiResponses({
