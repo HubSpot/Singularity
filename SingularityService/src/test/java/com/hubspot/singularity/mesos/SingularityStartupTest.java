@@ -13,6 +13,7 @@ import com.hubspot.singularity.SingularityPendingRequest.PendingType;
 import com.hubspot.singularity.SingularityPendingTask;
 import com.hubspot.singularity.SingularityRequestBuilder;
 import com.hubspot.singularity.SingularityTask;
+import com.hubspot.singularity.api.SingularityRunNowRequest;
 import com.hubspot.singularity.scheduler.SingularitySchedulerTestBase;
 
 public class SingularityStartupTest extends SingularitySchedulerTestBase {
@@ -112,7 +113,7 @@ public class SingularityStartupTest extends SingularitySchedulerTestBase {
     boolean caughtException = false;
 
     try {
-      requestResource.scheduleImmediately(singularityUser, requestId);
+      requestResource.scheduleImmediately(singularityUser, requestId, ((SingularityRunNowRequest) null));
     } catch (Exception e) {
       caughtException = true;
     }
