@@ -378,7 +378,7 @@ public class SingularityExecutorMonitor {
           cfsChecker.watch();
           cgroupCheckers.put(task.getTaskId(), cfsChecker);
         } catch (Throwable t) {
-          LOG.error("Could not start cgorup checker for task {}", task.getTaskId(), t);
+          LOG.error("Could not start cgroup checker for task {}", task.getTaskId(), t);
         }
       });
     }
