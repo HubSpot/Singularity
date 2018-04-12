@@ -325,13 +325,6 @@ public class RequestResource extends AbstractRequestResource {
 
   @POST
   @Path("/request/{requestId}/run")
-  @Operation(summary = "Schedule a one-off or scheduled Singularity request for immediate or delayed execution")
-  public SingularityPendingRequestParent scheduleImmediately(@Parameter(hidden = true) @Auth SingularityUser user, @PathParam("requestId") String requestId) {
-    return scheduleImmediately(user, requestId, null);
-  }
-
-  @POST
-  @Path("/request/{requestId}/run")
   @Consumes({ MediaType.APPLICATION_JSON })
   @Operation(
       summary = "Schedule a one-off or scheduled Singularity request for immediate or delayed execution",
@@ -342,7 +335,12 @@ public class RequestResource extends AbstractRequestResource {
   public SingularityPendingRequestParent scheduleImmediately(
       @Parameter(hidden = true) @Auth SingularityUser user,
       @Parameter(required = true, description = "The request ID to run") @PathParam("requestId") String requestId,
-      @RequestBody(description = "Settings specific to this run of the request") SingularityRunNowRequest runNowRequest) {
+      @RequestBody(description = "Settings specific to this run of the request") SingularityRunNowRequest runNowRequest,
+      @Context HttpServletRequest requestContext) {
+    return maybeProxyToLeader(requestContext, SingularityPendingRequestParent.class, runNowRequest, () -> scheduleImmediately(user, requestId, runNowRequest));
+  }
+
+  public SingularityPendingRequestParent scheduleImmediately(SingularityUser user, String requestId, SingularityRunNowRequest runNowRequest) {
     final Optional<SingularityRunNowRequest> maybeRunNowRequest = Optional.fromNullable(runNowRequest);
     SingularityRequestWithState requestWithState = fetchRequestWithState(requestId, user);
 
