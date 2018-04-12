@@ -45,7 +45,7 @@ public class SingularityExecutorCgroupCfsChecker extends WatchServiceHelper {
     for (String cgroup : cgroups) {
       if (cgroup.contains(":cpu:")) {
         String[] segments = cgroup.split(":");
-        String cgroupPath = getBaseCgroupPath() + "/cpu" + segments[segments.length - 1];
+        String cgroupPath = getBaseCgroupPath() + segments[segments.length - 1];
         LOG.info("Will start watcher for directory {}", cgroupPath);
         return Paths.get(cgroupPath);
       }
