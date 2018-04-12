@@ -15,12 +15,16 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.ImmutableList;
 import com.hubspot.singularity.executor.task.SingularityExecutorTask;
+import com.hubspot.singularity.runner.base.shared.ProcessFailedException;
+import com.hubspot.singularity.runner.base.shared.SimpleProcessManager;
 import com.hubspot.singularity.runner.base.shared.WatchServiceHelper;
-
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 public class SingularityExecutorCgroupCfsChecker extends WatchServiceHelper {
   private static final Logger LOG = LoggerFactory.getLogger(SingularityExecutorCgroupCfsChecker.class);
+
+  private static final List<String> FIND_BASE_CGROUP_PATH_COMMAND = ImmutableList.of(
+      "findmnt", "--kernel", "--first-only", "--types", "cgroup", "--options", "cpu", "--noheadings", "--output", "TARGET"
+  );
 
   private static final String CGROUP_CFS_QUOTA_FILE = "cpu.cfs_quota_us";
   private static final String CGROUP_CFS_PERIOD_FILE = "cpu.cfs_period_us";
@@ -29,19 +33,19 @@ public class SingularityExecutorCgroupCfsChecker extends WatchServiceHelper {
   private final long desiredCfsQuota;
   private final long desiredCfsPeriod;
 
-  public SingularityExecutorCgroupCfsChecker(SingularityExecutorTask task, int cpuHardLimit, long desiredCfsPeriod) throws IOException {
+  public SingularityExecutorCgroupCfsChecker(SingularityExecutorTask task, int cpuHardLimit, long desiredCfsPeriod) throws IOException, InterruptedException, ProcessFailedException {
     super(1000, getCpuCgroupDirectory(task), ImmutableList.of(StandardWatchEventKinds.ENTRY_MODIFY));
     this.taskId = task.getTaskId();
     this.desiredCfsQuota = cpuHardLimit * desiredCfsPeriod;
     this.desiredCfsPeriod = desiredCfsPeriod;
   }
 
-  private static Path getCpuCgroupDirectory(SingularityExecutorTask task) throws IOException {
+  private static Path getCpuCgroupDirectory(SingularityExecutorTask task) throws IOException, InterruptedException, ProcessFailedException {
     List<String> cgroups = Files.readAllLines(Paths.get(String.format("/proc/%s/cgroup", task.getTaskDefinition().getExecutorPid())));
     for (String cgroup : cgroups) {
       if (cgroup.contains(":cpu:")) {
         String[] segments = cgroup.split(":");
-        String cgroupPath = getBaseCgroupPath() + "/cpu" + segments[segments.length - 1];
+        String cgroupPath = getBaseCgroupPath() + segments[segments.length - 1];
         LOG.info("Will start watcher for directory {}", cgroupPath);
         return Paths.get(cgroupPath);
       }
@@ -49,13 +53,9 @@ public class SingularityExecutorCgroupCfsChecker extends WatchServiceHelper {
     throw new RuntimeException(String.format("Found no cpu cgroup from output %s", cgroups));
   }
 
-  @SuppressFBWarnings("DMI_HARDCODED_ABSOLUTE_FILENAME")
-  private static String getBaseCgroupPath() {
-    if (Files.isDirectory(Paths.get("/cgroup"))) {
-      return "/cgroup";
-    } else {
-      return "/sys/fs/cgroup";
-    }
+  private static String getBaseCgroupPath() throws ProcessFailedException, InterruptedException {
+    SimpleProcessManager simpleProcessManager = new SimpleProcessManager(LOG);
+    return simpleProcessManager.runCommandWithOutput(FIND_BASE_CGROUP_PATH_COMMAND).get(0).trim();
   }
 
   @Override
