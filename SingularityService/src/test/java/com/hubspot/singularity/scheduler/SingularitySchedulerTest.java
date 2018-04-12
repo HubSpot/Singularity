@@ -497,7 +497,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
 
     Assert.assertTrue(requestManager.getPendingRequests().isEmpty());
 
-    requestResource.scheduleImmediately(singularityUser, requestId);
+    requestResource.scheduleImmediately(singularityUser, requestId, ((SingularityRunNowRequest) null));
 
     resourceOffers();
 
@@ -509,7 +509,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     Assert.assertEquals(0, taskManager.getActiveTaskIds().size());
     Assert.assertEquals(0, taskManager.getPendingTaskIds().size());
 
-    requestResource.scheduleImmediately(singularityUser, requestId);
+    requestResource.scheduleImmediately(singularityUser, requestId, ((SingularityRunNowRequest) null));
 
     resourceOffers();
 
@@ -528,7 +528,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     requestResource.postRequest(bldr.build(), singularityUser);
     deploy("d2");
 
-    requestResource.scheduleImmediately(singularityUser, requestId);
+    requestResource.scheduleImmediately(singularityUser, requestId, ((SingularityRunNowRequest) null));
 
     validateTaskDoesntMoveDuringDecommission();
   }
@@ -1466,21 +1466,21 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     deploy("d2");
     deployChecker.checkDeploys();
 
-    requestResource.scheduleImmediately(singularityUser, requestId);
+    requestResource.scheduleImmediately(singularityUser, requestId, ((SingularityRunNowRequest) null));
 
     resourceOffers();
 
-    requestResource.scheduleImmediately(singularityUser, requestId);
+    requestResource.scheduleImmediately(singularityUser, requestId, ((SingularityRunNowRequest) null));
 
     resourceOffers();
 
     Assert.assertEquals(2, taskManager.getActiveTaskIds().size());
 
-    requestResource.scheduleImmediately(singularityUser, requestId);
+    requestResource.scheduleImmediately(singularityUser, requestId, ((SingularityRunNowRequest) null));
 
     scheduler.drainPendingQueue();
 
-    requestResource.scheduleImmediately(singularityUser, requestId);
+    requestResource.scheduleImmediately(singularityUser, requestId, ((SingularityRunNowRequest) null));
 
     scheduler.drainPendingQueue();
 
@@ -1987,8 +1987,8 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
         new SingularityPriorityFreezeParent(new SingularityPriorityFreeze(0.3, true, Optional.<String>absent(), Optional.<String>absent()), System.currentTimeMillis(), Optional.<String>absent()));
 
     // launch both tasks
-    requestResource.scheduleImmediately(singularityUser, lowPriorityRequest.getId());
-    requestResource.scheduleImmediately(singularityUser, mediumPriorityRequest.getId());
+    requestResource.scheduleImmediately(singularityUser, lowPriorityRequest.getId(), ((SingularityRunNowRequest) null));
+    requestResource.scheduleImmediately(singularityUser, mediumPriorityRequest.getId(), ((SingularityRunNowRequest) null));
 
     // drain pending queue
     scheduler.drainPendingQueue();
