@@ -2,7 +2,6 @@ import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import rootComponent from '../../rootComponent';
-import { refresh } from '../../actions/ui/apidocs';
 
 import SwaggerUi, {presets} from 'swagger-ui';
 import 'swagger-ui/dist/swagger-ui.css';
@@ -12,8 +11,7 @@ class ApiDocs extends Component {
   componentDidMount() {
     SwaggerUi({
       dom_id: '#swaggerContainer',
-      url: this.props.url,
-      spec: this.props.spec,
+      url: `${config.apiRoot}/openapi.json`,
       presets: [presets.apis],
       defaultModelRendering: 'model',
       supportedSubmitMethods: ['get']
@@ -27,16 +25,4 @@ class ApiDocs extends Component {
   }
 }
 
-function mapStateToProps(state) {
-  return {
-    url: `${config.apiRoot}/openapi.json`,
-    spec: state.api.apidocs.data
-  };
-}
-
-ApiDocs.propTypes = {
-  url: PropTypes.string,
-  spec: PropTypes.object
-};
-
-export default connect(mapStateToProps)(rootComponent(ApiDocs, refresh));
+export default ApiDocs;
