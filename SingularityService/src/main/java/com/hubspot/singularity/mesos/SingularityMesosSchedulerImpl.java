@@ -370,12 +370,9 @@ public class SingularityMesosSchedulerImpl extends SingularityMesosScheduler {
     MesosConfiguration mesosConfiguration = configuration.getMesosConfiguration();
     // If more than one host is provided choose at random, we will be redirected if the host is not the master
     List<String> masters = Arrays.asList(mesosConfiguration.getMaster().split(","));
-    String masterUrl;
-    if (mesosConfiguration.getMesosUsername().isPresent() && mesosConfiguration.getMesosPassword().isPresent()) {
-      masterUrl = String.format(SCHEDULER_API_URL_CREDENTIALS_FORMAT, mesosConfiguration.getMasterProtocol(), mesosConfiguration.getMesosUsername().get(),
-          mesosConfiguration.getMesosPassword().get(), masters.get(new Random().nextInt(masters.size())));
-    } else {
-      masterUrl = String.format(SCHEDULER_API_URL_FORMAT, mesosConfiguration.getMasterProtocol(), masters.get(new Random().nextInt(masters.size())));
+    String masterUrl = masters.get(new Random().nextInt(masters.size()));
+    if (!masterUrl.startsWith("http")) {
+      masterUrl = "http://" + masterUrl;
     }
     mesosSchedulerClient.subscribe(masterUrl, this);
   }

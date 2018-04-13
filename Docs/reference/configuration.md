@@ -163,9 +163,7 @@ These settings should live under the "mesos" field inside the root configuration
 #### Framework ####
 | Parameter | Default | Description | Type |
 |-----------|---------|-------------|------|
-| master | null | A comma separated list of mesos master `host:port` | String |
-| mesosUsername | | Username to authenticate with the mesos master when using basic auth | String |
-| mesosPassword | | Password to authenticate with the mesos master when using basic auth | String |
+| master | null | A comma separated list of mesos master `http(s)://user:password@host:port` user and password are optional, http is used if no protocol is provided | String |
 | frameworkName | null | | String |
 | frameworkId | null | | String |
 | frameworkFailoverTimeout | 0.0 | | double |
