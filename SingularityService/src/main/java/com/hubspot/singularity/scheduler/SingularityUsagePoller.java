@@ -441,7 +441,7 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
   private SingularityTaskUsage getUsage(MesosTaskMonitorObject taskUsage) {
     return new SingularityTaskUsage(
         taskUsage.getStatistics().getMemTotalBytes(),
-        taskUsage.getStatistics().getTimestampSeconds(),
+        taskUsage.getStatistics().getTimestamp(),
         taskUsage.getStatistics().getCpusSystemTimeSecs() + taskUsage.getStatistics().getCpusUserTimeSecs(),
         taskUsage.getStatistics().getDiskUsedBytes(),
         taskUsage.getStatistics().getCpusNrPeriods(),
