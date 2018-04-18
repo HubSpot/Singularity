@@ -54,6 +54,10 @@ public abstract class WatchServiceHelper implements Closeable {
     this.stopped = stopped;
   }
 
+  protected Path getWatchDirectory() {
+    return watchDirectory;
+  }
+
   @Override
   public void close() {
     try {
