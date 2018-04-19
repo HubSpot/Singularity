@@ -3,10 +3,12 @@ package com.hubspot.singularity.scheduler;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.LongAdder;
 
 import javax.inject.Singleton;
 
@@ -48,6 +50,7 @@ import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.hooks.LoadBalancerClient;
 import com.hubspot.singularity.scheduler.SingularityDeployHealthHelper.DeployHealth;
 import com.hubspot.singularity.sentry.SingularityExceptionNotifier;
+import com.hubspot.singularity.smtp.SingularityMailer;
 
 /**
  * Handles tasks we need to check for staleness | load balancer state, etc - tasks that are not part of a deploy. ie, new replacement tasks.
@@ -65,6 +68,7 @@ public class SingularityNewTaskChecker {
   private final LoadBalancerClient lbClient;
 
   private final Map<String, Future<?>> taskIdToCheck;
+  private final ConcurrentMap<String, LongAdder> requestIdToUnhealthyCount;
 
   private final ScheduledExecutorService executorService;
 
@@ -72,11 +76,12 @@ public class SingularityNewTaskChecker {
   private final SingularityExceptionNotifier exceptionNotifier;
   private final SingularityDeployHealthHelper deployHealthHelper;
   private final DisasterManager disasterManager;
+  private final SingularityMailer mailer;
 
   @Inject
   public SingularityNewTaskChecker(@Named(SingularityMainModule.NEW_TASK_THREADPOOL_NAME) ScheduledExecutorService executorService, RequestManager requestManager,
                                    SingularityConfiguration configuration, LoadBalancerClient lbClient, TaskManager taskManager, SingularityExceptionNotifier exceptionNotifier, SingularityAbort abort,
-                                   SingularityDeployHealthHelper deployHealthHelper, DisasterManager disasterManager) {
+                                   SingularityDeployHealthHelper deployHealthHelper, DisasterManager disasterManager, SingularityMailer mailer) {
     this.configuration = configuration;
     this.requestManager = requestManager;
     this.taskManager = taskManager;
@@ -84,12 +89,14 @@ public class SingularityNewTaskChecker {
     this.abort = abort;
 
     this.taskIdToCheck = Maps.newConcurrentMap();
+    this.requestIdToUnhealthyCount = Maps.newConcurrentMap();
 
     this.executorService = executorService;
 
     this.exceptionNotifier = exceptionNotifier;
     this.deployHealthHelper = deployHealthHelper;
     this.disasterManager = disasterManager;
+    this.mailer = mailer;
   }
 
   private boolean hasHealthcheck(SingularityTask task, Optional<SingularityRequestWithState> requestWithState) {
@@ -262,6 +269,8 @@ public class SingularityNewTaskChecker {
 
           taskManager.createTaskCleanup(new SingularityTaskCleanup(Optional.absent(), TaskCleanupType.OVERDUE_NEW_TASK, System.currentTimeMillis(),
               task.getTaskId(), Optional.of(String.format("Task did not become healthy after %s", JavaUtils.durationFromMillis(getKillAfterHealthcheckRunningForMillis()))), Optional.absent(), Optional.absent()));
+
+          checkForRepeatedFailures(requestWithState);
           return false;
         } else {
           return true;
@@ -272,6 +281,8 @@ public class SingularityNewTaskChecker {
 
           taskManager.createTaskCleanup(new SingularityTaskCleanup(Optional.absent(), TaskCleanupType.OVERDUE_NEW_TASK, System.currentTimeMillis(),
               task.getTaskId(), Optional.of(String.format("Task did not reach the task running state after %s", JavaUtils.durationFromMillis(getKillAfterTaskNotRunningMillis()))), Optional.absent(), Optional.absent()));
+
+          checkForRepeatedFailures(requestWithState);
           return false;
         } else {
           return true;
@@ -283,13 +294,29 @@ public class SingularityNewTaskChecker {
 
         taskManager.createTaskCleanup(new SingularityTaskCleanup(Optional.absent(), TaskCleanupType.UNHEALTHY_NEW_TASK, System.currentTimeMillis(),
             task.getTaskId(), Optional.of("Task is not healthy"), Optional.absent(), Optional.absent()));
+
+        checkForRepeatedFailures(requestWithState);
         return false;
       case HEALTHY:
       case OBSOLETE:
+        if (requestWithState.isPresent()) {
+          requestIdToUnhealthyCount.remove(requestWithState.get().getRequest().getId());
+        }
         return false;
     }
 
     return false;
+  }
+
+  private void checkForRepeatedFailures(Optional<SingularityRequestWithState> requestWithState) {
+    if (requestWithState.isPresent()) {
+      String requestId = requestWithState.get().getRequest().getId();
+      requestIdToUnhealthyCount.computeIfAbsent(requestId, k -> new LongAdder()).increment();
+
+      if (requestIdToUnhealthyCount.get(requestId).longValue() > configuration.getCooldownAfterFailures()) {
+        mailer.sendReplacementTasksFailingMail(requestWithState.get().getRequest());
+      }
+    }
   }
 
   @VisibleForTesting
