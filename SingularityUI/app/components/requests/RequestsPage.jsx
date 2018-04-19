@@ -166,7 +166,7 @@ function mapStateToProps(state, ownProps) {
     pathname: ownProps.location.pathname,
     notFound: statusCode === 404,
     requestsInState: modifiedRequests,
-    requestUtilizations: state.api.utilization.data.requestUtilizations,
+    requestUtilizations: state.api.requestUtilizations.data,
     groups: userGroups,
     filter
   };
