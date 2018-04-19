@@ -81,11 +81,11 @@ public class SingularityMesosSchedulerClient {
    *
    * @throws URISyntaxException if the URL provided was not a syntactically correct URL.
    */
-  public void subscribe(String mesosMasterURI, SingularityMesosScheduler scheduler) throws URISyntaxException {
+  public void subscribe(URI mesosMasterURI, SingularityMesosScheduler scheduler) throws URISyntaxException {
 
     FrameworkInfo frameworkInfo = buildFrameworkInfo();
 
-    if (mesosMasterURI == null || mesosMasterURI.contains("zk:")) {
+    if (mesosMasterURI == null || mesosMasterURI.getScheme().contains("zk")) {
       throw new IllegalArgumentException(String.format("Must use master address for http api (e.g. http://localhost:5050/api/v1/scheduler) was %s", mesosMasterURI));
     }
 
@@ -99,7 +99,7 @@ public class SingularityMesosSchedulerClient {
       subscriberThread = new Thread() {
         public void run() {
           try {
-            connect(URI.create(mesosMasterURI), frameworkInfo, scheduler);
+            connect(mesosMasterURI, frameworkInfo, scheduler);
           } catch (RuntimeException|URISyntaxException e) {
             LOG.error("Could not connect: ", e);
             scheduler.onConnectException(e);
