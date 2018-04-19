@@ -17,13 +17,25 @@ public class RequestUtilization {
   private int numTasks = 0;
 
   private long maxMemBytesUsed = 0;
+  private double maxMemTimestamp = 0;
   private long minMemBytesUsed = Long.MAX_VALUE;
+  private double minMemTimestamp = 0;
   private double maxCpuUsed = 0;
+  private double maxCpusTimestamp = 0;
   private double minCpuUsed = Double.MAX_VALUE;
+  private double minCpusTimestamp = 0;
   private long maxDiskBytesUsed = 0;
-  private long minDiskBytesUsed = 0;
+  private double maxDiskTimestamp = 0;
+  private long minDiskBytesUsed = Long.MAX_VALUE;
+  private double minDiskTimestamp = 0;
 
   private double cpuBurstRating = 0;
+
+  private double percentCpuTimeThrottled = 0;
+  private double maxPercentCpuTimeThrottled = 0;
+  private double maxCpuThrottledTimestamp = 0;
+  private double minPercentCpuTimeThrottled = Double.MAX_VALUE;
+  private double minCpuThrottledTimestamp = 0;
 
   @JsonCreator
   public RequestUtilization(@JsonProperty("requestId") String requestId,
@@ -63,6 +75,11 @@ public class RequestUtilization {
     return this;
   }
 
+  public RequestUtilization addPercentCpuTimeThrottled(double percentCpuTimeThrottled) {
+    this.percentCpuTimeThrottled += percentCpuTimeThrottled;
+    return this;
+  }
+
   public RequestUtilization incrementTaskCount() {
     this.numTasks++;
     return this;
@@ -92,6 +109,10 @@ public class RequestUtilization {
     return diskBytesReserved;
   }
 
+  public double getPercentCpuTimeThrottled() {
+    return percentCpuTimeThrottled;
+  }
+
   public int getNumTasks() {
     return numTasks;
   }
@@ -114,6 +135,11 @@ public class RequestUtilization {
   @JsonIgnore
   public double getAvgDiskBytesUsed() {
     return diskBytesUsed / (double) numTasks;
+  }
+
+  @JsonIgnore
+  public double getAvgPercentCpuTimeThrottled() {
+    return percentCpuTimeThrottled / numTasks;
   }
 
   public String getDeployId() {
@@ -183,6 +209,96 @@ public class RequestUtilization {
     return this;
   }
 
+  public double getMaxPercentCpuTimeThrottled() {
+    return maxPercentCpuTimeThrottled;
+  }
+
+  public RequestUtilization setMaxPercentCpuTimeThrottled(double maxPercentCpuTimeThrottled) {
+    this.maxPercentCpuTimeThrottled = maxPercentCpuTimeThrottled;
+    return this;
+  }
+
+  public double getMinPercentCpuTimeThrottled() {
+    return minPercentCpuTimeThrottled;
+  }
+
+  public RequestUtilization setMinPercentCpuTimeThrottled(double minPercentCpuTimeThrottled) {
+    this.minPercentCpuTimeThrottled = minPercentCpuTimeThrottled;
+    return this;
+  }
+
+  public double getMaxMemTimestamp() {
+    return maxMemTimestamp;
+  }
+
+  public RequestUtilization setMaxMemTimestamp(double maxMemTimestamp) {
+    this.maxMemTimestamp = maxMemTimestamp;
+    return this;
+  }
+
+  public double getMinMemTimestamp() {
+    return minMemTimestamp;
+  }
+
+  public RequestUtilization setMinMemTimestamp(double minMemTimestamp) {
+    this.minMemTimestamp = minMemTimestamp;
+    return this;
+  }
+
+  public double getMaxCpusTimestamp() {
+    return maxCpusTimestamp;
+  }
+
+  public RequestUtilization setMaxCpusTimestamp(double maxCpusTimestamp) {
+    this.maxCpusTimestamp = maxCpusTimestamp;
+    return this;
+  }
+
+  public double getMinCpusTimestamp() {
+    return minCpusTimestamp;
+  }
+
+  public RequestUtilization setMinCpusTimestamp(double minCpusTimestamp) {
+    this.minCpusTimestamp = minCpusTimestamp;
+    return this;
+  }
+
+  public double getMaxDiskTimestamp() {
+    return maxDiskTimestamp;
+  }
+
+  public RequestUtilization setMaxDiskTimestamp(double maxDiskTimestamp) {
+    this.maxDiskTimestamp = maxDiskTimestamp;
+    return this;
+  }
+
+  public double getMinDiskTimestamp() {
+    return minDiskTimestamp;
+  }
+
+  public RequestUtilization setMinDiskTimestamp(double minDiskTimestamp) {
+    this.minDiskTimestamp = minDiskTimestamp;
+    return this;
+  }
+
+  public double getMaxCpuThrottledTimestamp() {
+    return maxCpuThrottledTimestamp;
+  }
+
+  public RequestUtilization setMaxCpuThrottledTimestamp(double maxCpuThrottledTimestamp) {
+    this.maxCpuThrottledTimestamp = maxCpuThrottledTimestamp;
+    return this;
+  }
+
+  public double getMinCpuThrottledTimestamp() {
+    return minCpuThrottledTimestamp;
+  }
+
+  public RequestUtilization setMinCpuThrottledTimestamp(double minCpuThrottledTimestamp) {
+    this.minCpuThrottledTimestamp = minCpuThrottledTimestamp;
+    return this;
+  }
+
   @Override
   public String toString() {
     return "RequestUtilization{" +
@@ -202,6 +318,9 @@ public class RequestUtilization {
         ", maxDiskBytesUsed=" + maxDiskBytesUsed +
         ", minDiskBytesUsed=" + minDiskBytesUsed +
         ", cpuBurstRating=" + cpuBurstRating +
+        ", percentCpuTimeThrottled=" + percentCpuTimeThrottled +
+        ", maxPercentCpuTimeThrottled=" + maxPercentCpuTimeThrottled +
+        ", minPercentCpuTimeThrottled=" + minPercentCpuTimeThrottled +
         '}';
   }
 }

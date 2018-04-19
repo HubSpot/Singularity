@@ -11,6 +11,7 @@ import javax.ws.rs.core.MediaType;
 
 import com.google.common.base.Optional;
 import com.google.inject.Inject;
+import com.hubspot.singularity.RequestUtilization;
 import com.hubspot.singularity.SingularityAuthorizationScope;
 import com.hubspot.singularity.SingularityClusterUtilization;
 import com.hubspot.singularity.SingularityService;
@@ -99,4 +100,18 @@ public class UsageResource {
 
     return usageManager.getClusterUtilization().get();
   }
+
+  @GET
+  @Path("/requests")
+  public List<RequestUtilization> getRequestUtilizations(@Auth SingularityUser user) {
+    return new ArrayList<>(usageManager.getRequestUtilizations().values());
+  }
+
+  @GET
+  @Path("/requests/request/{requestId}")
+  public Optional<RequestUtilization> getRequestUtilization(@Auth SingularityUser user, @PathParam("requestId") String requestId) {
+    authorizationHelper.checkForAuthorizationByRequestId(requestId, user, SingularityAuthorizationScope.READ);
+    return usageManager.getRequestUtilization(requestId);
+  }
+
 }
