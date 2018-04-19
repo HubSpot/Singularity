@@ -1,17 +1,10 @@
 package com.hubspot.singularity;
 
-import java.util.Map;
-
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
 
 public class SingularitySlaveUsage {
-
-  public enum ResourceUsageType {
-    CPU_USED, MEMORY_BYTES_USED, DISK_BYTES_USED, CPU_FREE, MEMORY_BYTES_FREE, DISK_BYTES_FREE
-  }
-
   public static final long BYTES_PER_MEGABYTE = 1024L * 1024L;
 
   private final double cpusUsed;
@@ -23,7 +16,6 @@ public class SingularitySlaveUsage {
   private final long diskBytesUsed;
   private final long diskMbReserved;
   private final Optional<Long> diskMbTotal;
-  private final Map<ResourceUsageType, Number> longRunningTasksUsage;
   private final int numTasks;
   private final long timestamp;
   private final double systemMemTotalBytes;
@@ -45,7 +37,6 @@ public class SingularitySlaveUsage {
                                @JsonProperty("diskBytesUsed") long diskBytesUsed,
                                @JsonProperty("diskMbReserved") long diskMbReserved,
                                @JsonProperty("diskMbTotal") Optional<Long> diskMbTotal,
-                               @JsonProperty("longRunningTasksUsage") Map<ResourceUsageType, Number> longRunningTasksUsage,
                                @JsonProperty("numTasks") int numTasks,
                                @JsonProperty("timestamp") long timestamp,
                                @JsonProperty("systemMemTotalBytes") double systemMemTotalBytes,
@@ -65,7 +56,6 @@ public class SingularitySlaveUsage {
     this.diskBytesUsed = diskBytesUsed;
     this.diskMbReserved = diskMbReserved;
     this.diskMbTotal = diskMbTotal;
-    this.longRunningTasksUsage = longRunningTasksUsage;
     this.numTasks = numTasks;
     this.timestamp = timestamp;
     this.systemMemTotalBytes = systemMemTotalBytes;
@@ -122,10 +112,6 @@ public class SingularitySlaveUsage {
     return diskMbTotal.isPresent() ? Optional.of(diskMbTotal.get() * BYTES_PER_MEGABYTE) : Optional.absent();
   }
 
-  public Map<ResourceUsageType, Number> getLongRunningTasksUsage() {
-    return longRunningTasksUsage;
-  }
-
   public int getNumTasks() {
     return numTasks;
   }
@@ -178,7 +164,6 @@ public class SingularitySlaveUsage {
         ", diskBytesUsed=" + diskBytesUsed +
         ", diskMbReserved=" + diskMbReserved +
         ", diskMbTotal=" + diskMbTotal +
-        ", longRunningTasksUsage=" + longRunningTasksUsage +
         ", numTasks=" + numTasks +
         ", timestamp=" + timestamp +
         ", systemMemTotalBytes=" + systemMemTotalBytes +

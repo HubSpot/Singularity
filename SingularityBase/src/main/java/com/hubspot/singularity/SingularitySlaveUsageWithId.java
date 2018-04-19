@@ -18,7 +18,6 @@ public class SingularitySlaveUsageWithId extends SingularitySlaveUsage {
         usage.getDiskBytesUsed(),
         usage.getDiskMbReserved(),
         usage.getDiskMbTotal(),
-        usage.getLongRunningTasksUsage(),
         usage.getNumTasks(),
         usage.getTimestamp(),
         usage.getSystemMemTotalBytes(),
