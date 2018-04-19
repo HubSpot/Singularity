@@ -3,12 +3,10 @@ package com.hubspot.singularity.scheduler;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
-import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.LongAdder;
 
 import javax.inject.Singleton;
 
@@ -68,7 +66,6 @@ public class SingularityNewTaskChecker {
   private final LoadBalancerClient lbClient;
 
   private final Map<String, Future<?>> taskIdToCheck;
-  private final ConcurrentMap<String, LongAdder> requestIdToUnhealthyCount;
 
   private final ScheduledExecutorService executorService;
 
@@ -89,7 +86,6 @@ public class SingularityNewTaskChecker {
     this.abort = abort;
 
     this.taskIdToCheck = Maps.newConcurrentMap();
-    this.requestIdToUnhealthyCount = Maps.newConcurrentMap();
 
     this.executorService = executorService;
 
@@ -270,7 +266,7 @@ public class SingularityNewTaskChecker {
           taskManager.createTaskCleanup(new SingularityTaskCleanup(Optional.absent(), TaskCleanupType.OVERDUE_NEW_TASK, System.currentTimeMillis(),
               task.getTaskId(), Optional.of(String.format("Task did not become healthy after %s", JavaUtils.durationFromMillis(getKillAfterHealthcheckRunningForMillis()))), Optional.absent(), Optional.absent()));
 
-          checkForRepeatedFailures(requestWithState);
+          checkForRepeatedFailures(requestWithState, task.getTaskId());
           return false;
         } else {
           return true;
@@ -282,7 +278,7 @@ public class SingularityNewTaskChecker {
           taskManager.createTaskCleanup(new SingularityTaskCleanup(Optional.absent(), TaskCleanupType.OVERDUE_NEW_TASK, System.currentTimeMillis(),
               task.getTaskId(), Optional.of(String.format("Task did not reach the task running state after %s", JavaUtils.durationFromMillis(getKillAfterTaskNotRunningMillis()))), Optional.absent(), Optional.absent()));
 
-          checkForRepeatedFailures(requestWithState);
+          checkForRepeatedFailures(requestWithState, task.getTaskId());
           return false;
         } else {
           return true;
@@ -295,12 +291,12 @@ public class SingularityNewTaskChecker {
         taskManager.createTaskCleanup(new SingularityTaskCleanup(Optional.absent(), TaskCleanupType.UNHEALTHY_NEW_TASK, System.currentTimeMillis(),
             task.getTaskId(), Optional.of("Task is not healthy"), Optional.absent(), Optional.absent()));
 
-        checkForRepeatedFailures(requestWithState);
+        checkForRepeatedFailures(requestWithState, task.getTaskId());
         return false;
       case HEALTHY:
       case OBSOLETE:
         if (requestWithState.isPresent()) {
-          requestIdToUnhealthyCount.remove(requestWithState.get().getRequest().getId());
+          taskManager.clearUnhealthyKills(requestWithState.get().getRequest().getId());
         }
         return false;
     }
@@ -308,14 +304,11 @@ public class SingularityNewTaskChecker {
     return false;
   }
 
-  private void checkForRepeatedFailures(Optional<SingularityRequestWithState> requestWithState) {
-    if (requestWithState.isPresent()) {
-      String requestId = requestWithState.get().getRequest().getId();
-      requestIdToUnhealthyCount.computeIfAbsent(requestId, k -> new LongAdder()).increment();
+  private void checkForRepeatedFailures(Optional<SingularityRequestWithState> requestWithState, SingularityTaskId taskId) {
+    taskManager.markUnhealthyKill(taskId);
 
-      if (requestIdToUnhealthyCount.get(requestId).longValue() > configuration.getCooldownAfterFailures()) {
-        mailer.sendReplacementTasksFailingMail(requestWithState.get().getRequest());
-      }
+    if (requestWithState.isPresent() && taskManager.getNumUnhealthyKills(taskId.getRequestId()) > configuration.getCooldownAfterFailures()) {
+      mailer.sendReplacementTasksFailingMail(requestWithState.get().getRequest());
     }
   }
 
