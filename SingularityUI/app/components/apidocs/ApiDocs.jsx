@@ -2,7 +2,6 @@ import { Component } from 'react';
 
 import SwaggerUi, {presets} from 'swagger-ui';
 import 'swagger-ui/dist/swagger-ui.css';
-import 'swagger-ui/dist/swagger-ui.js.map';
 
 class ApiDocs extends Component {
 
