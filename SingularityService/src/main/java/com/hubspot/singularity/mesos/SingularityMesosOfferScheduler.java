@@ -228,7 +228,7 @@ public class SingularityMesosOfferScheduler {
                 offerScoringSemaphore.call(
                     () -> CompletableFuture.runAsync(() -> {
                           try {
-                            double score = calculateScore(offerHolder, currentSlaveUsagesBySlaveId, tasksPerOfferHost, taskRequestHolder, activeTaskIdsForRequest);
+                            double score = calculateScore(offerHolder, currentSlaveUsagesBySlaveId, tasksPerOfferHost, taskRequestHolder, activeTaskIdsForRequest, requestUtilizations.get(taskRequestHolder.getTaskRequest().getRequest().getId()));
                             if (score != 0) {
                               scorePerOffer.put(offerHolder.getSlaveId(), score);
                             }
@@ -275,8 +275,7 @@ public class SingularityMesosOfferScheduler {
       if (taskId.getSanitizedHost().equals(sanitizedHostname)) {
         if (requestUtilizations.containsKey(taskId.getRequestId())) {
           RequestUtilization utilization = requestUtilizations.get(taskId.getRequestId());
-          // To account for cpu bursts, tend towards max usage if the app is consistently over-utilizing cpu, tend towards avg if it is over-utilized in short bursts
-          cpu += (utilization.getMaxCpuUsed() - utilization.getAvgCpuUsed()) * utilization.getCpuBurstRating() + utilization.getAvgCpuUsed();
+          cpu += getEstimatedCpuUsageForRequest(utilization);
           memBytes += utilization.getMaxMemBytesUsed();
           diskBytes += utilization.getMaxDiskBytesUsed();
         } else {
@@ -311,15 +310,19 @@ public class SingularityMesosOfferScheduler {
         usage.addEstimatedCpuUsage(requestUtilization.getMaxCpuUsed());
         usage.addEstimatedMemoryBytesUsage(requestUtilization.getMaxMemBytesUsed());
         usage.addEstimatedDiskBytesUsage(requestUtilization.getMaxDiskBytesUsed());
+      } else {
+        usage.addEstimatedCpuUsage(taskHolder.getTotalResources().getCpus());
+        usage.addEstimatedMemoryBytesUsage(taskHolder.getTotalResources().getMemoryMb() * SingularitySlaveUsage.BYTES_PER_MEGABYTE);
+        usage.addEstimatedDiskBytesUsage(taskHolder.getTotalResources().getDiskMb() * SingularitySlaveUsage.BYTES_PER_MEGABYTE);
       }
       usage.setScores(configuration.getMesosConfiguration().getScoringStrategy());
     }
   }
 
   private double calculateScore(SingularityOfferHolder offerHolder, Map<String, SingularitySlaveUsageWithCalculatedScores> currentSlaveUsagesBySlaveId, Map<String, Integer> tasksPerOffer,
-                                SingularityTaskRequestHolder taskRequestHolder, List<SingularityTaskId> activeTaskIdsForRequest) {
+                                SingularityTaskRequestHolder taskRequestHolder, List<SingularityTaskId> activeTaskIdsForRequest, RequestUtilization requestUtilization) {
     Optional<SingularitySlaveUsageWithCalculatedScores> maybeSlaveUsage = Optional.fromNullable(currentSlaveUsagesBySlaveId.get(offerHolder.getSlaveId()));
-    double score = score(offerHolder, tasksPerOffer, taskRequestHolder, maybeSlaveUsage, activeTaskIdsForRequest);
+    double score = score(offerHolder, tasksPerOffer, taskRequestHolder, maybeSlaveUsage, activeTaskIdsForRequest, requestUtilization);
     if (LOG.isTraceEnabled()) {
       LOG.trace("Scored {} | Task {} | Offer - mem {} - cpu {} | Slave {} | maybeSlaveUsage - {}", score, taskRequestHolder.getTaskRequest().getPendingTask().getPendingTaskId().getId(),
           MesosUtils.getMemory(offerHolder.getCurrentResources(), Optional.absent()), MesosUtils.getNumCpus(offerHolder.getCurrentResources(), Optional.absent()), offerHolder.getHostname(), maybeSlaveUsage);
@@ -339,8 +342,14 @@ public class SingularityMesosOfferScheduler {
         .collect(Collectors.toList());
   }
 
+  private double getEstimatedCpuUsageForRequest(RequestUtilization requestUtilization) {
+    // To account for cpu bursts, tend towards max usage if the app is consistently over-utilizing cpu, tend towards avg if it is over-utilized in short bursts
+    return (requestUtilization.getMaxCpuUsed() - requestUtilization.getAvgCpuUsed()) * requestUtilization.getCpuBurstRating() + requestUtilization.getAvgCpuUsed();
+  }
+
   private double score(SingularityOfferHolder offerHolder, Map<String, Integer> tasksPerOffer, SingularityTaskRequestHolder taskRequestHolder,
-                       Optional<SingularitySlaveUsageWithCalculatedScores> maybeSlaveUsage, List<SingularityTaskId> activeTaskIdsForRequest) {
+                       Optional<SingularitySlaveUsageWithCalculatedScores> maybeSlaveUsage, List<SingularityTaskId> activeTaskIdsForRequest,
+                       RequestUtilization requestUtilization) {
 
     final SingularityTaskRequest taskRequest = taskRequestHolder.getTaskRequest();
     final SingularityPendingTaskId pendingTaskId = taskRequest.getPendingTask().getPendingTaskId();
@@ -355,7 +364,11 @@ public class SingularityMesosOfferScheduler {
       return 0;
     }
 
-    if (mesosConfiguration.isOmitOverloadedHosts() && maybeSlaveUsage.isPresent() && maybeSlaveUsage.get().isOverloaded()) {
+    double estimatedCpusToAdd = taskRequestHolder.getTotalResources().getCpus();
+    if (requestUtilization != null) {
+      estimatedCpusToAdd = getEstimatedCpuUsageForRequest(requestUtilization);
+    }
+    if (mesosConfiguration.isOmitOverloadedHosts() && maybeSlaveUsage.isPresent() && maybeSlaveUsage.get().isCpuOverloaded(estimatedCpusToAdd)) {
       LOG.debug("Slave {} is overloaded (), ignoring offer");
       return 0;
     }

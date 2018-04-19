@@ -43,8 +43,9 @@ class SingularitySlaveUsageWithCalculatedScores {
     this.load1Threshold = load1Threshold;
   }
 
-  public boolean isOverloaded() {
-    return  (slaveUsage.getSystemLoad5Min() / slaveUsage.getSystemCpusTotal()) > load5Threshold || (slaveUsage.getSystemLoad1Min() / slaveUsage.getSystemCpusTotal()) > load1Threshold;
+  public boolean isCpuOverloaded(double estimatedNumCpusToAdd) {
+    return  ((slaveUsage.getSystemLoad5Min() + estimatedNumCpusToAdd) / slaveUsage.getSystemCpusTotal()) > load5Threshold
+        || ((slaveUsage.getSystemLoad1Min() + estimatedNumCpusToAdd) / slaveUsage.getSystemCpusTotal()) > load1Threshold;
   }
 
   private void setScores(double longRunningCpusUsedScore,
