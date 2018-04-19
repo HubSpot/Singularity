@@ -22,9 +22,10 @@ public class SingularityTaskExecutorData extends ExecutorData {
   private final Optional<String> requestGroup;
   private final Optional<String> s3StorageClass;
   private final Optional<Long> applyS3StorageClassAfterBytes;
+  private final Optional<Integer> cpuHardLimit;
 
   public SingularityTaskExecutorData(ExecutorData executorData, List<SingularityS3UploaderFile> s3UploaderAdditionalFiles, String defaultS3Bucket, String s3UploaderKeyPattern,
-       String serviceLog, String serviceFinishedTailLog, Optional<String> requestGroup, Optional<String> s3StorageClass, Optional<Long> applyS3StorageClassAfterBytes) {
+       String serviceLog, String serviceFinishedTailLog, Optional<String> requestGroup, Optional<String> s3StorageClass, Optional<Long> applyS3StorageClassAfterBytes, Optional<Integer> cpuHardLimit) {
     this(executorData.getCmd(),
         executorData.getEmbeddedArtifacts(),
         executorData.getExternalArtifacts(),
@@ -49,7 +50,8 @@ public class SingularityTaskExecutorData extends ExecutorData {
         serviceFinishedTailLog,
         requestGroup,
         s3StorageClass,
-        applyS3StorageClassAfterBytes);
+        applyS3StorageClassAfterBytes,
+        cpuHardLimit);
   }
 
   @JsonCreator
@@ -77,7 +79,8 @@ public class SingularityTaskExecutorData extends ExecutorData {
                                      @JsonProperty("serviceFinishedTailLog") String serviceFinishedTailLog,
                                      @JsonProperty("requestGroup")  Optional<String> requestGroup,
                                      @JsonProperty("s3StorageClass") Optional<String> s3StorageClass,
-                                     @JsonProperty("applyS3StorageClassAfterBytes") Optional<Long> applyS3StorageClassAfterBytes) {
+                                     @JsonProperty("applyS3StorageClassAfterBytes") Optional<Long> applyS3StorageClassAfterBytes,
+                                     @JsonProperty("cpuHardLimit") Optional<Integer> cpuHardLimit) {
     super(cmd, embeddedArtifacts, externalArtifacts, s3Artifacts, successfulExitCodes, user, runningSentinel, extraCmdLineArgs, loggingTag, loggingExtraFields,
         sigKillProcessesAfterMillis, maxTaskThreads, preserveTaskSandboxAfterFinish, maxOpenFiles, skipLogrotateAndCompress, s3ArtifactSignatures, logrotateFrequency);
     this.s3UploaderAdditionalFiles = s3UploaderAdditionalFiles;
@@ -88,6 +91,7 @@ public class SingularityTaskExecutorData extends ExecutorData {
     this.requestGroup = requestGroup;
     this.s3StorageClass = s3StorageClass;
     this.applyS3StorageClassAfterBytes = applyS3StorageClassAfterBytes;
+    this.cpuHardLimit = cpuHardLimit;
   }
 
   public List<SingularityS3UploaderFile> getS3UploaderAdditionalFiles() {
@@ -122,6 +126,10 @@ public class SingularityTaskExecutorData extends ExecutorData {
     return applyS3StorageClassAfterBytes;
   }
 
+  public Optional<Integer> getCpuHardLimit() {
+    return cpuHardLimit;
+  }
+
   @Override
   public String toString() {
     return "SingularityTaskExecutorData{" +
@@ -133,6 +141,7 @@ public class SingularityTaskExecutorData extends ExecutorData {
         ", requestGroup=" + requestGroup +
         ", s3StorageClass=" + s3StorageClass +
         ", applyS3StorageClassAfterBytes=" + applyS3StorageClassAfterBytes +
+        ", cpuHardLimit=" + cpuHardLimit +
         "} " + super.toString();
   }
 }

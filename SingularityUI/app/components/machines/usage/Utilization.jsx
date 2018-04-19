@@ -3,6 +3,7 @@ import { connect } from 'react-redux';
 import rootComponent from '../../../rootComponent';
 import { FetchSlaveUsages, FetchSlaves } from '../../../actions/api/slaves';
 import { FetchSingularityStatus } from '../../../actions/api/state';
+import { FetchUtilization } from '../../../actions/api/utilization';
 import { STAT_NAMES, WHOLE_NUMBER, HEALTH_SCALE_MAX } from '../Constants';
 import Utils from '../../../utils';
 import ResourceHealthData from './ResourceHealthData';
@@ -105,7 +106,8 @@ const refresh = () => (dispatch) =>
   Promise.all([
     dispatch(FetchSlaves.trigger()),
     dispatch(FetchSlaveUsages.trigger()),
-    dispatch(FetchSingularityStatus.trigger())
+    dispatch(FetchSingularityStatus.trigger()),
+    dispatch(FetchUtilization.trigger())
   ]);
 
 export default connect(mapStateToProps, mapDispatchToProps)(rootComponent(SlaveUsage, refresh, true, true));

@@ -140,6 +140,7 @@ class TaskDetail extends Component {
     if (this.props.task.isStillRunning) {
       this.props.fetchTaskStatistics(this.props.params.taskId);
     }
+    this.statisticsRefreshInterval = setInterval(() => this.props.fetchTaskStatistics(this.props.params.taskId), 3000);
   }
 
   componentWillReceiveProps(nextProps) {
@@ -149,6 +150,10 @@ class TaskDetail extends Component {
         previousUsage: this.props.resourceUsage
       });
     }
+  }
+
+  componentWillUnmount() {
+    clearInterval(this.statisticsRefreshInterval);
   }
 
   analyzeFiles(files) {
@@ -348,12 +353,14 @@ class TaskDetail extends Component {
     if (!this.props.task.isStillRunning) return null;
     let cpuUsage = 0;
     let cpuUsageExceeding = false;
+    let percentCpuTimeThrottled = 0;
     if (this.state.previousUsage) {
       const currentTime = this.props.resourceUsage.cpusSystemTimeSecs + this.props.resourceUsage.cpusUserTimeSecs;
       const previousTime = this.state.previousUsage.cpusSystemTimeSecs + this.state.previousUsage.cpusUserTimeSecs;
       const timestampDiff = this.props.resourceUsage.timestamp - this.state.previousUsage.timestamp;
       cpuUsage = (currentTime - previousTime) / timestampDiff;
       cpuUsageExceeding = (cpuUsage / this.props.resourceUsage.cpusLimit) > 1.10;
+      percentCpuTimeThrottled = (this.props.resourceUsage.cpusThrottledTimeSecs - this.state.previousUsage.cpusThrottledTimeSecs) / timestampDiff
     }
 
     const exceedingWarning = cpuUsageExceeding && (
@@ -374,19 +381,34 @@ class TaskDetail extends Component {
           title="CPU Usage"
           style={cpuUsageExceeding ? 'danger' : 'success'}
           total={this.props.resourceUsage.cpusLimit}
-          used={Math.round(cpuUsage * 100) / 100}
+          used={cpuUsage}
         >
           <span>
             <p>
-              {Math.round(cpuUsage * 100) / 100} used / {this.props.resourceUsage.cpusLimit} allocated CPUs
+              {cpuUsage.toFixed(3)} used / {this.props.resourceUsage.cpusLimit} allocated CPUs
             </p>
             {exceedingWarning}
           </span>
         </UsageInfo>
       ) : (
         <Panel header="CPU Usage">
-          <p>{Math.round(cpuUsage * 100) / 100} shares used</p>
+          <p>{cpuUsage.toFixed(3)} shares used</p>
         </Panel>
+      );
+
+      const maybePercentCpuTimeThrottled = (
+         <UsageInfo
+          title="% CPU Time Throttled"
+          style={percentCpuTimeThrottled > 0 ? 'danger' : 'success'}
+          total={100}
+          used={percentCpuTimeThrottled}
+        >
+          <span>
+            <p>
+              {percentCpuTimeThrottled.toFixed(3)}% of CPU Time Throttled
+            </p>
+          </span>
+        </UsageInfo>
       );
       maybeResourceUsage = (
         <div>
@@ -403,6 +425,9 @@ class TaskDetail extends Component {
             </div>
             <div className="col-md-3 col-sm-4">
               {maybeCpuUsage}
+            </div>
+            <div className="col-md-3 col-sm-4">
+              {maybePercentCpuTimeThrottled}
             </div>
             <div className="col-md-3 col-sm-4">
               <UsageInfo
@@ -552,12 +577,12 @@ function mapDispatchToProps(dispatch) {
   return {
     runCommandOnTask: (taskId, commandName) => dispatch(RunCommandOnTask.trigger(taskId, commandName)),
     fetchTaskHistory: (taskId) => dispatch(FetchTaskHistory.trigger(taskId, true)),
-    fetchTaskStatistics: (taskId) => dispatch(FetchTaskStatistics.trigger(taskId, [404])),
+    fetchTaskStatistics: (taskId) => dispatch(FetchTaskStatistics.trigger(taskId, [404, 500])),
     fetchTaskFiles: (taskId, path, catchStatusCodes = []) => dispatch(FetchTaskFiles.trigger(taskId, path, catchStatusCodes.concat([404]))),
     fetchDeployForRequest: (taskId, deployId) => dispatch(FetchDeployForRequest.trigger(taskId, deployId)),
     fetchTaskCleanups: () => dispatch(FetchTaskCleanups.trigger()),
     fetchPendingDeploys: () => dispatch(FetchPendingDeploys.trigger()),
-    fecthS3Logs: (taskId) => dispatch(FetchTaskS3Logs.trigger(taskId, [404, 500])),
+    fecthS3Logs: (taskId) => dispatch(FetchTaskS3Logs.trigger(taskId, [404, 500]))
   };
 }
 

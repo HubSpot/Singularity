@@ -137,6 +137,12 @@ PARENT_CGROUP=$(get_deepest_cgroup)
 DOCKER_OPTIONS+=(--name=$CONTAINER_NAME)
 DOCKER_OPTIONS+=(--cgroup-parent=$PARENT_CGROUP)
 DOCKER_OPTIONS+=(--env-file=docker.env)
+{{#if runContext.cfsQuota }}
+CPU_CGROUP_BASE_DIRECTORY=`findmnt --kernel --first-only --types cgroup --options cpu --noheadings --output TARGET`
+CGROUP_CPU_PATH="$CPU_CGROUP_BASE_DIRECTORY$PARENT_CGROUP"
+echo {{{ runContext.cfsQuota }}} > "$CGROUP_CPU_PATH/cpu.cfs_quota_us"
+echo {{{ runContext.cfsPeriod }}} > "$CGROUP_CPU_PATH/cpu.cfs_period_us"
+{{/if}}
 
 {{#unless envContext.dockerWorkdirOverriden }}
 DOCKER_OPTIONS+=(-w /mnt/mesos/sandbox/{{{ runContext.taskAppDirectory }}})
