@@ -1,5 +1,6 @@
 package com.hubspot.singularity.mesos;
 
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -35,6 +36,7 @@ import org.slf4j.LoggerFactory;
 import com.codahale.metrics.annotation.Timed;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
@@ -68,8 +70,6 @@ import io.netty.handler.codec.PrematureChannelClosureException;
 public class SingularityMesosSchedulerImpl extends SingularityMesosScheduler {
 
   private static final Logger LOG = LoggerFactory.getLogger(SingularityMesosScheduler.class);
-  private static final String SCHEDULER_API_URL_FORMAT = "%s://%s/api/v1/scheduler";
-  private static final String SCHEDULER_API_URL_CREDENTIALS_FORMAT = "%s://%s:%s@%s/api/v1/scheduler";
 
   private final SingularityExceptionNotifier exceptionNotifier;
 
@@ -334,6 +334,7 @@ public class SingularityMesosSchedulerImpl extends SingularityMesosScheduler {
 
   @Override
   public void onUncaughtException(Throwable t) {
+    LOG.error("uncaught exception", t);
     callWithStateLock(() -> {
       if (t instanceof PrematureChannelClosureException) {
         LOG.error("Lost connection to the mesos master, aborting", t);
@@ -370,11 +371,21 @@ public class SingularityMesosSchedulerImpl extends SingularityMesosScheduler {
     MesosConfiguration mesosConfiguration = configuration.getMesosConfiguration();
     // If more than one host is provided choose at random, we will be redirected if the host is not the master
     List<String> masters = Arrays.asList(mesosConfiguration.getMaster().split(","));
-    String masterUrl = masters.get(new Random().nextInt(masters.size()));
-    if (!masterUrl.startsWith("http")) {
-      masterUrl = "http://" + masterUrl;
+    String nextMaster = masters.get(new Random().nextInt(masters.size()));
+    if (!nextMaster.startsWith("http")) {
+      nextMaster = "http://" + nextMaster;
     }
-    mesosSchedulerClient.subscribe(masterUrl, this);
+    URI masterUri = URI.create(nextMaster);
+
+    mesosSchedulerClient.subscribe(new URI(
+        masterUri.getScheme() == null ? "http" : masterUri.getScheme(),
+        masterUri.getUserInfo(),
+        masterUri.getHost(),
+        masterUri.getPort(),
+        Strings.isNullOrEmpty(masterUri.getPath()) ? "/api/v1/scheduler" : masterUri.getPath(),
+        masterUri.getQuery(),
+        masterUri.getFragment()
+    ), this);
   }
 
   private void callWithOffersLock(Runnable function, String method) {
