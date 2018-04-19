@@ -82,10 +82,8 @@ import com.hubspot.singularity.smtp.SingularityMailer;
 import com.ning.http.client.AsyncHttpClient;
 
 import io.dropwizard.auth.Auth;
-import io.swagger.v3.oas.annotations.OpenAPIDefinition;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.info.Info;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -333,10 +331,10 @@ public class RequestResource extends AbstractRequestResource {
       }
   )
   public SingularityPendingRequestParent scheduleImmediately(
-      @Parameter(hidden = true) @Auth SingularityUser user,
-      @Parameter(required = true, description = "The request ID to run") @PathParam("requestId") String requestId,
-      @RequestBody(description = "Settings specific to this run of the request") SingularityRunNowRequest runNowRequest,
-      @Context HttpServletRequest requestContext) {
+        @Parameter(hidden = true) @Auth SingularityUser user,
+        @Parameter(required = true, description = "The request ID to run") @PathParam("requestId") String requestId,
+        @Parameter(hidden = true) @Context HttpServletRequest requestContext,
+        @RequestBody(description = "Settings specific to this run of the request") SingularityRunNowRequest runNowRequest) {
     return maybeProxyToLeader(requestContext, SingularityPendingRequestParent.class, runNowRequest, () -> scheduleImmediately(user, requestId, runNowRequest));
   }
 
