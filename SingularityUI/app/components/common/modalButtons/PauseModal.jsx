@@ -31,7 +31,8 @@ class PauseModal extends Component {
       {
         name: 'durationMillis',
         type: FormModal.INPUT_TYPES.DURATION,
-        label: 'Expiration (optional)'
+        label: 'Expiration (optional)',
+        defaultValue: '24h',
       },
       {
         name: 'message',
