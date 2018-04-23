@@ -9,7 +9,6 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
@@ -28,10 +27,8 @@ import com.google.inject.Inject;
 import com.hubspot.mesos.Resources;
 import com.hubspot.singularity.RequestType;
 import com.hubspot.singularity.RequestUtilization;
-import com.hubspot.singularity.SingularityDeployStatistics;
 import com.hubspot.singularity.SingularityPendingTaskId;
 import com.hubspot.singularity.SingularitySlaveUsage;
-import com.hubspot.singularity.SingularitySlaveUsage.ResourceUsageType;
 import com.hubspot.singularity.SingularitySlaveUsageWithId;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskId;
@@ -42,7 +39,6 @@ import com.hubspot.singularity.async.CompletableFutures;
 import com.hubspot.singularity.config.CustomExecutorConfiguration;
 import com.hubspot.singularity.config.MesosConfiguration;
 import com.hubspot.singularity.config.SingularityConfiguration;
-import com.hubspot.singularity.data.DeployManager;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.data.UsageManager;
 import com.hubspot.singularity.helpers.MesosUtils;
@@ -68,16 +64,12 @@ public class SingularityMesosOfferScheduler {
   private final SingularitySlaveAndRackHelper slaveAndRackHelper;
   private final SingularityTaskSizeOptimizer taskSizeOptimizer;
   private final UsageManager usageManager;
-  private final DeployManager deployManager;
   private final SingularitySchedulerLock lock;
   private final SingularityLeaderCache leaderCache;
 
-  private final double normalizedCpuFreeWeight;
-  private final double normalizedCpuUsedWeight;
-  private final double normalizedMemFreeWeight;
-  private final double normalizedMemUsedWeight;
-  private final double normalizedDiskFreeWeight;
-  private final double normalizedDiskUsedWeight;
+  private final double normalizedCpuWeight;
+  private final double normalizedMemWeight;
+  private final double normalizedDiskWeight;
 
   private final AsyncSemaphore<Void> offerScoringSemaphore;
   private final ExecutorService offerScoringExecutor;
@@ -95,7 +87,6 @@ public class SingularityMesosOfferScheduler {
                                         SingularitySlaveAndRackHelper slaveAndRackHelper,
                                         SingularityLeaderCache leaderCache,
                                         UsageManager usageManager,
-                                        DeployManager deployManager,
                                         SingularitySchedulerLock lock) {
     this.defaultResources = new Resources(mesosConfiguration.getDefaultCpus(), mesosConfiguration.getDefaultMemory(), 0, mesosConfiguration.getDefaultDisk());
     this.defaultCustomExecutorResources = new Resources(customExecutorConfiguration.getNumCpus(), customExecutorConfiguration.getMemoryMb(), 0, customExecutorConfiguration.getDiskMb());
@@ -110,45 +101,23 @@ public class SingularityMesosOfferScheduler {
     this.slaveAndRackHelper = slaveAndRackHelper;
     this.taskPrioritizer = taskPrioritizer;
     this.usageManager = usageManager;
-    this.deployManager = deployManager;
     this.lock = lock;
 
-    this.normalizedCpuFreeWeight = getNormalizedWeight(ResourceUsageType.CPU_FREE, configuration);
-    this.normalizedCpuUsedWeight = getNormalizedWeight(ResourceUsageType.CPU_USED, configuration);
-    this.normalizedMemFreeWeight = getNormalizedWeight(ResourceUsageType.MEMORY_BYTES_FREE, configuration);
-    this.normalizedMemUsedWeight = getNormalizedWeight(ResourceUsageType.MEMORY_BYTES_USED, configuration);
-    this.normalizedDiskFreeWeight = getNormalizedWeight(ResourceUsageType.DISK_BYTES_FREE, configuration);
-    this.normalizedDiskUsedWeight = getNormalizedWeight(ResourceUsageType.DISK_BYTES_USED, configuration);
+    double cpuWeight = mesosConfiguration.getCpuWeight();
+    double memWeight = mesosConfiguration.getMemWeight();
+    double diskWeight = mesosConfiguration.getDiskWeight();
+    if (cpuWeight + memWeight + diskWeight != 1) {
+      this.normalizedCpuWeight = cpuWeight / (cpuWeight + memWeight + diskWeight);
+      this.normalizedMemWeight = memWeight / (cpuWeight + memWeight + diskWeight);
+      this.normalizedDiskWeight = diskWeight / (cpuWeight + memWeight + diskWeight);
+    } else {
+      this.normalizedCpuWeight = cpuWeight;
+      this.normalizedMemWeight = memWeight;
+      this.normalizedDiskWeight = diskWeight;
+    }
 
     this.offerScoringSemaphore = AsyncSemaphore.newBuilder(mesosConfiguration::getOffersConcurrencyLimit).setFlushQueuePeriodically(true).build();
     this.offerScoringExecutor = Executors.newCachedThreadPool(new ThreadFactoryBuilder().setNameFormat("offer-scoring-%d").build());
-  }
-
-  private static double getNormalizedWeight(ResourceUsageType type, SingularityConfiguration configuration) {
-    double freeCpuWeight = configuration.getFreeCpuWeightForOffer();
-    double freeMemWeight = configuration.getFreeMemWeightForOffer();
-    double freeDiskWeight = configuration.getFreeDiskWeightForOffer();
-    double usedCpuWeight = configuration.getLongRunningUsedCpuWeightForOffer();
-    double usedMemWeight = configuration.getLongRunningUsedMemWeightForOffer();
-    double usedDiskWeight = configuration.getLongRunningUsedDiskWeightForOffer();
-
-    switch (type) {
-      case CPU_FREE:
-        return freeCpuWeight + freeMemWeight + freeDiskWeight != 1 ? freeCpuWeight / (freeCpuWeight + freeMemWeight + freeDiskWeight) : freeCpuWeight;
-      case MEMORY_BYTES_FREE:
-        return freeCpuWeight + freeMemWeight + freeDiskWeight != 1 ? freeMemWeight / (freeCpuWeight + freeMemWeight + freeDiskWeight) : freeMemWeight;
-      case DISK_BYTES_FREE:
-        return freeCpuWeight + freeMemWeight + freeDiskWeight != 1 ? freeDiskWeight / (freeCpuWeight + freeMemWeight + freeDiskWeight) : freeDiskWeight;
-      case CPU_USED:
-        return usedCpuWeight + usedMemWeight + usedDiskWeight != 1 ? usedCpuWeight / (usedCpuWeight + usedMemWeight + usedDiskWeight) : usedCpuWeight;
-      case MEMORY_BYTES_USED:
-        return usedCpuWeight + usedMemWeight + usedDiskWeight != 1 ? usedMemWeight / (usedCpuWeight + usedMemWeight + usedDiskWeight) : usedMemWeight;
-      case DISK_BYTES_USED:
-        return usedCpuWeight + usedMemWeight + usedDiskWeight != 1 ? usedDiskWeight / (usedCpuWeight + usedMemWeight + usedDiskWeight) : usedDiskWeight;
-      default:
-        LOG.error("Invalid ResourceUsageType {}", type);
-        return 0;
-    }
   }
 
   public Collection<SingularityOfferHolder> checkOffers(final Collection<Offer> offers) {
@@ -203,7 +172,6 @@ public class SingularityMesosOfferScheduler {
             SingularitySlaveUsageWithId::getSlaveId,
             (usageWithId) -> new SingularitySlaveUsageWithCalculatedScores(
                 usageWithId,
-                mesosConfiguration.getScoringStrategy(),
                 mesosConfiguration.getScoreUsingSystemLoad(),
                 getMaxProbableUsageForSlave(activeTaskIds, requestUtilizations, offerHolders.get(usageWithId.getSlaveId()).getSanitizedHost()),
                 mesosConfiguration.getLoad5OverloadedThreshold(),
@@ -228,7 +196,7 @@ public class SingularityMesosOfferScheduler {
                 offerScoringSemaphore.call(
                     () -> CompletableFuture.runAsync(() -> {
                           try {
-                            double score = calculateScore(offerHolder, currentSlaveUsagesBySlaveId, tasksPerOfferHost, taskRequestHolder, activeTaskIdsForRequest);
+                            double score = calculateScore(offerHolder, currentSlaveUsagesBySlaveId, tasksPerOfferHost, taskRequestHolder, activeTaskIdsForRequest, requestUtilizations.get(taskRequestHolder.getTaskRequest().getRequest().getId()));
                             if (score != 0) {
                               scorePerOffer.put(offerHolder.getSlaveId(), score);
                             }
@@ -275,8 +243,7 @@ public class SingularityMesosOfferScheduler {
       if (taskId.getSanitizedHost().equals(sanitizedHostname)) {
         if (requestUtilizations.containsKey(taskId.getRequestId())) {
           RequestUtilization utilization = requestUtilizations.get(taskId.getRequestId());
-          // To account for cpu bursts, tend towards max usage if the app is consistently over-utilizing cpu, tend towards avg if it is over-utilized in short bursts
-          cpu += (utilization.getMaxCpuUsed() - utilization.getAvgCpuUsed()) * utilization.getCpuBurstRating() + utilization.getAvgCpuUsed();
+          cpu += getEstimatedCpuUsageForRequest(utilization);
           memBytes += utilization.getMaxMemBytesUsed();
           diskBytes += utilization.getMaxDiskBytesUsed();
         } else {
@@ -311,15 +278,19 @@ public class SingularityMesosOfferScheduler {
         usage.addEstimatedCpuUsage(requestUtilization.getMaxCpuUsed());
         usage.addEstimatedMemoryBytesUsage(requestUtilization.getMaxMemBytesUsed());
         usage.addEstimatedDiskBytesUsage(requestUtilization.getMaxDiskBytesUsed());
+      } else {
+        usage.addEstimatedCpuUsage(taskHolder.getTotalResources().getCpus());
+        usage.addEstimatedMemoryBytesUsage(taskHolder.getTotalResources().getMemoryMb() * SingularitySlaveUsage.BYTES_PER_MEGABYTE);
+        usage.addEstimatedDiskBytesUsage(taskHolder.getTotalResources().getDiskMb() * SingularitySlaveUsage.BYTES_PER_MEGABYTE);
       }
-      usage.setScores(configuration.getMesosConfiguration().getScoringStrategy());
+      usage.recalculateScores();
     }
   }
 
   private double calculateScore(SingularityOfferHolder offerHolder, Map<String, SingularitySlaveUsageWithCalculatedScores> currentSlaveUsagesBySlaveId, Map<String, Integer> tasksPerOffer,
-                                SingularityTaskRequestHolder taskRequestHolder, List<SingularityTaskId> activeTaskIdsForRequest) {
+                                SingularityTaskRequestHolder taskRequestHolder, List<SingularityTaskId> activeTaskIdsForRequest, RequestUtilization requestUtilization) {
     Optional<SingularitySlaveUsageWithCalculatedScores> maybeSlaveUsage = Optional.fromNullable(currentSlaveUsagesBySlaveId.get(offerHolder.getSlaveId()));
-    double score = score(offerHolder, tasksPerOffer, taskRequestHolder, maybeSlaveUsage, activeTaskIdsForRequest);
+    double score = score(offerHolder, tasksPerOffer, taskRequestHolder, maybeSlaveUsage, activeTaskIdsForRequest, requestUtilization);
     if (LOG.isTraceEnabled()) {
       LOG.trace("Scored {} | Task {} | Offer - mem {} - cpu {} | Slave {} | maybeSlaveUsage - {}", score, taskRequestHolder.getTaskRequest().getPendingTask().getPendingTaskId().getId(),
           MesosUtils.getMemory(offerHolder.getCurrentResources(), Optional.absent()), MesosUtils.getNumCpus(offerHolder.getCurrentResources(), Optional.absent()), offerHolder.getHostname(), maybeSlaveUsage);
@@ -339,8 +310,14 @@ public class SingularityMesosOfferScheduler {
         .collect(Collectors.toList());
   }
 
+  private double getEstimatedCpuUsageForRequest(RequestUtilization requestUtilization) {
+    // To account for cpu bursts, tend towards max usage if the app is consistently over-utilizing cpu, tend towards avg if it is over-utilized in short bursts
+    return (requestUtilization.getMaxCpuUsed() - requestUtilization.getAvgCpuUsed()) * requestUtilization.getCpuBurstRating() + requestUtilization.getAvgCpuUsed();
+  }
+
   private double score(SingularityOfferHolder offerHolder, Map<String, Integer> tasksPerOffer, SingularityTaskRequestHolder taskRequestHolder,
-                       Optional<SingularitySlaveUsageWithCalculatedScores> maybeSlaveUsage, List<SingularityTaskId> activeTaskIdsForRequest) {
+                       Optional<SingularitySlaveUsageWithCalculatedScores> maybeSlaveUsage, List<SingularityTaskId> activeTaskIdsForRequest,
+                       RequestUtilization requestUtilization) {
 
     final SingularityTaskRequest taskRequest = taskRequestHolder.getTaskRequest();
     final SingularityPendingTaskId pendingTaskId = taskRequest.getPendingTask().getPendingTaskId();
@@ -355,11 +332,16 @@ public class SingularityMesosOfferScheduler {
       return 0;
     }
 
-    if (mesosConfiguration.isOmitOverloadedHosts() && maybeSlaveUsage.isPresent() && maybeSlaveUsage.get().isOverloaded()) {
-      LOG.debug("Slave {} is overloaded (load5 {}/{}, load1 {}/{}), ignoring offer",
+    double estimatedCpusToAdd = taskRequestHolder.getTotalResources().getCpus();
+    if (requestUtilization != null) {
+      estimatedCpusToAdd = getEstimatedCpuUsageForRequest(requestUtilization);
+    }
+    if (mesosConfiguration.isOmitOverloadedHosts() && maybeSlaveUsage.isPresent() && maybeSlaveUsage.get().isCpuOverloaded(estimatedCpusToAdd)) {
+      LOG.debug("Slave {} is overloaded (load5 {}/{}, load1 {}/{}, estimated cpus to add: {}), ignoring offer",
           offerHolder.getHostname(),
           maybeSlaveUsage.get().getSlaveUsage().getSystemLoad5Min(), maybeSlaveUsage.get().getSlaveUsage().getSystemCpusTotal(),
-          maybeSlaveUsage.get().getSlaveUsage().getSystemLoad1Min(), maybeSlaveUsage.get().getSlaveUsage().getSystemCpusTotal());
+          maybeSlaveUsage.get().getSlaveUsage().getSystemLoad1Min(), maybeSlaveUsage.get().getSlaveUsage().getSystemCpusTotal(),
+          estimatedCpusToAdd);
       return 0;
     }
 
@@ -378,7 +360,7 @@ public class SingularityMesosOfferScheduler {
     final SlaveMatchState slaveMatchState = slaveAndRackManager.doesOfferMatch(offerHolder, taskRequest, activeTaskIdsForRequest);
 
     if (slaveMatchState.isMatchAllowed()) {
-      return score(offerHolder.getHostname(), taskRequest, maybeSlaveUsage);
+      return score(offerHolder.getHostname(), maybeSlaveUsage);
     } else if (LOG.isTraceEnabled()) {
       LOG.trace("Ignoring offer on host {} with roles {} on {} for task {}; matched resources: {}, slave match state: {}", offerHolder.getHostname(),
           offerHolder.getRoles(), offerHolder.getHostname(), pendingTaskId, matchesResources, slaveMatchState);
@@ -388,65 +370,31 @@ public class SingularityMesosOfferScheduler {
   }
 
   @VisibleForTesting
-  double score(String hostname, SingularityTaskRequest taskRequest, Optional<SingularitySlaveUsageWithCalculatedScores> maybeSlaveUsage) {
+  double score(String hostname, Optional<SingularitySlaveUsageWithCalculatedScores> maybeSlaveUsage) {
     if (!maybeSlaveUsage.isPresent() || maybeSlaveUsage.get().isMissingUsageData()) {
-      LOG.info("Slave {} has missing usage data ({}). Will default to {}", hostname, maybeSlaveUsage, configuration.getDefaultOfferScoreForMissingUsage());
-      return configuration.getDefaultOfferScoreForMissingUsage();
+      LOG.info("Slave {} has missing usage data ({}). Will default to {}", hostname, maybeSlaveUsage, 0.5);
+      return 0.5;
     }
 
-    return isLongRunning(taskRequest)
-        ? scoreLongRunningTask(maybeSlaveUsage.get())
-        : scoreNonLongRunningTask(taskRequest, maybeSlaveUsage.get());
-  }
+    SingularitySlaveUsageWithCalculatedScores slaveUsageWithScores = maybeSlaveUsage.get();
 
-  private boolean isLongRunning(SingularityTaskRequest taskRequest) {
-    return taskRequest.getRequest().getRequestType().isLongRunning();
-  }
-
-  private double scoreLongRunningTask(SingularitySlaveUsageWithCalculatedScores slaveUsageWithScores) {
-    // unused, reserved resources improve score
     return calculateScore(
-        1 - slaveUsageWithScores.getLongRunningMemUsedScore(), slaveUsageWithScores.getMemFreeScore(),
-        1 - slaveUsageWithScores.getLongRunningCpusUsedScore(), slaveUsageWithScores.getCpusFreeScore(),
-        1 - slaveUsageWithScores.getLongRunningDiskUsedScore(), slaveUsageWithScores.getDiskFreeScore(),
-        mesosConfiguration.getLongRunningFreeResourceWeight(), mesosConfiguration.getLongRunningUsedResourceWeight());
+        1 - slaveUsageWithScores.getMemAllocatedScore(), slaveUsageWithScores.getMemInUseScore(),
+        1 - slaveUsageWithScores.getCpusAllocatedScore(), slaveUsageWithScores.getCpusInUseScore(),
+        1 - slaveUsageWithScores.getDiskAllocatedScore(), slaveUsageWithScores.getDiskInUseScore(),
+        mesosConfiguration.getInUseResourceWeight(), mesosConfiguration.getAllocatedResourceWeight());
   }
 
-  private double scoreNonLongRunningTask(SingularityTaskRequest taskRequest, SingularitySlaveUsageWithCalculatedScores slaveUsageWithScores) {
-    Optional<SingularityDeployStatistics> statistics = deployManager.getDeployStatistics(taskRequest.getRequest().getId(), taskRequest.getDeploy().getId());
-    final double epsilon = 0.0001;
-
-    double freeResourceWeight = mesosConfiguration.getNonLonRunningFreeResourceWeight();
-    double usedResourceWeight = mesosConfiguration.getNonLongRunningUsedResourceWeight();
-
-    if (statistics.isPresent() && statistics.get().getAverageRuntimeMillis().isPresent()) {
-      final double maxNonLongRunningUsedResourceWeight = configuration.getMaxNonLongRunningUsedResourceWeight();
-      usedResourceWeight = Math.min((double) TimeUnit.MILLISECONDS.toSeconds(statistics.get().getAverageRuntimeMillis().get()) / configuration.getConsiderNonLongRunningTaskLongRunningAfterRunningForSeconds(), 1) * maxNonLongRunningUsedResourceWeight;
-
-      if (Math.abs(usedResourceWeight - maxNonLongRunningUsedResourceWeight) < epsilon) {
-        return scoreLongRunningTask(slaveUsageWithScores);
-      }
-      freeResourceWeight = 1 - usedResourceWeight;
-    }
-
-    // usage reduces score
-    return calculateScore(
-        slaveUsageWithScores.getLongRunningMemUsedScore(), slaveUsageWithScores.getMemFreeScore(),
-        slaveUsageWithScores.getLongRunningCpusUsedScore(), slaveUsageWithScores.getCpusFreeScore(),
-        slaveUsageWithScores.getLongRunningDiskUsedScore(), slaveUsageWithScores.getDiskFreeScore(),
-        freeResourceWeight, usedResourceWeight * -1);
-  }
-
-  private double calculateScore(double longRunningMemUsedScore, double memFreeScore, double longRunningCpusUsedScore, double cpusFreeScore, double longRunningDiskUsedScore, double diskFreeScore, double freeResourceWeight, double usedResourceWeight) {
+  private double calculateScore(double memAllocatedScore, double memInUseScore, double cpusAllocatedScore, double cpusInUseScore, double diskAllocatedScore, double diskInUseScore, double inUseResourceWeight, double allocatedResourceWeight) {
     double score = 0;
 
-    score += (normalizedCpuUsedWeight * usedResourceWeight) * longRunningCpusUsedScore;
-    score += (normalizedMemUsedWeight * usedResourceWeight) * longRunningMemUsedScore;
-    score += (normalizedDiskUsedWeight * usedResourceWeight) * longRunningDiskUsedScore;
+    score += (normalizedCpuWeight * allocatedResourceWeight) * cpusAllocatedScore;
+    score += (normalizedMemWeight * allocatedResourceWeight) * memAllocatedScore;
+    score += (normalizedDiskWeight * allocatedResourceWeight) * diskAllocatedScore;
 
-    score += (normalizedCpuFreeWeight * freeResourceWeight) * cpusFreeScore;
-    score += (normalizedMemFreeWeight * freeResourceWeight) * memFreeScore;
-    score += (normalizedDiskFreeWeight * freeResourceWeight) * diskFreeScore;
+    score += (normalizedCpuWeight * inUseResourceWeight) * cpusInUseScore;
+    score += (normalizedMemWeight * inUseResourceWeight) * memInUseScore;
+    score += (normalizedDiskWeight * inUseResourceWeight) * diskInUseScore;
 
     return score;
   }

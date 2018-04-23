@@ -2,20 +2,18 @@ package com.hubspot.singularity.mesos;
 
 import com.hubspot.singularity.MachineLoadMetric;
 import com.hubspot.singularity.SingularitySlaveUsage;
-import com.hubspot.singularity.SingularitySlaveUsage.ResourceUsageType;
-import com.hubspot.singularity.SingularityUsageScoringStrategy;
 
 class SingularitySlaveUsageWithCalculatedScores {
   private final SingularitySlaveUsage slaveUsage;
   private final MachineLoadMetric systemLoadMetric;
   private final MaxProbableUsage maxProbableTaskUsage;
   private boolean missingUsageData;
-  private double longRunningCpusUsedScore;
-  private double longRunningMemUsedScore;
-  private double longRunningDiskUsedScore;
-  private double cpusFreeScore;
-  private double memFreeScore;
-  private double diskFreeScore;
+  private double cpusAllocatedScore;
+  private double memAllocatedScore;
+  private double diskAllocatedScore;
+  private double cpusInUseScore;
+  private double memInUseScore;
+  private double diskInUseScore;
 
   private double estimatedAddedCpusUsage = 0;
   private double estimatedAddedMemoryBytesUsage = 0;
@@ -28,7 +26,7 @@ class SingularitySlaveUsageWithCalculatedScores {
   private final double load5Threshold;
   private final double load1Threshold;
 
-  public SingularitySlaveUsageWithCalculatedScores(SingularitySlaveUsage slaveUsage, SingularityUsageScoringStrategy scoringStrategy, MachineLoadMetric systemLoadMetric, MaxProbableUsage maxProbableTaskUsage, double load5Threshold, double load1Threshold) {
+  SingularitySlaveUsageWithCalculatedScores(SingularitySlaveUsage slaveUsage, MachineLoadMetric systemLoadMetric, MaxProbableUsage maxProbableTaskUsage, double load5Threshold, double load1Threshold) {
     this.slaveUsage = slaveUsage;
     this.systemLoadMetric = systemLoadMetric;
     this.maxProbableTaskUsage = maxProbableTaskUsage;
@@ -37,67 +35,46 @@ class SingularitySlaveUsageWithCalculatedScores {
       setScores(0, 0, 0, 0, 0, 0);
     } else {
       this.missingUsageData = false;
-      setScores(scoringStrategy);
+      recalculateScores();
     }
     this.load5Threshold = load5Threshold;
     this.load1Threshold = load1Threshold;
   }
 
-  public boolean isOverloaded() {
-    return  (slaveUsage.getSystemLoad5Min() / slaveUsage.getSystemCpusTotal()) > load5Threshold || (slaveUsage.getSystemLoad1Min() / slaveUsage.getSystemCpusTotal()) > load1Threshold;
+  boolean isCpuOverloaded(double estimatedNumCpusToAdd) {
+    return  ((slaveUsage.getSystemLoad5Min() + estimatedNumCpusToAdd) / slaveUsage.getSystemCpusTotal()) > load5Threshold
+        || ((slaveUsage.getSystemLoad1Min() + estimatedNumCpusToAdd) / slaveUsage.getSystemCpusTotal()) > load1Threshold;
   }
 
-  private void setScores(double longRunningCpusUsedScore,
-                 double longRunningMemUsedScore,
-                 double longRunningDiskUsedScore,
-                 double cpusFreeScore,
-                 double memFreeScore,
-                 double diskFreeScore) {
-    this.longRunningCpusUsedScore = longRunningCpusUsedScore;
-    this.longRunningMemUsedScore = longRunningMemUsedScore;
-    this.longRunningDiskUsedScore = longRunningDiskUsedScore;
-    this.cpusFreeScore = cpusFreeScore;
-    this.memFreeScore = memFreeScore;
-    this.diskFreeScore = diskFreeScore;
+  private void setScores(double cpusAllocatedScore,
+                 double memAllocatedScore,
+                 double diskAllocatedScore,
+                 double cpusInUseScore,
+                 double memInUseScore,
+                 double diskInUseScore) {
+    this.cpusAllocatedScore = cpusAllocatedScore;
+    this.memAllocatedScore = memAllocatedScore;
+    this.diskAllocatedScore = diskAllocatedScore;
+    this.cpusInUseScore = cpusInUseScore;
+    this.memInUseScore = memInUseScore;
+    this.diskInUseScore = diskInUseScore;
   }
 
   private boolean missingUsageData(SingularitySlaveUsage slaveUsage) {
     return !slaveUsage.getCpusTotal().isPresent() ||
         !slaveUsage.getMemoryMbTotal().isPresent() ||
-        !slaveUsage.getDiskMbTotal().isPresent() ||
-        slaveUsage.getLongRunningTasksUsage() == null ||
-        !slaveUsage.getLongRunningTasksUsage().containsKey(ResourceUsageType.CPU_USED) ||
-        !slaveUsage.getLongRunningTasksUsage().containsKey(ResourceUsageType.MEMORY_BYTES_USED) ||
-        !slaveUsage.getLongRunningTasksUsage().containsKey(ResourceUsageType.DISK_BYTES_USED);
+        !slaveUsage.getDiskMbTotal().isPresent();
   }
 
-  void setScores(SingularityUsageScoringStrategy scoringStrategy) {
-    double longRunningCpusUsedScore = (slaveUsage.getLongRunningTasksUsage().get(ResourceUsageType.CPU_USED).doubleValue() + estimatedAddedCpusUsage) / slaveUsage.getCpusTotal().get();
-    double longRunningMemUsedScore = ((slaveUsage.getLongRunningTasksUsage().get(ResourceUsageType.MEMORY_BYTES_USED).longValue() + estimatedAddedMemoryBytesUsage) / slaveUsage.getMemoryBytesTotal().get());
-    double longRunningDiskUsedScore = ((slaveUsage.getLongRunningTasksUsage().get(ResourceUsageType.DISK_BYTES_USED).longValue() + estimatedAddedDiskBytesUsage) / slaveUsage.getDiskBytesTotal().get());
-    switch (scoringStrategy) {
-      case SPREAD_TASK_USAGE:
-        double cpusFreeScore = 1 - ((slaveUsage.getCpusReserved() + estimatedAddedCpusReserved) / slaveUsage.getCpusTotal().get());
-        double memFreeScore = 1 - ((slaveUsage.getMemoryMbReserved() + (estimatedAddedMemoryBytesReserved / SingularitySlaveUsage.BYTES_PER_MEGABYTE)) / slaveUsage.getMemoryMbTotal().get());
-        double diskFreeScore = 1 - ((slaveUsage.getDiskMbReserved() + (estimatedAddedDiskBytesReserved / SingularitySlaveUsage.BYTES_PER_MEGABYTE)) / slaveUsage.getDiskMbTotal().get());
-        setScores(longRunningCpusUsedScore, longRunningMemUsedScore, longRunningDiskUsedScore, cpusFreeScore, memFreeScore, diskFreeScore);
-        break;
-      case PROBABLE_MAX_USAGE:
-        double probableMaxCpuFreeScore = Math.max(
-            0,
-            1 - (getMaxProbableCpuWithEstimatedUsage() / slaveUsage.getSystemCpusTotal())
-        );
-        double probableMaxMemFreeScore = 1 - (getMaxProbableMemBytesWithEstimatedUsage() / slaveUsage.getSystemMemTotalBytes());
-        double probableMaxDiskFreeScore = 1 - (getMaxProbableDiskBytesWithEstimatedUsage() / slaveUsage.getSlaveDiskTotal());
-        setScores(longRunningCpusUsedScore, longRunningMemUsedScore, longRunningDiskUsedScore, probableMaxCpuFreeScore, probableMaxMemFreeScore, probableMaxDiskFreeScore);
-        break;
-      case SPREAD_SYSTEM_USAGE:
-      default:
-        double systemCpuFreeScore = Math.max(0, 1 - ((getSystemLoadMetric() + estimatedAddedCpusUsage) / slaveUsage.getSystemCpusTotal()));
-        double systemMemFreeScore = 1 - (slaveUsage.getSystemMemTotalBytes() - slaveUsage.getSystemMemFreeBytes() + estimatedAddedMemoryBytesUsage) / slaveUsage.getSystemMemTotalBytes();
-        double systemDiskFreeScore = 1 - ((slaveUsage.getSlaveDiskUsed() + estimatedAddedDiskBytesUsage) / slaveUsage.getSlaveDiskTotal());
-        setScores(longRunningCpusUsedScore, longRunningMemUsedScore, longRunningDiskUsedScore, systemCpuFreeScore, systemMemFreeScore, systemDiskFreeScore);
-    }
+  void recalculateScores() {
+    setScores(
+        (slaveUsage.getCpusReserved() + estimatedAddedCpusUsage) / slaveUsage.getCpusTotal().get(),
+        ((slaveUsage.getMemoryMbReserved() * SingularitySlaveUsage.BYTES_PER_MEGABYTE) + estimatedAddedMemoryBytesUsage) / slaveUsage.getMemoryBytesTotal().get(),
+        ((slaveUsage.getDiskMbReserved() * SingularitySlaveUsage.BYTES_PER_MEGABYTE) + estimatedAddedDiskBytesUsage) / slaveUsage.getDiskBytesTotal().get(),
+        Math.max(0, 1 - (getMaxProbableCpuWithEstimatedUsage() / slaveUsage.getSystemCpusTotal())),
+        1 - (getMaxProbableMemBytesWithEstimatedUsage() / slaveUsage.getSystemMemTotalBytes()),
+        1 - (getMaxProbableDiskBytesWithEstimatedUsage() / slaveUsage.getSlaveDiskTotal())
+    );
   }
 
   private double getMaxProbableCpuWithEstimatedUsage() {
@@ -120,28 +97,28 @@ class SingularitySlaveUsageWithCalculatedScores {
     return slaveUsage;
   }
 
-  double getLongRunningCpusUsedScore() {
-    return longRunningCpusUsedScore;
+  double getCpusAllocatedScore() {
+    return cpusAllocatedScore;
   }
 
-  double getLongRunningMemUsedScore() {
-    return longRunningMemUsedScore;
+  double getMemAllocatedScore() {
+    return memAllocatedScore;
   }
 
-  double getLongRunningDiskUsedScore() {
-    return longRunningDiskUsedScore;
+  double getDiskAllocatedScore() {
+    return diskAllocatedScore;
   }
 
-  double getCpusFreeScore() {
-    return cpusFreeScore;
+  double getCpusInUseScore() {
+    return cpusInUseScore;
   }
 
-  double getMemFreeScore() {
-    return memFreeScore;
+  double getMemInUseScore() {
+    return memInUseScore;
   }
 
-  double getDiskFreeScore() {
-    return diskFreeScore;
+  double getDiskInUseScore() {
+    return diskInUseScore;
   }
 
   void addEstimatedCpuUsage(double estimatedAddedCpus) {
@@ -209,12 +186,12 @@ class SingularitySlaveUsageWithCalculatedScores {
     return "SingularitySlaveUsageWithCalculatedScores{" +
         "slaveUsage=" + slaveUsage +
         ", missingUsageData=" + missingUsageData +
-        ", longRunningCpusUsedScore=" + longRunningCpusUsedScore +
-        ", longRunningMemUsedScore=" + longRunningMemUsedScore +
-        ", longRunningDiskUsedScore=" + longRunningDiskUsedScore +
-        ", cpusFreeScore=" + cpusFreeScore +
-        ", memFreeScore=" + memFreeScore +
-        ", diskFreeScore=" + diskFreeScore +
+        ", cpusAllocatedScore=" + cpusAllocatedScore +
+        ", memAllocatedScore=" + memAllocatedScore +
+        ", diskAllocatedScore=" + diskAllocatedScore +
+        ", cpusInUseScore=" + cpusInUseScore +
+        ", memInUseScore=" + memInUseScore +
+        ", diskInUseScore=" + diskInUseScore +
         ", estimatedAddedCpusUsage=" + estimatedAddedCpusUsage +
         ", estimatedAddedMemoryBytesUsage=" + estimatedAddedMemoryBytesUsage +
         ", estimatedAddedDiskBytesUsage=" + estimatedAddedDiskBytesUsage +
