@@ -42,8 +42,8 @@ class SingularitySlaveUsageWithCalculatedScores {
   }
 
   boolean isCpuOverloaded(double estimatedNumCpusToAdd) {
-    return  ((slaveUsage.getSystemLoad5Min() + estimatedNumCpusToAdd) / slaveUsage.getSystemCpusTotal()) > load5Threshold
-        || ((slaveUsage.getSystemLoad1Min() + estimatedNumCpusToAdd) / slaveUsage.getSystemCpusTotal()) > load1Threshold;
+    return  ((slaveUsage.getSystemLoad5Min() + estimatedAddedCpusUsage + estimatedNumCpusToAdd) / slaveUsage.getSystemCpusTotal()) > load5Threshold
+        || ((slaveUsage.getSystemLoad1Min() + estimatedAddedCpusUsage + estimatedNumCpusToAdd) / slaveUsage.getSystemCpusTotal()) > load1Threshold;
   }
 
   private void setScores(double cpusAllocatedScore,
