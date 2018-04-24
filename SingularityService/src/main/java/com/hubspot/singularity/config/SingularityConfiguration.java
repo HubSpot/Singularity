@@ -390,9 +390,9 @@ public class SingularityConfiguration extends Configuration {
   // If cpuHardLimit is specified and a task is requesting a base cpu of > cpuHardLimit, that task's new  hard limit is requested cpus * cpuHardLimitScaleFactor
   private double cpuHardLimitScaleFactor = 1.25;
 
-  private Map<String, String> preemptableTasksOnlyMachineAttributes = Collections.emptyMap();
+  private Map<String, String> preemptibleTasksOnlyMachineAttributes = Collections.emptyMap();
 
-  private long preemptableTaskMaxExpectedRuntimeMs = 900000; // 15 minutes
+  private long preemptibleTaskMaxExpectedRuntimeMs = 900000; // 15 minutes
 
   public long getAskDriverToKillTasksAgainAfterMillis() {
     return askDriverToKillTasksAgainAfterMillis;
@@ -1675,19 +1675,19 @@ public class SingularityConfiguration extends Configuration {
     return this;
   }
 
-  public Map<String, String> getPreemptableTasksOnlyMachineAttributes() {
-    return preemptableTasksOnlyMachineAttributes;
+  public Map<String, String> getPreemptibleTasksOnlyMachineAttributes() {
+    return preemptibleTasksOnlyMachineAttributes;
   }
 
-  public void setPreemptableTasksOnlyMachineAttributes(Map<String, String> preemptableTasksOnlyMachineAttributes) {
-    this.preemptableTasksOnlyMachineAttributes = preemptableTasksOnlyMachineAttributes;
+  public void setPreemptibleTasksOnlyMachineAttributes(Map<String, String> preemptibleTasksOnlyMachineAttributes) {
+    this.preemptibleTasksOnlyMachineAttributes = preemptibleTasksOnlyMachineAttributes;
   }
 
-  public long getPreemptableTaskMaxExpectedRuntimeMs() {
-    return preemptableTaskMaxExpectedRuntimeMs;
+  public long getPreemptibleTaskMaxExpectedRuntimeMs() {
+    return preemptibleTaskMaxExpectedRuntimeMs;
   }
 
-  public void setPreemptableTaskMaxExpectedRuntimeMs(long preemptableTaskMaxExpectedRuntimeMs) {
-    this.preemptableTaskMaxExpectedRuntimeMs = preemptableTaskMaxExpectedRuntimeMs;
+  public void setPreemptibleTaskMaxExpectedRuntimeMs(long preemptibleTaskMaxExpectedRuntimeMs) {
+    this.preemptibleTaskMaxExpectedRuntimeMs = preemptibleTaskMaxExpectedRuntimeMs;
   }
 }

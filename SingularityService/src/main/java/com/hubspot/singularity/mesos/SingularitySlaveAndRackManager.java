@@ -260,8 +260,8 @@ public class SingularitySlaveAndRackManager {
       }
     }
 
-    if (!configuration.getPreemptableTasksOnlyMachineAttributes().isEmpty()) {
-      if (slaveAndRackHelper.hasRequiredAttributes(offer.getTextAttributes(), configuration.getPreemptableTasksOnlyMachineAttributes())
+    if (!configuration.getPreemptibleTasksOnlyMachineAttributes().isEmpty()) {
+      if (slaveAndRackHelper.hasRequiredAttributes(offer.getTextAttributes(), configuration.getPreemptibleTasksOnlyMachineAttributes())
           && !isPreemtibleTask) {
         LOG.debug("Host {} is reserved for preemptible tasks", offer.getHostname());
         return false;

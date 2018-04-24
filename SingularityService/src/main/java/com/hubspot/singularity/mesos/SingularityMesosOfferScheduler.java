@@ -396,7 +396,7 @@ public class SingularityMesosOfferScheduler {
     Optional<SingularityDeployStatistics> deployStatistics = deployManager.getDeployStatistics(taskRequest.getRequest().getId(), taskRequest.getDeploy().getId());
     return deployStatistics.isPresent()
         && deployStatistics.get().getAverageRuntimeMillis().isPresent()
-        && deployStatistics.get().getAverageRuntimeMillis().get() < configuration.getPreemptableTaskMaxExpectedRuntimeMs();
+        && deployStatistics.get().getAverageRuntimeMillis().get() < configuration.getPreemptibleTaskMaxExpectedRuntimeMs();
   }
 
   @VisibleForTesting
