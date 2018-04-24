@@ -79,8 +79,6 @@ import {
 
 import { FetchWebhooks } from '../../actions/api/webhooks';
 
-import { FetchOpenApiJson } from '../../actions/api/apidocs';
-
 import {
   FetchDisastersData,
   FetchDisabledActions,
@@ -101,7 +99,6 @@ const user = buildApiActionReducer(FetchUser);
 const addStarredRequests = buildApiActionReducer(AddStarredRequests, []);
 const deleteStarredRequests = buildApiActionReducer(DeleteStarredRequests, []);
 const webhooks = buildApiActionReducer(FetchWebhooks, []);
-const apidocs = buildApiActionReducer(FetchOpenApiJson, {});
 const disabledActions = buildApiActionReducer(FetchDisabledActions, []);
 const disastersData = buildApiActionReducer(FetchDisastersData, []);
 const priorityFreeze = buildApiActionReducer(FetchPriorityFreeze, []);
@@ -160,7 +157,6 @@ export default combineReducers({
   addStarredRequests,
   deleteStarredRequests,
   webhooks,
-  apidocs,
   disabledActions,
   disastersData,
   priorityFreeze,
