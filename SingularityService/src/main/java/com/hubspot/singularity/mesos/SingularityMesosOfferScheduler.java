@@ -253,7 +253,7 @@ public class SingularityMesosOfferScheduler {
                 .or(maybeTask.get().getTaskRequest().getDeploy().getResources())
                 .or(defaultResources);
             cpu += resources.getCpus();
-            memBytes += resources.getDiskMb() * SingularitySlaveUsage.BYTES_PER_MEGABYTE;
+            memBytes += resources.getMemoryMb() * SingularitySlaveUsage.BYTES_PER_MEGABYTE;
             diskBytes += resources.getDiskMb() * SingularitySlaveUsage.BYTES_PER_MEGABYTE;
           }
         }
