@@ -157,6 +157,12 @@ class TaskHistoryTable extends Component {
             cellData={(task) => Utils.timestampFromNow(task.updatedAt)}
           />
           <Column
+            label="Run Time"
+            id="run-time"
+            key="run-time"
+            cellData={(task) => Utils.duration(task.updatedAt - task.taskId.startedAt)}
+          />
+          <Column
             id="actions-column"
             key="actions-column"
             className="actions-column"
