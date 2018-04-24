@@ -27,6 +27,7 @@ import com.google.inject.Inject;
 import com.hubspot.mesos.Resources;
 import com.hubspot.singularity.RequestType;
 import com.hubspot.singularity.RequestUtilization;
+import com.hubspot.singularity.SingularityDeployStatistics;
 import com.hubspot.singularity.SingularityPendingTaskId;
 import com.hubspot.singularity.SingularitySlaveUsage;
 import com.hubspot.singularity.SingularitySlaveUsageWithId;
@@ -39,6 +40,7 @@ import com.hubspot.singularity.async.CompletableFutures;
 import com.hubspot.singularity.config.CustomExecutorConfiguration;
 import com.hubspot.singularity.config.MesosConfiguration;
 import com.hubspot.singularity.config.SingularityConfiguration;
+import com.hubspot.singularity.data.DeployManager;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.data.UsageManager;
 import com.hubspot.singularity.helpers.MesosUtils;
@@ -64,6 +66,7 @@ public class SingularityMesosOfferScheduler {
   private final SingularitySlaveAndRackHelper slaveAndRackHelper;
   private final SingularityTaskSizeOptimizer taskSizeOptimizer;
   private final UsageManager usageManager;
+  private final DeployManager deployManager;
   private final SingularitySchedulerLock lock;
   private final SingularityLeaderCache leaderCache;
 
@@ -87,6 +90,7 @@ public class SingularityMesosOfferScheduler {
                                         SingularitySlaveAndRackHelper slaveAndRackHelper,
                                         SingularityLeaderCache leaderCache,
                                         UsageManager usageManager,
+                                        DeployManager deployManager,
                                         SingularitySchedulerLock lock) {
     this.defaultResources = new Resources(mesosConfiguration.getDefaultCpus(), mesosConfiguration.getDefaultMemory(), 0, mesosConfiguration.getDefaultDisk());
     this.defaultCustomExecutorResources = new Resources(customExecutorConfiguration.getNumCpus(), customExecutorConfiguration.getMemoryMb(), 0, customExecutorConfiguration.getDiskMb());
@@ -101,6 +105,7 @@ public class SingularityMesosOfferScheduler {
     this.slaveAndRackHelper = slaveAndRackHelper;
     this.taskPrioritizer = taskPrioritizer;
     this.usageManager = usageManager;
+    this.deployManager = deployManager;
     this.lock = lock;
 
     double cpuWeight = mesosConfiguration.getCpuWeight();
