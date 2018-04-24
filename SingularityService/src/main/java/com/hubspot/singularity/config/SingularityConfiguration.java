@@ -390,6 +390,10 @@ public class SingularityConfiguration extends Configuration {
   // If cpuHardLimit is specified and a task is requesting a base cpu of > cpuHardLimit, that task's new  hard limit is requested cpus * cpuHardLimitScaleFactor
   private double cpuHardLimitScaleFactor = 1.25;
 
+  private Map<String, String> preemptableTasksOnlyMachineAttributes = Collections.emptyMap();
+
+  private long preemptableTaskMaxExpectedRuntimeMs = 900000; // 15 minutes
+
   public long getAskDriverToKillTasksAgainAfterMillis() {
     return askDriverToKillTasksAgainAfterMillis;
   }
@@ -1669,5 +1673,21 @@ public class SingularityConfiguration extends Configuration {
   public SingularityConfiguration setCpuHardLimitScaleFactor(double cpuHardLimitScaleFactor) {
     this.cpuHardLimitScaleFactor = cpuHardLimitScaleFactor;
     return this;
+  }
+
+  public Map<String, String> getPreemptableTasksOnlyMachineAttributes() {
+    return preemptableTasksOnlyMachineAttributes;
+  }
+
+  public void setPreemptableTasksOnlyMachineAttributes(Map<String, String> preemptableTasksOnlyMachineAttributes) {
+    this.preemptableTasksOnlyMachineAttributes = preemptableTasksOnlyMachineAttributes;
+  }
+
+  public long getPreemptableTaskMaxExpectedRuntimeMs() {
+    return preemptableTaskMaxExpectedRuntimeMs;
+  }
+
+  public void setPreemptableTaskMaxExpectedRuntimeMs(long preemptableTaskMaxExpectedRuntimeMs) {
+    this.preemptableTaskMaxExpectedRuntimeMs = preemptableTaskMaxExpectedRuntimeMs;
   }
 }
