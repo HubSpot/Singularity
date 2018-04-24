@@ -1,16 +1,13 @@
 package com.hubspot.singularity.scheduler;
 
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
 
 import org.apache.mesos.v1.Protos.TaskID;
 import org.apache.mesos.v1.Protos.TaskState;
 import org.apache.mesos.v1.Protos.TaskStatus;
 import org.apache.mesos.v1.Protos.TaskStatus.Reason;
 import org.junit.Assert;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.Timeout;
 
 import com.google.inject.Inject;
 import com.hubspot.singularity.RequestType;
@@ -19,10 +16,6 @@ import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.mesos.SingularityMesosStatusUpdateHandler;
 
 public class SingularityRetryLostJobsTest extends SingularitySchedulerTestBase {
-
-  // TODO: rm me
-  @Rule
-  public Timeout globalTimeout = new Timeout(10000, TimeUnit.SECONDS);
 
   @Inject
   SingularityMesosStatusUpdateHandler updateHandler;
@@ -53,7 +46,7 @@ public class SingularityRetryLostJobsTest extends SingularitySchedulerTestBase {
     SingularityTask task = startTask(firstDeploy);
     Assert.assertEquals(taskManager.getPendingTaskIds().size(), 0);
     Assert.assertEquals(requestManager.getPendingRequests().size(), 0);
-    
+
     try {
       updateHandler.processStatusUpdateAsync(TaskStatus.newBuilder()
           .setState(TaskState.TASK_LOST)
@@ -68,9 +61,9 @@ public class SingularityRetryLostJobsTest extends SingularitySchedulerTestBase {
       Assert.assertEquals(requestManager.getPendingRequests().size(), 1);
       Assert.assertEquals(requestManager.getPendingRequests().get(0).getPendingType(), PendingType.RETRY);
     } else {
-      System.out.println(requestManager.getPendingRequests());
-      Assert.assertEquals(requestManager.getPendingRequests().size(), 0);
-//      Assert.assertEquals(requestManager.getPendingRequests().get(0).getPendingType(), PendingType.TASK_DONE);
+      if (requestManager.getPendingRequests().size() > 0) {
+        Assert.assertEquals(requestManager.getPendingRequests().get(0).getPendingType(), PendingType.TASK_DONE);
+      }
     }
 
   }
