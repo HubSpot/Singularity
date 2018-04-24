@@ -81,7 +81,7 @@ public class SingularitySlaveAndRackManager {
     this.leaderCache = leaderCache;
   }
 
-  SlaveMatchState doesOfferMatch(SingularityOfferHolder offerHolder, SingularityTaskRequest taskRequest, List<SingularityTaskId> activeTaskIdsForRequest, boolean isPreemtibleTask) {
+  SlaveMatchState doesOfferMatch(SingularityOfferHolder offerHolder, SingularityTaskRequest taskRequest, List<SingularityTaskId> activeTaskIdsForRequest, boolean isPreemptibleTask) {
     final String host = offerHolder.getHostname();
     final String rackId = offerHolder.getRackId();
     final String slaveId = offerHolder.getSlaveId();
@@ -113,7 +113,7 @@ public class SingularitySlaveAndRackManager {
       }
     }
 
-    if (!isSlaveAttributesMatch(offerHolder, taskRequest, isPreemtibleTask)) {
+    if (!isSlaveAttributesMatch(offerHolder, taskRequest, isPreemptibleTask)) {
       return SlaveMatchState.SLAVE_ATTRIBUTES_DO_NOT_MATCH;
     }
 
@@ -241,7 +241,7 @@ public class SingularitySlaveAndRackManager {
     return SlaveMatchState.OK;
   }
 
-  private boolean isSlaveAttributesMatch(SingularityOfferHolder offer, SingularityTaskRequest taskRequest, boolean isPreemtibleTask) {
+  private boolean isSlaveAttributesMatch(SingularityOfferHolder offer, SingularityTaskRequest taskRequest, boolean isPreemptibleTask) {
     if (offer.hasReservedSlaveAttributes()) {
       Map<String, String> reservedSlaveAttributes = offer.getReservedSlaveAttributes();
 
@@ -262,7 +262,7 @@ public class SingularitySlaveAndRackManager {
 
     if (!configuration.getPreemptibleTasksOnlyMachineAttributes().isEmpty()) {
       if (slaveAndRackHelper.hasRequiredAttributes(offer.getTextAttributes(), configuration.getPreemptibleTasksOnlyMachineAttributes())
-          && !isPreemtibleTask) {
+          && !isPreemptibleTask) {
         LOG.debug("Host {} is reserved for preemptible tasks", offer.getHostname());
         return false;
       }
