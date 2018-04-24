@@ -4,6 +4,7 @@ import static com.hubspot.singularity.data.transcoders.SingularityJsonTranscoder
 
 import com.google.inject.Binder;
 import com.google.inject.Module;
+import com.hubspot.singularity.RequestUtilization;
 import com.hubspot.singularity.SingularityClusterUtilization;
 import com.hubspot.singularity.SingularityDeploy;
 import com.hubspot.singularity.SingularityDeployHistory;
@@ -103,6 +104,7 @@ public class SingularityTranscoderModule implements Module {
     bindTranscoder(binder).asJson(SingularityTaskUsage.class);
     bindTranscoder(binder).asJson(SingularityClusterUtilization.class);
     bindTranscoder(binder).asJson(SingularityTaskCurrentUsage.class);
+    bindTranscoder(binder).asJson(RequestUtilization.class);
 
     bindTranscoder(binder).asCompressedJson(SingularityDeployHistory.class);
     bindTranscoder(binder).asCompressedJson(SingularityDeploy.class);

@@ -1,13 +1,9 @@
 package com.hubspot.singularity;
 
-import java.util.List;
-
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class SingularityClusterUtilization {
-  private final List<RequestUtilization> requestUtilizations;
-
   private final int numRequestsWithUnderUtilizedCpu;
   private final int numRequestsWithOverUtilizedCpu;
   private final int numRequestsWithUnderUtilizedMemBytes;
@@ -50,8 +46,7 @@ public class SingularityClusterUtilization {
   private final long timestamp;
 
   @JsonCreator
-  public SingularityClusterUtilization(@JsonProperty("requestUtilizations") List<RequestUtilization> requestUtilizations,
-                                       @JsonProperty("numRequestsWithUnderUtilizedCpu") int numRequestsWithUnderUtilizedCpu,
+  public SingularityClusterUtilization(@JsonProperty("numRequestsWithUnderUtilizedCpu") int numRequestsWithUnderUtilizedCpu,
                                        @JsonProperty("numRequestsWithOverUtilizedCpu") int numRequestsWithOverUtilizedCpu,
                                        @JsonProperty("numRequestsWithUnderUtilizedMemBytes") int numRequestsWithUnderUtilizedMemBytes,
                                        @JsonProperty("numRequestsWithUnderUtilizedDiskBytes") int numRequestsWithUnderUtilizedDiskBytes,
@@ -82,7 +77,6 @@ public class SingularityClusterUtilization {
                                        @JsonProperty("totalCpuUsed") double totalCpuUsed,
                                        @JsonProperty("totalCpuAvailable") double totalCpuAvailable,
                                        @JsonProperty("timestamp") long timestamp) {
-    this.requestUtilizations = requestUtilizations;
     this.numRequestsWithUnderUtilizedCpu = numRequestsWithUnderUtilizedCpu;
     this.numRequestsWithOverUtilizedCpu = numRequestsWithOverUtilizedCpu;
     this.numRequestsWithUnderUtilizedMemBytes = numRequestsWithUnderUtilizedMemBytes;
@@ -114,10 +108,6 @@ public class SingularityClusterUtilization {
     this.totalCpuUsed = totalCpuUsed;
     this.totalCpuAvailable = totalCpuAvailable;
     this.timestamp = timestamp;
-  }
-
-  public List<RequestUtilization> getRequestUtilizations() {
-    return requestUtilizations;
   }
 
   public int getNumRequestsWithUnderUtilizedCpu() {
@@ -247,7 +237,6 @@ public class SingularityClusterUtilization {
   @Override
   public String toString() {
     return "SingularityClusterUtilization [" +
-        ", requestUtilizations=" + requestUtilizations +
         ", numRequestsWithUnderUtilizedCpu=" + numRequestsWithUnderUtilizedCpu +
         ", numRequestsWithOverUtilizedCpu=" + numRequestsWithOverUtilizedCpu +
         ", numRequestsWithUnderUtilizedMemBytes=" + numRequestsWithUnderUtilizedMemBytes +

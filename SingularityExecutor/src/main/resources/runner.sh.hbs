@@ -6,6 +6,52 @@
 
 export MESOS_TASK_ID={{{bashEscaped taskId}}}  # I can't believe Mesos doesn't expose this.
 
+{{#if cfsQuota }}
+# Outputs the path of the deepest cgroup the current process is in.
+# The output of:
+#   cat /proc/self/cgroup
+# will look like:
+# --------------------
+# 8:net_cls:/
+# 7:memory:/test_cgroup/mesos/4e59173b-e2a7-47a6-bcb8-455b637faa5f
+# 6:freezer:/test_cgroup/mesos/4e59173b-e2a7-47a6-bcb8-455b637faa5f
+# 5:devices:/
+# 4:cpuset:/
+# 3:cpuacct:/test_cgroup/mesos/4e59173b-e2a7-47a6-bcb8-455b637faa5f
+# 2:cpu:/test_cgroup/mesos/4e59173b-e2a7-47a6-bcb8-455b637faa5f
+# 1:blkio:/test_cgroup
+# --------------------
+# This function will return the deepest cgroup path in that output.
+# For this example, it would return:
+#   /test_cgroup/mesos/4e59173b-e2a7-47a6-bcb8-455b637faa5f
+function get_deepest_cgroup {
+   local cgroups=$(</proc/self/cgroup)
+   local max_depth=0
+   local max_path="/"
+
+   for cgroup_spec in $cgroups; do
+     local cg_path=$(echo $cgroup_spec | cut -d: -f3)
+     if [ "$cg_path" == "/" ]; then
+       local depth=0
+     else
+       local depth=$(echo -ne "$cg_path" | tr '/' "\n" | wc -l)
+     fi
+
+     if [ "$depth" -gt "$max_depth" ]; then
+       local max_depth="$depth"
+       local max_path="$cg_path"
+     fi
+   done
+   echo "$max_path"
+}
+
+CPU_CGROUP_BASE_DIRECTORY=`findmnt --kernel --first-only --types cgroup --options cpu --noheadings --output TARGET`
+
+CGROUP_CPU_PATH="$CPU_CGROUP_BASE_DIRECTORY$(get_deepest_cgroup)"
+echo {{{ cfsQuota }}} > "$CGROUP_CPU_PATH/cpu.cfs_quota_us"
+echo {{{ cfsPeriod }}} > "$CGROUP_CPU_PATH/cpu.cfs_period_us"
+{{/if}}
+
 # load system-wide profile.d
 if [[ -d /etc/profile.d ]]; then
   echo "Sourcing files from /etc/profile.d"
