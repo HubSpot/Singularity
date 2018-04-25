@@ -374,8 +374,7 @@ public class SingularityMesosOfferScheduler {
     if (!matchesResources) {
       return 0;
     }
-
-    final SlaveMatchState slaveMatchState = slaveAndRackManager.doesOfferMatch(offerHolder, taskRequest, activeTaskIdsForRequest);
+    final SlaveMatchState slaveMatchState = slaveAndRackManager.doesOfferMatch(offerHolder, taskRequest, activeTaskIdsForRequest, isPreemptibleTask(taskRequest));
 
     if (slaveMatchState.isMatchAllowed()) {
       return score(offerHolder.getHostname(), taskRequest, maybeSlaveUsage);
@@ -385,6 +384,19 @@ public class SingularityMesosOfferScheduler {
     }
 
     return 0;
+  }
+
+  private boolean isPreemptibleTask(SingularityTaskRequest taskRequest) {
+    // A long running task can be replaced + killed easily
+    if (taskRequest.getRequest().getRequestType().isLongRunning()) {
+      return true;
+    }
+
+    // A short, non-long-running task
+    Optional<SingularityDeployStatistics> deployStatistics = deployManager.getDeployStatistics(taskRequest.getRequest().getId(), taskRequest.getDeploy().getId());
+    return deployStatistics.isPresent()
+        && deployStatistics.get().getAverageRuntimeMillis().isPresent()
+        && deployStatistics.get().getAverageRuntimeMillis().get() < configuration.getPreemptibleTaskMaxExpectedRuntimeMs();
   }
 
   @VisibleForTesting
