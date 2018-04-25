@@ -22,9 +22,14 @@ import com.google.inject.name.Named;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.ExtendedTaskState;
 import com.hubspot.singularity.InvalidSingularityTaskIdException;
+import com.hubspot.singularity.RequestType;
 import com.hubspot.singularity.SingularityCreateResult;
 import com.hubspot.singularity.SingularityMainModule;
 import com.hubspot.singularity.SingularityPendingDeploy;
+import com.hubspot.singularity.SingularityPendingRequest;
+import com.hubspot.singularity.SingularityPendingRequest.PendingType;
+import com.hubspot.singularity.SingularityPendingRequestBuilder;
+import com.hubspot.singularity.SingularityPendingTask;
 import com.hubspot.singularity.SingularityRequestWithState;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskHistoryUpdate;
@@ -175,6 +180,28 @@ public class SingularityMesosStatusUpdateHandler {
     return Optional.absent();
   }
 
+  private void relaunchTask(SingularityTask task) {
+    SingularityPendingTask pendingTask = task.getTaskRequest().getPendingTask();
+
+    SingularityPendingRequest pendingRequest = new SingularityPendingRequestBuilder()
+        .setDeployId(task.getTaskRequest().getDeploy().getId())
+        .setPendingType(PendingType.RETRY)
+        .setUser(pendingTask.getUser())
+        .setRunId(pendingTask.getRunId())
+        .setCmdLineArgsList(pendingTask.getCmdLineArgsList())
+        .setSkipHealthchecks(pendingTask.getSkipHealthchecks())
+        .setMessage(pendingTask.getMessage())
+        .setResources(pendingTask.getResources())
+        .setS3UploaderAdditionalFiles(pendingTask.getS3UploaderAdditionalFiles())
+        .setRunAsUserOverride(pendingTask.getRunAsUserOverride())
+        .setEnvOverrides(pendingTask.getEnvOverrides())
+        .setExtraArtifacts(pendingTask.getExtraArtifacts())
+        .setActionId(pendingTask.getActionId())
+        .build();
+
+    requestManager.addToPendingQueue(pendingRequest);
+  }
+
   private void unsafeProcessStatusUpdate(Protos.TaskStatus status, SingularityTaskId taskIdObj) {
     final String taskId = status.getTaskId().getValue();
 
@@ -200,14 +227,29 @@ public class SingularityMesosStatusUpdateHandler {
       return;
     }
 
+    final Optional<SingularityTask> task = taskManager.getTask(taskIdObj);
+
     if (status.getState() == TaskState.TASK_LOST) {
+      boolean isMesosFailure =
+          status.getReason() == Reason.REASON_INVALID_OFFERS
+          || status.getReason() == Reason.REASON_AGENT_REMOVED
+          || status.getReason() == Reason.REASON_AGENT_RESTARTED
+          || status.getReason() == Reason.REASON_AGENT_UNKNOWN
+          || status.getReason() == Reason.REASON_MASTER_DISCONNECTED
+          || status.getReason() == Reason.REASON_AGENT_DISCONNECTED;
+
+      RequestType requestType = task.isPresent() ? task.get().getTaskRequest().getRequest().getRequestType() : null;
+      boolean isRelaunchable = requestType != null && !requestType.isLongRunning();
+
+      if (isMesosFailure && isRelaunchable) {
+        LOG.info("Relaunching lost task {}", task);
+        relaunchTask(task.get());
+      }
       lostTasksMeter.mark();
       if (configuration.getDisasterDetection().isEnabled()) {
         taskLostReasons.add(status.getReason());
       }
     }
-
-    final Optional<SingularityTask> task = taskManager.getTask(taskIdObj);
 
     final boolean isActiveTask = taskManager.isActiveTask(taskId);
 

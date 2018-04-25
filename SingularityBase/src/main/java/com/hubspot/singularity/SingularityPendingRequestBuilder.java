@@ -118,6 +118,11 @@ public class SingularityPendingRequestBuilder {
     return this;
   }
 
+  public SingularityPendingRequestBuilder setActionId(Optional<String> actionId) {
+    this.actionId = actionId;
+    return this;
+  }
+
   public SingularityPendingRequestBuilder setResources(Resources resources) {
     this.resources = Optional.of(resources);
     return this;
