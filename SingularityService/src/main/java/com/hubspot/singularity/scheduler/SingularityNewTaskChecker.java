@@ -251,7 +251,8 @@ public class SingularityNewTaskChecker {
     UNHEALTHY_KILL_TASK, OBSOLETE, CHECK_IF_TASK_OVERDUE, CHECK_IF_HEALTHCHECK_OVERDUE, LB_IN_PROGRESS_CHECK_AGAIN, HEALTHY;
   }
 
-  private boolean checkTask(SingularityTask task, Optional<SingularityRequestWithState> requestWithState, SingularityHealthchecker healthchecker) {
+  @VisibleForTesting
+  boolean checkTask(SingularityTask task, Optional<SingularityRequestWithState> requestWithState, SingularityHealthchecker healthchecker) {
     final long start = System.currentTimeMillis();
 
     final CheckTaskState state = getTaskState(task, requestWithState, healthchecker);
