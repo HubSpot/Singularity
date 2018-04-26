@@ -64,6 +64,11 @@ public class NoopMailer implements SingularityMailer {
     logNotSendingEmail("request in cooldown");
   }
 
+  @Override
+  public void sendReplacementTasksFailingMail(final SingularityRequest request) {
+    logNotSendingEmail("replacement tasks failing");
+  }
+
   private void logNotSendingEmail(String type) {
     LOG.debug("Not sending " + type + " mail - no SMTP configuration is present");
   }
