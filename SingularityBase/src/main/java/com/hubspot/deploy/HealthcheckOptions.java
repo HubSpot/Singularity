@@ -74,7 +74,7 @@ public class HealthcheckOptions {
     return portNumber;
   }
 
-  @ApiModelProperty(required=false, value="Healthcheck protocol - HTTP or HTTPS")
+  @ApiModelProperty(required=false, value="Healthcheck protocol - HTTP or HTTPS for HTTP/1, HTTP2 or HTTPS2 for HTTP/2")
   public Optional<HealthcheckProtocol> getProtocol() {
     return protocol;
   }
