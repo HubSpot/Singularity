@@ -504,7 +504,7 @@ public class SmtpMailer implements SingularityMailer, Managed {
           prepareReplacementTaskFailedMail(request);
         } catch (Throwable t) {
           LOG.error("While preparing replacement task failed mail for {}", request);
-          exceptionNotifier.notify(String.format("Error preparing cooldown mail (%s)", t.getMessage()), t, ImmutableMap.of("requestId", request.getId()));
+          exceptionNotifier.notify(String.format("Error preparing replacement task failed mail (%s)", t.getMessage()), t, ImmutableMap.of("requestId", request.getId()));
         }
       }
     });
