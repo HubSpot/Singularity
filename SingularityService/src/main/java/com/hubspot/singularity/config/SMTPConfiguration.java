@@ -92,6 +92,7 @@ public class SMTPConfiguration {
   @JsonProperty("emails")
   private Map<SingularityEmailType, List<SingularityEmailDestination>> emailConfiguration = Maps.newHashMap(ImmutableMap.<SingularityEmailType, List<SingularityEmailDestination>>builder()
       .put(SingularityEmailType.REQUEST_IN_COOLDOWN, ImmutableList.of(SingularityEmailDestination.ADMINS, SingularityEmailDestination.OWNERS))
+      .put(SingularityEmailType.REPLACEMENT_TASKS_FAILING, ImmutableList.of(SingularityEmailDestination.OWNERS))
       .put(SingularityEmailType.SINGULARITY_ABORTING, ImmutableList.of(SingularityEmailDestination.ADMINS))
       .put(SingularityEmailType.TASK_FAILED, ImmutableList.of(SingularityEmailDestination.ADMINS, SingularityEmailDestination.OWNERS, SingularityEmailDestination.ACTION_TAKER))
       .put(SingularityEmailType.TASK_LOST, ImmutableList.of(SingularityEmailDestination.ADMINS, SingularityEmailDestination.ACTION_TAKER))
