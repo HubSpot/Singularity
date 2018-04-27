@@ -184,6 +184,7 @@ public class SingularityMesosStatusUpdateHandler {
     SingularityPendingTask pendingTask = task.getTaskRequest().getPendingTask();
 
     SingularityPendingRequest pendingRequest = new SingularityPendingRequestBuilder()
+        .setRequestId(task.getTaskRequest().getRequest().getId())
         .setDeployId(task.getTaskRequest().getDeploy().getId())
         .setPendingType(PendingType.RETRY)
         .setUser(pendingTask.getUser())
