@@ -65,6 +65,6 @@ public class SingularityRetryLostJobsTest extends SingularitySchedulerTestBase {
         Assert.assertEquals(requestManager.getPendingRequests().get(0).getPendingType(), PendingType.TASK_DONE);
       }
     }
-
+    scheduler.drainPendingQueue();
   }
 }
