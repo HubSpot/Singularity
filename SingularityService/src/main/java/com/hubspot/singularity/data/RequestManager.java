@@ -4,6 +4,7 @@ import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 import org.apache.curator.framework.CuratorFramework;
@@ -142,7 +143,7 @@ public class RequestManager extends CuratorAsyncManager {
     SingularityDeployKey deployKey = new SingularityDeployKey(pendingRequest.getRequestId(), pendingRequest.getDeployId());
     if (pendingRequest.getPendingType() == PendingType.ONEOFF
         || pendingRequest.getPendingType() == PendingType.IMMEDIATE) {
-      return String.format("%s%s", deployKey.toString(), pendingRequest.getTimestamp());
+      return String.format("%s%s", deployKey.toString(), UUID.randomUUID());
     } else {
       return deployKey.toString();
     }
