@@ -198,6 +198,8 @@ public class SingularityMesosStatusUpdateHandler {
         .setEnvOverrides(pendingTask.getEnvOverrides())
         .setExtraArtifacts(pendingTask.getExtraArtifacts())
         .setActionId(pendingTask.getActionId())
+        .setRunAt(pendingTask.getPendingTaskId().getNextRunAt())
+        .setTimestamp(System.currentTimeMillis())
         .build();
 
     requestManager.addToPendingQueue(pendingRequest);
