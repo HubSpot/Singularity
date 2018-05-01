@@ -5,15 +5,12 @@ import javax.validation.constraints.NotNull;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.google.common.base.Optional;
 import com.hubspot.singularity.MachineLoadMetric;
-import com.hubspot.singularity.SingularityUsageScoringStrategy;
 
 @JsonIgnoreProperties( ignoreUnknown = true )
 public class MesosConfiguration {
 
   @NotNull
   private String master;
-  @NotNull
-  private String masterProtocol = "http";
   @NotNull
   private String frameworkName;
   @NotNull
@@ -53,19 +50,17 @@ public class MesosConfiguration {
   private int maxDiskMbPerRequest = 3000000;
 
   private Optional<String> credentialPrincipal = Optional.absent();
-  private Optional<String> mesosUsername = Optional.absent();
-  private Optional<String> mesosPassword = Optional.absent();
 
   private long rxEventBufferSize = 10000;
   private int statusUpdateConcurrencyLimit = 500;
   private int maxStatusUpdateQueueSize = 5000;
   private int offersConcurrencyLimit = 100;
-  private SingularityUsageScoringStrategy scoringStrategy = SingularityUsageScoringStrategy.SPREAD_TASK_USAGE;
   private MachineLoadMetric scoreUsingSystemLoad = MachineLoadMetric.LOAD_5;
-  private double longRunningFreeResourceWeight = 0.5;
-  private double longRunningUsedResourceWeight = 0.5;
-  private double nonLonRunningFreeResourceWeight = 0.75;
-  private double nonLongRunningUsedResourceWeight = 0.25;
+  private double allocatedResourceWeight = 0.5;
+  private double inUseResourceWeight = 0.5;
+  private double cpuWeight = 0.4;
+  private double memWeight = 0.4;
+  private double diskWeight = 0.2;
   private boolean omitOverloadedHosts = false;
   private double load5OverloadedThreshold = 1.0;
   private double load1OverloadedThreshold = 1.5;
@@ -144,14 +139,6 @@ public class MesosConfiguration {
 
   public String getMaster() {
     return master;
-  }
-
-  public String getMasterProtocol() {
-    return masterProtocol;
-  }
-
-  public void setMasterProtocol(String masterProtocol) {
-    this.masterProtocol = masterProtocol;
   }
 
   public String getFrameworkId() {
@@ -238,22 +225,6 @@ public class MesosConfiguration {
     this.credentialPrincipal = credentialPrincipal;
   }
 
-  public Optional<String> getMesosUsername() {
-    return mesosUsername;
-  }
-
-  public void setMesosUsername(Optional<String> mesosUsername) {
-    this.mesosUsername = mesosUsername;
-  }
-
-  public Optional<String> getMesosPassword() {
-    return mesosPassword;
-  }
-
-  public void setMesosPassword(Optional<String> mesosPassword) {
-    this.mesosPassword = mesosPassword;
-  }
-
   public int getDefaultDisk() {
     return defaultDisk;
   }
@@ -302,52 +273,12 @@ public class MesosConfiguration {
     this.offersConcurrencyLimit = offersConcurrencyLimit;
   }
 
-  public SingularityUsageScoringStrategy getScoringStrategy() {
-    return scoringStrategy;
-  }
-
-  public void setScoringStrategy(SingularityUsageScoringStrategy scoringStrategy) {
-    this.scoringStrategy = scoringStrategy;
-  }
-
   public MachineLoadMetric getScoreUsingSystemLoad() {
     return scoreUsingSystemLoad;
   }
 
   public void setScoreUsingSystemLoad(MachineLoadMetric scoreUsingSystemLoad) {
     this.scoreUsingSystemLoad = scoreUsingSystemLoad;
-  }
-
-  public double getLongRunningFreeResourceWeight() {
-    return longRunningFreeResourceWeight;
-  }
-
-  public void setLongRunningFreeResourceWeight(double longRunningFreeResourceWeight) {
-    this.longRunningFreeResourceWeight = longRunningFreeResourceWeight;
-  }
-
-  public double getLongRunningUsedResourceWeight() {
-    return longRunningUsedResourceWeight;
-  }
-
-  public void setLongRunningUsedResourceWeight(double longRunningUsedResourceWeight) {
-    this.longRunningUsedResourceWeight = longRunningUsedResourceWeight;
-  }
-
-  public double getNonLonRunningFreeResourceWeight() {
-    return nonLonRunningFreeResourceWeight;
-  }
-
-  public void setNonLonRunningFreeResourceWeight(double nonLonRunningFreeResourceWeight) {
-    this.nonLonRunningFreeResourceWeight = nonLonRunningFreeResourceWeight;
-  }
-
-  public double getNonLongRunningUsedResourceWeight() {
-    return nonLongRunningUsedResourceWeight;
-  }
-
-  public void setNonLongRunningUsedResourceWeight(double nonLongRunningUsedResourceWeight) {
-    this.nonLongRunningUsedResourceWeight = nonLongRunningUsedResourceWeight;
   }
 
   public boolean isOmitOverloadedHosts() {
@@ -372,5 +303,45 @@ public class MesosConfiguration {
 
   public void setLoad1OverloadedThreshold(double load1OverloadedThreshold) {
     this.load1OverloadedThreshold = load1OverloadedThreshold;
+  }
+
+  public double getAllocatedResourceWeight() {
+    return allocatedResourceWeight;
+  }
+
+  public void setAllocatedResourceWeight(double allocatedResourceWeight) {
+    this.allocatedResourceWeight = allocatedResourceWeight;
+  }
+
+  public double getInUseResourceWeight() {
+    return inUseResourceWeight;
+  }
+
+  public void setInUseResourceWeight(double inUseResourceWeight) {
+    this.inUseResourceWeight = inUseResourceWeight;
+  }
+
+  public double getCpuWeight() {
+    return cpuWeight;
+  }
+
+  public void setCpuWeight(double cpuWeight) {
+    this.cpuWeight = cpuWeight;
+  }
+
+  public double getMemWeight() {
+    return memWeight;
+  }
+
+  public void setMemWeight(double memWeight) {
+    this.memWeight = memWeight;
+  }
+
+  public double getDiskWeight() {
+    return diskWeight;
+  }
+
+  public void setDiskWeight(double diskWeight) {
+    this.diskWeight = diskWeight;
   }
 }
