@@ -13,8 +13,6 @@ public class MesosConfiguration {
   @NotNull
   private String master;
   @NotNull
-  private String masterProtocol = "http";
-  @NotNull
   private String frameworkName;
   @NotNull
   private String frameworkId;
@@ -53,8 +51,6 @@ public class MesosConfiguration {
   private int maxDiskMbPerRequest = 3000000;
 
   private Optional<String> credentialPrincipal = Optional.absent();
-  private Optional<String> mesosUsername = Optional.absent();
-  private Optional<String> mesosPassword = Optional.absent();
 
   private long rxEventBufferSize = 10000;
   private int statusUpdateConcurrencyLimit = 500;
@@ -146,14 +142,6 @@ public class MesosConfiguration {
     return master;
   }
 
-  public String getMasterProtocol() {
-    return masterProtocol;
-  }
-
-  public void setMasterProtocol(String masterProtocol) {
-    this.masterProtocol = masterProtocol;
-  }
-
   public String getFrameworkId() {
     return frameworkId;
   }
@@ -236,22 +224,6 @@ public class MesosConfiguration {
 
   public void setCredentialPrincipal(Optional<String> credentialPrincipal) {
     this.credentialPrincipal = credentialPrincipal;
-  }
-
-  public Optional<String> getMesosUsername() {
-    return mesosUsername;
-  }
-
-  public void setMesosUsername(Optional<String> mesosUsername) {
-    this.mesosUsername = mesosUsername;
-  }
-
-  public Optional<String> getMesosPassword() {
-    return mesosPassword;
-  }
-
-  public void setMesosPassword(Optional<String> mesosPassword) {
-    this.mesosPassword = mesosPassword;
   }
 
   public int getDefaultDisk() {
