@@ -5,6 +5,15 @@ import java.util.Objects;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.base.Optional;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
+@Schema(
+    description = "A remote artifact to be downloaded",
+    subTypes = {
+        ExternalArtifact.class,
+        S3Artifact.class
+    }
+)
 public abstract class RemoteArtifact extends Artifact {
 
   private final Optional<Long> filesize;
@@ -16,10 +25,16 @@ public abstract class RemoteArtifact extends Artifact {
     this.isArtifactList = isArtifactList;
   }
 
+  @Schema(description = "Size of the artifact")
   public Optional<Long> getFilesize() {
     return filesize;
   }
 
+  @Schema(
+      description = "If true, this file is a list of other `Artifact`s to download, represented as json",
+      nullable = true,
+      defaultValue = "false"
+  )
   public Optional<Boolean> getIsArtifactList() {
     return isArtifactList;
   }

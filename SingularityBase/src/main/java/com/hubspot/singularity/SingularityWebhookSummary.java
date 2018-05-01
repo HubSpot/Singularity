@@ -5,6 +5,9 @@ import java.util.Objects;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
+@Schema
 public class SingularityWebhookSummary {
   private final SingularityWebhook webhook;
   private final int queueSize;
@@ -15,10 +18,12 @@ public class SingularityWebhookSummary {
     this.queueSize = queueSize;
   }
 
+  @Schema(description = "The description of the webhook")
   public SingularityWebhook getWebhook() {
     return webhook;
   }
 
+  @Schema(description = "The number of pending webhook sends in the queue for this webhook destination")
   public int getQueueSize() {
     return queueSize;
   }

@@ -6,9 +6,11 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.annotations.Beta;
 import com.google.common.base.Optional;
-import com.wordnik.swagger.annotations.ApiModelProperty;
+
+import io.swagger.v3.oas.annotations.media.Schema;
 
 @Beta
+@Schema(description = "Represents a docker port mapping")
 public class SingularityPortMapping {
   private final int hostPort, containerPort;
   private final Optional<String> protocol;
@@ -22,17 +24,17 @@ public class SingularityPortMapping {
     this.protocol = protocol;
   }
 
-  @ApiModelProperty(required=true, value="the port to map from on the host network interface")
+  @Schema(required = true, description = "the port to map from on the host network interface")
   public int getHostPort() {
     return hostPort;
   }
 
-  @ApiModelProperty(required=true, value="the port to map to on the container network interface")
+  @Schema(required = true, description = "the port to map to on the container network interface")
   public int getContainerPort() {
     return containerPort;
   }
 
-  @ApiModelProperty(required=false, value="the protocol e.g. 'tcp' or 'udp'")
+  @Schema(description = "the protocol e.g. 'tcp' or 'udp'")
   public Optional<String> getProtocol() {
     return protocol;
   }

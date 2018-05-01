@@ -7,10 +7,10 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
 import com.hubspot.mesos.json.MesosResourcesObject;
-import com.wordnik.swagger.annotations.ApiModel;
-import com.wordnik.swagger.annotations.ApiModelProperty;
 
-@ApiModel(description = "Singularity's view of a Mesos slave")
+import io.swagger.v3.oas.annotations.media.Schema;
+
+@Schema(description = "Singularity's view of a Mesos slave")
 public class SingularitySlave extends SingularityMachineAbstraction<SingularitySlave> {
 
   private final String host;
@@ -42,7 +42,7 @@ public class SingularitySlave extends SingularityMachineAbstraction<SingularityS
     return new SingularitySlave(getId(), getFirstSeenAt(), newState, host, rackId, attributes, resources);
   }
 
-  @ApiModelProperty("Slave hostname")
+  @Schema(description = "Slave hostname")
   public String getHost() {
     return host;
   }
@@ -64,15 +64,17 @@ public class SingularitySlave extends SingularityMachineAbstraction<SingularityS
     return new SingularitySlave(getId(), getFirstSeenAt(), getCurrentState(), host, rackId, attributes, Optional.of(resources));
   }
 
-  @ApiModelProperty("Slave rack ID")
+  @Schema(description = "Slave rack ID")
   public String getRackId() {
     return rackId;
   }
 
+  @Schema(description = "Mesos attributes associated with this slave")
   public Map<String, String> getAttributes() {
     return attributes;
   }
 
+  @Schema(description = "Resources available to allocate on this slave")
   public Optional<MesosResourcesObject> getResources() {
     return resources;
   }

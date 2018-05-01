@@ -4,16 +4,16 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
 import com.hubspot.mesos.JavaUtils;
-import com.wordnik.swagger.annotations.ApiModelProperty;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
+@Schema(description = "Representation of a destination for a specific type of webhook")
 public class SingularityWebhook {
 
   private final String uri;
   private final WebhookType type;
-
   private final Optional<String> user;
   private final long timestamp;
-
   private final String id;
 
   @JsonCreator
@@ -25,27 +25,27 @@ public class SingularityWebhook {
     this.type = type;
   }
 
-  @ApiModelProperty(required=false, value="Unique ID for webhook.")
+  @Schema(description = "Unique ID for webhook")
   public String getId() {
     return id;
   }
 
-  @ApiModelProperty("URI to POST to.")
+  @Schema(required = true, description = "URI to POST to")
   public String getUri() {
     return uri;
   }
 
-  @ApiModelProperty(required=false, value="")
+  @Schema(description = "Webhook creation timestamp")
   public long getTimestamp() {
     return timestamp;
   }
 
-  @ApiModelProperty(required=false, value="User that created webhook.")
+  @Schema(description = "User that created webhook")
   public Optional<String> getUser() {
     return user;
   }
 
-  @ApiModelProperty("Webhook type.")
+  @Schema(required = true, description = "Webhook type")
   public WebhookType getType() {
     return type;
   }

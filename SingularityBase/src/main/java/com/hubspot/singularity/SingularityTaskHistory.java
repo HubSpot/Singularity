@@ -8,6 +8,9 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
 import com.hubspot.mesos.JavaUtils;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
+@Schema(description = "Describes the full history of a Singularity task")
 public class SingularityTaskHistory {
 
   private final List<SingularityTaskHistoryUpdate> taskUpdates;
@@ -20,11 +23,14 @@ public class SingularityTaskHistory {
   private final List<SingularityTaskMetadata> taskMetadata;
 
   @JsonCreator
-  public SingularityTaskHistory(@JsonProperty("taskUpdates") List<SingularityTaskHistoryUpdate> taskUpdates, @JsonProperty("directory") Optional<String> directory, @JsonProperty("containerId") Optional<String> containerId,
-    @JsonProperty("healthcheckResults") List<SingularityTaskHealthcheckResult> healthcheckResults, @JsonProperty("task") SingularityTask task,
-      @JsonProperty("loadBalancerUpdates") List<SingularityLoadBalancerUpdate> loadBalancerUpdates,
-      @JsonProperty("shellCommandHistory") List<SingularityTaskShellCommandHistory> shellCommandHistory,
-      @JsonProperty("taskMetadata") List<SingularityTaskMetadata> taskMetadata) {
+  public SingularityTaskHistory(@JsonProperty("taskUpdates") List<SingularityTaskHistoryUpdate> taskUpdates,
+                                @JsonProperty("directory") Optional<String> directory,
+                                @JsonProperty("containerId") Optional<String> containerId,
+                                @JsonProperty("healthcheckResults") List<SingularityTaskHealthcheckResult> healthcheckResults,
+                                @JsonProperty("task") SingularityTask task,
+                                @JsonProperty("loadBalancerUpdates") List<SingularityLoadBalancerUpdate> loadBalancerUpdates,
+                                @JsonProperty("shellCommandHistory") List<SingularityTaskShellCommandHistory> shellCommandHistory,
+                                @JsonProperty("taskMetadata") List<SingularityTaskMetadata> taskMetadata) {
     this.directory = directory;
     this.containerId = containerId;
     this.task = task;
@@ -35,34 +41,42 @@ public class SingularityTaskHistory {
     this.taskMetadata = JavaUtils.nonNullImmutable(taskMetadata);
   }
 
+  @Schema(description = "A list of status updates for this task")
   public List<SingularityTaskHistoryUpdate> getTaskUpdates() {
     return taskUpdates;
   }
 
+  @Schema(description = "The directory of the task sandbox on teh mesos slave", nullable = true)
   public Optional<String> getDirectory() {
     return directory;
   }
 
+  @Schema(description = "If a docker task, the docker container id", nullable = true)
   public Optional<String> getContainerId() {
     return containerId;
   }
 
+  @Schema(description = "Full Singularity task data")
   public SingularityTask getTask() {
     return task;
   }
 
+  @Schema(description = "A list of custom metadata associated with this task")
   public List<SingularityTaskMetadata> getTaskMetadata() {
     return taskMetadata;
   }
 
+  @Schema(description = "Healthcheck results for this task")
   public List<SingularityTaskHealthcheckResult> getHealthcheckResults() {
     return healthcheckResults;
   }
 
+  @Schema(description = "A list of load balancer updates for this task")
   public List<SingularityLoadBalancerUpdate> getLoadBalancerUpdates() {
     return loadBalancerUpdates;
   }
 
+  @Schema(description = "A list of shell commands that have been run against this task")
   public List<SingularityTaskShellCommandHistory> getShellCommandHistory() {
     return shellCommandHistory;
   }

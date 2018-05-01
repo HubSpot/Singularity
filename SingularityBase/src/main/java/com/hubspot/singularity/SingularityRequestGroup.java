@@ -8,6 +8,9 @@ import java.util.Objects;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
+@Schema(description = "Describes a request grouping")
 public class SingularityRequestGroup {
     private final String id;
     private final List<String> requestIds;
@@ -20,14 +23,21 @@ public class SingularityRequestGroup {
         this.metadata = metadata != null ? metadata : Collections.<String, String>emptyMap();
     }
 
+    @Schema(
+        title = "A unique id for this request group",
+        description = "Max length is set in configuration yaml as maxRequestIdSize",
+        pattern = "a-zA-Z0-9_-"
+    )
     public String getId() {
         return id;
     }
 
+    @Schema(description = "The list of request ids that belong to this group")
     public List<String> getRequestIds() {
         return requestIds;
     }
 
+    @Schema(description = "Metadata related to this request group")
     public Map<String, String> getMetadata() {
         return metadata;
     }

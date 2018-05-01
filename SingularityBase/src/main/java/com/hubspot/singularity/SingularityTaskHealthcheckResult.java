@@ -9,6 +9,9 @@ import com.google.common.base.Optional;
 import com.google.common.collect.ComparisonChain;
 import com.hubspot.mesos.JavaUtils;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
+@Schema(description = "A Healthcheck result for a particular task")
 public class SingularityTaskHealthcheckResult extends SingularityTaskIdHolder implements Comparable<SingularityTaskHealthcheckResult> {
 
   private final Optional<Integer> statusCode;
@@ -19,8 +22,13 @@ public class SingularityTaskHealthcheckResult extends SingularityTaskIdHolder im
   private final long timestamp;
 
   @JsonCreator
-  public SingularityTaskHealthcheckResult(@JsonProperty("statusCode") Optional<Integer> statusCode, @JsonProperty("duration") Optional<Long> durationMillis, @JsonProperty("timestamp") long timestamp,
-      @JsonProperty("responseBody") Optional<String> responseBody, @JsonProperty("errorMessage") Optional<String> errorMessage, @JsonProperty("taskId") SingularityTaskId taskId, @JsonProperty("startup") Optional<Boolean> startup) {
+  public SingularityTaskHealthcheckResult(@JsonProperty("statusCode") Optional<Integer> statusCode,
+                                          @JsonProperty("duration") Optional<Long> durationMillis,
+                                          @JsonProperty("timestamp") long timestamp,
+                                          @JsonProperty("responseBody") Optional<String> responseBody,
+                                          @JsonProperty("errorMessage") Optional<String> errorMessage,
+                                          @JsonProperty("taskId") SingularityTaskId taskId,
+                                          @JsonProperty("startup") Optional<Boolean> startup) {
     super(taskId);
 
     this.statusCode = statusCode;
@@ -61,26 +69,32 @@ public class SingularityTaskHealthcheckResult extends SingularityTaskIdHolder im
     return Objects.hash(statusCode, durationMillis, responseBody, errorMessage, startup, timestamp);
   }
 
+  @Schema(description = "Status code if a response was received", nullable = true)
   public Optional<Integer> getStatusCode() {
     return statusCode;
   }
 
+  @Schema(description = "Response time of the check if a response was received", nullable = true)
   public Optional<Long> getDurationMillis() {
     return durationMillis;
   }
 
+  @Schema(description = "Error message if the check failed", nullable = true)
   public Optional<String> getErrorMessage() {
     return errorMessage;
   }
 
+  @Schema(description = "Timestamp of this healthcheck", nullable = true)
   public long getTimestamp() {
     return timestamp;
   }
 
+  @Schema(description = "response body if a response was received", nullable = true)
   public Optional<String> getResponseBody() {
     return responseBody;
   }
 
+  @Schema(description = "`true` if the healthcheck was running during the startup phase")
   public boolean isStartup() {
     return startup;
   }

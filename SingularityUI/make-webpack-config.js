@@ -132,6 +132,10 @@ module.exports = function(options) {
           test: /[\/]messenger\.js$/,
           loader: 'exports?Messenger',
         },
+        {
+          test: /\.json$/,
+          loader: 'json-loader'
+        },
       ],
     },
 

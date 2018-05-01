@@ -7,19 +7,22 @@ import java.util.Set;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
+@Schema(description = "Describes the settings for a particular user")
 public class SingularityUserSettings {
   private final Set<String> starredRequestIds;
 
   @JsonCreator
-  public SingularityUserSettings(
-      @JsonProperty("starredRequestIds") Set<String> starredRequestIds) {
-    this.starredRequestIds = starredRequestIds != null ? starredRequestIds : Collections.<String>emptySet();
+  public SingularityUserSettings(@JsonProperty("starredRequestIds") Set<String> starredRequestIds) {
+    this.starredRequestIds = starredRequestIds != null ? starredRequestIds : Collections.emptySet();
   }
 
   public static SingularityUserSettings empty() {
     return new SingularityUserSettings(Collections.<String>emptySet());
   }
 
+  @Schema(description = "The list of starred request ids for a particular user")
   public Set<String> getStarredRequestIds() {
     return starredRequestIds;
   }
