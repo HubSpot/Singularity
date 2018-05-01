@@ -48,6 +48,7 @@ import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.hooks.LoadBalancerClient;
 import com.hubspot.singularity.scheduler.SingularityDeployHealthHelper.DeployHealth;
 import com.hubspot.singularity.sentry.SingularityExceptionNotifier;
+import com.hubspot.singularity.smtp.SingularityMailer;
 
 /**
  * Handles tasks we need to check for staleness | load balancer state, etc - tasks that are not part of a deploy. ie, new replacement tasks.
@@ -72,11 +73,12 @@ public class SingularityNewTaskChecker {
   private final SingularityExceptionNotifier exceptionNotifier;
   private final SingularityDeployHealthHelper deployHealthHelper;
   private final DisasterManager disasterManager;
+  private final SingularityMailer mailer;
 
   @Inject
   public SingularityNewTaskChecker(@Named(SingularityMainModule.NEW_TASK_THREADPOOL_NAME) ScheduledExecutorService executorService, RequestManager requestManager,
                                    SingularityConfiguration configuration, LoadBalancerClient lbClient, TaskManager taskManager, SingularityExceptionNotifier exceptionNotifier, SingularityAbort abort,
-                                   SingularityDeployHealthHelper deployHealthHelper, DisasterManager disasterManager) {
+                                   SingularityDeployHealthHelper deployHealthHelper, DisasterManager disasterManager, SingularityMailer mailer) {
     this.configuration = configuration;
     this.requestManager = requestManager;
     this.taskManager = taskManager;
@@ -90,6 +92,7 @@ public class SingularityNewTaskChecker {
     this.exceptionNotifier = exceptionNotifier;
     this.deployHealthHelper = deployHealthHelper;
     this.disasterManager = disasterManager;
+    this.mailer = mailer;
   }
 
   private boolean hasHealthcheck(SingularityTask task, Optional<SingularityRequestWithState> requestWithState) {
@@ -248,7 +251,8 @@ public class SingularityNewTaskChecker {
     UNHEALTHY_KILL_TASK, OBSOLETE, CHECK_IF_TASK_OVERDUE, CHECK_IF_HEALTHCHECK_OVERDUE, LB_IN_PROGRESS_CHECK_AGAIN, HEALTHY;
   }
 
-  private boolean checkTask(SingularityTask task, Optional<SingularityRequestWithState> requestWithState, SingularityHealthchecker healthchecker) {
+  @VisibleForTesting
+  boolean checkTask(SingularityTask task, Optional<SingularityRequestWithState> requestWithState, SingularityHealthchecker healthchecker) {
     final long start = System.currentTimeMillis();
 
     final CheckTaskState state = getTaskState(task, requestWithState, healthchecker);
@@ -262,6 +266,8 @@ public class SingularityNewTaskChecker {
 
           taskManager.createTaskCleanup(new SingularityTaskCleanup(Optional.absent(), TaskCleanupType.OVERDUE_NEW_TASK, System.currentTimeMillis(),
               task.getTaskId(), Optional.of(String.format("Task did not become healthy after %s", JavaUtils.durationFromMillis(getKillAfterHealthcheckRunningForMillis()))), Optional.absent(), Optional.absent()));
+
+          checkForRepeatedFailures(requestWithState, task.getTaskId());
           return false;
         } else {
           return true;
@@ -272,6 +278,8 @@ public class SingularityNewTaskChecker {
 
           taskManager.createTaskCleanup(new SingularityTaskCleanup(Optional.absent(), TaskCleanupType.OVERDUE_NEW_TASK, System.currentTimeMillis(),
               task.getTaskId(), Optional.of(String.format("Task did not reach the task running state after %s", JavaUtils.durationFromMillis(getKillAfterTaskNotRunningMillis()))), Optional.absent(), Optional.absent()));
+
+          checkForRepeatedFailures(requestWithState, task.getTaskId());
           return false;
         } else {
           return true;
@@ -283,13 +291,26 @@ public class SingularityNewTaskChecker {
 
         taskManager.createTaskCleanup(new SingularityTaskCleanup(Optional.absent(), TaskCleanupType.UNHEALTHY_NEW_TASK, System.currentTimeMillis(),
             task.getTaskId(), Optional.of("Task is not healthy"), Optional.absent(), Optional.absent()));
+
+        checkForRepeatedFailures(requestWithState, task.getTaskId());
         return false;
       case HEALTHY:
       case OBSOLETE:
+        if (requestWithState.isPresent()) {
+          taskManager.clearUnhealthyKills(requestWithState.get().getRequest().getId());
+        }
         return false;
     }
 
     return false;
+  }
+
+  private void checkForRepeatedFailures(Optional<SingularityRequestWithState> requestWithState, SingularityTaskId taskId) {
+    taskManager.markUnhealthyKill(taskId);
+
+    if (requestWithState.isPresent() && taskManager.getNumUnhealthyKills(taskId.getRequestId()) > configuration.getCooldownAfterFailures()) {
+      mailer.sendReplacementTasksFailingMail(requestWithState.get().getRequest());
+    }
   }
 
   @VisibleForTesting
