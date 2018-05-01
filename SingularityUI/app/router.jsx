@@ -26,7 +26,7 @@ import TaskLogTailerContainer from './containers/TaskLogTailerContainer';
 import RequestLogTailerContainer from './containers/RequestLogTailerContainer';
 import CustomLogTailerContainer from './containers/CustomLogTailerContainer';
 import { Tail, AggregateTail } from './components/logs/Tail';
-import ApiDocs from './components/apidocs/ApiDocs';
+import ApiDocsContainer from './containers/ApiDocsContainer';
 
 const getFilenameFromSplat = (splat) => _.last(splat.split('/'));
 
@@ -62,7 +62,7 @@ const routes = (
     <Route path="webhooks" component={Webhooks} title="Webhooks" />
     <Route path="task-search" component={TaskSearch} title="Task Search" />
     <Route path="disasters" component={Disasters} title="Disasters" />
-    <Route path="api-docs" component={ApiDocs} title="API Docs" />
+    <Route path="api-docs" component={ApiDocsContainer} title="API Docs" />
     <Route path="*" component={NotFound} title="Not Found" />
   </Route>);
 
