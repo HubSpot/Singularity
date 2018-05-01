@@ -111,9 +111,10 @@ public class SingularityWebhookSender {
     int numRequestUpdates = 0;
 
     for (SingularityRequestHistory requestUpdate : requestUpdates) {
+      String concreteUri = applyPlaceholders(webhook.getUri(), requestUpdate);
       webhookFutures.add(webhookSemaphore.call(() ->
           executeWebhookAsync(
-              webhook,
+              concreteUri,
               requestUpdate,
               new SingularityRequestWebhookAsyncHandler(webhookManager, webhook, requestUpdate, shouldDeleteUpdateOnFailure(numRequestUpdates, requestUpdate.getCreatedAt())))
       ));
@@ -128,9 +129,10 @@ public class SingularityWebhookSender {
     int numDeployUpdates = 0;
 
     for (SingularityDeployUpdate deployUpdate : deployUpdates) {
+      String concreteUri = applyPlaceholders(webhook.getUri(), deployUpdate);
       webhookFutures.add(webhookSemaphore.call(() ->
           executeWebhookAsync(
-              webhook,
+              concreteUri,
               deployUpdate,
               new SingularityDeployWebhookAsyncHandler(webhookManager, webhook, deployUpdate, shouldDeleteUpdateOnFailure(numDeployUpdates, deployUpdate.getDeployMarker().getTimestamp())))
       ));
@@ -154,9 +156,10 @@ public class SingularityWebhookSender {
         continue;
       }
 
+      String concreteUri = applyPlaceholders(webhook.getUri(), taskUpdate);
       webhookFutures.add(webhookSemaphore.call(() ->
           executeWebhookAsync(
-              webhook,
+              concreteUri,
               new SingularityTaskWebhook(task.get(), taskUpdate),
               new SingularityTaskWebhookAsyncHandler(webhookManager, webhook, taskUpdate, shouldDeleteUpdateOnFailure(numTaskUpdates, taskUpdate.getTimestamp())))
       ));
@@ -165,10 +168,29 @@ public class SingularityWebhookSender {
     return taskUpdates.size();
   }
 
+  private String applyPlaceholders(String uri, SingularityRequestHistory requestHistory) {
+    return uri
+        .replaceAll("\\$REQUEST_ID", requestHistory.getRequest().getId());
+  }
+
+  private String applyPlaceholders(String uri, SingularityDeployUpdate deployUpdate) {
+    return uri
+        .replaceAll("\\$REQUEST_ID", deployUpdate.getDeployMarker().getRequestId())
+        .replaceAll("\\$DEPLOY_ID", deployUpdate.getDeployMarker().getDeployId());
+  }
+
+  private String applyPlaceholders(String uri, SingularityTaskHistoryUpdate taskUpdate) {
+    return uri
+        .replaceAll("\\$REQUEST_ID", taskUpdate.getTaskId().getRequestId())
+        .replaceAll("\\$DEPLOY_ID", taskUpdate.getTaskId().getDeployId())
+        .replaceAll("\\$TASK_ID", taskUpdate.getTaskId().getId());
+
+  }
+
   // TODO handle retries, errors.
-  private <T> CompletableFuture<Response> executeWebhookAsync(SingularityWebhook webhook, Object payload, AbstractSingularityWebhookAsyncHandler<T> handler) {
-    LOG.trace("Sending {} to {}", payload, webhook.getUri());
-    BoundRequestBuilder postRequest = http.preparePost(webhook.getUri());
+  private <T> CompletableFuture<Response> executeWebhookAsync(String uri, Object payload, AbstractSingularityWebhookAsyncHandler<T> handler) {
+    LOG.trace("Sending {} to {}", payload, uri);
+    BoundRequestBuilder postRequest = http.preparePost(uri);
     postRequest.setHeader(HttpHeaders.CONTENT_TYPE, "application/json");
 
     try {
@@ -182,7 +204,7 @@ public class SingularityWebhookSender {
       handler.setCompletableFuture(webhookFuture);
       postRequest.execute(handler);
     } catch (IOException e) {
-      LOG.warn("Couldn't execute webhook to {}", webhook.getUri(), e);
+      LOG.warn("Couldn't execute webhook to {}", uri, e);
 
       if (handler.shouldDeleteUpdateDueToQueueAboveCapacity()) {
         handler.deleteWebhookUpdate();
