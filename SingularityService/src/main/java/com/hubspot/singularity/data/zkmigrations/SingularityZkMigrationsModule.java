@@ -27,6 +27,7 @@ public class SingularityZkMigrationsModule implements Module {
     dataMigrations.addBinding().to(ScheduleMigration.class);
     dataMigrations.addBinding().to(SingularityRequestTypeMigration.class);
     dataMigrations.addBinding().to(PendingRequestDataMigration.class);
+    dataMigrations.addBinding().to(SingularityPendingRequestWithRunIdMigration.class);
   }
 
   @Provides
