@@ -142,7 +142,7 @@ public class RequestManager extends CuratorAsyncManager {
     SingularityDeployKey deployKey = new SingularityDeployKey(pendingRequest.getRequestId(), pendingRequest.getDeployId());
     if (pendingRequest.getPendingType() == PendingType.ONEOFF
         || pendingRequest.getPendingType() == PendingType.IMMEDIATE) {
-      return String.format("%s%s", deployKey.toString(), pendingRequest.getTimestamp());
+      return String.format("%s%s%s", deployKey.toString(), pendingRequest.getTimestamp(), pendingRequest.getRunId().or(""));
     } else {
       return deployKey.toString();
     }

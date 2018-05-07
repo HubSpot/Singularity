@@ -193,5 +193,50 @@ public class ZkMigrationTest extends SingularityTestBaseNoDb {
         .hasSize(0);
   }
 
+  @Test
+  public void testPendingRequestWithRunIdRewrite() throws Exception {
+    metadataManager.setZkDataVersion("10");
+    long now = System.currentTimeMillis();
+
+    SingularityPendingRequest immediateRequest = new SingularityPendingRequest("immediateRequest", "immediateDeploy", now, Optional.absent(), PendingType.IMMEDIATE, Optional.absent(), Optional.of("run1"), Optional.absent(), Optional.absent(), Optional.absent());
+    SingularityPendingRequest newDeploy = new SingularityPendingRequest("newDeployRequest", "newDeploy", now, Optional.absent(), PendingType.NEW_DEPLOY, Optional.absent(), Optional.absent());
+    SingularityPendingRequest oneOffRequest = new SingularityPendingRequest("oneOffRequest", "oneOffDeploy", now, Optional.absent(), PendingType.ONEOFF, Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent());
+    curator.create().creatingParentsIfNeeded().forPath(String.format("%s%s", "/requests/pending/immediateRequest-immediateDeploy", now), objectMapper.writeValueAsBytes(immediateRequest));
+    curator.create().creatingParentsIfNeeded().forPath("/requests/pending/newDeployRequest-newDeploy", objectMapper.writeValueAsBytes(newDeploy));
+    curator.create().creatingParentsIfNeeded().forPath(String.format("%s%s", "/requests/pending/oneOffRequest-oneOffDeploy", now), objectMapper.writeValueAsBytes(oneOffRequest));
+
+    Assert.assertEquals("3 existing requests under old paths", 3, requestManager.getPendingRequests().size());
+    System.out.println(curator.getChildren().forPath("/requests/pending"));
+
+    migrationRunner.checkMigrations();
+
+    System.out.println(curator.getChildren().forPath("/requests/pending"));
+    Assert.assertEquals("3 existing requests under new paths", 3, requestManager.getPendingRequests().size());
+    System.out.println(curator.getChildren().forPath("/requests/pending"));
+
+    requestManager.deletePendingRequest(newDeploy);
+    Assertions.assertThat(requestManager.getPendingRequests())
+        .as("Non-renamed, non-timestamped nodes can be deleted")
+        .hasSize(2)
+        // Shim for the fact that SinguarityPendingRequest does not implement `equals`/`hashCode`
+        // Can be removed when immutables PR is merged
+        .extracting(SingularityPendingRequest::toString)
+        .doesNotContain(newDeploy.toString())
+        .contains(oneOffRequest.toString(), immediateRequest.toString());
+
+    requestManager.deletePendingRequest(oneOffRequest);
+    Assertions.assertThat(requestManager.getPendingRequests())
+        .as("Non-renamed immediate (i.e., run-now scheduled without a runId) nodes can be deleted")
+        .hasSize(1)
+        .extracting(SingularityPendingRequest::toString)
+        .doesNotContain(oneOffRequest.toString())
+        .contains(immediateRequest.toString());
+
+    requestManager.deletePendingRequest(immediateRequest);
+    Assertions.assertThat(requestManager.getPendingRequests())
+        .as("Renamed one-off (i.e., run-now on-demand) nodes can be deleted")
+        .hasSize(0);
+  }
+
 
 }
