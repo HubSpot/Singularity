@@ -20,3 +20,11 @@ export const FetchInactiveHosts = buildApiAction(
   'FETCH_INACTIVE_HOST',
   {url: '/inactive'}
 );
+
+export const ClearInactiveHosts = buildApiAction(
+  'Clear_INACTIVE_HOSTS',
+  {
+    method: 'DELETE',
+    url: '/inactive/all'
+  }
+);

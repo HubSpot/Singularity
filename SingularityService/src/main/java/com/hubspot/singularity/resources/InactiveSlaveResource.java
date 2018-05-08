@@ -62,4 +62,11 @@ public class InactiveSlaveResource {
     authorizationHelper.checkAdminAuthorization(user);
     inactiveSlaveManager.activateSlave(host);
   }
+
+  @DELETE
+  @Path("/all")
+  public void clearAllInactiveHosts(@Auth SingularityUser user) {
+    authorizationHelper.checkAdminAuthorization(user);
+    inactiveSlaveManager.getInactiveSlaves().forEach(inactiveSlaveManager::activateSlave);
+  }
 }
