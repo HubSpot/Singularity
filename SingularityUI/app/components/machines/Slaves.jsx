@@ -7,8 +7,17 @@ import Utils from '../../utils';
 import { connect } from 'react-redux';
 import rootComponent from '../../rootComponent';
 import { Link } from 'react-router';
-import { FetchSlaves, FreezeSlave, DecommissionSlave, RemoveSlave, ReactivateSlave, FetchExpiringSlaveStates, RemoveExpiringSlaveState } from '../../actions/api/slaves';
-import { DeactivateHost, ReactivateHost, FetchInactiveHosts } from '../../actions/api/inactive';
+import {
+  FetchSlaves,
+  FreezeSlave,
+  DecommissionSlave,
+  RemoveSlave,
+  ReactivateSlave,
+  FetchExpiringSlaveStates,
+  RemoveExpiringSlaveState,
+  ClearInactiveSlaves
+} from '../../actions/api/slaves';
+import { DeactivateHost, ReactivateHost, FetchInactiveHosts, ClearInactiveHosts } from '../../actions/api/inactive';
 import Column from '../common/table/Column';
 import JSONButton from '../common/JSONButton';
 import { refresh, initialize } from '../../actions/ui/slaves'
@@ -111,6 +120,32 @@ const Slaves = (props) => {
       </FormModalButton>
     )
   );
+
+  const clearInactiveHostsButton = (
+      <FormModalButton
+        name="Clear Inactive Hosts"
+        buttonChildren={<Glyphicon glyph="remove-circle" />}
+        action="Clear Inactive Hosts"
+        onConfirm={() => props.clearInactiveHosts()}
+        tooltipText={`Clear inactive hosts list`}
+        formElements={[]}
+      >
+        <p>Are you sure you want to clear all inactive hosts?</p>
+      </FormModalButton>
+    );
+
+  const clearInactiveSlavesButton = (
+      <FormModalButton
+        name="Clear Inactive Slaves"
+        buttonChildren={<Glyphicon glyph="remove-circle" />}
+        action="Clear Inactive Slaves"
+        onConfirm={() => props.clearInactiveSlaves()}
+        tooltipText={`Clear inactive slaves list`}
+        formElements={[]}
+      >
+        <p>Are you sure you want to clear all dead slaves?</p>
+      </FormModalButton>
+    );
 
   const getMaybeReactivateButton = (slave) => (
     Utils.isIn(slave.currentState.state, ['DECOMMISSIONING', 'DECOMMISSIONED', 'STARTING_DECOMMISSION', 'FROZEN']) && (
@@ -388,7 +423,11 @@ const Slaves = (props) => {
   const inactiveHostsPanel = (inactiveHosts) => (
     inactiveHosts && inactiveHosts.length > 0 && (
       <div className="row">
-        <h3>Inactive Hosts</h3>
+        <h3>Inactive Hosts
+            <span className="pull-right">
+              {clearInactiveHostsButton}
+            </span>
+        </h3>
         <p>These hosts are marked as inactive: </p>
         <ul className="list-group">
           {inactiveHosts.map((host) => (
@@ -438,7 +477,8 @@ const Slaves = (props) => {
       emptyMessage: 'No Inactive Slaves',
       hostsInState: inactiveSlaves,
       columns: getColumns('inactive'),
-      paginated: props.paginated
+      paginated: props.paginated,
+      clearAllButton: clearInactiveSlavesButton
     }
   ];
 
@@ -482,7 +522,9 @@ Slaves.propTypes = {
   })),
   inactiveHosts: PropTypes.arrayOf(PropTypes.string),
   columnSettings: PropTypes.object.isRequired,
-  paginated: PropTypes.bool.isRequired
+  paginated: PropTypes.bool.isRequired,
+  clearInactiveHosts: PropTypes.func.isRequired,
+  clearInactiveSlaves: PropTypes.func.isRequired
 };
 
 function getErrorFromState(state) {
@@ -548,6 +590,8 @@ function mapDispatchToProps(dispatch) {
           dispatch(FetchInactiveHosts.trigger()),
         ])),
     fetchInactiveHosts: () => dispatch(FetchInactiveHosts.trigger()),
+    clearInactiveHosts: () => dispatch(ClearInactiveHosts.trigger()),
+    clearInactiveSlaves: () => dispatch(ClearInactiveSlaves.trigger()),
     reactivateSlave: (slave, message) => { clear().then(() => dispatch(ReactivateSlave.trigger(slave.id, message)).then(() => fetchSlavesAndExpiring())); },
     fetchExpiringSlaveStates: () => dispatch(FetchExpiringSlaveStates.trigger()),
     removeExpiringState: (slaveId) => { clear().then(() => dispatch(RemoveExpiringSlaveState.trigger(slaveId)).then(() => fetchSlavesAndExpiring())); },

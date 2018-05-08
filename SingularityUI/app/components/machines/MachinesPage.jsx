@@ -5,7 +5,11 @@ function MachinesPage (props) {
   function renderState(state, key) {
     return (
     <div key={key}>
-      <h2> {state.stateName} </h2>
+      <h2> {state.stateName}
+        <span className="pull-right">
+          {state.clearAllButton}
+        </span>
+      </h2>
       <UITable
         emptyTableMessage={state.emptyMessage}
         data={state.hostsInState}
