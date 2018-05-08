@@ -591,7 +591,7 @@ function mapDispatchToProps(dispatch) {
         ])),
     fetchInactiveHosts: () => dispatch(FetchInactiveHosts.trigger()),
     clearInactiveHosts: () => dispatch(ClearInactiveHosts.trigger()).then(() => fetchSlavesAndExpiring()),
-    clearInactiveSlaves: () => dispatch(ClearInactiveSlaves.trigger()).then(() => dispatch(FetchInactiveHosts.trigger()),
+    clearInactiveSlaves: () => dispatch(ClearInactiveSlaves.trigger()).then(() => dispatch(FetchInactiveHosts.trigger())),
     reactivateSlave: (slave, message) => { clear().then(() => dispatch(ReactivateSlave.trigger(slave.id, message)).then(() => fetchSlavesAndExpiring())); },
     fetchExpiringSlaveStates: () => dispatch(FetchExpiringSlaveStates.trigger()),
     removeExpiringState: (slaveId) => { clear().then(() => dispatch(RemoveExpiringSlaveState.trigger(slaveId)).then(() => fetchSlavesAndExpiring())); },
