@@ -564,12 +564,8 @@ class SingularityMesosTaskBuilder {
       Optional<Resources> maybeResources = task.getPendingTask().getResources().or(task.getDeploy().getResources());
       if (maybeResources.isPresent()) {
         double requestedCpus = maybeResources.get().getCpus();
-        if (requestedCpus > configuration.getCpuHardLimit().get()) {
-          Integer newHardLimit = (int) Math.ceil(requestedCpus * configuration.getCpuHardLimitScaleFactor());
-          return Optional.of(newHardLimit);
-        } else {
-          return configuration.getCpuHardLimit();
-        }
+        int scaledLimit = (int) Math.ceil(requestedCpus * configuration.getCpuHardLimitScaleFactor());
+        return Optional.of(Math.max(scaledLimit, configuration.getCpuHardLimit().get()));
       }
     }
     return Optional.absent();
