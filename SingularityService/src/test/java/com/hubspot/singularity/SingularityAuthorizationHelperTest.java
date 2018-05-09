@@ -20,8 +20,13 @@ import com.hubspot.singularity.config.AuthConfiguration;
 import com.hubspot.singularity.config.MesosConfiguration;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.RequestManager;
+import com.squarespace.jersey2.guice.JerseyGuiceUtils;
 
 public class SingularityAuthorizationHelperTest {
+
+  static {
+    JerseyGuiceUtils.install((s, serviceLocator) -> null);
+  }
 
   public static SingularityConfiguration buildAuthDisabledConfig() {
     AuthConfiguration authConfiguration = new AuthConfiguration();

@@ -4,6 +4,9 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
+@Schema(description = "Represents an action requiring tasks for a request to possibly be cleaned or replaced")
 public class SingularityRequestCleanup {
 
   private final Optional<String> user;
@@ -43,46 +46,57 @@ public class SingularityRequestCleanup {
     this.runShellCommandBeforeKill = runShellCommandBeforeKill;
   }
 
+  @Schema(description = "If `true`, skip health checks for new tasks created", nullable = true)
   public Optional<Boolean> getSkipHealthchecks() {
     return skipHealthchecks;
   }
 
+  @Schema(description = "Override the system default behavior for immediately kiiling a task (relevant for pause-related cleanups)", nullable = true)
   public Optional<Boolean> getKillTasks() {
     return killTasks;
   }
 
+  @Schema(description = "For deletes, remove the service from the load balancer when all tasks are cleaned", nullable = true)
   public Optional<Boolean> getRemoveFromLoadBalancer() {
     return removeFromLoadBalancer;
   }
 
+  @Schema(description = "The request this cleanup relates to")
   public String getRequestId() {
     return requestId;
   }
 
+  @Schema(description = "The user that triggered this cleanup", nullable = true)
   public Optional<String> getUser() {
     return user;
   }
 
+  @Schema(description = "The type of cleanup")
   public RequestCleanupType getCleanupType() {
     return cleanupType;
   }
 
+  @Schema(description = "The time this cleanup was created")
   public long getTimestamp() {
     return timestamp;
   }
 
+  @Schema(description = "A specific deploy related to this cleanup", nullable = true)
   public Optional<String> getDeployId() {
     return deployId;
   }
 
+  @Schema(description = "An optional message stating the reason for this cleanup", nullable = true)
   public Optional<String> getMessage() {
     return message;
   }
 
+  @Schema(description = "An optional unique id for this cleanup action", nullable = true)
   public Optional<String> getActionId() {
     return actionId;
   }
 
+  @Schema(description = "A shell command to run on tasks before they are killed", nullable = true)
   public Optional<SingularityShellCommand> getRunShellCommandBeforeKill() {
     return runShellCommandBeforeKill;
   }

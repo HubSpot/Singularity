@@ -6,27 +6,28 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.annotations.Beta;
 import com.google.common.base.Optional;
-import com.wordnik.swagger.annotations.ApiModelProperty;
+
+import io.swagger.v3.oas.annotations.media.Schema;
 
 @Beta
+@Schema(description = "Settings for an appc image")
 public class SingularityAppcImage {
   private final String name;
   private final Optional<String> id;
 
   @JsonCreator
-  public SingularityAppcImage(@JsonProperty("name") String name, @JsonProperty("id") Optional<String> id)
-  {
+  public SingularityAppcImage(@JsonProperty("name") String name, @JsonProperty("id") Optional<String> id) {
     this.name = name;
     this.id = id;
   }
 
-  @ApiModelProperty(required=true, value="Appc image name")
+  @Schema(required = true, description = "Appc image name")
   public String getName()
   {
     return name;
   }
 
-  @ApiModelProperty(required=false, value="")
+  @Schema(description = "The image id")
   public Optional<String> getId()
   {
     return id;

@@ -4,13 +4,13 @@ import java.util.Arrays;
 import java.util.Objects;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import io.swagger.v3.oas.annotations.media.Schema;
 
-@JsonIgnoreProperties(ignoreUnknown = true)
+@Schema(description = "Raw content used to create an artifact in the task sandbox")
 public class EmbeddedArtifact extends Artifact {
 
   private final byte[] content;
@@ -18,12 +18,13 @@ public class EmbeddedArtifact extends Artifact {
   @JsonCreator
   @SuppressFBWarnings("EI_EXPOSE_REP2")
   public EmbeddedArtifact(@JsonProperty("name") String name, @JsonProperty("filename") String filename, @JsonProperty("md5sum") Optional<String> md5sum,
-      @JsonProperty("content") byte[] content, @JsonProperty("targetFolderRelativeToTask") Optional<String> targetFolderRelativeToTask) {
+                          @JsonProperty("content") byte[] content, @JsonProperty("targetFolderRelativeToTask") Optional<String> targetFolderRelativeToTask) {
     super(name, filename, md5sum, targetFolderRelativeToTask);
     this.content = content;
   }
 
   @SuppressFBWarnings("EI_EXPOSE_REP")
+  @Schema(description = "Raw content for the file")
   public byte[] getContent() {
     return content;
   }

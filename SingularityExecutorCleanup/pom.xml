@@ -15,19 +15,24 @@
   </properties>
 
   <dependencies>
+
+    <dependency>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-annotations</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>com.google.guava</groupId>
+      <artifactId>guava</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>com.google.inject</groupId>
+      <artifactId>guice</artifactId>
+    </dependency>
     <dependency>
       <groupId>com.hubspot</groupId>
       <artifactId>SingularityBase</artifactId>
-    </dependency>
-
-    <dependency>
-      <groupId>com.hubspot</groupId>
-      <artifactId>SingularityRunnerBase</artifactId>
-    </dependency>
-
-    <dependency>
-      <groupId>com.hubspot</groupId>
-      <artifactId>SingularityExecutor</artifactId>
     </dependency>
 
     <dependency>
@@ -37,17 +42,37 @@
 
     <dependency>
       <groupId>com.hubspot</groupId>
+      <artifactId>SingularityExecutor</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>com.hubspot</groupId>
       <artifactId>SingularityMesosClient</artifactId>
     </dependency>
 
     <dependency>
-      <groupId>com.google.inject</groupId>
-      <artifactId>guice</artifactId>
+      <groupId>com.hubspot</groupId>
+      <artifactId>SingularityRunnerBase</artifactId>
     </dependency>
 
     <dependency>
-      <groupId>com.google.guava</groupId>
-      <artifactId>guava</artifactId>
+      <groupId>com.hubspot</groupId>
+      <artifactId>SingularityS3Base</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>com.spotify</groupId>
+      <artifactId>docker-client</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>javax.validation</groupId>
+      <artifactId>validation-api</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>org.hibernate</groupId>
+      <artifactId>hibernate-validator</artifactId>
     </dependency>
 
     <dependency>
@@ -57,33 +82,8 @@
 
     <dependency>
       <groupId>ch.qos.logback</groupId>
-      <artifactId>logback-classic</artifactId>  
+      <artifactId>logback-classic</artifactId>
       <scope>runtime</scope>
-    </dependency>
-
-    <dependency>
-      <groupId>com.spotify</groupId>
-      <artifactId>docker-client</artifactId>
-    </dependency>
-
-    <dependency>
-      <groupId>org.hibernate</groupId>
-      <artifactId>hibernate-validator</artifactId>
-    </dependency>
-
-    <dependency>
-      <groupId>javax.validation</groupId>
-      <artifactId>validation-api</artifactId>
-    </dependency>
-
-    <dependency>
-      <groupId>com.fasterxml.jackson.core</groupId>
-      <artifactId>jackson-annotations</artifactId>
-    </dependency>
-
-    <dependency>
-      <groupId>com.hubspot</groupId>
-      <artifactId>SingularityS3Base</artifactId>
     </dependency>
 
   </dependencies>
@@ -95,13 +95,12 @@
         <artifactId>maven-compiler-plugin</artifactId>
         <configuration>
           <!-- turn off Werror, because Antlr annotation processor logs a warning with JDK 7 -->
-          <compilerArguments combine.self="override" />
+          <compilerArguments combine.self="override"></compilerArguments>
         </configuration>
       </plugin>
     </plugins>
   </build>
 </project>
-
 <!-- Local Variables:     -->
 <!-- mode: nxml           -->
 <!-- nxml-child-indent: 2 -->

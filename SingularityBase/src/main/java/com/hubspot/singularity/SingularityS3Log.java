@@ -3,10 +3,10 @@ package com.hubspot.singularity;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
-import com.wordnik.swagger.annotations.ApiModel;
-import com.wordnik.swagger.annotations.ApiModelProperty;
 
-@ApiModel( description = "Represents a task sandbox file that was uploaded to S3" )
+import io.swagger.v3.oas.annotations.media.Schema;
+
+@Schema( title = "Represents a task sandbox file that was uploaded to S3" )
 public class SingularityS3Log extends SingularityS3LogMetadata {
   private final String getUrl;
   private final String downloadUrl;
@@ -19,12 +19,12 @@ public class SingularityS3Log extends SingularityS3LogMetadata {
     this.downloadUrl = downloadUrl;
   }
 
-  @ApiModelProperty("URL to file in S3")
+  @Schema(description = "URL to file in S3")
   public String getGetUrl() {
     return getUrl;
   }
 
-  @ApiModelProperty("URL to file in S3 containing headers that will force file to be downloaded instead of viewed")
+  @Schema(description = "URL to file in S3 containing headers that will force file to be downloaded instead of viewed")
   public String getDownloadUrl() {
     return downloadUrl;
   }

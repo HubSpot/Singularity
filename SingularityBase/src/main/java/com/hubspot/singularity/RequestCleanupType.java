@@ -2,6 +2,9 @@ package com.hubspot.singularity;
 
 import com.google.common.base.Optional;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
+@Schema
 public enum RequestCleanupType {
 
   DELETING(Optional.<TaskCleanupType> absent()), PAUSING(Optional.<TaskCleanupType> absent()), BOUNCE(Optional.of(TaskCleanupType.BOUNCING)),

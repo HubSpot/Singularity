@@ -7,9 +7,11 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.annotations.Beta;
 import com.google.common.base.Optional;
-import com.wordnik.swagger.annotations.ApiModelProperty;
+
+import io.swagger.v3.oas.annotations.media.Schema;
 
 @Beta
+@Schema(description = "Optional network settings for a container being launched in mesos")
 public class SingularityNetworkInfo {
   private final Optional<String> name;
   private final Optional<List<String>> groups;
@@ -24,17 +26,17 @@ public class SingularityNetworkInfo {
     this.portMappings = portMappings;
   }
 
-  @ApiModelProperty(required=false, value="Name of the network for the network driver to use")
+  @Schema(description = "Name of the network for the network driver to use")
   public Optional<String> getName() {
     return name;
   }
 
-  @ApiModelProperty(required=false, value="List of network groups for the container")
+  @Schema(description = "List of network groups for the container")
   public Optional<List<String>> getGroups() {
     return groups;
   }
 
-  @ApiModelProperty(required=false, value="List of ip port mappings to expose")
+  @Schema(description = "List of ip port mappings to expose")
   public Optional<List<SingularityPortMapping>> getPortMappings() {
     return portMappings;
   }
