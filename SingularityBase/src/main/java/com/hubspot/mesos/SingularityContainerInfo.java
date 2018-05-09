@@ -6,8 +6,10 @@ import java.util.Objects;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
-import com.wordnik.swagger.annotations.ApiModelProperty;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
+@Schema(description = "Settings for launching a container in mesos")
 public class SingularityContainerInfo {
   private final SingularityContainerType type;
   private final Optional<List<SingularityVolume>> volumes;
@@ -36,27 +38,27 @@ public class SingularityContainerInfo {
     this.networkInfos = networkInfos;
   }
 
-  @ApiModelProperty(required=true, value="Container type, can be MESOS or DOCKER. Default is MESOS")
+  @Schema(required = true, description = "Container type, can be MESOS or DOCKER. Default is MESOS")
   public SingularityContainerType getType() {
     return type;
   }
 
-  @ApiModelProperty(required=false, value="List of volumes to mount. Applicable only to DOCKER container type")
+  @Schema(description = "List of volumes to mount. Applicable only to DOCKER container type")
   public Optional<List<SingularityVolume>> getVolumes() {
     return volumes;
   }
 
-  @ApiModelProperty(required=false, value="Information specific to docker runtime settings")
+  @Schema(description = "Information specific to docker runtime settings")
   public Optional<SingularityDockerInfo> getDocker() {
     return docker;
   }
 
-  @ApiModelProperty(required=false, value="Information specific to Mesos container type")
+  @Schema(description = "Information specific to Mesos container type")
   public Optional<SingularityMesosInfo> getMesos() {
     return mesos;
   }
 
-  @ApiModelProperty(required=false, value="Mesos container network configuration")
+  @Schema(description = "Mesos container network configuration")
   public Optional<List<SingularityNetworkInfo>> getNetworkInfos() {
     return networkInfos;
   }

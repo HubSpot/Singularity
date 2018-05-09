@@ -6,6 +6,9 @@ import com.codahale.metrics.Metric;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
+@Schema(title = "A container for metrics")
 public class SingularityMetricsContainer {
   private final Map<String, Metric> metrics;
 
@@ -14,6 +17,7 @@ public class SingularityMetricsContainer {
     this.metrics = metrics;
   }
 
+  @Schema(title = "A map of metric name to metric content")
   public Map<String, Metric> getMetrics() {
     return metrics;
   }

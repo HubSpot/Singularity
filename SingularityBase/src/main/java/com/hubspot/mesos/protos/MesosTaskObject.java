@@ -12,11 +12,14 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
 /*
  * Mimics the TaskInfo object from mesos, with the addition that we can read
  * AgentID from either a field named slaveId or a field named agentId for
  * better backwards compatibility
  */
+@Schema(description = "The mesos protos representation of a task")
 public class MesosTaskObject {
   private final MesosStringValue taskId;
   private final Optional<MesosExecutorInfo> executor;

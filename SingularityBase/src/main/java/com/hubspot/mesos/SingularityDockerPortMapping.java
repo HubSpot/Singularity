@@ -5,8 +5,10 @@ import java.util.Objects;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
-import com.wordnik.swagger.annotations.ApiModelProperty;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
+@Schema(description = "Describes a docker port mapping")
 public class SingularityDockerPortMapping {
   public static final String DEFAULT_PROTOCOL = "tcp";
   public static final SingularityPortMappingType DEFAULT_PORT_MAPPING_TYPE = SingularityPortMappingType.LITERAL;
@@ -30,27 +32,27 @@ public class SingularityDockerPortMapping {
     this.protocol = protocol.or(DEFAULT_PROTOCOL);
   }
 
-  @ApiModelProperty(required=false, value="Container port. Use the port number provided (LITERAL) or the dynamically allocated port at this index (FROM_OFFER)")
+  @Schema(description = "Container port. Use the port number provided (LITERAL) or the dynamically allocated port at this index (FROM_OFFER)")
   public SingularityPortMappingType getContainerPortType() {
     return containerPortType;
   }
 
-  @ApiModelProperty(required=true, value="Port number, or index of port from offer within the container")
+  @Schema(required = true, description = "Port number, or index of port from offer within the container")
   public int getContainerPort() {
     return containerPort;
   }
 
-  @ApiModelProperty(required=false, value="Host port. Use the port number provided (LITERAL) or the dynamically allocated port at this index (FROM_OFFER)")
+  @Schema(description = "Host port. Use the port number provided (LITERAL) or the dynamically allocated port at this index (FROM_OFFER)")
   public SingularityPortMappingType getHostPortType() {
     return hostPortType;
   }
 
-  @ApiModelProperty(required=true, value="Port number, or index of port from offer on the host")
+  @Schema(required = true, description = "Port number, or index of port from offer on the host")
   public int getHostPort() {
     return hostPort;
   }
 
-  @ApiModelProperty(required=false, value="Protocol for binding the port. Default is tcp")
+  @Schema(description = "Protocol for binding the port. Default is tcp")
   public String getProtocol() {
     return protocol;
   }

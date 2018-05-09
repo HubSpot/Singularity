@@ -22,11 +22,17 @@ import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.history.SingularityHistoryPurger;
 import com.hubspot.singularity.mesos.SingularityMesosScheduler;
 import com.hubspot.singularity.scheduler.SingularityTaskReconciliation;
-import com.wordnik.swagger.annotations.Api;
-import com.wordnik.swagger.annotations.ApiOperation;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.tags.Tags;
 
 @Path(ApiPaths.TEST_RESOURCE_PATH)
-@Api(description="Misc testing endpoints.", value=ApiPaths.TEST_RESOURCE_PATH)
+@Schema(title = "Misc testing endpoints")
+@Tags({@Tag(name = "Test")})
 public class TestResource {
   private final SingularityAbort abort;
   private final SingularityLeaderController managed;
@@ -47,7 +53,12 @@ public class TestResource {
 
   @POST
   @Path("/scheduler/statusUpdate/{taskId}/{taskState}")
-  @ApiOperation("Force an update for a specific task.")
+  @Operation(
+      summary = "Force an update for a specific task",
+      responses = {
+          @ApiResponse(responseCode = "403", description = "Test resource calls are currently not enabled, set `allowTestResourceCalls` to `true` in config yaml to enable")
+      }
+  )
   public void statusUpdate(@PathParam("taskId") String taskId, @PathParam("taskState") String taskState) {
     checkForbidden(configuration.isAllowTestResourceCalls(), "Test resource calls are disabled (set isAllowTestResourceCalls to true in configuration)");
 
@@ -59,7 +70,12 @@ public class TestResource {
 
   @POST
   @Path("/leader")
-  @ApiOperation("Make this instance of Singularity believe it's elected leader.")
+  @Operation(
+      summary = "Make this instance of Singularity believe it's elected leader",
+      responses = {
+          @ApiResponse(responseCode = "403", description = "Test resource calls are currently not enabled, set `allowTestResourceCalls` to `true` in config yaml to enable")
+      }
+  )
   public void setLeader() {
     checkForbidden(configuration.isAllowTestResourceCalls(), "Test resource calls are disabled (set isAllowTestResourceCalls to true in configuration)");
 
@@ -68,7 +84,12 @@ public class TestResource {
 
   @POST
   @Path("/notleader")
-  @ApiOperation("Make this instanceo of Singularity believe it's lost leadership.")
+  @Operation(
+      summary = "Make this instanceo of Singularity believe it's lost leadership",
+      responses = {
+          @ApiResponse(responseCode = "403", description = "Test resource calls are currently not enabled, set `allowTestResourceCalls` to `true` in config yaml to enable")
+      }
+  )
   public void setNotLeader() {
     checkForbidden(configuration.isAllowTestResourceCalls(), "Test resource calls are disabled (set isAllowTestResourceCalls to true in configuration)");
 
@@ -77,7 +98,12 @@ public class TestResource {
 
   @POST
   @Path("/stop")
-  @ApiOperation("Stop the Mesos scheduler driver.")
+  @Operation(
+      summary = "Stop the Mesos scheduler subscriber",
+      responses = {
+          @ApiResponse(responseCode = "403", description = "Test resource calls are currently not enabled, set `allowTestResourceCalls` to `true` in config yaml to enable")
+      }
+  )
   public void stop() throws Exception {
     checkForbidden(configuration.isAllowTestResourceCalls(), "Test resource calls are disabled (set isAllowTestResourceCalls to true in configuration)");
 
@@ -86,7 +112,12 @@ public class TestResource {
 
   @POST
   @Path("/abort")
-  @ApiOperation("Abort the Mesos scheduler driver.")
+  @Operation(
+      summary = "Abort the Mesos scheduler",
+      responses = {
+          @ApiResponse(responseCode = "403", description = "Test resource calls are currently not enabled, set `allowTestResourceCalls` to `true` in config yaml to enable")
+      }
+  )
   public void abort() {
     checkForbidden(configuration.isAllowTestResourceCalls(), "Test resource calls are disabled (set isAllowTestResourceCalls to true in configuration)");
 
@@ -95,7 +126,12 @@ public class TestResource {
 
   @POST
   @Path("/start")
-  @ApiOperation("Start the Mesos scheduler driver.")
+  @Operation(
+      summary = "Start the Mesos scheduler driver",
+      responses = {
+          @ApiResponse(responseCode = "403", description = "Test resource calls are currently not enabled, set `allowTestResourceCalls` to `true` in config yaml to enable")
+      }
+  )
   public void start() throws Exception {
     checkForbidden(configuration.isAllowTestResourceCalls(), "Test resource calls are disabled (set isAllowTestResourceCalls to true in configuration)");
 
@@ -104,14 +140,25 @@ public class TestResource {
 
   @POST
   @Path("/exception")
-  @ApiOperation("Trigger an exception.")
-  public void throwException(@QueryParam("message") @DefaultValue("test exception") String message) {
+  @Operation(
+      summary = "Trigger an exception",
+      responses = {
+          @ApiResponse(responseCode = "403", description = "Test resource calls are currently not enabled, set `allowTestResourceCalls` to `true` in config yaml to enable")
+      }
+  )
+  public void throwException(
+      @Parameter(description = "Exception message") @QueryParam("message") @DefaultValue("test exception") String message) {
     throw new RuntimeException(message);
   }
 
   @POST
   @Path("/reconcile")
-  @ApiOperation("Start task reconciliation")
+  @Operation(
+      summary = "Start task reconciliation",
+      responses = {
+          @ApiResponse(responseCode = "403", description = "Test resource calls are currently not enabled, set `allowTestResourceCalls` to `true` in config yaml to enable")
+      }
+  )
   public void startTaskReconciliation() throws Exception {
     checkForbidden(configuration.isAllowTestResourceCalls(), "Test resource calls are disabled (set isAllowTestResourceCalls to true in configuration)");
     taskReconciliation.startReconciliation();
@@ -119,7 +166,12 @@ public class TestResource {
 
   @POST
   @Path("/purge-history")
-  @ApiOperation("Run history purge")
+  @Operation(
+      summary = "Run a history purge",
+      responses = {
+          @ApiResponse(responseCode = "403", description = "Test resource calls are currently not enabled, set `allowTestResourceCalls` to `true` in config yaml to enable")
+      }
+  )
   public void runHistoryPurge() throws Exception {
     checkForbidden(configuration.isAllowTestResourceCalls(), "Test resource calls are disabled (set isAllowTestResourceCalls to true in configuration)");
     historyPurger.runActionOnPoll();

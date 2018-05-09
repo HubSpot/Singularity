@@ -5,6 +5,15 @@ import java.util.Objects;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.base.Optional;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
+@Schema(
+    title = "Describes a slave or rack",
+    subTypes = {
+        SingularitySlave.class,
+        SingularityRack.class
+    }
+)
 public abstract class SingularityMachineAbstraction<T extends SingularityMachineAbstraction<T>> {
 
   private final String id;
@@ -21,6 +30,7 @@ public abstract class SingularityMachineAbstraction<T extends SingularityMachine
     this.firstSeenAt = firstSeenAt;
   }
 
+  @Schema(description = "The machine id")
   public String getId() {
     return id;
   }
@@ -59,10 +69,12 @@ public abstract class SingularityMachineAbstraction<T extends SingularityMachine
     return true;
   }
 
+  @Schema(description = "Timestamp of the first time this machine was seen")
   public long getFirstSeenAt() {
     return firstSeenAt;
   }
 
+  @Schema(description = "The current state of this machine")
   public SingularityMachineStateHistoryUpdate getCurrentState() {
     return currentState;
   }

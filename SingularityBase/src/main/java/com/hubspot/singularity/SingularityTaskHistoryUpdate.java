@@ -2,8 +2,8 @@ package com.hubspot.singularity;
 
 import java.util.Collections;
 import java.util.HashSet;
-import java.util.Set;
 import java.util.Objects;
+import java.util.Set;
 
 import javax.annotation.Nonnull;
 
@@ -14,6 +14,9 @@ import com.google.common.base.Predicate;
 import com.google.common.collect.ComparisonChain;
 import com.google.common.collect.Iterables;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
+@Schema(description = "Describes an update to the state of a task")
 public class SingularityTaskHistoryUpdate extends SingularityTaskIdHolder implements Comparable<SingularityTaskHistoryUpdate> {
 
   private final long timestamp;
@@ -22,6 +25,7 @@ public class SingularityTaskHistoryUpdate extends SingularityTaskIdHolder implem
   private final Optional<String> statusReason;
   private final Set<SingularityTaskHistoryUpdate> previous;
 
+  @Schema
   public enum SimplifiedTaskState {
     UNKNOWN, WAITING, RUNNING, DONE
   }
@@ -124,22 +128,28 @@ public class SingularityTaskHistoryUpdate extends SingularityTaskIdHolder implem
     return Objects.hash(timestamp, taskState, statusMessage, statusReason);
   }
 
+  @Schema(description = "The time at which this state update occured")
   public long getTimestamp() {
     return timestamp;
   }
 
+  @Schema(description = "The new state of the task")
   public ExtendedTaskState getTaskState() {
     return taskState;
   }
 
+  @Schema(description = "An optional message describing update", nullable = true)
   public Optional<String> getStatusMessage() {
     return statusMessage;
   }
 
+  @Schema(description = "An optional message describing the reason for the update", nullable = true)
   public Optional<String> getStatusReason() {
     return statusReason;
   }
 
+  // Swagger can't seem to handle the self reference here
+  // @Schema(description = "A list of task history updates of the same state. For example, multiple cleanups can be created for the same task")
   public Set<SingularityTaskHistoryUpdate> getPrevious() {
     return previous;
   }

@@ -3,6 +3,9 @@ package com.hubspot.singularity;
 import com.google.common.base.Optional;
 import com.hubspot.mesos.protos.MesosTaskState;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
+@Schema
 public enum ExtendedTaskState {
 
   TASK_LAUNCHED("launched", false, Optional.absent()), TASK_STAGING("staging", false, Optional.of(MesosTaskState.TASK_STAGING)),

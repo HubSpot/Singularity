@@ -4,8 +4,10 @@ import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
-import com.wordnik.swagger.annotations.ApiModelProperty;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
+@Schema(description = "Describes a command to run against an active task")
 public class SingularityShellCommand {
 
   private final String name;
@@ -20,22 +22,22 @@ public class SingularityShellCommand {
     this.logfileName = logfileName;
   }
 
-  @ApiModelProperty(required=false, value="User who requested the shell command")
+  @Schema(description = "User who requested the shell command")
   public Optional<String> getUser() {
     return user;
   }
 
-  @ApiModelProperty(required=true, value="Name of the shell command to run")
+  @Schema(required=true, title = "Name of the shell command to run")
   public String getName() {
     return name;
   }
 
-  @ApiModelProperty(required=false, value="Additional options related to the shell command")
+  @Schema(description = "Additional options related to the shell command")
   public Optional<List<String>> getOptions() {
     return options;
   }
 
-  @ApiModelProperty(required=false, value="File name for shell command output")
+  @Schema(description = "File name for shell command output")
   public Optional<String> getLogfileName() {
     return logfileName;
   }

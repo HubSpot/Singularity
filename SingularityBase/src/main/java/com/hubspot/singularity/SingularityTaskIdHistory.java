@@ -9,6 +9,9 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
 import com.google.common.collect.ComparisonChain;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
+@Schema(description = "A task id and latest state for a task")
 public class SingularityTaskIdHistory implements Comparable<SingularityTaskIdHistory> {
 
   private final SingularityTaskId taskId;
@@ -46,18 +49,22 @@ public class SingularityTaskIdHistory implements Comparable<SingularityTaskIdHis
       .result();
   }
 
+  @Schema(description = "Task id")
   public SingularityTaskId getTaskId() {
     return taskId;
   }
 
+  @Schema(description = "The latest state of the task", nullable = true)
   public Optional<ExtendedTaskState> getLastTaskState() {
     return lastTaskState;
   }
 
+  @Schema(description = "The timestamp of the latest update for the task")
   public long getUpdatedAt() {
     return updatedAt;
   }
 
+  @Schema(description = "A runId associated with this task", nullable = true)
   public Optional<String> getRunId() {
     return runId;
   }

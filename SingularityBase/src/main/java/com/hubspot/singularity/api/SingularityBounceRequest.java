@@ -6,8 +6,10 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
 import com.hubspot.singularity.SingularityShellCommand;
-import com.wordnik.swagger.annotations.ApiModelProperty;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
+@Schema(description = "Settings for how a bounce will behave")
 public class SingularityBounceRequest extends SingularityExpiringRequestParent {
 
   private final Optional<Boolean> incremental;
@@ -38,17 +40,17 @@ public class SingularityBounceRequest extends SingularityExpiringRequestParent {
         .setRunShellCommandBeforeKill(getRunShellCommandBeforeKill());
   }
 
-  @ApiModelProperty(required=false, value="If present and set to true, old tasks will be killed as soon as replacement tasks are available, instead of waiting for all replacement tasks to be healthy")
+  @Schema(description = "If present and set to true, old tasks will be killed as soon as replacement tasks are available, instead of waiting for all replacement tasks to be healthy")
   public Optional<Boolean> getIncremental() {
     return incremental;
   }
 
-  @ApiModelProperty(required=false, value="Instruct replacement tasks for this bounce only to skip healthchecks")
+  @Schema(description = "Instruct replacement tasks for this bounce only to skip healthchecks")
   public Optional<Boolean> getSkipHealthchecks() {
     return skipHealthchecks;
   }
 
-  @ApiModelProperty(required=false, value="Attempt to run this shell command on each task before it is shut down")
+  @Schema(description = "Attempt to run this shell command on each task before it is shut down")
   public Optional<SingularityShellCommand> getRunShellCommandBeforeKill() {
     return runShellCommandBeforeKill;
   }

@@ -47,6 +47,26 @@ Task webhooks are sent when tasks are launched by Singularity, killed with by Si
 
 Task webhooks are in the format of [SingularityTaskWebhook](https://github.com/HubSpot/Singularity/blob/master/SingularityBase/src/main/java/com/hubspot/singularity/SingularityTaskWebhook.java) objects.
 
+### Webhook placeholders
+
+Singularity supports placeholders in webhook URIs which will be replaced with their respective values before the URI is actually called.
+
+The following URI placeholder values are supported for each kind of webhook:
+- **Request**:
+  - `$REQUEST_ID`
+- **Deploy**:
+  - `$REQUEST_ID`
+  - `$DEPLOY_ID`
+- **Task**
+  - `$REQUEST_ID`
+  - `$DEPLOY_ID`
+  - `$TASK_ID`
+
+You could, for example, send along the relevant Request ID with a Task-level webhook by creating the following webhook URI in Singularity:
+```
+https://my-automation-service.net/webhooks/task?requestId=$REQUEST_ID
+```
+
 ### Webhook notes
 
 - Webhooks are only considered successful if the response code to the webhook is between 200 and 299 inclusive.
