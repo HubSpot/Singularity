@@ -58,3 +58,11 @@ export const FetchSlaveUsages = buildApiAction(
   'FETCH_SLAVE_USAGES',
   {url : '/usage/slaves'}
 );
+
+export const ClearInactiveSlaves = buildApiAction(
+  'FETCH_SLAVE_USAGES',
+  {
+    method: 'DELETE',
+    url : '/slaves/dead'
+  }
+);
