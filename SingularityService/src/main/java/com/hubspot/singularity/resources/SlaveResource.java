@@ -140,4 +140,10 @@ public class SlaveResource extends AbstractMachineResource<SingularitySlave> {
     return super.getExpiringStateChanges(user);
   }
 
+  @DELETE
+  @Path("/dead")
+  public void clearAllDeadSlaves(@Auth SingularityUser user) {
+    authorizationHelper.checkAdminAuthorization(user);
+    manager.getObjectsFiltered(MachineState.DEAD).forEach((s) -> manager.deleteObject(s.getId()));
+  }
 }
