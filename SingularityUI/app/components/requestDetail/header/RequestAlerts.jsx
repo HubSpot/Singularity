@@ -38,7 +38,10 @@ const RequestAlerts = ({requestId, requestAPI, bounces, activeTasksForRequest, d
   const { pendingDeploy, activeDeploy } = requestParent;
   if (pendingDeploy) {
     const deployingInstanceCount = Utils.request.deployingInstanceCount(requestParent, activeTasksForRequest.data);
-    const { instances } = requestParent.request;
+    let instances = equestParent.request.instances;
+    if (pendingDeploy.updatedRequest && pendingDeploy.updatedRequest.instances) {
+      instances = pendingDeploy.updatedRequest.instances
+    }
     const pendingDeployProgress = (
       <span>{`${deployingInstanceCount} of ${instances} new tasks are currently running`}</span>
     );
