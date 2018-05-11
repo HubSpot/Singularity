@@ -38,7 +38,7 @@ const RequestAlerts = ({requestId, requestAPI, bounces, activeTasksForRequest, d
   const { pendingDeploy, activeDeploy } = requestParent;
   if (pendingDeploy) {
     const deployingInstanceCount = Utils.request.deployingInstanceCount(requestParent, activeTasksForRequest.data);
-    let instances = equestParent.request.instances;
+    let instances = requestParent.request.instances;
     if (pendingDeploy.updatedRequest && pendingDeploy.updatedRequest.instances) {
       instances = pendingDeploy.updatedRequest.instances
     }
