@@ -22,6 +22,7 @@ import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import com.hubspot.deploy.HealthcheckOptions;
 import com.hubspot.singularity.ExtendedTaskState;
+import com.hubspot.singularity.HealthcheckMethod;
 import com.hubspot.singularity.HealthcheckProtocol;
 import com.hubspot.singularity.SingularityAbort;
 import com.hubspot.singularity.SingularityAction;
@@ -330,8 +331,18 @@ public class SingularityHealthchecker {
       return;
     }
 
-    final Integer timeoutSeconds = task.getTaskRequest().getDeploy().getHealthcheck().isPresent() ?
-      task.getTaskRequest().getDeploy().getHealthcheck().get().getResponseTimeoutSeconds().or(configuration.getHealthcheckTimeoutSeconds()) : configuration.getHealthcheckTimeoutSeconds();
+    final Integer timeoutSeconds;
+    final String method;
+
+    if (task.getTaskRequest().getDeploy().getHealthcheck().isPresent()) {
+      HealthcheckOptions options = task.getTaskRequest().getDeploy().getHealthcheck().get();
+
+      method = options.getMethod().or(HealthcheckMethod.GET).getMethod();
+      timeoutSeconds = options.getResponseTimeoutSeconds().or(configuration.getHealthcheckTimeoutSeconds());
+    } else {
+      timeoutSeconds = configuration.getHealthcheckTimeoutSeconds();
+      method = HealthcheckMethod.GET.getMethod();
+    }
 
     try {
       HealthcheckProtocol protocol = task.getTaskRequest().getDeploy().getHealthcheck().get().getProtocol().or(HealthcheckProtocol.HTTP);
@@ -349,7 +360,7 @@ public class SingularityHealthchecker {
             .build()
             .newCall(
                 new okhttp3.Request.Builder()
-                    .method("GET", null)
+                    .method(method, null)
                     .url(uri.get())
                     .build()
             ).enqueue(wrappedHttp2Handler(handler));
@@ -357,7 +368,7 @@ public class SingularityHealthchecker {
         PerRequestConfig prc = new PerRequestConfig();
         prc.setRequestTimeoutInMs((int) TimeUnit.SECONDS.toMillis(timeoutSeconds));
 
-        RequestBuilder builder = new RequestBuilder("GET");
+        RequestBuilder builder = new RequestBuilder(method);
         builder.setFollowRedirects(true);
         builder.setUrl(uri.get());
         builder.setPerRequestConfig(prc);
