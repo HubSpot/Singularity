@@ -9,6 +9,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
+import com.hubspot.singularity.HealthcheckMethod;
 import com.hubspot.singularity.HealthcheckProtocol;
 import com.wordnik.swagger.annotations.ApiModelProperty;
 
@@ -18,6 +19,7 @@ public class HealthcheckOptions {
   private final Optional<Integer> portIndex;
   private final Optional<Long> portNumber;
   private final Optional<HealthcheckProtocol> protocol;
+  private final Optional<HealthcheckMethod> method;
   private final Optional<Integer> startupTimeoutSeconds;
   private final Optional<Integer> startupDelaySeconds;
   private final Optional<Integer> startupIntervalSeconds;
@@ -27,14 +29,23 @@ public class HealthcheckOptions {
   private final Optional<List<Integer>> failureStatusCodes;
 
   @JsonCreator
-  public HealthcheckOptions(@JsonProperty("uri") String uri, @JsonProperty("portIndex") Optional<Integer> portIndex, @JsonProperty("portNumber") Optional<Long> portNumber, @JsonProperty("protocol") Optional<HealthcheckProtocol> protocol,
-    @JsonProperty("startupTimeoutSeconds") Optional<Integer> startupTimeoutSeconds, @JsonProperty("startupDelaySeconds") Optional<Integer> startupDelaySeconds, @JsonProperty("startupIntervalSeconds") Optional<Integer> startupIntervalSeconds,
-    @JsonProperty("intervalSeconds") Optional<Integer> intervalSeconds, @JsonProperty("responseTimeoutSeconds") Optional<Integer> responseTimeoutSeconds, @JsonProperty("maxRetries") Optional<Integer> maxRetries,
-    @JsonProperty("failureStatusCodes") Optional<List<Integer>> failureStatusCodes) {
+  public HealthcheckOptions(@JsonProperty("uri") String uri,
+                            @JsonProperty("portIndex") Optional<Integer> portIndex,
+                            @JsonProperty("portNumber") Optional<Long> portNumber,
+                            @JsonProperty("protocol") Optional<HealthcheckProtocol> protocol,
+                            @JsonProperty("method") Optional<HealthcheckMethod> method,
+                            @JsonProperty("startupTimeoutSeconds") Optional<Integer> startupTimeoutSeconds,
+                            @JsonProperty("startupDelaySeconds") Optional<Integer> startupDelaySeconds,
+                            @JsonProperty("startupIntervalSeconds") Optional<Integer> startupIntervalSeconds,
+                            @JsonProperty("intervalSeconds") Optional<Integer> intervalSeconds,
+                            @JsonProperty("responseTimeoutSeconds") Optional<Integer> responseTimeoutSeconds,
+                            @JsonProperty("maxRetries") Optional<Integer> maxRetries,
+                            @JsonProperty("failureStatusCodes") Optional<List<Integer>> failureStatusCodes) {
     this.uri = uri;
     this.portIndex = portIndex;
     this.portNumber = portNumber;
     this.protocol = protocol;
+    this.method = method;
     this.startupTimeoutSeconds = startupTimeoutSeconds;
     this.startupDelaySeconds = startupDelaySeconds;
     this.startupIntervalSeconds = startupIntervalSeconds;
@@ -50,6 +61,7 @@ public class HealthcheckOptions {
       .setPortIndex(portIndex)
       .setPortNumber(portNumber)
       .setProtocol(protocol)
+      .setMethod(method)
       .setStartupTimeoutSeconds(startupTimeoutSeconds)
       .setStartupDelaySeconds(startupDelaySeconds)
       .setStartupIntervalSeconds(startupIntervalSeconds)
@@ -77,6 +89,11 @@ public class HealthcheckOptions {
   @ApiModelProperty(required=false, value="Healthcheck protocol - HTTP or HTTPS for HTTP/1, HTTP2 or HTTPS2 for HTTP/2")
   public Optional<HealthcheckProtocol> getProtocol() {
     return protocol;
+  }
+
+  @ApiModelProperty(required=false, value="Healthcheck HTTP method - GET or POST, GET by default")
+  public Optional<HealthcheckMethod> getMethod() {
+    return method;
   }
 
   @ApiModelProperty(required=false, value="Consider the task unhealthy/failed if the app has not started responding to healthchecks in this amount of time")
@@ -138,7 +155,7 @@ public class HealthcheckOptions {
 
   @Override
   public int hashCode() {
-    return Objects.hash(uri, portIndex, portNumber, protocol, startupTimeoutSeconds, startupDelaySeconds, startupIntervalSeconds, intervalSeconds, responseTimeoutSeconds, maxRetries, failureStatusCodes);
+    return Objects.hash(uri, portIndex, portNumber, protocol, method, startupTimeoutSeconds, startupDelaySeconds, startupIntervalSeconds, intervalSeconds, responseTimeoutSeconds, maxRetries, failureStatusCodes);
   }
 
   @Override
@@ -148,6 +165,7 @@ public class HealthcheckOptions {
         ", portIndex=" + portIndex +
         ", portNumber=" + portNumber +
         ", protocol=" + protocol +
+        ", method=" + method +
         ", startupTimeoutSeconds=" + startupTimeoutSeconds +
         ", startupDelaySeconds=" + startupDelaySeconds +
         ", startupIntervalSeconds=" + startupIntervalSeconds +
