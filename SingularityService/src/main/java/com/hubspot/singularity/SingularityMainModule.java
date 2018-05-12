@@ -158,7 +158,7 @@ public class SingularityMainModule implements Module {
     binder.bind(MetricRegistry.class).toProvider(DropwizardMetricRegistryProvider.class).in(Scopes.SINGLETON);
 
     binder.bind(AsyncHttpClient.class).to(SingularityAsyncHttpClient.class).in(Scopes.SINGLETON);
-    binder.bind(OkHttpClient.class).in(Scopes.SINGLETON);
+    binder.bind(OkHttpClient.class).to(SingularityOkHttpClient.class).in(Scopes.SINGLETON);
     binder.bind(ServerProvider.class).in(Scopes.SINGLETON);
 
     binder.bind(SingularityDropwizardHealthcheck.class).in(Scopes.SINGLETON);
