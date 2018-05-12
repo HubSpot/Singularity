@@ -339,12 +339,20 @@ public class SingularityHealthchecker {
       LOG.trace("Issuing a healthcheck ({}) for task {} with timeout {}s", uri.get(), task.getTaskId(), timeoutSeconds);
 
       if (protocol == HealthcheckProtocol.HTTP2 || protocol == HealthcheckProtocol.HTTPS2) {
-        http2.newCall(
-            new okhttp3.Request.Builder()
-                .method("GET", null)
-                .url(uri.get())
-                .build()
-        ).enqueue(wrappedHttp2Handler(handler));
+        // Creates a lightweight new client which shares the underlying resource pools of the original instance.
+        http2.newBuilder()
+            .retryOnConnectionFailure(false)
+            .followRedirects(true)
+            .connectTimeout(timeoutSeconds, TimeUnit.SECONDS)
+            .readTimeout(timeoutSeconds, TimeUnit.SECONDS)
+            .cache(null)
+            .build()
+            .newCall(
+                new okhttp3.Request.Builder()
+                    .method("GET", null)
+                    .url(uri.get())
+                    .build()
+            ).enqueue(wrappedHttp2Handler(handler));
       } else {
         PerRequestConfig prc = new PerRequestConfig();
         prc.setRequestTimeoutInMs((int) TimeUnit.SECONDS.toMillis(timeoutSeconds));
