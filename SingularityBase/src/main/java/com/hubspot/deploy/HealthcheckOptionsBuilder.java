@@ -6,6 +6,7 @@ import java.util.Objects;
 import javax.validation.constraints.NotNull;
 
 import com.google.common.base.Optional;
+import com.hubspot.singularity.HealthcheckMethod;
 import com.hubspot.singularity.HealthcheckProtocol;
 
 public class HealthcheckOptionsBuilder {
@@ -14,6 +15,7 @@ public class HealthcheckOptionsBuilder {
   private Optional<Integer> portIndex;
   private Optional<Long> portNumber;
   private Optional<HealthcheckProtocol> protocol;
+  private Optional<HealthcheckMethod> method;
   private Optional<Integer> startupTimeoutSeconds;
   private Optional<Integer> startupDelaySeconds;
   private Optional<Integer> startupIntervalSeconds;
@@ -27,6 +29,7 @@ public class HealthcheckOptionsBuilder {
     this.portIndex = Optional.absent();
     this.portNumber = Optional.absent();
     this.protocol = Optional.absent();
+    this.method = Optional.absent();
     this.startupTimeoutSeconds = Optional.absent();
     this.startupDelaySeconds = Optional.absent();
     this.startupIntervalSeconds = Optional.absent();
@@ -69,6 +72,15 @@ public class HealthcheckOptionsBuilder {
 
   public HealthcheckOptionsBuilder setProtocol(Optional<HealthcheckProtocol> protocol) {
     this.protocol = protocol;
+    return this;
+  }
+
+  public Optional<HealthcheckMethod> getMethod() {
+    return method;
+  }
+
+  public HealthcheckOptionsBuilder setMethod(Optional<HealthcheckMethod> method) {
+    this.method = method;
     return this;
   }
 
@@ -136,7 +148,7 @@ public class HealthcheckOptionsBuilder {
   }
 
   public HealthcheckOptions build() {
-    return new HealthcheckOptions(uri, portIndex, portNumber, protocol, startupTimeoutSeconds, startupDelaySeconds, startupIntervalSeconds, intervalSeconds, responseTimeoutSeconds, maxRetries, failureStatusCodes);
+    return new HealthcheckOptions(uri, portIndex, portNumber, protocol, method, startupTimeoutSeconds, startupDelaySeconds, startupIntervalSeconds, intervalSeconds, responseTimeoutSeconds, maxRetries, failureStatusCodes);
   }
 
   @Override
@@ -163,7 +175,7 @@ public class HealthcheckOptionsBuilder {
 
   @Override
   public int hashCode() {
-    return Objects.hash(uri, portIndex, portNumber, protocol, startupTimeoutSeconds, startupDelaySeconds, startupIntervalSeconds, intervalSeconds, responseTimeoutSeconds, maxRetries, failureStatusCodes);
+    return Objects.hash(uri, portIndex, portNumber, protocol, method, startupTimeoutSeconds, startupDelaySeconds, startupIntervalSeconds, intervalSeconds, responseTimeoutSeconds, maxRetries, failureStatusCodes);
   }
 
   @Override
@@ -173,6 +185,7 @@ public class HealthcheckOptionsBuilder {
         ", portIndex=" + portIndex +
         ", portNumber=" + portNumber +
         ", protocol=" + protocol +
+        ", method=" + method +
         ", startupTimeoutSeconds=" + startupTimeoutSeconds +
         ", startupDelaySeconds=" + startupDelaySeconds +
         ", startupIntervalSeconds=" + startupIntervalSeconds +
