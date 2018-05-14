@@ -144,6 +144,7 @@ public class HealthcheckOptions {
         Objects.equals(portIndex, that.portIndex) &&
         Objects.equals(portNumber, that.portNumber) &&
         Objects.equals(protocol, that.protocol) &&
+        Objects.equals(method, that.method) &&
         Objects.equals(startupTimeoutSeconds, that.startupTimeoutSeconds) &&
         Objects.equals(startupDelaySeconds, that.startupDelaySeconds) &&
         Objects.equals(startupIntervalSeconds, that.startupIntervalSeconds) &&
