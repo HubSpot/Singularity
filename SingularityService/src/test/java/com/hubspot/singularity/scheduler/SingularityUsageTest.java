@@ -500,7 +500,7 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
       initFirstDeployWithResources(configuration.getMesosConfiguration().getDefaultCpus(), configuration.getMesosConfiguration().getDefaultMemory());
       saveAndSchedule(requestManager.getRequest(requestId).get().getRequest().toBuilder().setInstances(Optional.of(3)));
       resourceOffers(1);
-      SingularitySlaveUsage highUsage = new SingularitySlaveUsage(15, 10, Optional.of(10.0), 1, 1, Optional.of(30L), 1, 1, Optional.of(1024L), Collections.emptyMap(), 1, System.currentTimeMillis(), 1, 30000, 10, 15, 15, 15, 0, 107374182);
+      SingularitySlaveUsage highUsage = new SingularitySlaveUsage(15, 10, Optional.of(10.0), 1, 1, Optional.of(30L), 1, 1, Optional.of(1024L), 1, System.currentTimeMillis(), 1, 30000, 10, 15, 15, 15, 0, 107374182);
       usageManager.saveSpecificSlaveUsageAndSetCurrent("host1", highUsage);
 
       SingularityTaskId taskId1 = taskManager.getActiveTaskIds().get(0);
@@ -551,7 +551,7 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
       initFirstDeployWithResources(configuration.getMesosConfiguration().getDefaultCpus(), configuration.getMesosConfiguration().getDefaultMemory());
       saveAndSchedule(requestManager.getRequest(requestId).get().getRequest().toBuilder().setInstances(Optional.of(3)));
       resourceOffers(1);
-      SingularitySlaveUsage highUsage = new SingularitySlaveUsage(15, 10, Optional.of(10.0), 1, 1, Optional.of(30L), 1, 1, Optional.of(1024L), Collections.emptyMap(), 1, System.currentTimeMillis(), 1, 30000, 10, 15, 15, 15, 0, 107374182);
+      SingularitySlaveUsage highUsage = new SingularitySlaveUsage(15, 10, Optional.of(10.0), 1, 1, Optional.of(30L), 1, 1, Optional.of(1024L), 1, System.currentTimeMillis(), 1, 30000, 10, 15, 15, 15, 0, 107374182);
       usageManager.saveSpecificSlaveUsageAndSetCurrent("host1", highUsage);
 
       SingularityTaskId taskId1 = taskManager.getActiveTaskIds().get(0);
@@ -597,7 +597,7 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
       initFirstDeployWithResources(configuration.getMesosConfiguration().getDefaultCpus(), configuration.getMesosConfiguration().getDefaultMemory());
       saveAndSchedule(requestManager.getRequest(requestId).get().getRequest().toBuilder().setInstances(Optional.of(3)));
       resourceOffers(1);
-      SingularitySlaveUsage highUsage = new SingularitySlaveUsage(15, 10, Optional.of(10.0), 1, 1, Optional.of(30L), 1, 1, Optional.of(1024L), Collections.emptyMap(), 1, System.currentTimeMillis(), 1, 30000, 10, 15, 15, 15, 0, 107374182);
+      SingularitySlaveUsage highUsage = new SingularitySlaveUsage(15, 10, Optional.of(10.0), 1, 1, Optional.of(30L), 1, 1, Optional.of(1024L), 1, System.currentTimeMillis(), 1, 30000, 10, 15, 15, 15, 0, 107374182);
       usageManager.saveSpecificSlaveUsageAndSetCurrent("host1", highUsage);
 
       SingularityTaskId taskId1 = taskManager.getActiveTaskIds().get(0);

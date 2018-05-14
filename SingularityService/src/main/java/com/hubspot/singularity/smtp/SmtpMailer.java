@@ -72,6 +72,7 @@ public class SmtpMailer implements SingularityMailer, Managed {
   private final JadeTemplate requestModifiedTemplate;
   private final JadeTemplate rateLimitedTemplate;
   private final JadeTemplate disastersTemplate;
+  private final JadeTemplate replacementTasksFailingTemplate;
 
   private final MetadataManager metadataManager;
 
@@ -95,7 +96,8 @@ public class SmtpMailer implements SingularityMailer, Managed {
       @Named(SingularityMainModule.REQUEST_IN_COOLDOWN_TEMPLATE) JadeTemplate requestInCooldownTemplate,
       @Named(SingularityMainModule.REQUEST_MODIFIED_TEMPLATE) JadeTemplate requestModifiedTemplate,
       @Named(SingularityMainModule.RATE_LIMITED_TEMPLATE) JadeTemplate rateLimitedTemplate,
-      @Named(SingularityMainModule.DISASTERS_TEMPLATE) JadeTemplate disastersTemplate) {
+      @Named(SingularityMainModule.DISASTERS_TEMPLATE) JadeTemplate disastersTemplate,
+      @Named(SingularityMainModule.REPLACEMENT_TASKS_FAILING_TEMPLATE) JadeTemplate replacementTasksFailingTemplate) {
 
     this.smtpSender = smtpSender;
     this.smtpConfiguration = configuration.getSmtpConfigurationOptional().get();
@@ -112,6 +114,7 @@ public class SmtpMailer implements SingularityMailer, Managed {
     this.requestInCooldownTemplate = requestInCooldownTemplate;
     this.rateLimitedTemplate = rateLimitedTemplate;
     this.disastersTemplate = disastersTemplate;
+    this.replacementTasksFailingTemplate = replacementTasksFailingTemplate;
     this.disasterManager = disasterManager;
 
     this.mailPreparerExecutorService = JavaUtils.newFixedTimingOutThreadPool(smtpConfiguration.getMailMaxThreads(), TimeUnit.SECONDS.toMillis(1), "SingularityMailPreparer-%d");
@@ -485,6 +488,42 @@ public class SmtpMailer implements SingularityMailer, Managed {
   @Override
   public void sendRequestRemovedMail(SingularityRequest request, Optional<String> user, Optional<String> message) {
     sendRequestMail(request, RequestMailType.REMOVED, user, message, Optional.<Map<String, Object>> absent());
+  }
+
+  @Override
+  public void sendReplacementTasksFailingMail(final SingularityRequest request) {
+    mailPreparerExecutorService.submit(new Runnable() {
+
+      @Override
+      public void run() {
+        try {
+          prepareReplacementTaskFailedMail(request);
+        } catch (Throwable t) {
+          LOG.error("While preparing replacement task failed mail for {}", request);
+          exceptionNotifier.notify(String.format("Error preparing replacement task failed mail (%s)", t.getMessage()), t, ImmutableMap.of("requestId", request.getId()));
+        }
+      }
+    });
+  }
+
+  private void prepareReplacementTaskFailedMail(SingularityRequest request) {
+    final List<SingularityEmailDestination> emailDestination = getDestination(request, SingularityEmailType.REPLACEMENT_TASKS_FAILING);
+
+    if (emailDestination.isEmpty()) {
+      LOG.debug("Not configured to send replacement tasks failing email for {}", request);
+      return;
+    }
+
+    final Map<String, Object> templateProperties = Maps.newHashMap();
+    populateRequestEmailProperties(templateProperties, request, SingularityEmailType.REPLACEMENT_TASKS_FAILING);
+
+    final String subject = String.format("Replacement tasks for request %s are unhealthy — Singularity", request.getId());
+
+    templateProperties.put("numFailures", configuration.getCooldownAfterFailures());
+
+    final String body = Jade4J.render(replacementTasksFailingTemplate, templateProperties);
+
+    queueMail(emailDestination, request, SingularityEmailType.REPLACEMENT_TASKS_FAILING, Optional.<String> absent(), subject, body);
   }
 
   @Override

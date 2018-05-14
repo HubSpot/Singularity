@@ -2,7 +2,6 @@ package com.hubspot.singularity.scheduler;
 
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -34,13 +33,11 @@ import com.hubspot.singularity.RequestUtilization;
 import com.hubspot.singularity.SingularityClusterUtilization;
 import com.hubspot.singularity.SingularityDeleteResult;
 import com.hubspot.singularity.SingularityDeploy;
-import com.hubspot.singularity.SingularityDeployStatistics;
 import com.hubspot.singularity.SingularityPendingRequest;
 import com.hubspot.singularity.SingularityPendingRequest.PendingType;
 import com.hubspot.singularity.SingularityRequestWithState;
 import com.hubspot.singularity.SingularitySlave;
 import com.hubspot.singularity.SingularitySlaveUsage;
-import com.hubspot.singularity.SingularitySlaveUsage.ResourceUsageType;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskCleanup;
 import com.hubspot.singularity.SingularityTaskCurrentUsage;
@@ -159,11 +156,6 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
                                 AtomicDouble totalCpuAvailable,
                                 AtomicLong totalDiskBytesUsed,
                                 AtomicLong totalDiskBytesAvailable) {
-    Map<ResourceUsageType, Number> longRunningTasksUsage = new HashMap<>();
-    longRunningTasksUsage.put(ResourceUsageType.MEMORY_BYTES_USED, 0);
-    longRunningTasksUsage.put(ResourceUsageType.CPU_USED, 0);
-    longRunningTasksUsage.put(ResourceUsageType.DISK_BYTES_USED, 0);
-
     Optional<Long> memoryMbTotal = Optional.absent();
     Optional<Double> cpusTotal = Optional.absent();
     Optional<Long> diskMbTotal = Optional.absent();
@@ -258,9 +250,6 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
           if (maybeStartingUpdate.isPresent()) {
             long startTimestampSeconds = TimeUnit.MILLISECONDS.toSeconds(maybeStartingUpdate.get().getTimestamp());
             double usedCpusSinceStart = latestUsage.getCpuSeconds() / (latestUsage.getTimestamp() - startTimestampSeconds);
-            if (isLongRunning(task) || isConsideredLongRunning(task)) {
-              updateLongRunningTasksUsage(longRunningTasksUsage, latestUsage.getMemoryTotalBytes(), usedCpusSinceStart, latestUsage.getDiskTotalBytes());
-            }
             currentUsage = new SingularityTaskCurrentUsage(latestUsage.getMemoryTotalBytes(), now, usedCpusSinceStart, latestUsage.getDiskTotalBytes());
             usageManager.saveCurrentTaskUsage(taskId, currentUsage);
 
@@ -270,10 +259,6 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
           SingularityTaskUsage lastUsage = pastTaskUsages.get(pastTaskUsages.size() - 1);
 
           double taskCpusUsed = ((latestUsage.getCpuSeconds() - lastUsage.getCpuSeconds()) / (latestUsage.getTimestamp() - lastUsage.getTimestamp()));
-
-          if (isLongRunning(task) || isConsideredLongRunning(task)) {
-            updateLongRunningTasksUsage(longRunningTasksUsage, latestUsage.getMemoryTotalBytes(), taskCpusUsed, latestUsage.getDiskTotalBytes());
-          }
 
           currentUsage = new SingularityTaskCurrentUsage(latestUsage.getMemoryTotalBytes(), now, taskCpusUsed, latestUsage.getDiskTotalBytes());
           usageManager.saveCurrentTaskUsage(taskId, currentUsage);
@@ -305,7 +290,7 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
       }
 
       SingularitySlaveUsage slaveUsage = new SingularitySlaveUsage(cpusUsedOnSlave, cpuReservedOnSlave, cpusTotal, memoryBytesUsedOnSlave, memoryMbReservedOnSlave,
-          memoryMbTotal, diskMbUsedOnSlave, diskMbReservedOnSlave, diskMbTotal, longRunningTasksUsage, allTaskUsage.size(), now,
+          memoryMbTotal, diskMbUsedOnSlave, diskMbReservedOnSlave, diskMbTotal, allTaskUsage.size(), now,
           systemMemTotalBytes, systemMemFreeBytes, systemCpusTotal, systemLoad1Min, systemLoad5Min, systemLoad15Min, slaveDiskUsed, slaveDiskTotal);
 
       if (slaveOverloaded) {
@@ -393,7 +378,12 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
           break;
         }
         LOG.debug("Cleaning up task {} to free up cpu on overloaded host (remaining cpu overage: {})", taskIdWithUsage.getTaskId(), cpuOverage);
-        Optional<String> message = Optional.of(String.format("Load on slave is %s / %s, shuffling task to less busy host", systemLoad, overloadedSlave.getSystemCpusTotal()));
+        Optional<String> message = Optional.of(String.format(
+            "Load on slave is %s / %s, shuffling task using %s / %s to less busy host",
+            systemLoad,
+            overloadedSlave.getSystemCpusTotal(),
+            taskIdWithUsage.getUsage().getCpusUsed(),
+            taskIdWithUsage.getRequestedResources().getCpus()));
         taskManager.createTaskCleanup(
             new SingularityTaskCleanup(
                 Optional.absent(),
@@ -457,19 +447,6 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
 
     LOG.warn("Couldn't find request id {} for task {}", task.getRequestId(), task.getId());
     return false;
-  }
-
-  private boolean isConsideredLongRunning(SingularityTaskId task) {
-    final Optional<SingularityDeployStatistics> deployStatistics = deployManager.getDeployStatistics(task.getRequestId(), task.getDeployId());
-
-    return deployStatistics.isPresent() && deployStatistics.get().getAverageRuntimeMillis().isPresent() &&
-        deployStatistics.get().getAverageRuntimeMillis().get() >= configuration.getConsiderNonLongRunningTaskLongRunningAfterRunningForSeconds();
-  }
-
-  private void updateLongRunningTasksUsage(Map<ResourceUsageType, Number> longRunningTasksUsage, long memBytesUsed, double cpuUsed, long diskBytesUsed) {
-    longRunningTasksUsage.compute(ResourceUsageType.MEMORY_BYTES_USED, (k, v) -> (v == null) ? memBytesUsed : v.longValue() + memBytesUsed);
-    longRunningTasksUsage.compute(ResourceUsageType.CPU_USED, (k, v) -> (v == null) ? cpuUsed : v.doubleValue() + cpuUsed);
-    longRunningTasksUsage.compute(ResourceUsageType.DISK_BYTES_USED, (k, v) -> (v == null) ? diskBytesUsed : v.doubleValue() + diskBytesUsed);
   }
 
   private void updateRequestUtilization(Map<String, RequestUtilization> utilizationPerRequestId,
