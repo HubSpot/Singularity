@@ -756,10 +756,6 @@ public class SingularityScheduler {
       return false;
     }
 
-    if (task.isPresent() && task.get().getTaskRequest().getPendingTask().getPendingTaskId().getPendingType() == PendingType.IMMEDIATE) {
-      return false; // don't retry UI initiated run now
-    }
-
     final int numRetriesInARow = deployStatistics.getNumSequentialRetries();
 
     if (numRetriesInARow >= request.getNumRetriesOnFailure().get()) {
