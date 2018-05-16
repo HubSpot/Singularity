@@ -14,10 +14,10 @@
     {{/isDebug}}
 
     <script>
+        window.noZensmooth = true
         window.config = {
             staticRoot: "{{{staticRoot}}}",
             appRoot: "{{{appRoot}}}",
-            apiDocs: "{{{apiDocs}}}",
             apiRoot: localStorage.getItem("apiRootOverride") || "{{{apiRoot}}}",
             title: "{{{title}}}",
             hideNewDeployButton: {{{hideNewDeployButton}}},
@@ -58,6 +58,7 @@
     </script>
     <script src="{{{staticRoot}}}/js/vendor.bundle.js"></script>
     <script src="{{{staticRoot}}}/js/app.bundle.js"></script>
+    <link rel="stylesheet" type="text/css" href="//unpkg.com/swagger-ui-dist@3.13.4/swagger-ui.css">
     {{#extraScript}}
     {{{extraScript}}}
     {{/extraScript}}
@@ -71,5 +72,6 @@
     <div id="static-loader" class="page-loader fixed"></div>
     <div id="root"></div>
     <div style="-webkit-transform: translateZ(0)"></div>
+    <script src="//unpkg.com/swagger-ui-dist@3.13.4/swagger-ui-bundle.js"></script>
 </body>
 </html>

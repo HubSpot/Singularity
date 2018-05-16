@@ -11,20 +11,6 @@
   <artifactId>SingularityMesosClient</artifactId>
 
   <dependencies>
-    <dependency>
-      <groupId>com.hubspot</groupId>
-      <artifactId>SingularityBase</artifactId>
-    </dependency>
-
-    <dependency>
-      <groupId>com.google.inject</groupId>
-      <artifactId>guice</artifactId>
-    </dependency>
-
-    <dependency>
-      <groupId>org.slf4j</groupId>
-      <artifactId>slf4j-api</artifactId>
-    </dependency>
 
     <dependency>
       <groupId>com.fasterxml.jackson.core</groupId>
@@ -37,6 +23,11 @@
     </dependency>
 
     <dependency>
+      <groupId>com.google.inject</groupId>
+      <artifactId>guice</artifactId>
+    </dependency>
+
+    <dependency>
       <groupId>com.hubspot</groupId>
       <artifactId>HorizonCore</artifactId>
     </dependency>
@@ -45,11 +36,19 @@
       <groupId>com.hubspot</groupId>
       <artifactId>HorizonNing</artifactId>
     </dependency>
-    
+    <dependency>
+      <groupId>com.hubspot</groupId>
+      <artifactId>SingularityBase</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-api</artifactId>
+    </dependency>
+
   </dependencies>
 
 </project>
-
 <!-- Local Variables:     -->
 <!-- mode: nxml           -->
 <!-- nxml-child-indent: 2 -->

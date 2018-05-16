@@ -4,6 +4,9 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
+@Schema(description = "Describes the attributes of a Singularity user")
 public class SingularityUserHolder {
   private final Optional<SingularityUser> user;
   private final Optional<SingularityUserSettings> settings;
@@ -21,18 +24,22 @@ public class SingularityUserHolder {
     this.authEnabled = authEnabled;
   }
 
+  @Schema(description = "Information identifying this particular user")
   public Optional<SingularityUser> getUser() {
     return user;
   }
 
+  @Schema(description = "Settings for this particular user")
   public Optional<SingularityUserSettings> getSettings() {
     return settings;
   }
 
+  @Schema(description = "true if the user is authenticated")
   public boolean isAuthenticated() {
     return authenticated;
   }
 
+  @Schema(description = "true if authentication is enabled")
   public boolean isAuthEnabled() {
     return authEnabled;
   }

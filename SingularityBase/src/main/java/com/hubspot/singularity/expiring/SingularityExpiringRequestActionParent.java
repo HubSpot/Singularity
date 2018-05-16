@@ -3,6 +3,17 @@ package com.hubspot.singularity.expiring;
 import com.google.common.base.Optional;
 import com.hubspot.singularity.api.SingularityExpiringRequestParent;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
+@Schema(
+    description = "Details about a future action",
+    subTypes = {
+        SingularityExpiringBounce.class,
+        SingularityExpiringPause.class,
+        SingularityExpiringScale.class,
+        SingularityExpiringSkipHealthchecks.class
+    }
+)
 public abstract class SingularityExpiringRequestActionParent<T extends SingularityExpiringRequestParent> extends SingularityExpiringParent<T> {
 
   private final String requestId;
@@ -12,6 +23,7 @@ public abstract class SingularityExpiringRequestActionParent<T extends Singulari
     this.requestId = requestId;
   }
 
+  @Schema(description = "The request this future action is in reference to")
   public String getRequestId() {
     return requestId;
   }

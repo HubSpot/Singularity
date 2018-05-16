@@ -10,6 +10,9 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
+@Schema
 public class MesosResourcesObject {
 
   private final ImmutableMap<String, Object> properties;

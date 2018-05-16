@@ -7,9 +7,11 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.annotations.Beta;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Optional;
-import com.wordnik.swagger.annotations.ApiModelProperty;
+
+import io.swagger.v3.oas.annotations.media.Schema;
 
 @Beta
+@Schema(description = "The source of a docker volume")
 public class SingularityVolumeSource {
   private final SingularityVolumeSourceType type;
   private final Optional<SingularityDockerVolume> dockerVolume;
@@ -22,12 +24,12 @@ public class SingularityVolumeSource {
     this.dockerVolume = dockerVolume;
   }
 
-  @ApiModelProperty(required=false, value="Volume source type")
+  @Schema(description = "Volume source type")
   public SingularityVolumeSourceType getType() {
     return type;
   }
 
-  @ApiModelProperty(required=false, value="Docker source volume spec")
+  @Schema(description = "Docker source volume spec", nullable = true)
   public Optional<SingularityDockerVolume> getDockerVolume() {
     return dockerVolume;
   }

@@ -8,6 +8,9 @@ import java.util.Objects;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
+@Schema(defaultValue = "Describes an argument to docker run")
 public class SingularityDockerParameter {
   private final String key;
   private final String value;
@@ -23,10 +26,12 @@ public class SingularityDockerParameter {
     this.value = value;
   }
 
+  @Schema(description = "Argument name")
   public String getKey() {
     return key;
   }
 
+  @Schema(description = "Argument value")
   public String getValue() {
     return value;
   }

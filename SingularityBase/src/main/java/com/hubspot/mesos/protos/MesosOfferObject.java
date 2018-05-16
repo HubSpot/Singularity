@@ -10,9 +10,12 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
 /*
  * Mirrors the mesos Offer object, with the exception that slaveId can be read into agentId
  */
+@Schema(description = "The mesos protos representation of an offer")
 public class MesosOfferObject {
   private final MesosStringValue agentId;
   private final MesosStringValue slaveId;

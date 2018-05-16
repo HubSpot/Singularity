@@ -1,5 +1,8 @@
 package com.hubspot.singularity;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
+@Schema
 public enum MachineState {
 
   MISSING_ON_STARTUP(false, true), ACTIVE(false, false), STARTING_DECOMMISSION(true, false), DECOMMISSIONING(true, false), DECOMMISSIONED(true, false), DEAD(false, true), FROZEN(false, false);

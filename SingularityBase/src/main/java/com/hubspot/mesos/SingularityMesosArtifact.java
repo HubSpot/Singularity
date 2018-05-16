@@ -6,6 +6,9 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
+@Schema(description = "Describes an artifact to be downloaded")
 public class SingularityMesosArtifact {
   private final String uri;
   private final boolean cache;
@@ -31,22 +34,41 @@ public class SingularityMesosArtifact {
     this.outputFile = outputFile;
   }
 
+  @Schema(required = true, description = "The uri of the artifact to download")
   public String getUri() {
     return uri;
   }
 
+  @Schema(
+      description = "Cache this artifact to avoid multiple downloads on the same host",
+      defaultValue = "false"
+  )
   public boolean isCache() {
     return cache;
   }
 
+  @Schema(
+      description = "If true, chmod the download file so it is executable",
+      defaultValue = "false"
+  )
   public boolean isExecutable() {
     return executable;
   }
 
+  @Schema(
+      title = "If true, unpack the downloaded artifact in teh sandbox directory",
+      defaultValue = "true",
+      description = "Recognized file types: .tar, .tar.gz, .tar.bz2, .tar.xz, .gz, .tgz, .tbz2, .txz, .zip"
+  )
   public boolean isExtract() {
     return extract;
   }
 
+  @Schema(
+      title = "The destination filename for the download",
+      nullable = true,
+      defaultValue = "original name of the file"
+  )
   public Optional<String> getOutputFile() {
     return outputFile;
   }

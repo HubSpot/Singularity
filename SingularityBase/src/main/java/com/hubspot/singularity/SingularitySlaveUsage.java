@@ -4,6 +4,12 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
+@Schema(
+    title = "A description of resources used on a mesos slave",
+    subTypes = {SingularitySlaveUsageWithId.class}
+)
 public class SingularitySlaveUsage {
   public static final long BYTES_PER_MEGABYTE = 1024L * 1024L;
 
@@ -68,86 +74,130 @@ public class SingularitySlaveUsage {
     this.slaveDiskTotal = slaveDiskTotal;
   }
 
+  @Schema(description = "Total cpus used by tasks")
   public double getCpusUsed() {
     return cpusUsed;
   }
 
+  @Schema(description = "Total cpus reserved by tasks")
   public double getCpusReserved() {
     return cpusReserved;
   }
 
+  @Schema(
+      title = "Total cpus available to allocate",
+      description = "If oversubscribing a resource, this is the oversubscribed value, not the true value",
+      nullable = true
+  )
   public Optional<Double> getCpusTotal() {
     return cpusTotal;
   }
 
+  @Schema(description = "Total memory used by tasks in bytes")
   public long getMemoryBytesUsed() {
     return memoryBytesUsed;
   }
 
+  @Schema(description = "Total memory reserved by tasks in MB")
   public long getMemoryMbReserved() {
     return memoryMbReserved;
   }
 
+  @Schema(
+      title = "Total memory available to allocate in bytes",
+      description = "If oversubscribing a resource, this is the oversubscribed value, not the true value",
+      nullable = true
+  )
   public Optional<Long> getMemoryMbTotal() {
     return memoryMbTotal.isPresent() ? Optional.of(memoryMbTotal.get()) : Optional.absent();
   }
 
+  @Schema(
+      title = "Total memory available to allocate in bytes",
+      description = "If oversubscribing a resource, this is the oversubscribed value, not the true value",
+      nullable = true
+  )
   public Optional<Long> getMemoryBytesTotal() {
     return memoryMbTotal.isPresent() ? Optional.of(memoryMbTotal.get() * BYTES_PER_MEGABYTE) : Optional.absent();
   }
 
+  @Schema(description = "Total disk currently used by tasks in bytes")
   public long getDiskBytesUsed() {
     return diskBytesUsed;
   }
 
+  @Schema(description = "Total disk currently reserved by tasks in MB")
   public long getDiskMbReserved() {
     return diskMbReserved;
   }
 
+  @Schema(
+      title = "Total disk available to allocate in MB",
+      description = "If oversubscribing a resource, this is the oversubscribed value, not the true value",
+      nullable = true
+  )
   public Optional<Long> getDiskMbTotal() {
     return diskMbTotal;
   }
 
+  @Schema(
+      title = "Total disk available to allocate in bytes",
+      description = "If oversubscribing a resource, this is the oversubscribed value, not the true value",
+      nullable = true
+  )
   public Optional<Long> getDiskBytesTotal() {
     return diskMbTotal.isPresent() ? Optional.of(diskMbTotal.get() * BYTES_PER_MEGABYTE) : Optional.absent();
   }
 
+  @Schema(description = "Number of active tasks on this salve")
   public int getNumTasks() {
     return numTasks;
   }
 
+  @Schema(description = "Timestamp when usage data was collected")
   public long getTimestamp() {
     return timestamp;
   }
 
+  @Schema(description = "Total memory in bytes")
   public double getSystemMemTotalBytes() {
     return systemMemTotalBytes;
   }
 
+  @Schema(description = "Free memory in bytes")
   public double getSystemMemFreeBytes() {
     return systemMemFreeBytes;
   }
 
+  @Schema(description = "Number of CPUs available in this slave node")
   public double getSystemCpusTotal() {
     return systemCpusTotal;
   }
 
+  @Schema(description = "Load average for the past minute")
   public double getSystemLoad1Min() {
     return systemLoad1Min;
   }
 
+  @Schema(description = "Load average for the past 5 minutes")
   public double getSystemLoad5Min() {
     return systemLoad5Min;
   }
 
+  @Schema(description = "Load average for the past 15 minutes")
   public double getSystemLoad15Min() {
     return systemLoad15Min;
   }
 
+  @Schema(
+      title = "Total disk space used on the slave in bytes",
+      description = "Disk usage is only collected when disk enforcement is enable and disk resources for a task are > 0"
+  )
   public double getSlaveDiskUsed() {
     return slaveDiskUsed;
   }
 
+  @Schema(description = "Total disk spave available on the slave in bytes")
   public double getSlaveDiskTotal() {
     return slaveDiskTotal;
   }

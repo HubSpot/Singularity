@@ -10,8 +10,10 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
-import com.wordnik.swagger.annotations.ApiModelProperty;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
+@Schema(description = "Describes how a docker image should be launched")
 public class SingularityDockerInfo {
   private final String image;
   private final boolean privileged;
@@ -52,23 +54,23 @@ public class SingularityDockerInfo {
     this(image, privileged, network, portMappings, Optional.<Boolean>absent(), Optional.<Map<String, String>>absent(), Optional.<List<SingularityDockerParameter>>absent());
   }
 
-  @ApiModelProperty(required=true, value="Docker image name")
+  @Schema(required = true, description = "Docker image name")
   public String getImage() {
     return image;
   }
 
-  @ApiModelProperty(required=true, value="Controls use of the docker --privleged flag")
+  @Schema(required = true, description = "Controls use of the docker --privleged flag")
   public boolean isPrivileged()
   {
     return privileged;
   }
 
-  @ApiModelProperty(required=false, value="Docker netowkr type. Value can be BRIDGE, HOST, or NONE", dataType="com.hubspot.mesos.SingularityDockerNetworkType")
+  @Schema(description = "Docker netowkr type. Value can be BRIDGE, HOST, or NONE")
   public Optional<SingularityDockerNetworkType> getNetwork() {
     return network;
   }
 
-  @ApiModelProperty(required=false, value="List of port mappings")
+  @Schema(description = "List of port mappings")
   public List<SingularityDockerPortMapping> getPortMappings() {
     return portMappings;
   }
@@ -94,7 +96,7 @@ public class SingularityDockerInfo {
     return literalHostPorts;
   }
 
-  @ApiModelProperty(required=false, value="Always run docker pull even if the image already exists locally")
+  @Schema(description = "Always run docker pull even if the image already exists locally", defaultValue = "false")
   public boolean isForcePullImage() {
     return forcePullImage;
   }
@@ -104,7 +106,7 @@ public class SingularityDockerInfo {
     return parameters;
   }
 
-  @ApiModelProperty(required=false, value="Other docker run command line options to be set")
+  @Schema(description = "Other docker run command line options to be set")
   public List<SingularityDockerParameter> getDockerParameters() {
     return dockerParameters;
   }

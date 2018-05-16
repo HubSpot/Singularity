@@ -8,12 +8,12 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.annotation.Nonnull;
 
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
-import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
@@ -191,7 +191,7 @@ public class SingularityAuthorizationHelper {
     }
   }
 
-  public <T> Iterable<T> filterByAuthorizedRequests(final SingularityUser user, List<T> objects, final Function<T, String> requestIdFunction, final SingularityAuthorizationScope scope) {
+  public <T> List<T> filterByAuthorizedRequests(final SingularityUser user, List<T> objects, final Function<T, String> requestIdFunction, final SingularityAuthorizationScope scope) {
     if (hasAdminAuthorization(user)) {
       return objects;
     }
@@ -210,16 +210,15 @@ public class SingularityAuthorizationHelper {
       }
     });
 
-    return Iterables.filter(objects, new Predicate<T>() {
-      @Override
-      public boolean apply(@Nonnull T input) {
-        final String requestId = requestIdFunction.apply(input);
-        return requestMap.containsKey(requestId) && isAuthorizedForRequest(requestMap.get(requestId).getRequest(), user, scope);
-      }
-    });
+    return objects.stream()
+        .filter((input) -> {
+          final String requestId = requestIdFunction.apply(input);
+          return requestMap.containsKey(requestId) && isAuthorizedForRequest(requestMap.get(requestId).getRequest(), user, scope);
+        })
+        .collect(Collectors.toList());
   }
 
-  public Iterable<String> filterAuthorizedRequestIds(final SingularityUser user, List<String> requestIds, final SingularityAuthorizationScope scope, boolean useWebCache) {
+  public List<String> filterAuthorizedRequestIds(final SingularityUser user, List<String> requestIds, final SingularityAuthorizationScope scope, boolean useWebCache) {
     if (hasAdminAuthorization(user)) {
       return requestIds;
     }
@@ -231,11 +230,8 @@ public class SingularityAuthorizationHelper {
       }
     });
 
-    return Iterables.filter(requestIds, new Predicate<String>() {
-      @Override
-      public boolean apply(@Nonnull String input) {
-        return requestMap.containsKey(input) && isAuthorizedForRequest(requestMap.get(input).getRequest(), user, scope);
-      }
-    });
+    return requestIds.stream()
+        .filter((input) -> requestMap.containsKey(input) && isAuthorizedForRequest(requestMap.get(input).getRequest(), user, scope))
+        .collect(Collectors.toList());
   }
 }

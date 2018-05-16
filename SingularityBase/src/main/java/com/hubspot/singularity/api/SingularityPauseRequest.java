@@ -4,8 +4,10 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
 import com.hubspot.singularity.SingularityShellCommand;
-import com.wordnik.swagger.annotations.ApiModelProperty;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
+@Schema(description = "Settings for how a pause should behave")
 public class SingularityPauseRequest extends SingularityExpiringRequestParent {
 
   private final Optional<Boolean> killTasks;
@@ -21,12 +23,12 @@ public class SingularityPauseRequest extends SingularityExpiringRequestParent {
     this.runShellCommandBeforeKill = runShellCommandBeforeKill;
   }
 
-  @ApiModelProperty(required=false, value="If set to false, tasks will be allowed to finish instead of killed immediately")
+  @Schema(description = "If set to false, tasks will be allowed to finish instead of killed immediately", nullable = true)
   public Optional<Boolean> getKillTasks() {
     return killTasks;
   }
 
-  @ApiModelProperty(required=false, value="Attempt to run this shell command on each task before it is shut down")
+  @Schema(description = "Attempt to run this shell command on each task before it is shut down", nullable = true)
   public Optional<SingularityShellCommand> getRunShellCommandBeforeKill() {
     return runShellCommandBeforeKill;
   }

@@ -6,9 +6,11 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.annotations.Beta;
 import com.google.common.base.Optional;
-import com.wordnik.swagger.annotations.ApiModelProperty;
+
+import io.swagger.v3.oas.annotations.media.Schema;
 
 @Beta
+@Schema(description = "Holds the description of an image to be launched in mesos")
 public class SingularityMesosInfo {
   private final Optional<SingularityMesosImage> image;
 
@@ -17,7 +19,7 @@ public class SingularityMesosInfo {
     this.image = image;
   }
 
-  @ApiModelProperty(required=false, value="Mesos image descriptor")
+  @Schema(description = "Mesos image descriptor")
   public Optional<SingularityMesosImage> getImage() {
     return image;
   }
