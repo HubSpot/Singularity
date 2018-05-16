@@ -200,6 +200,7 @@ public class SingularityDeploy {
         healthcheckPortIndex,
         Optional.<Long>absent(),
         healthcheckProtocol,
+        Optional.<HealthcheckMethod>absent(),
         Optional.<Integer>absent(),
         Optional.<Integer>absent(),
         Optional.<Integer>absent(),
