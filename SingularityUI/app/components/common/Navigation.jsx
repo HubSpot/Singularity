@@ -3,6 +3,7 @@ import { connect } from 'react-redux';
 import { withRouter, Link } from 'react-router';
 import { ToggleVisibility } from '../../actions/ui/globalSearch';
 import classnames from 'classnames';
+import Utils from '../../utils';
 
 import { Glyphicon } from 'react-bootstrap';
 
@@ -32,6 +33,20 @@ function isActive(navbarPath, fragment) {
   return navbarPath === fragment;
 }
 
+function currentPathForLink(currentPath) {
+  try {
+    // The same task id will likely not exist in another singularity cluster, redirect to request page instead
+    if (currentPath.startsWith('/task/')) {
+      const requestId = Utils.getTaskDataFromTaskId(currentPath.split('/')[2]).requestId
+      return '/request/' + requestId
+    } else {
+      return currentPath;
+    }
+  } catch (err) {
+    return currentPath;
+  }
+}
+
 // put into page wrapper, render children
 const Navigation = (props) => {
   const fragment = props.location.pathname.split('/')[1];
@@ -45,7 +60,7 @@ const Navigation = (props) => {
           <ul className="dropdown-menu">
             {Object.keys(config.navTitleLinks).map((linkTitle, index) =>
               <li key={index}>
-                <a href={config.navTitleLinks[linkTitle]}>{linkTitle}</a>
+                <a href={config.navTitleLinks[linkTitle].replace('{CURRENT_PATH}', currentPathForLink(props.location.pathname))}>{linkTitle}</a>
               </li>
             )}
           </ul>
