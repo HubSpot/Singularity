@@ -47,13 +47,14 @@ class RequestDetailPage extends Component {
   render() {
     const { requestId } = this.props.params;
     const { deleted } = this.props;
+    const { taskHistoryPage }  = this.props.location.query;
     return (
       <div>
         <RequestHeader requestId={requestId} showBreadcrumbs={this.props.showBreadcrumbs} deleted={this.props.deleted} />
         {deleted || <RequestExpiringActions requestId={requestId} />}
         {deleted || <ActiveTasksTable requestId={requestId} />}
         {deleted || <PendingTasksTable requestId={requestId} />}
-        {deleted || <TaskHistoryTable requestId={requestId} />}
+        {deleted || <TaskHistoryTable requestId={requestId} initialPageNumber={Number(taskHistoryPage || 0)}/>}
         {deleted || <RequestUtilization requestId={requestId} />}
         {deleted || <DeployHistoryTable requestId={requestId} />}
         <RequestHistoryTable requestId={requestId} />

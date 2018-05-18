@@ -11,7 +11,7 @@ class UITable extends Component {
   constructor(props) {
     super(props);
 
-    let { data } = props;
+    let { data, initialPageNumber } = props;
     const { defaultSortBy, defaultSortDirection, rowChunkSize } = props;
     if (defaultSortBy) {
       data = this.doSort(data, defaultSortBy, defaultSortDirection);
@@ -21,7 +21,7 @@ class UITable extends Component {
       sortBy: defaultSortBy,
       sortDirection: defaultSortDirection,
       sortTime: null,
-      chunkNum: 1,
+      chunkNum: initialPageNumber || 1,
       data,
       rowChunkSize
     };
@@ -487,7 +487,8 @@ UITable.propTypes = {
     PropTypes.node,
     PropTypes.string
   ]),
-  striped: PropTypes.bool
+  striped: PropTypes.bool,
+  initialPageNumber: PropTypes.number
 };
 
 export default UITable;

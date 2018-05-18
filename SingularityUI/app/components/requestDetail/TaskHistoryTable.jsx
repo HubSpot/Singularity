@@ -34,6 +34,16 @@ class TaskHistoryTable extends Component {
     };
   }
 
+  componentDidMount() {
+    const { requestId, initialPageNumber } = this.props;
+    if (initialPageNumber) {
+      this.setState({ loading: true });
+      this.props.fetchTaskHistoryForRequest(
+        requestId, this.state.tableChunkSize, initialPageNumber
+      ).then(() => { this.setState({ loading: false })});
+    }
+  }
+
   handleTableSizeToggle(count) {
     this.setState({
       tableChunkSize: count,
@@ -113,6 +123,7 @@ class TaskHistoryTable extends Component {
           paginated={true}
           fetchDataFromApi={(page, numberPerPage) => fetchTaskHistoryForRequest(requestId, numberPerPage, page)}
           isFetching={isFetching}
+          initialPageNumber={this.props.initialPageNumber}
         >
           <Column
             label="Instance"
