@@ -1539,7 +1539,6 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     Assert.assertEquals(PendingType.RETRY, taskManager.getPendingTaskIds().get(0).getPendingType());
     Assert.assertEquals(1, deployStatistics.getNumFailures());
     Assert.assertEquals(1, deployStatistics.getNumSequentialRetries());
-    Assert.assertEquals(Optional.<Long>absent(), deployStatistics.getAverageRuntimeMillis());
   }
 
   @Test

@@ -777,7 +777,7 @@ public class SingularityScheduler {
   private int getNumMissingInstances(List<SingularityTaskId> matchingTaskIds, SingularityRequest request, SingularityPendingRequest pendingRequest,
     Optional<SingularityPendingDeploy> maybePendingDeploy) {
     if (request.isOneOff()) {
-      if (pendingRequest.getPendingType() == PendingType.ONEOFF) {
+      if (pendingRequest.getPendingType() == PendingType.ONEOFF || pendingRequest.getPendingType() == PendingType.RETRY) {
         return 1;
       } else {
         return 0;
