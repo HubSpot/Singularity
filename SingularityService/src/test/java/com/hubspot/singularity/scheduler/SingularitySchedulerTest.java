@@ -1516,7 +1516,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
 
   @Test
   public void testRunNowScheduledJobRetriesWithNonZeroLimit() {
-    initScheduledRequest();
+    initRequestWithType(RequestType.ON_DEMAND, false);
     SingularityRequest request = requestResource.getRequest(requestId, singularityUser).getRequest();
     SingularityRequest newRequest = request.toBuilder().setNumRetriesOnFailure(Optional.of(2)).build();
     requestResource.postRequest(newRequest, singularityUser);
