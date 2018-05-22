@@ -1515,8 +1515,6 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     Assert.assertEquals(0, deployStatistics.getNumSequentialRetries());
     Assert.assertEquals(Optional.<Long>absent(), deployStatistics.getAverageRuntimeMillis());
   }
-  @Rule
-  public Timeout globalTimeout = Timeout.seconds(10000); // 10 seconds max per method tested
 
   @Test
   public void testRunNowOnDemandJobMayRetryOnFailure() {
