@@ -759,7 +759,7 @@ public class SingularityScheduler {
     if (task.isPresent()
         && task.get().getTaskRequest().getPendingTask().getPendingTaskId().getPendingType() == PendingType.IMMEDIATE
         && request.getRequestType() == RequestType.SCHEDULED) {
-      return false; // don't retry non-UI scheduled jobs
+      return false; // don't retry UI triggered scheduled jobs (UI triggered on-demand jobs are okay to retry though)
     }
 
     final int numRetriesInARow = deployStatistics.getNumSequentialRetries();

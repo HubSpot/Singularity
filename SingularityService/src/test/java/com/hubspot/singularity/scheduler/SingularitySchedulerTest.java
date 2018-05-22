@@ -19,7 +19,9 @@ import org.apache.mesos.v1.Protos.TaskState;
 import org.apache.mesos.v1.Protos.TaskStatus;
 import org.assertj.core.api.Assertions;
 import org.junit.Assert;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.Timeout;
 import org.mockito.ArgumentMatchers;
 import org.mockito.Mockito;
 
@@ -1491,10 +1493,10 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
   }
 
   @Test
-  public void testRunNowScheduledJobDoesNotRetryWithZeroLimit() {
+  public void testRunNowScheduledJobDoesNotRetry() {
     initScheduledRequest();
     SingularityRequest request = requestResource.getRequest(requestId, singularityUser).getRequest();
-    SingularityRequest newRequest = request.toBuilder().setNumRetriesOnFailure(Optional.of(0)).build();
+    SingularityRequest newRequest = request.toBuilder().setNumRetriesOnFailure(Optional.of(2)).build();
     requestResource.postRequest(newRequest, singularityUser);
     initFirstDeploy();
 
@@ -1513,9 +1515,11 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     Assert.assertEquals(0, deployStatistics.getNumSequentialRetries());
     Assert.assertEquals(Optional.<Long>absent(), deployStatistics.getAverageRuntimeMillis());
   }
+  @Rule
+  public Timeout globalTimeout = Timeout.seconds(10000); // 10 seconds max per method tested
 
   @Test
-  public void testRunNowScheduledJobRetriesWithNonZeroLimit() {
+  public void testRunNowOnDemandJobMayRetryOnFailure() {
     initRequestWithType(RequestType.ON_DEMAND, false);
     SingularityRequest request = requestResource.getRequest(requestId, singularityUser).getRequest();
     SingularityRequest newRequest = request.toBuilder().setNumRetriesOnFailure(Optional.of(2)).build();
