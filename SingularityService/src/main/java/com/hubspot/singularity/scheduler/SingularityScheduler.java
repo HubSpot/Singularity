@@ -776,13 +776,14 @@ public class SingularityScheduler {
 
   private int getNumMissingInstances(List<SingularityTaskId> matchingTaskIds, SingularityRequest request, SingularityPendingRequest pendingRequest,
     Optional<SingularityPendingDeploy> maybePendingDeploy) {
+    PendingType pendingType = pendingRequest.getPendingType();
     if (request.isOneOff()) {
-      if (pendingRequest.getPendingType() == PendingType.ONEOFF || pendingRequest.getPendingType() == PendingType.RETRY) {
+      if (pendingType == PendingType.ONEOFF || pendingType == PendingType.RETRY) {
         return 1;
       } else {
         return 0;
       }
-    } else if (request.getRequestType() == RequestType.RUN_ONCE && pendingRequest.getPendingType() == PendingType.NEW_DEPLOY) {
+    } else if (request.getRequestType() == RequestType.RUN_ONCE && pendingType == PendingType.NEW_DEPLOY) {
       return 1;
     }
 
