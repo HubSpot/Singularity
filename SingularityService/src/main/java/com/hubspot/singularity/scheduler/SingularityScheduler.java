@@ -760,7 +760,7 @@ public class SingularityScheduler {
     if (task.isPresent()
         && task.get().getTaskRequest().getPendingTask().getPendingTaskId().getPendingType() == PendingType.IMMEDIATE
         && request.getRequestType() == RequestType.SCHEDULED) {
-      return false; // don't retry non-UI scheduled jobs
+      return false; // don't retry UI triggered scheduled jobs (UI triggered on-demand jobs are okay to retry though)
     }
 
     final int numRetriesInARow = deployStatistics.getNumSequentialRetries();
@@ -777,13 +777,14 @@ public class SingularityScheduler {
 
   private int getNumMissingInstances(List<SingularityTaskId> matchingTaskIds, SingularityRequest request, SingularityPendingRequest pendingRequest,
     Optional<SingularityPendingDeploy> maybePendingDeploy) {
+    PendingType pendingType = pendingRequest.getPendingType();
     if (request.isOneOff()) {
-      if (pendingRequest.getPendingType() == PendingType.ONEOFF) {
+      if (pendingType == PendingType.ONEOFF || pendingType == PendingType.RETRY) {
         return 1;
       } else {
         return 0;
       }
-    } else if (request.getRequestType() == RequestType.RUN_ONCE && pendingRequest.getPendingType() == PendingType.NEW_DEPLOY) {
+    } else if (request.getRequestType() == RequestType.RUN_ONCE && pendingType == PendingType.NEW_DEPLOY) {
       return 1;
     }
 
