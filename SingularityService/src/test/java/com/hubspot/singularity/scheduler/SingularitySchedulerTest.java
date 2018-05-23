@@ -19,9 +19,7 @@ import org.apache.mesos.v1.Protos.TaskState;
 import org.apache.mesos.v1.Protos.TaskStatus;
 import org.assertj.core.api.Assertions;
 import org.junit.Assert;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.Timeout;
 import org.mockito.ArgumentMatchers;
 import org.mockito.Mockito;
 
@@ -46,8 +44,8 @@ import com.hubspot.singularity.MachineState;
 import com.hubspot.singularity.RequestCleanupType;
 import com.hubspot.singularity.RequestState;
 import com.hubspot.singularity.RequestType;
-import com.hubspot.singularity.SingularityDeleteResult;
 import com.hubspot.singularity.ScheduleType;
+import com.hubspot.singularity.SingularityDeleteResult;
 import com.hubspot.singularity.SingularityDeploy;
 import com.hubspot.singularity.SingularityDeployBuilder;
 import com.hubspot.singularity.SingularityDeployMarker;
@@ -1537,30 +1535,6 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     Assert.assertEquals(PendingType.RETRY, taskManager.getPendingTaskIds().get(0).getPendingType());
     Assert.assertEquals(1, deployStatistics.getNumFailures());
     Assert.assertEquals(1, deployStatistics.getNumSequentialRetries());
-  }
-
-  @Test
-  public void testRunNowScheduledJobRetriesWithNonZeroLimit() {
-    initScheduledRequest();
-    SingularityRequest request = requestResource.getRequest(requestId, singularityUser).getRequest();
-    SingularityRequest newRequest = request.toBuilder().setNumRetriesOnFailure(Optional.of(2)).build();
-    requestResource.postRequest(newRequest, singularityUser);
-    initFirstDeploy();
-
-    requestResource.scheduleImmediately(singularityUser, requestId, new SingularityRunNowRequestBuilder().build());
-    resourceOffers();
-
-    SingularityTask task = taskManager.getActiveTasks().get(0);
-    statusUpdate(task, TaskState.TASK_FAILED);
-    scheduler.drainPendingQueue();
-
-    SingularityDeployStatistics deployStatistics = deployManager.getDeployStatistics(task.getTaskId().getRequestId(), task.getTaskId().getDeployId()).get();
-
-    Assert.assertEquals(MesosTaskState.TASK_FAILED, deployStatistics.getLastTaskState().get().toTaskState().get());
-    Assert.assertEquals(PendingType.RETRY, taskManager.getPendingTaskIds().get(0).getPendingType());
-    Assert.assertEquals(1, deployStatistics.getNumFailures());
-    Assert.assertEquals(1, deployStatistics.getNumSequentialRetries());
-    Assert.assertEquals(Optional.<Long>absent(), deployStatistics.getAverageRuntimeMillis());
   }
 
   @Test
