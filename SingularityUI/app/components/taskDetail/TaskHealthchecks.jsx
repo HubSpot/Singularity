@@ -36,7 +36,7 @@ function TaskHealthchecks (props) {
   }
 
   return (healthchecks && healthcheckOptions.uri && (
-    <CollapsableSection title="Healthchecks" id="healthchecks">
+    <CollapsableSection title="Healthchecks" id="healthchecks" expanded={props.expanded}>
       <div className="well">
         <p>
           Beginning {beginningOnMessage}, wait a max of <strong>{healthcheckOptions.startupTimeoutSeconds || config.defaultStartupTimeoutSeconds}s</strong> for app to start responding, then hit
@@ -127,7 +127,8 @@ TaskHealthchecks.propTypes = {
     errorMessage: PropTypes.string,
     responseBody: PropTypes.string
   })),
-  ports: PropTypes.arrayOf(PropTypes.number)
+  ports: PropTypes.arrayOf(PropTypes.number),
+  expanded: PropTypes.bool,
 };
 
 export default TaskHealthchecks;

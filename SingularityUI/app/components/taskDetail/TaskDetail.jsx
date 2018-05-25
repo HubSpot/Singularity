@@ -130,7 +130,8 @@ class TaskDetail extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      previousUsage: null
+      previousUsage: null,
+      expandedHealthchecks: false,
     };
   }
 
@@ -477,7 +478,12 @@ class TaskDetail extends Component {
     return (
       <div className="task-detail detail-view">
         {this.renderHeader(cleanup)}
-        <TaskAlerts task={this.props.task} deploy={this.props.deploy} pendingDeploys={this.props.pendingDeploys} />
+        <TaskAlerts
+          task={this.props.task}
+          deploy={this.props.deploy}
+          pendingDeploys={this.props.pendingDeploys}
+          onViewHealthchecks={() => this.setState({ expandedHealthchecks: true })}
+        />
         <TaskMetadataAlerts task={this.props.task} />
         <TaskHistory taskUpdates={this.props.task.taskUpdates} />
         <TaskLatestLog taskId={this.props.taskId} status={this.props.task.status} files={filesToDisplay} available={filesAvailable} />
@@ -487,7 +493,12 @@ class TaskDetail extends Component {
         <TaskInfo task={this.props.task.task} ports={this.props.task.ports} directory={this.props.task.directory} />
         {this.renderResourceUsage()}
         <TaskEnvVars executor={this.props.task.task.mesosTask.executor} />
-        <TaskHealthchecks task={this.props.task.task} healthcheckResults={this.props.task.healthcheckResults} ports={this.props.task.ports} />
+        <TaskHealthchecks
+          task={this.props.task.task}
+          healthcheckResults={this.props.task.healthcheckResults}
+          ports={this.props.task.ports}
+          expanded={this.state.expandedHealthchecks}
+        />
         {this.renderShellCommands()}
       </div>
     );
