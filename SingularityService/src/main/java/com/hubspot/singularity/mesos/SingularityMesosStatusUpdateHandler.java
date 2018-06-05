@@ -7,6 +7,7 @@ import java.util.concurrent.Executors;
 
 import org.apache.mesos.v1.Protos;
 import org.apache.mesos.v1.Protos.TaskState;
+import org.apache.mesos.v1.Protos.TaskStatus;
 import org.apache.mesos.v1.Protos.TaskStatus.Reason;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -294,12 +295,19 @@ public class SingularityMesosStatusUpdateHandler {
 
       taskManager.deleteKilledRecord(taskIdObj);
 
-      slaveAndRackManager.checkStateAfterFinishedTask(taskIdObj, status.getAgentId().getValue(), leaderCache);
-
-      scheduler.handleCompletedTask(task, taskIdObj, isActiveTask, timestamp, taskState, taskHistoryUpdateCreateResult, status);
+      handleCompletedTaskState(status, taskIdObj, taskState, taskHistoryUpdateCreateResult, task, timestamp, isActiveTask);
     }
 
     saveNewTaskStatusHolder(taskIdObj, newTaskStatusHolder, taskState);
+  }
+
+  private synchronized void handleCompletedTaskState(TaskStatus status, SingularityTaskId taskIdObj, ExtendedTaskState taskState,
+      SingularityCreateResult taskHistoryUpdateCreateResult, Optional<SingularityTask> task, long timestamp, boolean isActiveTask) {
+    // Method synchronized to prevent race condition where two tasks complete at the same time but the leader cache holding the state
+    // doesn't get updated between each task completion. If this were to happen, then slaves would never transition from DECOMMISSIONING to
+    // DECOMMISSIONED because each task state check thinks the other task is still running.
+    slaveAndRackManager.checkStateAfterFinishedTask(taskIdObj, status.getAgentId().getValue(), leaderCache);
+    scheduler.handleCompletedTask(task, taskIdObj, isActiveTask, timestamp, taskState, taskHistoryUpdateCreateResult, status);
   }
 
   public CompletableFuture<Boolean> processStatusUpdateAsync(Protos.TaskStatus status) {
