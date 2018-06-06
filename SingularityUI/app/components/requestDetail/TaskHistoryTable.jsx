@@ -40,7 +40,9 @@ class TaskHistoryTable extends Component {
       this.setState({ loading: true });
       this.props.fetchTaskHistoryForRequest(
         requestId, this.state.tableChunkSize, initialPageNumber
-      ).then(() => { this.setState({ loading: false })});
+      ).then(() => {
+        this.setState({ loading: false });
+      });
     }
   }
 
@@ -124,6 +126,7 @@ class TaskHistoryTable extends Component {
           fetchDataFromApi={(page, numberPerPage) => fetchTaskHistoryForRequest(requestId, numberPerPage, page)}
           isFetching={isFetching}
           initialPageNumber={this.props.initialPageNumber}
+          onPageChange={this.props.onPageChange}
         >
           <Column
             label="Instance"

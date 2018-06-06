@@ -33,6 +33,9 @@ class UITable extends Component {
     if (this.props.triggerOnDataSizeChange && prevState.data && prevState.data.length != this.state.data.length) {
       this.props.triggerOnDataSizeChange();
     }
+    if (prevState.chunkNum !== this.state.chunkNum && this.props.onPageChange) {
+      this.props.onPageChange(this.state.chunkNum);
+    }
   }
 
   componentWillReceiveProps(nextProps) {
@@ -488,7 +491,8 @@ UITable.propTypes = {
     PropTypes.string
   ]),
   striped: PropTypes.bool,
-  initialPageNumber: PropTypes.number
+  initialPageNumber: PropTypes.number,
+  onPageChange: PropTypes.func
 };
 
 export default UITable;

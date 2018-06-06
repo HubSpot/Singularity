@@ -1,9 +1,9 @@
 import React, { Component, PropTypes } from 'react';
 import { connect } from 'react-redux';
+import { withRouter } from 'react-router';
+
 import rootComponent from '../../rootComponent';
-
 import * as RefreshActions from '../../actions/ui/refresh';
-
 import { FetchRequest } from '../../actions/api/requests';
 import {
   FetchActiveTasksForRequest,
@@ -45,16 +45,22 @@ class RequestDetailPage extends Component {
   }
 
   render() {
-    const { requestId } = this.props.params;
-    const { deleted } = this.props;
-    const { taskHistoryPage }  = this.props.location.query;
+    const { deleted, router, location, params } = this.props;
+    const { requestId } = params;
+    const { taskHistoryPage } =location.query;
     return (
       <div>
         <RequestHeader requestId={requestId} showBreadcrumbs={this.props.showBreadcrumbs} deleted={this.props.deleted} />
         {deleted || <RequestExpiringActions requestId={requestId} />}
         {deleted || <ActiveTasksTable requestId={requestId} />}
         {deleted || <PendingTasksTable requestId={requestId} />}
-        {deleted || <TaskHistoryTable requestId={requestId} initialPageNumber={Number(taskHistoryPage || 0)}/>}
+        {deleted || (
+          <TaskHistoryTable
+            requestId={requestId}
+            onPageChange={num => router.replace(`${location.pathname}?taskHistoryPage=${num}`)}
+            initialPageNumber={Number(taskHistoryPage) || 1}
+          />
+        )}
         {deleted || <RequestUtilization requestId={requestId} />}
         {deleted || <DeployHistoryTable requestId={requestId} />}
         <RequestHistoryTable requestId={requestId} />
@@ -105,7 +111,7 @@ const mapDispatchToProps = (dispatch, ownProps) => {
   };
 };
 
-export default connect(
+export default withRouter(connect(
   mapStateToProps,
   mapDispatchToProps
-)(rootComponent(RequestDetailPage, (props) => refresh(props.params.requestId), false));
+)(rootComponent(RequestDetailPage, (props) => refresh(props.params.requestId), false)));
