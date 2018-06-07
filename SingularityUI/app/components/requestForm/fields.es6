@@ -109,7 +109,11 @@ export const FIELDS_BY_REQUEST_TYPE = {
     {id: 'scheduledExpectedRuntimeMillis', type: 'number'},
     EXECUTION_TIME_LIMIT_FIELD
   ],
-  ON_DEMAND: [INSTANCES_FIELD, KILL_OLD_NRL_FIELD, EXECUTION_TIME_LIMIT_FIELD],
+  ON_DEMAND: [
+    INSTANCES_FIELD,
+    {id: 'numRetriesOnFailure', type: 'number'},
+    KILL_OLD_NRL_FIELD,
+    EXECUTION_TIME_LIMIT_FIELD],
   RUN_ONCE: [KILL_OLD_NRL_FIELD, EXECUTION_TIME_LIMIT_FIELD]
 };
 
