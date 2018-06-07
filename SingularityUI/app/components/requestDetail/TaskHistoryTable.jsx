@@ -36,14 +36,12 @@ class TaskHistoryTable extends Component {
 
   componentDidMount() {
     const { requestId, initialPageNumber } = this.props;
-    if (initialPageNumber) {
-      this.setState({ loading: true });
-      this.props.fetchTaskHistoryForRequest(
-        requestId, this.state.tableChunkSize, initialPageNumber
-      ).then(() => {
-        this.setState({ loading: false });
-      });
-    }
+    this.setState({ loading: true });
+    this.props.fetchTaskHistoryForRequest(
+      requestId, this.state.tableChunkSize, initialPageNumber
+    ).then(() => {
+      this.setState({ loading: false });
+    });
   }
 
   handleTableSizeToggle(count) {

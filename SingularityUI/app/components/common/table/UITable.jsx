@@ -21,7 +21,7 @@ class UITable extends Component {
       sortBy: defaultSortBy,
       sortDirection: defaultSortDirection,
       sortTime: null,
-      chunkNum: initialPageNumber || 1,
+      chunkNum: initialPageNumber,
       data,
       rowChunkSize
     };
@@ -460,6 +460,10 @@ class UITable extends Component {
     );
   }
 }
+
+UITable.defaultProps = {
+  initialPageNumber: 1
+};
 
 UITable.propTypes = {
   data: PropTypes.arrayOf(PropTypes.object).isRequired,

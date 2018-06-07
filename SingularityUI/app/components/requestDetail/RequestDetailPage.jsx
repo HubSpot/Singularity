@@ -47,7 +47,7 @@ class RequestDetailPage extends Component {
   render() {
     const { deleted, router, location, params } = this.props;
     const { requestId } = params;
-    const { taskHistoryPage } =location.query;
+    const { taskHistoryPage } = location.query;
     return (
       <div>
         <RequestHeader requestId={requestId} showBreadcrumbs={this.props.showBreadcrumbs} deleted={this.props.deleted} />
@@ -57,7 +57,7 @@ class RequestDetailPage extends Component {
         {deleted || (
           <TaskHistoryTable
             requestId={requestId}
-            onPageChange={num => router.replace(`${location.pathname}?taskHistoryPage=${num}`)}
+            onPageChange={num => router.replace({ ...location, query: {...location.query, taskHistoryPage: num }})}
             initialPageNumber={Number(taskHistoryPage) || 1}
           />
         )}
