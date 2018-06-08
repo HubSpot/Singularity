@@ -126,7 +126,8 @@ class TaskDetail extends Component {
     fetchTaskStatistics: PropTypes.func.isRequired,
     fetchTaskFiles: PropTypes.func.isRequired,
     runCommandOnTask: PropTypes.func.isRequired,
-    group: PropTypes.object
+    group: PropTypes.object,
+    cancelRefresh: PropTypes.func.isRequired
   };
 
   constructor(props) {
@@ -590,6 +591,9 @@ function mapDispatchToProps(dispatch, ownProps) {
         4000
       ));
     },
+    cancelRefresh: () => dispatch(
+      RefreshActions.CancelAutoRefresh(`TaskDetailPage-${ownProps.params.taskId}`)
+    ),
     runCommandOnTask: (taskId, commandName) => dispatch(RunCommandOnTask.trigger(taskId, commandName)),
     fetchTaskHistory: (taskId) => dispatch(FetchTaskHistory.trigger(taskId, true)),
     fetchTaskStatistics: (taskId) => dispatch(FetchTaskStatistics.trigger(taskId, [404, 500])),
