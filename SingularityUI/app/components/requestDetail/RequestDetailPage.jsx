@@ -83,14 +83,16 @@ const mapStateToProps = (state, ownProps) => {
 const mapDispatchToProps = (dispatch, ownProps) => {
   const refreshActions = [
     FetchRequest.trigger(ownProps.params.requestId, true),
-    FetchTaskCleanups.trigger()
+    FetchTaskCleanups.trigger(),
+    FetchActiveTasksForRequest.trigger(ownProps.params.requestId),
+    FetchScheduledTasksForRequest.trigger(ownProps.params.requestId)
   ];
   return {
     refresh: () => {
       dispatch(RefreshActions.BeginAutoRefresh(
         `RequestDetailPage-${ownProps.index}`,
         refreshActions,
-        5000
+        4000
       ));
     },
     cancelRefresh: () => dispatch(
@@ -107,4 +109,4 @@ const mapDispatchToProps = (dispatch, ownProps) => {
 export default connect(
   mapStateToProps,
   mapDispatchToProps
-)(rootComponent(RequestDetailPage, (props) => refresh(props.params.requestId), false));
+)(rootComponent(RequestDetailPage, (props) => refresh(props.params.requestId), true));

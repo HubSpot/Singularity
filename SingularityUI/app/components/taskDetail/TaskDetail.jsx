@@ -4,6 +4,8 @@ import { withRouter } from 'react-router';
 import rootComponent from '../../rootComponent';
 import Utils from '../../utils';
 
+import * as RefreshActions from '../../actions/ui/refresh';
+
 import { FetchTaskFiles } from '../../actions/api/sandbox';
 import {
   FetchTaskStatistics,
@@ -135,6 +137,7 @@ class TaskDetail extends Component {
   }
 
   componentDidMount() {
+    this.props.refresh();
     if (!this.props.task) return;
     // Get a second sample for CPU usage right away
     if (this.props.task.isStillRunning) {
@@ -153,6 +156,7 @@ class TaskDetail extends Component {
   }
 
   componentWillUnmount() {
+    this.props.cancelRefresh();
     clearInterval(this.statisticsRefreshInterval);
   }
 
@@ -573,8 +577,19 @@ function mapStateToProps(state, ownProps) {
   };
 }
 
-function mapDispatchToProps(dispatch) {
+function mapDispatchToProps(dispatch, ownProps) {
+  const refreshActions = [
+    FetchTaskHistory.trigger(ownProps.params.taskId, true),
+    FetchTaskCleanups.trigger()
+  ];
   return {
+    refresh: () => {
+      dispatch(RefreshActions.BeginAutoRefresh(
+        `TaskDetailPage-${ownProps.params.taskId}`,
+        refreshActions,
+        4000
+      ));
+    },
     runCommandOnTask: (taskId, commandName) => dispatch(RunCommandOnTask.trigger(taskId, commandName)),
     fetchTaskHistory: (taskId) => dispatch(FetchTaskHistory.trigger(taskId, true)),
     fetchTaskStatistics: (taskId) => dispatch(FetchTaskStatistics.trigger(taskId, [404, 500])),
