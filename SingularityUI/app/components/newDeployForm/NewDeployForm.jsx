@@ -1330,7 +1330,21 @@ class NewDeployForm extends Component {
         onChange={newValue => this.updateField('protocol', newValue.value)}
         options={[
           { label: 'HTTP', value: 'HTTP' },
-          { label: 'HTTPS', value: 'HTTPS' }
+          { label: 'HTTPS', value: 'HTTPS' },
+          { label: 'HTTP2', value: 'HTTP2' },
+          { label: 'HTTPS2', value: 'HTTPS2' }
+        ]}
+      />
+    );
+    const healthCheckMethod = (
+      <SelectFormGroup
+        id="hc-method"
+        label="HC Method"
+        value={this.getValueOrDefault('method')}
+        onChange={newValue => this.updateField('method', newValue.value)}
+        options={[
+          { label: 'GET', value: 'GET' },
+          { label: 'POST', value: 'POST' }
         ]}
       />
     );
@@ -1565,8 +1579,11 @@ class NewDeployForm extends Component {
                 </div>
               </div>
               <div className="row">
-                <div className="col-md-6">
+                <div className="col-md-4">
                   {healthCheckProtocol}
+                </div>
+                <div className="col-md-2">
+                  {healthCheckMethod}
                 </div>
                 <div className="col-md-6">
                   {healthcheckStartupDelaySeconds}
