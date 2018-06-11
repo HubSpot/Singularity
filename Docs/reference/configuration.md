@@ -199,7 +199,7 @@ These settings should live under the "mesos" field inside the root configuration
 | Parameter | Default | Description | Type |
 |-----------|---------|-------------|------|
 | allocatedResourceWeight | 0.5 | This portion of an offer's score depends on the amount of resources currently allocated by mesos on the mesos slave/agent | double |
-| inUseResourceWeight | 0.5 | This portion of an offer's score depends on teh currently used resources on a mesos salve/agent as reported by the slave statistics endpoint | double |
+| inUseResourceWeight | 0.5 | This portion of an offer's score depends on the currently used resources on a mesos slave/agent as reported by the slave statistics endpoint | double |
 | cpuWeight | 0.4 | The weight the slave's cpu carries when scoring an offer | double |
 | memWeight | 0.4 | The weight the slave's memory carries when scoring an offer | double |
 | diskWeight | 0.2 | The weight the slave's disk carries when scoring an offer | double |
