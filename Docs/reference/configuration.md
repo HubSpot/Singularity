@@ -198,13 +198,11 @@ These settings should live under the "mesos" field inside the root configuration
 #### Offers ####
 | Parameter | Default | Description | Type |
 |-----------|---------|-------------|------|
-| longRunningUsedCpuWeightForOffer | 0.30 | The weight long running tasks' cpu utilization carries when scoring an offer (should add up to 1 with longRunningUsedMemWeightForOffer) | double |
-| longRunningUsedMemWeightForOffer | 0.70 | The weight long running tasks' memory utilization carries when scoring an offer (should add up to 1 with longRunningUsedCpuWeightForOffer) | double |
-| freeCpuWeightForOffer | 0.30 | The weight the slave's free cpu carries when scoring an offer (should add up to 1 with freeMemWeightForOffer) | double |
-| freeMemWeightForOffer | 0.70 | The weight the slave's free memory carries when scoring an offer (should add up to 1 with freeCpuWeightForOffer) | double |
-| defaultOfferScoreForMissingUsage | 0.30 | The default offer score used for offers without utilization metrics | double |
-| considerNonLongRunningTaskLongRunningAfterRunningForSeconds | 21600 (6 hours) | If a non long running task runs, on average, this long or more, it's considered a long running task | long |
-| maxNonLongRunningUsedResourceWeight | 0.50 | The max weight long running tasks' utilization can carry when scoring a non long running task for an offer | double
+| allocatedResourceWeight | 0.5 | This portion of an offer's score depends on the amount of resources currently allocated by mesos on the mesos slave/agent | double |
+| inUseResourceWeight | 0.5 | This portion of an offer's score depends on the currently used resources on a mesos slave/agent as reported by the slave statistics endpoint | double |
+| cpuWeight | 0.4 | The weight the slave's cpu carries when scoring an offer | double |
+| memWeight | 0.4 | The weight the slave's memory carries when scoring an offer | double |
+| diskWeight | 0.2 | The weight the slave's disk carries when scoring an offer | double |
 
 ## Database ##
 
