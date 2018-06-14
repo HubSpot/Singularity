@@ -114,9 +114,9 @@ public class SingularityScheduler {
     this.lock = lock;
   }
 
-  private void cleanupTaskDueToDecomission(final Map<String, Optional<String>> requestIdsToUserToReschedule, final Set<SingularityTaskId> matchingTaskIds, SingularityTask task,
+  private void cleanupTaskDueToDecomission(final Map<SingularityDeployKey, Optional<String>> requestIdsToUserToReschedule, final Set<SingularityTaskId> matchingTaskIds, SingularityTask task,
     SingularityMachineAbstraction<?> decommissioningObject) {
-    requestIdsToUserToReschedule.put(task.getTaskRequest().getRequest().getId(), decommissioningObject.getCurrentState().getUser());
+    requestIdsToUserToReschedule.put(new SingularityDeployKey(task.getTaskRequest().getRequest().getId(), task.getTaskRequest().getDeploy().getId()), decommissioningObject.getCurrentState().getUser());
 
     matchingTaskIds.add(task.getTaskId());
 
@@ -138,7 +138,7 @@ public class SingularityScheduler {
   public void checkForDecomissions() {
     final long start = System.currentTimeMillis();
 
-    final Map<String, Optional<String>> requestIdsToUserToReschedule = Maps.newHashMap();
+    final Map<SingularityDeployKey, Optional<String>> requestIdsToUserToReschedule = Maps.newHashMap();
     final Set<SingularityTaskId> matchingTaskIds = Sets.newHashSet();
 
     final Collection<SingularityTaskId> activeTaskIds = leaderCache.getActiveTaskIds();
@@ -185,20 +185,13 @@ public class SingularityScheduler {
       }
     }
 
-    for (Entry<String, Optional<String>> requestIdAndUser : requestIdsToUserToReschedule.entrySet()) {
-      final String requestId = requestIdAndUser.getKey();
+    for (Entry<SingularityDeployKey, Optional<String>> requestIdAndUser : requestIdsToUserToReschedule.entrySet()) {
+      final SingularityDeployKey deployKey = requestIdAndUser.getKey();
 
-      LOG.trace("Rescheduling request {} due to decomissions", requestId);
+      LOG.trace("Rescheduling request {} due to decomissions", deployKey);
 
-      Optional<String> maybeDeployId = deployManager.getInUseDeployId(requestId);
-
-      if (maybeDeployId.isPresent()) {
-        requestManager.addToPendingQueue(
-          new SingularityPendingRequest(requestId, maybeDeployId.get(), start, requestIdAndUser.getValue(), PendingType.DECOMISSIONED_SLAVE_OR_RACK, Optional.<Boolean>absent(),
-            Optional.<String>absent()));
-      } else {
-        LOG.warn("Not rescheduling a request ({}) because of no active deploy", requestId);
-      }
+      requestManager.addToPendingQueue(
+        new SingularityPendingRequest(deployKey.getRequestId(), deployKey.getDeployId(), start, requestIdAndUser.getValue(), PendingType.DECOMISSIONED_SLAVE_OR_RACK, Optional.absent(), Optional.absent()));
     }
 
     changeState(slaves, slaveManager);
