@@ -362,6 +362,24 @@ public class SingularityDeployChecker {
       }
     }
 
+    if (deployResult.getDeployState() == DeployState.SUCCEEDED) {
+      List<SingularityTaskId> newDeployCleaningTasks = taskManager.getCleanupTaskIds().stream()
+          .filter((t) -> t.getDeployId().equals(pendingDeploy.getDeployMarker().getDeployId()))
+          .collect(Collectors.toList());
+      // Account for any bounce/decom that may have happened during the deploy
+      if (!newDeployCleaningTasks.isEmpty()) {
+        requestManager.addToPendingQueue(new SingularityPendingRequest(
+            request.getId(),
+            pendingDeploy.getDeployMarker().getDeployId(),
+            deployResult.getTimestamp(),
+            pendingDeploy.getDeployMarker().getUser(),
+            PendingType.DEPLOY_FINISHED,
+            request.getSkipHealthchecks(),
+            pendingDeploy.getDeployMarker().getMessage()
+        ));
+      }
+    }
+
     if (request.isDeployable() && deployResult.getDeployState() == DeployState.SUCCEEDED && pendingDeploy.getDeployProgress().isPresent() && requestWithState.getState() != RequestState.PAUSED) {
       if (pendingDeploy.getDeployProgress().get().getTargetActiveInstances() != request.getInstancesSafe()) {
         requestManager.addToPendingQueue(new SingularityPendingRequest(request.getId(), pendingDeploy.getDeployMarker().getDeployId(), deployResult.getTimestamp(),
