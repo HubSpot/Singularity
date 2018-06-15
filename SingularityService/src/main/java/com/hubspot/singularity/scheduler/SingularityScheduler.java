@@ -187,12 +187,14 @@ public class SingularityScheduler {
 
     for (Entry<String, Optional<String>> requestIdAndUser : requestIdsToUserToReschedule.entrySet()) {
       final String requestId = requestIdAndUser.getKey();
+  
       LOG.trace("Rescheduling request {} due to decomissions", requestId);
 
       Optional<String> maybeDeployId = deployManager.getInUseDeployId(requestId);
 
       if (maybeDeployId.isPresent()) {
-        requestManager.addToPendingQueue(new SingularityPendingRequest(requestId, maybeDeployId.get(), start, requestIdAndUser.getValue(), PendingType.DECOMISSIONED_SLAVE_OR_RACK, Optional.<Boolean>absent(),
+        requestManager.addToPendingQueue(
+            new SingularityPendingRequest(requestId, maybeDeployId.get(), start, requestIdAndUser.getValue(), PendingType.DECOMISSIONED_SLAVE_OR_RACK, Optional.<Boolean>absent(),
             Optional.<String>absent()));
       } else {
         LOG.warn("Not rescheduling a request ({}) because of no active deploy", requestId);
