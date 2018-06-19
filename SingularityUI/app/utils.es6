@@ -142,6 +142,7 @@ const Utils = {
       } else if (fuzzyObject.string.toLowerCase().indexOf(filter.toLowerCase()) > -1) {
         fuzzyObject.score = fuzzyObject.score * 5;
       }
+      fuzzyObject.score = fuzzyObject.score * (1 + (filter.length/fuzzyObject.string.length));
       return fuzzyObject;
     });
     return _.uniq(
