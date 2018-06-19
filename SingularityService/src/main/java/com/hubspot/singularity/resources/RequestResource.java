@@ -151,8 +151,6 @@ public class RequestResource extends AbstractRequestResource {
       requestState = oldRequestWithState.get().getState();
     }
 
-    requestHelper.updateRequest(request, oldRequest, requestState, historyType, user.getEmail(), skipHealthchecks, message, maybeBounceRequest);
-
     if (oldRequest.isPresent() && oldRequest.get().getInstancesSafe() < request.getInstancesSafe()) {
       // Trigger cleanups for scale down
       int newInstances = request.getInstancesSafe();
@@ -170,6 +168,8 @@ public class RequestResource extends AbstractRequestResource {
         }
       });
     }
+
+    requestHelper.updateRequest(request, oldRequest, requestState, historyType, user.getEmail(), skipHealthchecks, message, maybeBounceRequest);
   }
 
   @POST
