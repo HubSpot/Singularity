@@ -151,7 +151,7 @@ public class RequestResource extends AbstractRequestResource {
       requestState = oldRequestWithState.get().getState();
     }
 
-    if (oldRequest.isPresent() && oldRequest.get().getInstancesSafe() < request.getInstancesSafe()) {
+    if (oldRequest.isPresent() && request.getInstancesSafe() < oldRequest.get().getInstancesSafe()) {
       // Trigger cleanups for scale down
       int newInstances = request.getInstancesSafe();
       taskManager.getActiveTaskIdsForRequest(request.getId()).forEach((taskId) -> {
