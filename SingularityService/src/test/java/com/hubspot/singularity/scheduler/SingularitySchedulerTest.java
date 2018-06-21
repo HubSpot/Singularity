@@ -2374,4 +2374,22 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
 
     Assert.assertEquals(1, taskManager.getActiveTaskIds().size());
   }
+
+  @Test
+  public void testCleanupsCreatedOnScaleDown() {
+    initRequest();
+    SingularityRequestBuilder bldr = request.toBuilder();
+    bldr.setInstances(Optional.of(2));
+    requestResource.postRequest(bldr.build(), singularityUser);
+    initFirstDeploy();
+
+    SingularityTask firstTask = launchTask(request, firstDeploy, 1, TaskState.TASK_RUNNING);
+    SingularityTask secondTask = launchTask(request, firstDeploy, 2, TaskState.TASK_RUNNING);
+    Assert.assertEquals(0, taskManager.getNumCleanupTasks());
+
+    bldr.setInstances(Optional.of(1));
+    requestResource.postRequest(bldr.build(), singularityUser);
+    Assert.assertEquals(1, taskManager.getNumCleanupTasks());
+    Assert.assertEquals(taskManager.getCleanupTaskIds().get(0), secondTask.getTaskId());
+  }
 }
