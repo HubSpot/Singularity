@@ -313,7 +313,7 @@ public class SingularitySlavePlacementTest extends SingularitySchedulerTestBase 
 
       scheduler.drainPendingQueue();
 
-      Assert.assertEquals(4, taskManager.getNumCleanupTasks());
+      Assert.assertEquals(3, taskManager.getNumCleanupTasks());
 
       int rebalanceRackCleanups = 0;
       for (SingularityTaskCleanup cleanup : taskManager.getCleanupTasks()) {
