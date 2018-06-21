@@ -51,10 +51,12 @@ import com.hubspot.singularity.SingularityRequestHistory.RequestHistoryType;
 import com.hubspot.singularity.SingularityRequestParent;
 import com.hubspot.singularity.SingularityRequestWithState;
 import com.hubspot.singularity.SingularityShellCommand;
+import com.hubspot.singularity.SingularityTaskCleanup;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTransformHelpers;
 import com.hubspot.singularity.SingularityUser;
 import com.hubspot.singularity.SlavePlacement;
+import com.hubspot.singularity.TaskCleanupType;
 import com.hubspot.singularity.WebExceptions;
 import com.hubspot.singularity.api.SingularityBounceRequest;
 import com.hubspot.singularity.api.SingularityDeleteRequestRequest;
@@ -139,7 +141,7 @@ public class RequestResource extends AbstractRequestResource {
     }
 
     if (!oldRequest.isPresent() || !(oldRequest.get().getInstancesSafe() == request.getInstancesSafe())) {
-      validator.checkScale(request, Optional.<Integer>absent());
+      validator.checkScale(request, Optional.absent());
     }
 
     authorizationHelper.checkForAuthorization(request, user, SingularityAuthorizationScope.WRITE);
@@ -148,6 +150,24 @@ public class RequestResource extends AbstractRequestResource {
 
     if (oldRequestWithState.isPresent()) {
       requestState = oldRequestWithState.get().getState();
+    }
+
+    if (oldRequest.isPresent() && request.getInstancesSafe() < oldRequest.get().getInstancesSafe()) {
+      // Trigger cleanups for scale down
+      int newInstances = request.getInstancesSafe();
+      taskManager.getActiveTaskIdsForRequest(request.getId()).forEach((taskId) -> {
+        if (taskId.getInstanceNo() > newInstances) {
+          taskManager.createTaskCleanup(new SingularityTaskCleanup(
+              Optional.of(user.getId()),
+              TaskCleanupType.SCALING_DOWN,
+              System.currentTimeMillis(),
+              taskId,
+              message,
+              Optional.of(UUID.randomUUID().toString()),
+              Optional.absent()
+          ));
+        }
+      });
     }
 
     requestHelper.updateRequest(request, oldRequest, requestState, historyType, user.getEmail(), skipHealthchecks, message, maybeBounceRequest);
