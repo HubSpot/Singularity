@@ -88,7 +88,8 @@ public class LogrotateTemplateContext {
         new LogrotateAdditionalFile(
           taskDefinition.getTaskDirectoryPath().resolve(additionalFile.getFilename()).toString(),
           additionalFile.getExtension().or(Strings.emptyToNull(Files.getFileExtension(additionalFile.getFilename()))),
-          dateformat
+          dateformat,
+          additionalFile.getFrequencyOverride()
       ));
     }
 
