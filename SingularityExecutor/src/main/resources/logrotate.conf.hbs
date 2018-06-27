@@ -36,6 +36,7 @@ notifempty
 
 {{#if extrasFiles}}
 {{#each extrasFiles}}{{{filename}}} {
+  {{{ logrotateFrequencyOverride }}}
   dateformat -{{{ dateformat }}}{{#if extension}}.{{{ extension}}}{{/if}}
   missingok
 {{#if useFileAttributes}}
