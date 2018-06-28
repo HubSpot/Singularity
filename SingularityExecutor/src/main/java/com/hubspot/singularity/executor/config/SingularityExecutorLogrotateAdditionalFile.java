@@ -7,20 +7,20 @@ import com.hubspot.singularity.executor.SingularityExecutorLogrotateFrequency;
 
 public class SingularityExecutorLogrotateAdditionalFile {
     private final String filename;
-    private final Optional<String> extension;
-    private final Optional<String> dateformat;
-    private final Optional<SingularityExecutorLogrotateFrequency> frequencyOverride;
+    private final String extension;
+    private final String dateformat;
+    private final SingularityExecutorLogrotateFrequency frequencyOverride;
 
     @JsonCreator
     public static SingularityExecutorLogrotateAdditionalFile fromString(String value) {
-        return new SingularityExecutorLogrotateAdditionalFile(value, Optional.absent(), Optional.absent(), Optional.absent());
+        return new SingularityExecutorLogrotateAdditionalFile(value, null, null, null);
     }
 
     @JsonCreator
     public SingularityExecutorLogrotateAdditionalFile(@JsonProperty("filename") String filename,
-        @JsonProperty("extension") Optional<String> extension,
-        @JsonProperty("dateformat") Optional<String> dateformat,
-        @JsonProperty("logrotateFrequencyOverride") Optional<SingularityExecutorLogrotateFrequency> frequencyOverride) {
+        @JsonProperty("extension") String extension,
+        @JsonProperty("dateformat") String dateformat,
+        @JsonProperty("logrotateFrequencyOverride") SingularityExecutorLogrotateFrequency frequencyOverride) {
         this.filename = filename;
         this.extension = extension;
         this.dateformat = dateformat;
@@ -32,14 +32,14 @@ public class SingularityExecutorLogrotateAdditionalFile {
     }
 
     public Optional<String> getExtension() {
-        return extension;
+        return Optional.fromNullable(extension);
     }
 
     public Optional<String> getDateformat() {
-        return dateformat;
+        return Optional.fromNullable(dateformat);
     }
 
     public Optional<SingularityExecutorLogrotateFrequency> getFrequencyOverride() {
-        return frequencyOverride;
+        return Optional.fromNullable(frequencyOverride);
     }
 }

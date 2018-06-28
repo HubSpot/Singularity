@@ -6,6 +6,7 @@ import java.util.List;
 import com.google.common.base.Optional;
 import com.google.common.base.Strings;
 import com.google.common.io.Files;
+import com.hubspot.singularity.executor.SingularityExecutorLogrotateFrequency;
 import com.hubspot.singularity.executor.config.SingularityExecutorConfiguration;
 import com.hubspot.singularity.executor.config.SingularityExecutorLogrotateAdditionalFile;
 import com.hubspot.singularity.executor.task.SingularityExecutorTaskDefinition;
@@ -84,12 +85,14 @@ public class LogrotateTemplateContext {
         dateformat = configuration.getLogrotateExtrasDateformat().startsWith("-") ? configuration.getLogrotateExtrasDateformat().substring(1) : configuration.getLogrotateExtrasDateformat();
       }
 
+      SingularityExecutorLogrotateFrequency freqOverride = additionalFile.getFrequencyOverride().isPresent() ? additionalFile.getFrequencyOverride().get() : null;
+
       transformed.add(
         new LogrotateAdditionalFile(
           taskDefinition.getTaskDirectoryPath().resolve(additionalFile.getFilename()).toString(),
           additionalFile.getExtension().or(Strings.emptyToNull(Files.getFileExtension(additionalFile.getFilename()))),
           dateformat,
-          additionalFile.getFrequencyOverride()
+          freqOverride
       ));
     }
 

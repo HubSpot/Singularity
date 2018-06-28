@@ -1,8 +1,7 @@
 package com.hubspot.singularity.executor.config;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.*;
 
 import java.io.File;
 import java.lang.reflect.Field;
@@ -81,7 +80,7 @@ public class SingularityExecutorConfigurationTest {
 
         List<LogrotateAdditionalFile> testExtraFiles = new ArrayList<>();
         testExtraFiles.add(new LogrotateAdditionalFile("/tmp/testfile.txt", "txt", "%Y%m%d",
-            Optional.of(SingularityExecutorLogrotateFrequency.DAILY)));
+            SingularityExecutorLogrotateFrequency.DAILY));
 
         doReturn(testExtraFiles).when(context).getExtrasFiles();
 
