@@ -7,9 +7,9 @@ import com.hubspot.singularity.executor.SingularityExecutorLogrotateFrequency;
 
 public class SingularityExecutorLogrotateAdditionalFile {
     private final String filename;
-    private final String extension;
-    private final String dateformat;
-    private final SingularityExecutorLogrotateFrequency frequencyOverride;
+    private Optional<String> extension;
+    private Optional<String> dateformat;
+    private Optional<SingularityExecutorLogrotateFrequency> logrotateFrequencyOverride;
 
     @JsonCreator
     public static SingularityExecutorLogrotateAdditionalFile fromString(String value) {
@@ -20,11 +20,11 @@ public class SingularityExecutorLogrotateAdditionalFile {
     public SingularityExecutorLogrotateAdditionalFile(@JsonProperty("filename") String filename,
         @JsonProperty("extension") String extension,
         @JsonProperty("dateformat") String dateformat,
-        @JsonProperty("logrotateFrequencyOverride") SingularityExecutorLogrotateFrequency frequencyOverride) {
+        @JsonProperty("logrotateFrequencyOverride") SingularityExecutorLogrotateFrequency logrotateFrequencyOverride) {
         this.filename = filename;
-        this.extension = extension;
-        this.dateformat = dateformat;
-        this.frequencyOverride = frequencyOverride;
+        this.extension = Optional.fromNullable(extension);
+        this.dateformat = Optional.fromNullable(dateformat);
+        this.logrotateFrequencyOverride = Optional.fromNullable(logrotateFrequencyOverride);
     }
 
     public String getFilename() {
@@ -32,14 +32,15 @@ public class SingularityExecutorLogrotateAdditionalFile {
     }
 
     public Optional<String> getExtension() {
-        return Optional.fromNullable(extension);
+        return extension;
     }
 
     public Optional<String> getDateformat() {
-        return Optional.fromNullable(dateformat);
+        return dateformat;
     }
 
-    public Optional<SingularityExecutorLogrotateFrequency> getFrequencyOverride() {
-        return Optional.fromNullable(frequencyOverride);
+    public Optional<SingularityExecutorLogrotateFrequency> getLogrotateFrequencyOverride() {
+        return logrotateFrequencyOverride;
     }
+
 }

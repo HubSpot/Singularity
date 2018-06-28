@@ -7,9 +7,9 @@ public class LogrotateAdditionalFile {
     private final String filename;
     private final String extension;
     private final String dateformat;
-    private final SingularityExecutorLogrotateFrequency logrotateFrequencyOverride;
+    private final Optional<SingularityExecutorLogrotateFrequency> logrotateFrequencyOverride;
 
-    public LogrotateAdditionalFile(String filename, String extension, String dateformat, SingularityExecutorLogrotateFrequency logrotateFrequencyOverride) {
+    public LogrotateAdditionalFile(String filename, String extension, String dateformat, Optional<SingularityExecutorLogrotateFrequency> logrotateFrequencyOverride) {
         this.filename = filename;
         this.extension = extension;
         this.dateformat = dateformat;
@@ -28,10 +28,10 @@ public class LogrotateAdditionalFile {
         return dateformat;
     }
 
-    public Optional<String> getLogrotateFrequencyOverride() {
+    public String getLogrotateFrequencyOverride() {
         return Optional.of(logrotateFrequencyOverride).isPresent() ?
-            Optional.of(logrotateFrequencyOverride.getLogrotateValue()) : Optional.absent();
-    }
+            logrotateFrequencyOverride.get().getLogrotateValue() : "";
+   }
 
     @Override
     public String toString() {

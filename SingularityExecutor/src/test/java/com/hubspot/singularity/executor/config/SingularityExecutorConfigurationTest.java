@@ -81,7 +81,7 @@ public class SingularityExecutorConfigurationTest {
 
         List<LogrotateAdditionalFile> testExtraFiles = new ArrayList<>();
         testExtraFiles.add(new LogrotateAdditionalFile("/tmp/testfile.txt", "txt", "%Y%m%d",
-            SingularityExecutorLogrotateFrequency.DAILY));
+            Optional.of(SingularityExecutorLogrotateFrequency.DAILY)));
 
         doReturn(testExtraFiles).when(context).getExtrasFiles();
 
