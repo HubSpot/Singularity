@@ -29,9 +29,9 @@ public class LogrotateAdditionalFile {
     }
 
     public String getLogrotateFrequencyOverride() {
-        return Optional.of(logrotateFrequencyOverride).isPresent() ?
+        return logrotateFrequencyOverride.isPresent() ?
             logrotateFrequencyOverride.get().getLogrotateValue() : "";
-   }
+    }
 
     @Override
     public String toString() {

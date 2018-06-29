@@ -36,7 +36,7 @@ notifempty
 
 {{#if extrasFiles}}
 {{#each extrasFiles}}{{{filename}}} {
-  {{#if logrotateFrequencyOverride }} {{{logrotateFrequencyOverride}}} {{/if}}
+  {{#if logrotateFrequencyOverride }}{{{logrotateFrequencyOverride}}}{{/if}}
   dateformat -{{{ dateformat }}}{{#if extension}}.{{{ extension}}}{{/if}}
   missingok
 {{#if useFileAttributes}}
