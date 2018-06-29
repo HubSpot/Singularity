@@ -89,7 +89,7 @@ public class LogrotateTemplateContext {
           taskDefinition.getTaskDirectoryPath().resolve(additionalFile.getFilename()).toString(),
           additionalFile.getExtension().or(Strings.emptyToNull(Files.getFileExtension(additionalFile.getFilename()))),
           dateformat,
-            additionalFile.getLogrotateFrequencyOverride()
+          additionalFile.getLogrotateFrequencyOverride()
       ));
     }
 
