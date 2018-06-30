@@ -178,7 +178,7 @@ const TaskAlerts = (props) => {
         </p>
         {respondedMessage}
         <p><li>
-          <a href="#healthchecks">View all healthchecks</a>
+          <a onClick={props.onViewHealthchecks} href="#healthchecks">View all healthchecks</a>
         </li>
         <li>
           <a href="#logs">View service logs</a>
@@ -253,6 +253,8 @@ TaskAlerts.propTypes = {
     }).isRequired,
     currentDeployState: PropTypes.string
   })),
+
+  onViewHealthchecks: PropTypes.func.isRequired,
 };
 
 export default TaskAlerts;

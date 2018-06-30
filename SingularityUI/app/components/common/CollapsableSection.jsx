@@ -4,6 +4,7 @@ export default class CollapsableSection extends React.Component {
 
   static propTypes = {
     defaultExpanded: PropTypes.bool,
+    expanded: PropTypes.bool,
     title: PropTypes.string,
     subtitle: PropTypes.string,
     children: PropTypes.node,
@@ -11,10 +12,16 @@ export default class CollapsableSection extends React.Component {
   };
 
   constructor(props) {
-    super();
+    super(props);
     this.state = {
-      expanded: props.defaultExpanded
+      expanded: props.defaultExpanded || props.expanded,
     };
+  }
+
+  componentWillReceiveProps(nextProps) {
+    if (this.props.expanded !== nextProps.expanded) {
+      this.setState({ expanded: nextProps.expanded });
+    }
   }
 
   toggle() {
