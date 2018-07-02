@@ -7,9 +7,9 @@ import com.hubspot.singularity.executor.SingularityExecutorLogrotateFrequency;
 
 public class SingularityExecutorLogrotateAdditionalFile {
     private final String filename;
-    private Optional<String> extension;
-    private Optional<String> dateformat;
-    private Optional<SingularityExecutorLogrotateFrequency> logrotateFrequencyOverride;
+    private final Optional<String> extension;
+    private final Optional<String> dateformat;
+    private final Optional<SingularityExecutorLogrotateFrequency> logrotateFrequencyOverride;
 
     @JsonCreator
     public static SingularityExecutorLogrotateAdditionalFile fromString(String value) {
