@@ -76,7 +76,8 @@ public class LogrotateTemplateContext {
    */
   public List<LogrotateAdditionalFile> getExtrasFiles() {
     return getAllExtraFiles().stream()
-        .filter(p -> ! p.getLogrotateFrequencyOverride().equals(SingularityExecutorLogrotateFrequency.HOURLY)).collect(Collectors.toList());
+        .filter(p -> ! p.getLogrotateFrequencyOverride().equals(SingularityExecutorLogrotateFrequency.HOURLY))
+        .collect(Collectors.toList());
   }
 
   /**
@@ -85,7 +86,8 @@ public class LogrotateTemplateContext {
    */
   public List<LogrotateAdditionalFile> getExtrasFilesHourly() {
     return getAllExtraFiles().stream()
-        .filter(p -> p.getLogrotateFrequencyOverride().equals(SingularityExecutorLogrotateFrequency.HOURLY)).collect(Collectors.toList());
+        .filter(p -> p.getLogrotateFrequencyOverride().equals(SingularityExecutorLogrotateFrequency.HOURLY))
+        .collect(Collectors.toList());
 
   }
 
@@ -105,22 +107,17 @@ public class LogrotateTemplateContext {
         dateformat = configuration.getLogrotateExtrasDateformat().startsWith("-") ? configuration.getLogrotateExtrasDateformat().substring(1) : configuration.getLogrotateExtrasDateformat();
       }
 
-      if (additionalFile.getLogrotateFrequencyOverride().isPresent() &&
-          additionalFile.getLogrotateFrequencyOverride().get() == SingularityExecutorLogrotateFrequency.HOURLY) {
-
-        transformed.add(
-            new LogrotateAdditionalFile(
-                taskDefinition.getTaskDirectoryPath().resolve(additionalFile.getFilename()).toString(),
-                additionalFile.getExtension().or(Strings.emptyToNull(Files.getFileExtension(additionalFile.getFilename()))),
-                dateformat,
-                additionalFile.getLogrotateFrequencyOverride()
-            ));
-      }
+      transformed.add(
+          new LogrotateAdditionalFile(
+              taskDefinition.getTaskDirectoryPath().resolve(additionalFile.getFilename()).toString(),
+              additionalFile.getExtension().or(Strings.emptyToNull(Files.getFileExtension(additionalFile.getFilename()))),
+              dateformat,
+              additionalFile.getLogrotateFrequencyOverride()
+          ));
     }
 
     return transformed;
   }
-
 
   private Optional<String> parseFilenameExtension(String filename) {
     final int lastPeriodIndex = filename.lastIndexOf('.');
