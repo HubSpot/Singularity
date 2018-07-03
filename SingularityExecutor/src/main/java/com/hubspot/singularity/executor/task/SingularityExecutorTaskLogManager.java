@@ -15,12 +15,11 @@ import com.google.common.base.Optional;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.hubspot.singularity.SingularityS3FormatHelper;
+import com.hubspot.singularity.SingularityS3UploaderFile;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.executor.SingularityExecutorLogrotateFrequency;
 import com.hubspot.singularity.executor.TemplateManager;
 import com.hubspot.singularity.executor.config.SingularityExecutorConfiguration;
-import com.hubspot.singularity.SingularityS3UploaderFile;
-import com.hubspot.singularity.executor.config.SingularityExecutorLogrotateAdditionalFile;
 import com.hubspot.singularity.executor.models.LogrotateCronTemplateContext;
 import com.hubspot.singularity.executor.models.LogrotateTemplateContext;
 import com.hubspot.singularity.runner.base.configuration.SingularityRunnerBaseConfiguration;
@@ -97,26 +96,25 @@ public class SingularityExecutorTaskLogManager {
     log.info("Writing non-hourly logrotate configuration file to {}", getLogrotateConfPath());
     templateManager.writeLogrotateFile(getLogrotateConfPath(), new LogrotateTemplateContext(configuration, taskDefinition));
 
-
     // Get the cron schedule for an additional file with an HOURLY schedule, if there is any
-    java.util.Optional<SingularityExecutorLogrotateAdditionalFile> hourlyAdditionalFile = configuration.getLogrotateAdditionalFiles()
+    Optional<SingularityExecutorLogrotateFrequency> additionalFileFrequency = configuration.getLogrotateAdditionalFiles()
         .stream()
         .filter(p -> p.getLogrotateFrequencyOverride().isPresent() &&
                 p.getLogrotateFrequencyOverride().get().equals(SingularityExecutorLogrotateFrequency.HOURLY) &&
                 p.getLogrotateFrequencyOverride().get().getCronSchedule().isPresent())
-        .findFirst();
-    Optional<String> cronSchedule = hourlyAdditionalFile.isPresent() && hourlyAdditionalFile.get().getLogrotateFrequencyOverride().isPresent() ?
-        hourlyAdditionalFile.get().getLogrotateFrequencyOverride().get().getCronSchedule() : Optional.absent();
+        .findFirst().get().getLogrotateFrequencyOverride();
 
     // if any additional file or the global setting has an hourly rotation, write a separate rotate config and force rotate using a cron schedule
-    if (cronSchedule.isPresent() || logrotateFrequency.getCronSchedule().isPresent()) {
+    if (additionalFileFrequency.isPresent() || logrotateFrequency.getCronSchedule().isPresent()) {
       log.info("Writing hourly logrotate configuration file to {}", getLogrotateHourlyConfPath());
       templateManager.writeHourlyLogrotateFile(getLogrotateHourlyConfPath(), new LogrotateTemplateContext(configuration, taskDefinition));
 
-      String cronScheduleString = cronSchedule.isPresent() ? cronSchedule.get() : logrotateFrequency.getCronSchedule().get();
+      String cronScheduleString = additionalFileFrequency.isPresent() ?
+          additionalFileFrequency.get().getCronSchedule().get() : logrotateFrequency.getCronSchedule().get();
+      SingularityExecutorLogrotateFrequency freq = additionalFileFrequency.isPresent() ? additionalFileFrequency.get() : logrotateFrequency;
 
       log.info("Writing logrotate cron entry with schedule '{}' to {}", cronScheduleString, getLogrotateCronPath());
-      templateManager.writeCronEntryForLogrotate(getLogrotateCronPath(), new LogrotateCronTemplateContext(configuration, taskDefinition, logrotateFrequency));
+      templateManager.writeCronEntryForLogrotate(getLogrotateCronPath(), new LogrotateCronTemplateContext(configuration, taskDefinition, freq));
     }
   }
 
