@@ -7,23 +7,23 @@ import com.hubspot.singularity.executor.SingularityExecutorLogrotateFrequency;
 
 public class SingularityExecutorLogrotateAdditionalFile {
     private final String filename;
-    private Optional<String> extension;
-    private Optional<String> dateformat;
-    private Optional<SingularityExecutorLogrotateFrequency> logrotateFrequencyOverride;
+    private final Optional<String> extension;
+    private final Optional<String> dateformat;
+    private final Optional<SingularityExecutorLogrotateFrequency> logrotateFrequencyOverride;
 
     @JsonCreator
     public static SingularityExecutorLogrotateAdditionalFile fromString(String value) {
-        return new SingularityExecutorLogrotateAdditionalFile(value, null, null, null);
+        return new SingularityExecutorLogrotateAdditionalFile(value, Optional.absent(), Optional.absent(), null);
     }
 
     @JsonCreator
     public SingularityExecutorLogrotateAdditionalFile(@JsonProperty("filename") String filename,
-        @JsonProperty("extension") String extension,
-        @JsonProperty("dateformat") String dateformat,
-        @JsonProperty("logrotateFrequencyOverride") SingularityExecutorLogrotateFrequency logrotateFrequencyOverride) {
+            @JsonProperty("extension") Optional<String> extension,
+            @JsonProperty("dateformat") Optional<String> dateformat,
+            @JsonProperty("logrotateFrequencyOverride") SingularityExecutorLogrotateFrequency logrotateFrequencyOverride) {
         this.filename = filename;
-        this.extension = Optional.fromNullable(extension);
-        this.dateformat = Optional.fromNullable(dateformat);
+        this.extension = extension;
+        this.dateformat = dateformat;
         this.logrotateFrequencyOverride = Optional.fromNullable(logrotateFrequencyOverride);
     }
 
