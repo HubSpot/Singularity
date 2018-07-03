@@ -75,6 +75,13 @@ public class SingularityExecutorModule extends AbstractModule {
 
   @Provides
   @Singleton
+  @Named(LOGROTATE_HOURLY_TEMPLATE)
+  public Template providesLogrotateHourlyTemplate(Handlebars handlebars) throws IOException {
+    return handlebars.compile(LOGROTATE_HOURLY_TEMPLATE);
+  }
+
+  @Provides
+  @Singleton
   @Named(LOGROTATE_CRON_TEMPLATE)
   public Template providesLogrotateCronTemplate(Handlebars handlebars) throws IOException {
     return handlebars.compile(LOGROTATE_CRON_TEMPLATE);
