@@ -18,9 +18,9 @@ public class SingularityExecutorLogrotateAdditionalFile {
 
     @JsonCreator
     public SingularityExecutorLogrotateAdditionalFile(@JsonProperty("filename") String filename,
-                                                      @JsonProperty("extension") Optional<String> extension,
-                                                      @JsonProperty("dateformat") Optional<String> dateformat,
-        @JsonProperty("logrotateFrequencyOverride") SingularityExecutorLogrotateFrequency logrotateFrequencyOverride) {
+            @JsonProperty("extension") Optional<String> extension,
+            @JsonProperty("dateformat") Optional<String> dateformat,
+            @JsonProperty("logrotateFrequencyOverride") SingularityExecutorLogrotateFrequency logrotateFrequencyOverride) {
         this.filename = filename;
         this.extension = extension;
         this.dateformat = dateformat;
