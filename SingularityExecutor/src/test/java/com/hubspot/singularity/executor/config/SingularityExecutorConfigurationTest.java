@@ -71,32 +71,47 @@ public class SingularityExecutorConfigurationTest {
     }
 
     @Test
-    public void itOverridesGlobalLogrotateFrequency() throws Exception {
+    public void itProperlyGeneratesTwoLogrotateConfigs() throws Exception {
         Handlebars handlebars = new Handlebars();
-        Template template = handlebars.compile(SingularityExecutorModule.LOGROTATE_TEMPLATE);
+        Template hourlyTemplate = handlebars.compile(SingularityExecutorModule.LOGROTATE_HOURLY_TEMPLATE);
+        Template nonHourlyTemplate = handlebars.compile(SingularityExecutorModule.LOGROTATE_TEMPLATE);
 
         LogrotateTemplateContext context = mock(LogrotateTemplateContext.class);
 
         doReturn(SingularityExecutorLogrotateFrequency.WEEKLY.getLogrotateValue()).when(context).getLogrotateFrequency();
 
         List<LogrotateAdditionalFile> testExtraFiles = new ArrayList<>();
+        List<LogrotateAdditionalFile> testExtraFilesHourly = new ArrayList<>();
+
         testExtraFiles.add(new LogrotateAdditionalFile("/tmp/testfile.txt", "txt", "%Y%m%d",
-            Optional.of(SingularityExecutorLogrotateFrequency.DAILY)));
+            Optional.of(SingularityExecutorLogrotateFrequency.MONTHLY)));
+
+        testExtraFilesHourly.add(new LogrotateAdditionalFile("/tmp/testfile-hourly.txt", "txt", "%Y%m%d",
+            Optional.of(SingularityExecutorLogrotateFrequency.HOURLY)));
 
         doReturn(testExtraFiles).when(context).getExtrasFiles();
+        doReturn(testExtraFilesHourly).when(context).getExtrasFilesHourly();
+        doReturn(true).when(context).getIsGlobalLogrotateHourly();
 
         // This sample output template, when copied into a staged Mesos slave and run with `logrotate -d <configFileName>`
         // confirms that a testfile.txt at the /tmp/testfile.txt will be cycled daily instead of weekly
-        String text = template.apply(context);
+        String hourlyOutput = hourlyTemplate.apply(context);
+        String nonHourlyOutput = nonHourlyTemplate.apply(context);
 
         // Assert that our config has both weekly and daily scopes, and that daily occurs second (thus overrides weekly
-        // in the /tmp/testfile.txt YAML object).
+        // in the /tmp/testfile-hourly.txt YAML object).
 
         // Admittedly, YAML serialization would be better, but given this code doesn't actually test much without
         // a binary of `logrotate` to run against, it's not a big deal.
-        assertThat(text.contains("weekly")).isTrue();
-        assertThat(text.contains("daily")).isTrue();
-        assertThat(text.indexOf("daily")).isGreaterThan(text.indexOf("weekly"));
+        assertThat(hourlyOutput.contains("weekly")).isTrue();
+        assertThat(hourlyOutput.contains("daily")).isTrue();
+        assertThat(hourlyOutput.indexOf("daily")).isGreaterThan(hourlyOutput.indexOf("weekly"));
+
+        // Assert that our config has both weekly and monthly scopes, and that monthly occurs second (thus overrides weekly
+        // in the /tmp/testfile.txt YAML object).
+        assertThat(nonHourlyOutput.contains("weekly")).isTrue();
+        assertThat(nonHourlyOutput.contains("monthly")).isTrue();
+        assertThat(nonHourlyOutput.indexOf("monthly")).isGreaterThan(hourlyOutput.indexOf("weekly"));
 
     }
 

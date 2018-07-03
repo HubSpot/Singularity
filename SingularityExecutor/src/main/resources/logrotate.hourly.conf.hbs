@@ -1,0 +1,65 @@
+dateext
+compress
+{{#if compressCmd}}compresscmd {{{compressCmd}}}{{/if}}
+{{#if uncompressCmd}}uncompresscmd {{{uncompressCmd}}}{{/if}}
+{{#if compressOptions}}compressoptions {{{compressOptions}}}{{/if}}
+{{#if compressExt}}compressext {{{compressExt}}}{{/if}}
+{{{ logrotateFrequency }}}
+copytruncate
+nomail
+nosharedscripts
+rotate {{{ rotateCount }}}
+maxage {{{ maxageDays }}}
+notifempty
+
+{{#if isGlobalLogrotateHourly}}
+{{#if shouldLogRotateLogFile }}
+{{{ logfile }}} {
+  dateformat -{{{ rotateDateformat }}}{{#if logfileExtension}}.{{{ logfileExtension}}}{{/if}}
+  olddir {{{ rotateDirectory }}}
+{{#if useFileAttributes}}
+  lastaction
+    NOW="$(($(date +%s%N)/1000000))"
+    LOGSTART=`getfattr --only-values -n user.logstart {{{ logfile }}}`
+    timestring=`date +%Y-%m-%d-%s`
+    for filename in "{{{ taskDirectory }}}/{{{ rotateDirectory }}}/{{{ logfileName }}}-${timestring%???}"*
+    do
+      setfattr -n user.logend -v "$NOW" $filename
+      if [ "$LOGSTART" != "" ]; then
+        setfattr -n user.logstart -v "$LOGSTART" $filename
+      fi
+    done
+    setfattr -n user.logstart -v "$NOW" {{{ logfile }}}
+  endscript
+{{/if}}
+}
+{{/if}}
+{{/if}}
+
+{{#if extrasFilesHourly}}
+{{#each extrasFilesHourly}}{{{filename}}} {
+  {{#if logrotateFrequencyOverride }}{{{logrotateFrequencyOverride}}}{{/if}}
+  dateformat -{{{ dateformat }}}{{#if extension}}.{{{ extension}}}{{/if}}
+  missingok
+{{#if useFileAttributes}}
+  lastaction
+    NOW="$(($(date +%s%N)/1000000))"
+    for oldfile in $@
+    do
+      LOGSTART=`getfattr --only-values -n user.logstart $oldfile`
+      timestring=`date +%Y-%m-%d-%s`
+      for filename in "$oldfile-${timestring%???}"*
+      do
+        if [ "$LOGSTART" != "" ]; then
+          setfattr -n user.logstart -v "$LOGSTART" $filename
+        fi
+        setfattr -n user.logend -v "$NOW" $filename
+      done
+      setfattr -n user.logstart -v "$NOW" $oldfile
+    done
+  endscript
+{{/if}}
+}
+
+{{/each}}
+{{/if}}
