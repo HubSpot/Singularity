@@ -91,7 +91,7 @@ public class LogrotateTemplateContext {
   }
 
   public boolean getIsGlobalLogrotateHourly() {
-    return configuration.getLogrotateFrequency().equals(SingularityExecutorLogrotateFrequency.HOURLY);
+    return configuration.getLogrotateFrequency().getLogrotateValue().equals(SingularityExecutorLogrotateFrequency.HOURLY.getLogrotateValue());
   }
 
   private List<LogrotateAdditionalFile> getAllExtraFiles() {
