@@ -130,7 +130,7 @@ class GlobalSearch extends React.Component {
             </div>
 
             <p className="hidden-xs text-muted tip">
-              Protip: You can press <kbd>s</kbd> or <kbd>t</kbd> to open global search and <kbd>esc</kbd> to close it.
+              Protip: You can press <kbd>s</kbd> or <kbd>t</kbd> to reach this search page and <kbd>esc</kbd> to close it.
             </p>
             <Typeahead
               ref="typeahead"
