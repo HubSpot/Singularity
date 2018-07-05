@@ -76,7 +76,7 @@ public class LogrotateTemplateContext {
    */
   public List<LogrotateAdditionalFile> getExtrasFiles() {
     return getAllExtraFiles().stream()
-        .filter(p -> ! p.getLogrotateFrequencyOverride().equals(SingularityExecutorLogrotateFrequency.HOURLY))
+        .filter(p -> !p.getLogrotateFrequencyOverride().equals(SingularityExecutorLogrotateFrequency.HOURLY.getLogrotateValue()))
         .collect(Collectors.toList());
   }
 
@@ -86,9 +86,8 @@ public class LogrotateTemplateContext {
    */
   public List<LogrotateAdditionalFile> getExtrasFilesHourly() {
     return getAllExtraFiles().stream()
-        .filter(p -> p.getLogrotateFrequencyOverride().equals(SingularityExecutorLogrotateFrequency.HOURLY))
+        .filter(p -> p.getLogrotateFrequencyOverride().equals(SingularityExecutorLogrotateFrequency.HOURLY.getLogrotateValue()))
         .collect(Collectors.toList());
-
   }
 
   public boolean getIsGlobalLogrotateHourly() {
