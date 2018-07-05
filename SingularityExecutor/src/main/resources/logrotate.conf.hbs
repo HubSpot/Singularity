@@ -12,6 +12,7 @@ rotate {{{ rotateCount }}}
 maxage {{{ maxageDays }}}
 notifempty
 
+{{#unless isGlobalLogrotateHourly}}
 {{#if shouldLogRotateLogFile }}
 {{{ logfile }}} {
   dateformat -{{{ rotateDateformat }}}{{#if logfileExtension}}.{{{ logfileExtension}}}{{/if}}
@@ -33,6 +34,7 @@ notifempty
 {{/if}}
 }
 {{/if}}
+{{/unless}}
 
 {{#if extrasFiles}}
 {{#each extrasFiles}}{{{filename}}} {
