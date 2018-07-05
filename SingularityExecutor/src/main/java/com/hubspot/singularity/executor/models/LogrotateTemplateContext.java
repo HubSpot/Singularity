@@ -2,10 +2,12 @@ package com.hubspot.singularity.executor.models;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import com.google.common.base.Optional;
 import com.google.common.base.Strings;
 import com.google.common.io.Files;
+import com.hubspot.singularity.executor.SingularityExecutorLogrotateFrequency;
 import com.hubspot.singularity.executor.config.SingularityExecutorConfiguration;
 import com.hubspot.singularity.executor.config.SingularityExecutorLogrotateAdditionalFile;
 import com.hubspot.singularity.executor.task.SingularityExecutorTaskDefinition;
@@ -69,10 +71,31 @@ public class LogrotateTemplateContext {
   }
 
   /**
-   * Extra files for logrotate to rotate. If these do not exist logrotate will continue without error.
+   * Extra files for logrotate to rotate (non-hourly). If these do not exist logrotate will continue without error.
    * @return filenames to rotate.
    */
   public List<LogrotateAdditionalFile> getExtrasFiles() {
+    return getAllExtraFiles().stream()
+        .filter(p -> ! p.getLogrotateFrequencyOverride().equals(SingularityExecutorLogrotateFrequency.HOURLY))
+        .collect(Collectors.toList());
+  }
+
+  /**
+   * Extra files for logrotate to rotate hourly. If these do not exist logrotate will continue without error.
+   * @return filenames to rotate.
+   */
+  public List<LogrotateAdditionalFile> getExtrasFilesHourly() {
+    return getAllExtraFiles().stream()
+        .filter(p -> p.getLogrotateFrequencyOverride().equals(SingularityExecutorLogrotateFrequency.HOURLY))
+        .collect(Collectors.toList());
+
+  }
+
+  public boolean getIsGlobalLogrotateHourly() {
+    return configuration.getLogrotateFrequency().equals(SingularityExecutorLogrotateFrequency.HOURLY);
+  }
+
+  private List<LogrotateAdditionalFile> getAllExtraFiles() {
     final List<SingularityExecutorLogrotateAdditionalFile> original = configuration.getLogrotateAdditionalFiles();
     final List<LogrotateAdditionalFile> transformed = new ArrayList<>(original.size());
 
@@ -85,11 +108,12 @@ public class LogrotateTemplateContext {
       }
 
       transformed.add(
-        new LogrotateAdditionalFile(
-          taskDefinition.getTaskDirectoryPath().resolve(additionalFile.getFilename()).toString(),
-          additionalFile.getExtension().or(Strings.emptyToNull(Files.getFileExtension(additionalFile.getFilename()))),
-          dateformat
-      ));
+          new LogrotateAdditionalFile(
+              taskDefinition.getTaskDirectoryPath().resolve(additionalFile.getFilename()).toString(),
+              additionalFile.getExtension().or(Strings.emptyToNull(Files.getFileExtension(additionalFile.getFilename()))),
+              dateformat,
+              additionalFile.getLogrotateFrequencyOverride()
+          ));
     }
 
     return transformed;
