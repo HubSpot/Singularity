@@ -78,8 +78,6 @@ public class SingularityExecutorConfigurationTest {
 
         LogrotateTemplateContext context = mock(LogrotateTemplateContext.class);
 
-        doReturn(SingularityExecutorLogrotateFrequency.WEEKLY.getLogrotateValue()).when(context).getLogrotateFrequency();
-
         List<LogrotateAdditionalFile> testExtraFiles = new ArrayList<>();
         List<LogrotateAdditionalFile> testExtraFilesHourly = new ArrayList<>();
 
@@ -89,9 +87,10 @@ public class SingularityExecutorConfigurationTest {
         testExtraFilesHourly.add(new LogrotateAdditionalFile("/tmp/testfile-hourly.txt", "txt", "%Y%m%d",
             Optional.of(SingularityExecutorLogrotateFrequency.HOURLY)));
 
+        doReturn(SingularityExecutorLogrotateFrequency.WEEKLY.getLogrotateValue()).when(context).getLogrotateFrequency();
         doReturn(testExtraFiles).when(context).getExtrasFiles();
         doReturn(testExtraFilesHourly).when(context).getExtrasFilesHourly();
-        doReturn(true).when(context).getIsGlobalLogrotateHourly();
+        doReturn(false).when(context).getIsGlobalLogrotateHourly();
 
         // This sample output template, when copied into a staged Mesos slave and run with `logrotate -d <configFileName>`
         // confirms that a testfile.txt at the /tmp/testfile.txt will be cycled daily instead of weekly
