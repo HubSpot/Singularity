@@ -163,6 +163,16 @@ class TaskDetail extends Component {
 
   analyzeFiles(files) {
     if (files && files.files) {
+
+      let userParam = '';
+      if (localStorage.getItem('singularityUserId')) {
+        if (options.url.includes('?')) {
+          userParam = `&user=${localStorage.getItem('singularityUserId')}`
+        } else {
+          userParam = `?user=${localStorage.getItem('singularityUserId')}`
+        }
+      }
+
       for (const file of files.files) {
         file.isDirectory = file.mode[0] === 'd';
         let httpPrefix = 'http';
@@ -179,8 +189,8 @@ class TaskDetail extends Component {
         }
 
         file.fullPath = `${files.fullPathToRoot}/${files.currentDirectory}/${file.name}`;
-        file.downloadLink = `${httpPrefix}://${files.slaveHostname}:${httpPort}/files/download.json?path=${file.fullPath}`;
 
+        file.downloadLink = `${config.apiRoot + options.url + userParam}/download/${httpPrefix}/${files.slaveHostname}/port/${httpPort}/path/${file.fullPath}`;
         file.isRecentlyModified = Date.now() / 1000 - file.mtime <= RECENTLY_MODIFIED_SECONDS;
 
         if (!file.isDirectory) {

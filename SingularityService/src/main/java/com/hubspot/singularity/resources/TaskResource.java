@@ -5,6 +5,7 @@ import static com.hubspot.singularity.WebExceptions.checkBadRequest;
 import static com.hubspot.singularity.WebExceptions.checkNotFound;
 import static com.hubspot.singularity.WebExceptions.notFound;
 
+import java.io.InputStream;
 import java.util.Collections;
 import java.util.List;
 
@@ -18,6 +19,8 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -608,5 +611,25 @@ public class TaskResource extends AbstractLeaderAwareResource {
 
     SingularityTaskId taskIdObj = getTaskIdFromStr(taskId);
     return taskManager.getTaskShellCommandUpdates(new SingularityTaskShellCommandRequestId(taskIdObj, commandName, commandTimestamp));
+  }
+
+  @GET
+  @Path("/download/{httpPrefix}/{slaveHostname}/port/{port}/path/{filePath}")
+  @Produces("application/octet-stream")
+  @Operation(summary = "Proxy a file download from a Mesos Slave through Singularity to access it over EAA (no VPN needed)")
+  public Response downloadFileOverProxy(
+      @Parameter(required = true, description = "Https (if available) or http") String httpPrefix,
+      @Parameter(required = true, description = "Mesos slave hostname") String slaveHostname,
+      @Parameter(required = true, description = "Http port for Mesos slave") String httpPort,
+      @Parameter(required = true, description = "Full file path to file on Mesos slave to be downloaded") String fileFullPath
+  ) {
+
+    Client client = ClientBuilder.newClient();
+    String url = String.format("%s://%s:%s/files/download.json?path=%s",
+        httpPrefix, slaveHostname, httpPort, fileFullPath);
+    final InputStream responseStream = client.target(url).request().get(InputStream.class);
+
+    final String headerValue = String.format("attachment, filename=\"%s\"", fileFullPath);
+    return Response.ok(responseStream).header("Content-Disposition", headerValue).build();
   }
 }
