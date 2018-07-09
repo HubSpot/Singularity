@@ -4,6 +4,7 @@ import static com.hubspot.singularity.WebExceptions.checkBadRequest;
 import static com.hubspot.singularity.WebExceptions.checkConflict;
 import static com.hubspot.singularity.WebExceptions.checkNotNullBadRequest;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -28,7 +29,9 @@ import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
+import com.google.common.collect.HashMultiset;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Multiset;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.hubspot.jackson.jaxrs.PropertyFiltering;
@@ -46,14 +49,17 @@ import com.hubspot.singularity.SingularityPendingRequest.PendingType;
 import com.hubspot.singularity.SingularityPendingRequestParent;
 import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityRequestCleanup;
+import com.hubspot.singularity.SingularityRequestDeployState;
 import com.hubspot.singularity.SingularityRequestHistory.RequestHistoryType;
 import com.hubspot.singularity.SingularityRequestParent;
 import com.hubspot.singularity.SingularityRequestWithState;
 import com.hubspot.singularity.SingularityShellCommand;
+import com.hubspot.singularity.SingularityTaskCleanup;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTransformHelpers;
 import com.hubspot.singularity.SingularityUser;
 import com.hubspot.singularity.SlavePlacement;
+import com.hubspot.singularity.TaskCleanupType;
 import com.hubspot.singularity.WebExceptions;
 import com.hubspot.singularity.api.SingularityBounceRequest;
 import com.hubspot.singularity.api.SingularityDeleteRequestRequest;
@@ -66,7 +72,9 @@ import com.hubspot.singularity.api.SingularityUnpauseRequest;
 import com.hubspot.singularity.api.SingularityUpdateGroupsRequest;
 import com.hubspot.singularity.auth.SingularityAuthorizationHelper;
 import com.hubspot.singularity.config.ApiPaths;
+import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.DeployManager;
+import com.hubspot.singularity.data.RackManager;
 import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.data.SingularityValidator;
 import com.hubspot.singularity.data.SlaveManager;
@@ -101,16 +109,21 @@ public class RequestResource extends AbstractRequestResource {
   private final TaskManager taskManager;
   private final RequestHelper requestHelper;
   private final SlaveManager slaveManager;
+  private final RackManager rackManager;
+  private final SingularityConfiguration configuration;
 
   @Inject
   public RequestResource(SingularityValidator validator, DeployManager deployManager, TaskManager taskManager, RequestManager requestManager, SingularityMailer mailer,
                          SingularityAuthorizationHelper authorizationHelper, RequestHelper requestHelper, LeaderLatch leaderLatch,
-                         SlaveManager slaveManager, AsyncHttpClient httpClient, ObjectMapper objectMapper, RequestHistoryHelper requestHistoryHelper) {
+                         SlaveManager slaveManager, AsyncHttpClient httpClient, ObjectMapper objectMapper, RequestHistoryHelper requestHistoryHelper,
+                         RackManager rackManager, SingularityConfiguration configuration) {
     super(requestManager, deployManager, validator, authorizationHelper, httpClient, leaderLatch, objectMapper, requestHelper, requestHistoryHelper);
     this.mailer = mailer;
     this.taskManager = taskManager;
     this.requestHelper = requestHelper;
     this.slaveManager = slaveManager;
+    this.rackManager = rackManager;
+    this.configuration = configuration;
   }
 
   private void submitRequest(SingularityRequest request, Optional<SingularityRequestWithState> oldRequestWithState, Optional<RequestHistoryType> historyType,
@@ -138,7 +151,7 @@ public class RequestResource extends AbstractRequestResource {
     }
 
     if (!oldRequest.isPresent() || !(oldRequest.get().getInstancesSafe() == request.getInstancesSafe())) {
-      validator.checkScale(request, Optional.<Integer>absent());
+      validator.checkScale(request, Optional.absent());
     }
 
     authorizationHelper.checkForAuthorization(request, user, SingularityAuthorizationScope.WRITE);
@@ -147,6 +160,47 @@ public class RequestResource extends AbstractRequestResource {
 
     if (oldRequestWithState.isPresent()) {
       requestState = oldRequestWithState.get().getState();
+    }
+
+    if (oldRequest.isPresent() && request.getInstancesSafe() < oldRequest.get().getInstancesSafe()) {
+      // Trigger cleanups for scale down
+      int newInstances = request.getInstancesSafe();
+      Optional<SingularityRequestDeployState> maybeDeployState = deployManager.getRequestDeployState(request.getId());
+      if (maybeDeployState.isPresent() && maybeDeployState.get().getActiveDeploy().isPresent()) {
+        List<SingularityTaskId> remainingActiveTasks = new ArrayList<>();
+        taskManager.getActiveTaskIdsForDeploy(request.getId(), maybeDeployState.get().getActiveDeploy().get().getDeployId()).forEach((taskId) -> {
+          if (taskId.getInstanceNo() > newInstances) {
+            taskManager.createTaskCleanup(new SingularityTaskCleanup(
+                Optional.of(user.getId()),
+                TaskCleanupType.SCALING_DOWN,
+                System.currentTimeMillis(),
+                taskId,
+                message,
+                Optional.of(UUID.randomUUID().toString()),
+                Optional.absent()
+            ));
+          } else {
+            remainingActiveTasks.add(taskId);
+          }
+        });
+
+        if (request.isRackSensitive() && configuration.isRebalanceRacksOnScaleDown()) {
+          List<SingularityTaskId> extraCleanedTasks = new ArrayList<>();
+          int numActiveRacks = rackManager.getNumActive();
+          double perRack = request.getInstancesSafe() / (double) numActiveRacks;
+
+          Multiset<String> countPerRack = HashMultiset.create();
+          for (SingularityTaskId taskId : remainingActiveTasks) {
+            countPerRack.add(taskId.getSanitizedRackId());
+            LOG.info("{} - {} - {} - {}", countPerRack, perRack, extraCleanedTasks.size(), taskId);
+            if (countPerRack.count(taskId.getSanitizedRackId()) > perRack && extraCleanedTasks.size() < numActiveRacks / 2) {
+              extraCleanedTasks.add(taskId);
+              LOG.info("Cleaning up task {} to evenly distribute tasks among racks", taskId);
+              taskManager.createTaskCleanup(new SingularityTaskCleanup(user.getEmail(), TaskCleanupType.REBALANCE_RACKS, System.currentTimeMillis(), taskId, Optional.<String>absent(), Optional.<String>absent(), Optional.absent()));
+            }
+          }
+        }
+      }
     }
 
     requestHelper.updateRequest(request, oldRequest, requestState, historyType, user.getEmail(), skipHealthchecks, message, maybeBounceRequest);
