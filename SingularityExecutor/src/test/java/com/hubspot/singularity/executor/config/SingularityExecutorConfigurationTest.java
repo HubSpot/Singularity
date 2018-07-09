@@ -90,7 +90,7 @@ public class SingularityExecutorConfigurationTest {
         doReturn(SingularityExecutorLogrotateFrequency.WEEKLY.getLogrotateValue()).when(context).getLogrotateFrequency();
         doReturn(testExtraFiles).when(context).getExtrasFiles();
         doReturn(testExtraFilesHourly).when(context).getExtrasFilesHourly();
-        doReturn(false).when(context).getIsGlobalLogrotateHourly();
+        doReturn(false).when(context).isGlobalLogrotateHourly();
 
         // This sample output template, when copied into a staged Mesos slave and run with `logrotate -d <configFileName>`
         // confirms that a testfile.txt at the /tmp/testfile.txt will be cycled daily instead of weekly

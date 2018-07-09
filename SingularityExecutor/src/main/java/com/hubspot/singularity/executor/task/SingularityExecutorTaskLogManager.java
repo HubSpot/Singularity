@@ -98,7 +98,7 @@ public class SingularityExecutorTaskLogManager {
     templateManager.writeLogrotateFile(getLogrotateConfPath(), new LogrotateTemplateContext(configuration, taskDefinition));
 
     // Get the frequency and cron schedule for an additional file with an HOURLY schedule, if there is any
-    Optional<SingularityExecutorLogrotateFrequency> additionalFileFrequency = getAdditionalHourlyFile();
+    Optional<SingularityExecutorLogrotateFrequency> additionalFileFrequency = getAdditionalHourlyFileFrequency();
 
     // if any additional file or the global setting has an hourly rotation, write a separate rotate config and force rotate using a cron schedule
     if (additionalFileFrequency.isPresent() && additionalFileFrequency.get().getCronSchedule().isPresent() || logrotateFrequency.getCronSchedule().isPresent()) {
@@ -115,19 +115,21 @@ public class SingularityExecutorTaskLogManager {
     }
   }
 
-  private Optional<SingularityExecutorLogrotateFrequency> getAdditionalHourlyFile() {
-    // Get the cron schedule for an additional file with an HOURLY schedule, if there is any
-    java.util.Optional<SingularityExecutorLogrotateAdditionalFile> additionalHourlyFile = configuration.getLogrotateAdditionalFiles()
-        .stream()
-        .filter(p -> p.getLogrotateFrequencyOverride().isPresent() &&
-            p.getLogrotateFrequencyOverride().get().equals(SingularityExecutorLogrotateFrequency.HOURLY) &&
-            p.getLogrotateFrequencyOverride().get().getCronSchedule().isPresent())
-        .findFirst();
+  /**
+   *
+   * @return Frequency (and contained cron schedule) of the hourly rotation additional file
+   */
+  private Optional<SingularityExecutorLogrotateFrequency> getAdditionalHourlyFileFrequency() {
 
-    Optional<SingularityExecutorLogrotateFrequency> additionalFileFrequency = additionalHourlyFile.isPresent() ?
-        additionalHourlyFile.get().getLogrotateFrequencyOverride() : Optional.absent();
+    for (SingularityExecutorLogrotateAdditionalFile file : configuration.getLogrotateAdditionalFiles()) {
+      if (file.getLogrotateFrequencyOverride().isPresent() &&
+          file.getLogrotateFrequencyOverride().get().equals(SingularityExecutorLogrotateFrequency.HOURLY) &&
+          file.getLogrotateFrequencyOverride().get().getCronSchedule().isPresent()) {
 
-    return additionalFileFrequency;
+        return Optional.of(file.getLogrotateFrequencyOverride().get());
+      }
+    }
+    return Optional.absent();
   }
 
   @SuppressFBWarnings
@@ -197,7 +199,7 @@ public class SingularityExecutorTaskLogManager {
       return false;
     }
 
-    Optional<SingularityExecutorLogrotateFrequency> additionalFileFreq = getAdditionalHourlyFile();
+    Optional<SingularityExecutorLogrotateFrequency> additionalFileFreq = getAdditionalHourlyFileFrequency();
     try {
       if (additionalFileFreq.isPresent() && additionalFileFreq.get().getCronSchedule().isPresent() || logrotateFrequency.getCronSchedule().isPresent()) {
         boolean hourlyConfDeleted = Files.deleteIfExists(getLogrotateHourlyConfPath());
