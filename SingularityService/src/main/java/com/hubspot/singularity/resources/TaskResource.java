@@ -614,14 +614,15 @@ public class TaskResource extends AbstractLeaderAwareResource {
   }
 
   @GET
-  @Path("/download/{httpPrefix}/{slaveHostname}/port/{port}/path/{filePath}")
-  @Produces("application/octet-stream")
-  @Operation(summary = "Proxy a file download from a Mesos Slave through Singularity to access it over EAA (no VPN needed)")
+  @Path("/download/{httpPrefix}/{slaveHostname}/port/{port}/path/{path}")
+  @Produces(MediaType.APPLICATION_OCTET_STREAM)
+  @Operation(summary = "Proxy a file download from a Mesos Slave through Singularity")
+  @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
   public Response downloadFileOverProxy(
-      @Parameter(required = true, description = "Https (if available) or http") String httpPrefix,
-      @Parameter(required = true, description = "Mesos slave hostname") String slaveHostname,
-      @Parameter(required = true, description = "Http port for Mesos slave") String httpPort,
-      @Parameter(required = true, description = "Full file path to file on Mesos slave to be downloaded") String fileFullPath
+      @Parameter(required = true, description = "Https (if available) or http") @PathParam("httpPrefix") String httpPrefix,
+      @Parameter(required = true, description = "Mesos slave hostname") @PathParam("slaveHostname") String slaveHostname,
+      @Parameter(required = true, description = "Http port for Mesos slave") @PathParam("port") String httpPort,
+      @Parameter(required = true, description = "Full file path to file on Mesos slave to be downloaded") @PathParam("path") String fileFullPath
   ) {
 
     Client client = ClientBuilder.newClient();
@@ -632,4 +633,5 @@ public class TaskResource extends AbstractLeaderAwareResource {
     final String headerValue = String.format("attachment, filename=\"%s\"", fileFullPath);
     return Response.ok(responseStream).header("Content-Disposition", headerValue).build();
   }
+
 }
