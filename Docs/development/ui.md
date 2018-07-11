@@ -122,7 +122,7 @@ If you're confused as to what's going on here, all your requests are being proce
 
 So far you have SingularityUI being served by gulp, and SingularityService running somewhere. If you have a proxy like vee running too, please replace the ports/URIs that follow with the ones you're using for the proxy.
 
-Open up SingularityUI in your browser by going to [`http://localhost:3333`](http://localhost:3333).
+Open up SingularityUI in your browser by going to [`http://localhost:3334`](http://localhost:3334).
 
 You'll be prompted to input an API root. This is the service that SingularityUI will interact with for its data. Give it your `http://docker/singularity/api` URI.
 
