@@ -6,6 +6,7 @@ import static com.hubspot.singularity.WebExceptions.checkNotFound;
 import static com.hubspot.singularity.WebExceptions.notFound;
 
 import java.io.InputStream;
+import java.net.ConnectException;
 import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.List;
@@ -20,8 +21,6 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.WebApplicationException;
-import javax.ws.rs.client.Client;
-import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -73,9 +72,11 @@ import com.hubspot.singularity.api.SingularityKillTaskRequest;
 import com.hubspot.singularity.api.SingularityTaskMetadataRequest;
 import com.hubspot.singularity.auth.SingularityAuthorizationHelper;
 import com.hubspot.singularity.config.ApiPaths;
+import com.hubspot.singularity.config.MesosConfiguration;
 import com.hubspot.singularity.config.SingularityTaskMetadataConfiguration;
 import com.hubspot.singularity.data.DisasterManager;
 import com.hubspot.singularity.data.RequestManager;
+import com.hubspot.singularity.data.SandboxManager.SlaveNotFoundException;
 import com.hubspot.singularity.data.SingularityValidator;
 import com.hubspot.singularity.data.SlaveManager;
 import com.hubspot.singularity.data.TaskManager;
@@ -99,6 +100,8 @@ import io.swagger.v3.oas.annotations.tags.Tags;
 public class TaskResource extends AbstractLeaderAwareResource {
   private static final Logger LOG = LoggerFactory.getLogger(TaskResource.class);
 
+  private final AsyncHttpClient httpClient;
+  private final MesosConfiguration configuration;
   private final TaskManager taskManager;
   private final RequestManager requestManager;
   private final SlaveManager slaveManager;
@@ -113,7 +116,7 @@ public class TaskResource extends AbstractLeaderAwareResource {
   @Inject
   public TaskResource(TaskRequestManager taskRequestManager, TaskManager taskManager, SlaveManager slaveManager, MesosClient mesosClient, SingularityTaskMetadataConfiguration taskMetadataConfiguration,
                       SingularityAuthorizationHelper authorizationHelper, RequestManager requestManager, SingularityValidator validator, DisasterManager disasterManager,
-                      AsyncHttpClient httpClient, LeaderLatch leaderLatch, ObjectMapper objectMapper, RequestHelper requestHelper) {
+                      AsyncHttpClient httpClient, LeaderLatch leaderLatch, ObjectMapper objectMapper, RequestHelper requestHelper, MesosConfiguration configuration) {
     super(httpClient, leaderLatch, objectMapper);
     this.taskManager = taskManager;
     this.taskRequestManager = taskRequestManager;
@@ -125,6 +128,8 @@ public class TaskResource extends AbstractLeaderAwareResource {
     this.validator = validator;
     this.disasterManager = disasterManager;
     this.requestHelper = requestHelper;
+    this.httpClient = httpClient;
+    this.configuration = configuration;
   }
 
   @GET
@@ -615,28 +620,40 @@ public class TaskResource extends AbstractLeaderAwareResource {
   }
 
   @GET
-  @Path("/download/{httpPrefix}/{slaveHostname}/port/{port}/path/{path}")
+  @Path("/download/hosts/{slaveHostname}/path/{path}")
   @Produces(MediaType.APPLICATION_OCTET_STREAM)
   @Operation(summary = "Proxy a file download from a Mesos Slave through Singularity")
-  @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
   public Response downloadFileOverProxy(
-      @Parameter(required = true, description = "Https (if available) or http") @PathParam("httpPrefix") String httpPrefix,
       @Parameter(required = true, description = "Mesos slave hostname") @PathParam("slaveHostname") String slaveHostname,
-      @Parameter(required = true, description = "Http port for Mesos slave") @PathParam("port") String httpPort,
       @Parameter(required = true, description = "Full file path to file on Mesos slave to be downloaded") @PathParam("path") String fileFullPath
   ) {
+    String httpPrefix = configuration.getSlaveHttpsPort().isPresent() ? "https" : "http";
+    int httpPort = configuration.getSlaveHttpsPort().isPresent() ? configuration.getSlaveHttpsPort().get() : configuration.getSlaveHttpPort();
 
-    Client client = ClientBuilder.newClient();
-    String url = String.format("%s://%s:%s/files/download.json?path=%s",
-        httpPrefix, slaveHostname, httpPort, fileFullPath);
-    final InputStream responseStream = client.target(url).request().get(InputStream.class);
+    String url = String.format("%s://%s:%s/files/download.json",
+            httpPrefix, slaveHostname, httpPort);
 
-    // Strip file path down to just a file name if we can
-    java.nio.file.Path filePath = Paths.get(fileFullPath).getFileName();
-    String fileName = filePath != null ? filePath.toString() : fileFullPath;
+    try {
+      final InputStream responseStream = httpClient.prepareGet(url)
+          .addQueryParameter("path", fileFullPath)
+          .execute()
+          .get()
+          .getResponseBodyAsStream();
 
-    final String headerValue = String.format("attachment; filename=\"%s\"", fileName);
-    return Response.ok(responseStream).header("Content-Disposition", headerValue).build();
+      // Strip file path down to just a file name if we can
+      java.nio.file.Path filePath = Paths.get(fileFullPath).getFileName();
+      String fileName = filePath != null ? filePath.toString() : fileFullPath;
+
+      final String headerValue = String.format("attachment; filename=\"%s\"", fileName);
+      return Response.ok(responseStream).header("Content-Disposition", headerValue).build();
+
+    } catch (Exception e) {
+      if (e.getCause().getClass() == ConnectException.class) {
+        throw new SlaveNotFoundException(e);
+      } else {
+        throw new RuntimeException(e);
+      }
+    }
+
   }
-
 }

@@ -180,7 +180,7 @@ class TaskDetail extends Component {
 
         file.fullPath = encodeURIComponent(`${files.fullPathToRoot}/${files.currentDirectory}/${file.name}`);
 
-        file.downloadLink = `${config.apiRoot}/tasks/download/${httpPrefix}/${files.slaveHostname}/port/${httpPort}/path/${file.fullPath}`;
+        file.downloadLink = `${config.apiRoot}/tasks/download/hosts/${files.slaveHostname}/path/${file.fullPath}`;
         file.isRecentlyModified = Date.now() / 1000 - file.mtime <= RECENTLY_MODIFIED_SECONDS;
 
         if (!file.isDirectory) {
