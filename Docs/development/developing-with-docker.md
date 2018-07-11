@@ -42,11 +42,13 @@ In the root of this project is a `dev` wrapper script to make developing easier.
 
 The output from the dev script will give you information about where the SingularityUI can be reached.
 
+* Note: If you are doing local development on SingularityUI, make sure you clear your web browser cache upon refresh to see your changes.
+
 ### Building new images
 
 Singularity uses the docker-maven-plugin for building its images. There are a few images related to Singularity:
 
-- `hubspot/singularityservice` - The Singularity scheduler itself
+- `hubspot/singularityservice` - The Singularity scheduler itself. Also contains the SingularityUI.
 - `hubspot/singularityexecutorslave` - A mesos slave with java/logrotate and the custom SingularityExecutor installed
 - `hubspot/singularitybase` - A base image for `singularityexecutorslave` that takes care of installing java/logrotate/etc on top of the mesos slave image (not built with maven plugin)
 
