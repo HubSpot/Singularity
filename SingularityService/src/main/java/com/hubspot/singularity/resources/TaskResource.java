@@ -6,6 +6,7 @@ import static com.hubspot.singularity.WebExceptions.checkNotFound;
 import static com.hubspot.singularity.WebExceptions.notFound;
 
 import java.io.InputStream;
+import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.List;
 
@@ -630,7 +631,7 @@ public class TaskResource extends AbstractLeaderAwareResource {
         httpPrefix, slaveHostname, httpPort, fileFullPath);
     final InputStream responseStream = client.target(url).request().get(InputStream.class);
 
-    final String headerValue = String.format("attachment, filename=\"%s\"", fileFullPath);
+    final String headerValue = String.format("attachment; filename=\"%s\"", Paths.get(fileFullPath).getFileName().toString());
     return Response.ok(responseStream).header("Content-Disposition", headerValue).build();
   }
 
