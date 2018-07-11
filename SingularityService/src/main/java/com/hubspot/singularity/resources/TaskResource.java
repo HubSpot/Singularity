@@ -631,7 +631,11 @@ public class TaskResource extends AbstractLeaderAwareResource {
         httpPrefix, slaveHostname, httpPort, fileFullPath);
     final InputStream responseStream = client.target(url).request().get(InputStream.class);
 
-    final String headerValue = String.format("attachment; filename=\"%s\"", Paths.get(fileFullPath).getFileName().toString());
+    // Strip file path down to just a file name if we can
+    java.nio.file.Path filePath = Paths.get(fileFullPath).getFileName();
+    String fileName = filePath != null ? filePath.toString() : fileFullPath;
+
+    final String headerValue = String.format("attachment; filename=\"%s\"", fileName);
     return Response.ok(responseStream).header("Content-Disposition", headerValue).build();
   }
 
