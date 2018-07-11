@@ -178,9 +178,8 @@ class TaskDetail extends Component {
           file.uiPath = file.name;
         }
 
-        file.fullPath = encodeURIComponent(`${files.fullPathToRoot}/${files.currentDirectory}/${file.name}`);
-
-        file.downloadLink = `${config.apiRoot}/tasks/download/hosts/${files.slaveHostname}/path/${file.fullPath}`;
+        file.fullPath = `${files.fullPathToRoot}/${files.currentDirectory}/${file.name}`;
+        file.downloadLink = `${config.apiRoot}/tasks/download?slaveHostname=${files.slaveHostname}&path=${file.fullPath}`;
         file.isRecentlyModified = Date.now() / 1000 - file.mtime <= RECENTLY_MODIFIED_SECONDS;
 
         if (!file.isDirectory) {

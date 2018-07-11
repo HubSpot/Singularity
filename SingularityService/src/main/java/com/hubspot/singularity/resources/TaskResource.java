@@ -620,12 +620,12 @@ public class TaskResource extends AbstractLeaderAwareResource {
   }
 
   @GET
-  @Path("/download/hosts/{slaveHostname}/path/{path}")
+  @Path("/download/")
   @Produces(MediaType.APPLICATION_OCTET_STREAM)
   @Operation(summary = "Proxy a file download from a Mesos Slave through Singularity")
   public Response downloadFileOverProxy(
-      @Parameter(required = true, description = "Mesos slave hostname") @PathParam("slaveHostname") String slaveHostname,
-      @Parameter(required = true, description = "Full file path to file on Mesos slave to be downloaded") @PathParam("path") String fileFullPath
+      @Parameter(required = true, description = "Mesos slave hostname") @QueryParam("slaveHostname") String slaveHostname,
+      @Parameter(required = true, description = "Full file path to file on Mesos slave to be downloaded") @QueryParam("path") String fileFullPath
   ) {
     String httpPrefix = configuration.getSlaveHttpsPort().isPresent() ? "https" : "http";
     int httpPort = configuration.getSlaveHttpsPort().isPresent() ? configuration.getSlaveHttpsPort().get() : configuration.getSlaveHttpPort();
