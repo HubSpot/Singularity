@@ -179,8 +179,7 @@ class TaskDetail extends Component {
         }
 
         file.fullPath = `${files.fullPathToRoot}/${files.currentDirectory}/${file.name}`;
-        file.downloadLink = `${httpPrefix}://${files.slaveHostname}:${httpPort}/files/download.json?path=${file.fullPath}`;
-
+        file.downloadLink = `${config.apiRoot}/tasks/download?slaveHostname=${files.slaveHostname}&path=${file.fullPath}`;
         file.isRecentlyModified = Date.now() / 1000 - file.mtime <= RECENTLY_MODIFIED_SECONDS;
 
         if (!file.isDirectory) {
