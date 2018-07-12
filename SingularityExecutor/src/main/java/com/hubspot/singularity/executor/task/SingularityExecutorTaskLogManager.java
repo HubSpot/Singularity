@@ -1,5 +1,6 @@
 package com.hubspot.singularity.executor.task;
 
+import java.io.File;
 import java.lang.ProcessBuilder.Redirect;
 import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
@@ -102,6 +103,12 @@ public class SingularityExecutorTaskLogManager {
 
     // if any additional file or the global setting has an hourly rotation, write a separate rotate config and force rotate using a cron schedule
     if (additionalFileFrequency.isPresent() && additionalFileFrequency.get().getCronSchedule().isPresent() || logrotateFrequency.getCronSchedule().isPresent()) {
+      File hourlyLogrotateDir = new File(configuration.getLogrotateHourlyConfDirectory());
+      if (!hourlyLogrotateDir.exists()) {
+        if (!hourlyLogrotateDir.mkdir()) {
+          log.warn("Could not create hourly logrotate directory at {}", configuration.getLogrotateHourlyConfDirectory());
+        }
+      }
       log.info("Writing hourly logrotate configuration file to {}", getLogrotateHourlyConfPath());
       templateManager.writeHourlyLogrotateFile(getLogrotateHourlyConfPath(), new LogrotateTemplateContext(configuration, taskDefinition));
 
