@@ -100,7 +100,6 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
   private String logrotateConfDirectory = "/etc/logrotate.d";
 
   @NotEmpty
-  @DirectoryExists
   @JsonProperty
   private String logrotateHourlyConfDirectory = "/etc/logrotate.d/hourly";
 
