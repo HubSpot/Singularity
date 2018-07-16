@@ -12,7 +12,7 @@ rotate {{{ rotateCount }}}
 maxage {{{ maxageDays }}}
 notifempty
 
-{{#unless isGlobalLogrotateHourly}}
+{{#if isGlobalLogrotateHourly}}
 {{#if shouldLogRotateLogFile }}
 {{{ logfile }}} {
   dateformat -{{{ rotateDateformat }}}{{#if logfileExtension}}.{{{ logfileExtension}}}{{/if}}
@@ -34,10 +34,38 @@ notifempty
 {{/if}}
 }
 {{/if}}
-{{/unless}}
 
 {{#if extrasFiles}}
 {{#each extrasFiles}}{{{filename}}} {
+  {{#if logrotateFrequencyOverride }}{{{logrotateFrequencyOverride}}}{{/if}}
+  dateformat -{{{ dateformat }}}{{#if extension}}.{{{ extension}}}{{/if}}
+  missingok
+{{#if useFileAttributes}}
+  lastaction
+    NOW="$(($(date +%s%N)/1000000))"
+    for oldfile in $@
+    do
+      LOGSTART=`getfattr --only-values -n user.logstart $oldfile`
+      timestring=`date +%Y-%m-%d-%s`
+      for filename in "$oldfile-${timestring%???}"*
+      do
+        if [ "$LOGSTART" != "" ]; then
+          setfattr -n user.logstart -v "$LOGSTART" $filename
+        fi
+          setfattr -n user.logend -v "$NOW" $filename
+      done
+      setfattr -n user.logstart -v "$NOW" $oldfile
+     done
+  endscript
+{{/if}}
+}
+
+{{/each}}
+{{/if}}
+{{/if}}
+
+{{#if extrasFilesHourly}}
+{{#each extrasFilesHourly}}{{{filename}}} {
   {{#if logrotateFrequencyOverride }}{{{logrotateFrequencyOverride}}}{{/if}}
   dateformat -{{{ dateformat }}}{{#if extension}}.{{{ extension}}}{{/if}}
   missingok
