@@ -224,7 +224,7 @@ public class SingularityExecutorTaskLogManager {
 
     try {
       if ((additionalFileFreq.isPresent() && additionalFileFreq.get().getCronSchedule().isPresent()) || logrotateFrequency.getCronSchedule().isPresent()) {
-        boolean cronDeleted = Files.exists(getLogrotateCronPath()) || Files.deleteIfExists(getLogrotateCronPath());
+        boolean cronDeleted = !Files.exists(getLogrotateCronPath()) || Files.deleteIfExists(getLogrotateCronPath());
         log.debug("Deleted {} : {}", getLogrotateCronPath(), deleted);
         deleted = deleted && cronDeleted;
       }
