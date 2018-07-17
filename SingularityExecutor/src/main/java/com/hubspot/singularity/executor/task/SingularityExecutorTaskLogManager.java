@@ -212,7 +212,7 @@ public class SingularityExecutorTaskLogManager {
 
     Optional<SingularityExecutorLogrotateFrequency> additionalFileFreq = getAdditionalHourlyFileFrequency();
     try {
-      if (additionalFileFreq.isPresent() && additionalFileFreq.get().getCronSchedule().isPresent() || logrotateFrequency.getCronSchedule().isPresent()) {
+      if ((additionalFileFreq.isPresent() && additionalFileFreq.get().getCronSchedule().isPresent()) || logrotateFrequency.getCronSchedule().isPresent()) {
         boolean hourlyConfDeleted = !Files.exists(getLogrotateHourlyConfPath()) || Files.deleteIfExists(getLogrotateHourlyConfPath());
         log.debug("Deleted {} : {}", getLogrotateHourlyConfPath(), deleted);
         deleted = deleted && hourlyConfDeleted;
@@ -223,7 +223,7 @@ public class SingularityExecutorTaskLogManager {
     }
 
     try {
-      if (additionalFileFreq.isPresent() && additionalFileFreq.get().getCronSchedule().isPresent() || logrotateFrequency.getCronSchedule().isPresent()) {
+      if ((additionalFileFreq.isPresent() && additionalFileFreq.get().getCronSchedule().isPresent()) || logrotateFrequency.getCronSchedule().isPresent()) {
         boolean cronDeleted = Files.exists(getLogrotateCronPath()) || Files.deleteIfExists(getLogrotateCronPath());
         log.debug("Deleted {} : {}", getLogrotateCronPath(), deleted);
         deleted = deleted && cronDeleted;
