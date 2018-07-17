@@ -167,7 +167,7 @@ public class SingularityExecutorTaskLogManager {
 
       return writeTailMetadataSuccess && removeLogRotateFileSuccess && writeS3MetadataForLogrotatedFilesSuccess && writeS3MetadataForNonLogRotatedFileSuccess;
     } else {
-      return false;
+      return removeLogrotateFile();
     }
   }
 
