@@ -167,7 +167,7 @@ public class SingularityExecutorTaskLogManager {
 
       return writeTailMetadataSuccess && removeLogRotateFileSuccess && writeS3MetadataForLogrotatedFilesSuccess && writeS3MetadataForNonLogRotatedFileSuccess;
     } else {
-      return false;
+      return removeLogrotateFile();
     }
   }
 
@@ -199,33 +199,37 @@ public class SingularityExecutorTaskLogManager {
   public boolean removeLogrotateFile() {
     boolean deleted = false;
     try {
-      deleted = Files.deleteIfExists(getLogrotateConfPath());
-      log.trace("Deleted {} : {}", getLogrotateConfPath(), deleted);
+      if (Files.exists(getLogrotateConfPath())) {
+        deleted = Files.deleteIfExists(getLogrotateConfPath());
+        log.debug("Deleted {} : {}", getLogrotateConfPath(), deleted);
+      } else {
+        deleted = true;
+      }
     } catch (Throwable t){
-      log.trace("Couldn't delete {}", getLogrotateConfPath(), t);
+      log.debug("Couldn't delete {}", getLogrotateConfPath(), t);
       return false;
     }
 
     Optional<SingularityExecutorLogrotateFrequency> additionalFileFreq = getAdditionalHourlyFileFrequency();
     try {
-      if (additionalFileFreq.isPresent() && additionalFileFreq.get().getCronSchedule().isPresent() || logrotateFrequency.getCronSchedule().isPresent()) {
-        boolean hourlyConfDeleted = Files.deleteIfExists(getLogrotateHourlyConfPath());
-        log.trace("Deleted {} : {}", getLogrotateHourlyConfPath(), deleted);
-        deleted = deleted || hourlyConfDeleted;
+      if ((additionalFileFreq.isPresent() && additionalFileFreq.get().getCronSchedule().isPresent()) || logrotateFrequency.getCronSchedule().isPresent()) {
+        boolean hourlyConfDeleted = !Files.exists(getLogrotateHourlyConfPath()) || Files.deleteIfExists(getLogrotateHourlyConfPath());
+        log.debug("Deleted {} : {}", getLogrotateHourlyConfPath(), deleted);
+        deleted = deleted && hourlyConfDeleted;
       }
     } catch (Throwable t) {
-      log.trace("Couldn't delete {}", getLogrotateHourlyConfPath(), t);
+      log.debug("Couldn't delete {}", getLogrotateHourlyConfPath(), t);
       return false;
     }
 
     try {
-      if (additionalFileFreq.isPresent() && additionalFileFreq.get().getCronSchedule().isPresent() || logrotateFrequency.getCronSchedule().isPresent()) {
-        boolean cronDeleted = Files.deleteIfExists(getLogrotateCronPath());
-        log.trace("Deleted {} : {}", getLogrotateCronPath(), deleted);
-        deleted = deleted || cronDeleted;
+      if ((additionalFileFreq.isPresent() && additionalFileFreq.get().getCronSchedule().isPresent()) || logrotateFrequency.getCronSchedule().isPresent()) {
+        boolean cronDeleted = !Files.exists(getLogrotateCronPath()) || Files.deleteIfExists(getLogrotateCronPath());
+        log.debug("Deleted {} : {}", getLogrotateCronPath(), deleted);
+        deleted = deleted && cronDeleted;
       }
     } catch (Throwable t) {
-      log.trace("Couldn't delete {}", getLogrotateCronPath(), t);
+      log.debug("Couldn't delete {}", getLogrotateCronPath(), t);
       return false;
     }
     return deleted;
