@@ -117,7 +117,7 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
     usageHelper.getSlavesToTrackUsageFor().forEach((slave) -> {
       usageFutures.add(usageCollectionSemaphore.call(() ->
           CompletableFuture.runAsync(() -> {
-            collectSlaveUage(slave, now, utilizationPerRequestId, previousUtilizations, overLoadedHosts, totalMemBytesUsed, totalMemBytesAvailable,
+            collectSlaveUsage(slave, now, utilizationPerRequestId, previousUtilizations, overLoadedHosts, totalMemBytesUsed, totalMemBytesAvailable,
                 totalCpuUsed, totalCpuAvailable, totalDiskBytesUsed, totalDiskBytesAvailable);
           }, usageExecutor)
       ));
@@ -126,13 +126,33 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
     CompletableFutures.allOf(usageFutures).join();
 
     usageManager.saveClusterUtilization(
-        getClusterUtilization(utilizationPerRequestId, totalMemBytesUsed.get(), totalMemBytesAvailable.get(), totalCpuUsed.get(), totalCpuAvailable.get(), totalDiskBytesUsed.get(), totalDiskBytesAvailable
-            .get(), now));
+        getClusterUtilization(
+            utilizationPerRequestId, totalMemBytesUsed.get(), totalMemBytesAvailable.get(),
+            totalCpuUsed.get(), totalCpuAvailable.get(), totalDiskBytesUsed.get(), totalDiskBytesAvailable.get(), now));
     utilizationPerRequestId.values().forEach(usageManager::saveRequestUtilization);
 
     if (configuration.isShuffleTasksForOverloadedSlaves()) {
       shuffleTasksOnOverloadedHosts(overLoadedHosts);
     }
+  }
+
+  public CompletableFuture<Void> getSlaveUsage(SingularitySlave slave) {
+    return usageCollectionSemaphore.call(() ->
+        CompletableFuture.runAsync(() -> {
+          collectSlaveUsage(
+              slave,
+              System.currentTimeMillis(),
+              new ConcurrentHashMap<>(),
+              usageManager.getRequestUtilizations(),
+              new ConcurrentHashMap<>(),
+              new AtomicLong(),
+              new AtomicLong(),
+              new AtomicDouble(),
+              new AtomicDouble(),
+              new AtomicLong(),
+              new AtomicLong());
+        }, usageExecutor)
+    );
   }
 
   public void runWithRequestLock(Runnable function, String requestId) {
@@ -145,17 +165,17 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
     }
   }
 
-  private void collectSlaveUage(SingularitySlave slave,
-                                long now,
-                                Map<String, RequestUtilization> utilizationPerRequestId,
-                                Map<String, RequestUtilization> previousUtilizations,
-                                Map<SingularitySlaveUsage, List<TaskIdWithUsage>> overLoadedHosts,
-                                AtomicLong totalMemBytesUsed,
-                                AtomicLong totalMemBytesAvailable,
-                                AtomicDouble totalCpuUsed,
-                                AtomicDouble totalCpuAvailable,
-                                AtomicLong totalDiskBytesUsed,
-                                AtomicLong totalDiskBytesAvailable) {
+  private void collectSlaveUsage(SingularitySlave slave,
+                                 long now,
+                                 Map<String, RequestUtilization> utilizationPerRequestId,
+                                 Map<String, RequestUtilization> previousUtilizations,
+                                 Map<SingularitySlaveUsage, List<TaskIdWithUsage>> overLoadedHosts,
+                                 AtomicLong totalMemBytesUsed,
+                                 AtomicLong totalMemBytesAvailable,
+                                 AtomicDouble totalCpuUsed,
+                                 AtomicDouble totalCpuAvailable,
+                                 AtomicLong totalDiskBytesUsed,
+                                 AtomicLong totalDiskBytesAvailable) {
     Optional<Long> memoryMbTotal = Optional.absent();
     Optional<Double> cpusTotal = Optional.absent();
     Optional<Long> diskMbTotal = Optional.absent();
