@@ -68,7 +68,7 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
   private final DeployManager deployManager;
   private final TaskManager taskManager;
 
-  private final AsyncSemaphore<Void> usageCollectionSemaphore;
+  private final AsyncSemaphore<SingularitySlaveUsage> usageCollectionSemaphore;
   private final ExecutorService usageExecutor;
   private final ConcurrentHashMap<String, ReentrantLock> requestLocks;
 
@@ -112,12 +112,12 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
 
     Map<SingularitySlaveUsage, List<TaskIdWithUsage>> overLoadedHosts = new ConcurrentHashMap<>();
 
-    List<CompletableFuture<Void>> usageFutures = new ArrayList<>();
+    List<CompletableFuture<SingularitySlaveUsage>> usageFutures = new ArrayList<>();
 
     usageHelper.getSlavesToTrackUsageFor().forEach((slave) -> {
       usageFutures.add(usageCollectionSemaphore.call(() ->
-          CompletableFuture.runAsync(() -> {
-            collectSlaveUsage(slave, now, utilizationPerRequestId, previousUtilizations, overLoadedHosts, totalMemBytesUsed, totalMemBytesAvailable,
+          CompletableFuture.supplyAsync(() -> {
+            return collectSlaveUsage(slave, now, utilizationPerRequestId, previousUtilizations, overLoadedHosts, totalMemBytesUsed, totalMemBytesAvailable,
                 totalCpuUsed, totalCpuAvailable, totalDiskBytesUsed, totalDiskBytesAvailable);
           }, usageExecutor)
       ));
@@ -136,10 +136,10 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
     }
   }
 
-  public CompletableFuture<Void> getSlaveUsage(SingularitySlave slave) {
+  public CompletableFuture<SingularitySlaveUsage> getSlaveUsage(SingularitySlave slave) {
     return usageCollectionSemaphore.call(() ->
-        CompletableFuture.runAsync(() -> {
-          collectSlaveUsage(
+        CompletableFuture.supplyAsync(() -> {
+          return collectSlaveUsage(
               slave,
               System.currentTimeMillis(),
               new ConcurrentHashMap<>(),
@@ -165,7 +165,7 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
     }
   }
 
-  private void collectSlaveUsage(SingularitySlave slave,
+  private SingularitySlaveUsage collectSlaveUsage(SingularitySlave slave,
                                  long now,
                                  Map<String, RequestUtilization> utilizationPerRequestId,
                                  Map<String, RequestUtilization> previousUtilizations,
@@ -334,11 +334,13 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
 
       LOG.debug("Saving slave {} usage {}", slave.getHost(), slaveUsage);
       usageManager.saveSpecificSlaveUsageAndSetCurrent(slave.getId(), slaveUsage);
+      return slaveUsage;
     } catch (Throwable t) {
       String message = String.format("Could not get slave usage for host %s", slave.getHost());
       LOG.error(message, t);
       exceptionNotifier.notify(message, t);
     }
+    return null; // TODO: is this really okay?
   }
 
   private boolean isEligibleForShuffle(SingularityTaskId task) {
