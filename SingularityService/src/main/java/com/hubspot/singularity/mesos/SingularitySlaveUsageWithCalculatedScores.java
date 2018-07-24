@@ -129,10 +129,6 @@ class SingularitySlaveUsageWithCalculatedScores {
     return diskInUseScore;
   }
 
-  long getTimestamp() {
-    return timestamp;
-  }
-
   void addEstimatedCpuUsage(double estimatedAddedCpus) {
     this.estimatedAddedCpusUsage += estimatedAddedCpus;
   }

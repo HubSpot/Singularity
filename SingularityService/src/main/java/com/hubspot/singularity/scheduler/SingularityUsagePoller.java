@@ -118,7 +118,7 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
       usageFutures.add(usageCollectionSemaphore.call(() ->
           CompletableFuture.supplyAsync(() -> {
             return collectSlaveUsage(slave, now, utilizationPerRequestId, previousUtilizations, overLoadedHosts, totalMemBytesUsed, totalMemBytesAvailable,
-                totalCpuUsed, totalCpuAvailable, totalDiskBytesUsed, totalDiskBytesAvailable);
+                totalCpuUsed, totalCpuAvailable, totalDiskBytesUsed, totalDiskBytesAvailable).get();
           }, usageExecutor)
       ));
     });
@@ -136,25 +136,6 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
     }
   }
 
-  public CompletableFuture<SingularitySlaveUsage> getSlaveUsage(SingularitySlave slave) {
-    return usageCollectionSemaphore.call(() ->
-        CompletableFuture.supplyAsync(() -> {
-          return collectSlaveUsage(
-              slave,
-              System.currentTimeMillis(),
-              new ConcurrentHashMap<>(),
-              usageManager.getRequestUtilizations(),
-              new ConcurrentHashMap<>(),
-              new AtomicLong(),
-              new AtomicLong(),
-              new AtomicDouble(),
-              new AtomicDouble(),
-              new AtomicLong(),
-              new AtomicLong());
-        }, usageExecutor)
-    );
-  }
-
   public void runWithRequestLock(Runnable function, String requestId) {
     ReentrantLock lock = requestLocks.computeIfAbsent(requestId, (r) -> new ReentrantLock());
     lock.lock();
@@ -165,17 +146,18 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
     }
   }
 
-  private SingularitySlaveUsage collectSlaveUsage(SingularitySlave slave,
-                                 long now,
-                                 Map<String, RequestUtilization> utilizationPerRequestId,
-                                 Map<String, RequestUtilization> previousUtilizations,
-                                 Map<SingularitySlaveUsage, List<TaskIdWithUsage>> overLoadedHosts,
-                                 AtomicLong totalMemBytesUsed,
-                                 AtomicLong totalMemBytesAvailable,
-                                 AtomicDouble totalCpuUsed,
-                                 AtomicDouble totalCpuAvailable,
-                                 AtomicLong totalDiskBytesUsed,
-                                 AtomicLong totalDiskBytesAvailable) {
+  public Optional<SingularitySlaveUsage> collectSlaveUsage(
+      SingularitySlave slave,
+      long now,
+      Map<String, RequestUtilization> utilizationPerRequestId,
+      Map<String, RequestUtilization> previousUtilizations,
+      Map<SingularitySlaveUsage, List<TaskIdWithUsage>> overLoadedHosts,
+      AtomicLong totalMemBytesUsed,
+      AtomicLong totalMemBytesAvailable,
+      AtomicDouble totalCpuUsed,
+      AtomicDouble totalCpuAvailable,
+      AtomicLong totalDiskBytesUsed,
+      AtomicLong totalDiskBytesAvailable) {
     Optional<Long> memoryMbTotal = Optional.absent();
     Optional<Double> cpusTotal = Optional.absent();
     Optional<Long> diskMbTotal = Optional.absent();
@@ -334,13 +316,13 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
 
       LOG.debug("Saving slave {} usage {}", slave.getHost(), slaveUsage);
       usageManager.saveSpecificSlaveUsageAndSetCurrent(slave.getId(), slaveUsage);
-      return slaveUsage;
+      return Optional.of(slaveUsage);
     } catch (Throwable t) {
       String message = String.format("Could not get slave usage for host %s", slave.getHost());
       LOG.error(message, t);
       exceptionNotifier.notify(message, t);
     }
-    return null; // TODO: is this really okay?
+    return Optional.absent();
   }
 
   private boolean isEligibleForShuffle(SingularityTaskId task) {

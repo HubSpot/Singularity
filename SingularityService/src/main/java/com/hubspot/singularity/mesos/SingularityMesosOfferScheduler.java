@@ -10,6 +10,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -22,6 +23,7 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
+import com.google.common.util.concurrent.AtomicDouble;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Inject;
 import com.hubspot.mesos.Resources;
@@ -208,7 +210,7 @@ public class SingularityMesosOfferScheduler {
         for (SingularityOfferHolder offerHolder : offerHolders.values()) {
           scoringFutures.add(offerScoringSemaphore.call(() ->
               CompletableFuture.supplyAsync(() -> {
-                return buildScoringFuture(offerHolders, requestUtilizations, activeTaskIds, currentSlaveUsagesBySlaveId, tasksPerOfferHost, taskRequestHolder, scorePerOffer, activeTaskIdsForRequest, scoringException, offerHolder);
+                return calculateScore(offerHolders, requestUtilizations, activeTaskIds, currentSlaveUsagesBySlaveId, tasksPerOfferHost, taskRequestHolder, scorePerOffer, activeTaskIdsForRequest, scoringException, offerHolder);
               },
               offerScoringExecutor)));
         }
@@ -238,7 +240,7 @@ public class SingularityMesosOfferScheduler {
     return offerHolders.values();
   }
 
-  private Void buildScoringFuture(
+  private Void calculateScore(
       Map<String, SingularityOfferHolder> offerHolders,
       Map<String, RequestUtilization> requestUtilizations,
       List<SingularityTaskId> activeTaskIds,
@@ -256,27 +258,39 @@ public class SingularityMesosOfferScheduler {
     Optional<SingularitySlaveUsageWithCalculatedScores> maybeSlaveUsage = Optional.fromNullable(currentSlaveUsagesBySlaveId.get(slaveId));
 
     if (taskManager.getActiveTasks().stream()
-        .anyMatch(t -> t.getTaskRequest().getDeploy().getTimestamp().or(System.currentTimeMillis()) > maybeSlaveUsage.get().getTimestamp()
+        .anyMatch(t -> t.getTaskRequest().getDeploy().getTimestamp().or(System.currentTimeMillis()) > maybeSlaveUsage.get().getSlaveUsage().getTimestamp()
             && t.getMesosTask().getSlaveId().getValue().equals(slaveId))) {
       Optional<SingularitySlave> maybeSlave = slaveManager.getSlave(slaveId);
       if (maybeSlave.isPresent()) {
-        usagePoller.getSlaveUsage(maybeSlave.get())
+        CompletableFuture.supplyAsync(() ->
+            usagePoller.collectSlaveUsage(
+              maybeSlave.get(),
+              System.currentTimeMillis(),
+              new ConcurrentHashMap<>(),
+              usageManager.getRequestUtilizations(),
+              new ConcurrentHashMap<>(),
+              new AtomicLong(),
+              new AtomicLong(),
+              new AtomicDouble(),
+              new AtomicDouble(),
+              new AtomicLong(),
+              new AtomicLong()),
+            offerScoringExecutor)
           .whenComplete((usage, throwable) -> {
-              if (throwable == null) {
+              if (throwable == null && usage.isPresent()) {
                 currentSlaveUsagesBySlaveId.put(slaveId, new SingularitySlaveUsageWithCalculatedScores(
-                    usage,
+                    usage.get(),
                     mesosConfiguration.getScoreUsingSystemLoad(),
                     getMaxProbableUsageForSlave(activeTaskIds, requestUtilizations, offerHolders.get(slaveId).getSanitizedHost()),
                     mesosConfiguration.getLoad5OverloadedThreshold(),
                     mesosConfiguration.getLoad1OverloadedThreshold(),
-                    usage.getTimestamp()
+                    usage.get().getTimestamp()
                 ));
               } else {
                 throw new RuntimeException(throwable);
               }
           });
       }
-      return null;
     }
 
     try {
