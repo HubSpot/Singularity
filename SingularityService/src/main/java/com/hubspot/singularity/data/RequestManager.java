@@ -244,7 +244,7 @@ public class RequestManager extends CuratorAsyncManager {
       if (existingPendingRequest.getPendingType() == PendingType.STARTUP) {
         // Fresh pending requests take priority over STARTUP-type pending requests
         set(getPendingPath(pendingRequest), pendingRequest, pendingRequestTranscoder);
-        LOG.info("{} added to pending queue, overwriting an existing SingularityPendingRequest of type STARTUP. Previous pending request was {}", pendingRequest, result);
+        LOG.info("{} added to pending queue, overwriting an existing SingularityPendingRequest of type STARTUP. Previous pending request was {}", existingPendingRequest, result);
         return result;
       }
     }
