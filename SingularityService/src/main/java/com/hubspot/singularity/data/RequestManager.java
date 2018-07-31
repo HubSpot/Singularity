@@ -240,11 +240,11 @@ public class RequestManager extends CuratorAsyncManager {
     SingularityCreateResult result = create(getPendingPath(pendingRequest), pendingRequest, pendingRequestTranscoder);
 
     if (result == SingularityCreateResult.EXISTED) {
-      Optional<SingularityPendingRequest> maybeExistingPendingRequest = getPendingRequest(pendingRequest.getRequestId(), pendingRequest.getDeployId());
-      if (maybeExistingPendingRequest.isPresent() && maybeExistingPendingRequest.get().getPendingType() == PendingType.STARTUP) {
-        // Fresh pending requests take priority over STARTUP-type pending requests
+      Optional<SingularityPendingRequest> existingPendingRequest = getPendingRequest(pendingRequest.getRequestId(), pendingRequest.getDeployId());
+      if (!existingPendingRequest.isPresent() || (existingPendingRequest.get().getPendingType() == PendingType.STARTUP)) {
+        // Fresh pending requests take priority over STARTUP-type pending requests (or if the pending request we originally found is gone, we'll go ahead and do the write now)
         set(getPendingPath(pendingRequest), pendingRequest, pendingRequestTranscoder);
-        LOG.info("{} added to pending queue, overwriting an existing SingularityPendingRequest of type STARTUP. Previous pending request was {}", maybeExistingPendingRequest.get(), result);
+        LOG.info("{} added to pending queue, overwriting an existing SingularityPendingRequest of type STARTUP. Previous pending request was {}", existingPendingRequest, result);
         return result;
       }
     }
