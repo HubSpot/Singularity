@@ -50,7 +50,7 @@ import com.hubspot.singularity.helpers.SingularityMesosTaskHolder;
 import com.hubspot.singularity.mesos.SingularitySlaveUsageWithCalculatedScores.MaxProbableUsage;
 import com.hubspot.singularity.scheduler.SingularityLeaderCache;
 import com.hubspot.singularity.scheduler.SingularityScheduler;
-import com.hubspot.singularity.scheduler.SingularityUsagePoller;
+import com.hubspot.singularity.scheduler.SingularityUsageHelper;
 
 @Singleton
 public class SingularityMesosOfferScheduler {
@@ -68,7 +68,7 @@ public class SingularityMesosOfferScheduler {
   private final SingularitySlaveAndRackManager slaveAndRackManager;
   private final SingularitySlaveAndRackHelper slaveAndRackHelper;
   private final SingularityTaskSizeOptimizer taskSizeOptimizer;
-  private final SingularityUsagePoller usagePoller;
+  private final SingularityUsageHelper usageHelper;
   private final SlaveManager slaveManager;
   private final UsageManager usageManager;
   private final DeployManager deployManager;
@@ -94,7 +94,7 @@ public class SingularityMesosOfferScheduler {
                                         SingularityTaskSizeOptimizer taskSizeOptimizer,
                                         SingularitySlaveAndRackHelper slaveAndRackHelper,
                                         SingularityLeaderCache leaderCache,
-                                        SingularityUsagePoller usagePoller,
+                                        SingularityUsageHelper usageHelper,
                                         SlaveManager slaveManager,
                                         UsageManager usageManager,
                                         DeployManager deployManager,
@@ -109,7 +109,7 @@ public class SingularityMesosOfferScheduler {
     this.slaveAndRackManager = slaveAndRackManager;
     this.taskSizeOptimizer = taskSizeOptimizer;
     this.leaderCache = leaderCache;
-    this.usagePoller = usagePoller;
+    this.usageHelper = usageHelper;
     this.slaveManager = slaveManager;
     this.slaveAndRackHelper = slaveAndRackHelper;
     this.taskPrioritizer = taskPrioritizer;
@@ -197,7 +197,7 @@ public class SingularityMesosOfferScheduler {
           if (maybeSlave.isPresent()) {
             currentSlaveUsages.put(
                 slaveId,
-                new SingularitySlaveUsageWithId(usagePoller.collectSlaveUsage(
+                new SingularitySlaveUsageWithId(usageHelper.collectSlaveUsage(
                     maybeSlave.get(),
                     System.currentTimeMillis(),
                     usageManager.getRequestUtilizations()).get(), slaveId));
