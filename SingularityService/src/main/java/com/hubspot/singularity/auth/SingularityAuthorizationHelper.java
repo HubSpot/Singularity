@@ -89,7 +89,7 @@ public class SingularityAuthorizationHelper {
         final Set<String> userGroups = user.getGroups();
         final boolean userIsAdmin = !adminGroups.isEmpty() && groupsIntersect(userGroups, adminGroups);
         final boolean userIsJITA = !jitaGroups.isEmpty() && groupsIntersect(userGroups, jitaGroups);
-        final boolean userIsReadOnlyUser = (!globalReadOnlyGroups.isEmpty() && groupsIntersect(userGroups, globalReadOnlyGroups));
+        final boolean userIsReadOnlyUser = !globalReadOnlyGroups.isEmpty() && groupsIntersect(userGroups, globalReadOnlyGroups);
         final boolean userIsPartOfRequiredGroups = requiredGroups.isEmpty() || groupsIntersect(userGroups, requiredGroups);
         if (!userIsAdmin) {
           checkForbidden(
