@@ -190,7 +190,7 @@ public class SingularityMesosOfferScheduler {
         String slaveId = offerHolder.getSlaveId();
         Optional<SingularitySlaveUsageWithId> maybeSlaveUsage = Optional.fromNullable(currentSlaveUsages.get(slaveId));
 
-        if (taskManager.getActiveTasks().stream()
+        if (maybeSlaveUsage.isPresent() && taskManager.getActiveTasks().stream()
             .anyMatch(t -> t.getTaskRequest().getDeploy().getTimestamp().or(System.currentTimeMillis()) > maybeSlaveUsage.get().getTimestamp()
                 && t.getMesosTask().getSlaveId().getValue().equals(slaveId))) {
           Optional<SingularitySlave> maybeSlave = slaveManager.getSlave(slaveId);
