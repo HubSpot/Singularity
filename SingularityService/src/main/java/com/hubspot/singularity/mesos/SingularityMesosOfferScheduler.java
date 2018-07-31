@@ -186,7 +186,7 @@ public class SingularityMesosOfferScheduler {
 
     List<CompletableFuture<Void>> currentSlaveUsagesFutures = new ArrayList<>();
     for (SingularityOfferHolder offerHolder : offerHolders.values()) {
-      currentSlaveUsagesFutures.add(CompletableFuture.runAsync(() -> {
+      currentSlaveUsagesFutures.add(offerScoringSemaphore.call(() -> CompletableFuture.runAsync(() -> {
         String slaveId = offerHolder.getSlaveId();
         Optional<SingularitySlaveUsageWithId> maybeSlaveUsage = Optional.fromNullable(currentSlaveUsages.get(slaveId));
 
@@ -203,14 +203,14 @@ public class SingularityMesosOfferScheduler {
                     usageManager.getRequestUtilizations()).get(), slaveId));
           }
         }
-      }, offerScoringExecutor));
+      }, offerScoringExecutor)));
     }
     CompletableFutures.allOf(currentSlaveUsagesFutures).join();
 
     List<CompletableFuture<Void>> usagesWithScoresFutures = new ArrayList<>();
     Map<String, SingularitySlaveUsageWithCalculatedScores> currentSlaveUsagesBySlaveId = new ConcurrentHashMap<>();
     for (SingularitySlaveUsageWithId usage : currentSlaveUsages.values()) {
-      usagesWithScoresFutures.add(
+      usagesWithScoresFutures.add(offerScoringSemaphore.call(() ->
           CompletableFuture.runAsync(() -> currentSlaveUsagesBySlaveId.put(usage.getSlaveId(),
               new SingularitySlaveUsageWithCalculatedScores(
                 usage,
@@ -219,7 +219,7 @@ public class SingularityMesosOfferScheduler {
                 mesosConfiguration.getLoad5OverloadedThreshold(),
                 mesosConfiguration.getLoad1OverloadedThreshold(),
                 usage.getTimestamp())),
-              offerScoringExecutor)
+              offerScoringExecutor))
       );
     }
 
