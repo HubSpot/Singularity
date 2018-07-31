@@ -10,7 +10,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -23,7 +22,6 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
-import com.google.common.util.concurrent.AtomicDouble;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Inject;
 import com.hubspot.mesos.Resources;
@@ -178,23 +176,54 @@ public class SingularityMesosOfferScheduler {
     Map<String, RequestUtilization> requestUtilizations = usageManager.getRequestUtilizations();
     List<SingularityTaskId> activeTaskIds = taskManager.getActiveTaskIds();
 
-    final Map<String, SingularitySlaveUsageWithCalculatedScores> currentSlaveUsagesBySlaveId = usageManager.getCurrentSlaveUsages(
+    Map<String, SingularitySlaveUsageWithId> currentSlaveUsages = usageManager.getCurrentSlaveUsages(
         offerHolders.values()
             .stream()
             .map(SingularityOfferHolder::getSlaveId)
             .collect(Collectors.toList()))
-        .parallelStream()
-        .collect(Collectors.toMap(
-            SingularitySlaveUsageWithId::getSlaveId,
-            (usageWithId) -> new SingularitySlaveUsageWithCalculatedScores(
-                usageWithId,
+        .stream()
+        .collect(Collectors.toMap(SingularitySlaveUsageWithId::getSlaveId, Function.identity()));
+
+    List<CompletableFuture<Void>> currentSlaveUsagesFutures = new ArrayList<>();
+    for (SingularityOfferHolder offerHolder : offerHolders.values()) {
+      currentSlaveUsagesFutures.add(CompletableFuture.runAsync(() -> {
+        String slaveId = offerHolder.getSlaveId();
+        Optional<SingularitySlaveUsageWithId> maybeSlaveUsage = Optional.fromNullable(currentSlaveUsages.get(slaveId));
+
+        if (taskManager.getActiveTasks().stream()
+            .anyMatch(t -> t.getTaskRequest().getDeploy().getTimestamp().or(System.currentTimeMillis()) > maybeSlaveUsage.get().getTimestamp()
+                && t.getMesosTask().getSlaveId().getValue().equals(slaveId))) {
+          Optional<SingularitySlave> maybeSlave = slaveManager.getSlave(slaveId);
+          if (maybeSlave.isPresent()) {
+            currentSlaveUsages.put(
+                slaveId,
+                new SingularitySlaveUsageWithId(usagePoller.collectSlaveUsage(
+                    maybeSlave.get(),
+                    System.currentTimeMillis(),
+                    usageManager.getRequestUtilizations()).get(), slaveId));
+          }
+        }
+      }, offerScoringExecutor));
+    }
+    CompletableFutures.allOf(currentSlaveUsagesFutures).join();
+
+    List<CompletableFuture<Void>> usagesWithScoresFutures = new ArrayList<>();
+    Map<String, SingularitySlaveUsageWithCalculatedScores> currentSlaveUsagesBySlaveId = new ConcurrentHashMap<>();
+    for (SingularitySlaveUsageWithId usage : currentSlaveUsages.values()) {
+      usagesWithScoresFutures.add(
+          CompletableFuture.runAsync(() -> currentSlaveUsagesBySlaveId.put(usage.getSlaveId(),
+              new SingularitySlaveUsageWithCalculatedScores(
+                usage,
                 mesosConfiguration.getScoreUsingSystemLoad(),
-                getMaxProbableUsageForSlave(activeTaskIds, requestUtilizations, offerHolders.get(usageWithId.getSlaveId()).getSanitizedHost()),
+                getMaxProbableUsageForSlave(activeTaskIds, requestUtilizations, offerHolders.get(usage.getSlaveId()).getSanitizedHost()),
                 mesosConfiguration.getLoad5OverloadedThreshold(),
                 mesosConfiguration.getLoad1OverloadedThreshold(),
-                usageWithId.getTimestamp()
-            )
-        ));
+                usage.getTimestamp())),
+              offerScoringExecutor)
+      );
+    }
+
+    CompletableFutures.allOf(usagesWithScoresFutures).join();
 
     LOG.trace("Found slave usages {}", currentSlaveUsagesBySlaveId);
 
@@ -210,7 +239,7 @@ public class SingularityMesosOfferScheduler {
         for (SingularityOfferHolder offerHolder : offerHolders.values()) {
           scoringFutures.add(offerScoringSemaphore.call(() ->
               CompletableFuture.supplyAsync(() -> {
-                return calculateScore(offerHolders, requestUtilizations, activeTaskIds, currentSlaveUsagesBySlaveId, tasksPerOfferHost, taskRequestHolder, scorePerOffer, activeTaskIdsForRequest, scoringException, offerHolder);
+                return calculateScore(requestUtilizations, currentSlaveUsagesBySlaveId, tasksPerOfferHost, taskRequestHolder, scorePerOffer, activeTaskIdsForRequest, scoringException, offerHolder);
               },
               offerScoringExecutor)));
         }
@@ -241,9 +270,7 @@ public class SingularityMesosOfferScheduler {
   }
 
   private Void calculateScore(
-      Map<String, SingularityOfferHolder> offerHolders,
       Map<String, RequestUtilization> requestUtilizations,
-      List<SingularityTaskId> activeTaskIds,
       Map<String, SingularitySlaveUsageWithCalculatedScores> currentSlaveUsagesBySlaveId,
       Map<String, Integer> tasksPerOfferHost,
       SingularityTaskRequestHolder taskRequestHolder,
@@ -255,43 +282,6 @@ public class SingularityMesosOfferScheduler {
       return null;
     }
     String slaveId = offerHolder.getSlaveId();
-    Optional<SingularitySlaveUsageWithCalculatedScores> maybeSlaveUsage = Optional.fromNullable(currentSlaveUsagesBySlaveId.get(slaveId));
-
-    if (taskManager.getActiveTasks().stream()
-        .anyMatch(t -> t.getTaskRequest().getDeploy().getTimestamp().or(System.currentTimeMillis()) > maybeSlaveUsage.get().getSlaveUsage().getTimestamp()
-            && t.getMesosTask().getSlaveId().getValue().equals(slaveId))) {
-      Optional<SingularitySlave> maybeSlave = slaveManager.getSlave(slaveId);
-      if (maybeSlave.isPresent()) {
-        CompletableFuture.supplyAsync(() ->
-            usagePoller.collectSlaveUsage(
-              maybeSlave.get(),
-              System.currentTimeMillis(),
-              new ConcurrentHashMap<>(),
-              usageManager.getRequestUtilizations(),
-              new ConcurrentHashMap<>(),
-              new AtomicLong(),
-              new AtomicLong(),
-              new AtomicDouble(),
-              new AtomicDouble(),
-              new AtomicLong(),
-              new AtomicLong()),
-            offerScoringExecutor)
-          .whenComplete((usage, throwable) -> {
-              if (throwable == null && usage.isPresent()) {
-                currentSlaveUsagesBySlaveId.put(slaveId, new SingularitySlaveUsageWithCalculatedScores(
-                    usage.get(),
-                    mesosConfiguration.getScoreUsingSystemLoad(),
-                    getMaxProbableUsageForSlave(activeTaskIds, requestUtilizations, offerHolders.get(slaveId).getSanitizedHost()),
-                    mesosConfiguration.getLoad5OverloadedThreshold(),
-                    mesosConfiguration.getLoad1OverloadedThreshold(),
-                    usage.get().getTimestamp()
-                ));
-              } else {
-                throw new RuntimeException(throwable);
-              }
-          });
-      }
-    }
 
     try {
       double score = calculateScore(offerHolder, currentSlaveUsagesBySlaveId, tasksPerOfferHost, taskRequestHolder, activeTaskIdsForRequest, requestUtilizations.get(taskRequestHolder.getTaskRequest().getRequest().getId()));

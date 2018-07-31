@@ -146,6 +146,21 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
     }
   }
 
+  public Optional<SingularitySlaveUsage> collectSlaveUsage(SingularitySlave slave, long now, Map<String, RequestUtilization> previousUtilizations) {
+    return collectSlaveUsage(
+        slave,
+        now,
+        new ConcurrentHashMap<>(),
+        previousUtilizations,
+        new ConcurrentHashMap<>(),
+        new AtomicLong(),
+        new AtomicLong(),
+        new AtomicDouble(),
+        new AtomicDouble(),
+        new AtomicLong(),
+        new AtomicLong());
+  }
+
   public Optional<SingularitySlaveUsage> collectSlaveUsage(
       SingularitySlave slave,
       long now,
