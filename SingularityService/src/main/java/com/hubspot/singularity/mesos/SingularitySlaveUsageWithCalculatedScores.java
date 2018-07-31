@@ -26,7 +26,14 @@ class SingularitySlaveUsageWithCalculatedScores {
   private final double load5Threshold;
   private final double load1Threshold;
 
-  SingularitySlaveUsageWithCalculatedScores(SingularitySlaveUsage slaveUsage, MachineLoadMetric systemLoadMetric, MaxProbableUsage maxProbableTaskUsage, double load5Threshold, double load1Threshold) {
+  private final long timestamp;
+
+  SingularitySlaveUsageWithCalculatedScores(SingularitySlaveUsage slaveUsage,
+                                            MachineLoadMetric systemLoadMetric,
+                                            MaxProbableUsage maxProbableTaskUsage,
+                                            double load5Threshold,
+                                            double load1Threshold,
+                                            long timestamp) {
     this.slaveUsage = slaveUsage;
     this.systemLoadMetric = systemLoadMetric;
     this.maxProbableTaskUsage = maxProbableTaskUsage;
@@ -39,6 +46,7 @@ class SingularitySlaveUsageWithCalculatedScores {
     }
     this.load5Threshold = load5Threshold;
     this.load1Threshold = load1Threshold;
+    this.timestamp = timestamp;
   }
 
   boolean isCpuOverloaded(double estimatedNumCpusToAdd) {

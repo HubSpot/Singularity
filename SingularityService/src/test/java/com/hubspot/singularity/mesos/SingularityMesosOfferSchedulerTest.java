@@ -251,7 +251,7 @@ public class SingularityMesosOfferSchedulerTest extends SingularitySchedulerTest
             cpusTotal, cpuInUse, cpuInUse, cpuInUse,
             diskMbInUse * SingularitySlaveUsage.BYTES_PER_MEGABYTE, diskMbTotal * SingularitySlaveUsage.BYTES_PER_MEGABYTE),
         MachineLoadMetric.LOAD_5, new MaxProbableUsage(0, 0, 0),
-        0, 0
+        0, 0, System.currentTimeMillis()
     );
   }
 
