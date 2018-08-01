@@ -195,13 +195,17 @@ public class SingularityMesosOfferScheduler {
                 && t.getMesosTask().getSlaveId().getValue().equals(slaveId))) {
           Optional<SingularitySlave> maybeSlave = slaveManager.getSlave(slaveId);
           if (maybeSlave.isPresent()) {
-            currentSlaveUsages.put(
-                slaveId,
-                new SingularitySlaveUsageWithId(usageHelper.collectSlaveUsage(
-                    maybeSlave.get(),
-                    System.currentTimeMillis(),
-                    usageManager.getRequestUtilizations(),
-                    true).get(), slaveId));
+            Optional<SingularitySlaveUsage> usage = usageHelper.collectSlaveUsage(
+                maybeSlave.get(),
+                System.currentTimeMillis(),
+                usageManager.getRequestUtilizations(),
+                true);
+            if (usage.isPresent()) {
+              currentSlaveUsages.put(slaveId, new SingularitySlaveUsageWithId(usage.get(), slaveId));
+            } else {
+              LOG.warn("Failed to refresh stale slave usage data for {}. Will not schedule tasks right now.", maybeSlave.get().getName());
+              currentSlaveUsages.remove(slaveId);
+            }
           }
         }
       }, offerScoringExecutor)));
