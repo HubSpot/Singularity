@@ -101,6 +101,10 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
 
   @NotEmpty
   @JsonProperty
+  private String logrotateHourlyConfDirectory = "/etc/logrotate.d/hourly";
+
+  @NotEmpty
+  @JsonProperty
   private String logrotateToDirectory = "logs";
 
   @Min(1)
@@ -326,6 +330,10 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
 
   public String getLogrotateConfDirectory() {
     return logrotateConfDirectory;
+  }
+
+  public String getLogrotateHourlyConfDirectory() {
+    return logrotateHourlyConfDirectory;
   }
 
   public String getLogrotateToDirectory() {
