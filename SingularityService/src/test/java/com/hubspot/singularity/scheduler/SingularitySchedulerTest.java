@@ -464,6 +464,34 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
   }
 
   @Test
+  public void testNewlyDeployedScheduledTasksAreScheduledAfterStartup() {
+    initScheduledRequest();
+    initFirstDeploy();
+
+    SingularityTask runningTask = launchTask(request, firstDeploy, 1, TaskState.TASK_RUNNING);
+
+    long now = System.currentTimeMillis();
+
+    initSecondDeploy();
+    requestManager.addToPendingQueue(new SingularityPendingRequest(requestId, secondDeployId, now, Optional.absent(), PendingType.STARTUP, Optional.absent(), Optional.absent()));
+    deployChecker.checkDeploys();
+
+    resourceOffers();
+
+    // There's an instance running, so we shouldn't schedule a pending task yet
+    Assert.assertTrue(taskManager.getPendingTaskIds().isEmpty());
+
+    statusUpdate(runningTask, TaskState.TASK_FINISHED);
+
+    scheduler.drainPendingQueue();
+
+    // Now a pending task should be scheduled with the new deploy
+    Assert.assertEquals(1, taskManager.getPendingTaskIds().size());
+    Assert.assertEquals(PendingType.NEW_DEPLOY, taskManager.getPendingTaskIds().get(0).getPendingType());
+    Assert.assertEquals(secondDeployId, taskManager.getPendingTaskIds().get(0).getDeployId());
+  }
+
+  @Test
   public void testFinishedRequestCanBeDeployed() {
     initScheduledRequest();
     initFirstDeploy();
