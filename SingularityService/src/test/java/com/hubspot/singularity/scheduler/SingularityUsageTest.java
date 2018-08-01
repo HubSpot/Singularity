@@ -28,6 +28,9 @@ import com.hubspot.singularity.data.UsageManager;
 public class SingularityUsageTest extends SingularitySchedulerTestBase {
 
   @Inject
+  protected SingularityUsageHelper usageHelper;
+
+  @Inject
   protected SingularityUsagePoller usagePoller;
 
   @Inject
@@ -639,7 +642,7 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
   }
 
   private void clearUsages(String taskId) {
-    usagePoller.clearOldUsage(taskId);
+    usageHelper.clearOldUsage(taskId);
   }
 
   private void testUtilization(SingularityClusterUtilization utilization,
