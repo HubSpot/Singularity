@@ -103,9 +103,6 @@ public class SingularityUsageHelper {
     return slavesToTrack;
   }
 
-
-
-
   public Optional<SingularitySlaveUsage> collectSlaveUsage(SingularitySlave slave, long now, Map<String, RequestUtilization> previousUtilizations, boolean useShortTimeout) {
     return collectSlaveUsage(
         slave,

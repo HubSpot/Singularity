@@ -41,6 +41,10 @@ public interface MesosClient {
 
   public MesosSlaveStateObject getSlaveState(String uri);
 
+  default List<MesosTaskMonitorObject> getSlaveResourceUsage(String hostname) {
+    return getSlaveResourceUsage(hostname, false);
+  }
+
   public List<MesosTaskMonitorObject> getSlaveResourceUsage(String hostname, boolean useShortTimeout);
 
 }
