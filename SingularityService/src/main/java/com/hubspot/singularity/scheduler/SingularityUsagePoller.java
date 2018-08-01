@@ -48,7 +48,7 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
   private final DeployManager deployManager;
   private final TaskManager taskManager;
 
-  private final AsyncSemaphore<SingularitySlaveUsage> usageCollectionSemaphore;
+  private final AsyncSemaphore<Void> usageCollectionSemaphore;
   private final ExecutorService usageExecutor;
   private final ConcurrentHashMap<String, ReentrantLock> requestLocks;
 
@@ -88,13 +88,13 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
 
     Map<SingularitySlaveUsage, List<TaskIdWithUsage>> overLoadedHosts = new ConcurrentHashMap<>();
 
-    List<CompletableFuture<SingularitySlaveUsage>> usageFutures = new ArrayList<>();
+    List<CompletableFuture<Void>> usageFutures = new ArrayList<>();
 
     usageHelper.getSlavesToTrackUsageFor().forEach((slave) -> {
       usageFutures.add(usageCollectionSemaphore.call(() ->
-          CompletableFuture.supplyAsync(() -> {
-            return usageHelper.collectSlaveUsage(slave, now, utilizationPerRequestId, previousUtilizations, overLoadedHosts, totalMemBytesUsed, totalMemBytesAvailable,
-                totalCpuUsed, totalCpuAvailable, totalDiskBytesUsed, totalDiskBytesAvailable).get();
+          CompletableFuture.runAsync(() -> {
+            usageHelper.collectSlaveUsage(slave, now, utilizationPerRequestId, previousUtilizations, overLoadedHosts, totalMemBytesUsed, totalMemBytesAvailable,
+                totalCpuUsed, totalCpuAvailable, totalDiskBytesUsed, totalDiskBytesAvailable, false);
           }, usageExecutor)
       ));
     });

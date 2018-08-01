@@ -103,10 +103,7 @@ public class SingularityUsageHelper {
     return slavesToTrack;
   }
 
-
-
-
-  public Optional<SingularitySlaveUsage> collectSlaveUsage(SingularitySlave slave, long now, Map<String, RequestUtilization> previousUtilizations) {
+  public Optional<SingularitySlaveUsage> collectSlaveUsage(SingularitySlave slave, long now, Map<String, RequestUtilization> previousUtilizations, boolean useShortTimeout) {
     return collectSlaveUsage(
         slave,
         now,
@@ -118,7 +115,8 @@ public class SingularityUsageHelper {
         new AtomicDouble(),
         new AtomicDouble(),
         new AtomicLong(),
-        new AtomicLong());
+        new AtomicLong(),
+        useShortTimeout);
   }
 
   public Optional<SingularitySlaveUsage> collectSlaveUsage(
@@ -132,7 +130,8 @@ public class SingularityUsageHelper {
       AtomicDouble totalCpuUsed,
       AtomicDouble totalCpuAvailable,
       AtomicLong totalDiskBytesUsed,
-      AtomicLong totalDiskBytesAvailable) {
+      AtomicLong totalDiskBytesAvailable,
+      boolean useShortTimeout) {
     Optional<Long> memoryMbTotal = Optional.absent();
     Optional<Double> cpusTotal = Optional.absent();
     Optional<Long> diskMbTotal = Optional.absent();
@@ -146,7 +145,7 @@ public class SingularityUsageHelper {
     long diskMbUsedOnSlave = 0;
 
     try {
-      List<MesosTaskMonitorObject> allTaskUsage = mesosClient.getSlaveResourceUsage(slave.getHost());
+      List<MesosTaskMonitorObject> allTaskUsage = mesosClient.getSlaveResourceUsage(slave.getHost(), useShortTimeout);
       MesosSlaveMetricsSnapshotObject slaveMetricsSnapshot = mesosClient.getSlaveMetricsSnapshot(slave.getHost());
       double systemMemTotalBytes = 0;
       double systemMemFreeBytes = 0;

@@ -66,7 +66,7 @@ public class TestingMesosClient implements MesosClient {
   }
 
   @Override
-  public List<MesosTaskMonitorObject> getSlaveResourceUsage(String hostname) {
+  public List<MesosTaskMonitorObject> getSlaveResourceUsage(String hostname, boolean useShortTimeout) {
     return slaveResourceUsage.getOrDefault(hostname, Collections.emptyList());
   }
 
