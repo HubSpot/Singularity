@@ -45,7 +45,7 @@ public abstract class AbstractMachineResource<T extends SingularityMachineAbstra
   }
 
   protected List<SingularityExpiringMachineState> getExpiringStateChanges(SingularityUser user) {
-    authorizationHelper.checkAdminAuthorization(user);
+    authorizationHelper.checkReadAuthorization(user);
     return manager.getExpiringObjects();
   }
 

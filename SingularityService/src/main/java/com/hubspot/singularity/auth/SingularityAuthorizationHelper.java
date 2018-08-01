@@ -82,6 +82,24 @@ public class SingularityAuthorizationHelper {
     }
   }
 
+  public void checkReadAuthorization(SingularityUser user) {
+    if (authEnabled) {
+      checkForbidden(user.isAuthenticated(), "Not Authenticated!");
+      if (!adminGroups.isEmpty()) {
+        final Set<String> userGroups = user.getGroups();
+        final boolean userIsAdmin = !adminGroups.isEmpty() && groupsIntersect(userGroups, adminGroups);
+        final boolean userIsJITA = !jitaGroups.isEmpty() && groupsIntersect(userGroups, jitaGroups);
+        final boolean userIsReadOnlyUser = !globalReadOnlyGroups.isEmpty() && groupsIntersect(userGroups, globalReadOnlyGroups);
+        final boolean userIsPartOfRequiredGroups = requiredGroups.isEmpty() || groupsIntersect(userGroups, requiredGroups);
+        if (!userIsAdmin) {
+          checkForbidden(
+              (userIsJITA || userIsReadOnlyUser) && userIsPartOfRequiredGroups,
+              "%s must be part of one or more read only or jita groups: %s,%s", user.getId(), JavaUtils.COMMA_JOINER.join(jitaGroups), JavaUtils.COMMA_JOINER.join(globalReadOnlyGroups));
+        }
+      }
+    }
+  }
+
   public void checkForAuthorizationByTaskId(String taskId, SingularityUser user, SingularityAuthorizationScope scope) {
     if (authEnabled) {
       checkForbidden(user.isAuthenticated(), "Not Authenticated!");
