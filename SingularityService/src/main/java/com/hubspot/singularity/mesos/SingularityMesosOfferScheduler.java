@@ -200,7 +200,8 @@ public class SingularityMesosOfferScheduler {
                 new SingularitySlaveUsageWithId(usageHelper.collectSlaveUsage(
                     maybeSlave.get(),
                     System.currentTimeMillis(),
-                    usageManager.getRequestUtilizations()).get(), slaveId));
+                    usageManager.getRequestUtilizations(),
+                    true).get(), slaveId));
           }
         }
       }, offerScoringExecutor)));
