@@ -3,8 +3,10 @@ package com.hubspot.singularity.mesos;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
@@ -149,6 +151,7 @@ public class SingularityMesosOfferScheduler {
 
     final List<SingularityTaskRequestHolder> sortedTaskRequestHolders = getSortedDueTaskRequests();
     final int numDueTasks = sortedTaskRequestHolders.size();
+    Set<String> relevantRequestIds = new HashSet<>();
 
     final Map<String, SingularityOfferHolder> offerHolders = offers.stream()
         .collect(Collectors.groupingBy((o) -> o.getAgentId().getValue()))
@@ -166,6 +169,13 @@ public class SingularityMesosOfferScheduler {
               slaveAndRackHelper.getTextAttributes(offersList.get(0)),
               slaveAndRackHelper.getReservedSlaveAttributes(offersList.get(0)));
         })
+        .peek((offerHolder) -> {
+          taskManager.getActiveTaskIds().forEach((t) -> {
+            if (t.getSanitizedHost().equals(offerHolder.getSanitizedHost())) {
+              relevantRequestIds.add(t.getRequestId());
+            }
+          });
+        })
         .collect(Collectors.toMap(SingularityOfferHolder::getSlaveId, Function.identity()));
 
     if (sortedTaskRequestHolders.isEmpty()) {
@@ -173,7 +183,7 @@ public class SingularityMesosOfferScheduler {
     }
 
     final AtomicInteger tasksScheduled = new AtomicInteger(0);
-    Map<String, RequestUtilization> requestUtilizations = usageManager.getRequestUtilizations();
+    Map<String, RequestUtilization> requestUtilizations = usageManager.getRequestUtilizations(relevantRequestIds);
     List<SingularityTaskId> activeTaskIds = taskManager.getActiveTaskIds();
 
     Map<String, SingularitySlaveUsageWithId> currentSlaveUsages = usageManager.getCurrentSlaveUsages(
@@ -198,7 +208,7 @@ public class SingularityMesosOfferScheduler {
             Optional<SingularitySlaveUsage> usage = usageHelper.collectSlaveUsage(
                 maybeSlave.get(),
                 System.currentTimeMillis(),
-                usageManager.getRequestUtilizations(),
+                requestUtilizations,
                 true);
             if (usage.isPresent()) {
               currentSlaveUsages.put(slaveId, new SingularitySlaveUsageWithId(usage.get(), slaveId));
