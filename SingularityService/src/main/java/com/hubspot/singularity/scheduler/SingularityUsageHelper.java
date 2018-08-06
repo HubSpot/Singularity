@@ -115,13 +115,13 @@ public class SingularityUsageHelper {
       List<MesosTaskMonitorObject> allTaskUsage = mesosClient.getSlaveResourceUsage(slave.getHost(), useShortTimeout);
       MesosSlaveMetricsSnapshotObject slaveMetricsSnapshot = mesosClient.getSlaveMetricsSnapshot(slave.getHost());
 
-      long memoryMbReservedOnSlave = 0L;
+      double memoryMbReservedOnSlave = 0L;
       double cpuReservedOnSlave = 0.0;
-      long diskMbReservedOnSlave = 0L;
+      double diskMbReservedOnSlave = 0L;
 
-      long memoryBytesUsedOnSlave = 0;
+      double memoryBytesUsedOnSlave = 0;
       double cpusUsedOnSlave = 0;
-      long diskMbUsedOnSlave = 0;
+      double diskMbUsedOnSlave = 0;
 
       double systemMemTotalBytes = 0;
       double systemMemFreeBytes = 0;
@@ -132,9 +132,9 @@ public class SingularityUsageHelper {
       double slaveDiskTotal = 0;
       double systemCpusTotal = 0;
       if (slaveMetricsSnapshot != null) {
-        memoryMbReservedOnSlave = (long) slaveMetricsSnapshot.getSlaveMemUsed();
+        memoryMbReservedOnSlave = slaveMetricsSnapshot.getSlaveMemUsed();
         cpuReservedOnSlave = slaveMetricsSnapshot.getSlaveCpusUsed();
-        diskMbReservedOnSlave = (long) slaveMetricsSnapshot.getSlaveDiskUsed();
+        diskMbReservedOnSlave = slaveMetricsSnapshot.getSlaveDiskUsed();
         systemMemTotalBytes = slaveMetricsSnapshot.getSystemMemTotalBytes();
         systemMemFreeBytes = slaveMetricsSnapshot.getSystemMemFreeBytes();
         systemLoad1Min = slaveMetricsSnapshot.getSystemLoad1Min();
@@ -357,9 +357,9 @@ public class SingularityUsageHelper {
       }
 
       if (slaveUsage.getMemoryBytesTotal().isPresent() && slaveUsage.getCpusTotal().isPresent()) {
-        totalMemBytesUsed.getAndAdd(slaveUsage.getMemoryBytesUsed());
+        totalMemBytesUsed.getAndAdd((long) slaveUsage.getMemoryBytesUsed());
         totalCpuUsed.getAndAdd(slaveUsage.getCpusUsed());
-        totalDiskBytesUsed.getAndAdd(slaveUsage.getDiskBytesUsed());
+        totalDiskBytesUsed.getAndAdd((long) slaveUsage.getDiskBytesUsed());
 
         totalMemBytesAvailable.getAndAdd(slaveUsage.getMemoryBytesTotal().get());
         totalCpuAvailable.getAndAdd(slaveUsage.getCpusTotal().get());
