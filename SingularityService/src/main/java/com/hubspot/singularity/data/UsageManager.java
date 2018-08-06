@@ -6,6 +6,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -186,6 +187,19 @@ public class UsageManager extends CuratorAsyncManager {
 
   public Map<String, RequestUtilization> getRequestUtilizations() {
     return getAsyncChildren(REQUESTS_PATH, requestUtilizationTranscoder).stream()
+        .collect(Collectors.toMap(
+            RequestUtilization::getRequestId,
+            Function.identity()
+        ));
+  }
+
+  public Map<String, RequestUtilization> getRequestUtilizations(Set<String> requestIds) {
+    List<String> paths = new ArrayList<>();
+    for (String requestId : requestIds) {
+      paths.add(getRequestPath(requestId));
+    }
+    return getAsync("/usage/requests", paths, requestUtilizationTranscoder)
+        .stream()
         .collect(Collectors.toMap(
             RequestUtilization::getRequestId,
             Function.identity()

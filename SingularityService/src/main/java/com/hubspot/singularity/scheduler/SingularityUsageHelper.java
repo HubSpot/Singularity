@@ -293,7 +293,7 @@ public class SingularityUsageHelper {
             cpuReservedOnSlave += cpuReservedForTask;
             diskMbReservedOnSlave += diskMbReservedForTask;
 
-            runWithRequestLock(() -> updateRequestUtilization(utilizationPerRequestId, previousUtilizations, pastTaskUsages, latestUsage, task, memoryMbReservedForTask, cpuReservedForTask, diskMbReservedForTask), task.getRequestId());
+            runWithRequestLock(() -> updateRequestUtilization(utilizationPerRequestId, previousUtilizations.get(maybeTask.get().getTaskRequest().getRequest().getId()), pastTaskUsages, latestUsage, task, memoryMbReservedForTask, cpuReservedForTask, diskMbReservedForTask), task.getRequestId());
           }
         }
         memoryBytesUsedOnSlave += latestUsage.getMemoryTotalBytes();
@@ -436,7 +436,7 @@ public class SingularityUsageHelper {
   }
 
   private void updateRequestUtilization(Map<String, RequestUtilization> utilizationPerRequestId,
-      Map<String, RequestUtilization> previousUtilizations,
+      RequestUtilization previous,
       List<SingularityTaskUsage> pastTaskUsages,
       SingularityTaskUsage latestUsage,
       SingularityTaskId task,
@@ -445,7 +445,6 @@ public class SingularityUsageHelper {
       double diskMbReservedForTask) {
     String requestId = task.getRequestId();
     RequestUtilization newRequestUtilization = utilizationPerRequestId.getOrDefault(requestId, new RequestUtilization(requestId, task.getDeployId()));
-    RequestUtilization previous = previousUtilizations.get(requestId);
     // Take the previous request utilization into account to better measure 24 hour max/min values
     if (previous != null) {
       if (previous.getMaxMemTimestamp() < DAY_IN_SECONDS) {
