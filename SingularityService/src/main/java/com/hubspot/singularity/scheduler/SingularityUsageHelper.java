@@ -103,20 +103,98 @@ public class SingularityUsageHelper {
     return slavesToTrack;
   }
 
-  public Optional<SingularitySlaveUsage> collectSlaveUsage(SingularitySlave slave, long now, Map<String, RequestUtilization> previousUtilizations, boolean useShortTimeout) {
-    return collectSlaveUsage(
-        slave,
-        now,
-        new ConcurrentHashMap<>(),
-        previousUtilizations,
-        new ConcurrentHashMap<>(),
-        new AtomicLong(),
-        new AtomicLong(),
-        new AtomicDouble(),
-        new AtomicDouble(),
-        new AtomicLong(),
-        new AtomicLong(),
-        useShortTimeout);
+  public Optional<SingularitySlaveUsage> collectSlaveUsageSimple(
+      SingularitySlave slave,
+      long now,
+      boolean useShortTimeout) {
+    Optional<Long> memoryMbTotal = Optional.absent();
+    Optional<Double> cpusTotal = Optional.absent();
+    Optional<Long> diskMbTotal = Optional.absent();
+
+    try {
+      List<MesosTaskMonitorObject> allTaskUsage = mesosClient.getSlaveResourceUsage(slave.getHost(), useShortTimeout);
+      MesosSlaveMetricsSnapshotObject slaveMetricsSnapshot = mesosClient.getSlaveMetricsSnapshot(slave.getHost());
+
+      double memoryMbReservedOnSlave = 0L;
+      double cpuReservedOnSlave = 0.0;
+      double diskMbReservedOnSlave = 0L;
+
+      double memoryBytesUsedOnSlave = 0;
+      double cpusUsedOnSlave = 0;
+      double diskMbUsedOnSlave = 0;
+
+      double systemMemTotalBytes = 0;
+      double systemMemFreeBytes = 0;
+      double systemLoad1Min = 0;
+      double systemLoad5Min = 0;
+      double systemLoad15Min = 0;
+      double slaveDiskUsed = 0;
+      double slaveDiskTotal = 0;
+      double systemCpusTotal = 0;
+      if (slaveMetricsSnapshot != null) {
+        memoryMbReservedOnSlave = slaveMetricsSnapshot.getSlaveMemUsed();
+        cpuReservedOnSlave = slaveMetricsSnapshot.getSlaveCpusUsed();
+        diskMbReservedOnSlave = slaveMetricsSnapshot.getSlaveDiskUsed();
+        systemMemTotalBytes = slaveMetricsSnapshot.getSystemMemTotalBytes();
+        systemMemFreeBytes = slaveMetricsSnapshot.getSystemMemFreeBytes();
+        systemLoad1Min = slaveMetricsSnapshot.getSystemLoad1Min();
+        systemLoad5Min = slaveMetricsSnapshot.getSystemLoad5Min();
+        systemLoad15Min = slaveMetricsSnapshot.getSystemLoad15Min();
+        slaveDiskUsed = slaveMetricsSnapshot.getSlaveDiskUsed();
+        slaveDiskTotal = slaveMetricsSnapshot.getSlaveDiskTotal();
+        systemCpusTotal = slaveMetricsSnapshot.getSystemCpusTotal();
+      }
+
+      for (MesosTaskMonitorObject taskUsage : allTaskUsage) {
+        String taskId = taskUsage.getSource();
+        SingularityTaskId task;
+        try {
+          task = SingularityTaskId.valueOf(taskId);
+        } catch (InvalidSingularityTaskIdException e) {
+          LOG.error("Couldn't get SingularityTaskId for {}", taskUsage);
+          continue;
+        }
+
+        SingularityTaskUsage latestUsage = getUsage(taskUsage);
+        memoryBytesUsedOnSlave += latestUsage.getMemoryTotalBytes();
+        diskMbUsedOnSlave += latestUsage.getDiskTotalBytes();
+
+        List<SingularityTaskUsage> pastTaskUsages = usageManager.getTaskUsage(taskId);
+        if (pastTaskUsages.isEmpty()) {
+          Optional<SingularityTaskHistoryUpdate> maybeStartingUpdate = taskManager.getTaskHistoryUpdate(task, ExtendedTaskState.TASK_STARTING);
+          if (maybeStartingUpdate.isPresent()) {
+            long startTimestampSeconds = TimeUnit.MILLISECONDS.toSeconds(maybeStartingUpdate.get().getTimestamp());
+            cpusUsedOnSlave += latestUsage.getCpuSeconds() / (latestUsage.getTimestamp() - startTimestampSeconds);
+          }
+        } else {
+          SingularityTaskUsage lastUsage = pastTaskUsages.get(pastTaskUsages.size() - 1);
+          cpusUsedOnSlave += ((latestUsage.getCpuSeconds() - lastUsage.getCpuSeconds()) / (latestUsage.getTimestamp() - lastUsage.getTimestamp()));
+        }
+      }
+
+      if (!slave.getResources().isPresent() ||
+          !slave.getResources().get().getMemoryMegaBytes().isPresent() ||
+          !slave.getResources().get().getNumCpus().isPresent()) {
+        LOG.debug("Could not find slave or resources for slave {}", slave.getId());
+      } else {
+        memoryMbTotal = Optional.of(slave.getResources().get().getMemoryMegaBytes().get().longValue());
+        cpusTotal = Optional.of(slave.getResources().get().getNumCpus().get().doubleValue());
+        diskMbTotal = Optional.of(slave.getResources().get().getDiskSpace().get());
+      }
+
+      SingularitySlaveUsage slaveUsage = new SingularitySlaveUsage(cpusUsedOnSlave, cpuReservedOnSlave, cpusTotal, memoryBytesUsedOnSlave, memoryMbReservedOnSlave,
+          memoryMbTotal, diskMbUsedOnSlave, diskMbReservedOnSlave, diskMbTotal, allTaskUsage.size(), now,
+          systemMemTotalBytes, systemMemFreeBytes, systemCpusTotal, systemLoad1Min, systemLoad5Min, systemLoad15Min, slaveDiskUsed, slaveDiskTotal);
+
+      LOG.debug("Saving slave {} usage {}", slave.getHost(), slaveUsage);
+      usageManager.saveSpecificSlaveUsageAndSetCurrent(slave.getId(), slaveUsage);
+      return Optional.of(slaveUsage);
+    } catch (Throwable t) {
+      String message = String.format("Could not get slave usage for host %s", slave.getHost());
+      LOG.error(message, t);
+      exceptionNotifier.notify(message, t);
+    }
+    return Optional.absent();
   }
 
   public Optional<SingularitySlaveUsage> collectSlaveUsage(
@@ -279,9 +357,9 @@ public class SingularityUsageHelper {
       }
 
       if (slaveUsage.getMemoryBytesTotal().isPresent() && slaveUsage.getCpusTotal().isPresent()) {
-        totalMemBytesUsed.getAndAdd(slaveUsage.getMemoryBytesUsed());
+        totalMemBytesUsed.getAndAdd((long) slaveUsage.getMemoryBytesUsed());
         totalCpuUsed.getAndAdd(slaveUsage.getCpusUsed());
-        totalDiskBytesUsed.getAndAdd(slaveUsage.getDiskBytesUsed());
+        totalDiskBytesUsed.getAndAdd((long) slaveUsage.getDiskBytesUsed());
 
         totalMemBytesAvailable.getAndAdd(slaveUsage.getMemoryBytesTotal().get());
         totalCpuAvailable.getAndAdd(slaveUsage.getCpusTotal().get());
