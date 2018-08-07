@@ -154,7 +154,7 @@ public class SingularityUsageHelper {
       SingularitySlaveUsage slaveUsage = new SingularitySlaveUsage(
           cpuReservedOnSlave, cpuReservedOnSlave, cpusTotal,
           memoryMbReservedOnSlave, memoryMbReservedOnSlave, memoryMbTotal,
-          memoryMbReservedOnSlave, diskMbReservedOnSlave, diskMbTotal,
+          diskMbReservedOnSlave, diskMbReservedOnSlave, diskMbTotal,
           allTaskUsage.size(), now,
           systemMemTotalBytes, systemMemFreeBytes, systemCpusTotal,
           systemLoad1Min, systemLoad5Min, systemLoad15Min,
