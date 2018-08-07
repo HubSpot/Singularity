@@ -55,7 +55,7 @@ public class SlaveResource extends AbstractMachineResource<SingularitySlave> {
   public List<SingularitySlave> getSlaves(
       @Parameter(hidden = true) @Auth SingularityUser user,
       @Parameter(description = "Optionally specify a particular state to filter slaves by") @QueryParam("state") Optional<MachineState> filterState) {
-    authorizationHelper.checkAdminAuthorization(user);
+    authorizationHelper.checkReadAuthorization(user);
     return manager.getObjectsFiltered(filterState);
   }
 
@@ -65,7 +65,7 @@ public class SlaveResource extends AbstractMachineResource<SingularitySlave> {
   public List<SingularityMachineStateHistoryUpdate> getSlaveHistory(
       @Parameter(hidden = true) @Auth SingularityUser user,
       @Parameter(required = true, description = "Slave ID") @PathParam("slaveId") String slaveId) {
-    authorizationHelper.checkAdminAuthorization(user);
+    authorizationHelper.checkReadAuthorization(user);
     return manager.getHistory(slaveId);
   }
 
@@ -75,7 +75,7 @@ public class SlaveResource extends AbstractMachineResource<SingularitySlave> {
   public Optional<SingularitySlave> getSlave(
       @Parameter(hidden = true) @Auth SingularityUser user,
       @Parameter(required = true, description = "Slave ID") @PathParam("slaveId") String slaveId) {
-    authorizationHelper.checkAdminAuthorization(user);
+    authorizationHelper.checkReadAuthorization(user);
     return manager.getObject(slaveId);
   }
 
