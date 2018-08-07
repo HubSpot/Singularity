@@ -143,33 +143,10 @@ public class SingularityUsageHelper {
         slaveDiskUsed = slaveMetricsSnapshot.getSlaveDiskUsed();
         slaveDiskTotal = slaveMetricsSnapshot.getSlaveDiskTotal();
         systemCpusTotal = slaveMetricsSnapshot.getSystemCpusTotal();
-      }
 
-      for (MesosTaskMonitorObject taskUsage : allTaskUsage) {
-        String taskId = taskUsage.getSource();
-        SingularityTaskId task;
-        try {
-          task = SingularityTaskId.valueOf(taskId);
-        } catch (InvalidSingularityTaskIdException e) {
-          LOG.error("Couldn't get SingularityTaskId for {}", taskUsage);
-          continue;
-        }
-
-        SingularityTaskUsage latestUsage = getUsage(taskUsage);
-        memoryBytesUsedOnSlave += latestUsage.getMemoryTotalBytes();
-        diskMbUsedOnSlave += latestUsage.getDiskTotalBytes();
-
-        List<SingularityTaskUsage> pastTaskUsages = usageManager.getTaskUsage(taskId);
-        if (pastTaskUsages.isEmpty()) {
-          Optional<SingularityTaskHistoryUpdate> maybeStartingUpdate = taskManager.getTaskHistoryUpdate(task, ExtendedTaskState.TASK_STARTING);
-          if (maybeStartingUpdate.isPresent()) {
-            long startTimestampSeconds = TimeUnit.MILLISECONDS.toSeconds(maybeStartingUpdate.get().getTimestamp());
-            cpusUsedOnSlave += latestUsage.getCpuSeconds() / (latestUsage.getTimestamp() - startTimestampSeconds);
-          }
-        } else {
-          SingularityTaskUsage lastUsage = pastTaskUsages.get(pastTaskUsages.size() - 1);
-          cpusUsedOnSlave += ((latestUsage.getCpuSeconds() - lastUsage.getCpuSeconds()) / (latestUsage.getTimestamp() - lastUsage.getTimestamp()));
-        }
+        memoryBytesUsedOnSlave = slaveMetricsSnapshot.getSlaveMemUsed();
+        diskMbUsedOnSlave = slaveMetricsSnapshot.getSlaveDiskUsed();
+        cpusUsedOnSlave = slaveMetricsSnapshot.getSlaveCpusUsed();
       }
 
       if (!slave.getResources().isPresent() ||
@@ -182,9 +159,14 @@ public class SingularityUsageHelper {
         diskMbTotal = Optional.of(slave.getResources().get().getDiskSpace().get());
       }
 
-      SingularitySlaveUsage slaveUsage = new SingularitySlaveUsage(cpusUsedOnSlave, cpuReservedOnSlave, cpusTotal, memoryBytesUsedOnSlave, memoryMbReservedOnSlave,
-          memoryMbTotal, diskMbUsedOnSlave, diskMbReservedOnSlave, diskMbTotal, allTaskUsage.size(), now,
-          systemMemTotalBytes, systemMemFreeBytes, systemCpusTotal, systemLoad1Min, systemLoad5Min, systemLoad15Min, slaveDiskUsed, slaveDiskTotal);
+      SingularitySlaveUsage slaveUsage = new SingularitySlaveUsage(
+          cpusUsedOnSlave, cpuReservedOnSlave, cpusTotal,
+          memoryBytesUsedOnSlave, memoryMbReservedOnSlave, memoryMbTotal,
+          diskMbUsedOnSlave, diskMbReservedOnSlave, diskMbTotal,
+          allTaskUsage.size(), now,
+          systemMemTotalBytes, systemMemFreeBytes, systemCpusTotal,
+          systemLoad1Min, systemLoad5Min, systemLoad15Min,
+          slaveDiskUsed, slaveDiskTotal);
 
       LOG.debug("Saving slave {} usage {}", slave.getHost(), slaveUsage);
       usageManager.saveSpecificSlaveUsageAndSetCurrent(slave.getId(), slaveUsage);
