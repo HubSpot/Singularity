@@ -119,10 +119,6 @@ public class SingularityUsageHelper {
       double cpuReservedOnSlave = 0.0;
       double diskMbReservedOnSlave = 0L;
 
-      double memoryBytesUsedOnSlave = 0;
-      double cpusUsedOnSlave = 0;
-      double diskMbUsedOnSlave = 0;
-
       double systemMemTotalBytes = 0;
       double systemMemFreeBytes = 0;
       double systemLoad1Min = 0;
@@ -143,10 +139,6 @@ public class SingularityUsageHelper {
         slaveDiskUsed = slaveMetricsSnapshot.getSlaveDiskUsed();
         slaveDiskTotal = slaveMetricsSnapshot.getSlaveDiskTotal();
         systemCpusTotal = slaveMetricsSnapshot.getSystemCpusTotal();
-
-        memoryBytesUsedOnSlave = slaveMetricsSnapshot.getSlaveMemUsed();
-        diskMbUsedOnSlave = slaveMetricsSnapshot.getSlaveDiskUsed();
-        cpusUsedOnSlave = slaveMetricsSnapshot.getSlaveCpusUsed();
       }
 
       if (!slave.getResources().isPresent() ||
@@ -160,9 +152,9 @@ public class SingularityUsageHelper {
       }
 
       SingularitySlaveUsage slaveUsage = new SingularitySlaveUsage(
-          cpusUsedOnSlave, cpuReservedOnSlave, cpusTotal,
-          memoryBytesUsedOnSlave, memoryMbReservedOnSlave, memoryMbTotal,
-          diskMbUsedOnSlave, diskMbReservedOnSlave, diskMbTotal,
+          cpuReservedOnSlave, cpuReservedOnSlave, cpusTotal,
+          memoryMbReservedOnSlave, memoryMbReservedOnSlave, memoryMbTotal,
+          memoryMbReservedOnSlave, diskMbReservedOnSlave, diskMbTotal,
           allTaskUsage.size(), now,
           systemMemTotalBytes, systemMemFreeBytes, systemCpusTotal,
           systemLoad1Min, systemLoad5Min, systemLoad15Min,
