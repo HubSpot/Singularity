@@ -697,7 +697,7 @@ public class TaskResource extends AbstractLeaderAwareResource {
 
     @Override
     public STATE onHeadersReceived(HttpResponseHeaders headers) {
-      LOG.trace("Proxying download of {} from Mesos: Headers={}", requestBuilder.build().getHeaders(), headers);
+      LOG.trace("Proxying download of {} from Mesos: Headers={}", requestBuilder.build().getHeaders(), headers.getHeaders());
       return STATE.CONTINUE;
     }
 
