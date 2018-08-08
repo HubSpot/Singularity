@@ -119,7 +119,6 @@ RequestUtilization.propTypes = {
 
 
 const mapStateToProps = function(state, ownProps) {
-  console.log(state);
   const requestId = ownProps.requestId;
   return {
     utilization: Utils.maybe(state, ['api', 'requestUtilization', requestId, 'data'])

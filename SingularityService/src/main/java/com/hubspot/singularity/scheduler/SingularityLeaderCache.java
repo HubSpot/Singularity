@@ -19,6 +19,7 @@ import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.hubspot.singularity.ExtendedTaskState;
+import com.hubspot.singularity.RequestUtilization;
 import com.hubspot.singularity.SingularityKilledTaskIdRecord;
 import com.hubspot.singularity.SingularityPendingTask;
 import com.hubspot.singularity.SingularityPendingTaskId;
@@ -46,6 +47,7 @@ public class SingularityLeaderCache {
   private Map<String, SingularitySlave> slaves;
   private Map<String, SingularityRack> racks;
   private Set<SingularityPendingTaskId> pendingTaskIdsToDelete;
+  private Map<String, RequestUtilization> requestUtilizations;
 
   private volatile boolean active;
 
@@ -112,6 +114,10 @@ public class SingularityLeaderCache {
   }
   public void stop() {
     active = false;
+  }
+
+  public void cacheRequestUtilizations(Map<String, RequestUtilization> requestUtilizations) {
+    this.requestUtilizations = new HashMap<>(requestUtilizations);
   }
 
   public boolean active() {
@@ -432,5 +438,25 @@ public class SingularityLeaderCache {
     }
 
     racks.put(rack.getId(), rack);
+  }
+
+  public void putRequestUtilization(RequestUtilization requestUtilization) {
+    if (!active) {
+      LOG.warn("putRequestUtilization {}, but not active", requestUtilization);
+    }
+
+    requestUtilizations.put(requestUtilization.getRequestId(), requestUtilization);
+  }
+
+  public void removeRequestUtilization(String requestId) {
+    if (!active) {
+      LOG.warn("removeRequestUtilization {}, but not active", requestId);
+      return;
+    }
+    requestUtilizations.remove(requestId);
+  }
+
+  public Map<String, RequestUtilization> getRequestUtilizations() {
+    return new HashMap<>(requestUtilizations);
   }
 }
