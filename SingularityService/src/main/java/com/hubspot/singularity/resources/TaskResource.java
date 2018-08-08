@@ -684,7 +684,6 @@ public class TaskResource extends AbstractLeaderAwareResource {
 
     @Override
     public STATE onBodyPartReceived(HttpResponseBodyPart bodyPart) throws Exception {
-      LOG.trace("Proxying download of {} from Mesos: Body chunk has length={}", requestBuilder.build().getUrl(), bodyPart.length());
       bodyPart.writeTo(wrappedOutputStream);
       wrappedOutputStream.flush();
       return STATE.CONTINUE;
