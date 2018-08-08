@@ -25,7 +25,9 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
+import javax.ws.rs.core.StreamingOutput;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.curator.framework.recipes.leader.LeaderLatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -640,12 +642,14 @@ public class TaskResource extends AbstractLeaderAwareResource {
           .get()
           .getResponseBodyAsStream();
 
+      StreamingOutput stream = output -> IOUtils.copy(responseStream, output);
+
       // Strip file path down to just a file name if we can
       java.nio.file.Path filePath = Paths.get(fileFullPath).getFileName();
       String fileName = filePath != null ? filePath.toString() : fileFullPath;
 
       final String headerValue = String.format("attachment; filename=\"%s\"", fileName);
-      return Response.ok(responseStream).header("Content-Disposition", headerValue).build();
+      return Response.ok(stream).header("Content-Disposition", headerValue).build();
 
     } catch (Exception e) {
       if (e.getCause().getClass() == ConnectException.class) {
