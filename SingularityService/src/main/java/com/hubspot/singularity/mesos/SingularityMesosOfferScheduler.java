@@ -31,7 +31,6 @@ import com.hubspot.singularity.RequestType;
 import com.hubspot.singularity.RequestUtilization;
 import com.hubspot.singularity.SingularityDeployStatistics;
 import com.hubspot.singularity.SingularityPendingTaskId;
-import com.hubspot.singularity.SingularitySlave;
 import com.hubspot.singularity.SingularitySlaveUsage;
 import com.hubspot.singularity.SingularitySlaveUsageWithId;
 import com.hubspot.singularity.SingularityTask;
@@ -200,22 +199,12 @@ public class SingularityMesosOfferScheduler {
         String slaveId = offerHolder.getSlaveId();
         Optional<SingularitySlaveUsageWithId> maybeSlaveUsage = Optional.fromNullable(currentSlaveUsages.get(slaveId));
 
-        if (maybeSlaveUsage.isPresent() && taskManager.getActiveTaskIds().stream()
-            .anyMatch(t -> t.getStartedAt() > maybeSlaveUsage.get().getTimestamp()
-                && t.getSanitizedHost().equals(offerHolder.getSanitizedHost()))) {
-          Optional<SingularitySlave> maybeSlave = slaveManager.getSlave(slaveId);
-          if (maybeSlave.isPresent()) {
-            Optional<SingularitySlaveUsage> usage = usageHelper.collectSlaveUsageSimple(
-                maybeSlave.get(),
-                System.currentTimeMillis(),
-                true);
-            if (usage.isPresent()) {
-              currentSlaveUsages.put(slaveId, new SingularitySlaveUsageWithId(usage.get(), slaveId));
-            } else {
-              LOG.warn("Failed to refresh stale slave usage data for {}. Will not schedule tasks right now.", maybeSlave.get().getName());
-              currentSlaveUsages.remove(slaveId);
-            }
-          }
+        if (configuration.isWaitForNewSlaveMetricsBeforeScheduling()
+            && maybeSlaveUsage.isPresent()
+            && taskManager.getActiveTaskIds().stream().anyMatch(t -> t.getStartedAt() > maybeSlaveUsage.get().getTimestamp()
+            && t.getSanitizedHost().equals(offerHolder.getSanitizedHost()))) {
+          // Come back to this slave after we have collected more metrics
+          currentSlaveUsages.remove(slaveId);
         }
       }, offerScoringExecutor)));
     }
