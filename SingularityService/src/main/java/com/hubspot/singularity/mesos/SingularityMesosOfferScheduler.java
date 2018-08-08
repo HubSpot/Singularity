@@ -182,7 +182,7 @@ public class SingularityMesosOfferScheduler {
     }
 
     final AtomicInteger tasksScheduled = new AtomicInteger(0);
-    Map<String, RequestUtilization> requestUtilizations = usageManager.getRequestUtilizations(relevantRequestIds);
+    Map<String, RequestUtilization> requestUtilizations = usageManager.getRequestUtilizations(false);
     List<SingularityTaskId> activeTaskIds = taskManager.getActiveTaskIds();
 
     Map<String, SingularitySlaveUsageWithId> currentSlaveUsages = usageManager.getCurrentSlaveUsages(

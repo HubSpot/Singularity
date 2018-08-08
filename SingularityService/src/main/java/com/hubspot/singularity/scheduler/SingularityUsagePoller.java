@@ -76,7 +76,7 @@ public class SingularityUsagePoller extends SingularityLeaderOnlyPoller {
   @Override
   public void runActionOnPoll() {
     Map<String, RequestUtilization> utilizationPerRequestId = new ConcurrentHashMap<>();
-    Map<String, RequestUtilization> previousUtilizations = usageManager.getRequestUtilizations();
+    Map<String, RequestUtilization> previousUtilizations = usageManager.getRequestUtilizations(false);
     final long now = System.currentTimeMillis();
 
     AtomicLong totalMemBytesUsed = new AtomicLong(0);

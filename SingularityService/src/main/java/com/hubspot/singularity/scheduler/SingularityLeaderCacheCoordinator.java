@@ -7,6 +7,7 @@ import com.hubspot.singularity.data.RackManager;
 import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.data.SlaveManager;
 import com.hubspot.singularity.data.TaskManager;
+import com.hubspot.singularity.data.UsageManager;
 
 @Singleton
 public class SingularityLeaderCacheCoordinator {
@@ -16,6 +17,7 @@ public class SingularityLeaderCacheCoordinator {
   private final RequestManager requestManager;
   private final SlaveManager slaveManager;
   private final RackManager rackManager;
+  private final UsageManager usageManager;
   private final SingularityLeaderCache leaderCache;
 
   @Inject
@@ -24,12 +26,14 @@ public class SingularityLeaderCacheCoordinator {
                                            RequestManager requestManager,
                                            SlaveManager slaveManager,
                                            RackManager rackManager,
+                                           UsageManager usageManager,
                                            SingularityLeaderCache leaderCache) {
     this.taskManager = taskManager;
     this.deployManager = deployManager;
     this.requestManager = requestManager;
     this.slaveManager = slaveManager;
     this.rackManager = rackManager;
+    this.usageManager = usageManager;
     this.leaderCache = leaderCache;
   }
 
@@ -39,6 +43,7 @@ public class SingularityLeaderCacheCoordinator {
     requestManager.activateLeaderCache();
     slaveManager.activateLeaderCache();
     rackManager.activateLeaderCache();
+    usageManager.activateLeaderCache();
     leaderCache.activate();
   }
 

@@ -25,6 +25,7 @@ public class TemplateManager {
   private final Template runnerTemplate;
   private final Template environmentTemplate;
   private final Template logrotateTemplate;
+  private final Template logrotateHourlyTemplate;
   private final Template logrotateCronTemplate;
   private final Template dockerTemplate;
 
@@ -32,12 +33,14 @@ public class TemplateManager {
   public TemplateManager(@Named(SingularityExecutorModule.RUNNER_TEMPLATE) Template runnerTemplate,
                          @Named(SingularityExecutorModule.ENVIRONMENT_TEMPLATE) Template environmentTemplate,
                          @Named(SingularityExecutorModule.LOGROTATE_TEMPLATE) Template logrotateTemplate,
+                         @Named(SingularityExecutorModule.LOGROTATE_HOURLY_TEMPLATE) Template logrotateHourlyTemplate,
                          @Named(SingularityExecutorModule.LOGROTATE_CRON_TEMPLATE) Template logrotateCronTemplate,
                          @Named(SingularityExecutorModule.DOCKER_TEMPLATE) Template dockerTemplate
                          ) {
     this.runnerTemplate = runnerTemplate;
     this.environmentTemplate = environmentTemplate;
     this.logrotateTemplate = logrotateTemplate;
+    this.logrotateHourlyTemplate = logrotateHourlyTemplate;
     this.logrotateCronTemplate = logrotateCronTemplate;
     this.dockerTemplate = dockerTemplate;
   }
@@ -52,6 +55,10 @@ public class TemplateManager {
 
   public void writeLogrotateFile(Path destination, LogrotateTemplateContext logRotateContext) {
     writeTemplate(destination, logrotateTemplate, logRotateContext);
+  }
+
+  public void writeHourlyLogrotateFile(Path destination, LogrotateTemplateContext logRotateContext) {
+    writeTemplate(destination, logrotateHourlyTemplate, logRotateContext);
   }
 
   public boolean writeCronEntryForLogrotate(Path destination, LogrotateCronTemplateContext logrotateCronTemplateContext) {

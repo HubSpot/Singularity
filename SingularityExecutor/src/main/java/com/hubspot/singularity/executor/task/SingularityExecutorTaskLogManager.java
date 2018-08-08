@@ -1,5 +1,6 @@
 package com.hubspot.singularity.executor.task;
 
+import java.io.File;
 import java.lang.ProcessBuilder.Redirect;
 import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
@@ -15,11 +16,12 @@ import com.google.common.base.Optional;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.hubspot.singularity.SingularityS3FormatHelper;
+import com.hubspot.singularity.SingularityS3UploaderFile;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.executor.SingularityExecutorLogrotateFrequency;
 import com.hubspot.singularity.executor.TemplateManager;
 import com.hubspot.singularity.executor.config.SingularityExecutorConfiguration;
-import com.hubspot.singularity.SingularityS3UploaderFile;
+import com.hubspot.singularity.executor.config.SingularityExecutorLogrotateAdditionalFile;
 import com.hubspot.singularity.executor.models.LogrotateCronTemplateContext;
 import com.hubspot.singularity.executor.models.LogrotateTemplateContext;
 import com.hubspot.singularity.runner.base.configuration.SingularityRunnerBaseConfiguration;
@@ -93,13 +95,48 @@ public class SingularityExecutorTaskLogManager {
   }
 
   private void writeLogrotateFile() {
-    log.info("Writing logrotate configuration file to {}", getLogrotateConfPath());
+    log.info("Writing non-hourly logrotate configuration file to {}", getLogrotateConfPath());
     templateManager.writeLogrotateFile(getLogrotateConfPath(), new LogrotateTemplateContext(configuration, taskDefinition));
 
-    if (logrotateFrequency.getCronSchedule().isPresent()) {
-      log.info("Writing logrotate cron entry with schedule '{}' to {}", logrotateFrequency.getCronSchedule().get(), getLogrotateCronPath());
-      templateManager.writeCronEntryForLogrotate(getLogrotateCronPath(), new LogrotateCronTemplateContext(configuration, taskDefinition, logrotateFrequency));
+    // Get the frequency and cron schedule for an additional file with an HOURLY schedule, if there is any
+    Optional<SingularityExecutorLogrotateFrequency> additionalFileFrequency = getAdditionalHourlyFileFrequency();
+
+    // if any additional file or the global setting has an hourly rotation, write a separate rotate config and force rotate using a cron schedule
+    if (additionalFileFrequency.isPresent() && additionalFileFrequency.get().getCronSchedule().isPresent() || logrotateFrequency.getCronSchedule().isPresent()) {
+      File hourlyLogrotateDir = new File(configuration.getLogrotateHourlyConfDirectory());
+      if (!hourlyLogrotateDir.exists()) {
+        if (!hourlyLogrotateDir.mkdir()) {
+          log.warn("Could not create hourly logrotate directory at {}", configuration.getLogrotateHourlyConfDirectory());
+        }
+      }
+      log.info("Writing hourly logrotate configuration file to {}", getLogrotateHourlyConfPath());
+      templateManager.writeHourlyLogrotateFile(getLogrotateHourlyConfPath(), new LogrotateTemplateContext(configuration, taskDefinition));
+
+      SingularityExecutorLogrotateFrequency freq = additionalFileFrequency.isPresent() && additionalFileFrequency.get().getCronSchedule().isPresent() ?
+          additionalFileFrequency.get() : logrotateFrequency;
+
+      String cronScheduleString = freq.getCronSchedule().isPresent() ? freq.getCronSchedule().get() : "Error in cron schedule"; // This should never evaluate to false
+
+      log.info("Writing logrotate cron entry with schedule '{}' to {}", cronScheduleString, getLogrotateCronPath());
+      templateManager.writeCronEntryForLogrotate(getLogrotateCronPath(), new LogrotateCronTemplateContext(configuration, taskDefinition, freq));
     }
+  }
+
+  /**
+   *
+   * @return Frequency (and contained cron schedule) of the hourly rotation additional file
+   */
+  private Optional<SingularityExecutorLogrotateFrequency> getAdditionalHourlyFileFrequency() {
+
+    for (SingularityExecutorLogrotateAdditionalFile file : configuration.getLogrotateAdditionalFiles()) {
+      if (file.getLogrotateFrequencyOverride().isPresent() &&
+          file.getLogrotateFrequencyOverride().get().equals(SingularityExecutorLogrotateFrequency.HOURLY) &&
+          file.getLogrotateFrequencyOverride().get().getCronSchedule().isPresent()) {
+
+        return Optional.of(file.getLogrotateFrequencyOverride().get());
+      }
+    }
+    return Optional.absent();
   }
 
   @SuppressFBWarnings
@@ -130,7 +167,7 @@ public class SingularityExecutorTaskLogManager {
 
       return writeTailMetadataSuccess && removeLogRotateFileSuccess && writeS3MetadataForLogrotatedFilesSuccess && writeS3MetadataForNonLogRotatedFileSuccess;
     } else {
-      return false;
+      return removeLogrotateFile();
     }
   }
 
@@ -162,17 +199,40 @@ public class SingularityExecutorTaskLogManager {
   public boolean removeLogrotateFile() {
     boolean deleted = false;
     try {
-      deleted = Files.deleteIfExists(getLogrotateConfPath());
-      if (logrotateFrequency.getCronSchedule().isPresent()) {
-        boolean cronDeleted = Files.deleteIfExists(getLogrotateCronPath());
-        deleted = deleted || cronDeleted;
+      if (Files.exists(getLogrotateConfPath())) {
+        deleted = Files.deleteIfExists(getLogrotateConfPath());
+        log.debug("Deleted {} : {}", getLogrotateConfPath(), deleted);
+      } else {
+        deleted = true;
       }
-    } catch (Throwable t) {
-      log.trace("Couldn't delete {}", getLogrotateConfPath(), t);
+    } catch (Throwable t){
+      log.debug("Couldn't delete {}", getLogrotateConfPath(), t);
       return false;
     }
-    log.trace("Deleted {} : {}", getLogrotateConfPath(), deleted);
-    return true;
+
+    Optional<SingularityExecutorLogrotateFrequency> additionalFileFreq = getAdditionalHourlyFileFrequency();
+    try {
+      if ((additionalFileFreq.isPresent() && additionalFileFreq.get().getCronSchedule().isPresent()) || logrotateFrequency.getCronSchedule().isPresent()) {
+        boolean hourlyConfDeleted = !Files.exists(getLogrotateHourlyConfPath()) || Files.deleteIfExists(getLogrotateHourlyConfPath());
+        log.debug("Deleted {} : {}", getLogrotateHourlyConfPath(), deleted);
+        deleted = deleted && hourlyConfDeleted;
+      }
+    } catch (Throwable t) {
+      log.debug("Couldn't delete {}", getLogrotateHourlyConfPath(), t);
+      return false;
+    }
+
+    try {
+      if ((additionalFileFreq.isPresent() && additionalFileFreq.get().getCronSchedule().isPresent()) || logrotateFrequency.getCronSchedule().isPresent()) {
+        boolean cronDeleted = !Files.exists(getLogrotateCronPath()) || Files.deleteIfExists(getLogrotateCronPath());
+        log.debug("Deleted {} : {}", getLogrotateCronPath(), deleted);
+        deleted = deleted && cronDeleted;
+      }
+    } catch (Throwable t) {
+      log.debug("Couldn't delete {}", getLogrotateCronPath(), t);
+      return false;
+    }
+    return deleted;
   }
 
   public boolean manualLogrotate() {
@@ -245,6 +305,10 @@ public class SingularityExecutorTaskLogManager {
 
   public Path getLogrotateConfPath() {
     return Paths.get(configuration.getLogrotateConfDirectory()).resolve(taskDefinition.getTaskId());
+  }
+
+  public Path getLogrotateHourlyConfPath() {
+    return Paths.get(configuration.getLogrotateHourlyConfDirectory()).resolve(taskDefinition.getTaskId());
   }
 
   public Path getLogrotateCronPath() {
