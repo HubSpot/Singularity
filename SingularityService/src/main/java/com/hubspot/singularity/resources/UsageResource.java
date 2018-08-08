@@ -7,6 +7,7 @@ import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
 import com.google.common.base.Optional;
@@ -118,15 +119,18 @@ public class UsageResource {
 
   @GET
   @Path("/requests")
-  public List<RequestUtilization> getRequestUtilizations(@Auth SingularityUser user) {
-    return new ArrayList<>(usageManager.getRequestUtilizations().values());
+  public List<RequestUtilization> getRequestUtilizations(@Auth SingularityUser user,
+                                                         @QueryParam("useWebCache") Boolean useWebCache) {
+    return new ArrayList<>(usageManager.getRequestUtilizations(useWebCache != null && useWebCache).values());
   }
 
   @GET
   @Path("/requests/request/{requestId}")
-  public Optional<RequestUtilization> getRequestUtilization(@Auth SingularityUser user, @PathParam("requestId") String requestId) {
+  public Optional<RequestUtilization> getRequestUtilization(@Auth SingularityUser user,
+                                                            @PathParam("requestId") String requestId,
+                                                            @QueryParam("useWebCache") Boolean useWebCache) {
     authorizationHelper.checkForAuthorizationByRequestId(requestId, user, SingularityAuthorizationScope.READ);
-    return usageManager.getRequestUtilization(requestId);
+    return usageManager.getRequestUtilization(requestId, useWebCache != null && useWebCache);
   }
 
 }

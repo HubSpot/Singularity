@@ -28,6 +28,7 @@ import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTaskUsage;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.transcoders.Transcoder;
+import com.hubspot.singularity.scheduler.SingularityLeaderCache;
 
 @Singleton
 public class UsageManager extends CuratorAsyncManager {
@@ -47,18 +48,23 @@ public class UsageManager extends CuratorAsyncManager {
   private final Transcoder<SingularityTaskCurrentUsage> taskCurrentUsageTranscoder;
   private final Transcoder<SingularityClusterUtilization> clusterUtilizationTranscoder;
   private final Transcoder<RequestUtilization> requestUtilizationTranscoder;
+  private final SingularityWebCache webCache;
+  private final SingularityLeaderCache leaderCache;
 
   @Inject
   public UsageManager(CuratorFramework curator,
                       SingularityConfiguration configuration,
                       MetricRegistry metricRegistry,
+                      SingularityWebCache webCache,
+                      SingularityLeaderCache leaderCache,
                       Transcoder<SingularitySlaveUsage> slaveUsageTranscoder,
                       Transcoder<SingularityTaskUsage> taskUsageTranscoder,
                       Transcoder<SingularityTaskCurrentUsage> taskCurrentUsageTranscoder,
                       Transcoder<SingularityClusterUtilization> clusterUtilizationTranscoder,
                       Transcoder<RequestUtilization> requestUtilizationTranscoder) {
     super(curator, configuration, metricRegistry);
-
+    this.webCache = webCache;
+    this.leaderCache = leaderCache;
     this.slaveUsageTranscoder = slaveUsageTranscoder;
     this.taskUsageTranscoder = taskUsageTranscoder;
     this.taskCurrentUsageTranscoder = taskCurrentUsageTranscoder;
@@ -184,20 +190,56 @@ public class UsageManager extends CuratorAsyncManager {
     return getData(USAGE_SUMMARY_PATH, clusterUtilizationTranscoder);
   }
 
+  public void activateLeaderCache() {
+    leaderCache.cacheRequestUtilizations(getRequestUtilizations(false));
+  }
+
   public Map<String, RequestUtilization> getRequestUtilizations() {
-    return getAsyncChildren(REQUESTS_PATH, requestUtilizationTranscoder).stream()
+    return getRequestUtilizations(false);
+  }
+
+  public Map<String, RequestUtilization> getRequestUtilizations(boolean useWebCache) {
+    if (leaderCache.active()) {
+      return leaderCache.getRequestUtilizations();
+    }
+
+    if (useWebCache && webCache.useCachedRequestUtilizations()) {
+      return webCache.getRequestUtilizations();
+    }
+    Map<String, RequestUtilization> requestUtilizations = getAsyncChildren(REQUESTS_PATH, requestUtilizationTranscoder).stream()
         .collect(Collectors.toMap(
             RequestUtilization::getRequestId,
             Function.identity()
         ));
+    if (useWebCache) {
+      webCache.cacheRequestUtilizations(requestUtilizations);
+    }
+    return requestUtilizations;
   }
 
-  public Optional<RequestUtilization> getRequestUtilization(String requestId) {
+  public Optional<RequestUtilization> getRequestUtilization(String requestId, boolean useWebCache) {
+    if (leaderCache.active()) {
+      return Optional.fromNullable(leaderCache.getRequestUtilizations().get(requestId));
+    }
+
+    if (useWebCache && webCache.useCachedRequestUtilizations()) {
+      return Optional.fromNullable(webCache.getRequestUtilizations().get(requestId));
+    }
     return getData(getRequestPath(requestId), requestUtilizationTranscoder);
   }
 
   public SingularityCreateResult saveRequestUtilization(RequestUtilization requestUtilization) {
+    if (leaderCache.active()) {
+      leaderCache.putRequestUtilization(requestUtilization);
+    }
     return save(getRequestPath(requestUtilization.getRequestId()), requestUtilization, requestUtilizationTranscoder);
+  }
+
+  public SingularityDeleteResult deleteRequestUtilization(String requestId) {
+    if (leaderCache.active()) {
+      leaderCache.removeRequestUtilization(requestId);
+    }
+    return delete(getRequestPath(requestId));
   }
 
   public List<SingularitySlaveUsageWithId> getCurrentSlaveUsages(List<String> slaveIds) {

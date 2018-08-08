@@ -52,6 +52,7 @@ import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.DeployManager;
 import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.data.TaskManager;
+import com.hubspot.singularity.data.UsageManager;
 import com.hubspot.singularity.data.history.RequestHistoryHelper;
 import com.hubspot.singularity.expiring.SingularityExpiringBounce;
 import com.hubspot.singularity.hooks.LoadBalancerClient;
@@ -74,6 +75,7 @@ public class SingularityCleaner {
   private final RequestHistoryHelper requestHistoryHelper;
   private final SingularityMesosScheduler scheduler;
   private final SingularitySchedulerLock lock;
+  private final UsageManager usageManager;
 
   private final SingularityConfiguration configuration;
   private final long killNonLongRunningTasksInCleanupAfterMillis;
@@ -81,7 +83,7 @@ public class SingularityCleaner {
   @Inject
   public SingularityCleaner(TaskManager taskManager, SingularityDeployHealthHelper deployHealthHelper, DeployManager deployManager, RequestManager requestManager,
                             SingularityConfiguration configuration, LoadBalancerClient lbClient, SingularityExceptionNotifier exceptionNotifier,
-                            RequestHistoryHelper requestHistoryHelper, SingularityMesosScheduler scheduler, SingularitySchedulerLock lock) {
+                            RequestHistoryHelper requestHistoryHelper, SingularityMesosScheduler scheduler, SingularitySchedulerLock lock, UsageManager usageManager) {
     this.taskManager = taskManager;
     this.lbClient = lbClient;
     this.deployHealthHelper = deployHealthHelper;
@@ -91,6 +93,7 @@ public class SingularityCleaner {
     this.requestHistoryHelper = requestHistoryHelper;
     this.scheduler = scheduler;
     this.lock = lock;
+    this.usageManager = usageManager;
 
     this.configuration = configuration;
 
@@ -519,6 +522,7 @@ public class SingularityCleaner {
     taskManager.deleteRequestId(requestCleanup.getRequestId());
     deployManager.deleteRequestId(requestCleanup.getRequestId());
     LOG.trace("Deleted stale request data for {}", requestCleanup.getRequestId());
+    usageManager.deleteRequestUtilization(requestCleanup.getRequestId());
   }
 
   public int drainCleanupQueue() {
