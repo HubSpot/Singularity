@@ -10,6 +10,7 @@ import com.codahale.metrics.MetricRegistry;
 import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.hubspot.singularity.RequestUtilization;
 import com.hubspot.singularity.SingularityPendingTask;
 import com.hubspot.singularity.SingularityPendingTaskId;
 import com.hubspot.singularity.SingularityRequestGroup;
@@ -37,6 +38,9 @@ public class SingularityWebCache {
   private volatile List<SingularityRequestGroup> cachedRequestGroups;
   private volatile long lastRequestGroupsCache;
 
+  private volatile Map<String, RequestUtilization> cachedRequestUtilizations;
+  private volatile long lastRequestUtilizationCache;
+
   private final long cacheForMillis;
 
   private final Meter cleanupHitMeter;
@@ -53,6 +57,9 @@ public class SingularityWebCache {
 
   private final Meter requestGroupsHitMeter;
   private final Meter requestGroupsMissMeter;
+
+  private final Meter requestUtilizationHitMeter;
+  private final Meter requestUtilizationMissMeter;
 
   @Inject
   public SingularityWebCache(SingularityConfiguration configuration, MetricRegistry metrics) {
@@ -72,6 +79,9 @@ public class SingularityWebCache {
 
     this.requestGroupsHitMeter = metrics.meter("zk.web.caches.requests.hits");
     this.requestGroupsMissMeter = metrics.meter("zk.web.caches.requests.miss");
+
+    this.requestUtilizationHitMeter = metrics.meter("zk.web.caches.utilization.hits");
+    this.requestUtilizationMissMeter = metrics.meter("zk.web.caches.utilization.miss");
   }
 
   public boolean useCachedPendingTasks() {
@@ -92,6 +102,10 @@ public class SingularityWebCache {
 
   public boolean useCachedRequestGroups() {
     return useCache(lastRequestGroupsCache);
+  }
+
+  public boolean useCachedRequestUtilizations() {
+    return useCache(lastRequestUtilizationCache);
   }
 
   private boolean useCache(long lastCache) {
@@ -126,6 +140,11 @@ public class SingularityWebCache {
   public List<SingularityRequestWithState> getRequests() {
     requestsHitMeter.mark();
     return new ArrayList<>(cachedRequests.values());
+  }
+
+  public Map<String, RequestUtilization> getRequestUtilizations() {
+    requestUtilizationHitMeter.mark();
+    return new HashMap<>(cachedRequestUtilizations);
   }
 
   public Optional<SingularityRequestWithState> getRequest(String requestId) {
@@ -177,6 +196,12 @@ public class SingularityWebCache {
     requestGroupsMissMeter.mark();
     cachedRequestGroups = new ArrayList<>(requestGroups);
     lastRequestGroupsCache = System.currentTimeMillis();
+  }
+
+  public void cacheRequestUtilizations(Map<String, RequestUtilization> requestUtilizations) {
+    requestUtilizationMissMeter.mark();
+    cachedRequestUtilizations = new HashMap<>(requestUtilizations);
+    lastRequestUtilizationCache = System.currentTimeMillis();
   }
 
 }
