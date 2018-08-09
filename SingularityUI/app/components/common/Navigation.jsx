@@ -84,11 +84,11 @@ const Navigation = (props) => {
         </div>
         <div className="collapse navbar-collapse" id="navbar-collapse">
           <ul className="nav navbar-nav">
-            <li className={classnames({active: isActive('status', fragment)})}>
-              <Link to="/status">Status {isActive('status', fragment) && <span className="sr-only">(current)</span>}</Link>
-            </li>
             <li className={classnames({active: isActive('requests', fragment)})}>
               <Link to="/requests">Requests {isActive('requests', fragment) && <span className="sr-only">(current)</span>}</Link>
+            </li>
+            <li className={classnames({active: isActive('status', fragment)})}>
+              <Link to="/status">Status {isActive('status', fragment) && <span className="sr-only">(current)</span>}</Link>
             </li>
             <li className={classnames({active: isActive('tasks', fragment)})}>
               <Link to="/tasks">Tasks {isActive('tasks', fragment) && <span className="sr-only">(current)</span>}</Link>
