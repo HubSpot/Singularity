@@ -103,6 +103,10 @@ public class SingularityUsageHelper {
     return slavesToTrack;
   }
 
+  public MesosSlaveMetricsSnapshotObject getMetricsSnapshot(String host) {
+    return mesosClient.getSlaveMetricsSnapshot(host, true);
+  }
+
   public void collectSlaveUsage(
       SingularitySlave slave,
       long now,
