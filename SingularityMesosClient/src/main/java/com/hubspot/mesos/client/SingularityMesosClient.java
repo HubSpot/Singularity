@@ -80,7 +80,11 @@ public class SingularityMesosClient implements MesosClient {
   }
 
   private <T> T getFromMesos(String uri, Class<T> clazz) {
-    HttpResponse response = getFromMesos(uri, false);
+    return getFromMesos(uri, clazz, false);
+  }
+
+  private <T> T getFromMesos(String uri, Class<T> clazz, boolean useShortTimeout) {
+    HttpResponse response = getFromMesos(uri, useShortTimeout);
 
     try {
       return response.getAs(clazz);
@@ -100,8 +104,8 @@ public class SingularityMesosClient implements MesosClient {
   }
 
   @Override
-  public MesosSlaveMetricsSnapshotObject getSlaveMetricsSnapshot(String hostname) {
-    return getFromMesos(String.format(MESOS_SLAVE_METRICS_SNAPSHOT_URL, hostname), MesosSlaveMetricsSnapshotObject.class);
+  public MesosSlaveMetricsSnapshotObject getSlaveMetricsSnapshot(String hostname, boolean useShortTimeout) {
+    return getFromMesos(String.format(MESOS_SLAVE_METRICS_SNAPSHOT_URL, hostname), MesosSlaveMetricsSnapshotObject.class, useShortTimeout);
   }
 
   @Override

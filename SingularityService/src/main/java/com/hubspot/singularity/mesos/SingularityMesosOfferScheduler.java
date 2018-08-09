@@ -27,6 +27,7 @@ import com.google.common.base.Optional;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Inject;
 import com.hubspot.mesos.Resources;
+import com.hubspot.mesos.json.MesosSlaveMetricsSnapshotObject;
 import com.hubspot.singularity.RequestType;
 import com.hubspot.singularity.RequestUtilization;
 import com.hubspot.singularity.SingularityDeployStatistics;
@@ -199,12 +200,20 @@ public class SingularityMesosOfferScheduler {
         String slaveId = offerHolder.getSlaveId();
         Optional<SingularitySlaveUsageWithId> maybeSlaveUsage = Optional.fromNullable(currentSlaveUsages.get(slaveId));
 
-        if (configuration.isWaitForNewSlaveMetricsBeforeScheduling()
-            && maybeSlaveUsage.isPresent()
-            && taskManager.getActiveTaskIds().stream().anyMatch(t -> t.getStartedAt() > maybeSlaveUsage.get().getTimestamp()
-            && t.getSanitizedHost().equals(offerHolder.getSanitizedHost()))) {
-          // Come back to this slave after we have collected more metrics
-          currentSlaveUsages.remove(slaveId);
+        if (configuration.isReCheckMetricsForLargeNewTaskCount() && maybeSlaveUsage.isPresent()) {
+          long newTaskCount = taskManager.getActiveTaskIds().stream()
+              .filter((t) -> t.getStartedAt() > maybeSlaveUsage.get().getTimestamp() && t.getSanitizedHost().equals(offerHolder.getSanitizedHost()))
+              .count();
+          if (newTaskCount >= maybeSlaveUsage.get().getNumTasks() / 2) {
+            MesosSlaveMetricsSnapshotObject metricsSnapshot = usageHelper.getMetricsSnapshot(offerHolder.getHostname());
+
+            if (metricsSnapshot.getSystemLoad5Min() / metricsSnapshot.getSystemCpusTotal() > mesosConfiguration.getRecheckMetricsLoad1Threshold()
+                || metricsSnapshot.getSystemLoad1Min() / metricsSnapshot.getSystemCpusTotal() > mesosConfiguration.getRecheckMetricsLoad5Threshold()) {
+              // Come back to this slave after we have collected more metrics
+              currentSlaveUsages.remove(slaveId);
+          }
+        }
+
         }
       }, offerScoringExecutor)));
     }

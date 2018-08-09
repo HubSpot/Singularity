@@ -35,7 +35,11 @@ public interface MesosClient {
 
   public MesosMasterMetricsSnapshotObject getMasterMetricsSnapshot(String uri);
 
-  public MesosSlaveMetricsSnapshotObject getSlaveMetricsSnapshot(String uri);
+  default MesosSlaveMetricsSnapshotObject getSlaveMetricsSnapshot(String uri) {
+    return getSlaveMetricsSnapshot(uri, false);
+  }
+
+  public MesosSlaveMetricsSnapshotObject getSlaveMetricsSnapshot(String uri, boolean useShortTimeout);
 
   public String getSlaveUri(String hostname);
 

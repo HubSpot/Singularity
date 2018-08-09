@@ -65,6 +65,9 @@ public class MesosConfiguration {
   private double load5OverloadedThreshold = 1.0;
   private double load1OverloadedThreshold = 1.5;
 
+  private double recheckMetricsLoad1Threshold = 0.75;
+  private double recheckMetricsLoad5Threshold = 0.8;
+
   public int getMaxNumInstancesPerRequest() {
     return maxNumInstancesPerRequest;
   }
@@ -343,5 +346,13 @@ public class MesosConfiguration {
 
   public void setDiskWeight(double diskWeight) {
     this.diskWeight = diskWeight;
+  }
+
+  public double getRecheckMetricsLoad1Threshold() {
+    return recheckMetricsLoad1Threshold;
+  }
+
+  public double getRecheckMetricsLoad5Threshold() {
+    return recheckMetricsLoad5Threshold;
   }
 }
