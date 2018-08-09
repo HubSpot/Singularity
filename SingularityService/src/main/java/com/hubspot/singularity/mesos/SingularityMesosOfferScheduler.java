@@ -210,6 +210,7 @@ public class SingularityMesosOfferScheduler {
             if (metricsSnapshot.getSystemLoad5Min() / metricsSnapshot.getSystemCpusTotal() > mesosConfiguration.getRecheckMetricsLoad1Threshold()
                 || metricsSnapshot.getSystemLoad1Min() / metricsSnapshot.getSystemCpusTotal() > mesosConfiguration.getRecheckMetricsLoad5Threshold()) {
               // Come back to this slave after we have collected more metrics
+              LOG.info("Skipping evaluation of {} until new metrics are collected. Current load is load1: {}, load5: {}", offerHolder.getHostname(), metricsSnapshot.getSystemLoad1Min(), metricsSnapshot.getSystemLoad5Min());
               currentSlaveUsages.remove(slaveId);
           }
         }
