@@ -205,15 +205,21 @@ public class SingularityMesosOfferScheduler {
               .filter((t) -> t.getStartedAt() > maybeSlaveUsage.get().getTimestamp() && t.getSanitizedHost().equals(offerHolder.getSanitizedHost()))
               .count();
           if (newTaskCount >= maybeSlaveUsage.get().getNumTasks() / 2) {
-            MesosSlaveMetricsSnapshotObject metricsSnapshot = usageHelper.getMetricsSnapshot(offerHolder.getHostname());
+            try {
+              MesosSlaveMetricsSnapshotObject metricsSnapshot = usageHelper.getMetricsSnapshot(offerHolder.getHostname());
 
-            if (metricsSnapshot.getSystemLoad5Min() / metricsSnapshot.getSystemCpusTotal() > mesosConfiguration.getRecheckMetricsLoad1Threshold()
-                || metricsSnapshot.getSystemLoad1Min() / metricsSnapshot.getSystemCpusTotal() > mesosConfiguration.getRecheckMetricsLoad5Threshold()) {
-              // Come back to this slave after we have collected more metrics
-              LOG.info("Skipping evaluation of {} until new metrics are collected. Current load is load1: {}, load5: {}", offerHolder.getHostname(), metricsSnapshot.getSystemLoad1Min(), metricsSnapshot.getSystemLoad5Min());
+              if (metricsSnapshot.getSystemLoad5Min() / metricsSnapshot.getSystemCpusTotal() > mesosConfiguration.getRecheckMetricsLoad1Threshold()
+                  || metricsSnapshot.getSystemLoad1Min() / metricsSnapshot.getSystemCpusTotal() > mesosConfiguration.getRecheckMetricsLoad5Threshold()) {
+                // Come back to this slave after we have collected more metrics
+                LOG.info("Skipping evaluation of {} until new metrics are collected. Current load is load1: {}, load5: {}", offerHolder.getHostname(), metricsSnapshot.getSystemLoad1Min(), metricsSnapshot
+                    .getSystemLoad5Min());
+                currentSlaveUsages.remove(slaveId);
+              }
+            } catch (Throwable t) {
+              LOG.warn("Could not check metrics for host {}, skipping", offerHolder.getHostname());
               currentSlaveUsages.remove(slaveId);
+            }
           }
-        }
 
         }
       }, offerScoringExecutor)));
