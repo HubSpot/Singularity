@@ -84,9 +84,6 @@ const Navigation = (props) => {
         </div>
         <div className="collapse navbar-collapse" id="navbar-collapse">
           <ul className="nav navbar-nav">
-            <li className={classnames({active: isActive('/', fragment)})}>
-              <Link to="/">Dashboard {isActive('/', fragment) && <span className="sr-only">(current)</span>}</Link>
-            </li>
             <li className={classnames({active: isActive('status', fragment)})}>
               <Link to="/status">Status {isActive('status', fragment) && <span className="sr-only">(current)</span>}</Link>
             </li>
