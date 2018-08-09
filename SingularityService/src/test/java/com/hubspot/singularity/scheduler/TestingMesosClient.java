@@ -51,7 +51,7 @@ public class TestingMesosClient implements MesosClient {
   }
 
   @Override
-  public MesosSlaveMetricsSnapshotObject getSlaveMetricsSnapshot(String hostname) {
+  public MesosSlaveMetricsSnapshotObject getSlaveMetricsSnapshot(String hostname, boolean useShortTimeout) {
     return slaveMetrics.get(hostname);
   }
 
