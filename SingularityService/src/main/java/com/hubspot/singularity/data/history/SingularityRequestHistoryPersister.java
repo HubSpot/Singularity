@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.ReentrantLock;
 
 import javax.inject.Singleton;
 
@@ -14,6 +15,7 @@ import org.slf4j.LoggerFactory;
 import com.google.common.base.Optional;
 import com.google.common.primitives.Longs;
 import com.google.inject.Inject;
+import com.google.inject.name.Named;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.SingularityDeleteResult;
 import com.hubspot.singularity.SingularityHistoryItem;
@@ -31,8 +33,11 @@ public class SingularityRequestHistoryPersister extends SingularityHistoryPersis
   private final HistoryManager historyManager;
 
   @Inject
-  public SingularityRequestHistoryPersister(SingularityConfiguration configuration, RequestManager requestManager, HistoryManager historyManager) {
-    super(configuration);
+  public SingularityRequestHistoryPersister(SingularityConfiguration configuration,
+                                            RequestManager requestManager,
+                                            HistoryManager historyManager,
+                                            @Named(SingularityHistoryModule.PERSISTER_LOCK) ReentrantLock persisterLock) {
+    super(configuration, persisterLock);
 
     this.requestManager = requestManager;
     this.historyManager = historyManager;
@@ -100,28 +105,34 @@ public class SingularityRequestHistoryPersister extends SingularityHistoryPersis
 
   @Override
   public void runActionOnPoll() {
-    LOG.info("Checking request history for persistence");
+    LOG.info("Attempting to grab persister lock");
+    persisterLock.lock();
+    try {
+      LOG.info("Checking request history for persistence");
 
-    final long start = System.currentTimeMillis();
+      final long start = System.currentTimeMillis();
 
-    final List<SingularityRequestHistoryParent> requestHistoryParents = new ArrayList();
+      final List<SingularityRequestHistoryParent> requestHistoryParents = new ArrayList();
 
-    int numHistoryTransferred = 0;
+      int numHistoryTransferred = 0;
 
-    for (String requestId : requestManager.getRequestIdsWithHistory()) {
-      requestHistoryParents.add(new SingularityRequestHistoryParent(requestManager.getRequestHistory(requestId), requestId));
-    }
-
-    Collections.sort(requestHistoryParents, Collections.reverseOrder());  // createdAt descending
-
-    int i=0;
-    for (SingularityRequestHistoryParent requestHistoryParent : requestHistoryParents) {
-      if (moveToHistoryOrCheckForPurge(requestHistoryParent, i++)) {
-        numHistoryTransferred += requestHistoryParent.history.size();
+      for (String requestId : requestManager.getRequestIdsWithHistory()) {
+        requestHistoryParents.add(new SingularityRequestHistoryParent(requestManager.getRequestHistory(requestId), requestId));
       }
-    }
 
-    LOG.info("Transferred {} history updates for {} requests in {}", numHistoryTransferred, requestHistoryParents.size(), JavaUtils.duration(start));
+      Collections.sort(requestHistoryParents, Collections.reverseOrder());  // createdAt descending
+
+      int i = 0;
+      for (SingularityRequestHistoryParent requestHistoryParent : requestHistoryParents) {
+        if (moveToHistoryOrCheckForPurge(requestHistoryParent, i++)) {
+          numHistoryTransferred += requestHistoryParent.history.size();
+        }
+      }
+
+      LOG.info("Transferred {} history updates for {} requests in {}", numHistoryTransferred, requestHistoryParents.size(), JavaUtils.duration(start));
+    } finally {
+      persisterLock.unlock();
+    }
   }
 
   @Override
