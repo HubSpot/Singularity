@@ -103,23 +103,11 @@ public class SingularityUsageHelper {
     return slavesToTrack;
   }
 
-  public Optional<SingularitySlaveUsage> collectSlaveUsage(SingularitySlave slave, long now, Map<String, RequestUtilization> previousUtilizations, boolean useShortTimeout) {
-    return collectSlaveUsage(
-        slave,
-        now,
-        new ConcurrentHashMap<>(),
-        previousUtilizations,
-        new ConcurrentHashMap<>(),
-        new AtomicLong(),
-        new AtomicLong(),
-        new AtomicDouble(),
-        new AtomicDouble(),
-        new AtomicLong(),
-        new AtomicLong(),
-        useShortTimeout);
+  public MesosSlaveMetricsSnapshotObject getMetricsSnapshot(String host) {
+    return mesosClient.getSlaveMetricsSnapshot(host, true);
   }
 
-  public Optional<SingularitySlaveUsage> collectSlaveUsage(
+  public void collectSlaveUsage(
       SingularitySlave slave,
       long now,
       Map<String, RequestUtilization> utilizationPerRequestId,
@@ -279,9 +267,9 @@ public class SingularityUsageHelper {
       }
 
       if (slaveUsage.getMemoryBytesTotal().isPresent() && slaveUsage.getCpusTotal().isPresent()) {
-        totalMemBytesUsed.getAndAdd(slaveUsage.getMemoryBytesUsed());
+        totalMemBytesUsed.getAndAdd((long) slaveUsage.getMemoryBytesUsed());
         totalCpuUsed.getAndAdd(slaveUsage.getCpusUsed());
-        totalDiskBytesUsed.getAndAdd(slaveUsage.getDiskBytesUsed());
+        totalDiskBytesUsed.getAndAdd((long) slaveUsage.getDiskBytesUsed());
 
         totalMemBytesAvailable.getAndAdd(slaveUsage.getMemoryBytesTotal().get());
         totalCpuAvailable.getAndAdd(slaveUsage.getCpusTotal().get());
@@ -290,13 +278,11 @@ public class SingularityUsageHelper {
 
       LOG.debug("Saving slave {} usage {}", slave.getHost(), slaveUsage);
       usageManager.saveSpecificSlaveUsageAndSetCurrent(slave.getId(), slaveUsage);
-      return Optional.of(slaveUsage);
     } catch (Throwable t) {
       String message = String.format("Could not get slave usage for host %s", slave.getHost());
       LOG.error(message, t);
       exceptionNotifier.notify(message, t);
     }
-    return Optional.absent();
   }
 
   private SingularityTaskUsage getUsage(MesosTaskMonitorObject taskUsage) {

@@ -378,6 +378,8 @@ public class SingularityConfiguration extends Configuration {
 
   private long maxSlaveUsageMetricAgeMs = 30000;
 
+  private boolean reCheckMetricsForLargeNewTaskCount = false;
+
   public long getAskDriverToKillTasksAgainAfterMillis() {
     return askDriverToKillTasksAgainAfterMillis;
   }
@@ -1602,5 +1604,13 @@ public class SingularityConfiguration extends Configuration {
 
   public void setMaxSlaveUsageMetricAgeMs(long maxSlaveUsageMetricAgeMs) {
     this.maxSlaveUsageMetricAgeMs = maxSlaveUsageMetricAgeMs;
+  }
+
+  public boolean isReCheckMetricsForLargeNewTaskCount() {
+    return reCheckMetricsForLargeNewTaskCount;
+  }
+
+  public void setReCheckMetricsForLargeNewTaskCount(boolean reCheckMetricsForLargeNewTaskCount) {
+    this.reCheckMetricsForLargeNewTaskCount = reCheckMetricsForLargeNewTaskCount;
   }
 }
