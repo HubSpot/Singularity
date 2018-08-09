@@ -3,6 +3,7 @@ package com.hubspot.singularity.data.history;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.Set;
+import java.util.concurrent.locks.ReentrantLock;
 
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
@@ -14,11 +15,14 @@ import com.google.common.collect.ImmutableSet;
 import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
+import com.google.inject.Provides;
 import com.google.inject.ProvisionException;
 import com.google.inject.Scopes;
+import com.google.inject.Singleton;
 import com.google.inject.TypeLiteral;
 import com.google.inject.matcher.Matchers;
 import com.google.inject.multibindings.Multibinder;
+import com.google.inject.name.Named;
 import com.hubspot.singularity.config.SingularityConfiguration;
 
 import io.dropwizard.db.DataSourceFactory;
@@ -26,6 +30,7 @@ import io.dropwizard.jdbi.DBIFactory;
 import io.dropwizard.setup.Environment;
 
 public class SingularityHistoryModule extends AbstractModule {
+  public static final String PERSISTER_LOCK = "hsitory.persister.lock";
 
   private final Optional<DataSourceFactory> configuration;
 
@@ -63,6 +68,13 @@ public class SingularityHistoryModule extends AbstractModule {
     } else {
       bind(HistoryManager.class).to(NoopHistoryManager.class).in(Scopes.SINGLETON);
     }
+  }
+
+  @Provides
+  @Singleton
+  @Named(PERSISTER_LOCK)
+  public ReentrantLock providePersisterLock() {
+    return new ReentrantLock();
   }
 
   private void bindMethodInterceptorForStringTemplateClassLoaderWorkaround() {

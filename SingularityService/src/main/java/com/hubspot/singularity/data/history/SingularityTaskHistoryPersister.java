@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.ReentrantLock;
 
 import javax.inject.Singleton;
 
@@ -17,6 +18,7 @@ import com.google.common.collect.Ordering;
 import com.google.common.collect.Sets;
 import com.google.common.collect.TreeMultimap;
 import com.google.inject.Inject;
+import com.google.inject.name.Named;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.SingularityDeleteResult;
 import com.hubspot.singularity.SingularityPendingDeploy;
@@ -41,8 +43,8 @@ public class SingularityTaskHistoryPersister extends SingularityHistoryPersister
 
   @Inject
   public SingularityTaskHistoryPersister(SingularityConfiguration configuration, SingularityTaskMetadataConfiguration taskMetadataConfiguration, TaskManager taskManager,
-      DeployManager deployManager, HistoryManager historyManager, SingularityExceptionNotifier exceptionNotifier) {
-    super(configuration);
+      DeployManager deployManager, HistoryManager historyManager, SingularityExceptionNotifier exceptionNotifier, @Named(SingularityHistoryModule.PERSISTER_LOCK) ReentrantLock persisterLock) {
+    super(configuration, persisterLock);
 
     this.taskManager = taskManager;
     this.historyManager = historyManager;
@@ -53,49 +55,55 @@ public class SingularityTaskHistoryPersister extends SingularityHistoryPersister
 
   @Override
   public void runActionOnPoll() {
-    LOG.info("Checking inactive task ids for task history persistence");
+    LOG.info("Attempting to grab persister lock");
+    persisterLock.lock();
+    try {
+      LOG.info("Checking inactive task ids for task history persistence");
 
-    final long start = System.currentTimeMillis();
+      final long start = System.currentTimeMillis();
 
-    final List<SingularityTaskId> allTaskIds = taskManager.getAllTaskIds();
+      final List<SingularityTaskId> allTaskIds = taskManager.getAllTaskIds();
 
-    final Set<SingularityTaskId> activeTaskIds = Sets.newHashSet(taskManager.getActiveTaskIds());
-    final Set<SingularityTaskId> lbCleaningTaskIds = Sets.newHashSet(taskManager.getLBCleanupTasks());
-    final List<SingularityPendingDeploy> pendingDeploys = deployManager.getPendingDeploys();
+      final Set<SingularityTaskId> activeTaskIds = Sets.newHashSet(taskManager.getActiveTaskIds());
+      final Set<SingularityTaskId> lbCleaningTaskIds = Sets.newHashSet(taskManager.getLBCleanupTasks());
+      final List<SingularityPendingDeploy> pendingDeploys = deployManager.getPendingDeploys();
 
-    int numTotal = 0;
-    int numTransferred = 0;
+      int numTotal = 0;
+      int numTransferred = 0;
 
-    final Multimap<String, SingularityTaskId> eligibleTaskIdByRequestId = TreeMultimap.create(Ordering.natural(), SingularityTaskId.STARTED_AT_COMPARATOR_DESC);
+      final Multimap<String, SingularityTaskId> eligibleTaskIdByRequestId = TreeMultimap.create(Ordering.natural(), SingularityTaskId.STARTED_AT_COMPARATOR_DESC);
 
-    for (SingularityTaskId taskId : allTaskIds) {
-      if (activeTaskIds.contains(taskId) || lbCleaningTaskIds.contains(taskId) || isPartOfPendingDeploy(pendingDeploys, taskId)) {
-        continue;
-      }
-
-      eligibleTaskIdByRequestId.put(taskId.getRequestId(), taskId);
-    }
-
-    for (Map.Entry<String, Collection<SingularityTaskId>> entry : eligibleTaskIdByRequestId.asMap().entrySet()) {
-      int i = 0;
-      for (SingularityTaskId taskId : entry.getValue()) {
-        final long age = start - taskId.getStartedAt();
-
-        if (age < configuration.getTaskPersistAfterStartupBufferMillis()) {
-          LOG.debug("Not persisting {}, it has started up too recently {} (buffer: {}) - this prevents race conditions with ZK tx", taskId, JavaUtils.durationFromMillis(age),
-              JavaUtils.durationFromMillis(configuration.getTaskPersistAfterStartupBufferMillis()));
+      for (SingularityTaskId taskId : allTaskIds) {
+        if (activeTaskIds.contains(taskId) || lbCleaningTaskIds.contains(taskId) || isPartOfPendingDeploy(pendingDeploys, taskId)) {
           continue;
         }
 
-        if (moveToHistoryOrCheckForPurge(taskId, i++)) {
-          numTransferred++;
-        }
-
-        numTotal++;
+        eligibleTaskIdByRequestId.put(taskId.getRequestId(), taskId);
       }
-    }
 
-    LOG.info("Transferred {} out of {} inactive task ids (total {}) in {}", numTransferred, numTotal, allTaskIds.size(), JavaUtils.duration(start));
+      for (Map.Entry<String, Collection<SingularityTaskId>> entry : eligibleTaskIdByRequestId.asMap().entrySet()) {
+        int i = 0;
+        for (SingularityTaskId taskId : entry.getValue()) {
+          final long age = start - taskId.getStartedAt();
+
+          if (age < configuration.getTaskPersistAfterStartupBufferMillis()) {
+            LOG.debug("Not persisting {}, it has started up too recently {} (buffer: {}) - this prevents race conditions with ZK tx", taskId, JavaUtils.durationFromMillis(age),
+                JavaUtils.durationFromMillis(configuration.getTaskPersistAfterStartupBufferMillis()));
+            continue;
+          }
+
+          if (moveToHistoryOrCheckForPurge(taskId, i++)) {
+            numTransferred++;
+          }
+
+          numTotal++;
+        }
+      }
+
+      LOG.info("Transferred {} out of {} inactive task ids (total {}) in {}", numTransferred, numTotal, allTaskIds.size(), JavaUtils.duration(start));
+    } finally {
+      persisterLock.unlock();
+    }
   }
 
   private boolean isPartOfPendingDeploy(List<SingularityPendingDeploy> pendingDeploys, SingularityTaskId taskId) {
