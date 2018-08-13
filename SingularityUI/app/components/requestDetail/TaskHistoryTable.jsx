@@ -29,14 +29,13 @@ class TaskHistoryTable extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      loading: false,
+      loading: true,
       tableChunkSize: 5
     };
   }
 
   componentDidMount() {
     const { requestId, initialPageNumber } = this.props;
-    this.setState({ loading: true });
     this.props.fetchTaskHistoryForRequest(
       requestId, this.state.tableChunkSize, initialPageNumber
     ).then(() => {
