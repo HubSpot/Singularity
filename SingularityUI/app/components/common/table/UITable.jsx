@@ -11,7 +11,7 @@ class UITable extends Component {
   constructor(props) {
     super(props);
 
-    let { data } = props;
+    let { data, initialPageNumber } = props;
     const { defaultSortBy, defaultSortDirection, rowChunkSize } = props;
     if (defaultSortBy) {
       data = this.doSort(data, defaultSortBy, defaultSortDirection);
@@ -21,7 +21,7 @@ class UITable extends Component {
       sortBy: defaultSortBy,
       sortDirection: defaultSortDirection,
       sortTime: null,
-      chunkNum: 1,
+      chunkNum: initialPageNumber,
       data,
       rowChunkSize
     };
@@ -32,6 +32,9 @@ class UITable extends Component {
   componentDidUpdate(prevProps, prevState) {
     if (this.props.triggerOnDataSizeChange && prevState.data && prevState.data.length != this.state.data.length) {
       this.props.triggerOnDataSizeChange();
+    }
+    if (prevState.chunkNum !== this.state.chunkNum && this.props.onPageChange) {
+      this.props.onPageChange(this.state.chunkNum);
     }
   }
 
@@ -458,6 +461,10 @@ class UITable extends Component {
   }
 }
 
+UITable.defaultProps = {
+  initialPageNumber: 1
+};
+
 UITable.propTypes = {
   data: PropTypes.arrayOf(PropTypes.object).isRequired,
   keyGetter: PropTypes.func.isRequired,
@@ -487,7 +494,9 @@ UITable.propTypes = {
     PropTypes.node,
     PropTypes.string
   ]),
-  striped: PropTypes.bool
+  striped: PropTypes.bool,
+  initialPageNumber: PropTypes.number,
+  onPageChange: PropTypes.func
 };
 
 export default UITable;
