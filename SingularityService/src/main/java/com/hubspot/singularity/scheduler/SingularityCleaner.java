@@ -508,7 +508,7 @@ public class SingularityCleaner {
         runBeforeKillId = Optional.of(shellRequest.getId());
       }
 
-      taskManager.createTaskCleanup(new SingularityTaskCleanup(requestCleanup.getUser(), TaskCleanupType.REQUEST_DELETING, start, taskId, requestCleanup.getMessage(), requestCleanup.getActionId(), runBeforeKillId, requestCleanup.getRemoveFromLoadBalancer()));
+      taskManager.saveTaskCleanup(new SingularityTaskCleanup(requestCleanup.getUser(), TaskCleanupType.REQUEST_DELETING, start, taskId, requestCleanup.getMessage(), requestCleanup.getActionId(), runBeforeKillId, requestCleanup.getRemoveFromLoadBalancer()));
     }
   }
 

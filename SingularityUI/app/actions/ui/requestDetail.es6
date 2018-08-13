@@ -14,7 +14,7 @@ export const refresh = (requestId) => (dispatch, getState) => {
     dispatch(FetchRequestHistory.trigger(requestId, 5, 1))
   ])
 
-  dispatch(FetchActiveTasksForRequest.trigger(requestId, 5, 1));
+  dispatch(FetchActiveTasksForRequest.trigger(requestId));
   dispatch(FetchTaskCleanups.trigger());
   dispatch(FetchTaskHistoryForRequest.trigger(requestId, 5, 1));
   dispatch(FetchDeploysForRequest.trigger(requestId, 5, 1));

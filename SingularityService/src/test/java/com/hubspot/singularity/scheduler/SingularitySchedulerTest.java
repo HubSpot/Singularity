@@ -463,6 +463,34 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
   }
 
   @Test
+  public void testNewlyDeployedScheduledTasksAreScheduledAfterStartup() {
+    initScheduledRequest();
+    initFirstDeploy();
+
+    SingularityTask runningTask = launchTask(request, firstDeploy, 1, TaskState.TASK_RUNNING);
+
+    long now = System.currentTimeMillis();
+
+    initSecondDeploy();
+    requestManager.addToPendingQueue(new SingularityPendingRequest(requestId, secondDeployId, now, Optional.absent(), PendingType.STARTUP, Optional.absent(), Optional.absent()));
+    deployChecker.checkDeploys();
+
+    resourceOffers();
+
+    // There's an instance running, so we shouldn't schedule a pending task yet
+    Assert.assertTrue(taskManager.getPendingTaskIds().isEmpty());
+
+    statusUpdate(runningTask, TaskState.TASK_FINISHED);
+
+    scheduler.drainPendingQueue();
+
+    // Now a pending task should be scheduled with the new deploy
+    Assert.assertEquals(1, taskManager.getPendingTaskIds().size());
+    Assert.assertEquals(PendingType.NEW_DEPLOY, taskManager.getPendingTaskIds().get(0).getPendingType());
+    Assert.assertEquals(secondDeployId, taskManager.getPendingTaskIds().get(0).getDeployId());
+  }
+
+  @Test
   public void testFinishedRequestCanBeDeployed() {
     initScheduledRequest();
     initFirstDeploy();
@@ -1515,6 +1543,29 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
   }
 
   @Test
+  public void testRunNowOnDemandJobMayRetryOnFailure() {
+    initRequestWithType(RequestType.ON_DEMAND, false);
+    SingularityRequest request = requestResource.getRequest(requestId, singularityUser).getRequest();
+    SingularityRequest newRequest = request.toBuilder().setNumRetriesOnFailure(Optional.of(2)).build();
+    requestResource.postRequest(newRequest, singularityUser);
+    initFirstDeploy();
+
+    requestResource.scheduleImmediately(singularityUser, requestId, new SingularityRunNowRequestBuilder().build());
+    resourceOffers();
+
+    SingularityTask task = taskManager.getActiveTasks().get(0);
+    statusUpdate(task, TaskState.TASK_FAILED);
+    scheduler.drainPendingQueue();
+
+    SingularityDeployStatistics deployStatistics = deployManager.getDeployStatistics(task.getTaskId().getRequestId(), task.getTaskId().getDeployId()).get();
+
+    Assert.assertEquals(MesosTaskState.TASK_FAILED, deployStatistics.getLastTaskState().get().toTaskState().get());
+    Assert.assertEquals(PendingType.RETRY, taskManager.getPendingTaskIds().get(0).getPendingType());
+    Assert.assertEquals(1, deployStatistics.getNumFailures());
+    Assert.assertEquals(1, deployStatistics.getNumSequentialRetries());
+  }
+
+  @Test
   public void testOnDemandRunNowJobRespectsSpecifiedRunAtTime() {
     initOnDemandRequest();
     initFirstDeploy();
@@ -2348,5 +2399,23 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     resourceOffers();
 
     Assert.assertEquals(1, taskManager.getActiveTaskIds().size());
+  }
+
+  @Test
+  public void testCleanupsCreatedOnScaleDown() {
+    initRequest();
+    SingularityRequestBuilder bldr = request.toBuilder();
+    bldr.setInstances(Optional.of(2));
+    requestResource.postRequest(bldr.build(), singularityUser);
+    initFirstDeploy();
+
+    SingularityTask firstTask = launchTask(request, firstDeploy, 1, TaskState.TASK_RUNNING);
+    SingularityTask secondTask = launchTask(request, firstDeploy, 2, TaskState.TASK_RUNNING);
+    Assert.assertEquals(0, taskManager.getNumCleanupTasks());
+
+    bldr.setInstances(Optional.of(1));
+    requestResource.postRequest(bldr.build(), singularityUser);
+    Assert.assertEquals(1, taskManager.getNumCleanupTasks());
+    Assert.assertEquals(taskManager.getCleanupTaskIds().get(0), secondTask.getTaskId());
   }
 }

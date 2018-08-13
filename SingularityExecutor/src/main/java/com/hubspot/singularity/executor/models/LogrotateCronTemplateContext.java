@@ -15,7 +15,7 @@ public class LogrotateCronTemplateContext {
     public LogrotateCronTemplateContext(SingularityExecutorConfiguration configuration, SingularityExecutorTaskDefinition taskDefinition, SingularityExecutorLogrotateFrequency logrotateFrequency) {
         this.logrotateCommand = configuration.getLogrotateCommand();
         this.logrotateStateFile = taskDefinition.getLogrotateStateFilePath().toString();
-        this.logrotateConfig = Paths.get(configuration.getLogrotateConfDirectory()).resolve(taskDefinition.getTaskId()).toString();
+        this.logrotateConfig = Paths.get(configuration.getLogrotateHourlyConfDirectory()).resolve(taskDefinition.getTaskId()).toString();
         this.cronSchedule = logrotateFrequency.getCronSchedule().get();
     }
 
