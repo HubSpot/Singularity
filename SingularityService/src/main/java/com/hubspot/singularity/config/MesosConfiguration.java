@@ -62,6 +62,7 @@ public class MesosConfiguration {
   private double memWeight = 0.4;
   private double diskWeight = 0.2;
   private boolean omitOverloadedHosts = false;
+  private boolean omitForMissingUsageData = false;
   private double load5OverloadedThreshold = 1.0;
   private double load1OverloadedThreshold = 1.5;
 
@@ -292,6 +293,14 @@ public class MesosConfiguration {
     this.omitOverloadedHosts = omitOverloadedHosts;
   }
 
+  public boolean isOmitForMissingUsageData() {
+    return omitForMissingUsageData;
+  }
+
+  public void setOmitForMissingUsageData(boolean omitForMissingUsageData) {
+    this.omitForMissingUsageData = omitForMissingUsageData;
+  }
+
   public double getLoad5OverloadedThreshold() {
     return load5OverloadedThreshold;
   }
@@ -352,7 +361,15 @@ public class MesosConfiguration {
     return recheckMetricsLoad1Threshold;
   }
 
+  public void setRecheckMetricsLoad1Threshold(double recheckMetricsLoad1Threshold) {
+    this.recheckMetricsLoad1Threshold = recheckMetricsLoad1Threshold;
+  }
+
   public double getRecheckMetricsLoad5Threshold() {
     return recheckMetricsLoad5Threshold;
+  }
+
+  public void setRecheckMetricsLoad5Threshold(double recheckMetricsLoad5Threshold) {
+    this.recheckMetricsLoad5Threshold = recheckMetricsLoad5Threshold;
   }
 }
