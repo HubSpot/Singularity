@@ -1,6 +1,7 @@
 package com.hubspot.singularity.data.history;
 
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.ReentrantLock;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,11 +18,13 @@ public abstract class SingularityHistoryPersister<T extends SingularityHistoryIt
   private static final Logger LOG = LoggerFactory.getLogger(SingularityHistoryPersister.class);
 
   protected final SingularityConfiguration configuration;
+  protected final ReentrantLock persisterLock;
 
-  public SingularityHistoryPersister(SingularityConfiguration configuration) {
+  public SingularityHistoryPersister(SingularityConfiguration configuration, ReentrantLock persisterLock) {
     super(configuration.getPersistHistoryEverySeconds(), TimeUnit.SECONDS);
 
     this.configuration = configuration;
+    this.persisterLock = persisterLock;
   }
 
   @Override
