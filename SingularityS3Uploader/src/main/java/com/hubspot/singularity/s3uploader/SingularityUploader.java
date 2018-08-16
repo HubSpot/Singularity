@@ -140,12 +140,12 @@ public abstract class SingularityUploader {
     int found = 0;
     if (Files.isDirectory(path, LinkOption.NOFOLLOW_LINKS)) {
       if (uploadMetadata.isCheckSubdirectories()) {
-        LOG.debug("{} was a directory, checking files in directory", path);
+        LOG.trace("{} was a directory, checking files in directory", path);
         for (Path file : JavaUtils.iterable(path)) {
           found += handleFile(file, isFinished, toUpload);
         }
       } else {
-        LOG.debug("{} was a directory, skipping", path);
+        LOG.trace("{} was a directory, skipping", path);
       }
       return found;
     }
