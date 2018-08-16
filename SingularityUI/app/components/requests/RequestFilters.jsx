@@ -149,7 +149,6 @@ export default class RequestFilters extends React.Component {
           placeholder="Filter requests"
           value={this.props.filter.searchFilter}
           onChange={(...args) => this.handleSearchChange(...args)}
-          autoFocus="true"
           maxLength="128"
           onFocus={function(e) {
             var val = e.target.value;
