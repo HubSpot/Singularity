@@ -10,40 +10,47 @@ class UITable extends Component {
 
   constructor(props) {
     super(props);
-    const {
-      data,
-      defaultSortBy,
-      defaultSortDirection,
-      rowChunkSize
-    } = props;
+
+    let { data, initialPageNumber } = props;
+    const { defaultSortBy, defaultSortDirection, rowChunkSize } = props;
+    if (defaultSortBy) {
+      data = this.doSort(data, defaultSortBy, defaultSortDirection);
+    }
 
     this.state = {
-      chunkNum: 1,
-      data: defaultSortBy
-        ? this.doSort(data, defaultSortBy, defaultSortDirection)
-        : data,
-      rowChunkSize,
       sortBy: defaultSortBy,
       sortDirection: defaultSortDirection,
-      sortTime: defaultSortBy ? Date.now() : null,
+      sortTime: null,
+      chunkNum: initialPageNumber,
+      data,
+      rowChunkSize
     };
 
     this.handlePageChange = this.handlePageChange.bind(this);
   }
 
+  componentDidUpdate(prevProps, prevState) {
+    if (this.props.triggerOnDataSizeChange && prevState.data && prevState.data.length != this.state.data.length) {
+      this.props.triggerOnDataSizeChange();
+    }
+    if (prevState.chunkNum !== this.state.chunkNum && this.props.onPageChange) {
+      this.props.onPageChange(this.state.chunkNum);
+    }
+  }
+
   componentWillReceiveProps(nextProps) {
-    const { lookahead, sortBy, sortDirection } = this.state;
-    this.updateSort(nextProps.data, sortBy, sortDirection);
-    if (nextProps.isFetching || !this.isApiPaginated() || lookahead) {
+    this.updateSort(nextProps.data, this.state.sortBy, this.state.sortDirection);
+    if (nextProps.isFetching) {
       return;
     }
 
-    this.setState({ data: nextProps.data });
-  }
-
-  componentDidUpdate(prevProps, prevState) {
-    if (this.props.triggerOnDataSizeChange && prevState.data && prevState.data.length !== this.state.data.length) {
-      this.props.triggerOnDataSizeChange();
+    if (this.isApiPaginated() && _.isEmpty(nextProps.data) && this.state.chunkNum > 1) {
+      this.fetchDataFromApi(this.state.chunkNum - 1, this.state.rowChunkSize, this.state.sortBy);
+      this.setState({ pastEnd: true, data: nextProps.data });
+    } else if (this.isApiPaginated() && (this.state.pastEnd || nextProps.data.length < this.state.rowChunkSize)) {
+      this.setState({ pastEnd: false, lastPage: true, data: nextProps.data });
+    } else if (this.isApiPaginated()) {
+      this.setState({ data: nextProps.data });
     }
   }
 
@@ -74,24 +81,24 @@ class UITable extends Component {
       table.setState({
         chunkNum: 1,
         rowChunkSize: this.props.rowChunkSize,
+        lastPage: false,
+        pastEnd: false
       });
     };
   }
 
   fetchDataFromApi(chunkNum, rowChunkSize, updateStateAfterFetching = false, sortBy = this.state.sortBy) {
-    const lookaheadNum = (chunkNum * rowChunkSize) + 1;
-    this.setState({ lookahead: true });
-    return this.props.fetchDataFromApi(lookaheadNum, 1).then((lookaheadResponse) => {
-      const lastPage = _.isEmpty(lookaheadResponse.data);
-
-      if (!updateStateAfterFetching) {
-        this.setState({chunkNum, rowChunkSize, sortBy, lastPage, lookahead: false});
+    let lastPage = this.state.lastPage;
+    if (chunkNum < this.state.chunkNum) {
+      lastPage = false;
+    }
+    if (!updateStateAfterFetching) {
+      this.setState({chunkNum, rowChunkSize, sortBy, lastPage});
+    }
+    return this.props.fetchDataFromApi(chunkNum, rowChunkSize, sortBy).then(() => {
+      if (updateStateAfterFetching) {
+        this.setState({chunkNum, rowChunkSize, sortBy, lastPage});
       }
-      return this.props.fetchDataFromApi(chunkNum, rowChunkSize, sortBy).then(() => {
-        if (updateStateAfterFetching) {
-          this.setState({chunkNum, rowChunkSize, sortBy, lastPage, lookahead: false});
-        }
-      });
     });
   }
 
@@ -219,7 +226,7 @@ class UITable extends Component {
 
   handleSortClick(col) {
     if (this.isApiPaginated()) {
-      this.props.fetchDataFromApi(this.state.chunkNum, this.state.rowChunkSize, col.props.id);
+      this.props.fetchDataFromApi(this.state.chunkNum, this.state.rowChunkSize, false, col.props.id);
     }
     const colId = col.props.id;
     if (colId === this.state.sortBy) {
@@ -232,13 +239,13 @@ class UITable extends Component {
       }
 
       this.updateSort(
-        this.state.data,
+        this.props.data,
         colId,
         newSortDirection
       );
     } else {
       this.updateSort(
-        this.state.data,
+        this.props.data,
         colId,
         UITable.SortDirection.DESC
       );
@@ -288,7 +295,7 @@ class UITable extends Component {
 
       return rows;
     } else if (this.props.paginated) {
-      return this.state.data.map((row, index) => {
+      return this.props.data.map((row, index) => {
         return this.renderTableRow(row, index);
       });
     }
@@ -387,7 +394,7 @@ class UITable extends Component {
     const headerRow = this.props.children.map((col) => {
       let cell;
       if (typeof col.props.label === 'function') {
-        cell = col.props.label(this.state.data);
+        cell = col.props.label(this.props.data);
       } else {
         // should only be string according to propTypes
         cell = col.props.label;
@@ -436,7 +443,7 @@ class UITable extends Component {
       </BootstrapTable>
     );
 
-    if (this.props.emptyTableMessage && !this.state.data.length) {
+    if (this.props.emptyTableMessage && !this.props.data.length) {
       maybeTable = (
         <div className="empty-table-message">
           {this.props.emptyTableMessage}
@@ -448,11 +455,15 @@ class UITable extends Component {
       <div>
         {this.props.rowChunkSizeChoices && <div className="row"><div className="col-md-12">{this.renderRowChunkSizeChoices()}</div></div>}
         {maybeTable}
-        <div className="text-center">{this.renderPagination()}</div>
+        {this.renderPagination()}
       </div>
     );
   }
 }
+
+UITable.defaultProps = {
+  initialPageNumber: 1
+};
 
 UITable.propTypes = {
   data: PropTypes.arrayOf(PropTypes.object).isRequired,
@@ -483,7 +494,9 @@ UITable.propTypes = {
     PropTypes.node,
     PropTypes.string
   ]),
-  striped: PropTypes.bool
+  striped: PropTypes.bool,
+  initialPageNumber: PropTypes.number,
+  onPageChange: PropTypes.func
 };
 
 export default UITable;
