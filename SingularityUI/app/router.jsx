@@ -1,11 +1,10 @@
 import React from 'react';
 import { Provider } from 'react-redux';
-import { Router, Route, IndexRoute } from 'react-router';
+import { Router, Route, IndexRedirect, IndexRoute } from 'react-router';
 import { syncHistoryWithStore } from 'react-router-redux';
 
 import Application from './components/common/Application';
 import NotFound from './components/common/NotFound';
-import DashboardPage from './components/dashboard/DashboardPage';
 import StatusPage from './components/status/StatusPage';
 import RequestsPage from './components/requests/RequestsPage';
 import TasksPage from './components/tasks/TasksPage';
@@ -32,7 +31,7 @@ const getFilenameFromSplat = (splat) => _.last(splat.split('/'));
 
 const routes = (
   <Route path="/" component={Application}>
-    <IndexRoute component={DashboardPage} title="Dashboard" />
+    <IndexRedirect to="requests" />
     <Route path="status" component={StatusPage} title="Status" />
     <Route path="requests/new" component={RequestForm} title="New Request" />
     <Route path="requests/edit/:requestId" component={RequestForm} title="New or Edit Request" />
