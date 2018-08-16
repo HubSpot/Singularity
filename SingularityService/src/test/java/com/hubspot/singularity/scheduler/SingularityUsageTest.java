@@ -28,6 +28,9 @@ import com.hubspot.singularity.data.UsageManager;
 public class SingularityUsageTest extends SingularitySchedulerTestBase {
 
   @Inject
+  protected SingularityUsageHelper usageHelper;
+
+  @Inject
   protected SingularityUsagePoller usagePoller;
 
   @Inject
@@ -68,7 +71,7 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
     Assert.assertEquals(slaves.get(0), slaveId);
 
     Assert.assertEquals(0, usageManager.getSlaveUsage(slaveId).get(0).getCpusUsed(), 0);
-    Assert.assertEquals(100, usageManager.getSlaveUsage(slaveId).get(0).getMemoryBytesUsed());
+    Assert.assertEquals(100, usageManager.getSlaveUsage(slaveId).get(0).getMemoryBytesUsed(), 0);
 
     SingularityTaskUsage first = usageManager.getTaskUsage(firstTask.getTaskId().getId()).get(0);
 
@@ -103,7 +106,7 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
     Assert.assertEquals(2, usageManager.getTasksWithUsage().size());
     Assert.assertEquals(1, usageManager.getSlavesWithUsage().size());
 
-    Assert.assertEquals(1100, usageManager.getAllCurrentSlaveUsage().get(0).getMemoryBytesUsed());
+    Assert.assertEquals(1100, usageManager.getAllCurrentSlaveUsage().get(0).getMemoryBytesUsed(), 0);
 
     // kill task one
     statusUpdate(taskManager.getActiveTasks().get(0), TaskState.TASK_KILLED);
@@ -192,7 +195,7 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
     Assert.assertEquals(1149, usageManager.getSlaveUsage(slaveId).get(1).getMemoryBytesUsed(), 0);
 
     Assert.assertEquals(slaveId, usageManager.getAllCurrentSlaveUsage().get(0).getSlaveId());
-    Assert.assertEquals(1149, usageManager.getAllCurrentSlaveUsage().get(0).getMemoryBytesUsed());
+    Assert.assertEquals(1149, usageManager.getAllCurrentSlaveUsage().get(0).getMemoryBytesUsed(), 0);
 
     List<SingularityTaskCurrentUsageWithId> taskCurrentUsages = usageManager.getTaskCurrentUsages(taskManager.getActiveTaskIds());
 
@@ -639,7 +642,7 @@ public class SingularityUsageTest extends SingularitySchedulerTestBase {
   }
 
   private void clearUsages(String taskId) {
-    usagePoller.clearOldUsage(taskId);
+    usageHelper.clearOldUsage(taskId);
   }
 
   private void testUtilization(SingularityClusterUtilization utilization,

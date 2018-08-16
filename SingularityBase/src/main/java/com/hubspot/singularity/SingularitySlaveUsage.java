@@ -16,11 +16,11 @@ public class SingularitySlaveUsage {
   private final double cpusUsed;
   private final double cpusReserved;
   private final Optional<Double> cpusTotal;
-  private final long memoryBytesUsed;
-  private final long memoryMbReserved;
+  private final double memoryBytesUsed;
+  private final double memoryMbReserved;
   private final Optional<Long> memoryMbTotal;
-  private final long diskBytesUsed;
-  private final long diskMbReserved;
+  private final double diskBytesUsed;
+  private final double diskMbReserved;
   private final Optional<Long> diskMbTotal;
   private final int numTasks;
   private final long timestamp;
@@ -37,11 +37,11 @@ public class SingularitySlaveUsage {
   public SingularitySlaveUsage(@JsonProperty("cpusUsed") double cpusUsed,
                                @JsonProperty("cpusReserved") double cpusReserved,
                                @JsonProperty("cpusTotal") Optional<Double> cpusTotal,
-                               @JsonProperty("memoryBytesUsed") long memoryBytesUsed,
-                               @JsonProperty("memoryMbReserved") long memoryMbReserved,
+                               @JsonProperty("memoryBytesUsed") double memoryBytesUsed,
+                               @JsonProperty("memoryMbReserved") double memoryMbReserved,
                                @JsonProperty("memoryMbTotal") Optional<Long> memoryMbTotal,
-                               @JsonProperty("diskBytesUsed") long diskBytesUsed,
-                               @JsonProperty("diskMbReserved") long diskMbReserved,
+                               @JsonProperty("diskBytesUsed") double diskBytesUsed,
+                               @JsonProperty("diskMbReserved") double diskMbReserved,
                                @JsonProperty("diskMbTotal") Optional<Long> diskMbTotal,
                                @JsonProperty("numTasks") int numTasks,
                                @JsonProperty("timestamp") long timestamp,
@@ -94,12 +94,12 @@ public class SingularitySlaveUsage {
   }
 
   @Schema(description = "Total memory used by tasks in bytes")
-  public long getMemoryBytesUsed() {
+  public double getMemoryBytesUsed() {
     return memoryBytesUsed;
   }
 
   @Schema(description = "Total memory reserved by tasks in MB")
-  public long getMemoryMbReserved() {
+  public double getMemoryMbReserved() {
     return memoryMbReserved;
   }
 
@@ -122,12 +122,12 @@ public class SingularitySlaveUsage {
   }
 
   @Schema(description = "Total disk currently used by tasks in bytes")
-  public long getDiskBytesUsed() {
+  public double getDiskBytesUsed() {
     return diskBytesUsed;
   }
 
   @Schema(description = "Total disk currently reserved by tasks in MB")
-  public long getDiskMbReserved() {
+  public double getDiskMbReserved() {
     return diskMbReserved;
   }
 

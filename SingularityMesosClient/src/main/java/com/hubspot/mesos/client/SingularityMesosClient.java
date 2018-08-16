@@ -11,6 +11,7 @@ import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import com.hubspot.horizon.HttpClient;
 import com.hubspot.horizon.HttpRequest;
+import com.hubspot.horizon.HttpRequest.Options;
 import com.hubspot.horizon.HttpResponse;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.mesos.json.MesosMasterMetricsSnapshotObject;
@@ -22,7 +23,8 @@ import com.hubspot.mesos.json.MesosTaskMonitorObject;
 @Singleton
 public class SingularityMesosClient implements MesosClient {
 
-  public static final String HTTP_CLIENT_NAME = "mesos.http.client";
+  public static final String DEFAULT_HTTP_CLIENT_NAME = "mesos.http.client";
+  public static final String SHORT_TIMEOUT_HTTP_CLIENT_NAME = "mesos.http.client.short.timeout";
 
   private static final Logger LOG = LoggerFactory.getLogger(SingularityMesosClient.class);
 
@@ -35,10 +37,13 @@ public class SingularityMesosClient implements MesosClient {
   private static final TypeReference<List<MesosTaskMonitorObject>> TASK_MONITOR_TYPE_REFERENCE = new TypeReference<List<MesosTaskMonitorObject>>() {};
 
   private final HttpClient httpClient;
+  private final HttpClient shortTimeoutHttpClient;
 
   @Inject
-  public SingularityMesosClient(@Named(HTTP_CLIENT_NAME) HttpClient httpClient) {
+  public SingularityMesosClient(@Named(DEFAULT_HTTP_CLIENT_NAME) HttpClient httpClient,
+                                @Named(SHORT_TIMEOUT_HTTP_CLIENT_NAME) HttpClient shortTimeoutHttpClient) {
     this.httpClient = httpClient;
+    this.shortTimeoutHttpClient = shortTimeoutHttpClient;
   }
 
   @Override
@@ -51,7 +56,8 @@ public class SingularityMesosClient implements MesosClient {
     return String.format(MESOS_MASTER_METRICS_SNAPSHOT_URL, hostnameAndPort);
   }
 
-  private HttpResponse getFromMesos(String uri) {
+  private HttpResponse getFromMesos(String uri, boolean useShortTimeout) {
+    HttpClient currentHttpClient = useShortTimeout ? shortTimeoutHttpClient : httpClient;
     HttpResponse response = null;
 
     final long start = System.currentTimeMillis();
@@ -59,7 +65,7 @@ public class SingularityMesosClient implements MesosClient {
     LOG.debug("Fetching {} from mesos", uri);
 
     try {
-      response = httpClient.execute(HttpRequest.newBuilder().setUrl(uri).build());
+      response = currentHttpClient.execute(HttpRequest.newBuilder().setUrl(uri).build(), new Options());
 
       LOG.debug("Response {} - {} after {}", response.getStatusCode(), uri, JavaUtils.duration(start));
     } catch (Exception e) {
@@ -74,7 +80,11 @@ public class SingularityMesosClient implements MesosClient {
   }
 
   private <T> T getFromMesos(String uri, Class<T> clazz) {
-    HttpResponse response = getFromMesos(uri);
+    return getFromMesos(uri, clazz, false);
+  }
+
+  private <T> T getFromMesos(String uri, Class<T> clazz, boolean useShortTimeout) {
+    HttpResponse response = getFromMesos(uri, useShortTimeout);
 
     try {
       return response.getAs(clazz);
@@ -94,8 +104,8 @@ public class SingularityMesosClient implements MesosClient {
   }
 
   @Override
-  public MesosSlaveMetricsSnapshotObject getSlaveMetricsSnapshot(String hostname) {
-    return getFromMesos(String.format(MESOS_SLAVE_METRICS_SNAPSHOT_URL, hostname), MesosSlaveMetricsSnapshotObject.class);
+  public MesosSlaveMetricsSnapshotObject getSlaveMetricsSnapshot(String hostname, boolean useShortTimeout) {
+    return getFromMesos(String.format(MESOS_SLAVE_METRICS_SNAPSHOT_URL, hostname), MesosSlaveMetricsSnapshotObject.class, useShortTimeout);
   }
 
   @Override
@@ -109,10 +119,10 @@ public class SingularityMesosClient implements MesosClient {
   }
 
   @Override
-  public List<MesosTaskMonitorObject> getSlaveResourceUsage(String hostname) {
+  public List<MesosTaskMonitorObject> getSlaveResourceUsage(String hostname, boolean useShortTimeout) {
     final String uri = String.format(MESOS_SLAVE_STATISTICS_URL, hostname);
 
-    HttpResponse response = getFromMesos(uri);
+    HttpResponse response = getFromMesos(uri, useShortTimeout);
 
     try {
       return response.getAs(TASK_MONITOR_TYPE_REFERENCE);

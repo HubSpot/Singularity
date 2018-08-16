@@ -51,7 +51,7 @@ public class TestingMesosClient implements MesosClient {
   }
 
   @Override
-  public MesosSlaveMetricsSnapshotObject getSlaveMetricsSnapshot(String hostname) {
+  public MesosSlaveMetricsSnapshotObject getSlaveMetricsSnapshot(String hostname, boolean useShortTimeout) {
     return slaveMetrics.get(hostname);
   }
 
@@ -66,7 +66,7 @@ public class TestingMesosClient implements MesosClient {
   }
 
   @Override
-  public List<MesosTaskMonitorObject> getSlaveResourceUsage(String hostname) {
+  public List<MesosTaskMonitorObject> getSlaveResourceUsage(String hostname, boolean useShortTimeout) {
     return slaveResourceUsage.getOrDefault(hostname, Collections.emptyList());
   }
 
