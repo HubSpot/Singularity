@@ -760,6 +760,65 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
   }
 
   @Test
+  public void testRetriesWithOverrides() {
+    SingularityRequestBuilder bldr = new SingularityRequestBuilder(requestId, RequestType.ON_DEMAND);
+    request = bldr.setNumRetriesOnFailure(Optional.of(2)).build();
+    saveRequest(request);
+
+    deployResource.deploy(new SingularityDeployRequest(new SingularityDeployBuilder(requestId, "d1").setCommand(Optional.of("cmd")).build(), Optional.absent(), Optional.absent()), singularityUser);
+
+    scheduler.drainPendingQueue();
+    deployChecker.checkDeploys();
+
+    requestResource.scheduleImmediately(
+        singularityUser,
+        requestId,
+        new SingularityRunNowRequestBuilder()
+            .setCommandLineArgs(Collections.singletonList("extraFlag"))
+            .setResources(new Resources(17, 1337, 0))
+            .build()
+    );
+
+    resourceOffers();
+
+    Assert.assertEquals(1, taskManager.getActiveTaskIds().size());
+
+    Resources resourcesForRunningTask = taskManager.getActiveTasks().get(0).getTaskRequest().getPendingTask().getResources().get();
+    Assert.assertEquals(Optional.of(Collections.singletonList("extraFlag")), taskManager.getActiveTasks().get(0).getTaskRequest().getPendingTask().getCmdLineArgsList());
+    Assert.assertEquals(17, resourcesForRunningTask.getCpus(), 0.01);
+    Assert.assertEquals(1337, resourcesForRunningTask.getMemoryMb(), 0.01);
+
+    statusUpdate(taskManager.getActiveTasks().get(0), TaskState.TASK_LOST);
+
+    resourceOffers();
+
+    Assert.assertEquals(1, taskManager.getActiveTaskIds().size());
+
+    resourcesForRunningTask = taskManager.getActiveTasks().get(0).getTaskRequest().getPendingTask().getResources().get();
+    Assert.assertEquals(Optional.of(Collections.singletonList("extraFlag")), taskManager.getActiveTasks().get(0).getTaskRequest().getPendingTask().getCmdLineArgsList());
+    Assert.assertEquals(17, resourcesForRunningTask.getCpus(), 0.01);
+    Assert.assertEquals(1337, resourcesForRunningTask.getMemoryMb(), 0.01);
+
+    statusUpdate(taskManager.getActiveTasks().get(0), TaskState.TASK_LOST);
+
+    resourceOffers();
+
+    Assert.assertEquals(1, taskManager.getActiveTaskIds().size());
+
+    resourcesForRunningTask = taskManager.getActiveTasks().get(0).getTaskRequest().getPendingTask().getResources().get();
+    Assert.assertEquals(Optional.of(Collections.singletonList("extraFlag")), taskManager.getActiveTasks().get(0).getTaskRequest().getPendingTask().getCmdLineArgsList());
+    Assert.assertEquals(17, resourcesForRunningTask.getCpus(), 0.01);
+    Assert.assertEquals(1337, resourcesForRunningTask.getMemoryMb(), 0.01);
+
+    statusUpdate(taskManager.getActiveTasks().get(0), TaskState.TASK_LOST);
+
+    resourceOffers();
+
+    Assert.assertTrue(taskManager.getActiveTaskIds().isEmpty());
+
+  }
+
+  @Test
   public void testCooldownAfterSequentialFailures() {
     initRequest();
     initFirstDeploy();
