@@ -67,7 +67,8 @@ class UITable extends Component {
     defaultSortDirection: UITable.SortDirection.DESC,
     asyncSort: false,
     maxPaginationButtons: 10,
-    triggerOnDataSizeChange: undefined
+    triggerOnDataSizeChange: undefined,
+    initialPageNumber: 1
   };
 
   state;
@@ -460,10 +461,6 @@ class UITable extends Component {
     );
   }
 }
-
-UITable.defaultProps = {
-  initialPageNumber: 1
-};
 
 UITable.propTypes = {
   data: PropTypes.arrayOf(PropTypes.object).isRequired,
