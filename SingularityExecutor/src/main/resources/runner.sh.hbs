@@ -116,6 +116,8 @@ sudo chown {{{ user }}} {{{ logFilePath }}}
 setfattr -n user.logstart -v "$(($(date +%s%N)/1000000))" {{{ logFilePath }}}
 {{/if}}
 
+{{{ extraScriptContent }}}
+
 # execute command
 {{#if shouldChangeUser}}
 echo "Executing: {{{ switchUserCommand }}} {{#if maxOpenFiles}}/bin/bash -c 'ulimit -Sn {{{maxOpenFiles}}} && {{/if}}{{{ cmd }}}{{#if maxOpenFiles}}'{{/if}} >> {{{ logFilePath }}} 2>&1"
