@@ -44,7 +44,6 @@ import com.hubspot.singularity.config.CustomExecutorConfiguration;
 import com.hubspot.singularity.config.MesosConfiguration;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.DeployManager;
-import com.hubspot.singularity.data.SlaveManager;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.data.UsageManager;
 import com.hubspot.singularity.helpers.MesosUtils;
@@ -71,7 +70,6 @@ public class SingularityMesosOfferScheduler {
   private final SingularitySlaveAndRackHelper slaveAndRackHelper;
   private final SingularityTaskSizeOptimizer taskSizeOptimizer;
   private final SingularityUsageHelper usageHelper;
-  private final SlaveManager slaveManager;
   private final UsageManager usageManager;
   private final DeployManager deployManager;
   private final SingularitySchedulerLock lock;
@@ -97,7 +95,6 @@ public class SingularityMesosOfferScheduler {
                                         SingularitySlaveAndRackHelper slaveAndRackHelper,
                                         SingularityLeaderCache leaderCache,
                                         SingularityUsageHelper usageHelper,
-                                        SlaveManager slaveManager,
                                         UsageManager usageManager,
                                         DeployManager deployManager,
                                         SingularitySchedulerLock lock) {
@@ -112,7 +109,6 @@ public class SingularityMesosOfferScheduler {
     this.taskSizeOptimizer = taskSizeOptimizer;
     this.leaderCache = leaderCache;
     this.usageHelper = usageHelper;
-    this.slaveManager = slaveManager;
     this.slaveAndRackHelper = slaveAndRackHelper;
     this.taskPrioritizer = taskPrioritizer;
     this.usageManager = usageManager;
@@ -463,8 +459,13 @@ public class SingularityMesosOfferScheduler {
   @VisibleForTesting
   double score(String hostname, Optional<SingularitySlaveUsageWithCalculatedScores> maybeSlaveUsage) {
     if (!maybeSlaveUsage.isPresent() || maybeSlaveUsage.get().isMissingUsageData()) {
-      LOG.info("Slave {} has missing usage data ({}). Will default to {}", hostname, maybeSlaveUsage, 0.5);
-      return 0.5;
+      if (mesosConfiguration.isOmitForMissingUsageData()) {
+        LOG.info("Skipping slave {} with missing usage data ({})", hostname, maybeSlaveUsage);
+        return 0.0;
+      } else {
+        LOG.info("Slave {} has missing usage data ({}). Will default to {}", hostname, maybeSlaveUsage, 0.5);
+        return 0.5;
+      }
     }
 
     SingularitySlaveUsageWithCalculatedScores slaveUsageWithScores = maybeSlaveUsage.get();
