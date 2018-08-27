@@ -284,12 +284,10 @@ public class SingularityMesosTaskBuilderTest {
         .setName("ports")
         .setType(Protos.Value.Type.RANGES)
         .setRanges(Protos.Value.Ranges.newBuilder()
-            .addRange(Protos.Value.Range.newBuilder()
-                .setBegin(31003)
-                .setEnd(31004).build())
-            .addRange(Protos.Value.Range.newBuilder()
-                .setBegin(31000)
-                .setEnd(31001).build())
+            .addRange(
+                Protos.Value.Range.newBuilder()
+                    .setBegin(31003)
+                    .setEnd(31006).build())
             .build()).build();
 
     final SingularityRequest request = new SingularityRequestBuilder("test", RequestType.WORKER).build();
@@ -299,7 +297,7 @@ public class SingularityMesosTaskBuilderTest {
         .build();
     final SingularityTaskRequest taskRequest = new SingularityTaskRequest(request, deploy, pendingTask);
     final SingularityMesosTaskHolder task = builder.buildTask(offerHolder, Collections.singletonList(portsResource), taskRequest, taskResources, executorResources);
-    assertEquals(31000L, task.getTask().getPortByIndex(2).get().longValue());
+    assertEquals(31005L, task.getTask().getPortByIndex(2).get().longValue());
   }
 
   @Test
