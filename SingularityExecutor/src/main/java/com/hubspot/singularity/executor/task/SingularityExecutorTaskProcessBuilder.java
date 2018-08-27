@@ -167,6 +167,7 @@ public class SingularityExecutorTaskProcessBuilder implements Callable<ProcessBu
 
   private ProcessBuilder buildProcessBuilder(TaskInfo taskInfo, SingularityTaskExecutorData executorData, String serviceLog) {
     final String cmd = getCommand(executorData);
+    boolean isDocker = taskInfo.hasContainer() && taskInfo.getContainer().hasDocker();
 
     RunnerContext runnerContext = new RunnerContext(
         cmd,
@@ -182,11 +183,12 @@ public class SingularityExecutorTaskProcessBuilder implements Callable<ProcessBu
         String.format(configuration.getSwitchUserCommandFormat(), executorData.getUser().or(configuration.getDefaultRunAsUser())),
         configuration.isUseFileAttributes(),
         getCfsQuota(executorData),
-        configuration.getDefaultCfsPeriod());
+        configuration.getDefaultCfsPeriod(),
+        isDocker ? configuration.getExtraDockerScriptContent() : configuration.getExtraScriptContent());
 
     EnvironmentContext environmentContext = new EnvironmentContext(taskInfo);
 
-    if (taskInfo.hasContainer() && taskInfo.getContainer().hasDocker()) {
+    if (isDocker) {
       task.getLog().info("Writing a runner script to execute {} in docker container", cmd);
       templateManager.writeDockerScript(getPath("runner.sh"),
           new DockerContext(environmentContext, runnerContext, configuration.getDockerPrefix(), configuration.getDockerStopTimeout(), taskInfo.getContainer().getDocker().getPrivileged()));
