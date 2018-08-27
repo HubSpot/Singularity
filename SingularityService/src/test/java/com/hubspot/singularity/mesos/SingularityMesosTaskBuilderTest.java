@@ -299,7 +299,7 @@ public class SingularityMesosTaskBuilderTest {
         .build();
     final SingularityTaskRequest taskRequest = new SingularityTaskRequest(request, deploy, pendingTask);
     final SingularityMesosTaskHolder task = builder.buildTask(offerHolder, Collections.singletonList(portsResource), taskRequest, taskResources, executorResources);
-    assertEquals(31003L, task.getTask().getPortByIndex(2).get().longValue());
+    assertEquals(31000L, task.getTask().getPortByIndex(2).get().longValue());
   }
 
   @Test
