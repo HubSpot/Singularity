@@ -4,3 +4,6 @@ jdk:
 
 install: mvn install -DskipTests=true -DskipSingularityWebUI -Dmaven.javadoc.skip=true -B -V
 script: mvn -B -q -DskipSingularityWebUI verify
+cache:
+  directories:
+  - $HOME/.m2
