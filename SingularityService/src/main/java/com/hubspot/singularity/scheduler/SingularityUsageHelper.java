@@ -172,6 +172,10 @@ public class SingularityUsageHelper {
       List<TaskIdWithUsage> possibleTasksToShuffle = new ArrayList<>();
 
       for (MesosTaskMonitorObject taskUsage : allTaskUsage) {
+        if (!taskUsage.getFrameworkId().equals(configuration.getMesosConfiguration().getFrameworkId())) {
+          LOG.info("Skipping task {} from other framework {}", taskUsage.getSource(), taskUsage.getFrameworkId());
+          continue;
+        }
         String taskId = taskUsage.getSource();
         SingularityTaskId task;
         try {

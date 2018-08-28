@@ -214,6 +214,7 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
     cacheCoordinator.activateLeaderCache();
     sms.setSubscribed();
     migrationRunner.checkMigrations();
+    configuration.getMesosConfiguration().setFrameworkId("singularity");
   }
 
   protected Offer createOffer(double cpus, double memory, double disk) {
@@ -746,7 +747,7 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
   }
 
   protected MesosTaskMonitorObject getTaskMonitor(String id, double cpuSecs, long timestampSeconds, int memBytes) {
-    return new MesosTaskMonitorObject(null, null, null, id, getStatistics(cpuSecs, timestampSeconds, memBytes));
+    return new MesosTaskMonitorObject(null, null, "singularity", id, getStatistics(cpuSecs, timestampSeconds, memBytes));
   }
 
 }
