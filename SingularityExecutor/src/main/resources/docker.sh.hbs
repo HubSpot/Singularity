@@ -153,7 +153,7 @@ DOCKER_OPTIONS+=(--privileged)
 {{/if}}
 
 {{#each envContext.dockerParameters}}
-DOCKER_OPTIONS+=({{this}})
+DOCKER_OPTIONS+=({{this}})g
 {{/each}}
 
 echo "Ensuring {{{ runContext.taskAppDirectory }}} is owned by $user"
