@@ -1,12 +1,1 @@
 language: java
-jdk:
-  - oraclejdk8
-
-install: true
-script: mvn -B -q verify
-
-sudo: false
-
-cache:
-  directories:
-  - $HOME/.m2
