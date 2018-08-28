@@ -113,7 +113,7 @@ class RequestsPage extends Component {
     if (this.state.loading) {
       table = <Loader />;
     } else if (!displayRequests.length) {
-      table = <div className="empty-table-message"><p>No matching requests</p></div>;
+      table = <div className="empty-table-message"><p>No requests found. You may not be part of the correct groups or teams to view the desired requests.</p></div>;
     } else {
       table = (
         <UITable

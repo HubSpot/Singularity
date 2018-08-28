@@ -100,6 +100,19 @@ public class SingularityAuthorizationHelper {
     }
   }
 
+  public void checkUserInRequiredGroups(SingularityUser user) {
+    if (authEnabled) {
+      final Set<String> userGroups = user.getGroups();
+      final boolean userIsAdmin = !adminGroups.isEmpty() && groupsIntersect(userGroups, adminGroups);
+      final boolean userIsPartOfRequiredGroups = requiredGroups.isEmpty() || groupsIntersect(userGroups, requiredGroups);
+      if (!userIsAdmin) {
+        checkForbidden(
+            userIsPartOfRequiredGroups,
+            "%s must be part of one or more read only or jita groups: %s,%s", user.getId(), JavaUtils.COMMA_JOINER.join(requiredGroups));
+      }
+    }
+  }
+
   public void checkForAuthorizationByTaskId(String taskId, SingularityUser user, SingularityAuthorizationScope scope) {
     if (authEnabled) {
       checkForbidden(user.isAuthenticated(), "Not Authenticated!");
