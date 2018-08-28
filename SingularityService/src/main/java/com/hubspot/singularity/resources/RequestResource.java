@@ -702,6 +702,7 @@ public class RequestResource extends AbstractRequestResource {
   }
 
   private List<SingularityRequestWithState> filterAutorized(List<SingularityRequestWithState> requests, final SingularityAuthorizationScope scope, SingularityUser user) {
+    authorizationHelper.checkUserInRequiredGroups(user);
     if (!authorizationHelper.hasAdminAuthorization(user)) {
       return requests.stream()
           .filter((parent) -> authorizationHelper.isAuthorizedForRequest(parent.getRequest(), user, scope))
