@@ -1,1 +1,5 @@
 language: java
+jdk:
+  - oraclejdk8
+
+script: mvn -B -q -DskipSingularityWebUI verify
