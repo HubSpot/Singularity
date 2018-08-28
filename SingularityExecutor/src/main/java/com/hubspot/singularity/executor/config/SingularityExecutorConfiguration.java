@@ -231,6 +231,10 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
 
   private int defaultCfsPeriod = 100000;
 
+  private String extraScriptContent = "";
+
+  private String extraDockerScriptContent = "";
+
   public SingularityExecutorConfiguration() {
     super(Optional.of("singularity-executor.log"));
   }
@@ -675,6 +679,22 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
   public SingularityExecutorConfiguration setDefaultCfsPeriod(int defaultCfsPeriod) {
     this.defaultCfsPeriod = defaultCfsPeriod;
     return this;
+  }
+
+  public String getExtraScriptContent() {
+    return extraScriptContent;
+  }
+
+  public void setExtraScriptContent(String extraScriptContent) {
+    this.extraScriptContent = extraScriptContent;
+  }
+
+  public String getExtraDockerScriptContent() {
+    return extraDockerScriptContent;
+  }
+
+  public void setExtraDockerScriptContent(String extraDockerScriptContent) {
+    this.extraDockerScriptContent = extraDockerScriptContent;
   }
 
   @Override
