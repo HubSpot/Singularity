@@ -37,6 +37,8 @@ public class SingularityUserSettings {
     return this;
   }
 
+  @Schema
+
   @Override
   public boolean equals(Object o) {
     if (this == o) {
