@@ -22,6 +22,7 @@ public class RunnerContext {
   private final boolean useFileAttributes;
   private final Integer cfsQuota;
   private final Integer cfsPeriod;
+  private final String extraScriptContent;
 
   public RunnerContext(String cmd,
                        String taskAppDirectory,
@@ -36,7 +37,8 @@ public class RunnerContext {
                        String switchUserCommand,
                        boolean useFileAttributes,
                        Integer cfsQuota,
-                       Integer cfsPeriod) {
+                       Integer cfsPeriod,
+                       String extraScriptContent) {
     this.cmd = cmd;
     this.taskAppDirectory = taskAppDirectory;
     this.logDir = logDir;
@@ -52,6 +54,7 @@ public class RunnerContext {
     this.useFileAttributes = useFileAttributes;
     this.cfsQuota = cfsQuota;
     this.cfsPeriod = cfsPeriod;
+    this.extraScriptContent = extraScriptContent;
   }
 
   public String getCmd() {
@@ -110,6 +113,10 @@ public class RunnerContext {
     return cfsPeriod;
   }
 
+  public String getExtraScriptContent() {
+    return extraScriptContent;
+  }
+
   @Override
   public String toString() {
     return "RunnerContext{" +
@@ -127,6 +134,7 @@ public class RunnerContext {
         ", useFileAttributes=" + useFileAttributes +
         ", cfsQuota=" + cfsQuota +
         ", cfsPeriod=" + cfsPeriod +
+        ", extraScriptContent=" + extraScriptContent +
         '}';
   }
 }
