@@ -75,7 +75,7 @@ public class SingularityHistoryModule extends AbstractModule {
   private void bindSpecificDatabase() {
     if (isPostgres(configuration)) {
       bind(HistoryJDBI.class).toProvider(PostgresHistoryJDBIProvider.class).in(Scopes.SINGLETON);
-    } else if (isMySQL(configuration)) {
+    } else if (isMySQL(configuration) || isH2(configuration)) {
       bind(HistoryJDBI.class).toProvider(MySQLHistoryJDBIProvider.class).in(Scopes.SINGLETON);
     } else {
       throw new IllegalStateException("Unknown driver class present " + configuration.get().getDriverClass());
@@ -174,6 +174,12 @@ public class SingularityHistoryModule extends AbstractModule {
   }
 
   // Convenience methods for determining which database is configured
+
+  static boolean isH2(Optional<DataSourceFactory> dataSourceFactoryOptional) {
+    return dataSourceFactoryOptional != null && dataSourceFactoryOptional.isPresent() &&
+            "org.h2.Driver".equals(dataSourceFactoryOptional.get().getDriverClass());
+  }
+
   static boolean isMySQL(Optional<DataSourceFactory> dataSourceFactoryOptional) {
     return dataSourceFactoryOptional != null && dataSourceFactoryOptional.isPresent() &&
             "com.mysql.jdbc.Driver".equals(dataSourceFactoryOptional.get().getDriverClass());
