@@ -59,13 +59,11 @@ public class SingularityHistoryModule extends AbstractModule {
     bind(SingularityDeployHistoryPersister.class).in(Scopes.SINGLETON);
     bind(SingularityTaskHistoryPersister.class).in(Scopes.SINGLETON);
 
+    // Setup database support
     if (configuration.isPresent()) {
       bind(DBI.class).toProvider(DBIProvider.class).in(Scopes.SINGLETON);
       bindSpecificDatabase();
-
-      //bind(HistoryJDBI.class).toProvider(HistoryJDBIProvider.class).in(Scopes.SINGLETON);
       bind(HistoryManager.class).to(JDBIHistoryManager.class).in(Scopes.SINGLETON);
-
       bindMethodInterceptorForStringTemplateClassLoaderWorkaround();
     } else {
       bind(HistoryManager.class).to(NoopHistoryManager.class).in(Scopes.SINGLETON);
@@ -75,6 +73,7 @@ public class SingularityHistoryModule extends AbstractModule {
   private void bindSpecificDatabase() {
     if (isPostgres(configuration)) {
       bind(HistoryJDBI.class).toProvider(PostgresHistoryJDBIProvider.class).in(Scopes.SINGLETON);
+      // Currently many unit tests use h2
     } else if (isMySQL(configuration) || isH2(configuration)) {
       bind(HistoryJDBI.class).toProvider(MySQLHistoryJDBIProvider.class).in(Scopes.SINGLETON);
     } else {
@@ -174,18 +173,20 @@ public class SingularityHistoryModule extends AbstractModule {
   }
 
   // Convenience methods for determining which database is configured
-
   static boolean isH2(Optional<DataSourceFactory> dataSourceFactoryOptional) {
-    return dataSourceFactoryOptional != null && dataSourceFactoryOptional.isPresent() &&
-            "org.h2.Driver".equals(dataSourceFactoryOptional.get().getDriverClass());
+    return driverConfigured(dataSourceFactoryOptional, "org.h2.Driver");
   }
 
   static boolean isMySQL(Optional<DataSourceFactory> dataSourceFactoryOptional) {
-    return dataSourceFactoryOptional != null && dataSourceFactoryOptional.isPresent() &&
-            "com.mysql.jdbc.Driver".equals(dataSourceFactoryOptional.get().getDriverClass());
+    return driverConfigured(dataSourceFactoryOptional, "com.mysql.jdbc.Driver");
   }
+
   static boolean isPostgres(Optional<DataSourceFactory> dataSourceFactoryOptional) {
-          return dataSourceFactoryOptional != null && dataSourceFactoryOptional.isPresent() &&
-                  "org.postgresql.Driver".equals(dataSourceFactoryOptional.get().getDriverClass());
+          return driverConfigured(dataSourceFactoryOptional, "org.postgresql.Driver");
+  }
+
+  private static boolean driverConfigured(Optional<DataSourceFactory> dataSourceFactoryOptional, String jdbcDriverclass) {
+    return dataSourceFactoryOptional != null && dataSourceFactoryOptional.isPresent() &&
+            jdbcDriverclass.equals(dataSourceFactoryOptional.get().getDriverClass());
   }
 }

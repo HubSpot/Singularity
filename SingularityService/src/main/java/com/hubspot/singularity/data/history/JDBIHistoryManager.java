@@ -45,7 +45,7 @@ public class JDBIHistoryManager implements HistoryManager {
 
     List<SingularityTaskIdHistory> taskIdHistoryList =  history.getTaskIdHistory(requestId, deployId, runId, host, lastTaskStatus, startedBefore, startedAfter, updatedBefore, updatedAfter, orderDirection, limitStart, limitCount);
     if (LOG.isTraceEnabled()) {
-      LOG.trace("getTaskIdHistory {}", taskIdHistoryList);
+      LOG.trace("getTaskIdHistory taskIdHistory {}", taskIdHistoryList);
     }
 
     return taskIdHistoryList;
@@ -87,7 +87,7 @@ public class JDBIHistoryManager implements HistoryManager {
   @Override
   public void saveRequestHistoryUpdate(SingularityRequestHistory requestHistory) {
     if (LOG.isTraceEnabled()) {
-      LOG.trace("saveRequestHistoryUpdate {}",  requestHistory);
+      LOG.trace("saveRequestHistoryUpdate requestHistory {}",  requestHistory);
     }
 
     history.insertRequestHistory(requestHistory.getRequest().getId(), singularityRequestTranscoder.toBytes(requestHistory.getRequest()), new Date(requestHistory.getCreatedAt()),
@@ -97,7 +97,7 @@ public class JDBIHistoryManager implements HistoryManager {
   @Override
   public void saveDeployHistory(SingularityDeployHistory deployHistory) {
     if (LOG.isTraceEnabled()) {
-      LOG.trace("saveDeployHistory " + deployHistory);
+      LOG.trace("saveDeployHistory {}", deployHistory);
     }
 
     history.insertDeployHistory(deployHistory.getDeployMarker().getRequestId(),
@@ -121,7 +121,8 @@ public class JDBIHistoryManager implements HistoryManager {
     }
 
     if (LOG.isTraceEnabled()) {
-      LOG.trace("getDeployHistory {}",  historyOptional);
+      LOG.trace("getDeployHistory requestId {}, deployId {}, deployHistory {}",
+              requestId, deployId, historyOptional);
     }
 
 
@@ -132,7 +133,8 @@ public class JDBIHistoryManager implements HistoryManager {
   public List<SingularityDeployHistory> getDeployHistoryForRequest(String requestId, Integer limitStart, Integer limitCount) {
     List<SingularityDeployHistory> deployHistoryList = history.getDeployHistoryForRequest(requestId, limitStart, limitCount);
     if (LOG.isTraceEnabled()) {
-      LOG.trace("getDeployHistory {}", deployHistoryList);
+      LOG.trace("getDeployHistory requestId {}, limitStart {}, limitCount {} deployHistory {}",
+              requestId, limitStart, limitCount, deployHistoryList);
     }
     return deployHistoryList;
   }
@@ -141,7 +143,7 @@ public class JDBIHistoryManager implements HistoryManager {
   public int getDeployHistoryForRequestCount(String requestId) {
     int count =  history.getDeployHistoryForRequestCount(requestId);
     if (LOG.isTraceEnabled()) {
-      LOG.trace("getDeployHistoryForRequestCount {}", count);
+      LOG.trace("getDeployHistoryForRequestCount requestId {}, count {}", requestId, count);
     }
     return count;
   }
@@ -154,7 +156,8 @@ public class JDBIHistoryManager implements HistoryManager {
   public List<SingularityRequestHistory> getRequestHistory(String requestId, Optional<OrderDirection> orderDirection, Integer limitStart, Integer limitCount) {
     List<SingularityRequestHistory> singularityRequestHistoryList =  history.getRequestHistory(requestId, getOrderDirection(orderDirection), limitStart, limitCount);
     if (LOG.isTraceEnabled()) {
-      LOG.trace("getRequestHistory {}", singularityRequestHistoryList);
+      LOG.trace("getRequestHistory requestId {}, orderDirection {}, limitStart {} , limitCount {}, requestHistory{}",
+              requestId, orderDirection, limitStart, limitCount, singularityRequestHistoryList);
     }
     return singularityRequestHistoryList;
   }
@@ -163,7 +166,7 @@ public class JDBIHistoryManager implements HistoryManager {
   public int getRequestHistoryCount(String requestId) {
     int count = history.getRequestHistoryCount(requestId);
     if (LOG.isTraceEnabled()) {
-      LOG.trace("getRequestHistoryCount {}", count);
+      LOG.trace("getRequestHistoryCount requestId {}, count {}", requestId, count);
     }
     return history.getRequestHistoryCount(requestId);
   }
@@ -172,7 +175,8 @@ public class JDBIHistoryManager implements HistoryManager {
   public List<String> getRequestHistoryLike(String requestIdLike, Integer limitStart, Integer limitCount) {
     List<String> list = history.getRequestHistoryLike(requestIdLike, limitStart, limitCount);
     if (LOG.isTraceEnabled()) {
-      LOG.trace("getRequestHistoryCountLike {}", list);
+      LOG.trace("getRequestHistoryCountLike requestIdLike {}, limitStart {}, limitCount {}, requestIds {}",
+              requestIdLike, limitStart, limitCount, list);
     }
     return list;
   }
@@ -181,7 +185,7 @@ public class JDBIHistoryManager implements HistoryManager {
   public void saveTaskHistory(SingularityTaskHistory taskHistory) {
     if (history.getTaskHistoryForTask(taskHistory.getTask().getTaskId().getId()) != null) {
       if (LOG.isTraceEnabled()) {
-        LOG.trace("saveTaskHistory -- exists in DB {}", taskHistory);
+        LOG.trace("saveTaskHistory -- existing taskHistory {}", taskHistory);
       }
       return;
     }
@@ -194,7 +198,7 @@ public class JDBIHistoryManager implements HistoryManager {
     }
 
     if (LOG.isTraceEnabled()) {
-      LOG.trace("saveTaskHistory -- new! {}", taskHistory);
+      LOG.trace("saveTaskHistory -- will insert taskHistory {}", taskHistory);
     }
 
     history.insertTaskHistory(taskIdHistory.getTaskId().getRequestId(), taskIdHistory.getTaskId().getId(), taskHistoryTranscoder.toBytes(taskHistory), new Date(taskIdHistory.getUpdatedAt()),
@@ -210,7 +214,7 @@ public class JDBIHistoryManager implements HistoryManager {
       taskHistoryOptional = Optional.of(taskHistoryTranscoder.fromBytes(historyBytes));;
     }
     if (LOG.isTraceEnabled()) {
-      LOG.trace("getTaskHistoryByTaskId {} ", taskHistoryOptional);
+      LOG.trace("getTaskHistoryByTaskId taskId {}, taskHistory {} ", taskId, taskHistoryOptional);
     }
 
     return taskHistoryOptional;
@@ -225,7 +229,7 @@ public class JDBIHistoryManager implements HistoryManager {
       taskHistoryOptional =  Optional.of(taskHistoryTranscoder.fromBytes(historyBytes));;
     }
     if (LOG.isTraceEnabled()) {
-      LOG.trace("getTaskHistoryByRequestAndRun {}",  taskHistoryOptional);
+      LOG.trace("getTaskHistoryByRequestAndRun requestId {}, runId {}, taskHistory {}", requestId, runId, taskHistoryOptional);
     }
     return taskHistoryOptional;
   }
@@ -234,7 +238,7 @@ public class JDBIHistoryManager implements HistoryManager {
   public List<SingularityRequestIdCount> getRequestIdCounts(Date before) {
     List<SingularityRequestIdCount> list  = history.getRequestIdCounts(before);
     if (LOG.isTraceEnabled()) {
-      LOG.trace("getRequestIdCountsUsingDateBefore {}", list);
+      LOG.trace("getRequestIdCountsUsingDateBefore before {}, requestIdCounts {}", before, list);
     }
     return list;
   }
@@ -243,7 +247,7 @@ public class JDBIHistoryManager implements HistoryManager {
   public List<String> getRequestIdsInTaskHistory() {
     List<String> list = history.getRequestIdsInTaskHistory();;
     if (LOG.isTraceEnabled()) {
-      LOG.trace("getRequestIdsInTaskHistory {}", list);
+      LOG.trace("getRequestIdsInTaskHistory requestIds {}", list);
     }
     return list;
   }
@@ -252,7 +256,7 @@ public class JDBIHistoryManager implements HistoryManager {
   public int getUnpurgedTaskHistoryCountByRequestBefore(String requestId, Date before) {
     int count =  history.getUnpurgedTaskHistoryCountByRequestBefore(requestId, before);
     if (LOG.isTraceEnabled()) {
-      LOG.trace("getUnpurgedTaskHistoryByRequestBeforeCount {}", count);
+      LOG.trace("getUnpurgedTaskHistoryByRequestBeforeCount requestId {}, before {}, count {}", requestId, before, count);
     }
 
     return count;
