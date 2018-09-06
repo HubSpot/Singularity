@@ -380,6 +380,8 @@ public class SingularityConfiguration extends Configuration {
 
   private boolean reCheckMetricsForLargeNewTaskCount = false;
 
+  private List<String> enforceHardCpuLimitForRequests = new ArrayList();
+
   public long getAskDriverToKillTasksAgainAfterMillis() {
     return askDriverToKillTasksAgainAfterMillis;
   }
@@ -1612,5 +1614,13 @@ public class SingularityConfiguration extends Configuration {
 
   public void setReCheckMetricsForLargeNewTaskCount(boolean reCheckMetricsForLargeNewTaskCount) {
     this.reCheckMetricsForLargeNewTaskCount = reCheckMetricsForLargeNewTaskCount;
+  }
+
+  public List<String> getEnforceHardCpuLimitForRequests() {
+    return enforceHardCpuLimitForRequests;
+  }
+
+  public void setEnforceHardCpuLimitForRequests(List<String> enforceHardCpuLimitForRequests) {
+    this.enforceHardCpuLimitForRequests = enforceHardCpuLimitForRequests;
   }
 }
