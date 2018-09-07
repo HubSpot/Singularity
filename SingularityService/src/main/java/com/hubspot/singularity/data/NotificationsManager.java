@@ -5,7 +5,6 @@ import java.util.concurrent.TimeUnit;
 
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.utils.ZKPaths;
-import org.jetbrains.annotations.NotNull;
 
 import com.codahale.metrics.MetricRegistry;
 import com.google.common.cache.CacheBuilder;
@@ -49,7 +48,7 @@ public class NotificationsManager extends CuratorManager {
     return cache.getUnchecked(BLACKLIST_ROOT);
   }
 
-  @NotNull private String getEmailPath(String email) {
+  private String getEmailPath(String email) {
     return ZKPaths.makePath(BLACKLIST_ROOT, email);
   }
 }
