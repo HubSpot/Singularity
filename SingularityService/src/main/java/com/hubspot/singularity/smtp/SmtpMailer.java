@@ -742,7 +742,6 @@ public class SmtpMailer implements SingularityMailer, Managed {
     }
 
     LOG.debug("Action taker is {}", actionTaker);
- 
     Set<String> emailBlacklist = Sets.newHashSet(notificationsManager.getBlacklist());
     toList.removeAll(emailBlacklist);
     ccList.removeAll(emailBlacklist);
