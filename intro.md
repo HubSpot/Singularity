@@ -53,6 +53,7 @@ Then simply run `docker-compose up` and it will start containers for...
  - [ZooKeeper](https://zookeeper.apache.org/doc/r3.4.6/zookeeperStarted.html) 
  - Java 8+
  - [MySQL](http://dev.mysql.com/usingmysql/get_started.html) (optional)
+ - PostgreSQL (optional)
 
 ##### Contact
 

@@ -16,8 +16,8 @@ The above endpoint as well as `/api/history/request/{requestId}/tasks` now take 
 - `count`: Maximum number of items to return, defaults to 100 and has a maximum value of 1000
 - `page`: Page of items to view (e.g. page 1 is the first `count` items, page 2 is the next `count` items), defaults to 1
 
-For clusters using mysql that have a large number of tasks in the history, a relevant  configuration option of `taskHistoryQueryUsesZkFirst` has been added in the base Singularity Configuration. This option can be used to either prefer efficiency or exact ordering when searching through task history, it defaults to `false`.
+For clusters using a database that have a large number of tasks in the history, a relevant  configuration option of `taskHistoryQueryUsesZkFirst` has been added in the base Singularity Configuration. This option can be used to either prefer efficiency or exact ordering when searching through task history, it defaults to `false`.
 
-- When `false` the setting will prefer correct ordering. This may require multiple database calls, since Singularity needs to determine the overall order of items base on persisted (in mysql) and non-persisted (still in zookeeper) tasks. The overall search may be less efficient, but the ordering is guranteed to be correct.
+- When `false` the setting will prefer correct ordering. This may require multiple database calls, since Singularity needs to determine the overall order of items base on persisted (in the database) and non-persisted (still in zookeeper) tasks. The overall search may be less efficient, but the ordering is guranteed to be correct.
 
-- When `true` the setting will prefer efficiency. In this case, it will be assumed that all task histories in zookeeper (not yet persisted) come before those in mysql (persisted). This results in faster results and fewer queries, but ordering is not guaranteed to be correct between persisted and non-persisted items.
+- When `true` the setting will prefer efficiency. In this case, it will be assumed that all task histories in zookeeper (not yet persisted) come before those in the database (persisted). This results in faster results and fewer queries, but ordering is not guaranteed to be correct between persisted and non-persisted items.
