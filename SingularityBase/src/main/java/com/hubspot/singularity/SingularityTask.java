@@ -102,7 +102,6 @@ public class SingularityTask extends SingularityTaskIdHolder {
     if (index >= ports.size() || index < 0) {
       return Optional.absent();
     } else {
-      Collections.sort(ports); // ports are always in ascending order
       return Optional.of(ports.get(index));
     }
   }
