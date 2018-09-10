@@ -40,6 +40,7 @@ public class SingularityResourceModule extends AbstractModule {
     bind(RequestGroupResource.class);
     bind(InactiveSlaveResource.class);
     bind(TaskTrackerResource.class);
+    bind(NotificationsResource.class);
 
     install(new SingularityServiceUIModule(uiConfiguration));
   }
