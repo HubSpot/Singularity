@@ -21,16 +21,14 @@
         <artifactId>okhttp</artifactId>
         <version>3.10.0</version>
       </dependency>
-    </dependencies>
 
-    <!-- TODO: Push up to hubspot basepom? -->
-    <dependencies>
+      <!-- TODO: Push up to hubspot basepom? -->
       <dependency>
-      <groupId>org.postgresql</groupId>
-      <artifactId>postgresql</artifactId>
-      <version>42.2.4</version>
-      <scope>runtime</scope>
-    </dependency>
+        <groupId>org.postgresql</groupId>
+        <artifactId>postgresql</artifactId>
+        <version>42.2.4</version>
+        <scope>runtime</scope>
+      </dependency>
     </dependencies>
   </dependencyManagement>
   <dependencies>
