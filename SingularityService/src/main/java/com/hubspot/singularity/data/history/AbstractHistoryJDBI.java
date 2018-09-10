@@ -5,14 +5,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.skife.jdbi.v2.Query;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.google.common.base.Optional;
 import com.hubspot.singularity.ExtendedTaskState;
 import com.hubspot.singularity.OrderDirection;
 import com.hubspot.singularity.SingularityTaskIdHistory;
-
-import org.skife.jdbi.v2.Query;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 // Common code for DB queries
 public abstract class AbstractHistoryJDBI implements HistoryJDBI {
@@ -106,14 +106,14 @@ public abstract class AbstractHistoryJDBI implements HistoryJDBI {
         }
 
         // NOTE: PG, MySQL are both compatible with OFFSET LIMIT syntax, while only MySQL understands LIMIT offset, limit.
-        if (limitStart.isPresent()) {
-            sqlBuilder.append(" OFFSET :limitStart ");
-            binds.put("limitStart", limitStart.get());
-        }
-
         if (limitCount != null ){
             sqlBuilder.append(" LIMIT :limitCount");
             binds.put("limitCount", limitCount);
+        }
+
+        if (limitStart.isPresent()) {
+            sqlBuilder.append(" OFFSET :limitStart ");
+            binds.put("limitStart", limitStart.get());
         }
 
         final String sql = sqlBuilder.toString();
