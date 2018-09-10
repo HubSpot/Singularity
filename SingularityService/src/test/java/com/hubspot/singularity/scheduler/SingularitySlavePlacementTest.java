@@ -15,6 +15,7 @@ import com.google.common.collect.ImmutableMap;
 import com.hubspot.singularity.ExtendedTaskState;
 import com.hubspot.singularity.MachineState;
 import com.hubspot.singularity.SingularityRequest;
+import com.hubspot.singularity.SingularityRunNowRequestBuilder;
 import com.hubspot.singularity.SingularityTaskCleanup;
 import com.hubspot.singularity.SingularityTaskHistoryUpdate;
 import com.hubspot.singularity.SingularityTaskId;
@@ -219,6 +220,34 @@ public class SingularitySlavePlacementTest extends SingularitySchedulerTestBase 
     initRequest();
     initFirstDeploy();
     saveAndSchedule(request.toBuilder().setInstances(Optional.of(1)).setRequiredSlaveAttributes(Optional.of(requiredAttributes)));
+
+    sms.resourceOffers(Arrays.asList(createOffer(20, 20000, 50000, "slave1", "host1", Optional.<String>absent(), ImmutableMap.of("requiredKey", "notTheRightValue"))));
+    sms.resourceOffers(Arrays.asList(createOffer(20, 20000, 50000, "slave2", "host2", Optional.<String>absent(), ImmutableMap.of("notTheRightKey", "requiredValue1"))));
+
+    Assert.assertTrue(taskManager.getActiveTaskIds().size() == 0);
+
+    sms.resourceOffers(Arrays.asList(createOffer(20, 20000, 50000, "slave2", "host2", Optional.<String>absent(), requiredAttributes)));
+
+    Assert.assertTrue(taskManager.getActiveTaskIds().size() == 1);
+  }
+
+  @Test
+  public void testRequiredSlaveAttributeOverrides() {
+    Map<String, String> requiredAttributes = new HashMap<>();
+    requiredAttributes.put("requiredKey", "requiredValue1");
+
+    initOnDemandRequest();
+    initFirstDeploy();
+
+    requestResource.scheduleImmediately(
+        singularityUser,
+        requestId,
+        new SingularityRunNowRequestBuilder()
+            .setRequiredSlaveAttributeOverrides(requiredAttributes)
+            .build()
+    );
+
+    scheduler.drainPendingQueue();
 
     sms.resourceOffers(Arrays.asList(createOffer(20, 20000, 50000, "slave1", "host1", Optional.<String>absent(), ImmutableMap.of("requiredKey", "notTheRightValue"))));
     sms.resourceOffers(Arrays.asList(createOffer(20, 20000, 50000, "slave2", "host2", Optional.<String>absent(), ImmutableMap.of("notTheRightKey", "requiredValue1"))));
