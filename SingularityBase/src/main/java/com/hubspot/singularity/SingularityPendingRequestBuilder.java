@@ -25,6 +25,8 @@ public class SingularityPendingRequestBuilder {
   private List<SingularityS3UploaderFile> s3UploaderAdditionalFiles;
   private Optional<String> runAsUserOverride;
   private Map<String, String> envOverrides;
+  private Map<String, String> requiredSlaveAttributeOverrides;
+  private Map<String, String> allowedSlaveAttributeOverrides;
   private List<SingularityMesosArtifact> extraArtifacts;
   private Optional<Long> runAt;
 
@@ -38,6 +40,8 @@ public class SingularityPendingRequestBuilder {
     this.resources = Optional.absent();
     this.runAsUserOverride = Optional.absent();
     this.envOverrides = Collections.emptyMap();
+    this.requiredSlaveAttributeOverrides = Collections.emptyMap();
+    this.allowedSlaveAttributeOverrides = Collections.emptyMap();
     this.extraArtifacts = Collections.emptyList();
     this.runAt = Optional.absent();
   }
@@ -147,6 +151,16 @@ public class SingularityPendingRequestBuilder {
     return this;
   }
 
+  public SingularityPendingRequestBuilder setRequiredSlaveAttributeOverrides(Map<String, String> requiredSlaveAttributeOverrides) {
+    this.requiredSlaveAttributeOverrides = requiredSlaveAttributeOverrides;
+    return this;
+  }
+
+  public SingularityPendingRequestBuilder setAllowedSlaveAttributeOverrides(Map<String, String> allowedSlaveAttributeOverrides) {
+    this.allowedSlaveAttributeOverrides = allowedSlaveAttributeOverrides;
+    return this;
+  }
+
   public SingularityPendingRequestBuilder setExtraArtifacts(List<SingularityMesosArtifact> extraArtifacts) {
     this.extraArtifacts = extraArtifacts;
     return this;
@@ -178,6 +192,8 @@ public class SingularityPendingRequestBuilder {
         s3UploaderAdditionalFiles,
         runAsUserOverride,
         envOverrides,
+        requiredSlaveAttributeOverrides,
+        allowedSlaveAttributeOverrides,
         extraArtifacts,
         runAt
     );
@@ -200,6 +216,8 @@ public class SingularityPendingRequestBuilder {
         ", s3UploaderAdditionalFiles=" + s3UploaderAdditionalFiles +
         ", runAsUserOverride" + runAsUserOverride +
         ", envOverrides" + envOverrides +
+        ", requiredSlaveAttributeOverrides=" + requiredSlaveAttributeOverrides +
+        ", allowedSlaveAttributeOverrides=" + allowedSlaveAttributeOverrides +
         ", extraArtifacts" + extraArtifacts +
         ", runAt" + runAt +
         "}";

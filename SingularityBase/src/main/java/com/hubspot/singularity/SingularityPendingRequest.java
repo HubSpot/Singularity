@@ -35,16 +35,18 @@ public class SingularityPendingRequest {
   private final List<SingularityS3UploaderFile> s3UploaderAdditionalFiles;
   private final Optional<String> runAsUserOverride;
   private final Map<String, String> envOverrides;
+  private final Map<String, String> requiredSlaveAttributeOverrides;
+  private final Map<String, String> allowedSlaveAttributeOverrides;
   private final List<SingularityMesosArtifact> extraArtifacts;
   private final Optional<Long> runAt;
 
   public SingularityPendingRequest(String requestId, String deployId, long timestamp, Optional<String> user, PendingType pendingType, Optional<Boolean> skipHealthchecks, Optional<String> message) {
-    this(requestId, deployId, timestamp, user, pendingType, Optional.<List<String>> absent(), Optional.<String> absent(), skipHealthchecks, message, Optional.<String> absent(), Optional.<Resources>absent(), Collections.emptyList(), Optional.absent(), null, null, Optional.<Long> absent());
+    this(requestId, deployId, timestamp, user, pendingType, Optional.<List<String>> absent(), Optional.<String> absent(), skipHealthchecks, message, Optional.<String> absent(), Optional.<Resources>absent(), Collections.emptyList(), Optional.absent(), null, null, null, null, Optional.<Long> absent());
   }
 
   public SingularityPendingRequest(String requestId, String deployId, long timestamp, Optional<String> user, PendingType pendingType, Optional<List<String>> cmdLineArgsList,
     Optional<String> runId, Optional<Boolean> skipHealthchecks, Optional<String> message, Optional<String> actionId) {
-    this(requestId, deployId, timestamp, user, pendingType, cmdLineArgsList, runId, skipHealthchecks, message, actionId, Optional.<Resources>absent(), Collections.emptyList(), Optional.absent(), null, null, Optional.<Long>absent());
+    this(requestId, deployId, timestamp, user, pendingType, cmdLineArgsList, runId, skipHealthchecks, message, actionId, Optional.<Resources>absent(), Collections.emptyList(), Optional.absent(), null, null, null, null, Optional.<Long>absent());
   }
 
   @JsonCreator
@@ -62,6 +64,8 @@ public class SingularityPendingRequest {
                                    @JsonProperty("s3UploaderAdditionalFiles") List<SingularityS3UploaderFile> s3UploaderAdditionalFiles,
                                    @JsonProperty("runAsUserOverride") Optional<String> runAsUserOverride,
                                    @JsonProperty("envOverrides") Map<String, String> envOverrides,
+                                   @JsonProperty("requiredSlaveAttributeOverrides") Map<String, String> requiredSlaveAttributeOverrides,
+                                   @JsonProperty("allowedSlaveAttributeOverrides") Map<String, String> allowedSlaveAttributeOverrides,
                                    @JsonProperty("extraArtifacts") List<SingularityMesosArtifact> extraArtifacts,
                                    @JsonProperty("runAt") Optional<Long> runAt) {
     this.requestId = requestId;
@@ -88,6 +92,18 @@ public class SingularityPendingRequest {
       this.envOverrides = envOverrides;
     } else {
       this.envOverrides = Collections.emptyMap();
+    }
+
+    if (Objects.nonNull(requiredSlaveAttributeOverrides)) {
+      this.requiredSlaveAttributeOverrides = requiredSlaveAttributeOverrides;
+    } else {
+      this.requiredSlaveAttributeOverrides = Collections.emptyMap();
+    }
+
+    if (Objects.nonNull(allowedSlaveAttributeOverrides)) {
+      this.allowedSlaveAttributeOverrides = allowedSlaveAttributeOverrides;
+    } else {
+      this.allowedSlaveAttributeOverrides = Collections.emptyMap();
     }
 
     if (Objects.nonNull(extraArtifacts)) {
@@ -151,6 +167,14 @@ public class SingularityPendingRequest {
     return envOverrides;
   }
 
+  public Map<String, String> getRequiredSlaveAttributeOverrides() {
+    return requiredSlaveAttributeOverrides;
+  }
+
+  public Map<String, String> getAllowedSlaveAttributeOverrides() {
+    return allowedSlaveAttributeOverrides;
+  }
+
   public Optional<String> getRunAsUserOverride() {
     return runAsUserOverride;
   }
@@ -181,6 +205,8 @@ public class SingularityPendingRequest {
         ", s3UploaderAdditionalFiles=" + s3UploaderAdditionalFiles +
         ", runAsUserOverride=" + runAsUserOverride +
         ", envOverrides=" + envOverrides +
+        ", requiredSlaveAttributeOverrides=" + requiredSlaveAttributeOverrides +
+        ", allowedSlaveAttributeOverrides=" + allowedSlaveAttributeOverrides +
         ", extraArtifacts=" + extraArtifacts +
         ", runAt=" + runAt +
         '}';

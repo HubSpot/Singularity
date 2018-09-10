@@ -20,6 +20,8 @@ public class SingularityPendingTaskBuilder {
   private List<SingularityS3UploaderFile> s3UploaderAdditionalFiles;
   private Optional<String> runAsUserOverride;
   private Map<String, String> envOverrides;
+  private Map<String, String> requiredSlaveAttributeOverrides;
+  private Map<String, String> allowedSlaveAttributeOverrides;
   private List<SingularityMesosArtifact> extraArtifacts;
   private Optional<String> actionId;
 
@@ -99,6 +101,16 @@ public class SingularityPendingTaskBuilder {
     return this;
   }
 
+  public SingularityPendingTaskBuilder setRequiredSlaveAttributeOverrides(Map<String, String> requiredSlaveAttributeOverrides) {
+    this.requiredSlaveAttributeOverrides = requiredSlaveAttributeOverrides;
+    return this;
+  }
+
+  public SingularityPendingTaskBuilder setAllowedSlaveAttributeOverrides(Map<String, String> allowedSlaveAttributeOverrides) {
+    this.allowedSlaveAttributeOverrides = allowedSlaveAttributeOverrides;
+    return this;
+  }
+
   public SingularityPendingTaskBuilder setExtraArtifacts(List<SingularityMesosArtifact> extraArtifacts) {
     this.extraArtifacts = extraArtifacts;
     return this;
@@ -111,7 +123,8 @@ public class SingularityPendingTaskBuilder {
 
   public SingularityPendingTask build() {
     return new SingularityPendingTask(
-        pendingTaskId, cmdLineArgsList, user, runId, skipHealthchecks, message, resources, s3UploaderAdditionalFiles, runAsUserOverride, envOverrides, extraArtifacts, actionId
+        pendingTaskId, cmdLineArgsList, user, runId, skipHealthchecks, message, resources, s3UploaderAdditionalFiles,
+        runAsUserOverride,envOverrides, requiredSlaveAttributeOverrides, allowedSlaveAttributeOverrides, extraArtifacts, actionId
     );
   }
 
@@ -128,6 +141,8 @@ public class SingularityPendingTaskBuilder {
         ", s3UploaderAdditionalFiles=" + s3UploaderAdditionalFiles +
         ", runAsUserOverride=" + runAsUserOverride +
         ", envOverrides=" + envOverrides +
+        ", requiredSlaveAttributeOverrides=" + requiredSlaveAttributeOverrides +
+        ", allowedSlaveAttributeOverrides=" + allowedSlaveAttributeOverrides +
         ", extraArtifacts=" + extraArtifacts +
         ", actionId=" + actionId +
         '}';
