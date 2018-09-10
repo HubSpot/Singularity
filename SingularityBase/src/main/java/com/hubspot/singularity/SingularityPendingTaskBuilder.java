@@ -124,7 +124,7 @@ public class SingularityPendingTaskBuilder {
   public SingularityPendingTask build() {
     return new SingularityPendingTask(
         pendingTaskId, cmdLineArgsList, user, runId, skipHealthchecks, message, resources, s3UploaderAdditionalFiles,
-        runAsUserOverride,envOverrides, requiredSlaveAttributeOverrides, allowedSlaveAttributeOverrides, extraArtifacts, actionId
+        runAsUserOverride, envOverrides, requiredSlaveAttributeOverrides, allowedSlaveAttributeOverrides, extraArtifacts, actionId
     );
   }
 

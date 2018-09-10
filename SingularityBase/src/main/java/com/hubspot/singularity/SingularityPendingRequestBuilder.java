@@ -202,24 +202,24 @@ public class SingularityPendingRequestBuilder {
   @Override
   public String toString() {
     return "SingularityPendingRequestBuilder{" +
-        "requestId" + requestId +
-        ", deployId" + deployId +
-        ", timestamp" + timestamp +
-        ", pendingType" + pendingType +
-        ", user" + user +
-        ", cmdLineArgsList" + cmdLineArgsList +
-        ", runId" + runId +
-        ", skipHealthchecks" + skipHealthchecks +
-        ", message" + message +
-        ", actionId" + actionId +
-        ", resources" + resources +
+        "requestId=" + requestId +
+        ", deployId=" + deployId +
+        ", timestamp=" + timestamp +
+        ", pendingType=" + pendingType +
+        ", user=" + user +
+        ", cmdLineArgsList=" + cmdLineArgsList +
+        ", runId=" + runId +
+        ", skipHealthchecks=" + skipHealthchecks +
+        ", message=" + message +
+        ", actionId=" + actionId +
+        ", resources=" + resources +
         ", s3UploaderAdditionalFiles=" + s3UploaderAdditionalFiles +
-        ", runAsUserOverride" + runAsUserOverride +
-        ", envOverrides" + envOverrides +
+        ", runAsUserOverride=" + runAsUserOverride +
+        ", envOverrides=" + envOverrides +
         ", requiredSlaveAttributeOverrides=" + requiredSlaveAttributeOverrides +
         ", allowedSlaveAttributeOverrides=" + allowedSlaveAttributeOverrides +
-        ", extraArtifacts" + extraArtifacts +
-        ", runAt" + runAt +
+        ", extraArtifacts=" + extraArtifacts +
+        ", runAt=" + runAt +
         "}";
   }
 }
