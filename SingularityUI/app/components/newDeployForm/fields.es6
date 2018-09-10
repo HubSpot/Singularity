@@ -22,7 +22,8 @@ export const FIELDS = {
   defaultExecutor: [
     {id: 'command', type: 'text'},
     {id: 'uris', type: 'mesosArtifacts'},
-    {id: 'arguments', type: 'array', arrayType: 'text'}
+    {id: 'arguments', type: 'array', arrayType: 'text'},
+    {id: 'shell', type: 'text', default: 'true'}
   ],
   customExecutor: [
     {id: 'customExecutorCmd', type: 'text'},
