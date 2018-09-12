@@ -117,7 +117,7 @@ public class SingularitySlaveAndRackManager {
 
     if (!isSlaveAttributesMatch(offerHolder, taskRequest, isPreemptibleTask)) {
       return SlaveMatchState.SLAVE_ATTRIBUTES_DO_NOT_MATCH;
-    } else if (!isSlaveAttributeDistributionOkay(offerHolder, taskRequest, activeTaskIdsForRequest)) {
+    } else if (!areSlaveAttributeMinimumsFeasible(offerHolder, taskRequest, activeTaskIdsForRequest)) {
       return SlaveMatchState.SLAVE_ATTRIBUTES_DO_NOT_MATCH; // TODO: other enum?
     }
 
@@ -281,8 +281,8 @@ public class SingularitySlaveAndRackManager {
     return true;
   }
 
-  private boolean isSlaveAttributeDistributionOkay(SingularityOfferHolder offerHolder, SingularityTaskRequest taskRequest, List<SingularityTaskId> activeTaskIdsForRequest) {
-    if (!taskRequest.getRequest().getSlaveAttributeDistribution().isPresent()) {
+  private boolean areSlaveAttributeMinimumsFeasible(SingularityOfferHolder offerHolder, SingularityTaskRequest taskRequest, List<SingularityTaskId> activeTaskIdsForRequest) {
+    if (!taskRequest.getRequest().getSlaveAttributeMinimums().isPresent()) {
       return true;
     }
     Map<String, String> offerAttributes = slaveManager.getSlave(offerHolder.getSlaveId()).get().getAttributes();
@@ -290,7 +290,7 @@ public class SingularitySlaveAndRackManager {
     Integer numDesiredInstances = taskRequest.getRequest().getInstancesSafe();
     Integer numActiveInstances = activeTaskIdsForRequest.size();
 
-    for (Entry<String, Map<String, Integer>> keyEntry : taskRequest.getRequest().getSlaveAttributeDistribution().get().entrySet()) {
+    for (Entry<String, Map<String, Integer>> keyEntry : taskRequest.getRequest().getSlaveAttributeMinimums().get().entrySet()) {
       String attrKey = keyEntry.getKey();
       for (Entry<String, Integer> valueEntry : keyEntry.getValue().entrySet()) {
         Integer percentInstancesWithAttr = valueEntry.getValue();

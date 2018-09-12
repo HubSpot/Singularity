@@ -372,7 +372,7 @@ public class SingularitySlavePlacementTest extends SingularitySchedulerTestBase 
 //  public Timeout globalTimeout = Timeout.seconds(6000);
 
   @Test
-  public void testSlaveAttributeDistribution() {
+  public void testSlaveAttributeMinimumsAreNotForciblyViolated() {
     Map<String, List<String>> reservedAttributes = new HashMap<>();
     reservedAttributes.put("instance_lifecycle_type", Arrays.asList("spot"));
     configuration.setReserveSlavesWithAttributes(reservedAttributes);
@@ -380,8 +380,8 @@ public class SingularitySlavePlacementTest extends SingularitySchedulerTestBase 
     Map<String, String> allowedAttributes = new HashMap<>();
     allowedAttributes.put("instance_lifecycle_type", "spot");
 
-    Map<String, Map<String, Integer>> attributeDistribution = new HashMap<>();
-    attributeDistribution.put("instance_lifecycle_type", ImmutableMap.of("non_spot", 70));
+    Map<String, Map<String, Integer>> attributeMinimums = new HashMap<>();
+    attributeMinimums.put("instance_lifecycle_type", ImmutableMap.of("non_spot", 70));
 
     initRequest();
     initFirstDeploy();
@@ -389,8 +389,9 @@ public class SingularitySlavePlacementTest extends SingularitySchedulerTestBase 
     saveAndSchedule(request.toBuilder()
         .setInstances(Optional.of(10))
         .setAllowedSlaveAttributes(Optional.of(allowedAttributes))
-        .setSlaveAttributeDistribution(Optional.of(attributeDistribution)));
+        .setSlaveAttributeMinimums(Optional.of(attributeMinimums)));
 
+    // The schedule should only accept as many "spot" instances so as to not force a violation of the minimum "non_spot" instances
     sms.resourceOffers(Arrays.asList(createOffer(20, 20000, 50000, "slave1", "host1", Optional.<String>absent(), ImmutableMap.of("instance_lifecycle_type", "spot"))));
     Assert.assertTrue(taskManager.getActiveTaskIds().size() == 3);
     Assert.assertEquals(3, taskManager.getTasksOnSlave(taskManager.getActiveTaskIds(), slaveManager.getObject("slave1").get()).size());
@@ -399,5 +400,31 @@ public class SingularitySlavePlacementTest extends SingularitySchedulerTestBase 
     Assert.assertTrue(taskManager.getActiveTaskIds().size() == 10);
     Assert.assertEquals(3, taskManager.getTasksOnSlave(taskManager.getActiveTaskIds(), slaveManager.getObject("slave1").get()).size());
     Assert.assertEquals(7, taskManager.getTasksOnSlave(taskManager.getActiveTaskIds(), slaveManager.getObject("slave2").get()).size());
+  }
+
+  @Test
+  public void testSlaveAttributeMinimumsCanBeExceeded() {
+    Map<String, List<String>> reservedAttributes = new HashMap<>();
+    reservedAttributes.put("instance_lifecycle_type", Arrays.asList("spot"));
+    configuration.setReserveSlavesWithAttributes(reservedAttributes);
+
+    Map<String, String> allowedAttributes = new HashMap<>();
+    allowedAttributes.put("instance_lifecycle_type", "spot");
+
+    Map<String, Map<String, Integer>> attributeMinimums = new HashMap<>();
+    attributeMinimums.put("instance_lifecycle_type", ImmutableMap.of("non_spot", 70));
+
+    initRequest();
+    initFirstDeploy();
+
+    saveAndSchedule(request.toBuilder()
+        .setInstances(Optional.of(10))
+        .setAllowedSlaveAttributes(Optional.of(allowedAttributes))
+        .setSlaveAttributeMinimums(Optional.of(attributeMinimums)));
+
+    // Ensure we can go over the minimum if there are enough resources available
+    sms.resourceOffers(Arrays.asList(createOffer(20, 20000, 50000, "slave1", "host1", Optional.<String>absent(), ImmutableMap.of("instance_lifecycle_type", "non_spot"))));
+    Assert.assertTrue(taskManager.getActiveTaskIds().size() == 10);
+    Assert.assertEquals(10, taskManager.getTasksOnSlave(taskManager.getActiveTaskIds(), slaveManager.getObject("slave1").get()).size());
   }
 }
