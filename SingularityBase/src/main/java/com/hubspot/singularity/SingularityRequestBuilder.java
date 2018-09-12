@@ -37,6 +37,7 @@ public class SingularityRequestBuilder {
   private Optional<SlavePlacement> slavePlacement;
   private Optional<Map<String, String>> requiredSlaveAttributes;
   private Optional<Map<String, String>> allowedSlaveAttributes;
+  private Optional<Map<String, Map<String, Integer>>> slaveAttributeDistribution;
   private Optional<Boolean> loadBalanced;
   private Optional<String> requiredRole;
 
@@ -72,6 +73,7 @@ public class SingularityRequestBuilder {
     this.slavePlacement = Optional.absent();
     this.requiredSlaveAttributes = Optional.absent();
     this.allowedSlaveAttributes = Optional.absent();
+    this.slaveAttributeDistribution = Optional.absent();
     this.scheduledExpectedRuntimeMillis = Optional.absent();
     this.waitAtLeastMillisAfterTaskFinishesForReschedule = Optional.absent();
     this.group = Optional.absent();
@@ -92,7 +94,7 @@ public class SingularityRequestBuilder {
 
   public SingularityRequest build() {
     return new SingularityRequest(id, requestType, owners, numRetriesOnFailure, schedule, instances, rackSensitive, loadBalanced, killOldNonLongRunningTasksAfterMillis, taskExecutionTimeLimitMillis, scheduleType, quartzSchedule, scheduleTimeZone,
-        rackAffinity, slavePlacement, requiredSlaveAttributes, allowedSlaveAttributes, scheduledExpectedRuntimeMillis, waitAtLeastMillisAfterTaskFinishesForReschedule, group, readWriteGroups, readOnlyGroups,
+        rackAffinity, slavePlacement, requiredSlaveAttributes, allowedSlaveAttributes, slaveAttributeDistribution, scheduledExpectedRuntimeMillis, waitAtLeastMillisAfterTaskFinishesForReschedule, group, readWriteGroups, readOnlyGroups,
         bounceAfterScale, skipHealthchecks, emailConfigurationOverrides, Optional.<Boolean>absent(), hideEvenNumberAcrossRacksHint, taskLogErrorRegex, taskLogErrorRegexCaseSensitive, taskPriorityLevel, maxTasksPerOffer, allowBounceToSameHost,
         requiredRole, dataCenter);
   }
@@ -283,6 +285,12 @@ public class SingularityRequestBuilder {
     return this;
   }
 
+  public SingularityRequestBuilder setSlaveAttributeDistribution(Optional<Map<String, Map<String, Integer>>> slaveAttributeDistribution) {
+    this.slaveAttributeDistribution = slaveAttributeDistribution;
+    return this;
+  }
+
+
   public Optional<Set<String>> getReadOnlyGroups() {
     return readOnlyGroups;
   }
@@ -397,6 +405,7 @@ public class SingularityRequestBuilder {
         Objects.equals(slavePlacement, that.slavePlacement) &&
         Objects.equals(requiredSlaveAttributes, that.requiredSlaveAttributes) &&
         Objects.equals(allowedSlaveAttributes, that.allowedSlaveAttributes) &&
+        Objects.equals(slaveAttributeDistribution, that.slaveAttributeDistribution) &&
         Objects.equals(loadBalanced, that.loadBalanced) &&
         Objects.equals(requiredRole, that.requiredRole) &&
         Objects.equals(group, that.group) &&
@@ -415,7 +424,14 @@ public class SingularityRequestBuilder {
 
   @Override
   public int hashCode() {
-    return Objects.hash(id, requestType, owners, numRetriesOnFailure, schedule, quartzSchedule, scheduleTimeZone, scheduleType, killOldNonLongRunningTasksAfterMillis, taskExecutionTimeLimitMillis, scheduledExpectedRuntimeMillis, waitAtLeastMillisAfterTaskFinishesForReschedule, instances, skipHealthchecks, rackSensitive, rackAffinity, slavePlacement, requiredSlaveAttributes, allowedSlaveAttributes, loadBalanced, requiredRole, group, readWriteGroups, readOnlyGroups, bounceAfterScale, emailConfigurationOverrides, hideEvenNumberAcrossRacksHint, taskLogErrorRegex, taskLogErrorRegexCaseSensitive, taskPriorityLevel, maxTasksPerOffer, allowBounceToSameHost, dataCenter);
+    return Objects.hash(id, requestType, owners, numRetriesOnFailure, schedule, quartzSchedule,
+        scheduleTimeZone, scheduleType, killOldNonLongRunningTasksAfterMillis, taskExecutionTimeLimitMillis,
+        scheduledExpectedRuntimeMillis, waitAtLeastMillisAfterTaskFinishesForReschedule, instances,
+        skipHealthchecks, rackSensitive, rackAffinity, slavePlacement, requiredSlaveAttributes,
+        allowedSlaveAttributes, slaveAttributeDistribution, loadBalanced, requiredRole, group,
+        readWriteGroups, readOnlyGroups, bounceAfterScale, emailConfigurationOverrides,
+        hideEvenNumberAcrossRacksHint, taskLogErrorRegex, taskLogErrorRegexCaseSensitive,
+        taskPriorityLevel, maxTasksPerOffer, allowBounceToSameHost, dataCenter);
   }
 
   @Override
@@ -440,6 +456,7 @@ public class SingularityRequestBuilder {
         ", slavePlacement=" + slavePlacement +
         ", requiredSlaveAttributes=" + requiredSlaveAttributes +
         ", allowedSlaveAttributes=" + allowedSlaveAttributes +
+        ", slaveAttributeDistribution=" + slaveAttributeDistribution +
         ", loadBalanced=" + loadBalanced +
         ", requiredRole=" + requiredRole +
         ", group=" + group +

@@ -367,4 +367,37 @@ public class SingularitySlavePlacementTest extends SingularitySchedulerTestBase 
     sms.resourceOffers(Arrays.asList(createOffer(1, 128, 1024, "slave1", "host1", Optional.of("rack1"))));
     Assert.assertEquals(3, taskManager.getActiveTaskIds().size());
   }
+
+//  @Rule
+//  public Timeout globalTimeout = Timeout.seconds(6000);
+
+  @Test
+  public void testSlaveAttributeDistribution() {
+    Map<String, List<String>> reservedAttributes = new HashMap<>();
+    reservedAttributes.put("instance_lifecycle_type", Arrays.asList("spot"));
+    configuration.setReserveSlavesWithAttributes(reservedAttributes);
+
+    Map<String, String> allowedAttributes = new HashMap<>();
+    allowedAttributes.put("instance_lifecycle_type", "spot");
+
+    Map<String, Map<String, Integer>> attributeDistribution = new HashMap<>();
+    attributeDistribution.put("instance_lifecycle_type", ImmutableMap.of("non_spot", 70));
+
+    initRequest();
+    initFirstDeploy();
+
+    saveAndSchedule(request.toBuilder()
+        .setInstances(Optional.of(10))
+        .setAllowedSlaveAttributes(Optional.of(allowedAttributes))
+        .setSlaveAttributeDistribution(Optional.of(attributeDistribution)));
+
+    sms.resourceOffers(Arrays.asList(createOffer(20, 20000, 50000, "slave1", "host1", Optional.<String>absent(), ImmutableMap.of("instance_lifecycle_type", "spot"))));
+    Assert.assertTrue(taskManager.getActiveTaskIds().size() == 3);
+    Assert.assertEquals(3, taskManager.getTasksOnSlave(taskManager.getActiveTaskIds(), slaveManager.getObject("slave1").get()).size());
+
+    sms.resourceOffers(Arrays.asList(createOffer(20, 20000, 50000, "slave2", "host2", Optional.<String>absent(), ImmutableMap.of("instance_lifecycle_type", "non_spot"))));
+    Assert.assertTrue(taskManager.getActiveTaskIds().size() == 10);
+    Assert.assertEquals(3, taskManager.getTasksOnSlave(taskManager.getActiveTaskIds(), slaveManager.getObject("slave1").get()).size());
+    Assert.assertEquals(7, taskManager.getTasksOnSlave(taskManager.getActiveTaskIds(), slaveManager.getObject("slave2").get()).size());
+  }
 }
