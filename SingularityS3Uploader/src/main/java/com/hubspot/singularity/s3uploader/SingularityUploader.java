@@ -171,14 +171,21 @@ public abstract class SingularityUploader {
     return found;
   }
 
-  static boolean isFileOpen(Path path) {
+  static boolean isFileOpen(Path path, boolean useFuser) {
     try {
-      SimpleProcessManager lsof = new SimpleProcessManager(LOG);
-      List<String> cmd = ImmutableList.of("lsof", path.toAbsolutePath().toString());
-      List<String> output = lsof.runCommandWithOutput(cmd, Sets.newHashSet(0, 1));
-      for (String line : output) {
-        if (line.contains(path.toAbsolutePath().toString())) {
-          return true;
+      if (useFuser) {
+        SimpleProcessManager fuser = new SimpleProcessManager(LOG);
+        List<String> cmd = ImmutableList.of("fuser", path.toAbsolutePath().toString());
+        int exitCode = fuser.getExitCode(cmd);
+        return exitCode == 0;
+      } else {
+        SimpleProcessManager lsof = new SimpleProcessManager(LOG);
+        List<String> cmd = ImmutableList.of("lsof", path.toAbsolutePath().toString());
+        List<String> output = lsof.runCommandWithOutput(cmd, Sets.newHashSet(0, 1));
+        for (String line : output) {
+          if (line.contains(path.toAbsolutePath().toString())) {
+            return true;
+          }
         }
       }
     } catch (Exception e) {

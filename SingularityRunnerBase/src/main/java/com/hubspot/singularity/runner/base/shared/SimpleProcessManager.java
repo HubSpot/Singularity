@@ -42,6 +42,20 @@ public class SimpleProcessManager extends SafeProcessManager {
     return runCommand(command, redirectOutput, Sets.newHashSet(0));
   }
 
+  public int getExitCode(final List<String> command) {
+    final ProcessBuilder processBuilder = new ProcessBuilder(command);
+    Optional<Integer> exitCode = Optional.absent();
+    try {
+      final Process process = startProcess(processBuilder);
+      return process.waitFor();
+    } catch (Throwable t) {
+      signalKillToProcessIfActive();
+      throw new RuntimeException(t);
+    } finally {
+      processFinished(exitCode);
+    }
+  }
+
   public List<String> runCommand(final List<String> command, final Redirect redirectOutput, final Set<Integer> acceptableExitCodes) throws InterruptedException, ProcessFailedException {
     final ProcessBuilder processBuilder = new ProcessBuilder(command);
 
