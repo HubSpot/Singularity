@@ -81,7 +81,7 @@ public abstract class SingularityUploader {
     for (int i = 0; i < toUpload.size(); i++) {
       final Context context = metrics.getUploadTimer().time();
       final Path file = toUpload.get(i);
-      if (!configuration.isCheckForOpenFiles() || !isFileOpen(file)) {
+      if (!configuration.isCheckForOpenFiles() || !isFileOpen(file, configuration.isCheckOpenFilesViaFuser())) {
         try {
           uploadSingle(i, file);
           metrics.upload();
