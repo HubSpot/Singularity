@@ -64,6 +64,9 @@ public class SingularityS3UploaderConfiguration extends BaseRunnerConfiguration 
   @JsonProperty
   private boolean checkForOpenFiles = true;
 
+  @JsonProperty
+  private boolean checkOpenFilesViaFuser = false;
+
   @NotNull
   @JsonProperty
   private Map<String, SingularityS3Credentials> s3BucketCredentials = new HashMap<>();
@@ -165,6 +168,14 @@ public class SingularityS3UploaderConfiguration extends BaseRunnerConfiguration 
     this.checkForOpenFiles = checkForOpenFiles;
   }
 
+  public boolean isCheckOpenFilesViaFuser() {
+    return checkOpenFilesViaFuser;
+  }
+
+  public void setCheckOpenFilesViaFuser(boolean checkOpenFilesViaFuser) {
+    this.checkOpenFilesViaFuser = checkOpenFilesViaFuser;
+  }
+
   public Map<String, SingularityS3Credentials> getS3BucketCredentials() {
     return s3BucketCredentials;
   }
@@ -195,6 +206,7 @@ public class SingularityS3UploaderConfiguration extends BaseRunnerConfiguration 
         ", retryWaitMs=" + retryWaitMs +
         ", retryCount=" + retryCount +
         ", checkForOpenFiles=" + checkForOpenFiles +
+        ", checkOpenFilesViaFuser=" + checkOpenFilesViaFuser +
         ", s3BucketCredentials=" + s3BucketCredentials +
         ", s3ContentHeaders=" + s3ContentHeaders +
         "} " + super.toString();
