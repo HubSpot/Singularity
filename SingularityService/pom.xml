@@ -14,6 +14,17 @@
     <basepom.shaded.main-class>com.hubspot.singularity.SingularityService</basepom.shaded.main-class>
   </properties>
 
+  <dependencyManagement>
+    <!-- TODO: Push up to hubspot basepom? -->
+    <dependencies>
+      <dependency>
+      <groupId>org.postgresql</groupId>
+      <artifactId>postgresql</artifactId>
+      <version>42.2.4</version>
+      <scope>runtime</scope>
+    </dependency>
+    </dependencies>
+  </dependencyManagement>
   <dependencies>
 
     <dependency>
@@ -406,6 +417,11 @@
     <dependency>
       <groupId>mysql</groupId>
       <artifactId>mysql-connector-java</artifactId>
+      <scope>runtime</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.postgresql</groupId>
+      <artifactId>postgresql</artifactId>
       <scope>runtime</scope>
     </dependency>
 

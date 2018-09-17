@@ -7,12 +7,6 @@ import java.util.Date;
 
 import javax.inject.Inject;
 
-import org.skife.jdbi.v2.StatementContext;
-import org.skife.jdbi.v2.exceptions.ResultSetException;
-import org.skife.jdbi.v2.tweak.ResultSetMapper;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.google.common.base.Optional;
 import com.hubspot.singularity.DeployState;
 import com.hubspot.singularity.ExtendedTaskState;
@@ -28,9 +22,18 @@ import com.hubspot.singularity.SingularityRequestHistory;
 import com.hubspot.singularity.SingularityRequestHistory.RequestHistoryType;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTaskIdHistory;
+import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.transcoders.IdTranscoder;
 import com.hubspot.singularity.data.transcoders.SingularityTranscoderException;
 import com.hubspot.singularity.data.transcoders.Transcoder;
+
+import org.skife.jdbi.v2.StatementContext;
+import org.skife.jdbi.v2.exceptions.ResultSetException;
+import org.skife.jdbi.v2.tweak.ResultSetMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import io.dropwizard.db.DataSourceFactory;
 
 public class SingularityMappers {
 
@@ -74,16 +77,18 @@ public class SingularityMappers {
 
   static class SingularityRequestHistoryMapper implements ResultSetMapper<SingularityRequestHistory> {
     private final Transcoder<SingularityRequest> singularityRequestTranscoder;
+    private final String userColumn;
 
     @Inject
-    SingularityRequestHistoryMapper(Transcoder<SingularityRequest> singularityRequestTranscoder) {
+    SingularityRequestHistoryMapper(Transcoder<SingularityRequest> singularityRequestTranscoder, SingularityConfiguration singularityConfiguration) {
       this.singularityRequestTranscoder = singularityRequestTranscoder;
+      this.userColumn = getUserColumn(singularityConfiguration);
     }
 
     @Override
     public SingularityRequestHistory map(int index, ResultSet r, StatementContext ctx) throws SQLException {
       try {
-        return new SingularityRequestHistory(r.getTimestamp("createdAt").getTime(), Optional.fromNullable(r.getString("user")), RequestHistoryType.valueOf(r.getString("requestState")),
+        return new SingularityRequestHistory(r.getTimestamp("createdAt").getTime(), Optional.fromNullable(r.getString(userColumn)), RequestHistoryType.valueOf(r.getString("requestState")),
             singularityRequestTranscoder.fromBytes(r.getBytes("request")), Optional.fromNullable(r.getString("message")));
       } catch (SingularityTranscoderException e) {
         throw new ResultSetException("Could not deserialize database result", e, ctx);
@@ -125,14 +130,17 @@ public class SingularityMappers {
   }
 
   static class SingularityDeployHistoryLiteMapper implements ResultSetMapper<SingularityDeployHistory> {
+    private final String userColumn;
 
     @Inject
-    SingularityDeployHistoryLiteMapper() {}
+    SingularityDeployHistoryLiteMapper(SingularityConfiguration singularityConfiguration) {
+      this.userColumn = getUserColumn(singularityConfiguration);
+    }
 
     @Override
     public SingularityDeployHistory map(int index, ResultSet r, StatementContext ctx) throws SQLException {
       SingularityDeployMarker marker =
-          new SingularityDeployMarker(r.getString("requestId"), r.getString("deployId"), r.getTimestamp("createdAt").getTime(), Optional.fromNullable(r.getString("user")),
+          new SingularityDeployMarker(r.getString("requestId"), r.getString("deployId"), r.getTimestamp("createdAt").getTime(), Optional.fromNullable(r.getString(userColumn)),
               Optional.fromNullable(r.getString("message")));
       SingularityDeployResult deployState =
           new SingularityDeployResult(DeployState.valueOf(r.getString("deployState")), Optional.<String>absent(), Optional.<SingularityLoadBalancerUpdate>absent(), Collections.<SingularityDeployFailure>emptyList(), r.getTimestamp("deployStateAt")
@@ -179,4 +187,8 @@ public class SingularityMappers {
 
   }
 
+  // In Postgres "user" is a reserved word - hence we cannot use it.
+  static String getUserColumn(SingularityConfiguration singularityConfiguration) {
+     return  SingularityHistoryModule.isPostgres(singularityConfiguration.getDatabaseConfiguration()) ? "f_user" : "user";
+  }
 }
