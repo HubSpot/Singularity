@@ -8,18 +8,22 @@ import java.util.stream.Collectors;
 
 import org.apache.mesos.v1.Protos.TaskState;
 import org.junit.Assert;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.Timeout;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 import com.hubspot.singularity.ExtendedTaskState;
 import com.hubspot.singularity.MachineState;
 import com.hubspot.singularity.SingularityRequest;
+import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskCleanup;
 import com.hubspot.singularity.SingularityTaskHistoryUpdate;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SlavePlacement;
 import com.hubspot.singularity.TaskCleanupType;
+import com.hubspot.singularity.api.SingularityScaleRequest;
 
 public class SingularitySlavePlacementTest extends SingularitySchedulerTestBase {
 
@@ -368,8 +372,8 @@ public class SingularitySlavePlacementTest extends SingularitySchedulerTestBase 
     Assert.assertEquals(3, taskManager.getActiveTaskIds().size());
   }
 
-//  @Rule
-//  public Timeout globalTimeout = Timeout.seconds(6000);
+  @Rule
+  public Timeout globalTimeout = Timeout.seconds(6000);
 
   @Test
   public void testSlaveAttributeMinimumsAreNotForciblyViolated() {
@@ -426,5 +430,53 @@ public class SingularitySlavePlacementTest extends SingularitySchedulerTestBase 
     sms.resourceOffers(Arrays.asList(createOffer(20, 20000, 50000, "slave1", "host1", Optional.<String>absent(), ImmutableMap.of("instance_lifecycle_type", "non_spot"))));
     Assert.assertTrue(taskManager.getActiveTaskIds().size() == 10);
     Assert.assertEquals(10, taskManager.getTasksOnSlave(taskManager.getActiveTaskIds(), slaveManager.getObject("slave1").get()).size());
+  }
+
+  @Test
+  public void testSlaveAttributesAreRedistributedOnScaleDown() {
+    Map<String, List<String>> reservedAttributes = new HashMap<>();
+    reservedAttributes.put("instance_lifecycle_type", Arrays.asList("spot"));
+    configuration.setReserveSlavesWithAttributes(reservedAttributes);
+
+    Map<String, String> allowedAttributes = new HashMap<>();
+    allowedAttributes.put("instance_lifecycle_type", "spot");
+
+    Map<String, Map<String, Integer>> attributeMinimums = new HashMap<>();
+    attributeMinimums.put("instance_lifecycle_type", ImmutableMap.of("non_spot", 70));
+
+    initRequest();
+    initFirstDeploy();
+
+    saveAndSchedule(request.toBuilder()
+        .setInstances(Optional.of(10))
+        .setAllowedSlaveAttributes(Optional.of(allowedAttributes))
+        .setSlaveAttributeMinimums(Optional.of(attributeMinimums)));
+
+    // The schedule should only accept as many "spot" instances so as to not force a violation of the minimum "non_spot" instances
+    sms.resourceOffers(Arrays.asList(createOffer(7, 20000, 50000, "slave1", "host1", Optional.<String>absent(), ImmutableMap.of("instance_lifecycle_type", "non_spot"))));
+    sms.resourceOffers(Arrays.asList(createOffer(3, 20000, 50000, "slave2", "host2", Optional.<String>absent(), ImmutableMap.of("instance_lifecycle_type", "spot"))));
+    Assert.assertTrue(taskManager.getActiveTaskIds().size() == 10);
+    Assert.assertEquals(7, taskManager.getTasksOnSlave(taskManager.getActiveTaskIds(), slaveManager.getObject("slave1").get()).size());
+    Assert.assertEquals(3, taskManager.getTasksOnSlave(taskManager.getActiveTaskIds(), slaveManager.getObject("slave2").get()).size());
+
+    SingularityTask instance10 = taskManager.getActiveTasks().stream().filter(t -> t.getTaskId().getInstanceNo() == 10).findFirst().get();
+
+    requestResource.scale(requestId, new SingularityScaleRequest(Optional.of(9), Optional.absent(), Optional.absent(),
+        Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent()), singularityUser);
+
+    resourceOffers();
+    cleaner.drainCleanupQueue();
+
+    Assert.assertEquals(1, taskManager.getKilledTaskIdRecords().size());
+    Assert.assertEquals(10, taskManager.getKilledTaskIdRecords().get(0).getTaskId().getInstanceNo());
+
+    statusUpdate(instance10, TaskState.TASK_KILLED);
+    killKilledTasks();
+
+    scheduler.drainPendingQueue();
+
+    Assert.assertEquals(9, taskManager.getActiveTaskIds().size());
+    Assert.assertEquals(7, taskManager.getTasksOnSlave(taskManager.getActiveTaskIds(), slaveManager.getObject("slave1").get()).size());
+    Assert.assertEquals(2, taskManager.getTasksOnSlave(taskManager.getActiveTaskIds(), slaveManager.getObject("slave2").get()).size());
   }
 }
