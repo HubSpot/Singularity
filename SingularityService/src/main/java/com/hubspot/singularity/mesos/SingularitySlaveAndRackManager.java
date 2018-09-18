@@ -118,7 +118,7 @@ public class SingularitySlaveAndRackManager {
     if (!isSlaveAttributesMatch(offerHolder, taskRequest, isPreemptibleTask)) {
       return SlaveMatchState.SLAVE_ATTRIBUTES_DO_NOT_MATCH;
     } else if (!areSlaveAttributeMinimumsFeasible(offerHolder, taskRequest, activeTaskIdsForRequest)) {
-      return SlaveMatchState.SLAVE_ATTRIBUTES_DO_NOT_MATCH; // TODO: other enum?
+      return SlaveMatchState.SLAVE_ATTRIBUTES_DO_NOT_MATCH;
     }
 
     final SlavePlacement slavePlacement = taskRequest.getRequest().getSlavePlacement().or(configuration.getDefaultSlavePlacement());
@@ -187,7 +187,7 @@ public class SingularitySlaveAndRackManager {
     }
 
     if (taskRequest.getRequest().isRackSensitive()) {
-      final boolean isRackOk = isRackOk(countPerRack, sanitizedRackId, numDesiredInstances, taskRequest.getRequest().getId(), slaveId, host, numCleaningOnSlave, leaderCache);
+      final boolean isRackOk = isRackOk(countPerRack, sanitizedRackId, numDesiredInstances, taskRequest.getRequest().getId(), slaveId, host, numCleaningOnSlave);
 
       if (!isRackOk) {
         return SlaveMatchState.RACK_SATURATED;
@@ -316,7 +316,7 @@ public class SingularitySlaveAndRackManager {
 
   private long getNumInstancesWithAttribute(List<SingularityTaskId> taskIds, String attrKey, String attrValue) {
     return taskIds.stream()
-        .map(id -> slaveManager.getSlave(taskManager.getTask(id).get().getMesosTask().getSlaveId().getValue()).get().getAttributes().get(attrKey))
+        .map(id -> leaderCache.getSlave(taskManager.getTask(id).get().getMesosTask().getSlaveId().getValue()).get().getAttributes().get(attrKey))
         .filter(Objects::nonNull)
         .filter(x -> x.equals(attrValue))
         .count();
@@ -330,7 +330,7 @@ public class SingularitySlaveAndRackManager {
     }
   }
 
-  private boolean isRackOk(Multiset<String> countPerRack, String sanitizedRackId, int numDesiredInstances, String requestId, String slaveId, String host, double numCleaningOnSlave, SingularityLeaderCache leaderCache) {
+  private boolean isRackOk(Multiset<String> countPerRack, String sanitizedRackId, int numDesiredInstances, String requestId, String slaveId, String host, double numCleaningOnSlave) {
     int racksAccountedFor = countPerRack.elementSet().size();
     double numPerRack = numDesiredInstances / (double) rackManager.getNumActive();
     if (racksAccountedFor < rackManager.getNumActive()) {
