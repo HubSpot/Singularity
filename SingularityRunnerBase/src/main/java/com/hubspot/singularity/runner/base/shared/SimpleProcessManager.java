@@ -9,6 +9,9 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 
@@ -42,12 +45,20 @@ public class SimpleProcessManager extends SafeProcessManager {
     return runCommand(command, redirectOutput, Sets.newHashSet(0));
   }
 
-  public int getExitCode(final List<String> command) {
+  public int getExitCode(final List<String> command, long timeoutMillis) {
     final ProcessBuilder processBuilder = new ProcessBuilder(command);
     Optional<Integer> exitCode = Optional.absent();
     try {
       final Process process = startProcess(processBuilder);
-      return process.waitFor();
+      boolean exited = process.waitFor(timeoutMillis, TimeUnit.MILLISECONDS);
+
+      if (exited) {
+        return process.exitValue();
+      } else {
+        signalKillToProcessIfActive();
+        throw new TimeoutException(String.format("Waited %d ms for an exit code from `%s`, but it didn't terminate in time.", timeoutMillis, command.stream().collect(Collectors.joining(" "))));
+      }
+
     } catch (Throwable t) {
       signalKillToProcessIfActive();
       throw new RuntimeException(t);
