@@ -539,7 +539,7 @@ public class SingularityScheduler {
               extraTasksToClean.add(taskId);
               LOG.info("Cleaning up task {} to satisfy attribute {}={} on at least {}% of instances", taskId, attrKey, valueEntry.getKey(), valueEntry.getValue());
               taskManager.createTaskCleanup(
-                  new SingularityTaskCleanup(pendingRequest.getUser(), TaskCleanupType.REBALANCE_RACKS, now, taskId, Optional.<String>absent(), Optional.<String>absent(), Optional.<SingularityTaskShellCommandRequestId>absent()));
+                  new SingularityTaskCleanup(pendingRequest.getUser(), TaskCleanupType.REBALANCE_SLAVE_ATTRIBUTES, now, taskId, Optional.<String>absent(), Optional.<String>absent(), Optional.<SingularityTaskShellCommandRequestId>absent()));
             }
           }
 
