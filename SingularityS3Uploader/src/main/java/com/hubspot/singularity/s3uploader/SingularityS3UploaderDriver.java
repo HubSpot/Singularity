@@ -65,6 +65,7 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper implements S
   private final Map<S3UploadMetadata, SingularityUploader> metadataToUploader;
   private final Map<SingularityUploader, Long> uploaderLastHadFilesAt;
   private final Lock runLock;
+  private final Lock checkFileOpenLock;
   private final ExecutorService executorService;
   private final FileSystem fileSystem;
   private final Set<SingularityUploader> expiring;
@@ -100,6 +101,7 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper implements S
     this.metrics.setExpiringCollection(expiring);
 
     this.runLock = new ReentrantLock();
+    this.checkFileOpenLock = new ReentrantLock();
 
     this.processUtils = new ProcessUtils(LOG);
 
@@ -473,9 +475,9 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper implements S
       final SingularityUploader uploader;
 
       if (metadata.getUploaderType() == SingularityUploaderType.S3) {
-        uploader = new SingularityS3Uploader(bucketCreds.or(defaultCredentials), metadata, fileSystem, metrics, filename, configuration, hostname, exceptionNotifier);
+        uploader = new SingularityS3Uploader(bucketCreds.or(defaultCredentials), metadata, fileSystem, metrics, filename, configuration, hostname, exceptionNotifier, checkFileOpenLock);
       } else {
-        uploader = new SingularityGCSUploader(metadata, fileSystem, metrics, filename, configuration, hostname, exceptionNotifier, jsonObjectFileHelper);
+        uploader = new SingularityGCSUploader(metadata, fileSystem, metrics, filename, configuration, hostname, exceptionNotifier, checkFileOpenLock, jsonObjectFileHelper);
       }
 
       if (metadata.isFinished()) {

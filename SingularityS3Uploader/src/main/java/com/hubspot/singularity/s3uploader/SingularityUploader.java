@@ -15,7 +15,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -53,8 +52,14 @@ public abstract class SingularityUploader {
   private final SingularityRunnerExceptionNotifier exceptionNotifier;
   private final Lock checkFileOpenLock;
 
-  SingularityUploader(S3UploadMetadata uploadMetadata, FileSystem fileSystem, SingularityS3UploaderMetrics metrics, Path metadataPath,
-                      SingularityS3UploaderConfiguration configuration, String hostname, SingularityRunnerExceptionNotifier exceptionNotifier) {
+  SingularityUploader(S3UploadMetadata uploadMetadata,
+                      FileSystem fileSystem,
+                      SingularityS3UploaderMetrics metrics,
+                      Path metadataPath,
+                      SingularityS3UploaderConfiguration configuration,
+                      String hostname,
+                      SingularityRunnerExceptionNotifier exceptionNotifier,
+                      Lock checkFileOpenLock) {
     this.metrics = metrics;
     this.uploadMetadata = uploadMetadata;
     this.fileDirectory = uploadMetadata.getDirectory();
@@ -73,7 +78,7 @@ public abstract class SingularityUploader {
     this.configuration = configuration;
     this.exceptionNotifier = exceptionNotifier;
 
-    this.checkFileOpenLock = new ReentrantLock();
+    this.checkFileOpenLock = checkFileOpenLock;
   }
 
   protected abstract void uploadSingle(int sequence, Path file) throws Exception;
