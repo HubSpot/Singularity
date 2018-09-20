@@ -55,7 +55,6 @@ public class SimpleProcessManager extends SafeProcessManager {
       if (exited) {
         return process.exitValue();
       } else {
-        signalKillToProcessIfActive();
         throw new TimeoutException(String.format("Waited %d ms for an exit code from `%s`, but it didn't terminate in time.", timeoutMillis, command.stream().collect(Collectors.joining(" "))));
       }
 
