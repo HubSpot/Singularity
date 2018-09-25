@@ -87,6 +87,7 @@ public class SingularityMesosSchedulerImpl extends SingularityMesosScheduler {
   private final boolean delayWhenStatusUpdateDeltaTooLarge;
   private final long delayWhenDeltaOverMs;
   private final AtomicLong statusUpdateDeltaAvg;
+  private final AtomicLong lastHeartbeatTime;
   private final SingularityConfiguration configuration;
   private final TaskManager taskManager;
   private final Transcoder<SingularityTaskDestroyFrameworkMessage> transcoder;
@@ -94,6 +95,7 @@ public class SingularityMesosSchedulerImpl extends SingularityMesosScheduler {
 
   private volatile SchedulerState state;
   private Optional<Long> lastOfferTimestamp = Optional.absent();
+  private Optional<Double> heartbeatIntervalSeconds = Optional.absent();
 
   private final AtomicReference<MasterInfo> masterInfo = new AtomicReference<>();
   private final List<TaskStatus> queuedUpdates;
@@ -114,7 +116,8 @@ public class SingularityMesosSchedulerImpl extends SingularityMesosScheduler {
                                 SingularityConfiguration configuration,
                                 TaskManager taskManager,
                                 Transcoder<SingularityTaskDestroyFrameworkMessage> transcoder,
-                                @Named(SingularityMainModule.STATUS_UPDATE_DELTA_30S_AVERAGE) AtomicLong statusUpdateDeltaAvg) {
+                                @Named(SingularityMainModule.STATUS_UPDATE_DELTA_30S_AVERAGE) AtomicLong statusUpdateDeltaAvg,
+                                @Named(SingularityMainModule.LAST_MESOS_MASTER_HEARTBEAT_TIME) AtomicLong lastHeartbeatTime) {
     this.exceptionNotifier = exceptionNotifier;
     this.startup = startup;
     this.abort = abort;
@@ -129,6 +132,8 @@ public class SingularityMesosSchedulerImpl extends SingularityMesosScheduler {
     this.delayWhenStatusUpdateDeltaTooLarge = configuration.isDelayOfferProcessingForLargeStatusUpdateDelta();
     this.delayWhenDeltaOverMs = configuration.getDelayPollersWhenDeltaOverMs();
     this.statusUpdateDeltaAvg = statusUpdateDeltaAvg;
+
+    this.lastHeartbeatTime = lastHeartbeatTime;
     this.taskManager = taskManager;
     this.transcoder = transcoder;
     this.leaderCacheCoordinator = leaderCacheCoordinator;
@@ -142,6 +147,11 @@ public class SingularityMesosSchedulerImpl extends SingularityMesosScheduler {
   public void subscribed(Subscribed subscribed) {
     callWithStateLock(() -> {
       Preconditions.checkState(state == SchedulerState.NOT_STARTED, "Asked to startup - but in invalid state: %s", state.name());
+
+      double advertisedHeartbeatIntervalSeconds = subscribed.getHeartbeatIntervalSeconds();
+      if (advertisedHeartbeatIntervalSeconds > 0) {
+        heartbeatIntervalSeconds = Optional.of(advertisedHeartbeatIntervalSeconds);
+      }
 
       leaderCacheCoordinator.activateLeaderCache();
       MasterInfo newMasterInfo = subscribed.getMasterInfo();
@@ -329,7 +339,8 @@ public class SingularityMesosSchedulerImpl extends SingularityMesosScheduler {
 
   @Override
   public void heartbeat(Event event) {
-    LOG.debug("Heartbeat from mesos");
+    long now = System.currentTimeMillis();
+    LOG.debug("Heartbeat from mesos. Delta since last heartbeat is {}ms", now - lastHeartbeatTime.getAndSet(now));
   }
 
   @Override
@@ -449,6 +460,10 @@ public class SingularityMesosSchedulerImpl extends SingularityMesosScheduler {
 
   public Optional<Long> getLastOfferTimestamp() {
     return lastOfferTimestamp;
+  }
+
+  public Optional<Double> getHeartbeatIntervalSeconds() {
+    return heartbeatIntervalSeconds;
   }
 
   public void killAndRecord(SingularityTaskId taskId, Optional<RequestCleanupType> requestCleanupType, Optional<TaskCleanupType> taskCleanupType, Optional<Long> originalTimestamp, Optional<Integer> retries, Optional<String> user) {
