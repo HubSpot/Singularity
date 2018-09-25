@@ -340,7 +340,8 @@ public class SingularityMesosSchedulerImpl extends SingularityMesosScheduler {
   @Override
   public void heartbeat(Event event) {
     long now = System.currentTimeMillis();
-    LOG.debug("Heartbeat from mesos. Delta since last heartbeat is {}ms", now - lastHeartbeatTime.getAndSet(now));
+    long delta = (now - lastHeartbeatTime.getAndSet(now));
+    LOG.debug("Heartbeat from mesos. Delta since last heartbeat is {}ms", delta);
   }
 
   @Override
