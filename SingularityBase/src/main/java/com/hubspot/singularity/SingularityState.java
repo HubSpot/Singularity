@@ -59,6 +59,7 @@ public class SingularityState {
   private final Optional<Double> minimumPriorityLevel;
 
   private final long avgStatusUpdateDelayMs;
+  private final long lastHeartbeatAt;
 
   @JsonCreator
   public SingularityState(@JsonProperty("activeTasks") int activeTasks,
@@ -96,7 +97,8 @@ public class SingularityState {
                           @JsonProperty("unknownSlaves") int unknownSlaves,
                           @JsonProperty("authDatastoreHealthy") Optional<Boolean> authDatastoreHealthy,
                           @JsonProperty("minimumPriorityLevel") Optional<Double> minimumPriorityLevel,
-                          @JsonProperty("avgStatusUpdateDelayMs") long avgStatusUpdateDelayMs) {
+                          @JsonProperty("avgStatusUpdateDelayMs") long avgStatusUpdateDelayMs,
+                          @JsonProperty("lastHeartbeatAt") long lastHeartbeatAt) {
     this.activeTasks = activeTasks;
     this.launchingTasks = launchingTasks;
     this.activeRequests = activeRequests;
@@ -133,6 +135,7 @@ public class SingularityState {
     this.authDatastoreHealthy = authDatastoreHealthy;
     this.minimumPriorityLevel = minimumPriorityLevel;
     this.avgStatusUpdateDelayMs = avgStatusUpdateDelayMs;
+    this.lastHeartbeatAt = lastHeartbeatAt;
   }
 
   @Schema(description = "Count of requests in finished state")
@@ -336,6 +339,11 @@ public class SingularityState {
   @Schema(description = "The average delay (in millis) for processing status updates from mesos")
   public long getAvgStatusUpdateDelayMs() {
     return avgStatusUpdateDelayMs;
+  }
+
+  @Schema(description = "Time in UTC millis at which Singularity received the most recent HEARTBEAT event from the Mesos Master")
+  public long getLastHeartbeatAt() {
+    return lastHeartbeatAt;
   }
 
   @Override
