@@ -1425,8 +1425,8 @@ public class SingularityConfiguration extends Configuration {
     return maxMissedMesosMasterHeartbeats;
   }
 
-  public void setMaxMissedMesosMasterHeartbeats(long maxMissedMesosHeartbeats) {
-    this.maxMissedMesosMasterHeartbeats = maxMissedMesosHeartbeats;
+  public void setMaxMissedMesosMasterHeartbeats(long maxMissedMesosMasterHeartbeats) {
+    this.maxMissedMesosMasterHeartbeats = maxMissedMesosMasterHeartbeats;
   }
 
   public int getMaxConcurrentUsageCollections() {
