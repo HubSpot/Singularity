@@ -66,6 +66,7 @@ public class StateManager extends CuratorManager {
   private final Transcoder<SingularityTaskReconciliationStatistics> taskReconciliationStatisticsTranscoder;
   private final PriorityManager priorityManager;
   private final AtomicLong statusUpdateDeltaAvg;
+  private final AtomicLong lastHeartbeatTime;
 
   @Inject
   public StateManager(CuratorFramework curatorFramework,
@@ -82,7 +83,8 @@ public class StateManager extends CuratorManager {
                       SingularityAuthDatastore authDatastore,
                       PriorityManager priorityManager,
                       Transcoder<SingularityTaskReconciliationStatistics> taskReconciliationStatisticsTranscoder,
-                      @Named(SingularityMainModule.STATUS_UPDATE_DELTA_30S_AVERAGE) AtomicLong statusUpdateDeltaAvg) {
+                      @Named(SingularityMainModule.STATUS_UPDATE_DELTA_30S_AVERAGE) AtomicLong statusUpdateDeltaAvg,
+                      @Named(SingularityMainModule.LAST_MESOS_MASTER_HEARTBEAT_TIME) AtomicLong lastHeartbeatTime) {
     super(curatorFramework, configuration, metricRegistry);
 
     this.requestManager = requestManager;
@@ -97,6 +99,7 @@ public class StateManager extends CuratorManager {
     this.priorityManager = priorityManager;
     this.taskReconciliationStatisticsTranscoder = taskReconciliationStatisticsTranscoder;
     this.statusUpdateDeltaAvg = statusUpdateDeltaAvg;
+    this.lastHeartbeatTime = lastHeartbeatTime;
   }
 
   public SingularityCreateResult saveTaskReconciliationStatistics(SingularityTaskReconciliationStatistics taskReconciliationStatistics) {
@@ -293,7 +296,7 @@ public class StateManager extends CuratorManager {
         deadSlaves, decommissioningSlaves, activeRacks, deadRacks, decommissioningRacks, cleaningTasks, states, oldestDeploy, numDeploys, oldestDeployStep, activeDeploys, scheduledTasksInfo.getNumLateTasks(),
         scheduledTasksInfo.getNumFutureTasks(), scheduledTasksInfo.getMaxTaskLag(), System.currentTimeMillis(), includeRequestIds ? overProvisionedRequestIds : null,
         includeRequestIds ? underProvisionedRequestIds : null, overProvisionedRequestIds.size(), underProvisionedRequestIds.size(), numFinishedRequests, unknownRacks, unknownSlaves, authDatastoreHealthy, minimumPriorityLevel,
-        statusUpdateDeltaAvg.get());
+        statusUpdateDeltaAvg.get(), lastHeartbeatTime.get());
   }
 
   private Map<String, Long> getNumTasks(List<SingularityRequestWithState> requests) {
