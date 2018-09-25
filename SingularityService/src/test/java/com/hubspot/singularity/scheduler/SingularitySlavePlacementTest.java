@@ -4,6 +4,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.apache.mesos.v1.Protos.TaskState;
@@ -21,6 +22,7 @@ import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskCleanup;
 import com.hubspot.singularity.SingularityTaskHistoryUpdate;
 import com.hubspot.singularity.SingularityTaskId;
+import com.hubspot.singularity.SingularityTaskIdHolder;
 import com.hubspot.singularity.SlavePlacement;
 import com.hubspot.singularity.TaskCleanupType;
 import com.hubspot.singularity.api.SingularityScaleRequest;
@@ -453,30 +455,30 @@ public class SingularitySlavePlacementTest extends SingularitySchedulerTestBase 
         .setSlaveAttributeMinimums(Optional.of(attributeMinimums)));
 
     // The schedule should only accept as many "spot" instances so as to not force a violation of the minimum "non_spot" instances
-    sms.resourceOffers(Arrays.asList(createOffer(7, 20000, 50000, "slave1", "host1", Optional.<String>absent(), ImmutableMap.of("instance_lifecycle_type", "non_spot"))));
-    sms.resourceOffers(Arrays.asList(createOffer(3, 20000, 50000, "slave2", "host2", Optional.<String>absent(), ImmutableMap.of("instance_lifecycle_type", "spot"))));
+    sms.resourceOffers(Arrays.asList(createOffer(3, 20000, 50000, "slave1", "host1", Optional.<String>absent(), ImmutableMap.of("instance_lifecycle_type", "spot"))));
+    sms.resourceOffers(Arrays.asList(createOffer(7, 20000, 50000, "slave2", "host2", Optional.<String>absent(), ImmutableMap.of("instance_lifecycle_type", "non_spot"))));
     Assert.assertTrue(taskManager.getActiveTaskIds().size() == 10);
-    Assert.assertEquals(7, taskManager.getTasksOnSlave(taskManager.getActiveTaskIds(), slaveManager.getObject("slave1").get()).size());
-    Assert.assertEquals(3, taskManager.getTasksOnSlave(taskManager.getActiveTaskIds(), slaveManager.getObject("slave2").get()).size());
+    System.out.println(taskManager.getTasksOnSlave(taskManager.getActiveTaskIds(), slaveManager.getObject("slave1").get()).stream().map(SingularityTaskIdHolder::getTaskId).collect(Collectors.toList()));
+    System.out.println(taskManager.getTasksOnSlave(taskManager.getActiveTaskIds(), slaveManager.getObject("slave2").get()).stream().map(SingularityTaskIdHolder::getTaskId).collect(Collectors.toList()));
 
-    SingularityTask instance10 = taskManager.getActiveTasks().stream().filter(t -> t.getTaskId().getInstanceNo() == 10).findFirst().get();
+    Assert.assertEquals(3, taskManager.getTasksOnSlave(taskManager.getActiveTaskIds(), slaveManager.getObject("slave1").get()).size());
+    Assert.assertEquals(7, taskManager.getTasksOnSlave(taskManager.getActiveTaskIds(), slaveManager.getObject("slave2").get()).size());
+
+    Map<SingularityTaskId, SingularityTask> allTasks = taskManager.getActiveTasks().stream().collect(Collectors.toMap(SingularityTask::getTaskId, Function.identity()));
 
     requestResource.scale(requestId, new SingularityScaleRequest(Optional.of(9), Optional.absent(), Optional.absent(),
         Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent(), Optional.absent()), singularityUser);
 
-    resourceOffers();
-    cleaner.drainCleanupQueue();
-
-    Assert.assertEquals(1, taskManager.getKilledTaskIdRecords().size());
-    Assert.assertEquals(10, taskManager.getKilledTaskIdRecords().get(0).getTaskId().getInstanceNo());
-
-    statusUpdate(instance10, TaskState.TASK_KILLED);
-    killKilledTasks();
+    Assert.assertEquals(2, taskManager.getCleanupTaskIds().size());
+    Assert.assertEquals(1, taskManager.getCleanupTasks().stream().filter(s -> s.getCleanupType() == TaskCleanupType.SCALING_DOWN).count());
+    Assert.assertEquals(1, taskManager.getCleanupTasks().stream().filter(s -> s.getCleanupType() == TaskCleanupType.REBALANCE_SLAVE_ATTRIBUTES).count());
 
     scheduler.drainPendingQueue();
 
-    Assert.assertEquals(9, taskManager.getActiveTaskIds().size());
-    Assert.assertEquals(7, taskManager.getTasksOnSlave(taskManager.getActiveTaskIds(), slaveManager.getObject("slave1").get()).size());
-    Assert.assertEquals(2, taskManager.getTasksOnSlave(taskManager.getActiveTaskIds(), slaveManager.getObject("slave2").get()).size());
+    sms.resourceOffers(Arrays.asList(createOffer(10, 20000, 50000, "slave2", "host2", Optional.<String>absent(), ImmutableMap.of("instance_lifecycle_type", "non_spot"))));
+
+    Assert.assertEquals(11, taskManager.getActiveTaskIds().size());
+    Assert.assertEquals(8, taskManager.getTasksOnSlave(taskManager.getActiveTaskIds(), slaveManager.getObject("slave2").get()).size());
+    Assert.assertEquals(3, taskManager.getTasksOnSlave(taskManager.getActiveTaskIds(), slaveManager.getObject("slave1").get()).size());
   }
 }

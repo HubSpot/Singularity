@@ -6,7 +6,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -28,12 +27,10 @@ import org.slf4j.LoggerFactory;
 import com.codahale.metrics.annotation.Timed;
 import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
-import com.google.common.collect.HashMultiset;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.google.common.collect.Multiset;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.hubspot.mesos.JavaUtils;
@@ -79,6 +76,7 @@ import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.data.TaskRequestManager;
 import com.hubspot.singularity.expiring.SingularityExpiringBounce;
 import com.hubspot.singularity.helpers.RFC5545Schedule;
+import com.hubspot.singularity.helpers.RebalancingHelper;
 import com.hubspot.singularity.mesos.SingularitySchedulerLock;
 import com.hubspot.singularity.smtp.SingularityMailer;
 
@@ -94,6 +92,7 @@ public class SingularityScheduler {
   private final TaskRequestManager taskRequestManager;
   private final DeployManager deployManager;
   private final SlaveManager slaveManager;
+  private final RebalancingHelper rebalancingHelper;
   private final RackManager rackManager;
   private final SingularityMailer mailer;
   private final SingularityLeaderCache leaderCache;
@@ -101,7 +100,8 @@ public class SingularityScheduler {
 
   @Inject
   public SingularityScheduler(TaskRequestManager taskRequestManager, SingularityConfiguration configuration, SingularityCooldown cooldown, DeployManager deployManager,
-                              TaskManager taskManager, RequestManager requestManager, SlaveManager slaveManager, RackManager rackManager, SingularityMailer mailer,
+                              TaskManager taskManager, RequestManager requestManager, SlaveManager slaveManager, RebalancingHelper rebalancingHelper,
+                              RackManager rackManager, SingularityMailer mailer,
                               SingularityLeaderCache leaderCache, SingularitySchedulerLock lock) {
     this.taskRequestManager = taskRequestManager;
     this.configuration = configuration;
@@ -109,6 +109,7 @@ public class SingularityScheduler {
     this.taskManager = taskManager;
     this.requestManager = requestManager;
     this.slaveManager = slaveManager;
+    this.rebalancingHelper = rebalancingHelper;
     this.rackManager = rackManager;
     this.mailer = mailer;
     this.cooldown = cooldown;
@@ -489,10 +490,10 @@ public class SingularityScheduler {
       }
 
       if (request.isRackSensitive() && configuration.isRebalanceRacksOnScaleDown()) {
-        rebalanceRacks(request, state, deployStatistics, pendingRequest, maybePendingDeploy, now, remainingActiveTasks);
+        rebalanceRacks(request, state, deployStatistics, pendingRequest, maybePendingDeploy, remainingActiveTasks);
       }
       if (request.getSlaveAttributeMinimums().isPresent()) {
-        rebalanceAttributeDistribution(request, state, deployStatistics, pendingRequest, maybePendingDeploy, now, remainingActiveTasks);
+        rebalanceAttributeDistribution(request, state, deployStatistics, pendingRequest, maybePendingDeploy, remainingActiveTasks);
       }
     }
     return numMissingInstances;
@@ -504,52 +505,10 @@ public class SingularityScheduler {
       SingularityDeployStatistics deployStatistics,
       SingularityPendingRequest pendingRequest,
       Optional<SingularityPendingDeploy> maybePendingDeploy,
-      long now,
       List<SingularityTaskId> remainingActiveTasks) {
-    Map<String, Map<String, Integer>> instanceAttrCounts = new HashMap<>();
-
-    for (SingularityTaskId taskId: remainingActiveTasks) {
-      SingularitySlave slave = leaderCache.getSlave(taskManager.getTask(taskId).get().getMesosTask().getSlaveId().getValue()).get();
-      for (Entry<String, String> entry : slave.getAttributes().entrySet()) {
-        instanceAttrCounts.getOrDefault(entry.getKey(), new HashMap<>()).compute(entry.getValue(), (k, v) -> v == null ? 1 : v + 1);
-      }
-    }
-
-    Integer numDesiredInstances = request.getInstancesSafe();
-
-    for (Entry<String, Map<String, Integer>> keyEntry : request.getSlaveAttributeMinimums().get().entrySet()) {
-      String attrKey = keyEntry.getKey();
-      for (Entry<String, Integer> valueEntry : keyEntry.getValue().entrySet()) {
-        Integer percentInstancesWithAttrRequested = valueEntry.getValue();
-        Integer minInstancesWithAttr = Math.max(1, (int) ((percentInstancesWithAttrRequested / 100.0) * numDesiredInstances));
-        long numInstancesWithAttr = instanceAttrCounts.containsKey(attrKey) ? instanceAttrCounts.get(attrKey).getOrDefault(valueEntry.getKey(), 0) : 0;
-        long maxPotentialInstancesWithAttr = numInstancesWithAttr + (numDesiredInstances - remainingActiveTasks.size());
-
-        long numTasksToClean = minInstancesWithAttr - maxPotentialInstancesWithAttr;
-        if (numTasksToClean > 0) {
-          List<SingularityTaskId> extraTasksToClean = new ArrayList<>();
-          for (SingularityTaskId taskId : remainingActiveTasks) {
-
-            SingularitySlave slave = leaderCache.getSlave(taskManager.getTask(taskId).get().getMesosTask().getSlaveId().getValue()).get();
-
-            if (!slave.getAttributes().containsKey(attrKey) && slave.getAttributes().get(attrKey).equals(valueEntry.getKey())) {
-              for (Entry<String, String> entry : slave.getAttributes().entrySet()) {
-                instanceAttrCounts.get(entry.getKey()).computeIfPresent(entry.getValue(), (k, v) -> v -= 1);
-              }
-              extraTasksToClean.add(taskId);
-              LOG.info("Cleaning up task {} to satisfy attribute {}={} on at least {}% of instances", taskId, attrKey, valueEntry.getKey(), valueEntry.getValue());
-              taskManager.createTaskCleanup(
-                  new SingularityTaskCleanup(pendingRequest.getUser(), TaskCleanupType.REBALANCE_SLAVE_ATTRIBUTES, now, taskId, Optional.<String>absent(), Optional.<String>absent(), Optional.<SingularityTaskShellCommandRequestId>absent()));
-            }
-          }
-
-          remainingActiveTasks.removeAll(extraTasksToClean);
-          if (extraTasksToClean.size() > 0) {
-            schedule(extraTasksToClean.size(), remainingActiveTasks, request, state, deployStatistics, pendingRequest, maybePendingDeploy);
-          }
-        }
-      }
-    }
+    Set<SingularityTaskId> extraTasksToClean = rebalancingHelper.rebalanceAttributeDistribution(request, pendingRequest.getUser(), remainingActiveTasks);
+    remainingActiveTasks.removeAll(extraTasksToClean);
+    schedule(extraTasksToClean.size(), remainingActiveTasks, request, state, deployStatistics, pendingRequest, maybePendingDeploy);
   }
 
   private void rebalanceRacks(
@@ -558,22 +517,8 @@ public class SingularityScheduler {
       SingularityDeployStatistics deployStatistics,
       SingularityPendingRequest pendingRequest,
       Optional<SingularityPendingDeploy> maybePendingDeploy,
-      long now,
       List<SingularityTaskId> remainingActiveTasks) {
-    List<SingularityTaskId> extraCleanedTasks = new ArrayList<>();
-    int numActiveRacks = rackManager.getNumActive();
-    double perRack = request.getInstancesSafe() / (double) numActiveRacks;
-
-    Multiset<String> countPerRack = HashMultiset.create();
-    for (SingularityTaskId taskId : remainingActiveTasks) {
-      countPerRack.add(taskId.getRackId());
-      LOG.info("{} - {} - {} - {}", countPerRack, perRack, extraCleanedTasks.size(), taskId);
-      if (countPerRack.count(taskId.getRackId()) > perRack && extraCleanedTasks.size() < numActiveRacks / 2) {
-        extraCleanedTasks.add(taskId);
-        LOG.info("Cleaning up task {} to evenly distribute tasks among racks", taskId);
-        taskManager.createTaskCleanup(new SingularityTaskCleanup(pendingRequest.getUser(), TaskCleanupType.REBALANCE_RACKS, now, taskId, Optional.<String>absent(), Optional.<String>absent(), Optional.<SingularityTaskShellCommandRequestId>absent()));
-      }
-    }
+    List<SingularityTaskId> extraCleanedTasks = rebalancingHelper.rebalanceRacks(request, remainingActiveTasks, pendingRequest.getUser());
     remainingActiveTasks.removeAll(extraCleanedTasks);
     if (extraCleanedTasks.size() > 0) {
       schedule(extraCleanedTasks.size(), remainingActiveTasks, request, state, deployStatistics, pendingRequest, maybePendingDeploy);
