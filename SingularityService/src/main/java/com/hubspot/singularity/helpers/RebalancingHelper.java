@@ -26,26 +26,21 @@ import com.hubspot.singularity.data.RackManager;
 import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.data.SlaveManager;
 import com.hubspot.singularity.data.TaskManager;
-import com.hubspot.singularity.scheduler.SingularityLeaderCache;
 
 @Singleton
 public class RebalancingHelper {
   private static final Logger LOG = LoggerFactory.getLogger(RebalancingHelper.class);
 
   private final TaskManager taskManager;
-  private final RequestManager requestManager;
   private final SlaveManager slaveManager;
   private final RackManager rackManager;
-  private final SingularityLeaderCache leaderCache;
 
   @Inject
   public RebalancingHelper(TaskManager taskManager, RequestManager requestManager, SlaveManager slaveManager,
-      RackManager rackManager, SingularityLeaderCache leaderCache) {
+      RackManager rackManager) {
     this.taskManager = taskManager;
-    this.requestManager = requestManager;
     this.slaveManager = slaveManager;
     this.rackManager = rackManager;
-    this.leaderCache = leaderCache;
   }
 
   public List<SingularityTaskId> rebalanceRacks(SingularityRequest request, List<SingularityTaskId> remainingActiveTasks, Optional<String> user) {
@@ -75,7 +70,7 @@ public class RebalancingHelper {
     Map<String, Map<String, Set<SingularityTaskId>>> attributeTaskMap = new HashMap<>();
 
     for (SingularityTaskId taskId : remainingActiveTasks) {
-      SingularitySlave slave = leaderCache.getSlave(taskManager.getTask(taskId).get().getMesosTask().getSlaveId().getValue()).get();
+      SingularitySlave slave = slaveManager.getSlave(taskManager.getTask(taskId).get().getMesosTask().getSlaveId().getValue()).get();
       for (Entry<String, String> entry : slave.getAttributes().entrySet()) {
         attributeTaskMap
             .computeIfAbsent(entry.getKey(), key -> new HashMap<>())
