@@ -184,19 +184,22 @@ public class RequestResource extends AbstractRequestResource {
           }
         });
 
-        if (request.isRackSensitive() && configuration.isRebalanceRacksOnScaleDown()) {
-          List<SingularityTaskId> extraCleanedTasks = new ArrayList<>();
-          int numActiveRacks = rackManager.getNumActive();
-          double perRack = request.getInstancesSafe() / (double) numActiveRacks;
+        if (oldRequest.get().getInstancesSafe() > rackManager.getNumActive()) {
+          if (request.isRackSensitive() && configuration.isRebalanceRacksOnScaleDown()) {
+            List<SingularityTaskId> extraCleanedTasks = new ArrayList<>();
+            int numActiveRacks = rackManager.getNumActive();
+            double perRack = request.getInstancesSafe() / (double) numActiveRacks;
 
-          Multiset<String> countPerRack = HashMultiset.create();
-          for (SingularityTaskId taskId : remainingActiveTasks) {
-            countPerRack.add(taskId.getSanitizedRackId());
-            LOG.info("{} - {} - {} - {}", countPerRack, perRack, extraCleanedTasks.size(), taskId);
-            if (countPerRack.count(taskId.getSanitizedRackId()) > perRack && extraCleanedTasks.size() < numActiveRacks / 2) {
-              extraCleanedTasks.add(taskId);
-              LOG.info("Cleaning up task {} to evenly distribute tasks among racks", taskId);
-              taskManager.createTaskCleanup(new SingularityTaskCleanup(user.getEmail(), TaskCleanupType.REBALANCE_RACKS, System.currentTimeMillis(), taskId, Optional.<String>absent(), Optional.<String>absent(), Optional.absent()));
+            Multiset<String> countPerRack = HashMultiset.create();
+            for (SingularityTaskId taskId : remainingActiveTasks) {
+              countPerRack.add(taskId.getSanitizedRackId());
+              LOG.info("{} - {} - {} - {}", countPerRack, perRack, extraCleanedTasks.size(), taskId);
+              if (countPerRack.count(taskId.getSanitizedRackId()) > 1 && countPerRack.count(taskId.getSanitizedRackId()) > perRack && extraCleanedTasks.size() < numActiveRacks / 2) {
+                extraCleanedTasks.add(taskId);
+                LOG.info("Cleaning up task {} to evenly distribute tasks among racks", taskId);
+                taskManager.createTaskCleanup(new SingularityTaskCleanup(user.getEmail(), TaskCleanupType.REBALANCE_RACKS, System.currentTimeMillis(), taskId, Optional.<String>absent(), Optional.<String>absent(), Optional
+                    .absent()));
+              }
             }
           }
         }
