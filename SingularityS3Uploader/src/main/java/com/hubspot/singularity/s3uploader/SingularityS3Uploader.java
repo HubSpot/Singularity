@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.Lock;
 
 import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.services.s3.AmazonS3;
@@ -41,8 +42,8 @@ public class SingularityS3Uploader extends SingularityUploader {
   private final AmazonS3 s3Client;
 
   SingularityS3Uploader(BasicAWSCredentials defaultCredentials, S3UploadMetadata uploadMetadata, FileSystem fileSystem, SingularityS3UploaderMetrics metrics, Path metadataPath,
-                        SingularityS3UploaderConfiguration configuration, String hostname, SingularityRunnerExceptionNotifier exceptionNotifier) {
-    super(uploadMetadata, fileSystem, metrics, metadataPath, configuration, hostname, exceptionNotifier);
+                        SingularityS3UploaderConfiguration configuration, String hostname, SingularityRunnerExceptionNotifier exceptionNotifier, Lock checkFileOpenLock) {
+    super(uploadMetadata, fileSystem, metrics, metadataPath, configuration, hostname, exceptionNotifier, checkFileOpenLock);
     BasicAWSCredentials credentials = defaultCredentials;
 
     if (uploadMetadata.getS3SecretKey().isPresent() && uploadMetadata.getS3AccessKey().isPresent()) {

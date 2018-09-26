@@ -14,6 +14,7 @@ import java.nio.file.attribute.UserDefinedFileAttributeView;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.locks.Lock;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,6 +37,7 @@ public abstract class SingularityUploader {
   static final Logger LOG = LoggerFactory.getLogger(SingularityUploader.class);
   private static final String LOG_START_TIME_ATTR = "logstart";
   private static final String LOG_END_TIME_ATTR = "logend";
+  private static final long CHECK_FILE_OPEN_TIMEOUT_MILLIS = 1500;
 
   final S3UploadMetadata uploadMetadata;
   private final PathMatcher pathMatcher;
@@ -48,9 +50,16 @@ public abstract class SingularityUploader {
   final String hostname;
   final SingularityS3UploaderConfiguration configuration;
   private final SingularityRunnerExceptionNotifier exceptionNotifier;
+  private final Lock checkFileOpenLock;
 
-  SingularityUploader(S3UploadMetadata uploadMetadata, FileSystem fileSystem, SingularityS3UploaderMetrics metrics, Path metadataPath,
-                      SingularityS3UploaderConfiguration configuration, String hostname, SingularityRunnerExceptionNotifier exceptionNotifier) {
+  SingularityUploader(S3UploadMetadata uploadMetadata,
+                      FileSystem fileSystem,
+                      SingularityS3UploaderMetrics metrics,
+                      Path metadataPath,
+                      SingularityS3UploaderConfiguration configuration,
+                      String hostname,
+                      SingularityRunnerExceptionNotifier exceptionNotifier,
+                      Lock checkFileOpenLock) {
     this.metrics = metrics;
     this.uploadMetadata = uploadMetadata;
     this.fileDirectory = uploadMetadata.getDirectory();
@@ -68,6 +77,8 @@ public abstract class SingularityUploader {
     this.logIdentifier = String.format("[%s]", metadataPath.getFileName());
     this.configuration = configuration;
     this.exceptionNotifier = exceptionNotifier;
+
+    this.checkFileOpenLock = checkFileOpenLock;
   }
 
   protected abstract void uploadSingle(int sequence, Path file) throws Exception;
@@ -171,12 +182,13 @@ public abstract class SingularityUploader {
     return found;
   }
 
-  static boolean isFileOpen(Path path, boolean useFuser) {
+  private boolean isFileOpen(Path path, boolean useFuser) {
     try {
+      checkFileOpenLock.lock();
       if (useFuser) {
         SimpleProcessManager fuser = new SimpleProcessManager(LOG);
         List<String> cmd = ImmutableList.of("fuser", path.toAbsolutePath().toString());
-        int exitCode = fuser.getExitCode(cmd);
+        int exitCode = fuser.getExitCode(cmd, CHECK_FILE_OPEN_TIMEOUT_MILLIS);
         return exitCode == 0;
       } else {
         SimpleProcessManager lsof = new SimpleProcessManager(LOG);
@@ -191,6 +203,8 @@ public abstract class SingularityUploader {
     } catch (Exception e) {
       LOG.error("Could not determine if file {} was in use, skipping", path, e);
       return true;
+    } finally {
+      checkFileOpenLock.unlock();
     }
     return false;
   }
