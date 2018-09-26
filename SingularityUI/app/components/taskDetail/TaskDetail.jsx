@@ -180,6 +180,10 @@ class TaskDetail extends Component {
 
         file.fullPath = `${files.fullPathToRoot}/${files.currentDirectory}/${file.name}`;
         file.downloadLink = `${config.apiRoot}/tasks/download?slaveHostname=${files.slaveHostname}&path=${file.fullPath}`;
+        const extensionMatcher = /(?:\.([^.]+))?$/;
+        if (!file.isDirectory && Utils.OPENABLE_EXTENSIONS.includes(extensionMatcher.exec(file.name)[1])) {
+          file.openLink = `${config.apiRoot}/tasks/open?slaveHostname=${files.slaveHostname}&path=${file.fullPath}`;
+        }
         file.isRecentlyModified = Date.now() / 1000 - file.mtime <= RECENTLY_MODIFIED_SECONDS;
 
         if (!file.isDirectory) {
