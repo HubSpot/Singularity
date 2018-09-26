@@ -645,7 +645,7 @@ public class TaskResource extends AbstractLeaderAwareResource {
 
   @GET
   @Path("/open/")
-  @Produces(MediaType.APPLICATION_OCTET_STREAM)
+  @Produces("*/*")
   @Operation(summary = "Open a file from a Mesos Slave through Singularity")
   public Response openFileOverProxy(
       @Parameter(required = true, description = "Mesos slave hostname") @QueryParam("slaveHostname") String slaveHostname,
