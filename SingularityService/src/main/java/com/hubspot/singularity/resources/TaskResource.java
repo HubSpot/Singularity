@@ -13,6 +13,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 
+import javax.activation.MimetypesFileTypeMap;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -26,6 +27,7 @@ import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.StreamingOutput;
 
@@ -121,6 +123,7 @@ public class TaskResource extends AbstractLeaderAwareResource {
   private final SingularityValidator validator;
   private final DisasterManager disasterManager;
   private final RequestHelper requestHelper;
+  private final MimetypesFileTypeMap fileTypeMap;
 
   @Inject
   public TaskResource(TaskRequestManager taskRequestManager, TaskManager taskManager, SlaveManager slaveManager, MesosClient mesosClient, SingularityTaskMetadataConfiguration taskMetadataConfiguration,
@@ -139,6 +142,7 @@ public class TaskResource extends AbstractLeaderAwareResource {
     this.requestHelper = requestHelper;
     this.httpClient = httpClient;
     this.configuration = configuration;
+    this.fileTypeMap = new MimetypesFileTypeMap();
   }
 
   @GET
@@ -636,11 +640,26 @@ public class TaskResource extends AbstractLeaderAwareResource {
       @Parameter(required = true, description = "Mesos slave hostname") @QueryParam("slaveHostname") String slaveHostname,
       @Parameter(required = true, description = "Full file path to file on Mesos slave to be downloaded") @QueryParam("path") String fileFullPath
   ) {
+    return getFile(slaveHostname, fileFullPath, true);
+  }
+
+  @GET
+  @Path("/open/")
+  @Produces(MediaType.APPLICATION_OCTET_STREAM)
+  @Operation(summary = "Open a file from a Mesos Slave through Singularity")
+  public Response openFileOverProxy(
+      @Parameter(required = true, description = "Mesos slave hostname") @QueryParam("slaveHostname") String slaveHostname,
+      @Parameter(required = true, description = "Full file path to file on Mesos slave to be downloaded") @QueryParam("path") String fileFullPath
+  ) {
+    return getFile(slaveHostname, fileFullPath, false);
+  }
+
+  private Response getFile(String slaveHostname, String fileFullPath, boolean download) {
     String httpPrefix = configuration.getSlaveHttpsPort().isPresent() ? "https" : "http";
     int httpPort = configuration.getSlaveHttpsPort().isPresent() ? configuration.getSlaveHttpsPort().get() : configuration.getSlaveHttpPort();
 
     String url = String.format("%s://%s:%s/files/download.json",
-            httpPrefix, slaveHostname, httpPort);
+        httpPrefix, slaveHostname, httpPort);
 
     try {
       PerRequestConfig unlimitedTimeout = new PerRequestConfig();
@@ -657,8 +676,17 @@ public class TaskResource extends AbstractLeaderAwareResource {
       java.nio.file.Path filePath = Paths.get(fileFullPath).getFileName();
       String fileName = filePath != null ? filePath.toString() : fileFullPath;
 
-      final String headerValue = String.format("attachment; filename=\"%s\"", fileName);
-      return Response.ok(streamingOutputNingHandler).header("Content-Disposition", headerValue).build();
+      ResponseBuilder responseBuilder = Response.ok(streamingOutputNingHandler);
+
+      if (download) {
+        final String headerValue = String.format("attachment; filename=\"%s\"", fileName);
+        responseBuilder.header("Content-Disposition", headerValue);
+      } else {
+        // Guess type based on extension since we don't have the file locally to check content
+        final String maybeContentType = fileTypeMap.getContentType(fileFullPath);
+        responseBuilder.header("Content-Type", maybeContentType);
+      }
+      return responseBuilder.build();
     } catch (Exception e) {
       if (e.getCause().getClass() == ConnectException.class) {
         throw new SlaveNotFoundException(e);
@@ -666,7 +694,6 @@ public class TaskResource extends AbstractLeaderAwareResource {
         throw new RuntimeException(e);
       }
     }
-
   }
 
   private static class NingOutputToJaxRsStreamingOutputWrapper implements AsyncHandler<Void>, StreamingOutput {
